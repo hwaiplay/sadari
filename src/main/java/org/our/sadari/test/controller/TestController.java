@@ -1,24 +1,21 @@
 package org.our.sadari.test.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.our.sadari.test.service.TestService;
 import org.our.sadari.test.vo.TestVO;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 public class TestController {
 
-    @Autowired
-    private TestService testService;
+    private final TestService testService;
 
     @GetMapping("/api/test")
     public List<TestVO> hello() {
-        TestVO testVO = new TestVO();
-        List<TestVO> testList = testService.testList(testVO);
-        System.out.println("API test");
-        return testList;
+        return testService.testList(new TestVO());
     }
 }

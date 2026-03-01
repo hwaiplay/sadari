@@ -5,7 +5,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-@MapperScan(basePackages = "org.our.sadari.**.mapper")
 public class SadariApplication {
 
 	public static void main(String[] args) {
