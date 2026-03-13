@@ -7,7 +7,6 @@ export const vars = createGlobalTheme(":root", {
   },
 
   space: {
-    xs: "4px",
     sm: "8px",
     md: "16px",
     lg: "24px",
@@ -22,14 +21,21 @@ export const vars = createGlobalTheme(":root", {
 
   fontSize: {
     caption: "12px",
-    body: "16px",
+    body: "14px",
     title: "24px",
     hero: "32px",
   },
 
   radius: {
-    sm: "10px",
-    md: "20px",
+    sm: "7px",
+    md: "12px",
     xl: "55555px",
   },
+
+  bookHeight: {
+    sm: "253px",
+    md: "273px",
+  },
+
+  headerHeight: "60px",
 });
