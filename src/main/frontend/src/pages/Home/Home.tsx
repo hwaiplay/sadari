@@ -1,34 +1,57 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Button } from "../../components/Button/Button";
+import { Container } from "../../components/Layout/Container/Container";
+import Book from "../../components/Book/Book";
+import * as styles from "./Home.css";
+import { homeDummyData } from "../../assets/dummy";
+import { BookProps } from "../../types/Book";
+import { tilt } from "../../components/Book/book.css";
+import clsx from "clsx";
 
-interface DataProps {
-  ename: string;
-  hiredate: string;
+function chunkArray<T>(array: T[], size: number) {
+  const result = [];
+
+  for (let i = 0; i < array.length; i += size) {
+    result.push(array.slice(i, i + size));
+  }
+
+  return result;
 }
 
 function Home() {
-  const [hello, setHello] = useState<DataProps[]>([]);
+  const dummy = homeDummyData;
+  const [booksData, setBooksData] = useState<BookProps[]>(homeDummyData);
 
-  useEffect(() => {
-    axios.get<DataProps[]>("/api/test").then((res) => {
-      setHello(res.data);
-    });
-  }, []);
+  const firstRow = booksData.slice(0, 5);
+  const rows = chunkArray(booksData.slice(5), 6);
+  const rowCount = Math.max(3, rows.length);
 
+  booksData.length;
+  //   useEffect(() => {
+  //   setBooksData(dummy);
+  // }, []);
   return (
-    <div className="App">
-      <h3>백엔드 데이터</h3>
-      <Button variant="primary">기록하기</Button>
-      {hello.map((h, index) => {
-        return (
-          <div key={index}>
-            <span>{h.ename}: </span>
-            <span>{h.hiredate}</span>
-          </div>
-        );
-      })}
-    </div>
+    <>
+      {/* 첫 줄 */}
+      <Container className={clsx(styles.row5, styles.rowContainer)}>
+        {firstRow.map((book, index) => (
+          <Book
+            key={book.id}
+            {...book}
+            className={index === firstRow.length - 5 ? tilt : ""}
+          />
+        ))}
+      </Container>
+
+      {/* 나머지 */}
+      {Array.from({ length: rowCount }).map((_, rowIndex) => (
+        <Container className={clsx(styles.row6, styles.rowContainer)}>
+          {rows[rowIndex]?.map((book) => (
+            <Book key={book.id} {...book} />
+          ))}
+        </Container>
+      ))}
+    </>
   );
 }
 
