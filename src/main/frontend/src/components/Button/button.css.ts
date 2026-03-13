@@ -10,6 +10,7 @@ export const buttonBase = style({
   justifyContent: "center",
 
   fontFamily: vars.font.heading,
+  fontSize: vars.fontSize.body,
   lineHeight: 1,
 
   border: "none",
@@ -36,12 +37,10 @@ export const buttonSize = styleVariants({
   sm: {
     height: "32px",
     padding: "0 12px",
-    fontSize: "14px",
   },
 
   md: {
     height: "40px",
-    fontSize: "14px",
   },
 
   lg: {
