@@ -1,16 +1,13 @@
 // App.tsx
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home/Home";
-import Header from "./components/Layout/Header/Header";
-import Navigation from "./components/Layout/Navigation/Navigation";
+import MainLayout from "./components/Layout/MainLayout/MainLayout";
 export default function App() {
   return (
-    <>
-      <Header />
-      <Routes>
+    <Routes>
+      <Route element={<MainLayout />}>
         <Route path="/" element={<Home />} />
-      </Routes>
-      <Navigation />
-    </>
+      </Route>
+    </Routes>
   );
 }
