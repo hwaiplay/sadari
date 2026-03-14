@@ -10,11 +10,15 @@ export const book = style({
   textOrientation: "mixed",
   fontFamily: vars.font.body,
   padding: `${vars.space.md} 0`,
+  fontStyle: "normal",
+  textDecoration: "none",
+  color: vars.color.black,
 
   "@media": {
     [`screen and (max-width: 767px)`]: {
       height: vars.bookHeight.sm,
       borderRadius: vars.radius.sm,
+      maxWidth: "48px",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
       height: vars.bookHeight.md,
