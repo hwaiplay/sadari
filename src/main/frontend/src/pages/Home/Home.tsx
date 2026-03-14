@@ -19,14 +19,14 @@ function chunkArray<T>(array: T[], size: number) {
 }
 
 function Home() {
-  const dummy = homeDummyData;
   const [booksData, setBooksData] = useState<BookProps[]>(homeDummyData);
 
-  const firstRow = booksData.slice(0, 5);
-  const rows = chunkArray(booksData.slice(5), 6);
-  const rowCount = Math.max(3, rows.length);
+  const firstRow = booksData.slice(0, 5); // 첫줄
+  const rows = chunkArray(booksData.slice(5), 6); // 두번째 줄~끝
+  const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
 
   booksData.length;
+
   //   useEffect(() => {
   //   setBooksData(dummy);
   // }, []);
