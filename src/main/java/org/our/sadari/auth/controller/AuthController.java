@@ -3,6 +3,7 @@ package org.our.sadari.auth.controller;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.constant.AuthConstant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -43,10 +44,10 @@ public class AuthController {
 
         // HttpBody 객체 생성
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("grant_type", "authorization_code"); //카카오 공식문서 기준 authorization_code 로 고정
-        params.add("client_id", KAKAO_CLIENT_ID);
-        params.add("redirect_uri", BACK_DOMAIN + KAKAO_REDIRECT_URI);
-        params.add("code", code); //인가 코드 요청시 받은 인가 코드값, 프론트에서 받아오는 그 코드
+        params.add(AuthConstant.GRANT_TYPE, "authorization_code"); //카카오 공식문서 기준 authorization_code 로 고정
+        params.add(AuthConstant.CLIENT_ID, KAKAO_CLIENT_ID);
+        params.add(AuthConstant.REDIRECT_URI, BACK_DOMAIN + KAKAO_REDIRECT_URI);
+        params.add(AuthConstant.CODE, code); //인가 코드 요청시 받은 인가 코드값, 프론트에서 받아오는 그 코드
 
         // 헤더와 바디 합치기 위해 HttpEntity 객체 생성
         HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest = new HttpEntity<>(params, headers);
@@ -54,7 +55,7 @@ public class AuthController {
 
         // 카카오로부터 Access token 수신
         ResponseEntity<String> accessTokenResponse = rt.exchange(
-                "https://kauth.kakao.com/oauth/token",
+                AuthConstant.AUTHORIZATION_URL,
                 HttpMethod.POST,
                 kakaoTokenRequest,
                 String.class
