@@ -22,6 +22,11 @@ globalStyle("html, body", {
   fontFamily: "PretendardRegular",
 });
 
+globalStyle("*", {
+  margin: 0,
+  padding: 0,
+});
+
 globalStyle("*, *::before, *::after", {
   boxSizing: "border-box",
 });
