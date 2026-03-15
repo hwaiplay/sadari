@@ -32,18 +32,48 @@ repositories {
 }
 
 dependencies {
-	//implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// 보안 관련 (인증/인가) 기능을 제공하는 스타터 (현재 주석 처리됨)
+	// implementation 'org.springframework.boot:spring-boot-starter-security'
+
+	// 스프링 MVC를 이용한 웹 개발(REST API, 컨트롤러 등)의 핵심 라이브러리
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+
+	// MyBatis와 스프링 부트를 연동하여 SQL 매퍼를 사용할 수 있게 해주는 라이브러리
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
+
+	// 컴파일 시점에 Getter/Setter 등을 자동으로 생성해주는 코드 다이어트용 라이브러리
 	compileOnly 'org.projectlombok:lombok'
+
+	// 인터페이스 기반으로 데이터베이스 접근(ORM)을 도와주는 JPA 스타터
 	implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+	// JSON 데이터와 자바 객체 간의 변환(직렬화/역직렬화)을 담당하는 핵심 라이브러리
+	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+
+	// 코드 수정 시 서버 자동 재시작 등 개발 편의 기능을 제공하는 도구
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+
+	// 오라클(Oracle) 데이터베이스 연결을 위한 JDBC 드라이버 (실행 시에만 필요)
 	runtimeOnly 'com.oracle.database.jdbc:ojdbc11'
+
+	// 컴파일 단계에서 Lombok 어노테이션을 해석하고 실제 코드를 생성하는 프로세서
 	annotationProcessor 'org.projectlombok:lombok'
+
+	// 외장 톰캣 환경에 배포할 때 런타임 시 필요한 라이브러리 포함 설정
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
-	//testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+
+	// --------------------- 테스트 관련 설정 ---------------------
+	// 보안 기능 테스트용 (현재 주석 처리됨)
+	// testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
+
+	// 웹 컨트롤러 계층을 테스트하기 위한 라이브러리
 	testImplementation 'org.springframework.boot:spring-boot-starter-webmvc-test'
+
+	// MyBatis 매퍼와 쿼리 작동 여부를 테스트하기 위한 라이브러리
 	testImplementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter-test:4.0.1'
+
+	//. JUnit 5 테스트를 실행하기 위한 플랫폼 런처 설정
 	testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 }
 
