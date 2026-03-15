@@ -18,7 +18,7 @@ export const book = style({
     [`screen and (max-width: 767px)`]: {
       height: vars.bookHeight.sm,
       borderRadius: vars.radius.sm,
-      maxWidth: "48px",
+      // maxWidth: "48px",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
       height: vars.bookHeight.md,
