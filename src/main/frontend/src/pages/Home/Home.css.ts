@@ -3,14 +3,22 @@ import { vars } from "../../styles/tokens.css";
 import { book } from "../../components/Book/book.css";
 import { breakpoints } from "../../styles/breakpoints";
 
-export const homeContainer = style({
+export const emptyHomeContainer = style({
   width: "100%",
+  height: "100svh",
+  padding: 0,
+  backgroundImage: 'url("/img/common/background-empty.png")',
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "cover",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
 });
 
-export const bgContainer = style({
-  width: "100%",
-  display: "flex",
-  flexDirection: "column",
+export const emptyTitle = style({
+  fontSize: vars.fontSize.title,
+  fontFamily: vars.font.heading,
+  textAlign: "center",
 });
 
 export const rowContainer = style({
@@ -41,8 +49,8 @@ export const row5 = style({
   "@media": {
     [`screen and (max-width: 767px)`]: {
       height: `calc(${vars.bookHeight.sm} + 106px - ${vars.headerHeight} + 30px)`,
-      gridTemplateColumns: "repeat(5, 1fr)",
-      paddingLeft: "calc(16px * 3)",
+      gridTemplateColumns: "repeat(5, 48px)",
+      // paddingLeft: "calc(16px * 3)",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
       gridTemplateColumns: "repeat(5, 74px)",

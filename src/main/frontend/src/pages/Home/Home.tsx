@@ -25,32 +25,38 @@ function Home() {
   const rows = chunkArray(booksData.slice(5), 6); // 두번째 줄~끝
   const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
 
-  booksData.length;
-
   //   useEffect(() => {
   //   setBooksData(dummy);
   // }, []);
   return (
     <>
-      {/* 첫 줄 */}
-      <Container className={clsx(styles.row5, styles.rowContainer)}>
-        {firstRow.map((book, index) => (
-          <Book
-            key={book.id}
-            {...book}
-            className={index === firstRow.length - 5 ? tilt : ""}
-          />
-        ))}
-      </Container>
+      {booksData.length !== 0 ? (
+        <>
+          {/* 첫 줄 */}
+          <Container className={clsx(styles.row5, styles.rowContainer)}>
+            {firstRow.map((book, index) => (
+              <Book
+                key={book.id}
+                {...book}
+                className={index === firstRow.length - 5 ? tilt : ""}
+              />
+            ))}
+          </Container>
 
-      {/* 나머지 */}
-      {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <Container className={clsx(styles.row6, styles.rowContainer)}>
-          {rows[rowIndex]?.map((book) => (
-            <Book key={book.id} {...book} />
+          {/* 나머지 */}
+          {Array.from({ length: rowCount }).map((_, rowIndex) => (
+            <Container className={clsx(styles.row6, styles.rowContainer)}>
+              {rows[rowIndex]?.map((book) => (
+                <Book key={book.id} {...book} />
+              ))}
+            </Container>
           ))}
+        </>
+      ) : (
+        <Container className={styles.emptyHomeContainer}>
+          <h1 className={styles.emptyTitle}>첫 책을 꽂아 책장을 채워보세요.</h1>
         </Container>
-      ))}
+      )}
     </>
   );
 }
