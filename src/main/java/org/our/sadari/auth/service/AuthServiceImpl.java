@@ -1,24 +1,21 @@
 package org.our.sadari.auth.service;
 
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.ResponseEntity;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.auth.vo.KakaoAccountVO;
 import org.our.sadari.auth.vo.KakaoTokenVO;
 import org.our.sadari.constant.AuthConstant;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -35,7 +32,7 @@ public class AuthServiceImpl {
     private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
 
     // 토큰 요청
-    public KakaoTokenVO getKakaoToken(String code) throws JsonProcessingException {
+    public KakaoAccountVO getKakaoToken(String code) throws JsonProcessingException {
         RestTemplate rt = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -62,12 +59,12 @@ public class AuthServiceImpl {
 
         // log.debug("카카오 엑세스 토큰: {}", response.getBody());
 
-        return kakaoTokenVO;
+        return getKakaoAccount(kakaoTokenVO.getAccess_token());
 
     }
 
     // 사용자 정보 요청
-    public String getKakaoAccount(String accessToken) throws JsonProcessingException {
+    public KakaoAccountVO getKakaoAccount(String accessToken) throws JsonProcessingException {
         RestTemplate rt = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -76,19 +73,23 @@ public class AuthServiceImpl {
 
         HttpEntity<?> request = new HttpEntity<>(headers);
 
-        ResponseEntity<String> response = rt.exchange(
+        ResponseEntity<String> accountInfoResponse  = rt.exchange(
               "https://kapi.kakao.com/v2/user/me",
             HttpMethod.POST,
             request,
             String.class
         );
 
+        // JSON Parsing (-> kakaoAccountDto)
         ObjectMapper objectMapper = new ObjectMapper();
-        // KakaoAccountVO kakaoAccountVO = objectMapper.readValue(response.getBody(), KakaoAccountVO.class);
+        KakaoAccountVO kakaoAccountVO = null;
+        try {
+            kakaoAccountVO = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountVO.class);
+        } catch (JsonProcessingException e) { e.printStackTrace(); }
 
-        log.debug("카카오 raw 응답: {}", response.getBody());
+        log.debug("카카오 raw 응답: {}", accountInfoResponse.getBody());
 
-        return response.getBody();
+        return kakaoAccountVO;
     }
 
    /* private final KakaoAuthProvider kakaoAuthProvider;
