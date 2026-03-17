@@ -1,9 +1,69 @@
 package org.our.sadari.auth.service;
 
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
+import org.our.sadari.auth.vo.KakaoAccountVO;
+import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.constant.AuthConstant;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
+
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@RequiredArgsConstructor
+@Slf4j
 public class AuthServiceImpl {
+
+    @Value("${domain.back}")
+    private String BACK_DOMAIN;  //call back uri
+
+    @Value("${kakao.redirect.uri}")
+    private String KAKAO_REDIRECT_URI;  //call back uri
+
+    @Value("${kakao.key.restApi}")
+    private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
+
+    // 토큰 요청
+    public KakaoTokenVO gKakaoTokenVO(String code) throws JsonProcessingException {
+        RestTemplate rt = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(AuthConstant.GRANT_TYPE, "authorization_code");
+        params.add(AuthConstant.CLIENT_ID, KAKAO_CLIENT_ID);
+        params.add(AuthConstant.REDIRECT_URI, BACK_DOMAIN + KAKAO_REDIRECT_URI);
+        params.add(AuthConstant.CODE, code);
+
+        HttpEntity<MultiValueMap<String, String>> request =
+            new HttpEntity<>(params, headers);
+
+        ResponseEntity<String> response = rt.exchange(
+            AuthConstant.AUTHORIZATION_URL,
+            HttpMethod.POST,
+            request,
+            String.class
+        );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        KakaoTokenVO kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
+
+        log.debug("카카오 엑세스 토큰: {}", response.getBody());
+
+        return kakaoTokenVO;
+
+    }
 
    /* private final KakaoAuthProvider kakaoAuthProvider;
 
