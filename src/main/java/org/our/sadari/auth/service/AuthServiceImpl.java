@@ -11,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -34,7 +35,7 @@ public class AuthServiceImpl {
     private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
 
     // 토큰 요청
-    public KakaoTokenVO gKakaoTokenVO(String code) throws JsonProcessingException {
+    public KakaoTokenVO getKakaoToken(String code) throws JsonProcessingException {
         RestTemplate rt = new RestTemplate();
 
         HttpHeaders headers = new HttpHeaders();
@@ -59,10 +60,35 @@ public class AuthServiceImpl {
         ObjectMapper objectMapper = new ObjectMapper();
         KakaoTokenVO kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
 
-        log.debug("카카오 엑세스 토큰: {}", response.getBody());
+        // log.debug("카카오 엑세스 토큰: {}", response.getBody());
 
         return kakaoTokenVO;
 
+    }
+
+    // 사용자 정보 요청
+    public String getKakaoAccount(String accessToken) throws JsonProcessingException {
+        RestTemplate rt = new RestTemplate();
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
+        headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        HttpEntity<?> request = new HttpEntity<>(headers);
+
+        ResponseEntity<String> response = rt.exchange(
+              "https://kapi.kakao.com/v2/user/me",
+            HttpMethod.POST,
+            request,
+            String.class
+        );
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        // KakaoAccountVO kakaoAccountVO = objectMapper.readValue(response.getBody(), KakaoAccountVO.class);
+
+        log.debug("카카오 raw 응답: {}", response.getBody());
+
+        return response.getBody();
     }
 
    /* private final KakaoAuthProvider kakaoAuthProvider;
