@@ -69,7 +69,6 @@ public class AuthController {
 
         // return kakaoTokenVO;
 
-        return authServiceImpl.gKakaoTokenVO(code);
+        return authServiceImpl.getKakaoToken(code);
     }
-
 }
