@@ -14,8 +14,6 @@ import java.util.List;
 public class TestController {
 
     private final TestService testService;
-    private final AuthServiceImpl authServiceImpl;
-
 
     @GetMapping("/api/test")
     public List<TestVO> hello() {
