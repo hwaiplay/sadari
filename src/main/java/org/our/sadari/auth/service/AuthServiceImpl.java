@@ -4,6 +4,10 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import org.our.sadari.auth.domain.User;
+import org.our.sadari.auth.repository.UserRepository;
+import org.our.sadari.auth.security.JwtProvider;
 import org.our.sadari.auth.vo.KakaoAccountVO;
 import org.our.sadari.auth.vo.KakaoTokenVO;
 import org.our.sadari.constant.AuthConstant;
@@ -30,6 +34,9 @@ public class AuthServiceImpl {
 
     @Value("${kakao.key.restApi}")
     private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
+
+    private final UserRepository userRepository;
+    private final JwtProvider jwtProvider;
 
     // 토큰 요청
     public KakaoAccountVO getKakaoToken(String code) throws JsonProcessingException {
@@ -90,6 +97,37 @@ public class AuthServiceImpl {
         log.debug("카카오 raw 응답: {}", accountInfoResponse.getBody());
 
         return kakaoAccountVO;
+    }
+
+    // 로그인
+    public String kakaoLogin(String code) throws JsonProcessingException {
+
+        // 1. 토큰 + 사용자 정보 가져오기
+        KakaoAccountVO kakaoUser = getKakaoToken(code);
+
+        String email = kakaoUser.kakao_account.email;
+        String nickName = kakaoUser.kakao_account.profile.nickname;
+        String providerId = String.valueOf(kakaoUser.id);
+
+        // 2. DB 조회
+        User user = userRepository.findByNickname(nickName)
+                .orElseGet(() -> {
+                    // 3. 회원가입
+                    User newUser = User.builder()
+                            // .email(email)
+                            .nickname(nickName)
+                            // .provider("KAKAO")
+                            // .providerId(providerId)
+                            .build();
+                    return userRepository.save(newUser);
+                });
+
+        // 4. JWT 발급
+        String token = jwtProvider.createToken(user.getUserNumb(), user.getNickname());
+
+        log.debug("JWT 발급 완료: {}", token);
+
+        return token;
     }
 
    /* private final KakaoAuthProvider kakaoAuthProvider;

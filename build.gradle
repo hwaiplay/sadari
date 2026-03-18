@@ -63,6 +63,11 @@ dependencies {
 	// 외장 톰캣 환경에 배포할 때 런타임 시 필요한 라이브러리 포함 설정
 	providedRuntime 'org.springframework.boot:spring-boot-starter-tomcat-runtime'
 
+	// JWT
+  implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
+  runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
+
 	// --------------------- 테스트 관련 설정 ---------------------
 	// 보안 기능 테스트용 (현재 주석 처리됨)
 	// testImplementation 'org.springframework.boot:spring-boot-starter-security-test'
