@@ -1,4 +1,13 @@
-// App.tsx
+/**
+ * fileName       : App
+ * author         : Hanwon.Jang
+ * date           : 2026-03-19
+ * description    :
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-19        Hanwon.Jang       주석 추가
+ */
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
 import MainLayout from "./components/Layout/MainLayout/MainLayout";
@@ -8,9 +17,9 @@ import KakaoOAuth from "./pages/Login/KakaoOAuth";
 export default function App() {
   return (
     <Routes>
+      <Route path="/login" element={<Login />} />
       <Route element={<MainLayout />}>
         <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/login" element={<Login />} />
         <Route path="/oauth" element={<KakaoOAuth />} />
         <Route path="/home" element={<Home />} />
         <Route path="/detail/:id" element={<BookDetail />} />
