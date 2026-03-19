@@ -11,6 +11,8 @@ import org.our.sadari.auth.security.JwtProvider;
 import org.our.sadari.auth.vo.KakaoAccountVO;
 import org.our.sadari.auth.vo.KakaoTokenVO;
 import org.our.sadari.constant.AuthConstant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +39,7 @@ public class AuthServiceImpl {
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     // 토큰 요청
     public KakaoAccountVO getKakaoToken(String code) throws JsonProcessingException {
@@ -64,7 +67,7 @@ public class AuthServiceImpl {
         ObjectMapper objectMapper = new ObjectMapper();
         KakaoTokenVO kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
 
-        // log.debug("카카오 엑세스 토큰: {}", response.getBody());
+        log.debug("카카오 엑세스 토큰");
 
         return getKakaoAccount(kakaoTokenVO.getAccess_token());
 
@@ -110,14 +113,14 @@ public class AuthServiceImpl {
         String providerId = String.valueOf(kakaoUser.id);
 
         // 2. DB 조회
-        User user = userRepository.findByNickname(nickName)
+        User user = userRepository.findByProviderId(providerId)
                 .orElseGet(() -> {
                     // 3. 회원가입
                     User newUser = User.builder()
                             // .email(email)
                             .nickname(nickName)
-                            // .provider("KAKAO")
-                            // .providerId(providerId)
+                            .provider("KAKAO")
+                            .providerId(providerId)
                             .build();
                     return userRepository.save(newUser);
                 });

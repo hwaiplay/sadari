@@ -27,7 +27,9 @@ public class User {
     @Column(name = "USER_NICK", nullable = false, unique = true)
     private String nickname;
 
-    // private String provider; // KAKAO
-
-    // private String providerId; // 카카오 id
+    @Column(name = "USER_PROV", nullable = false, unique = true)
+    private String provider; // KAKAO
+    
+    @Column(name = "USER_IDXX", nullable = false, unique = true)
+    private String providerId; // 카카오 id
 }
