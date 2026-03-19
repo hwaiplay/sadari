@@ -1,5 +1,15 @@
-import { useEffect, useState } from "react";
-import axios from "axios";
+/**
+ * fileName       : HOME
+ * author         : Hanwon.Jang
+ * date           : 2026-03-19
+ * description    : 메인 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-19        Hanwon.Jang       주석 추가
+ */
+
+import { useState } from "react";
 import { Container } from "../../components/Layout/Container/Container";
 import Book from "../../components/Book/Book";
 import * as styles from "./Home.css";

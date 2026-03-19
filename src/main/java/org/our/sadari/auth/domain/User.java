@@ -18,16 +18,19 @@ public class User {
         sequenceName = "TM_USERXM_SEQ",
         allocationSize = 1
     )
+
     @Column(name = "USER_NUMB")
     private Long userNumb;
 
     // @Column(name = "USER_EMIL", nullable = false, unique = true)
     // private String email;
 
-    @Column(name = "USER_NICK", nullable = false, unique = true)
+    @Column(name = "USER_NICK", nullable = false)
     private String nickname;
 
-    // private String provider; // KAKAO
-
-    // private String providerId; // 카카오 id
+    @Column(name = "USER_PROV")
+    private String provider; // KAKAO
+    
+    @Column(name = "USER_IDXX", nullable = false, unique = true)
+    private String providerId; // 카카오 id
 }
