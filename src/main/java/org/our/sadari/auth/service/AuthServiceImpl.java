@@ -126,7 +126,7 @@ public class AuthServiceImpl {
                 });
 
         // 4. JWT 발급
-        String token = jwtProvider.createToken(user.getUserNumb(), user.getNickname());
+        String token = jwtProvider.createToken(user.getUserNumb(), user.getProviderId());
 
         log.debug("JWT 발급 완료: {}", token);
 
