@@ -52,18 +52,22 @@ public class AuthServiceImpl {
         params.add(AuthConstant.CODE, code);
 
         HttpEntity<MultiValueMap<String, String>> request =
-            new HttpEntity<>(params, headers);
+                new HttpEntity<>(params, headers);
 
         ResponseEntity<String> response = rt.exchange(
-            AuthConstant.AUTHORIZATION_URL,
-            HttpMethod.POST,
-            request,
-            String.class
+                AuthConstant.AUTHORIZATION_URL,
+                HttpMethod.POST,
+                request,
+                String.class
         );
 
         ObjectMapper objectMapper = new ObjectMapper();
-        KakaoTokenVO kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
-
+        KakaoTokenVO kakaoTokenVO = new KakaoTokenVO();
+        try {
+            kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
         // log.debug("카카오 엑세스 토큰: {}", response.getBody());
 
         return getKakaoAccount(kakaoTokenVO.getAccess_token());
@@ -81,10 +85,10 @@ public class AuthServiceImpl {
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         ResponseEntity<String> accountInfoResponse  = rt.exchange(
-              "https://kapi.kakao.com/v2/user/me",
-            HttpMethod.POST,
-            request,
-            String.class
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                request,
+                String.class
         );
 
         // JSON Parsing (-> kakaoAccountDto)
@@ -92,7 +96,9 @@ public class AuthServiceImpl {
         KakaoAccountVO kakaoAccountVO = null;
         try {
             kakaoAccountVO = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountVO.class);
-        } catch (JsonProcessingException e) { e.printStackTrace(); }
+        } catch (JsonProcessingException e) {
+            e.printStackTrace();
+        }
 
         log.debug("카카오 raw 응답: {}", accountInfoResponse.getBody());
 
@@ -105,7 +111,6 @@ public class AuthServiceImpl {
         // 1. 토큰 + 사용자 정보 가져오기
         KakaoAccountVO kakaoUser = getKakaoToken(code);
 
-        String email = kakaoUser.kakao_account.email;
         String nickName = kakaoUser.kakao_account.profile.nickname;
         String providerId = String.valueOf(kakaoUser.id);
 
@@ -130,7 +135,7 @@ public class AuthServiceImpl {
         return token;
     }
 
-   /* private final KakaoAuthProvider kakaoAuthProvider;
+    /* private final KakaoAuthProvider kakaoAuthProvider;
 
     @Override
     public AuthResponseVO.LoginResponse kakaoLogin(String code) {
