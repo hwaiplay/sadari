@@ -1,6 +1,16 @@
+/**
+ * fileName       : Home.css.ts
+ * author         : Hanwon.Jang
+ * date           : 2026-03-19
+ * description    : 메인 페이지 CSS
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-19        Hanwon.Jang       주석 추가
+ */
+
 import { style } from "@vanilla-extract/css";
 import { vars } from "../../styles/tokens.css";
-import { book } from "../../components/Book/book.css";
 import { breakpoints } from "../../styles/breakpoints";
 
 export const emptyHomeContainer = style({

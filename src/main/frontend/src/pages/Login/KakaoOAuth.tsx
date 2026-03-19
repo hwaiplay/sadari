@@ -1,4 +1,13 @@
-// /oauth 페이지
+/**
+ * fileName       : KakaoOAuth
+ * author         : Hanwon.Jang
+ * date           : 2026-03-19
+ * description    : 토큰 인증
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-19        Hanwon.Jang       주석 추가
+ */
 import { useEffect } from "react";
 
 const KakaoOAuth = () => {

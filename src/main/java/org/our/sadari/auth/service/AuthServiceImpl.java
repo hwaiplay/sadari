@@ -11,6 +11,8 @@ import org.our.sadari.auth.security.JwtProvider;
 import org.our.sadari.auth.vo.KakaoAccountVO;
 import org.our.sadari.auth.vo.KakaoTokenVO;
 import org.our.sadari.constant.AuthConstant;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -37,6 +39,7 @@ public class AuthServiceImpl {
 
     private final UserRepository userRepository;
     private final JwtProvider jwtProvider;
+    private static final Logger log = LoggerFactory.getLogger(AuthServiceImpl.class);
 
     // 토큰 요청
     public KakaoAccountVO getKakaoToken(String code) throws JsonProcessingException {
@@ -52,23 +55,19 @@ public class AuthServiceImpl {
         params.add(AuthConstant.CODE, code);
 
         HttpEntity<MultiValueMap<String, String>> request =
-                new HttpEntity<>(params, headers);
+            new HttpEntity<>(params, headers);
 
         ResponseEntity<String> response = rt.exchange(
-                AuthConstant.AUTHORIZATION_URL,
-                HttpMethod.POST,
-                request,
-                String.class
+            AuthConstant.AUTHORIZATION_URL,
+            HttpMethod.POST,
+            request,
+            String.class
         );
 
         ObjectMapper objectMapper = new ObjectMapper();
-        KakaoTokenVO kakaoTokenVO = new KakaoTokenVO();
-        try {
-            kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        // log.debug("카카오 엑세스 토큰: {}", response.getBody());
+        KakaoTokenVO kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
+
+        log.debug("카카오 엑세스 토큰");
 
         return getKakaoAccount(kakaoTokenVO.getAccess_token());
 
@@ -85,10 +84,10 @@ public class AuthServiceImpl {
         HttpEntity<?> request = new HttpEntity<>(headers);
 
         ResponseEntity<String> accountInfoResponse  = rt.exchange(
-                "https://kapi.kakao.com/v2/user/me",
-                HttpMethod.POST,
-                request,
-                String.class
+              "https://kapi.kakao.com/v2/user/me",
+            HttpMethod.POST,
+            request,
+            String.class
         );
 
         // JSON Parsing (-> kakaoAccountDto)
@@ -96,9 +95,7 @@ public class AuthServiceImpl {
         KakaoAccountVO kakaoAccountVO = null;
         try {
             kakaoAccountVO = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountVO.class);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
+        } catch (JsonProcessingException e) { e.printStackTrace(); }
 
         log.debug("카카오 raw 응답: {}", accountInfoResponse.getBody());
 
@@ -111,31 +108,32 @@ public class AuthServiceImpl {
         // 1. 토큰 + 사용자 정보 가져오기
         KakaoAccountVO kakaoUser = getKakaoToken(code);
 
+        String email = kakaoUser.kakao_account.email;
         String nickName = kakaoUser.kakao_account.profile.nickname;
         String providerId = String.valueOf(kakaoUser.id);
 
         // 2. DB 조회
-        User user = userRepository.findByNickname(nickName)
+        User user = userRepository.findByProviderId(providerId)
                 .orElseGet(() -> {
                     // 3. 회원가입
                     User newUser = User.builder()
                             // .email(email)
                             .nickname(nickName)
-                            // .provider("KAKAO")
-                            // .providerId(providerId)
+                            .provider("KAKAO")
+                            .providerId(providerId)
                             .build();
                     return userRepository.save(newUser);
                 });
 
         // 4. JWT 발급
-        String token = jwtProvider.createToken(user.getUserNumb(), user.getNickname());
+        String token = jwtProvider.createToken(user.getUserNumb(), user.getProviderId());
 
         log.debug("JWT 발급 완료: {}", token);
 
         return token;
     }
 
-    /* private final KakaoAuthProvider kakaoAuthProvider;
+   /* private final KakaoAuthProvider kakaoAuthProvider;
 
     @Override
     public AuthResponseVO.LoginResponse kakaoLogin(String code) {

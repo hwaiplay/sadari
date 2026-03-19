@@ -9,10 +9,9 @@ public class KakaoAccountVO {
     @sierrah
     [Kakao] 현재 mument 에서의 동의 항목
     필수 - 닉네임 (profile_nickname)
-    선택 - 카카오계정 이메일 (account_email)
-    카카오 개발자 문서에 표기된 JSON 서식을 보고 만들었다.
+    필수 - 프로필사진 (profile_image_url)
     */
-    public Long id; //회원번호, *Required*
+    public Long id; //카카오 아이디, *Required*
     public String connected_at; //서비스에 연결된 시각, UTC*
     public Properties properties;
     public KakaoAccount kakao_account;
