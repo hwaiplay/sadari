@@ -10,10 +10,12 @@
  */
 import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
-import MainLayout from "./components/Layout/MainLayout/MainLayout";
+import MainLayout from "./components/Layout/MainLayout";
 import BookDetail from "./pages/BookDetail/BookDetail";
 import Login from "./pages/Login/Login";
 import KakaoOAuth from "./pages/Login/KakaoOAuth";
+import FormLayout from "./components/Layout/FormLayout";
+import Add from "./pages/Add/Add";
 export default function App() {
   return (
     <Routes>
@@ -23,6 +25,9 @@ export default function App() {
         <Route path="/oauth" element={<KakaoOAuth />} />
         <Route path="/home" element={<Home />} />
         <Route path="/detail/:id" element={<BookDetail />} />
+      </Route>
+      <Route element={<FormLayout />}>
+        <Route path="/add" element={<Add />} />
       </Route>
     </Routes>
   );
