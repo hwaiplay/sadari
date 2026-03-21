@@ -1,58 +1,128 @@
 package org.our.sadari.auth.provider;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.auth.vo.KakaoAccountVO;
+import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.common.constant.AuthConstant;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.RestTemplate;
 
+/**
+ * fileName       : KakaoAuthProvider
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-21
+ * description    :
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-21        SeungHyeon.Kang       최초 생성
+ */
 @Component
+@Slf4j
 public class KakaoAuthProvider {
 
-    /*private final MemberRepository memberRepository;
-    private final RefreshTokenService refreshTokenService;
-    private final JwtTokenProvider jwtTokenProvider;
-
-    @Value("${kakao.key.restApi}")
-    private String clientId;
+    @Value("${domain.back}")
+    private String BACK_DOMAIN;  //call back uri
 
     @Value("${kakao.redirect.uri}")
-    private String redirectUri;
+    private String KAKAO_REDIRECT_URI;  //call back uri
 
-    public String getAccessToken(String code) {
+    @Value("${kakao.key.restApi}")
+    private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
 
-       /* HttpHeaders headers = new HttpHeaders();
+    /**
+     * 로그인 로직 (회원가입 여부 확인 및 JWT 발급)
+     * @param: 발급된 카카오 액세스 토큰
+     * @return: 컨트롤러에서 전달받은 인가 코드
+     */
+    public KakaoTokenVO getKakaoToken(String code) throws JsonProcessingException {
+        // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
+        RestTemplate rt = new RestTemplate();
+
+        // HTTP Header 설정: 카카오 토큰 요청은 x-www-form-urlencoded 형식을 사용해야 함
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        // HTTP Body 설정: 토큰 발급에 필요한 필수 파라미터들을 담음
+        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
+        params.add(AuthConstant.KAKAO_GRANT_TYPE, AuthConstant.KAKAO_AUTHORIZATION_CODE); // 고정값: authorization_code
+        params.add(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID);                        // REST API 키
+        params.add(AuthConstant.KAKAO_REDIRECT_URI, BACK_DOMAIN + KAKAO_REDIRECT_URI);    // 등록된 리다이렉트 URI
+        params.add(AuthConstant.KAKAO_CODE, code);                                        // 발급받은 인가 코드
+
+        // Header와 Body를 하나의 Entity로 합침
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
+
+        // 카카오 토큰 서버로 POST 요청 전송 및 응답 수신
+        ResponseEntity<String> response = rt.exchange(
+                AuthConstant.KAKAO_AUTHORIZATION_URL,
+                HttpMethod.POST,
+                request,
+                String.class
+        );
+
+        // JSON 응답 문자열을 KakaoTokenVO 객체로 역직렬화(Parsing)
+        ObjectMapper objectMapper = new ObjectMapper();
+        KakaoTokenVO kakaoTokenVO = new KakaoTokenVO();
+        try {
+            kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
+        } catch (JsonProcessingException e) {
+            log.error("카카오 엑세스 토큰 발급 중 에러발생!: ", e.getMessage());
+            log.debug("카카오 엑세스 토큰 발급 중 에러발생!: ", e.getStackTrace());
+        }
+
+        log.debug("카카오 엑세스 토큰 발급 완료");
+
+        // 발급받은 액세스 토큰을 사용하여 사용자 정보를 가져오는 메서드 호출
+        return kakaoTokenVO;
+    }
+
+    /**
+     * 인가 코드로 카카오 액세스 토큰 요청
+     * @param: 발급된 카카오 액세스 토큰
+     * @return: KakaoAccountVO
+     */
+    public KakaoAccountVO getKakaoAccount(KakaoTokenVO vo) throws JsonProcessingException {
+
+        String accessToken = vo.getAccess_token();
+        RestTemplate rt = new RestTemplate();
+
+        // HTTP Header 설정: 'Bearer ' 방식의 인증 토큰 전송
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Bearer " + accessToken);
         headers.add("Content-type", "application/x-www-form-urlencoded;charset=utf-8");
 
-        // HTTP Body 생성
-        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
-        body.add("grant_type", "authorization_code");
-        body.add("client_id", clientId);
-        body.add("redirect_uri", redirectUri);
-        body.add("code", code);
+        // Body 없이 Header만 담아 요청 객체 생성
+        HttpEntity<?> request = new HttpEntity<>(headers);
 
-        // HTTP 요청 보내기
-        HttpEntity<MultiValueMap<String, String>> kakaoTokenRequest = new HttpEntity<>(body, headers);
-        RestTemplate restTemplate = new RestTemplate();
-        ResponseEntity<String> response = null;
+        // 카카오 API 서버에 사용자 정보 요청 (v2/user/me)
+        ResponseEntity<String> accountInfoResponse = rt.exchange(
+                "https://kapi.kakao.com/v2/user/me",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
 
-        try {
-            response =
-                    restTemplate.exchange(
-                            "https://kauth.kakao.com/oauth/token",
-                            HttpMethod.POST,
-                            kakaoTokenRequest,
-                            String.class);
-        } catch (Exception e) {
-            throw new GlobalException(ErrorConstant.KAKAO_AUTH_ERROR);
-        }
-
-        // HTTP 응답 (JSON) -> 액세스 토큰 파싱
-        String responseBody = response.getBody();
+        // 응답받은 JSON 데이터를 KakaoAccountVO 객체로 변환
         ObjectMapper objectMapper = new ObjectMapper();
-        JsonNode jsonNode = null;
+        KakaoAccountVO kakaoAccountVO = null;
         try {
-            jsonNode = objectMapper.readTree(responseBody);
+            kakaoAccountVO = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountVO.class);
         } catch (JsonProcessingException e) {
-            throw new GlobalException(GlobalErrorCode.KAKAO_AUTH_ERROR);
+            log.error("JSON 파싱 에러 발생: {}", e.getMessage());
+            log.debug("JSON 파싱 에러 발생: {}", e.getStackTrace());
         }
-        return jsonNode.get("access_token").asText(); // 토큰 추출
 
-        */
+        log.debug("카카오 사용자 정보 조회 완료");
+        return kakaoAccountVO;
+    }
 }

@@ -1,4 +1,4 @@
-package org.our.sadari.constant;
+package org.our.sadari.common.constant;
 
 public class ErrorConstant {
 
