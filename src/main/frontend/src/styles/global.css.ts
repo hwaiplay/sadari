@@ -41,3 +41,8 @@ globalStyle("*", {
 globalStyle("*, *::before, *::after", {
   boxSizing: "border-box",
 });
+
+globalStyle("button", {
+  backgroundColor: "#ffffff",
+  border: "none",
+});
