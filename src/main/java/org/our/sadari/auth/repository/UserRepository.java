@@ -1,11 +1,20 @@
 package org.our.sadari.auth.repository;
-import org.our.sadari.auth.domain.User;
+import org.our.sadari.auth.entity.UserEntity;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-
 import java.util.Optional;
 
-public interface UserRepository extends JpaRepository<User, Long> {
+/**
+ * fileName       : UserRepository
+ * author         : hanWon.Jang
+ * date           : 2026-03-18
+ * description    : 카카오 로그인 시 db조회
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-18       hanWon.Jang     최초 생성
+ */
+public interface UserRepository extends JpaRepository<UserEntity, Long> {
 
-    Optional<User> findByProviderId(String provierId);
+    Optional<UserEntity> findByProviderId(String provierId);
 }

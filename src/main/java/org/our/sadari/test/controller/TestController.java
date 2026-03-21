@@ -1,7 +1,6 @@
 package org.our.sadari.test.controller;
 
 import lombok.RequiredArgsConstructor;
-import org.our.sadari.auth.service.AuthServiceImpl;
 import org.our.sadari.test.service.TestService;
 import org.our.sadari.test.vo.TestVO;
 import org.springframework.web.bind.annotation.GetMapping;
