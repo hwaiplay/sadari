@@ -9,6 +9,7 @@ import org.our.sadari.auth.provider.KakaoAuthProvider;
 import org.our.sadari.auth.repository.UserRepository;
 import org.our.sadari.auth.vo.KakaoAccountVO;
 import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.common.constant.AuthConstant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -64,7 +65,7 @@ public class AuthServiceImpl implements AuthService {
                     // 신규 사용자라면 회원가입 처리 (DB 저장)
                     UserEntity newUserEntity = UserEntity.builder()
                             .nickname(nickName)
-                            .provider("KAKAO")
+                            .provider(AuthConstant.PROV_KAKAO)
                             .providerId(providerId)
                             .build();
                     return userRepository.save(newUserEntity);
