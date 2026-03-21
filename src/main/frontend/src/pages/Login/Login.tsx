@@ -11,6 +11,7 @@
 
 import React from "react";
 import { Link } from "react-router-dom";
+import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
 
 function Login() {
   const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
@@ -18,10 +19,17 @@ function Login() {
   const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile_nickname,profile_image`;
 
   return (
-    <main style={{ marginTop: "100px" }}>
-      <img src={"/img/common/logo-b.svg"} alt="사다리 로고" />
-      <h1>로그인</h1>
-      <Link to={KAKAO_AUTH_URL}>카카오로 3초만에 시작하기</Link>
+    <main className={loginContainer}>
+      <div className={content}>
+        <img src={"/img/common/logo-b.svg"} alt="사다리 로고" />
+        <h1 className={title}>
+          {`간편하게 로그인하고
+          독후감 기록으로 책장을 완성해보세요.`}
+        </h1>
+        <Link to={KAKAO_AUTH_URL} className={kakaoLoginBtn}>
+          카카오로 3초만에 시작하기
+        </Link>
+      </div>
     </main>
   );
 }

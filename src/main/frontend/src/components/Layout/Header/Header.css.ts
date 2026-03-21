@@ -4,7 +4,7 @@ import { vars } from "../../../styles/tokens.css";
 export const header = style({
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
+  justifyContent: "space-between",
   width: "100%",
   height: vars.headerHeight,
   position: "fixed",
@@ -13,4 +13,22 @@ export const header = style({
   right: 0,
   zIndex: 997,
   background: "transparent",
+
+  selectors: {
+    "&._form": {
+      padding: "0 8px 0 5px",
+    },
+  },
+});
+
+export const logo = style({
+  margin: "0 auto",
+  display: "inline-block",
+});
+
+export const saveBtn = style({
+  fontSize: "16px",
+  fontFamily: vars.font.heading,
+  width: "44px",
+  height: "44px",
 });
