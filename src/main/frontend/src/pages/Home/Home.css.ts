@@ -31,7 +31,14 @@ export const emptyTitle = style({
   textAlign: "center",
 });
 
-export const rowContainer = style({
+export const row5Container = style({
+  height: "calc(33% + 90px)",
+  backgroundImage: 'url("/img/common/background-top.png")',
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "cover",
+});
+
+export const row = style({
   display: "grid",
   alignItems: "flex-end",
   gap: vars.space.sm,
@@ -53,19 +60,16 @@ export const rowContainer = style({
 
 export const row5 = style({
   justifyContent: "flex-end",
-  backgroundImage: 'url("/img/common/background-top.png")',
-  paddingTop: vars.headerHeight,
-  height: "calc(33% + 90px)",
+  paddingTop: "90px",
   gridTemplateRows: "minmax(0, 1fr)",
+  height: "100%",
 
   "@media": {
     [`screen and (max-width: 767px)`]: {
-      // height: `calc(${vars.bookHeight.sm} + 106px - ${vars.headerHeight} + 30px)`,
       gridTemplateColumns: "repeat(5, 50px)",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
       gridTemplateColumns: "repeat(5, 74px)",
-      // height: `calc(${vars.bookHeight.md} + 40px + ${vars.headerHeight})`,
     },
   },
 });
@@ -77,12 +81,12 @@ export const row6 = style({
   gridTemplateRows: "minmax(0, 1fr)",
   justifyContent: "center",
   backgroundImage: 'url("/img/common/background-middle.png")',
-  "@media": {
-    [`screen and (max-width: 767px)`]: {
-      // height: `calc(${vars.bookHeight.sm} + 30px)`,
-    },
-    [`screen and (min-width: ${breakpoints.tablet}px)`]: {
-      // height: `calc(${vars.bookHeight.md} + 40px)`,
-    },
-  },
+  // "@media": {
+  //   [`screen and (max-width: 767px)`]: {
+  //     height: `calc(${vars.bookHeight.sm} + 30px)`,
+  //   },
+  //   [`screen and (min-width: ${breakpoints.tablet}px)`]: {
+  //     height: `calc(${vars.bookHeight.md} + 40px)`,
+  //   },
+  // },
 });
