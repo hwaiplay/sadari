@@ -1,6 +1,7 @@
 package org.our.sadari.auth.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import org.our.sadari.security.dto.TokenDto;
 
 /**
  * fileName       : AuthService
@@ -14,5 +15,5 @@ import com.fasterxml.jackson.core.JsonProcessingException;
  */
 public interface AuthService {
 
-    String kakaoLogin(String code) throws JsonProcessingException;
+    TokenDto kakaoLogin(String code) throws JsonProcessingException;
 }
