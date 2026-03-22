@@ -11,11 +11,11 @@
 
 import { useState } from "react";
 import { Container } from "../../components/Layout/Container/Container";
-import Book from "../../components/Book/Book";
+import Book from "../../features/Home/Book";
 import * as styles from "./Home.css";
 import { homeDummyData } from "../../assets/dummy";
 import { BookProps } from "../../types/Book";
-import { tilt } from "../../components/Book/book.css";
+import { tilt } from "../../features/Home/book.css";
 import clsx from "clsx";
 
 function chunkArray<T>(array: T[], size: number) {
@@ -41,7 +41,7 @@ function Home() {
   return (
     <>
       {booksData.length !== 0 ? (
-        <>
+        <div style={{ height: "100svh" }}>
           {/* 첫 줄 */}
           <Container className={clsx(styles.row5, styles.rowContainer)}>
             {firstRow.map((book, index) => (
@@ -61,7 +61,7 @@ function Home() {
               ))}
             </Container>
           ))}
-        </>
+        </div>
       ) : (
         <Container className={styles.emptyHomeContainer}>
           <h1 className={styles.emptyTitle}>첫 책을 꽂아 책장을 채워보세요.</h1>

@@ -55,30 +55,34 @@ export const row5 = style({
   justifyContent: "flex-end",
   backgroundImage: 'url("/img/common/background-top.png")',
   paddingTop: vars.headerHeight,
+  height: "calc(33% + 90px)",
+  gridTemplateRows: "minmax(0, 1fr)",
 
   "@media": {
     [`screen and (max-width: 767px)`]: {
-      height: `calc(${vars.bookHeight.sm} + 106px - ${vars.headerHeight} + 30px)`,
-      gridTemplateColumns: "repeat(5, 48px)",
-      // paddingLeft: "calc(16px * 3)",
+      // height: `calc(${vars.bookHeight.sm} + 106px - ${vars.headerHeight} + 30px)`,
+      gridTemplateColumns: "repeat(5, 50px)",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
       gridTemplateColumns: "repeat(5, 74px)",
-      height: `calc(${vars.bookHeight.md} + 40px + ${vars.headerHeight})`,
+      // height: `calc(${vars.bookHeight.md} + 40px + ${vars.headerHeight})`,
     },
   },
 });
 
 export const row6 = style({
+  height: "calc(33% + 30px)",
+  paddingTop: "30px",
   gridTemplateColumns: "repeat(6, 1fr)",
+  gridTemplateRows: "minmax(0, 1fr)",
   justifyContent: "center",
   backgroundImage: 'url("/img/common/background-middle.png")',
   "@media": {
     [`screen and (max-width: 767px)`]: {
-      height: `calc(${vars.bookHeight.sm} + 30px)`,
+      // height: `calc(${vars.bookHeight.sm} + 30px)`,
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
-      height: `calc(${vars.bookHeight.md} + 40px)`,
+      // height: `calc(${vars.bookHeight.md} + 40px)`,
     },
   },
 });
