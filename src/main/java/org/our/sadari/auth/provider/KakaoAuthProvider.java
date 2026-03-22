@@ -3,8 +3,8 @@ package org.our.sadari.auth.provider;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
-import org.our.sadari.auth.vo.KakaoAccountVO;
-import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.auth.dto.KakaoAccountDto;
+import org.our.sadari.auth.dto.KakaoTokenDto;
 import org.our.sadari.common.constant.AuthConstant;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
@@ -44,7 +44,7 @@ public class KakaoAuthProvider {
      * @param: 발급된 카카오 액세스 토큰
      * @return: 컨트롤러에서 전달받은 인가 코드
      */
-    public KakaoTokenVO getKakaoToken(String code) throws JsonProcessingException {
+    public KakaoTokenDto getKakaoToken(String code) throws JsonProcessingException {
         // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
         RestTemplate rt = new RestTemplate();
 
@@ -72,18 +72,18 @@ public class KakaoAuthProvider {
 
         // JSON 응답 문자열을 KakaoTokenVO 객체로 역직렬화(Parsing)
         ObjectMapper objectMapper = new ObjectMapper();
-        KakaoTokenVO kakaoTokenVO = new KakaoTokenVO();
+        KakaoTokenDto kakaoTokenDto = new KakaoTokenDto();
         try {
-            kakaoTokenVO = objectMapper.readValue(response.getBody(), KakaoTokenVO.class);
+            kakaoTokenDto = objectMapper.readValue(response.getBody(), KakaoTokenDto.class);
         } catch (JsonProcessingException e) {
-            log.error("카카오 엑세스 토큰 발급 중 에러발생!: ", e.getMessage());
-            log.debug("카카오 엑세스 토큰 발급 중 에러발생!: ", e.getStackTrace());
+            log.error("카카오 엑세스 토큰 발급 중 에러발생 {}", e.getMessage());
+            log.debug("카카오 엑세스 토큰 발급 중 에러발생: ", e.getStackTrace());
         }
 
         log.debug("카카오 엑세스 토큰 발급 완료");
 
         // 발급받은 액세스 토큰을 사용하여 사용자 정보를 가져오는 메서드 호출
-        return kakaoTokenVO;
+        return kakaoTokenDto;
     }
 
     /**
@@ -91,7 +91,7 @@ public class KakaoAuthProvider {
      * @param: 발급된 카카오 액세스 토큰
      * @return: KakaoAccountVO
      */
-    public KakaoAccountVO getKakaoAccount(KakaoTokenVO vo) throws JsonProcessingException {
+    public KakaoAccountDto getKakaoAccount(KakaoTokenDto vo) throws JsonProcessingException {
 
         String accessToken = vo.getAccess_token();
         RestTemplate rt = new RestTemplate();
@@ -114,15 +114,15 @@ public class KakaoAuthProvider {
 
         // 응답받은 JSON 데이터를 KakaoAccountVO 객체로 변환
         ObjectMapper objectMapper = new ObjectMapper();
-        KakaoAccountVO kakaoAccountVO = null;
+        KakaoAccountDto kakaoAccountDto = null;
         try {
-            kakaoAccountVO = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountVO.class);
+            kakaoAccountDto = objectMapper.readValue(accountInfoResponse.getBody(), KakaoAccountDto.class);
         } catch (JsonProcessingException e) {
             log.error("JSON 파싱 에러 발생: {}", e.getMessage());
-            log.debug("JSON 파싱 에러 발생: {}", e.getStackTrace());
+            log.debug("JSON 파싱 에러 발생: ", e.getStackTrace());
         }
 
         log.debug("카카오 사용자 정보 조회 완료");
-        return kakaoAccountVO;
+        return kakaoAccountDto;
     }
 }
