@@ -14,8 +14,8 @@ import MainLayout from "./components/Layout/MainLayout";
 import BookDetail from "./pages/BookDetail/BookDetail";
 import Login from "./pages/Login/Login";
 import KakaoOAuth from "./pages/Login/KakaoOAuth";
-import FormLayout from "./components/Layout/FormLayout";
 import Add from "./pages/Add/Add";
+import AddLayout from "./pages/Add/AddLayout";
 export default function App() {
   return (
     <Routes>
@@ -26,7 +26,7 @@ export default function App() {
         <Route path="/home" element={<Home />} />
         <Route path="/detail/:id" element={<BookDetail />} />
       </Route>
-      <Route element={<FormLayout />}>
+      <Route element={<AddLayout />}>
         <Route path="/add" element={<Add />} />
       </Route>
     </Routes>

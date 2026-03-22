@@ -42,20 +42,22 @@ function Home() {
     <>
       {booksData.length !== 0 ? (
         <div style={{ height: "100svh" }}>
-          {/* 첫 줄 */}
-          <Container className={clsx(styles.row5, styles.rowContainer)}>
-            {firstRow.map((book, index) => (
-              <Book
-                key={book.id}
-                {...book}
-                className={index === firstRow.length - 5 ? tilt : ""}
-              />
-            ))}
+          <Container className={styles.row5Container}>
+            {/* 첫 줄 */}
+            <div className={clsx(styles.row5, styles.row)}>
+              {firstRow.map((book, index) => (
+                <Book
+                  key={book.id}
+                  {...book}
+                  className={index === firstRow.length - 5 ? tilt : ""}
+                />
+              ))}
+            </div>
           </Container>
 
           {/* 나머지 */}
           {Array.from({ length: rowCount }).map((_, rowIndex) => (
-            <Container className={clsx(styles.row6, styles.rowContainer)}>
+            <Container className={clsx(styles.row6, styles.row)}>
               {rows[rowIndex]?.map((book) => (
                 <Book key={book.id} {...book} />
               ))}

@@ -43,6 +43,5 @@ globalStyle("*, *::before, *::after", {
 });
 
 globalStyle("button", {
-  backgroundColor: "#ffffff",
   border: "none",
 });

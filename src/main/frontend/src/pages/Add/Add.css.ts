@@ -10,22 +10,8 @@
  */
 
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../styles/tokens.css";
 
-export const searchBtn = style({
-  width: "112px",
-  height: "166px",
-  borderRadius: "6px",
-  backgroundColor: "#ffffff",
-  border: `1px solid ${vars.color.gray500}`,
-});
-
-export const searchBtnText = style({
-  color: vars.color.gray500,
-  fontSize: vars.fontSize.body,
-  marginTop: "19px",
-});
-
+// 독서 상태 버튼 컨테이너
 export const statusContainer = style({
   display: "flex",
   gap: "10px",

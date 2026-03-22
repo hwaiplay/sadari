@@ -2,14 +2,14 @@
  * fileName       : SearchBook
  * author         : Hanwon.Jang
  * date           : 2026-03-21
- * description    :
+ * description    : 책 검색하기 버튼 컴포넌트
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-21       Hanwon.Jang       최초 생성
  */
 
-import { searchBtn, searchBtnText } from "../../pages/Add/Add.css";
+import { searchBtn, searchBtnText } from "./SearchBook.css";
 
 interface SearchBookProps {}
 
