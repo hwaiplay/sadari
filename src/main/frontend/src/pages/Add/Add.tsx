@@ -1,7 +1,7 @@
 import React from "react";
 import { Container } from "../../components/Layout/Container/Container";
-import SearchBook from "../../features/Add/SearchBook";
-import EachLine from "../../features/Add/EachLine";
+import SearchBook from "../../features/Add/components/SearchBook";
+import FormField from "../../features/Add/fields/FormField";
 import { Button } from "../../components/Button/Button";
 import { statusContainer } from "./Add.css";
 
@@ -19,14 +19,16 @@ import { statusContainer } from "./Add.css";
 function Add() {
   return (
     <Container>
-      <SearchBook />
-      <EachLine title="독서상태">
-        <div className={statusContainer}>
-          <Button>다 읽었어요</Button>
-          <Button variant="disable">읽고 있어요</Button>
-          <Button variant="disable">중단 했어요</Button>
-        </div>
-      </EachLine>
+      <form action="" method="post">
+        <SearchBook />
+        <FormField title="독서상태">
+          <div className={statusContainer}>
+            <Button>다 읽었어요</Button>
+            <Button variant="disable">읽고 있어요</Button>
+            <Button variant="disable">중단 했어요</Button>
+          </div>
+        </FormField>
+      </form>
     </Container>
   );
 }

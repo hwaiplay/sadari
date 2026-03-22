@@ -17,6 +17,7 @@ export const header = style({
   selectors: {
     "&._form": {
       padding: "0 8px 0 5px",
+      backgroundColor: vars.color.background,
     },
   },
 });
