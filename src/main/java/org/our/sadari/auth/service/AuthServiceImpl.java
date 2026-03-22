@@ -3,14 +3,19 @@ package org.our.sadari.auth.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.our.sadari.auth.entity.UserEntity;
-import org.our.sadari.auth.provider.JwtProvider;
-import org.our.sadari.auth.provider.KakaoAuthProvider;
-import org.our.sadari.auth.repository.UserRepository;
 import org.our.sadari.auth.dto.KakaoAccountDto;
 import org.our.sadari.auth.dto.KakaoTokenDto;
+import org.our.sadari.auth.entity.TokenHistoryEntity;
+import org.our.sadari.auth.entity.UserEntity;
+import org.our.sadari.auth.provider.KakaoAuthProvider;
+import org.our.sadari.auth.repository.TokenHistoryRepository;
+import org.our.sadari.auth.repository.UserRepository;
 import org.our.sadari.common.constant.AuthConstant;
+import org.our.sadari.security.dto.TokenDto;
+import org.our.sadari.security.jwt.JwtProvider;
 import org.springframework.stereotype.Service;
+
+import java.time.LocalDateTime;
 
 /**
  * fileName       : AuthServiceImpl
@@ -29,6 +34,7 @@ import org.springframework.stereotype.Service;
 public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
+    private final TokenHistoryRepository tokenHistoryRepository;
     private final KakaoAuthProvider kakaoAuthProvider;
     private final JwtProvider jwtProvider;
 
@@ -38,7 +44,7 @@ public class AuthServiceImpl implements AuthService {
      * @return: 컨트롤러에서 전달받은 인가 코드
      */
     @Override
-    public String kakaoLogin(String code) throws JsonProcessingException {
+    public TokenDto kakaoLogin(String code) throws JsonProcessingException {
 
         // 카카오로부터 토큰 발급
         KakaoTokenDto kakaoTokenDto = kakaoAuthProvider.getKakaoToken(code);
@@ -60,6 +66,7 @@ public class AuthServiceImpl implements AuthService {
                                 .nickname(nickName)
                                 .userProv(AuthConstant.PROV_KAKAO)
                                 .userIdxx(providerId)
+                                .userRole("USER")
                                 .porfPath(profileImg)
                                 .build();
                         return userRepository.save(newUserEntity);
@@ -72,8 +79,23 @@ public class AuthServiceImpl implements AuthService {
             log.debug("회원등록 중 오류발생: ", e.getStackTrace());
         }
 
+        String accessToken = jwtProvider.createAccessToken(userEntity.getUserNumb(), userEntity.getUserRole());
+        String refreshToken = jwtProvider.createRefreshToken(userEntity.getUserNumb());
+
+        // 기존 토큰 삭제
+        tokenHistoryRepository.deleteByUserNumb(userEntity);
+
+        // 새 토큰 저장
+        TokenHistoryEntity tokenEntity = new TokenHistoryEntity(
+                userEntity,
+                refreshToken,
+                LocalDateTime.now().plusDays(7)
+        );
+        // 토큰 히스토리 삭제
+        tokenHistoryRepository.save(tokenEntity);
+
         // 서비스 전용 JWT 토큰 발급 및 반환
-        String token = jwtProvider.createToken(userEntity.getUserNumb(), userEntity.getUserIdxx());
+        TokenDto token = new TokenDto(accessToken, refreshToken);
 
         log.debug("로그인 처리 및 JWT 발급 완료: {}", token);
 

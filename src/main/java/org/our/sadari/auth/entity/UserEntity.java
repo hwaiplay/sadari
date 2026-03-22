@@ -53,6 +53,10 @@ public class UserEntity {
     @Column(name = "USER_IDXX", nullable = false, unique = true)
     private String userIdxx;
 
+    //소셜 ID 값
+    @Column(name = "USER_ROLE", nullable = false, unique = true)
+    private String userRole;
+
     //가입일
     @CreatedDate
     @Column(name = "JOIN_DATE", updatable = false)
