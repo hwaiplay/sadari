@@ -7,7 +7,6 @@ import { Link } from "react-router-dom";
 function Book({
   id,
   title,
-  author,
   color,
   className,
 }: BookProps & { className?: string }) {
@@ -20,14 +19,6 @@ function Book({
     >
       <div className={styles.title}>{title}</div>
     </Link>
-    // <div
-    //   className={`${styles.book} ${className ?? ""}`}
-    //   style={{ backgroundColor: `#${color}` }}
-    //   onClick={handleClick}
-    // >
-    //   <div className={styles.title}>{title}</div>
-    //   {/* <div className={styles.author}>{author}</div> */}
-    // </div>
   );
 }
 
