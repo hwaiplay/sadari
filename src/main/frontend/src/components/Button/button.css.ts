@@ -31,6 +31,11 @@ export const buttonVariant = styleVariants({
     background: vars.color.black025,
     color: "white",
   },
+  disable: {
+    background: vars.color.gray200,
+    border: `1px solid ${vars.color.gray500}`,
+    color: vars.color.gray500,
+  },
 });
 
 export const buttonSize = styleVariants({
