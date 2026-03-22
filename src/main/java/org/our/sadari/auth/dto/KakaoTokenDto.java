@@ -1,9 +1,9 @@
-package org.our.sadari.auth.vo;
+package org.our.sadari.auth.dto;
 
 import lombok.Data;
 
 @Data
-public class KakaoTokenVO {
+public class KakaoTokenDto {
     /*
     카카오에서 보내는 access token 을 매핑하는 클래스다.
     직접 요청을 던져보고 파라미터를 따왔다.
