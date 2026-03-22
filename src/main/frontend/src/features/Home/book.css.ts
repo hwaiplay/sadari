@@ -13,15 +13,15 @@ export const book = style({
   fontStyle: "normal",
   textDecoration: "none",
   color: vars.color.black,
+  height: "100%",
 
   "@media": {
     [`screen and (max-width: 767px)`]: {
-      height: vars.bookHeight.sm,
+      // height: vars.bookHeight.sm,
       borderRadius: vars.radius.sm,
-      // maxWidth: "48px",
     },
     [`screen and (min-width: ${breakpoints.tablet}px)`]: {
-      height: vars.bookHeight.md,
+      // height: vars.bookHeight.md,
       borderRadius: vars.radius.md,
     },
   },
