@@ -1,7 +1,14 @@
 package org.our.sadari.auth.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import org.springframework.data.annotation.CreatedDate;
+import org.springframework.data.jpa.domain.support.AuditingEntityListener;
+
+import java.time.LocalDateTime;
 
 /**
  * fileName       : User
@@ -19,6 +26,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "TM_USERXM")
+@EntityListeners(AuditingEntityListener.class)
 public class UserEntity {
 
     @Id
@@ -39,9 +47,18 @@ public class UserEntity {
     
     //회원 로그인 소셜타입
     @Column(name = "USER_PROV")
-    private String provider; // KAKAO
+    private String userProv;
     
     //소셜 ID 값
     @Column(name = "USER_IDXX", nullable = false, unique = true)
-    private String providerId; // 카카오 id
+    private String userIdxx;
+
+    //가입일
+    @CreatedDate
+    @Column(name = "JOIN_DATE", updatable = false)
+    private LocalDateTime joinDate;
+
+    //소셜 프로필 사진 경로
+    @Column(name = "PROF_PATH", length = 500)
+    private String porfPath;
 }

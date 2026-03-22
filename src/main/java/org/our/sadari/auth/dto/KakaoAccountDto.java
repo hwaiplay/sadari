@@ -1,9 +1,9 @@
-package org.our.sadari.auth.vo;
+package org.our.sadari.auth.dto;
 
 import lombok.Data;
 import java.util.Properties;
 
-public class KakaoAccountVO {
+public class KakaoAccountDto {
 
     /*
     @sierrah

@@ -7,10 +7,9 @@ import org.our.sadari.auth.entity.UserEntity;
 import org.our.sadari.auth.provider.JwtProvider;
 import org.our.sadari.auth.provider.KakaoAuthProvider;
 import org.our.sadari.auth.repository.UserRepository;
-import org.our.sadari.auth.vo.KakaoAccountVO;
-import org.our.sadari.auth.vo.KakaoTokenVO;
+import org.our.sadari.auth.dto.KakaoAccountDto;
+import org.our.sadari.auth.dto.KakaoTokenDto;
 import org.our.sadari.common.constant.AuthConstant;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 /**
@@ -29,15 +28,6 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public class AuthServiceImpl implements AuthService {
 
-    @Value("${domain.back}")
-    private String BACK_DOMAIN;  //call back uri
-
-    @Value("${kakao.redirect.uri}")
-    private String KAKAO_REDIRECT_URI;  //call back uri
-
-    @Value("${kakao.key.restApi}")
-    private String KAKAO_CLIENT_ID; //카카오 앱 REST API 키
-
     private final UserRepository userRepository;
     private final KakaoAuthProvider kakaoAuthProvider;
     private final JwtProvider jwtProvider;
@@ -51,28 +41,39 @@ public class AuthServiceImpl implements AuthService {
     public String kakaoLogin(String code) throws JsonProcessingException {
 
         // 카카오로부터 토큰 발급
-        KakaoTokenVO kakaoTokenVO = kakaoAuthProvider.getKakaoToken(code);
+        KakaoTokenDto kakaoTokenDto = kakaoAuthProvider.getKakaoToken(code);
         // 가져온 토큰으로 유저 정보 조회
-        KakaoAccountVO kakaoAccountVO = kakaoAuthProvider.getKakaoAccount(kakaoTokenVO);
+        KakaoAccountDto kakaoAccountDto = kakaoAuthProvider.getKakaoAccount(kakaoTokenDto);
 
         // VO에서 필요한 사용자 정보 추출
-        String nickName = kakaoAccountVO.kakao_account.profile.nickname;
-        String providerId = String.valueOf(kakaoAccountVO.id); // 카카오 고유 식별자
+        String providerId = String.valueOf(kakaoAccountDto.id);                       // 카카오 고유 식별자
+        String nickName = kakaoAccountDto.kakao_account.profile.nickname;             // 카카오 닉네임
+        String profileImg = kakaoAccountDto.kakao_account.profile.profile_image_url;  // 카카오 프로필 이미지
 
-        // DB 조회: 기존에 가입된 사용자인지 확인
-        UserEntity userEntity = userRepository.findByProviderId(providerId)
-                .orElseGet(() -> {
-                    // 신규 사용자라면 회원가입 처리 (DB 저장)
-                    UserEntity newUserEntity = UserEntity.builder()
-                            .nickname(nickName)
-                            .provider(AuthConstant.PROV_KAKAO)
-                            .providerId(providerId)
-                            .build();
-                    return userRepository.save(newUserEntity);
-                });
+        UserEntity userEntity = new UserEntity();
+        try {
+            // DB 조회: 기존에 가입된 사용자인지 확인
+            userEntity = userRepository.findByUserIdxx(providerId)
+                    .orElseGet(() -> {
+                        // 신규 사용자라면 회원가입 처리 (DB 저장)
+                        UserEntity newUserEntity = UserEntity.builder()
+                                .nickname(nickName)
+                                .userProv(AuthConstant.PROV_KAKAO)
+                                .userIdxx(providerId)
+                                .porfPath(profileImg)
+                                .build();
+                        return userRepository.save(newUserEntity);
+                    });
+
+            log.info("회원가입 완료 {}", providerId);
+
+        } catch (Exception e){
+            log.error("회원등록 중 오류발생 {}", e.getMessage());
+            log.debug("회원등록 중 오류발생: ", e.getStackTrace());
+        }
 
         // 서비스 전용 JWT 토큰 발급 및 반환
-        String token = jwtProvider.createToken(userEntity.getUserNumb(), userEntity.getProviderId());
+        String token = jwtProvider.createToken(userEntity.getUserNumb(), userEntity.getUserIdxx());
 
         log.debug("로그인 처리 및 JWT 발급 완료: {}", token);
 

@@ -20,6 +20,27 @@ import java.util.Date;
 @Component
 public class JwtProvider {
 
+    /*private Key secretkey;
+
+    private final String secretKey;
+    private final long accessTokenValidityMilliSeconds;
+    private final long refreshTokenValidityMilliSeconds;
+
+
+    public JwtProvider(@Value("${jwt.secret_key}") String secretKey,
+                         @Value("${jwt.access-token-validity-in-seconds}") long accessTokenValiditySeconds,
+                         @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds) {
+        this.secretKey = secretKey;
+        this.accessTokenValidityMilliSeconds = accessTokenValiditySeconds * 1000;
+        this.refreshTokenValidityMilliSeconds = refreshTokenValiditySeconds * 1000;
+    }
+
+    @PostConstruct
+    public void initKey() {
+        byte[] keyBytes = Decoders.BASE64.decode(secretKey);
+        this.secretkey = Keys.hmacShaKeyFor(keyBytes);
+    }*/
+
     private final SecretKey key =
             Keys.hmacShaKeyFor("mysecretkeymysecretkeymysecretkey".getBytes());
 
