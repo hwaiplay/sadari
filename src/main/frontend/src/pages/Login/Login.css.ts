@@ -34,11 +34,12 @@ export const kakaoLoginBtn = style({
   backgroundColor: "#FEE500",
   color: "#000000",
   fontSize: vars.fontSize.body,
-  width: "80%",
+  width: "300px",
   height: "40px",
   textDecoration: "none",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
   borderRadius: vars.radius.md,
+  overflow: "hidden",
 });
