@@ -1,5 +1,5 @@
 /**
- * fileName       : EachLine
+ * fileName       : FormField
  * author         : Hanwon.Jang
  * date           : 2026-03-21
  * description    : 기록하기 폼 내의 각 입력 영역
@@ -10,19 +10,20 @@
  */
 
 import React, { ReactNode } from "react";
+import { fieldTitle } from "./FormField.css";
 
-interface EachLineProps {
+interface FormFieldProps {
   title: string;
   children: ReactNode;
 }
 
-const EachLine = ({ title, children }: EachLineProps) => {
+const FormField = ({ title, children }: FormFieldProps) => {
   return (
     <div>
-      <h1>{title}</h1>
+      <h1 className={fieldTitle}>{title}</h1>
       {children}
     </div>
   );
 };
 
-export default EachLine;
+export default FormField;
