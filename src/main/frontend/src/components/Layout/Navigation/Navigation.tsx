@@ -7,7 +7,7 @@ function Navigation() {
   const navigate = useNavigate();
   //홈 버튼 네비게이트
   const HomeOnClick = () => {
-    navigate("/");
+    navigate("/home");
   };
   //기록하기 버튼 네비게이트
 
