@@ -12,7 +12,6 @@ function FormLayout() {
       <main>
         <Outlet />
       </main>
-      <Navigation />
     </div>
   );
 }
