@@ -15,6 +15,11 @@ export const vars = createGlobalTheme(":root", {
     black: "#151515",
     background: "#f0f0f0",
     black025: "#15151550",
+    gray100: "#f0f0f0",
+    gray200: "#e5e5e5",
+    gray300: "#d9d9d9",
+    gray400: "#D0D0D0",
+    gray500: "#C1C1C1",
   },
 
   space: {
