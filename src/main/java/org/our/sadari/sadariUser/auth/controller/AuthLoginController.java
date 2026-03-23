@@ -39,6 +39,31 @@ public class AuthLoginController {
     private final JwtProvider jwtProvider;
     private final TokenHistoryRepository tokenHistoryRepository;
 
+    // 로그인 상태 확인 API
+    @GetMapping("/me")
+    public ResponseEntity<?> me(HttpServletRequest request) {
+
+        String refreshToken = extractRefreshToken(request);
+
+        if (refreshToken == null) {
+            return ResponseEntity.status(401).build();
+        }
+
+        TokenHistoryEntity tokenEntity = tokenHistoryRepository
+                .findByRefrTokn(refreshToken)
+                .orElse(null);
+
+        if (tokenEntity == null || tokenEntity.isExpired()) {
+            return ResponseEntity.status(401).build();
+        }
+
+        if (!jwtProvider.validateToken(refreshToken)) {
+            return ResponseEntity.status(401).build();
+        }
+
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/callback/kakao")
     public void kakaoAuthLogin (@RequestParam("code") String code,
                                 HttpServletResponse response) throws Exception {
@@ -48,6 +73,7 @@ public class AuthLoginController {
         //refreshToken은 쿠키로 저장
         ResponseCookie cookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
                 .httpOnly(true)
+                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7) // 7일
                 .build();
