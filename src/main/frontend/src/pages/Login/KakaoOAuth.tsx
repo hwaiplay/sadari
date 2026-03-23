@@ -2,28 +2,46 @@
  * fileName       : KakaoOAuth
  * author         : Hanwon.Jang
  * date           : 2026-03-19
- * description    : 토큰 인증
+ * description    : 카카오 로그인 토큰 인증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-19        Hanwon.Jang       주석 추가
+ * 2026-03-23        Hanwon.Jang       로그인 성공 로직 수정
  */
 import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 const KakaoOAuth = () => {
+  const [params] = useSearchParams();
+  const navigate = useNavigate();
+
   useEffect(() => {
-    const url = new URL(window.location.href);
-    const token = url.searchParams.get("token");
+    // accessToken을 URL에서 가져와 localStorage에 저장
+    const accessToken = params.get("accessToken");
+    localStorage.setItem("token", accessToken || "");
 
-    if (token) {
-      localStorage.setItem("token", token); // 저장
-      window.location.href = "/home"; // 홈으로 이동
-
-      alert("WELCOME TO SADARI !");
+    if (accessToken) {
+      navigate("/home");
+    } else {
+      alert("로그인에 실패했습니다. 다시 시도해주세요.");
+      navigate("/login");
     }
   }, []);
 
-  return <div>로그인 처리중...</div>;
+  return (
+    <div
+      style={{
+        textAlign: "center",
+        height: "100svh",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      로그인 처리중...
+    </div>
+  );
 };
 
 export default KakaoOAuth;
