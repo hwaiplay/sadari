@@ -54,7 +54,7 @@ public class UserEntity {
     private String userIdxx;
 
     //소셜 ID 값
-    @Column(name = "USER_ROLE", nullable = false, unique = true)
+    @Column(name = "USER_ROLE", nullable = false)
     private String userRole;
 
     //가입일

@@ -93,7 +93,7 @@ public class AuthServiceImpl implements AuthService {
                 refreshToken,
                 LocalDateTime.now().plusDays(7)
         );
-        // 토큰 히스토리 삭제
+
         tokenHistoryRepository.save(tokenEntity);
 
         // 서비스 전용 JWT 토큰 발급 및 반환
