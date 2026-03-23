@@ -9,7 +9,7 @@
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Container } from "../../components/Layout/Container/Container";
 import Book from "../../features/Home/Book";
 import * as styles from "./Home.css";

@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-19        Hanwon.Jang       주석 추가
+ * 2026-03-23        Hanwon.Jang       로그인 성공 로직 수정
  */
 import { useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
