@@ -9,7 +9,6 @@
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
-import React from "react";
 import { Link } from "react-router-dom";
 import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
 

@@ -6,29 +6,28 @@
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-03-19        Hanwon.Jang       주석 추가
+ * 2026-03-19        Hanwon.Jang       Router 분리
  */
-import { Routes, Route, Navigate } from "react-router-dom";
 import Home from "./pages/Home/Home";
-import MainLayout from "./components/Layout/MainLayout";
-import BookDetail from "./pages/BookDetail/BookDetail";
 import Login from "./pages/Login/Login";
-import KakaoOAuth from "./pages/Login/KakaoOAuth";
-import Add from "./pages/Add/Add";
-import AddLayout from "./pages/Add/AddLayout";
+import { useEffect, useState } from "react";
+import { checkLogin } from "./api/user/loginCheck";
+import { initAuth } from "./api/user/auth";
+import Router from "./Router/Router";
+
 export default function App() {
-  return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/oauth" element={<KakaoOAuth />} />
-        <Route path="/home" element={<Home />} />
-        <Route path="/detail/:id" element={<BookDetail />} />
-      </Route>
-      <Route element={<AddLayout />}>
-        <Route path="/add" element={<Add />} />
-      </Route>
-    </Routes>
-  );
+  return <Router />;
+  // const [loadin/g, setLoading] = useState(true);
+  // const [isLogin, setIsLogin] = useState<boolean>(false);
+
+  // useEffect(() => {
+  //   const init = async () => {
+  //     await initAuth();
+  //   };
+  //   init();
+  // }, []);
+
+  // if (isLogin === null) return <div>로딩중...</div>;
+
+  // return isLogin ? <Home /> : <Login />;
 }
