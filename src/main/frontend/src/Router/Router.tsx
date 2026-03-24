@@ -19,18 +19,39 @@ import Home from "../pages/Home/Home";
 import AddLayout from "../pages/Add/AddLayout";
 import Add from "../pages/Add/Add";
 import BookDetail from "../pages/BookDetail/BookDetail";
+import ProtectedRoute from "./ProtectedRoute";
 
 const Router = () => {
   return (
     <Routes>
+      {/* 로그인 */}
       <Route path="/login" element={<Login />} />
-      <Route element={<MainLayout />}>
-        <Route path="/" element={<Navigate to="/login" replace />} />
-        <Route path="/oauth" element={<KakaoOAuth />} />
+      {/* 카카오 로그인 검증 */}
+      <Route path="/oauth" element={<KakaoOAuth />} />
+
+      <Route
+        element={
+          <ProtectedRoute>
+            <MainLayout />
+          </ProtectedRoute>
+        }
+      >
+        {/* 메인 */}
+        {/* home으로 리디렉션 */}
+        <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
+        {/* 독후감 상세보기 */}
         <Route path="/detail/:id" element={<BookDetail />} />
       </Route>
-      <Route element={<AddLayout />}>
+
+      {/* 기록하기 */}
+      <Route
+        element={
+          <ProtectedRoute>
+            <AddLayout />
+          </ProtectedRoute>
+        }
+      >
         <Route path="/add" element={<Add />} />
       </Route>
     </Routes>
