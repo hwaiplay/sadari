@@ -1,5 +1,8 @@
 package org.our.sadari.global.common.result;
 
+import lombok.Getter;
+import org.our.sadari.global.common.util.MessageUtils;
+
 /**
  * packageName    : org.our.sadari.global.common.result
  * fileName       : ResultData.java
@@ -11,8 +14,6 @@ package org.our.sadari.global.common.result;
  * -----------------------------------------------------------
  * 2026-03-24       hanwon.Jang       최초 생성
  */
-
-import lombok.Getter;
 
 @Getter
 public class ResultData<T> {
@@ -48,7 +49,9 @@ public class ResultData<T> {
      * 실패 응답 (messageKey 그대로 - 내부용)
      */
     public static <T> ResultData<T> fail(ResultEnum resultEnum) {
-        return new ResultData<>(resultEnum.getCode(), resultEnum.getMessageKey(), null);
+        // Enum의 키를 번역기에 넣어서 실제 메시지를 뽑아옵니다.
+        String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
+        return new ResultData<>(resultEnum.getCode(), translatedMessage, null);
     }
 
     /**
