@@ -5,7 +5,7 @@ import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
 /**
- * fileName       : TokenHistoryDto
+ * fileName       : TokenHistoryEntity
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
  * description    :

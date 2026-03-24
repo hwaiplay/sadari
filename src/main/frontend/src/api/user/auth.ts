@@ -1,7 +1,7 @@
 import api from "../axios";
 import { useAuthStore } from "../../store/authStore";
 
-export const initAuth = async () => {
+export const refresh = async () => {
   try {
     const res = await api.post("/oauth/refresh");
 

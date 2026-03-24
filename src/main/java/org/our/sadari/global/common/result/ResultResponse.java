@@ -1,10 +1,10 @@
-package org.our.sadari.global.common.exception;
+package org.our.sadari.global.common.result;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * fileName       : RsultResponse
+ * fileName       : ResultResponse
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
  * description    :
@@ -15,7 +15,7 @@ import lombok.Getter;
  */
 @Getter
 @AllArgsConstructor
-public class RsultResponse {
+public class ResultResponse {
 
     private int code;       // 에러 코드
     private String message; // 메시지
