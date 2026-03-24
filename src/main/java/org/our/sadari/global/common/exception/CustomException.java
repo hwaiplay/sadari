@@ -1,6 +1,8 @@
 package org.our.sadari.global.common.exception;
 
 import lombok.Getter;
+
+import org.our.sadari.global.common.result.ResultEnum;
 import org.springframework.http.HttpStatus;
 
 /**
