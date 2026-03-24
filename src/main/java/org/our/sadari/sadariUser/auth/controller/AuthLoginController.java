@@ -5,9 +5,13 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import javax.naming.spi.DirStateFactory.Result;
+
 import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.global.common.exception.CustomException;
-import org.our.sadari.global.common.exception.ResultEnum;
+import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.sadariUser.auth.entity.TokenHistoryEntity;
@@ -41,12 +45,12 @@ public class AuthLoginController {
 
     // 로그인 상태 확인 API
     @GetMapping("/me")
-    public ResponseEntity<?> me(HttpServletRequest request) {
+    public ResultData<?> me(HttpServletRequest request) {
 
         String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(401).build();
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         TokenHistoryEntity tokenEntity = tokenHistoryRepository
@@ -54,14 +58,14 @@ public class AuthLoginController {
                 .orElse(null);
 
         if (tokenEntity == null || tokenEntity.isExpired()) {
-            return ResponseEntity.status(401).build();
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         if (!jwtProvider.validateToken(refreshToken)) {
-            return ResponseEntity.status(401).build();
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        return ResponseEntity.ok().build();
+        return ResultData.success(); // 인증된 상태, 필요한 경우 사용자 정보도 반환 가능
     }
 
     @GetMapping("/callback/kakao")
@@ -70,19 +74,30 @@ public class AuthLoginController {
 
         TokenDto token = authService.kakaoLogin(code);
 
-        //refreshToken은 쿠키로 저장
-        ResponseCookie cookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
+        //refreshToken 쿠키로 저장
+        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
                 .httpOnly(true)
+                .sameSite("None") 
                 // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7) // 7일
                 .build();
+                
+        //accessToken 쿠키로 저장
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token.getAccessToken())
+                .httpOnly(true)
+                .sameSite("None") 
+                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
+                .path("/")
+                .maxAge(60 * 60) // 1시간
+                .build();
+        
 
-        response.addHeader("Set-Cookie", cookie.toString());
+        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
+        response.addHeader("Set-Cookie", accessTokenCookie.toString());
 
-        //accessToken만 프론트로 전달
         response.sendRedirect(
-                "http://localhost:5173/oauth?accessToken=" + token.getAccessToken()
+                "http://localhost:5173/oauth"
         );
     }
 
@@ -92,31 +107,31 @@ public class AuthLoginController {
      * @return
      */
     @PostMapping("/refresh")
-    public ResponseEntity<TokenDto> refresh(HttpServletRequest request) {
+    public ResultData<TokenDto> refresh(HttpServletRequest request) {
 
         // 쿠키에서 refreshToken 꺼내기
         String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
             // 인증 자체가 안 된 상태
-            throw new CustomException(ResultEnum.AUTH_FAIL, HttpStatus.UNAUTHORIZED);
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // 조회 (존재 여부 확인)
         TokenHistoryEntity tokenEntity = tokenHistoryRepository
                 .findByRefrTokn(refreshToken)
                 .orElseThrow(() ->
-                        new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
+                    new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
                 );
 
         // 만료 체크 (DB 기준)
         if (tokenEntity.isExpired()) {
-            throw new CustomException(ResultEnum.TOKEN_EXPIRED, HttpStatus.UNAUTHORIZED);
+            return ResultData.fail(ResultEnum.TOKEN_EXPIRED);
         }
 
         // JWT 자체 검증 (위조 체크)
         if (!jwtProvider.validateToken(refreshToken)) {
-            throw new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED);
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
         // userNumb 추출
@@ -126,7 +141,7 @@ public class AuthLoginController {
         String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
         // 응답
-        return ResponseEntity.ok(new TokenDto(newAccessToken, refreshToken));
+        return ResultData.success(new TokenDto(newAccessToken, refreshToken));
     }
 
     /**

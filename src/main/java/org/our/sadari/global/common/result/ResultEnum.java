@@ -1,4 +1,4 @@
-package org.our.sadari.global.common.exception;
+package org.our.sadari.global.common.result;
 
 import lombok.Getter;
 
