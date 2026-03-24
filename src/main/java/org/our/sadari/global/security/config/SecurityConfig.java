@@ -62,8 +62,10 @@ public class SecurityConfig {
                         // 인증 없이 허용할 API
                         .requestMatchers(
                                 "/api/oauth/callback/kakao",  // 🔥 이거 추가
-                                "/api/oauth/refresh"
+                                "/api/oauth/refresh",
+                                "/api/oauth/me"
                         ).permitAll()
+
                         
                         // 관리자 권한
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
