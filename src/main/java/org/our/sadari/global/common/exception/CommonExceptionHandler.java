@@ -1,6 +1,9 @@
 package org.our.sadari.global.common.exception;
 
 import lombok.RequiredArgsConstructor;
+
+import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.result.ResultResponse;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,7 +28,7 @@ public class CommonExceptionHandler {
     private final MessageSource messageSource;
 
     @ExceptionHandler(CustomException.class)
-    public ResponseEntity<RsultResponse> handleCustomException(CustomException e, Locale locale) {
+    public ResponseEntity<ResultResponse> handleCustomException(CustomException e, Locale locale) {
 
         ResultEnum result = e.getResultEnum();
 
@@ -35,7 +38,7 @@ public class CommonExceptionHandler {
                 locale
         );
 
-        RsultResponse response = new RsultResponse(
+        ResultResponse response = new ResultResponse(
                 result.getCode(),
                 message
         );
