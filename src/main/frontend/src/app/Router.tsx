@@ -14,7 +14,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import MainLayout from "../components/Layout/MainLayout";
 import App from "../App";
-import KakaoOAuth from "../pages/Login/KakaoOAuth";
+import Oauth from "../pages/Oauth/Oauth";
 import Home from "../pages/Home/Home";
 import AddLayout from "../pages/Add/AddLayout";
 import Add from "../pages/Add/Add";
@@ -27,7 +27,7 @@ const Router = () => {
       {/* 로그인 */}
       <Route path="/login" element={<Login />} />
       {/* 카카오 로그인 검증 */}
-      <Route path="/oauth" element={<KakaoOAuth />} />
+      <Route path="/oauth" element={<Oauth />} />
 
       <Route
         element={
