@@ -63,7 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/oauth/callback/kakao",  // 🔥 이거 추가
                                 "/api/oauth/refresh",
-                                "/api/oauth/me"
+                                "/api/oauth/tokenCheck"
                         ).permitAll()
 
                         
