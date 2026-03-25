@@ -5,9 +5,6 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-
-import javax.naming.spi.DirStateFactory.Result;
-
 import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
@@ -19,7 +16,6 @@ import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
 import org.our.sadari.sadariUser.auth.service.AuthService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -32,6 +28,7 @@ import org.springframework.web.bind.annotation.*;
  * -----------------------------------------------------------
  * 2026-03-15        seungHyeon.Kang   최초 생성
  * 2026-03-17        hanWon.jang       리팩터리 및 JWT 토큰 발급
+ * 2026-03-24        hanWon.jang       ResultData로 응답 통일, 로그인 상태 확인 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -44,7 +41,7 @@ public class AuthLoginController {
     private final TokenHistoryRepository tokenHistoryRepository;
 
     // 로그인 상태 확인 API
-    @GetMapping("/me")
+    @GetMapping("/tokenCheck")
     public ResultData<?> me(HttpServletRequest request) {
 
         String refreshToken = extractRefreshToken(request);
@@ -77,7 +74,7 @@ public class AuthLoginController {
         //refreshToken 쿠키로 저장
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
                 .httpOnly(true)
-                .sameSite("None") 
+                .sameSite("Lax") // 배포시 None으로 변경
                 // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7) // 7일
@@ -86,7 +83,7 @@ public class AuthLoginController {
         //accessToken 쿠키로 저장
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token.getAccessToken())
                 .httpOnly(true)
-                .sameSite("None") 
+                .sameSite("Lax") // 배포시 None으로 변경
                 // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
                 .path("/")
                 .maxAge(60 * 60) // 1시간
