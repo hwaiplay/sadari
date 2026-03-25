@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../../styles/tokens.css";
-import { media } from "../../../styles/responsive.css";
+import { vars } from "../../../app/styles/tokens.css";
+import { media } from "../../../app/styles/responsive.css";
 
 export const container = style({
   maxWidth: "600px",

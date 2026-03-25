@@ -1,5 +1,5 @@
 import { style, styleVariants } from "@vanilla-extract/css";
-import { vars } from "../../styles/tokens.css";
+import { vars } from "../../app/styles/tokens.css";
 
 export const buttonBase = style({
   padding: `0 ${vars.space.md}`,

@@ -10,8 +10,8 @@
  */
 
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../styles/tokens.css";
-import { breakpoints } from "../../styles/breakpoints";
+import { vars } from "../../app/styles/tokens.css";
+import { media } from "../../app/styles/responsive.css";
 
 export const emptyHomeContainer = style({
   width: "100%",
@@ -49,10 +49,7 @@ export const row = style({
   width: "100%",
 
   "@media": {
-    [`screen and (max-width: 767px)`]: {
-      gap: vars.space.sm,
-    },
-    [`screen and (min-width: ${breakpoints.tablet}px)`]: {
+    [media.desktop]: {
       gap: "12px",
     },
   },
@@ -63,12 +60,10 @@ export const row5 = style({
   paddingTop: "90px",
   gridTemplateRows: "minmax(0, 1fr)",
   height: "100%",
+  gridTemplateColumns: "repeat(5, 50px)",
 
   "@media": {
-    [`screen and (max-width: 767px)`]: {
-      gridTemplateColumns: "repeat(5, 50px)",
-    },
-    [`screen and (min-width: ${breakpoints.tablet}px)`]: {
+    [media.desktop]: {
       gridTemplateColumns: "repeat(5, 74px)",
     },
   },
@@ -81,12 +76,4 @@ export const row6 = style({
   gridTemplateRows: "minmax(0, 1fr)",
   justifyContent: "center",
   backgroundImage: 'url("/img/common/background-middle.png")',
-  // "@media": {
-  //   [`screen and (max-width: 767px)`]: {
-  //     height: `calc(${vars.bookHeight.sm} + 30px)`,
-  //   },
-  //   [`screen and (min-width: ${breakpoints.tablet}px)`]: {
-  //     height: `calc(${vars.bookHeight.md} + 40px)`,
-  //   },
-  // },
 });

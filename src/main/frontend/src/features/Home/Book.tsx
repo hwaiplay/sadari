@@ -1,8 +1,13 @@
 import React from "react";
-import { BookProps } from "../../types/Book";
 import * as styles from "./book.css";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
+
+interface BookProps {
+  id: number;
+  title: string;
+  color: string;
+}
 
 function Book({
   id,
