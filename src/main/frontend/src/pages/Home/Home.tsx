@@ -15,7 +15,7 @@ import Book from "../../features/Home/Book";
 import * as styles from "./Home.css";
 import { homeDummyData } from "../../assets/dummy";
 import { BookProps } from "../../types/Book";
-import { tilt } from "../../features/Home/book.css";
+import { tilt } from "../../features/Home/Book.css";
 import clsx from "clsx";
 
 function chunkArray<T>(array: T[], size: number) {

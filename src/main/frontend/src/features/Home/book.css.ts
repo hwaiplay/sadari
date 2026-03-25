@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../styles/tokens.css";
-import { breakpoints } from "../../styles/breakpoints";
+import { vars } from "../../app/styles/tokens.css";
+import { media } from "../../app/styles/responsive.css";
 
 export const book = style({
   display: "flex",
@@ -14,14 +14,10 @@ export const book = style({
   textDecoration: "none",
   color: vars.color.black,
   height: "100%",
+  borderRadius: vars.radius.sm,
 
   "@media": {
-    [`screen and (max-width: 767px)`]: {
-      // height: vars.bookHeight.sm,
-      borderRadius: vars.radius.sm,
-    },
-    [`screen and (min-width: ${breakpoints.tablet}px)`]: {
-      // height: vars.bookHeight.md,
+    [media.desktop]: {
       borderRadius: vars.radius.md,
     },
   },
