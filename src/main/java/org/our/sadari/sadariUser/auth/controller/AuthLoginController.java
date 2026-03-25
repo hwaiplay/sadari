@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
  * 2026-03-15        seungHyeon.Kang   최초 생성
  * 2026-03-17        hanWon.jang       리팩터리 및 JWT 토큰 발급
  * 2026-03-24        hanWon.jang       ResultData로 응답 통일, 로그인 상태 확인 API 추가
+ * 2026-03-25        hanWon.jang       리팩터링
  */
 @RestController
 @RequiredArgsConstructor
@@ -40,10 +41,20 @@ public class AuthLoginController {
     private final JwtProvider jwtProvider;
     private final TokenHistoryRepository tokenHistoryRepository;
 
-    // 로그인 상태 확인 API
+    /**
+     * 로그인 상태 확인 + 자동 재발급
+     */
     @GetMapping("/tokenCheck")
-    public ResultData<?> me(HttpServletRequest request) {
+    public ResultData<?> tokenCheck(HttpServletRequest request, HttpServletResponse response) {
 
+        String accessToken = extractAccessToken(request);
+
+        // 1️⃣ accessToken이 유효하면 그대로 통과
+        if (accessToken != null && jwtProvider.validateToken(accessToken)) {
+            return ResultData.success();
+        }
+
+        // 2️⃣ refreshToken으로 재발급 시도
         String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
@@ -55,110 +66,115 @@ public class AuthLoginController {
                 .orElse(null);
 
         if (tokenEntity == null || tokenEntity.isExpired()) {
-            return ResultData.fail(ResultEnum.AUTH_FAIL);
+            return ResultData.fail(ResultEnum.TOKEN_EXPIRED);
         }
 
         if (!jwtProvider.validateToken(refreshToken)) {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        return ResultData.success(); // 인증된 상태, 필요한 경우 사용자 정보도 반환 가능
+        // 3️⃣ 새 accessToken 발급
+        Long userNumb = jwtProvider.getUserNumb(refreshToken);
+        String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
+
+        // 4️⃣ 쿠키에 다시 저장
+        addAccessTokenCookie(response, newAccessToken);
+
+        log.info("accessToken 재발급 완료");
+
+        return ResultData.success();
     }
 
+    /**
+     * 카카오 로그인 콜백
+     */
     @GetMapping("/callback/kakao")
     public void kakaoAuthLogin (@RequestParam("code") String code,
                                 HttpServletResponse response) throws Exception {
 
         TokenDto token = authService.kakaoLogin(code);
 
-        //refreshToken 쿠키로 저장
-        ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
-                .httpOnly(true)
-                .sameSite("Lax") // 배포시 None으로 변경
-                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
-                .path("/")
-                .maxAge(60 * 60 * 24 * 7) // 7일
-                .build();
-                
-        //accessToken 쿠키로 저장
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token.getAccessToken())
-                .httpOnly(true)
-                .sameSite("Lax") // 배포시 None으로 변경
-                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
-                .path("/")
-                .maxAge(60 * 60) // 1시간
-                .build();
-        
+        addRefreshTokenCookie(response, token.getRefreshToken());
+        addAccessTokenCookie(response, token.getAccessToken());
 
-        response.addHeader("Set-Cookie", refreshTokenCookie.toString());
-        response.addHeader("Set-Cookie", accessTokenCookie.toString());
-
-        response.sendRedirect(
-                "http://localhost:5173/oauth"
-        );
+        response.sendRedirect("http://localhost:5173/oauth");
     }
 
     /**
-     * 토큰 재발급 API
-     * @param request
-     * @return
+     * refreshToken 기반 accessToken 재발급 (직접 호출용)
      */
     @PostMapping("/refresh")
-    public ResultData<TokenDto> refresh(HttpServletRequest request) {
+    public ResultData<?> refresh(HttpServletRequest request, HttpServletResponse response) {
 
-        // 쿠키에서 refreshToken 꺼내기
         String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
-            // 인증 자체가 안 된 상태
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 조회 (존재 여부 확인)
         TokenHistoryEntity tokenEntity = tokenHistoryRepository
                 .findByRefrTokn(refreshToken)
                 .orElseThrow(() ->
-                    new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
+                        new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
                 );
 
-        // 만료 체크 (DB 기준)
         if (tokenEntity.isExpired()) {
             return ResultData.fail(ResultEnum.TOKEN_EXPIRED);
         }
 
-        // JWT 자체 검증 (위조 체크)
         if (!jwtProvider.validateToken(refreshToken)) {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // userNumb 추출
         Long userNumb = jwtProvider.getUserNumb(refreshToken);
-
-        // 새 accessToken 발급
         String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
-        // 응답
-        return ResultData.success(new TokenDto(newAccessToken, refreshToken));
+        addAccessTokenCookie(response, newAccessToken);
+
+        return ResultData.success();
     }
 
-    /**
-     * 쿠키에서 refreshToken 추출
-     * @return refreshToken 값 (없으면 null)
-     */
+    // =========================
+    // 🔽 쿠키 처리 메서드 분리
+    // =========================
+    private void addAccessTokenCookie(HttpServletResponse response, String accessToken) {
+        ResponseCookie cookie = ResponseCookie.from("accessToken", accessToken)
+                .httpOnly(true)
+                .sameSite("Lax") // 배포 시 None + secure
+                .path("/")
+                .maxAge(60 * 60)
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private void addRefreshTokenCookie(HttpServletResponse response, String refreshToken) {
+        ResponseCookie cookie = ResponseCookie.from("refreshToken", refreshToken)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .path("/")
+                .maxAge(60 * 60 * 24 * 7)
+                .build();
+
+        response.addHeader("Set-Cookie", cookie.toString());
+    }
+
+    private String extractAccessToken(HttpServletRequest request) {
+        return extractCookie(request, "accessToken");
+    }
+
     private String extractRefreshToken(HttpServletRequest request) {
+        return extractCookie(request, "refreshToken");
+    }
 
-        // 쿠키 자체가 없는 경우
-        if (request.getCookies() == null) {
-            return null;
-        }
+    private String extractCookie(HttpServletRequest request, String name) {
+        if (request.getCookies() == null) return null;
 
-        // refreshToken 쿠키 찾기
         for (Cookie cookie : request.getCookies()) {
-            if ("refreshToken".equals(cookie.getName())) {
+            if (name.equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }
-
         return null;
     }
 }
