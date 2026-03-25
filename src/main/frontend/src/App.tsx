@@ -8,7 +8,7 @@
  * -----------------------------------------------------------
  * 2026-03-19        Hanwon.Jang       Router 분리
  */
-import Router from "./Router/Router";
+import Router from "./app/Router";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 const queryClient = new QueryClient();
 

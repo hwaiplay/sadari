@@ -10,7 +10,7 @@
  */
 
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../../styles/tokens.css";
+import { vars } from "../../../app/styles/tokens.css";
 
 export const fieldTitle = style({
   fontFamily: vars.font.heading,
