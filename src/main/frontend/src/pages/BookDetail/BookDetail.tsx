@@ -1,5 +1,5 @@
 import { useParams } from "react-router-dom";
-import { homeDummyData } from "../../assets/dummy";
+import { homeDummyData } from "../../app/assets/dummy";
 import { useState } from "react";
 
 function BookDetail() {
