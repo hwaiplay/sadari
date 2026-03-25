@@ -19,7 +19,7 @@ import Home from "../pages/Home/Home";
 import AddLayout from "../pages/Add/AddLayout";
 import Add from "../pages/Add/Add";
 import BookDetail from "../pages/BookDetail/BookDetail";
-import ProtectedRoute from "./ProtectedRoute";
+import ProtectedRoute from "../features/Auth/ProtectedRoute";
 
 const Router = () => {
   return (
