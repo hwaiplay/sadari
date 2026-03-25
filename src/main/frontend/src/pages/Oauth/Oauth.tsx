@@ -12,15 +12,12 @@
  */
 import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuthQuery } from "../../hooks/useAuthQuery";
-import { useAuthStore } from "../../store/authStore";
+import { useAuthQuery } from "../../features/Auth/hooks/useAuthQuery";
+import { useAuthStore } from "../../features/Auth/store/authStore";
 
-const KakaoOAuth = () => {
-  // const { data, isLoading, isError } = useAuthQuery();
-  // console.log("인증 결과:", data, "에러 여부:", isError);
-
+const Oauth = () => {
   const navigate = useNavigate();
-
+  // 로그인 인증 상태 조회
   const { checkAuth } = useAuthStore();
 
   useEffect(() => {
@@ -51,4 +48,4 @@ const KakaoOAuth = () => {
   );
 };
 
-export default KakaoOAuth;
+export default Oauth;
