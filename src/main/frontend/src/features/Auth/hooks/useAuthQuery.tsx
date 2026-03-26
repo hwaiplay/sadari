@@ -18,6 +18,7 @@ export const useAuthQuery = () => {
     queryFn: async () => {
       try {
         const res = await api.get("/oauth/tokenCheck");
+        console.log("토큰 체크 응답 query:", res.data);
         return res.data;
       } catch (err) {
         console.log("에러 발생:", err);
