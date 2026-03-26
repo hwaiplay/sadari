@@ -8,30 +8,21 @@
  * -----------------------------------------------------------
  * 2026-03-23       hanwon.Jang       최초 생성
  * 2026-03-24       hanwon.Jang       로그인 상태 초기값 null로 변경
+ * 2026-03-25       hanwon.Jang       커스텀 훅 맞춰 수정
  */
 
 import { create } from "zustand";
 
 interface AuthState {
-  isLogin: boolean | null; // 초기 로딩 상태
-  accessToken: string | null;
-  setLogin: (token: string) => void;
-  logout: () => void;
+  user: any | null;
+  isAuthenticated: boolean;
+  setAuth: (user: any) => void;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  isLogin: null,
-  accessToken: null,
-
-  setLogin: (token: string) =>
-    set({
-      isLogin: true,
-      accessToken: token,
-    }),
-
-  logout: () =>
-    set({
-      isLogin: false,
-      accessToken: null,
-    }),
+  user: null,
+  isAuthenticated: false,
+  setAuth: (user) => set({ user, isAuthenticated: true }),
+  clearAuth: () => set({ user: null, isAuthenticated: false }),
 }));
