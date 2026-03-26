@@ -13,9 +13,8 @@ import { useEffect, useState } from "react";
 import { Container } from "../../components/Layout/Container/Container";
 import Book from "../../features/Home/Book";
 import * as styles from "./Home.css";
-import { homeDummyData } from "../../assets/dummy";
-import { BookProps } from "../../types/Book";
-import { tilt } from "../../features/Home/Book.css";
+import { homeDummyData } from "../../app/assets/dummy";
+import { tilt } from "../../features/Home/book.css";
 import clsx from "clsx";
 
 function chunkArray<T>(array: T[], size: number) {
@@ -29,7 +28,7 @@ function chunkArray<T>(array: T[], size: number) {
 }
 
 function Home() {
-  const [booksData, setBooksData] = useState<BookProps[]>(homeDummyData);
+  const [booksData, setBooksData] = useState(homeDummyData);
 
   const firstRow = booksData.slice(0, 5); // 첫줄
   const rows = chunkArray(booksData.slice(5), 6); // 두번째 줄~끝
@@ -57,7 +56,7 @@ function Home() {
 
           {/* 나머지 */}
           {Array.from({ length: rowCount }).map((_, rowIndex) => (
-            <Container className={clsx(styles.row6, styles.row)}>
+            <Container className={clsx(styles.row6, styles.row)} key={rowIndex}>
               {rows[rowIndex]?.map((book) => (
                 <Book key={book.id} {...book} />
               ))}
