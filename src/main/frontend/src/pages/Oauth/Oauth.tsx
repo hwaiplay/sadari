@@ -11,41 +11,24 @@
  * 2026-03-25        hanwon.Jang       useAuthQuery 훅으로 인증 상태 조회
  */
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useAuthQuery } from "../../features/Auth/hooks/useAuthQuery";
 import { useAuthStore } from "../../features/Auth/store/authStore";
+import Loading from "../../components/Loading/Loading";
+import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 
 const Oauth = () => {
+  const { isLoading, navigateTo, showChildren } = useCheckAuth();
   const navigate = useNavigate();
-  // 로그인 인증 상태 조회
-  const { checkAuth } = useAuthStore();
 
   useEffect(() => {
-    const init = async () => {
-      try {
-        await checkAuth();
-        navigate("/home");
-      } catch {
-        navigate("/login");
-      }
-    };
+    if (!isLoading) {
+      if (showChildren) navigate("/home");
+      else if (navigateTo) navigate(navigateTo);
+    }
+  }, [isLoading, showChildren, navigateTo]);
 
-    init();
-  }, []);
-
-  return (
-    <div
-      style={{
-        textAlign: "center",
-        height: "100svh",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      로그인 처리중...
-    </div>
-  );
+  return <Loading />;
 };
 
 export default Oauth;

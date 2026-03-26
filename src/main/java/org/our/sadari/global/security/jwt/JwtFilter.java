@@ -57,4 +57,9 @@ public class JwtFilter extends OncePerRequestFilter {
         // 6. 다음 필터로 넘김 (이거 없으면 요청 멈춤)
         filterChain.doFilter(request, response);
     }
+    
+    @Override
+    protected boolean shouldNotFilter(HttpServletRequest request) {
+        return request.getRequestURI().equals("/api/oauth/refresh");
+    }
 }

@@ -8,42 +8,21 @@
  * -----------------------------------------------------------
  * 2026-03-23       hanwon.Jang       최초 생성
  * 2026-03-24       hanwon.Jang       로그인 상태 초기값 null로 변경
+ * 2026-03-25       hanwon.Jang       커스텀 훅 맞춰 수정
  */
 
 import { create } from "zustand";
-import api from "../../../app/api/axios";
 
 interface AuthState {
   user: any | null;
-  isAuthenticated: boolean; // 로그인 인증 여부
-  isLoading: boolean;
-  checkAuth: () => Promise<void>;
+  isAuthenticated: boolean;
+  setAuth: (user: any) => void;
+  clearAuth: () => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
-  // 초기값 설정
   user: null,
   isAuthenticated: false,
-  isLoading: true,
-
-  // 로그인 상태 체크 함수
-  checkAuth: async () => {
-    try {
-      const res = await api.get("/oauth/tokenCheck", {});
-
-      console.log("토큰 체크 응답:", res.data);
-      set({
-        user: res.data.data,
-        isAuthenticated: true,
-        isLoading: false,
-      });
-    } catch {
-      set({
-        user: null,
-        isAuthenticated: false,
-        isLoading: false,
-      });
-      throw new Error("auth failed");
-    }
-  },
+  setAuth: (user) => set({ user, isAuthenticated: true }),
+  clearAuth: () => set({ user: null, isAuthenticated: false }),
 }));
