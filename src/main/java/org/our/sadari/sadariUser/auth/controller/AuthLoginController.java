@@ -14,8 +14,10 @@ import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.sadariUser.auth.entity.TokenHistoryEntity;
 import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
 import org.our.sadari.sadariUser.auth.service.AuthService;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 /**
@@ -42,27 +44,20 @@ public class AuthLoginController {
 
     // 로그인 상태 확인 API
     @GetMapping("/tokenCheck")
-    public ResultData<?> me(HttpServletRequest request) {
+    public ResultData<?> tokenCheck(HttpServletRequest request) {
+        
+       String accessToken = extractAccessToken(request);
 
-        String refreshToken = extractRefreshToken(request);
-
-        if (refreshToken == null) {
+        if (accessToken == null) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        TokenHistoryEntity tokenEntity = tokenHistoryRepository
-                .findByRefrTokn(refreshToken)
-                .orElse(null);
-
-        if (tokenEntity == null || tokenEntity.isExpired()) {
-            return ResultData.fail(ResultEnum.AUTH_FAIL);
-        }
-
-        if (!jwtProvider.validateToken(refreshToken)) {
+        if (!jwtProvider.validateToken(accessToken)) {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        return ResultData.success(); // 인증된 상태, 필요한 경우 사용자 정보도 반환 가능
+        return ResultData.success(); 
+
     }
 
     @GetMapping("/callback/kakao")
@@ -74,8 +69,8 @@ public class AuthLoginController {
         //refreshToken 쿠키로 저장
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
                 .httpOnly(true)
-                .sameSite("Lax") // 배포시 None으로 변경
-                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
+                .sameSite("Lax")
+                .secure(false) 
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7) // 7일
                 .build();
@@ -83,8 +78,8 @@ public class AuthLoginController {
         //accessToken 쿠키로 저장
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token.getAccessToken())
                 .httpOnly(true)
-                .sameSite("Lax") // 배포시 None으로 변경
-                // .secure(true) // HTTPS 환경에서만 쿠키가 전송되도록 설정 (개발 환경에서는 주석 처리)
+                .sameSite("Lax")
+                .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
                 .path("/")
                 .maxAge(60 * 60) // 1시간
                 .build();
@@ -104,43 +99,44 @@ public class AuthLoginController {
      * @return
      */
     @PostMapping("/refresh")
-    public ResultData<TokenDto> refresh(HttpServletRequest request) {
+public ResponseEntity<ResultData<?>> refresh(HttpServletRequest request) {
+    String refreshToken = extractRefreshToken(request);
 
-        // 쿠키에서 refreshToken 꺼내기
-        String refreshToken = extractRefreshToken(request);
-
-        if (refreshToken == null) {
-            // 인증 자체가 안 된 상태
-            return ResultData.fail(ResultEnum.AUTH_FAIL);
-        }
-
-        // 조회 (존재 여부 확인)
-        TokenHistoryEntity tokenEntity = tokenHistoryRepository
-                .findByRefrTokn(refreshToken)
-                .orElseThrow(() ->
-                    new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
-                );
-
-        // 만료 체크 (DB 기준)
-        if (tokenEntity.isExpired()) {
-            return ResultData.fail(ResultEnum.TOKEN_EXPIRED);
-        }
-
-        // JWT 자체 검증 (위조 체크)
-        if (!jwtProvider.validateToken(refreshToken)) {
-            return ResultData.fail(ResultEnum.TOKEN_INVALID);
-        }
-
-        // userNumb 추출
-        Long userNumb = jwtProvider.getUserNumb(refreshToken);
-
-        // 새 accessToken 발급
-        String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
-
-        // 응답
-        return ResultData.success(new TokenDto(newAccessToken, refreshToken));
+    if (refreshToken == null) {
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                .body(ResultData.fail(ResultEnum.AUTH_FAIL));
     }
 
+    TokenHistoryEntity tokenEntity = tokenHistoryRepository
+            .findByRefrTokn(refreshToken)
+            .orElseThrow(() ->
+                new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
+            );
+
+    if (tokenEntity.isExpired()) {
+        return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_EXPIRED));
+    }
+
+    if (!jwtProvider.validateToken(refreshToken)) {
+        return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_INVALID));
+    }
+
+    Long userNumb = jwtProvider.getUserNumb(refreshToken);
+
+    String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
+
+    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+            .httpOnly(true)
+            .sameSite("Lax")
+            .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
+            .path("/")
+            .maxAge(60 * 60)
+            .build();
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
+            .body(ResultData.success());
+}
     /**
      * 쿠키에서 refreshToken 추출
      * @return refreshToken 값 (없으면 null)
@@ -155,6 +151,27 @@ public class AuthLoginController {
         // refreshToken 쿠키 찾기
         for (Cookie cookie : request.getCookies()) {
             if ("refreshToken".equals(cookie.getName())) {
+                return cookie.getValue();
+            }
+        }
+
+        return null;
+    }
+
+    /**
+     * 쿠키에서 accessToken 추출
+     * @return accessToken 값 (없으면 null)
+     */
+    private String extractAccessToken(HttpServletRequest request) {
+
+        // 쿠키 자체가 없는 경우
+        if (request.getCookies() == null) {
+            return null;
+        }
+
+        // accessToken 쿠키 찾기
+        for (Cookie cookie : request.getCookies()) {
+            if ("accessToken".equals(cookie.getName())) {
                 return cookie.getValue();
             }
         }

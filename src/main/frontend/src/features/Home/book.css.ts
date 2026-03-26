@@ -38,6 +38,7 @@ export const author = style({
   position: "absolute",
 });
 
+// 기울기
 export const tilt = style({
   transform: "rotate(8deg) translateY(-1px) translateX(-16px)",
 });
