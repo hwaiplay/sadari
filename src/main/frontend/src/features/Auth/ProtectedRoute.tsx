@@ -9,34 +9,22 @@ import { ReactNode, useEffect } from "react";
  * -----------------------------------------------------------
  * 2026-03-24       hanwon.Jang       최초 생성
  */
-import { useAuthQuery } from "./hooks/useAuthQuery.tsx";
 import { Navigate } from "react-router-dom";
 import Loading from "../../components/Loading/Loading.tsx";
+import { useCheckAuth } from "./hooks/useCheckAuth.tsx";
 
-export default function ProtectedRoute({ children }: any) {
-  const { isLoading, isError, error } = useAuthQuery();
+export default function ProtectedRoute({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const { isLoading, navigateTo, showChildren } = useCheckAuth();
 
-  if (isLoading) {
-    return <Loading />;
-  }
+  if (isLoading) return <Loading />;
 
-  if (isError) {
-    const code = (error as Error).message;
+  if (navigateTo) return <Navigate to={navigateTo} replace />;
 
-    if (code === "1001") {
-      alert("인증 실패 code: " + code);
-    }
+  if (showChildren) return children;
 
-    if (code === "1002") {
-      alert("유효하지 않은 토큰 code: " + code);
-    }
-
-    if (code === "1003") {
-      alert("토큰 만료 code: " + code);
-    }
-
-    return <Navigate to="/login" replace />;
-  }
-
-  return children;
+  return <Navigate to="/login" replace />; // fallback
 }
