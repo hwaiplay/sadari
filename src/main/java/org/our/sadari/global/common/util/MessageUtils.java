@@ -30,6 +30,6 @@ public class MessageUtils {
         if (messageSource == null) {
             throw new IllegalStateException("MessageSource not initialized");
         }
-        return messageSource.getMessage(key, null, Locale.KOREA);
+        return messageSource.getMessage(key, null, Locale.KOREAN);
     }
 }
