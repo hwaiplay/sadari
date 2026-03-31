@@ -3,7 +3,7 @@ import { ReactNode, useEffect } from "react";
  * fileName       : ProtectRoute
  * author         : hanwon.Jang
  * date           : 2026-03-24
- * description    : 인증이 필요한 라우트를 보호하는 컴포넌트
+ * description    : 인증이 필요한 라우트를 보호하는 컴포넌트. 로그인 인증된 사용자만 페이지 접근 허용
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
