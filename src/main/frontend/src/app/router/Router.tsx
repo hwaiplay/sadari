@@ -9,25 +9,38 @@
  * 2026-03-23       hanwon.Jang       최초 생성
  */
 
-import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
-import Login from "../pages/Login/Login";
-import MainLayout from "../components/Layout/MainLayout";
-import App from "../App";
-import Oauth from "../pages/Oauth/Oauth";
-import Home from "../pages/Home/Home";
-import AddLayout from "../pages/Add/AddLayout";
-import Add from "../pages/Add/Add";
-import BookDetail from "../pages/BookDetail/BookDetail";
-import ProtectedRoute from "../features/Auth/ProtectedRoute";
+import Login from "../../pages/Login/Login";
+import Oauth from "../../pages/Oauth/Oauth";
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../../components/Layout/MainLayout";
+import Home from "../../pages/Home/Home";
+import BookDetail from "../../pages/BookDetail/BookDetail";
+import AddLayout from "../../pages/Add/AddLayout";
+import Add from "../../pages/Add/Add";
+import PublicRoute from "./PublicRoute";
 
 const Router = () => {
   return (
     <Routes>
       {/* 로그인 */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
       {/* 카카오 로그인 검증 */}
-      <Route path="/oauth" element={<Oauth />} />
+      <Route
+        path="/oauth"
+        element={
+          <PublicRoute>
+            <Oauth />
+          </PublicRoute>
+        }
+      />
 
       <Route
         element={

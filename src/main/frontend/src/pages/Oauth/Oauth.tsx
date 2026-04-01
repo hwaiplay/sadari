@@ -22,11 +22,17 @@ const Oauth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!isLoading) {
-      if (showChildren) navigate("/home");
-      else if (navigateTo) navigate(navigateTo);
+    if (!isLoading && navigateTo) {
+      navigate("/home");
+
+      // <Navigate to={navigateTo} replace />;
+      // if (showChildren) navigate("/home");
+      // else if (navigateTo) navigate(navigateTo);
+    } else {
+      alert("인증에 실패했습니다. 로그인 페이지로 이동합니다.");
+      navigate("/login");
     }
-  }, [isLoading, showChildren, navigateTo]);
+  }, [isLoading, navigateTo]);
 
   return <Loading />;
 };
