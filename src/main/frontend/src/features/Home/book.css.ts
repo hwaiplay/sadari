@@ -41,4 +41,10 @@ export const author = style({
 // 기울기
 export const tilt = style({
   transform: "rotate(8deg) translateY(-1px) translateX(-16px)",
+
+  "@media": {
+    [media.tablet]: {
+      transform: "rotate(8deg) translateY(-1px) translateX(-26px)",
+    },
+  },
 });
