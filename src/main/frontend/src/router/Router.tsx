@@ -10,15 +10,16 @@
  */
 
 import { Navigate, Route, Routes } from "react-router-dom";
-import Login from "../../pages/Login/Login";
-import Oauth from "../../pages/Oauth/Oauth";
+import Login from "../pages/Login/Login";
+import Oauth from "../pages/Oauth/Oauth";
 import ProtectedRoute from "./ProtectedRoute";
-import MainLayout from "../../components/Layout/MainLayout";
-import Home from "../../pages/Home/Home";
-import BookDetail from "../../pages/BookDetail/BookDetail";
-import AddLayout from "../../pages/Add/AddLayout";
-import Add from "../../pages/Add/Add";
+import MainLayout from "../components/Layout/MainLayout";
+import Home from "../pages/Home/Home";
+import BookDetail from "../pages/Book/Detail/BookDetail";
+import Add from "../pages/Add/Add";
 import PublicRoute from "./PublicRoute";
+import AddLayout from "../features/Add/components/AddLayout";
+import BookSearch from "../pages/Book/Search/BookSearch";
 
 const Router = () => {
   return (
@@ -54,7 +55,8 @@ const Router = () => {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
         {/* 독후감 상세보기 */}
-        <Route path="/detail/:id" element={<BookDetail />} />
+        <Route path="/book/detail/:id" element={<BookDetail />} />
+        <Route path="/book/search" element={<BookSearch />} />
       </Route>
 
       {/* 기록하기 */}
