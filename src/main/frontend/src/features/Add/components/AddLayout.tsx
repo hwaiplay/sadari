@@ -1,16 +1,17 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import { vars } from "../../app/styles/tokens.css";
-import FormHeader from "../../components/Layout/Header/FormHeader";
+import { Container } from "../../../components/Layout/Container/Container";
+import FormHeader from "../../../components/Layout/Header/FormHeader";
+import { vars } from "../../../app/styles/tokens.css";
 
 function AddLayout() {
   return (
-    <div style={{ backgroundColor: vars.color.background }}>
+    <Container>
       <FormHeader />
       <main style={{ marginTop: vars.headerHeight }}>
         <Outlet />
       </main>
-    </div>
+    </Container>
   );
 }
 

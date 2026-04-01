@@ -10,8 +10,8 @@ import { ReactNode, useEffect } from "react";
  * 2026-03-24       hanwon.Jang       최초 생성
  */
 import { Navigate } from "react-router-dom";
-import Loading from "../../components/Loading/Loading.tsx";
-import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth.tsx";
+import Loading from "../components/Loading/Loading.tsx";
+import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 
 export default function ProtectedRoute({
   children,

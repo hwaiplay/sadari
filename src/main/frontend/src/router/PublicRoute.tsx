@@ -10,8 +10,8 @@
  */
 
 import React from "react";
-import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
-import Loading from "../../components/Loading/Loading";
+import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth";
+import Loading from "../components/Loading/Loading";
 import { Navigate } from "react-router-dom";
 
 export default function PublicRoute({
