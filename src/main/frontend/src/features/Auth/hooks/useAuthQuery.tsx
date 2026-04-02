@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../app/api/axios";
+import { checkAuthApi } from "../api/authApi";
 
 /**
  * fileName       : useAuthQuery
@@ -17,7 +18,7 @@ export const useAuthQuery = () => {
     queryKey: ["auth"],
     queryFn: async () => {
       try {
-        const res = await api.get("/oauth/tokenCheck");
+        const res = await checkAuthApi();
         console.log("토큰 체크 응답 query:", res.data);
         return res.data;
       } catch (err) {
