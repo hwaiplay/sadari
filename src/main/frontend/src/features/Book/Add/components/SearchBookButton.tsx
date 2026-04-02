@@ -9,13 +9,14 @@
  * 2026-03-21       Hanwon.Jang       최초 생성
  */
 
-import { searchBtn, searchBtnText } from "./SearchBook.css";
+import { Link } from "react-router-dom";
+import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
 interface SearchBookProps {}
 
-const SearchBook = (props: SearchBookProps) => {
+const SearchBookButton = (props: SearchBookProps) => {
   return (
-    <button type="button" className={searchBtn}>
+    <Link to="/book/search" className={searchBtn}>
       <svg
         width="27"
         height="27"
@@ -26,19 +27,19 @@ const SearchBook = (props: SearchBookProps) => {
         <path
           d="M13.2736 1.5V25.5"
           stroke="#C1C1C1"
-          stroke-width="3"
-          stroke-linecap="round"
+          strokeWidth="3"
+          strokeLinecap="round"
         />
         <path
           d="M1.5 13.2736L25.5 13.2736"
           stroke="#C1C1C1"
-          stroke-width="3"
-          stroke-linecap="round"
+          strokeWidth="3"
+          strokeLinecap="round"
         />
       </svg>
       <p className={searchBtnText}>책 검색하기</p>
-    </button>
+    </Link>
   );
 };
 
-export default SearchBook;
+export default SearchBookButton;
