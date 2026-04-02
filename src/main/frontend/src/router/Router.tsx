@@ -18,7 +18,7 @@ import Home from "../pages/Home/Home";
 import BookDetail from "../pages/Book/Detail/BookDetail";
 import Add from "../pages/Add/Add";
 import PublicRoute from "./PublicRoute";
-import AddLayout from "../features/Add/components/AddLayout";
+import AddLayout from "../features/Book/Add/components/AddLayout";
 import BookSearch from "../pages/Book/Search/BookSearch";
 
 const Router = () => {

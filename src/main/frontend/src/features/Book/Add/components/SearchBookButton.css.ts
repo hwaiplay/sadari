@@ -9,7 +9,7 @@
  * 2026-03-22       Hanwon.Jang       최초 생성
  */
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../../app/styles/tokens.css";
+import { vars } from "@/app/styles/tokens.css";
 
 export const searchBtn = style({
   width: "112px",
