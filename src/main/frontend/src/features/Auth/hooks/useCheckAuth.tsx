@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
-import { refreshTokenApi } from "../api/refreshTokenApi";
+import { refreshTokenApi } from "../api/authApi";
 
 export const useCheckAuth = () => {
   const { data, isLoading, isError, refetch } = useAuthQuery(); // 로그인 상태 확인 (/api/oauth/tokenCheck)
