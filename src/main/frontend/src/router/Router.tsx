@@ -16,10 +16,10 @@ import ProtectedRoute from "./ProtectedRoute";
 import MainLayout from "../components/Layout/MainLayout";
 import Home from "../pages/Home/Home";
 import BookDetail from "../pages/Book/Detail/BookDetail";
-import Add from "../pages/Add/Add";
 import PublicRoute from "./PublicRoute";
 import AddLayout from "../features/Book/Add/components/AddLayout";
 import BookSearch from "../pages/Book/Search/BookSearch";
+import BookAdd from "@/pages/Book/Add/BookAdd";
 
 const Router = () => {
   return (
@@ -67,7 +67,7 @@ const Router = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/add" element={<Add />} />
+        <Route path="/add" element={<BookAdd />} />
       </Route>
     </Routes>
   );
