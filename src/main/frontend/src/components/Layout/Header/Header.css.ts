@@ -4,7 +4,7 @@ import { vars } from "../../../app/styles/tokens.css";
 export const header = style({
   display: "flex",
   alignItems: "center",
-  justifyContent: "space-between",
+  justifyContent: "center",
   width: "100%",
   height: vars.headerHeight,
   position: "fixed",
@@ -27,9 +27,11 @@ export const logo = style({
   display: "inline-block",
 });
 
-export const saveBtn = style({
-  fontSize: "16px",
-  fontFamily: vars.font.heading,
+export const backpageBtn = style({
+  position: "absolute",
+  left: "5px",
+  top: "50%",
+  transform: "translateY(-50%)",
   width: "44px",
   height: "44px",
 });
