@@ -9,14 +9,14 @@
  * 2026-04-01       hanwon.Jang       최초 생성
  */
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import api from "../../../app/api/axios";
-import { BookSearchProps } from "@/features/Book/types/book.type";
+import { BookSearchType } from "@/features/Book/types/book.type";
 import { useNavigate } from "react-router-dom";
 
 const BookSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
-  const [bookResult, setBookResult] = useState<BookSearchProps[] | null>(null); // 응답 데이터
+  const [bookResult, setBookResult] = useState<BookSearchType[] | null>(null); // 응답 데이터
 
   // 검색 로직 구현
   const handleSearchClick = async () => {
@@ -46,15 +46,11 @@ const BookSearch = () => {
 
   const navigate = useNavigate();
 
-  const handleSelectBook = (book: BookSearchProps) => {
+  const handleSelectBook = (book: BookSearchType) => {
     navigate("/add", {
       state: { selectedBook: book },
     });
   };
-
-  useEffect(() => {
-    console.log(bookResult);
-  }, [bookResult]);
 
   return (
     <>

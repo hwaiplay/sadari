@@ -9,8 +9,10 @@
  * 2026-04-02       hanwon.Jang       최초 생성
  */
 
-// 책 검색 타입
-export interface BookSearchProps {
+/**
+ * 책 검색
+ */
+export interface BookSearchType {
   title: string;
   author: string;
   publisher: string;
@@ -19,9 +21,23 @@ export interface BookSearchProps {
   description: string;
 }
 
-// 기록하기 폼 타입
-export interface BookForm {
+export interface SelectBookType {
   title: string;
   isbn: string;
   image: string;
+}
+
+/**
+ * 기록하기 폼
+ */
+// 독서 진행 상태
+export type ReadingStatusType = "done" | "reading" | "stopped";
+
+export interface BookFormType {
+  coverImage: string;
+  readingStatus: string;
+  readStartDate: string;
+  readEndDate: string;
+  grade: string;
+  content: string;
 }

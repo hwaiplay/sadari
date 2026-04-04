@@ -64,7 +64,8 @@ public class SecurityConfig {
                                 "/api/oauth/callback/kakao",  // 🔥 이거 추가
                                 "/api/oauth/refresh",
                                 "/api/oauth/tokenCheck",
-                                "/api/book/search" // 책 검색 API는 인증 없이 접근 허용
+                                "/api/book/search", // 책 검색 API
+                                "/api/book/addBookReport" // 독후감 등록 API
                         ).permitAll()
 
                         
