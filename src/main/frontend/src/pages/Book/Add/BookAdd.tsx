@@ -4,7 +4,11 @@ import { statusContainer } from "./BookAdd.css";
 import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
 import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { BookForm } from "@/features/Book/types/book.type";
+import {
+  ReadingStatusType,
+  SelectBookType,
+} from "@/features/Book/types/book.type";
+import { addBookReport } from "@/features/Book/api/bookApi";
 
 /**
  * fileName       : Add
@@ -16,13 +20,13 @@ import { BookForm } from "@/features/Book/types/book.type";
  * -----------------------------------------------------------
  * 2026-03-21       Hanwon.Jang       최초 생성
  * 2026-04-02       Hanwon.Jang       선택 책 반영
- * 2026-04-02       Hanwon.Jang       폼 구성
+ * 2026-04-03       Hanwon.Jang       폼 구성
  */
 
 function BookAdd() {
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
-  const [form, setForm] = useState<BookForm>({
+  const [form, setForm] = useState<SelectBookType>({
     isbn: "",
     image: "",
     title: "",
@@ -38,51 +42,82 @@ function BookAdd() {
     }
   }, [selectedBook]);
 
-  const [readingStatus, setReadingStatus] = useState("done");
-  const [statusBtnVariant, setStatusBtnVariant] = useState("done");
+  const [status, setStatus] = useState<ReadingStatusType>("done");
 
-  const handleStatusClick = (state: string) => {
-    switch (state) {
-      case "done":
-        break;
+  const addFormAction = (event: any) => {
+    const formData = new FormData(event.target);
+    const coverImage = form.image; // 책표지
+    const status = formData.get("status"); // 독서상태
+    const startDate = formData.get("startDate"); // 독서 시작일
+    const endDate = formData.get("endDate"); // 독서 종료일
+    const grade = formData.get("grade"); // 평점
+    const content = formData.get("content"); // 평점
 
-      case "ing":
-        break;
-      case "stop":
-        break;
+    const data = {
+      coverImage: coverImage,
+      readingStatus: status as ReadingStatusType,
+      readStartDate: startDate as string,
+      readEndDate: endDate as string,
+      grade: grade as string,
+      content: content as string,
+    };
+
+    try {
+      addBookReport(data);
+      alert("등록 완료!");
+    } catch (e) {
+      console.error(e);
     }
   };
 
   return (
-    <form action="" method="post">
-      <SearchBookButton src={form.image} title={form.title} />
+    <form onSubmit={addFormAction}>
+      {selectedBook ? (
+        form.image && (
+          <div style={{ width: "300px" }}>
+            <img src={form.image} alt={form.title} style={{ width: "100%" }} />
+          </div>
+        )
+      ) : (
+        <SearchBookButton />
+      )}
       <FormField title="독서 상태">
         <div className={statusContainer}>
-          <Button onClick={() => handleStatusClick("done")}>다 읽었어요</Button>
-          <Button onClick={() => handleStatusClick("ing")} variant="disable">
-            읽고 있어요
-          </Button>
-          <Button onClick={() => handleStatusClick("stop")} variant="disable">
-            중단 했어요
-          </Button>
+          {[
+            { label: "다 읽었어요", value: "done" },
+            { label: "읽고 있어요", value: "reading" },
+            { label: "중단했어요", value: "stopped" },
+          ].map((item) => (
+            <label htmlFor={`readingStatus-${item.value}`} key={item.value}>
+              <div>{item.label}</div>
+              <input
+                type="radio"
+                name="readingStatus"
+                id={`readingStatus-${item.value}`}
+                value={item.value}
+                checked={status === item.value}
+                onChange={() => setStatus(item.value as ReadingStatusType)}
+              />
+            </label>
+          ))}
         </div>
       </FormField>
       <FormField title="독서 기간">
         <div>
           <label htmlFor="startDate">시작일</label>
-          <input type="date" name="startDate" id="startDate" />
+          <input type="date" name="readStartDate" id="startDate" />
         </div>
         <div>
-          <label htmlFor="EndDate">종료일</label>
-          <input type="date" name="EndDate" id="EndDate" />
+          <label htmlFor="endDate">종료일</label>
+          <input type="date" name="readEndDate" id="endDate" />
         </div>
       </FormField>
       <FormField title="평점">
-        <input type="radio" name="range" id="range1" value={1} />
-        <input type="radio" name="range" id="range2" value={2} />
-        <input type="radio" name="range" id="range3" value={3} />
-        <input type="radio" name="range" id="range4" value={4} />
-        <input type="radio" name="range" id="range5" value={5} />
+        <input type="radio" name="grade" id="grade1" value="1" />
+        <input type="radio" name="grade" id="grade2" value="2" />
+        <input type="radio" name="grade" id="grade3" value="3" />
+        <input type="radio" name="grade" id="grade4" value="4" />
+        <input type="radio" name="grade" id="grade5" value="5" />
       </FormField>
       <FormField title="기록">
         <textarea

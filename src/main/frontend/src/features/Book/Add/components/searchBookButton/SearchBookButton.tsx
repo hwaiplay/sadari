@@ -12,17 +12,8 @@
 import { Link } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
-interface SearchBookProps {
-  src: string;
-  title: string;
-}
-
-const SearchBookButton = ({ src, title }: SearchBookProps) => {
-  return src ? (
-    <div style={{ width: "300px" }}>
-      <img src={src} alt={title} style={{ width: "100%" }} />
-    </div>
-  ) : (
+const SearchBookButton = () => {
+  return (
     <Link to="/book/search" className={searchBtn}>
       <svg
         width="27"

@@ -18,7 +18,7 @@ import Home from "../pages/Home/Home";
 import BookDetail from "../pages/Book/Detail/BookDetail";
 import PublicRoute from "./PublicRoute";
 import AddLayout from "../features/Book/Add/components/AddLayout";
-import BookSearch from "../pages/Book/Search/BookSearch";
+import BookSearchType from "../pages/Book/Search/BookSearch";
 import BookAdd from "@/pages/Book/Add/BookAdd";
 
 const Router = () => {
@@ -56,7 +56,7 @@ const Router = () => {
         <Route path="/home" element={<Home />} />
         {/* 독후감 상세보기 */}
         <Route path="/book/detail/:id" element={<BookDetail />} />
-        <Route path="/book/search" element={<BookSearch />} />
+        <Route path="/book/search" element={<BookSearchType />} />
       </Route>
 
       {/* 기록하기 */}
