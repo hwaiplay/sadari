@@ -17,6 +17,4 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 
 public interface BookRepository extends JpaRepository<BookEntity, Long> {
-
-    Optional<BookEntity> findByUserIdxx(String provierId);
 }
