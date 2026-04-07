@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import org.our.sadari.sadariUser.auth.entity.UserEntity;
 import org.springframework.data.annotation.CreatedDate;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 
 @Entity
 @Getter
+@Setter
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
@@ -64,4 +66,12 @@ public class BookEntity {
     // 독서 종료일
     @Column(name = "BOOK_ENDT", nullable = false)
     private String bookEndt;
+    
+    // 평점
+    @Column(name = "BOOK_GRDE", nullable = false)
+    private String bookGrde;
+
+    // 기록 내용
+    @Column(name = "BOOK_CNTN", nullable = false)
+    private String bookCntn;
 }

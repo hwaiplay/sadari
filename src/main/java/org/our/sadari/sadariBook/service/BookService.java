@@ -16,5 +16,5 @@ import com.fasterxml.jackson.core.JsonParseException;
  */
 
 public interface BookService {
-    BookReportDto createReport(BookReportDto request) throws JsonParseException;
+    Long createReport(BookReportDto request);
 }

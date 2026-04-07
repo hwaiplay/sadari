@@ -35,9 +35,9 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
 
 export interface BookFormType {
   coverImage: string;
-  readingStatus: string;
-  readStartDate: string;
-  readEndDate: string;
+  status: string;
+  startDate: string;
+  endDate: string;
   grade: string;
   content: string;
 }

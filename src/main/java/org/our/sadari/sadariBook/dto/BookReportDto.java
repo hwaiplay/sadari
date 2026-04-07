@@ -17,9 +17,9 @@ import lombok.Data;
 @Data
 public class BookReportDto {
     private String coverImage;
-    private String readingStatus;
-    private String readStartDate;
-    private String readEndDate;
+    private String status;
+    private String startDate;
+    private String endDate;
     private String grade;
     private String content;
 }

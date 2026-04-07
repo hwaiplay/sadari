@@ -2,13 +2,15 @@ import FormField from "@/features/Book/Add/components/form/field/FormField";
 import { Button } from "@/components/Button/Button";
 import { statusContainer } from "./BookAdd.css";
 import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   ReadingStatusType,
   SelectBookType,
 } from "@/features/Book/types/book.type";
 import { addBookReport } from "@/features/Book/api/bookApi";
+import Loading from "@/components/Loading/Loading";
+import useAddBook from "@/features/Book/Add/hooks/useAddBook";
 
 /**
  * fileName       : Add
@@ -24,6 +26,8 @@ import { addBookReport } from "@/features/Book/api/bookApi";
  */
 
 function BookAdd() {
+  const { submitBook, loading } = useAddBook();
+
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
   const [form, setForm] = useState<SelectBookType>({
@@ -44,7 +48,10 @@ function BookAdd() {
 
   const [status, setStatus] = useState<ReadingStatusType>("done");
 
+  // 폼 action
   const addFormAction = (event: any) => {
+    event.preventDefault();
+
     const formData = new FormData(event.target);
     const coverImage = form.image; // 책표지
     const status = formData.get("status"); // 독서상태
@@ -55,22 +62,19 @@ function BookAdd() {
 
     const data = {
       coverImage: coverImage,
-      readingStatus: status as ReadingStatusType,
-      readStartDate: startDate as string,
-      readEndDate: endDate as string,
+      status: status as ReadingStatusType,
+      startDate: startDate as string,
+      endDate: endDate as string,
       grade: grade as string,
       content: content as string,
     };
 
-    try {
-      addBookReport(data);
-      alert("등록 완료!");
-    } catch (e) {
-      console.error(e);
-    }
+    submitBook(data);
   };
 
-  return (
+  return loading ? (
+    <Loading />
+  ) : (
     <form onSubmit={addFormAction}>
       {selectedBook ? (
         form.image && (
@@ -88,12 +92,12 @@ function BookAdd() {
             { label: "읽고 있어요", value: "reading" },
             { label: "중단했어요", value: "stopped" },
           ].map((item) => (
-            <label htmlFor={`readingStatus-${item.value}`} key={item.value}>
+            <label htmlFor={`status-${item.value}`} key={item.value}>
               <div>{item.label}</div>
               <input
                 type="radio"
-                name="readingStatus"
-                id={`readingStatus-${item.value}`}
+                name="status"
+                id={`status-${item.value}`}
                 value={item.value}
                 checked={status === item.value}
                 onChange={() => setStatus(item.value as ReadingStatusType)}
@@ -105,11 +109,11 @@ function BookAdd() {
       <FormField title="독서 기간">
         <div>
           <label htmlFor="startDate">시작일</label>
-          <input type="date" name="readStartDate" id="startDate" />
+          <input type="date" name="startDate" id="startDate" />
         </div>
         <div>
           <label htmlFor="endDate">종료일</label>
-          <input type="date" name="readEndDate" id="endDate" />
+          <input type="date" name="endDate" id="endDate" />
         </div>
       </FormField>
       <FormField title="평점">

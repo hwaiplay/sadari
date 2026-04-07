@@ -6,6 +6,9 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.sadariBook.dto.BookItemDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.entity.BookEntity;
+import org.our.sadari.sadariBook.repository.BookRepository;
+import org.our.sadari.sadariBook.service.BookServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
@@ -20,8 +23,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
-
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
@@ -39,6 +41,7 @@ import tools.jackson.databind.ObjectMapper;
 
 @Slf4j
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/api/book")
 public class BookController {
 
@@ -47,6 +50,10 @@ public class BookController {
 
     @Value("${naver.key.clientSecret}")
     private String NAVER_CLIENT_SECRET; //네이버 앱 시크릿 키
+
+    private final BookServiceImpl bookServiceImpl;
+
+    private final BookRepository bookreRepository;
 
     /**
      *  책 검색 Api
@@ -86,14 +93,17 @@ public class BookController {
      * 독후감 기록 Api
      */
     @PostMapping("/addBookReport")
-    public ResponseEntity<ResultData<?>> createReport(@RequestBody BookReportDto request) {
-        log.debug("독후감 기록: " + request);
+    public ResponseEntity<ResultData<?>> createReport(@RequestBody BookReportDto bookReportDto) {
 
-        if(request == null) {
+        if(bookReportDto == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ResultData.fail(ResultEnum.AUTH_FAIL));
         }
 
-        return ResponseEntity.ok(ResultData.success());
+        log.debug("독후감 기록: " + bookReportDto);
+
+        Long bookId = bookServiceImpl.createReport(bookReportDto);
+
+        return ResponseEntity.ok(ResultData.success(bookId));
     }
 }
