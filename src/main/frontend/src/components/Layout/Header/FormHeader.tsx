@@ -1,8 +1,18 @@
-import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { header, saveBtn } from "./Header.css";
+import { backpageBtn, header } from "./Header.css";
 import { Container } from "../Container/Container";
 import clsx from "clsx";
+
+/**
+ * fileName       : FormHeader
+ * author         : hanwon.Jang
+ * date           : 2026-04-03
+ * description    : form 전용 헤더
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-04-03       hanwon.Jang       레이아웃 변경
+ */
 
 function FormHeader() {
   const navigate = useNavigate();
@@ -15,6 +25,7 @@ function FormHeader() {
     <header>
       <Container className={clsx(header, "_form")}>
         <button
+          className={backpageBtn}
           type="button"
           aria-label="이전 페이지로 돌아가기"
           onClick={backPrev}
@@ -27,9 +38,6 @@ function FormHeader() {
         <Link to="/">
           <img src={"/img/common/logo-b.svg"} alt="사다리 로고" width={100} />
         </Link>
-        <button type="button" aria-label="저장하기" className={saveBtn}>
-          저장
-        </button>
       </Container>
     </header>
   );

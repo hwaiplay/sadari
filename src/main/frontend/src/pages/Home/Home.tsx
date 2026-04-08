@@ -10,12 +10,13 @@
  */
 
 import { useEffect, useState } from "react";
+import clsx from "clsx";
+import { homeDummyData } from "../../app/assets/dummy";
 import { Container } from "../../components/Layout/Container/Container";
 import Book from "../../features/Home/Book";
 import * as styles from "./Home.css";
-import { homeDummyData } from "../../app/assets/dummy";
+import { container } from "../../components/Layout/Container/container.css";
 import { tilt } from "../../features/Home/book.css";
-import clsx from "clsx";
 
 function chunkArray<T>(array: T[], size: number) {
   const result = [];
@@ -40,8 +41,8 @@ function Home() {
   return (
     <>
       {booksData.length !== 0 ? (
-        <div style={{ height: "100svh" }}>
-          <Container className={styles.row5Container}>
+        <div className={clsx(styles.homeContainer, container)}>
+          <div className={styles.row5Container}>
             {/* 첫 줄 */}
             <div className={clsx(styles.row5, styles.row)}>
               {firstRow.map((book, index) => (
@@ -52,15 +53,15 @@ function Home() {
                 />
               ))}
             </div>
-          </Container>
+          </div>
 
           {/* 나머지 */}
           {Array.from({ length: rowCount }).map((_, rowIndex) => (
-            <Container className={clsx(styles.row6, styles.row)} key={rowIndex}>
+            <div className={clsx(styles.row6, styles.row)} key={rowIndex}>
               {rows[rowIndex]?.map((book) => (
                 <Book key={book.id} {...book} />
               ))}
-            </Container>
+            </div>
           ))}
         </div>
       ) : (

@@ -9,8 +9,9 @@
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
+import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 
 function Login() {
   const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;

@@ -63,7 +63,9 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/oauth/callback/kakao",  // 🔥 이거 추가
                                 "/api/oauth/refresh",
-                                "/api/oauth/tokenCheck"
+                                "/api/oauth/tokenCheck",
+                                "/api/book/search", // 책 검색 API
+                                "/api/book/addBookReport" // 독후감 등록 API
                         ).permitAll()
 
                         
