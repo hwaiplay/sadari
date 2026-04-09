@@ -21,7 +21,7 @@ export default function PublicRoute({
 }) {
   const { isLoading, isAuthenticated } = useCheckAuth();
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading title="로딩중" />;
 
   if (isAuthenticated) {
     return <Navigate to="/home" replace />;

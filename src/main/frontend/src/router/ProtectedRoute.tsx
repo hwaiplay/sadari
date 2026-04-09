@@ -20,7 +20,7 @@ export default function ProtectedRoute({
 }) {
   const { isLoading, isAuthenticated } = useCheckAuth();
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading title="로딩중" />;
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

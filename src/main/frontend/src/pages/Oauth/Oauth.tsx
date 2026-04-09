@@ -29,7 +29,7 @@ const Oauth = () => {
     }
   }, [isLoading]);
 
-  return <Loading />;
+  return <Loading title="로그인 중" />;
 };
 
 export default Oauth;

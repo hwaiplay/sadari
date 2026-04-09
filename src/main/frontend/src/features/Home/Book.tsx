@@ -1,5 +1,5 @@
 import React from "react";
-import * as styles from "./book.css";
+import * as styles from "./Book.css";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
 
@@ -18,7 +18,7 @@ function Book({
   const navigate = useNavigate();
   return (
     <Link
-      to={`/detail/${id}`}
+      to={`/book/detail/${id}`}
       className={`${styles.book} ${className ?? ""}`}
       style={{ backgroundColor: `#${color}` }}
     >
