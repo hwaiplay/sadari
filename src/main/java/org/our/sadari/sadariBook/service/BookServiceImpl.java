@@ -17,7 +17,9 @@ public class BookServiceImpl implements BookService {
     private final BookRepository bookRepository;
     private final UserRepository userRepository;
 
-    // 독후감 기록 로직
+    /**
+     * 독후감 기록 로직
+     */
     @Override
     public Long createReport(BookReportDto request) {
 
@@ -38,5 +40,15 @@ public class BookServiceImpl implements BookService {
         BookEntity saved = bookRepository.save(entity);
        
         return saved.getBookNumb();
+    }
+
+    /**
+     * 독후감 상세보기 로직
+     */
+    public BookReportDto getDetail(Long id) {
+        BookEntity detail =  bookRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("데이터 없음"));
+
+        return BookReportDto.from(detail);
     }
 }
