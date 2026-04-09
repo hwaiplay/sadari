@@ -28,11 +28,12 @@ export interface SelectBookType {
 }
 
 /**
- * 기록하기 폼
+ * 독후감 기록하기
  */
 // 독서 진행 상태
 export type ReadingStatusType = "done" | "reading" | "stopped";
 
+// 기록하기 폼
 export interface BookFormType {
   coverImage: string;
   status: string;
@@ -40,4 +41,10 @@ export interface BookFormType {
   endDate: string;
   grade: string;
   content: string;
+}
+
+// 기록 후 백엔드 응답
+export interface AddBookResponse {
+  success: boolean;
+  data: number; // bookId
 }

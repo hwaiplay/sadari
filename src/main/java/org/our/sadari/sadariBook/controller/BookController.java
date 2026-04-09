@@ -16,6 +16,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -100,10 +101,25 @@ public class BookController {
                     .body(ResultData.fail(ResultEnum.AUTH_FAIL));
         }
 
-        log.debug("독후감 기록: " + bookReportDto);
+        log.debug("독후감 기록 성공: " + bookReportDto);
 
         Long bookId = bookServiceImpl.createReport(bookReportDto);
 
         return ResponseEntity.ok(ResultData.success(bookId));
+    }
+
+    @GetMapping("/getBookdetail/{id}")
+    public ResponseEntity<ResultData<?>> getDetail(@PathVariable Long id) {
+
+        if(id == null) {
+             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ResultData.fail(ResultEnum.AUTH_FAIL));
+        }
+
+        BookReportDto detail = bookServiceImpl.getDetail(id);
+
+        log.debug("독후감 상세보기 조회 성공: " + detail);
+
+        return ResponseEntity.ok(ResultData.success(detail));
     }
 }

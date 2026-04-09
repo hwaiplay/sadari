@@ -1,16 +1,14 @@
 import FormField from "@/features/Book/Add/components/form/field/FormField";
-import { Button } from "@/components/Button/Button";
 import { statusContainer } from "./BookAdd.css";
 import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
-import { Navigate, useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   ReadingStatusType,
   SelectBookType,
 } from "@/features/Book/types/book.type";
-import { addBookReport } from "@/features/Book/api/bookApi";
 import Loading from "@/components/Loading/Loading";
-import useAddBook from "@/features/Book/Add/hooks/useAddBook";
+import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation";
 
 /**
  * fileName       : Add
@@ -26,8 +24,7 @@ import useAddBook from "@/features/Book/Add/hooks/useAddBook";
  */
 
 function BookAdd() {
-  const { submitBook, loading } = useAddBook();
-
+  // 책 검색 결과 가져옴
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
   const [form, setForm] = useState<SelectBookType>({
@@ -46,34 +43,35 @@ function BookAdd() {
     }
   }, [selectedBook]);
 
+  // 독서 상태
   const [status, setStatus] = useState<ReadingStatusType>("done");
 
-  // 폼 action
-  const addFormAction = (event: any) => {
-    event.preventDefault();
+  // 백엔드 응답 결과
+  const { mutate, isPending } = useAddBookMutation();
 
-    const formData = new FormData(event.target);
-    const coverImage = form.image; // 책표지
+  // 폼 action
+  const addFormAction = (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    const formData = new FormData(e.currentTarget);
     const status = formData.get("status"); // 독서상태
     const startDate = formData.get("startDate"); // 독서 시작일
     const endDate = formData.get("endDate"); // 독서 종료일
     const grade = formData.get("grade"); // 평점
     const content = formData.get("content"); // 평점
 
-    const data = {
-      coverImage: coverImage,
+    mutate({
+      coverImage: form.image,
       status: status as ReadingStatusType,
       startDate: startDate as string,
       endDate: endDate as string,
       grade: grade as string,
       content: content as string,
-    };
-
-    submitBook(data);
+    });
   };
 
-  return loading ? (
-    <Loading />
+  return isPending ? (
+    <Loading title={"등록중"} />
   ) : (
     <form onSubmit={addFormAction}>
       {selectedBook ? (
