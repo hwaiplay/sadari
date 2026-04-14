@@ -1,5 +1,9 @@
 {
   "compilerOptions": {
+    "paths": {
+      "@/*": ["./src/*"]
+    },
+
     "target": "ESNext",
     "useDefineForClassFields": true,
     "lib": ["DOM", "DOM.Iterable", "ESNext"],
@@ -7,7 +11,6 @@
     "module": "ESNext",
     "skipLibCheck": true,
 
-    "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
     "isolatedModules": true,

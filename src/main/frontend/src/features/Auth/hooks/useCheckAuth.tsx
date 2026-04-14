@@ -11,7 +11,7 @@
 
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
-import { refreshToken } from "../api/authApi";
+import { refreshTokenApi } from "../api/authApi";
 
 export const useCheckAuth = () => {
   const { data, isLoading, isError, refetch } = useAuthQuery(); // 로그인 상태 확인 (/api/oauth/tokenCheck)
@@ -23,10 +23,11 @@ export const useCheckAuth = () => {
       setRefreshing(true);
       (async () => {
         try {
-          await refreshToken(); // 토큰 갱신 API 호출
+          await refreshTokenApi(); // 토큰 갱신 API 호출
           await refetch(); // 재인증
         } catch {
-          alert("세션이 만료되었습니다. 다시 로그인해주세요.");
+          console.log("토큰 갱신 실패");
+          // alert("세션이 만료되었습니다. 다시 로그인해주세요.");
           return { status: "unauthenticated" };
         } finally {
           setRefreshing(false);
@@ -35,20 +36,17 @@ export const useCheckAuth = () => {
     }
   }, [data?.code, refreshing]);
 
-  if (isLoading || refreshing)
-    return { isLoading: true, navigateTo: null, showChildren: false };
+  if (isLoading) return { isLoading: true, isAuthenticated: false };
 
-  if (isError)
-    return { isLoading: false, navigateTo: "/login", showChildren: false };
+  if (isError) return { isLoading: false, isAuthenticated: false };
 
   if (data) {
     const code = data.code; // 응답 코드
 
-    if (code === 200)
-      return { isLoading: false, navigateTo: null, showChildren: true };
+    if (code === 200) return { isLoading: false, isAuthenticated: true };
     if (code === 1002 || code === 1003)
-      return { isLoading: false, navigateTo: "/login", showChildren: false };
+      return { isLoading: false, isAuthenticated: false };
   }
 
-  return { isLoading: false, navigateTo: "/login", showChildren: false };
+  return { isLoading: false, isAuthenticated: false };
 };

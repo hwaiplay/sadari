@@ -99,33 +99,33 @@ public class AuthLoginController {
      * @return
      */
     @PostMapping("/refresh")
-public ResponseEntity<ResultData<?>> refresh(HttpServletRequest request) {
-    String refreshToken = extractRefreshToken(request);
+    public ResponseEntity<ResultData<?>> refresh(HttpServletRequest request) {
+        String refreshToken = extractRefreshToken(request);
 
-    if (refreshToken == null) {
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                .body(ResultData.fail(ResultEnum.AUTH_FAIL));
-    }
+        if (refreshToken == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                    .body(ResultData.fail(ResultEnum.AUTH_FAIL));
+        }
 
-    TokenHistoryEntity tokenEntity = tokenHistoryRepository
-            .findByRefrTokn(refreshToken)
-            .orElseThrow(() ->
-                new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
-            );
+        TokenHistoryEntity tokenEntity = tokenHistoryRepository
+                .findByRefrTokn(refreshToken)
+                .orElseThrow(() ->
+                    new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
+                );
 
-    if (tokenEntity.isExpired()) {
-        return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_EXPIRED));
-    }
+        if (tokenEntity.isExpired()) {
+            return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_EXPIRED));
+        }
 
-    if (!jwtProvider.validateToken(refreshToken)) {
-        return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_INVALID));
-    }
+        if (!jwtProvider.validateToken(refreshToken)) {
+            return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_INVALID));
+        }
 
-    Long userNumb = jwtProvider.getUserNumb(refreshToken);
+        Long userNumb = jwtProvider.getUserNumb(refreshToken);
 
-    String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
+        String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
-    ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
             .httpOnly(true)
             .sameSite("Lax")
             .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
@@ -133,10 +133,11 @@ public ResponseEntity<ResultData<?>> refresh(HttpServletRequest request) {
             .maxAge(60 * 60)
             .build();
 
-    return ResponseEntity.ok()
+        return ResponseEntity.ok()
             .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
             .body(ResultData.success());
-}
+    }
+
     /**
      * 쿠키에서 refreshToken 추출
      * @return refreshToken 값 (없으면 null)

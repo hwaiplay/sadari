@@ -9,25 +9,39 @@
  * 2026-03-23       hanwon.Jang       최초 생성
  */
 
-import React from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "../pages/Login/Login";
-import MainLayout from "../components/Layout/MainLayout";
-import App from "../App";
 import Oauth from "../pages/Oauth/Oauth";
+import ProtectedRoute from "./ProtectedRoute";
+import MainLayout from "../components/Layout/MainLayout";
 import Home from "../pages/Home/Home";
-import AddLayout from "../pages/Add/AddLayout";
-import Add from "../pages/Add/Add";
-import BookDetail from "../pages/BookDetail/BookDetail";
-import ProtectedRoute from "../features/Auth/ProtectedRoute";
+import BookDetail from "../pages/Book/Detail/BookDetail";
+import PublicRoute from "./PublicRoute";
+import AddLayout from "../features/Book/Add/components/AddLayout";
+import BookSearchType from "../pages/Book/Search/BookSearch";
+import BookAdd from "@/pages/Book/Add/BookAdd";
 
 const Router = () => {
   return (
     <Routes>
       {/* 로그인 */}
-      <Route path="/login" element={<Login />} />
+      <Route
+        path="/login"
+        element={
+          <PublicRoute>
+            <Login />
+          </PublicRoute>
+        }
+      />
       {/* 카카오 로그인 검증 */}
-      <Route path="/oauth" element={<Oauth />} />
+      <Route
+        path="/oauth"
+        element={
+          <PublicRoute>
+            <Oauth />
+          </PublicRoute>
+        }
+      />
 
       <Route
         element={
@@ -41,7 +55,8 @@ const Router = () => {
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
         {/* 독후감 상세보기 */}
-        <Route path="/detail/:id" element={<BookDetail />} />
+        <Route path="/book/detail/:id" element={<BookDetail />} />
+        <Route path="/book/search" element={<BookSearchType />} />
       </Route>
 
       {/* 기록하기 */}
@@ -52,7 +67,7 @@ const Router = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/add" element={<Add />} />
+        <Route path="/add" element={<BookAdd />} />
       </Route>
     </Routes>
   );

@@ -10,21 +10,21 @@ import { ReactNode, useEffect } from "react";
  * 2026-03-24       hanwon.Jang       최초 생성
  */
 import { Navigate } from "react-router-dom";
-import Loading from "../../components/Loading/Loading.tsx";
-import { useCheckAuth } from "./hooks/useCheckAuth.tsx";
+import Loading from "../components/Loading/Loading.tsx";
+import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 
 export default function ProtectedRoute({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { isLoading, navigateTo, showChildren } = useCheckAuth();
+  const { isLoading, isAuthenticated } = useCheckAuth();
 
-  if (isLoading) return <Loading />;
+  if (isLoading) return <Loading title="로딩중" />;
 
-  if (navigateTo) return <Navigate to={navigateTo} replace />;
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
 
-  if (showChildren) return children;
-
-  return <Navigate to="/login" replace />; // fallback
+  return children;
 }
