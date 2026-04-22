@@ -3,7 +3,6 @@ import { homeDummyData } from "../../../app/assets/dummy";
 import { useEffect, useState } from "react";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
-import { BookFormType } from "@/features/Book/types/book.type";
 
 function BookDetail() {
   const { id } = useParams();
