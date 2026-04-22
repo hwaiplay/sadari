@@ -35,7 +35,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "TM_BOOKXM")
+@Table(name = "TM_BOOK_REPORT")
 public class BookReportEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tm_bookxm_seq_gen")
@@ -46,7 +46,7 @@ public class BookReportEntity {
     )
 
     // 독후감 번호
-    @Column(name = "BOOK_NUMB")
+    @Column(name = "REPORT_NUMB")
     private Long bookNumb;
     
     // 유저와 연결
@@ -56,25 +56,29 @@ public class BookReportEntity {
 
     // 책과 연결 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(
+        name = "BOOK_NUMB",              // 내가 사용할 FK 컬럼명
+        referencedColumnName = "BOOK_NUMB" // BookEntity의 PK 컬럼명)
+    )
     private BookEntity book;
 
     // 독서 상태
-    @Column(name = "BOOK_STAT", nullable = false)
+    @Column(name = "REPORT_STAT", nullable = false)
     private String bookStat;
 
     // 독서 시작일
-    @Column(name = "BOOK_STDT", nullable = false)
+    @Column(name = "REPORT_STDT", nullable = false)
     private String bookStdt;
     
     // 독서 종료일
-    @Column(name = "BOOK_ENDT", nullable = false)
+    @Column(name = "REPORT_ENDT", nullable = false)
     private String bookEndt;
     
     // 평점
-    @Column(name = "BOOK_GRDE", nullable = false)
+    @Column(name = "REPORT_GRDE", nullable = false)
     private String bookGrde;
 
     // 기록 내용
-    @Column(name = "BOOK_CNTN", nullable = false)
+    @Column(name = "REPORT_CNTN", nullable = false)
     private String bookCntn;
 }

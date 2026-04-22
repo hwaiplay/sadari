@@ -3,7 +3,6 @@ package org.our.sadari.sadariBook.service;
 import java.util.List;
 
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
@@ -72,8 +71,15 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     public BookReportDto getDetail(Long id) {
+        // 책 조회
+        BookEntity bookInfo =  bookRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("데이터 없음"));
+
+        // 독후감 조회
         BookReportEntity detail =  bookReportRepository.findById(id)
             .orElseThrow(() -> new RuntimeException("데이터 없음"));
+
+        String coverImage = bookRepository.findImageById(id);
 
         return BookReportDto.from(detail);
     }
