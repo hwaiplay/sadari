@@ -5,7 +5,7 @@ import { useLocation } from "react-router-dom";
 import { useEffect, useState } from "react";
 import {
   ReadingStatusType,
-  SelectBookType,
+  SelectedBookType,
 } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
 import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation";
@@ -27,18 +27,29 @@ function BookAdd() {
   // 책 검색 결과 가져옴
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
-  const [form, setForm] = useState<SelectBookType>({
+
+  const [selectedBookData, setSelectedBookData] = useState<SelectedBookType>({
+    title: "",
+    author: "",
+    publisher: "",
     isbn: "",
     image: "",
-    title: "",
+    description: "",
   });
 
   useEffect(() => {
     if (selectedBook) {
-      setForm({
+      const bookDes = selectedBook.description;
+      const cutBookDes = bookDes.substring(0, 200);
+      const replaceBookDes = cutBookDes.replace(/(\r\n|\n|\r)/gm, "");
+
+      setSelectedBookData({
+        title: selectedBook.title,
+        author: selectedBook.author,
+        publisher: selectedBook.publisher,
         isbn: selectedBook.isbn,
         image: selectedBook.image,
-        title: selectedBook.title,
+        description: replaceBookDes,
       });
     }
   }, [selectedBook]);
@@ -60,14 +71,26 @@ function BookAdd() {
     const grade = formData.get("grade"); // 평점
     const content = formData.get("content"); // 평점
 
-    mutate({
-      coverImage: form.image,
-      status: status as ReadingStatusType,
-      startDate: startDate as string,
-      endDate: endDate as string,
-      grade: grade as string,
-      content: content as string,
-    });
+    const data = {
+      bookDto: {
+        title: selectedBookData.title,
+        author: selectedBookData.author,
+        publisher: selectedBookData.publisher,
+        isbn: selectedBookData.isbn,
+        image: selectedBookData.image,
+        description: selectedBookData.description,
+      },
+      bookReportDto: {
+        image: selectedBookData.image,
+        status: status as ReadingStatusType,
+        startDate: startDate as string,
+        endDate: endDate as string,
+        grade: grade as string,
+        content: content as string,
+      },
+    };
+
+    mutate(data);
   };
 
   return isPending ? (
@@ -75,9 +98,13 @@ function BookAdd() {
   ) : (
     <form onSubmit={addFormAction}>
       {selectedBook ? (
-        form.image && (
+        selectedBookData.image && (
           <div style={{ width: "300px" }}>
-            <img src={form.image} alt={form.title} style={{ width: "100%" }} />
+            <img
+              src={selectedBookData.image}
+              alt={selectedBookData.title}
+              style={{ width: "100%" }}
+            />
           </div>
         )
       ) : (

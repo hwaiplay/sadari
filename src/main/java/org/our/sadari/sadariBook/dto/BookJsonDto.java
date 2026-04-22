@@ -22,5 +22,5 @@ public class BookJsonDto {
     private int total;
     private int start;
     private int display;
-    private List<BookItemDto> items;
+    private List<BookDto> items;
 }
