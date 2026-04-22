@@ -7,7 +7,7 @@ import lombok.Data;
 
 /**
  * packageName    : org.our.sadari.sadariBook.dto
- * fileName       : BookItemDto.java
+ * fileName       : BookDto.java
  * author         : hanwon.Jang
  * date           : 2026-04-08
  * description    : "책"의 정보를 담는 DTO

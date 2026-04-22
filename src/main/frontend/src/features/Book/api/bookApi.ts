@@ -27,6 +27,6 @@ export const addBookReport = async (
  * @param 독후감 id
  * @returns 독후감 내용
  */
-export const getBookDetail = (id: number) => {
-  return api.get(`/book/getBookdetail/${id}`);
+export const getBookDetail = (bookNumb: number) => {
+  return api.get(`/book/getBookdetail/${bookNumb}`);
 };
