@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { homeDummyData } from "../../../app/assets/dummy";
 import { useEffect, useState } from "react";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
@@ -13,10 +12,10 @@ function BookDetail() {
     return <Loading title={"로딩중"} />;
   }
 
-  return (
+  return bookData ? (
     <div>
       <div>
-        <img src={bookData.coverImage} alt={""} width="300px" />
+        <img src={bookData.image} alt={bookData.title} width="300px" />
       </div>
       <div>
         <h1>독서기간</h1>
@@ -31,6 +30,8 @@ function BookDetail() {
         {bookData.content}
       </div>
     </div>
+  ) : (
+    <h1>독후감 데이터가 존재하지 않습니다</h1>
   );
 }
 
