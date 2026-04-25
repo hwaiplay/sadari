@@ -21,6 +21,8 @@ export const useSearchQuery = (searchKeyword: string) => {
           `/book/search?query=${encodeURIComponent(searchKeyword)}`,
         );
 
+        console.log(response.data);
+
         return response.data;
       } catch (err) {
         console.log("에러 발생:", err);

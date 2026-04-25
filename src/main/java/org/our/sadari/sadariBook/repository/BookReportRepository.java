@@ -1,0 +1,44 @@
+package org.our.sadari.sadariBook.repository;
+
+import java.util.Optional;
+
+import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.entity.BookReportEntity;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
+
+/**
+ * packageName    : org.our.sadari.sadariBook.repository
+ * fileName       : BookReportRepository.java
+ * author         : hanwon.Jang
+ * date           : 2026-04-21
+ * description    : "독후감"에 관한 레포지토리
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-04-21       hanwon.Jang       최초 생성
+ */
+
+public interface BookReportRepository extends JpaRepository<BookReportEntity, Long> {
+    @Query("""
+        SELECT new org.our.sadari.sadariBook.dto.AddBookReportDto(
+            b.bookTitl,
+            b.bookAthr,
+            b.bookPubl,
+            b.bookIsbn,
+            b.bookCvim,
+            b.bookDesc,
+            r.bookStat,
+            r.bookStdt,
+            r.bookEndt,
+            r.bookGrde,
+            r.bookCntn
+        )
+        FROM BookReportEntity r
+        JOIN r.book b
+        WHERE r.id = :id
+    """)
+    AddBookReportDto findDetail(Long id);
+}

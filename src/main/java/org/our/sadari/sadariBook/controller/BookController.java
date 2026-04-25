@@ -3,10 +3,10 @@ package org.our.sadari.sadariBook.controller;
 import java.util.List;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.sadariBook.dto.BookItemDto;
+import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
-import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.repository.BookRepository;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,7 +33,7 @@ import tools.jackson.databind.ObjectMapper;
  * fileName       : BookController.java
  * author         : hanwon.Jang
  * date           : 2026-04-01
- * description    : 네이버 책 검색 API 연동 컨트롤러    
+ * description    : 독후감 관련 컨트롤러    
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -54,7 +54,7 @@ public class BookController {
 
     private final BookServiceImpl bookServiceImpl;
 
-    private final BookRepository bookreRepository;
+    private final BookRepository bookRepository;
 
     /**
      *  책 검색 Api
@@ -84,7 +84,7 @@ public class BookController {
             
         BookJsonDto bookJsonDto = objectMapper.readValue(response.getBody(), BookJsonDto.class);
 
-        List<BookItemDto> books = bookJsonDto.getItems();
+        List<BookDto> books = bookJsonDto.getItems();
 
         return ResponseEntity.ok(ResultData.success(books));
 
@@ -94,16 +94,16 @@ public class BookController {
      * 독후감 기록 Api
      */
     @PostMapping("/addBookReport")
-    public ResponseEntity<ResultData<?>> createReport(@RequestBody BookReportDto bookReportDto) {
+    public ResponseEntity<ResultData<?>> createReport(@RequestBody AddBookReportDto addBookReportDto) {
 
-        if(bookReportDto == null) {
+        if(addBookReportDto == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(ResultData.fail(ResultEnum.AUTH_FAIL));
         }
 
-        log.debug("독후감 기록 성공: " + bookReportDto);
-
-        Long bookId = bookServiceImpl.createReport(bookReportDto);
+        Long bookId = bookServiceImpl.createReport(addBookReportDto);
+        
+        log.debug("독후감 기록 성공: " + addBookReportDto);
 
         return ResponseEntity.ok(ResultData.success(bookId));
     }
@@ -116,7 +116,7 @@ public class BookController {
                     .body(ResultData.fail(ResultEnum.AUTH_FAIL));
         }
 
-        BookReportDto detail = bookServiceImpl.getDetail(id);
+        AddBookReportDto detail = bookServiceImpl.getDetail(id);
 
         log.debug("독후감 상세보기 조회 성공: " + detail);
 
