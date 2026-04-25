@@ -1,6 +1,6 @@
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../app/styles/tokens.css";
-import { media } from "../../app/styles/responsive.css";
+import { vars } from "@/app/styles/tokens.css";
+import { media } from "@/app/styles/responsive.css";
 
 export const book = style({
   display: "flex",

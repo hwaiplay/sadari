@@ -46,19 +46,23 @@ public class BookReportEntity {
     )
 
     // 독후감 번호
-    @Column(name = "REPORT_NUMB")
-    private Long bookNumb;
+    @Column(name = "REPORT_NUMB", nullable = false)
+    private Long reportNumb;
     
     // 유저와 연결
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_NUMB", nullable = false)
-    private UserEntity userNumb;
+    @JoinColumn(
+        name = "USER_NUMB", 
+        referencedColumnName = "USER_NUMB",
+        nullable = false
+    )
+    private UserEntity user;
 
     // 책과 연결 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "BOOK_NUMB",              // 내가 사용할 FK 컬럼명
-        referencedColumnName = "BOOK_NUMB" // BookEntity의 PK 컬럼명)
+        name = "BOOK_NUMB",                // 내가 사용할 FK 컬럼명
+        referencedColumnName = "BOOK_NUMB" // BookEntity의 PK 컬럼명
     )
     private BookEntity book;
 
