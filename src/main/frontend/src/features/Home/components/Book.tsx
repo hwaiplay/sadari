@@ -2,27 +2,23 @@ import React from "react";
 import * as styles from "./Book.css";
 import { useNavigate } from "react-router-dom";
 import { Link } from "react-router-dom";
-
-interface BookProps {
-  id: number;
-  title: string;
-  color: string;
-}
+import { HomeBookType } from "@/features/Book/types/book.type";
 
 function Book({
-  id,
-  title,
-  color,
+  reportNumb,
+  bookTitle,
   className,
-}: BookProps & { className?: string }) {
+}: HomeBookType & { className?: string }) {
   const navigate = useNavigate();
+
   return (
     <Link
-      to={`/book/detail/${id}`}
+      to={`/book/detail/${reportNumb}`}
       className={`${styles.book} ${className ?? ""}`}
-      style={{ backgroundColor: `#${color}` }}
+      style={{ backgroundColor: `#ac8a8a` }}
+      // style={{ backgroundColor: `#${color}` }}
     >
-      <div className={styles.title}>{title}</div>
+      <div className={styles.title}>{bookTitle}</div>
     </Link>
   );
 }

@@ -51,8 +51,8 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
 
     /**
      * 독후감 리스트 조회
-     * @param userIdxx
+     * @param user
      * @return 독후감 리스트
      */
-    List<BookReportDto> findAllByUserIdxx(String userIdxx);
+    List<BookReportDto> findAllByUser_UserNumb(Long user);
 }
