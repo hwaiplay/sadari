@@ -2,10 +2,8 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
+import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
-import org.our.sadari.sadariBook.entity.BookEntity;
-
-import com.fasterxml.jackson.core.JsonParseException;
 
 /**
  * packageName    : 
@@ -22,10 +20,10 @@ import com.fasterxml.jackson.core.JsonParseException;
 
 public interface BookService {
     // 독후감 기록
-    Long createReport(BookReportDto request);
+    Long createReport(AddBookReportDto request);
 
     // 독후감 상세보기
-    BookReportDto getDetail(Long id);
+    AddBookReportDto getDetail(Long id);
 
     // 독후감 리스트 출력 (홈화면)
     List<BookReportDto> getBookList(Long userId);

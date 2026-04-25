@@ -1,5 +1,5 @@
 import api from "@/app/api/axios";
-import { AddBookResponse, BookFormType } from "../types/book.type";
+import { AddBookResponse, AddBookReportRequest } from "../types/book.type";
 
 /**
  * fileName       : bookApi
@@ -16,7 +16,7 @@ import { AddBookResponse, BookFormType } from "../types/book.type";
  * 독후감 기록 API
  */
 export const addBookReport = async (
-  data: BookFormType,
+  data: AddBookReportRequest,
 ): Promise<AddBookResponse> => {
   const res = await api.post("/book/addBookReport", data);
   return res.data;
