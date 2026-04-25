@@ -25,9 +25,4 @@ public interface BookRepository extends JpaRepository<BookEntity, Long> {
     // 책 표지 이미지 조회
     @Query("SELECT b.bookCvim FROM BookEntity b WHERE bookNumb = :id")
     String findImageById(@Param("id") Long id);
-
-    // @Query(
-    //     value = "SELECT * FROM TM_BOOK_REPORT r JOIN TM_BOOK_IMFO b ON r.REPORT_BOOK_NUMB = b.BOOK_NUMB WHERE m.name = :name", nativeQuery = true
-    // )
-    // BookReportDto findDetail(@Param("id") Long id);
 }

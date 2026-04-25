@@ -116,7 +116,7 @@ public class BookController {
                     .body(ResultData.fail(ResultEnum.AUTH_FAIL));
         }
 
-        BookReportDto detail = bookServiceImpl.getDetail(id);
+        AddBookReportDto detail = bookServiceImpl.getDetail(id);
 
         log.debug("독후감 상세보기 조회 성공: " + detail);
 

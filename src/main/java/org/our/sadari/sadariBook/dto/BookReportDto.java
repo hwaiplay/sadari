@@ -1,9 +1,6 @@
 package org.our.sadari.sadariBook.dto;
 
-import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
-
-import lombok.Builder;
 import lombok.Data;
 
 /**

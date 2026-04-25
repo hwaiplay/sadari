@@ -2,11 +2,8 @@ import FormField from "@/features/Book/Add/components/form/field/FormField";
 import { statusContainer } from "./BookAdd.css";
 import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
 import { useLocation } from "react-router-dom";
-import { useEffect, useState } from "react";
-import {
-  ReadingStatusType,
-  SelectedBookType,
-} from "@/features/Book/types/book.type";
+import { useState } from "react";
+import { ReadingStatusType } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
 import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation";
 
@@ -24,35 +21,9 @@ import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation
  */
 
 function BookAdd() {
-  // 책 검색 결과 가져옴
+  // 책 검색 페이지에서 결과 가져옴
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
-
-  const [selectedBookData, setSelectedBookData] = useState<SelectedBookType>({
-    title: "",
-    author: "",
-    publisher: "",
-    isbn: "",
-    image: "",
-    description: "",
-  });
-
-  useEffect(() => {
-    if (selectedBook) {
-      const bookDes = selectedBook.description;
-      const cutBookDes = bookDes.substring(0, 200);
-      const replaceBookDes = cutBookDes.replace(/(\r\n|\n|\r)/gm, "");
-
-      setSelectedBookData({
-        title: selectedBook.title,
-        author: selectedBook.author,
-        publisher: selectedBook.publisher,
-        isbn: selectedBook.isbn,
-        image: selectedBook.image,
-        description: replaceBookDes,
-      });
-    }
-  }, [selectedBook]);
 
   // 독서 상태
   const [status, setStatus] = useState<ReadingStatusType>("done");
@@ -71,23 +42,28 @@ function BookAdd() {
     const grade = formData.get("grade"); // 평점
     const content = formData.get("content"); // 평점
 
+    // 책 소개 글 자르기
+    // const bookDes = selectedBook.description;
+    // let cutBookDes = bookDes;
+
+    // if (bookDes.length > 254) {
+    //   cutBookDes = bookDes.substring(0, 255);
+    // }
+
+    // const replaceBookDes = cutBookDes.replace(/(\r\n|\n|\r)/gm, "");
+
     const data = {
-      bookDto: {
-        title: selectedBookData.title,
-        author: selectedBookData.author,
-        publisher: selectedBookData.publisher,
-        isbn: selectedBookData.isbn,
-        image: selectedBookData.image,
-        description: selectedBookData.description,
-      },
-      bookReportDto: {
-        image: selectedBookData.image,
-        status: status as ReadingStatusType,
-        startDate: startDate as string,
-        endDate: endDate as string,
-        grade: grade as string,
-        content: content as string,
-      },
+      title: selectedBook.title,
+      author: selectedBook.author,
+      publisher: selectedBook.publisher,
+      isbn: selectedBook.isbn,
+      image: selectedBook.image,
+      description: selectedBook.description,
+      status: status as ReadingStatusType,
+      startDate: startDate as string,
+      endDate: endDate as string,
+      grade: grade as string,
+      content: content as string,
     };
 
     mutate(data);
@@ -98,11 +74,11 @@ function BookAdd() {
   ) : (
     <form onSubmit={addFormAction}>
       {selectedBook ? (
-        selectedBookData.image && (
+        selectedBook.image && (
           <div style={{ width: "300px" }}>
             <img
-              src={selectedBookData.image}
-              alt={selectedBookData.title}
+              src={selectedBook.image}
+              alt={selectedBook.title}
               style={{ width: "100%" }}
             />
           </div>
