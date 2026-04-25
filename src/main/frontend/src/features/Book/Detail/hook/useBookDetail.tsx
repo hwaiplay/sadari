@@ -20,10 +20,11 @@ import { getBookDetail } from "../../api/bookApi";
 
 export const useBookDetail = (id: number) => {
   return useQuery({
-    queryKey: ["detail"],
+    queryKey: ["detail", id],
     queryFn: async () => {
       try {
         const res = await getBookDetail(id);
+        console.log(res.data);
         return res.data;
       } catch (error) {
         console.log("에러발생: " + error);

@@ -1,7 +1,13 @@
 package org.our.sadari.sadariBook.repository;
 
+import java.util.Optional;
+
+import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 /**
  * packageName    : org.our.sadari.sadariBook.repository
@@ -16,8 +22,23 @@ import org.springframework.data.jpa.repository.JpaRepository;
  */
 
 public interface BookReportRepository extends JpaRepository<BookReportEntity, Long> {
-
-    // Page<BookReportEntity> findByUser(UserEntity user, Pageable pageable);
-
-    // Optional<BookReportEntity> findById(Long id);
+    @Query("""
+        SELECT new org.our.sadari.sadariBook.dto.AddBookReportDto(
+            b.bookTitl,
+            b.bookAthr,
+            b.bookPubl,
+            b.bookIsbn,
+            b.bookCvim,
+            b.bookDesc,
+            r.bookStat,
+            r.bookStdt,
+            r.bookEndt,
+            r.bookGrde,
+            r.bookCntn
+        )
+        FROM BookReportEntity r
+        JOIN r.book b
+        WHERE r.id = :id
+    """)
+    AddBookReportDto findDetail(Long id);
 }

@@ -35,15 +35,15 @@ public class BookServiceImpl implements BookService {
         .orElseThrow(() -> new RuntimeException("유저 없음"));
 
         // 책 먼저 저장
-        BookEntity bookEntity = bookRepository.findByBookIsbn(request.getBookDto().getIsbn())
+        BookEntity bookEntity = bookRepository.findByBookIsbn(request.getIsbn())
             .orElseGet(() -> {
                 // 없으면 새로 저장
                 BookEntity newBook = BookEntity.builder()
-                    .bookIsbn(request.getBookDto().getIsbn())
-                    .bookTitl(request.getBookDto().getTitle())
-                    .bookAthr(request.getBookDto().getAuthor())
-                    .bookDesc(request.getBookDto().getDescription())
-                    .bookCvim(request.getBookDto().getImage())
+                    .bookIsbn(request.getIsbn())
+                    .bookTitl(request.getTitle())
+                    .bookAthr(request.getAuthor())
+                    .bookDesc(request.getDescription())
+                    .bookCvim(request.getImage())
                     .build();
 
                 return bookRepository.save(newBook);
@@ -53,11 +53,11 @@ public class BookServiceImpl implements BookService {
         BookReportEntity reportEntity = BookReportEntity.builder()
             .book(bookEntity)
             .userNumb(user)
-            .bookStat(request.getBookReportDto().getStatus())
-            .bookStdt(request.getBookReportDto().getStartDate())
-            .bookEndt(request.getBookReportDto().getEndDate())
-            .bookGrde((request.getBookReportDto().getGrade()))
-            .bookCntn(request.getBookReportDto().getContent())
+            .bookStat(request.getStatus())
+            .bookStdt(request.getStartDate())
+            .bookEndt(request.getEndDate())
+            .bookGrde((request.getGrade()))
+            .bookCntn(request.getContent())
             .build();
 
 
@@ -70,18 +70,17 @@ public class BookServiceImpl implements BookService {
      * 독후감 상세보기 로직
      */
     @Override
-    public BookReportDto getDetail(Long id) {
-        // 책 조회
-        BookEntity bookInfo =  bookRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("데이터 없음"));
+    public AddBookReportDto getDetail(Long id) {
 
         // 독후감 조회
-        BookReportEntity detail =  bookReportRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("데이터 없음"));
+        AddBookReportDto detail = bookReportRepository.findDetail(id);
 
-        String coverImage = bookRepository.findImageById(id);
+        if (detail == null) {
+            throw new RuntimeException("데이터 없음");
+        }
 
-        return BookReportDto.from(detail);
+        return detail;
+
     }
 
     /**
@@ -90,8 +89,8 @@ public class BookServiceImpl implements BookService {
     @Override
     public List<BookReportDto> getBookList(Long userId) {
 
-        BookReportEntity list = bookReportRepository.findById(userId)
-            .orElseThrow(() -> new RuntimeException("데이터 없음"));
+        // BookReportDto list = bookReportRepository.findById(userId)
+            // .orElseThrow(() -> new RuntimeException("데이터 없음"));
 
         return null;
     }

@@ -16,7 +16,45 @@ import lombok.Data;
 
 @Data
 public class AddBookReportDto {
-    
-    BookDto bookDto;
-    BookReportDto bookReportDto;
+    // BookDto bookDto;
+    // BookReportDto bookReportDto;
+
+    private String title;
+    private String author;
+    private String publisher;
+    private String isbn;
+    private String image;
+    private String description;
+
+    private String status;
+    private String startDate;
+    private String endDate;
+    private String grade;
+    private String content;
+
+    public AddBookReportDto(
+        String title,
+        String author,
+        String publisher,
+        String isbn,
+        String image,
+        String description,
+        String status,
+        String startDate,
+        String endDate,
+        String grade,
+        String content
+    ) {
+        this.title = title;
+        this.author = author;
+        this.publisher = publisher;
+        this.isbn = isbn;
+        this.image = image;
+        this.description = description;
+        this.status = status;
+        this.startDate = startDate;
+        this.endDate = endDate;
+        this.grade = grade;
+        this.content = content;
+    }
 }
