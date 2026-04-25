@@ -26,5 +26,5 @@ public interface BookService {
     AddBookReportDto getDetail(Long id);
 
     // 독후감 리스트 출력 (홈화면)
-    List<BookReportDto> getBookList(Long userId);
+    // List<BookReportDto> getBookList();
 }

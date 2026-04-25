@@ -1,5 +1,6 @@
 package org.our.sadari.sadariBook.service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
@@ -52,7 +53,7 @@ public class BookServiceImpl implements BookService {
         // 독후감 저장
         BookReportEntity reportEntity = BookReportEntity.builder()
             .book(bookEntity)
-            .userNumb(user)
+            .userIdxx(user)
             .bookStat(request.getStatus())
             .bookStdt(request.getStartDate())
             .bookEndt(request.getEndDate())
@@ -86,12 +87,15 @@ public class BookServiceImpl implements BookService {
     /**
      * 독후감 리스트 로직
      */
-    @Override
-    public List<BookReportDto> getBookList(Long userId) {
+    // @Override
+    // public List<BookReportDto> getBookList() {
+        
+    //     // userId 임시로 입력
+    //     List<BookReportDto> entity = bookReportRepository.findAllByUserNumb("4798174319")
+    //         .orElseThrow(() -> new RuntimeException("데이터 없음"));
 
-        // BookReportDto list = bookReportRepository.findById(userId)
-            // .orElseThrow(() -> new RuntimeException("데이터 없음"));
+    //     List<BookReportDto> list = new ArrayList<BookReportDto>();
 
-        return null;
-    }
+    //     return list;
+    // }
 }
