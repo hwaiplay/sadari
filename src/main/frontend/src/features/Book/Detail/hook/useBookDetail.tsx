@@ -24,7 +24,6 @@ export const useBookDetail = (id: number) => {
     queryFn: async () => {
       try {
         const res = await getBookDetail(id);
-        console.log(res.data);
         return res.data;
       } catch (error) {
         console.log("에러발생: " + error);

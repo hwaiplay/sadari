@@ -20,9 +20,13 @@ import org.springframework.data.jpa.repository.Query;
  */
 
 public interface BookRepository extends JpaRepository<BookEntity, Long> {
+    // 저장된 책 검색
     Optional<BookEntity> findByBookIsbn(String id);
 
     // 책 표지 이미지 조회
     @Query("SELECT b.bookCvim FROM BookEntity b WHERE bookNumb = :id")
     String findImageById(@Param("id") Long id);
+
+    // 리스트에서 책 번호로 저장된 책 검색
+    Optional<BookEntity> findByBookNumb(Long bookNumb);
 }
