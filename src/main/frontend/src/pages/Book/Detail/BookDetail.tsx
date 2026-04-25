@@ -5,15 +5,25 @@ import Loading from "@/components/Loading/Loading";
 
 function BookDetail() {
   const { id } = useParams();
-  const mutation = useBookDetail(Number(id));
-  const bookData = mutation.data.data;
+  const idNum = Number(id);
 
-  if (mutation.isPending) {
+  const { data, isPending } = useBookDetail(idNum);
+
+  if (!id || isNaN(idNum)) {
+    return <div>잘못된 접근입니다</div>;
+  }
+
+  if (isPending) {
     return <Loading title={"로딩중"} />;
   }
 
+  const bookData = data?.data;
+
   return bookData ? (
     <div>
+      <div>
+        <h1>{bookData.title}</h1>
+      </div>
       <div>
         <img src={bookData.image} alt={bookData.title} width="300px" />
       </div>
@@ -28,6 +38,25 @@ function BookDetail() {
       <div>
         <h1>독후감</h1>
         {bookData.content}
+      </div>
+      <div>
+        <h1>책 소개</h1>
+        <div>
+          <h1>저자</h1>
+          <p>{bookData.author}</p>
+        </div>
+        <div>
+          <h1>출판사</h1>
+          <p>{bookData.publisher}</p>
+        </div>
+        <div>
+          <h1>책 소개</h1>
+          <p>{bookData.description}</p>
+        </div>
+        <div>
+          <h1>isbn</h1>
+          <p>{bookData.isbn}</p>
+        </div>
       </div>
     </div>
   ) : (
