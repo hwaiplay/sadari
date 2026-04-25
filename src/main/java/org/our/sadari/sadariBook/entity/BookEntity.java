@@ -41,26 +41,26 @@ public class BookEntity {
     private Long bookNumb;
     
     // 책 제목
-    @Column(name = "BOOK_TITL")
+    @Column(name = "BOOK_TITL", nullable = false)
     private String bookTitl;
     
     // 저자
-    @Column(name = "BOOK_ATHR")
+    @Column(name = "BOOK_ATHR", nullable = false)
     private String bookAthr;
     
     // 출판사
-    @Column(name = "BOOK_PUBL")
+    @Column(name = "BOOK_PUBL", nullable = false)
     private String bookPubl;
     
     // isbn
-    @Column(name = "BOOK_ISBN")
+    @Column(name = "BOOK_ISBN", nullable = false)
     private String bookIsbn;
 
     // 책 표지 이미지
-    @Column(name = "BOOK_CVIM")
+    @Column(name = "BOOK_CVIM", nullable = false)
     private String bookCvim;
     
     // 책 설명
-    @Column(name = "BOOK_DESC", length = 4000)
+    @Column(name = "BOOK_DESC", length = 4000, nullable = false)
     private String bookDesc;
 }

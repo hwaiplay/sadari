@@ -1,10 +1,6 @@
 package org.our.sadari.sadariBook.service;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
@@ -43,6 +39,7 @@ public class BookServiceImpl implements BookService {
                     .bookIsbn(request.getIsbn())
                     .bookTitl(request.getTitle())
                     .bookAthr(request.getAuthor())
+                    .bookPubl(request.getPublisher())
                     .bookDesc(request.getDescription())
                     .bookCvim(request.getImage())
                     .build();
@@ -53,14 +50,13 @@ public class BookServiceImpl implements BookService {
         // 독후감 저장
         BookReportEntity reportEntity = BookReportEntity.builder()
             .book(bookEntity)
-            .userIdxx(user)
+            .user(user)
             .bookStat(request.getStatus())
             .bookStdt(request.getStartDate())
             .bookEndt(request.getEndDate())
             .bookGrde((request.getGrade()))
             .bookCntn(request.getContent())
             .build();
-
 
         BookReportEntity saved = bookReportRepository.save(reportEntity);
        
