@@ -10,6 +10,7 @@ import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.repository.BookRepository;
@@ -129,11 +130,15 @@ public class BookController {
         return ResponseEntity.ok(ResultData.success(detail));
     }
 
+    /**
+     * 독후감 리스트 조회 API
+     * @param userNumb 유저번호
+     * @return 리스트
+     */
     @GetMapping("/getBookList/{userNumb}")
-    public ResponseEntity<ResultData<?>> getBookList(@PathVariable String userIdxx) {
+    public ResponseEntity<ResultData<?>> getBookList(@PathVariable Long userNumb) {
 
-        List<BookReportDto> list = bookReportRepository.findAllByUserIdxx(userIdxx);
-        log.debug("리스트 출력: {}", list);
+        List<HomeBookDto> list = bookServiceImpl.getBookList(userNumb);
 
         return ResponseEntity.ok(ResultData.success(list));
     }

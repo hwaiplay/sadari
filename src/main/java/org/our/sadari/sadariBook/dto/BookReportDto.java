@@ -13,18 +13,23 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-04-03       hanwon.Jang       최초 생성
+ * 2026-04-03       hanwon.Jang       독후감 번호, 책 번호 추가
  */
 
 @Data
 public class BookReportDto {
+    private Long reportNumb; // 독후감 번호 
+    private Long bookNumb; // 책 번호
     private String status;
     private String startDate;
     private String endDate;
     private String grade;
     private String content;
-
+    
     public static BookReportDto from(BookReportEntity entity) {
         BookReportDto dto = new BookReportDto();
+        dto.setReportNumb(entity.getReportNumb());
+        dto.setBookNumb(entity.getBook().getBookNumb());
         dto.setStatus(entity.getBookStat());
         dto.setStartDate(entity.getBookStdt());
         dto.setEndDate(entity.getBookEndt());

@@ -47,7 +47,7 @@ public class BookReportEntity {
 
     // 독후감 번호
     @Column(name = "REPORT_NUMB", nullable = false)
-    private Long bookNumb;
+    private Long reportNumb;
     
     // 유저와 연결
     @ManyToOne(fetch = FetchType.LAZY)

@@ -12,7 +12,7 @@
 import { getBooklist } from "@/features/Book/api/bookApi";
 import { useQuery } from "@tanstack/react-query";
 
-export const useGetListQuery = (userNumb: string) => {
+export const useGetListQuery = (userNumb: number) => {
   return useQuery({
     queryKey: ["list", userNumb],
     queryFn: async () => {

@@ -30,6 +30,7 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
 
 // 독후감 타입
 export interface ReportType {
+  bookNumb: number;
   status: ReadingStatusType;
   startDate: string;
   endDate: string;
@@ -62,4 +63,11 @@ export interface AddBookResponse {
 export interface ReportDetail extends ReportType {
   image: string;
   title: string;
+}
+
+// 홈화면에 보이는 독후감 타입
+export interface HomeBookType {
+  bookNumb: number;
+  reportNumb: number;
+  bookTitle: string;
 }
