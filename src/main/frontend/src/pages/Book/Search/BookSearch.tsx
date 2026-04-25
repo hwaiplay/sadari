@@ -11,12 +11,12 @@
 
 import { useState } from "react";
 import api from "../../../app/api/axios";
-import { BookSearchType } from "@/features/Book/types/book.type";
+import { SelectedBookType } from "@/features/Book/types/book.type";
 import { useNavigate } from "react-router-dom";
 
 const BookSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
-  const [bookResult, setBookResult] = useState<BookSearchType[] | null>(null); // 응답 데이터
+  const [bookResult, setBookResult] = useState<SelectedBookType[] | null>(null); // 응답 데이터
 
   // 검색 로직 구현
   const handleSearchClick = async () => {
@@ -38,6 +38,7 @@ const BookSearch = () => {
       }
 
       const responseData = response.data.data;
+
       setBookResult(responseData);
     } catch (error) {
       console.error("검색어 처리 중 에러 발생: ", error);
@@ -46,7 +47,7 @@ const BookSearch = () => {
 
   const navigate = useNavigate();
 
-  const handleSelectBook = (book: BookSearchType) => {
+  const handleSelectBook = (book: SelectedBookType) => {
     navigate("/add", {
       state: { selectedBook: book },
     });
@@ -68,13 +69,16 @@ const BookSearch = () => {
       {bookResult &&
         (bookResult.length > 0 ? (
           bookResult.map((book) => (
-            <div key={book.isbn} onClick={() => handleSelectBook(book)}>
-              <img src={book.image} alt={book.title} />
-              <h2>{book.title}</h2>
-              <div>
-                <p>{book.author}</p>
-                <p>{book.publisher}</p>
+            <div key={book.isbn}>
+              <div onClick={() => handleSelectBook(book)}>
+                <img src={book.image} alt={`${book.title} 표지`} width={300} />
+                <h2>{book.title}</h2>
+                <div>
+                  <p>{book.author}</p>
+                  <p>{book.publisher}</p>
+                </div>
               </div>
+              <hr />
             </div>
           ))
         ) : (

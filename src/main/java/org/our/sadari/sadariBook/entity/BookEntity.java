@@ -7,17 +7,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import org.our.sadari.sadariUser.auth.entity.UserEntity;
-import org.springframework.data.annotation.CreatedDate;
-import org.springframework.data.jpa.domain.support.AuditingEntityListener;
-import java.time.LocalDateTime;
-
 /**
- * packageName    : 
+ * packageName    : org.our.sadari.sadariBook.entity
  * fileName       : BookEntity.java
  * author         : hanwon.Jang
  * date           : 2026-04-03
- * description    : '독후감'을 정의한 Entity
+ * description    : '독후감이 기록된 책'을 정의한 Entity
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -30,48 +25,42 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "TM_BOOKXM")
-@EntityListeners(AuditingEntityListener.class)
+@Table(name = "TM_BOOK_INFO")
 public class BookEntity {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tm_bookxm_seq_gen")
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "tm_book_info_seq_gen")
     @SequenceGenerator(
-        name = "tm_bookxm_seq_gen",
-        sequenceName = "TM_BOOKXM_SEQ",
+        name = "tm_book_info_seq_gen",
+        sequenceName = "TM_BOOK_INFO_SEQ",
         allocationSize = 1
     )
 
-    // 독후감 번호
+    // 책 번호
     @Column(name = "BOOK_NUMB")
     private Long bookNumb;
     
-    // 유저와 연결
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "USER_NUMB", nullable = false)
-    private UserEntity userNumb;
+    // 책 제목
+    @Column(name = "BOOK_TITL")
+    private String bookTitl;
+    
+    // 저자
+    @Column(name = "BOOK_ATHR")
+    private String bookAthr;
+    
+    // 출판사
+    @Column(name = "BOOK_PUBL")
+    private String bookPubl;
+    
+    // isbn
+    @Column(name = "BOOK_ISBN")
+    private String bookIsbn;
 
-    // 표지 이미지
-    @Column(name = "BOOK_CVIM", nullable = false)
+    // 책 표지 이미지
+    @Column(name = "BOOK_CVIM")
     private String bookCvim;
-
-    // 독서 상태
-    @Column(name = "BOOK_STAT", nullable = false)
-    private String bookStat;
-
-    // 독서 시작일
-    @Column(name = "BOOK_STDT", nullable = false)
-    private String bookStdt;
     
-    // 독서 종료일
-    @Column(name = "BOOK_ENDT", nullable = false)
-    private String bookEndt;
-    
-    // 평점
-    @Column(name = "BOOK_GRDE", nullable = false)
-    private String bookGrde;
-
-    // 기록 내용
-    @Column(name = "BOOK_CNTN", nullable = false)
-    private String bookCntn;
+    // 책 설명
+    @Column(name = "BOOK_DESC", length = 4000)
+    private String bookDesc;
 }

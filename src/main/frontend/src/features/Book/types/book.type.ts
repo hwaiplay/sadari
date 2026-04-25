@@ -1,3 +1,4 @@
+import { title } from "./../../../pages/Login/Login.css";
 /**
  * fileName       : book.type
  * author         : hanwon.Jang
@@ -10,9 +11,9 @@
  */
 
 /**
- * 책 검색
+ * 책 검색 후 선택한 책 타입
  */
-export interface BookSearchType {
+export interface SelectedBookType {
   title: string;
   author: string;
   publisher: string;
@@ -21,22 +22,30 @@ export interface BookSearchType {
   description: string;
 }
 
-export interface SelectBookType {
-  title: string;
-  isbn: string;
-  image: string;
-}
-
 /**
  * 독후감 기록하기
  */
 // 독서 진행 상태
 export type ReadingStatusType = "done" | "reading" | "stopped";
 
-// 기록하기 폼
-export interface BookFormType {
-  coverImage: string;
-  status: string;
+// 독후감 타입
+export interface ReportType {
+  status: ReadingStatusType;
+  startDate: string;
+  endDate: string;
+  grade: string;
+  content: string;
+}
+
+// 기록하기 데이터 타입
+export interface AddBookReportRequest {
+  title: string;
+  author: string;
+  publisher: string;
+  isbn: string;
+  image: string;
+  description: string;
+  status: ReadingStatusType;
   startDate: string;
   endDate: string;
   grade: string;
@@ -47,4 +56,10 @@ export interface BookFormType {
 export interface AddBookResponse {
   success: boolean;
   data: number; // bookId
+}
+
+// 독후감 상세보기 타입
+export interface ReportDetail extends ReportType {
+  image: string;
+  title: string;
 }
