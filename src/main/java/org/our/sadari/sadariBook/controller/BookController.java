@@ -1,12 +1,17 @@
 package org.our.sadari.sadariBook.controller;
 
 import java.util.List;
+
+import javax.naming.spi.DirStateFactory.Result;
+
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.entity.BookReportEntity;
+import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.repository.BookRepository;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,6 +43,8 @@ import tools.jackson.databind.ObjectMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-04-01       hanwon.Jang       최초 생성
+ * 2026-04-23       hanwon.Jang       독후감 상세보기 로직
+ * 2026-04-25       hanwon.Jang       독후감 리스트 조회 로직
  */
 
 @Slf4j
@@ -53,8 +60,7 @@ public class BookController {
     private String NAVER_CLIENT_SECRET; //네이버 앱 시크릿 키
 
     private final BookServiceImpl bookServiceImpl;
-
-    private final BookRepository bookRepository;
+    private final BookReportRepository bookReportRepository;
 
     /**
      *  책 검색 Api
@@ -121,5 +127,14 @@ public class BookController {
         log.debug("독후감 상세보기 조회 성공: " + detail);
 
         return ResponseEntity.ok(ResultData.success(detail));
+    }
+
+    @GetMapping("/getBookList/{userNumb}")
+    public ResponseEntity<ResultData<?>> getBookList(@PathVariable String userIdxx) {
+
+        List<BookReportDto> list = bookReportRepository.findAllByUserIdxx(userIdxx);
+        log.debug("리스트 출력: {}", list);
+
+        return ResponseEntity.ok(ResultData.success(list));
     }
 }

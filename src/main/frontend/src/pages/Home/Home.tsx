@@ -11,12 +11,13 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { homeDummyData } from "../../app/assets/dummy";
-import { Container } from "../../components/Layout/Container/Container";
-import Book from "../../features/Home/Book";
+import { homeDummyData } from "@/app/assets/dummy";
+import { Container } from "@/components/Layout/Container/Container";
+import { container } from "@/components/Layout/Container/container.css";
+import Book from "@/features/Home/components/Book";
+import { tilt } from "@/features/Home/components/Book.css";
+import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
-import { container } from "../../components/Layout/Container/container.css";
-import { tilt } from "../../features/Home/book.css";
 
 function chunkArray<T>(array: T[], size: number) {
   const result = [];
@@ -30,14 +31,13 @@ function chunkArray<T>(array: T[], size: number) {
 
 function Home() {
   const [booksData, setBooksData] = useState(homeDummyData);
+  const { data, isPending } = useGetListQuery("4798174319");
+  console.log(data);
 
   const firstRow = booksData.slice(0, 5); // 첫줄
   const rows = chunkArray(booksData.slice(5), 6); // 두번째 줄~끝
   const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
 
-  //   useEffect(() => {
-  //   setBooksData(dummy);
-  // }, []);
   return (
     <>
       {booksData.length !== 0 ? (
