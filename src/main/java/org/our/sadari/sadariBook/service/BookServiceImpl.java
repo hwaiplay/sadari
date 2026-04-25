@@ -1,6 +1,12 @@
 package org.our.sadari.sadariBook.service;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
@@ -60,7 +66,7 @@ public class BookServiceImpl implements BookService {
 
         BookReportEntity saved = bookReportRepository.save(reportEntity);
        
-        return saved.getBookNumb();
+        return saved.getBook().getBookNumb();
     }
 
     /**
@@ -83,15 +89,41 @@ public class BookServiceImpl implements BookService {
     /**
      * 독후감 리스트 로직
      */
-    // @Override
-    // public List<BookReportDto> getBookList() {
-        
-    //     // userId 임시로 입력
-    //     List<BookReportDto> entity = bookReportRepository.findAllByUserNumb("4798174319")
-    //         .orElseThrow(() -> new RuntimeException("데이터 없음"));
+    @Override
+    public List<HomeBookDto> getBookList(Long userNumb) {
 
-    //     List<BookReportDto> list = new ArrayList<BookReportDto>();
+        if(userNumb == null) {
+            throw new RuntimeException("유저 정보 없음");
+        }
 
-    //     return list;
-    // }
+        // 리스트 조회
+        List<BookReportDto> reportList = bookReportRepository.findAllByUser_UserNumb(userNumb);
+        log.info("독후감 리스트 조회 완료 {}", reportList);
+
+        List<HomeBookDto> returnList = new ArrayList<>();
+
+        // 책 번호를 사용한 책 제목 검색
+        // 책 번호와 책 제목만 담은 리스트를 저장
+        for(BookReportDto book : reportList) {
+            // 책 번호
+            Long bookNumb = book.getBookNumb();
+
+            // 독후감 번호
+            Long reportNumb = book.getReportNumb();
+
+            // 책 조회
+            BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb)
+                .orElseThrow(() -> new RuntimeException("책 정보 없음"));
+
+            // 책 제목
+            String bookTitle = bookEntity.getBookTitl();
+
+            // 리스트 저장
+            returnList.add(new HomeBookDto(bookNumb, reportNumb, bookTitle));
+        }
+
+        log.info("책 번호와 책 제목 객체 리스트 생성 완료 {}", returnList);
+
+        return returnList;
+    }
 }

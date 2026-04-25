@@ -11,13 +11,14 @@
 
 import { useEffect, useState } from "react";
 import clsx from "clsx";
-import { homeDummyData } from "@/app/assets/dummy";
 import { Container } from "@/components/Layout/Container/Container";
 import { container } from "@/components/Layout/Container/container.css";
 import Book from "@/features/Home/components/Book";
 import { tilt } from "@/features/Home/components/Book.css";
 import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
+import Loading from "@/components/Loading/Loading";
+import { HomeBookType } from "@/features/Book/types/book.type";
 
 function chunkArray<T>(array: T[], size: number) {
   const result = [];
@@ -30,46 +31,43 @@ function chunkArray<T>(array: T[], size: number) {
 }
 
 function Home() {
-  const [booksData, setBooksData] = useState(homeDummyData);
-  const { data, isPending } = useGetListQuery("4798174319");
-  console.log(data);
+  const { data, isPending } = useGetListQuery(1);
 
-  const firstRow = booksData.slice(0, 5); // 첫줄
-  const rows = chunkArray(booksData.slice(5), 6); // 두번째 줄~끝
+  if (isPending) {
+    return <Loading title={"목록 조회중"} />;
+  }
+
+  const bookList = data?.data;
+  const firstRow = bookList.slice(0, 5); // 첫줄
+  const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6); // 두번째 줄~끝
   const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
 
-  return (
-    <>
-      {booksData.length !== 0 ? (
-        <div className={clsx(styles.homeContainer, container)}>
-          <div className={styles.row5Container}>
-            {/* 첫 줄 */}
-            <div className={clsx(styles.row5, styles.row)}>
-              {firstRow.map((book, index) => (
-                <Book
-                  key={book.id}
-                  {...book}
-                  className={index === firstRow.length - 5 ? tilt : ""}
-                />
-              ))}
-            </div>
-          </div>
-
-          {/* 나머지 */}
-          {Array.from({ length: rowCount }).map((_, rowIndex) => (
-            <div className={clsx(styles.row6, styles.row)} key={rowIndex}>
-              {rows[rowIndex]?.map((book) => (
-                <Book key={book.id} {...book} />
-              ))}
-            </div>
+  return bookList ? (
+    <div className={clsx(styles.homeContainer, container)}>
+      <div className={styles.row5Container}>
+        <div className={clsx(styles.row5, styles.row)}>
+          {firstRow.map((book: HomeBookType, index: number) => (
+            <Book
+              key={book.bookNumb}
+              {...book}
+              className={index === firstRow.length - 5 ? tilt : ""}
+            />
           ))}
         </div>
-      ) : (
-        <Container className={styles.emptyHomeContainer}>
-          <h1 className={styles.emptyTitle}>첫 책을 꽂아 책장을 채워보세요.</h1>
-        </Container>
-      )}
-    </>
+      </div>
+
+      {Array.from({ length: rowCount }).map((_, rowIndex) => (
+        <div className={clsx(styles.row6, styles.row)} key={rowIndex}>
+          {rows[rowIndex]?.map((book) => (
+            <Book key={book.bookNumb} {...book} />
+          ))}
+        </div>
+      ))}
+    </div>
+  ) : (
+    <Container className={styles.emptyHomeContainer}>
+      <h1 className={styles.emptyTitle}>첫 책을 꽂아 책장을 채워보세요.</h1>
+    </Container>
   );
 }
 
