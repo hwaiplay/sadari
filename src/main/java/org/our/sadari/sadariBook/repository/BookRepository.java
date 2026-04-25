@@ -20,6 +20,7 @@ import org.springframework.data.jpa.repository.Query;
  */
 
 public interface BookRepository extends JpaRepository<BookEntity, Long> {
+    // 저장된 책 검색
     Optional<BookEntity> findByBookIsbn(String id);
 
     // 책 표지 이미지 조회
