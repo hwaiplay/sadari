@@ -16,9 +16,6 @@ import lombok.Data;
 
 @Data
 public class AddBookReportDto {
-    // BookDto bookDto;
-    // BookReportDto bookReportDto;
-
     private String title;
     private String author;
     private String publisher;
