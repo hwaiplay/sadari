@@ -1,9 +1,6 @@
 package org.our.sadari.sadariBook.repository;
 
 import java.util.List;
-import java.util.Optional;
-
-import org.apache.ibatis.annotations.Param;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
