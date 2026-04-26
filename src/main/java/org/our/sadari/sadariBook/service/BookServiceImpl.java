@@ -89,41 +89,41 @@ public class BookServiceImpl implements BookService {
      * 독후감 리스트 로직
      */
     @Override
-    public List<HomeBookDto> getBookList(Long userNumb) {
+    public List<BookReportDto> getBookList(Long userNumb) {
 
         if(userNumb == null) {
             throw new RuntimeException("유저 정보 없음");
         }
 
         // 리스트 조회
-        List<BookReportDto> reportList = bookReportRepository.findAllByUser_UserNumb(userNumb);
-        log.info("독후감 리스트 조회 완료 {}", reportList);
+        List<BookReportDto> list = bookReportRepository.findAllByUser(userNumb);
+        log.info("독후감 리스트 조회 완료 {}", list);
 
-        List<HomeBookDto> returnList = new ArrayList<>();
+        // List<HomeBookDto> returnList = new ArrayList<>();
 
-        // 책 번호를 사용한 책 제목 검색
-        // 책 번호와 책 제목만 담은 리스트를 저장
-        for(BookReportDto book : reportList) {
-            // 책 번호
-            Long bookNumb = book.getBookNumb();
+        // // 책 번호를 사용한 책 제목 검색
+        // // 책 번호와 책 제목만 담은 리스트를 저장
+        // for(BookReportDto book : reportList) {
+        //     // 책 번호
+        //     Long bookNumb = book.getBookNumb();
 
-            // 독후감 번호
-            Long reportNumb = book.getReportNumb();
+        //     // 독후감 번호
+        //     Long reportNumb = book.getReportNumb();
 
-            // 책 조회
-            BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb);
-                // .orElseThrow(() -> new RuntimeException("책 정보 없음"));
+        //     // 책 조회
+        //     BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb);
+        //         // .orElseThrow(() -> new RuntimeException("책 정보 없음"));
 
-            // 책 제목 자르기
-            String bookTitle = bookEntity.getBookTitl();
-            // String cutTitle = stringUtil.cutString(bookTitle, 14);
+        //     // 책 제목 자르기
+        //     String bookTitle = bookEntity.getBookTitl();
+        //     // String cutTitle = stringUtil.cutString(bookTitle, 14);
         
-            // 리스트 저장
-            returnList.add(new HomeBookDto(bookNumb, reportNumb, bookTitle));
-        }
+        //     // 리스트 저장
+        //     returnList.add(new HomeBookDto(bookNumb, reportNumb, bookTitle));
+        // }
 
-        log.info("책 번호와 책 제목 객체 리스트 생성 완료 {}", returnList);
+        // log.info("책 번호와 책 제목 객체 리스트 생성 완료 {}", returnList);
 
-        return returnList;
+        return list;
     }
 }

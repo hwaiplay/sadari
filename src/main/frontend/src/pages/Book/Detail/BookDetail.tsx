@@ -13,13 +13,21 @@ function BookDetail() {
     return <div>잘못된 접근입니다</div>;
   }
 
+  // 조회 결과가 없는 경우
+  if (data?.code == 2004) {
+    return <div>{data.message}</div>;
+  }
+
+  // 로딩중인 경우
   if (isPending) {
     return <Loading title={"독후감 불러오는 중"} />;
   }
 
-  const bookData = data?.data;
+  // 독후감 데이터
+  const bookData = data?.data[0];
 
-  return bookData ? (
+  return data?.code === 200 && bookData ? (
+    // {bookData.map(book =>()}
     <div>
       <div>
         <h1>{bookData.title}</h1>
@@ -60,7 +68,7 @@ function BookDetail() {
       </div>
     </div>
   ) : (
-    <h1>독후감 데이터가 존재하지 않습니다</h1>
+    <h1>{data.message}</h1>
   );
 }
 
