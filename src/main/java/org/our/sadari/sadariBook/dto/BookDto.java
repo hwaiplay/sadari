@@ -1,8 +1,6 @@
 package org.our.sadari.sadariBook.dto;
 
 import org.our.sadari.sadariBook.entity.BookEntity;
-import org.our.sadari.sadariBook.entity.BookReportEntity;
-
 import lombok.Data;
 
 /**
@@ -20,13 +18,18 @@ import lombok.Data;
 
 @Data
 public class BookDto {
+    // 책 제목
     private String title;
+    // 저자
     private String author;
-    private String publisher;
-    private String isbn;
-    private String image;
-    private String description;
-
+    // 출판사
+    private String publisher; 
+    // isbn
+    private String isbn; 
+    // 책 표지 이미지
+    private String image; 
+    // 책 소개 내용
+    private String description; 
 
     public static BookDto from(BookEntity entity) {
         BookDto dto = new BookDto();
