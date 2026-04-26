@@ -1,5 +1,4 @@
 import { useParams } from "react-router-dom";
-import { useEffect, useState } from "react";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
 
@@ -30,40 +29,40 @@ function BookDetail() {
     // {bookData.map(book =>()}
     <div>
       <div>
-        <h1>{bookData.title}</h1>
+        <h1>{bookData.bookTitl}</h1>
       </div>
       <div>
-        <img src={bookData.image} alt={bookData.title} width="300px" />
+        <img src={bookData.bookCvim} alt={bookData.bookTitl} width="300px" />
       </div>
       <div>
         <h1>독서기간</h1>
-        {bookData.startDate} ~ {bookData.endDate}
+        {bookData.bookStdt} ~ {bookData.bookEndt}
       </div>
       <div>
         <h1>평점</h1>
-        {bookData.grade}
+        {bookData.bookGrde}
       </div>
       <div>
         <h1>독후감</h1>
-        {bookData.content}
+        {bookData.bookCntn}
       </div>
       <div>
         <h1>책 소개</h1>
         <div>
           <h1>저자</h1>
-          <p>{bookData.author}</p>
+          <p>{bookData.bookAthr}</p>
         </div>
         <div>
           <h1>출판사</h1>
-          <p>{bookData.publisher}</p>
+          <p>{bookData.bookPubl}</p>
         </div>
         <div>
           <h1>책 소개</h1>
-          <p>{bookData.description}</p>
+          <p>{bookData.bookDesc}</p>
         </div>
         <div>
           <h1>isbn</h1>
-          <p>{bookData.isbn}</p>
+          <p>{bookData.bookIsbn}</p>
         </div>
       </div>
     </div>
