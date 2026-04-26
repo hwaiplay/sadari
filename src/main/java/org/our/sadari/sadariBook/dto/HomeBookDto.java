@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : HomeBookDto.java
  * author         : hanwon.Jang
  * date           : 2026-04-26
- * description    : 홈화면의 독후감 리스트에서 사용되는 DTO
+ * description    : 홈 화면의 독후감 리스트에서 사용되는 DTO
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,9 +16,12 @@ import lombok.Data;
 
 @Data
 public class HomeBookDto {
-    private Long bookNumb;
-    private Long reportNumb;
-    private String bookTitle;
+    // 책 번호
+    private Long bookNumb; 
+    // 독후감 번호
+    private Long reportNumb; 
+    // 책 제목
+    private String bookTitle; 
 
     public HomeBookDto(Long bookNumb, Long reportNumb, String bookTitle) {
         this.bookNumb = bookNumb;

@@ -5,7 +5,7 @@ import java.util.List;
 import lombok.Data;
 
 /**
- * packageName    : 
+ * packageName    : package org.our.sadari.sadariBook.dto;
  * fileName       : BookJsonDto.java
  * author         : hanwon.Jang
  * date           : 2026-04-02
@@ -18,9 +18,14 @@ import lombok.Data;
 
 @Data
 public class BookJsonDto {
+    // 검색 결과를 생성한 시간
     private String lastBuildDate;
+    // 검색 결과 수
     private int total;
+    // 검색 시작 위치(기본값: 1, 최댓값: 1000) 
     private int start;
+    // 한 번에 표시할 검색 결과 개수(기본값: 10, 최댓값: 100)
     private int display;
-    private List<BookDto> items;
+    // 검색된 책 데이터륻 담는 배열
+    private List<BookDto> items; 
 }
