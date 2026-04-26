@@ -1,5 +1,6 @@
 package org.our.sadari.sadariBook.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -15,17 +16,12 @@ import lombok.Data;
  */
 
 @Data
+@AllArgsConstructor
 public class HomeBookDto {
     // 책 번호
     private Long bookNumb; 
-    // 독후감 번호
-    private Long reportNumb; 
+    // 유저 번호
+    private Long userNumb; 
     // 책 제목
     private String bookTitle; 
-
-    public HomeBookDto(Long bookNumb, Long reportNumb, String bookTitle) {
-        this.bookNumb = bookNumb;
-        this.reportNumb = reportNumb;
-        this.bookTitle = bookTitle;
-    }
 }

@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -53,14 +54,14 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
      * @return 독후감 리스트
      */
     @Query("""
-        SELECT new org.our.sadari.sadariBook.dto.AddBookReportDto(
-            b.bookTitl,
-            r.book.bookNumb,
-            r.user.userNumb
+        SELECT new org.our.sadari.sadariBook.dto.HomeBookDto(
+            b.bookNumb,
+            r.user.userNumb,
+            b.bookTitl
         )
         FROM BookReportEntity r
         LEFT JOIN r.book b
         WHERE r.user.userNumb = :user
     """)
-    List<BookReportDto> findAllByUser(Long user);
+    List<HomeBookDto> findAllByUserNumb(Long user);
 }
