@@ -1,5 +1,5 @@
 import api from "@/app/api/axios";
-import { AddBookResponse, AddBookReportRequest } from "../types/book.type";
+import { AddBookResponse, BookType, ReportType } from "../types/book.type";
 
 /**
  * fileName       : bookApi
@@ -15,11 +15,11 @@ import { AddBookResponse, AddBookReportRequest } from "../types/book.type";
 
 /**
  * 독후감 등록 API
- * @param data 선책한 책&독후감
+ * @param data
  * @returns 독후감 id
  */
 export const addBookReport = async (
-  data: AddBookReportRequest,
+  data: BookType & ReportType,
 ): Promise<AddBookResponse> => {
   const res = await api.post("/book/addBookReport", data);
   return res.data;
@@ -27,7 +27,7 @@ export const addBookReport = async (
 
 /**
  * 독후감 상세보기 API
- * @param 독후감 id
+ * @param bookNumb
  * @returns 독후감 상세내용
  */
 export const getBookDetail = (bookNumb: number) => {
@@ -36,7 +36,7 @@ export const getBookDetail = (bookNumb: number) => {
 
 /**
  * 독후감 리스트 조회 API
- * @param userNumb 유저넘버
+ * @param userNumb
  * @returns 독후감 리스트
  */
 export const getBooklist = (userNumb: number) => {
