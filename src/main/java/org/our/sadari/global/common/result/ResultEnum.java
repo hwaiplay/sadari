@@ -15,6 +15,30 @@ import lombok.Getter;
 @Getter
 public enum ResultEnum {
 
+    /**
+     * 저장되었습니다.
+     */
+    COMMON_SAVE_SUCCESS(2001, "common.alert.0001"),
+
+    /**
+     * 수정되었습니다.
+     */
+    COMMON_UPDATE_SUCCESS(2002, "common.alert.0002"),
+
+    /**
+     * 삭제되었습니다.
+     */
+    COMMON_DELETE_SUCCESS(2003, "common.alert.0003"),
+
+    /**
+     * 조회 결과가 없습니다.
+     */
+    COMMON_NO_DATA(2004, "common.alert.0004"),
+
+    /**
+     * 올바르지 않은 접근입니다.
+     */
+    COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
 
     /**
      * 인증 실패 (로그인 필요 or 인증 안됨)
@@ -43,6 +67,7 @@ public enum ResultEnum {
      * - USER가 ADMIN API 호출
      */
     FORBIDDEN(1004, "auth.common.forbidden");   //
+
 
     /**
      * 프론트로 내려줄 고유 에러 코드
