@@ -1,6 +1,8 @@
 package org.our.sadari.sadariBook.dto;
 
 import org.our.sadari.sadariBook.entity.BookReportEntity;
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -17,6 +19,7 @@ import lombok.Data;
  */
 
 @Data
+@AllArgsConstructor
 public class BookReportDto {
     // 독후감 번호 
     private Long reportNumb; 
@@ -33,16 +36,4 @@ public class BookReportDto {
     // 독후감 내용
     private String content; 
     
-    public static BookReportDto from(BookReportEntity entity) {
-        BookReportDto dto = new BookReportDto();
-        dto.setReportNumb(entity.getReportNumb());
-        dto.setBookNumb(entity.getBook().getBookNumb());
-        dto.setStatus(entity.getBookStat());
-        dto.setStartDate(entity.getBookStdt());
-        dto.setEndDate(entity.getBookEndt());
-        dto.setGrade(entity.getBookGrde());
-        dto.setContent(entity.getBookCntn());
-
-        return dto;
-    }
 }
