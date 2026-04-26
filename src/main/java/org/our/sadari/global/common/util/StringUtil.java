@@ -10,7 +10,6 @@ import java.security.SecureRandom;
 import java.sql.Timestamp;
 import java.text.MessageFormat;
 import java.text.SimpleDateFormat;
-import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -112,58 +111,34 @@ public class StringUtil {
     }
 
     /**
-     * <p>
-     * String이 비었거나("") 혹은 null 인지 검증한다.
-     * </p>
-     *
-     * <pre>
-     *  StringUtil.isEmpty(null)      = true
-     *  StringUtil.isEmpty("")        = true
-     *  StringUtil.isEmpty(" ")       = false
-     *  StringUtil.isEmpty("bob")     = false
-     *  StringUtil.isEmpty("  bob  ") = false
-     * </pre>
-     *
-     * @param str - 체크 대상 스트링오브젝트이며 null을 허용함
-     * @return <code>true</code> - 입력받은 String 이 빈 문자열 또는 null인 경우 
-     */
-    /**
-     * 1. String 체크 (기존)
-     */
-    public static boolean isEmpty(String str) {
-        return str == null || str.trim().isEmpty();
-    }
-
-    /**
-     * 2. Object 체크 (일반 VO 등)
-     * 객체 자체가 null인지 확인합니다.
+     * 문자열, 리스트, Map, 일반 객체 등 다양한 타입의 비어있음 여부를 확인합니다.
+     * @param obj 체크할 대상
+     * @return 비어있거나 null이면 true, 내용이 있으면 false
      */
     public static boolean isEmpty(Object obj) {
-        return obj == null;
-    }
+        if (obj == null) {
+            return true;
+        }
 
-    /**
-     * 3. List 및 모든 Collection 체크 (List<VO>, Set 등)
-     * 리스트가 null이거나 요소가 하나도 없는지 확인합니다.
-     */
-    public static boolean isEmpty(Collection<?> collection) {
-        return collection == null || collection.isEmpty();
-    }
+        if (obj instanceof String) {
+            return ((String) obj).trim().isEmpty();
+        }
 
-    /**
-     * 4. Map 체크
-     * 맵이 null이거나 키-값 쌍이 없는지 확인합니다.
-     */
-    public static boolean isEmpty(Map<?, ?> map) {
-        return map == null || map.isEmpty();
-    }
+        if (obj instanceof List) {
+            return ((List<?>) obj).isEmpty();
+        }
 
-    /**
-     * 5. 배열(Array) 체크 (추가 권장)
-     * Object[] 형태의 배열이 비었는지 확인합니다.
-     */
-    public static boolean isEmpty(Object[] array) {
-        return array == null || array.length == 0;
+        if (obj instanceof Map) {
+            return ((Map<?, ?>) obj).isEmpty();
+        }
+
+        if (obj instanceof Object[]) {
+            return ((Object[]) obj).length == 0;
+        }
+
+        // 일반 VO나 객체의 경우 null 체크는 이미 위에서 통과했으므로
+        // 데이터가 존재하는 것으로 간주하여 false 반환
+        return false;
     }
 
     /**
