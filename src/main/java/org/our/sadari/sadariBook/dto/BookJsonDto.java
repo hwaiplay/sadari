@@ -27,5 +27,21 @@ public class BookJsonDto {
     // 한 번에 표시할 검색 결과 개수(기본값: 10, 최댓값: 100)
     private int display;
     // 검색된 책 데이터륻 담는 배열
-    private List<BookDto> items; 
+    private List<BookDto> items;
+
+    @Data
+    public class BookDto {
+        // 책 제목
+        private String title;
+        // 저자
+        private String author;
+        // 출판사
+        private String publisher; 
+        // isbn
+        private String isbn; 
+        // 책 표지 이미지
+        private String image; 
+        // 책 소개 내용
+        private String description; 
+    }
 }
