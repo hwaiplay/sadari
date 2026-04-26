@@ -9,6 +9,7 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
@@ -104,16 +105,21 @@ public class BookController {
         return ResultData.success(bookId);
     }
 
-    @GetMapping("/getBookdetail/{id}")
+    /**
+     * 독후감 상세보기 API
+     * @param bookNumb
+     * @return
+     */
+    @GetMapping("/getBookdetail/{bookNumb}")
     public ResultData<?> getDetail(@PathVariable Long bookNumb) {
-
-        if(bookNumb == null) {
-             return ResultData.fail(null, "책 번호 없음");
-        }
 
         List<AddBookReportDto> detail = bookServiceImpl.getDetail(bookNumb);
 
-        log.debug("독후감 상세보기 조회 성공: " + detail);
+        if(stringUtil.isEmpty(detail)) {
+             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        log.debug("독후감 상세보기 조회 성공: " + detail.size());
 
         return ResultData.success(detail);
     }
@@ -124,10 +130,14 @@ public class BookController {
      * @return 리스트
      */
     @GetMapping("/getBookList/{userNumb}")
-    public ResponseEntity<ResultData<?>> getBookList(@PathVariable Long userNumb) {
+    public ResultData<?> getBookList(@PathVariable Long userNumb) {
 
-        List<HomeBookDto> list = bookServiceImpl.getBookList(userNumb);
+        List<BookReportDto> list = bookServiceImpl.getBookList(userNumb);
 
-        return ResponseEntity.ok(ResultData.success(list));
+        if(stringUtil.isEmpty(list)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        return ResultData.success(list);
     }
 }

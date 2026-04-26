@@ -14,7 +14,7 @@ import { HomeBookType } from "@/features/Book/types/book.type";
  */
 
 function Book({
-  reportNumb,
+  bookNumb,
   bookTitle,
   className,
 }: HomeBookType & { className?: string }) {
@@ -26,7 +26,7 @@ function Book({
 
   return (
     <Link
-      to={`/book/detail/${reportNumb}`}
+      to={`/book/detail/${bookNumb}`}
       className={`${styles.book} ${className ?? ""}`}
       style={{ backgroundColor: `#ac8a8a` }}
       // style={{ backgroundColor: `#${color}` }}

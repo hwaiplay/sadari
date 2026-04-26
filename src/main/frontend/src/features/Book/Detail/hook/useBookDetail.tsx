@@ -18,12 +18,12 @@ import { getBookDetail } from "../../api/bookApi";
 //   });
 // };
 
-export const useBookDetail = (id: number) => {
+export const useBookDetail = (bookNumb: number) => {
   return useQuery({
-    queryKey: ["detail", id],
+    queryKey: ["detail", bookNumb],
     queryFn: async () => {
       try {
-        const res = await getBookDetail(id);
+        const res = await getBookDetail(bookNumb);
         return res.data;
       } catch (error) {
         console.log("에러발생: " + error);

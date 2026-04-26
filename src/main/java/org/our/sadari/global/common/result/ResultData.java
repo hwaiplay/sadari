@@ -53,11 +53,4 @@ public class ResultData<T> {
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
         return new ResultData<>(resultEnum.getCode(), translatedMessage, null);
     }
-
-    /**
-     * 실패 응답 (메시지 변환 완료)
-     */
-    public static <T> ResultData<T> fail(ResultEnum resultEnum, String message) {
-        return new ResultData<>(resultEnum.getCode(), message, null);
-    }
 }
