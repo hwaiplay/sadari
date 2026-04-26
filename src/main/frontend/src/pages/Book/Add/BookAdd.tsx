@@ -48,17 +48,17 @@ function BookAdd() {
     const content = formData.get("content");
 
     const data = {
-      title: selectedBook.title,
-      author: selectedBook.author,
-      publisher: selectedBook.publisher,
-      isbn: selectedBook.isbn,
-      image: selectedBook.image,
-      description: selectedBook.description,
-      status: status as ReadingStatusType,
-      startDate: startDate as string,
-      endDate: endDate as string,
-      grade: grade as string,
-      content: content as string,
+      bookTitl: selectedBook.title,
+      bookAthr: selectedBook.author,
+      bookPubl: selectedBook.publisher,
+      bookIsbn: selectedBook.isbn,
+      bookCvim: selectedBook.image,
+      bookDesc: selectedBook.description,
+      bookStat: status as ReadingStatusType,
+      bookStdt: startDate as string,
+      bookEndt: endDate as string,
+      bookGrde: grade as string,
+      bookCntn: content as string,
     };
 
     mutate(data);

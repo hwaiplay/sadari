@@ -2,7 +2,9 @@ package org.our.sadari.sadariBook.dto;
 
 import java.util.List;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 /**
  * packageName    : package org.our.sadari.sadariBook.dto;
@@ -17,6 +19,8 @@ import lombok.Data;
  */
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class BookJsonDto {
     // 검색 결과를 생성한 시간
     private String lastBuildDate;
@@ -30,7 +34,7 @@ public class BookJsonDto {
     private List<BookDto> items;
 
     @Data
-    public class BookDto {
+    public static class BookDto {
         // 책 제목
         private String title;
         // 저자
@@ -40,7 +44,7 @@ public class BookJsonDto {
         // isbn
         private String isbn; 
         // 책 표지 이미지
-        private String image; 
+        private String image;
         // 책 소개 내용
         private String description; 
     }

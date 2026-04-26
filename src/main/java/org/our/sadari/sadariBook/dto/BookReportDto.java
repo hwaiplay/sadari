@@ -26,14 +26,14 @@ public class BookReportDto {
     // 책 번호
     private Long bookNumb; 
     // 독서 상태(완독/읽는중/중단)
-    private String status; 
+    private String bookStat;
     // 독서 시작일
-    private String startDate; 
+    private String bookStdt;
     // 독서 종료일
-    private String endDate; 
+    private String bookEndt;
     // 별점
-    private String grade; 
+    private String bookGrde;
     // 독후감 내용
-    private String content; 
+    private String bookCntn;
     
 }
