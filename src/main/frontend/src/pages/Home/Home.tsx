@@ -42,7 +42,7 @@ function Home() {
   const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6); // 두번째 줄~끝
   const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
 
-  return bookList ? (
+  return bookList && data?.code === 200 ? (
     <div className={clsx(styles.homeContainer, container)}>
       <div className={styles.row5Container}>
         <div className={clsx(styles.row5, styles.row)}>
