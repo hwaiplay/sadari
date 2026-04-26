@@ -11,47 +11,77 @@ import { title } from "./../../../pages/Login/Login.css";
  */
 
 /**
- * 책 검색 후 선택한 책 타입
+ * "네이버 검색 결과 타입"
  */
-export interface SelectedBookType {
+export interface NaverBookResultType {
+  // 책 제목
   title: string;
+  // 저자
   author: string;
+  // 출판사
   publisher: string;
+  // 책 isbn
   isbn: string;
+  // 책 표지 이미지
   image: string;
+  // 책 소개 내용
   description: string;
 }
 
 /**
- * 독후감 기록하기
+ * "책 타입"
  */
-// 독서 진행 상태
+export interface BookType {
+  // 책 제목
+  bookTitl: string;
+  // 저자
+  bookAthr: string;
+  // 출판사
+  bookPubl: string;
+  // 책 isbn
+  bookIsbn: string;
+  // 책 표지 이미지
+  bookCvim: string;
+  // 책 소개 내용
+  bookDesc: string;
+}
+
+/**
+ * 독서 진행 상태 타입
+ * (완독/읽는중/중단)
+ */
 export type ReadingStatusType = "done" | "reading" | "stopped";
 
-// 독후감 타입
+/**
+ * "독후감" 타입
+ */
 export interface ReportType {
-  bookNumb: number;
-  status: ReadingStatusType;
-  startDate: string;
-  endDate: string;
-  grade: string;
-  content: string;
+  // 독서 진행 상태
+  bookStat: ReadingStatusType;
+  // 독서 시작일
+  bookStdt: string;
+  // 독서 종료일
+  bookEndt: string;
+  // 별점
+  bookGrde: string;
+  // 독후감 내용
+  bookCntn: string;
 }
 
 // 기록하기 데이터 타입
-export interface AddBookReportRequest {
-  title: string;
-  author: string;
-  publisher: string;
-  isbn: string;
-  image: string;
-  description: string;
-  status: ReadingStatusType;
-  startDate: string;
-  endDate: string;
-  grade: string;
-  content: string;
-}
+// export interface AddBookReportRequest {
+//   bookTitl: string;
+//   bookAthr: string;
+//   bookPubl: string;
+//   bookIsbn: string;
+//   bookCvim: string;
+//   bookDesc: string;
+//   bookStat: ReadingStatusType;
+//   bookStdt: string;
+//   bookEndt: string;
+//   bookGrde: string;
+//   bookCntn: string;
+// }
 
 // 기록 후 백엔드 응답
 export interface AddBookResponse {
@@ -68,6 +98,5 @@ export interface ReportDetail extends ReportType {
 // 홈화면에 보이는 독후감 타입
 export interface HomeBookType {
   bookNumb: number;
-  reportNumb: number;
-  bookTitle: string;
+  bookTitl: string;
 }
