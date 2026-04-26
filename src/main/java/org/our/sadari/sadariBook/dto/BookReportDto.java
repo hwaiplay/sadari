@@ -18,13 +18,20 @@ import lombok.Data;
 
 @Data
 public class BookReportDto {
-    private Long reportNumb; // 독후감 번호 
-    private Long bookNumb; // 책 번호
-    private String status;
-    private String startDate;
-    private String endDate;
-    private String grade;
-    private String content;
+    // 독후감 번호 
+    private Long reportNumb; 
+    // 책 번호
+    private Long bookNumb; 
+    // 독서 상태(완독/읽는중/중단)
+    private String status; 
+    // 독서 시작일
+    private String startDate; 
+    // 독서 종료일
+    private String endDate; 
+    // 별점
+    private String grade; 
+    // 독후감 내용
+    private String content; 
     
     public static BookReportDto from(BookReportEntity entity) {
         BookReportDto dto = new BookReportDto();
