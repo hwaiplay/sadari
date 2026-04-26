@@ -14,7 +14,7 @@ function BookDetail() {
   }
 
   if (isPending) {
-    return <Loading title={"로딩중"} />;
+    return <Loading title={"독후감 불러오는 중"} />;
   }
 
   const bookData = data?.data;
