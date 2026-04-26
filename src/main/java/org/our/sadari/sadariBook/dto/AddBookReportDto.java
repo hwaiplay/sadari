@@ -37,7 +37,7 @@ public class AddBookReportDto {
     private String startDate;
     // 독서 종료일
     private String endDate;
-    // 평점
+    // 별점
     private String grade;
     // 독후감 내용
     private String content;
