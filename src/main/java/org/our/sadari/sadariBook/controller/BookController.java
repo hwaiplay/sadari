@@ -1,38 +1,24 @@
 package org.our.sadari.sadariBook.controller;
 
-import java.util.List;
-
-import javax.naming.spi.DirStateFactory.Result;
-
-import org.our.sadari.global.common.result.ResultData;
-import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookDto;
-import org.our.sadari.sadariBook.dto.BookJsonDto;
-import org.our.sadari.sadariBook.dto.BookReportDto;
-import org.our.sadari.sadariBook.dto.HomeBookDto;
-import org.our.sadari.sadariBook.entity.BookReportEntity;
-import org.our.sadari.sadariBook.repository.BookReportRepository;
-import org.our.sadari.sadariBook.repository.BookRepository;
-import org.our.sadari.sadariBook.service.BookServiceImpl;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.BookJsonDto;
+import org.our.sadari.sadariBook.dto.HomeBookDto;
+import org.our.sadari.sadariBook.repository.BookReportRepository;
+import org.our.sadari.sadariBook.service.BookServiceImpl;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 /**
  * packageName    : org.our.sadari.sadariBook.controller
@@ -63,11 +49,13 @@ public class BookController {
     private final BookServiceImpl bookServiceImpl;
     private final BookReportRepository bookReportRepository;
 
+    private StringUtil stringUtil;
+
     /**
      *  책 검색 Api
      */
     @GetMapping("/search")
-    public ResponseEntity<ResultData<?>> searchBooks(@RequestParam String query) throws JsonProcessingException {
+    public ResultData<?> searchBooks(@RequestParam String query) throws JsonProcessingException {
 
         // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
         RestTemplate rt = new RestTemplate();
@@ -93,7 +81,7 @@ public class BookController {
 
         List<BookDto> books = bookJsonDto.getItems();
 
-        return ResponseEntity.ok(ResultData.success(books));
+        return ResultData.success(books);
 
     }
     
@@ -101,18 +89,19 @@ public class BookController {
      * 독후감 기록 Api
      */
     @PostMapping("/addBookReport")
-    public ResponseEntity<ResultData<?>> createReport(@RequestBody AddBookReportDto addBookReportDto) {
+    public ResultData<?> createReport(@RequestBody AddBookReportDto addBookReportDto) {
 
-        if(addBookReportDto == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResultData.fail(ResultEnum.AUTH_FAIL));
+        //if(stringUtil.isEmpty(addBookReportDto.getAuthor() || ))
+
+        if(stringUtil.isEmpty(addBookReportDto)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         Long bookId = bookServiceImpl.createReport(addBookReportDto);
         
         log.debug("독후감 기록 성공: " + addBookReportDto);
 
-        return ResponseEntity.ok(ResultData.success(bookId));
+        return ResultData.success(bookId);
     }
 
     @GetMapping("/getBookdetail/{id}")
