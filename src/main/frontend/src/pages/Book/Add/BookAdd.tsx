@@ -36,21 +36,16 @@ function BookAdd() {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
-    const status = formData.get("status"); // 독서상태
-    const startDate = formData.get("startDate"); // 독서 시작일
-    const endDate = formData.get("endDate"); // 독서 종료일
-    const grade = formData.get("grade"); // 평점
-    const content = formData.get("content"); // 평점
-
-    // 책 소개 글 자르기
-    // const bookDes = selectedBook.description;
-    // let cutBookDes = bookDes;
-
-    // if (bookDes.length > 254) {
-    //   cutBookDes = bookDes.substring(0, 255);
-    // }
-
-    // const replaceBookDes = cutBookDes.replace(/(\r\n|\n|\r)/gm, "");
+    // 독서상태
+    const status = formData.get("status");
+    // 독서 시작일
+    const startDate = formData.get("startDate");
+    // 독서 종료일
+    const endDate = formData.get("endDate");
+    // 별점
+    const grade = formData.get("grade");
+    // 독후감 내용
+    const content = formData.get("content");
 
     const data = {
       title: selectedBook.title,
