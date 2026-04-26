@@ -61,8 +61,9 @@ public class BookReportEntity {
     // 책과 연결 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(
-        name = "BOOK_NUMB",                // 내가 사용할 FK 컬럼명
-        referencedColumnName = "BOOK_NUMB" // BookEntity의 PK 컬럼명
+        name = "BOOK_NUMB",                 // 내가 사용할 FK 컬럼명
+        referencedColumnName = "BOOK_NUMB", // BookEntity의 PK 컬럼명
+        nullable = false
     )
     private BookEntity book;
 

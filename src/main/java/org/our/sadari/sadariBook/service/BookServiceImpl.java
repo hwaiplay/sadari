@@ -72,10 +72,10 @@ public class BookServiceImpl implements BookService {
      * 독후감 상세보기 로직
      */
     @Override
-    public AddBookReportDto getDetail(Long id) {
+    public List<AddBookReportDto> getDetail(Long bookNumb) {
 
         // 독후감 조회
-        AddBookReportDto detail = bookReportRepository.findDetail(id);
+        List<AddBookReportDto> detail = bookReportRepository.findDetail(bookNumb);
 
         if (detail == null) {
             throw new RuntimeException("데이터 없음");
@@ -111,12 +111,13 @@ public class BookServiceImpl implements BookService {
             Long reportNumb = book.getReportNumb();
 
             // 책 조회
-            BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb)
-                .orElseThrow(() -> new RuntimeException("책 정보 없음"));
+            BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb);
+                // .orElseThrow(() -> new RuntimeException("책 정보 없음"));
 
-            // 책 제목
+            // 책 제목 자르기
             String bookTitle = bookEntity.getBookTitl();
-
+            // String cutTitle = stringUtil.cutString(bookTitle, 14);
+        
             // 리스트 저장
             returnList.add(new HomeBookDto(bookNumb, reportNumb, bookTitle));
         }

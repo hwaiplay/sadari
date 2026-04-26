@@ -1,6 +1,8 @@
 package org.our.sadari.sadariBook.repository;
 
 import java.util.List;
+
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
@@ -41,15 +43,25 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
             r.bookCntn
         )
         FROM BookReportEntity r
-        JOIN r.book b
-        WHERE r.id = :id
+        LEFT JOIN r.book b
+        WHERE r.bookNumb = :bookNumb
     """)
-    AddBookReportDto findDetail(Long id); 
+    List<AddBookReportDto> findDetail(Long bookNumb); 
 
     /**
      * 독후감 리스트 조회
      * @param user
      * @return 독후감 리스트
      */
+    // @Query("""
+    //     SELECT new org.our.sadari.sadariBook.dto.AddBookReportDto(
+    //         b.bookTitl,
+    //         r.bookNumb,
+    //         r.userNumb
+    //     )
+    //     FROM BookReportEntity r
+    //     LEFT JOIN r.book b
+    //     WHERE r.id = :user
+    // """)
     List<BookReportDto> findAllByUser_UserNumb(Long user);
 }
