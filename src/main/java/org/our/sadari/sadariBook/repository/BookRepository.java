@@ -1,11 +1,11 @@
 package org.our.sadari.sadariBook.repository;
 
-import java.util.Optional;
-
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+
+import java.util.Optional;
 
 /**
  * fileName       : BookRepository
@@ -24,7 +24,7 @@ public interface BookRepository extends JpaRepository<BookEntity, Long> {
     Optional<BookEntity> findByBookIsbn(String id);
 
     // 책 표지 이미지 조회
-    @Query("SELECT b.bookCvim FROM BookEntity b WHERE bookNumb = :id")
+    @Query("SELECT b.bookCvim FROM BookEntity b WHERE b.bookNumb = :id")
     String findImageById(@Param("id") Long id);
 
     // 리스트에서 책 번호로 저장된 책 검색
