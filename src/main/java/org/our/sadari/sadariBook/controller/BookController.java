@@ -46,7 +46,6 @@ public class BookController {
     private String NAVER_CLIENT_SECRET; //네이버 앱 시크릿 키
 
     private final BookServiceImpl bookServiceImpl;
-    private final BookReportRepository bookReportRepository;
 
     private StringUtil stringUtil;
 

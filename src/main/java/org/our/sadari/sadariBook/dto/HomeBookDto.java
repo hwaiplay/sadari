@@ -23,5 +23,5 @@ public class HomeBookDto {
     // 유저 번호
     private Long userNumb; 
     // 책 제목
-    private String bookTitle; 
+    private String bookTitl; 
 }

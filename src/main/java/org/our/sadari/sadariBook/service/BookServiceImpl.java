@@ -1,10 +1,7 @@
 package org.our.sadari.sadariBook.service;
 
-import java.util.ArrayList;
 import java.util.List;
-
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
@@ -13,7 +10,6 @@ import org.our.sadari.sadariBook.repository.BookRepository;
 import org.our.sadari.sadariUser.auth.entity.UserEntity;
 import org.our.sadari.sadariUser.auth.repository.UserRepository;
 import org.springframework.stereotype.Service;
-
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,16 +33,16 @@ public class BookServiceImpl implements BookService {
         .orElseThrow(() -> new RuntimeException("유저 없음"));
 
         // 책 먼저 저장
-        BookEntity bookEntity = bookRepository.findByBookIsbn(request.getIsbn())
+        BookEntity bookEntity = bookRepository.findByBookIsbn(request.getBookIsbn())
             .orElseGet(() -> {
                 // 없으면 새로 저장
                 BookEntity newBook = BookEntity.builder()
-                    .bookIsbn(request.getIsbn())
-                    .bookTitl(request.getTitle())
-                    .bookAthr(request.getAuthor())
-                    .bookPubl(request.getPublisher())
-                    .bookDesc(request.getDescription())
-                    .bookCvim(request.getImage())
+                    .bookIsbn(request.getBookIsbn())
+                    .bookTitl(request.getBookTitl())
+                    .bookAthr(request.getBookAthr())
+                    .bookPubl(request.getBookPubl())
+                    .bookDesc(request.getBookDesc())
+                    .bookCvim(request.getBookCvim())
                     .build();
 
                 return bookRepository.save(newBook);
@@ -56,11 +52,11 @@ public class BookServiceImpl implements BookService {
         BookReportEntity reportEntity = BookReportEntity.builder()
             .book(bookEntity)
             .user(user)
-            .bookStat(request.getStatus())
-            .bookStdt(request.getStartDate())
-            .bookEndt(request.getEndDate())
-            .bookGrde((request.getGrade()))
-            .bookCntn(request.getContent())
+            .bookStat(request.getBookStat())
+            .bookStdt(request.getBookStdt())
+            .bookEndt(request.getBookEndt())
+            .bookGrde((request.getBookGrde()))
+            .bookCntn(request.getBookCntn())
             .build();
 
         BookReportEntity saved = bookReportRepository.save(reportEntity);
@@ -98,31 +94,6 @@ public class BookServiceImpl implements BookService {
         // 리스트 조회
         List<HomeBookDto> list = bookReportRepository.findAllByUserNumb(userNumb);
         log.info("독후감 리스트 조회 완료 {}", list);
-
-        // List<HomeBookDto> returnList = new ArrayList<>();
-
-        // // 책 번호를 사용한 책 제목 검색
-        // // 책 번호와 책 제목만 담은 리스트를 저장
-        // for(BookReportDto book : reportList) {
-        //     // 책 번호
-        //     Long bookNumb = book.getBookNumb();
-
-        //     // 독후감 번호
-        //     Long reportNumb = book.getReportNumb();
-
-        //     // 책 조회
-        //     BookEntity bookEntity = bookRepository.findByBookNumb(bookNumb);
-        //         // .orElseThrow(() -> new RuntimeException("책 정보 없음"));
-
-        //     // 책 제목 자르기
-        //     String bookTitle = bookEntity.getBookTitl();
-        //     // String cutTitle = stringUtil.cutString(bookTitle, 14);
-        
-        //     // 리스트 저장
-        //     returnList.add(new HomeBookDto(bookNumb, reportNumb, bookTitle));
-        // }
-
-        // log.info("책 번호와 책 제목 객체 리스트 생성 완료 {}", returnList);
 
         return list;
     }
