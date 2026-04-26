@@ -105,18 +105,17 @@ public class BookController {
     }
 
     @GetMapping("/getBookdetail/{id}")
-    public ResponseEntity<ResultData<?>> getDetail(@PathVariable Long id) {
+    public ResultData<?> getDetail(@PathVariable Long bookNumb) {
 
-        if(id == null) {
-             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResultData.fail(ResultEnum.AUTH_FAIL));
+        if(bookNumb == null) {
+             return ResultData.fail(null, "책 번호 없음");
         }
 
-        AddBookReportDto detail = bookServiceImpl.getDetail(id);
+        List<AddBookReportDto> detail = bookServiceImpl.getDetail(bookNumb);
 
         log.debug("독후감 상세보기 조회 성공: " + detail);
 
-        return ResponseEntity.ok(ResultData.success(detail));
+        return ResultData.success(detail);
     }
 
     /**
