@@ -28,5 +28,5 @@ public interface BookRepository extends JpaRepository<BookEntity, Long> {
     String findImageById(@Param("id") Long id);
 
     // 리스트에서 책 번호로 저장된 책 검색
-    Optional<BookEntity> findByBookNumb(Long bookNumb);
+    BookEntity findByBookNumb(Long bookNumb);
 }
