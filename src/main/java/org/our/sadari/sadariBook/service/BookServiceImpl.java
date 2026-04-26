@@ -89,14 +89,14 @@ public class BookServiceImpl implements BookService {
      * 독후감 리스트 로직
      */
     @Override
-    public List<BookReportDto> getBookList(Long userNumb) {
+    public List<HomeBookDto> getBookList(Long userNumb) {
 
         if(userNumb == null) {
             throw new RuntimeException("유저 정보 없음");
         }
 
         // 리스트 조회
-        List<BookReportDto> list = bookReportRepository.findAllByUser(userNumb);
+        List<HomeBookDto> list = bookReportRepository.findAllByUserNumb(userNumb);
         log.info("독후감 리스트 조회 완료 {}", list);
 
         // List<HomeBookDto> returnList = new ArrayList<>();
