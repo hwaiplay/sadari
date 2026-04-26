@@ -18,16 +18,29 @@ import lombok.Data;
 @Data
 @AllArgsConstructor
 public class AddBookReportDto {
-    private String title;
-    private String author;
-    private String publisher;
-    private String isbn;
-    private String image;
-    private String description;
-
-    private String status;
-    private String startDate;
-    private String endDate;
-    private String grade;
-    private String content;
+    // "책" 관련 필드 -----------
+    // 책 제목
+    private String bookTitl;
+    // 저자
+    private String bookAthr;
+    // 출판사
+    private String bookPubl;
+    // Isbn
+    private String bookIsbn;
+    // 책 표지 이미지
+    private String bookCvim;
+    // 책 소개 내용
+    private String bookDesc;
+    
+    // "독후감" 관련 필드 ---------
+    // 독서 상태(완독/읽는중/중단)
+    private String bookStat;
+    // 독서 시작일
+    private String bookStdt;
+    // 독서 종료일
+    private String bookEndt;
+    // 별점
+    private String bookGrde;
+    // 독후감 내용
+    private String bookCntn;
 }

@@ -15,13 +15,13 @@ import { HomeBookType } from "@/features/Book/types/book.type";
 
 function Book({
   bookNumb,
-  bookTitle,
+  bookTitl,
   className,
 }: HomeBookType & { className?: string }) {
-  let sliceTitle = bookTitle;
+  let sliceTitle = bookTitl;
 
-  if (bookTitle.length > 14) {
-    sliceTitle = bookTitle?.slice(0, 14) + "•••";
+  if (bookTitl.length > 14) {
+    sliceTitle = bookTitl?.slice(0, 14) + "•••";
   }
 
   return (

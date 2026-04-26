@@ -11,12 +11,14 @@
 
 import { useState } from "react";
 import api from "../../../app/api/axios";
-import { SelectedBookType } from "@/features/Book/types/book.type";
+import { BookType, NaverBookResultType } from "@/features/Book/types/book.type";
 import { useNavigate } from "react-router-dom";
 
 const BookSearch = () => {
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
-  const [bookResult, setBookResult] = useState<SelectedBookType[] | null>(null); // 응답 데이터
+  const [bookResult, setBookResult] = useState<NaverBookResultType[] | null>(
+    null,
+  ); // 응답 데이터
 
   // 검색 로직 구현
   const handleSearchClick = async () => {
@@ -37,7 +39,7 @@ const BookSearch = () => {
         return;
       }
 
-      const responseData = response.data.data;
+      const responseData = response?.data.data;
 
       setBookResult(responseData);
     } catch (error) {
@@ -47,7 +49,7 @@ const BookSearch = () => {
 
   const navigate = useNavigate();
 
-  const handleSelectBook = (book: SelectedBookType) => {
+  const handleSelectBook = (book: NaverBookResultType) => {
     navigate("/add", {
       state: { selectedBook: book },
     });
@@ -55,7 +57,7 @@ const BookSearch = () => {
 
   return (
     <>
-      <div style={{ marginTop: "90px" }}>
+      <div>
         <input
           type="text"
           name="searchKeyword"
