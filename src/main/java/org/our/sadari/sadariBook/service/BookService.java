@@ -28,5 +28,5 @@ public interface BookService {
     List<AddBookReportDto> getDetail(Long bookNumb);
 
     // 독후감 리스트 출력 (홈화면)
-    List<BookReportDto> getBookList(Long userNumb);
+    List<HomeBookDto> getBookList(Long userNumb);
 }
