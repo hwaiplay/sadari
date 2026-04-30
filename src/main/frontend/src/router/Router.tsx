@@ -13,7 +13,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Oauth from "../pages/Oauth/Oauth";
 import ProtectedRoute from "./ProtectedRoute";
-import MainLayout from "../components/Layout/MainLayout";
+import Layout from "../components/Layout/Layout";
 import Home from "../pages/Home/Home";
 import BookDetail from "../pages/Book/Detail/BookDetail";
 import PublicRoute from "./PublicRoute";
@@ -46,16 +46,25 @@ const Router = () => {
       <Route
         element={
           <ProtectedRoute>
-            <MainLayout />
+            <Layout hasPaddingTop={false} />
           </ProtectedRoute>
         }
       >
         {/* 메인 */}
-        {/* home으로 리디렉션 */}
         <Route path="/" element={<Navigate to="/home" replace />} />
         <Route path="/home" element={<Home />} />
+      </Route>
+
+      <Route
+        element={
+          <ProtectedRoute>
+            <Layout />
+          </ProtectedRoute>
+        }
+      >
         {/* 독후감 상세보기 */}
         <Route path="/book/detail/:id" element={<BookDetail />} />
+        {/* 책 검색 */}
         <Route path="/book/search" element={<BookSearchType />} />
       </Route>
 
