@@ -53,7 +53,7 @@ public class BookController {
      *  책 검색 Api
      */
     @GetMapping("/search")
-    public ResultData<?> searchBooks(@RequestParam String query) throws JsonProcessingException {
+    public ResultData<?> searchBooks(@RequestParam("query") String query) throws JsonProcessingException {
 
         // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
         RestTemplate rt = new RestTemplate();
@@ -108,7 +108,7 @@ public class BookController {
      * @return
      */
     @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData<?> getDetail(@PathVariable Long bookNumb) {
+    public ResultData<?> getDetail(@PathVariable("bookNumb") Long bookNumb) {
 
         List<AddBookReportDto> detail = bookServiceImpl.getDetail(bookNumb);
 
@@ -127,7 +127,7 @@ public class BookController {
      * @return 리스트
      */
     @GetMapping("/getBookList/{userNumb}")
-    public ResultData<?> getBookList(@PathVariable Long userNumb) {
+    public ResultData<?> getBookList(@PathVariable("userNumb") Long userNumb) {
 
         List<HomeBookDto> list = bookServiceImpl.getBookList(userNumb);
 
