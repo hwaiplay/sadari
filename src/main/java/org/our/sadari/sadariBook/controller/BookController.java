@@ -138,11 +138,23 @@ public class BookController {
         return ResultData.success(list);
     }
 
+    /**
+     * 독후감 수정 API
+     * @param reportNumb
+     * @param request
+     * @return
+     */
     @PutMapping("/setReport/{reportNumb}")
-    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb) {
+    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, AddBookReportDto request) {
 
+        if(stringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
 
+        Long entity = bookServiceImpl.setReport(reportNumb, request);
 
-        return ResultData.success();
+        log.debug("독후감 수정 성공: " + entity);
+        
+        return ResultData.success(entity);
     }
 }
