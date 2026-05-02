@@ -1,5 +1,7 @@
 package org.our.sadari.sadariBook.entity;
 
+import java.time.LocalDate;
+
 import org.our.sadari.sadariUser.auth.entity.UserEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -86,4 +88,19 @@ public class BookReportEntity {
     // 기록 내용
     @Column(name = "REPORT_CNTN", nullable = false)
     private String bookCntn;
+
+    // 독후감 수정 메소드
+    public void update(
+        String bookStat,
+        String bookStdt,
+        String bookEndt,
+        String bookGrde,
+        String bookCntn
+    ) {
+        this.bookStat = bookStat;
+        this.bookStdt = bookStdt;
+        this.bookEndt = bookEndt;
+        this.bookGrde = bookGrde;
+        this.bookCntn = bookCntn;
+    }
 }
