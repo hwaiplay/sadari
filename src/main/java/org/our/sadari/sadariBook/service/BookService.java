@@ -31,6 +31,6 @@ public interface BookService {
     // 독후감 리스트 출력 (홈화면)
     List<HomeBookDto> getBookList(Long userNumb);
 
-    // 독후감 삭제
-    ResultData<?> setReport(AddBookReportDto request);
+    // 독후감 수정
+    Long setReport(Long reportNumb, AddBookReportDto request);
 }
