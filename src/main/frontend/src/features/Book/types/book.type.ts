@@ -68,21 +68,6 @@ export interface ReportType {
   bookCntn: string;
 }
 
-// 기록하기 데이터 타입
-// export interface AddBookReportRequest {
-//   bookTitl: string;
-//   bookAthr: string;
-//   bookPubl: string;
-//   bookIsbn: string;
-//   bookCvim: string;
-//   bookDesc: string;
-//   bookStat: ReadingStatusType;
-//   bookStdt: string;
-//   bookEndt: string;
-//   bookGrde: string;
-//   bookCntn: string;
-// }
-
 // 기록 후 백엔드 응답
 export interface AddBookResponse {
   success: boolean;
@@ -100,3 +85,9 @@ export interface HomeBookType {
   bookNumb: number;
   bookTitl: string;
 }
+
+// 독후감 수정 시 파라미터 타입
+export type SetReportParams = {
+  reportNumb: number; // 독후감 번호
+  data: BookType & ReportType; // 수정 데이터
+};
