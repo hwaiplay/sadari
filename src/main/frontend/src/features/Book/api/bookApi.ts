@@ -42,3 +42,12 @@ export const getBookDetail = (bookNumb: number) => {
 export const getBooklist = (userNumb: number) => {
   return api.get(`/book/getBookList/${userNumb}`);
 };
+
+/**
+ * 독후감 수정 API
+ * @param reportNumb
+ * @returns
+ */
+export const setReport = (reportNumb: number) => {
+  return api.get(`/book/setReport/${reportNumb}`);
+};
