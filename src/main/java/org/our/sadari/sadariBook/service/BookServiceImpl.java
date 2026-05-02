@@ -1,6 +1,8 @@
 package org.our.sadari.sadariBook.service;
 
 import java.util.List;
+
+import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
@@ -97,4 +99,10 @@ public class BookServiceImpl implements BookService {
 
         return list;
     }
+
+    @Override
+    public ResultData<?> setReport(AddBookReportDto request) {
+        return ResultData.success();
+    }
+
 }

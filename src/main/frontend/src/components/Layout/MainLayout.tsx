@@ -1,6 +1,7 @@
 import Header from "./Header/Header";
 import { Outlet } from "react-router-dom";
 import Navigation from "./Navigation/Navigation";
+import { vars } from "@/app/styles/tokens.css";
 
 /**
  * fileName       : MainLayout
@@ -13,11 +14,11 @@ import Navigation from "./Navigation/Navigation";
  * 2026-04-26       hanwon.Jang        주석 추가
  */
 
-function MainLayout() {
+function Layout({ hasPaddingTop = true }) {
   return (
     <div>
       <Header />
-      <main>
+      <main style={{ paddingTop: hasPaddingTop ? vars.headerHeight : 0 }}>
         <Outlet />
       </main>
       <Navigation />
@@ -25,4 +26,4 @@ function MainLayout() {
   );
 }
 
-export default MainLayout;
+export default Layout;

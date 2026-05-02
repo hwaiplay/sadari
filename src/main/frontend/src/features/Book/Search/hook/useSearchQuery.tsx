@@ -21,12 +21,10 @@ export const useSearchQuery = (searchKeyword: string) => {
           `/book/search?query=${encodeURIComponent(searchKeyword)}`,
         );
 
-        console.log(response.data);
-
         return response.data;
       } catch (err) {
         console.log("에러 발생:", err);
-        throw err; // 중요 (Query가 에러 인식하도록)
+        throw err;
       }
     },
   });
