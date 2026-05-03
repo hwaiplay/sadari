@@ -11,12 +11,15 @@
 
 import { useState } from "react";
 import api from "../../../app/api/axios";
-import { BookType, NaverBookResultType } from "@/features/Book/types/book.type";
+import {
+  BookDtoType,
+  NaverApiResultType,
+} from "@/features/Book/types/book.type";
 import { useNavigate } from "react-router-dom";
 
 const SearchBookPage = () => {
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
-  const [bookResult, setBookResult] = useState<NaverBookResultType[] | null>(
+  const [bookResult, setBookResult] = useState<NaverApiResultType[] | null>(
     null,
   ); // 응답 데이터
 
@@ -49,7 +52,7 @@ const SearchBookPage = () => {
 
   const navigate = useNavigate();
 
-  const handleSelectBook = (book: NaverBookResultType) => {
+  const handleSelectBook = (book: NaverApiResultType) => {
     navigate("/add", {
       state: { selectedBook: book },
     });
