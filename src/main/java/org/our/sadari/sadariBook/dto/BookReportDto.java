@@ -19,7 +19,7 @@ import lombok.Data;
  */
 
 @Data
-public class BookReportDto {
+public class BookReportDto extends BookDto {
     //유저 번호
     private Long UserNumb;
     // 독후감 번호 
