@@ -4,9 +4,11 @@ import java.util.List;
 
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
+import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.repository.BookRepository;
 import org.our.sadari.sadariUser.auth.entity.UserEntity;
@@ -21,9 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 @Slf4j
 public class BookServiceImpl implements BookService {
+
     private final BookRepository bookRepository;
     private final BookReportRepository bookReportRepository;
     private final UserRepository userRepository;
+    private final ReportMapper reportMapper;
 
     /**
      * 독후감 기록 로직
@@ -69,13 +73,32 @@ public class BookServiceImpl implements BookService {
     }
 
     /**
+     * 독후감 리스트 로직
+     */
+    @Override
+    public List<BookReportDto> getBookList() {
+
+        BookReportDto book = new BookReportDto();
+        book.setUserNumb(Long.valueOf(1));
+
+        // 리스트 조회
+        List<BookReportDto> list = reportMapper.getReportList(book);
+        log.info("독후감 리스트 조회 완료 {}", list);
+
+        return list;
+    }
+
+    /**
      * 독후감 상세보기 로직
      */
     @Override
-    public List<AddBookReportDto> getDetail(Long bookNumb) {
+    public BookReportDto getDetail(Long reportNumb) {
 
+        BookReportDto book = new BookReportDto();
+        book.setReportNumb(reportNumb);
+        book.setUserNumb(Long.valueOf(1));
         // 독후감 조회
-        List<AddBookReportDto> detail = bookReportRepository.findDetail(bookNumb);
+        BookReportDto detail = reportMapper.getReportDtl(book);
 
         if (detail == null) {
             throw new RuntimeException("데이터 없음");
@@ -83,23 +106,6 @@ public class BookServiceImpl implements BookService {
 
         return detail;
 
-    }
-
-    /**
-     * 독후감 리스트 로직
-     */
-    @Override
-    public List<HomeBookDto> getBookList(Long userNumb) {
-
-        if(userNumb == null) {
-            throw new RuntimeException("유저 정보 없음");
-        }
-
-        // 리스트 조회
-        List<HomeBookDto> list = bookReportRepository.findAllByUserNumb(userNumb);
-        log.info("독후감 리스트 조회 완료 {}", list);
-
-        return list;
     }
 
     /**

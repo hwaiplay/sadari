@@ -25,11 +25,10 @@ public interface BookService {
     Long createReport(AddBookReportDto request);
 
     // 독후감 상세보기
-    // 한 책에 독후감 여러개일 수 있기 때문에 List 타입
-    List<AddBookReportDto> getDetail(Long bookNumb);
+    BookReportDto getDetail(Long reportNumb);
 
     // 독후감 리스트 출력 (홈화면)
-    List<HomeBookDto> getBookList(Long userNumb);
+    List<BookReportDto> getBookList();
 
     // 독후감 수정
     Long setReport(Long reportNumb, AddBookReportDto request);
