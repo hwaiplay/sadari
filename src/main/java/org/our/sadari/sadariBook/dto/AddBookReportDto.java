@@ -19,6 +19,8 @@ import lombok.Data;
 @AllArgsConstructor
 public class AddBookReportDto {
     // "책" 관련 필드 -----------
+    // 책 번호
+    private Long bookNumb;
     // 책 제목
     private String bookTitl;
     // 저자
@@ -33,6 +35,8 @@ public class AddBookReportDto {
     private String bookDesc;
     
     // "독후감" 관련 필드 ---------
+    // 독후감 번호
+    private Long reportNumb;
     // 독서 상태(완독/읽는중/중단)
     private String bookStat;
     // 독서 시작일

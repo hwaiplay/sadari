@@ -18,6 +18,7 @@ function Book({
   bookTitl,
   className,
 }: HomeBookType & { className?: string }) {
+  // 책 제목 자르기
   let sliceTitle = bookTitl;
 
   if (bookTitl.length > 14) {
