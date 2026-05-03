@@ -14,7 +14,7 @@ import api from "../../../app/api/axios";
 import { BookType, NaverBookResultType } from "@/features/Book/types/book.type";
 import { useNavigate } from "react-router-dom";
 
-const BookSearch = () => {
+const SearchBookPage = () => {
   const [searchKeyword, setSearchKeyword] = useState(""); // 검색어
   const [bookResult, setBookResult] = useState<NaverBookResultType[] | null>(
     null,
@@ -90,4 +90,4 @@ const BookSearch = () => {
   );
 };
 
-export default BookSearch;
+export default SearchBookPage;

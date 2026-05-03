@@ -1,3 +1,15 @@
+import { Navigate, Route, Routes } from "react-router-dom";
+import LoginPage from "../pages/Login/LoginPage";
+import Oauth from "../pages/Oauth/Oauth";
+import ProtectedRoute from "./ProtectedRoute";
+import Layout from "../components/Layout/Layout";
+import Home from "../pages/Home/Home";
+import DetailPage from "../pages/Book/Detail/DetailPage";
+import PublicRoute from "./PublicRoute";
+import AddLayout from "../features/Book/Add/components/AddLayout";
+import BookSearchType from "../pages/Book/Search/SearchBookPage";
+import SetReportPage from "@/pages/Book/Set/SetReportPage";
+
 /**
  * fileName       : Router
  * author         : hanwon.Jang
@@ -9,19 +21,6 @@
  * 2026-03-23       hanwon.Jang       최초 생성
  */
 
-import { Navigate, Route, Routes } from "react-router-dom";
-import Login from "../pages/Login/Login";
-import Oauth from "../pages/Oauth/Oauth";
-import ProtectedRoute from "./ProtectedRoute";
-import Layout from "../components/Layout/Layout";
-import Home from "../pages/Home/Home";
-import BookDetail from "../pages/Book/Detail/BookDetail";
-import PublicRoute from "./PublicRoute";
-import AddLayout from "../features/Book/Add/components/AddLayout";
-import BookSearchType from "../pages/Book/Search/BookSearch";
-import BookAdd from "@/pages/Book/Add/BookAdd";
-import SetReport from "@/pages/Book/Set/SetReport";
-
 const Router = () => {
   return (
     <Routes>
@@ -30,7 +29,7 @@ const Router = () => {
         path="/login"
         element={
           <PublicRoute>
-            <Login />
+            <LoginPage />
           </PublicRoute>
         }
       />
@@ -64,11 +63,11 @@ const Router = () => {
         }
       >
         {/* 독후감 상세보기 */}
-        <Route path="/book/detail/:id" element={<BookDetail />} />
+        <Route path="/book/detail/:id" element={<DetailPage />} />
         {/* 책 검색 */}
         <Route path="/book/search" element={<BookSearchType />} />
         {/* 독후감 수정 */}
-        <Route path="/book/set/:id" element={<SetReport />} />
+        <Route path="/book/set/:id" element={<SetReportPage />} />
       </Route>
 
       {/* 기록하기 */}
@@ -79,7 +78,7 @@ const Router = () => {
           </ProtectedRoute>
         }
       >
-        <Route path="/add" element={<BookAdd />} />
+        <Route path="/add" element={<SetReportPage />} />
       </Route>
     </Routes>
   );
