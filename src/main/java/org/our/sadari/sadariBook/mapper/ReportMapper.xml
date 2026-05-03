@@ -3,15 +3,40 @@
 <mapper namespace="org.our.sadari.sadariBook.mapper.ReportMapper">
 
     <select id="getReportList" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
-        SELECT *
-          FROM TM_BOOK_REPORT
-         WHERE USER_NUMB = #{userNumb}
+        SELECT A.BOOK_NUMB
+             , A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.REPORT_CNTN
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , A.REPORT_STAT
+             , A.REPORT_STDT
+             , B.BOOK_TITL
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+           ON A.BOOK_NUMB = B.BOOK_NUMB
+        WHERE A.USER_NUMB = #{userNumb}
     </select>
 
     <select id="getReporDtl" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
-        SELECT *
-        FROM TM_BOOK_REPORT
-        WHERE USER_NUMB = #{userNumb}
-          AND REPORT_NUMB = #{reportNumb}
+        SELECT A.BOOK_NUMB
+             , A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.REPORT_CNTN
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , A.REPORT_STAT
+             , A.REPORT_STDT
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+             , B.BOOK_ISBN
+             , B.BOOK_PUBL
+             , B.BOOK_DESC
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_NUMB = #{reportNumb}
     </select>
 </mapper>
