@@ -8,6 +8,7 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
@@ -145,7 +146,7 @@ public class BookController {
      * @return
      */
     @PutMapping("/setReport/{reportNumb}")
-    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, AddBookReportDto request) {
+    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, BookReportDto request) {
 
         if(stringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
