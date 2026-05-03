@@ -1,8 +1,5 @@
 package org.our.sadari.sadariBook.dto;
 
-import org.our.sadari.sadariBook.entity.BookReportEntity;
-
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -27,14 +24,14 @@ public class BookReportDto extends BookDto {
     // 책 번호
     private Long bookNumb; 
     // 독서 상태(완독/읽는중/중단)
-    private String bookStat;
+    private String reportStat;
     // 독서 시작일
-    private String bookStdt;
+    private String reportStdt;
     // 독서 종료일
-    private String bookEndt;
+    private String reportEndt;
     // 별점
-    private String bookGrde;
+    private String reportGrde;
     // 독후감 내용
-    private String bookCntn;
+    private String reportCntn;
     
 }

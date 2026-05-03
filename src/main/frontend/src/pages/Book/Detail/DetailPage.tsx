@@ -12,7 +12,7 @@ function DetailPage() {
   const navigate = useNavigate();
 
   // 수정 페이지로 이동
-  const setReportBtn = (reportNumb: number) => {
+  const goUpdatePage = (reportNumb: number) => {
     navigate(`/book/set/${reportNumb}`);
   };
 
@@ -30,13 +30,13 @@ function DetailPage() {
   }
 
   // 독후감 데이터
-  const bookData = data?.data[0];
+  const bookData = data?.data;
 
   return data?.code === 200 && bookData ? (
     // {bookData.map(book =>()}
     <Container>
       <h1
-        onClick={() => setReportBtn(idNum)}
+        onClick={() => goUpdatePage(idNum)}
         style={{ backgroundColor: "#e3d3d3" }}
       >
         독후감 수정하기
@@ -49,15 +49,15 @@ function DetailPage() {
       </div>
       <div>
         <h3>독서기간</h3>
-        {bookData.bookStdt} ~ {bookData.bookEndt}
+        {bookData.reportStdt} ~ {bookData.reportEndt}
       </div>
       <div>
         <h3>평점</h3>
-        {bookData.bookGrde}
+        {bookData.reportGrde}
       </div>
       <div>
         <h3>독후감</h3>
-        {bookData.bookCntn}
+        {bookData.reportCntn}
       </div>
       <div>
         <h3>책 소개</h3>

@@ -16,8 +16,8 @@ import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { useParams } from "react-router-dom";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useState } from "react";
-import { statusContainer } from "../Set/SetReport.css";
 import { useSetReport } from "@/features/Book/Update/useSetReport";
+import { statusContainer } from "../Set/SetReportPage.css";
 
 interface UpdateReportPageProps {}
 
@@ -32,15 +32,10 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
   const { data, isPending } = useBookDetail(idNum);
 
   // 독후감 데이터
-  const bookData = data?.data[0];
+  const bookData = data?.data;
 
   // 독서 상태
-  const [status, setStatus] = useState<ReadingStatusType>(bookData?.bookStat);
-
-  // 조회 결과가 없는 경우
-  if (data?.code == 2004) {
-    return <div>{data.message}</div>;
-  }
+  const [status, setStatus] = useState<ReadingStatusType>(bookData?.reportStat);
 
   // 로딩중인 경우
   if (isPending) {
@@ -68,18 +63,17 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
 
     const data = {
       reportNumb: idNum,
-      bookNumb: 29,
-      bookStat: status as ReadingStatusType,
-      bookStdt: startDate as string,
-      bookEndt: endDate as string,
-      bookGrde: grade as string,
-      bookCntn: content as string,
+      reportStat: status as ReadingStatusType,
+      reportStdt: startDate as string,
+      reportEndt: endDate as string,
+      reportGrde: grade as string,
+      reportCntn: content as string,
     };
 
     mutate({ reportNumb: idNum, data });
   };
 
-  return data?.code === 200 && bookData ? (
+  return bookData ? (
     <Container>
       <form onSubmit={setFormAction}>
         <div style={{ width: "300px" }}>
@@ -117,7 +111,7 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
               type="date"
               name="startDate"
               id="startDate"
-              defaultValue={bookData.bookStdt}
+              defaultValue={bookData.reportStdt}
             />
           </div>
           <div>
@@ -126,7 +120,7 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
               type="date"
               name="endDate"
               id="endDate"
-              defaultValue={bookData.bookEndt}
+              defaultValue={bookData.reportEndt}
             />
           </div>
         </FormField>
@@ -142,7 +136,7 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
             name="content"
             id="content"
             placeholder="독후감을 남겨보세요"
-            defaultValue={bookData.bookCntn}
+            defaultValue={bookData.reportCntn}
           />
         </FormField>
         <button type="submit">수정하기</button>

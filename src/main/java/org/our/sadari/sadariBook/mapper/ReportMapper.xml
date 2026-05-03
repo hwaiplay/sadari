@@ -18,7 +18,7 @@
         WHERE A.USER_NUMB = #{userNumb}
     </select>
 
-    <select id="getReporDtl" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
+    <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
         SELECT A.BOOK_NUMB
              , A.REPORT_NUMB
              , A.USER_NUMB
