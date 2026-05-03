@@ -1,5 +1,8 @@
+import { Link } from "react-router-dom";
+import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
+
 /**
- * fileName       : Login
+ * fileName       : LoginPage
  * author         : Hanwon.Jang
  * date           : 2026-03-19
  * description    : 로그인 페이지
@@ -9,11 +12,7 @@
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
-import { Link, Navigate } from "react-router-dom";
-import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
-import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
-
-function Login() {
+function LoginPage() {
   const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
   const REDIRECT_URI = "http://localhost:8080/api/oauth/callback/kakao";
   const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile_nickname,profile_image`;
@@ -34,4 +33,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginPage;

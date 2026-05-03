@@ -11,17 +11,17 @@
 
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
-import FormField from "@/features/Book/Add/components/form/field/FormField";
+import FormField from "@/features/Book/Set/components/form/field/FormField";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { useParams } from "react-router-dom";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useState } from "react";
-import { statusContainer } from "../Add/BookAdd.css";
-import { useSetReport } from "@/features/Book/Set/useSetReport";
+import { statusContainer } from "../Set/SetReport.css";
+import { useSetReport } from "@/features/Book/Update/useSetReport";
 
-interface SetReportProps {}
+interface UpdateReportPageProps {}
 
-const SetReport = (props: SetReportProps) => {
+const UpdateReportPage = (props: UpdateReportPageProps) => {
   const { id } = useParams();
   const idNum = Number(id);
 
@@ -47,7 +47,7 @@ const SetReport = (props: SetReportProps) => {
     return <Loading title={"독후감 불러오는 중"} />;
   }
 
-  //
+  // 수정 mutation
   const { mutate } = useSetReport();
 
   // 폼 action
@@ -67,12 +67,8 @@ const SetReport = (props: SetReportProps) => {
     const content = formData.get("content");
 
     const data = {
-      bookTitl: bookData.title,
-      bookAthr: bookData.author,
-      bookPubl: bookData.publisher,
-      bookIsbn: bookData.isbn,
-      bookCvim: bookData.image,
-      bookDesc: bookData.description,
+      reportNumb: idNum,
+      bookNumb: 29,
       bookStat: status as ReadingStatusType,
       bookStdt: startDate as string,
       bookEndt: endDate as string,
@@ -157,4 +153,4 @@ const SetReport = (props: SetReportProps) => {
   );
 };
 
-export default SetReport;
+export default UpdateReportPage;

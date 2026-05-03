@@ -31,12 +31,14 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
     */
     @Query("""
         SELECT new org.our.sadari.sadariBook.dto.AddBookReportDto(
+            b.bookNumb,
             b.bookTitl,
             b.bookAthr,
             b.bookPubl,
             b.bookIsbn,
             b.bookCvim,
             b.bookDesc,
+            r.reportNumb,
             r.bookStat,
             r.bookStdt,
             r.bookEndt,
