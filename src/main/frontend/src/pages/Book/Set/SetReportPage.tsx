@@ -1,5 +1,5 @@
 import FormField from "@/features/Book/Add/components/form/field/FormField";
-import { statusContainer } from "./BookAdd.css";
+import { statusContainer } from "./SetReportPage.css";
 import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
@@ -8,7 +8,7 @@ import Loading from "@/components/Loading/Loading";
 import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation";
 
 /**
- * fileName       : Add
+ * fileName       : SetReport
  * author         : Hanwon.Jang
  * date           : 2026-03-21
  * description    : 기록하기 페이지
@@ -20,7 +20,7 @@ import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation
  * 2026-04-03       Hanwon.Jang       폼 구성
  */
 
-function BookAdd() {
+function SetReportPage() {
   // 책 검색 페이지에서 결과 가져옴
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
@@ -131,4 +131,4 @@ function BookAdd() {
   );
 }
 
-export default BookAdd;
+export default SetReportPage;
