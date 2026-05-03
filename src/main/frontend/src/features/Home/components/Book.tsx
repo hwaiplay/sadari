@@ -21,7 +21,7 @@ function Book({
   // 책 제목 자르기
   let sliceTitle = bookTitl;
 
-  if (bookTitl.length > 14) {
+  if (bookTitl?.length > 14) {
     sliceTitle = bookTitl?.slice(0, 14) + "•••";
   }
 

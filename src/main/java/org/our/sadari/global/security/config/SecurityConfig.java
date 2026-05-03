@@ -67,7 +67,7 @@ public class SecurityConfig {
                                 "/api/book/search", // 책 검색 API
                                 "/api/book/addBookReport", // 독후감 등록 API
                                 "/api/book/getBookdetail/*", // 독후감 상세보기 조회 API
-                                "/api/book/getBookList/*" // 독후감 리스트 조회 API
+                                "/api/book/getBookList" // 독후감 리스트 조회 API
                         ).permitAll()
 
                         

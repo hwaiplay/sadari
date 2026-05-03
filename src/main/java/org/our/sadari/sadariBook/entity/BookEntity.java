@@ -61,6 +61,7 @@ public class BookEntity {
     private String bookCvim;
     
     // 책 설명
-    @Column(name = "BOOK_DESC", length = 4000, nullable = false)
+    @Column(name = "BOOK_DESC")
+    @Lob
     private String bookDesc;
 }

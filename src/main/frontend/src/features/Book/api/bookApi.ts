@@ -44,8 +44,8 @@ export const getBookDetail = (bookNumb: number) => {
  * @param userNumb
  * @returns 독후감 리스트
  */
-export const getBooklist = (userNumb: number) => {
-  return api.get(`/book/getBookList/${userNumb}`);
+export const getBooklist = () => {
+  return api.get(`/book/getBookList`);
 };
 
 /**
