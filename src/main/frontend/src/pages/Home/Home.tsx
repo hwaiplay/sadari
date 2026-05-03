@@ -30,8 +30,7 @@ function chunkArray<T>(array: T[], size: number) {
 }
 
 function Home() {
-  // ******* 유저넘버 임시로 넘김 *******
-  const { data, isPending } = useGetListQuery(1);
+  const { data, isPending } = useGetListQuery();
 
   // 로딩 중
   if (isPending) {
@@ -42,7 +41,7 @@ function Home() {
   const bookList = data?.data;
 
   // 독후감 리스트에서 첫줄(5권) 뽑음
-  const firstRow = bookList.slice(0, 5);
+  const firstRow = bookList?.slice(0, 5);
 
   const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6); // 두번째 줄~끝
   const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
