@@ -11,13 +11,13 @@
 
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
-import FormField from "@/features/Book/Add/components/form/field/FormField";
+import FormField from "@/features/Book/Set/components/form/field/FormField";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { useParams } from "react-router-dom";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useState } from "react";
 import { statusContainer } from "../Set/SetReport.css";
-import { useSetReport } from "@/features/Book/Set/useSetReport";
+import { useSetReport } from "@/features/Book/Update/useSetReport";
 
 interface UpdateReportPageProps {}
 
