@@ -1,14 +1,15 @@
-import FormField from "@/features/Book/Add/components/form/field/FormField";
-import { statusContainer } from "./BookAdd.css";
-import SearchBookButton from "@/features/Book/Add/components/searchBookButton/SearchBookButton";
+import FormField from "@/features/Book/Set/components/form/field/FormField";
+import { statusContainer } from "./SetReportPage.css";
+import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import { useLocation } from "react-router-dom";
 import { useState } from "react";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
-import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation";
+import { useAddBookMutation } from "@/features/Book/Set/hooks/useAddBookMutation";
+import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 
 /**
- * fileName       : Add
+ * fileName       : SetReport
  * author         : Hanwon.Jang
  * date           : 2026-03-21
  * description    : 기록하기 페이지
@@ -20,7 +21,7 @@ import { useAddBookMutation } from "@/features/Book/Add/hooks/useAddBookMutation
  * 2026-04-03       Hanwon.Jang       폼 구성
  */
 
-function BookAdd() {
+function SetReportPage() {
   // 책 검색 페이지에서 결과 가져옴
   const location = useLocation();
   const selectedBook = location.state?.selectedBook;
@@ -28,46 +29,18 @@ function BookAdd() {
   // 독서 상태
   const [status, setStatus] = useState<ReadingStatusType>("done");
 
-  // 백엔드 응답 결과
-  const { mutate, isPending } = useAddBookMutation();
+  const { isPending, handleSubmit } = useSetReportForm(selectedBook);
 
-  // 폼 action
-  const addFormAction = (e: React.FormEvent<HTMLFormElement>) => {
+  const formAction = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
-    const formData = new FormData(e.currentTarget);
-    // 독서상태
-    const status = formData.get("status");
-    // 독서 시작일
-    const startDate = formData.get("startDate");
-    // 독서 종료일
-    const endDate = formData.get("endDate");
-    // 별점
-    const grade = formData.get("grade");
-    // 독후감 내용
-    const content = formData.get("content");
-
-    const data = {
-      bookTitl: selectedBook.title,
-      bookAthr: selectedBook.author,
-      bookPubl: selectedBook.publisher,
-      bookIsbn: selectedBook.isbn,
-      bookCvim: selectedBook.image,
-      bookDesc: selectedBook.description,
-      bookStat: status as ReadingStatusType,
-      bookStdt: startDate as string,
-      bookEndt: endDate as string,
-      bookGrde: grade as string,
-      bookCntn: content as string,
-    };
-
-    mutate(data);
+    handleSubmit(e.currentTarget);
   };
 
   return isPending ? (
     <Loading title={"등록중"} />
   ) : (
-    <form onSubmit={addFormAction}>
+    <form onSubmit={formAction}>
       {selectedBook ? (
         selectedBook.image && (
           <div style={{ width: "300px" }}>
@@ -131,4 +104,4 @@ function BookAdd() {
   );
 }
 
-export default BookAdd;
+export default SetReportPage;
