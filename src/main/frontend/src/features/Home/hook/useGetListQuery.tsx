@@ -12,15 +12,15 @@
 import { getBooklist } from "@/features/Book/api/bookApi";
 import { useQuery } from "@tanstack/react-query";
 
-export const useGetListQuery = (userNumb: number) => {
+export const useGetListQuery = () => {
   return useQuery({
-    queryKey: ["list", userNumb],
+    queryKey: ["list"],
     queryFn: async () => {
       try {
-        const res = await getBooklist(userNumb);
+        const res = await getBooklist();
         return res.data;
       } catch (error) {
-        console.log("에러발생: " + error);
+        console.log("리스트 조회중 에러발생: " + error);
         throw error;
       }
     },
