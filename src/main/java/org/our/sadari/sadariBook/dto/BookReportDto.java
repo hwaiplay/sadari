@@ -19,8 +19,9 @@ import lombok.Data;
  */
 
 @Data
-@AllArgsConstructor
 public class BookReportDto {
+    //유저 번호
+    private Long UserNumb;
     // 독후감 번호 
     private Long reportNumb; 
     // 책 번호

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.sadariBook.mapper.ReportMapper">
+
+    <select id="getReportList" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
+        SELECT *
+          FROM TM_BOOK_REPORT
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+
+    <select id="getReporDtl" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
+        SELECT *
+        FROM TM_BOOK_REPORT
+        WHERE USER_NUMB = #{userNumb}
+          AND REPORT_NUMB = #{reportNumb}
+    </select>
+</mapper>
