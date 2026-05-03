@@ -56,15 +56,15 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
  */
 export interface ReportDtoType {
   // 독서 진행 상태
-  bookStat: ReadingStatusType;
+  reportStat: ReadingStatusType;
   // 독서 시작일
-  bookStdt: string;
+  reportStdt: string;
   // 독서 종료일
-  bookEndt: string;
+  reportEndt: string;
   // 별점
-  bookGrde: string;
+  reportGrde: string;
   // 독후감 내용
-  bookCntn: string;
+  reportCntn: string;
 }
 
 // 기록 후 백엔드 응답
@@ -81,6 +81,7 @@ export interface ReportDetailType extends ReportDtoType {
 
 // 홈화면에 보이는 독후감 타입
 export interface HomeBookType {
+  reportNumb: number;
   bookNumb: number;
   bookTitl: string;
 }
