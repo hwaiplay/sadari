@@ -1,3 +1,8 @@
+import React from "react";
+import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth";
+import Loading from "../components/Loading/Loading";
+import { Navigate } from "react-router-dom";
+
 /**
  * fileName       : PublicRoute
  * author         : hanwon.Jang
@@ -8,11 +13,6 @@
  * -----------------------------------------------------------
  * 2026-04-01       hanwon.Jang       최초 생성
  */
-
-import React from "react";
-import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth";
-import Loading from "../components/Loading/Loading";
-import { Navigate } from "react-router-dom";
 
 export default function PublicRoute({
   children,

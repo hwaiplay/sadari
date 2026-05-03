@@ -1,9 +1,9 @@
 import api from "@/app/api/axios";
 import {
   AddBookResponse,
-  BookType,
-  ReportType,
-  SetReportParams,
+  BookDtoType,
+  ReportDtoType,
+  SetReportParamsType,
 } from "../types/book.type";
 
 /**
@@ -24,7 +24,7 @@ import {
  * @returns 독후감 id
  */
 export const addBookReport = async (
-  data: BookType & ReportType,
+  data: BookDtoType & ReportDtoType,
 ): Promise<AddBookResponse> => {
   const res = await api.post("/book/addBookReport", data);
   return res.data;
@@ -52,12 +52,12 @@ export const getBooklist = (userNumb: number) => {
  * 독후감 수정 API
  * @param reportNumb
  * @param data
- * @returns
+ * @returns 독후감 번호
  */
 export const setReportApi = async ({
   reportNumb,
   data,
-}: SetReportParams): Promise<AddBookResponse> => {
+}: SetReportParamsType): Promise<AddBookResponse> => {
   const res = await api.put(`/book/setReport/${reportNumb}`, data);
   return res.data;
 };
