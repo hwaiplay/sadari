@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
@@ -107,7 +108,7 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     @Transactional
-    public Long setReport(Long reportNumb, AddBookReportDto request) {
+    public Long setReport(Long reportNumb, BookReportDto request) {
 
         BookReportEntity entity = bookReportRepository.findById(reportNumb)
             .orElseThrow(() -> new IllegalArgumentException("독후감 없음"));

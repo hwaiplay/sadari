@@ -2,7 +2,6 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
-import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
@@ -32,5 +31,5 @@ public interface BookService {
     List<HomeBookDto> getBookList(Long userNumb);
 
     // 독후감 수정
-    Long setReport(Long reportNumb, AddBookReportDto request);
+    Long setReport(Long reportNumb, BookReportDto request);
 }
