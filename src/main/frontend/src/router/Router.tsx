@@ -13,7 +13,7 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import Login from "../pages/Login/Login";
 import Oauth from "../pages/Oauth/Oauth";
 import ProtectedRoute from "./ProtectedRoute";
-import Layout from "../components/Layout/MainLayout";
+import Layout from "../components/Layout/Layout";
 import Home from "../pages/Home/Home";
 import BookDetail from "../pages/Book/Detail/BookDetail";
 import PublicRoute from "./PublicRoute";
@@ -47,7 +47,7 @@ const Router = () => {
       <Route
         element={
           <ProtectedRoute>
-            <Layout hasPaddingTop={false} />
+            <Layout isMainLayout={false} />
           </ProtectedRoute>
         }
       >
