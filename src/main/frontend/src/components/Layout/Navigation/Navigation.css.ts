@@ -7,12 +7,16 @@ export const navContainer = style({
   right: 0,
   left: 0,
   zIndex: 997,
-  // background: "#ffffffb9",
   width: "100%",
   height: vars.headerHeight,
   margin: "0 auto",
   display: "flex",
   alignItems: "center",
+  padding: "0 60px",
+});
+
+export const whiteBg = style({
+  backgroundColor: "#ffffff",
 });
 
 export const navigation = style({
