@@ -6,7 +6,7 @@ import Layout from "../components/Layout/Layout";
 import Home from "../pages/Home/Home";
 import DetailPage from "../pages/Book/Detail/DetailPage";
 import PublicRoute from "./PublicRoute";
-import AddLayout from "../features/Book/Add/components/AddLayout";
+import SetLayout from "../features/Book/Set/components/SetLayout";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
 
@@ -33,6 +33,7 @@ const Router = () => {
           </PublicRoute>
         }
       />
+
       {/* 카카오 로그인 검증 */}
       <Route
         path="/oauth"
@@ -64,21 +65,15 @@ const Router = () => {
       >
         {/* 독후감 상세보기 */}
         <Route path="/book/detail/:id" element={<DetailPage />} />
+
         {/* 책 검색 */}
         <Route path="/book/search" element={<BookSearchType />} />
+
+        {/* 기록하기 */}
+        <Route path="/add" element={<SetReportPage />} />
+
         {/* 독후감 수정 */}
         <Route path="/book/set/:id" element={<SetReportPage />} />
-      </Route>
-
-      {/* 기록하기 */}
-      <Route
-        element={
-          <ProtectedRoute>
-            <AddLayout />
-          </ProtectedRoute>
-        }
-      >
-        <Route path="/add" element={<SetReportPage />} />
       </Route>
     </Routes>
   );
