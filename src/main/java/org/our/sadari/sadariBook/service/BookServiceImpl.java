@@ -2,10 +2,8 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
-import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookReportDto;
-import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.entity.BookEntity;
 import org.our.sadari.sadariBook.entity.BookReportEntity;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
@@ -118,7 +116,7 @@ public class BookServiceImpl implements BookService {
         BookReportEntity entity = bookReportRepository.findById(reportNumb)
             .orElseThrow(() -> new IllegalArgumentException("독후감 없음"));
 
-        entity.update(request.getBookStat(), request.getBookStdt(), request.getBookEndt(), request.getBookGrde(), request.getBookCntn());
+        entity.update(request.getReportStat(), request.getReportStdt(), request.getReportEndt(), request.getReportGrde(), request.getReportCntn());
 
         return entity.getReportNumb();
     }
