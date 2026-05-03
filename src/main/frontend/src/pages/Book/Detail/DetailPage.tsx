@@ -3,22 +3,21 @@ import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
 
-function BookDetail() {
+function DetailPage() {
+  // 책 번호 파라미터
   const { id } = useParams();
+  // 파라미터 타입 변환 string -> number
   const idNum = Number(id);
 
   const navigate = useNavigate();
 
-  // 수정버튼
+  // 수정 페이지로 이동
   const setReportBtn = (reportNumb: number) => {
     navigate(`/book/set/${reportNumb}`);
   };
 
+  // 상세보기 데이터 불러옴
   const { data, isPending } = useBookDetail(idNum);
-
-  if (!id || isNaN(idNum)) {
-    return <div>잘못된 접근입니다</div>;
-  }
 
   // 조회 결과가 없는 경우
   if (data?.code == 2004) {
@@ -85,4 +84,4 @@ function BookDetail() {
   );
 }
 
-export default BookDetail;
+export default DetailPage;
