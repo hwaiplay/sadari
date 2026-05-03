@@ -113,7 +113,7 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     @Transactional
-    public Long setReport(Long reportNumb, AddBookReportDto request) {
+    public Long setReport(Long reportNumb, BookReportDto request) {
 
         BookReportEntity entity = bookReportRepository.findById(reportNumb)
             .orElseThrow(() -> new IllegalArgumentException("독후감 없음"));
