@@ -1,9 +1,8 @@
-import { title } from "./../../../pages/Login/Login.css";
 /**
  * fileName       : book.type
  * author         : hanwon.Jang
  * date           : 2026-04-02
- * description    : 책 관련 타입 정의
+ * description    : 독후감 관련 타입 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -13,7 +12,7 @@ import { title } from "./../../../pages/Login/Login.css";
 /**
  * "네이버 검색 결과 타입"
  */
-export interface NaverBookResultType {
+export interface NaverApiResultType {
   // 책 제목
   title: string;
   // 저자
@@ -31,7 +30,7 @@ export interface NaverBookResultType {
 /**
  * "책 타입"
  */
-export interface BookType {
+export interface BookDtoType {
   // 책 제목
   bookTitl: string;
   // 저자
@@ -55,7 +54,7 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
 /**
  * "독후감" 타입
  */
-export interface ReportType {
+export interface ReportDtoType {
   // 독서 진행 상태
   bookStat: ReadingStatusType;
   // 독서 시작일
@@ -75,7 +74,7 @@ export interface AddBookResponse {
 }
 
 // 독후감 상세보기 타입
-export interface ReportDetail extends ReportType {
+export interface ReportDetailType extends ReportDtoType {
   image: string;
   title: string;
 }
@@ -87,7 +86,7 @@ export interface HomeBookType {
 }
 
 // 독후감 수정 시 파라미터 타입
-export type SetReportParams = {
+export type SetReportParamsType = {
   reportNumb: number; // 독후감 번호
-  data: BookType & ReportType; // 수정 데이터
+  data: ReportDtoType; // 수정 데이터
 };

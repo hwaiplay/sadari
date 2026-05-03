@@ -145,7 +145,7 @@ public class BookController {
      * @return
      */
     @PutMapping("/setReport/{reportNumb}")
-    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, AddBookReportDto request) {
+    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, BookReportDto request) {
 
         if(stringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
