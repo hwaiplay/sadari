@@ -2,7 +2,8 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.sadariBook.mapper.ReportMapper">
 
-    <select id="getReportList" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
+    <!-- 독후감 리스트 조회 -->
+    <select id="getReportList" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
         SELECT A.BOOK_NUMB
              , A.REPORT_NUMB
              , A.USER_NUMB
@@ -18,7 +19,8 @@
         WHERE A.USER_NUMB = #{userNumb}
     </select>
 
-    <select id="getReporDtl" parameterType="org.our.sadari.sadariBook.dto.BookReportDto" resultType="org.our.sadari.sadariBook.dto.BookReportDto">
+    <!-- 독후감 상세보기 -->
+    <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
         SELECT A.BOOK_NUMB
              , A.REPORT_NUMB
              , A.USER_NUMB
@@ -39,4 +41,35 @@
          WHERE A.USER_NUMB = #{userNumb}
            AND A.REPORT_NUMB = #{reportNumb}
     </select>
+
+    <!-- 책 중복 검사 -->
+    <select id="dupBook"  parameterType="org.our.sadari.sadariBook.dto.BookDto" resultType="int">
+        SELECT COUNT(*)
+        FROM TM_BOOK_INFO
+        WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
+    
+    <!-- 책 저장 -->
+    <!-- <insert id="setBook" parameterType="org.our.sadari.sadariBook.dto.BookDto" resultType="int">
+        INSERT INTO TM_BOOK_INFO(
+            BOOK_NUMB
+            , BOOK_ATHR
+            , BOOK_CVIM
+            , BOOK_ISBN
+            , BOOK_PUBL
+            , BOOK_TITL
+            , BOOK_DESC
+        )
+        VALUES(
+              #{bookNumb}
+            , #{bookAthr}
+            , #{bookCvim}
+            , #{bookIsbn}
+            , #{bookPubl}
+            , #{bookTitl}
+            , #{bookDesc}
+        )
+    </insert> -->
+
+    <!-- 독후감 저장 -->
 </mapper>

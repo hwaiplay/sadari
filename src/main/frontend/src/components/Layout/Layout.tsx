@@ -18,7 +18,12 @@ function Layout({ isMainLayout = true }) {
   return (
     <div>
       <Header />
-      <main style={{ paddingTop: isMainLayout ? vars.headerHeight : 0 }}>
+      <main
+        style={{
+          paddingTop: isMainLayout ? vars.headerHeight : 0,
+          paddingBottom: "60px",
+        }}
+      >
         <Outlet />
       </main>
       <Navigation isMain={isMainLayout} />

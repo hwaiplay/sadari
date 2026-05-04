@@ -1,7 +1,9 @@
 package org.our.sadari.sadariBook.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.ReportDto;
+import org.our.sadari.sadariUser.user.dto.UserDto;
 
 import java.util.List;
 
@@ -14,6 +16,7 @@ import java.util.List;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-05-03        SeungHyeon.Kang       최초 생성
+ * 2026-05-03        Hanwon.Jang           독후감 저장 매퍼 추가
  */
 @Mapper
 public interface ReportMapper {
@@ -23,12 +26,33 @@ public interface ReportMapper {
      * @param req
      * @return
      */
-    List<BookReportDto> getReportList(BookReportDto req);
+    List<ReportDto> getReportList(ReportDto req);
 
     /**
      * 독후감 상세
      * @param req
      * @return
      */
-    BookReportDto getReportDtl(BookReportDto req);
+    ReportDto getReportDtl(ReportDto req);
+
+    /**
+     * 책 중복 검사
+     * @param bookDto
+     * @return
+     */
+    int dupBook(BookDto bookDto);
+
+    /**
+     * 책 저장
+     * @param bookDto
+     * @return
+     */
+    int setBook(BookDto bookDto);
+    
+    /**
+     * 독후감 저장
+     * @param reportDto
+     * @return
+     */
+    ReportDto setReport(ReportDto reportDto);
 }
