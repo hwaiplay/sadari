@@ -6,10 +6,10 @@ import lombok.NoArgsConstructor;
 
 /**
  * packageName    : org.our.sadari.sadariBook.dto
- * fileName       : AddBookReportDto.java
+ * fileName       : BookDto.java
  * author         : hanwon.Jang
  * date           : 2026-04-09
- * description    : 독후감 등록 요청 데이터 DTO
+ * description    : 책 DTO
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
