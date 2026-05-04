@@ -7,8 +7,9 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
+import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
-import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 import org.our.sadari.sadariBook.repository.BookReportRepository;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
@@ -88,19 +89,19 @@ public class BookController {
      * 독후감 기록 Api
      */
     @PostMapping("/addBookReport")
-    public ResultData<?> createReport(@RequestBody AddBookReportDto addBookReportDto) {
+    public ResultData<?> createReport(@RequestBody ReportDto reportDto) {
 
         //if(stringUtil.isEmpty(addBookReportDto.getAuthor() || ))
 
-        if(stringUtil.isEmpty(addBookReportDto)) {
+        if(stringUtil.isEmpty(reportDto)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        Long bookId = bookServiceImpl.createReport(addBookReportDto);
+        ReportDto resultDto = bookServiceImpl.setReport(reportDto);
         
-        log.debug("독후감 기록 성공: " + addBookReportDto);
+        log.debug("독후감 기록 성공: " + resultDto);
 
-        return ResultData.success(bookId);
+        return ResultData.success(resultDto);
     }
 
     /**
@@ -111,7 +112,7 @@ public class BookController {
     @GetMapping("/getBookdetail/{bookNumb}")
     public ResultData<?> getDetail(@PathVariable("bookNumb") Long bookNumb) {
 
-        BookReportDto detail = bookServiceImpl.getDetail(bookNumb);
+        ReportDto detail = bookServiceImpl.getDetail(bookNumb);
 
         if(stringUtil.isEmpty(detail)) {
              return ResultData.fail(ResultEnum.COMMON_NO_DATA);
@@ -129,7 +130,7 @@ public class BookController {
     @GetMapping("/getBookList")
     public ResultData<?> getBookList() {
 
-        List<BookReportDto> list = bookServiceImpl.getBookList();
+        List<ReportDto> list = bookServiceImpl.getBookList();
 
         if(stringUtil.isEmpty(list)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
@@ -144,17 +145,17 @@ public class BookController {
      * @param request
      * @return
      */
-    @PutMapping("/setReport/{reportNumb}")
-    public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, BookReportDto request) {
+    // @PutMapping("/setReport/{reportNumb}")
+    // public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, ReportDto request) {
 
-        if(stringUtil.isEmpty(reportNumb)) {
-            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
+    //     if(stringUtil.isEmpty(reportNumb)) {
+    //         return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+    //     }
 
-        Long entity = bookServiceImpl.setReport(reportNumb, request);
+    //     Long entity = bookServiceImpl.uptReport(reportNumb, request);
 
-        log.debug("독후감 수정 성공: " + entity);
+    //     log.debug("독후감 수정 성공: " + entity);
         
-        return ResultData.success(entity);
-    }
+    //     return ResultData.success(entity);
+    // }
 }

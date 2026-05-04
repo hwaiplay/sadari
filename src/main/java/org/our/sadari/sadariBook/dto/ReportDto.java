@@ -4,7 +4,7 @@ import lombok.Data;
 
 /**
  * packageName    : org.our.sadari.sadariBook.dto
- * fileName       : BookReportDto.java
+ * fileName       : ReportDto.java
  * author         : hanwon.Jang
  * date           : 2026-04-03
  * description    : 유저가 작성한 독후감 DTO
@@ -12,13 +12,13 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-04-03       hanwon.Jang       최초 생성
- * 2026-04-03       hanwon.Jang       독후감 번호, 책 번호 추가
+ * 2026-05-03       hanwon.Jang       독후감 번호, 책 번호 추가
  */
 
 @Data
-public class BookReportDto extends BookDto {
+public class ReportDto extends BookDto {
     //유저 번호
-    private Long UserNumb;
+    private Long userNumb;
     // 독후감 번호 
     private Long reportNumb; 
     // 책 번호
