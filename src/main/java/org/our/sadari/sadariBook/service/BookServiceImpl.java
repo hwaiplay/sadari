@@ -2,17 +2,10 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
-import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.entity.BookEntity;
-import org.our.sadari.sadariBook.entity.BookReportEntity;
+import org.our.sadari.sadariBook.dto.ReportRequestDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
-import org.our.sadari.sadariBook.repository.BookReportRepository;
-import org.our.sadari.sadariBook.repository.BookRepository;
-import org.our.sadari.sadariUser.auth.entity.UserEntity;
-import org.our.sadari.sadariUser.auth.repository.UserRepository;
-import org.our.sadari.sadariUser.user.dto.UserDto;
 import org.our.sadari.sadariUser.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -25,9 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class BookServiceImpl implements BookService {
 
-    private final BookRepository bookRepository;
-    private final BookReportRepository bookReportRepository;
-    private final UserRepository userRepository;
     private final ReportMapper reportMapper;
     private final UserMapper userMapper;
 
@@ -35,26 +25,32 @@ public class BookServiceImpl implements BookService {
      * 독후감 기록 로직
      */
     @Override
-    public ReportDto setReport(ReportDto reportDto) {
-        
-        BookDto bookDto = reportDto;
-        int result = 0;
+    @Transactional
+    public int setReport(ReportRequestDto requestDto) {
+
+        int bookCount = 0;
+
+        BookDto bookDto = requestDto.getBookDto();
+        ReportDto reportDto = requestDto.getReportDto();
+        reportDto.setUserNumb(Long.valueOf(1));
 
         // 책 중복 검사
-        result = reportMapper.dupBook(bookDto);
-        if(result == 0) {
-            // 책 저장
-            result = reportMapper.setBook(bookDto);
+        bookCount = reportMapper.dupBook(bookDto);
+
+        // 책 저장 안 되어 있어야 책 저장
+        if (bookCount == 0) {
+            reportMapper.setBook(bookDto);
+            reportDto.setBookNumb(bookDto.getBookNumb());
+        } else {
+            // 책 있으면 기존 bookNumb 가져옴
+            Long bookNumb = reportMapper.getBookNumbByIsbn(bookDto.getBookIsbn());
+            reportDto.setBookNumb(bookNumb);
         }
 
-        ReportDto resultDto = new ReportDto();
-        
         // 독후감 저장
-        if(result == 1) {
-            resultDto = reportMapper.setReport(reportDto);
-        }
+        int result = reportMapper.setReport(reportDto);
 
-        return resultDto;
+        return  result;
     }
 
     /**
