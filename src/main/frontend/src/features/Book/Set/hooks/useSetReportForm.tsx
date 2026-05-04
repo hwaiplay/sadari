@@ -37,11 +37,11 @@ export function useSetReportForm(selectedBook: any) {
       bookIsbn: selectedBook.isbn,
       bookCvim: selectedBook.image,
       bookDesc: selectedBook.description,
-      bookStat: status as ReadingStatusType,
-      bookStdt: startDate as string,
-      bookEndt: endDate as string,
-      bookGrde: grade as string,
-      bookCntn: content as string,
+      reportStat: status as ReadingStatusType,
+      reportStdt: startDate as string,
+      reportEndt: endDate as string,
+      reportGrde: grade as string,
+      reportCntn: content as string,
     };
 
     mutate(data);
