@@ -10,14 +10,14 @@
  */
 
 import { useMutation } from "@tanstack/react-query";
-import { addBookReport } from "../../api/bookApi";
+import { setReportApi } from "../../api/bookApi";
 import { useNavigate } from "react-router-dom";
 
-export const useAddBookMutation = () => {
+export const useSetReport = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: addBookReport,
+    mutationFn: setReportApi,
     onSuccess: (data) => {
       // 서버에서 새 글 ID 받아서 이동
       navigate(`/book/detail/${data.data}`);
