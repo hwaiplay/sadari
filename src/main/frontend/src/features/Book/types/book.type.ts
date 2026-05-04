@@ -31,18 +31,20 @@ export interface NaverApiResultType {
  * "책 타입"
  */
 export interface BookDtoType {
-  // 책 제목
-  bookTitl: string;
-  // 저자
-  bookAthr: string;
-  // 출판사
-  bookPubl: string;
-  // 책 isbn
-  bookIsbn: string;
-  // 책 표지 이미지
-  bookCvim: string;
-  // 책 소개 내용
-  bookDesc: string;
+  bookDto: {
+    // 책 제목
+    bookTitl: string;
+    // 저자
+    bookAthr: string;
+    // 출판사
+    bookPubl: string;
+    // 책 isbn
+    bookIsbn: string;
+    // 책 표지 이미지
+    bookCvim: string;
+    // 책 소개 내용
+    bookDesc: string;
+  };
 }
 
 /**
@@ -55,16 +57,18 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
  * "독후감" 타입
  */
 export interface ReportDtoType {
-  // 독서 진행 상태
-  reportStat: ReadingStatusType;
-  // 독서 시작일
-  reportStdt: string;
-  // 독서 종료일
-  reportEndt: string;
-  // 별점
-  reportGrde: string;
-  // 독후감 내용
-  reportCntn: string;
+  reportDto: {
+    // 독서 진행 상태
+    reportStat: ReadingStatusType;
+    // 독서 시작일
+    reportStdt: string;
+    // 독서 종료일
+    reportEndt: string;
+    // 별점
+    reportGrde: string;
+    // 독후감 내용
+    reportCntn: string;
+  };
 }
 
 // 기록 후 백엔드 응답
