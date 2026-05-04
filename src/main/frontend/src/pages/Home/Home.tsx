@@ -52,7 +52,7 @@ function Home() {
         <div className={clsx(styles.row5, styles.row)}>
           {firstRow.map((book: HomeBookType, index: number) => (
             <Book
-              key={book.bookNumb}
+              key={book.reportNumb}
               {...book}
               className={index === firstRow.length - 5 ? tilt : ""}
             />
@@ -63,7 +63,7 @@ function Home() {
       {Array.from({ length: rowCount }).map((_, rowIndex) => (
         <div className={clsx(styles.row6, styles.row)} key={rowIndex}>
           {rows[rowIndex]?.map((book) => (
-            <Book key={book.bookNumb} {...book} />
+            <Book key={book.reportNumb} {...book} />
           ))}
         </div>
       ))}

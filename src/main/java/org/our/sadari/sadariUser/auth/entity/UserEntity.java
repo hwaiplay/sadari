@@ -49,11 +49,11 @@ public class UserEntity {
     @Column(name = "USER_PROV")
     private String userProv;
     
-    //소셜 ID 값
+    // 소셜 ID 값
     @Column(name = "USER_IDXX", nullable = false, unique = true)
     private String userIdxx;
 
-    //소셜 ID 값
+    //회원등급
     @Column(name = "USER_ROLE", nullable = false)
     private String userRole;
 

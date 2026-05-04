@@ -6,9 +6,9 @@ import Layout from "../components/Layout/Layout";
 import Home from "../pages/Home/Home";
 import DetailPage from "../pages/Book/Detail/DetailPage";
 import PublicRoute from "./PublicRoute";
-import SetLayout from "../features/Book/Set/components/SetLayout";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
+import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
 
 /**
  * fileName       : Router
@@ -73,7 +73,7 @@ const Router = () => {
         <Route path="/add" element={<SetReportPage />} />
 
         {/* 독후감 수정 */}
-        <Route path="/book/set/:id" element={<SetReportPage />} />
+        <Route path="/book/set/:id" element={<UpdateReportPage />} />
       </Route>
     </Routes>
   );

@@ -3,7 +3,7 @@ package org.our.sadari.sadariBook.service;
 import java.util.List;
 
 import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookReportDto;
+import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.dto.HomeBookDto;
 
 /**
@@ -21,14 +21,14 @@ import org.our.sadari.sadariBook.dto.HomeBookDto;
 
 public interface BookService {
     // 독후감 기록
-    Long createReport(AddBookReportDto request);
+    ReportDto setReport(ReportDto request);
 
     // 독후감 상세보기
-    BookReportDto getDetail(Long reportNumb);
+    ReportDto getDetail(Long reportNumb);
 
     // 독후감 리스트 출력 (홈화면)
-    List<BookReportDto> getBookList();
+    List<ReportDto> getBookList();
 
     // 독후감 수정
-    Long setReport(Long reportNumb, BookReportDto request);
+    // ReportDto uptReport(Long reportNumb, ReportDto request);
 }
