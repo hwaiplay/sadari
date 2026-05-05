@@ -26,6 +26,6 @@ export const navigation = style({
   width: "100%",
 });
 
-export const navButton = style({
-  width: "101px",
+export const navMenu = style({
+  display: "flex",
 });
