@@ -25,31 +25,24 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     @Transactional
-    public int setReport(ReportRequestDto requestDto) {
+    public ReportDto setReport(ReportDto requestDto) {
 
         int bookCount = 0;
 
-        BookDto bookDto = requestDto.getBookDto();
-        ReportDto reportDto = requestDto.getReportDto();
-        reportDto.setUserNumb(Long.valueOf(1));
+        requestDto.setUserNumb(Long.valueOf(1));
 
         // 책 중복 검사
-        bookCount = reportMapper.dupBook(bookDto);
+        bookCount = reportMapper.dupBook(requestDto);
 
         // 책 저장 안 되어 있어야 책 저장
         if (bookCount == 0) {
-            reportMapper.setBook(bookDto);
-            reportDto.setBookNumb(bookDto.getBookNumb());
-        } else {
-            // 책 있으면 기존 bookNumb 가져옴
-            Long bookNumb = reportMapper.getBookNumbByIsbn(bookDto.getBookIsbn());
-            reportDto.setBookNumb(bookNumb);
+            reportMapper.setBook(requestDto);
         }
 
         // 독후감 저장
-        int result = reportMapper.setReport(reportDto);
+        reportMapper.setReport(requestDto);
 
-        return  result;
+        return requestDto;
     }
 
     /**

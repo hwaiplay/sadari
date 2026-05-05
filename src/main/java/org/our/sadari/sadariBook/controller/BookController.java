@@ -88,19 +88,21 @@ public class BookController {
      * @return 독후감 번호
      */
     @PostMapping("/setReport")
-    public ResultData<?> createReport(@RequestBody ReportRequestDto requestDto) {
+    public ResultData<?> createReport(@RequestBody ReportDto requestDto) {
 
         if(stringUtil.isEmpty(requestDto)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        bookServiceImpl.setReport(requestDto);
+        ReportDto resultReportDto = bookServiceImpl.setReport(requestDto);
 
-        Long reportNumb = requestDto.getReportDto().getReportNumb();
-        
-        log.debug("독후감 기록 성공, 독후감 번호: " + reportNumb);
+        if(!StringUtil.isEmpty(resultReportDto.getReportNumb())) {
+            log.debug("독후감 기록 성공, 독후감 번호: " + resultReportDto.getReportNumb());
+            return ResultData.success(resultReportDto.getReportNumb());
+        } else {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
 
-        return ResultData.success(reportNumb);
     }
 
     /**
