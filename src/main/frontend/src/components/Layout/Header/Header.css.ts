@@ -15,7 +15,7 @@ export const header = style({
   background: "transparent",
 
   selectors: {
-    "&._form": {
+    "&._sub": {
       padding: "0 8px 0 5px",
       backgroundColor: vars.color.background,
     },
