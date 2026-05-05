@@ -14,6 +14,8 @@ import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.sadariUser.auth.entity.TokenHistoryEntity;
 import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
 import org.our.sadari.sadariUser.auth.service.AuthService;
+import org.our.sadari.sadariUser.user.dto.TokenHistoryDto;
+import org.our.sadari.sadariUser.user.mapper.TokenHistoryMapper;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -41,6 +43,7 @@ public class AuthLoginController {
     private final AuthService authService;
     private final JwtProvider jwtProvider;
     private final TokenHistoryRepository tokenHistoryRepository;
+    private final TokenHistoryMapper tokenMapper;
 
     // 로그인 상태 확인 API
     @GetMapping("/tokenCheck")
@@ -94,38 +97,41 @@ public class AuthLoginController {
     }
 
     /**
-     * 토큰 재발급 API
+     * Access 토큰 재발급 API
      * @param request
      * @return
      */
     @PostMapping("/refresh")
-    public ResponseEntity<ResultData<?>> refresh(HttpServletRequest request) {
+    public ResultData<?> refresh(HttpServletRequest request) {
+        
+        // 쿠키에서 리프레시 토큰 추출
         String refreshToken = extractRefreshToken(request);
 
         if (refreshToken == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(ResultData.fail(ResultEnum.AUTH_FAIL));
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        TokenHistoryEntity tokenEntity = tokenHistoryRepository
-                .findByRefrTokn(refreshToken)
-                .orElseThrow(() ->
-                    new CustomException(ResultEnum.TOKEN_INVALID, HttpStatus.UNAUTHORIZED)
-                );
+        TokenHistoryDto tokenDto = new TokenHistoryDto();
 
-        if (tokenEntity.isExpired()) {
-            return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_EXPIRED));
+        // DB에서 리프레시 토큰 조회
+        tokenDto = tokenMapper.getRefreshToken(refreshToken);
+
+        // 만료시
+        if (tokenDto.isExpired()) {
+            return ResultData.fail(ResultEnum.TOKEN_EXPIRED);
         }
 
+        // 토큰 정상 여부 확인
         if (!jwtProvider.validateToken(refreshToken)) {
-            return ResponseEntity.ok(ResultData.fail(ResultEnum.TOKEN_INVALID));
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
         Long userNumb = jwtProvider.getUserNumb(refreshToken);
 
+        // 새로운 Access 토큰 발급
         String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
-        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
+        ResponseCookie.from("accessToken", newAccessToken)
             .httpOnly(true)
             .sameSite("Lax")
             .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
@@ -133,9 +139,7 @@ public class AuthLoginController {
             .maxAge(60 * 60)
             .build();
 
-        return ResponseEntity.ok()
-            .header(HttpHeaders.SET_COOKIE, accessTokenCookie.toString())
-            .body(ResultData.success());
+        return ResultData.success();
     }
 
     /**
