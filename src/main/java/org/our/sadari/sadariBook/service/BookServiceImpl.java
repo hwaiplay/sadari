@@ -19,7 +19,6 @@ import lombok.extern.slf4j.Slf4j;
 public class BookServiceImpl implements BookService {
 
     private final ReportMapper reportMapper;
-    private final UserMapper userMapper;
 
     /**
      * 독후감 기록 로직
