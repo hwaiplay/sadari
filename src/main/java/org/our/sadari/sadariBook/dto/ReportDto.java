@@ -21,8 +21,6 @@ public class ReportDto extends BookDto {
     private Long userNumb;
     // 독후감 번호 
     private Long reportNumb; 
-    // 책 번호
-    private Long bookNumb; 
     // 독서 상태(완독/읽는중/중단)
     private String reportStat;
     // 독서 시작일

@@ -68,6 +68,18 @@ export interface ReportDtoType {
     reportGrde: string;
     // 독후감 내용
     reportCntn: string;
+
+    bookTitl: string;
+    // 저자
+    bookAthr: string;
+    // 출판사
+    bookPubl: string;
+    // 책 isbn
+    bookIsbn: string;
+    // 책 표지 이미지
+    bookCvim: string;
+    // 책 소개 내용
+    bookDesc: string;
   };
 }
 

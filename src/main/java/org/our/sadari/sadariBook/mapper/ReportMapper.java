@@ -40,7 +40,7 @@ public interface ReportMapper {
      * @param bookDto
      * @return
      */
-    int dupBook(BookDto bookDto);
+    int dupBook(ReportDto bookDto);
 
     /**
      * 책 중복일 때 bookNumb 조회
@@ -54,7 +54,7 @@ public interface ReportMapper {
      * @param bookDto
      * @return
      */
-    int setBook(BookDto bookDto);
+    int setBook(ReportDto bookDto);
     
     /**
      * 독후감 저장
