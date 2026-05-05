@@ -89,6 +89,7 @@
         <selectKey keyProperty="reportNumb" resultType="long" order="BEFORE">
             SELECT TM_BOOK_REPORT_SEQ.NEXTVAL FROM DUAL
         </selectKey>
+        
         INSERT INTO TM_BOOK_REPORT(
               BOOK_NUMB
             , REPORT_NUMB
