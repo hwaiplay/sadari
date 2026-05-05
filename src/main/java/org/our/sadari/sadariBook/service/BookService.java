@@ -19,7 +19,7 @@ import org.our.sadari.sadariBook.dto.ReportRequestDto;
 
 public interface BookService {
     // 독후감 기록
-    int setReport(ReportRequestDto request);
+    ReportDto setReport(ReportDto request);
 
     // 독후감 상세보기
     ReportDto getDetail(Long reportNumb);
