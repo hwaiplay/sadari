@@ -17,6 +17,7 @@ import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
 import org.our.sadari.sadariUser.auth.repository.UserRepository;
 import org.our.sadari.sadariUser.user.dto.TokenHistoryDto;
 import org.our.sadari.sadariUser.user.dto.UserDto;
+import org.our.sadari.sadariUser.user.mapper.TokenHistoryMapper;
 import org.our.sadari.sadariUser.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 
@@ -41,6 +42,7 @@ public class AuthServiceImpl implements AuthService {
     private final KakaoAuthProvider kakaoAuthProvider;
     private final JwtProvider jwtProvider;
     private final UserMapper userMapper;
+    private final TokenHistoryMapper tokenMapper;
 
     /**
      * 로그인 로직 (회원가입 여부 확인 및 JWT 발급)
@@ -102,7 +104,7 @@ public class AuthServiceImpl implements AuthService {
         String refreshToken = jwtProvider.createRefreshToken(userDto.getUserNumb());
 
         // 기존 토큰 삭제
-        userMapper.deleteToken(userDto.getUserNumb());
+        tokenMapper.deleteToken(userDto.getUserNumb());
 
         // 새 토큰 저장
         TokenHistoryDto tokenHistoryDto = new TokenHistoryDto();
@@ -111,7 +113,7 @@ public class AuthServiceImpl implements AuthService {
         tokenHistoryDto.setCretDate(LocalDateTime.now());
         tokenHistoryDto.setExprDate(LocalDateTime.now().plusDays(7));
         
-        userMapper.setToken(tokenHistoryDto);    
+        tokenMapper.setToken(tokenHistoryDto);    
 
         // 서비스 전용 JWT 토큰 발급 및 반환
         TokenDto token = new TokenDto(accessToken, refreshToken);
@@ -120,5 +122,4 @@ public class AuthServiceImpl implements AuthService {
 
         return token;
     }
-
 }

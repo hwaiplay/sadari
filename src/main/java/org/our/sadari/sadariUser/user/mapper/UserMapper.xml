@@ -40,32 +40,4 @@
         );
     </insert>
 
-    <!-- 기존 토큰 삭제 -->
-    <delete id="deleteToken">
-        DELETE FROM TB_TOKHIS
-        WHERE USER_NUMB = #{userNumb}
-    </delete>
-
-    <!-- 새 토큰 저장 -->
-    <insert id="setToken" parameterType="org.our.sadari.sadariUser.user.dto.TokenHistoryDto">
-        <selectKey keyProperty="id" resultType="long" order="BEFORE">
-            SELECT TOKHIS_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
-
-        INSERT INTO TB_TOKHIS(
-              CRET_DATE
-            , EXPR_DATE
-            , ID
-            , USER_NUMB
-            , REFR_TOKN
-        )
-        VALUES(
-               #{cretDate}
-            , #{exprDate}
-            , #{id}
-            , #{userNumb}
-            , #{refrTokn}
-        )
-    </insert>
-
 </mapper>
