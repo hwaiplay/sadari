@@ -63,7 +63,6 @@
             SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
         </selectKey>
 
-
         INSERT INTO TM_BOOK_INFO(
             BOOK_NUMB
             , BOOK_ATHR
