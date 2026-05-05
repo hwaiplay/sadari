@@ -1,9 +1,8 @@
 import { Link } from "react-router-dom";
-import { Button } from "../../Button/Button";
-import { useNavigate } from "react-router-dom";
-import { navButton, navContainer, navigation, whiteBg } from "./Navigation.css";
+import { navContainer, navigation, navMenu, whiteBg } from "./Navigation.css";
 import { Container } from "../Container/Container";
 import clsx from "clsx";
+import LinkButton from "@/components/LinkButton/LinkButton";
 
 /**
  * fileName       : Navigation
@@ -21,40 +20,18 @@ type NavigationProps = {
 };
 
 function Navigation({ isMain }: NavigationProps) {
-  const navigate = useNavigate();
-
-  //홈 버튼 네비게이트
-  const HomeOnClick = () => {
-    navigate("/home");
-  };
-  //기록하기 버튼 네비게이트
-
-  const AddOnClick = () => {
-    navigate("/add");
-  };
-  //마이페이지 버튼 네비게이트
-
-  const MypageOnClick = () => {
-    navigate("/mypage");
-  };
   return (
     <Container className={clsx(navContainer, isMain && whiteBg)}>
       <nav className={navigation}>
-        <Link to="/home">
+        <LinkButton link="/home">
           <img src={"/img/common/icon-home.svg"} alt="홈 아이콘" />
-        </Link>
-        {/* <Button onClick={HomeOnClick} className={navButton}>
-        </Button> */}
-        <Link to="/add">
-          {/* <Button onClick={AddOnClick} className={navButton}> */}
+        </LinkButton>
+        <LinkButton link="/add">
           <img src={"/img/common/icon-add.svg"} alt="기록하기 아이콘" />
-          {/* </Button> */}
-        </Link>
-        <Link to="/mypage">
-          {/* <Button onClick={MypageOnClick} className={navButton}> */}
-          <img src={"/img/common/icon-user.svg"} alt="마이페이지 아이콘" />
-          {/* </Button> */}
-        </Link>
+        </LinkButton>
+        <LinkButton link="/mypage">
+          <img src={"/img/common/icon-user.svg"} alt="마이페이지" />
+        </LinkButton>
       </nav>
     </Container>
   );

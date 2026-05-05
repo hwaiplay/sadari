@@ -1,5 +1,15 @@
+import { Container } from "@/components/Layout/Container/Container";
+import Loading from "@/components/Loading/Loading";
+import FormField from "@/features/Book/Set/components/form/field/FormField";
+import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
+import { useParams } from "react-router-dom";
+import { ReadingStatusType } from "@/features/Book/types/book.type";
+import { useState } from "react";
+import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
+import { statusContainer } from "../Set/SetReportPage.css";
+
 /**
- * fileName       : SetBookDetail
+ * fileName       : UpdateReportPageProps
  * author         : Hanwon.Jang
  * date           : 2026-05-03
  * description    : 독후감 수정하는 페이지
@@ -9,19 +19,7 @@
  * 2026-05-03       Hanwon.Jang       최초 생성
  */
 
-import { Container } from "@/components/Layout/Container/Container";
-import Loading from "@/components/Loading/Loading";
-import FormField from "@/features/Book/Set/components/form/field/FormField";
-import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
-import { useParams } from "react-router-dom";
-import { ReadingStatusType } from "@/features/Book/types/book.type";
-import { useState } from "react";
-import { useSetReport } from "@/features/Book/Update/useSetReport";
-import { statusContainer } from "../Set/SetReportPage.css";
-
-interface UpdateReportPageProps {}
-
-const UpdateReportPage = (props: UpdateReportPageProps) => {
+const UpdateReportPage = () => {
   const { id } = useParams();
   const idNum = Number(id);
 
@@ -43,7 +41,7 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
   }
 
   // 수정 mutation
-  const { mutate } = useSetReport();
+  const { mutate } = useUpdateMutation();
 
   // 폼 action
   const setFormAction = (e: React.FormEvent<HTMLFormElement>) => {
@@ -62,19 +60,21 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
     const content = formData.get("content");
 
     const data = {
-      reportNumb: idNum,
-      reportStat: status as ReadingStatusType,
-      reportStdt: startDate as string,
-      reportEndt: endDate as string,
-      reportGrde: grade as string,
-      reportCntn: content as string,
+      reportDto: {
+        reportNumb: idNum,
+        reportStat: status as ReadingStatusType,
+        reportStdt: startDate as string,
+        reportEndt: endDate as string,
+        reportGrde: grade as string,
+        reportCntn: content as string,
+      },
     };
 
     mutate({ reportNumb: idNum, data });
   };
 
   return bookData ? (
-    <Container>
+    <>
       <form onSubmit={setFormAction}>
         <div style={{ width: "300px" }}>
           <img
@@ -141,7 +141,7 @@ const UpdateReportPage = (props: UpdateReportPageProps) => {
         </FormField>
         <button type="submit">수정하기</button>
       </form>
-    </Container>
+    </>
   ) : (
     <h3>{data.message}</h3>
   );
