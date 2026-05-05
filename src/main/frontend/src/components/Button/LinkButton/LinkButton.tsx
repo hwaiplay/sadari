@@ -22,7 +22,11 @@ interface LinkButtonProps {
 
 const LinkButton = ({ link, className, children }: LinkButtonProps) => {
   return (
-    <Link to={link} className={className ? className : ""}>
+    <Link
+      to={link}
+      style={{ display: "flex" }}
+      className={className ? className : ""}
+    >
       {children}
     </Link>
   );
