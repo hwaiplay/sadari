@@ -13,7 +13,7 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { setUpdateApi } from "../api/bookApi";
 
-export const useSetReport = () => {
+export const useUpdateMutation = () => {
   const navigate = useNavigate();
 
   return useMutation({
