@@ -33,5 +33,4 @@ public class ReportDto extends BookDto {
     private String reportGrde;
     // 독후감 내용
     private String reportCntn;
-    
 }
