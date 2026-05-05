@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { navContainer, navigation, navMenu, whiteBg } from "./Navigation.css";
 import { Container } from "../Container/Container";
 import clsx from "clsx";
-import LinkButton from "@/components/LinkButton/LinkButton";
+import LinkButton from "@/components/Button/LinkButton/LinkButton";
 
 /**
  * fileName       : Navigation
