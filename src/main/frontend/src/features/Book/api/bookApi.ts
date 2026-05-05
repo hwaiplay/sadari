@@ -24,7 +24,7 @@ import {
  * @returns 독후감 id
  */
 export const setReportApi = async (
-  data: BookDtoType & ReportDtoType,
+  data: ReportDtoType,
 ): Promise<AddBookResponse> => {
   const res = await api.post("/book/setReport", data);
   return res.data;
