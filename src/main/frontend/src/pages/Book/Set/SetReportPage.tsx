@@ -2,10 +2,10 @@ import FormField from "@/features/Book/Set/components/form/field/FormField";
 import { statusContainer } from "./SetReportPage.css";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import { useLocation } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
-import { useAddBookMutation } from "@/features/Book/Set/hooks/useAddBookMutation";
+import { useSetReport } from "@/features/Book/Set/hooks/useSetReport";
 import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 
 /**

@@ -9,7 +9,7 @@
  * 2026-04-25       hanwon.Jang       최초 생성
  */
 
-import { getBooklist } from "@/features/Book/api/bookApi";
+import { getListApi } from "@/features/Book/api/bookApi";
 import { useQuery } from "@tanstack/react-query";
 
 export const useGetListQuery = () => {
@@ -17,7 +17,7 @@ export const useGetListQuery = () => {
     queryKey: ["list"],
     queryFn: async () => {
       try {
-        const res = await getBooklist();
+        const res = await getListApi();
         return res.data;
       } catch (error) {
         console.log("리스트 조회중 에러발생: " + error);

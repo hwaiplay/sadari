@@ -2,15 +2,42 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.sadariUser.user.mapper.UserMapper">
 
-    <select id="getUser" parameterType="org.our.sadari.sadariUser.user.dto.UserDto" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
-        SELECT USER_NUMB
-            , JOIN_DATE
+    <!-- USER_IDXX 로 유저 조회 -->
+    <select id="getUserByIdxx" parameterType="string" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
+        SELECT 
+              USER_NUMB
+            , PROF_PATH
+            , USER_IDXX
+            , USER_NICK
+            , USER_PROV
+            , USER_ROLE 
+        FROM TM_USERXM
+        WHERE USER_IDXX = #{userIdxx}
+    </select>
+
+    <!-- 신규 회원 가입 -->
+    <insert id="setUser" parameterType="org.our.sadari.sadariUser.user.dto.UserDto">
+        <selectKey keyProperty="userNumb" resultType="long" order="BEFORE">
+            SELECT TM_USERXM_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
+        INSERT INTO TM_USERXM(
+              JOIN_DATE
+            , USER_NUMB
             , PROF_PATH
             , USER_IDXX
             , USER_NICK
             , USER_PROV
             , USER_ROLE
-          FROM TM_USERXM
-        WHERE A.USER_NUMB = #{userNumb}
-    </select>
+            )
+        VALUES(
+              #{userNumb}
+            , #{porfPath}
+            , #{userIdxx}
+            , #{userNick}
+            , #{userProv}
+            , #{userRole}
+        );
+    </insert>
+
 </mapper>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { getBookDetail } from "../../api/bookApi";
+import { getDetailApi } from "../../api/bookApi";
 
 /**
  * fileName       : useBookDetailMutation
@@ -23,7 +23,7 @@ export const useBookDetail = (bookNumb: number) => {
     queryKey: ["detail", bookNumb],
     queryFn: async () => {
       try {
-        const res = await getBookDetail(bookNumb);
+        const res = await getDetailApi(bookNumb);
         return res.data;
       } catch (error) {
         console.log("에러발생: " + error);

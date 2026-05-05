@@ -1,10 +1,8 @@
 package org.our.sadari.sadariBook.service;
 
 import java.util.List;
-
-import org.our.sadari.sadariBook.dto.AddBookReportDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.dto.HomeBookDto;
+import org.our.sadari.sadariBook.dto.ReportRequestDto;
 
 /**
  * packageName    : 
@@ -21,7 +19,7 @@ import org.our.sadari.sadariBook.dto.HomeBookDto;
 
 public interface BookService {
     // 독후감 기록
-    ReportDto setReport(ReportDto request);
+    int setReport(ReportRequestDto request);
 
     // 독후감 상세보기
     ReportDto getDetail(Long reportNumb);
