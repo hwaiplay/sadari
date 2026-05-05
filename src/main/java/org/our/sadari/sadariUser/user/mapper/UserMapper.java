@@ -1,9 +1,6 @@
 package org.our.sadari.sadariUser.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.our.sadari.global.security.dto.TokenDto;
-import org.our.sadari.sadariUser.user.dto.TokenHistoryDto;
 import org.our.sadari.sadariUser.user.dto.UserDto;
 
 /**
@@ -33,18 +30,4 @@ public interface UserMapper {
      * @return 결과 (0/1)
      */
     int setUser(UserDto request);
-
-    /**
-     * 기존 토큰 삭제
-     * @param userNumb
-     * @return 결과 (0/1)
-     */
-    int deleteToken(@Param("userNumb") Long userNumb);
-
-    /**
-     * 새 토큰 저장
-     * @param tokenHistoryDto
-     * @return 결과 (0/1)
-     */
-    int setToken(TokenHistoryDto tokenHistoryDto);
 }
