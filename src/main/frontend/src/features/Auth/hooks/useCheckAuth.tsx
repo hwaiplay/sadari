@@ -24,7 +24,7 @@ export const useCheckAuth = () => {
       (async () => {
         try {
           await refreshTokenApi(); // 토큰 갱신 API 호출
-          await refetch(); // 재인증
+          // await refetch(); // 재인증
         } catch {
           console.log("토큰 갱신 실패");
           // alert("세션이 만료되었습니다. 다시 로그인해주세요.");

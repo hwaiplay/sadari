@@ -96,12 +96,6 @@ public class BookServiceImpl implements BookService {
     // @Transactional
     // public ReportDto uptReport(Long reportNumb, ReportDto request) {
 
-    //     BookReportEntity entity = bookReportRepository.findById(reportNumb)
-    //         .orElseThrow(() -> new IllegalArgumentException("독후감 없음"));
-
-    //     entity.update(request.getReportStat(), request.getReportStdt(), request.getReportEndt(), request.getReportGrde(), request.getReportCntn());
-
-    //     return entity.getReportNumb();
     // }
 
 }
