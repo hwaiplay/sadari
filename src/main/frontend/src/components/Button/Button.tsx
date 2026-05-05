@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import * as s from "./button.css";
 import clsx from "clsx";
 
