@@ -43,6 +43,13 @@ public interface ReportMapper {
     int dupBook(BookDto bookDto);
 
     /**
+     * 책 중복일 때 bookNumb 조회
+     * @param bookIsbn
+     * @return
+     */
+    Long getBookNumbByIsbn(String bookIsbn);
+
+    /**
      * 책 저장
      * @param bookDto
      * @return
@@ -54,5 +61,5 @@ public interface ReportMapper {
      * @param reportDto
      * @return
      */
-    ReportDto setReport(ReportDto reportDto);
+    int setReport(ReportDto reportDto);
 }

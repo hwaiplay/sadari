@@ -11,13 +11,13 @@
 
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
-import { setReportApi } from "../api/bookApi";
+import { setUpdateApi } from "../api/bookApi";
 
 export const useSetReport = () => {
   const navigate = useNavigate();
 
   return useMutation({
-    mutationFn: setReportApi,
+    mutationFn: setUpdateApi,
     onSuccess: (data) => {
       navigate(`/book/detail/${data.data}`);
     },
