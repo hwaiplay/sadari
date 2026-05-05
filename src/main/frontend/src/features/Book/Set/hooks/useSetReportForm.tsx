@@ -31,21 +31,17 @@ export function useSetReportForm(selectedBook: any) {
     const content = formData.get("content");
 
     const data = {
-      bookDto: {
+        reportStat: status as ReadingStatusType,
+        reportStdt: startDate as string,
+        reportEndt: endDate as string,
+        reportGrde: grade as string,
+        reportCntn: content as string,
         bookTitl: selectedBook.title,
         bookAthr: selectedBook.author,
         bookPubl: selectedBook.publisher,
         bookIsbn: selectedBook.isbn,
         bookCvim: selectedBook.image,
         bookDesc: selectedBook.description,
-      },
-      reportDto: {
-        reportStat: status as ReadingStatusType,
-        reportStdt: startDate as string,
-        reportEndt: endDate as string,
-        reportGrde: grade as string,
-        reportCntn: content as string,
-      },
     };
 
     mutate(data);

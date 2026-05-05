@@ -57,7 +57,7 @@
     </select>
     
     <!-- 책 저장 -->
-    <insert id="setBook" parameterType="org.our.sadari.sadariBook.dto.ReportDto">
+    <insert id="setBook" parameterType="org.our.sadari.sadariBook.dto.ReportDto" useGeneratedKeys="true" keyProperty="bookNumb">
         <!-- SEQUENCE로 PK 생성 -->
         <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
             SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
@@ -84,12 +84,11 @@
     </insert>
 
     <!-- 독후감 저장 -->
-    <insert id="setReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto">
+    <insert id="setReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto" useGeneratedKeys="true" keyProperty="reportNumb">
         <!-- SEQUENCE로 PK 생성 -->
         <selectKey keyProperty="reportNumb" resultType="long" order="BEFORE">
             SELECT TM_BOOK_REPORT_SEQ.NEXTVAL FROM DUAL
         </selectKey>
-
         INSERT INTO TM_BOOK_REPORT(
               BOOK_NUMB
             , REPORT_NUMB
