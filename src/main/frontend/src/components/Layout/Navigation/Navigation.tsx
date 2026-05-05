@@ -23,13 +23,13 @@ function Navigation({ isMain }: NavigationProps) {
   return (
     <Container className={clsx(navContainer, isMain && whiteBg)}>
       <nav className={navigation}>
-        <LinkButton link="/home" className={navMenu}>
+        <LinkButton link="/home">
           <img src={"/img/common/icon-home.svg"} alt="홈 아이콘" />
         </LinkButton>
-        <LinkButton link="/add" className={navMenu}>
+        <LinkButton link="/add">
           <img src={"/img/common/icon-add.svg"} alt="기록하기 아이콘" />
         </LinkButton>
-        <LinkButton link="/mypage" className={navMenu}>
+        <LinkButton link="/mypage">
           <img src={"/img/common/icon-user.svg"} alt="마이페이지" />
         </LinkButton>
       </nav>
