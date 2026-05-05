@@ -2,6 +2,7 @@ import Header from "./Header/Header";
 import { Outlet } from "react-router-dom";
 import Navigation from "./Navigation/Navigation";
 import { vars } from "@/app/styles/tokens.css";
+import { Container } from "./Container/Container";
 
 /**
  * fileName       : Layout
@@ -24,7 +25,13 @@ function Layout({ isMainLayout = true }) {
           paddingBottom: "60px",
         }}
       >
-        <Outlet />
+        {isMainLayout ? (
+          <Container>
+            <Outlet />
+          </Container>
+        ) : (
+          <Outlet />
+        )}
       </main>
       <Navigation isMain={isMainLayout} />
     </div>

@@ -4,17 +4,18 @@ import { Container } from "../Container/Container";
 import clsx from "clsx";
 
 /**
- * fileName       : FormHeader
+ * fileName       : SubPageHeader
  * author         : hanwon.Jang
  * date           : 2026-04-03
- * description    : form 전용 헤더
+ * description    : 서브페이지용 헤더
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-04-03       hanwon.Jang       레이아웃 변경
+ * 2026-05-06       hanwon.Jang       서브페이지용으로 수정
  */
 
-function FormHeader() {
+function SubPageHeader() {
   const navigate = useNavigate();
 
   const backPrev = () => {
@@ -43,4 +44,4 @@ function FormHeader() {
   );
 }
 
-export default FormHeader;
+export default SubPageHeader;
