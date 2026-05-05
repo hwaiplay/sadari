@@ -33,8 +33,7 @@ function DetailPage() {
   const bookData = data?.data;
 
   return data?.code === 200 && bookData ? (
-    // {bookData.map(book =>()}
-    <Container>
+    <>
       <h1
         onClick={() => goUpdatePage(idNum)}
         style={{ backgroundColor: "#e3d3d3" }}
@@ -78,7 +77,7 @@ function DetailPage() {
           <p>{bookData.bookIsbn}</p>
         </div>
       </div>
-    </Container>
+    </>
   ) : (
     <h3>{data.message}</h3>
   );
