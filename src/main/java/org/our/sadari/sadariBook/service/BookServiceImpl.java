@@ -81,13 +81,4 @@ public class BookServiceImpl implements BookService {
 
     }
 
-    /**
-     * 독후감 수정
-     */
-    // @Override
-    // @Transactional
-    // public ReportDto uptReport(Long reportNumb, ReportDto request) {
-
-    // }
-
 }
