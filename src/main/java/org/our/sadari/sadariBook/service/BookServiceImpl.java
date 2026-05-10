@@ -2,14 +2,11 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.dto.ReportRequestDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
-import org.our.sadari.sadariUser.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
+import org.our.sadari.global.common.exception.CustomException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -80,5 +77,26 @@ public class BookServiceImpl implements BookService {
         return detail;
 
     }
+
+    /**
+     * 독후감 수정
+     */
+    // @Override
+    // @Transactional
+    // public ReportDto uptReport(Long reportNumb, ReportDto request) {
+
+    /**
+     * 독후감 수정
+     */
+    /**
+     * 독후감 수정
+     */
+    /**
+     * 독후감 수정
+     */
+    /**
+     * 독후감 수정
+     */
+    // }
 
 }
