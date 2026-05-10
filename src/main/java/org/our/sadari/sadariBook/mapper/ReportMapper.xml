@@ -72,4 +72,26 @@
     </insert> -->
 
     <!-- 독후감 저장 -->
+    <insert id="setReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
+        INSERT INTO TM_BOOK_REPORT(
+            BOOK_NUMB
+            , REPORT_NUMB
+            , USER_NUMB
+            , REPORT_CNTN
+            , REPORT_ENDT
+            , REPORT_GRDE
+            , REPORT_STAT
+            , REPORT_STDT
+        )
+        VALUES(
+              #{bookNumb}
+            , #{reportNumb}
+            , #{userNumb}
+            , #{reportCntn}
+            , #{reportEndt}
+            , #{reportGrde}
+            , #{reportStat}
+            , #{reportStdt}
+        )
+    </insert>
 </mapper>
