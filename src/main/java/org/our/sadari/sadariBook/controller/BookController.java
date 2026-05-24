@@ -153,10 +153,37 @@ public class BookController {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        ReportDto uptReport = bookServiceImpl.uptReport(request, reportNumb);
+        ReportDto uptReport = bookServiceImpl.uptReport(reportNumb, request);
 
         log.debug("독후감 수정 성공: " + uptReport);
         
         return ResultData.success(uptReport.getReportNumb());
+    }
+
+    /**
+     * 독후감 삭제 API
+     * @param reportNumb
+     * @param request
+     * @return
+     */
+    @DeleteMapping("/delReport/{reportNumb}")
+    public ResultData<?> delReport(@PathVariable("reportNumb") Long reportNumb) {
+
+        if(StringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        ReportDto report = new ReportDto();
+        report.setReportNumb(reportNumb);
+        report.setUserNumb(Long.valueOf(1));
+
+        // 삭제 실패
+        if(bookServiceImpl.delReport(report) == 0) {
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+        log.debug("독후감 삭제 성공: ", reportNumb);
+
+        return ResultData.success();
     }
 }

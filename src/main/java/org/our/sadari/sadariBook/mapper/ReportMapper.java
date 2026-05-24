@@ -69,4 +69,11 @@ public interface ReportMapper {
      * @return
      */
     int uptReport(ReportDto reportDto);
+    
+    /** 
+     * 독후감 삭제
+     * @param reportDto
+     * @return
+     */
+    int delReport(ReportDto reportDto);
 }
