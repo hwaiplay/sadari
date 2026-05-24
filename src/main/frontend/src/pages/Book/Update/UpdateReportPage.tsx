@@ -59,18 +59,18 @@ const UpdateReportPage = () => {
     // 독후감 내용
     const content = formData.get("content");
 
+    const reportNumb = idNum;
+
     const data = {
-      reportDto: {
-        reportNumb: idNum,
-        reportStat: status as ReadingStatusType,
-        reportStdt: startDate as string,
-        reportEndt: endDate as string,
-        reportGrde: grade as string,
-        reportCntn: content as string,
-      },
+      reportNumb: idNum,
+      reportStat: status as ReadingStatusType,
+      reportStdt: startDate as string,
+      reportEndt: endDate as string,
+      reportGrde: grade as string,
+      reportCntn: content as string,
     };
 
-    // mutate({ reportNumb: idNum, data });
+    mutate({ reportNumb, data });
   };
 
   return bookData ? (
