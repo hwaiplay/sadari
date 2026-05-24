@@ -15,6 +15,7 @@ import {
  * -----------------------------------------------------------
  * 2026-04-03       hanwon.Jang       최초 생성
  * 2026-04-25       hanwon.Jang       주석 수정 및 독후감 리스트 조회 API 추가
+ * 2026-05-24       hanwon.Jang       독후감 수정, 삭제 API 추가
  */
 
 /**
@@ -58,5 +59,15 @@ export const uptReportApi = async ({
   data,
 }: uptReportType): Promise<AddBookResponse> => {
   const res = await api.put(`/book/uptReport/${reportNumb}`, data);
+  return res.data;
+};
+
+/**
+ * 독후감 삭제 API
+ * @param reportNumb
+ * @returns
+ */
+export const delReportApi = async (reportNumb: number) => {
+  const res = await api.delete(`/book/delReport/${reportNumb}`);
   return res.data;
 };
