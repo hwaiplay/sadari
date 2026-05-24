@@ -153,7 +153,10 @@ public class BookController {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        ReportDto uptReport = bookServiceImpl.uptReport(reportNumb, request);
+        request.setReportNumb(reportNumb);
+        request.setUserNumb(Long.valueOf(1));
+
+        ReportDto uptReport = bookServiceImpl.uptReport(request);
 
         log.debug("독후감 수정 성공: " + uptReport);
         
