@@ -23,10 +23,10 @@ import {
  * @param data
  * @returns 독후감 id
  */
-export const addBookReport = async (
-  data: BookDtoType & ReportDtoType,
+export const setReportApi = async (
+  data: ReportDtoType,
 ): Promise<AddBookResponse> => {
-  const res = await api.post("/book/addBookReport", data);
+  const res = await api.post("/book/setReport", data);
   return res.data;
 };
 
@@ -35,7 +35,7 @@ export const addBookReport = async (
  * @param bookNumb
  * @returns 독후감 상세내용
  */
-export const getBookDetail = (bookNumb: number) => {
+export const getDetailApi = (bookNumb: number) => {
   return api.get(`/book/getBookdetail/${bookNumb}`);
 };
 
@@ -44,7 +44,7 @@ export const getBookDetail = (bookNumb: number) => {
  * @param userNumb
  * @returns 독후감 리스트
  */
-export const getBooklist = () => {
+export const getListApi = () => {
   return api.get(`/book/getBookList`);
 };
 
@@ -54,7 +54,7 @@ export const getBooklist = () => {
  * @param data
  * @returns 독후감 번호
  */
-export const setReportApi = async ({
+export const setUpdateApi = async ({
   reportNumb,
   data,
 }: SetReportParamsType): Promise<AddBookResponse> => {

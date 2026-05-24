@@ -1,17 +1,17 @@
 /**
- * fileName       : useSetReport
- * author         : Hanwon.Jang
- * date           : 2026-05-03
- * description    : 독후감 수정 Mutation
+ * fileName       : useAddBookMutation
+ * author         : hanwon.Jang
+ * date           : 2026-04-07
+ * description    : 독후감 기록 백엔드 통신
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-05-03       Hanwon.Jang       최초 생성
+ * 2026-04-07       hanwon.Jang       최초 생성
  */
 
 import { useMutation } from "@tanstack/react-query";
+import { setReportApi } from "../../api/bookApi";
 import { useNavigate } from "react-router-dom";
-import { setReportApi } from "../api/bookApi";
 
 export const useSetReport = () => {
   const navigate = useNavigate();
@@ -19,6 +19,7 @@ export const useSetReport = () => {
   return useMutation({
     mutationFn: setReportApi,
     onSuccess: (data) => {
+      // 서버에서 새 글 ID 받아서 이동
       navigate(`/book/detail/${data.data}`);
     },
   });
