@@ -81,6 +81,26 @@ export interface ReportDtoType {
   bookDesc: string;
 }
 
+/**
+ * 독후감 수정 타입
+ */
+export interface uptReportType {
+  reportNumb: number;
+
+  data: {
+    // 독서 진행 상태
+    reportStat: ReadingStatusType;
+    // 독서 시작일
+    reportStdt: string;
+    // 독서 종료일
+    reportEndt: string;
+    // 별점
+    reportGrde: string;
+    // 독후감 내용
+    reportCntn: string;
+  };
+}
+
 // 기록 후 백엔드 응답
 export interface AddBookResponse {
   success: boolean;
@@ -102,6 +122,6 @@ export interface HomeBookType {
 
 // 독후감 수정 시 파라미터 타입
 export type SetReportParamsType = {
-  reportNumb: number; // 독후감 번호
-  data: ReportDtoType; // 수정 데이터
+  // reportNumb: number; // 독후감 번호
+  data: uptReportType; // 수정 데이터
 };

@@ -111,4 +111,14 @@
             , #{reportStdt}
         )
     </insert>
+
+    <update id="uptReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto">
+        UPDATE TM_BOOK_REPORT SET
+              REPORT_CNTN=#{reportCntn}
+            , REPORT_ENDT=#{reportEndt}
+            , REPORT_GRDE=#{reportGrde}
+            , REPORT_STAT=#{reportStat}
+            , REPORT_STDT=#{reportStdt}
+        WHERE REPORT_NUMB=#{reportNumb}
+    </update>
 </mapper>

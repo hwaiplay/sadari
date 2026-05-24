@@ -62,4 +62,11 @@ public interface ReportMapper {
      * @return
      */
     int setReport(ReportDto reportDto);
+    
+    /**
+     * 독후감 수정
+     * @param reportDto
+     * @return
+     */
+    int uptReport(ReportDto reportDto);
 }

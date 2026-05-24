@@ -144,19 +144,19 @@ public class BookController {
      * 독후감 수정 API
      * @param reportNumb
      * @param request
-     * @return
+     * @return 독후감 번호
      */
-    // @PutMapping("/setReport/{reportNumb}")
-    // public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, ReportDto request) {
+    @PutMapping("/uptReport/{reportNumb}")
+    public ResultData<?> uptReport(@PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
 
-    //     if(stringUtil.isEmpty(reportNumb)) {
-    //         return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-    //     }
+        if(stringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
 
-    //     Long entity = bookServiceImpl.uptReport(reportNumb, request);
+        ReportDto uptReport = bookServiceImpl.uptReport(request, reportNumb);
 
-    //     log.debug("독후감 수정 성공: " + entity);
+        log.debug("독후감 수정 성공: " + uptReport);
         
-    //     return ResultData.success(entity);
-    // }
+        return ResultData.success(uptReport.getReportNumb());
+    }
 }
