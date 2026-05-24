@@ -73,10 +73,10 @@ const Router = () => {
           <Route path="/book/search" element={<BookSearchType />} />
 
           {/* 기록하기 */}
-          <Route path="/add" element={<SetReportPage />} />
+          <Route path="/set" element={<SetReportPage />} />
 
           {/* 독후감 수정 */}
-          <Route path="/book/set/:id" element={<UpdateReportPage />} />
+          <Route path="/book/upt/:id" element={<UpdateReportPage />} />
         </Route>
       </Routes>
     </>
