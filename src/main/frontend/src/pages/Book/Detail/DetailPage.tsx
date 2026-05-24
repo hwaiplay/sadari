@@ -2,6 +2,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
+import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 
 function DetailPage() {
   // 책 번호 파라미터
@@ -13,7 +14,20 @@ function DetailPage() {
 
   // 수정 페이지로 이동
   const goUpdatePage = (reportNumb: number) => {
-    navigate(`/book/set/${reportNumb}`);
+    navigate(`/book/upt/${reportNumb}`);
+  };
+
+  // 삭제 API
+  const { mutate } = useDeleteMutation();
+
+  const deleteOnClick = (reportNumb: number) => {
+    const confirm = window.confirm(
+      "독후감 삭제 시 복구할 수 없어요. 정말 삭제 할까요?",
+    );
+
+    if (confirm) {
+      mutate(reportNumb);
+    }
   };
 
   // 상세보기 데이터 불러옴
@@ -39,6 +53,12 @@ function DetailPage() {
         style={{ backgroundColor: "#e3d3d3" }}
       >
         독후감 수정하기
+      </h1>
+      <h1
+        onClick={() => deleteOnClick(idNum)}
+        style={{ backgroundColor: "#d3dde3" }}
+      >
+        독후감 삭제하기
       </h1>
       <div>
         <h3>{bookData.bookTitl}</h3>
