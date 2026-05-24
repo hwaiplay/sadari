@@ -1,8 +1,7 @@
-import { Link } from "react-router-dom";
 import { navContainer, navigation, navMenu, whiteBg } from "./Navigation.css";
 import { Container } from "../Container/Container";
-import clsx from "clsx";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
+import { clsx } from "clsx";
 
 /**
  * fileName       : Navigation
@@ -26,7 +25,7 @@ function Navigation({ isMain }: NavigationProps) {
         <LinkButton link="/home">
           <img src={"/img/common/icon-home.svg"} alt="홈 아이콘" />
         </LinkButton>
-        <LinkButton link="/add">
+        <LinkButton link="/set">
           <img src={"/img/common/icon-add.svg"} alt="기록하기 아이콘" />
         </LinkButton>
         <LinkButton link="/mypage">
