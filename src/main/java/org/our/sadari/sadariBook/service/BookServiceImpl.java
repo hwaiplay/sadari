@@ -89,13 +89,7 @@ public class BookServiceImpl implements BookService {
      * 독후감 수정
      */
     @Override
-    public ReportDto uptReport(Long reportNumb, ReportDto request) {
-
-        // 독후감 번호 설정
-        request.setBookNumb(reportNumb);
-
-        // 유저 번호 설정 (임시)
-        request.setUserNumb(Long.valueOf(1));
+    public ReportDto uptReport(ReportDto request) {
 
         // 독후감 수정
         reportMapper.uptReport(request);
