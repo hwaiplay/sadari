@@ -28,5 +28,8 @@ public interface BookService {
     List<ReportDto> getBookList();
 
     // 독후감 수정
-    ReportDto uptReport(ReportDto request, Long reportNumb);
+    ReportDto uptReport(Long reportNumb, ReportDto request);
+
+    // 독후감 삭제
+    int delReport(ReportDto request);
 }
