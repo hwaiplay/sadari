@@ -13,7 +13,7 @@ function DetailPage() {
 
   // 수정 페이지로 이동
   const goUpdatePage = (reportNumb: number) => {
-    navigate(`/book/set/${reportNumb}`);
+    navigate(`/book/upt/${reportNumb}`);
   };
 
   // 상세보기 데이터 불러옴
