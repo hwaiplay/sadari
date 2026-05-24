@@ -9,6 +9,7 @@ import PublicRoute from "./PublicRoute";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
 import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
+import ScrollToTop from "@/components/Layout/ScrollTop";
 
 /**
  * fileName       : Router
@@ -23,59 +24,62 @@ import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
 
 const Router = () => {
   return (
-    <Routes>
-      {/* 로그인 */}
-      <Route
-        path="/login"
-        element={
-          <PublicRoute>
-            <LoginPage />
-          </PublicRoute>
-        }
-      />
+    <>
+      <ScrollToTop />
+      <Routes>
+        {/* 로그인 */}
+        <Route
+          path="/login"
+          element={
+            <PublicRoute>
+              <LoginPage />
+            </PublicRoute>
+          }
+        />
 
-      {/* 카카오 로그인 검증 */}
-      <Route
-        path="/oauth"
-        element={
-          <PublicRoute>
-            <Oauth />
-          </PublicRoute>
-        }
-      />
+        {/* 카카오 로그인 검증 */}
+        <Route
+          path="/oauth"
+          element={
+            <PublicRoute>
+              <Oauth />
+            </PublicRoute>
+          }
+        />
 
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout isMainLayout={false} />
-          </ProtectedRoute>
-        }
-      >
-        {/* 메인 */}
-        <Route path="/" element={<Navigate to="/home" replace />} />
-        <Route path="/home" element={<Home />} />
-      </Route>
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout isMainLayout={false} />
+            </ProtectedRoute>
+          }
+        >
+          {/* 메인 */}
+          <Route path="/" element={<Navigate to="/home" replace />} />
+          <Route path="/home" element={<Home />} />
+        </Route>
 
-      <Route
-        element={
-          <ProtectedRoute>
-            <Layout />
-          </ProtectedRoute>
-        }
-      >
-        {/* 독후감 상세보기 */}
-        <Route path="/book/detail/:id" element={<DetailPage />} />
+        <Route
+          element={
+            <ProtectedRoute>
+              <Layout />
+            </ProtectedRoute>
+          }
+        >
+          {/* 독후감 상세보기 */}
+          <Route path="/book/detail/:id" element={<DetailPage />} />
 
-        {/* 책 검색 */}
-        <Route path="/book/search" element={<BookSearchType />} />
+          {/* 책 검색 */}
+          <Route path="/book/search" element={<BookSearchType />} />
 
-        {/* 기록하기 */}
-        <Route path="/add" element={<SetReportPage />} />
+          {/* 기록하기 */}
+          <Route path="/add" element={<SetReportPage />} />
 
-        {/* 독후감 수정 */}
-        <Route path="/book/set/:id" element={<UpdateReportPage />} />
-      </Route>
-    </Routes>
+          {/* 독후감 수정 */}
+          <Route path="/book/set/:id" element={<UpdateReportPage />} />
+        </Route>
+      </Routes>
+    </>
   );
 };
 

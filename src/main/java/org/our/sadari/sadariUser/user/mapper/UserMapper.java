@@ -19,9 +19,15 @@ import org.our.sadari.sadariUser.user.dto.UserDto;
 public interface UserMapper {
     /**
      * 유저 조회
-     * @param req
-     * @return
+     * @param idxx
+     * @return count 
      */
-    UserDto getUser(UserDto req);
+    UserDto getUserByIdxx(String idxx);
     
+    /**
+     * 유저 회원가입
+     * @param request
+     * @return 결과 (0/1)
+     */
+    int setUser(UserDto request);
 }

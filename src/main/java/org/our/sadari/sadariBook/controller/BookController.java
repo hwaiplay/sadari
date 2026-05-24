@@ -6,12 +6,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
-import org.our.sadari.sadariBook.dto.AddBookReportDto;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.dto.HomeBookDto;
-import org.our.sadari.sadariBook.repository.BookReportRepository;
+import org.our.sadari.sadariBook.dto.ReportRequestDto;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -86,22 +83,26 @@ public class BookController {
     }
     
     /**
-     * 독후감 기록 Api
+     * 독후감 기록 API
+     * @param requestDto
+     * @return 독후감 번호
      */
-    @PostMapping("/addBookReport")
-    public ResultData<?> createReport(@RequestBody ReportDto reportDto) {
+    @PostMapping("/setReport")
+    public ResultData<?> createReport(@RequestBody ReportDto requestDto) {
 
-        //if(stringUtil.isEmpty(addBookReportDto.getAuthor() || ))
-
-        if(stringUtil.isEmpty(reportDto)) {
+        if(stringUtil.isEmpty(requestDto)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        ReportDto resultDto = bookServiceImpl.setReport(reportDto);
-        
-        log.debug("독후감 기록 성공: " + resultDto);
+        ReportDto resultReportDto = bookServiceImpl.setReport(requestDto);
 
-        return ResultData.success(resultDto);
+        if(!StringUtil.isEmpty(resultReportDto.getReportNumb())) {
+            log.debug("독후감 기록 성공, 독후감 번호: " + resultReportDto.getReportNumb());
+            return ResultData.success(resultReportDto.getReportNumb());
+        } else {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
     }
 
     /**

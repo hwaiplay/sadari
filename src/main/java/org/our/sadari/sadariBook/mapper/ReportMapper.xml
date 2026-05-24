@@ -48,9 +48,21 @@
         FROM TM_BOOK_INFO
         WHERE BOOK_ISBN = #{bookIsbn}
     </select>
+
+    <!-- 책이 중복일 때 bookNumb 조회 -->
+    <select id="getBookNumbByIsbn" resultType="long">
+        SELECT BOOK_NUMB
+        FROM TM_BOOK_INFO
+        WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
     
     <!-- 책 저장 -->
-    <!-- <insert id="setBook" parameterType="org.our.sadari.sadariBook.dto.BookDto" resultType="int">
+    <insert id="setBook" parameterType="org.our.sadari.sadariBook.dto.ReportDto" useGeneratedKeys="true" keyProperty="bookNumb">
+        <!-- SEQUENCE로 PK 생성 -->
+        <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
+            SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+
         INSERT INTO TM_BOOK_INFO(
             BOOK_NUMB
             , BOOK_ATHR
@@ -69,12 +81,17 @@
             , #{bookTitl}
             , #{bookDesc}
         )
-    </insert> -->
+    </insert>
 
     <!-- 독후감 저장 -->
-    <insert id="setReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
+    <insert id="setReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto" useGeneratedKeys="true" keyProperty="reportNumb">
+        <!-- SEQUENCE로 PK 생성 -->
+        <selectKey keyProperty="reportNumb" resultType="long" order="BEFORE">
+            SELECT TM_BOOK_REPORT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        
         INSERT INTO TM_BOOK_REPORT(
-            BOOK_NUMB
+              BOOK_NUMB
             , REPORT_NUMB
             , USER_NUMB
             , REPORT_CNTN
