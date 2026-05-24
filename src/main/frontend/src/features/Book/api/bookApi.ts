@@ -1,9 +1,8 @@
 import api from "@/app/api/axios";
 import {
   AddBookResponse,
-  BookDtoType,
   ReportDtoType,
-  SetReportParamsType,
+  uptReportType,
 } from "../types/book.type";
 
 /**
@@ -54,10 +53,10 @@ export const getListApi = () => {
  * @param data
  * @returns 독후감 번호
  */
-export const setUpdateApi = async ({
+export const uptReportApi = async ({
   reportNumb,
   data,
-}: SetReportParamsType): Promise<AddBookResponse> => {
-  const res = await api.put(`/book/setReport/${reportNumb}`, data);
+}: uptReportType): Promise<AddBookResponse> => {
+  const res = await api.put(`/book/uptReport/${reportNumb}`, data);
   return res.data;
 };
