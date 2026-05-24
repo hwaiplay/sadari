@@ -10,11 +10,11 @@
  */
 
 import { ReadingStatusType } from "../../types/book.type";
-import { useAddBookMutation } from "./useAddBookMutation";
+import { useSetReport } from "./useSetReport";
 
 export function useSetReportForm(selectedBook: any) {
   // 백엔드 응답
-  const { mutate, isPending } = useAddBookMutation();
+  const { mutate, isPending } = useSetReport();
 
   // 폼 action
   const handleSubmit = (form: HTMLFormElement) => {
@@ -31,17 +31,17 @@ export function useSetReportForm(selectedBook: any) {
     const content = formData.get("content");
 
     const data = {
+      reportStat: status as ReadingStatusType,
+      reportStdt: startDate as string,
+      reportEndt: endDate as string,
+      reportGrde: grade as string,
+      reportCntn: content as string,
       bookTitl: selectedBook.title,
       bookAthr: selectedBook.author,
       bookPubl: selectedBook.publisher,
       bookIsbn: selectedBook.isbn,
       bookCvim: selectedBook.image,
       bookDesc: selectedBook.description,
-      reportStat: status as ReadingStatusType,
-      reportStdt: startDate as string,
-      reportEndt: endDate as string,
-      reportGrde: grade as string,
-      reportCntn: content as string,
     };
 
     mutate(data);

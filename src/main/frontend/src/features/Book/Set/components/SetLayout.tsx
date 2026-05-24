@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
 import { vars } from "@/app/styles/tokens.css";
-import FormHeader from "@/components/Layout/Header/FormHeader";
+import SubPageHeader from "@/components/Layout/Header/FormHeader";
 import Navigation from "@/components/Layout/Navigation/Navigation";
 
 /**
@@ -18,7 +18,7 @@ import Navigation from "@/components/Layout/Navigation/Navigation";
 function SetLayout() {
   return (
     <Container>
-      <FormHeader />
+      <SubPageHeader />
       <main style={{ marginTop: vars.headerHeight }}>
         <Outlet />
       </main>
