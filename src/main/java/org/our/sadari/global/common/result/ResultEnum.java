@@ -24,21 +24,37 @@ public enum ResultEnum {
      * 수정되었습니다.
      */
     COMMON_UPDATE_SUCCESS(2002, "common.alert.0002"),
-
+    
     /**
      * 삭제되었습니다.
-     */
+    */
     COMMON_DELETE_SUCCESS(2003, "common.alert.0003"),
-
+   
     /**
      * 조회 결과가 없습니다.
-     */
+    */
     COMMON_NO_DATA(2004, "common.alert.0004"),
+    
+    /**
+     * 저장에 실패했어요.\n다시 시도해주세요.
+     */
+    COMMON_SAVE_REJECTED(2005, "common.alert.0005"),
+    
+    /**
+     * 수정에 실패했어요.\n다시 시도해주세요.
+     */
+    COMMON_UPDATE_REJECTED(2006, "common.alert.0006"),
+    
+    /**
+     * 삭제에 실패했어요.\n다시 시도해주세요.
+     */
+    COMMON_DELETE_REJECTED(2007, "common.alert.0007"),
 
     /**
      * 올바르지 않은 접근입니다.
      */
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
+
 
     /**
      * 인증 실패 (로그인 필요 or 인증 안됨)
