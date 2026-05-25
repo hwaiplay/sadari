@@ -7,6 +7,8 @@ import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.our.sadari.global.common.exception.CustomException;
+import org.our.sadari.global.common.util.StringUtil;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -65,12 +67,17 @@ public class BookServiceImpl implements BookService {
     public ReportDto getDetail(Long reportNumb) {
 
         ReportDto book = new ReportDto();
+
+        // 독후감 번호 설정
         book.setReportNumb(reportNumb);
+
+        // 유저 번호 설정 (임시)
         book.setUserNumb(Long.valueOf(1));
+
         // 독후감 조회
         ReportDto detail = reportMapper.getReportDtl(book);
 
-        if (detail == null) {
+        if (StringUtil.isEmpty(detail)) {
             throw new RuntimeException("데이터 없음");
         }
 
@@ -81,22 +88,21 @@ public class BookServiceImpl implements BookService {
     /**
      * 독후감 수정
      */
-    // @Override
-    // @Transactional
-    // public ReportDto uptReport(Long reportNumb, ReportDto request) {
+    @Override
+    public ReportDto uptReport(ReportDto request) {
+
+        // 독후감 수정
+        reportMapper.uptReport(request);
+
+        return request;
+    }
 
     /**
-     * 독후감 수정
+     * 독후감 삭제
      */
-    /**
-     * 독후감 수정
-     */
-    /**
-     * 독후감 수정
-     */
-    /**
-     * 독후감 수정
-     */
-    // }
+    @Override
+    public int delReport(ReportDto request) {
 
+        return reportMapper.delReport(request);
+    }
 }

@@ -53,7 +53,7 @@ const SearchBookPage = () => {
   const navigate = useNavigate();
 
   const handleSelectBook = (book: NaverApiResultType) => {
-    navigate("/add", {
+    navigate("/set", {
       state: { selectedBook: book },
     });
   };

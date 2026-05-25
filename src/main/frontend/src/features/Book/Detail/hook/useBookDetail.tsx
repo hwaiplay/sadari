@@ -12,12 +12,6 @@ import { getDetailApi } from "../../api/bookApi";
  * 2026-04-08       hanwon.Jang       최초 생성
  */
 
-// export const useBookDetailMutation = () => {
-//   return useMutation({
-//     mutationFn: getBookDetail,
-//   });
-// };
-
 export const useBookDetail = (bookNumb: number) => {
   return useQuery({
     queryKey: ["detail", bookNumb],

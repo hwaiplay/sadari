@@ -12,7 +12,8 @@
     "skipLibCheck": true,
 
     "allowImportingTsExtensions": true,
-    "resolveJsonModule": true,
+    // "resolveJsonModule": true,
+    "moduleResolution": "node",
     "isolatedModules": true,
     "noEmit": true,
 
