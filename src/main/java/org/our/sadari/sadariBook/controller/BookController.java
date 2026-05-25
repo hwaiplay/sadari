@@ -144,19 +144,49 @@ public class BookController {
      * 독후감 수정 API
      * @param reportNumb
      * @param request
+     * @return 독후감 번호
+     */
+    @PutMapping("/uptReport/{reportNumb}")
+    public ResultData<?> uptReport(@PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
+
+        if(stringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        request.setReportNumb(reportNumb);
+        request.setUserNumb(Long.valueOf(1));
+
+        ReportDto uptReport = bookServiceImpl.uptReport(request);
+
+        log.debug("독후감 수정 성공: " + uptReport);
+        
+        return ResultData.success(uptReport.getReportNumb());
+    }
+
+    /**
+     * 독후감 삭제 API
+     * @param reportNumb
+     * @param request
      * @return
      */
-    // @PutMapping("/setReport/{reportNumb}")
-    // public ResultData<?> setReport(@PathVariable("reportNumb") Long reportNumb, ReportDto request) {
+    @DeleteMapping("/delReport/{reportNumb}")
+    public ResultData<?> delReport(@PathVariable("reportNumb") Long reportNumb) {
 
-    //     if(stringUtil.isEmpty(reportNumb)) {
-    //         return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-    //     }
+        if(StringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
 
-    //     Long entity = bookServiceImpl.uptReport(reportNumb, request);
+        ReportDto report = new ReportDto();
+        report.setReportNumb(reportNumb);
+        report.setUserNumb(Long.valueOf(1));
 
-    //     log.debug("독후감 수정 성공: " + entity);
-        
-    //     return ResultData.success(entity);
-    // }
+        // 삭제 실패
+        if(bookServiceImpl.delReport(report) == 0) {
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+        log.debug("독후감 삭제 성공: ", reportNumb);
+
+        return ResultData.success();
+    }
 }
