@@ -1,6 +1,7 @@
 package org.our.sadari.global.common.result;
 
 import lombok.Getter;
+import org.our.sadari.global.common.util.MessageUtils;
 
 /**
  * fileName       : ResultEnum
@@ -15,6 +16,10 @@ import lombok.Getter;
 @Getter
 public enum ResultEnum {
 
+    /**
+     * success
+     */
+    COMMON_SUCCESS(200, "common.success"),
     /**
      * 저장되었습니다.
      */
@@ -101,13 +106,21 @@ public enum ResultEnum {
 
     /**
      * Enum 생성자
-     *
      * @param code        프론트 전달용 에러 코드
      * @param messageKey  메시지 프로퍼티 키
      */
     ResultEnum(int code, String messageKey) {
         this.code = code;
-        this.messageKey = messageKey;
+        this.messageKey = translateMessage(messageKey);
+    }
+
+    /**
+     * 문자 코드값 메시징 치환
+     * @param messageKey
+     * @return
+     */
+    private String translateMessage (String messageKey) {
+        return MessageUtils.getMessage(messageKey);
     }
 
 }
