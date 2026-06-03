@@ -1,7 +1,6 @@
 package org.our.sadari.global.common.result;
 
 import lombok.Getter;
-import org.our.sadari.global.common.util.MessageUtils;
 
 /**
  * fileName       : ResultEnum
@@ -17,10 +16,6 @@ import org.our.sadari.global.common.util.MessageUtils;
 public enum ResultEnum {
 
     /**
-     * success
-     */
-    COMMON_SUCCESS(200, "common.success"),
-    /**
      * 저장되었습니다.
      */
     COMMON_SAVE_SUCCESS(2001, "common.alert.0001"),
@@ -29,27 +24,27 @@ public enum ResultEnum {
      * 수정되었습니다.
      */
     COMMON_UPDATE_SUCCESS(2002, "common.alert.0002"),
-    
+
     /**
      * 삭제되었습니다.
-    */
+     */
     COMMON_DELETE_SUCCESS(2003, "common.alert.0003"),
-   
+
     /**
      * 조회 결과가 없습니다.
-    */
+     */
     COMMON_NO_DATA(2004, "common.alert.0004"),
-    
+
     /**
      * 저장에 실패했어요.\n다시 시도해주세요.
      */
     COMMON_SAVE_REJECTED(2005, "common.alert.0005"),
-    
+
     /**
      * 수정에 실패했어요.\n다시 시도해주세요.
      */
     COMMON_UPDATE_REJECTED(2006, "common.alert.0006"),
-    
+
     /**
      * 삭제에 실패했어요.\n다시 시도해주세요.
      */
@@ -106,21 +101,13 @@ public enum ResultEnum {
 
     /**
      * Enum 생성자
+     *
      * @param code        프론트 전달용 에러 코드
      * @param messageKey  메시지 프로퍼티 키
      */
     ResultEnum(int code, String messageKey) {
         this.code = code;
-        this.messageKey = translateMessage(messageKey);
-    }
-
-    /**
-     * 문자 코드값 메시징 치환
-     * @param messageKey
-     * @return
-     */
-    private String translateMessage (String messageKey) {
-        return MessageUtils.getMessage(messageKey);
+        this.messageKey = messageKey;
     }
 
 }
