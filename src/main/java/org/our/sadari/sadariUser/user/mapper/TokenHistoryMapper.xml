@@ -13,7 +13,6 @@
         <selectKey keyProperty="id" resultType="long" order="BEFORE">
             SELECT TOKHIS_SEQ.NEXTVAL FROM DUAL
         </selectKey>
-
         INSERT INTO TB_TOKHIS(
               CRET_DATE
             , EXPR_DATE
@@ -32,14 +31,13 @@
 
     <!-- 토큰 조회 -->
     <select id="getRefreshToken" parameterType="string" resultType="org.our.sadari.sadariUser.user.dto.TokenHistoryDto">
-        SELECT 
-              CRET_DATE
-            , EXPR_DATE
-            , ID
-            , USER_NUMB
-            , REFR_TOKN
-        FROM TB_TOKHIS
-        WHERE REFR_TOKN = #{refrTokn}
+        SELECT CRET_DATE
+             , EXPR_DATE
+             , ID
+             , USER_NUMB
+             , REFR_TOKN
+          FROM TB_TOKHIS
+         WHERE REFR_TOKN = #{refrTokn}
     </select>
 
 </mapper>
