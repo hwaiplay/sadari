@@ -42,6 +42,7 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
             r.bookStdt,
             r.bookEndt,
             r.bookGrde,
+            r.bookColr,
             r.bookCntn
         )
         FROM BookReportEntity r
@@ -59,7 +60,8 @@ public interface BookReportRepository extends JpaRepository<BookReportEntity, Lo
         SELECT new org.our.sadari.sadariBook.dto.HomeBookDto(
             b.bookNumb,
             r.user.userNumb,
-            b.bookTitl
+            b.bookTitl,
+            r.bookColr
         )
         FROM BookReportEntity r
         LEFT JOIN r.book b

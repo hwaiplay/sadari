@@ -10,6 +10,7 @@
              , A.REPORT_CNTN
              , A.REPORT_ENDT
              , A.REPORT_GRDE
+             , A.REPORT_COLR
              , A.REPORT_STAT
              , A.REPORT_STDT
              , B.BOOK_TITL
@@ -27,6 +28,7 @@
              , A.REPORT_CNTN
              , A.REPORT_ENDT
              , A.REPORT_GRDE
+             , A.REPORT_COLR
              , A.REPORT_STAT
              , A.REPORT_STDT
              , B.BOOK_TITL
@@ -97,6 +99,7 @@
             , REPORT_CNTN
             , REPORT_ENDT
             , REPORT_GRDE
+            , REPORT_COLR
             , REPORT_STAT
             , REPORT_STDT
         )
@@ -107,6 +110,7 @@
             , #{reportCntn}
             , #{reportEndt}
             , #{reportGrde}
+            , #{reportColr}
             , #{reportStat}
             , #{reportStdt}
         )
@@ -117,6 +121,7 @@
                REPORT_CNTN = #{reportCntn}
              , REPORT_ENDT = #{reportEndt}
              , REPORT_GRDE = #{reportGrde}
+             , REPORT_COLR = #{reportColr}
              , REPORT_STAT = #{reportStat}
              , REPORT_STDT = #{reportStdt}
          WHERE REPORT_NUMB = #{reportNumb}
