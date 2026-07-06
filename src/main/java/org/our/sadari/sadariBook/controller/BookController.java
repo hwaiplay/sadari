@@ -1,6 +1,7 @@
 package org.our.sadari.sadariBook.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
@@ -8,9 +9,10 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.service.BookServiceImpl;
+import org.our.sadari.sadariBook.service.BookService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 import tools.jackson.databind.ObjectMapper;
@@ -43,7 +45,7 @@ public class BookController {
     @Value("${naver.key.clientSecret}")
     private String NAVER_CLIENT_SECRET; //네이버 앱 시크릿 키
 
-    private final BookServiceImpl bookServiceImpl;
+    private final BookService bookService;
 
     /**
      *  책 검색 Api
@@ -79,19 +81,55 @@ public class BookController {
 
     }
     
+
     /**
-     * 독후감 기록 API
-     * @param requestDto
+     * 독후감 리스트 조회 API
+     * @return ResultData
+     */
+    @GetMapping("/getBookList")
+    public ResultData getBookList(@AuthenticationPrincipal Long userNumb) {
+
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        List<ReportDto> list = bookService.getBookList(reportDto);
+
+        return ResultData.success(list);
+    }
+
+    /**
+     * 독후감 상세보기 API
+     * @param bookNumb
+     * @return ResultData
+     */
+    @GetMapping("/getBookdetail/{bookNumb}")
+    public ResultData getDetail(@PathVariable("bookNumb") Long bookNumb) {
+
+        ReportDto detail = bookService.getDetail(bookNumb);
+
+        //독후감 없음
+        if(StringUtil.isEmpty(detail)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        log.debug("독후감 상세보기 조회 성공: " + detail);
+
+        return ResultData.success(detail);
+    }
+
+    /**
+     * 독후감 등록 API
+     * @param requestDto, request
      * @return ResultData
      */
     @PostMapping("/setReport")
     public ResultData createReport(@RequestBody ReportDto requestDto) {
 
+        // 독후감 기록이 있는지 유효성 검사
         if(StringUtil.isEmpty(requestDto)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        ReportDto resultReportDto = bookServiceImpl.setReport(requestDto);
+        ReportDto resultReportDto = bookService.setReport(requestDto);
 
         if(!StringUtil.isEmpty(resultReportDto.getReportNumb())) {
             log.debug("독후감 기록 성공, 독후감 번호: " + resultReportDto.getReportNumb());
@@ -103,57 +141,22 @@ public class BookController {
     }
 
     /**
-     * 독후감 상세보기 API
-     * @param bookNumb
-     * @return ResultData
-     */
-    @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData getDetail(@PathVariable("bookNumb") Long bookNumb) {
-
-        ReportDto detail = bookServiceImpl.getDetail(bookNumb);
-
-        if(StringUtil.isEmpty(detail)) {
-             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
-
-        log.debug("독후감 상세보기 조회 성공: " + detail);
-
-        return ResultData.success(detail);
-    }
-
-    /**
-     * 독후감 리스트 조회 API
-     * @return ResultData
-     */
-    @GetMapping("/getBookList")
-    public ResultData getBookList() {
-
-        List<ReportDto> list = bookServiceImpl.getBookList();
-
-        if(StringUtil.isEmpty(list)) {
-            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
-
-        return ResultData.success(list);
-    }
-
-    /**
      * 독후감 수정 API
      * @param reportNumb
      * @param request
      * @return ResultData
      */
     @PutMapping("/uptReport/{reportNumb}")
-    public ResultData uptReport(@PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
+    public ResultData uptReport(@AuthenticationPrincipal Long userNumb, @PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
 
         if(StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         request.setReportNumb(reportNumb);
-        request.setUserNumb(Long.valueOf(1));
+        request.setUserNumb(userNumb);
 
-        ReportDto uptReport = bookServiceImpl.uptReport(request);
+        ReportDto uptReport = bookService.uptReport(request);
 
         log.debug("독후감 수정 성공: " + uptReport);
 
@@ -166,7 +169,7 @@ public class BookController {
      * @return ResultData
      */
     @DeleteMapping("/delReport/{reportNumb}")
-    public ResultData delReport(@PathVariable("reportNumb") Long reportNumb) {
+    public ResultData delReport(@AuthenticationPrincipal Long userNumb, @PathVariable("reportNumb") Long reportNumb) {
         
         //독후감번호 없는 경우
         if(StringUtil.isEmpty(reportNumb)) {
@@ -175,10 +178,10 @@ public class BookController {
 
         ReportDto report = new ReportDto();
         report.setReportNumb(reportNumb);
-        report.setUserNumb(Long.valueOf(1));
+        report.setUserNumb(userNumb);
 
         // 삭제 실패
-        if(bookServiceImpl.delReport(report) == 0) {
+        if(bookService.delReport(report) == 0) {
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
 

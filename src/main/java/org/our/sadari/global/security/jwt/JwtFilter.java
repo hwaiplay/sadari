@@ -5,6 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.global.common.util.StringUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -34,27 +35,27 @@ public class JwtFilter extends OncePerRequestFilter {
                                     FilterChain filterChain)
             throws ServletException, IOException {
 
-        // 1. Authorization 헤더 꺼내기
-        String header = request.getHeader("Authorization");
-
-        // 2. Bearer 토큰인지 확인
-        if (header != null && header.startsWith("Bearer ")) {
-
-            // "Bearer " 이후 실제 토큰만 추출
-            String token = header.substring(7);
-
-            // 3. 토큰 검증
-            if (jwtProvider.validateToken(token)) {
-
-                // 4. Authentication 객체 생성
-                Authentication authentication = jwtProvider.getAuthentication(token);
-
-                // 5. SecurityContext에 저장
-                SecurityContextHolder.getContext().setAuthentication(authentication);
+        // 1. Authorization 헤더 대신 "쿠키"에서 accessToken 찾기
+        String token = null;
+        if (!StringUtil.isEmpty(request.getCookies())) {
+            for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
+                if ("accessToken".equals(cookie.getName())) {
+                    token = cookie.getValue();
+                    break;
+                }
             }
         }
 
-        // 6. 다음 필터로 넘김 (이거 없으면 요청 멈춤)
+        // 2. 토큰 검증 및 시큐리티 컨텍스트 저장
+        if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token)) {
+            // 3. Authentication 객체 생성
+            Authentication authentication = jwtProvider.getAuthentication(token);
+
+            // 4. SecurityContext에 저장 (치트키 발동 준비 완료!)
+            SecurityContextHolder.getContext().setAuthentication(authentication);
+        }
+
+        // 5. 다음 필터로 넘김
         filterChain.doFilter(request, response);
     }
     

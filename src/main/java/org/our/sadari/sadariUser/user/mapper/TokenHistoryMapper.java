@@ -23,7 +23,7 @@ public interface TokenHistoryMapper {
      * @param userNumb
      * @return 결과 (0/1)
      */
-    int deleteToken(@Param("userNumb") Long userNumb);
+    int deleteToken(Long userNumb);
 
     /**
      * 새 토큰 저장

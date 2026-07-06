@@ -1,5 +1,6 @@
 package org.our.sadari.global.common.config;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
 /**
@@ -16,10 +17,14 @@ import org.springframework.web.servlet.config.annotation.*;
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
 
+
+    @Value("${domain.front}")
+    private String FRONT_DOMAIN; //네이버 앱 시크릿 키
+
     @Override
     public void addCorsMappings(CorsRegistry registry) {
         registry.addMapping("/**")
-                .allowedOrigins("http://localhost:5173")
+                .allowedOrigins(FRONT_DOMAIN)
                 .allowedMethods("*")
                 .allowCredentials(true);
     }

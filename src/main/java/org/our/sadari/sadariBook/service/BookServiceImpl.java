@@ -2,6 +2,7 @@ package org.our.sadari.sadariBook.service;
 
 import java.util.List;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
@@ -23,37 +24,34 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     @Transactional
-    public ReportDto setReport(ReportDto requestDto) {
+    public ReportDto setReport(ReportDto reportDto) {
 
         int bookCount = 0;
 
-        requestDto.setUserNumb(Long.valueOf(1));
+        reportDto.setUserNumb(Long.valueOf(1));
 
         // 책 중복 검사
-        bookCount = reportMapper.dupBook(requestDto);
+        bookCount = reportMapper.dupBook(reportDto);
 
         // 책 저장 안 되어 있어야 책 저장
         if (bookCount == 0) {
-            reportMapper.setBook(requestDto);
+            reportMapper.setBook(reportDto);
         }
 
         // 독후감 저장
-        reportMapper.setReport(requestDto);
+        reportMapper.setReport(reportDto);
 
-        return requestDto;
+        return reportDto;
     }
 
     /**
      * 독후감 리스트 로직
      */
     @Override
-    public List<ReportDto> getBookList() {
-
-        ReportDto book = new ReportDto();
-        book.setUserNumb(Long.valueOf(1));
+    public List<ReportDto> getBookList(ReportDto reportDto) {
 
         // 리스트 조회
-        List<ReportDto> list = reportMapper.getReportList(book);
+        List<ReportDto> list = reportMapper.getReportList(reportDto);
         log.info("독후감 리스트 조회 완료 {}", list);
 
         return list;
@@ -76,10 +74,6 @@ public class BookServiceImpl implements BookService {
         // 독후감 조회
         ReportDto detail = reportMapper.getReportDtl(book);
 
-        if (StringUtil.isEmpty(detail)) {
-            throw new RuntimeException("데이터 없음");
-        }
-
         return detail;
 
     }
@@ -88,20 +82,20 @@ public class BookServiceImpl implements BookService {
      * 독후감 수정
      */
     @Override
-    public ReportDto uptReport(ReportDto request) {
+    public ReportDto uptReport(ReportDto reportDto) {
 
         // 독후감 수정
-        reportMapper.uptReport(request);
+        reportMapper.uptReport(reportDto);
 
-        return request;
+        return reportDto;
     }
 
     /**
      * 독후감 삭제
      */
     @Override
-    public int delReport(ReportDto request) {
+    public int delReport(ReportDto reportDto) {
 
-        return reportMapper.delReport(request);
+        return reportMapper.delReport(reportDto);
     }
 }
