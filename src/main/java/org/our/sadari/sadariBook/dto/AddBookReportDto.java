@@ -45,6 +45,8 @@ public class AddBookReportDto {
     private String bookEndt;
     // 별점
     private String bookGrde;
+    // 책장 색상
+    private String reportColr;
     // 독후감 내용
     private String bookCntn;
 }
