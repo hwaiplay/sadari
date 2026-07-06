@@ -1,5 +1,6 @@
 package org.our.sadari.sadariBook.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 
 import lombok.AllArgsConstructor;
@@ -21,6 +22,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class BookJsonDto {
     // 검색 결과를 생성한 시간
     private String lastBuildDate;
@@ -34,6 +36,7 @@ public class BookJsonDto {
     private List<BookDto> items;
 
     @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BookDto {
         // 책 제목
         private String title;
