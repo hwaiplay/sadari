@@ -13,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 public class BookServiceImpl implements BookService {
 
+    private static final String DEFAULT_REPORT_COLOR = "#ac8a8a";
+
     private final ReportMapper reportMapper;
 
     @Override
@@ -20,6 +22,7 @@ public class BookServiceImpl implements BookService {
     public ReportDto setReport(Long userNumb, ReportDto reportDto) {
         // 사용자 번호는 요청 본문이 아니라 인증 정보에서 받은 값으로 설정한다.
         reportDto.setUserNumb(userNumb);
+        setDefaultReportColor(reportDto);
 
         // 책이 없으면 새로 저장하고, 이미 있으면 기존 책 번호를 독후감에 연결한다.
         if (reportMapper.dupBook(reportDto) == 0) {
@@ -58,9 +61,16 @@ public class BookServiceImpl implements BookService {
         // 수정 대상은 인증 사용자와 경로의 독후감 번호로 확정한다.
         reportDto.setUserNumb(userNumb);
         reportDto.setReportNumb(reportNumb);
+        setDefaultReportColor(reportDto);
 
         reportMapper.uptReport(reportDto);
         return reportDto;
+    }
+
+    private void setDefaultReportColor(ReportDto reportDto) {
+        if (reportDto.getReportColr() == null || reportDto.getReportColr().isBlank()) {
+            reportDto.setReportColr(DEFAULT_REPORT_COLOR);
+        }
     }
 
     @Override

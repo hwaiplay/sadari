@@ -1,105 +1,155 @@
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
 import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
+import * as styles from "./DetailPage.css";
+
+const MAX_DESCRIPTION_LENGTH = 100;
+
+function RatingStars({ grade }: { grade: string }) {
+  const rating = Math.max(0, Math.min(5, Number(grade) || 0));
+
+  return (
+    <div className={styles.stars} aria-label={`평점 ${rating}점`}>
+      {[1, 2, 3, 4, 5].map((value) => (
+        <span
+          key={value}
+          className={value <= rating ? styles.starFilled : undefined}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+}
 
 function DetailPage() {
-  // 책 번호 파라미터
   const { id } = useParams();
-  // 파라미터 타입 변환 string -> number
   const idNum = Number(id);
-
   const navigate = useNavigate();
+  const [isDescriptionOpen, setIsDescriptionOpen] = useState(false);
 
-  // 수정 페이지로 이동
   const goUpdatePage = (reportNumb: number) => {
     navigate(`/book/upt/${reportNumb}`);
   };
 
-  // 삭제 API
   const { mutate } = useDeleteMutation();
 
   const deleteOnClick = (reportNumb: number) => {
-    const confirm = window.confirm(
-      "독후감 삭제 시 복구할 수 없어요. 정말 삭제 할까요?",
+    const confirmed = window.confirm(
+      "독후감을 삭제하면 복구할 수 없습니다. 정말 삭제할까요?",
     );
 
-    if (confirm) {
+    if (confirmed) {
       mutate(reportNumb);
     }
   };
 
-  // 상세보기 데이터 불러옴
   const { data, isPending } = useBookDetail(idNum);
 
-  // 조회 결과가 없는 경우
-  if (data?.code == 2004) {
+  if (data?.code === 2004) {
     return <div>{data.message}</div>;
   }
 
-  // 로딩중인 경우
   if (isPending) {
-    return <Loading title={"독후감 불러오는 중"} />;
+    return <Loading title={"독후감을 불러오는 중"} />;
   }
 
-  // 독후감 데이터
   const bookData = data?.data;
 
-  return data?.code === 200 && bookData ? (
-    <>
-      <h1
-        onClick={() => goUpdatePage(idNum)}
-        style={{ backgroundColor: "#e3d3d3" }}
-      >
-        독후감 수정하기
-      </h1>
-      <h1
-        onClick={() => deleteOnClick(idNum)}
-        style={{ backgroundColor: "#d3dde3" }}
-      >
-        독후감 삭제하기
-      </h1>
-      <div>
-        <h3>{bookData.bookTitl}</h3>
-      </div>
-      <div>
-        <img src={bookData.bookCvim} alt={bookData.bookTitl} width="300px" />
-      </div>
-      <div>
-        <h3>독서기간</h3>
-        {bookData.reportStdt} ~ {bookData.reportEndt}
-      </div>
-      <div>
-        <h3>평점</h3>
-        {bookData.reportGrde}
-      </div>
-      <div>
-        <h3>독후감</h3>
-        {bookData.reportCntn}
-      </div>
-      <div>
-        <h3>책 소개</h3>
-        <div>
-          <h3>저자</h3>
-          <p>{bookData.bookAthr}</p>
+  if (data?.code !== 200 || !bookData) {
+    return <h3>{data?.message}</h3>;
+  }
+
+  const description = bookData.bookDesc || "";
+  const hasLongDescription = description.length > MAX_DESCRIPTION_LENGTH;
+  const visibleDescription =
+    hasLongDescription && !isDescriptionOpen
+      ? `${description.slice(0, MAX_DESCRIPTION_LENGTH)}...`
+      : description;
+
+  return (
+    <main className={styles.page}>
+      <Container className={styles.detail}>
+        <div className={styles.actions}>
+          <button
+            className={styles.actionButton}
+            type="button"
+            onClick={() => goUpdatePage(idNum)}
+          >
+            수정
+          </button>
+          <button
+            className={styles.deleteButton}
+            type="button"
+            onClick={() => deleteOnClick(idNum)}
+          >
+            삭제
+          </button>
         </div>
-        <div>
-          <h3>출판사</h3>
-          <p>{bookData.bookPubl}</p>
-        </div>
-        <div>
-          <h3>책 소개</h3>
-          <p>{bookData.bookDesc}</p>
-        </div>
-        <div>
-          <h3>isbn</h3>
-          <p>{bookData.bookIsbn}</p>
-        </div>
-      </div>
-    </>
-  ) : (
-    <h3>{data.message}</h3>
+
+        <section className={styles.header}>
+          <div className={styles.coverFrame}>
+            <img
+              className={styles.coverImage}
+              src={bookData.bookCvim}
+              alt={bookData.bookTitl}
+            />
+          </div>
+          <div>
+            <h1 className={styles.title}>{bookData.bookTitl}</h1>
+            <p className={styles.meta}>
+              {bookData.bookAthr} · {bookData.bookPubl}
+            </p>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <div>
+            <h2 className={styles.sectionTitle}>독서 기간</h2>
+            <div className={styles.period}>
+              {bookData.reportStdt} ~ {bookData.reportEndt}
+            </div>
+          </div>
+
+          <div>
+            <h2 className={styles.sectionTitle}>평점</h2>
+            <RatingStars grade={bookData.reportGrde} />
+          </div>
+
+          <div>
+            <h2 className={styles.sectionTitle}>독후감</h2>
+            <p className={styles.content}>{bookData.reportCntn}</p>
+          </div>
+        </section>
+
+        <section className={styles.panel}>
+          <h2 className={styles.sectionTitle}>책 소개</h2>
+          <div className={styles.bookInfoGrid}>
+            <span className={styles.infoLabel}>저자</span>
+            <p className={styles.infoValue}>{bookData.bookAthr}</p>
+            <span className={styles.infoLabel}>출판사</span>
+            <p className={styles.infoValue}>{bookData.bookPubl}</p>
+            <span className={styles.infoLabel}>ISBN</span>
+            <p className={styles.infoValue}>{bookData.bookIsbn}</p>
+          </div>
+          <div>
+            <p className={styles.content}>{visibleDescription}</p>
+            {hasLongDescription && (
+              <button
+                className={styles.toggleButton}
+                type="button"
+                onClick={() => setIsDescriptionOpen((prev) => !prev)}
+              >
+                {isDescriptionOpen ? "접기" : "더보기"}
+              </button>
+            )}
+          </div>
+        </section>
+      </Container>
+    </main>
   );
 }
 
