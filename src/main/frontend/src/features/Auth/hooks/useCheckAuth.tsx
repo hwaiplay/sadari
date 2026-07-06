@@ -1,53 +1,48 @@
-/**
- * fileName       : useCheckAuth
- * author         : hanwon.Jang
- * date           : 2026-03-28
- * description    : 로그인 상태 확인 후 필요 시 토큰 갱신 및 페이지 이동을 결정하는 커스텀 훅
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-28       hanwon.Jang       주석 추가 및 리팩토링
- */
-
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
 import { refreshTokenApi } from "../api/authApi";
 
 export const useCheckAuth = () => {
-  const { data, isLoading, isError, refetch } = useAuthQuery(); // 로그인 상태 확인 (/api/oauth/tokenCheck)
-  const [refreshing, setRefreshing] = useState(false); // 토큰 갱신 중인지 여부 상태
+  const { data, isLoading, isError, refetch } = useAuthQuery();
+  const [refreshing, setRefreshing] = useState(false);
+  const [refreshAttempted, setRefreshAttempted] = useState(false);
 
   useEffect(() => {
-    // 토큰 만료 코드 (1001) + 현재 토큰 갱신 중이 아닐 때 → 토큰 갱신 시도
-    if (data?.code === 1001 && !refreshing) {
+    if (data?.code === 1001 && !refreshing && !refreshAttempted) {
       setRefreshing(true);
+      setRefreshAttempted(true);
+
       (async () => {
         try {
-          await refreshTokenApi(); // 1. 새 토큰 받아오기
-
-          await refetch(); // 2. 주석 해제! 새 토큰으로 내 상태를 200으로 업데이트해야 루프가 끊김
-
+          await refreshTokenApi();
+          await refetch();
         } catch {
-          console.log("토큰 갱신 실패");
-          // alert("세션이 만료되었습니다. 다시 로그인해주세요.");
-          return { status: "unauthenticated" };
+          console.log("token refresh failed");
         } finally {
           setRefreshing(false);
         }
       })();
     }
-  }, [data?.code, refreshing]);
+  }, [data?.code, refreshing, refreshAttempted, refetch]);
 
-  if (isLoading) return { isLoading: true, isAuthenticated: false };
+  if (isLoading || refreshing) {
+    return { isLoading: true, isAuthenticated: false };
+  }
 
-  if (isError) return { isLoading: false, isAuthenticated: false };
+  if (isError) {
+    return { isLoading: false, isAuthenticated: false };
+  }
 
   if (data) {
-    const code = data.code; // 응답 코드
+    const code = data.code;
 
-    if (code === 200) return { isLoading: false, isAuthenticated: true };
-    if (code === 1002 || code === 1003)
+    if (code === 200) {
+      return { isLoading: false, isAuthenticated: true };
+    }
+
+    if (code === 1002 || code === 1003 || refreshAttempted) {
       return { isLoading: false, isAuthenticated: false };
+    }
   }
 
   return { isLoading: false, isAuthenticated: false };

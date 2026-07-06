@@ -50,6 +50,12 @@ public enum ResultEnum {
      */
     COMMON_DELETE_REJECTED(2007, "common.alert.0007"),
 
+    // 검색 요청 실패 응답이다.
+    COMMON_SEARCH_REJECTED(2008, "common.alert.0008"),
+
+    // 요청값 검증 실패 응답이다.
+    COMMON_INVALID_REQUEST(2009, "common.alert.0009"),
+
     /**
      * 올바르지 않은 접근입니다.
      */

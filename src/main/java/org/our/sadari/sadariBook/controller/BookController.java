@@ -1,7 +1,7 @@
 package org.our.sadari.sadariBook.controller;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.Valid;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
@@ -9,29 +9,18 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
+import org.our.sadari.sadariBook.service.BookSearchService;
 import org.our.sadari.sadariBook.service.BookService;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.*;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.web.client.RestTemplate;
-import tools.jackson.databind.ObjectMapper;
-
-import java.util.List;
-
-/**
- * packageName    : org.our.sadari.sadariBook.controller
- * fileName       : BookController.java
- * author         : hanwon.Jang
- * date           : 2026-04-01
- * description    : 독후감 관련 컨트롤러    
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-01       hanwon.Jang       최초 생성
- * 2026-04-23       hanwon.Jang       독후감 상세보기 로직
- * 2026-04-25       hanwon.Jang       독후감 리스트 조회 로직
- */
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
 @Slf4j
 @RestController
@@ -39,154 +28,89 @@ import java.util.List;
 @RequestMapping("/api/book")
 public class BookController {
 
-    @Value("${naver.key.clientId}")
-    private String NAVER_CLIENT_ID; //네이버 앱 클라이언트 키
-
-    @Value("${naver.key.clientSecret}")
-    private String NAVER_CLIENT_SECRET; //네이버 앱 시크릿 키
-
+    // 독후감 저장, 조회, 수정, 삭제 로직은 서비스에 위임한다.
     private final BookService bookService;
+    // 네이버 책 검색 호출과 응답 변환은 검색 서비스에 위임한다.
+    private final BookSearchService bookSearchService;
 
-    /**
-     *  책 검색 Api
-     */
     @GetMapping("/search")
-    public ResultData searchBooks(@RequestParam("query") String query) throws JsonProcessingException {
-
-        // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
-        RestTemplate rt = new RestTemplate();
-
-        // HTTP Header 설정
-        HttpHeaders headers = new HttpHeaders();
-        headers.add("X-Naver-Client-Id", NAVER_CLIENT_ID);
-        headers.add("X-Naver-Client-Secret", NAVER_CLIENT_SECRET);
-
-        String url = "https://openapi.naver.com/v1/search/book.json?query=" + query + "&display=10&sort=sim";
-
-        ResponseEntity<String> response = rt.exchange(
-            url,
-            HttpMethod.GET,
-            new HttpEntity<>(headers),
-            String.class
-        );
-
-        // JSON 응답 문자열을 KakaoTokenVO 객체로 역직렬화(Parsing)
-        ObjectMapper objectMapper = new ObjectMapper();
-            
-        BookJsonDto bookJsonDto = objectMapper.readValue(response.getBody(), BookJsonDto.class);
-
-        List<BookJsonDto.BookDto> books = bookJsonDto.getItems();
-
+    public ResultData searchBooks(@RequestParam("query") String query) {
+        // 컨트롤러는 검색 요청을 받고 결과 응답만 만든다.
+        List<BookJsonDto.BookDto> books = bookSearchService.searchBooks(query);
         return ResultData.success(books);
-
     }
-    
 
-    /**
-     * 독후감 리스트 조회 API
-     * @return ResultData
-     */
     @GetMapping("/getBookList")
     public ResultData getBookList(@AuthenticationPrincipal Long userNumb) {
-
-        ReportDto reportDto = new ReportDto();
-        reportDto.setUserNumb(userNumb);
-        List<ReportDto> list = bookService.getBookList(reportDto);
-
+        // 로그인 사용자 번호로 해당 사용자의 독후감 목록만 조회한다.
+        List<ReportDto> list = bookService.getBookList(userNumb);
         return ResultData.success(list);
     }
 
-    /**
-     * 독후감 상세보기 API
-     * @param bookNumb
-     * @return ResultData
-     */
     @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData getDetail(@PathVariable("bookNumb") Long bookNumb) {
+    public ResultData getDetail(
+            @AuthenticationPrincipal Long userNumb,
+            @PathVariable("bookNumb") Long bookNumb
+    ) {
+        // 로그인 사용자 번호와 독후감 번호를 함께 전달해 소유자 기준으로 조회한다.
+        ReportDto detail = bookService.getDetail(userNumb, bookNumb);
 
-        ReportDto detail = bookService.getDetail(bookNumb);
-
-        //독후감 없음
-        if(StringUtil.isEmpty(detail)) {
+        if (StringUtil.isEmpty(detail)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        log.debug("독후감 상세보기 조회 성공: " + detail);
-
+        log.debug("Book report detail lookup succeeded: {}", detail);
         return ResultData.success(detail);
     }
 
-    /**
-     * 독후감 등록 API
-     * @param requestDto, request
-     * @return ResultData
-     */
     @PostMapping("/setReport")
-    public ResultData createReport(@RequestBody ReportDto requestDto) {
+    public ResultData createReport(
+            @AuthenticationPrincipal Long userNumb,
+            @Valid @RequestBody ReportDto requestDto
+    ) {
+        // 요청 본문은 검증 후 서비스로 넘기고 사용자 번호는 서버에서 주입한다.
+        ReportDto resultReportDto = bookService.setReport(userNumb, requestDto);
 
-        // 독후감 기록이 있는지 유효성 검사
-        if(StringUtil.isEmpty(requestDto)) {
-            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        if (StringUtil.isEmpty(resultReportDto.getReportNumb())) {
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        ReportDto resultReportDto = bookService.setReport(requestDto);
-
-        if(!StringUtil.isEmpty(resultReportDto.getReportNumb())) {
-            log.debug("독후감 기록 성공, 독후감 번호: " + resultReportDto.getReportNumb());
-            return ResultData.success(resultReportDto.getReportNumb());
-        } else {
-            return ResultData.fail(ResultEnum.AUTH_FAIL);
-        }
-
+        log.debug("Book report created: {}", resultReportDto.getReportNumb());
+        return ResultData.success(resultReportDto.getReportNumb());
     }
 
-    /**
-     * 독후감 수정 API
-     * @param reportNumb
-     * @param request
-     * @return ResultData
-     */
     @PutMapping("/uptReport/{reportNumb}")
-    public ResultData uptReport(@AuthenticationPrincipal Long userNumb, @PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
-
-        if(StringUtil.isEmpty(reportNumb)) {
+    public ResultData uptReport(
+            @AuthenticationPrincipal Long userNumb,
+            @PathVariable("reportNumb") Long reportNumb,
+            @Valid @RequestBody ReportDto request
+    ) {
+        // 경로의 독후감 번호와 로그인 사용자 번호를 기준으로 수정한다.
+        if (StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        request.setReportNumb(reportNumb);
-        request.setUserNumb(userNumb);
+        ReportDto uptReport = bookService.uptReport(userNumb, reportNumb, request);
 
-        ReportDto uptReport = bookService.uptReport(request);
-
-        log.debug("독후감 수정 성공: " + uptReport);
-
+        log.debug("Book report updated: {}", uptReport);
         return ResultData.success(uptReport.getReportNumb());
     }
 
-    /**
-     * 독후감 삭제 API
-     * @param reportNumb
-     * @return ResultData
-     */
     @DeleteMapping("/delReport/{reportNumb}")
-    public ResultData delReport(@AuthenticationPrincipal Long userNumb, @PathVariable("reportNumb") Long reportNumb) {
-        
-        //독후감번호 없는 경우
-        if(StringUtil.isEmpty(reportNumb)) {
+    public ResultData delReport(
+            @AuthenticationPrincipal Long userNumb,
+            @PathVariable("reportNumb") Long reportNumb
+    ) {
+        // 경로의 독후감 번호와 로그인 사용자 번호를 기준으로 삭제한다.
+        if (StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        ReportDto report = new ReportDto();
-        report.setReportNumb(reportNumb);
-        report.setUserNumb(userNumb);
-
-        // 삭제 실패
-        if(bookService.delReport(report) == 0) {
+        if (bookService.delReport(userNumb, reportNumb) == 0) {
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
 
-        log.debug("독후감 삭제 성공: ", reportNumb);
-
+        log.debug("Book report deleted: {}", reportNumb);
         return ResultData.success();
     }
 }

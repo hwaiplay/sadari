@@ -105,7 +105,7 @@ public class AuthLoginController {
      * @return
      */
     @PostMapping("/refresh")
-    public ResultData refresh(HttpServletRequest request) {
+    public ResultData refresh(HttpServletRequest request, HttpServletResponse response) {
 
         // 쿠키에서 리프레시 토큰 추출
         String refreshToken = extractRefreshToken(request);
@@ -118,6 +118,10 @@ public class AuthLoginController {
 
         // DB에서 리프레시 토큰 조회
         tokenDto = tokenMapper.getRefreshToken(refreshToken);
+
+        if (StringUtil.isEmpty(tokenDto)) {
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
+        }
 
         // 만료시
         if (tokenDto.isExpired()) {
@@ -134,13 +138,15 @@ public class AuthLoginController {
         // 새로운 Access 토큰 발급
         String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
-        ResponseCookie.from("accessToken", newAccessToken)
+        ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", newAccessToken)
                 .httpOnly(true)
                 .sameSite("Lax")
                 .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
                 .path("/")
                 .maxAge(60 * 60)
                 .build();
+
+        response.addHeader(HttpHeaders.SET_COOKIE, accessTokenCookie.toString());
 
         return ResultData.success();
     }

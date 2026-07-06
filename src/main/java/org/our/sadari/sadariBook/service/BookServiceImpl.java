@@ -1,16 +1,12 @@
 package org.our.sadari.sadariBook.service;
 
 import java.util.List;
-
-import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.our.sadari.global.common.util.StringUtil;
-
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 @Service
 @RequiredArgsConstructor
@@ -19,82 +15,60 @@ public class BookServiceImpl implements BookService {
 
     private final ReportMapper reportMapper;
 
-    /**
-     * 독후감 기록 로직
-     */
     @Override
     @Transactional
-    public ReportDto setReport(ReportDto reportDto) {
+    public ReportDto setReport(Long userNumb, ReportDto reportDto) {
+        // 사용자 번호는 요청 본문이 아니라 인증 정보에서 받은 값으로 설정한다.
+        reportDto.setUserNumb(userNumb);
 
-        int bookCount = 0;
-
-        reportDto.setUserNumb(Long.valueOf(1));
-
-        // 책 중복 검사
-        bookCount = reportMapper.dupBook(reportDto);
-
-        // 책 저장 안 되어 있어야 책 저장
-        if (bookCount == 0) {
+        // 책이 없으면 새로 저장하고, 이미 있으면 기존 책 번호를 독후감에 연결한다.
+        if (reportMapper.dupBook(reportDto) == 0) {
             reportMapper.setBook(reportDto);
+        } else {
+            reportDto.setBookNumb(reportMapper.getBookNumbByIsbn(reportDto.getBookIsbn()));
         }
 
-        // 독후감 저장
         reportMapper.setReport(reportDto);
-
         return reportDto;
     }
 
-    /**
-     * 독후감 리스트 로직
-     */
     @Override
-    public List<ReportDto> getBookList(ReportDto reportDto) {
+    public List<ReportDto> getBookList(Long userNumb) {
+        // 목록 조회 조건은 로그인 사용자 번호만 사용한다.
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
 
-        // 리스트 조회
         List<ReportDto> list = reportMapper.getReportList(reportDto);
-        log.info("독후감 리스트 조회 완료 {}", list);
-
+        log.info("Book report list lookup completed. userNumb={}, size={}", userNumb, list.size());
         return list;
     }
 
-    /**
-     * 독후감 상세보기 로직
-     */
     @Override
-    public ReportDto getDetail(Long reportNumb) {
+    public ReportDto getDetail(Long userNumb, Long reportNumb) {
+        // 상세 조회는 로그인 사용자 번호와 독후감 번호를 함께 사용한다.
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
 
-        ReportDto book = new ReportDto();
-
-        // 독후감 번호 설정
-        book.setReportNumb(reportNumb);
-
-        // 유저 번호 설정 (임시)
-        book.setUserNumb(Long.valueOf(1));
-
-        // 독후감 조회
-        ReportDto detail = reportMapper.getReportDtl(book);
-
-        return detail;
-
+        return reportMapper.getReportDtl(reportDto);
     }
 
-    /**
-     * 독후감 수정
-     */
     @Override
-    public ReportDto uptReport(ReportDto reportDto) {
+    public ReportDto uptReport(Long userNumb, Long reportNumb, ReportDto reportDto) {
+        // 수정 대상은 인증 사용자와 경로의 독후감 번호로 확정한다.
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
 
-        // 독후감 수정
         reportMapper.uptReport(reportDto);
-
         return reportDto;
     }
 
-    /**
-     * 독후감 삭제
-     */
     @Override
-    public int delReport(ReportDto reportDto) {
+    public int delReport(Long userNumb, Long reportNumb) {
+        // 삭제 대상은 인증 사용자와 경로의 독후감 번호로 확정한다.
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
 
         return reportMapper.delReport(reportDto);
     }

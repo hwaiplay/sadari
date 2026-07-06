@@ -5,7 +5,9 @@ import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.result.ResultResponse;
 import org.springframework.context.MessageSource;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -45,6 +47,29 @@ public class CommonExceptionHandler {
 
         return ResponseEntity
                 .status(e.getStatus())
+                .body(response);
+    }
+
+
+    @ExceptionHandler(MethodArgumentNotValidException.class)
+    public ResponseEntity<ResultResponse> handleMethodArgumentNotValidException(
+            MethodArgumentNotValidException e,
+            Locale locale
+    ) {
+        // 요청 본문 검증 실패는 공통 요청 오류 응답으로 변환한다.
+        String message = messageSource.getMessage(
+                ResultEnum.COMMON_INVALID_REQUEST.getMessageKey(),
+                null,
+                locale
+        );
+
+        ResultResponse response = new ResultResponse(
+                ResultEnum.COMMON_INVALID_REQUEST.getCode(),
+                message
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
                 .body(response);
     }
 }

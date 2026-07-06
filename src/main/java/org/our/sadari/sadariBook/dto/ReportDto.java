@@ -1,34 +1,30 @@
 package org.our.sadari.sadariBook.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
-
-/**
- * packageName    : org.our.sadari.sadariBook.dto
- * fileName       : ReportDto.java
- * author         : hanwon.Jang
- * date           : 2026-04-03
- * description    : 유저가 작성한 독후감 DTO
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-03       hanwon.Jang       최초 생성
- * 2026-05-03       hanwon.Jang       독후감 번호, 책 번호 추가
- */
+import lombok.EqualsAndHashCode;
 
 @Data
+@EqualsAndHashCode(callSuper = true)
 public class ReportDto extends BookDto {
-    //유저 번호
+
+    // 사용자 번호는 인증 정보에서 설정한다.
     private Long userNumb;
-    // 독후감 번호 
-    private Long reportNumb; 
-    // 독서 상태(완독/읽는중/중단)
+    // 독후감 번호는 상세, 수정, 삭제 대상 식별에 사용한다.
+    private Long reportNumb;
+
+    // 독서 상태는 저장과 수정 요청에서 필수 값이다.
+    @NotBlank
     private String reportStat;
-    // 독서 시작일
+
+    // 독서 시작일은 저장과 수정 요청에서 필수 값이다.
+    @NotBlank
     private String reportStdt;
-    // 독서 종료일
+
     private String reportEndt;
-    // 별점
     private String reportGrde;
-    // 독후감 내용
+
+    // 독후감 내용은 저장과 수정 요청에서 필수 값이다.
+    @NotBlank
     private String reportCntn;
 }
