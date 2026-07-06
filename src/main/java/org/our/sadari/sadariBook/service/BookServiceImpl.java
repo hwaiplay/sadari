@@ -6,7 +6,6 @@ import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.util.StringUtil;
 
 import lombok.RequiredArgsConstructor;

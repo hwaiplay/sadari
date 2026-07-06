@@ -9,6 +9,7 @@ import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.sadariUser.auth.entity.TokenHistoryEntity;
@@ -16,6 +17,7 @@ import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
 import org.our.sadari.sadariUser.auth.service.AuthService;
 import org.our.sadari.sadariUser.user.dto.TokenHistoryDto;
 import org.our.sadari.sadariUser.user.mapper.TokenHistoryMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseCookie;
@@ -42,16 +44,18 @@ public class AuthLoginController {
 
     private final AuthService authService;
     private final JwtProvider jwtProvider;
-    private final TokenHistoryRepository tokenHistoryRepository;
     private final TokenHistoryMapper tokenMapper;
+
+    @Value("${domain.front}")
+    private String FRONT_DOMAIN; //네이버 앱 시크릿 키
 
     // 로그인 상태 확인 API
     @GetMapping("/tokenCheck")
-    public ResultData<?> tokenCheck(HttpServletRequest request) {
-        
-       String accessToken = extractAccessToken(request);
+    public ResultData tokenCheck(HttpServletRequest request) {
 
-        if (accessToken == null) {
+        String accessToken = extractAccessToken(request);
+
+        if (StringUtil.isEmpty(accessToken)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -59,13 +63,13 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        return ResultData.success(); 
+        return ResultData.success();
 
     }
 
     @GetMapping("/callback/kakao")
-    public void kakaoAuthLogin (@RequestParam("code") String code,
-                                HttpServletResponse response) throws Exception {
+    public void kakaoAuthLogin(@RequestParam("code") String code,
+                               HttpServletResponse response) throws Exception {
 
         TokenDto token = authService.kakaoLogin(code);
 
@@ -73,11 +77,11 @@ public class AuthLoginController {
         ResponseCookie refreshTokenCookie = ResponseCookie.from("refreshToken", token.getRefreshToken())
                 .httpOnly(true)
                 .sameSite("Lax")
-                .secure(false) 
+                .secure(false)
                 .path("/")
                 .maxAge(60 * 60 * 24 * 7) // 7일
                 .build();
-                
+
         //accessToken 쿠키로 저장
         ResponseCookie accessTokenCookie = ResponseCookie.from("accessToken", token.getAccessToken())
                 .httpOnly(true)
@@ -86,28 +90,27 @@ public class AuthLoginController {
                 .path("/")
                 .maxAge(60 * 60) // 1시간
                 .build();
-        
+
 
         response.addHeader("Set-Cookie", refreshTokenCookie.toString());
         response.addHeader("Set-Cookie", accessTokenCookie.toString());
 
-        response.sendRedirect(
-                "http://localhost:5173/oauth"
-        );
+        response.sendRedirect(FRONT_DOMAIN + "/oauth");
     }
 
     /**
      * Access 토큰 재발급 API
+     *
      * @param request
      * @return
      */
     @PostMapping("/refresh")
-    public ResultData<?> refresh(HttpServletRequest request) {
-        
+    public ResultData refresh(HttpServletRequest request) {
+
         // 쿠키에서 리프레시 토큰 추출
         String refreshToken = extractRefreshToken(request);
 
-        if (refreshToken == null) {
+        if (StringUtil.isEmpty(refreshToken)) {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
@@ -132,24 +135,25 @@ public class AuthLoginController {
         String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
 
         ResponseCookie.from("accessToken", newAccessToken)
-            .httpOnly(true)
-            .sameSite("Lax")
-            .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
-            .path("/")
-            .maxAge(60 * 60)
-            .build();
+                .httpOnly(true)
+                .sameSite("Lax")
+                .secure(false) // 로컬 테스트에서는 false. 배포 시 HTTPS면 true 권장
+                .path("/")
+                .maxAge(60 * 60)
+                .build();
 
         return ResultData.success();
     }
 
     /**
      * 쿠키에서 refreshToken 추출
+     *
      * @return refreshToken 값 (없으면 null)
      */
     private String extractRefreshToken(HttpServletRequest request) {
 
         // 쿠키 자체가 없는 경우
-        if (request.getCookies() == null) {
+        if (StringUtil.isEmpty(request.getCookies())) {
             return null;
         }
 
@@ -165,12 +169,13 @@ public class AuthLoginController {
 
     /**
      * 쿠키에서 accessToken 추출
+     *
      * @return accessToken 값 (없으면 null)
      */
     private String extractAccessToken(HttpServletRequest request) {
 
         // 쿠키 자체가 없는 경우
-        if (request.getCookies() == null) {
+        if (StringUtil.isEmpty(request.getCookies())) {
             return null;
         }
 
