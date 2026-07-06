@@ -8,6 +8,12 @@ export const useCheckAuth = () => {
   const [refreshAttempted, setRefreshAttempted] = useState(false);
 
   useEffect(() => {
+    if (data?.code === 200 && refreshAttempted) {
+      setRefreshAttempted(false);
+    }
+  }, [data?.code, refreshAttempted]);
+
+  useEffect(() => {
     if (data?.code === 1001 && !refreshing && !refreshAttempted) {
       setRefreshing(true);
       setRefreshAttempted(true);
