@@ -23,8 +23,10 @@ export const useCheckAuth = () => {
       setRefreshing(true);
       (async () => {
         try {
-          await refreshTokenApi(); // 토큰 갱신 API 호출
-          // await refetch(); // 재인증
+          await refreshTokenApi(); // 1. 새 토큰 받아오기
+
+          await refetch(); // 2. 주석 해제! 새 토큰으로 내 상태를 200으로 업데이트해야 루프가 끊김
+
         } catch {
           console.log("토큰 갱신 실패");
           // alert("세션이 만료되었습니다. 다시 로그인해주세요.");

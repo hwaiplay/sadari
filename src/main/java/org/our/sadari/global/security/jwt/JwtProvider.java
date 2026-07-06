@@ -166,8 +166,7 @@ public class JwtProvider {
 
         // Spring Security 권한 객체 생성
         // 반드시 "ROLE_" prefix 필요 (hasRole에서 사용됨)
-        List<GrantedAuthority> authorities =
-                List.of(new SimpleGrantedAuthority("ROLE_" + role));
+        List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
         // Authentication 구현체 생성
         return new UsernamePasswordAuthenticationToken(
