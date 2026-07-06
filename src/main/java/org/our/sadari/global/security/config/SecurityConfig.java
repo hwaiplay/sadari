@@ -65,15 +65,11 @@ public class SecurityConfig {
 
                         // 인증 없이 허용할 API
                         .requestMatchers(
-                                "/api/oauth/callback/kakao",  // 🔥 이거 추가
+                                "/api/oauth/callback/kakao",
                                 "/api/oauth/refresh",
                                 "/api/oauth/tokenCheck",
-                                "/api/book/search", // 책 검색 API
-                                "/api/book/setReport", // 독후감 등록 API
-                                "/api/book/getBookdetail/*", // 독후감 상세보기 조회 API
-                                "/api/book/getBookList", // 독후감 리스트 조회 API
-                                "/api/book/uptReport/*", // 독후감 수정 API
-                                "/api/book/delReport/*" // 독후감 삭제 API
+                                // 책 검색만 인증 없이 허용한다.
+                                "/api/book/search"
                         ).permitAll()
 
                         

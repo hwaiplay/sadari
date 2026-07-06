@@ -42,6 +42,9 @@ dependencies {
 	// 스프링 MVC를 이용한 웹 개발(REST API, 컨트롤러 등)의 핵심 라이브러리
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
+	// 요청 본문 검증에 필요한 의존성이다.
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+
 	// MyBatis와 스프링 부트를 연동하여 SQL 매퍼를 사용할 수 있게 해주는 라이브러리
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
 
