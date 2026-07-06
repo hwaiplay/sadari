@@ -27,6 +27,8 @@ export function useSetReportForm(selectedBook: any) {
     const endDate = formData.get("endDate");
     // 별점
     const grade = formData.get("grade");
+    // 책장 색상
+    const reportColr = formData.get("reportColr");
     // 독후감 내용
     const content = formData.get("content");
 
@@ -35,6 +37,7 @@ export function useSetReportForm(selectedBook: any) {
       reportStdt: startDate as string,
       reportEndt: endDate as string,
       reportGrde: grade as string,
+      reportColr: reportColr as string,
       reportCntn: content as string,
       bookTitl: selectedBook.title,
       bookAthr: selectedBook.author,

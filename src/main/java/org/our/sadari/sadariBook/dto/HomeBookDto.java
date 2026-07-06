@@ -24,4 +24,6 @@ public class HomeBookDto {
     private Long userNumb; 
     // 책 제목
     private String bookTitl; 
+    // 책장 색상
+    private String reportColr;
 }
