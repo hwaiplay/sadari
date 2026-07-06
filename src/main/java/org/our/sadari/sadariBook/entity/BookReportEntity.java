@@ -85,6 +85,10 @@ public class BookReportEntity {
     @Column(name = "REPORT_GRDE", nullable = false)
     private String bookGrde;
 
+    // 책장 색상
+    @Column(name = "REPORT_COLR", nullable = false)
+    private String bookColr;
+
     // 기록 내용
     @Column(name = "REPORT_CNTN", nullable = false)
     private String bookCntn;
@@ -95,12 +99,14 @@ public class BookReportEntity {
         String bookStdt,
         String bookEndt,
         String bookGrde,
+        String bookColr,
         String bookCntn
     ) {
         this.bookStat = bookStat;
         this.bookStdt = bookStdt;
         this.bookEndt = bookEndt;
         this.bookGrde = bookGrde;
+        this.bookColr = bookColr;
         this.bookCntn = bookCntn;
     }
 }
