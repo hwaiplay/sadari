@@ -8,7 +8,6 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariBook.dto.ReportRequestDto;
 import org.our.sadari.sadariBook.service.BookServiceImpl;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
@@ -46,13 +45,11 @@ public class BookController {
 
     private final BookServiceImpl bookServiceImpl;
 
-    private StringUtil stringUtil;
-
     /**
      *  책 검색 Api
      */
     @GetMapping("/search")
-    public ResultData<?> searchBooks(@RequestParam("query") String query) throws JsonProcessingException {
+    public ResultData searchBooks(@RequestParam("query") String query) throws JsonProcessingException {
 
         // HTTP 요청을 보내기 위한 RestTemplate 객체 생성
         RestTemplate rt = new RestTemplate();
@@ -85,12 +82,12 @@ public class BookController {
     /**
      * 독후감 기록 API
      * @param requestDto
-     * @return 독후감 번호
+     * @return ResultData
      */
     @PostMapping("/setReport")
-    public ResultData<?> createReport(@RequestBody ReportDto requestDto) {
+    public ResultData createReport(@RequestBody ReportDto requestDto) {
 
-        if(stringUtil.isEmpty(requestDto)) {
+        if(StringUtil.isEmpty(requestDto)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -108,14 +105,14 @@ public class BookController {
     /**
      * 독후감 상세보기 API
      * @param bookNumb
-     * @return
+     * @return ResultData
      */
     @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData<?> getDetail(@PathVariable("bookNumb") Long bookNumb) {
+    public ResultData getDetail(@PathVariable("bookNumb") Long bookNumb) {
 
         ReportDto detail = bookServiceImpl.getDetail(bookNumb);
 
-        if(stringUtil.isEmpty(detail)) {
+        if(StringUtil.isEmpty(detail)) {
              return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -126,14 +123,14 @@ public class BookController {
 
     /**
      * 독후감 리스트 조회 API
-     * @return 리스트
+     * @return ResultData
      */
     @GetMapping("/getBookList")
-    public ResultData<?> getBookList() {
+    public ResultData getBookList() {
 
         List<ReportDto> list = bookServiceImpl.getBookList();
 
-        if(stringUtil.isEmpty(list)) {
+        if(StringUtil.isEmpty(list)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -144,12 +141,12 @@ public class BookController {
      * 독후감 수정 API
      * @param reportNumb
      * @param request
-     * @return 독후감 번호
+     * @return ResultData
      */
     @PutMapping("/uptReport/{reportNumb}")
-    public ResultData<?> uptReport(@PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
+    public ResultData uptReport(@PathVariable("reportNumb") Long reportNumb, @RequestBody ReportDto request) {
 
-        if(stringUtil.isEmpty(reportNumb)) {
+        if(StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -159,19 +156,19 @@ public class BookController {
         ReportDto uptReport = bookServiceImpl.uptReport(request);
 
         log.debug("독후감 수정 성공: " + uptReport);
-        
+
         return ResultData.success(uptReport.getReportNumb());
     }
 
     /**
      * 독후감 삭제 API
      * @param reportNumb
-     * @param request
-     * @return
+     * @return ResultData
      */
     @DeleteMapping("/delReport/{reportNumb}")
-    public ResultData<?> delReport(@PathVariable("reportNumb") Long reportNumb) {
-
+    public ResultData delReport(@PathVariable("reportNumb") Long reportNumb) {
+        
+        //독후감번호 없는 경우
         if(StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }

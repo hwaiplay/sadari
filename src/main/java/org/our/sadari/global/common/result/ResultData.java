@@ -16,16 +16,16 @@ import org.our.sadari.global.common.util.MessageUtils;
  */
 
 @Getter
-public class ResultData<T> {
+public class ResultData {
 
     private final int code;
     private final String message;
-    private final T data;
+    private Object data;
 
     /**
      * 성공 응답 생성자
      */
-    private ResultData(int code, String message, T data) {
+    private ResultData(int code, String message, Object data) {
         this.code = code;
         this.message = message;
         this.data = data;
@@ -34,23 +34,23 @@ public class ResultData<T> {
     /**
      * 성공 응답 (데이터 없음)
      */
-    public static <T> ResultData<T> success() {
-        return new ResultData<>(200, "success", null);
+    public static ResultData success() {
+        return new ResultData(200, "success", null);
     }
 
     /**
      * 성공 응답 (데이터 있음)
      */
-    public static <T> ResultData<T> success(T data) {
-        return new ResultData<>(200, "success", data);
+    public static ResultData success(Object data) {
+        return new ResultData(200, "success", data);
     }
 
     /**
      * 실패 응답 (messageKey 그대로 - 내부용)
      */
-    public static <T> ResultData<T> fail(ResultEnum resultEnum) {
+    public static ResultData fail(ResultEnum resultEnum) {
         // Enum의 키를 번역기에 넣어서 실제 메시지를 뽑아옵니다.
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
-        return new ResultData<>(resultEnum.getCode(), translatedMessage, null);
+        return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 }
