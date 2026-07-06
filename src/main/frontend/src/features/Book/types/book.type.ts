@@ -65,6 +65,8 @@ export interface ReportDtoType {
   reportEndt: string;
   // 별점
   reportGrde: string;
+  // 책장 색상
+  reportColr: string;
   // 독후감 내용
   reportCntn: string;
 
@@ -96,6 +98,8 @@ export interface uptReportType {
     reportEndt: string;
     // 별점
     reportGrde: string;
+    // 책장 색상
+    reportColr: string;
     // 독후감 내용
     reportCntn: string;
   };
@@ -118,6 +122,7 @@ export interface HomeBookType {
   reportNumb: number;
   bookNumb: number;
   bookTitl: string;
+  reportColr?: string;
 }
 
 // 독후감 수정 시 파라미터 타입

@@ -23,6 +23,7 @@ public class ReportDto extends BookDto {
 
     private String reportEndt;
     private String reportGrde;
+    private String reportColr;
 
     // 독후감 내용은 저장과 수정 요청에서 필수 값이다.
     @NotBlank

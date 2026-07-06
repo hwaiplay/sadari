@@ -17,10 +17,16 @@ export const searchBtn = style({
   borderRadius: "6px",
   backgroundColor: "#ffffff",
   border: `1px solid ${vars.color.gray500}`,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  textDecoration: "none",
 });
 
 export const searchBtnText = style({
   color: vars.color.gray500,
   fontSize: vars.fontSize.body,
   marginTop: "19px",
+  marginBottom: 0,
 });
