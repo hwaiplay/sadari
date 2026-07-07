@@ -40,6 +40,15 @@ export const getDetailApi = (bookNumb: number) => {
 };
 
 /**
+ * 도서 정보 상세보기 API
+ * @param reportNumb
+ * @returns 독후감에 연결된 책 정보
+ */
+export const getBookInfoApi = (reportNumb: number) => {
+  return api.get(`/book/getBookInfo/${reportNumb}`);
+};
+
+/**
  * 독후감 리스트 조회 API
  * @param userNumb
  * @returns 독후감 리스트
