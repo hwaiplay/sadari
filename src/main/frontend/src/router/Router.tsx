@@ -9,7 +9,10 @@ import PublicRoute from "./PublicRoute";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
 import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
+import BookInfoPage from "@/pages/Book/Info/BookInfoPage";
+import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
+import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
 
 /**
  * fileName       : Router
@@ -69,14 +72,20 @@ const Router = () => {
           {/* 독후감 상세보기 */}
           <Route path="/book/detail/:id" element={<DetailPage />} />
 
+          {/* 도서 정보 상세보기 */}
+          <Route path="/book/info/:id" element={<BookInfoPage />} />
+
           {/* 책 검색 */}
           <Route path="/book/search" element={<BookSearchType />} />
+          <Route path="/book/search/info" element={<SearchBookInfoPage />} />
 
           {/* 기록하기 */}
           <Route path="/set" element={<SetReportPage />} />
 
           {/* 독후감 수정 */}
           <Route path="/book/upt/:id" element={<UpdateReportPage />} />
+
+          <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
         </Route>
       </Routes>
     </>

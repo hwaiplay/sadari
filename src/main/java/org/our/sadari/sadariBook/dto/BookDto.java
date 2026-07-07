@@ -1,5 +1,6 @@
 package org.our.sadari.sadariBook.dto;
 
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -24,16 +25,22 @@ public class BookDto {
     // 책 번호
     private Long bookNumb;
     // 책 제목
+    @Size(max = 500)
     private String bookTitl;
     // 저자
+    @Size(max = 500)
     private String bookAthr;
     // 출판사
+    @Size(max = 500)
     private String bookPubl;
     // Isbn
+    @Size(max = 100)
     private String bookIsbn;
     // 책 표지 이미지
+    @Size(max = 1000)
     private String bookCvim;
     // 책 소개 내용
+    @Size(max = 4000)
     private String bookDesc;
 
 }

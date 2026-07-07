@@ -12,12 +12,29 @@ export const header = style({
   left: 0,
   right: 0,
   zIndex: 997,
-  background: "transparent",
+  background:
+    "linear-gradient(180deg, #ffffff 0%, rgba(255, 255, 255, 0.98) 60%, rgba(255, 255, 255, 0.86) 84%, rgba(255, 255, 255, 0) 100%)",
 
   selectors: {
+    "&::after": {
+      content: "",
+      position: "absolute",
+      top: "74%",
+      left: 0,
+      right: 0,
+      height: "42px",
+      pointerEvents: "none",
+      background:
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.28) 52%, rgba(255, 255, 255, 0) 100%)",
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+      maskImage:
+        "linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
+      WebkitMaskImage:
+        "linear-gradient(180deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
+    },
     "&._sub": {
       padding: "0 8px 0 5px",
-      backgroundColor: vars.color.background,
     },
   },
 });
@@ -25,6 +42,8 @@ export const header = style({
 export const logo = style({
   margin: "0 auto",
   display: "inline-block",
+  position: "relative",
+  zIndex: 1,
 });
 
 export const backpageBtn = style({
@@ -32,6 +51,10 @@ export const backpageBtn = style({
   left: "5px",
   top: "50%",
   transform: "translateY(-50%)",
-  width: "44px",
-  height: "44px",
+  width: "40px",
+  height: "40px",
+  border: 0,
+  backgroundColor: "transparent",
+  cursor: "pointer",
+  zIndex: 1,
 });

@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import Loading from "../../components/Loading/Loading";
 import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 
 /**
  * fileName       : KakaoOAuth
@@ -24,12 +26,15 @@ const Oauth = () => {
     if (!isLoading) {
       <Navigate to={"/home"} replace />;
     } else {
-      alert("인증에 실패했습니다. 로그인 페이지로 이동합니다.");
+      void sweetError(
+        message("frontend.alert.authFailedTitle"), // frontend.alert.authFailedTitle = 인증에 실패했습니다
+        message("frontend.auth.failedRedirect"), // frontend.auth.failedRedirect = 로그인 페이지로 이동합니다.
+      );
       <Navigate to={"/login"} replace />;
     }
   }, [isLoading]);
 
-  return <Loading title="로그인 중" />;
+  return <Loading title={message("frontend.common.loginLoading")} />; // frontend.common.loginLoading = 로그인 중
 };
 
 export default Oauth;

@@ -9,9 +9,16 @@
  * 2026-04-07       hanwon.Jang       최초 생성
  */
 
+import { message } from "@/app/messages/message";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
 import { setReportApi } from "../../api/bookApi";
 import { useNavigate } from "react-router-dom";
+import { AxiosError } from "axios";
+
+type ErrorResponse = {
+  message?: string;
+};
 
 export const useSetReport = () => {
   const navigate = useNavigate();
@@ -19,8 +26,13 @@ export const useSetReport = () => {
   return useMutation({
     mutationFn: setReportApi,
     onSuccess: (data) => {
-      // 서버에서 새 글 ID 받아서 이동
       navigate(`/book/detail/${data.data}`);
+    },
+    onError: (error: AxiosError<ErrorResponse>) => {
+      void sweetError(
+        message("frontend.alert.createFailedTitle"), // frontend.alert.createFailedTitle = 등록에 실패했습니다
+        error.response?.data?.message ?? message("frontend.report.createFailed"), // frontend.report.createFailed = 독후감 등록에 실패했어요.
+      );
     },
   });
 };

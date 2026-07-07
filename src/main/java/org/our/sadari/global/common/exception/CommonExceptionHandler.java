@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.result.ResultResponse;
+import org.springframework.dao.DataAccessException;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.sql.SQLException;
 import java.util.Locale;
 
 /**
@@ -71,5 +73,51 @@ public class CommonExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(response);
+    }
+
+    @ExceptionHandler(DataAccessException.class)
+    public ResponseEntity<ResultResponse> handleDataAccessException(DataAccessException e) {
+        SQLException sqlException = findSqlException(e);
+
+        if (sqlException != null && sqlException.getErrorCode() == 1461) {
+            // ORA-01461은 VARCHAR2(4000 BYTE)보다 큰 문자열을 바인딩할 때 발생한다.
+            ResultResponse response = new ResultResponse(
+                    ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG.getCode(),
+                    "독후감 내용이 4000바이트를 초과했어요. 한글은 글자당 2~3바이트로 계산됩니다."
+            );
+
+            return ResponseEntity
+                    .status(HttpStatus.BAD_REQUEST)
+                    .body(response);
+        }
+
+        ResultResponse response = new ResultResponse(
+                ResultEnum.COMMON_INVALID_REQUEST.getCode(),
+                "데이터베이스 처리 중 오류가 발생했어요. 입력값을 확인해주세요."
+        );
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(response);
+    }
+
+    /**
+     * SQLException 추출
+     * @Author SeungHyeon.Kang
+     * @param throwable
+     * @return
+     */
+    private SQLException findSqlException(Throwable throwable) {
+        Throwable current = throwable;
+
+        while (current != null) {
+            if (current instanceof SQLException sqlException) {
+                return sqlException;
+            }
+
+            current = current.getCause();
+        }
+
+        return null;
     }
 }

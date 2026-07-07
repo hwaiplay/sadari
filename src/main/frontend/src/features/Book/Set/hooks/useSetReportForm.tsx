@@ -2,35 +2,62 @@
  * fileName       : useSetReportForm
  * author         : hanwon.Jang
  * date           : 2026-05-03
- * description    : form 로직 훅
+ * description    : 독후감 등록 form 로직
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-05-03       hanwon.Jang       최초 생성
  */
 
+import { message } from "@/app/messages/message";
+import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { ReadingStatusType } from "../../types/book.type";
+import {
+  sanitizeText,
+  stripHtmlTags,
+  validateReportForm,
+  validateSelectedBook,
+} from "@/features/Book/utils/reportValidation";
 import { useSetReport } from "./useSetReport";
 
 export function useSetReportForm(selectedBook: any) {
-  // 백엔드 응답
   const { mutate, isPending } = useSetReport();
 
-  // 폼 action
   const handleSubmit = (form: HTMLFormElement) => {
+    const bookValidationMessage = validateSelectedBook(selectedBook);
+
+    if (bookValidationMessage) {
+      void sweetWarning(
+        message("frontend.alert.inputRequired"), // frontend.alert.inputRequired = 입력이 필요합니다
+        bookValidationMessage,
+      );
+      return;
+    }
+
     const formData = new FormData(form);
-    // 독서상태
     const status = formData.get("status");
-    // 독서 시작일
     const startDate = formData.get("startDate");
-    // 독서 종료일
     const endDate = formData.get("endDate");
-    // 별점
     const grade = formData.get("grade");
-    // 책장 색상
     const reportColr = formData.get("reportColr");
-    // 독후감 내용
     const content = formData.get("content");
+
+    const validationMessage = validateReportForm({
+      status,
+      startDate,
+      endDate,
+      grade,
+      reportColr,
+      content,
+    });
+
+    if (validationMessage) {
+      void sweetWarning(
+        message("frontend.alert.inputRequired"), // frontend.alert.inputRequired = 입력이 필요합니다
+        validationMessage,
+      );
+      return;
+    }
 
     const data = {
       reportStat: status as ReadingStatusType,
@@ -38,13 +65,13 @@ export function useSetReportForm(selectedBook: any) {
       reportEndt: endDate as string,
       reportGrde: grade as string,
       reportColr: reportColr as string,
-      reportCntn: content as string,
-      bookTitl: selectedBook.title,
-      bookAthr: selectedBook.author,
-      bookPubl: selectedBook.publisher,
-      bookIsbn: selectedBook.isbn,
-      bookCvim: selectedBook.image,
-      bookDesc: selectedBook.description,
+      reportCntn: sanitizeText(content),
+      bookTitl: stripHtmlTags(selectedBook.title),
+      bookAthr: stripHtmlTags(selectedBook.author),
+      bookPubl: stripHtmlTags(selectedBook.publisher),
+      bookIsbn: sanitizeText(selectedBook.isbn),
+      bookCvim: sanitizeText(selectedBook.image),
+      bookDesc: stripHtmlTags(selectedBook.description),
     };
 
     mutate(data);

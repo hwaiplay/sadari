@@ -4,108 +4,135 @@ import { vars } from "@/app/styles/tokens.css";
 export const page = style({
   minHeight: "100vh",
   backgroundColor: "#ffffff",
-  padding: "24px 0 48px",
 });
 
 export const detail = style({
+  maxWidth: "420px",
+  width: "100%",
+  margin: "0 auto",
+  padding: "22px 20px 44px",
   display: "flex",
   flexDirection: "column",
-  gap: "24px",
+  gap: "26px",
 });
-
-export const actions = style({
-  display: "flex",
-  justifyContent: "flex-end",
-  gap: "8px",
-});
-
-export const actionButton = style({
-  minHeight: "34px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  padding: "0 14px",
-  fontFamily: vars.font.middle,
-  fontSize: "13px",
-  color: vars.color.black,
-  cursor: "pointer",
-});
-
-export const deleteButton = style([
-  actionButton,
-  {
-    color: "#d54848",
-  },
-]);
 
 export const header = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: "18px",
   textAlign: "center",
+  gap: "8px",
+  paddingTop: "4px",
+  paddingBottom: "10px",
 });
 
 export const coverFrame = style({
-  width: "168px",
-  borderRadius: "8px",
+  width: "128px",
+  minHeight: "178px",
+  borderRadius: "6px",
   overflow: "hidden",
-  border: `1px solid ${vars.color.gray300}`,
+  border: `1px solid ${vars.color.gray400}`,
   backgroundColor: "#ffffff",
-  boxShadow: "0 14px 32px rgba(0, 0, 0, 0.1)",
+  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.08)",
 });
 
 export const coverImage = style({
   display: "block",
   width: "100%",
-  aspectRatio: "3 / 4.2",
+  height: "100%",
   objectFit: "cover",
 });
 
 export const title = style({
-  margin: 0,
+  margin: "12px 0 0",
   fontFamily: vars.font.heading,
-  fontSize: "24px",
+  fontSize: "22px",
   lineHeight: 1.35,
   color: vars.color.black,
+  wordBreak: "keep-all",
 });
 
 export const meta = style({
-  margin: "6px 0 0",
-  color: "#767676",
-  fontSize: "14px",
+  margin: 0,
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.45,
+  color: "#666666",
 });
 
-export const panel = style({
+export const bookInfoButton = style({
+  marginTop: "8px",
+  height: "36px",
+  padding: "0 16px",
+  border: `1px solid ${vars.color.black}`,
+  borderRadius: vars.radius.xl,
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  cursor: "pointer",
+});
+
+export const section = style({
   display: "flex",
   flexDirection: "column",
-  gap: "18px",
-  borderTop: `1px solid ${vars.color.gray200}`,
-  paddingTop: "24px",
+  gap: "12px",
+  paddingTop: "2px",
 });
 
 export const sectionTitle = style({
-  margin: "0 0 10px",
+  margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "16px",
+  fontSize: "15px",
   color: vars.color.black,
 });
 
-export const period = style({
-  display: "inline-flex",
+export const statusPill = style({
+  width: "fit-content",
+  minHeight: "30px",
+  padding: "0 12px",
+  display: "flex",
   alignItems: "center",
-  minHeight: "36px",
-  padding: "0 16px",
-  border: `1px solid ${vars.color.gray300}`,
+  justifyContent: "center",
   borderRadius: "999px",
+  backgroundColor: "#f5f5f5",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+});
+
+export const dateStack = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+});
+
+export const dateRow = style({
+  display: "grid",
+  gridTemplateColumns: "52px 1fr",
+  alignItems: "center",
+  gap: "14px",
+});
+
+export const dateLabel = style({
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  color: "#777777",
+});
+
+export const dateValue = style({
+  minHeight: "auto",
+  padding: 0,
+  fontFamily: vars.font.body,
   fontSize: "14px",
+  color: vars.color.black,
 });
 
 export const stars = style({
   display: "flex",
-  gap: "2px",
+  gap: "3px",
   color: "#d3d7dc",
-  fontSize: "28px",
+  fontSize: "34px",
   lineHeight: 1,
 });
 
@@ -113,38 +140,39 @@ export const starFilled = style({
   color: "#ffd966",
 });
 
-export const content = style({
+export const contentBox = style({
   margin: 0,
-  color: "#333333",
-  fontSize: "15px",
-  lineHeight: 1.75,
-  whiteSpace: "pre-wrap",
-});
-
-export const bookInfoGrid = style({
-  display: "grid",
-  gridTemplateColumns: "72px 1fr",
-  gap: "10px 14px",
+  padding: "2px 0 0",
+  fontFamily: vars.font.body,
   fontSize: "14px",
+  lineHeight: 1.8,
+  color: vars.color.black,
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
 });
 
-export const infoLabel = style({
-  color: "#767676",
+export const actions = style({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+  paddingTop: "4px",
+});
+
+export const actionButton = style({
+  height: "44px",
+  border: `1px solid ${vars.color.black}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
   fontFamily: vars.font.middle,
-});
-
-export const infoValue = style({
-  margin: 0,
-  color: vars.color.black,
-});
-
-export const toggleButton = style({
-  marginTop: "10px",
-  border: 0,
-  backgroundColor: "transparent",
-  padding: 0,
-  color: vars.color.black,
-  fontFamily: vars.font.heading,
   fontSize: "14px",
   cursor: "pointer",
 });
+
+export const deleteButton = style([
+  actionButton,
+  {
+    borderColor: "#d84a3a",
+    color: "#d84a3a",
+  },
+]);
