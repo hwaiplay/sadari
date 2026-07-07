@@ -23,6 +23,8 @@ public interface UserMapper {
      * @return count 
      */
     UserDto getUserByIdxx(String idxx);
+
+    UserDto getUserByNumb(Long userNumb);
     
     /**
      * 유저 회원가입
