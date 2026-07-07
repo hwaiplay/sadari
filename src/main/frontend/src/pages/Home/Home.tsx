@@ -9,6 +9,7 @@
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
+import { message } from "@/app/messages/message";
 import clsx from "clsx";
 import { Container } from "@/components/Layout/Container/Container";
 import { container } from "@/components/Layout/Container/container.css";
@@ -32,19 +33,14 @@ function chunkArray<T>(array: T[], size: number) {
 function Home() {
   const { data, isPending } = useGetListQuery();
 
-  // 로딩 중
   if (isPending) {
-    return <Loading title={"목록 조회중"} />;
+    return <Loading title={message("frontend.common.loadingList")} />; // frontend.common.loadingList = 목록 조회중
   }
 
-  // 독후감 리스트
   const bookList = data?.data;
-
-  // 독후감 리스트에서 첫줄(5권) 뽑음
   const firstRow = bookList?.slice(0, 5);
-
-  const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6); // 두번째 줄~끝
-  const rowCount = Math.max(2, rows.length); // 최소 3개의 컨테이너 UI를 위함
+  const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6);
+  const rowCount = Math.max(2, rows.length);
 
   return bookList && data?.code === 200 ? (
     <div className={clsx(styles.homeContainer, container)}>
@@ -70,7 +66,9 @@ function Home() {
     </div>
   ) : (
     <Container className={styles.emptyHomeContainer}>
-      <h1 className={styles.emptyTitle}>첫 책을 꽂아 책장을 채워보세요.</h1>
+      <h1 className={styles.emptyTitle}>
+        {message("frontend.home.empty") /* frontend.home.empty = 첫 책을 꽂아 책장을 채워보세요. */}
+      </h1>
     </Container>
   );
 }

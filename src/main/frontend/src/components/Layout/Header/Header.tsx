@@ -1,9 +1,8 @@
-import { Link, useNavigate } from "react-router-dom";
+import { message } from "@/app/messages/message";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { backpageBtn, header, logo } from "./Header.css";
 import { Container } from "../Container/Container";
-import { useLocation } from "react-router-dom";
 import clsx from "clsx";
-import { Button } from "@/components/Button/Button";
 
 /**
  * fileName       : Header
@@ -19,11 +18,8 @@ import { Button } from "@/components/Button/Button";
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
-
-  // 서브페이지인지 여부 (메인 제외 모든 페이지)
   const isSubPage = location.pathname !== "/home";
 
-  // 이전페이지로 이동 클릭 함수
   const backPrev = () => {
     navigate(-1);
   };
@@ -35,17 +31,21 @@ function Header() {
           <button
             className={backpageBtn}
             type="button"
-            aria-label="이전 페이지로 돌아가기"
+            aria-label={message("frontend.common.back")} // frontend.common.back = 이전 페이지로 돌아가기
             onClick={backPrev}
           >
             <img
               src={"/img/common/icon-backpage.svg"}
-              alt="뒤로가기 화살표 아이콘"
+              alt={message("frontend.common.backIconAlt")} // frontend.common.backIconAlt = 뒤로가기 아이콘
             />
           </button>
         )}
         <Link to="/" className={logo}>
-          <img src={"/img/common/logo-b.svg"} alt="사다리 로고" width={100} />
+          <img
+            src={"/img/common/logo-b.svg"}
+            alt={message("frontend.common.logoAlt")} // frontend.common.logoAlt = 사다리 로고
+            width={100}
+          />
         </Link>
       </Container>
     </header>

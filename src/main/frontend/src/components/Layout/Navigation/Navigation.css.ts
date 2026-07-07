@@ -12,7 +12,8 @@ export const navContainer = style({
   margin: "0 auto",
   display: "flex",
   alignItems: "center",
-  padding: "0 60px",
+  padding: "0 64px",
+  backgroundColor: "#ffffff",
 });
 
 export const whiteBg = style({
@@ -24,6 +25,21 @@ export const navigation = style({
   justifyContent: "space-between",
   alignItems: "center",
   width: "100%",
+});
+
+export const navLink = style({
+  width: "40px",
+  height: "40px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  borderRadius: vars.radius.xl,
+});
+
+export const navIcon = style({
+  width: "24px",
+  height: "24px",
+  display: "block",
 });
 
 export const navMenu = style({
