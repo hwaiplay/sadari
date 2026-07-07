@@ -12,6 +12,7 @@ import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
 import BookInfoPage from "@/pages/Book/Info/BookInfoPage";
 import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
+import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
 
 /**
  * fileName       : Router
@@ -83,6 +84,8 @@ const Router = () => {
 
           {/* 독후감 수정 */}
           <Route path="/book/upt/:id" element={<UpdateReportPage />} />
+
+          <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
         </Route>
       </Routes>
     </>

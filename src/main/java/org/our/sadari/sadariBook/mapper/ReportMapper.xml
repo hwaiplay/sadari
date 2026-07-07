@@ -18,6 +18,7 @@
      LEFT JOIN TM_BOOK_INFO B
            ON A.BOOK_NUMB = B.BOOK_NUMB
         WHERE A.USER_NUMB = #{userNumb}
+     ORDER BY A.REPORT_ENDT DESC
     </select>
 
     <!-- 독후감 상세보기 -->
