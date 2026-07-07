@@ -22,7 +22,7 @@ function Layout({ isMainLayout = true }) {
       <main
         style={{
           paddingTop: isMainLayout ? vars.headerHeight : 0,
-          paddingBottom: "60px",
+          paddingBottom: vars.headerHeight,
         }}
       >
         {isMainLayout ? (

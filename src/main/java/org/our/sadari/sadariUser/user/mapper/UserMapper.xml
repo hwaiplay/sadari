@@ -6,13 +6,25 @@
     <select id="getUserByIdxx" parameterType="string" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
         SELECT 
               USER_NUMB
-            , PROF_PATH
+            , PROF_PATH AS PORF_PATH
             , USER_IDXX
             , USER_NICK
             , USER_PROV
             , USER_ROLE 
         FROM TM_USERXM
         WHERE USER_IDXX = #{userIdxx}
+    </select>
+
+    <select id="getUserByNumb" parameterType="long" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
+        SELECT
+              USER_NUMB
+            , PROF_PATH AS PORF_PATH
+            , USER_IDXX
+            , USER_NICK
+            , USER_PROV
+            , USER_ROLE
+        FROM TM_USERXM
+        WHERE USER_NUMB = #{userNumb}
     </select>
 
     <!-- 신규 회원 가입 -->

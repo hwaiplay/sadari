@@ -43,34 +43,20 @@ export const brand = style({
 });
 
 export const saveButton = style({
-  border: 0,
-  backgroundColor: "transparent",
+  width: "100%",
+  height: "44px",
+  border: `1px solid ${vars.color.black}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.heading,
-  fontSize: "15px",
+  fontSize: "14px",
   cursor: "pointer",
 });
 
-export const coverArea = style({
+export const searchBookArea = style({
   display: "flex",
   justifyContent: "center",
-});
-
-export const coverFrame = style({
-  width: "128px",
-  minHeight: "178px",
-  borderRadius: "6px",
-  overflow: "hidden",
-  border: `1px solid ${vars.color.gray400}`,
-  backgroundColor: "#ffffff",
-  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.08)",
-});
-
-export const coverImage = style({
-  display: "block",
-  width: "100%",
-  height: "100%",
-  objectFit: "cover",
 });
 
 export const fieldStack = style({
@@ -121,7 +107,7 @@ export const statusPill = style({
 });
 
 export const dateRow = style({
-  display: "grid",
+  display: "none",
   gridTemplateColumns: "44px 1fr",
   alignItems: "center",
   gap: "10px",
@@ -161,34 +147,6 @@ export const starLabel = style({
 
 export const starActive = style({
   color: "#ffd966",
-});
-
-export const colorGrid = style({
-  display: "grid",
-  gridTemplateColumns: "repeat(6, 1fr)",
-  gap: "10px",
-});
-
-export const colorOption = style({
-  display: "flex",
-  justifyContent: "center",
-});
-
-export const colorSwatch = style({
-  width: "34px",
-  height: "34px",
-  borderRadius: "999px",
-  border: "2px solid transparent",
-  boxShadow: "inset 0 0 0 1px rgba(0, 0, 0, 0.12)",
-  cursor: "pointer",
-
-  selectors: {
-    [`${hiddenInput}:checked + &`]: {
-      borderColor: vars.color.black,
-      boxShadow:
-        "inset 0 0 0 3px #ffffff, 0 0 0 1px rgba(0, 0, 0, 0.2)",
-    },
-  },
 });
 
 export const textAreaWrap = style({

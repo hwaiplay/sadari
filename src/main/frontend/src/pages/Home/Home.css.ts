@@ -34,6 +34,7 @@ export const emptyTitle = style({
 export const homeContainer = style({
   height: "100svh",
   padding: 0,
+  backgroundColor: "#fffaf3",
 
   "@media": {
     [media.tablet]: {
@@ -45,7 +46,10 @@ export const homeContainer = style({
 export const row5Container = style({
   width: "100%",
   height: "calc(33% + 90px)",
-  backgroundImage: 'url("/img/common/background-top.png")',
+  backgroundColor: "#fffaf3",
+  backgroundImage:
+    'linear-gradient(rgba(255, 250, 243, 0.42), rgba(255, 246, 232, 0.34)), url("/img/common/background-top.png")',
+  backgroundBlendMode: "screen, normal",
   backgroundRepeat: "no-repeat",
   backgroundSize: "cover",
 });
@@ -88,7 +92,10 @@ export const row6 = style({
   gridTemplateColumns: "repeat(6, 1fr)",
   gridTemplateRows: "minmax(0, 1fr)",
   justifyContent: "center",
-  backgroundImage: 'url("/img/common/background-middle.png")',
+  backgroundColor: "#fff6e8",
+  backgroundImage:
+    'linear-gradient(rgba(255, 250, 243, 0.46), rgba(255, 246, 232, 0.36)), url("/img/common/background-middle.png")',
+  backgroundBlendMode: "screen, normal",
 
   // "@media": {
   //   [media.tablet]: {
