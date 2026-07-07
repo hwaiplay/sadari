@@ -1,4 +1,5 @@
-import { navContainer, navigation, navMenu, whiteBg } from "./Navigation.css";
+import { message } from "@/app/messages/message";
+import { navContainer, navigation, navIcon, navLink, whiteBg } from "./Navigation.css";
 import { Container } from "../Container/Container";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import { clsx } from "clsx";
@@ -22,14 +23,26 @@ function Navigation({ isMain }: NavigationProps) {
   return (
     <Container className={clsx(navContainer, isMain && whiteBg)}>
       <nav className={navigation}>
-        <LinkButton link="/home">
-          <img src={"/img/common/icon-home.svg"} alt="홈 아이콘" />
+        <LinkButton link="/home" className={navLink}>
+          <img
+            className={navIcon}
+            src={"/img/common/icon-home.svg"}
+            alt={message("frontend.common.homeIconAlt")} // frontend.common.homeIconAlt = 홈 아이콘
+          />
         </LinkButton>
-        <LinkButton link="/set">
-          <img src={"/img/common/icon-add.svg"} alt="기록하기 아이콘" />
+        <LinkButton link="/set" className={navLink}>
+          <img
+            className={navIcon}
+            src={"/img/common/icon-add.svg"}
+            alt={message("frontend.common.addIconAlt")} // frontend.common.addIconAlt = 기록하기 아이콘
+          />
         </LinkButton>
-        <LinkButton link="/mypage">
-          <img src={"/img/common/icon-user.svg"} alt="마이페이지" />
+        <LinkButton link="/mypage" className={navLink}>
+          <img
+            className={navIcon}
+            src={"/img/common/icon-user.svg"}
+            alt={message("frontend.common.myPageIconAlt")} // frontend.common.myPageIconAlt = 마이페이지 아이콘
+          />
         </LinkButton>
       </nav>
     </Container>

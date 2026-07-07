@@ -34,11 +34,24 @@
              , B.BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_NUMB = #{reportNumb}
+    </select>
+
+    <!-- 독후감에 연결된 책 정보 상세보기 -->
+    <select id="getBookInfo" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.BookDto">
+        SELECT B.BOOK_NUMB
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
              , B.BOOK_ISBN
              , B.BOOK_PUBL
              , B.BOOK_DESC
           FROM TM_BOOK_REPORT A
-     LEFT JOIN TM_BOOK_INFO B
+    INNER JOIN TM_BOOK_INFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
          WHERE A.USER_NUMB = #{userNumb}
            AND A.REPORT_NUMB = #{reportNumb}

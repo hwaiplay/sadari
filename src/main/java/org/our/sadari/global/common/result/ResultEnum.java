@@ -56,6 +56,9 @@ public enum ResultEnum {
     // 요청값 검증 실패 응답이다.
     COMMON_INVALID_REQUEST(2009, "common.alert.0009"),
 
+    // 독후감 내용 바이트 초과 응답이다.
+    COMMON_REPORT_CONTENT_TOO_LONG(2010, "common.alert.0010"),
+
     /**
      * 올바르지 않은 접근입니다.
      */
