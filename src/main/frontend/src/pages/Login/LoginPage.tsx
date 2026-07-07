@@ -1,3 +1,4 @@
+import { message } from "@/app/messages/message";
 import { Link } from "react-router-dom";
 import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
 
@@ -20,13 +21,15 @@ function LoginPage() {
   return (
     <main className={loginContainer}>
       <div className={content}>
-        <img src={"/img/common/logo-b.svg"} alt="사다리 로고" />
+        <img
+          src={"/img/common/logo-b.svg"}
+          alt={message("frontend.common.logoAlt")} // frontend.common.logoAlt = 사다리 로고
+        />
         <h1 className={title}>
-          {`간편하게 로그인하고
-          독후감 기록으로 책장을 완성해보세요.`}
+          {message("frontend.auth.loginCopy") /* frontend.auth.loginCopy = 간편하게 로그인하고 독후감 기록으로 책장을 완성해보세요. */}
         </h1>
         <Link to={KAKAO_AUTH_URL} className={kakaoLoginBtn}>
-          카카오로 3초만에 시작하기
+          {message("frontend.auth.kakaoStart") /* frontend.auth.kakaoStart = 카카오로 3초만에 시작하기 */}
         </Link>
       </div>
     </main>

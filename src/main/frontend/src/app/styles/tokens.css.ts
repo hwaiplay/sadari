@@ -53,5 +53,5 @@ export const vars = createGlobalTheme(":root", {
     md: "273px",
   },
 
-  headerHeight: "60px",
+  headerHeight: "52px",
 });

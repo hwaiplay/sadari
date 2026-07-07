@@ -9,6 +9,7 @@
  * 2026-03-21       Hanwon.Jang       최초 생성
  */
 
+import { message } from "@/app/messages/message";
 import { Link } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
@@ -35,7 +36,9 @@ const SearchBookButton = () => {
           strokeLinecap="round"
         />
       </svg>
-      <p className={searchBtnText}>책 검색하기</p>
+      <p className={searchBtnText}>
+        {message("frontend.book.search.open") /* frontend.book.search.open = 책 검색하기 */}
+      </p>
     </Link>
   );
 };

@@ -3,7 +3,6 @@ package org.our.sadari.sadariBook.mapper;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
-import org.our.sadari.sadariUser.user.dto.UserDto;
 
 import java.util.List;
 
@@ -22,21 +21,32 @@ import java.util.List;
 public interface ReportMapper {
 
     /**
-     * 독후감 리스트
+     * 독후감 리스트 조회
+     * @Author SeungHyeon.Kang
      * @param req
      * @return
      */
     List<ReportDto> getReportList(ReportDto req);
 
     /**
-     * 독후감 상세
+     * 독후감 상세 조회
+     * @Author SeungHyeon.Kang
      * @param req
      * @return
      */
     ReportDto getReportDtl(ReportDto req);
 
     /**
+     * 도서 정보 상세 조회
+     * @Author SeungHyeon.Kang
+     * @param req
+     * @return
+     */
+    BookDto getBookInfo(ReportDto req);
+
+    /**
      * 책 중복 검사
+     * @Author SeungHyeon.Kang
      * @param bookDto
      * @return
      */
@@ -44,6 +54,7 @@ public interface ReportMapper {
 
     /**
      * 책 중복일 때 bookNumb 조회
+     * @Author SeungHyeon.Kang
      * @param bookIsbn
      * @return
      */
@@ -51,6 +62,7 @@ public interface ReportMapper {
 
     /**
      * 책 저장
+     * @Author SeungHyeon.Kang
      * @param bookDto
      * @return
      */
@@ -58,6 +70,7 @@ public interface ReportMapper {
     
     /**
      * 독후감 저장
+     * @Author SeungHyeon.Kang
      * @param reportDto
      * @return
      */
@@ -65,6 +78,7 @@ public interface ReportMapper {
     
     /**
      * 독후감 수정
+     * @Author SeungHyeon.Kang
      * @param reportDto
      * @return
      */
@@ -72,6 +86,7 @@ public interface ReportMapper {
     
     /** 
      * 독후감 삭제
+     * @Author SeungHyeon.Kang
      * @param reportDto
      * @return
      */

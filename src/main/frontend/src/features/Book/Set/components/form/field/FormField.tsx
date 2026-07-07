@@ -10,7 +10,7 @@
  */
 
 import React, { ReactNode } from "react";
-import { fieldTitle } from "./FormField.css";
+import { field, fieldTitle } from "./FormField.css";
 
 interface FormFieldProps {
   title: string;
@@ -19,7 +19,7 @@ interface FormFieldProps {
 
 const FormField = ({ title, children }: FormFieldProps) => {
   return (
-    <div>
+    <div className={field}>
       <h1 className={fieldTitle}>{title}</h1>
       {children}
     </div>

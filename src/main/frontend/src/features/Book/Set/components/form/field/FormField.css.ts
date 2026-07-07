@@ -12,7 +12,14 @@
 import { style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
+export const field = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px",
+});
+
 export const fieldTitle = style({
+  margin: 0,
   fontFamily: vars.font.heading,
   fontSize: "16px",
 });
