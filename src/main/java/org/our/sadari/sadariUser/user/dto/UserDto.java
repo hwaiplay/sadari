@@ -2,9 +2,6 @@ package org.our.sadari.sadariUser.user.dto;
 
 import java.time.LocalDateTime;
 
-import org.springframework.data.annotation.CreatedDate;
-
-import jakarta.persistence.Column;
 import lombok.Data;
 
 /**
