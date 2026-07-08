@@ -89,17 +89,17 @@ export const row5 = style({
 export const row6 = style({
   height: "calc(33% + 30px)",
   paddingTop: "30px",
-  gridTemplateColumns: "repeat(6, 1fr)",
+  gridTemplateColumns: "repeat(6, 50px)",
   gridTemplateRows: "minmax(0, 1fr)",
-  justifyContent: "center",
+  justifyContent: "flex-start",
   backgroundColor: "#fff6e8",
   backgroundImage:
     'linear-gradient(rgba(255, 250, 243, 0.46), rgba(255, 246, 232, 0.36)), url("/img/common/background-middle.png")',
   backgroundBlendMode: "screen, normal",
 
-  // "@media": {
-  //   [media.tablet]: {
-  //     gridTemplateColumns: "repeat(6, 84px)",
-  //   },
-  // },
+  "@media": {
+    [media.tablet]: {
+      gridTemplateColumns: "repeat(6, 84px)",
+    },
+  },
 });
