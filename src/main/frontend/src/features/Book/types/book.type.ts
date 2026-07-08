@@ -122,7 +122,10 @@ export interface HomeBookType {
   reportNumb: number;
   bookNumb: number;
   bookTitl: string;
+  bookCvim?: string;
+  reportEndt?: string;
   reportColr?: string;
+  readingYn?: "Y" | "N";
 }
 
 // 독후감 수정 시 파라미터 타입

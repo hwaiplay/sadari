@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "@/components/Loading/Loading";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
@@ -33,8 +34,12 @@ const UpdateReportPage = () => {
 
   const { data, isPending } = useBookDetail(idNum);
   const { mutate } = useUpdateMutation();
-
   const bookData = data?.data;
+  const pageStyle = bookData?.bookCvim
+    ? ({
+        "--book-bg-image": `url("${bookData.bookCvim}")`,
+      } as CSSProperties)
+    : undefined;
 
   useEffect(() => {
     if (!bookData) {
@@ -50,11 +55,11 @@ const UpdateReportPage = () => {
   }, [bookData]);
 
   if (!id || isNaN(idNum)) {
-    return <div>{message("frontend.common.invalidAccess")}</div>; // frontend.common.invalidAccess = 잘못된 접근입니다
+    return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 
   if (isPending) {
-    return <Loading title={message("frontend.report.loading.detail")} />; // frontend.report.loading.detail = 독후감을 불러오는 중
+    return <Loading title={message("frontend.report.loading.detail")} />;
   }
 
   const setFormAction = (e: React.FormEvent<HTMLFormElement>) => {
@@ -62,7 +67,6 @@ const UpdateReportPage = () => {
 
     const formData = new FormData(e.currentTarget);
     const reportNumb = idNum;
-
     const validationMessage = validateReportForm({
       status: formData.get("status"),
       startDate: formData.get("startDate"),
@@ -73,10 +77,7 @@ const UpdateReportPage = () => {
     });
 
     if (validationMessage) {
-      void sweetWarning(
-        message("frontend.alert.inputRequired"), // frontend.alert.inputRequired = 입력이 필요합니다
-        validationMessage,
-      );
+      void sweetWarning(message("frontend.alert.inputRequired"), validationMessage);
       return;
     }
 
@@ -94,7 +95,7 @@ const UpdateReportPage = () => {
   };
 
   return bookData ? (
-    <main className={styles.page}>
+    <main className={styles.page} style={pageStyle}>
       <form className={styles.form} onSubmit={setFormAction}>
         <BookSummary
           image={bookData.bookCvim}
@@ -103,99 +104,110 @@ const UpdateReportPage = () => {
           publisher={bookData.bookPubl}
         />
 
-        <FormField title={message("frontend.report.field.status")}> {/* frontend.report.field.status = 독서 상태 */}
-          <div className={styles.statusContainer}>
-            {[
-              { label: message("frontend.report.status.done"), value: "done" }, // frontend.report.status.done = 다 읽었어요
-              { label: message("frontend.report.status.reading"), value: "reading" }, // frontend.report.status.reading = 읽고 있어요
-              { label: message("frontend.report.status.stopped"), value: "stopped" }, // frontend.report.status.stopped = 중단했어요
-            ].map((item) => (
-              <label className={styles.statusOption} key={item.value}>
-                <input
-                  className={styles.hiddenInput}
-                  type="radio"
-                  name="status"
-                  value={item.value}
-                  checked={status === item.value}
-                  onChange={() => setStatus(item.value as ReadingStatusType)}
-                />
-                <span className={styles.statusPill}>{item.label}</span>
-              </label>
-            ))}
-          </div>
-        </FormField>
+        <div className={styles.contentPanel}>
+          <FormField title={message("frontend.report.field.status")}>
+            <div className={styles.statusContainer}>
+              {[
+                { label: message("frontend.report.status.done"), value: "done" },
+                {
+                  label: message("frontend.report.status.reading"),
+                  value: "reading",
+                },
+                {
+                  label: message("frontend.report.status.stopped"),
+                  value: "stopped",
+                },
+              ].map((item) => (
+                <label className={styles.statusOption} key={item.value}>
+                  <input
+                    className={styles.hiddenInput}
+                    type="radio"
+                    name="status"
+                    value={item.value}
+                    checked={status === item.value}
+                    onChange={() => setStatus(item.value as ReadingStatusType)}
+                  />
+                  <span className={styles.statusPill}>{item.label}</span>
+                </label>
+              ))}
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.period")}> {/* frontend.report.field.period = 독서 기간 */}
-          <div className={styles.fieldStack}>
-            <CalendarDatePicker
-              name="startDate"
-              label={message("frontend.report.field.startDate")} // frontend.report.field.startDate = 시작일
-              defaultValue={bookData.reportStdt}
-              placeholder={message("frontend.report.placeholder.startDate")} // frontend.report.placeholder.startDate = 시작일 선택
-            />
-            <CalendarDatePicker
-              name="endDate"
-              label={message("frontend.report.field.endDate")} // frontend.report.field.endDate = 종료일
-              defaultValue={bookData.reportEndt}
-              placeholder={message("frontend.report.placeholder.endDate")} // frontend.report.placeholder.endDate = 종료일 선택
-            />
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.period")}>
+            <div className={styles.fieldStack}>
+              <CalendarDatePicker
+                name="startDate"
+                label={message("frontend.report.field.startDate")}
+                defaultValue={bookData.reportStdt}
+                placeholder={message("frontend.report.placeholder.startDate")}
+              />
+              <CalendarDatePicker
+                name="endDate"
+                label={message("frontend.report.field.endDate")}
+                defaultValue={bookData.reportEndt}
+                placeholder={message("frontend.report.placeholder.endDate")}
+              />
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.grade")}> {/* frontend.report.field.grade = 평점 */}
-          <div className={styles.starGroup} aria-label={message("frontend.report.gradeAria")}> {/* frontend.report.gradeAria = 평점 선택 */}
-            {[1, 2, 3, 4, 5].map((value) => (
-              <label
-                key={value}
-                className={`${styles.starLabel} ${
-                  value <= grade ? styles.starActive : ""
-                }`}
-                htmlFor={`grade${value}`}
-              >
-                ★
-                <input
-                  className={styles.hiddenInput}
-                  type="radio"
-                  name="grade"
-                  id={`grade${value}`}
-                  value={value}
-                  checked={grade === value}
-                  onChange={() => setGrade(value)}
-                />
-              </label>
-            ))}
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.grade")}>
+            <div
+              className={styles.starGroup}
+              aria-label={message("frontend.report.gradeAria")}
+            >
+              {[1, 2, 3, 4, 5].map((value) => (
+                <label
+                  key={value}
+                  className={`${styles.starLabel} ${
+                    value <= grade ? styles.starActive : ""
+                  }`}
+                  htmlFor={`grade${value}`}
+                >
+                  ★
+                  <input
+                    className={styles.hiddenInput}
+                    type="radio"
+                    name="grade"
+                    id={`grade${value}`}
+                    value={value}
+                    checked={grade === value}
+                    onChange={() => setGrade(value)}
+                  />
+                </label>
+              ))}
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.color")}> {/* frontend.report.field.color = 책장 색상 */}
-          <ColorPickerField value={reportColr} onChange={setReportColr} />
-        </FormField>
+          <FormField title={message("frontend.report.field.color")}>
+            <ColorPickerField value={reportColr} onChange={setReportColr} />
+          </FormField>
 
-        <FormField title={message("frontend.report.field.content")}> {/* frontend.report.field.content = 기록 */}
-          <div className={styles.textAreaWrap}>
-            <span className={styles.counter}>
-              ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
-            </span>
-            <textarea
-              className={styles.textArea}
-              name="content"
-              id="content"
-              placeholder={message("frontend.report.placeholder.content")} // frontend.report.placeholder.content = 독후감을 남겨보세요
-              defaultValue={bookData.reportCntn}
-              onChange={(e) => {
-                const nextValue = truncateUtf8Bytes(e.currentTarget.value);
-                e.currentTarget.value = nextValue;
-                setContentByteLength(
-                  getReportContentStorageByteLength(nextValue),
-                );
-              }}
-            />
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.content")}>
+            <div className={styles.textAreaWrap}>
+              <span className={styles.counter}>
+                ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
+              </span>
+              <textarea
+                className={styles.textArea}
+                name="content"
+                id="content"
+                placeholder={message("frontend.report.placeholder.content")}
+                defaultValue={bookData.reportCntn}
+                onChange={(e) => {
+                  const nextValue = truncateUtf8Bytes(e.currentTarget.value);
+                  e.currentTarget.value = nextValue;
+                  setContentByteLength(
+                    getReportContentStorageByteLength(nextValue),
+                  );
+                }}
+              />
+            </div>
+          </FormField>
 
-        <button className={styles.saveButton} type="submit">
-          {message("frontend.report.save") /* frontend.report.save = 저장 */}
-        </button>
+          <button className={styles.saveButton} type="submit">
+            {message("frontend.report.save")}
+          </button>
+        </div>
       </form>
     </main>
   ) : (
