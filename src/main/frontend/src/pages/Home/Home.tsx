@@ -1,74 +1,82 @@
-/**
- * fileName       : HOME
- * author         : Hanwon.Jang
- * date           : 2026-03-19
- * description    : 메인 페이지
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-19        Hanwon.Jang       주석 추가
- */
-
 import { message } from "@/app/messages/message";
 import clsx from "clsx";
 import { Container } from "@/components/Layout/Container/Container";
 import { container } from "@/components/Layout/Container/container.css";
 import Book from "@/features/Home/components/Book";
-import { tilt } from "@/features/Home/components/Book.css";
 import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 
-function chunkArray<T>(array: T[], size: number) {
-  const result = [];
+type MonthlyBookGroup = {
+  key: string;
+  label: string;
+  books: HomeBookType[];
+};
 
-  for (let i = 0; i < array.length; i += size) {
-    result?.push(array.slice(i, i + size));
+function getMonthGroup(book: HomeBookType) {
+  const match = book.reportEndt?.match(/^(\d{4})-(\d{2})/);
+
+  if (!match) {
+    return {
+      key: "unknown",
+      label: "날짜 없음",
+    };
   }
 
-  return result;
+  const [, year, month] = match;
+  return {
+    key: `${year}-${month}`,
+    label: `${year}년 ${Number(month)}월`,
+  };
+}
+
+function groupBooksByMonth(bookList: HomeBookType[]) {
+  return bookList.reduce<MonthlyBookGroup[]>((groups, book) => {
+    const monthGroup = getMonthGroup(book);
+    const currentGroup = groups[groups.length - 1];
+
+    if (currentGroup?.key === monthGroup.key) {
+      currentGroup.books.push(book);
+      return groups;
+    }
+
+    groups.push({
+      ...monthGroup,
+      books: [book],
+    });
+    return groups;
+  }, []);
 }
 
 function Home() {
   const { data, isPending } = useGetListQuery();
 
   if (isPending) {
-    return <Loading title={message("frontend.common.loadingList")} />; // frontend.common.loadingList = 목록 조회중
+    return <Loading title={message("frontend.common.loadingList")} />;
   }
 
-  const bookList = data?.data;
-  const firstRow = bookList?.slice(0, 5);
-  const rows: HomeBookType[][] = chunkArray(bookList.slice(5), 6);
-  const rowCount = Math.max(2, rows.length);
+  const bookList = data?.data ?? [];
+  const monthlyBookGroups = groupBooksByMonth(bookList);
 
-  return bookList && data?.code === 200 ? (
+  return data?.code === 200 && bookList.length > 0 ? (
     <div className={clsx(styles.homeContainer, container)}>
-      <div className={styles.row5Container}>
-        <div className={clsx(styles.row5, styles.row)}>
-          {firstRow.map((book: HomeBookType, index: number) => (
-            <Book
-              key={book.reportNumb}
-              {...book}
-              className={index === firstRow.length - 5 ? tilt : ""}
-            />
-          ))}
-        </div>
+      <div className={styles.monthGroupStack}>
+        {monthlyBookGroups.map((group) => (
+          <section className={styles.monthGroup} key={group.key}>
+            <div className={styles.monthLabel}>{group.label}</div>
+            <div className={styles.bookGrid}>
+              {group.books.map((book: HomeBookType) => (
+                <Book key={book.reportNumb} {...book} />
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
-
-      {Array.from({ length: rowCount }).map((_, rowIndex) => (
-        <div className={clsx(styles.row6, styles.row)} key={rowIndex}>
-          {rows[rowIndex]?.map((book) => (
-            <Book key={book.reportNumb} {...book} />
-          ))}
-        </div>
-      ))}
     </div>
   ) : (
     <Container className={styles.emptyHomeContainer}>
-      <h1 className={styles.emptyTitle}>
-        {message("frontend.home.empty") /* frontend.home.empty = 첫 책을 꽂아 책장을 채워보세요. */}
-      </h1>
+      <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>
     </Container>
   );
 }

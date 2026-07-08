@@ -1,25 +1,20 @@
 package org.our.sadari.sadariUser.auth.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
-import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.sadariUser.auth.dto.KakaoAccountDto;
 import org.our.sadari.sadariUser.auth.dto.KakaoTokenDto;
-import org.our.sadari.sadariUser.auth.entity.TokenHistoryEntity;
-import org.our.sadari.sadariUser.auth.entity.UserEntity;
 import org.our.sadari.sadariUser.auth.provider.KakaoAuthProvider;
-import org.our.sadari.sadariUser.auth.repository.TokenHistoryRepository;
-import org.our.sadari.sadariUser.auth.repository.UserRepository;
 import org.our.sadari.sadariUser.user.dto.TokenHistoryDto;
 import org.our.sadari.sadariUser.user.dto.UserDto;
 import org.our.sadari.sadariUser.user.mapper.TokenHistoryMapper;
 import org.our.sadari.sadariUser.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 

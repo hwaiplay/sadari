@@ -3,6 +3,7 @@ import FormField from "@/features/Book/Set/components/form/field/FormField";
 import * as styles from "./SetReportPage.css";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import { useLocation, useNavigate } from "react-router-dom";
+import type { CSSProperties } from "react";
 import { useState } from "react";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
@@ -30,6 +31,11 @@ function SetReportPage() {
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { isPending, handleSubmit } = useSetReportForm(selectedBook);
+  const pageStyle = selectedBook?.image
+    ? ({
+        "--book-bg-image": `url("${selectedBook.image}")`,
+      } as CSSProperties)
+    : undefined;
 
   const formAction = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -37,9 +43,9 @@ function SetReportPage() {
   };
 
   return isPending ? (
-    <Loading title={message("frontend.report.loading.create")} /> // frontend.report.loading.create = 등록중
+    <Loading title={message("frontend.report.loading.create")} />
   ) : (
-    <main className={styles.page}>
+    <main className={styles.page} style={pageStyle}>
       <form className={styles.form} onSubmit={formAction}>
         {selectedBook?.image ? (
           <BookSummary
@@ -47,6 +53,9 @@ function SetReportPage() {
             title={selectedBook.title}
             author={selectedBook.author}
             publisher={selectedBook.publisher}
+            onShowBookInfo={() =>
+              navigate("/book/search/info", { state: { book: selectedBook } })
+            }
             onChangeBook={() =>
               navigate("/book/search", { state: { keepSearchResult: true } })
             }
@@ -57,96 +66,107 @@ function SetReportPage() {
           </div>
         )}
 
-        <FormField title={message("frontend.report.field.status")}> {/* frontend.report.field.status = 독서 상태 */}
-          <div className={styles.statusContainer}>
-            {[
-              { label: message("frontend.report.status.done"), value: "done" }, // frontend.report.status.done = 다 읽었어요
-              { label: message("frontend.report.status.reading"), value: "reading" }, // frontend.report.status.reading = 읽고 있어요
-              { label: message("frontend.report.status.stopped"), value: "stopped" }, // frontend.report.status.stopped = 중단했어요
-            ].map((item) => (
-              <label className={styles.statusOption} key={item.value}>
-                <input
-                  className={styles.hiddenInput}
-                  type="radio"
-                  name="status"
-                  value={item.value}
-                  checked={status === item.value}
-                  onChange={() => setStatus(item.value as ReadingStatusType)}
-                />
-                <span className={styles.statusPill}>{item.label}</span>
-              </label>
-            ))}
-          </div>
-        </FormField>
+        <div className={styles.contentPanel}>
+          <FormField title={message("frontend.report.field.status")}>
+            <div className={styles.statusContainer}>
+              {[
+                { label: message("frontend.report.status.done"), value: "done" },
+                {
+                  label: message("frontend.report.status.reading"),
+                  value: "reading",
+                },
+                {
+                  label: message("frontend.report.status.stopped"),
+                  value: "stopped",
+                },
+              ].map((item) => (
+                <label className={styles.statusOption} key={item.value}>
+                  <input
+                    className={styles.hiddenInput}
+                    type="radio"
+                    name="status"
+                    value={item.value}
+                    checked={status === item.value}
+                    onChange={() => setStatus(item.value as ReadingStatusType)}
+                  />
+                  <span className={styles.statusPill}>{item.label}</span>
+                </label>
+              ))}
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.period")}> {/* frontend.report.field.period = 독서 기간 */}
-          <div className={styles.fieldStack}>
-            <CalendarDatePicker
-              name="startDate"
-              label={message("frontend.report.field.startDate")} // frontend.report.field.startDate = 시작일
-              placeholder={message("frontend.report.placeholder.startDate")} // frontend.report.placeholder.startDate = 시작일 선택
-            />
-            <CalendarDatePicker
-              name="endDate"
-              label={message("frontend.report.field.endDate")} // frontend.report.field.endDate = 종료일
-              placeholder={message("frontend.report.placeholder.endDate")} // frontend.report.placeholder.endDate = 종료일 선택
-            />
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.period")}>
+            <div className={styles.fieldStack}>
+              <CalendarDatePicker
+                name="startDate"
+                label={message("frontend.report.field.startDate")}
+                placeholder={message("frontend.report.placeholder.startDate")}
+              />
+              <CalendarDatePicker
+                name="endDate"
+                label={message("frontend.report.field.endDate")}
+                placeholder={message("frontend.report.placeholder.endDate")}
+              />
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.grade")}> {/* frontend.report.field.grade = 평점 */}
-          <div className={styles.starGroup} aria-label={message("frontend.report.gradeAria")}> {/* frontend.report.gradeAria = 평점 선택 */}
-            {[1, 2, 3, 4, 5].map((value) => (
-              <label
-                key={value}
-                className={`${styles.starLabel} ${
-                  value <= grade ? styles.starActive : ""
-                }`}
-                htmlFor={`grade${value}`}
-              >
-                ★
-                <input
-                  className={styles.hiddenInput}
-                  type="radio"
-                  name="grade"
-                  id={`grade${value}`}
-                  value={value}
-                  checked={grade === value}
-                  onChange={() => setGrade(value)}
-                />
-              </label>
-            ))}
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.grade")}>
+            <div
+              className={styles.starGroup}
+              aria-label={message("frontend.report.gradeAria")}
+            >
+              {[1, 2, 3, 4, 5].map((value) => (
+                <label
+                  key={value}
+                  className={`${styles.starLabel} ${
+                    value <= grade ? styles.starActive : ""
+                  }`}
+                  htmlFor={`grade${value}`}
+                >
+                  ★
+                  <input
+                    className={styles.hiddenInput}
+                    type="radio"
+                    name="grade"
+                    id={`grade${value}`}
+                    value={value}
+                    checked={grade === value}
+                    onChange={() => setGrade(value)}
+                  />
+                </label>
+              ))}
+            </div>
+          </FormField>
 
-        <FormField title={message("frontend.report.field.color")}> {/* frontend.report.field.color = 책장 색상 */}
-          <ColorPickerField value={reportColr} onChange={setReportColr} />
-        </FormField>
+          <FormField title={message("frontend.report.field.color")}>
+            <ColorPickerField value={reportColr} onChange={setReportColr} />
+          </FormField>
 
-        <FormField title={message("frontend.report.field.content")}> {/* frontend.report.field.content = 기록 */}
-          <div className={styles.textAreaWrap}>
-            <span className={styles.counter}>
-              ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
-            </span>
-            <textarea
-              className={styles.textArea}
-              name="content"
-              id="content"
-              placeholder={message("frontend.report.placeholder.content")} // frontend.report.placeholder.content = 독후감을 남겨보세요
-              onChange={(e) => {
-                const nextValue = truncateUtf8Bytes(e.currentTarget.value);
-                e.currentTarget.value = nextValue;
-                setContentByteLength(
-                  getReportContentStorageByteLength(nextValue),
-                );
-              }}
-            />
-          </div>
-        </FormField>
+          <FormField title={message("frontend.report.field.content")}>
+            <div className={styles.textAreaWrap}>
+              <span className={styles.counter}>
+                ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
+              </span>
+              <textarea
+                className={styles.textArea}
+                name="content"
+                id="content"
+                placeholder={message("frontend.report.placeholder.content")}
+                onChange={(e) => {
+                  const nextValue = truncateUtf8Bytes(e.currentTarget.value);
+                  e.currentTarget.value = nextValue;
+                  setContentByteLength(
+                    getReportContentStorageByteLength(nextValue),
+                  );
+                }}
+              />
+            </div>
+          </FormField>
 
-        <button className={styles.saveButton} type="submit">
-          {message("frontend.report.save") /* frontend.report.save = 저장 */}
-        </button>
+          <button className={styles.saveButton} type="submit">
+            {message("frontend.report.save")}
+          </button>
+        </div>
       </form>
     </main>
   );
