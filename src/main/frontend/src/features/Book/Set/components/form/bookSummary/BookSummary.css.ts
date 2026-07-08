@@ -6,17 +6,20 @@ export const coverArea = style({
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  gap: "12px",
+  gap: "14px",
+  padding: "48px 24px 42px",
+  borderRadius: "14px",
+  backgroundColor: "rgba(255, 255, 255, 0.94)",
+  boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
 });
 
 export const coverFrame = style({
-  width: "128px",
-  minHeight: "178px",
+  width: "126px",
+  aspectRatio: "2 / 3",
   borderRadius: "6px",
   overflow: "hidden",
-  border: `1px solid ${vars.color.gray400}`,
   backgroundColor: "#ffffff",
-  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.08)",
+  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
 });
 
 export const coverImage = style({
@@ -31,15 +34,15 @@ export const bookMeta = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: "4px",
+  gap: "5px",
   textAlign: "center",
 });
 
 export const bookTitle = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "17px",
-  lineHeight: 1.4,
+  fontSize: "20px",
+  lineHeight: 1.35,
   color: vars.color.black,
   wordBreak: "keep-all",
 });
@@ -52,7 +55,14 @@ export const bookSubInfo = style({
   color: "#666666",
 });
 
-export const changeButton = style({
+export const buttonGroup = style({
+  display: "flex",
+  flexWrap: "wrap",
+  justifyContent: "center",
+  gap: "8px",
+});
+
+export const bookInfoButton = style({
   height: "34px",
   padding: "0 14px",
   border: `1px solid ${vars.color.gray400}`,
@@ -63,3 +73,10 @@ export const changeButton = style({
   fontSize: "13px",
   cursor: "pointer",
 });
+
+export const changeButton = style([
+  bookInfoButton,
+  {
+    borderColor: "rgba(21, 21, 21, 0.22)",
+  },
+]);
