@@ -39,4 +39,6 @@ public class ReportDto extends BookDto {
     @NotBlank
     @Size(max = 4000)
     private String reportCntn;
+
+    private String readingYn;
 }

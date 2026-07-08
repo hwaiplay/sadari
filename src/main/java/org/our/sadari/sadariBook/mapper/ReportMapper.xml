@@ -14,6 +14,8 @@
              , A.REPORT_STAT
              , A.REPORT_STDT
              , B.BOOK_TITL
+             , B.BOOK_CVIM
+             , CASE WHEN A.REPORT_STAT = 'reading' THEN 'Y' ELSE 'N' END AS READING_YN
           FROM TM_BOOK_REPORT A
      LEFT JOIN TM_BOOK_INFO B
            ON A.BOOK_NUMB = B.BOOK_NUMB

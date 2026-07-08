@@ -13,7 +13,28 @@ export const navContainer = style({
   display: "flex",
   alignItems: "center",
   padding: "0 64px",
-  backgroundColor: "#ffffff",
+  background:
+    "linear-gradient(0deg, #ffffff 0%, rgba(255, 255, 255, 0.98) 60%, rgba(255, 255, 255, 0.86) 84%, rgba(255, 255, 255, 0) 100%)",
+
+  selectors: {
+    "&::before": {
+      content: "",
+      position: "absolute",
+      bottom: "74%",
+      left: 0,
+      right: 0,
+      height: "42px",
+      pointerEvents: "none",
+      background:
+        "linear-gradient(0deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.28) 52%, rgba(255, 255, 255, 0) 100%)",
+      backdropFilter: "blur(8px)",
+      WebkitBackdropFilter: "blur(8px)",
+      maskImage:
+        "linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
+      WebkitMaskImage:
+        "linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
+    },
+  },
 });
 
 export const whiteBg = style({
@@ -21,6 +42,8 @@ export const whiteBg = style({
 });
 
 export const navigation = style({
+  position: "relative",
+  zIndex: 1,
   display: "flex",
   justifyContent: "space-between",
   alignItems: "center",
