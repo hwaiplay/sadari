@@ -9,7 +9,7 @@ export const emptyHomeContainer = style({
   // backgroundImage: 'url("/img/common/background-empty.png")',
   // backgroundRepeat: "no-repeat",
   // backgroundSize: "cover",
-  backgroundColor:'#f3f3f3',
+  backgroundColor:'#fff',
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -25,7 +25,7 @@ export const homeContainer = style({
   minHeight: "100svh",
   paddingTop: "82px",
   paddingBottom: "96px",
-  backgroundColor:'#f3f3f3',
+  backgroundColor:'#fff',
 
   width: "100%",
   margin: "0 auto",

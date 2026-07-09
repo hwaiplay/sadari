@@ -13,11 +13,10 @@ export const coverWrap = style({
   aspectRatio: "2 / 3",
   borderRadius: "6px",
   backgroundColor: "#ffffff",
-  // boxShadow: "0 2px 8px rgba(0, 0, 0, 0.14)",
   overflow: "hidden",
   border: '1px solid',
-  borderColor:vars.color.gray200
-
+  borderColor:vars.color.gray200,
+  boxShadow: 'rgba(99, 99, 99, 0.2) 0px 2px 8px 0px'
 });
 
 export const cover = style({

@@ -17,22 +17,10 @@ import {useEffect, useState} from "react";
  */
 
 function Layout({ isMainLayout = true }) {
-   const [headerActive, setHeaderActive] = useState<boolean>(false)
-
-    useEffect(() => {
-        const handleScroll = () => {
-            const isActive = window.scrollY > 5;
-            setHeaderActive(isActive);
-        };
-
-        window.addEventListener("scroll", handleScroll);
-
-        return () => window.removeEventListener("scroll", handleScroll);
-    }, []);
 
     return (
     <div>
-      <Header headerActive={headerActive}   />
+      <Header   />
       <main
         style={{
           paddingTop: isMainLayout ? vars.headerHeight : 0,
