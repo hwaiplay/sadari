@@ -4,33 +4,39 @@ import * as styles from "./SetReportPage.css";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
 import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
-import ColorPickerField from "@/features/Book/Set/components/form/colorPickerField/ColorPickerField";
+import ColorCodeField from "@/features/Book/Set/components/form/colorCodeField/ColorCodeField";
 import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
-import {
-  DEFAULT_REPORT_COLOR,
-  MAX_REPORT_CONTENT_BYTES,
-} from "@/features/Book/constants/reportForm";
+import { MAX_REPORT_CONTENT_BYTES } from "@/features/Book/constants/reportForm";
 import {
   getReportContentStorageByteLength,
   truncateUtf8Bytes,
 } from "@/features/Book/utils/reportValidation";
+import { useCodeList } from "@/features/Common/utils/codeUtil";
 
 function SetReportPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedBook = location.state?.selectedBook;
 
-  const [status, setStatus] = useState<ReadingStatusType>("done");
+  const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
-  const [reportColr, setReportColr] = useState(DEFAULT_REPORT_COLOR);
+  const [reportColr, setReportColr] = useState("");
   const [contentByteLength, setContentByteLength] = useState(0);
 
-  const { isPending, handleSubmit } = useSetReportForm(selectedBook);
+  const { data: statusCodes = [] } = useCodeList("READ_STAT");
+  const { data: colorCodes = [] } = useCodeList("BOOK_COLR");
+  const validStatusCodes = statusCodes.map((item) => item.comdCode);
+  const validReportColors = colorCodes.map((item) => item.comdCode);
+  const { isPending, handleSubmit } = useSetReportForm(
+    selectedBook,
+    validStatusCodes,
+    validReportColors,
+  );
   const pageStyle = selectedBook?.image
     ? ({
         "--book-bg-image": `url("${selectedBook.image}")`,
@@ -41,6 +47,18 @@ function SetReportPage() {
     e.preventDefault();
     handleSubmit(e.currentTarget);
   };
+
+  useEffect(() => {
+    if (!status && statusCodes.length > 0) {
+      setStatus(statusCodes[0].comdCode);
+    }
+  }, [status, statusCodes]);
+
+  useEffect(() => {
+    if (!reportColr && colorCodes.length > 0) {
+      setReportColr(colorCodes[0].comdCode);
+    }
+  }, [reportColr, colorCodes]);
 
   return isPending ? (
     <Loading title={message("frontend.report.loading.create")} />
@@ -69,27 +87,19 @@ function SetReportPage() {
         <div className={styles.contentPanel}>
           <FormField title={message("frontend.report.field.status")}>
             <div className={styles.statusContainer}>
-              {[
-                { label: message("frontend.report.status.done"), value: "done" },
-                {
-                  label: message("frontend.report.status.reading"),
-                  value: "reading",
-                },
-                {
-                  label: message("frontend.report.status.stopped"),
-                  value: "stopped",
-                },
-              ].map((item) => (
-                <label className={styles.statusOption} key={item.value}>
+              {statusCodes.map((item) => (
+                <label className={styles.statusOption} key={item.comdCode}>
                   <input
                     className={styles.hiddenInput}
                     type="radio"
                     name="status"
-                    value={item.value}
-                    checked={status === item.value}
-                    onChange={() => setStatus(item.value as ReadingStatusType)}
+                    value={item.comdCode}
+                    checked={status === item.comdCode}
+                    onChange={() =>
+                      setStatus(item.comdCode as ReadingStatusType)
+                    }
                   />
-                  <span className={styles.statusPill}>{item.label}</span>
+                  <span className={styles.statusPill}>{item.comdName}</span>
                 </label>
               ))}
             </div>
@@ -139,7 +149,11 @@ function SetReportPage() {
           </FormField>
 
           <FormField title={message("frontend.report.field.color")}>
-            <ColorPickerField value={reportColr} onChange={setReportColr} />
+            <ColorCodeField
+              colors={colorCodes}
+              value={reportColr}
+              onChange={setReportColr}
+            />
           </FormField>
 
           <FormField title={message("frontend.report.field.content")}>

@@ -51,7 +51,7 @@ export interface BookDtoType {
  * 독서 진행 상태 타입
  * (완독/읽는중/중단)
  */
-export type ReadingStatusType = "done" | "reading" | "stopped";
+export type ReadingStatusType = string;
 
 /**
  * "독후감" 타입
@@ -59,6 +59,7 @@ export type ReadingStatusType = "done" | "reading" | "stopped";
 export interface ReportDtoType {
   // 독서 진행 상태
   reportStat: ReadingStatusType;
+  reportStatName?: string;
   // 독서 시작일
   reportStdt: string;
   // 독서 종료일
@@ -67,6 +68,7 @@ export interface ReportDtoType {
   reportGrde: string;
   // 책장 색상
   reportColr: string;
+  reportColrName?: string;
   // 독후감 내용
   reportCntn: string;
 
@@ -125,6 +127,7 @@ export interface HomeBookType {
   bookCvim?: string;
   reportEndt?: string;
   reportColr?: string;
+  reportColrName?: string;
   readingYn?: "Y" | "N";
 }
 

@@ -17,8 +17,8 @@ public class ReportDto extends BookDto {
 
     // 독서 상태는 저장과 수정 요청에서 필수 값이다.
     @NotBlank
-    @Pattern(regexp = "done|reading|stopped")
     private String reportStat;
+    private String reportStatName;
 
     // 독서 시작일은 저장과 수정 요청에서 필수 값이다.
     @NotBlank
@@ -32,8 +32,8 @@ public class ReportDto extends BookDto {
     @Pattern(regexp = "[1-5]")
     private String reportGrde;
     @NotBlank
-    @Pattern(regexp = "#[0-9a-fA-F]{6}")
     private String reportColr;
+    private String reportColrName;
 
     // 독후감 내용은 저장과 수정 요청에서 필수 값이다.
     @NotBlank

@@ -13,6 +13,5 @@ package org.our.sadari.global.common.constant;
 public class Constant {
 
 
-    public static final String DEFAULT_REPORT_COLOR = "#ac8a8a";    //책상 기본색상
     public static final int REPORT_CONTENT_MAX_BYTES = 4000;    //독후감 기록 최대 바이트
 }
