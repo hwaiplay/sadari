@@ -8,18 +8,6 @@ import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import * as styles from "./DetailPage.css";
 
-const STATUS_LABEL = {
-  done: message("frontend.report.status.done"),
-  reading: message("frontend.report.status.reading"),
-  stopped: message("frontend.report.status.stopped"),
-} as const;
-
-function getStatusLabel(status: string) {
-  return status in STATUS_LABEL
-    ? STATUS_LABEL[status as keyof typeof STATUS_LABEL]
-    : status;
-}
-
 function RatingStars({ grade }: { grade: string }) {
   const rating = Math.max(0, Math.min(5, Number(grade) || 0));
 
@@ -114,7 +102,7 @@ function DetailPage() {
               {message("frontend.report.field.status")}
             </h2>
             <div className={styles.statusPill}>
-              {getStatusLabel(bookData.reportStat)}
+              {bookData.reportStatName || bookData.reportStat}
             </div>
           </section>
 

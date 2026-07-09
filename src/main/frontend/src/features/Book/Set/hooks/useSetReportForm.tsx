@@ -20,7 +20,11 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useSetReport } from "./useSetReport";
 
-export function useSetReportForm(selectedBook: any) {
+export function useSetReportForm(
+  selectedBook: any,
+  validStatusCodes: string[],
+  validReportColors: string[],
+) {
   const { mutate, isPending } = useSetReport();
 
   const handleSubmit = (form: HTMLFormElement) => {
@@ -49,6 +53,8 @@ export function useSetReportForm(selectedBook: any) {
       grade,
       reportColr,
       content,
+      validStatusCodes,
+      validReportColors,
     });
 
     if (validationMessage) {

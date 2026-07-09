@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.global.common.code.mapper.CodeMapper">
+
+    <select id="getCodeList" resultType="org.our.sadari.global.common.code.dto.CodeDto">
+        SELECT COMM_CODE
+             , COMD_CODE
+             , COMD_NAME
+             , CODE_EXPL
+             , OPT1_CODE
+             , OPT1_NAME
+             , OPT2_CODE
+             , OPT2_NAME
+             , OPT3_CODE
+             , OPT3_NAME
+             , OPT4_CODE
+             , OPT4_NAME
+             , USEE_YSNO
+             , SORT_ORDER
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{commCode}
+           AND NVL(USEE_YSNO, 'Y') = 'Y'
+      ORDER BY SORT_ORDER NULLS LAST, COMD_CODE
+    </select>
+
+    <select id="getCodeName" resultType="string">
+        SELECT FN_GET_CODE_NAME(#{commCode}, #{comdCode}, #{optCode})
+          FROM DUAL
+    </select>
+</mapper>

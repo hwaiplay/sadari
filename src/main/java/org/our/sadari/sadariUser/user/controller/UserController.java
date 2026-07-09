@@ -72,7 +72,7 @@ public class UserController {
             item.put("bookTitl", report.getBookTitl());
             item.put("reportStdt", report.getReportStdt());
             item.put("reportEndt", report.getReportEndt());
-            item.put("reportColr", report.getReportColr());
+            item.put("reportColr", report.getReportColrName());
             calendarReports.add(item);
         }
 

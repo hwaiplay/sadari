@@ -10,29 +10,29 @@ import { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
 import * as styles from "../Set/SetReportPage.css";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
-import ColorPickerField from "@/features/Book/Set/components/form/colorPickerField/ColorPickerField";
+import ColorCodeField from "@/features/Book/Set/components/form/colorCodeField/ColorCodeField";
 import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
-import {
-  DEFAULT_REPORT_COLOR,
-  MAX_REPORT_CONTENT_BYTES,
-} from "@/features/Book/constants/reportForm";
+import { MAX_REPORT_CONTENT_BYTES } from "@/features/Book/constants/reportForm";
 import {
   getReportContentStorageByteLength,
   sanitizeText,
   truncateUtf8Bytes,
   validateReportForm,
 } from "@/features/Book/utils/reportValidation";
+import { useCodeList } from "@/features/Common/utils/codeUtil";
 
 const UpdateReportPage = () => {
   const { id } = useParams();
   const idNum = Number(id);
 
-  const [status, setStatus] = useState<ReadingStatusType>("done");
+  const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
-  const [reportColr, setReportColr] = useState(DEFAULT_REPORT_COLOR);
+  const [reportColr, setReportColr] = useState("");
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { data, isPending } = useBookDetail(idNum);
+  const { data: statusCodes = [] } = useCodeList("READ_STAT");
+  const { data: colorCodes = [] } = useCodeList("BOOK_COLR");
   const { mutate } = useUpdateMutation();
   const bookData = data?.data;
   const pageStyle = bookData?.bookCvim
@@ -46,9 +46,9 @@ const UpdateReportPage = () => {
       return;
     }
 
-    setStatus(bookData.reportStat ?? "done");
+    setStatus(bookData.reportStat ?? "");
     setGrade(Number(bookData.reportGrde) || 0);
-    setReportColr(bookData.reportColr || DEFAULT_REPORT_COLOR);
+    setReportColr(bookData.reportColr ?? "");
     setContentByteLength(
       getReportContentStorageByteLength(bookData.reportCntn ?? ""),
     );
@@ -74,6 +74,8 @@ const UpdateReportPage = () => {
       grade: formData.get("grade"),
       reportColr: formData.get("reportColr"),
       content: formData.get("content"),
+      validStatusCodes: statusCodes.map((item) => item.comdCode),
+      validReportColors: colorCodes.map((item) => item.comdCode),
     });
 
     if (validationMessage) {
@@ -107,27 +109,19 @@ const UpdateReportPage = () => {
         <div className={styles.contentPanel}>
           <FormField title={message("frontend.report.field.status")}>
             <div className={styles.statusContainer}>
-              {[
-                { label: message("frontend.report.status.done"), value: "done" },
-                {
-                  label: message("frontend.report.status.reading"),
-                  value: "reading",
-                },
-                {
-                  label: message("frontend.report.status.stopped"),
-                  value: "stopped",
-                },
-              ].map((item) => (
-                <label className={styles.statusOption} key={item.value}>
+              {statusCodes.map((item) => (
+                <label className={styles.statusOption} key={item.comdCode}>
                   <input
                     className={styles.hiddenInput}
                     type="radio"
                     name="status"
-                    value={item.value}
-                    checked={status === item.value}
-                    onChange={() => setStatus(item.value as ReadingStatusType)}
+                    value={item.comdCode}
+                    checked={status === item.comdCode}
+                    onChange={() =>
+                      setStatus(item.comdCode as ReadingStatusType)
+                    }
                   />
-                  <span className={styles.statusPill}>{item.label}</span>
+                  <span className={styles.statusPill}>{item.comdName}</span>
                 </label>
               ))}
             </div>
@@ -179,7 +173,11 @@ const UpdateReportPage = () => {
           </FormField>
 
           <FormField title={message("frontend.report.field.color")}>
-            <ColorPickerField value={reportColr} onChange={setReportColr} />
+            <ColorCodeField
+              colors={colorCodes}
+              value={reportColr}
+              onChange={setReportColr}
+            />
           </FormField>
 
           <FormField title={message("frontend.report.field.content")}>
