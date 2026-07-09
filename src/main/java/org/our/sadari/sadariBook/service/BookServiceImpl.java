@@ -4,6 +4,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class BookServiceImpl implements BookService {
 
     private final ReportMapper reportMapper;
+    private final CodeUtil codeUtil;
 
     /**
      * 독후감 리스트 조회
@@ -86,6 +88,8 @@ public class BookServiceImpl implements BookService {
         reportDto.setUserNumb(userNumb);
         setDefaultReportColor(reportDto);
         sanitizeReport(reportDto, true);
+        validateReportStatus(reportDto);
+        validateReportColor(reportDto);
         validateReportContentBytes(reportDto);
 
         if (reportMapper.dupBook(reportDto) == 0) {
@@ -115,6 +119,8 @@ public class BookServiceImpl implements BookService {
         reportDto.setReportNumb(reportNumb);
         setDefaultReportColor(reportDto);
         sanitizeReport(reportDto, false);
+        validateReportStatus(reportDto);
+        validateReportColor(reportDto);
         validateReportContentBytes(reportDto);
 
         reportMapper.uptReport(reportDto);
@@ -147,7 +153,9 @@ public class BookServiceImpl implements BookService {
     private void setDefaultReportColor(ReportDto reportDto) {
         if (reportDto.getReportColr() == null || reportDto.getReportColr().isBlank()) {
             // 프론트에서 색상이 누락된 예외 상황에도 DB 필수값을 채우기 위해 기본색을 사용한다.
-            reportDto.setReportColr(Constant.DEFAULT_REPORT_COLOR);
+            codeUtil.getCodeList("BOOK_COLR").stream()
+                    .findFirst()
+                    .ifPresent(code -> reportDto.setReportColr(code.getComdCode()));
         }
     }
 
@@ -187,6 +195,24 @@ public class BookServiceImpl implements BookService {
         if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
             // XSS escape 이후 실제 DB에 저장될 문자열이 VARCHAR2(4000 BYTE)를 넘으면 ORA-01461이 발생하므로 저장 전 차단한다.
             throw new CustomException(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, HttpStatus.BAD_REQUEST); // 독후감 내용 바이트 초과 응답이다.
+        }
+    }
+
+    private void validateReportStatus(ReportDto reportDto) {
+        boolean isValidStatus = codeUtil.getCodeList("READ_STAT").stream()
+                .anyMatch(code -> code.getComdCode().equals(reportDto.getReportStat()));
+
+        if (!isValidStatus) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validateReportColor(ReportDto reportDto) {
+        boolean isValidColor = codeUtil.getCodeList("BOOK_COLR").stream()
+                .anyMatch(code -> code.getComdCode().equalsIgnoreCase(reportDto.getReportColr()));
+
+        if (!isValidColor) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 }

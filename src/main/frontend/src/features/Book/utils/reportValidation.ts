@@ -1,9 +1,6 @@
 import { message } from "@/app/messages/message";
 import { MAX_REPORT_CONTENT_BYTES } from "@/features/Book/constants/reportForm";
-import { ReadingStatusType } from "@/features/Book/types/book.type";
 
-const VALID_STATUSES: ReadingStatusType[] = ["done", "reading", "stopped"];
-const HEX_COLOR_PATTERN = /^#([0-9a-fA-F]{6})$/;
 const textEncoder = new TextEncoder();
 
 export function getUtf8ByteLength(value: string) {
@@ -66,6 +63,8 @@ type ReportFormValues = {
   grade: FormDataEntryValue | null;
   reportColr: FormDataEntryValue | null;
   content: FormDataEntryValue | null;
+  validStatusCodes?: string[];
+  validReportColors?: string[];
 };
 
 // 등록/수정 공통 필수값을 제출 직전에 검사하고, 누락된 항목을 한 번에 알려준다.
@@ -78,7 +77,10 @@ export function validateReportForm(values: ReportFormValues) {
   const content = String(values.content ?? "").trim();
   const missingFields: string[] = [];
 
-  if (!VALID_STATUSES.includes(status as ReadingStatusType)) {
+  if (
+    !status ||
+    (values.validStatusCodes && !values.validStatusCodes.includes(status))
+  ) {
     missingFields.push(message("frontend.report.field.status")); // frontend.report.field.status = 독서 상태
   }
 
@@ -94,7 +96,13 @@ export function validateReportForm(values: ReportFormValues) {
     missingFields.push(message("frontend.report.field.grade")); // frontend.report.field.grade = 평점
   }
 
-  if (!HEX_COLOR_PATTERN.test(reportColr)) {
+  if (
+    !reportColr ||
+    (values.validReportColors &&
+      !values.validReportColors.some(
+        (color) => color.toLowerCase() === reportColr.toLowerCase(),
+      ))
+  ) {
     missingFields.push(message("frontend.report.field.color")); // frontend.report.field.color = 책장 색상
   }
 

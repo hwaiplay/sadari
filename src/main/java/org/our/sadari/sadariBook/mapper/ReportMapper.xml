@@ -11,11 +11,13 @@
              , A.REPORT_ENDT
              , A.REPORT_GRDE
              , A.REPORT_COLR
+             , FN_GET_CODE_NAME('BOOK_COLR', A.REPORT_COLR) AS REPORT_COLR_NAME
              , A.REPORT_STAT
+             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
              , A.REPORT_STDT
              , B.BOOK_TITL
              , B.BOOK_CVIM
-             , CASE WHEN A.REPORT_STAT = 'reading' THEN 'Y' ELSE 'N' END AS READING_YN
+             , CASE WHEN A.REPORT_STAT = 'READ' THEN 'Y' ELSE 'N' END AS READING_YN
           FROM TM_BOOK_REPORT A
      LEFT JOIN TM_BOOK_INFO B
            ON A.BOOK_NUMB = B.BOOK_NUMB
@@ -32,7 +34,9 @@
              , A.REPORT_ENDT
              , A.REPORT_GRDE
              , A.REPORT_COLR
+             , FN_GET_CODE_NAME('BOOK_COLR', A.REPORT_COLR) AS REPORT_COLR_NAME
              , A.REPORT_STAT
+             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
              , A.REPORT_STDT
              , B.BOOK_TITL
              , B.BOOK_ATHR
