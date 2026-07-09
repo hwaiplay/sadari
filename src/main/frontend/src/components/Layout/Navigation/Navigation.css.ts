@@ -12,29 +12,8 @@ export const navContainer = style({
   margin: "0 auto",
   display: "flex",
   alignItems: "center",
-  padding: "0 64px",
-  background:
-    "linear-gradient(0deg, #ffffff 0%, rgba(255, 255, 255, 0.98) 60%, rgba(255, 255, 255, 0.86) 84%, rgba(255, 255, 255, 0) 100%)",
-
-  selectors: {
-    "&::before": {
-      content: "",
-      position: "absolute",
-      bottom: "74%",
-      left: 0,
-      right: 0,
-      height: "42px",
-      pointerEvents: "none",
-      background:
-        "linear-gradient(0deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0.28) 52%, rgba(255, 255, 255, 0) 100%)",
-      backdropFilter: "blur(8px)",
-      WebkitBackdropFilter: "blur(8px)",
-      maskImage:
-        "linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
-      WebkitMaskImage:
-        "linear-gradient(0deg, rgba(0, 0, 0, 0.72) 0%, rgba(0, 0, 0, 0.48) 58%, rgba(0, 0, 0, 0) 100%)",
-    },
-  },
+  background:'#fff',
+padding: '0 50px'
 });
 
 export const whiteBg = style({
@@ -58,6 +37,14 @@ export const navLink = style({
   justifyContent: "center",
   borderRadius: vars.radius.xl,
 });
+
+export  const navLink__set = style({
+  width:'70px',
+  height:'70px',
+  border: '5px solid #fff',
+  backgroundColor: vars.color.gray100,
+  marginBottom: '35px'
+})
 
 export const navIcon = style({
   width: "24px",
@@ -121,7 +108,7 @@ export const drawer = style({
   height: "100%",
   padding: "28px 20px",
   backgroundColor: "#ffffff",
-  boxShadow: "-18px 0 42px rgba(0, 0, 0, 0.16)",
+  // boxShadow: "-18px 0 42px rgba(0, 0, 0, 0.16)",
   transform: "translateX(100%)",
   transition: "transform 220ms ease",
   display: "flex",

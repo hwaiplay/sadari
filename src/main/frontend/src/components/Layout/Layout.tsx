@@ -3,6 +3,7 @@ import { Outlet } from "react-router-dom";
 import Navigation from "./Navigation/Navigation";
 import { vars } from "@/app/styles/tokens.css";
 import { Container } from "./Container/Container";
+import {useEffect, useState} from "react";
 
 /**
  * fileName       : Layout
@@ -16,9 +17,22 @@ import { Container } from "./Container/Container";
  */
 
 function Layout({ isMainLayout = true }) {
-  return (
+   const [headerActive, setHeaderActive] = useState<boolean>(false)
+
+    useEffect(() => {
+        const handleScroll = () => {
+            const isActive = window.scrollY > 5;
+            setHeaderActive(isActive);
+        };
+
+        window.addEventListener("scroll", handleScroll);
+
+        return () => window.removeEventListener("scroll", handleScroll);
+    }, []);
+
+    return (
     <div>
-      <Header />
+      <Header headerActive={headerActive}   />
       <main
         style={{
           paddingTop: isMainLayout ? vars.headerHeight : 0,

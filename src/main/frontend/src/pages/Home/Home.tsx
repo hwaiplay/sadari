@@ -1,7 +1,5 @@
 import { message } from "@/app/messages/message";
-import clsx from "clsx";
 import { Container } from "@/components/Layout/Container/Container";
-import { container } from "@/components/Layout/Container/container.css";
 import Book from "@/features/Home/components/Book";
 import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
@@ -27,7 +25,7 @@ function getMonthGroup(book: HomeBookType) {
   const [, year, month] = match;
   return {
     key: `${year}-${month}`,
-    label: `${year}년 ${Number(month)}월`,
+    label: `${year.slice(2)}.${month}`,
   };
 }
 
@@ -49,6 +47,12 @@ function groupBooksByMonth(bookList: HomeBookType[]) {
   }, []);
 }
 
+function chunkBooks(bookList: HomeBookType[], size: number) {
+  return Array.from({ length: Math.ceil(bookList.length / size) }, (_, index) =>
+    bookList.slice(index * size, index * size + size),
+  );
+}
+
 function Home() {
   const { data, isPending } = useGetListQuery();
 
@@ -60,15 +64,21 @@ function Home() {
   const monthlyBookGroups = groupBooksByMonth(bookList);
 
   return data?.code === 200 && bookList.length > 0 ? (
-    <div className={clsx(styles.homeContainer, container)}>
+    <div className={styles.homeContainer}>
       <div className={styles.monthGroupStack}>
         {monthlyBookGroups.map((group) => (
           <section className={styles.monthGroup} key={group.key}>
-            <div className={styles.monthLabel}>{group.label}</div>
-            <div className={styles.bookGrid}>
-              {group.books.map((book: HomeBookType) => (
-                <Book key={book.reportNumb} {...book} />
-              ))}
+            <div className={styles.monthGroup__inner}>
+              <div className={styles.monthLabel}>{group.label}</div>
+              <div className={styles.bookGrid}>
+                {chunkBooks(group.books, 3).map((rowBooks, rowIndex) => (
+                  <div className={styles.bookRow} key={`${group.key}-${rowIndex}`}>
+                    {rowBooks.map((book: HomeBookType) => (
+                      <Book key={book.reportNumb} {...book} />
+                    ))}
+                  </div>
+                ))}
+              </div>
             </div>
           </section>
         ))}
