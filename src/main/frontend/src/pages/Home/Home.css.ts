@@ -6,9 +6,10 @@ export const emptyHomeContainer = style({
   width: "100%",
   minHeight: "100svh",
   padding: 0,
-  backgroundImage: 'url("/img/common/background-empty.png")',
-  backgroundRepeat: "no-repeat",
-  backgroundSize: "cover",
+  // backgroundImage: 'url("/img/common/background-empty.png")',
+  // backgroundRepeat: "no-repeat",
+  // backgroundSize: "cover",
+  backgroundColor:'#f3f3f3',
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -24,7 +25,11 @@ export const homeContainer = style({
   minHeight: "100svh",
   paddingTop: "82px",
   paddingBottom: "96px",
-  backgroundColor: "#f3f3f3",
+  backgroundColor:'#f3f3f3',
+
+  width: "100%",
+  margin: "0 auto",
+  maxWidth: "600px"
 });
 
 export const monthGroupStack = style({
@@ -39,41 +44,49 @@ export const monthGroup = style({
   gap: "18px",
 });
 
+export const monthGroup__inner = style({})
+
 export const monthLabel = style({
   position: "relative",
   width: "fit-content",
-  paddingLeft: "13px",
-  fontFamily: vars.font.middle,
-  fontSize: "13px",
+  padding: "4px 8px",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
   lineHeight: 1,
-  color: "#575757",
+  color: vars.color.gray500,
+  backgroundColor:'#EBEBEB',
+  borderRadius: '999px',
+  marginBottom:'8px',
+  marginLeft: vars.space.md
+});
 
-  selectors: {
-    "&::before": {
-      content: "",
-      position: "absolute",
-      left: 0,
-      top: "50%",
-      width: "5px",
-      height: "5px",
-      borderRadius: "50%",
-      backgroundColor: "#151515",
-      transform: "translateY(-50%)",
+export const bookGrid = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "48px",
+  width: "100%",
+
+
+
+  "@media": {
+    [media.tablet]: {
+      gap: "72px",
     },
   },
 });
 
-export const bookGrid = style({
+export const bookRow = style({
   display: "grid",
   gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-  columnGap: "28px",
-  rowGap: "52px",
-  width: "100%",
+  columnGap: "16px",
+  position: "relative",
+  padding: `0 ${vars.space.md} 8px`,
+
 
   "@media": {
     [media.tablet]: {
+      padding: `0 ${vars.space.lg} 8px`,
       columnGap: "42px",
-      rowGap: "72px",
     },
   },
 });
