@@ -2,7 +2,7 @@ import { message } from "@/app/messages/message";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { header_active, backpageBtn, header, logo } from "./Header.css";
 import { Container } from "../Container/Container";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 /**
  * fileName       : Header
@@ -14,10 +14,7 @@ import clsx from "clsx";
  * -----------------------------------------------------------
  * 2026-05-03       hanwon.Jang       기록 페이지 감지 추가
  */
-interface HeaderProps {
-  headerActive: boolean;
-}
-function Header({headerActive}:HeaderProps) {
+function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const isSubPage = location.pathname !== "/home";
@@ -28,7 +25,7 @@ function Header({headerActive}:HeaderProps) {
 
   return (
     <header >
-      <Container className={clsx(header, isSubPage && "_sub",  headerActive && header_active)}>
+      <Container className={clsx(header, isSubPage && "_sub")}>
         {isSubPage && (
           <button
             className={backpageBtn}
