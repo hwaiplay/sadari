@@ -153,9 +153,7 @@ public class BookServiceImpl implements BookService {
     private void setDefaultReportColor(ReportDto reportDto) {
         if (reportDto.getReportColr() == null || reportDto.getReportColr().isBlank()) {
             // 프론트에서 색상이 누락된 예외 상황에도 DB 필수값을 채우기 위해 기본색을 사용한다.
-            codeUtil.getCodeList("BOOK_COLR").stream()
-                    .findFirst()
-                    .ifPresent(code -> reportDto.setReportColr(code.getComdCode()));
+            reportDto.setReportColr(codeUtil.getFirstCode("BOOK_COLR"));
         }
     }
 
@@ -199,19 +197,13 @@ public class BookServiceImpl implements BookService {
     }
 
     private void validateReportStatus(ReportDto reportDto) {
-        boolean isValidStatus = codeUtil.getCodeList("READ_STAT").stream()
-                .anyMatch(code -> code.getComdCode().equals(reportDto.getReportStat()));
-
-        if (!isValidStatus) {
+        if (!codeUtil.existsCode("READ_STAT", reportDto.getReportStat())) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 
     private void validateReportColor(ReportDto reportDto) {
-        boolean isValidColor = codeUtil.getCodeList("BOOK_COLR").stream()
-                .anyMatch(code -> code.getComdCode().equalsIgnoreCase(reportDto.getReportColr()));
-
-        if (!isValidColor) {
+        if (!codeUtil.existsCode("BOOK_COLR", reportDto.getReportColr())) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }

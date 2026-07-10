@@ -17,6 +17,13 @@ interface FormFieldProps {
   children: ReactNode;
 }
 
+/**
+ * 독후감 입력 폼의 제목과 입력 영역을 하나의 필드 블록으로 감싼다.
+ * @Author Hanwon.Jang
+ * @param title 필드 제목
+ * @param children 필드 안에 렌더링할 입력 UI
+ * @return 폼 필드 레이아웃 컴포넌트
+ */
 const FormField = ({ title, children }: FormFieldProps) => {
   return (
     <div className={field}>

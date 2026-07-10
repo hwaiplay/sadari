@@ -12,6 +12,11 @@ import { useLocation } from "react-router-dom";
  * 2026-05-04       Hanwon.Jang       최초 생성
  */
 
+/**
+ * 라우트 경로가 변경될 때마다 브라우저 스크롤을 최상단으로 이동한다.
+ * @Author Hanwon.Jang
+ * @return 렌더링 없이 스크롤 부수효과만 수행하므로 null
+ */
 const ScrollToTop = () => {
   const { pathname } = useLocation(); // 현재 페이지 경로를 가져옴
 

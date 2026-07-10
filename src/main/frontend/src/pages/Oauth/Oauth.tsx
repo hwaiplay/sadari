@@ -19,6 +19,11 @@ import { message } from "@/app/messages/message";
  * 2026-04-01        hanwon.Jang       페이지 리디렉션 수정
  */
 
+/**
+ * OAuth 인증 콜백 이후 인증 상태를 확인하고 다음 화면 이동을 처리한다.
+ * @Author Hanwon.Jang
+ * @return OAuth 처리 중 로딩 화면 컴포넌트
+ */
 const Oauth = () => {
   const { isLoading } = useCheckAuth();
 

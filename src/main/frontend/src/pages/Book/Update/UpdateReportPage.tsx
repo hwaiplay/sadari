@@ -21,6 +21,11 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 
+/**
+ * 독후감 수정 화면을 렌더링하고 기존 상세 데이터로 폼 상태를 초기화한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 수정 페이지 컴포넌트
+ */
 const UpdateReportPage = () => {
   const { id } = useParams();
   const idNum = Number(id);

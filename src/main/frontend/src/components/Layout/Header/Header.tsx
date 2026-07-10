@@ -14,6 +14,11 @@ import { clsx } from "clsx";
  * -----------------------------------------------------------
  * 2026-05-03       hanwon.Jang       기록 페이지 감지 추가
  */
+/**
+ * 현재 경로에 따라 뒤로가기 버튼과 로고를 표시하는 상단 헤더를 렌더링한다.
+ * @Author Hanwon.Jang
+ * @return 헤더 컴포넌트
+ */
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();

@@ -8,6 +8,12 @@ import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import * as styles from "./DetailPage.css";
 
+/**
+ * 독후감 평점을 별점 UI로 변환해 표시한다.
+ * @Author Hanwon.Jang
+ * @param grade 문자열로 전달된 1점부터 5점까지의 평점
+ * @return 별점 표시 컴포넌트
+ */
 function RatingStars({ grade }: { grade: string }) {
   const rating = Math.max(0, Math.min(5, Number(grade) || 0));
 
@@ -28,6 +34,11 @@ function RatingStars({ grade }: { grade: string }) {
   );
 }
 
+/**
+ * 독후감 상세 조회 결과를 화면에 표시하고 수정, 삭제, 책 정보 이동 동작을 제공한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 상세 페이지 컴포넌트
+ */
 function DetailPage() {
   const { id } = useParams();
   const idNum = Number(id);

@@ -20,6 +20,11 @@ type ErrorResponse = {
   message?: string;
 };
 
+/**
+ * 독후감 등록 API mutation을 생성하고 성공 시 상세 화면으로 이동한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 등록 mutation 객체
+ */
 export const useSetReport = () => {
   const navigate = useNavigate();
 

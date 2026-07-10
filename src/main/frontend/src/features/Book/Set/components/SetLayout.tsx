@@ -15,6 +15,11 @@ import Navigation from "@/components/Layout/Navigation/Navigation";
  * 2026-04-26       hanwon.Jang       주석 추가
  */
 
+/**
+ * 독후감 작성 계열 화면에서 사용할 서브 헤더, 본문, 하단 네비게이션 레이아웃을 구성한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 작성 레이아웃 컴포넌트
+ */
 function SetLayout() {
   return (
     <Container>

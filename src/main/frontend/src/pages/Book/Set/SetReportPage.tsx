@@ -18,6 +18,11 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 
+/**
+ * 독후감 등록 화면을 렌더링하고 입력 폼 상태를 관리한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 등록 페이지 컴포넌트
+ */
 function SetReportPage() {
   const location = useLocation();
   const navigate = useNavigate();

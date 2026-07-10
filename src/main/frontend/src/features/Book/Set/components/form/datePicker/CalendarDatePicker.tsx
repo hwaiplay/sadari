@@ -1,4 +1,5 @@
 import { message } from "@/app/messages/message";
+import { formatDateValue, parseDateValue } from "@/app/utils/dateUtil";
 import { useEffect, useMemo, useState } from "react";
 import * as styles from "./CalendarDatePicker.css";
 
@@ -19,25 +20,15 @@ const WEEK_DAYS = [
   message("frontend.calendar.week.sat"), // frontend.calendar.week.sat = 토
 ];
 
-const pad = (value: number) => String(value).padStart(2, "0");
-
-const toDateValue = (date: Date) =>
-  `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`;
-
-const parseDateValue = (value?: string) => {
-  if (!value) {
-    return new Date();
-  }
-
-  const [year, month, day] = value.split("-").map(Number);
-
-  if (!year || !month || !day) {
-    return new Date();
-  }
-
-  return new Date(year, month - 1, day);
-};
-
+/**
+ * 달력 팝오버로 날짜를 선택하고 hidden input으로 폼 값을 전달한다.
+ * @Author Hanwon.Jang
+ * @param name 폼 전송에 사용할 input 이름
+ * @param label 날짜 필드 라벨
+ * @param defaultValue 초기 선택 날짜
+ * @param placeholder 날짜 미선택 시 표시할 문구
+ * @return 달력 날짜 선택 컴포넌트
+ */
 function CalendarDatePicker({
   name,
   label,
@@ -53,7 +44,7 @@ function CalendarDatePicker({
     setViewDate(parseDateValue(defaultValue));
   }, [defaultValue]);
 
-  const todayValue = toDateValue(new Date());
+  const todayValue = formatDateValue(new Date());
   const viewYear = viewDate.getFullYear();
   const viewMonth = viewDate.getMonth();
 
@@ -72,7 +63,7 @@ function CalendarDatePicker({
   };
 
   const selectDay = (day: number) => {
-    const nextDate = toDateValue(new Date(viewYear, viewMonth, day));
+    const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
     setSelectedDate(nextDate);
     setIsOpen(false);
@@ -151,7 +142,7 @@ function CalendarDatePicker({
                 return <span className={styles.emptyDay} key={`empty-${index}`} />;
               }
 
-              const dateValue = toDateValue(new Date(viewYear, viewMonth, day));
+              const dateValue = formatDateValue(new Date(viewYear, viewMonth, day));
               const dayClassName = [
                 styles.dayButton,
                 dateValue === todayValue ? styles.today : "",
