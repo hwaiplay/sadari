@@ -32,10 +32,7 @@ public class MessageUtils {
             throw new IllegalStateException("MessageSource not initialized");
         }
 
-        return messageSource.getMessage(
-                key,
-                null,
-                LocaleContextHolder.getLocale() // ✅ 현재 요청의 Locale 사용
+        return messageSource.getMessage(key, null, LocaleContextHolder.getLocale() // 현재 요청의 Locale 사용
         );
     }
 }
