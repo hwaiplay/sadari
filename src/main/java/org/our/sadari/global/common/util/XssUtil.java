@@ -14,7 +14,7 @@ public class XssUtil {
      * @return
      */
     public static String escape(String value) {
-        if (value == null) {
+        if (StringUtil.isEmpty(value)) {
             // null 값은 필터링 대상 문자열이 아니므로 그대로 반환한다.
             return null;
         }
@@ -34,7 +34,7 @@ public class XssUtil {
      * @return
      */
     public static int utf8ByteLength(String value) {
-        if (value == null) {
+        if (StringUtil.isEmpty(value)) {
             // null 값은 DB에 저장될 문자열이 아니므로 길이를 0으로 판단한다.
             return 0;
         }
