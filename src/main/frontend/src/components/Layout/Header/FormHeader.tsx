@@ -15,6 +15,11 @@ import clsx from "clsx";
  * 2026-05-06       hanwon.Jang       서브페이지용으로 수정
  */
 
+/**
+ * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링한다.
+ * @Author Hanwon.Jang
+ * @return 서브 페이지 헤더 컴포넌트
+ */
 function SubPageHeader() {
   const navigate = useNavigate();
 

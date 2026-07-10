@@ -12,6 +12,12 @@ import { getDetailApi } from "../../api/bookApi";
  * 2026-04-08       hanwon.Jang       최초 생성
  */
 
+/**
+ * 독후감 상세 정보를 React Query로 조회한다.
+ * @Author Hanwon.Jang
+ * @param bookNumb 조회할 독후감 번호
+ * @return 독후감 상세 조회 Query 객체
+ */
 export const useBookDetail = (bookNumb: number) => {
   return useQuery({
     queryKey: ["detail", bookNumb],

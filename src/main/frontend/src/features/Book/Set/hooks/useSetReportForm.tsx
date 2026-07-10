@@ -20,6 +20,14 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useSetReport } from "./useSetReport";
 
+/**
+ * 독후감 등록 폼 제출에 필요한 도서 검증, 입력값 검증, 데이터 정제를 수행한다.
+ * @Author Hanwon.Jang
+ * @param selectedBook 검색 화면에서 선택한 도서 정보
+ * @param validStatusCodes DB 공통코드에서 조회한 허용 독서 상태 코드 목록
+ * @param validReportColors DB 공통코드에서 조회한 허용 책장 색상 코드 목록
+ * @return 등록 진행 상태와 submit 처리 함수
+ */
 export function useSetReportForm(
   selectedBook: any,
   validStatusCodes: string[],

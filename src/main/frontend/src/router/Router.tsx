@@ -25,6 +25,11 @@ import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
  * 2026-03-23       hanwon.Jang       최초 생성
  */
 
+/**
+ * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다.
+ * @Author Hanwon.Jang
+ * @return 애플리케이션 라우터 컴포넌트
+ */
 const Router = () => {
   return (
     <>

@@ -20,6 +20,14 @@ interface LinkButtonProps {
   children: React.ReactNode;
 }
 
+/**
+ * 지정한 라우트로 이동하는 링크형 버튼을 렌더링한다.
+ * @Author Hanwon.Jang
+ * @param link 이동할 라우트 경로
+ * @param className 외부에서 전달하는 추가 스타일 클래스
+ * @param children 링크 안에 표시할 텍스트 또는 아이콘
+ * @return 링크 버튼 컴포넌트
+ */
 const LinkButton = ({ link, className, children }: LinkButtonProps) => {
   return (
     <Link

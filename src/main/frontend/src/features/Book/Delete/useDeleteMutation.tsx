@@ -15,6 +15,11 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { delReportApi } from "../api/bookApi";
 
+/**
+ * 독후감 삭제 API mutation을 생성하고 성공 시 홈 화면으로 이동한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 삭제 mutation 객체
+ */
 export const useDeleteMutation = () => {
   const navigate = useNavigate();
 

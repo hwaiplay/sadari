@@ -12,6 +12,11 @@
 import { getListApi } from "@/features/Book/api/bookApi";
 import { useQuery } from "@tanstack/react-query";
 
+/**
+ * 로그인 사용자의 독후감 목록을 React Query로 조회한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 목록 조회 Query 객체
+ */
 export const useGetListQuery = () => {
   return useQuery({
     queryKey: ["list"],

@@ -30,6 +30,11 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
   info: "sadari-swal-icon-info",
 };
 
+/**
+ * SweetAlert 대체 모달에 필요한 공통 스타일 태그를 문서에 한 번만 삽입한다.
+ * @Author Hanwon.Jang
+ * @return 없음
+ */
 function ensureSweetAlertStyle() {
   if (document.getElementById(STYLE_ID)) {
     return;
@@ -160,12 +165,25 @@ function ensureSweetAlertStyle() {
   document.head.appendChild(style);
 }
 
+/**
+ * SweetAlert 모달을 닫고 body 스크롤 상태를 복구한다.
+ * @Author Hanwon.Jang
+ * @param overlay 제거할 모달 오버레이 엘리먼트
+ * @param result 사용자 확인 여부 결과
+ * @return SweetAlert 처리 결과
+ */
 function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
   overlay.remove();
   document.body.style.overflow = "";
   return result;
 }
 
+/**
+ * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param options 알림 모달 표시 옵션
+ * @return 사용자의 확인 또는 취소 선택 결과 Promise
+ */
 export function sweetAlert(options: SweetAlertOptions) {
   ensureSweetAlertStyle();
 
@@ -242,6 +260,12 @@ export function sweetAlert(options: SweetAlertOptions) {
   });
 }
 
+/**
+ * 취소 버튼이 포함된 확인 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param options 확인 모달 표시 옵션
+ * @return 사용자의 확인 또는 취소 선택 결과 Promise
+ */
 export function sweetConfirm(options: SweetAlertOptions) {
   return sweetAlert({
     icon: "warning",
@@ -252,14 +276,35 @@ export function sweetConfirm(options: SweetAlertOptions) {
   });
 }
 
+/**
+ * 성공 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param title 알림 제목
+ * @param text 알림 본문
+ * @return 사용자 확인 결과 Promise
+ */
 export function sweetSuccess(title: string, text?: string) {
   return sweetAlert({ title, text, icon: "success" });
 }
 
+/**
+ * 오류 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param title 알림 제목
+ * @param text 알림 본문
+ * @return 사용자 확인 결과 Promise
+ */
 export function sweetError(title: string, text?: string) {
   return sweetAlert({ title, text, icon: "error" });
 }
 
+/**
+ * 경고 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param title 알림 제목
+ * @param text 알림 본문
+ * @return 사용자 확인 결과 Promise
+ */
 export function sweetWarning(title: string, text?: string) {
   return sweetAlert({ title, text, icon: "warning" });
 }

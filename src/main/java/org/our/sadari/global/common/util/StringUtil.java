@@ -142,6 +142,26 @@ public class StringUtil {
     }
 
     /**
+     * Passed values are checked together and true is returned when at least one value is empty.
+     * @Author Seunghyeon.Kang
+     * @param values Values to inspect.
+     * @return Whether any value is null or empty.
+     */
+    public static boolean hasEmpty(Object... values) {
+        if (values == null) {
+            return true;
+        }
+
+        for (Object value : values) {
+            if (isEmpty(value)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * <p>기준 문자열에 포함된 모든 대상 문자(char)를 제거한다.</p>
      *
      * <pre>

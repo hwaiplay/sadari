@@ -13,6 +13,11 @@ import { message } from "@/app/messages/message";
 import { Link } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
+/**
+ * 책 검색 화면으로 이동하는 버튼을 표시한다.
+ * @Author Hanwon.Jang
+ * @return 책 검색 이동 버튼 컴포넌트
+ */
 const SearchBookButton = () => {
   return (
     <Link to="/book/search" className={searchBtn}>

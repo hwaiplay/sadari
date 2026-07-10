@@ -13,6 +13,12 @@ import { Navigate } from "react-router-dom";
 import Loading from "../components/Loading/Loading.tsx";
 import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 
+/**
+ * 인증이 필요한 페이지를 보호하고 미인증 사용자는 로그인 화면으로 이동시킨다.
+ * @Author Hanwon.Jang
+ * @param children 인증 성공 시 렌더링할 하위 라우트 컴포넌트
+ * @return 인증 상태에 따른 보호 라우트 결과
+ */
 export default function ProtectedRoute({
   children,
 }: {

@@ -6,6 +6,11 @@ import Loading from "@/components/Loading/Loading";
 import { useBookInfo } from "@/features/Book/Detail/hook/useBookInfo";
 import * as styles from "./BookInfoPage.css";
 
+/**
+ * 저장된 독후감에 연결된 책 상세 정보를 조회해 표시한다.
+ * @Author Hanwon.Jang
+ * @return 책 정보 상세 페이지 컴포넌트
+ */
 function BookInfoPage() {
   const { id } = useParams();
   const reportNumb = Number(id);

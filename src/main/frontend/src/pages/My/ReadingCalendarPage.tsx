@@ -1,4 +1,5 @@
 import api from "@/app/api/axios";
+import { formatYearMonthValue, isSameLocalDate, parseLocalDate } from "@/app/utils/dateUtil";
 import { Container } from "@/components/Layout/Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useMemo, useState } from "react";
@@ -15,45 +16,60 @@ type CalendarReport = {
 
 const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
 
-function formatYearMonth(date: Date) {
-  return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-}
-
+/**
+ * 캘린더 상단에 표시할 연월 제목을 만든다.
+ * @Author Hanwon.Jang
+ * @param date 제목을 만들 기준 날짜
+ * @return 화면 표시용 연월 문자열
+ */
 function formatMonthTitle(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
 }
 
+/**
+ * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환한다.
+ * @Author Hanwon.Jang
+ * @param value 변환할 날짜 문자열
+ * @return 점 구분 날짜 문자열
+ */
 function formatDisplayDate(value: string) {
   return value.replaceAll("-", ".");
 }
 
+/**
+ * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환한다.
+ * @Author Hanwon.Jang
+ * @param date 선택된 날짜
+ * @return 화면 표시용 날짜 문자열
+ */
 function formatSelectedDate(date: Date) {
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 }
 
-function toDate(value: string) {
-  const [year, month, date] = value.split("-").map(Number);
-  return new Date(year, month - 1, date);
-}
-
-function isSameDay(a: Date, b: Date) {
-  return (
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate()
-  );
-}
-
+/**
+ * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인한다.
+ * @Author Hanwon.Jang
+ * @param report 독서 기간을 가진 독후감 데이터
+ * @param date 포함 여부를 확인할 날짜
+ * @return 해당 날짜에 독서 중인지 여부
+ */
 function isReadingOnDate(report: CalendarReport, date: Date) {
-  const start = toDate(report.reportStdt);
-  const end = toDate(report.reportEndt);
+  const start = parseLocalDate(report.reportStdt);
+  const end = parseLocalDate(report.reportEndt);
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   return start <= target && target <= end;
 }
 
+/**
+ * 독서 시작일과 독후감 번호를 기준으로 캘린더 목록 정렬 순서를 계산한다.
+ * @Author Hanwon.Jang
+ * @param a 비교할 첫 번째 독후감
+ * @param b 비교할 두 번째 독후감
+ * @return 정렬 비교 결과
+ */
 function compareReports(a: CalendarReport, b: CalendarReport) {
-  const startCompare = toDate(a.reportStdt).getTime() - toDate(b.reportStdt).getTime();
+  const startCompare = parseLocalDate(a.reportStdt).getTime() - parseLocalDate(b.reportStdt).getTime();
 
   if (startCompare !== 0) {
     return startCompare;
@@ -62,6 +78,12 @@ function compareReports(a: CalendarReport, b: CalendarReport) {
   return a.reportNumb - b.reportNumb;
 }
 
+/**
+ * 월 화면에 표시할 6주치 날짜 배열을 생성한다.
+ * @Author Hanwon.Jang
+ * @param month 달력을 구성할 기준 월
+ * @return 캘린더 셀에 표시할 42개 날짜 목록
+ */
 function getCalendarDays(month: Date) {
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
   const start = new Date(firstDay);
@@ -74,16 +96,28 @@ function getCalendarDays(month: Date) {
   });
 }
 
+/**
+ * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬한다.
+ * @Author Hanwon.Jang
+ * @param reports 월 범위에서 조회한 독후감 목록
+ * @param date 목록을 찾을 기준 날짜
+ * @return 지정 날짜에 해당하는 독후감 목록
+ */
 function getReportsOnDate(reports: CalendarReport[], date: Date) {
   return reports.filter((report) => isReadingOnDate(report, date)).sort(compareReports);
 }
 
+/**
+ * 월별 독서 기간을 캘린더에 표시하고 선택 날짜의 독후감 목록을 제공한다.
+ * @Author Hanwon.Jang
+ * @return 독서 캘린더 페이지 컴포넌트
+ */
 function ReadingCalendarPage() {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [reports, setReports] = useState<CalendarReport[]>([]);
-  const yearMonth = formatYearMonth(currentMonth);
+  const yearMonth = formatYearMonthValue(currentMonth);
   const days = useMemo(() => getCalendarDays(currentMonth), [currentMonth]);
   const today = useMemo(() => new Date(), []);
   const selectedReports = useMemo(
@@ -159,8 +193,8 @@ function ReadingCalendarPage() {
                 className={clsx(
                   styles.dayCell,
                   isOutsideMonth && styles.outsideDay,
-                  isSameDay(day, today) && styles.today,
-                  isSameDay(day, selectedDate) && styles.selectedDay,
+                  isSameLocalDate(day, today) && styles.today,
+                  isSameLocalDate(day, selectedDate) && styles.selectedDay,
                 )}
                 type="button"
                 onClick={() => setSelectedDate(day)}

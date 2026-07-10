@@ -14,6 +14,12 @@ import { Link } from "react-router-dom";
 
 interface ErrorProps {}
 
+/**
+ * 잘못된 접근 또는 예외 라우팅 시 표시할 기본 오류 화면을 렌더링한다.
+ * @Author Hanwon.Jang
+ * @param props 오류 페이지 확장용 props
+ * @return 오류 페이지 컴포넌트
+ */
 const ErrorPage = (props: ErrorProps) => {
   return (
     <Container>

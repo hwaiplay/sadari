@@ -13,6 +13,11 @@ import { checkAuthApi } from "../api/authApi";
  * 2026-03-24       hanwon.Jang       최초 생성
  */
 
+/**
+ * 현재 로그인 인증 상태를 React Query로 조회한다.
+ * @Author Hanwon.Jang
+ * @return 인증 상태 조회 Query 객체
+ */
 export const useAuthQuery = () => {
   return useQuery({
     queryKey: ["auth"],

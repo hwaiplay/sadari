@@ -200,11 +200,13 @@ public class BookController {
      * @return
      */
     private boolean hasInvalidBookFields(ReportDto reportDto) {
-        return StringUtil.isEmpty(reportDto.getBookTitl())
-                || StringUtil.isEmpty(reportDto.getBookAthr())
-                || StringUtil.isEmpty(reportDto.getBookPubl())
-                || StringUtil.isEmpty(reportDto.getBookIsbn())
-                || StringUtil.isEmpty(reportDto.getBookCvim())
-                || StringUtil.isEmpty(reportDto.getBookDesc());
+        return StringUtil.hasEmpty(
+                reportDto.getBookTitl(),
+                reportDto.getBookAthr(),
+                reportDto.getBookPubl(),
+                reportDto.getBookIsbn(),
+                reportDto.getBookCvim(),
+                reportDto.getBookDesc()
+        );
     }
 }

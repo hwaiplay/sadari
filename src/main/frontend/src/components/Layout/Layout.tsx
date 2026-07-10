@@ -16,6 +16,12 @@ import {useEffect, useState} from "react";
  * 2026-04-26       hanwon.Jang        주석 추가
  */
 
+/**
+ * 공통 Header, 본문 영역, Navigation을 조합해 페이지 레이아웃을 구성한다.
+ * @Author Hanwon.Jang
+ * @param isMainLayout 본문을 Container로 감쌀지 여부
+ * @return 공통 레이아웃 컴포넌트
+ */
 function Layout({ isMainLayout = true }) {
 
     return (

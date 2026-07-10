@@ -13,6 +13,11 @@ import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
  * 2026-03-19        Hanwon.Jang       주석 추가
  */
 
+/**
+ * 카카오 OAuth 시작 링크를 제공하는 로그인 화면을 렌더링한다.
+ * @Author Hanwon.Jang
+ * @return 로그인 페이지 컴포넌트
+ */
 function LoginPage() {
   const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
   const REDIRECT_URI = "http://localhost:8080/api/oauth/callback/kakao";

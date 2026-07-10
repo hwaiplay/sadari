@@ -13,6 +13,11 @@ import Router from "./router/Router";
 
 const queryClient = new QueryClient();
 
+/**
+ * React Query Provider와 애플리케이션 Router를 연결하는 최상위 컴포넌트이다.
+ * @Author Hanwon.Jang
+ * @return 애플리케이션 루트 컴포넌트
+ */
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>

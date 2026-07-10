@@ -8,6 +8,14 @@ type ColorCodeFieldProps = {
   onChange: (color: string) => void;
 };
 
+/**
+ * DB 공통코드로 조회한 책장 색상 코드를 swatch 라디오 목록으로 표시한다.
+ * @Author Hanwon.Jang
+ * @param colors BOOK_COLR 공통코드의 세부코드 목록
+ * @param value 현재 선택된 책장 색상 코드
+ * @param onChange 색상 코드 선택 변경 콜백
+ * @return 책장 색상 선택 필드 컴포넌트
+ */
 function ColorCodeField({ colors, value, onChange }: ColorCodeFieldProps) {
   return (
     <div

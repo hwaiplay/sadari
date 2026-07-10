@@ -5,16 +5,18 @@ import api from "../../../app/api/axios";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
+import { stripHtmlTags } from "@/app/utils/htmlUtil";
 import * as styles from "./SearchBookPage.css";
 
 const SEARCH_STORAGE_KEY = "sadari:book-search";
 const DESCRIPTION_PREVIEW_LENGTH = 90;
 const SEARCH_PAGE_SIZE = 10;
 
-function stripTags(value?: string) {
-  return value?.replace(/<[^>]*>/g, "") ?? "";
-}
-
+/**
+ * 책 검색, 더보기, 선택, 상세보기 이동을 처리하는 책 검색 화면을 렌더링한다.
+ * @Author Hanwon.Jang
+ * @return 책 검색 페이지 컴포넌트
+ */
 const SearchBookPage = () => {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [bookResult, setBookResult] = useState<NaverApiResultType[] | null>(
@@ -211,10 +213,10 @@ const SearchBookPage = () => {
           (bookResult.length > 0 ? (
             <div className={styles.resultList}>
               {bookResult.map((book, index) => {
-                const title = stripTags(book.title);
-                const author = stripTags(book.author);
-                const publisher = stripTags(book.publisher);
-                const description = stripTags(book.description);
+                const title = stripHtmlTags(book.title);
+                const author = stripHtmlTags(book.author);
+                const publisher = stripHtmlTags(book.publisher);
+                const description = stripHtmlTags(book.description);
                 const preview =
                   description.length > DESCRIPTION_PREVIEW_LENGTH
                     ? `${description.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`
