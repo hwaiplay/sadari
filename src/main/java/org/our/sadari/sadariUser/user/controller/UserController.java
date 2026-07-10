@@ -9,6 +9,7 @@ import java.util.List;
 import java.util.Map;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.util.CommonUtil;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.service.BookService;
@@ -56,14 +57,14 @@ public class UserController {
         List<Map<String, Object>> calendarReports = new ArrayList<>();
 
         for (ReportDto report : bookService.getBookList(userNumb)) {
-            if (StringUtil.isEmpty(report.getReportStdt()) || StringUtil.isEmpty(report.getReportEndt())) {
+            if (StringUtil.hasEmpty(report.getReportStdt(), report.getReportEndt())) {
                 continue;
             }
 
             LocalDate reportStart = LocalDate.parse(report.getReportStdt());
             LocalDate reportEnd = LocalDate.parse(report.getReportEndt());
 
-            if (reportEnd.isBefore(calendarStart) || reportStart.isAfter(calendarEnd)) {
+            if (!CommonUtil.isDateRangeOverlapped(reportStart, reportEnd, calendarStart, calendarEnd)) {
                 continue;
             }
 

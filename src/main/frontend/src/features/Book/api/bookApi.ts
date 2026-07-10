@@ -23,6 +23,12 @@ import {
  * @param data
  * @returns 독후감 id
  */
+/**
+ * 독후감과 책 정보를 등록한다.
+ * @Author Hanwon.Jang
+ * @param data 등록할 독후감과 책 정보
+ * @return 등록된 독후감 번호 응답
+ */
 export const setReportApi = async (
   data: ReportDtoType,
 ): Promise<AddBookResponse> => {
@@ -35,6 +41,12 @@ export const setReportApi = async (
  * @param bookNumb
  * @returns 독후감 상세내용
  */
+/**
+ * 독후감 상세 정보를 조회한다.
+ * @Author Hanwon.Jang
+ * @param bookNumb 조회할 독후감 번호
+ * @return 독후감 상세 조회 응답
+ */
 export const getDetailApi = (bookNumb: number) => {
   return api.get(`/book/getBookdetail/${bookNumb}`);
 };
@@ -43,6 +55,12 @@ export const getDetailApi = (bookNumb: number) => {
  * 도서 정보 상세보기 API
  * @param reportNumb
  * @returns 독후감에 연결된 책 정보
+ */
+/**
+ * 독후감에 연결된 책 상세 정보를 조회한다.
+ * @Author Hanwon.Jang
+ * @param reportNumb 책 정보를 조회할 독후감 번호
+ * @return 책 상세 정보 조회 응답
  */
 export const getBookInfoApi = (reportNumb: number) => {
   return api.get(`/book/getBookInfo/${reportNumb}`);
@@ -53,6 +71,11 @@ export const getBookInfoApi = (reportNumb: number) => {
  * @param userNumb
  * @returns 독후감 리스트
  */
+/**
+ * 로그인 사용자의 독후감 목록을 조회한다.
+ * @Author Hanwon.Jang
+ * @return 독후감 목록 조회 응답
+ */
 export const getListApi = () => {
   return api.get(`/book/getBookList`);
 };
@@ -62,6 +85,13 @@ export const getListApi = () => {
  * @param reportNumb
  * @param data
  * @returns 독후감 번호
+ */
+/**
+ * 지정한 독후감을 수정한다.
+ * @Author Hanwon.Jang
+ * @param reportNumb 수정할 독후감 번호
+ * @param data 수정할 독후감 입력값
+ * @return 수정된 독후감 번호 응답
  */
 export const uptReportApi = async ({
   reportNumb,
@@ -75,6 +105,12 @@ export const uptReportApi = async ({
  * 독후감 삭제 API
  * @param reportNumb
  * @returns
+ */
+/**
+ * 지정한 독후감을 삭제한다.
+ * @Author Hanwon.Jang
+ * @param reportNumb 삭제할 독후감 번호
+ * @return 삭제 처리 응답
  */
 export const delReportApi = async (reportNumb: number) => {
   const res = await api.delete(`/book/delReport/${reportNumb}`);

@@ -3,12 +3,14 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
+import { stripHtmlTags } from "@/app/utils/htmlUtil";
 import * as styles from "@/pages/Book/Info/BookInfoPage.css";
 
-function stripTags(value?: string) {
-  return value?.replace(/<[^>]*>/g, "") ?? "";
-}
-
+/**
+ * 검색 결과에서 선택한 책의 상세 정보를 표시하고 독후감 작성 화면으로 연결한다.
+ * @Author Hanwon.Jang
+ * @return 검색 책 정보 상세 페이지 컴포넌트
+ */
 function SearchBookInfoPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -18,10 +20,10 @@ function SearchBookInfoPage() {
     return <h3>{message("frontend.common.noBookInfo")}</h3>;
   }
 
-  const title = stripTags(book.title);
-  const author = stripTags(book.author);
-  const publisher = stripTags(book.publisher);
-  const description = stripTags(book.description);
+  const title = stripHtmlTags(book.title);
+  const author = stripHtmlTags(book.author);
+  const publisher = stripHtmlTags(book.publisher);
+  const description = stripHtmlTags(book.description);
   const pageStyle = {
     "--book-bg-image": `url("${book.image}")`,
   } as CSSProperties;

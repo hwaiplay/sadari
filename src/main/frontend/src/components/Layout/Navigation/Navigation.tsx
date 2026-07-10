@@ -23,6 +23,12 @@ const MENU_ITEMS = [
   { label: "준비 중", disabled: true },
 ];
 
+/**
+ * 하단 주요 이동 버튼과 마이페이지 drawer 메뉴를 렌더링한다.
+ * @Author Hanwon.Jang
+ * @param isMain 메인 레이아웃에서 사용하는 배경 스타일 여부
+ * @return 하단 네비게이션 컴포넌트
+ */
 function Navigation({ isMain }: NavigationProps) {
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);

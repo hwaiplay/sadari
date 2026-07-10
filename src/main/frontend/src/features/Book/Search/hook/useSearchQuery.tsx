@@ -12,6 +12,12 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../../app/api/axios";
 
+/**
+ * 검색어로 네이버 책 검색 API 결과를 조회한다.
+ * @Author Hanwon.Jang
+ * @param searchKeyword 사용자가 입력한 책 검색어
+ * @return 책 검색 결과 Query 객체
+ */
 export const useSearchQuery = (searchKeyword: string) => {
   return useQuery({
     queryKey: ["search", searchKeyword],
