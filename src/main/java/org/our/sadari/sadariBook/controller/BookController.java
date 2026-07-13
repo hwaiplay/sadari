@@ -1,9 +1,11 @@
 package org.our.sadari.sadariBook.controller;
 
 import jakarta.validation.Valid;
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -57,9 +59,13 @@ public class BookController {
      * @return
      */
     @GetMapping("/getBookList")
-    public ResultData getBookList(@AuthenticationPrincipal Long userNumb) {
-        // 로그인 사용자 번호로 해당 사용자의 독후감 목록만 조회한다.
-        List<ReportDto> list = bookService.getBookList(userNumb);
+    public ResultData getBookList(
+            @AuthenticationPrincipal Long userNumb,
+            @RequestParam(value = "bookKeyword", required = false) String bookKeyword,
+            @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType
+    ) {
+        // 로그인 사용자 번호와 화면 검색/정렬 조건으로 해당 사용자의 독후감 목록을 조회한다.
+        List<ReportDto> list = bookService.getBookList(userNumb, bookKeyword, sortType);
         return ResultData.success(list);
     }
 
@@ -109,6 +115,79 @@ public class BookController {
 
         log.debug("Book info lookup succeeded: {}", bookInfo);
         return ResultData.success(bookInfo);
+    }
+
+    /**
+     * 기준 독후감과 같은 도서에 대해 다른 사용자가 공개한 독후감 목록을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param reportNumb 기준 독후감 번호
+     * @return 공개 독후감 목록
+     */
+    @GetMapping("/publicReports/by-report/{reportNumb}")
+    public ResultData getPublicReportsByReport(
+            @AuthenticationPrincipal Long userNumb,
+            @PathVariable("reportNumb") Long reportNumb
+    ) {
+        if (StringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        return ResultData.success(bookService.getPublicReportsByReport(userNumb, reportNumb));
+    }
+
+    /**
+     * 검색 도서의 ISBN과 같은 도서에 대해 다른 사용자가 공개한 독후감 목록을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param isbn 도서 ISBN
+     * @return 공개 독후감 목록
+     */
+    @GetMapping("/publicReports/by-isbn")
+    public ResultData getPublicReportsByIsbn(
+            @AuthenticationPrincipal Long userNumb,
+            @RequestParam("isbn") String isbn
+    ) {
+        if (StringUtil.isEmpty(isbn)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        return ResultData.success(bookService.getPublicReportsByIsbn(userNumb, isbn));
+    }
+
+    /**
+     * 검색 도서의 ISBN을 기준으로 전체 독후감 평균 별점을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param isbn 도서 ISBN
+     * @return 전체 독후감 평균 별점
+     */
+    @GetMapping("/ratingAverage/by-isbn")
+    public ResultData getRatingAverageByIsbn(@RequestParam("isbn") String isbn) {
+        if (StringUtil.isEmpty(isbn)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        BigDecimal average = bookService.getPublicRatingAverageByIsbn(isbn);
+        return ResultData.success(average);
+    }
+
+    /**
+     * 공개 독후감 좋아요 상태를 토글한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param reportNumb 좋아요 대상 독후감 번호
+     * @return 변경 후 좋아요 수와 현재 사용자 좋아요 여부
+     */
+    @PostMapping("/publicReports/{reportNumb}/like")
+    public ResultData setReportLike(
+            @AuthenticationPrincipal Long userNumb,
+            @PathVariable("reportNumb") Long reportNumb
+    ) {
+        if (StringUtil.isEmpty(reportNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        return ResultData.success(bookService.setReportLike(userNumb, reportNumb));
     }
 
     /**

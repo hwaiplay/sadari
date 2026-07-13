@@ -78,7 +78,31 @@ export const saveButton = style({
   color: vars.color.black,
   fontFamily: vars.font.heading,
   fontSize: "14px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "7px",
   cursor: "pointer",
+});
+
+export const formActions = style({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "10px",
+});
+
+export const deleteButton = style([
+  saveButton,
+  {
+    borderColor: "#d84a3a",
+    color: "#d84a3a",
+  },
+]);
+
+export const buttonIcon = style({
+  width: "17px",
+  height: "17px",
+  flexShrink: 0,
 });
 
 export const searchBookArea = style({
@@ -184,7 +208,7 @@ export const textAreaWrap = style({
 
 export const textArea = style({
   width: "100%",
-  minHeight: "150px",
+  minHeight: "300px",
   resize: "vertical",
   border: `1px solid ${vars.color.gray400}`,
   borderRadius: "16px",
@@ -202,6 +226,77 @@ export const counter = style({
   right: "4px",
   fontSize: "11px",
   color: vars.color.gray500,
+});
+
+export const publicToggleRow = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "14px",
+});
+
+export const publicToggleControl = style({
+  display: "inline-flex",
+  alignItems: "center",
+  flexShrink: 0,
+  cursor: "pointer",
+});
+
+export const publicToggleText = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+  minWidth: 0,
+});
+
+export const publicToggleState = style({
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  color: vars.color.black,
+});
+
+export const publicToggleHelp = style({
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.45,
+  color: "#777777",
+});
+
+export const switchTrack = style({
+  display: "inline-flex",
+  alignItems: "center",
+  position: "relative",
+  flexShrink: 0,
+  width: "52px",
+  height: "30px",
+  borderRadius: "999px",
+  backgroundColor: vars.color.gray400,
+  cursor: "pointer",
+  transition: "background-color 0.18s ease",
+
+  selectors: {
+    [`${hiddenInput}:checked + &`]: {
+      backgroundColor: vars.color.black,
+    },
+  },
+});
+
+export const switchThumb = style({
+  position: "absolute",
+  top: "3px",
+  left: "3px",
+  width: "24px",
+  height: "24px",
+  borderRadius: "50%",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 2px 6px rgba(0, 0, 0, 0.18)",
+  transition: "transform 0.18s ease",
+
+  selectors: {
+    [`${hiddenInput}:checked + ${switchTrack} &`]: {
+      transform: "translateX(22px)",
+    },
+  },
 });
 
 export const topBar = style({

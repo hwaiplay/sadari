@@ -1,5 +1,5 @@
 import { message } from "@/app/messages/message";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
@@ -13,6 +13,7 @@ import * as styles from "./BookInfoPage.css";
  */
 function BookInfoPage() {
   const { id } = useParams();
+  const navigate = useNavigate();
   const reportNumb = Number(id);
   const { data, isPending } = useBookInfo(reportNumb);
 
@@ -46,7 +47,41 @@ function BookInfoPage() {
             />
           </div>
           <h1 className={styles.title}>{bookInfo.bookTitl}</h1>
-          <p className={styles.meta}>{bookInfo.bookAthr}</p>
+          <div className={styles.authorRatingLine}>
+            <p className={styles.meta}>{bookInfo.bookAthr}</p>
+            {bookInfo.bookAvgGrde && (
+              <span className={styles.metaSeparator}>|</span>
+            )}
+            {bookInfo.bookAvgGrde && (
+              <span
+                className={styles.ratingSummary}
+                aria-label={message("frontend.report.gradeValue", [
+                  bookInfo.bookAvgGrde,
+                ])}
+              >
+                <span className={styles.ratingStar}>★</span>
+                <span className={styles.ratingValue}>
+                  {bookInfo.bookAvgGrde}
+                </span>
+              </span>
+            )}
+          </div>
+          <button
+            className={styles.bookInfoButton}
+            type="button"
+            onClick={() =>
+              navigate(`/book/public-reports/report/${reportNumb}`, {
+                state: {
+                  title: bookInfo.bookTitl,
+                  author: bookInfo.bookAthr,
+                  cover: bookInfo.bookCvim,
+                  ratingAverage: bookInfo.bookAvgGrde,
+                },
+              })
+            }
+          >
+            {message("frontend.book.publicReports.button")}
+          </button>
         </section>
 
         <div className={styles.contentPanel}>
@@ -63,8 +98,6 @@ function BookInfoPage() {
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{bookInfo.bookPubl || "-"}</p>
-              <span className={styles.infoLabel}>ISBN</span>
-              <p className={styles.infoValue}>{bookInfo.bookIsbn || "-"}</p>
             </div>
           </section>
 

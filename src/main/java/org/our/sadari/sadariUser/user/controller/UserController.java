@@ -7,6 +7,7 @@ import java.time.YearMonth;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.CommonUtil;
@@ -56,7 +57,7 @@ public class UserController {
         LocalDate calendarEnd = calendarStart.plusDays(41);
         List<Map<String, Object>> calendarReports = new ArrayList<>();
 
-        for (ReportDto report : bookService.getBookList(userNumb)) {
+        for (ReportDto report : bookService.getBookList(userNumb, null, Constant.SORT_END_DATE_DESC)) {
             if (StringUtil.hasEmpty(report.getReportStdt(), report.getReportEndt())) {
                 continue;
             }

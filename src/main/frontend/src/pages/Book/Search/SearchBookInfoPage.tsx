@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
+import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { stripHtmlTags } from "@/app/utils/htmlUtil";
 import * as styles from "@/pages/Book/Info/BookInfoPage.css";
 
@@ -15,6 +16,10 @@ function SearchBookInfoPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book as NaverApiResultType | undefined;
+  const { data: ratingAverageData } = useBookRatingAverageByIsbn(
+    book?.isbn ?? "",
+    Boolean(book?.isbn),
+  );
 
   if (!book) {
     return <h3>{message("frontend.common.noBookInfo")}</h3>;
@@ -24,6 +29,7 @@ function SearchBookInfoPage() {
   const author = stripHtmlTags(book.author);
   const publisher = stripHtmlTags(book.publisher);
   const description = stripHtmlTags(book.description);
+  const ratingAverage = ratingAverageData?.data;
   const pageStyle = {
     "--book-bg-image": `url("${book.image}")`,
   } as CSSProperties;
@@ -36,7 +42,42 @@ function SearchBookInfoPage() {
             <img className={styles.coverImage} src={book.image} alt={title} />
           </div>
           <h1 className={styles.title}>{title}</h1>
-          <p className={styles.meta}>{author}</p>
+          <div className={styles.authorRatingLine}>
+            <p className={styles.meta}>{author}</p>
+            {ratingAverage && <span className={styles.metaSeparator}>|</span>}
+            {ratingAverage && (
+              <span
+                className={styles.ratingSummary}
+                aria-label={message("frontend.report.gradeValue", [
+                  ratingAverage,
+                ])}
+              >
+                <span className={styles.ratingStar}>★</span>
+                <span className={styles.ratingValue}>{ratingAverage}</span>
+              </span>
+            )}
+          </div>
+          <button
+            className={styles.bookInfoButton}
+            type="button"
+            onClick={() =>
+              navigate(
+                `/book/public-reports/isbn?isbn=${encodeURIComponent(
+                  book.isbn,
+                )}`,
+                {
+                  state: {
+                    title,
+                    author,
+                    cover: book.image,
+                    ratingAverage,
+                  },
+                },
+              )
+            }
+          >
+            {message("frontend.book.publicReports.button")}
+          </button>
         </section>
 
         <div className={styles.contentPanel}>
@@ -53,8 +94,6 @@ function SearchBookInfoPage() {
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{publisher || "-"}</p>
-              <span className={styles.infoLabel}>ISBN</span>
-              <p className={styles.infoValue}>{book.isbn || "-"}</p>
             </div>
           </section>
 

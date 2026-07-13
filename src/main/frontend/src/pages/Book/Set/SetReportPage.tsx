@@ -31,6 +31,7 @@ function SetReportPage() {
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
   const [reportColr, setReportColr] = useState("");
+  const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { data: statusCodes = [] } = useCodeList("READ_STAT");
@@ -161,6 +162,33 @@ function SetReportPage() {
             />
           </FormField>
 
+          <FormField title={message("frontend.report.field.public")}>
+            <div className={styles.publicToggleRow}>
+              <div className={styles.publicToggleText}>
+                <span className={styles.publicToggleState}>
+                  {pubcYsno === "Y"
+                    ? message("frontend.report.public.on")
+                    : message("frontend.report.public.off")}
+                </span>
+                <span className={styles.publicToggleHelp}>
+                  {message("frontend.report.public.help")}
+                </span>
+              </div>
+              <label className={styles.publicToggleControl}>
+                <input type="hidden" name="pubcYsno" value={pubcYsno} />
+                <input
+                  className={styles.hiddenInput}
+                  type="checkbox"
+                  checked={pubcYsno === "Y"}
+                  onChange={(e) => setPubcYsno(e.target.checked ? "Y" : "N")}
+                />
+                <span className={styles.switchTrack}>
+                  <span className={styles.switchThumb} />
+                </span>
+              </label>
+            </div>
+          </FormField>
+
           <FormField title={message("frontend.report.field.content")}>
             <div className={styles.textAreaWrap}>
               <span className={styles.counter}>
@@ -183,6 +211,27 @@ function SetReportPage() {
           </FormField>
 
           <button className={styles.saveButton} type="submit">
+            <svg
+              className={styles.buttonIcon}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M5 4h11l3 3v13H5V4Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinejoin="round"
+              />
+              <path
+                d="M8 4v6h8M8 17h8"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
             {message("frontend.report.save")}
           </button>
         </div>
