@@ -103,6 +103,43 @@ export const meta = style({
   color: "#666666",
 });
 
+export const authorRatingLine = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  maxWidth: "100%",
+});
+
+export const ratingSummary = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "3px",
+  flexShrink: 0,
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  lineHeight: 1,
+  color: vars.color.black,
+});
+
+export const metaSeparator = style({
+  flexShrink: 0,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1,
+  color: vars.color.gray500,
+});
+
+export const ratingStar = style({
+  color: "#ffd966",
+  fontSize: "15px",
+  lineHeight: 1,
+});
+
+export const ratingValue = style({
+  lineHeight: 1,
+});
+
 export const contentPanel = style({
   display: "flex",
   flexDirection: "column",
@@ -166,5 +203,17 @@ export const selectButton = style({
   color: "#ffffff",
   fontFamily: vars.font.heading,
   fontSize: "14px",
+  cursor: "pointer",
+});
+
+export const bookInfoButton = style({
+  height: "34px",
+  padding: "0 14px",
+  border: `1px solid ${vars.color.gray400}`,
+  borderRadius: vars.radius.xl,
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
   cursor: "pointer",
 });

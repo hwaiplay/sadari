@@ -10,7 +10,7 @@
  */
 
 import { message } from "@/app/messages/message";
-import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { ReadingStatusType } from "../../types/book.type";
 import {
   sanitizeText,
@@ -35,7 +35,7 @@ export function useSetReportForm(
 ) {
   const { mutate, isPending } = useSetReport();
 
-  const handleSubmit = (form: HTMLFormElement) => {
+  const handleSubmit = async (form: HTMLFormElement) => {
     const bookValidationMessage = validateSelectedBook(selectedBook);
 
     if (bookValidationMessage) {
@@ -52,6 +52,7 @@ export function useSetReportForm(
     const endDate = formData.get("endDate");
     const grade = formData.get("grade");
     const reportColr = formData.get("reportColr");
+    const pubcYsno = formData.get("pubcYsno");
     const content = formData.get("content");
 
     const validationMessage = validateReportForm({
@@ -79,6 +80,7 @@ export function useSetReportForm(
       reportEndt: endDate as string,
       reportGrde: grade as string,
       reportColr: reportColr as string,
+      pubcYsno: pubcYsno === "Y" ? "Y" : "N",
       reportCntn: sanitizeText(content),
       bookTitl: stripHtmlTags(selectedBook.title),
       bookAthr: stripHtmlTags(selectedBook.author),
@@ -87,6 +89,17 @@ export function useSetReportForm(
       bookCvim: sanitizeText(selectedBook.image),
       bookDesc: stripHtmlTags(selectedBook.description),
     };
+
+    const confirmed = await sweetConfirm({
+      title: message("frontend.alert.saveConfirmTitle"),
+      text: message("frontend.report.saveConfirmText"),
+      confirmButtonText: message("frontend.report.save"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    if (!confirmed.isConfirmed) {
+      return;
+    }
 
     mutate(data);
   };

@@ -1,6 +1,7 @@
 package org.our.sadari.sadariBook.dto;
 
 import jakarta.validation.constraints.Size;
+import java.math.BigDecimal;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -42,5 +43,7 @@ public class BookDto {
     // 책 소개 내용
     @Size(max = 4000)
     private String bookDesc;
+    // 공개여부와 상관없이 전체 독후감 기준으로 계산한 도서 평균 별점
+    private BigDecimal bookAvgGrde;
 
 }

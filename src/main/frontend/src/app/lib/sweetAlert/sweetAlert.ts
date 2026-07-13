@@ -1,4 +1,4 @@
-type SweetAlertIcon = "success" | "error" | "warning" | "info";
+type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question";
 
 type SweetAlertOptions = {
   title: string;
@@ -21,6 +21,7 @@ const ICON_LABEL: Record<SweetAlertIcon, string> = {
   error: "!",
   warning: "!",
   info: "i",
+  question: "?",
 };
 
 const ICON_CLASS: Record<SweetAlertIcon, string> = {
@@ -28,6 +29,7 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
   error: "sadari-swal-icon-error",
   warning: "sadari-swal-icon-warning",
   info: "sadari-swal-icon-info",
+  question: "sadari-swal-icon-question",
 };
 
 /**
@@ -97,6 +99,10 @@ function ensureSweetAlertStyle() {
       color: #3a74a8;
       font-family: Georgia, serif;
       font-style: italic;
+    }
+
+    .sadari-swal-icon-question {
+      color: #4b6fbd;
     }
 
     .sadari-swal-title {
@@ -268,7 +274,7 @@ export function sweetAlert(options: SweetAlertOptions) {
  */
 export function sweetConfirm(options: SweetAlertOptions) {
   return sweetAlert({
-    icon: "warning",
+    icon: "question",
     confirmButtonText: "확인",
     cancelButtonText: "취소",
     ...options,
@@ -307,4 +313,26 @@ export function sweetError(title: string, text?: string) {
  */
 export function sweetWarning(title: string, text?: string) {
   return sweetAlert({ title, text, icon: "warning" });
+}
+
+/**
+ * 안내 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param title 알림 제목
+ * @param text 알림 본문
+ * @return 사용자 확인 결과 Promise
+ */
+export function sweetInfo(title: string, text?: string) {
+  return sweetAlert({ title, text, icon: "info" });
+}
+
+/**
+ * 질문 알림 모달을 표시한다.
+ * @Author Hanwon.Jang
+ * @param title 알림 제목
+ * @param text 알림 본문
+ * @return 사용자 확인 결과 Promise
+ */
+export function sweetQuestion(title: string, text?: string) {
+  return sweetAlert({ title, text, icon: "question" });
 }

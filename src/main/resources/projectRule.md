@@ -21,11 +21,11 @@
 * **길이 및 패딩 규칙:**
     * 언더바 앞과 뒤는 각각 **반드시 영문 4자리**여야 합니다.
     * 단어의 길이가 4자리보다 짧은 경우, 남는 뒷자리는 대문자 `X`로 채워서 4자리를 맞춥니다.
-* **필수 : 컬럼:**
+* ** 관리자 테이블 필수 컬럼:**
     * REGI_ADMN: 등록자
     * REGI_DATE: 등록일
-    * UPDT_ADMN: 수정자 
-    * UPDT_DATE: 수정일
+    * UPDT_ADMN: 수정자(수정가능한 경우)
+    * UPDT_DATE: 수정일(수정가능한 경우)
 * **고정으로 사용해야할 컬럼 단어:**
   * 사용자: USER
   * 사용: USEE
@@ -95,6 +95,8 @@ C:\Users\USER\IdeaProjects\sadari-admin\src\main\java\org\sadari\admin\sadariadm
     * 예: `delUser()`, `delBoard()`
 * **중복 검사 (Duplicate Check):** `dup***`
     * 예: `dupUser()`, `dupEmail()`
+* **데이터 배포 (Distribution Check):** `dist***`
+  * 예: `distUser()`, `distEmail()`
 
 ## 5. 주석(Javadoc) 작성 규칙 가이드
 

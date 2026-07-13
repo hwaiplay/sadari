@@ -1,5 +1,5 @@
 import { message } from "@/app/messages/message";
-import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { useEffect, useState } from "react";
 import type { CSSProperties } from "react";
 import { useParams } from "react-router-dom";
@@ -8,6 +8,7 @@ import FormField from "@/features/Book/Set/components/form/field/FormField";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
+import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import * as styles from "../Set/SetReportPage.css";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
 import ColorCodeField from "@/features/Book/Set/components/form/colorCodeField/ColorCodeField";
@@ -33,12 +34,14 @@ const UpdateReportPage = () => {
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
   const [reportColr, setReportColr] = useState("");
+  const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { data, isPending } = useBookDetail(idNum);
   const { data: statusCodes = [] } = useCodeList("READ_STAT");
   const { data: colorCodes = [] } = useCodeList("BOOK_COLR");
   const { mutate } = useUpdateMutation();
+  const { mutate: deleteReport } = useDeleteMutation();
   const bookData = data?.data;
   const pageStyle = bookData?.bookCvim
     ? ({
@@ -54,6 +57,7 @@ const UpdateReportPage = () => {
     setStatus(bookData.reportStat ?? "");
     setGrade(Number(bookData.reportGrde) || 0);
     setReportColr(bookData.reportColr ?? "");
+    setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
     setContentByteLength(
       getReportContentStorageByteLength(bookData.reportCntn ?? ""),
     );
@@ -67,7 +71,7 @@ const UpdateReportPage = () => {
     return <Loading title={message("frontend.report.loading.detail")} />;
   }
 
-  const setFormAction = (e: React.FormEvent<HTMLFormElement>) => {
+  const setFormAction = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
@@ -95,10 +99,36 @@ const UpdateReportPage = () => {
       reportEndt: formData.get("endDate") as string,
       reportGrde: formData.get("grade") as string,
       reportColr: formData.get("reportColr") as string,
+      pubcYsno: formData.get("pubcYsno") === "Y" ? "Y" : "N",
       reportCntn: sanitizeText(formData.get("content")),
     };
 
+    const confirmed = await sweetConfirm({
+      title: message("frontend.alert.saveConfirmTitle"),
+      text: message("frontend.report.saveConfirmText"),
+      confirmButtonText: message("frontend.report.save"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    if (!confirmed.isConfirmed) {
+      return;
+    }
+
     mutate({ reportNumb, data });
+  };
+
+  const deleteOnClick = async () => {
+    const confirmed = await sweetConfirm({
+      icon: "warning",
+      title: message("frontend.alert.deleteConfirmTitle"),
+      text: message("frontend.report.deleteConfirmText"),
+      confirmButtonText: message("frontend.report.delete"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    if (confirmed.isConfirmed) {
+      deleteReport(idNum);
+    }
   };
 
   return bookData ? (
@@ -185,6 +215,33 @@ const UpdateReportPage = () => {
             />
           </FormField>
 
+          <FormField title={message("frontend.report.field.public")}>
+            <div className={styles.publicToggleRow}>
+              <div className={styles.publicToggleText}>
+                <span className={styles.publicToggleState}>
+                  {pubcYsno === "Y"
+                    ? message("frontend.report.public.on")
+                    : message("frontend.report.public.off")}
+                </span>
+                <span className={styles.publicToggleHelp}>
+                  {message("frontend.report.public.help")}
+                </span>
+              </div>
+              <label className={styles.publicToggleControl}>
+                <input type="hidden" name="pubcYsno" value={pubcYsno} />
+                <input
+                  className={styles.hiddenInput}
+                  type="checkbox"
+                  checked={pubcYsno === "Y"}
+                  onChange={(e) => setPubcYsno(e.target.checked ? "Y" : "N")}
+                />
+                <span className={styles.switchTrack}>
+                  <span className={styles.switchThumb} />
+                </span>
+              </label>
+            </div>
+          </FormField>
+
           <FormField title={message("frontend.report.field.content")}>
             <div className={styles.textAreaWrap}>
               <span className={styles.counter}>
@@ -207,9 +264,60 @@ const UpdateReportPage = () => {
             </div>
           </FormField>
 
-          <button className={styles.saveButton} type="submit">
-            {message("frontend.report.save")}
-          </button>
+          <div className={styles.formActions}>
+            <button
+              className={styles.deleteButton}
+              type="button"
+              onClick={deleteOnClick}
+            >
+              <svg
+                className={styles.buttonIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M6 7h12M10 7V5.5h4V7M8 10v8M12 10v8M16 10v8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 7l.8 13h6.4L16 7"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {message("frontend.report.delete")}
+            </button>
+            <button className={styles.saveButton} type="submit">
+              <svg
+                className={styles.buttonIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M5 4h11l3 3v13H5V4Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinejoin="round"
+                />
+                <path
+                  d="M8 4v6h8M8 17h8"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              {message("frontend.report.save")}
+            </button>
+          </div>
         </div>
       </form>
     </main>
