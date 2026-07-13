@@ -142,10 +142,12 @@ public class StringUtil {
     }
 
     /**
-     * Passed values are checked together and true is returned when at least one value is empty.
+     * 여러 값을 한 번에 검사해 하나라도 비어 있는 값이 있는지 확인한다.
+     * 컨트롤러나 서비스에서 필수 입력값이 여러 개인 경우 isEmpty 호출을 반복하지 않고 한 줄로 검증하기 위해 사용한다.
+     * 검사 대상 배열 자체가 null이면 검증할 값이 없으므로 비어 있는 상태로 판단한다.
      * @Author Seunghyeon.Kang
-     * @param values Values to inspect.
-     * @return Whether any value is null or empty.
+     * @param values null 또는 비어 있음 여부를 검사할 값 목록
+     * @return 검사 대상 중 하나라도 비어 있으면 true, 모든 값에 내용이 있으면 false
      */
     public static boolean hasEmpty(Object... values) {
         if (values == null) {
