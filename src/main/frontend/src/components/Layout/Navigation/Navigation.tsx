@@ -1,5 +1,7 @@
 import { message } from "@/app/messages/message";
 import api from "@/app/api/axios";
+import { logoutApi } from "@/features/Auth/api/authApi";
+import { useAuthStore } from "@/features/Auth/store/authStore";
 import { Container } from "../Container/Container";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import { clsx } from "clsx";
@@ -33,8 +35,26 @@ function Navigation({ isMain }: NavigationProps) {
   const [profile, setProfile] = useState<MyProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const navigate = useNavigate();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
   const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
   const profileName = profile?.userNick || "사용자";
+
+  /**
+   * 로그아웃 API를 호출해 서버의 refreshToken과 accessToken blacklist를 정리한다.
+   * HttpOnly 쿠키 삭제는 서버 응답으로 처리되므로 프론트에서는 API 호출 후 로컬 인증 상태만 초기화한다.
+   * 로그아웃 요청 성공 여부와 관계없이 사용자 화면은 로그인 페이지로 이동시켜 보호 화면에 남아 있지 않게 한다.
+   * @Author Hanwon.Jang
+   * @return
+   */
+  const handleLogout = async () => {
+    try {
+      await logoutApi();
+    } finally {
+      clearAuth();
+      setIsDrawerOpen(false);
+      navigate("/login");
+    }
+  };
 
   useEffect(() => {
     let ignore = false;
@@ -114,6 +134,13 @@ function Navigation({ isMain }: NavigationProps) {
               <strong className={styles.drawerProfileName}>{profileName}</strong>
               <span className={styles.drawerProfileSub}>카카오 프로필</span>
             </div>
+            <button
+              className={styles.drawerLogoutButton}
+              type="button"
+              onClick={handleLogout}
+            >
+              {message("frontend.auth.logout")}
+            </button>
           </section>
           <div className={styles.drawerMenu}>
             {MENU_ITEMS.map((item, index) => (

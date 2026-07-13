@@ -123,7 +123,7 @@ export const drawerOpen = style({
 
 export const drawerHeader = style({
     display: "grid",
-    gridTemplateColumns: "58px 1fr",
+    gridTemplateColumns: "58px minmax(0, 1fr) auto",
     alignItems: "center",
     gap: "14px",
     paddingBottom: "20px",
@@ -162,19 +162,34 @@ export const drawerProfileSub = style({
     color: "#777777",
 });
 
+export const drawerLogoutButton = style({
+    minWidth: "58px",
+    height: "34px",
+    padding: "0 10px",
+    border: `1px solid ${vars.color.gray300}`,
+    borderRadius: vars.radius.sm,
+    backgroundColor: "#ffffff",
+    color: "#555555",
+    fontFamily: vars.font.middle,
+    fontSize: "12px",
+    cursor: "pointer",
+    whiteSpace: "nowrap",
+});
+
 export const drawerMenu = style({
     display: "flex",
     flexDirection: "column",
-    gap: "10px",
+    gap: 0,
 });
 
 export const drawerMenuButton = style({
     width: "100%",
     height: "46px",
-    padding: "0 16px",
-    border: `1px solid ${vars.color.gray300}`,
-    borderRadius: vars.radius.md,
-    backgroundColor: "#ffffff",
+    padding: "0 2px",
+    border: 0,
+    borderBottom: `1px solid ${vars.color.gray200}`,
+    borderRadius: 0,
+    backgroundColor: "transparent",
     color: vars.color.black,
     fontFamily: vars.font.middle,
     fontSize: "14px",
@@ -184,6 +199,6 @@ export const drawerMenuButton = style({
 
 export const drawerMenuDisabled = style({
     color: vars.color.gray500,
-    backgroundColor: "#f7f7f7",
+    backgroundColor: "transparent",
     cursor: "default",
 });

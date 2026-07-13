@@ -43,13 +43,14 @@
             , USER_ROLE
             )
         VALUES(
-              #{userNumb}
+              SYSDATE
+            , #{userNumb}
             , #{porfPath}
             , #{userIdxx}
             , #{userNick}
             , #{userProv}
             , #{userRole}
-        );
+        )
     </insert>
 
 </mapper>
