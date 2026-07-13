@@ -1,5 +1,6 @@
 package org.our.sadari.global.security.jwt;
 
+import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
@@ -15,6 +16,8 @@ import org.springframework.security.core.Authentication;
 import java.security.Key;
 import java.util.Date;
 import java.util.List;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * fileName       : JwtProvider
@@ -69,8 +72,10 @@ public class JwtProvider {
         Date now = new Date();
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userNumb)) // 🔥 핵심
+                .setSubject(String.valueOf(userNumb))
+                .setId(UUID.randomUUID().toString())
                 .claim("role", role)
+                .setId(UUID.randomUUID().toString())
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -87,7 +92,7 @@ public class JwtProvider {
         Date now = new Date();
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userNumb)) // 🔥 핵심
+                .setSubject(String.valueOf(userNumb))
                 .setIssuedAt(now)
                 .setExpiration(new Date(now.getTime() + refreshTokenValidityMilliSeconds))
                 .signWith(secretKey, SignatureAlgorithm.HS256)
@@ -121,14 +126,7 @@ public class JwtProvider {
      * @return 사용자 ID (Long)
      */
     public Long getUserNumb(String token) {
-        return Long.parseLong(
-                Jwts.parserBuilder()
-                        .setSigningKey(secretKey)
-                        .build()
-                        .parseClaimsJws(token)
-                        .getBody()
-                        .getSubject()
-        );
+        return Long.parseLong(getClaims(token).getSubject());
     }
 
     /**
@@ -138,12 +136,59 @@ public class JwtProvider {
      * @return 권한 문자열 (USER, ADMIN 등)
      */
     public String getRole(String token) {
+        return getClaims(token).get("role", String.class);
+    }
+
+    /**
+     * JWT claims에 저장된 토큰 고유 ID를 추출한다.
+     * accessToken blacklist는 토큰 전체 문자열이 아니라 이 ID를 기준으로 저장하므로 로그아웃 차단 여부 확인에 사용한다.
+     * 토큰 검증이 끝난 뒤 호출하는 것을 전제로 하며, 잘못된 토큰이 들어오면 JWT 파싱 예외가 발생할 수 있다.
+     * @Author Seunghyeon.Kang
+     * @param token 토큰 ID를 추출할 JWT 문자열
+     * @return JWT 생성 시 부여된 고유 ID 값
+     */
+    public String getTokenId(String token) {
+        return getClaims(token).getId();
+    }
+
+    /**
+     * JWT의 만료 시각을 기준으로 현재 시점에서 남은 유효 시간을 초 단위로 계산한다.
+     * 로그아웃 시 accessToken blacklist의 Redis TTL을 토큰 잔여 시간과 맞추기 위해 사용한다.
+     * 이미 만료된 토큰이거나 만료 시간이 현재보다 이전이면 0을 반환해 불필요한 blacklist 저장을 방지한다.
+     * @Author Seunghyeon.Kang
+     * @param token 남은 유효 시간을 계산할 JWT 문자열
+     * @return 현재 시점부터 JWT 만료 시각까지 남은 초 단위 시간
+     */
+    public long getRemainingSeconds(String token) {
+        long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
+        return Math.max(TimeUnit.MILLISECONDS.toSeconds(remainingMillis), 0);
+    }
+
+    /**
+     * 설정 파일에 정의된 refreshToken 유효 시간을 Redis TTL에 사용할 초 단위 값으로 반환한다.
+     * refreshToken JWT의 만료 시간과 Redis 저장 만료 시간을 동일하게 유지하기 위해 사용한다.
+     * 로그인과 refresh token rotation 시 Redis 저장소에 같은 정책을 적용할 수 있게 한다.
+     * @Author Seunghyeon.Kang
+     * @return refreshToken 유효 시간을 초 단위로 변환한 값
+     */
+    public long getRefreshTokenValiditySeconds() {
+        return TimeUnit.MILLISECONDS.toSeconds(refreshTokenValidityMilliSeconds);
+    }
+
+    /**
+     * 설정된 서명 키로 JWT를 파싱해 claims 객체를 반환한다.
+     * 사용자 번호, 권한, 토큰 ID, 만료 시간처럼 여러 메서드에서 반복해서 필요한 claim 조회를 한 곳으로 모은다.
+     * 서명 검증 또는 만료 검증에 실패하면 JWT 라이브러리 예외가 발생하므로 호출 전 validateToken 사용 여부를 고려해야 한다.
+     * @Author Seunghyeon.Kang
+     * @param token claims를 조회할 JWT 문자열
+     * @return 서명 검증을 통과한 JWT claims 객체
+     */
+    private Claims getClaims(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(secretKey)
                 .build()
                 .parseClaimsJws(token)
-                .getBody()
-                .get("role", String.class);
+                .getBody();
     }
 
     /**

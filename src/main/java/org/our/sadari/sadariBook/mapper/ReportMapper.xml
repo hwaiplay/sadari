@@ -4,17 +4,17 @@
 
     <!-- 독후감 리스트 조회 -->
     <select id="getReportList" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
-        SELECT A.BOOK_NUMB
-             , A.REPORT_NUMB
+        SELECT A.REPORT_NUMB
              , A.USER_NUMB
-             , A.REPORT_CNTN
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
+             , A.REPORT_STDT
              , A.REPORT_ENDT
              , A.REPORT_GRDE
              , A.REPORT_COLR
              , FN_GET_CODE_NAME('BOOK_COLR', A.REPORT_COLR) AS REPORT_COLR_NAME
-             , A.REPORT_STAT
-             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
-             , A.REPORT_STDT
+             , A.REPORT_CNTN
              , B.BOOK_TITL
              , B.BOOK_CVIM
              , CASE WHEN A.REPORT_STAT = 'READ' THEN 'Y' ELSE 'N' END AS READING_YN
@@ -27,17 +27,17 @@
 
     <!-- 독후감 상세보기 -->
     <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
-        SELECT A.BOOK_NUMB
-             , A.REPORT_NUMB
+        SELECT A.REPORT_NUMB
              , A.USER_NUMB
-             , A.REPORT_CNTN
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
+             , A.REPORT_STDT
              , A.REPORT_ENDT
              , A.REPORT_GRDE
              , A.REPORT_COLR
              , FN_GET_CODE_NAME('BOOK_COLR', A.REPORT_COLR) AS REPORT_COLR_NAME
-             , A.REPORT_STAT
-             , FN_GET_CODE_NAME('READ_STAT', A.REPORT_STAT) AS REPORT_STAT_NAME
-             , A.REPORT_STDT
+             , A.REPORT_CNTN
              , B.BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
@@ -113,37 +113,37 @@
         </selectKey>
         
         INSERT INTO TM_BOOK_REPORT(
-              BOOK_NUMB
-            , REPORT_NUMB
+              REPORT_NUMB
             , USER_NUMB
-            , REPORT_CNTN
+            , BOOK_NUMB
+            , REPORT_STAT
+            , REPORT_STDT
             , REPORT_ENDT
             , REPORT_GRDE
             , REPORT_COLR
-            , REPORT_STAT
-            , REPORT_STDT
+            , REPORT_CNTN
         )
         VALUES(
-              #{bookNumb}
-            , #{reportNumb}
+              #{reportNumb}
             , #{userNumb}
-            , #{reportCntn}
+            , #{bookNumb}
+            , #{reportStat}
+            , #{reportStdt}
             , #{reportEndt}
             , #{reportGrde}
             , #{reportColr}
-            , #{reportStat}
-            , #{reportStdt}
+            , #{reportCntn}
         )
     </insert>
 
     <update id="uptReport" parameterType="org.our.sadari.sadariBook.dto.ReportDto">
         UPDATE TM_BOOK_REPORT SET
-               REPORT_CNTN = #{reportCntn}
+               REPORT_STAT = #{reportStat}
+             , REPORT_STDT = #{reportStdt}
              , REPORT_ENDT = #{reportEndt}
              , REPORT_GRDE = #{reportGrde}
              , REPORT_COLR = #{reportColr}
-             , REPORT_STAT = #{reportStat}
-             , REPORT_STDT = #{reportStdt}
+             , REPORT_CNTN = #{reportCntn}
          WHERE REPORT_NUMB = #{reportNumb}
            AND USER_NUMB   = #{userNumb}
     </update>

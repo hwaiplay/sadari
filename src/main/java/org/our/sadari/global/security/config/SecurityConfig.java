@@ -67,6 +67,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/oauth/callback/kakao",
                                 "/api/oauth/refresh",
+                                "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
                                 // 책 검색만 인증 없이 허용한다.
                                 "/api/book/search"
