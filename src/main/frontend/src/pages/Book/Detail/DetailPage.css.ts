@@ -139,6 +139,54 @@ export const sectionTitle = style({
   color: vars.color.black,
 });
 
+export const sectionTitleRow = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
+});
+
+export const likeButton = style({
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  minWidth: "48px",
+  height: "30px",
+  padding: "0 9px",
+  border: "1px solid #f0b8c2",
+  borderRadius: "999px",
+  backgroundColor: "#fff7f9",
+  color: "#d84a5f",
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  lineHeight: 1,
+  cursor: "pointer",
+  flexShrink: 0,
+
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#fff1f4",
+      borderColor: "#e98597",
+    },
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.55,
+    },
+  },
+});
+
+export const likeIcon = style({
+  width: "18px",
+  height: "18px",
+  flexShrink: 0,
+});
+
+export const likeCount = style({
+  minWidth: "16px",
+  textAlign: "left",
+});
+
 export const statusPill = style({
   width: "fit-content",
   minHeight: "30px",
@@ -202,12 +250,11 @@ export const contentBox = style({
 });
 
 export const actions = style({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "10px",
+  display: "flex",
 });
 
 export const actionButton = style({
+  width: "100%",
   height: "44px",
   border: `1px solid ${vars.color.black}`,
   borderRadius: "999px",
@@ -215,7 +262,17 @@ export const actionButton = style({
   color: vars.color.black,
   fontFamily: vars.font.middle,
   fontSize: "14px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "7px",
   cursor: "pointer",
+});
+
+export const buttonIcon = style({
+  width: "17px",
+  height: "17px",
+  flexShrink: 0,
 });
 
 export const deleteButton = style([

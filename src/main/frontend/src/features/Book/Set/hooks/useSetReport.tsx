@@ -10,7 +10,7 @@
  */
 
 import { message } from "@/app/messages/message";
-import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
 import { setReportApi } from "../../api/bookApi";
 import { useNavigate } from "react-router-dom";
@@ -31,7 +31,12 @@ export const useSetReport = () => {
   return useMutation({
     mutationFn: setReportApi,
     onSuccess: (data) => {
-      navigate(`/book/detail/${data.data}`);
+      void sweetSuccess(
+        message("frontend.alert.saveSuccessTitle"),
+        message("frontend.report.saved"),
+      ).then(() => {
+        navigate(`/book/detail/${data.data}`);
+      });
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       void sweetError(

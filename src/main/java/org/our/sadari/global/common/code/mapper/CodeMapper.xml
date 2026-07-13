@@ -3,6 +3,7 @@
 <mapper namespace="org.our.sadari.global.common.code.mapper.CodeMapper">
 
     <select id="getCodeList" resultType="org.our.sadari.global.common.code.dto.CodeDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT COMM_CODE
              , COMD_CODE
              , COMD_NAME
@@ -19,7 +20,7 @@
              , SORT_ORDER
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
-           AND NVL(USEE_YSNO, 'Y') = 'Y'
+           AND NVL(USEE_YSNO, #{commYes}) = #{commYes}
       ORDER BY SORT_ORDER NULLS LAST, COMD_CODE
     </select>
 

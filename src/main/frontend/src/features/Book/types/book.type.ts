@@ -44,6 +44,8 @@ export interface BookDtoType {
     bookCvim: string;
     // 책 소개 내용
     bookDesc: string;
+    // 공개 독후감 평균 별점
+    bookAvgGrde?: number | string | null;
   };
 }
 
@@ -69,6 +71,10 @@ export interface ReportDtoType {
   // 책장 색상
   reportColr: string;
   reportColrName?: string;
+  pubcYsno?: "Y" | "N";
+  pubcYsnoName?: string;
+  likeCnt?: number;
+  likeYsno?: "Y" | "N";
   // 독후감 내용
   reportCntn: string;
 
@@ -102,6 +108,7 @@ export interface uptReportType {
     reportGrde: string;
     // 책장 색상
     reportColr: string;
+    pubcYsno: "Y" | "N";
     // 독후감 내용
     reportCntn: string;
   };
@@ -111,6 +118,19 @@ export interface uptReportType {
 export interface AddBookResponse {
   success: boolean;
   data: number; // bookId
+}
+
+export interface PublicReportType {
+  reportNumb: number;
+  userNumb: number;
+  userNick: string;
+  porfPath?: string;
+  bookNumb: number;
+  reportGrde: string;
+  reportCntn: string;
+  pubcYsno: "Y";
+  likeCnt?: number;
+  likeYsno?: "Y" | "N";
 }
 
 // 독후감 상세보기 타입
@@ -125,7 +145,9 @@ export interface HomeBookType {
   bookNumb: number;
   bookTitl: string;
   bookCvim?: string;
+  reportStdt?: string;
   reportEndt?: string;
+  reportGrde?: string;
   reportColr?: string;
   reportColrName?: string;
   readingYn?: "Y" | "N";

@@ -1,0 +1,227 @@
+import { message } from "@/app/messages/message";
+import { Container } from "@/components/Layout/Container/Container";
+import Loading from "@/components/Loading/Loading";
+import {
+  usePublicReportLikeMutation,
+  usePublicReportsByIsbn,
+  usePublicReportsByReport,
+} from "@/features/Book/Detail/hook/usePublicReports";
+import type { PublicReportType } from "@/features/Book/types/book.type";
+import { useMemo, useState } from "react";
+import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import * as styles from "./PublicReportPage.css";
+
+const CONTENT_PREVIEW_LENGTH = 180;
+const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
+
+type PublicReportPageState = {
+  title?: string;
+  author?: string;
+  cover?: string;
+  ratingAverage?: number | string | null;
+};
+
+/**
+ * 선택한 도서와 같은 도서에 작성된 공개 독후감 목록을 별도 화면으로 조회한다.
+ * @Author Hanwon.Jang
+ * @return 공개 독후감 목록 페이지 컴포넌트
+ */
+function PublicReportPage() {
+  const { reportNumb } = useParams();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
+    {},
+  );
+
+  const reportNumbNumber = Number(reportNumb);
+  const isbn = searchParams.get("isbn") ?? "";
+  const isReportMode = Boolean(reportNumb) && Number.isFinite(reportNumbNumber);
+  const isIsbnMode = !isReportMode && isbn.trim().length > 0;
+
+  const reportQuery = usePublicReportsByReport(reportNumbNumber, isReportMode);
+  const isbnQuery = usePublicReportsByIsbn(isbn, isIsbnMode);
+  const activeQuery = isReportMode ? reportQuery : isbnQuery;
+  const likeMutation = usePublicReportLikeMutation();
+  const pageState = (location.state ?? {}) as PublicReportPageState;
+
+  const reports = useMemo(() => {
+    return (activeQuery.data?.data ?? []) as PublicReportType[];
+  }, [activeQuery.data]);
+
+  /**
+   * 긴 독후감 내용의 접힘 상태를 독후감 번호 기준으로 전환한다.
+   * @Author Hanwon.Jang
+   * @param reportNumb 독후감 번호
+   */
+  const handleToggleReport = (reportNumb: number) => {
+    setExpandedReports((prev) => ({
+      ...prev,
+      [reportNumb]: !prev[reportNumb],
+    }));
+  };
+
+  /**
+   * 좋아요 수가 99개를 넘으면 화면 폭을 보호하기 위해 99+로 축약한다.
+   * @Author Hanwon.Jang
+   * @param likeCnt 서버에서 조회한 좋아요 수
+   * @return 화면에 표시할 좋아요 수 문자열
+   */
+  const getLikeCountLabel = (likeCnt?: number) => {
+    const count = Number(likeCnt) || 0;
+    return count > 99 ? "99+" : String(count);
+  };
+
+  if (!isReportMode && !isIsbnMode) {
+    return <div>{message("frontend.common.invalidAccess")}</div>;
+  }
+
+  if (activeQuery.isPending) {
+    return <Loading title={message("frontend.common.loadingList")} />;
+  }
+
+  return (
+    <main className={styles.page}>
+      <Container className={styles.content}>
+        <section className={styles.header}>
+          {pageState.cover && (
+            <div className={styles.coverFrame}>
+              <img
+                className={styles.coverImage}
+                src={pageState.cover}
+                alt={pageState.title ?? message("frontend.common.bookInfo")}
+              />
+            </div>
+          )}
+          <div className={styles.headingArea}>
+            {pageState.title && (
+              <h1 className={styles.bookTitle}>{pageState.title}</h1>
+            )}
+            {pageState.author && (
+              <div className={styles.authorRatingLine}>
+                <p className={styles.meta}>{pageState.author}</p>
+                {pageState.ratingAverage && (
+                  <span className={styles.metaSeparator}>|</span>
+                )}
+                {pageState.ratingAverage && (
+                  <span
+                    className={styles.ratingSummary}
+                    aria-label={message("frontend.report.gradeValue", [
+                      pageState.ratingAverage,
+                    ])}
+                  >
+                    <span className={styles.ratingStar}>★</span>
+                    <span className={styles.ratingValue}>
+                      {pageState.ratingAverage}
+                    </span>
+                  </span>
+                )}
+              </div>
+            )}
+          </div>
+        </section>
+
+        {reports.length > 0 ? (
+          <section className={styles.list}>
+            {reports.map((report) => {
+              const rating = Number(report.reportGrde) || 0;
+              const isExpanded = Boolean(expandedReports[report.reportNumb]);
+              const isLongContent =
+                report.reportCntn.length > CONTENT_PREVIEW_LENGTH;
+              const content =
+                !isExpanded && isLongContent
+                  ? `${report.reportCntn.slice(0, CONTENT_PREVIEW_LENGTH)}...`
+                  : report.reportCntn;
+
+              return (
+                <article className={styles.item} key={report.reportNumb}>
+                  <div className={styles.itemTop}>
+                    <div className={styles.itemHeader}>
+                    <img
+                      className={styles.profileImage}
+                      src={report.porfPath || DEFAULT_PROFILE_IMAGE}
+                      alt=""
+                    />
+                    <span className={styles.writer}>
+                      {report.userNick || "-"}
+                    </span>
+                    <span className={styles.metaSeparator}>|</span>
+                    <span
+                      className={styles.stars}
+                      aria-label={message("frontend.report.gradeValue", [
+                        rating,
+                      ])}
+                    >
+                      {Array.from({ length: 5 }, (_, index) => (
+                        <span
+                          className={
+                            index < rating ? styles.starFilled : undefined
+                          }
+                          key={index}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </span>
+                    </div>
+                    <button
+                      className={styles.likeButton}
+                      type="button"
+                      aria-label="좋아요"
+                      aria-pressed={report.likeYsno === "Y"}
+                      disabled={likeMutation.isPending}
+                      onClick={() => likeMutation.mutate(report.reportNumb)}
+                    >
+                      <svg
+                        className={styles.likeIcon}
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                      >
+                        <path
+                          d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
+                          fill={
+                            report.likeYsno === "Y" ? "currentColor" : "none"
+                          }
+                          stroke="currentColor"
+                          strokeWidth="1.8"
+                          strokeLinejoin="round"
+                        />
+                      </svg>
+                      <span className={styles.likeCount}>
+                        {getLikeCountLabel(report.likeCnt)}
+                      </span>
+                    </button>
+                  </div>
+
+                  <p className={styles.reportContent}>
+                    {content || message("frontend.common.noWrittenReport")}
+                  </p>
+
+                  {isLongContent && (
+                    <button
+                      className={styles.expandButton}
+                      type="button"
+                      onClick={() => handleToggleReport(report.reportNumb)}
+                    >
+                      {message(
+                        isExpanded
+                          ? "frontend.book.publicReports.collapse"
+                          : "frontend.book.publicReports.expand",
+                      )}
+                    </button>
+                  )}
+                </article>
+              );
+            })}
+          </section>
+        ) : (
+          <p className={styles.empty}>
+            {message("frontend.book.publicReports.empty")}
+          </p>
+        )}
+      </Container>
+    </main>
+  );
+}
+
+export default PublicReportPage;

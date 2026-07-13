@@ -1,5 +1,6 @@
 package org.our.sadari.sadariBook.service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,14 +31,30 @@ public class BookServiceImpl implements BookService {
      * @return
      */
     @Override
-    public List<ReportDto> getBookList(Long userNumb) {
-        // 목록 조회 조건은 로그인 사용자 번호만 사용한다.
+    public List<ReportDto> getBookList(Long userNumb, String bookKeyword, String sortType) {
+        // 목록 조회 조건은 로그인 사용자 번호, 책 제목 검색어, 정렬 코드를 함께 사용한다.
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
+        reportDto.setBookKeyword(XssUtil.escape(bookKeyword));
+        reportDto.setSortType(normalizeListSortType(sortType));
 
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         log.info("Book report list lookup completed. userNumb={}, size={}", userNumb, list.size());
         return list;
+    }
+
+    /**
+     * 독후감 목록 정렬값을 허용된 정렬 코드로 보정한다.
+     * @Author SeungHyeon.Kang
+     * @param sortType 화면에서 전달한 정렬 코드
+     * @return Mapper에서 사용할 정렬 코드
+     */
+    private String normalizeListSortType(String sortType) {
+        if (Constant.SORT_START_DATE_DESC.equals(sortType) || Constant.SORT_GRADE_DESC.equals(sortType)) {
+            return sortType;
+        }
+
+        return Constant.SORT_END_DATE_DESC;
     }
 
     /**
@@ -75,6 +92,77 @@ public class BookServiceImpl implements BookService {
     }
 
     /**
+     * 기준 독후감과 같은 도서의 공개 독후감 목록을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param reportNumb 기준 독후감 번호
+     * @return 다른 사용자가 공개한 독후감 목록
+     */
+    @Override
+    public List<ReportDto> getPublicReportsByReport(Long userNumb, Long reportNumb) {
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
+
+        return reportMapper.getPublicReportList(reportDto);
+    }
+
+    /**
+     * ISBN이 같은 도서의 공개 독후감 목록을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param bookIsbn 도서 ISBN
+     * @return 다른 사용자가 공개한 독후감 목록
+     */
+    @Override
+    public List<ReportDto> getPublicReportsByIsbn(Long userNumb, String bookIsbn) {
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        reportDto.setBookIsbn(XssUtil.escape(bookIsbn));
+
+        return reportMapper.getPublicReportList(reportDto);
+    }
+
+    /**
+     * ISBN 기준으로 전체 독후감 평균 별점을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param bookIsbn 도서 ISBN
+     * @return 전체 독후감 평균 별점
+     */
+    @Override
+    public BigDecimal getPublicRatingAverageByIsbn(String bookIsbn) {
+        return reportMapper.getPublicRatingAverageByIsbn(XssUtil.escape(bookIsbn));
+    }
+
+    /**
+     * 공개 독후감 좋아요 상태를 토글한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 현재 로그인 사용자 번호
+     * @param reportNumb 좋아요 대상 독후감 번호
+     * @return 변경 후 좋아요 수와 현재 사용자 좋아요 여부
+     */
+    @Override
+    @Transactional
+    public ReportDto setReportLike(Long userNumb, Long reportNumb) {
+        ReportDto reportDto = new ReportDto();
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
+
+        if (reportMapper.getPublicReportLikeTargetCnt(reportDto) == 0) {
+            // 본인 글, 비공개 글, 존재하지 않는 글에는 좋아요를 저장하지 않는다.
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+
+        if (reportMapper.dupReportLike(reportDto) > 0) {
+            reportMapper.delReportLike(reportDto);
+        } else {
+            reportMapper.setReportLike(reportDto);
+        }
+
+        return reportMapper.getReportLikeDtl(reportDto);
+    }
+
+    /**
      * 독후감 등록
      * @Author SeungHyeon.Kang
      * @param userNumb
@@ -87,9 +175,11 @@ public class BookServiceImpl implements BookService {
         // 사용자 번호는 요청 본문이 아니라 인증 정보에서 받은 값으로 설정한다.
         reportDto.setUserNumb(userNumb);
         setDefaultReportColor(reportDto);
+        setDefaultPublicFlag(reportDto);
         sanitizeReport(reportDto, true);
         validateReportStatus(reportDto);
         validateReportColor(reportDto);
+        validatePublicFlag(reportDto);
         validateReportContentBytes(reportDto);
 
         if (reportMapper.dupBook(reportDto) == 0) {
@@ -118,9 +208,11 @@ public class BookServiceImpl implements BookService {
         reportDto.setUserNumb(userNumb);
         reportDto.setReportNumb(reportNumb);
         setDefaultReportColor(reportDto);
+        setDefaultPublicFlag(reportDto);
         sanitizeReport(reportDto, false);
         validateReportStatus(reportDto);
         validateReportColor(reportDto);
+        validatePublicFlag(reportDto);
         validateReportContentBytes(reportDto);
 
         reportMapper.uptReport(reportDto);
@@ -153,7 +245,7 @@ public class BookServiceImpl implements BookService {
     private void setDefaultReportColor(ReportDto reportDto) {
         if (reportDto.getReportColr() == null || reportDto.getReportColr().isBlank()) {
             // 프론트에서 색상이 누락된 예외 상황에도 DB 필수값을 채우기 위해 기본색을 사용한다.
-            reportDto.setReportColr(codeUtil.getFirstCode("BOOK_COLR"));
+            reportDto.setReportColr(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR));
         }
     }
 
@@ -164,12 +256,26 @@ public class BookServiceImpl implements BookService {
      * @param includeBookFields
      * @return
      */
+    /**
+     * 공개 여부 값이 비어 있으면 비공개를 기본값으로 설정한다.
+     * @Author SeungHyeon.Kang
+     * @param reportDto 공개 여부를 보정할 독후감 DTO
+     * @return
+     */
+    private void setDefaultPublicFlag(ReportDto reportDto) {
+        if (reportDto.getPubcYsno() == null || reportDto.getPubcYsno().isBlank()) {
+            // 공개 여부가 누락되면 의도치 않은 노출을 막기 위해 비공개로 저장한다.
+            reportDto.setPubcYsno(Constant.COMM_NO);
+        }
+    }
+
     private void sanitizeReport(ReportDto reportDto, boolean includeBookFields) {
         reportDto.setReportStat(XssUtil.escape(reportDto.getReportStat()));
         reportDto.setReportStdt(XssUtil.escape(reportDto.getReportStdt()));
         reportDto.setReportEndt(XssUtil.escape(reportDto.getReportEndt()));
         reportDto.setReportGrde(XssUtil.escape(reportDto.getReportGrde()));
         reportDto.setReportColr(XssUtil.escape(reportDto.getReportColr()));
+        reportDto.setPubcYsno(XssUtil.escape(reportDto.getPubcYsno()));
         reportDto.setReportCntn(XssUtil.escape(reportDto.getReportCntn()));
 
         if (includeBookFields) {
@@ -197,13 +303,19 @@ public class BookServiceImpl implements BookService {
     }
 
     private void validateReportStatus(ReportDto reportDto) {
-        if (!codeUtil.existsCode("READ_STAT", reportDto.getReportStat())) {
+        if (!codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReportStat())) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
 
     private void validateReportColor(ReportDto reportDto) {
-        if (!codeUtil.existsCode("BOOK_COLR", reportDto.getReportColr())) {
+        if (!codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReportColr())) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    private void validatePublicFlag(ReportDto reportDto) {
+        if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
     }
