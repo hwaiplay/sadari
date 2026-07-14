@@ -3,6 +3,7 @@ package org.our.sadari.sadariBook.service;
 import java.math.BigDecimal;
 import java.util.List;
 import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
 public interface BookService {
@@ -76,6 +77,14 @@ public interface BookService {
      * @return
      */
     List<ReportDto> getBookList(Long userNumb, String bookKeyword, String sortType);
+
+    /**
+     * 로그인 사용자의 이번 달 완료 독서 권수와 지난달 대비 변화량을 조회한다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 이번 달 완료 독서 요약 정보
+     */
+    MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb);
 
     /**
      * 독후감 수정

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
 /**
@@ -27,6 +28,24 @@ public interface ReportMapper {
      * @return 로그인 사용자의 독후감 목록
      */
     List<ReportDto> getReportList(ReportDto req);
+
+    /**
+     * 로그인 사용자의 특정 기간 완료 독서 권수를 조회한다.
+     * 독서 상태가 DONE이고 독서 종료일이 집계 기간 안에 있으며, 아직 도래하지 않은 종료일은 제외한다.
+     * @Author SeungHyeon.Kang
+     * @param req 사용자 번호와 집계 기간 날짜 조건을 담은 DTO
+     * @return 해당 기간 완료 독서 권수
+     */
+    int getDoneReportCntByPeriod(MonthlyReadingSummaryDto req);
+
+    /**
+     * 로그인 사용자의 특정 기간 완료 독후감 목록을 조회한다.
+     * 마이페이지 독서 요약을 펼쳤을 때 표시할 책 제목, 저자, 종료일, 독후감 번호를 함께 내려준다.
+     * @Author SeungHyeon.Kang
+     * @param req 사용자 번호와 집계 기간 날짜 조건을 담은 DTO
+     * @return 해당 기간 완료 독후감 목록
+     */
+    List<ReportDto> getDoneReportListByPeriod(MonthlyReadingSummaryDto req);
 
     /**
      * 로그인 사용자의 독후감 상세 정보를 조회한다.
