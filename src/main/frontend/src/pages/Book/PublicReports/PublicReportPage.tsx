@@ -128,10 +128,7 @@ function PublicReportPage() {
               const isExpanded = Boolean(expandedReports[report.reportNumb]);
               const isLongContent =
                 report.reportCntn.length > CONTENT_PREVIEW_LENGTH;
-              const content =
-                !isExpanded && isLongContent
-                  ? `${report.reportCntn.slice(0, CONTENT_PREVIEW_LENGTH)}...`
-                  : report.reportCntn;
+              const content = report.reportCntn || message("frontend.common.noWrittenReport");
 
               return (
                 <article className={styles.item} key={report.reportNumb}>
@@ -193,21 +190,43 @@ function PublicReportPage() {
                     </button>
                   </div>
 
-                  <p className={styles.reportContent}>
-                    {content || message("frontend.common.noWrittenReport")}
-                  </p>
+                  <div
+                    className={
+                      isExpanded || !isLongContent
+                        ? styles.reportContentWrapOpen
+                        : styles.reportContentWrap
+                    }
+                  >
+                    <p className={styles.reportContent}>{content}</p>
+                  </div>
 
                   {isLongContent && (
                     <button
                       className={styles.expandButton}
                       type="button"
-                      onClick={() => handleToggleReport(report.reportNumb)}
-                    >
-                      {message(
+                      aria-label={message(
                         isExpanded
                           ? "frontend.book.publicReports.collapse"
                           : "frontend.book.publicReports.expand",
                       )}
+                      onClick={() => handleToggleReport(report.reportNumb)}
+                    >
+                      <span
+                        className={
+                          isExpanded
+                            ? styles.expandArrowOpen
+                            : styles.expandArrow
+                        }
+                        aria-hidden="true"
+                      >
+                        <svg
+                          className={styles.expandArrowIcon}
+                          viewBox="0 0 24 24"
+                          focusable="false"
+                        >
+                          <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
+                        </svg>
+                      </span>
                     </button>
                   )}
                 </article>

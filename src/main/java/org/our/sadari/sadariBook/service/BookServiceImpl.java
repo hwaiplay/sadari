@@ -1,7 +1,10 @@
 package org.our.sadari.sadariBook.service;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.time.format.TextStyle;
 import java.util.List;
+import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
@@ -11,6 +14,7 @@ import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.sadariBook.dto.BookDto;
+import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
@@ -36,13 +40,97 @@ public class BookServiceImpl implements BookService {
         // 목록 조회 조건은 로그인 사용자 번호, 책 제목 검색어, 정렬 코드를 함께 사용한다.
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
-        reportDto.setBookKeyword(XssUtil.escape(bookKeyword));
+        reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
         reportDto.setSortType(normalizeListSortType(sortType));
 
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         log.info("Book report list lookup completed. userNumb={}, size={}", userNumb, list.size());
         return list;
     }
+
+    /**
+     * 이번 달 완료 독서 권수와 지난달 대비 변화량을 조회한다.
+     * 독서 종료일이 아직 오지 않은 기록은 완료 상태여도 집계에서 제외해 현재 시점 기준의 월간 성과만 보여준다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 이번 달 완료 독서 요약 정보
+     */
+    @Override
+    public MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb) {
+        LocalDate today = LocalDate.now();
+        LocalDate currentMonthStart = today.withDayOfMonth(1);
+        LocalDate previousMonthStart = currentMonthStart.minusMonths(1);
+        LocalDate currentYearStart = today.withDayOfYear(1);
+        LocalDate previousYearStart = currentYearStart.minusYears(1);
+
+        MonthlyReadingSummaryDto currentMonthReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                currentMonthStart,
+                currentMonthStart.plusMonths(1),
+                today
+        );
+        MonthlyReadingSummaryDto previousMonthReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                previousMonthStart,
+                currentMonthStart,
+                currentMonthStart.minusDays(1)
+        );
+        MonthlyReadingSummaryDto currentYearReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                currentYearStart,
+                currentYearStart.plusYears(1),
+                today
+        );
+        MonthlyReadingSummaryDto previousYearReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                previousYearStart,
+                currentYearStart,
+                currentYearStart.minusDays(1)
+        );
+
+        int currentMonthCount = reportMapper.getDoneReportCntByPeriod(currentMonthReq);
+        int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);
+        int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);
+        int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);
+
+        MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
+        summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
+        summary.setCurrentMonthCount(currentMonthCount);
+        summary.setPreviousMonthCount(previousMonthCount);
+        summary.setCountDiff(currentMonthCount - previousMonthCount);
+        summary.setYearCode(String.valueOf(today.getYear()));
+        summary.setCurrentYearCount(currentYearCount);
+        summary.setPreviousYearCount(previousYearCount);
+        summary.setYearCountDiff(currentYearCount - previousYearCount);
+        summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq));
+        summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));
+        return summary;
+    }
+
+    /**
+     * 기간별 완료 독서 권수 조회에 필요한 날짜 조건 DTO를 생성한다.
+     * 시작일은 이상 조건, 종료 경계일은 미만 조건으로 사용해 날짜 끝 경계가 겹치지 않게 만든다.
+     * @Author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param periodStart 집계 대상 기간 시작일
+     * @param periodEndExclusive 집계 대상 기간 종료 경계일
+     * @param targetDate 집계 기준일
+     * @return 기간별 완료 독서 권수 조회 조건 DTO
+     */
+    private MonthlyReadingSummaryDto getDoneReportCntByPeriodReq(
+            Long userNumb,
+            LocalDate periodStart,
+            LocalDate periodEndExclusive,
+            LocalDate targetDate
+    ) {
+        MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
+        req.setUserNumb(userNumb);
+        req.setPeriodStart(periodStart.toString());
+        req.setPeriodEndExclusive(periodEndExclusive.toString());
+        req.setTargetDate(targetDate.toString());
+        return req;
+    }
+
 
     /**
      * 독후감 목록 정렬값을 허용된 정렬 코드로 보정한다.
@@ -119,7 +207,7 @@ public class BookServiceImpl implements BookService {
     public List<ReportDto> getPublicReportsByIsbn(Long userNumb, String bookIsbn) {
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
-        reportDto.setBookIsbn(XssUtil.escape(bookIsbn));
+        reportDto.setBookIsbn(StringUtil.normalizePlainText(bookIsbn));
 
         return reportMapper.getPublicReportList(reportDto);
     }
@@ -132,7 +220,7 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     public BigDecimal getPublicRatingAverageByIsbn(String bookIsbn) {
-        return reportMapper.getPublicRatingAverageByIsbn(XssUtil.escape(bookIsbn));
+        return reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn));
     }
 
     /**
@@ -251,7 +339,7 @@ public class BookServiceImpl implements BookService {
     }
 
     /**
-     * 독후감 입력값 XSS 필터링
+     * 독후감 입력값을 DB 저장용 원문 문자열로 정리한다.
      * @Author SeungHyeon.Kang
      * @param reportDto
      * @param includeBookFields
@@ -271,22 +359,22 @@ public class BookServiceImpl implements BookService {
     }
 
     private void sanitizeReport(ReportDto reportDto, boolean includeBookFields) {
-        reportDto.setReportStat(XssUtil.escape(reportDto.getReportStat()));
-        reportDto.setReportStdt(XssUtil.escape(reportDto.getReportStdt()));
-        reportDto.setReportEndt(XssUtil.escape(reportDto.getReportEndt()));
-        reportDto.setReportGrde(XssUtil.escape(reportDto.getReportGrde()));
-        reportDto.setReportColr(XssUtil.escape(reportDto.getReportColr()));
-        reportDto.setPubcYsno(XssUtil.escape(reportDto.getPubcYsno()));
-        reportDto.setReportCntn(XssUtil.escape(reportDto.getReportCntn()));
+        reportDto.setReportStat(StringUtil.normalizePlainText(reportDto.getReportStat()));
+        reportDto.setReportStdt(StringUtil.normalizePlainText(reportDto.getReportStdt()));
+        reportDto.setReportEndt(StringUtil.normalizePlainText(reportDto.getReportEndt()));
+        reportDto.setReportGrde(StringUtil.normalizePlainText(reportDto.getReportGrde()));
+        reportDto.setReportColr(StringUtil.normalizePlainText(reportDto.getReportColr()));
+        reportDto.setPubcYsno(StringUtil.normalizePlainText(reportDto.getPubcYsno()));
+        reportDto.setReportCntn(StringUtil.normalizePlainText(reportDto.getReportCntn()));
 
         if (includeBookFields) {
-            // 등록 요청은 책 정보도 함께 저장하므로 책 관련 필드까지 필터링한다.
-            reportDto.setBookTitl(XssUtil.escape(reportDto.getBookTitl()));
-            reportDto.setBookAthr(XssUtil.escape(reportDto.getBookAthr()));
-            reportDto.setBookPubl(XssUtil.escape(reportDto.getBookPubl()));
-            reportDto.setBookIsbn(XssUtil.escape(reportDto.getBookIsbn()));
-            reportDto.setBookCvim(XssUtil.escape(reportDto.getBookCvim()));
-            reportDto.setBookDesc(XssUtil.escape(reportDto.getBookDesc()));
+            // 등록 요청은 책 정보도 함께 저장하므로 책 관련 필드까지 원문 기준으로 정리한다.
+            reportDto.setBookTitl(StringUtil.normalizePlainText(reportDto.getBookTitl()));
+            reportDto.setBookAthr(StringUtil.normalizePlainText(reportDto.getBookAthr()));
+            reportDto.setBookPubl(StringUtil.normalizePlainText(reportDto.getBookPubl()));
+            reportDto.setBookIsbn(StringUtil.normalizePlainText(reportDto.getBookIsbn()));
+            reportDto.setBookCvim(StringUtil.normalizePlainText(reportDto.getBookCvim()));
+            reportDto.setBookDesc(StringUtil.normalizePlainText(reportDto.getBookDesc()));
         }
     }
 
@@ -298,7 +386,7 @@ public class BookServiceImpl implements BookService {
      */
     private void validateReportContentBytes(ReportDto reportDto) {
         if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
-            // XSS escape 이후 실제 DB에 저장될 문자열이 VARCHAR2(4000 BYTE)를 넘으면 ORA-01461이 발생하므로 저장 전 차단한다.
+            // DB에는 HTML entity로 변환하지 않은 원문을 저장하므로, 원문 기준 byte 길이가 VARCHAR2(4000 BYTE)를 넘는지 먼저 차단한다.
             throw new CustomException(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, HttpStatus.BAD_REQUEST); // 독후감 내용 바이트 초과 응답이다.
         }
     }

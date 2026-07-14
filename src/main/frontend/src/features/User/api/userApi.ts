@@ -7,6 +7,28 @@ export type UserProfile = {
   intrCntn?: string;
 };
 
+export type ReadingSummaryReport = {
+  reportNumb: number;
+  bookTitl?: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  reportEndt?: string;
+  reportGrde?: string;
+};
+
+export type MonthlyReadingSummary = {
+  monthCode?: string;
+  currentMonthCount: number;
+  previousMonthCount: number;
+  countDiff: number;
+  yearCode?: string;
+  currentYearCount: number;
+  previousYearCount: number;
+  yearCountDiff: number;
+  currentMonthReports?: ReadingSummaryReport[];
+  currentYearReports?: ReadingSummaryReport[];
+};
+
 export type UpdateUserProfileParams = {
   userNick: string;
   intrCntn: string;
@@ -21,6 +43,15 @@ export type UpdateUserProfileParams = {
  */
 export const getMyProfileApi = () => {
   return api.get("/user/me");
+};
+
+/**
+ * 마이페이지에 표시할 이번 달 완료 독서 권수와 지난달 대비 변화량을 조회한다.
+ * @Author Hanwon.Jang
+ * @return 월간 완료 독서 요약 API 응답
+ */
+export const getMonthlyReadingSummaryApi = () => {
+  return api.get("/user/monthly-reading-summary");
 };
 
 /**

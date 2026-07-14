@@ -217,6 +217,19 @@ export const contentLabel = style({
   color: "#777777",
 });
 
+export const reportContentWrap = style({
+  maxHeight: "102px",
+  overflow: "hidden",
+  transition: "max-height 240ms ease",
+});
+
+export const reportContentWrapOpen = style([
+  reportContentWrap,
+  {
+    maxHeight: "3000px",
+  },
+]);
+
 export const reportContent = style({
   margin: 0,
   fontFamily: vars.font.body,
@@ -232,20 +245,46 @@ export const expandButton = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "4px",
-  minHeight: "24px",
+  width: "34px",
+  height: "34px",
   padding: 0,
-  border: 0,
-  backgroundColor: "transparent",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "50%",
+  backgroundColor: "#f8f9fa",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
-  fontSize: "12px",
   cursor: "pointer",
+  transition: "background-color 180ms ease, border-color 180ms ease, box-shadow 180ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#ffffff",
+      borderColor: "#cfd4da",
+      boxShadow: "0 6px 14px rgba(0, 0, 0, 0.08)",
+    },
+  },
 });
 
 export const expandArrow = style({
-  fontSize: "13px",
+  width: "20px",
+  height: "20px",
   lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  transform: "rotate(0deg)",
+  transition: "transform 200ms ease",
+});
+
+export const expandArrowOpen = style([
+  expandArrow,
+  {
+    transform: "rotate(180deg)",
+  },
+]);
+
+export const expandArrowIcon = style({
+  width: "18px",
+  height: "18px",
+  fill: "currentColor",
 });
 
 export const empty = style({

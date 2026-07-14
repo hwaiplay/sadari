@@ -1,14 +1,18 @@
 import { message } from "@/app/messages/message";
-import { sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyProfileApi,
+  getMonthlyReadingSummaryApi,
   updateMyProfileApi,
+  type MonthlyReadingSummary,
+  type ReadingSummaryReport,
   type UserProfile,
 } from "@/features/User/api/userApi";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import type { FormEvent, MouseEvent } from "react";
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
@@ -37,12 +41,28 @@ const normalizeProfileIntro = (value: string) =>
   value.slice(0, PROFILE_INTRO_MAX_LENGTH);
 
 /**
+ * 지난달 대비 완료 독서 변화량을 화면 표시용 문자열로 변환한다.
+ * 양수에는 + 기호를 붙이고, 0은 증감이 없는 상태로 그대로 표시한다.
+ * @Author Hanwon.Jang
+ * @param diff 지난달 대비 완료 독서 권수 변화량
+ * @return 변화량 표시 문자열
+ */
+const formatReadingDiff = (diff: number) => {
+  if (diff > 0) {
+    return `+${diff}`;
+  }
+
+  return String(diff);
+};
+
+/**
  * 로그인 사용자의 프로필 사진, 배경 사진, 닉네임, 한줄 소개를 조회하고 수정한다.
  * 수정 모드에서는 화면을 전환하지 않고 기존 요소 위치에서 텍스트와 이미지만 편집할 수 있게 제공한다.
  * @Author Hanwon.Jang
  * @return 프로필 상세 및 수정 페이지 컴포넌트
  */
 function ProfileEditPage() {
+  const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [userNick, setUserNick] = useState("");
@@ -51,6 +71,11 @@ function ProfileEditPage() {
   const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
+  const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
+  const [expandedSummary, setExpandedSummary] = useState<Record<"month" | "year", boolean>>({
+    month: false,
+    year: false,
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -86,10 +111,45 @@ function ProfileEditPage() {
         }
       });
 
+    getMonthlyReadingSummaryApi().then((response) => {
+      if (!ignore) {
+        setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+      }
+    });
+
     return () => {
       ignore = true;
     };
   }, []);
+
+  /**
+   * 이전 기간 대비 완료 독서 변화량 상세 문구를 info 알림으로 보여준다.
+   * 월간과 연간 비교 모두 같은 UI 패턴을 사용하므로 비교 단위별 메시지 key만 분기한다.
+   * @Author Hanwon.Jang
+   * @param diff 이전 기간 대비 완료 독서 권수 변화량
+   * @param period 비교 단위 구분값
+   * @return
+   */
+  const handleReadingDiffClick = (diff: number, period: "month" | "year") => {
+    if (diff === 0) {
+      return;
+    }
+
+    const diffCount = Math.abs(diff);
+    const messageKey =
+      diff > 0
+        ? `frontend.profile.${period === "month" ? "monthlyReading" : "yearlyReading"}.diffMore`
+        : `frontend.profile.${period === "month" ? "monthlyReading" : "yearlyReading"}.diffLess`;
+
+    void sweetInfo(
+      message(
+        period === "month"
+          ? "frontend.profile.monthlyReading.title"
+          : "frontend.profile.yearlyReading.title",
+      ),
+      message(messageKey, [diffCount]),
+    );
+  };
 
   /**
    * 사용자가 선택한 이미지 파일을 프로필 또는 배경 대상에 맞춰 미리보기로 반영한다.
@@ -99,6 +159,150 @@ function ProfileEditPage() {
    * @param target 이미지가 적용될 영역 구분값
    * @return
    */
+  /**
+   * 독서 요약 행의 펼침 상태를 월간/연간 단위로 전환한다.
+   * 같은 섹션 안에서 두 목록을 독립적으로 열 수 있어 사용자가 비교 중인 목록을 닫지 않아도 된다.
+   * @Author Hanwon.Jang
+   * @param period 펼치거나 접을 독서 요약 기간 구분값
+   * @return
+   */
+  const handleToggleReadingSummary = (period: "month" | "year") => {
+    setExpandedSummary((prev) => ({
+      ...prev,
+      [period]: !prev[period],
+    }));
+  };
+
+  /**
+   * 요약 목록에서 선택한 책의 독후감 상세 화면으로 이동한다.
+   * 백엔드가 내려준 reportNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결한다.
+   * @Author Hanwon.Jang
+   * @param reportNumb 이동할 독후감 번호
+   * @return
+   */
+  const handleSummaryReportClick = (reportNumb: number) => {
+    navigate(`/book/detail/${reportNumb}`);
+  };
+
+  /**
+   * 월간/연간 독서 요약 행과 펼침 목록을 공통 구조로 렌더링한다.
+   * 권수 비교 버튼은 별도 버튼으로 유지하고, 제목/권수 영역을 누르면 목록이 부드럽게 열리도록 분리한다.
+   * @Author Hanwon.Jang
+   * @param period 월간 또는 연간 구분값
+   * @param code 달력 아이콘 안에 표시할 월 약어 또는 연도
+   * @param titleKey 제목 메시지 key
+   * @param countKey 권수 메시지 key
+   * @param count 현재 기간 완료 권수
+   * @param diff 이전 기간 대비 증감 권수
+   * @param diffAriaKey 증감 버튼 접근성 메시지 key
+   * @param reports 펼침 영역에 표시할 완료 독후감 목록
+   * @return 독서 요약 행 JSX
+   */
+  const renderReadingSummaryRow = (
+    period: "month" | "year",
+    code: string | undefined,
+    titleKey: string,
+    countKey: string,
+    count: number,
+    diff: number,
+    diffAriaKey: string,
+    reports: ReadingSummaryReport[] = [],
+  ) => {
+    const isExpanded = expandedSummary[period];
+
+    return (
+      <div>
+        <div className={styles.readingSummaryRow}>
+          <button
+            className={styles.readingSummaryToggle}
+            type="button"
+            aria-expanded={isExpanded}
+            onClick={() => handleToggleReadingSummary(period)}
+          >
+            <div className={styles.monthlyCalendarIcon} aria-hidden="true">
+              <span className={styles.monthlyCalendarRing} />
+              <span className={styles.monthlyCalendarMonth}>{code ?? ""}</span>
+            </div>
+            <div className={styles.monthlySummaryText}>
+              <span className={styles.monthlySummaryLabel}>{message(titleKey)}</span>
+              <strong className={styles.monthlySummaryCount}>
+                {message(countKey, [count])}
+              </strong>
+            </div>
+            <span
+              className={
+                isExpanded
+                  ? styles.readingSummaryChevronOpen
+                  : styles.readingSummaryChevron
+              }
+              aria-hidden="true"
+            >
+              <svg
+                className={styles.readingSummaryChevronIcon}
+                viewBox="0 0 24 24"
+                focusable="false"
+              >
+                <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
+              </svg>
+            </span>
+          </button>
+          {diff === 0 ? (
+            <span className={styles.monthlyDiffNeutral}>0</span>
+          ) : (
+            <button
+              className={diff > 0 ? styles.monthlyDiffUp : styles.monthlyDiffDown}
+              type="button"
+              aria-label={message(diffAriaKey)}
+              onClick={() => handleReadingDiffClick(diff, period)}
+            >
+              {formatReadingDiff(diff)}
+            </button>
+          )}
+        </div>
+        <div
+          className={
+            isExpanded
+              ? styles.readingSummaryPanelOpen
+              : styles.readingSummaryPanel
+          }
+        >
+          <div className={styles.readingSummaryPanelInner}>
+            {reports.length > 0 ? (
+              reports.map((report) => (
+                <button
+                  className={styles.readingSummaryReport}
+                  type="button"
+                  key={report.reportNumb}
+                  onClick={() => handleSummaryReportClick(report.reportNumb)}
+                >
+                  {report.bookCvim && (
+                    <img
+                      className={styles.readingSummaryCover}
+                      src={report.bookCvim}
+                      alt=""
+                    />
+                  )}
+                  <span className={styles.readingSummaryBookText}>
+                    <strong className={styles.readingSummaryBookTitle}>
+                      {report.bookTitl || message("frontend.common.noBookInfo")}
+                    </strong>
+                    <span className={styles.readingSummaryBookMeta}>
+                      {[report.bookAthr, report.reportEndt].filter(Boolean).join(" | ")}
+                    </span>
+                  </span>
+                </button>
+              ))
+            ) : (
+              <p className={styles.readingSummaryEmpty}>
+                {message("frontend.profile.readingSummary.empty")}
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const applyImagePreview = (file: File | undefined, target: "profile" | "background") => {
     if (!file) {
       return;
@@ -330,6 +534,32 @@ function ProfileEditPage() {
               )}
             </div>
           </div>
+
+          {monthlySummary && (
+            <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+              {renderReadingSummaryRow(
+                "month",
+                monthlySummary.monthCode,
+                "frontend.profile.monthlyReading.title",
+                "frontend.profile.monthlyReading.count",
+                monthlySummary.currentMonthCount,
+                monthlySummary.countDiff,
+                "frontend.profile.monthlyReading.diffAria",
+                monthlySummary.currentMonthReports,
+              )}
+              <div className={styles.readingSummaryDivider} />
+              {renderReadingSummaryRow(
+                "year",
+                monthlySummary.yearCode,
+                "frontend.profile.yearlyReading.title",
+                "frontend.profile.yearlyReading.count",
+                monthlySummary.currentYearCount,
+                monthlySummary.yearCountDiff,
+                "frontend.profile.yearlyReading.diffAria",
+                monthlySummary.currentYearReports,
+              )}
+            </section>
+          )}
         </section>
       </form>
     </main>

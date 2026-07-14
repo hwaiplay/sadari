@@ -18,7 +18,7 @@ const STYLE_ID = "sadari-sweet-alert-style";
 
 const ICON_LABEL: Record<SweetAlertIcon, string> = {
   success: "✓",
-  error: "!",
+  error: "×",
   warning: "!",
   info: "i",
   question: "?",
@@ -34,6 +34,7 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
 
 /**
  * SweetAlert 대체 모달에 필요한 공통 스타일 태그를 문서에 한 번만 삽입한다.
+ * 아이콘은 SweetAlert2의 등장감에 맞춰 테두리와 기호가 각각 애니메이션되도록 구성한다.
  * @Author Hanwon.Jang
  * @return 없음
  */
@@ -81,28 +82,72 @@ function ensureSweetAlertStyle() {
       font-size: 30px;
       font-weight: 700;
       line-height: 1;
+      box-sizing: border-box;
+      transform-origin: center;
+      animation: sadari-swal-icon-show 300ms ease-out both;
+    }
+
+    .sadari-swal-icon-label {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      height: 100%;
+      line-height: 1;
+      transform-origin: center;
     }
 
     .sadari-swal-icon-success {
       color: #2f8f64;
+      animation: sadari-swal-icon-show 300ms ease-out both, sadari-swal-success-ring 700ms ease-out 120ms both;
+    }
+
+    .sadari-swal-icon-success .sadari-swal-icon-label {
+      font-size: 34px;
+      animation: sadari-swal-success-mark 520ms ease-out 150ms both;
     }
 
     .sadari-swal-icon-error {
       color: #c94b4b;
+      animation: sadari-swal-icon-show 300ms ease-out both, sadari-swal-error-shake 650ms ease-out 120ms both;
+    }
+
+    .sadari-swal-icon-error .sadari-swal-icon-label {
+      font-size: 42px;
+      font-weight: 300;
+      animation: sadari-swal-error-mark 420ms ease-out 150ms both;
     }
 
     .sadari-swal-icon-warning {
       color: #c78722;
+      animation: sadari-swal-icon-show 300ms ease-out both, sadari-swal-warning-pulse 900ms ease-out 130ms both;
+    }
+
+    .sadari-swal-icon-warning .sadari-swal-icon-label {
+      animation: sadari-swal-pop-mark 450ms ease-out 160ms both;
     }
 
     .sadari-swal-icon-info {
-      color: #3a74a8;
-      font-family: Georgia, serif;
-      font-style: italic;
+      color: #3fc3ee;
+      font-family: Arial, Helvetica, sans-serif;
+      font-size: 35px;
+      font-style: normal;
+      font-weight: 400;
+      line-height: 58px;
+      animation: sadari-swal-icon-show 300ms ease-out both, sadari-swal-info-pulse 700ms ease-out 120ms both;
+    }
+
+    .sadari-swal-icon-info .sadari-swal-icon-label {
+      animation: sadari-swal-info-mark 500ms ease-out 160ms both;
     }
 
     .sadari-swal-icon-question {
       color: #4b6fbd;
+      animation: sadari-swal-icon-show 300ms ease-out both, sadari-swal-question-bounce 680ms ease-out 120ms both;
+    }
+
+    .sadari-swal-icon-question .sadari-swal-icon-label {
+      animation: sadari-swal-pop-mark 500ms ease-out 160ms both;
     }
 
     .sadari-swal-title {
@@ -166,6 +211,152 @@ function ensureSweetAlertStyle() {
         transform: translateY(0) scale(1);
       }
     }
+
+    @keyframes sadari-swal-icon-show {
+      0% {
+        opacity: 0;
+        transform: scale(0.48);
+      }
+      45% {
+        opacity: 1;
+        transform: scale(1.08);
+      }
+      80% {
+        transform: scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes sadari-swal-success-ring {
+      0% {
+        box-shadow: 0 0 0 0 rgba(47, 143, 100, 0.28);
+      }
+      55% {
+        box-shadow: 0 0 0 12px rgba(47, 143, 100, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(47, 143, 100, 0);
+      }
+    }
+
+    @keyframes sadari-swal-success-mark {
+      0% {
+        opacity: 0;
+        transform: rotate(-35deg) scale(0.35);
+      }
+      55% {
+        opacity: 1;
+        transform: rotate(8deg) scale(1.16);
+      }
+      100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+      }
+    }
+
+    @keyframes sadari-swal-error-shake {
+      0%, 100% {
+        transform: scale(1) translateX(0);
+      }
+      20% {
+        transform: scale(1) translateX(-7px);
+      }
+      40% {
+        transform: scale(1) translateX(7px);
+      }
+      60% {
+        transform: scale(1) translateX(-4px);
+      }
+      80% {
+        transform: scale(1) translateX(4px);
+      }
+    }
+
+    @keyframes sadari-swal-error-mark {
+      0% {
+        opacity: 0;
+        transform: rotate(45deg) scale(0.45);
+      }
+      70% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1.12);
+      }
+      100% {
+        opacity: 1;
+        transform: rotate(0deg) scale(1);
+      }
+    }
+
+    @keyframes sadari-swal-warning-pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(199, 135, 34, 0.32);
+      }
+      45% {
+        transform: scale(1.04);
+        box-shadow: 0 0 0 10px rgba(199, 135, 34, 0);
+      }
+      100% {
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(199, 135, 34, 0);
+      }
+    }
+
+    @keyframes sadari-swal-info-pulse {
+      0% {
+        box-shadow: 0 0 0 0 rgba(63, 195, 238, 0.28);
+      }
+      55% {
+        box-shadow: 0 0 0 11px rgba(63, 195, 238, 0);
+      }
+      100% {
+        box-shadow: 0 0 0 0 rgba(63, 195, 238, 0);
+      }
+    }
+
+    @keyframes sadari-swal-info-mark {
+      0% {
+        opacity: 0;
+        transform: translateY(-18px);
+      }
+      60% {
+        opacity: 1;
+        transform: translateY(4px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes sadari-swal-question-bounce {
+      0%, 100% {
+        transform: scale(1) rotateY(0deg);
+      }
+      45% {
+        transform: scale(1.04) rotateY(-14deg);
+      }
+      70% {
+        transform: scale(0.98) rotateY(10deg);
+      }
+    }
+
+    @keyframes sadari-swal-pop-mark {
+      0% {
+        opacity: 0;
+        transform: scale(0.25);
+      }
+      60% {
+        opacity: 1;
+        transform: scale(1.18);
+      }
+      100% {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
   `;
 
   document.head.appendChild(style);
@@ -205,7 +396,11 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     const icon = document.createElement("div");
     icon.className = `sadari-swal-icon ${ICON_CLASS[iconType]}`;
-    icon.textContent = ICON_LABEL[iconType];
+
+    const iconLabel = document.createElement("span");
+    iconLabel.className = "sadari-swal-icon-label";
+    iconLabel.textContent = ICON_LABEL[iconType];
+    icon.appendChild(iconLabel);
 
     const title = document.createElement("h2");
     title.className = "sadari-swal-title";
@@ -267,7 +462,7 @@ export function sweetAlert(options: SweetAlertOptions) {
 }
 
 /**
- * 취소 버튼이 포함된 확인 모달을 표시한다.
+ * 취소 버튼을 포함한 확인 모달을 표시한다.
  * @Author Hanwon.Jang
  * @param options 확인 모달 표시 옵션
  * @return 사용자의 확인 또는 취소 선택 결과 Promise

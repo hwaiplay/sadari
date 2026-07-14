@@ -111,6 +111,39 @@ public class StringUtil {
     }
 
     /**
+     * DB 저장 또는 조회 조건에 사용할 일반 문자열을 원문 기준으로 정리한다.
+     * XSS 처리는 저장 시점이 아니라 화면 출력 시점에서 수행해야 하므로 HTML entity 변환은 하지 않고, 앞뒤 공백만 제거한다.
+     * @Author Seunghyeon.Kang
+     * @param value 정리할 입력 문자열
+     * @return 앞뒤 공백이 제거된 문자열 또는 null
+     */
+    public static String normalizePlainText(String value) {
+        if (isEmpty(value)) {
+            return null;
+        }
+
+        return value.trim();
+    }
+
+    /**
+     * DB 저장 또는 조회 조건에 사용할 일반 문자열을 원문 기준으로 정리하고 최대 길이를 제한한다.
+     * 화면에서 이미 길이를 제한하더라도 API 직접 호출이나 우회 요청이 들어올 수 있으므로 서버에서도 동일하게 한 번 더 제한한다.
+     * @Author Seunghyeon.Kang
+     * @param value 정리할 입력 문자열
+     * @param maxLength 저장 가능한 최대 문자 길이
+     * @return 앞뒤 공백이 제거되고 최대 길이로 잘린 문자열 또는 null
+     */
+    public static String normalizePlainText(String value, int maxLength) {
+        String normalizedValue = normalizePlainText(value);
+
+        if (isEmpty(normalizedValue)) {
+            return null;
+        }
+
+        return cutString(normalizedValue, maxLength);
+    }
+
+    /**
      * 문자열, 리스트, Map, 일반 객체 등 다양한 타입의 비어있음 여부를 확인합니다.
      * @param obj 체크할 대상
      * @return 비어있거나 null이면 true, 내용이 있으면 false

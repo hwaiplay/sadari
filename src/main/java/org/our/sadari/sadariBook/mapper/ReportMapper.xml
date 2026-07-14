@@ -55,6 +55,41 @@
         </choose>
     </select>
 
+    <!-- 기간별 완료 독서 권수 조회 -->
+    <select id="getDoneReportCntByPeriod" parameterType="org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto" resultType="int">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT COUNT(*)
+          FROM TM_BOOK_REPORT A
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_STAT = #{reportStatDone}
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &gt;= TO_DATE(#{periodStart}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &lt; TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &lt;= TO_DATE(#{targetDate}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 기간별 완료 독후감 목록 조회 -->
+    <select id="getDoneReportListByPeriod" parameterType="org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_STAT = #{reportStatDone}
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &gt;= TO_DATE(#{periodStart}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &lt; TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') &lt;= TO_DATE(#{targetDate}, 'YYYY-MM-DD')
+      ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') DESC, A.REPORT_NUMB DESC
+    </select>
+
     <!-- 독후감 상세 조회 -->
     <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
