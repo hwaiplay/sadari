@@ -31,5 +31,9 @@ public class UserDto {
     // 가입일
     private LocalDateTime joinDate;
     // 프로필 사진 경로
+    private Long profNumb;
+    private Long bgimNumb;
+    private String intrCntn;
     private String porfPath;
+    private String bgimPath;
 }

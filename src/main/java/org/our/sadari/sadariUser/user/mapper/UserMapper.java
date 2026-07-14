@@ -32,4 +32,12 @@ public interface UserMapper {
      * @return 결과 (0/1)
      */
     int setUser(UserDto request);
+
+    /**
+     * 로그인 사용자의 프로필 정보를 수정한다.
+     * @Author Seunghyeon.Kang
+     * @param request 수정할 프로필 정보
+     * @return 수정 처리 건수
+     */
+    int uptUserProfile(UserDto request);
 }
