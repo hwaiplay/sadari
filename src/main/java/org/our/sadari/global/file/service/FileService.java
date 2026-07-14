@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.dto.FileDto;
 import org.our.sadari.global.file.mapper.FileMapper;
 import org.springframework.http.ResponseEntity;
@@ -43,16 +44,21 @@ public class FileService {
      * @throws IOException 파일 저장 중 오류가 발생한 경우
      */
     public Long setUploadedImage(MultipartFile imageFile, String imageType, Long regiUser) throws IOException {
-        if (imageFile == null || imageFile.isEmpty()) {
+        // 업로드 파일이 없으면 기존 프로필 또는 배경 이미지를 유지해야 하므로 파일 등록을 건너뛴다.
+        if (StringUtil.isEmpty(imageFile) || imageFile.isEmpty()) {
             return null;
         }
 
+        // 원본 파일명은 사용자에게 받은 값이고, 저장 파일명은 충돌 방지를 위해 UUID 기반으로 새로 만든다.
         String originalName = imageFile.getOriginalFilename();
         String storedName = createStoredFileName(originalName);
+
+        // 프로필 사진과 배경 사진은 서로 다른 디렉터리에 저장해 파일 구분과 정적 리소스 관리를 단순하게 유지한다.
         Path uploadPath = getUploadPath(imageType);
         Files.createDirectories(uploadPath);
         Files.copy(imageFile.getInputStream(), uploadPath.resolve(storedName));
 
+        // 브라우저 접근 경로와 등록자 회원 번호를 함께 저장해 사용자 테이블은 파일 번호만 참조하게 한다.
         FileDto fileDto = new FileDto();
         fileDto.setOrigName(originalName);
         fileDto.setStorName(storedName);
@@ -75,20 +81,24 @@ public class FileService {
      * @return 파일 테이블에 생성된 파일 번호
      */
     public Long setKakaoProfileImage(String profileImageUrl, String userIdxx, Long regiUser) {
-        if (profileImageUrl == null || profileImageUrl.isBlank()) {
+        // 카카오에서 프로필 이미지 URL을 제공하지 않으면 사용자 생성 흐름만 계속 진행한다.
+        if (StringUtil.isEmpty(profileImageUrl)) {
             return null;
         }
 
         try {
+            // 외부 URL 이미지를 로컬 저장소로 복사해 이후 카카오 URL 만료나 접근 실패에 영향을 덜 받게 한다.
             RestTemplate restTemplate = new RestTemplate();
             ResponseEntity<byte[]> response = restTemplate.getForEntity(URI.create(profileImageUrl), byte[].class);
             byte[] imageBytes = response.getBody();
 
-            if (imageBytes == null || imageBytes.length == 0) {
+            // 응답 본문이 없으면 원본 URL을 파일 경로로 저장해 프로필 표시 자체는 가능하게 둔다.
+            if (StringUtil.isEmpty(imageBytes) || imageBytes.length == 0) {
                 return setExternalImage(profileImageUrl, userIdxx, Constant.FILE_TYPE_PROFILE, regiUser);
             }
 
-            String contentType = response.getHeaders().getContentType() == null
+            // Content-Type이 없을 때는 일반적인 카카오 프로필 이미지 포맷인 jpg로 저장한다.
+            String contentType = StringUtil.isEmpty(response.getHeaders().getContentType())
                     ? "image/jpeg"
                     : response.getHeaders().getContentType().toString();
             String storedName = UUID.randomUUID() + resolveExtension(contentType);
@@ -107,6 +117,7 @@ public class FileService {
 
             return fileDto.getFileNumb();
         } catch (Exception e) {
+            // 외부 이미지 다운로드 실패는 로그만 남기고 원본 URL 저장으로 대체해 로그인 자체를 막지 않는다.
             log.warn("Kakao profile image download failed. userIdxx={}, message={}", userIdxx, e.getMessage());
             return setExternalImage(profileImageUrl, userIdxx, Constant.FILE_TYPE_PROFILE, regiUser);
         }
@@ -123,6 +134,7 @@ public class FileService {
      * @return 파일 테이블에 생성된 파일 번호
      */
     private Long setExternalImage(String imageUrl, String ownerKey, String imageType, Long regiUser) {
+        // 실제 파일이 없는 외부 URL 케이스이므로 크기는 비우고 MIME 타입은 이미지 와일드카드로 남긴다.
         FileDto fileDto = new FileDto();
         fileDto.setOrigName(imageType.toLowerCase() + "-" + ownerKey);
         fileDto.setStorName(imageType.toLowerCase() + "-" + ownerKey);
@@ -151,6 +163,7 @@ public class FileService {
      * @return 브라우저 접근 경로 prefix
      */
     private String getAccessPrefix(String imageType) {
+        // DB에는 서버 파일 시스템 경로가 아니라 브라우저가 접근할 수 있는 URL 경로를 저장한다.
         return UPLOAD_ACCESS_PREFIX + getUploadDirectoryName(imageType) + "/";
     }
 
@@ -161,6 +174,7 @@ public class FileService {
      * @return 저장 디렉터리명
      */
     private String getUploadDirectoryName(String imageType) {
+        // 배경 이미지만 background 디렉터리에 저장하고, 그 외 이미지 타입은 프로필 디렉터리를 기본값으로 사용한다.
         if (Constant.FILE_TYPE_BACKGROUND.equals(imageType)) {
             return "background";
         }
@@ -177,7 +191,8 @@ public class FileService {
     private String createStoredFileName(String originalName) {
         String extension = "";
 
-        if (originalName != null && originalName.lastIndexOf('.') >= 0) {
+        // 원본 파일명에 확장자가 있으면 유지하고, 없으면 UUID만 저장 파일명으로 사용한다.
+        if (!StringUtil.isEmpty(originalName) && originalName.lastIndexOf('.') >= 0) {
             extension = originalName.substring(originalName.lastIndexOf('.'));
         }
 

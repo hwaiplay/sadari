@@ -23,6 +23,8 @@ public class Constant {
 
     // 독서중 상태 코드
     public static final String REPORT_STAT_READ = "READ";
+    // 독서 완료 상태 코드
+    public static final String REPORT_STAT_DONE = "DONE";
     // 공통 Y 값
     public static final String COMM_YES = "Y";
     // 공통 N 값

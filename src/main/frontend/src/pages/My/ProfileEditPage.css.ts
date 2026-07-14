@@ -241,3 +241,285 @@ export const profileIntroInput = style({
     },
   },
 });
+
+export const monthlySummary = style({
+  width: "calc(100% + 44px)",
+  marginTop: "28px",
+  marginLeft: "-22px",
+  marginRight: "-22px",
+  padding: "6px 14px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+});
+
+export const readingSummaryRow = style({
+  minHeight: "66px",
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: "12px",
+});
+
+export const readingSummaryToggle = style({
+  minWidth: 0,
+  width: "100%",
+  minHeight: "66px",
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  display: "grid",
+  gridTemplateColumns: "38px minmax(0, 1fr) 28px",
+  alignItems: "center",
+  gap: "12px",
+  textAlign: "left",
+  cursor: "pointer",
+});
+
+export const readingSummaryChevron = style({
+  width: "28px",
+  height: "28px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "50%",
+  backgroundColor: "#f8f9fa",
+  color: "#666666",
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  transform: "rotate(0deg)",
+  transition: "transform 200ms ease, color 180ms ease, background-color 180ms ease, border-color 180ms ease",
+});
+
+export const readingSummaryChevronOpen = style([
+  readingSummaryChevron,
+  {
+    color: vars.color.black,
+    backgroundColor: "#ffffff",
+    borderColor: "#cfd4da",
+    transform: "rotate(180deg)",
+  },
+]);
+
+export const readingSummaryChevronIcon = style({
+  width: "17px",
+  height: "17px",
+  fill: "currentColor",
+});
+
+export const readingSummaryDivider = style({
+  width: "100%",
+  height: "1px",
+  backgroundColor: "#eef0f2",
+});
+
+export const readingSummaryPanel = style({
+  display: "grid",
+  gridTemplateRows: "0fr",
+  opacity: 0,
+  overflow: "hidden",
+  transition: "grid-template-rows 220ms ease, opacity 180ms ease",
+});
+
+export const readingSummaryPanelOpen = style([
+  readingSummaryPanel,
+  {
+    gridTemplateRows: "1fr",
+    opacity: 1,
+  },
+]);
+
+export const readingSummaryPanelInner = style({
+  minHeight: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  padding: "0 0 12px",
+});
+
+export const readingSummaryReport = style({
+  width: "100%",
+  minHeight: "48px",
+  padding: "7px 8px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "10px",
+  backgroundColor: "#fafafa",
+  display: "grid",
+  gridTemplateColumns: "32px minmax(0, 1fr)",
+  alignItems: "center",
+  gap: "9px",
+  textAlign: "left",
+  cursor: "pointer",
+  transition: "background-color 160ms ease, border-color 160ms ease, transform 160ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#ffffff",
+      borderColor: "#cfd4da",
+      transform: "translateY(-1px)",
+    },
+  },
+});
+
+export const readingSummaryCover = style({
+  width: "32px",
+  height: "42px",
+  borderRadius: "4px",
+  objectFit: "cover",
+  backgroundColor: "#f0f1f2",
+});
+
+export const readingSummaryBookText = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "3px",
+});
+
+export const readingSummaryBookTitle = style({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  lineHeight: 1.25,
+  color: vars.color.black,
+});
+
+export const readingSummaryBookMeta = style({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1.25,
+  color: "#777777",
+});
+
+export const readingSummaryEmpty = style({
+  margin: "0 0 10px",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.5,
+  color: "#777777",
+});
+
+export const monthlyCalendarIcon = style({
+  position: "relative",
+  width: "38px",
+  height: "38px",
+  border: `2px solid ${vars.color.black}`,
+  borderRadius: "8px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  flexShrink: 0,
+});
+
+export const monthlyCalendarRing = style({
+  position: "absolute",
+  top: "6px",
+  left: "7px",
+  right: "7px",
+  height: "2px",
+  backgroundColor: vars.color.black,
+  selectors: {
+    "&::before": {
+      content: "",
+      position: "absolute",
+      left: "3px",
+      top: "-6px",
+      width: "3px",
+      height: "7px",
+      borderRadius: "999px",
+      backgroundColor: vars.color.black,
+    },
+    "&::after": {
+      content: "",
+      position: "absolute",
+      right: "3px",
+      top: "-6px",
+      width: "3px",
+      height: "7px",
+      borderRadius: "999px",
+      backgroundColor: vars.color.black,
+    },
+  },
+});
+
+export const monthlyCalendarMonth = style({
+  marginTop: "7px",
+  fontFamily: vars.font.heading,
+  fontSize: "9px",
+  lineHeight: 1,
+  color: vars.color.black,
+});
+
+export const monthlySummaryText = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+});
+
+export const monthlySummaryLabel = style({
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.3,
+  color: "#777777",
+});
+
+export const monthlySummaryCount = style({
+  fontFamily: vars.font.heading,
+  fontSize: "20px",
+  lineHeight: 1.2,
+  color: vars.color.black,
+});
+
+const monthlyDiffBase = style({
+  minWidth: "38px",
+  height: "30px",
+  padding: "0 9px",
+  border: 0,
+  borderRadius: "999px",
+  fontFamily: vars.font.heading,
+  fontSize: "14px",
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+});
+
+export const monthlyDiffUp = style([
+  monthlyDiffBase,
+  {
+    backgroundColor: "#e4f6e9",
+    color: "#2f8f64",
+  },
+]);
+
+export const monthlyDiffDown = style([
+  monthlyDiffBase,
+  {
+    backgroundColor: "#fdeaea",
+    color: "#c94b4b",
+  },
+]);
+
+export const monthlyDiffNeutral = style({
+  minWidth: "38px",
+  height: "30px",
+  padding: "0 9px",
+  borderRadius: "999px",
+  backgroundColor: "#f3f4f5",
+  color: "#777777",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+});
