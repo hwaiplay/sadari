@@ -5,7 +5,8 @@ import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "react-router-dom";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -116,6 +117,7 @@ function chunkBooks(bookList: HomeBookType[], size: number) {
  * @return 홈 화면 컴포넌트
  */
 function Home() {
+  const location = useLocation();
   const [sortType, setSortType] = useState<HomeSortType>("END_DATE_DESC");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [appliedSearchKeyword, setAppliedSearchKeyword] = useState("");
@@ -133,6 +135,17 @@ function Home() {
     (option) => option.value === sortType,
   );
   const hasSearchCondition = appliedSearchKeyword.trim().length > 0;
+
+  useEffect(() => {
+    const state = location.state as { resetHomeSearch?: boolean } | null;
+
+    if (!state?.resetHomeSearch) {
+      return;
+    }
+
+    setSearchKeyword("");
+    setAppliedSearchKeyword("");
+  }, [location.key, location.state]);
 
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

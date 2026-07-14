@@ -69,6 +69,7 @@ public class SecurityConfig {
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
+                                "/uploads/**",
                                 // 책 검색만 인증 없이 허용한다.
                                 "/api/book/search"
                         ).permitAll()

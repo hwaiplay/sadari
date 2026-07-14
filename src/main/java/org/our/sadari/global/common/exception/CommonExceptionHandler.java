@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.result.ResultResponse;
+import org.our.sadari.global.common.util.StringUtil;
 import org.springframework.dao.DataAccessException;
 import org.springframework.context.MessageSource;
 import org.springframework.http.HttpStatus;
@@ -79,7 +80,7 @@ public class CommonExceptionHandler {
     public ResponseEntity<ResultResponse> handleDataAccessException(DataAccessException e) {
         SQLException sqlException = findSqlException(e);
 
-        if (sqlException != null && sqlException.getErrorCode() == 1461) {
+        if (!StringUtil.isEmpty(sqlException) && sqlException.getErrorCode() == 1461) {
             // ORA-01461은 VARCHAR2(4000 BYTE)보다 큰 문자열을 바인딩할 때 발생한다.
             ResultResponse response = new ResultResponse(
                     ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG.getCode(),
@@ -110,7 +111,7 @@ public class CommonExceptionHandler {
     private SQLException findSqlException(Throwable throwable) {
         Throwable current = throwable;
 
-        while (current != null) {
+        while (!StringUtil.isEmpty(current)) {
             if (current instanceof SQLException sqlException) {
                 return sqlException;
             }

@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.global.file.mapper.FileMapper">
+
+    <!-- 파일 메타 정보 저장 -->
+    <insert id="setFile" parameterType="org.our.sadari.global.file.dto.FileDto">
+        <selectKey keyProperty="fileNumb" resultType="long" order="BEFORE">
+            SELECT TM_FILEXM_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        INSERT INTO TM_FILEXM(
+              FILE_NUMB
+            , ORIG_NAME
+            , STOR_NAME
+            , FILE_PATH
+            , FILE_SIZE
+            , MIME_TYPE
+            , REGI_USER
+            , REGI_DATE
+        )
+        VALUES(
+              #{fileNumb}
+            , #{origName}
+            , #{storName}
+            , #{filePath}
+            , #{fileSize}
+            , #{mimeType}
+            , #{regiUser,jdbcType=NUMERIC}
+            , SYSDATE
+        )
+    </insert>
+
+    <!-- 파일 번호 기준 파일 메타 정보 조회 -->
+    <select id="getFileByNumb" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
+        SELECT FILE_NUMB
+             , ORIG_NAME
+             , STOR_NAME
+             , FILE_PATH
+             , FILE_SIZE
+             , MIME_TYPE
+             , REGI_USER
+             , REGI_DATE
+          FROM TM_FILEXM
+         WHERE FILE_NUMB = #{fileNumb}
+    </select>
+</mapper>

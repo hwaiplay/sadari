@@ -1,5 +1,6 @@
 package org.our.sadari.global.common.config;
 
+import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
@@ -27,5 +28,18 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(FRONT_DOMAIN)
                 .allowedMethods("*")
                 .allowCredentials(true);
+    }
+
+    /**
+     * 프로젝트 내부 업로드 디렉터리에 저장한 프로필 이미지를 정적 리소스로 제공한다.
+     * @Author Seunghyeon.Kang
+     * @param registry 정적 리소스 핸들러 레지스트리
+     * @return
+     */
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        String uploadPath = Paths.get("uploads").toAbsolutePath().normalize().toUri().toString();
+        registry.addResourceHandler("/uploads/**")
+                .addResourceLocations(uploadPath);
     }
 }

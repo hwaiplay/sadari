@@ -1,15 +1,8 @@
 package org.our.sadari.global.common.constant;
 
 /**
- * fileName       : Constant
- * author         : SeungHyeon.Kang
- * date           : 2026-07-07
- * description    : 애플리케이션 전역에서 공통으로 사용하는 상수를 관리한다.
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-07-07        SeungHyeon.Kang    최초 생성
- * 2026-07-13        SeungHyeon.Kang    공통코드, 공개여부, 독후감 목록 정렬 상수 추가
+ * 애플리케이션 전역에서 공통으로 사용하는 상수를 관리한다.
+ * @Author Seunghyeon.Kang
  */
 public class Constant {
 
@@ -41,4 +34,9 @@ public class Constant {
     public static final String SORT_START_DATE_DESC = "START_DATE_DESC";
     // 독후감 목록 별점 내림차순 정렬 코드
     public static final String SORT_GRADE_DESC = "GRADE_DESC";
+
+    // 프로필 사진 파일 구분값
+    public static final String FILE_TYPE_PROFILE = "PROFILE";
+    // 프로필 배경 사진 파일 구분값
+    public static final String FILE_TYPE_BACKGROUND = "BACKGROUND";
 }

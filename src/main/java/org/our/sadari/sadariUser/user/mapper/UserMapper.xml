@@ -4,27 +4,41 @@
 
     <!-- USER_IDXX 로 유저 조회 -->
     <select id="getUserByIdxx" parameterType="string" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
-        SELECT 
-              USER_NUMB
-            , PROF_PATH AS PORF_PATH
-            , USER_IDXX
-            , USER_NICK
-            , USER_PROV
-            , USER_ROLE 
-        FROM TM_USERXM
-        WHERE USER_IDXX = #{userIdxx}
+        SELECT U.USER_NUMB
+             , U.PROF_NUMB
+             , F.FILE_PATH AS PORF_PATH
+             , U.BGIM_NUMB
+             , BF.FILE_PATH AS BGIM_PATH
+             , U.USER_IDXX
+             , U.USER_NICK
+             , U.USER_PROV
+             , U.USER_ROLE
+             , U.INTR_CNTN
+          FROM TM_USERXM U
+     LEFT JOIN TM_FILEXM F
+            ON U.PROF_NUMB = F.FILE_NUMB
+     LEFT JOIN TM_FILEXM BF
+            ON U.BGIM_NUMB = BF.FILE_NUMB
+         WHERE U.USER_IDXX = #{userIdxx}
     </select>
 
     <select id="getUserByNumb" parameterType="long" resultType="org.our.sadari.sadariUser.user.dto.UserDto">
-        SELECT
-              USER_NUMB
-            , PROF_PATH AS PORF_PATH
-            , USER_IDXX
-            , USER_NICK
-            , USER_PROV
-            , USER_ROLE
-        FROM TM_USERXM
-        WHERE USER_NUMB = #{userNumb}
+        SELECT U.USER_NUMB
+             , U.PROF_NUMB
+             , F.FILE_PATH AS PORF_PATH
+             , U.BGIM_NUMB
+             , BF.FILE_PATH AS BGIM_PATH
+             , U.USER_IDXX
+             , U.USER_NICK
+             , U.USER_PROV
+             , U.USER_ROLE
+             , U.INTR_CNTN
+          FROM TM_USERXM U
+     LEFT JOIN TM_FILEXM F
+            ON U.PROF_NUMB = F.FILE_NUMB
+     LEFT JOIN TM_FILEXM BF
+            ON U.BGIM_NUMB = BF.FILE_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
     </select>
 
     <!-- 신규 회원 가입 -->
@@ -36,21 +50,39 @@
         INSERT INTO TM_USERXM(
               JOIN_DATE
             , USER_NUMB
-            , PROF_PATH
+            , PROF_NUMB
+            , BGIM_NUMB
             , USER_IDXX
             , USER_NICK
             , USER_PROV
             , USER_ROLE
+            , INTR_CNTN
             )
         VALUES(
               SYSDATE
             , #{userNumb}
-            , #{porfPath}
+            , #{profNumb,jdbcType=NUMERIC}
+            , #{bgimNumb,jdbcType=NUMERIC}
             , #{userIdxx}
             , #{userNick}
-            , #{userProv}
+            , #{userProv,jdbcType=VARCHAR}
             , #{userRole}
+            , #{intrCntn,jdbcType=VARCHAR}
         )
     </insert>
+
+    <!-- 회원 프로필 수정 -->
+    <update id="uptUserProfile" parameterType="org.our.sadari.sadariUser.user.dto.UserDto">
+        UPDATE TM_USERXM
+           SET USER_NICK = #{userNick}
+             , INTR_CNTN = #{intrCntn,jdbcType=VARCHAR}
+        <if test="profNumb != null">
+             , PROF_NUMB = #{profNumb}
+        </if>
+        <if test="bgimNumb != null">
+             , BGIM_NUMB = #{bgimNumb}
+        </if>
+         WHERE USER_NUMB = #{userNumb}
+    </update>
 
 </mapper>
