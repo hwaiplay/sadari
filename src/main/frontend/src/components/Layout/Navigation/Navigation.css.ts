@@ -121,9 +121,23 @@ export const drawerOpen = style({
     transform: "translateX(0)",
 });
 
+export const drawerProfileSummaryButton = style({
+    gridColumn: "1 / -1",
+    display: "grid",
+    gridTemplateColumns: "58px minmax(0, 1fr)",
+    alignItems: "center",
+    gap: "14px",
+    width: "100%",
+    padding: 0,
+    border: 0,
+    backgroundColor: "transparent",
+    textAlign: "left",
+    cursor: "pointer",
+});
+
 export const drawerHeader = style({
     display: "grid",
-    gridTemplateColumns: "58px minmax(0, 1fr) auto",
+    gridTemplateColumns: "58px minmax(0, 1fr)",
     alignItems: "center",
     gap: "14px",
     paddingBottom: "20px",
@@ -159,19 +173,31 @@ export const drawerProfileName = style({
 export const drawerProfileSub = style({
     fontFamily: vars.font.body,
     fontSize: "12px",
+    lineHeight: 1.45,
     color: "#777777",
+    display: "-webkit-box",
+    overflow: "hidden",
+    textOverflow: "ellipsis",
+    WebkitLineClamp: 2,
+    WebkitBoxOrient: "vertical",
+});
+
+export const drawerActionGroup = style({
+    gridColumn: "1 / -1",
+    display: "flex",
+    justifyContent: "flex-end",
 });
 
 export const drawerLogoutButton = style({
-    minWidth: "58px",
-    height: "34px",
-    padding: "0 10px",
-    border: `1px solid ${vars.color.gray300}`,
-    borderRadius: vars.radius.sm,
+    minWidth: "64px",
+    height: "30px",
+    padding: "0 12px",
+    border: "1px solid #d84a4a",
+    borderRadius: "999px",
     backgroundColor: "#ffffff",
-    color: "#555555",
+    color: "#d84a4a",
     fontFamily: vars.font.middle,
-    fontSize: "12px",
+    fontSize: "11px",
     cursor: "pointer",
     whiteSpace: "nowrap",
 });

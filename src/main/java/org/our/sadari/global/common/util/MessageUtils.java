@@ -28,7 +28,7 @@ public class MessageUtils {
     }
 
     public static String getMessage(String key) {
-        if (messageSource == null) {
+        if (StringUtil.isEmpty(messageSource)) {
             throw new IllegalStateException("MessageSource not initialized");
         }
 

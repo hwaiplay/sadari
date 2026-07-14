@@ -130,7 +130,7 @@
         SELECT P.REPORT_NUMB
              , P.USER_NUMB
              , U.USER_NICK
-             , U.PROF_PATH AS PORF_PATH
+             , F.FILE_PATH AS PORF_PATH
              , P.BOOK_NUMB
              , P.REPORT_GRDE
              , P.REPORT_CNTN
@@ -151,6 +151,8 @@
             ON B.BOOK_NUMB = P.BOOK_NUMB
     INNER JOIN TM_USERXM U
             ON P.USER_NUMB = U.USER_NUMB
+     LEFT JOIN TM_FILEXM F
+            ON U.PROF_NUMB = F.FILE_NUMB
          WHERE P.USER_NUMB != #{userNumb}
            AND P.PUBC_YSNO = #{commYes}
         <choose>

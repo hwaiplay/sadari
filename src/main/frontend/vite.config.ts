@@ -10,7 +10,10 @@ export default defineConfig({
       "/api": {
         target: "http://localhost:8080",
         changeOrigin: true,
-        // rewrite: (path) => path.replace(/^\/api/, '') // 백엔드 API에 /api가 없다면 이 줄 추가
+      },
+      "/uploads": {
+        target: "http://localhost:8080",
+        changeOrigin: true,
       },
     },
   },

@@ -14,6 +14,7 @@ import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
 import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
 import PublicReportPage from "@/pages/Book/PublicReports/PublicReportPage";
+import ProfileEditPage from "@/pages/My/ProfileEditPage";
 
 /**
  * fileName       : Router
@@ -102,6 +103,7 @@ const Router = () => {
           <Route path="/book/upt/:id" element={<UpdateReportPage />} />
 
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
+          <Route path="/mypage/profile" element={<ProfileEditPage />} />
         </Route>
       </Routes>
     </>

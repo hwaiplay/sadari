@@ -16,6 +16,7 @@ interface LinkButtonProps {
   link: string;
   // style class
   className?: string;
+  state?: unknown;
   // 텍스트 or 아이콘 등..
   children: React.ReactNode;
 }
@@ -28,10 +29,11 @@ interface LinkButtonProps {
  * @param children 링크 안에 표시할 텍스트 또는 아이콘
  * @return 링크 버튼 컴포넌트
  */
-const LinkButton = ({ link, className, children }: LinkButtonProps) => {
+const LinkButton = ({ link, className, state, children }: LinkButtonProps) => {
   return (
     <Link
       to={link}
+      state={state}
       style={{ display: "flex" }}
       className={className ? className : ""}
     >

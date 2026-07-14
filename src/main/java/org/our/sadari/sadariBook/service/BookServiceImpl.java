@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.code.util.CodeUtil;
+import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -243,7 +244,7 @@ public class BookServiceImpl implements BookService {
      * @return
      */
     private void setDefaultReportColor(ReportDto reportDto) {
-        if (reportDto.getReportColr() == null || reportDto.getReportColr().isBlank()) {
+        if (StringUtil.isEmpty(reportDto.getReportColr()) || reportDto.getReportColr().isBlank()) {
             // 프론트에서 색상이 누락된 예외 상황에도 DB 필수값을 채우기 위해 기본색을 사용한다.
             reportDto.setReportColr(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR));
         }
@@ -263,7 +264,7 @@ public class BookServiceImpl implements BookService {
      * @return
      */
     private void setDefaultPublicFlag(ReportDto reportDto) {
-        if (reportDto.getPubcYsno() == null || reportDto.getPubcYsno().isBlank()) {
+        if (StringUtil.isEmpty(reportDto.getPubcYsno()) || reportDto.getPubcYsno().isBlank()) {
             // 공개 여부가 누락되면 의도치 않은 노출을 막기 위해 비공개로 저장한다.
             reportDto.setPubcYsno(Constant.COMM_NO);
         }
