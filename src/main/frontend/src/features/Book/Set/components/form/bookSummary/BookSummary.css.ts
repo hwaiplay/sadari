@@ -9,7 +9,7 @@ export const coverArea = style({
   gap: "14px",
   padding: "48px 24px 42px",
   borderRadius: "14px",
-  backgroundColor: "rgba(255, 255, 255, 0.94)",
+  backgroundColor: "rgb(255, 255, 255)",
   boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
 });
 

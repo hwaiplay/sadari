@@ -20,7 +20,7 @@ export const cover = style({
   position: "relative",
   height: "260px",
   overflow: "hidden",
-  borderRadius: "0 0 22px 22px",
+  borderRadius: "22px",
   backgroundColor: "#d9e0e7",
   backgroundSize: "cover",
   backgroundPosition: "center",
