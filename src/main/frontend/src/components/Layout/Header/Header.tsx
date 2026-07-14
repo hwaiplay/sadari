@@ -46,7 +46,7 @@ function Header() {
         )}
         <Link to="/" className={logo}>
           <img
-            src={"/img/common/logo-b.svg"}
+            src={"/img/common/logo-upper.svg"}
             alt={message("frontend.common.logoAlt")} // frontend.common.logoAlt = 사다리 로고
             width={100}
           />
