@@ -121,7 +121,7 @@ export const dayBooks = style({
 
 export const bookPill = style({
   width: "100%",
-  minHeight: "18px",
+  minHeight: "12px",
   borderRadius: "999px",
 });
 
