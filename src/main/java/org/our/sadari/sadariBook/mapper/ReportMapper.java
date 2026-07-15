@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
+import org.our.sadari.sadariBook.dto.ReadingGoalDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
 /**
@@ -40,6 +41,24 @@ public interface ReportMapper {
      * @return 완료 독서 목록
      */
     List<ReportDto> getDoneReportListByPeriod(MonthlyReadingSummaryDto req);
+
+    /**
+     * 현재 월 또는 현재 연도의 독서 목표를 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 회원 번호, 목표 기간, 목표 타입을 담은 요청 DTO
+     * @return 독서 목표 정보
+     */
+    ReadingGoalDto getReadingGoalDtl(ReadingGoalDto req);
+
+    /**
+     * 현재 월 또는 현재 연도의 독서 목표를 등록하거나 수정합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 회원 번호, 목표 기간, 목표 타입, 목표 권수를 담은 요청 DTO
+     * @return 처리 건수
+     */
+    int setReadingGoal(ReadingGoalDto req);
 
     /**
      * 로그인한 회원의 독후감 상세 정보를 조회합니다.
