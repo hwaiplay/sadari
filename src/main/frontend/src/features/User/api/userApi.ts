@@ -25,8 +25,19 @@ export type MonthlyReadingSummary = {
   currentYearCount: number;
   previousYearCount: number;
   yearCountDiff: number;
+  monthGoalCnt?: number | null;
+  yearGoalCnt?: number | null;
+  monthGoalRate: number;
+  yearGoalRate: number;
+  monthGoalSet: boolean;
+  yearGoalSet: boolean;
   currentMonthReports?: ReadingSummaryReport[];
   currentYearReports?: ReadingSummaryReport[];
+};
+
+export type ReadingGoalParams = {
+  monthGoalCnt: number;
+  yearGoalCnt: number;
 };
 
 export type UpdateUserProfileParams = {
@@ -41,12 +52,24 @@ export const getMyProfileApi = () => {
 };
 
 /**
- * 留덉씠?섏씠吏???쒖떆???대쾲 ???꾨즺 ?낆꽌 沅뚯닔? 吏?쒕떖 ?鍮?蹂?붾웾??議고쉶?쒕떎.
+ * 마이페이지에 표시할 이번 달/올해 완료 독서 권수와 목표 달성 정보를 조회합니다.
+ *
  * @author Hanwon.Jang
- * @return ?붽컙 ?꾨즺 ?낆꽌 ?붿빟 API ?묐떟
+ * @return 월간/연간 완료 독서 요약 API 응답
  */
 export const getMonthlyReadingSummaryApi = () => {
   return api.get("/user/monthly-reading-summary");
+};
+
+/**
+ * 마이페이지에서 설정한 이번 달/올해 독서 목표 권수를 저장합니다.
+ *
+ * @author Hanwon.Jang
+ * @param params 월간/연간 목표 권수
+ * @return 저장 후 갱신된 월간/연간 완료 독서 요약 API 응답
+ */
+export const updateReadingGoalApi = (params: ReadingGoalParams) => {
+  return api.put("/user/reading-goal", params);
 };
 
 export const updateMyProfileApi = (params: UpdateUserProfileParams) => {

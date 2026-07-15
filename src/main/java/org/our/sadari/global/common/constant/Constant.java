@@ -27,6 +27,9 @@ public final class Constant {
     public static final String FILE_TYPE_PROFILE = "PROFILE";
     public static final String FILE_TYPE_BACKGROUND = "BACKGROUND";
 
+    public static final String GOAL_TYPE_MONTH = "MONT";
+    public static final String GOAL_TYPE_YEAR = "YEAR";
+
     private Constant() {
         // 공통 상수 클래스는 상태를 가지지 않으므로 인스턴스 생성을 막습니다.
     }

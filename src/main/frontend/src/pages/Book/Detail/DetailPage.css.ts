@@ -1,5 +1,33 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+
+const viewFadeIn = keyframes({
+  "0%": {
+    opacity: 0,
+  },
+  "100%": {
+    opacity: 1,
+  },
+});
+
+const contentPanelFadeIn = keyframes({
+  "0%": {
+    opacity: 0,
+    filter: "blur(2px)",
+  },
+  "100%": {
+    opacity: 1,
+    filter: "blur(0)",
+  },
+});
+
+export const viewFade = style({
+  animation: `${viewFadeIn} 580ms ease-out both`,
+});
+
+export const contentSwitchFade = style({
+  animation: `${contentPanelFadeIn} 240ms ease-out both`,
+});
 
 export const page = style({
   position: "relative",

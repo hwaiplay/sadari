@@ -2,6 +2,8 @@ package org.our.sadari.sadariBook.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.YearMonth;
+import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.List;
 import java.util.Locale;
@@ -15,6 +17,7 @@ import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
+import org.our.sadari.sadariBook.dto.ReadingGoalDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
 import org.springframework.stereotype.Service;
@@ -33,6 +36,7 @@ public class BookServiceImpl implements BookService {
 
     private final ReportMapper reportMapper;
     private final CodeUtil codeUtil;
+    private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
 
     /**
      * 로그인한 회원의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회합니다.
@@ -103,19 +107,162 @@ public class BookServiceImpl implements BookService {
         int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);
         int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);
         int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);
+        ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH);
+        ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);
 
         MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
+        // [주석] 화면 대시보드 헤더 및 타이틀 영역에 노출할 영문 3자리 월 코드 획득: "JAN", "FEB", "MAR" 등
         summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
+
+        // 당월 독후감 작성 건수와 전월 작성 건수를 요약 객체에 세팅합니다.
         summary.setCurrentMonthCount(currentMonthCount);
         summary.setPreviousMonthCount(previousMonthCount);
+
+        // 전월 대비 당월의 독후감 작성 건수 증감 수치(Diff)를 연산하여 세팅합니다. (음수일 경우 감소를 의미)
         summary.setCountDiff(currentMonthCount - previousMonthCount);
+
+        // 조회 기준 년도 코드를 문자열로 변환하여 세팅합니다. (예: "2026")
         summary.setYearCode(String.valueOf(today.getYear()));
+
+        // 금년 독후감 작성 건수와 전년 작성 건수를 요약 객체에 세팅합니다.
         summary.setCurrentYearCount(currentYearCount);
         summary.setPreviousYearCount(previousYearCount);
+
+        // 전년 대비 금년의 독후감 작성 건수 증감 수치(Diff)를 연산하여 세팅합니다. (음수일 경우 감소를 의미)
         summary.setYearCountDiff(currentYearCount - previousYearCount);
+
+        //달성률을 계산
+        applyReadingGoal(summary, currentMonthGoal, currentYearGoal);
+
+        // 메인 대시보드 화면에 리스트 형식으로 노출할 당월 및 금년 완료 상태의 독후감 목록을 조회하여 바인딩합니다.
         summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq));
         summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));
         return summary;
+    }
+
+    /**
+     * 현재 월 또는 현재 연도에 설정된 독서 목표를 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param targetDate 목표 기간 계산 기준일
+     * @param goalType 목표 구분 타입
+     * @return 독서 목표 정보
+     */
+    private ReadingGoalDto getReadingGoalDtl(Long userNumb, LocalDate targetDate, String goalType) {
+        ReadingGoalDto req = new ReadingGoalDto();
+        req.setUserNumb(userNumb);
+        req.setGoalDate(getGoalDate(targetDate, goalType));
+        req.setGoalType(goalType);
+        return reportMapper.getReadingGoalDtl(req);
+    }
+
+    /**
+     * 조회된 월간/연간 목표를 독서 요약 DTO에 반영하고 달성률을 계산합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param summary 마이페이지 독서 요약 DTO
+     * @param monthGoal 이번 달 목표 정보
+     * @param yearGoal 올해 목표 정보
+     */
+    private void applyReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto monthGoal, ReadingGoalDto yearGoal) {
+        if (!StringUtil.isEmpty(monthGoal)) {
+            summary.setMonthGoalSet(true);
+            summary.setMonthGoalCnt(monthGoal.getGoalCnt());
+            summary.setMonthGoalRate(getGoalRate(summary.getCurrentMonthCount(), monthGoal.getGoalCnt()));
+        }
+
+        if (!StringUtil.isEmpty(yearGoal)) {
+            summary.setYearGoalSet(true);
+            summary.setYearGoalCnt(yearGoal.getGoalCnt());
+            summary.setYearGoalRate(getGoalRate(summary.getCurrentYearCount(), yearGoal.getGoalCnt()));
+        }
+    }
+
+    /**
+     * 현재 달성 권수와 목표 권수를 기준으로 달성률을 계산합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param doneCount 완료 독서 권수
+     * @param goalCount 목표 독서 권수
+     * @return 0 이상 100 이하의 달성률
+     */
+    private int getGoalRate(int doneCount, Integer goalCount) {
+        if (StringUtil.isEmpty(goalCount) || goalCount <= 0) {
+            return 0;
+        }
+
+        return Math.min(100, (int) Math.round((doneCount * 100.0) / goalCount));
+    }
+
+    /**
+     * 목표 구분에 따라 TM_GOALXM.GOAL_DATE 값을 생성합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param targetDate 목표 기간 계산 기준일
+     * @param goalType 목표 구분 타입
+     * @return 월별은 YYYYMM, 연도별은 YYYY00 형식의 목표 기간 값
+     */
+    private String getGoalDate(LocalDate targetDate, String goalType) {
+        if (Constant.GOAL_TYPE_YEAR.equals(goalType)) {
+            return targetDate.getYear() + "00";
+        }
+
+        return YearMonth.from(targetDate).format(GOAL_MONTH_FORMATTER);
+    }
+
+    /**
+     * 마이페이지에서 설정한 현재 월간/연간 독서 목표를 저장합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param readingGoalDto 저장할 목표 권수
+     * @return 저장 후 다시 조회한 독서 요약 정보
+     */
+    @Override
+    @Transactional
+    public MonthlyReadingSummaryDto setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto) {
+        validateReadingGoal(readingGoalDto);
+        LocalDate today = LocalDate.now();
+        setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_MONTH, readingGoalDto.getMonthGoalCnt());
+        setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_YEAR, readingGoalDto.getYearGoalCnt());
+        return getMonthlyReadingSummary(userNumb);
+    }
+
+    /**
+     * 월간/연간 목표 입력값이 저장 가능한 권수인지 검증합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param readingGoalDto 검증할 목표 DTO
+     */
+    private void validateReadingGoal(ReadingGoalDto readingGoalDto) {
+        if (
+                StringUtil.isEmpty(readingGoalDto)
+                        || StringUtil.isEmpty(readingGoalDto.getMonthGoalCnt())
+                        || StringUtil.isEmpty(readingGoalDto.getYearGoalCnt())
+                        || readingGoalDto.getMonthGoalCnt() <= 0
+                        || readingGoalDto.getYearGoalCnt() <= 0
+        ) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * 목표 타입별로 현재 기간의 독서 목표를 저장합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param today 현재 날짜
+     * @param goalType 목표 타입
+     * @param goalCnt 목표 권수
+     */
+    private void setReadingGoalByType(Long userNumb, LocalDate today, String goalType, Integer goalCnt) {
+        ReadingGoalDto req = new ReadingGoalDto();
+        req.setUserNumb(userNumb);
+        req.setGoalDate(getGoalDate(today, goalType));
+        req.setGoalType(goalType);
+        req.setGoalCnt(goalCnt);
+        reportMapper.setReadingGoal(req);
     }
 
     /**
