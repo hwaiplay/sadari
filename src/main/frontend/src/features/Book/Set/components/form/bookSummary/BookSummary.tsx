@@ -11,13 +11,16 @@ type BookSummaryProps = {
 };
 
 /**
- * ?좏깮??梨낆쓽 ?쒖?, ?쒕ぉ, ??먯? 梨?愿??蹂댁“ ?숈옉 踰꾪듉???쒖떆?쒕떎.
+ * 선택된 책의 표지, 제목, 저자와 책 관련 보조 동작 버튼을 표시합니다.
+ *
  * @author Hanwon.Jang
- * @param image 梨??쒖? ?대?吏 URL
- * @param title 梨??쒕ぉ
- * @param author 梨???? * @param onChangeBook 梨?蹂寃?踰꾪듉 ?대┃ 肄쒕갚
- * @param onShowBookInfo 梨??뺣낫 ?붾낫湲?踰꾪듉 ?대┃ 肄쒕갚
- * @return 梨??붿빟 ?뺣낫 而댄룷?뚰듃
+ * @param image 책 표지 이미지 URL
+ * @param title 책 제목
+ * @param author 책 저자
+ * @param publisher 책 출판사
+ * @param onChangeBook 책 변경 버튼 클릭 시 실행할 콜백
+ * @param onShowBookInfo 책 정보 더보기 버튼 클릭 시 실행할 콜백
+ * @return 책 요약 정보 컴포넌트
  */
 function BookSummary({
   image,

@@ -22,14 +22,6 @@ export const getDetailApi = (bookNumb: number) => {
   return api.get(`/book/getBookdetail/${bookNumb}`);
 };
 
-export const getBookInfoApi = (reportNumb: number) => {
-  return api.get(`/book/getBookInfo/${reportNumb}`);
-};
-
-export const getPublicReportsByReportApi = (reportNumb: number) => {
-  return api.get(`/book/publicReports/by-report/${reportNumb}`);
-};
-
 export const getPublicReportsByIsbnApi = (isbn: string) => {
   return api.get(`/book/publicReports/by-isbn?isbn=${encodeURIComponent(isbn)}`);
 };

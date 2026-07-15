@@ -112,6 +112,51 @@ apply: always
 
 ---
 
+### 6. 스칼라 서브쿼리(Scalar Subquery) 사용 금지 및 인라인 뷰(GROUP BY) 대체 규칙
+* **스칼라 서브쿼리 사용 금지:** SELECT 절 내부에서 서브쿼리를 통해 다른 테이블의 집계 값(AVG, SUM 등)이나 단건 데이터를 매 로우마다 반복 조회하는 스칼라 서브쿼리 형태의 작성을 절대 금지합니다. 이는 데이터양이 많아질수록 무수한 Random I/O를 유발하여 성능을 심각하게 저하시킵니다.
+* **GROUP BY 인라인 뷰 조인 대체:** 집계 및 대량 조회가 필요한 경우, 사전에 집계를 완료한 **GROUP BY 서브쿼리(인라인 뷰)를 만들고 이를 메인 쿼리와 Outer Join(또는 Inner Join)** 하도록 쿼리를 전면 개편해야 합니다.
+
+#### [Before] 스칼라 서브쿼리를 사용한 나쁜 예 (금지)
+```sql
+SELECT B.BOOK_NUMB
+     , B.BOOK_TITL
+     , (SELECT ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1)
+          FROM TM_BOOK_REPORT P
+         WHERE P.BOOK_NUMB = B.BOOK_NUMB
+        ) AS BOOK_AVG_GRDE
+  FROM TM_BOOK_REPORT A
+INNER JOIN TM_BOOK_INFO B
+    ON A.BOOK_NUMB = B.BOOK_NUMB
+ WHERE A.USER_NUMB = #{userNumb}
+   AND A.REPORT_NUMB = #{reportNumb}
+```
+
+#### [After] GROUP BY 인라인 뷰 조인을 적용한 올바른 예 (우측 정렬 규칙 준수)
+```text
+               SELECT   | B.BOOK_NUMB
+                    ,   | B.BOOK_TITL
+                    ,   | B.BOOK_ATHR
+                    ,   | B.BOOK_CVIM
+                    ,   | B.BOOK_ISBN
+                    ,   | B.BOOK_PUBL
+                    ,   | B.BOOK_DESC
+                    ,   | B.PUBL_DATE
+                    ,   | G.BOOK_AVG_GRDE
+                 FROM   | TM_BOOK_REPORT A
+           INNER JOIN   | TM_BOOK_INFO B
+                   ON   | A.BOOK_NUMB = B.BOOK_NUMB
+            LEFT JOIN   | (  SELECT   | P.BOOK_NUMB
+                        |         ,   | ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1) AS BOOK_AVG_GRDE
+                        |      FROM   | TM_BOOK_REPORT P
+                        |  GROUP BY   | P.BOOK_NUMB
+                        | ) G
+                   ON   | G.BOOK_NUMB = B.BOOK_NUMB
+                WHERE   | A.USER_NUMB = #{userNumb}
+                  AND   | A.REPORT_NUMB = #{reportNumb}
+```
+
+---
+
 ## 4. Java Method & Transaction Rule
 
 메서드명은 기능(Action)에 따라 엄격한 접두사(Prefix)와 접미사(Suffix) 규칙을 준수해야 합니다. 이 규칙 이외의 임의의 동사(예: find, query, save, remove 등)를 사용하는 메서드 선언은 절대 허용하지 않습니다. (***는 해당 도메인 또는 엔티티의 명칭을 의미합니다.)
@@ -133,6 +178,33 @@ apply: always
 ### 3. 트랜잭션(@Transactional) 적용 가이드
 * **기본 조회 트랜잭션 제한:** 비즈니스 로직을 처리하는 Service 클래스 상단에는 기본적으로 `@Transactional(readOnly = true)`를 선언하여 읽기 전용 커넥션을 맺도록 강제합니다.
 * **등록/수정/삭제 트랜잭션 개별 부여:** 데이터 상태가 변경되는 `set***`, `upt***`, `del***` 메서드 상단에만 구체적으로 `@Transactional` (읽기/쓰기 가능) 어노테이션을 선언하여 불필요한 데이터베이스 락과 리소스 점유를 차단합니다.
+
+---
+
+### 4. 컨트롤러 및 메서드 파라미터 개행 및 선행 콤마 정렬 규칙
+* **1줄 1파라미터 규칙 (Line Break per Parameter):**
+  * 컨트롤러나 서비스 등의 Java 메서드 선언부에서 입력받는 파라미터가 2개 이상인 경우, 한 줄에 나열하는 것을 금지하며 반드시 **새로운 줄(Line Break)로 분리하여 작성**해야 합니다.
+* **선행 콤마 (Leading Comma) 및 시작선 정렬:**
+  * SQL 포맷팅 규칙과 동일하게, 파라미터를 구분하는 콤마(`,`)는 뒷줄이 아닌 **새로운 줄의 맨 앞에 위치(선행 콤마)** 시킵니다.
+  * 콤마 뒤에는 공백을 두어 다음 라인의 어노테이션 및 데이터 타입의 **시작 시작선(좌측 정렬)이 세로로 일치**하도록 줄을 맞춰 정렬합니다.
+* **인증 및 유효성 검증 어노테이션 표준 탑재:**
+  * 로그인 세션 정보나 회원 식별값 바인딩이 필요할 경우 반드시 `@AuthenticationPrincipal` 어노테이션을 파라미터 맨 앞에 정의합니다.
+  * 외부로부터 유입되는 데이터 객체(DTO)에는 유효성 검증을 강제하기 위한 `@Valid`와 JSON 바인딩을 위한 `@RequestBody`를 빠짐없이 명시적으로 선언해야 합니다.
+
+#### [Before] 한 줄로 나열된 나쁜 예 (금지)
+```java
+public ResultData createReport(@AuthenticationPrincipal Long userNumb, @Valid @RequestBody ReportDto requestDto) {
+    // ... 로직
+}
+```
+
+#### [After] 1줄 1파라미터 및 선행 콤마 정렬을 적용한 올바른 예 (준수)
+```java
+public ResultData createReport(@AuthenticationPrincipal Long userNumb
+                             , @Valid @RequestBody ReportDto requestDto) {
+    // ... 로직
+}
+```
 
 ---
 

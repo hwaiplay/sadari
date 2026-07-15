@@ -4,11 +4,10 @@ import Loading from "@/components/Loading/Loading";
 import {
   usePublicReportLikeMutation,
   usePublicReportsByIsbn,
-  usePublicReportsByReport,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useMemo, useState } from "react";
-import { useLocation, useParams, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
@@ -28,27 +27,22 @@ type PublicReportPageState = {
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
-  const { reportNumb } = useParams();
   const location = useLocation();
   const [searchParams] = useSearchParams();
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
 
-  const reportNumbNumber = Number(reportNumb);
   const isbn = searchParams.get("isbn") ?? "";
-  const isReportMode = Boolean(reportNumb) && Number.isFinite(reportNumbNumber);
-  const isIsbnMode = !isReportMode && isbn.trim().length > 0;
+  const isValidIsbn = isbn.trim().length > 0;
 
-  const reportQuery = usePublicReportsByReport(reportNumbNumber, isReportMode);
-  const isbnQuery = usePublicReportsByIsbn(isbn, isIsbnMode);
-  const activeQuery = isReportMode ? reportQuery : isbnQuery;
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
   const likeMutation = usePublicReportLikeMutation();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {
-    return (activeQuery.data?.data ?? []) as PublicReportType[];
-  }, [activeQuery.data]);
+    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
+  }, [publicReportsQuery.data]);
 
   /**
    * 긴 독후감 내용의 펼침 상태를 독후감 번호 기준으로 전환합니다.
@@ -76,11 +70,11 @@ function PublicReportPage() {
     return count > 99 ? "99+" : String(count);
   };
 
-  if (!isReportMode && !isIsbnMode) {
+  if (!isValidIsbn) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 
-  if (activeQuery.isPending) {
+  if (publicReportsQuery.isPending) {
     return <Loading title={message("frontend.common.loadingList")} />;
   }
 

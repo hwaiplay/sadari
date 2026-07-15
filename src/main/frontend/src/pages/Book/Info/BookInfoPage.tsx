@@ -4,31 +4,40 @@
  * @author Hanwon.Jang
  */
 import { message } from "@/app/messages/message";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
-import { useBookInfo } from "@/features/Book/Detail/hook/useBookInfo";
+import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
+import type { ReportDtoType } from "@/features/Book/types/book.type";
 import * as styles from "./BookInfoPage.css";
 
 function BookInfoPage() {
   const { id } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const reportNumb = Number(id);
-  const { data, isPending } = useBookInfo(reportNumb);
+  const routeBookInfo = (
+    location.state as { bookInfo?: ReportDtoType } | null
+  )?.bookInfo;
+  const { data, isPending } = useBookDetail(reportNumb, !routeBookInfo);
 
   if (!id || isNaN(reportNumb)) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 
-  if (isPending) {
+  if (!routeBookInfo && isPending) {
     return <Loading title={message("frontend.report.loading.bookInfo")} />;
   }
 
-  const bookInfo = data?.data;
+  const bookInfo = routeBookInfo ?? data?.data;
 
-  if (data?.code !== 200 || !bookInfo) {
+  if (!routeBookInfo && data?.code !== 200) {
     return <h3>{data?.message}</h3>;
+  }
+
+  if (!bookInfo) {
+    return <h3>{message("frontend.common.noBookInfo")}</h3>;
   }
 
   const pageStyle = {
@@ -70,14 +79,19 @@ function BookInfoPage() {
             className={styles.bookInfoButton}
             type="button"
             onClick={() =>
-              navigate(`/book/public-reports/report/${reportNumb}`, {
-                state: {
-                  title: bookInfo.bookTitl,
-                  author: bookInfo.bookAthr,
-                  cover: bookInfo.bookCvim,
-                  ratingAverage: bookInfo.bookAvgGrde,
+              navigate(
+                `/book/public-reports/isbn?isbn=${encodeURIComponent(
+                  bookInfo.bookIsbn,
+                )}`,
+                {
+                  state: {
+                    title: bookInfo.bookTitl,
+                    author: bookInfo.bookAthr,
+                    cover: bookInfo.bookCvim,
+                    ratingAverage: bookInfo.bookAvgGrde,
+                  },
                 },
-              })
+              )
             }
           >
             {message("frontend.book.publicReports.button")}
@@ -98,6 +112,10 @@ function BookInfoPage() {
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{bookInfo.bookPubl || "-"}</p>
+              <span className={styles.infoLabel}>
+                {message("frontend.common.publDate")}
+              </span>
+              <p className={styles.infoValue}>{bookInfo.publDate || "-"}</p>
             </div>
           </section>
 

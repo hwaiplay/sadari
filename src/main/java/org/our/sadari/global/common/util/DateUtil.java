@@ -14,10 +14,6 @@ import java.util.Locale;
  */
 public final class DateUtil {
 
-    public static final String DEFAULT_DATE_PATTERN = "yyyy-MM-dd";
-    public static final String COMPACT_DATE_PATTERN = "yyyyMMdd";
-    public static final String KOREAN_DATE_PATTERN = "yyyy년M월d일";
-
     private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =
             DateTimeFormatter.ofPattern("uuuu-MM-dd").withResolverStyle(ResolverStyle.STRICT);
     private static final DateTimeFormatter COMPACT_DATE_FORMATTER =

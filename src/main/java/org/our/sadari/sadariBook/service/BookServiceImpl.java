@@ -9,11 +9,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.code.util.CodeUtil;
+import org.our.sadari.global.common.util.LocaleUtil;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.mapper.ReportMapper;
@@ -172,42 +172,9 @@ public class BookServiceImpl implements BookService {
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
         reportDto.setReportNumb(reportNumb);
+        reportDto.setLocale(LocaleUtil.getLocale());
 
         return reportMapper.getReportDtl(reportDto);
-    }
-
-    /**
-     * 독후감 번호로 연결된 책 상세 정보를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 기준 독후감 번호
-     * @return 책 상세 정보
-     */
-    @Override
-    public BookDto getBookInfo(Long userNumb, Long reportNumb) {
-        ReportDto reportDto = new ReportDto();
-        reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
-
-        return reportMapper.getBookInfo(reportDto);
-    }
-
-    /**
-     * 독후감 번호를 기준으로 같은 책의 공개 독후감 목록을 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 기준 독후감 번호
-     * @return 공개 독후감 목록
-     */
-    @Override
-    public List<ReportDto> getPublicReportsByReport(Long userNumb, Long reportNumb) {
-        ReportDto reportDto = new ReportDto();
-        reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
-
-        return reportMapper.getPublicReportList(reportDto);
     }
 
     /**
