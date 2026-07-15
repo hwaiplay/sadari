@@ -1,3 +1,8 @@
+/**
+ * src/main/frontend/src/features/Book/Detail/hook/usePublicReports.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getPublicReportsByIsbnApi,
@@ -5,13 +10,6 @@ import {
   setPublicReportLikeApi,
 } from "../../api/bookApi";
 
-/**
- * 기준 독후감 번호로 같은 도서의 공개 독후감 목록을 조회한다.
- * @Author Hanwon.Jang
- * @param reportNumb 기준 독후감 번호
- * @param enabled 조회 실행 여부
- * @return 공개 독후감 목록 Query 객체
- */
 export const usePublicReportsByReport = (
   reportNumb: number,
   enabled: boolean,
@@ -26,13 +24,6 @@ export const usePublicReportsByReport = (
   });
 };
 
-/**
- * ISBN으로 같은 도서의 공개 독후감 목록을 조회한다.
- * @Author Hanwon.Jang
- * @param isbn 도서 ISBN
- * @param enabled 조회 실행 여부
- * @return 공개 독후감 목록 Query 객체
- */
 export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
   return useQuery({
     queryKey: ["publicReports", "isbn", isbn],
@@ -44,11 +35,6 @@ export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
   });
 };
 
-/**
- * 공개 독후감 좋아요 토글 API를 호출하고 공개 독후감 목록을 다시 조회한다.
- * @Author Hanwon.Jang
- * @return 공개 독후감 좋아요 Mutation 객체
- */
 export const usePublicReportLikeMutation = () => {
   const queryClient = useQueryClient();
 

@@ -1,3 +1,8 @@
+/**
+ * src/main/frontend/src/pages/Book/Info/BookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
@@ -6,11 +11,6 @@ import Loading from "@/components/Loading/Loading";
 import { useBookInfo } from "@/features/Book/Detail/hook/useBookInfo";
 import * as styles from "./BookInfoPage.css";
 
-/**
- * 저장된 독후감에 연결된 책 상세 정보를 조회해 표시한다.
- * @Author Hanwon.Jang
- * @return 책 정보 상세 페이지 컴포넌트
- */
 function BookInfoPage() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -59,7 +59,7 @@ function BookInfoPage() {
                   bookInfo.bookAvgGrde,
                 ])}
               >
-                <span className={styles.ratingStar}>★</span>
+                <span className={styles.ratingStar}>{"\u2605"}</span>
                 <span className={styles.ratingValue}>
                   {bookInfo.bookAvgGrde}
                 </span>

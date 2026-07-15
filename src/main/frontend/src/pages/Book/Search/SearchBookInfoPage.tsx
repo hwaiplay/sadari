@@ -1,3 +1,8 @@
+/**
+ * src/main/frontend/src/pages/Book/Search/SearchBookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
@@ -5,13 +10,9 @@ import { Container } from "@/components/Layout/Container/Container";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { stripHtmlTags } from "@/app/utils/htmlUtil";
+import { formatCompactDate } from "@/app/utils/dateUtil";
 import * as styles from "@/pages/Book/Info/BookInfoPage.css";
 
-/**
- * 검색 결과에서 선택한 책의 상세 정보를 표시하고 독후감 작성 화면으로 연결한다.
- * @Author Hanwon.Jang
- * @return 검색 책 정보 상세 페이지 컴포넌트
- */
 function SearchBookInfoPage() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -29,6 +30,7 @@ function SearchBookInfoPage() {
   const author = stripHtmlTags(book.author);
   const publisher = stripHtmlTags(book.publisher);
   const description = stripHtmlTags(book.description);
+  const pubdate = formatCompactDate(stripHtmlTags(book.pubdate));
   const ratingAverage = ratingAverageData?.data;
   const pageStyle = {
     "--book-bg-image": `url("${book.image}")`,
@@ -52,7 +54,7 @@ function SearchBookInfoPage() {
                   ratingAverage,
                 ])}
               >
-                <span className={styles.ratingStar}>★</span>
+                <span className={styles.ratingStar}>{"\u2605"}</span>
                 <span className={styles.ratingValue}>{ratingAverage}</span>
               </span>
             )}
@@ -94,6 +96,10 @@ function SearchBookInfoPage() {
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{publisher || "-"}</p>
+              <span className={styles.infoLabel}>
+                {message("frontend.common.publDate")}
+              </span>
+              <p className={styles.infoValue}>{pubdate || "-"}</p>
             </div>
           </section>
 

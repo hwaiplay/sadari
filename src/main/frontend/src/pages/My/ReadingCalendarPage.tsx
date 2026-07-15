@@ -1,4 +1,5 @@
 import api from "@/app/api/axios";
+import { message } from "@/app/messages/message";
 import { formatYearMonthValue, isSameLocalDate, parseLocalDate } from "@/app/utils/dateUtil";
 import { Container } from "@/components/Layout/Container/Container";
 import { clsx } from "clsx";
@@ -14,21 +15,34 @@ type CalendarReport = {
   reportColr?: string;
 };
 
-const WEEKDAYS = ["일", "월", "화", "수", "목", "금", "토"];
+const WEEKDAY_KEYS = [
+  "frontend.calendar.week.sun",
+  "frontend.calendar.week.mon",
+  "frontend.calendar.week.tue",
+  "frontend.calendar.week.wed",
+  "frontend.calendar.week.thu",
+  "frontend.calendar.week.fri",
+  "frontend.calendar.week.sat",
+];
 
 /**
- * 캘린더 상단에 표시할 연월 제목을 만든다.
- * @Author Hanwon.Jang
+ * 달력 상단에 표시할 연월 제목을 만듭니다.
+ *
+ * @author Hanwon.Jang
  * @param date 제목을 만들 기준 날짜
  * @return 화면 표시용 연월 문자열
  */
 function formatMonthTitle(date: Date) {
-  return `${date.getFullYear()}년 ${date.getMonth() + 1}월`;
+  return message("frontend.calendar.monthLabel", [
+    date.getFullYear(),
+    date.getMonth() + 1,
+  ]);
 }
 
 /**
- * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환한다.
- * @Author Hanwon.Jang
+ * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환합니다.
+ *
+ * @author Hanwon.Jang
  * @param value 변환할 날짜 문자열
  * @return 점 구분 날짜 문자열
  */
@@ -37,9 +51,10 @@ function formatDisplayDate(value: string) {
 }
 
 /**
- * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환한다.
- * @Author Hanwon.Jang
- * @param date 선택된 날짜
+ * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환합니다.
+ *
+ * @author Hanwon.Jang
+ * @param date 선택한 날짜
  * @return 화면 표시용 날짜 문자열
  */
 function formatSelectedDate(date: Date) {
@@ -47,11 +62,12 @@ function formatSelectedDate(date: Date) {
 }
 
 /**
- * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인한다.
- * @Author Hanwon.Jang
+ * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인합니다.
+ *
+ * @author Hanwon.Jang
  * @param report 독서 기간을 가진 독후감 데이터
  * @param date 포함 여부를 확인할 날짜
- * @return 해당 날짜에 독서 중인지 여부
+ * @return 해당 날짜가 독서 기간에 포함되면 true
  */
 function isReadingOnDate(report: CalendarReport, date: Date) {
   const start = parseLocalDate(report.reportStdt);
@@ -62,8 +78,9 @@ function isReadingOnDate(report: CalendarReport, date: Date) {
 }
 
 /**
- * 독서 시작일과 독후감 번호를 기준으로 캘린더 목록 정렬 순서를 계산한다.
- * @Author Hanwon.Jang
+ * 독서 시작일과 독후감 번호를 기준으로 달력 목록 정렬 순서를 계산합니다.
+ *
+ * @author Hanwon.Jang
  * @param a 비교할 첫 번째 독후감
  * @param b 비교할 두 번째 독후감
  * @return 정렬 비교 결과
@@ -79,10 +96,11 @@ function compareReports(a: CalendarReport, b: CalendarReport) {
 }
 
 /**
- * 월 화면에 표시할 6주치 날짜 배열을 생성한다.
- * @Author Hanwon.Jang
+ * 월 화면에 표시할 6주치 날짜 배열을 생성합니다.
+ *
+ * @author Hanwon.Jang
  * @param month 달력을 구성할 기준 월
- * @return 캘린더 셀에 표시할 42개 날짜 목록
+ * @return 달력에 표시할 42개 날짜 목록
  */
 function getCalendarDays(month: Date) {
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
@@ -97,8 +115,9 @@ function getCalendarDays(month: Date) {
 }
 
 /**
- * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬한다.
- * @Author Hanwon.Jang
+ * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬합니다.
+ *
+ * @author Hanwon.Jang
  * @param reports 월 범위에서 조회한 독후감 목록
  * @param date 목록을 찾을 기준 날짜
  * @return 지정 날짜에 해당하는 독후감 목록
@@ -108,9 +127,10 @@ function getReportsOnDate(reports: CalendarReport[], date: Date) {
 }
 
 /**
- * 월별 독서 기간을 캘린더에 표시하고 선택 날짜의 독후감 목록을 제공한다.
- * @Author Hanwon.Jang
- * @return 독서 캘린더 페이지 컴포넌트
+ * 월별 독서 기간을 달력에 표시하고 선택 날짜의 독후감 목록을 제공합니다.
+ *
+ * @author Hanwon.Jang
+ * @return 독서 달력 페이지 컴포넌트
  */
 function ReadingCalendarPage() {
   const navigate = useNavigate();
@@ -161,26 +181,26 @@ function ReadingCalendarPage() {
           <button
             className={styles.monthButton}
             type="button"
-            aria-label="이전 달"
+            aria-label={message("frontend.calendar.prevMonth")}
             onClick={() => moveMonth(-1)}
           >
-            ‹
+            {"<"}
           </button>
           <h1 className={styles.monthTitle}>{formatMonthTitle(currentMonth)}</h1>
           <button
             className={styles.monthButton}
             type="button"
-            aria-label="다음 달"
+            aria-label={message("frontend.calendar.nextMonth")}
             onClick={() => moveMonth(1)}
           >
-            ›
+            {">"}
           </button>
         </div>
 
-        <section className={styles.calendar} aria-label="월간 독서 시간표">
-          {WEEKDAYS.map((weekday) => (
-            <div className={styles.weekday} key={weekday}>
-              {weekday}
+        <section className={styles.calendar} aria-label={message("frontend.calendar.dateSelect")}>
+          {WEEKDAY_KEYS.map((weekdayKey) => (
+            <div className={styles.weekday} key={weekdayKey}>
+              {message(weekdayKey)}
             </div>
           ))}
           {days.map((day) => {

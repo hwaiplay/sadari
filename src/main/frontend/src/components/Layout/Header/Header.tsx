@@ -1,24 +1,14 @@
+/**
+ * src/main/frontend/src/components/Layout/Header/Header.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { header_active, backpageBtn, header, logo } from "./Header.css";
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 
-/**
- * fileName       : Header
- * author         : hanwon.Jang
- * date           : 2026-05-03
- * description    : 헤더 컴포넌트
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-05-03       hanwon.Jang       기록 페이지 감지 추가
- */
-/**
- * 현재 경로에 따라 뒤로가기 버튼과 로고를 표시하는 상단 헤더를 렌더링한다.
- * @Author Hanwon.Jang
- * @return 헤더 컴포넌트
- */
 function Header() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -35,19 +25,19 @@ function Header() {
           <button
             className={backpageBtn}
             type="button"
-            aria-label={message("frontend.common.back")} // frontend.common.back = 이전 페이지로 돌아가기
+            aria-label={message("frontend.common.back")}
             onClick={backPrev}
           >
             <img
               src={"/img/common/icon-backpage.svg"}
-              alt={message("frontend.common.backIconAlt")} // frontend.common.backIconAlt = 뒤로가기 아이콘
+              alt={message("frontend.common.backIconAlt")}
             />
           </button>
         )}
         <Link to="/" className={logo}>
           <img
             src={"/img/common/logo-upper.svg"}
-            alt={message("frontend.common.logoAlt")} // frontend.common.logoAlt = 사다리 로고
+            alt={message("frontend.common.logoAlt")}
             width={100}
           />
         </Link>

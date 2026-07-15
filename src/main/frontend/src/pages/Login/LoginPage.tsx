@@ -3,19 +3,9 @@ import { Link } from "react-router-dom";
 import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
 
 /**
- * fileName       : LoginPage
- * author         : Hanwon.Jang
- * date           : 2026-03-19
- * description    : 로그인 페이지
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-19        Hanwon.Jang       주석 추가
- */
-
-/**
- * 카카오 OAuth 시작 링크를 제공하는 로그인 화면을 렌더링한다.
- * @Author Hanwon.Jang
+ * Kakao OAuth 시작 링크를 제공하는 로그인 화면을 렌더링합니다.
+ *
+ * @author Hanwon.Jang
  * @return 로그인 페이지 컴포넌트
  */
 function LoginPage() {
@@ -28,13 +18,13 @@ function LoginPage() {
       <div className={content}>
         <img
           src={"/img/common/logo-b.svg"}
-          alt={message("frontend.common.logoAlt")} // frontend.common.logoAlt = 사다리 로고
+          alt={message("frontend.common.logoAlt")}
         />
         <h1 className={title}>
-          {message("frontend.auth.loginCopy") /* frontend.auth.loginCopy = 간편하게 로그인하고 독후감 기록으로 책장을 완성해보세요. */}
+          {message("frontend.auth.loginCopy")}
         </h1>
         <Link to={KAKAO_AUTH_URL} className={kakaoLoginBtn}>
-          {message("frontend.auth.kakaoStart") /* frontend.auth.kakaoStart = 카카오로 3초만에 시작하기 */}
+          {message("frontend.auth.kakaoStart")}
         </Link>
       </div>
     </main>

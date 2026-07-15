@@ -6,102 +6,120 @@ import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
+/**
+ * 책과 독후감 업무 로직을 정의하는 서비스 인터페이스입니다.
+ *
+ * @author Seunghyeon.Kang
+ */
 public interface BookService {
 
     /**
-     * 독후감 등록
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @param reportDto
-     * @return
+     * 독후감을 신규 등록합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param reportDto 등록할 독후감 정보
+     * @return 등록된 독후감 정보
      */
     ReportDto setReport(Long userNumb, ReportDto reportDto);
 
     /**
-     * 독후감 상세 조회
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @param reportNumb
-     * @return
+     * 로그인한 회원의 독후감 상세 정보를 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param reportNumb 조회할 독후감 번호
+     * @return 독후감 상세 정보
      */
     ReportDto getDetail(Long userNumb, Long reportNumb);
 
     /**
-     * 도서 정보 상세 조회
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @param reportNumb
-     * @return
+     * 독후감 번호로 연결된 책 상세 정보를 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param reportNumb 기준 독후감 번호
+     * @return 책 상세 정보
      */
     BookDto getBookInfo(Long userNumb, Long reportNumb);
 
     /**
-     * 기준 독후감과 같은 도서의 공개 독후감 목록을 조회한다.
-     * @Author SeungHyeon.Kang
-     * @param userNumb 현재 로그인 사용자 번호
+     * 독후감 번호를 기준으로 같은 책의 공개 독후감 목록을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
      * @param reportNumb 기준 독후감 번호
-     * @return 다른 사용자가 공개한 독후감 목록
+     * @return 공개 독후감 목록
      */
     List<ReportDto> getPublicReportsByReport(Long userNumb, Long reportNumb);
 
     /**
-     * ISBN이 같은 도서의 공개 독후감 목록을 조회한다.
-     * @Author SeungHyeon.Kang
-     * @param userNumb 현재 로그인 사용자 번호
-     * @param bookIsbn 도서 ISBN
-     * @return 다른 사용자가 공개한 독후감 목록
+     * ISBN 기준 공개 독후감 목록을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param bookIsbn 조회할 ISBN
+     * @return 공개 독후감 목록
      */
     List<ReportDto> getPublicReportsByIsbn(Long userNumb, String bookIsbn);
 
     /**
-     * ISBN 기준으로 전체 독후감 평균 별점을 조회한다.
-     * @Author SeungHyeon.Kang
-     * @param bookIsbn 도서 ISBN
-     * @return 전체 독후감 평균 별점
+     * ISBN 기준 평균 별점을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param bookIsbn 평균 별점을 조회할 ISBN
+     * @return 평균 별점
      */
     BigDecimal getPublicRatingAverageByIsbn(String bookIsbn);
 
     /**
-     * 공개 독후감 좋아요 상태를 토글한다.
-     * @Author SeungHyeon.Kang
-     * @param userNumb 현재 로그인 사용자 번호
+     * 독후감 좋아요 상태를 토글합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
      * @param reportNumb 좋아요 대상 독후감 번호
-     * @return 변경 후 좋아요 수와 현재 사용자 좋아요 여부
+     * @return 변경 후 좋아요 상태
      */
     ReportDto setReportLike(Long userNumb, Long reportNumb);
 
     /**
-     * 독후감 리스트 조회
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @return
+     * 로그인한 회원의 독후감 목록을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param bookKeyword 책 제목 또는 작가 검색어
+     * @param sortType 목록 정렬 코드
+     * @return 독후감 목록
      */
     List<ReportDto> getBookList(Long userNumb, String bookKeyword, String sortType);
 
     /**
-     * 로그인 사용자의 이번 달 완료 독서 권수와 지난달 대비 변화량을 조회한다.
-     * @Author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @return 이번 달 완료 독서 요약 정보
+     * 마이페이지 월간/연간 독서 요약을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @return 독서 요약 정보
      */
     MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb);
 
     /**
-     * 독후감 수정
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @param reportNumb
-     * @param reportDto
-     * @return
+     * 독후감을 수정합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param reportNumb 수정할 독후감 번호
+     * @param reportDto 수정할 독후감 정보
+     * @return 수정된 독후감 정보
      */
     ReportDto uptReport(Long userNumb, Long reportNumb, ReportDto reportDto);
 
     /**
-     * 독후감 삭제
-     * @Author SeungHyeon.Kang
-     * @param userNumb
-     * @param reportNumb
-     * @return
+     * 독후감을 삭제합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param reportNumb 삭제할 독후감 번호
+     * @return 삭제 건수
      */
     int delReport(Long userNumb, Long reportNumb);
 }

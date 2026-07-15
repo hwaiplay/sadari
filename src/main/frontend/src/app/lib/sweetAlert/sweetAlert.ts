@@ -17,8 +17,8 @@ type SweetAlertResult = {
 const STYLE_ID = "sadari-sweet-alert-style";
 
 const ICON_LABEL: Record<SweetAlertIcon, string> = {
-  success: "✓",
-  error: "×",
+  success: "OK",
+  error: "X",
   warning: "!",
   info: "i",
   question: "?",
@@ -33,10 +33,10 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
 };
 
 /**
- * SweetAlert 대체 모달에 필요한 공통 스타일 태그를 문서에 한 번만 삽입한다.
- * 아이콘은 SweetAlert2의 등장감에 맞춰 테두리와 기호가 각각 애니메이션되도록 구성한다.
- * @Author Hanwon.Jang
- * @return 없음
+ * SweetAlert 모달에 필요한 스타일 태그를 한 번만 주입합니다.
+ *
+ * @author Hanwon.Jang
+ * @return
  */
 function ensureSweetAlertStyle() {
   if (document.getElementById(STYLE_ID)) {
@@ -363,10 +363,11 @@ function ensureSweetAlertStyle() {
 }
 
 /**
- * SweetAlert 모달을 닫고 body 스크롤 상태를 복구한다.
- * @Author Hanwon.Jang
+ * SweetAlert 모달을 닫고 body 스크롤 상태를 복구합니다.
+ *
+ * @author Hanwon.Jang
  * @param overlay 제거할 모달 오버레이 엘리먼트
- * @param result 사용자 확인 여부 결과
+ * @param result 사용자의 확인 여부 결과
  * @return SweetAlert 처리 결과
  */
 function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
@@ -376,8 +377,9 @@ function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
 }
 
 /**
- * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param options 알림 모달 표시 옵션
  * @return 사용자의 확인 또는 취소 선택 결과 Promise
  */
@@ -462,8 +464,9 @@ export function sweetAlert(options: SweetAlertOptions) {
 }
 
 /**
- * 취소 버튼을 포함한 확인 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 취소 버튼을 포함한 확인 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param options 확인 모달 표시 옵션
  * @return 사용자의 확인 또는 취소 선택 결과 Promise
  */
@@ -478,8 +481,9 @@ export function sweetConfirm(options: SweetAlertOptions) {
 }
 
 /**
- * 성공 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 성공 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
@@ -489,8 +493,9 @@ export function sweetSuccess(title: string, text?: string) {
 }
 
 /**
- * 오류 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 오류 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
@@ -500,8 +505,9 @@ export function sweetError(title: string, text?: string) {
 }
 
 /**
- * 경고 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 경고 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
@@ -511,8 +517,9 @@ export function sweetWarning(title: string, text?: string) {
 }
 
 /**
- * 안내 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 안내 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
@@ -522,8 +529,9 @@ export function sweetInfo(title: string, text?: string) {
 }
 
 /**
- * 질문 알림 모달을 표시한다.
- * @Author Hanwon.Jang
+ * 질문 알림 모달을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
