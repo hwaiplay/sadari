@@ -7,11 +7,11 @@ import {
   isUserProfileUpdatedEvent,
   USER_PROFILE_UPDATED_EVENT,
 } from "@/features/User/lib/profileEvents";
-import { Container } from "../Container/Container";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Container } from "../Container/Container";
 import * as styles from "./Navigation.css";
 
 type NavigationProps = {
@@ -19,16 +19,17 @@ type NavigationProps = {
 };
 
 const MENU_ITEMS = [
-  { label: "독후감 달력", disabled: false },
+  { label: "독서 캘린더", disabled: false },
   { label: "준비 중", disabled: true },
   { label: "준비 중", disabled: true },
   { label: "준비 중", disabled: true },
 ];
 
 /**
- * 하단 주요 이동 버튼과 마이페이지 drawer 메뉴를 렌더링한다.
- * @Author Hanwon.Jang
- * @param isMain 메인 레이아웃에서 사용하는 배경 스타일 여부
+ * 하단 네비게이션과 마이페이지 drawer 메뉴를 렌더링합니다.
+ *
+ * @author Hanwon.Jang
+ * @param isMain 메인 레이아웃 여부
  * @return 하단 네비게이션 컴포넌트
  */
 function Navigation({ isMain }: NavigationProps) {
@@ -38,11 +39,13 @@ function Navigation({ isMain }: NavigationProps) {
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
   const profileName = profile?.userNick || "사용자";
-  const profileIntro = profile?.intrCntn || message("frontend.profile.intro.empty");
+  const profileIntro =
+    profile?.intrCntn || message("frontend.profile.intro.empty");
 
   /**
-   * 로그아웃 API를 호출하고 로컬 인증 상태를 초기화한다.
-   * @Author Hanwon.Jang
+   * 로그아웃 확인 후 서버 로그아웃 API를 호출하고 인증 상태를 초기화합니다.
+   *
+   * @author Hanwon.Jang
    * @return
    */
   const handleLogout = async () => {

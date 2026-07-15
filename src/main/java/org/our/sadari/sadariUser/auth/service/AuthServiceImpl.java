@@ -21,9 +21,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 카카오 로그인, 회원 저장, JWT 발급, Redis refresh token 저장, 로그인 이력 저장을 처리한다.
- * 신규 회원의 카카오 프로필 이미지는 회원을 먼저 생성해 USER_NUMB를 확보한 뒤 파일 등록 시 REGI_USER로 바로 저장한다.
- * @Author Seunghyeon.Kang
+ * Kakao 로그인, 회원 생성/조회, JWT 발급, Redis refreshToken 저장, 로그인 이력 저장을 처리합니다.
+ *
+ * @author Seunghyeon.Kang
  */
 @Service
 @RequiredArgsConstructor
@@ -40,14 +40,14 @@ public class AuthServiceImpl implements AuthService {
     private final FileService fileService;
 
     /**
-     * 카카오 인가 코드로 사용자 정보를 조회하고 서비스 JWT를 발급한다.
-     * 신규 회원은 사용자 테이블 insert 후 생성된 USER_NUMB로 카카오 프로필 파일을 등록하고 사용자 프로필 파일 번호를 갱신한다.
-     * @Author Seunghyeon.Kang
-     * @param code 카카오 OAuth 인증 완료 후 전달받은 인가 코드
-     * @param lognIpxx 로그인 요청 IP 주소
-     * @param userAgnt 로그인 요청 User-Agent 값
-     * @return 서비스 access token과 refresh token
-     * @throws JsonProcessingException 카카오 응답 JSON 파싱 실패 시 발생
+     * Kakao OAuth 인가 코드로 로그인 처리를 완료하고 JWT를 발급합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param code Kakao OAuth callback 인가 코드
+     * @param lognIpxx 로그인 이력에 저장할 IP 주소
+     * @param userAgnt 로그인 이력에 저장할 User-Agent 값
+     * @return 서비스 accessToken과 refreshToken
+     * @throws JsonProcessingException Kakao 응답 JSON 변환에 실패한 경우
      */
     @Transactional
     @Override
@@ -69,6 +69,7 @@ public class AuthServiceImpl implements AuthService {
             userDto.setUserRole(AuthConstant.ROLE_USER);
             userDto.setUserNick(nickName);
 
+            // 최초 로그인 회원은 회원 테이블을 먼저 생성해야 USER_NUMB로 프로필 파일을 등록할 수 있습니다.
             if (StringUtil.isEmpty(savedUser)) {
                 userMapper.setUser(userDto);
                 userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
@@ -78,6 +79,7 @@ public class AuthServiceImpl implements AuthService {
                 userDto.setUserNumb(savedUser.getUserNumb());
                 userDto.setUserRole(savedUser.getUserRole());
 
+                // 기존 회원 중 프로필 파일 번호가 없는 사용자는 Kakao 프로필 이미지를 파일 테이블에 보정 저장합니다.
                 if (StringUtil.isEmpty(savedUser.getProfNumb())) {
                     userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                     userMapper.uptUserProfile(userDto);
@@ -93,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtProvider.createAccessToken(userDto.getUserNumb(), userDto.getUserRole());
         String refreshToken = jwtProvider.createRefreshToken(userDto.getUserNumb());
 
-        // refresh token은 DB가 아닌 Redis에 저장해 rotation과 logout 차단 기준으로 사용한다.
+        // refreshToken은 Redis에 사용자별 하나만 저장해 재로그인과 재발급 시 이전 토큰을 무효화합니다.
         tokenRedisService.setRefreshToken(
                 userDto.getUserNumb(),
                 refreshToken,
@@ -106,6 +108,7 @@ public class AuthServiceImpl implements AuthService {
         loginHistoryDto.setLognIpxx(lognIpxx);
         loginHistoryDto.setUserAgnt(StringUtil.cutString(userAgnt, USER_AGENT_MAX_LENGTH));
         loginHistoryDto.setProvCode(AuthConstant.PROV_KAKAO);
+        // 로그인 이력은 토큰 값이 아닌 접속 환경 정보를 저장해 이후 사용자 활동 추적에 사용합니다.
         loginHistoryMapper.setLoginHistory(loginHistoryDto);
 
         log.debug("Kakao login JWT issued. userNumb={}", userDto.getUserNumb());

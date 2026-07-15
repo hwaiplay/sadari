@@ -1,32 +1,23 @@
-import { ReactNode, useEffect } from "react";
-/**
- * fileName       : ProtectRoute
- * author         : hanwon.Jang
- * date           : 2026-03-24
- * description    : 인증이 필요한 라우트를 보호하는 컴포넌트. 로그인 인증된 사용자만 페이지 접근 허용
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-24       hanwon.Jang       최초 생성
- */
+import { message } from "@/app/messages/message";
+import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import Loading from "../components/Loading/Loading.tsx";
 import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 
 /**
- * 인증이 필요한 페이지를 보호하고 미인증 사용자는 로그인 화면으로 이동시킨다.
- * @Author Hanwon.Jang
- * @param children 인증 성공 시 렌더링할 하위 라우트 컴포넌트
- * @return 인증 상태에 따른 보호 라우트 결과
+ * 로그인 인증이 필요한 화면의 접근 권한을 확인합니다.
+ * 인증 확인 중에는 로딩 화면을 보여주고, 인증되지 않은 사용자는 로그인 화면으로 이동시킵니다.
+ *
+ * @author Hanwon.Jang
+ * @param children 인증이 완료된 뒤 렌더링할 보호 대상 화면
+ * @return 인증 상태에 맞는 라우트 화면
  */
-export default function ProtectedRoute({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function ProtectedRoute({ children }: { children: ReactNode }) {
   const { isLoading, isAuthenticated } = useCheckAuth();
 
-  if (isLoading) return <Loading title="로딩중" />;
+  if (isLoading) {
+    return <Loading title={message("frontend.common.loginLoading")} />;
+  }
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;

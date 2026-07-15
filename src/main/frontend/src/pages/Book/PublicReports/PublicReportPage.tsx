@@ -22,8 +22,9 @@ type PublicReportPageState = {
 };
 
 /**
- * 선택한 도서와 같은 도서에 작성된 공개 독후감 목록을 별도 화면으로 조회한다.
- * @Author Hanwon.Jang
+ * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시합니다.
+ *
+ * @author Hanwon.Jang
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
@@ -50,9 +51,11 @@ function PublicReportPage() {
   }, [activeQuery.data]);
 
   /**
-   * 긴 독후감 내용의 접힘 상태를 독후감 번호 기준으로 전환한다.
-   * @Author Hanwon.Jang
-   * @param reportNumb 독후감 번호
+   * 긴 독후감 내용의 펼침 상태를 독후감 번호 기준으로 전환합니다.
+   *
+   * @author Hanwon.Jang
+   * @param reportNumb 펼치거나 접을 독후감 번호
+   * @return
    */
   const handleToggleReport = (reportNumb: number) => {
     setExpandedReports((prev) => ({
@@ -62,8 +65,9 @@ function PublicReportPage() {
   };
 
   /**
-   * 좋아요 수가 99개를 넘으면 화면 폭을 보호하기 위해 99+로 축약한다.
-   * @Author Hanwon.Jang
+   * 좋아요 수가 99개를 넘으면 화면 폭을 보호하기 위해 99+로 축약합니다.
+   *
+   * @author Hanwon.Jang
    * @param likeCnt 서버에서 조회한 좋아요 수
    * @return 화면에 표시할 좋아요 수 문자열
    */
@@ -110,7 +114,7 @@ function PublicReportPage() {
                       pageState.ratingAverage,
                     ])}
                   >
-                    <span className={styles.ratingStar}>★</span>
+                    <span className={styles.ratingStar}>{"\u2605"}</span>
                     <span className={styles.ratingValue}>
                       {pageState.ratingAverage}
                     </span>
@@ -128,38 +132,39 @@ function PublicReportPage() {
               const isExpanded = Boolean(expandedReports[report.reportNumb]);
               const isLongContent =
                 report.reportCntn.length > CONTENT_PREVIEW_LENGTH;
-              const content = report.reportCntn || message("frontend.common.noWrittenReport");
+              const content =
+                report.reportCntn || message("frontend.common.noWrittenReport");
 
               return (
                 <article className={styles.item} key={report.reportNumb}>
                   <div className={styles.itemTop}>
                     <div className={styles.itemHeader}>
-                    <img
-                      className={styles.profileImage}
-                      src={report.porfPath || DEFAULT_PROFILE_IMAGE}
-                      alt=""
-                    />
-                    <span className={styles.writer}>
-                      {report.userNick || "-"}
-                    </span>
-                    <span className={styles.metaSeparator}>|</span>
-                    <span
-                      className={styles.stars}
-                      aria-label={message("frontend.report.gradeValue", [
-                        rating,
-                      ])}
-                    >
-                      {Array.from({ length: 5 }, (_, index) => (
-                        <span
-                          className={
-                            index < rating ? styles.starFilled : undefined
-                          }
-                          key={index}
-                        >
-                          ★
-                        </span>
-                      ))}
-                    </span>
+                      <img
+                        className={styles.profileImage}
+                        src={report.porfPath || DEFAULT_PROFILE_IMAGE}
+                        alt=""
+                      />
+                      <span className={styles.writer}>
+                        {report.userNick || "-"}
+                      </span>
+                      <span className={styles.metaSeparator}>|</span>
+                      <span
+                        className={styles.stars}
+                        aria-label={message("frontend.report.gradeValue", [
+                          rating,
+                        ])}
+                      >
+                        {Array.from({ length: 5 }, (_, index) => (
+                          <span
+                            className={
+                              index < rating ? styles.starFilled : undefined
+                            }
+                            key={index}
+                          >
+                            {"\u2605"}
+                          </span>
+                        ))}
+                      </span>
                     </div>
                     <button
                       className={styles.likeButton}

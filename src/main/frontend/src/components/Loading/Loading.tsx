@@ -4,18 +4,18 @@ import * as styles from "./Loading.css";
  * fileName       : Loading
  * author         : hanwon.Jang
  * date           : 2026-04-07
- * description    : 로딩화면 컴포넌트
+ * description    : 濡쒕뵫?붾㈃ 而댄룷?뚰듃
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-04-07       hanwon.Jang       컴포넌트 수정
+ * 2026-04-07       hanwon.Jang       而댄룷?뚰듃 ?섏젙
  */
 
 /**
- * 비동기 처리 중 표시할 스피너와 안내 문구를 렌더링한다.
- * @Author Hanwon.Jang
- * @param title 로딩 문구 앞부분에 표시할 제목
- * @return 로딩 화면 컴포넌트
+ * 鍮꾨룞湲?泥섎━ 以??쒖떆???ㅽ뵾?덉? ?덈궡 臾멸뎄瑜??뚮뜑留곹븳??
+ * @author Hanwon.Jang
+ * @param title 濡쒕뵫 臾멸뎄 ?욌?遺꾩뿉 ?쒖떆???쒕ぉ
+ * @return 濡쒕뵫 ?붾㈃ 而댄룷?뚰듃
  */
 const Loading = ({ title }: { title: String }) => {
   return (

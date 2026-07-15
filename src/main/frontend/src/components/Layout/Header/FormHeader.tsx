@@ -4,27 +4,22 @@ import { Container } from "../Container/Container";
 import clsx from "clsx";
 
 /**
- * fileName       : SubPageHeader
- * author         : hanwon.Jang
- * date           : 2026-04-03
- * description    : 서브페이지용 헤더
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-03       hanwon.Jang       레이아웃 변경
- * 2026-05-06       hanwon.Jang       서브페이지용으로 수정
- */
-
-/**
- * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링한다.
- * @Author Hanwon.Jang
+ * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링합니다.
+ *
+ * @author Hanwon.Jang
  * @return 서브 페이지 헤더 컴포넌트
  */
 function SubPageHeader() {
   const navigate = useNavigate();
 
+  /**
+   * 브라우저 이전 페이지로 이동합니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
   const backPrev = () => {
-    navigate(-1); // 이전 페이지로 이동
+    navigate(-1);
   };
 
   return (

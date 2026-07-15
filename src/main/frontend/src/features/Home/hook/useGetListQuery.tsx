@@ -1,14 +1,3 @@
-/**
- * fileName       : useGetListQuery
- * author         : hanwon.Jang
- * date           : 2026-04-25
- * description    : 독후감 리스트 조회 API
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-25       hanwon.Jang       최초 생성
- */
-
 import { getListApi } from "@/features/Book/api/bookApi";
 import { useQuery } from "@tanstack/react-query";
 
@@ -18,8 +7,10 @@ type GetListQueryParams = {
 };
 
 /**
- * 로그인 사용자의 독후감 목록을 React Query로 조회한다.
- * @Author Hanwon.Jang
+ * 메인 화면 독후감 목록을 검색어와 정렬 조건으로 조회합니다.
+ *
+ * @author Hanwon.Jang
+ * @param params 책 제목/작가 검색어와 정렬 조건
  * @return 독후감 목록 조회 Query 객체
  */
 export const useGetListQuery = (params: GetListQueryParams) => {
@@ -30,7 +21,7 @@ export const useGetListQuery = (params: GetListQueryParams) => {
         const res = await getListApi(params);
         return res.data;
       } catch (error) {
-        console.log("리스트 조회중 에러발생: " + error);
+        console.log("목록 조회 중 오류 발생: " + error);
         throw error;
       }
     },

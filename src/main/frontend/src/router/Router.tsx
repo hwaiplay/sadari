@@ -17,19 +17,9 @@ import PublicReportPage from "@/pages/Book/PublicReports/PublicReportPage";
 import ProfileEditPage from "@/pages/My/ProfileEditPage";
 
 /**
- * fileName       : Router
- * author         : hanwon.Jang
- * date           : 2026-03-23
- * description    : Router 컴포넌트
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-23       hanwon.Jang       최초 생성
- */
-
-/**
- * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다.
- * @Author Hanwon.Jang
+ * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
+ *
+ * @author Hanwon.Jang
  * @return 애플리케이션 라우터 컴포넌트
  */
 const Router = () => {
@@ -47,7 +37,7 @@ const Router = () => {
           }
         />
 
-        {/* 카카오 로그인 검증 */}
+        {/* Kakao 로그인 검증 */}
         <Route
           path="/oauth"
           element={

@@ -1,3 +1,8 @@
+/**
+ * src/main/frontend/src/pages/Book/Detail/DetailPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
@@ -7,12 +12,6 @@ import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
 import * as styles from "./DetailPage.css";
 
-/**
- * 독후감 평점을 별점 UI로 변환해 표시한다.
- * @Author Hanwon.Jang
- * @param grade 문자열로 전달된 1점부터 5점까지의 평점
- * @return 별점 표시 컴포넌트
- */
 function RatingStars({ grade }: { grade: string }) {
   const rating = Math.max(0, Math.min(5, Number(grade) || 0));
 
@@ -26,18 +25,13 @@ function RatingStars({ grade }: { grade: string }) {
           key={value}
           className={value <= rating ? styles.starFilled : undefined}
         >
-          ★
+          {"\u2605"}
         </span>
       ))}
     </div>
   );
 }
 
-/**
- * 독후감 상세 조회 결과를 화면에 표시하고 수정, 삭제, 책 정보 이동 동작을 제공한다.
- * @Author Hanwon.Jang
- * @return 독후감 상세 페이지 컴포넌트
- */
 function DetailPage() {
   const { id } = useParams();
   const idNum = Number(id);

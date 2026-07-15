@@ -1,12 +1,7 @@
 /**
- * fileName       : useSetReport
- * author         : Hanwon.Jang
- * date           : 2026-05-03
- * description    : 독후감 수정 Mutation
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-05-03       Hanwon.Jang       최초 생성
+ * src/main/frontend/src/features/Book/Update/useUpdateMutation.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
  */
 
 import { message } from "@/app/messages/message";
@@ -20,11 +15,6 @@ type ErrorResponse = {
   message?: string;
 };
 
-/**
- * 독후감 수정 API mutation을 생성하고 성공 시 상세 화면으로 이동한다.
- * @Author Hanwon.Jang
- * @return 독후감 수정 mutation 객체
- */
 export const useUpdateMutation = () => {
   const navigate = useNavigate();
 
@@ -40,8 +30,8 @@ export const useUpdateMutation = () => {
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       void sweetError(
-        message("frontend.alert.updateFailedTitle"), // frontend.alert.updateFailedTitle = 수정에 실패했습니다
-        error.response?.data?.message ?? message("frontend.report.updateFailed"), // frontend.report.updateFailed = 독후감 수정에 실패했어요.
+        message("frontend.alert.updateFailedTitle"), // frontend.alert.updateFailedTitle = ?섏젙???ㅽ뙣?덉뒿?덈떎
+        error.response?.data?.message ?? message("frontend.report.updateFailed"),
       );
     },
   });

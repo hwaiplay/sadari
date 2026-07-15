@@ -1,12 +1,7 @@
 /**
- * fileName       : useAddBookMutation
- * author         : hanwon.Jang
- * date           : 2026-04-07
- * description    : 독후감 기록 백엔드 통신
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-07       hanwon.Jang       최초 생성
+ * src/main/frontend/src/features/Book/Set/hooks/useSetReport.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
  */
 
 import { message } from "@/app/messages/message";
@@ -20,11 +15,6 @@ type ErrorResponse = {
   message?: string;
 };
 
-/**
- * 독후감 등록 API mutation을 생성하고 성공 시 상세 화면으로 이동한다.
- * @Author Hanwon.Jang
- * @return 독후감 등록 mutation 객체
- */
 export const useSetReport = () => {
   const navigate = useNavigate();
 
@@ -40,8 +30,8 @@ export const useSetReport = () => {
     },
     onError: (error: AxiosError<ErrorResponse>) => {
       void sweetError(
-        message("frontend.alert.createFailedTitle"), // frontend.alert.createFailedTitle = 등록에 실패했습니다
-        error.response?.data?.message ?? message("frontend.report.createFailed"), // frontend.report.createFailed = 독후감 등록에 실패했어요.
+        message("frontend.alert.createFailedTitle"), // frontend.alert.createFailedTitle = ?깅줉???ㅽ뙣?덉뒿?덈떎
+        error.response?.data?.message ?? message("frontend.report.createFailed"),
       );
     },
   });

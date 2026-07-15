@@ -1,12 +1,7 @@
 /**
- * fileName       : useDeleteMutation
- * author         : hanwon.Jang
- * date           : 2026-05-24
- * description    : 독후감 삭제 mutation
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-05-24       hanwon.Jang       최초 생성
+ * src/main/frontend/src/features/Book/Delete/useDeleteMutation.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
  */
 
 import { message } from "@/app/messages/message";
@@ -15,11 +10,6 @@ import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { delReportApi } from "../api/bookApi";
 
-/**
- * 독후감 삭제 API mutation을 생성하고 성공 시 홈 화면으로 이동한다.
- * @Author Hanwon.Jang
- * @return 독후감 삭제 mutation 객체
- */
 export const useDeleteMutation = () => {
   const navigate = useNavigate();
 
@@ -27,8 +17,7 @@ export const useDeleteMutation = () => {
     mutationFn: delReportApi,
     onSuccess: () => {
       void sweetSuccess(
-        message("frontend.alert.deleteSuccessTitle"), // frontend.alert.deleteSuccessTitle = 삭제되었습니다
-        message("frontend.report.deleted"), // frontend.report.deleted = 독후감이 삭제되었습니다.
+        message("frontend.alert.deleteSuccessTitle"),
       ).then(() => navigate("/home"));
     },
   });

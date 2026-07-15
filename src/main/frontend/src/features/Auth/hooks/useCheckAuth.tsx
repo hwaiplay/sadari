@@ -1,12 +1,12 @@
+/**
+ * src/main/frontend/src/features/Auth/hooks/useCheckAuth.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
 import { refreshTokenApi } from "../api/authApi";
 
-/**
- * 인증 상태를 확인하고 만료된 access token은 한 번 refresh 후 재조회한다.
- * @Author Hanwon.Jang
- * @return 로딩 여부와 최종 인증 성공 여부
- */
 export const useCheckAuth = () => {
   const { data, isLoading, isError, refetch } = useAuthQuery();
   const [refreshing, setRefreshing] = useState(false);

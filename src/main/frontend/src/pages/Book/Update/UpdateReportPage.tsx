@@ -1,7 +1,12 @@
+/**
+ * src/main/frontend/src/pages/Book/Update/UpdateReportPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { useEffect, useState } from "react";
-import type { CSSProperties } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import { useParams } from "react-router-dom";
 import Loading from "@/components/Loading/Loading";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
@@ -22,11 +27,6 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 
-/**
- * 독후감 수정 화면을 렌더링하고 기존 상세 데이터로 폼 상태를 초기화한다.
- * @Author Hanwon.Jang
- * @return 독후감 수정 페이지 컴포넌트
- */
 const UpdateReportPage = () => {
   const { id } = useParams();
   const idNum = Number(id);
@@ -71,7 +71,7 @@ const UpdateReportPage = () => {
     return <Loading title={message("frontend.report.loading.detail")} />;
   }
 
-  const setFormAction = async (e: React.FormEvent<HTMLFormElement>) => {
+  const setFormAction = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
@@ -92,6 +92,7 @@ const UpdateReportPage = () => {
       return;
     }
 
+    const pubcYsno: "Y" | "N" = formData.get("pubcYsno") === "Y" ? "Y" : "N";
     const data = {
       reportNumb: idNum,
       reportStat: formData.get("status") as ReadingStatusType,
@@ -99,7 +100,7 @@ const UpdateReportPage = () => {
       reportEndt: formData.get("endDate") as string,
       reportGrde: formData.get("grade") as string,
       reportColr: formData.get("reportColr") as string,
-      pubcYsno: formData.get("pubcYsno") === "Y" ? "Y" : "N",
+      pubcYsno,
       reportCntn: sanitizeText(formData.get("content")),
     };
 
@@ -192,7 +193,7 @@ const UpdateReportPage = () => {
                   }`}
                   htmlFor={`grade${value}`}
                 >
-                  ★
+                  {"\u2605"}
                   <input
                     className={styles.hiddenInput}
                     type="radio"

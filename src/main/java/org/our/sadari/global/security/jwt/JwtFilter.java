@@ -13,14 +13,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 /**
- * fileName       : JwtFilter
- * author         : SeungHyeon.Kang
- * date           : 2026-03-22
- * description    : 쿠키 기반 JWT 인증 필터
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-22        SeungHyeon.Kang       최초 생성
+ * accessToken 쿠키를 읽어 Spring Security 인증 객체를 구성하는 JWT 필터입니다.
+ *
+ * @author Seunghyeon.Kang
  */
 @Component
 @RequiredArgsConstructor
@@ -30,48 +25,45 @@ public class JwtFilter extends OncePerRequestFilter {
     private final TokenRedisService tokenRedisService;
 
     /**
-     * 요청 쿠키의 accessToken을 검증하고 Spring Security 인증 컨텍스트를 구성한다.
-     * JWT 서명과 만료 시간이 정상이어도 Redis blacklist에 등록된 토큰이면 로그아웃된 토큰으로 보고 인증하지 않는다.
-     * 토큰이 없거나 검증에 실패한 경우 여기서 직접 응답을 종료하지 않고 SecurityConfig의 인증 실패 처리로 넘긴다.
-     * @Author Seunghyeon.Kang
-     * @param request accessToken 쿠키가 포함될 수 있는 HTTP 요청 객체
-     * @param response 인증 실패 또는 성공 이후 이어질 HTTP 응답 객체
-     * @param filterChain 다음 필터로 요청 처리를 넘기기 위한 필터 체인 객체
-     * @return
+     * 요청 쿠키에서 accessToken을 추출하고 JWT 검증과 Redis blacklist 검증을 수행합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param request HTTP 요청 객체
+     * @param response HTTP 응답 객체
+     * @param filterChain 다음 필터로 요청을 넘기기 위한 필터 체인
+     * @throws ServletException 필터 처리 중 Servlet 오류가 발생한 경우
+     * @throws IOException 필터 처리 중 IO 오류가 발생한 경우
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
         String token = null;
 
+        // accessToken은 HttpOnly 쿠키에 저장되므로 요청 쿠키 배열에서 직접 찾아야 합니다.
         if (!StringUtil.isEmpty(request.getCookies())) {
             for (jakarta.servlet.http.Cookie cookie : request.getCookies()) {
                 if ("accessToken".equals(cookie.getName())) {
-                    // accessToken 쿠키를 찾으면 더 이상 다른 쿠키를 탐색하지 않는다.
                     token = cookie.getValue();
                     break;
                 }
             }
         }
 
+        // JWT 자체가 유효하고 logout blacklist에 없는 경우에만 SecurityContext에 인증 객체를 저장합니다.
         if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
-            // 쿠키 존재, JWT 검증, Redis blacklist 검증을 모두 통과한 경우에만 인증 객체를 만든다.
             Authentication authentication = jwtProvider.getAuthentication(token);
 
-            // 이후 컨트롤러에서 @AuthenticationPrincipal로 사용자 번호를 받을 수 있도록 인증 정보를 저장한다.
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // 토큰이 없거나 검증에 실패해도 여기서 응답을 끊지 않고 다음 필터와 SecurityConfig 판단에 맡긴다.
         filterChain.doFilter(request, response);
     }
 
     /**
-     * accessToken 없이 refreshToken만으로 처리해야 하는 재발급 API는 JWT 필터를 적용하지 않는다.
-     * 재발급 API 내부에서 refreshToken 쿠키와 Redis 저장값을 직접 검증하므로 이 필터의 accessToken 검증 대상에서 제외한다.
-     * 다른 API는 필터를 통과시켜 accessToken 기반 인증 여부를 판단한다.
-     * @Author Seunghyeon.Kang
-     * @param request 필터 적용 제외 여부를 확인할 HTTP 요청 객체
-     * @return JWT 필터를 건너뛰어야 하면 true, 필터를 적용해야 하면 false
+     * refreshToken으로 accessToken을 재발급받는 API는 accessToken 필터 검증에서 제외합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param request HTTP 요청 객체
+     * @return JWT 필터를 건너뛸 요청이면 true
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {

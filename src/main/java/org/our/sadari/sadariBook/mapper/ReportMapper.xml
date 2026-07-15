@@ -305,6 +305,7 @@
             , BOOK_PUBL
             , BOOK_TITL
             , BOOK_DESC
+            , PUBL_DATE
         )
         VALUES(
               #{bookNumb}
@@ -314,6 +315,7 @@
             , #{bookPubl}
             , #{bookTitl}
             , #{bookDesc}
+            , #{publDate}
         )
     </insert>
 

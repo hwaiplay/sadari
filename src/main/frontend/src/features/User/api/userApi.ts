@@ -36,30 +36,19 @@ export type UpdateUserProfileParams = {
   backgroundImage?: File | null;
 };
 
-/**
- * 로그인 사용자의 프로필 정보를 조회한다.
- * @Author Hanwon.Jang
- * @return 프로필 조회 API 응답
- */
 export const getMyProfileApi = () => {
   return api.get("/user/me");
 };
 
 /**
- * 마이페이지에 표시할 이번 달 완료 독서 권수와 지난달 대비 변화량을 조회한다.
- * @Author Hanwon.Jang
- * @return 월간 완료 독서 요약 API 응답
+ * 留덉씠?섏씠吏???쒖떆???대쾲 ???꾨즺 ?낆꽌 沅뚯닔? 吏?쒕떖 ?鍮?蹂?붾웾??議고쉶?쒕떎.
+ * @author Hanwon.Jang
+ * @return ?붽컙 ?꾨즺 ?낆꽌 ?붿빟 API ?묐떟
  */
 export const getMonthlyReadingSummaryApi = () => {
   return api.get("/user/monthly-reading-summary");
 };
 
-/**
- * 로그인 사용자의 프로필 사진, 닉네임, 한줄 소개를 수정한다.
- * @Author Hanwon.Jang
- * @param params 수정할 프로필 정보
- * @return 프로필 수정 API 응답
- */
 export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
   const formData = new FormData();
   formData.append("userNick", params.userNick);

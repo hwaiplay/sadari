@@ -9,12 +9,12 @@ type ColorCodeFieldProps = {
 };
 
 /**
- * DB 공통코드로 조회한 책장 색상 코드를 swatch 라디오 목록으로 표시한다.
- * @Author Hanwon.Jang
- * @param colors BOOK_COLR 공통코드의 세부코드 목록
- * @param value 현재 선택된 책장 색상 코드
- * @param onChange 색상 코드 선택 변경 콜백
- * @return 책장 색상 선택 필드 컴포넌트
+ * DB 怨듯넻肄붾뱶濡?議고쉶??梨낆옣 ?됱긽 肄붾뱶瑜?swatch ?쇰뵒??紐⑸줉?쇰줈 ?쒖떆?쒕떎.
+ * @author Hanwon.Jang
+ * @param colors BOOK_COLR 怨듯넻肄붾뱶???몃?肄붾뱶 紐⑸줉
+ * @param value ?꾩옱 ?좏깮??梨낆옣 ?됱긽 肄붾뱶
+ * @param onChange ?됱긽 肄붾뱶 ?좏깮 蹂寃?肄쒕갚
+ * @return 梨낆옣 ?됱긽 ?좏깮 ?꾨뱶 而댄룷?뚰듃
  */
 function ColorCodeField({ colors, value, onChange }: ColorCodeFieldProps) {
   return (

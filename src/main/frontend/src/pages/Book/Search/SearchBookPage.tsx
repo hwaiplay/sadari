@@ -13,8 +13,9 @@ const DESCRIPTION_PREVIEW_LENGTH = 90;
 const SEARCH_PAGE_SIZE = 10;
 
 /**
- * 책 검색, 더보기, 선택, 상세보기 이동을 처리하는 책 검색 화면을 렌더링한다.
- * @Author Hanwon.Jang
+ * 책 검색, 더보기, 선택, 추가 조회 흐름을 처리하는 책 검색 화면을 렌더링합니다.
+ *
+ * @author Hanwon.Jang
  * @return 책 검색 페이지 컴포넌트
  */
 const SearchBookPage = () => {
