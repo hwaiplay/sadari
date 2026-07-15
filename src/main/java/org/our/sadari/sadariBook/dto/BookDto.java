@@ -48,4 +48,7 @@ public class BookDto {
 
     /** 공개 여부와 상관없이 해당 책 전체 독후감 기준으로 계산한 평균 별점입니다. */
     private BigDecimal bookAvgGrde;
+
+    /** 어권 */
+    private String locale;
 }

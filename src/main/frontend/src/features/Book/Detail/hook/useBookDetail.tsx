@@ -6,9 +6,10 @@ import { getDetailApi } from "../../api/bookApi";
  *
  * @author Hanwon.Jang
  * @param bookNumb 조회할 독후감 번호
+ * @param enabled 상세 조회 API 호출 여부
  * @return 독후감 상세 조회 Query 객체
  */
-export const useBookDetail = (bookNumb: number) => {
+export const useBookDetail = (bookNumb: number, enabled = true) => {
   return useQuery({
     queryKey: ["detail", bookNumb],
     queryFn: async () => {
@@ -20,5 +21,6 @@ export const useBookDetail = (bookNumb: number) => {
         throw error;
       }
     },
+    enabled: enabled && Number.isFinite(bookNumb),
   });
 };

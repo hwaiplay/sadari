@@ -2,7 +2,6 @@ package org.our.sadari.sadariBook.service;
 
 import java.math.BigDecimal;
 import java.util.List;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
@@ -32,26 +31,6 @@ public interface BookService {
      * @return 독후감 상세 정보
      */
     ReportDto getDetail(Long userNumb, Long reportNumb);
-
-    /**
-     * 독후감 번호로 연결된 책 상세 정보를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 기준 독후감 번호
-     * @return 책 상세 정보
-     */
-    BookDto getBookInfo(Long userNumb, Long reportNumb);
-
-    /**
-     * 독후감 번호를 기준으로 같은 책의 공개 독후감 목록을 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 기준 독후감 번호
-     * @return 공개 독후감 목록
-     */
-    List<ReportDto> getPublicReportsByReport(Long userNumb, Long reportNumb);
 
     /**
      * ISBN 기준 공개 독후감 목록을 조회합니다.
