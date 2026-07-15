@@ -1,22 +1,12 @@
-/**
- * fileName       : SearchBook
- * author         : Hanwon.Jang
- * date           : 2026-03-21
- * description    : 책 검색하기 버튼 컴포넌트
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-21       Hanwon.Jang       최초 생성
- */
 
 import { message } from "@/app/messages/message";
 import { Link } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
 /**
- * 책 검색 화면으로 이동하는 버튼을 표시한다.
- * @Author Hanwon.Jang
- * @return 책 검색 이동 버튼 컴포넌트
+ * 梨?寃???붾㈃?쇰줈 ?대룞?섎뒗 踰꾪듉???쒖떆?쒕떎.
+ * @author Hanwon.Jang
+ * @return 梨?寃???대룞 踰꾪듉 而댄룷?뚰듃
  */
 const SearchBookButton = () => {
   return (
@@ -42,7 +32,7 @@ const SearchBookButton = () => {
         />
       </svg>
       <p className={searchBtnText}>
-        {message("frontend.book.search.open") /* frontend.book.search.open = 책 검색하기 */}
+        {message("frontend.book.search.open") /* frontend.book.search.open = 梨?寃?됲븯湲?*/}
       </p>
     </Link>
   );

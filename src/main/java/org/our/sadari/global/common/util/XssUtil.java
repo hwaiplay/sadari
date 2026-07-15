@@ -2,20 +2,25 @@ package org.our.sadari.global.common.util;
 
 import java.nio.charset.StandardCharsets;
 
+/**
+ * 화면 출력용 문자열 escaping과 UTF-8 byte 길이 계산을 제공하는 유틸 클래스입니다.
+ *
+ * @author Seunghyeon.Kang
+ */
 public class XssUtil {
 
     private XssUtil() {
     }
 
     /**
-     * XSS 방어용 HTML 엔티티 변환
-     * @Author SeungHyeon.Kang
-     * @param value
-     * @return
+     * HTML에서 의미를 가지는 특수문자를 entity로 변환합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param value 변환할 문자열
+     * @return HTML entity로 변환된 문자열, 입력값이 비어 있으면 null
      */
     public static String escape(String value) {
         if (StringUtil.isEmpty(value)) {
-            // null 값은 필터링 대상 문자열이 아니므로 그대로 반환한다.
             return null;
         }
 
@@ -28,14 +33,14 @@ public class XssUtil {
     }
 
     /**
-     * UTF-8 바이트 길이 계산
-     * @Author SeungHyeon.Kang
-     * @param value
-     * @return
+     * 문자열의 UTF-8 byte 길이를 계산합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param value byte 길이를 계산할 문자열
+     * @return UTF-8 기준 byte 길이
      */
     public static int utf8ByteLength(String value) {
         if (StringUtil.isEmpty(value)) {
-            // null 값은 DB에 저장될 문자열이 아니므로 길이를 0으로 판단한다.
             return 0;
         }
 

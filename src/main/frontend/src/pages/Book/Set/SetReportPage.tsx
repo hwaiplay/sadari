@@ -1,11 +1,19 @@
+/**
+ * src/main/frontend/src/pages/Book/Set/SetReportPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ *
+ * @author Hanwon.Jang
+ */
 import { message } from "@/app/messages/message";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
 import * as styles from "./SetReportPage.css";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import { useLocation, useNavigate } from "react-router-dom";
-import type { CSSProperties } from "react";
+import type { CSSProperties, FormEvent } from "react";
 import { useEffect, useState } from "react";
-import { ReadingStatusType } from "@/features/Book/types/book.type";
+import type {
+  NaverApiResultType,
+  ReadingStatusType,
+} from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
 import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
@@ -18,15 +26,12 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 
-/**
- * 독후감 등록 화면을 렌더링하고 입력 폼 상태를 관리한다.
- * @Author Hanwon.Jang
- * @return 독후감 등록 페이지 컴포넌트
- */
 function SetReportPage() {
   const location = useLocation();
   const navigate = useNavigate();
-  const selectedBook = location.state?.selectedBook;
+  const selectedBook = (
+    location.state as { selectedBook?: NaverApiResultType } | null
+  )?.selectedBook;
 
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
@@ -49,7 +54,7 @@ function SetReportPage() {
       } as CSSProperties)
     : undefined;
 
-  const formAction = (e: React.FormEvent<HTMLFormElement>) => {
+  const formAction = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e.currentTarget);
   };
@@ -139,7 +144,7 @@ function SetReportPage() {
                   }`}
                   htmlFor={`grade${value}`}
                 >
-                  ★
+                  {"\u2605"}
                   <input
                     className={styles.hiddenInput}
                     type="radio"

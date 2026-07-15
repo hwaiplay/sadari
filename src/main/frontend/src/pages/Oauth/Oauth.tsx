@@ -1,45 +1,39 @@
-import { useEffect } from "react";
-import { Navigate } from "react-router-dom";
-import Loading from "../../components/Loading/Loading";
-import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import Loading from "../../components/Loading/Loading";
+import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 
 /**
- * fileName       : KakaoOAuth
- * author         : hanwon.Jang
- * date           : 2026-03-19
- * description    : 카카오 로그인 검증 페이지
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-19        hanwon.Jang       주석 추가
- * 2026-03-23        hanwon.Jang       로그인 성공 로직 수정
- * 2026-03-25        hanwon.Jang       useAuthQuery 훅으로 인증 상태 조회
- * 2026-04-01        hanwon.Jang       페이지 리디렉션 수정
- */
-
-/**
- * OAuth 인증 콜백 이후 인증 상태를 확인하고 다음 화면 이동을 처리한다.
- * @Author Hanwon.Jang
- * @return OAuth 처리 중 로딩 화면 컴포넌트
+ * Kakao OAuth 인증 결과를 확인하고 인증 상태에 맞는 화면으로 이동합니다.
+ *
+ * @author Hanwon.Jang
+ * @return OAuth 인증 처리 중 표시할 로딩 화면
  */
 const Oauth = () => {
-  const { isLoading } = useCheckAuth();
+  const navigate = useNavigate();
+  const { isLoading, isAuthenticated } = useCheckAuth();
 
   useEffect(() => {
-    if (!isLoading) {
-      <Navigate to={"/home"} replace />;
-    } else {
-      void sweetError(
-        message("frontend.alert.authFailedTitle"), // frontend.alert.authFailedTitle = 인증에 실패했습니다
-        message("frontend.auth.failedRedirect"), // frontend.auth.failedRedirect = 로그인 페이지로 이동합니다.
-      );
-      <Navigate to={"/login"} replace />;
+    if (isLoading) {
+      return;
     }
-  }, [isLoading]);
 
-  return <Loading title={message("frontend.common.loginLoading")} />; // frontend.common.loginLoading = 로그인 중
+    if (isAuthenticated) {
+      navigate("/home", { replace: true });
+      return;
+    }
+
+    void sweetError(
+      message("frontend.alert.authFailedTitle"),
+      message("frontend.auth.failedRedirect"),
+    ).then(() => {
+      navigate("/login", { replace: true });
+    });
+  }, [isAuthenticated, isLoading, navigate]);
+
+  return <Loading title={message("frontend.common.loginLoading")} />;
 };
 
 export default Oauth;

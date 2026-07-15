@@ -2,53 +2,64 @@ package org.our.sadari.sadariBook.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
-
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * packageName    : package org.our.sadari.sadariBook.dto;
- * fileName       : BookJsonDto.java
- * author         : hanwon.Jang
- * date           : 2026-04-02
- * description    : 네이버 API 응답을 담는 DTO
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-04-02       hanwon.Jang       최초 생성
+ * Naver 책 검색 API 응답을 매핑하는 DTO입니다.
+ *
+ * @author Seunghyeon.Kang
  */
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class BookJsonDto {
-    // 검색 결과를 생성한 시간
+
+    /** Naver 검색 결과가 생성된 일시입니다. */
     private String lastBuildDate;
-    // 검색 결과 수
+
+    /** 검색 결과 전체 건수입니다. */
     private int total;
-    // 검색 시작 위치(기본값: 1, 최댓값: 1000) 
+
+    /** 검색 결과 시작 위치입니다. */
     private int start;
-    // 한 번에 표시할 검색 결과 개수(기본값: 10, 최댓값: 100)
+
+    /** 한 번에 표시되는 검색 결과 수입니다. */
     private int display;
-    // 검색된 책 데이터륻 담는 배열
+
+    /** 검색된 책 목록입니다. */
     private List<BookDto> items;
 
+    /**
+     * Naver 책 검색 API의 단건 책 정보를 매핑하는 DTO입니다.
+     *
+     * @author Seunghyeon.Kang
+     */
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
     public static class BookDto {
-        // 책 제목
+
+        /** 책 제목입니다. */
         private String title;
-        // 저자
+
+        /** 작가 이름입니다. */
         private String author;
-        // 출판사
-        private String publisher; 
-        // isbn
-        private String isbn; 
-        // 책 표지 이미지
+
+        /** 출판사 이름입니다. */
+        private String publisher;
+
+        /** ISBN 값입니다. */
+        private String isbn;
+
+        /** 책 표지 이미지 URL입니다. */
         private String image;
-        // 책 소개 내용
-        private String description; 
+
+        /** 책 소개 내용입니다. */
+        private String description;
+
+        /** 출간일입니다. Naver API는 yyyyMMdd 형식으로 내려줍니다. */
+        private String pubdate;
     }
 }

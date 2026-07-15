@@ -25,6 +25,8 @@ export interface NaverApiResultType {
   image: string;
   // 책 소개 내용
   description: string;
+  // 출간일
+  pubdate: string;
 }
 
 /**
@@ -89,6 +91,8 @@ export interface ReportDtoType {
   bookCvim: string;
   // 책 소개 내용
   bookDesc: string;
+  // 출간일
+  publDate: string;
 }
 
 /**

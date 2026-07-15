@@ -10,30 +10,31 @@ type CalendarDatePickerProps = {
   placeholder?: string;
 };
 
-const WEEK_DAYS = [
-  message("frontend.calendar.week.sun"), // frontend.calendar.week.sun = 일
-  message("frontend.calendar.week.mon"), // frontend.calendar.week.mon = 월
-  message("frontend.calendar.week.tue"), // frontend.calendar.week.tue = 화
-  message("frontend.calendar.week.wed"), // frontend.calendar.week.wed = 수
-  message("frontend.calendar.week.thu"), // frontend.calendar.week.thu = 목
-  message("frontend.calendar.week.fri"), // frontend.calendar.week.fri = 금
-  message("frontend.calendar.week.sat"), // frontend.calendar.week.sat = 토
+const WEEK_DAY_KEYS = [
+  "frontend.calendar.week.sun",
+  "frontend.calendar.week.mon",
+  "frontend.calendar.week.tue",
+  "frontend.calendar.week.wed",
+  "frontend.calendar.week.thu",
+  "frontend.calendar.week.fri",
+  "frontend.calendar.week.sat",
 ];
 
 /**
- * 달력 팝오버로 날짜를 선택하고 hidden input으로 폼 값을 전달한다.
- * @Author Hanwon.Jang
+ * 달력 팝오버를 통해 날짜를 선택하고 hidden input으로 값을 전달합니다.
+ *
+ * @author Hanwon.Jang
  * @param name 폼 전송에 사용할 input 이름
- * @param label 날짜 필드 라벨
+ * @param label 날짜 입력 라벨
  * @param defaultValue 초기 선택 날짜
- * @param placeholder 날짜 미선택 시 표시할 문구
+ * @param placeholder 날짜 미선택 상태에서 보여줄 문구
  * @return 달력 날짜 선택 컴포넌트
  */
 function CalendarDatePicker({
   name,
   label,
   defaultValue = "",
-  placeholder = message("frontend.calendar.dateSelect"), // frontend.calendar.dateSelect = 날짜 선택
+  placeholder = message("frontend.calendar.dateSelect"),
 }: CalendarDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(defaultValue);
@@ -58,10 +59,24 @@ function CalendarDatePicker({
     ];
   }, [viewMonth, viewYear]);
 
+  /**
+   * 현재 보고 있는 달을 이전 달 또는 다음 달로 이동합니다.
+   *
+   * @author Hanwon.Jang
+   * @param amount 이동할 월 수
+   * @return
+   */
   const changeMonth = (amount: number) => {
     setViewDate(new Date(viewYear, viewMonth + amount, 1));
   };
 
+  /**
+   * 선택한 일을 yyyy-MM-dd 값으로 변환해 hidden input 값으로 반영합니다.
+   *
+   * @author Hanwon.Jang
+   * @param day 선택한 일
+   * @return
+   */
   const selectDay = (day: number) => {
     const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
@@ -107,31 +122,31 @@ function CalendarDatePicker({
             <button
               className={styles.navButton}
               type="button"
-              aria-label={message("frontend.calendar.prevMonth")} // frontend.calendar.prevMonth = 이전 달
+              aria-label={message("frontend.calendar.prevMonth")}
               onClick={() => changeMonth(-1)}
             >
-              ‹
+              {"<"}
             </button>
             <strong className={styles.monthLabel}>
               {message("frontend.calendar.monthLabel", [
                 viewYear,
                 viewMonth + 1,
-              ]) /* frontend.calendar.monthLabel = {0}년 {1}월 */}
+              ])}
             </strong>
             <button
               className={styles.navButton}
               type="button"
-              aria-label={message("frontend.calendar.nextMonth")} // frontend.calendar.nextMonth = 다음 달
+              aria-label={message("frontend.calendar.nextMonth")}
               onClick={() => changeMonth(1)}
             >
-              ›
+              {">"}
             </button>
           </div>
 
           <div className={styles.weekGrid}>
-            {WEEK_DAYS.map((day) => (
-              <span className={styles.weekDay} key={day}>
-                {day}
+            {WEEK_DAY_KEYS.map((dayKey) => (
+              <span className={styles.weekDay} key={dayKey}>
+                {message(dayKey)}
               </span>
             ))}
           </div>
@@ -170,7 +185,7 @@ function CalendarDatePicker({
               type="button"
               onClick={() => setIsOpen(false)}
             >
-              {message("frontend.common.close") /* frontend.common.close = 닫기 */}
+              {message("frontend.common.close")}
             </button>
           </div>
         </div>
