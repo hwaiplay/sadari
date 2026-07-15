@@ -9,7 +9,6 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.BookJsonDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.service.BookSearchService;
@@ -49,8 +48,7 @@ public class BookController {
      */
     @GetMapping("/search")
     public ResultData searchBooks(@RequestParam("query") String query
-                                , @RequestParam(value = "start", defaultValue = "1") int start
-    ) {
+                                , @RequestParam(value = "start", defaultValue = "1") int start) {
         List<BookJsonDto.BookDto> books = bookSearchService.searchBooks(query, start);
         return ResultData.success(books);
     }
@@ -65,9 +63,9 @@ public class BookController {
      * @return 독후감 목록을 담은 공통 응답
      */
     @GetMapping("/getBookList")
-    public ResultData getBookList(@AuthenticationPrincipal Long userNumb, @RequestParam(value = "bookKeyword", required = false) String bookKeyword,
-                                    @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType
-    ) {
+    public ResultData getBookList(@AuthenticationPrincipal Long userNumb
+                                , @RequestParam(value = "bookKeyword", required = false) String bookKeyword
+                                , @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType) {
         List<ReportDto> list = bookService.getBookList(userNumb, bookKeyword, sortType);
         return ResultData.success(list);
     }
@@ -81,10 +79,8 @@ public class BookController {
      * @return 독후감 상세 정보를 담은 공통 응답
      */
     @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData getDetail(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("bookNumb") Long bookNumb
-    ) {
+    public ResultData getDetail(@AuthenticationPrincipal Long userNumb
+                              , @PathVariable("bookNumb") Long bookNumb) {
         ReportDto detail = bookService.getDetail(userNumb, bookNumb);
 
         // 소유권 조건까지 포함해 조회하므로 결과가 없으면 존재하지 않거나 접근할 수 없는 독후감입니다.
@@ -97,50 +93,6 @@ public class BookController {
     }
 
     /**
-     * 독후감 번호를 기준으로 연결된 책 상세 정보를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 독후감 번호
-     * @return 책 상세 정보를 담은 공통 응답
-     */
-    @GetMapping("/getBookInfo/{reportNumb}")
-    public ResultData getBookInfo(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("reportNumb") Long reportNumb
-    ) {
-        BookDto bookInfo = bookService.getBookInfo(userNumb, reportNumb);
-
-        // 독후감 소유권이 맞지 않거나 연결된 책 정보가 없으면 빈 응답으로 처리합니다.
-        if (StringUtil.isEmpty(bookInfo)) {
-            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
-
-        log.debug("Book info lookup succeeded: {}", bookInfo);
-        return ResultData.success(bookInfo);
-    }
-
-    /**
-     * 내가 작성한 독후감이 연결된 책의 공개 독후감 목록을 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인한 회원 번호
-     * @param reportNumb 기준 독후감 번호
-     * @return 공개 독후감 목록을 담은 공통 응답
-     */
-    @GetMapping("/publicReports/by-report/{reportNumb}")
-    public ResultData getPublicReportsByReport(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("reportNumb") Long reportNumb
-    ) {
-        if (StringUtil.isEmpty(reportNumb)) {
-            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
-
-        return ResultData.success(bookService.getPublicReportsByReport(userNumb, reportNumb));
-    }
-
-    /**
      * ISBN을 기준으로 공개 독후감 목록을 조회합니다.
      *
      * @author Seunghyeon.Kang
@@ -149,10 +101,8 @@ public class BookController {
      * @return 공개 독후감 목록을 담은 공통 응답
      */
     @GetMapping("/publicReports/by-isbn")
-    public ResultData getPublicReportsByIsbn(
-            @AuthenticationPrincipal Long userNumb,
-            @RequestParam("isbn") String isbn
-    ) {
+    public ResultData getPublicReportsByIsbn(@AuthenticationPrincipal Long userNumb
+                                           , @RequestParam("isbn") String isbn) {
         if (StringUtil.isEmpty(isbn)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -186,10 +136,8 @@ public class BookController {
      * @return 변경된 좋아요 상태를 담은 공통 응답
      */
     @PostMapping("/publicReports/{reportNumb}/like")
-    public ResultData setReportLike(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("reportNumb") Long reportNumb
-    ) {
+    public ResultData setReportLike(@AuthenticationPrincipal Long userNumb
+                                  , @PathVariable("reportNumb") Long reportNumb) {
         if (StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -206,10 +154,8 @@ public class BookController {
      * @return 생성된 독후감 번호를 담은 공통 응답
      */
     @PostMapping("/setReport")
-    public ResultData createReport(
-            @AuthenticationPrincipal Long userNumb,
-            @Valid @RequestBody ReportDto requestDto
-    ) {
+    public ResultData createReport(@AuthenticationPrincipal Long userNumb
+                                 , @Valid @RequestBody ReportDto requestDto) {
         // 책 정보는 독후감 등록 시 함께 저장되므로 필수 책 정보가 없으면 등록을 거부합니다.
         if (hasInvalidBookFields(requestDto)) {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
@@ -235,11 +181,9 @@ public class BookController {
      * @return 수정된 독후감 번호를 담은 공통 응답
      */
     @PutMapping("/uptReport/{reportNumb}")
-    public ResultData uptReport(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("reportNumb") Long reportNumb,
-            @Valid @RequestBody ReportDto request
-    ) {
+    public ResultData uptReport(@AuthenticationPrincipal Long userNumb
+                              , @PathVariable("reportNumb") Long reportNumb
+                              , @Valid @RequestBody ReportDto request) {
         if (StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -259,10 +203,8 @@ public class BookController {
      * @return 삭제 결과 공통 응답
      */
     @DeleteMapping("/delReport/{reportNumb}")
-    public ResultData delReport(
-            @AuthenticationPrincipal Long userNumb,
-            @PathVariable("reportNumb") Long reportNumb
-    ) {
+    public ResultData delReport(@AuthenticationPrincipal Long userNumb
+                              , @PathVariable("reportNumb") Long reportNumb) {
         if (StringUtil.isEmpty(reportNumb)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }

@@ -74,10 +74,6 @@ const Router = () => {
 
           {/* 공개 독후감 목록 */}
           <Route
-            path="/book/public-reports/report/:reportNumb"
-            element={<PublicReportPage />}
-          />
-          <Route
             path="/book/public-reports/isbn"
             element={<PublicReportPage />}
           />

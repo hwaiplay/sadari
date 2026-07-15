@@ -3,7 +3,6 @@ package org.our.sadari.sadariBook.mapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
-import org.our.sadari.sadariBook.dto.BookDto;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
@@ -50,15 +49,6 @@ public interface ReportMapper {
      * @return 독후감 상세 정보
      */
     ReportDto getReportDtl(ReportDto req);
-
-    /**
-     * 독후감과 연결된 책 상세 정보를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 회원 번호와 독후감 번호를 담은 요청 DTO
-     * @return 책 상세 정보
-     */
-    BookDto getBookInfo(ReportDto req);
 
     /**
      * ISBN 또는 독후감 번호 기준으로 공개 독후감 목록을 조회합니다.

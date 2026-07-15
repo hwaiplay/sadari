@@ -93,6 +93,8 @@ export interface ReportDtoType {
   bookDesc: string;
   // 출간일
   publDate: string;
+  // 평균 별점
+  bookAvgGrde?: number | string | null;
 }
 
 /**

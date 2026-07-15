@@ -6,11 +6,13 @@
 import { message } from "@/app/messages/message";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
+import { useState } from "react";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
 import * as styles from "./DetailPage.css";
+import * as infoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
 function RatingStars({ grade }: { grade: string }) {
   const rating = Math.max(0, Math.min(5, Number(grade) || 0));
@@ -38,14 +40,13 @@ function DetailPage() {
   const navigate = useNavigate();
   const { data, isPending } = useBookDetail(idNum);
   const likeMutation = usePublicReportLikeMutation();
+  const [showBookInfo, setShowBookInfo] = useState(false);
 
   const goUpdatePage = (reportNumb: number) => {
     navigate(`/book/upt/${reportNumb}`);
   };
 
-  const goBookInfoPage = (reportNumb: number) => {
-    navigate(`/book/info/${reportNumb}`);
-  };
+  const showBookInfoView = () => setShowBookInfo(true);
 
   const getLikeCountLabel = (likeCnt?: number) => {
     const count = Number(likeCnt) || 0;
@@ -70,6 +71,127 @@ function DetailPage() {
     "--book-bg-image": `url("${bookData.bookCvim}")`,
   } as CSSProperties;
 
+  // 같은 상세 API에서 받은 책 정보를 사용하므로 URL 이동 없이 화면 표시 모드만 변경합니다.
+  if (showBookInfo) {
+    return (
+      <main className={infoStyles.page} style={pageStyle}>
+        <Container className={infoStyles.content}>
+          <section className={infoStyles.header}>
+            <div className={infoStyles.coverFrame}>
+              <img
+                className={infoStyles.coverImage}
+                src={bookData.bookCvim}
+                alt={bookData.bookTitl}
+              />
+            </div>
+            <h1 className={infoStyles.title}>{bookData.bookTitl}</h1>
+            <div className={infoStyles.authorRatingLine}>
+              <p className={infoStyles.meta}>{bookData.bookAthr}</p>
+              {bookData.bookAvgGrde && (
+                <span className={infoStyles.metaSeparator}>|</span>
+              )}
+              {bookData.bookAvgGrde && (
+                <span
+                  className={infoStyles.ratingSummary}
+                  aria-label={message("frontend.report.gradeValue", [
+                    bookData.bookAvgGrde,
+                  ])}
+                >
+                  <span className={infoStyles.ratingStar}>{"\u2605"}</span>
+                  <span className={infoStyles.ratingValue}>
+                    {bookData.bookAvgGrde}
+                  </span>
+                </span>
+              )}
+            </div>
+            <div className={infoStyles.bookInfoActionRow}>
+              <button
+                className={infoStyles.reportBackButton}
+                type="button"
+                onClick={() => setShowBookInfo(false)}
+              >
+                <svg
+                  className={infoStyles.reportBackIcon}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M15 6 9 12l6 6"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {message("frontend.report.backToReport")}
+              </button>
+              <button
+                className={infoStyles.bookInfoButton}
+                type="button"
+                onClick={() =>
+                  navigate(
+                    `/book/public-reports/isbn?isbn=${encodeURIComponent(
+                      bookData.bookIsbn,
+                    )}`,
+                    {
+                      state: {
+                        title: bookData.bookTitl,
+                        author: bookData.bookAthr,
+                        cover: bookData.bookCvim,
+                        ratingAverage: bookData.bookAvgGrde,
+                      },
+                    },
+                  )
+                }
+              >
+                {message("frontend.book.publicReports.button")}
+              </button>
+            </div>
+          </section>
+
+          <div className={infoStyles.contentPanel}>
+            <section className={infoStyles.section}>
+              <h2 className={infoStyles.sectionTitle}>
+                {message("frontend.common.bookInfo")}
+              </h2>
+              <div className={infoStyles.infoGrid}>
+                <span className={infoStyles.infoLabel}>
+                  {message("frontend.common.author")}
+                </span>
+                <p className={infoStyles.infoValue}>
+                  {bookData.bookAthr || "-"}
+                </p>
+                <span className={infoStyles.infoLabel}>
+                  {message("frontend.common.publisher")}
+                </span>
+                <p className={infoStyles.infoValue}>
+                  {bookData.bookPubl || "-"}
+                </p>
+                <span className={infoStyles.infoLabel}>
+                  {message("frontend.common.publDate")}
+                </span>
+                <p className={infoStyles.infoValue}>
+                  {bookData.publDate || "-"}
+                </p>
+              </div>
+            </section>
+
+            <section className={infoStyles.section}>
+              <h2 className={infoStyles.sectionTitle}>
+                {message("frontend.common.bookDescription")}
+              </h2>
+              <p className={infoStyles.description}>
+                {bookData.bookDesc ||
+                  message("frontend.common.noBookDescription")}
+              </p>
+            </section>
+          </div>
+        </Container>
+      </main>
+    );
+  }
+
   return (
     <main className={styles.page} style={pageStyle}>
       <Container className={styles.detail}>
@@ -86,7 +208,7 @@ function DetailPage() {
           <button
             className={styles.bookInfoButton}
             type="button"
-            onClick={() => goBookInfoPage(idNum)}
+            onClick={showBookInfoView}
           >
             {message("frontend.report.bookInfoMore")}
           </button>

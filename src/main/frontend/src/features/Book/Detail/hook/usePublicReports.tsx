@@ -6,23 +6,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   getPublicReportsByIsbnApi,
-  getPublicReportsByReportApi,
   setPublicReportLikeApi,
 } from "../../api/bookApi";
-
-export const usePublicReportsByReport = (
-  reportNumb: number,
-  enabled: boolean,
-) => {
-  return useQuery({
-    queryKey: ["publicReports", "report", reportNumb],
-    queryFn: async () => {
-      const res = await getPublicReportsByReportApi(reportNumb);
-      return res.data;
-    },
-    enabled: enabled && Number.isFinite(reportNumb),
-  });
-};
 
 export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
   return useQuery({
