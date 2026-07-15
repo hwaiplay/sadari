@@ -47,6 +47,24 @@ public class MonthlyReadingSummaryDto {
     /** 올해와 작년의 완료 독서 권수 차이입니다. */
     private int yearCountDiff;
 
+    /** 이번 달 목표 독서 권수입니다. 목표를 설정하지 않았으면 null입니다. */
+    private Integer monthGoalCnt;
+
+    /** 올해 목표 독서 권수입니다. 목표를 설정하지 않았으면 null입니다. */
+    private Integer yearGoalCnt;
+
+    /** 이번 달 목표 달성률입니다. 목표를 설정하지 않았으면 0입니다. */
+    private int monthGoalRate;
+
+    /** 올해 목표 달성률입니다. 목표를 설정하지 않았으면 0입니다. */
+    private int yearGoalRate;
+
+    /** 이번 달 목표 설정 여부입니다. */
+    private boolean monthGoalSet;
+
+    /** 올해 목표 설정 여부입니다. */
+    private boolean yearGoalSet;
+
     /** 이번 달 완료 독서 목록입니다. */
     private List<ReportDto> currentMonthReports;
 

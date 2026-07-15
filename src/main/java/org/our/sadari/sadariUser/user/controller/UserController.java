@@ -15,6 +15,7 @@ import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.global.file.service.FileService;
+import org.our.sadari.sadariBook.dto.ReadingGoalDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 import org.our.sadari.sadariBook.service.BookService;
 import org.our.sadari.sadariUser.user.dto.UserDto;
@@ -23,6 +24,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -104,6 +106,20 @@ public class UserController {
     @GetMapping("/monthly-reading-summary")
     public ResultData getMonthlyReadingSummary(@AuthenticationPrincipal Long userNumb) {
         MonthlyReadingSummaryDto summary = bookService.getMonthlyReadingSummary(userNumb);
+        return ResultData.success(summary);
+    }
+
+    /**
+     * 마이페이지 월간/연간 독서 목표를 저장합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param readingGoalDto 저장할 월간/연간 목표 권수
+     * @return 저장 후 다시 조회한 독서 요약 정보
+     */
+    @PutMapping("/reading-goal")
+    public ResultData setReadingGoal(@AuthenticationPrincipal Long userNumb, @RequestBody ReadingGoalDto readingGoalDto) {
+        MonthlyReadingSummaryDto summary = bookService.setReadingGoal(userNumb, readingGoalDto);
         return ResultData.success(summary);
     }
 

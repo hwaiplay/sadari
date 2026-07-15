@@ -17,7 +17,7 @@ type SweetAlertResult = {
 const STYLE_ID = "sadari-sweet-alert-style";
 
 const ICON_LABEL: Record<SweetAlertIcon, string> = {
-  success: "OK",
+  success: "✓",
   error: "X",
   warning: "!",
   info: "i",
@@ -103,7 +103,8 @@ function ensureSweetAlertStyle() {
     }
 
     .sadari-swal-icon-success .sadari-swal-icon-label {
-      font-size: 34px;
+      font-size: 38px;
+      font-weight: 600;
       animation: sadari-swal-success-mark 520ms ease-out 150ms both;
     }
 

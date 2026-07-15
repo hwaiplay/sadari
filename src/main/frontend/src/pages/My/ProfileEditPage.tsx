@@ -1,9 +1,10 @@
 import { message } from "@/app/messages/message";
-import { sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyProfileApi,
   getMonthlyReadingSummaryApi,
+  updateReadingGoalApi,
   updateMyProfileApi,
   type MonthlyReadingSummary,
   type ReadingSummaryReport,
@@ -11,7 +12,7 @@ import {
 } from "@/features/User/api/userApi";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import type { FormEvent, MouseEvent } from "react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
@@ -76,12 +77,21 @@ function ProfileEditPage() {
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
+  const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [monthGoalCnt, setMonthGoalCnt] = useState("");
+  const [yearGoalCnt, setYearGoalCnt] = useState("");
   const [expandedSummary, setExpandedSummary] = useState<Record<"month" | "year", boolean>>({
     month: false,
     year: false,
   });
+  const [activeDiffTooltip, setActiveDiffTooltip] = useState<"month" | "year" | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isGoalSaving, setIsGoalSaving] = useState(false);
+  const diffTooltipRefs = useRef<Record<"month" | "year", HTMLDivElement | null>>({
+    month: null,
+    year: null,
+  });
 
   /**
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
@@ -127,6 +137,36 @@ function ProfileEditPage() {
   }, []);
 
   /**
+   * 이전 기간 대비 완료 독서량 말풍선이 열린 상태에서 다른 영역을 누르면 말풍선을 닫습니다.
+   * 비교 숫자와 말풍선 자체를 누르는 경우에는 같은 요소 안에서 발생한 클릭으로 판단해 닫지 않습니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
+  useEffect(() => {
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      if (!activeDiffTooltip) {
+        return;
+      }
+
+      const tooltipArea = diffTooltipRefs.current[activeDiffTooltip];
+      const target = event.target;
+
+      if (tooltipArea && target instanceof Node && tooltipArea.contains(target)) {
+        return;
+      }
+
+      setActiveDiffTooltip(null);
+    };
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+    };
+  }, [activeDiffTooltip]);
+
+  /**
    * 이전 기간 대비 완료 독서 변화량 상세 문구를 info 알림으로 보여줍니다.
    * 월간과 연간 비교 모두 같은 UI 패턴을 사용하므로 비교 단위별 메시지 key만 분기합니다.
    *
@@ -134,25 +174,20 @@ function ProfileEditPage() {
    * @param diff 이전 기간 대비 완료 독서 권수 변화량
    * @param period 비교 단위
    */
-  const handleReadingDiffClick = (diff: number, period: "month" | "year") => {
-    if (diff === 0) {
-      return;
-    }
-
+  const getReadingDiffMessage = (diff: number, period: "month" | "year") => {
     const diffCount = Math.abs(diff);
+    const periodMessagePrefix =
+      period === "month" ? "monthlyReading" : "yearlyReading";
     const messageKey =
-      diff > 0
-        ? `frontend.profile.${period === "month" ? "monthlyReading" : "yearlyReading"}.diffMore`
-        : `frontend.profile.${period === "month" ? "monthlyReading" : "yearlyReading"}.diffLess`;
+      diff === 0
+        ? `frontend.profile.${periodMessagePrefix}.diffSame`
+        : `frontend.profile.${periodMessagePrefix}.${diff > 0 ? "diffMore" : "diffLess"}`;
 
-    void sweetInfo(
-      message(
-        period === "month"
-          ? "frontend.profile.monthlyReading.title"
-          : "frontend.profile.yearlyReading.title",
-      ),
-      message(messageKey, [diffCount]),
-    );
+    return message(messageKey, [diffCount]);
+  };
+
+  const handleReadingDiffClick = (diff: number, period: "month" | "year") => {
+    setActiveDiffTooltip((prev) => (prev === period ? null : period));
   };
 
   /**
@@ -214,6 +249,112 @@ function ProfileEditPage() {
   };
 
   /**
+   * 목표 설정 모달을 열 때 현재 저장된 목표값을 입력값에 반영합니다.
+   * 아직 목표가 없으면 빈 값으로 시작해 사용자가 직접 입력하도록 유도합니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
+  const handleGoalModalOpen = () => {
+    setMonthGoalCnt(monthlySummary?.monthGoalCnt ? String(monthlySummary.monthGoalCnt) : "");
+    setYearGoalCnt(monthlySummary?.yearGoalCnt ? String(monthlySummary.yearGoalCnt) : "");
+    setIsGoalModalOpen(true);
+  };
+
+  /**
+   * 목표 입력값을 1 이상 숫자만 남긴 문자열로 정리합니다.
+   *
+   * @author Hanwon.Jang
+   * @param value 사용자가 입력한 목표 권수
+   * @return 숫자로만 구성된 목표 권수 문자열
+   */
+  const normalizeGoalCount = (value: string) =>
+    value.replace(/[^0-9]/g, "").replace(/^0+/, "");
+
+  /**
+   * 목표 달성률에 따라 진행 막대와 달성률 텍스트에 사용할 파스텔 색상을 반환합니다.
+   * 낮은 달성률은 부드러운 붉은색으로 경고성을 주고, 목표에 가까워질수록 노랑/파랑/초록 계열로
+   * 변하게 하여 사용자가 현재 진행 상태를 숫자를 읽기 전에도 빠르게 구분할 수 있게 합니다.
+   *
+   * @author Hanwon.Jang
+   * @param rate 현재 목표 달성률
+   * @return 달성률 구간에 대응하는 파스텔 색상 코드
+   */
+  const getGoalProgressColor = (rate: number) => {
+    if (rate >= 100) {
+      return "#9edfc2";
+    }
+
+    if (rate >= 70) {
+      return "#9ed8f2";
+    }
+
+    if (rate >= 40) {
+      return "#f7d98b";
+    }
+
+    return "#f4a7ad";
+  };
+
+  /**
+   * 목표 입력 모달에서 버튼 클릭으로 월별/연도별 목표 권수를 1권 단위로 증감합니다.
+   * 목표 권수는 저장 가능한 최소 단위가 1권이므로 감소 버튼을 반복해서 눌러도 1 미만으로 내려가지 않게 제한합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 조정할 목표 기간
+   * @param amount 증감할 권수
+   * @return
+   */
+  const handleGoalCountStep = (period: "month" | "year", amount: number) => {
+    const setGoalCnt = period === "month" ? setMonthGoalCnt : setYearGoalCnt;
+
+    setGoalCnt((prev) => {
+      const currentCount = Number(prev) || 1;
+      return String(Math.max(1, currentCount + amount));
+    });
+  };
+
+  /**
+   * 월간/연간 목표 권수를 저장하고 저장 후 갱신된 요약 정보를 화면에 반영합니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
+  const handleGoalSubmit = async () => {
+    const nextMonthGoalCnt = Number(monthGoalCnt);
+    const nextYearGoalCnt = Number(yearGoalCnt);
+
+    if (nextMonthGoalCnt <= 0 || nextYearGoalCnt <= 0) {
+      void sweetWarning(
+        message("frontend.alert.inputRequired"),
+        message("frontend.profile.goal.required"),
+      );
+      return;
+    }
+
+    try {
+      setIsGoalSaving(true);
+      const response = await updateReadingGoalApi({
+        monthGoalCnt: nextMonthGoalCnt,
+        yearGoalCnt: nextYearGoalCnt,
+      });
+      setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+      setIsGoalModalOpen(false);
+      await sweetSuccess(
+        message("frontend.profile.goal.savedTitle"),
+        message("frontend.profile.goal.saved"),
+      );
+    } catch {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        message("frontend.common.tryAgain"),
+      );
+    } finally {
+      setIsGoalSaving(false);
+    }
+  };
+
+  /**
    * 월간/연간 독서 요약 행과 펼침 목록을 공통 구조로 렌더링합니다.
    * 권수 비교 버튼은 별도 버튼으로 유지하고, 제목/권수 영역을 누르면 목록만 부드럽게 열리도록 분리합니다.
    *
@@ -239,6 +380,17 @@ function ProfileEditPage() {
     reports: ReadingSummaryReport[] = [],
   ) => {
     const isExpanded = expandedSummary[period];
+    const goalCnt =
+      period === "month" ? monthlySummary?.monthGoalCnt : monthlySummary?.yearGoalCnt;
+    const goalRate =
+      period === "month"
+        ? monthlySummary?.monthGoalRate ?? 0
+        : monthlySummary?.yearGoalRate ?? 0;
+    const goalSet =
+      period === "month"
+        ? Boolean(monthlySummary?.monthGoalSet)
+        : Boolean(monthlySummary?.yearGoalSet);
+    const goalProgressColor = getGoalProgressColor(goalRate);
 
     return (
       <div>
@@ -276,18 +428,55 @@ function ProfileEditPage() {
               </svg>
             </span>
           </button>
-          {diff === 0 ? (
-            <span className={styles.monthlyDiffNeutral}>0</span>
-          ) : (
+          <div
+            className={styles.monthlyDiffTooltipWrap}
+            ref={(element) => {
+              diffTooltipRefs.current[period] = element;
+            }}
+          >
             <button
-              className={diff > 0 ? styles.monthlyDiffUp : styles.monthlyDiffDown}
+              className={
+                diff === 0
+                  ? styles.monthlyDiffNeutral
+                  : diff > 0
+                    ? styles.monthlyDiffUp
+                    : styles.monthlyDiffDown
+              }
               type="button"
               aria-label={message(diffAriaKey)}
+              aria-expanded={activeDiffTooltip === period}
               onClick={() => handleReadingDiffClick(diff, period)}
             >
               {formatReadingDiff(diff)}
             </button>
-          )}
+            {activeDiffTooltip === period && (
+              <div className={styles.monthlyDiffTooltip} role="tooltip">
+                {getReadingDiffMessage(diff, period)}
+              </div>
+            )}
+          </div>
+        </div>
+        <div className={styles.goalProgressRow}>
+          <span className={styles.goalProgressTarget}>
+            {goalSet ? message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
+          </span>
+          <div className={styles.goalProgressTrack}>
+            <span
+              className={styles.goalProgressFill}
+              style={{
+                width: `${Math.min(100, goalRate)}%`,
+                backgroundColor: goalProgressColor,
+              }}
+            />
+          </div>
+          <span
+            className={styles.goalProgressRate}
+            style={goalSet ? { color: goalProgressColor } : undefined}
+          >
+            {goalSet
+              ? message("frontend.profile.goal.rate", [goalRate])
+              : message("frontend.profile.goal.unset")}
+          </span>
         </div>
         <div
           className={
@@ -541,32 +730,152 @@ function ProfileEditPage() {
           </div>
 
           {monthlySummary && (
-            <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
-              {renderReadingSummaryRow(
-                "month",
-                monthlySummary.monthCode,
-                "frontend.profile.monthlyReading.title",
-                "frontend.profile.monthlyReading.count",
-                monthlySummary.currentMonthCount,
-                monthlySummary.countDiff,
-                "frontend.profile.monthlyReading.diffAria",
-                monthlySummary.currentMonthReports,
-              )}
-              <div className={styles.readingSummaryDivider} />
-              {renderReadingSummaryRow(
-                "year",
-                monthlySummary.yearCode,
-                "frontend.profile.yearlyReading.title",
-                "frontend.profile.yearlyReading.count",
-                monthlySummary.currentYearCount,
-                monthlySummary.yearCountDiff,
-                "frontend.profile.yearlyReading.diffAria",
-                monthlySummary.currentYearReports,
-              )}
-            </section>
+            <>
+              <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+                {renderReadingSummaryRow(
+                  "month",
+                  monthlySummary.monthCode,
+                  "frontend.profile.monthlyReading.title",
+                  "frontend.profile.monthlyReading.count",
+                  monthlySummary.currentMonthCount,
+                  monthlySummary.countDiff,
+                  "frontend.profile.monthlyReading.diffAria",
+                  monthlySummary.currentMonthReports,
+                )}
+                <div className={styles.readingSummaryDivider} />
+                {renderReadingSummaryRow(
+                  "year",
+                  monthlySummary.yearCode,
+                  "frontend.profile.yearlyReading.title",
+                  "frontend.profile.yearlyReading.count",
+                  monthlySummary.currentYearCount,
+                  monthlySummary.yearCountDiff,
+                  "frontend.profile.yearlyReading.diffAria",
+                  monthlySummary.currentYearReports,
+                )}
+              </section>
+              <button
+                className={styles.goalSettingButton}
+                type="button"
+                onClick={handleGoalModalOpen}
+              >
+                {message(
+                  monthlySummary.monthGoalSet && monthlySummary.yearGoalSet
+                    ? "frontend.profile.goal.edit"
+                    : "frontend.profile.goal.set",
+                )}
+                <span className={styles.goalSettingArrow} aria-hidden="true">
+                  ›
+                </span>
+              </button>
+            </>
           )}
         </section>
       </form>
+
+      {isGoalModalOpen && (
+        <div className={styles.goalModalOverlay} role="presentation">
+          <section
+            className={styles.goalModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reading-goal-title"
+          >
+            <div className={styles.goalModalHeader}>
+              <h2 className={styles.goalModalTitle} id="reading-goal-title">
+                {message("frontend.profile.goal.modalTitle")}
+              </h2>
+              <button
+                className={styles.goalModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={() => setIsGoalModalOpen(false)}
+              >
+                ×
+              </button>
+            </div>
+            <div className={styles.goalModalBody}>
+              <label className={styles.goalInputLabel}>
+                <span>{message("frontend.profile.goal.monthLabel")}</span>
+                <div className={styles.goalStepper}>
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.monthLabel")} 감소`}
+                    onClick={() => handleGoalCountStep("month", -1)}
+                  >
+                    -
+                  </button>
+                  <input
+                    className={styles.goalInput}
+                    inputMode="numeric"
+                    value={monthGoalCnt}
+                    placeholder={message("frontend.profile.goal.placeholder")}
+                    onChange={(event) =>
+                      setMonthGoalCnt(normalizeGoalCount(event.currentTarget.value))
+                    }
+                  />
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.monthLabel")} 증가`}
+                    onClick={() => handleGoalCountStep("month", 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </label>
+              <label className={styles.goalInputLabel}>
+                <span>{message("frontend.profile.goal.yearLabel")}</span>
+                <div className={styles.goalStepper}>
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.yearLabel")} 감소`}
+                    onClick={() => handleGoalCountStep("year", -1)}
+                  >
+                    -
+                  </button>
+                  <input
+                    className={styles.goalInput}
+                    inputMode="numeric"
+                    value={yearGoalCnt}
+                    placeholder={message("frontend.profile.goal.placeholder")}
+                    onChange={(event) =>
+                      setYearGoalCnt(normalizeGoalCount(event.currentTarget.value))
+                    }
+                  />
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.yearLabel")} 증가`}
+                    onClick={() => handleGoalCountStep("year", 1)}
+                  >
+                    +
+                  </button>
+                </div>
+              </label>
+            </div>
+            <div className={styles.goalModalActions}>
+              <button
+                className={styles.goalModalCancel}
+                type="button"
+                onClick={() => setIsGoalModalOpen(false)}
+              >
+                {message("frontend.common.cancel")}
+              </button>
+              <button
+                className={styles.goalModalSave}
+                type="button"
+                disabled={isGoalSaving}
+                onClick={handleGoalSubmit}
+              >
+                {message("frontend.report.save")}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
     </main>
   );
 }

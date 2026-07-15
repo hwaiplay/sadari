@@ -7,6 +7,7 @@ import { message } from "@/app/messages/message";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { useState } from "react";
+import { clsx } from "clsx";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
 import Loading from "@/components/Loading/Loading";
@@ -75,7 +76,7 @@ function DetailPage() {
   if (showBookInfo) {
     return (
       <main className={infoStyles.page} style={pageStyle}>
-        <Container className={infoStyles.content}>
+        <Container className={clsx(infoStyles.content, styles.viewFade)}>
           <section className={infoStyles.header}>
             <div className={infoStyles.coverFrame}>
               <img
@@ -150,7 +151,9 @@ function DetailPage() {
             </div>
           </section>
 
-          <div className={infoStyles.contentPanel}>
+          <div
+            className={clsx(infoStyles.contentPanel, styles.contentSwitchFade)}
+          >
             <section className={infoStyles.section}>
               <h2 className={infoStyles.sectionTitle}>
                 {message("frontend.common.bookInfo")}
@@ -194,7 +197,7 @@ function DetailPage() {
 
   return (
     <main className={styles.page} style={pageStyle}>
-      <Container className={styles.detail}>
+      <Container className={clsx(styles.detail, styles.viewFade)}>
         <section className={styles.header}>
           <div className={styles.coverFrame}>
             <img
@@ -214,7 +217,7 @@ function DetailPage() {
           </button>
         </section>
 
-        <div className={styles.contentPanel}>
+        <div className={clsx(styles.contentPanel, styles.contentSwitchFade)}>
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
               {message("frontend.report.field.status")}

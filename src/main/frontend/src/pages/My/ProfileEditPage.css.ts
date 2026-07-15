@@ -513,6 +513,7 @@ export const monthlyDiffNeutral = style({
   minWidth: "38px",
   height: "30px",
   padding: "0 9px",
+  border: 0,
   borderRadius: "999px",
   backgroundColor: "#f3f4f5",
   color: "#777777",
@@ -522,4 +523,319 @@ export const monthlyDiffNeutral = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
+  cursor: "pointer",
 });
+
+export const monthlyDiffTooltipWrap = style({
+  position: "relative",
+  display: "inline-flex",
+  justifyContent: "flex-end",
+});
+
+export const monthlyDiffTooltip = style({
+  position: "absolute",
+  right: 0,
+  top: "calc(100% + 9px)",
+  zIndex: 5,
+  width: "max-content",
+  maxWidth: "190px",
+  padding: "9px 11px",
+  borderRadius: "10px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.45,
+  textAlign: "left",
+  boxShadow: "0 10px 28px rgba(0, 0, 0, 0.14)",
+  border: `1px solid ${vars.color.gray300}`,
+  selectors: {
+    "&::before": {
+      content: "",
+      position: "absolute",
+      right: "16px",
+      top: "-6px",
+      width: "10px",
+      height: "10px",
+      backgroundColor: "#ffffff",
+      borderLeft: `1px solid ${vars.color.gray300}`,
+      borderTop: `1px solid ${vars.color.gray300}`,
+      transform: "rotate(45deg)",
+    },
+  },
+});
+
+export const goalProgressRow = style({
+  position: "relative",
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) 38px",
+  alignItems: "center",
+  gap: "8px",
+  padding: "0 0 8px 50px",
+});
+
+export const goalProgressTarget = style({
+  position: "absolute",
+  left: 0,
+  top: "0",
+  width: "42px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1,
+  color: "#888888",
+  textAlign: "center",
+  transform: "translateY(1px)",
+});
+
+export const goalProgressTrack = style({
+  height: "12px",
+  borderRadius: "999px",
+  backgroundColor: "#eeeeee",
+  overflow: "hidden",
+});
+
+export const goalProgressFill = style({
+  display: "block",
+  height: "100%",
+  minWidth: "0%",
+  maxWidth: "100%",
+  borderRadius: "999px",
+  transition: "width 220ms ease, background-color 180ms ease",
+});
+
+export const goalProgressMonth = style([
+  goalProgressFill,
+  {
+    backgroundColor: "#ff929c",
+  },
+]);
+
+export const goalProgressYear = style([
+  goalProgressFill,
+  {
+    backgroundColor: "#8fd7f4",
+  },
+]);
+
+export const goalProgressRate = style({
+  fontFamily: vars.font.heading,
+  fontSize: "13px",
+  lineHeight: 1,
+  textAlign: "center",
+  whiteSpace: "nowrap",
+  color: "#999999",
+  transition: "color 180ms ease",
+});
+
+export const goalProgressRateMonth = style([
+  goalProgressRate,
+  {
+    color: "#ff929c",
+  },
+]);
+
+export const goalProgressRateYear = style([
+  goalProgressRate,
+  {
+    color: "#8fd7f4",
+  },
+]);
+
+export const goalProgressText = style({
+  margin: "-2px 16px 8px 50px",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  color: "#888888",
+});
+
+export const goalSettingButton = style({
+  alignSelf: "flex-end",
+  marginTop: "10px",
+  padding: "0 4px",
+  border: 0,
+  backgroundColor: "transparent",
+  color: "#8a8a8a",
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  lineHeight: 1.4,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "2px",
+  transition: "color 160ms ease, opacity 160ms ease",
+  selectors: {
+    "&:hover": {
+      color: "#555555",
+    },
+  },
+});
+
+export const goalSettingArrow = style({
+  fontSize: "17px",
+  lineHeight: 1,
+});
+
+export const goalModalOverlay = style({
+  position: "fixed",
+  inset: 0,
+  zIndex: 1200,
+  padding: "24px",
+  backgroundColor: "rgba(0, 0, 0, 0.34)",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+});
+
+export const goalModal = style({
+  width: "min(360px, 100%)",
+  borderRadius: "18px",
+  backgroundColor: "#ffffff",
+  padding: "22px 20px 18px",
+  boxShadow: "0 22px 58px rgba(0, 0, 0, 0.24)",
+});
+
+export const goalModalHeader = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
+});
+
+export const goalModalTitle = style({
+  margin: 0,
+  fontFamily: vars.font.heading,
+  fontSize: "18px",
+  lineHeight: 1.35,
+  color: vars.color.black,
+});
+
+export const goalModalClose = style({
+  width: "32px",
+  height: "32px",
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "#f3f4f5",
+  color: vars.color.black,
+  fontSize: "22px",
+  lineHeight: 1,
+  cursor: "pointer",
+});
+
+export const goalModalBody = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px",
+  marginTop: "20px",
+});
+
+export const goalInputLabel = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "7px",
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  color: vars.color.black,
+});
+
+export const goalStepper = style({
+  height: "42px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "10px",
+  backgroundColor: "#fafafa",
+  overflow: "hidden",
+  display: "grid",
+  gridTemplateColumns: "40px minmax(0, 1fr) 40px",
+  alignItems: "stretch",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:focus-within": {
+      borderColor: vars.color.black,
+      backgroundColor: "#ffffff",
+    },
+  },
+});
+
+export const goalStepperButton = style({
+  border: 0,
+  backgroundColor: "#f0f1f2",
+  color: "#555555",
+  fontFamily: vars.font.heading,
+  fontSize: "18px",
+  lineHeight: 1,
+  cursor: "pointer",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  transition: "background-color 160ms ease, color 160ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#e7e9eb",
+      color: vars.color.black,
+    },
+  },
+});
+
+export const goalInput = style({
+  width: "100%",
+  minWidth: 0,
+  height: "40px",
+  padding: "0 10px",
+  border: 0,
+  borderLeft: `1px solid ${vars.color.gray300}`,
+  borderRight: `1px solid ${vars.color.gray300}`,
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: "16px",
+  textAlign: "center",
+  outline: "none",
+  selectors: {
+    "&::placeholder": {
+      color: "#aaaaaa",
+    },
+  },
+});
+
+export const goalModalActions = style({
+  display: "flex",
+  justifyContent: "flex-end",
+  gap: "8px",
+  marginTop: "20px",
+});
+
+const goalModalButtonBase = style({
+  minWidth: "76px",
+  height: "36px",
+  borderRadius: "999px",
+  padding: "0 14px",
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  cursor: "pointer",
+});
+
+export const goalModalCancel = style([
+  goalModalButtonBase,
+  {
+    border: `1px solid ${vars.color.gray300}`,
+    backgroundColor: "#ffffff",
+    color: vars.color.black,
+  },
+]);
+
+export const goalModalSave = style([
+  goalModalButtonBase,
+  {
+    border: `1px solid ${vars.color.black}`,
+    backgroundColor: vars.color.black,
+    color: "#ffffff",
+    selectors: {
+      "&:disabled": {
+        cursor: "default",
+        opacity: 0.6,
+      },
+    },
+  },
+]);

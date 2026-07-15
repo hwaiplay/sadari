@@ -3,6 +3,7 @@ package org.our.sadari.sadariBook.service;
 import java.math.BigDecimal;
 import java.util.List;
 import org.our.sadari.sadariBook.dto.MonthlyReadingSummaryDto;
+import org.our.sadari.sadariBook.dto.ReadingGoalDto;
 import org.our.sadari.sadariBook.dto.ReportDto;
 
 /**
@@ -80,6 +81,16 @@ public interface BookService {
      * @return 독서 요약 정보
      */
     MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb);
+
+    /**
+     * 마이페이지 월간/연간 독서 목표를 저장합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param readingGoalDto 저장할 월간/연간 목표 권수
+     * @return 저장 후 다시 조회한 독서 요약 정보
+     */
+    MonthlyReadingSummaryDto setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto);
 
     /**
      * 독후감을 수정합니다.

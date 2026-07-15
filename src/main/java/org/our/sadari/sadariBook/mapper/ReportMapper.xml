@@ -88,6 +88,56 @@
       ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') DESC, A.REPORT_NUMB DESC
     </select>
 
+    <!-- 현재 월 또는 현재 연도의 독서 목표 조회 -->
+    <select id="getReadingGoalDtl" parameterType="org.our.sadari.sadariBook.dto.ReadingGoalDto" resultType="org.our.sadari.sadariBook.dto.ReadingGoalDto">
+        SELECT G.USER_NUMB
+             , G.GOAL_DATE
+             , G.GOAL_TYPE
+             , G.GOAL_CNT_ AS GOAL_CNT
+          FROM TM_GOALXM G
+         WHERE G.USER_NUMB = #{userNumb}
+           AND G.GOAL_DATE = #{goalDate}
+           AND G.GOAL_TYPE = #{goalType}
+    </select>
+
+    <!-- 현재 월 또는 현재 연도의 독서 목표 저장 -->
+    <insert id="setReadingGoal" parameterType="org.our.sadari.sadariBook.dto.ReadingGoalDto">
+        MERGE INTO TM_GOALXM G
+        USING (
+              SELECT #{userNumb} AS USER_NUMB
+                   , #{goalDate} AS GOAL_DATE
+                   , #{goalType} AS GOAL_TYPE
+                   , #{goalCnt} AS GOAL_CNT_
+                FROM DUAL
+              ) S
+           ON (
+              G.USER_NUMB = S.USER_NUMB
+          AND G.GOAL_DATE = S.GOAL_DATE
+          AND G.GOAL_TYPE = S.GOAL_TYPE
+           )
+         WHEN MATCHED THEN
+       UPDATE
+          SET G.GOAL_CNT_ = S.GOAL_CNT_
+            , G.UPDT_DATE = SYSDATE
+         WHEN NOT MATCHED THEN
+       INSERT (
+              USER_NUMB
+            , GOAL_DATE
+            , GOAL_TYPE
+            , GOAL_CNT_
+            , REGI_DATE
+            , UPDT_DATE
+       )
+       VALUES (
+              S.USER_NUMB
+            , S.GOAL_DATE
+            , S.GOAL_TYPE
+            , S.GOAL_CNT_
+            , SYSDATE
+            , SYSDATE
+       )
+    </insert>
+
     <!-- 독후감 상세 조회 -->
     <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
