@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
+import java.time.temporal.ChronoUnit;
+import java.time.temporal.WeekFields;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +39,12 @@ public class BookServiceImpl implements BookService {
     private final ReportMapper reportMapper;
     private final CodeUtil codeUtil;
     private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
+    private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;
+    private static final int WEEK_GOAL_MAX_UPDATE_COUNT = 1;
+    private static final int MONTH_GOAL_MAX_UPDATE_COUNT = 3;
+    private static final int YEAR_GOAL_MAX_UPDATE_COUNT = 5;
+    private static final int WEEK_GOAL_LOCK_REMAINING_DAYS = 3;
+    private static final int MONTH_GOAL_LOCK_REMAINING_DAYS = 7;
 
     /**
      * 로그인한 회원의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회합니다.
@@ -49,6 +57,7 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     public List<ReportDto> getBookList(Long userNumb, String bookKeyword, String sortType) {
+
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
         reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
@@ -68,49 +77,68 @@ public class BookServiceImpl implements BookService {
      */
     @Override
     public MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb) {
+
         LocalDate today = LocalDate.now();
+        LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);
+        LocalDate previousWeekStart = currentWeekStart.minusWeeks(1);
         LocalDate currentMonthStart = today.withDayOfMonth(1);
         LocalDate previousMonthStart = currentMonthStart.minusMonths(1);
         LocalDate currentYearStart = today.withDayOfYear(1);
         LocalDate previousYearStart = currentYearStart.minusYears(1);
 
         // 이번 달은 오늘 기준 월의 1일부터 다음 달 1일 전까지를 집계 범위로 사용합니다.
+        // 이번 주는 ISO 기준 월요일부터 다음 주 월요일 전까지를 집계 범위로 사용합니다.
+        MonthlyReadingSummaryDto currentWeekReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                currentWeekStart,
+                currentWeekStart.plusWeeks(1)
+        );
+        // 지난주 비교값은 직전 월요일부터 이번 주 월요일 전까지 같은 방식으로 계산합니다.
+        MonthlyReadingSummaryDto previousWeekReq = getDoneReportCntByPeriodReq(
+                userNumb,
+                previousWeekStart,
+                currentWeekStart
+        );
         MonthlyReadingSummaryDto currentMonthReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 currentMonthStart,
-                currentMonthStart.plusMonths(1),
-                today
+                currentMonthStart.plusMonths(1)
         );
         // 지난 달 비교값은 지난 달 1일부터 이번 달 1일 전까지 같은 방식으로 계산합니다.
         MonthlyReadingSummaryDto previousMonthReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 previousMonthStart,
-                currentMonthStart,
-                currentMonthStart.minusDays(1)
+                currentMonthStart
         );
         // 올해 집계는 1월 1일부터 다음 해 1월 1일 전까지의 완료 독서를 대상으로 합니다.
         MonthlyReadingSummaryDto currentYearReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 currentYearStart,
-                currentYearStart.plusYears(1),
-                today
+                currentYearStart.plusYears(1)
         );
         // 작년 비교값은 작년 1월 1일부터 올해 1월 1일 전까지의 완료 독서를 대상으로 합니다.
         MonthlyReadingSummaryDto previousYearReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 previousYearStart,
-                currentYearStart,
-                currentYearStart.minusDays(1)
+                currentYearStart
         );
 
+        int currentWeekCount = reportMapper.getDoneReportCntByPeriod(currentWeekReq);
+        int previousWeekCount = reportMapper.getDoneReportCntByPeriod(previousWeekReq);
         int currentMonthCount = reportMapper.getDoneReportCntByPeriod(currentMonthReq);
         int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);
         int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);
         int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);
+
+        ReadingGoalDto currentWeekGoal = getReadingGoalDtl(userNumb, currentWeekStart, Constant.GOAL_TYPE_WEEK);
         ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH);
         ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);
 
         MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
+        summary.setWeekCode(getWeekCode(today));
+        summary.setCurrentWeekCount(currentWeekCount);
+        summary.setPreviousWeekCount(previousWeekCount);
+        summary.setWeekCountDiff(currentWeekCount - previousWeekCount);
         // [주석] 화면 대시보드 헤더 및 타이틀 영역에 노출할 영문 3자리 월 코드 획득: "JAN", "FEB", "MAR" 등
         summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
 
@@ -132,9 +160,12 @@ public class BookServiceImpl implements BookService {
         summary.setYearCountDiff(currentYearCount - previousYearCount);
 
         //달성률을 계산
-        applyReadingGoal(summary, currentMonthGoal, currentYearGoal);
+        applyReadingGoal(summary, currentWeekGoal, currentMonthGoal, currentYearGoal);
+        applyReadingGoalUpdateMeta(summary, today, currentWeekGoal, currentMonthGoal, currentYearGoal);
+        applyReadingGoalAchvCnt(summary, userNumb);
 
         // 메인 대시보드 화면에 리스트 형식으로 노출할 당월 및 금년 완료 상태의 독후감 목록을 조회하여 바인딩합니다.
+        summary.setCurrentWeekReports(reportMapper.getDoneReportListByPeriod(currentWeekReq));
         summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq));
         summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));
         return summary;
@@ -165,7 +196,18 @@ public class BookServiceImpl implements BookService {
      * @param monthGoal 이번 달 목표 정보
      * @param yearGoal 올해 목표 정보
      */
-    private void applyReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto monthGoal, ReadingGoalDto yearGoal) {
+    private void applyReadingGoal(
+            MonthlyReadingSummaryDto summary,
+            ReadingGoalDto weekGoal,
+            ReadingGoalDto monthGoal,
+            ReadingGoalDto yearGoal
+    ) {
+        if (!StringUtil.isEmpty(weekGoal)) {
+            summary.setWeekGoalSet(true);
+            summary.setWeekGoalCnt(weekGoal.getGoalCnt());
+            summary.setWeekGoalRate(getGoalRate(summary.getCurrentWeekCount(), weekGoal.getGoalCnt()));
+        }
+
         if (!StringUtil.isEmpty(monthGoal)) {
             summary.setMonthGoalSet(true);
             summary.setMonthGoalCnt(monthGoal.getGoalCnt());
@@ -187,6 +229,69 @@ public class BookServiceImpl implements BookService {
      * @param goalCount 목표 독서 권수
      * @return 0 이상 100 이하의 달성률
      */
+    /**
+     * 회원이 과거에 설정한 주간, 월간, 연간 목표 중 실제 완료 독서 권수가 목표 권수를 충족한 횟수를 요약 DTO에 반영합니다.
+     * 목표 기간별 실적은 mapper의 인라인 집계 뷰에서 계산하므로 별도의 목표 달성 이력 테이블 없이 현재 목표 테이블과 독후감 테이블만 사용합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param summary 마이페이지 독서 요약 DTO
+     * @param userNumb 로그인한 회원 번호
+     */
+    /**
+     * 화면에서 목표 저장 전에 수정 가능 여부를 먼저 판단할 수 있도록 기간별 수정 메타 정보를 채웁니다.
+     * 최초 설정은 수정 횟수 제한 대상이 아니므로 아직 목표가 없는 경우에는 최대 수정 가능 횟수를 그대로 내려줍니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param summary 마이페이지 독서 요약 DTO
+     * @param today 현재 날짜
+     * @param weekGoal 이번 주 목표 정보
+     * @param monthGoal 이번 달 목표 정보
+     * @param yearGoal 올해 목표 정보
+     */
+    private void applyReadingGoalUpdateMeta(
+            MonthlyReadingSummaryDto summary,
+            LocalDate today,
+            ReadingGoalDto weekGoal,
+            ReadingGoalDto monthGoal,
+            ReadingGoalDto yearGoal
+    ) {
+        summary.setWeekGoalRemainUpdateCnt(getGoalRemainUpdateCount(weekGoal, Constant.GOAL_TYPE_WEEK));
+        summary.setMonthGoalRemainUpdateCnt(getGoalRemainUpdateCount(monthGoal, Constant.GOAL_TYPE_MONTH));
+        summary.setYearGoalRemainUpdateCnt(getGoalRemainUpdateCount(yearGoal, Constant.GOAL_TYPE_YEAR));
+        summary.setWeekGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_WEEK));
+        summary.setMonthGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_MONTH));
+        summary.setYearGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_YEAR));
+        summary.setWeekGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_WEEK));
+        summary.setMonthGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_MONTH));
+        summary.setYearGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_YEAR));
+    }
+
+    private void applyReadingGoalAchvCnt(MonthlyReadingSummaryDto summary, Long userNumb) {
+        int weekGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_WEEK);
+        int monthGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_MONTH);
+        int yearGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_YEAR);
+
+        summary.setWeekGoalAchvCnt(weekGoalAchvCnt);
+        summary.setMonthGoalAchvCnt(monthGoalAchvCnt);
+        summary.setYearGoalAchvCnt(yearGoalAchvCnt);
+        summary.setTotalGoalAchvCnt(weekGoalAchvCnt + monthGoalAchvCnt + yearGoalAchvCnt);
+    }
+
+    /**
+     * 목표 타입별 달성 횟수 조회 요청 DTO를 구성하고 mapper에 위임합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param goalType 조회할 목표 타입
+     * @return 목표 달성 횟수
+     */
+    private int getReadingGoalAchvCnt(Long userNumb, String goalType) {
+        ReadingGoalDto req = new ReadingGoalDto();
+        req.setUserNumb(userNumb);
+        req.setGoalType(goalType);
+        return reportMapper.getReadingGoalAchvCnt(req);
+    }
+
     private int getGoalRate(int doneCount, Integer goalCount) {
         if (StringUtil.isEmpty(goalCount) || goalCount <= 0) {
             return 0;
@@ -204,11 +309,41 @@ public class BookServiceImpl implements BookService {
      * @return 월별은 YYYYMM, 연도별은 YYYY00 형식의 목표 기간 값
      */
     private String getGoalDate(LocalDate targetDate, String goalType) {
+        if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
+            return getGoalWeekDate(targetDate);
+        }
+
         if (Constant.GOAL_TYPE_YEAR.equals(goalType)) {
             return targetDate.getYear() + "00";
         }
 
         return YearMonth.from(targetDate).format(GOAL_MONTH_FORMATTER);
+    }
+
+    /**
+     * 주간 목표 조회와 저장에 사용할 ISO 주차 기반 목표 기간 값을 생성합니다.
+     * 연말과 연초가 한 주에 걸치는 경우에도 ISO week-based-year를 사용해 같은 주가 같은 키로 저장되게 합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param targetDate 목표 기간 계산 기준일
+     * @return ISO 주차 기준 YYYYWW 형식의 목표 기간 값
+     */
+    private String getGoalWeekDate(LocalDate targetDate) {
+        int weekYear = targetDate.get(GOAL_WEEK_FIELDS.weekBasedYear());
+        int weekNumber = targetDate.get(GOAL_WEEK_FIELDS.weekOfWeekBasedYear());
+        return String.format("%04d%02d", weekYear, weekNumber);
+    }
+
+    /**
+     * 마이페이지 달력 아이콘 안에 표시할 주차 코드를 생성합니다.
+     * 월간의 JAN, 연간의 2026처럼 주간도 W29 형태로 짧게 표시하여 카드 폭을 유지합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param targetDate 주차 표시 기준일
+     * @return W와 ISO 주차 번호를 조합한 표시 코드
+     */
+    private String getWeekCode(LocalDate targetDate) {
+        return "WEEK";
     }
 
     /**
@@ -222,8 +357,10 @@ public class BookServiceImpl implements BookService {
     @Override
     @Transactional
     public MonthlyReadingSummaryDto setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto) {
+
         validateReadingGoal(readingGoalDto);
         LocalDate today = LocalDate.now();
+        setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_WEEK, readingGoalDto.getWeekGoalCnt());
         setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_MONTH, readingGoalDto.getMonthGoalCnt());
         setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_YEAR, readingGoalDto.getYearGoalCnt());
         return getMonthlyReadingSummary(userNumb);
@@ -236,12 +373,11 @@ public class BookServiceImpl implements BookService {
      * @param readingGoalDto 검증할 목표 DTO
      */
     private void validateReadingGoal(ReadingGoalDto readingGoalDto) {
-        if (
-                StringUtil.isEmpty(readingGoalDto)
-                        || StringUtil.isEmpty(readingGoalDto.getMonthGoalCnt())
-                        || StringUtil.isEmpty(readingGoalDto.getYearGoalCnt())
-                        || readingGoalDto.getMonthGoalCnt() <= 0
-                        || readingGoalDto.getYearGoalCnt() <= 0
+
+        if (StringUtil.isEmpty(readingGoalDto) || StringUtil.isEmpty(readingGoalDto.getWeekGoalCnt())
+            || StringUtil.isEmpty(readingGoalDto.getMonthGoalCnt()) || StringUtil.isEmpty(readingGoalDto.getYearGoalCnt())
+            || readingGoalDto.getWeekGoalCnt() <= 0 || readingGoalDto.getMonthGoalCnt() <= 0
+            || readingGoalDto.getYearGoalCnt() <= 0
         ) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
@@ -257,12 +393,137 @@ public class BookServiceImpl implements BookService {
      * @param goalCnt 목표 권수
      */
     private void setReadingGoalByType(Long userNumb, LocalDate today, String goalType, Integer goalCnt) {
+        ReadingGoalDto currentGoal = getReadingGoalDtl(userNumb, today, goalType);
+
+        if (!StringUtil.isEmpty(currentGoal) && goalCnt.equals(currentGoal.getGoalCnt())) {
+            return;
+        }
+
+        validateReadingGoalDown(currentGoal, today, goalType, goalCnt);
+
         ReadingGoalDto req = new ReadingGoalDto();
         req.setUserNumb(userNumb);
         req.setGoalDate(getGoalDate(today, goalType));
         req.setGoalType(goalType);
         req.setGoalCnt(goalCnt);
         reportMapper.setReadingGoal(req);
+    }
+
+    /**
+     * 기존 목표를 실제로 수정하려는 경우 목표 타입별 수정 횟수와 수정 가능 기간을 검증합니다.
+     * 최초 설정은 수정 횟수에 포함하지 않으며, 이미 같은 값인 경우에는 저장을 건너뛰므로 수정 횟수를 소모하지 않습니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param currentGoal 현재 기간에 이미 저장된 목표 정보
+     * @param today 현재 날짜
+     * @param goalType 목표 타입
+     */
+    private void validateReadingGoalDown(ReadingGoalDto currentGoal, LocalDate today, String goalType, Integer goalCnt) {
+        if (StringUtil.isEmpty(currentGoal) || currentGoal.getGoalCnt() <= goalCnt) {
+            return;
+        }
+
+        if (getGoalUpdateLimit(goalType) <= getGoalUpdateCount(currentGoal)) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+
+        if (isGoalUpdateLocked(today, goalType)) {
+            throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    /**
+     * 목표 타입별 최대 수정 가능 횟수를 반환합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param goalType 목표 타입
+     * @return 최대 수정 가능 횟수
+     */
+    private int getGoalUpdateLimit(String goalType) {
+        if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
+            return WEEK_GOAL_MAX_UPDATE_COUNT;
+        }
+
+        if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
+            return MONTH_GOAL_MAX_UPDATE_COUNT;
+        }
+
+        return YEAR_GOAL_MAX_UPDATE_COUNT;
+    }
+
+    /**
+     * 현재 기간 목표를 앞으로 몇 번 더 수정할 수 있는지 계산합니다.
+     * 목표가 아직 생성되지 않은 경우에는 최초 설정 화면 안내를 위해 해당 목표 타입의 최대 수정 횟수를 반환합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param currentGoal 현재 기간에 저장된 목표 정보
+     * @param goalType 목표 타입
+     * @return 남은 수정 가능 횟수
+     */
+    private int getGoalRemainUpdateCount(ReadingGoalDto currentGoal, String goalType) {
+        if (StringUtil.isEmpty(currentGoal)) {
+            return getGoalUpdateLimit(goalType);
+        }
+
+        return Math.max(0, getGoalUpdateLimit(goalType) - getGoalUpdateCount(currentGoal));
+    }
+
+    /**
+     * 목표 수정 횟수가 null인 기존 데이터를 0회로 보정해 반환합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param currentGoal 현재 기간에 저장된 목표 정보
+     * @return 보정된 수정 횟수
+     */
+    private int getGoalUpdateCount(ReadingGoalDto currentGoal) {
+        return StringUtil.isEmpty(currentGoal.getUpdtCntt()) ? 0 : currentGoal.getUpdtCntt();
+    }
+
+    /**
+     * 목표 타입별 수정 마감 기간에 들어섰는지 확인합니다.
+     * 주간은 해당 주 마지막 날까지 3일 이하, 월간은 해당 월 마지막 날까지 7일 이하, 연간은 12월 1일부터 수정할 수 없습니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param today 현재 날짜
+     * @param goalType 목표 타입
+     * @return 수정 마감 기간이면 true
+     */
+    private boolean isGoalUpdateLocked(LocalDate today, String goalType) {
+        if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
+            LocalDate weekLastDay = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 7);
+            return ChronoUnit.DAYS.between(today, weekLastDay) <= WEEK_GOAL_LOCK_REMAINING_DAYS;
+        }
+
+        if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
+            LocalDate monthLastDay = today.withDayOfMonth(today.lengthOfMonth());
+            return ChronoUnit.DAYS.between(today, monthLastDay) <= MONTH_GOAL_LOCK_REMAINING_DAYS;
+        }
+
+        return today.getMonthValue() == 12;
+    }
+
+    /**
+     * 목표 수정 제한 시점까지 남은 일수를 계산합니다.
+     * 반환값이 0이면 현재 날짜 기준으로 이미 수정 제한 기간에 들어왔다는 의미입니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param today 현재 날짜
+     * @param goalType 목표 타입
+     * @return 수정 제한 시점까지 남은 일수
+     */
+    private int getGoalEditableRemainDays(LocalDate today, String goalType) {
+        if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
+            LocalDate weekLastDay = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 7);
+            return Math.max(0, (int) ChronoUnit.DAYS.between(today, weekLastDay) - WEEK_GOAL_LOCK_REMAINING_DAYS);
+        }
+
+        if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
+            LocalDate monthLastDay = today.withDayOfMonth(today.lengthOfMonth());
+            return Math.max(0, (int) ChronoUnit.DAYS.between(today, monthLastDay) - MONTH_GOAL_LOCK_REMAINING_DAYS);
+        }
+
+        LocalDate yearLockDate = LocalDate.of(today.getYear(), 12, 1);
+        return Math.max(0, (int) ChronoUnit.DAYS.between(today, yearLockDate));
     }
 
     /**
@@ -278,14 +539,12 @@ public class BookServiceImpl implements BookService {
     private MonthlyReadingSummaryDto getDoneReportCntByPeriodReq(
             Long userNumb,
             LocalDate periodStart,
-            LocalDate periodEndExclusive,
-            LocalDate targetDate
+            LocalDate periodEndExclusive
     ) {
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         req.setUserNumb(userNumb);
         req.setPeriodStart(periodStart.toString());
         req.setPeriodEndExclusive(periodEndExclusive.toString());
-        req.setTargetDate(targetDate.toString());
         return req;
     }
 

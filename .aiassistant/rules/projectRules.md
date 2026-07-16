@@ -191,9 +191,10 @@ INNER JOIN TM_BOOK_INFO B
   * 로그인 세션 정보나 회원 식별값 바인딩이 필요할 경우 반드시 `@AuthenticationPrincipal` 어노테이션을 파라미터 맨 앞에 정의합니다.
   * 외부로부터 유입되는 데이터 객체(DTO)에는 유효성 검증을 강제하기 위한 `@Valid`와 JSON 바인딩을 위한 `@RequestBody`를 빠짐없이 명시적으로 선언해야 합니다.
 
+* **Controller 에서 파라미터 3개 이상일 시:**
 #### [Before] 한 줄로 나열된 나쁜 예 (금지)
 ```java
-public ResultData createReport(@AuthenticationPrincipal Long userNumb, @Valid @RequestBody ReportDto requestDto) {
+public ResultData createReport(@AuthenticationPrincipal Long userNumb, @Valid @RequestBody ReportDto requestDto , @Valid @RequestBody BookDto bookDto) {
     // ... 로직
 }
 ```
@@ -201,7 +202,8 @@ public ResultData createReport(@AuthenticationPrincipal Long userNumb, @Valid @R
 #### [After] 1줄 1파라미터 및 선행 콤마 정렬을 적용한 올바른 예 (준수)
 ```java
 public ResultData createReport(@AuthenticationPrincipal Long userNumb
-                             , @Valid @RequestBody ReportDto requestDto) {
+                             , @Valid @RequestBody ReportDto requestDto
+                             , @Valid @RequestBody BookDto bookDto) {
     // ... 로직
 }
 ```

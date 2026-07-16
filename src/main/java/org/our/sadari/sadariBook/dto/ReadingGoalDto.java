@@ -22,9 +22,15 @@ public class ReadingGoalDto {
     /** 사용자가 설정한 목표 독서 권수입니다. */
     private Integer goalCnt;
 
+    /** 목표 수정 횟수입니다. 최초 등록 이후 실제 목표 권수를 변경한 횟수를 저장합니다. */
+    private Integer updtCntt;
+
     /** 현재 월 목표 독서 권수입니다. 화면 요청 DTO에서 사용합니다. */
     private Integer monthGoalCnt;
 
     /** 현재 연도 목표 독서 권수입니다. 화면 요청 DTO에서 사용합니다. */
+    /** 현재 주간 목표 독서 권수입니다. 화면 요청 DTO에서 사용합니다. */
+    private Integer weekGoalCnt;
+
     private Integer yearGoalCnt;
 }

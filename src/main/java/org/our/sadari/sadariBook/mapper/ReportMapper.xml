@@ -62,7 +62,6 @@
            AND A.REPORT_STAT = #{reportStatDone}
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
-           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<=]]> TO_DATE(#{targetDate}, 'YYYY-MM-DD')
     </select>
 
     <!-- 기간별 완료 독후감 목록 조회 -->
@@ -84,7 +83,6 @@
            AND A.REPORT_STAT = #{reportStatDone}
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
-           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<=]]> TO_DATE(#{targetDate}, 'YYYY-MM-DD')
       ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') DESC, A.REPORT_NUMB DESC
     </select>
 
@@ -93,7 +91,8 @@
         SELECT G.USER_NUMB
              , G.GOAL_DATE
              , G.GOAL_TYPE
-             , G.GOAL_CNT_ AS GOAL_CNT
+             , G.GOAL_CNTT AS GOAL_CNT
+             , NVL(G.UPDT_CNTT, 0) AS UPDT_CNTT
           FROM TM_GOALXM G
          WHERE G.USER_NUMB = #{userNumb}
            AND G.GOAL_DATE = #{goalDate}
@@ -107,7 +106,7 @@
               SELECT #{userNumb} AS USER_NUMB
                    , #{goalDate} AS GOAL_DATE
                    , #{goalType} AS GOAL_TYPE
-                   , #{goalCnt} AS GOAL_CNT_
+                   , #{goalCnt} AS GOAL_CNTT
                 FROM DUAL
               ) S
            ON (
@@ -116,15 +115,20 @@
           AND G.GOAL_TYPE = S.GOAL_TYPE
            )
          WHEN MATCHED THEN
-       UPDATE
-          SET G.GOAL_CNT_ = S.GOAL_CNT_
+      UPDATE
+         SET G.GOAL_CNTT = S.GOAL_CNTT
+            , G.UPDT_CNTT = CASE
+                            WHEN S.GOAL_CNTT <![CDATA[<]]> G.GOAL_CNTT THEN NVL(G.UPDT_CNTT, 0) + 1
+                            ELSE NVL(G.UPDT_CNTT, 0)
+                         END
             , G.UPDT_DATE = SYSDATE
          WHEN NOT MATCHED THEN
        INSERT (
               USER_NUMB
             , GOAL_DATE
             , GOAL_TYPE
-            , GOAL_CNT_
+            , GOAL_CNTT
+            , UPDT_CNTT
             , REGI_DATE
             , UPDT_DATE
        )
@@ -132,13 +136,60 @@
               S.USER_NUMB
             , S.GOAL_DATE
             , S.GOAL_TYPE
-            , S.GOAL_CNT_
+            , S.GOAL_CNTT
+            , 0
             , SYSDATE
             , SYSDATE
        )
     </insert>
 
     <!-- 독후감 상세 조회 -->
+    <!-- 목표 타입별 달성 횟수 조회 -->
+    <select id="getReadingGoalAchvCnt" parameterType="org.our.sadari.sadariBook.dto.ReadingGoalDto" resultType="int">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        <bind name="goalTypeWeek" value="@org.our.sadari.global.common.constant.Constant@GOAL_TYPE_WEEK" />
+        <bind name="goalTypeMonth" value="@org.our.sadari.global.common.constant.Constant@GOAL_TYPE_MONTH" />
+        SELECT COUNT(*)
+          FROM TM_GOALXM G
+     LEFT JOIN (
+                SELECT A.USER_NUMB
+                     , <choose>
+                           <when test="goalType == goalTypeWeek">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
+                           </when>
+                           <when test="goalType == goalTypeMonth">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
+                           </when>
+                           <otherwise>
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
+                           </otherwise>
+                       </choose> AS GOAL_DATE
+                     , COUNT(*) AS DONE_CNT
+                 FROM TM_BOOK_REPORT A
+                 WHERE A.USER_NUMB = #{userNumb}
+                   AND A.REPORT_STAT = #{reportStatDone}
+                   AND A.REPORT_ENDT IS NOT NULL
+              GROUP BY A.USER_NUMB
+                     , <choose>
+                           <when test="goalType == goalTypeWeek">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
+                           </when>
+                           <when test="goalType == goalTypeMonth">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
+                           </when>
+                           <otherwise>
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
+                           </otherwise>
+                       </choose>
+               ) R
+            ON G.USER_NUMB = R.USER_NUMB
+           AND G.GOAL_DATE = R.GOAL_DATE
+         WHERE G.USER_NUMB = #{userNumb}
+           AND G.GOAL_TYPE = #{goalType}
+           AND G.GOAL_CNTT > 0
+           AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
+    </select>
+
     <select id="getReportDtl" parameterType="org.our.sadari.sadariBook.dto.ReportDto" resultType="org.our.sadari.sadariBook.dto.ReportDto">
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
