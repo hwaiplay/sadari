@@ -27,6 +27,7 @@ public final class Constant {
     public static final String FILE_TYPE_PROFILE = "PROFILE";
     public static final String FILE_TYPE_BACKGROUND = "BACKGROUND";
 
+    public static final String GOAL_TYPE_WEEK = "WEEK";
     public static final String GOAL_TYPE_MONTH = "MONT";
     public static final String GOAL_TYPE_YEAR = "YEAR";
 
