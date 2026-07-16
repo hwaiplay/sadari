@@ -61,6 +61,15 @@ public interface ReportMapper {
     int setReadingGoal(ReadingGoalDto req);
 
     /**
+     * 목표 타입별로 설정된 목표를 실제 완료 독서 권수가 충족한 횟수로 집계합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 회원 번호와 목표 타입을 담은 요청 DTO
+     * @return 목표 달성 횟수
+     */
+    int getReadingGoalAchvCnt(ReadingGoalDto req);
+
+    /**
      * 로그인한 회원의 독후감 상세 정보를 조회합니다.
      *
      * @author Seunghyeon.Kang
