@@ -263,7 +263,16 @@ export const readingSummaryRow = style({
 });
 
 export const goalAchievementSummary = style({
-  padding: "12px 8px 10px",
+  padding: "9px 8px 24px",
+});
+
+export const goalAchievementTitle = style({
+  margin: "0 0 16px",
+  fontFamily: vars.font.middle,
+  fontSize: "14px",
+  lineHeight: 1.3,
+  textAlign: "center",
+  color: vars.color.gray600,
 });
 
 export const goalAchievementGrid = style({

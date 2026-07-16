@@ -1,5 +1,27 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+
+const calendarSlideFromLeftKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(-18px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
+
+const calendarSlideFromRightKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(18px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
 
 export const page = style({
   minHeight: "100vh",
@@ -30,10 +52,31 @@ export const monthButton = style({
   borderRadius: "50%",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.heading,
-  fontSize: "22px",
-  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   cursor: "pointer",
+  transition: "background-color 160ms ease, border-color 160ms ease, transform 160ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "#f8f9fa",
+      borderColor: "#cfd4da",
+      transform: "translateY(-1px)",
+    },
+    "&:active": {
+      transform: "translateY(0)",
+    },
+  },
+});
+
+export const monthButtonIcon = style({
+  width: "20px",
+  height: "20px",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
 });
 
 export const monthTitle = style({
@@ -54,6 +97,15 @@ export const calendar = style({
   backgroundColor: vars.color.gray200,
   gap: "1px",
   boxShadow: "0 10px 28px rgba(0, 0, 0, 0.06)",
+  willChange: "transform, opacity",
+});
+
+export const calendarSlideFromLeft = style({
+  animation: `${calendarSlideFromLeftKeyframes} 220ms ease-out`,
+});
+
+export const calendarSlideFromRight = style({
+  animation: `${calendarSlideFromRightKeyframes} 220ms ease-out`,
 });
 
 export const weekday = style({

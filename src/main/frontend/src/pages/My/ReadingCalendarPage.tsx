@@ -25,6 +25,8 @@ const WEEKDAY_KEYS = [
   "frontend.calendar.week.sat",
 ];
 
+type MonthMoveDirection = "prev" | "next";
+
 /**
  * 달력 상단에 표시할 연월 제목을 만듭니다.
  *
@@ -135,6 +137,7 @@ function getReportsOnDate(reports: CalendarReport[], date: Date) {
 function ReadingCalendarPage() {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
+  const [monthMoveDirection, setMonthMoveDirection] = useState<MonthMoveDirection>("next");
   const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [reports, setReports] = useState<CalendarReport[]>([]);
   const yearMonth = formatYearMonthValue(currentMonth);
@@ -167,6 +170,7 @@ function ReadingCalendarPage() {
   }, [yearMonth]);
 
   const moveMonth = (offset: number) => {
+    setMonthMoveDirection(offset < 0 ? "prev" : "next");
     setCurrentMonth((prev) => {
       const next = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
       setSelectedDate(next);
@@ -184,7 +188,9 @@ function ReadingCalendarPage() {
             aria-label={message("frontend.calendar.prevMonth")}
             onClick={() => moveMonth(-1)}
           >
-            {"<"}
+            <svg className={styles.monthButtonIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M15 5 8 12l7 7" />
+            </svg>
           </button>
           <h1 className={styles.monthTitle}>{formatMonthTitle(currentMonth)}</h1>
           <button
@@ -193,11 +199,20 @@ function ReadingCalendarPage() {
             aria-label={message("frontend.calendar.nextMonth")}
             onClick={() => moveMonth(1)}
           >
-            {">"}
+            <svg className={styles.monthButtonIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 5 7 7-7 7" />
+            </svg>
           </button>
         </div>
 
-        <section className={styles.calendar} aria-label={message("frontend.calendar.dateSelect")}>
+        <section
+          className={clsx(
+            styles.calendar,
+            monthMoveDirection === "prev" ? styles.calendarSlideFromLeft : styles.calendarSlideFromRight,
+          )}
+          aria-label={message("frontend.calendar.dateSelect")}
+          key={yearMonth}
+        >
           {WEEKDAY_KEYS.map((weekdayKey) => (
             <div className={styles.weekday} key={weekdayKey}>
               {message(weekdayKey)}
