@@ -1004,6 +1004,9 @@ function ProfileEditPage() {
             <>
               <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
                 <div className={styles.goalAchievementSummary}>
+                  <p className={styles.goalAchievementTitle}>
+                    {message("frontend.profile.goal.achievementTitle")}
+                  </p>
                   <div className={styles.goalAchievementGrid}>
                     <div className={styles.goalAchievementItem}>
                       <span className={styles.goalAchievementLabel}>

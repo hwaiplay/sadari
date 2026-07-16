@@ -20,6 +20,7 @@ export const vars = createGlobalTheme(":root", {
     gray300: "#d9d9d9",
     gray400: "#D0D0D0",
     gray500: "#C1C1C1",
+    gray600: "#777777",
   },
 
   space: {

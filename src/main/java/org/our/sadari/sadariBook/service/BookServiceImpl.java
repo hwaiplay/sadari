@@ -38,14 +38,13 @@ public class BookServiceImpl implements BookService {
 
     private final ReportMapper reportMapper;
     private final CodeUtil codeUtil;
-    private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
-    private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;
-    private static final int WEEK_GOAL_MAX_UPDATE_COUNT = 1;
-    private static final int MONTH_GOAL_MAX_UPDATE_COUNT = 3;
-    private static final int YEAR_GOAL_MAX_UPDATE_COUNT = 5;
-    private static final int WEEK_GOAL_LOCK_REMAINING_DAYS = 3;
-    private static final int MONTH_GOAL_LOCK_REMAINING_DAYS = 7;
-
+    private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");// 월간 목표 영속화 키(YYYYMM) 포맷터
+    private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;                                  // ISO-8601 표준 주차(월요일 시작) 규격 정의
+    private static final int WEEK_GOAL_MAX_UPDATE_COUNT = 1;                                            // 주간 목표 최대 수정 가능 횟수
+    private static final int MONTH_GOAL_MAX_UPDATE_COUNT = 3;                                           // 월간 목표 최대 수정 가능 횟수
+    private static final int YEAR_GOAL_MAX_UPDATE_COUNT = 5;                                            // 연간 목표 최대 수정 가능 횟수
+    private static final int WEEK_GOAL_LOCK_REMAINING_DAYS = 3;                                         // 주간 목표 수정 차단 기준 잔여 일수 (금요일부터)
+    private static final int MONTH_GOAL_LOCK_REMAINING_DAYS = 7;                                        // 월간 목표 수정 차단 기준 잔여 일수 (마감 7일 전)
     /**
      * 로그인한 회원의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회합니다.
      *
@@ -71,83 +70,95 @@ public class BookServiceImpl implements BookService {
     /**
      * 이번 달과 올해의 완료 독서 권수, 비교 증감, 펼침 목록을 조회합니다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인한 회원 번호
      * @return 마이페이지 독서 요약 정보
      */
     @Override
     public MonthlyReadingSummaryDto getMonthlyReadingSummary(Long userNumb) {
 
-        LocalDate today = LocalDate.now();
-        LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);
-        LocalDate previousWeekStart = currentWeekStart.minusWeeks(1);
-        LocalDate currentMonthStart = today.withDayOfMonth(1);
-        LocalDate previousMonthStart = currentMonthStart.minusMonths(1);
-        LocalDate currentYearStart = today.withDayOfYear(1);
-        LocalDate previousYearStart = currentYearStart.minusYears(1);
+        // ==========================================
+        // [1단계] 날짜 기준점 설정 및 조회 조건(Req DTO) 생성 구간
+        // ==========================================
+        LocalDate today = LocalDate.now();                                                      // 시스템 기준 실시간 현재 날짜 획득
+        LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);      // ISO 표준 기준 이번 주 월요일 날짜 계산
+        LocalDate previousWeekStart = currentWeekStart.minusWeeks(1);             // 이번 주 월요일 기준 직전 주 월요일 날짜 계산
+        LocalDate currentMonthStart = today.withDayOfMonth(1);                                  // 당월 집계 기준점이 되는 당월 1일 일자 계산
+        LocalDate previousMonthStart = currentMonthStart.minusMonths(1);         // 전월 대조 집계 기준점이 되는 전월 1일 일자 계산
+        LocalDate currentYearStart = today.withDayOfYear(1);                                    // 금년 집계 기준점이 되는 1월 1일 일자 계산
+        LocalDate previousYearStart = currentYearStart.minusYears(1);              // 전년 대조 집계 기준점이 되는 작년 1월 1일 일자 계산
 
-        // 이번 달은 오늘 기준 월의 1일부터 다음 달 1일 전까지를 집계 범위로 사용합니다.
         // 이번 주는 ISO 기준 월요일부터 다음 주 월요일 전까지를 집계 범위로 사용합니다.
         MonthlyReadingSummaryDto currentWeekReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 currentWeekStart,
                 currentWeekStart.plusWeeks(1)
-        );
+        ); // 이번 주 실적 조회를 위한 날짜 바운더리 파라미터 DTO 생성
+
         // 지난주 비교값은 직전 월요일부터 이번 주 월요일 전까지 같은 방식으로 계산합니다.
         MonthlyReadingSummaryDto previousWeekReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 previousWeekStart,
                 currentWeekStart
-        );
+        ); // 지난 주 실적 대조를 위한 날짜 바운더리 파라미터 DTO 생성
+
+        // 당월 1일부터 다음 달 1일 전까지의 월간 독서 완료 건수 조회 요청 DTO 생성
         MonthlyReadingSummaryDto currentMonthReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 currentMonthStart,
                 currentMonthStart.plusMonths(1)
-        );
+        ); // 이번 달 실적 조회를 위한 날짜 바운더리 파라미터 DTO 생성
+
         // 지난 달 비교값은 지난 달 1일부터 이번 달 1일 전까지 같은 방식으로 계산합니다.
         MonthlyReadingSummaryDto previousMonthReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 previousMonthStart,
                 currentMonthStart
-        );
+        ); // 지난 달 실적 대조를 위한 날짜 바운더리 파라미터 DTO 생성
+
         // 올해 집계는 1월 1일부터 다음 해 1월 1일 전까지의 완료 독서를 대상으로 합니다.
         MonthlyReadingSummaryDto currentYearReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 currentYearStart,
                 currentYearStart.plusYears(1)
-        );
+        ); // 금년 누적 실적 조회를 위한 날짜 바운더리 파라미터 DTO 생성
+
         // 작년 비교값은 작년 1월 1일부터 올해 1월 1일 전까지의 완료 독서를 대상으로 합니다.
         MonthlyReadingSummaryDto previousYearReq = getDoneReportCntByPeriodReq(
                 userNumb,
                 previousYearStart,
                 currentYearStart
-        );
+        ); // 전년 누적 실적 대조를 위한 날짜 바운더리 파라미터 DTO 생성
 
-        int currentWeekCount = reportMapper.getDoneReportCntByPeriod(currentWeekReq);
-        int previousWeekCount = reportMapper.getDoneReportCntByPeriod(previousWeekReq);
-        int currentMonthCount = reportMapper.getDoneReportCntByPeriod(currentMonthReq);
-        int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);
-        int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);
-        int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);
+        // ==========================================
+        // [2단계] DB 실적 조회 (실제 권수 및 설정된 목표) 구간
+        // ==========================================
+        int currentWeekCount = reportMapper.getDoneReportCntByPeriod(currentWeekReq);           // 이번 주 완료된 독후감 건수 카운트
+        int previousWeekCount = reportMapper.getDoneReportCntByPeriod(previousWeekReq);         // 지난 주 완료된 독후감 건수 카운트
+        int currentMonthCount = reportMapper.getDoneReportCntByPeriod(currentMonthReq);         // 이번 달 완료된 독후감 건수 카운트
+        int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);       // 지난 달 완료된 독후감 건수 카운트
+        int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);           // 올해 완료된 독후감 건수 카운트
+        int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);         // 작년 완료된 독후감 건수 카운트
 
-        ReadingGoalDto currentWeekGoal = getReadingGoalDtl(userNumb, currentWeekStart, Constant.GOAL_TYPE_WEEK);
-        ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH);
-        ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);
+        ReadingGoalDto currentWeekGoal = getReadingGoalDtl(userNumb, currentWeekStart, Constant.GOAL_TYPE_WEEK);   // 이번 주차에 유저가 설정한 주간 목표 객체 조회
+        ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH); // 이번 연월에 유저가 설정한 월간 목표 객체 조회
+        ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);   // 올해 연도에 유저가 설정한 연간 목표 객체 조회
 
-        MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
-        summary.setWeekCode(getWeekCode(today));
-        summary.setCurrentWeekCount(currentWeekCount);
-        summary.setPreviousWeekCount(previousWeekCount);
-        summary.setWeekCountDiff(currentWeekCount - previousWeekCount);
-        // [주석] 화면 대시보드 헤더 및 타이틀 영역에 노출할 영문 3자리 월 코드 획득: "JAN", "FEB", "MAR" 등
+        // ==========================================
+        // [3단계] 결과 요약 객체(Summary DTO) 조립 및 연산 구간
+        // ==========================================
+        MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();                      // 화면에 응답할 최종 통합 통계 요약 바구니 객체 개설
+        summary.setWeekCode(Constant.GOAL_TYPE_WEEK);                                           // 주간 카드 영역 레이아웃 고정을 위한 정적 텍스트 "WEEK" 바인딩
+        summary.setCurrentWeekCount(currentWeekCount);                                          // 이번 주 실적 바인딩
+        summary.setPreviousWeekCount(previousWeekCount);                                        // 지난 주 실적 바인딩
+
+        // 화면 대시보드 헤더 및 타이틀 영역에 노출할 영문 3자리 월 코드 획득: "JAN", "FEB", "MAR" 등
         summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
 
         // 당월 독후감 작성 건수와 전월 작성 건수를 요약 객체에 세팅합니다.
         summary.setCurrentMonthCount(currentMonthCount);
         summary.setPreviousMonthCount(previousMonthCount);
 
-        // 전월 대비 당월의 독후감 작성 건수 증감 수치(Diff)를 연산하여 세팅합니다. (음수일 경우 감소를 의미)
-        summary.setCountDiff(currentMonthCount - previousMonthCount);
 
         // 조회 기준 년도 코드를 문자열로 변환하여 세팅합니다. (예: "2026")
         summary.setYearCode(String.valueOf(today.getYear()));
@@ -156,19 +167,27 @@ public class BookServiceImpl implements BookService {
         summary.setCurrentYearCount(currentYearCount);
         summary.setPreviousYearCount(previousYearCount);
 
-        // 전년 대비 금년의 독후감 작성 건수 증감 수치(Diff)를 연산하여 세팅합니다. (음수일 경우 감소를 의미)
+        // 주간 실적 격차 계산 및 대입 (이번주 권수 - 지난주 권수)
+        summary.setWeekCountDiff(currentWeekCount - previousWeekCount);
+        // 월간 실적 격차 계산 및 대입 (이번달 권수 - 지난달 권수)
+        summary.setCountDiff(currentMonthCount - previousMonthCount);
+        // 연간 실적 격차 계산 및 대입 (올해 권서 - 작년 권수)
         summary.setYearCountDiff(currentYearCount - previousYearCount);
 
-        //달성률을 계산
-        applyReadingGoal(summary, currentWeekGoal, currentMonthGoal, currentYearGoal);
-        applyReadingGoalUpdateMeta(summary, today, currentWeekGoal, currentMonthGoal, currentYearGoal);
-        applyReadingGoalAchvCnt(summary, userNumb);
+        // 달성률을 계산
+        applyReadingGoal(summary, currentWeekGoal, currentMonthGoal, currentYearGoal);                  // 헬퍼 메서드: 목표치 대조 100% 한계 기준 퍼센트 달성률 연산 후 바인딩
+        applyReadingGoalUpdateMeta(summary, today, currentWeekGoal, currentMonthGoal, currentYearGoal); // 헬퍼 메서드: 수정 가능 횟수 및 UI 버튼 활성 락(Lock) 메타 정보 바인딩
+        applyReadingGoalAchvCnt(summary, userNumb);                                                     // 헬퍼 메서드: 인라인 뷰 GROUP BY 쿼리 연동 역대 목표 달성 성공 누적 횟수 바인딩
 
+        // ==========================================
+        // [4단계] 대시보드 리스트 채우기 및 반환 구간
+        // ==========================================
         // 메인 대시보드 화면에 리스트 형식으로 노출할 당월 및 금년 완료 상태의 독후감 목록을 조회하여 바인딩합니다.
-        summary.setCurrentWeekReports(reportMapper.getDoneReportListByPeriod(currentWeekReq));
-        summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq));
-        summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));
-        return summary;
+        summary.setCurrentWeekReports(reportMapper.getDoneReportListByPeriod(currentWeekReq));   // 이번 주 읽은 독후감들의 실제 도서 상세 리스트 바인딩
+        summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq)); // 이번 달 읽은 독후감들의 실제 도서 상세 리스트 바인딩
+        summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));   // 올해 읽은 독후감들의 실제 도서 상세 리스트 바인딩
+
+        return summary;                                                                         // 데이터 조립 및 밸리데이션 연산이 최종 완료된 summary 객체 리턴
     }
 
     /**
@@ -190,30 +209,28 @@ public class BookServiceImpl implements BookService {
 
     /**
      * 조회된 월간/연간 목표를 독서 요약 DTO에 반영하고 달성률을 계산합니다.
-     *
      * @author Seunghyeon.Kang
      * @param summary 마이페이지 독서 요약 DTO
      * @param monthGoal 이번 달 목표 정보
      * @param yearGoal 올해 목표 정보
      */
-    private void applyReadingGoal(
-            MonthlyReadingSummaryDto summary,
-            ReadingGoalDto weekGoal,
-            ReadingGoalDto monthGoal,
-            ReadingGoalDto yearGoal
-    ) {
+    private void applyReadingGoal(MonthlyReadingSummaryDto summary , ReadingGoalDto weekGoal
+                                , ReadingGoalDto monthGoal , ReadingGoalDto yearGoal) {
+
+        // 주간
         if (!StringUtil.isEmpty(weekGoal)) {
             summary.setWeekGoalSet(true);
             summary.setWeekGoalCnt(weekGoal.getGoalCnt());
             summary.setWeekGoalRate(getGoalRate(summary.getCurrentWeekCount(), weekGoal.getGoalCnt()));
         }
 
+        // 월간
         if (!StringUtil.isEmpty(monthGoal)) {
             summary.setMonthGoalSet(true);
             summary.setMonthGoalCnt(monthGoal.getGoalCnt());
             summary.setMonthGoalRate(getGoalRate(summary.getCurrentMonthCount(), monthGoal.getGoalCnt()));
         }
-
+        // 연간
         if (!StringUtil.isEmpty(yearGoal)) {
             summary.setYearGoalSet(true);
             summary.setYearGoalCnt(yearGoal.getGoalCnt());
@@ -221,22 +238,6 @@ public class BookServiceImpl implements BookService {
         }
     }
 
-    /**
-     * 현재 달성 권수와 목표 권수를 기준으로 달성률을 계산합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param doneCount 완료 독서 권수
-     * @param goalCount 목표 독서 권수
-     * @return 0 이상 100 이하의 달성률
-     */
-    /**
-     * 회원이 과거에 설정한 주간, 월간, 연간 목표 중 실제 완료 독서 권수가 목표 권수를 충족한 횟수를 요약 DTO에 반영합니다.
-     * 목표 기간별 실적은 mapper의 인라인 집계 뷰에서 계산하므로 별도의 목표 달성 이력 테이블 없이 현재 목표 테이블과 독후감 테이블만 사용합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param summary 마이페이지 독서 요약 DTO
-     * @param userNumb 로그인한 회원 번호
-     */
     /**
      * 화면에서 목표 저장 전에 수정 가능 여부를 먼저 판단할 수 있도록 기간별 수정 메타 정보를 채웁니다.
      * 최초 설정은 수정 횟수 제한 대상이 아니므로 아직 목표가 없는 경우에는 최대 수정 가능 횟수를 그대로 내려줍니다.
@@ -255,25 +256,42 @@ public class BookServiceImpl implements BookService {
             ReadingGoalDto monthGoal,
             ReadingGoalDto yearGoal
     ) {
+        // 1. 기간별(주간, 월간, 연간) 수정 정책 한도에 부합하는 잔여 수정 가능 횟수를 계산하여 매핑합니다.
         summary.setWeekGoalRemainUpdateCnt(getGoalRemainUpdateCount(weekGoal, Constant.GOAL_TYPE_WEEK));
         summary.setMonthGoalRemainUpdateCnt(getGoalRemainUpdateCount(monthGoal, Constant.GOAL_TYPE_MONTH));
         summary.setYearGoalRemainUpdateCnt(getGoalRemainUpdateCount(yearGoal, Constant.GOAL_TYPE_YEAR));
+
+        // 2. 마감 데드라인 임박 시점(주간 3일, 월간 7일, 연간 12월 1일)까지 안전하게 수정 가능한 남은 일수를 계산하여 세팅합니다.
         summary.setWeekGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_WEEK));
         summary.setMonthGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_MONTH));
         summary.setYearGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_YEAR));
+
+        // 3. 현재 날짜가 수정 제한 데드라인 영역 내에 이미 진입했는지 여부를 판단하는 락(Lock) 상태 플래그를 결정합니다.
         summary.setWeekGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_WEEK));
         summary.setMonthGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_MONTH));
         summary.setYearGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_YEAR));
     }
 
+    /**
+     * 회원이 과거에 설정한 주간, 월간, 연간 목표 중 실제 완료 독서 권수가 목표 권수를 충족한 횟수를 요약 DTO에 반영합니다.
+     * 목표 기간별 실적은 mapper의 인라인 집계 뷰에서 계산하므로 별도의 목표 달성 이력 테이블 없이 현재 목표 테이블과 독후감 테이블만 사용합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param summary 마이페이지 독서 요약 DTO
+     * @param userNumb 로그인한 회원 번호
+     */
     private void applyReadingGoalAchvCnt(MonthlyReadingSummaryDto summary, Long userNumb) {
+        // 매퍼의 인라인 뷰 집계 성능 최적화 규칙에 의거하여 기간별(주간, 월간, 연간) 성공 누적 횟수를 각각 획득합니다.
         int weekGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_WEEK);
         int monthGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_MONTH);
         int yearGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_YEAR);
 
+        // 요약 객체의 기간별 누적 성공 필드에 각각 조회한 결과 카운트를 바인딩합니다.
         summary.setWeekGoalAchvCnt(weekGoalAchvCnt);
         summary.setMonthGoalAchvCnt(monthGoalAchvCnt);
         summary.setYearGoalAchvCnt(yearGoalAchvCnt);
+
+        // 마이페이지 뱃지 렌더링 및 동기부여 UX 제공을 위해 전체 기간의 누적 성공 횟수를 산술 통합하여 세팅합니다.
         summary.setTotalGoalAchvCnt(weekGoalAchvCnt + monthGoalAchvCnt + yearGoalAchvCnt);
     }
 
@@ -292,11 +310,21 @@ public class BookServiceImpl implements BookService {
         return reportMapper.getReadingGoalAchvCnt(req);
     }
 
+    /**
+     * 현재 달성 권수와 목표 권수를 기준으로 달성률을 계산합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param doneCount 완료 독서 권수
+     * @param goalCount 목표 독서 권수
+     * @return 0 이상 100 이하의 달성률
+     */
     private int getGoalRate(int doneCount, Integer goalCount) {
+        // 목표 독서량이 없거나 정상적이지 않은 음수값이 주어지면 분모 0 오류 및 오연산을 막기 위해 즉시 0%를 반환합니다.
         if (StringUtil.isEmpty(goalCount) || goalCount <= 0) {
             return 0;
         }
 
+        // 목표를 대폭 초과하더라도 대시보드 UI 게이지 그래프의 한계를 유지하기 위해 최대값을 100%로 강제 조절합니다.
         return Math.min(100, (int) Math.round((doneCount * 100.0) / goalCount));
     }
 
@@ -332,18 +360,6 @@ public class BookServiceImpl implements BookService {
         int weekYear = targetDate.get(GOAL_WEEK_FIELDS.weekBasedYear());
         int weekNumber = targetDate.get(GOAL_WEEK_FIELDS.weekOfWeekBasedYear());
         return String.format("%04d%02d", weekYear, weekNumber);
-    }
-
-    /**
-     * 마이페이지 달력 아이콘 안에 표시할 주차 코드를 생성합니다.
-     * 월간의 JAN, 연간의 2026처럼 주간도 W29 형태로 짧게 표시하여 카드 폭을 유지합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param targetDate 주차 표시 기준일
-     * @return W와 ISO 주차 번호를 조합한 표시 코드
-     */
-    private String getWeekCode(LocalDate targetDate) {
-        return "WEEK";
     }
 
     /**
