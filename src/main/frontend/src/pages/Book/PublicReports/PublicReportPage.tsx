@@ -7,7 +7,7 @@ import {
 } from "@/features/Book/Detail/hook/usePublicReports";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useMemo, useState } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
@@ -22,12 +22,14 @@ type PublicReportPageState = {
 
 /**
  * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시합니다.
+ * 작성자 프로필, 별점, 좋아요 상태, 독후감 내용을 한 화면에서 확인할 수 있습니다.
  *
  * @author Hanwon.Jang
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
@@ -49,7 +51,6 @@ function PublicReportPage() {
    *
    * @author Hanwon.Jang
    * @param reportNumb 펼치거나 접을 독후감 번호
-   * @return
    */
   const handleToggleReport = (reportNumb: number) => {
     setExpandedReports((prev) => ({
@@ -68,6 +69,21 @@ function PublicReportPage() {
   const getLikeCountLabel = (likeCnt?: number) => {
     const count = Number(likeCnt) || 0;
     return count > 99 ? "99+" : String(count);
+  };
+
+  /**
+   * 공개 독후감 작성자 프로필 화면으로 이동합니다.
+   * 사용자 번호가 없는 비정상 데이터는 라우팅하지 않아 잘못된 프로필 화면 진입을 방지합니다.
+   *
+   * @author Hanwon.Jang
+   * @param userNumb 이동할 작성자 사용자 번호
+   */
+  const handleProfileClick = (userNumb: number) => {
+    if (!userNumb) {
+      return;
+    }
+
+    navigate(`/social/profile/${userNumb}`);
   };
 
   if (!isValidIsbn) {
@@ -128,23 +144,28 @@ function PublicReportPage() {
                 : 0;
               const starCount = Math.floor(rating);
               const isExpanded = Boolean(expandedReports[report.reportNumb]);
-              const isLongContent =
-                report.reportCntn.length > CONTENT_PREVIEW_LENGTH;
               const content =
                 report.reportCntn || message("frontend.common.noWrittenReport");
+              const isLongContent = content.length > CONTENT_PREVIEW_LENGTH;
 
               return (
                 <article className={styles.item} key={report.reportNumb}>
                   <div className={styles.itemTop}>
                     <div className={styles.itemHeader}>
-                      <img
-                        className={styles.profileImage}
-                        src={report.porfPath || DEFAULT_PROFILE_IMAGE}
-                        alt=""
-                      />
-                      <span className={styles.writer}>
-                        {report.userNick || "-"}
-                      </span>
+                      <button
+                        className={styles.profileButton}
+                        type="button"
+                        onClick={() => handleProfileClick(report.userNumb)}
+                      >
+                        <img
+                          className={styles.profileImage}
+                          src={report.porfPath || DEFAULT_PROFILE_IMAGE}
+                          alt=""
+                        />
+                        <span className={styles.writer}>
+                          {report.userNick || "-"}
+                        </span>
+                      </button>
                       <span className={styles.metaSeparator}>|</span>
                       <span
                         className={styles.stars}

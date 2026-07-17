@@ -140,6 +140,17 @@ export const itemHeader = style({
   minWidth: 0,
 });
 
+export const profileButton = style({
+  minWidth: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "10px",
+  cursor: "pointer",
+});
+
 export const profileImage = style({
   width: "31px",
   height: "31px",

@@ -12,8 +12,11 @@ export type ReadingSummaryReport = {
   bookTitl?: string;
   bookAthr?: string;
   bookCvim?: string;
+  bookIsbn?: string;
+  reportStdt?: string;
   reportEndt?: string;
   reportGrde?: string;
+  pubcYsno?: "Y" | "N";
 };
 
 export type MonthlyReadingSummary = {

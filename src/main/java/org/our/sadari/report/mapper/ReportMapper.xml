@@ -72,11 +72,14 @@
              , A.USER_NUMB
              , A.BOOK_NUMB
              , A.REPORT_STAT
+             , A.REPORT_STDT
              , A.REPORT_ENDT
              , A.REPORT_GRDE
-             , B.BOOK_TITL
+             , A.PUBC_YSNO
+             , REGEXP_REPLACE(B.BOOK_TITL, '[[:space:]]*\([^)]*\)[[:space:]]*$', '') AS BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
+             , B.BOOK_ISBN
           FROM TM_BOOK_REPORT A
      LEFT JOIN TM_BOOK_INFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
@@ -375,46 +378,10 @@
     </select>
 
     <!-- ISBN 기준 도서 중복 등록 여부를 확인한다. -->
-    <select id="dupBook" parameterType="org.our.sadari.book.dto.BookDto" resultType="int">
-        SELECT /* dupBook */
-               COUNT(*)
-          FROM TM_BOOK_INFO
-         WHERE BOOK_ISBN = #{bookIsbn}
-    </select>
 
     <!-- ISBN 기준 기존 도서 번호를 조회한다. -->
-    <select id="getBookNumbByIsbn" resultType="long">
-        SELECT /* getBookNumbByIsbn */
-               BOOK_NUMB
-          FROM TM_BOOK_INFO
-         WHERE BOOK_ISBN = #{bookIsbn}
-    </select>
 
     <!-- 신규 도서 정보를 등록한다. -->
-    <insert id="setBook" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="bookNumb">
-        <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
-            SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
-        /* setBook */
-        INSERT INTO TM_BOOK_INFO(
-                    BOOK_NUMB
-                  , BOOK_ATHR
-                  , BOOK_CVIM
-                  , BOOK_ISBN
-                  , BOOK_PUBL
-                  , BOOK_TITL
-                  , BOOK_DESC
-                  , PUBL_DATE
-        ) VALUES (  #{bookNumb}
-                  , #{bookAthr}
-                  , #{bookCvim}
-                  , #{bookIsbn}
-                  , #{bookPubl}
-                  , #{bookTitl}
-                  , #{bookDesc}
-                  , #{publDate}
-        )
-    </insert>
 
     <!-- 신규 독후감을 등록한다. -->
     <insert id="setReport" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="reportNumb">

@@ -39,6 +39,28 @@ export function formatYearMonthValue(date: Date) {
 }
 
 /**
+ * yyyy-MM-dd 형식의 날짜 문자열을 yyyy.MM.dd 형식으로 변환합니다.
+ * 마이페이지와 소셜 프로필의 요약 목록처럼 짧은 날짜 표시가 필요한 영역에서 사용합니다.
+ *
+ * @author Hanwon.Jang
+ * @param value yyyy-MM-dd 형식의 날짜 문자열
+ * @return yyyy.MM.dd 형식의 날짜 문자열
+ */
+export function formatDashedDateToDot(value?: string) {
+  if (!value) {
+    return "";
+  }
+
+  const [year, month, day] = value.split("-");
+
+  if (!year || !month || !day) {
+    return value;
+  }
+
+  return `${year}.${month}.${day}`;
+}
+
+/**
  * 8자리 숫자 형태의 날짜 문자열을 해석하여 개별 연, 월, 일 정보 및 Date 객체로 변환합니다.
  *
  * @author SeungHyeon.Kang

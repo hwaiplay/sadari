@@ -411,6 +411,38 @@ export const readingSummaryReport = style({
   },
 });
 
+export const readingSummaryReportStatic = style([
+  readingSummaryReport,
+  {
+    cursor: "default",
+    selectors: {
+      "&:hover": {
+        backgroundColor: "#fafafa",
+        borderColor: vars.color.gray300,
+        transform: "none",
+      },
+    },
+  },
+]);
+
+export const readingSummaryReportPrivate = style([
+  readingSummaryReport,
+  {
+    backgroundColor: "#f0f1f2",
+    borderColor: "#e1e3e5",
+    color: "#9a9a9a",
+    filter: "grayscale(0.65)",
+    opacity: 0.72,
+    selectors: {
+      "&:hover": {
+        backgroundColor: "#eceeef",
+        borderColor: "#d9dcdf",
+        transform: "none",
+      },
+    },
+  },
+]);
+
 export const readingSummaryCover = style({
   width: "32px",
   height: "42px",
@@ -444,6 +476,27 @@ export const readingSummaryBookMeta = style({
   fontSize: "11px",
   lineHeight: 1.25,
   color: "#777777",
+});
+
+export const readingSummaryMetaLine = style({
+  minWidth: 0,
+  display: "flex",
+  alignItems: "center",
+  gap: "5px",
+  overflow: "hidden",
+});
+
+export const readingSummaryMetaText = style({
+  minWidth: 0,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const readingSummaryGrade = style({
+  flexShrink: 0,
+  color: "#ffd966",
+  letterSpacing: 0,
 });
 
 export const readingSummaryEmpty = style({
