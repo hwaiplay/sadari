@@ -4,17 +4,10 @@ import lombok.Getter;
 import org.our.sadari.global.common.util.MessageUtils;
 
 /**
- * packageName    : org.our.sadari.global.common.result
- * fileName       : ResultData.java
- * author         : hanwon.Jang
- * date           : 2026-03-24
- * description    : 공통 응답 객체
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-24       hanwon.Jang       최초 생성
+ * ResultData 클래스의 역할과 책임을 정의한다.
+ *
+ * @author Seunghyeon.Kang
  */
-
 @Getter
 public class ResultData {
 
@@ -23,7 +16,12 @@ public class ResultData {
     private Object data;
 
     /**
-     * 성공 응답 생성자
+     * ResultData 객체를 생성한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param code 처리에 필요한 입력값
+     * @param message 처리에 필요한 입력값
+     * @param data 처리에 필요한 입력값
      */
     private ResultData(int code, String message, Object data) {
         this.code = code;
@@ -32,25 +30,48 @@ public class ResultData {
     }
 
     /**
-     * 성공 응답 (데이터 없음)
+     * success 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     *
+     * @author Seunghyeon.Kang
+     * @return 처리 결과
      */
     public static ResultData success() {
         return new ResultData(200, "success", null);
     }
 
     /**
-     * 성공 응답 (데이터 있음)
+     * success 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param data 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public static ResultData success(Object data) {
         return new ResultData(200, "success", data);
     }
 
     /**
-     * 실패 응답 (messageKey 그대로 - 내부용)
+     * fail 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param resultEnum 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum) {
-        // Enum의 키를 번역기에 넣어서 실제 메시지를 뽑아옵니다.
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
+        return new ResultData(resultEnum.getCode(), translatedMessage, null);
+    }
+
+    /**
+     * fail 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param resultEnum 처리에 필요한 입력값
+     * @param args 처리에 필요한 입력값
+     * @return 처리 결과
+     */
+    public static ResultData fail(ResultEnum resultEnum, Object... args) {
+        String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey(), args);
         return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 }

@@ -3,120 +3,116 @@ package org.our.sadari.global.common.result;
 import lombok.Getter;
 
 /**
- * fileName       : ResultEnum
- * author         : SeungHyeon.Kang
- * date           : 2026-03-22
- * description    : 애플리케이션 전역에서 사용하는 "에러 코드 정의 Enum"
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-22        SeungHyeon.Kang       최초 생성
+ * ResultEnum 열거형에서 사용하는 고정 값을 정의한다.
+ *
+ * @author Seunghyeon.Kang
  */
 @Getter
 public enum ResultEnum {
 
     /**
-     * 저장되었습니다.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_SAVE_SUCCESS(2001, "common.alert.0001"),
 
     /**
-     * 수정되었습니다.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_UPDATE_SUCCESS(2002, "common.alert.0002"),
 
     /**
-     * 삭제되었습니다.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_DELETE_SUCCESS(2003, "common.alert.0003"),
 
     /**
-     * 조회 결과가 없습니다.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_NO_DATA(2004, "common.alert.0004"),
 
     /**
-     * 저장에 실패했어요.\n다시 시도해주세요.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_SAVE_REJECTED(2005, "common.alert.0005"),
 
     /**
-     * 수정에 실패했어요.\n다시 시도해주세요.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_UPDATE_REJECTED(2006, "common.alert.0006"),
 
     /**
-     * 삭제에 실패했어요.\n다시 시도해주세요.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_DELETE_REJECTED(2007, "common.alert.0007"),
 
-    // 검색 요청 실패 응답이다.
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
     COMMON_SEARCH_REJECTED(2008, "common.alert.0008"),
 
-    // 요청값 검증 실패 응답이다.
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
     COMMON_INVALID_REQUEST(2009, "common.alert.0009"),
 
-    // 독후감 내용 바이트 초과 응답이다.
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
     COMMON_REPORT_CONTENT_TOO_LONG(2010, "common.alert.0010"),
 
     /**
-     * 올바르지 않은 접근입니다.
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
+    COMMON_REPORT_DATE_RANGE_INVALID(2011, "common.alert.0011"),
+
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
+    COMMON_REPORT_REQUIRED_MISSING(2012, "common.alert.0012"),
+
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
+    COMMON_REPORT_BOOK_INVALID(2013, "common.alert.0013"),
+
+    /**
+     * 데이터베이스 연결을 가져오지 못해 요청을 처리할 수 없을 때 사용하는 enum 항목이다.
+     */
+    COMMON_DB_CONNECTION_FAILED(2014, "common.alert.0014"),
+
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
 
+    /**
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
+     */
+    AUTH_FAIL(1001, "auth.common.fail"),
 
     /**
-     * 인증 실패 (로그인 필요 or 인증 안됨)
-     * - accessToken 없음
-     * - refreshToken 없음
-     * - 기타 인증 불가 상황
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
-    AUTH_FAIL(1001, "auth.common.fail"),   //
+    TOKEN_INVALID(1002, "auth.token.invalid"),
 
     /**
-     * 토큰이 유효하지 않은 경우 (위조, 형식 오류 등)
-     * - JWT 파싱 실패
-     * - 서명 검증 실패
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
-    TOKEN_INVALID(1002, "auth.token.invalid"),  //
+    TOKEN_EXPIRED(1003, "auth.token.expired"),
 
     /**
-     * 토큰 만료
-     * - accessToken 만료
-     * - refreshToken 만료
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
-    TOKEN_EXPIRED(1003, "auth.token.expired"),  //
+    FORBIDDEN(1004, "auth.common.forbidden");
 
-    /**
-     * 권한 없음 (인증은 되었지만 접근 불가)
-     * - USER가 ADMIN API 호출
-     */
-    FORBIDDEN(1004, "auth.common.forbidden");   //
-
-
-    /**
-     * 프론트로 내려줄 고유 에러 코드
-     * - 숫자 기반으로 정의 (ex: 1001, 1002)
-     * - 프론트는 이 값을 기준으로 분기 처리
-     */
     private final int code;
-
-    /**
-     * message.properties에서 메시지를 찾기 위한 key
-     * - ex) auth.token.expired
-     * - 다국어 지원 및 메시지 중앙 관리를 위해 사용
-     */
     private final String messageKey;
 
     /**
-     * Enum 생성자
-     *
-     * @param code        프론트 전달용 에러 코드
-     * @param messageKey  메시지 프로퍼티 키
+     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     ResultEnum(int code, String messageKey) {
         this.code = code;
         this.messageKey = messageKey;
     }
-
 }
