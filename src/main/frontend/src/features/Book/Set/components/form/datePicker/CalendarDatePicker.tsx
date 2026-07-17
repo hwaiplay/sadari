@@ -3,11 +3,19 @@ import { formatDateValue, parseDateValue } from "@/app/utils/dateUtil";
 import { useEffect, useMemo, useState } from "react";
 import * as styles from "./CalendarDatePicker.css";
 
+type MonthMoveDirection = "prev" | "next";
+
 type CalendarDatePickerProps = {
   name: string;
   label: string;
+  // 외부 폼 state에서 날짜 값을 직접 제어해야 할 때 사용하는 선택 날짜입니다.
+  value?: string;
   defaultValue?: string;
   placeholder?: string;
+  // 날짜 선택이 확정되면 부모 폼의 state와 hidden input 값을 함께 동기화합니다.
+  onChange?: (value: string) => void;
+  // 시작일/종료일 역전처럼 선택 즉시 막아야 하는 검증을 부모 폼에서 실행합니다.
+  onBeforeChange?: (value: string) => boolean;
 };
 
 const WEEK_DAY_KEYS = [
@@ -33,17 +41,32 @@ const WEEK_DAY_KEYS = [
 function CalendarDatePicker({
   name,
   label,
+  value,
   defaultValue = "",
   placeholder = message("frontend.calendar.dateSelect"),
+  onChange,
+  onBeforeChange,
 }: CalendarDatePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(defaultValue);
   const [viewDate, setViewDate] = useState(() => parseDateValue(defaultValue));
+  const [monthMoveDirection, setMonthMoveDirection] =
+    useState<MonthMoveDirection>("next");
+  const currentDateValue = value ?? selectedDate;
 
   useEffect(() => {
     setSelectedDate(defaultValue);
     setViewDate(parseDateValue(defaultValue));
   }, [defaultValue]);
+
+  useEffect(() => {
+    // 외부 state로 제어하는 날짜가 바뀌면 달력이 해당 월을 바라보도록 동기화합니다.
+    if (value === undefined) {
+      return;
+    }
+
+    setViewDate(parseDateValue(value));
+  }, [value]);
 
   const todayValue = formatDateValue(new Date());
   const viewYear = viewDate.getFullYear();
@@ -67,6 +90,7 @@ function CalendarDatePicker({
    * @return
    */
   const changeMonth = (amount: number) => {
+    setMonthMoveDirection(amount < 0 ? "prev" : "next");
     setViewDate(new Date(viewYear, viewMonth + amount, 1));
   };
 
@@ -80,7 +104,12 @@ function CalendarDatePicker({
   const selectDay = (day: number) => {
     const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
+    if (onBeforeChange && !onBeforeChange(nextDate)) {
+      return;
+    }
+
     setSelectedDate(nextDate);
+    onChange?.(nextDate);
     setIsOpen(false);
   };
 
@@ -89,7 +118,7 @@ function CalendarDatePicker({
       <label className={styles.label} htmlFor={`${name}Trigger`}>
         {label}
       </label>
-      <input type="hidden" name={name} value={selectedDate} />
+      <input type="hidden" name={name} value={currentDateValue} />
       <button
         className={styles.trigger}
         id={`${name}Trigger`}
@@ -97,8 +126,8 @@ function CalendarDatePicker({
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <span className={selectedDate ? "" : styles.placeholder}>
-          {selectedDate ? selectedDate.replaceAll("-", ".") : placeholder}
+        <span className={currentDateValue ? "" : styles.placeholder}>
+          {currentDateValue ? currentDateValue.replaceAll("-", ".") : placeholder}
         </span>
         <svg
           className={styles.calendarIcon}
@@ -125,7 +154,13 @@ function CalendarDatePicker({
               aria-label={message("frontend.calendar.prevMonth")}
               onClick={() => changeMonth(-1)}
             >
-              {"<"}
+              <svg
+                className={styles.navIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M15 5 8 12l7 7" />
+              </svg>
             </button>
             <strong className={styles.monthLabel}>
               {message("frontend.calendar.monthLabel", [
@@ -139,7 +174,13 @@ function CalendarDatePicker({
               aria-label={message("frontend.calendar.nextMonth")}
               onClick={() => changeMonth(1)}
             >
-              {">"}
+              <svg
+                className={styles.navIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="m9 5 7 7-7 7" />
+              </svg>
             </button>
           </div>
 
@@ -151,7 +192,14 @@ function CalendarDatePicker({
             ))}
           </div>
 
-          <div className={styles.dayGrid}>
+          <div
+            className={`${styles.dayGrid} ${
+              monthMoveDirection === "prev"
+                ? styles.dayGridSlideFromLeft
+                : styles.dayGridSlideFromRight
+            }`}
+            key={`${viewYear}-${viewMonth}`}
+          >
             {days.map((day, index) => {
               if (!day) {
                 return <span className={styles.emptyDay} key={`empty-${index}`} />;
@@ -161,7 +209,7 @@ function CalendarDatePicker({
               const dayClassName = [
                 styles.dayButton,
                 dateValue === todayValue ? styles.today : "",
-                dateValue === selectedDate ? styles.selected : "",
+                dateValue === currentDateValue ? styles.selected : "",
               ]
                 .filter(Boolean)
                 .join(" ");

@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
 export const page = style({
@@ -259,6 +259,47 @@ export const readingSummaryRow = style({
   gap: "12px",
 });
 
+export const goalAchievementSummary = style({
+  padding: "9px 8px 24px",
+});
+
+export const goalAchievementTitle = style({
+  margin: "0 0 16px",
+  fontFamily: vars.font.middle,
+  fontSize: "14px",
+  lineHeight: 1.3,
+  textAlign: "center",
+  color: vars.color.gray600,
+});
+
+export const goalAchievementGrid = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "8px",
+});
+
+export const goalAchievementItem = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "10px",
+});
+
+export const goalAchievementLabel = style({
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.2,
+  color: "#777777",
+});
+
+export const goalAchievementCount = style({
+  fontFamily: vars.font.heading,
+  fontSize: "18px",
+  lineHeight: 1.2,
+  color: vars.color.black,
+});
+
 export const readingSummaryToggle = style({
   minWidth: 0,
   width: "100%",
@@ -273,6 +314,18 @@ export const readingSummaryToggle = style({
   textAlign: "left",
   cursor: "pointer",
 });
+
+export const readingSummaryToggleStatic = style([
+  readingSummaryToggle,
+  {
+    cursor: "default",
+    selectors: {
+      "&:disabled": {
+        opacity: 1,
+      },
+    },
+  },
+]);
 
 export const readingSummaryChevron = style({
   width: "28px",
@@ -678,21 +731,63 @@ export const goalModalOverlay = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  animation: `${keyframes({
+    from: { opacity: 0 },
+    to: { opacity: 1 },
+  })} 160ms ease-out`,
 });
 
 export const goalModal = style({
-  width: "min(360px, 100%)",
+  width: "min(520px, 100%)",
   borderRadius: "18px",
   backgroundColor: "#ffffff",
   padding: "22px 20px 18px",
   boxShadow: "0 22px 58px rgba(0, 0, 0, 0.24)",
+  animation: `${keyframes({
+    from: { opacity: 0, transform: "translateY(8px)" },
+    to: { opacity: 1, transform: "translateY(0)" },
+  })} 180ms ease-out`,
 });
+
+export const goalHelpModal = style([
+  goalModal,
+  {
+    width: "min(440px, 100%)",
+  },
+]);
 
 export const goalModalHeader = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
   gap: "12px",
+});
+
+export const goalModalHeaderActions = style({
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
+});
+
+export const goalHelpButton = style({
+  minHeight: "30px",
+  padding: "0 10px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
+  color: "#777777",
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  lineHeight: 1,
+  cursor: "pointer",
+  transition: "border-color 160ms ease, color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: "#cfd4da",
+      backgroundColor: "#f8f9fa",
+      color: vars.color.black,
+    },
+  },
 });
 
 export const goalModalTitle = style({
@@ -715,10 +810,34 @@ export const goalModalClose = style({
   cursor: "pointer",
 });
 
-export const goalModalBody = style({
+export const goalHelpBody = style({
+  marginTop: "18px",
+});
+
+export const goalHelpLead = style({
+  margin: "0 0 12px",
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.55,
+  color: "#555555",
+});
+
+export const goalHelpList = style({
+  margin: 0,
+  paddingLeft: "18px",
   display: "flex",
   flexDirection: "column",
-  gap: "14px",
+  gap: "9px",
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.55,
+  color: vars.color.black,
+});
+
+export const goalModalBody = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "10px",
   marginTop: "20px",
 });
 
@@ -729,16 +848,18 @@ export const goalInputLabel = style({
   fontFamily: vars.font.middle,
   fontSize: "13px",
   color: vars.color.black,
+  textAlign: "center",
 });
 
 export const goalStepper = style({
-  height: "42px",
+  minHeight: "104px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "10px",
   backgroundColor: "#fafafa",
   overflow: "hidden",
   display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr) 40px",
+  gridTemplateRows: "32px 40px 32px",
+  gridTemplateColumns: "1fr",
   alignItems: "stretch",
   transition: "border-color 160ms ease, background-color 160ms ease",
   selectors: {
@@ -762,6 +883,12 @@ export const goalStepperButton = style({
   justifyContent: "center",
   transition: "background-color 160ms ease, color 160ms ease",
   selectors: {
+    "&:first-child": {
+      gridRow: "3",
+    },
+    "&:last-child": {
+      gridRow: "1",
+    },
     "&:hover": {
       backgroundColor: "#e7e9eb",
       color: vars.color.black,
@@ -773,14 +900,14 @@ export const goalInput = style({
   width: "100%",
   minWidth: 0,
   height: "40px",
-  padding: "0 10px",
+  padding: "0 4px",
   border: 0,
-  borderLeft: `1px solid ${vars.color.gray300}`,
-  borderRight: `1px solid ${vars.color.gray300}`,
+  borderTop: `1px solid ${vars.color.gray300}`,
+  borderBottom: `1px solid ${vars.color.gray300}`,
   backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.heading,
-  fontSize: "16px",
+  fontSize: "15px",
   textAlign: "center",
   outline: "none",
   selectors: {
@@ -789,6 +916,50 @@ export const goalInput = style({
     },
   },
 });
+
+export const goalLimitInfo = style({
+  minHeight: "52px",
+  padding: "8px 7px",
+  borderRadius: "9px",
+  backgroundColor: "#f7f8f8",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "5px",
+});
+
+export const goalLimitPill = style({
+  maxWidth: "100%",
+  padding: "4px 8px",
+  borderRadius: "999px",
+  backgroundColor: "#edf7f1",
+  color: "#3b8f64",
+  fontFamily: vars.font.middle,
+  fontSize: "11px",
+  lineHeight: 1,
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const goalLimitMuted = style({
+  maxWidth: "100%",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1.25,
+  color: "#777777",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const goalLimitDanger = style([
+  goalLimitMuted,
+  {
+    color: "#c94b4b",
+  },
+]);
 
 export const goalModalActions = style({
   display: "flex",
