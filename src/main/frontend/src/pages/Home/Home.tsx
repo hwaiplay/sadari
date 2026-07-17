@@ -12,6 +12,7 @@ import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
+import { AxiosError } from "axios";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -19,6 +20,10 @@ type MonthlyBookGroup = {
   key: string;
   label: string;
   books: HomeBookType[];
+};
+
+type ApiErrorResponse = {
+  message?: string;
 };
 
 const SORT_OPTIONS: Array<{ value: HomeSortType; labelKey: string }> = [
@@ -56,11 +61,17 @@ function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
 }
 
 function getGradeGroup(book: HomeBookType) {
-  const grade = Math.max(1, Math.min(5, Number(book.reportGrde) || 1));
+  const rawGrade = Number(book.reportGrde);
+  const grade = Number.isFinite(rawGrade) ? Math.max(0, Math.min(5, rawGrade)) : 0;
+  const starCount = Math.floor(grade);
+  const gradeLabel =
+    grade === 0
+      ? "0"
+      : String.fromCharCode(9733).repeat(starCount);
 
   return {
-    key: String(grade),
-    label: String.fromCharCode(9733).repeat(grade),
+    key: String(starCount),
+    label: gradeLabel,
   };
 }
 
@@ -91,13 +102,24 @@ function chunkBooks(bookList: HomeBookType[], size: number) {
   );
 }
 
+function getHomeErrorMessage(error: unknown) {
+  if (error instanceof AxiosError) {
+    return (
+      (error.response?.data as ApiErrorResponse | undefined)?.message ??
+      message("frontend.common.tryAgain")
+    );
+  }
+
+  return message("frontend.common.tryAgain");
+}
+
 function Home() {
   const location = useLocation();
   const [sortType, setSortType] = useState<HomeSortType>("END_DATE_DESC");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [appliedSearchKeyword, setAppliedSearchKeyword] = useState("");
   const [isSortOpen, setIsSortOpen] = useState(false);
-  const { data, isPending } = useGetListQuery({
+  const { data, isPending, isError, error } = useGetListQuery({
     bookKeyword: appliedSearchKeyword,
     sortType,
   });
@@ -129,6 +151,14 @@ function Home() {
 
   if (isPending) {
     return <Loading title={message("frontend.common.loadingList")} />;
+  }
+
+  if (isError) {
+    return (
+      <Container className={styles.emptyHomeContainer}>
+        <h1 className={styles.emptyTitle}>{getHomeErrorMessage(error)}</h1>
+      </Container>
+    );
   }
 
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (

@@ -10,13 +10,13 @@ public class RestTemplateConfig {
 
     @Bean
     public RestTemplate restTemplate() {
-        // 외부 API 호출 객체를 빈으로 관리해 서비스에서 재사용한다.
+        // 호출한 계층에서 사용할 처리 결과를 반환한다.
         return new RestTemplate();
     }
 
     @Bean
     public ObjectMapper objectMapper() {
-        // JSON 변환 객체를 빈으로 관리해 서비스에서 주입받는다.
+        // 호출한 계층에서 사용할 처리 결과를 반환한다.
         return new ObjectMapper();
     }
 }

@@ -1,0 +1,471 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.report.mapper.ReportMapper">
+
+    <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회한다. -->
+    <select id="getReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
+        <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
+        <bind name="codeCommYsno" value="@org.our.sadari.global.common.constant.Constant@CODE_COMM_YSNO" />
+        <bind name="optPubcYsno" value="@org.our.sadari.global.common.constant.Constant@OPT_PUBC_YSNO" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="bookKeywordLike" value="bookKeyword == null or bookKeyword == '' ? '' : '%' + bookKeyword + '%'" />
+        SELECT /* getReportList */
+               A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , FN_GET_CODE_NAME(#{codeReadStat}, A.REPORT_STAT) AS REPORT_STAT_NAME
+             , A.REPORT_STDT
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , A.REPORT_COLR
+             , FN_GET_CODE_NAME(#{codeBookColr}, A.REPORT_COLR) AS REPORT_COLR_NAME
+             , A.PUBC_YSNO
+             , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}) AS PUBC_YSNO_NAME
+             , A.REPORT_CNTN
+             , B.BOOK_TITL
+             , B.BOOK_CVIM
+             , CASE WHEN A.REPORT_STAT = #{reportStatRead} THEN #{commYes} ELSE #{commNo} END AS READING_YN
+         FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+        <if test="bookKeyword != null and bookKeyword != ''">
+           AND (
+               LOWER(B.BOOK_TITL) LIKE LOWER(#{bookKeywordLike})
+            OR LOWER(B.BOOK_ATHR) LIKE LOWER(#{bookKeywordLike})
+           )
+        </if>
+        <choose>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_START_DATE_DESC">
+      ORDER BY A.REPORT_STDT DESC, A.REPORT_NUMB DESC
+            </when>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_GRADE_DESC">
+      ORDER BY TO_NUMBER(A.REPORT_GRDE) DESC, A.REPORT_ENDT DESC, A.REPORT_NUMB DESC
+            </when>
+            <otherwise>
+      ORDER BY A.REPORT_ENDT DESC, A.REPORT_NUMB DESC
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 지정 기간 안에 완료된 독후감 권수를 조회한다. -->
+    <select id="getDoneReportCntByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="int">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getDoneReportCntByPeriod */
+               COUNT(*)
+          FROM TM_BOOK_REPORT A
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_STAT = #{reportStatDone}
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+    </select>
+
+    <!-- 지정 기간 안에 완료된 독후감 목록을 조회한다. -->
+    <select id="getDoneReportListByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getDoneReportListByPeriod */
+               A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_STAT = #{reportStatDone}
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
+           AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+      ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') DESC, A.REPORT_NUMB DESC
+    </select>
+
+    <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회한다. -->
+    <select id="getReadingGoalDtl" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="org.our.sadari.myPage.dto.ReadingGoalDto">
+        SELECT /* getReadingGoalDtl */
+               G.USER_NUMB
+             , G.GOAL_DATE
+             , G.GOAL_TYPE
+             , G.GOAL_CNTT AS GOAL_CNT
+             , NVL(G.UPDT_CNTT, 0) AS UPDT_CNTT
+          FROM TM_GOALXM G
+         WHERE G.USER_NUMB = #{userNumb}
+           AND G.GOAL_DATE = #{goalDate}
+           AND G.GOAL_TYPE = #{goalType}
+    </select>
+
+    <!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신한다. -->
+    <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
+        MERGE /* setReadingGoal */ INTO TM_GOALXM G
+        USING (
+              SELECT #{userNumb} AS USER_NUMB
+                   , #{goalDate} AS GOAL_DATE
+                   , #{goalType} AS GOAL_TYPE
+                   , #{goalCnt} AS GOAL_CNTT
+                FROM DUAL
+              ) S
+           ON (
+              G.USER_NUMB = S.USER_NUMB
+          AND G.GOAL_DATE = S.GOAL_DATE
+          AND G.GOAL_TYPE = S.GOAL_TYPE
+           )
+         WHEN MATCHED THEN
+      UPDATE
+         SET G.GOAL_CNTT = S.GOAL_CNTT
+            , G.UPDT_CNTT = CASE
+                            WHEN S.GOAL_CNTT <![CDATA[<]]> G.GOAL_CNTT THEN NVL(G.UPDT_CNTT, 0) + 1
+                            ELSE NVL(G.UPDT_CNTT, 0)
+                         END
+            , G.UPDT_DATE = SYSDATE
+         WHEN NOT MATCHED THEN
+       INSERT (
+              USER_NUMB
+            , GOAL_DATE
+            , GOAL_TYPE
+            , GOAL_CNTT
+            , UPDT_CNTT
+            , REGI_DATE
+            , UPDT_DATE
+       )
+       VALUES (
+              S.USER_NUMB
+            , S.GOAL_DATE
+            , S.GOAL_TYPE
+            , S.GOAL_CNTT
+            , 0
+            , SYSDATE
+            , SYSDATE
+       )
+    </insert>
+
+    <!-- 목표 유형별 전체 목표 달성 횟수를 조회한다. -->
+    <select id="getReadingGoalAchvCnt" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="int">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getReadingGoalAchvCnt */
+               COUNT(*)
+          FROM TM_GOALXM G
+     LEFT JOIN (
+                SELECT A.USER_NUMB
+                     , <choose>
+                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_WEEK">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
+                           </when>
+                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_MONTH">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
+                           </when>
+                           <otherwise>
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
+                           </otherwise>
+                       </choose> AS GOAL_DATE
+                     , COUNT(*) AS DONE_CNT
+                 FROM TM_BOOK_REPORT A
+                 WHERE A.USER_NUMB = #{userNumb}
+                   AND A.REPORT_STAT = #{reportStatDone}
+                   AND A.REPORT_ENDT IS NOT NULL
+              GROUP BY A.USER_NUMB
+                     , <choose>
+                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_WEEK">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
+                           </when>
+                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_MONTH">
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
+                           </when>
+                           <otherwise>
+                               TO_CHAR(TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
+                           </otherwise>
+                       </choose>
+               ) R
+            ON G.USER_NUMB = R.USER_NUMB
+           AND G.GOAL_DATE = R.GOAL_DATE
+         WHERE G.USER_NUMB = #{userNumb}
+           AND G.GOAL_TYPE = #{goalType}
+           AND G.GOAL_CNTT > 0
+           AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
+    </select>
+
+    <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회한다. -->
+    <select id="getReportDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
+        <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
+        <bind name="codeCommYsno" value="@org.our.sadari.global.common.constant.Constant@CODE_COMM_YSNO" />
+        <bind name="optPubcYsno" value="@org.our.sadari.global.common.constant.Constant@OPT_PUBC_YSNO" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getReportDtl */
+               A.REPORT_NUMB
+             , A.USER_NUMB
+             , A.BOOK_NUMB
+             , A.REPORT_STAT
+             , FN_GET_CODE_NAME(#{codeReadStat}, A.REPORT_STAT) AS REPORT_STAT_NAME
+             , A.REPORT_STDT
+             , A.REPORT_ENDT
+             , A.REPORT_GRDE
+             , A.REPORT_COLR
+             , FN_GET_CODE_NAME(#{codeBookColr}, A.REPORT_COLR) AS REPORT_COLR_NAME
+             , A.PUBC_YSNO
+             , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}) AS PUBC_YSNO_NAME
+             , A.REPORT_CNTN
+             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+             , B.BOOK_ISBN
+             , B.BOOK_PUBL
+             , B.BOOK_DESC
+             , FN_GET_LOCAL_DATE_STR(B.PUBL_DATE, #{locale}) AS PUBL_DATE
+             , G.BOOK_AVG_GRDE
+          FROM TM_BOOK_REPORT A
+     LEFT JOIN TM_BOOK_INFO B
+            ON A.BOOK_NUMB = B.BOOK_NUMB
+     LEFT JOIN (
+               SELECT L.REPORT_NUMB
+                    , COUNT(*) AS LIKE_CNT
+                 FROM TB_RPLIKE L
+                GROUP BY L.REPORT_NUMB
+           ) LC
+            ON A.REPORT_NUMB = LC.REPORT_NUMB
+     LEFT JOIN (
+               SELECT L.REPORT_NUMB
+                    , #{commYes} AS LIKE_YSNO
+                 FROM TB_RPLIKE L
+                WHERE L.USER_NUMB = #{userNumb}
+           ) UL
+            ON A.REPORT_NUMB = UL.REPORT_NUMB
+     LEFT JOIN (
+               SELECT P.BOOK_NUMB
+                    , ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1) AS BOOK_AVG_GRDE
+                 FROM TM_BOOK_REPORT P
+                WHERE P.REPORT_STAT = #{reportStatDone}
+                GROUP BY P.BOOK_NUMB
+           ) G
+            ON G.BOOK_NUMB = B.BOOK_NUMB
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.REPORT_NUMB = #{reportNumb}
+    </select>
+
+    <!-- ISBN 기준으로 다른 사용자가 공개한 독후감 목록을 조회한다. -->
+    <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getPublicReportList */
+               P.REPORT_NUMB
+             , P.USER_NUMB
+             , U.USER_NICK
+             , F.FILE_PATH AS PORF_PATH
+             , P.BOOK_NUMB
+             , P.REPORT_GRDE
+             , P.REPORT_CNTN
+             , P.PUBC_YSNO
+             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+          FROM TM_BOOK_INFO B
+    INNER JOIN TM_BOOK_REPORT P
+            ON B.BOOK_NUMB = P.BOOK_NUMB
+    INNER JOIN TM_USERXM U
+            ON P.USER_NUMB = U.USER_NUMB
+     LEFT JOIN TM_FILEXM F
+            ON U.PROF_NUMB = F.FILE_NUMB
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_RPLIKE L
+                GROUP BY L.REPORT_NUMB
+                ) LC
+            ON LC.REPORT_NUMB = P.REPORT_NUMB
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                       , #{commYes} AS LIKE_YSNO
+                    FROM TB_RPLIKE L
+                   WHERE L.USER_NUMB = #{userNumb}
+                ) UL
+            ON UL.REPORT_NUMB = P.REPORT_NUMB
+         WHERE P.USER_NUMB <![CDATA[!=]]> #{userNumb}
+           AND P.PUBC_YSNO = #{commYes}
+           AND B.BOOK_ISBN = #{bookIsbn}
+      ORDER BY P.REPORT_NUMB DESC
+    </select>
+
+    <!-- 좋아요를 누를 수 있는 독후감 대상인지 확인한다. -->
+    <select id="getPublicReportLikeTargetCnt" parameterType="org.our.sadari.report.dto.ReportDto" resultType="int">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getPublicReportLikeTargetCnt */
+               COUNT(*)
+         FROM TM_BOOK_REPORT R
+         WHERE R.REPORT_NUMB = #{reportNumb}
+           AND (
+               R.USER_NUMB = #{userNumb}
+            OR R.PUBC_YSNO = #{commYes}
+           )
+    </select>
+
+    <!-- 사용자가 해당 독후감에 이미 좋아요를 눌렀는지 확인한다. -->
+    <select id="dupReportLike" parameterType="org.our.sadari.report.dto.ReportDto" resultType="int">
+        SELECT /* dupReportLike */
+               COUNT(*)
+          FROM TB_RPLIKE
+         WHERE USER_NUMB = #{userNumb}
+           AND REPORT_NUMB = #{reportNumb}
+    </select>
+
+    <!-- 독후감 좋아요를 등록한다. -->
+    <insert id="setReportLike" parameterType="org.our.sadari.report.dto.ReportDto">
+        /* setReportLike */
+        INSERT INTO TB_RPLIKE(
+                    USER_NUMB
+                  , REPORT_NUMB
+                  , REGI_DATE
+        ) VALUES(   #{userNumb}
+                  , #{reportNumb}
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 독후감 좋아요를 취소한다. -->
+    <delete id="delReportLike" parameterType="org.our.sadari.report.dto.ReportDto">
+        /* delReportLike */
+        DELETE FROM TB_RPLIKE
+         WHERE USER_NUMB = #{userNumb}
+           AND REPORT_NUMB = #{reportNumb}
+    </delete>
+
+    <!-- 좋아요 토글 후 화면에 표시할 좋아요 수와 여부를 조회한다. -->
+    <select id="getReportLikeDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getReportLikeDtl */
+               R.REPORT_NUMB
+             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+          FROM (  SELECT #{reportNumb} AS REPORT_NUMB
+                    FROM DUAL
+                ) R
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_RPLIKE L
+                   WHERE L.REPORT_NUMB = #{reportNumb}
+                GROUP BY L.REPORT_NUMB
+               ) LC
+            ON LC.REPORT_NUMB = R.REPORT_NUMB
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                       , #{commYes} AS LIKE_YSNO
+                    FROM TB_RPLIKE L
+                   WHERE L.REPORT_NUMB = #{reportNumb}
+                     AND L.USER_NUMB = #{userNumb}
+                ) UL
+            ON UL.REPORT_NUMB = R.REPORT_NUMB
+    </select>
+
+    <!-- ISBN 기준 전체 독후감 평균 별점을 조회한다. -->
+    <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getPublicRatingAverageByIsbn */
+               ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1)
+          FROM TM_BOOK_INFO B
+    INNER JOIN TM_BOOK_REPORT P
+            ON B.BOOK_NUMB = P.BOOK_NUMB
+         WHERE B.BOOK_ISBN = #{bookIsbn}
+           AND P.REPORT_STAT = #{reportStatDone}
+    </select>
+
+    <!-- ISBN 기준 도서 중복 등록 여부를 확인한다. -->
+    <select id="dupBook" parameterType="org.our.sadari.book.dto.BookDto" resultType="int">
+        SELECT /* dupBook */
+               COUNT(*)
+          FROM TM_BOOK_INFO
+         WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
+
+    <!-- ISBN 기준 기존 도서 번호를 조회한다. -->
+    <select id="getBookNumbByIsbn" resultType="long">
+        SELECT /* getBookNumbByIsbn */
+               BOOK_NUMB
+          FROM TM_BOOK_INFO
+         WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
+
+    <!-- 신규 도서 정보를 등록한다. -->
+    <insert id="setBook" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="bookNumb">
+        <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
+            SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /* setBook */
+        INSERT INTO TM_BOOK_INFO(
+                    BOOK_NUMB
+                  , BOOK_ATHR
+                  , BOOK_CVIM
+                  , BOOK_ISBN
+                  , BOOK_PUBL
+                  , BOOK_TITL
+                  , BOOK_DESC
+                  , PUBL_DATE
+        ) VALUES (  #{bookNumb}
+                  , #{bookAthr}
+                  , #{bookCvim}
+                  , #{bookIsbn}
+                  , #{bookPubl}
+                  , #{bookTitl}
+                  , #{bookDesc}
+                  , #{publDate}
+        )
+    </insert>
+
+    <!-- 신규 독후감을 등록한다. -->
+    <insert id="setReport" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="reportNumb">
+        <selectKey keyProperty="reportNumb" resultType="long" order="BEFORE">
+            SELECT TM_BOOK_REPORT_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /* setReport */
+        INSERT INTO TM_BOOK_REPORT(
+                    REPORT_NUMB
+                  , USER_NUMB
+                  , BOOK_NUMB
+                  , REPORT_STAT
+                  , REPORT_STDT
+                  , REPORT_ENDT
+                  , REPORT_GRDE
+                  , REPORT_COLR
+                  , PUBC_YSNO
+                  , REPORT_CNTN
+        ) VALUES (  #{reportNumb}
+                  , #{userNumb}
+                  , #{bookNumb}
+                  , #{reportStat}
+                  , #{reportStdt}
+                  , #{reportEndt}
+                  , #{reportGrde}
+                  , #{reportColr}
+                  , #{pubcYsno}
+                  , #{reportCntn}
+        )
+    </insert>
+
+    <!-- 기존 독후감을 수정한다. -->
+    <update id="uptReport" parameterType="org.our.sadari.report.dto.ReportDto">
+        /* uptReport */
+        UPDATE TM_BOOK_REPORT
+           SET REPORT_STAT = #{reportStat}
+             , REPORT_STDT = #{reportStdt}
+             , REPORT_ENDT = #{reportEndt}
+             , REPORT_GRDE = #{reportGrde}
+             , REPORT_COLR = #{reportColr}
+             , PUBC_YSNO = #{pubcYsno}
+             , REPORT_CNTN = #{reportCntn}
+         WHERE REPORT_NUMB = #{reportNumb}
+           AND USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 로그인 사용자의 독후감을 삭제한다. -->
+    <delete id="delReport" parameterType="org.our.sadari.report.dto.ReportDto">
+        /* delReport */
+        DELETE FROM TM_BOOK_REPORT
+         WHERE REPORT_NUMB = #{reportNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+</mapper>

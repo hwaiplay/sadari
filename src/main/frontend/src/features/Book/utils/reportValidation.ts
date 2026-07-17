@@ -1,5 +1,9 @@
 import { message } from "@/app/messages/message";
-import { MAX_REPORT_CONTENT_BYTES } from "@/features/Book/constants/reportForm";
+import {
+  REPORT_GRADE_OPTIONS,
+  MAX_REPORT_CONTENT_BYTES,
+  REPORT_STATUS_READ,
+} from "@/features/Book/constants/reportForm";
 import type { NaverApiResultType } from "@/features/Book/types/book.type";
 
 const textEncoder = new TextEncoder();
@@ -125,6 +129,18 @@ export function validateReportForm(values: ReportFormValues) {
   const reportColr = String(values.reportColr ?? "");
   const content = String(values.content ?? "").trim();
   const missingFields: string[] = [];
+  // 완료 상태에서는 화면 라벨이 목표 날짜로 바뀌므로 필수값 안내 문구도 같은 명칭을 사용합니다.
+  const startDateFieldName =
+    status === REPORT_STATUS_READ
+      ? message("frontend.report.field.targetStartDate")
+      : message("frontend.report.field.startDate");
+  const endDateFieldName =
+    status === REPORT_STATUS_READ
+      ? message("frontend.report.field.targetEndDate")
+      : message("frontend.report.field.endDate");
+  const isReadingStatus = status === REPORT_STATUS_READ;
+  const gradeNumber = Number(grade);
+  const hasGrade = grade !== "";
 
   if (
     !status ||
@@ -134,14 +150,17 @@ export function validateReportForm(values: ReportFormValues) {
   }
 
   if (!startDate) {
-    missingFields.push(message("frontend.report.field.startDate"));
+    missingFields.push(startDateFieldName);
   }
 
   if (!endDate) {
-    missingFields.push(message("frontend.report.field.endDate"));
+    missingFields.push(endDateFieldName);
   }
 
-  if (!grade || Number(grade) < 1 || Number(grade) > 5) {
+  if (
+    (!isReadingStatus && !hasGrade) ||
+    (hasGrade && !(REPORT_GRADE_OPTIONS as readonly number[]).includes(gradeNumber))
+  ) {
     missingFields.push(message("frontend.report.field.grade"));
   }
 
@@ -163,6 +182,10 @@ export function validateReportForm(values: ReportFormValues) {
     return `${message("frontend.validation.missingPrefix")}\n${missingFields
       .map((field) => `- ${field}`)
       .join("\n")}`;
+  }
+
+  if (new Date(startDate) > new Date(endDate)) {
+    return message("frontend.validation.invalidDateRange");
   }
 
   if (getReportContentStorageByteLength(content) > MAX_REPORT_CONTENT_BYTES) {

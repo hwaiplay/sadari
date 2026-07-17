@@ -3,7 +3,7 @@ package org.our.sadari.global.common.util;
 import java.nio.charset.StandardCharsets;
 
 /**
- * 화면 출력용 문자열 escaping과 UTF-8 byte 길이 계산을 제공하는 유틸 클래스입니다.
+ * XssUtil 클래스의 역할과 책임을 정의한다.
  *
  * @author Seunghyeon.Kang
  */
@@ -13,13 +13,14 @@ public class XssUtil {
     }
 
     /**
-     * HTML에서 의미를 가지는 특수문자를 entity로 변환합니다.
+     * escape 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param value 변환할 문자열
-     * @return HTML entity로 변환된 문자열, 입력값이 비어 있으면 null
+     * @param value 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public static String escape(String value) {
+        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
         if (StringUtil.isEmpty(value)) {
             return null;
         }
@@ -33,13 +34,14 @@ public class XssUtil {
     }
 
     /**
-     * 문자열의 UTF-8 byte 길이를 계산합니다.
+     * utf8ByteLength 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param value byte 길이를 계산할 문자열
-     * @return UTF-8 기준 byte 길이
+     * @param value 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public static int utf8ByteLength(String value) {
+        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
         if (StringUtil.isEmpty(value)) {
             return 0;
         }

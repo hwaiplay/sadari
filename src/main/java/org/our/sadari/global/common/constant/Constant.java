@@ -1,7 +1,7 @@
 package org.our.sadari.global.common.constant;
 
 /**
- * 프로젝트 전역에서 사용하는 공통 상수를 관리합니다.
+ * Constant 클래스의 역할과 책임을 정의한다.
  *
  * @author Seunghyeon.Kang
  */
@@ -32,6 +32,6 @@ public final class Constant {
     public static final String GOAL_TYPE_YEAR = "YEAR";
 
     private Constant() {
-        // 공통 상수 클래스는 상태를 가지지 않으므로 인스턴스 생성을 막습니다.
+        // 아래 처리 단계의 업무 목적을 설명한다.
     }
 }

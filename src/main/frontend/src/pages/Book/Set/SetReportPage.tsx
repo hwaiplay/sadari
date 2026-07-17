@@ -19,12 +19,17 @@ import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
 import ColorCodeField from "@/features/Book/Set/components/form/colorCodeField/ColorCodeField";
 import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
-import { MAX_REPORT_CONTENT_BYTES } from "@/features/Book/constants/reportForm";
+import {
+  MAX_REPORT_CONTENT_BYTES,
+  REPORT_GRADE_OPTIONS,
+  REPORT_STATUS_READ,
+} from "@/features/Book/constants/reportForm";
 import {
   getReportContentStorageByteLength,
   truncateUtf8Bytes,
 } from "@/features/Book/utils/reportValidation";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 
 function SetReportPage() {
   const location = useLocation();
@@ -37,6 +42,8 @@ function SetReportPage() {
   const [grade, setGrade] = useState(0);
   const [reportColr, setReportColr] = useState("");
   const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { data: statusCodes = [] } = useCodeList("READ_STAT");
@@ -57,6 +64,40 @@ function SetReportPage() {
   const formAction = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     handleSubmit(e.currentTarget);
+  };
+
+  const isReadingStatus = status === REPORT_STATUS_READ;
+  const startDateLabel = isReadingStatus
+    ? message("frontend.report.field.targetStartDate")
+    : message("frontend.report.field.startDate");
+  const endDateLabel = isReadingStatus
+    ? message("frontend.report.field.targetEndDate")
+    : message("frontend.report.field.endDate");
+
+  /**
+   * 사용자가 달력에서 날짜를 선택하는 즉시 시작일과 종료일의 역전 여부를 검증합니다.
+   *
+   * @author Hanwon.Jang
+   * @param nextStartDate 선택 또는 유지될 시작일
+   * @param nextEndDate 선택 또는 유지될 종료일
+   * @return 날짜 범위가 정상인 경우 true, 시작일이 종료일보다 늦은 경우 false
+   */
+  const validateDateRangeOnSelect = (nextStartDate: string, nextEndDate: string) => {
+    // 한쪽 날짜가 아직 선택되지 않은 상태에서는 최종 저장 검증에서 필수값을 판단합니다.
+    if (!nextStartDate || !nextEndDate) {
+      return true;
+    }
+
+    // 시작일이 종료일과 같거나 앞선 경우 정상 범위이므로 선택 값을 반영합니다.
+    if (new Date(nextStartDate) <= new Date(nextEndDate)) {
+      return true;
+    }
+
+    void sweetWarning(
+      message("frontend.alert.inputRequired"),
+      message("frontend.validation.invalidDateRange"),
+    );
+    return false;
   };
 
   useEffect(() => {
@@ -120,13 +161,23 @@ function SetReportPage() {
             <div className={styles.fieldStack}>
               <CalendarDatePicker
                 name="startDate"
-                label={message("frontend.report.field.startDate")}
+                label={startDateLabel}
+                value={startDate}
                 placeholder={message("frontend.report.placeholder.startDate")}
+                onChange={setStartDate}
+                onBeforeChange={(nextDate) =>
+                  validateDateRangeOnSelect(nextDate, endDate)
+                }
               />
               <CalendarDatePicker
                 name="endDate"
-                label={message("frontend.report.field.endDate")}
+                label={endDateLabel}
+                value={endDate}
                 placeholder={message("frontend.report.placeholder.endDate")}
+                onChange={setEndDate}
+                onBeforeChange={(nextDate) =>
+                  validateDateRangeOnSelect(startDate, nextDate)
+                }
               />
             </div>
           </FormField>
@@ -136,7 +187,7 @@ function SetReportPage() {
               className={styles.starGroup}
               aria-label={message("frontend.report.gradeAria")}
             >
-              {[1, 2, 3, 4, 5].map((value) => (
+              {REPORT_GRADE_OPTIONS.map((value) => (
                 <label
                   key={value}
                   className={`${styles.starLabel} ${

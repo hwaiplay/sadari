@@ -188,14 +188,32 @@ export const input = style({
 export const starGroup = style({
   display: "flex",
   alignItems: "center",
+  flexWrap: "wrap",
   gap: "3px",
-});
-
-export const starLabel = style({
   color: "#d3d7dc",
   fontSize: "34px",
   lineHeight: 1,
+});
+
+export const starLabel = style({
+  minWidth: "auto",
+  height: "auto",
+  border: 0,
+  borderRadius: 0,
+  backgroundColor: "transparent",
+  color: "inherit",
+  fontSize: "inherit",
+  lineHeight: 1,
+  textAlign: "center",
   cursor: "pointer",
+  boxSizing: "border-box",
+  transition: "color 0.15s ease",
+
+  selectors: {
+    "&:hover": {
+      color: "#ffd966",
+    },
+  },
 });
 
 export const starActive = style({
