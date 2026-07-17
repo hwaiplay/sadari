@@ -12,11 +12,16 @@ import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
+import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
 import * as styles from "./DetailPage.css";
 import * as infoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
 function RatingStars({ grade }: { grade: string }) {
-  const rating = Math.max(0, Math.min(5, Number(grade) || 0));
+  const rawRating = Number(grade);
+  const rating = Number.isFinite(rawRating)
+    ? Math.max(0, Math.min(5, rawRating))
+    : 0;
+  const starCount = Math.floor(rating);
 
   return (
     <div
@@ -26,7 +31,7 @@ function RatingStars({ grade }: { grade: string }) {
       {[1, 2, 3, 4, 5].map((value) => (
         <span
           key={value}
-          className={value <= rating ? styles.starFilled : undefined}
+          className={value <= starCount ? styles.starFilled : undefined}
         >
           {"\u2605"}
         </span>
@@ -71,6 +76,13 @@ function DetailPage() {
   const pageStyle = {
     "--book-bg-image": `url("${bookData.bookCvim}")`,
   } as CSSProperties;
+  const isReadingStatus = bookData.reportStat === REPORT_STATUS_READ;
+  const startDateLabel = isReadingStatus
+    ? message("frontend.report.field.targetStartDate")
+    : message("frontend.report.field.startDate");
+  const endDateLabel = isReadingStatus
+    ? message("frontend.report.field.targetEndDate")
+    : message("frontend.report.field.endDate");
 
   // 같은 상세 API에서 받은 책 정보를 사용하므로 URL 이동 없이 화면 표시 모드만 변경합니다.
   if (showBookInfo) {
@@ -246,7 +258,7 @@ function DetailPage() {
             <div className={styles.dateStack}>
               <div className={styles.dateRow}>
                 <span className={styles.dateLabel}>
-                  {message("frontend.report.field.startDate")}
+                  {startDateLabel}
                 </span>
                 <span className={styles.dateValue}>
                   {bookData.reportStdt || "-"}
@@ -254,7 +266,7 @@ function DetailPage() {
               </div>
               <div className={styles.dateRow}>
                 <span className={styles.dateLabel}>
-                  {message("frontend.report.field.endDate")}
+                  {endDateLabel}
                 </span>
                 <span className={styles.dateValue}>
                   {bookData.reportEndt || "-"}

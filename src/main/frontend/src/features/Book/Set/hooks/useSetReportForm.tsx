@@ -69,11 +69,12 @@ export function useSetReportForm(
     }
 
     const normalizedPubcYsno: "Y" | "N" = pubcYsno === "Y" ? "Y" : "N";
+    const normalizedGrade = grade ? String(grade) : "0";
     const data = {
       reportStat: status as ReadingStatusType,
       reportStdt: startDate as string,
       reportEndt: endDate as string,
-      reportGrde: grade as string,
+      reportGrde: normalizedGrade,
       reportColr: reportColr as string,
       pubcYsno: normalizedPubcYsno,
       reportCntn: sanitizeText(content),

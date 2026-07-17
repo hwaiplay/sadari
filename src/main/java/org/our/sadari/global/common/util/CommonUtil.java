@@ -3,21 +3,21 @@ package org.our.sadari.global.common.util;
 import java.time.LocalDate;
 
 /**
- * 공통 유틸리티.
+ * CommonUtil 클래스의 역할과 책임을 정의한다.
  *
  * @author Seunghyeon.Kang
  */
 public class CommonUtil {
 
     /**
-     * 두 날짜 구간이 서로 겹치는지 시작일과 종료일을 포함해 확인한다.
+     * isDateRangeOverlapped 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param startDate 비교할 첫 번째 날짜 구간의 시작일
-     * @param endDate 비교할 첫 번째 날짜 구간의 종료일
-     * @param targetStartDate 겹침 여부를 확인할 대상 구간의 시작일
-     * @param targetEndDate 겹침 여부를 확인할 대상 구간의 종료일
-     * @return 두 날짜 구간이 하루라도 겹치면 true, 전혀 겹치지 않으면 false
+     * @param startDate 처리에 필요한 입력값
+     * @param endDate 처리에 필요한 입력값
+     * @param targetStartDate 처리에 필요한 입력값
+     * @param targetEndDate 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public static boolean isDateRangeOverlapped(
             LocalDate startDate,
