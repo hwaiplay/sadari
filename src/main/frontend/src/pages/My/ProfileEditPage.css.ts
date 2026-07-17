@@ -99,7 +99,6 @@ export const coverEmptyText = style({
 
 export const profileBody = style({
   position: "relative",
-  padding: "0 22px 28px",
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
@@ -203,11 +202,11 @@ export const profileNameInput = style({
   margin: 0,
   padding: "0 12px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: vars.radius.sm,
+  borderRadius:'999px',
   backgroundColor: "#f8f9fa",
   color: vars.color.black,
   fontFamily: vars.font.heading,
-  fontSize: "20px",
+  fontSize: "16px",
   lineHeight: 1.3,
   outline: "none",
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
@@ -222,10 +221,10 @@ export const profileNameInput = style({
 export const profileIntroInput = style({
   width: "100%",
   minWidth: 0,
-  height: "56px",
+  height: "80px",
   padding: "9px 12px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: vars.radius.sm,
+  borderRadius: '16px',
   backgroundColor: "#f8f9fa",
   color: "#666666",
   fontFamily: vars.font.body,
@@ -243,10 +242,8 @@ export const profileIntroInput = style({
 });
 
 export const monthlySummary = style({
-  width: "calc(100% + 44px)",
-  marginTop: "28px",
-  marginLeft: "-22px",
-  marginRight: "-22px",
+  width: "100%",
+  marginTop: "24px",
   padding: "6px 14px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
@@ -270,7 +267,7 @@ export const readingSummaryToggle = style({
   border: 0,
   backgroundColor: "transparent",
   display: "grid",
-  gridTemplateColumns: "38px minmax(0, 1fr) 28px",
+  gridTemplateColumns: "44px minmax(0, 1fr) 28px",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -334,7 +331,7 @@ export const readingSummaryPanelInner = style({
   minHeight: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "8px",
+  gap: "12px",
   padding: "0 0 12px",
 });
 
@@ -406,8 +403,8 @@ export const readingSummaryEmpty = style({
 
 export const monthlyCalendarIcon = style({
   position: "relative",
-  width: "38px",
-  height: "38px",
+  width: "44px",
+  height: "44px",
   border: `2px solid ${vars.color.black}`,
   borderRadius: "8px",
   backgroundColor: "#ffffff",
@@ -571,14 +568,14 @@ export const goalProgressRow = style({
   gridTemplateColumns: "minmax(0, 1fr) 38px",
   alignItems: "center",
   gap: "8px",
-  padding: "0 0 8px 50px",
+  padding: "0 0 16px 56px",
 });
 
 export const goalProgressTarget = style({
   position: "absolute",
   left: 0,
   top: "0",
-  width: "42px",
+  width: "44px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -654,13 +651,11 @@ export const goalProgressText = style({
 export const goalSettingButton = style({
   alignSelf: "flex-end",
   marginTop: "10px",
-  padding: "0 4px",
   border: 0,
   backgroundColor: "transparent",
   color: "#8a8a8a",
   fontFamily: vars.font.middle,
-  fontSize: "12px",
-  lineHeight: 1.4,
+  fontSize: "14px",
   cursor: "pointer",
   display: "inline-flex",
   alignItems: "center",
@@ -673,10 +668,6 @@ export const goalSettingButton = style({
   },
 });
 
-export const goalSettingArrow = style({
-  fontSize: "17px",
-  lineHeight: 1,
-});
 
 export const goalModalOverlay = style({
   position: "fixed",

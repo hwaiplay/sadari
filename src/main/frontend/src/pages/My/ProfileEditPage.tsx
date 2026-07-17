@@ -764,9 +764,9 @@ function ProfileEditPage() {
                     ? "frontend.profile.goal.edit"
                     : "frontend.profile.goal.set",
                 )}
-                <span className={styles.goalSettingArrow} aria-hidden="true">
-                  ›
-                </span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                  </svg>
               </button>
             </>
           )}
