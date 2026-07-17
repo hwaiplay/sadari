@@ -149,7 +149,6 @@ public interface ReportMapper {
      * @param bookDto 도서 정보
      * @return 중복 도서 수
      */
-    int dupBook(ReportDto bookDto);
 
     /**
      * ISBN 기준으로 도서 번호를 조회한다.
@@ -158,7 +157,6 @@ public interface ReportMapper {
      * @param bookIsbn 도서 ISBN
      * @return 도서 번호
      */
-    Long getBookNumbByIsbn(String bookIsbn);
 
     /**
      * 신규 도서 정보를 등록한다.
@@ -167,7 +165,6 @@ public interface ReportMapper {
      * @param bookDto 등록할 도서 정보
      * @return 반영 건수
      */
-    int setBook(ReportDto bookDto);
 
     /**
      * 신규 독후감을 등록한다.
