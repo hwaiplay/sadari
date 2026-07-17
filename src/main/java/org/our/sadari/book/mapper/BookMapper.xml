@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.book.mapper.BookMapper">
+
+    <!-- ISBN 기준으로 도서 마스터 중복 등록 여부를 확인한다. -->
+    <select id="dupBook" parameterType="org.our.sadari.book.dto.BookDto" resultType="int">
+        SELECT /* dupBook */
+               COUNT(*)
+          FROM TM_BOOK_INFO
+         WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
+
+    <!-- ISBN 기준으로 이미 등록된 도서 마스터 번호를 조회한다. -->
+    <select id="getBookNumbByIsbn" resultType="long">
+        SELECT /* getBookNumbByIsbn */
+               BOOK_NUMB
+          FROM TM_BOOK_INFO
+         WHERE BOOK_ISBN = #{bookIsbn}
+    </select>
+
+    <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영한다. -->
+    <insert id="setBook" parameterType="org.our.sadari.book.dto.BookDto" useGeneratedKeys="true" keyProperty="bookNumb">
+        <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
+            SELECT TM_BOOK_INFO_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /* setBook */
+        INSERT INTO TM_BOOK_INFO(
+                    BOOK_NUMB
+                  , BOOK_ATHR
+                  , BOOK_CVIM
+                  , BOOK_ISBN
+                  , BOOK_PUBL
+                  , BOOK_TITL
+                  , BOOK_DESC
+                  , PUBL_DATE
+        ) VALUES (  #{bookNumb}
+                  , #{bookAthr}
+                  , #{bookCvim}
+                  , #{bookIsbn}
+                  , #{bookPubl}
+                  , #{bookTitl}
+                  , #{bookDesc}
+                  , #{publDate}
+        )
+    </insert>
+</mapper>

@@ -1,5 +1,6 @@
 import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyProfileApi,
@@ -60,6 +61,31 @@ const formatReadingDiff = (diff: number) => {
   }
 
   return String(diff);
+};
+
+/**
+ * 독후감 요약 목록에 표시할 독서 기간을 시작일과 종료일 기준으로 조합합니다.
+ * 시작일 또는 종료일 중 하나만 내려오는 예외 상황에서도 비어 있는 구분자가 보이지 않도록 처리합니다.
+ *
+ * @author Hanwon.Jang
+ * @param report 독서 기간을 표시할 독후감 요약 정보
+ * @return 화면에 표시할 독서 기간 문자열
+ */
+const getReadingEndDateText = (report: ReadingSummaryReport) => {
+  return formatDashedDateToDot(report.reportEndt);
+};
+
+/**
+ * 독후감 평점을 5개의 별 문자열로 변환합니다.
+ * 완료 독후감 목록의 평점은 숫자 형태로 내려오므로 0점부터 5점 사이로 보정해 화면 표시가 깨지지 않게 합니다.
+ *
+ * @author Hanwon.Jang
+ * @param grade 서버에서 내려온 평점 문자열
+ * @return 5개 기준의 별점 표시 문자열
+ */
+const getReadingGradeText = (grade?: string) => {
+  const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
+  return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
 };
 
 /**
@@ -781,7 +807,27 @@ function ProfileEditPage() {
                       {report.bookTitl || message("frontend.common.noBookInfo")}
                     </strong>
                     <span className={styles.readingSummaryBookMeta}>
-                      {[report.bookAthr, report.reportEndt].filter(Boolean).join(" | ")}
+                      <span className={styles.readingSummaryMetaLine}>
+                        {report.bookAthr && (
+                          <span className={styles.readingSummaryMetaText}>
+                            {report.bookAthr}
+                          </span>
+                        )}
+                        {report.bookAthr && getReadingEndDateText(report) && (
+                          <span>|</span>
+                        )}
+                        {getReadingEndDateText(report) && (
+                          <span className={styles.readingSummaryMetaText}>
+                            {getReadingEndDateText(report)}
+                          </span>
+                        )}
+                        {(report.bookAthr || getReadingEndDateText(report)) && (
+                          <span>|</span>
+                        )}
+                        <span className={styles.readingSummaryGrade}>
+                          {getReadingGradeText(report.reportGrde)}
+                        </span>
+                      </span>
                     </span>
                   </span>
                 </button>

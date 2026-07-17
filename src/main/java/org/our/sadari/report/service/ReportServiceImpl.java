@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.result.ResultData;
@@ -37,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportServiceImpl implements ReportService {
 
     private final ReportMapper reportMapper;
+    private final BookMapper bookMapper;
     private final CodeUtil codeUtil;
     private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
     private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;
@@ -764,10 +766,10 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // ISBN 기준 등록된 도서가 없을 때만 도서 마스터를 신규 생성한다.
-        if (reportMapper.dupBook(reportDto) == 0) {
-            reportMapper.setBook(reportDto);
+        if (bookMapper.dupBook(reportDto) == 0) {
+            bookMapper.setBook(reportDto);
         } else {
-            reportDto.setBookNumb(reportMapper.getBookNumbByIsbn(reportDto.getBookIsbn()));
+            reportDto.setBookNumb(bookMapper.getBookNumbByIsbn(reportDto.getBookIsbn()));
         }
 
         reportMapper.setReport(reportDto);

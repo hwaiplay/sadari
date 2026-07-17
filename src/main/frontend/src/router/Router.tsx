@@ -15,6 +15,7 @@ import ScrollToTop from "@/components/Layout/ScrollTop";
 import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
 import PublicReportPage from "@/pages/Book/PublicReports/PublicReportPage";
 import ProfileEditPage from "@/pages/My/ProfileEditPage";
+import SocialProfilePage from "@/pages/Social/SocialProfilePage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
@@ -90,6 +91,7 @@ const Router = () => {
 
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
+          <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
         </Route>
       </Routes>
     </>
