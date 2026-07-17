@@ -19,15 +19,9 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * fileName       : SecurityConfig
- * author         : SeungHyeon.Kang
- * date           : 2026-03-22
- * description    :
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-03-22        SeungHyeon.Kang       최초 생성
- * 2026-03-23        hanwon.Jang           CORS 설정 추가
+ * SecurityConfig 클래스의 역할과 책임을 정의한다.
+ *
+ * @author Seunghyeon.Kang
  */
 @Configuration
 @EnableWebSecurity
@@ -35,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 public class SecurityConfig {
 
     @Value("${domain.front}")
-    private String FRONT_DOMAIN; //프론트 도메인
+    private String FRONT_DOMAIN; // 업무 규칙에서 사용하는 고정 설정 값이다.
 
     private final JwtFilter jwtFilter;
 
@@ -43,63 +37,63 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
         http
-                //  CSRF 비활성화
-                // JWT는 세션을 사용하지 않기 때문에 필요 없음
+                // 아래 처리 단계의 업무 목적을 설명한다.
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .csrf(csrf -> csrf.disable())
 
-                //  세션 사용 안 함 (stateless)
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
-                // CORS 설정 (WebConfig에서 설정한 CORS 정책 적용)
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
-                //  기본 로그인 방식 제거
-                // (Spring Security 기본 로그인 페이지 방지)
+                // 아래 처리 단계의 업무 목적을 설명한다.
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
 
-                // URL별 권한 설정
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .authorizeHttpRequests(auth -> auth
 
-                        // 인증 없이 허용할 API
+                        // 아래 처리 단계의 업무 목적을 설명한다.
                         .requestMatchers(
                                 "/api/oauth/callback/kakao",
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
                                 "/uploads/**",
-                                // 책 검색만 인증 없이 허용한다.
+                                // 아래 처리 단계의 업무 목적을 설명한다.
                                 "/api/book/search"
                         ).permitAll()
 
                         
-                        // 관리자 권한
+                        // 아래 처리 단계의 업무 목적을 설명한다.
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
-                        // 나머지는 전부 인증 필요
+                        // 아래 처리 단계의 업무 목적을 설명한다.
                         .anyRequest().authenticated()
                 )
 
                 .exceptionHandling(ex -> ex
-                        //  인증 실패 → 401
+                        // 아래 처리 단계의 업무 목적을 설명한다.
                         .authenticationEntryPoint((req, res, e) -> {
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         })
-                        //  권한 부족 → 403
+                        // 아래 처리 단계의 업무 목적을 설명한다.
                         .accessDeniedHandler((req, res, e) -> {
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         })
                 )
 
-                // JWT 필터 등록 (핵심)
+                // 아래 처리 단계의 업무 목적을 설명한다.
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
 
-    // CORS 설정을 위한 Bean 등록
+    // 아래 처리 단계의 업무 목적을 설명한다.
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration config = new CorsConfiguration();

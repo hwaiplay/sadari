@@ -25,5 +25,6 @@ export const useGetListQuery = (params: GetListQueryParams) => {
         throw error;
       }
     },
+    retry: false,
   });
 };

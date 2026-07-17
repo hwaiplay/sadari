@@ -17,6 +17,10 @@ export type ReadingSummaryReport = {
 };
 
 export type MonthlyReadingSummary = {
+  weekCode?: string;
+  currentWeekCount: number;
+  previousWeekCount: number;
+  weekCountDiff: number;
   monthCode?: string;
   currentMonthCount: number;
   previousMonthCount: number;
@@ -25,17 +29,35 @@ export type MonthlyReadingSummary = {
   currentYearCount: number;
   previousYearCount: number;
   yearCountDiff: number;
+  weekGoalCnt?: number | null;
   monthGoalCnt?: number | null;
   yearGoalCnt?: number | null;
+  weekGoalRate: number;
   monthGoalRate: number;
   yearGoalRate: number;
+  weekGoalSet: boolean;
   monthGoalSet: boolean;
   yearGoalSet: boolean;
+  weekGoalRemainUpdateCnt: number;
+  monthGoalRemainUpdateCnt: number;
+  yearGoalRemainUpdateCnt: number;
+  weekGoalEditableRemainDays: number;
+  monthGoalEditableRemainDays: number;
+  yearGoalEditableRemainDays: number;
+  weekGoalUpdateLocked: boolean;
+  monthGoalUpdateLocked: boolean;
+  yearGoalUpdateLocked: boolean;
+  weekGoalAchvCnt: number;
+  monthGoalAchvCnt: number;
+  yearGoalAchvCnt: number;
+  totalGoalAchvCnt: number;
+  currentWeekReports?: ReadingSummaryReport[];
   currentMonthReports?: ReadingSummaryReport[];
   currentYearReports?: ReadingSummaryReport[];
 };
 
 export type ReadingGoalParams = {
+  weekGoalCnt: number;
   monthGoalCnt: number;
   yearGoalCnt: number;
 };

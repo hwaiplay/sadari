@@ -237,15 +237,16 @@ export const dateStack = style({
 
 export const dateRow = style({
   display: "grid",
-  gridTemplateColumns: "52px 1fr",
+  gridTemplateColumns: "82px minmax(0, 1fr)",
   alignItems: "center",
-  gap: "14px",
+  gap: "10px",
 });
 
 export const dateLabel = style({
   fontFamily: vars.font.middle,
   fontSize: "13px",
   color: "#777777",
+  whiteSpace: "nowrap",
 });
 
 export const dateValue = style({

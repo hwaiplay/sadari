@@ -4,7 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.global.file.dto.FileDto;
 
 /**
- * 파일 메타정보 저장과 조회를 담당하는 MyBatis Mapper입니다.
+ * FileMapper 인터페이스에서 제공해야 하는 기능 계약을 정의한다.
  *
  * @author Seunghyeon.Kang
  */
@@ -12,20 +12,12 @@ import org.our.sadari.global.file.dto.FileDto;
 public interface FileMapper {
 
     /**
-     * 파일 메타정보를 저장하고 생성된 파일 번호를 DTO에 채웁니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param fileDto 저장할 파일 메타정보
-     * @return 저장된 행 수
+     * 아래 코드의 처리 목적을 설명한다.
      */
     int setFile(FileDto fileDto);
 
     /**
-     * 파일 번호로 파일 메타정보를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param fileNumb 조회할 파일 번호
-     * @return 파일 메타정보
+     * 아래 코드의 처리 목적을 설명한다.
      */
     FileDto getFileByNumb(Long fileNumb);
 }

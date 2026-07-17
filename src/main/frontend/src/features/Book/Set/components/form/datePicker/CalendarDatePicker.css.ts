@@ -1,18 +1,41 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+
+const dayGridSlideFromLeftKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(-14px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
+
+const dayGridSlideFromRightKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(14px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
 
 export const wrapper = style({
   position: "relative",
   display: "grid",
-  gridTemplateColumns: "52px 1fr",
+  gridTemplateColumns: "82px minmax(0, 1fr)",
   alignItems: "center",
-  gap: "10px",
+  gap: "8px",
 });
 
 export const label = style({
   fontFamily: vars.font.body,
   fontSize: "13px",
   color: vars.color.black,
+  whiteSpace: "nowrap",
 });
 
 export const trigger = style({
@@ -30,6 +53,7 @@ export const trigger = style({
   fontFamily: vars.font.body,
   fontSize: "14px",
   cursor: "pointer",
+  boxSizing: "border-box",
 });
 
 export const placeholder = style({
@@ -76,9 +100,25 @@ export const navButton = style({
   borderRadius: "50%",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontSize: "20px",
-  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
   cursor: "pointer",
+
+  ":hover": {
+    borderColor: vars.color.gray500,
+    backgroundColor: "#f7f7f7",
+  },
+});
+
+export const navIcon = style({
+  width: "18px",
+  height: "18px",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
 });
 
 export const weekGrid = style({
@@ -102,6 +142,14 @@ export const dayGrid = style({
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
   gap: "4px",
+});
+
+export const dayGridSlideFromLeft = style({
+  animation: `${dayGridSlideFromLeftKeyframes} 180ms ease-out`,
+});
+
+export const dayGridSlideFromRight = style({
+  animation: `${dayGridSlideFromRightKeyframes} 180ms ease-out`,
 });
 
 export const emptyDay = style({

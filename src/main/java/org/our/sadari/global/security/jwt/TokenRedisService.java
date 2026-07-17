@@ -7,7 +7,7 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
 /**
- * JWT logout과 refresh token rotation에 필요한 Redis 저장소 접근을 담당합니다.
+ * TokenRedisService 클래스의 역할과 책임을 정의한다.
  *
  * @author Seunghyeon.Kang
  */
@@ -21,14 +21,18 @@ public class TokenRedisService {
     private final StringRedisTemplate redisTemplate;
 
     /**
-     * 사용자별 refreshToken을 Redis에 저장합니다.
+     * setRefreshToken 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param userNumb refreshToken 소유 회원 번호
-     * @param refreshToken 저장할 refreshToken
-     * @param ttlSeconds Redis에 유지할 초 단위 만료 시간
+     * @param userNumb 처리에 필요한 입력값
+     * @param refreshToken 처리에 필요한 입력값
+     * @param ttlSeconds 처리에 필요한 입력값
      */
-    public void setRefreshToken(Long userNumb, String refreshToken, long ttlSeconds) {
+    public void setRefreshToken(
+            Long userNumb,
+            String refreshToken,
+            long ttlSeconds
+    ) {
         redisTemplate.opsForValue().set(
                 getRefreshTokenKey(userNumb),
                 refreshToken,
@@ -37,35 +41,38 @@ public class TokenRedisService {
     }
 
     /**
-     * 사용자별 refreshToken을 조회합니다.
+     * getRefreshToken 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param userNumb refreshToken 소유 회원 번호
-     * @return Redis에 저장된 refreshToken
+     * @param userNumb 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public String getRefreshToken(Long userNumb) {
         return redisTemplate.opsForValue().get(getRefreshTokenKey(userNumb));
     }
 
     /**
-     * 사용자별 refreshToken을 삭제해 재발급 권한을 차단합니다.
+     * deleteRefreshToken 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param userNumb refreshToken을 삭제할 회원 번호
+     * @param userNumb 처리에 필요한 입력값
      */
     public void deleteRefreshToken(Long userNumb) {
         redisTemplate.delete(getRefreshTokenKey(userNumb));
     }
 
     /**
-     * logout된 accessToken의 JWT ID를 Redis blacklist에 저장합니다.
+     * setAccessTokenBlacklist 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param tokenId accessToken의 JWT ID
-     * @param ttlSeconds accessToken 잔여 만료 시간
+     * @param tokenId 처리에 필요한 입력값
+     * @param ttlSeconds 처리에 필요한 입력값
      */
-    public void setAccessTokenBlacklist(String tokenId, long ttlSeconds) {
-        // JWT ID가 없거나 이미 만료된 토큰은 차단 목록에 보관할 필요가 없습니다.
+    public void setAccessTokenBlacklist(
+            String tokenId,
+            long ttlSeconds
+    ) {
+        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
         if (StringUtil.isEmpty(tokenId) || ttlSeconds <= 0) {
             return;
         }
@@ -78,14 +85,14 @@ public class TokenRedisService {
     }
 
     /**
-     * accessToken의 JWT ID가 logout blacklist에 존재하는지 확인합니다.
+     * hasAccessTokenBlacklist 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param tokenId accessToken의 JWT ID
-     * @return blacklist에 있으면 true, 없으면 false
+     * @param tokenId 처리에 필요한 입력값
+     * @return 처리 결과
      */
     public boolean hasAccessTokenBlacklist(String tokenId) {
-        // 토큰 ID가 없으면 blacklist 조회 없이 인증 실패 흐름에 맡깁니다.
+        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
         if (StringUtil.isEmpty(tokenId)) {
             return false;
         }
@@ -94,22 +101,22 @@ public class TokenRedisService {
     }
 
     /**
-     * 사용자 번호 기반 refreshToken Redis key를 생성합니다.
+     * getRefreshTokenKey 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param userNumb 회원 번호
-     * @return refreshToken Redis key
+     * @param userNumb 처리에 필요한 입력값
+     * @return 처리 결과
      */
     private String getRefreshTokenKey(Long userNumb) {
         return REFRESH_TOKEN_PREFIX + userNumb;
     }
 
     /**
-     * JWT ID 기반 accessToken blacklist Redis key를 생성합니다.
+     * getAccessTokenBlacklistKey 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param tokenId accessToken의 JWT ID
-     * @return accessToken blacklist Redis key
+     * @param tokenId 처리에 필요한 입력값
+     * @return 처리 결과
      */
     private String getAccessTokenBlacklistKey(String tokenId) {
         return ACCESS_TOKEN_BLACKLIST_PREFIX + tokenId;

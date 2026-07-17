@@ -1,5 +1,5 @@
 import { message } from "@/app/messages/message";
-import { sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyProfileApi,
@@ -20,6 +20,9 @@ const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 10;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const KOREAN_NICK_REGEX = /^[\uAC00-\uD7A3]+$/;
+type ReadingPeriod = "week" | "month" | "year";
+
+const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 
 /**
  * 닉네임 입력값에서 한글이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
@@ -78,17 +81,21 @@ function ProfileEditPage() {
   const [previewBackground, setPreviewBackground] = useState("");
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
+  const [weekGoalCnt, setWeekGoalCnt] = useState("");
   const [monthGoalCnt, setMonthGoalCnt] = useState("");
   const [yearGoalCnt, setYearGoalCnt] = useState("");
-  const [expandedSummary, setExpandedSummary] = useState<Record<"month" | "year", boolean>>({
+  const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
+    week: false,
     month: false,
     year: false,
   });
-  const [activeDiffTooltip, setActiveDiffTooltip] = useState<"month" | "year" | null>(null);
+  const [activeDiffTooltip, setActiveDiffTooltip] = useState<ReadingPeriod | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
-  const diffTooltipRefs = useRef<Record<"month" | "year", HTMLDivElement | null>>({
+  const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
+    week: null,
     month: null,
     year: null,
   });
@@ -174,10 +181,10 @@ function ProfileEditPage() {
    * @param diff 이전 기간 대비 완료 독서 권수 변화량
    * @param period 비교 단위
    */
-  const getReadingDiffMessage = (diff: number, period: "month" | "year") => {
+  const getReadingDiffMessage = (diff: number, period: ReadingPeriod) => {
     const diffCount = Math.abs(diff);
     const periodMessagePrefix =
-      period === "month" ? "monthlyReading" : "yearlyReading";
+      period === "week" ? "weeklyReading" : period === "month" ? "monthlyReading" : "yearlyReading";
     const messageKey =
       diff === 0
         ? `frontend.profile.${periodMessagePrefix}.diffSame`
@@ -186,7 +193,7 @@ function ProfileEditPage() {
     return message(messageKey, [diffCount]);
   };
 
-  const handleReadingDiffClick = (diff: number, period: "month" | "year") => {
+  const handleReadingDiffClick = (diff: number, period: ReadingPeriod) => {
     setActiveDiffTooltip((prev) => (prev === period ? null : period));
   };
 
@@ -230,7 +237,7 @@ function ProfileEditPage() {
    * @author Hanwon.Jang
    * @param period 열거나 닫을 독서 요약 기간 구분값
    */
-  const handleToggleReadingSummary = (period: "month" | "year") => {
+  const handleToggleReadingSummary = (period: ReadingPeriod) => {
     setExpandedSummary((prev) => ({
       ...prev,
       [period]: !prev[period],
@@ -256,6 +263,7 @@ function ProfileEditPage() {
    * @return
    */
   const handleGoalModalOpen = () => {
+    setWeekGoalCnt(monthlySummary?.weekGoalCnt ? String(monthlySummary.weekGoalCnt) : "");
     setMonthGoalCnt(monthlySummary?.monthGoalCnt ? String(monthlySummary.monthGoalCnt) : "");
     setYearGoalCnt(monthlySummary?.yearGoalCnt ? String(monthlySummary.yearGoalCnt) : "");
     setIsGoalModalOpen(true);
@@ -305,8 +313,13 @@ function ProfileEditPage() {
    * @param amount 증감할 권수
    * @return
    */
-  const handleGoalCountStep = (period: "month" | "year", amount: number) => {
-    const setGoalCnt = period === "month" ? setMonthGoalCnt : setYearGoalCnt;
+  const handleGoalCountStep = (period: ReadingPeriod, amount: number) => {
+    const setGoalCnt =
+      period === "week"
+        ? setWeekGoalCnt
+        : period === "month"
+          ? setMonthGoalCnt
+          : setYearGoalCnt;
 
     setGoalCnt((prev) => {
       const currentCount = Number(prev) || 1;
@@ -320,11 +333,232 @@ function ProfileEditPage() {
    * @author Hanwon.Jang
    * @return
    */
+  /**
+   * 목표 기간에 맞는 화면 라벨 메시지 key를 반환합니다.
+   * 같은 기간 분기값을 입력 카드, 제한 안내, 저장 전 검증에서 함께 사용해 화면 안내와 검증 기준이 어긋나지 않게 합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 기간 라벨 메시지 key
+   */
+  const getGoalPeriodLabelKey = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return "frontend.profile.goal.weekLabel";
+    }
+
+    if (period === "month") {
+      return "frontend.profile.goal.monthLabel";
+    }
+
+    return "frontend.profile.goal.yearLabel";
+  };
+
+  /**
+   * 현재 모달 입력값 중 기간에 맞는 목표 권수를 숫자로 반환합니다.
+   * 빈 문자열은 Number 변환 시 0이 되므로 필수 입력 검증과 같은 기준으로 처리됩니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 사용자가 입력한 목표 권수
+   */
+  const getGoalInputCount = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return Number(weekGoalCnt);
+    }
+
+    if (period === "month") {
+      return Number(monthGoalCnt);
+    }
+
+    return Number(yearGoalCnt);
+  };
+
+  /**
+   * 서버에 저장되어 있던 기간별 목표 권수를 반환합니다.
+   * 저장된 값과 입력값이 다른 기간만 수정 제한 검증을 적용해야 같은 값을 다시 저장할 때 수정 횟수를 소모하지 않습니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 서버에 저장된 목표 권수
+   */
+  const getSavedGoalCount = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return monthlySummary?.weekGoalCnt ?? null;
+    }
+
+    if (period === "month") {
+      return monthlySummary?.monthGoalCnt ?? null;
+    }
+
+    return monthlySummary?.yearGoalCnt ?? null;
+  };
+
+  /**
+   * 기간별 목표가 이미 설정되어 있는지 확인합니다.
+   * 최초 설정은 수정 제한 대상이 아니므로 기존 목표가 있는 기간만 수정 제한 안내와 저장 전 차단에 사용합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 기존 목표가 있으면 true
+   */
+  const isGoalAlreadySet = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return Boolean(monthlySummary?.weekGoalSet);
+    }
+
+    if (period === "month") {
+      return Boolean(monthlySummary?.monthGoalSet);
+    }
+
+    return Boolean(monthlySummary?.yearGoalSet);
+  };
+
+  /**
+   * 기간별로 앞으로 남은 목표 수정 횟수를 반환합니다.
+   * 값은 백엔드 제한 로직과 같은 기준으로 내려온 응답값을 사용해 화면 선검증과 서버 검증의 기준을 맞춥니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 남은 수정 가능 횟수
+   */
+  const getGoalRemainUpdateCount = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return monthlySummary?.weekGoalRemainUpdateCnt ?? 0;
+    }
+
+    if (period === "month") {
+      return monthlySummary?.monthGoalRemainUpdateCnt ?? 0;
+    }
+
+    return monthlySummary?.yearGoalRemainUpdateCnt ?? 0;
+  };
+
+  /**
+   * 목표 수정 제한 기간이 시작되기 전까지 남은 일수를 반환합니다.
+   * 0이면 이미 수정 가능 기간이 끝난 상태로 보고 저장 전에 사용자에게 안내합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 수정 가능 기간 남은 일수
+   */
+  const getGoalEditableRemainDays = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return monthlySummary?.weekGoalEditableRemainDays ?? 0;
+    }
+
+    if (period === "month") {
+      return monthlySummary?.monthGoalEditableRemainDays ?? 0;
+    }
+
+    return monthlySummary?.yearGoalEditableRemainDays ?? 0;
+  };
+
+  /**
+   * 목표 기간이 마감 규칙 때문에 잠겨 있는지 반환합니다.
+   * 수정 횟수가 남아 있어도 기간이 잠긴 경우에는 프론트에서 먼저 저장을 차단합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 기간 제한으로 수정할 수 없으면 true
+   */
+  const isGoalUpdateLocked = (period: ReadingPeriod) => {
+    if (period === "week") {
+      return Boolean(monthlySummary?.weekGoalUpdateLocked);
+    }
+
+    if (period === "month") {
+      return Boolean(monthlySummary?.monthGoalUpdateLocked);
+    }
+
+    return Boolean(monthlySummary?.yearGoalUpdateLocked);
+  };
+
+  /**
+   * 모달 입력값이 기존 목표보다 낮아졌는지 확인합니다.
+   * 목표를 올리는 것은 언제든 허용되어야 하므로 낮아진 기간만 목표 내리기 제한 검증과 확인 alert 대상이 됩니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 기존 목표보다 입력 목표가 낮으면 true
+   */
+  const isGoalDecreased = (period: ReadingPeriod) => {
+    const savedGoalCount = getSavedGoalCount(period);
+    return (
+      isGoalAlreadySet(period) &&
+      savedGoalCount !== null &&
+      getGoalInputCount(period) < savedGoalCount
+    );
+  };
+
+  /**
+   * 저장 전 목표 내리기 제한에 걸리는 기간의 안내 문구를 반환합니다.
+   * 제한이 없는 기간은 빈 문자열을 반환해 저장 검증 루프에서 다음 기간을 계속 확인할 수 있게 합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 제한 안내 메시지
+   */
+  const getGoalEditBlockMessage = (period: ReadingPeriod) => {
+    if (!isGoalDecreased(period)) {
+      return "";
+    }
+
+    const label = message(getGoalPeriodLabelKey(period));
+
+    if (getGoalRemainUpdateCount(period) <= 0) {
+      return message("frontend.profile.goal.downCountBlocked", [label]);
+    }
+
+    if (isGoalUpdateLocked(period)) {
+      return message("frontend.profile.goal.downPeriodBlocked", [label]);
+    }
+
+    return "";
+  };
+
+  /**
+   * 목표 입력 카드 하단에 목표 내리기 가능 횟수와 가능 기간 안내를 표시합니다.
+   * 목표 올리기는 항상 가능하므로 내리기 제한 정보를 짧은 보조 정보로 분리해 표시합니다.
+   *
+   * @author Hanwon.Jang
+   * @param period 목표 기간 구분값
+   * @return 목표 수정 제한 안내 JSX
+   */
+  const renderGoalLimitInfo = (period: ReadingPeriod) => {
+    const remainUpdateCount = getGoalRemainUpdateCount(period);
+    const remainDays = getGoalEditableRemainDays(period);
+    const isLocked = isGoalUpdateLocked(period);
+    const isUnset = !isGoalAlreadySet(period);
+    const isDownClosed = !isUnset && (remainUpdateCount <= 0 || isLocked);
+
+    return (
+      <div className={styles.goalLimitInfo}>
+        {isDownClosed ? (
+          <span className={styles.goalLimitDanger}>
+            {message("frontend.profile.goal.downLocked")}
+          </span>
+        ) : (
+          <>
+            <span className={styles.goalLimitPill}>
+              {isUnset
+                ? message("frontend.profile.goal.firstSet")
+                : message("frontend.profile.goal.remainDown", [remainUpdateCount])}
+            </span>
+            <span className={styles.goalLimitMuted}>
+              {message("frontend.profile.goal.downRemainDays", [remainDays])}
+            </span>
+          </>
+        )}
+      </div>
+    );
+  };
+
   const handleGoalSubmit = async () => {
+    const nextWeekGoalCnt = Number(weekGoalCnt);
     const nextMonthGoalCnt = Number(monthGoalCnt);
     const nextYearGoalCnt = Number(yearGoalCnt);
 
-    if (nextMonthGoalCnt <= 0 || nextYearGoalCnt <= 0) {
+    if (nextWeekGoalCnt <= 0 || nextMonthGoalCnt <= 0 || nextYearGoalCnt <= 0) {
       void sweetWarning(
         message("frontend.alert.inputRequired"),
         message("frontend.profile.goal.required"),
@@ -332,9 +566,34 @@ function ProfileEditPage() {
       return;
     }
 
+    const blockMessage = GOAL_PERIODS.map(getGoalEditBlockMessage).find(Boolean);
+
+    if (blockMessage) {
+      void sweetWarning(message("frontend.profile.goal.downBlockedTitle"), blockMessage);
+      return;
+    }
+
+    const downGoalLabels = GOAL_PERIODS.filter(isGoalDecreased).map((period) =>
+      message(getGoalPeriodLabelKey(period)),
+    );
+
+    if (downGoalLabels.length > 0) {
+      const confirmResult = await sweetConfirm({
+        title: message("frontend.profile.goal.downConfirmTitle"),
+        text: message("frontend.profile.goal.downConfirmText", [downGoalLabels.join(", ")]),
+        confirmButtonText: message("frontend.common.confirm"),
+        cancelButtonText: message("frontend.common.cancel"),
+      });
+
+      if (!confirmResult.isConfirmed) {
+        return;
+      }
+    }
+
     try {
       setIsGoalSaving(true);
       const response = await updateReadingGoalApi({
+        weekGoalCnt: nextWeekGoalCnt,
         monthGoalCnt: nextMonthGoalCnt,
         yearGoalCnt: nextYearGoalCnt,
       });
@@ -370,7 +629,7 @@ function ProfileEditPage() {
    * @return 독서 요약 행 JSX
    */
   const renderReadingSummaryRow = (
-    period: "month" | "year",
+    period: ReadingPeriod,
     code: string | undefined,
     titleKey: string,
     countKey: string,
@@ -380,26 +639,40 @@ function ProfileEditPage() {
     reports: ReadingSummaryReport[] = [],
   ) => {
     const isExpanded = expandedSummary[period];
+    const hasReports = reports.length > 0;
     const goalCnt =
-      period === "month" ? monthlySummary?.monthGoalCnt : monthlySummary?.yearGoalCnt;
+      period === "week"
+        ? monthlySummary?.weekGoalCnt
+        : period === "month"
+          ? monthlySummary?.monthGoalCnt
+          : monthlySummary?.yearGoalCnt;
     const goalRate =
-      period === "month"
-        ? monthlySummary?.monthGoalRate ?? 0
-        : monthlySummary?.yearGoalRate ?? 0;
+      period === "week"
+        ? monthlySummary?.weekGoalRate ?? 0
+        : period === "month"
+          ? monthlySummary?.monthGoalRate ?? 0
+          : monthlySummary?.yearGoalRate ?? 0;
     const goalSet =
-      period === "month"
-        ? Boolean(monthlySummary?.monthGoalSet)
-        : Boolean(monthlySummary?.yearGoalSet);
+      period === "week"
+        ? Boolean(monthlySummary?.weekGoalSet)
+        : period === "month"
+          ? Boolean(monthlySummary?.monthGoalSet)
+          : Boolean(monthlySummary?.yearGoalSet);
     const goalProgressColor = getGoalProgressColor(goalRate);
 
     return (
       <div>
         <div className={styles.readingSummaryRow}>
           <button
-            className={styles.readingSummaryToggle}
+            className={hasReports ? styles.readingSummaryToggle : styles.readingSummaryToggleStatic}
             type="button"
-            aria-expanded={isExpanded}
-            onClick={() => handleToggleReadingSummary(period)}
+            aria-expanded={hasReports ? isExpanded : undefined}
+            disabled={!hasReports}
+            onClick={() => {
+              if (hasReports) {
+                handleToggleReadingSummary(period);
+              }
+            }}
           >
             <div className={styles.monthlyCalendarIcon} aria-hidden="true">
               <span className={styles.monthlyCalendarRing} />
@@ -411,22 +684,24 @@ function ProfileEditPage() {
                 {message(countKey, [count])}
               </strong>
             </div>
-            <span
-              className={
-                isExpanded
-                  ? styles.readingSummaryChevronOpen
-                  : styles.readingSummaryChevron
-              }
-              aria-hidden="true"
-            >
-              <svg
-                className={styles.readingSummaryChevronIcon}
-                viewBox="0 0 24 24"
-                focusable="false"
+            {hasReports && (
+              <span
+                className={
+                  isExpanded
+                    ? styles.readingSummaryChevronOpen
+                    : styles.readingSummaryChevron
+                }
+                aria-hidden="true"
               >
-                <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
-              </svg>
-            </span>
+                <svg
+                  className={styles.readingSummaryChevronIcon}
+                  viewBox="0 0 24 24"
+                  focusable="false"
+                >
+                  <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
+                </svg>
+              </span>
+            )}
           </button>
           <div
             className={styles.monthlyDiffTooltipWrap}
@@ -478,16 +753,16 @@ function ProfileEditPage() {
               : message("frontend.profile.goal.unset")}
           </span>
         </div>
-        <div
-          className={
-            isExpanded
-              ? styles.readingSummaryPanelOpen
-              : styles.readingSummaryPanel
-          }
-        >
-          <div className={styles.readingSummaryPanelInner}>
-            {reports.length > 0 ? (
-              reports.map((report) => (
+        {hasReports && (
+          <div
+            className={
+              isExpanded
+                ? styles.readingSummaryPanelOpen
+                : styles.readingSummaryPanel
+            }
+          >
+            <div className={styles.readingSummaryPanelInner}>
+              {reports.map((report) => (
                 <button
                   className={styles.readingSummaryReport}
                   type="button"
@@ -510,14 +785,10 @@ function ProfileEditPage() {
                     </span>
                   </span>
                 </button>
-              ))
-            ) : (
-              <p className={styles.readingSummaryEmpty}>
-                {message("frontend.profile.readingSummary.empty")}
-              </p>
-            )}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     );
   };
@@ -732,6 +1003,57 @@ function ProfileEditPage() {
           {monthlySummary && (
             <>
               <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+                <div className={styles.goalAchievementSummary}>
+                  <p className={styles.goalAchievementTitle}>
+                    {message("frontend.profile.goal.achievementTitle")}
+                  </p>
+                  <div className={styles.goalAchievementGrid}>
+                    <div className={styles.goalAchievementItem}>
+                      <span className={styles.goalAchievementLabel}>
+                        {message("frontend.profile.goal.weekLabel")}
+                      </span>
+                      <strong className={styles.goalAchievementCount}>
+                        {message("frontend.profile.goal.achievementCount", [monthlySummary.weekGoalAchvCnt])}
+                      </strong>
+                    </div>
+                    <div className={styles.goalAchievementItem}>
+                      <span className={styles.goalAchievementLabel}>
+                        {message("frontend.profile.goal.monthLabel")}
+                      </span>
+                      <strong className={styles.goalAchievementCount}>
+                        {message("frontend.profile.goal.achievementCount", [monthlySummary.monthGoalAchvCnt])}
+                      </strong>
+                    </div>
+                    <div className={styles.goalAchievementItem}>
+                      <span className={styles.goalAchievementLabel}>
+                        {message("frontend.profile.goal.yearLabel")}
+                      </span>
+                      <strong className={styles.goalAchievementCount}>
+                        {message("frontend.profile.goal.achievementCount", [monthlySummary.yearGoalAchvCnt])}
+                      </strong>
+                    </div>
+                    <div className={styles.goalAchievementItem}>
+                      <span className={styles.goalAchievementLabel}>
+                        {message("frontend.profile.goal.totalLabel")}
+                      </span>
+                      <strong className={styles.goalAchievementCount}>
+                        {message("frontend.profile.goal.achievementCount", [monthlySummary.totalGoalAchvCnt])}
+                      </strong>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.readingSummaryDivider} />
+                {renderReadingSummaryRow(
+                  "week",
+                  monthlySummary.weekCode,
+                  "frontend.profile.weeklyReading.title",
+                  "frontend.profile.weeklyReading.count",
+                  monthlySummary.currentWeekCount,
+                  monthlySummary.weekCountDiff,
+                  "frontend.profile.weeklyReading.diffAria",
+                  monthlySummary.currentWeekReports,
+                )}
+                <div className={styles.readingSummaryDivider} />
                 {renderReadingSummaryRow(
                   "month",
                   monthlySummary.monthCode,
@@ -760,7 +1082,7 @@ function ProfileEditPage() {
                 onClick={handleGoalModalOpen}
               >
                 {message(
-                  monthlySummary.monthGoalSet && monthlySummary.yearGoalSet
+                  monthlySummary.weekGoalSet && monthlySummary.monthGoalSet && monthlySummary.yearGoalSet
                     ? "frontend.profile.goal.edit"
                     : "frontend.profile.goal.set",
                 )}
@@ -774,7 +1096,15 @@ function ProfileEditPage() {
       </form>
 
       {isGoalModalOpen && (
-        <div className={styles.goalModalOverlay} role="presentation">
+        <div
+          className={styles.goalModalOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setIsGoalModalOpen(false);
+            }
+          }}
+        >
           <section
             className={styles.goalModal}
             role="dialog"
@@ -785,16 +1115,56 @@ function ProfileEditPage() {
               <h2 className={styles.goalModalTitle} id="reading-goal-title">
                 {message("frontend.profile.goal.modalTitle")}
               </h2>
-              <button
-                className={styles.goalModalClose}
-                type="button"
-                aria-label={message("frontend.common.close")}
-                onClick={() => setIsGoalModalOpen(false)}
-              >
-                ×
-              </button>
+              <div className={styles.goalModalHeaderActions}>
+                <button
+                  className={styles.goalHelpButton}
+                  type="button"
+                  onClick={() => setIsGoalHelpModalOpen(true)}
+                >
+                  {message("frontend.profile.goal.helpButton")}
+                </button>
+                <button
+                  className={styles.goalModalClose}
+                  type="button"
+                  aria-label={message("frontend.common.close")}
+                  onClick={() => setIsGoalModalOpen(false)}
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div className={styles.goalModalBody}>
+              <label className={styles.goalInputLabel}>
+                <span>{message("frontend.profile.goal.weekLabel")}</span>
+                <div className={styles.goalStepper}>
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.weekLabel")} 감소`}
+                    onClick={() => handleGoalCountStep("week", -1)}
+                  >
+                    -
+                  </button>
+                  <input
+                    className={styles.goalInput}
+                    inputMode="numeric"
+                    value={weekGoalCnt}
+                    placeholder={message("frontend.profile.goal.placeholder")}
+                    onChange={(event) =>
+                      setWeekGoalCnt(normalizeGoalCount(event.currentTarget.value))
+                    }
+                  />
+                  <button
+                    className={styles.goalStepperButton}
+                    type="button"
+                    aria-label={`${message("frontend.profile.goal.weekLabel")} 증가`}
+                    onClick={() => handleGoalCountStep("week", 1)}
+                  >
+                    +
+                  </button>
+                </div>
+                {renderGoalLimitInfo("week")}
+              </label>
               <label className={styles.goalInputLabel}>
                 <span>{message("frontend.profile.goal.monthLabel")}</span>
                 <div className={styles.goalStepper}>
@@ -824,6 +1194,7 @@ function ProfileEditPage() {
                     +
                   </button>
                 </div>
+                {renderGoalLimitInfo("month")}
               </label>
               <label className={styles.goalInputLabel}>
                 <span>{message("frontend.profile.goal.yearLabel")}</span>
@@ -854,6 +1225,7 @@ function ProfileEditPage() {
                     +
                   </button>
                 </div>
+                {renderGoalLimitInfo("year")}
               </label>
             </div>
             <div className={styles.goalModalActions}>
@@ -872,6 +1244,49 @@ function ProfileEditPage() {
               >
                 {message("frontend.report.save")}
               </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {isGoalHelpModalOpen && (
+        <div
+          className={styles.goalModalOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              setIsGoalHelpModalOpen(false);
+            }
+          }}
+        >
+          <section
+            className={styles.goalHelpModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="reading-goal-help-title"
+          >
+            <div className={styles.goalModalHeader}>
+              <h2 className={styles.goalModalTitle} id="reading-goal-help-title">
+                {message("frontend.profile.goal.helpTitle")}
+              </h2>
+              <button
+                className={styles.goalModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={() => setIsGoalHelpModalOpen(false)}
+              >
+                x
+              </button>
+            </div>
+            <div className={styles.goalHelpBody}>
+              <p className={styles.goalHelpLead}>
+                {message("frontend.profile.goal.helpLead")}
+              </p>
+              <ul className={styles.goalHelpList}>
+                <li>{message("frontend.profile.goal.helpWeek")}</li>
+                <li>{message("frontend.profile.goal.helpMonth")}</li>
+                <li>{message("frontend.profile.goal.helpYear")}</li>
+                <li>{message("frontend.profile.goal.helpSameValue")}</li>
+              </ul>
             </div>
           </section>
         </div>

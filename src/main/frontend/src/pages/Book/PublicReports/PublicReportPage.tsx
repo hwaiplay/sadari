@@ -122,7 +122,11 @@ function PublicReportPage() {
         {reports.length > 0 ? (
           <section className={styles.list}>
             {reports.map((report) => {
-              const rating = Number(report.reportGrde) || 0;
+              const rawRating = Number(report.reportGrde);
+              const rating = Number.isFinite(rawRating)
+                ? Math.max(0, Math.min(5, rawRating))
+                : 0;
+              const starCount = Math.floor(rating);
               const isExpanded = Boolean(expandedReports[report.reportNumb]);
               const isLongContent =
                 report.reportCntn.length > CONTENT_PREVIEW_LENGTH;
@@ -151,7 +155,7 @@ function PublicReportPage() {
                         {Array.from({ length: 5 }, (_, index) => (
                           <span
                             className={
-                              index < rating ? styles.starFilled : undefined
+                              index < starCount ? styles.starFilled : undefined
                             }
                             key={index}
                           >
