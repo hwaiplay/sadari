@@ -31,6 +31,10 @@ export const wrapper = style({
   gap: "8px",
 });
 
+export const wrapperNoLabel = style({
+  gridTemplateColumns: "minmax(0, 1fr)",
+});
+
 export const label = style({
   fontFamily: vars.font.body,
   fontSize: "13px",
@@ -141,7 +145,9 @@ export const weekDay = style({
 export const dayGrid = style({
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
-  gap: "4px",
+  gap: 0,
+  overflow: "hidden",
+  borderRadius: "10px",
 });
 
 export const dayGridSlideFromLeft = style({
@@ -159,7 +165,7 @@ export const emptyDay = style({
 export const dayButton = style({
   height: "34px",
   border: "1px solid transparent",
-  borderRadius: "10px",
+  borderRadius: 0,
   backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.body,
@@ -178,6 +184,7 @@ export const today = style({
 });
 
 export const selected = style({
+  borderRadius: "10px",
   borderColor: vars.color.black,
   backgroundColor: vars.color.black,
   color: "#ffffff",
@@ -185,6 +192,50 @@ export const selected = style({
   ":hover": {
     borderColor: vars.color.black,
     backgroundColor: vars.color.black,
+  },
+});
+
+export const rangeInner = style({
+  borderColor: "#e5f0eb",
+  backgroundColor: "#e5f0eb",
+  color: "#25624c",
+});
+
+export const rangeStart = style({
+  borderColor: "#e5f0eb",
+  borderTopLeftRadius: "999px",
+  borderBottomLeftRadius: "999px",
+  backgroundColor: "#e5f0eb",
+  color: "#1f5d47",
+
+  ":hover": {
+    borderColor: "#e5f0eb",
+    backgroundColor: "#e5f0eb",
+  },
+});
+
+export const rangeEnd = style({
+  borderColor: "#e5f0eb",
+  borderTopRightRadius: "999px",
+  borderBottomRightRadius: "999px",
+  backgroundColor: "#e5f0eb",
+  color: "#1f5d47",
+
+  ":hover": {
+    borderColor: "#e5f0eb",
+    backgroundColor: "#e5f0eb",
+  },
+});
+
+export const rangeSameDay = style({
+  borderColor: "#e5f0eb",
+  borderRadius: "999px",
+  backgroundColor: "#e5f0eb",
+  color: "#1f5d47",
+
+  ":hover": {
+    borderColor: "#e5f0eb",
+    backgroundColor: "#e5f0eb",
   },
 });
 

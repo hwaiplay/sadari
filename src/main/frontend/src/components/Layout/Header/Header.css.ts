@@ -50,3 +50,30 @@ export const backpageBtn = style({
   cursor: "pointer",
   zIndex: 1,
 });
+
+export const hamburgerButton = style({
+  position: "absolute",
+  right: "5px",
+  top: "50%",
+  transform: "translateY(-50%)",
+  width: "40px",
+  height: "40px",
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  zIndex: 2,
+});
+
+export const hamburgerIcon = style({
+  width: "24px",
+  height: "24px",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+});

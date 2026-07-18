@@ -90,6 +90,7 @@ export const drawerOverlayVisible = style({
 export const drawerBackdrop = style({
     position: "absolute",
     inset: 0,
+    zIndex: 0,
     border: 0,
     backgroundColor: "rgba(0, 0, 0, 0)",
     opacity: 0,
@@ -97,7 +98,7 @@ export const drawerBackdrop = style({
 });
 
 export const drawerBackdropVisible = style({
-    backgroundColor: "rgba(0, 0, 0, 0.24)",
+    backgroundColor: "rgba(0, 0, 0, 0)",
     opacity: 1,
 });
 
@@ -105,11 +106,15 @@ export const drawer = style({
     position: "absolute",
     top: 0,
     right: 0,
+    zIndex: 1,
     width: "min(82vw, 320px)",
     height: "100%",
     padding: "28px 20px",
+    border: "1px solid #cfd4d9",
+    borderRight: 0,
     backgroundColor: "#ffffff",
-    // boxShadow: "-18px 0 42px rgba(0, 0, 0, 0.16)",
+    boxShadow: "none",
+    boxSizing: "border-box",
     transform: "translateX(100%)",
     transition: "transform 220ms ease",
     display: "flex",
