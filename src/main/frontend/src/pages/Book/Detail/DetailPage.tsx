@@ -89,7 +89,7 @@ function DetailPage() {
   if (showBookInfo) {
     return (
       <main className={infoStyles.page} style={pageStyle}>
-        <Container className={clsx(infoStyles.content, styles.viewFade)}>
+        <Container className={infoStyles.content}>
           <section className={infoStyles.header}>
             <div className={infoStyles.coverFrame}>
               <img
@@ -165,6 +165,7 @@ function DetailPage() {
           </section>
 
           <div
+            key="book-info"
             className={clsx(infoStyles.contentPanel, styles.contentSwitchFade)}
           >
             <section className={infoStyles.section}>
@@ -210,7 +211,7 @@ function DetailPage() {
 
   return (
     <main className={styles.page} style={pageStyle}>
-      <Container className={clsx(styles.detail, styles.viewFade)}>
+      <Container className={styles.detail}>
         <section className={styles.header}>
           <div className={styles.coverFrame}>
             <img
@@ -230,7 +231,10 @@ function DetailPage() {
           </button>
         </section>
 
-        <div className={clsx(styles.contentPanel, styles.contentSwitchFade)}>
+        <div
+          key="report-detail"
+          className={clsx(styles.contentPanel, styles.contentSwitchFade)}
+        >
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
               {message("frontend.report.field.status")}
