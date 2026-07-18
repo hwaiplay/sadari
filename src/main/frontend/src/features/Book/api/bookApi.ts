@@ -51,6 +51,23 @@ export const uptReportApi = async ({
   return res.data;
 };
 
+export type UptReportStatusGradeParams = {
+  reportNumb: number;
+  data: {
+    reportStat: string;
+    reportGrde: string;
+    reportEndt?: string;
+  };
+};
+
+export const uptReportStatusGradeApi = async ({
+  reportNumb,
+  data,
+}: UptReportStatusGradeParams): Promise<AddBookResponse> => {
+  const res = await api.put(`/book/uptReport/status-grade/${reportNumb}`, data);
+  return res.data;
+};
+
 export const delReportApi = async (reportNumb: number) => {
   const res = await api.delete(`/book/delReport/${reportNumb}`);
   return res.data;

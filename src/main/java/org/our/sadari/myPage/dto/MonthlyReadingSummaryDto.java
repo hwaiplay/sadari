@@ -30,6 +30,16 @@ public class MonthlyReadingSummaryDto {
     /**
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
      */
+    private String reportStat;
+
+    /**
+     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
+     */
+    private String reportOrderType;
+
+    /**
+     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
+     */
     private String monthCode;
 
     /**
@@ -211,4 +221,10 @@ public class MonthlyReadingSummaryDto {
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
      */
     private List<ReportDto> currentYearReports;
+
+    /**
+     * 현재 읽고 있는 독후감 목록입니다.
+     * 목표 종료일까지 남은 기간을 화면에서 계산할 수 있도록 시작일과 종료일을 함께 내려줍니다.
+     */
+    private List<ReportDto> currentReadingReports;
 }

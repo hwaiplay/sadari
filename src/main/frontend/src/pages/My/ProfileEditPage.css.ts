@@ -263,6 +263,79 @@ export const goalAchievementSummary = style({
   padding: "9px 8px 24px",
 });
 
+export const currentReadingSection = style({
+  padding: "10px 4px 18px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+});
+
+export const currentReadingTitle = style({
+  margin: "0 0 16px",
+  fontFamily: vars.font.middle,
+  fontSize: "14px",
+  lineHeight: 1.3,
+  textAlign: "center",
+  color: vars.color.gray600,
+});
+
+export const currentReadingList = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "9px",
+});
+
+export const currentReadingCard = style({
+  width: "100%",
+  minHeight: "62px",
+  padding: "9px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "12px",
+  backgroundColor: "#fafafa",
+  display: "grid",
+  gridTemplateColumns: "34px minmax(0, 1fr)",
+  alignItems: "center",
+  gap: "10px",
+  textAlign: "left",
+});
+
+export const currentReadingButton = style([
+  currentReadingCard,
+  {
+    cursor: "pointer",
+    transition: "background-color 160ms ease, border-color 160ms ease, transform 160ms ease",
+    selectors: {
+      "&:hover": {
+        backgroundColor: "#ffffff",
+        borderColor: "#cfd4da",
+        transform: "translateY(-1px)",
+      },
+    },
+  },
+]);
+
+export const currentReadingText = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "5px",
+});
+
+export const currentReadingMeta = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+});
+
+export const currentReadingRemain = style({
+  flexShrink: 0,
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+});
+
 export const goalAchievementTitle = style({
   margin: "0 0 16px",
   fontFamily: vars.font.middle,
@@ -778,20 +851,34 @@ export const goalSettingButton = style({
 export const goalModalOverlay = style({
   position: "fixed",
   inset: 0,
+  width: "100vw",
+  height: "100dvh",
   zIndex: 1200,
   padding: "24px",
   backgroundColor: "rgba(0, 0, 0, 0.34)",
   display: "flex",
+  // Center app modal dialogs vertically; popovers such as calendars/select boxes keep their own positioning.
   alignItems: "center",
   justifyContent: "center",
+  overflow: "hidden",
+  overscrollBehavior: "contain",
   animation: `${keyframes({
     from: { opacity: 0 },
     to: { opacity: 1 },
   })} 160ms ease-out`,
 });
 
+export const goalModalOverlayClosing = style({
+  animation: `${keyframes({
+    from: { opacity: 1 },
+    to: { opacity: 0 },
+  })} 180ms ease-in forwards`,
+});
+
 export const goalModal = style({
   width: "min(520px, 100%)",
+  maxHeight: "calc(100dvh - 48px)",
+  overflowY: "auto",
   borderRadius: "18px",
   backgroundColor: "#ffffff",
   padding: "22px 20px 18px",
@@ -800,6 +887,13 @@ export const goalModal = style({
     from: { opacity: 0, transform: "translateY(8px)" },
     to: { opacity: 1, transform: "translateY(0)" },
   })} 180ms ease-out`,
+});
+
+export const goalModalClosing = style({
+  animation: `${keyframes({
+    from: { opacity: 1, transform: "translateY(0)" },
+    to: { opacity: 0, transform: "translateY(8px)" },
+  })} 180ms ease-in forwards`,
 });
 
 export const goalHelpModal = style([
@@ -866,6 +960,181 @@ export const goalModalClose = style({
 export const goalHelpBody = style({
   marginTop: "18px",
 });
+
+export const quickReadingHelp = style({
+  margin: "6px 0 0",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.45,
+  color: "#777777",
+});
+
+export const quickReadingBody = style({
+  marginTop: "18px",
+  display: "flex",
+  flexDirection: "column",
+  gap: "14px",
+});
+
+export const quickReadingBookInfo = style({
+  minHeight: "196px",
+  padding: "16px 16px 36px",
+  borderRadius: "12px",
+  backgroundColor: "#f7f8f8",
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  gap: "12px",
+  textAlign: "center",
+});
+
+export const quickReadingCover = style({
+  width: "72px",
+  height: "98px",
+  borderRadius: "8px",
+  objectFit: "cover",
+  backgroundColor: "#eceeef",
+  boxShadow: "0 8px 18px rgba(0, 0, 0, 0.12)",
+});
+
+export const quickReadingCoverPlaceholder = style({
+  width: "72px",
+  height: "98px",
+  borderRadius: "8px",
+  backgroundColor: "#eceeef",
+  display: "block",
+});
+
+export const quickReadingBookText = style({
+  width: "100%",
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "8px",
+});
+
+export const quickReadingBookTitle = style({
+  margin: 0,
+  fontFamily: vars.font.middle,
+  fontSize: "14px",
+  lineHeight: 1.5,
+  color: vars.color.black,
+  maxWidth: "100%",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const quickReadingBookMeta = style({
+  margin: 0,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.45,
+  color: "#777777",
+  maxWidth: "100%",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const quickReadingEditButton = style({
+  position: "absolute",
+  right: "14px",
+  bottom: "11px",
+  minWidth: 0,
+  minHeight: "22px",
+  padding: "0",
+  border: 0,
+  backgroundColor: "transparent",
+  color: "#777777",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "2px",
+  fontFamily: vars.font.middle,
+  fontSize: "11px",
+  lineHeight: 1,
+  cursor: "pointer",
+  transition: "color 160ms ease, transform 160ms ease",
+  selectors: {
+    "&:hover": {
+      color: vars.color.black,
+      transform: "translateX(1px)",
+    },
+  },
+});
+
+export const quickStatusGroup = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "8px",
+});
+
+export const quickStatusOption = style({
+  minHeight: "38px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
+  color: "#666666",
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  cursor: "pointer",
+  transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: "#cfd4da",
+      backgroundColor: "#fafafa",
+      color: vars.color.black,
+    },
+  },
+});
+
+export const quickStatusOptionActive = style([
+  quickStatusOption,
+  {
+    borderColor: vars.color.black,
+    backgroundColor: vars.color.black,
+    color: "#ffffff",
+  },
+]);
+
+export const quickStarGroup = style({
+  display: "flex",
+  justifyContent: "center",
+  gap: "4px",
+});
+
+export const quickStarButton = style({
+  width: "36px",
+  height: "36px",
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  color: "#d3d7dc",
+  fontSize: "28px",
+  lineHeight: 1,
+  cursor: "pointer",
+  transition: "color 140ms ease, transform 140ms ease, opacity 140ms ease",
+  selectors: {
+    "&:hover": {
+      transform: "translateY(-1px)",
+    },
+    "&:disabled": {
+      cursor: "default",
+      transform: "none",
+    },
+  },
+});
+
+export const quickStarButtonActive = style([
+  quickStarButton,
+  {
+    color: "#ffd34d",
+  },
+]);
 
 export const goalHelpLead = style({
   margin: "0 0 12px",

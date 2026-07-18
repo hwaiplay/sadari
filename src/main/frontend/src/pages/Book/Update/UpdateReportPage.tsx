@@ -171,10 +171,11 @@ const UpdateReportPage = () => {
     }
 
     const pubcYsno: "Y" | "N" = formData.get("pubcYsno") === "Y" ? "Y" : "N";
+    const nextStatus = formData.get("status") as ReadingStatusType;
     const gradeValue = formData.get("grade");
     const data = {
       reportNumb: idNum,
-      reportStat: formData.get("status") as ReadingStatusType,
+      reportStat: nextStatus,
       reportStdt: formData.get("startDate") as string,
       reportEndt: formData.get("endDate") as string,
       reportGrde: gradeValue ? String(gradeValue) : "0",

@@ -138,7 +138,6 @@ export function validateReportForm(values: ReportFormValues) {
     status === REPORT_STATUS_READ
       ? message("frontend.report.field.targetEndDate")
       : message("frontend.report.field.endDate");
-  const isReadingStatus = status === REPORT_STATUS_READ;
   const gradeNumber = Number(grade);
   const hasGrade = grade !== "";
 
@@ -158,8 +157,8 @@ export function validateReportForm(values: ReportFormValues) {
   }
 
   if (
-    (!isReadingStatus && !hasGrade) ||
-    (hasGrade && !(REPORT_GRADE_OPTIONS as readonly number[]).includes(gradeNumber))
+    hasGrade &&
+    !(REPORT_GRADE_OPTIONS as readonly number[]).includes(gradeNumber)
   ) {
     missingFields.push(message("frontend.report.field.grade"));
   }

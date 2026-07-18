@@ -25,7 +25,9 @@ export const useUpdateMutation = () => {
         message("frontend.alert.saveSuccessTitle"),
         message("frontend.report.saved"),
       ).then(() => {
-        navigate(`/book/detail/${data.data}`);
+        // 수정 저장 후 상세 화면은 새 히스토리로 쌓지 않고 현재 수정 화면을 교체한다.
+        // 그래야 상세에서 뒤로가기를 눌렀을 때 방금 저장한 수정 화면으로 되돌아가지 않는다.
+        navigate(`/book/detail/${data.data}`, { replace: true });
       });
     },
     onError: (error: AxiosError<ErrorResponse>) => {

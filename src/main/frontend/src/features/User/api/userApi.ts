@@ -54,6 +54,7 @@ export type MonthlyReadingSummary = {
   monthGoalAchvCnt: number;
   yearGoalAchvCnt: number;
   totalGoalAchvCnt: number;
+  currentReadingReports?: ReadingSummaryReport[];
   currentWeekReports?: ReadingSummaryReport[];
   currentMonthReports?: ReadingSummaryReport[];
   currentYearReports?: ReadingSummaryReport[];
