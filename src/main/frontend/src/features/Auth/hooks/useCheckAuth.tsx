@@ -6,11 +6,19 @@
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
 import { refreshTokenApi } from "../api/authApi";
+import { ResultDataError } from "@/app/api/resultData";
+
+const AUTH_FAIL_CODE = 1001;
+const TOKEN_INVALID_CODE = 1002;
+const TOKEN_EXPIRED_CODE = 1003;
 
 export const useCheckAuth = () => {
-  const { data, isLoading, isError, refetch } = useAuthQuery();
+  const { data, error, isLoading, isError, refetch } = useAuthQuery();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshAttempted, setRefreshAttempted] = useState(false);
+  const errorCode = error instanceof ResultDataError
+    ? Number(error.result.code)
+    : undefined;
 
   useEffect(() => {
     if (data?.code === 200 && refreshAttempted) {
@@ -19,7 +27,7 @@ export const useCheckAuth = () => {
   }, [data?.code, refreshAttempted]);
 
   useEffect(() => {
-    if (data?.code === 1001 && !refreshing && !refreshAttempted) {
+    if (errorCode === AUTH_FAIL_CODE && !refreshing && !refreshAttempted) {
       setRefreshing(true);
       setRefreshAttempted(true);
 
@@ -34,13 +42,21 @@ export const useCheckAuth = () => {
         }
       })();
     }
-  }, [data?.code, refreshing, refreshAttempted, refetch]);
+  }, [errorCode, refreshing, refreshAttempted, refetch]);
 
   if (isLoading || refreshing) {
     return { isLoading: true, isAuthenticated: false };
   }
 
   if (isError) {
+    if (
+      errorCode === TOKEN_INVALID_CODE ||
+      errorCode === TOKEN_EXPIRED_CODE ||
+      refreshAttempted
+    ) {
+      return { isLoading: false, isAuthenticated: false };
+    }
+
     return { isLoading: false, isAuthenticated: false };
   }
 
@@ -51,9 +67,7 @@ export const useCheckAuth = () => {
       return { isLoading: false, isAuthenticated: true };
     }
 
-    if (code === 1002 || code === 1003 || refreshAttempted) {
-      return { isLoading: false, isAuthenticated: false };
-    }
+    return { isLoading: false, isAuthenticated: false };
   }
 
   return { isLoading: false, isAuthenticated: false };

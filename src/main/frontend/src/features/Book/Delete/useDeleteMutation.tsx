@@ -5,7 +5,8 @@
  */
 
 import { message } from "@/app/messages/message";
-import { sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { getApiErrorMessage } from "@/app/api/resultData";
+import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { delReportApi } from "../api/bookApi";
@@ -19,6 +20,12 @@ export const useDeleteMutation = () => {
       void sweetSuccess(
         message("frontend.alert.deleteSuccessTitle"),
       ).then(() => navigate("/home"));
+    },
+    onError: (error: unknown) => {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
     },
   });
 };

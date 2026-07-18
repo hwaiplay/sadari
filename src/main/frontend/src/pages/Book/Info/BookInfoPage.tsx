@@ -4,6 +4,7 @@
  * @author Hanwon.Jang
  */
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
@@ -20,7 +21,7 @@ function BookInfoPage() {
   const routeBookInfo = (
     location.state as { bookInfo?: ReportDtoType } | null
   )?.bookInfo;
-  const { data, isPending } = useBookDetail(reportNumb, !routeBookInfo);
+  const { data, error, isError, isPending } = useBookDetail(reportNumb, !routeBookInfo);
 
   if (!id || isNaN(reportNumb)) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
@@ -30,11 +31,11 @@ function BookInfoPage() {
     return <Loading title={message("frontend.report.loading.bookInfo")} />;
   }
 
-  const bookInfo = routeBookInfo ?? data?.data;
-
-  if (!routeBookInfo && data?.code !== 200) {
-    return <h3>{data?.message}</h3>;
+  if (!routeBookInfo && isError) {
+    return <h3>{getApiErrorMessage(error, message("frontend.common.tryAgain"))}</h3>;
   }
+
+  const bookInfo = routeBookInfo ?? data?.data;
 
   if (!bookInfo) {
     return <h3>{message("frontend.common.noBookInfo")}</h3>;

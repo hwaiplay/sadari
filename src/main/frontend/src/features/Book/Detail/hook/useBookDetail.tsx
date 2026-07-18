@@ -14,8 +14,7 @@ export const useBookDetail = (bookNumb: number, enabled = true) => {
     queryKey: ["detail", bookNumb],
     queryFn: async () => {
       try {
-        const res = await getDetailApi(bookNumb);
-        return res.data;
+        return await getDetailApi(bookNumb);
       } catch (error) {
         console.log("독후감 상세 조회 중 오류 발생: " + error);
         throw error;

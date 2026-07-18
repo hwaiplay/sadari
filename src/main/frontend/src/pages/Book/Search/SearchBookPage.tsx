@@ -1,4 +1,8 @@
 import { message } from "@/app/messages/message";
+import {
+  assertResultDataSuccess,
+  getApiErrorMessage,
+} from "@/app/api/resultData";
 import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { FormEvent, useEffect, useState } from "react";
 import api from "../../../app/api/axios";
@@ -68,15 +72,7 @@ const SearchBookPage = () => {
       `/book/search?query=${encodeURIComponent(keyword)}&start=${start}`,
     );
 
-    if (response.data.code !== 200) {
-      await sweetError(
-        message("frontend.alert.searchFailedTitle"),
-        message("frontend.book.search.failed"),
-      );
-      return null;
-    }
-
-    return (response.data.data ?? []) as NaverApiResultType[];
+    return (assertResultDataSuccess(response.data).data ?? []) as NaverApiResultType[];
   };
 
   const saveSearchCache = (
@@ -129,7 +125,7 @@ const SearchBookPage = () => {
       console.error("도서 검색 중 오류 발생: ", error);
       await sweetError(
         message("frontend.alert.searchFailedTitle"),
-        message("frontend.book.search.failed"),
+        getApiErrorMessage(error, message("frontend.book.search.failed")),
       );
     } finally {
       setIsSearching(false);
@@ -169,7 +165,7 @@ const SearchBookPage = () => {
       console.error("도서 검색 결과 추가 조회 중 오류 발생: ", error);
       await sweetError(
         message("frontend.alert.searchFailedTitle"),
-        message("frontend.book.search.failed"),
+        getApiErrorMessage(error, message("frontend.book.search.failed")),
       );
     } finally {
       setIsLoadingMore(false);

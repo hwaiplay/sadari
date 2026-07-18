@@ -13,8 +13,7 @@ export const useBookRatingAverageByIsbn = (
   return useQuery({
     queryKey: ["bookRatingAverage", isbn],
     queryFn: async () => {
-      const res = await getBookRatingAverageByIsbnApi(isbn);
-      return res.data;
+      return await getBookRatingAverageByIsbnApi(isbn);
     },
     enabled: enabled && isbn.trim().length > 0,
   });

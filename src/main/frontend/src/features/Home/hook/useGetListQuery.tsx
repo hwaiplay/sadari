@@ -18,8 +18,7 @@ export const useGetListQuery = (params: GetListQueryParams) => {
     queryKey: ["list", params.bookKeyword, params.sortType],
     queryFn: async () => {
       try {
-        const res = await getListApi(params);
-        return res.data;
+        return await getListApi(params);
       } catch (error) {
         console.log("목록 조회 중 오류 발생: " + error);
         throw error;

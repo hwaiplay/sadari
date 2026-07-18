@@ -1,4 +1,5 @@
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
 import {
@@ -92,6 +93,21 @@ function PublicReportPage() {
 
   if (publicReportsQuery.isPending) {
     return <Loading title={message("frontend.common.loadingList")} />;
+  }
+
+  if (publicReportsQuery.isError) {
+    return (
+      <main className={styles.page}>
+        <Container className={styles.content}>
+          <p className={styles.empty}>
+            {getApiErrorMessage(
+              publicReportsQuery.error,
+              message("frontend.common.tryAgain"),
+            )}
+          </p>
+        </Container>
+      </main>
+    );
   }
 
   return (

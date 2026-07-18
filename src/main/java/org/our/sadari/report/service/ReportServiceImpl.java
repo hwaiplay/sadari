@@ -785,7 +785,7 @@ public class ReportServiceImpl implements ReportService {
         setDefaultPublicFlag(reportDto);
         sanitizeReport(reportDto, true);
 
-        ReportValidationResult validationResult = validateReport(reportDto);
+        ReportValidationResult validationResult = validateReport(reportDto, true);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
@@ -833,7 +833,7 @@ public class ReportServiceImpl implements ReportService {
         setDefaultPublicFlag(reportDto);
         sanitizeReport(reportDto, false);
 
-        ReportValidationResult validationResult = validateReport(reportDto);
+        ReportValidationResult validationResult = validateReport(reportDto, true);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
@@ -871,14 +871,16 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setReportStat(StringUtil.normalizePlainText(reportDto.getReportStat()));
         reportDto.setReportEndt(LocalDate.now().toString()); // 빠른 완료/중단 처리에서는 사용자가 저장한 시점을 실제 독서 종료일로 기록한다.
 
-        ReportValidationResult validationResult = validateReport(reportDto);
+        ReportValidationResult validationResult = validateReport(reportDto, false);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
         // 사용자 번호를 WHERE 조건에 함께 사용해 다른 사용자의 독후감은 수정되지 않도록 막는다.
-        if (reportMapper.uptReportStatusGrade(reportDto) == 0) {
+        int result = reportMapper.uptReportStatusGrade(reportDto);
+
+        if (result == 0) {
             // 수정 실패를 의미하는 공통 응답 메시지: "수정에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
@@ -940,9 +942,10 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author Seunghyeon.Kang
      * @param reportDto 검증할 독후감 정보
+     * @param isFullScan 독후감 내용을 모두 유효성 검사 할 것인지를 판단
      * @return 검증 실패 결과, 통과하면 null
      */
-    private ReportValidationResult validateReport(ReportDto reportDto) {
+    private ReportValidationResult validateReport(ReportDto reportDto, boolean isFullScan) {
         List<String> missingFields = new ArrayList<>();
 
         // 독서 상태는 필수값이며 READ_STAT 공통코드에 등록된 값만 저장한다.
@@ -950,58 +953,60 @@ public class ReportServiceImpl implements ReportService {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_STATUS_KEY));
         }
 
-        // 시작일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
-        if (StringUtil.isEmpty(reportDto.getReportStdt())) {
-            missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
-        }
-
         // 종료일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
         if (StringUtil.isEmpty(reportDto.getReportEndt())) {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_END_DATE_KEY));
         }
 
-        // 완료가 아닌 독서 상태에서는 평점을 사용하지 않으므로 저장값을 0점으로 보정해 저장값을 숫자로 유지한다.
+        // 도서 평점의 저장값이 없으면 저장값을 0점으로 보정해 저장값을 숫자로 유지한다.
         if (StringUtil.isEmpty(reportDto.getReportGrde())) {
             reportDto.setReportGrde("0");
         }
 
-        // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
-        if (!isValidReportGrade(reportDto.getReportGrde())) {
-            missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
-        }
+        //등록 수정화면에서 행해지는 등록 및 수정은 모든 값을 입력받아야한다.
+        if(isFullScan) {
+            // 시작일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
+            if (StringUtil.isEmpty(reportDto.getReportStdt())) {
+                missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
+            }
 
-        // 책장 색상은 필수값이며 BOOK_COLR 공통코드에 등록된 값만 저장한다.
-        if (StringUtil.isEmpty(reportDto.getReportColr()) || !codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReportColr())) {
-            missingFields.add(MessageUtils.getMessage(REPORT_FIELD_COLOR_KEY));
-        }
+            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
+            if (!isValidReportGrade(reportDto.getReportGrde())) {
+                missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
+            }
 
-        // 독후감 본문이 비어 있으면 저장 대상 내용이 없으므로 필수값 누락으로 처리한다.
-        if (StringUtil.isEmpty(reportDto.getReportCntn())) {
-            missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
-        }
+            // 책장 색상은 필수값이며 BOOK_COLR 공통코드에 등록된 값만 저장한다.
+            if (StringUtil.isEmpty(reportDto.getReportColr()) || !codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReportColr())) {
+                missingFields.add(MessageUtils.getMessage(REPORT_FIELD_COLOR_KEY));
+            }
 
-        // 필수값 누락이 하나라도 있으면 누락 항목 목록을 메시지 인자로 반환한다.
-        if (!missingFields.isEmpty()) {
-            // 검증 실패 사유를 ResultData로 감싸 Controller까지 전달한다.
-            return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
-        }
+            // 독후감 본문이 비어 있으면 저장 대상 내용이 없으므로 필수값 누락으로 처리한다.
+            if (StringUtil.isEmpty(reportDto.getReportCntn())) {
+                missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
+            }
 
-        // 시작일이 종료일보다 늦은 데이터는 프론트 조작 여부와 관계없이 저장하지 않는다.
-        if (!DateUtil.validateReportDateRange(reportDto.getReportStdt(), reportDto.getReportEndt())) {
-            // 사용자에게 프론트와 같은 날짜 범위 오류 메시지를 반환한다.
-            return new ReportValidationResult(ResultEnum.COMMON_REPORT_DATE_RANGE_INVALID);
-        }
+            // 필수값 누락이 하나라도 있으면 누락 항목 목록을 메시지 인자로 반환한다.
+            if (!missingFields.isEmpty()) {
+                // 검증 실패 사유를 ResultData로 감싸 Controller까지 전달한다.
+                return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
+            }
+            // 시작일이 종료일보다 늦은 데이터는 프론트 조작 여부와 관계없이 저장하지 않는다.
+            if (!DateUtil.validateReportDateRange(reportDto.getReportStdt(), reportDto.getReportEndt())) {
+                // 사용자에게 프론트와 같은 날짜 범위 오류 메시지를 반환한다.
+                return new ReportValidationResult(ResultEnum.COMMON_REPORT_DATE_RANGE_INVALID);
+            }
 
-        // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
-        if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
-            // 최대 허용 byte 수를 메시지 인자로 함께 반환한다.
-            return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
-        }
+            // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
+            if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
+                // 최대 허용 byte 수를 메시지 인자로 함께 반환한다.
+                return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
+            }
 
-        // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
-        if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
-            // 요청값이 업무 규칙에 맞지 않으면 공통 잘못된 요청 응답으로 반환한다.
-            return new ReportValidationResult(ResultEnum.COMMON_INVALID_REQUEST);
+            // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
+            if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
+                // 요청값이 업무 규칙에 맞지 않으면 공통 잘못된 요청 응답으로 반환한다.
+                return new ReportValidationResult(ResultEnum.COMMON_INVALID_REQUEST);
+            }
         }
 
         return null;

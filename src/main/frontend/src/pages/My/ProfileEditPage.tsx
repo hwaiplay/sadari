@@ -1,4 +1,5 @@
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetConfirm, sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   formatDateValue,
@@ -192,7 +193,7 @@ function ProfileEditPage() {
     getMyProfileApi()
       .then((response) => {
         if (!ignore) {
-          syncProfileState(response.data?.data as UserProfile);
+          syncProfileState(response.data as UserProfile);
         }
       })
       .finally(() => {
@@ -203,7 +204,7 @@ function ProfileEditPage() {
 
     getMonthlyReadingSummaryApi().then((response) => {
       if (!ignore) {
-        setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+        setMonthlySummary(response.data as MonthlyReadingSummary);
       }
     });
 
@@ -410,16 +411,16 @@ function ProfileEditPage() {
       });
 
       const response = await getMonthlyReadingSummaryApi();
-      setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+      setMonthlySummary(response.data as MonthlyReadingSummary);
       await closeProfileModal("quick");
       await sweetSuccess(
         message("frontend.alert.saveSuccessTitle"),
         message("frontend.report.saved"),
       );
-    } catch {
+    } catch (error) {
       void sweetError(
         message("frontend.alert.updateFailedTitle"),
-        message("frontend.common.tryAgain"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
       setIsQuickSaving(false);
@@ -846,16 +847,16 @@ function ProfileEditPage() {
         monthGoalCnt: nextMonthGoalCnt,
         yearGoalCnt: nextYearGoalCnt,
       });
-      setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+      setMonthlySummary(response.data as MonthlyReadingSummary);
       await closeProfileModal("goal");
       await sweetSuccess(
         message("frontend.profile.goal.savedTitle"),
         message("frontend.profile.goal.saved"),
       );
-    } catch {
+    } catch (error) {
       void sweetError(
         message("frontend.alert.updateFailedTitle"),
-        message("frontend.common.tryAgain"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
       setIsGoalSaving(false);
@@ -1112,7 +1113,7 @@ function ProfileEditPage() {
         profileImage,
         backgroundImage,
       });
-      const nextProfile = response.data?.data as UserProfile;
+      const nextProfile = response.data as UserProfile;
       syncProfileState(nextProfile);
       notifyUserProfileUpdated(nextProfile);
       setIsEditMode(false);
@@ -1120,10 +1121,10 @@ function ProfileEditPage() {
         message("frontend.profile.savedTitle"),
         message("frontend.profile.saved"),
       );
-    } catch {
+    } catch (error) {
       void sweetError(
         message("frontend.alert.updateFailedTitle"),
-        message("frontend.common.tryAgain"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
       setIsSaving(false);

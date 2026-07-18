@@ -1,4 +1,5 @@
 import api from "../../../app/api/axios";
+import { assertResultDataSuccess } from "../../../app/api/resultData";
 
 
 /**
@@ -7,7 +8,8 @@ import api from "../../../app/api/axios";
  * @return ?몄쬆 ?곹깭 ?뺤씤 API ?묐떟
  */
 export const checkAuthApi = async () => {
-  return api.get("/oauth/tokenCheck");
+  const res = await api.get("/oauth/tokenCheck");
+  return assertResultDataSuccess(res.data);
 };
 
 // refreshToken 湲곕컲 accessToken ?щ컻湲?API
@@ -17,9 +19,11 @@ export const checkAuthApi = async () => {
  * @return ?좏겙 ?щ컻湲?API ?묐떟
  */
 export const refreshTokenApi = async () => {
-  return api.post("/oauth/refresh");
+  const res = await api.post("/oauth/refresh");
+  return assertResultDataSuccess(res.data);
 };
 
 export const logoutApi = async () => {
-  return api.post("/oauth/logout");
+  const res = await api.post("/oauth/logout");
+  return assertResultDataSuccess(res.data);
 };

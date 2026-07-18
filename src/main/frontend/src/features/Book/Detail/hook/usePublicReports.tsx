@@ -4,6 +4,9 @@
  * @author Hanwon.Jang
  */
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   getPublicReportsByIsbnApi,
   setPublicReportLikeApi,
@@ -13,8 +16,7 @@ export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
   return useQuery({
     queryKey: ["publicReports", "isbn", isbn],
     queryFn: async () => {
-      const res = await getPublicReportsByIsbnApi(isbn);
-      return res.data;
+      return await getPublicReportsByIsbnApi(isbn);
     },
     enabled: enabled && isbn.trim().length > 0,
   });
@@ -28,6 +30,12 @@ export const usePublicReportLikeMutation = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: ["publicReports"] });
       void queryClient.invalidateQueries({ queryKey: ["detail"] });
+    },
+    onError: (error: unknown) => {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
     },
   });
 };

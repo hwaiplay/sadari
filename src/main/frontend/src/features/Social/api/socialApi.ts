@@ -1,4 +1,5 @@
 import api from "@/app/api/axios";
+import { assertResultDataSuccess } from "@/app/api/resultData";
 import type {
   MonthlyReadingSummary,
   UserProfile,
@@ -12,8 +13,9 @@ import type {
  * @param userNumb 조회할 사용자 번호
  * @return 공개 프로필 조회 API 응답
  */
-export const getSocialProfileApi = (userNumb: number) => {
-  return api.get<{ data: UserProfile }>(`/social/profile/${userNumb}`);
+export const getSocialProfileApi = async (userNumb: number) => {
+  const res = await api.get<{ data: UserProfile }>(`/social/profile/${userNumb}`);
+  return assertResultDataSuccess(res.data);
 };
 
 /**
@@ -24,8 +26,9 @@ export const getSocialProfileApi = (userNumb: number) => {
  * @param userNumb 조회할 사용자 번호
  * @return 독서 활동 요약 조회 API 응답
  */
-export const getSocialReadingSummaryApi = (userNumb: number) => {
-  return api.get<{ data: MonthlyReadingSummary }>(
+export const getSocialReadingSummaryApi = async (userNumb: number) => {
+  const res = await api.get<{ data: MonthlyReadingSummary }>(
     `/social/profile/${userNumb}/reading-summary`,
   );
+  return assertResultDataSuccess(res.data);
 };

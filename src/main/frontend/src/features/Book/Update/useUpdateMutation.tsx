@@ -5,15 +5,11 @@
  */
 
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { uptReportApi } from "../api/bookApi";
-import { AxiosError } from "axios";
-
-type ErrorResponse = {
-  message?: string;
-};
 
 export const useUpdateMutation = () => {
   const navigate = useNavigate();
@@ -30,10 +26,10 @@ export const useUpdateMutation = () => {
         navigate(`/book/detail/${data.data}`, { replace: true });
       });
     },
-    onError: (error: AxiosError<ErrorResponse>) => {
+    onError: (error: unknown) => {
       void sweetError(
         message("frontend.alert.updateFailedTitle"), // frontend.alert.updateFailedTitle = ?섏젙???ㅽ뙣?덉뒿?덈떎
-        error.response?.data?.message ?? message("frontend.report.updateFailed"),
+        getApiErrorMessage(error, message("frontend.report.updateFailed")),
       );
     },
   });

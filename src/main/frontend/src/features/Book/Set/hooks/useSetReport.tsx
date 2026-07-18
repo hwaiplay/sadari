@@ -5,15 +5,11 @@
  */
 
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
 import { setReportApi } from "../../api/bookApi";
 import { useNavigate } from "react-router-dom";
-import { AxiosError } from "axios";
-
-type ErrorResponse = {
-  message?: string;
-};
 
 export const useSetReport = () => {
   const navigate = useNavigate();
@@ -28,10 +24,10 @@ export const useSetReport = () => {
         navigate(`/book/detail/${data.data}`);
       });
     },
-    onError: (error: AxiosError<ErrorResponse>) => {
+    onError: (error: unknown) => {
       void sweetError(
         message("frontend.alert.createFailedTitle"), // frontend.alert.createFailedTitle = ?깅줉???ㅽ뙣?덉뒿?덈떎
-        error.response?.data?.message ?? message("frontend.report.createFailed"),
+        getApiErrorMessage(error, message("frontend.report.createFailed")),
       );
     },
   });

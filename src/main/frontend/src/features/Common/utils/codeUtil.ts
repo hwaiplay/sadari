@@ -5,6 +5,7 @@
  */
 import { useQuery } from "@tanstack/react-query";
 import api from "@/app/api/axios";
+import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type CodeDetail = {
   commCode: string;
@@ -25,7 +26,7 @@ export type CodeDetail = {
 
 export const getCodeListApi = async (commCode: string): Promise<CodeDetail[]> => {
   const res = await api.get(`/code/${commCode}`);
-  return res.data.data ?? [];
+  return assertResultDataSuccess(res.data).data ?? [];
 };
 
 export const useCodeList = (commCode: string) => {
