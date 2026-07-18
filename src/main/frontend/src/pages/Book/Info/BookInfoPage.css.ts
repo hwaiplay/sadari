@@ -22,7 +22,7 @@ export const page = style({
       backgroundRepeat: "no-repeat",
       backgroundPosition: "center top",
       backgroundSize: "cover",
-      filter: "blur(26px)",
+      filter: "blur(16px)",
       transform: "scale(1.12)",
       opacity: 0.86,
       pointerEvents: "none",
