@@ -49,7 +49,7 @@ export const page = style({
 export const form = style({
   position: "relative",
   zIndex: 1,
-  maxWidth: "420px",
+  maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
   padding: "28px 20px 28px",

@@ -28,8 +28,7 @@ export const navigation = style({
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    width: "100%",
-    maxWidth: "310px",
+    width: "min(100%, clamp(320px, 56vw, 520px))",
     margin: "0 auto",
 });
 
