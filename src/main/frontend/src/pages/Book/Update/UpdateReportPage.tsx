@@ -18,9 +18,9 @@ import * as styles from "../Set/SetReportPage.css";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
 import ColorCodeField from "@/features/Book/Set/components/form/colorCodeField/ColorCodeField";
 import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
+import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
 import {
   MAX_REPORT_CONTENT_BYTES,
-  REPORT_GRADE_OPTIONS,
   REPORT_STATUS_DONE,
   REPORT_STATUS_READ,
 } from "@/features/Book/constants/reportForm";
@@ -232,31 +232,7 @@ const UpdateReportPage = () => {
           </FormField>
 
           <FormField title={message("frontend.report.field.grade")}>
-            <div
-              className={styles.starGroup}
-              aria-label={message("frontend.report.gradeAria")}
-            >
-              {REPORT_GRADE_OPTIONS.map((value) => (
-                <label
-                  key={value}
-                  className={`${styles.starLabel} ${
-                    value <= grade ? styles.starActive : ""
-                  }`}
-                  htmlFor={`grade${value}`}
-                >
-                  {"\u2605"}
-                  <input
-                    className={styles.hiddenInput}
-                    type="radio"
-                    name="grade"
-                    id={`grade${value}`}
-                    value={value}
-                    checked={grade === value}
-                    onChange={() => setGrade(value)}
-                  />
-                </label>
-              ))}
-            </div>
+            <RatingField value={grade} onChange={setGrade} />
           </FormField>
 
           <FormField title={message("frontend.report.field.color")}>

@@ -12,8 +12,11 @@ export const profileShell = style({
   width: "100%",
   maxWidth: "520px",
   minHeight: "calc(100vh - 110px)",
-  margin: "0 auto",
+  margin: "12px auto 0",
   backgroundColor: "#ffffff",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
 });
 
 export const cover = style({
@@ -102,6 +105,7 @@ export const profileBody = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
+  padding: "0 14px",
 });
 
 export const profileHeaderRow = style({

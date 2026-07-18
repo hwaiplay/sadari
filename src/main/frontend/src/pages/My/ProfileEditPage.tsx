@@ -10,6 +10,7 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import { uptReportStatusGradeApi } from "@/features/Book/api/bookApi";
+import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
 import {
   REPORT_GRADE_OPTIONS,
   REPORT_STATUS_DONE,
@@ -1269,6 +1270,7 @@ function ProfileEditPage() {
               )}
             </div>
           </div>
+        </section>
 
           {monthlySummary && (
             <>
@@ -1363,7 +1365,6 @@ function ProfileEditPage() {
               </button>
             </>
           )}
-        </section>
       </form>
 
       {/* Render dialogs under body so page scroll/transition transforms cannot move fixed overlays. */}
@@ -1464,23 +1465,12 @@ function ProfileEditPage() {
                   {message("frontend.report.status.stopped")}
                 </button>
               </div>
-              <div className={styles.quickStarGroup} aria-label={message("frontend.report.gradeAria")}>
-                {REPORT_GRADE_OPTIONS.map((grade) => (
-                  <button
-                    className={
-                      grade <= quickGrade
-                        ? styles.quickStarButtonActive
-                        : styles.quickStarButton
-                    }
-                    key={grade}
-                    type="button"
-                    disabled={quickStatus !== REPORT_STATUS_DONE}
-                    aria-label={message("frontend.report.gradeValue", [grade])}
-                    onClick={() => setQuickGrade(grade)}
-                  >
-                    ★
-                  </button>
-                ))}
+              <div className={styles.quickStarGroup}>
+                <RatingField
+                  value={quickGrade}
+                  onChange={setQuickGrade}
+                  disabled={quickStatus !== REPORT_STATUS_DONE}
+                />
               </div>
             </div>
 
