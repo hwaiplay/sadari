@@ -13,8 +13,9 @@ export const navContainer = style({
     display: "flex",
     alignItems: "center",
     background: '#fff',
-    padding: '0 50px',
-    boxShadow: "rgba(100, 100, 111, 0.2) 1px 9px 29px 0px"
+    padding: '0 clamp(16px, 8vw, 50px)',
+    boxShadow: "rgba(100, 100, 111, 0.2) 1px 9px 29px 0px",
+    boxSizing: "border-box",
 });
 
 export const whiteBg = style({
@@ -28,6 +29,8 @@ export const navigation = style({
     justifyContent: "space-between",
     alignItems: "center",
     width: "100%",
+    maxWidth: "310px",
+    margin: "0 auto",
 });
 
 export const navLink = style({

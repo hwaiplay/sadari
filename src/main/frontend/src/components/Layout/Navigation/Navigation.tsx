@@ -8,7 +8,6 @@ import {
 import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Container } from "../Container/Container";
 import * as styles from "./Navigation.css";
 
 type NavigationProps = {
@@ -49,7 +48,7 @@ function Navigation({ isMain }: NavigationProps) {
   }, []);
 
   return (
-    <Container className={clsx(styles.navContainer, isMain && styles.whiteBg)}>
+    <div className={clsx(styles.navContainer, isMain && styles.whiteBg)}>
       <nav className={styles.navigation}>
         <LinkButton
           link="/home"
@@ -78,7 +77,7 @@ function Navigation({ isMain }: NavigationProps) {
           />
         </button>
       </nav>
-    </Container>
+    </div>
   );
 }
 
