@@ -80,12 +80,10 @@ function DetailPage() {
     "--book-bg-image": `url("${bookData.bookCvim}")`,
   } as CSSProperties;
   const isReadingStatus = bookData.reportStat === REPORT_STATUS_READ;
-  const startDateLabel = isReadingStatus
-    ? message("frontend.report.field.targetStartDate")
-    : message("frontend.report.field.startDate");
-  const endDateLabel = isReadingStatus
-    ? message("frontend.report.field.targetEndDate")
-    : message("frontend.report.field.endDate");
+  const periodTitle = isReadingStatus ? "목표 독서기간" : "독서 기간";
+  const periodText = [bookData.reportStdt, bookData.reportEndt]
+    .filter(Boolean)
+    .join(" ~ ");
 
   // 같은 상세 API에서 받은 책 정보를 사용하므로 URL 이동 없이 화면 표시 모드만 변경합니다.
   if (showBookInfo) {
@@ -256,25 +254,10 @@ function DetailPage() {
 
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
-              {message("frontend.report.field.period")}
+              {periodTitle}
             </h2>
             <div className={styles.dateStack}>
-              <div className={styles.dateRow}>
-                <span className={styles.dateLabel}>
-                  {startDateLabel}
-                </span>
-                <span className={styles.dateValue}>
-                  {bookData.reportStdt || "-"}
-                </span>
-              </div>
-              <div className={styles.dateRow}>
-                <span className={styles.dateLabel}>
-                  {endDateLabel}
-                </span>
-                <span className={styles.dateValue}>
-                  {bookData.reportEndt || "-"}
-                </span>
-              </div>
+              <span className={styles.dateValue}>{periodText || "-"}</span>
             </div>
           </section>
 

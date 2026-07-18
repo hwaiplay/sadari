@@ -4,6 +4,7 @@ import { backpageBtn, header, headerHidden, headerShell } from "./Header.css";
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
+import HeaderMenuDrawer from "./HeaderMenuDrawer";
 
 const HEADER_SCROLL_DELTA = 4;
 
@@ -100,6 +101,7 @@ function SubPageHeader() {
                 width={100}
             />
           </Link>
+          <HeaderMenuDrawer />
         </Container>
       </header>
   );

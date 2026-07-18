@@ -76,38 +76,7 @@ const UpdateReportPage = () => {
   }, [bookData]);
 
   const isReadingStatus = status === REPORT_STATUS_READ;
-  const startDateLabel = isReadingStatus
-    ? message("frontend.report.field.targetStartDate")
-    : message("frontend.report.field.startDate");
-  const endDateLabel = isReadingStatus
-    ? message("frontend.report.field.targetEndDate")
-    : message("frontend.report.field.endDate");
-
-  /**
-   * 사용자가 달력에서 날짜를 선택하는 즉시 시작일과 종료일의 역전 여부를 검증합니다.
-   *
-   * @author Hanwon.Jang
-   * @param nextStartDate 선택 또는 유지될 시작일
-   * @param nextEndDate 선택 또는 유지될 종료일
-   * @return 날짜 범위가 정상인 경우 true, 시작일이 종료일보다 늦은 경우 false
-   */
-  const validateDateRangeOnSelect = (nextStartDate: string, nextEndDate: string) => {
-    // 한쪽 날짜가 아직 선택되지 않은 상태에서는 최종 저장 검증에서 필수값을 판단합니다.
-    if (!nextStartDate || !nextEndDate) {
-      return true;
-    }
-
-    // 시작일이 종료일과 같거나 앞선 경우 정상 범위이므로 선택 값을 반영합니다.
-    if (new Date(nextStartDate) <= new Date(nextEndDate)) {
-      return true;
-    }
-
-    void sweetWarning(
-      message("frontend.alert.inputRequired"),
-      message("frontend.validation.invalidDateRange"),
-    );
-    return false;
-  };
+  const periodTitle = isReadingStatus ? "목표 독서 기간" : "독서 기간";
 
   /**
    * 독서 상태 변경을 반영하고 읽는 중에서 완료 상태로 바뀌는 경우 종료일 보정 여부를 확인합니다.
@@ -245,27 +214,19 @@ const UpdateReportPage = () => {
             </div>
           </FormField>
 
-          <FormField title={message("frontend.report.field.period")}>
+          <FormField title={periodTitle}>
             <div className={styles.fieldStack}>
               <CalendarDatePicker
                 name="startDate"
-                label={startDateLabel}
+                endName="endDate"
                 value={startDate}
+                endValue={endDate}
                 placeholder={message("frontend.report.placeholder.startDate")}
-                onChange={setStartDate}
-                onBeforeChange={(nextDate) =>
-                  validateDateRangeOnSelect(nextDate, endDate)
-                }
-              />
-              <CalendarDatePicker
-                name="endDate"
-                label={endDateLabel}
-                value={endDate}
-                placeholder={message("frontend.report.placeholder.endDate")}
-                onChange={setEndDate}
-                onBeforeChange={(nextDate) =>
-                  validateDateRangeOnSelect(startDate, nextDate)
-                }
+                endPlaceholder={message("frontend.report.placeholder.endDate")}
+                onRangeChange={(nextStartDate, nextEndDate) => {
+                  setStartDate(nextStartDate);
+                  setEndDate(nextEndDate);
+                }}
               />
             </div>
           </FormField>

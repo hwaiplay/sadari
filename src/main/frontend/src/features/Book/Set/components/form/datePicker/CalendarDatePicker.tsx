@@ -1,13 +1,13 @@
 import { message } from "@/app/messages/message";
 import { formatDateValue, parseDateValue } from "@/app/utils/dateUtil";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import * as styles from "./CalendarDatePicker.css";
 
 type MonthMoveDirection = "prev" | "next";
 
 type CalendarDatePickerProps = {
   name: string;
-  label: string;
+  label?: string;
   // 외부 폼 state에서 날짜 값을 직접 제어해야 할 때 사용하는 선택 날짜입니다.
   value?: string;
   defaultValue?: string;
@@ -16,6 +16,10 @@ type CalendarDatePickerProps = {
   onChange?: (value: string) => void;
   // 시작일/종료일 역전처럼 선택 즉시 막아야 하는 검증을 부모 폼에서 실행합니다.
   onBeforeChange?: (value: string) => boolean;
+  endName?: string;
+  endValue?: string;
+  endPlaceholder?: string;
+  onRangeChange?: (startValue: string, endValue: string) => void;
 };
 
 const WEEK_DAY_KEYS = [
@@ -46,18 +50,51 @@ function CalendarDatePicker({
   placeholder = message("frontend.calendar.dateSelect"),
   onChange,
   onBeforeChange,
+  endName,
+  endValue = "",
+  endPlaceholder = message("frontend.report.placeholder.endDate"),
+  onRangeChange,
 }: CalendarDatePickerProps) {
+  const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(defaultValue);
   const [viewDate, setViewDate] = useState(() => parseDateValue(defaultValue));
   const [monthMoveDirection, setMonthMoveDirection] =
     useState<MonthMoveDirection>("next");
   const currentDateValue = value ?? selectedDate;
+  const isRangePicker = Boolean(endName);
+  const currentEndDateValue = endValue;
 
   useEffect(() => {
     setSelectedDate(defaultValue);
     setViewDate(parseDateValue(defaultValue));
   }, [defaultValue]);
+
+  useEffect(() => {
+    if (!isOpen) {
+      return;
+    }
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target;
+
+      if (
+        wrapperRef.current &&
+        target instanceof Node &&
+        wrapperRef.current.contains(target)
+      ) {
+        return;
+      }
+
+      setIsOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handlePointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [isOpen]);
 
   useEffect(() => {
     // 외부 state로 제어하는 날짜가 바뀌면 달력이 해당 월을 바라보도록 동기화합니다.
@@ -104,6 +141,23 @@ function CalendarDatePicker({
   const selectDay = (day: number) => {
     const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
+    if (isRangePicker) {
+      if (!currentDateValue || currentEndDateValue) {
+        setSelectedDate(nextDate);
+        onChange?.(nextDate);
+        onRangeChange?.(nextDate, "");
+        return;
+      }
+
+      if (new Date(nextDate) < new Date(currentDateValue)) {
+        onRangeChange?.(nextDate, currentDateValue);
+      } else {
+        onRangeChange?.(currentDateValue, nextDate);
+      }
+
+      return;
+    }
+
     if (onBeforeChange && !onBeforeChange(nextDate)) {
       return;
     }
@@ -114,11 +168,19 @@ function CalendarDatePicker({
   };
 
   return (
-    <div className={styles.wrapper}>
-      <label className={styles.label} htmlFor={`${name}Trigger`}>
-        {label}
-      </label>
+    <div
+      className={`${styles.wrapper} ${label ? "" : styles.wrapperNoLabel}`}
+      ref={wrapperRef}
+    >
+      {label && (
+        <label className={styles.label} htmlFor={`${name}Trigger`}>
+          {label}
+        </label>
+      )}
       <input type="hidden" name={name} value={currentDateValue} />
+      {endName && (
+        <input type="hidden" name={endName} value={currentEndDateValue} />
+      )}
       <button
         className={styles.trigger}
         id={`${name}Trigger`}
@@ -126,8 +188,23 @@ function CalendarDatePicker({
         aria-expanded={isOpen}
         onClick={() => setIsOpen((prev) => !prev)}
       >
-        <span className={currentDateValue ? "" : styles.placeholder}>
-          {currentDateValue ? currentDateValue.replaceAll("-", ".") : placeholder}
+        <span
+          className={
+            currentDateValue || currentEndDateValue ? "" : styles.placeholder
+          }
+        >
+          {isRangePicker
+            ? [
+                currentDateValue
+                  ? currentDateValue.replaceAll("-", ".")
+                  : placeholder,
+                currentEndDateValue
+                  ? currentEndDateValue.replaceAll("-", ".")
+                  : endPlaceholder,
+              ].join(" ~ ")
+            : currentDateValue
+              ? currentDateValue.replaceAll("-", ".")
+              : placeholder}
         </span>
         <svg
           className={styles.calendarIcon}
@@ -206,10 +283,28 @@ function CalendarDatePicker({
               }
 
               const dateValue = formatDateValue(new Date(viewYear, viewMonth, day));
+              const isRangeStart = isRangePicker && dateValue === currentDateValue;
+              const isRangeEnd = isRangePicker && dateValue === currentEndDateValue;
+              const isRangeSameDay = isRangeStart && isRangeEnd;
+              const isRangeInner =
+                isRangePicker &&
+                Boolean(currentDateValue) &&
+                Boolean(currentEndDateValue) &&
+                new Date(currentDateValue) < new Date(dateValue) &&
+                new Date(dateValue) < new Date(currentEndDateValue);
               const dayClassName = [
                 styles.dayButton,
                 dateValue === todayValue ? styles.today : "",
-                dateValue === currentDateValue ? styles.selected : "",
+                isRangeInner ? styles.rangeInner : "",
+                isRangeSameDay
+                  ? styles.rangeSameDay
+                  : isRangeStart
+                    ? styles.rangeStart
+                    : isRangeEnd
+                      ? styles.rangeEnd
+                  : dateValue === currentDateValue
+                    ? styles.selected
+                    : "",
               ]
                 .filter(Boolean)
                 .join(" ");
@@ -233,7 +328,9 @@ function CalendarDatePicker({
               type="button"
               onClick={() => setIsOpen(false)}
             >
-              {message("frontend.common.close")}
+              {isRangePicker
+                ? "완료"
+                : message("frontend.common.close")}
             </button>
           </div>
         </div>
