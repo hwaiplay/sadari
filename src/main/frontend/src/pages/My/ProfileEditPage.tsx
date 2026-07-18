@@ -1,7 +1,19 @@
 import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
-import { formatDashedDateToDot } from "@/app/utils/dateUtil";
+import {
+  formatDateValue,
+  formatDashedDateToDot,
+  getRemainDaysUntil,
+  getRemainPeriodRate,
+} from "@/app/utils/dateUtil";
+import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import { uptReportStatusGradeApi } from "@/features/Book/api/bookApi";
+import {
+  REPORT_GRADE_OPTIONS,
+  REPORT_STATUS_DONE,
+  REPORT_STATUS_STOP,
+} from "@/features/Book/constants/reportForm";
 import {
   getMyProfileApi,
   getMonthlyReadingSummaryApi,
@@ -14,6 +26,7 @@ import {
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import type { FormEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
@@ -22,8 +35,11 @@ const USER_NICK_MAX_LENGTH = 10;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const KOREAN_NICK_REGEX = /^[\uAC00-\uD7A3]+$/;
 type ReadingPeriod = "week" | "month" | "year";
+type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
+type ProfileModalType = "quick" | "goal" | "goalHelp";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
+const MODAL_CLOSE_DELAY_MS = 180;
 
 /**
  * 닉네임 입력값에서 한글이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
@@ -76,6 +92,27 @@ const getReadingEndDateText = (report: ReadingSummaryReport) => {
 };
 
 /**
+ * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환합니다.
+ * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환합니다.
+ *
+ * @author Hanwon.Jang
+ * @param report 목표 독서기간을 표시할 독후감 요약 정보
+ * @return 목표 독서기간 표시 문구
+ */
+const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
+  const periodText = [
+    formatDashedDateToDot(report.reportStdt),
+    formatDashedDateToDot(report.reportEndt),
+  ]
+    .filter(Boolean)
+    .join(" ~ ");
+
+  return periodText
+    ? message("frontend.profile.currentReading.targetPeriod", [periodText])
+    : "";
+};
+
+/**
  * 독후감 평점을 5개의 별 문자열로 변환합니다.
  * 완료 독후감 목록의 평점은 숫자 형태로 내려오므로 0점부터 5점 사이로 보정해 화면 표시가 깨지지 않게 합니다.
  *
@@ -106,8 +143,12 @@ function ProfileEditPage() {
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
+  const [quickReport, setQuickReport] = useState<ReadingSummaryReport | null>(null);
+  const [quickStatus, setQuickStatus] = useState<QuickReadingStatus>(REPORT_STATUS_DONE);
+  const [quickGrade, setQuickGrade] = useState(5);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
+  const [closingModal, setClosingModal] = useState<ProfileModalType | null>(null);
   const [weekGoalCnt, setWeekGoalCnt] = useState("");
   const [monthGoalCnt, setMonthGoalCnt] = useState("");
   const [yearGoalCnt, setYearGoalCnt] = useState("");
@@ -120,11 +161,13 @@ function ProfileEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
+  const [isQuickSaving, setIsQuickSaving] = useState(false);
   const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
     week: null,
     month: null,
     year: null,
   });
+  useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen);
 
   /**
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
@@ -282,6 +325,108 @@ function ProfileEditPage() {
   };
 
   /**
+   * 커스텀 모달을 닫을 때 fade-out 애니메이션이 끝난 뒤 실제 상태를 제거합니다.
+   * sweetAlert, 달력, selectBox 성격의 모달은 이 흐름을 사용하지 않고 각 컴포넌트의 기본 동작을 유지합니다.
+   *
+   * @author Hanwon.Jang
+   * @param modal 닫을 마이페이지 커스텀 모달 구분값
+   * @return fade-out 완료 Promise
+   */
+  const closeProfileModal = (modal: ProfileModalType) => {
+    setClosingModal(modal);
+
+    return new Promise<void>((resolve) => {
+      window.setTimeout(() => {
+        if (modal === "quick") {
+          setQuickReport(null);
+        }
+
+        if (modal === "goal") {
+          setIsGoalModalOpen(false);
+          setIsGoalHelpModalOpen(false);
+        }
+
+        if (modal === "goalHelp") {
+          setIsGoalHelpModalOpen(false);
+        }
+
+        setClosingModal((current) => (current === modal ? null : current));
+        resolve();
+      }, MODAL_CLOSE_DELAY_MS);
+    });
+  };
+
+  /**
+   * 현재 읽고 있는 책을 눌렀을 때 빠른 상태/별점 수정 모달을 엽니다.
+   * 아직 별점이 없는 독후감은 사용자가 바로 완료 처리할 수 있도록 기본값을 5점으로 보여줍니다.
+   *
+   * @author Hanwon.Jang
+   * @param report 선택한 현재 읽고 있는 책 정보
+   */
+  const handleCurrentReadingClick = (report: ReadingSummaryReport) => {
+    const reportGrade = Number(report.reportGrde);
+
+    setClosingModal(null);
+    setQuickReport(report);
+    setQuickStatus(REPORT_STATUS_DONE);
+    setQuickGrade(Number.isFinite(reportGrade) && reportGrade > 0 ? reportGrade : 5);
+  };
+
+  const handleQuickEditClick = () => {
+    if (!quickReport) {
+      return;
+    }
+
+    navigate(`/book/upt/${quickReport.reportNumb}`);
+  };
+
+  const handleQuickSaveClick = async () => {
+    if (!quickReport) {
+      return;
+    }
+
+    if (
+      quickStatus === REPORT_STATUS_DONE
+      && !(REPORT_GRADE_OPTIONS as readonly number[]).includes(quickGrade)
+    ) {
+      void sweetWarning(
+        message("frontend.alert.inputRequired"),
+        message("frontend.report.field.grade"),
+      );
+      return;
+    }
+
+    try {
+      setIsQuickSaving(true);
+      await uptReportStatusGradeApi({
+        reportNumb: quickReport.reportNumb,
+        data: {
+          reportStat: quickStatus,
+          reportGrde: quickStatus === REPORT_STATUS_DONE ? String(quickGrade) : "0",
+          reportEndt: quickStatus === REPORT_STATUS_DONE || quickStatus === REPORT_STATUS_STOP
+            ? formatDateValue(new Date())
+            : quickReport.reportEndt,
+        },
+      });
+
+      const response = await getMonthlyReadingSummaryApi();
+      setMonthlySummary(response.data?.data as MonthlyReadingSummary);
+      await closeProfileModal("quick");
+      await sweetSuccess(
+        message("frontend.alert.saveSuccessTitle"),
+        message("frontend.report.saved"),
+      );
+    } catch {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        message("frontend.common.tryAgain"),
+      );
+    } finally {
+      setIsQuickSaving(false);
+    }
+  };
+
+  /**
    * 목표 설정 모달을 열 때 현재 저장된 목표값을 입력값에 반영합니다.
    * 아직 목표가 없으면 빈 값으로 시작해 사용자가 직접 입력하도록 유도합니다.
    *
@@ -292,6 +437,7 @@ function ProfileEditPage() {
     setWeekGoalCnt(monthlySummary?.weekGoalCnt ? String(monthlySummary.weekGoalCnt) : "");
     setMonthGoalCnt(monthlySummary?.monthGoalCnt ? String(monthlySummary.monthGoalCnt) : "");
     setYearGoalCnt(monthlySummary?.yearGoalCnt ? String(monthlySummary.yearGoalCnt) : "");
+    setClosingModal(null);
     setIsGoalModalOpen(true);
   };
 
@@ -328,6 +474,83 @@ function ProfileEditPage() {
     }
 
     return "#f4a7ad";
+  };
+
+  /**
+   * 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링합니다.
+   * 전체 목표기간 대비 남은 비율을 색상 기준으로 사용해 기간이 가까워질수록 붉은 계열로 표시합니다.
+   *
+   * @author Hanwon.Jang
+   * @param reports 현재 읽고 있는 독후감 목록
+   * @return 현재 읽고 있는 책 섹션 JSX
+   */
+  const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+    if (reports.length === 0) {
+      return null;
+    }
+
+    return (
+      <section
+        className={styles.monthlySummary}
+        aria-label={message("frontend.profile.currentReading.title")}
+      >
+        <div className={styles.currentReadingSection}>
+          <h2 className={styles.currentReadingTitle}>
+            {message("frontend.profile.currentReading.title")}
+          </h2>
+          <div className={styles.currentReadingList}>
+            {reports.map((report) => {
+              const remainDays = getRemainDaysUntil(report.reportEndt);
+              const remainRate = getRemainPeriodRate(report.reportStdt, report.reportEndt);
+              const remainColor = getGoalProgressColor(remainRate);
+              const isExpired = remainDays <= 0;
+              const content = (
+                <>
+                  {report.bookCvim && (
+                    <img
+                      className={styles.readingSummaryCover}
+                      src={report.bookCvim}
+                      alt=""
+                    />
+                  )}
+                  <span className={styles.currentReadingText}>
+                    <strong className={styles.readingSummaryBookTitle}>
+                      {report.bookTitl || message("frontend.common.noBookInfo")}
+                    </strong>
+                    <span className={styles.currentReadingMeta}>
+                      <span className={styles.readingSummaryBookMeta}>
+                        {[report.bookAthr, formatDashedDateToDot(report.reportEndt)]
+                          .filter(Boolean)
+                          .join(" | ")}
+                      </span>
+                      <span
+                        className={styles.currentReadingRemain}
+                        style={{ color: remainColor }}
+                      >
+                        {isExpired
+                          ? message("frontend.profile.currentReading.expired")
+                          : message("frontend.profile.currentReading.remain", [remainDays])}
+                      </span>
+                    </span>
+                  </span>
+                </>
+              );
+
+              return (
+                <button
+                  className={styles.currentReadingButton}
+                  key={report.reportNumb}
+                  type="button"
+                  onClick={() => handleCurrentReadingClick(report)}
+                >
+                  {content}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
   };
 
   /**
@@ -624,7 +847,7 @@ function ProfileEditPage() {
         yearGoalCnt: nextYearGoalCnt,
       });
       setMonthlySummary(response.data?.data as MonthlyReadingSummary);
-      setIsGoalModalOpen(false);
+      await closeProfileModal("goal");
       await sweetSuccess(
         message("frontend.profile.goal.savedTitle"),
         message("frontend.profile.goal.saved"),
@@ -1048,6 +1271,7 @@ function ProfileEditPage() {
 
           {monthlySummary && (
             <>
+              {renderCurrentReadingReports(monthlySummary.currentReadingReports)}
               <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
                 <div className={styles.goalAchievementSummary}>
                   <p className={styles.goalAchievementTitle}>
@@ -1141,18 +1365,161 @@ function ProfileEditPage() {
         </section>
       </form>
 
-      {isGoalModalOpen && (
+      {/* Render dialogs under body so page scroll/transition transforms cannot move fixed overlays. */}
+      {quickReport && createPortal((
         <div
-          className={styles.goalModalOverlay}
+          className={`${styles.goalModalOverlay} ${
+            closingModal === "quick" ? styles.goalModalOverlayClosing : ""
+          }`}
           role="presentation"
           onMouseDown={(event) => {
             if (event.currentTarget === event.target) {
-              setIsGoalModalOpen(false);
+              void closeProfileModal("quick");
             }
           }}
         >
           <section
-            className={styles.goalModal}
+            className={`${styles.goalModal} ${
+              closingModal === "quick" ? styles.goalModalClosing : ""
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quick-reading-title"
+          >
+            <div className={styles.goalModalHeader}>
+              <div>
+                <h2 className={styles.goalModalTitle} id="quick-reading-title">
+                  {message("frontend.profile.currentReading.quickTitle")}
+                </h2>
+                <p className={styles.quickReadingHelp}>
+                  {message("frontend.profile.currentReading.quickHelp")}
+                </p>
+              </div>
+              <button
+                className={styles.goalModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={() => void closeProfileModal("quick")}
+              >
+                ×
+              </button>
+            </div>
+
+            <div className={styles.quickReadingBody}>
+              <div className={styles.quickReadingBookInfo}>
+                {quickReport.bookCvim && (
+                  <img
+                    className={styles.quickReadingCover}
+                    src={quickReport.bookCvim}
+                    alt=""
+                  />
+                )}
+                {!quickReport.bookCvim && (
+                  <span className={styles.quickReadingCoverPlaceholder} aria-hidden="true" />
+                )}
+                <div className={styles.quickReadingBookText}>
+                  <p className={styles.quickReadingBookTitle}>
+                    {quickReport.bookTitl || message("frontend.common.noBookInfo")}
+                  </p>
+                  {getTargetReadingPeriodText(quickReport) && (
+                    <p className={styles.quickReadingBookMeta}>
+                      {getTargetReadingPeriodText(quickReport)}
+                    </p>
+                  )}
+                </div>
+                <button
+                  className={styles.quickReadingEditButton}
+                  type="button"
+                  aria-label={message("frontend.profile.currentReading.editFull")}
+                  onClick={handleQuickEditClick}
+                >
+                  <span>{message("frontend.profile.currentReading.editFull")}</span>
+                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <path d="M5.25 2.92L9.33 7L5.25 11.08" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </button>
+              </div>
+              <div className={styles.quickStatusGroup}>
+                <button
+                  className={
+                    quickStatus === REPORT_STATUS_DONE
+                      ? styles.quickStatusOptionActive
+                      : styles.quickStatusOption
+                  }
+                  type="button"
+                  onClick={() => setQuickStatus(REPORT_STATUS_DONE)}
+                >
+                  {message("frontend.report.status.done")}
+                </button>
+                <button
+                  className={
+                    quickStatus === REPORT_STATUS_STOP
+                      ? styles.quickStatusOptionActive
+                      : styles.quickStatusOption
+                  }
+                  type="button"
+                  onClick={() => setQuickStatus(REPORT_STATUS_STOP)}
+                >
+                  {message("frontend.report.status.stopped")}
+                </button>
+              </div>
+              <div className={styles.quickStarGroup} aria-label={message("frontend.report.gradeAria")}>
+                {REPORT_GRADE_OPTIONS.map((grade) => (
+                  <button
+                    className={
+                      grade <= quickGrade
+                        ? styles.quickStarButtonActive
+                        : styles.quickStarButton
+                    }
+                    key={grade}
+                    type="button"
+                    disabled={quickStatus !== REPORT_STATUS_DONE}
+                    aria-label={message("frontend.report.gradeValue", [grade])}
+                    onClick={() => setQuickGrade(grade)}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className={styles.goalModalActions}>
+              <button
+                className={styles.goalModalCancel}
+                type="button"
+                onClick={() => void closeProfileModal("quick")}
+              >
+                {message("frontend.profile.currentReading.close")}
+              </button>
+              <button
+                className={styles.goalModalSave}
+                type="button"
+                disabled={isQuickSaving}
+                onClick={handleQuickSaveClick}
+              >
+                {message("frontend.profile.currentReading.save")}
+              </button>
+            </div>
+          </section>
+        </div>
+      ), document.body)}
+
+      {isGoalModalOpen && createPortal((
+        <div
+          className={`${styles.goalModalOverlay} ${
+            closingModal === "goal" ? styles.goalModalOverlayClosing : ""
+          }`}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              void closeProfileModal("goal");
+            }
+          }}
+        >
+          <section
+            className={`${styles.goalModal} ${
+              closingModal === "goal" ? styles.goalModalClosing : ""
+            }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reading-goal-title"
@@ -1165,7 +1532,10 @@ function ProfileEditPage() {
                 <button
                   className={styles.goalHelpButton}
                   type="button"
-                  onClick={() => setIsGoalHelpModalOpen(true)}
+                  onClick={() => {
+                    setClosingModal(null);
+                    setIsGoalHelpModalOpen(true);
+                  }}
                 >
                   {message("frontend.profile.goal.helpButton")}
                 </button>
@@ -1173,7 +1543,7 @@ function ProfileEditPage() {
                   className={styles.goalModalClose}
                   type="button"
                   aria-label={message("frontend.common.close")}
-                  onClick={() => setIsGoalModalOpen(false)}
+                  onClick={() => void closeProfileModal("goal")}
                 >
                   ×
                 </button>
@@ -1278,7 +1648,7 @@ function ProfileEditPage() {
               <button
                 className={styles.goalModalCancel}
                 type="button"
-                onClick={() => setIsGoalModalOpen(false)}
+                onClick={() => void closeProfileModal("goal")}
               >
                 {message("frontend.common.cancel")}
               </button>
@@ -1293,19 +1663,23 @@ function ProfileEditPage() {
             </div>
           </section>
         </div>
-      )}
-      {isGoalHelpModalOpen && (
+      ), document.body)}
+      {isGoalHelpModalOpen && createPortal((
         <div
-          className={styles.goalModalOverlay}
+          className={`${styles.goalModalOverlay} ${
+            closingModal === "goalHelp" ? styles.goalModalOverlayClosing : ""
+          }`}
           role="presentation"
           onMouseDown={(event) => {
             if (event.currentTarget === event.target) {
-              setIsGoalHelpModalOpen(false);
+              void closeProfileModal("goalHelp");
             }
           }}
         >
           <section
-            className={styles.goalHelpModal}
+            className={`${styles.goalHelpModal} ${
+              closingModal === "goalHelp" ? styles.goalModalClosing : ""
+            }`}
             role="dialog"
             aria-modal="true"
             aria-labelledby="reading-goal-help-title"
@@ -1318,7 +1692,7 @@ function ProfileEditPage() {
                 className={styles.goalModalClose}
                 type="button"
                 aria-label={message("frontend.common.close")}
-                onClick={() => setIsGoalHelpModalOpen(false)}
+                onClick={() => void closeProfileModal("goalHelp")}
               >
                 x
               </button>
@@ -1336,7 +1710,7 @@ function ProfileEditPage() {
             </div>
           </section>
         </div>
-      )}
+      ), document.body)}
     </main>
   );
 }

@@ -71,7 +71,6 @@ public class CommonExceptionHandler {
             Locale locale
     ) {
         // 아래 처리 단계의 업무 목적을 설명한다.
-        // 아래 처리 단계의 업무 목적을 설명한다.
         String message = messageSource.getMessage(
                 ResultEnum.COMMON_INVALID_REQUEST.getMessageKey(),
                 null,

@@ -1,6 +1,10 @@
 import { message } from "@/app/messages/message";
 import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
-import { formatDashedDateToDot } from "@/app/utils/dateUtil";
+import {
+  formatDashedDateToDot,
+  getRemainDaysUntil,
+  getRemainPeriodRate,
+} from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import {
   getSocialProfileApi,
@@ -170,6 +174,73 @@ function SocialProfilePage() {
         cover: report.bookCvim,
       },
     });
+  };
+
+  /**
+   * 다른 사용자가 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링합니다.
+   * 남은 기간이 적을수록 붉은 계열로 표시해 목표 종료일이 가까움을 보여줍니다.
+   *
+   * @author Hanwon.Jang
+   * @param reports 현재 읽고 있는 독후감 목록
+   * @return 현재 읽고 있는 책 섹션 JSX
+   */
+  const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+    if (reports.length === 0) {
+      return null;
+    }
+
+    return (
+      <section
+        className={styles.monthlySummary}
+        aria-label={message("frontend.profile.currentReading.title")}
+      >
+        <div className={styles.currentReadingSection}>
+          <h2 className={styles.currentReadingTitle}>
+            {message("frontend.profile.currentReading.title")}
+          </h2>
+          <div className={styles.currentReadingList}>
+            {reports.map((report) => {
+              const remainDays = getRemainDaysUntil(report.reportEndt);
+              const remainRate = getRemainPeriodRate(report.reportStdt, report.reportEndt);
+              const remainColor = getGoalProgressColor(remainRate);
+              const isExpired = remainDays <= 0;
+
+              return (
+                <div className={styles.currentReadingCard} key={report.reportNumb}>
+                  {report.bookCvim && (
+                    <img
+                      className={styles.readingSummaryCover}
+                      src={report.bookCvim}
+                      alt=""
+                    />
+                  )}
+                  <span className={styles.currentReadingText}>
+                    <strong className={styles.readingSummaryBookTitle}>
+                      {report.bookTitl || message("frontend.common.noBookInfo")}
+                    </strong>
+                    <span className={styles.currentReadingMeta}>
+                      <span className={styles.readingSummaryBookMeta}>
+                        {[report.bookAthr, formatDashedDateToDot(report.reportEndt)]
+                          .filter(Boolean)
+                          .join(" | ")}
+                      </span>
+                      <span
+                        className={styles.currentReadingRemain}
+                        style={{ color: remainColor }}
+                      >
+                        {isExpired
+                          ? message("frontend.profile.currentReading.expired")
+                          : message("frontend.profile.currentReading.remain", [remainDays])}
+                      </span>
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+    );
   };
 
   /**
@@ -389,6 +460,7 @@ function SocialProfilePage() {
             </div>
           </div>
 
+          {renderCurrentReadingReports(summary.currentReadingReports)}
           <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
               <p className={styles.goalAchievementTitle}>

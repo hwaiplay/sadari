@@ -127,6 +127,23 @@ public class ReportController {
     }
 
     /**
+     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정한다.
+     * 본문, 기간, 공개 여부 등 전체 독후감 수정 화면에서 다루는 값은 변경하지 않도록 별도 API로 분리한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param reportNumb 수정할 독후감 번호
+     * @param request 수정할 독서 상태와 별점 정보
+     * @return 수정 처리 결과
+     */
+    @PutMapping("/uptReport/status-grade/{reportNumb}")
+    public ResultData uptReportStatusGrade(@AuthenticationPrincipal Long userNumb
+                                          , @PathVariable("reportNumb") Long reportNumb
+                                          , @RequestBody ReportDto request) {
+        return reportService.uptReportStatusGrade(userNumb, reportNumb, request);
+    }
+
+    /**
      * 로그인 사용자가 작성한 독후감을 삭제한다.
      * Service에서 사용자 번호와 독후감 번호를 함께 조건으로 사용해 본인 데이터만 삭제되도록 한다.
      *
