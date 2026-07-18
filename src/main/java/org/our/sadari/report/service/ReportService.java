@@ -105,6 +105,17 @@ public interface ReportService {
     ResultData uptReport(Long userNumb, Long reportNumb, ReportDto reportDto);
 
     /**
+     * 독후감의 읽기 상태와 별점만 수정합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param reportNumb 수정할 독후감 번호
+     * @param reportDto 수정할 읽기 상태와 별점
+     * @return 수정 처리 결과
+     */
+    ResultData uptReportStatusGrade(Long userNumb, Long reportNumb, ReportDto reportDto);
+
+    /**
      * 로그인 사용자의 독후감을 삭제한다.
      *
      * @author Seunghyeon.Kang

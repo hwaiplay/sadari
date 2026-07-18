@@ -61,6 +61,64 @@ export function formatDashedDateToDot(value?: string) {
 }
 
 /**
+ * 두 날짜 사이의 일수 차이를 계산합니다.
+ * 목표 기간 계산에서 시간대나 현재 시각의 영향을 줄이기 위해 로컬 자정 기준 날짜만 비교합니다.
+ *
+ * @author Hanwon.Jang
+ * @param startValue 시작일 문자열
+ * @param endValue 종료일 문자열
+ * @return 시작일부터 종료일까지의 일수
+ */
+export function getDateDiffDays(startValue?: string, endValue?: string) {
+  if (!startValue || !endValue) {
+    return 0;
+  }
+
+  const startDate = parseDateValue(startValue);
+  const endDate = parseDateValue(endValue);
+  const startTime = new Date(
+    startDate.getFullYear(),
+    startDate.getMonth(),
+    startDate.getDate(),
+  ).getTime();
+  const endTime = new Date(
+    endDate.getFullYear(),
+    endDate.getMonth(),
+    endDate.getDate(),
+  ).getTime();
+
+  return Math.ceil((endTime - startTime) / 86400000);
+}
+
+/**
+ * 오늘 기준 목표 종료일까지 남은 일수를 계산합니다.
+ * 종료일 당일부터는 남은 기간이 0일로 계산되어 목표기간 경과 안내 대상으로 처리됩니다.
+ *
+ * @author Hanwon.Jang
+ * @param endValue 목표 종료일 문자열
+ * @return 오늘부터 목표 종료일까지 남은 일수
+ */
+export function getRemainDaysUntil(endValue?: string) {
+  return getDateDiffDays(formatDateValue(new Date()), endValue);
+}
+
+/**
+ * 전체 목표기간을 100%로 보고 남은 기간 비율을 계산합니다.
+ * 남은 기간이 짧아질수록 낮은 비율을 반환하므로 진행 막대와 같은 색상 체계를 그대로 사용할 수 있습니다.
+ *
+ * @author Hanwon.Jang
+ * @param startValue 목표 시작일 문자열
+ * @param endValue 목표 종료일 문자열
+ * @return 남은 기간 비율
+ */
+export function getRemainPeriodRate(startValue?: string, endValue?: string) {
+  const totalDays = Math.max(1, getDateDiffDays(startValue, endValue));
+  const remainDays = Math.max(0, getRemainDaysUntil(endValue));
+
+  return Math.max(0, Math.min(100, Math.round((remainDays / totalDays) * 100)));
+}
+
+/**
  * 8자리 숫자 형태의 날짜 문자열을 해석하여 개별 연, 월, 일 정보 및 Date 객체로 변환합니다.
  *
  * @author SeungHyeon.Kang

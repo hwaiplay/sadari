@@ -10,7 +10,6 @@
         <bind name="optPubcYsno" value="@org.our.sadari.global.common.constant.Constant@OPT_PUBC_YSNO" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="bookKeywordLike" value="bookKeyword == null or bookKeyword == '' ? '' : '%' + bookKeyword + '%'" />
         SELECT /* getReportList */
                A.REPORT_NUMB
@@ -28,7 +27,7 @@
              , A.REPORT_CNTN
              , B.BOOK_TITL
              , B.BOOK_CVIM
-             , CASE WHEN A.REPORT_STAT = #{reportStatRead} THEN #{commYes} ELSE #{commNo} END AS READING_YN
+             , CASE WHEN A.REPORT_STAT = #{reportStat} THEN #{commYes} ELSE #{commNo} END AS READING_YN
          FROM TM_BOOK_REPORT A
      LEFT JOIN TM_BOOK_INFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
@@ -52,22 +51,20 @@
         </choose>
     </select>
 
-    <!-- 지정 기간 안에 완료된 독후감 권수를 조회한다. -->
-    <select id="getDoneReportCntByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="int">
-        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
-        SELECT /* getDoneReportCntByPeriod */
+    <!-- 서비스에서 지정한 독서 상태와 기간 조건에 맞는 독후감 권수를 조회한다. -->
+    <select id="getReportCntByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="int">
+        SELECT /* getReportCntByPeriod */
                COUNT(*)
           FROM TM_BOOK_REPORT A
          WHERE A.USER_NUMB = #{userNumb}
-           AND A.REPORT_STAT = #{reportStatDone}
+           AND A.REPORT_STAT = #{reportStat}
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
     </select>
 
-    <!-- 지정 기간 안에 완료된 독후감 목록을 조회한다. -->
-    <select id="getDoneReportListByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.report.dto.ReportDto">
-        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
-        SELECT /* getDoneReportListByPeriod */
+    <!-- 서비스에서 지정한 독서 상태와 선택 기간 조건에 맞는 독후감 목록을 조회한다. -->
+    <select id="getSummaryReportList" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.report.dto.ReportDto">
+        SELECT /* getSummaryReportList */
                A.REPORT_NUMB
              , A.USER_NUMB
              , A.BOOK_NUMB
@@ -84,10 +81,21 @@
      LEFT JOIN TM_BOOK_INFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
          WHERE A.USER_NUMB = #{userNumb}
-           AND A.REPORT_STAT = #{reportStatDone}
+           AND A.REPORT_STAT = #{reportStat}
+        <if test="periodStart != null and periodStart != ''">
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
+        </if>
+        <if test="periodEndExclusive != null and periodEndExclusive != ''">
            AND TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+        </if>
+        <choose>
+            <when test="reportOrderType == 'END_DATE_ASC'">
+      ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') ASC, A.REPORT_NUMB DESC
+            </when>
+            <otherwise>
       ORDER BY TO_DATE(A.REPORT_ENDT, 'YYYY-MM-DD') DESC, A.REPORT_NUMB DESC
+            </otherwise>
+        </choose>
     </select>
 
     <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회한다. -->
@@ -106,7 +114,8 @@
 
     <!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신한다. -->
     <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
-        MERGE /* setReadingGoal */ INTO TM_GOALXM G
+        /* setReadingGoal */
+        MERGE INTO TM_GOALXM G
         USING (
               SELECT #{userNumb} AS USER_NUMB
                    , #{goalDate} AS GOAL_DATE
@@ -150,7 +159,6 @@
 
     <!-- 목표 유형별 전체 목표 달성 횟수를 조회한다. -->
     <select id="getReadingGoalAchvCnt" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="int">
-        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         SELECT /* getReadingGoalAchvCnt */
                COUNT(*)
           FROM TM_GOALXM G
@@ -170,7 +178,7 @@
                      , COUNT(*) AS DONE_CNT
                  FROM TM_BOOK_REPORT A
                  WHERE A.USER_NUMB = #{userNumb}
-                   AND A.REPORT_STAT = #{reportStatDone}
+                   AND A.REPORT_STAT = #{reportStat}
                    AND A.REPORT_ENDT IS NOT NULL
               GROUP BY A.USER_NUMB
                      , <choose>
@@ -201,7 +209,6 @@
         <bind name="optPubcYsno" value="@org.our.sadari.global.common.constant.Constant@OPT_PUBC_YSNO" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         SELECT /* getReportDtl */
                A.REPORT_NUMB
              , A.USER_NUMB
@@ -247,7 +254,7 @@
                SELECT P.BOOK_NUMB
                     , ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1) AS BOOK_AVG_GRDE
                  FROM TM_BOOK_REPORT P
-                WHERE P.REPORT_STAT = #{reportStatDone}
+                WHERE P.REPORT_STAT = #{reportStat}
                 GROUP BY P.BOOK_NUMB
            ) G
             ON G.BOOK_NUMB = B.BOOK_NUMB
@@ -365,24 +372,6 @@
             ON UL.REPORT_NUMB = R.REPORT_NUMB
     </select>
 
-    <!-- ISBN 기준 전체 독후감 평균 별점을 조회한다. -->
-    <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
-        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
-        SELECT /* getPublicRatingAverageByIsbn */
-               ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1)
-          FROM TM_BOOK_INFO B
-    INNER JOIN TM_BOOK_REPORT P
-            ON B.BOOK_NUMB = P.BOOK_NUMB
-         WHERE B.BOOK_ISBN = #{bookIsbn}
-           AND P.REPORT_STAT = #{reportStatDone}
-    </select>
-
-    <!-- ISBN 기준 도서 중복 등록 여부를 확인한다. -->
-
-    <!-- ISBN 기준 기존 도서 번호를 조회한다. -->
-
-    <!-- 신규 도서 정보를 등록한다. -->
-
     <!-- 신규 독후감을 등록한다. -->
     <insert id="setReport" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="reportNumb">
         <selectKey keyProperty="reportNumb" resultType="long" order="BEFORE">
@@ -424,6 +413,21 @@
              , REPORT_COLR = #{reportColr}
              , PUBC_YSNO = #{pubcYsno}
              , REPORT_CNTN = #{reportCntn}
+         WHERE REPORT_NUMB = #{reportNumb}
+           AND USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 독후감의 읽기 상태와 별점만 수정한다. -->
+    <update id="uptReportStatusGrade" parameterType="org.our.sadari.report.dto.ReportDto">
+        /* uptReportStatusGrade */
+        UPDATE TM_BOOK_REPORT
+        <set>
+               REPORT_STAT = #{reportStat}
+             , REPORT_GRDE = #{reportGrde}
+            <if test="reportEndt != null and reportEndt != ''">
+             , REPORT_ENDT = #{reportEndt}
+            </if>
+        </set>
          WHERE REPORT_NUMB = #{reportNumb}
            AND USER_NUMB = #{userNumb}
     </update>

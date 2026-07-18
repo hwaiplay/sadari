@@ -49,7 +49,9 @@ function DetailPage() {
   const [showBookInfo, setShowBookInfo] = useState(false);
 
   const goUpdatePage = (reportNumb: number) => {
-    navigate(`/book/upt/${reportNumb}`);
+    // 상세에서 수정으로 진입한 뒤 저장하면 다시 상세로 이동한다.
+    // 이때 기존 상세 히스토리를 남기면 뒤로가기 시 같은 상세 화면으로 돌아오므로 수정 진입 시 현재 상세 엔트리를 교체한다.
+    navigate(`/book/upt/${reportNumb}`, { replace: true });
   };
 
   const showBookInfoView = () => setShowBookInfo(true);

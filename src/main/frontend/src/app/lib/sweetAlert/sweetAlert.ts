@@ -1,3 +1,5 @@
+import { lockBodyScroll, unlockBodyScroll } from "@/app/utils/modalUtil";
+
 type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question";
 
 type SweetAlertOptions = {
@@ -49,6 +51,8 @@ function ensureSweetAlertStyle() {
     .sadari-swal-overlay {
       position: fixed;
       inset: 0;
+      width: 100vw;
+      height: 100dvh;
       z-index: 9999;
       display: flex;
       align-items: center;
@@ -56,10 +60,14 @@ function ensureSweetAlertStyle() {
       padding: 24px;
       background: rgba(0, 0, 0, 0.34);
       box-sizing: border-box;
+      overflow: hidden;
+      overscroll-behavior: contain;
     }
 
     .sadari-swal-modal {
       width: min(360px, 100%);
+      max-height: calc(100dvh - 48px);
+      overflow-y: auto;
       border: 1px solid #e3e3e3;
       border-radius: 18px;
       background: #ffffff;
@@ -373,7 +381,7 @@ function ensureSweetAlertStyle() {
  */
 function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
   overlay.remove();
-  document.body.style.overflow = "";
+  unlockBodyScroll();
   return result;
 }
 
@@ -391,7 +399,18 @@ export function sweetAlert(options: SweetAlertOptions) {
     const overlay = document.createElement("div");
     const modal = document.createElement("div");
     const iconType = options.icon ?? "info";
+    let isClosed = false;
 
+    const close = (result: SweetAlertResult) => {
+      if (isClosed) {
+        return;
+      }
+
+      isClosed = true;
+      resolve(closeSweetAlert(overlay, result));
+    };
+
+    lockBodyScroll();
     overlay.className = "sadari-swal-overlay";
     modal.className = "sadari-swal-modal";
     modal.setAttribute("role", "alertdialog");
@@ -432,7 +451,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       cancelButton.type = "button";
       cancelButton.textContent = options.cancelButtonText ?? "취소";
       cancelButton.addEventListener("click", () => {
-        resolve(closeSweetAlert(overlay, { isConfirmed: false }));
+        close({ isConfirmed: false });
       });
       actions.appendChild(cancelButton);
     }
@@ -442,13 +461,13 @@ export function sweetAlert(options: SweetAlertOptions) {
     confirmButton.type = "button";
     confirmButton.textContent = options.confirmButtonText ?? "확인";
     confirmButton.addEventListener("click", () => {
-      resolve(closeSweetAlert(overlay, { isConfirmed: true }));
+      close({ isConfirmed: true });
     });
     actions.appendChild(confirmButton);
 
     overlay.addEventListener("click", (event) => {
       if (event.target === overlay && options.showCancelButton) {
-        resolve(closeSweetAlert(overlay, { isConfirmed: false }));
+        close({ isConfirmed: false });
       }
     });
 
@@ -459,7 +478,6 @@ export function sweetAlert(options: SweetAlertOptions) {
     modal.appendChild(actions);
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    document.body.style.overflow = "hidden";
     confirmButton.focus();
   });
 }

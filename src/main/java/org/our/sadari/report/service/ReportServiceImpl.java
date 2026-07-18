@@ -47,6 +47,8 @@ public class ReportServiceImpl implements ReportService {
     private static final int YEAR_GOAL_MAX_UPDATE_COUNT = 5; // 연간 목표는 장기 목표이므로 목표 내리기를 최대 5회까지 허용한다.
     private static final int WEEK_GOAL_LOCK_REMAINING_DAYS = 3; // 주간 목표는 해당 주가 3일 남은 시점부터 목표 내리기를 잠근다.
     private static final int MONTH_GOAL_LOCK_REMAINING_DAYS = 7; // 월간 목표는 해당 월이 7일 남은 시점부터 목표 내리기를 잠근다.
+    private static final String SUMMARY_REPORT_ORDER_END_DATE_DESC = "END_DATE_DESC";
+    private static final String SUMMARY_REPORT_ORDER_END_DATE_ASC = "END_DATE_ASC";
     private static final String REPORT_FIELD_STATUS_KEY = "common.report.field.status";
     private static final String REPORT_FIELD_START_DATE_KEY = "common.report.field.startDate";
     private static final String REPORT_FIELD_END_DATE_KEY = "common.report.field.endDate";
@@ -71,6 +73,7 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setUserNumb(userNumb);
         reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
         reportDto.setSortType(normalizeListSortType(sortType));
+        reportDto.setReportStat(Constant.REPORT_STAT_READ);
 
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         return ResultData.success(list);
@@ -121,22 +124,31 @@ public class ReportServiceImpl implements ReportService {
         // 예: 이번 주 집계는 '이번 주 시작일(이상)'부터 '다음 주 시작일(미만)' 즉, 이번 주 마지막 날짜의 23시 59분 59초까지 포함하게 됨
 
         // 이번 주 집계 범위: [currentWeekStart] <= 독서 완료일 < [currentWeekStart + 1주]
-        MonthlyReadingSummaryDto currentWeekReq = getDoneReportCntByPeriodReq(userNumb, currentWeekStart, currentWeekStart.plusWeeks(1));
+        MonthlyReadingSummaryDto currentWeekReq = getSummaryReportReq(
+                userNumb, currentWeekStart, currentWeekStart.plusWeeks(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
 
         // 직전 주 집계 범위: [previousWeekStart] <= 독서 완료일 < [currentWeekStart] (이번 주 시작일 직전까지)
-        MonthlyReadingSummaryDto previousWeekReq = getDoneReportCntByPeriodReq(userNumb, previousWeekStart, currentWeekStart);
+        MonthlyReadingSummaryDto previousWeekReq = getSummaryReportReq(
+                userNumb, previousWeekStart, currentWeekStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
 
         // 이번 달 집계 범위: [currentMonthStart] <= 독서 완료일 < [currentMonthStart + 1달]
-        MonthlyReadingSummaryDto currentMonthReq = getDoneReportCntByPeriodReq(userNumb, currentMonthStart, currentMonthStart.plusMonths(1));
+        MonthlyReadingSummaryDto currentMonthReq = getSummaryReportReq(
+                userNumb, currentMonthStart, currentMonthStart.plusMonths(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
 
         // 직전 달 집계 범위: [previousMonthStart] <= 독서 완료일 < [currentMonthStart] (이번 달 시작일 직전까지)
-        MonthlyReadingSummaryDto previousMonthReq = getDoneReportCntByPeriodReq(userNumb, previousMonthStart, currentMonthStart);
+        MonthlyReadingSummaryDto previousMonthReq = getSummaryReportReq(
+                userNumb, previousMonthStart, currentMonthStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
 
         // 올해 집계 범위: [currentYearStart] <= 독서 완료일 < [currentYearStart + 1년]
-        MonthlyReadingSummaryDto currentYearReq = getDoneReportCntByPeriodReq(userNumb, currentYearStart, currentYearStart.plusYears(1));
+        MonthlyReadingSummaryDto currentYearReq = getSummaryReportReq(
+                userNumb, currentYearStart, currentYearStart.plusYears(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
 
         // 작년 집계 범위: [previousYearStart] <= 독서 완료일 < [currentYearStart] (올해 시작일 직전까지)
-        MonthlyReadingSummaryDto previousYearReq = getDoneReportCntByPeriodReq(userNumb, previousYearStart, currentYearStart);
+        MonthlyReadingSummaryDto previousYearReq = getSummaryReportReq(
+                userNumb, previousYearStart, currentYearStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+
+        MonthlyReadingSummaryDto currentReadingReq = getSummaryReportReq(
+                userNumb, Constant.REPORT_STAT_READ, SUMMARY_REPORT_ORDER_END_DATE_ASC);
 
 
         // ==========================================
@@ -144,12 +156,12 @@ public class ReportServiceImpl implements ReportService {
         // ==========================================
 
         // 데이터 정합성을 위해 임시 저장(TEMP) 등이 아닌, 작성이 완전히 완료된(REPORT_STAT = 'DONE') 독후감만 DB에서 카운트함
-        int currentWeekCount = reportMapper.getDoneReportCntByPeriod(currentWeekReq);
-        int previousWeekCount = reportMapper.getDoneReportCntByPeriod(previousWeekReq);
-        int currentMonthCount = reportMapper.getDoneReportCntByPeriod(currentMonthReq);
-        int previousMonthCount = reportMapper.getDoneReportCntByPeriod(previousMonthReq);
-        int currentYearCount = reportMapper.getDoneReportCntByPeriod(currentYearReq);
-        int previousYearCount = reportMapper.getDoneReportCntByPeriod(previousYearReq);
+        int currentWeekCount = reportMapper.getReportCntByPeriod(currentWeekReq);
+        int previousWeekCount = reportMapper.getReportCntByPeriod(previousWeekReq);
+        int currentMonthCount = reportMapper.getReportCntByPeriod(currentMonthReq);
+        int previousMonthCount = reportMapper.getReportCntByPeriod(previousMonthReq);
+        int currentYearCount = reportMapper.getReportCntByPeriod(currentYearReq);
+        int previousYearCount = reportMapper.getReportCntByPeriod(previousYearReq);
 
 
         // ==========================================
@@ -207,9 +219,10 @@ public class ReportServiceImpl implements ReportService {
         // ==========================================
 
         // 사용자가 요약 카드 영역을 펼쳤을 때(Accordion 등) 즉시 책 목록을 렌더링할 수 있도록 상세 독후감 리스트도 함께 포함하여 응답함
-        summary.setCurrentWeekReports(reportMapper.getDoneReportListByPeriod(currentWeekReq));
-        summary.setCurrentMonthReports(reportMapper.getDoneReportListByPeriod(currentMonthReq));
-        summary.setCurrentYearReports(reportMapper.getDoneReportListByPeriod(currentYearReq));
+        summary.setCurrentWeekReports(reportMapper.getSummaryReportList(currentWeekReq));
+        summary.setCurrentMonthReports(reportMapper.getSummaryReportList(currentMonthReq));
+        summary.setCurrentYearReports(reportMapper.getSummaryReportList(currentYearReq));
+        summary.setCurrentReadingReports(reportMapper.getSummaryReportList(currentReadingReq));
 
         // 가공 완료된 최종 요약 데이터를 성공 상태 포맷으로 감싸서 컨트롤러로 반환
         return ResultData.success(summary);
@@ -324,6 +337,7 @@ public class ReportServiceImpl implements ReportService {
         ReadingGoalDto req = new ReadingGoalDto();
         req.setUserNumb(userNumb);
         req.setGoalType(goalType);
+        req.setReportStat(Constant.REPORT_STAT_DONE);
         return reportMapper.getReadingGoalAchvCnt(req);
     }
 
@@ -604,11 +618,22 @@ public class ReportServiceImpl implements ReportService {
      * @param periodEndExclusive 기간 종료 다음 일자
      * @return 기간 집계 요청 DTO
      */
-    private MonthlyReadingSummaryDto getDoneReportCntByPeriodReq(Long userNumb, LocalDate periodStart, LocalDate periodEndExclusive) {
+    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, LocalDate periodStart, LocalDate periodEndExclusive,
+                                                         String reportStat, String reportOrderType) {
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         req.setUserNumb(userNumb);
         req.setPeriodStart(periodStart.toString());
         req.setPeriodEndExclusive(periodEndExclusive.toString());
+        req.setReportStat(reportStat);
+        req.setReportOrderType(reportOrderType);
+        return req;
+    }
+
+    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, String reportStat, String reportOrderType) {
+        MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
+        req.setUserNumb(userNumb);
+        req.setReportStat(reportStat);
+        req.setReportOrderType(reportOrderType);
         return req;
     }
 
@@ -640,6 +665,7 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setUserNumb(userNumb);
         reportDto.setReportNumb(reportNumb);
         reportDto.setLocale(LocaleUtil.getLocale());
+        reportDto.setReportStat(Constant.REPORT_STAT_DONE);
 
         ReportDto detail = reportMapper.getReportDtl(reportDto);
 
@@ -694,7 +720,7 @@ public class ReportServiceImpl implements ReportService {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        return ResultData.success(reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
+        return ResultData.success(bookMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
     }
 
             /**
@@ -813,7 +839,50 @@ public class ReportServiceImpl implements ReportService {
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
-        reportMapper.uptReport(reportDto);
+        if (reportMapper.uptReport(reportDto) == 0) {
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        return ResultData.success(reportDto.getReportNumb());
+    }
+
+    /**
+     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정한다.
+     * 전체 독후감 수정 화면으로 이동하지 않아도 완료 여부와 평점만 즉시 반영할 수 있도록 별도 수정 범위를 사용한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param reportNumb 수정할 독후감 번호
+     * @param reportDto 수정할 독서 상태와 별점 정보
+     * @return 수정 처리 결과
+     */
+    @Override
+    public ResultData uptReportStatusGrade(Long userNumb, Long reportNumb, ReportDto reportDto) {
+
+        // 대상 독후감 번호가 없으면 수정 대상을 특정할 수 없으므로 실패 처리한다.
+        if (StringUtil.isEmpty(reportNumb)) {
+            // 조회 결과가 없음을 의미하는 공통 응답 메시지: "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        reportDto.setUserNumb(userNumb);
+        reportDto.setReportNumb(reportNumb);
+        reportDto.setReportGrde(StringUtil.normalizePlainText(reportDto.getReportGrde()));
+        reportDto.setReportStat(StringUtil.normalizePlainText(reportDto.getReportStat()));
+        reportDto.setReportEndt(LocalDate.now().toString()); // 빠른 완료/중단 처리에서는 사용자가 저장한 시점을 실제 독서 종료일로 기록한다.
+
+        ReportValidationResult validationResult = validateReport(reportDto);
+        // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
+        if (!StringUtil.isEmpty(validationResult)) {
+            return ResultData.fail(validationResult.resultEnum(), validationResult.args());
+        }
+
+        // 사용자 번호를 WHERE 조건에 함께 사용해 다른 사용자의 독후감은 수정되지 않도록 막는다.
+        if (reportMapper.uptReportStatusGrade(reportDto) == 0) {
+            // 수정 실패를 의미하는 공통 응답 메시지: "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
         return ResultData.success(reportDto.getReportNumb());
     }
 
@@ -891,13 +960,13 @@ public class ReportServiceImpl implements ReportService {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_END_DATE_KEY));
         }
 
-        // 읽고있어요 상태에서는 평점 입력을 생략할 수 있으므로 빈 값을 0점으로 보정해 저장값을 숫자로 유지한다.
-        if (StringUtil.isEmpty(reportDto.getReportGrde()) && Constant.REPORT_STAT_READ.equals(reportDto.getReportStat())) {
+        // 완료가 아닌 독서 상태에서는 평점을 사용하지 않으므로 저장값을 0점으로 보정해 저장값을 숫자로 유지한다.
+        if (StringUtil.isEmpty(reportDto.getReportGrde())) {
             reportDto.setReportGrde("0");
         }
 
         // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
-        if (StringUtil.isEmpty(reportDto.getReportGrde()) || !isValidReportGrade(reportDto.getReportGrde())) {
+        if (!isValidReportGrade(reportDto.getReportGrde())) {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
         }
 
@@ -914,10 +983,7 @@ public class ReportServiceImpl implements ReportService {
         // 필수값 누락이 하나라도 있으면 누락 항목 목록을 메시지 인자로 반환한다.
         if (!missingFields.isEmpty()) {
             // 검증 실패 사유를 ResultData로 감싸 Controller까지 전달한다.
-            return new ReportValidationResult(
-                    ResultEnum.COMMON_REPORT_REQUIRED_MISSING,
-                    formatMissingFields(missingFields)
-            );
+            return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
         }
 
         // 시작일이 종료일보다 늦은 데이터는 프론트 조작 여부와 관계없이 저장하지 않는다.
@@ -1021,72 +1087,6 @@ public class ReportServiceImpl implements ReportService {
             reportDto.setBookIsbn(StringUtil.normalizePlainText(reportDto.getBookIsbn()));
             reportDto.setBookCvim(StringUtil.normalizePlainText(reportDto.getBookCvim()));
             reportDto.setBookDesc(StringUtil.normalizePlainText(reportDto.getBookDesc()));
-        }
-    }
-
-    /**
-     * 독후감 본문 byte 길이가 DB 저장 한도를 초과하는지 확인하는 보조 검증 메서드이다.
-     * 현재 통합 검증은 validateReport에서 처리하지만, 개별 검증 분리가 필요할 때 재사용한다.
-     *
-     * @author Seunghyeon.Kang
-     * @param reportDto 검증할 독후감 DTO
-     */
-    private void validateReportContentBytes(ReportDto reportDto) {
-        // 독후감 본문이 비어 있으면 필수값 누락 목록에 추가한다.
-        if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
-            return;
-        }
-    }
-
-    /**
-     * 독서 시작일과 종료일의 순서가 유효한지 확인하는 보조 검증 메서드이다.
-     *
-     * @author Seunghyeon.Kang
-     * @param reportDto 검증할 독후감 DTO
-     */
-    private void validateReportDateRange(ReportDto reportDto) {
-        // 독서 시작일이 비어 있으면 필수값 누락 목록에 추가한다.
-        if (!DateUtil.validateReportDateRange(reportDto.getReportStdt(), reportDto.getReportEndt())) {
-            return;
-        }
-    }
-
-    /**
-     * 독서 상태 코드가 공통코드에 존재하는지 확인하는 보조 검증 메서드이다.
-     *
-     * @author Seunghyeon.Kang
-     * @param reportDto 검증할 독후감 DTO
-     */
-    private void validateReportStatus(ReportDto reportDto) {
-        // 독서 상태는 필수값이며 공통코드에 등록된 값만 허용한다.
-        if (!codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReportStat())) {
-            return;
-        }
-    }
-
-    /**
-     * 책장 색상 코드가 공통코드에 존재하는지 확인하는 보조 검증 메서드이다.
-     *
-     * @author Seunghyeon.Kang
-     * @param reportDto 검증할 독후감 DTO
-     */
-    private void validateReportColor(ReportDto reportDto) {
-        // 책장 색상은 필수값이며 공통코드에 등록된 색상 코드만 허용한다.
-        if (!codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReportColr())) {
-            return;
-        }
-    }
-
-    /**
-     * 공개 여부 코드가 Y 또는 N인지 확인하는 보조 검증 메서드이다.
-     *
-     * @author Seunghyeon.Kang
-     * @param reportDto 검증할 독후감 DTO
-     */
-    private void validatePublicFlag(ReportDto reportDto) {
-        // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
-        if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
-            return;
         }
     }
 

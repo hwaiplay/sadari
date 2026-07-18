@@ -18,6 +18,18 @@
          WHERE BOOK_ISBN = #{bookIsbn}
     </select>
 
+    <!-- ISBN 기준으로 도서에 연결된 완료 독후감의 평균 별점을 조회한다. -->
+    <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        SELECT /* getPublicRatingAverageByIsbn */
+               ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1)
+          FROM TM_BOOK_INFO B
+    INNER JOIN TM_BOOK_REPORT P
+            ON B.BOOK_NUMB = P.BOOK_NUMB
+         WHERE B.BOOK_ISBN = #{bookIsbn}
+           AND P.REPORT_STAT = #{reportStatDone}
+    </select>
+
     <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영한다. -->
     <insert id="setBook" parameterType="org.our.sadari.book.dto.BookDto" useGeneratedKeys="true" keyProperty="bookNumb">
         <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">

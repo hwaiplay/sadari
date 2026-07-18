@@ -1,5 +1,6 @@
 package org.our.sadari.book.mapper;
 
+import java.math.BigDecimal;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.book.dto.BookDto;
 
@@ -38,4 +39,13 @@ public interface BookMapper {
      * @return 반영 건수
      */
     int setBook(BookDto bookDto);
+
+    /**
+     * ISBN 기준으로 도서에 연결된 완료 독후감의 평균 별점을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param bookIsbn 조회할 도서 ISBN
+     * @return 평균 별점
+     */
+    BigDecimal getPublicRatingAverageByIsbn(String bookIsbn);
 }
