@@ -179,7 +179,7 @@ export function validateReportForm(values: ReportFormValues) {
 
   if (missingFields.length > 0) {
     return `${message("frontend.validation.missingPrefix")}\n${missingFields
-      .map((field) => `- ${field}`)
+      .map((field) => `• ${field}`)
       .join("\n")}`;
   }
 

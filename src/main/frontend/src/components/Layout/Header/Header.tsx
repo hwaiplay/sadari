@@ -9,6 +9,7 @@ import { backpageBtn, header, headerHidden, headerShell, logo } from "./Header.c
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
+import HeaderMenuDrawer from "./HeaderMenuDrawer";
 
 const HEADER_SCROLL_DELTA = 4;
 
@@ -94,6 +95,7 @@ function Header() {
             width={100}
           />
         </Link>
+        <HeaderMenuDrawer />
       </Container>
     </header>
   );
