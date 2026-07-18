@@ -6,6 +6,7 @@
 // src/api/axios.ts
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/features/Auth/store/authStore";
+import { assertResultDataSuccess } from "./resultData";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -80,9 +81,12 @@ api.interceptors.response.use(
 
     try {
       if (!refreshRequest) {
-        refreshRequest = api.post("/oauth/refresh").finally(() => {
-          refreshRequest = null;
-        });
+        refreshRequest = api
+          .post("/oauth/refresh")
+          .then((response) => assertResultDataSuccess(response.data))
+          .finally(() => {
+            refreshRequest = null;
+          });
       }
 
       await refreshRequest;

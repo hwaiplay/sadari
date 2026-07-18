@@ -108,8 +108,8 @@ function SocialProfilePage() {
     ])
       .then(([profileResponse, summaryResponse]) => {
         if (!ignore) {
-          setProfile(profileResponse.data?.data as UserProfile);
-          setSummary(summaryResponse.data?.data as MonthlyReadingSummary);
+          setProfile(profileResponse.data as UserProfile);
+          setSummary(summaryResponse.data as MonthlyReadingSummary);
         }
       })
       .catch(() => {

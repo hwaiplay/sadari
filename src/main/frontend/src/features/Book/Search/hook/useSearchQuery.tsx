@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
 import api from "../../../../app/api/axios";
+import { assertResultDataSuccess } from "../../../../app/api/resultData";
 
 /**
  * 검색어로 책 검색 결과를 React Query로 조회합니다.
@@ -17,7 +18,7 @@ export const useSearchQuery = (searchKeyword: string) => {
           `/book/search?query=${encodeURIComponent(searchKeyword)}`,
         );
 
-        return response.data;
+        return assertResultDataSuccess(response.data);
       } catch (err) {
         console.log("책 검색 중 오류 발생:", err);
         throw err;

@@ -1,4 +1,5 @@
 import api from "@/app/api/axios";
+import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type UserProfile = {
   userNick?: string;
@@ -73,8 +74,9 @@ export type UpdateUserProfileParams = {
   backgroundImage?: File | null;
 };
 
-export const getMyProfileApi = () => {
-  return api.get("/user/me");
+export const getMyProfileApi = async () => {
+  const res = await api.get("/user/me");
+  return assertResultDataSuccess(res.data);
 };
 
 /**
@@ -83,8 +85,9 @@ export const getMyProfileApi = () => {
  * @author Hanwon.Jang
  * @return 월간/연간 완료 독서 요약 API 응답
  */
-export const getMonthlyReadingSummaryApi = () => {
-  return api.get("/user/monthly-reading-summary");
+export const getMonthlyReadingSummaryApi = async () => {
+  const res = await api.get("/user/monthly-reading-summary");
+  return assertResultDataSuccess(res.data);
 };
 
 /**
@@ -95,7 +98,9 @@ export const getMonthlyReadingSummaryApi = () => {
  * @return 저장 후 갱신된 월간/연간 완료 독서 요약 API 응답
  */
 export const updateReadingGoalApi = (params: ReadingGoalParams) => {
-  return api.put("/user/reading-goal", params);
+  return api.put("/user/reading-goal", params).then((res) => {
+    return assertResultDataSuccess(res.data);
+  });
 };
 
 export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
@@ -111,5 +116,7 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
     formData.append("backgroundImage", params.backgroundImage);
   }
 
-  return api.put("/user/me", formData);
+  return api.put("/user/me", formData).then((res) => {
+    return assertResultDataSuccess(res.data);
+  });
 };

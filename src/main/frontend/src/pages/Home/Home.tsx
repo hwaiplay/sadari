@@ -4,6 +4,7 @@
  * @author Hanwon.Jang
  */
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { Container } from "@/components/Layout/Container/Container";
 import Book from "@/features/Home/components/Book";
 import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
@@ -12,7 +13,6 @@ import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
-import { AxiosError } from "axios";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -20,10 +20,6 @@ type MonthlyBookGroup = {
   key: string;
   label: string;
   books: HomeBookType[];
-};
-
-type ApiErrorResponse = {
-  message?: string;
 };
 
 const SORT_OPTIONS: Array<{ value: HomeSortType; labelKey: string }> = [
@@ -103,14 +99,7 @@ function chunkBooks(bookList: HomeBookType[], size: number) {
 }
 
 function getHomeErrorMessage(error: unknown) {
-  if (error instanceof AxiosError) {
-    return (
-      (error.response?.data as ApiErrorResponse | undefined)?.message ??
-      message("frontend.common.tryAgain")
-    );
-  }
-
-  return message("frontend.common.tryAgain");
+  return getApiErrorMessage(error, message("frontend.common.tryAgain"));
 }
 
 function Home() {
