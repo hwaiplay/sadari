@@ -122,8 +122,9 @@ export interface uptReportType {
 
 // 기록 후 백엔드 응답
 export interface AddBookResponse {
-  success: boolean;
-  data: number; // bookId
+  code: number;
+  message?: string;
+  data: number; // reportNumb
 }
 
 export interface PublicReportType {

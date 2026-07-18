@@ -4,6 +4,7 @@
  * @author Hanwon.Jang
  */
 import { message } from "@/app/messages/message";
+import { getApiErrorMessage } from "@/app/api/resultData";
 import { useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { useState } from "react";
@@ -44,7 +45,7 @@ function DetailPage() {
   const { id } = useParams();
   const idNum = Number(id);
   const navigate = useNavigate();
-  const { data, isPending } = useBookDetail(idNum);
+  const { data, error, isError, isPending } = useBookDetail(idNum);
   const likeMutation = usePublicReportLikeMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
 
@@ -61,17 +62,17 @@ function DetailPage() {
     return count > 99 ? "99+" : String(count);
   };
 
-  if (data?.code === 2004) {
-    return <div>{data.message}</div>;
-  }
-
   if (isPending) {
     return <Loading title={message("frontend.report.loading.detail")} />;
   }
 
+  if (isError) {
+    return <h3>{getApiErrorMessage(error, message("frontend.common.tryAgain"))}</h3>;
+  }
+
   const bookData = data?.data;
 
-  if (data?.code !== 200 || !bookData) {
+  if (!bookData) {
     return <h3>{data?.message}</h3>;
   }
 

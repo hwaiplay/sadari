@@ -12,12 +12,12 @@ export const useAuthQuery = () => {
     queryKey: ["auth"],
     queryFn: async () => {
       try {
-        const res = await checkAuthApi();
-        return res.data;
+        return await checkAuthApi();
       } catch (err) {
         console.log("인증 상태 조회 중 오류 발생:", err);
         throw err;
       }
     },
+    retry: false,
   });
 };

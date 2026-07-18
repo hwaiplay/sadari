@@ -1,4 +1,5 @@
 import api from "@/app/api/axios";
+import { assertResultDataSuccess } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { formatYearMonthValue, isSameLocalDate, parseLocalDate } from "@/app/utils/dateUtil";
 import { Container } from "@/components/Layout/Container/Container";
@@ -154,8 +155,8 @@ function ReadingCalendarPage() {
     api
       .get(`/user/reading-calendar?yearMonth=${yearMonth}`)
       .then((response) => {
-        if (!ignore && response.data?.code === 200) {
-          setReports(response.data.data ?? []);
+        if (!ignore) {
+          setReports(assertResultDataSuccess(response.data).data ?? []);
         }
       })
       .catch(() => {

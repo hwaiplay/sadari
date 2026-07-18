@@ -78,8 +78,8 @@ function Navigation({ isMain }: NavigationProps) {
 
     getMyProfileApi()
       .then((response) => {
-        if (!ignore && response.data?.code === 200) {
-          setProfile(response.data.data);
+        if (!ignore) {
+          setProfile(response.data);
         }
       })
       .catch(() => {

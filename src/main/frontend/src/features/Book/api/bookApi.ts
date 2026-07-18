@@ -4,6 +4,7 @@
  * @author Hanwon.Jang
  */
 import api from "@/app/api/axios";
+import { assertResultDataSuccess } from "@/app/api/resultData";
 import {
   AddBookResponse,
   ReportDtoType,
@@ -15,23 +16,32 @@ export const setReportApi = async (
   data: ReportDtoType,
 ): Promise<AddBookResponse> => {
   const res = await api.post("/book/setReport", data);
-  return res.data;
+  return assertResultDataSuccess(res.data);
 };
 
-export const getDetailApi = (bookNumb: number) => {
-  return api.get(`/book/getBookdetail/${bookNumb}`);
+export const getDetailApi = async (bookNumb: number) => {
+  const res = await api.get(`/book/getBookdetail/${bookNumb}`);
+  return assertResultDataSuccess(res.data);
 };
 
-export const getPublicReportsByIsbnApi = (isbn: string) => {
-  return api.get(`/book/publicReports/by-isbn?isbn=${encodeURIComponent(isbn)}`);
+export const getPublicReportsByIsbnApi = async (isbn: string) => {
+  const res = await api.get(
+    `/book/publicReports/by-isbn?isbn=${encodeURIComponent(isbn)}`,
+  );
+  return assertResultDataSuccess(res.data);
 };
 
-export const getBookRatingAverageByIsbnApi = (isbn: string) => {
-  return api.get(`/book/ratingAverage/by-isbn?isbn=${encodeURIComponent(isbn)}`);
+export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
+  const res = await api.get(
+    `/book/ratingAverage/by-isbn?isbn=${encodeURIComponent(isbn)}`,
+  );
+  return assertResultDataSuccess(res.data);
 };
 
 export const setPublicReportLikeApi = (reportNumb: number) => {
-  return api.post(`/book/publicReports/${reportNumb}/like`);
+  return api.post(`/book/publicReports/${reportNumb}/like`).then((res) => {
+    return assertResultDataSuccess(res.data);
+  });
 };
 
 export type BookListParams = {
@@ -39,8 +49,9 @@ export type BookListParams = {
   sortType?: string;
 };
 
-export const getListApi = (params: BookListParams = {}) => {
-  return api.get(`/book/getBookList`, { params });
+export const getListApi = async (params: BookListParams = {}) => {
+  const res = await api.get(`/book/getBookList`, { params });
+  return assertResultDataSuccess(res.data);
 };
 
 export const uptReportApi = async ({
@@ -48,7 +59,7 @@ export const uptReportApi = async ({
   data,
 }: uptReportType): Promise<AddBookResponse> => {
   const res = await api.put(`/book/uptReport/${reportNumb}`, data);
-  return res.data;
+  return assertResultDataSuccess(res.data);
 };
 
 export type UptReportStatusGradeParams = {
@@ -65,10 +76,10 @@ export const uptReportStatusGradeApi = async ({
   data,
 }: UptReportStatusGradeParams): Promise<AddBookResponse> => {
   const res = await api.put(`/book/uptReport/status-grade/${reportNumb}`, data);
-  return res.data;
+  return assertResultDataSuccess(res.data);
 };
 
 export const delReportApi = async (reportNumb: number) => {
   const res = await api.delete(`/book/delReport/${reportNumb}`);
-  return res.data;
+  return assertResultDataSuccess(res.data);
 };
