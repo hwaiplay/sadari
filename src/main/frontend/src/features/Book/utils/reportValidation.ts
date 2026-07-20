@@ -1,6 +1,6 @@
 import { message } from "@/app/messages/message";
 import {
-  REPORT_GRADE_OPTIONS,
+  REPORT_GRADE_VALUES,
   MAX_REPORT_CONTENT_BYTES,
   REPORT_STATUS_READ,
 } from "@/features/Book/constants/reportForm";
@@ -158,7 +158,7 @@ export function validateReportForm(values: ReportFormValues) {
 
   if (
     hasGrade &&
-    !(REPORT_GRADE_OPTIONS as readonly number[]).includes(gradeNumber)
+    !(REPORT_GRADE_VALUES as readonly number[]).includes(gradeNumber)
   ) {
     missingFields.push(message("frontend.report.field.grade"));
   }

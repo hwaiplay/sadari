@@ -1,5 +1,6 @@
 package org.our.sadari.report.mapper;
 
+import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
@@ -86,6 +87,15 @@ public interface ReportMapper {
      * @return 공개 독후감 목록
      */
     List<ReportDto> getPublicReportList(ReportDto req);
+
+    /**
+     * ISBN 기준으로 도서에 연결된 완료 독후감의 평균 별점을 조회합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param bookIsbn 조회할 도서 ISBN
+     * @return 평균 별점
+     */
+    BigDecimal getPublicRatingAverageByIsbn(String bookIsbn);
 
     /**
      * 좋아요 대상 독후감이 존재하며 좋아요 가능한 상태인지 확인합니다.

@@ -172,6 +172,9 @@ public class ReportServiceImpl implements ReportService {
         ReadingGoalDto currentWeekGoal = getReadingGoalDtl(userNumb, currentWeekStart, Constant.GOAL_TYPE_WEEK);
         ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH);
         ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);
+        ReadingGoalDto previousWeekGoal = getReadingGoalDtl(userNumb, previousWeekStart, Constant.GOAL_TYPE_WEEK);
+        ReadingGoalDto previousMonthGoal = getReadingGoalDtl(userNumb, previousMonthStart, Constant.GOAL_TYPE_MONTH);
+        ReadingGoalDto previousYearGoal = getReadingGoalDtl(userNumb, previousYearStart, Constant.GOAL_TYPE_YEAR);
 
 
         // ==========================================
@@ -206,6 +209,7 @@ public class ReportServiceImpl implements ReportService {
 
         // 1) 조회한 목표 권수 정보와 달성 여부를 요약 DTO에 바인딩
         applyReadingGoal(summary, currentWeekGoal, currentMonthGoal, currentYearGoal);
+        applyPreviousReadingGoal(summary, previousWeekGoal, previousMonthGoal, previousYearGoal);
 
         // 2) 목표 수정 제한 정보 계산 및 바인딩 (특정 시점이 지나면 수정 버튼을 비활성화하는 등의 비즈니스 규칙 처리)
         applyReadingGoalUpdateMeta(summary, today, currentWeekGoal, currentMonthGoal, currentYearGoal);
@@ -277,6 +281,21 @@ public class ReportServiceImpl implements ReportService {
             summary.setYearGoalSet(true);
             summary.setYearGoalCnt(yearGoal.getGoalCnt());
             summary.setYearGoalRate(getGoalRate(summary.getCurrentYearCount(), yearGoal.getGoalCnt()));
+        }
+    }
+
+    private void applyPreviousReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto weekGoal,
+                                          ReadingGoalDto monthGoal, ReadingGoalDto yearGoal) {
+        if (!StringUtil.isEmpty(weekGoal)) {
+            summary.setPreviousWeekGoalCnt(weekGoal.getGoalCnt());
+        }
+
+        if (!StringUtil.isEmpty(monthGoal)) {
+            summary.setPreviousMonthGoalCnt(monthGoal.getGoalCnt());
+        }
+
+        if (!StringUtil.isEmpty(yearGoal)) {
+            summary.setPreviousYearGoalCnt(yearGoal.getGoalCnt());
         }
     }
 
@@ -396,7 +415,7 @@ public class ReportServiceImpl implements ReportService {
         return String.format("%04d%02d", weekYear, weekNumber);
     }
 
-            /**
+    /**
      * 주간, 월간, 연간 독서 목표를 한 번에 저장한다.
      * 목표를 올리는 것은 항상 허용하고, 목표를 낮추는 경우에만 기간과 횟수 제한을 적용한다.
      *
@@ -440,6 +459,75 @@ public class ReportServiceImpl implements ReportService {
         }
 
         return getMonthlyReadingSummary(userNumb);
+    }
+
+    /**
+     * 직전 기간(지난주, 지난달, 작년)에 설정되어 있던 독서 목표 데이터를 조회하여 현재 기간의 목표로 일괄 복사합니다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @return 복사 처리 결과 데이터 (복사된 목표가 없으면 실패 결과, 성공 시 최신 독서 요약 정보 반환)
+     */
+    @Override
+    @Transactional
+    public ResultData copyPreviousReadingGoal(Long userNumb) {
+
+        // 1. 현재 시점 및 직전 주간, 월간, 연간의 시작 날짜 기준점을 계산합니다.
+        LocalDate today = LocalDate.now();                                                      // 실시간 현재 일자 획득
+        LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);               // ISO 기준 이번 주 월요일 날짜
+        LocalDate previousWeekStart = currentWeekStart.minusWeeks(1);                           // ISO 기준 지난 주 월요일 날짜
+        LocalDate currentMonthStart = today.withDayOfMonth(1);                                  // 당월 1일 날짜
+        LocalDate previousMonthStart = currentMonthStart.minusMonths(1);                        // 전월 1일 날짜
+        LocalDate currentYearStart = today.withDayOfYear(1);                                    // 금년 1월 1일 날짜
+        LocalDate previousYearStart = currentYearStart.minusYears(1);                           // 전년 1월 1일 날짜
+
+        // 2. 주간, 월간, 연간 목표 순으로 직전 기간의 목표를 복사 처리하고 성공한 총 건수를 누적합니다.
+        int copiedCount = 0;
+        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentWeekStart, previousWeekStart, Constant.GOAL_TYPE_WEEK);
+        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentMonthStart, previousMonthStart, Constant.GOAL_TYPE_MONTH);
+        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentYearStart, previousYearStart, Constant.GOAL_TYPE_YEAR);
+
+        // 3. 복사된 목표가 단 1건도 없는 경우(이미 목표가 존재하거나 이전 목표 데이터가 없는 경우) 요청 실패로 응답합니다.
+        if (copiedCount == 0) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 4. 성공적으로 복사가 완료되면 최신 독서 요약 정보를 재조회하여 반환합니다.
+        return getMonthlyReadingSummary(userNumb);
+    }
+
+    /**
+     * 목표 타입별로 직전 기간의 목표 데이터를 검증하고 현재 기간의 목표로 단건 복사합니다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인한 회원 번호
+     * @param today 현재 날짜
+     * @param currentDate 현재 기간의 시작일
+     * @param previousDate 직전 기간의 시작일
+     * @param goalType 목표 타입 (WEEK / MONTH / YEAR)
+     * @return 목표 복사 성공 여부 (성공: 1, 실패/스킵: 0)
+     */
+    private int copyPreviousReadingGoalByType(Long userNumb, LocalDate today, LocalDate currentDate,
+                                              LocalDate previousDate, String goalType) {
+
+        // 1. 이미 현재 기간에 설정된 목표가 존재하는 경우 덮어쓰지 않고 즉시 스킵합니다.
+        ReadingGoalDto currentGoal = getReadingGoalDtl(userNumb, currentDate, goalType);
+        if (!StringUtil.isEmpty(currentGoal)) {
+            return 0;
+        }
+
+        // 2. 직전 기간의 목표 데이터를 조회하여 값이 없거나 0 이하의 유효하지 않은 권수인 경우 스킵합니다.
+        ReadingGoalDto previousGoal = getReadingGoalDtl(userNumb, previousDate, goalType);
+        if (StringUtil.isEmpty(previousGoal) || StringUtil.isEmpty(previousGoal.getGoalCnt())
+                || previousGoal.getGoalCnt() <= 0) {
+            return 0;
+        }
+
+        // 3. 직전 기간의 목표 권수를 기반으로 현재 기간의 목표를 새로 등록합니다.
+        ResultEnum result = setReadingGoalByType(userNumb, today, goalType, previousGoal.getGoalCnt());
+
+        // 4. 등록 처리 결과가 정상(isEmpty)이면 복사 성공 카운트 1을 리턴합니다.
+        return StringUtil.isEmpty(result) ? 1 : 0;
     }
 
     /**
@@ -720,7 +808,7 @@ public class ReportServiceImpl implements ReportService {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        return ResultData.success(bookMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
+        return ResultData.success(reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
     }
 
             /**

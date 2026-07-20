@@ -12,11 +12,12 @@ import Loading from "@/components/Loading/Loading";
 import { uptReportStatusGradeApi } from "@/features/Book/api/bookApi";
 import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
 import {
-  REPORT_GRADE_OPTIONS,
+  REPORT_GRADE_VALUES,
   REPORT_STATUS_DONE,
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
 import {
+  copyPreviousReadingGoalApi,
   getMyProfileApi,
   getMonthlyReadingSummaryApi,
   updateReadingGoalApi,
@@ -43,6 +44,24 @@ type ProfileModalType = "quick" | "goal" | "goalHelp";
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
 
+const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: string; singular: string }> = {
+  week: {
+    current: "이번 주",
+    previous: "지난 주",
+    singular: "이번주의",
+  },
+  month: {
+    current: "이번 달",
+    previous: "지난 달",
+    singular: "이번 달의",
+  },
+  year: {
+    current: "올해",
+    previous: "작년",
+    singular: "올해의",
+  },
+};
+
 /**
  * 닉네임 입력값에서 한글이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
  * 사용자가 영문, 숫자, 특수문자를 붙여 넣어도 저장 가능한 한글 닉네임 형식만 상태에 반영합니다.
@@ -64,6 +83,54 @@ const normalizeKoreanNick = (value: string) =>
  */
 const normalizeProfileIntro = (value: string) =>
   value.slice(0, PROFILE_INTRO_MAX_LENGTH);
+
+const joinKoreanList = (items: string[]) => items.join(", ");
+
+const getCopyablePreviousGoalPeriods = (summary: MonthlyReadingSummary | null) =>
+  GOAL_PERIODS.filter((period) => {
+    if (!summary) {
+      return false;
+    }
+
+    if (period === "week") {
+      return !summary.weekGoalSet && Boolean(summary.previousWeekGoalCnt);
+    }
+
+    if (period === "month") {
+      return !summary.monthGoalSet && Boolean(summary.previousMonthGoalCnt);
+    }
+
+    return !summary.yearGoalSet && Boolean(summary.previousYearGoalCnt);
+  });
+
+const getPreviousGoalCount = (summary: MonthlyReadingSummary, period: ReadingPeriod) => {
+  if (period === "week") {
+    return summary.previousWeekGoalCnt ?? 0;
+  }
+
+  if (period === "month") {
+    return summary.previousMonthGoalCnt ?? 0;
+  }
+
+  return summary.previousYearGoalCnt ?? 0;
+};
+
+const getCopyPreviousGoalConfirmText = (summary: MonthlyReadingSummary, periods: ReadingPeriod[]) => {
+  if (periods.length === 1) {
+    const period = periods[0];
+    const count = getPreviousGoalCount(summary, period);
+    const labels = GOAL_COPY_LABELS[period];
+    return `${labels.singular} 독서 목표설정이 비어있습니다. ${labels.previous} 목표 권수(${count}권)를 가져오시겠습니까?`;
+  }
+
+  const currentLabels = periods.map((period) => GOAL_COPY_LABELS[period].current);
+  const previousLabels = periods.map((period) => {
+    const labels = GOAL_COPY_LABELS[period];
+    return `${labels.previous}(${getPreviousGoalCount(summary, period)}권)`;
+  });
+
+  return `${joinKoreanList(currentLabels)} 목표가 비어있습니다. ${joinKoreanList(previousLabels)} 목표를 가져오시겠습니까?`;
+};
 
 /**
  * 이전 기간 대비 완료 독서 변화량을 화면 표시용 문자열로 변환합니다.
@@ -371,7 +438,7 @@ function ProfileEditPage() {
     setClosingModal(null);
     setQuickReport(report);
     setQuickStatus(REPORT_STATUS_DONE);
-    setQuickGrade(Number.isFinite(reportGrade) && reportGrade > 0 ? reportGrade : 5);
+    setQuickGrade(Number.isFinite(reportGrade) ? reportGrade : 5);
   };
 
   const handleQuickEditClick = () => {
@@ -389,7 +456,7 @@ function ProfileEditPage() {
 
     if (
       quickStatus === REPORT_STATUS_DONE
-      && !(REPORT_GRADE_OPTIONS as readonly number[]).includes(quickGrade)
+      && !(REPORT_GRADE_VALUES as readonly number[]).includes(quickGrade)
     ) {
       void sweetWarning(
         message("frontend.alert.inputRequired"),
@@ -435,10 +502,44 @@ function ProfileEditPage() {
    * @author Hanwon.Jang
    * @return
    */
-  const handleGoalModalOpen = () => {
-    setWeekGoalCnt(monthlySummary?.weekGoalCnt ? String(monthlySummary.weekGoalCnt) : "");
-    setMonthGoalCnt(monthlySummary?.monthGoalCnt ? String(monthlySummary.monthGoalCnt) : "");
-    setYearGoalCnt(monthlySummary?.yearGoalCnt ? String(monthlySummary.yearGoalCnt) : "");
+  const handleGoalModalOpen = async () => {
+    let nextSummary = monthlySummary;
+    const copyablePreviousGoalPeriods = getCopyablePreviousGoalPeriods(nextSummary);
+
+    if (nextSummary && copyablePreviousGoalPeriods.length > 0) {
+      const confirmResult = await sweetConfirm({
+        title: message("frontend.profile.goal.copyPreviousTitle"),
+        text: getCopyPreviousGoalConfirmText(nextSummary, copyablePreviousGoalPeriods),
+        confirmButtonText: message("frontend.profile.goal.copyPreviousConfirm"),
+        cancelButtonText: message("frontend.profile.goal.copyPreviousCancel"),
+      });
+
+      if (confirmResult.isConfirmed) {
+        try {
+          setIsGoalSaving(true);
+          const response = await copyPreviousReadingGoalApi();
+          nextSummary = response.data as MonthlyReadingSummary;
+          setMonthlySummary(nextSummary);
+          await sweetSuccess(
+            message("frontend.profile.goal.savedTitle"),
+            message("frontend.profile.goal.saved"),
+          );
+          return;
+        } catch (error) {
+          void sweetError(
+            message("frontend.alert.updateFailedTitle"),
+            getApiErrorMessage(error, message("frontend.common.tryAgain")),
+          );
+          return;
+        } finally {
+          setIsGoalSaving(false);
+        }
+      }
+    }
+
+    setWeekGoalCnt(nextSummary?.weekGoalCnt ? String(nextSummary.weekGoalCnt) : "");
+    setMonthGoalCnt(nextSummary?.monthGoalCnt ? String(nextSummary.monthGoalCnt) : "");
+    setYearGoalCnt(nextSummary?.yearGoalCnt ? String(nextSummary.yearGoalCnt) : "");
     setClosingModal(null);
     setIsGoalModalOpen(true);
   };
@@ -1360,7 +1461,7 @@ function ProfileEditPage() {
                     : "frontend.profile.goal.set",
                 )}
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"/>
+                    <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
               </button>
             </>

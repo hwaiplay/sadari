@@ -113,6 +113,21 @@ public class MonthlyReadingSummaryDto {
     private Integer yearGoalCnt;
 
     /**
+     * ?대옒???대??먯꽌 ?ъ슜?섎뒗 ?곹깭 ?먮뒗 ?ㅼ젙 媛믪씠??
+     */
+    private Integer previousWeekGoalCnt;
+
+    /**
+     * ?대옒???대??먯꽌 ?ъ슜?섎뒗 ?곹깭 ?먮뒗 ?ㅼ젙 媛믪씠??
+     */
+    private Integer previousMonthGoalCnt;
+
+    /**
+     * ?대옒???대??먯꽌 ?ъ슜?섎뒗 ?곹깭 ?먮뒗 ?ㅼ젙 媛믪씠??
+     */
+    private Integer previousYearGoalCnt;
+
+    /**
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
      */
     private int monthGoalRate;

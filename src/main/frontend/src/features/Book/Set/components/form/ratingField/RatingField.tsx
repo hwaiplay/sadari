@@ -1,5 +1,8 @@
 import { message } from "@/app/messages/message";
-import { REPORT_GRADE_OPTIONS } from "@/features/Book/constants/reportForm";
+import {
+  REPORT_GRADE_OPTIONS,
+  REPORT_GRADE_VALUES,
+} from "@/features/Book/constants/reportForm";
 import { useRef, useState } from "react";
 import type { PointerEvent } from "react";
 import * as styles from "./RatingField.css";
@@ -27,9 +30,12 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
 
     const rect = group.getBoundingClientRect();
     const position = Math.min(Math.max(clientX - rect.left, 0), rect.width);
+    const rawGrade = Math.ceil(
+      (position / rect.width) * REPORT_GRADE_OPTIONS.length,
+    );
     const nextGrade = Math.min(
       REPORT_GRADE_OPTIONS.length,
-      Math.max(1, Math.ceil((position / rect.width) * REPORT_GRADE_OPTIONS.length)),
+      Math.max(0, rawGrade),
     );
 
     onChange(nextGrade);
@@ -71,6 +77,14 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
+      {value === 0 && (
+        <input
+          className={styles.hiddenInput}
+          type="hidden"
+          name="grade"
+          value={REPORT_GRADE_VALUES[0]}
+        />
+      )}
       {REPORT_GRADE_OPTIONS.map((grade) => (
         <label
           key={grade}
