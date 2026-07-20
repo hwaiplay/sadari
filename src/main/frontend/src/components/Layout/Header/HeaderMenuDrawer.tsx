@@ -1,4 +1,5 @@
 import { message } from "@/app/messages/message";
+import { queryClient } from "@/app/query/queryClient";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { logoutApi } from "@/features/Auth/api/authApi";
 import { useAuthStore } from "@/features/Auth/store/authStore";
@@ -47,8 +48,10 @@ function HeaderMenuDrawer() {
       await logoutApi();
     } finally {
       clearAuth();
+      // Logout changes the auth state immediately; clearing the cached check prevents /login -> /home loops.
+      queryClient.removeQueries({ queryKey: ["auth"] });
       setIsDrawerOpen(false);
-      navigate("/login");
+      navigate("/login", { replace: true });
     }
   };
 
