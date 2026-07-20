@@ -93,6 +93,8 @@ public interface ReportService {
      */
     ResultData setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto);
 
+    ResultData copyPreviousReadingGoal(Long userNumb);
+
     /**
      * 기존 독후감 내용을 수정한다.
      *

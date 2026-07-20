@@ -21,7 +21,7 @@ export const useSetReport = () => {
         message("frontend.alert.saveSuccessTitle"),
         message("frontend.report.saved"),
       ).then(() => {
-        navigate(`/book/detail/${data.data}`);
+        navigate(`/book/detail/${data.data}`, { replace: true });
       });
     },
     onError: (error: unknown) => {

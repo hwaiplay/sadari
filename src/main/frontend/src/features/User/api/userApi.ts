@@ -36,6 +36,9 @@ export type MonthlyReadingSummary = {
   weekGoalCnt?: number | null;
   monthGoalCnt?: number | null;
   yearGoalCnt?: number | null;
+  previousWeekGoalCnt?: number | null;
+  previousMonthGoalCnt?: number | null;
+  previousYearGoalCnt?: number | null;
   weekGoalRate: number;
   monthGoalRate: number;
   yearGoalRate: number;
@@ -99,6 +102,12 @@ export const getMonthlyReadingSummaryApi = async () => {
  */
 export const updateReadingGoalApi = (params: ReadingGoalParams) => {
   return api.put("/user/reading-goal", params).then((res) => {
+    return assertResultDataSuccess(res.data);
+  });
+};
+
+export const copyPreviousReadingGoalApi = () => {
+  return api.post("/user/reading-goal/previous").then((res) => {
     return assertResultDataSuccess(res.data);
   });
 };

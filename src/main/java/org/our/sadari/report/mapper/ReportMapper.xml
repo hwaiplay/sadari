@@ -236,27 +236,24 @@
           FROM TM_BOOK_REPORT A
      LEFT JOIN TM_BOOK_INFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
-     LEFT JOIN (
-               SELECT L.REPORT_NUMB
-                    , COUNT(*) AS LIKE_CNT
-                 FROM TB_RPLIKE L
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_RPLIKE L
                 GROUP BY L.REPORT_NUMB
-           ) LC
+                ) LC
             ON A.REPORT_NUMB = LC.REPORT_NUMB
-     LEFT JOIN (
-               SELECT L.REPORT_NUMB
-                    , #{commYes} AS LIKE_YSNO
-                 FROM TB_RPLIKE L
-                WHERE L.USER_NUMB = #{userNumb}
-           ) UL
+     LEFT JOIN (  SELECT L.REPORT_NUMB
+                      , #{commYes} AS LIKE_YSNO
+                   FROM TB_RPLIKE L
+                  WHERE L.USER_NUMB = #{userNumb}
+               ) UL
             ON A.REPORT_NUMB = UL.REPORT_NUMB
-     LEFT JOIN (
-               SELECT P.BOOK_NUMB
-                    , ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1) AS BOOK_AVG_GRDE
-                 FROM TM_BOOK_REPORT P
-                WHERE P.REPORT_STAT = #{reportStat}
+     LEFT JOIN (  SELECT P.BOOK_NUMB
+                       , ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1) AS BOOK_AVG_GRDE
+                    FROM TM_BOOK_REPORT P
+                   WHERE P.REPORT_STAT = #{reportStat}
                 GROUP BY P.BOOK_NUMB
-           ) G
+                ) G
             ON G.BOOK_NUMB = B.BOOK_NUMB
          WHERE A.USER_NUMB = #{userNumb}
            AND A.REPORT_NUMB = #{reportNumb}
@@ -266,6 +263,7 @@
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicReportList */
                P.REPORT_NUMB
              , P.USER_NUMB
@@ -296,10 +294,23 @@
                    WHERE L.USER_NUMB = #{userNumb}
                 ) UL
             ON UL.REPORT_NUMB = P.REPORT_NUMB
-         WHERE P.USER_NUMB <![CDATA[!=]]> #{userNumb}
+         WHERE P.USER_NUMB != #{userNumb}
            AND P.PUBC_YSNO = #{commYes}
+           AND P.REPORT_STAT != #{reportStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
       ORDER BY P.REPORT_NUMB DESC
+    </select>
+
+    <!-- ISBN 기준으로 도서에 연결된 완료 독후감의 평균 별점을 조회한다. -->
+    <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        SELECT /* getPublicRatingAverageByIsbn */
+               ROUND(AVG(TO_NUMBER(P.REPORT_GRDE)), 1)
+          FROM TM_BOOK_INFO B
+    INNER JOIN TM_BOOK_REPORT P
+            ON B.BOOK_NUMB = P.BOOK_NUMB
+         WHERE B.BOOK_ISBN = #{bookIsbn}
+          AND P.REPORT_STAT != #{reportStatRead}
     </select>
 
     <!-- 좋아요를 누를 수 있는 독후감 대상인지 확인한다. -->
