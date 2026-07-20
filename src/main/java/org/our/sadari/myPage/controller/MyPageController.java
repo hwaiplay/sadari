@@ -18,6 +18,7 @@ import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -59,6 +60,18 @@ public class MyPageController {
     @PutMapping("/reading-goal")
     public ResultData setReadingGoal(@AuthenticationPrincipal Long userNumb, @RequestBody ReadingGoalDto readingGoalDto) {
         return reportService.setReadingGoal(userNumb, readingGoalDto);
+    }
+
+    /**
+     * 이전 목표량 복사
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 처리에 필요한 입력값
+     * @return 처리 결과
+     */
+    @PostMapping("/reading-goal/previous")
+    public ResultData copyPreviousReadingGoal(@AuthenticationPrincipal Long userNumb) {
+        return reportService.copyPreviousReadingGoal(userNumb);
     }
 
     /**

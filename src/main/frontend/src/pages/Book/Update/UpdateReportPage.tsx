@@ -23,6 +23,7 @@ import {
   MAX_REPORT_CONTENT_BYTES,
   REPORT_STATUS_DONE,
   REPORT_STATUS_READ,
+  REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
 import {
   getReportContentStorageByteLength,
@@ -87,13 +88,13 @@ const UpdateReportPage = () => {
    */
   const handleStatusChange = async (nextStatus: ReadingStatusType) => {
     setStatus(nextStatus);
+    const needsEndDateConfirm =
+      initialStatus === REPORT_STATUS_READ &&
+      status === REPORT_STATUS_READ &&
+      (nextStatus === REPORT_STATUS_DONE || nextStatus === REPORT_STATUS_STOP);
 
     // 최초 상태가 읽는 중이 아니거나 완료 상태로 진입한 상황이 아니면 날짜 보정 확인이 필요 없습니다.
-    if (
-      initialStatus !== REPORT_STATUS_READ ||
-      nextStatus !== REPORT_STATUS_DONE ||
-      status === REPORT_STATUS_DONE
-    ) {
+    if (!needsEndDateConfirm) {
       return;
     }
 
