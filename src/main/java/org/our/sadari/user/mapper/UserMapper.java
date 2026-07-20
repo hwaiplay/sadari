@@ -31,4 +31,6 @@ public interface UserMapper {
      * 아래 코드의 처리 목적을 설명한다.
      */
     int uptUserProfile(UserDto request);
+
+    int getUserNickDuplicateCnt(UserDto request);
 }

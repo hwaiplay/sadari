@@ -87,4 +87,14 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
+    <select id="getUserNickDuplicateCnt" parameterType="org.our.sadari.user.dto.UserDto" resultType="int">
+        SELECT /* getUserNickDuplicateCnt */
+               COUNT(1)
+          FROM TM_USERXM
+         WHERE USER_NICK = #{userNick}
+        <if test="userNumb != null">
+           AND USER_NUMB != #{userNumb}
+        </if>
+    </select>
+
 </mapper>

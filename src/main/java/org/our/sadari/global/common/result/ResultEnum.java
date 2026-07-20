@@ -80,6 +80,10 @@ public enum ResultEnum {
      */
     COMMON_DB_CONNECTION_FAILED(2014, "common.alert.0014"),
 
+    COMMON_BAD_WORD_INCLUDED(2015, "common.alert.0015"),
+
+    USER_NICK_DUPLICATED(2016, "user.alert.0001"),
+
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
