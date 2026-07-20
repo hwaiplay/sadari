@@ -51,7 +51,8 @@ dependencies {
 	// 컴파일 시점에 Getter/Setter 등을 자동으로 생성해주는 코드 다이어트용 라이브러리
 	compileOnly 'org.projectlombok:lombok'
 
-	// 인터페이스 기반으로 데이터베이스 접근(ORM)을 도와주는 JPA 스타터
+	// 비속어 필터
+	implementation 'io.github.vaneproject:badwordfiltering:1.0.0'
 
 	// JSON 데이터와 자바 객체 간의 변환(직렬화/역직렬화)을 담당하는 핵심 라이브러리
 	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'

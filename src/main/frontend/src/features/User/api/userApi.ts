@@ -125,7 +125,7 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
     formData.append("backgroundImage", params.backgroundImage);
   }
 
-  return api.put("/user/me", formData).then((res) => {
+  return api.put("/user/uptProfile", formData).then((res) => {
     return assertResultDataSuccess(res.data);
   });
 };

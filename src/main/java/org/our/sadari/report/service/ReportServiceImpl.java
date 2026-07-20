@@ -14,6 +14,7 @@ import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.service.BadWordFilterService;
 import org.our.sadari.global.common.util.LocaleUtil;
 import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.MessageUtils;
@@ -40,6 +41,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportMapper reportMapper;
     private final BookMapper bookMapper;
     private final CodeUtil codeUtil;
+    private final BadWordFilterService badWordFilterService;
     private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
     private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;
     private static final int WEEK_GOAL_MAX_UPDATE_COUNT = 1;
@@ -1088,6 +1090,11 @@ public class ReportServiceImpl implements ReportService {
             if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
                 // 최대 허용 byte 수를 메시지 인자로 함께 반환한다.
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
+            }
+
+            // 욕설 필터링
+            if (badWordFilterService.hasBadWord(reportDto.getReportCntn())) {
+                return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED);
             }
 
             // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
