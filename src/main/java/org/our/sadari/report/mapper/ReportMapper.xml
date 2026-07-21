@@ -116,17 +116,15 @@
     <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
         /* setReadingGoal */
         MERGE INTO TM_GOALXM G
-        USING (
-              SELECT #{userNumb} AS USER_NUMB
-                   , #{goalDate} AS GOAL_DATE
-                   , #{goalType} AS GOAL_TYPE
-                   , #{goalCnt} AS GOAL_CNTT
-                FROM DUAL
+        USING (   SELECT #{userNumb} AS USER_NUMB
+                       , #{goalDate} AS GOAL_DATE
+                       , #{goalType} AS GOAL_TYPE
+                       , #{goalCnt} AS GOAL_CNTT
+                    FROM DUAL
               ) S
-           ON (
-              G.USER_NUMB = S.USER_NUMB
-          AND G.GOAL_DATE = S.GOAL_DATE
-          AND G.GOAL_TYPE = S.GOAL_TYPE
+           ON (    G.USER_NUMB = S.USER_NUMB
+               AND G.GOAL_DATE = S.GOAL_DATE
+               AND G.GOAL_TYPE = S.GOAL_TYPE
            )
          WHEN MATCHED THEN
       UPDATE

@@ -36,8 +36,8 @@ import * as styles from "./ProfileEditPage.css";
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 10;
 const PROFILE_INTRO_MAX_LENGTH = 50;
-const USER_NICK_REGEX = /^[A-Za-z\uAC00-\uD7A3]+$/;
-const USER_NICK_INPUT_REGEX = /[^A-Za-z\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
+const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+$/;
+const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
 type ReadingPeriod = "week" | "month" | "year";
 type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
 type ProfileModalType = "quick" | "goal" | "goalHelp";
@@ -64,12 +64,12 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
 };
 
 /**
- * 닉네임 입력값에서 한글/영문이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
- * 사용자가 숫자, 특수문자를 붙여 넣어도 저장 가능한 닉네임 형식만 상태에 반영합니다.
+ * 닉네임 입력값에서 한글/영문/숫자가 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
+ * 사용자가 특수문자를 붙여 넣어도 저장 가능한 닉네임 형식만 상태에 반영합니다.
  *
  * @author Hanwon.Jang
  * @param value 사용자가 입력한 닉네임 원문
- * @return 한글/영문 10자 이하로 정리한 닉네임
+ * @return 한글/영문/숫자 10자 이하로 정리한 닉네임
  */
 const normalizeUserNick = (value: string) =>
   value.replace(USER_NICK_INPUT_REGEX, "").slice(0, USER_NICK_MAX_LENGTH);
