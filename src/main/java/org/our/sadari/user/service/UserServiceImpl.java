@@ -3,6 +3,7 @@ package org.our.sadari.user.service;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
@@ -85,8 +86,10 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
         //욕설 포함된 경우 실패 리턴
-        if (badWordFilterService.hasBadWord(userDto.getUserNick()) || badWordFilterService.hasBadWord(userDto.getIntrCntn())) {
-            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED);
+        Optional<String> badWord = badWordFilterService.findBadWord(userDto.getUserNick())
+                .or(() -> badWordFilterService.findBadWord(userDto.getIntrCntn()));
+        if (badWord.isPresent()) {
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
         //이미 사용중인 닉네임이 있을 시 실패 리턴
         if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {

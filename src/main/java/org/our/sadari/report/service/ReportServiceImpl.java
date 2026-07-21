@@ -9,6 +9,7 @@ import java.time.temporal.WeekFields;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.constant.Constant;
@@ -1093,8 +1094,9 @@ public class ReportServiceImpl implements ReportService {
             }
 
             // 욕설 필터링
-            if (badWordFilterService.hasBadWord(reportDto.getReportCntn())) {
-                return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED);
+            Optional<String> badWord = badWordFilterService.findBadWord(reportDto.getReportCntn());
+            if (badWord.isPresent()) {
+                return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
             }
 
             // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
