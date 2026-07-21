@@ -491,8 +491,10 @@ public class BadWordDetectionService {
          * @return 한글 또는 영문 여부
          */
         private boolean isHangulOrAlphabetic(int codePoint) {
-            return Character.UnicodeScript.of(codePoint) == Character.UnicodeScript.HANGUL
-                    || Character.isAlphabetic(codePoint);
+            Character.UnicodeScript unicodeScript = Character.UnicodeScript.of(codePoint);
+
+            return unicodeScript == Character.UnicodeScript.HANGUL
+                    || unicodeScript == Character.UnicodeScript.LATIN;
         }
 
         /**
