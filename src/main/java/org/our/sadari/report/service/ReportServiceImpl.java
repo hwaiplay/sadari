@@ -814,7 +814,7 @@ public class ReportServiceImpl implements ReportService {
         return ResultData.success(reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
     }
 
-            /**
+     /**
      * 독후감과 필요한 도서 정보를 등록한다.
      * 도서가 이미 존재하면 기존 도서 번호를 재사용하고, 없으면 도서를 먼저 등록한 뒤 독후감을 저장한다.
      *

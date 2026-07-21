@@ -36,7 +36,8 @@ import * as styles from "./ProfileEditPage.css";
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 10;
 const PROFILE_INTRO_MAX_LENGTH = 50;
-const KOREAN_NICK_REGEX = /^[\uAC00-\uD7A3]+$/;
+const USER_NICK_REGEX = /^[A-Za-z\uAC00-\uD7A3]+$/;
+const USER_NICK_INPUT_REGEX = /[^A-Za-z\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
 type ReadingPeriod = "week" | "month" | "year";
 type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
 type ProfileModalType = "quick" | "goal" | "goalHelp";
@@ -63,15 +64,15 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
 };
 
 /**
- * 닉네임 입력값에서 한글이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
- * 사용자가 영문, 숫자, 특수문자를 붙여 넣어도 저장 가능한 한글 닉네임 형식만 상태에 반영합니다.
+ * 닉네임 입력값에서 한글/영문이 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
+ * 사용자가 숫자, 특수문자를 붙여 넣어도 저장 가능한 닉네임 형식만 상태에 반영합니다.
  *
  * @author Hanwon.Jang
  * @param value 사용자가 입력한 닉네임 원문
- * @return 한글 10자 이하로 정리한 닉네임
+ * @return 한글/영문 10자 이하로 정리한 닉네임
  */
-const normalizeKoreanNick = (value: string) =>
-  value.replace(/[^\uAC00-\uD7A3]/g, "").slice(0, USER_NICK_MAX_LENGTH);
+const normalizeUserNick = (value: string) =>
+  value.replace(USER_NICK_INPUT_REGEX, "").slice(0, USER_NICK_MAX_LENGTH);
 
 /**
  * 한줄 소개 입력값을 허용 길이 이하로 제한합니다.
@@ -1175,6 +1176,9 @@ function ProfileEditPage() {
   const handleEditModeClick = (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     event.stopPropagation();
+    // 편집 진입 시점의 최신 프로필 값을 input 상태에 다시 주입해 빈 값으로 열리는 경우를 막는다.
+    setUserNick(profile?.userNick ?? "");
+    setIntrCntn(profile?.intrCntn ?? "");
     setIsEditMode(true);
   };
 
@@ -1198,7 +1202,7 @@ function ProfileEditPage() {
 
     if (
       userNick.trim().length > USER_NICK_MAX_LENGTH ||
-      !KOREAN_NICK_REGEX.test(userNick.trim())
+      !USER_NICK_REGEX.test(userNick.trim())
     ) {
       void sweetWarning(
         message("frontend.alert.inputRequired"),
@@ -1347,7 +1351,7 @@ function ProfileEditPage() {
                   maxLength={USER_NICK_MAX_LENGTH}
                   aria-label={message("frontend.profile.nick")}
                   onChange={(event) =>
-                    setUserNick(normalizeKoreanNick(event.currentTarget.value))
+                    setUserNick(normalizeUserNick(event.currentTarget.value))
                   }
                 />
               ) : (

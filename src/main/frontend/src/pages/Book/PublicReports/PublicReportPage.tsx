@@ -7,7 +7,7 @@ import {
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import type { PublicReportType } from "@/features/Book/types/book.type";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
 
@@ -35,6 +35,8 @@ function PublicReportPage() {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
+  const [isRatingTooltipOpen, setIsRatingTooltipOpen] = useState(false);
+  const ratingTooltipRef = useRef<HTMLDivElement | null>(null);
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
@@ -42,10 +44,47 @@ function PublicReportPage() {
   const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
   const likeMutation = usePublicReportLikeMutation();
   const pageState = (location.state ?? {}) as PublicReportPageState;
+  const hasRatingAverage =
+    pageState.ratingAverage !== null &&
+    pageState.ratingAverage !== undefined &&
+    pageState.ratingAverage !== "";
 
   const reports = useMemo(() => {
     return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
   }, [publicReportsQuery.data]);
+
+  /**
+   * 평점 평균 설명 말풍선이 열린 상태에서 다른 영역을 누르면 말풍선을 닫습니다.
+   * 평균 평점 버튼과 말풍선 내부 클릭은 같은 영역으로 보아 닫지 않습니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
+  useEffect(() => {
+    const handleDocumentPointerDown = (event: PointerEvent) => {
+      if (!isRatingTooltipOpen) {
+        return;
+      }
+
+      const target = event.target;
+
+      if (
+        ratingTooltipRef.current &&
+        target instanceof Node &&
+        ratingTooltipRef.current.contains(target)
+      ) {
+        return;
+      }
+
+      setIsRatingTooltipOpen(false);
+    };
+
+    document.addEventListener("pointerdown", handleDocumentPointerDown);
+
+    return () => {
+      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+    };
+  }, [isRatingTooltipOpen]);
 
   /**
    * 긴 독후감 내용의 펼침 상태를 독후감 번호 기준으로 전환합니다.
@@ -130,21 +169,36 @@ function PublicReportPage() {
             {pageState.author && (
               <div className={styles.authorRatingLine}>
                 <p className={styles.meta}>{pageState.author}</p>
-                {pageState.ratingAverage && (
+                {hasRatingAverage && (
                   <span className={styles.metaSeparator}>|</span>
                 )}
-                {pageState.ratingAverage && (
-                  <span
-                    className={styles.ratingSummary}
-                    aria-label={message("frontend.report.gradeValue", [
-                      pageState.ratingAverage,
-                    ])}
+                {hasRatingAverage && (
+                  <div
+                    className={styles.ratingTooltipWrap}
+                    ref={ratingTooltipRef}
                   >
-                    <span className={styles.ratingStar}>{"\u2605"}</span>
-                    <span className={styles.ratingValue}>
-                      {pageState.ratingAverage}
-                    </span>
-                  </span>
+                    <button
+                      className={styles.ratingSummary}
+                      type="button"
+                      aria-label={message("frontend.report.gradeValue", [
+                        pageState.ratingAverage,
+                      ])}
+                      aria-expanded={isRatingTooltipOpen}
+                      onClick={() =>
+                        setIsRatingTooltipOpen((prev) => !prev)
+                      }
+                    >
+                      <span className={styles.ratingStar}>{"\u2605"}</span>
+                      <span className={styles.ratingValue}>
+                        {pageState.ratingAverage}
+                      </span>
+                    </button>
+                    {isRatingTooltipOpen && (
+                      <div className={styles.ratingTooltip} role="tooltip">
+                        {message("frontend.book.ratingAverageHelp")}
+                      </div>
+                    )}
+                  </div>
                 )}
               </div>
             )}
