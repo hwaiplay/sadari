@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.global.common.service.BadWordFilterService;
+import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.user.dto.UserDto;
@@ -28,7 +28,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final FileService fileService;
-    private final BadWordFilterService badWordFilterService;
+    private final BadWordDetectionService badWordDetectionService;
 
     /**
      * 로그인 사용자의 최신 프로필 정보를 조회합니다.
@@ -86,8 +86,8 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
         //욕설 포함된 경우 실패 리턴
-        Optional<String> badWord = badWordFilterService.findBadWord(userDto.getUserNick())
-                .or(() -> badWordFilterService.findBadWord(userDto.getIntrCntn()));
+        Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick())
+                .or(() -> badWordDetectionService.findBadWord(userDto.getIntrCntn()));
         if (badWord.isPresent()) {
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
