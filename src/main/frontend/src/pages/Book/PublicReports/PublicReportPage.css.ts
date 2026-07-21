@@ -83,6 +83,9 @@ export const authorRatingLine = style({
 });
 
 export const ratingSummary = style({
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
   display: "inline-flex",
   alignItems: "center",
   gap: "3px",
@@ -91,6 +94,46 @@ export const ratingSummary = style({
   fontSize: "13px",
   lineHeight: 1,
   color: vars.color.black,
+  cursor: "pointer",
+});
+
+export const ratingTooltipWrap = style({
+  position: "relative",
+  display: "inline-flex",
+  justifyContent: "flex-start",
+});
+
+export const ratingTooltip = style({
+  position: "absolute",
+  left: 0,
+  top: "calc(100% + 9px)",
+  zIndex: 5,
+  width: "max-content",
+  maxWidth: "220px",
+  padding: "9px 11px",
+  borderRadius: "10px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.45,
+  textAlign: "left",
+  boxShadow: "0 10px 28px rgba(0, 0, 0, 0.14)",
+  border: `1px solid ${vars.color.gray300}`,
+  selectors: {
+    "&::before": {
+      content: "",
+      position: "absolute",
+      left: "16px",
+      top: "-6px",
+      width: "10px",
+      height: "10px",
+      backgroundColor: "#ffffff",
+      borderLeft: `1px solid ${vars.color.gray300}`,
+      borderTop: `1px solid ${vars.color.gray300}`,
+      transform: "rotate(45deg)",
+    },
+  },
 });
 
 export const metaSeparator = style({
