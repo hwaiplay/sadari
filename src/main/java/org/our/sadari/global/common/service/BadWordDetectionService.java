@@ -28,7 +28,7 @@ import org.springframework.stereotype.Service;
  *
  * 3. 변종 우회 문자 차단
  *    공백 제거, 특수문자 제거, 숫자 포함 문자 정규화를 거쳐
- *    의도적으로 기호나 숫자를 섞어 넣은 우회 비속어까지 탐지한다.
+ *    의도적으로 기호나 숫자 또는 한글/영문 끼워넣기를 섞어 넣은 우회 비속어까지 탐지한다.
  *
  * 4. 아호-코라식 문자열 탐색
  *    비속어 사전 전체를 매번 순회하지 않고 캐시 갱신 시점에 트라이와 실패 링크를 미리 구성한다.
@@ -53,7 +53,7 @@ public class BadWordDetectionService {
 
     /**
      * 입력된 문자열에서 탐지된 비속어 단어를 찾아 Optional 형태로 반환한다.
-     * 원문, 특수문자 제거본, 숫자 보존 정규화본을 순차적으로 검사한다.
+     * 원문, 특수문자 제거본, 한글/영문 끼워넣기 우회본, 숫자 보존 정규화본을 순차적으로 검사한다.
      *
      * @author Seonghyeon.Kang
      * @param value 검사할 사용자 입력 문자열
@@ -83,6 +83,7 @@ public class BadWordDetectionService {
         // 앞 단계에서 비속어가 발견되면 뒤 단계의 검사 로직은 실행되지 않고 즉시 종료되어 CPU 자원을 아낀다.
         return findBadWord(cache.badWordMatcher(), blankRemovedValue)
                 .or(() -> findBadWord(cache.badWordMatcher(), normalizedWithoutDigits))
+                .or(() -> findBadWordWithLetterGap(cache.badWordMatcher(), normalizedWithoutDigits))
                 .or(() -> findDigitBadWord(cache.digitBadWordMatcher(), normalizedWithDigits));
     }
 
@@ -170,6 +171,26 @@ public class BadWordDetectionService {
         // matcher 내부에는 모든 비속어가 트라이와 실패 링크로 컴파일되어 있다.
         // 따라서 단어 600개를 각각 contains로 검사하지 않고 입력 문자열의 글자 흐름을 한 번만 따라가며 매칭 결과를 찾는다.
         return matcher.findLongest(value);
+    }
+
+    /**
+     * 비속어 글자 사이에 한글이나 영문 한 글자 또는 같은 글자가 연속으로 끼어든 우회 문자열을 탐지한다.
+     * 예를 들어 비속어가 "씨발"이면 "씨아발", "씨아아발"처럼 같은 끼워넣기 문자가 반복된 형태까지 차단한다.
+     *
+     * @author Seonghyeon.Kang
+     * @param matcher 비속어 사전으로 구성한 아호-코라식 자동자
+     * @param value 한글과 영문만 남긴 검사 대상 문자열
+     * @return 탐지된 비속어 중 가장 긴 단어
+     */
+    private Optional<String> findBadWordWithLetterGap(AhoCorasickMatcher matcher, String value) {
+        // 끼워넣기 우회 검사는 정규화된 문자열이 있어야 의미가 있으므로 빈 값이면 즉시 종료한다.
+        if (StringUtil.isEmpty(value)) {
+            return Optional.empty();
+        }
+
+        // 일반 아호-코라식 검사는 정확한 연속 문자열 탐색이고, 이 메서드는 글자 사이의 제한된 노이즈를 허용하는 보강 검사이다.
+        // 두 검사를 분리하면 기본 탐색 성능은 유지하면서 사용자가 의도적으로 한글/영문을 끼워 넣은 경우만 추가로 처리할 수 있다.
+        return matcher.findLongestWithSingleRepeatedLetterGap(value);
     }
 
     /**
@@ -348,6 +369,130 @@ public class BadWordDetectionService {
             }
 
             return Optional.ofNullable(longestMatchedWord);
+        }
+
+        /**
+         * 비속어 각 글자 사이에 한글 또는 영문 한 종류가 끼어든 경우까지 포함하여 가장 긴 매칭 단어를 찾는다.
+         * 정확한 아호-코라식 탐색으로 잡히지 않는 "씨아발", "fxxuck" 같은 우회 입력을 보강하기 위한 제한적 근사 탐색이다.
+         *
+         * @author Seonghyeon.Kang
+         * @param value 한글과 영문만 남긴 검사 대상 문자열
+         * @return 탐지된 가장 긴 비속어
+         */
+        private Optional<String> findLongestWithSingleRepeatedLetterGap(String value) {
+            int[] codePoints = value.codePoints().toArray();
+            String longestMatchedWord = null;
+
+            for (int startIndex = 0; startIndex < codePoints.length; startIndex++) {
+                Optional<String> matchedWord = findLongestWithSingleRepeatedLetterGap(codePoints, startIndex);
+
+                // 같은 입력 안에서 여러 비속어 후보가 잡힐 수 있으므로 사용자에게 가장 구체적인 긴 단어를 반환한다.
+                if (matchedWord.isPresent()
+                        && (longestMatchedWord == null || matchedWord.get().length() > longestMatchedWord.length())) {
+                    longestMatchedWord = matchedWord.get();
+                }
+            }
+
+            return Optional.ofNullable(longestMatchedWord);
+        }
+
+        /**
+         * 특정 시작 위치에서 비속어 글자 사이의 제한된 끼워넣기 문자를 허용하며 트라이를 따라간다.
+         * 한 전이 구간마다 하나의 한글/영문 문자 또는 같은 문자의 연속만 건너뛰도록 제한해 과도한 오탐을 막는다.
+         *
+         * @author Seonghyeon.Kang
+         * @param codePoints 검사 대상 문자열을 코드포인트 배열로 변환한 값
+         * @param startIndex 검사를 시작할 코드포인트 배열 위치
+         * @return 해당 시작 위치에서 탐지된 가장 긴 비속어
+         */
+        private Optional<String> findLongestWithSingleRepeatedLetterGap(int[] codePoints, int startIndex) {
+            TrieNode node = root;
+            String longestMatchedWord = null;
+            int index = startIndex;
+
+            while (index < codePoints.length) {
+                int codePoint = codePoints[index];
+                TrieNode nextNode = node.children.get(codePoint);
+
+                // 현재 문자로 바로 다음 트라이 노드에 갈 수 있으면 가장 정상적인 매칭 경로이므로 그대로 진행한다.
+                if (nextNode != null) {
+                    node = nextNode;
+                    index++;
+                    longestMatchedWord = chooseLongerWord(longestMatchedWord, node.outputs);
+                    continue;
+                }
+
+                // 아직 비속어 첫 글자도 맞추지 못한 상태라면 끼워넣기 문자를 허용할 근거가 없다.
+                // 시작 글자부터 다른 경우는 이 위치에서의 근사 탐색을 중단하고 다음 시작 위치로 넘긴다.
+                if (node == root) {
+                    break;
+                }
+
+                // 끼워넣기 허용 대상은 한글/영문 한 종류로 제한한다.
+                // 숫자와 특수문자는 앞선 정규화 단계에서 이미 별도 처리하므로 여기서 다시 허용하지 않는다.
+                if (!isHangulOrAlphabetic(codePoint)) {
+                    break;
+                }
+
+                int gapCodePoint = codePoint;
+
+                // 사용자가 같은 글자를 여러 번 늘려 쓰는 우회도 같은 한 종류의 끼워넣기 문자로 본다.
+                // 예를 들어 "씨아아아발"은 "씨"와 "발" 사이에 "아"가 반복된 것으로 보고 한 번에 건너뛴다.
+                while (index < codePoints.length && codePoints[index] == gapCodePoint) {
+                    index++;
+                }
+
+                // 한 종류의 끼워넣기 문자를 건너뛴 직후에는 반드시 원래 비속어의 다음 글자가 와야 한다.
+                // 다른 한글/영문이 또 나오면 서로 다른 노이즈가 연속된 것이므로 과도한 오탐 방지를 위해 중단한다.
+                if (index >= codePoints.length) {
+                    break;
+                }
+
+                nextNode = node.children.get(codePoints[index]);
+                if (nextNode == null) {
+                    break;
+                }
+
+                node = nextNode;
+                index++;
+                longestMatchedWord = chooseLongerWord(longestMatchedWord, node.outputs);
+            }
+
+            return Optional.ofNullable(longestMatchedWord);
+        }
+
+        /**
+         * 현재까지 발견한 단어와 새로 끝난 출력 단어 목록 중 더 긴 단어를 선택한다.
+         * 비속어 사전에 짧은 초성어와 긴 완성어가 함께 있을 때 알림 메시지에는 긴 완성어를 노출하는 것이 더 정확하다.
+         *
+         * @author Seonghyeon.Kang
+         * @param currentWord 현재까지 선택된 비속어 단어
+         * @param outputWords 현재 트라이 노드에서 끝나는 비속어 단어 목록
+         * @return 더 긴 비속어 단어
+         */
+        private String chooseLongerWord(String currentWord, List<String> outputWords) {
+            String selectedWord = currentWord;
+
+            for (String outputWord : outputWords) {
+                if (selectedWord == null || outputWord.length() > selectedWord.length()) {
+                    selectedWord = outputWord;
+                }
+            }
+
+            return selectedWord;
+        }
+
+        /**
+         * 끼워넣기 우회 문자로 허용할 문자인지 판단한다.
+         * 한글과 영문 외의 숫자, 기호, 공백은 이미 다른 정규화 단계에서 처리하므로 이 분기에서는 제외한다.
+         *
+         * @author Seonghyeon.Kang
+         * @param codePoint 검사할 유니코드 코드포인트
+         * @return 한글 또는 영문 여부
+         */
+        private boolean isHangulOrAlphabetic(int codePoint) {
+            return Character.UnicodeScript.of(codePoint) == Character.UnicodeScript.HANGUL
+                    || Character.isAlphabetic(codePoint);
         }
 
         /**
