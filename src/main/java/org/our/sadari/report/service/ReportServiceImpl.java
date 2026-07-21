@@ -15,7 +15,7 @@ import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.result.ResultData;
-import org.our.sadari.global.common.service.BadWordFilterService;
+import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.LocaleUtil;
 import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.MessageUtils;
@@ -42,7 +42,7 @@ public class ReportServiceImpl implements ReportService {
     private final ReportMapper reportMapper;
     private final BookMapper bookMapper;
     private final CodeUtil codeUtil;
-    private final BadWordFilterService badWordFilterService;
+    private final BadWordDetectionService badWordDetectionService;
     private static final DateTimeFormatter GOAL_MONTH_FORMATTER = DateTimeFormatter.ofPattern("yyyyMM");
     private static final WeekFields GOAL_WEEK_FIELDS = WeekFields.ISO;
     private static final int WEEK_GOAL_MAX_UPDATE_COUNT = 1;
@@ -1094,7 +1094,7 @@ public class ReportServiceImpl implements ReportService {
             }
 
             // 비속어 필터링
-            Optional<String> badWord = badWordFilterService.findBadWord(reportDto.getReportCntn());
+            Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReportCntn());
             if (badWord.isPresent()) {
                 return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
             }
