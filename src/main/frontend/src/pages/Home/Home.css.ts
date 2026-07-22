@@ -226,10 +226,38 @@ export const gradeLabel = style({
 
 export const emptySearchResult = style({
   padding: "48px 20px",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "12px",
+  textAlign: "center",
+});
+
+export const emptySearchText = style({
+  margin: 0,
   fontFamily: vars.font.body,
   fontSize: "13px",
   color: vars.color.gray500,
-  textAlign: "center",
+});
+
+export const emptySearchButton = style({
+  minHeight: "28px",
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px",
+  border: 0,
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  cursor: "pointer",
+});
+
+export const emptySearchButtonIcon = style({
+  width: "15px",
+  height: "15px",
+  flexShrink: 0,
 });
 
 export const bookGrid = style({

@@ -16,6 +16,11 @@ const SEARCH_STORAGE_KEY = "sadari:book-search";
 const DESCRIPTION_PREVIEW_LENGTH = 90;
 const SEARCH_PAGE_SIZE = 10;
 
+type SearchBookPageState = {
+  initialSearchKeyword?: string;
+  keepSearchResult?: boolean;
+};
+
 /**
  * 책 검색, 더보기, 선택, 추가 조회 흐름을 처리하는 책 검색 화면을 렌더링합니다.
  *
@@ -34,38 +39,6 @@ const SearchBookPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
-
-  useEffect(() => {
-    const shouldRestoreSearch =
-      navigationType === "POP" || location.state?.keepSearchResult === true;
-
-    if (!shouldRestoreSearch) {
-      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
-      return;
-    }
-
-    const cached = sessionStorage.getItem(SEARCH_STORAGE_KEY);
-
-    if (!cached) {
-      return;
-    }
-
-    try {
-      const parsed = JSON.parse(cached) as {
-        searchKeyword?: string;
-        bookResult?: NaverApiResultType[];
-        nextStart?: number;
-        hasMore?: boolean;
-      };
-
-      setSearchKeyword(parsed.searchKeyword ?? "");
-      setBookResult(parsed.bookResult ?? null);
-      setNextStart(parsed.nextStart ?? 1);
-      setHasMore(parsed.hasMore ?? false);
-    } catch {
-      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
-    }
-  }, [location.state, navigationType]);
 
   const fetchBooks = async (keyword: string, start: number) => {
     const response = await api.get(
@@ -92,10 +65,15 @@ const SearchBookPage = () => {
     );
   };
 
-  const handleSearchClick = async (e?: FormEvent<HTMLFormElement>) => {
-    e?.preventDefault();
-    const keyword = searchKeyword.trim();
-
+  /**
+   * 전달받은 검색어로 도서 검색을 실행하고 첫 페이지 결과를 화면과 세션 캐시에 반영합니다.
+   * 홈 독후감 검색 결과 없음 추천과 사용자가 직접 누른 검색 버튼이 같은 흐름을 사용하도록 분리했습니다.
+   *
+   * @author Hanwon.Jang
+   * @param keyword 검색할 책 제목 또는 작가 이름
+   * @return
+   */
+  const executeBookSearch = async (keyword: string) => {
     try {
       if (keyword === "") {
         await sweetWarning(
@@ -123,6 +101,8 @@ const SearchBookPage = () => {
       saveSearchCache(keyword, responseData, next, more);
     } catch (error) {
       console.error("도서 검색 중 오류 발생: ", error);
+      // 화면표시: 검색에 실패했습니다.
+      // 화면표시: 책 검색에 실패했습니다. 다시 시도해주세요.
       await sweetError(
         message("frontend.alert.searchFailedTitle"),
         getApiErrorMessage(error, message("frontend.book.search.failed")),
@@ -130,6 +110,57 @@ const SearchBookPage = () => {
     } finally {
       setIsSearching(false);
     }
+  };
+
+  useEffect(() => {
+    const state = (location.state ?? {}) as SearchBookPageState;
+    const initialSearchKeyword = state.initialSearchKeyword?.trim() ?? "";
+
+    // 홈 독후감 검색 결과가 없어서 넘어온 경우에는 이전 도서 검색 캐시보다 전달받은 검색어가 우선입니다.
+    // 입력창을 먼저 채운 뒤 같은 검색어로 즉시 조회해 사용자가 다시 검색 버튼을 누르지 않게 합니다.
+    if (initialSearchKeyword.length > 0) {
+      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+      setSearchKeyword(initialSearchKeyword);
+      void executeBookSearch(initialSearchKeyword);
+      return;
+    }
+
+    const shouldRestoreSearch =
+      navigationType === "POP" || state.keepSearchResult === true;
+
+    // 새로 도서 검색 화면에 진입한 경우에는 이전 검색 결과가 남지 않도록 세션 캐시를 비웁니다.
+    // 뒤로가기나 책 정보 화면에서 돌아온 경우에만 사용자가 보던 검색 결과를 복구합니다.
+    if (!shouldRestoreSearch) {
+      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+      return;
+    }
+
+    const cached = sessionStorage.getItem(SEARCH_STORAGE_KEY);
+
+    if (!cached) {
+      return;
+    }
+
+    try {
+      const parsed = JSON.parse(cached) as {
+        searchKeyword?: string;
+        bookResult?: NaverApiResultType[];
+        nextStart?: number;
+        hasMore?: boolean;
+      };
+
+      setSearchKeyword(parsed.searchKeyword ?? "");
+      setBookResult(parsed.bookResult ?? null);
+      setNextStart(parsed.nextStart ?? 1);
+      setHasMore(parsed.hasMore ?? false);
+    } catch {
+      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+    }
+  }, [location.key, location.state, navigationType]);
+
+  const handleSearchClick = async (e?: FormEvent<HTMLFormElement>) => {
+    e?.preventDefault();
+    await executeBookSearch(searchKeyword.trim());
   };
 
   const handleLoadMore = async () => {
