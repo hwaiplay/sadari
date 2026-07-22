@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.follow.mapper.FollowMapper">
+
+    <!-- Oracle 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 버튼명을 조회한다. -->
+    <select id="getFollowStatusName" resultType="string">
+        SELECT /* getFollowStatusName */
+               FN_GET_FOLW_STAT(#{userNumb}, #{flowNumb})
+          FROM DUAL
+    </select>
+
+    <!-- 중복 팔로우 요청은 PK 오류가 나지 않도록 MERGE로 한 번만 저장한다. -->
+    <insert id="setFollow">
+        MERGE INTO TB_FOLLOW F
+        USING (
+            SELECT #{userNumb} AS USER_NUMB
+                 , #{flowNumb} AS FLOW_NUMB
+              FROM DUAL
+        ) S
+           ON (F.USER_NUMB = S.USER_NUMB AND F.FLOW_NUMB = S.FLOW_NUMB)
+        WHEN NOT MATCHED THEN
+            INSERT (USER_NUMB, FLOW_NUMB, REGI_DATE)
+            VALUES (S.USER_NUMB, S.FLOW_NUMB, SYSDATE)
+    </insert>
+
+    <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제한다. -->
+    <delete id="delFollow">
+        DELETE FROM TB_FOLLOW
+         WHERE USER_NUMB = #{userNumb}
+           AND FLOW_NUMB = #{flowNumb}
+    </delete>
+</mapper>
