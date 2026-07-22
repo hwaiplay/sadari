@@ -207,7 +207,7 @@ public class JwtProvider {
 
         // SecurityContext에 등록할 인증 토큰 객체를 생성한다. (Principal로 userNumb 사용)
         return new UsernamePasswordAuthenticationToken(
-                userNumb, // principal
+                userNumb, // Authentication principal
                 null,
                 authorities
         );

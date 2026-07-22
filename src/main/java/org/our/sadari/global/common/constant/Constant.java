@@ -13,6 +13,7 @@ public final class Constant {
     public static final String CODE_BOOK_COLR = "BOOK_COLR";
     public static final String CODE_COMM_YSNO = "COMM_YSNO";
     public static final String CODE_BADX_WORD = "BADX_WORD";
+    public static final String CODE_EXCP_WORD = "EXCP_WORD";
     public static final String OPT_PUBC_YSNO = "PUBC_YSNO";
 
     public static final String REPORT_STAT_READ = "READ";

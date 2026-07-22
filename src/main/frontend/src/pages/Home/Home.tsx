@@ -12,7 +12,7 @@ import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 import { useEffect, useMemo, useState } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -104,6 +104,7 @@ function getHomeErrorMessage(error: unknown) {
 
 function Home() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [sortType, setSortType] = useState<HomeSortType>("END_DATE_DESC");
   const [searchKeyword, setSearchKeyword] = useState("");
   const [appliedSearchKeyword, setAppliedSearchKeyword] = useState("");
@@ -258,7 +259,40 @@ function Home() {
         </div>
       ) : (
         <div className={styles.emptySearchResult}>
-          {message("frontend.home.search.empty")}
+          <p className={styles.emptySearchText}>
+            {message("frontend.home.search.empty")}
+          </p>
+          <button
+            className={styles.emptySearchButton}
+            type="button"
+            onClick={() => {
+              // 독후감 검색 결과가 없을 때 같은 검색어를 도서 검색 화면에 전달해 즉시 도서 API 검색을 실행한다.
+              navigate("/book/search", {
+                state: { initialSearchKeyword: appliedSearchKeyword.trim() },
+              });
+            }}
+          >
+            {/* 화면표시: "{0}"으로 도서검색하기 */}
+            <span>
+              {message("frontend.home.search.goBookSearch", [
+                appliedSearchKeyword.trim(),
+              ])}
+            </span>
+            <svg
+              className={styles.emptySearchButtonIcon}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path
+                d="M9 6l6 6-6 6"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+          </button>
         </div>
       )}
     </div>
