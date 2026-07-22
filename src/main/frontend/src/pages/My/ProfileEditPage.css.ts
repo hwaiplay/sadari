@@ -21,6 +21,8 @@ export const profileShell = style({
 
 export const cover = style({
   position: "relative",
+  width: "100%",
+  margin: 0,
   height: "260px",
   overflow: "hidden",
   borderRadius: "22px",
@@ -52,6 +54,12 @@ export const coverProfileEditButton = style({
   alignItems: "center",
   gap: "5px",
   cursor: "pointer",
+  selectors: {
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.62,
+    },
+  },
 });
 
 export const coverImageButton = style([
@@ -108,6 +116,13 @@ export const profileBody = style({
   padding: "0 14px",
 });
 
+export const socialProfileBody = style([
+  profileBody,
+  {
+    padding: 0,
+  },
+]);
+
 export const profileHeaderRow = style({
   width: "100%",
   marginTop: "-34px",
@@ -116,6 +131,14 @@ export const profileHeaderRow = style({
   alignItems: "start",
   gap: "18px",
 });
+
+export const socialProfileHeaderRow = style([
+  profileHeaderRow,
+  {
+    padding: "0 14px",
+    boxSizing: "border-box",
+  },
+]);
 
 export const avatarWrap = style({
   position: "relative",
@@ -197,6 +220,29 @@ export const profileIntro = style({
   lineHeight: 1.55,
   color: "#666666",
   wordBreak: "break-word",
+});
+
+export const socialFollowButton = style({
+  position: "absolute",
+  right: "-8px",
+  bottom: "8px",
+  minWidth: "58px",
+  height: "34px",
+  padding: "0 10px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.62,
+    },
+  },
 });
 
 export const profileNameInput = style({
