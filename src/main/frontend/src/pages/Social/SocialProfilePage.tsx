@@ -1,5 +1,5 @@
 import { message } from "@/app/messages/message";
-import { sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -7,8 +7,11 @@ import {
 } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import {
+  delSocialFollowApi,
+  getSocialFollowStatusApi,
   getSocialProfileApi,
   getSocialReadingSummaryApi,
+  setSocialFollowApi,
 } from "@/features/Social/api/socialApi";
 import type {
   MonthlyReadingSummary,
@@ -84,6 +87,8 @@ function SocialProfilePage() {
   const targetUserNumb = Number(userNumb);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [summary, setSummary] = useState<MonthlyReadingSummary | null>(null);
+  const [followStatName, setFollowStatName] = useState("");
+  const [isFollowUpdating, setIsFollowUpdating] = useState(false);
   const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
     week: false,
     month: false,
@@ -105,17 +110,20 @@ function SocialProfilePage() {
     Promise.all([
       getSocialProfileApi(targetUserNumb),
       getSocialReadingSummaryApi(targetUserNumb),
+      getSocialFollowStatusApi(targetUserNumb),
     ])
-      .then(([profileResponse, summaryResponse]) => {
+      .then(([profileResponse, summaryResponse, followStatusResponse]) => {
         if (!ignore) {
           setProfile(profileResponse.data as UserProfile);
           setSummary(summaryResponse.data as MonthlyReadingSummary);
+          setFollowStatName(followStatusResponse.data?.followStatName ?? "");
         }
       })
       .catch(() => {
         if (!ignore) {
           setProfile(null);
           setSummary(null);
+          setFollowStatName("");
         }
       })
       .finally(() => {
@@ -128,6 +136,53 @@ function SocialProfilePage() {
       ignore = true;
     };
   }, [targetUserNumb]);
+
+  /**
+   * 팔로우 버튼 클릭 시 현재 버튼명에 맞춰 팔로우 또는 언팔로우 API를 호출합니다.
+   * 버튼명이 "팔로잉"이면 이미 내가 상대를 팔로우 중인 상태이므로 삭제하고, 그 외에는 팔로우 관계를 저장합니다.
+   *
+   * @author Hanwon.Jang
+   * @return
+   */
+  const handleFollowButtonClick = async () => {
+    if (isFollowUpdating) {
+      return;
+    }
+
+    if (followStatName === "팔로잉") {
+      const result = await sweetConfirm({
+        // 화면표시: 언팔로우하시겠습니까?
+        title: message("frontend.social.unfollow.title"),
+        // 화면표시: 팔로잉 목록에서 삭제됩니다.
+        text: message("frontend.social.unfollow.text"),
+        // 화면표시: 언팔로우
+        confirmButtonText: message("frontend.social.unfollow.confirm"),
+        cancelButtonText: message("frontend.common.cancel"),
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+    }
+
+    setIsFollowUpdating(true);
+
+    try {
+      const response =
+        followStatName === "팔로잉"
+          ? await delSocialFollowApi(targetUserNumb)
+          : await setSocialFollowApi(targetUserNumb);
+
+      setFollowStatName(response.data?.followStatName ?? "");
+    } catch {
+      void sweetWarning(
+        message("frontend.common.invalidAccess"),
+        message("frontend.common.tryAgain"),
+      );
+    } finally {
+      setIsFollowUpdating(false);
+    }
+  };
 
   /**
    * 주간, 월간, 연간 요약 리스트의 펼침 상태를 전환합니다.
@@ -442,14 +497,24 @@ function SocialProfilePage() {
           )}
         </div>
 
-        <section className={styles.profileBody}>
-          <div className={styles.profileHeaderRow}>
+        <section className={styles.socialProfileBody}>
+          <div className={styles.socialProfileHeaderRow}>
             <div className={styles.avatarWrap}>
               <img
                 className={styles.profileImage}
                 src={profile.porfPath || DEFAULT_PROFILE_IMAGE}
                 alt={profile.userNick ?? message("frontend.profile.nick")}
               />
+              {followStatName && (
+                <button
+                  className={styles.socialFollowButton}
+                  type="button"
+                  disabled={isFollowUpdating}
+                  onClick={handleFollowButtonClick}
+                >
+                  {followStatName}
+                </button>
+              )}
             </div>
 
             <div className={styles.profileText}>
