@@ -99,6 +99,8 @@ tasks.named('test') {
 	useJUnitPlatform()
 }
 def frontendDir = "$projectDir/src/main/frontend"
+def skipFrontendBuild = providers.gradleProperty("skipFrontendBuild").map { it.toBoolean() }.orElse(false)
+def frontendInstallCommand = providers.gradleProperty("frontendInstallCommand").orElse("install")
 
 sourceSets {
 	main {
@@ -107,17 +109,24 @@ sourceSets {
 	}
 }
 
-processResources { dependsOn "copyReactBuildFiles" }
+processResources {
+	if (!skipFrontendBuild.get()) {
+		dependsOn "copyReactBuildFiles"
+	}
+}
 
 task installReact(type: Exec) {
 	workingDir "$frontendDir"
 	inputs.dir "$frontendDir"
 	group = BasePlugin.BUILD_GROUP
+	def npmInstallCommand = frontendInstallCommand.get()
 	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		commandLine "npm.cmd", "audit", "fix"
-		commandLine 'npm.cmd', 'install' }
+		// 로컬 Windows 빌드에서는 실행 중인 esbuild.exe를 npm ci가 삭제하려다 실패할 수 있어 기본값은 install로 둔다.
+		commandLine 'npm.cmd', npmInstallCommand
+	}
 	else {
-		commandLine "npm", "audit", "fix" commandLine 'npm', 'install'
+		// Docker/CI에서는 -PfrontendInstallCommand=ci를 넘겨 package-lock.json 기준의 재현 가능한 설치를 수행한다.
+		commandLine 'npm', npmInstallCommand
 	}
 }
 

@@ -1,0 +1,32 @@
+services:
+  app:
+    image: ${APP_IMAGE:-sadari-app:latest}
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: sadari-app
+    restart: always
+    env_file:
+      - .env
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "${APP_PORT:-8080}:8080"
+    volumes:
+      - sadari-uploads:/app/uploads
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7-alpine
+    container_name: sadari-redis
+    restart: always
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - sadari-redis-data:/data
+
+volumes:
+  sadari-uploads:
+  sadari-redis-data:

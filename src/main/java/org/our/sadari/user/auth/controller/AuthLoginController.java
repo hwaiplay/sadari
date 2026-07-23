@@ -8,14 +8,15 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
+import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.auth.service.AuthService;
+import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -46,6 +47,7 @@ public class AuthLoginController {
     private final AuthService authService;
     private final JwtProvider jwtProvider;
     private final TokenRedisService tokenRedisService;
+    private final UserMapper userMapper;
 
     @Value("${domain.front}")
     private String frontDomain;
@@ -56,6 +58,12 @@ public class AuthLoginController {
 
     @Value("${jwt.refresh-token-validity-in-seconds}")
     private long refreshTokenCookieMaxAgeSeconds;
+
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
 
     /**
      * tokenCheck 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
@@ -164,7 +172,15 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        String newAccessToken = jwtProvider.createAccessToken(userNumb, AuthConstant.ROLE_USER);
+        UserDto savedUser = userMapper.getUserByNumb(userNumb);
+
+        // Access Token 재발급 시에도 DB에 저장된 현재 권한을 사용해야 ADMIN 사용자가 Swagger 접근 권한을 유지할 수 있다.
+        if (StringUtil.isEmpty(savedUser)) {
+            expireTokenCookies(response);
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
+        }
+
+        String newAccessToken = jwtProvider.createAccessToken(userNumb, savedUser.getUserRole());
         String newRefreshToken = jwtProvider.createRefreshToken(userNumb);
 
         // 신규 발급된 Refresh Token을 Redis 저장소에 저장(RTR 패턴)하고, 쿠키에도 새로 발급된 토큰들을 내려준다.
@@ -370,8 +386,10 @@ public class AuthLoginController {
     private ResponseCookie createTokenCookie(String name, String value, long maxAgeSeconds) {
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                .sameSite("Lax")
-                .secure(false)
+                // 운영 HTTPS와 프론트/백 도메인 분리 여부에 따라 SameSite 값을 yml 환경변수로 조정한다.
+                .sameSite(cookieSameSite)
+                // 운영 HTTPS 배포에서는 true로 설정해 브라우저가 보안 연결에서만 토큰 쿠키를 전송하게 한다.
+                .secure(cookieSecure)
                 .path("/")
                 .maxAge(maxAgeSeconds)
                 .build();

@@ -38,3 +38,14 @@ out/
 
 # Local Spring config
 src/main/resources/application-loc.yml
+
+# Deployment secrets
+.env
+*.env
+!*.env.example
+src/main/resources/application-prod.yml
+
+# DB migration/seed scripts can contain operational schema and seed account data.
+docs/db/*.sql
+docs/db/*.ddl
+docs/db/*.dml
