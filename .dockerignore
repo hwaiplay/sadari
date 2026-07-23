@@ -1,0 +1,11 @@
+.git
+.gradle
+.idea
+build
+out
+uploads
+src/main/frontend/node_modules
+src/main/frontend/dist
+src/main/resources/static
+*.log
+*.tmp
