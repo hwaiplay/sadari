@@ -27,10 +27,10 @@ public interface ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 조회할 독후감 번호
+     * @param reptNumb 조회할 독후감 번호
      * @return 독후감 상세 조회 결과
      */
-    ResultData getDetail(Long userNumb, Long reportNumb);
+    ResultData getDetail(Long userNumb, Long reptNumb);
 
     /**
      * ISBN 기준으로 공개 독후감 목록을 조회한다.
@@ -57,10 +57,10 @@ public interface ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 좋아요를 토글할 독후감 번호
+     * @param reptNumb 좋아요를 토글할 독후감 번호
      * @return 변경 후 좋아요 상세 정보
      */
-    ResultData setReportLike(Long userNumb, Long reportNumb);
+    ResultData setReportLike(Long userNumb, Long reptNumb);
 
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회한다.
@@ -100,30 +100,30 @@ public interface ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param reportDto 수정할 독후감 정보
      * @return 수정된 독후감 번호를 담은 처리 결과
      */
-    ResultData uptReport(Long userNumb, Long reportNumb, ReportDto reportDto);
+    ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto);
 
     /**
      * 독후감의 읽기 상태와 별점만 수정합니다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param reportDto 수정할 읽기 상태와 별점
      * @return 수정 처리 결과
      */
-    ResultData uptReportStatusGrade(Long userNumb, Long reportNumb, ReportDto reportDto);
+    ResultData uptReptStatusGrade(Long userNumb, Long reptNumb, ReportDto reportDto);
 
     /**
      * 로그인 사용자의 독후감을 삭제한다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 삭제할 독후감 번호
+     * @param reptNumb 삭제할 독후감 번호
      * @return 삭제 처리 결과
      */
-    ResultData delReport(Long userNumb, Long reportNumb);
+    ResultData delReport(Long userNumb, Long reptNumb);
 }

@@ -27,7 +27,7 @@ function ColorCodeField({ colors, value, onChange }: ColorCodeFieldProps) {
           <input
             className={styles.hiddenInput}
             type="radio"
-            name="reportColr"
+            name="reptColr"
             value={color.comdCode}
             checked={value.toLowerCase() === color.comdCode.toLowerCase()}
             onChange={() => onChange(color.comdCode)}

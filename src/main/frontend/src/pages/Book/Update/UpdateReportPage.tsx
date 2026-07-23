@@ -40,7 +40,7 @@ const UpdateReportPage = () => {
 
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
-  const [reportColr, setReportColr] = useState("");
+  const [reptColr, setReptColr] = useState("");
   const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
   const [initialStatus, setInitialStatus] = useState<ReadingStatusType>("");
   const [startDate, setStartDate] = useState("");
@@ -64,15 +64,15 @@ const UpdateReportPage = () => {
       return;
     }
 
-    setStatus(bookData.reportStat ?? "");
-    setInitialStatus(bookData.reportStat ?? "");
-    setStartDate(bookData.reportStdt ?? "");
-    setEndDate(bookData.reportEndt ?? "");
-    setGrade(Number(bookData.reportGrde) || 0);
-    setReportColr(bookData.reportColr ?? "");
+    setStatus(bookData.reptStat ?? "");
+    setInitialStatus(bookData.reptStat ?? "");
+    setStartDate(bookData.reptStdt ?? "");
+    setEndDate(bookData.reptEndt ?? "");
+    setGrade(Number(bookData.reptGrde) || 0);
+    setReptColr(bookData.reptColr ?? "");
     setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
     setContentByteLength(
-      getReportContentStorageByteLength(bookData.reportCntn ?? ""),
+      getReportContentStorageByteLength(bookData.reptCntn ?? ""),
     );
   }, [bookData]);
 
@@ -123,13 +123,13 @@ const UpdateReportPage = () => {
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
-    const reportNumb = idNum;
+    const reptNumb = idNum;
     const validationMessage = validateReportForm({
       status: formData.get("status"),
       startDate: formData.get("startDate"),
       endDate: formData.get("endDate"),
       grade: formData.get("grade"),
-      reportColr: formData.get("reportColr"),
+      reptColr: formData.get("reptColr"),
       content: formData.get("content"),
       validStatusCodes: statusCodes.map((item) => item.comdCode),
       validReportColors: colorCodes.map((item) => item.comdCode),
@@ -144,14 +144,14 @@ const UpdateReportPage = () => {
     const nextStatus = formData.get("status") as ReadingStatusType;
     const gradeValue = formData.get("grade");
     const data = {
-      reportNumb: idNum,
-      reportStat: nextStatus,
-      reportStdt: formData.get("startDate") as string,
-      reportEndt: formData.get("endDate") as string,
-      reportGrde: gradeValue ? String(gradeValue) : "0",
-      reportColr: formData.get("reportColr") as string,
+      reptNumb: idNum,
+      reptStat: nextStatus,
+      reptStdt: formData.get("startDate") as string,
+      reptEndt: formData.get("endDate") as string,
+      reptGrde: gradeValue ? String(gradeValue) : "0",
+      reptColr: formData.get("reptColr") as string,
       pubcYsno,
-      reportCntn: sanitizeText(formData.get("content")),
+      reptCntn: sanitizeText(formData.get("content")),
     };
 
     const confirmed = await sweetConfirm({
@@ -165,7 +165,7 @@ const UpdateReportPage = () => {
       return;
     }
 
-    mutate({ reportNumb, data });
+    mutate({ reptNumb, data });
   };
 
   const deleteOnClick = async () => {
@@ -239,8 +239,8 @@ const UpdateReportPage = () => {
           <FormField title={message("frontend.report.field.color")}>
             <ColorCodeField
               colors={colorCodes}
-              value={reportColr}
-              onChange={setReportColr}
+              value={reptColr}
+              onChange={setReptColr}
             />
           </FormField>
 
@@ -281,7 +281,7 @@ const UpdateReportPage = () => {
                 name="content"
                 id="content"
                 placeholder={message("frontend.report.placeholder.content")}
-                defaultValue={bookData.reportCntn}
+                defaultValue={bookData.reptCntn}
                 onChange={(e) => {
                   const nextValue = truncateUtf8Bytes(e.currentTarget.value);
                   e.currentTarget.value = nextValue;

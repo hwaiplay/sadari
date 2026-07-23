@@ -96,15 +96,15 @@ public class ReportController {
      *
      * @author Seunghyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
-     * @param reportNumb 좋아요를 토글할 독후감 번호
+     * @param reptNumb 좋아요를 토글할 독후감 번호
      * @return 변경 후 좋아요 상태와 좋아요 수
      */
-    @PostMapping("/publicReports/{reportNumb}/like")
+    @PostMapping("/publicReports/{reptNumb}/like")
     @Operation(summary = "공개 독후감 좋아요 토글", description = "공개 독후감의 좋아요를 등록하거나 취소하고 변경된 좋아요 상태를 반환한다.")
     public ResultData setReportLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                   , @Parameter(description = "좋아요를 토글할 독후감 번호", example = "1")
-                                    @PathVariable("reportNumb") Long reportNumb) {
-        return reportService.setReportLike(userNumb, reportNumb);
+                                    @PathVariable("reptNumb") Long reptNumb) {
+        return reportService.setReportLike(userNumb, reptNumb);
     }
 
     /**
@@ -125,21 +125,21 @@ public class ReportController {
 
     /**
      * 기존 독후감 정보를 수정한다.
-     * URL의 reportNumb를 기준으로 수정 대상을 확정하고, 본문 DTO에는 변경할 독후감 값을 담는다.
+     * URL의 reptNumb를 기준으로 수정 대상을 확정하고, 본문 DTO에는 변경할 독후감 값을 담는다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param request 수정할 독후감 정보
      * @return 수정된 독후감 번호
      */
-    @PutMapping("/uptReport/{reportNumb}")
+    @PutMapping("/uptReport/{reptNumb}")
     @Operation(summary = "독후감 수정", description = "기존 독후감의 도서, 기간, 상태, 별점, 공개 여부, 본문을 수정한다.")
     public ResultData uptReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "수정할 독후감 번호", example = "1")
-                                @PathVariable("reportNumb") Long reportNumb
+                                @PathVariable("reptNumb") Long reptNumb
                               , @Valid @RequestBody ReportDto request) {
-        return reportService.uptReport(userNumb, reportNumb, request);
+        return reportService.uptReport(userNumb, reptNumb, request);
     }
 
     /**
@@ -148,17 +148,17 @@ public class ReportController {
      *
      * @author Seunghyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param request 수정할 독서 상태와 별점 정보
      * @return 수정 처리 결과
      */
-    @PutMapping("/uptReport/status-grade/{reportNumb}")
+    @PutMapping("/uptReport/status-grade/{reptNumb}")
     @Operation(summary = "독서 상태와 별점 빠른 수정", description = "마이페이지 팝업에서 독서 상태와 별점만 빠르게 수정한다.")
-    public ResultData uptReportStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+    public ResultData uptReptStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                           , @Parameter(description = "수정할 독후감 번호", example = "1")
-                                            @PathVariable("reportNumb") Long reportNumb
+                                            @PathVariable("reptNumb") Long reptNumb
                                           , @RequestBody ReportDto request) {
-        return reportService.uptReportStatusGrade(userNumb, reportNumb, request);
+        return reportService.uptReptStatusGrade(userNumb, reptNumb, request);
     }
 
     /**
@@ -167,14 +167,14 @@ public class ReportController {
      *
      * @author Seunghyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
-     * @param reportNumb 삭제할 독후감 번호
+     * @param reptNumb 삭제할 독후감 번호
      * @return 삭제 처리 결과
      */
-    @DeleteMapping("/delReport/{reportNumb}")
+    @DeleteMapping("/delReport/{reptNumb}")
     @Operation(summary = "독후감 삭제", description = "로그인 사용자가 작성한 독후감을 삭제한다.")
     public ResultData delReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "삭제할 독후감 번호", example = "1")
-                                @PathVariable("reportNumb") Long reportNumb) {
-        return reportService.delReport(userNumb, reportNumb);
+                                @PathVariable("reptNumb") Long reptNumb) {
+        return reportService.delReport(userNumb, reptNumb);
     }
 }

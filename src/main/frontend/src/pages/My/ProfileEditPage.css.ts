@@ -538,7 +538,7 @@ export const readingSummaryReport = style({
   },
 });
 
-export const readingSummaryReportStatic = style([
+export const readingSummaryReptStatic = style([
   readingSummaryReport,
   {
     cursor: "default",

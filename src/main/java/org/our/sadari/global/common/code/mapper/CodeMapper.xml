@@ -17,11 +17,11 @@
              , OPT4_CODE
              , OPT4_NAME
              , USEE_YSNO
-             , SORT_ORDER
+             , SORT_ORDR
           FROM TB_CODEXD
          WHERE COMM_CODE = #{commCode}
            AND NVL(USEE_YSNO, #{commYes}) = #{commYes}
-      ORDER BY SORT_ORDER NULLS LAST, COMD_CODE
+      ORDER BY SORT_ORDR NULLS LAST, COMD_CODE
     </select>
 
     <select id="getCodeName" resultType="string">

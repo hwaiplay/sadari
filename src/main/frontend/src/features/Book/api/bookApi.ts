@@ -38,8 +38,8 @@ export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
   return assertResultDataSuccess(res.data);
 };
 
-export const setPublicReportLikeApi = (reportNumb: number) => {
-  return api.post(`/book/publicReports/${reportNumb}/like`).then((res) => {
+export const setPublicReportLikeApi = (reptNumb: number) => {
+  return api.post(`/book/publicReports/${reptNumb}/like`).then((res) => {
     return assertResultDataSuccess(res.data);
   });
 };
@@ -55,31 +55,31 @@ export const getListApi = async (params: BookListParams = {}) => {
 };
 
 export const uptReportApi = async ({
-  reportNumb,
+  reptNumb,
   data,
 }: uptReportType): Promise<AddBookResponse> => {
-  const res = await api.put(`/book/uptReport/${reportNumb}`, data);
+  const res = await api.put(`/book/uptReport/${reptNumb}`, data);
   return assertResultDataSuccess(res.data);
 };
 
-export type UptReportStatusGradeParams = {
-  reportNumb: number;
+export type UptReptStatusGradeParams = {
+  reptNumb: number;
   data: {
-    reportStat: string;
-    reportGrde: string;
-    reportEndt?: string;
+    reptStat: string;
+    reptGrde: string;
+    reptEndt?: string;
   };
 };
 
-export const uptReportStatusGradeApi = async ({
-  reportNumb,
+export const uptReptStatusGradeApi = async ({
+  reptNumb,
   data,
-}: UptReportStatusGradeParams): Promise<AddBookResponse> => {
-  const res = await api.put(`/book/uptReport/status-grade/${reportNumb}`, data);
+}: UptReptStatusGradeParams): Promise<AddBookResponse> => {
+  const res = await api.put(`/book/uptReport/status-grade/${reptNumb}`, data);
   return assertResultDataSuccess(res.data);
 };
 
-export const delReportApi = async (reportNumb: number) => {
-  const res = await api.delete(`/book/delReport/${reportNumb}`);
+export const delReportApi = async (reptNumb: number) => {
+  const res = await api.delete(`/book/delReport/${reptNumb}`);
   return assertResultDataSuccess(res.data);
 };

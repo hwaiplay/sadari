@@ -39,7 +39,7 @@ const SORT_OPTIONS: Array<{ value: HomeSortType; labelKey: string }> = [
 
 function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
   const targetDate =
-    sortType === "START_DATE_DESC" ? book.reportStdt : book.reportEndt;
+    sortType === "START_DATE_DESC" ? book.reptStdt : book.reptEndt;
   const match = targetDate?.match(/^(\d{4})-(\d{2})/);
 
   if (!match) {
@@ -57,7 +57,7 @@ function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
 }
 
 function getGradeGroup(book: HomeBookType) {
-  const rawGrade = Number(book.reportGrde);
+  const rawGrade = Number(book.reptGrde);
   const grade = Number.isFinite(rawGrade) ? Math.max(0, Math.min(5, rawGrade)) : 0;
   const starCount = Math.floor(grade);
   const gradeLabel =
@@ -248,7 +248,7 @@ function Home() {
                       key={`${group.key}-${rowIndex}`}
                     >
                       {rowBooks.map((book: HomeBookType) => (
-                        <Book key={book.reportNumb} {...book} />
+                        <Book key={book.reptNumb} {...book} />
                       ))}
                     </div>
                   ))}

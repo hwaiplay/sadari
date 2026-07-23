@@ -30,7 +30,7 @@ public class MonthlyReadingSummaryDto {
     /**
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
      */
-    private String reportStat;
+    private String reptStat;
 
     /**
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
