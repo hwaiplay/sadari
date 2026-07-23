@@ -1,12 +1,15 @@
 package org.our.sadari.social.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.util.HashMap;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.our.sadari.follow.service.FollowService;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.social.service.SocialService;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
@@ -27,11 +30,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/social")
+@Tag(name = "소셜", description = "타인 프로필 조회와 팔로우/언팔로우 API")
 public class SocialController {
 
     private final UserMapper userMapper;
     private final ReportService reportService;
-    private final FollowService followService;
+    private final SocialService socialService;
 
     /**
      * 사용자 번호로 공개 프로필 정보를 조회합니다.
@@ -42,7 +46,9 @@ public class SocialController {
      * @return 공개 프로필 조회 결과
      */
     @GetMapping("/profile/{userNumb}")
-    public ResultData getSocialProfile(@PathVariable Long userNumb) {
+    @Operation(summary = "타인 프로필 조회", description = "사용자 번호로 공개 프로필 정보를 조회한다.")
+    public ResultData getSocialProfile(@Parameter(description = "조회할 사용자 번호", example = "31")
+                                       @PathVariable Long userNumb) {
         UserDto user = userMapper.getUserByNumb(userNumb);
 
         // 존재하지 않는 사용자 번호로 접근한 경우 화면에서 빈 프로필을 그리지 않도록 공통 실패 응답을 반환합니다.
@@ -68,7 +74,9 @@ public class SocialController {
      * @return 독서 활동 요약 조회 결과
      */
     @GetMapping("/profile/{userNumb}/reading-summary")
-    public ResultData getSocialReadingSummary(@PathVariable Long userNumb) {
+    @Operation(summary = "타인 독서 요약 조회", description = "사용자 번호로 공개 프로필의 독서 활동 요약을 조회한다.")
+    public ResultData getSocialReadingSummary(@Parameter(description = "조회할 사용자 번호", example = "31")
+                                              @PathVariable Long userNumb) {
         UserDto user = userMapper.getUserByNumb(userNumb);
 
         // 활동 요약 조회 전에 사용자 존재 여부를 먼저 확인해 의미 없는 집계를 방지합니다.
@@ -81,7 +89,7 @@ public class SocialController {
 
     /**
      * 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회합니다.
-     * 실제 버튼명 결정은 Oracle 함수 FN_GET_FOLW_STAT을 사용하는 FollowService에서 처리합니다.
+     * 실제 버튼명 결정은 Oracle 함수 FN_GET_FOLW_STAT을 사용하는 SocialService에서 처리합니다.
      *
      * @author Seunghyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -89,8 +97,11 @@ public class SocialController {
      * @return 팔로우 버튼 상태 조회 결과
      */
     @GetMapping("/profile/{userNumb}/follow-status")
-    public ResultData getFollowStatus(@AuthenticationPrincipal Long loginUserNumb, @PathVariable Long userNumb) {
-        return followService.getFollowStatus(loginUserNumb, userNumb);
+    @Operation(summary = "팔로우 버튼 상태 조회", description = "로그인 사용자와 상대 사용자 관계를 기준으로 팔로우, 맞팔로우, 팔로잉 버튼명을 조회한다.")
+    public ResultData getFollowStatus(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+                                      @Parameter(description = "상대 사용자 번호", example = "31")
+                                      @PathVariable Long userNumb) {
+        return socialService.getFollowStatus(loginUserNumb, userNumb);
     }
 
     /**
@@ -103,8 +114,11 @@ public class SocialController {
      * @return 저장 후 팔로우 버튼 상태 조회 결과
      */
     @PostMapping("/profile/{userNumb}/follow")
-    public ResultData setFollow(@AuthenticationPrincipal Long loginUserNumb, @PathVariable Long userNumb) {
-        return followService.setFollow(loginUserNumb, userNumb);
+    @Operation(summary = "팔로우 등록", description = "로그인 사용자가 상대 사용자를 팔로우한다.")
+    public ResultData setFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+                                @Parameter(description = "팔로우할 상대 사용자 번호", example = "31")
+                                @PathVariable Long userNumb) {
+        return socialService.setFollow(loginUserNumb, userNumb);
     }
 
     /**
@@ -117,7 +131,10 @@ public class SocialController {
      * @return 삭제 후 팔로우 버튼 상태 조회 결과
      */
     @DeleteMapping("/profile/{userNumb}/follow")
-    public ResultData delFollow(@AuthenticationPrincipal Long loginUserNumb, @PathVariable Long userNumb) {
-        return followService.delFollow(loginUserNumb, userNumb);
+    @Operation(summary = "언팔로우", description = "로그인 사용자가 상대 사용자에게 건 팔로우 관계를 삭제한다.")
+    public ResultData delFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+                                @Parameter(description = "언팔로우할 상대 사용자 번호", example = "31")
+                                @PathVariable Long userNumb) {
+        return socialService.delFollow(loginUserNumb, userNumb);
     }
 }

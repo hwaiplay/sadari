@@ -1,5 +1,8 @@
 package org.our.sadari.report.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/book")
+@Tag(name = "독후감", description = "독후감 목록, 상세, 등록, 수정, 삭제, 공개 독후감, 좋아요 API")
 public class ReportController {
 
     private final ReportService reportService;
@@ -43,9 +47,12 @@ public class ReportController {
      * @return 독후감 목록 조회 결과
      */
     @GetMapping("/getBookList")
-    public ResultData getBookList(@AuthenticationPrincipal Long userNumb
-                                , @RequestParam(value = "bookKeyword", required = false) String bookKeyword
-                                , @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType) {
+    @Operation(summary = "내 독후감 목록 조회", description = "로그인 사용자의 독후감을 책 제목 또는 작가명 검색어와 정렬 조건으로 조회한다.")
+    public ResultData getBookList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                , @Parameter(description = "책 제목 또는 작가명 검색어", example = "용의자")
+                                  @RequestParam(value = "bookKeyword", required = false) String bookKeyword
+                                , @Parameter(description = "정렬 유형", example = Constant.SORT_END_DATE_DESC)
+                                  @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType) {
         return reportService.getBookList(userNumb, bookKeyword, sortType);
     }
 
@@ -59,8 +66,10 @@ public class ReportController {
      * @return 독후감 상세 조회 결과
      */
     @GetMapping("/getBookdetail/{bookNumb}")
-    public ResultData getDetail(@AuthenticationPrincipal Long userNumb
-                              , @PathVariable("bookNumb") Long bookNumb) {
+    @Operation(summary = "내 독후감 상세 조회", description = "로그인 사용자가 작성한 독후감과 연결된 도서 정보를 함께 조회한다.")
+    public ResultData getDetail(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                              , @Parameter(description = "독후감 번호", example = "1")
+                                @PathVariable("bookNumb") Long bookNumb) {
         return reportService.getDetail(userNumb, bookNumb);
     }
 
@@ -74,8 +83,10 @@ public class ReportController {
      * @return 공개 독후감 목록 조회 결과
      */
     @GetMapping("/publicReports/by-isbn")
-    public ResultData getPublicReportsByIsbn(@AuthenticationPrincipal Long userNumb
-                                           , @RequestParam("isbn") String isbn) {
+    @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서에 대해 다른 사용자가 공개한 독후감 목록을 조회한다.")
+    public ResultData getPublicReportsByIsbn(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                           , @Parameter(description = "공개 독후감을 조회할 도서 ISBN", example = "9788972756194")
+                                             @RequestParam("isbn") String isbn) {
         return reportService.getPublicReportsByIsbn(userNumb, isbn);
     }
 
@@ -89,8 +100,10 @@ public class ReportController {
      * @return 변경 후 좋아요 상태와 좋아요 수
      */
     @PostMapping("/publicReports/{reportNumb}/like")
-    public ResultData setReportLike(@AuthenticationPrincipal Long userNumb
-                                  , @PathVariable("reportNumb") Long reportNumb) {
+    @Operation(summary = "공개 독후감 좋아요 토글", description = "공개 독후감의 좋아요를 등록하거나 취소하고 변경된 좋아요 상태를 반환한다.")
+    public ResultData setReportLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                  , @Parameter(description = "좋아요를 토글할 독후감 번호", example = "1")
+                                    @PathVariable("reportNumb") Long reportNumb) {
         return reportService.setReportLike(userNumb, reportNumb);
     }
 
@@ -104,7 +117,8 @@ public class ReportController {
      * @return 등록된 독후감 번호
      */
     @PostMapping("/setReport")
-    public ResultData createReport(@AuthenticationPrincipal Long userNumb
+    @Operation(summary = "독후감 등록", description = "도서 정보가 없으면 도서를 먼저 저장한 뒤 로그인 사용자의 독후감을 등록한다.")
+    public ResultData createReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Valid @RequestBody ReportDto requestDto) {
         return reportService.setReport(userNumb, requestDto);
     }
@@ -120,8 +134,10 @@ public class ReportController {
      * @return 수정된 독후감 번호
      */
     @PutMapping("/uptReport/{reportNumb}")
-    public ResultData uptReport(@AuthenticationPrincipal Long userNumb
-                              , @PathVariable("reportNumb") Long reportNumb
+    @Operation(summary = "독후감 수정", description = "기존 독후감의 도서, 기간, 상태, 별점, 공개 여부, 본문을 수정한다.")
+    public ResultData uptReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                              , @Parameter(description = "수정할 독후감 번호", example = "1")
+                                @PathVariable("reportNumb") Long reportNumb
                               , @Valid @RequestBody ReportDto request) {
         return reportService.uptReport(userNumb, reportNumb, request);
     }
@@ -137,8 +153,10 @@ public class ReportController {
      * @return 수정 처리 결과
      */
     @PutMapping("/uptReport/status-grade/{reportNumb}")
-    public ResultData uptReportStatusGrade(@AuthenticationPrincipal Long userNumb
-                                          , @PathVariable("reportNumb") Long reportNumb
+    @Operation(summary = "독서 상태와 별점 빠른 수정", description = "마이페이지 팝업에서 독서 상태와 별점만 빠르게 수정한다.")
+    public ResultData uptReportStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                          , @Parameter(description = "수정할 독후감 번호", example = "1")
+                                            @PathVariable("reportNumb") Long reportNumb
                                           , @RequestBody ReportDto request) {
         return reportService.uptReportStatusGrade(userNumb, reportNumb, request);
     }
@@ -153,8 +171,10 @@ public class ReportController {
      * @return 삭제 처리 결과
      */
     @DeleteMapping("/delReport/{reportNumb}")
-    public ResultData delReport(@AuthenticationPrincipal Long userNumb
-                              , @PathVariable("reportNumb") Long reportNumb) {
+    @Operation(summary = "독후감 삭제", description = "로그인 사용자가 작성한 독후감을 삭제한다.")
+    public ResultData delReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                              , @Parameter(description = "삭제할 독후감 번호", example = "1")
+                                @PathVariable("reportNumb") Long reportNumb) {
         return reportService.delReport(userNumb, reportNumb);
     }
 }
