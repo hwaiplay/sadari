@@ -9,11 +9,11 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./ReadingCalendarPage.css";
 
 type CalendarReport = {
-  reportNumb: number;
+  reptNumb: number;
   bookTitl: string;
-  reportStdt: string;
-  reportEndt: string;
-  reportColr?: string;
+  reptStdt: string;
+  reptEndt: string;
+  reptColr?: string;
 };
 
 const WEEKDAY_KEYS = [
@@ -73,8 +73,8 @@ function formatSelectedDate(date: Date) {
  * @return 해당 날짜가 독서 기간에 포함되면 true
  */
 function isReadingOnDate(report: CalendarReport, date: Date) {
-  const start = parseLocalDate(report.reportStdt);
-  const end = parseLocalDate(report.reportEndt);
+  const start = parseLocalDate(report.reptStdt);
+  const end = parseLocalDate(report.reptEndt);
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
 
   return start <= target && target <= end;
@@ -89,13 +89,13 @@ function isReadingOnDate(report: CalendarReport, date: Date) {
  * @return 정렬 비교 결과
  */
 function compareReports(a: CalendarReport, b: CalendarReport) {
-  const startCompare = parseLocalDate(a.reportStdt).getTime() - parseLocalDate(b.reportStdt).getTime();
+  const startCompare = parseLocalDate(a.reptStdt).getTime() - parseLocalDate(b.reptStdt).getTime();
 
   if (startCompare !== 0) {
     return startCompare;
   }
 
-  return a.reportNumb - b.reportNumb;
+  return a.reptNumb - b.reptNumb;
 }
 
 /**
@@ -246,14 +246,14 @@ function ReadingCalendarPage() {
                 </span>
                 <div className={styles.dayBooks}>
                   {visibleReports.map((report) => {
-                    const backgroundColor = report.reportColr || "#e5e5e5";
+                    const backgroundColor = report.reptColr || "#e5e5e5";
 
                     return (
                       <div
                         className={styles.bookPill}
                         style={{ backgroundColor }}
                         title={report.bookTitl}
-                        key={`${day.toISOString()}-${report.reportNumb}`}
+                        key={`${day.toISOString()}-${report.reptNumb}`}
                       />
                     );
                   })}
@@ -275,14 +275,14 @@ function ReadingCalendarPage() {
         {selectedReports.length > 0 ? (
           <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
             {selectedReports.map((report) => {
-              const backgroundColor = report.reportColr || "#e5e5e5";
+              const backgroundColor = report.reptColr || "#e5e5e5";
 
               return (
                 <button
                   className={styles.scheduleItem}
                   type="button"
-                  onClick={() => navigate(`/book/detail/${report.reportNumb}`)}
-                  key={report.reportNumb}
+                  onClick={() => navigate(`/book/detail/${report.reptNumb}`)}
+                  key={report.reptNumb}
                 >
                   <span
                     className={styles.scheduleColor}
@@ -293,8 +293,8 @@ function ReadingCalendarPage() {
                       {report.bookTitl}
                     </strong>
                     <span className={styles.scheduleDate}>
-                      {formatDisplayDate(report.reportStdt)} -{" "}
-                      {formatDisplayDate(report.reportEndt)}
+                      {formatDisplayDate(report.reptStdt)} -{" "}
+                      {formatDisplayDate(report.reptEndt)}
                     </span>
                   </span>
                 </button>

@@ -34,5 +34,5 @@ public class CodeDto {
     @Schema(description = "사용 여부", example = "Y")
     private String useeYsno;
     @Schema(description = "정렬 순서", example = "1")
-    private Integer sortOrder;
+    private Integer sortOrdr;
 }

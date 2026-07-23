@@ -21,7 +21,7 @@ export type CodeDetail = {
   opt4Code?: string;
   opt4Name?: string;
   useeYsno?: string;
-  sortOrder?: number;
+  sortOrdr?: number;
 };
 
 export const getCodeListApi = async (commCode: string): Promise<CodeDetail[]> => {

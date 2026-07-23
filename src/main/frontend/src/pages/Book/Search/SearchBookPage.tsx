@@ -9,7 +9,7 @@ import api from "../../../app/api/axios";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
-import { stripHtmlTags } from "@/app/utils/htmlUtil";
+import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import * as styles from "./SearchBookPage.css";
 
 const SEARCH_STORAGE_KEY = "sadari:book-search";
@@ -242,7 +242,7 @@ const SearchBookPage = () => {
             <div className={styles.resultList}>
               {bookResult.map((book, index) => {
                 const title = stripHtmlTags(book.title);
-                const author = stripHtmlTags(book.author);
+                const author = normalizeBookAuthor(book.author);
                 const publisher = stripHtmlTags(book.publisher);
                 const description = stripHtmlTags(book.description);
                 const preview =

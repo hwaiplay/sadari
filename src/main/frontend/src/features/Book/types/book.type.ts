@@ -62,23 +62,23 @@ export type ReadingStatusType = string;
  */
 export interface ReportDtoType {
   // 독서 진행 상태
-  reportStat: ReadingStatusType;
-  reportStatName?: string;
+  reptStat: ReadingStatusType;
+  reptStatName?: string;
   // 독서 시작일
-  reportStdt: string;
+  reptStdt: string;
   // 독서 종료일
-  reportEndt: string;
+  reptEndt: string;
   // 별점
-  reportGrde: string;
+  reptGrde: string;
   // 책장 색상
-  reportColr: string;
-  reportColrName?: string;
+  reptColr: string;
+  reptColrName?: string;
   pubcYsno?: "Y" | "N";
   pubcYsnoName?: string;
   likeCnt?: number;
   likeYsno?: "Y" | "N";
   // 독후감 내용
-  reportCntn: string;
+  reptCntn: string;
 
   bookTitl: string;
   // 저자
@@ -101,22 +101,22 @@ export interface ReportDtoType {
  * 독후감 수정 타입
  */
 export interface uptReportType {
-  reportNumb: number;
+  reptNumb: number;
 
   data: {
     // 독서 진행 상태
-    reportStat: ReadingStatusType;
+    reptStat: ReadingStatusType;
     // 독서 시작일
-    reportStdt: string;
+    reptStdt: string;
     // 독서 종료일
-    reportEndt: string;
+    reptEndt: string;
     // 별점
-    reportGrde: string;
+    reptGrde: string;
     // 책장 색상
-    reportColr: string;
+    reptColr: string;
     pubcYsno: "Y" | "N";
     // 독후감 내용
-    reportCntn: string;
+    reptCntn: string;
   };
 }
 
@@ -124,17 +124,17 @@ export interface uptReportType {
 export interface AddBookResponse {
   code: number;
   message?: string;
-  data: number; // reportNumb
+  data: number; // reptNumb
 }
 
 export interface PublicReportType {
-  reportNumb: number;
+  reptNumb: number;
   userNumb: number;
   userNick: string;
   porfPath?: string;
   bookNumb: number;
-  reportGrde: string;
-  reportCntn: string;
+  reptGrde: string;
+  reptCntn: string;
   pubcYsno: "Y";
   likeCnt?: number;
   likeYsno?: "Y" | "N";
@@ -148,20 +148,20 @@ export interface ReportDetailType extends ReportDtoType {
 
 // 홈화면에 보이는 독후감 타입
 export interface HomeBookType {
-  reportNumb: number;
+  reptNumb: number;
   bookNumb: number;
   bookTitl: string;
   bookCvim?: string;
-  reportStdt?: string;
-  reportEndt?: string;
-  reportGrde?: string;
-  reportColr?: string;
-  reportColrName?: string;
+  reptStdt?: string;
+  reptEndt?: string;
+  reptGrde?: string;
+  reptColr?: string;
+  reptColrName?: string;
   readingYn?: "Y" | "N";
 }
 
 // 독후감 수정 시 파라미터 타입
 export type SetReportParamsType = {
-  // reportNumb: number; // 독후감 번호
+  // reptNumb: number; // 독후감 번호
   data: uptReportType; // 수정 데이터
 };
