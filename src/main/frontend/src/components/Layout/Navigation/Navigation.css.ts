@@ -4,10 +4,10 @@ import {vars} from "../../../app/styles/tokens.css";
 export const navContainer = style({
     position: "fixed",
     bottom: 0,
-    right: 0,
+    right: "var(--sadari-scrollbar-compensation, 0px)",
     left: 0,
     zIndex: 997,
-    width: "100%",
+    width: "auto",
     height: vars.headerHeight,
     margin: "0 auto",
     display: "flex",

@@ -3,6 +3,7 @@ import { useEffect } from "react";
 let scrollLockCount = 0;
 let originalOverflow = "";
 let originalPaddingRight = "";
+let originalScrollbarCompensation = "";
 
 /**
  * 현재 열린 모달 개수를 기준으로 body 스크롤을 잠급니다.
@@ -17,10 +18,18 @@ export function lockBodyScroll() {
 
     originalOverflow = document.body.style.overflow;
     originalPaddingRight = document.body.style.paddingRight;
+    originalScrollbarCompensation = document.documentElement.style.getPropertyValue(
+      "--sadari-scrollbar-compensation",
+    );
     document.body.style.overflow = "hidden";
 
     if (scrollbarWidth > 0) {
       document.body.style.paddingRight = `${scrollbarWidth}px`;
+      // fixed 네비게이션은 body padding 영향을 받지 않으므로 별도 CSS 변수로 같은 폭을 보정한다.
+      document.documentElement.style.setProperty(
+        "--sadari-scrollbar-compensation",
+        `${scrollbarWidth}px`,
+      );
     }
   }
 
@@ -40,6 +49,15 @@ export function unlockBodyScroll() {
   if (scrollLockCount === 0) {
     document.body.style.overflow = originalOverflow;
     document.body.style.paddingRight = originalPaddingRight;
+
+    if (originalScrollbarCompensation) {
+      document.documentElement.style.setProperty(
+        "--sadari-scrollbar-compensation",
+        originalScrollbarCompensation,
+      );
+    } else {
+      document.documentElement.style.removeProperty("--sadari-scrollbar-compensation");
+    }
   }
 }
 
