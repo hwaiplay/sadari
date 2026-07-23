@@ -12,6 +12,7 @@ import type {
 } from "../../types/book.type";
 import {
   sanitizeText,
+  normalizeBookAuthor,
   stripHtmlTags,
   validateReportForm,
   validateSelectedBook,
@@ -45,7 +46,7 @@ export function useSetReportForm(
     const startDate = formData.get("startDate");
     const endDate = formData.get("endDate");
     const grade = formData.get("grade");
-    const reportColr = formData.get("reportColr");
+    const reptColr = formData.get("reptColr");
     const pubcYsno = formData.get("pubcYsno");
     const content = formData.get("content");
 
@@ -54,7 +55,7 @@ export function useSetReportForm(
       startDate,
       endDate,
       grade,
-      reportColr,
+      reptColr,
       content,
       validStatusCodes,
       validReportColors,
@@ -71,15 +72,15 @@ export function useSetReportForm(
     const normalizedPubcYsno: "Y" | "N" = pubcYsno === "Y" ? "Y" : "N";
     const normalizedGrade = grade ? String(grade) : "0";
     const data = {
-      reportStat: status as ReadingStatusType,
-      reportStdt: startDate as string,
-      reportEndt: endDate as string,
-      reportGrde: normalizedGrade,
-      reportColr: reportColr as string,
+      reptStat: status as ReadingStatusType,
+      reptStdt: startDate as string,
+      reptEndt: endDate as string,
+      reptGrde: normalizedGrade,
+      reptColr: reptColr as string,
       pubcYsno: normalizedPubcYsno,
-      reportCntn: sanitizeText(content),
+      reptCntn: sanitizeText(content),
       bookTitl: stripHtmlTags(selectedBook.title),
-      bookAthr: stripHtmlTags(selectedBook.author),
+      bookAthr: normalizeBookAuthor(selectedBook.author),
       bookPubl: stripHtmlTags(selectedBook.publisher),
       bookIsbn: sanitizeText(selectedBook.isbn),
       bookCvim: sanitizeText(selectedBook.image),

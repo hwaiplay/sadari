@@ -39,7 +39,7 @@ function SetReportPage() {
 
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
-  const [reportColr, setReportColr] = useState("");
+  const [reptColr, setReptColr] = useState("");
   const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
@@ -75,10 +75,10 @@ function SetReportPage() {
   }, [status, statusCodes]);
 
   useEffect(() => {
-    if (!reportColr && colorCodes.length > 0) {
-      setReportColr(colorCodes[0].comdCode);
+    if (!reptColr && colorCodes.length > 0) {
+      setReptColr(colorCodes[0].comdCode);
     }
-  }, [reportColr, colorCodes]);
+  }, [reptColr, colorCodes]);
 
   return isPending ? (
     <Loading title={message("frontend.report.loading.create")} />
@@ -149,8 +149,8 @@ function SetReportPage() {
           <FormField title={message("frontend.report.field.color")}>
             <ColorCodeField
               colors={colorCodes}
-              value={reportColr}
-              onChange={setReportColr}
+              value={reptColr}
+              onChange={setReptColr}
             />
           </FormField>
 

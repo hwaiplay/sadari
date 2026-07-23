@@ -34,7 +34,7 @@ public class ReadingGoalDto {
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
      */
     @Schema(description = "목표 집계에 사용할 독서 상태 코드", example = "DONE")
-    private String reportStat;
+    private String reptStat;
 
     /**
      * 클래스 내부에서 사용하는 상태 또는 설정 값이다.

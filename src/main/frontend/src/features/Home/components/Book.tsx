@@ -7,7 +7,7 @@ import * as styles from "./Book.css";
  * 홈 책장에 표시할 책 표지와 독서 중 배지를 렌더링합니다.
  *
  * @author Hanwon.Jang
- * @param reportNumb 이동할 독후감 번호
+ * @param reptNumb 이동할 독후감 번호
  * @param bookTitl 책 제목
  * @param bookCvim 책 표지 이미지 URL
  * @param readingYn 독서 중 여부
@@ -15,7 +15,7 @@ import * as styles from "./Book.css";
  * @return 책장 책 컴포넌트
  */
 function Book({
-  reportNumb,
+  reptNumb,
   bookTitl,
   bookCvim,
   readingYn,
@@ -23,7 +23,7 @@ function Book({
 }: HomeBookType & { className?: string }) {
   return (
     <Link
-      to={`/book/detail/${reportNumb}`}
+      to={`/book/detail/${reptNumb}`}
       className={`${styles.book} ${className ?? ""}`}
       aria-label={bookTitl}
     >

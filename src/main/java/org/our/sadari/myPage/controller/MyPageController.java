@@ -124,12 +124,12 @@ public class MyPageController {
 
         for (ReportDto report : bookList) {
             // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
-            if (StringUtil.hasEmpty(report.getReportStdt(), report.getReportEndt())) {
+            if (StringUtil.hasEmpty(report.getReptStdt(), report.getReptEndt())) {
                 continue;
             }
 
-            LocalDate reportStart = DateUtil.parseDefaultDate(report.getReportStdt());
-            LocalDate reportEnd = DateUtil.parseDefaultDate(report.getReportEndt());
+            LocalDate reportStart = DateUtil.parseDefaultDate(report.getReptStdt());
+            LocalDate reportEnd = DateUtil.parseDefaultDate(report.getReptEndt());
 
             // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
             if (!DateUtil.isDateRangeOverlapped(reportStart, reportEnd, calendarStart, calendarEnd)) {
@@ -137,11 +137,11 @@ public class MyPageController {
             }
 
             Map<String, Object> item = new HashMap<>();
-            item.put("reportNumb", report.getReportNumb());
+            item.put("reptNumb", report.getReptNumb());
             item.put("bookTitl", report.getBookTitl());
-            item.put("reportStdt", report.getReportStdt());
-            item.put("reportEndt", report.getReportEndt());
-            item.put("reportColr", report.getReportColrName());
+            item.put("reptStdt", report.getReptStdt());
+            item.put("reptEndt", report.getReptEndt());
+            item.put("reptColr", report.getReptColrName());
             calendarReports.add(item);
         }
 

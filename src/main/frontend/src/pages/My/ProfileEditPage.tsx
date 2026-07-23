@@ -9,7 +9,7 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
-import { uptReportStatusGradeApi } from "@/features/Book/api/bookApi";
+import { uptReptStatusGradeApi } from "@/features/Book/api/bookApi";
 import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
 import {
   REPORT_GRADE_VALUES,
@@ -158,7 +158,7 @@ const formatReadingDiff = (diff: number) => {
  * @return 화면에 표시할 독서 기간 문자열
  */
 const getReadingEndDateText = (report: ReadingSummaryReport) => {
-  return formatDashedDateToDot(report.reportEndt);
+  return formatDashedDateToDot(report.reptEndt);
 };
 
 /**
@@ -171,8 +171,8 @@ const getReadingEndDateText = (report: ReadingSummaryReport) => {
  */
 const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
   const periodText = [
-    formatDashedDateToDot(report.reportStdt),
-    formatDashedDateToDot(report.reportEndt),
+    formatDashedDateToDot(report.reptStdt),
+    formatDashedDateToDot(report.reptEndt),
   ]
     .filter(Boolean)
     .join(" ~ ");
@@ -385,13 +385,13 @@ function ProfileEditPage() {
 
   /**
    * 요약 목록에서 선택한 책의 독후감 상세 화면으로 이동합니다.
-   * 백엔드가 내려준 reportNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결합니다.
+   * 백엔드가 내려준 reptNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결합니다.
    *
    * @author Hanwon.Jang
-   * @param reportNumb 이동할 독후감 번호
+   * @param reptNumb 이동할 독후감 번호
    */
-  const handleSummaryReportClick = (reportNumb: number) => {
-    navigate(`/book/detail/${reportNumb}`);
+  const handleSummaryReportClick = (reptNumb: number) => {
+    navigate(`/book/detail/${reptNumb}`);
   };
 
   /**
@@ -434,7 +434,7 @@ function ProfileEditPage() {
    * @param report 선택한 현재 읽고 있는 책 정보
    */
   const handleCurrentReadingClick = (report: ReadingSummaryReport) => {
-    const reportGrade = Number(report.reportGrde);
+    const reportGrade = Number(report.reptGrde);
 
     setClosingModal(null);
     setQuickReport(report);
@@ -447,7 +447,7 @@ function ProfileEditPage() {
       return;
     }
 
-    navigate(`/book/upt/${quickReport.reportNumb}`);
+    navigate(`/book/upt/${quickReport.reptNumb}`);
   };
 
   const handleQuickSaveClick = async () => {
@@ -468,14 +468,14 @@ function ProfileEditPage() {
 
     try {
       setIsQuickSaving(true);
-      await uptReportStatusGradeApi({
-        reportNumb: quickReport.reportNumb,
+      await uptReptStatusGradeApi({
+        reptNumb: quickReport.reptNumb,
         data: {
-          reportStat: quickStatus,
-          reportGrde: quickStatus === REPORT_STATUS_DONE ? String(quickGrade) : "0",
-          reportEndt: quickStatus === REPORT_STATUS_DONE || quickStatus === REPORT_STATUS_STOP
+          reptStat: quickStatus,
+          reptGrde: quickStatus === REPORT_STATUS_DONE ? String(quickGrade) : "0",
+          reptEndt: quickStatus === REPORT_STATUS_DONE || quickStatus === REPORT_STATUS_STOP
             ? formatDateValue(new Date())
-            : quickReport.reportEndt,
+            : quickReport.reptEndt,
         },
       });
 
@@ -604,8 +604,8 @@ function ProfileEditPage() {
           </h2>
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
-              const remainDays = getRemainDaysUntil(report.reportEndt);
-              const remainRate = getRemainPeriodRate(report.reportStdt, report.reportEndt);
+              const remainDays = getRemainDaysUntil(report.reptEndt);
+              const remainRate = getRemainPeriodRate(report.reptStdt, report.reptEndt);
               const remainColor = getGoalProgressColor(remainRate);
               const isExpired = remainDays <= 0;
               const content = (
@@ -623,7 +623,7 @@ function ProfileEditPage() {
                     </strong>
                     <span className={styles.currentReadingMeta}>
                       <span className={styles.readingSummaryBookMeta}>
-                        {[report.bookAthr, formatDashedDateToDot(report.reportEndt)]
+                        {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
                           .filter(Boolean)
                           .join(" | ")}
                       </span>
@@ -643,7 +643,7 @@ function ProfileEditPage() {
               return (
                 <button
                   className={styles.currentReadingButton}
-                  key={report.reportNumb}
+                  key={report.reptNumb}
                   type="button"
                   onClick={() => handleCurrentReadingClick(report)}
                 >
@@ -1119,8 +1119,8 @@ function ProfileEditPage() {
                 <button
                   className={styles.readingSummaryReport}
                   type="button"
-                  key={report.reportNumb}
-                  onClick={() => handleSummaryReportClick(report.reportNumb)}
+                  key={report.reptNumb}
+                  onClick={() => handleSummaryReportClick(report.reptNumb)}
                 >
                   {report.bookCvim && (
                     <img
@@ -1152,7 +1152,7 @@ function ProfileEditPage() {
                           <span>|</span>
                         )}
                         <span className={styles.readingSummaryGrade}>
-                          {getReadingGradeText(report.reportGrde)}
+                          {getReadingGradeText(report.reptGrde)}
                         </span>
                       </span>
                     </span>

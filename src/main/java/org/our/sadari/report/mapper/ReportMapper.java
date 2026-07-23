@@ -167,7 +167,7 @@ public interface ReportMapper {
      * @param reportDto 사용자 번호, 독후감 번호, 읽기 상태, 별점
      * @return 반영 건수
      */
-    int uptReportStatusGrade(ReportDto reportDto);
+    int uptReptStatusGrade(ReportDto reportDto);
 
     /**
      * 로그인 사용자의 독후감을 삭제합니다.

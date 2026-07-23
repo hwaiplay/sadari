@@ -9,14 +9,14 @@ export type UserProfile = {
 };
 
 export type ReadingSummaryReport = {
-  reportNumb: number;
+  reptNumb: number;
   bookTitl?: string;
   bookAthr?: string;
   bookCvim?: string;
   bookIsbn?: string;
-  reportStdt?: string;
-  reportEndt?: string;
-  reportGrde?: string;
+  reptStdt?: string;
+  reptEndt?: string;
+  reptGrde?: string;
   pubcYsno?: "Y" | "N";
 };
 

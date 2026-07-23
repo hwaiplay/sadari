@@ -25,41 +25,41 @@ public class ReportDto extends BookDto {
 
     /** 독후감 고유 번호이다. */
     @Schema(description = "독후감 번호", example = "1")
-    private Long reportNumb;
+    private Long reptNumb;
 
     /** 독서 상태 코드이다. 예: 읽는 중, 완료 등 공통코드 값을 사용한다. */
     @Schema(description = "독서 상태 코드", example = "DONE", allowableValues = {"READ", "DONE", "STOP"})
     @NotBlank
-    private String reportStat;
+    private String reptStat;
 
     /** 화면 표시용 독서 상태명이다. */
     @Schema(description = "독서 상태명", example = "다 읽었어요")
-    private String reportStatName;
+    private String reptStatName;
 
     /** 독서 시작일이다. yyyy-MM-dd 형식만 허용한다. */
     @Schema(description = "독서 시작일", example = "2026-07-01")
     @NotBlank
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
-    private String reportStdt;
+    private String reptStdt;
 
     /** 독서 종료일이다. yyyy-MM-dd 형식만 허용한다. */
     @Schema(description = "독서 종료일", example = "2026-07-23")
     @NotBlank
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
-    private String reportEndt;
+    private String reptEndt;
 
     /** 독후감 별점이다. 읽고있어요 상태의 미선택 값은 0, 사용자가 선택하는 값은 1점부터 5점까지의 정수로 저장한다. */
     @Schema(description = "독후감 별점. 0점부터 등록 가능하다.", example = "4")
-    private String reportGrde;
+    private String reptGrde;
 
     /** 책장 색상 코드이다. 공통코드 CODE_BOOK_COLR의 세부코드 값을 사용한다. */
     @Schema(description = "책장 색상 코드", example = "BLUE")
     @NotBlank
-    private String reportColr;
+    private String reptColr;
 
     /** 화면 표시용 책장 색상명 또는 색상값이다. */
     @Schema(description = "책장 색상명 또는 색상값")
-    private String reportColrName;
+    private String reptColrName;
 
     /** 공개 여부 코드이다. Y이면 공개, N이면 비공개이다. */
     @Schema(description = "공개 여부", example = "Y", allowableValues = {"Y", "N"})
@@ -73,7 +73,7 @@ public class ReportDto extends BookDto {
     @Schema(description = "독후감 본문", example = "인물의 선택이 끝까지 긴장감을 유지했다.")
     @NotBlank
     @Size(max = 4000)
-    private String reportCntn;
+    private String reptCntn;
 
     /** 공개 독후감 목록에 표시할 작성자 닉네임이다. */
     private String userNick;

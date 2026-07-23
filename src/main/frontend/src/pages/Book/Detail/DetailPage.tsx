@@ -49,10 +49,10 @@ function DetailPage() {
   const likeMutation = usePublicReportLikeMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
 
-  const goUpdatePage = (reportNumb: number) => {
+  const goUpdatePage = (reptNumb: number) => {
     // 상세에서 수정으로 진입한 뒤 저장하면 다시 상세로 이동한다.
     // 이때 기존 상세 히스토리를 남기면 뒤로가기 시 같은 상세 화면으로 돌아오므로 수정 진입 시 현재 상세 엔트리를 교체한다.
-    navigate(`/book/upt/${reportNumb}`, { replace: true });
+    navigate(`/book/upt/${reptNumb}`, { replace: true });
   };
 
   const showBookInfoView = () => setShowBookInfo(true);
@@ -79,9 +79,9 @@ function DetailPage() {
   const pageStyle = {
     "--book-bg-image": `url("${bookData.bookCvim}")`,
   } as CSSProperties;
-  const isReadingStatus = bookData.reportStat === REPORT_STATUS_READ;
+  const isReadingStatus = bookData.reptStat === REPORT_STATUS_READ;
   const periodTitle = isReadingStatus ? "목표 독서기간" : "독서 기간";
-  const periodText = [bookData.reportStdt, bookData.reportEndt]
+  const periodText = [bookData.reptStdt, bookData.reptEndt]
     .filter(Boolean)
     .join(" ~ ");
 
@@ -240,7 +240,7 @@ function DetailPage() {
               {message("frontend.report.field.status")}
             </h2>
             <div className={styles.statusPill}>
-              {bookData.reportStatName || bookData.reportStat}
+              {bookData.reptStatName || bookData.reptStat}
             </div>
           </section>
 
@@ -269,7 +269,7 @@ function DetailPage() {
             <h2 className={styles.sectionTitle}>
               {message("frontend.report.field.grade")}
             </h2>
-            <RatingStars grade={bookData.reportGrde} />
+            <RatingStars grade={bookData.reptGrde} />
           </section>
 
           <section className={styles.section}>
@@ -304,7 +304,7 @@ function DetailPage() {
               </button>
             </div>
             <p className={styles.contentBox}>
-              {bookData.reportCntn || message("frontend.common.noWrittenReport")}
+              {bookData.reptCntn || message("frontend.common.noWrittenReport")}
             </p>
           </section>
 

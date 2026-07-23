@@ -44,10 +44,11 @@ function PublicReportPage() {
   const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
   const likeMutation = usePublicReportLikeMutation();
   const pageState = (location.state ?? {}) as PublicReportPageState;
+  const ratingAverageValue = pageState.ratingAverage;
   const hasRatingAverage =
-    pageState.ratingAverage !== null &&
-    pageState.ratingAverage !== undefined &&
-    pageState.ratingAverage !== "";
+    ratingAverageValue !== null &&
+    ratingAverageValue !== undefined &&
+    ratingAverageValue !== "";
 
   const reports = useMemo(() => {
     return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
@@ -90,12 +91,12 @@ function PublicReportPage() {
    * 긴 독후감 내용의 펼침 상태를 독후감 번호 기준으로 전환합니다.
    *
    * @author Hanwon.Jang
-   * @param reportNumb 펼치거나 접을 독후감 번호
+   * @param reptNumb 펼치거나 접을 독후감 번호
    */
-  const handleToggleReport = (reportNumb: number) => {
+  const handleToggleReport = (reptNumb: number) => {
     setExpandedReports((prev) => ({
       ...prev,
-      [reportNumb]: !prev[reportNumb],
+      [reptNumb]: !prev[reptNumb],
     }));
   };
 
@@ -181,7 +182,7 @@ function PublicReportPage() {
                       className={styles.ratingSummary}
                       type="button"
                       aria-label={message("frontend.report.gradeValue", [
-                        pageState.ratingAverage,
+                        ratingAverageValue,
                       ])}
                       aria-expanded={isRatingTooltipOpen}
                       onClick={() =>
@@ -190,7 +191,7 @@ function PublicReportPage() {
                     >
                       <span className={styles.ratingStar}>{"\u2605"}</span>
                       <span className={styles.ratingValue}>
-                        {pageState.ratingAverage}
+                        {ratingAverageValue}
                       </span>
                     </button>
                     {isRatingTooltipOpen && (
@@ -208,18 +209,18 @@ function PublicReportPage() {
         {reports.length > 0 ? (
           <section className={styles.list}>
             {reports.map((report) => {
-              const rawRating = Number(report.reportGrde);
+              const rawRating = Number(report.reptGrde);
               const rating = Number.isFinite(rawRating)
                 ? Math.max(0, Math.min(5, rawRating))
                 : 0;
               const starCount = Math.floor(rating);
-              const isExpanded = Boolean(expandedReports[report.reportNumb]);
+              const isExpanded = Boolean(expandedReports[report.reptNumb]);
               const content =
-                report.reportCntn || message("frontend.common.noWrittenReport");
+                report.reptCntn || message("frontend.common.noWrittenReport");
               const isLongContent = content.length > CONTENT_PREVIEW_LENGTH;
 
               return (
-                <article className={styles.item} key={report.reportNumb}>
+                <article className={styles.item} key={report.reptNumb}>
                   <div className={styles.itemTop}>
                     <div className={styles.itemHeader}>
                       <button
@@ -261,7 +262,7 @@ function PublicReportPage() {
                       aria-label="좋아요"
                       aria-pressed={report.likeYsno === "Y"}
                       disabled={likeMutation.isPending}
-                      onClick={() => likeMutation.mutate(report.reportNumb)}
+                      onClick={() => likeMutation.mutate(report.reptNumb)}
                     >
                       <svg
                         className={styles.likeIcon}
@@ -303,7 +304,7 @@ function PublicReportPage() {
                           ? "frontend.book.publicReports.collapse"
                           : "frontend.book.publicReports.expand",
                       )}
-                      onClick={() => handleToggleReport(report.reportNumb)}
+                      onClick={() => handleToggleReport(report.reptNumb)}
                     >
                       <span
                         className={

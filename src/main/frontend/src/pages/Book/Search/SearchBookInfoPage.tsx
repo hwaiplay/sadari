@@ -9,7 +9,7 @@ import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import { NaverApiResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
-import { stripHtmlTags } from "@/app/utils/htmlUtil";
+import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import * as styles from "@/pages/Book/Info/BookInfoPage.css";
 
@@ -27,7 +27,7 @@ function SearchBookInfoPage() {
   }
 
   const title = stripHtmlTags(book.title);
-  const author = stripHtmlTags(book.author);
+  const author = normalizeBookAuthor(book.author);
   const publisher = stripHtmlTags(book.publisher);
   const description = stripHtmlTags(book.description);
   const pubdate = formatCompactDate(stripHtmlTags(book.pubdate));

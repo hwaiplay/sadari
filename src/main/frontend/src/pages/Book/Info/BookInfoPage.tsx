@@ -17,13 +17,13 @@ function BookInfoPage() {
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
-  const reportNumb = Number(id);
+  const reptNumb = Number(id);
   const routeBookInfo = (
     location.state as { bookInfo?: ReportDtoType } | null
   )?.bookInfo;
-  const { data, error, isError, isPending } = useBookDetail(reportNumb, !routeBookInfo);
+  const { data, error, isError, isPending } = useBookDetail(reptNumb, !routeBookInfo);
 
-  if (!id || isNaN(reportNumb)) {
+  if (!id || isNaN(reptNumb)) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 

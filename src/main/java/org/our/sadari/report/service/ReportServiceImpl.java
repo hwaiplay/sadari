@@ -76,7 +76,7 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setUserNumb(userNumb);
         reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
         reportDto.setSortType(normalizeListSortType(sortType));
-        reportDto.setReportStat(Constant.REPORT_STAT_READ);
+        reportDto.setReptStat(Constant.REPORT_STAT_READ);
 
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         return ResultData.success(list);
@@ -359,7 +359,7 @@ public class ReportServiceImpl implements ReportService {
         ReadingGoalDto req = new ReadingGoalDto();
         req.setUserNumb(userNumb);
         req.setGoalType(goalType);
-        req.setReportStat(Constant.REPORT_STAT_DONE);
+        req.setReptStat(Constant.REPORT_STAT_DONE);
         return reportMapper.getReadingGoalAchvCnt(req);
     }
 
@@ -710,20 +710,20 @@ public class ReportServiceImpl implements ReportService {
      * @return 기간 집계 요청 DTO
      */
     private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, LocalDate periodStart, LocalDate periodEndExclusive,
-                                                         String reportStat, String reportOrderType) {
+                                                         String reptStat, String reportOrderType) {
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         req.setUserNumb(userNumb);
         req.setPeriodStart(periodStart.toString());
         req.setPeriodEndExclusive(periodEndExclusive.toString());
-        req.setReportStat(reportStat);
+        req.setReptStat(reptStat);
         req.setReportOrderType(reportOrderType);
         return req;
     }
 
-    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, String reportStat, String reportOrderType) {
+    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, String reptStat, String reportOrderType) {
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         req.setUserNumb(userNumb);
-        req.setReportStat(reportStat);
+        req.setReptStat(reptStat);
         req.setReportOrderType(reportOrderType);
         return req;
     }
@@ -744,19 +744,19 @@ public class ReportServiceImpl implements ReportService {
         return Constant.SORT_END_DATE_DESC;
     }
     @Override
-    public ResultData getDetail(Long userNumb, Long reportNumb) {
+    public ResultData getDetail(Long userNumb, Long reptNumb) {
 
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reportNumb)) {
+        if (StringUtil.isEmpty(reptNumb)) {
             // 대상 데이터가 없음을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
+        reportDto.setReptNumb(reptNumb);
         reportDto.setLocale(LocaleUtil.getLocale());
-        reportDto.setReportStat(Constant.REPORT_STAT_DONE);
+        reportDto.setReptStat(Constant.REPORT_STAT_DONE);
 
         ReportDto detail = reportMapper.getReportDtl(reportDto);
 
@@ -824,17 +824,17 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     @Transactional
-    public ResultData setReportLike(Long userNumb, Long reportNumb) {
+    public ResultData setReportLike(Long userNumb, Long reptNumb) {
 
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reportNumb)) {
+        if (StringUtil.isEmpty(reptNumb)) {
             // 대상 데이터가 없음을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
+        reportDto.setReptNumb(reptNumb);
 
         // 비공개 또는 존재하지 않는 독후감에는 좋아요를 등록하지 못하도록 차단한다.
         if (reportMapper.getPublicReportLikeTargetCnt(reportDto) == 0) {
@@ -891,12 +891,12 @@ public class ReportServiceImpl implements ReportService {
 
         reportMapper.setReport(reportDto);
         // 독후감 등록 후 PK가 채워지지 않으면 저장 실패로 판단한다.
-        if (StringUtil.isEmpty(reportDto.getReportNumb())) {
+        if (StringUtil.isEmpty(reportDto.getReptNumb())) {
             // 저장 실패 상황을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        return ResultData.success(reportDto.getReportNumb());
+        return ResultData.success(reportDto.getReptNumb());
     }
 
     /**
@@ -905,21 +905,21 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param reportDto 수정할 독후감 정보
      * @return 수정된 독후감 번호
      */
     @Override
-    public ResultData uptReport(Long userNumb, Long reportNumb, ReportDto reportDto) {
+    public ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto) {
 
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reportNumb)) {
+        if (StringUtil.isEmpty(reptNumb)) {
             // 대상 데이터가 없음을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
+        reportDto.setReptNumb(reptNumb);
         setDefaultReportColor(reportDto);
         setDefaultPublicFlag(reportDto);
         sanitizeReport(reportDto, false);
@@ -934,7 +934,7 @@ public class ReportServiceImpl implements ReportService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        return ResultData.success(reportDto.getReportNumb());
+        return ResultData.success(reportDto.getReptNumb());
     }
 
     /**
@@ -943,24 +943,24 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 수정할 독후감 번호
+     * @param reptNumb 수정할 독후감 번호
      * @param reportDto 수정할 독서 상태와 별점 정보
      * @return 수정 처리 결과
      */
     @Override
-    public ResultData uptReportStatusGrade(Long userNumb, Long reportNumb, ReportDto reportDto) {
+    public ResultData uptReptStatusGrade(Long userNumb, Long reptNumb, ReportDto reportDto) {
 
         // 대상 독후감 번호가 없으면 수정 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reportNumb)) {
+        if (StringUtil.isEmpty(reptNumb)) {
             // 조회 결과가 없음을 의미하는 공통 응답 메시지: "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
-        reportDto.setReportGrde(StringUtil.normalizePlainText(reportDto.getReportGrde()));
-        reportDto.setReportStat(StringUtil.normalizePlainText(reportDto.getReportStat()));
-        reportDto.setReportEndt(LocalDate.now().toString()); // 빠른 완료/중단 처리에서는 사용자가 저장한 시점을 실제 독서 종료일로 기록한다.
+        reportDto.setReptNumb(reptNumb);
+        reportDto.setReptGrde(StringUtil.normalizePlainText(reportDto.getReptGrde()));
+        reportDto.setReptStat(StringUtil.normalizePlainText(reportDto.getReptStat()));
+        reportDto.setReptEndt(LocalDate.now().toString()); // 빠른 완료/중단 처리에서는 사용자가 저장한 시점을 실제 독서 종료일로 기록한다.
 
         ReportValidationResult validationResult = validateReport(reportDto, false);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
@@ -969,14 +969,14 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // 사용자 번호를 WHERE 조건에 함께 사용해 다른 사용자의 독후감은 수정되지 않도록 막는다.
-        int result = reportMapper.uptReportStatusGrade(reportDto);
+        int result = reportMapper.uptReptStatusGrade(reportDto);
 
         if (result == 0) {
             // 수정 실패를 의미하는 공통 응답 메시지: "수정에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        return ResultData.success(reportDto.getReportNumb());
+        return ResultData.success(reportDto.getReptNumb());
     }
 
     /**
@@ -985,20 +985,20 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param reportNumb 삭제할 독후감 번호
+     * @param reptNumb 삭제할 독후감 번호
      * @return 삭제 처리 결과
      */
     @Override
-    public ResultData delReport(Long userNumb, Long reportNumb) {
+    public ResultData delReport(Long userNumb, Long reptNumb) {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reportNumb)) {
+        if (StringUtil.isEmpty(reptNumb)) {
             // 대상 데이터가 없음을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
         ReportDto reportDto = new ReportDto();
         reportDto.setUserNumb(userNumb);
-        reportDto.setReportNumb(reportNumb);
+        reportDto.setReptNumb(reptNumb);
 
         // 삭제 반영 건수가 없으면 본인 독후감이 아니거나 이미 삭제된 데이터로 판단한다.
         if (reportMapper.delReport(reportDto) == 0) {
@@ -1040,39 +1040,39 @@ public class ReportServiceImpl implements ReportService {
         List<String> missingFields = new ArrayList<>();
 
         // 독서 상태는 필수값이며 READ_STAT 공통코드에 등록된 값만 저장한다.
-        if (StringUtil.isEmpty(reportDto.getReportStat()) || !codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReportStat())) {
+        if (StringUtil.isEmpty(reportDto.getReptStat()) || !codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReptStat())) {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_STATUS_KEY));
         }
 
         // 종료일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
-        if (StringUtil.isEmpty(reportDto.getReportEndt())) {
+        if (StringUtil.isEmpty(reportDto.getReptEndt())) {
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_END_DATE_KEY));
         }
 
         // 도서 평점의 저장값이 없으면 저장값을 0점으로 보정해 저장값을 숫자로 유지한다.
-        if (StringUtil.isEmpty(reportDto.getReportGrde())) {
-            reportDto.setReportGrde("0");
+        if (StringUtil.isEmpty(reportDto.getReptGrde())) {
+            reportDto.setReptGrde("0");
         }
 
         //등록 수정화면에서 행해지는 등록 및 수정은 모든 값을 입력받아야한다.
         if(isFullScan) {
             // 시작일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
-            if (StringUtil.isEmpty(reportDto.getReportStdt())) {
+            if (StringUtil.isEmpty(reportDto.getReptStdt())) {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
             }
 
             // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
-            if (!isValidReportGrade(reportDto.getReportGrde())) {
+            if (!isValidReportGrade(reportDto.getReptGrde())) {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
             }
 
             // 책장 색상은 필수값이며 BOOK_COLR 공통코드에 등록된 값만 저장한다.
-            if (StringUtil.isEmpty(reportDto.getReportColr()) || !codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReportColr())) {
+            if (StringUtil.isEmpty(reportDto.getReptColr()) || !codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReptColr())) {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_COLOR_KEY));
             }
 
             // 독후감 본문이 비어 있으면 저장 대상 내용이 없으므로 필수값 누락으로 처리한다.
-            if (StringUtil.isEmpty(reportDto.getReportCntn())) {
+            if (StringUtil.isEmpty(reportDto.getReptCntn())) {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
             }
 
@@ -1082,19 +1082,19 @@ public class ReportServiceImpl implements ReportService {
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
             }
             // 시작일이 종료일보다 늦은 데이터는 프론트 조작 여부와 관계없이 저장하지 않는다.
-            if (!DateUtil.validateReportDateRange(reportDto.getReportStdt(), reportDto.getReportEndt())) {
+            if (!DateUtil.validateReportDateRange(reportDto.getReptStdt(), reportDto.getReptEndt())) {
                 // 사용자에게 프론트와 같은 날짜 범위 오류 메시지를 반환한다.
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_DATE_RANGE_INVALID);
             }
 
             // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
-            if (XssUtil.utf8ByteLength(reportDto.getReportCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
+            if (XssUtil.utf8ByteLength(reportDto.getReptCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
                 // 최대 허용 byte 수를 메시지 인자로 함께 반환한다.
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
             }
 
             // 비속어 필터링
-            Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReportCntn());
+            Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReptCntn());
             if (badWord.isPresent()) {
                 return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
             }
@@ -1125,17 +1125,17 @@ public class ReportServiceImpl implements ReportService {
      * 0점은 읽고있어요 상태에서 별점을 선택하지 않은 값을 저장하기 위한 내부 보정값으로 허용한다.
      *
      * @author Seunghyeon.Kang
-     * @param reportGrde 검증할 별점 문자열
+     * @param reptGrde 검증할 별점 문자열
      * @return 유효한 별점 여부
      */
-    private boolean isValidReportGrade(String reportGrde) {
+    private boolean isValidReportGrade(String reptGrde) {
         // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다.
-        if (StringUtil.isEmpty(reportGrde)) {
+        if (StringUtil.isEmpty(reptGrde)) {
             return false;
         }
 
         try {
-            int grade = Integer.parseInt(reportGrde);
+            int grade = Integer.parseInt(reptGrde);
 
             // 평점은 0점부터 5점까지의 정수만 허용하고 소수점 별점은 저장하지 않는다.
             return grade >= 0 && grade <= 5;
@@ -1145,8 +1145,8 @@ public class ReportServiceImpl implements ReportService {
     }
     private void setDefaultReportColor(ReportDto reportDto) {
         // 책장 색상은 필수값이며 공통코드에 등록된 색상 코드만 허용한다.
-        if (StringUtil.isEmpty(reportDto.getReportColr()) || reportDto.getReportColr().isBlank()) {
-            reportDto.setReportColr(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR));
+        if (StringUtil.isEmpty(reportDto.getReptColr()) || reportDto.getReptColr().isBlank()) {
+            reportDto.setReptColr(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR));
         }
     }
 
@@ -1173,13 +1173,13 @@ public class ReportServiceImpl implements ReportService {
      * @param includeBookFields 도서 필드 정규화 포함 여부
      */
     private void sanitizeReport(ReportDto reportDto, boolean includeBookFields) {
-        reportDto.setReportStat(StringUtil.normalizePlainText(reportDto.getReportStat()));
-        reportDto.setReportStdt(StringUtil.normalizePlainText(reportDto.getReportStdt()));
-        reportDto.setReportEndt(StringUtil.normalizePlainText(reportDto.getReportEndt()));
-        reportDto.setReportGrde(StringUtil.normalizePlainText(reportDto.getReportGrde()));
-        reportDto.setReportColr(StringUtil.normalizePlainText(reportDto.getReportColr()));
+        reportDto.setReptStat(StringUtil.normalizePlainText(reportDto.getReptStat()));
+        reportDto.setReptStdt(StringUtil.normalizePlainText(reportDto.getReptStdt()));
+        reportDto.setReptEndt(StringUtil.normalizePlainText(reportDto.getReptEndt()));
+        reportDto.setReptGrde(StringUtil.normalizePlainText(reportDto.getReptGrde()));
+        reportDto.setReptColr(StringUtil.normalizePlainText(reportDto.getReptColr()));
         reportDto.setPubcYsno(StringUtil.normalizePlainText(reportDto.getPubcYsno()));
-        reportDto.setReportCntn(StringUtil.normalizePlainText(reportDto.getReportCntn()));
+        reportDto.setReptCntn(StringUtil.normalizePlainText(reportDto.getReptCntn()));
 
         // 등록 요청일 때만 도서 필드를 함께 정규화하고, 수정 요청에서는 독후감 필드만 정규화한다.
         if (includeBookFields) {

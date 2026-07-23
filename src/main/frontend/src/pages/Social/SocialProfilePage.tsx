@@ -46,7 +46,7 @@ const isActiveFollowStatus = (followStatName: string) => {
  * @return 화면에 표시할 독서 기간 문자열
  */
 const getReadingEndDateText = (report: ReadingSummaryReport) => {
-  return formatDashedDateToDot(report.reportEndt);
+  return formatDashedDateToDot(report.reptEndt);
 };
 
 /**
@@ -267,13 +267,13 @@ function SocialProfilePage() {
           </h2>
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
-              const remainDays = getRemainDaysUntil(report.reportEndt);
-              const remainRate = getRemainPeriodRate(report.reportStdt, report.reportEndt);
+              const remainDays = getRemainDaysUntil(report.reptEndt);
+              const remainRate = getRemainPeriodRate(report.reptStdt, report.reptEndt);
               const remainColor = getGoalProgressColor(remainRate);
               const isExpired = remainDays <= 0;
 
               return (
-                <div className={styles.currentReadingCard} key={report.reportNumb}>
+                <div className={styles.currentReadingCard} key={report.reptNumb}>
                   {report.bookCvim && (
                     <img
                       className={styles.readingSummaryCover}
@@ -287,7 +287,7 @@ function SocialProfilePage() {
                     </strong>
                     <span className={styles.currentReadingMeta}>
                       <span className={styles.readingSummaryBookMeta}>
-                        {[report.bookAthr, formatDashedDateToDot(report.reportEndt)]
+                        {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
                           .filter(Boolean)
                           .join(" | ")}
                       </span>
@@ -436,7 +436,7 @@ function SocialProfilePage() {
                       : styles.readingSummaryReportPrivate
                   }
                   type="button"
-                  key={report.reportNumb}
+                  key={report.reptNumb}
                   onClick={() => handleSummaryReportClick(report)}
                 >
                   {report.bookCvim && (
@@ -469,7 +469,7 @@ function SocialProfilePage() {
                           <span>|</span>
                         )}
                         <span className={styles.readingSummaryGrade}>
-                          {getReadingGradeText(report.reportGrde)}
+                          {getReadingGradeText(report.reptGrde)}
                         </span>
                       </span>
                     </span>

@@ -103,12 +103,23 @@ export function stripHtmlTags(value?: string) {
   return sanitizeText(value ?? "");
 }
 
+/**
+ * 도서 검색 API가 여러 저자를 ^ 구분자로 내려주는 경우 저장 요청에 그대로 들어가지 않도록 정리합니다.
+ *
+ * @author Hanwon.Jang
+ * @param value 도서 검색 API에서 받은 저자 문자열
+ * @return HTML 태그와 ^ 구분자를 제거한 저자 문자열
+ */
+export function normalizeBookAuthor(value?: string) {
+  return stripHtmlTags(value).replace(/\s*\^\s*/g, ", ");
+}
+
 type ReportFormValues = {
   status: FormDataEntryValue | null;
   startDate: FormDataEntryValue | null;
   endDate: FormDataEntryValue | null;
   grade: FormDataEntryValue | null;
-  reportColr: FormDataEntryValue | null;
+  reptColr: FormDataEntryValue | null;
   content: FormDataEntryValue | null;
   validStatusCodes?: string[];
   validReportColors?: string[];
@@ -126,7 +137,7 @@ export function validateReportForm(values: ReportFormValues) {
   const startDate = String(values.startDate ?? "");
   const endDate = String(values.endDate ?? "");
   const grade = String(values.grade ?? "");
-  const reportColr = String(values.reportColr ?? "");
+  const reptColr = String(values.reptColr ?? "");
   const content = String(values.content ?? "").trim();
   const missingFields: string[] = [];
   // 완료 상태에서는 화면 라벨이 목표 날짜로 바뀌므로 필수값 안내 문구도 같은 명칭을 사용합니다.
@@ -164,10 +175,10 @@ export function validateReportForm(values: ReportFormValues) {
   }
 
   if (
-    !reportColr ||
+    !reptColr ||
     (values.validReportColors &&
       !values.validReportColors.some(
-        (color) => color.toLowerCase() === reportColr.toLowerCase(),
+        (color) => color.toLowerCase() === reptColr.toLowerCase(),
       ))
   ) {
     missingFields.push(message("frontend.report.field.color"));
