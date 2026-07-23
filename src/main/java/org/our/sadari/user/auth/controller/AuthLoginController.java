@@ -18,6 +18,9 @@ import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.auth.service.AuthService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -116,6 +119,22 @@ public class AuthLoginController {
     }
 
     /**
+     * OAuth 콜백 루트 URL로 직접 접근했을 때 보여줄 HTML 오류 화면을 반환한다.
+     * 실제 로그인 처리는 /api/oauth/callback/kakao에서만 수행하므로, 잘못된 콜백 URL에서는 ResultData JSON이 브라우저에 그대로 노출되지 않도록 분리한다.
+     *
+     * @author Seunghyeon.Kang
+     * @return OAuth 콜백 오류 안내 HTML
+     */
+    @GetMapping(value = {"/callback", "/callback/"}, produces = MediaType.TEXT_HTML_VALUE)
+    @Operation(summary = "OAuth 콜백 오류 화면", description = "지원하지 않는 OAuth 콜백 루트 접근 시 브라우저용 오류 화면을 반환한다.")
+    public ResponseEntity<String> oauthCallbackErrorPage() {
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .contentType(MediaType.TEXT_HTML)
+                .body(createOauthCallbackErrorHtml());
+    }
+
+    /**
      * refresh 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
@@ -203,6 +222,102 @@ public class AuthLoginController {
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
         response.addHeader(HttpHeaders.SET_COOKIE, createAccessTokenCookie(accessToken).toString());
         response.addHeader(HttpHeaders.SET_COOKIE, createRefreshTokenCookie(refreshToken).toString());
+    }
+
+    /**
+     * OAuth 콜백 오류 화면의 HTML 문자열을 생성한다.
+     * API 전용 URL을 사용자가 직접 열었을 때도 빈 화면이나 JSON 원문 대신 로그인 화면으로 돌아갈 수 있는 안내 화면을 제공한다.
+     *
+     * @author Seunghyeon.Kang
+     * @return OAuth 콜백 오류 화면 HTML
+     */
+    private String createOauthCallbackErrorHtml() {
+        return """
+                <!doctype html>
+                <html lang="ko">
+                <head>
+                    <meta charset="UTF-8">
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>로그인 요청을 처리할 수 없어요</title>
+                    <style>
+                        * {
+                            box-sizing: border-box;
+                        }
+
+                        body {
+                            margin: 0;
+                            min-height: 100vh;
+                            display: grid;
+                            place-items: center;
+                            padding: 24px;
+                            background: #f5f7fb;
+                            color: #191919;
+                            font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+                        }
+
+                        .page {
+                            width: min(100%, 420px);
+                            padding: 34px 28px 30px;
+                            border: 1px solid #e8edf5;
+                            border-radius: 18px;
+                            background: #ffffff;
+                            text-align: center;
+                            box-shadow: 0 18px 50px rgba(36, 56, 96, 0.12);
+                        }
+
+                        .mark {
+                            width: 54px;
+                            height: 54px;
+                            display: grid;
+                            place-items: center;
+                            margin: 0 auto 18px;
+                            border-radius: 18px;
+                            background: #e8f3ff;
+                            color: #2f80ed;
+                            font-size: 28px;
+                            font-weight: 800;
+                        }
+
+                        h1 {
+                            margin: 0;
+                            font-size: 22px;
+                            line-height: 1.35;
+                            letter-spacing: 0;
+                        }
+
+                        p {
+                            margin: 12px 0 0;
+                            color: #687386;
+                            font-size: 14px;
+                            line-height: 1.65;
+                        }
+
+                        a {
+                            display: inline-flex;
+                            align-items: center;
+                            justify-content: center;
+                            width: 100%;
+                            height: 46px;
+                            margin-top: 24px;
+                            border-radius: 12px;
+                            background: #2f80ed;
+                            color: #ffffff;
+                            font-size: 15px;
+                            font-weight: 700;
+                            text-decoration: none;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <main class="page">
+                        <div class="mark">!</div>
+                        <h1>로그인 요청을 처리할 수 없어요</h1>
+                        <p>로그인 제공자 정보가 없는 콜백 주소로 접근했어요.<br>다시 로그인 화면에서 시작해주세요.</p>
+                        <a href="%s/login">로그인 화면으로 돌아가기</a>
+                    </main>
+                </body>
+                </html>
+                """.formatted(frontDomain);
     }
 
     /**
