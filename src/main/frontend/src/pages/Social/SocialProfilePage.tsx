@@ -26,6 +26,18 @@ const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 type ReadingPeriod = "week" | "month" | "year";
 
 /**
+ * 팔로우 버튼이 관계가 맺어진 상태를 표시하는지 판단합니다.
+ * 팔로잉과 맞팔로우는 이미 관계가 존재하거나 상대가 나를 팔로우 중인 상태라서 초록색으로 강조합니다.
+ *
+ * @author Hanwon.Jang
+ * @param followStatName 서버에서 내려준 팔로우 버튼명
+ * @return 강조 색상 적용 여부
+ */
+const isActiveFollowStatus = (followStatName: string) => {
+  return followStatName === "팔로잉" || followStatName === "맞팔로우";
+};
+
+/**
  * 독후감 요약 목록에 표시할 독서 기간을 조합합니다.
  * 시작일과 종료일 중 일부만 존재해도 불필요한 구분자가 표시되지 않도록 빈 값을 제거합니다.
  *
@@ -507,7 +519,11 @@ function SocialProfilePage() {
               />
               {followStatName && (
                 <button
-                  className={styles.socialFollowButton}
+                  className={`${styles.socialFollowButton} ${
+                    isActiveFollowStatus(followStatName)
+                      ? styles.socialFollowButtonActive
+                      : ""
+                  }`}
                   type="button"
                   disabled={isFollowUpdating}
                   onClick={handleFollowButtonClick}

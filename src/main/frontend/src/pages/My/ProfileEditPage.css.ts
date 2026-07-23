@@ -245,6 +245,10 @@ export const socialFollowButton = style({
   },
 });
 
+export const socialFollowButtonActive = style({
+  color: "#2f9e44",
+});
+
 export const profileNameInput = style({
   width: "100%",
   minWidth: 0,
