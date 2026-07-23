@@ -1,5 +1,8 @@
 package org.our.sadari.user.auth.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -31,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequiredArgsConstructor
 @RequestMapping("/api/oauth")
 @Slf4j
+@Tag(name = "인증", description = "카카오 OAuth 로그인, JWT 검증, 재발급, 로그아웃 API")
 public class AuthLoginController {
 
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
@@ -58,7 +62,8 @@ public class AuthLoginController {
      * @return 처리 결과
      */
     @GetMapping("/tokenCheck")
-    public ResultData tokenCheck(HttpServletRequest request) {
+    @Operation(summary = "Access Token 검증", description = "HttpOnly 쿠키의 Access Token 유효성 및 로그아웃 블랙리스트 여부를 검증한다.")
+    public ResultData tokenCheck(@Parameter(hidden = true) HttpServletRequest request) {
         String accessToken = extractAccessToken(request);
 
         // 요청 쿠키에 Access Token이 없으면 인증 실패 응답을 반환한다.
@@ -88,9 +93,11 @@ public class AuthLoginController {
      * @param response 처리에 필요한 입력값
      */
     @GetMapping("/callback/kakao")
-    public void kakaoAuthLogin(@RequestParam("code") String code
-            , HttpServletRequest request
-            , HttpServletResponse response) throws Exception {
+    @Operation(summary = "카카오 로그인 콜백", description = "카카오 인가 코드를 받아 서비스 토큰을 발급하고 프론트 OAuth 처리 화면으로 리다이렉트한다.")
+    public void kakaoAuthLogin(@Parameter(description = "카카오 OAuth 인가 코드")
+                               @RequestParam("code") String code
+            , @Parameter(hidden = true) HttpServletRequest request
+            , @Parameter(hidden = true) HttpServletResponse response) throws Exception {
 
         ResultData loginResult = authService.kakaoLogin(code, getLoginIp(request), getUserAgent(request));
 
@@ -117,7 +124,9 @@ public class AuthLoginController {
      * @return 처리 결과
      */
     @PostMapping("/refresh")
-    public ResultData refresh(HttpServletRequest request, HttpServletResponse response) {
+    @Operation(summary = "JWT 재발급", description = "Refresh Token 쿠키를 검증하고 Access Token과 Refresh Token을 재발급한다.")
+    public ResultData refresh(@Parameter(hidden = true) HttpServletRequest request,
+                              @Parameter(hidden = true) HttpServletResponse response) {
 
         String refreshToken = extractRefreshToken(request);
 
@@ -159,7 +168,9 @@ public class AuthLoginController {
      * @return 처리 결과
      */
     @PostMapping("/logout")
-    public ResultData logout(HttpServletRequest request, HttpServletResponse response) {
+    @Operation(summary = "로그아웃", description = "Access Token을 Redis 블랙리스트에 등록하고 Refresh Token을 제거한 뒤 토큰 쿠키를 만료시킨다.")
+    public ResultData logout(@Parameter(hidden = true) HttpServletRequest request,
+                             @Parameter(hidden = true) HttpServletResponse response) {
         String accessToken = extractAccessToken(request);
         String refreshToken = extractRefreshToken(request);
 

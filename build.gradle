@@ -45,6 +45,9 @@ dependencies {
 	// 요청 본문 검증에 필요한 의존성이다.
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
+	// Swagger UI와 OpenAPI 3 문서를 자동 생성해 API 정의서를 브라우저에서 확인할 수 있게 해주는 라이브러리
+	implementation 'org.springdoc:springdoc-openapi-starter-webmvc-ui:3.0.3'
+
 	// MyBatis와 스프링 부트를 연동하여 SQL 매퍼를 사용할 수 있게 해주는 라이브러리
 	implementation 'org.mybatis.spring.boot:mybatis-spring-boot-starter:4.0.1'
 
@@ -52,7 +55,8 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 
 	// JSON 데이터와 자바 객체 간의 변환(직렬화/역직렬화)을 담당하는 핵심 라이브러리
-	implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.3'
+	// Spring Boot 4/Spring 7은 최신 Jackson API(DatatypeFeature 등)를 사용하므로 버전은 Boot BOM에 맡긴다.
+	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
 	// 코드 수정 시 서버 자동 재시작 등 개발 편의 기능을 제공하는 도구
 	developmentOnly 'org.springframework.boot:spring-boot-devtools'

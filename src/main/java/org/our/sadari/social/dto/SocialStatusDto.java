@@ -1,5 +1,6 @@
-package org.our.sadari.follow.dto;
+package org.our.sadari.social.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
 /**
@@ -9,8 +10,10 @@ import lombok.Data;
  * @author Seunghyeon.Kang
  */
 @Data
-public class FollowStatusDto {
+@Schema(description = "팔로우 버튼 상태 응답 DTO")
+public class SocialStatusDto {
 
     // 화면에 표시할 팔로우 버튼명입니다. 예: 팔로우, 팔로잉, 맞팔로우
+    @Schema(description = "화면에 표시할 팔로우 버튼명", example = "팔로잉", allowableValues = {"팔로우", "맞팔로우", "팔로잉"})
     private String followStatName;
 }

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="org.our.sadari.follow.mapper.FollowMapper">
+<mapper namespace="org.our.sadari.social.mapper.SocialMapper">
 
     <!-- Oracle 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 버튼명을 조회한다. -->
     <select id="getFollowStatusName" resultType="string">

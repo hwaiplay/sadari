@@ -1,5 +1,6 @@
 package org.our.sadari.global.common.result;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import org.our.sadari.global.common.util.MessageUtils;
 
@@ -9,10 +10,16 @@ import org.our.sadari.global.common.util.MessageUtils;
  * @author Seunghyeon.Kang
  */
 @Getter
+@Schema(description = "공통 API 응답 형식")
 public class ResultData {
 
+    @Schema(description = "업무 응답 코드. 성공은 200이다.", example = "200")
     private final int code;
+
+    @Schema(description = "응답 메시지. 실패 시 사용자에게 표시할 메시지를 담는다.", example = "success")
     private final String message;
+
+    @Schema(description = "API별 응답 데이터")
     private Object data;
 
     /**

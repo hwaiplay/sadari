@@ -224,8 +224,8 @@ export const profileIntro = style({
 
 export const socialFollowButton = style({
   position: "absolute",
-  right: "-8px",
-  bottom: "8px",
+  right: "-13px",
+  bottom: "-7px",
   minWidth: "58px",
   height: "34px",
   padding: "0 10px",

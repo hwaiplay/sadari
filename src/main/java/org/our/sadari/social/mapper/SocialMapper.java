@@ -1,4 +1,4 @@
-package org.our.sadari.follow.mapper;
+package org.our.sadari.social.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Param;
  * @author Seunghyeon.Kang
  */
 @Mapper
-public interface FollowMapper {
+public interface SocialMapper {
 
     /**
      * 로그인 사용자와 상대 사용자 번호를 기준으로 화면에 표시할 팔로우 버튼명을 조회합니다.
