@@ -13,9 +13,13 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
 };
 
+const API_TIMEOUT_MILLISECONDS = 60_000;
+
 const api = axios.create({
   baseURL: "/api",
   withCredentials: true,
+  // DB 연결 장애처럼 서버 응답이 멈춘 요청은 사용자가 무기한 로딩에 갇히지 않도록 1분 후 실패 처리한다.
+  timeout: API_TIMEOUT_MILLISECONDS,
 });
 
 let refreshRequest: Promise<unknown> | null = null;
