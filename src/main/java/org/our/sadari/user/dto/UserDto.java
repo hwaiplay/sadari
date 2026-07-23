@@ -34,12 +34,16 @@ public class UserDto {
 
     @Schema(description = "프로필 이미지 파일 번호")
     private Long profNumb;
+
     @Schema(description = "배경 이미지 파일 번호")
     private Long bgimNumb;
+
     @Schema(description = "한줄소개", example = "추리소설을 좋아합니다.")
     private String intrCntn;
+
     @Schema(description = "프로필 이미지 경로")
     private String porfPath;
+
     @Schema(description = "배경 이미지 경로")
     private String bgimPath;
 }
