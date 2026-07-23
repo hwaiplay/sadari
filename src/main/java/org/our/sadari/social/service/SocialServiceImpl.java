@@ -1,11 +1,11 @@
-package org.our.sadari.follow.service;
+package org.our.sadari.social.service;
 
 import lombok.RequiredArgsConstructor;
-import org.our.sadari.follow.dto.FollowStatusDto;
-import org.our.sadari.follow.mapper.FollowMapper;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.social.dto.SocialStatusDto;
+import org.our.sadari.social.mapper.SocialMapper;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
@@ -19,9 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
-public class FollowServiceImpl implements FollowService {
+public class SocialServiceImpl implements SocialService {
 
-    private final FollowMapper followMapper;
+    private final SocialMapper socialMapper;
     private final UserMapper userMapper;
 
     /**
@@ -41,7 +41,7 @@ public class FollowServiceImpl implements FollowService {
             return invalidResult;
         }
 
-        return ResultData.success(createFollowStatus(followMapper.getFollowStatusName(userNumb, flowNumb)));
+        return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(userNumb, flowNumb)));
     }
 
     /**
@@ -62,8 +62,8 @@ public class FollowServiceImpl implements FollowService {
             return invalidResult;
         }
 
-        followMapper.setFollow(userNumb, flowNumb);
-        return ResultData.success(createFollowStatus(followMapper.getFollowStatusName(userNumb, flowNumb)));
+        socialMapper.setFollow(userNumb, flowNumb);
+        return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(userNumb, flowNumb)));
     }
 
     /**
@@ -84,8 +84,8 @@ public class FollowServiceImpl implements FollowService {
             return invalidResult;
         }
 
-        followMapper.delFollow(userNumb, flowNumb);
-        return ResultData.success(createFollowStatus(followMapper.getFollowStatusName(userNumb, flowNumb)));
+        socialMapper.delFollow(userNumb, flowNumb);
+        return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(userNumb, flowNumb)));
     }
 
     /**
@@ -123,9 +123,9 @@ public class FollowServiceImpl implements FollowService {
      * @param followStatName 화면에 표시할 팔로우 버튼명
      * @return 팔로우 상태 DTO
      */
-    private FollowStatusDto createFollowStatus(String followStatName) {
-        FollowStatusDto followStatusDto = new FollowStatusDto();
-        followStatusDto.setFollowStatName(followStatName);
-        return followStatusDto;
+    private SocialStatusDto createFollowStatus(String followStatName) {
+        SocialStatusDto socialStatusDto = new SocialStatusDto();
+        socialStatusDto.setFollowStatName(followStatName);
+        return socialStatusDto;
     }
 }

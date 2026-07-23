@@ -1,5 +1,8 @@
 package org.our.sadari.myPage.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -33,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
+@Tag(name = "마이페이지", description = "독서 목표, 독서 요약, 독서 캘린더 API")
 public class MyPageController {
 
     private final ReportService reportService;
@@ -45,7 +49,8 @@ public class MyPageController {
      * @return 처리 결과
      */
     @GetMapping("/monthly-reading-summary")
-    public ResultData getMonthlyReadingSummary(@AuthenticationPrincipal Long userNumb) {
+    @Operation(summary = "독서 요약 조회", description = "로그인 사용자의 주간, 월간, 연간 독서 목표와 완료 독후감 요약을 조회한다.")
+    public ResultData getMonthlyReadingSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
         return reportService.getMonthlyReadingSummary(userNumb);
     }
 
@@ -58,7 +63,9 @@ public class MyPageController {
      * @return 처리 결과
      */
     @PutMapping("/reading-goal")
-    public ResultData setReadingGoal(@AuthenticationPrincipal Long userNumb, @RequestBody ReadingGoalDto readingGoalDto) {
+    @Operation(summary = "독서 목표 저장", description = "로그인 사용자의 주간, 월간, 연간 독서 목표 권수를 저장한다.")
+    public ResultData setReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb,
+                                     @RequestBody ReadingGoalDto readingGoalDto) {
         return reportService.setReadingGoal(userNumb, readingGoalDto);
     }
 
@@ -70,7 +77,8 @@ public class MyPageController {
      * @return 처리 결과
      */
     @PostMapping("/reading-goal/previous")
-    public ResultData copyPreviousReadingGoal(@AuthenticationPrincipal Long userNumb) {
+    @Operation(summary = "이전 독서 목표 복사", description = "현재 기간의 목표가 비어 있을 때 이전 주/월/년 목표 권수를 복사해 저장한다.")
+    public ResultData copyPreviousReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
         return reportService.copyPreviousReadingGoal(userNumb);
     }
 
@@ -82,7 +90,10 @@ public class MyPageController {
      * @return 처리 결과
      */
     @GetMapping("/reading-calendar")
-    public ResultData getReadingCalendar(@AuthenticationPrincipal Long userNumb, @RequestParam("yearMonth") String yearMonth) {
+    @Operation(summary = "독서 캘린더 조회", description = "월 단위 캘린더에 표시할 독서 기간 데이터를 조회한다.")
+    public ResultData getReadingCalendar(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb,
+                                         @Parameter(description = "조회할 연월", example = "2026-07")
+                                         @RequestParam("yearMonth") String yearMonth) {
 
         YearMonth targetMonth;
 
