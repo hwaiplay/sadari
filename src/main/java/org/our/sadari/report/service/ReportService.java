@@ -53,16 +53,6 @@ public interface ReportService {
     ResultData getPublicRatingAverageByIsbn(String bookIsbn);
 
     /**
-     * 독후감 좋아요를 등록하거나 취소한다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @param reptNumb 좋아요를 토글할 독후감 번호
-     * @return 변경 후 좋아요 상세 정보
-     */
-    ResultData setReportLike(Long userNumb, Long reptNumb);
-
-    /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회한다.
      *
      * @author Seunghyeon.Kang

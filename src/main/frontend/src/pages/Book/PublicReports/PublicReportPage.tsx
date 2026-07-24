@@ -262,7 +262,12 @@ function PublicReportPage() {
                       aria-label="좋아요"
                       aria-pressed={report.likeYsno === "Y"}
                       disabled={likeMutation.isPending}
-                      onClick={() => likeMutation.mutate(report.reptNumb)}
+                      onClick={() =>
+                        likeMutation.mutate({
+                          tagtType: "REPORT",
+                          tagtNumb: report.reptNumb,
+                        })
+                      }
                     >
                       <svg
                         className={styles.likeIcon}

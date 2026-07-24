@@ -26,6 +26,8 @@ import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
+import org.our.sadari.social.dto.SocialDto;
+import org.our.sadari.social.mapper.SocialMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class ReportServiceImpl implements ReportService {
 
     private final ReportMapper reportMapper;
+    private final SocialMapper socialMapper;
     private final BookMapper bookMapper;
     private final CodeUtil codeUtil;
     private final BadWordDetectionService badWordDetectionService;
@@ -820,44 +823,6 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @return 등록된 독후감 번호
-     */
-    @Override
-    @Transactional
-    public ResultData setReportLike(Long userNumb, Long reptNumb) {
-
-        // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reptNumb)) {
-            // 대상 데이터가 없음을 공통 응답 코드로 반환한다.
-            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
-        }
-
-        ReportDto reportDto = new ReportDto();
-        reportDto.setUserNumb(userNumb);
-        reportDto.setReptNumb(reptNumb);
-
-        // 비공개 또는 존재하지 않는 독후감에는 좋아요를 등록하지 못하도록 차단한다.
-        if (reportMapper.getPublicReportLikeTargetCnt(reportDto) == 0) {
-            // 요청값이 업무 규칙에 맞지 않음을 공통 응답 코드로 반환한다.
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
-
-        // 이미 좋아요가 있으면 취소하고, 없으면 신규 등록하는 토글 방식으로 처리한다.
-        if (reportMapper.dupReportLike(reportDto) > 0) {
-            reportMapper.delReportLike(reportDto);
-        } else {
-            reportMapper.setReportLike(reportDto);
-        }
-
-        return ResultData.success(reportMapper.getReportLikeDtl(reportDto));
-    }
-
-    /**
-     * 독후감과 필요한 도서 정보를 등록한다.
-     * 도서가 이미 존재하면 기존 도서 번호를 재사용하고, 없으면 도서를 먼저 등록한 뒤 독후감을 저장한다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb 로그인 사용자 번호
      * @param reportDto 등록할 독후감 및 도서 정보
      * @return 등록된 독후감 번호
      */
@@ -989,6 +954,7 @@ public class ReportServiceImpl implements ReportService {
      * @return 삭제 처리 결과
      */
     @Override
+    @Transactional
     public ResultData delReport(Long userNumb, Long reptNumb) {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
@@ -1005,6 +971,13 @@ public class ReportServiceImpl implements ReportService {
             // 삭제 실패 상황을 공통 응답 코드로 반환한다.
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
+
+        // TB_LIKEXX는 TAGT_TYPE 기반 공용 좋아요 테이블이라 DB FK cascade를 걸 수 없다.
+        // 독후감 삭제가 성공한 뒤 REPORT 대상 좋아요만 명시적으로 정리해 고아 좋아요 데이터를 남기지 않는다.
+        SocialDto.LikeDto likeDto = new SocialDto.LikeDto();
+        likeDto.setTagtType(Constant.LIKE_TARGET_REPORT);
+        likeDto.setTagtNumb(reportDto.getReptNumb());
+        socialMapper.delLikeByTarget(likeDto);
 
         return ResultData.success();
     }
@@ -1038,6 +1011,8 @@ public class ReportServiceImpl implements ReportService {
      */
     private ReportValidationResult validateReport(ReportDto reportDto, boolean isFullScan) {
         List<String> missingFields = new ArrayList<>();
+        boolean isReadingStatus = Constant.REPORT_STAT_READ.equals(reportDto.getReptStat());
+        boolean hasReportContent = !StringUtil.isEmpty(reportDto.getReptCntn());
 
         // 독서 상태는 필수값이며 READ_STAT 공통코드에 등록된 값만 저장한다.
         if (StringUtil.isEmpty(reportDto.getReptStat()) || !codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReptStat())) {
@@ -1071,8 +1046,9 @@ public class ReportServiceImpl implements ReportService {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_COLOR_KEY));
             }
 
-            // 독후감 본문이 비어 있으면 저장 대상 내용이 없으므로 필수값 누락으로 처리한다.
-            if (StringUtil.isEmpty(reportDto.getReptCntn())) {
+            // 읽고 있어요 상태는 사용자가 아직 기록을 남기지 않을 수 있으므로 본문 필수 검증에서 제외한다.
+            // 완료/중단 상태는 실제 독후감 기록 저장 단계이므로 기존처럼 본문을 필수값으로 유지한다.
+            if (!isReadingStatus && !hasReportContent) {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
             }
 
@@ -1088,15 +1064,17 @@ public class ReportServiceImpl implements ReportService {
             }
 
             // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
-            if (XssUtil.utf8ByteLength(reportDto.getReptCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
+            if (hasReportContent && XssUtil.utf8ByteLength(reportDto.getReptCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
                 // 최대 허용 byte 수를 메시지 인자로 함께 반환한다.
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
             }
 
             // 비속어 필터링
-            Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReptCntn());
-            if (badWord.isPresent()) {
-                return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
+            if (hasReportContent) {
+                Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReptCntn());
+                if (badWord.isPresent()) {
+                    return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
+                }
             }
 
             // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.

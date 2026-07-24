@@ -71,7 +71,6 @@ public class ReportDto extends BookDto {
 
     /** 독후감 본문 내용이다. DB 저장 크기를 고려해 4000자 이하로 제한한다. */
     @Schema(description = "독후감 본문", example = "인물의 선택이 끝까지 긴장감을 유지했다.")
-    @NotBlank
     @Size(max = 4000)
     private String reptCntn;
 
