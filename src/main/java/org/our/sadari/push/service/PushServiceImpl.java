@@ -1,7 +1,9 @@
 package org.our.sadari.push.service;
 
 import java.util.List;
+import java.util.ArrayList;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -17,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
  * @author Seunghyeon.Kang
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 public class PushServiceImpl implements PushService {
 
@@ -53,14 +56,12 @@ public class PushServiceImpl implements PushService {
      */
     @Override
     public ResultData getFirebaseWebConfig() {
-        if (
-                StringUtil.isEmpty(apiKey)
-                        || StringUtil.isEmpty(projectId)
-                        || StringUtil.isEmpty(messagingSenderId)
-                        || StringUtil.isEmpty(appId)
-                        || StringUtil.isEmpty(vapidPublicKey)
-        ) {
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        List<String> missingConfigList = getMissingFirebaseWebConfigList();
+
+        if (!missingConfigList.isEmpty()) {
+            String missingConfigText = String.join(", ", missingConfigList);
+            log.warn("Firebase Web Push config is missing. fields={}", missingConfigText);
+            return ResultData.fail(ResultEnum.PUSH_CONFIG_MISSING, missingConfigText);
         }
 
         PushDto.FirebaseWebConfigDto res = new PushDto.FirebaseWebConfigDto();
@@ -72,6 +73,39 @@ public class PushServiceImpl implements PushService {
         res.setAppId(appId);
         res.setVapidPublicKey(vapidPublicKey);
         return ResultData.success(res);
+    }
+
+    /**
+     * 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산합니다.
+     * VAPID public key만으로는 token을 만들 수 없고, Firebase Console의 Web app config 값들이 함께 필요합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @return 누락된 설정 property 이름 목록
+     */
+    private List<String> getMissingFirebaseWebConfigList() {
+        List<String> missingConfigList = new ArrayList<>();
+
+        if (StringUtil.isEmpty(apiKey)) {
+            missingConfigList.add("firebase.web.api-key");
+        }
+
+        if (StringUtil.isEmpty(projectId)) {
+            missingConfigList.add("firebase.web.project-id");
+        }
+
+        if (StringUtil.isEmpty(messagingSenderId)) {
+            missingConfigList.add("firebase.web.messaging-sender-id");
+        }
+
+        if (StringUtil.isEmpty(appId)) {
+            missingConfigList.add("firebase.web.app-id");
+        }
+
+        if (StringUtil.isEmpty(vapidPublicKey)) {
+            missingConfigList.add("firebase.web.vapid-public-key");
+        }
+
+        return missingConfigList;
     }
 
     /**
