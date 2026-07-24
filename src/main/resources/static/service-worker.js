@@ -85,3 +85,52 @@ self.addEventListener("fetch", (event) => {
     }),
   );
 });
+
+self.addEventListener("push", (event) => {
+  let payload = {};
+
+  if (event.data) {
+    try {
+      payload = event.data.json();
+    } catch (e) {
+      payload = { notification: { title: "알림", body: event.data.text() } };
+    }
+  }
+
+  const notification = payload.notification || {};
+  const data = payload.data || {};
+  const title = notification.title || data.title || "알림";
+  const body = notification.body || data.body || "";
+  const linkUrlx = data.linkUrlx || "/alim";
+
+  // FCM에서 받은 payload를 브라우저 알림으로 표시한다.
+  // 링크는 notificationclick에서 사용해야 하므로 notification data에 함께 저장한다.
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body,
+      icon: "/favicon/android-chrome-192x192.png",
+      badge: "/favicon/favicon-32x32.png",
+      data: { linkUrlx },
+    }),
+  );
+});
+
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+
+  const linkUrlx = event.notification.data?.linkUrlx || "/alim";
+  const targetUrl = new URL(linkUrlx, self.location.origin).href;
+
+  event.waitUntil(
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(targetUrl);
+          return client.focus();
+        }
+      }
+
+      return clients.openWindow(targetUrl);
+    }),
+  );
+});

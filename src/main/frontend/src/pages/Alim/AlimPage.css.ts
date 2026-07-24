@@ -15,6 +15,7 @@ export const header = style({
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
+  flexWrap: "wrap",
   gap: "14px",
   marginBottom: "22px",
 });
@@ -55,6 +56,22 @@ export const readAllButton = style({
     },
   },
 });
+
+export const headerActions = style({
+  flex: "0 0 auto",
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+});
+
+export const pushButton = style([
+  readAllButton,
+  {
+    minWidth: "92px",
+    borderColor: "#2f9e44",
+    color: "#2f9e44",
+  },
+]);
 
 export const list = style({
   display: "flex",

@@ -76,6 +76,9 @@ dependencies {
 	// 세션을 Redis에 저장해 주는 라이브러리
 	implementation 'org.springframework.session:spring-session-data-redis'
 
+	// Firebase Cloud Messaging 서버 발송을 위한 공식 Admin SDK
+	implementation 'com.google.firebase:firebase-admin:9.10.0'
+
 	// JWT
   	implementation 'io.jsonwebtoken:jjwt-api:0.11.5'
   	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
