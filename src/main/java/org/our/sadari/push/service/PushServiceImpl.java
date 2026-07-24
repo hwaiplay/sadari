@@ -1,7 +1,10 @@
 package org.our.sadari.push.service;
 
-import java.util.List;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
@@ -10,6 +13,8 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.push.dto.PushDto;
 import org.our.sadari.push.mapper.PushMapper;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +30,8 @@ public class PushServiceImpl implements PushService {
 
     private final PushMapper pushMapper;
     private final FirebaseMessagingProvider firebaseMessagingProvider;
+    private final ResourceLoader resourceLoader;
+    private final ObjectMapper objectMapper;
 
     @Value("${firebase.web.api-key:}")
     private String apiKey;
@@ -47,6 +54,9 @@ public class PushServiceImpl implements PushService {
     @Value("${firebase.web.vapid-public-key:}")
     private String vapidPublicKey;
 
+    @Value("${firebase.admin.credentials-path:}")
+    private String credentialsPath;
+
     /**
      * 브라우저에서 FCM token을 발급받는 데 필요한 공개 설정만 반환합니다.
      * 하나라도 비어 있으면 프론트가 token을 만들 수 없으므로 잘못된 설정으로 응답합니다.
@@ -56,6 +66,7 @@ public class PushServiceImpl implements PushService {
      */
     @Override
     public ResultData getFirebaseWebConfig() {
+        applyFirebaseWebFallbackFromServiceAccount();
         List<String> missingConfigList = getMissingFirebaseWebConfigList();
 
         if (!missingConfigList.isEmpty()) {
@@ -76,8 +87,74 @@ public class PushServiceImpl implements PushService {
     }
 
     /**
+     * Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다.
+     * service account는 서버 인증용 파일이라 apiKey, appId, messagingSenderId는 들어 있지 않습니다.
+     * 따라서 여기서는 projectId, authDomain, storageBucket처럼 project_id로 유추 가능한 공개 설정만 fallback 처리합니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    private void applyFirebaseWebFallbackFromServiceAccount() {
+        if (!StringUtil.isEmpty(projectId) || StringUtil.isEmpty(credentialsPath)) {
+            return;
+        }
+
+        try {
+            Resource resource = resourceLoader.getResource(normalizeCredentialsPath(credentialsPath));
+
+            if (!resource.exists()) {
+                log.warn("Firebase service account json is not found for web config fallback. path={}", credentialsPath);
+                return;
+            }
+
+            try (InputStream inputStream = resource.getInputStream()) {
+                JsonNode serviceAccount = objectMapper.readTree(inputStream);
+                String serviceAccountProjectId = serviceAccount.path("project_id").asText("");
+
+                if (StringUtil.isEmpty(serviceAccountProjectId)) {
+                    return;
+                }
+
+                /*
+                 * project_id는 service account와 Firebase Web app이 같은 Firebase project를 바라보는 경우 동일하게 사용할 수 있다.
+                 * 단, apiKey/appId/messagingSenderId는 service account에 없으므로 Firebase Console의 Web app config를 yml에 넣어야 한다.
+                 */
+                projectId = serviceAccountProjectId;
+
+                if (StringUtil.isEmpty(authDomain)) {
+                    authDomain = serviceAccountProjectId + ".firebaseapp.com";
+                }
+
+                if (StringUtil.isEmpty(storageBucket)) {
+                    storageBucket = serviceAccountProjectId + ".firebasestorage.app";
+                }
+            }
+        } catch (Exception e) {
+            log.warn("Firebase service account json could not be used for web config fallback.", e);
+        }
+    }
+
+    /**
+     * Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정합니다.
+     * classpath:가 중복으로 들어온 경우 파일을 못 찾으므로 한 번만 남깁니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param path yml에 등록된 service account json 경로
+     * @return 보정된 리소스 경로
+     */
+    private String normalizeCredentialsPath(String path) {
+        String normalizedPath = path;
+
+        while (normalizedPath.startsWith("classpath:classpath:")) {
+            normalizedPath = normalizedPath.replaceFirst("classpath:classpath:", "classpath:");
+        }
+
+        return normalizedPath;
+    }
+
+    /**
      * 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산합니다.
      * VAPID public key만으로는 token을 만들 수 없고, Firebase Console의 Web app config 값들이 함께 필요합니다.
+     * service account json에는 apiKey/appId/messagingSenderId가 없으므로 이 값들은 yml 또는 환경변수에서 반드시 받아야 합니다.
      *
      * @author Seunghyeon.Kang
      * @return 누락된 설정 property 이름 목록
