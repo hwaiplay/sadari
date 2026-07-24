@@ -1,6 +1,7 @@
 package org.our.sadari.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.user.dto.UserDto;
 
 
@@ -15,7 +16,7 @@ public interface UserMapper {
     /**
      * 아래 코드의 처리 목적을 설명한다.
      */
-    UserDto getUserByIdxx(String idxx);
+    UserDto getUserByIdxx(@Param("userIdxx") String userIdxx);
 
     /**
      * 아래 코드의 처리 목적을 설명한다.
