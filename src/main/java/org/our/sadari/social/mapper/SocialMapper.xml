@@ -2,15 +2,15 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.social.mapper.SocialMapper">
 
-    <!-- Oracle 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 버튼명을 조회한다. -->
-    <select id="getFollowStatusName" resultType="string">
+    <!-- Oracle 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 팔로우 버튼명을 조회한다. -->
+    <select id="getFollowStatusName" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto" resultType="string">
         SELECT /* getFollowStatusName */
                FN_GET_FOLW_STAT(#{userNumb}, #{flowNumb})
           FROM DUAL
     </select>
 
-    <!-- 중복 팔로우 요청은 PK 오류가 나지 않도록 MERGE로 한 번만 저장한다. -->
-    <insert id="setFollow">
+    <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MERGE로 한 번만 저장한다. -->
+    <insert id="setFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
         MERGE INTO TB_FOLLOW F
         USING (
             SELECT #{userNumb} AS USER_NUMB
@@ -24,9 +24,86 @@
     </insert>
 
     <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제한다. -->
-    <delete id="delFollow">
+    <delete id="delFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
         DELETE FROM TB_FOLLOW
          WHERE USER_NUMB = #{userNumb}
            AND FLOW_NUMB = #{flowNumb}
     </delete>
+
+    <!-- 사용자가 해당 대상에 이미 좋아요를 눌렀는지 확인한다. -->
+    <select id="dupLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
+        SELECT /* dupLike */
+               COUNT(*)
+          FROM TB_LIKEXX
+         WHERE USER_NUMB = #{userNumb}
+           AND TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </select>
+
+    <!-- 좋아요를 등록한다. 대상 유형과 대상 번호는 요청 DTO 값을 그대로 사용한다. -->
+    <insert id="setLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        /* setLike */
+        INSERT INTO TB_LIKEXX(
+                    USER_NUMB
+                  , TAGT_TYPE
+                  , TAGT_NUMB
+                  , REGI_DATE
+        ) VALUES(   #{userNumb}
+                  , #{tagtType}
+                  , #{tagtNumb}
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 좋아요를 취소한다. -->
+    <delete id="delLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        /* delLike */
+        DELETE FROM TB_LIKEXX
+         WHERE USER_NUMB = #{userNumb}
+           AND TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </delete>
+
+    <!-- 특정 대상에 연결된 좋아요를 모두 정리한다. -->
+    <delete id="delLikeByTarget" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        /* delLikeByTarget */
+        DELETE FROM TB_LIKEXX
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </delete>
+
+    <!-- 좋아요 토글 후 화면에 표시할 좋아요 수와 현재 사용자의 좋아요 여부를 조회한다. -->
+    <select id="getLikeDtl" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getLikeDtl */
+               R.TAGT_TYPE
+             , R.TAGT_NUMB
+             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+          FROM (  SELECT #{tagtType} AS TAGT_TYPE
+                       , #{tagtNumb} AS TAGT_NUMB
+                    FROM DUAL
+                ) R
+     LEFT JOIN (  SELECT L.TAGT_TYPE
+                       , L.TAGT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_LIKEXX L
+                   WHERE L.TAGT_TYPE = #{tagtType}
+                     AND L.TAGT_NUMB = #{tagtNumb}
+                GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
+               ) LC
+            ON LC.TAGT_TYPE = R.TAGT_TYPE
+           AND LC.TAGT_NUMB = R.TAGT_NUMB
+     LEFT JOIN (  SELECT L.TAGT_TYPE
+                       , L.TAGT_NUMB
+                       , #{commYes} AS LIKE_YSNO
+                    FROM TB_LIKEXX L
+                   WHERE L.TAGT_TYPE = #{tagtType}
+                     AND L.TAGT_NUMB = #{tagtNumb}
+                     AND L.USER_NUMB = #{userNumb}
+                ) UL
+            ON UL.TAGT_TYPE = R.TAGT_TYPE
+           AND UL.TAGT_NUMB = R.TAGT_NUMB
+    </select>
 </mapper>

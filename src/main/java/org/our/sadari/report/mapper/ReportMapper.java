@@ -6,10 +6,11 @@ import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.report.dto.ReportDto;
+import org.our.sadari.social.dto.SocialDto;
 
 /**
- * 독후감, 좋아요, 독서 목표와 관련된 MyBatis Mapper입니다.
- * 도서 마스터(TM_BOOK_INFO)를 단독으로 사용하는 쿼리는 BookMapper에서 관리합니다.
+ * 독후감, 독서 목표, 공개 독후감 조회를 담당하는 MyBatis Mapper 계약입니다.
+ * 좋아요 등록/삭제처럼 TB_LIKEXX를 직접 변경하는 기능은 SocialMapper에서 관리합니다.
  *
  * @author Seunghyeon.Kang
  */
@@ -17,7 +18,7 @@ import org.our.sadari.report.dto.ReportDto;
 public interface ReportMapper {
 
     /**
-     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회합니다.
+     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회합니다.
      *
      * @author Seunghyeon.Kang
      * @param req 사용자 번호, 검색어, 정렬 조건을 담은 요청 DTO
@@ -26,7 +27,7 @@ public interface ReportMapper {
     List<ReportDto> getReportList(ReportDto req);
 
     /**
-     * 지정 기간 안에 완료된 독후감 수를 조회합니다.
+     * 지정한 기간 안에 완료된 독후감 수를 조회합니다.
      *
      * @author Seunghyeon.Kang
      * @param req 사용자 번호와 기간 조건을 담은 요청 DTO
@@ -35,7 +36,7 @@ public interface ReportMapper {
     int getReportCntByPeriod(MonthlyReadingSummaryDto req);
 
     /**
-     * 지정 기간 안에 완료된 독후감 목록을 조회합니다.
+     * 지정한 기간 안에 완료된 독후감 목록을 조회합니다.
      *
      * @author Seunghyeon.Kang
      * @param req 사용자 번호와 기간 조건을 담은 요청 DTO
@@ -80,6 +81,16 @@ public interface ReportMapper {
     ReportDto getReportDtl(ReportDto req);
 
     /**
+     * 좋아요를 허용할 수 있는 공개 독후감 대상인지 조회합니다.
+     * TB_LIKEXX 변경은 SocialMapper에서 처리하지만, 대상 검증 기준은 TM_REPORT이므로 ReportMapper에서 관리합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 독후감 번호와 사용자 번호
+     * @return 좋아요 허용 대상 수
+     */
+    int getPublicReportLikeTargetCnt(SocialDto.LikeDto req);
+
+    /**
      * ISBN 기준 공개 독후감 목록을 조회합니다.
      *
      * @author Seunghyeon.Kang
@@ -89,7 +100,7 @@ public interface ReportMapper {
     List<ReportDto> getPublicReportList(ReportDto req);
 
     /**
-     * ISBN 기준으로 도서에 연결된 완료 독후감의 평균 별점을 조회합니다.
+     * ISBN 기준으로 연결된 완료 독후감의 평균 별점을 조회합니다.
      *
      * @author Seunghyeon.Kang
      * @param bookIsbn 조회할 도서 ISBN
@@ -98,52 +109,7 @@ public interface ReportMapper {
     BigDecimal getPublicRatingAverageByIsbn(String bookIsbn);
 
     /**
-     * 좋아요 대상 독후감이 존재하며 좋아요 가능한 상태인지 확인합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
-     * @return 좋아요 가능 대상 수
-     */
-    int getPublicReportLikeTargetCnt(ReportDto req);
-
-    /**
-     * 사용자가 해당 독후감에 이미 좋아요를 눌렀는지 확인합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
-     * @return 중복 좋아요 수
-     */
-    int dupReportLike(ReportDto req);
-
-    /**
-     * 독후감 좋아요를 등록합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
-     * @return 반영 건수
-     */
-    int setReportLike(ReportDto req);
-
-    /**
-     * 독후감 좋아요를 취소합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
-     * @return 반영 건수
-     */
-    int delReportLike(ReportDto req);
-
-    /**
-     * 좋아요 변경 후 화면에 표시할 좋아요 상태와 개수를 조회합니다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
-     * @return 좋아요 상세 정보
-     */
-    ReportDto getReportLikeDtl(ReportDto req);
-
-    /**
-     * 신규 독후감을 등록합니다.
+     * 신규 독후감을 저장합니다.
      *
      * @author Seunghyeon.Kang
      * @param reportDto 등록할 독후감 정보
