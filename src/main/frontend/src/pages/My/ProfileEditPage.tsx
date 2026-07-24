@@ -5,7 +5,6 @@ import {
   formatDateValue,
   formatDashedDateToDot,
   getRemainDaysUntil,
-  getRemainPeriodRate,
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
@@ -697,6 +696,12 @@ function ProfileEditPage() {
     return "#f4a7ad";
   };
 
+  const getReadingRemainRate = (remainDays: number) => {
+    // 현재 읽고 있는 책의 남은 기간 색상은 전체 목표기간 비율이 아니라 남은 10일을 기준으로 판단한다.
+    // 10일 이상 남으면 가장 여유 있는 색상, 0일에 가까워질수록 기존 색상 단계가 내려간다.
+    return Math.max(0, Math.min(100, Math.round((Math.max(remainDays, 0) / 10) * 100)));
+  };
+
   /**
    * 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링합니다.
    * 전체 목표기간 대비 남은 비율을 색상 기준으로 사용해 기간이 가까워질수록 붉은 계열로 표시합니다.
@@ -722,7 +727,7 @@ function ProfileEditPage() {
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
               const remainDays = getRemainDaysUntil(report.reptEndt);
-              const remainRate = getRemainPeriodRate(report.reptStdt, report.reptEndt);
+              const remainRate = getReadingRemainRate(remainDays);
               const remainColor = getGoalProgressColor(remainRate);
               const isExpired = remainDays <= 0;
               const content = (

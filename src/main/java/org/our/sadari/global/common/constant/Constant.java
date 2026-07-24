@@ -14,6 +14,7 @@ public final class Constant {
     public static final String CODE_COMM_YSNO = "COMM_YSNO";
     public static final String CODE_BADX_WORD = "BADX_WORD";
     public static final String CODE_EXCP_WORD = "EXCP_WORD";
+    public static final String CODE_ALIM_SITU = "ALIM_SITU";
     public static final String OPT_PUBC_YSNO = "PUBC_YSNO";
 
     public static final String REPORT_STAT_READ = "READ";
@@ -21,7 +22,9 @@ public final class Constant {
     public static final String REPORT_STAT_STOP = "STOP";
     public static final String LIKE_TARGET_REPORT = "REPORT";
     public static final String ALIM_SITU_LIKE = "LIKE";
+    public static final String ALIM_SITU_FOLLOW = "FOLLOW";
     public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";
+    public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
 
     public static final String COMM_YES = "Y";
     public static final String COMM_NO = "N";
