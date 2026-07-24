@@ -11,6 +11,7 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.push.service.PushService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +28,7 @@ public class AlimServiceImpl implements AlimService {
     private static final int ALIM_PAGE_SIZE = 20;
 
     private final AlimMapper alimMapper;
+    private final PushService pushService;
 
     /**
      * 로그인 사용자의 알림 목록을 조회한다.
@@ -174,6 +176,9 @@ public class AlimServiceImpl implements AlimService {
         }
 
         alimMapper.setAlim(alim);
+        // 알림함 저장이 실제로 일어난 경우에만 푸시를 발송한다.
+        // 위의 1시간 동일 알림 차단 분기에서 return된 경우에는 사용자에게 같은 푸시가 반복되지 않는다.
+        pushService.sendPush(userNumb, alim.getAlimTitl(), alim.getAlimCont(), alim.getLinkUrlx());
         return ResultData.success(alim);
     }
 

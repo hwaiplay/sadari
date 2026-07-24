@@ -49,3 +49,10 @@ src/main/resources/application-prod.yml
 docs/db/*.sql
 docs/db/*.ddl
 docs/db/*.dml
+
+# Firebase Admin SDK Private Key
+firebase-adminsdk-account
+firebase-adminsdk-account.json
+firebase-service-account.json
+src/main/resources/firebase-adminsdk-account.json
+src/main/resources/firebase-service-account.json
