@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { queryClient } from "@/app/query/queryClient";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
+import { getUnreadAlimCntApi } from "@/features/Alim/api/alimApi";
 import { logoutApi } from "@/features/Auth/api/authApi";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
@@ -25,6 +26,7 @@ const MENU_ITEMS = [
 function HeaderMenuDrawer() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
   const clearAuth = useAuthStore((state) => state.clearAuth);
   const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
@@ -82,6 +84,31 @@ function HeaderMenuDrawer() {
       window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
     };
   }, []);
+
+  useEffect(() => {
+    let ignore = false;
+
+    if (!isDrawerOpen) {
+      return;
+    }
+
+    getUnreadAlimCntApi()
+      .then((response) => {
+        if (!ignore) {
+          setUnreadAlimCnt(response.data?.unreadCnt ?? 0);
+        }
+      })
+      .catch(() => {
+        // 알림 배지는 보조 정보이므로 실패해도 메뉴 사용을 막지 않고 숫자만 숨긴다.
+        if (!ignore) {
+          setUnreadAlimCnt(0);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [isDrawerOpen]);
 
   const drawer = (
     <div
@@ -167,6 +194,11 @@ function HeaderMenuDrawer() {
               <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
               <path d="M13.73 21a2 2 0 0 1-3.46 0" />
             </svg>
+            {unreadAlimCnt > 0 ? (
+              <span className={drawerStyles.drawerAlimBadge}>
+                {unreadAlimCnt > 99 ? "99+" : unreadAlimCnt}
+              </span>
+            ) : null}
           </button>
         </div>
       </aside>
