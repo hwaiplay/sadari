@@ -106,4 +106,106 @@
             ON UL.TAGT_TYPE = R.TAGT_TYPE
            AND UL.TAGT_NUMB = R.TAGT_NUMB
     </select>
+
+    <!-- 마이페이지 프로필 통계 영역에 표시할 집계 값이다.
+         팔로우/좋아요 테이블은 social 도메인 소유이므로 MyPageController는 이 쿼리를 직접 알지 않고 service 결과만 합쳐서 내려준다. -->
+    <!-- 독후감 좋아요 알림 발송을 위해 독후감 작성자와 좋아요를 누른 사용자의 닉네임을 조회한다. -->
+    <select id="getReportLikeAlimInfo" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        SELECT /* getReportLikeAlimInfo */
+               R.USER_NUMB AS TARGET_USER_NUMB
+             , U.USER_NICK AS SEND_USER_NICK
+          FROM TM_REPORT R
+    INNER JOIN TM_USERXM U
+            ON U.USER_NUMB = #{userNumb}
+         WHERE R.REPT_NUMB = #{tagtNumb}
+    </select>
+
+    <select id="getProfileStats" parameterType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto" resultType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto">
+        <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        SELECT /* getProfileStats */
+               #{userNumb} AS USER_NUMB
+             , ( SELECT COUNT(*)
+                   FROM TM_REPORT R
+                  WHERE R.USER_NUMB = #{userNumb}
+                    AND R.REPT_STAT = #{reportStatDone}
+               ) AS TOTAL_READ_BOOK_CNT
+             , ( SELECT COUNT(*)
+                   FROM TB_FOLLOW F
+                  WHERE F.USER_NUMB = #{userNumb}
+               ) AS FOLLOWING_CNT
+             , ( SELECT COUNT(*)
+                   FROM TB_FOLLOW F
+                  WHERE F.FLOW_NUMB = #{userNumb}
+               ) AS FOLLOWER_CNT
+             , ( SELECT COUNT(*)
+                   FROM TB_LIKEXX L
+                  WHERE L.TAGT_TYPE = #{likeTargetReport}
+                    AND EXISTS (
+                        SELECT 1
+                          FROM TM_REPORT R
+                         WHERE R.REPT_NUMB = L.TAGT_NUMB
+                           AND R.USER_NUMB = #{userNumb}
+                    )
+               ) AS RECEIVED_LIKE_CNT
+          FROM DUAL
+    </select>
+
+    <!-- 특정 사용자가 팔로우하고 있는 사용자 목록을 조회한다.
+         로그인 사용자 기준 버튼명을 함께 계산해 모달에서 사용자별 상태 API를 반복 호출하지 않게 한다. -->
+    <select id="getFollowingList" parameterType="org.our.sadari.social.dto.SocialDto$FollowListReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getFollowingList */
+               U.USER_NUMB
+             , U.USER_NICK
+             , U.INTR_CNTN
+             , F.FILE_PATH AS PORF_PATH
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN #{commYes}
+                   ELSE #{commNo}
+               END AS ME_YSNO
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
+                   ELSE FN_GET_FOLW_STAT(#{loginUserNumb}, U.USER_NUMB)
+               END AS FOLLOW_STAT_NAME
+          FROM TB_FOLLOW FL
+    INNER JOIN TM_USERXM U
+            ON U.USER_NUMB = FL.FLOW_NUMB
+     LEFT JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.PROF_NUMB
+         WHERE FL.USER_NUMB = #{userNumb}
+      ORDER BY CASE WHEN U.USER_NUMB = #{loginUserNumb} THEN 0 ELSE 1 END
+             , FL.REGI_DATE DESC
+             , U.USER_NUMB DESC
+    </select>
+
+    <!-- 특정 사용자를 팔로우하는 사용자 목록을 조회한다.
+         팔로워 목록도 팔로잉 목록과 같은 응답 구조를 사용해 프론트 모달을 공통으로 렌더링한다. -->
+    <select id="getFollowerList" parameterType="org.our.sadari.social.dto.SocialDto$FollowListReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getFollowerList */
+               U.USER_NUMB
+             , U.USER_NICK
+             , U.INTR_CNTN
+             , F.FILE_PATH AS PORF_PATH
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN #{commYes}
+                   ELSE #{commNo}
+               END AS ME_YSNO
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
+                   ELSE FN_GET_FOLW_STAT(#{loginUserNumb}, U.USER_NUMB)
+               END AS FOLLOW_STAT_NAME
+          FROM TB_FOLLOW FL
+    INNER JOIN TM_USERXM U
+            ON U.USER_NUMB = FL.USER_NUMB
+     LEFT JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.PROF_NUMB
+         WHERE FL.FLOW_NUMB = #{userNumb}
+      ORDER BY CASE WHEN U.USER_NUMB = #{loginUserNumb} THEN 0 ELSE 1 END
+             , FL.REGI_DATE DESC
+             , U.USER_NUMB DESC
+    </select>
 </mapper>

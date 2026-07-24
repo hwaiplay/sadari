@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.alim.mapper.AlimMapper">
+
+    <!-- 발송 가능한 알림 템플릿을 조회한다. USEE_YSNO가 Y인 템플릿만 실제 사용자 알림으로 저장할 수 있다. -->
+    <select id="getAlimTemp" parameterType="org.our.sadari.alim.dto.AlimDto$AlimTempDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimTempDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getAlimTemp */
+               ALIM_SITU
+             , TEMP_CODE
+             , TEMP_TITL
+             , ALIM_TITL
+             , TEMP_CONT
+             , LINK_URLX
+             , USEE_YSNO
+          FROM TB_ALTEMP
+         WHERE ALIM_SITU = #{alimSitu}
+           AND TEMP_CODE = #{tempCode}
+           AND USEE_YSNO = #{commYes}
+    </select>
+
+    <!-- 템플릿을 치환한 발송 스냅샷을 사용자 알림함에 저장한다. 사용자별 알림 순번은 별도 조회 없이 INSERT 시점에 계산한다. -->
+    <insert id="setAlim" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
+        INSERT INTO TB_ALIMXX(
+                    USER_NUMB
+                  , ALIM_NUMB
+                  , ALIM_SITU
+                  , TEMP_CODE
+                  , ALIM_TITL
+                  , ALIM_CONT
+                  , LINK_URLX
+                  , READ_YSNO
+                  , SEND_DATE
+                  , DELT_YSNO
+        ) VALUES(   #{userNumb}
+                  , (
+                        SELECT NVL(MAX(ALIM_NUMB), 0) + 1
+                          FROM TB_ALIMXX
+                         WHERE USER_NUMB = #{userNumb}
+                    )
+                  , #{alimSitu}
+                  , #{tempCode}
+                  , #{alimTitl}
+                  , #{alimCont}
+                  , #{linkUrlx}
+                  , #{readYsno}
+                  , SYSDATE
+                  , #{deltYsno}
+        )
+    </insert>
+
+    <!-- 사용자가 삭제하지 않은 알림을 최신 발송순으로 조회한다. -->
+    <select id="getMyAlimList" parameterType="long" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getMyAlimList */
+               USER_NUMB
+             , ALIM_NUMB
+             , ALIM_SITU
+             , TEMP_CODE
+             , ALIM_TITL
+             , ALIM_CONT
+             , LINK_URLX
+             , READ_YSNO
+             , TO_CHAR(READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
+             , TO_CHAR(SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
+             , DELT_YSNO
+          FROM TB_ALIMXX
+         WHERE USER_NUMB = #{userNumb}
+           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
+      ORDER BY SEND_DATE DESC
+             , ALIM_NUMB DESC
+    </select>
+</mapper>
