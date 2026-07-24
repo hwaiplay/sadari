@@ -63,5 +63,99 @@ public class SocialDto {
         // 로그인 사용자의 좋아요 여부입니다. Y/N 값으로 화면의 버튼 상태를 제어합니다.
         @Schema(description = "로그인 사용자 좋아요 여부", example = "Y")
         private String likeYsno;
+
+        // 좋아요 알림을 받을 독후감 작성자 번호입니다. 화면 요청값이 아니라 알림 발송 전 DB 조회로 채웁니다.
+        @Schema(description = "좋아요 알림 수신 사용자 번호", example = "32", hidden = true)
+        private Long targetUserNumb;
+
+        // 좋아요 알림 문구에 표시할 좋아요 누른 사용자 닉네임입니다.
+        @Schema(description = "좋아요 발송 사용자 닉네임", example = "reader31", hidden = true)
+        private String sendUserNick;
+    }
+
+    /**
+     * 마이페이지 상단 통계 영역에 표시할 social 집계 DTO입니다.
+     * 총 읽은 책은 독후감 완료 상태를 기준으로 세지만, 화면 요구사항상 팔로우/팔로워/좋아요와 함께 묶여 표시되므로
+     * 조회 책임을 social 영역에 둡니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Data
+    @Schema(description = "마이페이지 프로필 통계 DTO")
+    public static class ProfileStatsDto {
+
+        // 로그인 사용자의 사용자 번호입니다. 화면에서 받지 않고 인증 정보에서 채워 조회 조건으로 사용합니다.
+        @Schema(description = "로그인 사용자 번호", example = "31", hidden = true)
+        private Long userNumb;
+
+        // 완료 상태 독후감 수입니다. 마이페이지에서는 사용자가 지금까지 다 읽은 총 권수로 표시합니다.
+        @Schema(description = "총 읽은 책 권수", example = "12")
+        private int totalReadBookCnt;
+
+        // 내가 팔로우하고 있는 사용자 수입니다.
+        @Schema(description = "팔로우 수", example = "8")
+        private int followingCnt;
+
+        // 나를 팔로우하고 있는 사용자 수입니다.
+        @Schema(description = "팔로워 수", example = "5")
+        private int followerCnt;
+
+        // 내 독후감이 받은 좋아요 수입니다.
+        @Schema(description = "받은 좋아요 수", example = "42")
+        private int receivedLikeCnt;
+    }
+
+    /**
+     * 팔로우/팔로워 목록 조회 조건 DTO입니다.
+     * userNumb는 목록의 주인이고, loginUserNumb는 각 목록 사용자에 대한 현재 로그인 사용자의 팔로우 상태를 계산하는 기준입니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Data
+    @Schema(description = "팔로우 목록 조회 조건 DTO")
+    public static class FollowListReqDto {
+
+        // 목록을 조회할 프로필 주인의 사용자 번호입니다.
+        @Schema(description = "목록 주인 사용자 번호", example = "31")
+        private Long userNumb;
+
+        // 각 목록 사용자 오른쪽에 표시할 팔로우 상태를 계산하는 로그인 사용자 번호입니다.
+        @Schema(description = "로그인 사용자 번호", example = "1", hidden = true)
+        private Long loginUserNumb;
+    }
+
+    /**
+     * 팔로우/팔로워 목록에 표시할 사용자 DTO입니다.
+     * 목록의 각 사용자는 프로필 기본 정보와 로그인 사용자 기준 팔로우 버튼명을 함께 가진다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Data
+    @Schema(description = "팔로우 목록 사용자 DTO")
+    public static class FollowUserDto {
+
+        // 목록에 표시할 사용자 번호입니다. 프로필 이동 및 팔로우/언팔로우 요청 대상 번호로 사용합니다.
+        @Schema(description = "사용자 번호", example = "31")
+        private Long userNumb;
+
+        // 목록에 표시할 사용자 닉네임입니다.
+        @Schema(description = "닉네임", example = "reader31")
+        private String userNick;
+
+        // 목록에 표시할 프로필 이미지 경로입니다.
+        @Schema(description = "프로필 이미지 경로")
+        private String porfPath;
+
+        // 목록에 표시할 한줄소개입니다.
+        @Schema(description = "한줄소개")
+        private String intrCntn;
+
+        // 로그인 사용자와 목록 사용자 사이의 팔로우 상태 버튼명입니다.
+        @Schema(description = "팔로우 상태명", example = "팔로잉")
+        private String followStatName;
+
+        // 목록 사용자가 현재 로그인 사용자 자신인지 여부입니다. 자기 자신은 팔로우 조작 대상에서 제외하기 위해 화면에서 사용합니다.
+        @Schema(description = "내 계정 여부", example = "N")
+        private String meYsno;
     }
 }

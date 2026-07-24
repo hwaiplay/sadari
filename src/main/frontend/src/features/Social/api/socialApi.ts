@@ -9,6 +9,17 @@ export type FollowStatus = {
   followStatName?: string;
 };
 
+export type FollowListType = "following" | "followers";
+
+export type FollowUser = {
+  userNumb: number;
+  userNick?: string;
+  porfPath?: string;
+  intrCntn?: string;
+  followStatName?: string;
+  meYsno?: "Y" | "N";
+};
+
 /**
  * 다른 사용자의 공개 프로필 정보를 조회합니다.
  * 공개 독후감 작성자 프로필 화면에서 마이페이지와 같은 프로필 영역을 구성할 때 사용합니다.
@@ -78,6 +89,21 @@ export const setSocialFollowApi = async (userNumb: number) => {
 export const delSocialFollowApi = async (userNumb: number) => {
   const res = await api.delete<{ data: FollowStatus }>(
     `/social/profile/${userNumb}/follow`,
+  );
+  return assertResultDataSuccess(res.data);
+};
+
+export const getMyFollowListApi = async (type: FollowListType) => {
+  const res = await api.get<{ data: FollowUser[] }>(`/social/me/${type}`);
+  return assertResultDataSuccess(res.data);
+};
+
+export const getSocialFollowListApi = async (
+  userNumb: number,
+  type: FollowListType,
+) => {
+  const res = await api.get<{ data: FollowUser[] }>(
+    `/social/profile/${userNumb}/${type}`,
   );
   return assertResultDataSuccess(res.data);
 };
