@@ -1,7 +1,10 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
-import { requestFirebaseMessagingToken } from "@/app/pwa/firebaseMessaging";
+import {
+  requestFirebaseMessagingToken,
+  requestPushNotificationPermission,
+} from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyAlimListApi,
@@ -125,6 +128,10 @@ function AlimPage() {
     setIsPushEnabling(true);
 
     try {
+      // 브라우저 권한 요청은 버튼 클릭 직후 실행해야 팝업이 차단되지 않는다.
+      // Firebase 설정 API를 기다린 뒤 요청하면 사용자 액션으로 인정되지 않아 컨펌창이 뜨지 않을 수 있다.
+      await requestPushNotificationPermission();
+
       const configResponse = await getPushConfigApi();
       const token = await requestFirebaseMessagingToken(configResponse.data);
 
@@ -137,8 +144,12 @@ function AlimPage() {
       const detailMessage =
         errorMessage === "PUSH_NOT_SUPPORTED"
           ? message("frontend.push.enable.unsupported")
+          : errorMessage === "PUSH_INSECURE_CONTEXT"
+            ? message("frontend.push.enable.insecureContext")
           : errorMessage === "PUSH_PERMISSION_DENIED"
             ? message("frontend.push.enable.denied")
+            : errorMessage === "PUSH_SERVICE_WORKER_NOT_READY"
+              ? message("frontend.push.enable.serviceWorkerNotReady")
             : getApiErrorMessage(error, message("frontend.common.tryAgain"));
 
       void sweetError(message("frontend.push.enable.failedTitle"), detailMessage);
