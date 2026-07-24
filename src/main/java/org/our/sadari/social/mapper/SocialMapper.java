@@ -83,4 +83,34 @@ public interface SocialMapper {
      * @return 좋아요 상세 정보
      */
     SocialDto.LikeDto getLikeDtl(SocialDto.LikeDto req);
+
+    /**
+     * 마이페이지 프로필 통계에 표시할 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수를 한 번에 조회합니다.
+     * 해당 집계는 social 영역에서 관리하는 팔로우/좋아요 데이터를 포함하므로 MyPageController가 직접 SQL을 알지 않도록 분리합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 로그인 사용자 번호
+     * @return 마이페이지 프로필 통계
+     */
+    SocialDto.ProfileStatsDto getProfileStats(SocialDto.ProfileStatsDto req);
+
+    /**
+     * 특정 사용자가 팔로우하는 사용자 목록을 조회합니다.
+     * 각 행에는 로그인 사용자 기준 팔로우 상태를 함께 내려 화면 오른쪽 버튼 상태를 별도 API 없이 표시합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 목록 주인 사용자 번호와 로그인 사용자 번호
+     * @return 팔로잉 사용자 목록
+     */
+    java.util.List<SocialDto.FollowUserDto> getFollowingList(SocialDto.FollowListReqDto req);
+
+    /**
+     * 특정 사용자를 팔로우하는 사용자 목록을 조회합니다.
+     * 각 행에는 로그인 사용자 기준 팔로우 상태를 함께 내려 화면 오른쪽 버튼 상태를 별도 API 없이 표시합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 목록 주인 사용자 번호와 로그인 사용자 번호
+     * @return 팔로워 사용자 목록
+     */
+    java.util.List<SocialDto.FollowUserDto> getFollowerList(SocialDto.FollowListReqDto req);
 }

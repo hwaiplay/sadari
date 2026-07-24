@@ -17,6 +17,13 @@ import {
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
 import {
+  delSocialFollowApi,
+  getMyFollowListApi,
+  setSocialFollowApi,
+  type FollowListType,
+  type FollowUser,
+} from "@/features/Social/api/socialApi";
+import {
   copyPreviousReadingGoalApi,
   getMyProfileApi,
   getMonthlyReadingSummaryApi,
@@ -40,10 +47,14 @@ const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+$/;
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
 type ReadingPeriod = "week" | "month" | "year";
 type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
-type ProfileModalType = "quick" | "goal" | "goalHelp";
+type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
+
+const isActiveFollowStatus = (followStatName?: string) => {
+  return followStatName === "팔로잉" || followStatName === "맞팔로우";
+};
 
 const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: string; singular: string }> = {
   week: {
@@ -218,6 +229,11 @@ function ProfileEditPage() {
   const [quickGrade, setQuickGrade] = useState(5);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
+  const [followListType, setFollowListType] = useState<FollowListType | null>(null);
+  const [followUsers, setFollowUsers] = useState<FollowUser[]>([]);
+  const [isFollowListLoading, setIsFollowListLoading] = useState(false);
+  const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
+  const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
   const [closingModal, setClosingModal] = useState<ProfileModalType | null>(null);
   const [weekGoalCnt, setWeekGoalCnt] = useState("");
   const [monthGoalCnt, setMonthGoalCnt] = useState("");
@@ -237,7 +253,8 @@ function ProfileEditPage() {
     month: null,
     year: null,
   });
-  useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen);
+  const followListScrollTimeoutRef = useRef<number | null>(null);
+  useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType));
 
   /**
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
@@ -311,6 +328,14 @@ function ProfileEditPage() {
       document.removeEventListener("pointerdown", handleDocumentPointerDown);
     };
   }, [activeDiffTooltip]);
+
+  useEffect(() => {
+    return () => {
+      if (followListScrollTimeoutRef.current) {
+        window.clearTimeout(followListScrollTimeoutRef.current);
+      }
+    };
+  }, []);
 
   /**
    * 이전 기간 대비 완료 독서 변화량 상세 문구를 info 알림으로 보여줍니다.
@@ -420,6 +445,12 @@ function ProfileEditPage() {
           setIsGoalHelpModalOpen(false);
         }
 
+        if (modal === "followList") {
+          setFollowListType(null);
+          setFollowUsers([]);
+          setIsFollowListScrolling(false);
+        }
+
         setClosingModal((current) => (current === modal ? null : current));
         resolve();
       }, MODAL_CLOSE_DELAY_MS);
@@ -440,6 +471,92 @@ function ProfileEditPage() {
     setQuickReport(report);
     setQuickStatus(REPORT_STATUS_DONE);
     setQuickGrade(Number.isFinite(reportGrade) ? reportGrade : 5);
+  };
+
+  const handleFollowListOpen = async (type: FollowListType) => {
+    setClosingModal(null);
+    setFollowListType(type);
+    setFollowUsers([]);
+    setIsFollowListScrolling(false);
+    setIsFollowListLoading(true);
+
+    try {
+      const response = await getMyFollowListApi(type);
+      setFollowUsers((response.data ?? []) as FollowUser[]);
+    } catch (error) {
+      void sweetError(
+        message("frontend.common.invalidAccess"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+      setFollowListType(null);
+    } finally {
+      setIsFollowListLoading(false);
+    }
+  };
+
+  const handleFollowListScroll = () => {
+    setIsFollowListScrolling(true);
+
+    if (followListScrollTimeoutRef.current) {
+      window.clearTimeout(followListScrollTimeoutRef.current);
+    }
+
+    followListScrollTimeoutRef.current = window.setTimeout(() => {
+      setIsFollowListScrolling(false);
+      followListScrollTimeoutRef.current = null;
+    }, 650);
+  };
+
+  const handleFollowListUserClick = (userNumb: number) => {
+    void closeProfileModal("followList").then(() => {
+      navigate(`/social/profile/${userNumb}`);
+    });
+  };
+
+  const handleFollowStatusClick = async (user: FollowUser) => {
+    if (followUpdatingUserNumb || user.meYsno === "Y") {
+      return;
+    }
+
+    if (user.followStatName === "팔로잉") {
+      const result = await sweetConfirm({
+        title: message("frontend.social.unfollow.title"),
+        text: message("frontend.social.unfollow.text"),
+        confirmButtonText: message("frontend.social.unfollow.confirm"),
+        cancelButtonText: message("frontend.common.cancel"),
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+    }
+
+    setFollowUpdatingUserNumb(user.userNumb);
+
+    try {
+      const response =
+        user.followStatName === "팔로잉"
+          ? await delSocialFollowApi(user.userNumb)
+          : await setSocialFollowApi(user.userNumb);
+
+      setFollowUsers((prev) =>
+        prev.map((item) =>
+          item.userNumb === user.userNumb
+            ? { ...item, followStatName: response.data?.followStatName ?? item.followStatName }
+            : item,
+        ),
+      );
+
+      const summaryResponse = await getMonthlyReadingSummaryApi();
+      setMonthlySummary(summaryResponse.data as MonthlyReadingSummary);
+    } catch (error) {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+    } finally {
+      setFollowUpdatingUserNumb(null);
+    }
   };
 
   const handleQuickEditClick = () => {
@@ -651,6 +768,59 @@ function ProfileEditPage() {
                 </button>
               );
             })}
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  const renderProfileStats = (summary: MonthlyReadingSummary) => {
+    const stats = [
+      {
+        label: message("frontend.profile.stats.totalReadBook"),
+        value: message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
+        listType: null,
+      },
+      {
+        label: message("frontend.profile.stats.following"),
+        value: message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
+        listType: "following" as FollowListType,
+      },
+      {
+        label: message("frontend.profile.stats.follower"),
+        value: message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
+        listType: "followers" as FollowListType,
+      },
+      {
+        label: message("frontend.profile.stats.receivedLike"),
+        value: message("frontend.profile.stats.likeCount", [summary.receivedLikeCnt ?? 0]),
+        listType: null,
+      },
+    ];
+
+    return (
+      <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
+        <div className={styles.profileStatsSummary}>
+          <div className={styles.goalAchievementGrid}>
+            {stats.map((stat) => (
+              <div className={styles.goalAchievementItem} key={stat.label}>
+                {stat.listType ? (
+                  <button
+                    className={styles.profileStatsButton}
+                    type="button"
+                    onClick={() => void handleFollowListOpen(stat.listType)}
+                  >
+                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
+                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
+                  </button>
+                ) : (
+                  <>
+                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
+                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
@@ -1379,6 +1549,7 @@ function ProfileEditPage() {
 
           {monthlySummary && (
             <>
+              {renderProfileStats(monthlySummary)}
               {renderCurrentReadingReports(monthlySummary.currentReadingReports)}
               <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
                 <div className={styles.goalAchievementSummary}>
@@ -1595,6 +1766,104 @@ function ProfileEditPage() {
               >
                 {message("frontend.profile.currentReading.save")}
               </button>
+            </div>
+          </section>
+        </div>
+      ), document.body)}
+
+      {followListType && createPortal((
+        <div
+          className={`${styles.goalModalOverlay} ${
+            closingModal === "followList" ? styles.goalModalOverlayClosing : ""
+          }`}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              void closeProfileModal("followList");
+            }
+          }}
+        >
+          <section
+            className={`${styles.followModal} ${
+              closingModal === "followList" ? styles.goalModalClosing : ""
+            }`}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="follow-list-title"
+          >
+            <div className={styles.goalModalHeader}>
+              <h2 className={styles.goalModalTitle} id="follow-list-title">
+                {message(
+                  followListType === "following"
+                    ? "frontend.profile.followingList.title"
+                    : "frontend.profile.followerList.title",
+                )}
+              </h2>
+              <button
+                className={styles.goalModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={() => void closeProfileModal("followList")}
+              >
+                x
+              </button>
+            </div>
+
+            <div
+              className={isFollowListScrolling ? styles.followModalListScrolling : styles.followModalList}
+              onScroll={handleFollowListScroll}
+            >
+              {isFollowListLoading && (
+                <p className={styles.followModalEmpty}>
+                  {message("frontend.common.loadingList")}
+                </p>
+              )}
+              {!isFollowListLoading && followUsers.length === 0 && (
+                <p className={styles.followModalEmpty}>
+                  {message(
+                    followListType === "following"
+                      ? "frontend.profile.followingList.empty"
+                      : "frontend.profile.followerList.empty",
+                  )}
+                </p>
+              )}
+              {!isFollowListLoading && followUsers.map((user) => (
+                <div className={styles.followModalItem} key={user.userNumb}>
+                  <button
+                    className={styles.followModalProfileButton}
+                    type="button"
+                    onClick={() => handleFollowListUserClick(user.userNumb)}
+                  >
+                    <img
+                      className={styles.followModalAvatar}
+                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      alt={user.userNick ?? message("frontend.profile.nick")}
+                    />
+                    <span className={styles.followModalText}>
+                      <strong className={styles.followModalName}>
+                        {user.userNick || "-"}
+                      </strong>
+                      <span className={styles.followModalIntro}>
+                        {user.intrCntn || message("frontend.profile.intro.empty")}
+                      </span>
+                    </span>
+                  </button>
+                  {user.meYsno !== "Y" && (
+                    <button
+                      className={`${styles.followModalStatusButton} ${
+                        isActiveFollowStatus(user.followStatName)
+                          ? styles.followModalStatusButtonActive
+                          : ""
+                      }`}
+                      type="button"
+                      disabled={followUpdatingUserNumb === user.userNumb}
+                      onClick={() => void handleFollowStatusClick(user)}
+                    >
+                      {user.followStatName}
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </section>
         </div>
