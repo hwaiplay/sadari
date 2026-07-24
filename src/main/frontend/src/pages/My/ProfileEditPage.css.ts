@@ -317,6 +317,38 @@ export const goalAchievementSummary = style({
   padding: "9px 8px 24px",
 });
 
+export const profileStatsSummary = style({
+  padding: "9px 8px 14px",
+});
+
+export const profileStatsTitle = style({
+  margin: "0 0 16px",
+  fontFamily: vars.font.middle,
+  fontSize: "14px",
+  lineHeight: 1.3,
+  textAlign: "center",
+  color: vars.color.gray600,
+});
+
+export const profileStatsButton = style({
+  width: "100%",
+  minWidth: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  color: "inherit",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "10px",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": {
+      cursor: "default",
+    },
+  },
+});
+
 export const currentReadingSection = style({
   padding: "10px 4px 18px",
   display: "flex",
@@ -941,6 +973,150 @@ export const goalModal = style({
     from: { opacity: 0, transform: "translateY(8px)" },
     to: { opacity: 1, transform: "translateY(0)" },
   })} 180ms ease-out`,
+});
+
+export const followModal = style([
+  goalModal,
+  {
+    width: "min(460px, 100%)",
+    padding: "20px 18px 18px",
+    overflow: "hidden",
+  },
+]);
+
+export const followModalList = style({
+  marginTop: "18px",
+  maxHeight: "min(420px, calc(100dvh - 150px))",
+  paddingRight: "8px",
+  overflowY: "auto",
+  overflowX: "hidden",
+  borderRadius: "12px",
+  scrollbarGutter: "stable",
+  scrollbarWidth: "thin",
+  scrollbarColor: "transparent transparent",
+  display: "flex",
+  flexDirection: "column",
+  gap: "9px",
+  selectors: {
+    "&::-webkit-scrollbar": {
+      width: "6px",
+    },
+    "&::-webkit-scrollbar-track": {
+      backgroundColor: "transparent",
+    },
+    "&::-webkit-scrollbar-thumb": {
+      borderRadius: "999px",
+      backgroundColor: "transparent",
+      transition: "background-color 220ms ease",
+    },
+  },
+});
+
+export const followModalListScrolling = style([
+  followModalList,
+  {
+    scrollbarColor: "rgba(0, 0, 0, 0.24) transparent",
+    selectors: {
+      "&::-webkit-scrollbar-thumb": {
+        backgroundColor: "rgba(0, 0, 0, 0.24)",
+      },
+    },
+  },
+]);
+
+export const followModalItem = style({
+  width: "100%",
+  minHeight: "58px",
+  padding: "8px 0",
+  border: 0,
+  borderBottom: "1px solid #eef0f2",
+  backgroundColor: "transparent",
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: "10px",
+  textAlign: "left",
+});
+
+export const followModalProfileButton = style({
+  minWidth: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  display: "grid",
+  gridTemplateColumns: "42px minmax(0, 1fr)",
+  alignItems: "center",
+  gap: "10px",
+  textAlign: "left",
+  cursor: "pointer",
+});
+
+export const followModalAvatar = style({
+  width: "42px",
+  height: "42px",
+  borderRadius: "50%",
+  objectFit: "cover",
+  backgroundColor: "#f0f1f2",
+});
+
+export const followModalText = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "3px",
+});
+
+export const followModalName = style({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontFamily: vars.font.middle,
+  fontSize: "13px",
+  lineHeight: 1.25,
+  color: vars.color.black,
+});
+
+export const followModalIntro = style({
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1.35,
+  color: "#777777",
+});
+
+export const followModalStatusButton = style({
+  minWidth: "58px",
+  minHeight: "30px",
+  padding: "0 10px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
+  backgroundColor: "#ffffff",
+  color: vars.color.black,
+  fontFamily: vars.font.middle,
+  fontSize: "12px",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.62,
+    },
+  },
+});
+
+export const followModalStatusButtonActive = style({
+  color: "#2f9e44",
+});
+
+export const followModalEmpty = style({
+  margin: "12px 0 4px",
+  padding: "24px 0",
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.5,
+  color: "#777777",
+  textAlign: "center",
 });
 
 export const goalModalClosing = style({

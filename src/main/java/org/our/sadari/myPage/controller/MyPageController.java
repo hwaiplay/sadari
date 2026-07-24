@@ -16,9 +16,12 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
+import org.our.sadari.social.dto.SocialDto;
+import org.our.sadari.social.service.SocialService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class MyPageController {
 
     private final ReportService reportService;
+    private final SocialService socialService;
 
     /**
      * getMonthlyReadingSummary 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
@@ -51,7 +55,33 @@ public class MyPageController {
     @GetMapping("/monthly-reading-summary")
     @Operation(summary = "독서 요약 조회", description = "로그인 사용자의 주간, 월간, 연간 독서 목표와 완료 독후감 요약을 조회한다.")
     public ResultData getMonthlyReadingSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        return reportService.getMonthlyReadingSummary(userNumb);
+        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
+
+        // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 원래 실패 응답을 그대로 내려준다.
+        // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않는다.
+        if (summaryResult.getCode() != 200) {
+            return summaryResult;
+        }
+
+        ResultData statsResult = socialService.getMyPageProfileStats(userNumb);
+
+        // 마이페이지 API Controller는 응답 조합만 담당하고, 통계 집계 SQL과 기준은 social service/mapper에 둔다.
+        // social 통계 조회가 실패하면 화면 통계만 비우지 않고 실패 사유를 그대로 반환해 공통 API 검증 흐름과 맞춘다.
+        if (statsResult.getCode() != 200) {
+            return statsResult;
+        }
+
+        MonthlyReadingSummaryDto summary = (MonthlyReadingSummaryDto) summaryResult.getData();
+        SocialDto.ProfileStatsDto profileStats = (SocialDto.ProfileStatsDto) statsResult.getData();
+
+        if (!StringUtil.isEmpty(profileStats)) {
+            summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
+            summary.setFollowingCnt(profileStats.getFollowingCnt());
+            summary.setFollowerCnt(profileStats.getFollowerCnt());
+            summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
+        }
+
+        return ResultData.success(summary);
     }
 
     /**
