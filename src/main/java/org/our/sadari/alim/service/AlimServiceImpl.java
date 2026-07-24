@@ -1,6 +1,8 @@
 package org.our.sadari.alim.service;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.alim.dto.AlimDto;
@@ -22,6 +24,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class AlimServiceImpl implements AlimService {
 
+    private static final int ALIM_PAGE_SIZE = 20;
+
     private final AlimMapper alimMapper;
 
     /**
@@ -33,12 +37,87 @@ public class AlimServiceImpl implements AlimService {
      * @return 알림 목록
      */
     @Override
-    public ResultData getMyAlimList(Long userNumb) {
+    @Transactional
+    public ResultData getMyAlimList(Long userNumb, int page) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        return ResultData.success(alimMapper.getMyAlimList(userNumb));
+        int currentPage = Math.max(page, 1);
+        AlimDto.AlimListReqDto req = new AlimDto.AlimListReqDto();
+        req.setUserNumb(userNumb);
+        req.setPage(currentPage);
+        req.setPageSize(ALIM_PAGE_SIZE);
+        req.setStartRow(((currentPage - 1) * ALIM_PAGE_SIZE) + 1);
+        // 다음 페이지가 있는지 판단해야 하므로 화면 표시 개수보다 1개 더 조회한다.
+        req.setEndRow(currentPage * ALIM_PAGE_SIZE + 1);
+
+        List<AlimDto.AlimItemDto> searchedList = alimMapper.getMyAlimList(req);
+        boolean hasNext = searchedList.size() > ALIM_PAGE_SIZE;
+        List<AlimDto.AlimItemDto> visibleList = new ArrayList<>(
+                hasNext ? searchedList.subList(0, ALIM_PAGE_SIZE) : searchedList
+        );
+
+        // 알림 목록을 보는 순간 읽음 처리하지만, 아직 스크롤로 불러오지 않은 알림은 읽음 처리하지 않는다.
+        // 그래서 DB에서 pageSize + 1개를 조회했더라도 실제 화면에 노출하는 20개만 UPDATE 대상으로 넘긴다.
+        if (!visibleList.isEmpty()) {
+            AlimDto.AlimReadReqDto readReq = new AlimDto.AlimReadReqDto();
+            readReq.setUserNumb(userNumb);
+            readReq.setAlimList(visibleList);
+            alimMapper.uptAlimReadByList(readReq);
+
+            // 화면에 돌려주는 목록도 이미 읽은 상태로 맞춰 프론트에서 즉시 상태가 어긋나지 않게 한다.
+            visibleList.forEach(alim -> alim.setReadYsno(Constant.COMM_YES));
+        }
+
+        AlimDto.AlimListResDto res = new AlimDto.AlimListResDto();
+        res.setList(visibleList);
+        res.setHasNext(hasNext);
+        res.setNextPage(currentPage + 1);
+        res.setUnreadCnt(alimMapper.getUnreadAlimCnt(userNumb));
+
+        return ResultData.success(res);
+    }
+
+    /**
+     * 햄버거 메뉴 배지에서 사용할 미읽음 알림 수를 조회한다.
+     * 목록 진입 전 숫자만 필요하므로 목록 조회와 읽음 처리를 함께 수행하지 않는다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 미읽음 알림 수
+     */
+    @Override
+    public ResultData getUnreadAlimCnt(Long userNumb) {
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        AlimDto.AlimUnreadCntDto res = new AlimDto.AlimUnreadCntDto();
+        res.setUnreadCnt(alimMapper.getUnreadAlimCnt(userNumb));
+        return ResultData.success(res);
+    }
+
+    /**
+     * 사용자가 모두 읽음 버튼을 누른 경우 아직 화면에 로드하지 않은 알림까지 전부 읽음 처리한다.
+     * 일반 목록 조회와 달리 특정 ALIM_NUMB 목록을 받지 않는 것이 의도된 분기이다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 읽음 처리 결과
+     */
+    @Override
+    @Transactional
+    public ResultData readAllAlim(Long userNumb) {
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        alimMapper.uptAllAlimRead(userNumb);
+
+        AlimDto.AlimUnreadCntDto res = new AlimDto.AlimUnreadCntDto();
+        res.setUnreadCnt(0);
+        return ResultData.success(res);
     }
 
     /**
@@ -87,6 +166,12 @@ public class AlimServiceImpl implements AlimService {
         alim.setLinkUrlx(createLinkUrl(temp.getLinkUrlx(), tagtNumb));
         alim.setReadYsno(Constant.COMM_NO);
         alim.setDeltYsno(Constant.COMM_NO);
+
+        // 최종 제목, 내용, 링크까지 완전히 같은 알림이 1시간 이내에 있으면 새 알림을 만들지 않는다.
+        // 좋아요나 팔로우 버튼을 반복 조작할 때 같은 알림이 짧은 시간에 쌓이는 것을 막기 위한 공통 발송 분기이다.
+        if (alimMapper.dupSameAlimInHour(alim) > 0) {
+            return ResultData.success(alim);
+        }
 
         alimMapper.setAlim(alim);
         return ResultData.success(alim);

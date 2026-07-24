@@ -244,10 +244,11 @@ export const drawerFooter = style({
 });
 
 export const drawerAlimButton = style({
-    width: "42px",
-    height: "42px",
+    position: "relative",
+    width: "40px",
+    height: "40px",
     padding: 0,
-    border: `1px solid ${vars.color.gray200}`,
+    border: 0,
     borderRadius: "50%",
     backgroundColor: "#ffffff",
     color: vars.color.black,
@@ -255,6 +256,26 @@ export const drawerAlimButton = style({
     alignItems: "center",
     justifyContent: "center",
     cursor: "pointer",
+});
+
+export const drawerAlimBadge = style({
+    position: "absolute",
+    top: "-3px",
+    right: "-5px",
+    minWidth: "18px",
+    height: "18px",
+    padding: "0 5px",
+    borderRadius: "999px",
+    backgroundColor: "#ef4444",
+    color: "#ffffff",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    fontFamily: vars.font.middle,
+    fontSize: "10px",
+    lineHeight: 1,
+    boxSizing: "border-box",
+    pointerEvents: "none",
 });
 
 export const drawerAlimIcon = style({

@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -37,8 +38,38 @@ public class AlimController {
      */
     @GetMapping("/list")
     @Operation(summary = "내 알림 목록 조회", description = "로그인 사용자의 삭제되지 않은 알림 목록을 최신순으로 조회한다.")
-    public ResultData getMyAlimList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-        return alimService.getMyAlimList(loginUserNumb);
+    public ResultData getMyAlimList(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+            @RequestParam(defaultValue = "1") int page
+    ) {
+        // 알림 목록은 조회되는 순간 읽음 처리되므로, page 값만 넘기고 20개 단위 정책은 서비스에서 고정한다.
+        return alimService.getMyAlimList(loginUserNumb, page);
+    }
+
+    /**
+     * 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @return 미읽음 알림 수
+     */
+    @GetMapping("/unread-count")
+    @Operation(summary = "미읽음 알림 수 조회", description = "로그인 사용자의 읽지 않은 알림 수를 조회한다.")
+    public ResultData getUnreadAlimCnt(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+        return alimService.getUnreadAlimCnt(loginUserNumb);
+    }
+
+    /**
+     * 사용자가 모두 읽음 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 읽음 처리한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @return 읽음 처리 결과
+     */
+    @PostMapping("/read-all")
+    @Operation(summary = "알림 모두 읽음 처리", description = "로그인 사용자의 모든 미읽음 알림을 읽음 처리한다.")
+    public ResultData readAllAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+        return alimService.readAllAlim(loginUserNumb);
     }
 
     /**

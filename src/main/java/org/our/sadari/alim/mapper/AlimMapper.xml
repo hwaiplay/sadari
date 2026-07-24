@@ -49,9 +49,26 @@
         )
     </insert>
 
-    <!-- 사용자가 삭제하지 않은 알림을 최신 발송순으로 조회한다. -->
-    <select id="getMyAlimList" parameterType="long" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
+    <!-- 같은 조건의 알림이 1시간 안에 이미 있으면 사용자가 같은 알림을 반복해서 받지 않도록 발송을 생략한다. -->
+    <select id="dupSameAlimInHour" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto" resultType="int">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* dupSameAlimInHour */
+               COUNT(*)
+          FROM TB_ALIMXX
+         WHERE USER_NUMB = #{userNumb}
+           AND ALIM_SITU = #{alimSitu}
+           AND TEMP_CODE = #{tempCode}
+           AND NVL(ALIM_TITL, ' ') = NVL(#{alimTitl}, ' ')
+           AND NVL(ALIM_CONT, ' ') = NVL(#{alimCont}, ' ')
+           AND NVL(LINK_URLX, ' ') = NVL(#{linkUrlx}, ' ')
+           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
+           AND SEND_DATE >= SYSDATE - (1 / 24)
+    </select>
+
+    <!-- 알림 목록은 20개씩 보이며, 서비스에서 다음 페이지 확인용으로 1개를 더 조회할 수 있게 ROW_NUMBER 범위를 받는다. -->
+    <select id="getMyAlimList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimListReqDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="codeAlimSitu" value="@org.our.sadari.global.common.constant.Constant@CODE_ALIM_SITU" />
         SELECT /* getMyAlimList */
                USER_NUMB
              , ALIM_NUMB
@@ -61,13 +78,90 @@
              , ALIM_CONT
              , LINK_URLX
              , READ_YSNO
-             , TO_CHAR(READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
-             , TO_CHAR(SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
+             , READ_DATE
+             , SEND_DATE
              , DELT_YSNO
+             , ALIM_ICON_CODE
+             , ALIM_ICON_NAME
+          FROM (
+                SELECT USER_NUMB
+                     , ALIM_NUMB
+                     , ALIM_SITU
+                     , TEMP_CODE
+                     , ALIM_TITL
+                     , ALIM_CONT
+                     , LINK_URLX
+                     , READ_YSNO
+                     , TO_CHAR(READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
+                     , TO_CHAR(SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
+                     , DELT_YSNO
+                     , ALIM_ICON_CODE
+                     , ALIM_ICON_NAME
+                     , ROW_NUMBER() OVER(ORDER BY SEND_DATE DESC, ALIM_NUMB DESC) AS ROW_NUMB
+                  FROM (
+                        SELECT A.USER_NUMB
+                             , A.ALIM_NUMB
+                             , A.ALIM_SITU
+                             , A.TEMP_CODE
+                             , A.ALIM_TITL
+                             , A.ALIM_CONT
+                             , A.LINK_URLX
+                             , A.READ_YSNO
+                             , A.READ_DATE
+                             , A.SEND_DATE
+                             , A.DELT_YSNO
+                             , C.OPT1_CODE AS ALIM_ICON_CODE
+                             , C.OPT1_NAME AS ALIM_ICON_NAME
+                          FROM TB_ALIMXX A
+                          LEFT JOIN TB_CODEXD C
+                            ON C.COMM_CODE = #{codeAlimSitu}
+                           AND C.COMD_CODE = A.ALIM_SITU
+                           AND C.OPT1_CODE = '1'
+                           AND NVL(C.USEE_YSNO, 'Y') = 'Y'
+                         WHERE A.USER_NUMB = #{userNumb}
+                           AND NVL(A.DELT_YSNO, #{commNo}) = #{commNo}
+                       )
+               )
+         WHERE ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY ROW_NUMB
+    </select>
+
+    <!-- 목록에 실제로 담겨 화면에 노출된 알림만 읽음 처리한다. 스크롤하지 않으면 첫 페이지 20개만 여기 들어온다. -->
+    <update id="uptAlimReadByList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimReadReqDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE TB_ALIMXX
+           SET READ_YSNO = #{commYes}
+             , READ_DATE = SYSDATE
+         WHERE USER_NUMB = #{userNumb}
+           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
+           AND NVL(READ_YSNO, #{commNo}) = #{commNo}
+           AND ALIM_NUMB IN
+               <foreach collection="alimList" item="alim" open="(" separator="," close=")">
+                   #{alim.alimNumb}
+               </foreach>
+    </update>
+
+    <!-- 모두 읽음 버튼은 현재 화면에 불러오지 않은 알림까지 모두 읽음 처리해야 하므로 사용자 기준으로 일괄 갱신한다. -->
+    <update id="uptAllAlimRead" parameterType="long">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE TB_ALIMXX
+           SET READ_YSNO = #{commYes}
+             , READ_DATE = SYSDATE
+         WHERE USER_NUMB = #{userNumb}
+           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
+           AND NVL(READ_YSNO, #{commNo}) = #{commNo}
+    </update>
+
+    <!-- 햄버거 메뉴 배지용 미읽음 알림 수이다. 목록 조회 없이 숫자만 필요할 때 사용한다. -->
+    <select id="getUnreadAlimCnt" parameterType="long" resultType="int">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getUnreadAlimCnt */
+               COUNT(*)
           FROM TB_ALIMXX
          WHERE USER_NUMB = #{userNumb}
            AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
-      ORDER BY SEND_DATE DESC
-             , ALIM_NUMB DESC
+           AND NVL(READ_YSNO, #{commNo}) = #{commNo}
     </select>
 </mapper>

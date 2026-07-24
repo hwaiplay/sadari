@@ -67,7 +67,14 @@ public class SocialServiceImpl implements SocialService {
             return invalidResult;
         }
 
-        socialMapper.setFollow(req);
+        int insertCnt = socialMapper.setFollow(req);
+
+        // 새 팔로우 관계가 실제로 저장된 경우에만 팔로우 알림을 발송한다.
+        // 이미 팔로우 중이라 MERGE가 아무 것도 저장하지 않은 경우에는 같은 알림을 다시 만들 필요가 없다.
+        if (insertCnt > 0) {
+            sendFollowAlim(req);
+        }
+
         return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(req)));
     }
 
@@ -352,6 +359,39 @@ public class SocialServiceImpl implements SocialService {
      * @param followStatName 화면에 표시할 팔로우 버튼명
      * @return 팔로우 상태 DTO
      */
+    /**
+     * 팔로우를 받은 사용자에게 새 팔로워 알림을 발송한다.
+     * 팔로우 INSERT가 실제로 발생한 경우에만 호출되며, sendAlim 공통 로직에서 1시간 내 동일 알림을 한 번 더 차단한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param req 팔로우를 수행한 사용자와 팔로우 대상 사용자 번호
+     */
+    private void sendFollowAlim(SocialDto.FollowDto req) {
+        // 본인을 팔로우하는 요청은 검증에서 차단되지만, 알림 발송 직전에도 한 번 더 방어한다.
+        if (req.getUserNumb().equals(req.getFlowNumb())) {
+            return;
+        }
+
+        UserDto sendUser = userMapper.getUserByNumb(req.getUserNumb());
+
+        // 발송자 정보가 없으면 템플릿의 #{userName}을 채울 수 없으므로 알림만 생략한다.
+        // 팔로우 저장 자체는 이미 끝난 상태라 여기서 실패 응답으로 바꾸지 않는다.
+        if (StringUtil.isEmpty(sendUser)) {
+            return;
+        }
+
+        Map<String, Object> replaceMap = new HashMap<>();
+        replaceMap.put("userName", sendUser.getUserNick());
+
+        alimService.sendAlim(
+                req.getFlowNumb(),
+                Constant.ALIM_SITU_FOLLOW,
+                Constant.ALIM_TEMP_CODE_FOLLOW_USER,
+                req.getUserNumb(),
+                replaceMap
+        );
+    }
+
     private SocialDto.FollowDto createFollowStatus(String followStatName) {
         SocialDto.FollowDto followDto = new SocialDto.FollowDto();
         followDto.setFollowStatName(followStatName);
