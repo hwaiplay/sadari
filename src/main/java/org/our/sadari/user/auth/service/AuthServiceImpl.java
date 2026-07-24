@@ -7,6 +7,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.service.UserIdEncryptionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.dto.TokenDto;
@@ -40,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final LoginHistoryMapper loginHistoryMapper;
     private final UserMapper userMapper;
     private final FileService fileService;
+    private final UserIdEncryptionService userIdEncryptionService;
 
     /**
      * kakaoLogin 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
@@ -72,16 +74,19 @@ public class AuthServiceImpl implements AuthService {
         }
 
         String providerId = String.valueOf(kakaoAccountDto.id);
+        String encryptedProviderId = userIdEncryptionService.encryptForStorage(providerId);
         String nickName = kakaoAccountDto.kakao_account.profile.nickname;
         String profileImg = kakaoAccountDto.kakao_account.profile.profile_image_url;
 
         UserDto userDto = new UserDto();
 
         try {
-            UserDto savedUser = userMapper.getUserByIdxx(providerId);
+            UserDto savedUser = userMapper.getUserByIdxx(encryptedProviderId);
 
             userDto.setUserProv(AuthConstant.PROV_KAKAO);
-            userDto.setUserIdxx(providerId);
+            // USER_IDXX는 외부 OAuth 제공자의 고유 식별값이라 DB에는 평문을 남기지 않고 결정적 암호문으로 저장한다.
+            // 로그인 조회도 같은 암호문으로 수행하므로 별도 복호화 없이 기존 사용자 식별이 가능하다.
+            userDto.setUserIdxx(encryptedProviderId);
             userDto.setUserRole(AuthConstant.ROLE_USER);
             userDto.setUserNick(nickName);
 
@@ -90,7 +95,7 @@ public class AuthServiceImpl implements AuthService {
                 userMapper.setUser(userDto);
                 userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                 userMapper.uptUserProfile(userDto);
-                log.info("Kakao user created. providerId={}", providerId);
+                log.info("Kakao user created. userNumb={}", userDto.getUserNumb());
             } else {
                 userDto.setUserNumb(savedUser.getUserNumb());
                 userDto.setUserRole(savedUser.getUserRole());
@@ -104,7 +109,7 @@ public class AuthServiceImpl implements AuthService {
 
             log.info("Kakao login user resolved. userNumb={}", userDto.getUserNumb());
         } catch (Exception e) {
-            log.error("Kakao user save failed. providerId={}, message={}", providerId, e.getMessage());
+            log.error("Kakao user save failed. message={}", e.getMessage());
             // 호출한 계층에서 사용할 처리 결과를 반환한다.
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }

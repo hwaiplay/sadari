@@ -51,8 +51,7 @@
         </selectKey>
         /* setUser */
         INSERT INTO TM_USERXM(
-                    JOIN_DATE
-                  , USER_NUMB
+                    USER_NUMB
                   , PROF_NUMB
                   , BGIM_NUMB
                   , USER_IDXX
@@ -60,8 +59,8 @@
                   , USER_PROV
                   , USER_ROLE
                   , INTR_CNTN
-        ) VALUES (  SYSDATE
-                  , #{userNumb}
+                  , JOIN_DATE
+        ) VALUES (  #{userNumb}
                   , #{profNumb,jdbcType=NUMERIC}
                   , #{bgimNumb,jdbcType=NUMERIC}
                   , #{userIdxx}
@@ -69,6 +68,7 @@
                   , #{userProv,jdbcType=VARCHAR}
                   , #{userRole}
                   , #{intrCntn,jdbcType=VARCHAR}
+                  , SYSDATE
         )
     </insert>
 
