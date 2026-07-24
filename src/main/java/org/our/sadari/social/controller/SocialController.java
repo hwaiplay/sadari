@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.service.SocialService;
@@ -82,7 +83,93 @@ public class SocialController {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        return reportService.getMonthlyReadingSummary(userNumb);
+        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
+
+        // 다른 사람 프로필도 마이페이지와 같은 통계 영역을 사용하므로 독서 요약 응답에 social 통계를 합쳐 내려준다.
+        // 독서 요약이 실패하면 통계를 추가하지 않고 원래 실패 응답을 그대로 반환한다.
+        if (summaryResult.getCode() != 200) {
+            return summaryResult;
+        }
+
+        ResultData statsResult = socialService.getProfileStats(userNumb);
+
+        if (statsResult.getCode() != 200) {
+            return statsResult;
+        }
+
+        MonthlyReadingSummaryDto summary = (MonthlyReadingSummaryDto) summaryResult.getData();
+        SocialDto.ProfileStatsDto profileStats = (SocialDto.ProfileStatsDto) statsResult.getData();
+
+        if (!StringUtil.isEmpty(profileStats)) {
+            summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
+            summary.setFollowingCnt(profileStats.getFollowingCnt());
+            summary.setFollowerCnt(profileStats.getFollowerCnt());
+            summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
+        }
+
+        return ResultData.success(summary);
+    }
+
+    /**
+     * 로그인 사용자의 팔로잉 목록을 조회합니다.
+     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @return 팔로잉 목록 조회 결과
+     */
+    @GetMapping("/me/following")
+    @Operation(summary = "내 팔로잉 목록 조회", description = "로그인 사용자가 팔로우하는 사용자 목록을 조회한다.")
+    public ResultData getMyFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+        return socialService.getFollowingList(loginUserNumb, loginUserNumb);
+    }
+
+    /**
+     * 로그인 사용자의 팔로워 목록을 조회합니다.
+     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용합니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @return 팔로워 목록 조회 결과
+     */
+    @GetMapping("/me/followers")
+    @Operation(summary = "내 팔로워 목록 조회", description = "로그인 사용자를 팔로우하는 사용자 목록을 조회한다.")
+    public ResultData getMyFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+        return socialService.getFollowerList(loginUserNumb, loginUserNumb);
+    }
+
+    /**
+     * 특정 사용자의 팔로잉 목록을 조회합니다.
+     * 목록의 각 사용자에는 현재 로그인 사용자 기준 팔로우 상태가 포함됩니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param userNumb 목록 주인 사용자 번호
+     * @return 팔로잉 목록 조회 결과
+     */
+    @GetMapping("/profile/{userNumb}/following")
+    @Operation(summary = "팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회한다.")
+    public ResultData getFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+                                       @Parameter(description = "목록 주인 사용자 번호", example = "31")
+                                       @PathVariable Long userNumb) {
+        return socialService.getFollowingList(loginUserNumb, userNumb);
+    }
+
+    /**
+     * 특정 사용자의 팔로워 목록을 조회합니다.
+     * 목록의 각 사용자에는 현재 로그인 사용자 기준 팔로우 상태가 포함됩니다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param userNumb 목록 주인 사용자 번호
+     * @return 팔로워 목록 조회 결과
+     */
+    @GetMapping("/profile/{userNumb}/followers")
+    @Operation(summary = "팔로워 목록 조회", description = "특정 사용자를 팔로우하는 사용자 목록을 조회한다.")
+    public ResultData getFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
+                                      @Parameter(description = "목록 주인 사용자 번호", example = "31")
+                                      @PathVariable Long userNumb) {
+        return socialService.getFollowerList(loginUserNumb, userNumb);
     }
 
     /**
