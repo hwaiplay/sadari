@@ -85,6 +85,11 @@ public enum ResultEnum {
     USER_NICK_DUPLICATED(2016, "user.alert.0001"),
 
     /**
+     * Firebase Web Push 설정이 누락되어 브라우저 FCM token을 발급할 수 없을 때 사용하는 enum 항목이다.
+     */
+    PUSH_CONFIG_MISSING(2017, "push.alert.0001"),
+
+    /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
