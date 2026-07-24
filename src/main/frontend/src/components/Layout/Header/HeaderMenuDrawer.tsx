@@ -152,6 +152,23 @@ function HeaderMenuDrawer() {
             </button>
           ))}
         </div>
+        <div className={drawerStyles.drawerFooter}>
+          <button
+            className={drawerStyles.drawerAlimButton}
+            type="button"
+            aria-label={message("frontend.alim.title")}
+            onClick={() => {
+              // 알림 아이콘은 드로어 안의 하단 액션이므로 먼저 드로어를 닫고 알림 목록 화면으로 이동합니다.
+              setIsDrawerOpen(false);
+              navigate("/alim");
+            }}
+          >
+            <svg className={drawerStyles.drawerAlimIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+            </svg>
+          </button>
+        </div>
       </aside>
     </div>
   );

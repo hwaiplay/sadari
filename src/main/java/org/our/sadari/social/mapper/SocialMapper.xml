@@ -109,6 +109,17 @@
 
     <!-- 마이페이지 프로필 통계 영역에 표시할 집계 값이다.
          팔로우/좋아요 테이블은 social 도메인 소유이므로 MyPageController는 이 쿼리를 직접 알지 않고 service 결과만 합쳐서 내려준다. -->
+    <!-- 독후감 좋아요 알림 발송을 위해 독후감 작성자와 좋아요를 누른 사용자의 닉네임을 조회한다. -->
+    <select id="getReportLikeAlimInfo" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        SELECT /* getReportLikeAlimInfo */
+               R.USER_NUMB AS TARGET_USER_NUMB
+             , U.USER_NICK AS SEND_USER_NICK
+          FROM TM_REPORT R
+    INNER JOIN TM_USERXM U
+            ON U.USER_NUMB = #{userNumb}
+         WHERE R.REPT_NUMB = #{tagtNumb}
+    </select>
+
     <select id="getProfileStats" parameterType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto" resultType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto">
         <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />

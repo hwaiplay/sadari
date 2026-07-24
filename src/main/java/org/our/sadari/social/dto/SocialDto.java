@@ -63,6 +63,14 @@ public class SocialDto {
         // 로그인 사용자의 좋아요 여부입니다. Y/N 값으로 화면의 버튼 상태를 제어합니다.
         @Schema(description = "로그인 사용자 좋아요 여부", example = "Y")
         private String likeYsno;
+
+        // 좋아요 알림을 받을 독후감 작성자 번호입니다. 화면 요청값이 아니라 알림 발송 전 DB 조회로 채웁니다.
+        @Schema(description = "좋아요 알림 수신 사용자 번호", example = "32", hidden = true)
+        private Long targetUserNumb;
+
+        // 좋아요 알림 문구에 표시할 좋아요 누른 사용자 닉네임입니다.
+        @Schema(description = "좋아요 발송 사용자 닉네임", example = "reader31", hidden = true)
+        private String sendUserNick;
     }
 
     /**
