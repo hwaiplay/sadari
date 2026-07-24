@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.push.mapper.PushMapper">
+
+    <!-- FCM token은 기존 TB_PSHSUB.ENDP_URLX에 저장한다. 같은 사용자/토큰이면 새 row를 만들지 않고 다시 활성화한다. -->
+    <insert id="setPushSub" parameterType="org.our.sadari.push.dto.PushDto$PushSubDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        MERGE INTO TB_PSHSUB P
+        USING (
+            SELECT #{userNumb} AS USER_NUMB
+                 , #{endpUrlx} AS ENDP_URLX
+                 , #{p256Keyx,jdbcType=VARCHAR} AS P256_KEYX
+                 , #{authKeyx,jdbcType=VARCHAR} AS AUTH_KEYX
+              FROM DUAL
+        ) S
+           ON (P.USER_NUMB = S.USER_NUMB AND P.ENDP_URLX = S.ENDP_URLX)
+        WHEN MATCHED THEN
+            UPDATE SET P.P256_KEYX = S.P256_KEYX
+                     , P.AUTH_KEYX = S.AUTH_KEYX
+                     , P.USEE_YSNO = #{commYes}
+                     , P.UPDT_DATE = SYSDATE
+        WHEN NOT MATCHED THEN
+            INSERT (USER_NUMB, ENDP_URLX, P256_KEYX, AUTH_KEYX, USEE_YSNO, REGI_DATE)
+            VALUES (S.USER_NUMB, S.ENDP_URLX, S.P256_KEYX, S.AUTH_KEYX, #{commYes}, SYSDATE)
+    </insert>
+
+    <!-- 로그아웃이나 알림 끄기 시 token row를 삭제하지 않고 비활성화해 추적 가능성을 남긴다. -->
+    <update id="delPushSub" parameterType="org.our.sadari.push.dto.PushDto$PushSubDto">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE TB_PSHSUB
+           SET USEE_YSNO = #{commNo}
+             , UPDT_DATE = SYSDATE
+         WHERE USER_NUMB = #{userNumb}
+           AND ENDP_URLX = #{endpUrlx}
+    </update>
+
+    <!-- 알림 수신자에게 등록된 활성 FCM token만 조회한다. -->
+    <select id="getActivePushSubList" parameterType="long" resultType="org.our.sadari.push.dto.PushDto$PushSubDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getActivePushSubList */
+               USER_NUMB
+             , ENDP_URLX
+             , P256_KEYX
+             , AUTH_KEYX
+             , USEE_YSNO
+          FROM TB_PSHSUB
+         WHERE USER_NUMB = #{userNumb}
+           AND USEE_YSNO = #{commYes}
+    </select>
+</mapper>

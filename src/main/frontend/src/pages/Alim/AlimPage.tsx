@@ -1,12 +1,14 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { requestFirebaseMessagingToken } from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
 import {
   getMyAlimListApi,
   readAllAlimApi,
   type AlimItem,
 } from "@/features/Alim/api/alimApi";
+import { getPushConfigApi, setPushSubApi } from "@/features/Push/api/pushApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./AlimPage.css";
@@ -26,6 +28,7 @@ function AlimPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
   const [isReadingAll, setIsReadingAll] = useState(false);
+  const [isPushEnabling, setIsPushEnabling] = useState(false);
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
 
   const loadAlimList = useCallback(
@@ -114,6 +117,36 @@ function AlimPage() {
     }
   };
 
+  const handlePushEnable = async () => {
+    if (isPushEnabling) {
+      return;
+    }
+
+    setIsPushEnabling(true);
+
+    try {
+      const configResponse = await getPushConfigApi();
+      const token = await requestFirebaseMessagingToken(configResponse.data);
+
+      // TB_PSHSUB.ENDP_URLX는 현재 FCM registration token 저장 위치로 사용한다.
+      // 서버는 인증 사용자 번호를 직접 채우므로 프론트에서는 token만 전달한다.
+      await setPushSubApi({ endpUrlx: token });
+      void sweetSuccess(message("frontend.push.enable.successTitle"));
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "";
+      const detailMessage =
+        errorMessage === "PUSH_NOT_SUPPORTED"
+          ? message("frontend.push.enable.unsupported")
+          : errorMessage === "PUSH_PERMISSION_DENIED"
+            ? message("frontend.push.enable.denied")
+            : getApiErrorMessage(error, message("frontend.common.tryAgain"));
+
+      void sweetError(message("frontend.push.enable.failedTitle"), detailMessage);
+    } finally {
+      setIsPushEnabling(false);
+    }
+  };
+
   const handleAlimClick = (alim: AlimItem) => {
     // 링크가 없는 알림은 단순 안내 알림으로 취급해 현재 화면을 유지합니다.
     if (!alim.linkUrlx) {
@@ -178,14 +211,24 @@ function AlimPage() {
           <h1 className={styles.title}>{message("frontend.alim.title")}</h1>
           <p className={styles.subtitle}>{message("frontend.alim.subtitle")}</p>
         </div>
-        <button
-          className={styles.readAllButton}
-          type="button"
-          disabled={isReadingAll}
-          onClick={handleReadAll}
-        >
-          {message("frontend.alim.readAll")}
-        </button>
+        <div className={styles.headerActions}>
+          <button
+            className={styles.pushButton}
+            type="button"
+            disabled={isPushEnabling}
+            onClick={() => void handlePushEnable()}
+          >
+            {message("frontend.push.enable")}
+          </button>
+          <button
+            className={styles.readAllButton}
+            type="button"
+            disabled={isReadingAll}
+            onClick={handleReadAll}
+          >
+            {message("frontend.alim.readAll")}
+          </button>
+        </div>
       </section>
 
       {alimList.length === 0 ? (
