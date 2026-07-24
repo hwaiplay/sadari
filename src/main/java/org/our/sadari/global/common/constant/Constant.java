@@ -20,6 +20,8 @@ public final class Constant {
     public static final String REPORT_STAT_DONE = "DONE";
     public static final String REPORT_STAT_STOP = "STOP";
     public static final String LIKE_TARGET_REPORT = "REPORT";
+    public static final String ALIM_SITU_LIKE = "LIKE";
+    public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";
 
     public static final String COMM_YES = "Y";
     public static final String COMM_NO = "N";

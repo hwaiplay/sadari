@@ -117,12 +117,12 @@ frontend.book.publicReports.pageTitle=도서 공개 독후감\r
 frontend.book.ratingAverage=별점 평균\r
 # 화면표시: {0}점\r
 frontend.book.ratingAverageValue={0}점\r
-# 화면표시: 아직 별점이 없습니다.\r
-frontend.book.ratingAverageEmpty=아직 별점이 없습니다.\r
-# 화면표시: 평점 평균은 공개/비공개 여부와 관계없이 이 도서에 작성된 모든 독후감의 평점을 기준으로 계산돼요.\r
-frontend.book.ratingAverageHelp=평점 평균은 공개/비공개 여부와 관계없이 이 도서에 작성된 모든 독후감의 평점을 기준으로 계산돼요.\r
-\r
-# 독후감 폼\r
+# 화면표시: 아직 별점이 없습니다.
+frontend.book.ratingAverageEmpty=아직 별점이 없습니다.
+# 화면표시: 평점 평균은 공개/비공개 여부와 관계없이 이 도서에 작성된 모든 독후감의 평점을 기준으로 계산돼요.
+frontend.book.ratingAverageHelp=평점 평균은 공개/비공개 여부와 관계없이 이 도서에 작성된 모든 독후감의 평점을 기준으로 계산돼요.
+
+# 독후감 폼
 # 화면표시: 등록중\r
 frontend.report.loading.create=등록중\r
 # 화면표시: 독후감을 불러오는 중\r
@@ -269,12 +269,12 @@ frontend.profile.background.empty=배경사진을 선택해주세요.\r
 frontend.profile.imageOnly=이미지 파일만 선택해주세요.\r
 # 화면표시: 닉네임을 입력해주세요.\r
 frontend.profile.nickRequired=닉네임을 입력해주세요.\r
-# 화면표시: 닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요.\r
-frontend.profile.nickKoreanOnly=닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요.\r
-# 화면표시: 이미 사용 중인 닉네임이에요.\r
-frontend.profile.nickDuplicated=이미 사용 중인 닉네임이에요.\r
-# 화면표시: 프로필이 저장되었습니다.\r
-frontend.profile.savedTitle=프로필이 저장되었습니다.\r
+# 화면표시: 닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요.
+frontend.profile.nickKoreanOnly=닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요.
+# 화면표시: 이미 사용 중인 닉네임이에요.
+frontend.profile.nickDuplicated=이미 사용 중인 닉네임이에요.
+# 화면표시: 프로필이 저장되었습니다.
+frontend.profile.savedTitle=프로필이 저장되었습니다.
 # 화면표시: 수정한 프로필을 반영했습니다.\r
 frontend.profile.saved=수정한 프로필을 반영했습니다.\r
 # 화면표시: 이번 주에 읽은 책\r
@@ -377,18 +377,18 @@ frontend.profile.goal.downCountBlocked={0} 목표는 내리기 횟수를 모두 
 frontend.profile.goal.downPeriodBlocked={0} 목표는 내리기 가능 기간이 지났습니다.\r
 # 화면표시: 목표를 내릴까요?\r
 frontend.profile.goal.downConfirmTitle=목표를 내릴까요?\r
-# 화면표시: {0} 목표를 내리면 목표 내리기 횟수가 사용됩니다.\r
-frontend.profile.goal.downConfirmText={0} 목표를 내리면 목표 내리기 횟수가 사용됩니다.\r
-# 화면표시: 지난 목표를 가져올까요?\r
-frontend.profile.goal.copyPreviousTitle=지난 목표를 가져올까요?\r
-# 화면표시: 지난 주 혹은 지난 달, 작년에 설정한 목표를 가져올 수 있습니다. 가져오시겠습니까?\r
-frontend.profile.goal.copyPreviousText=지난 주 혹은 지난 달, 작년에 설정한 목표를 가져올 수 있습니다.\\n가져오시겠습니까?\r
-# 화면표시: 가져오기\r
-frontend.profile.goal.copyPreviousConfirm=가져오기\r
-# 화면표시: 직접 설정\r
-frontend.profile.goal.copyPreviousCancel=직접 설정\r
-# 화면표시: 현재 읽고 있는 책\r
-frontend.profile.currentReading.title=현재 읽고 있는 책\r
+# 화면표시: {0} 목표를 내리면 목표 내리기 횟수가 사용됩니다.
+frontend.profile.goal.downConfirmText={0} 목표를 내리면 목표 내리기 횟수가 사용됩니다.
+# 화면표시: 지난 목표를 가져올까요?
+frontend.profile.goal.copyPreviousTitle=지난 목표를 가져올까요?
+# 화면표시: 지난 주 혹은 지난 달, 작년에 설정한 목표를 가져올 수 있습니다. 가져오시겠습니까?
+frontend.profile.goal.copyPreviousText=지난 주 혹은 지난 달, 작년에 설정한 목표를 가져올 수 있습니다.\\n가져오시겠습니까?
+# 화면표시: 가져오기
+frontend.profile.goal.copyPreviousConfirm=가져오기
+# 화면표시: 직접 설정
+frontend.profile.goal.copyPreviousCancel=직접 설정
+# 화면표시: 현재 읽고 있는 책
+frontend.profile.currentReading.title=현재 읽고 있는 책
 # 화면표시: 남은 목표일 {0}일\r
 frontend.profile.currentReading.remain=남은 목표일 {0}일\r
 # 화면표시: 목표기간이 지났어요.\r
@@ -409,16 +409,16 @@ frontend.profile.currentReading.save=저장\r
 # 소셜\r
 # 화면표시: 비공개 독후감입니다.\r
 frontend.social.privateReport.title=비공개 독후감입니다.\r
-# 화면표시: 작성자가 공개한 독후감만 볼 수 있습니다.\r
-frontend.social.privateReport.text=작성자가 공개한 독후감만 볼 수 있습니다.\r
-# 화면표시: 언팔로우하시겠습니까?\r
-frontend.social.unfollow.title=언팔로우하시겠습니까?\r
-# 화면표시: 팔로잉 목록에서 삭제됩니다.\r
-frontend.social.unfollow.text=팔로잉 목록에서 삭제됩니다.\r
-# 화면표시: 언팔로우\r
-frontend.social.unfollow.confirm=언팔로우\r
-\r
-# 홈\r
+# 화면표시: 작성자가 공개한 독후감만 볼 수 있습니다.
+frontend.social.privateReport.text=작성자가 공개한 독후감만 볼 수 있습니다.
+# 화면표시: 언팔로우하시겠습니까?
+frontend.social.unfollow.title=언팔로우하시겠습니까?
+# 화면표시: 팔로잉 목록에서 삭제됩니다.
+frontend.social.unfollow.text=팔로잉 목록에서 삭제됩니다.
+# 화면표시: 언팔로우
+frontend.social.unfollow.confirm=언팔로우
+
+# 홈
 # 화면표시: 첫 책을 꽂아 책장을 채워보세요.\r
 frontend.home.empty=첫 책을 꽂아 책장을 채워보세요.\r
 # 화면표시: 독후감 정렬\r
@@ -433,10 +433,10 @@ frontend.home.sort.gradeDesc=별점순\r
 frontend.home.search.label=제목, 작가 검색\r
 # 화면표시: 검색\r
 frontend.home.search.button=검색\r
-# 화면표시: 검색된 독후감이 없습니다.\r
-frontend.home.search.empty=검색된 독후감이 없습니다.\r
-# 화면표시: "{0}"으로 도서검색하기\r
-frontend.home.search.goBookSearch="{0}"으로 도서검색하기\r
+# 화면표시: 검색된 독후감이 없습니다.
+frontend.home.search.empty=검색된 독후감이 없습니다.
+# 화면표시: "{0}"으로 도서검색하기
+frontend.home.search.goBookSearch="{0}"으로 도서검색하기
 `,aE=`\uFEFF# Common alerts\r
 # 화면표시: Input required.\r
 frontend.alert.inputRequired=Input required.\r
@@ -546,12 +546,12 @@ frontend.book.publicReports.pageTitle=Public book reports\r
 frontend.book.ratingAverage=Average rating\r
 # 화면표시: {0}\r
 frontend.book.ratingAverageValue={0}\r
-# 화면표시: No ratings yet.\r
-frontend.book.ratingAverageEmpty=No ratings yet.\r
-# 화면표시: The average rating is calculated from all reports for this book, regardless of public or private visibility.\r
-frontend.book.ratingAverageHelp=The average rating is calculated from all reports for this book, regardless of public or private visibility.\r
-\r
-# Report form\r
+# 화면표시: No ratings yet.
+frontend.book.ratingAverageEmpty=No ratings yet.
+# 화면표시: The average rating is calculated from all reports for this book, regardless of public or private visibility.
+frontend.book.ratingAverageHelp=The average rating is calculated from all reports for this book, regardless of public or private visibility.
+
+# Report form
 # 화면표시: Creating\r
 frontend.report.loading.create=Creating\r
 # 화면표시: Loading report\r
@@ -698,12 +698,12 @@ frontend.profile.background.empty=Please select a background photo.\r
 frontend.profile.imageOnly=Please select an image file.\r
 # 화면표시: Please enter a nickname.\r
 frontend.profile.nickRequired=Please enter a nickname.\r
-# 화면표시: Please enter a Korean, English, or numeric nickname of 10 characters or less.\r
-frontend.profile.nickKoreanOnly=Please enter a Korean, English, or numeric nickname of 10 characters or less.\r
-# 화면표시: This nickname is already in use.\r
-frontend.profile.nickDuplicated=This nickname is already in use.\r
-# 화면표시: Profile saved.\r
-frontend.profile.savedTitle=Profile saved.\r
+# 화면표시: Please enter a Korean, English, or numeric nickname of 10 characters or less.
+frontend.profile.nickKoreanOnly=Please enter a Korean, English, or numeric nickname of 10 characters or less.
+# 화면표시: This nickname is already in use.
+frontend.profile.nickDuplicated=This nickname is already in use.
+# 화면표시: Profile saved.
+frontend.profile.savedTitle=Profile saved.
 # 화면표시: Your updated profile has been applied.\r
 frontend.profile.saved=Your updated profile has been applied.\r
 # 화면표시: Books read this week\r
@@ -806,18 +806,18 @@ frontend.profile.goal.downCountBlocked=The {0} goal has used all available lower
 frontend.profile.goal.downPeriodBlocked=The {0} goal lowering window has closed.\r
 # 화면표시: Lower this goal?\r
 frontend.profile.goal.downConfirmTitle=Lower this goal?\r
-# 화면표시: Lowering the {0} goal will consume a goal-lowering count.\r
-frontend.profile.goal.downConfirmText=Lowering the {0} goal will consume a goal-lowering count.\r
-# 화면표시: Bring in previous goals?\r
-frontend.profile.goal.copyPreviousTitle=Bring in previous goals?\r
-# 화면표시: You can bring in goals set last week, last month, or last year. Do you want to bring them in?\r
-frontend.profile.goal.copyPreviousText=You can bring in goals set last week, last month, or last year.\\nDo you want to bring them in?\r
-# 화면표시: Bring in\r
-frontend.profile.goal.copyPreviousConfirm=Bring in\r
-# 화면표시: Set manually\r
-frontend.profile.goal.copyPreviousCancel=Set manually\r
-# 화면표시: Currently reading\r
-frontend.profile.currentReading.title=Currently reading\r
+# 화면표시: Lowering the {0} goal will consume a goal-lowering count.
+frontend.profile.goal.downConfirmText=Lowering the {0} goal will consume a goal-lowering count.
+# 화면표시: Bring in previous goals?
+frontend.profile.goal.copyPreviousTitle=Bring in previous goals?
+# 화면표시: You can bring in goals set last week, last month, or last year. Do you want to bring them in?
+frontend.profile.goal.copyPreviousText=You can bring in goals set last week, last month, or last year.\\nDo you want to bring them in?
+# 화면표시: Bring in
+frontend.profile.goal.copyPreviousConfirm=Bring in
+# 화면표시: Set manually
+frontend.profile.goal.copyPreviousCancel=Set manually
+# 화면표시: Currently reading
+frontend.profile.currentReading.title=Currently reading
 # 화면표시: {0} day(s) left\r
 frontend.profile.currentReading.remain={0} day(s) left\r
 # 화면표시: The target period has passed.\r
@@ -838,16 +838,16 @@ frontend.profile.currentReading.save=Save\r
 # Social\r
 # 화면표시: This report is private.\r
 frontend.social.privateReport.title=This report is private.\r
-# 화면표시: Only reports made public by the writer can be viewed.\r
-frontend.social.privateReport.text=Only reports made public by the writer can be viewed.\r
-# 화면표시: Unfollow this user?\r
-frontend.social.unfollow.title=Unfollow this user?\r
-# 화면표시: This user will be removed from your following list.\r
-frontend.social.unfollow.text=This user will be removed from your following list.\r
-# 화면표시: Unfollow\r
-frontend.social.unfollow.confirm=Unfollow\r
-\r
-# Home\r
+# 화면표시: Only reports made public by the writer can be viewed.
+frontend.social.privateReport.text=Only reports made public by the writer can be viewed.
+# 화면표시: Unfollow this user?
+frontend.social.unfollow.title=Unfollow this user?
+# 화면표시: This user will be removed from your following list.
+frontend.social.unfollow.text=This user will be removed from your following list.
+# 화면표시: Unfollow
+frontend.social.unfollow.confirm=Unfollow
+
+# Home
 # 화면표시: Place your first book on the shelf.\r
 frontend.home.empty=Place your first book on the shelf.\r
 # 화면표시: Report sort\r
@@ -862,10 +862,10 @@ frontend.home.sort.gradeDesc=Rating\r
 frontend.home.search.label=Search by title or author\r
 # 화면표시: Search\r
 frontend.home.search.button=Search\r
-# 화면표시: No reports matched your search.\r
-frontend.home.search.empty=No reports matched your search.\r
-# 화면표시: Search books for "{0}"\r
-frontend.home.search.goBookSearch=Search books for "{0}"\r
+# 화면표시: No reports matched your search.
+frontend.home.search.empty=No reports matched your search.
+# 화면표시: Search books for "{0}"
+frontend.home.search.goBookSearch=Search books for "{0}"
 `,Yg={ko:Qg(nE),en:Qg(aE)};function Qg(a){return a.split(/\r?\n/).map(r=>r.trim()).filter(r=>r&&!r.startsWith("#")).reduce((r,o)=>{const s=o.indexOf("=");if(s===-1)return r;const f=o.slice(0,s).trim(),d=o.slice(s+1).trim().replace(/\\n/g,`
 `).replace(/\\u([0-9a-fA-F]{4})/g,(m,p)=>String.fromCharCode(parseInt(p,16)));return r[f]=d,r},{})}function lE(){return navigator.language.toLowerCase().startsWith("en")?"en":"ko"}function y(a,r=[]){const o=Yg[lE()],s=Yg.ko,f=o[a]??s[a]??a;return r.reduce((d,m,p)=>d.split(`{${p}}`).join(String(m)),f)}var rE="_1xxtp490",iE="_1xxtp491",oE="_1xxtp492",sE="_1xxtp493";function uE(){return c.jsx("main",{className:rE,children:c.jsxs("div",{className:iE,children:[c.jsx("img",{src:"/img/common/logo-b.svg",alt:y("frontend.common.logoAlt")}),c.jsx("h1",{className:oE,children:y("frontend.auth.loginCopy")}),c.jsx($a,{to:"https://kauth.kakao.com/oauth/authorize?client_id=e0821f29638c3233f1398790eb255be7&redirect_uri=http://localhost:8080/api/oauth/callback/kakao&response_type=code&scope=profile_nickname,profile_image",className:sE,children:y("frontend.auth.kakaoStart")})]})})}let si=0,Cy="",wy="",Nf="";function jy(){if(si===0){const a=window.innerWidth-document.documentElement.clientWidth;Cy=document.body.style.overflow,wy=document.body.style.paddingRight,Nf=document.documentElement.style.getPropertyValue("--sadari-scrollbar-compensation"),document.body.style.overflow="hidden",a>0&&(document.body.style.paddingRight=`${a}px`,document.documentElement.style.setProperty("--sadari-scrollbar-compensation",`${a}px`))}si+=1}function Ty(){si=Math.max(0,si-1),si===0&&(document.body.style.overflow=Cy,document.body.style.paddingRight=wy,Nf?document.documentElement.style.setProperty("--sadari-scrollbar-compensation",Nf):document.documentElement.style.removeProperty("--sadari-scrollbar-compensation"))}function cE(a){R.useEffect(()=>{if(a)return jy(),()=>{Ty()}},[a])}const Vg="sadari-sweet-alert-style",fE={success:"✓",error:"X",warning:"!",info:"i",question:"?"},dE={success:"sadari-swal-icon-success",error:"sadari-swal-icon-error",warning:"sadari-swal-icon-warning",info:"sadari-swal-icon-info",question:"sadari-swal-icon-question"};function hE(){if(document.getElementById(Vg))return;const a=document.createElement("style");a.id=Vg,a.textContent=`
     .sadari-swal-overlay {

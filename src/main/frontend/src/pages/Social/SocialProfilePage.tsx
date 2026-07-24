@@ -1,24 +1,30 @@
 import { message } from "@/app/messages/message";
-import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { getApiErrorMessage } from "@/app/api/resultData";
+import { sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
   getRemainPeriodRate,
 } from "@/app/utils/dateUtil";
+import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import {
   delSocialFollowApi,
   getSocialFollowStatusApi,
+  getSocialFollowListApi,
   getSocialProfileApi,
   getSocialReadingSummaryApi,
   setSocialFollowApi,
+  type FollowListType,
+  type FollowUser,
 } from "@/features/Social/api/socialApi";
 import type {
   MonthlyReadingSummary,
   ReadingSummaryReport,
   UserProfile,
 } from "@/features/User/api/userApi";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
@@ -101,12 +107,19 @@ function SocialProfilePage() {
   const [summary, setSummary] = useState<MonthlyReadingSummary | null>(null);
   const [followStatName, setFollowStatName] = useState("");
   const [isFollowUpdating, setIsFollowUpdating] = useState(false);
+  const [followListType, setFollowListType] = useState<FollowListType | null>(null);
+  const [followUsers, setFollowUsers] = useState<FollowUser[]>([]);
+  const [isFollowListLoading, setIsFollowListLoading] = useState(false);
+  const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
+  const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
   const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
     week: false,
     month: false,
     year: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const followListScrollTimeoutRef = useRef<number | null>(null);
+  useBodyScrollLock(Boolean(followListType));
 
   useEffect(() => {
     let ignore = false;
@@ -149,6 +162,14 @@ function SocialProfilePage() {
     };
   }, [targetUserNumb]);
 
+  useEffect(() => {
+    return () => {
+      if (followListScrollTimeoutRef.current) {
+        window.clearTimeout(followListScrollTimeoutRef.current);
+      }
+    };
+  }, []);
+
   /**
    * 팔로우 버튼 클릭 시 현재 버튼명에 맞춰 팔로우 또는 언팔로우 API를 호출합니다.
    * 버튼명이 "팔로잉"이면 이미 내가 상대를 팔로우 중인 상태이므로 삭제하고, 그 외에는 팔로우 관계를 저장합니다.
@@ -186,6 +207,8 @@ function SocialProfilePage() {
           : await setSocialFollowApi(targetUserNumb);
 
       setFollowStatName(response.data?.followStatName ?? "");
+      const summaryResponse = await getSocialReadingSummaryApi(targetUserNumb);
+      setSummary(summaryResponse.data as MonthlyReadingSummary);
     } catch {
       void sweetWarning(
         message("frontend.common.invalidAccess"),
@@ -193,6 +216,96 @@ function SocialProfilePage() {
       );
     } finally {
       setIsFollowUpdating(false);
+    }
+  };
+
+  const handleFollowListOpen = async (type: FollowListType) => {
+    setFollowListType(type);
+    setFollowUsers([]);
+    setIsFollowListScrolling(false);
+    setIsFollowListLoading(true);
+
+    try {
+      const response = await getSocialFollowListApi(targetUserNumb, type);
+      setFollowUsers((response.data ?? []) as FollowUser[]);
+    } catch (error) {
+      void sweetError(
+        message("frontend.common.invalidAccess"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+      setFollowListType(null);
+    } finally {
+      setIsFollowListLoading(false);
+    }
+  };
+
+  const handleFollowListClose = () => {
+    setFollowListType(null);
+    setFollowUsers([]);
+    setIsFollowListScrolling(false);
+  };
+
+  const handleFollowListScroll = () => {
+    setIsFollowListScrolling(true);
+
+    if (followListScrollTimeoutRef.current) {
+      window.clearTimeout(followListScrollTimeoutRef.current);
+    }
+
+    followListScrollTimeoutRef.current = window.setTimeout(() => {
+      setIsFollowListScrolling(false);
+      followListScrollTimeoutRef.current = null;
+    }, 650);
+  };
+
+  const handleFollowListUserClick = (nextUserNumb: number) => {
+    handleFollowListClose();
+    navigate(`/social/profile/${nextUserNumb}`);
+  };
+
+  const handleFollowStatusClick = async (user: FollowUser) => {
+    if (followUpdatingUserNumb || user.meYsno === "Y") {
+      return;
+    }
+
+    if (user.followStatName === "팔로잉") {
+      const result = await sweetConfirm({
+        title: message("frontend.social.unfollow.title"),
+        text: message("frontend.social.unfollow.text"),
+        confirmButtonText: message("frontend.social.unfollow.confirm"),
+        cancelButtonText: message("frontend.common.cancel"),
+      });
+
+      if (!result.isConfirmed) {
+        return;
+      }
+    }
+
+    setFollowUpdatingUserNumb(user.userNumb);
+
+    try {
+      const response =
+        user.followStatName === "팔로잉"
+          ? await delSocialFollowApi(user.userNumb)
+          : await setSocialFollowApi(user.userNumb);
+
+      setFollowUsers((prev) =>
+        prev.map((item) =>
+          item.userNumb === user.userNumb
+            ? { ...item, followStatName: response.data?.followStatName ?? item.followStatName }
+            : item,
+        ),
+      );
+
+      const summaryResponse = await getSocialReadingSummaryApi(targetUserNumb);
+      setSummary(summaryResponse.data as MonthlyReadingSummary);
+    } catch (error) {
+      void sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+    } finally {
+      setFollowUpdatingUserNumb(null);
     }
   };
 
@@ -241,6 +354,59 @@ function SocialProfilePage() {
         cover: report.bookCvim,
       },
     });
+  };
+
+  const renderProfileStats = (summaryData: MonthlyReadingSummary) => {
+    const stats = [
+      {
+        label: message("frontend.profile.stats.totalReadBook"),
+        value: message("frontend.profile.stats.bookCount", [summaryData.totalReadBookCnt ?? 0]),
+        listType: null,
+      },
+      {
+        label: message("frontend.profile.stats.following"),
+        value: message("frontend.profile.stats.userCount", [summaryData.followingCnt ?? 0]),
+        listType: "following" as FollowListType,
+      },
+      {
+        label: message("frontend.profile.stats.follower"),
+        value: message("frontend.profile.stats.userCount", [summaryData.followerCnt ?? 0]),
+        listType: "followers" as FollowListType,
+      },
+      {
+        label: message("frontend.profile.stats.receivedLike"),
+        value: message("frontend.profile.stats.likeCount", [summaryData.receivedLikeCnt ?? 0]),
+        listType: null,
+      },
+    ];
+
+    return (
+      <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
+        <div className={styles.profileStatsSummary}>
+          <div className={styles.goalAchievementGrid}>
+            {stats.map((stat) => (
+              <div className={styles.goalAchievementItem} key={stat.label}>
+                {stat.listType ? (
+                  <button
+                    className={styles.profileStatsButton}
+                    type="button"
+                    onClick={() => void handleFollowListOpen(stat.listType)}
+                  >
+                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
+                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
+                  </button>
+                ) : (
+                  <>
+                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
+                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
   };
 
   /**
@@ -541,6 +707,7 @@ function SocialProfilePage() {
             </div>
           </div>
 
+          {renderProfileStats(summary)}
           {renderCurrentReadingReports(summary.currentReadingReports)}
           <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
@@ -612,6 +779,100 @@ function SocialProfilePage() {
           </section>
         </section>
       </section>
+
+      {followListType && createPortal((
+        <div
+          className={styles.goalModalOverlay}
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.currentTarget === event.target) {
+              handleFollowListClose();
+            }
+          }}
+        >
+          <section
+            className={styles.followModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="follow-list-title"
+          >
+            <div className={styles.goalModalHeader}>
+              <h2 className={styles.goalModalTitle} id="follow-list-title">
+                {message(
+                  followListType === "following"
+                    ? "frontend.profile.followingList.title"
+                    : "frontend.profile.followerList.title",
+                )}
+              </h2>
+              <button
+                className={styles.goalModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={handleFollowListClose}
+              >
+                x
+              </button>
+            </div>
+
+            <div
+              className={isFollowListScrolling ? styles.followModalListScrolling : styles.followModalList}
+              onScroll={handleFollowListScroll}
+            >
+              {isFollowListLoading && (
+                <p className={styles.followModalEmpty}>
+                  {message("frontend.common.loadingList")}
+                </p>
+              )}
+              {!isFollowListLoading && followUsers.length === 0 && (
+                <p className={styles.followModalEmpty}>
+                  {message(
+                    followListType === "following"
+                      ? "frontend.profile.followingList.empty"
+                      : "frontend.profile.followerList.empty",
+                  )}
+                </p>
+              )}
+              {!isFollowListLoading && followUsers.map((user) => (
+                <div className={styles.followModalItem} key={user.userNumb}>
+                  <button
+                    className={styles.followModalProfileButton}
+                    type="button"
+                    onClick={() => handleFollowListUserClick(user.userNumb)}
+                  >
+                    <img
+                      className={styles.followModalAvatar}
+                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      alt={user.userNick ?? message("frontend.profile.nick")}
+                    />
+                    <span className={styles.followModalText}>
+                      <strong className={styles.followModalName}>
+                        {user.userNick || "-"}
+                      </strong>
+                      <span className={styles.followModalIntro}>
+                        {user.intrCntn || message("frontend.profile.intro.empty")}
+                      </span>
+                    </span>
+                  </button>
+                  {user.meYsno !== "Y" && (
+                    <button
+                      className={`${styles.followModalStatusButton} ${
+                        isActiveFollowStatus(user.followStatName ?? "")
+                          ? styles.followModalStatusButtonActive
+                          : ""
+                      }`}
+                      type="button"
+                      disabled={followUpdatingUserNumb === user.userNumb}
+                      onClick={() => void handleFollowStatusClick(user)}
+                    >
+                      {user.followStatName}
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      ), document.body)}
     </main>
   );
 }
