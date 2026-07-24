@@ -84,6 +84,9 @@ function DetailPage() {
   const periodText = [bookData.reptStdt, bookData.reptEndt]
     .filter(Boolean)
     .join(" ~ ");
+  const rawBookAverageGrade = Number(bookData.bookAvgGrde);
+  const hasBookAverageGrade =
+    Number.isFinite(rawBookAverageGrade) && rawBookAverageGrade > 0;
 
   // 같은 상세 API에서 받은 책 정보를 사용하므로 URL 이동 없이 화면 표시 모드만 변경합니다.
   if (showBookInfo) {
@@ -101,10 +104,10 @@ function DetailPage() {
             <h1 className={infoStyles.title}>{bookData.bookTitl}</h1>
             <div className={infoStyles.authorRatingLine}>
               <p className={infoStyles.meta}>{bookData.bookAthr}</p>
-              {bookData.bookAvgGrde && (
+              {hasBookAverageGrade && (
                 <span className={infoStyles.metaSeparator}>|</span>
               )}
-              {bookData.bookAvgGrde && (
+              {hasBookAverageGrade && (
                 <span
                   className={infoStyles.ratingSummary}
                   aria-label={message("frontend.report.gradeValue", [
@@ -283,7 +286,9 @@ function DetailPage() {
                 aria-label="좋아요"
                 aria-pressed={bookData.likeYsno === "Y"}
                 disabled={likeMutation.isPending}
-                onClick={() => likeMutation.mutate(idNum)}
+                onClick={() =>
+                  likeMutation.mutate({ tagtType: "REPORT", tagtNumb: idNum })
+                }
               >
                 <svg
                   className={styles.likeIcon}

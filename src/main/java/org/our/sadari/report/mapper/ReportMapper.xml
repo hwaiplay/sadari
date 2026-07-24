@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.report.mapper.ReportMapper">
 
-    <!-- 濡쒓렇???ъ슜?먯쓽 ?낇썑媛?紐⑸줉??寃?됱뼱? ?뺣젹 議곌굔???곕씪 議고쉶?쒕떎. -->
+    <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회한다. -->
     <select id="getReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
@@ -51,7 +51,7 @@
         </choose>
     </select>
 
-    <!-- ?쒕퉬?ㅼ뿉??吏?뺥븳 ?낆꽌 ?곹깭? 湲곌컙 議곌굔??留욌뒗 ?낇썑媛?沅뚯닔瑜?議고쉶?쒕떎. -->
+    <!-- 서비스에서 지정한 독서 상태와 기간 조건에 맞는 독후감 권수를 조회한다. -->
     <select id="getReportCntByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="int">
         SELECT /* getReportCntByPeriod */
                COUNT(*)
@@ -62,7 +62,7 @@
            AND TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
     </select>
 
-    <!-- ?쒕퉬?ㅼ뿉??吏?뺥븳 ?낆꽌 ?곹깭? ?좏깮 湲곌컙 議곌굔??留욌뒗 ?낇썑媛?紐⑸줉??議고쉶?쒕떎. -->
+    <!-- 서비스에서 지정한 독서 상태와 기간 조건에 맞는 독후감 목록을 조회한다. -->
     <select id="getSummaryReportList" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.report.dto.ReportDto">
         SELECT /* getSummaryReportList */
                A.REPT_NUMB
@@ -98,7 +98,7 @@
         </choose>
     </select>
 
-    <!-- ?ъ슜?? 紐⑺몴 湲곗??? 紐⑺몴 ?좏삎???대떦?섎뒗 ?낆꽌 紐⑺몴瑜?議고쉶?쒕떎. -->
+    <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회한다. -->
     <select id="getReadingGoalDtl" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="org.our.sadari.myPage.dto.ReadingGoalDto">
         SELECT /* getReadingGoalDtl */
                G.USER_NUMB
@@ -112,7 +112,7 @@
            AND G.GOAL_TYPE = #{goalType}
     </select>
 
-    <!-- ?낆꽌 紐⑺몴瑜??좉퇋 ?깅줉?섍굅??湲곗〈 紐⑺몴瑜?媛깆떊?쒕떎. -->
+    <!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신한다. -->
     <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
         /* setReadingGoal */
         MERGE INTO TM_GOALXM G
@@ -155,7 +155,7 @@
        )
     </insert>
 
-    <!-- 紐⑺몴 ?좏삎蹂??꾩껜 紐⑺몴 ?ъ꽦 ?잛닔瑜?議고쉶?쒕떎. -->
+    <!-- 목표 유형별 전체 목표 달성 횟수를 조회한다. -->
     <select id="getReadingGoalAchvCnt" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="int">
         SELECT /* getReadingGoalAchvCnt */
                COUNT(*)
@@ -199,7 +199,7 @@
            AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
     </select>
 
-    <!-- ?낇썑媛??곸꽭? ?곌껐???꾩꽌, 醫뗭븘?? ?됯퇏 蹂꾩젏 ?뺣낫瑜?議고쉶?쒕떎. -->
+    <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회한다. -->
     <select id="getReportDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
@@ -207,6 +207,7 @@
         <bind name="optPubcYsno" value="@org.our.sadari.global.common.constant.Constant@OPT_PUBC_YSNO" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         SELECT /* getReportDtl */
                A.REPT_NUMB
              , A.USER_NUMB
@@ -234,16 +235,18 @@
           FROM TM_REPORT A
      LEFT JOIN TM_BKINFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
-     LEFT JOIN (  SELECT L.REPT_NUMB
+     LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
-                    FROM TB_RPLIKE L
-                GROUP BY L.REPT_NUMB
+                    FROM TB_LIKEXX L
+                   WHERE L.TAGT_TYPE = #{likeTargetReport}
+                GROUP BY L.TAGT_NUMB
                 ) LC
             ON A.REPT_NUMB = LC.REPT_NUMB
-     LEFT JOIN (  SELECT L.REPT_NUMB
+     LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                       , #{commYes} AS LIKE_YSNO
-                   FROM TB_RPLIKE L
+                   FROM TB_LIKEXX L
                   WHERE L.USER_NUMB = #{userNumb}
+                    AND L.TAGT_TYPE = #{likeTargetReport}
                ) UL
             ON A.REPT_NUMB = UL.REPT_NUMB
      LEFT JOIN (  SELECT P.BOOK_NUMB
@@ -257,11 +260,25 @@
            AND A.REPT_NUMB = #{reptNumb}
     </select>
 
-    <!-- ISBN 湲곗??쇰줈 ?ㅻⅨ ?ъ슜?먭? 怨듦컻???낇썑媛?紐⑸줉??議고쉶?쒕떎. -->
+    <!-- 좋아요 요청이 가능한 공개 독후감 대상인지 조회한다. -->
+    <select id="getPublicReportLikeTargetCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getPublicReportLikeTargetCnt */
+               COUNT(*)
+          FROM TM_REPORT R
+         WHERE R.REPT_NUMB = #{tagtNumb}
+           AND (
+               R.USER_NUMB = #{userNumb}
+            OR R.PUBC_YSNO = #{commYes}
+           )
+    </select>
+
+    <!-- ISBN 기준으로 다른 사용자의 공개 독후감 목록을 조회한다. -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         SELECT /* getPublicReportList */
                P.REPT_NUMB
              , P.USER_NUMB
@@ -280,16 +297,18 @@
             ON P.USER_NUMB = U.USER_NUMB
      LEFT JOIN TM_FILEXM F
             ON U.PROF_NUMB = F.FILE_NUMB
-     LEFT JOIN (  SELECT L.REPT_NUMB
+     LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
-                    FROM TB_RPLIKE L
-                GROUP BY L.REPT_NUMB
+                    FROM TB_LIKEXX L
+                   WHERE L.TAGT_TYPE = #{likeTargetReport}
+                GROUP BY L.TAGT_NUMB
                 ) LC
             ON LC.REPT_NUMB = P.REPT_NUMB
-     LEFT JOIN (  SELECT L.REPT_NUMB
+     LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , #{commYes} AS LIKE_YSNO
-                    FROM TB_RPLIKE L
+                    FROM TB_LIKEXX L
                    WHERE L.USER_NUMB = #{userNumb}
+                     AND L.TAGT_TYPE = #{likeTargetReport}
                 ) UL
             ON UL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
@@ -299,7 +318,7 @@
       ORDER BY P.REPT_NUMB DESC
     </select>
 
-    <!-- ISBN 湲곗??쇰줈 ?꾩꽌???곌껐???꾨즺 ?낇썑媛먯쓽 ?됯퇏 蹂꾩젏??議고쉶?쒕떎. -->
+    <!-- ISBN 기준으로 연결된 완료 독후감의 평균 별점을 조회한다. -->
     <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicRatingAverageByIsbn */
@@ -311,77 +330,7 @@
           AND P.REPT_STAT != #{reptStatRead}
     </select>
 
-    <!-- 醫뗭븘?붾? ?꾨? ???덈뒗 ?낇썑媛???곸씤吏 ?뺤씤?쒕떎. -->
-    <select id="getPublicReportLikeTargetCnt" parameterType="org.our.sadari.report.dto.ReportDto" resultType="int">
-        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
-        SELECT /* getPublicReportLikeTargetCnt */
-               COUNT(*)
-         FROM TM_REPORT R
-         WHERE R.REPT_NUMB = #{reptNumb}
-           AND (
-               R.USER_NUMB = #{userNumb}
-            OR R.PUBC_YSNO = #{commYes}
-           )
-    </select>
-
-    <!-- ?ъ슜?먭? ?대떦 ?낇썑媛먯뿉 ?대? 醫뗭븘?붾? ?뚮??붿? ?뺤씤?쒕떎. -->
-    <select id="dupReportLike" parameterType="org.our.sadari.report.dto.ReportDto" resultType="int">
-        SELECT /* dupReportLike */
-               COUNT(*)
-          FROM TB_RPLIKE
-         WHERE USER_NUMB = #{userNumb}
-           AND REPT_NUMB = #{reptNumb}
-    </select>
-
-    <!-- ?낇썑媛?醫뗭븘?붾? ?깅줉?쒕떎. -->
-    <insert id="setReportLike" parameterType="org.our.sadari.report.dto.ReportDto">
-        /* setReportLike */
-        INSERT INTO TB_RPLIKE(
-                    USER_NUMB
-                  , REPT_NUMB
-                  , REGI_DATE
-        ) VALUES(   #{userNumb}
-                  , #{reptNumb}
-                  , SYSDATE
-        )
-    </insert>
-
-    <!-- ?낇썑媛?醫뗭븘?붾? 痍⑥냼?쒕떎. -->
-    <delete id="delReportLike" parameterType="org.our.sadari.report.dto.ReportDto">
-        /* delReportLike */
-        DELETE FROM TB_RPLIKE
-         WHERE USER_NUMB = #{userNumb}
-           AND REPT_NUMB = #{reptNumb}
-    </delete>
-
-    <!-- 醫뗭븘???좉? ???붾㈃???쒖떆??醫뗭븘???섏? ?щ?瑜?議고쉶?쒕떎. -->
-    <select id="getReportLikeDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
-        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
-        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-        SELECT /* getReportLikeDtl */
-               R.REPT_NUMB
-             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
-             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
-          FROM (  SELECT #{reptNumb} AS REPT_NUMB
-                    FROM DUAL
-                ) R
-     LEFT JOIN (  SELECT L.REPT_NUMB
-                       , COUNT(*) AS LIKE_CNT
-                    FROM TB_RPLIKE L
-                   WHERE L.REPT_NUMB = #{reptNumb}
-                GROUP BY L.REPT_NUMB
-               ) LC
-            ON LC.REPT_NUMB = R.REPT_NUMB
-     LEFT JOIN (  SELECT L.REPT_NUMB
-                       , #{commYes} AS LIKE_YSNO
-                    FROM TB_RPLIKE L
-                   WHERE L.REPT_NUMB = #{reptNumb}
-                     AND L.USER_NUMB = #{userNumb}
-                ) UL
-            ON UL.REPT_NUMB = R.REPT_NUMB
-    </select>
-
-    <!-- ?좉퇋 ?낇썑媛먯쓣 ?깅줉?쒕떎. -->
+    <!-- 신규 독후감을 등록한다. -->
     <insert id="setReport" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="reptNumb">
         <selectKey keyProperty="reptNumb" resultType="long" order="BEFORE">
             SELECT TM_REPORT_SEQ.NEXTVAL FROM DUAL
@@ -415,7 +364,7 @@
         )
     </insert>
 
-    <!-- 湲곗〈 ?낇썑媛먯쓣 ?섏젙?쒕떎. -->
+    <!-- 기존 독후감을 수정한다. -->
     <update id="uptReport" parameterType="org.our.sadari.report.dto.ReportDto">
         /* uptReport */
         UPDATE TM_REPORT
@@ -431,7 +380,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- ?낇썑媛먯쓽 ?쎄린 ?곹깭? 蹂꾩젏留??섏젙?쒕떎. -->
+    <!-- 독후감의 읽기 상태와 별점만 수정한다. -->
     <update id="uptReptStatusGrade" parameterType="org.our.sadari.report.dto.ReportDto">
         /* uptReptStatusGrade */
         UPDATE TM_REPORT
@@ -447,7 +396,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 濡쒓렇???ъ슜?먯쓽 ?낇썑媛먯쓣 ??젣?쒕떎. -->
+    <!-- 로그인 사용자의 독후감을 삭제한다. -->
     <delete id="delReport" parameterType="org.our.sadari.report.dto.ReportDto">
         /* delReport */
         DELETE FROM TM_REPORT

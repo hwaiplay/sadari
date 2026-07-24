@@ -91,23 +91,6 @@ public class ReportController {
     }
 
     /**
-     * 공개 독후감의 좋아요 상태를 토글한다.
-     * 이미 좋아요를 누른 경우에는 취소하고, 누르지 않은 경우에는 신규 좋아요를 등록한다.
-     *
-     * @author Seunghyeon.Kang
-     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
-     * @param reptNumb 좋아요를 토글할 독후감 번호
-     * @return 변경 후 좋아요 상태와 좋아요 수
-     */
-    @PostMapping("/publicReports/{reptNumb}/like")
-    @Operation(summary = "공개 독후감 좋아요 토글", description = "공개 독후감의 좋아요를 등록하거나 취소하고 변경된 좋아요 상태를 반환한다.")
-    public ResultData setReportLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
-                                  , @Parameter(description = "좋아요를 토글할 독후감 번호", example = "1")
-                                    @PathVariable("reptNumb") Long reptNumb) {
-        return reportService.setReportLike(userNumb, reptNumb);
-    }
-
-    /**
      * 새 독후감과 필요 시 신규 도서 정보를 함께 등록한다.
      * DTO 검증은 Controller에서 1차 수행하고, 업무 규칙 검증은 Service에서 한 번 더 수행한다.
      *

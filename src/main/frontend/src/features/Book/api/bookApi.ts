@@ -38,8 +38,13 @@ export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
   return assertResultDataSuccess(res.data);
 };
 
-export const setPublicReportLikeApi = (reptNumb: number) => {
-  return api.post(`/book/publicReports/${reptNumb}/like`).then((res) => {
+export type LikeTargetParams = {
+  tagtType: string;
+  tagtNumb: number;
+};
+
+export const setPublicReportLikeApi = (data: LikeTargetParams) => {
+  return api.post("/social/like", data).then((res) => {
     return assertResultDataSuccess(res.data);
   });
 };

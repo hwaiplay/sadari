@@ -140,13 +140,14 @@ export function validateReportForm(values: ReportFormValues) {
   const reptColr = String(values.reptColr ?? "");
   const content = String(values.content ?? "").trim();
   const missingFields: string[] = [];
+  const isReadingStatus = status === REPORT_STATUS_READ;
   // 완료 상태에서는 화면 라벨이 목표 날짜로 바뀌므로 필수값 안내 문구도 같은 명칭을 사용합니다.
   const startDateFieldName =
-    status === REPORT_STATUS_READ
+    isReadingStatus
       ? message("frontend.report.field.targetStartDate")
       : message("frontend.report.field.startDate");
   const endDateFieldName =
-    status === REPORT_STATUS_READ
+    isReadingStatus
       ? message("frontend.report.field.targetEndDate")
       : message("frontend.report.field.endDate");
   const gradeNumber = Number(grade);
@@ -184,7 +185,7 @@ export function validateReportForm(values: ReportFormValues) {
     missingFields.push(message("frontend.report.field.color"));
   }
 
-  if (!content) {
+  if (!isReadingStatus && !content) {
     missingFields.push(message("frontend.report.field.content"));
   }
 
