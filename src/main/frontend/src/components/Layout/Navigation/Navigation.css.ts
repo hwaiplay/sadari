@@ -235,3 +235,34 @@ export const drawerMenuDisabled = style({
     backgroundColor: "transparent",
     cursor: "default",
 });
+
+export const drawerFooter = style({
+    marginTop: "auto",
+    display: "flex",
+    justifyContent: "flex-start",
+    alignItems: "center",
+});
+
+export const drawerAlimButton = style({
+    width: "42px",
+    height: "42px",
+    padding: 0,
+    border: `1px solid ${vars.color.gray200}`,
+    borderRadius: "50%",
+    backgroundColor: "#ffffff",
+    color: vars.color.black,
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+});
+
+export const drawerAlimIcon = style({
+    width: "20px",
+    height: "20px",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 2,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+});
