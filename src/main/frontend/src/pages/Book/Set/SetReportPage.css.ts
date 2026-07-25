@@ -148,7 +148,7 @@ export const statusPill = style({
   border: `1px solid ${vars.color.gray400}`,
   backgroundColor: "#f7f7f7",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   whiteSpace: "nowrap",
   cursor: "pointer",
@@ -268,7 +268,7 @@ export const publicToggleText = style({
 });
 
 export const publicToggleState = style({
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   color: vars.color.black,
 });

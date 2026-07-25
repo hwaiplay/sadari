@@ -90,7 +90,7 @@ export const ratingSummary = style({
   alignItems: "center",
   gap: "3px",
   flexShrink: 0,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   lineHeight: 1,
   color: vars.color.black,
@@ -190,23 +190,21 @@ export const profileButton = style({
   backgroundColor: "transparent",
   display: "inline-flex",
   alignItems: "center",
-  gap: "10px",
+  gap: "8px",
   cursor: "pointer",
 });
 
 export const profileImage = style({
-  width: "31px",
-  height: "31px",
-  borderRadius: "50%",
+  width: "28px",
+  height: "28px",
   flexShrink: 0,
-  objectFit: "cover",
-  backgroundColor: vars.color.gray300,
+  borderRadius: '50%'
 });
 
 export const writer = style({
   minWidth: 0,
-  fontFamily: vars.font.middle,
-  fontSize: "16px",
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
   color: vars.color.black,
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -236,7 +234,7 @@ export const likeButton = style({
   borderRadius: "999px",
   backgroundColor: "#fff7f9",
   color: "#d84a5f",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   lineHeight: 1,
   cursor: "pointer",
@@ -266,7 +264,7 @@ export const likeCount = style({
 });
 
 export const contentLabel = style({
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   color: "#777777",
 });
@@ -287,7 +285,7 @@ export const reportContentWrapOpen = style([
 export const reportContent = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "14px",
+  fontSize: "15px",
   lineHeight: 1.7,
   color: vars.color.black,
   whiteSpace: "pre-wrap",
