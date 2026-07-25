@@ -43,7 +43,8 @@ src/main/resources/application-loc.yml
 .env
 *.env
 !*.env.example
-src/main/resources/application-prod.yml
+# application-prod.yml에는 환경변수 이름과 기본값만 두고 실제 운영 비밀값은 GitHub Secrets/EC2 .env로 관리한다.
+# 따라서 운영 설정 구조를 Docker 이미지에 포함할 수 있도록 이 파일은 Git에서 추적한다.
 
 # DB migration/seed scripts can contain operational schema and seed account data.
 docs/db/*.sql
