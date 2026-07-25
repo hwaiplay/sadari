@@ -116,7 +116,7 @@ export const ratingSummary = style({
   alignItems: "center",
   gap: "3px",
   flexShrink: 0,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   lineHeight: 1,
   color: vars.color.black,
@@ -171,7 +171,7 @@ export const infoGrid = style({
 });
 
 export const infoLabel = style({
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   color: "#777777",
 });
@@ -213,7 +213,7 @@ export const bookInfoButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   cursor: "pointer",
 });
@@ -238,7 +238,7 @@ export const reportBackButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   cursor: "pointer",
 });

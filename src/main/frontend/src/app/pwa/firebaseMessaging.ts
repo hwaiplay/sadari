@@ -1,6 +1,12 @@
 import { initializeApp, getApp, getApps, type FirebaseOptions } from "firebase/app";
-import { getMessaging, getToken, isSupported } from "firebase/messaging";
+import { getMessaging, getToken, isSupported, onMessage } from "firebase/messaging";
 import type { FirebaseWebConfig } from "@/features/Push/api/pushApi";
+
+export const FIREBASE_PUSH_ENABLED_EVENT = "sadari:firebase-push-enabled";
+
+export function notifyFirebasePushEnabled() {
+  window.dispatchEvent(new Event(FIREBASE_PUSH_ENABLED_EVENT));
+}
 
 /**
  * 서버 설정 DTO를 Firebase Web SDK 초기화 옵션으로 변환합니다.
@@ -65,4 +71,29 @@ export async function requestFirebaseMessagingToken(config: FirebaseWebConfig) {
   }
 
   return token;
+}
+
+/**
+ * 앱이 열린 상태에서 도착한 FCM 메시지를 구독합니다.
+ *
+ * @param config 서버에서 받은 Firebase Web 설정
+ * @param listener 포그라운드 메시지 수신 콜백
+ * @return 구독 해제 함수. 미지원 환경에서는 아무 작업도 하지 않는 함수를 반환합니다.
+ */
+export async function subscribeFirebaseForegroundMessages(
+  config: FirebaseWebConfig,
+  listener: () => void,
+) {
+  const supported = await isSupported();
+
+  if (
+    !supported
+    || !("Notification" in window)
+    || Notification.permission !== "granted"
+  ) {
+    return () => undefined;
+  }
+
+  const messaging = getMessaging(getFirebaseApp(config));
+  return onMessage(messaging, listener);
 }

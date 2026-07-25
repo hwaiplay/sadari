@@ -114,7 +114,7 @@ export const weekday = style({
   alignItems: "center",
   justifyContent: "center",
   backgroundColor: "#fafafa",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   color: "#777777",
 });
@@ -155,7 +155,7 @@ export const dayNumber = style({
   justifyContent: "center",
   minWidth: "16px",
   height: "16px",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   lineHeight: 1,
   color: vars.color.black,
@@ -186,7 +186,7 @@ export const moreCount = style({
 
 export const selectedSummary = style({
   margin: 0,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   color: vars.color.black,
 });
@@ -234,7 +234,7 @@ export const scheduleText = style({
 });
 
 export const scheduleTitle = style({
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   color: vars.color.black,
   overflow: "hidden",
