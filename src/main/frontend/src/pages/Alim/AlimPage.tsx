@@ -2,8 +2,8 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import {
+  notifyFirebasePushEnabled,
   requestFirebaseMessagingToken,
-  requestPushNotificationPermission,
 } from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
 import {
@@ -11,6 +11,7 @@ import {
   readAllAlimApi,
   type AlimItem,
 } from "@/features/Alim/api/alimApi";
+import { notifyUnreadAlimCntChanged } from "@/features/Alim/lib/alimEvents";
 import { getPushConfigApi, setPushSubApi } from "@/features/Push/api/pushApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +55,7 @@ function AlimPage() {
         ));
         setHasNext(Boolean(data.hasNext));
         setNextPage(data.nextPage ?? page + 1);
+        notifyUnreadAlimCntChanged(data.unreadCnt ?? 0);
       } catch (error) {
         void sweetError(
           message("frontend.alim.list.failedTitle"),
@@ -106,10 +108,11 @@ function AlimPage() {
     setIsReadingAll(true);
 
     try {
-      await readAllAlimApi();
+      const response = await readAllAlimApi();
 
       // 모두 읽음은 아직 불러오지 않은 알림도 처리하지만, 현재 화면에는 이미 로드된 목록만 있으므로 표시 목록만 즉시 보정한다.
       setAlimList((prevList) => prevList.map((alim) => ({ ...alim, readYsno: "Y" })));
+      notifyUnreadAlimCntChanged(response.data?.unreadCnt ?? 0);
     } catch (error) {
       void sweetError(
         message("frontend.alim.readAll.failedTitle"),
@@ -138,6 +141,7 @@ function AlimPage() {
       // TB_PSHSUB.ENDP_URLX는 현재 FCM registration token 저장 위치로 사용한다.
       // 서버는 인증 사용자 번호를 직접 채우므로 프론트에서는 token만 전달한다.
       await setPushSubApi({ endpUrlx: token });
+      notifyFirebasePushEnabled();
       void sweetSuccess(message("frontend.push.enable.successTitle"));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "";

@@ -33,7 +33,8 @@ export const vars = createGlobalTheme(":root", {
   font: {
     body: `"PretendardRegular", system-ui, sans-serif`,
     heading: `"PretendardBold", system-ui, sans-serif`,
-    middle: `"PretendardSemiBold", system-ui, sans-serif`,
+    medium: `"PretendardMedium", system-ui, sans-serif`,
+    semibold: `"PretendardSemiBold", system-ui, sans-serif`,
   },
 
   fontSize: {

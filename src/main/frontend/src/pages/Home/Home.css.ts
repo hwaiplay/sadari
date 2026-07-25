@@ -133,7 +133,7 @@ export const sortTrigger = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   cursor: "pointer",
 });
@@ -221,7 +221,7 @@ export const monthLabel = style({
 
 export const gradeLabel = style({
   color: "#ffd966",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
 });
 
 export const emptySearchResult = style({
@@ -249,7 +249,7 @@ export const emptySearchButton = style({
   border: 0,
   backgroundColor: "transparent",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   cursor: "pointer",
 });

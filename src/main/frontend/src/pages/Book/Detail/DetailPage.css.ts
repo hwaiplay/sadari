@@ -138,7 +138,7 @@ export const bookInfoButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   cursor: "pointer",
 });
@@ -186,7 +186,7 @@ export const likeButton = style({
   borderRadius: "999px",
   backgroundColor: "#fff7f9",
   color: "#d84a5f",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   lineHeight: 1,
   cursor: "pointer",
@@ -225,7 +225,7 @@ export const statusPill = style({
   borderRadius: "999px",
   backgroundColor: "#f5f5f5",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
 });
 
@@ -275,7 +275,7 @@ export const actionButton = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   display: "inline-flex",
   alignItems: "center",
