@@ -11,8 +11,6 @@ export const headerShell = style({
   height: vars.headerHeight,
   backgroundColor: "rgba(255, 255, 255, 0.96)",
   boxShadow: "0 8px 22px rgba(0, 0, 0, 0.08)",
-  backdropFilter: "blur(10px)",
-  WebkitBackdropFilter: "blur(10px)",
   transform: "translateY(0)",
   transition: "transform 180ms ease",
   willChange: "transform",
@@ -76,4 +74,53 @@ export const hamburgerIcon = style({
   stroke: "currentColor",
   strokeWidth: 2,
   strokeLinecap: "round",
+});
+
+export const headerAlimButton = style({
+  position: "absolute",
+  right: "49px",
+  top: "50%",
+  transform: "translateY(-50%)",
+  width: "40px",
+  height: "40px",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  zIndex: 2,
+});
+
+export const headerAlimBadge = style({
+  position: "absolute",
+  top: "5px",
+  right: "3px",
+  minWidth: "14px",
+  height: "14px",
+  padding: "0 5px",
+  borderRadius: "999px",
+  backgroundColor: "#ef4444",
+  color: "#ffffff",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: vars.font.semibold,
+  fontSize: "10px",
+  lineHeight: 1,
+  boxSizing: "border-box",
+  pointerEvents: "none",
+});
+
+export const headerAlimIcon = style({
+  width: "24px",
+  height: "24px",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
 });

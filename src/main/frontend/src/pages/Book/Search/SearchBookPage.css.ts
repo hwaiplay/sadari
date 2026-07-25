@@ -41,7 +41,7 @@ export const searchButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: vars.color.black,
   color: "#ffffff",
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
   selectors: {
@@ -128,7 +128,7 @@ export const actionButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "13px",
   cursor: "pointer",
 });
@@ -148,7 +148,7 @@ export const loadMoreButton = style({
   borderRadius: vars.radius.xl,
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
   selectors: {

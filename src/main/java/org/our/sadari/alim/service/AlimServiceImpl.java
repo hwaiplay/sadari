@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.alim.dto.AlimDto;
 import org.our.sadari.alim.mapper.AlimMapper;
 import org.our.sadari.global.common.constant.Constant;
@@ -14,6 +15,8 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.push.service.PushService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * 알림 템플릿 조회, 치환, 사용자 알림함 저장을 공통으로 처리하는 Service 구현체이다.
@@ -23,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class AlimServiceImpl implements AlimService {
 
     private static final int ALIM_PAGE_SIZE = 20;
@@ -176,10 +180,43 @@ public class AlimServiceImpl implements AlimService {
         }
 
         alimMapper.setAlim(alim);
-        // 알림함 저장이 실제로 일어난 경우에만 푸시를 발송한다.
-        // 위의 1시간 동일 알림 차단 분기에서 return된 경우에는 사용자에게 같은 푸시가 반복되지 않는다.
-        pushService.sendPush(userNumb, alim.getAlimTitl(), alim.getAlimCont(), alim.getLinkUrlx());
+        // 브라우저가 푸시 직후 미읽음 수를 조회해도 저장된 알림을 볼 수 있도록 DB commit 이후에 발송한다.
+        schedulePushAfterCommit(alim);
         return ResultData.success(alim);
+    }
+
+    /**
+     * 알림 저장 트랜잭션이 완료된 뒤 FCM 푸시를 발송한다.
+     * commit 전에 푸시를 보내면 열린 브라우저가 즉시 미읽음 수를 조회할 때 이전 값을 받을 수 있다.
+     *
+     * @param alim 저장된 알림 정보
+     */
+    private void schedulePushAfterCommit(AlimDto.AlimItemDto alim) {
+        Runnable sendPush = () -> {
+            try {
+                pushService.sendPush(
+                        alim.getUserNumb(),
+                        alim.getAlimTitl(),
+                        alim.getAlimCont(),
+                        alim.getLinkUrlx()
+                );
+            } catch (RuntimeException e) {
+                // 푸시는 부가 기능이므로 commit이 끝난 알림 저장 결과에는 영향을 주지 않는다.
+                log.warn("FCM push send failed after notification commit. userNumb={}", alim.getUserNumb(), e);
+            }
+        };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    sendPush.run();
+                }
+            });
+            return;
+        }
+
+        sendPush.run();
     }
 
     /**
