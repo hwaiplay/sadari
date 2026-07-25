@@ -25,7 +25,7 @@ export const cover = style({
   margin: 0,
   height: "260px",
   overflow: "hidden",
-  borderRadius: "14px",
+  borderRadius: "22px",
   backgroundColor: "#d9e0e7",
   backgroundSize: "cover",
   backgroundPosition: "center",
@@ -48,7 +48,7 @@ export const coverProfileEditButton = style({
   borderRadius: "999px",
   backgroundColor: "rgba(0, 0, 0, 0.48)",
   color: "#ffffff",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "12px",
   display: "inline-flex",
   alignItems: "center",
@@ -113,7 +113,7 @@ export const profileBody = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
-  padding: "0 10px",
+  padding: "0 14px",
 });
 
 export const socialProfileBody = style([
@@ -129,7 +129,7 @@ export const profileHeaderRow = style({
   display: "grid",
   gridTemplateColumns: "112px minmax(0, 1fr)",
   alignItems: "start",
-  gap: "12px",
+  gap: "18px",
 });
 
 export const socialProfileHeaderRow = style([
@@ -154,6 +154,7 @@ export const profileImage = style({
   objectFit: "cover",
   border: "4px solid #ffffff",
   backgroundColor: "#ffffff",
+  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
 });
 
 export const avatarCameraButton = style({
@@ -232,7 +233,7 @@ export const socialFollowButton = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "12px",
   boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
   cursor: "pointer",
@@ -299,7 +300,7 @@ export const monthlySummary = style({
   marginTop: "24px",
   padding: "6px 14px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "14px",
+  borderRadius: "22px",
   backgroundColor: "#ffffff",
   boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
 });
@@ -322,7 +323,7 @@ export const profileStatsSummary = style({
 
 export const profileStatsTitle = style({
   margin: "0 0 16px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "14px",
   lineHeight: 1.3,
   textAlign: "center",
@@ -357,7 +358,7 @@ export const currentReadingSection = style({
 
 export const currentReadingTitle = style({
   margin: "0 0 16px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "14px",
   lineHeight: 1.3,
   textAlign: "center",
@@ -415,7 +416,7 @@ export const currentReadingMeta = style({
 
 export const currentReadingRemain = style({
   flexShrink: 0,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "12px",
   lineHeight: 1,
   whiteSpace: "nowrap",
@@ -423,7 +424,7 @@ export const currentReadingRemain = style({
 
 export const goalAchievementTitle = style({
   margin: "0 0 16px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "14px",
   lineHeight: 1.3,
   textAlign: "center",
@@ -466,7 +467,7 @@ export const readingSummaryToggle = style({
   border: 0,
   backgroundColor: "transparent",
   display: "grid",
-  gridTemplateColumns: "48px minmax(0, 1fr) 28px",
+  gridTemplateColumns: "44px minmax(0, 1fr) 28px",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -620,7 +621,7 @@ export const readingSummaryBookTitle = style({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "13px",
   lineHeight: 1.25,
   color: vars.color.black,
@@ -665,16 +666,10 @@ export const readingSummaryEmpty = style({
   color: "#777777",
 });
 
-export const monthlyCalendarWrap = style({
-  display: 'flex',
-  flexDirection: 'column',
-  gap: '4px'
-})
-
 export const monthlyCalendarIcon = style({
   position: "relative",
-  width: "48px",
-  height: "48px",
+  width: "44px",
+  height: "44px",
   border: `2px solid ${vars.color.black}`,
   borderRadius: "8px",
   backgroundColor: "#ffffff",
@@ -717,9 +712,9 @@ export const monthlyCalendarRing = style({
 });
 
 export const monthlyCalendarMonth = style({
-  marginTop: "6px",
+  marginTop: "7px",
   fontFamily: vars.font.heading,
-  fontSize: "12px",
+  fontSize: "9px",
   lineHeight: 1,
   color: vars.color.black,
 });
@@ -730,12 +725,6 @@ export const monthlySummaryText = style({
   flexDirection: "column",
   gap: "4px",
 });
-
-export  const monthlySummaryTextWrap = style({
-  display: "flex",
-  flexDirection: "column",
-
-})
 
 export const monthlySummaryLabel = style({
   fontFamily: vars.font.body,
@@ -844,17 +833,21 @@ export const goalProgressRow = style({
   gridTemplateColumns: "minmax(0, 1fr) 38px",
   alignItems: "center",
   gap: "8px",
+  padding: "0 0 16px 56px",
 });
 
 export const goalProgressTarget = style({
+  position: "absolute",
+  left: 0,
+  top: "0",
+  width: "44px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  fontFamily: vars.font.medium,
-  fontSize: "13px",
-  fontWeight: 500,
+  fontFamily: vars.font.body,
+  fontSize: "11px",
   lineHeight: 1,
-  letterSpacing: '-1px',
+  color: "#888888",
   textAlign: "center",
   transform: "translateY(1px)",
 });
@@ -926,7 +919,7 @@ export const goalSettingButton = style({
   border: 0,
   backgroundColor: "transparent",
   color: "#8a8a8a",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "14px",
   cursor: "pointer",
   display: "inline-flex",
@@ -1077,7 +1070,7 @@ export const followModalName = style({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "13px",
   lineHeight: 1.25,
   color: vars.color.black,
@@ -1101,7 +1094,7 @@ export const followModalStatusButton = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "12px",
   cursor: "pointer",
   selectors: {
@@ -1160,7 +1153,7 @@ export const goalHelpButton = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: "#777777",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "12px",
   lineHeight: 1,
   cursor: "pointer",
@@ -1255,7 +1248,7 @@ export const quickReadingBookText = style({
 
 export const quickReadingBookTitle = style({
   margin: 0,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "14px",
   lineHeight: 1.5,
   color: vars.color.black,
@@ -1291,7 +1284,7 @@ export const quickReadingEditButton = style({
   alignItems: "center",
   justifyContent: "center",
   gap: "2px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "11px",
   lineHeight: 1,
   cursor: "pointer",
@@ -1316,7 +1309,7 @@ export const quickStatusOption = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: "#666666",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "13px",
   cursor: "pointer",
   transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
@@ -1404,7 +1397,7 @@ export const goalInputLabel = style({
   display: "flex",
   flexDirection: "column",
   gap: "7px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "13px",
   color: vars.color.black,
   textAlign: "center",
@@ -1494,7 +1487,7 @@ export const goalLimitPill = style({
   borderRadius: "999px",
   backgroundColor: "#edf7f1",
   color: "#3b8f64",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "11px",
   lineHeight: 1,
   overflow: "hidden",
@@ -1532,7 +1525,7 @@ const goalModalButtonBase = style({
   height: "36px",
   borderRadius: "999px",
   padding: "0 14px",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.middle,
   fontSize: "13px",
   cursor: "pointer",
 });

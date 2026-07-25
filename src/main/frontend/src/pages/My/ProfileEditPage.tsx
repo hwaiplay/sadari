@@ -38,7 +38,6 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
-import {monthlyCalendarWrap} from "./ProfileEditPage.css";
 
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 10;
@@ -1203,44 +1202,15 @@ function ProfileEditPage() {
               }
             }}
           >
-            <div className={styles.monthlyCalendarWrap}>
-              <div className={styles.monthlyCalendarIcon} aria-hidden="true">
-                <span className={styles.monthlyCalendarRing} />
-                <span className={styles.monthlyCalendarMonth}>{code ?? ""}</span>
-              </div>
-              <span className={styles.goalProgressTarget}>
-                {goalSet ? message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
-              </span>
+            <div className={styles.monthlyCalendarIcon} aria-hidden="true">
+              <span className={styles.monthlyCalendarRing} />
+              <span className={styles.monthlyCalendarMonth}>{code ?? ""}</span>
             </div>
             <div className={styles.monthlySummaryText}>
-              <div className={styles.monthlySummaryTextWrap}>
-                <span className={styles.monthlySummaryLabel}>{message(titleKey)}</span>
-                <strong className={styles.monthlySummaryCount}>
-                  {message(countKey, [count])}
-                </strong>
-              </div>
-
-              <div className={styles.goalProgressRow}>
-
-                <div className={styles.goalProgressTrack}>
-            <span
-                className={styles.goalProgressFill}
-                style={{
-                  width: `${Math.min(100, goalRate)}%`,
-                  backgroundColor: goalProgressColor,
-                }}
-            />
-                </div>
-                <span
-                    className={styles.goalProgressRate}
-                    style={goalSet ? { color: goalProgressColor } : undefined}
-                >
-            {goalSet
-                ? message("frontend.profile.goal.rate", [goalRate])
-                : message("frontend.profile.goal.unset")}
-          </span>
-              </div>
-
+              <span className={styles.monthlySummaryLabel}>{message(titleKey)}</span>
+              <strong className={styles.monthlySummaryCount}>
+                {message(countKey, [count])}
+              </strong>
             </div>
             {hasReports && (
               <span
@@ -1288,6 +1258,28 @@ function ProfileEditPage() {
               </div>
             )}
           </div>
+        </div>
+        <div className={styles.goalProgressRow}>
+          <span className={styles.goalProgressTarget}>
+            {goalSet ? message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
+          </span>
+          <div className={styles.goalProgressTrack}>
+            <span
+              className={styles.goalProgressFill}
+              style={{
+                width: `${Math.min(100, goalRate)}%`,
+                backgroundColor: goalProgressColor,
+              }}
+            />
+          </div>
+          <span
+            className={styles.goalProgressRate}
+            style={goalSet ? { color: goalProgressColor } : undefined}
+          >
+            {goalSet
+              ? message("frontend.profile.goal.rate", [goalRate])
+              : message("frontend.profile.goal.unset")}
+          </span>
         </div>
         {hasReports && (
           <div

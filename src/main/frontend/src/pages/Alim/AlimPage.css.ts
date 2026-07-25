@@ -6,7 +6,7 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "100svh",
   margin: "0 auto",
-  padding: "82px 18px 96px",
+  padding: "20px 18px 96px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
 });
@@ -23,8 +23,9 @@ export const header = style({
 export const title = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "24px",
+  fontSize: "22px",
   lineHeight: 1.25,
+  letterSpacing: '-0.5px',
   color: vars.color.black,
 });
 
@@ -158,10 +159,11 @@ export const itemTitle = style({
 
 export const itemContent = style({
   margin: 0,
-  fontFamily: vars.font.body,
-  fontSize: "12px",
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
   lineHeight: 1.45,
-  color: "#555555",
+  letterSpacing: '-0.5px',
+  color: vars.color.black,
 });
 
 export const itemDate = style({
