@@ -9,6 +9,74 @@ export function notifyFirebasePushEnabled() {
 }
 
 /**
+ * 사용자의 버튼 클릭 흐름 안에서 브라우저 알림 권한을 요청합니다.
+ *
+ * Notification.requestPermission()은 사용자의 직접 동작과 분리되면 브라우저가
+ * 권한 팝업을 차단할 수 있으므로 Firebase 설정 조회보다 먼저 호출해야 합니다.
+ *
+ * @author Hanwon.Jang
+ * @return 허용된 알림 권한
+ */
+export async function requestPushNotificationPermission() {
+  if (!window.isSecureContext) {
+    throw new Error("PUSH_INSECURE_CONTEXT");
+  }
+
+  if (!("Notification" in window) || !("serviceWorker" in navigator)) {
+    throw new Error("PUSH_NOT_SUPPORTED");
+  }
+
+  // 이미 허용된 브라우저에서는 팝업을 다시 띄우지 않고 다음 토큰 발급 단계로 진행합니다.
+  if (Notification.permission === "granted") {
+    return Notification.permission;
+  }
+
+  // 사용자가 한 번 차단한 권한은 코드로 다시 요청할 수 없으므로 사이트 설정 변경을 안내합니다.
+  if (Notification.permission === "denied") {
+    throw new Error("PUSH_PERMISSION_DENIED");
+  }
+
+  const permission = await Notification.requestPermission();
+
+  if (permission !== "granted") {
+    throw new Error("PUSH_PERMISSION_DENIED");
+  }
+
+  return permission;
+}
+
+/**
+ * FCM token 발급에 사용할 service worker가 활성화될 때까지 기다립니다.
+ *
+ * 개발 서버 로드 직후처럼 등록이 아직 끝나지 않은 경우 navigator.serviceWorker.ready가
+ * 대기 상태가 될 수 있으므로 제한 시간을 두어 버튼이 무한 로딩되는 것을 막습니다.
+ *
+ * @author Hanwon.Jang
+ * @return 활성화된 service worker 등록 정보
+ */
+async function waitServiceWorkerReady() {
+  const serviceWorkerReadyTimeoutMs = 10_000;
+  // 브라우저의 window.setTimeout 반환값은 number입니다.
+  // 프로젝트에 @types/node도 포함되어 있어 ReturnType을 쓰면 NodeJS.Timeout으로 잘못 추론될 수 있으므로 명시합니다.
+  let timeoutId: number | undefined;
+
+  try {
+    return await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<never>((_, reject) => {
+        timeoutId = window.setTimeout(() => {
+          reject(new Error("PUSH_SERVICE_WORKER_NOT_READY"));
+        }, serviceWorkerReadyTimeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timeoutId !== undefined) {
+      window.clearTimeout(timeoutId);
+    }
+  }
+}
+
+/**
  * 서버 설정 DTO를 Firebase Web SDK 초기화 옵션으로 변환합니다.
  * service account는 백엔드 전용이므로 여기에는 공개 가능한 Web 설정만 들어옵니다.
  *

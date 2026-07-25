@@ -92,7 +92,7 @@ self.addEventListener("push", (event) => {
   if (event.data) {
     try {
       payload = event.data.json();
-    } catch (e) {
+    } catch {
       payload = { notification: { title: "알림", body: event.data.text() } };
     }
   }
@@ -105,13 +105,22 @@ self.addEventListener("push", (event) => {
 
   // FCM에서 받은 payload를 브라우저 알림으로 표시한다.
   // 링크는 notificationclick에서 사용해야 하므로 notification data에 함께 저장한다.
-  event.waitUntil(
-    self.registration.showNotification(title, {
+  const showNotification = self.registration.showNotification(title, {
       body,
       icon: "/favicon/android-chrome-192x192.png",
       badge: "/favicon/favicon-32x32.png",
       data: { linkUrlx },
-    }),
+    });
+  const notifyOpenClients = self.clients
+    .matchAll({ type: "window", includeUncontrolled: true })
+    .then((clientList) => {
+      clientList.forEach((client) => {
+        client.postMessage({ type: "SADARI_ALIM_RECEIVED" });
+      });
+    });
+
+  event.waitUntil(
+    Promise.all([showNotification, notifyOpenClients]),
   );
 });
 
@@ -122,7 +131,7 @@ self.addEventListener("notificationclick", (event) => {
   const targetUrl = new URL(linkUrlx, self.location.origin).href;
 
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
       for (const client of clientList) {
         if ("focus" in client) {
           client.navigate(targetUrl);
@@ -130,7 +139,7 @@ self.addEventListener("notificationclick", (event) => {
         }
       }
 
-      return clients.openWindow(targetUrl);
+      return self.clients.openWindow(targetUrl);
     }),
   );
 });
