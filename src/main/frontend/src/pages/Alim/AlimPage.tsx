@@ -226,8 +226,7 @@ function AlimPage() {
     <main className={styles.page}>
       <section className={styles.header}>
         <div>
-          <h1 className={styles.title}>{message("frontend.alim.title")}</h1>
-          <p className={styles.subtitle}>{message("frontend.alim.subtitle")}</p>
+          <p className={styles.title}>{message("frontend.alim.subtitle")}</p>
         </div>
         <div className={styles.headerActions}>
           <button
@@ -264,9 +263,6 @@ function AlimPage() {
                 {renderAlimIcon(alim.alimIconName)}
               </span>
               <span className={styles.itemText}>
-                <strong className={styles.itemTitle}>
-                  {alim.alimTitl || message("frontend.alim.defaultTitle")}
-                </strong>
                 <span className={styles.itemContent}>{alim.alimCont}</span>
                 <span className={styles.itemDate}>{alim.sendDate}</span>
               </span>
