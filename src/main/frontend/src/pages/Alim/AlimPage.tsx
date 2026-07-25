@@ -4,6 +4,7 @@ import { message } from "@/app/messages/message";
 import {
   notifyFirebasePushEnabled,
   requestFirebaseMessagingToken,
+  requestPushNotificationPermission,
 } from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
 import {
@@ -152,6 +153,8 @@ function AlimPage() {
             ? message("frontend.push.enable.insecureContext")
           : errorMessage === "PUSH_PERMISSION_DENIED"
             ? message("frontend.push.enable.denied")
+            : errorMessage === "PUSH_PERMISSION_REQUIRED"
+              ? message("frontend.push.enable.denied")
             : errorMessage === "PUSH_SERVICE_WORKER_NOT_READY"
               ? message("frontend.push.enable.serviceWorkerNotReady")
             : getApiErrorMessage(error, message("frontend.common.tryAgain"));
