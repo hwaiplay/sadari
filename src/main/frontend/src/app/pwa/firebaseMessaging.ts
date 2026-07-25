@@ -53,13 +53,11 @@ export async function requestFirebaseMessagingToken(config: FirebaseWebConfig) {
     throw new Error("PUSH_NOT_SUPPORTED");
   }
 
-  const permission = await Notification.requestPermission();
-
-  if (permission !== "granted") {
-    throw new Error("PUSH_PERMISSION_DENIED");
+  if (Notification.permission !== "granted") {
+    throw new Error("PUSH_PERMISSION_REQUIRED");
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  const registration = await waitServiceWorkerReady();
   const messaging = getMessaging(getFirebaseApp(config));
   const token = await getToken(messaging, {
     vapidKey: config.vapidPublicKey,
