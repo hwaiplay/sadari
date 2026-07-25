@@ -1,0 +1,302 @@
+name: Sadari CI/CD
+
+on:
+  pull_request:
+    branches:
+      - main
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# 같은 브랜치의 이전 실행이 남아 있으면 취소해 오래된 이미지가 나중에 배포되는 경쟁 상태를 막는다.
+concurrency:
+  group: sadari-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  verify:
+    name: Build verification
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: gradle
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: src/main/frontend/package-lock.json
+
+      - name: Verify application build
+        run: |
+          chmod +x ./gradlew
+          ./gradlew clean bootWar \
+            -PfrontendInstallCommand=ci \
+            --no-daemon \
+            -x test
+
+      # 현재 contextLoads 테스트는 Git에서 제외된 application-loc.yml과 로컬 DB/Redis를 요구한다.
+      # CI용 독립 테스트 프로필이 생기기 전까지 패키징 검증을 수행하고, Docker 빌드에서도 동일 소스를 다시 검증한다.
+
+  publish:
+    name: Build and publish image
+    if: github.event_name != 'pull_request'
+    needs:
+      - verify
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      image: ${{ steps.image.outputs.name }}
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v6
+
+      - name: Resolve lowercase image name
+        id: image
+        shell: bash
+        run: |
+          echo "name=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: |
+            ${{ steps.image.outputs.name }}:${{ github.sha }}
+            ${{ steps.image.outputs.name }}:latest
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.revision=${{ github.sha }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  deploy:
+    name: Deploy to EC2
+    if: github.event_name != 'pull_request'
+    needs:
+      - publish
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: production
+
+    env:
+      EC2_HOST: ${{ secrets.EC2_HOST }}
+      EC2_USER: ${{ secrets.EC2_USER }}
+      EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+      EC2_SSH_PORT: ${{ vars.EC2_SSH_PORT || '22' }}
+      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
+      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+
+      DB_URL: ${{ secrets.DB_URL }}
+      DB_USERNAME: ${{ secrets.DB_USERNAME }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+      KAKAO_JAVASCRIPT_KEY: ${{ secrets.KAKAO_JAVASCRIPT_KEY }}
+      KAKAO_NATIVE_APP_KEY: ${{ secrets.KAKAO_NATIVE_APP_KEY }}
+      NAVER_CLIENT_ID: ${{ secrets.NAVER_CLIENT_ID }}
+      NAVER_CLIENT_SECRET: ${{ secrets.NAVER_CLIENT_SECRET }}
+      FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+      FIREBASE_WEB_AUTH_DOMAIN: ${{ secrets.FIREBASE_WEB_AUTH_DOMAIN }}
+      FIREBASE_WEB_PROJECT_ID: ${{ secrets.FIREBASE_WEB_PROJECT_ID }}
+      FIREBASE_WEB_STORAGE_BUCKET: ${{ secrets.FIREBASE_WEB_STORAGE_BUCKET }}
+      FIREBASE_WEB_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_WEB_MESSAGING_SENDER_ID }}
+      FIREBASE_WEB_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
+      FIREBASE_VAPID_PUBLIC_KEY: ${{ secrets.FIREBASE_VAPID_PUBLIC_KEY }}
+      FRONT_DOMAIN: ${{ secrets.FRONT_DOMAIN }}
+      BACK_DOMAIN: ${{ secrets.BACK_DOMAIN }}
+
+      APP_PORT: ${{ vars.APP_PORT || '8080' }}
+      DB_CONNECTION_TIMEOUT: ${{ vars.DB_CONNECTION_TIMEOUT || '60000' }}
+      DB_MAXIMUM_POOL_SIZE: ${{ vars.DB_MAXIMUM_POOL_SIZE || '10' }}
+      DB_MINIMUM_IDLE: ${{ vars.DB_MINIMUM_IDLE || '2' }}
+      JWT_ACCESS_TOKEN_SECONDS: ${{ vars.JWT_ACCESS_TOKEN_SECONDS || '1800' }}
+      JWT_REFRESH_TOKEN_SECONDS: ${{ vars.JWT_REFRESH_TOKEN_SECONDS || '86400' }}
+      MULTIPART_MAX_FILE_SIZE: ${{ vars.MULTIPART_MAX_FILE_SIZE || '20MB' }}
+      MULTIPART_MAX_REQUEST_SIZE: ${{ vars.MULTIPART_MAX_REQUEST_SIZE || '40MB' }}
+      COOKIE_SECURE: ${{ vars.COOKIE_SECURE || 'true' }}
+      COOKIE_SAME_SITE: ${{ vars.COOKIE_SAME_SITE || 'None' }}
+      LOGGING_LEVEL_ROOT: ${{ vars.LOGGING_LEVEL_ROOT || 'info' }}
+      LOGGING_LEVEL_APP: ${{ vars.LOGGING_LEVEL_APP || 'info' }}
+
+    steps:
+      - name: Checkout deployment files
+        uses: actions/checkout@v6
+
+      - name: Validate required secrets
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          required_names=(
+            EC2_HOST EC2_USER EC2_SSH_PRIVATE_KEY GHCR_USERNAME GHCR_TOKEN
+            FIREBASE_SERVICE_ACCOUNT_JSON DB_URL DB_USERNAME DB_PASSWORD JWT_SECRET
+            KAKAO_REST_API_KEY KAKAO_JAVASCRIPT_KEY NAVER_CLIENT_ID NAVER_CLIENT_SECRET
+            FIREBASE_WEB_API_KEY FIREBASE_WEB_AUTH_DOMAIN FIREBASE_WEB_PROJECT_ID
+            FIREBASE_WEB_STORAGE_BUCKET FIREBASE_WEB_MESSAGING_SENDER_ID
+            FIREBASE_WEB_APP_ID FIREBASE_VAPID_PUBLIC_KEY FRONT_DOMAIN BACK_DOMAIN
+          )
+
+          for name in "${required_names[@]}"; do
+            if [[ -z "${!name:-}" ]]; then
+              echo "::error::Required GitHub secret is missing: ${name}"
+              exit 1
+            fi
+          done
+
+      - name: Create deployment bundle
+        shell: bash
+        env:
+          APP_IMAGE: ${{ needs.publish.outputs.image }}:${{ github.sha }}
+        run: |
+          set -euo pipefail
+          mkdir -p .deploy/secrets
+
+          # 값 안의 따옴표, 역슬래시, 개행을 Docker Compose env_file 문법에 맞게 이스케이프한다.
+          write_env() {
+            local key="$1"
+            local value="$2"
+            value="${value//\\/\\\\}"
+            value="${value//\"/\\\"}"
+            value="${value//$'\n'/\\n}"
+            printf '%s="%s"\n' "$key" "$value" >> .deploy/.env
+          }
+
+          : > .deploy/.env
+          write_env APP_IMAGE "$APP_IMAGE"
+          write_env APP_PORT "$APP_PORT"
+          write_env DB_URL "$DB_URL"
+          write_env DB_USERNAME "$DB_USERNAME"
+          write_env DB_PASSWORD "$DB_PASSWORD"
+          write_env DB_CONNECTION_TIMEOUT "$DB_CONNECTION_TIMEOUT"
+          write_env DB_MAXIMUM_POOL_SIZE "$DB_MAXIMUM_POOL_SIZE"
+          write_env DB_MINIMUM_IDLE "$DB_MINIMUM_IDLE"
+          write_env REDIS_HOST "redis"
+          write_env REDIS_PORT "6379"
+          write_env REDIS_PASSWORD ""
+          write_env FRONT_DOMAIN "$FRONT_DOMAIN"
+          write_env BACK_DOMAIN "$BACK_DOMAIN"
+          write_env JWT_SECRET "$JWT_SECRET"
+          write_env JWT_ACCESS_TOKEN_SECONDS "$JWT_ACCESS_TOKEN_SECONDS"
+          write_env JWT_REFRESH_TOKEN_SECONDS "$JWT_REFRESH_TOKEN_SECONDS"
+          write_env KAKAO_REST_API_KEY "$KAKAO_REST_API_KEY"
+          write_env KAKAO_JAVASCRIPT_KEY "$KAKAO_JAVASCRIPT_KEY"
+          write_env KAKAO_NATIVE_APP_KEY "$KAKAO_NATIVE_APP_KEY"
+          write_env NAVER_CLIENT_ID "$NAVER_CLIENT_ID"
+          write_env NAVER_CLIENT_SECRET "$NAVER_CLIENT_SECRET"
+          write_env FIREBASE_WEB_API_KEY "$FIREBASE_WEB_API_KEY"
+          write_env FIREBASE_WEB_AUTH_DOMAIN "$FIREBASE_WEB_AUTH_DOMAIN"
+          write_env FIREBASE_WEB_PROJECT_ID "$FIREBASE_WEB_PROJECT_ID"
+          write_env FIREBASE_WEB_STORAGE_BUCKET "$FIREBASE_WEB_STORAGE_BUCKET"
+          write_env FIREBASE_WEB_MESSAGING_SENDER_ID "$FIREBASE_WEB_MESSAGING_SENDER_ID"
+          write_env FIREBASE_WEB_APP_ID "$FIREBASE_WEB_APP_ID"
+          write_env FIREBASE_VAPID_PUBLIC_KEY "$FIREBASE_VAPID_PUBLIC_KEY"
+          write_env FIREBASE_CREDENTIALS_PATH "file:/run/secrets/firebase-service-account.json"
+          write_env MULTIPART_MAX_FILE_SIZE "$MULTIPART_MAX_FILE_SIZE"
+          write_env MULTIPART_MAX_REQUEST_SIZE "$MULTIPART_MAX_REQUEST_SIZE"
+          write_env COOKIE_SECURE "$COOKIE_SECURE"
+          write_env COOKIE_SAME_SITE "$COOKIE_SAME_SITE"
+          write_env SERVER_PORT "8080"
+          write_env LOGGING_LEVEL_ROOT "$LOGGING_LEVEL_ROOT"
+          write_env LOGGING_LEVEL_APP "$LOGGING_LEVEL_APP"
+
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" \
+            > .deploy/secrets/firebase-service-account.json
+          cp docker-compose.yml .deploy/docker-compose.yml
+
+      - name: Configure SSH
+        shell: bash
+        run: |
+          set -euo pipefail
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/sadari_deploy_key
+          chmod 600 ~/.ssh/sadari_deploy_key
+          ssh-keyscan -p "$EC2_SSH_PORT" -H "$EC2_HOST" >> ~/.ssh/known_hosts
+
+      - name: Upload deployment bundle
+        shell: bash
+        run: |
+          set -euo pipefail
+          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
+            "$EC2_USER@$EC2_HOST" \
+            "mkdir -p ~/sadari/secrets"
+
+          scp -i ~/.ssh/sadari_deploy_key -P "$EC2_SSH_PORT" \
+            .deploy/.env \
+            .deploy/docker-compose.yml \
+            "$EC2_USER@$EC2_HOST:~/sadari/"
+
+          scp -i ~/.ssh/sadari_deploy_key -P "$EC2_SSH_PORT" \
+            .deploy/secrets/firebase-service-account.json \
+            "$EC2_USER@$EC2_HOST:~/sadari/secrets/"
+
+      - name: Deploy containers
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # 비공개 GHCR 패키지를 EC2에서 pull할 수 있도록 read:packages PAT를 표준입력으로만 전달한다.
+          printf '%s' "$GHCR_TOKEN" | \
+            ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
+              "$EC2_USER@$EC2_HOST" \
+              "docker login ghcr.io --username '$GHCR_USERNAME' --password-stdin"
+
+          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
+            "$EC2_USER@$EC2_HOST" \
+            "cd ~/sadari && chmod 600 .env secrets/firebase-service-account.json && docker compose pull app && docker compose up -d --remove-orphans"
+
+      - name: Verify deployment
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          # Spring Boot와 정적 프론트가 모두 올라오는 시간을 고려해 최대 2분 동안 실제 HTTP 응답을 확인한다.
+          for attempt in {1..24}; do
+            if ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
+              "$EC2_USER@$EC2_HOST" \
+              "curl --fail --silent --show-error http://127.0.0.1:${APP_PORT}/ > /dev/null"; then
+              echo "Sadari deployment is healthy."
+              exit 0
+            fi
+
+            sleep 5
+          done
+
+          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
+            "$EC2_USER@$EC2_HOST" \
+            "cd ~/sadari && docker compose ps && docker compose logs --tail=200 app"
+          exit 1
