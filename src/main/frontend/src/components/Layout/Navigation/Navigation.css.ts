@@ -14,7 +14,7 @@ export const navContainer = style({
     alignItems: "center",
     background: '#fff',
     padding: '0 clamp(16px, 8vw, 50px)',
-    boxShadow: "rgba(100, 100, 111, 0.2) 1px 9px 29px 0px",
+    boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
 });
 
@@ -33,8 +33,8 @@ export const navigation = style({
 });
 
 export const navLink = style({
-    width: "40px",
-    height: "40px",
+    width: "24px",
+    height: "24px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
@@ -46,6 +46,7 @@ export const navLink__set = style({
     height: '70px',
     border: '5px solid #fff',
     backgroundColor: vars.color.gray100,
+    boxShadow: 'rgb(0 0 0 / 7%) 0px -9px 18px 0px',
     marginBottom: '35px'
 })
 
@@ -111,11 +112,8 @@ export const drawer = style({
     zIndex: 1,
     width: "min(82vw, 320px)",
     height: "100%",
-    padding: "28px 20px",
-    border: "1px solid #cfd4d9",
-    borderRight: 0,
+    padding: "28px 20px 0 20px",
     backgroundColor: "#ffffff",
-    boxShadow: "none",
     boxSizing: "border-box",
     transform: "translateX(100%)",
     transition: "transform 220ms ease",
@@ -126,6 +124,8 @@ export const drawer = style({
 
 export const drawerOpen = style({
     transform: "translateX(0)",
+    boxShadow: '-13px 0 32px rgba(0, 0, 0, 0.1)',
+
 });
 
 export const drawerProfileSummaryButton = style({
@@ -203,7 +203,7 @@ export const drawerLogoutButton = style({
     borderRadius: "999px",
     backgroundColor: "#ffffff",
     color: "#d84a4a",
-    fontFamily: vars.font.middle,
+    fontFamily: vars.font.semibold,
     fontSize: "11px",
     cursor: "pointer",
     whiteSpace: "nowrap",
@@ -224,7 +224,7 @@ export const drawerMenuButton = style({
     borderRadius: 0,
     backgroundColor: "transparent",
     color: vars.color.black,
-    fontFamily: vars.font.middle,
+    fontFamily: vars.font.semibold,
     fontSize: "14px",
     textAlign: "left",
     cursor: "pointer",
@@ -234,56 +234,4 @@ export const drawerMenuDisabled = style({
     color: vars.color.gray500,
     backgroundColor: "transparent",
     cursor: "default",
-});
-
-export const drawerFooter = style({
-    marginTop: "auto",
-    display: "flex",
-    justifyContent: "flex-start",
-    alignItems: "center",
-});
-
-export const drawerAlimButton = style({
-    position: "relative",
-    width: "40px",
-    height: "40px",
-    padding: 0,
-    border: 0,
-    borderRadius: "50%",
-    backgroundColor: "#ffffff",
-    color: vars.color.black,
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    cursor: "pointer",
-});
-
-export const drawerAlimBadge = style({
-    position: "absolute",
-    top: "-3px",
-    right: "-5px",
-    minWidth: "18px",
-    height: "18px",
-    padding: "0 5px",
-    borderRadius: "999px",
-    backgroundColor: "#ef4444",
-    color: "#ffffff",
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
-    fontFamily: vars.font.middle,
-    fontSize: "10px",
-    lineHeight: 1,
-    boxSizing: "border-box",
-    pointerEvents: "none",
-});
-
-export const drawerAlimIcon = style({
-    width: "20px",
-    height: "20px",
-    fill: "none",
-    stroke: "currentColor",
-    strokeWidth: 2,
-    strokeLinecap: "round",
-    strokeLinejoin: "round",
 });

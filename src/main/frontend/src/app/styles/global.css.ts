@@ -22,6 +22,11 @@ globalFontFace("PretendardSemiBold", {
   fontWeight: 600,
 });
 
+globalFontFace("PretendardMedium", {
+  src: 'url("/fonts/PretendardVariable.woff2") format("woff2")',
+  fontWeight: 500,
+});
+
 globalFontFace("PretendardRegular", {
   src: 'url("/fonts/PretendardVariable.woff2") format("woff2")',
   fontWeight: 400,
