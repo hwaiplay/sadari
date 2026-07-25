@@ -1,0 +1,88 @@
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+    driver-class-name: oracle.jdbc.OracleDriver
+    hikari:
+      # 운영 DB 장애 시 요청 스레드가 오래 묶이지 않도록 커넥션 획득 대기시간을 1분으로 제한한다.
+      connection-timeout: ${DB_CONNECTION_TIMEOUT:60000}
+      maximum-pool-size: ${DB_MAXIMUM_POOL_SIZE:10}
+      minimum-idle: ${DB_MINIMUM_IDLE:2}
+  application:
+    name: sadari
+  config:
+    activate:
+      on-profile: prod
+  session:
+    store-type: redis
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT:6379}
+      password: ${REDIS_PASSWORD:}
+  messages:
+    basename: messages
+    encoding: UTF-8
+  servlet:
+    multipart:
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE:20MB}
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:40MB}
+
+mybatis:
+  mapper-locations: classpath:org/our/sadari/**/**/*.xml
+  type-aliases-package: org.our.sadari.**.**.vo
+  configuration:
+    map-underscore-to-camel-case: true
+
+domain:
+  front: ${FRONT_DOMAIN}
+  back: ${BACK_DOMAIN}
+
+kakao:
+  redirect:
+    uri: /api/oauth/callback/kakao
+  key:
+    restApi: ${KAKAO_REST_API_KEY}
+    javaScript: ${KAKAO_JAVASCRIPT_KEY}
+    nativeApp: ${KAKAO_NATIVE_APP_KEY:}
+
+naver:
+  key:
+    clientId: ${NAVER_CLIENT_ID}
+    clientSecret: ${NAVER_CLIENT_SECRET}
+
+firebase:
+  web:
+    # 브라우저 Push 구독에 쓰는 VAPID public key이다. public key지만 환경별 교체를 위해 환경변수로 관리한다.
+    api-key: ${FIREBASE_WEB_API_KEY}
+    auth-domain: ${FIREBASE_WEB_AUTH_DOMAIN}
+    project-id: ${FIREBASE_WEB_PROJECT_ID}
+    storage-bucket: ${FIREBASE_WEB_STORAGE_BUCKET}
+    messaging-sender-id: ${FIREBASE_WEB_MESSAGING_SENDER_ID}
+    app-id: ${FIREBASE_WEB_APP_ID}
+    vapid-public-key: ${FIREBASE_VAPID_PUBLIC_KEY}
+  admin:
+    # FCM 서버 발송에 쓰는 service account json 경로이다. json 원문은 Git이 아니라 EC2/Docker secret/환경별 파일로 관리한다.
+    credentials-path: ${FIREBASE_CREDENTIALS_PATH}
+
+jwt:
+  secret_key: ${JWT_SECRET}
+  access-token-validity-in-seconds: ${JWT_ACCESS_TOKEN_SECONDS:1800}
+  refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_SECONDS:86400}
+
+app:
+  cookie:
+    # HTTPS 운영 환경에서는 true가 맞다. 로컬 테스트용 prod 실행이 필요하면 환경변수로 false를 줄 수 있다.
+    secure: ${COOKIE_SECURE:true}
+    # 프론트와 백엔드가 서로 다른 사이트면 None, 같은 사이트면 Lax를 사용한다.
+    same-site: ${COOKIE_SAME_SITE:None}
+
+server:
+  port: ${SERVER_PORT:8080}
+  forward-headers-strategy: framework
+
+logging:
+  level:
+    root: ${LOGGING_LEVEL_ROOT:info}
+    org.our.sadari: ${LOGGING_LEVEL_APP:info}

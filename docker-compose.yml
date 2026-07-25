@@ -16,6 +16,8 @@ services:
       - "${APP_PORT:-8080}:8080"
     volumes:
       - sadari-uploads:/app/uploads
+      # Firebase 서비스 계정 원문은 이미지에 포함하지 않고 EC2 배포 디렉터리의 읽기 전용 파일로 주입한다.
+      - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
     depends_on:
       - redis
 
