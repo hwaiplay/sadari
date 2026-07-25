@@ -1,8 +1,17 @@
 import { message } from "@/app/messages/message";
+import {
+  FIREBASE_PUSH_ENABLED_EVENT,
+  subscribeFirebaseForegroundMessages,
+} from "@/app/pwa/firebaseMessaging";
 import { queryClient } from "@/app/query/queryClient";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { getUnreadAlimCntApi } from "@/features/Alim/api/alimApi";
+import {
+  isUnreadAlimCntChangedEvent,
+  UNREAD_ALIM_CNT_CHANGED_EVENT,
+} from "@/features/Alim/lib/alimEvents";
 import { logoutApi } from "@/features/Auth/api/authApi";
+import { getPushConfigApi } from "@/features/Push/api/pushApi";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
 import {
@@ -10,10 +19,16 @@ import {
   USER_PROFILE_UPDATED_EVENT,
 } from "@/features/User/lib/profileEvents";
 import { clsx } from "clsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
-import { hamburgerButton, hamburgerIcon } from "./Header.css";
+import {
+  headerAlimBadge,
+  headerAlimButton,
+  headerAlimIcon,
+  hamburgerButton,
+  hamburgerIcon,
+} from "./Header.css";
 import * as drawerStyles from "../Navigation/Navigation.css";
 
 const MENU_ITEMS = [
@@ -34,6 +49,15 @@ function HeaderMenuDrawer() {
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
   const portalTarget = typeof document === "undefined" ? null : document.body;
+
+  const refreshUnreadAlimCnt = useCallback(async () => {
+    try {
+      const response = await getUnreadAlimCntApi();
+      setUnreadAlimCnt(response.data?.unreadCnt ?? 0);
+    } catch {
+      // 알림 배지는 보조 정보이므로 조회 실패 시 기존 숫자를 유지한다.
+    }
+  }, []);
 
   const handleLogout = async () => {
     const confirmed = await sweetConfirm({
@@ -86,29 +110,77 @@ function HeaderMenuDrawer() {
   }, []);
 
   useEffect(() => {
+    void refreshUnreadAlimCnt();
+
+    const handleServiceWorkerMessage = (event: MessageEvent) => {
+      if (event.data?.type === "SADARI_ALIM_RECEIVED") {
+        void refreshUnreadAlimCnt();
+      }
+    };
+
+    const handleWindowFocus = () => {
+      void refreshUnreadAlimCnt();
+    };
+
+    const handleUnreadAlimCntChanged = (event: Event) => {
+      if (isUnreadAlimCntChangedEvent(event)) {
+        setUnreadAlimCnt(event.detail);
+      }
+    };
+
+    navigator.serviceWorker?.addEventListener("message", handleServiceWorkerMessage);
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
+
+    return () => {
+      navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
+    };
+  }, [refreshUnreadAlimCnt]);
+
+  useEffect(() => {
+    let unsubscribe: (() => void) | undefined;
     let ignore = false;
 
-    if (!isDrawerOpen) {
-      return;
-    }
+    const initializeForegroundMessages = async () => {
+      if (!("Notification" in window) || Notification.permission !== "granted") {
+        return;
+      }
 
-    getUnreadAlimCntApi()
-      .then((response) => {
-        if (!ignore) {
-          setUnreadAlimCnt(response.data?.unreadCnt ?? 0);
+      try {
+        const response = await getPushConfigApi();
+        const unsubscribeForegroundMessages =
+          await subscribeFirebaseForegroundMessages(
+            response.data,
+            () => void refreshUnreadAlimCnt(),
+          );
+
+        if (ignore) {
+          unsubscribeForegroundMessages();
+          return;
         }
-      })
-      .catch(() => {
-        // 알림 배지는 보조 정보이므로 실패해도 메뉴 사용을 막지 않고 숫자만 숨긴다.
-        if (!ignore) {
-          setUnreadAlimCnt(0);
-        }
-      });
+
+        unsubscribe?.();
+        unsubscribe = unsubscribeForegroundMessages;
+      } catch {
+        // 포그라운드 리스너 초기화 실패는 기본 화면 사용을 막지 않는다.
+      }
+    };
+
+    const handlePushEnabled = () => {
+      void initializeForegroundMessages();
+    };
+
+    void initializeForegroundMessages();
+    window.addEventListener(FIREBASE_PUSH_ENABLED_EVENT, handlePushEnabled);
 
     return () => {
       ignore = true;
+      unsubscribe?.();
+      window.removeEventListener(FIREBASE_PUSH_ENABLED_EVENT, handlePushEnabled);
     };
-  }, [isDrawerOpen]);
+  }, [refreshUnreadAlimCnt]);
 
   const drawer = (
     <div
@@ -179,34 +251,28 @@ function HeaderMenuDrawer() {
             </button>
           ))}
         </div>
-        <div className={drawerStyles.drawerFooter}>
-          <button
-            className={drawerStyles.drawerAlimButton}
-            type="button"
-            aria-label={message("frontend.alim.title")}
-            onClick={() => {
-              // 알림 아이콘은 드로어 안의 하단 액션이므로 먼저 드로어를 닫고 알림 목록 화면으로 이동합니다.
-              setIsDrawerOpen(false);
-              navigate("/alim");
-            }}
-          >
-            <svg className={drawerStyles.drawerAlimIcon} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-              <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-            </svg>
-            {unreadAlimCnt > 0 ? (
-              <span className={drawerStyles.drawerAlimBadge}>
-                {unreadAlimCnt > 99 ? "99+" : unreadAlimCnt}
-              </span>
-            ) : null}
-          </button>
-        </div>
       </aside>
     </div>
   );
 
   return (
     <>
+      <button
+        className={headerAlimButton}
+        type="button"
+        aria-label={message("frontend.alim.title")}
+        onClick={() => navigate("/alim")}
+      >
+        <svg className={headerAlimIcon} viewBox="0 0 24 24" aria-hidden="true">
+          <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
+          <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+        </svg>
+        {unreadAlimCnt > 0 ? (
+          <span className={headerAlimBadge}>
+            {unreadAlimCnt > 99 ? "99+" : unreadAlimCnt}
+          </span>
+        ) : null}
+      </button>
       <button
         className={hamburgerButton}
         type="button"

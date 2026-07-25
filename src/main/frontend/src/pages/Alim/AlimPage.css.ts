@@ -45,7 +45,7 @@ export const readAllButton = style({
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "12px",
   cursor: "pointer",
   whiteSpace: "nowrap",
@@ -150,7 +150,7 @@ export const itemText = style({
 
 export const itemTitle = style({
   margin: 0,
-  fontFamily: vars.font.middle,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   lineHeight: 1.35,
   color: vars.color.black,
