@@ -23,8 +23,9 @@ export const header = style({
 export const title = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "24px",
+  fontSize: "22px",
   lineHeight: 1.25,
+  letterSpacing: '-0.5px',
   color: vars.color.black,
 });
 
@@ -161,7 +162,7 @@ export const itemContent = style({
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   lineHeight: 1.45,
-  letterSpacing: '-1.4px',
+  letterSpacing: '-0.5px',
   color: vars.color.black,
 });
 
