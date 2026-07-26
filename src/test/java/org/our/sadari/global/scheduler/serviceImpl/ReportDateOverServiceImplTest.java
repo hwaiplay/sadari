@@ -18,8 +18,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.ReportDateOverMapper;
 import org.our.sadari.global.scheduler.service.ReportDateOverServiceImpl;
+import org.our.sadari.global.scheduler.service.SchedulerLogService;
 import org.our.sadari.report.dto.ReportDto;
 
 /**
@@ -36,6 +38,9 @@ class ReportDateOverServiceImplTest {
     @Mock
     private AlimService alimService;
 
+    @Mock
+    private SchedulerLogService schedulerLogService;
+
     private ReportDateOverServiceImpl schedulerService;
 
     /**
@@ -45,7 +50,13 @@ class ReportDateOverServiceImplTest {
      */
     @BeforeEach
     void setUp() {
-        schedulerService = new ReportDateOverServiceImpl(reportDateOverMapper, alimService, 100);
+        schedulerService = new ReportDateOverServiceImpl(
+                reportDateOverMapper
+              , alimService
+              , schedulerLogService
+              , 100
+        );
+        when(schedulerLogService.setSchedulerLog(any())).thenReturn(1L);
     }
 
     /**
@@ -77,6 +88,14 @@ class ReportDateOverServiceImplTest {
               , replaceMapCaptor.capture()
         );
         assertEquals("나미야 잡화점의 기적", replaceMapCaptor.getValue().get("bookTitl"));
+
+        ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> runCaptor =
+                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
+        verify(schedulerLogService).uptSchedulerLog(runCaptor.capture());
+        assertEquals(Constant.SCHEDULER_EXEC_SUCCESS, runCaptor.getValue().getExecStat());
+        assertEquals(1, runCaptor.getValue().getTrgtCntt());
+        assertEquals(1, runCaptor.getValue().getSuccCntt());
+        assertEquals(0, runCaptor.getValue().getFailCntt());
     }
 
     /**
@@ -113,6 +132,41 @@ class ReportDateOverServiceImplTest {
               , eq(11L)
               , any()
         );
+
+        ArgumentCaptor<SchedulerLogDto.SchedulerFailDto> failCaptor =
+                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerFailDto.class);
+        verify(schedulerLogService).setSchedulerFail(failCaptor.capture());
+        assertEquals(1L, failCaptor.getValue().getRunxNumb());
+        assertEquals(Constant.SCHEDULER_FAIL_EXCEPTION, failCaptor.getValue().getFailType());
+        assertEquals(IllegalStateException.class.getName(), failCaptor.getValue().getErroType());
+
+        ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> runCaptor =
+                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
+        verify(schedulerLogService).uptSchedulerLog(runCaptor.capture());
+        assertEquals(Constant.SCHEDULER_EXEC_PARTIAL, runCaptor.getValue().getExecStat());
+        assertEquals(2, runCaptor.getValue().getTrgtCntt());
+        assertEquals(1, runCaptor.getValue().getSuccCntt());
+        assertEquals(1, runCaptor.getValue().getFailCntt());
+    }
+
+    /**
+     * 조회 대상이 없을 때 실패 상세 없이 NO_DATA 상태로 실행 로그를 종료하는지 검증합니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Test
+    void sendReportDateOverAlimUpdatesNoDataStatus() {
+        when(reportDateOverMapper.getReportDateOverTargetList(100)).thenReturn(List.of());
+
+        schedulerService.sendReportDateOverAlim();
+
+        ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> runCaptor =
+                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
+        verify(schedulerLogService).uptSchedulerLog(runCaptor.capture());
+        assertEquals(Constant.SCHEDULER_EXEC_NO_DATA, runCaptor.getValue().getExecStat());
+        assertEquals(0, runCaptor.getValue().getTrgtCntt());
+        assertEquals(0, runCaptor.getValue().getSuccCntt());
+        assertEquals(0, runCaptor.getValue().getFailCntt());
     }
 
     /**

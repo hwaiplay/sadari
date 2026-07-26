@@ -1,7 +1,7 @@
 package org.our.sadari.global.scheduler.service;
 
 /**
- * 정기 작업이 수행할 업무를 정의하는 서비스 인터페이스입니다.
+ * 정기 작업이 수행할 업무를 정의하는 서비스 인터페이스.
  * 스케줄 실행 시각과 실제 업무 처리를 분리해 수동 실행이나 로그 관리 기능에서도 같은 업무를 재사용할 수 있게 합니다.
  *
  * @author Seunghyeon.Kang
