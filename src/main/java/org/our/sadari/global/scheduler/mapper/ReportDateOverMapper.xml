@@ -3,7 +3,8 @@
 <mapper namespace="org.our.sadari.global.scheduler.mapper.ReportDateOverMapper">
 
     <!--
-        목표 종료일이 오늘보다 이전인 READ 상태 독후감을 오래된 순서대로 조회한다.
+        목표 종료일이 오늘, 어제, 이틀 전인 READ 상태 독후감을 오래된 순서대로 조회한다.
+        REPT_ENDT에는 시간이 없는 yyyy-MM-dd 값만 저장되므로 오늘을 포함한 최근 3개 날짜를 48시간 알림 범위로 사용한다.
         ROWNUM 조건을 최외곽에 적용해 정렬된 전체 후보 중 최대 maxSize건만 JVM 메모리로 반환한다.
         이미 같은 독후감 링크로 REPORT_DATE_OVER 알림을 저장한 경우에는 다음 실행에서 다시 선택하지 않는다.
     -->
@@ -12,6 +13,7 @@
         <bind name="alimSituReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_REPORT" />
         <bind name="tempCodeReportDateOver" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPORT_DATE_OVER" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="lookbackDays" value="@org.our.sadari.global.common.constant.Constant@REPORT_DATE_OVER_LOOKBACK_DAYS" />
         SELECT REPT_NUMB
              , USER_NUMB
              , BOOK_TITL
@@ -30,7 +32,8 @@
                    AND T.USEE_YSNO = #{commYes}
                  WHERE R.REPT_STAT = #{reportStatRead}
                    AND R.REPT_ENDT IS NOT NULL
-                   AND R.REPT_ENDT <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+                   AND R.REPT_ENDT <![CDATA[>=]]> TO_CHAR(TRUNC(SYSDATE) - #{lookbackDays}, 'YYYY-MM-DD')
+                   AND R.REPT_ENDT <![CDATA[<=]]> TO_CHAR(TRUNC(SYSDATE), 'YYYY-MM-DD')
                    AND TRIM(B.BOOK_TITL) IS NOT NULL
                    AND NOT EXISTS (
                         SELECT 1

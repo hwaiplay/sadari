@@ -8,8 +8,7 @@ import org.springframework.scheduling.annotation.Schedules;
 import org.springframework.stereotype.Component;
 
 /**
- * 목표 독서기간 초과 알림 작업을 설정된 시간에 시작하는 스케줄러입니다.
- * 실행 시각만 관리하고 실제 대상 조회와 발송은 SchedulerService에 위임합니다.
+ * 스케줄러
  *
  * @author Seunghyeon.Kang
  */
@@ -21,6 +20,7 @@ public class Scheduler {
     private final ReportDateOverService reportDateOverService;
 
     /**
+     *
      * 매일 09:00부터 10:00까지 5분 간격으로 실행
      *
      * @author Seunghyeon.Kang
