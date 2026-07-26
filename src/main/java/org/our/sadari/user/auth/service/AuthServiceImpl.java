@@ -99,6 +99,8 @@ public class AuthServiceImpl implements AuthService {
             } else {
                 userDto.setUserNumb(savedUser.getUserNumb());
                 userDto.setUserRole(savedUser.getUserRole());
+                // 기존 사용자가 프로필에서 수정한 닉네임이 있으면 Kakao 기본 닉네임으로 다시 덮지 않고 DB 값을 사용한다.
+                userDto.setUserNick(savedUser.getUserNick());
 
                 // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
                 if (StringUtil.isEmpty(savedUser.getProfNumb())) {
@@ -117,11 +119,15 @@ public class AuthServiceImpl implements AuthService {
         String accessToken = jwtProvider.createAccessToken(userDto.getUserNumb(), userDto.getUserRole());
         String refreshToken = jwtProvider.createRefreshToken(userDto.getUserNumb());
 
-        // 아래 처리 단계의 업무 목적을 설명한다.
-        tokenRedisService.setRefreshToken(
-                userDto.getUserNumb(),
-                refreshToken,
-                jwtProvider.getRefreshTokenValiditySeconds()
+        /*
+         * 알림 발송 시 발신자 닉네임을 다시 DB에서 조회하지 않도록 로그인 시점의 최신 닉네임을 Refresh Token과 함께 저장한다.
+         * 두 값은 TokenRedisService의 Lua 스크립트에서 같은 TTL로 원자 반영된다.
+         */
+        tokenRedisService.setLoginUserInfo(
+                userDto.getUserNumb()
+              , refreshToken
+              , userDto.getUserNick()
+              , jwtProvider.getRefreshTokenValiditySeconds()
         );
 
         LoginHistoryDto loginHistoryDto = new LoginHistoryDto();

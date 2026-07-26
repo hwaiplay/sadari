@@ -2,10 +2,10 @@ package org.our.sadari.global.security.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
+import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.GrantedAuthority;
@@ -13,7 +13,6 @@ import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.stereotype.Component;
 import org.springframework.security.core.Authentication;
 
-import java.security.Key;
 import java.util.Date;
 import java.util.List;
 import java.util.UUID;
@@ -27,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class JwtProvider {
 
-    private Key secretKey;
+    private SecretKey secretKey;
 
     private final String secret;
     private final long accessTokenValidityMilliSeconds;
@@ -72,14 +71,13 @@ public class JwtProvider {
         Date now = new Date();
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userNumb))
-                .setId(UUID.randomUUID().toString())
+                .subject(String.valueOf(userNumb))
+                .id(UUID.randomUUID().toString())
                 .claim("role", role)
-                // jti(고유 식별자) 생성을 위한 이중 호출 (마지막에 설정된 UUID가 최종 jti로 등록됨)
-                .setId(UUID.randomUUID().toString())
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
+                // 0.13 API의 알고리즘 레지스트리를 명시해 서명 알고리즘을 HS256으로 고정한다.
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -94,10 +92,10 @@ public class JwtProvider {
         Date now = new Date();
 
         return Jwts.builder()
-                .setSubject(String.valueOf(userNumb))
-                .setIssuedAt(now)
-                .setExpiration(new Date(now.getTime() + refreshTokenValidityMilliSeconds))
-                .signWith(secretKey, SignatureAlgorithm.HS256)
+                .subject(String.valueOf(userNumb))
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + refreshTokenValidityMilliSeconds))
+                .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
@@ -110,10 +108,14 @@ public class JwtProvider {
      */
     public boolean validateToken(String token) {
         try {
-            Jwts.parserBuilder()
-                    .setSigningKey(secretKey)
+            /*
+             * JJWT 0.13에서는 parserBuilder가 parser로 변경되었다.
+             * verifyWith로 검증 키를 고정하고 서명된 Claims만 허용해 unsigned JWT가 통과하지 못하게 한다.
+             */
+            Jwts.parser()
+                    .verifyWith(secretKey)
                     .build()
-                    .parseClaimsJws(token);
+                    .parseSignedClaims(token);
             return true;
         } catch (Exception e) {
             // 서명 불일치, 만료, 형식 오류 등의 예외 발생 시 검증 실패 처리한다.
@@ -183,11 +185,11 @@ public class JwtProvider {
      * @return 추출된 Claims 객체
      */
     private Claims getClaims(String token) {
-        return Jwts.parserBuilder()
-                .setSigningKey(secretKey)
+        return Jwts.parser()
+                .verifyWith(secretKey)
                 .build()
-                .parseClaimsJws(token)
-                .getBody();
+                .parseSignedClaims(token)
+                .getPayload();
     }
 
     /**

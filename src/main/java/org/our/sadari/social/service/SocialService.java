@@ -42,7 +42,7 @@ public interface SocialService {
      * 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소합니다.
      *
      * @author Seunghyeon.Kang
-     * @param req 사용자 번호, 대상 유형, 대상 번호
+     * @param req 사용자 번호, 대상 유형, 대상 번호와 화면이 조회한 대상 작성자 번호
      * @return 변경 후 좋아요 상세 정보
      */
     ResultData setLike(SocialDto.LikeDto req);

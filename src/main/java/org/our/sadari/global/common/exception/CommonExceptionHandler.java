@@ -25,6 +25,7 @@ import org.springframework.transaction.TransactionSystemException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MultipartException;
 
 /**
  * 애플리케이션 전역에서 발생하는 예외를 포착하여 일관된 API 응답(ResultData)으로 변환하는 전역 예외 처리 핸들러.
@@ -72,6 +73,24 @@ public class CommonExceptionHandler {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST));
+    }
+
+    /**
+     * multipart 요청 크기 초과 또는 본문 파싱 실패를 허용하지 않은 이미지 요청으로 변환한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param e multipart 파싱 과정에서 발생한 예외
+     * @param locale 사용자 언어 환경
+     * @return 이미지 업로드 검증 실패 응답
+     */
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ResultData> handleMultipartException(
+            MultipartException e
+          , Locale locale) {
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID));
     }
 
     /**

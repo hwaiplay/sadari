@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * KakaoAuthProvider 클래스의 역할과 책임을 정의한다.
@@ -35,6 +36,24 @@ public class KakaoAuthProvider {
     private String KAKAO_CLIENT_ID;
 
     /**
+     * yml의 백엔드 도메인, 콜백 경로와 카카오 REST API 키로 로그인 인가 URL을 생성한다.
+     *
+     * @author Seunghyeon.Kang
+     * @return 카카오 로그인 동의 화면 URL
+     */
+    public String getKakaoAuthorizationUrl() {
+        return UriComponentsBuilder
+                .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
+                .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
+                .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
+                .queryParam("response_type", "code")
+                .queryParam("scope", "profile_nickname,profile_image")
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    /**
      * getKakaoToken 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
      *
      * @author Seunghyeon.Kang
@@ -51,7 +70,7 @@ public class KakaoAuthProvider {
         MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
         params.add(AuthConstant.KAKAO_GRANT_TYPE, AuthConstant.KAKAO_AUTHORIZATION_CODE);
         params.add(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID);
-        params.add(AuthConstant.KAKAO_REDIRECT_URI, BACK_DOMAIN + KAKAO_REDIRECT_URI);
+        params.add(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri());
         params.add(AuthConstant.KAKAO_CODE, code);
 
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
@@ -105,5 +124,17 @@ public class KakaoAuthProvider {
             log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
             throw e;
         }
+    }
+
+    /**
+     * yml의 백엔드 도메인과 콜백 경로 사이의 슬래시를 하나로 정규화한다.
+     *
+     * @author Seunghyeon.Kang
+     * @return 카카오 콘솔에 등록할 전체 OAuth 콜백 URI
+     */
+    private String getKakaoRedirectUri() {
+        String normalizedDomain = BACK_DOMAIN.replaceAll("/+$", "");
+        String normalizedPath = KAKAO_REDIRECT_URI.replaceAll("^/+", "");
+        return normalizedDomain + "/" + normalizedPath;
     }
 }

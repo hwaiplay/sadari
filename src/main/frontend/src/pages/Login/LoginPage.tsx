@@ -1,5 +1,4 @@
 import { message } from "@/app/messages/message";
-import { Link } from "react-router-dom";
 import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
 
 /**
@@ -9,10 +8,6 @@ import { content, kakaoLoginBtn, loginContainer, title } from "./Login.css";
  * @return 로그인 페이지 컴포넌트
  */
 function LoginPage() {
-  const REST_API_KEY = import.meta.env.VITE_KAKAO_REST_API_KEY;
-  const REDIRECT_URI = "http://localhost:8080/api/oauth/callback/kakao";
-  const KAKAO_AUTH_URL = `https://kauth.kakao.com/oauth/authorize?client_id=${REST_API_KEY}&redirect_uri=${REDIRECT_URI}&response_type=code&scope=profile_nickname,profile_image`;
-
   return (
     <main className={loginContainer}>
       <div className={content}>
@@ -23,9 +18,9 @@ function LoginPage() {
         <h1 className={title}>
           {message("frontend.auth.loginCopy")}
         </h1>
-        <Link to={KAKAO_AUTH_URL} className={kakaoLoginBtn}>
+        <a href="/api/oauth/kakao" className={kakaoLoginBtn}>
           {message("frontend.auth.kakaoStart")}
-        </Link>
+        </a>
       </div>
     </main>
   );

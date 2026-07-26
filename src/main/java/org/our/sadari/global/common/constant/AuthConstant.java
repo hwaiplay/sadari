@@ -28,4 +28,6 @@ public class AuthConstant {
     public static final String KAKAO_AUTHORIZATION_CODE = "authorization_code";
     // 아래 처리 단계의 업무 목적을 설명한다.
     public static final String KAKAO_AUTHORIZATION_URL = "https://kauth.kakao.com/oauth/token";
+    // 카카오 로그인 동의 화면으로 이동할 OAuth 인가 Endpoint이다.
+    public static final String KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 }
