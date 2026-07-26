@@ -260,7 +260,7 @@ function AlimPage() {
               key={`${alim.userNumb}-${alim.alimNumb}`}
             >
               <span className={getAlimIconWrapClass(alim.alimIconName)} aria-hidden="true">
-                {renderAlimIcon(alim.alimIconName)}
+                <img src={`/img/icons/noti-${alim.alimIconName}.svg`} alt={"icon"} />
               </span>
               <span className={styles.itemText}>
                 <span className={styles.itemContent}>{alim.alimCont}</span>
