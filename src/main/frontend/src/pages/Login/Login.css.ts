@@ -1,13 +1,112 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "../../app/styles/tokens.css";
 
-export const loginContainer = style({
-  backgroundImage: "url(img/common/background-login.png)",
-  backgroundRepeat: "no-repeat",
-  backgroundSize: "cover",
-  paddingTop: "100px",
-  height: "100svh",
+const rollUp = keyframes({
+  from: {
+    transform: "translate3d(0, 0, 0)",
+  },
+  to: {
+    transform: "translate3d(0, -50%, 0)",
+  },
 });
+
+const rollDown = keyframes({
+  from: {
+    transform: "translate3d(0, -50%, 0)",
+  },
+  to: {
+    transform: "translate3d(0, 0, 0)",
+  },
+});
+
+export const loginContainer = style({
+  position: "relative",
+  height: "100svh",
+  overflow: "hidden"
+});
+
+export const background  = style({
+  position: "absolute",
+  inset: 0,
+})
+
+export const background_img_container  = style({
+  display: "flex",
+  gap: "18px",
+  height: "100%",
+  paddingInline: "16px",
+  overflow: "hidden",
+  boxSizing: "border-box",
+})
+
+export const background_img_column = style({
+  flex: "1 1 0",
+  minWidth: 0,
+  height: "100%",
+  overflow: "hidden",
+});
+
+const background_img_track = style({
+  display: "flex",
+  flexDirection: "column",
+  width: "100%",
+  willChange: "transform",
+});
+
+export const background_img_track_up = style([
+  background_img_track,
+  {
+    animation: `${rollUp} 55s linear infinite`,
+
+    "@media": {
+      "(prefers-reduced-motion: reduce)": {
+        animation: "none",
+      },
+    },
+  },
+]);
+
+export const background_img_track_down = style([
+  background_img_track,
+  {
+    transform: "translate3d(0, -12.5%, 0)",
+    animation: `${rollDown} 55s linear infinite`,
+    animationDelay: "-41.25s",
+
+    "@media": {
+      "(prefers-reduced-motion: reduce)": {
+        animation: "none",
+      },
+    },
+  },
+]);
+
+export const background_img_track_up_delayed = style([
+  background_img_track_up,
+  {
+    transform: "translate3d(0, -25%, 0)",
+    animationDelay: "-27.5s",
+  },
+]);
+
+export const background_img = style({
+  display: "block",
+  width: "100%",
+  height: "auto",
+  flexShrink: 0,
+});
+
+export const background_img_overlay = style({
+  position: "absolute",
+  top: '0',
+  left:"0",
+  background: "linear-gradient(0deg, rgba(194, 194, 194, 0.8) 0%, rgba(219, 219, 219, 0.6) 71%, rgba(255, 255, 255, 0) 99%)",
+  backdropFilter: "blur(6px)",
+  width: "100%",
+  height: "100%",
+  zIndex: "1"
+})
+
 
 export const content = style({
   position: "absolute",
@@ -18,13 +117,14 @@ export const content = style({
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  gap: "45px",
+  gap: "24px",
   width: "100%",
+  zIndex:"2"
 });
 
 export const title = style({
   fontSize: "18px",
-  fontWeight: 700,
+  fontFamily: vars.font.heading,
   lineHeight: 1.3,
   whiteSpace: "pre-line",
   textAlign: "center",
@@ -34,12 +134,14 @@ export const kakaoLoginBtn = style({
   backgroundColor: "#FEE500",
   color: "#000000",
   fontSize: vars.fontSize.body,
+  fontFamily: vars.font.semibold,
   width: "300px",
   height: "40px",
   textDecoration: "none",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: vars.radius.md,
+  borderRadius: vars.radius.sm,
   overflow: "hidden",
+  marginTop:"16px"
 });
