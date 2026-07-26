@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.global.scheduler.mapper.ReportDateOverMapper">
+
+    <!--
+        목표 종료일이 오늘보다 이전인 READ 상태 독후감을 오래된 순서대로 조회한다.
+        ROWNUM 조건을 최외곽에 적용해 정렬된 전체 후보 중 최대 maxSize건만 JVM 메모리로 반환한다.
+        이미 같은 독후감 링크로 REPORT_DATE_OVER 알림을 저장한 경우에는 다음 실행에서 다시 선택하지 않는다.
+    -->
+    <select id="getReportDateOverTargetList" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="alimSituReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_REPORT" />
+        <bind name="tempCodeReportDateOver" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPORT_DATE_OVER" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT REPT_NUMB
+             , USER_NUMB
+             , BOOK_TITL
+          FROM (
+                SELECT R.REPT_NUMB
+                     , R.USER_NUMB
+                     , B.BOOK_TITL
+                  FROM TM_REPORT R
+            INNER JOIN TM_BKINFO B
+                    ON B.BOOK_NUMB = R.BOOK_NUMB
+            INNER JOIN TM_USERXM U
+                    ON U.USER_NUMB = R.USER_NUMB
+            INNER JOIN TB_ALTEMP T
+                    ON T.ALIM_SITU = #{alimSituReport}
+                   AND T.TEMP_CODE = #{tempCodeReportDateOver}
+                   AND T.USEE_YSNO = #{commYes}
+                 WHERE R.REPT_STAT = #{reportStatRead}
+                   AND R.REPT_ENDT IS NOT NULL
+                   AND R.REPT_ENDT <![CDATA[<]]> TO_CHAR(SYSDATE, 'YYYY-MM-DD')
+                   AND TRIM(B.BOOK_TITL) IS NOT NULL
+                   AND NOT EXISTS (
+                        SELECT 1
+                          FROM TB_ALIMXX A
+                         WHERE A.USER_NUMB = R.USER_NUMB
+                           AND A.ALIM_SITU = T.ALIM_SITU
+                           AND A.TEMP_CODE = T.TEMP_CODE
+                           AND A.LINK_URLX = T.LINK_URLX || TO_CHAR(R.REPT_NUMB)
+                   )
+              ORDER BY R.REPT_ENDT ASC
+                     , R.REPT_NUMB ASC
+               )
+         WHERE ROWNUM <![CDATA[<=]]> #{maxSize}
+    </select>
+</mapper>
