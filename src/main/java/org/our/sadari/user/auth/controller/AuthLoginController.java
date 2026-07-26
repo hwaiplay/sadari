@@ -15,6 +15,7 @@ import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -45,6 +46,7 @@ public class AuthLoginController {
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
 
     private final AuthService authService;
+    private final KakaoAuthProvider kakaoAuthProvider;
     private final JwtProvider jwtProvider;
     private final TokenRedisService tokenRedisService;
     private final UserMapper userMapper;
@@ -64,6 +66,19 @@ public class AuthLoginController {
 
     @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
+
+    /**
+     * yml 설정으로 생성한 카카오 OAuth 인가 화면으로 브라우저를 이동시킨다.
+     *
+     * @author Seunghyeon.Kang
+     * @param response 카카오 인가 화면으로 리다이렉트할 HTTP 응답
+     * @throws java.io.IOException 리다이렉트 응답 기록 실패
+     */
+    @GetMapping("/kakao")
+    @Operation(summary = "카카오 로그인 시작", description = "서버 설정으로 카카오 OAuth 인가 URL을 생성해 로그인 화면으로 이동한다.")
+    public void getKakaoAuthorization(HttpServletResponse response) throws java.io.IOException {
+        response.sendRedirect(kakaoAuthProvider.getKakaoAuthorizationUrl());
+    }
 
     /**
      * tokenCheck 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
@@ -184,10 +199,11 @@ public class AuthLoginController {
         String newRefreshToken = jwtProvider.createRefreshToken(userNumb);
 
         // 신규 발급된 Refresh Token을 Redis 저장소에 저장(RTR 패턴)하고, 쿠키에도 새로 발급된 토큰들을 내려준다.
-        tokenRedisService.setRefreshToken(
-                userNumb,
-                newRefreshToken,
-                jwtProvider.getRefreshTokenValiditySeconds()
+        tokenRedisService.setLoginUserInfo(
+                userNumb
+              , newRefreshToken
+              , savedUser.getUserNick()
+              , jwtProvider.getRefreshTokenValiditySeconds()
         );
 
         addTokenCookies(response, newAccessToken, newRefreshToken);
@@ -219,7 +235,7 @@ public class AuthLoginController {
 
         // 유효한 Refresh Token인 경우 재발급에 사용되지 못하도록 Redis에서 제거한다.
         if (!StringUtil.isEmpty(refreshToken) && jwtProvider.validateToken(refreshToken)) {
-            tokenRedisService.deleteRefreshToken(jwtProvider.getUserNumb(refreshToken));
+            tokenRedisService.delLoginUserInfo(jwtProvider.getUserNumb(refreshToken));
         }
 
         // 브라우저의 토큰 쿠키를 삭제(만료 처리)한다.

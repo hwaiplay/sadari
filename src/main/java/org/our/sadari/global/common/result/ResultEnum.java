@@ -85,6 +85,11 @@ public enum ResultEnum {
     USER_NICK_DUPLICATED(2016, "user.alert.0001"),
 
     /**
+     * 허용하지 않은 형식, 크기 또는 해상도의 이미지가 업로드되었을 때 사용하는 enum 항목이다.
+     */
+    COMMON_IMAGE_INVALID(2018, "common.alert.0018"),
+
+    /**
      * Firebase Web Push 설정이 누락되어 브라우저 FCM token을 발급할 수 없을 때 사용하는 enum 항목이다.
      */
     PUSH_CONFIG_MISSING(2017, "push.alert.0001"),

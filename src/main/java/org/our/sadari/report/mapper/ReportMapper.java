@@ -85,7 +85,7 @@ public interface ReportMapper {
      * TB_LIKEXX 변경은 SocialMapper에서 처리하지만, 대상 검증 기준은 TM_REPORT이므로 ReportMapper에서 관리합니다.
      *
      * @author Seunghyeon.Kang
-     * @param req 독후감 번호와 사용자 번호
+     * @param req 독후감 번호, 요청 사용자 번호와 화면에서 전달한 작성자 번호
      * @return 좋아요 허용 대상 수
      */
     int getPublicReportLikeTargetCnt(SocialDto.LikeDto req);

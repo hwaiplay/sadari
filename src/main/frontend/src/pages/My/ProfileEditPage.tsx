@@ -44,6 +44,8 @@ const USER_NICK_MAX_LENGTH = 10;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+$/;
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
+const PROFILE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
+const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type ReadingPeriod = "week" | "month" | "year";
 type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
 type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
@@ -362,7 +364,7 @@ function ProfileEditPage() {
 
   /**
    * 사용자가 선택한 이미지 파일을 프로필 또는 배경 대상에 맞춰 미리보기로 반영합니다.
-   * 이미지가 아닌 파일은 서버 저장 대상에서 제외하고 경고 알림만 표시합니다.
+   * 서버와 같은 JPG/PNG 및 10MB 조건을 통과한 파일만 미리보기에 반영합니다.
    *
    * @author Hanwon.Jang
    * @param file 사용자가 선택한 이미지 파일
@@ -373,7 +375,11 @@ function ProfileEditPage() {
       return;
     }
 
-    if (!file.type.startsWith("image/")) {
+    if (
+      !PROFILE_IMAGE_MIME_TYPES.has(file.type.toLowerCase()) ||
+      file.size > PROFILE_IMAGE_MAX_BYTES
+    ) {
+      // 사용자에게 표시: "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
       void sweetWarning(
         message("frontend.alert.inputRequired"),
         message("frontend.profile.imageOnly"),
@@ -1448,7 +1454,7 @@ function ProfileEditPage() {
                 <input
                   className={styles.hiddenInput}
                   type="file"
-                  accept="image/*"
+                  accept="image/jpeg,image/png"
                   onChange={(event) =>
                     applyImagePreview(event.currentTarget.files?.[0], "background")
                   }
@@ -1509,7 +1515,7 @@ function ProfileEditPage() {
                   <input
                     className={styles.hiddenInput}
                     type="file"
-                    accept="image/*"
+                    accept="image/jpeg,image/png"
                     onChange={(event) =>
                       applyImagePreview(event.currentTarget.files?.[0], "profile")
                     }

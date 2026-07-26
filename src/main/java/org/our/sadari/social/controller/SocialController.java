@@ -230,7 +230,10 @@ public class SocialController {
      * @return 변경 후 좋아요 상태와 좋아요 수
      */
     @PostMapping("/like")
-    @Operation(summary = "좋아요 토글", description = "대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소한다.")
+    @Operation(
+            summary = "좋아요 토글"
+          , description = "대상 유형, 대상 번호와 화면이 조회한 작성자 번호를 검증한 뒤 좋아요를 등록하거나 취소한다."
+    )
     public ResultData setLike(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
                               @RequestBody SocialDto.LikeDto request) {
         if (request == null) {
