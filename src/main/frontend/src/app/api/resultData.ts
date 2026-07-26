@@ -32,7 +32,7 @@ export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
     return error.message || fallbackMessage;
   }
 
-  if (isAxiosError<{ message?: string }>(error)) {
+  if (isAxiosError<ResultData>(error)) {
     const resultCode = Number(error.response?.data?.code);
 
     /*
