@@ -26,8 +26,10 @@ spring:
     encoding: UTF-8
   servlet:
     multipart:
-      max-file-size: ${MULTIPART_MAX_FILE_SIZE:20MB}
-      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:40MB}
+      # 서비스의 이미지 바이트 검증 전에 과도한 업로드 본문이 서버 자원을 점유하지 못하도록 파일당 크기를 제한한다.
+      max-file-size: ${MULTIPART_MAX_FILE_SIZE:10MB}
+      # 프로필과 배경 이미지를 한 요청에 각각 10MB까지 전송할 수 있도록 multipart 부가 데이터를 포함한 여유를 둔다.
+      max-request-size: ${MULTIPART_MAX_REQUEST_SIZE:21MB}
 
 mybatis:
   mapper-locations: classpath:org/our/sadari/**/**/*.xml
@@ -72,6 +74,11 @@ jwt:
   refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_SECONDS:86400}
 
 app:
+  upload:
+    # 운영 환경에서도 파일 검증 기준을 환경변수로 조정하되 기본값은 로컬과 동일하게 유지한다.
+    max-image-bytes: ${UPLOAD_MAX_IMAGE_BYTES:10485760}
+    max-image-pixels: ${UPLOAD_MAX_IMAGE_PIXELS:20000000}
+    max-image-dimension: ${UPLOAD_MAX_IMAGE_DIMENSION:8192}
   cookie:
     # HTTPS 운영 환경에서는 true가 맞다. 로컬 테스트용 prod 실행이 필요하면 환경변수로 false를 줄 수 있다.
     secure: ${COOKIE_SECURE:true}

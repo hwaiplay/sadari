@@ -64,13 +64,12 @@ public class SocialDto {
         @Schema(description = "로그인 사용자 좋아요 여부", example = "Y")
         private String likeYsno;
 
-        // 좋아요 알림을 받을 독후감 작성자 번호입니다. 화면 요청값이 아니라 알림 발송 전 DB 조회로 채웁니다.
-        @Schema(description = "좋아요 알림 수신 사용자 번호", example = "32", hidden = true)
+        /*
+         * 화면이 이미 조회한 독후감 작성자 번호입니다.
+         * 서버는 이 값을 바로 신뢰하지 않고 REPT_NUMB의 실제 작성자와 일치하는지 검증한 뒤 알림 수신자로 사용합니다.
+         */
+        @Schema(description = "좋아요 대상 독후감 작성자 사용자 번호", example = "32")
         private Long targetUserNumb;
-
-        // 좋아요 알림 문구에 표시할 좋아요 누른 사용자 닉네임입니다.
-        @Schema(description = "좋아요 발송 사용자 닉네임", example = "reader31", hidden = true)
-        private String sendUserNick;
     }
 
     /**

@@ -8,6 +8,7 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.mapper.SocialMapper;
@@ -30,6 +31,7 @@ public class SocialServiceImpl implements SocialService {
     private final ReportMapper reportMapper;
     private final UserMapper userMapper;
     private final AlimService alimService;
+    private final TokenRedisService tokenRedisService;
 
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
@@ -298,7 +300,9 @@ public class SocialServiceImpl implements SocialService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        if (StringUtil.isEmpty(req.getTagtType()) || StringUtil.isEmpty(req.getTagtNumb())) {
+        if (StringUtil.isEmpty(req.getTagtType())
+                || StringUtil.isEmpty(req.getTagtNumb())
+                || StringUtil.isEmpty(req.getTargetUserNumb())) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -323,31 +327,30 @@ public class SocialServiceImpl implements SocialService {
      * @param req 좋아요 요청 DTO
      */
     private void sendReportLikeAlim(SocialDto.LikeDto req) {
-        SocialDto.LikeDto alimInfo = socialMapper.getReportLikeAlimInfo(req);
-
-        // 알림 대상 독후감 정보가 조회되지 않으면 좋아요 저장 결과는 유지하되 알림만 발송하지 않는다.
-        // 좋아요 기능 자체와 부가 기능인 알림 발송을 느슨하게 분리해 알림 정보 누락이 좋아요 실패로 번지지 않게 한다.
-        if (StringUtil.isEmpty(alimInfo) || StringUtil.isEmpty(alimInfo.getTargetUserNumb())) {
+        // 본인이 작성한 독후감에 본인이 좋아요를 누른 경우에는 자기 자신에게 알림을 만들 필요가 없어 중단한다.
+        if (req.getTargetUserNumb().equals(req.getUserNumb())) {
             return;
         }
 
-        // 본인이 작성한 독후감에 본인이 좋아요를 누른 경우에는 자기 자신에게 알림을 만들 필요가 없어 중단한다.
-        if (alimInfo.getTargetUserNumb().equals(req.getUserNumb())) {
+        String sendUserNick = tokenRedisService.getUserNick(req.getUserNumb());
+
+        // 로그인 Redis 정보가 없으면 DB를 다시 조회하지 않고 알림만 생략해 요청당 추가 사용자 조회가 생기지 않게 한다.
+        if (StringUtil.isEmpty(sendUserNick)) {
             return;
         }
 
         // TB_ALTEMP.TEMP_CONT의 #{userName} 상용구만 치환하기 위해 화면 표시 문구에 필요한 값만 Map에 담는다.
         // 수신자와 이동 대상 번호는 sendAlim의 명시 파라미터로 넘겨 Map의 역할을 문구 치환으로 제한한다.
         Map<String, Object> replaceMap = new HashMap<>();
-        replaceMap.put("userName", alimInfo.getSendUserNick());
+        replaceMap.put("userName", sendUserNick);
 
         // 링크 기본값은 TB_ALTEMP.LINK_URLX(/book/detail/)를 사용하고, tagtNumb만 넘겨 서비스에서 최종 링크를 조합한다.
         alimService.sendAlim(
-                alimInfo.getTargetUserNumb(),
-                Constant.ALIM_SITU_LIKE,
-                Constant.ALIM_TEMP_CODE_LIKE_REPORT,
-                req.getTagtNumb(),
-                replaceMap
+                req.getTargetUserNumb()
+              , Constant.ALIM_SITU_LIKE
+              , Constant.ALIM_TEMP_CODE_LIKE_REPORT
+              , req.getTagtNumb()
+              , replaceMap
         );
     }
 
@@ -359,6 +362,12 @@ public class SocialServiceImpl implements SocialService {
      * @param followStatName 화면에 표시할 팔로우 버튼명
      * @return 팔로우 상태 DTO
      */
+    private SocialDto.FollowDto createFollowStatus(String followStatName) {
+        SocialDto.FollowDto followDto = new SocialDto.FollowDto();
+        followDto.setFollowStatName(followStatName);
+        return followDto;
+    }
+
     /**
      * 팔로우를 받은 사용자에게 새 팔로워 알림을 발송한다.
      * 팔로우 INSERT가 실제로 발생한 경우에만 호출되며, sendAlim 공통 로직에서 1시간 내 동일 알림을 한 번 더 차단한다.
@@ -372,29 +381,22 @@ public class SocialServiceImpl implements SocialService {
             return;
         }
 
-        UserDto sendUser = userMapper.getUserByNumb(req.getUserNumb());
+        String sendUserNick = tokenRedisService.getUserNick(req.getUserNumb());
 
-        // 발송자 정보가 없으면 템플릿의 #{userName}을 채울 수 없으므로 알림만 생략한다.
-        // 팔로우 저장 자체는 이미 끝난 상태라 여기서 실패 응답으로 바꾸지 않는다.
-        if (StringUtil.isEmpty(sendUser)) {
+        // 로그인 Redis 정보가 없으면 사용자 테이블을 다시 조회하지 않고 부가 기능인 알림만 생략한다.
+        if (StringUtil.isEmpty(sendUserNick)) {
             return;
         }
 
         Map<String, Object> replaceMap = new HashMap<>();
-        replaceMap.put("userName", sendUser.getUserNick());
+        replaceMap.put("userName", sendUserNick);
 
         alimService.sendAlim(
-                req.getFlowNumb(),
-                Constant.ALIM_SITU_FOLLOW,
-                Constant.ALIM_TEMP_CODE_FOLLOW_USER,
-                req.getUserNumb(),
-                replaceMap
+                req.getFlowNumb()
+              , Constant.ALIM_SITU_FOLLOW
+              , Constant.ALIM_TEMP_CODE_FOLLOW_USER
+              , req.getUserNumb()
+              , replaceMap
         );
-    }
-
-    private SocialDto.FollowDto createFollowStatus(String followStatName) {
-        SocialDto.FollowDto followDto = new SocialDto.FollowDto();
-        followDto.setFollowStatName(followStatName);
-        return followDto;
     }
 }

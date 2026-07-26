@@ -111,7 +111,7 @@ function DetailPage() {
                 <span
                   className={infoStyles.ratingSummary}
                   aria-label={message("frontend.report.gradeValue", [
-                    bookData.bookAvgGrde,
+                    rawBookAverageGrade,
                   ])}
                 >
                   <span className={infoStyles.ratingStar}>{"\u2605"}</span>
@@ -287,7 +287,11 @@ function DetailPage() {
                 aria-pressed={bookData.likeYsno === "Y"}
                 disabled={likeMutation.isPending}
                 onClick={() =>
-                  likeMutation.mutate({ tagtType: "REPORT", tagtNumb: idNum })
+                  likeMutation.mutate({
+                    tagtType: "REPORT",
+                    tagtNumb: idNum,
+                    targetUserNumb: bookData.userNumb,
+                  })
                 }
               >
                 <svg

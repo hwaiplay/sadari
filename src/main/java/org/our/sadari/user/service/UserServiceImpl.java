@@ -5,15 +5,22 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.service.FileService;
+import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -24,11 +31,13 @@ import org.springframework.web.multipart.MultipartFile;
  */
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
     private final FileService fileService;
     private final BadWordDetectionService badWordDetectionService;
+    private final TokenRedisService tokenRedisService;
 
     /**
      * 로그인 사용자의 최신 프로필 정보를 조회합니다.
@@ -71,6 +80,7 @@ public class UserServiceImpl implements UserService {
      * @return 수정 후 최신 프로필 조회 결과
      */
     @Override
+    @Transactional
     public ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage, MultipartFile backgroundImage) {
 
         if (StringUtil.isEmpty(userNumb)) {
@@ -101,11 +111,67 @@ public class UserServiceImpl implements UserService {
             userDto.setProfNumb(fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, userNumb));          //새로운 프로필 사진 존재시 파일 저장
             userDto.setBgimNumb(fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, userNumb));    //새로운 배경 사진 존재시 파일 저장
 
+        } catch (InvalidImageFileException e) {
+            // 앞에서 다른 이미지가 저장되었을 수 있으므로 파일 메타정보와 물리 파일 정리가 실행되게 전체 수정을 롤백한다.
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
         } catch (IOException e) {
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        userMapper.uptUserProfile(userDto);
+        int updateCnt = userMapper.uptUserProfile(userDto);
+
+        if (updateCnt == 0) {
+            // 사용자 UPDATE가 반영되지 않았다면 같은 요청에서 먼저 저장한 이미지도 유지하지 않는다.
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        /*
+         * DB commit이 실패했는데 Redis만 먼저 바뀌면 두 저장소의 닉네임이 달라진다.
+         * 실제 커밋이 완료된 직후에만 같은 로그인 세션의 Redis 닉네임을 갱신한다.
+         */
+        uptUserNickAfterCommit(userNumb, userDto.getUserNick());
         return getMe(userNumb);
+    }
+
+    /**
+     * 프로필 DB 트랜잭션이 커밋된 직후 Redis 로그인 사용자 닉네임을 갱신한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 닉네임을 수정한 사용자 번호
+     * @param userNick DB에 저장한 최신 닉네임
+     */
+    private void uptUserNickAfterCommit(Long userNumb, String userNick) {
+        Runnable updateUserNick = () -> {
+            try {
+                tokenRedisService.uptUserNick(userNumb, userNick);
+            } catch (RuntimeException e) {
+                /*
+                 * Redis 갱신 실패 시 예전 닉네임을 그대로 쓰는 것이 가장 위험하다.
+                 * 가능한 경우 닉네임 키를 제거해 다음 로그인 또는 재발급 때 최신 DB 값으로 다시 생성되게 한다.
+                 */
+                try {
+                    tokenRedisService.delUserNick(userNumb);
+                } catch (RuntimeException deleteException) {
+                    log.error("Redis user nickname cleanup failed. userNumb={}", userNumb, deleteException);
+                }
+
+                log.error("Redis user nickname update failed. userNumb={}", userNumb, e);
+            }
+        };
+
+        if (TransactionSynchronizationManager.isSynchronizationActive()) {
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    updateUserNick.run();
+                }
+            });
+            return;
+        }
+
+        updateUserNick.run();
     }
 }

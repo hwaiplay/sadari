@@ -265,8 +265,9 @@
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getPublicReportLikeTargetCnt */
                COUNT(*)
-          FROM TM_REPORT R
+         FROM TM_REPORT R
          WHERE R.REPT_NUMB = #{tagtNumb}
+           AND R.USER_NUMB = #{targetUserNumb}
            AND (
                R.USER_NUMB = #{userNumb}
             OR R.PUBC_YSNO = #{commYes}
