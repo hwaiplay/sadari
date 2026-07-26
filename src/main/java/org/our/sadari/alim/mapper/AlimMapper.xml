@@ -65,10 +65,11 @@
            AND SEND_DATE >= SYSDATE - (1 / 24)
     </select>
 
-    <!-- 알림 목록은 20개씩 보이며, 서비스에서 다음 페이지 확인용으로 1개를 더 조회할 수 있게 ROW_NUMBER 범위를 받는다. -->
+    <!-- 미읽음 또는 읽은 지 30분이 지나지 않은 알림을 20개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환할 수 있게 ROW_NUMBER 범위를 받는다. -->
     <select id="getMyAlimList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimListReqDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="codeAlimSitu" value="@org.our.sadari.global.common.constant.Constant@CODE_ALIM_SITU" />
+        <bind name="readVisibleMinutes" value="@org.our.sadari.global.common.constant.Constant@ALIM_READ_VISIBLE_MINUTES" />
         SELECT /* getMyAlimList */
                USER_NUMB
              , ALIM_NUMB
@@ -120,6 +121,10 @@
                            AND NVL(C.USEE_YSNO, 'Y') = 'Y'
                          WHERE A.USER_NUMB = #{userNumb}
                            AND NVL(A.DELT_YSNO, #{commNo}) = #{commNo}
+                           AND (
+                                   NVL(A.READ_YSNO, #{commNo}) = #{commNo}
+                                OR A.READ_DATE >= SYSDATE - NUMTODSINTERVAL(#{readVisibleMinutes}, 'MINUTE')
+                               )
                        )
                )
          WHERE ROW_NUMB BETWEEN #{startRow} AND #{endRow}
