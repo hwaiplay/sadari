@@ -21,6 +21,9 @@ import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/C
 import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
 import {
   MAX_REPORT_CONTENT_BYTES,
+  REPORT_COLOR_CODE_GROUP,
+  REPORT_FORM_CODE_GROUPS,
+  REPORT_STATUS_CODE_GROUP,
   REPORT_STATUS_DONE,
   REPORT_STATUS_READ,
   REPORT_STATUS_STOP,
@@ -31,7 +34,7 @@ import {
   truncateUtf8Bytes,
   validateReportForm,
 } from "@/features/Book/utils/reportValidation";
-import { useCodeList } from "@/features/Common/utils/codeUtil";
+import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 import { formatDateValue } from "@/app/utils/dateUtil";
 
 const UpdateReportPage = () => {
@@ -48,8 +51,12 @@ const UpdateReportPage = () => {
   const [contentByteLength, setContentByteLength] = useState(0);
 
   const { data, isPending } = useBookDetail(idNum);
-  const { data: statusCodes = [] } = useCodeList("READ_STAT");
-  const { data: colorCodes = [] } = useCodeList("BOOK_COLR");
+  // 등록 화면과 동일한 캐시 키를 사용해 상태와 달력 색상을 한 번의 API 호출로 재사용합니다.
+  const { data: codeGroupList = {} } = useCodeGroupList(
+    REPORT_FORM_CODE_GROUPS,
+  );
+  const statusCodes = codeGroupList[REPORT_STATUS_CODE_GROUP] ?? [];
+  const colorCodes = codeGroupList[REPORT_COLOR_CODE_GROUP] ?? [];
   const { mutate } = useUpdateMutation();
   const { mutate: deleteReport } = useDeleteMutation();
   const bookData = data?.data;
