@@ -74,6 +74,22 @@ export const pushButton = style([
   },
 ]);
 
+export const pushButtonOff = style([
+  pushButton,
+  {
+    borderColor: "#e03131",
+    backgroundColor: "#ffffff",
+    color: "#e03131",
+    selectors: {
+      "&:disabled": {
+        borderColor: "#e03131",
+        backgroundColor: "#ffffff",
+        color: "#e03131",
+      },
+    },
+  },
+]);
+
 export const list = style({
   display: "flex",
   flexDirection: "column",
