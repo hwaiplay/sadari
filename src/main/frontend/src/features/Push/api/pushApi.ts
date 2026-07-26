@@ -41,3 +41,15 @@ export const setPushSubApi = async (data: PushSubRequest) => {
   const res = await api.post("/push/subscribe", data);
   return assertResultDataSuccess(res.data);
 };
+
+/**
+ * 현재 브라우저 FCM token을 서버에서 비활성화합니다.
+ *
+ * @author Hanwon.Jang
+ * @param data 비활성화할 FCM token
+ * @return 구독 해제 API 응답
+ */
+export const delPushSubApi = async (data: PushSubRequest) => {
+  const res = await api.delete("/push/subscribe", { data });
+  return assertResultDataSuccess(res.data);
+};
