@@ -23,8 +23,12 @@ public final class Constant {
     public static final String LIKE_TARGET_REPORT = "REPORT";
     public static final String ALIM_SITU_LIKE = "LIKE";
     public static final String ALIM_SITU_FOLLOW = "FOLLOW";
+    /** 독후감 상태나 도서 정보에 의해 발생하는 알림 상황 코드입니다. */
+    public static final String ALIM_SITU_REPORT = "REPORT";
     public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";
     public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
+    /** 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드입니다. */
+    public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
 
     public static final String COMM_YES = "Y";
     public static final String COMM_NO = "N";
