@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.ReportDateOverMapper;
 import org.our.sadari.global.scheduler.service.ReportDateOverServiceImpl;
@@ -50,10 +51,11 @@ class ReportDateOverServiceImplTest {
      */
     @BeforeEach
     void setUp() {
+        SchedulerLogSupport schedulerLogSupport = new SchedulerLogSupport(schedulerLogService);
         schedulerService = new ReportDateOverServiceImpl(
                 reportDateOverMapper
               , alimService
-              , schedulerLogService
+              , schedulerLogSupport
               , 100
         );
         when(schedulerLogService.setSchedulerLog(any())).thenReturn(1L);
