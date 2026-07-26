@@ -1,7 +1,7 @@
 {
-  "name": "사다리",
-  "short_name": "사다리",
-  "description": "독서 기록과 독후감을 관리하는 서비스",
+  "name": "독서의 즐거움에 오르다, 사다리",
+  "short_name": "SADARI",
+  "description": "독서의 즐거움에 오르다, 사다리",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
