@@ -85,16 +85,6 @@ public interface SocialMapper {
     SocialDto.LikeDto getLikeDtl(SocialDto.LikeDto req);
 
     /**
-     * 독후감 좋아요 알림 발송에 필요한 수신자와 발송자 닉네임을 조회한다.
-     * 좋아요 자체는 공용 테이블에서 처리하지만, REPORT 좋아요 알림은 독후감 작성자에게 보내야 하므로 TM_REPORT와 TM_USERXM을 함께 조회한다.
-     *
-     * @author Seunghyeon.Kang
-     * @param req 좋아요 요청 DTO
-     * @return 알림 발송 대상 정보
-     */
-    SocialDto.LikeDto getReportLikeAlimInfo(SocialDto.LikeDto req);
-
-    /**
      * 마이페이지 프로필 통계에 표시할 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수를 한 번에 조회한다.
      * 해당 집계는 social 영역에서 관리하는 팔로우/좋아요 데이터를 포함하므로 MyPageController가 직접 SQL을 알지 않도록 분리한다.
      *

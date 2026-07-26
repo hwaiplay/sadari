@@ -4,9 +4,13 @@
  * @author Hanwon.Jang
  */
 import api from "@/app/api/axios";
-import { assertResultDataSuccess } from "@/app/api/resultData";
+import {
+  assertResultDataSuccess,
+  type ResultData,
+} from "@/app/api/resultData";
 import {
   AddBookResponse,
+  ReportDetailType,
   ReportDtoType,
   uptReportType,
 } from "../types/book.type";
@@ -20,7 +24,9 @@ export const setReportApi = async (
 };
 
 export const getDetailApi = async (bookNumb: number) => {
-  const res = await api.get(`/book/getBookdetail/${bookNumb}`);
+  const res = await api.get<ResultData<ReportDetailType>>(
+    `/book/getBookdetail/${bookNumb}`,
+  );
   return assertResultDataSuccess(res.data);
 };
 
@@ -41,6 +47,8 @@ export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
 export type LikeTargetParams = {
   tagtType: string;
   tagtNumb: number;
+  // 알림 대상 DB 재조회를 없애기 위해 화면이 이미 조회한 독후감 작성자 번호를 함께 전송합니다.
+  targetUserNumb: number;
 };
 
 export const setPublicReportLikeApi = (data: LikeTargetParams) => {

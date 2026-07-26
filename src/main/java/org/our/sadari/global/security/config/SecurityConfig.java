@@ -57,6 +57,7 @@ public class SecurityConfig {
 
                         // 인증 없이 접근을 허용할 공개 API Endpoint 목록
                         .requestMatchers(
+                                "/api/oauth/kakao",
                                 "/api/oauth/callback/**",
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
