@@ -35,11 +35,9 @@
                   , SEND_DATE
                   , DELT_YSNO
         ) VALUES(   #{userNumb}
-                  , (
-                        SELECT NVL(MAX(ALIM_NUMB), 0) + 1
+                  , (   SELECT NVL(MAX(ALIM_NUMB), 0) + 1
                           FROM TB_ALIMXX
-                         WHERE USER_NUMB = #{userNumb}
-                    )
+                         WHERE USER_NUMB = #{userNumb})
                   , #{alimSitu}
                   , #{tempCode}
                   , #{alimTitl}
