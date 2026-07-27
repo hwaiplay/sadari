@@ -17,8 +17,6 @@ function SettingsPage() {
 
   return (
     <main className={styles.page}>
-      <h1 className={styles.title}>설정</h1>
-
       <section className={styles.menu} aria-label="설정 메뉴">
         <button
           className={styles.primaryMenuButton}
