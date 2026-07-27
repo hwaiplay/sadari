@@ -34,8 +34,8 @@ public final class Constant {
 
     // 목표 독서기간 초과 알림 스케줄러를 식별하는 로그 코드
     public static final String SCHEDULER_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
-    // 읽은 알림을 알림센터에 계속 노출하는 시간
-    public static final int ALIM_READ_VISIBLE_MINUTES = 30;
+    // 읽음 처리된 알림을 알림센터에 계속 노출하는 시간
+    public static final int ALIM_READ_VISIBLE_HOURS = 24;
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수
      * 오늘, 어제, 이틀 전 종료 대상을 후보로 삼고 이미 알림이 저장된 대상은 Mapper에서 별도로 제외합니다.
