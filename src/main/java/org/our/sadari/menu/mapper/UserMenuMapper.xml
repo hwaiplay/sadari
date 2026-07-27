@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.menu.mapper.UserMenuMapper">
+
+    <!-- 동적 번호가 붙는 상세 경로는 끝이 /인 DB URL을 접두 경로로 사용하고, 가장 긴 URL을 우선 선택한다. -->
+    <select id="getCurrentUserMenu" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
+        SELECT /* getCurrentUserMenu */
+               MENU_NUMB
+             , SUBX_NUMB
+             , MENU_NAME
+             , MENU_URLX
+             , SORT_ORDR
+          FROM (
+                SELECT MENU_NUMB
+                     , SUBX_NUMB
+                     , MENU_NAME
+                     , MENU_URLX
+                     , SORT_ORDR
+                  FROM TM_URMENU
+                 WHERE MENU_URLX = #{menuUrlx}
+                    OR (
+                           SUBSTR(MENU_URLX, -1) = '/'
+                       AND #{menuUrlx} LIKE MENU_URLX || '%'
+                       )
+              ORDER BY LENGTH(MENU_URLX) DESC
+               )
+         WHERE ROWNUM = 1
+    </select>
+
+    <!-- 햄버거 메뉴에는 운영자가 노출하고 현재 사용하도록 설정한 메뉴만 정렬 순서대로 제공한다. -->
+    <select id="getVisibleUserMenuList" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getVisibleUserMenuList */
+               MENU_NUMB
+             , SUBX_NUMB
+             , MENU_NAME
+             , MENU_URLX
+             , SORT_ORDR
+          FROM TM_URMENU
+         WHERE SHOW_YSNO = #{commYes}
+           AND USEE_YSNO = #{commYes}
+      ORDER BY NVL(SORT_ORDR, 9999)
+             , MENU_NUMB
+             , SUBX_NUMB
+    </select>
+
+</mapper>
