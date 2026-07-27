@@ -2,6 +2,9 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
+import CustomSelect, {
+  type CustomSelectOption,
+} from "@/components/Select/CustomSelect";
 import {
   usePublicReportLikeMutation,
   usePublicReportsByIsbn,
@@ -17,6 +20,18 @@ const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 
 type ReportSort = "LATEST" | "RATING";
 type ReportStatus = "ALL" | PublicReportType["reptStat"];
+
+const SORT_OPTIONS: readonly CustomSelectOption<ReportSort>[] = [
+  { value: "LATEST", label: "최신순" },
+  { value: "RATING", label: "별점순" },
+];
+
+const STATUS_OPTIONS: readonly CustomSelectOption<ReportStatus>[] = [
+  { value: "ALL", label: "전체" },
+  { value: "READ", label: "읽고 있어요" },
+  { value: "DONE", label: "다 읽었어요" },
+  { value: "STOP", label: "중단했어요" },
+];
 
 type PublicReportPageState = {
   title?: string;
@@ -280,64 +295,53 @@ function PublicReportPage() {
   return (
     <>
       <main className={styles.page}>
-        <Container className={styles.content}>
+        <div className={styles.content}>
           <section className={styles.header}>
-            {pageState.cover ? (
-              <div className={styles.coverFrame}>
-                <img
-                  className={styles.coverImage}
-                  src={pageState.cover}
-                  alt={pageState.title ?? message("frontend.common.bookInfo")}
-                />
-              </div>
-            ) : null}
-            <div className={styles.headingArea}>
-              <h1 className={styles.bookTitle}>{pageState.title ?? "-"}</h1>
-              <div className={styles.authorRatingLine}>
-                <p className={styles.meta}>{pageState.author ?? "-"}</p>
-                {pageState.ratingAverage !== null &&
-                pageState.ratingAverage !== undefined &&
-                pageState.ratingAverage !== "" ? (
-                  <>
-                    <span className={styles.metaSeparator}>|</span>
-                    <span className={styles.ratingSummary}>
-                      <span className={styles.ratingStar}>{"\u2605"}</span>
+            <div className={styles.headerWrap}>
+              {pageState.cover ? (
+                  <div className={styles.coverFrame}>
+                    <img
+                        className={styles.coverImage}
+                        src={pageState.cover}
+                        alt={pageState.title ?? message("frontend.common.bookInfo")}
+                    />
+                  </div>
+              ) : null}
+              <div className={styles.headingArea}>
+                <h1 className={styles.bookTitle}>{pageState.title ?? "-"}</h1>
+                <div className={styles.authorRatingLine}>
+                  <p className={styles.meta}>{pageState.author ?? "-"}</p>
+                  {pageState.ratingAverage !== null &&
+                  pageState.ratingAverage !== undefined &&
+                  pageState.ratingAverage !== "" ? (
+                      <>
+                        <span className={styles.metaSeparator}>|</span>
+                        <span className={styles.ratingSummary}>
+                      <span className={styles.ratingStar}>
+                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
+                      </span>
                       <span>{pageState.ratingAverage}</span>
                     </span>
-                  </>
-                ) : null}
+                      </>
+                  ) : null}
+                </div>
               </div>
             </div>
           </section>
 
           <section className={styles.filters} aria-label="독후감 필터">
-            <label className={styles.filterControl}>
-              <span className={styles.visuallyHidden}>정렬</span>
-              <select
-                className={styles.filterSelect}
-                value={sort}
-                onChange={(event) => setSort(event.target.value as ReportSort)}
-              >
-                <option value="LATEST">최신순</option>
-                <option value="RATING">별점순</option>
-              </select>
-            </label>
-            <span className={styles.filterDivider} aria-hidden="true" />
-            <label className={styles.filterControl}>
-              <span className={styles.visuallyHidden}>독서 상태</span>
-              <select
-                className={styles.filterSelect}
-                value={status}
-                onChange={(event) =>
-                  setStatus(event.target.value as ReportStatus)
-                }
-              >
-                <option value="ALL">전체</option>
-                <option value="READ">읽고 있어요</option>
-                <option value="DONE">다 읽었어요</option>
-                <option value="STOP">중단했어요</option>
-              </select>
-            </label>
+            <CustomSelect
+              value={sort}
+              options={SORT_OPTIONS}
+              ariaLabel="독후감 정렬"
+              onChange={setSort}
+            />
+            <CustomSelect
+              value={status}
+              options={STATUS_OPTIONS}
+              ariaLabel="독서 상태"
+              onChange={setStatus}
+            />
           </section>
 
           {visibleReports.length > 0 ? (
@@ -379,13 +383,15 @@ function PublicReportPage() {
                             STATUS_LABELS[reportStatus]}
                         </span>
                       </div>
+
+                      {/* 별점 */}
                       <span
                         className={styles.reportRating}
                         aria-label={message("frontend.report.gradeValue", [
                           rating,
                         ])}
                       >
-                        <span className={styles.ratingStar}>{"\u2605"}</span>
+                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
                         <span>{rating}</span>
                       </span>
                     </div>
@@ -411,17 +417,14 @@ function PublicReportPage() {
                         )}
                         onClick={() => handleToggleReport(report.reptNumb)}
                       >
-                        <svg
-                          className={
-                            isExpanded
-                              ? styles.expandArrowOpen
-                              : styles.expandArrow
-                          }
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
-                        </svg>
+                        <img
+                            className={
+                              isExpanded
+                                  ? styles.expandArrowOpen
+                                  : styles.expandArrow
+                            }
+                            src={"/img/icons/arrow-bottom.svg"}
+                            alt={"arrow"} />
                       </button>
                     ) : null}
 
@@ -440,23 +443,12 @@ function PublicReportPage() {
                           })
                         }
                       >
-                        <svg
-                          className={styles.metricIcon}
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
-                            fill={
-                              report.likeYsno === "Y"
-                                ? "currentColor"
-                                : "none"
-                            }
-                            stroke="currentColor"
-                            strokeWidth="1.8"
-                            strokeLinejoin="round"
-                          />
-                        </svg>
+                        {
+                          report.likeYsno === "Y"
+                              ? <img  src={"/img/icons/icon-heart-fill.svg"} alt={"좋아요"}/>
+                              : <img  src={"/img/icons/icon-heart.svg"} alt={"좋아요"}/>
+                        }
+
                         <span>{getCountLabel(report.likeCnt)}</span>
                       </button>
                       <button
@@ -465,16 +457,7 @@ function PublicReportPage() {
                         aria-label="댓글 보기"
                         onClick={() => setCommentReport(report)}
                       >
-                        <svg
-                          className={styles.commentIcon}
-                          viewBox="0 0 24 24"
-                          aria-hidden="true"
-                        >
-                          <path d="M5 5.5h14v10H9l-4 3v-13Z" />
-                          <circle cx="9" cy="10.5" r="0.8" />
-                          <circle cx="12" cy="10.5" r="0.8" />
-                          <circle cx="15" cy="10.5" r="0.8" />
-                        </svg>
+                        <img  src={"/img/icons/icon-comment.svg"} alt={"댓글"}/>
                         <span>
                           {getCountLabel(
                             (report.commentCnt ?? 0) +
@@ -494,7 +477,7 @@ function PublicReportPage() {
                 : message("frontend.book.publicReports.empty")}
             </p>
           )}
-        </Container>
+        </div>
       </main>
       {typeof document !== "undefined" && commentSheet
         ? createPortal(commentSheet, document.body)
