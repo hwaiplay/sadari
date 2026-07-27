@@ -11,15 +11,6 @@ export const page = style({
   backgroundColor: "#ffffff",
 });
 
-export const title = style({
-  margin: "0 0 22px",
-  fontFamily: vars.font.heading,
-  fontSize: "22px",
-  lineHeight: 1.3,
-  letterSpacing: 0,
-  color: vars.color.black,
-});
-
 export const menu = style({
   width: "100%",
   borderTop: `1px solid ${vars.color.gray200}`,
