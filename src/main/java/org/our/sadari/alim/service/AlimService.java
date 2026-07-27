@@ -1,6 +1,7 @@
 package org.our.sadari.alim.service;
 
 import java.util.Map;
+import org.our.sadari.alim.dto.AlimDto;
 import org.our.sadari.global.common.result.ResultData;
 
 /**
@@ -31,14 +32,24 @@ public interface AlimService {
     ResultData getUnreadAlimCnt(Long userNumb);
 
     /**
-     * 로그인 사용자의 모든 알림을 읽음 처리.
-     * 화면에 아직 로드하지 않은 알림까지 처리해야 하는 모두 읽음 버튼에서 사용한다.
+     * 알림센터 항목 또는 푸시 알림을 클릭한 사용자의 알림 한 건을 읽음 처리한다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @return 읽음 처리 결과
+     * @param req 읽음 처리할 사용자별 알림 번호
+     * @return 읽음 처리 후 남은 미읽음 알림 수
      */
-    ResultData readAllAlim(Long userNumb);
+    ResultData uptAlimRead(Long userNumb, AlimDto.AlimReadReqDto req);
+
+    /**
+     * 로그인 사용자의 삭제되지 않은 모든 알림을 삭제 상태로 변경한다.
+     * 화면에 아직 로드하지 않은 알림까지 처리해야 하는 모두 지우기 버튼에서 사용한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 모두 지우기 처리 결과
+     */
+    ResultData delAllAlim(Long userNumb);
 
     /**
      * 알림 수신자, 상황 코드, 템플릿 코드, 이동 대상 번호, 치환 Map을 받아 사용자 알림을 발송.
