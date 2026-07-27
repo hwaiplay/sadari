@@ -126,10 +126,9 @@ export const socialProfileBody = style([
 export const profileHeaderRow = style({
   width: "100%",
   marginTop: "-34px",
-  display: "grid",
-  gridTemplateColumns: "112px minmax(0, 1fr)",
+  display: "flex",
   alignItems: "start",
-  gap: "18px",
+  gap: "12px",
 });
 
 export const socialProfileHeaderRow = style([
@@ -142,14 +141,14 @@ export const socialProfileHeaderRow = style([
 
 export const avatarWrap = style({
   position: "relative",
-  width: "112px",
-  height: "112px",
+  width: "100px",
+  height: "100px",
   margin: 0,
 });
 
 export const profileImage = style({
-  width: "112px",
-  height: "112px",
+  width: "100px",
+  height: "100px",
   borderRadius: "50%",
   objectFit: "cover",
   border: "4px solid #ffffff",
@@ -195,7 +194,7 @@ export const hiddenInput = style({
 export const profileText = style({
   width: "100%",
   minWidth: 0,
-  paddingTop: "42px",
+  paddingTop: "46px",
   display: "flex",
   flexDirection: "column",
   alignItems: "flex-start",
@@ -206,8 +205,8 @@ export const profileText = style({
 export const profileName = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "22px",
-  lineHeight: 1.3,
+  fontSize: "20px",
+  lineHeight: 1,
   color: vars.color.black,
   wordBreak: "break-word",
 });
@@ -217,8 +216,8 @@ export const profileIntro = style({
   maxWidth: "100%",
   fontFamily: vars.font.body,
   fontSize: "14px",
-  lineHeight: 1.55,
-  color: "#666666",
+  lineHeight: 1.5,
+  color: vars.color.gray600,
   wordBreak: "break-word",
 });
 
@@ -351,10 +350,10 @@ export const profileStatsButton = style({
 });
 
 export const currentReadingSection = style({
-  padding: "24px 4px 18px",
   display: "flex",
   flexDirection: "column",
   gap: "10px",
+  padding: "18px 14px"
 });
 
 export const currentReadingTitle = style({
@@ -363,11 +362,11 @@ export const currentReadingTitle = style({
   left: "22px",
   zIndex: 1,
   margin: 0,
-  padding: "0 9px",
+  padding: "0 8px",
+  borderRadius: "9999px",
   backgroundColor: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
-  lineHeight: 1.3,
+  fontSize: "14px",
   textAlign: "left",
   color: vars.color.black,
   transform: "translateY(-50%)",
@@ -381,16 +380,13 @@ export const currentReadingList = style({
 
 export const currentReadingCard = style({
   width: "100%",
-  minHeight: "78px",
-  padding: "12px 8px",
   border: 0,
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "#ffffff",
-  display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr)",
+  display: "flex",
   alignItems: "center",
-  gap: "12px",
+  gap: "10px",
   textAlign: "left",
   selectors: {
     "&:last-child": {
@@ -416,8 +412,16 @@ export const currentReadingText = style({
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "5px",
+  gap: "10px",
 });
+
+export const currentReadingTextBookInfo = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "4px",
+});
+
 
 export const currentReadingMeta = style({
   display: "flex",
@@ -428,7 +432,7 @@ export const currentReadingMeta = style({
 
 export const currentReadingRemain = style({
   flexShrink: 0,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.medium,
   fontSize: "12px",
   lineHeight: 1,
   whiteSpace: "nowrap",
@@ -574,8 +578,7 @@ export const readingSummaryReport = style({
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "#ffffff",
-  display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr)",
+  display: "flex",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -590,19 +593,6 @@ export const readingSummaryReport = style({
     },
   },
 });
-
-export const readingSummaryReptStatic = style([
-  readingSummaryReport,
-  {
-    cursor: "default",
-    selectors: {
-      "&:hover": {
-        backgroundColor: "#ffffff",
-        transform: "none",
-      },
-    },
-  },
-]);
 
 export const readingSummaryReportPrivate = style([
   readingSummaryReport,
@@ -623,8 +613,8 @@ export const readingSummaryReportPrivate = style([
 ]);
 
 export const readingSummaryCover = style({
-  width: "40px",
-  height: "54px",
+  width: "auto",
+  height: "92px",
   borderRadius: "4px",
   objectFit: "cover",
   backgroundColor: "#f0f1f2",
@@ -653,8 +643,7 @@ export const readingSummaryBookMeta = style({
   whiteSpace: "nowrap",
   fontFamily: vars.font.body,
   fontSize: "12px",
-  lineHeight: 1.25,
-  color: "#777777",
+  color: vars.color.gray600
 });
 
 export const readingSummaryMetaLine = style({

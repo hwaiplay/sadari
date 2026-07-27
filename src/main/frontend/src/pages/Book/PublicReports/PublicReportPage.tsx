@@ -10,9 +10,9 @@ import {
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import type { PublicReportType } from "@/features/Book/types/book.type";
-import { createPortal } from "react-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import CommentSheet from "./components/CommentSheet";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
@@ -94,7 +94,6 @@ function PublicReportPage() {
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
   );
-  const [commentInput, setCommentInput] = useState("");
   const [temporaryComments, setTemporaryComments] = useState<
     Record<number, string[]>
   >({});
@@ -125,28 +124,6 @@ function PublicReportPage() {
     return filteredReports;
   }, [reports, sort, status]);
 
-  useEffect(() => {
-    if (!commentReport) {
-      return;
-    }
-
-    const previousOverflow = document.body.style.overflow;
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setCommentReport(null);
-        setCommentInput("");
-      }
-    };
-
-    document.body.style.overflow = "hidden";
-    window.addEventListener("keydown", handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [commentReport]);
-
   const handleToggleReport = (reptNumb: number) => {
     setExpandedReports((prev) => ({
       ...prev,
@@ -165,28 +142,14 @@ function PublicReportPage() {
     }
   };
 
-  const handleCloseCommentSheet = () => {
-    setCommentReport(null);
-    setCommentInput("");
-  };
-
-  const handleSubmitComment = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
-
-    const comment = commentInput.trim();
-
-    if (!commentReport || !comment) {
-      return;
-    }
-
+  const handleSubmitComment = (reptNumb: number, comment: string) => {
     setTemporaryComments((prev) => ({
       ...prev,
-      [commentReport.reptNumb]: [
-        ...(prev[commentReport.reptNumb] ?? []),
+      [reptNumb]: [
+        ...(prev[reptNumb] ?? []),
         comment,
       ],
     }));
-    setCommentInput("");
   };
 
   const getStatusClassName = (reportStatus: PublicReportType["reptStat"]) => {
@@ -223,74 +186,6 @@ function PublicReportPage() {
       </main>
     );
   }
-
-  const commentSheet = commentReport ? (
-    <div className={styles.sheetLayer}>
-      <button
-        className={styles.sheetBackdrop}
-        type="button"
-        aria-label={message("frontend.common.close")}
-        onClick={handleCloseCommentSheet}
-      />
-      <section
-        className={styles.commentSheet}
-        role="dialog"
-        aria-modal="true"
-        aria-label={`${commentReport.userNick}님의 독후감 댓글`}
-      >
-        <div className={styles.sheetHandle} aria-hidden="true" />
-        <div className={styles.commentSheetBody}>
-          {(temporaryComments[commentReport.reptNumb] ?? []).length > 0 ? (
-            <ul className={styles.temporaryCommentList}>
-              {(temporaryComments[commentReport.reptNumb] ?? []).map(
-                (comment, index) => (
-                  <li
-                    className={styles.temporaryComment}
-                    key={`${commentReport.reptNumb}-${index}`}
-                  >
-                    {comment}
-                  </li>
-                ),
-              )}
-            </ul>
-          ) : (
-            <div className={styles.commentEmpty}>
-              <img
-                className={styles.commentEmptyIcon}
-                src="/img/icons/noti-COMMENT.svg"
-                alt=""
-              />
-              <p className={styles.commentEmptyTitle}>아직 댓글이 없어요.</p>
-              <p className={styles.commentEmptyText}>
-                첫 번째 댓글을 남겨보세요.
-              </p>
-            </div>
-          )}
-        </div>
-        <form
-          className={styles.commentForm}
-          onSubmit={handleSubmitComment}
-        >
-          <input
-            className={styles.commentInput}
-            type="text"
-            value={commentInput}
-            maxLength={500}
-            placeholder="댓글을 입력해주세요."
-            aria-label="댓글 입력"
-            onChange={(event) => setCommentInput(event.target.value)}
-          />
-          <button
-            className={styles.commentSubmitButton}
-            type="submit"
-            disabled={!commentInput.trim()}
-          >
-            등록
-          </button>
-        </form>
-      </section>
-    </div>
-  ) : null;
 
   return (
     <>
@@ -479,9 +374,16 @@ function PublicReportPage() {
           )}
         </div>
       </main>
-      {typeof document !== "undefined" && commentSheet
-        ? createPortal(commentSheet, document.body)
-        : null}
+      {commentReport ? (
+        <CommentSheet
+          report={commentReport}
+          comments={temporaryComments[commentReport.reptNumb] ?? []}
+          onClose={() => setCommentReport(null)}
+          onSubmitComment={(comment) =>
+            handleSubmitComment(commentReport.reptNumb, comment)
+          }
+        />
+      ) : null}
     </>
   );
 }

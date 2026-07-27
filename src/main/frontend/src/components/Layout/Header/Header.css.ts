@@ -1,5 +1,5 @@
 import { style } from "@vanilla-extract/css";
-import { vars } from "../../../app/styles/tokens.css";
+import { vars } from "@/app/styles/tokens.css";
 
 export const headerShell = style({
   position: "fixed",
@@ -18,6 +18,7 @@ export const headerShell = style({
 
 export const headerHidden = style({
   transform: "translateY(-100%)",
+  boxShadow: "none"
 });
 
 export const header = style({
