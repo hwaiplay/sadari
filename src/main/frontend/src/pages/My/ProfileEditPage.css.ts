@@ -387,8 +387,7 @@ export const currentReadingCard = style({
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "#ffffff",
-  display: "grid",
-  gridTemplateColumns: "58px minmax(0, 1fr)",
+  display: "flex",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -623,8 +622,8 @@ export const readingSummaryReportPrivate = style([
 ]);
 
 export const readingSummaryCover = style({
-  width: "58px",
-  height: "78px",
+  width: "50px",
+  height: "74px",
   borderRadius: "4px",
   objectFit: "cover",
   backgroundColor: "#f0f1f2",
