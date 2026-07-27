@@ -278,7 +278,7 @@
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-        <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         SELECT /* getPublicReportList */
                P.REPT_NUMB
@@ -286,6 +286,8 @@
              , U.USER_NICK
              , F.FILE_PATH AS PORF_PATH
              , P.BOOK_NUMB
+             , P.REPT_STAT
+             , FN_GET_CODE_NAME(#{codeReadStat}, P.REPT_STAT) AS REPT_STAT_NAME
              , P.REPT_GRDE
              , P.REPT_CNTN
              , P.PUBC_YSNO
@@ -314,7 +316,6 @@
             ON UL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
            AND P.PUBC_YSNO = #{commYes}
-           AND P.REPT_STAT != #{reptStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
       ORDER BY P.REPT_NUMB DESC
     </select>
