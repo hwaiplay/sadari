@@ -381,14 +381,14 @@ export const currentReadingList = style({
 
 export const currentReadingCard = style({
   width: "100%",
-  minHeight: "78px",
+  minHeight: "102px",
   padding: "12px 8px",
   border: 0,
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "#ffffff",
   display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr)",
+  gridTemplateColumns: "58px minmax(0, 1fr)",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -568,14 +568,14 @@ export const readingSummaryPanelInner = style({
 
 export const readingSummaryReport = style({
   width: "100%",
-  minHeight: "68px",
+  minHeight: "98px",
   padding: "10px 8px",
   border: 0,
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "#ffffff",
   display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr)",
+  gridTemplateColumns: "58px minmax(0, 1fr)",
   alignItems: "center",
   gap: "12px",
   textAlign: "left",
@@ -623,8 +623,8 @@ export const readingSummaryReportPrivate = style([
 ]);
 
 export const readingSummaryCover = style({
-  width: "40px",
-  height: "54px",
+  width: "58px",
+  height: "78px",
   borderRadius: "4px",
   objectFit: "cover",
   backgroundColor: "#f0f1f2",
@@ -646,6 +646,31 @@ export const readingSummaryBookTitle = style({
   lineHeight: 1.25,
   color: vars.color.black,
 });
+
+export const readingSummaryBookTitleButton = style([
+  readingSummaryBookTitle,
+  {
+    width: "fit-content",
+    maxWidth: "100%",
+    padding: 0,
+    border: 0,
+    backgroundColor: "transparent",
+    textAlign: "left",
+    cursor: "pointer",
+    selectors: {
+      "&:hover": {
+        textDecoration: "underline",
+        textUnderlineOffset: "3px",
+      },
+      "&:focus-visible": {
+        outline: "2px solid #8ab4e8",
+        outlineOffset: "2px",
+        textDecoration: "underline",
+        textUnderlineOffset: "3px",
+      },
+    },
+  },
+]);
 
 export const readingSummaryBookMeta = style({
   overflow: "hidden",

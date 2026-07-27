@@ -746,9 +746,27 @@ function ProfileEditPage() {
                     />
                   )}
                   <span className={styles.currentReadingText}>
-                    <strong className={styles.readingSummaryBookTitle}>
+                    <span
+                      className={styles.readingSummaryBookTitleButton}
+                      role="link"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        // 제목은 카드의 빠른 수정 동작과 분리하여 도서 정보 화면으로 바로 이동합니다.
+                        event.stopPropagation();
+                        navigate(`/book/info/${report.reptNumb}`);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        navigate(`/book/info/${report.reptNumb}`);
+                      }}
+                    >
                       {report.bookTitl || message("frontend.common.noBookInfo")}
-                    </strong>
+                    </span>
                     <span className={styles.currentReadingMeta}>
                       <span className={styles.readingSummaryBookMeta}>
                         {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
@@ -1311,9 +1329,27 @@ function ProfileEditPage() {
                     />
                   )}
                   <span className={styles.readingSummaryBookText}>
-                    <strong className={styles.readingSummaryBookTitle}>
+                    <span
+                      className={styles.readingSummaryBookTitleButton}
+                      role="link"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        // 목록 전체 클릭은 독후감 상세, 제목 클릭은 해당 독후감의 도서 정보로 분리합니다.
+                        event.stopPropagation();
+                        navigate(`/book/info/${report.reptNumb}`);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+                        navigate(`/book/info/${report.reptNumb}`);
+                      }}
+                    >
                       {report.bookTitl || message("frontend.common.noBookInfo")}
-                    </strong>
+                    </span>
                     <span className={styles.readingSummaryBookMeta}>
                       <span className={styles.readingSummaryMetaLine}>
                         {report.bookAthr && (
@@ -1816,7 +1852,7 @@ function ProfileEditPage() {
                 aria-label={message("frontend.common.close")}
                 onClick={() => void closeProfileModal("followList")}
               >
-                x
+                ×
               </button>
             </div>
 
@@ -2070,7 +2106,7 @@ function ProfileEditPage() {
                 aria-label={message("frontend.common.close")}
                 onClick={() => void closeProfileModal("goalHelp")}
               >
-                x
+                ×
               </button>
             </div>
             <div className={styles.goalHelpBody}>
