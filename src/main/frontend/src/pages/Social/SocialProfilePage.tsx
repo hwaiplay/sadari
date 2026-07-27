@@ -453,9 +453,33 @@ function SocialProfilePage() {
                     />
                   )}
                   <span className={styles.currentReadingText}>
-                    <strong className={styles.readingSummaryBookTitle}>
+                    <button
+                      className={styles.readingSummaryBookTitleButton}
+                      type="button"
+                      onClick={() => {
+                        if (!report.bookIsbn) {
+                          void sweetWarning(
+                            message("frontend.common.invalidAccess"),
+                            message("frontend.common.noBookInfo"),
+                          );
+                          return;
+                        }
+
+                        // 다른 사용자 도서는 특정 독후감의 공개 여부와 무관하게 ISBN 기반 도서 정보로 이동합니다.
+                        navigate(
+                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          {
+                            state: {
+                              title: report.bookTitl,
+                              author: report.bookAthr,
+                              cover: report.bookCvim,
+                            },
+                          },
+                        );
+                      }}
+                    >
                       {report.bookTitl || message("frontend.common.noBookInfo")}
-                    </strong>
+                    </button>
                     <span className={styles.currentReadingMeta}>
                       <span className={styles.readingSummaryBookMeta}>
                         {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
@@ -618,9 +642,63 @@ function SocialProfilePage() {
                     />
                   )}
                   <span className={styles.readingSummaryBookText}>
-                    <strong className={styles.readingSummaryBookTitle}>
+                    <span
+                      className={styles.readingSummaryBookTitleButton}
+                      role="link"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.stopPropagation();
+
+                        if (!report.bookIsbn) {
+                          void sweetWarning(
+                            message("frontend.common.invalidAccess"),
+                            message("frontend.common.noBookInfo"),
+                          );
+                          return;
+                        }
+
+                        // 공개 여부와 관계없이 제목에서는 ISBN 기준 도서 정보 화면으로 이동합니다.
+                        navigate(
+                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          {
+                            state: {
+                              title: report.bookTitl,
+                              author: report.bookAthr,
+                              cover: report.bookCvim,
+                            },
+                          },
+                        );
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key !== "Enter" && event.key !== " ") {
+                          return;
+                        }
+
+                        event.preventDefault();
+                        event.stopPropagation();
+
+                        if (!report.bookIsbn) {
+                          void sweetWarning(
+                            message("frontend.common.invalidAccess"),
+                            message("frontend.common.noBookInfo"),
+                          );
+                          return;
+                        }
+
+                        navigate(
+                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          {
+                            state: {
+                              title: report.bookTitl,
+                              author: report.bookAthr,
+                              cover: report.bookCvim,
+                            },
+                          },
+                        );
+                      }}
+                    >
                       {report.bookTitl || message("frontend.common.noBookInfo")}
-                    </strong>
+                    </span>
                     <span className={styles.readingSummaryBookMeta}>
                       <span className={styles.readingSummaryMetaLine}>
                         {report.bookAthr && (
@@ -815,7 +893,7 @@ function SocialProfilePage() {
                 aria-label={message("frontend.common.close")}
                 onClick={handleFollowListClose}
               >
-                x
+                ×
               </button>
             </div>
 

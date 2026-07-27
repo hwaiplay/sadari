@@ -9,7 +9,9 @@ import {
   usePublicReportLikeMutation,
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
+import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import { useCodeList } from "@/features/Common/utils/codeUtil";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import CommentSheet from "./components/CommentSheet";
@@ -19,18 +21,11 @@ const CONTENT_PREVIEW_LENGTH = 180;
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 
 type ReportSort = "LATEST" | "RATING";
-type ReportStatus = "ALL" | PublicReportType["reptStat"];
+type ReportStatus = string;
 
 const SORT_OPTIONS: readonly CustomSelectOption<ReportSort>[] = [
   { value: "LATEST", label: "최신순" },
   { value: "RATING", label: "별점순" },
-];
-
-const STATUS_OPTIONS: readonly CustomSelectOption<ReportStatus>[] = [
-  { value: "ALL", label: "전체" },
-  { value: "READ", label: "읽고 있어요" },
-  { value: "DONE", label: "다 읽었어요" },
-  { value: "STOP", label: "중단했어요" },
 ];
 
 type PublicReportPageState = {
@@ -40,39 +35,12 @@ type PublicReportPageState = {
   ratingAverage?: number | string | null;
 };
 
-const STATUS_LABELS: Record<PublicReportType["reptStat"], string> = {
-  READ: "읽고 있어요",
-  DONE: "다 읽었어요",
-  STOP: "중단했어요",
-};
-
 const getReportStatus = (
   report: PublicReportType,
-): PublicReportType["reptStat"] => {
-  const reportStatus = String(report.reptStat ?? "")
+): string => {
+  return String(report.reptStat ?? "")
     .trim()
     .toUpperCase();
-
-  if (
-    reportStatus === "READ" ||
-    reportStatus === "DONE" ||
-    reportStatus === "STOP"
-  ) {
-    return reportStatus;
-  }
-
-  const reportStatusName = report.reptStatName?.replace(/\s/g, "") ?? "";
-
-  if (reportStatusName.includes("중단")) return "STOP";
-  if (
-    reportStatusName.includes("다읽") ||
-    reportStatusName.includes("완료")
-  ) {
-    return "DONE";
-  }
-
-  // 이전 API 응답처럼 상태 코드가 없는 데이터도 '읽고 있어요'로 표시한다.
-  return "READ";
 };
 
 /**
@@ -101,12 +69,33 @@ function PublicReportPage() {
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
   const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
+  const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLikeMutation();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {
     return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
   }, [publicReportsQuery.data]);
+
+  const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
+    // 전체 옵션만 화면 전용 값으로 두고 실제 독서 상태는 READ_STAT 상세코드의 사용 순서를 그대로 따릅니다.
+    return [
+      { value: "ALL", label: "전체" },
+      ...(reportStatusCodeQuery.data ?? []).map((code) => ({
+        value: code.comdCode,
+        label: code.comdName,
+      })),
+    ];
+  }, [reportStatusCodeQuery.data]);
+
+  const statusNameByCode = useMemo(() => {
+    return new Map(
+      (reportStatusCodeQuery.data ?? []).map((code) => [
+        code.comdCode.toUpperCase(),
+        code.comdName,
+      ]),
+    );
+  }, [reportStatusCodeQuery.data]);
 
   const visibleReports = useMemo(() => {
     const filteredReports =
@@ -152,7 +141,7 @@ function PublicReportPage() {
     }));
   };
 
-  const getStatusClassName = (reportStatus: PublicReportType["reptStat"]) => {
+  const getStatusClassName = (reportStatus: string) => {
     if (reportStatus === "DONE") {
       return styles.statusDone;
     }
@@ -233,7 +222,7 @@ function PublicReportPage() {
             />
             <CustomSelect
               value={status}
-              options={STATUS_OPTIONS}
+              options={statusOptions}
               ariaLabel="독서 상태"
               onChange={setStatus}
             />
@@ -275,7 +264,8 @@ function PublicReportPage() {
                           className={getStatusClassName(reportStatus)}
                         >
                           {report.reptStatName ||
-                            STATUS_LABELS[reportStatus]}
+                            statusNameByCode.get(reportStatus) ||
+                            reportStatus}
                         </span>
                       </div>
 
