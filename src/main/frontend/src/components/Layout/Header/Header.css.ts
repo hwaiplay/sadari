@@ -36,6 +36,19 @@ export const logo = style({
   zIndex: 1,
 });
 
+export const routeTitle = style({
+  margin: "0 auto",
+  padding: "0 94px 0 48px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  lineHeight: 1.2,
+  textAlign: "center",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
 export const backpageBtn = style({
   position: "absolute",
   left: "5px",
