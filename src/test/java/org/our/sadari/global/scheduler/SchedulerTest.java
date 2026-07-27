@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
 
 /**
@@ -25,6 +26,9 @@ class SchedulerTest {
     private ReportDateOverService reportDateOverService;
 
     @Mock
+    private AlimDeleteService alimDeleteService;
+
+    @Mock
     private CodeUtil codeUtil;
 
     private Scheduler scheduler;
@@ -36,7 +40,7 @@ class SchedulerTest {
      */
     @BeforeEach
     void setUp() {
-        scheduler = new Scheduler(reportDateOverService, codeUtil);
+        scheduler = new Scheduler(reportDateOverService, alimDeleteService, codeUtil);
     }
 
     /**
@@ -71,5 +75,39 @@ class SchedulerTest {
         scheduler.sendReportDateOverAlim();
 
         verify(reportDateOverService, never()).sendReportDateOverAlim();
+    }
+
+    /**
+     * ALIM_DELETE 상세코드가 사용 중이면 알림 삭제 서비스를 호출하는지 검증합니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Test
+    void delAlimRunsWhenDetailCodeIsEnabled() {
+        when(codeUtil.existsCode(
+                Constant.CODE_SCHD_CODE
+              , Constant.SCHEDULER_CODE_ALIM_DELETE
+        )).thenReturn(true);
+
+        scheduler.delAlim();
+
+        verify(alimDeleteService).delAlim();
+    }
+
+    /**
+     * ALIM_DELETE 상세코드가 중지 상태이면 알림 삭제 서비스를 호출하지 않는지 검증합니다.
+     *
+     * @author Seunghyeon.Kang
+     */
+    @Test
+    void delAlimSkipsWhenDetailCodeIsDisabled() {
+        when(codeUtil.existsCode(
+                Constant.CODE_SCHD_CODE
+              , Constant.SCHEDULER_CODE_ALIM_DELETE
+        )).thenReturn(false);
+
+        scheduler.delAlim();
+
+        verify(alimDeleteService, never()).delAlim();
     }
 }

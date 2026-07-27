@@ -7,8 +7,8 @@ import org.our.sadari.global.scheduler.service.SchedulerLogService;
 import org.springframework.stereotype.Component;
 
 /**
- * 모든 스케줄러가 실행 로그를 안전하게 등록하고 최종 상태를 계산할 수 있도록 공통 기능을 제공합니다.
- * 로그 저장 장애는 원래 스케줄러 업무의 성공 여부를 변경하지 않아야 하므로 내부에서 예외를 격리합니다.
+ * 모든 스케줄러가 실행 로그를 안전하게 등록하고 최종 상태를 계산할 수 있도록 공통 기능을 제공
+ * 로그 저장 장애는 원래 스케줄러 업무의 성공 여부를 변경하지 않아야 하므로 내부에서 예외를 격리
  *
  * @author Seunghyeon.Kang
  */
@@ -19,7 +19,7 @@ public class SchedulerLogSupport {
     private final SchedulerLogService schedulerLogService;
 
     /**
-     * 별도 트랜잭션으로 로그를 저장하는 서비스를 주입받아 공통 로그 지원 객체를 생성합니다.
+     * 별도 트랜잭션으로 로그를 저장하는 서비스를 주입받아 공통 로그 지원 객체를 생성
      *
      * @author Seunghyeon.Kang
      * @param schedulerLogService 스케줄러 실행 및 실패 로그 저장 서비스
@@ -29,7 +29,7 @@ public class SchedulerLogSupport {
     }
 
     /**
-     * 실행 시작 로그를 등록하되 로그 저장 오류가 원래 스케줄러 업무를 중단시키지 않도록 격리합니다.
+     * 실행 시작 로그를 등록하되 로그 저장 오류가 원래 스케줄러 업무를 중단시키지 않도록 격리
      *
      * @author Seunghyeon.Kang
      * @param schedulerRunDto 실행 시작 정보
@@ -51,7 +51,7 @@ public class SchedulerLogSupport {
     }
 
     /**
-     * 실패 상세를 등록하되 로그 저장 오류가 다음 스케줄러 대상의 처리를 막지 않도록 격리합니다.
+     * 실패 상세를 등록하되 로그 저장 오류가 다음 스케줄러 대상의 처리를 막지 않도록 격리
      *
      * @author Seunghyeon.Kang
      * @param runxNumb 스케줄러 실행 번호
@@ -93,7 +93,7 @@ public class SchedulerLogSupport {
     }
 
     /**
-     * 실행 종료 로그를 수정하되 로그 수정 오류가 스케줄러의 원래 처리 결과를 덮어쓰지 않도록 격리합니다.
+     * 실행 종료 로그를 수정하되 로그 수정 오류가 스케줄러의 원래 처리 결과를 덮어쓰지 않도록 격리
      *
      * @author Seunghyeon.Kang
      * @param schedulerRunDto 실행 종료 정보
@@ -116,7 +116,7 @@ public class SchedulerLogSupport {
     }
 
     /**
-     * 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정합니다.
+     * 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정
      *
      * @author Seunghyeon.Kang
      * @param successCnt 성공 건수

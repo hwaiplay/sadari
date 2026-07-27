@@ -8,7 +8,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * 스케줄러 업무 트랜잭션과 독립적으로 실행 요약 및 실패 상세 로그를 저장합니다.
+ * 스케줄러 업무 트랜잭션과 독립적으로 실행 요약 및 실패 상세 로그를 저장
  *
  * @author Seunghyeon.Kang
  */
@@ -27,7 +27,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     private final SchedulerLogMapper schedulerLogMapper;
 
     /**
-     * 스케줄러 로그 Mapper를 주입받아 로그 서비스 구현체를 생성합니다.
+     * 스케줄러 로그 Mapper를 주입받아 로그 서비스 구현체를 생성
      *
      * @author Seunghyeon.Kang
      * @param schedulerLogMapper 스케줄러 로그 등록 및 수정 Mapper
@@ -37,7 +37,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     }
 
     /**
-     * 스케줄러 실행 시작 로그를 별도 트랜잭션으로 등록합니다.
+     * 스케줄러 실행 시작 로그를 별도 트랜잭션으로 등록
      *
      * @author Seunghyeon.Kang
      * @param schedulerRunDto 실행 시작 정보
@@ -77,7 +77,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     }
 
     /**
-     * 스케줄러 실행의 최종 결과를 별도 트랜잭션으로 수정합니다.
+     * 스케줄러 실행의 최종 결과를 별도 트랜잭션으로 수정
      *
      * @author Seunghyeon.Kang
      * @param schedulerRunDto 실행 종료 정보
@@ -112,7 +112,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     }
 
     /**
-     * 스케줄러 실패 한 건을 별도 트랜잭션으로 등록합니다.
+     * 스케줄러 실패 한 건을 별도 트랜잭션으로 등록
      *
      * @author Seunghyeon.Kang
      * @param schedulerFailDto 실패 상세 정보

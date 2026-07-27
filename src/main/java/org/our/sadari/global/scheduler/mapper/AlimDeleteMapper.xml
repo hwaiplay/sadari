@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.global.scheduler.mapper.AlimDeleteMapper">
+
+    <!-- 사용자가 알림센터에서 지운 알림만 물리 삭제하며 읽음 여부만 Y인 알림은 삭제하지 않는다. -->
+    <delete id="delAlim">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        DELETE /* delAlim */
+          FROM TB_ALIMXX
+         WHERE DELT_YSNO = #{commYes}
+    </delete>
+
+</mapper>
