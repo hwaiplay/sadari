@@ -858,7 +858,7 @@ export const goalProgressRow = style({
 
 export const goalProgressTarget = style({
   position: "absolute",
-  left: 0,
+  left: "-4px",
   top: "0",
   width: "52px",
   overflow: "hidden",
