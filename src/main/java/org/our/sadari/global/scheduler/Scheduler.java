@@ -33,9 +33,9 @@ public class Scheduler {
      *
      * @author Seunghyeon.Kang
      */
-//    @Schedules({@Scheduled(cron = "0 */5 9 * * *"), // 오전 9:00 ~ 9:55 (5분 간격)
-//                @Scheduled(cron = "0 0 10 * * *")})  // 오전 10:00 정각
-    @Scheduled(fixedRate = 10000)
+    @Schedules({@Scheduled(cron = "0 */5 9 * * *"), // 오전 9:00 ~ 9:55 (5분 간격)
+                @Scheduled(cron = "0 0 10 * * *")})  // 오전 10:00 정각
+    //@Scheduled(fixedRate = 10000) //테스트
     public void sendReportDateOverAlim() {
         /*
          * CodeUtil은 USEE_YSNO가 Y인 상세코드만 반환한다.
@@ -50,4 +50,5 @@ public class Scheduler {
 
         reportDateOverService.sendReportDateOverAlim();
     }
+
 }
