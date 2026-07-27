@@ -13,7 +13,7 @@ import { createGlobalTheme } from "@vanilla-extract/css";
 export const vars = createGlobalTheme(":root", {
   color: {
     black: "#151515",
-    background: "#f0f0f0",
+    background: "#ffffff",
     black025: "#15151550",
     gray100: "#f0f0f0",
     gray200: "#e5e5e5",
