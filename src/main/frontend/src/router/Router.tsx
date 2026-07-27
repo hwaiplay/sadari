@@ -17,6 +17,7 @@ import PublicReportPage from "@/pages/Book/PublicReports/PublicReportPage";
 import ProfileEditPage from "@/pages/My/ProfileEditPage";
 import SocialProfilePage from "@/pages/Social/SocialProfilePage";
 import AlimPage from "@/pages/Alim/AlimPage";
+import SettingsPage from "@/pages/Settings/SettingsPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
@@ -94,6 +95,7 @@ const Router = () => {
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
           <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
           <Route path="/alim" element={<AlimPage />} />
+          <Route path="/settings" element={<SettingsPage />} />
         </Route>
       </Routes>
     </>

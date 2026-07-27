@@ -29,7 +29,8 @@ import org.springframework.stereotype.Service;
  *
  * 3. 변종 우회 문자 차단
  *    공백 제거, 특수문자 제거, 숫자 포함 문자 정규화를 거쳐
- *    의도적으로 기호나 숫자 또는 한글/영문 끼워넣기를 섞어 넣은 우회 비속어까지 탐지한다.
+ *    의도적으로 기호나 숫자를 섞어 넣은 우회 비속어까지 탐지한다.
+ *    정상 단어의 한글이나 영문을 임의로 건너뛰지 않아 "보이지" 같은 표현이 "보지"로 오탐되는 것을 방지한다.
  *
  * 4. 아호-코라식 문자열 탐색
  *    비속어 사전 전체를 매번 순회하지 않고 캐시 갱신 시점에 트라이와 실패 링크를 미리 구성한다.
@@ -55,7 +56,8 @@ public class BadWordDetectionService {
     /**
      * 입력된 문자열에서 탐지된 비속어 단어를 찾아 Optional 형태로 반환한다.
      * 비속어가 발견되더라도 같은 문자열 안에서 EXCP_WORD 허용어가 더 넓은 범위로 감싸고 있으면 정상 표현으로 보고 통과시킨다.
-     * 원문, 특수문자 제거본, 한글/영문 끼워넣기 우회본, 숫자 보존 정규화본을 순차적으로 검사한다.
+     * 공백 제거본, 숫자·특수문자 제거본, 숫자 보존 정규화본을 순차적으로 검사한다.
+     * 한글이나 영문은 우회 문자로 제거하지 않으며 숫자, 특수문자 및 공백을 끼워 넣은 경우만 차단한다.
      *
      * 예시 처리 과정:
      * 입력값 "안 녕 씨 아 발 1 8 년"
@@ -91,7 +93,6 @@ public class BadWordDetectionService {
         // 앞 단계에서 비속어가 발견되면 뒤 단계의 검사 로직은 실행되지 않고 즉시 종료되어 CPU 자원을 아낀다.
         return findBadWord(cache.badWordMatcher(), cache.exceptionWordMatcher(), blankRemovedValue)
                 .or(() -> findBadWord(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits))
-                .or(() -> findBadWordWithLetterGap(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits))
                 .or(() -> findDigitBadWord(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
     }
 
@@ -204,29 +205,6 @@ public class BadWordDetectionService {
         // 따라서 단어 600개를 각각 contains로 검사하지 않고 입력 문자열의 글자 흐름을 한 번만 따라가며 매칭 결과를 찾는다.
         // 단, EXCP_WORD 허용어가 같은 구간을 감싸는 경우에는 정상 단어로 판단해야 하므로 위치 정보를 함께 비교한다.
         return findLongestBadWordOutsideException(matcher.findMatches(value), exceptionMatcher.findMatches(value));
-    }
-
-    /**
-     * 비속어 글자 사이에 한글이나 영문 한 글자 또는 같은 글자가 연속으로 끼어든 우회 문자열을 탐지한다.
-     * 예를 들어 비속어가 "씨발"이면 "씨아발", "씨아아발"처럼 같은 끼워넣기 문자가 반복된 형태까지 차단한다.
-     *
-     * @author Seonghyeon.Kang
-     * @param matcher 비속어 사전으로 구성한 아호-코라식 자동자
-     * @param value 한글과 영문만 남긴 검사 대상 문자열
-     * @return 탐지된 비속어 중 가장 긴 단어
-     */
-    private Optional<String> findBadWordWithLetterGap(AhoCorasickMatcher matcher, AhoCorasickMatcher exceptionMatcher, String value) {
-        // 끼워넣기 우회 검사는 정규화된 문자열이 있어야 의미가 있으므로 빈 값이면 즉시 종료한다.
-        if (StringUtil.isEmpty(value)) {
-            return Optional.empty();
-        }
-
-        // 일반 아호-코라식 검사는 정확한 연속 문자열 탐색이고, 이 메서드는 글자 사이의 제한된 노이즈를 허용하는 보강 검사이다.
-        // 두 검사를 분리하면 기본 탐색 성능은 유지하면서 사용자가 의도적으로 한글/영문을 끼워 넣은 경우만 추가로 처리할 수 있다.
-        return findLongestBadWordOutsideException(
-                matcher.findMatchesWithSingleRepeatedLetterGap(value),
-                exceptionMatcher.findMatches(value)
-        );
     }
 
     /**
@@ -481,130 +459,6 @@ public class BadWordDetectionService {
             }
 
             return matchedWords;
-        }
-
-        /**
-         * 비속어 각 글자 사이에 한글 또는 영문 한 종류가 끼어든 경우까지 포함하여 가장 긴 매칭 단어를 찾는다.
-         * 정확한 아호-코라식 탐색으로 잡히지 않는 "씨아발", "fxxuck" 같은 우회 입력을 보강하기 위한 제한적 근사 탐색이다.
-         *
-         * @author Seonghyeon.Kang
-         * @param value 한글과 영문만 남긴 검사 대상 문자열
-         * @return 탐지된 가장 긴 비속어
-         */
-        private List<MatchedWord> findMatchesWithSingleRepeatedLetterGap(String value) {
-            int[] codePoints = value.codePoints().toArray();
-            List<MatchedWord> matchedWords = new ArrayList<>();
-
-            for (int startIndex = 0; startIndex < codePoints.length; startIndex++) {
-                matchedWords.addAll(findMatchesWithSingleRepeatedLetterGap(codePoints, startIndex));
-            }
-
-            return matchedWords;
-        }
-
-        /**
-         * 특정 시작 위치에서 비속어 글자 사이의 제한된 끼워넣기 문자를 허용하며 트라이를 따라간다.
-         * 한 전이 구간마다 하나의 한글/영문 문자 또는 같은 문자의 연속만 건너뛰도록 제한해 과도한 오탐을 막는다.
-         *
-         * 동작 시뮬레이션 예시:
-         * 입력값 = "씨아아아발" (비속어 사전: "씨발")
-         * 1. '씨' 노드 매칭 성공.
-         * 2. 다음 글자 '아'를 만남 -> '씨' 노드의 자식에 '아'가 없으므로 정규 검사 실패.
-         * 3. 끼워넣기 검사 발동 -> '아'가 연속으로 나오는지 확인하면서 인덱스를 넘김 ("아아아" 통과).
-         * 4. 끼워넣기 문자가 끝난 직후 다음 글자인 '발'을 확인 -> '씨' 노드의 자식 '발'과 매칭 성공.
-         * 5. "씨발" 탐지 성공.
-         *
-         * @author Seonghyeon.Kang
-         * @param codePoints 검사 대상 문자열을 코드포인트 배열로 변환한 값
-         * @param startIndex 검사를 시작할 코드포인트 배열 위치
-         * @return 해당 시작 위치에서 탐지된 가장 긴 비속어
-         */
-        private List<MatchedWord> findMatchesWithSingleRepeatedLetterGap(int[] codePoints, int startIndex) {
-            TrieNode node = root;
-            List<MatchedWord> matchedWords = new ArrayList<>();
-            int index = startIndex;
-
-            while (index < codePoints.length) {
-                int codePoint = codePoints[index];
-                TrieNode nextNode = node.children.get(codePoint);
-
-                // 현재 문자로 바로 다음 트라이 노드에 갈 수 있으면 가장 정상적인 매칭 경로이므로 그대로 진행한다.
-                if (nextNode != null) {
-                    node = nextNode;
-                    index++;
-                    addMatches(matchedWords, node.outputs, startIndex, index);
-                    continue;
-                }
-
-                // 아직 비속어 첫 글자도 맞추지 못한 상태라면 끼워넣기 문자를 허용할 근거가 없다.
-                // 시작 글자부터 다른 경우는 이 위치에서의 근사 탐색을 중단하고 다음 시작 위치로 넘긴다.
-                if (node == root) {
-                    break;
-                }
-
-                // 끼워넣기 허용 대상은 한글/영문 한 종류로 제한한다.
-                // 숫자와 특수문자는 앞선 정규화 단계에서 이미 별도 처리하므로 여기서 다시 허용하지 않는다.
-                if (!isHangulOrAlphabetic(codePoint)) {
-                    break;
-                }
-
-                int gapCodePoint = codePoint;
-
-                // 사용자가 같은 글자를 여러 번 늘려 쓰는 우회도 같은 한 종류의 끼워넣기 문자로 본다.
-                // 예를 들어 "씨아아아발"은 "씨"와 "발" 사이에 "아"가 반복된 것으로 보고 한 번에 건너뛴다.
-                while (index < codePoints.length && codePoints[index] == gapCodePoint) {
-                    index++;
-                }
-
-                // 한 종류의 끼워넣기 문자를 건너뛴 직후에는 반드시 원래 비속어의 다음 글자가 와야 한다.
-                // 다른 한글/영문이 또 나오면 서로 다른 노이즈가 연속된 것이므로 과도한 오탐 방지를 위해 중단한다.
-                if (index >= codePoints.length) {
-                    break;
-                }
-
-                nextNode = node.children.get(codePoints[index]);
-                if (nextNode == null) {
-                    break;
-                }
-
-                node = nextNode;
-                index++;
-                addMatches(matchedWords, node.outputs, startIndex, index);
-            }
-
-            return matchedWords;
-        }
-
-        /**
-         * 현재 위치에서 완성된 출력 단어 목록을 매칭 결과 목록에 추가한다.
-         * 끼워넣기 우회 탐색에서는 실제 입력에서 비속어 글자 사이에 허용된 노이즈 문자가 들어갈 수 있으므로
-         * 단어 길이로 시작 위치를 역산하지 않고 탐색을 시작한 위치와 현재 위치를 그대로 범위로 사용한다.
-         *
-         * @author Seonghyeon.Kang
-         * @param matchedWords 누적할 매칭 결과 목록
-         * @param outputWords 현재 트라이 노드에서 끝나는 단어 목록
-         * @param startIndex 탐색 시작 위치
-         * @param endIndex 탐색이 끝난 직후 위치
-         */
-        private void addMatches(List<MatchedWord> matchedWords, List<String> outputWords, int startIndex, int endIndex) {
-            for (String outputWord : outputWords) {
-                matchedWords.add(new MatchedWord(outputWord, startIndex, endIndex));
-            }
-        }
-
-        /**
-         * 끼워넣기 우회 문자로 허용할 문자인지 판단한다.
-         * 한글과 영문 외의 숫자, 기호, 공백은 이미 다른 정규화 단계에서 처리하므로 이 분기에서는 제외한다.
-         *
-         * @author Seonghyeon.Kang
-         * @param codePoint 검사할 유니코드 코드포인트
-         * @return 한글 또는 영문 여부
-         */
-        private boolean isHangulOrAlphabetic(int codePoint) {
-            Character.UnicodeScript unicodeScript = Character.UnicodeScript.of(codePoint);
-
-            return unicodeScript == Character.UnicodeScript.HANGUL
-                    || unicodeScript == Character.UnicodeScript.LATIN;
         }
 
         /**
