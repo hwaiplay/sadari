@@ -10,9 +10,9 @@ export const page = style({
 
 export const profileShell = style({
   width: "100%",
-  maxWidth: "520px",
+  maxWidth: "600px",
   minHeight: "calc(100vh - 110px)",
-  margin: "12px auto 0",
+  margin: "12px 0",
   backgroundColor: "#ffffff",
   display: "flex",
   flexDirection: "column",
@@ -982,7 +982,7 @@ export const goalModalOverlayClosing = style({
 });
 
 export const goalModal = style({
-  width: "min(520px, 100%)",
+  width: "min(600px, 100%)",
   maxHeight: "calc(100dvh - 48px)",
   overflowY: "auto",
   borderRadius: "18px",
