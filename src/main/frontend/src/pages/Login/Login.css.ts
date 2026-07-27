@@ -21,7 +21,10 @@ const rollDown = keyframes({
 
 export const loginContainer = style({
   position: "relative",
+  maxWidth: "600px",
+  width: "100%",
   height: "100svh",
+  margin: "0 auto",
   overflow: "hidden"
 });
 
