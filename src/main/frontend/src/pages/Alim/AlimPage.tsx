@@ -9,7 +9,8 @@ import {
 import Loading from "@/components/Loading/Loading";
 import {
   getMyAlimListApi,
-  readAllAlimApi,
+  delAllAlimApi,
+  uptAlimReadApi,
   type AlimItem,
 } from "@/features/Alim/api/alimApi";
 import { notifyUnreadAlimCntChanged } from "@/features/Alim/lib/alimEvents";
@@ -23,6 +24,9 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./AlimPage.css";
 
 const PUSH_ENABLED_STORAGE_KEY = "sadari:push-enabled";
+const ALIM_DISMISS_ANIMATION_MS = 360;
+const ALIM_DISMISS_STAGGER_MS = 30;
+const ALIM_DISMISS_MAX_STAGGER_COUNT = 10;
 
 /**
  * 별도 상태 조회 API 없이 버튼 상태를 유지하기 위해 현재 브라우저에 마지막 토글 결과를 저장합니다.
@@ -52,7 +56,7 @@ function setStoredPushEnabled(enabled: boolean) {
 
 /**
  * 로그인 사용자의 알림 목록을 보여주는 페이지입니다.
- * 목록 API는 조회된 알림을 읽음 처리하므로, 무한 스크롤로 실제 불러온 페이지까지만 읽음 처리됩니다.
+ * 삭제되지 않은 알림을 모두 보여주며, 개별 링크 클릭으로 읽음 처리하고 모두 지우기로 목록에서 제거합니다.
  *
  * @author Hanwon.Jang
  * @return 알림 목록 화면
@@ -64,11 +68,14 @@ function AlimPage() {
   const [hasNext, setHasNext] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isFetchingMore, setIsFetchingMore] = useState(false);
-  const [isReadingAll, setIsReadingAll] = useState(false);
+  const [isDeletingAll, setIsDeletingAll] = useState(false);
+  const [isClearingAll, setIsClearingAll] = useState(false);
+  const [readingAlimNumb, setReadingAlimNumb] = useState<number | null>(null);
   const [isPushEnabled, setIsPushEnabled] = useState(getInitialPushEnabled);
   const [isPushChanging, setIsPushChanging] = useState(false);
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
   const pushTokenRef = useRef<string | null>(null);
+  const dismissTimerRef = useRef<number | null>(null);
 
   const loadAlimList = useCallback(
     async (page: number) => {
@@ -84,7 +91,7 @@ function AlimPage() {
         const response = await getMyAlimListApi(page);
         const data = response.data;
 
-        // 서버에서 조회된 알림은 이미 읽음 처리했으므로 프론트 목록도 같은 상태로 병합한다.
+        // 목록 조회는 상태를 변경하지 않으므로 서버가 반환한 미삭제 알림을 읽음 상태 그대로 페이지 순서대로 병합한다.
         setAlimList((prevList) => (
           isFirstPage ? data.list ?? [] : [...prevList, ...(data.list ?? [])]
         ));
@@ -112,6 +119,14 @@ function AlimPage() {
   }, [loadAlimList]);
 
   useEffect(() => {
+    return () => {
+      if (dismissTimerRef.current !== null) {
+        window.clearTimeout(dismissTimerRef.current);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
     const target = observerTargetRef.current;
 
     if (!target || !hasNext || isLoading || isFetchingMore) {
@@ -121,8 +136,7 @@ function AlimPage() {
     const observer = new IntersectionObserver((entries) => {
       const [entry] = entries;
 
-      // 하단 감지 영역이 보이는 순간 다음 20개를 요청한다.
-      // 이 요청이 성공한 페이지까지만 서버에서 읽음 처리되므로 스크롤하지 않은 알림은 미읽음 상태로 남는다.
+      // 하단 감지 영역이 보이는 순간 다음 미읽음 알림 20개를 요청한다.
       if (entry?.isIntersecting) {
         void loadAlimList(nextPage);
       }
@@ -135,26 +149,53 @@ function AlimPage() {
     };
   }, [hasNext, isFetchingMore, isLoading, loadAlimList, nextPage]);
 
-  const handleReadAll = async () => {
-    if (isReadingAll) {
+  const handleDeleteAll = async () => {
+    if (isDeletingAll) {
       return;
     }
 
-    setIsReadingAll(true);
+    let dismissAnimationStarted = false;
+    setIsDeletingAll(true);
 
     try {
-      const response = await readAllAlimApi();
+      const response = await delAllAlimApi();
 
-      // 모두 읽음은 아직 불러오지 않은 알림도 처리하지만, 현재 화면에는 이미 로드된 목록만 있으므로 표시 목록만 즉시 보정한다.
-      setAlimList((prevList) => prevList.map((alim) => ({ ...alim, readYsno: "Y" })));
+      // 서버는 아직 불러오지 않은 알림까지 모두 삭제 처리하므로 추가 페이지 요청을 즉시 중단한다.
+      setHasNext(false);
       notifyUnreadAlimCntChanged(response.data?.unreadCnt ?? 0);
+
+      // 현재 화면에 카드가 있으면 순차적으로 오른쪽 퇴장시킨 뒤 목록을 비워 빈 상태 문구로 전환한다.
+      if (alimList.length > 0) {
+        dismissAnimationStarted = true;
+        setIsClearingAll(true);
+        const maxStaggerCount = Math.min(
+          Math.max(alimList.length - 1, 0),
+          ALIM_DISMISS_MAX_STAGGER_COUNT,
+        );
+        const totalAnimationMs =
+          ALIM_DISMISS_ANIMATION_MS
+          + maxStaggerCount * ALIM_DISMISS_STAGGER_MS;
+
+        dismissTimerRef.current = window.setTimeout(() => {
+          setAlimList([]);
+          setIsClearingAll(false);
+          setIsDeletingAll(false);
+          dismissTimerRef.current = null;
+        }, totalAnimationMs);
+        return;
+      }
+
+      setAlimList([]);
     } catch (error) {
       void sweetError(
         message("frontend.alim.readAll.failedTitle"),
         getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
-      setIsReadingAll(false);
+      // 퇴장 애니메이션이 시작된 경우에는 타이머 완료 시 버튼 잠금을 해제해 중복 요청을 막는다.
+      if (!dismissAnimationStarted) {
+        setIsDeletingAll(false);
+      }
     }
   };
 
@@ -234,13 +275,34 @@ function AlimPage() {
     }
   };
 
-  const handleAlimClick = (alim: AlimItem) => {
+  const handleAlimClick = async (alim: AlimItem) => {
     // 링크가 없는 알림은 단순 안내 알림으로 취급해 현재 화면을 유지합니다.
-    if (!alim.linkUrlx) {
+    if (!alim.linkUrlx || readingAlimNumb !== null || isClearingAll) {
       return;
     }
 
-    navigate(alim.linkUrlx);
+    setReadingAlimNumb(alim.alimNumb);
+
+    try {
+      const response = await uptAlimReadApi(alim.alimNumb);
+      notifyUnreadAlimCntChanged(response.data?.unreadCnt ?? 0);
+      // 읽은 알림도 알림센터에 유지하므로 제거하지 않고 상태만 바꾸어 어두운 스타일을 즉시 적용한다.
+      setAlimList((prevList) => (
+        prevList.map((item) => (
+          item.alimNumb === alim.alimNumb
+            ? { ...item, readYsno: "Y" }
+            : item
+        ))
+      ));
+      navigate(alim.linkUrlx);
+    } catch (error) {
+      void sweetError(
+        message("frontend.alim.readAll.failedTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+    } finally {
+      setReadingAlimNumb(null);
+    }
   };
 
   const renderAlimIcon = (alimIconName?: string) => {
@@ -314,8 +376,8 @@ function AlimPage() {
           <button
             className={styles.readAllButton}
             type="button"
-            disabled={isReadingAll}
-            onClick={handleReadAll}
+            disabled={isDeletingAll || isClearingAll || alimList.length === 0}
+            onClick={handleDeleteAll}
           >
             {message("frontend.alim.readAll")}
           </button>
@@ -326,11 +388,22 @@ function AlimPage() {
         <div className={styles.empty}>{message("frontend.alim.empty")}</div>
       ) : (
         <section className={styles.list} aria-label={message("frontend.alim.title")}>
-          {alimList.map((alim) => (
+          {alimList.map((alim, index) => (
             <button
-              className={styles.itemButton}
+              className={[
+                styles.itemButton,
+                alim.readYsno === "Y" ? styles.itemButtonRead : "",
+                isClearingAll ? styles.itemButtonLeaving : "",
+              ].filter(Boolean).join(" ")}
               type="button"
-              onClick={() => handleAlimClick(alim)}
+              disabled={isClearingAll || readingAlimNumb === alim.alimNumb}
+              onClick={() => void handleAlimClick(alim)}
+              style={isClearingAll ? {
+                animationDelay: `${
+                  Math.min(index, ALIM_DISMISS_MAX_STAGGER_COUNT)
+                  * ALIM_DISMISS_STAGGER_MS
+                }ms`,
+              } : undefined}
               key={`${alim.userNumb}-${alim.alimNumb}`}
             >
               <span className={getAlimIconWrapClass(alim.alimIconName)} aria-hidden="true">

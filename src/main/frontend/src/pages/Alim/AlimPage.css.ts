@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
 export const page = style({
@@ -110,6 +110,33 @@ export const itemButton = style({
   textAlign: "left",
   cursor: "pointer",
   boxSizing: "border-box",
+});
+
+// 읽은 알림은 목록에 유지하되 미읽음 알림보다 낮은 명도와 대비로 상태를 구분한다.
+export const itemButtonRead = style({
+  backgroundColor: "#f3f4f6",
+  borderColor: "#e5e7eb",
+  opacity: 0.68,
+});
+
+const dismissToRight = keyframes({
+  from: {
+    transform: "translateX(0)",
+    opacity: 1,
+  },
+  to: {
+    transform: "translateX(calc(100% + 32px))",
+    opacity: 0,
+  },
+});
+
+export const itemButtonLeaving = style({
+  pointerEvents: "none",
+  animationName: dismissToRight,
+  animationDuration: "360ms",
+  animationTimingFunction: "cubic-bezier(0.4, 0, 0.2, 1)",
+  animationFillMode: "forwards",
+  willChange: "transform, opacity",
 });
 
 export const alimIconWrap = style({
