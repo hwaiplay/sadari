@@ -17,6 +17,10 @@ import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import HeaderMenuDrawer from "./HeaderMenuDrawer";
+import {
+  getUserMenuApi,
+  type UserMenuItem,
+} from "@/features/Menu/api/userMenuApi";
 
 const HEADER_SCROLL_DELTA = 4;
 
@@ -24,11 +28,11 @@ function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const isSubPage = location.pathname !== "/home";
-  const isPublicReportsPage =
-    location.pathname === "/book/public-reports/isbn";
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
   const [isHidden, setIsHidden] = useState(false);
+  const [currentMenu, setCurrentMenu] = useState<UserMenuItem | null>(null);
+  const [menuList, setMenuList] = useState<UserMenuItem[]>([]);
 
   const backPrev = () => {
     navigate(-1);
@@ -81,11 +85,39 @@ function Header() {
     };
   }, [location.pathname]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    // 경로가 바뀌면 이전 화면의 메뉴명이 잠시 남지 않도록 먼저 로고 표시 상태로 초기화한다.
+    setCurrentMenu(null);
+
+    getUserMenuApi(location.pathname)
+      .then((response) => {
+        if (ignore) {
+          return;
+        }
+
+        setCurrentMenu(response.data?.currentMenu ?? null);
+        setMenuList(response.data?.menuList ?? []);
+      })
+      .catch(() => {
+        if (!ignore) {
+          // 메뉴 조회 실패는 화면 진입을 막지 않고 기존 로고와 빈 햄버거 목록으로 대체한다.
+          setCurrentMenu(null);
+          setMenuList([]);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [location.pathname]);
+
   return (
     <header
       className={clsx(
         headerShell,
-        isHidden && !isPublicReportsPage && headerHidden,
+        isHidden && headerHidden,
       )}
     >
       <Container className={clsx(header, isSubPage && "_sub")}>
@@ -102,8 +134,8 @@ function Header() {
             />
           </button>
         )}
-        {isPublicReportsPage ? (
-          <h1 className={routeTitle}>다른 사람이 쓴 독후감 보기</h1>
+        {currentMenu?.menuName ? (
+          <h1 className={routeTitle}>{currentMenu.menuName}</h1>
         ) : (
           <Link to="/" className={logo}>
             <img
@@ -113,7 +145,7 @@ function Header() {
             />
           </Link>
         )}
-        <HeaderMenuDrawer />
+        <HeaderMenuDrawer menuList={menuList} />
       </Container>
     </header>
   );
