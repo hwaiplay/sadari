@@ -12,53 +12,56 @@ const sheetEnter = keyframes({
 
 const statusPill = style({
   flexShrink: 0,
-  minHeight: "20px",
-  padding: "3px 8px",
+  maxHeight: "20px",
+  padding: "5px 7px",
   borderRadius: "999px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.medium,
-  fontSize: "9px",
+  fontSize: "10px",
   lineHeight: 1,
+  letterSpacing: "-1%",
   whiteSpace: "nowrap",
 });
 
 export const page = style({
   width: "100%",
-  minHeight: "100vh",
+  minHeight: "100svh",
   backgroundColor: "#ffffff",
+  paddingBottom: '60px'
 });
 
 export const content = style({
-  maxWidth: "520px",
-  width: "100%",
-  margin: "0 auto",
-  padding: "84px 12px 32px",
   display: "flex",
   flexDirection: "column",
 });
 
 export const header = style({
-  position: "fixed",
+  position: "sticky",
   top: vars.headerHeight,
-  left: "50%",
   zIndex: 996,
-  width: "min(100%, 520px)",
-  height: "84px",
+  width: "100svw",
+  height: "90px",
+  marginLeft: "calc(50% - 50svw)",
+  backgroundColor: "#ffffff",
+  boxShadow: "0px 3px 10px rgba(0, 0, 0, 0.08)",
+});
+
+export const headerWrap = style({
+  width: "100%",
+  maxWidth: "600px",
+  height: "100%",
+  margin: "0 auto",
+  padding: "10px 24px",
   display: "flex",
   gap: "12px",
   alignItems: "center",
-  margin: 0,
-  padding: "10px 16px",
-  transform: "translateX(-50%)",
-  backgroundColor: "#ffffff",
-  boxShadow: "0 5px 12px rgba(0, 0, 0, 0.08)",
 });
 
 export const coverFrame = style({
-  width: "48px",
-  height: "64px",
+  width: "fit-content",
+  height: "100%",
   borderRadius: "3px",
   overflow: "hidden",
   flexShrink: 0,
@@ -82,7 +85,7 @@ export const headingArea = style({
 export const bookTitle = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.45,
   color: vars.color.black,
   display: "-webkit-box",
@@ -94,7 +97,7 @@ export const bookTitle = style({
 export const authorRatingLine = style({
   display: "flex",
   alignItems: "center",
-  gap: "7px",
+  gap: "2px",
   minWidth: 0,
 });
 
@@ -103,7 +106,7 @@ export const meta = style({
   margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "10px",
+  fontSize: "12px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -121,7 +124,7 @@ export const ratingSummary = style({
   gap: "3px",
   color: vars.color.gray600,
   fontFamily: vars.font.medium,
-  fontSize: "10px",
+  fontSize: "12px",
 });
 
 export const ratingStar = style({
@@ -135,65 +138,14 @@ export const filters = style({
   alignItems: "center",
   gap: "8px",
   minHeight: "42px",
-  padding: "8px 0 4px",
-});
-
-export const filterControl = style({
-  position: "relative",
-  display: "inline-flex",
-  alignItems: "center",
-  selectors: {
-    "&::after": {
-      content: "",
-      width: "6px",
-      height: "6px",
-      marginLeft: "-12px",
-      borderRight: `1px solid ${vars.color.gray600}`,
-      borderBottom: `1px solid ${vars.color.gray600}`,
-      transform: "translateY(-2px) rotate(45deg)",
-      pointerEvents: "none",
-    },
-  },
-});
-
-export const filterSelect = style({
-  minWidth: 0,
-  height: "28px",
-  padding: "0 20px 0 2px",
-  border: 0,
-  borderRadius: 0,
-  appearance: "none",
-  backgroundColor: "transparent",
-  color: vars.color.black,
-  fontFamily: vars.font.medium,
-  fontSize: "11px",
-  cursor: "pointer",
-  outline: "none",
-});
-
-export const filterDivider = style({
-  width: "1px",
-  height: "12px",
-  backgroundColor: vars.color.gray300,
-});
-
-export const visuallyHidden = style({
-  position: "absolute",
-  width: "1px",
-  height: "1px",
-  padding: 0,
-  margin: "-1px",
-  overflow: "hidden",
-  clip: "rect(0, 0, 0, 0)",
-  whiteSpace: "nowrap",
-  border: 0,
+  padding: "18px 0",
 });
 
 export const list = style({
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
-  paddingBottom: "8px",
+  gap: "16px",
+
 });
 
 export const item = style({
@@ -201,10 +153,10 @@ export const item = style({
   display: "flex",
   flexDirection: "column",
   gap: "8px",
-  minHeight: "110px",
-  padding: "10px",
+  minHeight: "172px",
+  padding: "12px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "10px",
+  borderRadius: "22px",
   backgroundColor: "#ffffff",
 });
 
@@ -257,9 +209,9 @@ export const writer = style({
 export const statusDone = style([
   statusPill,
   {
-    border: "1px solid #70b6ee",
-    backgroundColor: "#f4faff",
-    color: "#4d9ddb",
+    border: `1px solid ${vars.color.brand}`,
+    backgroundColor: "#DAEEF8",
+    color: vars.color.brand,
   },
 ]);
 
@@ -286,14 +238,14 @@ export const reportRating = style({
   display: "inline-flex",
   alignItems: "center",
   gap: "3px",
-  color: vars.color.gray600,
+  color: vars.color.gray900,
   fontFamily: vars.font.medium,
-  fontSize: "10px",
+  fontSize: "12px",
 });
 
 export const reportContentWrap = style({
   maxHeight: "70px",
-  overflow: "hidden",
+  overflow: "clip",
   transition: "max-height 220ms ease",
 });
 
@@ -306,20 +258,21 @@ export const reportContentWrapOpen = style([
 
 export const reportContent = style({
   margin: 0,
-  color: "#555555",
+  color: "#565656",
   fontFamily: vars.font.body,
   fontSize: "14px",
-  lineHeight: 1.65,
+  lineHeight: "22px",
+  letterSpacing: '-1%',
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
 });
 
 export const expandButton = style({
   position: "absolute",
-  bottom: "8px",
+  bottom: "14px",
   left: "50%",
-  width: "22px",
-  height: "18px",
+  width: "20px",
+  height: "20px",
   padding: 0,
   display: "inline-flex",
   alignItems: "center",
@@ -331,9 +284,6 @@ export const expandButton = style({
 });
 
 export const expandArrow = style({
-  width: "17px",
-  height: "17px",
-  fill: "currentColor",
   transition: "transform 180ms ease",
 });
 
@@ -514,7 +464,7 @@ export const commentForm = style({
   flexShrink: 0,
   padding: "10px 16px calc(10px + env(safe-area-inset-bottom))",
   borderTop: `1px solid ${vars.color.gray300}`,
-  backgroundColor: vars.color.white,
+  backgroundColor: "#FFFFFF",
   display: "flex",
   alignItems: "center",
   gap: "8px",
@@ -527,7 +477,7 @@ export const commentInput = style({
   padding: "0 14px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "21px",
-  backgroundColor: vars.color.white,
+  backgroundColor: "#FFFFFF",
   color: vars.color.black,
   fontFamily: vars.font.body,
   fontSize: "14px",
@@ -549,7 +499,7 @@ export const commentSubmitButton = style({
   border: 0,
   borderRadius: "21px",
   backgroundColor: vars.color.black,
-  color: vars.color.white,
+  color: "#FFFFFF",
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
