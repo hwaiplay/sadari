@@ -1,5 +1,5 @@
 import {style} from "@vanilla-extract/css";
-import {vars} from "../../../app/styles/tokens.css";
+import {vars} from "@/app/styles/tokens.css";
 
 export const navContainer = style({
     position: "fixed",
@@ -28,7 +28,7 @@ export const navigation = style({
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    width: "min(100%, clamp(320px, 56vw, 520px))",
+    width: "min(100%, clamp(320px, 56vw, 600px))",
     margin: "0 auto",
 });
 
