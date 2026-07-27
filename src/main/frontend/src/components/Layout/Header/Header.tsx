@@ -5,7 +5,14 @@
  */
 import { message } from "@/app/messages/message";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { backpageBtn, header, headerHidden, headerShell, logo } from "./Header.css";
+import {
+  backpageBtn,
+  header,
+  headerHidden,
+  headerShell,
+  logo,
+  routeTitle,
+} from "./Header.css";
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
@@ -17,6 +24,8 @@ function Header() {
   const location = useLocation();
   const navigate = useNavigate();
   const isSubPage = location.pathname !== "/home";
+  const isPublicReportsPage =
+    location.pathname === "/book/public-reports/isbn";
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
   const [isHidden, setIsHidden] = useState(false);
@@ -73,7 +82,12 @@ function Header() {
   }, [location.pathname]);
 
   return (
-    <header className={clsx(headerShell, isHidden && headerHidden)}>
+    <header
+      className={clsx(
+        headerShell,
+        isHidden && !isPublicReportsPage && headerHidden,
+      )}
+    >
       <Container className={clsx(header, isSubPage && "_sub")}>
         {isSubPage && (
           <button
@@ -88,13 +102,17 @@ function Header() {
             />
           </button>
         )}
-        <Link to="/" className={logo}>
-          <img
-            src={"/img/common/logo-upper.svg"}
-            alt={message("frontend.common.logoAlt")}
-            width={100}
-          />
-        </Link>
+        {isPublicReportsPage ? (
+          <h1 className={routeTitle}>다른 사람이 쓴 독후감 보기</h1>
+        ) : (
+          <Link to="/" className={logo}>
+            <img
+              src={"/img/common/logo-upper.svg"}
+              alt={message("frontend.common.logoAlt")}
+              width={100}
+            />
+          </Link>
+        )}
         <HeaderMenuDrawer />
       </Container>
     </header>
