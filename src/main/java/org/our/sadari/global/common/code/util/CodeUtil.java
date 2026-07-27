@@ -16,7 +16,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 /**
- * CodeUtil 클래스의 역할과 책임을 정의한다.
+ * 공통코드와 세부코드의 목록, 존재 여부 및 표시 이름을 조회하는 공통 유틸리티이다.
+ * 코드 조회가 필요한 각 도메인이 CodeMapper에 직접 의존하지 않도록 공통 조회 진입점을 제공한다.
  *
  * @author Seunghyeon.Kang
  */
@@ -32,11 +33,12 @@ public class CodeUtil {
     private final CodeMapper codeMapper;
 
     /**
-     * getCodeList 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 정렬 순서대로 조회한다.
+     * 사용 중지된 세부코드는 Mapper 조회 조건에서 제외된다.
      *
      * @author Seunghyeon.Kang
-     * @param commCode 처리에 필요한 입력값
-     * @return 처리 결과
+     * @param commCode 세부코드 목록을 조회할 공통코드
+     * @return 사용 가능한 세부코드 DTO 목록
      */
     public List<CodeDto> getCodeList(String commCode) {
         return codeMapper.getCodeList(commCode);
@@ -52,9 +54,7 @@ public class CodeUtil {
      */
     public Map<String, List<CodeDto>> getCodeGroupList(List<String> commCodeList) {
         // 빈 IN 조건은 Oracle 문법 오류를 만들 수 있으므로 Mapper를 호출하기 전에 요청을 차단한다.
-        if (commCodeList == null
-                || commCodeList.isEmpty()
-                || commCodeList.size() > CODE_GROUP_QUERY_MAX_SIZE) {
+        if (commCodeList == null || commCodeList.isEmpty() || commCodeList.size() > CODE_GROUP_QUERY_MAX_SIZE) {
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
         }
 
@@ -92,11 +92,12 @@ public class CodeUtil {
     }
 
     /**
-     * getFirstCode 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통코드에 등록된 사용 가능한 세부코드 중 정렬 순서가 가장 앞선 코드값을 조회한다.
+     * 기본 선택값이 필요한 화면이나 업무 로직에서 사용하며, 조회 결과가 없으면 null을 반환한다.
      *
      * @author Seunghyeon.Kang
-     * @param commCode 처리에 필요한 입력값
-     * @return 처리 결과
+     * @param commCode 첫 번째 세부코드를 조회할 공통코드
+     * @return 첫 번째 세부코드값 또는 조회 결과가 없을 경우 null
      */
     public String getFirstCode(String commCode) {
         return getCodeList(commCode).stream()
@@ -106,12 +107,13 @@ public class CodeUtil {
     }
 
     /**
-     * existsCode 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 전달받은 세부코드가 지정한 공통코드의 사용 가능한 코드 목록에 존재하는지 확인한다.
+     * 영문 코드값은 대소문자를 구분하지 않고 비교한다.
      *
      * @author Seunghyeon.Kang
-     * @param commCode 처리에 필요한 입력값
-     * @param comdCode 처리에 필요한 입력값
-     * @return 처리 결과
+     * @param commCode 존재 여부를 확인할 공통코드
+     * @param comdCode 존재 여부를 확인할 세부코드
+     * @return 세부코드가 사용 가능한 목록에 존재하면 true, 그렇지 않으면 false
      */
     public boolean existsCode(String commCode, String comdCode) {
         return getCodeList(commCode).stream()
@@ -119,25 +121,27 @@ public class CodeUtil {
     }
 
     /**
-     * getCodeName 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통코드와 세부코드에 대응하는 화면 표시용 코드명을 조회한다.
+     * 옵션 조건이 필요하지 않은 일반 코드명 조회에서 사용한다.
      *
      * @author Seunghyeon.Kang
-     * @param commCode 처리에 필요한 입력값
-     * @param comdCode 처리에 필요한 입력값
-     * @return 처리 결과
+     * @param commCode 코드명을 조회할 공통코드
+     * @param comdCode 코드명을 조회할 세부코드
+     * @return 공통코드와 세부코드에 대응하는 코드명
      */
     public String getCodeName(String commCode, String comdCode) {
         return getCodeName(commCode, comdCode, null);
     }
 
     /**
-     * getCodeName 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통코드, 세부코드 및 선택 옵션값에 대응하는 화면 표시용 코드명을 조회한다.
+     * 옵션값이 전달되면 데이터베이스 코드명 조회 함수가 해당 옵션 조건까지 반영한다.
      *
      * @author Seunghyeon.Kang
-     * @param commCode 처리에 필요한 입력값
-     * @param comdCode 처리에 필요한 입력값
-     * @param optCode 처리에 필요한 입력값
-     * @return 처리 결과
+     * @param commCode 코드명을 조회할 공통코드
+     * @param comdCode 코드명을 조회할 세부코드
+     * @param optCode 코드명 조회에 추가로 적용할 옵션 코드
+     * @return 공통코드, 세부코드 및 옵션 조건에 대응하는 코드명
      */
     public String getCodeName(String commCode, String comdCode, String optCode) {
         return codeMapper.getCodeName(commCode, comdCode, optCode);
