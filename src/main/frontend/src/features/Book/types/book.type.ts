@@ -135,11 +135,14 @@ export interface PublicReportType {
   userNick: string;
   porfPath?: string;
   bookNumb: number;
+  reptStat: "READ" | "DONE" | "STOP";
+  reptStatName?: string;
   reptGrde: string;
   reptCntn: string;
   pubcYsno: "Y";
   likeCnt?: number;
   likeYsno?: "Y" | "N";
+  commentCnt?: number;
 }
 
 // 독후감 상세보기 타입
