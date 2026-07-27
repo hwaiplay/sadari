@@ -1,14 +1,5 @@
-import { keyframes, style } from "@vanilla-extract/css";
+import { style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
-
-const sheetEnter = keyframes({
-  from: {
-    transform: "translateY(100%)",
-  },
-  to: {
-    transform: "translateY(0)",
-  },
-});
 
 const statusPill = style({
   flexShrink: 0,
@@ -39,7 +30,7 @@ export const content = style({
 
 export const header = style({
   position: "sticky",
-  top: vars.headerHeight,
+  top: 0,
   zIndex: 996,
   width: "100svw",
   height: "90px",
@@ -354,159 +345,4 @@ export const empty = style({
   fontFamily: vars.font.body,
   fontSize: "13px",
   textAlign: "center",
-});
-
-export const sheetLayer = style({
-  position: "fixed",
-  inset: 0,
-  zIndex: 1200,
-  display: "flex",
-  justifyContent: "center",
-  alignItems: "flex-end",
-});
-
-export const sheetBackdrop = style({
-  position: "absolute",
-  inset: 0,
-  width: "100%",
-  height: "100%",
-  border: 0,
-  backgroundColor: "rgba(0, 0, 0, 0.48)",
-  cursor: "default",
-});
-
-export const commentSheet = style({
-  position: "relative",
-  zIndex: 1,
-  width: "min(100%, 600px)",
-  height: "min(72svh, 560px)",
-  borderRadius: "12px 12px 0 0",
-  backgroundColor: "#ffffff",
-  display: "flex",
-  flexDirection: "column",
-  overflow: "hidden",
-  animation: `${sheetEnter} 240ms cubic-bezier(0.22, 1, 0.36, 1) both`,
-});
-
-export const sheetHandle = style({
-  width: "40px",
-  height: "4px",
-  margin: "10px auto 0",
-  borderRadius: "999px",
-  backgroundColor: vars.color.gray300,
-});
-
-export const commentSheetBody = style({
-  minHeight: 0,
-  flex: 1,
-  padding: "24px 20px",
-  display: "flex",
-  flexDirection: "column",
-  overflowY: "auto",
-});
-
-export const commentEmpty = style({
-  flex: 1,
-  display: "flex",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-});
-
-export const commentEmptyIcon = style({
-  width: "42px",
-  height: "42px",
-  marginBottom: "12px",
-  opacity: 0.72,
-});
-
-export const commentEmptyTitle = style({
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-});
-
-export const commentEmptyText = style({
-  maxWidth: "250px",
-  marginTop: "7px",
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "11px",
-  lineHeight: 1.55,
-  textAlign: "center",
-  wordBreak: "keep-all",
-});
-
-export const temporaryCommentList = style({
-  width: "100%",
-  margin: 0,
-  padding: 0,
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  listStyle: "none",
-});
-
-export const temporaryComment = style({
-  alignSelf: "flex-end",
-  maxWidth: "82%",
-  padding: "9px 12px",
-  borderRadius: "14px 14px 2px 14px",
-  backgroundColor: vars.color.gray100,
-  color: vars.color.black,
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  lineHeight: 1.45,
-  wordBreak: "break-word",
-});
-
-export const commentForm = style({
-  flexShrink: 0,
-  padding: "10px 16px calc(10px + env(safe-area-inset-bottom))",
-  borderTop: `1px solid ${vars.color.gray300}`,
-  backgroundColor: "#FFFFFF",
-  display: "flex",
-  alignItems: "center",
-  gap: "8px",
-});
-
-export const commentInput = style({
-  minWidth: 0,
-  height: "42px",
-  flex: 1,
-  padding: "0 14px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "21px",
-  backgroundColor: "#FFFFFF",
-  color: vars.color.black,
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  outline: "none",
-  selectors: {
-    "&::placeholder": {
-      color: vars.color.gray500,
-    },
-    "&:focus": {
-      borderColor: vars.color.gray600,
-    },
-  },
-});
-
-export const commentSubmitButton = style({
-  flexShrink: 0,
-  height: "42px",
-  padding: "0 14px",
-  border: 0,
-  borderRadius: "21px",
-  backgroundColor: vars.color.black,
-  color: "#FFFFFF",
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
-  selectors: {
-    "&:disabled": {
-      backgroundColor: vars.color.gray300,
-      cursor: "default",
-    },
-  },
 });
