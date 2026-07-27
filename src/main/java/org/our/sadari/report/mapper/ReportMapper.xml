@@ -274,7 +274,7 @@
            )
     </select>
 
-    <!-- ISBN 기준으로 다른 사용자의 공개 독후감 목록을 조회한다. -->
+    <!-- ISBN 기준으로 다른 사용자의 공개 독후감을 조회하며, 독서 상태와 관계없이 전체 상태를 반환한다. -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
