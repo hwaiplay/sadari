@@ -46,7 +46,7 @@ public interface AlimMapper {
      * 로그인 사용자의 삭제되지 않은 알림 목록을 최신순으로 조회합니다.
      *
      * @author Seunghyeon.Kang
-     * @param userNumb 로그인 사용자 번호
+     * @param req 로그인 사용자 번호
      * @return 사용자 알림 목록
      */
     List<AlimDto.AlimItemDto> getMyAlimList(AlimDto.AlimListReqDto req);
