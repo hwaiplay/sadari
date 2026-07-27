@@ -40,10 +40,8 @@ public class AlimController {
      */
     @GetMapping("/list")
     @Operation(summary = "내 알림 목록 조회", description = "로그인 사용자의 삭제되지 않은 알림 목록을 최신순으로 조회한다.")
-    public ResultData getMyAlimList(
-            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
-            @RequestParam(defaultValue = "1") int page
-    ) {
+    public ResultData getMyAlimList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                    , @RequestParam(defaultValue = "1") int page) {
         // 목록 조회만으로는 읽음 처리하지 않으며 명시적으로 알림 링크를 클릭했을 때만 읽음 상태를 변경한다.
         return alimService.getMyAlimList(loginUserNumb, page);
     }
@@ -71,10 +69,8 @@ public class AlimController {
      */
     @PutMapping("/read-status")
     @Operation(summary = "알림 개별 읽음 처리", description = "사용자가 클릭한 알림 한 건의 읽음 여부와 읽은 일시를 갱신한다.")
-    public ResultData uptAlimRead(
-            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
-          , @Valid @RequestBody AlimDto.AlimReadReqDto request
-    ) {
+    public ResultData uptAlimRead(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                , @Valid @RequestBody AlimDto.AlimReadReqDto request) {
         return alimService.uptAlimRead(loginUserNumb, request);
     }
 
