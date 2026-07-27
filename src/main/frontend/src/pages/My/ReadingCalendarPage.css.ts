@@ -29,7 +29,7 @@ export const page = style({
 });
 
 export const content = style({
-  maxWidth: "520px",
+  maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
   padding: "18px 16px 44px",
