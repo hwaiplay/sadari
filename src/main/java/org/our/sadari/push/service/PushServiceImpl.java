@@ -236,9 +236,14 @@ public class PushServiceImpl implements PushService {
      * @param title 푸시 제목
      * @param body 푸시 내용
      * @param linkUrlx 클릭 이동 링크
+     * @param alimNumb 클릭 시 읽음 처리할 사용자별 알림 번호
      */
     @Override
-    public void sendPush(Long userNumb, String title, String body, String linkUrlx) {
+    public void sendPush(Long userNumb
+                       , String title
+                       , String body
+                       , String linkUrlx
+                       , Long alimNumb) {
         if (StringUtil.isEmpty(userNumb)) {
             return;
         }
@@ -246,7 +251,13 @@ public class PushServiceImpl implements PushService {
         List<PushDto.PushSubDto> pushSubList = pushMapper.getActivePushSubList(userNumb);
 
         for (PushDto.PushSubDto pushSub : pushSubList) {
-            firebaseMessagingProvider.send(pushSub.getEndpUrlx(), title, body, linkUrlx);
+            firebaseMessagingProvider.send(
+                    pushSub.getEndpUrlx()
+                  , title
+                  , body
+                  , linkUrlx
+                  , alimNumb
+            );
         }
     }
 }

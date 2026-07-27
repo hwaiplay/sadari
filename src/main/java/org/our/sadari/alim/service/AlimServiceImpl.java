@@ -43,7 +43,7 @@ public class AlimServiceImpl implements AlimService {
      * @return 알림 목록
      */
     @Override
-    @Transactional
+    @Transactional(readOnly = true)
     public ResultData getMyAlimList(Long userNumb, int page) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
@@ -59,22 +59,14 @@ public class AlimServiceImpl implements AlimService {
         req.setEndRow(currentPage * ALIM_PAGE_SIZE + 1);
 
         List<AlimDto.AlimItemDto> searchedList = alimMapper.getMyAlimList(req);
+        if (searchedList == null) {
+            searchedList = Collections.emptyList();
+        }
+
         boolean hasNext = searchedList.size() > ALIM_PAGE_SIZE;
         List<AlimDto.AlimItemDto> visibleList = new ArrayList<>(
                 hasNext ? searchedList.subList(0, ALIM_PAGE_SIZE) : searchedList
         );
-
-        // 알림 목록을 보는 순간 읽음 처리하지만, 아직 스크롤로 불러오지 않은 알림은 읽음 처리하지 않는다.
-        // 그래서 DB에서 pageSize + 1개를 조회했더라도 실제 화면에 노출하는 20개만 UPDATE 대상으로 넘긴다.
-        if (!visibleList.isEmpty()) {
-            AlimDto.AlimReadReqDto readReq = new AlimDto.AlimReadReqDto();
-            readReq.setUserNumb(userNumb);
-            readReq.setAlimList(visibleList);
-            alimMapper.uptAlimReadByList(readReq);
-
-            // 화면에 돌려주는 목록도 이미 읽은 상태로 맞춰 프론트에서 즉시 상태가 어긋나지 않게 한다.
-            visibleList.forEach(alim -> alim.setReadYsno(Constant.COMM_YES));
-        }
 
         AlimDto.AlimListResDto res = new AlimDto.AlimListResDto();
         res.setList(visibleList);
@@ -94,6 +86,7 @@ public class AlimServiceImpl implements AlimService {
      * @return 미읽음 알림 수
      */
     @Override
+    @Transactional(readOnly = true)
     public ResultData getUnreadAlimCnt(Long userNumb) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
@@ -105,21 +98,51 @@ public class AlimServiceImpl implements AlimService {
     }
 
     /**
-     * 사용자가 모두 읽음 버튼을 누른 경우 아직 화면에 로드하지 않은 알림까지 전부 읽음 처리한다.
-     * 일반 목록 조회와 달리 특정 ALIM_NUMB 목록을 받지 않는 것이 의도된 분기이다.
+     * 알림센터 항목 또는 푸시 알림을 클릭한 경우 해당 사용자의 알림 한 건을 읽음 처리한다.
+     * 이미 읽은 알림에 같은 요청이 다시 들어와도 성공으로 응답하는 멱등 방식으로 처리한다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @return 읽음 처리 결과
+     * @param req 읽음 처리할 사용자별 알림 번호
+     * @return 읽음 처리 후 남은 미읽음 알림 수
      */
     @Override
     @Transactional
-    public ResultData readAllAlim(Long userNumb) {
+    public ResultData uptAlimRead(Long userNumb, AlimDto.AlimReadReqDto req) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        alimMapper.uptAllAlimRead(userNumb);
+        if (req == null || StringUtil.isEmpty(req.getAlimNumb())) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // USER_NUMB는 요청 본문을 신뢰하지 않고 인증 정보로 덮어써 다른 사용자의 알림 변경을 차단한다.
+        req.setUserNumb(userNumb);
+        alimMapper.uptAlimRead(req);
+
+        AlimDto.AlimUnreadCntDto res = new AlimDto.AlimUnreadCntDto();
+        res.setUnreadCnt(alimMapper.getUnreadAlimCnt(userNumb));
+        return ResultData.success(res);
+    }
+
+    /**
+     * 사용자가 모두 지우기 버튼을 누르면 아직 화면에 로드하지 않은 알림까지 전부 삭제 상태로 변경한다.
+     * READ_YSNO와 READ_DATE는 변경하지 않아 읽음 이력과 삭제 이력을 서로 독립적으로 유지한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 모두 지우기 처리 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delAllAlim(Long userNumb) {
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 모두 지우기는 읽음 여부를 변경하지 않고 삭제 여부만 갱신하여 알림센터 노출 대상에서 제외한다.
+        alimMapper.delAllAlim(userNumb);
 
         AlimDto.AlimUnreadCntDto res = new AlimDto.AlimUnreadCntDto();
         res.setUnreadCnt(0);
@@ -198,7 +221,8 @@ public class AlimServiceImpl implements AlimService {
                         alim.getUserNumb(),
                         alim.getAlimTitl(),
                         alim.getAlimCont(),
-                        alim.getLinkUrlx()
+                        alim.getLinkUrlx(),
+                        alim.getAlimNumb()
                 );
             } catch (RuntimeException e) {
                 // 푸시는 부가 기능이므로 commit이 끝난 알림 저장 결과에는 영향을 주지 않는다.

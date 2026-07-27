@@ -113,7 +113,11 @@ function HeaderMenuDrawer() {
     void refreshUnreadAlimCnt();
 
     const handleServiceWorkerMessage = (event: MessageEvent) => {
-      if (event.data?.type === "SADARI_ALIM_RECEIVED") {
+      // 푸시 수신뿐 아니라 시스템 알림 클릭으로 읽음 상태가 바뀐 경우에도 배지 수를 다시 조회한다.
+      if (
+        event.data?.type === "SADARI_ALIM_RECEIVED"
+        || event.data?.type === "SADARI_ALIM_READ"
+      ) {
         void refreshUnreadAlimCnt();
       }
     };
