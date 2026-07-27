@@ -30,15 +30,20 @@ import {
   hamburgerIcon,
 } from "./Header.css";
 import * as drawerStyles from "../Navigation/Navigation.css";
+import type { UserMenuItem } from "@/features/Menu/api/userMenuApi";
 
-const MENU_ITEMS = [
-  { label: "독서 캘린더", disabled: false },
-  { label: "준비 중", disabled: true },
-  { label: "준비 중", disabled: true },
-  { label: "준비 중", disabled: true },
-];
+type HeaderMenuDrawerProps = {
+  menuList: UserMenuItem[];
+};
 
-function HeaderMenuDrawer() {
+/**
+ * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시합니다.
+ *
+ * @author Hanwon.Jang
+ * @param menuList SHOW_YSNO와 USEE_YSNO가 모두 Y인 사용자 메뉴 목록
+ * @return 헤더 알림·햄버거 버튼과 메뉴 드로어
+ */
+function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
@@ -253,25 +258,25 @@ function HeaderMenuDrawer() {
           </div>
         </section>
         <div className={drawerStyles.drawerMenu}>
-          {MENU_ITEMS.map((item, index) => (
+          {menuList.map((item) => (
             <button
               className={clsx(
                 drawerStyles.drawerMenuButton,
-                item.disabled && drawerStyles.drawerMenuDisabled,
+                !item.menuUrlx && drawerStyles.drawerMenuDisabled,
               )}
               type="button"
-              disabled={item.disabled}
+              disabled={!item.menuUrlx}
               onClick={() => {
-                if (item.disabled) {
+                if (!item.menuUrlx) {
                   return;
                 }
 
                 setIsDrawerOpen(false);
-                navigate("/mypage/reading-calendar");
+                navigate(item.menuUrlx);
               }}
-              key={`${item.label}-${index}`}
+              key={`${item.menuNumb}-${item.subxNumb}`}
             >
-              {item.label}
+              {item.menuName}
             </button>
           ))}
         </div>
