@@ -41,7 +41,7 @@ export const routeTitle = style({
   margin: "0 auto",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "17px",
+  fontSize: "19px",
   lineHeight: 1.3,
   letterSpacing: 0,
   overflow: "hidden",
