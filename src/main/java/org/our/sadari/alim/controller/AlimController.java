@@ -3,6 +3,7 @@ package org.our.sadari.alim.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.alim.dto.AlimDto;
 import org.our.sadari.alim.service.AlimService;
@@ -14,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PutMapping;
 
 /**
  * 사용자 알림 목록 조회와 공통 알림 발송을 제공하는 API Controller이다.
@@ -42,7 +44,7 @@ public class AlimController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb,
             @RequestParam(defaultValue = "1") int page
     ) {
-        // 알림 목록은 조회되는 순간 읽음 처리되므로, page 값만 넘기고 20개 단위 정책은 서비스에서 고정한다.
+        // 목록 조회만으로는 읽음 처리하지 않으며 명시적으로 알림 링크를 클릭했을 때만 읽음 상태를 변경한다.
         return alimService.getMyAlimList(loginUserNumb, page);
     }
 
@@ -60,16 +62,34 @@ public class AlimController {
     }
 
     /**
-     * 사용자가 모두 읽음 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 읽음 처리한다.
+     * 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리한다.
      *
      * @author Seunghyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
-     * @return 읽음 처리 결과
+     * @param request 읽음 처리할 사용자별 알림 번호
+     * @return 읽음 처리 후 남은 미읽음 알림 수
      */
-    @PostMapping("/read-all")
-    @Operation(summary = "알림 모두 읽음 처리", description = "로그인 사용자의 모든 미읽음 알림을 읽음 처리한다.")
-    public ResultData readAllAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-        return alimService.readAllAlim(loginUserNumb);
+    @PutMapping("/read-status")
+    @Operation(summary = "알림 개별 읽음 처리", description = "사용자가 클릭한 알림 한 건의 읽음 여부와 읽은 일시를 갱신한다.")
+    public ResultData uptAlimRead(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+          , @Valid @RequestBody AlimDto.AlimReadReqDto request
+    ) {
+        return alimService.uptAlimRead(loginUserNumb, request);
+    }
+
+    /**
+     * 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경한다.
+     *
+     * @author Seunghyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @return 모두 지우기 처리 결과
+     */
+    @PostMapping("/delete-all")
+    @Operation(summary = "알림 모두 지우기", description = "로그인 사용자의 삭제되지 않은 모든 알림을 삭제 상태로 변경한다.")
+    public ResultData delAllAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+        // 실제 데이터를 물리 삭제하지 않고 DELT_YSNO만 변경하여 알림 이력은 보존한다.
+        return alimService.delAllAlim(loginUserNumb);
     }
 
     /**

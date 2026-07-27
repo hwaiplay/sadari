@@ -52,24 +52,24 @@ public interface AlimMapper {
     List<AlimDto.AlimItemDto> getMyAlimList(AlimDto.AlimListReqDto req);
 
     /**
-     * 화면에 실제로 노출된 알림만 읽음 처리합니다.
-     * 모두 읽음과 달리 리스트에 포함된 ALIM_NUMB만 갱신해야 첫 페이지 이탈 시 20개만 읽음 처리됩니다.
+     * 사용자가 클릭한 알림 한 건을 읽음 처리합니다.
+     * 사용자별 알림 번호이므로 인증 사용자 번호와 ALIM_NUMB를 함께 조건으로 사용합니다.
      *
      * @author Seunghyeon.Kang
-     * @param req 사용자 번호와 읽음 처리 대상 알림 목록
+     * @param req 로그인 사용자 번호와 읽음 처리할 알림 번호
      * @return 반영 건수
      */
-    int uptAlimReadByList(AlimDto.AlimReadReqDto req);
+    int uptAlimRead(AlimDto.AlimReadReqDto req);
 
     /**
-     * 로그인 사용자의 모든 미읽음 알림을 읽음 처리합니다.
-     * 화면에 아직 로드하지 않은 알림까지 처리해야 하므로 목록 조건 없이 사용자 기준으로 갱신합니다.
+     * 로그인 사용자의 삭제되지 않은 모든 알림을 삭제 상태로 변경합니다.
+     * 화면에 아직 로드하지 않은 알림까지 처리해야 하므로 사용자 번호만으로 갱신합니다.
      *
      * @author Seunghyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @return 반영 건수
      */
-    int uptAllAlimRead(@Param("userNumb") Long userNumb);
+    int delAllAlim(@Param("userNumb") Long userNumb);
 
     /**
      * 햄버거 메뉴 배지에 표시할 미읽음 알림 수를 조회합니다.
