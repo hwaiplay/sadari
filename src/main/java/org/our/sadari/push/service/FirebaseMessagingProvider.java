@@ -88,9 +88,14 @@ public class FirebaseMessagingProvider {
      * @param title 알림 제목
      * @param body 알림 내용
      * @param linkUrlx 알림 클릭 이동 링크
+     * @param alimNumb 클릭 시 읽음 처리할 사용자별 알림 번호
      * @return 실제 발송 성공 여부
      */
-    public boolean send(String token, String title, String body, String linkUrlx) {
+    public boolean send(String token
+                      , String title
+                      , String body
+                      , String linkUrlx
+                      , Long alimNumb) {
         if (StringUtil.isEmpty(token)) {
             // token 없이 호출된 경우는 특정 브라우저 구독을 식별할 수 없어 발송하지 않는다.
             log.debug("FCM push send skipped. token is empty.");
@@ -104,7 +109,7 @@ public class FirebaseMessagingProvider {
         }
 
         try {
-            Object message = createMessage(token, title, body, linkUrlx);
+            Object message = createMessage(token, title, body, linkUrlx, alimNumb);
             firebaseMessagingClass.getMethod("send", messageClass).invoke(firebaseMessaging, message);
             return true;
         } catch (Throwable e) {
@@ -216,9 +221,14 @@ public class FirebaseMessagingProvider {
      * @param title 알림 제목
      * @param body 알림 내용
      * @param linkUrlx 알림 클릭 이동 링크
+     * @param alimNumb 클릭 시 읽음 처리할 사용자별 알림 번호
      * @return Firebase Message 객체
      */
-    private Object createMessage(String token, String title, String body, String linkUrlx) throws Exception {
+    private Object createMessage(String token
+                               , String title
+                               , String body
+                               , String linkUrlx
+                               , Long alimNumb) throws Exception {
         Class<?> notificationClass = Class.forName(FIREBASE_NOTIFICATION_CLASS_NAME);
         Object notification = createNotification(notificationClass, title, body);
         Object messageBuilder = invokeStatic(messageClass, "builder");
@@ -228,8 +238,20 @@ public class FirebaseMessagingProvider {
         Object titleDataBuilder = invoke(notificationBuilder, "putData", new Class<?>[]{String.class, String.class}, "title", getPushTitle(title));
         Object bodyDataBuilder = invoke(titleDataBuilder, "putData", new Class<?>[]{String.class, String.class}, "body", getPushBody(body));
         Object linkDataBuilder = invoke(bodyDataBuilder, "putData", new Class<?>[]{String.class, String.class}, "linkUrlx", getPushLink(linkUrlx));
+        Object messageDataBuilder = linkDataBuilder;
 
-        return invoke(linkDataBuilder, "build");
+        // 알림 번호가 있어야 서비스워커가 사용자가 클릭한 정확한 알림 한 건을 읽음 처리할 수 있다.
+        if (alimNumb != null) {
+            messageDataBuilder = invoke(
+                    linkDataBuilder
+                  , "putData"
+                  , new Class<?>[]{String.class, String.class}
+                  , "alimNumb"
+                  , String.valueOf(alimNumb)
+            );
+        }
+
+        return invoke(messageDataBuilder, "build");
     }
 
     /**

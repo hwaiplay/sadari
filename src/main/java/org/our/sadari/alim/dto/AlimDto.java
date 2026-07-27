@@ -1,6 +1,7 @@
 package org.our.sadari.alim.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.NotNull;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -155,7 +156,7 @@ public class AlimDto {
 
     /**
      * 알림 목록 응답 DTO이다.
-     * 조회된 목록만 읽음 처리하기 때문에, 사용자가 첫 화면만 보고 나가면 첫 페이지 20개만 읽음 처리된다.
+     * 목록 조회 자체는 읽음 상태를 변경하지 않으며 삭제되지 않은 알림을 읽음 여부와 함께 전달한다.
      *
      * @author Seunghyeon.Kang
      */
@@ -181,22 +182,23 @@ public class AlimDto {
     }
 
     /**
-     * 조회된 알림만 읽음 처리하기 위한 DTO이다.
-     * 모두 읽음과 달리 화면에 실제로 도착한 알림 번호만 담아 부분 읽음 처리한다.
+     * 사용자가 클릭한 알림 한 건을 읽음 처리하기 위한 DTO이다.
+     * USER_NUMB는 인증 정보로 서비스에서 설정하고 외부 요청은 사용자별 ALIM_NUMB만 전달한다.
      *
      * @author Seunghyeon.Kang
      */
     @Data
-    @Schema(description = "알림 부분 읽음 처리 DTO")
+    @Schema(description = "알림 개별 읽음 처리 DTO")
     public static class AlimReadReqDto {
 
         // 로그인 사용자 번호이다. 다른 사용자의 알림 번호가 섞여 들어와도 WHERE 절에서 한 번 더 제한한다.
         @Schema(description = "사용자 번호", example = "31")
         private Long userNumb;
 
-        // 이번 조회 결과로 화면에 노출된 알림 목록이다.
-        @Schema(description = "읽음 처리할 알림 목록")
-        private List<AlimItemDto> alimList;
+        // 사용자가 실제로 클릭한 사용자별 알림 번호이다.
+        @NotNull
+        @Schema(description = "읽음 처리할 사용자별 알림 번호", example = "1", requiredMode = Schema.RequiredMode.REQUIRED)
+        private Long alimNumb;
     }
 
     /**
