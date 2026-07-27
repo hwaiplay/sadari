@@ -1,5 +1,5 @@
-import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
 import {
@@ -7,12 +7,16 @@ import {
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import type { PublicReportType } from "@/features/Book/types/book.type";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
+
+type ReportSort = "LATEST" | "RATING";
+type ReportStatus = "ALL" | PublicReportType["reptStat"];
 
 type PublicReportPageState = {
   title?: string;
@@ -21,9 +25,44 @@ type PublicReportPageState = {
   ratingAverage?: number | string | null;
 };
 
+const STATUS_LABELS: Record<PublicReportType["reptStat"], string> = {
+  READ: "읽고 있어요",
+  DONE: "다 읽었어요",
+  STOP: "중단했어요",
+};
+
+const getReportStatus = (
+  report: PublicReportType,
+): PublicReportType["reptStat"] => {
+  const reportStatus = String(report.reptStat ?? "")
+    .trim()
+    .toUpperCase();
+
+  if (
+    reportStatus === "READ" ||
+    reportStatus === "DONE" ||
+    reportStatus === "STOP"
+  ) {
+    return reportStatus;
+  }
+
+  const reportStatusName = report.reptStatName?.replace(/\s/g, "") ?? "";
+
+  if (reportStatusName.includes("중단")) return "STOP";
+  if (
+    reportStatusName.includes("다읽") ||
+    reportStatusName.includes("완료")
+  ) {
+    return "DONE";
+  }
+
+  // 이전 API 응답처럼 상태 코드가 없는 데이터도 '읽고 있어요'로 표시한다.
+  return "READ";
+};
+
 /**
  * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시합니다.
- * 작성자 프로필, 별점, 좋아요 상태, 독후감 내용을 한 화면에서 확인할 수 있습니다.
+ * 책 정보, 정렬 및 독서 상태 필터, 좋아요와 댓글 바텀시트를 한 화면에서 제공합니다.
  *
  * @author Hanwon.Jang
  * @return 공개 독후감 목록 페이지 컴포넌트
@@ -35,64 +74,64 @@ function PublicReportPage() {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
-  const [isRatingTooltipOpen, setIsRatingTooltipOpen] = useState(false);
-  const ratingTooltipRef = useRef<HTMLDivElement | null>(null);
+  const [sort, setSort] = useState<ReportSort>("LATEST");
+  const [status, setStatus] = useState<ReportStatus>("ALL");
+  const [commentReport, setCommentReport] = useState<PublicReportType | null>(
+    null,
+  );
+  const [commentInput, setCommentInput] = useState("");
+  const [temporaryComments, setTemporaryComments] = useState<
+    Record<number, string[]>
+  >({});
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
-
   const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
   const likeMutation = usePublicReportLikeMutation();
   const pageState = (location.state ?? {}) as PublicReportPageState;
-  const ratingAverageValue = pageState.ratingAverage;
-  const hasRatingAverage =
-    ratingAverageValue !== null &&
-    ratingAverageValue !== undefined &&
-    ratingAverageValue !== "";
 
   const reports = useMemo(() => {
     return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
   }, [publicReportsQuery.data]);
 
-  /**
-   * 평점 평균 설명 말풍선이 열린 상태에서 다른 영역을 누르면 말풍선을 닫습니다.
-   * 평균 평점 버튼과 말풍선 내부 클릭은 같은 영역으로 보아 닫지 않습니다.
-   *
-   * @author Hanwon.Jang
-   * @return
-   */
+  const visibleReports = useMemo(() => {
+    const filteredReports =
+      status === "ALL"
+        ? reports
+        : reports.filter((report) => getReportStatus(report) === status);
+
+    if (sort === "RATING") {
+      return [...filteredReports].sort(
+        (left, right) =>
+          (Number(right.reptGrde) || 0) - (Number(left.reptGrde) || 0),
+      );
+    }
+
+    return filteredReports;
+  }, [reports, sort, status]);
+
   useEffect(() => {
-    const handleDocumentPointerDown = (event: PointerEvent) => {
-      if (!isRatingTooltipOpen) {
-        return;
+    if (!commentReport) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setCommentReport(null);
+        setCommentInput("");
       }
-
-      const target = event.target;
-
-      if (
-        ratingTooltipRef.current &&
-        target instanceof Node &&
-        ratingTooltipRef.current.contains(target)
-      ) {
-        return;
-      }
-
-      setIsRatingTooltipOpen(false);
     };
 
-    document.addEventListener("pointerdown", handleDocumentPointerDown);
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", handleKeyDown);
 
     return () => {
-      document.removeEventListener("pointerdown", handleDocumentPointerDown);
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [isRatingTooltipOpen]);
+  }, [commentReport]);
 
-  /**
-   * 긴 독후감 내용의 펼침 상태를 독후감 번호 기준으로 전환합니다.
-   *
-   * @author Hanwon.Jang
-   * @param reptNumb 펼치거나 접을 독후감 번호
-   */
   const handleToggleReport = (reptNumb: number) => {
     setExpandedReports((prev) => ({
       ...prev,
@@ -100,31 +139,51 @@ function PublicReportPage() {
     }));
   };
 
-  /**
-   * 좋아요 수가 99개를 넘으면 화면 폭을 보호하기 위해 99+로 축약합니다.
-   *
-   * @author Hanwon.Jang
-   * @param likeCnt 서버에서 조회한 좋아요 수
-   * @return 화면에 표시할 좋아요 수 문자열
-   */
-  const getLikeCountLabel = (likeCnt?: number) => {
-    const count = Number(likeCnt) || 0;
-    return count > 99 ? "99+" : String(count);
+  const getCountLabel = (countValue?: number) => {
+    const count = Number(countValue) || 0;
+    return count > 999 ? "999+" : String(count);
   };
 
-  /**
-   * 공개 독후감 작성자 프로필 화면으로 이동합니다.
-   * 사용자 번호가 없는 비정상 데이터는 라우팅하지 않아 잘못된 프로필 화면 진입을 방지합니다.
-   *
-   * @author Hanwon.Jang
-   * @param userNumb 이동할 작성자 사용자 번호
-   */
   const handleProfileClick = (userNumb: number) => {
-    if (!userNumb) {
+    if (userNumb) {
+      navigate(`/social/profile/${userNumb}`);
+    }
+  };
+
+  const handleCloseCommentSheet = () => {
+    setCommentReport(null);
+    setCommentInput("");
+  };
+
+  const handleSubmitComment = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const comment = commentInput.trim();
+
+    if (!commentReport || !comment) {
       return;
     }
 
-    navigate(`/social/profile/${userNumb}`);
+    setTemporaryComments((prev) => ({
+      ...prev,
+      [commentReport.reptNumb]: [
+        ...(prev[commentReport.reptNumb] ?? []),
+        comment,
+      ],
+    }));
+    setCommentInput("");
+  };
+
+  const getStatusClassName = (reportStatus: PublicReportType["reptStat"]) => {
+    if (reportStatus === "DONE") {
+      return styles.statusDone;
+    }
+
+    if (reportStatus === "STOP") {
+      return styles.statusStopped;
+    }
+
+    return styles.statusReading;
   };
 
   if (!isValidIsbn) {
@@ -150,197 +209,297 @@ function PublicReportPage() {
     );
   }
 
-  return (
-    <main className={styles.page}>
-      <Container className={styles.content}>
-        <section className={styles.header}>
-          {pageState.cover && (
-            <div className={styles.coverFrame}>
+  const commentSheet = commentReport ? (
+    <div className={styles.sheetLayer}>
+      <button
+        className={styles.sheetBackdrop}
+        type="button"
+        aria-label={message("frontend.common.close")}
+        onClick={handleCloseCommentSheet}
+      />
+      <section
+        className={styles.commentSheet}
+        role="dialog"
+        aria-modal="true"
+        aria-label={`${commentReport.userNick}님의 독후감 댓글`}
+      >
+        <div className={styles.sheetHandle} aria-hidden="true" />
+        <div className={styles.commentSheetBody}>
+          {(temporaryComments[commentReport.reptNumb] ?? []).length > 0 ? (
+            <ul className={styles.temporaryCommentList}>
+              {(temporaryComments[commentReport.reptNumb] ?? []).map(
+                (comment, index) => (
+                  <li
+                    className={styles.temporaryComment}
+                    key={`${commentReport.reptNumb}-${index}`}
+                  >
+                    {comment}
+                  </li>
+                ),
+              )}
+            </ul>
+          ) : (
+            <div className={styles.commentEmpty}>
               <img
-                className={styles.coverImage}
-                src={pageState.cover}
-                alt={pageState.title ?? message("frontend.common.bookInfo")}
+                className={styles.commentEmptyIcon}
+                src="/img/icons/noti-COMMENT.svg"
+                alt=""
               />
+              <p className={styles.commentEmptyTitle}>아직 댓글이 없어요.</p>
+              <p className={styles.commentEmptyText}>
+                첫 번째 댓글을 남겨보세요.
+              </p>
             </div>
           )}
-          <div className={styles.headingArea}>
-            {pageState.title && (
-              <h1 className={styles.bookTitle}>{pageState.title}</h1>
-            )}
-            {pageState.author && (
-              <div className={styles.authorRatingLine}>
-                <p className={styles.meta}>{pageState.author}</p>
-                {hasRatingAverage && (
-                  <span className={styles.metaSeparator}>|</span>
-                )}
-                {hasRatingAverage && (
-                  <div
-                    className={styles.ratingTooltipWrap}
-                    ref={ratingTooltipRef}
-                  >
-                    <button
-                      className={styles.ratingSummary}
-                      type="button"
-                      aria-label={message("frontend.report.gradeValue", [
-                        ratingAverageValue,
-                      ])}
-                      aria-expanded={isRatingTooltipOpen}
-                      onClick={() =>
-                        setIsRatingTooltipOpen((prev) => !prev)
-                      }
-                    >
-                      <span className={styles.ratingStar}>{"\u2605"}</span>
-                      <span className={styles.ratingValue}>
-                        {ratingAverageValue}
-                      </span>
-                    </button>
-                    {isRatingTooltipOpen && (
-                      <div className={styles.ratingTooltip} role="tooltip">
-                        {message("frontend.book.ratingAverageHelp")}
-                      </div>
-                    )}
-                  </div>
-                )}
+        </div>
+        <form
+          className={styles.commentForm}
+          onSubmit={handleSubmitComment}
+        >
+          <input
+            className={styles.commentInput}
+            type="text"
+            value={commentInput}
+            maxLength={500}
+            placeholder="댓글을 입력해주세요."
+            aria-label="댓글 입력"
+            onChange={(event) => setCommentInput(event.target.value)}
+          />
+          <button
+            className={styles.commentSubmitButton}
+            type="submit"
+            disabled={!commentInput.trim()}
+          >
+            등록
+          </button>
+        </form>
+      </section>
+    </div>
+  ) : null;
+
+  return (
+    <>
+      <main className={styles.page}>
+        <Container className={styles.content}>
+          <section className={styles.header}>
+            {pageState.cover ? (
+              <div className={styles.coverFrame}>
+                <img
+                  className={styles.coverImage}
+                  src={pageState.cover}
+                  alt={pageState.title ?? message("frontend.common.bookInfo")}
+                />
               </div>
-            )}
-          </div>
-        </section>
+            ) : null}
+            <div className={styles.headingArea}>
+              <h1 className={styles.bookTitle}>{pageState.title ?? "-"}</h1>
+              <div className={styles.authorRatingLine}>
+                <p className={styles.meta}>{pageState.author ?? "-"}</p>
+                {pageState.ratingAverage !== null &&
+                pageState.ratingAverage !== undefined &&
+                pageState.ratingAverage !== "" ? (
+                  <>
+                    <span className={styles.metaSeparator}>|</span>
+                    <span className={styles.ratingSummary}>
+                      <span className={styles.ratingStar}>{"\u2605"}</span>
+                      <span>{pageState.ratingAverage}</span>
+                    </span>
+                  </>
+                ) : null}
+              </div>
+            </div>
+          </section>
 
-        {reports.length > 0 ? (
-          <section className={styles.list}>
-            {reports.map((report) => {
-              const rawRating = Number(report.reptGrde);
-              const rating = Number.isFinite(rawRating)
-                ? Math.max(0, Math.min(5, rawRating))
-                : 0;
-              const starCount = Math.floor(rating);
-              const isExpanded = Boolean(expandedReports[report.reptNumb]);
-              const content =
-                report.reptCntn || message("frontend.common.noWrittenReport");
-              const isLongContent = content.length > CONTENT_PREVIEW_LENGTH;
+          <section className={styles.filters} aria-label="독후감 필터">
+            <label className={styles.filterControl}>
+              <span className={styles.visuallyHidden}>정렬</span>
+              <select
+                className={styles.filterSelect}
+                value={sort}
+                onChange={(event) => setSort(event.target.value as ReportSort)}
+              >
+                <option value="LATEST">최신순</option>
+                <option value="RATING">별점순</option>
+              </select>
+            </label>
+            <span className={styles.filterDivider} aria-hidden="true" />
+            <label className={styles.filterControl}>
+              <span className={styles.visuallyHidden}>독서 상태</span>
+              <select
+                className={styles.filterSelect}
+                value={status}
+                onChange={(event) =>
+                  setStatus(event.target.value as ReportStatus)
+                }
+              >
+                <option value="ALL">전체</option>
+                <option value="READ">읽고 있어요</option>
+                <option value="DONE">다 읽었어요</option>
+                <option value="STOP">중단했어요</option>
+              </select>
+            </label>
+          </section>
 
-              return (
-                <article className={styles.item} key={report.reptNumb}>
-                  <div className={styles.itemTop}>
-                    <div className={styles.itemHeader}>
-                      <button
-                        className={styles.profileButton}
-                        type="button"
-                        onClick={() => handleProfileClick(report.userNumb)}
-                      >
-                        <img
-                          className={styles.profileImage}
-                          src={report.porfPath || DEFAULT_PROFILE_IMAGE}
-                          alt=""
-                        />
-                        <span className={styles.writer}>
-                          {report.userNick || "-"}
+          {visibleReports.length > 0 ? (
+            <section className={styles.list}>
+              {visibleReports.map((report) => {
+                const rating = Math.max(
+                  0,
+                  Math.min(5, Number(report.reptGrde) || 0),
+                );
+                const reportStatus = getReportStatus(report);
+                const isExpanded = Boolean(expandedReports[report.reptNumb]);
+                const reportContent =
+                  report.reptCntn || message("frontend.common.noWrittenReport");
+                const isLongContent =
+                  reportContent.length > CONTENT_PREVIEW_LENGTH;
+
+                return (
+                  <article className={styles.item} key={report.reptNumb}>
+                    <div className={styles.itemTop}>
+                      <div className={styles.itemHeader}>
+                        <button
+                          className={styles.profileButton}
+                          type="button"
+                          onClick={() => handleProfileClick(report.userNumb)}
+                        >
+                          <img
+                            className={styles.profileImage}
+                            src={report.porfPath || DEFAULT_PROFILE_IMAGE}
+                            alt=""
+                          />
+                          <span className={styles.writer}>
+                            {report.userNick || "-"}
+                          </span>
+                        </button>
+                        <span
+                          className={getStatusClassName(reportStatus)}
+                        >
+                          {report.reptStatName ||
+                            STATUS_LABELS[reportStatus]}
                         </span>
-                      </button>
-                      <span className={styles.metaSeparator}>|</span>
+                      </div>
                       <span
-                        className={styles.stars}
+                        className={styles.reportRating}
                         aria-label={message("frontend.report.gradeValue", [
                           rating,
                         ])}
                       >
-                        {Array.from({ length: 5 }, (_, index) => (
-                          <span
-                            className={
-                              index < starCount ? styles.starFilled : undefined
-                            }
-                            key={index}
-                          >
-                            {"\u2605"}
-                          </span>
-                        ))}
+                        <span className={styles.ratingStar}>{"\u2605"}</span>
+                        <span>{rating}</span>
                       </span>
                     </div>
-                    <button
-                      className={styles.likeButton}
-                      type="button"
-                      aria-label="좋아요"
-                      aria-pressed={report.likeYsno === "Y"}
-                      disabled={likeMutation.isPending}
-                      onClick={() =>
-                        likeMutation.mutate({
-                          tagtType: "REPORT",
-                          tagtNumb: report.reptNumb,
-                          targetUserNumb: report.userNumb,
-                        })
+
+                    <div
+                      className={
+                        isExpanded || !isLongContent
+                          ? styles.reportContentWrapOpen
+                          : styles.reportContentWrap
                       }
                     >
-                      <svg
-                        className={styles.likeIcon}
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                      >
-                        <path
-                          d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
-                          fill={
-                            report.likeYsno === "Y" ? "currentColor" : "none"
-                          }
-                          stroke="currentColor"
-                          strokeWidth="1.8"
-                          strokeLinejoin="round"
-                        />
-                      </svg>
-                      <span className={styles.likeCount}>
-                        {getLikeCountLabel(report.likeCnt)}
-                      </span>
-                    </button>
-                  </div>
+                      <p className={styles.reportContent}>{reportContent}</p>
+                    </div>
 
-                  <div
-                    className={
-                      isExpanded || !isLongContent
-                        ? styles.reportContentWrapOpen
-                        : styles.reportContentWrap
-                    }
-                  >
-                    <p className={styles.reportContent}>{content}</p>
-                  </div>
-
-                  {isLongContent && (
-                    <button
-                      className={styles.expandButton}
-                      type="button"
-                      aria-label={message(
-                        isExpanded
-                          ? "frontend.book.publicReports.collapse"
-                          : "frontend.book.publicReports.expand",
-                      )}
-                      onClick={() => handleToggleReport(report.reptNumb)}
-                    >
-                      <span
-                        className={
+                    {isLongContent ? (
+                      <button
+                        className={styles.expandButton}
+                        type="button"
+                        aria-label={message(
                           isExpanded
-                            ? styles.expandArrowOpen
-                            : styles.expandArrow
-                        }
-                        aria-hidden="true"
+                            ? "frontend.book.publicReports.collapse"
+                            : "frontend.book.publicReports.expand",
+                        )}
+                        onClick={() => handleToggleReport(report.reptNumb)}
                       >
                         <svg
-                          className={styles.expandArrowIcon}
+                          className={
+                            isExpanded
+                              ? styles.expandArrowOpen
+                              : styles.expandArrow
+                          }
                           viewBox="0 0 24 24"
-                          focusable="false"
+                          aria-hidden="true"
                         >
                           <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
                         </svg>
-                      </span>
-                    </button>
-                  )}
-                </article>
-              );
-            })}
-          </section>
-        ) : (
-          <p className={styles.empty}>
-            {message("frontend.book.publicReports.empty")}
-          </p>
-        )}
-      </Container>
-    </main>
+                      </button>
+                    ) : null}
+
+                    <div className={styles.itemMetrics}>
+                      <button
+                        className={styles.metricButton}
+                        type="button"
+                        aria-label="좋아요"
+                        aria-pressed={report.likeYsno === "Y"}
+                        disabled={likeMutation.isPending}
+                        onClick={() =>
+                          likeMutation.mutate({
+                            tagtType: "REPORT",
+                            tagtNumb: report.reptNumb,
+                            targetUserNumb: report.userNumb,
+                          })
+                        }
+                      >
+                        <svg
+                          className={styles.metricIcon}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path
+                            d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
+                            fill={
+                              report.likeYsno === "Y"
+                                ? "currentColor"
+                                : "none"
+                            }
+                            stroke="currentColor"
+                            strokeWidth="1.8"
+                            strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span>{getCountLabel(report.likeCnt)}</span>
+                      </button>
+                      <button
+                        className={styles.commentButton}
+                        type="button"
+                        aria-label="댓글 보기"
+                        onClick={() => setCommentReport(report)}
+                      >
+                        <svg
+                          className={styles.commentIcon}
+                          viewBox="0 0 24 24"
+                          aria-hidden="true"
+                        >
+                          <path d="M5 5.5h14v10H9l-4 3v-13Z" />
+                          <circle cx="9" cy="10.5" r="0.8" />
+                          <circle cx="12" cy="10.5" r="0.8" />
+                          <circle cx="15" cy="10.5" r="0.8" />
+                        </svg>
+                        <span>
+                          {getCountLabel(
+                            (report.commentCnt ?? 0) +
+                              (temporaryComments[report.reptNumb]?.length ?? 0),
+                          )}
+                        </span>
+                      </button>
+                    </div>
+                  </article>
+                );
+              })}
+            </section>
+          ) : (
+            <p className={styles.empty}>
+              {reports.length > 0
+                ? "선택한 조건에 맞는 독후감이 없어요."
+                : message("frontend.book.publicReports.empty")}
+            </p>
+          )}
+        </Container>
+      </main>
+      {typeof document !== "undefined" && commentSheet
+        ? createPortal(commentSheet, document.body)
+        : null}
+    </>
   );
 }
 
