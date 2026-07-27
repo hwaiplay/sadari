@@ -39,7 +39,7 @@ export const content = style({
 
 export const header = style({
   position: "sticky",
-  top: vars.headerHeight,
+  top: 0,
   zIndex: 996,
   width: "100svw",
   height: "90px",
@@ -380,7 +380,7 @@ export const commentSheet = style({
   zIndex: 1,
   width: "min(100%, 600px)",
   height: "min(72svh, 560px)",
-  borderRadius: "12px 12px 0 0",
+  borderRadius: "22px 22px 0 0",
   backgroundColor: "#ffffff",
   display: "flex",
   flexDirection: "column",
@@ -428,10 +428,10 @@ export const commentEmptyTitle = style({
 
 export const commentEmptyText = style({
   maxWidth: "250px",
-  marginTop: "7px",
+  marginTop: "6px",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.55,
   textAlign: "center",
   wordBreak: "keep-all",
@@ -472,7 +472,7 @@ export const commentForm = style({
 
 export const commentInput = style({
   minWidth: 0,
-  height: "42px",
+  height: "40px",
   flex: 1,
   padding: "0 14px",
   border: `1px solid ${vars.color.gray300}`,
@@ -494,18 +494,18 @@ export const commentInput = style({
 
 export const commentSubmitButton = style({
   flexShrink: 0,
-  height: "42px",
-  padding: "0 14px",
+  height: "40px",
+  padding: "0 24px",
   border: 0,
   borderRadius: "21px",
   backgroundColor: vars.color.black,
   color: "#FFFFFF",
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.medium,
   fontSize: "14px",
   cursor: "pointer",
   selectors: {
     "&:disabled": {
-      backgroundColor: vars.color.gray300,
+      backgroundColor: vars.color.gray400,
       cursor: "default",
     },
   },
