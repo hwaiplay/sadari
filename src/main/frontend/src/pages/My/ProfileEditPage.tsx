@@ -745,26 +745,42 @@ function ProfileEditPage() {
                       alt=""
                     />
                   )}
-                  <span className={styles.currentReadingText}>
-                    <strong className={styles.readingSummaryBookTitle}>
-                      {report.bookTitl || message("frontend.common.noBookInfo")}
-                    </strong>
-                    <span className={styles.currentReadingMeta}>
-                      <span className={styles.readingSummaryBookMeta}>
-                        {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
-                          .filter(Boolean)
-                          .join(" | ")}
-                      </span>
-                      <span
+                  <div className={styles.currentReadingText}>
+                    <div  className={styles.currentReadingTextBookInfo}>
+                      <p className={styles.readingSummaryBookTitle}>
+                        {report.bookTitl || message("frontend.common.noBookInfo")}
+                      </p>
+                        <p className={styles.readingSummaryBookMeta}>
+                          {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
+                            .filter(Boolean)
+                            .join(" | ")}
+                        </p>
+                    </div>
+                      <div
                         className={styles.currentReadingRemain}
                         style={{ color: remainColor }}
                       >
-                        {isExpired
-                          ? message("frontend.profile.currentReading.expired")
-                          : message("frontend.profile.currentReading.remain", [remainDays])}
-                      </span>
-                    </span>
-                  </span>
+                        {isExpired ? (
+                          <>
+                            <img
+                              src="/img/icons/icon-warning.svg"
+                              alt=""
+                            />
+                            {message(
+                              "frontend.profile.currentReading.expired",
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <img src="/img/icons/icon-book.svg" alt="" />
+                            {message(
+                              "frontend.profile.currentReading.remain",
+                              [remainDays],
+                            )}
+                          </>
+                        )}
+                      </div>
+                  </div>
                 </>
               );
 
