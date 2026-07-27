@@ -296,6 +296,7 @@ export const profileIntroInput = style({
 });
 
 export const monthlySummary = style({
+  position: "relative",
   width: "100%",
   marginTop: "24px",
   padding: "6px 14px",
@@ -314,7 +315,7 @@ export const readingSummaryRow = style({
 });
 
 export const goalAchievementSummary = style({
-  padding: "9px 8px 24px",
+  padding: "24px 8px 24px",
 });
 
 export const profileStatsSummary = style({
@@ -350,51 +351,62 @@ export const profileStatsButton = style({
 });
 
 export const currentReadingSection = style({
-  padding: "10px 4px 18px",
+  padding: "24px 4px 18px",
   display: "flex",
   flexDirection: "column",
   gap: "10px",
 });
 
 export const currentReadingTitle = style({
-  margin: "0 0 16px",
+  position: "absolute",
+  top: 0,
+  left: "22px",
+  zIndex: 1,
+  margin: 0,
+  padding: "0 9px",
+  backgroundColor: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "15px",
   lineHeight: 1.3,
-  textAlign: "center",
-  color: vars.color.gray600,
+  textAlign: "left",
+  color: vars.color.black,
+  transform: "translateY(-50%)",
 });
 
 export const currentReadingList = style({
   display: "flex",
   flexDirection: "column",
-  gap: "9px",
+  gap: 0,
 });
 
 export const currentReadingCard = style({
   width: "100%",
-  minHeight: "62px",
-  padding: "9px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "12px",
-  backgroundColor: "#fafafa",
+  minHeight: "78px",
+  padding: "12px 8px",
+  border: 0,
+  borderBottom: `1px solid ${vars.color.gray200}`,
+  borderRadius: 0,
+  backgroundColor: "#ffffff",
   display: "grid",
-  gridTemplateColumns: "34px minmax(0, 1fr)",
+  gridTemplateColumns: "40px minmax(0, 1fr)",
   alignItems: "center",
-  gap: "10px",
+  gap: "12px",
   textAlign: "left",
+  selectors: {
+    "&:last-child": {
+      borderBottom: 0,
+    },
+  },
 });
 
 export const currentReadingButton = style([
   currentReadingCard,
   {
     cursor: "pointer",
-    transition: "background-color 160ms ease, border-color 160ms ease, transform 160ms ease",
+    transition: "background-color 160ms ease",
     selectors: {
       "&:hover": {
-        backgroundColor: "#ffffff",
-        borderColor: "#cfd4da",
-        transform: "translateY(-1px)",
+        backgroundColor: "#f8f9fa",
       },
     },
   },
@@ -423,12 +435,19 @@ export const currentReadingRemain = style({
 });
 
 export const goalAchievementTitle = style({
-  margin: "0 0 16px",
+  position: "absolute",
+  top: 0,
+  left: "22px",
+  zIndex: 1,
+  margin: 0,
+  padding: "0 9px",
+  backgroundColor: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "15px",
   lineHeight: 1.3,
-  textAlign: "center",
-  color: vars.color.gray600,
+  textAlign: "left",
+  color: vars.color.black,
+  transform: "translateY(-50%)",
 });
 
 export const goalAchievementGrid = style({
@@ -543,29 +562,31 @@ export const readingSummaryPanelInner = style({
   minHeight: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "12px",
+  gap: 0,
   padding: "0 0 12px",
 });
 
 export const readingSummaryReport = style({
   width: "100%",
-  minHeight: "48px",
-  padding: "7px 8px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "10px",
-  backgroundColor: "#fafafa",
+  minHeight: "68px",
+  padding: "10px 8px",
+  border: 0,
+  borderBottom: `1px solid ${vars.color.gray200}`,
+  borderRadius: 0,
+  backgroundColor: "#ffffff",
   display: "grid",
-  gridTemplateColumns: "32px minmax(0, 1fr)",
+  gridTemplateColumns: "40px minmax(0, 1fr)",
   alignItems: "center",
-  gap: "9px",
+  gap: "12px",
   textAlign: "left",
   cursor: "pointer",
-  transition: "background-color 160ms ease, border-color 160ms ease, transform 160ms ease",
+  transition: "background-color 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#ffffff",
-      borderColor: "#cfd4da",
-      transform: "translateY(-1px)",
+      backgroundColor: "#f8f9fa",
+    },
+    "&:last-child": {
+      borderBottom: 0,
     },
   },
 });
@@ -576,8 +597,7 @@ export const readingSummaryReptStatic = style([
     cursor: "default",
     selectors: {
       "&:hover": {
-        backgroundColor: "#fafafa",
-        borderColor: vars.color.gray300,
+        backgroundColor: "#ffffff",
         transform: "none",
       },
     },
@@ -588,14 +608,14 @@ export const readingSummaryReportPrivate = style([
   readingSummaryReport,
   {
     backgroundColor: "#f0f1f2",
-    borderColor: "#e1e3e5",
+    borderBottomColor: "#d9dcdf",
     color: "#9a9a9a",
     filter: "grayscale(0.65)",
     opacity: 0.72,
     selectors: {
       "&:hover": {
         backgroundColor: "#eceeef",
-        borderColor: "#d9dcdf",
+        borderBottomColor: "#d9dcdf",
         transform: "none",
       },
     },
@@ -603,8 +623,8 @@ export const readingSummaryReportPrivate = style([
 ]);
 
 export const readingSummaryCover = style({
-  width: "32px",
-  height: "42px",
+  width: "40px",
+  height: "54px",
   borderRadius: "4px",
   objectFit: "cover",
   backgroundColor: "#f0f1f2",
@@ -622,7 +642,7 @@ export const readingSummaryBookTitle = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.25,
   color: vars.color.black,
 });
@@ -632,7 +652,7 @@ export const readingSummaryBookMeta = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.25,
   color: "#777777",
 });
@@ -714,7 +734,7 @@ export const monthlyCalendarRing = style({
 export const monthlyCalendarMonth = style({
   marginTop: "7px",
   fontFamily: vars.font.heading,
-  fontSize: "9px",
+  fontSize: "11px",
   lineHeight: 1,
   color: vars.color.black,
 });
@@ -833,19 +853,19 @@ export const goalProgressRow = style({
   gridTemplateColumns: "minmax(0, 1fr) 38px",
   alignItems: "center",
   gap: "8px",
-  padding: "0 0 16px 56px",
+  padding: "0 0 16px 60px",
 });
 
 export const goalProgressTarget = style({
   position: "absolute",
-  left: 0,
+  left: "-4px",
   top: "0",
-  width: "44px",
+  width: "52px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1,
   color: "#888888",
   textAlign: "center",

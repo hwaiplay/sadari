@@ -37,13 +37,13 @@ export const logo = style({
 });
 
 export const routeTitle = style({
+  maxWidth: "calc(100% - 190px)",
   margin: "0 auto",
-  padding: "0 94px 0 48px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  lineHeight: 1.2,
-  textAlign: "center",
+  fontSize: "19px",
+  lineHeight: 1.3,
+  letterSpacing: 0,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
