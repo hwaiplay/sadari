@@ -192,7 +192,32 @@ export const drawerProfileSub = style({
 export const drawerActionGroup = style({
     gridColumn: "1 / -1",
     display: "flex",
-    justifyContent: "flex-end",
+    alignItems: "center",
+    justifyContent: "space-between",
+});
+
+export const drawerSettingButton = style({
+    width: "30px",
+    height: "30px",
+    padding: 0,
+    border: `1px solid ${vars.color.gray300}`,
+    borderRadius: "50%",
+    backgroundColor: "#ffffff",
+    color: "#555555",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+});
+
+export const drawerSettingIcon = style({
+    width: "16px",
+    height: "16px",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
 });
 
 export const drawerLogoutButton = style({

@@ -224,6 +224,26 @@ function HeaderMenuDrawer() {
           </button>
           <div className={drawerStyles.drawerActionGroup}>
             <button
+              className={drawerStyles.drawerSettingButton}
+              type="button"
+              aria-label={message("frontend.common.settings")}
+              title={message("frontend.common.settings")}
+              onClick={() => {
+                // 햄버거 메뉴를 먼저 닫은 뒤 설정 전용 화면으로 이동해 배경 클릭 영역이 남지 않게 한다.
+                setIsDrawerOpen(false);
+                navigate("/settings");
+              }}
+            >
+              <svg
+                className={drawerStyles.drawerSettingIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path d="M12 15.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Z" />
+                <path d="M19.4 15a1.7 1.7 0 0 0 .34 1.88l.06.06-2.83 2.83-.06-.06a1.7 1.7 0 0 0-1.88-.34 1.7 1.7 0 0 0-1.03 1.56V21h-4v-.08A1.7 1.7 0 0 0 8.96 19.4a1.7 1.7 0 0 0-1.88.34l-.06.06-2.83-2.83.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.03H3v-4h.08A1.7 1.7 0 0 0 4.6 8.96a1.7 1.7 0 0 0-.34-1.88l-.06-.06 2.83-2.83.06.06A1.7 1.7 0 0 0 8.96 4.6 1.7 1.7 0 0 0 10 3.08V3h4v.08a1.7 1.7 0 0 0 1.03 1.56 1.7 1.7 0 0 0 1.88-.34l.06-.06 2.83 2.83-.06.06a1.7 1.7 0 0 0-.34 1.88A1.7 1.7 0 0 0 20.92 10H21v4h-.08A1.7 1.7 0 0 0 19.4 15Z" />
+              </svg>
+            </button>
+            <button
               className={drawerStyles.drawerLogoutButton}
               type="button"
               onClick={handleLogout}
