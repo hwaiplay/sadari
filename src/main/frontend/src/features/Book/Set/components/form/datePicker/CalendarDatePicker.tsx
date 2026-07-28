@@ -35,7 +35,7 @@ const WEEK_DAY_KEYS = [
 /**
  * 달력 팝오버를 통해 날짜를 선택하고 hidden input으로 값을 전달합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param name 폼 전송에 사용할 input 이름
  * @param label 날짜 입력 라벨
  * @param defaultValue 초기 선택 날짜
@@ -55,6 +55,7 @@ function CalendarDatePicker({
   endPlaceholder = message("frontend.report.placeholder.endDate"),
   onRangeChange,
 }: CalendarDatePickerProps) {
+
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState(defaultValue);
@@ -66,16 +67,26 @@ function CalendarDatePicker({
   const currentEndDateValue = endValue;
 
   useEffect(() => {
+
     setSelectedDate(defaultValue);
     setViewDate(parseDateValue(defaultValue));
   }, [defaultValue]);
 
   useEffect(() => {
+
     if (!isOpen) {
       return;
     }
 
+    /**
+     * handle Pointer Down 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handlePointerDown = (event: PointerEvent) => {
+
       const target = event.target;
 
       if (
@@ -92,6 +103,7 @@ function CalendarDatePicker({
     document.addEventListener("pointerdown", handlePointerDown);
 
     return () => {
+
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, [isOpen]);
@@ -110,6 +122,7 @@ function CalendarDatePicker({
   const viewMonth = viewDate.getMonth();
 
   const days = useMemo(() => {
+
     const firstDay = new Date(viewYear, viewMonth, 1).getDay();
     const lastDate = new Date(viewYear, viewMonth + 1, 0).getDate();
 
@@ -122,11 +135,12 @@ function CalendarDatePicker({
   /**
    * 현재 보고 있는 달을 이전 달 또는 다음 달로 이동합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param amount 이동할 월 수
    * @return
    */
   const changeMonth = (amount: number) => {
+
     setMonthMoveDirection(amount < 0 ? "prev" : "next");
     setViewDate(new Date(viewYear, viewMonth + amount, 1));
   };
@@ -134,11 +148,12 @@ function CalendarDatePicker({
   /**
    * 선택한 일을 yyyy-MM-dd 값으로 변환해 hidden input 값으로 반영합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param day 선택한 일
    * @return
    */
   const selectDay = (day: number) => {
+
     const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
     if (isRangePicker) {
@@ -278,6 +293,7 @@ function CalendarDatePicker({
             key={`${viewYear}-${viewMonth}`}
           >
             {days.map((day, index) => {
+
               if (!day) {
                 return <span className={styles.emptyDay} key={`empty-${index}`} />;
               }

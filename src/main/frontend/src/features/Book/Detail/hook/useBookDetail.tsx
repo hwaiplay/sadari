@@ -4,15 +4,17 @@ import { getDetailApi } from "../../api/bookApi";
 /**
  * 독후감 상세 정보를 React Query로 조회합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param bookNumb 조회할 독후감 번호
  * @param enabled 상세 조회 API 호출 여부
  * @return 독후감 상세 조회 Query 객체
  */
 export const useBookDetail = (bookNumb: number, enabled = true) => {
+
   return useQuery({
     queryKey: ["detail", bookNumb],
     queryFn: async () => {
+
       try {
         return await getDetailApi(bookNumb);
       } catch (error) {

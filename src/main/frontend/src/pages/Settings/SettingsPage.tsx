@@ -8,10 +8,11 @@ const USER_MANAGEMENT_ITEMS = ["팔로우 관리", "팔로워 관리", "차단 �
  * 알림과 사용자 관련 기능을 계층형 메뉴로 제공하는 설정 메인 화면입니다.
  * 사용자 관리만 하위 메뉴를 가지며 펼침 상태는 화면 내부에서 관리합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 설정 카테고리 및 하위 메뉴 화면
  */
 function SettingsPage() {
+
   const navigate = useNavigate();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 

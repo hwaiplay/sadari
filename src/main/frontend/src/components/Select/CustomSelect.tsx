@@ -15,6 +15,13 @@ type CustomSelectProps<T extends string> = {
   className?: string;
 };
 
+/**
+ * Custom Select 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @param props props 입력값
+ * @return 구성된 화면 요소
+ */
 function CustomSelect<T extends string>({
   value,
   options,
@@ -22,6 +29,7 @@ function CustomSelect<T extends string>({
   ariaLabel,
   className,
 }: CustomSelectProps<T>) {
+
   const listboxId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
@@ -34,6 +42,7 @@ function CustomSelect<T extends string>({
   const selectedOption = options[selectedIndex];
 
   useEffect(() => {
+
     if (!isOpen) {
       return;
     }
@@ -42,7 +51,15 @@ function CustomSelect<T extends string>({
   }, [activeIndex, isOpen]);
 
   useEffect(() => {
+    /**
+     * handle Pointer Down 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handlePointerDown = (event: PointerEvent) => {
+
       if (!rootRef.current?.contains(event.target as Node)) {
         setIsOpen(false);
       }
@@ -51,11 +68,20 @@ function CustomSelect<T extends string>({
     document.addEventListener("pointerdown", handlePointerDown);
 
     return () => {
+
       document.removeEventListener("pointerdown", handlePointerDown);
     };
   }, []);
 
+  /**
+   * handle Select 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param option option 입력값
+   * @return 반환값이 없다
+   */
   const handleSelect = (option: CustomSelectOption<T>) => {
+
     onChange(option.value);
     setActiveIndex(
       Math.max(
@@ -66,7 +92,15 @@ function CustomSelect<T extends string>({
     setIsOpen(false);
   };
 
+  /**
+   * handle Key Down 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+
     if (event.key === "Escape") {
       setIsOpen(false);
       return;
@@ -78,6 +112,7 @@ function CustomSelect<T extends string>({
       const direction = event.key === "ArrowDown" ? 1 : -1;
       setIsOpen(true);
       setActiveIndex((currentIndex) => {
+
         const nextIndex = currentIndex + direction;
 
         if (nextIndex < 0) return options.length - 1;
@@ -93,6 +128,7 @@ function CustomSelect<T extends string>({
       ref={rootRef}
       onKeyDown={handleKeyDown}
       onBlur={(event) => {
+
         if (!event.currentTarget.contains(event.relatedTarget)) {
           setIsOpen(false);
         }
@@ -106,6 +142,7 @@ function CustomSelect<T extends string>({
         aria-expanded={isOpen}
         aria-controls={listboxId}
         onClick={() => {
+
           setActiveIndex(selectedIndex);
           setIsOpen((prev) => !prev);
         }}
@@ -123,6 +160,7 @@ function CustomSelect<T extends string>({
       {isOpen ? (
         <div className={styles.optionList} id={listboxId} role="listbox">
           {options.map((option, index) => {
+
             const isSelected = option.value === value;
 
             return (
@@ -132,6 +170,7 @@ function CustomSelect<T extends string>({
                   isSelected && styles.optionSelected,
                 )}
                 ref={(element) => {
+
                   optionRefs.current[index] = element;
                 }}
                 type="button"

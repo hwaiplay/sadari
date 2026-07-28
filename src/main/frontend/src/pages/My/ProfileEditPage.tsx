@@ -53,7 +53,15 @@ type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
 
+/**
+ * is Active Follow Status 여부를 판정한다
+ *
+ * @author HanWon.Jang
+ * @param followStatName follow Stat Name 입력값
+ * @return 판정 결과
+ */
 const isActiveFollowStatus = (followStatName?: string) => {
+
   return followStatName === "팔로잉" || followStatName === "맞팔로우";
 };
 
@@ -79,7 +87,7 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
  * 닉네임 입력값에서 한글/영문/숫자가 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
  * 사용자가 특수문자를 붙여 넣어도 저장 가능한 닉네임 형식만 상태에 반영합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param value 사용자가 입력한 닉네임 원문
  * @return 한글/영문/숫자 10자 이하로 정리한 닉네임
  */
@@ -90,17 +98,32 @@ const normalizeUserNick = (value: string) =>
  * 한줄 소개 입력값을 허용 길이 이하로 제한합니다.
  * textarea의 maxLength와 별개로 상태 값도 제한해 브라우저별 입력 차이를 한 번 더 방어합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param value 사용자가 입력한 한줄 소개 원문
  * @return 50자 이하로 제한한 한줄 소개
  */
 const normalizeProfileIntro = (value: string) =>
   value.slice(0, PROFILE_INTRO_MAX_LENGTH);
 
+/**
+ * join Korean List 기능을 처리한다
+ *
+ * @author HanWon.Jang
+ * @param items items 입력값
+ * @return 처리 결과
+ */
 const joinKoreanList = (items: string[]) => items.join(", ");
 
+/**
+ * get Copyable Previous Goal Periods 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param summary summary 입력값
+ * @return 처리 결과
+ */
 const getCopyablePreviousGoalPeriods = (summary: MonthlyReadingSummary | null) =>
   GOAL_PERIODS.filter((period) => {
+
     if (!summary) {
       return false;
     }
@@ -116,7 +139,16 @@ const getCopyablePreviousGoalPeriods = (summary: MonthlyReadingSummary | null) =
     return !summary.yearGoalSet && Boolean(summary.previousYearGoalCnt);
   });
 
+/**
+ * get Previous Goal Count 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param summary summary 입력값
+ * @param period period 입력값
+ * @return 처리 결과
+ */
 const getPreviousGoalCount = (summary: MonthlyReadingSummary, period: ReadingPeriod) => {
+
   if (period === "week") {
     return summary.previousWeekGoalCnt ?? 0;
   }
@@ -128,7 +160,16 @@ const getPreviousGoalCount = (summary: MonthlyReadingSummary, period: ReadingPer
   return summary.previousYearGoalCnt ?? 0;
 };
 
+/**
+ * get Copy Previous Goal Confirm Text 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param summary summary 입력값
+ * @param periods periods 입력값
+ * @return 처리 결과
+ */
 const getCopyPreviousGoalConfirmText = (summary: MonthlyReadingSummary, periods: ReadingPeriod[]) => {
+
   if (periods.length === 1) {
     const period = periods[0];
     const count = getPreviousGoalCount(summary, period);
@@ -138,6 +179,7 @@ const getCopyPreviousGoalConfirmText = (summary: MonthlyReadingSummary, periods:
 
   const currentLabels = periods.map((period) => GOAL_COPY_LABELS[period].current);
   const previousLabels = periods.map((period) => {
+
     const labels = GOAL_COPY_LABELS[period];
     return `${labels.previous}(${getPreviousGoalCount(summary, period)}권)`;
   });
@@ -149,11 +191,12 @@ const getCopyPreviousGoalConfirmText = (summary: MonthlyReadingSummary, periods:
  * 이전 기간 대비 완료 독서 변화량을 화면 표시용 문자열로 변환합니다.
  * 양수에는 + 기호를 붙이고 0은 증감이 없는 상태로 그대로 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param diff 이전 기간 대비 완료 독서 권수 변화량
  * @return 변화량 표시 문자열
  */
 const formatReadingDiff = (diff: number) => {
+
   if (diff > 0) {
     return `+${diff}`;
   }
@@ -165,11 +208,12 @@ const formatReadingDiff = (diff: number) => {
  * 독후감 요약 목록에 표시할 독서 기간을 시작일과 종료일 기준으로 조합합니다.
  * 시작일 또는 종료일 중 하나만 내려오는 예외 상황에서도 비어 있는 구분자가 보이지 않도록 처리합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param report 독서 기간을 표시할 독후감 요약 정보
  * @return 화면에 표시할 독서 기간 문자열
  */
 const getReadingEndDateText = (report: ReadingSummaryReport) => {
+
   return formatDashedDateToDot(report.reptEndt);
 };
 
@@ -177,11 +221,12 @@ const getReadingEndDateText = (report: ReadingSummaryReport) => {
  * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환합니다.
  * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param report 목표 독서기간을 표시할 독후감 요약 정보
  * @return 목표 독서기간 표시 문구
  */
 const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
+
   const periodText = [
     formatDashedDateToDot(report.reptStdt),
     formatDashedDateToDot(report.reptEndt),
@@ -198,11 +243,12 @@ const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
  * 독후감 평점을 5개의 별 문자열로 변환합니다.
  * 완료 독후감 목록의 평점은 숫자 형태로 내려오므로 0점부터 5점 사이로 보정해 화면 표시가 깨지지 않게 합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param grade 서버에서 내려온 평점 문자열
  * @return 5개 기준의 별점 표시 문자열
  */
 const getReadingGradeText = (grade?: string) => {
+
   const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
   return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
 };
@@ -211,10 +257,11 @@ const getReadingGradeText = (grade?: string) => {
  * 로그인 사용자의 프로필 사진, 배경 사진, 닉네임, 한줄 소개를 조회하고 수정합니다.
  * 수정 모드에서는 화면을 전환하지 않고 기존 요소 위치에서 텍스트와 이미지만 편집할 수 있게 제공합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 프로필 상세 및 수정 페이지 컴포넌트
  */
 function ProfileEditPage() {
+
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
@@ -261,10 +308,11 @@ function ProfileEditPage() {
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
    * 저장 완료 후 파일 선택 상태를 비워 같은 파일을 다시 선택하더라도 정상적으로 반응하게 만듭니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param nextProfile 서버에서 조회하거나 저장 후 반환한 사용자 프로필 정보
    */
   const syncProfileState = (nextProfile: UserProfile) => {
+
     setProfile(nextProfile);
     setUserNick(nextProfile?.userNick ?? "");
     setIntrCntn(nextProfile?.intrCntn ?? "");
@@ -275,27 +323,32 @@ function ProfileEditPage() {
   };
 
   useEffect(() => {
+
     let ignore = false;
 
     getMyProfileApi()
       .then((response) => {
+
         if (!ignore) {
           syncProfileState(response.data as UserProfile);
         }
       })
       .finally(() => {
+
         if (!ignore) {
           setIsLoading(false);
         }
       });
 
     getMonthlyReadingSummaryApi().then((response) => {
+
       if (!ignore) {
         setMonthlySummary(response.data as MonthlyReadingSummary);
       }
     });
 
     return () => {
+
       ignore = true;
     };
   }, []);
@@ -304,11 +357,19 @@ function ProfileEditPage() {
    * 이전 기간 대비 완료 독서량 말풍선이 열린 상태에서 다른 영역을 누르면 말풍선을 닫습니다.
    * 비교 숫자와 말풍선 자체를 누르는 경우에는 같은 요소 안에서 발생한 클릭으로 판단해 닫지 않습니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @return
    */
   useEffect(() => {
+    /**
+     * handle Document Pointer Down 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleDocumentPointerDown = (event: PointerEvent) => {
+
       if (!activeDiffTooltip) {
         return;
       }
@@ -326,12 +387,15 @@ function ProfileEditPage() {
     document.addEventListener("pointerdown", handleDocumentPointerDown);
 
     return () => {
+
       document.removeEventListener("pointerdown", handleDocumentPointerDown);
     };
   }, [activeDiffTooltip]);
 
   useEffect(() => {
+
     return () => {
+
       if (followListScrollTimeoutRef.current) {
         window.clearTimeout(followListScrollTimeoutRef.current);
       }
@@ -342,11 +406,12 @@ function ProfileEditPage() {
    * 이전 기간 대비 완료 독서 변화량 상세 문구를 info 알림으로 보여줍니다.
    * 월간과 연간 비교 모두 같은 UI 패턴을 사용하므로 비교 단위별 메시지 key만 분기합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param diff 이전 기간 대비 완료 독서 권수 변화량
    * @param period 비교 단위
    */
   const getReadingDiffMessage = (diff: number, period: ReadingPeriod) => {
+
     const diffCount = Math.abs(diff);
     const periodMessagePrefix =
       period === "week" ? "weeklyReading" : period === "month" ? "monthlyReading" : "yearlyReading";
@@ -361,7 +426,16 @@ function ProfileEditPage() {
     return message(messageKey, [diffCount]);
   };
 
+  /**
+   * handle Reading Diff Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param diff diff 입력값
+   * @param period period 입력값
+   * @return 반환값이 없다
+   */
   const handleReadingDiffClick = (diff: number, period: ReadingPeriod) => {
+
     setActiveDiffTooltip((prev) => (prev === period ? null : period));
   };
 
@@ -369,11 +443,12 @@ function ProfileEditPage() {
    * 사용자가 선택한 이미지 파일을 프로필 또는 배경 대상에 맞춰 미리보기로 반영합니다.
    * 서버와 같은 JPG/PNG 및 10MB 조건을 통과한 파일만 미리보기에 반영합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param file 사용자가 선택한 이미지 파일
    * @param target 이미지가 적용될 영역 구분값
    */
   const applyImagePreview = (file: File | undefined, target: "profile" | "background") => {
+
     if (!file) {
       return;
     }
@@ -406,10 +481,11 @@ function ProfileEditPage() {
    * 독서 요약 행의 펼침 상태를 월간/연간 단위로 전환합니다.
    * 같은 섹션 안에서 두 목록을 독립적으로 열 수 있어 사용자가 비교 중인 목록을 잃지 않게 합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 열거나 닫을 독서 요약 기간 구분값
    */
   const handleToggleReadingSummary = (period: ReadingPeriod) => {
+
     setExpandedSummary((prev) => ({
       ...prev,
       [period]: !prev[period],
@@ -420,10 +496,11 @@ function ProfileEditPage() {
    * 요약 목록에서 선택한 책의 독후감 상세 화면으로 이동합니다.
    * 백엔드가 내려준 reptNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param reptNumb 이동할 독후감 번호
    */
   const handleSummaryReportClick = (reptNumb: number) => {
+
     navigate(`/book/detail/${reptNumb}`);
   };
 
@@ -431,15 +508,18 @@ function ProfileEditPage() {
    * 커스텀 모달을 닫을 때 fade-out 애니메이션이 끝난 뒤 실제 상태를 제거합니다.
    * sweetAlert, 달력, selectBox 성격의 모달은 이 흐름을 사용하지 않고 각 컴포넌트의 기본 동작을 유지합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param modal 닫을 마이페이지 커스텀 모달 구분값
    * @return fade-out 완료 Promise
    */
   const closeProfileModal = (modal: ProfileModalType) => {
+
     setClosingModal(modal);
 
     return new Promise<void>((resolve) => {
+
       window.setTimeout(() => {
+
         if (modal === "quick") {
           setQuickReport(null);
         }
@@ -469,10 +549,11 @@ function ProfileEditPage() {
    * 현재 읽고 있는 책을 눌렀을 때 빠른 상태/별점 수정 모달을 엽니다.
    * 아직 별점이 없는 독후감은 사용자가 바로 완료 처리할 수 있도록 기본값을 5점으로 보여줍니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param report 선택한 현재 읽고 있는 책 정보
    */
   const handleCurrentReadingClick = (report: ReadingSummaryReport) => {
+
     const reportGrade = Number(report.reptGrde);
 
     setClosingModal(null);
@@ -481,7 +562,16 @@ function ProfileEditPage() {
     setQuickGrade(Number.isFinite(reportGrade) ? reportGrade : 5);
   };
 
+  /**
+   * handle Follow List Open 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param type type 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleFollowListOpen = async (type: FollowListType) => {
+
     setClosingModal(null);
     setFollowListType(type);
     setFollowUsers([]);
@@ -502,7 +592,14 @@ function ProfileEditPage() {
     }
   };
 
+  /**
+   * handle Follow List Scroll 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const handleFollowListScroll = () => {
+
     setIsFollowListScrolling(true);
 
     if (followListScrollTimeoutRef.current) {
@@ -510,18 +607,37 @@ function ProfileEditPage() {
     }
 
     followListScrollTimeoutRef.current = window.setTimeout(() => {
+
       setIsFollowListScrolling(false);
       followListScrollTimeoutRef.current = null;
     }, 650);
   };
 
+  /**
+   * handle Follow List User Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param userNumb user Numb 입력값
+   * @return 반환값이 없다
+   */
   const handleFollowListUserClick = (userNumb: number) => {
+
     void closeProfileModal("followList").then(() => {
+
       navigate(`/social/profile/${userNumb}`);
     });
   };
 
+  /**
+   * handle Follow Status Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param user user 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleFollowStatusClick = async (user: FollowUser) => {
+
     if (followUpdatingUserNumb || user.meYsno === "Y") {
       return;
     }
@@ -567,7 +683,14 @@ function ProfileEditPage() {
     }
   };
 
+  /**
+   * handle Quick Edit Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const handleQuickEditClick = () => {
+
     if (!quickReport) {
       return;
     }
@@ -575,7 +698,15 @@ function ProfileEditPage() {
     navigate(`/book/upt/${quickReport.reptNumb}`);
   };
 
+  /**
+   * handle Quick Save Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleQuickSaveClick = async () => {
+
     if (!quickReport) {
       return;
     }
@@ -625,10 +756,11 @@ function ProfileEditPage() {
    * 목표 설정 모달을 열 때 현재 저장된 목표값을 입력값에 반영합니다.
    * 아직 목표가 없으면 빈 값으로 시작해 사용자가 직접 입력하도록 유도합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @return
    */
   const handleGoalModalOpen = async () => {
+
     let nextSummary = monthlySummary;
     const copyablePreviousGoalPeriods = getCopyablePreviousGoalPeriods(nextSummary);
 
@@ -673,7 +805,7 @@ function ProfileEditPage() {
   /**
    * 목표 입력값을 1 이상 숫자만 남긴 문자열로 정리합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param value 사용자가 입력한 목표 권수
    * @return 숫자로만 구성된 목표 권수 문자열
    */
@@ -685,11 +817,12 @@ function ProfileEditPage() {
    * 낮은 달성률은 부드러운 붉은색으로 경고성을 주고, 목표에 가까워질수록 노랑/파랑/초록 계열로
    * 변하게 하여 사용자가 현재 진행 상태를 숫자를 읽기 전에도 빠르게 구분할 수 있게 합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param rate 현재 목표 달성률
    * @return 달성률 구간에 대응하는 파스텔 색상 코드
    */
   const getGoalProgressColor = (rate: number) => {
+
     if (rate >= 100) {
       return "#9edfc2";
     }
@@ -705,6 +838,13 @@ function ProfileEditPage() {
     return "#f4a7ad";
   };
 
+  /**
+   * get Reading Remain Rate 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @param remainDays remain Days 입력값
+   * @return 처리 결과
+   */
   const getReadingRemainRate = (remainDays: number) => {
     // 현재 읽고 있는 책의 남은 기간 색상은 전체 목표기간 비율이 아니라 남은 10일을 기준으로 판단한다.
     // 10일 이상 남으면 가장 여유 있는 색상, 0일에 가까워질수록 기존 색상 단계가 내려간다.
@@ -715,11 +855,12 @@ function ProfileEditPage() {
    * 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링합니다.
    * 전체 목표기간 대비 남은 비율을 색상 기준으로 사용해 기간이 가까워질수록 붉은 계열로 표시합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param reports 현재 읽고 있는 독후감 목록
    * @return 현재 읽고 있는 책 섹션 JSX
    */
   const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+
     if (reports.length === 0) {
       return null;
     }
@@ -738,6 +879,7 @@ function ProfileEditPage() {
           {/* 현재 읽고 있는 책 목록 영역 */}
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
+
               const remainDays = getRemainDaysUntil(report.reptEndt);
               const remainRate = getReadingRemainRate(remainDays);
               const remainColor = getGoalProgressColor(remainRate);
@@ -764,6 +906,7 @@ function ProfileEditPage() {
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
                       onKeyDown={(event) => {
+
                         if (event.key !== "Enter" && event.key !== " ") {
                           return;
                         }
@@ -812,7 +955,15 @@ function ProfileEditPage() {
     );
   };
 
+  /**
+   * render Profile Stats 화면 요소를 구성한다
+   *
+   * @author HanWon.Jang
+   * @param summary summary 입력값
+   * @return 구성된 화면 요소
+   */
   const renderProfileStats = (summary: MonthlyReadingSummary) => {
+
     const stats = [
       {
         label: /* "총 읽은 책" */ message("frontend.profile.stats.totalReadBook"),
@@ -872,12 +1023,13 @@ function ProfileEditPage() {
    * 목표 입력 모달에서 버튼 클릭으로 월별/연도별 목표 권수를 1권 단위로 증감합니다.
    * 목표 권수는 저장 가능한 최소 단위가 1권이므로 감소 버튼을 반복해서 눌러도 1 미만으로 내려가지 않게 제한합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 조정할 목표 기간
    * @param amount 증감할 권수
    * @return
    */
   const handleGoalCountStep = (period: ReadingPeriod, amount: number) => {
+
     const setGoalCnt =
       period === "week"
         ? setWeekGoalCnt
@@ -886,6 +1038,7 @@ function ProfileEditPage() {
           : setYearGoalCnt;
 
     setGoalCnt((prev) => {
+
       const currentCount = Number(prev) || 1;
       return String(Math.max(1, currentCount + amount));
     });
@@ -894,18 +1047,19 @@ function ProfileEditPage() {
   /**
    * 월간/연간 목표 권수를 저장하고 저장 후 갱신된 요약 정보를 화면에 반영합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @return
    */
   /**
    * 목표 기간에 맞는 화면 라벨 메시지 key를 반환합니다.
    * 같은 기간 분기값을 입력 카드, 제한 안내, 저장 전 검증에서 함께 사용해 화면 안내와 검증 기준이 어긋나지 않게 합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 기간 라벨 메시지 key
    */
   const getGoalPeriodLabelKey = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return "frontend.profile.goal.weekLabel";
     }
@@ -921,11 +1075,12 @@ function ProfileEditPage() {
    * 현재 모달 입력값 중 기간에 맞는 목표 권수를 숫자로 반환합니다.
    * 빈 문자열은 Number 변환 시 0이 되므로 필수 입력 검증과 같은 기준으로 처리됩니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 사용자가 입력한 목표 권수
    */
   const getGoalInputCount = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return Number(weekGoalCnt);
     }
@@ -941,11 +1096,12 @@ function ProfileEditPage() {
    * 서버에 저장되어 있던 기간별 목표 권수를 반환합니다.
    * 저장된 값과 입력값이 다른 기간만 수정 제한 검증을 적용해야 같은 값을 다시 저장할 때 수정 횟수를 소모하지 않습니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 서버에 저장된 목표 권수
    */
   const getSavedGoalCount = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return monthlySummary?.weekGoalCnt ?? null;
     }
@@ -961,11 +1117,12 @@ function ProfileEditPage() {
    * 기간별 목표가 이미 설정되어 있는지 확인합니다.
    * 최초 설정은 수정 제한 대상이 아니므로 기존 목표가 있는 기간만 수정 제한 안내와 저장 전 차단에 사용합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 기존 목표가 있으면 true
    */
   const isGoalAlreadySet = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return Boolean(monthlySummary?.weekGoalSet);
     }
@@ -981,11 +1138,12 @@ function ProfileEditPage() {
    * 기간별로 앞으로 남은 목표 수정 횟수를 반환합니다.
    * 값은 백엔드 제한 로직과 같은 기준으로 내려온 응답값을 사용해 화면 선검증과 서버 검증의 기준을 맞춥니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 남은 수정 가능 횟수
    */
   const getGoalRemainUpdateCount = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return monthlySummary?.weekGoalRemainUpdateCnt ?? 0;
     }
@@ -1001,11 +1159,12 @@ function ProfileEditPage() {
    * 목표 수정 제한 기간이 시작되기 전까지 남은 일수를 반환합니다.
    * 0이면 이미 수정 가능 기간이 끝난 상태로 보고 저장 전에 사용자에게 안내합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 수정 가능 기간 남은 일수
    */
   const getGoalEditableRemainDays = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return monthlySummary?.weekGoalEditableRemainDays ?? 0;
     }
@@ -1021,11 +1180,12 @@ function ProfileEditPage() {
    * 목표 기간이 마감 규칙 때문에 잠겨 있는지 반환합니다.
    * 수정 횟수가 남아 있어도 기간이 잠긴 경우에는 프론트에서 먼저 저장을 차단합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 기간 제한으로 수정할 수 없으면 true
    */
   const isGoalUpdateLocked = (period: ReadingPeriod) => {
+
     if (period === "week") {
       return Boolean(monthlySummary?.weekGoalUpdateLocked);
     }
@@ -1041,11 +1201,12 @@ function ProfileEditPage() {
    * 모달 입력값이 기존 목표보다 낮아졌는지 확인합니다.
    * 목표를 올리는 것은 언제든 허용되어야 하므로 낮아진 기간만 목표 내리기 제한 검증과 확인 alert 대상이 됩니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 기존 목표보다 입력 목표가 낮으면 true
    */
   const isGoalDecreased = (period: ReadingPeriod) => {
+
     const savedGoalCount = getSavedGoalCount(period);
     return (
       isGoalAlreadySet(period) &&
@@ -1058,11 +1219,12 @@ function ProfileEditPage() {
    * 저장 전 목표 내리기 제한에 걸리는 기간의 안내 문구를 반환합니다.
    * 제한이 없는 기간은 빈 문자열을 반환해 저장 검증 루프에서 다음 기간을 계속 확인할 수 있게 합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 제한 안내 메시지
    */
   const getGoalEditBlockMessage = (period: ReadingPeriod) => {
+
     if (!isGoalDecreased(period)) {
       return "";
     }
@@ -1085,11 +1247,12 @@ function ProfileEditPage() {
    * 목표 입력 카드 하단에 목표 내리기 가능 횟수와 가능 기간 안내를 표시합니다.
    * 목표 올리기는 항상 가능하므로 내리기 제한 정보를 짧은 보조 정보로 분리해 표시합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 목표 기간 구분값
    * @return 목표 수정 제한 안내 JSX
    */
   const renderGoalLimitInfo = (period: ReadingPeriod) => {
+
     const remainUpdateCount = getGoalRemainUpdateCount(period);
     const remainDays = getGoalEditableRemainDays(period);
     const isLocked = isGoalUpdateLocked(period);
@@ -1119,7 +1282,15 @@ function ProfileEditPage() {
     );
   };
 
+  /**
+   * handle Goal Submit 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleGoalSubmit = async () => {
+
     const nextWeekGoalCnt = Number(weekGoalCnt);
     const nextMonthGoalCnt = Number(monthGoalCnt);
     const nextYearGoalCnt = Number(yearGoalCnt);
@@ -1184,7 +1355,7 @@ function ProfileEditPage() {
    * 월간/연간 독서 요약 행과 펼침 목록을 공통 구조로 렌더링합니다.
    * 권수 비교 버튼은 별도 버튼으로 유지하고, 제목/권수 영역을 누르면 목록만 부드럽게 열리도록 분리합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 월간 또는 연간 구분값
    * @param code 달력 아이콘 안에 표시할 월 영문 또는 연도
    * @param titleKey 제목 메시지 key
@@ -1205,6 +1376,7 @@ function ProfileEditPage() {
     diffAriaKey: string,
     reports: ReadingSummaryReport[] = [],
   ) => {
+
     const isExpanded = expandedSummary[period];
     const hasReports = reports.length > 0;
     const goalCnt =
@@ -1238,6 +1410,7 @@ function ProfileEditPage() {
             aria-expanded={hasReports ? isExpanded : undefined}
             disabled={!hasReports}
             onClick={() => {
+
               if (hasReports) {
                 handleToggleReadingSummary(period);
               }
@@ -1280,6 +1453,7 @@ function ProfileEditPage() {
           <div
             className={styles.monthlyDiffTooltipWrap}
             ref={(element) => {
+
               diffTooltipRefs.current[period] = element;
             }}
           >
@@ -1370,6 +1544,7 @@ function ProfileEditPage() {
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
                       onKeyDown={(event) => {
+
                         if (event.key !== "Enter" && event.key !== " ") {
                           return;
                         }
@@ -1418,10 +1593,11 @@ function ProfileEditPage() {
    * 프로필 수정 버튼 클릭 시 기본 동작과 상위 영역 이벤트 전파를 막고 수정 모드로 전환합니다.
    * 배경 영역 안의 버튼이 다른 요소로 포커스되거나 클릭 이벤트가 겹치지 않도록 클릭 흐름을 고정합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param event 프로필 수정 버튼 클릭 이벤트
    */
   const handleEditModeClick = (event: MouseEvent<HTMLButtonElement>) => {
+
     event.preventDefault();
     event.stopPropagation();
     // 편집 진입 시점의 최신 프로필 값을 input 상태에 다시 주입해 빈 값으로 열리는 경우를 막는다.
@@ -1434,10 +1610,11 @@ function ProfileEditPage() {
    * 닉네임 필수값을 확인한 뒤 프로필 수정 API를 호출해 텍스트와 이미지 파일을 함께 저장합니다.
    * 저장에 성공하면 서버가 반환한 최신 프로필 정보로 화면을 갱신하고 조회 모드로 되돌립니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param event 프로필 수정 폼 제출 이벤트
    */
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+
     event.preventDefault();
 
     if (!userNick.trim()) {
@@ -1751,6 +1928,7 @@ function ProfileEditPage() {
           }`}
           role="presentation"
           onMouseDown={(event) => {
+
             if (event.currentTarget === event.target) {
               void closeProfileModal("quick");
             }
@@ -1887,6 +2065,7 @@ function ProfileEditPage() {
           }`}
           role="presentation"
           onMouseDown={(event) => {
+
             if (event.currentTarget === event.target) {
               void closeProfileModal("followList");
             }
@@ -1995,6 +2174,7 @@ function ProfileEditPage() {
           }`}
           role="presentation"
           onMouseDown={(event) => {
+
             if (event.currentTarget === event.target) {
               void closeProfileModal("goal");
             }
@@ -2019,6 +2199,7 @@ function ProfileEditPage() {
                   className={styles.goalHelpButton}
                   type="button"
                   onClick={() => {
+
                     setClosingModal(null);
                     setIsGoalHelpModalOpen(true);
                   }}
@@ -2164,6 +2345,7 @@ function ProfileEditPage() {
           }`}
           role="presentation"
           onMouseDown={(event) => {
+
             if (event.currentTarget === event.target) {
               void closeProfileModal("goalHelp");
             }

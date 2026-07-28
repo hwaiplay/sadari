@@ -14,14 +14,31 @@ type NavigationProps = {
   isMain: boolean;
 };
 
+/**
+ * Navigation 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @param props props 입력값
+ * @return 구성된 화면 요소
+ */
 function Navigation({ isMain }: NavigationProps) {
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
   const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
 
   useEffect(() => {
+
     let ignore = false;
+    /**
+     * handle Profile Updated 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleProfileUpdated = (event: Event) => {
+
       if (isUserProfileUpdatedEvent(event)) {
         setProfile(event.detail);
       }
@@ -29,11 +46,13 @@ function Navigation({ isMain }: NavigationProps) {
 
     getMyProfileApi()
       .then((response) => {
+
         if (!ignore) {
           setProfile(response.data);
         }
       })
       .catch(() => {
+
         if (!ignore) {
           setProfile(null);
         }
@@ -42,6 +61,7 @@ function Navigation({ isMain }: NavigationProps) {
     window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
 
     return () => {
+
       ignore = true;
       window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
     };

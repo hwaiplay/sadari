@@ -32,10 +32,11 @@ export type AlimUnreadCntData = {
  * 로그인 사용자의 알림 목록을 조회합니다.
  * 읽음 상태는 변경하지 않고 삭제되지 않은 알림을 읽음 여부와 함께 화면으로 전달합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 내 알림 목록 API 응답
  */
 export const getMyAlimListApi = async (page = 1) => {
+
   const res = await api.get<{ data: AlimListData }>("/alim/list", {
     params: { page },
   });
@@ -46,10 +47,11 @@ export const getMyAlimListApi = async (page = 1) => {
  * 햄버거 메뉴 알림 버튼에 표시할 미읽음 알림 수만 조회합니다.
  * 목록 전체를 조회하지 않고 배지 숫자만 갱신할 때 사용합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 미읽음 알림 수 API 응답
  */
 export const getUnreadAlimCntApi = async () => {
+
   const res = await api.get<{ data: AlimUnreadCntData }>("/alim/unread-count");
   return assertResultDataSuccess(res.data);
 };
@@ -57,11 +59,12 @@ export const getUnreadAlimCntApi = async () => {
 /**
  * 알림센터 항목 또는 푸시 알림을 클릭한 경우 사용자별 알림 한 건을 읽음 처리합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param alimNumb 읽음 처리할 사용자별 알림 번호
  * @return 읽음 처리 후 남은 미읽음 알림 수 API 응답
  */
 export const uptAlimReadApi = async (alimNumb: number) => {
+
   const res = await api.put<{ data: AlimUnreadCntData }>("/alim/read-status", {
     alimNumb,
   });
@@ -72,10 +75,11 @@ export const uptAlimReadApi = async (alimNumb: number) => {
  * 화면에 아직 불러오지 않은 알림까지 모두 삭제 상태로 변경합니다.
  * 알림 페이지의 모두 지우기 버튼에서만 사용합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 모두 지우기 처리 API 응답
  */
 export const delAllAlimApi = async () => {
+
   const res = await api.post<{ data: AlimUnreadCntData }>("/alim/delete-all");
   return assertResultDataSuccess(res.data);
 };

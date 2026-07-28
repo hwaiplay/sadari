@@ -37,10 +37,11 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
 /**
  * SweetAlert 모달에 필요한 스타일 태그를 한 번만 주입합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return
  */
 function ensureSweetAlertStyle() {
+
   if (document.getElementById(STYLE_ID)) {
     return;
   }
@@ -374,12 +375,13 @@ function ensureSweetAlertStyle() {
 /**
  * SweetAlert 모달을 닫고 body 스크롤 상태를 복구합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param overlay 제거할 모달 오버레이 엘리먼트
  * @param result 사용자의 확인 여부 결과
  * @return SweetAlert 처리 결과
  */
 function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
+
   overlay.remove();
   unlockBodyScroll();
   return result;
@@ -388,20 +390,30 @@ function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
 /**
  * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param options 알림 모달 표시 옵션
  * @return 사용자의 확인 또는 취소 선택 결과 Promise
  */
 export function sweetAlert(options: SweetAlertOptions) {
+
   ensureSweetAlertStyle();
 
   return new Promise<SweetAlertResult>((resolve) => {
+
     const overlay = document.createElement("div");
     const modal = document.createElement("div");
     const iconType = options.icon ?? "info";
     let isClosed = false;
 
+    /**
+     * close 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param result result 입력값
+     * @return 반환값이 없다
+     */
     const close = (result: SweetAlertResult) => {
+
       if (isClosed) {
         return;
       }
@@ -451,6 +463,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       cancelButton.type = "button";
       cancelButton.textContent = options.cancelButtonText ?? "취소";
       cancelButton.addEventListener("click", () => {
+
         close({ isConfirmed: false });
       });
       actions.appendChild(cancelButton);
@@ -461,17 +474,20 @@ export function sweetAlert(options: SweetAlertOptions) {
     confirmButton.type = "button";
     confirmButton.textContent = options.confirmButtonText ?? "확인";
     confirmButton.addEventListener("click", () => {
+
       close({ isConfirmed: true });
     });
     actions.appendChild(confirmButton);
 
     overlay.addEventListener("click", (event) => {
+
       if (event.target === overlay && options.showCancelButton) {
         close({ isConfirmed: false });
       }
     });
 
     modal.addEventListener("click", (event) => {
+
       event.stopPropagation();
     });
 
@@ -485,11 +501,12 @@ export function sweetAlert(options: SweetAlertOptions) {
 /**
  * 취소 버튼을 포함한 확인 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param options 확인 모달 표시 옵션
  * @return 사용자의 확인 또는 취소 선택 결과 Promise
  */
 export function sweetConfirm(options: SweetAlertOptions) {
+
   return sweetAlert({
     icon: "question",
     confirmButtonText: "확인",
@@ -502,59 +519,64 @@ export function sweetConfirm(options: SweetAlertOptions) {
 /**
  * 성공 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
  */
 export function sweetSuccess(title: string, text?: string) {
+
   return sweetAlert({ title, text, icon: "success" });
 }
 
 /**
  * 오류 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
  */
 export function sweetError(title: string, text?: string) {
+
   return sweetAlert({ title, text, icon: "error" });
 }
 
 /**
  * 경고 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
  */
 export function sweetWarning(title: string, text?: string) {
+
   return sweetAlert({ title, text, icon: "warning" });
 }
 
 /**
  * 안내 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
  */
 export function sweetInfo(title: string, text?: string) {
+
   return sweetAlert({ title, text, icon: "info" });
 }
 
 /**
  * 질문 알림 모달을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param title 알림 제목
  * @param text 알림 본문
  * @return 사용자 확인 결과 Promise
  */
 export function sweetQuestion(title: string, text?: string) {
+
   return sweetAlert({ title, text, icon: "question" });
 }

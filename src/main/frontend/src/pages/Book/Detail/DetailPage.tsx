@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Book/Detail/DetailPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
@@ -17,7 +17,15 @@ import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
 import * as styles from "./DetailPage.css";
 import * as infoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
+/**
+ * Rating Stars 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @param props props 입력값
+ * @return 구성된 화면 요소
+ */
 function RatingStars({ grade }: { grade: string }) {
+
   const rawRating = Number(grade);
   const rating = Number.isFinite(rawRating)
     ? Math.max(0, Math.min(5, rawRating))
@@ -41,7 +49,14 @@ function RatingStars({ grade }: { grade: string }) {
   );
 }
 
+/**
+ * Detail Page 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function DetailPage() {
+
   const { id } = useParams();
   const idNum = Number(id);
   const navigate = useNavigate();
@@ -49,15 +64,36 @@ function DetailPage() {
   const likeMutation = usePublicReportLikeMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
 
+  /**
+   * go Update Page 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param reptNumb rept Numb 입력값
+   * @return 반환값이 없다
+   */
   const goUpdatePage = (reptNumb: number) => {
     // 상세에서 수정으로 진입한 뒤 저장하면 다시 상세로 이동한다.
     // 이때 기존 상세 히스토리를 남기면 뒤로가기 시 같은 상세 화면으로 돌아오므로 수정 진입 시 현재 상세 엔트리를 교체한다.
     navigate(`/book/upt/${reptNumb}`, { replace: true });
   };
 
+  /**
+   * show Book Info View 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const showBookInfoView = () => setShowBookInfo(true);
 
+  /**
+   * get Like Count Label 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @param likeCnt like Cnt 입력값
+   * @return 처리 결과
+   */
   const getLikeCountLabel = (likeCnt?: number) => {
+
     const count = Number(likeCnt) || 0;
     return count > 99 ? "99+" : String(count);
   };

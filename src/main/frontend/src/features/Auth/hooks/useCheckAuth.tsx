@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/features/Auth/hooks/useCheckAuth.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
@@ -17,7 +17,14 @@ const REFRESHABLE_AUTH_CODES = new Set([
   TOKEN_EXPIRED_CODE,
 ]);
 
+/**
+ * use Check Auth 상태와 처리 함수를 제공한다
+ *
+ * @author HanWon.Jang
+ * @return 화면에서 사용할 상태와 처리 함수
+ */
 export const useCheckAuth = () => {
+
   const { data, error, isLoading, isError, refetch } = useAuthQuery();
   const [refreshing, setRefreshing] = useState(false);
   const [refreshAttempted, setRefreshAttempted] = useState(false);
@@ -26,12 +33,14 @@ export const useCheckAuth = () => {
     : undefined;
 
   useEffect(() => {
+
     if (data?.code === 200 && refreshAttempted) {
       setRefreshAttempted(false);
     }
   }, [data?.code, refreshAttempted]);
 
   useEffect(() => {
+
     if (
       errorCode &&
       REFRESHABLE_AUTH_CODES.has(errorCode) &&
@@ -42,6 +51,7 @@ export const useCheckAuth = () => {
       setRefreshAttempted(true);
 
       (async () => {
+
         try {
           // accessToken 만료/누락/검증 실패는 refreshToken으로 복구 가능한 상태일 수 있어 먼저 재발급을 시도한다.
           await refreshTokenApi();
