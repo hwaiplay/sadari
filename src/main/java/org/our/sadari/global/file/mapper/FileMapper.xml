@@ -8,7 +8,7 @@
             SELECT TM_FILEXM_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         /* setFile */
-        INSERT INTO TM_FILEXM(
+        INSERT INTO TM_FILEXM (
                     FILE_NUMB
                   , ORIG_NAME
                   , STOR_NAME
