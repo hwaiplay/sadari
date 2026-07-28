@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Book/Info/BookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
@@ -13,7 +13,14 @@ import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import type { ReportDtoType } from "@/features/Book/types/book.type";
 import * as styles from "./BookInfoPage.css";
 
+/**
+ * Book Info Page 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function BookInfoPage() {
+
   const { id } = useParams();
   const location = useLocation();
   const navigate = useNavigate();

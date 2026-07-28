@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Book/Update/UpdateReportPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
@@ -37,7 +37,14 @@ import {
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 import { formatDateValue } from "@/app/utils/dateUtil";
 
+/**
+ * Update Report Page 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 const UpdateReportPage = () => {
+
   const { id } = useParams();
   const idNum = Number(id);
 
@@ -67,6 +74,7 @@ const UpdateReportPage = () => {
     : undefined;
 
   useEffect(() => {
+
     if (!bookData) {
       return;
     }
@@ -89,11 +97,12 @@ const UpdateReportPage = () => {
   /**
    * 독서 상태 변경을 반영하고 읽는 중에서 완료 상태로 바뀌는 경우 종료일 보정 여부를 확인합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param nextStatus 사용자가 선택한 다음 독서 상태 코드
    * @return
    */
   const handleStatusChange = async (nextStatus: ReadingStatusType) => {
+
     setStatus(nextStatus);
     const needsEndDateConfirm =
       initialStatus === REPORT_STATUS_READ &&
@@ -126,7 +135,16 @@ const UpdateReportPage = () => {
     return <Loading title={message("frontend.report.loading.detail")} />;
   }
 
+  /**
+   * set Form Action 정보를 설정하거나 등록한다
+   *
+   * @author HanWon.Jang
+   * @param e e 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const setFormAction = async (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
 
     const formData = new FormData(e.currentTarget);
@@ -175,7 +193,15 @@ const UpdateReportPage = () => {
     mutate({ reptNumb, data });
   };
 
+  /**
+   * delete On Click 정보를 삭제한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const deleteOnClick = async () => {
+
     const confirmed = await sweetConfirm({
       icon: "warning",
       title: message("frontend.alert.deleteConfirmTitle"),
@@ -232,6 +258,7 @@ const UpdateReportPage = () => {
                 placeholder={message("frontend.report.placeholder.startDate")}
                 endPlaceholder={message("frontend.report.placeholder.endDate")}
                 onRangeChange={(nextStartDate, nextEndDate) => {
+
                   setStartDate(nextStartDate);
                   setEndDate(nextEndDate);
                 }}
@@ -290,6 +317,7 @@ const UpdateReportPage = () => {
                 placeholder={message("frontend.report.placeholder.content")}
                 defaultValue={bookData.reptCntn}
                 onChange={(e) => {
+
                   const nextValue = truncateUtf8Bytes(e.currentTarget.value);
                   e.currentTarget.value = nextValue;
                   setContentByteLength(

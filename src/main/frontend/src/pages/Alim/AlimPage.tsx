@@ -32,10 +32,11 @@ const ALIM_DISMISS_MAX_STAGGER_COUNT = 10;
  * 별도 상태 조회 API 없이 버튼 상태를 유지하기 위해 현재 브라우저에 마지막 토글 결과를 저장합니다.
  * 저장값이 아직 없는 기존 사용자는 브라우저 알림 권한이 허용돼 있으면 켜짐 상태로 시작합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 현재 브라우저에서 기억한 푸시 알림 활성 여부
  */
 function getInitialPushEnabled() {
+
   if (!("Notification" in window) || Notification.permission !== "granted") {
     return false;
   }
@@ -47,10 +48,11 @@ function getInitialPushEnabled() {
 /**
  * 서버의 USEE_YSNO 변경이 성공한 뒤 버튼 상태를 현재 브라우저에 보관합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param enabled 푸시 알림 활성 여부
  */
 function setStoredPushEnabled(enabled: boolean) {
+
   window.localStorage.setItem(PUSH_ENABLED_STORAGE_KEY, enabled ? "Y" : "N");
 }
 
@@ -58,10 +60,11 @@ function setStoredPushEnabled(enabled: boolean) {
  * 로그인 사용자의 알림 목록을 보여주는 페이지입니다.
  * 삭제되지 않은 알림을 모두 보여주며, 개별 링크 클릭으로 읽음 처리하고 모두 지우기로 목록에서 제거합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 알림 목록 화면
  */
 function AlimPage() {
+
   const navigate = useNavigate();
   const [alimList, setAlimList] = useState<AlimItem[]>([]);
   const [nextPage, setNextPage] = useState(1);
@@ -79,6 +82,7 @@ function AlimPage() {
 
   const loadAlimList = useCallback(
     async (page: number) => {
+
       const isFirstPage = page === 1;
 
       if (isFirstPage) {
@@ -115,11 +119,14 @@ function AlimPage() {
   );
 
   useEffect(() => {
+
     void loadAlimList(1);
   }, [loadAlimList]);
 
   useEffect(() => {
+
     return () => {
+
       if (dismissTimerRef.current !== null) {
         window.clearTimeout(dismissTimerRef.current);
       }
@@ -127,6 +134,7 @@ function AlimPage() {
   }, []);
 
   useEffect(() => {
+
     const target = observerTargetRef.current;
 
     if (!target || !hasNext || isLoading || isFetchingMore) {
@@ -134,6 +142,7 @@ function AlimPage() {
     }
 
     const observer = new IntersectionObserver((entries) => {
+
       const [entry] = entries;
 
       // 하단 감지 영역이 보이는 순간 다음 미읽음 알림 20개를 요청한다.
@@ -145,11 +154,20 @@ function AlimPage() {
     observer.observe(target);
 
     return () => {
+
       observer.disconnect();
     };
   }, [hasNext, isFetchingMore, isLoading, loadAlimList, nextPage]);
 
+  /**
+   * handle Delete All 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleDeleteAll = async () => {
+
     if (isDeletingAll) {
       return;
     }
@@ -177,6 +195,7 @@ function AlimPage() {
           + maxStaggerCount * ALIM_DISMISS_STAGGER_MS;
 
         dismissTimerRef.current = window.setTimeout(() => {
+
           setAlimList([]);
           setIsClearingAll(false);
           setIsDeletingAll(false);
@@ -199,7 +218,15 @@ function AlimPage() {
     }
   };
 
+  /**
+   * get Current Push Token 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @return 처리 결과
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const getCurrentPushToken = async () => {
+
     if (pushTokenRef.current) {
       return pushTokenRef.current;
     }
@@ -212,7 +239,15 @@ function AlimPage() {
     return token;
   };
 
+  /**
+   * handle Push Toggle 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handlePushToggle = async () => {
+
     if (isPushChanging) {
       return;
     }
@@ -275,6 +310,14 @@ function AlimPage() {
     }
   };
 
+  /**
+   * handle Alim Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param alim alim 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleAlimClick = async (alim: AlimItem) => {
     // 링크가 없는 알림은 단순 안내 알림으로 취급해 현재 화면을 유지합니다.
     if (!alim.linkUrlx || readingAlimNumb !== null || isClearingAll) {
@@ -305,6 +348,13 @@ function AlimPage() {
     }
   };
 
+  /**
+   * render Alim Icon 화면 요소를 구성한다
+   *
+   * @author HanWon.Jang
+   * @param alimIconName alim Icon Name 입력값
+   * @return 구성된 화면 요소
+   */
   const renderAlimIcon = (alimIconName?: string) => {
     // 알림 상황 공통코드의 OPT1_NAME으로 아이콘을 분기한다.
     // 코드가 아직 등록되지 않은 상황은 기존 종 아이콘을 보여줘 알림 목록 자체는 깨지지 않게 한다.
@@ -335,6 +385,13 @@ function AlimPage() {
     );
   };
 
+  /**
+   * get Alim Icon Wrap Class 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @param alimIconName alim Icon Name 입력값
+   * @return 처리 결과
+   */
   const getAlimIconWrapClass = (alimIconName?: string) => {
     // DB 공통코드의 OPT1_NAME을 화면 스타일로 매핑한다.
     // LIKE는 HEART, FOLLOW는 FOLLOW로 내려오며, 신규 상황 코드가 추가되면 기본 파란 종 아이콘 스타일을 사용한다.

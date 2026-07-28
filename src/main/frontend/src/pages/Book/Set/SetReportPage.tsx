@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Book/Set/SetReportPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
@@ -33,7 +33,14 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 
+/**
+ * Set Report Page 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function SetReportPage() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const selectedBook = (
@@ -67,7 +74,15 @@ function SetReportPage() {
       } as CSSProperties)
     : undefined;
 
+  /**
+   * form Action 기능을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param e e 입력값
+   * @return 처리 결과
+   */
   const formAction = (e: FormEvent<HTMLFormElement>) => {
+
     e.preventDefault();
     handleSubmit(e.currentTarget);
   };
@@ -76,12 +91,14 @@ function SetReportPage() {
   const periodTitle = isReadingStatus ? "목표 독서 기간" : "독서 기간";
 
   useEffect(() => {
+
     if (!status && statusCodes.length > 0) {
       setStatus(statusCodes[0].comdCode);
     }
   }, [status, statusCodes]);
 
   useEffect(() => {
+
     if (!reptColr && colorCodes.length > 0) {
       setReptColr(colorCodes[0].comdCode);
     }
@@ -142,6 +159,7 @@ function SetReportPage() {
                 placeholder={message("frontend.report.placeholder.startDate")}
                 endPlaceholder={message("frontend.report.placeholder.endDate")}
                 onRangeChange={(nextStartDate, nextEndDate) => {
+
                   setStartDate(nextStartDate);
                   setEndDate(nextEndDate);
                 }}
@@ -199,6 +217,7 @@ function SetReportPage() {
                 id="content"
                 placeholder={message("frontend.report.placeholder.content")}
                 onChange={(e) => {
+
                   const nextValue = truncateUtf8Bytes(e.currentTarget.value);
                   e.currentTarget.value = nextValue;
                   setContentByteLength(

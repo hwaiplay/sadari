@@ -15,9 +15,19 @@ const AUTH_RETRY_RESULT_CODES = new Set([1001, 1002, 1003]);
  *
  * @param {number} alimNumb 사용자별 알림 번호
  * @return {Promise<void>} 읽음 처리 완료 Promise
+ * @author HanWon.Jang
  */
 async function uptAlimRead(alimNumb) {
+
+  /**
+   * 알림 읽음 처리 API를 호출한다
+   *
+   * @author HanWon.Jang
+   * @return {Promise<{response: Response, result: object | null}>} API 응답과 공통 응답 데이터
+   * @throws 알림 읽음 처리 요청에 실패하면 발생
+   */
   const requestRead = async () => {
+
     const response = await fetch("/api/alim/read-status", {
       method: "PUT",
       credentials: "include",

@@ -6,7 +6,7 @@ import * as styles from "./Book.css";
 /**
  * 홈 책장에 표시할 책 표지와 독서 중 배지를 렌더링합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param reptNumb 이동할 독후감 번호
  * @param bookTitl 책 제목
  * @param bookCvim 책 표지 이미지 URL
@@ -21,6 +21,7 @@ function Book({
   readingYn,
   className,
 }: HomeBookType & { className?: string }) {
+
   return (
     <Link
       to={`/book/detail/${reptNumb}`}

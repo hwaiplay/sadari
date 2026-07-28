@@ -12,14 +12,30 @@ export type ResultData<T = unknown> = {
 export class ResultDataError extends Error {
   result: ResultData;
 
+  /**
+   * 공통 응답 오류 객체를 초기화한다
+   *
+   * @author HanWon.Jang
+   * @param result result 입력값
+   * @return 처리 결과
+   */
   constructor(result: ResultData) {
+
     super(result.message);
     this.name = "ResultDataError";
     this.result = result;
   }
 }
 
+/**
+ * assert Result Data Success 기능을 처리한다
+ *
+ * @author HanWon.Jang
+ * @param result result 입력값
+ * @return 처리 결과
+ */
 export function assertResultDataSuccess<T extends ResultData>(result: T): T {
+
   if (Number(result?.code) !== RESULT_SUCCESS_CODE) {
     throw new ResultDataError(result);
   }
@@ -27,7 +43,16 @@ export function assertResultDataSuccess<T extends ResultData>(result: T): T {
   return result;
 }
 
+/**
+ * get Api Error Message 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param error error 입력값
+ * @param fallbackMessage fallback Message 입력값
+ * @return 처리 결과
+ */
 export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
+
   if (error instanceof ResultDataError) {
     return error.message || fallbackMessage;
   }

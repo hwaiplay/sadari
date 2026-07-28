@@ -39,11 +39,12 @@ type HeaderMenuDrawerProps = {
 /**
  * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param menuList SHOW_YSNO와 USEE_YSNO가 모두 Y인 사용자 메뉴 목록
  * @return 헤더 알림·햄버거 버튼과 메뉴 드로어
  */
 function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
+
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
@@ -56,6 +57,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   const refreshUnreadAlimCnt = useCallback(async () => {
+
     try {
       const response = await getUnreadAlimCntApi();
       setUnreadAlimCnt(response.data?.unreadCnt ?? 0);
@@ -64,7 +66,15 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
     }
   }, []);
 
+  /**
+   * handle Logout 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleLogout = async () => {
+
     const confirmed = await sweetConfirm({
       title: message("frontend.auth.logoutConfirmTitle"),
       confirmButtonText: message("frontend.auth.logout"),
@@ -87,8 +97,17 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
   };
 
   useEffect(() => {
+
     let ignore = false;
+    /**
+     * handle Profile Updated 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleProfileUpdated = (event: Event) => {
+
       if (isUserProfileUpdatedEvent(event)) {
         setProfile(event.detail);
       }
@@ -96,11 +115,13 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
 
     getMyProfileApi()
       .then((response) => {
+
         if (!ignore) {
           setProfile(response.data);
         }
       })
       .catch(() => {
+
         if (!ignore) {
           setProfile(null);
         }
@@ -109,14 +130,23 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
     window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
 
     return () => {
+
       ignore = true;
       window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
     };
   }, []);
 
   useEffect(() => {
+
     void refreshUnreadAlimCnt();
 
+    /**
+     * handle Service Worker Message 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleServiceWorkerMessage = (event: MessageEvent) => {
       // 푸시 수신뿐 아니라 시스템 알림 클릭으로 읽음 상태가 바뀐 경우에도 배지 수를 다시 조회한다.
       if (
@@ -127,11 +157,26 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
       }
     };
 
+    /**
+     * handle Window Focus 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
     const handleWindowFocus = () => {
+
       void refreshUnreadAlimCnt();
     };
 
+    /**
+     * handle Unread Alim Cnt Changed 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleUnreadAlimCntChanged = (event: Event) => {
+
       if (isUnreadAlimCntChangedEvent(event)) {
         setUnreadAlimCnt(event.detail);
       }
@@ -142,6 +187,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
     window.addEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
 
     return () => {
+
       navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
       window.removeEventListener("focus", handleWindowFocus);
       window.removeEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
@@ -149,10 +195,19 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
   }, [refreshUnreadAlimCnt]);
 
   useEffect(() => {
+
     let unsubscribe: (() => void) | undefined;
     let ignore = false;
 
+    /**
+     * initialize Foreground Messages 기능을 처리한다
+     *
+     * @author HanWon.Jang
+     * @return 처리 결과
+     * @throws API 요청 또는 비동기 처리 실패 시 발생
+     */
     const initializeForegroundMessages = async () => {
+
       if (!("Notification" in window) || Notification.permission !== "granted") {
         return;
       }
@@ -177,7 +232,14 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
       }
     };
 
+    /**
+     * handle Push Enabled 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
     const handlePushEnabled = () => {
+
       void initializeForegroundMessages();
     };
 
@@ -185,6 +247,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
     window.addEventListener(FIREBASE_PUSH_ENABLED_EVENT, handlePushEnabled);
 
     return () => {
+
       ignore = true;
       unsubscribe?.();
       window.removeEventListener(FIREBASE_PUSH_ENABLED_EVENT, handlePushEnabled);
@@ -217,6 +280,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
             className={drawerStyles.drawerProfileSummaryButton}
             type="button"
             onClick={() => {
+
               setIsDrawerOpen(false);
               navigate("/mypage/profile");
             }}
@@ -267,6 +331,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
               type="button"
               disabled={!item.menuUrlx}
               onClick={() => {
+
                 if (!item.menuUrlx) {
                   return;
                 }

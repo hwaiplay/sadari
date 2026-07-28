@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/app/api/axios.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 // src/api/axios.ts
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
@@ -28,24 +28,56 @@ let logoutRequest: Promise<unknown> | null = null;
 const AUTH_FAILURE_CODES = new Set([1001, 1002, 1003, 2004, 2009]);
 const REFRESHABLE_AUTH_CODES = new Set([1001, 1002, 1003]);
 
+/**
+ * get Result Code 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param data data 입력값
+ * @return 처리 결과
+ */
 function getResultCode(data: unknown) {
+
   return Number((data as { code?: unknown } | undefined)?.code);
 }
 
+/**
+ * is Refreshable Auth Code 여부를 판정한다
+ *
+ * @author HanWon.Jang
+ * @param code code 입력값
+ * @return 판정 결과
+ */
 function isRefreshableAuthCode(code: number) {
+
   return REFRESHABLE_AUTH_CODES.has(code);
 }
 
+/**
+ * is Auth Endpoint 여부를 판정한다
+ *
+ * @author HanWon.Jang
+ * @param url url 입력값
+ * @return 판정 결과
+ */
 function isAuthEndpoint(url?: string) {
+
   return url === "/oauth/refresh" || url === "/oauth/logout";
 }
 
+/**
+ * refresh Session 기능을 처리한다
+ *
+ * @author HanWon.Jang
+ * @return 처리 결과
+ */
 function refreshSession() {
+
   if (!refreshRequest) {
     refreshRequest = api
       .post("/oauth/refresh")
       .then((response) => assertResultDataSuccess(response.data))
       .finally(() => {
+
         refreshRequest = null;
       });
   }
@@ -53,6 +85,13 @@ function refreshSession() {
   return refreshRequest;
 }
 
+/**
+ * reset Session And Redirect To Login 사용자 동작을 처리한다
+ *
+ * @author HanWon.Jang
+ * @return 반환값이 없다
+ * @throws API 요청 또는 비동기 처리 실패 시 발생
+ */
 async function resetSessionAndRedirectToLogin() {
   // /user/me는 로그인 후 화면에서 현재 세션의 사용자 정보를 확정하는 API다.
   // 인증성 실패 코드가 오면 토큰과 사용자 데이터가 불일치한 상태이므로 세션을 비우고 로그인부터 다시 시킨다.
@@ -67,6 +106,7 @@ async function resetSessionAndRedirectToLogin() {
       .post("/api/oauth/logout", undefined, { withCredentials: true })
       .catch(() => undefined)
       .finally(() => {
+
         logoutRequest = null;
       });
   }
@@ -80,6 +120,7 @@ async function resetSessionAndRedirectToLogin() {
 
 api.interceptors.response.use(
   async (response) => {
+
     const originalRequest = response.config as RetryableRequestConfig;
     const resultCode = getResultCode(response.data);
 
@@ -110,6 +151,7 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+
     const originalRequest = error.config as RetryableRequestConfig | undefined;
 
     // /user/me가 400/2009처럼 에러 응답으로 내려와도 세션 불일치로 보고 재로그인 처리한다.
