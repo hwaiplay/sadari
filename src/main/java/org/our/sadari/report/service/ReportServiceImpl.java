@@ -575,7 +575,7 @@ public class ReportServiceImpl implements ReportService {
         // 주간, 월간, 연간 목표 중 하나라도 유효하지 않으면 저장 요청 전체를 거절한다.
         if (!isValidReadingGoal(readingGoalDto)) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -586,7 +586,7 @@ public class ReportServiceImpl implements ReportService {
         // 주간 목표 저장 중 제한 규칙에 걸리면 이후 월간, 연간 저장을 진행하지 않는다.
         if (!StringUtil.isEmpty(weekResult)) {
 
-            // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
+            // 주간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(weekResult);
         }
 
@@ -595,7 +595,7 @@ public class ReportServiceImpl implements ReportService {
         // 월간 목표 저장 중 제한 규칙에 걸리면 이후 연간 저장을 진행하지 않는다.
         if (!StringUtil.isEmpty(monthResult)) {
 
-            // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
+            // 월간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(monthResult);
         }
 
@@ -604,7 +604,7 @@ public class ReportServiceImpl implements ReportService {
         // 연간 목표 저장 중 제한 규칙에 걸리면 실패 결과를 그대로 반환한다.
         if (!StringUtil.isEmpty(yearResult)) {
 
-            // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
+            // 연간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(yearResult);
         }
         // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
@@ -649,7 +649,7 @@ public class ReportServiceImpl implements ReportService {
         // 3. 복사된 목표가 단 1건도 없는 경우(이미 목표가 존재하거나 이전 목표 데이터가 없는 경우) 요청 실패로 응답한다.
         if (copiedCount == 0) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -987,7 +987,7 @@ public class ReportServiceImpl implements ReportService {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -1008,7 +1008,7 @@ public class ReportServiceImpl implements ReportService {
         // 조회 결과가 없으면 존재하지 않거나 접근할 수 없는 독후감으로 판단한다.
         if (StringUtil.isEmpty(detail)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
         // 독후감 번호로 독후감과 도서 상세 정보를 조회 결과를 성공 응답으로 반환한다
@@ -1030,7 +1030,7 @@ public class ReportServiceImpl implements ReportService {
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -1058,7 +1058,7 @@ public class ReportServiceImpl implements ReportService {
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
         // ISBN 기준 도서 평균 별점을 조회 결과를 성공 응답으로 반환한다
@@ -1081,7 +1081,7 @@ public class ReportServiceImpl implements ReportService {
         // 등록 요청의 도서 필수값이 누락되면 도서와 독후감 저장을 모두 중단한다.
         if (hasInvalidBookFields(reportDto)) {
 
-            // "\uC120\uD0DD\uD55C \uCC45 \uC815\uBCF4\uAC00 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC2B5\uB2C8\uB2E4. \uB2E4\uB978 \uCC45\uC744 \uC120\uD0DD\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "선택한 책 정보가 올바르지 않습니다. 다른 책을 선택해주세요."
             return ResultData.fail(ResultEnum.COMMON_REPORT_BOOK_INVALID);
         }
 
@@ -1099,7 +1099,7 @@ public class ReportServiceImpl implements ReportService {
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
 
-            // 독후감과 필요한 도서 정보를 등록 과정에서 확인된 검증 실패 응답을 반환한다
+            // 독후감과 필요한 도서 정보를 등록 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
@@ -1120,7 +1120,7 @@ public class ReportServiceImpl implements ReportService {
         // 독후감 등록 후 PK가 채워지지 않으면 저장 실패로 판단한다.
         if (StringUtil.isEmpty(reportDto.getReptNumb())) {
 
-            // "\uC800\uC7A5\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "저장에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
         // 독후감과 필요한 도서 정보를 등록 결과를 성공 응답으로 반환한다
@@ -1144,7 +1144,7 @@ public class ReportServiceImpl implements ReportService {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -1164,14 +1164,14 @@ public class ReportServiceImpl implements ReportService {
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
 
-            // 기존 독후감 정보를 수정 과정에서 확인된 검증 실패 응답을 반환한다
+            // 기존 독후감 정보를 수정 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (reportMapper.uptReport(reportDto) == 0) {
 
-            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
         // 기존 독후감 정보를 수정 결과를 성공 응답으로 반환한다
@@ -1195,7 +1195,7 @@ public class ReportServiceImpl implements ReportService {
         // 대상 독후감 번호가 없으면 수정 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -1215,7 +1215,7 @@ public class ReportServiceImpl implements ReportService {
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
 
-            // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 과정에서 확인된 검증 실패 응답을 반환한다
+            // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
@@ -1225,7 +1225,7 @@ public class ReportServiceImpl implements ReportService {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (result == 0) {
 
-            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
         // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 결과를 성공 응답으로 반환한다
@@ -1248,7 +1248,7 @@ public class ReportServiceImpl implements ReportService {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -1262,7 +1262,7 @@ public class ReportServiceImpl implements ReportService {
         // 삭제 반영 건수가 없으면 본인 독후감이 아니거나 이미 삭제된 데이터로 판단한다.
         if (reportMapper.delReport(reportDto) == 0) {
 
-            // "\uC0AD\uC81C\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "삭제에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
 
