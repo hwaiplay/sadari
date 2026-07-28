@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-13        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    Redis Lua 주석 문법 수정
  */
 @Service
 @RequiredArgsConstructor
@@ -31,18 +32,16 @@ public class TokenRedisService {
 
     private static final DefaultRedisScript<Long> SET_LOGIN_USER_SCRIPT = new DefaultRedisScript<>(
             """
-            // 검증 대상 콜백을 실행한다
+            -- Refresh Token을 지정된 로그인 유지시간 동안 저장한다
             redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
-            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+            -- 닉네임이 비어 있으면 이전 로그인에서 남은 닉네임을 제거한다
             if ARGV[2] == '' then
-                // 검증 대상 콜백을 실행한다
                 redis.call('DEL', KEYS[2])
-            // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else
-                // 검증 대상 콜백을 실행한다
+                -- 닉네임이 있으면 Refresh Token과 같은 만료시간으로 저장한다
                 redis.call('SET', KEYS[2], ARGV[2], 'EX', ARGV[3])
             end
-            // 로그인 사용자의 Refresh Token과 닉네임을 Redis에 같은 TTL로 원자 저장 결과를 반환한다
+            -- 두 로그인 정보를 정상적으로 반영한 결과를 반환한다
             return 1
             """
           , Long.class
@@ -50,18 +49,17 @@ public class TokenRedisService {
 
     private static final DefaultRedisScript<Long> UPDATE_USER_NICK_SCRIPT = new DefaultRedisScript<>(
             """
-            // 검증 대상 콜백을 실행한다
+            -- 로그인 세션과 동일한 만료시간을 적용하기 위해 Refresh Token의 남은 시간을 조회한다
             local refreshTtl = redis.call('TTL', KEYS[1])
-            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+            -- 로그인 세션이 없거나 만료됐으면 닉네임 캐시도 남기지 않는다
             if refreshTtl <= 0 then
-                // 검증 대상 콜백을 실행한다
                 redis.call('DEL', KEYS[2])
-                // 로그인 사용자의 Refresh Token과 닉네임을 Redis에 같은 TTL로 원자 저장 결과를 반환한다
+                -- 갱신할 로그인 세션이 없음을 반환한다
                 return 0
             end
-            // 검증 대상 콜백을 실행한다
+            -- 수정된 닉네임을 Refresh Token의 남은 만료시간으로 저장한다
             redis.call('SET', KEYS[2], ARGV[1], 'EX', refreshTtl)
-            // 로그인 사용자의 Refresh Token과 닉네임을 Redis에 같은 TTL로 원자 저장 결과를 반환한다
+            -- 닉네임 캐시를 정상적으로 갱신한 결과를 반환한다
             return 1
             """
           , Long.class
