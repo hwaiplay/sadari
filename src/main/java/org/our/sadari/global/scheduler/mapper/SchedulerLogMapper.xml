@@ -2,36 +2,34 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.global.scheduler.mapper.SchedulerLogMapper">
 
-    <!-- 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록 -->
+    <!-- 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록한다. -->
     <insert id="setSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto">
         <selectKey keyProperty="runxNumb" resultType="long" order="BEFORE">
-            SELECT /* setSchedulerLog.selectKey */
-                   TL_SCLOGX_SEQ.NEXTVAL
+            SELECT TL_SCLOGX_SEQ.NEXTVAL
               FROM DUAL
         </selectKey>
         INSERT /* setSchedulerLog */
-          INTO TL_SCLOGX (
-               RUNX_NUMB
-             , SCHD_CODE
-             , METH_NAME
-             , EXEC_STAT
-             , STRT_DATE
-             , TRGT_CNTT
-             , SUCC_CNTT
-             , FAIL_CNTT
-          ) VALUES (
-               #{runxNumb}
-             , #{schdCode}
-             , #{methName}
-             , #{execStat}
-             , SYSTIMESTAMP
-             , #{trgtCntt}
-             , #{succCntt}
-             , #{failCntt}
-          )
+               INTO TL_SCLOGX (
+                    RUNX_NUMB
+                  , SCHD_CODE
+                  , METH_NAME
+                  , EXEC_STAT
+                  , STRT_DATE
+                  , TRGT_CNTT
+                  , SUCC_CNTT
+                  , FAIL_CNTT
+        ) VALUES (  #{runxNumb}
+                  , #{schdCode}
+                  , #{methName}
+                  , #{execStat}
+                  , SYSTIMESTAMP
+                  , #{trgtCntt}
+                  , #{succCntt}
+                  , #{failCntt}
+        )
     </insert>
 
-    <!-- 스케줄러 최종 상태와 처리 건수 및 실행 시간을 TL_SCLOGX에 수정 -->
+    <!-- 스케줄러 최종 상태와 처리 건수 및 실행 시간을 TL_SCLOGX에 수정한다. -->
     <update id="uptSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto">
         UPDATE /* uptSchedulerLog */
                TL_SCLOGX
@@ -51,26 +49,26 @@
     <insert id="setSchedulerFail" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerFailDto">
         <bind name="numberZero" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ZERO" />
         <bind name="numberOne" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ONE" />
-        INSERT /* setSchedulerFail */
-          INTO TL_SCFAIL (
-               RUNX_NUMB
-             , FAIL_NUMB
-             , FAIL_TYPE
-             , RSLT_CODE
-             , RSLT_MESG
-             , ERRO_TYPE
-             , ERRO_CNTN
-             , FAIL_DATE
-          )
+        /* setSchedulerFail */
+        INSERT INTO TL_SCFAIL (
+                    RUNX_NUMB
+                  , FAIL_NUMB
+                  , FAIL_TYPE
+                  , RSLT_CODE
+                  , RSLT_MESG
+                  , ERRO_TYPE
+                  , ERRO_CNTN
+                  , FAIL_DATE
+        )
         SELECT #{runxNumb}
-             , NVL(MAX(F.FAIL_NUMB), #{numberZero}) + #{numberOne}
+             , NVL(MAX(FAIL.FAIL_NUMB), #{numberZero}) + #{numberOne}
              , #{failType}
              , #{rsltCode, jdbcType=NUMERIC}
              , #{rsltMesg, jdbcType=VARCHAR}
              , #{erroType, jdbcType=VARCHAR}
              , #{erroCntn, jdbcType=VARCHAR}
              , SYSTIMESTAMP
-          FROM TL_SCFAIL F
-         WHERE F.RUNX_NUMB = #{runxNumb}
+          FROM TL_SCFAIL FAIL
+         WHERE FAIL.RUNX_NUMB = #{runxNumb}
     </insert>
 </mapper>

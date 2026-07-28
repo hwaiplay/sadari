@@ -14,13 +14,13 @@
         <bind name="tempCodeReportDateOver" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPORT_DATE_OVER" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="lookbackDays" value="@org.our.sadari.global.common.constant.Constant@REPORT_DATE_OVER_LOOKBACK_DAYS" />
-        SELECT REPT_NUMB
-             , USER_NUMB
-             , BOOK_TITL
-          FROM (
-                SELECT R.REPT_NUMB
-                     , R.USER_NUMB
-                     , B.BOOK_TITL
+        SELECT /* getReportDateOverTargetList */
+               DATEOVERREPORT.REPT_NUMB
+             , DATEOVERREPORT.USER_NUMB
+             , DATEOVERREPORT.BOOK_TITL
+          FROM (  SELECT R.REPT_NUMB
+                       , R.USER_NUMB
+                       , B.BOOK_TITL
                   FROM TM_REPORT R
             INNER JOIN TM_BKINFO B
                     ON B.BOOK_NUMB = R.BOOK_NUMB
@@ -45,7 +45,7 @@
                    )
               ORDER BY R.REPT_ENDT ASC
                      , R.REPT_NUMB ASC
-               )
+               ) DATEOVERREPORT
          WHERE ROWNUM <![CDATA[<=]]> #{maxSize}
     </select>
 </mapper>
