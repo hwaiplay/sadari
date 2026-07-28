@@ -44,8 +44,10 @@ function SearchBookInfoPage() {
   } as CSSProperties;
 
   return (
+    /* 검색한 도서의 상세 정보 전체 영역 */
     <main className={styles.page} style={pageStyle}>
       <Container className={styles.content}>
+        {/* 도서 표지와 평점 요약 영역 */}
         <section className={styles.header}>
           <div className={styles.coverFrame}>
             <img className={styles.coverImage} src={book.image} alt={title} />
@@ -85,33 +87,41 @@ function SearchBookInfoPage() {
               )
             }
           >
+            {/* "다른 사람이 쓴 독후감 보기" */}
             {message("frontend.book.publicReports.button")}
           </button>
         </section>
 
         <div className={styles.contentPanel}>
+          {/* 저자와 출판 정보 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "도서 정보" */}
               {message("frontend.common.bookInfo")}
             </h2>
             <div className={styles.infoGrid}>
               <span className={styles.infoLabel}>
+                {/* "저자" */}
                 {message("frontend.common.author")}
               </span>
               <p className={styles.infoValue}>{author || "-"}</p>
               <span className={styles.infoLabel}>
+                {/* "출판사" */}
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{publisher || "-"}</p>
               <span className={styles.infoLabel}>
+                {/* "출간일" */}
                 {message("frontend.common.publDate")}
               </span>
               <p className={styles.infoValue}>{pubdate || "-"}</p>
             </div>
           </section>
 
+          {/* 도서 소개 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "책 소개" */}
               {message("frontend.common.bookDescription")}
             </h2>
             <p className={styles.description}>
@@ -124,6 +134,7 @@ function SearchBookInfoPage() {
             type="button"
             onClick={() => navigate("/set", { state: { selectedBook: book } })}
           >
+            {/* "이 책으로 기록하기" */}
             {message("frontend.book.search.writeThisBook")}
           </button>
         </div>

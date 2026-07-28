@@ -124,8 +124,8 @@ const SearchBookPage = () => {
       saveSearchCache(keyword, responseData, next, more);
     } catch (error) {
       console.error("도서 검색 중 오류 발생: ", error);
-      // 화면표시: 검색에 실패했습니다.
-      // 화면표시: 책 검색에 실패했습니다. 다시 시도해주세요.
+      // "검색에 실패했습니다."
+      // "책 검색에 실패했습니다. 다시 시도해주세요."
       await sweetError(
         message("frontend.alert.searchFailedTitle"),
         getApiErrorMessage(error, message("frontend.book.search.failed")),
@@ -273,8 +273,10 @@ const SearchBookPage = () => {
   };
 
   return (
+    /* 외부 도서 검색과 결과 목록 전체 영역 */
     <main className={styles.page}>
       <Container className={styles.content}>
+        {/* 도서 검색어 입력과 검색 실행 영역 */}
         <form className={styles.searchForm} onSubmit={handleSearchClick}>
           <input
             className={styles.searchInput}
@@ -290,6 +292,7 @@ const SearchBookPage = () => {
             type="submit"
             disabled={isSearching}
           >
+            {/* "검색" */}
             {message("frontend.book.search.button")}
           </button>
         </form>
@@ -309,6 +312,7 @@ const SearchBookPage = () => {
                     : description;
 
                 return (
+                  /* 검색된 도서 개별 항목 영역 */
                   <article
                     className={styles.resultCard}
                     key={`${book.isbn}-${index}`}
@@ -339,6 +343,7 @@ const SearchBookPage = () => {
                         type="button"
                         onClick={() => handleMoreInfo(book)}
                       >
+                        {/* "더보기" */}
                         {message("frontend.book.search.more")}
                       </button>
                       <button
@@ -346,6 +351,7 @@ const SearchBookPage = () => {
                         type="button"
                         onClick={() => handleSelectBook(book)}
                       >
+                        {/* "선택" */}
                         {message("frontend.book.search.select")}
                       </button>
                     </div>
@@ -367,6 +373,7 @@ const SearchBookPage = () => {
             </div>
           ) : (
             <p className={styles.emptyMessage}>
+              {/* "검색 결과가 없습니다." */}
               {message("frontend.book.search.noResult")}
             </p>
           ))}

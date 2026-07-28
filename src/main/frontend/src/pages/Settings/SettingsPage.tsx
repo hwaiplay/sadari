@@ -17,7 +17,9 @@ function SettingsPage() {
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
 
   return (
+    /* 사용자 설정 메뉴 전체 영역 */
     <main className={styles.page}>
+      {/* 알림과 사용자 관리 설정 영역 */}
       <section className={styles.menu} aria-label="설정 메뉴">
         <button
           className={styles.primaryMenuButton}

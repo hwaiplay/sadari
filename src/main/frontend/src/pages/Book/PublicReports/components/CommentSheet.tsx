@@ -186,6 +186,7 @@ function CommentSheet({
         aria-label={message("frontend.common.close")}
         onClick={onClose}
       />
+      {/* 댓글 목록과 등록 기능을 제공하는 모달 본문 영역 */}
       <section
         className={styles.commentSheet}
         ref={sheetRef}
@@ -244,7 +245,8 @@ function CommentSheet({
           )}
         </div>
 
-        <form className={styles.commentForm} onSubmit={handleSubmit}>
+          {/* 댓글 입력과 등록 버튼 영역 */}
+          <form className={styles.commentForm} onSubmit={handleSubmit}>
           <input
             className={styles.commentInput}
             type="text"

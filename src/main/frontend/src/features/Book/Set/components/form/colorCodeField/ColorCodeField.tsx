@@ -11,7 +11,7 @@ type ColorCodeFieldProps = {
 /**
  * DB 怨듯넻肄붾뱶濡?議고쉶??梨낆옣 ?됱긽 肄붾뱶瑜?swatch ?쇰뵒??紐⑸줉?쇰줈 ?쒖떆?쒕떎.
  * @author HanWon.Jang
- * @param colors BOOK_COLR 怨듯넻肄붾뱶???몃?肄붾뱶 紐⑸줉
+ * @param colors BOOK_COLR 공통코드의 세부 색상 코드 목록
  * @param value ?꾩옱 ?좏깮??梨낆옣 ?됱긽 肄붾뱶
  * @param onChange ?됱긽 肄붾뱶 ?좏깮 蹂寃?肄쒕갚
  * @return 梨낆옣 ?됱긽 ?좏깮 ?꾨뱶 而댄룷?뚰듃

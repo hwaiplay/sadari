@@ -69,6 +69,7 @@ function Navigation({ isMain }: NavigationProps) {
 
   return (
     <div className={clsx(styles.navContainer, isMain && styles.whiteBg)}>
+      {/* 홈과 마이페이지 이동 영역 */}
       <nav className={styles.navigation}>
         <LinkButton
           link="/home"

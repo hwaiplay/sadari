@@ -53,8 +53,10 @@ function BookInfoPage() {
   } as CSSProperties;
 
   return (
+    /* 저장된 도서의 상세 정보 전체 영역 */
     <main className={styles.page} style={pageStyle}>
       <Container className={styles.content}>
+        {/* 도서 표지와 평점 요약 영역 */}
         <section className={styles.header}>
           <div className={styles.coverFrame}>
             <img
@@ -102,33 +104,41 @@ function BookInfoPage() {
               )
             }
           >
+            {/* "다른 사람이 쓴 독후감 보기" */}
             {message("frontend.book.publicReports.button")}
           </button>
         </section>
 
         <div className={styles.contentPanel}>
+          {/* 저자와 출판 정보 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "도서 정보" */}
               {message("frontend.common.bookInfo")}
             </h2>
             <div className={styles.infoGrid}>
               <span className={styles.infoLabel}>
+                {/* "저자" */}
                 {message("frontend.common.author")}
               </span>
               <p className={styles.infoValue}>{bookInfo.bookAthr || "-"}</p>
               <span className={styles.infoLabel}>
+                {/* "출판사" */}
                 {message("frontend.common.publisher")}
               </span>
               <p className={styles.infoValue}>{bookInfo.bookPubl || "-"}</p>
               <span className={styles.infoLabel}>
+                {/* "출간일" */}
                 {message("frontend.common.publDate")}
               </span>
               <p className={styles.infoValue}>{bookInfo.publDate || "-"}</p>
             </div>
           </section>
 
+          {/* 도서 소개 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "책 소개" */}
               {message("frontend.common.bookDescription")}
             </h2>
             <p className={styles.description}>

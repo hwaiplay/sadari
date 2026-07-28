@@ -202,6 +202,7 @@ function ReadingCalendarPage() {
   };
 
   return (
+    /* 날짜별 독서 기록 확인 영역 */
     <main className={styles.page}>
       <Container className={styles.content}>
         <div className={styles.toolbar}>
@@ -228,6 +229,7 @@ function ReadingCalendarPage() {
           </button>
         </div>
 
+        {/* 월별 독서 기록 달력 영역 */}
         <section
           className={clsx(
             styles.calendar,
@@ -297,7 +299,9 @@ function ReadingCalendarPage() {
         </p>
 
         {selectedReports.length > 0 ? (
-          <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
+          <>
+            {/* 선택한 날짜의 독서 기록 목록 영역 */}
+            <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
             {selectedReports.map((report) => {
 
               const backgroundColor = report.reptColr || "#e5e5e5";
@@ -325,7 +329,8 @@ function ReadingCalendarPage() {
                 </button>
               );
             })}
-          </section>
+            </section>
+          </>
         ) : (
           <p className={styles.emptyMessage}>
             선택한 날짜에 읽고 있던 책이 없습니다.

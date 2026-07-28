@@ -4,7 +4,7 @@
  * @author HanWon.Jang
  */
 
-import React, { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { field, fieldTitle } from "./FormField.css";
 
 interface FormFieldProps {
