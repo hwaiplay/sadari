@@ -1,9 +1,11 @@
 package org.our.sadari.global.scheduler.service;
 
+import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.AlimDeleteMapper;
@@ -49,9 +51,9 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
         schedulerRunDto.setMethName(Thread.currentThread().getStackTrace()[1].getMethodName());
         // ExecStat 업무 값을 schedulerRunDto DTO에 설정한다
         schedulerRunDto.setExecStat(Constant.SCHEDULER_EXEC_RUNNING);
-
-        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
-        Long runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+        // StrtDate 업무 값을 schedulerRunDto DTO에 설정한다
+        schedulerRunDto.setStrtDate(LocalDateTime.now());
+        Long runxNumb = null;
         int targetCnt = 0;
         int successCnt = 0;
         int failureCnt = 0;
@@ -79,6 +81,14 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
             // 단일 DELETE가 실패하면 이번 실행 전체가 실패한 것이므로 마스터와 실패 상세에 각각 결과를 남긴다.
             failureCnt = 1;
             executionStatus = Constant.SCHEDULER_EXEC_FAILURE;
+            // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
+            schedulerRunDto.setFailCntt(failureCnt);
+            // 실패 상세를 연결할 실행 번호가 없으면 최초 예외 시점에 마스터 로그를 생성한다.
+            if (StringUtil.isEmpty(runxNumb)) {
+                // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+            }
+
             // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
             schedulerLogSupport.setSchedulerFailSafely(
                     runxNumb
@@ -109,6 +119,15 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
                     // 측정한 실행 시간을 밀리초 단위로 변환한다
                     TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime)
             );
+            // 삭제 또는 실패 건수가 존재하지만 마스터 로그를 만들지 않았다면 최종 건수로 로그를 생성한다.
+            if (StringUtil.isEmpty(runxNumb)) {
+
+                // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
+                schedulerRunDto.setRunxNumb(runxNumb);
+            }
+
             // uptSchedulerLogSafely 호출로 변경된 업무 상태를 반영한다
             schedulerLogSupport.uptSchedulerLogSafely(schedulerRunDto);
         }

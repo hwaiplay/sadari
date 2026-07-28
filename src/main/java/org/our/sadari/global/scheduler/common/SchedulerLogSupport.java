@@ -50,6 +50,13 @@ public class SchedulerLogSupport {
             return null;
         }
 
+        // 처리 대상과 성공 및 실패 건수가 모두 없으면 관리할 실행 결과가 없으므로 마스터 로그를 생성하지 않는다.
+        if (schedulerRunDto.getTrgtCntt() == 0 && schedulerRunDto.getSuccCntt() == 0
+                && schedulerRunDto.getFailCntt() == 0) {
+            // 저장할 실행 결과가 없음을 반환한다
+            return null;
+        }
+
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // 실행 시작 로그를 등록하되 로그 저장 오류가 원래 스케줄러 업무를 중단시키지 않도록 격리 결과를 반환한다
