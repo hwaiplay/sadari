@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @Tag(name = "인증", description = "카카오 OAuth 로그인, JWT 검증, 재발급, 로그아웃 API")
 public class AuthLoginController {
+
     // 접근 TOKEN COOKIE 명칭 설정값
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN COOKIE 명칭 설정값

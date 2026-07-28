@@ -30,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/push")
 @Tag(name = "푸시", description = "PWA 푸시 알림 설정 및 구독 API")
 public class PushController {
+
     // Push 업무 처리 서비스
     private final PushService pushService;
 

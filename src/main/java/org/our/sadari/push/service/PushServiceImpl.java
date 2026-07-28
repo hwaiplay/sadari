@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PushServiceImpl implements PushService {
+
     // Push 데이터 접근 객체
     private final PushMapper pushMapper;
     // FirebaseMessaging 외부 연동 제공 객체

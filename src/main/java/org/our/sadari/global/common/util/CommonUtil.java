@@ -13,6 +13,7 @@ import java.time.LocalDate;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class CommonUtil {
+
     /**
      * 두 날짜 기간의 겹침 여부 판정한다.
      *

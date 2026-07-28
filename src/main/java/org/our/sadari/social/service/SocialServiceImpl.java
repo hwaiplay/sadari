@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SocialServiceImpl implements SocialService {
+
     // Social 데이터 접근 객체
     private final SocialMapper socialMapper;
     // Report 데이터 접근 객체

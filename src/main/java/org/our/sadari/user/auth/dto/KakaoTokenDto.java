@@ -18,6 +18,7 @@ import lombok.Data;
 @Data
 @Schema(description = "Kakao OAuth 토큰 응답 DTO", hidden = true)
 public class KakaoTokenDto {
+
     // 카카오 API 호출에 사용하는 액세스 토큰
     private String access_token;
     // OAuth 인증 스킴을 나타내는 토큰 유형

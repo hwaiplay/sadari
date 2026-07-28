@@ -16,6 +16,7 @@ import lombok.Getter;
 @Getter
 @AllArgsConstructor
 public class ResultResponse {
+
     // 공통 응답 결과 코드
     private int code;
     // 공통 응답 메시지

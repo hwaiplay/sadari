@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +28,7 @@ import org.our.sadari.global.scheduler.service.SchedulerLogServiceImpl;
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerLogServiceImplTest {
+
     // SchedulerLog 데이터 접근 객체
     @Mock
     private SchedulerLogMapper schedulerLogMapper;
@@ -60,6 +62,8 @@ class SchedulerLogServiceImplTest {
         runDto.setMethName("sendReportDateOverAlim");
         // ExecStat 업무 값을 runDto DTO에 설정한다
         runDto.setExecStat(Constant.SCHEDULER_EXEC_RUNNING);
+        // StrtDate 업무 값을 runDto DTO에 설정한다
+        runDto.setStrtDate(LocalDateTime.now());
         when(schedulerLogMapper.setSchedulerLog(runDto)).thenAnswer(invocation -> {
             // RunxNumb 업무 값을 runDto DTO에 설정한다
             runDto.setRunxNumb(7L);

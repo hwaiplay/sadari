@@ -18,6 +18,7 @@ import lombok.Data;
  */
 @Schema(description = "현재 URL 메뉴와 햄버거 메뉴 응답 DTO")
 public class UserMenuDto {
+
     /**
      * TM_URMENU 한 건의 화면 표시 정보를 전달한다.
      *

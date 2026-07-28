@@ -24,6 +24,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class FirebaseMessagingProvider {
+
     // 기본 PUSH TITLE 설정값
     private static final String DEFAULT_PUSH_TITLE = "알림";
     // 기본 PUSH LINK 설정값

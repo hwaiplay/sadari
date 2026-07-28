@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/code")
 @Tag(name = "공통코드", description = "공통코드의 세부코드 목록 조회 API")
 public class CodeController {
+
     // 공통코드 캐시 조회 객체
     private final CodeUtil codeUtil;
 

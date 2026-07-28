@@ -38,6 +38,7 @@ import org.springframework.web.multipart.MultipartFile;
 @Slf4j
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+
     // User 데이터 접근 객체
     private final UserMapper userMapper;
     // File 업무 처리 서비스

@@ -28,6 +28,7 @@ import org.our.sadari.menu.mapper.UserMenuMapper;
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
+
     // UserMenu 데이터 접근 객체
     @Mock
     private UserMenuMapper userMenuMapper;
