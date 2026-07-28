@@ -25,7 +25,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user-menu")
 @Tag(name = "사용자 메뉴", description = "사용자 화면의 헤더 및 햄버거 메뉴 조회 API")
 public class UserMenuController {
-
     // UserMenu 업무 처리 서비스
     private final UserMenuService userMenuService;
 
@@ -39,7 +38,6 @@ public class UserMenuController {
     @GetMapping
     @Operation(summary = "사용자 메뉴 조회", description = "현재 URL 메뉴와 햄버거 노출 메뉴를 함께 조회한다.")
     public ResultData getUserMenu(@RequestParam String menuUrlx) {
-
         // 현재 URL에 해당하는 메뉴명과 노출 가능한 햄버거 메뉴 목록을 조회한 결과를 반환한다
         return userMenuService.getUserMenu(menuUrlx);
     }

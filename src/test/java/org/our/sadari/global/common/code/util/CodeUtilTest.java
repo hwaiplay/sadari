@@ -30,7 +30,6 @@ import org.our.sadari.global.common.result.ResultEnum;
  */
 @ExtendWith(MockitoExtension.class)
 class CodeUtilTest {
-
     // Code 데이터 접근 객체
     @Mock
     private CodeMapper codeMapper;
@@ -45,7 +44,6 @@ class CodeUtilTest {
      */
     @BeforeEach
     void setUp() {
-
         // 공통코드 캐시 단위 테스트 대상을 담을 객체를 생성한다
         codeUtil = new CodeUtil(codeMapper);
     }
@@ -57,7 +55,6 @@ class CodeUtilTest {
      */
     @Test
     void getCodeGroupListNormalizesAndGroupsRequestedCodes() {
-
         // 필요한 값으로 불변 객체를 생성한다
         List<String> normalizedCommCodeList = List.of("READ_STAT", "BOOK_COLR");
         // getCodeDto 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -90,7 +87,6 @@ class CodeUtilTest {
      */
     @Test
     void getCodeGroupListRejectsEmptyRequestBeforeMapperCall() {
-
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인한다
         CustomException exception = assertThrows(
                 CustomException.class
@@ -112,7 +108,6 @@ class CodeUtilTest {
      * @return 공통코드와 세부코드가 설정된 DTO
      */
     private CodeDto getCodeDto(String commCode, String comdCode) {
-
         // 공통코드 항목을 담을 객체를 생성한다
         CodeDto codeDto = new CodeDto();
         // CommCode 업무 값을 codeDto DTO에 설정한다

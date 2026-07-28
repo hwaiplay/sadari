@@ -19,7 +19,6 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableScheduling
 @SpringBootApplication
 public class SadariApplication {
-
 	/**
 	 * Spring Boot 애플리케이션을 실행한다.
 	 *
@@ -27,7 +26,6 @@ public class SadariApplication {
 	 * @param args 애플리케이션 실행 인자
 	 */
 	public static void main(String[] args) {
-
 		// 검증 대상 작업을 실행한다
 		SpringApplication.run(SadariApplication.class, args);
 	}

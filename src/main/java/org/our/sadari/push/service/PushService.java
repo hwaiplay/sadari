@@ -14,7 +14,6 @@ import org.our.sadari.push.dto.PushDto;
  * 2026-07-25        SeungHyeon.Kang    최초 생성
  */
 public interface PushService {
-
     // getFirebaseWebConfig 조회로 후속 처리에 필요한 데이터를 가져온다
     ResultData getFirebaseWebConfig();
 

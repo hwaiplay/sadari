@@ -13,7 +13,6 @@ import org.our.sadari.global.common.result.ResultData;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  */
 public interface UserMenuService {
-
     /**
      * 현재 URL의 메뉴명과 노출 가능한 햄버거 메뉴 목록을 조회한다.
      *

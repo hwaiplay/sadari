@@ -49,7 +49,6 @@ public class ResultData {
      * @return 처리 결과
      */
     public static ResultData success() {
-
         // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(200, "success", null);
     }
@@ -62,7 +61,6 @@ public class ResultData {
      * @return 처리 결과
      */
     public static ResultData success(Object data) {
-
         // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(200, "success", data);
     }
@@ -75,7 +73,6 @@ public class ResultData {
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum) {
-
         // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
         // 새로 생성한 ResultData 객체를 반환한다
@@ -91,7 +88,6 @@ public class ResultData {
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum, Object... args) {
-
         // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey(), args);
         // 새로 생성한 ResultData 객체를 반환한다

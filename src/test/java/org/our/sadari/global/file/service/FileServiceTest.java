@@ -27,7 +27,6 @@ import org.springframework.test.util.ReflectionTestUtils;
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceTest {
-
     // File 데이터 접근 객체
     @Mock
     private FileMapper fileMapper;
@@ -42,7 +41,6 @@ class FileServiceTest {
      */
     @BeforeEach
     void setUp() {
-
         // 파일 검증 서비스 단위 테스트 대상을 담을 객체를 생성한다
         fileService = new FileService(fileMapper);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
@@ -60,14 +58,8 @@ class FileServiceTest {
      */
     @Test
     void setUploadedImageRejectsTextDisguisedAsPng() {
-
         // 허용하지 않는 이미지 입력을 재현할 테스트 파일을 담을 객체를 생성한다
-        MockMultipartFile disguisedFile = new MockMultipartFile(
-                "profileImage"
-              , "profile.png"
-              , "image/png"
-              , "not-an-image".getBytes(StandardCharsets.UTF_8)
-        );
+        MockMultipartFile disguisedFile = new MockMultipartFile("profileImage", "profile.png", "image/png", "not-an-image".getBytes(StandardCharsets.UTF_8));
 
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인한다
         assertThrows(
@@ -93,13 +85,9 @@ class FileServiceTest {
         byte[] invalidJpeg = {
                 (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00, 0x01, 0x02
         };
+
         // 허용하지 않는 이미지 입력을 재현할 테스트 파일을 담을 객체를 생성한다
-        MockMultipartFile disguisedFile = new MockMultipartFile(
-                "profileImage"
-              , "profile.jpg"
-              , "image/jpeg"
-              , invalidJpeg
-        );
+        MockMultipartFile disguisedFile = new MockMultipartFile("profileImage", "profile.jpg", "image/jpeg", invalidJpeg);
 
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인한다
         assertThrows(
@@ -121,16 +109,10 @@ class FileServiceTest {
      */
     @Test
     void setUploadedImageRejectsOversizedFile() {
-
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageBytes", 4L);
         // 허용하지 않는 이미지 입력을 재현할 테스트 파일을 담을 객체를 생성한다
-        MockMultipartFile oversizedFile = new MockMultipartFile(
-                "profileImage"
-              , "profile.png"
-              , "image/png"
-              , new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x00}
-        );
+        MockMultipartFile oversizedFile = new MockMultipartFile("profileImage", "profile.png", "image/png", new byte[] {(byte) 0x89, 0x50, 0x4E, 0x47, 0x00});
 
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인한다
         assertThrows(

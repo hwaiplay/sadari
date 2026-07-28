@@ -25,7 +25,6 @@ import lombok.NoArgsConstructor;
 @JsonIgnoreProperties(ignoreUnknown = true)
 @Schema(description = "네이버 도서 검색 API 응답 DTO", hidden = true)
 public class BookJsonDto {
-
     // 네이버 도서 검색 API의 검색 결과 생성 일시
     private String lastBuildDate;
 
@@ -51,7 +50,6 @@ public class BookJsonDto {
     @JsonIgnoreProperties(ignoreUnknown = true)
     @Schema(description = "네이버 도서 검색 결과 항목 DTO", hidden = true)
     public static class BookDto {
-
         // 도서 제목
         private String title;
 

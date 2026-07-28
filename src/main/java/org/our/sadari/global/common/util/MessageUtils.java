@@ -17,7 +17,6 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MessageUtils {
-
     // 다국어 메시지 조회 객체
     private static MessageSource messageSource;
 
@@ -41,12 +40,12 @@ public class MessageUtils {
      * @return 처리 결과
      */
     public static String getMessage(String key) {
-
         // messageSource 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(messageSource)) {
 
             throw new IllegalStateException("MessageSource not initialized");
         }
+
         // 메시지 키와 치환값 기준 공통 문구 조회 결과를 반환한다
         return messageSource.getMessage(key, null, LocaleContextHolder.getLocale());
     }
@@ -60,12 +59,12 @@ public class MessageUtils {
      * @return 처리 결과
      */
     public static String getMessage(String key, Object... args) {
-
         // messageSource 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(messageSource)) {
 
             throw new IllegalStateException("MessageSource not initialized");
         }
+
         // 메시지 키와 치환값 기준 공통 문구 조회 결과를 반환한다
         return messageSource.getMessage(key, args, LocaleContextHolder.getLocale());
     }

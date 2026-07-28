@@ -17,7 +17,6 @@ import org.our.sadari.global.common.code.dto.CodeDto;
  */
 @Mapper
 public interface CodeMapper {
-
     /**
      * 하나의 공통코드에 속한 사용 가능한 세부코드 목록을 조회한다.
      *

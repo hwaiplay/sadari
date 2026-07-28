@@ -17,7 +17,6 @@ import org.our.sadari.alim.dto.AlimDto;
  */
 @Mapper
 public interface AlimMapper {
-
     /**
      * 알림 상황과 템플릿 코드로 사용 가능한 템플릿 1건을 조회한다.
      *

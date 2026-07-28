@@ -32,7 +32,6 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @RequiredArgsConstructor
 @Slf4j
 public class AlimServiceImpl implements AlimService {
-
     // 알림 페이지 크기 설정값
     private static final int ALIM_PAGE_SIZE = 20;
 
@@ -52,10 +51,8 @@ public class AlimServiceImpl implements AlimService {
     @Override
     @Transactional(readOnly = true)
     public ResultData getMyAlimList(Long userNumb, int page) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -79,17 +76,14 @@ public class AlimServiceImpl implements AlimService {
         List<AlimDto.AlimItemDto> searchedList = alimMapper.getMyAlimList(req);
         // searchedList 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(searchedList)) {
-
             // 조회 결과가 없을 때 사용할 빈 목록을 생성한다
             searchedList = Collections.emptyList();
         }
 
         // 처리된 데이터 건수를 확인한다
         boolean hasNext = searchedList.size() > ALIM_PAGE_SIZE;
-        List<AlimDto.AlimItemDto> visibleList = new ArrayList<>(
-                // 요청한 페이지 크기만큼 알림 목록을 분리한다
-                hasNext ? searchedList.subList(0, ALIM_PAGE_SIZE) : searchedList
-        );
+        // 요청한 페이지 크기만큼 알림 목록을 분리한 객체를 생성한다
+        List<AlimDto.AlimItemDto> visibleList = new ArrayList<>(hasNext ? searchedList.subList(0, ALIM_PAGE_SIZE) : searchedList);
 
         // 알림 목록과 다음 페이지 여부를 담을 객체를 생성한다
         AlimDto.AlimListResDto res = new AlimDto.AlimListResDto();
@@ -116,10 +110,8 @@ public class AlimServiceImpl implements AlimService {
     @Override
     @Transactional(readOnly = true)
     public ResultData getUnreadAlimCnt(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -144,17 +136,14 @@ public class AlimServiceImpl implements AlimService {
     @Override
     @Transactional
     public ResultData uptAlimRead(Long userNumb, AlimDto.AlimReadReqDto req) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getAlimNumb())) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -183,10 +172,8 @@ public class AlimServiceImpl implements AlimService {
     @Override
     @Transactional
     public ResultData delAllAlim(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -218,10 +205,8 @@ public class AlimServiceImpl implements AlimService {
     @Transactional
     public ResultData sendAlim(Long userNumb, String alimSitu, String tempCode
                              , Long tagtNumb, Map<String, Object> replaceMap) {
-
         // 수신자, 상황 코드, 템플릿 코드가 없으면 템플릿 조회와 사용자별 알림 저장 기준이 사라지므로 잘못된 요청으로 중단한다.
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(alimSitu) || StringUtil.isEmpty(tempCode)) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -243,7 +228,6 @@ public class AlimServiceImpl implements AlimService {
 
         // 사용 가능한 템플릿이 없으면 어떤 제목/내용/링크로 발송해야 하는지 알 수 없으므로 알림을 저장하지 않는다.
         if (StringUtil.isEmpty(temp)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -270,7 +254,6 @@ public class AlimServiceImpl implements AlimService {
         // 최종 제목, 내용, 링크까지 완전히 같은 알림이 1시간 이내에 있으면 새 알림을 만들지 않는다.
         // 좋아요나 팔로우 버튼을 반복 조작할 때 같은 알림이 짧은 시간에 쌓이는 것을 막기 위한 공통 발송 분기이다.
         if (alimMapper.dupSameAlimInHour(alim) > 0) {
-
             // 알림 수신자와 템플릿 식별값으로 TB_ALTEMP의 사용 가능한 템플릿을 찾고, #{key} 형식의 상용구를 Map 값으로 치환해 TB_ALIMXX에 저장 결과를 성공 응답으로 반환한다
             return ResultData.success(alim);
         }
@@ -308,9 +291,9 @@ public class AlimServiceImpl implements AlimService {
                         alim.getAlimNumb()
                 );
             }
+
             // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
             catch (RuntimeException e) {
-
                 // 푸시는 부가 기능이므로 commit이 끝난 알림 저장 결과에는 영향을 주지 않는다.
                 log.warn("FCM push send failed after notification commit. userNumb={}", alim.getUserNumb(), e);
             }
@@ -320,7 +303,6 @@ public class AlimServiceImpl implements AlimService {
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
 
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-
                 /**
                  * 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행한다
                  *
@@ -329,11 +311,11 @@ public class AlimServiceImpl implements AlimService {
                  */
                 @Override
                 public void afterCommit() {
-
                     // 검증 대상 작업을 실행한다
                     sendPush.run();
                 }
             });
+
             // 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행 결과를 반환한다
             return;
         }
@@ -352,10 +334,8 @@ public class AlimServiceImpl implements AlimService {
      * @return 치환 완료 문구
      */
     private String replaceTemplate(String template, Map<String, Object> replaceMap) {
-
         // template 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(template)) {
-
             // 템플릿 문구의 #{key} 상용구를 replaceMap의 값으로 치환 결과를 반환한다
             return "";
         }
@@ -364,7 +344,6 @@ public class AlimServiceImpl implements AlimService {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (Map.Entry<String, Object> entry : replaceMap.entrySet()) {
-
             // entry.getKey( 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
             if (StringUtil.isEmpty(entry.getKey())) {
 
@@ -379,6 +358,7 @@ public class AlimServiceImpl implements AlimService {
                     StringUtil.isEmpty(entry.getValue()) ? "" : String.valueOf(entry.getValue())
             );
         }
+
         // 템플릿 문구의 #{key} 상용구를 replaceMap의 값으로 치환 결과를 반환한다
         return replacedTemplate;
     }
@@ -393,10 +373,8 @@ public class AlimServiceImpl implements AlimService {
      * @return 실제 이동 URL
      */
     private String createLinkUrl(String linkUrlx, Long tagtNumb) {
-
         // 링크가 없는 템플릿은 클릭 이동을 제공하지 않는 알림으로 볼 수 있으므로 빈 문자열을 저장한다.
         if (StringUtil.isEmpty(linkUrlx)) {
-
             // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
             return "";
         }
@@ -404,10 +382,10 @@ public class AlimServiceImpl implements AlimService {
         // 대상 번호가 없으면 기본 링크만 저장한다.
         // 추후 단순 공지처럼 특정 상세 번호가 없는 알림도 같은 공통 메서드를 재사용할 수 있게 하기 위한 분기이다.
         if (StringUtil.isEmpty(tagtNumb)) {
-
             // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
             return linkUrlx;
         }
+
         // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
         return linkUrlx + tagtNumb;
     }

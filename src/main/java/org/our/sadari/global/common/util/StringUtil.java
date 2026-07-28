@@ -24,7 +24,6 @@ import java.util.Map;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class StringUtil {
-
     // 빈 값 설정값
     public static final String EMPTY = "";
 
@@ -51,17 +50,19 @@ public class StringUtil {
             returnVal= new String(source.getBytes(),0, slength);
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if(returnVal.length()==0 ){
-
                 // 문자열 변환 결과를 담을 객체를 생성한다
                 returnVal= new String(source.getBytes(),0, slength+1);
             }
+
             returnVal += output;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch(IndexOutOfBoundsException e){
 
             returnVal = source;
         }
+
         // UTF-8 바이트 길이 기준 문자열 자르기 결과를 반환한다
         return returnVal;
     }
@@ -79,17 +80,17 @@ public class StringUtil {
         String returnVal = null;
         // source 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(source)) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (source.length() > slength) {
-
                 // 요청한 범위의 문자열을 추출한다
                 returnVal = source.substring(0, slength) + output;
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else
                 returnVal = source;
         }
+
         // UTF-8 바이트 길이에 맞춰 문자열을 자른다 결과를 반환한다
         return returnVal;
     }
@@ -106,17 +107,17 @@ public class StringUtil {
         String result = null;
         // source 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(source)) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (source.length() > slength) {
-
                 // 요청한 범위의 문자열을 추출한다
                 result = source.substring(0, slength);
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else
                 result = source;
         }
+
         // UTF-8 바이트 길이에 맞춰 문자열을 자른다 결과를 반환한다
         return result;
     }
@@ -128,13 +129,12 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String normalizePlainText(String value) {
-
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(value)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 사용자 평문 입력의 제어 문자를 제거하고 길이를 제한 결과를 반환한다
         return value.trim();
     }
@@ -147,16 +147,15 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String normalizePlainText(String value, int maxLength) {
-
         // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화한다
         String normalizedValue = normalizePlainText(value);
 
         // normalizedValue 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(normalizedValue)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 사용자 평문 입력의 제어 문자를 제거하고 길이를 제한 결과를 반환한다
         return cutString(normalizedValue, maxLength);
     }
@@ -168,42 +167,37 @@ public class StringUtil {
      * @return 검사 조건 충족 여부
      */
     public static boolean isEmpty(Object obj) {
-
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         // 공통 빈 값 판정 메서드 내부에서는 재귀 호출을 피하기 위해 Null 자체를 직접 확인한다.
         if (obj == null) {
-
             // 값의 null 또는 빈 상태를 판정값을 반환한다
             return true;
         }
 
         // 입력값의 실제 타입에 맞는 변환 로직을 선택하기 위해 분기한다
         if (obj instanceof String) {
-
             // 값의 null 또는 빈 상태를 판정 결과를 반환한다
             return ((String) obj).trim().isEmpty();
         }
 
         // 입력값의 실제 타입에 맞는 변환 로직을 선택하기 위해 분기한다
         if (obj instanceof List) {
-
             // 값의 null 또는 빈 상태를 판정 결과를 반환한다
             return ((List<?>) obj).isEmpty();
         }
 
         // 입력값의 실제 타입에 맞는 변환 로직을 선택하기 위해 분기한다
         if (obj instanceof Map) {
-
             // 값의 null 또는 빈 상태를 판정 결과를 반환한다
             return ((Map<?, ?>) obj).isEmpty();
         }
 
         // 입력값의 실제 타입에 맞는 변환 로직을 선택하기 위해 분기한다
         if (obj instanceof Object[]) {
-
             // 값의 null 또는 빈 상태를 판정 결과를 반환한다
             return ((Object[]) obj).length == 0;
         }
+
         // 값의 null 또는 빈 상태를 판정값을 반환한다
         return false;
     }
@@ -215,25 +209,22 @@ public class StringUtil {
      * @return 검사 조건 충족 여부
      */
     public static boolean hasEmpty(Object... values) {
-
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         // 가변 인자 배열 자체가 생성되지 않은 호출은 빈 값이 포함된 요청으로 판정한다.
         if (values == null) {
-
             // 값의 null 또는 빈 상태를 판정값을 반환한다
             return true;
         }
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (Object value : values) {
-
             // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (isEmpty(value)) {
-
                 // 값의 null 또는 빈 상태를 판정값을 반환한다
                 return true;
             }
         }
+
         // 값의 null 또는 빈 상태를 판정값을 반환한다
         return false;
     }
@@ -246,25 +237,24 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String remove(String str, char remove) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str) || str.indexOf(remove) == -1) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         // 문자 단위 검사를 위해 문자열을 문자 배열로 변환한다
         char[] chars = str.toCharArray();
         int pos = 0;
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (int i = 0; i < chars.length; i++) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (chars[i] != remove) {
 
                 chars[pos++] = chars[i];
             }
         }
+
         // 새로 생성한 String 객체를 반환한다
         return new String(chars, 0, pos);
     }
@@ -276,7 +266,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String removeCommaChar(String str) {
-
         // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
         return remove(str, ',');
     }
@@ -288,7 +277,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String removeMinusChar(String str) {
-
         // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
         return remove(str, '-');
     }
@@ -302,7 +290,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String replace(String source, String subject, String object) {
-
         // 문자열 변환 결과를 누적할 버퍼를 담을 객체를 생성한다
         StringBuffer rtnStr = new StringBuffer();
         String preStr = "";
@@ -311,10 +298,8 @@ public class StringUtil {
 
         // srcStr 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(srcStr)) {
-
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             while (srcStr.indexOf(subject) >= 0) {
-
                 // 요청한 범위의 문자열을 추출한다
                 preStr = srcStr.substring(0, srcStr.indexOf(subject));
                 // 요청한 범위의 문자열을 추출한다
@@ -324,6 +309,7 @@ public class StringUtil {
                 rtnStr.append(preStr).append(object);
             }
         }
+
         // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
         rtnStr.append(nextStr);
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
@@ -343,10 +329,10 @@ public class StringUtil {
         String str = source;
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for(int i=0;i<subject.length;i++){
-
             // 대상 문자열에서 지정한 값을 치환한다
             str=replace(str, subject[i], object[i]);
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return str;
     }
@@ -360,14 +346,12 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String replaceOnce(String source, String subject, String object) {
-
         // 문자열 변환 결과를 누적할 버퍼를 담을 객체를 생성한다
         StringBuffer rtnStr = new StringBuffer();
         String preStr = "";
         String nextStr = source;
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (source.indexOf(subject) >= 0) {
-
             // 요청한 범위의 문자열을 추출한다
             preStr = source.substring(0, source.indexOf(subject));
             // 요청한 범위의 문자열을 추출한다
@@ -377,6 +361,7 @@ public class StringUtil {
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
             return rtnStr.toString();
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
@@ -393,7 +378,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String replaceChar(String source, String subject, String object) {
-
         // 문자열 변환 결과를 누적할 버퍼를 담을 객체를 생성한다
         StringBuffer rtnStr = new StringBuffer();
         String preStr = "";
@@ -404,13 +388,11 @@ public class StringUtil {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (int i = 0; i < subject.length(); i++) {
-
             // 현재 위치의 문자를 확인한다
             chA = subject.charAt(i);
 
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (srcStr.indexOf(chA) >= 0) {
-
                 // 요청한 범위의 문자열을 추출한다
                 preStr = srcStr.substring(0, srcStr.indexOf(chA));
                 // 요청한 범위의 문자열을 추출한다
@@ -419,6 +401,7 @@ public class StringUtil {
                 srcStr = rtnStr.append(preStr).append(object).append(nextStr).toString();
             }
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcStr;
     }
@@ -431,13 +414,12 @@ public class StringUtil {
      * @return 계산하거나 조회한 숫자 결과
      */
     public static int indexOf(String str, String searchStr) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str) || isEmpty(searchStr)) {
-
             // 검색 문자열이 처음 나타나는 위치를 조회 결과를 반환한다
             return -1;
         }
+
         // 검색 문자열이 처음 나타나는 위치를 조회 결과를 반환한다
         return str.indexOf(searchStr);
     }
@@ -453,27 +435,24 @@ public class StringUtil {
      */
     public static String decode(String sourceStr, String compareStr, String returnStr
                               , String defaultStr) {
-
         // sourceStr 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(sourceStr) && isEmpty(compareStr)) {
-
             // 비교 조건에 맞는 반환 문자열을 선택 결과를 반환한다
             return returnStr;
         }
 
         // sourceStr 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (isEmpty(sourceStr) && !isEmpty(compareStr)) {
-
             // 비교 조건에 맞는 반환 문자열을 선택 결과를 반환한다
             return defaultStr;
         }
 
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (sourceStr.trim().equals(compareStr)) {
-
             // 비교 조건에 맞는 반환 문자열을 선택 결과를 반환한다
             return returnStr;
         }
+
         // 비교 조건에 맞는 반환 문자열을 선택 결과를 반환한다
         return defaultStr;
     }
@@ -487,7 +466,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String decode(String sourceStr, String compareStr, String returnStr) {
-
         // 비교 조건에 맞는 반환 문자열을 선택 결과를 반환한다
         return decode(sourceStr, compareStr, returnStr, sourceStr);
     }
@@ -504,10 +482,10 @@ public class StringUtil {
 
         // object 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(object)) {
-
             // 누적한 값을 최종 문자열로 변환한다
             string = object.toString().trim();
         }
+
         // null 값을 빈 문자열로 보정 결과를 반환한다
         return string;
     }
@@ -519,20 +497,18 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String nullConvert(Object src) {
-
         // src 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(src) && src instanceof java.math.BigDecimal) {
-
             // null 값을 빈 문자열로 보정 결과를 반환한다
             return ((BigDecimal)src).toString();
         }
 
         // src 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(src) || src.equals("null")) {
-
             // null 값을 빈 문자열로 보정 결과를 반환한다
             return "";
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // null 값을 빈 문자열로 보정 결과를 반환한다
@@ -547,13 +523,12 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String nullConvert(String src) {
-
         // src 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(src) || src.equals("null") || "".equals(src) || " ".equals(src)) {
-
             // null 값을 빈 문자열로 보정 결과를 반환한다
             return "";
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // null 값을 빈 문자열로 보정 결과를 반환한다
@@ -568,13 +543,12 @@ public class StringUtil {
      * @return 계산하거나 조회한 숫자 결과
      */
     public static int zeroConvert(Object src) {
-
         // src 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(src) || src.equals("null")) {
-
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
             return 0;
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
@@ -589,13 +563,12 @@ public class StringUtil {
      * @return 계산하거나 조회한 숫자 결과
      */
     public static int zeroConvert(String src) {
-
         // src 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(src) || src.equals("null") || "".equals(src) || " ".equals(src)) {
-
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
             return 0;
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
@@ -610,13 +583,12 @@ public class StringUtil {
      * @return 계산하거나 조회한 숫자 결과
      */
     public static int zeroConvertHashMap(Object src) {
-
         // src 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(src) || src.equals("null")) {
-
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
             return 0;
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // null 또는 빈 값을 0으로 보정하여 숫자로 변환 결과를 반환한다
@@ -631,33 +603,31 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String removeWhitespace(String str) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str)) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         // 처리 범위를 결정할 문자열 길이를 확인한다
         int sz = str.length();
         char[] chs = new char[sz];
         int count = 0;
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (int i = 0; i < sz; i++) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (!Character.isWhitespace(str.charAt(i))) {
-
                 // 현재 위치의 문자를 확인한다
                 chs[count++] = str.charAt(i);
             }
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (count == sz) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         // 새로 생성한 String 객체를 반환한다
         return new String(chs, 0, count);
     }
@@ -683,13 +653,11 @@ public class StringUtil {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int i = 0; i < len; i++) {
-
                 // 현재 위치의 문자를 확인한다
                 chrBuff = (char)strString.charAt(i);
 
                 // 입력 코드나 날짜 값별로 서로 다른 업무 규칙을 적용하기 위해 분기한다
                 switch (chrBuff) {
-
                     // 현재 선택된 코드 값에 해당하는 결과를 결정한다
                     case '<':
                         // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
@@ -728,12 +696,13 @@ public class StringUtil {
             strNew = strTxt.toString();
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return strNew;
     }
@@ -760,13 +729,13 @@ public class StringUtil {
             // 대상 문자열에서 기준값의 위치를 찾는다
             index = source.indexOf(separator, index + 1);
         }
+
         returnVal = new String[cnt];
         cnt = 0;
         // 대상 문자열에서 기준값의 위치를 찾는다
         index = source.indexOf(separator);
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         while (index >= 0) {
-
             // 요청한 범위의 문자열을 추출한다
             returnVal[cnt] = source.substring(index0, index);
             index0 = index + 1;
@@ -774,6 +743,7 @@ public class StringUtil {
             index = source.indexOf(separator, index + 1);
             cnt++;
         }
+
         // 요청한 범위의 문자열을 추출한다
         returnVal[cnt] = source.substring(index0);
         // 구분자를 기준으로 문자열을 분리 결과를 반환한다
@@ -787,13 +757,12 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String lowerCase(String str) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 입력 문자열의 영문 대소문자를 변환 결과를 반환한다
         return str.toLowerCase();
     }
@@ -805,13 +774,12 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String upperCase(String str) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 입력 문자열의 영문 대소문자를 변환 결과를 반환한다
         return str.toUpperCase();
     }
@@ -823,10 +791,8 @@ public class StringUtil {
      * @return 검사 조건 충족 여부
      */
     public static boolean lowerNumCheck(String str) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str)) {
-
             // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 판정값을 반환한다
             return false;
         }
@@ -848,26 +814,26 @@ public class StringUtil {
         int strLen;
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str) || (strLen = str.length()) == 0) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         int start = 0;
         // stripChars 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(stripChars)) {
-
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             while ((start != strLen) && Character.isWhitespace(str.charAt(start))) {
 
                 start++;
             }
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else if (stripChars.length() == 0) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
@@ -876,6 +842,7 @@ public class StringUtil {
                 start++;
             }
         }
+
         // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
         return str.substring(start);
     }
@@ -892,26 +859,25 @@ public class StringUtil {
         int end;
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str) || (end = str.length()) == 0) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
 
         // stripChars 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(stripChars)) {
-
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             while ((end != 0) && Character.isWhitespace(str.charAt(end - 1))) {
 
                 end--;
             }
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else if (stripChars.length() == 0) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
@@ -920,6 +886,7 @@ public class StringUtil {
                 end--;
             }
         }
+
         // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
         return str.substring(0, end);
     }
@@ -932,10 +899,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String strip(String str, String stripChars) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(str)) {
-
             // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
             return str;
         }
@@ -964,7 +929,6 @@ public class StringUtil {
         int index = source.indexOf(separator);
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         while (index >= 0 && cnt < (arraylength - 1)) {
-
             // 요청한 범위의 문자열을 추출한다
             returnVal[cnt] = source.substring(index0, index);
             index0 = index + 1;
@@ -972,17 +936,18 @@ public class StringUtil {
             index = source.indexOf(separator, index + 1);
             cnt++;
         }
+
         // 요청한 범위의 문자열을 추출한다
         returnVal[cnt] = source.substring(index0);
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (cnt < (arraylength - 1)) {
-
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int i = cnt + 1; i < arraylength; i++) {
 
                 returnVal[i] = "";
             }
         }
+
         // 구분자를 기준으로 문자열을 분리 결과를 반환한다
         return returnVal;
     }
@@ -1020,16 +985,19 @@ public class StringUtil {
                 // 인증번호에 사용할 난수를 생성한다
                 randomInt = rnd.nextInt(endInt + 1);
             // 조건을 만족하는 인증번호가 생성될 때까지 반복한다
-            } while (randomInt < startInt);
+            }
+
+            while (randomInt < startInt);
 
             randomStr = (char)randomInt + "";
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             e.printStackTrace();
         }
+
         // 지정한 문자 범위에서 임의 문자를 생성 결과를 반환한다
         return randomStr;
     }
@@ -1056,11 +1024,13 @@ public class StringUtil {
             // 문자열 변환 결과를 담을 객체를 생성한다
             rtnStr = new String(srcString.getBytes(srcCharsetNm), cnvrCharsetNm);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (UnsupportedEncodingException e) {
 
             rtnStr = null;
         }
+
         // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
         return rtnStr;
     }
@@ -1072,10 +1042,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getConvert8859(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)) {
-
             // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
             return "";
         }
@@ -1085,9 +1053,9 @@ public class StringUtil {
             // 새로 생성한 String 객체를 반환한다
             return new String(srcString.getBytes("KSC5601"),"8859_1");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
             return "";
         }
@@ -1100,10 +1068,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getConvertUTF8(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)) {
-
             // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
             return "";
         }
@@ -1113,6 +1079,7 @@ public class StringUtil {
             // 새로 생성한 String 객체를 반환한다
             return new String(srcString.getBytes("8859_1"),"KSC5601");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e)
         {
@@ -1142,13 +1109,11 @@ public class StringUtil {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int i = 0; i < len; i++) {
-
                 // 현재 위치의 문자를 확인한다
                 chrBuff = (char)srcString.charAt(i);
 
                 // 입력 코드나 날짜 값별로 서로 다른 업무 규칙을 적용하기 위해 분기한다
                 switch (chrBuff) {
-
                     // 현재 선택된 코드 값에 해당하는 결과를 결정한다
                     case '<':
                         // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
@@ -1170,12 +1135,13 @@ public class StringUtil {
             rtnStr = strTxt.toString();
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             e.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return rtnStr;
     }
@@ -1201,12 +1167,13 @@ public class StringUtil {
             // 지정한 형식에 맞춰 값을 문자열로 변환한다
             rtnStr = sdfCurrent.format(ts.getTime());
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             e.printStackTrace();
         }
+
         // 현재 시각을 시간 스탬프 문자열로 생성 결과를 반환한다
         return rtnStr;
     }
@@ -1227,12 +1194,14 @@ public class StringUtil {
             // 정규식과 일치하는 문자열을 일괄 치환한다
             tmpString = tmpString.replaceAll("\"","&quot;");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return  tmpString;
 
@@ -1293,12 +1262,14 @@ public class StringUtil {
             tmpString = tmpString.replaceAll("&#124;", "|");
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return  tmpString;
 
@@ -1311,13 +1282,11 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String specialTrim(String str) {
-
         // 문자열 변환 결과를 누적할 버퍼를 담을 객체를 생성한다
         StringBuffer    sb = new StringBuffer();
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for(int ii = 0; ii < str.length(); ii++) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if(str.charAt(ii) <  ' ') { continue; }
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
@@ -1333,6 +1302,7 @@ public class StringUtil {
             // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
             sb.append(str.charAt(ii));
         }
+
         // 입력 문자열에서 지정한 문자나 공백을 제거 결과를 반환한다
         return (String)sb.toString();
     }
@@ -1344,10 +1314,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getPrmStrCnvr(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
             return "";
         }
@@ -1384,12 +1352,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString," ", "");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1401,10 +1371,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getPrmStrCnvr2(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
             return "";
         }
@@ -1437,12 +1405,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"'","");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1454,10 +1424,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getPrmStrCnvr3(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
             return "";
         }
@@ -1492,12 +1460,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"\t'", "' '");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1515,43 +1485,42 @@ public class StringUtil {
 
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals("&")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals(":")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals(";")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals("/")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals(",")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.substring(str.length()- flag).equals(".")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- flag);
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.length() > 1 && str.substring(str.length()- 2).equals("--")) {
-
             // 요청한 범위의 문자열을 추출한다
             str = str.substring(0, str.length()- 2);
         }
@@ -1570,10 +1539,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getSearchStrCnvr(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString) || srcString==""){
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -1598,12 +1565,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"&","");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1615,10 +1584,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getSearchStrCnvr2(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString) || srcString==""){
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -1633,12 +1600,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"?","");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1649,10 +1618,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getContentsStrCnvr(String srcString) {
-
         // 원본 문자열이 없으면 보안 치환을 수행할 수 없으므로 빈 결과를 반환한다.
         if (isEmpty(srcString)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -1695,12 +1662,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"?","");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -1729,12 +1698,14 @@ public class StringUtil {
 
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return  tmpString;
 
@@ -1747,10 +1718,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String chktag(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -1791,12 +1760,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"FRAME","frami");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return srcString;
     }
@@ -1808,10 +1779,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String chktel(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -1852,12 +1821,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"FRAME","frami");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return srcString;
     }
@@ -1882,10 +1853,12 @@ public class StringUtil {
             // 지정한 형식에 맞춰 값을 문자열로 변환한다
             rStr = form.format(testArgs);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
 
         }
+
         // 숫자 문자열을 천 단위 구분 형식으로 변환 결과를 반환한다
         return rStr;
     }
@@ -1924,17 +1897,19 @@ public class StringUtil {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for ( int i = 0; i < str.length; i++ ) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( "".equals(result) ) {
 
                 result = "'" + str[i] + "'";
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
+
                 result = result + ", " + "'" + str[i] + "'";
             }
         }
+
         // 배열이나 목록 요소를 하나의 문자열로 결합 결과를 반환한다
         return result;
     }
@@ -1951,17 +1926,19 @@ public class StringUtil {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for ( int i = 0; i < str.length; i++ ) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( "".equals(result) ) {
 
                 result = str[i];
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
+
                 result = result + ", " + str[i];
             }
         }
+
         // 배열이나 목록 요소를 하나의 문자열로 결합 결과를 반환한다
         return result;
     }
@@ -1983,25 +1960,23 @@ public class StringUtil {
             String[] val = (String[])str1;
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for ( int i = 0; i < val.length; i++ ) {
-
                 // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
                 if ( val[i].equals(String.valueOf(str2)) ) {
-
                     // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
                     return "checked";
                 }
             }
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else if (!isEmpty(str1) && str1 instanceof String) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( String.valueOf(str1).equals(String.valueOf(str2)) ) {
-
                 // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
                 return "checked";
             }
         }
+
         // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
         return result;
     }
@@ -2023,25 +1998,23 @@ public class StringUtil {
             String[] val = (String[])str1;
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for ( int i = 0; i < val.length; i++ ) {
-
                 // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
                 if ( val[i].equals(String.valueOf(str2)) ) {
-
                     // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
                     return "selected=\"selected\"";
                 }
             }
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else if (!isEmpty(str1)) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( String.valueOf(str1).equals(String.valueOf(str2)) ) {
-
                 // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
                 return "selected=\"selected\"";
             }
         }
+
         // 두 값의 일치 여부에 따라 HTML 선택 속성을 생성 결과를 반환한다
         return result;
     }
@@ -2058,19 +2031,19 @@ public class StringUtil {
         String result = "";
         // str1 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         for (int i = 0; !isEmpty(str1) && i < str1.size(); i++) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( result.equals("") ) {
-
                 // 지정한 키에 대응하는 값을 조회한다
                 result = str1.get(i);
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
                 // 지정한 키에 대응하는 값을 조회한다
                 result += str2 + str1.get(i);
             }
         }
+
         // 배열이나 목록 요소를 하나의 문자열로 결합 결과를 반환한다
         return result;
     }
@@ -2087,17 +2060,19 @@ public class StringUtil {
         String result = "";
         // str1 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         for (int i = 0; !isEmpty(str1) && i < str1.length; i++) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if ( result.equals("") ) {
 
                 result = str1[i];
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
+
                 result += str2 + str1[i];
             }
         }
+
         // 배열이나 목록 요소를 하나의 문자열로 결합 결과를 반환한다
         return result;
     }
@@ -2115,20 +2090,19 @@ public class StringUtil {
 
         // subject 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if(isEmpty(subject)){
-
             // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
             return result;
         }
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for(int i=0;i<subject.length;i++){
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if(source.equals(subject[i])){
 
                 result = true;
             }
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return result;
     }
@@ -2147,11 +2121,9 @@ public class StringUtil {
 
         // source 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!isEmpty(source)) {
-
             // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
             try
             {
-
                 // 구분자를 기준으로 문자열을 분리한다
                 String[] splitString = source.split(str1);
                 String firstString = splitString[1];
@@ -2163,6 +2135,7 @@ public class StringUtil {
                 str = nextString;
 
             }
+
             // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
             catch (Exception ex)
             {
@@ -2170,6 +2143,7 @@ public class StringUtil {
                 ex.printStackTrace();
             }
         }
+
         // 구분자를 기준으로 문자열을 분리 결과를 반환한다
         return str;
     }
@@ -2183,7 +2157,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String convert_Length(Object obj, int length, String chr) {
-
         // 입력값을 문자열 표현으로 변환한다
         String result = String.valueOf(obj);
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
@@ -2191,6 +2164,7 @@ public class StringUtil {
 
             result = chr + result;
         }
+
         // 입력 값을 메서드의 형식 규칙에 맞춰 변환 결과를 반환한다
         return result;
     }
@@ -2202,10 +2176,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getTagChage(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
             return "";
         }
@@ -2220,12 +2192,14 @@ public class StringUtil {
             // 대상 문자열에서 지정한 값을 치환한다
             srcString=StringUtil.replace(srcString,"&gt",">");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex)
         {
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 입력 문자열을 지정한 표현 규칙에 맞춰 치환 결과를 반환한다
         return srcString;
     }
@@ -2238,7 +2212,6 @@ public class StringUtil {
      * @return 처리 결과
      */
     public static String getURLEncode(String srcString){
-
         // 문자열 URL 인코딩 결과를 반환한다
         return getURLEncode(srcString, "utf-8");
     }
@@ -2250,7 +2223,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getURLEncodeKr(String srcString){
-
         // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
         return getURLEncode(srcString, "euc-kr");
     }
@@ -2263,10 +2235,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getURLEncode(String srcString, String enc) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
             return "";
         }
@@ -2276,22 +2246,23 @@ public class StringUtil {
         {
             // enc 값이 존재할 때만 관련 업무를 수행하도록 분기한다
             if (!isEmpty(enc)) {
-
                 // 전송 가능한 형식으로 값을 인코딩한다
                 srcString = URLEncoder.encode(srcString, enc);
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else{
                 // 전송 가능한 형식으로 값을 인코딩한다
                 srcString = URLEncoder.encode(srcString, "UTF-8");
             }
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex){
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
         return srcString;
     }
@@ -2304,10 +2275,8 @@ public class StringUtil {
      * @return 처리 결과
      */
     public static String getURLDecode(String srcString) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // URL 인코딩 문자열 디코딩 결과를 반환한다
             return "";
         }
@@ -2318,12 +2287,13 @@ public class StringUtil {
             // 인코딩된 값을 원문 형식으로 복원한다
             srcString = URLDecoder.decode(srcString, "UTF-8");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex){
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // URL 인코딩 문자열 디코딩 결과를 반환한다
         return  srcString;
     }
@@ -2336,10 +2306,8 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getURLDecode(String srcString, String enc) {
-
         // srcString 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(srcString)){
-
             // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
             return "";
         }
@@ -2350,12 +2318,13 @@ public class StringUtil {
             // 인코딩된 값을 원문 형식으로 복원한다
             srcString = URLDecoder.decode(srcString,enc);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex){
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // 문자열을 지정한 문자 집합이나 URL 형식으로 변환 결과를 반환한다
         return  srcString;
     }
@@ -2368,10 +2337,8 @@ public class StringUtil {
      * @return 처리 결과
      */
     public static String getURLDecodeObj(Object object) {
-
         // object 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (isEmpty(object)){
-
             // URL 인코딩 객체 디코딩 결과를 반환한다
             return "";
         }
@@ -2382,12 +2349,13 @@ public class StringUtil {
             // 인코딩된 값을 원문 형식으로 복원한다
             object = URLDecoder.decode((String) object, "UTF-8");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception ex){
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             ex.printStackTrace();
         }
+
         // URL 인코딩 객체 디코딩 결과를 반환한다
         return (String) object;
     }
@@ -2413,13 +2381,11 @@ public class StringUtil {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int i = 0; i < len; i++) {
-
                 // 현재 위치의 문자를 확인한다
                 chrBuff = (char)strString.charAt(i);
 
                 // 입력 코드나 날짜 값별로 서로 다른 업무 규칙을 적용하기 위해 분기한다
                 switch (chrBuff) {
-
                     // 현재 선택된 코드 값에 해당하는 결과를 결정한다
                     case '<':
                         // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
@@ -2446,15 +2412,18 @@ public class StringUtil {
                         strTxt.append(chrBuff);
                 }
             }
+
             // 누적한 값을 최종 문자열로 변환한다
             strNew = strTxt.toString();
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch(Exception e) {
 
             strNew = "";
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return strNew;
     }
@@ -2473,10 +2442,12 @@ public class StringUtil {
             // 전송 가능한 형식으로 값을 인코딩한다
             rstr = URLEncoder.encode(StringUtil.checkHtmlView(strString),"UTF-8");
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch(Exception e){
 
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return rstr;
     }
@@ -2488,19 +2459,18 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String jumin_hide(String str) {
-
         // str 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if(isEmpty(str) || str.length() <= 0){
-
             // 입력 값을 메서드의 형식 규칙에 맞춰 변환 결과를 반환한다
             return "";
         }
+
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if(str.length() >= 6){
-
             // 입력 값을 메서드의 형식 규칙에 맞춰 변환 결과를 반환한다
             return str.substring(0, 6) + "*******";
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else{
             // 입력 값을 메서드의 형식 규칙에 맞춰 변환 결과를 반환한다
@@ -2529,13 +2499,11 @@ public class StringUtil {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int i = 0; i < len; i++) {
-
                 // 현재 위치의 문자를 확인한다
                 chrBuff = (char)strString.charAt(i);
 
                 // 입력 코드나 날짜 값별로 서로 다른 업무 규칙을 적용하기 위해 분기한다
                 switch (chrBuff) {
-
                     // 현재 선택된 코드 값에 해당하는 결과를 결정한다
                     case '\'':
                         // 변환한 문자열 조각을 결과 문자열에 이어 붙인다
@@ -2556,15 +2524,18 @@ public class StringUtil {
                         strTxt.append(chrBuff);
                 }
             }
+
             // 누적한 값을 최종 문자열로 변환한다
             strNew = strTxt.toString();
 
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch(Exception e) {
 
             strNew = "";
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return strNew;
     }
@@ -2576,7 +2547,6 @@ public class StringUtil {
      * @return 변환된 문자열
      */
     public static String getStackTrace(Throwable throwable) {
-
         // 예외 스택 정보를 문자열로 누적할 writer를 담을 객체를 생성한다
         StringWriter sw = new StringWriter();
         // 예외 스택 정보를 StringWriter에 기록할 writer를 담을 객체를 생성한다
@@ -2609,12 +2579,13 @@ public class StringUtil {
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else flag = false;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 예외 발생 지점을 확인할 수 있도록 스택 정보를 출력한다
             e.printStackTrace();
         }
+
         // 입력 문자열이 허용된 형식인지 판정하거나 위험 문자를 정제 결과를 반환한다
         return flag;
     }

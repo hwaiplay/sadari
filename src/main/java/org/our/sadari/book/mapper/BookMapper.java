@@ -16,7 +16,6 @@ import org.our.sadari.book.dto.BookDto;
  */
 @Mapper
 public interface BookMapper {
-
     /**
      * ISBN 기준으로 이미 등록된 도서가 있는지 확인한다.
      *

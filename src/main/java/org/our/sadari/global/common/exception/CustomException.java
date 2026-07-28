@@ -17,7 +17,6 @@ import org.springframework.http.HttpStatus;
  */
 @Getter
 public class CustomException extends RuntimeException {
-
     // 공통 예외 결과 코드
     private final ResultEnum resultEnum;
     // 예외 응답 HTTP 상태

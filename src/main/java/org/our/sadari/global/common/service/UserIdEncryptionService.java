@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class UserIdEncryptionService {
-
     // 암호화 접두사 설정값
     private static final String ENCRYPTED_PREFIX = "ENC:";
     // 키 알고리즘 설정값
@@ -41,7 +40,6 @@ public class UserIdEncryptionService {
      * @param userIdEncryptionKey USER_IDXX 암호화 전용 키
      */
     public UserIdEncryptionService(@Value("${app.crypto.user-id-key:${jwt.secret_key}}") String userIdEncryptionKey) {
-
         // 사용자 식별자 암호화에 사용할 비밀키를 담을 객체를 생성한다
         this.secretKeySpec = new SecretKeySpec(createAesKey(userIdEncryptionKey), KEY_ALGORITHM);
     }
@@ -55,10 +53,8 @@ public class UserIdEncryptionService {
      * @return DB 저장 및 조회용 암호문
      */
     public String encryptForStorage(String plainUserId) {
-
         // plainUserId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(plainUserId) || plainUserId.startsWith(ENCRYPTED_PREFIX)) {
-
             // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환한다
             return plainUserId;
         }
@@ -72,6 +68,7 @@ public class UserIdEncryptionService {
             // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환한다
             return ENCRYPTED_PREFIX + Base64.getEncoder().encodeToString(cipher.doFinal(plainUserId.getBytes(StandardCharsets.UTF_8)));
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
 
@@ -88,7 +85,6 @@ public class UserIdEncryptionService {
      * @return AES-128 키 바이트
      */
     private byte[] createAesKey(String sourceKey) {
-
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // 초기화된 Firebase 서비스 인스턴스를 조회한다
@@ -96,6 +92,7 @@ public class UserIdEncryptionService {
             // 임의 길이의 설정 키를 AES-128 키 길이에 맞게 축약 결과를 반환한다
             return Arrays.copyOf(digest.digest(sourceKey.getBytes(StandardCharsets.UTF_8)), 16);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
 

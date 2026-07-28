@@ -15,7 +15,6 @@ import org.our.sadari.social.dto.SocialDto;
  */
 @Mapper
 public interface SocialMapper {
-
     /**
      * 로그인 사용자와 상대 사용자 번호를 기준으로 화면에 표시할 팔로우 버튼명을 조회한다.
      *

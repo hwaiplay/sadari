@@ -17,7 +17,6 @@ import org.our.sadari.push.dto.PushDto;
  */
 @Mapper
 public interface PushMapper {
-
     /**
      * FCM token을 구독 정보로 저장하거나, 이미 있으면 다시 활성화한다.
      *
