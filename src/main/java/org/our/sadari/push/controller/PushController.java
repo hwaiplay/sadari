@@ -30,7 +30,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/push")
 @Tag(name = "푸시", description = "PWA 푸시 알림 설정 및 구독 API")
 public class PushController {
-
     // Push 업무 처리 서비스
     private final PushService pushService;
 
@@ -44,7 +43,6 @@ public class PushController {
     @GetMapping("/config")
     @Operation(summary = "Firebase Web 설정 조회", description = "브라우저에서 FCM token을 발급받기 위한 공개 설정을 조회한다.")
     public ResultData getFirebaseWebConfig() {
-
         // 프론트에서 Firebase Messaging을 초기화할 공개 설정을 조회한 결과를 반환한다
         return pushService.getFirebaseWebConfig();
     }
@@ -61,7 +59,6 @@ public class PushController {
     @Operation(summary = "푸시 구독 저장", description = "로그인 사용자의 현재 브라우저 FCM token을 TB_PSHSUB에 저장한다.")
     public ResultData setPushSub(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                , @RequestBody PushDto.PushSubDto request) {
-
         // 로그인 사용자의 현재 브라우저 FCM token을 저장한 결과를 반환한다
         return pushService.setPushSub(loginUserNumb, request);
     }
@@ -78,7 +75,6 @@ public class PushController {
     @Operation(summary = "푸시 구독 해제", description = "로그인 사용자의 현재 브라우저 FCM token을 비활성화한다.")
     public ResultData delPushSub(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                , @RequestBody PushDto.PushSubDto request) {
-
         // 로그인 사용자의 현재 브라우저 FCM token을 비활성화한 결과를 반환한다
         return pushService.delPushSub(loginUserNumb, request);
     }

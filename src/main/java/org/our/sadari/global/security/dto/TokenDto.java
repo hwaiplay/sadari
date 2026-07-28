@@ -37,7 +37,6 @@ public class TokenDto {
      * @return 구성하거나 조회한 결과 객체
      */
     public static TokenDto of(String accessToken, String refreshToken) {
-
         // 발급한 Access Token과 Refresh Token을 담은 인증 응답을 반환한다
         return TokenDto
                 .builder()

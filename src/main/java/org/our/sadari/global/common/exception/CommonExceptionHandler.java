@@ -40,7 +40,6 @@ import org.springframework.web.multipart.MultipartException;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
-
     // 오라클 값 초과 대용량 오류 코드 설정값
     private static final int ORACLE_VALUE_TOO_LARGE_ERROR_CODE = 1461;
 
@@ -57,7 +56,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ResultData> handleCustomException(CustomException e, Locale locale) {
-
         // getResultEnum 조회로 후속 처리에 필요한 데이터를 가져온다
         ResultEnum result = e.getResultEnum();
         // 비즈니스 로직 수행 중 직접 발생시킨 커스텀 예외(CustomException)를 포착하여 지정된 결과 코드와 메시지를 반환한다
@@ -76,7 +74,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResultData> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, Locale locale) {
-
         // "요청값이 올바르지 않아요."
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -93,7 +90,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<ResultData> handleMultipartException(MultipartException e, Locale locale) {
-
         // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 업로드할 수 있어요."
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -110,7 +106,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ResultData> handleDataAccessException(DataAccessException e, Locale locale) {
-
         // 예외 체인에서 데이터베이스 예외를 찾는다
         SQLException sqlException = findSqlException(e);
 
@@ -119,14 +114,12 @@ public class CommonExceptionHandler {
          * 모든 DB 장애를 400으로 내려주면 프론트가 "요청값 오류"로 오해하므로, 커넥션 계열 원인은 먼저 분리한다.
          */
         if (isDatabaseConnectionFailure(e)) {
-
             // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
         // Oracle ORA-01461 (바인딩된 값이 열의 크기보다 큼) 에러 발생 시 신고 내용/입력값 길이 초과 전용 메시지를 응답한다.
         if (!StringUtil.isEmpty(sqlException) && sqlException.getErrorCode() == ORACLE_VALUE_TOO_LARGE_ERROR_CODE) {
-
             // "독후감 내용은 {0}byte 이하로 입력해주세요."
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -148,7 +141,6 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(MyBatisSystemException.class)
     public ResponseEntity<ResultData> handleMyBatisSystemException(MyBatisSystemException e, Locale locale) {
-
         // 예외 체인에서 DB 연결 실패 여부를 판별한다
         ResultEnum resultEnum = isDatabaseConnectionFailure(e)
                 ? ResultEnum.COMMON_DB_CONNECTION_FAILED
@@ -171,22 +163,22 @@ public class CommonExceptionHandler {
      * @return DB 연결 실패 응답
      */
     @ExceptionHandler({
+
             CannotCreateTransactionException.class,
             TransactionSystemException.class,
             PersistenceException.class,
             SQLException.class
     })
     public ResponseEntity<ResultData> handleDatabaseConnectionException(Exception e, Locale locale) {
-
         /*
          * 위 예외들은 DB 연결 실패 외의 SQL 실행 오류도 감쌀 수 있다.
          * 실제 원인 체인을 확인해 연결 장애이면 503, 그 외 DB 오류이면 기존 공통 요청 오류로 응답한다.
          */
         if (isDatabaseConnectionFailure(e)) {
-
             // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
+
         // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
         return createFailResponse(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
     }
@@ -202,10 +194,8 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResultData> handleRuntimeException(RuntimeException e, Locale locale) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (isDatabaseConnectionFailure(e)) {
-
             // 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착 결과를 반환한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -226,10 +216,8 @@ public class CommonExceptionHandler {
 
         // current 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         while (!StringUtil.isEmpty(current)) {
-
             // 원인 체인을 순회하는 도중 SQLException 인스턴스를 발견하면 즉시 해당 예외 객체를 반환한다.
             if (current instanceof SQLException sqlException) {
-
                 // 예외 원인 체인에서 확인한 최하위 SQLException을 반환한다
                 return sqlException;
             }
@@ -237,6 +225,7 @@ public class CommonExceptionHandler {
             // 상위 예외에 포함된 원인 예외를 조회한다
             current = current.getCause();
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -250,33 +239,20 @@ public class CommonExceptionHandler {
      * @return DB 연결 실패 여부
      */
     private boolean isDatabaseConnectionFailure(Throwable throwable) {
-
         // 예외 체인에서 데이터베이스 예외를 찾는다
         SQLException sqlException = findSqlException(throwable);
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
-        if (hasCause(throwable, CannotGetJdbcConnectionException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, CannotCreateTransactionException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, SQLRecoverableException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, SQLTransientConnectionException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, SQLNonTransientConnectionException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, SQLTimeoutException.class)
-                // 예외 체인에 지정한 원인이 포함되어 있는지 확인한다
-                || hasCause(throwable, ConnectException.class)
-                || hasCause(throwable, SocketTimeoutException.class)) {
-
+        if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
+                || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
+                || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
+                || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
             // 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다 판정값을 반환한다
             return true;
         }
 
         // sqlException 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(sqlException)) {
-
             // 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다 판정값을 반환한다
             return false;
         }
@@ -304,16 +280,15 @@ public class CommonExceptionHandler {
      * @return SQLState 분류 코드
      */
     private String getSqlStateClass(SQLException sqlException) {
-
         // getSQLState 조회로 후속 처리에 필요한 데이터를 가져온다
         String sqlState = sqlException.getSQLState();
 
         // sqlState 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(sqlState) || sqlState.length() < 2) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미 결과를 반환한다
         return sqlState.substring(0, 2);
     }
@@ -328,7 +303,6 @@ public class CommonExceptionHandler {
      * @return ResultData 실패 응답
      */
     private ResponseEntity<ResultData> createFailResponse(ResultEnum resultEnum, HttpStatus status) {
-
         // 공통 결과 코드에 대응하는 사용자 메시지와 HTTP 상태
         return ResponseEntity
                 .status(status)
@@ -350,10 +324,8 @@ public class CommonExceptionHandler {
 
         // 원인 체인을 끝까지 순회해 MyBatis나 Spring이 감싼 실제 DB 연결 예외를 찾는다.
         while (!StringUtil.isEmpty(current)) {
-
             // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
             if (causeType.isInstance(current)) {
-
                 // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환한다
                 return true;
             }
@@ -361,6 +333,7 @@ public class CommonExceptionHandler {
             // 상위 예외에 포함된 원인 예외를 조회한다
             current = current.getCause();
         }
+
         // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환한다
         return false;
     }

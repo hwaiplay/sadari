@@ -20,7 +20,6 @@ class SadariApplicationTests {
 
 	@Test
 	void contextLoads() {
-
 		// 테스트 실행 여부를 콘솔에서 확인한다
 		System.out.println("Hello World");
 	}

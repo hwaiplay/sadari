@@ -20,6 +20,7 @@ import org.our.sadari.report.dto.ReportDto;
 @Data
 @Schema(description = "월간 독서 활동과 목표 달성 요약 DTO")
 public class MonthlyReadingSummaryDto {
+
     @Schema(description = "사용자 번호", example = "31")
     private Long userNumb;
     @Schema(description = "조회 기간 시작일", example = "2026-07-01")

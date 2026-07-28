@@ -18,7 +18,6 @@ import java.util.Locale;
  * 2026-07-15        SeungHyeon.Kang    최초 생성
  */
 public final class DateUtil {
-
     // 기본 날짜 FORMATTER 설정값
     private static final DateTimeFormatter DEFAULT_DATE_FORMATTER =
             // 날짜 문자열을 해석할 형식 객체를 생성한다
@@ -38,7 +37,6 @@ public final class DateUtil {
     };
 
     private DateUtil() {
-
         // 아래 처리 단계의 업무 목적을 설명한다.
     }
 
@@ -50,7 +48,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static LocalDate parseDefaultDate(String value) {
-
         // yyyy-MM-dd 문자열의 날지 파싱 결과를 반환한다
         return parseDate(value, DEFAULT_DATE_FORMATTER);
     }
@@ -63,10 +60,8 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static LocalDate parseCompactDate(String value) {
-
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(value)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -76,10 +71,10 @@ public final class DateUtil {
 
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (compactDate.length() != 8) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // yyyyMMdd 문자열의 날짜 파싱 결과를 반환한다
         return parseDate(compactDate, COMPACT_DATE_FORMATTER);
     }
@@ -92,7 +87,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static String formatDefaultDate(LocalDate date) {
-
         // yyyy-MM-dd 날짜 문자열 변환 결과를 반환한다
         return formatDate(date, DEFAULT_DATE_FORMATTER);
     }
@@ -105,7 +99,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static String formatCompactDate(LocalDate date) {
-
         // yyyyMMdd 날짜 문자열 변환 결과를 반환한다
         return formatDate(date, COMPACT_DATE_FORMATTER);
     }
@@ -118,10 +111,8 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static String formatCompactDateToKorean(String value) {
-
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(value)) {
-
             // 한글 표기 날짜 문자열 변환 결과를 반환한다
             return "";
         }
@@ -131,10 +122,10 @@ public final class DateUtil {
 
         // date 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(date)) {
-
             // 한글 표기 날짜 문자열 변환 결과를 반환한다
             return value;
         }
+
         // 한글 표기 날짜 문자열 변환 결과를 반환한다
         return formatDate(date, KOREAN_DATE_FORMATTER);
     }
@@ -147,10 +138,8 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static String formatCompactDateToEnglish(String value) {
-
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(value)) {
-
             // 영문 표기 날짜 문자열 변환 결과를 반환한다
             return "";
         }
@@ -160,10 +149,10 @@ public final class DateUtil {
 
         // date 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(date)) {
-
             // 영문 표기 날짜 문자열 변환 결과를 반환한다
             return value;
         }
+
         // 영문 표기 날짜 문자열 변환 결과를 반환한다
         return ENGLISH_MONTH_NAMES[date.getMonthValue() - 1]
                 + " "
@@ -185,13 +174,12 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static String formatCompactDate(String value, Locale locale) {
-
         // locale 값이 존재할 때만 관련 업무를 수행하도록 분기한다
         if (!StringUtil.isEmpty(locale) && Locale.KOREAN.getLanguage().equals(locale.getLanguage())) {
-
             // yyyyMMdd 날짜 문자열 변환 결과를 반환한다
             return formatCompactDateToKorean(value);
         }
+
         // yyyyMMdd 날짜 문자열 변환 결과를 반환한다
         return formatCompactDateToEnglish(value);
     }
@@ -204,7 +192,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static boolean isDefaultDate(String value) {
-
         // yyyy-MM-dd 날짜 형식 유효성 판정 결과를 반환한다
         return !StringUtil.isEmpty(parseDefaultDate(value));
     }
@@ -218,7 +205,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static boolean validateReportDateRange(String startDate, String endDate) {
-
         // 기본 날짜 형식의 문자열을 날짜 객체로 변환한다
         LocalDate parsedStartDate = parseDefaultDate(startDate);
         // 기본 날짜 형식의 문자열을 날짜 객체로 변환한다
@@ -226,10 +212,10 @@ public final class DateUtil {
 
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (StringUtil.hasEmpty(parsedStartDate, parsedEndDate)) {
-
             // 독서 시작일과 종료일 범위 검증 판정값을 반환한다
             return false;
         }
+
         // 독서 시작일과 종료일 범위 검증 결과를 반환한다
         return !parsedStartDate.isAfter(parsedEndDate);
     }
@@ -242,7 +228,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static LocalDate getMonthStart(LocalDate date) {
-
         // 필수 값이 비어 있는지 공통 기준으로 확인한다
         LocalDate targetDate = StringUtil.isEmpty(date) ? LocalDate.now() : date;
         // 기준일이 속한 월의 첫 날 계산 결과를 반환한다
@@ -257,7 +242,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static LocalDate getMonthEnd(LocalDate date) {
-
         // 필수 값이 비어 있는지 공통 기준으로 확인한다
         LocalDate targetDate = StringUtil.isEmpty(date) ? LocalDate.now() : date;
         // 기준일이 속한 월의 마지막 날 계산 결과를 반환한다
@@ -272,7 +256,6 @@ public final class DateUtil {
      * @return 처리 결과
      */
     public static LocalDate getYearStart(LocalDate date) {
-
         // 필수 값이 비어 있는지 공통 기준으로 확인한다
         LocalDate targetDate = StringUtil.isEmpty(date) ? LocalDate.now() : date;
         // 기준일이 속한 연도의 첫 날 계산 결과를 반환한다
@@ -291,13 +274,12 @@ public final class DateUtil {
      */
     public static boolean isDateRangeOverlapped(LocalDate startDate, LocalDate endDate, LocalDate targetStartDate
                                               , LocalDate targetEndDate) {
-
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (StringUtil.hasEmpty(startDate, endDate, targetStartDate, targetEndDate)) {
-
             // 두 날짜 기간의 겹침 여부 판정값을 반환한다
             return false;
         }
+
         // 두 날짜 기간의 겹침 여부 판정 결과를 반환한다
         return !endDate.isBefore(targetStartDate) && !startDate.isAfter(targetEndDate);
     }
@@ -310,17 +292,14 @@ public final class DateUtil {
      * @return 처리 결과
      */
     private static String getEnglishOrdinalSuffix(int day) {
-
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (day >= 11 && day <= 13) {
-
             // 영문 일자 서수 접미사 조회 결과를 반환한다
             return "th";
         }
 
         // 입력 코드나 날짜 값별로 서로 다른 업무 규칙을 적용하기 위해 분기한다
         switch (day % 10) {
-
             // 현재 선택된 코드 값에 해당하는 결과를 결정한다
             case 1:
                 // 영문 일자 서수 접미사 조회 결과를 반환한다
@@ -349,10 +328,8 @@ public final class DateUtil {
      * @return 처리 결과
      */
     private static LocalDate parseDate(String value, DateTimeFormatter formatter) {
-
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(value)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -362,9 +339,9 @@ public final class DateUtil {
             // 지정 형식 문자열의 날지 파싱 결과를 반환한다
             return LocalDate.parse(value, formatter);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (DateTimeParseException e) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -379,13 +356,12 @@ public final class DateUtil {
      * @return 처리 결과
      */
     private static String formatDate(LocalDate date, DateTimeFormatter formatter) {
-
         // date 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(date)) {
-
             // 지정 형식 날짜 문자열 변환 결과를 반환한다
             return "";
         }
+
         // 지정 형식 날짜 문자열 변환 결과를 반환한다
         return date.format(formatter);
     }

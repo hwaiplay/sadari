@@ -20,7 +20,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class SchedulerLogServiceImpl implements SchedulerLogService {
-
     // 스케줄러 코드 최대 길이 설정값
     private static final int SCHEDULER_CODE_MAX_LENGTH = 50;
     // 메서드 명칭 최대 길이 설정값
@@ -62,14 +61,9 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long setSchedulerLog(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-
         // 로그 코드, 메서드명, 실행 상태가 없으면 관리자 화면에서 어떤 실행인지 식별할 수 없어 등록을 중단한다.
-        if (StringUtil.isEmpty(schedulerRunDto)
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerRunDto.getSchdCode())
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerRunDto.getMethName())
-                || StringUtil.isEmpty(schedulerRunDto.getExecStat())) {
+        if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getSchdCode())
+                || StringUtil.isEmpty(schedulerRunDto.getMethName()) || StringUtil.isEmpty(schedulerRunDto.getExecStat())) {
 
             throw new IllegalArgumentException("스케줄러 실행 로그의 필수 정보가 없습니다.");
         }
@@ -98,6 +92,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
 
             throw new IllegalStateException("스케줄러 실행 로그 등록 결과가 올바르지 않습니다.");
         }
+
         // 스케줄러 실행 시작 로그를 별도 트랜잭션으로 등록 결과를 반환한다
         return schedulerRunDto.getRunxNumb();
     }
@@ -113,22 +108,11 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void uptSchedulerLog(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-
         // 음수 건수나 실행 시간은 실제 처리 결과가 아니므로 TL_SCLOGX를 수정하기 전에 차단한다.
-        if (StringUtil.isEmpty(schedulerRunDto)
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerRunDto.getRunxNumb())
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerRunDto.getExecStat())
-                // getTrgtCntt 조회로 후속 처리에 필요한 데이터를 가져온다
-                || schedulerRunDto.getTrgtCntt() < 0
-                // getSuccCntt 조회로 후속 처리에 필요한 데이터를 가져온다
-                || schedulerRunDto.getSuccCntt() < 0
-                // getFailCntt 조회로 후속 처리에 필요한 데이터를 가져온다
-                || schedulerRunDto.getFailCntt() < 0
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerRunDto.getExecMsec())
-                || schedulerRunDto.getExecMsec() < 0) {
+        if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getRunxNumb())
+                || StringUtil.isEmpty(schedulerRunDto.getExecStat()) || schedulerRunDto.getTrgtCntt() < 0
+                || schedulerRunDto.getSuccCntt() < 0 || schedulerRunDto.getFailCntt() < 0
+                || StringUtil.isEmpty(schedulerRunDto.getExecMsec()) || schedulerRunDto.getExecMsec() < 0) {
 
             throw new IllegalArgumentException("스케줄러 실행 로그의 종료 정보가 올바르지 않습니다.");
         }
@@ -160,11 +144,8 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void setSchedulerFail(SchedulerLogDto.SchedulerFailDto schedulerFailDto) {
-
         // 실행 번호와 실패 유형이 없으면 복합키 순번과 실패 의미를 결정할 수 없어 저장하지 않는다.
-        if (StringUtil.isEmpty(schedulerFailDto)
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(schedulerFailDto.getRunxNumb())
+        if (StringUtil.isEmpty(schedulerFailDto) || StringUtil.isEmpty(schedulerFailDto.getRunxNumb())
                 || StringUtil.isEmpty(schedulerFailDto.getFailType())) {
 
             throw new IllegalArgumentException("스케줄러 실패 로그의 필수 정보가 없습니다.");

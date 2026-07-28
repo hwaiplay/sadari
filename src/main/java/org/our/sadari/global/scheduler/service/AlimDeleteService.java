@@ -11,7 +11,6 @@ package org.our.sadari.global.scheduler.service;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  */
 public interface AlimDeleteService {
-
     /**
      * DELT_YSNO가 Y인 알림을 삭제하고 실행 결과를 스케줄러 로그에 기록
      *

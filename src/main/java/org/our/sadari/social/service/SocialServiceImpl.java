@@ -31,7 +31,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SocialServiceImpl implements SocialService {
-
     // Social 데이터 접근 객체
     private final SocialMapper socialMapper;
     // Report 데이터 접근 객체
@@ -53,16 +52,15 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getFollowStatus(SocialDto.FollowDto req) {
-
         // validateFollowUsers 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowUsers(req);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
+
         // 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(req)));
     }
@@ -78,13 +76,11 @@ public class SocialServiceImpl implements SocialService {
     @Override
     @Transactional
     public ResultData setFollow(SocialDto.FollowDto req) {
-
         // validateFollowUsers 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowUsers(req);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 로그인 사용자가 상대 사용자를 팔로우하도록 TB_FOLLOW에 저장 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
@@ -95,10 +91,10 @@ public class SocialServiceImpl implements SocialService {
         // 새 팔로우 관계가 실제로 저장된 경우에만 팔로우 알림을 발송한다.
         // 이미 팔로우 중이라 MERGE가 아무 것도 저장하지 않은 경우에는 같은 알림을 다시 만들 필요가 없다.
         if (insertCnt > 0) {
-
             // sendFollowAlim 호출로 검증된 알림 또는 응답을 전송한다
             sendFollowAlim(req);
         }
+
         // 로그인 사용자가 상대 사용자를 팔로우하도록 TB_FOLLOW에 저장 결과를 성공 응답으로 반환한다
         return ResultData.success(createFollowStatus(socialMapper.getFollowStatusName(req)));
     }
@@ -114,13 +110,11 @@ public class SocialServiceImpl implements SocialService {
     @Override
     @Transactional
     public ResultData delFollow(SocialDto.FollowDto req) {
-
         // validateFollowUsers 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowUsers(req);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 로그인 사용자가 상대 사용자를 팔로우 중인 관계를 삭제 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
@@ -142,23 +136,21 @@ public class SocialServiceImpl implements SocialService {
     @Override
     @Transactional
     public ResultData setLike(SocialDto.LikeDto req) {
-
         // validateLikeTarget 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateLikeTarget(req);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (socialMapper.dupLike(req) > 0) {
-
             // Like 데이터를 DB에서 삭제한다
             socialMapper.delLike(req);
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // Like 업무 값을 socialMapper DTO에 설정한다
@@ -166,6 +158,7 @@ public class SocialServiceImpl implements SocialService {
             // sendReportLikeAlim 호출로 검증된 알림 또는 응답을 전송한다
             sendReportLikeAlim(req);
         }
+
         // 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소 결과를 성공 응답으로 반환한다
         return ResultData.success(socialMapper.getLikeDtl(req));
     }
@@ -181,7 +174,6 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getMyPageProfileStats(Long userNumb) {
-
         // 마이페이지 프로필 상단 통계 값을 조회 결과를 반환한다
         return getProfileStats(userNumb);
     }
@@ -196,13 +188,11 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getProfileStats(Long userNumb) {
-
         // validateTargetUser 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateTargetUser(userNumb);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 사용자 프로필 통계 값을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
@@ -226,13 +216,11 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getFollowingList(Long loginUserNumb, Long userNumb) {
-
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 특정 사용자가 팔로우하는 사용자 목록을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
@@ -254,13 +242,11 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getFollowerList(Long loginUserNumb, Long userNumb) {
-
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
-
             // 특정 사용자를 팔로우하는 사용자 목록을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
@@ -280,17 +266,14 @@ public class SocialServiceImpl implements SocialService {
      * @return 실패 응답 또는 null
      */
     private ResultData validateFollowUsers(SocialDto.FollowDto req) {
-
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getUserNumb())) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // req.getFlowNumb( 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req.getFlowNumb()) || req.getUserNumb().equals(req.getFlowNumb())) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -300,10 +283,10 @@ public class SocialServiceImpl implements SocialService {
 
         // targetUser 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(targetUser)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -317,10 +300,8 @@ public class SocialServiceImpl implements SocialService {
      * @return 실패 응답 또는 null
      */
     private ResultData validateTargetUser(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -330,10 +311,10 @@ public class SocialServiceImpl implements SocialService {
 
         // targetUser 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(targetUser)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -348,13 +329,12 @@ public class SocialServiceImpl implements SocialService {
      * @return 실패 응답 또는 null
      */
     private ResultData validateFollowListReq(Long loginUserNumb, Long userNumb) {
-
         // loginUserNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(loginUserNumb)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
+
         // 팔로우/팔로워 목록 조회에 필요한 로그인 사용자와 목록 주인 사용자를 검증 결과를 반환한다
         return validateTargetUser(userNumb);
     }
@@ -369,7 +349,6 @@ public class SocialServiceImpl implements SocialService {
      * @return 팔로우 목록 조회 조건 DTO
      */
     private SocialDto.FollowListReqDto createFollowListReq(Long loginUserNumb, Long userNumb) {
-
         // 팔로우 목록 조회 조건을 담을 객체를 생성한다
         SocialDto.FollowListReqDto req = new SocialDto.FollowListReqDto();
         // LoginUserNumb 업무 값을 req DTO에 설정한다
@@ -389,20 +368,15 @@ public class SocialServiceImpl implements SocialService {
      * @return 실패 응답 또는 null
      */
     private ResultData validateLikeTarget(SocialDto.LikeDto req) {
-
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getUserNumb())) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // req.getTagtType( 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (StringUtil.isEmpty(req.getTagtType())
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(req.getTagtNumb())
+        if (StringUtil.isEmpty(req.getTagtType()) || StringUtil.isEmpty(req.getTagtNumb())
                 || StringUtil.isEmpty(req.getTargetUserNumb())) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -412,17 +386,16 @@ public class SocialServiceImpl implements SocialService {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!Constant.LIKE_TARGET_REPORT.equals(req.getTagtType())) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (reportMapper.getPublicReportLikeTargetCnt(req) == 0) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -435,10 +408,8 @@ public class SocialServiceImpl implements SocialService {
      * @param req 좋아요 요청 DTO
      */
     private void sendReportLikeAlim(SocialDto.LikeDto req) {
-
         // 본인이 작성한 독후감에 본인이 좋아요를 누른 경우에는 자기 자신에게 알림을 만들 필요가 없어 중단한다.
         if (req.getTargetUserNumb().equals(req.getUserNumb())) {
-
             // 독후감 좋아요가 새로 등록된 경우 독후감 작성자에게 좋아요 알림을 발송 결과를 반환한다
             return;
         }
@@ -448,7 +419,6 @@ public class SocialServiceImpl implements SocialService {
 
         // 로그인 Redis 정보가 없으면 DB를 다시 조회하지 않고 알림만 생략해 요청당 추가 사용자 조회가 생기지 않게 한다.
         if (StringUtil.isEmpty(sendUserNick)) {
-
             // 독후감 좋아요가 새로 등록된 경우 독후감 작성자에게 좋아요 알림을 발송 결과를 반환한다
             return;
         }
@@ -479,7 +449,6 @@ public class SocialServiceImpl implements SocialService {
      * @return 팔로우 상태 DTO
      */
     private SocialDto.FollowDto createFollowStatus(String followStatName) {
-
         // 팔로우 대상과 알림 정보를 담을 객체를 생성한다
         SocialDto.FollowDto followDto = new SocialDto.FollowDto();
         // FollowStatName 업무 값을 followDto DTO에 설정한다
@@ -496,10 +465,8 @@ public class SocialServiceImpl implements SocialService {
      * @param req 팔로우를 수행한 사용자와 팔로우 대상 사용자 번호
      */
     private void sendFollowAlim(SocialDto.FollowDto req) {
-
         // 본인을 팔로우하는 요청은 검증에서 차단되지만, 알림 발송 직전에도 한 번 더 방어한다.
         if (req.getUserNumb().equals(req.getFlowNumb())) {
-
             // 팔로우를 받은 사용자에게 새 팔로워 알림을 발송 결과를 반환한다
             return;
         }
@@ -509,7 +476,6 @@ public class SocialServiceImpl implements SocialService {
 
         // 로그인 Redis 정보가 없으면 사용자 테이블을 다시 조회하지 않고 부가 기능인 알림만 생략한다.
         if (StringUtil.isEmpty(sendUserNick)) {
-
             // 팔로우를 받은 사용자에게 새 팔로워 알림을 발송 결과를 반환한다
             return;
         }

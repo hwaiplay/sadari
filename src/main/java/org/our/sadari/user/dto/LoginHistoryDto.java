@@ -19,7 +19,6 @@ import lombok.Data;
 @Data
 @Schema(description = "로그인 성공 여부와 접속 환경 이력 DTO", hidden = true)
 public class LoginHistoryDto {
-
     // 로그인 이력 번호
     private Long lognNumb;
 

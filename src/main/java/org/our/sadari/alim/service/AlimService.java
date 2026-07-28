@@ -15,7 +15,6 @@ import org.our.sadari.global.common.result.ResultData;
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  */
 public interface AlimService {
-
     /**
      * 로그인 사용자의 알림 목록을 조회.
      *

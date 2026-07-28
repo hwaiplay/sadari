@@ -20,7 +20,6 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class SchedulerLogSupport {
-
     // SchedulerLog 업무 처리 서비스
     private final SchedulerLogService schedulerLogService;
 
@@ -43,10 +42,8 @@ public class SchedulerLogSupport {
      * @return 등록된 실행 번호, 입력값 누락 또는 로그 등록 실패 시 null
      */
     public Long setSchedulerLogSafely(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-
         // 실행 정보가 없으면 로그 서비스의 필수값 검증 예외를 만들지 않고 로그 등록만 생략한다.
         if (StringUtil.isEmpty(schedulerRunDto)) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("스케줄러 실행 시작 로그 정보가 없어 등록을 생략했습니다.");
             // 조회하거나 생성할 값이 없음을 반환한다
@@ -58,9 +55,9 @@ public class SchedulerLogSupport {
             // 실행 시작 로그를 등록하되 로그 저장 오류가 원래 스케줄러 업무를 중단시키지 않도록 격리 결과를 반환한다
             return schedulerLogService.setSchedulerLog(schedulerRunDto);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RuntimeException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("스케줄러 실행 시작 로그를 등록하지 못했습니다.", e);
             // 조회하거나 생성할 값이 없음을 반환한다
@@ -80,17 +77,14 @@ public class SchedulerLogSupport {
      */
     public void setSchedulerFailSafely(Long runxNumb, String failType, Integer resultCode
                                      , String resultMessage, RuntimeException exception) {
-
         // 마스터 로그 등록에 실패했다면 연결할 실행 번호가 없으므로 고아 상세 로그의 저장을 생략한다.
         if (StringUtil.isEmpty(runxNumb)) {
-
             // 실패 상세를 등록하되 로그 저장 오류가 다음 스케줄러 대상의 처리를 막지 않도록 격리 결과를 반환한다
             return;
         }
 
-        SchedulerLogDto.SchedulerFailDto schedulerFailDto =
-                // 스케줄러 실패 상세 정보를 담을 객체를 생성한다
-                new SchedulerLogDto.SchedulerFailDto();
+        // 스케줄러 실패 상세 정보를 담을 객체를 생성한다
+        SchedulerLogDto.SchedulerFailDto schedulerFailDto = new SchedulerLogDto.SchedulerFailDto();
         // RunxNumb 업무 값을 schedulerFailDto DTO에 설정한다
         schedulerFailDto.setRunxNumb(runxNumb);
         // FailType 업무 값을 schedulerFailDto DTO에 설정한다
@@ -102,7 +96,6 @@ public class SchedulerLogSupport {
 
         // 비정상 ResultData 응답과 달리 Java 예외에는 예외 클래스와 메시지를 오류 전용 컬럼에 보관한다.
         if (!StringUtil.isEmpty(exception)) {
-
             // ErroType 업무 값을 schedulerFailDto DTO에 설정한다
             schedulerFailDto.setErroType(exception.getClass().getName());
             // ErroCntn 업무 값을 schedulerFailDto DTO에 설정한다
@@ -114,9 +107,9 @@ public class SchedulerLogSupport {
             // SchedulerFail 업무 값을 schedulerLogService DTO에 설정한다
             schedulerLogService.setSchedulerFail(schedulerFailDto);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RuntimeException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("스케줄러 실패 상세 로그를 등록하지 못했습니다. 실행 번호={}", runxNumb, e);
         }
@@ -129,10 +122,8 @@ public class SchedulerLogSupport {
      * @param schedulerRunDto 실행 종료 정보
      */
     public void uptSchedulerLogSafely(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-
         // 시작 로그가 등록되지 않았다면 수정할 마스터 행이 없으므로 종료 상태 갱신만 생략한다.
         if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getRunxNumb())) {
-
             // 실행 종료 로그를 수정하되 로그 수정 오류가 스케줄러의 원래 처리 결과를 덮어쓰지 않도록 격리 결과를 반환한다
             return;
         }
@@ -142,15 +133,11 @@ public class SchedulerLogSupport {
             // uptSchedulerLog 업무 로직을 schedulerLogService에 위임한다
             schedulerLogService.uptSchedulerLog(schedulerRunDto);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RuntimeException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
-            log.error(
-                    "스케줄러 실행 종료 로그를 수정하지 못했습니다. 실행 번호={}"
-                  , schedulerRunDto.getRunxNumb()
-                  , e
-            );
+            log.error("스케줄러 실행 종료 로그를 수정하지 못했습니다. 실행 번호={}", schedulerRunDto.getRunxNumb(), e);
         }
     }
 
@@ -163,20 +150,18 @@ public class SchedulerLogSupport {
      * @return 성공, 일부 실패, 실패 중 하나의 실행 상태
      */
     public String getSchedulerExecutionStatus(int successCnt, int failureCnt) {
-
         // 실패가 한 건도 없으면 조회된 모든 대상이 성공한 상태이다.
         if (failureCnt == 0) {
-
             // 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정 결과를 반환한다
             return Constant.SCHEDULER_EXEC_SUCCESS;
         }
 
         // 성공과 실패가 함께 있으면 관리자가 일부 대상만 재확인할 수 있도록 일부 실패로 구분한다.
         if (successCnt > 0) {
-
             // 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정 결과를 반환한다
             return Constant.SCHEDULER_EXEC_PARTIAL;
         }
+
         // 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정 결과를 반환한다
         return Constant.SCHEDULER_EXEC_FAILURE;
     }

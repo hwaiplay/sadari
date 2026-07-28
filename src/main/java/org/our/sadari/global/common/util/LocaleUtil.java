@@ -15,7 +15,6 @@ import java.util.Locale;
  * 2026-07-15        SeungHyeon.Kang    최초 생성
  */
 public class LocaleUtil {
-
     /**
      * LocaleUtil 객체를 생성한다.
      *
@@ -33,13 +32,11 @@ public class LocaleUtil {
      * @return 처리 결과
      */
     public static String getLocale() {
-
         // getLocale 조회로 후속 처리에 필요한 데이터를 가져온다
         Locale currentLocale = LocaleContextHolder.getLocale();
 
         // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(currentLocale)) {
-
             // 현재 요청 언어 환경 조회 결과를 반환한다
             return "KO";
         }
@@ -49,10 +46,10 @@ public class LocaleUtil {
 
         // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(language) || language.trim().isEmpty()) {
-
             // 현재 요청 언어 환경 조회 결과를 반환한다
             return "KO";
         }
+
         // 현재 요청 언어 환경 조회 결과를 반환한다
         return language.toUpperCase();
     }

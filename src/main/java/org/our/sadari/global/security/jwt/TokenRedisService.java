@@ -22,7 +22,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class TokenRedisService {
-
     // REFRESH TOKEN 접두사 설정값
     private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
     // USER NICK 접두사 설정값
@@ -30,8 +29,8 @@ public class TokenRedisService {
     // 접근 TOKEN BLACKLIST 접두사 설정값
     private static final String ACCESS_TOKEN_BLACKLIST_PREFIX = "auth:blacklist:access:";
 
-    private static final DefaultRedisScript<Long> SET_LOGIN_USER_SCRIPT = new DefaultRedisScript<>(
-            """
+    // 로그인 사용자 정보를 원자적으로 저장하는 Lua 스크립트
+    private static final String SET_LOGIN_USER_LUA = """
             -- Refresh Token을 지정된 로그인 유지시간 동안 저장한다
             redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
             -- 닉네임이 비어 있으면 이전 로그인에서 남은 닉네임을 제거한다
@@ -43,12 +42,12 @@ public class TokenRedisService {
             end
             -- 두 로그인 정보를 정상적으로 반영한 결과를 반환한다
             return 1
-            """
-          , Long.class
-    );
+            """;
+    // 로그인 사용자 정보를 저장하는 Redis 스크립트 객체
+    private static final DefaultRedisScript<Long> SET_LOGIN_USER_SCRIPT = new DefaultRedisScript<>(SET_LOGIN_USER_LUA, Long.class);
 
-    private static final DefaultRedisScript<Long> UPDATE_USER_NICK_SCRIPT = new DefaultRedisScript<>(
-            """
+    // 로그인 사용자의 닉네임을 원자적으로 갱신하는 Lua 스크립트
+    private static final String UPDATE_USER_NICK_LUA = """
             -- 로그인 세션과 동일한 만료시간을 적용하기 위해 Refresh Token의 남은 시간을 조회한다
             local refreshTtl = redis.call('TTL', KEYS[1])
             -- 로그인 세션이 없거나 만료됐으면 닉네임 캐시도 남기지 않는다
@@ -61,9 +60,9 @@ public class TokenRedisService {
             redis.call('SET', KEYS[2], ARGV[1], 'EX', refreshTtl)
             -- 닉네임 캐시를 정상적으로 갱신한 결과를 반환한다
             return 1
-            """
-          , Long.class
-    );
+            """;
+    // 로그인 사용자의 닉네임을 갱신하는 Redis 스크립트 객체
+    private static final DefaultRedisScript<Long> UPDATE_USER_NICK_SCRIPT = new DefaultRedisScript<>(UPDATE_USER_NICK_LUA, Long.class);
 
     // JWT와 사용자 정보를 저장하는 Redis 연산 객체
     private final StringRedisTemplate redisTemplate;
@@ -80,14 +79,9 @@ public class TokenRedisService {
      */
     public void setLoginUserInfo(Long userNumb, String refreshToken, String userNick
                                , Long ttlSeconds) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (StringUtil.isEmpty(userNumb)
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(refreshToken)
-                // 필수 값이 비어 있는지 공통 기준으로 확인한다
-                || StringUtil.isEmpty(ttlSeconds)
-                || ttlSeconds <= 0) {
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(refreshToken)
+                || StringUtil.isEmpty(ttlSeconds) || ttlSeconds <= 0) {
 
             throw new IllegalArgumentException("Login user Redis values are invalid.");
         }
@@ -113,7 +107,6 @@ public class TokenRedisService {
      * @return 저장된 Refresh Token (없을 경우 null)
      */
     public String getRefreshToken(Long userNumb) {
-
         // 회원 번호로 Redis에 저장된 Refresh Token을 조회 결과를 반환한다
         return redisTemplate.opsForValue().get(getRefreshTokenKey(userNumb));
     }
@@ -126,13 +119,12 @@ public class TokenRedisService {
      * @return Redis에 저장된 닉네임, 로그인 정보가 없으면 null
      */
     public String getUserNick(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
+
         // 로그인 사용자 번호로 Redis에 저장된 닉네임을 조회 결과를 반환한다
         return redisTemplate.opsForValue().get(getUserNickKey(userNumb));
     }
@@ -147,10 +139,8 @@ public class TokenRedisService {
      * @return 로그인 세션이 존재해 Redis 닉네임을 갱신했으면 true
      */
     public boolean uptUserNick(Long userNumb, String userNick) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(userNick)) {
-
             // 프로필 수정 후 Redis 닉네임을 갱신하되 Refresh Token의 남은 TTL을 그대로 적용 판정값을 반환한다
             return false;
         }
@@ -172,10 +162,8 @@ public class TokenRedisService {
      * @param userNumb 닉네임 캐시를 제거할 사용자 번호
      */
     public void delUserNick(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // DB와 다른 오래된 닉네임을 알림에서 사용하지 않도록 닉네임 캐시만 제거 결과를 반환한다
             return;
         }
@@ -191,10 +179,8 @@ public class TokenRedisService {
      * @param userNumb 회원 번호 (PK)
      */
     public void delLoginUserInfo(Long userNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // 로그아웃 시 Refresh Token과 로그인 사용자 닉네임을 함께 삭제 결과를 반환한다
             return;
         }
@@ -211,10 +197,8 @@ public class TokenRedisService {
      * @param ttlSeconds Access Token의 남은 유효 시간(초)
      */
     public void setAccessTokenBlacklist(String tokenId, long ttlSeconds) {
-
         // 토큰 식별자가 없거나 만료 시간이 유효하지 않은(0 이하) 경우 블랙리스트에 등록하지 않고 종료한다.
         if (StringUtil.isEmpty(tokenId) || ttlSeconds <= 0) {
-
             // 로그아웃 처리된 Access Token의 식별자(jti)를 Redis 블랙리스트에 등록 결과를 반환한다
             return;
         }
@@ -231,13 +215,12 @@ public class TokenRedisService {
      * @return 블랙리스트 등록 여부 (true: 로그아웃된 토큰, false: 사용 가능한 토큰)
      */
     public boolean hasAccessTokenBlacklist(String tokenId) {
-
         // 토큰 식별자(jti)가 전달되지 않은 경우 정상적인 조회 불가로 판단하여 false를 반환한다.
         if (StringUtil.isEmpty(tokenId)) {
-
             // 전달받은 Access Token 식별자(jti)가 Redis 블랙리스트에 존재하는지 검증 판정값을 반환한다
             return false;
         }
+
         // 전달받은 Access Token 식별자(jti)가 Redis 블랙리스트에 존재하는지 검증 결과를 반환한다
         return Boolean.TRUE.equals(redisTemplate.hasKey(getAccessTokenBlacklistKey(tokenId)));
     }
@@ -250,7 +233,6 @@ public class TokenRedisService {
      * @return Redis Key 문자열
      */
     private String getRefreshTokenKey(Long userNumb) {
-
         // Refresh Token 저장용 Redis Key를 생성한다. (형식: auth:refresh:{userNumb}) 결과를 반환한다
         return REFRESH_TOKEN_PREFIX + userNumb;
     }
@@ -263,7 +245,6 @@ public class TokenRedisService {
      * @return Redis Key 문자열
      */
     private String getUserNickKey(Long userNumb) {
-
         // 로그인 사용자 닉네임 저장용 Redis Key를 생성한다. (형식: auth:user:nick:{userNumb}) 결과를 반환한다
         return USER_NICK_PREFIX + userNumb;
     }
@@ -276,7 +257,6 @@ public class TokenRedisService {
      * @return Redis Key 문자열
      */
     private String getAccessTokenBlacklistKey(String tokenId) {
-
         // Access Token 블랙리스트 저장용 Redis Key를 생성한다. (형식: auth:blacklist:access:{tokenId}) 결과를 반환한다
         return ACCESS_TOKEN_BLACKLIST_PREFIX + tokenId;
     }

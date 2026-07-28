@@ -24,7 +24,6 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 public class FirebaseMessagingProvider {
-
     // 기본 PUSH TITLE 설정값
     private static final String DEFAULT_PUSH_TITLE = "알림";
     // 기본 PUSH LINK 설정값
@@ -78,10 +77,8 @@ public class FirebaseMessagingProvider {
      */
     @PostConstruct
     public void init() {
-
         // credentialsPath 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(credentialsPath)) {
-
             // Firebase service account 경로가 없으면 서버 발송 자체가 불가능하므로 push만 비활성화한다.
             log.warn("Firebase credentials path is empty. Push sending is disabled.");
             // 서버 시작 시 Firebase Admin SDK를 초기화한 결과를 반환한다
@@ -93,9 +90,9 @@ public class FirebaseMessagingProvider {
             // Firebase 인증정보로 메시징 클라이언트를 초기화한다
             initializeFirebaseMessaging();
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Throwable e) {
-
             /*
              * Firebase Admin SDK가 런타임 classpath에 없거나 service account json이 잘못되어도
              * 알림함 저장 기능까지 같이 죽으면 안 된다. 푸시는 부가 기능으로 보고 서버 기동은 유지한다.
@@ -120,10 +117,8 @@ public class FirebaseMessagingProvider {
      */
     public boolean send(String token, String title, String body
                       , String linkUrlx, Long alimNumb) {
-
         // token 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(token)) {
-
             // token 없이 호출된 경우는 특정 브라우저 구독을 식별할 수 없어 발송하지 않는다.
             log.debug("FCM push send skipped. token is empty.");
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환한다
@@ -132,7 +127,6 @@ public class FirebaseMessagingProvider {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!isFirebaseMessagingReady()) {
-
             // Firebase 초기화 실패 상태에서도 알림 저장은 성공해야 하므로 푸시 발송만 조용히 생략한다.
             log.debug("FCM push send skipped. Firebase messaging is not initialized.");
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환한다
@@ -148,9 +142,9 @@ public class FirebaseMessagingProvider {
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환한다
             return true;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Throwable e) {
-
             /*
              * 토큰 만료, Firebase 장애, 런타임 의존성 미반영 같은 문제는 개별 푸시 발송 실패로만 처리한다.
              * 알림 insert 트랜잭션의 성공 여부와 푸시 전송 성공 여부를 강하게 묶지 않기 위한 분기다.
@@ -168,7 +162,6 @@ public class FirebaseMessagingProvider {
      * @author SeungHyeon.Kang
      */
     private void initializeFirebaseMessaging() throws Exception {
-
         // Firebase 인증 파일 경로의 classpath 접두사를 정규화한다
         String resolvedCredentialsPath = normalizeCredentialsPath(credentialsPath);
         // 처리 상태를 정보 로그로 남긴다
@@ -179,7 +172,6 @@ public class FirebaseMessagingProvider {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!resource.exists()) {
-
             // json 파일이 없으면 Firebase 인증을 만들 수 없으므로 push만 비활성화한다.
             log.warn("Firebase credentials file does not exist. path={}", resolvedCredentialsPath);
             // Firebase Admin SDK class를 로딩하고 service account json으로 FirebaseMessaging 객체를 준비한 결과를 반환한다
@@ -191,7 +183,6 @@ public class FirebaseMessagingProvider {
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try (InputStream inputStream = resource.getInputStream()) {
-
             // createFirebaseOptions 호출로 후속 처리에 필요한 객체를 생성한다
             Object options = createFirebaseOptions(sdkClasses, inputStream);
             // getOrInitializeFirebaseApp 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -217,22 +208,8 @@ public class FirebaseMessagingProvider {
      * @return Firebase Admin SDK class 묶음
      */
     private FirebaseSdkClasses loadFirebaseSdkClasses() throws ClassNotFoundException {
-
-        // 새로 생성한 FirebaseSdkClasses 객체를 반환한다
-        return new FirebaseSdkClasses(
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(GOOGLE_CREDENTIALS_CLASS_NAME),
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(FIREBASE_OPTIONS_CLASS_NAME),
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(FIREBASE_APP_CLASS_NAME),
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(FIREBASE_MESSAGING_CLASS_NAME),
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(FIREBASE_MESSAGE_CLASS_NAME),
-                // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
-                Class.forName(FIREBASE_NOTIFICATION_CLASS_NAME)
-        );
+        // 런타임에 조회한 Firebase Admin SDK 클래스를 묶은 객체를 반환한다
+        return new FirebaseSdkClasses(Class.forName(GOOGLE_CREDENTIALS_CLASS_NAME), Class.forName(FIREBASE_OPTIONS_CLASS_NAME), Class.forName(FIREBASE_APP_CLASS_NAME), Class.forName(FIREBASE_MESSAGING_CLASS_NAME), Class.forName(FIREBASE_MESSAGE_CLASS_NAME), Class.forName(FIREBASE_NOTIFICATION_CLASS_NAME));
     }
 
     /**
@@ -245,7 +222,6 @@ public class FirebaseMessagingProvider {
      * @return FirebaseOptions 객체
      */
     private Object createFirebaseOptions(FirebaseSdkClasses sdkClasses, InputStream inputStream) throws Exception {
-
         // Google 인증정보 클래스의 런타임 타입을 확인한다
         Object credentials = invokeStatic(sdkClasses.googleCredentialsClass(), "fromStream", new Class<?>[]{InputStream.class}, inputStream);
         // Firebase 옵션 클래스의 런타임 타입을 확인한다
@@ -270,16 +246,15 @@ public class FirebaseMessagingProvider {
      * @return FirebaseApp 객체
      */
     private Object getOrInitializeFirebaseApp(FirebaseSdkClasses sdkClasses, Object options) throws Exception {
-
         // Firebase 애플리케이션 클래스의 런타임 타입을 확인한다
         List<?> appList = (List<?>) invokeStatic(sdkClasses.firebaseAppClass(), "getApps");
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (appList.isEmpty()) {
-
             // JVM 안에 이미 FirebaseApp이 있으면 재사용하고, 없으면 새로 초기화한 결과를 반환한다
             return invokeStatic(sdkClasses.firebaseAppClass(), "initializeApp", new Class<?>[]{sdkClasses.firebaseOptionsClass()}, options);
         }
+
         // JVM 안에 이미 FirebaseApp이 있으면 재사용하고, 없으면 새로 초기화한 결과를 반환한다
         return invokeStatic(sdkClasses.firebaseAppClass(), "getInstance");
     }
@@ -298,7 +273,6 @@ public class FirebaseMessagingProvider {
      */
     private Object createMessage(String token, String title, String body
                                , String linkUrlx, Long alimNumb) throws Exception {
-
         // 런타임에 사용할 Firebase 클래스를 이름으로 조회한다
         Class<?> notificationClass = Class.forName(FIREBASE_NOTIFICATION_CLASS_NAME);
         // createNotification 호출로 후속 처리에 필요한 객체를 생성한다
@@ -320,7 +294,6 @@ public class FirebaseMessagingProvider {
 
         // 알림 번호가 있어야 서비스워커가 사용자가 클릭한 정확한 알림 한 건을 읽음 처리할 수 있다.
         if (!StringUtil.isEmpty(alimNumb)) {
-
             // 리플렉션으로 확인한 외부 라이브러리 메서드를 실행한다
             messageDataBuilder = invoke(
                     linkDataBuilder
@@ -330,6 +303,7 @@ public class FirebaseMessagingProvider {
                   , String.valueOf(alimNumb)
             );
         }
+
         // Firebase Messaging이 발송할 Message 객체를 생성한 결과를 반환한다
         return invoke(messageDataBuilder, "build");
     }
@@ -345,7 +319,6 @@ public class FirebaseMessagingProvider {
      * @return Firebase Notification 객체
      */
     private Object createNotification(Class<?> notificationClass, String title, String body) throws Exception {
-
         // 정적 팩토리 메서드를 호출해 외부 객체를 생성한다
         Object notificationBuilder = invokeStatic(notificationClass, "builder");
         // 리플렉션으로 확인한 외부 라이브러리 메서드를 실행한다
@@ -372,10 +345,10 @@ public class FirebaseMessagingProvider {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         while (normalizedPath.startsWith(CLASSPATH_DUPLICATED_PREFIX)) {
-
             // 정규식과 처음 일치하는 문자열을 치환한다
             normalizedPath = normalizedPath.replaceFirst(CLASSPATH_DUPLICATED_PREFIX, CLASSPATH_PREFIX);
         }
+
         // Firebase service account json 경로를 Spring ResourceLoader가 해석할 수 있는 값으로 보정한 결과를 반환한다
         return normalizedPath;
     }
@@ -388,7 +361,6 @@ public class FirebaseMessagingProvider {
      * @return Firebase 발송 가능 여부
      */
     private boolean isFirebaseMessagingReady() {
-
         // Firebase 초기화가 완료되어 실제 발송을 시도할 수 있는지 확인한 결과를 반환한다
         return !StringUtil.hasEmpty(firebaseMessaging, firebaseMessagingClass, messageClass);
     }
@@ -414,7 +386,6 @@ public class FirebaseMessagingProvider {
      * @return 보정된 알림 제목
      */
     private String getPushTitle(String title) {
-
         // 비어 있는 푸시 제목을 기본 제목으로 보정한 결과를 반환한다
         return StringUtil.isEmpty(title) ? DEFAULT_PUSH_TITLE : title;
     }
@@ -427,7 +398,6 @@ public class FirebaseMessagingProvider {
      * @return 보정된 알림 내용
      */
     private String getPushBody(String body) {
-
         // 비어 있는 푸시 본문을 빈 문자열로 보정한 결과를 반환한다
         return StringUtil.isEmpty(body) ? "" : body;
     }
@@ -440,7 +410,6 @@ public class FirebaseMessagingProvider {
      * @return 보정된 클릭 이동 링크
      */
     private String getPushLink(String linkUrlx) {
-
         // 비어 있는 클릭 링크를 알림 목록 경로로 보정한 결과를 반환한다
         return StringUtil.isEmpty(linkUrlx) ? DEFAULT_PUSH_LINK : linkUrlx;
     }
@@ -454,7 +423,6 @@ public class FirebaseMessagingProvider {
      * @return 메서드 호출 결과
      */
     private Object invokeStatic(Class<?> targetClass, String methodName) throws Exception {
-
         // 파라미터 없는 static 메서드를 reflection으로 호출한 결과를 반환한다
         return invokeStatic(targetClass, methodName, new Class<?>[]{});
     }
@@ -472,7 +440,6 @@ public class FirebaseMessagingProvider {
      */
     private Object invokeStatic(Class<?> targetClass, String methodName, Class<?>[] parameterTypes
                               , Object... args) throws Exception {
-
         // 호출할 외부 라이브러리 메서드를 조회한다
         Method method = targetClass.getMethod(methodName, parameterTypes);
         // static 메서드를 reflection으로 호출한 결과를 반환한다
@@ -488,7 +455,6 @@ public class FirebaseMessagingProvider {
      * @return 메서드 호출 결과
      */
     private Object invoke(Object target, String methodName) throws Exception {
-
         // 파라미터 없는 인스턴스 메서드를 reflection으로 호출한 결과를 반환한다
         return invoke(target, methodName, new Class<?>[]{});
     }
@@ -506,7 +472,6 @@ public class FirebaseMessagingProvider {
      */
     private Object invoke(Object target, String methodName, Class<?>[] parameterTypes
                         , Object... args) throws Exception {
-
         // getClass 조회로 후속 처리에 필요한 데이터를 가져온다
         Method method = target.getClass().getMethod(methodName, parameterTypes);
         // 인스턴스 메서드를 reflection으로 호출한 결과를 반환한다

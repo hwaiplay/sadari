@@ -38,7 +38,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
-
     // USER AGENT 최대 길이 설정값
     private static final int USER_AGENT_MAX_LENGTH = 500;
 
@@ -69,10 +68,8 @@ public class AuthServiceImpl implements AuthService {
     @Transactional
     @Override
     public ResultData kakaoLogin(String code, String lognIpxx, String userAgnt) {
-
         // code 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(code)) {
-
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -87,9 +84,9 @@ public class AuthServiceImpl implements AuthService {
             // getKakaoAccount 조회로 후속 처리에 필요한 데이터를 가져온다
             kakaoAccountDto = kakaoAuthProvider.getKakaoAccount(kakaoTokenDto);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (JsonProcessingException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao OAuth response parse failed. message={}", e.getMessage());
             // "인증에 실패했어요.\n다시 로그인 해주세요."
@@ -123,7 +120,6 @@ public class AuthServiceImpl implements AuthService {
 
             // savedUser 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (StringUtil.isEmpty(savedUser)) {
-
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
@@ -133,6 +129,7 @@ public class AuthServiceImpl implements AuthService {
                 // 처리 상태를 정보 로그로 남긴다
                 log.info("Kakao user created. userNumb={}", userDto.getUserNumb());
             }
+
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
                 // UserNumb 업무 값을 userDto DTO에 설정한다
@@ -144,7 +141,6 @@ public class AuthServiceImpl implements AuthService {
 
                 // savedUser.getProfNumb( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
                 if (StringUtil.isEmpty(savedUser.getProfNumb())) {
-
                     // ProfNumb 업무 값을 userDto DTO에 설정한다
                     userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                     // UserProfile 데이터를 DB에서 수정한다
@@ -155,9 +151,9 @@ public class AuthServiceImpl implements AuthService {
             // 처리 상태를 정보 로그로 남긴다
             log.info("Kakao login user resolved. userNumb={}", userDto.getUserNumb());
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao user save failed. message={}", e.getMessage());
             // "인증에 실패했어요.\n다시 로그인 해주세요."

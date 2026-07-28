@@ -30,7 +30,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/user")
 @Tag(name = "사용자", description = "로그인 사용자 프로필 조회와 수정 API")
 public class UserController {
-
     // User 업무 처리 서비스
     private final UserService userService;
     /**
@@ -43,7 +42,6 @@ public class UserController {
     @GetMapping("/me")
     @Operation(summary = "내 프로필 조회", description = "Access Token으로 식별한 로그인 사용자의 프로필 정보를 조회한다.")
     public ResultData getMe(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-
         // 로그인 사용자의 프로필 정보를 조회 결과를 반환한다
         return userService.getMe(userNumb);
     }
@@ -63,7 +61,6 @@ public class UserController {
                           , @ModelAttribute UserDto userDto
                           , @Parameter(description = "프로필 이미지 파일") @RequestParam(value = "profileImage", required = false) MultipartFile profileImage
                           , @Parameter(description = "배경 이미지 파일") @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage) {
-
         // 로그인 사용자의 프로필과 이미지를 수정 결과를 반환한다
         return userService.uptMe(userNumb, userDto, profileImage, backgroundImage);
     }

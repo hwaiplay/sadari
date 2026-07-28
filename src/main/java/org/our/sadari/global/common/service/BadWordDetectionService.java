@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class BadWordDetectionService {
-
     // 비속어 목록을 메모리에 보관할 만료 시간이다. 10분으로 설정되어 있다.
     private static final long BAD_WORD_CACHE_TTL_MILLIS = 10 * 60 * 1000L;
 
@@ -56,11 +55,9 @@ public class BadWordDetectionService {
      * @return 감지된 비속어 단어
      */
     public Optional<String> findBadWord(String value) {
-
         // 검사할 입력 문자열이 null이거나 빈 값인 경우
         // 메모리 캐시 조회나 정규화 연산을 수행할 필요가 없으므로 즉시 빈 Optional을 반환한다.
         if (StringUtil.isEmpty(value)) {
-
             // 입력 문자열에서 처음 탐지된 비속어를 Optional로 반환한다
             return Optional.empty();
         }
@@ -93,7 +90,6 @@ public class BadWordDetectionService {
      * @return 메인 메모리에 적재된 비속어 탐색 캐시
      */
     private BadWordCache getBadWordCache() {
-
         // 만료 시각 계산에 사용할 현재 시각을 조회한다
         long now = System.currentTimeMillis();
         BadWordCache currentCache = badWordCache;
@@ -101,7 +97,6 @@ public class BadWordDetectionService {
         // 1차 검사: 동기화 블록 밖에서 빠르게 캐시 만료 여부를 확인한다.
         // 99퍼센트의 정상 요청은 synchronized 락을 획득하는 오버헤드 없이 바로 메인 메모리의 캐시 데이터를 반환한다.
         if (!currentCache.isExpired(now)) {
-
             // 메모리에 캐싱된 아호-코라식 자동자 묶음을 반환한다
             return currentCache;
         }
@@ -115,7 +110,6 @@ public class BadWordDetectionService {
             // 락 획득을 위해 대기하던 다른 스레드들이 1등 스레드가 이미 캐시를 갱신해 둔 것을 확인하고
             // 중복해서 데이터베이스를 조회하지 않도록 차단한다.
             if (!currentCache.isExpired(now)) {
-
                 // 메모리에 캐싱된 아호-코라식 자동자 묶음을 반환한다
                 return currentCache;
             }
@@ -146,13 +140,7 @@ public class BadWordDetectionService {
 
             // 생성된 자동자와 만료 시각을 담은 새 BadWordCache 인스턴스를 생성하여 참조를 교체한다.
             // 인스턴스 교체 작업은 원자적 연산이므로 멀티스레드 환경에서 불완전한 상태의 객체가 노출되지 않는다.
-            BadWordCache reloadedCache = new BadWordCache(
-                    badWordMatcher,
-                    exceptionWordMatcher,
-                    digitBadWordMatcher,
-                    digitExceptionWordMatcher,
-                    now + BAD_WORD_CACHE_TTL_MILLIS
-            );
+            BadWordCache reloadedCache = new BadWordCache(badWordMatcher, exceptionWordMatcher, digitBadWordMatcher, digitExceptionWordMatcher, now + BAD_WORD_CACHE_TTL_MILLIS);
             badWordCache = reloadedCache;
             // 메모리에 캐싱된 아호-코라식 자동자 묶음을 반환한다
             return reloadedCache;
@@ -166,7 +154,6 @@ public class BadWordDetectionService {
      * @return 데이터베이스에서 조회한 비속어 문자열 리스트
      */
     private List<String> loadBadWordsFromCodeList() {
-
         // 데이터베이스의 공통코드 테이블에서 BADX_WORD 리스트를 조회하여 문자열 목록으로 변환 결과를 반환한다
         return codeUtil.getCodeList(Constant.CODE_BADX_WORD).stream()
                 .map(CodeDto::getComdName)
@@ -183,7 +170,6 @@ public class BadWordDetectionService {
      * @return 데이터베이스에서 조회한 비속어 예외 허용어 문자열 리스트
      */
     private List<String> loadExceptionWordsFromCodeList() {
-
         // 데이터베이스의 공통코드 테이블에서 EXCP_WORD 리스트를 조회하여 문자열 목록으로 변환 결과를 반환한다
         return codeUtil.getCodeList(Constant.CODE_EXCP_WORD).stream()
                 .map(CodeDto::getComdName)
@@ -202,10 +188,8 @@ public class BadWordDetectionService {
      * @return 탐지된 비속어 중 가장 긴 단어
      */
     private Optional<String> findBadWord(AhoCorasickMatcher matcher, AhoCorasickMatcher exceptionMatcher, String value) {
-
         // 검사할 대상 문자열이 없으면 contains 비교 자체가 불필요하므로 즉시 반환한다.
         if (StringUtil.isEmpty(value)) {
-
             // 아호-코라식 자동자를 사용해 입력 문자열에 포함된 비속어가 있는지 탐지 결과를 반환한다
             return Optional.empty();
         }
@@ -230,7 +214,6 @@ public class BadWordDetectionService {
      * @return 탐지된 숫자 포함 비속어
      */
     private Optional<String> findDigitBadWord(AhoCorasickMatcher digitMatcher, AhoCorasickMatcher digitExceptionMatcher, String value) {
-
         // 숫자가 포함된 비속어 전용 아호-코라식 자동자로 특수문자만 제거된 입력 문자열을 비교 결과를 반환한다
         return findBadWord(digitMatcher, digitExceptionMatcher, value);
     }
@@ -254,7 +237,6 @@ public class BadWordDetectionService {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (MatchedWord badWordMatch : badWordMatches) {
-
             // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
             if (isCoveredByException(badWordMatch, exceptionMatches)) {
 
@@ -263,11 +245,11 @@ public class BadWordDetectionService {
 
             // longestMatchedWord 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
             if (StringUtil.isEmpty(longestMatchedWord) || badWordMatch.word().length() > longestMatchedWord.length()) {
-
                 // 탐지 결과에서 원본 비속어를 조회한다
                 longestMatchedWord = badWordMatch.word();
             }
         }
+
         // 비속어 매칭 결과 중 EXCP_WORD 허용어 범위 밖에 있는 가장 긴 비속어를 선택 결과를 반환한다
         return Optional.ofNullable(longestMatchedWord);
     }
@@ -282,7 +264,6 @@ public class BadWordDetectionService {
      * @return 허용어가 비속어 구간을 완전히 감싸는지 여부
      */
     private boolean isCoveredByException(MatchedWord badWordMatch, List<MatchedWord> exceptionMatches) {
-
         // 비속어 매칭 구간이 허용어 매칭 구간 안에 완전히 포함되는지 판단 결과를 반환한다
         return exceptionMatches.stream()
                 .anyMatch(exceptionMatch -> exceptionMatch.startIndex() <= badWordMatch.startIndex()
@@ -299,7 +280,6 @@ public class BadWordDetectionService {
      * @return 유효한 문자만 남긴 정규화 문자열
      */
     private String normalizeObfuscatedBadWord(String value, boolean keepDigits) {
-
         // keepDigits 옵션이 true이면 한글, 영문, 숫자를 제외한 모든 문자를 제거한다.
         // keepDigits 옵션이 false이면 한글, 영문만 남기고 숫자까지 포함한 모든 특수문자를 제거한다.
         // 유니코드 프로퍼티 표현식을 사용하여 완성형 및 조합형 한글과 영문 대소문자를 정확하게 판별한다.
@@ -318,7 +298,6 @@ public class BadWordDetectionService {
      * @return 숫자 포함 여부 boolean 값
      */
     private boolean hasDigit(String value) {
-
         // 비속어 단어 내부에 숫자가 포함되어 있는지 검사 결과를 반환한다
         return value.chars().anyMatch(Character::isDigit);
     }
@@ -347,7 +326,6 @@ public class BadWordDetectionService {
      */
     private record BadWordCache(AhoCorasickMatcher badWordMatcher, AhoCorasickMatcher exceptionWordMatcher, AhoCorasickMatcher digitBadWordMatcher
                               , AhoCorasickMatcher digitExceptionWordMatcher, long expiresAtMillis) {
-
         /**
          * 애플리케이션 최초 구동 시 사용할 빈 캐시 인스턴스이다.
          * 만료 시각을 0으로 설정하여 첫 요청 시 무조건 데이터베이스에서 조회가 일어나도록 유도한다.
@@ -356,19 +334,8 @@ public class BadWordDetectionService {
          * @return 만료 시각이 0인 빈 BadWordCache 객체
          */
         private static BadWordCache empty() {
-
-            // 새로 생성한 BadWordCache 객체를 반환한다
-            return new BadWordCache(
-                    // 빈 결과 객체를 생성한다
-                    AhoCorasickMatcher.empty(),
-                    // 빈 결과 객체를 생성한다
-                    AhoCorasickMatcher.empty(),
-                    // 빈 결과 객체를 생성한다
-                    AhoCorasickMatcher.empty(),
-                    // 빈 결과 객체를 생성한다
-                    AhoCorasickMatcher.empty(),
-                    0L
-            );
+            // 비속어 사전이 로딩되기 전 사용할 빈 캐시 객체를 반환한다
+            return new BadWordCache(AhoCorasickMatcher.empty(), AhoCorasickMatcher.empty(), AhoCorasickMatcher.empty(), AhoCorasickMatcher.empty(), 0L);
         }
 
         /**
@@ -381,7 +348,6 @@ public class BadWordDetectionService {
          * @return 만료 여부 boolean 값
          */
         private boolean isExpired(long nowMillis) {
-
             // 현재 시각과 비교하여 캐시가 만료되었는지 여부를 판단 결과를 반환한다
             return nowMillis >= expiresAtMillis;
         }
@@ -394,7 +360,6 @@ public class BadWordDetectionService {
      * @author SeungHyeon.Kang
      */
     private static final class AhoCorasickMatcher {
-
         // 비속어 탐색 트리 루트 노드
         private final TrieNode root;
 
@@ -419,17 +384,14 @@ public class BadWordDetectionService {
          * @return 비속어 목록이 컴파일된 아호-코라식 매처
          */
         private static AhoCorasickMatcher from(List<String> words) {
-
             // 비속어 탐색 트리의 루트 노드를 담을 객체를 생성한다
             TrieNode root = new TrieNode();
 
             // 공통코드 값이 비어 있거나 중복 제거 후 빈 문자열이 섞여 있으면 트라이에 넣지 않는다.
             // 빈 문자열을 단어로 등록하면 모든 입력이 매칭되는 심각한 오탐이 발생할 수 있다.
             for (String word : words) {
-
                 // word 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
                 if (!StringUtil.isEmpty(word)) {
-
                     // 비속어를 아호 코라식 탐색 트리에 등록한다
                     addWord(root, word);
                 }
@@ -449,7 +411,6 @@ public class BadWordDetectionService {
          * @return 매칭 결과가 없는 빈 아호-코라식 매처
          */
         private static AhoCorasickMatcher empty() {
-
             // 새로 생성한 AhoCorasickMatcher 객체를 반환한다
             return new AhoCorasickMatcher(new TrieNode());
         }
@@ -481,7 +442,6 @@ public class BadWordDetectionService {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int index = 0; index < value.length(); ) {
-
                 // 현재 위치의 유니코드 코드 포인트를 확인한다
                 int codePoint = value.codePointAt(index);
                 // 유니코드 문자가 차지하는 길이를 계산한다
@@ -502,11 +462,11 @@ public class BadWordDetectionService {
                 // 여러 단어가 동시에 끝나는 위치라면 모두 기록한다.
                 // 호출부에서 EXCP_WORD 범위와 비교한 뒤 최종적으로 가장 긴 차단 단어를 선택해야 하기 때문이다.
                 for (String matchedWord : node.outputs) {
-
                     // 탐지된 비속어와 원문 위치를 담을 객체를 생성한다
                     matchedWords.add(new MatchedWord(matchedWord, index - matchedWord.length(), index));
                 }
             }
+
             // 입력 문자열에서 가장 긴 비속어 매칭 결과를 찾는다 결과를 반환한다
             return matchedWords;
         }
@@ -532,7 +492,6 @@ public class BadWordDetectionService {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (int index = 0; index < word.length(); ) {
-
                 // 현재 위치의 유니코드 코드 포인트를 확인한다
                 int codePoint = word.codePointAt(index); // 1. 진짜 유니코드 번호(int)를 뽑아낸다.
                 // 유니코드 문자가 차지하는 길이를 계산한다
@@ -580,13 +539,11 @@ public class BadWordDetectionService {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             while (!queue.isEmpty()) {
-
                 // 너비 우선 탐색에서 다음 노드를 꺼낸다
                 TrieNode current = queue.poll();
 
                 // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
                 for (Map.Entry<Integer, TrieNode> entry : current.children.entrySet()) {
-
                     // 현재 항목의 키를 조회한다
                     int codePoint = entry.getKey();
                     // 현재 항목의 값을 조회한다

@@ -17,7 +17,6 @@ import org.our.sadari.menu.dto.UserMenuDto;
  */
 @Mapper
 public interface UserMenuMapper {
-
     /**
      * 현재 URL과 정확히 일치하거나 동적 상세 URL의 접두 경로와 일치하는 메뉴 한 건을 조회한다.
      *

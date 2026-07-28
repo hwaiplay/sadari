@@ -14,7 +14,6 @@ import org.apache.ibatis.annotations.Mapper;
  */
 @Mapper
 public interface AlimDeleteMapper {
-
     /**
      * TB_ALIMXX에서 DELT_YSNO가 Y인 알림을 모두 물리 삭제
      *
