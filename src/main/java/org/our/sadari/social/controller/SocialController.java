@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/social")
 @Tag(name = "소셜", description = "공개 프로필, 팔로우, 좋아요 API")
 public class SocialController {
+
     // User 데이터 접근 객체
     private final UserMapper userMapper;
     // Report 업무 처리 서비스

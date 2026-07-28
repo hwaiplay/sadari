@@ -32,6 +32,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 @RequiredArgsConstructor
 @Slf4j
 public class AlimServiceImpl implements AlimService {
+
     // 알림 페이지 크기 설정값
     private static final int ALIM_PAGE_SIZE = 20;
 

@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/api/alim")
 @Tag(name = "알림", description = "사용자 알림 목록 및 알림 발송 API")
 public class AlimController {
+
     // Alim 업무 처리 서비스
     private final AlimService alimService;
 

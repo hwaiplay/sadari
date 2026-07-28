@@ -46,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user")
 @Tag(name = "마이페이지", description = "독서 목표, 독서 요약, 독서 캘린더 API")
 public class MyPageController {
+
     // Report 업무 처리 서비스
     private final ReportService reportService;
     // Social 업무 처리 서비스

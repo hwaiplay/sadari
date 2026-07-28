@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class SchedulerLogSupport {
+
     // SchedulerLog 업무 처리 서비스
     private final SchedulerLogService schedulerLogService;
 
@@ -47,6 +48,13 @@ public class SchedulerLogSupport {
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("스케줄러 실행 시작 로그 정보가 없어 등록을 생략했습니다.");
             // 조회하거나 생성할 값이 없음을 반환한다
+            return null;
+        }
+
+        // 처리 대상과 성공 및 실패 건수가 모두 없으면 관리할 실행 결과가 없으므로 마스터 로그를 생성하지 않는다.
+        if (schedulerRunDto.getTrgtCntt() == 0 && schedulerRunDto.getSuccCntt() == 0
+                && schedulerRunDto.getFailCntt() == 0) {
+            // 저장할 실행 결과가 없음을 반환한다
             return null;
         }
 

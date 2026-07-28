@@ -17,6 +17,7 @@ import org.springframework.web.servlet.config.annotation.*;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
+
     // FRONT DOMAIN 설정값
     @Value("${domain.front}")
     private String FRONT_DOMAIN;

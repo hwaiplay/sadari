@@ -43,6 +43,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Slf4j
 public class FileService {
+
     // 업로드 루트 디렉터리 설정값
     private static final String UPLOAD_ROOT_DIR = "uploads";
     // 업로드 접근 접두사 설정값

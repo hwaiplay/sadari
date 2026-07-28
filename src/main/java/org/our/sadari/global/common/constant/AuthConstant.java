@@ -11,6 +11,7 @@ package org.our.sadari.global.common.constant;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class AuthConstant {
+
     // 아래 처리 단계의 업무 목적을 설명한다.
     public static final String PROV_KAKAO = "KA";
     // 아래 처리 단계의 업무 목적을 설명한다.

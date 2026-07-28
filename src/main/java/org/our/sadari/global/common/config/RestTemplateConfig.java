@@ -16,6 +16,7 @@ import org.springframework.web.client.RestTemplate;
  */
 @Configuration
 public class RestTemplateConfig {
+
     /**
      * 외부 HTTP API 호출에 사용할 RestTemplate Bean을 생성한다
      *

@@ -30,6 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 @Slf4j
 public class KakaoAuthProvider {
+
     // BACK DOMAIN 설정값
     @Value("${domain.back}")
     private String BACK_DOMAIN;

@@ -19,6 +19,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableScheduling
 @SpringBootApplication
 public class SadariApplication {
+
 	/**
 	 * Spring Boot 애플리케이션을 실행한다.
 	 *
