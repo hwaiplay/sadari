@@ -26,8 +26,12 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 
 ## 3. 검증 및 예외 처리
 
-- 외부 API 응답, DB 조회 결과, 메서드 파라미터를 참조하기 전에 Null 여부를 검증합니다.
-- `Optional` 또는 명시적인 Null 검증을 사용하여 `NullPointerException`을 방지합니다.
+- 외부 API 응답, DB 조회 결과, 메서드 파라미터를 참조하기 전에 Null 또는 빈 값 여부를 검증합니다.
+- 문자열, 객체, 컬렉션, 배열의 Null 또는 빈 값 검증에는 `StringUtil.isEmpty`를 우선 사용합니다.
+- `value != null`, `value == null`처럼 직접 Null을 비교하지 않고 각각 `!StringUtil.isEmpty(value)`, `StringUtil.isEmpty(value)`를 사용합니다.
+- Primitive처럼 `StringUtil.isEmpty`를 적용할 수 없거나 외부 라이브러리 계약상 Null 자체만 구분해야 하는 경우에만 직접 Null 비교를 허용합니다.
+- 여러 값 중 하나라도 비어 있는지 검사할 때는 `StringUtil.hasEmpty`를 사용합니다.
+- `Optional` 또는 `StringUtil.isEmpty`를 사용하여 `NullPointerException`을 방지합니다.
 - `set***`, `upt***` 메서드는 진입 직후 필수 파라미터의 Null 및 빈 문자열 여부를 검증합니다.
 - 외부 API 통신과 비동기 처리 전후에는 예외 경로를 포함한 처리 흐름을 명확히 작성합니다.
 - 사용자에게 반환하는 실패 응답은 원시 예외를 노출하지 않고 프로젝트 공통 응답과 메시지를 사용합니다.
@@ -140,7 +144,7 @@ public class BookController {
  */
 public UserDto getUserDtl(String userId) {
     // 사용자 식별자는 Mapper 호출 전에 검증하여 불필요한 DB 접근과 Null 조회를 차단한다
-    if (userId == null || userId.trim().isEmpty()) {
+    if (StringUtil.isEmpty(userId)) {
         // 비어 있는 사용자 식별자가 Mapper까지 전달되지 않도록 예외를 생성한다
         throw new IllegalArgumentException("사용자 ID는 필수 값입니다.");
     }
@@ -152,8 +156,14 @@ public UserDto getUserDtl(String userId) {
 
 ## 8. 로직 주석 규칙
 
-- 모든 `return` 문 바로 앞에는 빈 줄을 한 줄만 작성하여 반환 로직을 앞선 처리 블록과 구분합니다.
-- 메서드 본문이 `return` 문 하나로만 구성되어도 반환문 앞의 빈 줄을 생략하지 않습니다.
+- 모든 메서드 선언의 여는 중괄호 바로 다음에는 빈 줄을 한 줄 작성한 뒤 첫 실행문을 작성합니다.
+- 생성자, 일반 메서드, Controller, Service, Mapper 기본 메서드, 익명 클래스와 콜백 메서드에도 메서드 시작 공백 규칙을 동일하게 적용합니다.
+- 모든 `return` 문 바로 위에는 반환하는 값이나 반환 목적을 구체적으로 설명하는 한글 주석을 작성합니다.
+- `return` 문과 반환 주석 사이에는 빈 줄을 작성하지 않습니다.
+- `ResultData.fail(ResultEnum.***)`을 반환할 때는 해당 `ResultEnum.messageKey`가 가리키는 실제 사용자 메시지를 주석에 작성합니다.
+- 메시지 치환 인자가 있는 실패 응답은 치환 전 메시지와 치환되는 값의 의미를 주석에 함께 작성합니다.
+- `ResultData.success`, DTO, 컬렉션, boolean, 숫자 또는 문자열을 반환할 때도 성공 응답, 조회 데이터, 판정 결과 또는 변환 결과 중 무엇을 반환하는지 작성합니다.
+- `반환 결과를 반환한다`, `호출한 계층에 전달한다`처럼 어느 반환문에도 적용할 수 있는 포괄적 주석은 사용하지 않습니다.
 - `if`, `else if`, `else`, `switch`, `case`, 삼항 연산자 등 모든 분기 처리 바로 위에는 한글 주석을 반드시 작성합니다.
 - `for`, 향상된 `for`, `while`, `do-while`, `try`, `catch`, `finally`, 람다, 익명 클래스 등 새로운 실행 블록 바로 위에는 한글 주석을 반드시 작성합니다.
 - 메서드 안에서 중괄호로 새로운 지역 블록을 시작할 때도 해당 블록의 목적을 설명하는 한글 주석을 바로 위에 작성합니다.
@@ -167,7 +177,7 @@ public UserDto getUserDtl(String userId) {
 - 사용자 메시지를 반환하거나 노출하는 코드 바로 위에는 실제 노출 문구를 주석으로 작성합니다.
 ```java
 // 조회 결과가 없으면 이후 로직에서 사용자 정보가 참조되지 않도록 공통 실패 응답을 즉시 반환한다
-if (userDto == null) {
+if (StringUtil.isEmpty(userDto)) {
     // "사용자 정보를 찾을 수 없습니다."
     return ResultData.fail(ResultEnum.USER_NOT_FOUND);
 }

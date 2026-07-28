@@ -3,9 +3,14 @@ package org.our.sadari.global.common.result;
 import lombok.Getter;
 
 /**
- * ResultEnum 열거형에서 사용하는 고정 값을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : ResultEnum
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-25
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-25        SeungHyeon.Kang    최초 생성
  */
 @Getter
 public enum ResultEnum {
@@ -80,8 +85,10 @@ public enum ResultEnum {
      */
     COMMON_DB_CONNECTION_FAILED(2014, "common.alert.0014"),
 
+    // 입력 내용에 비속어가 포함된 경우의 실패 코드
     COMMON_BAD_WORD_INCLUDED(2015, "common.alert.0015"),
 
+    // 이미 사용 중인 닉네임인 경우의 실패 코드
     USER_NICK_DUPLICATED(2016, "user.alert.0001"),
 
     /**
@@ -119,13 +126,16 @@ public enum ResultEnum {
      */
     FORBIDDEN(1004, "auth.common.forbidden");
 
+    // 공통 응답 결과 코드
     private final int code;
+    // 다국어 응답 메시지 키
     private final String messageKey;
 
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     ResultEnum(int code, String messageKey) {
+
         this.code = code;
         this.messageKey = messageKey;
     }

@@ -19,20 +19,33 @@ import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 /**
- * Spring Security 및 JWT 기반 보안 설정을 담당하는 클래스
- *
- * @author Seunghyeon.Kang
+ * fileName       : SecurityConfig
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-22
+ * description    : 인증과 보안 실행 설정을 구성한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-22        SeungHyeon.Kang    최초 생성
  */
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
 
+    // FRONT DOMAIN 설정값
     @Value("${domain.front}")
     private String FRONT_DOMAIN; // CORS 허용을 위한 프론트엔드 도메인 주소
 
+    // jwt filter
     private final JwtFilter jwtFilter;
-
+    /**
+     * JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성한다
+     *
+     * @author SeungHyeon.Kang
+     * @param http API 접근 규칙을 설정할 HttpSecurity
+     * @return 구성하거나 조회한 결과 객체
+     */
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -42,6 +55,7 @@ public class SecurityConfig {
 
                 // JWT 기반 인증을 사용하므로 세션을 생성하지 않고 Stateless 상태로 관리
                 .sessionManagement(session ->
+                        // JWT 인증에 맞게 서버 세션을 생성하지 않도록 설정한다
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
 
@@ -65,6 +79,7 @@ public class SecurityConfig {
                                 "/uploads/**",
                                 // 도서 검색 API
                                 "/api/book/search"
+                        // 인증 없이 접근 가능한 공개 API 경로를 설정한다
                         ).permitAll()
 
                         // 관리자 권한(ADMIN)을 가진 사용자만 접근 가능
@@ -74,6 +89,7 @@ public class SecurityConfig {
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
+                        // Swagger 문서 접근을 관리자 권한으로 제한한다
                         ).hasRole("ADMIN")
 
                         // 그 외 모든 요청은 인증된 사용자만 접근 가능
@@ -84,17 +100,19 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         // 미인증 사용자 접근 시 401 Unauthorized 반환
                         .authenticationEntryPoint((req, res, e) -> {
+                            // Status 업무 값을 res DTO에 설정한다
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                         })
                         // 권한 부족 시 403 Forbidden 반환
                         .accessDeniedHandler((req, res, e) -> {
+                            // Status 업무 값을 res DTO에 설정한다
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                         })
                 )
 
                 // UsernamePasswordAuthenticationFilter 이전에 커스텀 JwtFilter 실행
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
+        // JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성 결과를 반환한다
         return http.build();
     }
 
@@ -103,16 +121,24 @@ public class SecurityConfig {
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
+
+        // 프런트엔드 출처에 허용할 CORS 정책을 담을 객체를 생성한다
         CorsConfiguration config = new CorsConfiguration();
 
+        // AllowedOrigins 업무 값을 config DTO에 설정한다
         config.setAllowedOrigins(List.of(FRONT_DOMAIN)); // 지정된 프론트엔드 도메인만 접근 허용
+        // AllowedMethods 업무 값을 config DTO에 설정한다
         config.setAllowedMethods(List.of("*"));           // 모든 HTTP Method 허용
+        // AllowedHeaders 업무 값을 config DTO에 설정한다
         config.setAllowedHeaders(List.of("*"));           // 모든 헤더 허용
+        // AllowCredentials 업무 값을 config DTO에 설정한다
         config.setAllowCredentials(true);                 // 자격 증명(쿠키, Authorization 헤더 등) 허용
 
+        // 요청 경로별 CORS 정책을 담을 객체를 생성한다
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        // API 전체 경로에 CORS 정책을 등록한다
         source.registerCorsConfiguration("/**", config);   // 전체 경로에 CORS 정책 적용
-
+        // CORS(Cross-Origin Resource Sharing) 세부 정책 설정 결과를 반환한다
         return source;
     }
 }
