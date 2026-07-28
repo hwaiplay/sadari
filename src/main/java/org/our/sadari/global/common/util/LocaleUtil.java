@@ -5,42 +5,55 @@ import org.springframework.context.i18n.LocaleContextHolder;
 import java.util.Locale;
 
 /**
- * LocaleUtil 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : LocaleUtil
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-15
+ * description    : 공통 처리에 필요한 변환과 판정 기능을 제공한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-15        SeungHyeon.Kang    최초 생성
  */
 public class LocaleUtil {
 
     /**
      * LocaleUtil 객체를 생성한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      */
     private LocaleUtil() {
+
         throw new UnsupportedOperationException("유틸리티 클래스는 인스턴스를 생성할 수 없습니다.");
     }
 
     /**
-     * getLocale 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 현재 요청 언어 환경 조회한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @return 처리 결과
      */
     public static String getLocale() {
+
+        // getLocale 조회로 후속 처리에 필요한 데이터를 가져온다
         Locale currentLocale = LocaleContextHolder.getLocale();
 
-        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
-        if (currentLocale == null) {
+        // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
+        if (StringUtil.isEmpty(currentLocale)) {
+
+            // 현재 요청 언어 환경 조회 결과를 반환한다
             return "KO";
         }
 
+        // getLanguage 조회로 후속 처리에 필요한 데이터를 가져온다
         String language = currentLocale.getLanguage();
 
-        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
-        if (language == null || language.trim().isEmpty()) {
+        // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
+        if (StringUtil.isEmpty(language) || language.trim().isEmpty()) {
+
+            // 현재 요청 언어 환경 조회 결과를 반환한다
             return "KO";
         }
-
+        // 현재 요청 언어 환경 조회 결과를 반환한다
         return language.toUpperCase();
     }
 }

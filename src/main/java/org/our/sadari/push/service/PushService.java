@@ -4,22 +4,30 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.push.dto.PushDto;
 
 /**
- * 푸시 설정 조회, 구독 저장, FCM 발송 기능을 제공하는 Service 계약입니다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : PushService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-25
+ * description    : 푸시 알림 업무 계약을 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-25        SeungHyeon.Kang    최초 생성
  */
 public interface PushService {
 
+    // getFirebaseWebConfig 조회로 후속 처리에 필요한 데이터를 가져온다
     ResultData getFirebaseWebConfig();
 
+    // setPushSub 호출로 업무 처리에 필요한 값을 설정한다
     ResultData setPushSub(Long userNumb, PushDto.PushSubDto req);
 
+    // delPushSub 호출로 삭제 대상 데이터를 정리한다
     ResultData delPushSub(Long userNumb, PushDto.PushSubDto req);
 
     /**
      * 알림 수신자의 활성 FCM 토큰으로 알림 내용과 클릭 이동 정보를 발송한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param userNumb 알림 수신 사용자 번호
      * @param title 푸시 제목
      * @param body 푸시 내용

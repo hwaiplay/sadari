@@ -1,5 +1,7 @@
 package org.our.sadari.book.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import java.util.List;
 import lombok.AllArgsConstructor;
@@ -7,14 +9,21 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * BookJsonDto 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : BookJsonDto
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-17
+ * description    : 도서 요청과 응답 데이터를 전달한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  */
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonIgnoreProperties(ignoreUnknown = true)
+@Schema(description = "네이버 도서 검색 API 응답 DTO", hidden = true)
 public class BookJsonDto {
 
     // 네이버 도서 검색 API의 검색 결과 생성 일시
@@ -32,9 +41,15 @@ public class BookJsonDto {
     // 네이버 도서 검색 API에서 조회된 도서 목록
     private List<BookDto> items;
 
+    /**
+     * 네이버 도서 검색 API가 반환한 개별 도서 정보를 전달한다
+     *
+     * @author SeungHyeon.Kang
+     */
     // 네이버 도서 검색 API에서 조회된 개별 도서 정보
     @Data
     @JsonIgnoreProperties(ignoreUnknown = true)
+    @Schema(description = "네이버 도서 검색 결과 항목 DTO", hidden = true)
     public static class BookDto {
 
         // 도서 제목

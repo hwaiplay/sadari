@@ -5,10 +5,14 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 
 /**
- * 애플리케이션 전체 Spring Context가 정상 생성되는지 검증합니다.
- * 테스트 도중 실제 사용자에게 정기 알림이 발송되지 않도록 스케줄러 실행 빈만 비활성화합니다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : SadariApplicationTests
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-01
+ * description    : 애플리케이션 로직의 동작을 검증한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-01        SeungHyeon.Kang    최초 생성
  */
 @SpringBootTest(properties = "scheduler.enabled=false")
 @ActiveProfiles("loc")
@@ -16,6 +20,8 @@ class SadariApplicationTests {
 
 	@Test
 	void contextLoads() {
+
+		// 테스트 실행 여부를 콘솔에서 확인한다
 		System.out.println("Hello World");
 	}
 

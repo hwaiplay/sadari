@@ -6,9 +6,15 @@ import java.time.LocalDateTime;
 import lombok.Data;
 
 /**
- * UserDto 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : UserDto
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-17
+ * description    : 사용자 요청과 응답 데이터를 전달한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")

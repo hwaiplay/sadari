@@ -24,55 +24,76 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * 사용자 프로필 조회와 수정 업무를 처리하는 Service 구현체입니다.
- * 닉네임 중복 검사, 욕설 필터링, 이미지 저장, 사용자 정보 갱신을 한 흐름에서 처리합니다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : UserServiceImpl
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-20
+ * description    : 사용자 업무 로직을 구현한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-20        SeungHyeon.Kang    최초 생성
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
+@Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
+    // User 데이터 접근 객체
     private final UserMapper userMapper;
+    // File 업무 처리 서비스
     private final FileService fileService;
+    // BadWordDetection 업무 처리 서비스
     private final BadWordDetectionService badWordDetectionService;
+    // TokenRedis 업무 처리 서비스
     private final TokenRedisService tokenRedisService;
 
     /**
-     * 로그인 사용자의 최신 프로필 정보를 조회합니다.
-     * 인증 사용자 번호가 없거나 사용자 레코드가 없으면 다시 로그인해야 하므로 인증 실패로 응답합니다.
+     * 로그인 사용자의 최신 프로필 정보를 조회한다.
+     * 인증 사용자 번호가 없거나 사용자 레코드가 없으면 다시 로그인해야 하므로 인증 실패로 응답한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @return 프로필 조회 결과
      */
     @Override
     public ResultData getMe(Long userNumb) {
+
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
+
+            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
+        // UserByNumb 데이터를 DB에서 조회한다
         UserDto user = userMapper.getUserByNumb(userNumb);
 
+        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
+
+            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         Map<String, String> profile = new HashMap<>();
+        // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("userNick", user.getUserNick());
+        // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("porfPath", user.getPorfPath());
+        // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("bgimPath", user.getBgimPath());
+        // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("intrCntn", user.getIntrCntn());
-
+        // 로그인 사용자의 최신 프로필 정보를 조회한 결과를 성공 응답으로 반환한다
         return ResultData.success(profile);
     }
 
     /**
-     * 로그인 사용자의 프로필 정보를 수정합니다.
-     * 화면에서 별도 닉네임 중복 검사 API를 호출하지 않으므로 저장 요청에서 중복과 욕설을 최종 검증합니다.
+     * 로그인 사용자의 프로필 정보를 수정한다.
+     * 화면에서 별도 닉네임 중복 검사 API를 호출하지 않으므로 저장 요청에서 중복과 욕설을 최종 검증한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @param userDto 수정할 사용자 프로필 입력값
      * @param profileImage 새 프로필 이미지 파일
@@ -81,50 +102,80 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     @Transactional
-    public ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage, MultipartFile backgroundImage) {
+    public ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage
+                          , MultipartFile backgroundImage) {
 
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
+
+            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
+        // UserNumb 업무 값을 userDto DTO에 설정한다
         userDto.setUserNumb(userNumb);
+        // UserNick 업무 값을 userDto DTO에 설정한다
         userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick(), 10));
+        // IntrCntn 업무 값을 userDto DTO에 설정한다
         userDto.setIntrCntn(StringUtil.normalizePlainText(userDto.getIntrCntn(), 50));
 
         //닉네임 없는 경우 실패 리턴
         if (StringUtil.isEmpty(userDto.getUserNick())) {
+
+            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
         //욕설 포함된 경우 실패 리턴
         Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick())
                 .or(() -> badWordDetectionService.findBadWord(userDto.getIntrCntn()));
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (badWord.isPresent()) {
+
+            // "\uC695\uC124\uC774\uB098 \uBE44\uC18D\uC5B4\uB294 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4\uC694.\n\uAC10\uC9C0\uB41C \uB2E8\uC5B4: {0}" 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
         //이미 사용중인 닉네임이 있을 시 실패 리턴
         if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
+
+            // "\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uB2C9\uB124\uC784\uC774\uC5D0\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
         }
 
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
 
+            // ProfNumb 업무 값을 userDto DTO에 설정한다
             userDto.setProfNumb(fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, userNumb));          //새로운 프로필 사진 존재시 파일 저장
+            // BgimNumb 업무 값을 userDto DTO에 설정한다
             userDto.setBgimNumb(fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, userNumb));    //새로운 배경 사진 존재시 파일 저장
 
-        } catch (InvalidImageFileException e) {
+        }
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        catch (InvalidImageFileException e) {
+
             // 앞에서 다른 이미지가 저장되었을 수 있으므로 파일 메타정보와 물리 파일 정리가 실행되게 전체 수정을 롤백한다.
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // "JPG \uB610\uB294 PNG \uD615\uC2DD\uC758 10MB \uC774\uD558 \uC774\uBBF8\uC9C0 \uD30C\uC77C\uB9CC \uC5C5\uB85C\uB4DC\uD560 \uC218 \uC788\uC5B4\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
-        } catch (IOException e) {
+        }
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        catch (IOException e) {
+
+            // Redis 갱신 실패 시 현재 프로필 수정 트랜잭션을 롤백 상태로 전환한다
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
+        // UserProfile 데이터를 DB에서 수정한다
         int updateCnt = userMapper.uptUserProfile(userDto);
 
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (updateCnt == 0) {
+
             // 사용자 UPDATE가 반영되지 않았다면 같은 요청에서 먼저 저장한 이미지도 유지하지 않는다.
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
+            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
@@ -133,45 +184,71 @@ public class UserServiceImpl implements UserService {
          * 실제 커밋이 완료된 직후에만 같은 로그인 세션의 Redis 닉네임을 갱신한다.
          */
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
+        // 로그인 사용자의 프로필 정보를 수정한 결과를 반환한다
         return getMe(userNumb);
     }
 
     /**
      * 프로필 DB 트랜잭션이 커밋된 직후 Redis 로그인 사용자 닉네임을 갱신한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param userNumb 닉네임을 수정한 사용자 번호
      * @param userNick DB에 저장한 최신 닉네임
      */
     private void uptUserNickAfterCommit(Long userNumb, String userNick) {
+
         Runnable updateUserNick = () -> {
+            // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
             try {
+                // uptUserNick 업무 로직을 tokenRedisService에 위임한다
                 tokenRedisService.uptUserNick(userNumb, userNick);
-            } catch (RuntimeException e) {
+            }
+            // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+            catch (RuntimeException e) {
+
                 /*
                  * Redis 갱신 실패 시 예전 닉네임을 그대로 쓰는 것이 가장 위험하다.
                  * 가능한 경우 닉네임 키를 제거해 다음 로그인 또는 재발급 때 최신 DB 값으로 다시 생성되게 한다.
                  */
                 try {
+                    // delUserNick 업무 로직을 tokenRedisService에 위임한다
                     tokenRedisService.delUserNick(userNumb);
-                } catch (RuntimeException deleteException) {
+                }
+                // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+                catch (RuntimeException deleteException) {
+
+                    // 실패 원인과 처리 대상을 오류 로그로 남긴다
                     log.error("Redis user nickname cleanup failed. userNumb={}", userNumb, deleteException);
                 }
 
+                // 실패 원인과 처리 대상을 오류 로그로 남긴다
                 log.error("Redis user nickname update failed. userNumb={}", userNumb, e);
             }
         };
 
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
+
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+
+                /**
+                 * 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행한다
+                 *
+                 * @author SeungHyeon.Kang
+                 * @return 반환값이 없다
+                 */
                 @Override
                 public void afterCommit() {
+
+                    // 검증 대상 작업을 실행한다
                     updateUserNick.run();
                 }
             });
+            // 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행 결과를 반환한다
             return;
         }
 
+        // 검증 대상 작업을 실행한다
         updateUserNick.run();
     }
 }

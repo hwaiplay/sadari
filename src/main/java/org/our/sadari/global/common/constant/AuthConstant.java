@@ -1,9 +1,14 @@
 package org.our.sadari.global.common.constant;
 
 /**
- * AuthConstant 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : AuthConstant
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-21
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class AuthConstant {
     // 아래 처리 단계의 업무 목적을 설명한다.
