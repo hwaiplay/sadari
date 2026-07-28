@@ -1,0 +1,317 @@
+---
+apply: always
+---
+
+# SQL Rules
+
+이 문서는 Sadari 프로젝트의 Oracle 데이터베이스, SQL 및 MyBatis XML 규칙을 정의합니다.
+DDL, DML, Mapper XML을 생성하거나 수정할 때 아래 규칙을 예외 없이 적용합니다.
+규칙은 주석 공통 정책, SQL 보안, 스키마 무결성, 쿼리 정확성, 성능과 정렬, 품질 검증, 형상 관리 순으로 중요도가 높은 항목부터 나열합니다.
+
+## 1. 공통 주석 작성 규칙
+
+- SQL 주석, XML 주석 및 DDL COMMENT 설명은 모두 `한다`, `이다`, `된다` 형태의 반말 서술체로 작성합니다.
+- 주석에 `합니다`, `입니다`, `됩니다` 형태의 존댓말을 사용하지 않습니다.
+- 주석에 이모티콘과 이모지를 사용하지 않습니다.
+- 주석에 느낌표와 물음표를 사용하지 않습니다.
+- 사용자에게 노출되는 실제 문구를 인용한 주석은 접두사 없이 원문만 작성하며 문구 안의 문체와 문장부호는 예외로 둡니다.
+- SQL 문장을 그대로 읽는 주석은 작성하지 않고 조건의 이유와 데이터 정책을 설명합니다.
+
+## 2. SQL 보안 및 안전 규칙
+
+- `SELECT *`를 사용하지 않고 필요한 컬럼을 모두 명시합니다.
+- 테이블 별칭은 한 글자로 제한하지 않고 테이블의 역할을 알아볼 수 있는 영문 대문자로 작성합니다.
+- Oracle은 테이블 별칭 앞의 `AS`를 지원하지 않으므로 테이블과 인라인 뷰 별칭에는 `AS`를 작성하지 않습니다.
+- SELECT 컬럼과 계산식의 별칭에는 `AS`를 반드시 작성하여 테이블 별칭과 명확히 구분합니다.
+- 같은 쿼리 안에서 사용하는 테이블 별칭은 서로 중복되지 않아야 합니다.
+- 사용자 입력값은 반드시 `#{param}`으로 바인딩합니다.
+- `${param}`은 테이블명, 컬럼명, 정렬 방향처럼 바인딩할 수 없는 경우에만 사용합니다.
+- `${param}`을 사용하기 전에 Java 계층에서 허용 목록을 검증합니다.
+- SQL에 업무 코드, Y/N 값, 검색 문자열을 직접 하드코딩하지 않습니다.
+- 동적 값과 문자열 결합은 MyBatis `<bind>`로 정의합니다.
+- 동일한 `<bind>`가 여러 쿼리에서 반복되면 `<sql>`과 `<include>`로 공통화합니다.
+- Null 가능 값은 조건과 정렬 의도에 따라 `NVL` 또는 `COALESCE`로 명확히 처리합니다.
+
+## 3. 테이블 명명 규칙
+
+테이블 성격에 따라 다음 접두사를 사용합니다.
+
+- 마스터 테이블: `TM_`
+- 파생 테이블: `TB_`
+- 히스토리 테이블: `TH_`
+- 로그 테이블: `TL_`
+
+접두사 뒤에는 영문 대문자 6자리를 사용합니다. 의미 글자가 6자리보다 짧으면 오른쪽을 `X`로 채웁니다.
+
+- 허용: `TM_USERXM`, `TM_ADMINX`
+- 금지: `TM_USERS`, `TM_USER_INFO`
+
+## 4. 컬럼 명명 규칙
+
+- 컬럼은 `[영문 대문자 4자]_[영문 대문자 4자]` 형식으로 작성합니다.
+- 각 구간이 4자리보다 짧으면 오른쪽을 `X`로 채웁니다.
+- 지정된 단어를 임의로 다시 축약하지 않습니다.
+
+고정 단어:
+
+- 사용자: `USER`
+- 사용 여부: `USEE`
+- 여부: `YSNO`
+- 등록: `REGI`
+- 수정: `UPDT`
+- 관리자: `ADMN`
+- 아이디: `IDXX`
+
+고정 예시:
+
+- `USER_IDXX`
+- `MENU_NMSX`
+- `USEE_YSNO`
+
+수정 가능한 관리자 테이블에는 다음 관리 컬럼을 포함합니다.
+
+- `REGI_ADMN`: 등록자 아이디
+- `REGI_DATE`: 등록일시
+- `UPDT_ADMN`: 수정자 아이디
+- `UPDT_DATE`: 수정일시
+
+수정할 수 없는 이력성 테이블에는 해당 관리 컬럼을 강제하지 않습니다.
+
+## 5. SQL 정렬 규칙
+
+- 주요 절의 키워드 오른쪽 끝과 데이터 시작 위치를 세로로 맞춥니다.
+- SELECT 절은 한 줄에 한 컬럼만 작성합니다.
+- 컬럼 구분자는 선행 콤마로 작성합니다.
+- `JOIN`, `ON`, `AND`, `WHERE`, `ORDER BY`에도 같은 우측 정렬 기준을 적용합니다.
+
+```sql
+       SELECT /* getMenuList */
+              M.MENU_NUMB
+            , M.SUBX_NUMB
+            , M.MENU_NAME
+         FROM TM_MENUXM M
+    LEFT JOIN TB_CODEXD R
+           ON R.COMM_CODE = #{authCode}
+          AND R.COMD_CODE = M.READ_AUTH
+        WHERE NVL(M.USEE_YSNO, #{yes}) = #{yes}
+          AND (M.READ_AUTH IS NULL OR M.READ_AUTH = #{auth})
+     ORDER BY NVL(M.SORT_ORDR, 9999)
+```
+
+## 6. JOIN 및 조건 규칙
+
+- JOIN 조건은 해당 JOIN 바로 아래에 작성합니다.
+- 조건식의 괄호 시작 위치를 다른 데이터 시작 위치와 맞춥니다.
+- 다건 조회에 전달된 리스트가 비어 있는지 Java 또는 MyBatis 조건문에서 먼저 검사합니다.
+- 빈 리스트로 `IN ()`이 생성되지 않도록 방지합니다.
+- 정렬 기준을 동적으로 받을 경우 허용된 컬럼과 방향만 사용합니다.
+
+## 7. MyBatis XML 규칙
+
+- `<`, `>`, `<=`, `>=`를 SQL에서 사용할 때 반드시 `<![CDATA[ ... ]]>`로 감쌉니다.
+- 모든 `<select>`, `<insert>`, `<update>`, `<delete>` 바로 위에 쿼리 목적을 설명하는 XML 주석을 작성합니다.
+- 실제 SQL 시작 키워드 뒤에는 Mapper ID를 SQL 주석으로 작성합니다.
+
+```xml
+<!-- 사용자 식별자로 사용자 상세 정보를 조회한다. -->
+<select id="getUserDtl" parameterType="org.our.sadari.user.dto.UserDto" resultType="org.our.sadari.user.dto.UserDto">
+    SELECT /* getUserDtl */
+           U.USER_IDXX
+         , U.USER_NAME
+      FROM TM_USERXM U
+     WHERE U.USER_IDXX = #{userId}
+</select>
+```
+
+## 8. INSERT 문 정렬 규칙
+
+- `INSERT INTO 테이블명 (` 형식으로 테이블명 뒤에 한 칸을 두고 여는 괄호를 작성합니다.
+- INSERT 대상 컬럼은 한 줄에 하나씩 작성합니다.
+- 첫 번째 컬럼은 여는 괄호 다음 데이터 시작 위치에 맞추고, 두 번째 컬럼부터 선행 콤마를 사용합니다.
+- 모든 컬럼명과 선행 콤마의 위치를 각각 세로로 정렬합니다.
+- 닫는 괄호와 `VALUES`는 `) VALUES (` 형식으로 같은 줄에 작성합니다.
+- 첫 번째 값은 `VALUES (` 뒤에 작성하고, 두 번째 값부터 한 줄에 하나씩 선행 콤마를 사용합니다.
+- 컬럼 목록과 VALUES 목록의 각 순서가 일대일로 대응하도록 작성합니다.
+- 마지막 닫는 괄호는 컬럼 목록의 닫는 괄호와 같은 위치에 정렬합니다.
+- 시퀀스를 사용하는 경우 `<selectKey>`를 INSERT 본문 바로 위에 배치합니다.
+- SQL 식별 주석 `/* Mapper ID */`는 `INSERT INTO` 바로 위에 작성합니다.
+
+```xml
+<!-- 신규 회원 정보를 등록한다. -->
+<insert id="setUser" parameterType="org.our.sadari.user.dto.UserDto">
+    <selectKey keyProperty="userNumb" resultType="long" order="BEFORE">
+        SELECT TM_USERXM_SEQ.NEXTVAL FROM DUAL
+    </selectKey>
+    /* setUser */
+    INSERT INTO TM_USERXM (
+                USER_NUMB
+              , PROF_NUMB
+              , BGIM_NUMB
+              , USER_IDXX
+              , USER_NICK
+              , JOIN_DATE
+    ) VALUES (  #{userNumb}
+              , #{profNumb,jdbcType=NUMERIC}
+              , #{bgimNumb,jdbcType=NUMERIC}
+              , #{userIdxx}
+              , #{userNick}
+              , SYSDATE
+    )
+</insert>
+```
+
+## 9. MERGE 문 정렬 규칙
+
+- `MERGE INTO`와 `USING`은 같은 시작 위치에 정렬합니다.
+- `USING (` 뒤에는 두 칸을 두고 `SELECT`를 작성합니다.
+- USING 인라인 뷰의 두 번째 컬럼부터 선행 콤마를 사용하고 컬럼 시작 위치를 세로로 맞춥니다.
+- USING 인라인 뷰의 `FROM`과 닫는 괄호 및 별칭은 내부 SELECT 기준으로 우측 정렬합니다.
+- `ON (` 뒤의 첫 번째 조건은 여는 괄호와 구분되도록 네 칸을 두고 작성합니다.
+- 두 번째 ON 조건부터 `AND`를 선행하여 조건식 시작 위치를 맞춥니다.
+- ON 절의 닫는 괄호는 `ON`과 같은 시작 기준선에 맞춥니다.
+- `WHEN MATCHED THEN`과 `WHEN NOT MATCHED THEN`은 같은 시작 위치에 정렬합니다.
+- MATCHED 영역의 `UPDATE`와 `SET`은 SQL 주요 키워드 우측 정렬 기준을 따릅니다.
+- SET 절의 두 번째 컬럼부터 선행 콤마를 사용하고 대입 대상 컬럼 시작 위치를 맞춥니다.
+- NOT MATCHED 영역의 `INSERT`와 `) VALUES (`는 같은 시작 위치에 정렬합니다.
+- INSERT 컬럼과 VALUES 값은 한 줄에 하나씩 작성하고 각각 선행 콤마 위치를 맞춥니다.
+- MERGE 내부 INSERT의 컬럼 순서와 VALUES 순서는 반드시 일대일로 대응해야 합니다.
+
+```xml
+<!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신한다. -->
+<insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
+    /* setReadingGoal */
+    MERGE INTO TM_GOALXM G
+    USING (  SELECT #{userNumb} AS USER_NUMB
+                  , #{goalDate} AS GOAL_DATE
+                  , #{goalType} AS GOAL_TYPE
+                  , #{goalCnt} AS GOAL_CNTT
+             FROM DUAL
+           ) S
+       ON (    G.USER_NUMB = S.USER_NUMB
+           AND G.GOAL_DATE = S.GOAL_DATE
+           AND G.GOAL_TYPE = S.GOAL_TYPE
+       )
+     WHEN MATCHED THEN
+  UPDATE
+     SET G.GOAL_CNTT = S.GOAL_CNTT
+       , G.UPDT_DATE = SYSDATE
+     WHEN NOT MATCHED THEN
+   INSERT (    USER_NUMB
+             , GOAL_DATE
+             , GOAL_TYPE
+             , GOAL_CNTT
+             , REGI_DATE
+             , UPDT_DATE
+   ) VALUES (  S.USER_NUMB
+             , S.GOAL_DATE
+             , S.GOAL_TYPE
+             , S.GOAL_CNTT
+             , SYSDATE
+             , SYSDATE
+   )
+</insert>
+```
+
+## 10. CASE WHEN THEN 문 정렬 규칙
+
+- 컬럼 대입식에서 CASE를 사용할 때 `대상컬럼 = CASE WHEN 조건`을 같은 줄에 작성합니다.
+- 첫 번째 `WHEN`은 `CASE`와 같은 줄에 작성합니다.
+- `THEN`은 WHEN 조건의 다음 줄에 작성하고 조건 뒤의 결과 영역임을 알 수 있도록 CASE보다 깊게 들여씁니다.
+- `ELSE`는 THEN보다 한 단계 왼쪽에 작성하여 기본 분기 시작 위치를 구분합니다.
+- `END`는 ELSE보다 한 단계 왼쪽에 작성하고 CASE 표현식의 종료 위치를 나타냅니다.
+- CASE 표현식이 SET 절의 두 번째 항목 이후에 있으면 대상 컬럼 앞의 선행 콤마 정렬을 유지합니다.
+- 비교 연산자 `<`, `>`, `<=`, `>=`는 MyBatis XML에서 반드시 CDATA로 감쌉니다.
+- CASE가 여러 개 중첩되면 내부 CASE의 `WHEN`, `THEN`, `ELSE`, `END`를 외부 CASE보다 한 단계 더 들여씁니다.
+
+```sql
+       , G.UPDT_CNTT = CASE WHEN S.GOAL_CNTT <![CDATA[<]]> G.GOAL_CNTT
+                                 THEN NVL(G.UPDT_CNTT, 0) + 1
+                            ELSE NVL(G.UPDT_CNTT, 0)
+                        END
+```
+
+## 11. 인라인 뷰 및 서브쿼리 정렬 규칙
+
+- 인라인 뷰는 `FROM (  SELECT` 또는 `JOIN (  SELECT`처럼 여는 괄호 뒤 두 칸을 두고 `SELECT`를 시작합니다.
+- 인라인 뷰의 첫 번째 SELECT 컬럼은 `SELECT` 다음 데이터 시작 위치에 작성합니다.
+- 두 번째 컬럼부터 선행 콤마를 사용하고 컬럼 시작 위치를 맞춥니다.
+- 인라인 뷰 내부의 `FROM`, `WHERE`, `AND`, `GROUP BY`는 내부 SELECT 기준으로 우측 정렬합니다.
+- 닫는 괄호는 인라인 뷰를 시작한 `FROM` 또는 `JOIN`의 데이터 시작 기준에 맞추고, 같은 줄에 한 글자 대문자 별칭을 작성합니다.
+- 인라인 뷰 뒤의 `ON`과 `AND`는 외부 쿼리의 JOIN 기준선에 맞춥니다.
+- 같은 깊이의 인라인 뷰는 동일한 들여쓰기 폭을 사용합니다.
+- SELECT 절에서 행마다 실행되는 스칼라 서브쿼리는 금지하며, 집계가 필요하면 GROUP BY 인라인 뷰를 JOIN합니다.
+
+```sql
+       SELECT /* getLikeDtl */
+              R.TAGT_TYPE
+            , R.TAGT_NUMB
+            , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
+         FROM (  SELECT #{tagtType} AS TAGT_TYPE
+                      , #{tagtNumb} AS TAGT_NUMB
+                   FROM DUAL
+               ) R
+    LEFT JOIN (  SELECT L.TAGT_TYPE
+                      , L.TAGT_NUMB
+                      , COUNT(*) AS LIKE_CNT
+                   FROM TB_LIKEXX L
+                  WHERE L.TAGT_TYPE = #{tagtType}
+                    AND L.TAGT_NUMB = #{tagtNumb}
+               GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
+              ) LC
+           ON LC.TAGT_TYPE = R.TAGT_TYPE
+          AND LC.TAGT_NUMB = R.TAGT_NUMB
+```
+
+## 12. 스칼라 서브쿼리 금지
+
+- SELECT 절에서 행마다 실행되는 스칼라 서브쿼리를 사용하지 않습니다.
+- 집계값이나 연관 단건 데이터는 먼저 집계한 인라인 뷰를 JOIN합니다.
+- 대량 데이터에서 반복 Random I/O가 발생하지 않도록 GROUP BY 결과를 한 번만 계산합니다.
+
+금지:
+
+```sql
+SELECT B.BOOK_NUMB
+     , (SELECT AVG(P.REPT_GRDE)
+          FROM TM_REPORT P
+         WHERE P.BOOK_NUMB = B.BOOK_NUMB) AS BOOK_AVG_GRDE
+  FROM TM_BKINFO B
+```
+
+허용:
+
+```sql
+       SELECT B.BOOK_NUMB
+            , G.BOOK_AVG_GRDE
+         FROM TM_BKINFO B
+    LEFT JOIN (  SELECT P.BOOK_NUMB
+                      , ROUND(AVG(TO_NUMBER(P.REPT_GRDE)), 1) AS BOOK_AVG_GRDE
+                   FROM TM_REPORT P
+               GROUP BY P.BOOK_NUMB
+              ) G
+           ON G.BOOK_NUMB = B.BOOK_NUMB
+```
+
+## 13. SQL 로직 주석
+
+- 복잡한 조건 분기와 업무 정책이 반영되는 WHERE 조건에는 왜 필요한지 설명합니다.
+- 날짜 경계, 상태 제외, 중복 방지, 동시성 처리 등 결과 해석에 영향을 주는 조건을 주석으로 남깁니다.
+- 단순히 SQL 문장을 한글로 옮긴 주석은 작성하지 않습니다.
+- DDL에는 테이블 및 컬럼 `COMMENT`를 정확한 한글로 작성합니다.
+
+## 14. 품질 규칙
+
+- Mapper ID와 Java Mapper 메서드명을 일치시킵니다.
+- parameterType, resultType 및 DTO 필드 타입을 실제 SQL 결과와 일치시킵니다.
+- 사용하지 않는 `<sql>`, `<bind>`, resultMap을 남기지 않습니다.
+- Mapper XML 파싱 오류와 IDE 경고를 모두 해결한 뒤 완료합니다.
+
+## 15. Git 규칙
+
+SQL 변경 커밋도 표준 접두사를 사용합니다.
+
+- `feat:` 스키마 또는 쿼리 기능 추가
+- `fix:` 잘못된 쿼리 및 데이터 수정
+- `refactor:` 결과 변경 없는 쿼리 구조 개선
+- `docs:` DB 문서와 코멘트 수정
+- `style:` SQL 정렬만 변경

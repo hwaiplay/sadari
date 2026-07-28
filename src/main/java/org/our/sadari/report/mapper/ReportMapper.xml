@@ -116,12 +116,12 @@
     <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
         /* setReadingGoal */
         MERGE INTO TM_GOALXM G
-        USING (   SELECT #{userNumb} AS USER_NUMB
-                       , #{goalDate} AS GOAL_DATE
-                       , #{goalType} AS GOAL_TYPE
-                       , #{goalCnt} AS GOAL_CNTT
-                    FROM DUAL
-              ) S
+        USING (  SELECT #{userNumb} AS USER_NUMB
+                      , #{goalDate} AS GOAL_DATE
+                      , #{goalType} AS GOAL_TYPE
+                      , #{goalCnt} AS GOAL_CNTT
+                 FROM DUAL
+               ) S
            ON (    G.USER_NUMB = S.USER_NUMB
                AND G.GOAL_DATE = S.GOAL_DATE
                AND G.GOAL_TYPE = S.GOAL_TYPE
@@ -129,29 +129,26 @@
          WHEN MATCHED THEN
       UPDATE
          SET G.GOAL_CNTT = S.GOAL_CNTT
-            , G.UPDT_CNTT = CASE
-                            WHEN S.GOAL_CNTT <![CDATA[<]]> G.GOAL_CNTT THEN NVL(G.UPDT_CNTT, 0) + 1
-                            ELSE NVL(G.UPDT_CNTT, 0)
-                         END
-            , G.UPDT_DATE = SYSDATE
+           , G.UPDT_CNTT = CASE WHEN S.GOAL_CNTT <![CDATA[<]]> G.GOAL_CNTT
+                                     THEN NVL(G.UPDT_CNTT, 0) + 1
+                                ELSE NVL(G.UPDT_CNTT, 0)
+                            END
+           , G.UPDT_DATE = SYSDATE
          WHEN NOT MATCHED THEN
-       INSERT (
-              USER_NUMB
-            , GOAL_DATE
-            , GOAL_TYPE
-            , GOAL_CNTT
-            , UPDT_CNTT
-            , REGI_DATE
-            , UPDT_DATE
-       )
-       VALUES (
-              S.USER_NUMB
-            , S.GOAL_DATE
-            , S.GOAL_TYPE
-            , S.GOAL_CNTT
-            , 0
-            , SYSDATE
-            , SYSDATE
+       INSERT (    USER_NUMB
+                 , GOAL_DATE
+                 , GOAL_TYPE
+                 , GOAL_CNTT
+                 , UPDT_CNTT
+                 , REGI_DATE
+                 , UPDT_DATE
+       ) VALUES (  S.USER_NUMB
+                 , S.GOAL_DATE
+                 , S.GOAL_TYPE
+                 , S.GOAL_CNTT
+                 , 0
+                 , SYSDATE
+                 , SYSDATE
        )
     </insert>
 

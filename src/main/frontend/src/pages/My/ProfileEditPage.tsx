@@ -190,7 +190,7 @@ const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
     .join(" ~ ");
 
   return periodText
-    ? message("frontend.profile.currentReading.targetPeriod", [periodText])
+    ? /* "목표 독서기간: {0}" */ message("frontend.profile.currentReading.targetPeriod", [periodText])
     : "";
 };
 
@@ -355,6 +355,9 @@ function ProfileEditPage() {
         ? `frontend.profile.${periodMessagePrefix}.diffSame`
         : `frontend.profile.${periodMessagePrefix}.${diff > 0 ? "diffMore" : "diffLess"}`;
 
+    // "지난주보다 {0}권 더 읽었어요." 또는 "지난주보다 {0}권 덜 읽었어요." 또는 "지난주와 읽은 량이 동일해요."
+    // "지난달보다 {0}권 더 읽었어요." 또는 "지난달보다 {0}권 덜 읽었어요." 또는 "지난달과 읽은 량이 동일해요."
+    // "작년보다 {0}권 더 읽었어요." 또는 "작년보다 {0}권 덜 읽었어요." 또는 "작년과 읽은 량이 동일해요."
     return message(messageKey, [diffCount]);
   };
 
@@ -381,8 +384,8 @@ function ProfileEditPage() {
     ) {
       // 사용자에게 표시: "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
       void sweetWarning(
-        message("frontend.alert.inputRequired"),
-        message("frontend.profile.imageOnly"),
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요." */ message("frontend.profile.imageOnly"),
       );
       return;
     }
@@ -490,8 +493,8 @@ function ProfileEditPage() {
       setFollowUsers((response.data ?? []) as FollowUser[]);
     } catch (error) {
       void sweetError(
-        message("frontend.common.invalidAccess"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        /* "잘못된 접근입니다" */ message("frontend.common.invalidAccess"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
       setFollowListType(null);
     } finally {
@@ -525,10 +528,10 @@ function ProfileEditPage() {
 
     if (user.followStatName === "팔로잉") {
       const result = await sweetConfirm({
-        title: message("frontend.social.unfollow.title"),
-        text: message("frontend.social.unfollow.text"),
-        confirmButtonText: message("frontend.social.unfollow.confirm"),
-        cancelButtonText: message("frontend.common.cancel"),
+        title: /* "언팔로우하시겠습니까?" */ message("frontend.social.unfollow.title"),
+        text: /* "팔로잉 목록에서 삭제됩니다." */ message("frontend.social.unfollow.text"),
+        confirmButtonText: /* "언팔로우" */ message("frontend.social.unfollow.confirm"),
+        cancelButtonText: /* "취소" */ message("frontend.common.cancel"),
       });
 
       if (!result.isConfirmed) {
@@ -556,8 +559,8 @@ function ProfileEditPage() {
       setMonthlySummary(summaryResponse.data as MonthlyReadingSummary);
     } catch (error) {
       void sweetError(
-        message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
     } finally {
       setFollowUpdatingUserNumb(null);
@@ -582,8 +585,8 @@ function ProfileEditPage() {
       && !(REPORT_GRADE_VALUES as readonly number[]).includes(quickGrade)
     ) {
       void sweetWarning(
-        message("frontend.alert.inputRequired"),
-        message("frontend.report.field.grade"),
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "평점" */ message("frontend.report.field.grade"),
       );
       return;
     }
@@ -605,13 +608,13 @@ function ProfileEditPage() {
       setMonthlySummary(response.data as MonthlyReadingSummary);
       await closeProfileModal("quick");
       await sweetSuccess(
-        message("frontend.alert.saveSuccessTitle"),
-        message("frontend.report.saved"),
+        /* "저장되었습니다." */ message("frontend.alert.saveSuccessTitle"),
+        /* "독후감이 저장되었습니다." */ message("frontend.report.saved"),
       );
     } catch (error) {
       void sweetError(
-        message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
     } finally {
       setIsQuickSaving(false);
@@ -631,10 +634,10 @@ function ProfileEditPage() {
 
     if (nextSummary && copyablePreviousGoalPeriods.length > 0) {
       const confirmResult = await sweetConfirm({
-        title: message("frontend.profile.goal.copyPreviousTitle"),
+        title: /* "지난 목표를 가져올까요?" */ message("frontend.profile.goal.copyPreviousTitle"),
         text: getCopyPreviousGoalConfirmText(nextSummary, copyablePreviousGoalPeriods),
-        confirmButtonText: message("frontend.profile.goal.copyPreviousConfirm"),
-        cancelButtonText: message("frontend.profile.goal.copyPreviousCancel"),
+        confirmButtonText: /* "가져오기" */ message("frontend.profile.goal.copyPreviousConfirm"),
+        cancelButtonText: /* "직접 설정" */ message("frontend.profile.goal.copyPreviousCancel"),
       });
 
       if (confirmResult.isConfirmed) {
@@ -644,14 +647,14 @@ function ProfileEditPage() {
           nextSummary = response.data as MonthlyReadingSummary;
           setMonthlySummary(nextSummary);
           await sweetSuccess(
-            message("frontend.profile.goal.savedTitle"),
-            message("frontend.profile.goal.saved"),
+            /* "목표가 저장되었습니다." */ message("frontend.profile.goal.savedTitle"),
+            /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ message("frontend.profile.goal.saved"),
           );
           return;
         } catch (error) {
           void sweetError(
-            message("frontend.alert.updateFailedTitle"),
-            getApiErrorMessage(error, message("frontend.common.tryAgain")),
+            /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+            getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
           );
           return;
         } finally {
@@ -722,14 +725,17 @@ function ProfileEditPage() {
     }
 
     return (
+      /* 현재 읽고 있는 책 영역 */
       <section
         className={styles.monthlySummary}
-        aria-label={message("frontend.profile.currentReading.title")}
+        aria-label={/* "현재 읽고 있는 책" */ message("frontend.profile.currentReading.title")}
       >
         <div className={styles.currentReadingSection}>
+          {/* 현재 읽고 있는 책 제목 영역 */}
           <h2 className={styles.currentReadingTitle}>
-            {message("frontend.profile.currentReading.title")}
+            {/* "현재 읽고 있는 책" */ message("frontend.profile.currentReading.title")}
           </h2>
+          {/* 현재 읽고 있는 책 목록 영역 */}
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
               const remainDays = getRemainDaysUntil(report.reptEndt);
@@ -738,6 +744,7 @@ function ProfileEditPage() {
               const isExpired = remainDays <= 0;
               const content = (
                 <>
+                  {/* 현재 읽고 있는 책 표지 영역 */}
                   {report.bookCvim && (
                     <img
                       className={styles.readingSummaryCover}
@@ -745,6 +752,7 @@ function ProfileEditPage() {
                       alt=""
                     />
                   )}
+                  {/* 현재 읽고 있는 책 정보 영역 */}
                   <span className={styles.currentReadingText}>
                     <span
                       className={styles.readingSummaryBookTitleButton}
@@ -765,8 +773,9 @@ function ProfileEditPage() {
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
                     >
-                      {report.bookTitl || message("frontend.common.noBookInfo")}
+                      {report.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                     </span>
+                    {/* 저자와 목표 종료일 및 남은 기간 영역 */}
                     <span className={styles.currentReadingMeta}>
                       <span className={styles.readingSummaryBookMeta}>
                         {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
@@ -778,8 +787,8 @@ function ProfileEditPage() {
                         style={{ color: remainColor }}
                       >
                         {isExpired
-                          ? message("frontend.profile.currentReading.expired")
-                          : message("frontend.profile.currentReading.remain", [remainDays])}
+                          ? /* "목표기간이 지났어요." */ message("frontend.profile.currentReading.expired")
+                          : /* "남은 목표일 {0}일" */ message("frontend.profile.currentReading.remain", [remainDays])}
                       </span>
                     </span>
                   </span>
@@ -806,32 +815,35 @@ function ProfileEditPage() {
   const renderProfileStats = (summary: MonthlyReadingSummary) => {
     const stats = [
       {
-        label: message("frontend.profile.stats.totalReadBook"),
-        value: message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
+        label: /* "총 읽은 책" */ message("frontend.profile.stats.totalReadBook"),
+        value: /* "{0}권" */ message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
         listType: null,
       },
       {
-        label: message("frontend.profile.stats.following"),
-        value: message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
+        label: /* "팔로우" */ message("frontend.profile.stats.following"),
+        value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
         listType: "following" as FollowListType,
       },
       {
-        label: message("frontend.profile.stats.follower"),
-        value: message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
+        label: /* "팔로워" */ message("frontend.profile.stats.follower"),
+        value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
         listType: "followers" as FollowListType,
       },
       {
-        label: message("frontend.profile.stats.receivedLike"),
-        value: message("frontend.profile.stats.likeCount", [summary.receivedLikeCnt ?? 0]),
+        label: /* "좋아요수" */ message("frontend.profile.stats.receivedLike"),
+        value: /* "{0}개" */ message("frontend.profile.stats.likeCount", [summary.receivedLikeCnt ?? 0]),
         listType: null,
       },
     ];
 
     return (
-      <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
+      /* 프로필 활동 통계 영역 */
+      <section className={styles.monthlySummary} aria-label={/* "내 활동" */ message("frontend.profile.stats.title")}>
         <div className={styles.profileStatsSummary}>
+          {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
           <div className={styles.goalAchievementGrid}>
             {stats.map((stat) => (
+              /* 프로필 활동 통계 개별 항목 영역 */
               <div className={styles.goalAchievementItem} key={stat.label}>
                 {stat.listType ? (
                   <button
@@ -1055,14 +1067,15 @@ function ProfileEditPage() {
       return "";
     }
 
+    // "주간" 또는 "월간" 또는 "연간"
     const label = message(getGoalPeriodLabelKey(period));
 
     if (getGoalRemainUpdateCount(period) <= 0) {
-      return message("frontend.profile.goal.downCountBlocked", [label]);
+      return /* "{0} 목표는 내리기 횟수를 모두 사용했습니다." */ message("frontend.profile.goal.downCountBlocked", [label]);
     }
 
     if (isGoalUpdateLocked(period)) {
-      return message("frontend.profile.goal.downPeriodBlocked", [label]);
+      return /* "{0} 목표는 내리기 가능 기간이 지났습니다." */ message("frontend.profile.goal.downPeriodBlocked", [label]);
     }
 
     return "";
@@ -1084,20 +1097,21 @@ function ProfileEditPage() {
     const isDownClosed = !isUnset && (remainUpdateCount <= 0 || isLocked);
 
     return (
+      /* 목표 권수 수정 가능 횟수와 제한 기간 안내 영역 */
       <div className={styles.goalLimitInfo}>
         {isDownClosed ? (
           <span className={styles.goalLimitDanger}>
-            {message("frontend.profile.goal.downLocked")}
+            {/* "내리기 마감" */ message("frontend.profile.goal.downLocked")}
           </span>
         ) : (
           <>
             <span className={styles.goalLimitPill}>
               {isUnset
-                ? message("frontend.profile.goal.firstSet")
-                : message("frontend.profile.goal.remainDown", [remainUpdateCount])}
+                ? /* "첫 설정 가능" */ message("frontend.profile.goal.firstSet")
+                : /* "내리기 {0}회" */ message("frontend.profile.goal.remainDown", [remainUpdateCount])}
             </span>
             <span className={styles.goalLimitMuted}>
-              {message("frontend.profile.goal.downRemainDays", [remainDays])}
+              {/* "내리기 {0}일 남음" */ message("frontend.profile.goal.downRemainDays", [remainDays])}
             </span>
           </>
         )}
@@ -1112,8 +1126,8 @@ function ProfileEditPage() {
 
     if (nextWeekGoalCnt <= 0 || nextMonthGoalCnt <= 0 || nextYearGoalCnt <= 0) {
       void sweetWarning(
-        message("frontend.alert.inputRequired"),
-        message("frontend.profile.goal.required"),
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "월간과 연간 목표를 1권 이상으로 입력해주세요." */ message("frontend.profile.goal.required"),
       );
       return;
     }
@@ -1121,20 +1135,21 @@ function ProfileEditPage() {
     const blockMessage = GOAL_PERIODS.map(getGoalEditBlockMessage).find(Boolean);
 
     if (blockMessage) {
-      void sweetWarning(message("frontend.profile.goal.downBlockedTitle"), blockMessage);
+      void sweetWarning(/* "목표를 내릴 수 없어요." */ message("frontend.profile.goal.downBlockedTitle"), blockMessage);
       return;
     }
 
     const downGoalLabels = GOAL_PERIODS.filter(isGoalDecreased).map((period) =>
+      // "주간" 또는 "월간" 또는 "연간"
       message(getGoalPeriodLabelKey(period)),
     );
 
     if (downGoalLabels.length > 0) {
       const confirmResult = await sweetConfirm({
-        title: message("frontend.profile.goal.downConfirmTitle"),
-        text: message("frontend.profile.goal.downConfirmText", [downGoalLabels.join(", ")]),
-        confirmButtonText: message("frontend.common.confirm"),
-        cancelButtonText: message("frontend.common.cancel"),
+        title: /* "목표를 내릴까요?" */ message("frontend.profile.goal.downConfirmTitle"),
+        text: /* "{0} 목표를 내리면 목표 내리기 횟수가 사용됩니다." */ message("frontend.profile.goal.downConfirmText", [downGoalLabels.join(", ")]),
+        confirmButtonText: /* "확인" */ message("frontend.common.confirm"),
+        cancelButtonText: /* "취소" */ message("frontend.common.cancel"),
       });
 
       if (!confirmResult.isConfirmed) {
@@ -1152,13 +1167,13 @@ function ProfileEditPage() {
       setMonthlySummary(response.data as MonthlyReadingSummary);
       await closeProfileModal("goal");
       await sweetSuccess(
-        message("frontend.profile.goal.savedTitle"),
-        message("frontend.profile.goal.saved"),
+        /* "목표가 저장되었습니다." */ message("frontend.profile.goal.savedTitle"),
+        /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ message("frontend.profile.goal.saved"),
       );
     } catch (error) {
       void sweetError(
-        message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
     } finally {
       setIsGoalSaving(false);
@@ -1213,7 +1228,9 @@ function ProfileEditPage() {
     const goalProgressColor = getGoalProgressColor(goalRate);
 
     return (
+      /* 기간별 독서 목표와 달성 현황 영역 */
       <div>
+        {/* 기간별 독서 완료 현황 영역 */}
         <div className={styles.readingSummaryRow}>
           <button
             className={hasReports ? styles.readingSummaryToggle : styles.readingSummaryToggleStatic}
@@ -1226,13 +1243,17 @@ function ProfileEditPage() {
               }
             }}
           >
+            {/* 주간과 월간 및 연간 구분 달력 영역 */}
             <div className={styles.monthlyCalendarIcon} aria-hidden="true">
               <span className={styles.monthlyCalendarRing} />
               <span className={styles.monthlyCalendarMonth}>{code ?? ""}</span>
             </div>
+            {/* 기간별 완료 권수 영역 */}
             <div className={styles.monthlySummaryText}>
+              {/* "이번 주에 읽은 책" 또는 "이번 달에 읽은 책" 또는 "올해 읽은 책" */}
               <span className={styles.monthlySummaryLabel}>{message(titleKey)}</span>
               <strong className={styles.monthlySummaryCount}>
+                {/* "{0}권" */}
                 {message(countKey, [count])}
               </strong>
             </div>
@@ -1255,6 +1276,7 @@ function ProfileEditPage() {
               </span>
             )}
           </button>
+          {/* 이전 기간 대비 독서량 증감 영역 */}
           <div
             className={styles.monthlyDiffTooltipWrap}
             ref={(element) => {
@@ -1270,7 +1292,10 @@ function ProfileEditPage() {
                     : styles.monthlyDiffDown
               }
               type="button"
-              aria-label={message(diffAriaKey)}
+              aria-label={
+                /* "지난주 대비 독서 권수 변화" 또는 "지난달 대비 독서 권수 변화" 또는 "작년 대비 독서 권수 변화" */
+                message(diffAriaKey)
+              }
               aria-expanded={activeDiffTooltip === period}
               onClick={() => handleReadingDiffClick(diff, period)}
             >
@@ -1283,9 +1308,10 @@ function ProfileEditPage() {
             )}
           </div>
         </div>
+        {/* 목표 권수와 달성률 진행 상태 영역 */}
         <div className={styles.goalProgressRow}>
           <span className={styles.goalProgressTarget}>
-            {goalSet ? message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
+            {goalSet ? /* "목표 {0}권" */ message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
           </span>
           <div className={styles.goalProgressTrack}>
             <span
@@ -1301,10 +1327,11 @@ function ProfileEditPage() {
             style={goalSet ? { color: goalProgressColor } : undefined}
           >
             {goalSet
-              ? message("frontend.profile.goal.rate", [goalRate])
-              : message("frontend.profile.goal.unset")}
+              ? /* "{0}%" */ message("frontend.profile.goal.rate", [goalRate])
+              : /* "미설정" */ message("frontend.profile.goal.unset")}
           </span>
         </div>
+        {/* 기간별 완료 도서 펼침 영역 */}
         {hasReports && (
           <div
             className={
@@ -1313,14 +1340,17 @@ function ProfileEditPage() {
                 : styles.readingSummaryPanel
             }
           >
+            {/* 기간별 완료 도서 목록 영역 */}
             <div className={styles.readingSummaryPanelInner}>
               {reports.map((report) => (
+                /* 기간별 완료 도서 개별 항목 영역 */
                 <button
                   className={styles.readingSummaryReport}
                   type="button"
                   key={report.reptNumb}
                   onClick={() => handleSummaryReportClick(report.reptNumb)}
                 >
+                  {/* 완료 도서 표지 영역 */}
                   {report.bookCvim && (
                     <img
                       className={styles.readingSummaryCover}
@@ -1328,6 +1358,7 @@ function ProfileEditPage() {
                       alt=""
                     />
                   )}
+                  {/* 완료 도서 제목과 저자 및 별점 영역 */}
                   <span className={styles.readingSummaryBookText}>
                     <span
                       className={styles.readingSummaryBookTitleButton}
@@ -1348,7 +1379,7 @@ function ProfileEditPage() {
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
                     >
-                      {report.bookTitl || message("frontend.common.noBookInfo")}
+                      {report.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                     </span>
                     <span className={styles.readingSummaryBookMeta}>
                       <span className={styles.readingSummaryMetaLine}>
@@ -1411,8 +1442,8 @@ function ProfileEditPage() {
 
     if (!userNick.trim()) {
       void sweetWarning(
-        message("frontend.alert.inputRequired"),
-        message("frontend.profile.nickRequired"),
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "닉네임을 입력해주세요." */ message("frontend.profile.nickRequired"),
       );
       return;
     }
@@ -1422,8 +1453,8 @@ function ProfileEditPage() {
       !USER_NICK_REGEX.test(userNick.trim())
     ) {
       void sweetWarning(
-        message("frontend.alert.inputRequired"),
-        message("frontend.profile.nickKoreanOnly"),
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요." */ message("frontend.profile.nickKoreanOnly"),
       );
       return;
     }
@@ -1441,13 +1472,13 @@ function ProfileEditPage() {
       notifyUserProfileUpdated(nextProfile);
       setIsEditMode(false);
       await sweetSuccess(
-        message("frontend.profile.savedTitle"),
-        message("frontend.profile.saved"),
+        /* "프로필이 저장되었습니다." */ message("frontend.profile.savedTitle"),
+        /* "수정한 프로필을 반영했습니다." */ message("frontend.profile.saved"),
       );
     } catch (error) {
       void sweetError(
-        message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
     } finally {
       setIsSaving(false);
@@ -1455,12 +1486,14 @@ function ProfileEditPage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading title={/* "목록 조회중" */ message("frontend.common.loadingList")} />;
   }
 
   return (
     <main className={styles.page}>
+      {/* 마이페이지 프로필과 독서 활동 전체 영역 */}
       <form className={styles.profileShell} onSubmit={handleSubmit}>
+        {/* 프로필 배경 이미지 영역 */}
         <section
           className={styles.cover}
           style={
@@ -1471,10 +1504,11 @@ function ProfileEditPage() {
         >
           {!previewBackground && (
             <p className={styles.coverEmptyText}>
-              {message("frontend.profile.background.empty")}
+              {/* "배경사진을 선택해주세요." */ message("frontend.profile.background.empty")}
             </p>
           )}
 
+          {/* 배경 이미지 변경과 프로필 저장 및 수정 버튼 영역 */}
           <div className={styles.coverActionGroup}>
             {isEditMode && (
               <label className={styles.coverImageButton}>
@@ -1486,7 +1520,7 @@ function ProfileEditPage() {
                 >
                   <path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
                 </svg>
-                {message("frontend.profile.backgroundChange")}
+                {/* "배경 변경" */ message("frontend.profile.backgroundChange")}
                 <input
                   className={styles.hiddenInput}
                   type="file"
@@ -1508,7 +1542,7 @@ function ProfileEditPage() {
                 >
                   <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
                 </svg>
-                {message("frontend.report.save")}
+                {/* "저장" */ message("frontend.report.save")}
               </button>
             ) : (
               <button
@@ -1524,19 +1558,22 @@ function ProfileEditPage() {
                 >
                   <path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3L17.7 4.6a2.1 2.1 0 0 0-3 0L4 15.3V20Zm2-2v-1.9L16.1 6l1.9 1.9L7.9 18H6Z" />
                 </svg>
-                {message("frontend.profile.edit")}
+                {/* "프로필 수정" */ message("frontend.profile.edit")}
               </button>
             )}
           </div>
         </section>
 
+        {/* 프로필 기본 정보 영역 */}
         <section className={styles.profileBody}>
+          {/* 프로필 이미지와 사용자 소개 영역 */}
           <div className={styles.profileHeaderRow}>
+            {/* 프로필 이미지와 이미지 변경 영역 */}
             <div className={styles.avatarWrap}>
               <img
                 className={styles.profileImage}
                 src={previewImage}
-                alt={profile?.userNick ?? message("frontend.profile.edit")}
+                alt={profile?.userNick ?? /* "프로필 수정" */ message("frontend.profile.edit")}
               />
               {isEditMode && (
                 <label className={styles.avatarCameraButton}>
@@ -1560,13 +1597,14 @@ function ProfileEditPage() {
               )}
             </div>
 
+            {/* 닉네임과 한줄소개 영역 */}
             <div className={styles.profileText}>
               {isEditMode ? (
                 <input
                   className={styles.profileNameInput}
                   value={userNick}
                   maxLength={USER_NICK_MAX_LENGTH}
-                  aria-label={message("frontend.profile.nick")}
+                  aria-label={/* "닉네임" */ message("frontend.profile.nick")}
                   onChange={(event) =>
                     setUserNick(normalizeUserNick(event.currentTarget.value))
                   }
@@ -1580,14 +1618,14 @@ function ProfileEditPage() {
                   className={styles.profileIntroInput}
                   value={intrCntn}
                   maxLength={PROFILE_INTRO_MAX_LENGTH}
-                  aria-label={message("frontend.profile.intro")}
+                  aria-label={/* "한줄 소개" */ message("frontend.profile.intro")}
                   onChange={(event) =>
                     setIntrCntn(normalizeProfileIntro(event.currentTarget.value))
                   }
                 />
               ) : (
                 <p className={styles.profileIntro}>
-                  {profile?.intrCntn || message("frontend.profile.intro.empty")}
+                  {profile?.intrCntn || /* "한줄 소개를 등록해보세요." */ message("frontend.profile.intro.empty")}
                 </p>
               )}
             </div>
@@ -1596,48 +1634,58 @@ function ProfileEditPage() {
 
           {monthlySummary && (
             <>
+              {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
               {renderProfileStats(monthlySummary)}
+              {/* 현재 읽고 있는 책 영역 */}
               {renderCurrentReadingReports(monthlySummary.currentReadingReports)}
-              <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+              {/* 목표 달성 횟수와 기간별 독서 목표 영역 */}
+              <section className={styles.monthlySummary} aria-label={/* "이번 달에 읽은 책" */ message("frontend.profile.monthlyReading.title")}>
+                {/* 주간과 월간 및 연간 목표 달성 횟수 영역 */}
                 <div className={styles.goalAchievementSummary}>
                   <p className={styles.goalAchievementTitle}>
-                    {message("frontend.profile.goal.achievementTitle")}
+                    {/* "목표 달성 횟수" */ message("frontend.profile.goal.achievementTitle")}
                   </p>
+                  {/* 전체와 주간 및 월간 및 연간 목표 달성 통계 영역 */}
                   <div className={styles.goalAchievementGrid}>
+                    {/* 전체 목표 달성 횟수 영역 */}
                     <div className={styles.goalAchievementItem}>
                       <span className={styles.goalAchievementLabel}>
-                        {message("frontend.profile.goal.weekLabel")}
+                        {/* "주간" */ message("frontend.profile.goal.weekLabel")}
                       </span>
                       <strong className={styles.goalAchievementCount}>
-                        {message("frontend.profile.goal.achievementCount", [monthlySummary.weekGoalAchvCnt])}
+                        {/* "{0}회" */ message("frontend.profile.goal.achievementCount", [monthlySummary.weekGoalAchvCnt])}
                       </strong>
                     </div>
+                    {/* 주간 목표 달성 횟수 영역 */}
                     <div className={styles.goalAchievementItem}>
                       <span className={styles.goalAchievementLabel}>
-                        {message("frontend.profile.goal.monthLabel")}
+                        {/* "월간" */ message("frontend.profile.goal.monthLabel")}
                       </span>
                       <strong className={styles.goalAchievementCount}>
-                        {message("frontend.profile.goal.achievementCount", [monthlySummary.monthGoalAchvCnt])}
+                        {/* "{0}회" */ message("frontend.profile.goal.achievementCount", [monthlySummary.monthGoalAchvCnt])}
                       </strong>
                     </div>
+                    {/* 월간 목표 달성 횟수 영역 */}
                     <div className={styles.goalAchievementItem}>
                       <span className={styles.goalAchievementLabel}>
-                        {message("frontend.profile.goal.yearLabel")}
+                        {/* "연간" */ message("frontend.profile.goal.yearLabel")}
                       </span>
                       <strong className={styles.goalAchievementCount}>
-                        {message("frontend.profile.goal.achievementCount", [monthlySummary.yearGoalAchvCnt])}
+                        {/* "{0}회" */ message("frontend.profile.goal.achievementCount", [monthlySummary.yearGoalAchvCnt])}
                       </strong>
                     </div>
+                    {/* 연간 목표 달성 횟수 영역 */}
                     <div className={styles.goalAchievementItem}>
                       <span className={styles.goalAchievementLabel}>
-                        {message("frontend.profile.goal.totalLabel")}
+                        {/* "총" */ message("frontend.profile.goal.totalLabel")}
                       </span>
                       <strong className={styles.goalAchievementCount}>
-                        {message("frontend.profile.goal.achievementCount", [monthlySummary.totalGoalAchvCnt])}
+                        {/* "{0}회" */ message("frontend.profile.goal.achievementCount", [monthlySummary.totalGoalAchvCnt])}
                       </strong>
                     </div>
                   </div>
                 </div>
+                {/* 주간 독서 목표와 달성 현황 영역 */}
                 <div className={styles.readingSummaryDivider} />
                 {renderReadingSummaryRow(
                   "week",
@@ -1649,6 +1697,7 @@ function ProfileEditPage() {
                   "frontend.profile.weeklyReading.diffAria",
                   monthlySummary.currentWeekReports,
                 )}
+                {/* 월간 독서 목표와 달성 현황 영역 */}
                 <div className={styles.readingSummaryDivider} />
                 {renderReadingSummaryRow(
                   "month",
@@ -1660,6 +1709,7 @@ function ProfileEditPage() {
                   "frontend.profile.monthlyReading.diffAria",
                   monthlySummary.currentMonthReports,
                 )}
+                {/* 연간 독서 목표와 달성 현황 영역 */}
                 <div className={styles.readingSummaryDivider} />
                 {renderReadingSummaryRow(
                   "year",
@@ -1672,11 +1722,13 @@ function ProfileEditPage() {
                   monthlySummary.currentYearReports,
                 )}
               </section>
+              {/* 독서 목표 설정과 수정 진입 영역 */}
               <button
                 className={styles.goalSettingButton}
                 type="button"
                 onClick={handleGoalModalOpen}
               >
+                {/* "목표 수정하기" 또는 "목표 설정하기" */}
                 {message(
                   monthlySummary.weekGoalSet && monthlySummary.monthGoalSet && monthlySummary.yearGoalSet
                     ? "frontend.profile.goal.edit"
@@ -1690,8 +1742,9 @@ function ProfileEditPage() {
           )}
       </form>
 
-      {/* Render dialogs under body so page scroll/transition transforms cannot move fixed overlays. */}
+      {/* 현재 읽는 책의 상태와 별점을 빠르게 수정하는 모달 영역 */}
       {quickReport && createPortal((
+        /* 현재 읽는 책 빠른 수정 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
             closingModal === "quick" ? styles.goalModalOverlayClosing : ""
@@ -1703,6 +1756,7 @@ function ProfileEditPage() {
             }
           }}
         >
+          {/* 현재 읽는 책 빠른 수정 모달 본문 영역 */}
           <section
             className={`${styles.goalModal} ${
               closingModal === "quick" ? styles.goalModalClosing : ""
@@ -1711,26 +1765,29 @@ function ProfileEditPage() {
             aria-modal="true"
             aria-labelledby="quick-reading-title"
           >
+            {/* 현재 읽는 책 빠른 수정 모달 제목과 닫기 영역 */}
             <div className={styles.goalModalHeader}>
               <div>
                 <h2 className={styles.goalModalTitle} id="quick-reading-title">
-                  {message("frontend.profile.currentReading.quickTitle")}
+                  {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.quickTitle")}
                 </h2>
                 <p className={styles.quickReadingHelp}>
-                  {message("frontend.profile.currentReading.quickHelp")}
+                  {/* "독서 상태와 별점만 빠르게 수정할 수 있어요." */ message("frontend.profile.currentReading.quickHelp")}
                 </p>
               </div>
               <button
                 className={styles.goalModalClose}
                 type="button"
-                aria-label={message("frontend.common.close")}
+                aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("quick")}
               >
                 ×
               </button>
             </div>
 
+            {/* 현재 읽는 책 빠른 수정 입력 영역 */}
             <div className={styles.quickReadingBody}>
+              {/* 빠른 수정 대상 도서 정보와 전체 수정 진입 영역 */}
               <div className={styles.quickReadingBookInfo}>
                 {quickReport.bookCvim && (
                   <img
@@ -1744,7 +1801,7 @@ function ProfileEditPage() {
                 )}
                 <div className={styles.quickReadingBookText}>
                   <p className={styles.quickReadingBookTitle}>
-                    {quickReport.bookTitl || message("frontend.common.noBookInfo")}
+                    {quickReport.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                   </p>
                   {getTargetReadingPeriodText(quickReport) && (
                     <p className={styles.quickReadingBookMeta}>
@@ -1755,15 +1812,16 @@ function ProfileEditPage() {
                 <button
                   className={styles.quickReadingEditButton}
                   type="button"
-                  aria-label={message("frontend.profile.currentReading.editFull")}
+                  aria-label={/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}
                   onClick={handleQuickEditClick}
                 >
-                  <span>{message("frontend.profile.currentReading.editFull")}</span>
+                  <span>{/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}</span>
                   <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
                     <path d="M5.25 2.92L9.33 7L5.25 11.08" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
                   </svg>
                 </button>
               </div>
+              {/* 독서 완료와 중단 상태 선택 영역 */}
               <div className={styles.quickStatusGroup}>
                 <button
                   className={
@@ -1774,7 +1832,7 @@ function ProfileEditPage() {
                   type="button"
                   onClick={() => setQuickStatus(REPORT_STATUS_DONE)}
                 >
-                  {message("frontend.report.status.done")}
+                  {/* "다 읽었어요" */ message("frontend.report.status.done")}
                 </button>
                 <button
                   className={
@@ -1785,9 +1843,10 @@ function ProfileEditPage() {
                   type="button"
                   onClick={() => setQuickStatus(REPORT_STATUS_STOP)}
                 >
-                  {message("frontend.report.status.stopped")}
+                  {/* "중단했어요" */ message("frontend.report.status.stopped")}
                 </button>
               </div>
+              {/* 독후감 별점 설정 영역 */}
               <div className={styles.quickStarGroup}>
                 <RatingField
                   value={quickGrade}
@@ -1797,13 +1856,14 @@ function ProfileEditPage() {
               </div>
             </div>
 
+            {/* 현재 읽는 책 빠른 수정 취소와 저장 영역 */}
             <div className={styles.goalModalActions}>
               <button
                 className={styles.goalModalCancel}
                 type="button"
                 onClick={() => void closeProfileModal("quick")}
               >
-                {message("frontend.profile.currentReading.close")}
+                {/* "닫기" */ message("frontend.profile.currentReading.close")}
               </button>
               <button
                 className={styles.goalModalSave}
@@ -1811,14 +1871,16 @@ function ProfileEditPage() {
                 disabled={isQuickSaving}
                 onClick={handleQuickSaveClick}
               >
-                {message("frontend.profile.currentReading.save")}
+                {/* "저장" */ message("frontend.profile.currentReading.save")}
               </button>
             </div>
           </section>
         </div>
       ), document.body)}
 
+      {/* 팔로잉과 팔로워 사용자 목록 모달 영역 */}
       {followListType && createPortal((
+        /* 팔로우 사용자 목록 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
             closingModal === "followList" ? styles.goalModalOverlayClosing : ""
@@ -1830,6 +1892,7 @@ function ProfileEditPage() {
             }
           }}
         >
+          {/* 팔로우 사용자 목록 모달 본문 영역 */}
           <section
             className={`${styles.followModal} ${
               closingModal === "followList" ? styles.goalModalClosing : ""
@@ -1838,8 +1901,10 @@ function ProfileEditPage() {
             aria-modal="true"
             aria-labelledby="follow-list-title"
           >
+            {/* 팔로우 사용자 목록 제목과 닫기 영역 */}
             <div className={styles.goalModalHeader}>
               <h2 className={styles.goalModalTitle} id="follow-list-title">
+                {/* "팔로우" 또는 "팔로워" */}
                 {message(
                   followListType === "following"
                     ? "frontend.profile.followingList.title"
@@ -1849,24 +1914,26 @@ function ProfileEditPage() {
               <button
                 className={styles.goalModalClose}
                 type="button"
-                aria-label={message("frontend.common.close")}
+                aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("followList")}
               >
                 ×
               </button>
             </div>
 
+            {/* 팔로우 사용자 목록과 조회 상태 영역 */}
             <div
               className={isFollowListScrolling ? styles.followModalListScrolling : styles.followModalList}
               onScroll={handleFollowListScroll}
             >
               {isFollowListLoading && (
                 <p className={styles.followModalEmpty}>
-                  {message("frontend.common.loadingList")}
+                  {/* "목록 조회중" */ message("frontend.common.loadingList")}
                 </p>
               )}
               {!isFollowListLoading && followUsers.length === 0 && (
                 <p className={styles.followModalEmpty}>
+                  {/* "팔로우한 사용자가 없습니다." 또는 "팔로워가 없습니다." */}
                   {message(
                     followListType === "following"
                       ? "frontend.profile.followingList.empty"
@@ -1875,7 +1942,9 @@ function ProfileEditPage() {
                 </p>
               )}
               {!isFollowListLoading && followUsers.map((user) => (
+                /* 팔로우 사용자 개별 항목 영역 */
                 <div className={styles.followModalItem} key={user.userNumb}>
+                  {/* 팔로우 사용자 프로필 정보 영역 */}
                   <button
                     className={styles.followModalProfileButton}
                     type="button"
@@ -1884,17 +1953,18 @@ function ProfileEditPage() {
                     <img
                       className={styles.followModalAvatar}
                       src={user.porfPath || DEFAULT_PROFILE_IMAGE}
-                      alt={user.userNick ?? message("frontend.profile.nick")}
+                      alt={user.userNick ?? /* "닉네임" */ message("frontend.profile.nick")}
                     />
                     <span className={styles.followModalText}>
                       <strong className={styles.followModalName}>
                         {user.userNick || "-"}
                       </strong>
                       <span className={styles.followModalIntro}>
-                        {user.intrCntn || message("frontend.profile.intro.empty")}
+                        {user.intrCntn || /* "한줄 소개를 등록해보세요." */ message("frontend.profile.intro.empty")}
                       </span>
                     </span>
                   </button>
+                  {/* 팔로우 상태 확인과 변경 영역 */}
                   {user.meYsno !== "Y" && (
                     <button
                       className={`${styles.followModalStatusButton} ${
@@ -1916,7 +1986,9 @@ function ProfileEditPage() {
         </div>
       ), document.body)}
 
+      {/* 주간과 월간 및 연간 독서 목표 설정 모달 영역 */}
       {isGoalModalOpen && createPortal((
+        /* 독서 목표 설정 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
             closingModal === "goal" ? styles.goalModalOverlayClosing : ""
@@ -1928,6 +2000,7 @@ function ProfileEditPage() {
             }
           }}
         >
+          {/* 독서 목표 설정 모달 본문 영역 */}
           <section
             className={`${styles.goalModal} ${
               closingModal === "goal" ? styles.goalModalClosing : ""
@@ -1936,9 +2009,10 @@ function ProfileEditPage() {
             aria-modal="true"
             aria-labelledby="reading-goal-title"
           >
+            {/* 독서 목표 설정 제목과 도움말 및 닫기 영역 */}
             <div className={styles.goalModalHeader}>
               <h2 className={styles.goalModalTitle} id="reading-goal-title">
-                {message("frontend.profile.goal.modalTitle")}
+                {/* "독서 목표 설정" */ message("frontend.profile.goal.modalTitle")}
               </h2>
               <div className={styles.goalModalHeaderActions}>
                 <button
@@ -1949,26 +2023,28 @@ function ProfileEditPage() {
                     setIsGoalHelpModalOpen(true);
                   }}
                 >
-                  {message("frontend.profile.goal.helpButton")}
+                  {/* "도움말" */ message("frontend.profile.goal.helpButton")}
                 </button>
                 <button
                   className={styles.goalModalClose}
                   type="button"
-                  aria-label={message("frontend.common.close")}
+                  aria-label={/* "닫기" */ message("frontend.common.close")}
                   onClick={() => void closeProfileModal("goal")}
                 >
                   ×
                 </button>
               </div>
             </div>
+            {/* 기간별 목표 권수 입력 영역 */}
             <div className={styles.goalModalBody}>
+              {/* 주간 목표 권수 입력과 수정 제한 안내 영역 */}
               <label className={styles.goalInputLabel}>
-                <span>{message("frontend.profile.goal.weekLabel")}</span>
+                <span>{/* "주간" */ message("frontend.profile.goal.weekLabel")}</span>
                 <div className={styles.goalStepper}>
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.weekLabel")} 감소`}
+                    aria-label={`${/* "주간" */ message("frontend.profile.goal.weekLabel")} 감소`}
                     onClick={() => handleGoalCountStep("week", -1)}
                   >
                     -
@@ -1977,7 +2053,7 @@ function ProfileEditPage() {
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={weekGoalCnt}
-                    placeholder={message("frontend.profile.goal.placeholder")}
+                    placeholder={/* "목표 권수" */ message("frontend.profile.goal.placeholder")}
                     onChange={(event) =>
                       setWeekGoalCnt(normalizeGoalCount(event.currentTarget.value))
                     }
@@ -1985,7 +2061,7 @@ function ProfileEditPage() {
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.weekLabel")} 증가`}
+                    aria-label={`${/* "주간" */ message("frontend.profile.goal.weekLabel")} 증가`}
                     onClick={() => handleGoalCountStep("week", 1)}
                   >
                     +
@@ -1993,13 +2069,14 @@ function ProfileEditPage() {
                 </div>
                 {renderGoalLimitInfo("week")}
               </label>
+              {/* 월간 목표 권수 입력과 수정 제한 안내 영역 */}
               <label className={styles.goalInputLabel}>
-                <span>{message("frontend.profile.goal.monthLabel")}</span>
+                <span>{/* "월간" */ message("frontend.profile.goal.monthLabel")}</span>
                 <div className={styles.goalStepper}>
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.monthLabel")} 감소`}
+                    aria-label={`${/* "월간" */ message("frontend.profile.goal.monthLabel")} 감소`}
                     onClick={() => handleGoalCountStep("month", -1)}
                   >
                     -
@@ -2008,7 +2085,7 @@ function ProfileEditPage() {
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={monthGoalCnt}
-                    placeholder={message("frontend.profile.goal.placeholder")}
+                    placeholder={/* "목표 권수" */ message("frontend.profile.goal.placeholder")}
                     onChange={(event) =>
                       setMonthGoalCnt(normalizeGoalCount(event.currentTarget.value))
                     }
@@ -2016,7 +2093,7 @@ function ProfileEditPage() {
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.monthLabel")} 증가`}
+                    aria-label={`${/* "월간" */ message("frontend.profile.goal.monthLabel")} 증가`}
                     onClick={() => handleGoalCountStep("month", 1)}
                   >
                     +
@@ -2024,13 +2101,14 @@ function ProfileEditPage() {
                 </div>
                 {renderGoalLimitInfo("month")}
               </label>
+              {/* 연간 목표 권수 입력과 수정 제한 안내 영역 */}
               <label className={styles.goalInputLabel}>
-                <span>{message("frontend.profile.goal.yearLabel")}</span>
+                <span>{/* "연간" */ message("frontend.profile.goal.yearLabel")}</span>
                 <div className={styles.goalStepper}>
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.yearLabel")} 감소`}
+                    aria-label={`${/* "연간" */ message("frontend.profile.goal.yearLabel")} 감소`}
                     onClick={() => handleGoalCountStep("year", -1)}
                   >
                     -
@@ -2039,7 +2117,7 @@ function ProfileEditPage() {
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={yearGoalCnt}
-                    placeholder={message("frontend.profile.goal.placeholder")}
+                    placeholder={/* "목표 권수" */ message("frontend.profile.goal.placeholder")}
                     onChange={(event) =>
                       setYearGoalCnt(normalizeGoalCount(event.currentTarget.value))
                     }
@@ -2047,7 +2125,7 @@ function ProfileEditPage() {
                   <button
                     className={styles.goalStepperButton}
                     type="button"
-                    aria-label={`${message("frontend.profile.goal.yearLabel")} 증가`}
+                    aria-label={`${/* "연간" */ message("frontend.profile.goal.yearLabel")} 증가`}
                     onClick={() => handleGoalCountStep("year", 1)}
                   >
                     +
@@ -2056,13 +2134,14 @@ function ProfileEditPage() {
                 {renderGoalLimitInfo("year")}
               </label>
             </div>
+            {/* 독서 목표 설정 취소와 저장 영역 */}
             <div className={styles.goalModalActions}>
               <button
                 className={styles.goalModalCancel}
                 type="button"
                 onClick={() => void closeProfileModal("goal")}
               >
-                {message("frontend.common.cancel")}
+                {/* "취소" */ message("frontend.common.cancel")}
               </button>
               <button
                 className={styles.goalModalSave}
@@ -2070,13 +2149,15 @@ function ProfileEditPage() {
                 disabled={isGoalSaving}
                 onClick={handleGoalSubmit}
               >
-                {message("frontend.report.save")}
+                {/* "저장" */ message("frontend.report.save")}
               </button>
             </div>
           </section>
         </div>
       ), document.body)}
+      {/* 독서 목표 설정 기준 도움말 모달 영역 */}
       {isGoalHelpModalOpen && createPortal((
+        /* 독서 목표 도움말 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
             closingModal === "goalHelp" ? styles.goalModalOverlayClosing : ""
@@ -2088,6 +2169,7 @@ function ProfileEditPage() {
             }
           }}
         >
+          {/* 독서 목표 도움말 모달 본문 영역 */}
           <section
             className={`${styles.goalHelpModal} ${
               closingModal === "goalHelp" ? styles.goalModalClosing : ""
@@ -2096,28 +2178,30 @@ function ProfileEditPage() {
             aria-modal="true"
             aria-labelledby="reading-goal-help-title"
           >
+            {/* 독서 목표 도움말 제목과 닫기 영역 */}
             <div className={styles.goalModalHeader}>
               <h2 className={styles.goalModalTitle} id="reading-goal-help-title">
-                {message("frontend.profile.goal.helpTitle")}
+                {/* "목표 내리기" */ message("frontend.profile.goal.helpTitle")}
               </h2>
               <button
                 className={styles.goalModalClose}
                 type="button"
-                aria-label={message("frontend.common.close")}
+                aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("goalHelp")}
               >
                 ×
               </button>
             </div>
+            {/* 독서 목표 기간별 수정 기준 안내 영역 */}
             <div className={styles.goalHelpBody}>
               <p className={styles.goalHelpLead}>
-                {message("frontend.profile.goal.helpLead")}
+                {/* "목표를 올리는 것은 언제나 가능하고, 목표를 내릴 때만 기간별 횟수와 가능 기간이 제한됩니다." */ message("frontend.profile.goal.helpLead")}
               </p>
               <ul className={styles.goalHelpList}>
-                <li>{message("frontend.profile.goal.helpWeek")}</li>
-                <li>{message("frontend.profile.goal.helpMonth")}</li>
-                <li>{message("frontend.profile.goal.helpYear")}</li>
-                <li>{message("frontend.profile.goal.helpSameValue")}</li>
+                <li>{/* "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpWeek")}</li>
+                <li>{/* "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpMonth")}</li>
+                <li>{/* "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpYear")}</li>
+                <li>{/* "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다." */ message("frontend.profile.goal.helpSameValue")}</li>
               </ul>
             </div>
           </section>
