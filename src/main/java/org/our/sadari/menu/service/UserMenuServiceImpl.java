@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserMenuServiceImpl implements UserMenuService {
+
     // UserMenu 데이터 접근 객체
     private final UserMenuMapper userMenuMapper;
 

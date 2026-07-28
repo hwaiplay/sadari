@@ -26,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
 @Component
 @RequiredArgsConstructor
 public class JwtFilter extends OncePerRequestFilter {
+
     // 접근 TOKEN COOKIE 명칭 설정값
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN API URI 설정값

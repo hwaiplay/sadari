@@ -19,6 +19,7 @@ import lombok.Data;
 @Data
 @Schema(description = "업로드 파일 저장 정보 DTO", hidden = true)
 public class FileDto {
+
     // 파일 번호
     private Long fileNumb;
     // 업로드 당시 원본 파일명

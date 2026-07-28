@@ -30,6 +30,7 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CodeUtil {
+
     /**
      * 비정상적으로 큰 IN 조건 생성을 막기 위해 한 요청에서 허용하는 공통코드 최대 개수를 제한한다.
      */

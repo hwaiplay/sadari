@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user-menu")
 @Tag(name = "사용자 메뉴", description = "사용자 화면의 헤더 및 햄버거 메뉴 조회 API")
 public class UserMenuController {
+
     // UserMenu 업무 처리 서비스
     private final UserMenuService userMenuService;
 

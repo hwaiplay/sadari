@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class AuthServiceImpl implements AuthService {
+
     // USER AGENT 최대 길이 설정값
     private static final int USER_AGENT_MAX_LENGTH = 500;
 

@@ -31,6 +31,7 @@ import org.our.sadari.global.scheduler.service.SchedulerLogService;
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerLogSupportTest {
+
     // SchedulerLog 업무 처리 서비스
     @Mock
     private SchedulerLogService schedulerLogService;
@@ -58,6 +59,8 @@ class SchedulerLogSupportTest {
     void setSchedulerLogSafelyReturnsNullWhenLogStorageFails() {
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
+        // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
+        schedulerRunDto.setFailCntt(1);
         // SchedulerLog 업무 값을 schedulerLogService DTO에 설정한다
         when(schedulerLogService.setSchedulerLog(schedulerRunDto))
                 .thenThrow(new IllegalStateException("log storage failure"));

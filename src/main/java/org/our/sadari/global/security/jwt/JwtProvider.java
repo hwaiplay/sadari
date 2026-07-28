@@ -30,6 +30,7 @@ import java.util.concurrent.TimeUnit;
  */
 @Component
 public class JwtProvider {
+
     // JWT 서명 검증용 비밀키
     private SecretKey secretKey;
 

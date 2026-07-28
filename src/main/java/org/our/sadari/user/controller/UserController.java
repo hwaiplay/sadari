@@ -30,6 +30,7 @@ import org.springframework.web.multipart.MultipartFile;
 @RequestMapping("/api/user")
 @Tag(name = "사용자", description = "로그인 사용자 프로필 조회와 수정 API")
 public class UserController {
+
     // User 업무 처리 서비스
     private final UserService userService;
     /**

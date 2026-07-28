@@ -18,6 +18,7 @@ import lombok.Data;
  */
 @Schema(description = "스케줄러 실행과 실패 로그 DTO", hidden = true)
 public class SchedulerLogDto {
+
     /**
      * TL_SCLOGX의 스케줄러 실행 단위 요약 정보를 전달한다
      *
@@ -27,6 +28,7 @@ public class SchedulerLogDto {
     @Data
     @Schema(description = "스케줄러 실행 로그 DTO", hidden = true)
     public static class SchedulerRunDto {
+
         // 스케줄러 실행 번호
         private Long runxNumb;
 
@@ -67,6 +69,7 @@ public class SchedulerLogDto {
     @Data
     @Schema(description = "스케줄러 실패 로그 DTO", hidden = true)
     public static class SchedulerFailDto {
+
         // 스케줄러 실행 번호
         private Long runxNumb;
 

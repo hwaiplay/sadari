@@ -31,6 +31,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor
 public class BookSearchService {
+
     // 네이버 도서 검색 URL 설정값
     private static final String NAVER_BOOK_SEARCH_URL = "https://openapi.naver.com/v1/search/book.json";
     // 표시 건수 설정값

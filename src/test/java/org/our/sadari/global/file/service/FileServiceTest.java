@@ -27,6 +27,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceTest {
+
     // File 데이터 접근 객체
     @Mock
     private FileMapper fileMapper;

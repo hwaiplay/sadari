@@ -29,6 +29,7 @@ import org.our.sadari.global.scheduler.service.AlimDeleteServiceImpl;
  */
 @ExtendWith(MockitoExtension.class)
 class AlimDeleteServiceImplTest {
+
     // AlimDelete 데이터 접근 객체
     @Mock
     private AlimDeleteMapper alimDeleteMapper;

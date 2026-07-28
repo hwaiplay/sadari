@@ -11,6 +11,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-07        SeungHyeon.Kang    최초 생성
  */
 public final class Constant {
+
     // 독후감 내용 최대 바이트 설정값
     public static final int REPORT_CONTENT_MAX_BYTES = 4000;
 

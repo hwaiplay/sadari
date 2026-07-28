@@ -17,6 +17,7 @@ import org.springframework.stereotype.Component;
  */
 @Component
 public class MessageUtils {
+
     // 다국어 메시지 조회 객체
     private static MessageSource messageSource;
 

@@ -27,6 +27,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class BadWordDetectionService {
+
     // 비속어 목록을 메모리에 보관할 만료 시간이다. 10분으로 설정되어 있다.
     private static final long BAD_WORD_CACHE_TTL_MILLIS = 10 * 60 * 1000L;
 
@@ -360,6 +361,7 @@ public class BadWordDetectionService {
      * @author SeungHyeon.Kang
      */
     private static final class AhoCorasickMatcher {
+
         // 비속어 탐색 트리 루트 노드
         private final TrieNode root;
 
