@@ -67,7 +67,7 @@ public class BookSearchService {
         // query 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(query) || start < MIN_START || start > MAX_START) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -77,7 +77,7 @@ public class BookSearchService {
         // response.getBody( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(response.getBody())) {
 
-            // "\uAC80\uC0C9\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "검색에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
 
@@ -92,7 +92,7 @@ public class BookSearchService {
         catch (JsonProcessingException e) {
 
             // 아래 처리 단계의 업무 목적을 설명한다.
-            // "\uAC80\uC0C9\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "검색에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
     }

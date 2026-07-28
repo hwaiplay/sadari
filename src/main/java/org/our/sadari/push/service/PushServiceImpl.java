@@ -97,7 +97,7 @@ public class PushServiceImpl implements PushService {
             String missingConfigText = String.join(", ", missingConfigList);
             // 복구 가능한 예외 상황을 경고 로그로 남긴다
             log.warn("Firebase Web Push config is missing. fields={}", missingConfigText);
-            // "Firebase Web Push \uC124\uC815\uC774 \uB204\uB77D\uB418\uC5C8\uC5B4\uC694.\n\uB204\uB77D\uB41C \uD56D\uBAA9: {0}" 실패 응답을 반환한다
+            // "Firebase Web Push 설정이 누락되었어요.\n누락된 항목: {0}"
             return ResultData.fail(ResultEnum.PUSH_CONFIG_MISSING, missingConfigText);
         }
 
@@ -281,7 +281,7 @@ public class PushServiceImpl implements PushService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -309,7 +309,7 @@ public class PushServiceImpl implements PushService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 

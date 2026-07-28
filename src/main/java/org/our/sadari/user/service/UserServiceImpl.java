@@ -62,7 +62,7 @@ public class UserServiceImpl implements UserService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -72,7 +72,7 @@ public class UserServiceImpl implements UserService {
         // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -108,7 +108,7 @@ public class UserServiceImpl implements UserService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -122,7 +122,7 @@ public class UserServiceImpl implements UserService {
         //닉네임 없는 경우 실패 리턴
         if (StringUtil.isEmpty(userDto.getUserNick())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
         //욕설 포함된 경우 실패 리턴
@@ -131,13 +131,13 @@ public class UserServiceImpl implements UserService {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (badWord.isPresent()) {
 
-            // "\uC695\uC124\uC774\uB098 \uBE44\uC18D\uC5B4\uB294 \uC0AC\uC6A9\uD560 \uC218 \uC5C6\uC5B4\uC694.\n\uAC10\uC9C0\uB41C \uB2E8\uC5B4: {0}" 실패 응답을 반환한다
+            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
         //이미 사용중인 닉네임이 있을 시 실패 리턴
         if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
 
-            // "\uC774\uBBF8 \uC0AC\uC6A9 \uC911\uC778 \uB2C9\uB124\uC784\uC774\uC5D0\uC694." 실패 응답을 반환한다
+            // "이미 사용 중인 닉네임이에요."
             return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
         }
 
@@ -155,7 +155,7 @@ public class UserServiceImpl implements UserService {
 
             // 앞에서 다른 이미지가 저장되었을 수 있으므로 파일 메타정보와 물리 파일 정리가 실행되게 전체 수정을 롤백한다.
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            // "JPG \uB610\uB294 PNG \uD615\uC2DD\uC758 10MB \uC774\uD558 \uC774\uBBF8\uC9C0 \uD30C\uC77C\uB9CC \uC5C5\uB85C\uB4DC\uD560 \uC218 \uC788\uC5B4\uC694." 실패 응답을 반환한다
+            // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 업로드할 수 있어요."
             return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
         }
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
@@ -163,7 +163,7 @@ public class UserServiceImpl implements UserService {
 
             // Redis 갱신 실패 시 현재 프로필 수정 트랜잭션을 롤백 상태로 전환한다
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
@@ -175,7 +175,7 @@ public class UserServiceImpl implements UserService {
 
             // 사용자 UPDATE가 반영되지 않았다면 같은 요청에서 먼저 저장한 이미지도 유지하지 않는다.
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
-            // "\uC218\uC815\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 

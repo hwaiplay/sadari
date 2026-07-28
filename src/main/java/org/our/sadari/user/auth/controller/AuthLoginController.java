@@ -112,24 +112,24 @@ public class AuthLoginController {
         // extractAccessToken 호출로 요청에서 인증 토큰을 추출한다
         String accessToken = extractAccessToken(request);
 
-        // 요청 쿠키에 Access Token이 없으면 인증 실패 응답을 반환한다.
+        // 요청 쿠키에 Access Token이 없으면 인증 처리를 중단한다
         if (StringUtil.isEmpty(accessToken)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // Access Token의 위변조 여부 및 만료 시간을 검증하여 유효하지 않으면 실패 처리한다.
         if (!jwtProvider.validateToken(accessToken)) {
 
-            // "\uC720\uD6A8\uD558\uC9C0 \uC54A\uC740 \uD1A0\uD070\uC774\uC5D0\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
         // 로그아웃되어 Redis 블랙리스트에 등록된 Access Token(jti 기준)인지 확인한다.
         if (tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(accessToken))) {
 
-            // "\uC720\uD6A8\uD558\uC9C0 \uC54A\uC740 \uD1A0\uD070\uC774\uC5D0\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
         // Access Token 쿠키 유효성 검증 결과를 성공 응답으로 반환한다
@@ -210,7 +210,7 @@ public class AuthLoginController {
 
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
-            // "\uC720\uD6A8\uD558\uC9C0 \uC54A\uC740 \uD1A0\uD070\uC774\uC5D0\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
@@ -224,7 +224,7 @@ public class AuthLoginController {
 
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
-            // "\uC720\uD6A8\uD558\uC9C0 \uC54A\uC740 \uD1A0\uD070\uC774\uC5D0\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
@@ -236,7 +236,7 @@ public class AuthLoginController {
 
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
-            // "\uC720\uD6A8\uD558\uC9C0 \uC54A\uC740 \uD1A0\uD070\uC774\uC5D0\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
