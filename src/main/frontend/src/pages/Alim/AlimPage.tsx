@@ -262,7 +262,7 @@ function AlimPage() {
         await delPushSubApi({ endpUrlx: token });
         setIsPushEnabled(false);
         setStoredPushEnabled(false);
-        // 화면표시: "푸시 알림이 꺼졌습니다."
+        // "푸시 알림이 꺼졌습니다."
         void sweetSuccess(message("frontend.push.disable.successTitle"));
         return;
       }
@@ -279,7 +279,7 @@ function AlimPage() {
       setIsPushEnabled(true);
       setStoredPushEnabled(true);
       notifyFirebasePushEnabled();
-      // 화면표시: "푸시 알림이 켜졌습니다."
+      // "푸시 알림이 켜졌습니다."
       void sweetSuccess(message("frontend.push.enable.successTitle"));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "";
@@ -296,7 +296,8 @@ function AlimPage() {
               ? message("frontend.push.enable.serviceWorkerNotReady")
             : getApiErrorMessage(error, message("frontend.common.tryAgain"));
 
-      // 화면표시: "푸시 알림 설정에 실패했습니다." 또는 "푸시 알림 해제에 실패했습니다."
+      // "푸시 알림 설정에 실패했습니다."
+      // "푸시 알림 해제에 실패했습니다."
       void sweetError(
         message(
           wasPushEnabled
@@ -411,7 +412,9 @@ function AlimPage() {
   }
 
   return (
+    /* 알림 설정과 수신 내역 전체 영역 */
     <main className={styles.page}>
+      {/* 푸시 알림 설정과 전체 삭제 영역 */}
       <section className={styles.header}>
         <div>
           <p className={styles.title}>{message("frontend.alim.subtitle")}</p>
@@ -436,6 +439,7 @@ function AlimPage() {
             disabled={isDeletingAll || isClearingAll || alimList.length === 0}
             onClick={handleDeleteAll}
           >
+            {/* "모두 지우기" */}
             {message("frontend.alim.readAll")}
           </button>
         </div>
@@ -444,8 +448,10 @@ function AlimPage() {
       {alimList.length === 0 ? (
         <div className={styles.empty}>{message("frontend.alim.empty")}</div>
       ) : (
+        /* 삭제되지 않은 알림 목록 영역 */
         <section className={styles.list} aria-label={message("frontend.alim.title")}>
           {alimList.map((alim, index) => (
+            /* 개별 알림 내용과 이동 영역 */
             <button
               className={[
                 styles.itemButton,

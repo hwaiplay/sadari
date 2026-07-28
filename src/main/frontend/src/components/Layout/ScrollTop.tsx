@@ -20,7 +20,7 @@ const ScrollToTop = () => {
   useEffect(() => {
 
     window.scrollTo(0, 0);
-  }, [pathname]); // pathname??蹂寃쎈맆 ?뚮쭏???ㅽ뻾??
+  }, [pathname]); // 화면 경로가 변경될 때마다 실행한다
 
   return null;
 };

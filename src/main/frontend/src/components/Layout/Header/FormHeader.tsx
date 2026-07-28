@@ -83,7 +83,8 @@ function SubPageHeader() {
   }, []);
 
   return (
-      <header className={clsx(headerShell, isHidden && headerHidden)}>
+    /* 등록과 수정 화면의 상단 이동 및 제목 영역 */
+    <header className={clsx(headerShell, isHidden && headerHidden)}>
         <Container className={clsx(header, "_form")}>
           {/* [주석] 필수 입력 값 누락 시 노출: "이전 페이지로 이동" */}
           <button

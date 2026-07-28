@@ -37,7 +37,8 @@ export const useUpdateMutation = () => {
     onError: (error: unknown) => {
 
       void sweetError(
-        message("frontend.alert.updateFailedTitle"), // frontend.alert.updateFailedTitle = ?섏젙???ㅽ뙣?덉뒿?덈떎
+        // "수정에 실패했습니다."
+        message("frontend.alert.updateFailedTitle"),
         getApiErrorMessage(error, message("frontend.report.updateFailed")),
       );
     },

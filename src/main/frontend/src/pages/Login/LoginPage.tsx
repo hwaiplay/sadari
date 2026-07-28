@@ -22,6 +22,7 @@ import {
 function LoginPage() {
 
   return (
+    /* 서비스 로고와 소셜 로그인 영역 */
     <main className={loginContainer}>
       <div className={background}>
           <div className={background_img_overlay}></div>
@@ -53,9 +54,11 @@ function LoginPage() {
           width={110}
         />
         <h1 className={title}>
+          {/* "간편하게 로그인하고\n독서의 즐거움에 올라보세요." */}
           {message("frontend.auth.loginCopy")}
         </h1>
         <a href="/api/oauth/kakao" className={kakaoLoginBtn}>
+          {/* "카카오로 3초만에 시작하기" */}
           {message("frontend.auth.kakaoStart")}
         </a>
       </div>
