@@ -110,8 +110,8 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 
 ```java
 public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNumb, String sourceType
-                          , @Valid @RequestBody ReportDto reportDto
-                          , @RequestParam(required = false) String requestType, HttpServletRequest request) {
+                          , @Valid @RequestBody ReportDto reportDto, @RequestParam(required = false) String requestType
+                          , HttpServletRequest request) {
     // 독후감 등록에 필요한 사용자 번호와 요청 데이터를 서비스에 전달한다
     return reportService.setReport(userNumb, reptNumb, sourceType, reportDto, requestType, request);
 }
