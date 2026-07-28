@@ -19,72 +19,99 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 /**
- * BookSearchService 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : BookSearchService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-06
+ * description    : 도서 업무 계약을 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-06        SeungHyeon.Kang    최초 생성
  */
 @Service
 @RequiredArgsConstructor
 public class BookSearchService {
 
+    // 네이버 도서 검색 URL 설정값
     private static final String NAVER_BOOK_SEARCH_URL = "https://openapi.naver.com/v1/search/book.json";
+    // 표시 건수 설정값
     private static final int DISPLAY_COUNT = 10;
+    // 최소 시작 설정값
     private static final int MIN_START = 1;
+    // 최대 시작 설정값
     private static final int MAX_START = 1000;
 
+    // 네이버 도서 검색 API 클라이언트 식별자
     @Value("${naver.key.clientId}")
     private String naverClientId;
 
+    // 네이버 도서 검색 API 클라이언트 비밀값
     @Value("${naver.key.clientSecret}")
     private String naverClientSecret;
 
+    // 외부 HTTP API 통신 객체
     private final RestTemplate restTemplate;
+    // Object 데이터 접근 객체
     private final ObjectMapper objectMapper;
 
     /**
-     * searchBooks 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 검색어 기준 네이버 도서 목록 검색한다.
      *
-     * @author Seunghyeon.Kang
-     * @param query 처리에 필요한 입력값
-     * @param start 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param query 네이버 도서 API에 전달할 검색어
+     * @param start 네이버 도서 검색 결과의 시작 위치
      * @return 처리 결과
      */
     public ResultData searchBooks(String query, int start) {
-        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
+
+        // query 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(query) || start < MIN_START || start > MAX_START) {
-            // 호출한 계층에서 사용할 처리 결과를 반환한다.
+
+            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
+        // 사용자 검색어로 네이버 도서 검색 API를 호출한다
         ResponseEntity<String> response = requestNaverBookSearch(query, start);
 
-        // 조건을 먼저 검증해 이후 처리 흐름에서 잘못된 데이터가 사용되지 않도록 분기한다.
+        // response.getBody( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(response.getBody())) {
-            // 호출한 계층에서 사용할 처리 결과를 반환한다.
+
+            // "\uAC80\uC0C9\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
 
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
+            // 외부 API의 JSON 응답을 업무 DTO로 변환한다
             BookJsonDto bookJsonDto = objectMapper.readValue(response.getBody(), BookJsonDto.class);
+            // 검색어 기준 네이버 도서 목록 검색 결과를 성공 응답으로 반환한다
             return ResultData.success(bookJsonDto.getItems());
-        } catch (JsonProcessingException e) {
+        }
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        catch (JsonProcessingException e) {
+
             // 아래 처리 단계의 업무 목적을 설명한다.
-            // 호출한 계층에서 사용할 처리 결과를 반환한다.
+            // "\uAC80\uC0C9\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uC2DC\uB3C4\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
     }
 
     /**
-     * requestNaverBookSearch 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 네이버 도서 API 검색 요청한다.
      *
-     * @author Seunghyeon.Kang
-     * @param query 처리에 필요한 입력값
-     * @param start 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param query 네이버 도서 API에 전달할 검색어
+     * @param start 네이버 도서 검색 결과의 시작 위치
      * @return 처리 결과
      */
     private ResponseEntity<String> requestNaverBookSearch(String query, int start) {
+
+        // 외부 API 요청 헤더를 담을 객체를 생성한다
         HttpHeaders headers = new HttpHeaders();
+        // 처리한 값을 결과 컬렉션에 추가한다
         headers.add("X-Naver-Client-Id", naverClientId);
+        // 처리한 값을 결과 컬렉션에 추가한다
         headers.add("X-Naver-Client-Secret", naverClientSecret);
 
         URI uri = UriComponentsBuilder
@@ -97,15 +124,20 @@ public class BookSearchService {
                 .encode()
                 .toUri();
 
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
+            // 네이버 도서 API 검색 요청 결과를 반환한다
             return restTemplate.exchange(
                     uri,
                     HttpMethod.GET,
                     new HttpEntity<>(headers),
                     String.class
             );
-        } catch (RestClientException e) {
-            // 호출한 계층에서 사용할 처리 결과를 반환한다.
+        }
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        catch (RestClientException e) {
+
+            // HTTP 응답 상태와 본문을 반환한다
             return ResponseEntity.ok("");
         }
     }

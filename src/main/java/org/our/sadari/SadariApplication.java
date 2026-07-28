@@ -6,10 +6,14 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
 /**
- * Sadari 백엔드 애플리케이션의 실행 진입점입니다.
- * 별도 SchedulerConfig 없이도 @Scheduled 메서드가 동작하도록 이 전역 설정에서 스케줄링을 활성화합니다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : SadariApplication
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-01
+ * description    : 애플리케이션 업무에 필요한 기능을 제공한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-01        SeungHyeon.Kang    최초 생성
  */
 @EnableRedisHttpSession
 @EnableScheduling
@@ -17,12 +21,14 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 public class SadariApplication {
 
 	/**
-	 * Spring Boot 애플리케이션을 실행합니다.
+	 * Spring Boot 애플리케이션을 실행한다.
 	 *
-	 * @author Seunghyeon.Kang
+	 * @author SeungHyeon.Kang
 	 * @param args 애플리케이션 실행 인자
 	 */
 	public static void main(String[] args) {
+
+		// 검증 대상 작업을 실행한다
 		SpringApplication.run(SadariApplication.class, args);
 	}
 

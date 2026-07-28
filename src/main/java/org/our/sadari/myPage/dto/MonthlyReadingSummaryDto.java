@@ -1,269 +1,123 @@
 package org.our.sadari.myPage.dto;
 
+import io.swagger.v3.oas.annotations.media.Schema;
+
 import java.util.List;
 import lombok.Data;
 import org.our.sadari.report.dto.ReportDto;
 
 /**
- * MonthlyReadingSummaryDto 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : MonthlyReadingSummaryDto
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-17
+ * description    : 마이페이지의 독서 활동과 목표 달성 요약을 전달한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  */
 @Data
+@Schema(description = "월간 독서 활동과 목표 달성 요약 DTO")
 public class MonthlyReadingSummaryDto {
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "사용자 번호", example = "31")
     private Long userNumb;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "조회 기간 시작일", example = "2026-07-01")
     private String periodStart;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "조회 기간에 포함되지 않는 종료 기준일", example = "2026-08-01")
     private String periodEndExclusive;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "집계할 독서 상태 코드", example = "DONE")
     private String reptStat;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "독후감 목록 정렬 유형", example = "END_DATE_DESC")
     private String reportOrderType;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 유형 코드", example = "MONT")
     private String monthCode;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 유형 코드", example = "WEEK")
     private String weekCode;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 주에 완료한 독서 권수", example = "2")
     private int currentWeekCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "지난 주에 완료한 독서 권수", example = "1")
     private int previousWeekCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 주와 지난 주의 완료 독서 권수 차이", example = "1")
     private int weekCountDiff;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 달에 완료한 독서 권수", example = "5")
     private int currentMonthCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "지난 달에 완료한 독서 권수", example = "4")
     private int previousMonthCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 달과 지난 달의 완료 독서 권수 차이", example = "1")
     private int countDiff;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 유형 코드", example = "YEAR")
     private String yearCode;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "올해 완료한 독서 권수", example = "30")
     private int currentYearCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "지난해 완료한 독서 권수", example = "24")
     private int previousYearCount;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "올해와 지난해의 완료 독서 권수 차이", example = "6")
     private int yearCountDiff;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 달 목표 권수", example = "5")
     private Integer monthGoalCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 주 목표 권수", example = "2")
     private Integer weekGoalCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "올해 목표 권수", example = "60")
     private Integer yearGoalCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "지난 주 목표 권수", example = "2")
     private Integer previousWeekGoalCnt;
-
-    /**
-     * ?대옒???대??먯꽌 ?ъ슜?섎뒗 ?곹깭 ?먮뒗 ?ㅼ젙 媛믪씠??
-     */
+    @Schema(description = "지난 달 목표 권수", example = "5")
     private Integer previousMonthGoalCnt;
-
-    /**
-     * ?대옒???대??먯꽌 ?ъ슜?섎뒗 ?곹깭 ?먮뒗 ?ㅼ젙 媛믪씠??
-     */
+    @Schema(description = "지난해 목표 권수", example = "50")
     private Integer previousYearGoalCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 달성률", example = "100")
     private int monthGoalRate;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 달성률", example = "50")
     private int weekGoalRate;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 달성률", example = "50")
     private int yearGoalRate;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 설정 여부", example = "true")
     private boolean monthGoalSet;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 설정 여부", example = "true")
     private boolean weekGoalSet;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 설정 여부", example = "true")
     private boolean yearGoalSet;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표를 추가로 수정할 수 있는 횟수", example = "1")
     private int weekGoalRemainUpdateCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표를 추가로 수정할 수 있는 횟수", example = "1")
     private int monthGoalRemainUpdateCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표를 추가로 수정할 수 있는 횟수", example = "1")
     private int yearGoalRemainUpdateCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 수정 가능 기간의 남은 일수", example = "3")
     private int weekGoalEditableRemainDays;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 수정 가능 기간의 남은 일수", example = "10")
     private int monthGoalEditableRemainDays;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 수정 가능 기간의 남은 일수", example = "120")
     private int yearGoalEditableRemainDays;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 수정 잠금 여부", example = "false")
     private boolean weekGoalUpdateLocked;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 수정 잠금 여부", example = "false")
     private boolean monthGoalUpdateLocked;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 수정 잠금 여부", example = "false")
     private boolean yearGoalUpdateLocked;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "주간 목표 달성 횟수", example = "3")
     private int weekGoalAchvCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "월간 목표 달성 횟수", example = "2")
     private int monthGoalAchvCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "연간 목표 달성 횟수", example = "1")
     private int yearGoalAchvCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "전체 독서 목표 달성 횟수", example = "6")
     private int totalGoalAchvCnt;
-
-    /**
-     * 마이페이지 프로필 통계에 표시할 전체 완료 독서 권수입니다.
-     * 집계 SQL은 social 영역에서 수행하고, MyPageController가 기존 독서 요약 응답에 이 값을 합쳐 내려줍니다.
-     */
+    @Schema(description = "완료 상태인 전체 독서 권수", example = "30")
     private int totalReadBookCnt;
-
-    /**
-     * 마이페이지 프로필 통계에 표시할 내가 팔로우하는 사용자 수입니다.
-     * 팔로우 관계는 social 도메인의 데이터이므로 social 서비스 결과를 받아 세팅합니다.
-     */
+    @Schema(description = "사용자가 팔로우하는 계정 수", example = "8")
     private int followingCnt;
-
-    /**
-     * 마이페이지 프로필 통계에 표시할 나를 팔로우하는 사용자 수입니다.
-     * 팔로워/팔로잉 기준을 화면에서 재계산하지 않도록 서버에서 확정된 값을 내려줍니다.
-     */
+    @Schema(description = "사용자를 팔로우하는 계정 수", example = "5")
     private int followerCnt;
-
-    /**
-     * 마이페이지 프로필 통계에 표시할 내 독후감이 받은 좋아요 수입니다.
-     * TB_LIKEXX가 공용 좋아요 테이블이므로 TAGT_TYPE이 REPORT인 데이터만 social 쿼리에서 집계합니다.
-     */
+    @Schema(description = "사용자의 독후감이 받은 좋아요 수", example = "42")
     private int receivedLikeCnt;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 달에 완료한 독후감 목록")
     private List<ReportDto> currentMonthReports;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "이번 주에 완료한 독후감 목록")
     private List<ReportDto> currentWeekReports;
-
-    /**
-     * 클래스 내부에서 사용하는 상태 또는 설정 값이다.
-     */
+    @Schema(description = "올해 완료한 독후감 목록")
     private List<ReportDto> currentYearReports;
-
-    /**
-     * 현재 읽고 있는 독후감 목록입니다.
-     * 목표 종료일까지 남은 기간을 화면에서 계산할 수 있도록 시작일과 종료일을 함께 내려줍니다.
-     */
+    @Schema(description = "현재 읽고 있는 독후감 목록")
     private List<ReportDto> currentReadingReports;
 }
