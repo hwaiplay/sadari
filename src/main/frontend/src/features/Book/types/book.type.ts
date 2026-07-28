@@ -129,6 +129,7 @@ export interface AddBookResponse {
   data: number; // reptNumb
 }
 
+// 공개된 독후감 타입
 export interface PublicReportType {
   reptNumb: number;
   userNumb: number;
@@ -141,6 +142,7 @@ export interface PublicReportType {
   reptCntn: string;
   pubcYsno: "Y";
   likeCnt?: number;
+  replCnt?: number;
   likeYsno?: "Y" | "N";
   commentCnt?: number;
 }

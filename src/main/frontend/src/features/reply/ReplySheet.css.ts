@@ -1,5 +1,5 @@
 import { keyframes, style } from "@vanilla-extract/css";
-import { vars } from "@/app/styles/tokens.css";
+import { vars } from "@/app/styles/tokens.css.ts";
 
 const sheetEnter = keyframes({
   from: {
@@ -33,7 +33,7 @@ export const commentSheet = style({
   position: "relative",
   zIndex: 1,
   width: "min(100%, 600px)",
-  height: "min(72svh, 560px)",
+  height: "85%",
   borderRadius: "22px 22px 0 0",
   backgroundColor: "#ffffff",
   display: "flex",
@@ -46,7 +46,7 @@ export const commentSheet = style({
 export const sheetHandle = style({
   position: "relative",
   width: "100%",
-  height: "28px",
+  height: "60px",
   flexShrink: 0,
   cursor: "grab",
   touchAction: "none",
@@ -55,7 +55,7 @@ export const sheetHandle = style({
     "&::after": {
       content: "",
       position: "absolute",
-      top: "10px",
+      top: "12px",
       left: "50%",
       width: "40px",
       height: "4px",
@@ -114,28 +114,115 @@ export const commentEmptyText = style({
   wordBreak: "keep-all",
 });
 
-export const temporaryCommentList = style({
+export const replyList = style({
   width: "100%",
   margin: 0,
   padding: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "16px",
   listStyle: "none",
 });
 
-export const temporaryComment = style({
-  alignSelf: "flex-end",
-  maxWidth: "82%",
-  padding: "9px 12px",
-  borderRadius: "14px 14px 2px 14px",
-  backgroundColor: vars.color.gray100,
+export const replyItem = style({
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+  minHeight: "172px",
+  backgroundColor: "#ffffff",
+});
+
+export const replyItemTop = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "8px",
+  minWidth: 0,
+});
+
+export const replyItemHeader = style({
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+  minWidth: 0,
+});
+
+export const replyWriterArea = style({
+  minWidth: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "6px",
+});
+
+export const replyProfileImage = style({
+  width: "24px",
+  height: "24px",
+  flexShrink: 0,
+  borderRadius: "50%",
+  objectFit: "cover",
+  backgroundColor: vars.color.gray300,
+});
+
+export const replyWriter = style({
+  minWidth: 0,
+  maxWidth: "115px",
   color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const replyContentWrap = style({
+  maxHeight: "3000px",
+  overflow: "clip",
+  transition: "max-height 220ms ease",
+});
+
+export const replyContent = style({
+  margin: 0,
+  color: "#565656",
   fontFamily: vars.font.body,
   fontSize: "14px",
-  lineHeight: 1.45,
+  lineHeight: "22px",
+  letterSpacing: "-1%",
+  whiteSpace: "pre-wrap",
   wordBreak: "break-word",
 });
+
+export const replyItemMetrics = style({
+  width: "100%",
+  minHeight: "24px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "8px",
+  marginTop: "auto",
+});
+
+export const replyMetricButton = style({
+  minWidth: "32px",
+  height: "24px",
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  backgroundColor: "transparent",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  cursor: "pointer",
+});
+
+export const replyAnswerButton = style([
+  replyMetricButton,
+  {
+    color: "#777777",
+  },
+]);
 
 export const commentForm = style({
   flexShrink: 0,
