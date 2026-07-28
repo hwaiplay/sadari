@@ -5,7 +5,8 @@
     <!-- 파일 메타 정보를 등록한다. -->
     <insert id="setFile" parameterType="org.our.sadari.global.file.dto.FileDto">
         <selectKey keyProperty="fileNumb" resultType="long" order="BEFORE">
-            SELECT TM_FILEXM_SEQ.NEXTVAL FROM DUAL
+            SELECT TM_FILEXM_SEQ.NEXTVAL
+              FROM DUAL
         </selectKey>
         /* setFile */
         INSERT INTO TM_FILEXM (
@@ -17,8 +18,7 @@
                   , MIME_TYPE
                   , REGI_USER
                   , REGI_DATE
-        ) VALUES (
-                    #{fileNumb}
+        ) VALUES (  #{fileNumb}
                   , #{origName}
                   , #{storName}
                   , #{filePath}

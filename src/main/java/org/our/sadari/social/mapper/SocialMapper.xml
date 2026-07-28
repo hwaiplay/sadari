@@ -11,21 +11,29 @@
 
     <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MERGE로 한 번만 저장한다. -->
     <insert id="setFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
+        /* setFollow */
         MERGE INTO TB_FOLLOW F
-        USING (
-            SELECT #{userNumb} AS USER_NUMB
-                 , #{flowNumb} AS FLOW_NUMB
-              FROM DUAL
-        ) S
-           ON (F.USER_NUMB = S.USER_NUMB AND F.FLOW_NUMB = S.FLOW_NUMB)
-        WHEN NOT MATCHED THEN
-            INSERT (USER_NUMB, FLOW_NUMB, REGI_DATE)
-            VALUES (S.USER_NUMB, S.FLOW_NUMB, SYSDATE)
+        USING (  SELECT #{userNumb} AS USER_NUMB
+                      , #{flowNumb} AS FLOW_NUMB
+                   FROM DUAL
+               ) S
+           ON (    F.USER_NUMB = S.USER_NUMB
+               AND F.FLOW_NUMB = S.FLOW_NUMB
+           )
+         WHEN NOT MATCHED THEN
+       INSERT (    USER_NUMB
+                 , FLOW_NUMB
+                 , REGI_DATE
+       ) VALUES (  S.USER_NUMB
+                 , S.FLOW_NUMB
+                 , SYSDATE
+       )
     </insert>
 
     <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제한다. -->
     <delete id="delFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
-        DELETE FROM TB_FOLLOW
+        DELETE /* delFollow */
+          FROM TB_FOLLOW
          WHERE USER_NUMB = #{userNumb}
            AND FLOW_NUMB = #{flowNumb}
     </delete>
@@ -43,12 +51,12 @@
     <!-- 좋아요를 등록한다. 대상 유형과 대상 번호는 요청 DTO 값을 그대로 사용한다. -->
     <insert id="setLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
         /* setLike */
-        INSERT INTO TB_LIKEXX(
+        INSERT INTO TB_LIKEXX (
                     USER_NUMB
                   , TAGT_TYPE
                   , TAGT_NUMB
                   , REGI_DATE
-        ) VALUES(   #{userNumb}
+        ) VALUES (  #{userNumb}
                   , #{tagtType}
                   , #{tagtNumb}
                   , SYSDATE
@@ -57,8 +65,8 @@
 
     <!-- 좋아요를 취소한다. -->
     <delete id="delLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
-        /* delLike */
-        DELETE FROM TB_LIKEXX
+        DELETE /* delLike */
+          FROM TB_LIKEXX
          WHERE USER_NUMB = #{userNumb}
            AND TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
@@ -66,8 +74,8 @@
 
     <!-- 특정 대상에 연결된 좋아요를 모두 정리한다. -->
     <delete id="delLikeByTarget" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
-        /* delLikeByTarget */
-        DELETE FROM TB_LIKEXX
+        DELETE /* delLikeByTarget */
+          FROM TB_LIKEXX
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
     </delete>
@@ -113,31 +121,46 @@
         <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         SELECT /* getProfileStats */
-               #{userNumb} AS USER_NUMB
-             , ( SELECT COUNT(*)
-                   FROM TM_REPORT R
-                  WHERE R.USER_NUMB = #{userNumb}
-                    AND R.REPT_STAT = #{reportStatDone}
-               ) AS TOTAL_READ_BOOK_CNT
-             , ( SELECT COUNT(*)
-                   FROM TB_FOLLOW F
-                  WHERE F.USER_NUMB = #{userNumb}
-               ) AS FOLLOWING_CNT
-             , ( SELECT COUNT(*)
-                   FROM TB_FOLLOW F
-                  WHERE F.FLOW_NUMB = #{userNumb}
-               ) AS FOLLOWER_CNT
-             , ( SELECT COUNT(*)
-                   FROM TB_LIKEXX L
-                  WHERE L.TAGT_TYPE = #{likeTargetReport}
-                    AND EXISTS (
-                        SELECT 1
-                          FROM TM_REPORT R
-                         WHERE R.REPT_NUMB = L.TAGT_NUMB
-                           AND R.USER_NUMB = #{userNumb}
-                    )
-               ) AS RECEIVED_LIKE_CNT
-          FROM DUAL
+               TARGET.USER_NUMB
+             , NVL(READSTATS.TOTAL_READ_BOOK_CNT, 0) AS TOTAL_READ_BOOK_CNT
+             , NVL(FOLLOWINGSTATS.FOLLOWING_CNT, 0) AS FOLLOWING_CNT
+             , NVL(FOLLOWERSTATS.FOLLOWER_CNT, 0) AS FOLLOWER_CNT
+             , NVL(LIKESTATS.RECEIVED_LIKE_CNT, 0) AS RECEIVED_LIKE_CNT
+          FROM (  SELECT #{userNumb} AS USER_NUMB
+                    FROM DUAL
+               ) TARGET
+     LEFT JOIN (  SELECT REPORT.USER_NUMB
+                       , COUNT(*) AS TOTAL_READ_BOOK_CNT
+                    FROM TM_REPORT REPORT
+                   WHERE REPORT.REPT_STAT = #{reportStatDone}
+                     AND REPORT.USER_NUMB = #{userNumb}
+                GROUP BY REPORT.USER_NUMB
+               ) READSTATS
+            ON READSTATS.USER_NUMB = TARGET.USER_NUMB
+     LEFT JOIN (  SELECT FOLLOW.USER_NUMB
+                       , COUNT(*) AS FOLLOWING_CNT
+                    FROM TB_FOLLOW FOLLOW
+                   WHERE FOLLOW.USER_NUMB = #{userNumb}
+                GROUP BY FOLLOW.USER_NUMB
+               ) FOLLOWINGSTATS
+            ON FOLLOWINGSTATS.USER_NUMB = TARGET.USER_NUMB
+     LEFT JOIN (  SELECT FOLLOW.FLOW_NUMB AS USER_NUMB
+                       , COUNT(*) AS FOLLOWER_CNT
+                    FROM TB_FOLLOW FOLLOW
+                   WHERE FOLLOW.FLOW_NUMB = #{userNumb}
+                GROUP BY FOLLOW.FLOW_NUMB
+               ) FOLLOWERSTATS
+            ON FOLLOWERSTATS.USER_NUMB = TARGET.USER_NUMB
+     LEFT JOIN (  SELECT REPORT.USER_NUMB
+                       , COUNT(*) AS RECEIVED_LIKE_CNT
+                    FROM TB_LIKEXX LIKES
+              INNER JOIN TM_REPORT REPORT
+                      ON REPORT.REPT_NUMB = LIKES.TAGT_NUMB
+                   WHERE LIKES.TAGT_TYPE = #{likeTargetReport}
+                     AND REPORT.USER_NUMB = #{userNumb}
+                GROUP BY REPORT.USER_NUMB
+               ) LIKESTATS
+            ON LIKESTATS.USER_NUMB = TARGET.USER_NUMB
     </select>
 
     <!-- 특정 사용자가 팔로우하고 있는 사용자 목록을 조회한다.
