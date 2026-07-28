@@ -3,9 +3,9 @@
  *
  * @author HanWon.Jang
  */
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 import { container } from "./container.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 /**
  * Container 화면 또는 컴포넌트를 구성한다

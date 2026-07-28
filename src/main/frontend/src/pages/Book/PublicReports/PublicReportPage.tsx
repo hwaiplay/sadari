@@ -216,6 +216,7 @@ function PublicReportPage() {
 
   if (publicReportsQuery.isError) {
     return (
+      /* 공개 독후감 조회 실패 안내 영역 */
       <main className={styles.page}>
         <Container className={styles.content}>
           <p className={styles.empty}>
@@ -231,8 +232,10 @@ function PublicReportPage() {
 
   return (
     <>
+      {/* 도서별 공개 독후감 전체 영역 */}
       <main className={styles.page}>
         <div className={styles.content}>
+          {/* 도서 표지와 공개 독후감 요약 영역 */}
           <section className={styles.header}>
             <div className={styles.headerWrap}>
               {pageState.cover ? (
@@ -266,6 +269,7 @@ function PublicReportPage() {
             </div>
           </section>
 
+          {/* 공개 독후감 정렬과 독서 상태 필터 영역 */}
           <section className={styles.filters} aria-label="독후감 필터">
             <CustomSelect
               value={sort}
@@ -282,6 +286,7 @@ function PublicReportPage() {
           </section>
 
           {visibleReports.length > 0 ? (
+            /* 공개 독후감 목록 영역 */
             <section className={styles.list}>
               {visibleReports.map((report) => {
 
@@ -297,6 +302,7 @@ function PublicReportPage() {
                   reportContent.length > CONTENT_PREVIEW_LENGTH;
 
                 return (
+                  /* 공개 독후감 개별 항목 영역 */
                   <article className={styles.item} key={report.reptNumb}>
                     <div className={styles.itemTop}>
                       <div className={styles.itemHeader}>

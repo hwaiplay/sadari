@@ -25,6 +25,7 @@ function SetLayout() {
   return (
     <Container>
       <SubPageHeader />
+      {/* 독후감 등록과 수정 화면의 입력 콘텐츠 영역 */}
       <main style={{ marginTop: vars.headerHeight }}>
         <Outlet />
       </main>

@@ -12,9 +12,9 @@ import * as styles from "./Loading.css";
  */
 
 /**
- * 鍮꾨룞湲?泥섎━ 以??쒖떆???ㅽ뵾?덉? ?덈궡 臾멸뎄瑜??뚮뜑留곹븳??
+ * 비동기 처리 중 스피너와 안내 문구를 표시한다
  * @author HanWon.Jang
- * @param title 濡쒕뵫 臾멸뎄 ?욌?遺꾩뿉 ?쒖떆???쒕ぉ
+ * @param title 로딩 문구 앞에 표시할 제목
  * @return 濡쒕뵫 ?붾㈃ 而댄룷?뚰듃
  */
 const Loading = ({ title }: { title: String }) => {
