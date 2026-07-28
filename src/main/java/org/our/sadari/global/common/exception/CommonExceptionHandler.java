@@ -77,7 +77,7 @@ public class CommonExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ResultData> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, Locale locale) {
 
-        // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+        // "요청값이 올바르지 않아요."
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST));
@@ -94,7 +94,7 @@ public class CommonExceptionHandler {
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<ResultData> handleMultipartException(MultipartException e, Locale locale) {
 
-        // "JPG \uB610\uB294 PNG \uD615\uC2DD\uC758 10MB \uC774\uD558 \uC774\uBBF8\uC9C0 \uD30C\uC77C\uB9CC \uC5C5\uB85C\uB4DC\uD560 \uC218 \uC788\uC5B4\uC694." 실패 응답을 반환한다
+        // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 업로드할 수 있어요."
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .body(ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID));
@@ -127,7 +127,7 @@ public class CommonExceptionHandler {
         // Oracle ORA-01461 (바인딩된 값이 열의 크기보다 큼) 에러 발생 시 신고 내용/입력값 길이 초과 전용 메시지를 응답한다.
         if (!StringUtil.isEmpty(sqlException) && sqlException.getErrorCode() == ORACLE_VALUE_TOO_LARGE_ERROR_CODE) {
 
-            // "\uB3C5\uD6C4\uAC10 \uB0B4\uC6A9\uC740 {0}byte \uC774\uD558\uB85C \uC785\uB825\uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "독후감 내용은 {0}byte 이하로 입력해주세요."
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(ResultData.fail(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES));
@@ -184,10 +184,10 @@ public class CommonExceptionHandler {
          */
         if (isDatabaseConnectionFailure(e)) {
 
-            // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 실패 응답으로 변환 결과를 반환한다
+            // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
-        // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 실패 응답으로 변환 결과를 반환한다
+        // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
         return createFailResponse(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
@@ -329,7 +329,7 @@ public class CommonExceptionHandler {
      */
     private ResponseEntity<ResultData> createFailResponse(ResultEnum resultEnum, HttpStatus status) {
 
-        // 공통 실패 응답과 HTTP 상태를 함께 반환한다
+        // 공통 결과 코드에 대응하는 사용자 메시지와 HTTP 상태
         return ResponseEntity
                 .status(status)
                 .body(ResultData.fail(resultEnum));

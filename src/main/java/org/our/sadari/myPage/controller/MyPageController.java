@@ -66,7 +66,7 @@ public class MyPageController {
         // getMonthlyReadingSummary 업무 로직을 reportService에 위임한다
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
 
-        // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 원래 실패 응답을 그대로 내려준다.
+        // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단한다
         // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않는다.
         if (summaryResult.getCode() != 200) {
 
@@ -160,7 +160,7 @@ public class MyPageController {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (DateTimeParseException e) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 

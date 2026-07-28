@@ -56,7 +56,7 @@ public class AlimServiceImpl implements AlimService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -120,7 +120,7 @@ public class AlimServiceImpl implements AlimService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -148,14 +148,14 @@ public class AlimServiceImpl implements AlimService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getAlimNumb())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -187,7 +187,7 @@ public class AlimServiceImpl implements AlimService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -222,7 +222,7 @@ public class AlimServiceImpl implements AlimService {
         // 수신자, 상황 코드, 템플릿 코드가 없으면 템플릿 조회와 사용자별 알림 저장 기준이 사라지므로 잘못된 요청으로 중단한다.
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(alimSitu) || StringUtil.isEmpty(tempCode)) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -244,7 +244,7 @@ public class AlimServiceImpl implements AlimService {
         // 사용 가능한 템플릿이 없으면 어떤 제목/내용/링크로 발송해야 하는지 알 수 없으므로 알림을 저장하지 않는다.
         if (StringUtil.isEmpty(temp)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 

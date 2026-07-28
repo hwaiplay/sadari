@@ -73,7 +73,7 @@ public class AuthServiceImpl implements AuthService {
         // code 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(code)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -92,7 +92,7 @@ public class AuthServiceImpl implements AuthService {
 
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao OAuth response parse failed. message={}", e.getMessage());
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -160,7 +160,7 @@ public class AuthServiceImpl implements AuthService {
 
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao user save failed. message={}", e.getMessage());
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
