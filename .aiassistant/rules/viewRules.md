@@ -1,0 +1,130 @@
+---
+apply: always
+---
+
+# View Rules
+
+이 문서는 Sadari 프로젝트의 React 화면 렌더링, 사용자 노출 문구 및 JSX 주석 규칙을 정의합니다.
+화면 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적용합니다.
+규칙은 공통 주석 정책, 화면 영역 식별, 사용자 메시지 식별, JSX 작성 형식 순으로 중요도가 높은 항목부터 나열합니다.
+
+## 1. 공통 주석 작성 규칙
+
+- 일반 주석과 JSDoc은 모두 `한다`, `이다`, `된다` 형태의 반말 서술체로 작성합니다.
+- 주석에 `합니다`, `입니다`, `됩니다` 형태의 존댓말을 사용하지 않습니다.
+- 주석에 이모티콘과 이모지를 사용하지 않습니다.
+- 주석에 느낌표와 물음표를 사용하지 않습니다.
+- 사용자에게 노출되는 실제 문구를 인용한 주석은 원문을 그대로 작성하며 문구 안의 문체와 문장부호는 예외로 둡니다.
+- 코드 내용을 그대로 읽는 주석은 작성하지 않고 화면 정책과 구현 이유를 설명합니다.
+
+## 2. 화면 영역 주석 규칙
+
+- 하나의 페이지를 구성하는 모든 주요 화면 영역 바로 위에 해당 영역의 역할을 설명하는 JSX 주석을 작성합니다.
+- 주요 화면 영역 안에 독립된 정보, 입력, 목록, 통계, 버튼 또는 상태 표시 영역이 있으면 각 하위 영역 바로 위에도 JSX 주석을 작성합니다.
+- 하위 영역 안에 다시 독립된 기능 단위가 있으면 깊이와 관계없이 같은 방식으로 주석을 작성합니다.
+- 주석은 사용자가 화면에서 인식하는 기능과 정보 단위를 기준으로 작성합니다.
+- `div`, `span` 등 HTML 태그명이나 CSS 클래스명을 설명하지 않고 해당 영역이 사용자에게 제공하는 역할을 작성합니다.
+- 레이아웃 정렬만을 위한 래퍼처럼 별도의 기능과 의미가 없는 요소에는 영역 주석을 강제하지 않습니다.
+- 반복 목록에는 목록 전체 영역 주석과 개별 항목 영역 주석을 각각 작성합니다.
+- 모달에는 모달 전체, 배경, 본문, 헤더, 입력 또는 정보, 버튼 영역을 구분하여 주석을 작성합니다.
+- 조건부 렌더링과 Portal로 분리된 화면도 실제 화면에 표시되는 독립 영역이면 주석을 작성합니다.
+- 렌더링 함수가 특정 화면 영역 전체를 반환하면 반환 JSX의 최상위 요소 바로 위에 영역 주석을 작성합니다.
+- 영역이 추가되거나 역할이 변경되면 관련 영역 주석도 같은 변경에서 함께 수정합니다.
+
+```tsx
+<main className={styles.page}>
+  {/* 마이페이지 프로필과 독서 활동 전체 영역 */}
+  <form className={styles.profileShell}>
+    {/* 프로필 배경 이미지 영역 */}
+    <section className={styles.cover}>
+      {/* 배경 이미지 변경과 프로필 저장 및 수정 버튼 영역 */}
+      <div className={styles.coverActionGroup}>
+        {profileActions}
+      </div>
+    </section>
+
+    {/* 프로필 기본 정보 영역 */}
+    <section className={styles.profileBody}>
+      {/* 프로필 이미지와 이미지 변경 영역 */}
+      <div className={styles.avatarWrap}>
+        {profileImage}
+      </div>
+
+      {/* 닉네임과 한줄소개 영역 */}
+      <div className={styles.profileText}>
+        {profileText}
+      </div>
+    </section>
+
+    {/* 현재 읽고 있는 책 영역 */}
+    <section className={styles.currentReading}>
+      {/* 현재 읽고 있는 책 목록 영역 */}
+      <div className={styles.currentReadingList}>
+        {reports.map((report) => (
+          /* 현재 읽고 있는 책 개별 항목 영역 */
+          <article key={report.reptNumb}>
+            {/* 현재 읽고 있는 책 표지 영역 */}
+            {report.bookCover}
+
+            {/* 현재 읽고 있는 책 제목과 독서기간 영역 */}
+            <div>{report.bookInfo}</div>
+          </article>
+        ))}
+      </div>
+    </section>
+  </form>
+</main>
+```
+
+## 3. 사용자 메시지 주석 규칙
+
+- `message`, `alert`, toast, SweetAlert, 모달 및 안내 문구처럼 사용자 화면에 문구를 노출하는 모든 코드 바로 위에 실제 노출 문구를 주석으로 작성합니다.
+- 메시지 프로퍼티 키를 호출할 때는 해당 키에 연결된 기본 언어의 실제 문구를 주석에 작성합니다.
+- 주석에는 `화면표시:`와 같은 접두사를 작성하지 않고 실제 문구만 큰따옴표로 감싸서 작성합니다.
+- 조건에 따라 서로 다른 문구를 호출하면 각 메시지 호출 바로 위에 해당 분기의 실제 문구를 개별 작성합니다.
+- 서버에서 이미 완성된 표시 문구를 받아 그대로 렌더링하는 경우에는 메시지 함수 호출이 아니므로 실제 문구 주석을 강제하지 않습니다.
+- 메시지 프로퍼티의 문구가 변경되면 호출부의 실제 문구 주석도 같은 변경에서 함께 수정합니다.
+
+## 4. JSX 메시지 주석 형식
+
+- JSX 태그 내부에서는 `{/* "실제 문구" */}` 형식으로 주석을 작성합니다.
+- JSX 바깥의 TypeScript 영역에서는 `// "실제 문구"` 형식으로 주석을 작성합니다.
+- JSX 조건 분기에서는 Fragment를 사용하여 각 메시지 호출 바로 위에 주석을 배치합니다.
+- 하나의 주석으로 여러 메시지 호출을 묶지 않습니다.
+
+```tsx
+<section className={styles.section}>
+  <h2 className={styles.sectionTitle}>
+    {/* "공개 여부" */}
+    {message("frontend.report.field.public")}
+  </h2>
+
+  <div className={styles.statusPill}>
+    {bookData.pubcYsnoName ||
+      (bookData.pubcYsno === "Y" ? (
+        <>
+          {/* "공개" */}
+          {message("frontend.report.public.on")}
+        </>
+      ) : (
+        <>
+          {/* "비공개" */}
+          {message("frontend.report.public.off")}
+        </>
+      ))}
+  </div>
+</section>
+```
+
+## 5. TypeScript 메시지 주석 형식
+
+- JSX 밖에서 메시지를 변수에 저장하거나 알림 함수에 전달하는 경우에도 각 함수 호출 바로 위에 실제 문구를 작성합니다.
+- 메시지 조회와 사용자 알림 호출이 분리되어 있으면 각 호출의 역할에 맞는 주석을 개별 작성합니다.
+
+```typescript
+// "필수 입력 항목을 확인해 주세요."
+const requiredMessage = message("frontend.validation.required");
+
+// "필수 입력 항목을 확인해 주세요."
+await sweetWarning(requiredMessage);
+```
