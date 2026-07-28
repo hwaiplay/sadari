@@ -50,7 +50,7 @@
             SELECT TM_USERXM_SEQ.NEXTVAL FROM DUAL
         </selectKey>
         /* setUser */
-        INSERT INTO TM_USERXM(
+        INSERT INTO TM_USERXM (
                     USER_NUMB
                   , PROF_NUMB
                   , BGIM_NUMB
