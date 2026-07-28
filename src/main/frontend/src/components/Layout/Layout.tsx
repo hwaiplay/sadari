@@ -41,6 +41,7 @@ function Layout({ isMainLayout = true }: { isMainLayout?: boolean }) {
   return (
     <div>
       <Header />
+      {/* 현재 경로에 연결된 페이지 표시 영역 */}
       <main
         style={{
           paddingTop: isMainLayout ? vars.headerHeight : 0,

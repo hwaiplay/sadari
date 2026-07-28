@@ -4,9 +4,9 @@ import { Link } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
 /**
- * 梨?寃???붾㈃?쇰줈 ?대룞?섎뒗 踰꾪듉???쒖떆?쒕떎.
+ * 도서 검색 화면으로 이동하는 버튼을 표시한다
  * @author HanWon.Jang
- * @return 梨?寃???대룞 踰꾪듉 而댄룷?뚰듃
+ * @return 도서 검색 화면 이동 버튼
  */
 const SearchBookButton = () => {
 
@@ -33,7 +33,8 @@ const SearchBookButton = () => {
         />
       </svg>
       <p className={searchBtnText}>
-        {message("frontend.book.search.open") /* frontend.book.search.open = 梨?寃?됲븯湲?*/}
+        {/* "책 검색하기" */}
+        {message("frontend.book.search.open")}
       </p>
     </Link>
   );

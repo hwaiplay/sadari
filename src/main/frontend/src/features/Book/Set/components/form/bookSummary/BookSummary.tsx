@@ -47,6 +47,7 @@ function BookSummary({
               type="button"
               onClick={onShowBookInfo}
             >
+              {/* "도서 정보 자세히보기" */}
               {message("frontend.report.bookInfoMore")}
             </button>
           )}
@@ -56,6 +57,7 @@ function BookSummary({
               type="button"
               onClick={onChangeBook}
             >
+              {/* "책 변경" */}
               {message("frontend.report.bookChange")}
             </button>
           )}

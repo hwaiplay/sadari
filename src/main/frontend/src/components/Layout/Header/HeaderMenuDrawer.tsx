@@ -33,7 +33,7 @@ import * as drawerStyles from "../Navigation/Navigation.css";
 import type { UserMenuItem } from "@/features/Menu/api/userMenuApi";
 
 type HeaderMenuDrawerProps = {
-  menuList: UserMenuItem[];
+  menuList?: UserMenuItem[];
 };
 
 /**
@@ -43,7 +43,7 @@ type HeaderMenuDrawerProps = {
  * @param menuList SHOW_YSNO와 USEE_YSNO가 모두 Y인 사용자 메뉴 목록
  * @return 헤더 알림·햄버거 버튼과 메뉴 드로어
  */
-function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
+function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -275,6 +275,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
         className={clsx(drawerStyles.drawer, isDrawerOpen && drawerStyles.drawerOpen)}
         aria-label="마이페이지 메뉴"
       >
+        {/* 사용자 프로필과 메뉴 닫기 영역 */}
         <section className={drawerStyles.drawerHeader}>
           <button
             className={drawerStyles.drawerProfileSummaryButton}
@@ -317,6 +318,7 @@ function HeaderMenuDrawer({ menuList }: HeaderMenuDrawerProps) {
               type="button"
               onClick={handleLogout}
             >
+              {/* "로그아웃" */}
               {message("frontend.auth.logout")}
             </button>
           </div>

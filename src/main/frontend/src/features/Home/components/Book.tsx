@@ -36,6 +36,7 @@ function Book({
         )}
         {readingYn === "Y" && (
           <span className={styles.readingBadge}>
+            {/* "읽고 있어요" */}
             {message("frontend.report.status.reading")}
           </span>
         )}

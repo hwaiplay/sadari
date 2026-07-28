@@ -135,6 +135,7 @@ function Header() {
   }, [location.pathname]);
 
   return (
+    /* 사용자 화면의 이전 이동과 현재 메뉴 표시 영역 */
     <header
       className={clsx(
         headerShell,

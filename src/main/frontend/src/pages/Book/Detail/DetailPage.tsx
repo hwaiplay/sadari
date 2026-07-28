@@ -127,8 +127,10 @@ function DetailPage() {
   // 같은 상세 API에서 받은 책 정보를 사용하므로 URL 이동 없이 화면 표시 모드만 변경합니다.
   if (showBookInfo) {
     return (
+      /* 독후감에 연결된 도서 정보 전체 영역 */
       <main className={infoStyles.page} style={pageStyle}>
         <Container className={infoStyles.content}>
+          {/* 도서 표지와 기본 정보 영역 */}
           <section className={infoStyles.header}>
             <div className={infoStyles.coverFrame}>
               <img
@@ -177,6 +179,7 @@ function DetailPage() {
                     strokeLinejoin="round"
                   />
                 </svg>
+                {/* "돌아가기" */}
                 {message("frontend.report.backToReport")}
               </button>
               <button
@@ -198,6 +201,7 @@ function DetailPage() {
                   )
                 }
               >
+                {/* "다른 사람이 쓴 독후감 보기" */}
                 {message("frontend.book.publicReports.button")}
               </button>
             </div>
@@ -207,24 +211,29 @@ function DetailPage() {
             key="book-info"
             className={clsx(infoStyles.contentPanel, styles.contentSwitchFade)}
           >
+            {/* 저자와 출판 정보 영역 */}
             <section className={infoStyles.section}>
               <h2 className={infoStyles.sectionTitle}>
+                {/* "도서 정보" */}
                 {message("frontend.common.bookInfo")}
               </h2>
               <div className={infoStyles.infoGrid}>
                 <span className={infoStyles.infoLabel}>
+                  {/* "저자" */}
                   {message("frontend.common.author")}
                 </span>
                 <p className={infoStyles.infoValue}>
                   {bookData.bookAthr || "-"}
                 </p>
                 <span className={infoStyles.infoLabel}>
+                  {/* "출판사" */}
                   {message("frontend.common.publisher")}
                 </span>
                 <p className={infoStyles.infoValue}>
                   {bookData.bookPubl || "-"}
                 </p>
                 <span className={infoStyles.infoLabel}>
+                  {/* "출간일" */}
                   {message("frontend.common.publDate")}
                 </span>
                 <p className={infoStyles.infoValue}>
@@ -233,8 +242,10 @@ function DetailPage() {
               </div>
             </section>
 
+            {/* 도서 소개 영역 */}
             <section className={infoStyles.section}>
               <h2 className={infoStyles.sectionTitle}>
+                {/* "책 소개" */}
                 {message("frontend.common.bookDescription")}
               </h2>
               <p className={infoStyles.description}>
@@ -249,8 +260,10 @@ function DetailPage() {
   }
 
   return (
+    /* 독후감 상세 정보 전체 영역 */
     <main className={styles.page} style={pageStyle}>
       <Container className={styles.detail}>
+        {/* 도서 표지와 독후감 전환 영역 */}
         <section className={styles.header}>
           <div className={styles.coverFrame}>
             <img
@@ -266,6 +279,7 @@ function DetailPage() {
             type="button"
             onClick={showBookInfoView}
           >
+            {/* "도서 정보 자세히보기" */}
             {message("frontend.report.bookInfoMore")}
           </button>
         </section>
@@ -274,8 +288,10 @@ function DetailPage() {
           key="report-detail"
           className={clsx(styles.contentPanel, styles.contentSwitchFade)}
         >
+          {/* 독서 상태 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "독서 상태" */}
               {message("frontend.report.field.status")}
             </h2>
             <div className={styles.statusPill}>
@@ -283,8 +299,10 @@ function DetailPage() {
             </div>
           </section>
 
+          {/* 독후감 공개 여부 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "공개 여부" */}
               {message("frontend.report.field.public")}
             </h2>
             <div className={styles.statusPill}>
@@ -295,6 +313,7 @@ function DetailPage() {
             </div>
           </section>
 
+          {/* 독서 기간 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
               {periodTitle}
@@ -304,16 +323,20 @@ function DetailPage() {
             </div>
           </section>
 
+          {/* 독후감 평점 영역 */}
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>
+              {/* "평점" */}
               {message("frontend.report.field.grade")}
             </h2>
             <RatingStars grade={bookData.reptGrde} />
           </section>
 
+          {/* 독후감 기록과 좋아요 영역 */}
           <section className={styles.section}>
             <div className={styles.sectionTitleRow}>
               <h2 className={styles.sectionTitle}>
+                {/* "기록" */}
                 {message("frontend.report.field.content")}
               </h2>
               <button
@@ -379,6 +402,7 @@ function DetailPage() {
                   strokeLinecap="round"
                 />
               </svg>
+              {/* "수정" */}
               {message("frontend.report.update")}
             </button>
           </div>

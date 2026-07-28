@@ -210,11 +210,11 @@ function SocialProfilePage() {
 
     if (followStatName === "팔로잉") {
       const result = await sweetConfirm({
-        // 화면표시: 언팔로우하시겠습니까?
+        // "언팔로우하시겠습니까?"
         title: message("frontend.social.unfollow.title"),
-        // 화면표시: 팔로잉 목록에서 삭제됩니다.
+        // "팔로잉 목록에서 삭제됩니다."
         text: message("frontend.social.unfollow.text"),
-        // 화면표시: 언팔로우
+        // "언팔로우"
         confirmButtonText: message("frontend.social.unfollow.confirm"),
         cancelButtonText: message("frontend.common.cancel"),
       });
@@ -458,6 +458,7 @@ function SocialProfilePage() {
     ];
 
     return (
+      /* 상대 사용자의 독서와 소셜 활동 통계 영역 */
       <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
         <div className={styles.profileStatsSummary}>
           <div className={styles.goalAchievementGrid}>
@@ -501,12 +502,14 @@ function SocialProfilePage() {
     }
 
     return (
+      /* 상대 사용자가 현재 읽고 있는 책 목록 영역 */
       <section
         className={styles.monthlySummary}
         aria-label={message("frontend.profile.currentReading.title")}
       >
         <div className={styles.currentReadingSection}>
           <h2 className={styles.currentReadingTitle}>
+            {/* "현재 읽고 있는 책" */}
             {message("frontend.profile.currentReading.title")}
           </h2>
           <div className={styles.currentReadingList}>
@@ -820,7 +823,9 @@ function SocialProfilePage() {
   }
 
   return (
+    /* 상대 사용자의 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>
+      {/* 상대 사용자의 프로필 배경과 기본 정보 영역 */}
       <section className={styles.profileShell}>
         <div
           className={styles.cover}
@@ -832,11 +837,13 @@ function SocialProfilePage() {
         >
           {!profile.bgimPath && (
             <p className={styles.coverEmptyText}>
+              {/* "배경사진을 선택해주세요." */}
               {message("frontend.profile.background.empty")}
             </p>
           )}
         </div>
 
+        {/* 상대 사용자 정보와 팔로우 상태 영역 */}
         <section className={styles.socialProfileBody}>
           <div className={styles.socialProfileHeaderRow}>
             <div className={styles.avatarWrap}>
@@ -871,41 +878,51 @@ function SocialProfilePage() {
 
           {renderProfileStats(summary)}
           {renderCurrentReadingReports(summary.currentReadingReports)}
-          <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+        {/* 상대 사용자의 월간 독서 요약 영역 */}
+        <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
               <p className={styles.goalAchievementTitle}>
+                {/* "목표 달성 횟수" */}
                 {message("frontend.profile.goal.achievementTitle")}
               </p>
               <div className={styles.goalAchievementGrid}>
                 <div className={styles.goalAchievementItem}>
                   <span className={styles.goalAchievementLabel}>
+                    {/* "주간" */}
                     {message("frontend.profile.goal.weekLabel")}
                   </span>
                   <strong className={styles.goalAchievementCount}>
+                    {/* "{0}회" */}
                     {message("frontend.profile.goal.achievementCount", [summary.weekGoalAchvCnt])}
                   </strong>
                 </div>
                 <div className={styles.goalAchievementItem}>
                   <span className={styles.goalAchievementLabel}>
+                    {/* "월간" */}
                     {message("frontend.profile.goal.monthLabel")}
                   </span>
                   <strong className={styles.goalAchievementCount}>
+                    {/* "{0}회" */}
                     {message("frontend.profile.goal.achievementCount", [summary.monthGoalAchvCnt])}
                   </strong>
                 </div>
                 <div className={styles.goalAchievementItem}>
                   <span className={styles.goalAchievementLabel}>
+                    {/* "연간" */}
                     {message("frontend.profile.goal.yearLabel")}
                   </span>
                   <strong className={styles.goalAchievementCount}>
+                    {/* "{0}회" */}
                     {message("frontend.profile.goal.achievementCount", [summary.yearGoalAchvCnt])}
                   </strong>
                 </div>
                 <div className={styles.goalAchievementItem}>
                   <span className={styles.goalAchievementLabel}>
+                    {/* "총" */}
                     {message("frontend.profile.goal.totalLabel")}
                   </span>
                   <strong className={styles.goalAchievementCount}>
+                    {/* "{0}회" */}
                     {message("frontend.profile.goal.achievementCount", [summary.totalGoalAchvCnt])}
                   </strong>
                 </div>
@@ -953,7 +970,8 @@ function SocialProfilePage() {
             }
           }}
         >
-          <section
+        {/* 상대 사용자의 목표 달성 기록 영역 */}
+        <section
             className={styles.followModal}
             role="dialog"
             aria-modal="true"
@@ -983,6 +1001,7 @@ function SocialProfilePage() {
             >
               {isFollowListLoading && (
                 <p className={styles.followModalEmpty}>
+                  {/* "목록 조회중" */}
                   {message("frontend.common.loadingList")}
                 </p>
               )}

@@ -36,7 +36,8 @@ export const useSetReport = () => {
     onError: (error: unknown) => {
 
       void sweetError(
-        message("frontend.alert.createFailedTitle"), // frontend.alert.createFailedTitle = ?깅줉???ㅽ뙣?덉뒿?덈떎
+        // "등록에 실패했습니다."
+        message("frontend.alert.createFailedTitle"),
         getApiErrorMessage(error, message("frontend.report.createFailed")),
       );
     },

@@ -1667,6 +1667,7 @@ function ProfileEditPage() {
   }
 
   return (
+    /* 내 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>
       {/* 마이페이지 프로필과 독서 활동 전체 영역 */}
       <form className={styles.profileShell} onSubmit={handleSubmit}>

@@ -4,7 +4,7 @@
  * @author HanWon.Jang
  */
 import * as s from "./button.css";
-import clsx from "clsx";
+import { clsx } from "clsx";
 
 type ButtonProps = {
   variant?: keyof typeof s.buttonVariant;

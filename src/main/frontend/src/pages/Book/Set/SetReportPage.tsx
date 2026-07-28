@@ -107,7 +107,9 @@ function SetReportPage() {
   return isPending ? (
     <Loading title={message("frontend.report.loading.create")} />
   ) : (
+    /* 독후감 등록 입력 전체 영역 */
     <main className={styles.page} style={pageStyle}>
+      {/* 도서와 독서 정보 입력 영역 */}
       <form className={styles.form} onSubmit={formAction}>
         {selectedBook?.image ? (
           <BookSummary
@@ -188,6 +190,7 @@ function SetReportPage() {
                     : message("frontend.report.public.off")}
                 </span>
                 <span className={styles.publicToggleHelp}>
+                  {/* "공개하면 다른 사용자가 이 도서 정보에서 독후감과 별점을 볼 수 있습니다." */}
                   {message("frontend.report.public.help")}
                 </span>
               </div>
@@ -250,6 +253,7 @@ function SetReportPage() {
                 strokeLinejoin="round"
               />
             </svg>
+            {/* "저장" */}
             {message("frontend.report.save")}
           </button>
         </div>

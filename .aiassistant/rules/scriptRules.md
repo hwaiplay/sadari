@@ -151,6 +151,9 @@ apply: always
 ### 7.2 정적 분석
 
 - ESLint 및 TypeScript 오류와 경고를 모두 해결합니다.
+- 외부 모듈은 현재 TypeScript 설정에서 실제로 제공하는 export 형식에 맞춰 import합니다.
+- `allowSyntheticDefaultImports`에 의존하는 기본 import를 사용하지 않고 named export 또는 namespace export를 사용합니다.
+- 타입으로만 사용하는 모듈 항목은 `import type`으로 선언합니다.
 - 사용하지 않는 import, 변수, 타입 및 함수는 즉시 삭제합니다.
 - Raw 객체 대신 구체적인 인터페이스, 타입 별칭 또는 제네릭을 사용합니다.
 - 경고 억제 주석으로 문제를 숨기지 않고 원인을 수정합니다.
@@ -348,6 +351,7 @@ await sweetWarning(message("frontend.login.required"));
 ### 16.1 필수 검사
 
 - 수정 후 `npm run lint`를 실행합니다.
+- 수정 후 `npx tsc --noEmit`을 실행하여 IDE에서 표시되는 TypeScript 오류까지 확인합니다.
 - 사용자 화면이나 빌드 결과에 영향을 주는 변경은 `npm run build`로 검증합니다.
 - IDE의 오류와 경고를 남기지 않습니다.
 - 경고 비활성화 주석으로 문제를 숨기지 않습니다.

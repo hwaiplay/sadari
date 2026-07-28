@@ -213,9 +213,11 @@ function Home() {
 
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
     <div className={styles.homeContainer}>
+      {/* 독후감 검색과 정렬 영역 */}
       <form className={styles.sortBar} onSubmit={handleSearchSubmit}>
         <label className={styles.searchLabel}>
           <span className={styles.hiddenLabel}>
+            {/* "제목, 작가 검색" */}
             {message("frontend.home.search.label")}
           </span>
           <input
@@ -293,6 +295,7 @@ function Home() {
       {bookList.length > 0 ? (
         <div className={styles.monthGroupStack}>
           {monthlyBookGroups.map((group) => (
+            /* 등록 월별 독후감 목록 영역 */
             <section className={styles.monthGroup} key={group.key}>
               <div className={styles.monthGroup__inner}>
                 <div
@@ -321,6 +324,7 @@ function Home() {
       ) : (
         <div className={styles.emptySearchResult}>
           <p className={styles.emptySearchText}>
+            {/* "검색된 독후감이 없습니다." */}
             {message("frontend.home.search.empty")}
           </p>
           <button
@@ -333,7 +337,7 @@ function Home() {
               });
             }}
           >
-            {/* 화면표시: "{0}"으로 도서검색하기 */}
+            {/* ""{0}"으로 도서검색하기" */}
             <span>
               {message("frontend.home.search.goBookSearch", [
                 appliedSearchKeyword.trim(),
