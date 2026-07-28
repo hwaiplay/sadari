@@ -30,7 +30,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class ReportDateOverServiceImpl implements ReportDateOverService {
-
     // 결과 성공 코드 설정값
     private static final int RESULT_SUCCESS_CODE = 200;
     // 빈 값 결과 메시지 설정값
@@ -72,7 +71,6 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
      */
     @Override
     public void sendReportDateOverAlim() {
-
         // 실행 시간을 측정할 시작 시각을 기록한다
         long startNanoTime = System.nanoTime();
         // 스케줄러 실행 로그를 담을 객체를 생성한다
@@ -115,7 +113,6 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
 
             // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
             for (ReportDto target : targetList) {
-
                 // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
                 try {
                     /*
@@ -153,16 +150,12 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                     );
 
                     // 복구 가능한 예외 상황을 경고 로그로 남긴다
-                    log.warn(
-                            "목표 독서기간 초과 알림 발송이 거부되었습니다. 사용자 번호={}, 독후감 번호={}, 응답 코드={}"
-                          , target.getUserNumb()
-                      , target.getReptNumb()
-                      , resultCode
-                    );
+                    log.warn("목표 독서기간 초과 알림 발송이 거부되었습니다. 사용자 번호={}, 독후감 번호={}, 응답 코드={}"
+                           , target.getUserNumb(), target.getReptNumb(), resultCode);
                 }
+
                 // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
                 catch (RuntimeException e) {
-
                     /*
                      * 한 대상의 예외가 남은 배치를 중단시키지 않도록 실패 건만 기록하고 다음 대상으로 진행한다.
                      * 저장되지 않은 대상은 조회 SQL의 NOT EXISTS 조건을 계속 만족하므로 다음 실행에서 다시 시도된다.
@@ -177,21 +170,16 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                           , e
                     );
                     // 실패 원인과 처리 대상을 오류 로그로 남긴다
-                    log.error(
-                            "목표 독서기간 초과 알림 발송 중 오류가 발생했습니다. 사용자 번호={}, 독후감 번호={}"
-                          , target.getUserNumb()
-                          , target.getReptNumb()
-                          , e
-                    );
+                    log.error("목표 독서기간 초과 알림 발송 중 오류가 발생했습니다. 사용자 번호={}, 독후감 번호={}", target.getUserNumb(), target.getReptNumb(), e);
                 }
             }
 
             // getSchedulerExecutionStatus 조회로 후속 처리에 필요한 데이터를 가져온다
             executionStatus = schedulerLogSupport.getSchedulerExecutionStatus(successCnt, failureCnt);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RuntimeException e) {
-
             /*
              * 대상 목록 조회처럼 개별 대상 처리 이전에 발생한 예외도 실행 실패로 남겨 관리자 화면에서 확인할 수 있게 한다.
              * 최종 마스터 로그를 갱신한 뒤 Spring 스케줄러에도 실패가 전달되도록 원래 예외를 다시 던진다.
@@ -210,6 +198,7 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
             log.error("목표 독서기간 초과 스케줄러 실행 중 오류가 발생했습니다.", e);
             throw e;
         }
+
         // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
         finally {
             // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
@@ -231,13 +220,9 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
             schedulerLogSupport.uptSchedulerLogSafely(schedulerRunDto);
 
             // 처리 상태를 정보 로그로 남긴다
-            log.info(
-                    "목표 독서기간 초과 스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수={}, 실패 건수={}, 최대 조회 건수={}"
-                  , targetCnt
-                  , successCnt
-                  , failureCnt
-                  , maxSize
-            );
+            log.info("목표 독서기간 초과 스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수={}, 실패 건수={}, 최대 조회 건수={}"
+                   , targetCnt, successCnt, failureCnt
+                   , maxSize);
         }
     }
 

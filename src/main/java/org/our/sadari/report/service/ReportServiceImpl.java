@@ -45,7 +45,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
-
     // Report 데이터 접근 객체
     private final ReportMapper reportMapper;
     // Social 데이터 접근 객체
@@ -98,7 +97,6 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getBookList(Long userNumb, String bookKeyword, String sortType) {
-
         // 독후감 또는 독서 목표 처리 데이터를 담을 객체를 생성한다
         ReportDto reportDto = new ReportDto();
         // UserNumb 업무 값을 reportDto DTO에 설정한다
@@ -126,7 +124,6 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getMonthlyReadingSummary(Long userNumb) {
-
         // ==========================================
         // 1. 기준 날짜 정의 및 기간별 시작일 계산
         // ==========================================
@@ -306,7 +303,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 저장된 목표 정보, 없으면 null
      */
     private ReadingGoalDto getReadingGoalDtl(Long userNumb, LocalDate targetDate, String goalType) {
-
         // 독서 목표 조회 또는 저장 조건을 담을 객체를 생성한다
         ReadingGoalDto req = new ReadingGoalDto();
         // UserNumb 업무 값을 req DTO에 설정한다
@@ -331,10 +327,8 @@ public class ReportServiceImpl implements ReportService {
      */
     private void applyReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto weekGoal, ReadingGoalDto monthGoal
                                 , ReadingGoalDto yearGoal) {
-
         // 주간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
         if (!StringUtil.isEmpty(weekGoal)) {
-
             // WeekGoalSet 업무 값을 summary DTO에 설정한다
             summary.setWeekGoalSet(true);
             // WeekGoalCnt 업무 값을 summary DTO에 설정한다
@@ -345,7 +339,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 월간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
         if (!StringUtil.isEmpty(monthGoal)) {
-
             // MonthGoalSet 업무 값을 summary DTO에 설정한다
             summary.setMonthGoalSet(true);
             // MonthGoalCnt 업무 값을 summary DTO에 설정한다
@@ -356,7 +349,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 연간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
         if (!StringUtil.isEmpty(yearGoal)) {
-
             // YearGoalSet 업무 값을 summary DTO에 설정한다
             summary.setYearGoalSet(true);
             // YearGoalCnt 업무 값을 summary DTO에 설정한다
@@ -368,24 +360,20 @@ public class ReportServiceImpl implements ReportService {
 
     private void applyPreviousReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto weekGoal, ReadingGoalDto monthGoal
                                         , ReadingGoalDto yearGoal) {
-
         // weekGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(weekGoal)) {
-
             // PreviousWeekGoalCnt 업무 값을 summary DTO에 설정한다
             summary.setPreviousWeekGoalCnt(weekGoal.getGoalCnt());
         }
 
         // monthGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(monthGoal)) {
-
             // PreviousMonthGoalCnt 업무 값을 summary DTO에 설정한다
             summary.setPreviousMonthGoalCnt(monthGoal.getGoalCnt());
         }
 
         // yearGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(yearGoal)) {
-
             // PreviousYearGoalCnt 업무 값을 summary DTO에 설정한다
             summary.setPreviousYearGoalCnt(yearGoal.getGoalCnt());
         }
@@ -404,7 +392,6 @@ public class ReportServiceImpl implements ReportService {
      */
     private void applyReadingGoalUpdateMeta(MonthlyReadingSummaryDto summary, LocalDate today, ReadingGoalDto weekGoal
                                           , ReadingGoalDto monthGoal, ReadingGoalDto yearGoal) {
-
         // WeekGoalRemainUpdateCnt 업무 값을 summary DTO에 설정한다
         summary.setWeekGoalRemainUpdateCnt(getGoalRemainUpdateCount(weekGoal, Constant.GOAL_TYPE_WEEK));
         // MonthGoalRemainUpdateCnt 업무 값을 summary DTO에 설정한다
@@ -434,7 +421,6 @@ public class ReportServiceImpl implements ReportService {
      * @param userNumb 로그인 사용자 번호
      */
     private void applyReadingGoalAchvCnt(MonthlyReadingSummaryDto summary, Long userNumb) {
-
         // getReadingGoalAchvCnt 조회로 후속 처리에 필요한 데이터를 가져온다
         int weekGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_WEEK);
         // getReadingGoalAchvCnt 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -461,7 +447,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 달성 횟수
      */
     private int getReadingGoalAchvCnt(Long userNumb, String goalType) {
-
         // 독서 목표 조회 또는 저장 조건을 담을 객체를 생성한다
         ReadingGoalDto req = new ReadingGoalDto();
         // UserNumb 업무 값을 req DTO에 설정한다
@@ -484,13 +469,12 @@ public class ReportServiceImpl implements ReportService {
      * @return 0부터 100까지의 달성률
      */
     private int getGoalRate(int doneCount, Integer goalCount) {
-
         // 목표 권수가 없거나 0 이하이면 달성률 계산이 불가능하므로 0%로 처리한다.
         if (StringUtil.isEmpty(goalCount) || goalCount <= 0) {
-
             // 완료 독후감 수와 목표 권수를 비교해 화면 표시용 달성률을 계산 결과를 반환한다
             return 0;
         }
+
         // 완료 독후감 수와 목표 권수를 비교해 화면 표시용 달성률을 계산 결과를 반환한다
         return Math.min(100, (int) Math.round((doneCount * 100.0) / goalCount));
     }
@@ -505,20 +489,18 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 기준값
      */
     private String getGoalDate(LocalDate targetDate, String goalType) {
-
         // 주간 목표는 ISO 주차 기준값을 사용해야 하므로 별도 변환 로직으로 분기한다.
         if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
-
             // 목표 유형에 따라 TM_GOALXM.GOAL_DATE에 저장할 기준값을 만든다 결과를 반환한다
             return getGoalWeekDate(targetDate);
         }
 
         // 연간 목표는 월 정보가 필요 없으므로 YYYY00 형식으로 저장한다.
         if (Constant.GOAL_TYPE_YEAR.equals(goalType)) {
-
             // 목표 유형에 따라 TM_GOALXM.GOAL_DATE에 저장할 기준값을 만든다 결과를 반환한다
             return targetDate.getYear() + "00";
         }
+
         // 목표 유형에 따라 TM_GOALXM.GOAL_DATE에 저장할 기준값을 만든다 결과를 반환한다
         return YearMonth.from(targetDate).format(GOAL_MONTH_FORMATTER);
     }
@@ -532,7 +514,6 @@ public class ReportServiceImpl implements ReportService {
      * @return YYYYWW 형식의 주간 목표 기준값
      */
     private String getGoalWeekDate(LocalDate targetDate) {
-
         // 지정한 키에 대응하는 값을 조회한다
         int weekYear = targetDate.get(GOAL_WEEK_FIELDS.weekBasedYear());
         // 지정한 키에 대응하는 값을 조회한다
@@ -550,7 +531,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 저장 후 갱신된 마이페이지 독서 요약 정보
      */
     private boolean isValidReadingGoal(ReadingGoalDto readingGoalDto) {
-
         // 주간, 월간, 연간 독서 목표를 한 번에 저장 결과를 반환한다
         return !(StringUtil.isEmpty(readingGoalDto) || StringUtil.isEmpty(readingGoalDto.getWeekGoalCnt())
                 // 필수 값이 비어 있는지 공통 기준으로 확인한다
@@ -571,10 +551,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto) {
-
         // 주간, 월간, 연간 목표 중 하나라도 유효하지 않으면 저장 요청 전체를 거절한다.
         if (!isValidReadingGoal(readingGoalDto)) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -585,7 +563,6 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum weekResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_WEEK, readingGoalDto.getWeekGoalCnt());
         // 주간 목표 저장 중 제한 규칙에 걸리면 이후 월간, 연간 저장을 진행하지 않는다.
         if (!StringUtil.isEmpty(weekResult)) {
-
             // 주간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(weekResult);
         }
@@ -594,7 +571,6 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum monthResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_MONTH, readingGoalDto.getMonthGoalCnt());
         // 월간 목표 저장 중 제한 규칙에 걸리면 이후 연간 저장을 진행하지 않는다.
         if (!StringUtil.isEmpty(monthResult)) {
-
             // 월간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(monthResult);
         }
@@ -603,10 +579,10 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum yearResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_YEAR, readingGoalDto.getYearGoalCnt());
         // 연간 목표 저장 중 제한 규칙에 걸리면 실패 결과를 그대로 반환한다.
         if (!StringUtil.isEmpty(yearResult)) {
-
             // 연간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(yearResult);
         }
+
         // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
         return getMonthlyReadingSummary(userNumb);
     }
@@ -621,7 +597,6 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData copyPreviousReadingGoal(Long userNumb) {
-
         // 1. 현재 시점 및 직전 주간, 월간, 연간의 시작 날짜 기준점을 계산한다.
         LocalDate today = LocalDate.now();                                                      // 실시간 현재 일자 획득
         // 목표 기간 계산에 사용할 기준 요일로 날짜를 조정한다
@@ -648,7 +623,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 3. 복사된 목표가 단 1건도 없는 경우(이미 목표가 존재하거나 이전 목표 데이터가 없는 경우) 요청 실패로 응답한다.
         if (copiedCount == 0) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -670,12 +644,10 @@ public class ReportServiceImpl implements ReportService {
      */
     private int copyPreviousReadingGoalByType(Long userNumb, LocalDate today, LocalDate currentDate
                                             , LocalDate previousDate, String goalType) {
-
         // 1. 이미 현재 기간에 설정된 목표가 존재하는 경우 덮어쓰지 않고 즉시 스킵한다.
         ReadingGoalDto currentGoal = getReadingGoalDtl(userNumb, currentDate, goalType);
         // currentGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(currentGoal)) {
-
             // 목표 타입별로 직전 기간의 목표 데이터를 검증하고 현재 기간의 목표로 단건 복사한 결과를 반환한다
             return 0;
         }
@@ -685,7 +657,6 @@ public class ReportServiceImpl implements ReportService {
         // previousGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(previousGoal) || StringUtil.isEmpty(previousGoal.getGoalCnt())
                 || previousGoal.getGoalCnt() <= 0) {
-
             // 목표 타입별로 직전 기간의 목표 데이터를 검증하고 현재 기간의 목표로 단건 복사한 결과를 반환한다
             return 0;
         }
@@ -710,13 +681,11 @@ public class ReportServiceImpl implements ReportService {
      */
     private ResultEnum setReadingGoalByType(Long userNumb, LocalDate today, String goalType
                                           , Integer goalCnt) {
-
         // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
         ReadingGoalDto currentGoal = getReadingGoalDtl(userNumb, today, goalType);
 
         // 현재 목표와 새 목표가 같으면 수정 횟수를 증가시키지 않기 위해 DB 갱신을 생략한다.
         if (!StringUtil.isEmpty(currentGoal) && goalCnt.equals(currentGoal.getGoalCnt())) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -725,7 +694,6 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum validateResult = validateReadingGoalDown(currentGoal, today, goalType, goalCnt);
         // 목표 내리기 검증에서 실패 코드가 나오면 해당 코드를 Controller까지 전달한다.
         if (!StringUtil.isEmpty(validateResult)) {
-
             // 목표 유형 하나에 대해 현재 목표와 신규 목표를 비교한 뒤 저장 결과를 반환한다
             return validateResult;
         }
@@ -759,27 +727,24 @@ public class ReportServiceImpl implements ReportService {
      */
     private ResultEnum validateReadingGoalDown(ReadingGoalDto currentGoal, LocalDate today, String goalType
                                              , Integer goalCnt) {
-
         // 신규 목표 설정이거나 목표를 올리는 요청이면 내리기 제한을 적용하지 않는다.
         if (StringUtil.isEmpty(currentGoal) || currentGoal.getGoalCnt() <= goalCnt) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
 
         // 목표 내리기 허용 횟수를 모두 사용한 경우 더 이상 목표를 낮출 수 없다.
         if (getGoalUpdateLimit(goalType) <= getGoalUpdateCount(currentGoal)) {
-
             // 목표 권수를 낮추는 요청인지 판단하고 낮추기 제한을 검증 결과를 반환한다
             return ResultEnum.COMMON_INVALID_REQUEST;
         }
 
         // 목표 내리기 가능 기간이 마감된 경우 목표를 낮출 수 없다.
         if (isGoalUpdateLocked(today, goalType)) {
-
             // 목표 권수를 낮추는 요청인지 판단하고 낮추기 제한을 검증 결과를 반환한다
             return ResultEnum.COMMON_INVALID_REQUEST;
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -793,20 +758,18 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 내리기 허용 횟수
      */
     private int getGoalUpdateLimit(String goalType) {
-
         // 주간 목표는 ISO 주차 기준값을 사용해야 하므로 별도 변환 로직으로 분기한다.
         if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
-
             // 목표 유형별 목표 내리기 가능 횟수를 반환한다
             return WEEK_GOAL_MAX_UPDATE_COUNT;
         }
 
         // 월간 목표는 주간보다 넓은 기간을 다루므로 3회까지 목표 내리기를 허용한다.
         if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
-
             // 목표 유형별 목표 내리기 가능 횟수를 반환한다
             return MONTH_GOAL_MAX_UPDATE_COUNT;
         }
+
         // 목표 유형별 목표 내리기 가능 횟수를 반환한다
         return YEAR_GOAL_MAX_UPDATE_COUNT;
     }
@@ -821,13 +784,12 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 내리기 잔여 횟수
      */
     private int getGoalRemainUpdateCount(ReadingGoalDto currentGoal, String goalType) {
-
         // 저장된 목표가 아직 없으면 유형별 전체 내리기 횟수를 잔여 횟수로 표시한다.
         if (StringUtil.isEmpty(currentGoal)) {
-
             // 현재 목표의 사용 횟수를 기준으로 목표 내리기 잔여 횟수를 계산 결과를 반환한다
             return getGoalUpdateLimit(goalType);
         }
+
         // 현재 목표의 사용 횟수를 기준으로 목표 내리기 잔여 횟수를 계산 결과를 반환한다
         return Math.max(0, getGoalUpdateLimit(goalType) - getGoalUpdateCount(currentGoal));
     }
@@ -840,7 +802,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 내리기 사용 횟수
      */
     private int getGoalUpdateCount(ReadingGoalDto currentGoal) {
-
         // 목표 내리기 사용 횟수가 null이면 0으로 보정 결과를 반환한다
         return StringUtil.isEmpty(currentGoal.getUpdtCntt()) ? 0 : currentGoal.getUpdtCntt();
     }
@@ -855,10 +816,8 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 내리기 마감 여부
      */
     private boolean isGoalUpdateLocked(LocalDate today, String goalType) {
-
         // 주간 목표는 ISO 주차 기준값을 사용해야 하므로 별도 변환 로직으로 분기한다.
         if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
-
             // 목표 기간 계산에 사용할 기준 요일로 날짜를 조정한다
             LocalDate weekLastDay = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 7);
             // 목표 내리기 가능 기간이 지났는지 판단 결과를 반환한다
@@ -867,12 +826,12 @@ public class ReportServiceImpl implements ReportService {
 
         // 월간 목표는 월 종료 7일 전부터 내리기를 막기 위해 월 마지막 날을 기준으로 계산한다.
         if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
-
             // 기준 월에서 필요한 일자로 날짜를 조정한다
             LocalDate monthLastDay = today.withDayOfMonth(today.lengthOfMonth());
             // 목표 내리기 가능 기간이 지났는지 판단 결과를 반환한다
             return ChronoUnit.DAYS.between(today, monthLastDay) <= MONTH_GOAL_LOCK_REMAINING_DAYS;
         }
+
         // 목표 내리기 가능 기간이 지났는지 판단 결과를 반환한다
         return today.getMonthValue() == 12;
     }
@@ -887,10 +846,8 @@ public class ReportServiceImpl implements ReportService {
      * @return 목표 내리기 가능 잔여 일수
      */
     private int getGoalEditableRemainDays(LocalDate today, String goalType) {
-
         // 주간 목표는 ISO 주차 기준값을 사용해야 하므로 별도 변환 로직으로 분기한다.
         if (Constant.GOAL_TYPE_WEEK.equals(goalType)) {
-
             // 목표 기간 계산에 사용할 기준 요일로 날짜를 조정한다
             LocalDate weekLastDay = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 7);
             // 목표 내리기가 가능한 잔여 일수를 계산 결과를 반환한다
@@ -899,7 +856,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 월간 목표의 내리기 가능 잔여 일수는 월 마지막 날에서 잠금 기준일을 뺀 값으로 계산한다.
         if (Constant.GOAL_TYPE_MONTH.equals(goalType)) {
-
             // 기준 월에서 필요한 일자로 날짜를 조정한다
             LocalDate monthLastDay = today.withDayOfMonth(today.lengthOfMonth());
             // 목표 내리기가 가능한 잔여 일수를 계산 결과를 반환한다
@@ -924,7 +880,6 @@ public class ReportServiceImpl implements ReportService {
      */
     private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, LocalDate periodStart, LocalDate periodEndExclusive
                                                        , String reptStat, String reportOrderType) {
-
         // 월별 독서 요약 결과를 담을 객체를 생성한다
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         // UserNumb 업무 값을 req DTO에 설정한다
@@ -942,7 +897,6 @@ public class ReportServiceImpl implements ReportService {
     }
 
     private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, String reptStat, String reportOrderType) {
-
         // 월별 독서 요약 결과를 담을 객체를 생성한다
         MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
         // UserNumb 업무 값을 req DTO에 설정한다
@@ -963,13 +917,12 @@ public class ReportServiceImpl implements ReportService {
      * @return 독후감 상세 조회 결과
      */
     private String normalizeListSortType(String sortType) {
-
         // 허용된 정렬값만 Mapper에 전달해 동적 정렬 조건이 임의로 확장되지 않게 한다.
         if (Constant.SORT_START_DATE_DESC.equals(sortType) || Constant.SORT_GRADE_DESC.equals(sortType)) {
-
             // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 조회 결과를 반환한다
             return sortType;
         }
+
         // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 조회 결과를 반환한다
         return Constant.SORT_END_DATE_DESC;
     }
@@ -983,10 +936,8 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getDetail(Long userNumb, Long reptNumb) {
-
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1007,10 +958,10 @@ public class ReportServiceImpl implements ReportService {
 
         // 조회 결과가 없으면 존재하지 않거나 접근할 수 없는 독후감으로 판단한다.
         if (StringUtil.isEmpty(detail)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
+
         // 독후감 번호로 독후감과 도서 상세 정보를 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(detail);
     }
@@ -1026,10 +977,8 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn) {
-
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1054,13 +1003,12 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getPublicRatingAverageByIsbn(String bookIsbn) {
-
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
+
         // ISBN 기준 도서 평균 별점을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
     }
@@ -1077,10 +1025,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData setReport(Long userNumb, ReportDto reportDto) {
-
         // 등록 요청의 도서 필수값이 누락되면 도서와 독후감 저장을 모두 중단한다.
         if (hasInvalidBookFields(reportDto)) {
-
             // "선택한 책 정보가 올바르지 않습니다. 다른 책을 선택해주세요."
             return ResultData.fail(ResultEnum.COMMON_REPORT_BOOK_INVALID);
         }
@@ -1098,17 +1044,16 @@ public class ReportServiceImpl implements ReportService {
         ReportValidationResult validationResult = validateReport(reportDto, true);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
-
             // 독후감과 필요한 도서 정보를 등록 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
         // ISBN 기준 등록된 도서가 없을 때만 도서 마스터를 신규 생성한다.
         if (bookMapper.dupBook(reportDto) == 0) {
-
             // Book 업무 값을 bookMapper DTO에 설정한다
             bookMapper.setBook(reportDto);
         }
+
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
         else {
             // BookNumb 업무 값을 reportDto DTO에 설정한다
@@ -1119,10 +1064,10 @@ public class ReportServiceImpl implements ReportService {
         reportMapper.setReport(reportDto);
         // 독후감 등록 후 PK가 채워지지 않으면 저장 실패로 판단한다.
         if (StringUtil.isEmpty(reportDto.getReptNumb())) {
-
             // "저장에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
+
         // 독후감과 필요한 도서 정보를 등록 결과를 성공 응답으로 반환한다
         return ResultData.success(reportDto.getReptNumb());
     }
@@ -1140,10 +1085,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto) {
-
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1163,17 +1106,16 @@ public class ReportServiceImpl implements ReportService {
         ReportValidationResult validationResult = validateReport(reportDto, true);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
-
             // 기존 독후감 정보를 수정 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (reportMapper.uptReport(reportDto) == 0) {
-
             // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
+
         // 기존 독후감 정보를 수정 결과를 성공 응답으로 반환한다
         return ResultData.success(reportDto.getReptNumb());
     }
@@ -1191,10 +1133,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData uptReptStatusGrade(Long userNumb, Long reptNumb, ReportDto reportDto) {
-
         // 대상 독후감 번호가 없으면 수정 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1214,7 +1154,6 @@ public class ReportServiceImpl implements ReportService {
         ReportValidationResult validationResult = validateReport(reportDto, false);
         // 업무 검증 실패가 있으면 DB 변경 전에 사용자에게 전달할 실패 결과를 반환한다.
         if (!StringUtil.isEmpty(validationResult)) {
-
             // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 과정에서 확인된 사용자 메시지
             return ResultData.fail(validationResult.resultEnum(), validationResult.args());
         }
@@ -1224,10 +1163,10 @@ public class ReportServiceImpl implements ReportService {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (result == 0) {
-
             // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
+
         // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 결과를 성공 응답으로 반환한다
         return ResultData.success(reportDto.getReptNumb());
     }
@@ -1244,10 +1183,8 @@ public class ReportServiceImpl implements ReportService {
     @Override
     @Transactional
     public ResultData delReport(Long userNumb, Long reptNumb) {
-
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
         if (StringUtil.isEmpty(reptNumb)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1261,7 +1198,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 삭제 반영 건수가 없으면 본인 독후감이 아니거나 이미 삭제된 데이터로 판단한다.
         if (reportMapper.delReport(reportDto) == 0) {
-
             // "삭제에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
@@ -1287,7 +1223,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 도서 필수값 누락 여부
      */
     private boolean hasInvalidBookFields(ReportDto reportDto) {
-
         // 독후감 등록에 필요한 도서 필수값이 모두 존재하는지 확인 결과를 반환한다
         return StringUtil.isEmpty(reportDto) || StringUtil.hasEmpty(
                 // getBookTitl 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -1324,45 +1259,38 @@ public class ReportServiceImpl implements ReportService {
 
         // 독서 상태는 필수값이며 READ_STAT 공통코드에 등록된 값만 저장한다.
         if (StringUtil.isEmpty(reportDto.getReptStat()) || !codeUtil.existsCode(Constant.CODE_READ_STAT, reportDto.getReptStat())) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_STATUS_KEY));
         }
 
         // 종료일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
         if (StringUtil.isEmpty(reportDto.getReptEndt())) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingFields.add(MessageUtils.getMessage(REPORT_FIELD_END_DATE_KEY));
         }
 
         // 도서 평점의 저장값이 없으면 저장값을 0점으로 보정해 저장값을 숫자로 유지한다.
         if (StringUtil.isEmpty(reportDto.getReptGrde())) {
-
             // ReptGrde 업무 값을 reportDto DTO에 설정한다
             reportDto.setReptGrde("0");
         }
 
         //등록 수정화면에서 행해지는 등록 및 수정은 모든 값을 입력받아야한다.
         if(isFullScan) {
-
             // 시작일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
             if (StringUtil.isEmpty(reportDto.getReptStdt())) {
-
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
             }
 
             // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
             if (!isValidReportGrade(reportDto.getReptGrde())) {
-
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
             }
 
             // 책장 색상은 필수값이며 BOOK_COLR 공통코드에 등록된 값만 저장한다.
             if (StringUtil.isEmpty(reportDto.getReptColr()) || !codeUtil.existsCode(Constant.CODE_BOOK_COLR, reportDto.getReptColr())) {
-
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_COLOR_KEY));
             }
@@ -1370,39 +1298,34 @@ public class ReportServiceImpl implements ReportService {
             // 읽고 있어요 상태는 사용자가 아직 기록을 남기지 않을 수 있으므로 본문 필수 검증에서 제외한다.
             // 완료/중단 상태는 실제 독후감 기록 저장 단계이므로 기존처럼 본문을 필수값으로 유지한다.
             if (!isReadingStatus && !hasReportContent) {
-
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
             }
 
             // 필수값 누락이 하나라도 있으면 누락 항목 목록을 메시지 인자로 반환한다.
             if (!missingFields.isEmpty()) {
-
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
             }
+
             // 시작일이 종료일보다 늦은 데이터는 프론트 조작 여부와 관계없이 저장하지 않는다.
             if (!DateUtil.validateReportDateRange(reportDto.getReptStdt(), reportDto.getReptEndt())) {
-
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_DATE_RANGE_INVALID);
             }
 
             // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
             if (hasReportContent && XssUtil.utf8ByteLength(reportDto.getReptCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
-
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
             }
 
             // 비속어 필터링
             if (hasReportContent) {
-
                 // findBadWord 업무 로직을 badWordDetectionService에 위임한다
                 Optional<String> badWord = badWordDetectionService.findBadWord(reportDto.getReptCntn());
                 // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
                 if (badWord.isPresent()) {
-
                     // 새로 생성한 ReportValidationResult 객체를 반환한다
                     return new ReportValidationResult(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
                 }
@@ -1410,11 +1333,11 @@ public class ReportServiceImpl implements ReportService {
 
             // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
             if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
-
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_INVALID_REQUEST);
             }
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -1427,7 +1350,6 @@ public class ReportServiceImpl implements ReportService {
      * @return 필수값 누락 메시지 인자
      */
     private String formatMissingFields(List<String> missingFields) {
-
         // 누락된 필수 항목 목록을 사용자에게 보여줄 수 있는 줄바꿈 문장으로 변환 결과를 반환한다
         return "- " + String.join("\n- ", missingFields);
     }
@@ -1441,10 +1363,8 @@ public class ReportServiceImpl implements ReportService {
      * @return 유효한 별점 여부
      */
     private boolean isValidReportGrade(String reptGrde) {
-
         // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다.
         if (StringUtil.isEmpty(reptGrde)) {
-
             // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
             return false;
         }
@@ -1457,18 +1377,16 @@ public class ReportServiceImpl implements ReportService {
             // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 결과를 반환한다
             return grade >= 0 && grade <= 5;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (NumberFormatException e) {
-
             // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
             return false;
         }
     }
     private void setDefaultReportColor(ReportDto reportDto) {
-
         // 책장 색상은 필수값이며 공통코드에 등록된 색상 코드만 허용한다.
         if (StringUtil.isEmpty(reportDto.getReptColr()) || reportDto.getReptColr().isBlank()) {
-
             // ReptColr 업무 값을 reportDto DTO에 설정한다
             reportDto.setReptColr(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR));
         }
@@ -1482,10 +1400,8 @@ public class ReportServiceImpl implements ReportService {
      * @param reportDto 공개 여부 기본값을 반영할 독후감 DTO
      */
     private void setDefaultPublicFlag(ReportDto reportDto) {
-
         // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
         if (StringUtil.isEmpty(reportDto.getPubcYsno()) || reportDto.getPubcYsno().isBlank()) {
-
             // PubcYsno 업무 값을 reportDto DTO에 설정한다
             reportDto.setPubcYsno(Constant.COMM_NO);
         }
@@ -1500,7 +1416,6 @@ public class ReportServiceImpl implements ReportService {
      * @param includeBookFields 도서 필드 정규화 포함 여부
      */
     private void sanitizeReport(ReportDto reportDto, boolean includeBookFields) {
-
         // ReptStat 업무 값을 reportDto DTO에 설정한다
         reportDto.setReptStat(StringUtil.normalizePlainText(reportDto.getReptStat()));
         // ReptStdt 업무 값을 reportDto DTO에 설정한다
@@ -1518,7 +1433,6 @@ public class ReportServiceImpl implements ReportService {
 
         // 등록 요청일 때만 도서 필드를 함께 정규화하고, 수정 요청에서는 독후감 필드만 정규화한다.
         if (includeBookFields) {
-
             // BookTitl 업무 값을 reportDto DTO에 설정한다
             reportDto.setBookTitl(StringUtil.normalizePlainText(reportDto.getBookTitl()));
             // BookAthr 업무 값을 reportDto DTO에 설정한다

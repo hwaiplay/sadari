@@ -46,7 +46,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/user")
 @Tag(name = "마이페이지", description = "독서 목표, 독서 요약, 독서 캘린더 API")
 public class MyPageController {
-
     // Report 업무 처리 서비스
     private final ReportService reportService;
     // Social 업무 처리 서비스
@@ -62,14 +61,12 @@ public class MyPageController {
     @GetMapping("/monthly-reading-summary")
     @Operation(summary = "독서 요약 조회", description = "로그인 사용자의 주간, 월간, 연간 독서 목표와 완료 독후감 요약을 조회한다.")
     public ResultData getMonthlyReadingSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-
         // getMonthlyReadingSummary 업무 로직을 reportService에 위임한다
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
 
         // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단한다
         // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않는다.
         if (summaryResult.getCode() != 200) {
-
             // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환한다
             return summaryResult;
         }
@@ -80,7 +77,6 @@ public class MyPageController {
         // 마이페이지 API Controller는 응답 조합만 담당하고, 통계 집계 SQL과 기준은 social service/mapper에 둔다.
         // social 통계 조회가 실패하면 화면 통계만 비우지 않고 실패 사유를 그대로 반환해 공통 API 검증 흐름과 맞춘다.
         if (statsResult.getCode() != 200) {
-
             // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환한다
             return statsResult;
         }
@@ -92,7 +88,6 @@ public class MyPageController {
 
         // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(profileStats)) {
-
             // TotalReadBookCnt 업무 값을 summary DTO에 설정한다
             summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
             // FollowingCnt 업무 값을 summary DTO에 설정한다
@@ -102,6 +97,7 @@ public class MyPageController {
             // ReceivedLikeCnt 업무 값을 summary DTO에 설정한다
             summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
         }
+
         // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(summary);
     }
@@ -118,7 +114,6 @@ public class MyPageController {
     @Operation(summary = "독서 목표 저장", description = "로그인 사용자의 주간, 월간, 연간 독서 목표 권수를 저장한다.")
     public ResultData setReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @RequestBody ReadingGoalDto readingGoalDto) {
-
         // 로그인 사용자의 독서 목표 저장 결과를 반환한다
         return reportService.setReadingGoal(userNumb, readingGoalDto);
     }
@@ -133,7 +128,6 @@ public class MyPageController {
     @PostMapping("/reading-goal/previous")
     @Operation(summary = "이전 독서 목표 복사", description = "현재 기간의 목표가 비어 있을 때 이전 주/월/년 목표 권수를 복사해 저장한다.")
     public ResultData copyPreviousReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-
         // 이전 목표량 복사 결과를 반환한다
         return reportService.copyPreviousReadingGoal(userNumb);
     }
@@ -157,9 +151,9 @@ public class MyPageController {
             // parse 호출로 입력값을 필요한 데이터 형식으로 변환한다
             targetMonth = YearMonth.parse(yearMonth);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (DateTimeParseException e) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -179,7 +173,6 @@ public class MyPageController {
 
         // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
         if (bookListResult.getCode() != 200) {
-
             // 로그인 사용자의 독서 달력 데이터 조회 결과를 반환한다
             return bookListResult;
         }
@@ -190,7 +183,6 @@ public class MyPageController {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (ReportDto report : bookList) {
-
             // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기한다
             if (StringUtil.hasEmpty(report.getReptStdt(), report.getReptEndt())) {
 
@@ -222,6 +214,7 @@ public class MyPageController {
             // 처리한 값을 결과 컬렉션에 추가한다
             calendarReports.add(item);
         }
+
         // 로그인 사용자의 독서 달력 데이터 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(calendarReports);
     }

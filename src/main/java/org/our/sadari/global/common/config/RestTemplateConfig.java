@@ -24,7 +24,6 @@ public class RestTemplateConfig {
      */
     @Bean
     public RestTemplate restTemplate() {
-
         // 새로 생성한 RestTemplate 객체를 반환한다
         return new RestTemplate();
     }
@@ -36,7 +35,6 @@ public class RestTemplateConfig {
      */
     @Bean
     public ObjectMapper objectMapper() {
-
         // 새로 생성한 ObjectMapper 객체를 반환한다
         return new ObjectMapper();
     }

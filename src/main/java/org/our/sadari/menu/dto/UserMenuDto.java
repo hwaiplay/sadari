@@ -18,7 +18,6 @@ import lombok.Data;
  */
 @Schema(description = "현재 URL 메뉴와 햄버거 메뉴 응답 DTO")
 public class UserMenuDto {
-
     /**
      * TM_URMENU 한 건의 화면 표시 정보를 전달한다.
      *
@@ -28,6 +27,7 @@ public class UserMenuDto {
     @Data
     @Schema(description = "사용자 화면 메뉴 항목 DTO")
     public static class UserMenuItemDto {
+
     @Schema(description = "1뎁스 메뉴 번호", example = "MENU_0001")
     private String menuNumb;
     @Schema(description = "상위 메뉴 번호", example = "MENU_0000")
@@ -49,6 +49,7 @@ public class UserMenuDto {
     @Data
     @Schema(description = "현재 URL 메뉴와 햄버거 메뉴 목록 DTO")
     public static class UserMenuResDto {
+
     @Schema(description = "현재 URL과 일치하는 메뉴 정보")
     private UserMenuItemDto currentMenu;
     @Schema(description = "노출 여부와 사용 여부가 모두 Y인 햄버거 메뉴 목록")

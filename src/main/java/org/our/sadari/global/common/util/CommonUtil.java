@@ -13,7 +13,6 @@ import java.time.LocalDate;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class CommonUtil {
-
     /**
      * 두 날짜 기간의 겹침 여부 판정한다.
      *
@@ -26,7 +25,6 @@ public class CommonUtil {
      */
     public static boolean isDateRangeOverlapped(LocalDate startDate, LocalDate endDate, LocalDate targetStartDate
                                               , LocalDate targetEndDate) {
-
         // 두 날짜 기간의 겹침 여부 판정 결과를 반환한다
         return DateUtil.isDateRangeOverlapped(startDate, endDate, targetStartDate, targetEndDate);
     }

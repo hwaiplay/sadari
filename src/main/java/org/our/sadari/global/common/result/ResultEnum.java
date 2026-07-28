@@ -14,7 +14,6 @@ import lombok.Getter;
  */
 @Getter
 public enum ResultEnum {
-
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */

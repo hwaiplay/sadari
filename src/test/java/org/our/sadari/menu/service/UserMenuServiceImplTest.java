@@ -28,7 +28,6 @@ import org.our.sadari.menu.mapper.UserMenuMapper;
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
-
     // UserMenu 데이터 접근 객체
     @Mock
     private UserMenuMapper userMenuMapper;
@@ -43,7 +42,6 @@ class UserMenuServiceImplTest {
      */
     @BeforeEach
     void setUp() {
-
         // 사용자 메뉴 서비스 단위 테스트 대상을 담을 객체를 생성한다
         userMenuService = new UserMenuServiceImpl(userMenuMapper);
     }
@@ -55,7 +53,6 @@ class UserMenuServiceImplTest {
      */
     @Test
     void getUserMenuReturnsCurrentMenuAndVisibleList() {
-
         // 사용자 메뉴 목록 항목을 담을 객체를 생성한다
         UserMenuDto.UserMenuItemDto currentMenu = new UserMenuDto.UserMenuItemDto();
         // MenuName 업무 값을 currentMenu DTO에 설정한다
@@ -95,7 +92,6 @@ class UserMenuServiceImplTest {
      */
     @Test
     void getUserMenuReturnsNullCurrentMenuWhenUrlIsNotRegistered() {
-
         // CurrentUserMenu 데이터를 DB에서 조회한다
         when(userMenuMapper.getCurrentUserMenu(anyString())).thenReturn(null);
         // VisibleUserMenuList 데이터를 DB에서 조회한다

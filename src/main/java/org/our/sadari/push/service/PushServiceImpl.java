@@ -33,7 +33,6 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class PushServiceImpl implements PushService {
-
     // Push 데이터 접근 객체
     private final PushMapper pushMapper;
     // FirebaseMessaging 외부 연동 제공 객체
@@ -84,7 +83,6 @@ public class PushServiceImpl implements PushService {
      */
     @Override
     public ResultData getFirebaseWebConfig() {
-
         // 웹 설정 누락값을 Firebase 서비스 계정 정보로 보완한다
         applyFirebaseWebFallbackFromServiceAccount();
         // getMissingFirebaseWebConfigList 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -92,7 +90,6 @@ public class PushServiceImpl implements PushService {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!missingConfigList.isEmpty()) {
-
             // 누락된 Firebase 설정 항목을 오류 메시지로 결합한다
             String missingConfigText = String.join(", ", missingConfigList);
             // 복구 가능한 예외 상황을 경고 로그로 남긴다
@@ -129,10 +126,8 @@ public class PushServiceImpl implements PushService {
      * @author SeungHyeon.Kang
      */
     private void applyFirebaseWebFallbackFromServiceAccount() {
-
         // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(projectId) || StringUtil.isEmpty(credentialsPath)) {
-
             // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환한다
             return;
         }
@@ -144,7 +139,6 @@ public class PushServiceImpl implements PushService {
 
             // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
             if (!resource.exists()) {
-
                 // 복구 가능한 예외 상황을 경고 로그로 남긴다
                 log.warn("Firebase service account json is not found for web config fallback. path={}", credentialsPath);
                 // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환한다
@@ -153,7 +147,6 @@ public class PushServiceImpl implements PushService {
 
             // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
             try (InputStream inputStream = resource.getInputStream()) {
-
                 // Firebase 서비스 계정 JSON을 설정 조회용 트리로 변환한다
                 JsonNode serviceAccount = objectMapper.readTree(inputStream);
                 // 서비스 계정 JSON에서 필요한 Firebase 설정 항목을 조회한다
@@ -161,7 +154,6 @@ public class PushServiceImpl implements PushService {
 
                 // serviceAccountProjectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
                 if (StringUtil.isEmpty(serviceAccountProjectId)) {
-
                     // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환한다
                     return;
                 }
@@ -185,9 +177,9 @@ public class PushServiceImpl implements PushService {
                 }
             }
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 복구 가능한 예외 상황을 경고 로그로 남긴다
             log.warn("Firebase service account json could not be used for web config fallback.", e);
         }
@@ -207,10 +199,10 @@ public class PushServiceImpl implements PushService {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         while (normalizedPath.startsWith("classpath:classpath:")) {
-
             // 정규식과 처음 일치하는 문자열을 치환한다
             normalizedPath = normalizedPath.replaceFirst("classpath:classpath:", "classpath:");
         }
+
         // Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정한 결과를 반환한다
         return normalizedPath;
     }
@@ -229,38 +221,34 @@ public class PushServiceImpl implements PushService {
 
         // apiKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(apiKey)) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingConfigList.add("firebase.web.api-key");
         }
 
         // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(projectId)) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingConfigList.add("firebase.web.project-id");
         }
 
         // messagingSenderId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(messagingSenderId)) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingConfigList.add("firebase.web.messaging-sender-id");
         }
 
         // appId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(appId)) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingConfigList.add("firebase.web.app-id");
         }
 
         // vapidPublicKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(vapidPublicKey)) {
-
             // 처리한 값을 결과 컬렉션에 추가한다
             missingConfigList.add("firebase.web.vapid-public-key");
         }
+
         // 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산한 결과를 반환한다
         return missingConfigList;
     }
@@ -277,10 +265,8 @@ public class PushServiceImpl implements PushService {
     @Override
     @Transactional
     public ResultData setPushSub(Long userNumb, PushDto.PushSubDto req) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -305,10 +291,8 @@ public class PushServiceImpl implements PushService {
     @Override
     @Transactional
     public ResultData delPushSub(Long userNumb, PushDto.PushSubDto req) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -335,10 +319,8 @@ public class PushServiceImpl implements PushService {
     @Override
     public void sendPush(Long userNumb, String title, String body
                        , String linkUrlx, Long alimNumb) {
-
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
-
             // 알림 수신자의 활성 token 전체로 FCM 푸시를 발송한 결과를 반환한다
             return;
         }
@@ -348,7 +330,6 @@ public class PushServiceImpl implements PushService {
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (PushDto.PushSubDto pushSub : pushSubList) {
-
             // send 호출로 검증된 알림 또는 응답을 전송한다
             firebaseMessagingProvider.send(
                     // getEndpUrlx 조회로 후속 처리에 필요한 데이터를 가져온다

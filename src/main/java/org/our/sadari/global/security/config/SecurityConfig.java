@@ -32,7 +32,6 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-
     // FRONT DOMAIN 설정값
     @Value("${domain.front}")
     private String FRONT_DOMAIN; // CORS 허용을 위한 프론트엔드 도메인 주소
@@ -121,7 +120,6 @@ public class SecurityConfig {
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-
         // 프런트엔드 출처에 허용할 CORS 정책을 담을 객체를 생성한다
         CorsConfiguration config = new CorsConfiguration();
 

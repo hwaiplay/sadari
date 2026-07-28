@@ -14,7 +14,6 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  */
 public interface SocialService {
-
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
      *

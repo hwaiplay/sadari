@@ -20,7 +20,6 @@ import org.our.sadari.social.dto.SocialDto;
  */
 @Mapper
 public interface ReportMapper {
-
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회한다.
      *

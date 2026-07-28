@@ -17,7 +17,6 @@ import org.our.sadari.report.dto.ReportDto;
  */
 @Mapper
 public interface ReportDateOverMapper {
-
     /**
      * 진행 중이면서 목표 종료일이 지난 독후감 중 아직 기간 초과 알림을 받지 않은 대상을 조회
      *

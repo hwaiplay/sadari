@@ -43,7 +43,6 @@ import org.springframework.web.multipart.MultipartFile;
 @RequiredArgsConstructor
 @Slf4j
 public class FileService {
-
     // 업로드 루트 디렉터리 설정값
     private static final String UPLOAD_ROOT_DIR = "uploads";
     // 업로드 접근 접두사 설정값
@@ -82,10 +81,8 @@ public class FileService {
      * @throws IOException 파일 저장 중 오류가 발생한 경우
      */
     public Long setUploadedImage(MultipartFile imageFile, String imageType, Long regiUser) throws IOException {
-
         // 수정 화면에서 파일을 변경하지 않은 경우 기존 파일 번호를 유지해야 하므로 신규 파일 등록을 건너뜁니다.
         if (StringUtil.isEmpty(imageFile) || imageFile.isEmpty()) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -153,11 +150,11 @@ public class FileService {
             // 사용자가 업로드한 이미지 파일을 프로젝트 내부 저장소에 저장하고 파일 번호를 반환한 결과를 반환한다
             return fileDto.getFileNumb();
         }
+
         // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
         finally {
             // DB 메타정보 저장 전에 실패한 파일을 남기면 접근되지 않는 파일이 누적되므로 즉시 정리한다.
             if (!fileMetadataSaved) {
-
                 // 검증 중 생성된 임시 파일이 있으면 삭제한다
                 Files.deleteIfExists(storedPath);
             }
@@ -174,10 +171,8 @@ public class FileService {
      * @return 파일 테이블에 생성된 파일 번호, URL이 없으면 null
      */
     public Long setKakaoProfileImage(String profileImageUrl, String userIdxx, Long regiUser) {
-
         // Kakao 계정에 프로필 이미지가 없을 수 있으므로 회원 생성 흐름은 계속 진행한다.
         if (StringUtil.isEmpty(profileImageUrl)) {
-
             // 조회하거나 생성할 값이 없음을 반환한다
             return null;
         }
@@ -193,7 +188,6 @@ public class FileService {
 
             // 응답 본문이 비어 있으면 원본 URL을 파일 경로로 등록해 프로필 표시 자체는 가능하게 한다.
             if (StringUtil.isEmpty(imageBytes) || imageBytes.length == 0) {
-
                 // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
                 return setExternalImage(profileImageUrl, userIdxx, Constant.FILE_TYPE_PROFILE, regiUser);
             }
@@ -249,19 +243,19 @@ public class FileService {
                 // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
                 return fileDto.getFileNumb();
             }
+
             // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
             finally {
                 // 메타정보 저장 전 실패한 외부 프로필 파일도 서버에 남기지 않는다.
                 if (!fileMetadataSaved) {
-
                     // 검증 중 생성된 임시 파일이 있으면 삭제한다
                     Files.deleteIfExists(storedPath);
                 }
             }
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-
             // 외부 이미지 다운로드 실패가 로그인 실패로 이어지지 않도록 원본 URL을 대체 경로로 저장한다.
             log.warn("Kakao profile image download failed. userIdxx={}, message={}", userIdxx, e.getMessage());
             // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
@@ -281,7 +275,6 @@ public class FileService {
      */
     private Long setExternalImage(String imageUrl, String ownerKey, String imageType
                                 , Long regiUser) {
-
         // 업로드 파일의 저장 정보를 담을 객체를 생성한다
         FileDto fileDto = new FileDto();
         // OrigName 업무 값을 fileDto DTO에 설정한다
@@ -308,7 +301,6 @@ public class FileService {
      * @return 서버 파일 시스템 저장 경로
      */
     private Path getUploadPath(String imageType) {
-
         // 이미지 타입에 맞는 서버 저장 경로를 반환한 결과를 반환한다
         return Paths.get(UPLOAD_ROOT_DIR, getUploadDirectoryName(imageType)).toAbsolutePath().normalize();
     }
@@ -321,7 +313,6 @@ public class FileService {
      * @return 브라우저 접근 URL prefix
      */
     private String getAccessPrefix(String imageType) {
-
         // 이미지 타입에 맞는 브라우저 접근 URL prefix를 반환한 결과를 반환한다
         return UPLOAD_ACCESS_PREFIX + getUploadDirectoryName(imageType) + "/";
     }
@@ -334,13 +325,12 @@ public class FileService {
      * @return 저장 디렉터리명
      */
     private String getUploadDirectoryName(String imageType) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (Constant.FILE_TYPE_BACKGROUND.equals(imageType)) {
-
             // 이미지 타입을 실제 저장 디렉터리명으로 변환한 결과를 반환한다
             return "background";
         }
+
         // 이미지 타입을 실제 저장 디렉터리명으로 변환한 결과를 반환한다
         return "profile";
     }
@@ -353,7 +343,6 @@ public class FileService {
      * @return UUID 기반 저장 파일명
      */
     private String createStoredFileName(String extension) {
-
         // 서버가 검증해 결정한 확장자로 충돌 없는 저장 파일명을 생성한 결과를 반환한다
         return UUID.randomUUID() + extension;
     }
@@ -365,10 +354,8 @@ public class FileService {
      * @param imageType 검증할 파일 타입
      */
     private void validateImageType(String imageType) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
-        if (!Constant.FILE_TYPE_PROFILE.equals(imageType)
-                && !Constant.FILE_TYPE_BACKGROUND.equals(imageType)) {
+        if (!Constant.FILE_TYPE_PROFILE.equals(imageType) && !Constant.FILE_TYPE_BACKGROUND.equals(imageType)) {
 
             throw new InvalidImageFileException("Unsupported image type.");
         }
@@ -382,10 +369,8 @@ public class FileService {
      * @return 경로와 제어문자를 제거한 파일명
      */
     private String normalizeOriginalName(String originalName) {
-
         // originalName 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(originalName)) {
-
             // 원본 파일명에서 경로와 제어문자를 제거해 메타정보로 저장할 안전한 이름을 만듭니다 결과를 반환한다
             return "image";
         }
@@ -399,10 +384,10 @@ public class FileService {
 
         // normalizedName 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(normalizedName)) {
-
             // 원본 파일명에서 경로와 제어문자를 제거해 메타정보로 저장할 안전한 이름을 만듭니다 결과를 반환한다
             return "image";
         }
+
         // 원본 파일명에서 경로와 제어문자를 제거해 메타정보로 저장할 안전한 이름을 만듭니다 결과를 반환한다
         return StringUtil.cutString(normalizedName, 255);
     }
@@ -415,10 +400,8 @@ public class FileService {
      * @return 저장 가능한 정규화 이미지
      */
     private ValidatedImage validateAndNormalizeImage(byte[] originalBytes) {
-
         // originalBytes 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (StringUtil.isEmpty(originalBytes)
-                || originalBytes.length == 0
+        if (StringUtil.isEmpty(originalBytes) || originalBytes.length == 0
                 || originalBytes.length > maxImageBytes) {
 
             throw new InvalidImageFileException("Image file size is invalid.");
@@ -440,7 +423,6 @@ public class FileService {
                 // createImageInputStream 호출로 후속 처리에 필요한 객체를 생성한다
                 ImageInputStream imageInput = ImageIO.createImageInputStream(byteInput)
         ) {
-
             // imageInput 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
             if (StringUtil.isEmpty(imageInput)) {
 
@@ -478,10 +460,8 @@ public class FileService {
                 long pixelCount = Math.multiplyExact((long) width, (long) height);
 
                 // 압축 해제 폭탄을 막기 위해 전체 픽셀 수를 확인한 뒤에만 실제 픽셀 디코딩을 수행한다.
-                if (width <= 0
-                        || height <= 0
-                        || width > maxImageDimension
-                        || height > maxImageDimension
+                if (width <= 0 || height <= 0
+                        || width > maxImageDimension || height > maxImageDimension
                         || pixelCount > maxImagePixels) {
 
                     throw new InvalidImageFileException("Image dimensions are invalid.");
@@ -506,14 +486,12 @@ public class FileService {
 
                     throw new InvalidImageFileException("Normalized image size is invalid.");
                 }
+
                 // 새로 생성한 ValidatedImage 객체를 반환한다
-                return new ValidatedImage(
-                        // 정규화한 이미지를 저장 가능한 바이트 배열로 변환한다
-                        normalizedOutput.toByteArray()
-                      , imageFormat.mimeType()
-                      , imageFormat.extension()
-                );
+                // 정규화한 이미지와 파일 형식 정보를 담은 객체를 반환한다
+                return new ValidatedImage(normalizedOutput.toByteArray(), imageFormat.mimeType(), imageFormat.extension());
             }
+
             // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
             finally {
                 // 이미지 변환에 사용한 그래픽 자원을 해제한다
@@ -525,6 +503,7 @@ public class FileService {
 
             throw e;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (IOException | ArithmeticException e) {
 
@@ -540,20 +519,18 @@ public class FileService {
      * @return 허용 이미지 형식, 일치하지 않으면 null
      */
     private ImageFormat detectImageFormat(byte[] bytes) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (startsWith(bytes, JPEG_SIGNATURE)) {
-
             // 이미지 선두 바이트를 기준으로 허용 형식을 판별한 결과를 반환한다
             return ImageFormat.JPEG;
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (startsWith(bytes, PNG_SIGNATURE)) {
-
             // 이미지 선두 바이트를 기준으로 허용 형식을 판별한 결과를 반환한다
             return ImageFormat.PNG;
         }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -567,24 +544,21 @@ public class FileService {
      * @return 시그니처 일치 여부
      */
     private boolean startsWith(byte[] bytes, byte[] signature) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (bytes.length < signature.length) {
-
             // 파일 바이트가 지정된 시그니처로 시작하는지 확인한다 판정값을 반환한다
             return false;
         }
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (int index = 0; index < signature.length; index++) {
-
             // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
             if (bytes[index] != signature[index]) {
-
                 // 파일 바이트가 지정된 시그니처로 시작하는지 확인한다 판정값을 반환한다
                 return false;
             }
         }
+
         // 파일 바이트가 지정된 시그니처로 시작하는지 확인한다 판정값을 반환한다
         return true;
     }
@@ -596,16 +570,13 @@ public class FileService {
      * @param storedPath 트랜잭션 롤백 시 삭제할 실제 파일 경로
      */
     private void registerRollbackCleanup(Path storedPath) {
-
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
-
             // DB 트랜잭션이 롤백될 때 이미 생성한 실제 이미지 파일도 함께 제거하도록 정리 작업을 등록한 결과를 반환한다
             return;
         }
 
         TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
-
             /**
              * 트랜잭션 종료 상태에 맞춰 임시 파일을 정리한다
              *
@@ -615,10 +586,8 @@ public class FileService {
              */
             @Override
             public void afterCompletion(int status) {
-
                 // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
                 if (status != TransactionSynchronization.STATUS_ROLLED_BACK) {
-
                     // 트랜잭션 종료 상태에 맞춰 임시 파일을 정리 결과를 반환한다
                     return;
                 }
@@ -628,9 +597,9 @@ public class FileService {
                     // 검증 중 생성된 임시 파일이 있으면 삭제한다
                     Files.deleteIfExists(storedPath);
                 }
+
                 // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
                 catch (IOException e) {
-
                     // 실패 원인과 처리 대상을 오류 로그로 남긴다
                     log.error("Rolled-back image file cleanup failed. path={}", storedPath, e);
                 }
@@ -676,25 +645,21 @@ public class FileService {
         }
 
         private String imageIoName() {
-
             // io name 처리 결과를 반환한다
             return imageIoName;
         }
 
         private String readerFormatName() {
-
             // format name 처리 결과를 반환한다
             return readerFormatName;
         }
 
         private String mimeType() {
-
             // type 처리 결과를 반환한다
             return mimeType;
         }
 
         private String extension() {
-
             // extension 처리 결과를 반환한다
             return extension;
         }

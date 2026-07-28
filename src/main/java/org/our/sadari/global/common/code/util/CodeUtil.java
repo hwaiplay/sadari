@@ -30,7 +30,6 @@ import org.springframework.stereotype.Component;
 @Component
 @RequiredArgsConstructor
 public class CodeUtil {
-
     /**
      * 비정상적으로 큰 IN 조건 생성을 막기 위해 한 요청에서 허용하는 공통코드 최대 개수를 제한한다.
      */
@@ -49,7 +48,6 @@ public class CodeUtil {
      * @return 사용 가능한 세부코드 DTO 목록
      */
     public List<CodeDto> getCodeList(String commCode) {
-
         // 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 정렬 순서대로 조회 결과를 반환한다
         return codeMapper.getCodeList(commCode);
     }
@@ -63,7 +61,6 @@ public class CodeUtil {
      * @throws CustomException 공통코드 목록이 비어 있거나 허용 개수를 초과한 경우 발생
      */
     public Map<String, List<CodeDto>> getCodeGroupList(List<String> commCodeList) {
-
         // 빈 IN 조건은 Oracle 문법 오류를 만들 수 있으므로 Mapper를 호출하기 전에 요청을 차단한다.
         if (StringUtil.isEmpty(commCodeList) || commCodeList.isEmpty() || commCodeList.size() > CODE_GROUP_QUERY_MAX_SIZE) {
 
@@ -73,12 +70,12 @@ public class CodeUtil {
         Set<String> normalizedCommCodeSet = new LinkedHashSet<>();
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (String commCode : commCodeList) {
-
             // 공백 코드를 조용히 제외하면 잘못된 화면 설정을 발견하기 어려우므로 요청 자체를 실패 처리한다.
             if (StringUtil.isEmpty(commCode) || commCode.isBlank()) {
 
                 throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
             }
+
             // 처리한 값을 결과 컬렉션에 추가한다
             normalizedCommCodeSet.add(commCode.trim().toUpperCase(Locale.ROOT));
         }
@@ -88,7 +85,6 @@ public class CodeUtil {
 
         // 등록된 세부코드가 없는 공통코드도 빈 배열로 반환하여 프론트에서 안정적으로 구조 분해할 수 있게 한다.
         for (String commCode : normalizedCommCodeList) {
-
             // 공통코드별 상세코드 목록을 담을 객체를 생성한다
             codeGroupList.put(commCode, new ArrayList<>());
         }
@@ -97,22 +93,22 @@ public class CodeUtil {
         List<CodeDto> codeList = codeMapper.getCodeGroupList(normalizedCommCodeList);
         // codeList 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(codeList)) {
-
             // 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 정렬 순서대로 조회 결과를 반환한다
             return codeGroupList;
         }
 
         // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
         for (CodeDto codeDto : codeList) {
-
             // DB 결과가 요청 범위를 벗어나거나 식별값이 없으면 응답 그룹을 오염시키지 않고 제외한다.
             if (StringUtil.isEmpty(codeDto) || !codeGroupList.containsKey(codeDto.getCommCode())) {
 
                 continue;
             }
+
             // 지정한 키에 대응하는 값을 조회한다
             codeGroupList.get(codeDto.getCommCode()).add(codeDto);
         }
+
         // 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 정렬 순서대로 조회 결과를 반환한다
         return codeGroupList;
     }
@@ -126,7 +122,6 @@ public class CodeUtil {
      * @return 첫 번째 세부코드값 또는 조회 결과가 없을 경우 null
      */
     public String getFirstCode(String commCode) {
-
         // 공통코드에 등록된 사용 가능한 세부코드 중 정렬 순서가 가장 앞선 코드값을 조회 결과를 반환한다
         return getCodeList(commCode).stream()
                 .findFirst()
@@ -144,7 +139,6 @@ public class CodeUtil {
      * @return 세부코드가 사용 가능한 목록에 존재하면 true, 그렇지 않으면 false
      */
     public boolean existsCode(String commCode, String comdCode) {
-
         // 전달받은 세부코드가 지정한 공통코드의 사용 가능한 코드 목록에 존재하는지 확인 결과를 반환한다
         return getCodeList(commCode).stream()
                 .anyMatch(code -> code.getComdCode().equalsIgnoreCase(comdCode));
@@ -160,7 +154,6 @@ public class CodeUtil {
      * @return 공통코드와 세부코드에 대응하는 코드명
      */
     public String getCodeName(String commCode, String comdCode) {
-
         // 공통코드와 세부코드에 대응하는 화면 표시용 코드명을 조회 결과를 반환한다
         return getCodeName(commCode, comdCode, null);
     }
@@ -176,7 +169,6 @@ public class CodeUtil {
      * @return 공통코드, 세부코드 및 옵션 조건에 대응하는 코드명
      */
     public String getCodeName(String commCode, String comdCode, String optCode) {
-
         // 공통코드, 세부코드 및 선택 옵션값에 대응하는 화면 표시용 코드명을 조회 결과를 반환한다
         return codeMapper.getCodeName(commCode, comdCode, optCode);
     }

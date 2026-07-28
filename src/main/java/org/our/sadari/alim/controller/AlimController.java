@@ -34,7 +34,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 @RequestMapping("/api/alim")
 @Tag(name = "알림", description = "사용자 알림 목록 및 알림 발송 API")
 public class AlimController {
-
     // Alim 업무 처리 서비스
     private final AlimService alimService;
 
@@ -49,7 +48,6 @@ public class AlimController {
     @Operation(summary = "내 알림 목록 조회", description = "로그인 사용자의 삭제되지 않은 알림 목록을 최신순으로 조회한다.")
     public ResultData getMyAlimList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                   , @RequestParam(defaultValue = "1") int page) {
-
         // 로그인 사용자의 알림 목록을 조회 결과를 반환한다
         return alimService.getMyAlimList(loginUserNumb, page);
     }
@@ -64,7 +62,6 @@ public class AlimController {
     @GetMapping("/unread-count")
     @Operation(summary = "미읽음 알림 수 조회", description = "로그인 사용자의 읽지 않은 알림 수를 조회한다.")
     public ResultData getUnreadAlimCnt(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-
         // 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회 결과를 반환한다
         return alimService.getUnreadAlimCnt(loginUserNumb);
     }
@@ -81,7 +78,6 @@ public class AlimController {
     @Operation(summary = "알림 개별 읽음 처리", description = "사용자가 클릭한 알림 한 건의 읽음 여부와 읽은 일시를 갱신한다.")
     public ResultData uptAlimRead(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                 , @Valid @RequestBody AlimDto.AlimReadReqDto request) {
-
         // 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리 결과를 반환한다
         return alimService.uptAlimRead(loginUserNumb, request);
     }
@@ -96,7 +92,6 @@ public class AlimController {
     @PostMapping("/delete-all")
     @Operation(summary = "알림 모두 지우기", description = "로그인 사용자의 삭제되지 않은 모든 알림을 삭제 상태로 변경한다.")
     public ResultData delAllAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-
         // 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경 결과를 반환한다
         return alimService.delAllAlim(loginUserNumb);
     }
@@ -112,10 +107,8 @@ public class AlimController {
     @PostMapping("/send")
     @Operation(summary = "알림 발송", description = "알림 상황, 템플릿 코드, 치환 Map으로 사용자 알림을 발송한다.")
     public ResultData sendAlim(@RequestBody AlimDto.AlimSendDto request) {
-
         // request 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(request)) {
-
             // 관리자 알림 발송 요청을 담을 객체를 생성한다
             request = new AlimDto.AlimSendDto();
         }

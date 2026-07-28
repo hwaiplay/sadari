@@ -31,7 +31,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Service
 @RequiredArgsConstructor
 public class BookSearchService {
-
     // 네이버 도서 검색 URL 설정값
     private static final String NAVER_BOOK_SEARCH_URL = "https://openapi.naver.com/v1/search/book.json";
     // 표시 건수 설정값
@@ -63,10 +62,8 @@ public class BookSearchService {
      * @return 처리 결과
      */
     public ResultData searchBooks(String query, int start) {
-
         // query 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(query) || start < MIN_START || start > MAX_START) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -76,7 +73,6 @@ public class BookSearchService {
 
         // response.getBody( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(response.getBody())) {
-
             // "검색에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
@@ -88,9 +84,9 @@ public class BookSearchService {
             // 검색어 기준 네이버 도서 목록 검색 결과를 성공 응답으로 반환한다
             return ResultData.success(bookJsonDto.getItems());
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (JsonProcessingException e) {
-
             // 아래 처리 단계의 업무 목적을 설명한다.
             // "검색에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
@@ -106,7 +102,6 @@ public class BookSearchService {
      * @return 처리 결과
      */
     private ResponseEntity<String> requestNaverBookSearch(String query, int start) {
-
         // 외부 API 요청 헤더를 담을 객체를 생성한다
         HttpHeaders headers = new HttpHeaders();
         // 처리한 값을 결과 컬렉션에 추가한다
@@ -134,9 +129,9 @@ public class BookSearchService {
                     String.class
             );
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RestClientException e) {
-
             // HTTP 응답 상태와 본문을 반환한다
             return ResponseEntity.ok("");
         }

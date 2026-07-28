@@ -17,7 +17,6 @@ import org.our.sadari.user.dto.UserDto;
  */
 @Mapper
 public interface UserMapper {
-
     /**
      * 아래 코드의 처리 목적을 설명한다.
      */

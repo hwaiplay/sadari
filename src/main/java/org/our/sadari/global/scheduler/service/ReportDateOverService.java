@@ -11,7 +11,6 @@ package org.our.sadari.global.scheduler.service;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 public interface ReportDateOverService {
-
     /**
      * 목표 독서 종료일이 지난 진행 중 독후감을 조회해 알림과 FCM 푸시를 발송
      *
