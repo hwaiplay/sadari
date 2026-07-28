@@ -47,7 +47,8 @@
     <!-- 신규 회원 정보를 등록한다. -->
     <insert id="setUser" parameterType="org.our.sadari.user.dto.UserDto">
         <selectKey keyProperty="userNumb" resultType="long" order="BEFORE">
-            SELECT TM_USERXM_SEQ.NEXTVAL FROM DUAL
+            SELECT TM_USERXM_SEQ.NEXTVAL
+              FROM DUAL
         </selectKey>
         /* setUser */
         INSERT INTO TM_USERXM (
@@ -74,8 +75,8 @@
 
     <!-- 회원 프로필 정보를 수정한다. -->
     <update id="uptUserProfile" parameterType="org.our.sadari.user.dto.UserDto">
-        /* uptUserProfile */
-        UPDATE TM_USERXM
+        UPDATE /* uptUserProfile */
+               TM_USERXM
            SET USER_NICK = #{userNick}
              , INTR_CNTN = #{intrCntn,jdbcType=VARCHAR}
         <if test="profNumb != null">
@@ -87,6 +88,7 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
+    <!-- 본인을 제외하고 동일한 닉네임을 사용하는 회원 수를 조회한다. -->
     <select id="getUserNickDuplicateCnt" parameterType="org.our.sadari.user.dto.UserDto" resultType="int">
         SELECT /* getUserNickDuplicateCnt */
                COUNT(1)

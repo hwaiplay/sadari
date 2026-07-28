@@ -22,33 +22,34 @@
     <!-- 사용자별 알림 순번을 INSERT에서 계산하고 RETURNING INTO로 같은 호출 안에서 발송할 알림 번호를 DTO에 돌려준다. -->
     <insert id="setAlim" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto" statementType="CALLABLE">
         BEGIN
-        INSERT /* setAlim */
-          INTO TB_ALIMXX(
-                    USER_NUMB
-                  , ALIM_NUMB
-                  , ALIM_SITU
-                  , TEMP_CODE
-                  , ALIM_TITL
-                  , ALIM_CONT
-                  , LINK_URLX
-                  , READ_YSNO
-                  , SEND_DATE
-                  , DELT_YSNO
-        ) VALUES(   #{userNumb}
-                  , (   SELECT NVL(MAX(ALIM_NUMB), 0) + 1
-                          FROM TB_ALIMXX
-                         WHERE USER_NUMB = #{userNumb})
-                  , #{alimSitu}
-                  , #{tempCode}
-                  , #{alimTitl}
-                  , #{alimCont}
-                  , #{linkUrlx}
-                  , #{readYsno}
-                  , SYSDATE
-                  , #{deltYsno}
-        )
-        RETURNING ALIM_NUMB
-             INTO #{alimNumb, mode=OUT, jdbcType=NUMERIC};
+            /* setAlim */
+            INSERT INTO TB_ALIMXX (
+                        USER_NUMB
+                      , ALIM_NUMB
+                      , ALIM_SITU
+                      , TEMP_CODE
+                      , ALIM_TITL
+                      , ALIM_CONT
+                      , LINK_URLX
+                      , READ_YSNO
+                      , SEND_DATE
+                      , DELT_YSNO
+            ) VALUES (  #{userNumb}
+                      , (  SELECT NVL(MAX(ALIM.ALIM_NUMB), 0) + 1
+                             FROM TB_ALIMXX ALIM
+                            WHERE ALIM.USER_NUMB = #{userNumb}
+                        )
+                      , #{alimSitu}
+                      , #{tempCode}
+                      , #{alimTitl}
+                      , #{alimCont}
+                      , #{linkUrlx}
+                      , #{readYsno}
+                      , SYSDATE
+                      , #{deltYsno}
+            )
+            RETURNING ALIM_NUMB
+                 INTO #{alimNumb, mode=OUT, jdbcType=NUMERIC};
         END;
     </insert>
 
@@ -71,62 +72,65 @@
     <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 20개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->
     <select id="getMyAlimList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimListReqDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="codeAlimSitu" value="@org.our.sadari.global.common.constant.Constant@CODE_ALIM_SITU" />
+        <bind name="numberOne" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ONE" />
         SELECT /* getMyAlimList */
-               USER_NUMB
-             , ALIM_NUMB
-             , ALIM_SITU
-             , TEMP_CODE
-             , ALIM_TITL
-             , ALIM_CONT
-             , LINK_URLX
-             , READ_YSNO
-             , READ_DATE
-             , SEND_DATE
-             , DELT_YSNO
-             , ALIM_ICON_CODE
-             , ALIM_ICON_NAME
-          FROM (
-                SELECT USER_NUMB
-                     , ALIM_NUMB
-                     , ALIM_SITU
-                     , TEMP_CODE
-                     , ALIM_TITL
-                     , ALIM_CONT
-                     , LINK_URLX
-                     , READ_YSNO
-                     , TO_CHAR(READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
-                     , TO_CHAR(SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
-                     , DELT_YSNO
-                     , ALIM_ICON_CODE
-                     , ALIM_ICON_NAME
-                     , ROW_NUMBER() OVER(ORDER BY SEND_DATE DESC, ALIM_NUMB DESC) AS ROW_NUMB
-                  FROM (
-                        SELECT A.USER_NUMB
-                             , A.ALIM_NUMB
-                             , A.ALIM_SITU
-                             , A.TEMP_CODE
-                             , A.ALIM_TITL
-                             , A.ALIM_CONT
-                             , A.LINK_URLX
-                             , A.READ_YSNO
-                             , A.READ_DATE
-                             , A.SEND_DATE
-                             , A.DELT_YSNO
-                             , C.OPT1_CODE AS ALIM_ICON_CODE
-                             , C.OPT1_NAME AS ALIM_ICON_NAME
-                          FROM TB_ALIMXX A
-                          LEFT JOIN TB_CODEXD C
-                            ON C.COMM_CODE = #{codeAlimSitu}
-                           AND C.COMD_CODE = A.ALIM_SITU
-                           AND C.OPT1_CODE = '1'
-                           AND NVL(C.USEE_YSNO, 'Y') = 'Y'
-                         WHERE A.USER_NUMB = #{userNumb}
-                           AND NVL(A.DELT_YSNO, #{commNo}) = #{commNo}
-                       )
-               )
-         WHERE ROW_NUMB BETWEEN #{startRow} AND #{endRow}
-      ORDER BY ROW_NUMB
+               ALIMPAGE.USER_NUMB
+             , ALIMPAGE.ALIM_NUMB
+             , ALIMPAGE.ALIM_SITU
+             , ALIMPAGE.TEMP_CODE
+             , ALIMPAGE.ALIM_TITL
+             , ALIMPAGE.ALIM_CONT
+             , ALIMPAGE.LINK_URLX
+             , ALIMPAGE.READ_YSNO
+             , ALIMPAGE.READ_DATE
+             , ALIMPAGE.SEND_DATE
+             , ALIMPAGE.DELT_YSNO
+             , ALIMPAGE.ALIM_ICON_CODE
+             , ALIMPAGE.ALIM_ICON_NAME
+          FROM (  SELECT ALIMDETAIL.USER_NUMB
+                       , ALIMDETAIL.ALIM_NUMB
+                       , ALIMDETAIL.ALIM_SITU
+                       , ALIMDETAIL.TEMP_CODE
+                       , ALIMDETAIL.ALIM_TITL
+                       , ALIMDETAIL.ALIM_CONT
+                       , ALIMDETAIL.LINK_URLX
+                       , ALIMDETAIL.READ_YSNO
+                       , TO_CHAR(ALIMDETAIL.READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
+                       , TO_CHAR(ALIMDETAIL.SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
+                       , ALIMDETAIL.DELT_YSNO
+                       , ALIMDETAIL.ALIM_ICON_CODE
+                       , ALIMDETAIL.ALIM_ICON_NAME
+                       , ROW_NUMBER() OVER(
+                             ORDER BY ALIMDETAIL.SEND_DATE DESC
+                                    , ALIMDETAIL.ALIM_NUMB DESC
+                         ) AS ROW_NUMB
+                    FROM (  SELECT ALIM.USER_NUMB
+                                 , ALIM.ALIM_NUMB
+                                 , ALIM.ALIM_SITU
+                                 , ALIM.TEMP_CODE
+                                 , ALIM.ALIM_TITL
+                                 , ALIM.ALIM_CONT
+                                 , ALIM.LINK_URLX
+                                 , ALIM.READ_YSNO
+                                 , ALIM.READ_DATE
+                                 , ALIM.SEND_DATE
+                                 , ALIM.DELT_YSNO
+                                 , CODE.OPT1_CODE AS ALIM_ICON_CODE
+                                 , CODE.OPT1_NAME AS ALIM_ICON_NAME
+                              FROM TB_ALIMXX ALIM
+                         LEFT JOIN TB_CODEXD CODE
+                                ON CODE.COMM_CODE = #{codeAlimSitu}
+                               AND CODE.COMD_CODE = ALIM.ALIM_SITU
+                               AND CODE.OPT1_CODE = TO_CHAR(#{numberOne})
+                               AND NVL(CODE.USEE_YSNO, #{commYes}) = #{commYes}
+                             WHERE ALIM.USER_NUMB = #{userNumb}
+                               AND NVL(ALIM.DELT_YSNO, #{commNo}) = #{commNo}
+                         ) ALIMDETAIL
+               ) ALIMPAGE
+         WHERE ALIMPAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
+      ORDER BY ALIMPAGE.ROW_NUMB
     </select>
 
     <!-- 사용자가 알림센터 항목 또는 푸시 알림을 클릭한 경우 해당 알림 한 건만 읽음 처리한다. -->

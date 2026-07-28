@@ -5,25 +5,24 @@
     <!-- 동적 번호가 붙는 상세 경로는 끝이 /인 DB URL을 접두 경로로 사용하고, 가장 긴 URL을 우선 선택한다. -->
     <select id="getCurrentUserMenu" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         SELECT /* getCurrentUserMenu */
-               MENU_NUMB
-             , SUBX_NUMB
-             , MENU_NAME
-             , MENU_URLX
-             , SORT_ORDR
-          FROM (
-                SELECT MENU_NUMB
-                     , SUBX_NUMB
-                     , MENU_NAME
-                     , MENU_URLX
-                     , SORT_ORDR
-                  FROM TM_URMENU
-                 WHERE MENU_URLX = #{menuUrlx}
+               MENUMATCH.MENU_NUMB
+             , MENUMATCH.SUBX_NUMB
+             , MENUMATCH.MENU_NAME
+             , MENUMATCH.MENU_URLX
+             , MENUMATCH.SORT_ORDR
+          FROM (  SELECT MENU.MENU_NUMB
+                       , MENU.SUBX_NUMB
+                       , MENU.MENU_NAME
+                       , MENU.MENU_URLX
+                       , MENU.SORT_ORDR
+                    FROM TM_URMENU MENU
+                   WHERE MENU.MENU_URLX = #{menuUrlx}
                     OR (
-                           SUBSTR(MENU_URLX, -1) = '/'
-                       AND #{menuUrlx} LIKE MENU_URLX || '%'
+                           SUBSTR(MENU.MENU_URLX, -1) = '/'
+                       AND #{menuUrlx} LIKE MENU.MENU_URLX || '%'
                        )
-              ORDER BY LENGTH(MENU_URLX) DESC
-               )
+                ORDER BY LENGTH(MENU.MENU_URLX) DESC
+               ) MENUMATCH
          WHERE ROWNUM = 1
     </select>
 
