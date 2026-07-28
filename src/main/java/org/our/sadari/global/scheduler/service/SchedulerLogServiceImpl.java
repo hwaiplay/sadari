@@ -63,7 +63,8 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     public Long setSchedulerLog(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
         // 로그 코드, 메서드명, 실행 상태가 없으면 관리자 화면에서 어떤 실행인지 식별할 수 없어 등록을 중단한다.
         if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getSchdCode())
-                || StringUtil.isEmpty(schedulerRunDto.getMethName()) || StringUtil.isEmpty(schedulerRunDto.getExecStat())) {
+                || StringUtil.isEmpty(schedulerRunDto.getMethName()) || StringUtil.isEmpty(schedulerRunDto.getExecStat())
+                || StringUtil.isEmpty(schedulerRunDto.getStrtDate())) {
 
             throw new IllegalArgumentException("스케줄러 실행 로그의 필수 정보가 없습니다.");
         }

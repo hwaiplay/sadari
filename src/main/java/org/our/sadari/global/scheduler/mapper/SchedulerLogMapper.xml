@@ -22,7 +22,7 @@
                   , #{schdCode}
                   , #{methName}
                   , #{execStat}
-                  , SYSTIMESTAMP
+                  , #{strtDate}
                   , #{trgtCntt}
                   , #{succCntt}
                   , #{failCntt}
