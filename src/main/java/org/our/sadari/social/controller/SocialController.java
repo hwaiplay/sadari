@@ -64,7 +64,7 @@ public class SocialController {
         // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -98,7 +98,7 @@ public class SocialController {
         // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -106,7 +106,7 @@ public class SocialController {
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
 
         // 다른 사람 프로필도 마이페이지와 같은 통계 영역을 사용하므로 독서 요약 응답에 social 통계를 합쳐 내려준다.
-        // 독서 요약이 실패하면 통계를 추가하지 않고 원래 실패 응답을 그대로 반환한다.
+        // 독서 요약이 실패하면 통계를 추가하지 않고 후속 응답 데이터 결합을 중단한다
         if (summaryResult.getCode() != 200) {
 
             // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환한다

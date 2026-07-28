@@ -60,7 +60,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회 과정에서 확인된 검증 실패 응답을 반환한다
+            // 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
         // 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회 결과를 성공 응답으로 반환한다
@@ -85,7 +85,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 로그인 사용자가 상대 사용자를 팔로우하도록 TB_FOLLOW에 저장 과정에서 확인된 검증 실패 응답을 반환한다
+            // 로그인 사용자가 상대 사용자를 팔로우하도록 TB_FOLLOW에 저장 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -121,7 +121,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 로그인 사용자가 상대 사용자를 팔로우 중인 관계를 삭제 과정에서 확인된 검증 실패 응답을 반환한다
+            // 로그인 사용자가 상대 사용자를 팔로우 중인 관계를 삭제 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -149,7 +149,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소 과정에서 확인된 검증 실패 응답을 반환한다
+            // 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -203,7 +203,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 사용자 프로필 통계 값을 조회 과정에서 확인된 검증 실패 응답을 반환한다
+            // 사용자 프로필 통계 값을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -233,7 +233,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 특정 사용자가 팔로우하는 사용자 목록을 조회 과정에서 확인된 검증 실패 응답을 반환한다
+            // 특정 사용자가 팔로우하는 사용자 목록을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -261,7 +261,7 @@ public class SocialServiceImpl implements SocialService {
         // invalidResult 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(invalidResult)) {
 
-            // 특정 사용자를 팔로우하는 사용자 목록을 조회 과정에서 확인된 검증 실패 응답을 반환한다
+            // 특정 사용자를 팔로우하는 사용자 목록을 조회 과정에서 확인된 사용자 메시지
             return invalidResult;
         }
 
@@ -284,14 +284,14 @@ public class SocialServiceImpl implements SocialService {
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getUserNumb())) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // req.getFlowNumb( 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req.getFlowNumb()) || req.getUserNumb().equals(req.getFlowNumb())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -301,7 +301,7 @@ public class SocialServiceImpl implements SocialService {
         // targetUser 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(targetUser)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
         // 조회하거나 생성할 값이 없음을 반환한다
@@ -321,7 +321,7 @@ public class SocialServiceImpl implements SocialService {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb)) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -331,7 +331,7 @@ public class SocialServiceImpl implements SocialService {
         // targetUser 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(targetUser)) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
         // 조회하거나 생성할 값이 없음을 반환한다
@@ -352,7 +352,7 @@ public class SocialServiceImpl implements SocialService {
         // loginUserNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(loginUserNumb)) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
         // 팔로우/팔로워 목록 조회에 필요한 로그인 사용자와 목록 주인 사용자를 검증 결과를 반환한다
@@ -393,7 +393,7 @@ public class SocialServiceImpl implements SocialService {
         // req 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getUserNumb())) {
 
-            // "\uC778\uC99D\uC5D0 \uC2E4\uD328\uD588\uC5B4\uC694.\n\uB2E4\uC2DC \uB85C\uADF8\uC778 \uD574\uC8FC\uC138\uC694." 실패 응답을 반환한다
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
@@ -403,7 +403,7 @@ public class SocialServiceImpl implements SocialService {
                 || StringUtil.isEmpty(req.getTagtNumb())
                 || StringUtil.isEmpty(req.getTargetUserNumb())) {
 
-            // "\uC870\uD68C \uACB0\uACFC\uAC00 \uC5C6\uC5B4\uC694." 실패 응답을 반환한다
+            // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
@@ -413,14 +413,14 @@ public class SocialServiceImpl implements SocialService {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!Constant.LIKE_TARGET_REPORT.equals(req.getTagtType())) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (reportMapper.getPublicReportLikeTargetCnt(req) == 0) {
 
-            // "\uC694\uCCAD\uAC12\uC774 \uC62C\uBC14\uB974\uC9C0 \uC54A\uC544\uC694." 실패 응답을 반환한다
+            // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
         // 조회하거나 생성할 값이 없음을 반환한다
