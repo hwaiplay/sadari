@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @RequiredArgsConstructor
 public class UserMenuServiceImpl implements UserMenuService {
-
     // UserMenu 데이터 접근 객체
     private final UserMenuMapper userMenuMapper;
 
@@ -39,10 +38,8 @@ public class UserMenuServiceImpl implements UserMenuService {
     @Override
     @Transactional(readOnly = true)
     public ResultData getUserMenu(String menuUrlx) {
-
         // menuUrlx 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(menuUrlx)) {
-
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -56,7 +53,6 @@ public class UserMenuServiceImpl implements UserMenuService {
 
         // 비정상적으로 null 목록이 반환되어도 프론트가 별도 null 분기 없이 빈 메뉴를 렌더링하도록 보정한다.
         if (StringUtil.isEmpty(menuList)) {
-
             // 조회 결과가 없을 때 사용할 빈 목록을 생성한다
             menuList = Collections.emptyList();
         }

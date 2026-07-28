@@ -15,7 +15,6 @@ import org.our.sadari.user.dto.LoginHistoryDto;
  */
 @Mapper
 public interface LoginHistoryMapper {
-
     /**
      * 아래 코드의 처리 목적을 설명한다.
      */

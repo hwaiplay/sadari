@@ -119,6 +119,23 @@ public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNum
 
 위 예시의 첫 번째 줄은 `1.5 + 1 + 1 = 3.5`, 두 번째 줄은 `3`, 세 번째 줄은 `1.5 + 1 = 2.5`로 계산합니다.
 
+### 5.5 로그 호출 파라미터
+
+- 로그 메시지의 `{}` 치환값이 2개 이하이면 예외 객체를 포함한 로그 호출 전체를 한 줄에 작성합니다.
+- 로그 메시지의 `{}` 치환값이 3개 이상이면 포맷 문자열 다음 줄부터 치환값을 작성합니다.
+- 여러 줄 로그 호출의 두 번째 줄부터 선행 콤마를 작성합니다.
+- 선행 콤마와 파라미터 시작 위치는 메서드 파라미터 정렬 규칙과 동일하게 각각 세로로 맞춥니다.
+- 로그 치환값은 어노테이션이 없는 일반 파라미터로 계산하여 한 줄에 최대 3개까지 작성합니다.
+- 치환값 외에 마지막 예외 객체가 있으면 일반 파라미터와 같은 기준으로 이어서 배치합니다.
+
+```java
+log.error("알림 발송에 실패했습니다. 사용자 번호={}, 독후감 번호={}", userNumb, reptNumb, e);
+
+log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수={}, 실패 건수={}, 최대 조회 건수={}"
+       , targetCnt, successCnt, failureCnt
+       , maxSize);
+```
+
 ## 6. REST API 규칙
 
 ### 6.1 URI
@@ -224,6 +241,8 @@ public UserDto getUserDtl(String userId) {
 
 - 모든 메서드 선언의 여는 중괄호 바로 다음에는 빈 줄을 한 줄 작성한 뒤 첫 실행문을 작성합니다.
 - 생성자, 일반 메서드, Controller, Service, Mapper 기본 메서드, 익명 클래스와 콜백 메서드에도 메서드 시작 공백 규칙을 동일하게 적용합니다.
+- 메서드 여는 중괄호 바로 다음 줄이 한 줄 주석 또는 여러 줄 주석이면 해당 주석을 빈 줄 한 줄과 동일하게 취급합니다.
+- 메서드 시작 직후 주석이 있으면 여는 중괄호와 주석 사이에 별도 빈 줄을 작성하지 않습니다.
 
 ### 8.2 모든 반환문
 
@@ -246,10 +265,31 @@ public UserDto getUserDtl(String userId) {
 ### 8.5 분기와 실행 블록
 
 - `if`, `else if`, `else`, `switch`, `case`, 삼항 연산자 등 모든 분기 처리 바로 위에는 한글 주석을 반드시 작성합니다.
+- `if` 조건절의 여는 괄호와 닫는 괄호 사이에는 한 줄 주석과 여러 줄 주석을 작성하지 않습니다.
+- 조건별 설명이 필요하면 `if` 문 바로 위의 분기 주석에 조건의 목적과 판단 기준을 함께 작성합니다.
+- 여러 줄 `if` 조건절은 `CommonExceptionHandler.isDatabaseConnectionFailure` 형식을 기준으로 작성합니다.
+- 첫 번째 조건은 `if (`와 같은 줄에 작성하고, 다음 줄부터 현재 `if` 문의 들여쓰기보다 8칸 더 들여씁니다.
+- 한 줄에는 조건을 최대 두 개까지 작성하며, `||` 또는 `&&` 논리 연산자를 한 번 사용해 두 조건을 계산한 뒤 줄바꿈합니다.
+- 조건 개수가 홀수이면 마지막 줄에는 하나의 조건만 작성할 수 있습니다.
+- 이어지는 조건 줄은 이전 줄과 연결되는 `||` 또는 `&&` 논리 연산자로 시작하며 같은 세로 위치에 정렬합니다.
 - `for`, 향상된 `for`, `while`, `do-while`, `try`, `catch`, `finally`, 람다, 익명 클래스 등 새로운 실행 블록 바로 위에는 한글 주석을 반드시 작성합니다.
 - 메서드 안에서 중괄호로 새로운 지역 블록을 시작할 때도 해당 블록의 목적을 설명하는 한글 주석을 바로 위에 작성합니다.
 - 분기 또는 블록이 단순하더라도 주석 생략을 허용하지 않습니다.
 - 주석에는 코드가 무엇을 하는지만 반복하지 말고 해당 분기나 블록이 필요한 이유, 적용되는 도메인 정책, 실패 시 처리 방향을 작성합니다.
+- 분기, 반복문, `try`, `catch`, `finally`, 람다, 익명 클래스 및 지역 블록의 닫는 중괄호 다음 줄은 주석 유무와 관계없이 한 줄 비웁니다.
+- 메서드 자체를 끝내는 닫는 중괄호 뒤에는 블록 종료 공백 규칙을 적용하지 않습니다.
+- 블록 종료 뒤 `else`, `catch`, `finally`가 이어져도 닫는 중괄호와 다음 키워드 사이를 한 줄 비웁니다.
+
+```java
+// 예외 체인에 데이터베이스 연결 장애를 나타내는 예외가 포함되어 있는지 확인한다
+if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
+        || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
+        || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
+        || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
+    // 데이터베이스 연결 실패로 판정한다
+    return true;
+}
+```
 
 ### 8.6 함수 호출과 값 설정
 
@@ -257,13 +297,24 @@ public UserDto getUserDtl(String userId) {
 - DTO, VO, Entity 등에 `set***` 메서드로 값을 넣는 코드 바로 위에는 어떤 업무 값을 설정하는지 설명하는 한글 주석을 반드시 작성합니다.
 - 여러 함수 호출 또는 여러 setter가 하나의 동일한 목적을 가지더라도 각 호출 바로 위에 주석을 개별 작성합니다.
 
-### 8.7 복잡한 처리와 사용자 메시지
+### 8.7 객체 생성
+
+- 객체 변수 선언과 `new` 생성자 호출은 줄바꿈하지 않고 한 줄에 작성합니다.
+- 객체 생성 목적 주석은 객체 선언 바로 위에 작성합니다.
+- 생성자 파라미터가 많더라도 객체 생성문 자체는 한 줄로 유지합니다.
+
+```java
+// 스케줄러 실패 상세 정보를 담을 객체를 생성한다
+SchedulerLogDto.SchedulerFailDto schedulerFailDto = new SchedulerLogDto.SchedulerFailDto();
+```
+
+### 8.8 복잡한 처리와 사용자 메시지
 
 - 정규식, 수식, 비트 연산, 외부 API 통신 전후에는 의도를 설명합니다.
 - 코드 내용을 그대로 읽는 주석은 작성하지 않습니다.
 - 사용자 메시지를 반환하거나 노출하는 코드 바로 위에는 실제 노출 문구를 주석으로 작성합니다.
 
-### 8.8 로직 주석 예시
+### 8.9 로직 주석 예시
 
 ```java
 // 조회 결과가 없으면 이후 로직에서 사용자 정보가 참조되지 않도록 공통 실패 응답을 즉시 반환한다

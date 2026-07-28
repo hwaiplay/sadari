@@ -11,7 +11,6 @@ package org.our.sadari.global.common.constant;
  * 2026-07-07        SeungHyeon.Kang    최초 생성
  */
 public final class Constant {
-
     // 독후감 내용 최대 바이트 설정값
     public static final int REPORT_CONTENT_MAX_BYTES = 4000;
 
@@ -108,7 +107,6 @@ public final class Constant {
     public static final String GOAL_TYPE_YEAR = "YEAR";
 
     private Constant() {
-
         // 아래 처리 단계의 업무 목적을 설명한다.
     }
 }

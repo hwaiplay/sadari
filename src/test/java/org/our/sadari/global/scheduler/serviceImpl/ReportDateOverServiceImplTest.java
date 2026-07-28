@@ -37,7 +37,6 @@ import org.our.sadari.report.dto.ReportDto;
  */
 @ExtendWith(MockitoExtension.class)
 class ReportDateOverServiceImplTest {
-
     // ReportDateOver 데이터 접근 객체
     @Mock
     private ReportDateOverMapper reportDateOverMapper;
@@ -60,16 +59,10 @@ class ReportDateOverServiceImplTest {
      */
     @BeforeEach
     void setUp() {
-
         // 스케줄러 로그 예외 처리 테스트 대상을 담을 객체를 생성한다
         SchedulerLogSupport schedulerLogSupport = new SchedulerLogSupport(schedulerLogService);
         // 목표 독서기간 만료 스케줄러 단위 테스트 대상을 담을 객체를 생성한다
-        schedulerService = new ReportDateOverServiceImpl(
-                reportDateOverMapper
-              , alimService
-              , schedulerLogSupport
-              , 100
-        );
+        schedulerService = new ReportDateOverServiceImpl(reportDateOverMapper, alimService, schedulerLogSupport, 100);
         // SchedulerLog 업무 값을 schedulerLogService DTO에 설정한다
         when(schedulerLogService.setSchedulerLog(any())).thenReturn(1L);
     }
@@ -81,7 +74,6 @@ class ReportDateOverServiceImplTest {
      */
     @Test
     void sendReportDateOverAlimUsesConfiguredMaxSizeAndReportDto() {
-
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
         ReportDto target = createTarget(10L, 31L, "나미야 잡화점의 기적");
         // ReportDateOverTargetList 데이터를 DB에서 조회한다
@@ -137,7 +129,6 @@ class ReportDateOverServiceImplTest {
      */
     @Test
     void sendReportDateOverAlimContinuesAfterSingleFailure() {
-
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
         ReportDto failedTarget = createTarget(10L, 31L, "첫 번째 책");
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
@@ -212,7 +203,6 @@ class ReportDateOverServiceImplTest {
      */
     @Test
     void sendReportDateOverAlimUpdatesNoDataStatus() {
-
         // ReportDateOverTargetList 데이터를 DB에서 조회한다
         when(reportDateOverMapper.getReportDateOverTargetList(100)).thenReturn(List.of());
 
@@ -244,7 +234,6 @@ class ReportDateOverServiceImplTest {
      * @return 독후감 도메인의 공용 ReportDto
      */
     private ReportDto createTarget(Long reptNumb, Long userNumb, String bookTitl) {
-
         // 독후감 또는 독서 목표 처리 데이터를 담을 객체를 생성한다
         ReportDto target = new ReportDto();
         // ReptNumb 업무 값을 target DTO에 설정한다

@@ -27,7 +27,6 @@ import org.our.sadari.global.scheduler.service.SchedulerLogServiceImpl;
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerLogServiceImplTest {
-
     // SchedulerLog 데이터 접근 객체
     @Mock
     private SchedulerLogMapper schedulerLogMapper;
@@ -42,7 +41,6 @@ class SchedulerLogServiceImplTest {
      */
     @BeforeEach
     void setUp() {
-
         // 스케줄러 로그 서비스 단위 테스트 대상을 담을 객체를 생성한다
         schedulerLogService = new SchedulerLogServiceImpl(schedulerLogMapper);
     }
@@ -54,7 +52,6 @@ class SchedulerLogServiceImplTest {
      */
     @Test
     void setSchedulerLogReturnsGeneratedRunNumber() {
-
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto runDto = new SchedulerLogDto.SchedulerRunDto();
         // SchdCode 업무 값을 runDto DTO에 설정한다
@@ -86,7 +83,6 @@ class SchedulerLogServiceImplTest {
      */
     @Test
     void setSchedulerFailRejectsMissingRunNumber() {
-
         // 스케줄러 실패 상세 정보를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerFailDto failDto = new SchedulerLogDto.SchedulerFailDto();
         // FailType 업무 값을 failDto DTO에 설정한다
@@ -106,7 +102,6 @@ class SchedulerLogServiceImplTest {
      */
     @Test
     void uptSchedulerLogRejectsMissingMasterRow() {
-
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto runDto = new SchedulerLogDto.SchedulerRunDto();
         // RunxNumb 업무 값을 runDto DTO에 설정한다

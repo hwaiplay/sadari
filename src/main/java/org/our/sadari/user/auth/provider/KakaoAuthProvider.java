@@ -30,7 +30,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 @Component
 @Slf4j
 public class KakaoAuthProvider {
-
     // BACK DOMAIN 설정값
     @Value("${domain.back}")
     private String BACK_DOMAIN;
@@ -50,7 +49,6 @@ public class KakaoAuthProvider {
      * @return 카카오 로그인 동의 화면 URL
      */
     public String getKakaoAuthorizationUrl() {
-
         // yml의 백엔드 도메인, 콜백 경로와 카카오 REST API 키로 로그인 인가 URL을 생성 결과를 반환한다
         return UriComponentsBuilder
                 .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
@@ -71,7 +69,6 @@ public class KakaoAuthProvider {
      * @return 처리 결과
      */
     public KakaoTokenDto getKakaoToken(String code) throws JsonProcessingException {
-
         // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
         RestTemplate restTemplate = new RestTemplate();
 
@@ -110,9 +107,9 @@ public class KakaoAuthProvider {
             // Kakao 인가 코드의 Access Token 교환 결과를 반환한다
             return kakaoTokenDto;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (JsonProcessingException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
             throw e;
@@ -127,7 +124,6 @@ public class KakaoAuthProvider {
      * @return 처리 결과
      */
     public KakaoAccountDto getKakaoAccount(KakaoTokenDto vo) throws JsonProcessingException {
-
         // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
         RestTemplate restTemplate = new RestTemplate();
 
@@ -158,9 +154,9 @@ public class KakaoAuthProvider {
             // Kakao Access Token 기준 사용자 계정 조회 결과를 반환한다
             return kakaoAccountDto;
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (JsonProcessingException e) {
-
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
             throw e;
@@ -174,7 +170,6 @@ public class KakaoAuthProvider {
      * @return 카카오 콘솔에 등록할 전체 OAuth 콜백 URI
      */
     private String getKakaoRedirectUri() {
-
         // 정규식과 일치하는 문자열을 일괄 치환한다
         String normalizedDomain = BACK_DOMAIN.replaceAll("/+$", "");
         // 정규식과 일치하는 문자열을 일괄 치환한다

@@ -16,7 +16,6 @@ import lombok.Data;
  */
 @Schema(description = "웹 푸시 설정과 구독 DTO 컨테이너", hidden = true)
 public class PushDto {
-
     /**
      * 브라우저가 FCM token을 발급받기 위해 필요한 Firebase Web 설정 DTO이다.
      * VAPID 공개키만 브라우저에 제공하고 Firebase Admin 서비스 계정 정보는 노출하지 않는다.

@@ -29,7 +29,6 @@ import org.our.sadari.global.scheduler.service.AlimDeleteServiceImpl;
  */
 @ExtendWith(MockitoExtension.class)
 class AlimDeleteServiceImplTest {
-
     // AlimDelete 데이터 접근 객체
     @Mock
     private AlimDeleteMapper alimDeleteMapper;
@@ -48,7 +47,6 @@ class AlimDeleteServiceImplTest {
      */
     @BeforeEach
     void setUp() {
-
         // 알림 삭제 스케줄러 단위 테스트 대상을 담을 객체를 생성한다
         alimDeleteService = new AlimDeleteServiceImpl(alimDeleteMapper, schedulerLogSupport);
         // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
@@ -62,7 +60,6 @@ class AlimDeleteServiceImplTest {
      */
     @Test
     void delAlimRecordsDeletedCountAsSuccess() {
-
         // Alim 데이터를 DB에서 삭제한다
         when(alimDeleteMapper.delAlim()).thenReturn(12);
 
@@ -96,7 +93,6 @@ class AlimDeleteServiceImplTest {
      */
     @Test
     void delAlimRecordsNoDataWhenNothingWasDeleted() {
-
         // Alim 데이터를 DB에서 삭제한다
         when(alimDeleteMapper.delAlim()).thenReturn(0);
 
@@ -122,7 +118,6 @@ class AlimDeleteServiceImplTest {
      */
     @Test
     void delAlimRecordsFailureAndRethrowsDeleteException() {
-
         // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성한다
         RuntimeException exception = new RuntimeException("delete failed");
         // Alim 데이터를 DB에서 삭제한다

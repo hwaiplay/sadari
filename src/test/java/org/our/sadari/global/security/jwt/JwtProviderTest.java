@@ -21,7 +21,6 @@ import org.junit.jupiter.api.Test;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 class JwtProviderTest {
-
     // 접근 TOKEN SECONDS 설정값
     private static final long ACCESS_TOKEN_SECONDS = 1_800L;
     // REFRESH TOKEN SECONDS 설정값
@@ -41,7 +40,6 @@ class JwtProviderTest {
      */
     @BeforeEach
     void setUp() {
-
         // JWT 발급과 검증 테스트 대상을 담을 객체를 생성한다
         jwtProvider = new JwtProvider(TEST_SECRET, ACCESS_TOKEN_SECONDS, REFRESH_TOKEN_SECONDS);
         // 토큰 생성과 검증에 사용할 서명 키를 초기화한다
@@ -55,7 +53,6 @@ class JwtProviderTest {
      */
     @Test
     void createAndParseAccessToken() {
-
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createAccessToken(31L, "USER");
 
@@ -76,7 +73,6 @@ class JwtProviderTest {
      */
     @Test
     void createAndValidateRefreshToken() {
-
         // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createRefreshToken(31L);
 
@@ -95,7 +91,6 @@ class JwtProviderTest {
      */
     @Test
     void rejectTamperedToken() {
-
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createAccessToken(31L, "USER");
         // Bearer 접두사 뒤에 토큰이 포함되어 있는지 확인한다

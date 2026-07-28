@@ -31,7 +31,6 @@ import org.our.sadari.global.scheduler.service.SchedulerLogService;
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerLogSupportTest {
-
     // SchedulerLog 업무 처리 서비스
     @Mock
     private SchedulerLogService schedulerLogService;
@@ -46,7 +45,6 @@ class SchedulerLogSupportTest {
      */
     @BeforeEach
     void setUp() {
-
         // 스케줄러 로그 예외 처리 테스트 대상을 담을 객체를 생성한다
         schedulerLogSupport = new SchedulerLogSupport(schedulerLogService);
     }
@@ -58,10 +56,8 @@ class SchedulerLogSupportTest {
      */
     @Test
     void setSchedulerLogSafelyReturnsNullWhenLogStorageFails() {
-
-        SchedulerLogDto.SchedulerRunDto schedulerRunDto =
-                // 스케줄러 실행 로그를 담을 객체를 생성한다
-                new SchedulerLogDto.SchedulerRunDto();
+        // 스케줄러 실행 로그를 담을 객체를 생성한다
+        SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
         // SchedulerLog 업무 값을 schedulerLogService DTO에 설정한다
         when(schedulerLogService.setSchedulerLog(schedulerRunDto))
                 .thenThrow(new IllegalStateException("log storage failure"));
@@ -80,7 +76,6 @@ class SchedulerLogSupportTest {
      */
     @Test
     void setSchedulerFailSafelySkipsWhenRunNumberIsMissing() {
-
         // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
         schedulerLogSupport.setSchedulerFailSafely(
                 null
@@ -101,7 +96,6 @@ class SchedulerLogSupportTest {
      */
     @Test
     void setSchedulerFailSafelyMapsExceptionInformation() {
-
         // 잘못된 입력 상황을 재현할 예외를 담을 객체를 생성한다
         RuntimeException exception = new IllegalArgumentException("invalid target");
 
@@ -134,10 +128,8 @@ class SchedulerLogSupportTest {
      */
     @Test
     void uptSchedulerLogSafelySuppressesLogStorageFailure() {
-
-        SchedulerLogDto.SchedulerRunDto schedulerRunDto =
-                // 스케줄러 실행 로그를 담을 객체를 생성한다
-                new SchedulerLogDto.SchedulerRunDto();
+        // 스케줄러 실행 로그를 담을 객체를 생성한다
+        SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
         // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
         schedulerRunDto.setRunxNumb(9L);
         // 스케줄러 비정상 상태를 재현할 예외를 담을 객체를 생성한다
@@ -156,7 +148,6 @@ class SchedulerLogSupportTest {
      */
     @Test
     void getSchedulerExecutionStatusUsesSuccessAndFailureCounts() {
-
         // 실제 처리 결과가 예상값과 일치하는지 검증한다
         assertEquals(
                 Constant.SCHEDULER_EXEC_SUCCESS

@@ -13,7 +13,6 @@ import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 public interface SchedulerLogService {
-
     /**
      * 스케줄러 실행 시작 로그를 등록하고 발급된 실행 번호를 반환
      *

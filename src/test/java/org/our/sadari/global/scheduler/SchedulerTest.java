@@ -26,7 +26,6 @@ import org.our.sadari.global.scheduler.service.ReportDateOverService;
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerTest {
-
     // ReportDateOver 업무 처리 서비스
     @Mock
     private ReportDateOverService reportDateOverService;
@@ -49,7 +48,6 @@ class SchedulerTest {
      */
     @BeforeEach
     void setUp() {
-
         // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성한다
         scheduler = new Scheduler(reportDateOverService, alimDeleteService, codeUtil);
     }
@@ -61,7 +59,6 @@ class SchedulerTest {
      */
     @Test
     void sendReportDateOverAlimRunsWhenDetailCodeIsEnabled() {
-
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -83,7 +80,6 @@ class SchedulerTest {
      */
     @Test
     void sendReportDateOverAlimSkipsWhenDetailCodeIsDisabled() {
-
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -105,7 +101,6 @@ class SchedulerTest {
      */
     @Test
     void delAlimRunsWhenDetailCodeIsEnabled() {
-
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -127,7 +122,6 @@ class SchedulerTest {
      */
     @Test
     void delAlimSkipsWhenDetailCodeIsDisabled() {
-
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE

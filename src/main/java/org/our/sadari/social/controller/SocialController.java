@@ -39,7 +39,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/social")
 @Tag(name = "소셜", description = "공개 프로필, 팔로우, 좋아요 API")
 public class SocialController {
-
     // User 데이터 접근 객체
     private final UserMapper userMapper;
     // Report 업무 처리 서비스
@@ -57,13 +56,11 @@ public class SocialController {
     @GetMapping("/profile/{userNumb}")
     @Operation(summary = "공개 프로필 조회", description = "사용자 번호로 공개 프로필 정보를 조회한다.")
     public ResultData getSocialProfile(@Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // UserByNumb 데이터를 DB에서 조회한다
         UserDto user = userMapper.getUserByNumb(userNumb);
 
         // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -91,13 +88,11 @@ public class SocialController {
     @GetMapping("/profile/{userNumb}/reading-summary")
     @Operation(summary = "공개 독서 요약 조회", description = "사용자 번호로 공개 프로필의 독서 활동 요약을 조회한다.")
     public ResultData getSocialReadingSummary(@Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // UserByNumb 데이터를 DB에서 조회한다
         UserDto user = userMapper.getUserByNumb(userNumb);
 
         // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(user)) {
-
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -108,7 +103,6 @@ public class SocialController {
         // 다른 사람 프로필도 마이페이지와 같은 통계 영역을 사용하므로 독서 요약 응답에 social 통계를 합쳐 내려준다.
         // 독서 요약이 실패하면 통계를 추가하지 않고 후속 응답 데이터 결합을 중단한다
         if (summaryResult.getCode() != 200) {
-
             // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환한다
             return summaryResult;
         }
@@ -118,7 +112,6 @@ public class SocialController {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (statsResult.getCode() != 200) {
-
             // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환한다
             return statsResult;
         }
@@ -130,7 +123,6 @@ public class SocialController {
 
         // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(profileStats)) {
-
             // TotalReadBookCnt 업무 값을 summary DTO에 설정한다
             summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
             // FollowingCnt 업무 값을 summary DTO에 설정한다
@@ -140,6 +132,7 @@ public class SocialController {
             // ReceivedLikeCnt 업무 값을 summary DTO에 설정한다
             summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
         }
+
         // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(summary);
     }
@@ -155,7 +148,6 @@ public class SocialController {
     @GetMapping("/me/following")
     @Operation(summary = "내 팔로잉 목록 조회", description = "로그인 사용자가 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getMyFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-
         // 로그인 사용자의 팔로잉 목록을 조회한 결과를 반환한다
         return socialService.getFollowingList(loginUserNumb, loginUserNumb);
     }
@@ -171,7 +163,6 @@ public class SocialController {
     @GetMapping("/me/followers")
     @Operation(summary = "내 팔로워 목록 조회", description = "로그인 사용자를 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getMyFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-
         // 로그인 사용자의 팔로워 목록을 조회한 결과를 반환한다
         return socialService.getFollowerList(loginUserNumb, loginUserNumb);
     }
@@ -189,7 +180,6 @@ public class SocialController {
     @Operation(summary = "팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                      , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // 특정 사용자의 팔로잉 목록을 조회한 결과를 반환한다
         return socialService.getFollowingList(loginUserNumb, userNumb);
     }
@@ -207,7 +197,6 @@ public class SocialController {
     @Operation(summary = "팔로워 목록 조회", description = "특정 사용자를 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                     , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // 특정 사용자의 팔로워 목록을 조회한 결과를 반환한다
         return socialService.getFollowerList(loginUserNumb, userNumb);
     }
@@ -224,7 +213,6 @@ public class SocialController {
     @Operation(summary = "팔로우 버튼 상태 조회", description = "로그인 사용자와 상대 사용자 관계를 기준으로 팔로우 버튼명을 조회한다.")
     public ResultData getFollowStatus(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                     , @Parameter(description = "상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회 결과를 반환한다
         return socialService.getFollowStatus(createFollowDto(loginUserNumb, userNumb));
     }
@@ -241,7 +229,6 @@ public class SocialController {
     @Operation(summary = "팔로우 등록", description = "로그인 사용자가 상대 사용자를 팔로우한다.")
     public ResultData setFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                               , @Parameter(description = "팔로우할 상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // 로그인 사용자가 프로필 주인을 팔로우하도록 저장 결과를 반환한다
         return socialService.setFollow(createFollowDto(loginUserNumb, userNumb));
     }
@@ -258,7 +245,6 @@ public class SocialController {
     @Operation(summary = "언팔로우", description = "로그인 사용자가 상대 사용자에게 건 팔로우 관계를 삭제한다.")
     public ResultData delFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                               , @Parameter(description = "언팔로우할 상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
-
         // 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제 결과를 반환한다
         return socialService.delFollow(createFollowDto(loginUserNumb, userNumb));
     }
@@ -279,10 +265,8 @@ public class SocialController {
     )
     public ResultData setLike(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                             , @RequestBody SocialDto.LikeDto request) {
-
         // request 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(request)) {
-
             // 좋아요 대상과 알림 정보를 담을 객체를 생성한다
             request = new SocialDto.LikeDto();
         }
@@ -303,7 +287,6 @@ public class SocialController {
      * @return 팔로우 요청 DTO
      */
     private SocialDto.FollowDto createFollowDto(Long loginUserNumb, Long userNumb) {
-
         // 팔로우 대상과 알림 정보를 담을 객체를 생성한다
         SocialDto.FollowDto followDto = new SocialDto.FollowDto();
         // UserNumb 업무 값을 followDto DTO에 설정한다

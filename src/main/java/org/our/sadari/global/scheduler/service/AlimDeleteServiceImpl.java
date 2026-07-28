@@ -25,7 +25,6 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class AlimDeleteServiceImpl implements AlimDeleteService {
-
     // AlimDelete 데이터 접근 객체
     private final AlimDeleteMapper alimDeleteMapper;
     // 스케줄러 로그 안전 처리 객체
@@ -40,7 +39,6 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
     @Override
     @Transactional
     public void delAlim() {
-
         // 실행 시간을 측정할 시작 시각을 기록한다
         long startNanoTime = System.nanoTime();
         // 스케줄러 실행 로그를 담을 객체를 생성한다
@@ -75,9 +73,9 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
             // 처리 상태를 정보 로그로 남긴다
             log.info("삭제 상태 알림 정리가 완료되었습니다. 삭제 건수={}", deletedCnt);
         }
+
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (RuntimeException e) {
-
             // 단일 DELETE가 실패하면 이번 실행 전체가 실패한 것이므로 마스터와 실패 상세에 각각 결과를 남긴다.
             failureCnt = 1;
             executionStatus = Constant.SCHEDULER_EXEC_FAILURE;
@@ -93,6 +91,7 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
             log.error("삭제 상태 알림 정리 중 오류가 발생했습니다.", e);
             throw e;
         }
+
         // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
         finally {
             // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다

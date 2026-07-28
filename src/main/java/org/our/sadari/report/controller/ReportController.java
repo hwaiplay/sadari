@@ -37,7 +37,6 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/book")
 @Tag(name = "독후감", description = "독후감 목록, 상세, 등록, 수정, 삭제, 공개 독후감, 좋아요 API")
 public class ReportController {
-
     // Report 업무 처리 서비스
     private final ReportService reportService;
 
@@ -56,7 +55,6 @@ public class ReportController {
     public ResultData getBookList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @Parameter(description = "책 제목 또는 작가명 검색어", example = "용의자") @RequestParam(value = "bookKeyword", required = false) String bookKeyword
                                 , @Parameter(description = "정렬 유형", example = Constant.SORT_END_DATE_DESC) @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType) {
-
         // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회 결과를 반환한다
         return reportService.getBookList(userNumb, bookKeyword, sortType);
     }
@@ -74,7 +72,6 @@ public class ReportController {
     @Operation(summary = "내 독후감 상세 조회", description = "로그인 사용자가 작성한 독후감과 연결된 도서 정보를 함께 조회한다.")
     public ResultData getDetail(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "독후감 번호", example = "1") @PathVariable("bookNumb") Long bookNumb) {
-
         // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회 결과를 반환한다
         return reportService.getDetail(userNumb, bookNumb);
     }
@@ -92,7 +89,6 @@ public class ReportController {
     @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서에 대해 다른 사용자가 공개한 독후감 목록을 조회한다.")
     public ResultData getPublicReportsByIsbn(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                            , @Parameter(description = "공개 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn) {
-
         // ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회 결과를 반환한다
         return reportService.getPublicReportsByIsbn(userNumb, isbn);
     }
@@ -110,7 +106,6 @@ public class ReportController {
     @Operation(summary = "독후감 등록", description = "도서 정보가 없으면 도서를 먼저 저장한 뒤 로그인 사용자의 독후감을 등록한다.")
     public ResultData createReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Valid @RequestBody ReportDto requestDto) {
-
         // 새 독후감과 필요 시 신규 도서 정보를 함께 등록 결과를 반환한다
         return reportService.setReport(userNumb, requestDto);
     }
@@ -130,7 +125,6 @@ public class ReportController {
     public ResultData uptReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
                               , @Valid @RequestBody ReportDto request) {
-
         // 기존 독후감 정보를 수정 결과를 반환한다
         return reportService.uptReport(userNumb, reptNumb, request);
     }
@@ -150,7 +144,6 @@ public class ReportController {
     public ResultData uptReptStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
                                        , @RequestBody ReportDto request) {
-
         // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 결과를 반환한다
         return reportService.uptReptStatusGrade(userNumb, reptNumb, request);
     }
@@ -168,7 +161,6 @@ public class ReportController {
     @Operation(summary = "독후감 삭제", description = "로그인 사용자가 작성한 독후감을 삭제한다.")
     public ResultData delReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "삭제할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb) {
-
         // 로그인 사용자가 작성한 독후감을 삭제 결과를 반환한다
         return reportService.delReport(userNumb, reptNumb);
     }

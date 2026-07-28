@@ -15,7 +15,6 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-20        SeungHyeon.Kang    최초 생성
  */
 public interface UserService {
-
     /**
      * 로그인 사용자의 프로필 정보를 조회한다.
      *

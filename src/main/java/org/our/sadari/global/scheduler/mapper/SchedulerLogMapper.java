@@ -15,7 +15,6 @@ import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
  */
 @Mapper
 public interface SchedulerLogMapper {
-
     /**
      * 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록
      *

@@ -16,7 +16,6 @@ public class ServletInitializer extends SpringBootServletInitializer {
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-
 		// configure 처리 결과를 반환한다
 		return application.sources(SadariApplication.class);
 	}

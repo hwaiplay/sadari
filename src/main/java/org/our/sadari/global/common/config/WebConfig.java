@@ -17,8 +17,6 @@ import org.springframework.web.servlet.config.annotation.*;
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
-
-
     // FRONT DOMAIN 설정값
     @Value("${domain.front}")
     private String FRONT_DOMAIN;
@@ -31,7 +29,6 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-
         // 프론트엔드 라우팅을 위한 뷰 컨트롤러 경로를 등록한다
         registry.addMapping("/**")
                 .allowedOrigins(FRONT_DOMAIN)
@@ -47,7 +44,6 @@ public class WebConfig implements WebMvcConfigurer {
      */
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-
         // DB에는 파일 시스템 절대 경로가 아닌 /uploads 하위 접근 URL만 저장하므로 여기서 실제 디렉터리를 연결한다.
         String uploadPath = Paths.get("uploads").toAbsolutePath().normalize().toUri().toString();
         // 업로드 파일을 제공할 정적 리소스 경로를 등록한다

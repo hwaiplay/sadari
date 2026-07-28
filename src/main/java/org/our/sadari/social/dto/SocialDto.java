@@ -16,7 +16,6 @@ import lombok.Data;
  */
 @Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
-
     /**
      * 팔로우 관계 조회, 등록, 삭제에 사용하는 DTO이다.
      * 로그인 사용자와 대상 사용자를 한 객체로 묶어 Controller, Service, Mapper가 같은 파라미터 구조를 사용하게 한다.

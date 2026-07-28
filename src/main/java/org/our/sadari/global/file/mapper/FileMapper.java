@@ -15,7 +15,6 @@ import org.our.sadari.global.file.dto.FileDto;
  */
 @Mapper
 public interface FileMapper {
-
     /**
      * 아래 코드의 처리 목적을 설명한다.
      */
