@@ -5,9 +5,14 @@ import lombok.Getter;
 import org.our.sadari.global.common.util.MessageUtils;
 
 /**
- * ResultData 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : ResultData
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-25
+ * description    : 공통 업무에 필요한 기능을 제공한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-25        SeungHyeon.Kang    최초 생성
  */
 @Getter
 @Schema(description = "공통 API 응답 형식")
@@ -25,60 +30,71 @@ public class ResultData {
     /**
      * ResultData 객체를 생성한다.
      *
-     * @author Seunghyeon.Kang
-     * @param code 처리에 필요한 입력값
-     * @param message 처리에 필요한 입력값
-     * @param data 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param code Kakao 로그인 인가 코드
+     * @param message 사용자에게 노출할 응답 메시지
+     * @param data 성공 응답에 포함할 업무 데이터
      */
     private ResultData(int code, String message, Object data) {
+
         this.code = code;
         this.message = message;
         this.data = data;
     }
 
     /**
-     * success 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통 성공 응답 생성한다.
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @return 처리 결과
      */
     public static ResultData success() {
+
+        // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(200, "success", null);
     }
 
     /**
-     * success 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통 성공 응답 생성한다.
      *
-     * @author Seunghyeon.Kang
-     * @param data 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param data 성공 응답에 포함할 업무 데이터
      * @return 처리 결과
      */
     public static ResultData success(Object data) {
+
+        // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(200, "success", data);
     }
 
     /**
-     * fail 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통 실패 응답 생성한다.
      *
-     * @author Seunghyeon.Kang
-     * @param resultEnum 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param resultEnum 실패 응답에 사용할 공통 결과 코드
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum) {
+
+        // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
+        // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 
     /**
-     * fail 메서드의 요청을 검증하고 업무 처리 결과를 반환한다.
+     * 공통 실패 응답 생성한다.
      *
-     * @author Seunghyeon.Kang
-     * @param resultEnum 처리에 필요한 입력값
-     * @param args 처리에 필요한 입력값
+     * @author SeungHyeon.Kang
+     * @param resultEnum 실패 응답에 사용할 공통 결과 코드
+     * @param args 메시지 치환에 사용할 인자 목록
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum, Object... args) {
+
+        // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey(), args);
+        // 새로 생성한 ResultData 객체를 반환한다
         return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 }

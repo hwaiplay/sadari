@@ -4,16 +4,23 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * ResultResponse 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : ResultResponse
+ * author         : SeungHyeon.Kang
+ * date           : 2026-03-25
+ * description    : 공통 업무에 필요한 기능을 제공한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-03-25        SeungHyeon.Kang    최초 생성
  */
 @Getter
 @AllArgsConstructor
 public class ResultResponse {
 
-    private int code; // 업무 규칙에서 사용하는 고정 설정 값이다.
-    private String message; // 업무 규칙에서 사용하는 고정 설정 값이다.
+    // 공통 응답 결과 코드
+    private int code;
+    // 공통 응답 메시지
+    private String message;
 
 
 }

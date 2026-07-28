@@ -8,9 +8,15 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
- * BookDto 클래스의 역할과 책임을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : BookDto
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-17
+ * description    : 도서 요청과 응답 데이터를 전달한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  */
 @Data
 @AllArgsConstructor

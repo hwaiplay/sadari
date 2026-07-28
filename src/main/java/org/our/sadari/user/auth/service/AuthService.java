@@ -3,9 +3,14 @@ package org.our.sadari.user.auth.service;
 import org.our.sadari.global.common.result.ResultData;
 
 /**
- * AuthService 인터페이스에서 제공해야 하는 기능 계약을 정의한다.
- *
- * @author Seunghyeon.Kang
+ * fileName       : AuthService
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-17
+ * description    : 사용자 업무 계약을 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-17        SeungHyeon.Kang    최초 생성
  */
 public interface AuthService {
 

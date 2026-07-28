@@ -6,9 +6,14 @@ import org.apache.ibatis.annotations.Param;
 import org.our.sadari.report.dto.ReportDto;
 
 /**
- * 정기 작업 대상자를 DB에서 제한된 크기로 조회하는 MyBatis Mapper
- *
- * @author Seunghyeon.Kang
+ * fileName       : ReportDateOverMapper
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-26
+ * description    : 스케줄러 데이터베이스 접근 메서드를 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 @Mapper
 public interface ReportDateOverMapper {
@@ -16,7 +21,7 @@ public interface ReportDateOverMapper {
     /**
      * 진행 중이면서 목표 종료일이 지난 독후감 중 아직 기간 초과 알림을 받지 않은 대상을 조회
      *
-     * @author Seunghyeon.Kang
+     * @author SeungHyeon.Kang
      * @param maxSize SQL에서 반환할 최대 행 수
      * @return 목표 독서기간 초과 알림 대상 목록
      */

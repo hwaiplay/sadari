@@ -3,6 +3,17 @@ package org.our.sadari.global.common.code.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
+/**
+ * fileName       : CodeDto
+ * author         : SeungHyeon.Kang
+ * date           : 2026-07-09
+ * description    : 공통 요청과 응답 데이터를 전달한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-07-09        SeungHyeon.Kang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
+ */
 @Data
 @Schema(description = "공통코드 세부코드 DTO")
 public class CodeDto {
@@ -31,7 +42,7 @@ public class CodeDto {
     private String opt4Code;
     @Schema(description = "옵션4 명")
     private String opt4Name;
-    @Schema(description = "사용 여부", example = "Y")
+    @Schema(description = "사용 여부", example = "Y", allowableValues = {"Y", "N"})
     private String useeYsno;
     @Schema(description = "정렬 순서", example = "1")
     private Integer sortOrdr;
