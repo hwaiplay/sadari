@@ -13,11 +13,27 @@ type RatingFieldProps = {
   disabled?: boolean;
 };
 
+/**
+ * Rating Field 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @param props props 입력값
+ * @return 구성된 화면 요소
+ */
 function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
+
   const groupRef = useRef<HTMLDivElement | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
+  /**
+   * update Grade By Pointer 정보를 수정한다
+   *
+   * @author HanWon.Jang
+   * @param clientX client X 입력값
+   * @return 반환값이 없다
+   */
   const updateGradeByPointer = (clientX: number) => {
+
     if (disabled) {
       return;
     }
@@ -41,7 +57,15 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
     onChange(nextGrade);
   };
 
+  /**
+   * handle Pointer Down 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
+
     if (disabled) {
       return;
     }
@@ -51,7 +75,15 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
     updateGradeByPointer(event.clientX);
   };
 
+  /**
+   * handle Pointer Move 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
+
     if (!isDragging) {
       return;
     }
@@ -59,7 +91,15 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
     updateGradeByPointer(event.clientX);
   };
 
+  /**
+   * end Drag 기능을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 처리 결과
+   */
   const endDrag = (event: PointerEvent<HTMLDivElement>) => {
+
     setIsDragging(false);
 
     if (event.currentTarget.hasPointerCapture(event.pointerId)) {
@@ -103,6 +143,7 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
             checked={value === grade}
             disabled={disabled}
             onChange={() => {
+
               if (!disabled) {
                 onChange(grade);
               }

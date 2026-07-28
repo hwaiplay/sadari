@@ -24,10 +24,11 @@ type SearchBookPageState = {
 /**
  * 책 검색, 더보기, 선택, 추가 조회 흐름을 처리하는 책 검색 화면을 렌더링합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 책 검색 페이지 컴포넌트
  */
 const SearchBookPage = () => {
+
   const [searchKeyword, setSearchKeyword] = useState("");
   const [bookResult, setBookResult] = useState<NaverApiResultType[] | null>(
     null,
@@ -40,7 +41,17 @@ const SearchBookPage = () => {
   const location = useLocation();
   const navigationType = useNavigationType();
 
+  /**
+   * fetch Books 기능을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param keyword keyword 입력값
+   * @param start start 입력값
+   * @return 처리 결과
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const fetchBooks = async (keyword: string, start: number) => {
+
     const response = await api.get(
       `/book/search?query=${encodeURIComponent(keyword)}&start=${start}`,
     );
@@ -48,12 +59,23 @@ const SearchBookPage = () => {
     return (assertResultDataSuccess(response.data).data ?? []) as NaverApiResultType[];
   };
 
+  /**
+   * save Search Cache 기능을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param keyword keyword 입력값
+   * @param result result 입력값
+   * @param next next 입력값
+   * @param more more 입력값
+   * @return 처리 결과
+   */
   const saveSearchCache = (
     keyword: string,
     result: NaverApiResultType[],
     next: number,
     more: boolean,
   ) => {
+
     sessionStorage.setItem(
       SEARCH_STORAGE_KEY,
       JSON.stringify({
@@ -69,11 +91,12 @@ const SearchBookPage = () => {
    * 전달받은 검색어로 도서 검색을 실행하고 첫 페이지 결과를 화면과 세션 캐시에 반영합니다.
    * 홈 독후감 검색 결과 없음 추천과 사용자가 직접 누른 검색 버튼이 같은 흐름을 사용하도록 분리했습니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param keyword 검색할 책 제목 또는 작가 이름
    * @return
    */
   const executeBookSearch = async (keyword: string) => {
+
     try {
       if (keyword === "") {
         await sweetWarning(
@@ -113,6 +136,7 @@ const SearchBookPage = () => {
   };
 
   useEffect(() => {
+
     const state = (location.state ?? {}) as SearchBookPageState;
     const initialSearchKeyword = state.initialSearchKeyword?.trim() ?? "";
 
@@ -158,12 +182,29 @@ const SearchBookPage = () => {
     }
   }, [location.key, location.state, navigationType]);
 
+  /**
+   * handle Search Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param e e 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleSearchClick = async (e?: FormEvent<HTMLFormElement>) => {
+
     e?.preventDefault();
     await executeBookSearch(searchKeyword.trim());
   };
 
+  /**
+   * handle Load More 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleLoadMore = async () => {
+
     const keyword = searchKeyword.trim();
 
     if (!keyword || isLoadingMore) {
@@ -203,13 +244,29 @@ const SearchBookPage = () => {
     }
   };
 
+  /**
+   * handle Select Book 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param book book 입력값
+   * @return 반환값이 없다
+   */
   const handleSelectBook = (book: NaverApiResultType) => {
+
     navigate("/set", {
       state: { selectedBook: book },
     });
   };
 
+  /**
+   * handle More Info 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param book book 입력값
+   * @return 반환값이 없다
+   */
   const handleMoreInfo = (book: NaverApiResultType) => {
+
     navigate("/book/search/info", {
       state: { book },
     });
@@ -241,6 +298,7 @@ const SearchBookPage = () => {
           (bookResult.length > 0 ? (
             <div className={styles.resultList}>
               {bookResult.map((book, index) => {
+
                 const title = stripHtmlTags(book.title);
                 const author = normalizeBookAuthor(book.author);
                 const publisher = stripHtmlTags(book.publisher);

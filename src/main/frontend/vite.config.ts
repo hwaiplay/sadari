@@ -18,7 +18,7 @@ const SPRING_PROFILE_PATTERN = /^[A-Za-z0-9_-]+$/;
 /**
  * Spring yml의 환경변수 placeholder를 현재 프로세스 환경값으로 해석합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param configuredValue yml의 domain.back 설정값
  * @return 실제 Vite proxy 대상 URL
  */
@@ -46,7 +46,7 @@ const resolveSpringValue = (configuredValue: string) => {
  * 현재 Spring profile의 application yml에서 백엔드 도메인을 읽습니다.
  * Vite 개발 서버와 Spring 서버가 서로 다른 주소를 사용하지 않도록 yml을 단일 설정 원본으로 사용합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 검증된 백엔드 도메인 URL
  */
 const getBackendDomain = () => {

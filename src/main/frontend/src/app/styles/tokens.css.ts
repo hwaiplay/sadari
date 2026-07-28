@@ -1,12 +1,12 @@
 /**
  * fileName       : tokens.css.ts
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-03-19
  * description    : 디자인 시스템 토큰 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-03-19        Hanwon.Jang       주석 추가
+ * 2026-03-19        HanWon.Jang       주석 추가
  */
 
 import { createGlobalTheme } from "@vanilla-extract/css";

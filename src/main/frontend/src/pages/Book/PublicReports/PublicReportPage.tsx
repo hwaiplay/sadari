@@ -35,9 +35,17 @@ type PublicReportPageState = {
   ratingAverage?: number | string | null;
 };
 
+/**
+ * get Report Status 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param report report 입력값
+ * @return 처리 결과
+ */
 const getReportStatus = (
   report: PublicReportType,
 ): string => {
+
   return String(report.reptStat ?? "")
     .trim()
     .toUpperCase();
@@ -47,10 +55,11 @@ const getReportStatus = (
  * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시합니다.
  * 책 정보, 정렬 및 독서 상태 필터, 좋아요와 댓글 바텀시트를 한 화면에서 제공합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -74,6 +83,7 @@ function PublicReportPage() {
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {
+
     return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
   }, [publicReportsQuery.data]);
 
@@ -89,6 +99,7 @@ function PublicReportPage() {
   }, [reportStatusCodeQuery.data]);
 
   const statusNameByCode = useMemo(() => {
+
     return new Map(
       (reportStatusCodeQuery.data ?? []).map((code) => [
         code.comdCode.toUpperCase(),
@@ -98,6 +109,7 @@ function PublicReportPage() {
   }, [reportStatusCodeQuery.data]);
 
   const visibleReports = useMemo(() => {
+
     const filteredReports =
       status === "ALL"
         ? reports
@@ -113,25 +125,58 @@ function PublicReportPage() {
     return filteredReports;
   }, [reports, sort, status]);
 
+  /**
+   * handle Toggle Report 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param reptNumb rept Numb 입력값
+   * @return 반환값이 없다
+   */
   const handleToggleReport = (reptNumb: number) => {
+
     setExpandedReports((prev) => ({
       ...prev,
       [reptNumb]: !prev[reptNumb],
     }));
   };
 
+  /**
+   * get Count Label 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @param countValue count Value 입력값
+   * @return 처리 결과
+   */
   const getCountLabel = (countValue?: number) => {
+
     const count = Number(countValue) || 0;
     return count > 999 ? "999+" : String(count);
   };
 
+  /**
+   * handle Profile Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param userNumb user Numb 입력값
+   * @return 반환값이 없다
+   */
   const handleProfileClick = (userNumb: number) => {
+
     if (userNumb) {
       navigate(`/social/profile/${userNumb}`);
     }
   };
 
+  /**
+   * handle Submit Comment 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param reptNumb rept Numb 입력값
+   * @param comment comment 입력값
+   * @return 반환값이 없다
+   */
   const handleSubmitComment = (reptNumb: number, comment: string) => {
+
     setTemporaryComments((prev) => ({
       ...prev,
       [reptNumb]: [
@@ -141,7 +186,15 @@ function PublicReportPage() {
     }));
   };
 
+  /**
+   * get Status Class Name 정보를 조회한다
+   *
+   * @author HanWon.Jang
+   * @param reportStatus report Status 입력값
+   * @return 처리 결과
+   */
   const getStatusClassName = (reportStatus: string) => {
+
     if (reportStatus === "DONE") {
       return styles.statusDone;
     }
@@ -231,6 +284,7 @@ function PublicReportPage() {
           {visibleReports.length > 0 ? (
             <section className={styles.list}>
               {visibleReports.map((report) => {
+
                 const rating = Math.max(
                   0,
                   Math.min(5, Number(report.reptGrde) || 0),

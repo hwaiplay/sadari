@@ -1,7 +1,7 @@
 /**
  * 공통 헤더, 본문, 하단 네비게이션을 배치하고 페이지 전환 애니메이션을 적용합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import Header from "./Header/Header";
 import { Outlet, useLocation, useNavigationType } from "react-router-dom";
@@ -20,11 +20,12 @@ import {
 /**
  * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param isMainLayout 메인 컨테이너와 헤더 여백 적용 여부
  * @return 공통 레이아웃 컴포넌트
  */
 function Layout({ isMainLayout = true }: { isMainLayout?: boolean }) {
+
   const location = useLocation();
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
@@ -33,6 +34,7 @@ function Layout({ isMainLayout = true }: { isMainLayout?: boolean }) {
     navigationType === "POP" ? pageTransitionBack : pageTransitionForward;
 
   useEffect(() => {
+
     hasMountedRef.current = true;
   }, []);
 

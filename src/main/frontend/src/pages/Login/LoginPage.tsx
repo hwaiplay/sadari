@@ -16,10 +16,11 @@ import {
 /**
  * Kakao OAuth 시작 링크를 제공하는 로그인 화면을 렌더링합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 로그인 페이지 컴포넌트
  */
 function LoginPage() {
+
   return (
     <main className={loginContainer}>
       <div className={background}>

@@ -31,11 +31,12 @@ type MonthMoveDirection = "prev" | "next";
 /**
  * 달력 상단에 표시할 연월 제목을 만듭니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param date 제목을 만들 기준 날짜
  * @return 화면 표시용 연월 문자열
  */
 function formatMonthTitle(date: Date) {
+
   return message("frontend.calendar.monthLabel", [
     date.getFullYear(),
     date.getMonth() + 1,
@@ -45,34 +46,37 @@ function formatMonthTitle(date: Date) {
 /**
  * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param value 변환할 날짜 문자열
  * @return 점 구분 날짜 문자열
  */
 function formatDisplayDate(value: string) {
+
   return value.replaceAll("-", ".");
 }
 
 /**
  * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param date 선택한 날짜
  * @return 화면 표시용 날짜 문자열
  */
 function formatSelectedDate(date: Date) {
+
   return `${date.getFullYear()}년 ${date.getMonth() + 1}월 ${date.getDate()}일`;
 }
 
 /**
  * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param report 독서 기간을 가진 독후감 데이터
  * @param date 포함 여부를 확인할 날짜
  * @return 해당 날짜가 독서 기간에 포함되면 true
  */
 function isReadingOnDate(report: CalendarReport, date: Date) {
+
   const start = parseLocalDate(report.reptStdt);
   const end = parseLocalDate(report.reptEndt);
   const target = new Date(date.getFullYear(), date.getMonth(), date.getDate());
@@ -83,12 +87,13 @@ function isReadingOnDate(report: CalendarReport, date: Date) {
 /**
  * 독서 시작일과 독후감 번호를 기준으로 달력 목록 정렬 순서를 계산합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param a 비교할 첫 번째 독후감
  * @param b 비교할 두 번째 독후감
  * @return 정렬 비교 결과
  */
 function compareReports(a: CalendarReport, b: CalendarReport) {
+
   const startCompare = parseLocalDate(a.reptStdt).getTime() - parseLocalDate(b.reptStdt).getTime();
 
   if (startCompare !== 0) {
@@ -101,16 +106,18 @@ function compareReports(a: CalendarReport, b: CalendarReport) {
 /**
  * 월 화면에 표시할 6주치 날짜 배열을 생성합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param month 달력을 구성할 기준 월
  * @return 달력에 표시할 42개 날짜 목록
  */
 function getCalendarDays(month: Date) {
+
   const firstDay = new Date(month.getFullYear(), month.getMonth(), 1);
   const start = new Date(firstDay);
   start.setDate(firstDay.getDate() - firstDay.getDay());
 
   return Array.from({ length: 42 }, (_, index) => {
+
     const day = new Date(start);
     day.setDate(start.getDate() + index);
     return day;
@@ -120,22 +127,24 @@ function getCalendarDays(month: Date) {
 /**
  * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param reports 월 범위에서 조회한 독후감 목록
  * @param date 목록을 찾을 기준 날짜
  * @return 지정 날짜에 해당하는 독후감 목록
  */
 function getReportsOnDate(reports: CalendarReport[], date: Date) {
+
   return reports.filter((report) => isReadingOnDate(report, date)).sort(compareReports);
 }
 
 /**
  * 월별 독서 기간을 달력에 표시하고 선택 날짜의 독후감 목록을 제공합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 독서 달력 페이지 컴포넌트
  */
 function ReadingCalendarPage() {
+
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(() => new Date());
   const [monthMoveDirection, setMonthMoveDirection] = useState<MonthMoveDirection>("next");
@@ -150,29 +159,42 @@ function ReadingCalendarPage() {
   );
 
   useEffect(() => {
+
     let ignore = false;
 
     api
       .get(`/user/reading-calendar?yearMonth=${yearMonth}`)
       .then((response) => {
+
         if (!ignore) {
           setReports(assertResultDataSuccess(response.data).data ?? []);
         }
       })
       .catch(() => {
+
         if (!ignore) {
           setReports([]);
         }
       });
 
     return () => {
+
       ignore = true;
     };
   }, [yearMonth]);
 
+  /**
+   * move Month 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param offset offset 입력값
+   * @return 반환값이 없다
+   */
   const moveMonth = (offset: number) => {
+
     setMonthMoveDirection(offset < 0 ? "prev" : "next");
     setCurrentMonth((prev) => {
+
       const next = new Date(prev.getFullYear(), prev.getMonth() + offset, 1);
       setSelectedDate(next);
       return next;
@@ -220,6 +242,7 @@ function ReadingCalendarPage() {
             </div>
           ))}
           {days.map((day) => {
+
             const dayReports = getReportsOnDate(reports, day);
             const visibleReports = dayReports.slice(0, 3);
             const isOutsideMonth = day.getMonth() !== currentMonth.getMonth();
@@ -246,6 +269,7 @@ function ReadingCalendarPage() {
                 </span>
                 <div className={styles.dayBooks}>
                   {visibleReports.map((report) => {
+
                     const backgroundColor = report.reptColr || "#e5e5e5";
 
                     return (
@@ -275,6 +299,7 @@ function ReadingCalendarPage() {
         {selectedReports.length > 0 ? (
           <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
             {selectedReports.map((report) => {
+
               const backgroundColor = report.reptColr || "#e5e5e5";
 
               return (

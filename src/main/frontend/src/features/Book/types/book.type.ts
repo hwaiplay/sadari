@@ -1,12 +1,12 @@
 /**
  * fileName       : book.type
- * author         : hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-04-02
  * description    : 독후감 관련 타입 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-04-02       hanwon.Jang       최초 생성
+ * 2026-04-02       HanWon.Jang       최초 생성
  */
 
 /**
