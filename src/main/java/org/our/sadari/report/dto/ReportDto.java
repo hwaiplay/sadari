@@ -18,6 +18,7 @@ import org.our.sadari.book.dto.BookDto;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
+ * 2026-07-28        Hanwon.Jang        댓글 필드 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -66,18 +67,28 @@ public class ReportDto extends BookDto {
     @Schema(description = "독후감 본문", example = "인물의 선택이 끝까지 긴장감을 유지했다.")
     @Size(max = 4000)
     private String reptCntn;
+
     @Schema(description = "독후감 작성자 닉네임", example = "reader31")
     private String userNick;
+
     @Schema(description = "독후감 작성자 프로필 이미지 경로", example = "/uploads/profile/sample.jpg")
     private String porfPath;
+
     @Schema(description = "독후감이 받은 좋아요 수", example = "12")
     private Long likeCnt;
+
     @Schema(description = "로그인 사용자의 좋아요 여부", example = "Y", allowableValues = {"Y", "N"})
     private String likeYsno;
+
     @Schema(description = "조회 기준일의 독서 기록 존재 여부", example = "Y", allowableValues = {"Y", "N"})
     private String readingYn;
+
     @Schema(description = "책 제목 또는 작가명 검색어", example = "히가시노 게이고")
     private String bookKeyword;
+
     @Schema(description = "독후감 목록 정렬 유형", example = "END_DATE_DESC")
     private String sortType;
+
+    @Schema(description = "독후감이 받은 댓글 수", example = "12")
+    private Long replCnt;
 }

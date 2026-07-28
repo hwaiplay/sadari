@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.reply.mapper.ReplyMapper">
+
+    <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
+    <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        SELECT /* getReplyList */
+               R.REPT_NUMB
+             , R.REPL_NUMB
+             , R.UPER_NUMB
+             , R.USER_NUMB
+             , R.REPL_CNTN
+             , R.DELT_YSNO
+             , R.REGI_DATE
+             , R.UPDT_DATE
+             , U.USER_NICK
+             , F.FILE_PATH AS PORF_PATH
+         FROM TB_REPLXX R
+    LEFT JOIN TM_USERXM U
+           ON R.USER_NUMB  = U.USER_NUMB
+    LEFT JOIN TM_FILEXM F
+           ON U.PROF_NUMB = F.FILE_NUMB
+        WHERE R.REPT_NUMB = #{reptNumb}
+     ORDER BY R.REPL_NUMB
+    </select>
+
+    <!-- 댓글 또는 답글을 신규 등록한다. -->
+    <insert id="setReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <selectKey keyProperty="replNumb" resultType="long" order="BEFORE">
+            SELECT TB_REPLXX_SEQ.NEXTVAL FROM DUAL
+        </selectKey>
+        /* setReply */
+        INSERT INTO TB_REPLXX (
+                    REPT_NUMB
+                  , REPL_NUMB
+                  , UPER_NUMB
+                  , USER_NUMB
+                  , REPL_CNTN
+                  , DELT_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{reptNumb}
+                  , #{replNumb}
+                  , #{uperNumb,jdbcType=NUMERIC}
+                  , #{userNumb}
+                  , #{replCntn}
+                  , #{deltYsno}
+                  , SYSDATE
+                  , SYSDATE
+        )
+    </insert>
+</mapper>
