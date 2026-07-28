@@ -40,6 +40,7 @@ import org.springframework.web.multipart.MultipartException;
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
+
     // 오라클 값 초과 대용량 오류 코드 설정값
     private static final int ORACLE_VALUE_TOO_LARGE_ERROR_CODE = 1461;
 

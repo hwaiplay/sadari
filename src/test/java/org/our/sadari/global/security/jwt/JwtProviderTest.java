@@ -21,6 +21,7 @@ import org.junit.jupiter.api.Test;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 class JwtProviderTest {
+
     // 접근 TOKEN SECONDS 설정값
     private static final long ACCESS_TOKEN_SECONDS = 1_800L;
     // REFRESH TOKEN SECONDS 설정값

@@ -24,6 +24,7 @@ import java.util.Map;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  */
 public class StringUtil {
+
     // 빈 값 설정값
     public static final String EMPTY = "";
 

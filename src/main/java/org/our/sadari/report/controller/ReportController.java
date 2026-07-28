@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/book")
 @Tag(name = "독후감", description = "독후감 목록, 상세, 등록, 수정, 삭제, 공개 독후감, 좋아요 API")
 public class ReportController {
+
     // Report 업무 처리 서비스
     private final ReportService reportService;
 

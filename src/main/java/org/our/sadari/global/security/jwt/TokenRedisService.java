@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 @Service
 @RequiredArgsConstructor
 public class TokenRedisService {
+
     // REFRESH TOKEN 접두사 설정값
     private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
     // USER NICK 접두사 설정값

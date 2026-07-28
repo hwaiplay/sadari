@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
+
     // Report 데이터 접근 객체
     private final ReportMapper reportMapper;
     // Social 데이터 접근 객체

@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -37,6 +39,7 @@ import org.our.sadari.report.dto.ReportDto;
  */
 @ExtendWith(MockitoExtension.class)
 class ReportDateOverServiceImplTest {
+
     // ReportDateOver 데이터 접근 객체
     @Mock
     private ReportDateOverMapper reportDateOverMapper;
@@ -64,7 +67,7 @@ class ReportDateOverServiceImplTest {
         // 목표 독서기간 만료 스케줄러 단위 테스트 대상을 담을 객체를 생성한다
         schedulerService = new ReportDateOverServiceImpl(reportDateOverMapper, alimService, schedulerLogSupport, 100);
         // SchedulerLog 업무 값을 schedulerLogService DTO에 설정한다
-        when(schedulerLogService.setSchedulerLog(any())).thenReturn(1L);
+        lenient().when(schedulerLogService.setSchedulerLog(any())).thenReturn(1L);
     }
 
     /**
@@ -197,7 +200,7 @@ class ReportDateOverServiceImplTest {
     }
 
     /**
-     * 조회 대상이 없을 때 실패 상세 없이 NO_DATA 상태로 실행 로그를 종료하는지 검증한다.
+     * 조회 대상이 없을 때 실행 로그를 등록하거나 수정하지 않는지 검증한다.
      *
      * @author SeungHyeon.Kang
      */
@@ -209,19 +212,10 @@ class ReportDateOverServiceImplTest {
         // sendReportDateOverAlim 업무 로직을 schedulerService에 위임한다
         schedulerService.sendReportDateOverAlim();
 
-        ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> runCaptor =
-                // 리플렉션 호출 결과의 반환 타입을 지정한다
-                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
-        // 호출 인자를 검증하기 위해 캡처한다
-        verify(schedulerLogService).uptSchedulerLog(runCaptor.capture());
-        // 현재 항목의 값을 조회한다
-        assertEquals(Constant.SCHEDULER_EXEC_NO_DATA, runCaptor.getValue().getExecStat());
-        // 현재 항목의 값을 조회한다
-        assertEquals(0, runCaptor.getValue().getTrgtCntt());
-        // 현재 항목의 값을 조회한다
-        assertEquals(0, runCaptor.getValue().getSuccCntt());
-        // 현재 항목의 값을 조회한다
-        assertEquals(0, runCaptor.getValue().getFailCntt());
+        // 처리 건수가 모두 0이면 마스터 로그를 등록하지 않는지 검증한다
+        verify(schedulerLogService, never()).setSchedulerLog(any());
+        // 등록된 마스터 로그가 없으므로 종료 로그 수정도 호출하지 않는지 검증한다
+        verify(schedulerLogService, never()).uptSchedulerLog(any());
     }
 
     /**

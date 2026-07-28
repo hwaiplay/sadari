@@ -3,6 +3,7 @@ package org.our.sadari.global.scheduler.service;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
+import java.time.LocalDateTime;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
@@ -30,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @Transactional(readOnly = true)
 public class ReportDateOverServiceImpl implements ReportDateOverService {
+
     // 결과 성공 코드 설정값
     private static final int RESULT_SUCCESS_CODE = 200;
     // 빈 값 결과 메시지 설정값
@@ -85,9 +87,9 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
         schedulerRunDto.setMethName(Thread.currentThread().getStackTrace()[1].getMethodName());
         // ExecStat 업무 값을 schedulerRunDto DTO에 설정한다
         schedulerRunDto.setExecStat(Constant.SCHEDULER_EXEC_RUNNING);
-
-        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
-        Long runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+        // StrtDate 업무 값을 schedulerRunDto DTO에 설정한다
+        schedulerRunDto.setStrtDate(LocalDateTime.now());
+        Long runxNumb = null;
         int targetCnt = 0;
         int successCnt = 0;
         int failureCnt = 0;
@@ -140,6 +142,16 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                     Integer resultCode = StringUtil.isEmpty(result) ? null : result.getCode();
                     // 필수 값이 비어 있는지 공통 기준으로 확인한다
                     String resultMessage = StringUtil.isEmpty(result) ? EMPTY_RESULT_MESSAGE : result.getMessage();
+                    // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
+                    schedulerRunDto.setFailCntt(failureCnt);
+                    // TrgtCntt 업무 값을 schedulerRunDto DTO에 설정한다
+                    schedulerRunDto.setTrgtCntt(targetCnt);
+                    // 실패 상세를 연결할 실행 번호가 없으면 최초 실패 시점에 마스터 로그를 생성한다.
+                    if (StringUtil.isEmpty(runxNumb)) {
+                        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                        runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                    }
+
                     // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
                     schedulerLogSupport.setSchedulerFailSafely(
                             runxNumb
@@ -161,6 +173,17 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                      * 저장되지 않은 대상은 조회 SQL의 NOT EXISTS 조건을 계속 만족하므로 다음 실행에서 다시 시도된다.
                      */
                     failureCnt++;
+                    // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
+                    schedulerRunDto.setFailCntt(failureCnt);
+                    // TrgtCntt 업무 값을 schedulerRunDto DTO에 설정한다
+                    schedulerRunDto.setTrgtCntt(targetCnt);
+                    // 실패 상세를 연결할 실행 번호가 없으면 최초 예외 시점에 마스터 로그를 생성한다.
+                    if (StringUtil.isEmpty(runxNumb)) {
+
+                        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                        runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                    }
+
                     // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
                     schedulerLogSupport.setSchedulerFailSafely(
                             runxNumb
@@ -186,6 +209,15 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
              */
             failureCnt++;
             executionStatus = Constant.SCHEDULER_EXEC_FAILURE;
+            // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
+            schedulerRunDto.setFailCntt(failureCnt);
+            // 실행 전반의 예외를 연결할 실행 번호가 없으면 마스터 로그를 생성한다.
+            if (StringUtil.isEmpty(runxNumb)) {
+
+                // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+            }
+
             // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
             schedulerLogSupport.setSchedulerFailSafely(
                     runxNumb
@@ -201,21 +233,24 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
 
         // 성공 여부와 관계없이 반드시 자원을 정리하기 위한 블록이다
         finally {
-            // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
+
             schedulerRunDto.setRunxNumb(runxNumb);
-            // ExecStat 업무 값을 schedulerRunDto DTO에 설정한다
             schedulerRunDto.setExecStat(executionStatus);
-            // TrgtCntt 업무 값을 schedulerRunDto DTO에 설정한다
             schedulerRunDto.setTrgtCntt(targetCnt);
-            // SuccCntt 업무 값을 schedulerRunDto DTO에 설정한다
             schedulerRunDto.setSuccCntt(successCnt);
-            // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
             schedulerRunDto.setFailCntt(failureCnt);
-            // ExecMsec 업무 값을 schedulerRunDto DTO에 설정한다
             schedulerRunDto.setExecMsec(
                     // 측정한 실행 시간을 밀리초 단위로 변환한다
                     TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime)
             );
+            // 처리 결과가 존재하지만 실패가 없어 마스터 로그를 만들지 않았다면 최종 건수로 로그를 생성한다.
+            if (StringUtil.isEmpty(runxNumb)) {
+                // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
+                runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
+                schedulerRunDto.setRunxNumb(runxNumb);
+            }
+
             // uptSchedulerLogSafely 호출로 변경된 업무 상태를 반영한다
             schedulerLogSupport.uptSchedulerLogSafely(schedulerRunDto);
 

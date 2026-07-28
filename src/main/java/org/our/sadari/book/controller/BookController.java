@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/book")
 @Tag(name = "도서", description = "도서 검색과 ISBN 기준 공개 평점 평균 조회 API")
 public class BookController {
+
     // BookSearch 업무 처리 서비스
     private final BookSearchService bookSearchService;
     // Report 업무 처리 서비스

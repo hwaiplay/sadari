@@ -30,6 +30,7 @@ import org.our.sadari.global.common.result.ResultEnum;
  */
 @ExtendWith(MockitoExtension.class)
 class CodeUtilTest {
+
     // Code 데이터 접근 객체
     @Mock
     private CodeMapper codeMapper;

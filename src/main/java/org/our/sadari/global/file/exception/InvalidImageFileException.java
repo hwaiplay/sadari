@@ -11,6 +11,7 @@ package org.our.sadari.global.file.exception;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  */
 public class InvalidImageFileException extends RuntimeException {
+
     /**
      * 이미지 검증 실패 원인을 내부 로그와 예외 체인에 보존한다.
      *

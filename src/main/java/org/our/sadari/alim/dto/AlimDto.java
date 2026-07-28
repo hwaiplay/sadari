@@ -19,6 +19,7 @@ import lombok.Data;
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
+
     /**
      * TB_ALTEMP에서 알림 템플릿을 조회할 때 사용하는 DTO이다.
      * 알림 상황과 템플릿 코드가 복합 PK이므로 두 값을 항상 함께 넘겨 템플릿을 특정한다.

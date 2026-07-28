@@ -31,6 +31,7 @@ import org.our.sadari.push.service.PushService;
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
+
     // Alim 데이터 접근 객체
     @Mock
     private AlimMapper alimMapper;

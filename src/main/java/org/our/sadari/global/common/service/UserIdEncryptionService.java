@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
  */
 @Service
 public class UserIdEncryptionService {
+
     // 암호화 접두사 설정값
     private static final String ENCRYPTED_PREFIX = "ENC:";
     // 키 알고리즘 설정값

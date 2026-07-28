@@ -26,6 +26,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @ConditionalOnProperty(prefix = "scheduler", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class Scheduler {
+
     // 목표 독서기간 초과 알림 업무를 수행하는 서비스
     private final ReportDateOverService reportDateOverService;
 
