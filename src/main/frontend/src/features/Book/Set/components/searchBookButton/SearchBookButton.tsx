@@ -5,10 +5,11 @@ import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
 /**
  * 梨?寃???붾㈃?쇰줈 ?대룞?섎뒗 踰꾪듉???쒖떆?쒕떎.
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 梨?寃???대룞 踰꾪듉 而댄룷?뚰듃
  */
 const SearchBookButton = () => {
+
   return (
     <Link to="/book/search" className={searchBtn}>
       <svg

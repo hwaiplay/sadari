@@ -11,10 +11,11 @@ const HEADER_SCROLL_DELTA = 4;
 /**
  * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 서브 페이지 헤더 컴포넌트
  */
 function SubPageHeader() {
+
   const navigate = useNavigate();
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
@@ -23,22 +24,25 @@ function SubPageHeader() {
   /**
    * 브라우저 히스토리를 기반으로 이전 페이지로 이동합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    */
   const backPrev = () => {
+
     navigate(-1);
   };
 
   useEffect(() => {
+
     lastScrollYRef.current = window.scrollY;
 
     /**
      * 등록/수정 화면의 전용 헤더도 일반 헤더와 동일하게 스크롤 방향에 따라 숨김 상태를 전환합니다.
      * 헤더 배경, 로고, 뒤로가기 버튼이 각각 따로 움직이지 않도록 하나의 래퍼 상태만 변경합니다.
      *
-     * @author Hanwon.Jang
+     * @author HanWon.Jang
      */
     const handleScroll = () => {
+
       const currentScrollY = window.scrollY;
       const scrollDiff = currentScrollY - lastScrollYRef.current;
 
@@ -73,6 +77,7 @@ function SubPageHeader() {
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
+
       window.removeEventListener("scroll", handleScroll);
     };
   }, []);

@@ -13,7 +13,7 @@ type BookSummaryProps = {
 /**
  * 선택된 책의 표지, 제목, 저자와 책 관련 보조 동작 버튼을 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param image 책 표지 이미지 URL
  * @param title 책 제목
  * @param author 책 저자
@@ -29,6 +29,7 @@ function BookSummary({
   onChangeBook,
   onShowBookInfo,
 }: BookSummaryProps) {
+
   return (
     <div className={styles.coverArea}>
       <div className={styles.coverFrame}>

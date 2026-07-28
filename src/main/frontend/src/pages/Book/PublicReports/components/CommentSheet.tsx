@@ -15,12 +15,20 @@ type CommentSheetProps = {
   onSubmitComment: (comment: string) => void;
 };
 
+/**
+ * Comment Sheet 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @param props props 입력값
+ * @return 구성된 화면 요소
+ */
 function CommentSheet({
   report,
   comments,
   onClose,
   onSubmitComment,
 }: CommentSheetProps) {
+
   const sheetRef = useRef<HTMLElement>(null);
   const dragStartRef = useRef({ y: 0, time: 0, pointerId: -1 });
   const closeTimerRef = useRef<number | null>(null);
@@ -29,8 +37,17 @@ function CommentSheet({
   const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
+
     const previousOverflow = document.body.style.overflow;
+    /**
+     * handle Key Down 사용자 동작을 처리한다
+     *
+     * @author HanWon.Jang
+     * @param event event 입력값
+     * @return 반환값이 없다
+     */
     const handleKeyDown = (event: KeyboardEvent) => {
+
       if (event.key === "Escape") {
         onClose();
       }
@@ -40,6 +57,7 @@ function CommentSheet({
     window.addEventListener("keydown", handleKeyDown);
 
     return () => {
+
       document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", handleKeyDown);
 
@@ -49,15 +67,30 @@ function CommentSheet({
     };
   }, [onClose]);
 
+  /**
+   * close With Drag Animation 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const closeWithDragAnimation = () => {
+
     setIsDragging(false);
     setDragOffset(sheetRef.current?.offsetHeight ?? window.innerHeight);
     closeTimerRef.current = window.setTimeout(onClose, CLOSE_ANIMATION_MS);
   };
 
+  /**
+   * handle Pointer Down 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handlePointerDown = (
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
+
     if (!event.isPrimary) {
       return;
     }
@@ -71,9 +104,17 @@ function CommentSheet({
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
+  /**
+   * handle Pointer Move 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handlePointerMove = (
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
+
     if (
       !isDragging ||
       dragStartRef.current.pointerId !== event.pointerId
@@ -84,9 +125,17 @@ function CommentSheet({
     setDragOffset(Math.max(0, event.clientY - dragStartRef.current.y));
   };
 
+  /**
+   * handle Pointer End 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handlePointerEnd = (
     event: React.PointerEvent<HTMLDivElement>,
   ) => {
+
     if (dragStartRef.current.pointerId !== event.pointerId) {
       return;
     }
@@ -108,7 +157,15 @@ function CommentSheet({
     setDragOffset(0);
   };
 
+  /**
+   * handle Submit 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+
     event.preventDefault();
 
     const comment = commentInput.trim();
@@ -148,6 +205,7 @@ function CommentSheet({
           role="button"
           tabIndex={0}
           onKeyDown={(event) => {
+
             if (event.key === "Enter" || event.key === " ") {
               event.preventDefault();
               onClose();

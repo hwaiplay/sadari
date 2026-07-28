@@ -34,11 +34,12 @@ type ReadingPeriod = "week" | "month" | "year";
  * 팔로우 버튼이 관계가 맺어진 상태를 표시하는지 판단합니다.
  * 팔로잉과 맞팔로우는 이미 관계가 존재하거나 상대가 나를 팔로우 중인 상태라서 초록색으로 강조합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param followStatName 서버에서 내려준 팔로우 버튼명
  * @return 강조 색상 적용 여부
  */
 const isActiveFollowStatus = (followStatName: string) => {
+
   return followStatName === "팔로잉" || followStatName === "맞팔로우";
 };
 
@@ -46,11 +47,12 @@ const isActiveFollowStatus = (followStatName: string) => {
  * 독후감 요약 목록에 표시할 독서 기간을 조합합니다.
  * 시작일과 종료일 중 일부만 존재해도 불필요한 구분자가 표시되지 않도록 빈 값을 제거합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param report 독서 기간을 표시할 독후감 요약 정보
  * @return 화면에 표시할 독서 기간 문자열
  */
 const getReadingEndDateText = (report: ReadingSummaryReport) => {
+
   return formatDashedDateToDot(report.reptEndt);
 };
 
@@ -58,11 +60,12 @@ const getReadingEndDateText = (report: ReadingSummaryReport) => {
  * 숫자 평점을 5개 별 표시 문자열로 변환합니다.
  * 서버 응답이 비어 있거나 숫자로 바꿀 수 없는 경우 0점으로 처리해 화면 표시를 안정적으로 유지합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param grade 서버에서 내려온 평점 문자열
  * @return 5개 기준 별점 문자열
  */
 const getReadingGradeText = (grade?: string) => {
+
   const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
   return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
 };
@@ -71,11 +74,12 @@ const getReadingGradeText = (grade?: string) => {
  * 목표 달성률에 따라 파스텔톤 진행 막대 색상을 반환합니다.
  * 달성률이 높아질수록 차분한 초록 계열로 이동해 목표 달성 상태를 직관적으로 보여줍니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @param rate 목표 달성률
  * @return 진행 막대 색상
  */
 const getGoalProgressColor = (rate: number) => {
+
   if (rate >= 100) {
     return "#95d5b2";
   }
@@ -91,6 +95,13 @@ const getGoalProgressColor = (rate: number) => {
   return "#ffb4a2";
 };
 
+/**
+ * get Reading Remain Rate 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param remainDays remain Days 입력값
+ * @return 처리 결과
+ */
 const getReadingRemainRate = (remainDays: number) => {
   // 현재 읽고 있는 책의 남은 기간 색상은 전체 목표기간 비율이 아니라 남은 10일을 기준으로 판단한다.
   // 10일 이상 남으면 가장 여유 있는 색상, 0일에 가까워질수록 기존 색상 단계가 내려간다.
@@ -101,10 +112,11 @@ const getReadingRemainRate = (remainDays: number) => {
  * 다른 사용자의 프로필과 독서 활동 현황을 보여주는 읽기 전용 페이지입니다.
  * 공개 독후감 목록에서 작성자 프로필을 눌렀을 때 진입하며, 마이페이지와 같은 활동 요약 데이터를 표시합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 소셜 프로필 페이지 컴포넌트
  */
 function SocialProfilePage() {
+
   const navigate = useNavigate();
   const { userNumb } = useParams();
   const targetUserNumb = Number(userNumb);
@@ -127,12 +139,14 @@ function SocialProfilePage() {
   useBodyScrollLock(Boolean(followListType));
 
   useEffect(() => {
+
     let ignore = false;
 
     // 잘못된 사용자 번호는 API 호출 전에 차단해 불필요한 서버 요청을 만들지 않습니다.
     if (!Number.isFinite(targetUserNumb) || targetUserNumb <= 0) {
       setIsLoading(false);
       return () => {
+
         ignore = true;
       };
     }
@@ -143,6 +157,7 @@ function SocialProfilePage() {
       getSocialFollowStatusApi(targetUserNumb),
     ])
       .then(([profileResponse, summaryResponse, followStatusResponse]) => {
+
         if (!ignore) {
           setProfile(profileResponse.data as UserProfile);
           setSummary(summaryResponse.data as MonthlyReadingSummary);
@@ -150,6 +165,7 @@ function SocialProfilePage() {
         }
       })
       .catch(() => {
+
         if (!ignore) {
           setProfile(null);
           setSummary(null);
@@ -157,18 +173,22 @@ function SocialProfilePage() {
         }
       })
       .finally(() => {
+
         if (!ignore) {
           setIsLoading(false);
         }
       });
 
     return () => {
+
       ignore = true;
     };
   }, [targetUserNumb]);
 
   useEffect(() => {
+
     return () => {
+
       if (followListScrollTimeoutRef.current) {
         window.clearTimeout(followListScrollTimeoutRef.current);
       }
@@ -179,10 +199,11 @@ function SocialProfilePage() {
    * 팔로우 버튼 클릭 시 현재 버튼명에 맞춰 팔로우 또는 언팔로우 API를 호출합니다.
    * 버튼명이 "팔로잉"이면 이미 내가 상대를 팔로우 중인 상태이므로 삭제하고, 그 외에는 팔로우 관계를 저장합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @return
    */
   const handleFollowButtonClick = async () => {
+
     if (isFollowUpdating) {
       return;
     }
@@ -224,7 +245,16 @@ function SocialProfilePage() {
     }
   };
 
+  /**
+   * handle Follow List Open 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param type type 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleFollowListOpen = async (type: FollowListType) => {
+
     setFollowListType(type);
     setFollowUsers([]);
     setIsFollowListScrolling(false);
@@ -244,13 +274,27 @@ function SocialProfilePage() {
     }
   };
 
+  /**
+   * handle Follow List Close 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const handleFollowListClose = () => {
+
     setFollowListType(null);
     setFollowUsers([]);
     setIsFollowListScrolling(false);
   };
 
+  /**
+   * handle Follow List Scroll 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const handleFollowListScroll = () => {
+
     setIsFollowListScrolling(true);
 
     if (followListScrollTimeoutRef.current) {
@@ -258,17 +302,35 @@ function SocialProfilePage() {
     }
 
     followListScrollTimeoutRef.current = window.setTimeout(() => {
+
       setIsFollowListScrolling(false);
       followListScrollTimeoutRef.current = null;
     }, 650);
   };
 
+  /**
+   * handle Follow List User Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param nextUserNumb next User Numb 입력값
+   * @return 반환값이 없다
+   */
   const handleFollowListUserClick = (nextUserNumb: number) => {
+
     handleFollowListClose();
     navigate(`/social/profile/${nextUserNumb}`);
   };
 
+  /**
+   * handle Follow Status Click 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param user user 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleFollowStatusClick = async (user: FollowUser) => {
+
     if (followUpdatingUserNumb || user.meYsno === "Y") {
       return;
     }
@@ -318,10 +380,11 @@ function SocialProfilePage() {
    * 주간, 월간, 연간 요약 리스트의 펼침 상태를 전환합니다.
    * 읽은 책이 있는 영역에만 호출되어 빈 목록에 대한 불필요한 상태 변경을 막습니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 펼침 상태를 변경할 기간 구분값
    */
   const handleToggleReadingSummary = (period: ReadingPeriod) => {
+
     setExpandedSummary((prev) => ({
       ...prev,
       [period]: !prev[period],
@@ -332,10 +395,11 @@ function SocialProfilePage() {
    * 다른 사용자의 요약 독후감 항목을 선택했을 때 공개 여부에 따라 이동 또는 경고를 처리합니다.
    * 공개 독후감은 ISBN 기준 공개 독후감 목록으로 이동하고, 비공개 독후감은 사용자가 내용을 볼 수 없음을 안내합니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param report 선택한 독후감 요약 정보
    */
   const handleSummaryReportClick = (report: ReadingSummaryReport) => {
+
     if (report.pubcYsno !== "Y") {
       void sweetWarning(
         message("frontend.social.privateReport.title"),
@@ -361,7 +425,15 @@ function SocialProfilePage() {
     });
   };
 
+  /**
+   * render Profile Stats 화면 요소를 구성한다
+   *
+   * @author HanWon.Jang
+   * @param summaryData summary Data 입력값
+   * @return 구성된 화면 요소
+   */
   const renderProfileStats = (summaryData: MonthlyReadingSummary) => {
+
     const stats = [
       {
         label: message("frontend.profile.stats.totalReadBook"),
@@ -418,11 +490,12 @@ function SocialProfilePage() {
    * 다른 사용자가 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링합니다.
    * 남은 기간이 적을수록 붉은 계열로 표시해 목표 종료일이 가까움을 보여줍니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param reports 현재 읽고 있는 독후감 목록
    * @return 현재 읽고 있는 책 섹션 JSX
    */
   const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+
     if (reports.length === 0) {
       return null;
     }
@@ -438,6 +511,7 @@ function SocialProfilePage() {
           </h2>
           <div className={styles.currentReadingList}>
             {reports.map((report) => {
+
               const remainDays = getRemainDaysUntil(report.reptEndt);
               const remainRate = getReadingRemainRate(remainDays);
               const remainColor = getGoalProgressColor(remainRate);
@@ -457,6 +531,7 @@ function SocialProfilePage() {
                       className={styles.readingSummaryBookTitleButton}
                       type="button"
                       onClick={() => {
+
                         if (!report.bookIsbn) {
                           void sweetWarning(
                             message("frontend.common.invalidAccess"),
@@ -509,7 +584,7 @@ function SocialProfilePage() {
    * 기간별 독서 활동 행과 펼침 목록을 공통 구조로 렌더링합니다.
    * 목표 달성률, 목표 권수, 실제 완료 권수, 완료 독후감 목록을 같은 배치로 보여줍니다.
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param period 주간, 월간, 연간 구분값
    * @param code 달력 아이콘 안에 표시할 코드
    * @param titleKey 제목 메시지 key
@@ -526,6 +601,7 @@ function SocialProfilePage() {
     count: number,
     reports: ReadingSummaryReport[] = [],
   ) => {
+
     const isExpanded = expandedSummary[period];
     const hasReports = reports.length > 0;
     const goalCnt =
@@ -557,6 +633,7 @@ function SocialProfilePage() {
             aria-expanded={hasReports ? isExpanded : undefined}
             disabled={!hasReports}
             onClick={() => {
+
               if (hasReports) {
                 handleToggleReadingSummary(period);
               }
@@ -647,6 +724,7 @@ function SocialProfilePage() {
                       role="link"
                       tabIndex={0}
                       onClick={(event) => {
+
                         event.stopPropagation();
 
                         if (!report.bookIsbn) {
@@ -670,6 +748,7 @@ function SocialProfilePage() {
                         );
                       }}
                       onKeyDown={(event) => {
+
                         if (event.key !== "Enter" && event.key !== " ") {
                           return;
                         }
@@ -868,6 +947,7 @@ function SocialProfilePage() {
           className={styles.goalModalOverlay}
           role="presentation"
           onMouseDown={(event) => {
+
             if (event.currentTarget === event.target) {
               handleFollowListClose();
             }

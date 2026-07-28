@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Book/Search/SearchBookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -13,7 +13,14 @@ import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import * as styles from "@/pages/Book/Info/BookInfoPage.css";
 
+/**
+ * Search Book Info Page 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function SearchBookInfoPage() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book as NaverApiResultType | undefined;

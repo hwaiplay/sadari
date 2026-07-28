@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/pages/Home/Home.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
@@ -37,7 +37,16 @@ const SORT_OPTIONS: Array<{ value: HomeSortType; labelKey: string }> = [
   },
 ];
 
+/**
+ * get Month Group 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param book book 입력값
+ * @param sortType sort Type 입력값
+ * @return 처리 결과
+ */
 function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
+
   const targetDate =
     sortType === "START_DATE_DESC" ? book.reptStdt : book.reptEndt;
   const match = targetDate?.match(/^(\d{4})-(\d{2})/);
@@ -56,7 +65,15 @@ function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
   };
 }
 
+/**
+ * get Grade Group 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param book book 입력값
+ * @return 처리 결과
+ */
 function getGradeGroup(book: HomeBookType) {
+
   const rawGrade = Number(book.reptGrde);
   const grade = Number.isFinite(rawGrade) ? Math.max(0, Math.min(5, rawGrade)) : 0;
   const starCount = Math.floor(grade);
@@ -71,8 +88,18 @@ function getGradeGroup(book: HomeBookType) {
   };
 }
 
+/**
+ * group Books By Sort 기능을 처리한다
+ *
+ * @author HanWon.Jang
+ * @param bookList book List 입력값
+ * @param sortType sort Type 입력값
+ * @return 처리 결과
+ */
 function groupBooksBySort(bookList: HomeBookType[], sortType: HomeSortType) {
+
   return bookList.reduce<MonthlyBookGroup[]>((groups, book) => {
+
     const monthGroup =
       sortType === "GRADE_DESC"
         ? getGradeGroup(book)
@@ -92,17 +119,41 @@ function groupBooksBySort(bookList: HomeBookType[], sortType: HomeSortType) {
   }, []);
 }
 
+/**
+ * chunk Books 기능을 처리한다
+ *
+ * @author HanWon.Jang
+ * @param bookList book List 입력값
+ * @param size size 입력값
+ * @return 처리 결과
+ */
 function chunkBooks(bookList: HomeBookType[], size: number) {
+
   return Array.from({ length: Math.ceil(bookList.length / size) }, (_, index) =>
     bookList.slice(index * size, index * size + size),
   );
 }
 
+/**
+ * get Home Error Message 정보를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param error error 입력값
+ * @return 처리 결과
+ */
 function getHomeErrorMessage(error: unknown) {
+
   return getApiErrorMessage(error, message("frontend.common.tryAgain"));
 }
 
+/**
+ * Home 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function Home() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const [sortType, setSortType] = useState<HomeSortType>("END_DATE_DESC");
@@ -124,6 +175,7 @@ function Home() {
   const hasSearchCondition = appliedSearchKeyword.trim().length > 0;
 
   useEffect(() => {
+
     const state = location.state as { resetHomeSearch?: boolean } | null;
 
     if (!state?.resetHomeSearch) {
@@ -134,7 +186,15 @@ function Home() {
     setAppliedSearchKeyword("");
   }, [location.key, location.state]);
 
+  /**
+   * handle Search Submit 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param event event 입력값
+   * @return 반환값이 없다
+   */
   const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+
     event.preventDefault();
     setAppliedSearchKeyword(searchKeyword.trim());
   };
@@ -218,6 +278,7 @@ function Home() {
                   key={option.value}
                   type="button"
                   onClick={() => {
+
                     setSortType(option.value);
                     setIsSortOpen(false);
                   }}

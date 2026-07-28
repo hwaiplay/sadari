@@ -3,9 +3,10 @@
  * 푸시 알림은 service worker가 있어야 토큰 발급과 백그라운드 수신이 가능하므로,
  * 운영 빌드뿐 아니라 localhost 개발 환경에서도 등록되도록 허용한다.
  *
- * @author Seunghyeon.Kang
+ * @author HanWon.Jang
  */
 export function registerServiceWorker() {
+
   const isLocalhost = ["localhost", "127.0.0.1"].includes(window.location.hostname);
 
   if (!("serviceWorker" in navigator) || (!import.meta.env.PROD && !isLocalhost)) {

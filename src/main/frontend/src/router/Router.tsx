@@ -22,10 +22,11 @@ import SettingsPage from "@/pages/Settings/SettingsPage";
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  * @return 애플리케이션 라우터 컴포넌트
  */
 const Router = () => {
+
   return (
     <>
       <ScrollToTop />

@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/components/Layout/Header/Header.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { Link, useLocation, useNavigate } from "react-router-dom";
@@ -24,7 +24,14 @@ import {
 
 const HEADER_SCROLL_DELTA = 4;
 
+/**
+ * Header 화면 또는 컴포넌트를 구성한다
+ *
+ * @author HanWon.Jang
+ * @return 구성된 화면 요소
+ */
 function Header() {
+
   const location = useLocation();
   const navigate = useNavigate();
   const isSubPage = location.pathname !== "/home";
@@ -34,21 +41,30 @@ function Header() {
   const [currentMenu, setCurrentMenu] = useState<UserMenuItem | null>(null);
   const [menuList, setMenuList] = useState<UserMenuItem[]>([]);
 
+  /**
+   * back Prev 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const backPrev = () => {
+
     navigate(-1);
   };
 
   useEffect(() => {
+
     lastScrollYRef.current = window.scrollY;
 
     /**
      * 작은 스크롤 이동에도 헤더 전체가 반응하도록 스크롤 방향을 기준으로 표시 상태를 전환합니다.
      * 화면 최상단에서는 이전 화면에서 숨김 상태였더라도 헤더를 다시 노출합니다.
      *
-     * @author Hanwon.Jang
+     * @author HanWon.Jang
      * @return
      */
     const handleScroll = () => {
+
       const currentScrollY = window.scrollY;
       const scrollDiff = currentScrollY - lastScrollYRef.current;
 
@@ -81,11 +97,13 @@ function Header() {
     window.addEventListener("scroll", handleScroll, { passive: true });
 
     return () => {
+
       window.removeEventListener("scroll", handleScroll);
     };
   }, [location.pathname]);
 
   useEffect(() => {
+
     let ignore = false;
 
     // 경로가 바뀌면 이전 화면의 메뉴명이 잠시 남지 않도록 먼저 로고 표시 상태로 초기화한다.
@@ -93,6 +111,7 @@ function Header() {
 
     getUserMenuApi(location.pathname)
       .then((response) => {
+
         if (ignore) {
           return;
         }
@@ -101,6 +120,7 @@ function Header() {
         setMenuList(response.data?.menuList ?? []);
       })
       .catch(() => {
+
         if (!ignore) {
           // 메뉴 조회 실패는 화면 진입을 막지 않고 기존 로고와 빈 햄버거 목록으로 대체한다.
           setCurrentMenu(null);
@@ -109,6 +129,7 @@ function Header() {
       });
 
     return () => {
+
       ignore = true;
     };
   }, [location.pathname]);

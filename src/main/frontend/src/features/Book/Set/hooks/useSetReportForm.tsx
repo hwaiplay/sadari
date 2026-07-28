@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/features/Book/Set/hooks/useSetReportForm.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author Hanwon.Jang
+ * @author HanWon.Jang
  */
 
 import { message } from "@/app/messages/message";
@@ -19,14 +19,33 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useSetReport } from "./useSetReport";
 
+/**
+ * use Set Report Form 상태와 처리 함수를 제공한다
+ *
+ * @author HanWon.Jang
+ * @param selectedBook selected Book 입력값
+ * @param validStatusCodes valid Status Codes 입력값
+ * @param validReportColors valid Report Colors 입력값
+ * @return 화면에서 사용할 상태와 처리 함수
+ */
 export function useSetReportForm(
   selectedBook: NaverApiResultType | undefined,
   validStatusCodes: string[],
   validReportColors: string[],
 ) {
+
   const { mutate, isPending } = useSetReport();
 
+  /**
+   * handle Submit 사용자 동작을 처리한다
+   *
+   * @author HanWon.Jang
+   * @param form form 입력값
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
   const handleSubmit = async (form: HTMLFormElement) => {
+
     const bookValidationMessage = validateSelectedBook(selectedBook);
 
     if (bookValidationMessage) {
