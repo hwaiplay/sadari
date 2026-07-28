@@ -5,223 +5,77 @@ import Loading from "@/components/Loading/Loading";
 import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
+import ReplySheet from "@/features/reply/ReplySheet";
 import {
-  usePublicReportLikeMutation,
-  usePublicReportsByIsbn,
-} from "@/features/Book/Detail/hook/usePublicReports";
-import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
-import type { PublicReportType } from "@/features/Book/types/book.type";
-import { useCodeList } from "@/features/Common/utils/codeUtil";
-import { useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import CommentSheet from "./components/CommentSheet";
+  type ReportSort,
+  type ReportStatusTone,
+  usePublicReportPage,
+} from "./hooks/usePublicReportPage";
 import * as styles from "./PublicReportPage.css";
 
-const CONTENT_PREVIEW_LENGTH = 180;
 const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
-
-type ReportSort = "LATEST" | "RATING";
-type ReportStatus = string;
 
 const SORT_OPTIONS: readonly CustomSelectOption<ReportSort>[] = [
   { value: "LATEST", label: "최신순" },
   { value: "RATING", label: "별점순" },
 ];
 
-type PublicReportPageState = {
-  title?: string;
-  author?: string;
-  cover?: string;
-  ratingAverage?: number | string | null;
+const STATUS_CLASS_NAME: Record<ReportStatusTone, string> = {
+  done: styles.statusDone,
+  reading: styles.statusReading,
+  stopped: styles.statusStopped,
 };
 
 /**
- * get Report Status 정보를 조회한다
- *
- * @author HanWon.Jang
- * @param report report 입력값
- * @return 처리 결과
- */
-const getReportStatus = (
-  report: PublicReportType,
-): string => {
-
-  return String(report.reptStat ?? "")
-    .trim()
-    .toUpperCase();
-};
-
-/**
- * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시합니다.
- * 책 정보, 정렬 및 독서 상태 필터, 좋아요와 댓글 바텀시트를 한 화면에서 제공합니다.
+ * 선택한 책과 같은 책에 작성된 공개 독후감 목록을 표시한다
+ * 책 정보, 정렬 및 독서 상태 필터, 좋아요와 댓글 바텀시트를 한 화면에서 제공한다
  *
  * @author HanWon.Jang
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
+  // 공개 독후감 페이지의 조회 결과와 필터 및 사용자 동작을 조회한다
+  const {
+    pageState,
+    isValidIsbn,
+    isPending,
+    isError,
+    error,
+    reportsCount,
+    visibleReports,
+    sort,
+    status,
+    statusOptions,
+    commentReport,
+    isLikePending,
+    handleSortChange,
+    handleStatusChange,
+    handleToggleReport,
+    handleProfileClick,
+    handleLike,
+    handleOpenReplySheet,
+    handleCloseReplySheet,
+  } = usePublicReportPage();
 
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
-    {},
-  );
-  const [sort, setSort] = useState<ReportSort>("LATEST");
-  const [status, setStatus] = useState<ReportStatus>("ALL");
-  const [commentReport, setCommentReport] = useState<PublicReportType | null>(
-    null,
-  );
-  const [temporaryComments, setTemporaryComments] = useState<
-    Record<number, string[]>
-  >({});
-
-  const isbn = searchParams.get("isbn") ?? "";
-  const isValidIsbn = isbn.trim().length > 0;
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
-  const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
-  const likeMutation = usePublicReportLikeMutation();
-  const pageState = (location.state ?? {}) as PublicReportPageState;
-
-  const reports = useMemo(() => {
-
-    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
-  }, [publicReportsQuery.data]);
-
-  const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
-    // 전체 옵션만 화면 전용 값으로 두고 실제 독서 상태는 READ_STAT 상세코드의 사용 순서를 그대로 따릅니다.
-    return [
-      { value: "ALL", label: "전체" },
-      ...(reportStatusCodeQuery.data ?? []).map((code) => ({
-        value: code.comdCode,
-        label: code.comdName,
-      })),
-    ];
-  }, [reportStatusCodeQuery.data]);
-
-  const statusNameByCode = useMemo(() => {
-
-    return new Map(
-      (reportStatusCodeQuery.data ?? []).map((code) => [
-        code.comdCode.toUpperCase(),
-        code.comdName,
-      ]),
-    );
-  }, [reportStatusCodeQuery.data]);
-
-  const visibleReports = useMemo(() => {
-
-    const filteredReports =
-      status === "ALL"
-        ? reports
-        : reports.filter((report) => getReportStatus(report) === status);
-
-    if (sort === "RATING") {
-      return [...filteredReports].sort(
-        (left, right) =>
-          (Number(right.reptGrde) || 0) - (Number(left.reptGrde) || 0),
-      );
-    }
-
-    return filteredReports;
-  }, [reports, sort, status]);
-
-  /**
-   * handle Toggle Report 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @param reptNumb rept Numb 입력값
-   * @return 반환값이 없다
-   */
-  const handleToggleReport = (reptNumb: number) => {
-
-    setExpandedReports((prev) => ({
-      ...prev,
-      [reptNumb]: !prev[reptNumb],
-    }));
-  };
-
-  /**
-   * get Count Label 정보를 조회한다
-   *
-   * @author HanWon.Jang
-   * @param countValue count Value 입력값
-   * @return 처리 결과
-   */
-  const getCountLabel = (countValue?: number) => {
-
-    const count = Number(countValue) || 0;
-    return count > 999 ? "999+" : String(count);
-  };
-
-  /**
-   * handle Profile Click 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @param userNumb user Numb 입력값
-   * @return 반환값이 없다
-   */
-  const handleProfileClick = (userNumb: number) => {
-
-    if (userNumb) {
-      navigate(`/social/profile/${userNumb}`);
-    }
-  };
-
-  /**
-   * handle Submit Comment 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @param reptNumb rept Numb 입력값
-   * @param comment comment 입력값
-   * @return 반환값이 없다
-   */
-  const handleSubmitComment = (reptNumb: number, comment: string) => {
-
-    setTemporaryComments((prev) => ({
-      ...prev,
-      [reptNumb]: [
-        ...(prev[reptNumb] ?? []),
-        comment,
-      ],
-    }));
-  };
-
-  /**
-   * get Status Class Name 정보를 조회한다
-   *
-   * @author HanWon.Jang
-   * @param reportStatus report Status 입력값
-   * @return 처리 결과
-   */
-  const getStatusClassName = (reportStatus: string) => {
-
-    if (reportStatus === "DONE") {
-      return styles.statusDone;
-    }
-
-    if (reportStatus === "STOP") {
-      return styles.statusStopped;
-    }
-
-    return styles.statusReading;
-  };
-
+  // 유효한 ISBN이 없으면 잘못된 공개 독후감 접근 안내만 표시한다
   if (!isValidIsbn) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 
-  if (publicReportsQuery.isPending) {
+  // 공개 독후감 목록 조회 중에는 공통 로딩 화면을 표시한다
+  if (isPending) {
     return <Loading title={message("frontend.common.loadingList")} />;
   }
 
-  if (publicReportsQuery.isError) {
+  // 공개 독후감 조회 실패 시 서버 공통 메시지를 현재 페이지에 표시한다
+  if (isError) {
     return (
       /* 공개 독후감 조회 실패 안내 영역 */
       <main className={styles.page}>
         <Container className={styles.content}>
           <p className={styles.empty}>
             {getApiErrorMessage(
-              publicReportsQuery.error,
+              error,
               message("frontend.common.tryAgain"),
             )}
           </p>
@@ -275,13 +129,13 @@ function PublicReportPage() {
               value={sort}
               options={SORT_OPTIONS}
               ariaLabel="독후감 정렬"
-              onChange={setSort}
+              onChange={handleSortChange}
             />
             <CustomSelect
               value={status}
               options={statusOptions}
               ariaLabel="독서 상태"
-              onChange={setStatus}
+              onChange={handleStatusChange}
             />
           </section>
 
@@ -289,18 +143,7 @@ function PublicReportPage() {
             /* 공개 독후감 목록 영역 */
             <section className={styles.list}>
               {visibleReports.map((report) => {
-
-                const rating = Math.max(
-                  0,
-                  Math.min(5, Number(report.reptGrde) || 0),
-                );
-                const reportStatus = getReportStatus(report);
-                const isExpanded = Boolean(expandedReports[report.reptNumb]);
-                const reportContent =
-                  report.reptCntn || message("frontend.common.noWrittenReport");
-                const isLongContent =
-                  reportContent.length > CONTENT_PREVIEW_LENGTH;
-
+                // 공개 독후감 화면 모델을 카드 UI로 렌더링한다
                 return (
                   /* 공개 독후감 개별 항목 영역 */
                   <article className={styles.item} key={report.reptNumb}>
@@ -321,11 +164,9 @@ function PublicReportPage() {
                           </span>
                         </button>
                         <span
-                          className={getStatusClassName(reportStatus)}
+                          className={STATUS_CLASS_NAME[report.statusTone]}
                         >
-                          {report.reptStatName ||
-                            statusNameByCode.get(reportStatus) ||
-                            reportStatus}
+                          {report.reportStatusName}
                         </span>
                       </div>
 
@@ -333,30 +174,33 @@ function PublicReportPage() {
                       <span
                         className={styles.reportRating}
                         aria-label={message("frontend.report.gradeValue", [
-                          rating,
+                          report.rating,
                         ])}
                       >
                         <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
-                        <span>{rating}</span>
+                        <span>{report.rating}</span>
                       </span>
                     </div>
 
                     <div
                       className={
-                        isExpanded || !isLongContent
+                        report.isExpanded || !report.isLongContent
                           ? styles.reportContentWrapOpen
                           : styles.reportContentWrap
                       }
                     >
-                      <p className={styles.reportContent}>{reportContent}</p>
+                      <p className={styles.reportContent}>
+                        {report.reportContent
+                          || message("frontend.common.noWrittenReport")}
+                      </p>
                     </div>
 
-                    {isLongContent ? (
+                    {report.isLongContent ? (
                       <button
                         className={styles.expandButton}
                         type="button"
                         aria-label={message(
-                          isExpanded
+                          report.isExpanded
                             ? "frontend.book.publicReports.collapse"
                             : "frontend.book.publicReports.expand",
                         )}
@@ -364,7 +208,7 @@ function PublicReportPage() {
                       >
                         <img
                             className={
-                              isExpanded
+                              report.isExpanded
                                   ? styles.expandArrowOpen
                                   : styles.expandArrow
                             }
@@ -379,14 +223,8 @@ function PublicReportPage() {
                         type="button"
                         aria-label="좋아요"
                         aria-pressed={report.likeYsno === "Y"}
-                        disabled={likeMutation.isPending}
-                        onClick={() =>
-                          likeMutation.mutate({
-                            tagtType: "REPORT",
-                            tagtNumb: report.reptNumb,
-                            targetUserNumb: report.userNumb,
-                          })
-                        }
+                        disabled={isLikePending}
+                        onClick={() => handleLike(report)}
                       >
                         {
                           report.likeYsno === "Y"
@@ -394,21 +232,16 @@ function PublicReportPage() {
                               : <img  src={"/img/icons/icon-heart.svg"} alt={"좋아요"}/>
                         }
 
-                        <span>{getCountLabel(report.likeCnt)}</span>
+                        <span>{report.likeCountLabel}</span>
                       </button>
                       <button
                         className={styles.commentButton}
                         type="button"
                         aria-label="댓글 보기"
-                        onClick={() => setCommentReport(report)}
+                        onClick={() => handleOpenReplySheet(report)}
                       >
                         <img  src={"/img/icons/icon-comment.svg"} alt={"댓글"}/>
-                        <span>
-                          {getCountLabel(
-                            (report.commentCnt ?? 0) +
-                              (temporaryComments[report.reptNumb]?.length ?? 0),
-                          )}
-                        </span>
+                        <span>{report.commentCountLabel}</span>
                       </button>
                     </div>
                   </article>
@@ -417,7 +250,7 @@ function PublicReportPage() {
             </section>
           ) : (
             <p className={styles.empty}>
-              {reports.length > 0
+              {reportsCount > 0
                 ? "선택한 조건에 맞는 독후감이 없어요."
                 : message("frontend.book.publicReports.empty")}
             </p>
@@ -425,13 +258,9 @@ function PublicReportPage() {
         </div>
       </main>
       {commentReport ? (
-        <CommentSheet
+        <ReplySheet
           report={commentReport}
-          comments={temporaryComments[commentReport.reptNumb] ?? []}
-          onClose={() => setCommentReport(null)}
-          onSubmitComment={(comment) =>
-            handleSubmitComment(commentReport.reptNumb, comment)
-          }
+          onClose={handleCloseReplySheet}
         />
       ) : null}
     </>
