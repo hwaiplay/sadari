@@ -51,20 +51,159 @@
         </choose>
     </select>
 
-    <!-- 서비스에서 지정한 독서 상태와 기간 조건에 맞는 독후감 권수를 조회한다. -->
-    <select id="getReportCntByPeriod" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="int">
-        SELECT /* getReportCntByPeriod */
-               COUNT(*)
-          FROM TM_REPORT A
-         WHERE A.USER_NUMB = #{userNumb}
-           AND A.REPT_STAT = #{reptStat}
-           AND TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
-           AND TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
+    <!-- 기간별 독서량과 현재 및 이전 목표 및 누적 달성 횟수를 한 번에 조회한다. -->
+    <select id="getReadingSummary" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto">
+        WITH REPORTBASE AS (
+             SELECT /*+ MATERIALIZE */
+                    A.REPT_ENDT
+                  , TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'IYYYIW') AS WEEK_GOAL_DATE
+                  , TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYYMM') AS MONTH_GOAL_DATE
+                  , TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00' AS YEAR_GOAL_DATE
+               FROM TM_REPORT A
+              WHERE A.USER_NUMB = #{userNumb}
+                AND A.REPT_STAT = #{doneStat}
+                AND A.REPT_ENDT IS NOT NULL
+        )
+           , PERIODCNT AS (
+             SELECT NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{currentWeekStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{nextWeekStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS CURRENT_WEEK_COUNT
+                  , NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{previousWeekStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{currentWeekStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS PREVIOUS_WEEK_COUNT
+                  , NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{currentMonthStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{nextMonthStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS CURRENT_MONTH_COUNT
+                  , NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{previousMonthStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{currentMonthStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS PREVIOUS_MONTH_COUNT
+                  , NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{currentYearStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{nextYearStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS CURRENT_YEAR_COUNT
+                  , NVL(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{previousYearStart}
+                                      AND A.REPT_ENDT <![CDATA[<]]> #{currentYearStart}
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS PREVIOUS_YEAR_COUNT
+               FROM REPORTBASE A
+        )
+           , REPORTGOAL AS (
+             SELECT A.GOAL_TYPE
+                  , A.GOAL_DATE
+                  , COUNT(*) AS DONE_CNT
+               FROM (
+                     SELECT #{weekGoalType} AS GOAL_TYPE
+                          , A.WEEK_GOAL_DATE AS GOAL_DATE
+                       FROM REPORTBASE A
+                      UNION ALL
+                     SELECT #{monthGoalType} AS GOAL_TYPE
+                          , A.MONTH_GOAL_DATE AS GOAL_DATE
+                       FROM REPORTBASE A
+                      UNION ALL
+                     SELECT #{yearGoalType} AS GOAL_TYPE
+                          , A.YEAR_GOAL_DATE AS GOAL_DATE
+                       FROM REPORTBASE A
+                    ) A
+           GROUP BY A.GOAL_TYPE
+                  , A.GOAL_DATE
+        )
+           , GOALSUMMARY AS (
+             SELECT MAX(CASE WHEN G.GOAL_TYPE = #{weekGoalType}
+                                  AND G.GOAL_DATE = #{currentWeekGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS WEEK_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{weekGoalType}
+                                  AND G.GOAL_DATE = #{previousWeekGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS PREVIOUS_WEEK_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{monthGoalType}
+                                  AND G.GOAL_DATE = #{currentMonthGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS MONTH_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{monthGoalType}
+                                  AND G.GOAL_DATE = #{previousMonthGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS PREVIOUS_MONTH_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{yearGoalType}
+                                  AND G.GOAL_DATE = #{currentYearGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS YEAR_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{yearGoalType}
+                                  AND G.GOAL_DATE = #{previousYearGoalDate}
+                                 THEN G.GOAL_CNTT
+                            END) AS PREVIOUS_YEAR_GOAL_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{weekGoalType}
+                                  AND G.GOAL_DATE = #{currentWeekGoalDate}
+                                 THEN NVL(G.UPDT_CNTT, 0)
+                            END) AS WEEK_GOAL_UPDT_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{monthGoalType}
+                                  AND G.GOAL_DATE = #{currentMonthGoalDate}
+                                 THEN NVL(G.UPDT_CNTT, 0)
+                            END) AS MONTH_GOAL_UPDT_CNT
+                  , MAX(CASE WHEN G.GOAL_TYPE = #{yearGoalType}
+                                  AND G.GOAL_DATE = #{currentYearGoalDate}
+                                 THEN NVL(G.UPDT_CNTT, 0)
+                            END) AS YEAR_GOAL_UPDT_CNT
+                  , NVL(SUM(CASE WHEN G.GOAL_TYPE = #{weekGoalType}
+                                      AND G.GOAL_CNTT > 0
+                                      AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS WEEK_GOAL_ACHV_CNT
+                  , NVL(SUM(CASE WHEN G.GOAL_TYPE = #{monthGoalType}
+                                      AND G.GOAL_CNTT > 0
+                                      AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS MONTH_GOAL_ACHV_CNT
+                  , NVL(SUM(CASE WHEN G.GOAL_TYPE = #{yearGoalType}
+                                      AND G.GOAL_CNTT > 0
+                                      AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
+                                     THEN 1
+                                ELSE 0
+                            END), 0) AS YEAR_GOAL_ACHV_CNT
+               FROM TM_GOALXM G
+          LEFT JOIN REPORTGOAL R
+                 ON G.GOAL_TYPE = R.GOAL_TYPE
+                AND G.GOAL_DATE = R.GOAL_DATE
+              WHERE G.USER_NUMB = #{userNumb}
+        )
+        SELECT /* getReadingSummary */
+               P.CURRENT_WEEK_COUNT
+             , P.PREVIOUS_WEEK_COUNT
+             , P.CURRENT_MONTH_COUNT
+             , P.PREVIOUS_MONTH_COUNT
+             , P.CURRENT_YEAR_COUNT
+             , P.PREVIOUS_YEAR_COUNT
+             , G.WEEK_GOAL_CNT
+             , G.PREVIOUS_WEEK_GOAL_CNT
+             , G.MONTH_GOAL_CNT
+             , G.PREVIOUS_MONTH_GOAL_CNT
+             , G.YEAR_GOAL_CNT
+             , G.PREVIOUS_YEAR_GOAL_CNT
+             , G.WEEK_GOAL_UPDT_CNT
+             , G.MONTH_GOAL_UPDT_CNT
+             , G.YEAR_GOAL_UPDT_CNT
+             , G.WEEK_GOAL_ACHV_CNT
+             , G.MONTH_GOAL_ACHV_CNT
+             , G.YEAR_GOAL_ACHV_CNT
+          FROM PERIODCNT P
+    CROSS JOIN GOALSUMMARY G
     </select>
 
-    <!-- 서비스에서 지정한 독서 상태와 기간 조건에 맞는 독후감 목록을 조회한다. -->
-    <select id="getSummaryReportList" parameterType="org.our.sadari.myPage.dto.MonthlyReadingSummaryDto" resultType="org.our.sadari.report.dto.ReportDto">
-        SELECT /* getSummaryReportList */
+    <!-- 현재 읽는 책과 올해 완료한 책을 기간별 중복 조회 없이 한 번에 조회한다. -->
+    <select id="getReadingSummaryReportList" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.report.dto.ReportDto">
+        SELECT /* getReadingSummaryReportList */
                A.REPT_NUMB
              , A.USER_NUMB
              , A.BOOK_NUMB
@@ -81,21 +220,23 @@
      LEFT JOIN TM_BKINFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
          WHERE A.USER_NUMB = #{userNumb}
-           AND A.REPT_STAT = #{reptStat}
-        <if test="periodStart != null and periodStart != ''">
-           AND TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') <![CDATA[>=]]> TO_DATE(#{periodStart}, 'YYYY-MM-DD')
-        </if>
-        <if test="periodEndExclusive != null and periodEndExclusive != ''">
-           AND TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') <![CDATA[<]]> TO_DATE(#{periodEndExclusive}, 'YYYY-MM-DD')
-        </if>
-        <choose>
-            <when test="reportOrderType == 'END_DATE_ASC'">
-      ORDER BY TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') ASC, A.REPT_NUMB DESC
-            </when>
-            <otherwise>
-      ORDER BY TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD') DESC, A.REPT_NUMB DESC
-            </otherwise>
-        </choose>
+           AND (   A.REPT_STAT = #{readStat}
+                OR (    A.REPT_STAT = #{doneStat}
+                    AND A.REPT_ENDT <![CDATA[>=]]> #{currentYearStart}
+                    AND A.REPT_ENDT <![CDATA[<]]> #{nextYearStart}
+                   )
+               )
+      ORDER BY CASE WHEN A.REPT_STAT = #{readStat}
+                         THEN 0
+                    ELSE 1
+                END
+             , CASE WHEN A.REPT_STAT = #{readStat}
+                         THEN A.REPT_ENDT
+                END ASC
+             , CASE WHEN A.REPT_STAT = #{doneStat}
+                         THEN A.REPT_ENDT
+                END DESC
+             , A.REPT_NUMB DESC
     </select>
 
     <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회한다. -->
@@ -151,50 +292,6 @@
                  , SYSDATE
        )
     </insert>
-
-    <!-- 목표 유형별 전체 목표 달성 횟수를 조회한다. -->
-    <select id="getReadingGoalAchvCnt" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="int">
-        SELECT /* getReadingGoalAchvCnt */
-               COUNT(*)
-          FROM TM_GOALXM G
-     LEFT JOIN (
-                SELECT A.USER_NUMB
-                     , <choose>
-                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_WEEK">
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
-                           </when>
-                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_MONTH">
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
-                           </when>
-                           <otherwise>
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
-                           </otherwise>
-                       </choose> AS GOAL_DATE
-                     , COUNT(*) AS DONE_CNT
-                 FROM TM_REPORT A
-                 WHERE A.USER_NUMB = #{userNumb}
-                   AND A.REPT_STAT = #{reptStat}
-                   AND A.REPT_ENDT IS NOT NULL
-              GROUP BY A.USER_NUMB
-                     , <choose>
-                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_WEEK">
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'IYYYIW')
-                           </when>
-                           <when test="goalType == @org.our.sadari.global.common.constant.Constant@GOAL_TYPE_MONTH">
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYYMM')
-                           </when>
-                           <otherwise>
-                               TO_CHAR(TO_DATE(A.REPT_ENDT, 'YYYY-MM-DD'), 'YYYY') || '00'
-                           </otherwise>
-                       </choose>
-               ) R
-            ON G.USER_NUMB = R.USER_NUMB
-           AND G.GOAL_DATE = R.GOAL_DATE
-         WHERE G.USER_NUMB = #{userNumb}
-           AND G.GOAL_TYPE = #{goalType}
-           AND G.GOAL_CNTT > 0
-           AND NVL(R.DONE_CNT, 0) <![CDATA[>=]]> G.GOAL_CNTT
-    </select>
 
     <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회한다. -->
     <select id="getReportDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">

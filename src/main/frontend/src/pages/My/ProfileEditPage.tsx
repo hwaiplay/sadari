@@ -340,12 +340,41 @@ function ProfileEditPage() {
         }
       });
 
-    getMonthlyReadingSummaryApi().then((response) => {
+    /**
+     * 프로필과 독립적으로 독서 활동 요약을 조회한다
+     *
+     * @author HanWon.Jang
+     * @return 독서 활동 요약 조회 완료 Promise
+     */
+    const loadReadingSummary = async () => {
 
-      if (!ignore) {
-        setMonthlySummary(response.data as MonthlyReadingSummary);
+      // 독서 활동 조회 성공과 실패 및 종료 상태를 각각 처리한다
+      try {
+        // 프로필 하단에 표시할 독서 활동 요약을 조회한다
+        const response = await getMonthlyReadingSummaryApi();
+
+        // 컴포넌트가 유지되는 동안에만 독서 활동 요약을 화면 상태에 반영한다
+        if (!ignore) {
+          // 조회한 독서 활동 요약을 프로필 하단 영역에 설정한다
+          setMonthlySummary(response.data as MonthlyReadingSummary);
+        }
       }
-    });
+
+      // 독서 활동 조회 실패를 사용자에게 안내한다
+      catch (error) {
+        // 화면을 벗어난 뒤 발생한 응답은 사용자 알림을 띄우지 않는다
+        if (!ignore) {
+          void sweetError(
+            /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
+            getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+          );
+        }
+      }
+
+    };
+
+    // 프로필 조회와 병렬로 독서 활동 요약 조회를 시작한다
+    void loadReadingSummary();
 
     return () => {
 
@@ -1810,8 +1839,10 @@ function ProfileEditPage() {
           </div>
         </section>
 
-          {monthlySummary && (
-            <>
+          {/* 프로필 외 독서 활동 조회 결과 영역 */}
+          {monthlySummary ? (
+            /* 조회가 완료된 독서 활동 페이드 인 영역 */
+            <div className={styles.activityContent}>
               {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
               {renderProfileStats(monthlySummary)}
               {/* 현재 읽고 있는 책 영역 */}
@@ -1916,8 +1947,8 @@ function ProfileEditPage() {
                     <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
               </button>
-            </>
-          )}
+            </div>
+          ) : null}
       </form>
 
       {/* 현재 읽는 책의 상태와 별점을 빠르게 수정하는 모달 영역 */}
