@@ -34,6 +34,7 @@ export function useSetReplyForm({
 }: UseSetReplyFormProps) {
   const queryClient = useQueryClient();
   const [commentInput, setCommentInput] = useState("");
+  const [uperNumb, setUperNumb] = useState<number | null>(null);
 
   // 댓글 등록 요청의 진행 상태와 성공 및 실패 경로를 관리한다
   const setReplyMutation = useMutation({
@@ -47,6 +48,8 @@ export function useSetReplyForm({
     onSuccess: (): void => {
       // 연속 댓글 작성 시 이전 내용이 다시 제출되지 않도록 입력값을 비운다
       setCommentInput("");
+      // 등록이 끝난 답글의 부모 번호가 다음 일반 댓글에 재사용되지 않도록 초기화한다
+      setUperNumb(null);
       // 등록한 댓글이 현재 바텀시트 목록에 표시되도록 댓글 Query를 갱신한다
       void queryClient.invalidateQueries({
         queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
@@ -84,6 +87,30 @@ export function useSetReplyForm({
   ): void => {
     // 사용자가 작성 중인 댓글 원문을 입력 필드에 유지한다
     setCommentInput(event.target.value);
+
+    // 입력값을 모두 지우면 선택했던 답글 대상도 함께 해제한다
+    if (event.target.value.length === 0) {
+      // 다음 입력을 일반 댓글로 등록할 수 있도록 부모 댓글 번호를 초기화한다
+      setUperNumb(null);
+    }
+  };
+
+  /**
+   * 선택한 댓글 작성자의 닉네임과 부모 댓글 번호를 답글 입력 상태에 반영한다
+   *
+   * @author HanWon.Jang
+   * @param parentReplyNumb 답글이 연결될 최상위 부모 댓글 번호
+   * @param userNick 입력창에서 언급할 댓글 작성자 닉네임
+   * @return 반환값이 없다
+   */
+  const handleSelectReplyTarget = (
+    parentReplyNumb: number,
+    userNick: string,
+  ): void => {
+    // 답글 등록 요청에서 사용할 최상위 부모 댓글 번호를 설정한다
+    setUperNumb(parentReplyNumb);
+    // 사용자가 바로 답글 내용을 이어 쓸 수 있도록 언급 닉네임을 입력한다
+    setCommentInput(`@${userNick} `);
   };
 
   /**
@@ -109,6 +136,7 @@ export function useSetReplyForm({
     setReplyMutation.mutate({
       reptNumb,
       replCntn: comment,
+      uperNumb: uperNumb ?? undefined,
     });
   };
 
@@ -120,6 +148,7 @@ export function useSetReplyForm({
     commentInput,
     isSubmitDisabled,
     handleCommentInputChange,
+    handleSelectReplyTarget,
     handleSubmit,
   };
 }

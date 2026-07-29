@@ -26,7 +26,9 @@ import type {
  * @throws 댓글 등록 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const setReplyApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replCntn">,
+  data: Pick<ReplyDtoType, "reptNumb" | "replCntn"> & {
+    uperNumb?: number;
+  },
 ): Promise<SetReplyResponse> => {
   // 로그인 사용자 정보는 인증 쿠키에서 확인하고 댓글 요청 데이터만 서버에 전달한다
   const response = await api.post<SetReplyResponse>("/reply", data);

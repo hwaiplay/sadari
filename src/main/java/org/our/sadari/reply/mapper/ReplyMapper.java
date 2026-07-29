@@ -2,6 +2,7 @@ package org.our.sadari.reply.mapper;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.reply.dto.ReplyDto;
 
 /**
@@ -14,6 +15,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 메서드 정의
+ * 2026-07-29        HanWon.Jang        댓글 알림 수신자 조회 메서드 정의
  */
 @Mapper
 public interface ReplyMapper {
@@ -35,4 +37,13 @@ public interface ReplyMapper {
      * @return 반영 건수
      */
     int setReply(ReplyDto replyDto);
+
+    /**
+     * 댓글이 등록된 독후감의 작성자 사용자 번호를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param reptNumb 댓글이 등록된 독후감 번호
+     * @return 독후감 작성자 사용자 번호
+     */
+    Long getReplyReportUserNumb(@Param("reptNumb") Long reptNumb);
 }

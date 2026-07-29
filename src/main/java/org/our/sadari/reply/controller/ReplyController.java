@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
+ * 2026-07-29        HanWon.Jang        댓글 조회 시 로그인 사용자 번호 전달
  */
 @RestController
 @RequiredArgsConstructor
@@ -55,14 +56,15 @@ public class ReplyController {
      * 독후감 번호에 연결된 댓글과 답글 목록을 조회한다.
      *
      * @author Hanwon.Jang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
      * @return 독후감 댓글과 답글 목록 조회 결과
      */
     @GetMapping("/{reptNumb}")
     @Operation(summary = "댓글 목록 조회", description = "독후감 번호에 연결된 댓글과 답글 목록을 조회한다.")
-    public ResultData getReplyList(
-            @Parameter(description = "댓글 목록을 조회할 독후감 번호", example = "1") @PathVariable Long reptNumb) {
-        // 독후감 번호에 연결된 댓글과 답글 목록 조회 결과를 반환한다
-        return replyService.getReplyList(reptNumb);
+    public ResultData getReplyList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @Parameter(description = "댓글 목록을 조회할 독후감 번호", example = "1") @PathVariable Long reptNumb) {
+        // 로그인 사용자 번호를 포함한 댓글과 답글 목록 조회 결과를 반환한다
+        return replyService.getReplyList(userNumb, reptNumb);
     }
 }
