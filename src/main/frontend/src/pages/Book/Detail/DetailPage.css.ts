@@ -29,6 +29,22 @@ export const contentSwitchFade = style({
   animation: `${contentPanelFadeIn} 520ms cubic-bezier(0.22, 1, 0.36, 1) both`,
 });
 
+const contentPanelFadeOut = keyframes({
+  "0%": {
+    opacity: 1,
+    filter: "blur(0)",
+  },
+  "100%": {
+    opacity: 0,
+    filter: "blur(2px)",
+  },
+});
+
+export const contentSwitchFadeOut = style({
+  pointerEvents: "none",
+  animation: `${contentPanelFadeOut} 180ms ease-in both`,
+});
+
 export const page = style({
   position: "relative",
   width: "100vw",
@@ -533,37 +549,103 @@ export const contentBox = style({
   wordBreak: "break-word",
 });
 
-export const actions = style({
+export const contentEditButton = style({
+  width: "100%",
+  minHeight: "118px",
+  margin: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.8,
+  color: vars.color.black,
+  textAlign: "left",
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  cursor: "text",
+});
+
+export const recordEditor = style({
+  width: "100%",
   display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+});
+
+export const recordByteCounter = style({
+  alignSelf: "flex-end",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1.4,
+  color: vars.color.gray500,
+});
+
+export const recordTextArea = style({
+  width: "100%",
+  minHeight: "118px",
+  padding: 0,
+  border: 0,
+  outline: 0,
+  overflow: "hidden",
+  resize: "none",
+  backgroundColor: "transparent",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.8,
+  color: vars.color.black,
+  boxSizing: "border-box",
+});
+
+export const editActions = style({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "8px",
   padding: "0 2px",
 });
 
-export const actionButton = style({
-  width: "100%",
-  height: "44px",
-  border: `1px solid ${vars.color.black}`,
+export const saveButton = style({
+  minWidth: "96px",
+  height: "40px",
+  padding: "0 18px",
+  border: `1px solid ${vars.color.gray600}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
-  color: vars.color.black,
+  color: vars.color.gray900,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "7px",
   cursor: "pointer",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:hover:not(:disabled)": {
+      borderColor: vars.color.gray900,
+      backgroundColor: "#f8f8f8",
+    },
+    "&:disabled": {
+      opacity: 0.5,
+      cursor: "default",
+    },
+  },
 });
 
-export const buttonIcon = style({
-  width: "17px",
-  height: "17px",
-  flexShrink: 0,
-});
+export const cancelButton = style([
+  saveButton,
+  {
+    borderColor: vars.color.gray400,
+    color: vars.color.gray700,
+  },
+]);
 
 export const deleteButton = style([
-  actionButton,
+  saveButton,
   {
-    borderColor: "#d84a3a",
-    color: "#d84a3a",
+    marginRight: "auto",
+    borderColor: "#d9877d",
+    color: "#b84b3f",
   },
 ]);

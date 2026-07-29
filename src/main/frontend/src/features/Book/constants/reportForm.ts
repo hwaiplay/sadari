@@ -9,5 +9,17 @@ export const REPORT_FORM_CODE_GROUPS = [
 export const REPORT_STATUS_READ = "READ";
 export const REPORT_STATUS_DONE = "DONE";
 export const REPORT_STATUS_STOP = "STOP";
-export const REPORT_GRADE_VALUES = [0, 1, 2, 3, 4, 5] as const;
+export const REPORT_GRADE_VALUES = [
+  0,
+  0.5,
+  1,
+  1.5,
+  2,
+  2.5,
+  3,
+  3.5,
+  4,
+  4.5,
+  5,
+] as const;
 export const REPORT_GRADE_OPTIONS = [1, 2, 3, 4, 5] as const;

@@ -1,3 +1,8 @@
+/**
+ * 독후감 등록 화면의 도서 요약과 하단 콘텐츠 전환 명령을 구성한다
+ *
+ * @author HanWon.Jang
+ */
 import { message } from "@/app/messages/message";
 import * as styles from "./BookSummary.css";
 
@@ -8,10 +13,11 @@ type BookSummaryProps = {
   publisher?: string;
   onChangeBook?: () => void;
   onShowBookInfo?: () => void;
+  showingBookInfo?: boolean;
 };
 
 /**
- * 선택된 책의 표지, 제목, 저자와 책 관련 보조 동작 버튼을 표시합니다.
+ * 선택된 책의 표지와 기본 정보 및 도서 정보 전환 명령을 표시한다
  *
  * @author HanWon.Jang
  * @param image 책 표지 이미지 URL
@@ -20,6 +26,7 @@ type BookSummaryProps = {
  * @param publisher 책 출판사
  * @param onChangeBook 책 변경 버튼 클릭 시 실행할 콜백
  * @param onShowBookInfo 책 정보 더보기 버튼 클릭 시 실행할 콜백
+ * @param showingBookInfo 도서 정보 영역 표시 여부
  * @return 책 요약 정보 컴포넌트
  */
 function BookSummary({
@@ -28,6 +35,7 @@ function BookSummary({
   author,
   onChangeBook,
   onShowBookInfo,
+  showingBookInfo = false,
 }: BookSummaryProps) {
 
   return (
@@ -47,8 +55,17 @@ function BookSummary({
               type="button"
               onClick={onShowBookInfo}
             >
-              {/* "도서 정보 자세히보기" */}
-              {message("frontend.report.bookInfoMore")}
+              {showingBookInfo ? (
+                <>
+                  {/* "돌아가기" */}
+                  {message("frontend.report.backToReport")}
+                </>
+              ) : (
+                <>
+                  {/* "도서 정보 자세히보기" */}
+                  {message("frontend.report.bookInfoMore")}
+                </>
+              )}
             </button>
           )}
           {onChangeBook && (

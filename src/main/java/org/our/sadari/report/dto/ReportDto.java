@@ -18,6 +18,7 @@ import org.our.sadari.book.dto.BookDto;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
+ * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 설명 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -47,7 +48,7 @@ public class ReportDto extends BookDto {
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
     private String reptEndt;
 
-    @Schema(description = "독후감 별점. 0점부터 등록 가능하다.", example = "4")
+    @Schema(description = "0점부터 5점까지 0.5점 단위의 독후감 별점", example = "4.5")
     private String reptGrde;
 
     @Schema(description = "책장 색상 코드", example = "BLUE")
