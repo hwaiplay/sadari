@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
@@ -32,12 +33,19 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
+
+    // 닉네임 최대 길이 설정값
+    private static final int USER_NICK_MAX_LENGTH = 20;
+    // 문자 사이에 단일 공백과 언더바 및 하이픈을 허용하는 닉네임 형식
+    private static final Pattern USER_NICK_PATTERN =
+            Pattern.compile("^[A-Za-z0-9가-힣]+(?:[ _-][A-Za-z0-9가-힣]+)*$");
 
     // User 데이터 접근 객체
     private final UserMapper userMapper;
@@ -109,27 +117,33 @@ public class UserServiceImpl implements UserService {
 
         // UserNumb 업무 값을 userDto DTO에 설정한다
         userDto.setUserNumb(userNumb);
-        // UserNick 업무 값을 userDto DTO에 설정한다
-        userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick(), 10));
+        // 닉네임 형식 검증 전에 앞뒤 공백만 제거한다
+        userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick()));
         // IntrCntn 업무 값을 userDto DTO에 설정한다
         userDto.setIntrCntn(StringUtil.normalizePlainText(userDto.getIntrCntn(), 50));
 
-        //닉네임 없는 경우 실패 리턴
+        // 닉네임이 비어 있으면 프로필 저장 요청을 거절한다
         if (StringUtil.isEmpty(userDto.getUserNick())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        //욕설 포함된 경우 실패 리턴
+        // 화면 검증을 우회한 요청도 같은 닉네임 문자와 구분자 규칙으로 차단한다
+        if (!isValidUserNick(userDto.getUserNick())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 닉네임과 한줄소개에서 저장을 차단할 비속어를 조회한다
         Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick())
                 .or(() -> badWordDetectionService.findBadWord(userDto.getIntrCntn()));
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+        // 닉네임이나 한줄소개에 비속어가 있으면 감지된 단어와 함께 요청을 거절한다
         if (badWord.isPresent()) {
             // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
-        //이미 사용중인 닉네임이 있을 시 실패 리턴
+        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단한다
         if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
             // "이미 사용 중인 닉네임이에요."
             return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
@@ -178,6 +192,19 @@ public class UserServiceImpl implements UserService {
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
         // 로그인 사용자의 프로필 정보를 수정한 결과를 반환한다
         return getMe(userNumb);
+    }
+
+    /**
+     * 닉네임이 한글, 영문, 숫자와 문자 사이의 단일 허용 구분자로 구성됐는지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNick 정규화한 닉네임
+     * @return 닉네임 형식 충족 여부
+     */
+    private boolean isValidUserNick(String userNick) {
+
+        // 닉네임이 최대 길이와 문자 사이의 단일 구분자 형식을 모두 충족하는지 반환한다
+        return userNick.length() <= USER_NICK_MAX_LENGTH && USER_NICK_PATTERN.matcher(userNick).matches();
     }
 
     /**
