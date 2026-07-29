@@ -42,7 +42,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 25;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
