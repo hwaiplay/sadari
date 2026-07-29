@@ -1,208 +1,45 @@
 /**
- * src/main/frontend/src/pages/Book/Detail/DetailPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * 독후감 상세 조회와 직접 편집 및 도서 정보 전환 화면을 구성한다
  *
  * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { formatDashedDateToDot } from "@/app/utils/dateUtil";
+import { formatDateValue } from "@/app/utils/dateUtil";
+import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { useNavigate, useParams } from "react-router-dom";
-import type { CSSProperties } from "react";
-import { useState } from "react";
+import type { ChangeEvent, CSSProperties } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
+import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
+import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
+import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor";
 import {
+  MAX_REPORT_CONTENT_BYTES,
+  REPORT_COLOR_CODE_GROUP,
+  REPORT_FORM_CODE_GROUPS,
+  REPORT_STATUS_CODE_GROUP,
   REPORT_STATUS_DONE,
   REPORT_STATUS_READ,
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
+import {
+  getReportContentStorageByteLength,
+  sanitizeText,
+  truncateUtf8Bytes,
+  validateReportForm,
+} from "@/features/Book/utils/reportValidation";
+import type { ReadingStatusType } from "@/features/Book/types/book.type";
+import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 import * as styles from "./DetailPage.css";
 
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 // 댓글 API 연결 전 기록 헤더의 댓글 수 배치를 확인하기 위한 임시 표시값이다
 const TEMPORARY_COMMENT_COUNT = 0;
-
-/**
- * 독서일 문자열을 날짜 차이 계산에 사용할 UTC 기준 일련번호로 변환한다
- *
- * @author HanWon.Jang
- * @param value YYYY-MM-DD 형식의 독서일
- * @return UTC 기준 일련번호 또는 유효하지 않은 날짜의 null
- */
-function getDateSerial(value?: string) {
-
-  // 날짜가 없으면 독서일 수를 계산할 수 없으므로 빈 결과를 사용한다
-  if (!value) {
-    // 유효한 날짜가 없음을 반환한다
-    return null;
-  }
-
-  // 하이픈 날짜를 연월일 숫자로 분리해 브라우저 시간대 파싱 차이를 제거한다
-  const [year, month, day] = value.split("-").map(Number);
-
-  // 연월일 중 하나라도 유효하지 않으면 잘못된 기간을 화면에 계산하지 않는다
-  if (!year || !month || !day) {
-    // 유효한 날짜가 없음을 반환한다
-    return null;
-  }
-
-  // 일광 절약 시간의 영향을 받지 않는 UTC 기준 일련번호를 반환한다
-  return Date.UTC(year, month - 1, day);
-}
-
-/**
- * 오늘 날짜를 독서일 수 계산에 사용할 UTC 기준 일련번호로 변환한다
- *
- * @author HanWon.Jang
- * @return 오늘의 UTC 기준 일련번호
- */
-function getTodayDateSerial() {
-
-  // 현재 사용자의 로컬 날짜를 기준으로 읽는 중인 독서일 수를 계산한다
-  const today = new Date();
-
-  // 시간 정보 없이 오늘 연월일에 해당하는 UTC 기준 일련번호를 반환한다
-  return Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-}
-
-/**
- * 독서 상태에 따라 완료된 독서일 수 또는 현재 독서일 차수를 표시한다
- *
- * @author HanWon.Jang
- * @param startDate 독서 시작일
- * @param endDate 독서 종료일 또는 목표 종료일
- * @param isReadingStatus 현재 읽는 중인 상태 여부
- * @return N일 또는 N일째 형식의 독서기간 요약
- */
-function getReadingDurationLabel(startDate: string, endDate: string, isReadingStatus: boolean) {
-
-  // 독서 시작일을 날짜 차이 계산 기준으로 변환한다
-  const startSerial = getDateSerial(startDate);
-  // 읽는 중이면 오늘을 사용하고 완료 또는 중단이면 저장된 종료일을 사용한다
-  const endSerial = isReadingStatus
-    ? getTodayDateSerial()
-    : getDateSerial(endDate);
-
-  // 날짜가 비어 있거나 종료일이 시작일보다 빠르면 잘못된 일 수를 표시하지 않는다
-  if (startSerial === null || endSerial === null || endSerial < startSerial) {
-    // 계산할 수 없는 독서기간 표시값을 반환한다
-    return "-";
-  }
-
-  // 시작일과 종료일을 모두 독서일에 포함해 최소 1일부터 계산한다
-  const durationDays = Math.floor((endSerial - startSerial) / MILLISECONDS_PER_DAY) + 1;
-
-  // 읽는 중인 독후감은 오늘이 몇 번째 독서일인지 표시한다
-  if (isReadingStatus) {
-    // "{0}일째"
-    return message("frontend.report.period.inProgressDays", [durationDays]);
-  }
-
-  // "{0}일"
-  return message("frontend.report.period.completedDays", [durationDays]);
-}
-
-/**
- * 독서 시작일과 종료일을 상세 기간 표시 문자열로 조합한다
- *
- * @author HanWon.Jang
- * @param startDate 독서 시작일
- * @param endDate 독서 종료일 또는 목표 종료일
- * @return 점으로 구분된 실제 독서기간
- */
-function getReadingPeriodText(startDate: string, endDate: string) {
-
-  // 독서 시작일을 화면 표시 형식으로 변환한다
-  const formattedStartDate = formatDashedDateToDot(startDate);
-  // 독서 종료일을 화면 표시 형식으로 변환한다
-  const formattedEndDate = formatDashedDateToDot(endDate);
-  // 존재하는 날짜만 사용해 불필요한 기간 구분자가 나오지 않게 한다
-  const periodText = [formattedStartDate, formattedEndDate].filter(Boolean).join(" ~ ");
-
-  // 실제 날짜가 없으면 대체 문자를 표시한다
-  return periodText || "-";
-}
-
-/**
- * 독후감 평점을 통계 영역의 간결한 점수 형식으로 변환한다
- *
- * @author HanWon.Jang
- * @param grade 서버에서 조회한 독후감 평점
- * @return 숫자 형식의 평점 또는 유효하지 않은 평점의 대체 문자
- */
-function getGradeLabel(grade: string) {
-
-  // 문자열 평점을 화면 계산에 사용할 숫자로 변환한다
-  const numericGrade = Number(grade);
-
-  // 숫자가 아닌 평점은 통계 영역에 잘못된 값을 표시하지 않는다
-  if (!Number.isFinite(numericGrade)) {
-    // 유효하지 않은 평점의 대체 문자를 반환한다
-    return "-";
-  }
-
-  // 정수 평점은 불필요한 소수점을 제거하고 반점 평점은 한 자리까지 유지한다
-  const gradeText = Number.isInteger(numericGrade)
-    ? String(numericGrade)
-    : numericGrade.toFixed(1);
-
-  // "{0}"
-  return message("frontend.report.gradeCompact", [gradeText]);
-}
-
-/**
- * 서버의 공개 여부 코드와 코드명을 화면 표시값으로 변환한다
- *
- * @author HanWon.Jang
- * @param publicName 서버에서 조회한 공개 여부 코드명
- * @param publicCode 공개 여부 Y/N 코드
- * @return 공개 또는 비공개 표시값
- */
-function getPublicLabel(publicName?: string, publicCode?: "Y" | "N") {
-
-  // 서버가 공통코드명을 제공하면 동일한 표시 정책을 그대로 사용한다
-  if (publicName) {
-    // 서버에서 조회한 공개 여부 코드명을 반환한다
-    return publicName;
-  }
-
-  // 공개 코드이면 공개 상태 문구를 사용한다
-  if (publicCode === "Y") {
-    // "공개"
-    return message("frontend.report.public.on");
-  }
-
-  // "비공개"
-  return message("frontend.report.public.off");
-}
-
-/**
- * 독서 상태에 맞는 통계 글자색 클래스를 결정한다
- *
- * @author HanWon.Jang
- * @param reportStatus 독후감 독서 상태 코드
- * @return 읽는 중과 완독 및 중단 상태에 맞는 글자색 클래스
- */
-function getReportStatusClassName(reportStatus: string) {
-
-  // 완독 상태는 긍정적인 완료 의미를 전달하는 연녹색을 사용한다
-  if (reportStatus === REPORT_STATUS_DONE) {
-    // 완독 상태 글자색 클래스를 반환한다
-    return styles.reportStatusDone;
-  }
-
-  // 중단 상태는 완료와 구분되는 연한 빨간색을 사용한다
-  if (reportStatus === REPORT_STATUS_STOP) {
-    // 중단 상태 글자색 클래스를 반환한다
-    return styles.reportStatusStop;
-  }
-
-  // 읽는 중과 알 수 없는 상태는 기본 검정 글자색 클래스를 반환한다
-  return styles.reportStatusRead;
-}
+const CONTENT_FADE_OUT_MILLISECONDS = 180;
 
 /**
  * Detail Page 화면 또는 컴포넌트를 구성한다
@@ -216,22 +53,107 @@ function DetailPage() {
   const idNum = Number(id);
   const navigate = useNavigate();
   const { data, error, isError, isPending } = useBookDetail(idNum);
+  const bookData = data?.data;
   const likeMutation = usePublicReportLikeMutation();
+  const { mutate: updateReport, isPending: isUpdatePending } = useUpdateMutation();
+  const { mutate: deleteReport, isPending: isDeletePending } = useDeleteMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
-  const [isPeriodDetailOpen, setIsPeriodDetailOpen] = useState(false);
+  const [isContentFadingOut, setIsContentFadingOut] = useState(false);
+  const contentSwitchTimerRef = useRef<number | null>(null);
+  const recordTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isRecordEditing, setIsRecordEditing] = useState(false);
+  const [status, setStatus] = useState<ReadingStatusType>("");
+  const [initialStatus, setInitialStatus] = useState<ReadingStatusType>("");
+  const [grade, setGrade] = useState(0);
+  const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
+  const [startDate, setStartDate] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [content, setContent] = useState("");
+  const [contentByteLength, setContentByteLength] = useState(0);
+
+  // 상세 직접 편집과 등록 화면이 같은 공통코드 캐시를 사용하도록 상태와 색상 코드를 함께 조회한다
+  const { data: codeGroupList = {} } = useCodeGroupList(
+    REPORT_FORM_CODE_GROUPS,
+  );
+  const statusCodes = codeGroupList[REPORT_STATUS_CODE_GROUP] ?? [];
+  const colorCodes = codeGroupList[REPORT_COLOR_CODE_GROUP] ?? [];
+
+  useEffect(() => {
+
+    // 상세 조회가 완료되기 전에는 편집 상태를 초기화하지 않는다
+    if (!bookData) {
+      return;
+    }
+
+    // 서버에서 조회한 독서 상태를 상세 직접 편집의 현재값과 복원 기준값으로 설정한다
+    setStatus(bookData.reptStat ?? "");
+    setInitialStatus(bookData.reptStat ?? "");
+    // 서버에서 조회한 평점을 숫자 입력 상태로 설정한다
+    setGrade(Number(bookData.reptGrde) || 0);
+    // 서버에서 조회한 공개 여부를 Y와 N 중 하나로 보정해 설정한다
+    setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
+    // 서버에서 조회한 독서 시작일과 종료일을 기간 편집 상태로 설정한다
+    setStartDate(bookData.reptStdt ?? "");
+    setEndDate(bookData.reptEndt ?? "");
+    // 서버에서 조회한 기록과 저장 기준 바이트 길이를 함께 설정한다
+    setContent(bookData.reptCntn ?? "");
+    setContentByteLength(
+      getReportContentStorageByteLength(bookData.reptCntn ?? ""),
+    );
+  }, [bookData]);
+
+  useEffect(() => {
+
+    // 상세 화면을 벗어난 뒤 예약된 콘텐츠 전환이 실행되지 않도록 타이머를 정리한다
+    return () => {
+
+      // 상세 하단 전환 타이머가 있을 때만 브라우저 예약 작업을 취소한다
+      if (contentSwitchTimerRef.current !== null) {
+        window.clearTimeout(contentSwitchTimerRef.current);
+      }
+    };
+  }, []);
+
+  useLayoutEffect(() => {
+
+    const recordTextArea = recordTextAreaRef.current;
+
+    // 기록 편집 전에는 읽기 영역의 높이를 변경하지 않는다
+    if (!isRecordEditing || !recordTextArea) {
+      return;
+    }
+
+    // 내용이 줄어든 경우에도 실제 줄 수에 맞춰 다시 계산할 수 있도록 기존 높이를 해제한다
+    recordTextArea.style.height = "auto";
+    // 스크롤 없이 전체 기록이 보이도록 현재 내용의 전체 높이를 입력창에 반영한다
+    recordTextArea.style.height = `${recordTextArea.scrollHeight}px`;
+  }, [content, isRecordEditing]);
 
   /**
-   * go Update Page 사용자 동작을 처리한다
+   * 독후감 상세와 도서 정보 하단 콘텐츠를 페이드아웃 후 교체한다
    *
    * @author HanWon.Jang
-   * @param reptNumb rept Numb 입력값
+   * @param nextShowBookInfo 도서 정보 표시 여부
    * @return 반환값이 없다
    */
-  const goUpdatePage = (reptNumb: number) => {
-    // 상세에서 수정으로 진입한 뒤 저장하면 다시 상세로 이동한다.
-    // 이때 기존 상세 히스토리를 남기면 뒤로가기 시 같은 상세 화면으로 돌아오므로 수정 진입 시 현재 상세 엔트리를 교체한다.
-    navigate(`/book/upt/${reptNumb}`, { replace: true });
-  };
+  function switchDetailContent(nextShowBookInfo: boolean) {
+
+    // 이미 목표 콘텐츠가 보이거나 전환 중이면 중복 애니메이션을 시작하지 않는다
+    if (showBookInfo === nextShowBookInfo || isContentFadingOut) {
+      return;
+    }
+
+    // 현재 하단 콘텐츠를 먼저 페이드아웃한다
+    setIsContentFadingOut(true);
+    // 페이드아웃이 끝난 뒤 목표 콘텐츠를 표시하고 페이드인을 시작한다
+    contentSwitchTimerRef.current = window.setTimeout(() => {
+
+      setShowBookInfo(nextShowBookInfo);
+      setIsContentFadingOut(false);
+      contentSwitchTimerRef.current = null;
+    }, CONTENT_FADE_OUT_MILLISECONDS);
+  }
 
   /**
    * 독후감 상세에서 도서 정보 화면으로 전환한다
@@ -241,33 +163,229 @@ function DetailPage() {
    */
   const showBookInfoView = () => {
 
-    // 같은 상세 페이지 안에서 도서 정보가 보이도록 화면 상태를 변경한다
-    setShowBookInfo(true);
+    // 같은 상세 페이지 안에서 도서 정보가 페이드 전환되도록 목표 화면을 설정한다
+    switchDetailContent(true);
   };
 
   /**
-   * 모바일과 클릭 환경에서 실제 독서기간 툴팁을 열거나 닫는다
+   * 4열 요약 항목을 누른 최초 시점부터 상세 화면을 편집 상태로 전환한다
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handlePeriodDetailToggle = () => {
+  function handleEditStart() {
 
-    // 이전 열림 상태를 반전해 같은 버튼으로 기간 확인과 닫기를 모두 제공한다
-    setIsPeriodDetailOpen(!isPeriodDetailOpen);
-  };
+    // 편집 시도 전에는 숨겨진 삭제와 취소 및 저장 명령을 표시한다
+    setIsEditing(true);
+  }
 
   /**
-   * 독서기간 통계에서 포커스가 벗어나면 클릭으로 연 툴팁을 닫는다
+   * 독서 상태 변경을 반영하고 읽는 중에서 완료 또는 중단으로 바뀌면 종료일 보정을 확인한다
+   *
+   * @author HanWon.Jang
+   * @param nextStatus 사용자가 선택한 다음 독서 상태 코드
+   * @return 반환값이 없다
+   */
+  async function handleStatusChange(nextStatus: ReadingStatusType) {
+
+    // 선택한 독서 상태를 상세 화면 요약과 저장 요청에 즉시 반영한다
+    setStatus(nextStatus);
+    const needsEndDateConfirm =
+      initialStatus === REPORT_STATUS_READ &&
+      status === REPORT_STATUS_READ &&
+      (nextStatus === REPORT_STATUS_DONE || nextStatus === REPORT_STATUS_STOP);
+
+    // 읽는 중에서 완료나 중단으로 처음 전환하는 경우에만 종료일 변경을 확인한다
+    if (!needsEndDateConfirm) {
+      return;
+    }
+
+    // "독서 종료일을 오늘로 설정할까요"
+    const confirmed = await sweetConfirm({
+      title: message("frontend.report.doneDateConfirmTitle"),
+      text: message("frontend.report.doneDateConfirmText"),
+      confirmButtonText: message("frontend.common.confirm"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 사용자가 날짜 보정에 동의하면 독서 종료일을 오늘로 설정한다
+    if (confirmed.isConfirmed) {
+      setEndDate(formatDateValue(new Date()));
+    }
+  }
+
+  /**
+   * 달력에서 확정한 독서 시작일과 종료일을 상세 편집 상태에 반영한다
+   *
+   * @author HanWon.Jang
+   * @param nextStartDate 선택한 독서 시작일
+   * @param nextEndDate 선택한 독서 종료일
+   * @return 반환값이 없다
+   */
+  function handleRangeChange(nextStartDate: string, nextEndDate: string) {
+
+    // 선택한 기간을 4열 요약과 저장 요청에 함께 사용할 수 있도록 설정한다
+    setStartDate(nextStartDate);
+    setEndDate(nextEndDate);
+  }
+
+  /**
+   * 기록 본문을 클릭하면 테두리 없는 직접 입력 상태로 전환한다
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handlePeriodDetailClose = () => {
+  function handleRecordEditStart() {
 
-    // 다른 화면 요소로 이동한 뒤 기간 툴팁이 남지 않게 닫는다
-    setIsPeriodDetailOpen(false);
-  };
+    // 기록 입력과 상세 편집 명령을 함께 활성화한다
+    setIsRecordEditing(true);
+    setIsEditing(true);
+  }
+
+  /**
+   * 기록 입력값을 저장 허용 바이트 안으로 보정해 상세 편집 상태에 반영한다
+   *
+   * @author HanWon.Jang
+   * @param event 기록 입력 영역 변경 이벤트
+   * @return 반환값이 없다
+   */
+  function handleContentChange(event: ChangeEvent<HTMLTextAreaElement>) {
+
+    // UTF-8 저장 허용량을 넘는 뒷부분을 제거한 기록값을 계산한다
+    const nextContent = truncateUtf8Bytes(event.currentTarget.value);
+
+    // 보정한 기록 본문과 저장 기준 바이트 길이를 함께 갱신한다
+    setContent(nextContent);
+    setContentByteLength(getReportContentStorageByteLength(nextContent));
+  }
+
+  /**
+   * 상세 편집값을 마지막 서버 조회값으로 복원하고 편집 명령을 숨긴다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  function handleEditCancel() {
+
+    // 취소 시 서버 조회값을 다시 반영해 아직 저장하지 않은 변경을 모두 제거한다
+    if (bookData) {
+      setStatus(bookData.reptStat ?? "");
+      setInitialStatus(bookData.reptStat ?? "");
+      setGrade(Number(bookData.reptGrde) || 0);
+      setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
+      setStartDate(bookData.reptStdt ?? "");
+      setEndDate(bookData.reptEndt ?? "");
+      setContent(bookData.reptCntn ?? "");
+      setContentByteLength(
+        getReportContentStorageByteLength(bookData.reptCntn ?? ""),
+      );
+    }
+
+    // 편집 입력과 하단 명령 영역을 읽기 상태로 되돌린다
+    setIsRecordEditing(false);
+    setIsEditing(false);
+  }
+
+  /**
+   * 상세 화면에서 변경한 독후감 값을 검증하고 저장한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
+  async function handleEditSave() {
+
+    // 상세 조회값이 없으면 수정 대상과 책장 색상을 확정할 수 없어 저장하지 않는다
+    if (!bookData) {
+      return;
+    }
+
+    // 등록 화면과 같은 필수값 및 공통코드 검증을 상세 직접 편집에도 적용한다
+    const validationMessage = validateReportForm({
+      status,
+      startDate,
+      endDate,
+      grade: String(grade),
+      reptColr: bookData.reptColr,
+      content,
+      validStatusCodes: statusCodes.map((item) => item.comdCode),
+      validReportColors: colorCodes.map((item) => item.comdCode),
+    });
+
+    // 검증에 실패하면 저장 요청 없이 누락되거나 잘못된 항목을 안내한다
+    if (validationMessage) {
+      // "입력이 필요합니다."
+      void sweetWarning(
+        message("frontend.alert.inputRequired"),
+        validationMessage,
+      );
+      return;
+    }
+
+    // "저장하시겠습니까"
+    const confirmed = await sweetConfirm({
+      title: message("frontend.alert.saveConfirmTitle"),
+      text: message("frontend.report.saveConfirmText"),
+      confirmButtonText: message("frontend.report.save"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 저장 확인을 취소하면 현재 편집값을 유지한다
+    if (!confirmed.isConfirmed) {
+      return;
+    }
+
+    // 상세 화면이 보유한 값으로 별도 수정 페이지 없이 독후감 수정 요청을 전송한다
+    updateReport(
+      {
+        reptNumb: idNum,
+        data: {
+          reptStat: status,
+          reptStdt: startDate,
+          reptEndt: endDate,
+          reptGrde: String(grade),
+          reptColr: bookData.reptColr,
+          pubcYsno,
+          reptCntn: sanitizeText(content),
+        },
+      },
+      {
+        onSuccess: () => {
+
+          // 저장이 완료되면 상세 화면을 읽기 상태로 되돌린다
+          setIsRecordEditing(false);
+          setIsEditing(false);
+        },
+      },
+    );
+  }
+
+  /**
+   * 현재 독후감 삭제 여부를 확인한 뒤 삭제 요청을 전송한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   */
+  async function handleDelete() {
+
+    // "삭제하시겠습니까"
+    const confirmed = await sweetConfirm({
+      icon: "warning",
+      title: message("frontend.alert.deleteConfirmTitle"),
+      text: message("frontend.report.deleteConfirmText"),
+      confirmButtonText: message("frontend.report.delete"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 삭제 확인을 취소하면 상세 편집 상태를 그대로 유지한다
+    if (!confirmed.isConfirmed) {
+      return;
+    }
+
+    // 확인된 독후감 번호로 삭제 요청을 전송한다
+    deleteReport(idNum);
+  }
 
   /**
    * get Like Count Label 정보를 조회한다
@@ -290,8 +408,6 @@ function DetailPage() {
     return <h3>{getApiErrorMessage(error, message("frontend.common.tryAgain"))}</h3>;
   }
 
-  const bookData = data?.data;
-
   if (!bookData) {
     return <h3>{data?.message}</h3>;
   }
@@ -299,31 +415,21 @@ function DetailPage() {
   const pageStyle = {
     "--book-bg-image": `url("${bookData.bookCvim}")`,
   } as CSSProperties;
-  const isReadingStatus = bookData.reptStat === REPORT_STATUS_READ;
+  const isReadingStatus = status === REPORT_STATUS_READ;
   // 읽는 중인 독후감은 저장된 종료일이 목표일이므로 목표 독서기간으로 구분한다
   const periodTitle = isReadingStatus
     ? /* "목표 독서기간" */ message("frontend.report.field.targetPeriod")
     : /* "독서 기간" */ message("frontend.report.field.period");
-  // 독서 상태에 맞는 N일 또는 N일째 형식의 요약값을 계산한다
-  const periodSummary = getReadingDurationLabel(
-    bookData.reptStdt,
-    bookData.reptEndt,
-    isReadingStatus,
-  );
-  // 툴팁에 표시할 시작일과 종료일의 실제 범위를 조합한다
-  const periodText = getReadingPeriodText(bookData.reptStdt, bookData.reptEndt);
-  // 통계 영역에 표시할 공개 여부 코드명을 결정한다
-  const publicLabel = getPublicLabel(bookData.pubcYsnoName, bookData.pubcYsno);
-  // 통계 영역에 표시할 평점 문자열을 결정한다
-  const gradeLabel = getGradeLabel(bookData.reptGrde);
-  // 독서 상태 코드에 맞는 통계 글자색을 결정한다
-  const reportStatusClassName = getReportStatusClassName(bookData.reptStat);
   const rawBookAverageGrade = Number(bookData.bookAvgGrde);
   const hasBookAverageGrade =
     Number.isFinite(rawBookAverageGrade) && rawBookAverageGrade > 0;
   // "등록된 책 소개가 없습니다."
   const bookDescription =
     bookData.bookDesc || message("frontend.common.noBookDescription");
+  // "독후감을 남겨보세요"
+  const contentPlaceholder = message("frontend.report.placeholder.content");
+  // "작성된 기록이 없습니다."
+  const emptyReportContent = message("frontend.common.noWrittenReport");
 
   /**
    * 도서 정보 화면에서 독후감 상세 화면으로 전환한다
@@ -333,8 +439,8 @@ function DetailPage() {
    */
   const showReportDetailView = () => {
 
-    // 같은 상세 페이지 안에서 독후감 정보가 다시 보이도록 화면 상태를 변경한다
-    setShowBookInfo(false);
+    // 같은 상세 페이지 안에서 독후감 정보가 페이드 전환되도록 목표 화면을 설정한다
+    switchDetailContent(false);
   };
 
   /**
@@ -467,7 +573,12 @@ function DetailPage() {
 
           <div
             key="book-info"
-            className={clsx(styles.contentPanel, styles.contentSwitchFade)}
+            className={clsx(
+              styles.contentPanel,
+              isContentFadingOut
+                ? styles.contentSwitchFadeOut
+                : styles.contentSwitchFade,
+            )}
           >
             {/* 저자와 출판사 및 출간일의 세로 요약 영역 */}
             <section
@@ -556,99 +667,29 @@ function DetailPage() {
 
         <div
           key="report-detail"
-          className={clsx(styles.contentPanel, styles.contentSwitchFade)}
+          className={clsx(
+            styles.contentPanel,
+            isContentFadingOut
+              ? styles.contentSwitchFadeOut
+              : styles.contentSwitchFade,
+          )}
         >
-          {/* 독서 상태와 공개 여부 및 평점과 독서기간 요약 영역 */}
-          <section
-            className={styles.reportStatsSection}
-            aria-label={/* "독후감 요약" */ message("frontend.report.summary.aria")}
-          >
-            <div className={styles.reportStatsGrid}>
-              {/* 독서 상태 통계 영역 */}
-              <div className={styles.reportStatsItem}>
-                <span className={styles.reportStatsLabel}>
-                  {/* "독서 상태" */}
-                  {message("frontend.report.field.status")}
-                </span>
-                <strong
-                  className={clsx(
-                    styles.reportStatsValue,
-                    reportStatusClassName,
-                  )}
-                >
-                  {bookData.reptStatName || bookData.reptStat}
-                </strong>
-              </div>
-
-              {/* 공개 여부 통계 영역 */}
-              <div className={styles.reportStatsItem}>
-                <span className={styles.reportStatsLabel}>
-                  {/* "공개 여부" */}
-                  {message("frontend.report.field.public")}
-                </span>
-                <strong className={styles.reportStatsValue}>
-                  {publicLabel}
-                </strong>
-              </div>
-
-              {/* 평점 통계 영역 */}
-              <div className={styles.reportStatsItem}>
-                <span className={styles.reportStatsLabel}>
-                  {/* "평점" */}
-                  {message("frontend.report.field.grade")}
-                </span>
-                <strong className={styles.reportGradeValue}>
-                  <svg
-                    className={styles.reportGradeStar}
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
-                  >
-                    <path
-                      d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
-                      fill="currentColor"
-                      stroke="currentColor"
-                      strokeWidth="1.4"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  {gradeLabel}
-                </strong>
-              </div>
-
-              {/* 독서기간 요약과 실제 날짜 확인 영역 */}
-              <div className={styles.reportStatsItem}>
-                <span className={styles.reportStatsLabel}>{periodTitle}</span>
-                <button
-                  className={styles.periodStatButton}
-                  type="button"
-                  aria-expanded={isPeriodDetailOpen}
-                  aria-label={
-                    /* "{0}: {1}" */
-                    message("frontend.report.period.detailAria", [
-                      periodTitle,
-                      periodText,
-                    ])
-                  }
-                  onClick={handlePeriodDetailToggle}
-                  onBlur={handlePeriodDetailClose}
-                >
-                  <strong className={styles.reportStatsValue}>
-                    {periodSummary}
-                  </strong>
-                  <span
-                    className={clsx(
-                      styles.periodTooltip,
-                      isPeriodDetailOpen && styles.periodTooltipOpen,
-                    )}
-                    role="tooltip"
-                  >
-                    {periodText}
-                  </span>
-                </button>
-              </div>
-            </div>
-          </section>
+          {/* 독서 상태와 공개 여부 및 평점과 독서기간 직접 편집 영역 */}
+          <ReportStatsEditor
+            statusCodes={statusCodes}
+            status={status}
+            statusFallbackLabel={bookData.reptStatName || bookData.reptStat}
+            grade={grade}
+            pubcYsno={pubcYsno}
+            startDate={startDate}
+            endDate={endDate}
+            periodTitle={periodTitle}
+            onStatusChange={handleStatusChange}
+            onGradeChange={setGrade}
+            onPublicChange={setPubcYsno}
+            onRangeChange={handleRangeChange}
+            onEditStart={handleEditStart}
+          />
 
           {/* 기록 제목부터 하단 배경을 흰색으로 유지하는 독후감 기록 영역 */}
           <div className={styles.recordArea}>
@@ -702,42 +743,65 @@ function DetailPage() {
                   </span>
                 </span>
               </div>
-              <p className={styles.contentBox}>
-                {bookData.reptCntn || message("frontend.common.noWrittenReport")}
-              </p>
+              {/* 기록 본문 직접 편집 영역 */}
+              {isRecordEditing ? (
+                <div className={styles.recordEditor}>
+                  <textarea
+                    ref={recordTextAreaRef}
+                    className={styles.recordTextArea}
+                    value={content}
+                    autoFocus
+                    aria-label={/* "기록" */ message("frontend.report.field.content")}
+                    placeholder={contentPlaceholder}
+                    onChange={handleContentChange}
+                  />
+                  <span className={styles.recordByteCounter}>
+                    ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
+                  </span>
+                </div>
+              ) : (
+                <button
+                  className={styles.contentEditButton}
+                  type="button"
+                  onClick={handleRecordEditStart}
+                >
+                  {content || emptyReportContent}
+                </button>
+              )}
             </section>
 
-            {/* 독후감 수정 이동 영역 */}
-            <div className={styles.actions}>
-              <button
-                className={styles.actionButton}
-                type="button"
-                onClick={() => goUpdatePage(idNum)}
-              >
-                <svg
-                  className={styles.buttonIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
+            {/* 최초 편집 시도 이후에만 표시되는 삭제와 취소 및 저장 명령 영역 */}
+            {isEditing ? (
+              <div className={styles.editActions}>
+                <button
+                  className={styles.deleteButton}
+                  type="button"
+                  disabled={isDeletePending || isUpdatePending}
+                  onClick={handleDelete}
                 >
-                  <path
-                    d="M5 19h3.2L18.7 8.5a1.7 1.7 0 0 0 0-2.4l-.8-.8a1.7 1.7 0 0 0-2.4 0L5 15.8V19Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M14.3 6.5l3.2 3.2M4 21h16"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-                {/* "수정" */}
-                {message("frontend.report.update")}
-              </button>
-            </div>
+                  {/* "삭제" */}
+                  {message("frontend.report.delete")}
+                </button>
+                <button
+                  className={styles.cancelButton}
+                  type="button"
+                  disabled={isDeletePending || isUpdatePending}
+                  onClick={handleEditCancel}
+                >
+                  {/* "취소" */}
+                  {message("frontend.common.cancel")}
+                </button>
+                <button
+                  className={styles.saveButton}
+                  type="button"
+                  disabled={isDeletePending || isUpdatePending}
+                  onClick={handleEditSave}
+                >
+                  {/* "저장" */}
+                  {message("frontend.report.save")}
+                </button>
+              </div>
+            ) : null}
           </div>
         </div>
       </Container>

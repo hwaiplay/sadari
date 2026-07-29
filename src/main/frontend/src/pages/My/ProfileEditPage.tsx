@@ -726,7 +726,8 @@ function ProfileEditPage() {
       return;
     }
 
-    navigate(`/book/upt/${quickReport.reptNumb}`);
+    // 별도 수정 화면 대신 선택한 독후감의 상세 직접 편집 화면으로 이동한다
+    navigate(`/book/detail/${quickReport.reptNumb}`);
   };
 
   /**

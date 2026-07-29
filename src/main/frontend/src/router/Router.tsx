@@ -8,7 +8,6 @@ import DetailPage from "../pages/Book/Detail/DetailPage";
 import PublicRoute from "./PublicRoute";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
-import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
 import BookInfoPage from "@/pages/Book/Info/BookInfoPage";
 import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
@@ -23,7 +22,7 @@ import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
 import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
 
 /**
- * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
+ * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
  *
  * @author HanWon.Jang
  * @return 애플리케이션 라우터 컴포넌트
@@ -104,9 +103,6 @@ const Router = () => {
 
           {/* 기록하기 */}
           <Route path="/set" element={<SetReportPage />} />
-
-          {/* 독후감 수정 */}
-          <Route path="/book/upt/:id" element={<UpdateReportPage />} />
 
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
