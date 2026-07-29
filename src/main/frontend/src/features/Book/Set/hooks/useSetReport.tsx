@@ -30,7 +30,10 @@ export const useSetReport = () => {
         message("frontend.report.saved"),
       ).then(() => {
 
-        navigate(`/book/detail/${data.data}`, { replace: true });
+        // 등록 화면 아래에 남아 있는 도서 검색 이력 대신 홈을 뒤로가기 목적지로 지정한다
+        navigate("/home", { replace: true });
+        // 홈 위에 등록된 독후감 상세 화면을 새 이력으로 추가한다
+        navigate(`/book/detail/${data.data}`);
       });
     },
     onError: (error: unknown) => {
