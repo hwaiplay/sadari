@@ -336,7 +336,7 @@ export const readingSummaryRow = style({
 });
 
 export const goalAchievementSummary = style({
-  padding: "24px 8px 24px",
+  padding: "18px 8px 24px",
 });
 
 export const profileStatsSummary = style({
@@ -372,26 +372,20 @@ export const profileStatsButton = style({
 });
 
 export const currentReadingSection = style({
-  padding: "24px 4px 18px",
+  padding: "18px 4px",
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "18px",
 });
 
 export const currentReadingTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  zIndex: 1,
   margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  padding: 0,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   textAlign: "left",
   color: vars.color.black,
-  transform: "translateY(-50%)",
 });
 
 export const currentReadingList = style({
@@ -439,6 +433,10 @@ export const currentReadingText = style({
   gap: "5px",
 });
 
+export const myPageCurrentReadingText = style({
+  flex: 1,
+});
+
 export const currentReadingMeta = style({
   display: "flex",
   alignItems: "center",
@@ -455,19 +453,22 @@ export const currentReadingRemain = style({
 });
 
 export const goalAchievementTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  zIndex: 1,
-  margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  margin: "0 0 18px",
+  padding: 0,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   textAlign: "left",
   color: vars.color.black,
-  transform: "translateY(-50%)",
+});
+
+export const myPageSectionTitle = style({
+  width: "100%",
+  textAlign: "center",
+});
+
+export const socialSectionTitle = style({
+  paddingLeft: "6px",
 });
 
 export const goalAchievementGrid = style({

@@ -904,7 +904,7 @@ function ProfileEditPage() {
       >
         <div className={styles.currentReadingSection}>
           {/* 현재 읽고 있는 책 제목 영역 */}
-          <h2 className={styles.currentReadingTitle}>
+          <h2 className={`${styles.currentReadingTitle} ${styles.myPageSectionTitle}`}>
             {/* "현재 읽고 있는 책" */ message("frontend.profile.currentReading.title")}
           </h2>
           {/* 현재 읽고 있는 책 목록 영역 */}
@@ -926,7 +926,7 @@ function ProfileEditPage() {
                     />
                   )}
                   {/* 현재 읽고 있는 책 정보 영역 */}
-                  <span className={styles.currentReadingText}>
+                  <span className={`${styles.currentReadingText} ${styles.myPageCurrentReadingText}`}>
                     <span
                       className={styles.readingSummaryBookTitleButton}
                       role="link"
@@ -1853,7 +1853,7 @@ function ProfileEditPage() {
               <section className={styles.monthlySummary} aria-label={/* "이번 달에 읽은 책" */ message("frontend.profile.monthlyReading.title")}>
                 {/* 주간과 월간 및 연간 목표 달성 횟수 영역 */}
                 <div className={styles.goalAchievementSummary}>
-                  <p className={styles.goalAchievementTitle}>
+                  <p className={`${styles.goalAchievementTitle} ${styles.myPageSectionTitle}`}>
                     {/* "목표 달성 횟수" */ message("frontend.profile.goal.achievementTitle")}
                   </p>
                   {/* 전체와 주간 및 월간 및 연간 목표 달성 통계 영역 */}
