@@ -1,5 +1,6 @@
 package org.our.sadari.report.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -82,6 +84,10 @@ public class ReportServiceImpl implements ReportService {
     private static final String REPORT_FIELD_COLOR_KEY = "common.report.field.color";
     // 독후감 FIELD 내용 키 설정값
     private static final String REPORT_FIELD_CONTENT_KEY = "common.report.field.content";
+    // 독후감 별점 최대값
+    private static final BigDecimal REPORT_GRADE_MAX = BigDecimal.valueOf(5);
+    // 독후감 별점 허용 간격
+    private static final BigDecimal REPORT_GRADE_STEP = new BigDecimal("0.5");
 
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회한다.
@@ -1206,7 +1212,7 @@ public class ReportServiceImpl implements ReportService {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
             }
 
-            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
+            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 0.5점 간격을 벗어난 값은 저장하지 않는다.
             if (!isValidReportGrade(reportDto.getReptGrde())) {
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
@@ -1278,7 +1284,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인한다.
+     * 별점 값이 숫자이며 0점부터 5점 범위 안의 0.5점 단위인지 확인한다.
      * 0점은 읽고있어요 상태에서 별점을 선택하지 않은 값을 저장하기 위한 내부 보정값으로 허용한다.
      *
      * @author SeungHyeon.Kang
@@ -1286,27 +1292,31 @@ public class ReportServiceImpl implements ReportService {
      * @return 유효한 별점 여부
      */
     private boolean isValidReportGrade(String reptGrde) {
-        // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다.
+        // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다
         if (StringUtil.isEmpty(reptGrde)) {
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
+            // 비어 있는 별점의 검증 실패 여부를 반환한다
             return false;
         }
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 사용자 입력 문자열을 정밀한 소수로 변환해 부동소수점 오차 없이 0.5점 간격을 확인한다
         try {
-            // parseInt 호출로 입력값을 필요한 데이터 형식으로 변환한다
-            int grade = Integer.parseInt(reptGrde);
+            // 독후감 별점 문자열을 소수점 비교가 가능한 값으로 변환한다
+            BigDecimal grade = new BigDecimal(reptGrde);
+            boolean isWithinRange = grade.compareTo(BigDecimal.ZERO) >= 0
+                    && grade.compareTo(REPORT_GRADE_MAX) <= 0;
+            boolean isHalfPointStep = grade.remainder(REPORT_GRADE_STEP).compareTo(BigDecimal.ZERO) == 0;
 
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 결과를 반환한다
-            return grade >= 0 && grade <= 5;
+            // 허용 범위와 0.5점 간격을 모두 만족하는 별점 여부를 반환한다
+            return isWithinRange && isHalfPointStep;
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 숫자로 변환할 수 없는 외부 입력은 유효하지 않은 별점으로 처리한다
         catch (NumberFormatException e) {
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
+            // 숫자가 아닌 별점의 검증 실패 여부를 반환한다
             return false;
         }
     }
+
     private void setDefaultReportColor(ReportDto reportDto) {
         // 책장 색상은 필수값이며 공통코드에 등록된 색상 코드만 허용한다.
         if (StringUtil.isEmpty(reportDto.getReptColr()) || reportDto.getReptColr().isBlank()) {

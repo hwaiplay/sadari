@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/features/Book/Update/useUpdateMutation.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * 독후감 수정 요청과 상세 조회 캐시 갱신 및 성공 이동을 처리한다
  *
  * @author HanWon.Jang
  */
@@ -7,7 +7,7 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { uptReportApi } from "../api/bookApi";
 
@@ -20,10 +20,16 @@ import { uptReportApi } from "../api/bookApi";
 export const useUpdateMutation = () => {
 
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: uptReportApi,
     onSuccess: (data) => {
+
+      // 상세 화면에서 직접 수정한 경우 같은 경로를 유지하므로 기존 상세 조회 캐시를 즉시 갱신한다
+      void queryClient.invalidateQueries({
+        queryKey: ["detail", data.data],
+      });
 
       void sweetSuccess(
         message("frontend.alert.saveSuccessTitle"),
