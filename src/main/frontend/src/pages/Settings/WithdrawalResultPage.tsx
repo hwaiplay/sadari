@@ -1,8 +1,8 @@
-import { useSearchParams } from "react-router-dom";
-import * as styles from "./WithdrawalStatusPage.css";
+import { Link, useSearchParams } from "react-router-dom";
+import * as styles from "./WithdrawalResultPage.css";
 
 /**
- * Kakao 재인증을 거친 회원 탈퇴 처리 결과를 표시합니다.
+ * Kakao 재인증을 거친 회원 탈퇴 처리 결과를 서비스 디자인으로 표시합니다.
  *
  * @author HanWon.Jang
  * @return 회원 탈퇴 완료 또는 실패 안내 화면
@@ -11,26 +11,114 @@ function WithdrawalResultPage() {
 
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("success") === "Y";
-  const withdrawalType = searchParams.get("type");
+  const isHardWithdrawal = searchParams.get("type") === "HARD";
+  let statusSymbol: string;
+  let heading: string;
+  let description: string;
+  let statusLabel: string;
+  let guide: string;
 
-  // 회원 탈퇴 처리 결과 안내 화면을 반환합니다
+  // 실패 결과는 계정 정보가 변경되지 않았음을 명확히 안내합니다
+  if (!isSuccess) {
+    // "!"
+    statusSymbol = "!";
+    // "탈퇴 요청을 처리하지 못했어요"
+    heading = "탈퇴 요청을 처리하지 못했어요";
+    // "계정 정보는 변경되지 않았어요. 잠시 후 다시 시도해주세요."
+    description = "계정 정보는 변경되지 않았어요. 잠시 후 다시 시도해주세요.";
+    // "처리 실패"
+    statusLabel = "처리 실패";
+    // "로그인 후 설정에서 탈퇴 절차를 다시 진행해주세요."
+    guide = "로그인 후 설정에서 탈퇴 절차를 다시 진행해주세요.";
+  }
+
+  // 영구 탈퇴 성공은 설정된 유예기간에 따라 삭제가 진행되는 상태로 안내합니다
+  else if (isHardWithdrawal) {
+    // "✓"
+    statusSymbol = "✓";
+    // "영구 탈퇴 신청이 완료됐어요"
+    heading = "영구 탈퇴 신청이 완료됐어요";
+    // "설정된 유예기간이 지나면 계정과 관련 데이터가 영구 삭제돼요."
+    description = "설정된 유예기간이 지나면 계정과 관련 데이터가 영구 삭제돼요.";
+    // "영구 탈퇴 신청 완료"
+    statusLabel = "영구 탈퇴 신청 완료";
+    // "삭제 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요."
+    guide = "삭제 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요.";
+  }
+
+  // 서비스 탈퇴 성공은 재로그인 시 기존 계정을 복구할 수 있음을 안내합니다
+  else {
+    // "✓"
+    statusSymbol = "✓";
+    // "서비스 탈퇴가 완료됐어요"
+    heading = "서비스 탈퇴가 완료됐어요";
+    // "Sadari 이용을 종료하고 계정을 안전하게 로그아웃했어요."
+    description = "Sadari 이용을 종료하고 계정을 안전하게 로그아웃했어요.";
+    // "서비스 탈퇴 완료"
+    statusLabel = "서비스 탈퇴 완료";
+    // "다시 Kakao 로그인을 하면 기존 계정을 복구할 수 있어요."
+    guide = "다시 Kakao 로그인을 하면 기존 계정을 복구할 수 있어요.";
+  }
+
+  // 회원 탈퇴 처리 결과와 후속 안내 화면을 반환합니다
   return (
+    /* 회원 탈퇴 처리 결과 전체 영역 */
     <main className={styles.page}>
-      {/* 회원 탈퇴 결과 안내 영역 */}
-      <section className={styles.panel}>
-        <div className={isSuccess ? styles.successMark : styles.failMark}>
-          {isSuccess ? "✓" : "!"}
-        </div>
-        <h1 className={styles.heading}>{isSuccess ? "탈퇴 처리가 완료됐어요" : "탈퇴 요청을 처리하지 못했어요"}</h1>
-        <p className={styles.description}>
-          {isSuccess
-            ? withdrawalType === "HARD"
-              ? "30일 동안 영구 삭제를 취소할 수 있어요."
-              : "다시 Kakao 로그인을 하면 기존 계정을 복구할 수 있어요."
-            : "계정 정보는 변경되지 않았어요. 잠시 후 다시 시도해주세요."}
-        </p>
-        <a className={styles.primaryLink} href="/login">로그인 화면으로 이동</a>
-      </section>
+      {/* Sadari 로고 영역 */}
+      <header className={styles.logoHeader}>
+        {/* "Sadari" */}
+        <img
+          className={styles.logo}
+          src="/img/common/logo-upper.svg"
+          alt="Sadari"
+        />
+      </header>
+
+      {/* 회원 탈퇴 처리 상태와 안내 영역 */}
+      <div className={styles.content}>
+        {/* 회원 탈퇴 처리 상태 요약 영역 */}
+        <section className={styles.statusSection}>
+          <div className={isSuccess ? styles.successMark : styles.failMark} aria-hidden="true">
+            {statusSymbol}
+          </div>
+          <h1 className={styles.heading}>{heading}</h1>
+          <p className={styles.description}>{description}</p>
+        </section>
+
+        {/* 회원 탈퇴 처리 결과 상세 안내 영역 */}
+        <section className={styles.guideSection}>
+          <h2 className={styles.sectionTitle}>
+            {/* "탈퇴 안내" */}
+            탈퇴 안내
+          </h2>
+
+          {/* 처리 상태와 후속 이용 안내 목록 영역 */}
+          <dl className={styles.guideList}>
+            <div className={styles.guideRow}>
+              <dt className={styles.guideLabel}>
+                {/* "처리 상태" */}
+                처리 상태
+              </dt>
+              <dd className={`${styles.guideValue} ${isSuccess ? styles.successText : styles.failText}`}>
+                {statusLabel}
+              </dd>
+            </div>
+            <div className={styles.guideRow}>
+              <dt className={styles.guideLabel}>
+                {/* "이용 안내" */}
+                이용 안내
+              </dt>
+              <dd className={styles.guideValue}>{guide}</dd>
+            </div>
+          </dl>
+        </section>
+
+        {/* 로그인 화면 이동 영역 */}
+        <Link className={styles.primaryLink} to="/login">
+          {/* "로그인 화면으로 이동" */}
+          로그인 화면으로 이동
+        </Link>
+      </div>
     </main>
   );
 }
