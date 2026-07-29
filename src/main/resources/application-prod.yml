@@ -90,6 +90,11 @@ scheduler:
   enabled: ${SCHEDULER_ENABLED:true}
   max-size: ${SCHEDULER_MAX_SIZE:100}
 
+# 운영 영구 탈퇴는 기본 30일 유예기간을 적용하고 로컬 전용 테스트 스케줄러는 항상 비활성화한다.
+withdrawal:
+  hard-delete-wait-days: ${WITHDRAWAL_HARD_DELETE_WAIT_DAYS:30}
+  hard-delete-test-enabled: false
+
 server:
   port: ${SERVER_PORT:8080}
   forward-headers-strategy: framework
