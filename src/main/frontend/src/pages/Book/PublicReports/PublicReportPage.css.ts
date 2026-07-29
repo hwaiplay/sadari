@@ -3,14 +3,13 @@ import { vars } from "@/app/styles/tokens.css";
 
 const statusPill = style({
   flexShrink: 0,
-  maxHeight: "20px",
-  padding: "5px 7px",
+  padding: "5px 10px",
   borderRadius: "999px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.medium,
-  fontSize: "10px",
+  fontSize: "12px",
   lineHeight: 1,
   letterSpacing: "-1%",
   whiteSpace: "nowrap",
@@ -76,7 +75,7 @@ export const headingArea = style({
 export const bookTitle = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "14px",
+  fontSize: "16px",
   lineHeight: 1.45,
   color: vars.color.black,
   display: "-webkit-box",
@@ -118,12 +117,6 @@ export const ratingSummary = style({
   fontSize: "12px",
 });
 
-export const ratingStar = style({
-  color: "#f6c944",
-  fontSize: "12px",
-  lineHeight: 1,
-});
-
 export const filters = style({
   display: "flex",
   alignItems: "center",
@@ -159,12 +152,6 @@ export const itemTop = style({
   minWidth: 0,
 });
 
-export const itemHeader = style({
-  display: "flex",
-  alignItems: "center",
-  gap: "7px",
-  minWidth: 0,
-});
 
 export const profileButton = style({
   minWidth: 0,
@@ -178,8 +165,8 @@ export const profileButton = style({
 });
 
 export const profileImage = style({
-  width: "24px",
-  height: "24px",
+  width: "32px",
+  height: "32px",
   flexShrink: 0,
   borderRadius: "50%",
   objectFit: "cover",
@@ -188,10 +175,10 @@ export const profileImage = style({
 
 export const writer = style({
   minWidth: 0,
-  maxWidth: "115px",
+  maxWidth: "220px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "16px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -231,7 +218,82 @@ export const reportRating = style({
   gap: "3px",
   color: vars.color.gray900,
   fontFamily: vars.font.medium,
-  fontSize: "12px",
+  fontSize: "14px",
+});
+
+export const itemActionArea = style({
+  flexShrink: 0,
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
+});
+
+export const actionMenuRoot = style({
+  position: "relative",
+  display: "inline-flex",
+});
+
+export const actionMenuTrigger = style({
+  width: "24px",
+  height: "24px",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: vars.color.gray100,
+      outline: "none",
+    },
+  },
+});
+
+export const actionMenuIcon = style({
+  width: "20px",
+  height: "20px",
+  display: "block",
+});
+
+export const actionMenu = style({
+  position: "absolute",
+  top: "calc(100% + 4px)",
+  right: 0,
+  zIndex: 30,
+  minWidth: "112px",
+  padding: "5px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "16px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "2px",
+});
+
+export const actionMenuOption = style({
+  width: "100%",
+  minHeight: "34px",
+  padding: "0 10px",
+  border: 0,
+  borderRadius: "10px",
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: "16px",
+  textAlign: "left",
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: vars.color.gray100,
+      color: vars.color.black,
+      outline: "none",
+    },
+  },
 });
 
 export const reportContentWrap = style({
@@ -251,8 +313,8 @@ export const reportContent = style({
   margin: 0,
   color: "#565656",
   fontFamily: vars.font.body,
-  fontSize: "14px",
-  lineHeight: "22px",
+  fontSize: "16px",
+  lineHeight: "1.45",
   letterSpacing: '-1%',
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",

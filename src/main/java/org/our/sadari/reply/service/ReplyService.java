@@ -12,6 +12,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang    최초 생성
+ * 2026-07-29        HanWon.Jang    댓글 조회 로그인 사용자 조건 추가
  */
 public interface ReplyService {
 
@@ -31,8 +32,9 @@ public interface ReplyService {
      * 독후감에 대한 댓글 목록을 조회한다.
      *
      * @author Hanwon.Jang
-     * @param reptNumb
+     * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
+     * @param reptNumb 댓글 목록을 조회할 독후감 번호
      * @return 독후감에 대한 댓글 조회 결과
      */
-    ResultData getReplyList(Long reptNumb);
+    ResultData getReplyList(Long userNumb, Long reptNumb);
 }
