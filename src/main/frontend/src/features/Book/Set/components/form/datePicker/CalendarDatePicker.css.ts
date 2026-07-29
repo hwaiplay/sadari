@@ -185,13 +185,14 @@ export const today = style({
 
 export const selected = style({
   borderRadius: "10px",
-  borderColor: vars.color.black,
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  border: `1px solid ${vars.color.gray700}`,
+  backgroundColor: "#f3f3f3",
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
 
   ":hover": {
-    borderColor: vars.color.black,
-    backgroundColor: vars.color.black,
+    borderColor: vars.color.gray700,
+    backgroundColor: vars.color.gray100,
   },
 });
 

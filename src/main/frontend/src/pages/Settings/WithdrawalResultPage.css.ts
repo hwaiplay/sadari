@@ -158,19 +158,21 @@ export const primaryLink = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  border: `1px solid ${vars.color.black}`,
+  border: `1px solid ${vars.color.gray700}`,
   borderRadius: "999px",
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   textDecoration: "none",
   boxSizing: "border-box",
-  transition: "background-color 160ms ease, border-color 160ms ease",
+  transition:
+    "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
   selectors: {
     "&:hover": {
-      borderColor: vars.color.gray900,
-      backgroundColor: vars.color.gray900,
+      borderColor: vars.color.gray700,
+      backgroundColor: vars.color.gray100,
+      color: vars.color.gray900,
     },
     "&:focus-visible": {
       outline: "2px solid #78b991",
