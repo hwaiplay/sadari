@@ -14,6 +14,8 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-28        Hanwon.Jang        댓글 컬럼 정의
+ * 2026-07-29        Hanwon.Jang        댓글 상태 조회 컬럼 정의
+ * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 정의
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")
@@ -28,10 +30,16 @@ public class ReplyDto {
     @Schema(description = "답글이 참조하는 부모 댓글 번호", example = "3")
     private Long uperNumb;
 
+    @Schema(description = "부모 댓글 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String parentYn;
+
     @Schema(description = "댓글 작성자 사용자 번호", example = "31")
     private Long userNumb;
 
-    @Schema(description = "닉네임. 한글, 영문, 숫자를 사용할 수 있다.", example = "reader31")
+    @Schema(description = "로그인 사용자가 작성한 댓글 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String myReplyYn;
+
+    @Schema(description = "닉네임. 한글, 영문, 숫자 사용 가능", example = "reader31")
     private String userNick;
 
     @Schema(description = "프로필 이미지 경로")
@@ -48,4 +56,10 @@ public class ReplyDto {
 
     @Schema(description = "댓글 수정 일시", example = "2026-07-28T15:30:00")
     private LocalDateTime updtDate;
+
+    @Schema(description = "댓글 수정 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String updtYsno;
+
+    @Schema(description = "댓글 수정 여부에 따라 화면에 표시할 문구", example = "수정됨")
+    private String updtYsnoNm;
 }
