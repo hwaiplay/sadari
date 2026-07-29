@@ -64,6 +64,8 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 ### 2.2 파라미터 바인딩
 
 - 사용자 입력값은 반드시 `#{param}`으로 바인딩합니다.
+- Oracle 조회 건수 제한에 바인딩 변수를 사용할 때는 `FETCH FIRST #{maxSize} ROWS ONLY`를 사용하지 않습니다.
+- 정렬된 결과의 조회 건수를 동적으로 제한할 때는 정렬 쿼리를 인라인 뷰로 감싸고 외부 WHERE 절에서 `ROWNUM <= #{maxSize}`를 적용합니다.
 - `${param}`은 테이블명, 컬럼명, 정렬 방향처럼 바인딩할 수 없는 경우에만 사용합니다.
 - `${param}`을 사용하기 전에 Java 계층에서 허용 목록을 검증합니다.
 

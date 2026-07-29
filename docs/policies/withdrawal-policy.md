@@ -31,7 +31,7 @@
 
 - 탈퇴 유형: `HARD`
 - 회원 상태: `DELETE_PENDING`
-- 신청 직후 삭제하지 않고 30일의 유예기간을 둡니다.
+- 운영 환경은 신청 직후 삭제하지 않고 기본 30일의 유예기간을 둡니다.
 - 유예기간에는 영구 삭제 예정일을 사용자에게 표시합니다.
 - 유예기간이 끝나기 전에는 영구 탈퇴를 취소할 수 있습니다.
 - 취소하면 회원 상태를 `ACTIVE`로 변경하고 탈퇴일과 삭제 예정일을 제거합니다.
@@ -40,6 +40,14 @@
 - 영구 삭제 시 `TM_USERXM` 회원 원본을 삭제합니다.
 - 로그인 이력은 보존하고, 정책상 보존 대상이 아닌 회원 연관 데이터는 삭제합니다.
 - 탈퇴 이력에는 원본 OAuth 식별값 대신 SHA-256 해시를 저장합니다.
+
+## 로컬 영구 탈퇴 테스트
+
+- `loc` 프로필은 `withdrawal.hard-delete-wait-days`를 `0`으로 설정해 영구 탈퇴 요청 시 삭제 예정일을 즉시 도래시킵니다.
+- `withdrawal.hard-delete-test-enabled`가 `true`이면 로컬 전용 스케줄러가 10초마다 영구 삭제 대상을 처리합니다.
+- 로컬 전용 스케줄러는 `loc` 프로필에서만 생성되며 운영 프로필에서는 활성화할 수 없습니다.
+- 테스트 설정은 특정 회원만 구분하지 않으므로 연결된 DB에서 삭제 예정일이 지난 모든 회원을 대상으로 합니다.
+- 공용 개발 DB에서 테스트할 때는 다른 사용자가 `DELETE_PENDING` 상태인지 확인한 뒤 실행해야 합니다.
 
 ## 외부 연동 실패
 
@@ -61,6 +69,7 @@
 - `user/service/UserWithdrawalServiceImpl.java`
 - `user/mapper/UserWithdrawalMapper.xml`
 - `global/scheduler/service/UserHardDeleteServiceImpl.java`
+- `global/scheduler/LocalUserHardDeleteScheduler.java`
 - `global/scheduler/mapper/UserHardDeleteMapper.xml`
 - `pages/Settings/WithdrawalPage.tsx`
 - `pages/Settings/WithdrawalPendingPage.tsx`
