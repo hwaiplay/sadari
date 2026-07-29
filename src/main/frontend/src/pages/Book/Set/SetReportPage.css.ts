@@ -151,13 +151,16 @@ export const statusPill = style({
   fontFamily: vars.font.semibold,
   fontSize: "13px",
   whiteSpace: "nowrap",
+  boxSizing: "border-box",
   cursor: "pointer",
 
   selectors: {
     [`${hiddenInput}:checked + &`]: {
-      backgroundColor: vars.color.black,
-      borderColor: vars.color.black,
-      color: "#ffffff",
+      borderWidth: "1px",
+      backgroundColor: "#f3f3f3",
+      borderColor: vars.color.gray700,
+      color: vars.color.gray900,
+      fontFamily: vars.font.semibold,
     },
   },
 });

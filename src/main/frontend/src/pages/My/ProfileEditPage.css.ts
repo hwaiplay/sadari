@@ -86,9 +86,10 @@ export const coverImageButton = style([
 export const coverSaveButton = style([
   coverProfileEditButton,
   {
-    backgroundColor: vars.color.black,
-    borderColor: vars.color.black,
-    color: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.96)",
+    borderColor: vars.color.gray700,
+    borderWidth: "1px",
+    color: vars.color.gray900,
     selectors: {
       "&:disabled": {
         cursor: "default",
@@ -1389,9 +1390,10 @@ export const quickStatusOption = style({
 export const quickStatusOptionActive = style([
   quickStatusOption,
   {
-    borderColor: vars.color.black,
-    backgroundColor: vars.color.black,
-    color: "#ffffff",
+    border: `1px solid ${vars.color.gray700}`,
+    backgroundColor: "#f3f3f3",
+    color: vars.color.gray900,
+    fontFamily: vars.font.semibold,
   },
 ]);
 
@@ -1606,9 +1608,9 @@ export const goalModalCancel = style([
 export const goalModalSave = style([
   goalModalButtonBase,
   {
-    border: `1px solid ${vars.color.black}`,
-    backgroundColor: vars.color.black,
-    color: "#ffffff",
+    border: `1px solid ${vars.color.gray700}`,
+    backgroundColor: "#ffffff",
+    color: vars.color.gray900,
     selectors: {
       "&:disabled": {
         cursor: "default",
