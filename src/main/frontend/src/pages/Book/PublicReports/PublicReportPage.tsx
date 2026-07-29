@@ -6,6 +6,7 @@ import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
 import ReplySheet from "@/features/reply/ReplySheet";
+import { useState } from "react";
 import {
   type ReportSort,
   type ReportStatusTone,
@@ -34,6 +35,10 @@ const STATUS_CLASS_NAME: Record<ReportStatusTone, string> = {
  * @return 공개 독후감 목록 페이지 컴포넌트
  */
 function PublicReportPage() {
+  const [openActionReportNumb, setOpenActionReportNumb] = useState<
+    number | null
+  >(null);
+
   // 공개 독후감 페이지의 조회 결과와 필터 및 사용자 동작을 조회한다
   const {
     pageState,
@@ -56,6 +61,73 @@ function PublicReportPage() {
     handleOpenReplySheet,
     handleCloseReplySheet,
   } = usePublicReportPage();
+
+  /**
+   * 선택한 공개 독후감의 신고와 차단 액션 메뉴를 펼치거나 닫는다
+   *
+   * @author HanWon.Jang
+   * @param reptNumb 액션 메뉴를 변경할 독후감 번호
+   * @return 반환값이 없다
+   */
+  const handleToggleActionMenu = (reptNumb: number): void => {
+    // 이미 열린 독후감이면 닫고 다른 독후감이면 해당 메뉴만 열리도록 상태를 변경한다
+    setOpenActionReportNumb((currentReptNumb) =>
+      currentReptNumb === reptNumb ? null : reptNumb,
+    );
+  };
+
+  /**
+   * 공개 독후감 액션 메뉴에서 포커스가 완전히 벗어나면 메뉴를 닫는다
+   *
+   * @author HanWon.Jang
+   * @param event 액션 메뉴 영역의 포커스 이탈 이벤트
+   * @return 반환값이 없다
+   */
+  const handleActionMenuBlur = (
+    event: React.FocusEvent<HTMLDivElement>,
+  ): void => {
+    // 메뉴 내부의 다른 버튼으로 포커스가 이동하는 동안에는 열린 상태를 유지한다
+    if (event.currentTarget.contains(event.relatedTarget)) {
+      // 메뉴 내부 포커스 이동은 닫기 처리 없이 종료한다
+      return;
+    }
+
+    // 메뉴 밖으로 포커스가 이동하면 현재 열린 액션 메뉴를 닫는다
+    setOpenActionReportNumb(null);
+  };
+
+  /**
+   * Escape 키로 열린 공개 독후감 액션 메뉴를 닫는다
+   *
+   * @author HanWon.Jang
+   * @param event 액션 메뉴 영역의 키보드 이벤트
+   * @return 반환값이 없다
+   */
+  const handleActionMenuKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ): void => {
+    // Escape 키가 아닌 입력은 메뉴 내부 버튼의 기본 동작을 유지한다
+    if (event.key !== "Escape") {
+      // 별도 키보드 처리 없이 종료한다
+      return;
+    }
+
+    // 브라우저의 추가 Escape 동작을 막고 현재 액션 메뉴를 닫는다
+    event.preventDefault();
+    // 열린 액션 메뉴 번호를 초기화한다
+    setOpenActionReportNumb(null);
+  };
+
+  /**
+   * API가 연결되기 전 신고 또는 차단 메뉴 선택 시 열린 메뉴만 닫는다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleCloseActionMenu = (): void => {
+    // 선택한 액션의 후속 API가 추가될 때까지 메뉴 표시 상태만 초기화한다
+    setOpenActionReportNumb(null);
+  };
 
   // 유효한 ISBN이 없으면 잘못된 공개 독후감 접근 안내만 표시한다
   if (!isValidIsbn) {
@@ -111,7 +183,7 @@ function PublicReportPage() {
                       <>
                         <span className={styles.metaSeparator}>|</span>
                         <span className={styles.ratingSummary}>
-                      <span className={styles.ratingStar}>
+                      <span>
                         <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
                       </span>
                       <span>{pageState.ratingAverage}</span>
@@ -148,7 +220,6 @@ function PublicReportPage() {
                   /* 공개 독후감 개별 항목 영역 */
                   <article className={styles.item} key={report.reptNumb}>
                     <div className={styles.itemTop}>
-                      <div className={styles.itemHeader}>
                         <button
                           className={styles.profileButton}
                           type="button"
@@ -163,23 +234,78 @@ function PublicReportPage() {
                             {report.userNick || "-"}
                           </span>
                         </button>
+
+                      {/* 독서 상태와 별점, 신고 및 차단 메뉴 영역 */}
+                      <div className={styles.itemActionArea}>
+
+                        {/* 독서상태 */}
                         <span
-                          className={STATUS_CLASS_NAME[report.statusTone]}
+                            className={STATUS_CLASS_NAME[report.statusTone]}
                         >
                           {report.reportStatusName}
                         </span>
-                      </div>
 
-                      {/* 별점 */}
-                      <span
-                        className={styles.reportRating}
-                        aria-label={message("frontend.report.gradeValue", [
-                          report.rating,
-                        ])}
-                      >
-                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
-                        <span>{report.rating}</span>
-                      </span>
+                        {/* 별점 */}
+                        <span
+                          className={styles.reportRating}
+                          aria-label={message("frontend.report.gradeValue", [
+                            report.rating,
+                          ])}
+                        >
+                          <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
+                          {report.rating}
+                        </span>
+
+                        {/* 공개 독후감 신고 및 사용자 차단 메뉴 영역 */}
+                        <div
+                          className={styles.actionMenuRoot}
+                          onBlur={handleActionMenuBlur}
+                          onKeyDown={handleActionMenuKeyDown}
+                        >
+                          {/* "더보기" */}
+                          <button
+                            className={styles.actionMenuTrigger}
+                            type="button"
+                            aria-label="더보기"
+                            aria-haspopup="menu"
+                            aria-expanded={
+                              openActionReportNumb === report.reptNumb
+                            }
+                            onClick={() =>
+                              handleToggleActionMenu(report.reptNumb)}
+                          >
+                            <img
+                              className={styles.actionMenuIcon}
+                              src="/img/icons/icon-more.svg"
+                              alt=""
+                            />
+                          </button>
+
+                          {openActionReportNumb === report.reptNumb ? (
+                            /* 신고 및 차단 선택 메뉴 */
+                            <div className={styles.actionMenu} role="menu">
+                              {/* "신고하기" */}
+                              <button
+                                className={styles.actionMenuOption}
+                                type="button"
+                                role="menuitem"
+                                onClick={handleCloseActionMenu}
+                              >
+                                신고하기
+                              </button>
+                              {/* "차단하기" */}
+                              <button
+                                className={styles.actionMenuOption}
+                                type="button"
+                                role="menuitem"
+                                onClick={handleCloseActionMenu}
+                              >
+                                차단하기
+                              </button>
+                            </div>
+                          ) : null}
+                        </div>
+                      </div>
                     </div>
 
                     <div

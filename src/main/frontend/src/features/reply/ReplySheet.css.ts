@@ -46,7 +46,7 @@ export const commentSheet = style({
 export const sheetHandle = style({
   position: "relative",
   width: "100%",
-  height: "60px",
+  height: "30px",
   flexShrink: 0,
   cursor: "grab",
   touchAction: "none",
@@ -100,7 +100,7 @@ export const commentEmptyIcon = style({
 export const commentEmptyTitle = style({
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "16px",
 });
 
 export const commentEmptyText = style({
@@ -124,40 +124,81 @@ export const replyList = style({
   listStyle: "none",
 });
 
+export const replyThread = style({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+});
+
 export const replyItem = style({
   position: "relative",
   display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-  minHeight: "172px",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
+  minHeight: "92px",
   backgroundColor: "#ffffff",
 });
 
-export const replyItemTop = style({
+export const childReplyItem = style([
+  replyItem,
+  {
+    width: "calc(100% - 44px)",
+    minHeight: "56px",
+    marginLeft: "44px",
+    alignItems: "flex-start"
+  },
+]);
+
+export const childReplyList = style({
   display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
+  flexDirection: "column",
   gap: "8px",
-  minWidth: 0,
 });
 
-export const replyItemHeader = style({
+export const replyItemWrap = style({
   display: "flex",
-  alignItems: "center",
-  gap: "7px",
-  minWidth: 0,
+  gap: "12px",
+})
+
+export const replyWriterProfileImgArea = style({
+  display: "inline-flex",
 });
 
-export const replyWriterArea = style({
-  minWidth: 0,
+export const replyProfileLink = style({
   display: "inline-flex",
+  flexShrink: 0,
+  borderRadius: "50%",
+  selectors: {
+    "&:focus-visible": {
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "2px",
+    },
+  },
+});
+
+export const replyBody = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+});
+
+export const replyTextArea = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "2px",
+});
+
+export const replyWriterRow = style({
+  display: "flex",
   alignItems: "center",
   gap: "6px",
 });
 
 export const replyProfileImage = style({
-  width: "24px",
-  height: "24px",
+  width: "32px",
+  height: "32px",
   flexShrink: 0,
   borderRadius: "50%",
   objectFit: "cover",
@@ -165,64 +206,172 @@ export const replyProfileImage = style({
 });
 
 export const replyWriter = style({
+  display: "inline-block",
   minWidth: 0,
   maxWidth: "115px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "16px",
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
+  textDecoration: "none",
+  selectors: {
+    "&:focus-visible": {
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "2px",
+    },
+  },
 });
 
-export const replyContentWrap = style({
-  maxHeight: "3000px",
-  overflow: "clip",
-  transition: "max-height 220ms ease",
-});
 
 export const replyContent = style({
   margin: 0,
-  color: "#565656",
   fontFamily: vars.font.body,
-  fontSize: "14px",
-  lineHeight: "22px",
+  fontSize: "16px",
+  lineHeight: "1.4",
   letterSpacing: "-1%",
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
+});
+
+export const replyMentionLink = style({
+  color: vars.color.brand,
+  textDecoration: "none",
+  selectors: {
+    "&:focus-visible": {
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "1px",
+    },
+  },
 });
 
 export const replyItemMetrics = style({
   width: "100%",
   minHeight: "24px",
   display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  gap: "8px",
-  marginTop: "auto",
+  flexDirection: "column",
+  gap: "6px",
+  marginTop: "6px",
+});
+
+export const replyDate = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1,
 });
 
 export const replyMetricButton = style({
-  minWidth: "32px",
-  height: "24px",
   padding: 0,
   display: "inline-flex",
   alignItems: "center",
-  justifyContent: "center",
   gap: "4px",
   backgroundColor: "transparent",
-  color: "#ff747c",
-  fontFamily: vars.font.body,
+  color: vars.color.gray600,
+  fontFamily: vars.font.medium,
   fontSize: "14px",
   cursor: "pointer",
 });
 
-export const replyAnswerButton = style([
+export const replyMoreButton = style([
   replyMetricButton,
   {
-    color: "#777777",
+    selectors: {
+      "&::before":
+          {
+            content: "''",
+            height: "1px",
+            width: "30px",
+            backgroundColor: vars.color.gray400
+          }
+    }
   },
 ]);
+
+export const replyLikeButton = style([
+  replyMetricButton,
+  {
+    color: "#ff747c",
+    flexDirection: "column",
+  }
+])
+
+export const replyItemActions = style({
+  flexShrink: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "6px",
+});
+
+export const actionMenuRoot = style({
+  position: "relative",
+  display: "inline-flex",
+});
+
+export const actionMenuTrigger = style({
+  width: "24px",
+  height: "24px",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: vars.color.gray100,
+      outline: "none",
+    },
+  },
+});
+
+export const actionMenuIcon = style({
+  width: "20px",
+  height: "20px",
+  display: "block",
+});
+
+export const actionMenu = style({
+  position: "absolute",
+  top: "calc(100% + 4px)",
+  right: 0,
+  zIndex: 30,
+  minWidth: "112px",
+  padding: "5px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "16px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
+  display: "flex",
+  flexDirection: "column",
+  gap: "2px",
+});
+
+export const actionMenuOption = style({
+  width: "100%",
+  minHeight: "34px",
+  padding: "0 10px",
+  border: 0,
+  borderRadius: "10px",
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  textAlign: "left",
+  whiteSpace: "nowrap",
+  cursor: "pointer",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      backgroundColor: vars.color.gray100,
+      color: vars.color.black,
+      outline: "none",
+    },
+  },
+});
 
 export const commentForm = style({
   flexShrink: 0,
@@ -244,7 +393,7 @@ export const commentInput = style({
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.body,
-  fontSize: "14px",
+  fontSize: "16px",
   outline: "none",
   selectors: {
     "&::placeholder": {
@@ -265,7 +414,7 @@ export const commentSubmitButton = style({
   backgroundColor: vars.color.black,
   color: "#ffffff",
   fontFamily: vars.font.medium,
-  fontSize: "14px",
+  fontSize: "16px",
   cursor: "pointer",
   selectors: {
     "&:disabled": {

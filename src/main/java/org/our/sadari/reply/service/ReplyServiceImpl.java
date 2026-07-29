@@ -1,13 +1,17 @@
 package org.our.sadari.reply.service;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.common.util.XssUtil;
+import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.reply.dto.ReplyDto;
 import org.our.sadari.reply.mapper.ReplyMapper;
 import org.springframework.stereotype.Service;
@@ -23,6 +27,8 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 구현
+ * 2026-07-29        HanWon.Jang        댓글 등록 시 독후감 작성자 알림 발송
+ * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 조회
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +42,10 @@ public class ReplyServiceImpl implements ReplyService {
     private final ReplyMapper replyMapper;
     // 댓글 비속어 검사 서비스
     private final BadWordDetectionService badWordDetectionService;
+    // 사용자별 알림 저장과 푸시 발송 서비스
+    private final AlimService alimService;
+    // 댓글 작성자의 최신 닉네임 조회 서비스
+    private final TokenRedisService tokenRedisService;
 
     /**
      * 로그인 사용자가 작성한 댓글 또는 답글을 등록한다.
@@ -102,19 +112,71 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
+        // 댓글이 등록된 독후감 작성자에게 신규 댓글 알림을 발송한다
+        sendReplyReportAlim(userNumb, replyDto);
+
         // 등록된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다
         return ResultData.success(replyDto.getReplNumb());
+    }
+
+    /**
+     * 독후감 작성자에게 댓글 작성자의 닉네임과 독후감 이동 링크가 포함된 알림을 발송한다.
+     * 작성자가 자기 독후감에 직접 등록한 댓글은 자기 자신에게 알림을 만들지 않는다.
+     *
+     * @author HanWon.Jang
+     * @param sendUserNumb 댓글을 등록한 사용자 번호
+     * @param replyDto 등록된 댓글과 독후감 번호
+     */
+    private void sendReplyReportAlim(Long sendUserNumb, ReplyDto replyDto) {
+        // 댓글이 등록된 독후감의 작성자를 알림 수신자로 조회한다
+        Long reportUserNumb = replyMapper.getReplyReportUserNumb(replyDto.getReptNumb());
+
+        // 독후감 작성자를 확인할 수 없거나 작성자가 직접 댓글을 등록했으면 알림을 만들지 않는다
+        if (StringUtil.isEmpty(reportUserNumb) || reportUserNumb.equals(sendUserNumb)) {
+            // 독후감 댓글 등록 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
+        // 알림 템플릿의 작성자 문구에 사용할 로그인 사용자의 최신 닉네임을 조회한다
+        String sendUserNick = tokenRedisService.getUserNick(sendUserNumb);
+
+        // 로그인 세션에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않는다
+        if (StringUtil.isEmpty(sendUserNick)) {
+            // 닉네임 치환이 불가능한 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
+        // REPLY_REPORT 템플릿의 사용자명 치환값을 담을 객체를 생성한다
+        Map<String, Object> replaceMap = new HashMap<>();
+        // 댓글 작성자의 닉네임을 템플릿 사용자명 치환값으로 설정한다
+        replaceMap.put("userName", sendUserNick);
+
+        // 독후감 작성자에게 댓글 알림을 저장하고 독후감 상세 화면 링크를 포함한 푸시를 예약한다
+        alimService.sendAlim(
+                reportUserNumb
+              , Constant.ALIM_SITU_REPLY
+              , Constant.ALIM_TEMP_CODE_REPLY_REPORT
+              , replyDto.getReptNumb()
+              , replaceMap
+        );
     }
 
     /**
      * 독후감 번호에 연결된 댓글과 답글 목록을 조회한다.
      *
      * @author Hanwon.Jang
+     * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
      * @return 독후감 댓글과 답글 목록 조회 결과
      */
     @Override
-    public ResultData getReplyList(Long reptNumb) {
+    public ResultData getReplyList(Long userNumb, Long reptNumb) {
+        // 로그인 사용자 번호가 없으면 본인 댓글 여부를 판별할 수 없으므로 조회를 중단한다
+        if (StringUtil.isEmpty(userNumb)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
         // 독후감 번호가 없으면 댓글 조회 대상을 특정할 수 없으므로 조회를 중단한다
         if (StringUtil.isEmpty(reptNumb)) {
             // "조회 결과가 없어요."
@@ -125,6 +187,8 @@ public class ReplyServiceImpl implements ReplyService {
         ReplyDto replyDto = new ReplyDto();
         // 요청받은 독후감 번호를 댓글 목록 조회 조건으로 설정한다
         replyDto.setReptNumb(reptNumb);
+        // 각 댓글의 로그인 사용자 작성 여부를 조회할 사용자 번호를 설정한다
+        replyDto.setUserNumb(userNumb);
 
         // 독후감 번호에 연결된 댓글과 답글 목록을 성공 응답으로 반환한다
         return ResultData.success(replyMapper.getReplyList(replyDto));
