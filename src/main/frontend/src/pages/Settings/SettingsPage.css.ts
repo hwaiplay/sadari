@@ -99,3 +99,12 @@ export const secondaryMenuButton = style({
     },
   },
 });
+
+export const withdrawMenuButton = style([
+  primaryMenuButton,
+  {
+    marginTop: "24px",
+    color: "#c74747",
+    borderTop: `1px solid ${vars.color.gray200}`,
+  },
+]);

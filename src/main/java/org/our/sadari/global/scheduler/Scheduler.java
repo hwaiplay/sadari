@@ -6,6 +6,7 @@ import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
+import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Schedules;
@@ -32,6 +33,8 @@ public class Scheduler {
 
     // 사용자가 삭제 상태로 변경한 알림을 물리 삭제하는 서비스
     private final AlimDeleteService alimDeleteService;
+    // 영구 삭제 대기 회원 물리 삭제 업무 서비스
+    private final UserHardDeleteService userHardDeleteService;
 
     // TB_CODEXD에서 스케줄러 상세코드의 활성 여부를 조회하는 공통 코드 유틸리티
     private final CodeUtil codeUtil;
@@ -81,6 +84,26 @@ public class Scheduler {
 
         // delAlim 업무 로직을 alimDeleteService에 위임한다
         alimDeleteService.delAlim();
+    }
+
+    /**
+     * 매일 새벽 3시에 30일 유예기간이 끝난 회원을 영구 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Scheduled(cron = "0 0 3 * * *")
+    public void delPendingUsers() {
+
+        // 공통코드에서 중지된 영구 삭제 스케줄러는 업무와 실행 로그를 만들지 않는다
+        if (!codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_USER_HARD_DELETE)) {
+            // 영구 삭제 스케줄러 중지 상태를 운영 로그에 기록한다
+            log.info("회원 영구 삭제 스케줄러가 사용 중지 상태여서 실행하지 않습니다. 공통코드={}, 상세코드={}", Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_USER_HARD_DELETE);
+            // 사용 중지된 스케줄러 처리를 종료한다
+            return;
+        }
+
+        // 삭제 유예기간이 끝난 회원의 연관 데이터와 회원 원본을 삭제한다
+        userHardDeleteService.delPendingUsers();
     }
 
 }

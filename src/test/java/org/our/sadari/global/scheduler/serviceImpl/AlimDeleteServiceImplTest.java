@@ -2,6 +2,7 @@ package org.our.sadari.global.scheduler.serviceImpl;
 
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -50,8 +51,6 @@ class AlimDeleteServiceImplTest {
     void setUp() {
         // 알림 삭제 스케줄러 단위 테스트 대상을 담을 객체를 생성한다
         alimDeleteService = new AlimDeleteServiceImpl(alimDeleteMapper, schedulerLogSupport);
-        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정한다
-        when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
     }
 
     /**
@@ -61,6 +60,8 @@ class AlimDeleteServiceImplTest {
      */
     @Test
     void delAlimRecordsDeletedCountAsSuccess() {
+        // 성공 실행 로그에 사용할 실행 번호를 설정한다
+        when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
         // Alim 데이터를 DB에서 삭제한다
         when(alimDeleteMapper.delAlim()).thenReturn(12);
 
@@ -88,28 +89,20 @@ class AlimDeleteServiceImplTest {
     }
 
     /**
-     * 삭제 대상이 없을 때 정상적인 대상 없음 상태로 기록되는지 검증한다.
+     * 삭제 대상이 없을 때 불필요한 스케줄러 로그를 저장하지 않는지 검증한다.
      *
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimRecordsNoDataWhenNothingWasDeleted() {
+    void delAlimSkipsLogWhenNothingWasDeleted() {
         // Alim 데이터를 DB에서 삭제한다
         when(alimDeleteMapper.delAlim()).thenReturn(0);
 
         // delAlim 업무 로직을 alimDeleteService에 위임한다
         alimDeleteService.delAlim();
 
-        ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> captor =
-                // 리플렉션 호출 결과의 반환 타입을 지정한다
-                ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
-        // 호출 인자를 검증하기 위해 캡처한다
-        verify(schedulerLogSupport).uptSchedulerLogSafely(captor.capture());
-        // 실제 처리 결과가 예상값과 일치하는지 검증한다
-        org.junit.jupiter.api.Assertions.assertEquals(
-                Constant.SCHEDULER_EXEC_NO_DATA
-              , captor.getValue().getExecStat()
-        );
+        // 처리 건수가 없는 실행은 마스터 로그 수정도 요청하지 않았는지 검증한다
+        verify(schedulerLogSupport, never()).uptSchedulerLogSafely(any(SchedulerLogDto.SchedulerRunDto.class));
     }
 
     /**
@@ -119,6 +112,8 @@ class AlimDeleteServiceImplTest {
      */
     @Test
     void delAlimRecordsFailureAndRethrowsDeleteException() {
+        // 실패 상세 로그에 연결할 실행 번호를 설정한다
+        when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
         // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성한다
         RuntimeException exception = new RuntimeException("delete failed");
         // Alim 데이터를 DB에서 삭제한다

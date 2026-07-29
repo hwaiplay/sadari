@@ -8,6 +8,7 @@ import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.report.service.ReportService;
@@ -67,6 +68,17 @@ public class SocialController {
         }
 
         Map<String, String> profile = new HashMap<>();
+        // 공개 프로필 화면이 탈퇴 회원 전용 표시를 선택할 수 있도록 회원 상태를 설정한다
+        profile.put("userStat", user.getUserStat());
+
+        // 탈퇴 회원은 프로필 원본 대신 탈퇴 상태만 공개한다
+        if (!Constant.USER_STAT_ACTIVE.equals(user.getUserStat())) {
+            // 탈퇴 회원의 대체 닉네임을 설정한다
+            profile.put("userNick", "탈퇴한 사용자");
+            // 제한된 공개 프로필 정보를 반환한다
+            return ResultData.success(profile);
+        }
+
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("userNick", user.getUserNick());
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
@@ -96,6 +108,12 @@ public class SocialController {
         if (StringUtil.isEmpty(user)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        // 탈퇴 회원의 목표와 독서 활동 집계는 공개하지 않고 빈 요약을 반환한다
+        if (!Constant.USER_STAT_ACTIVE.equals(user.getUserStat())) {
+            // 개인정보가 제거된 빈 독서 요약을 반환한다
+            return ResultData.success(new MonthlyReadingSummaryDto());
         }
 
         // getMonthlyReadingSummary 업무 로직을 reportService에 위임한다
@@ -230,6 +248,12 @@ public class SocialController {
     @Operation(summary = "팔로우 등록", description = "로그인 사용자가 상대 사용자를 팔로우한다.")
     public ResultData setFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                               , @Parameter(description = "팔로우할 상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 탈퇴 회원은 관계를 유지하되 새로운 팔로우 조작 대상에서 제외한다
+        if (!isActiveUser(userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 로그인 사용자가 프로필 주인을 팔로우하도록 저장 결과를 반환한다
         return socialService.setFollow(createFollowDto(loginUserNumb, userNumb));
     }
@@ -246,6 +270,12 @@ public class SocialController {
     @Operation(summary = "언팔로우", description = "로그인 사용자가 상대 사용자에게 건 팔로우 관계를 삭제한다.")
     public ResultData delFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                               , @Parameter(description = "언팔로우할 상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 탈퇴 회원은 기존 팔로우 관계를 유지하므로 언팔로우 조작을 허용하지 않는다
+        if (!isActiveUser(userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제 결과를 반환한다
         return socialService.delFollow(createFollowDto(loginUserNumb, userNumb));
     }
@@ -276,6 +306,20 @@ public class SocialController {
         request.setUserNumb(loginUserNumb);
         // 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소 결과를 반환한다
         return socialService.setLike(request);
+    }
+
+    /**
+     * 소셜 관계 조작 대상 회원이 정상 이용 상태인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 확인할 상대 회원 번호
+     * @return 정상 이용 회원 여부
+     */
+    private boolean isActiveUser(Long userNumb) {
+        // 회원 번호로 현재 사용자 상태를 조회한다
+        UserDto user = userMapper.getUserByNumb(userNumb);
+        // 존재하는 정상 이용 회원만 관계 조작 대상으로 인정한다
+        return !StringUtil.isEmpty(user) && Constant.USER_STAT_ACTIVE.equals(user.getUserStat());
     }
 
     /**
