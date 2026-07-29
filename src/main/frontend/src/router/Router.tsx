@@ -18,6 +18,9 @@ import ProfileEditPage from "@/pages/My/ProfileEditPage";
 import SocialProfilePage from "@/pages/Social/SocialProfilePage";
 import AlimPage from "@/pages/Alim/AlimPage";
 import SettingsPage from "@/pages/Settings/SettingsPage";
+import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
+import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
+import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
@@ -48,6 +51,19 @@ const Router = () => {
             <PublicRoute>
               <Oauth />
             </PublicRoute>
+          }
+        />
+
+        {/* 회원 탈퇴 처리 결과 */}
+        <Route path="/withdrawal/result" element={<WithdrawalResultPage />} />
+
+        {/* 영구 삭제 대기 */}
+        <Route
+          path="/withdrawal/pending"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPendingPage />
+            </ProtectedRoute>
           }
         />
 
@@ -97,6 +113,7 @@ const Router = () => {
           <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
         </Route>
       </Routes>
     </>

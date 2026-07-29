@@ -14,7 +14,7 @@ import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 const Oauth = () => {
 
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated } = useCheckAuth();
+  const { isLoading, isAuthenticated, isDeletePending } = useCheckAuth();
 
   useEffect(() => {
 
@@ -23,7 +23,8 @@ const Oauth = () => {
     }
 
     if (isAuthenticated) {
-      navigate("/home", { replace: true });
+      // 영구 삭제 대기 회원은 일반 홈 대신 탈퇴 취소 전용 화면으로 이동합니다
+      navigate(isDeletePending ? "/withdrawal/pending" : "/home", { replace: true });
       return;
     }
 
@@ -34,7 +35,7 @@ const Oauth = () => {
 
       navigate("/login", { replace: true });
     });
-  }, [isAuthenticated, isLoading, navigate]);
+  }, [isAuthenticated, isDeletePending, isLoading, navigate]);
 
   return <Loading title={message("frontend.common.loginLoading")} />;
 };

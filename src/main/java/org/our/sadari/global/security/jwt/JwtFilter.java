@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +32,12 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN API URI 설정값
     private static final String REFRESH_TOKEN_API_URI = "/api/oauth/refresh";
+    // 영구 삭제 대기 회원에게 허용할 회원 탈퇴 API 접두사
+    private static final String WITHDRAWAL_API_PREFIX = "/api/user/withdrawal";
+    // 영구 삭제 대기 회원에게 허용할 로그아웃 API URI
+    private static final String LOGOUT_API_URI = "/api/oauth/logout";
+    // 영구 삭제 대기 회원에게 허용할 토큰 검사 API URI
+    private static final String TOKEN_CHECK_API_URI = "/api/oauth/tokenCheck";
 
     // Jwt 외부 연동 제공 객체
     private final JwtProvider jwtProvider;
@@ -54,6 +61,16 @@ public class JwtFilter extends OncePerRequestFilter {
         if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
             // getAuthentication 조회로 후속 처리에 필요한 데이터를 가져온다
             Authentication authentication = jwtProvider.getAuthentication(token);
+
+            // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없다
+            if (Constant.USER_STAT_DELETE_PENDING.equals(tokenRedisService.getUserStatus(jwtProvider.getUserNumb(token)))
+                    && !isDeletePendingAllowedPath(request.getRequestURI())) {
+                // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답한다
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 영구 삭제 대기 회원 요청의 필터 처리를 종료한다
+                return;
+            }
+
             // SecurityContext에 Authentication 객체를 세팅하여 이 후 컨트롤러에서 @AuthenticationPrincipal 등으로 유저 정보를 참조할 수 있게 한다.
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
@@ -101,5 +118,19 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
+    }
+
+    /**
+     * 영구 삭제 대기 회원에게 허용된 최소 API 경로인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param requestUri 현재 요청 URI
+     * @return 허용 경로 여부
+     */
+    private boolean isDeletePendingAllowedPath(String requestUri) {
+        // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
+        return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
+                || LOGOUT_API_URI.equals(requestUri)
+                || TOKEN_CHECK_API_URI.equals(requestUri);
     }
 }

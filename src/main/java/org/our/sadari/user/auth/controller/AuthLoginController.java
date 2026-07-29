@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
@@ -18,6 +19,7 @@ import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
 import org.our.sadari.user.mapper.UserMapper;
+import org.our.sadari.user.service.UserWithdrawalService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -29,6 +31,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Map;
 
 /**
  * fileName       : AuthLoginController
@@ -62,6 +66,8 @@ public class AuthLoginController {
     private final TokenRedisService tokenRedisService;
     // User 데이터 접근 객체
     private final UserMapper userMapper;
+    // 회원 탈퇴 업무 처리 서비스
+    private final UserWithdrawalService userWithdrawalService;
 
     // OAuth 완료 후 이동할 프런트엔드 도메인
     @Value("${domain.front}")
@@ -128,8 +134,10 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // Access Token 쿠키 유효성 검증 결과를 성공 응답으로 반환한다
-        return ResultData.success();
+        // Redis 상태값이 없는 기존 세션은 정상 회원 상태로 보정한다
+        String userStat = tokenRedisService.getUserStatus(jwtProvider.getUserNumb(accessToken));
+        // 프론트엔드가 영구 삭제 대기 전용 화면을 선택할 수 있도록 현재 회원 상태를 반환한다
+        return ResultData.success(Map.of("userStat", StringUtil.isEmpty(userStat) ? Constant.USER_STAT_ACTIVE : userStat));
     }
 
     /**
@@ -143,7 +151,29 @@ public class AuthLoginController {
     @GetMapping("/callback/kakao")
     @Operation(summary = "카카오 로그인 콜백", description = "카카오 인가 코드를 받아 서비스 토큰을 발급하고 프론트 OAuth 처리 화면으로 리다이렉트한다.")
     public void kakaoAuthLogin(@Parameter(description = "카카오 OAuth 인가 코드") @RequestParam("code") String code
+                             , @Parameter(description = "탈퇴 재인증 상태값") @RequestParam(value = "state", required = false) String state
                              , @Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) throws Exception {
+        // OAuth state가 있으면 일반 로그인이 아니라 회원 탈퇴 재인증 콜백으로 처리한다
+        if (!StringUtil.isEmpty(state)) {
+            // 재인증한 Kakao 계정으로 회원 탈퇴 상태 변경을 요청한다
+            ResultData withdrawalResult = userWithdrawalService.setWithdrawalCallback(code, state);
+            // 탈퇴 처리 이후 기존 Access Token과 Refresh Token 쿠키를 제거한다
+            expireTokenCookies(response);
+
+            // 탈퇴 처리 성공 여부를 완료 화면이 구분할 수 있도록 쿼리값으로 전달한다
+            if (withdrawalResult.getCode() == 200) {
+                // 탈퇴 유형과 성공 상태를 포함한 완료 화면으로 이동한다
+                response.sendRedirect(frontDomain + "/withdrawal/result?success=Y&type=" + withdrawalResult.getData());
+                // 회원 탈퇴 재인증 콜백 처리를 종료한다
+                return;
+            }
+
+            // 실패 상태를 포함한 탈퇴 결과 화면으로 이동한다
+            response.sendRedirect(frontDomain + "/withdrawal/result?success=N");
+            // 회원 탈퇴 재인증 콜백 처리를 종료한다
+            return;
+        }
+
         // kakaoLogin 업무 로직을 authService에 위임한다
         ResultData loginResult = authService.kakaoLogin(code, getLoginIp(request), getUserAgent(request));
 
@@ -239,6 +269,7 @@ public class AuthLoginController {
                 userNumb
               , newRefreshToken
               , savedUser.getUserNick()
+              , savedUser.getUserStat()
               , jwtProvider.getRefreshTokenValiditySeconds()
         );
 

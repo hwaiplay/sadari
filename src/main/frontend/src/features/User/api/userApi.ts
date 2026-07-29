@@ -2,6 +2,7 @@ import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type UserProfile = {
+  userStat?: "ACTIVE" | "WITHDRAWN" | "DELETE_PENDING";
   userNick?: string;
   porfPath?: string;
   bgimPath?: string;
