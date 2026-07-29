@@ -14,6 +14,8 @@ public final class Constant {
 
     // 독후감 내용 최대 바이트 설정값
     public static final int REPORT_CONTENT_MAX_BYTES = 4000;
+    // 탈퇴 사유 상세 내용 최대 바이트 설정값
+    public static final int WITHDRAWAL_REASON_MAX_BYTES = 500;
 
     // 코드 읽기 상태 설정값
     public static final String CODE_READ_STAT = "READ_STAT";
@@ -29,6 +31,8 @@ public final class Constant {
     public static final String CODE_ALIM_SITU = "ALIM_SITU";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
+    // 회원 상태 공통코드
+    public static final String CODE_USER_STAT = "USER_STAT";
     // 옵션 공개 여부 설정값
     public static final String OPT_PUBC_YSNO = "PUBC_YSNO";
 
@@ -53,10 +57,23 @@ public final class Constant {
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
 
+    // 정상 이용 회원 상태
+    public static final String USER_STAT_ACTIVE = "ACTIVE";
+    // 소프트 탈퇴 회원 상태
+    public static final String USER_STAT_WITHDRAWN = "WITHDRAWN";
+    // 영구 삭제 대기 회원 상태
+    public static final String USER_STAT_DELETE_PENDING = "DELETE_PENDING";
+    // 소프트 탈퇴 유형
+    public static final String WITHDRAWAL_TYPE_SOFT = "SOFT";
+    // 영구 탈퇴 유형
+    public static final String WITHDRAWAL_TYPE_HARD = "HARD";
+
     // 목표 독서기간 초과 알림 스케줄러를 식별하는 로그 코드
       public static final String SCHEDULER_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
       // 삭제 상태 알림 물리 삭제 스케줄러를 식별하는 로그 및 상세코드
       public static final String SCHEDULER_CODE_ALIM_DELETE = "ALIM_DELETE";
+      // 영구 삭제 대기 회원 물리 삭제 스케줄러 상세코드
+      public static final String SCHEDULER_CODE_USER_HARD_DELETE = "USER_HARD_DELETE";
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수
      * 오늘, 어제, 이틀 전 종료 대상을 후보로 삼고 이미 알림이 저장된 대상은 Mapper에서 별도로 제외한다.

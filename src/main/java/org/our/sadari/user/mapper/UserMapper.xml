@@ -14,6 +14,9 @@
              , U.USER_NICK
              , U.USER_PROV
              , U.USER_ROLE
+             , U.USER_STAT
+             , U.WTHD_DATE
+             , U.DELT_DATE
              , U.INTR_CNTN
           FROM TM_USERXM U
      LEFT JOIN TM_FILEXM F
@@ -35,6 +38,9 @@
              , U.USER_NICK
              , U.USER_PROV
              , U.USER_ROLE
+             , U.USER_STAT
+             , U.WTHD_DATE
+             , U.DELT_DATE
              , U.INTR_CNTN
           FROM TM_USERXM U
      LEFT JOIN TM_FILEXM F
@@ -59,6 +65,7 @@
                   , USER_NICK
                   , USER_PROV
                   , USER_ROLE
+                  , USER_STAT
                   , INTR_CNTN
                   , JOIN_DATE
         ) VALUES (  #{userNumb}
@@ -68,6 +75,7 @@
                   , #{userNick}
                   , #{userProv,jdbcType=VARCHAR}
                   , #{userRole}
+                  , #{userStat}
                   , #{intrCntn,jdbcType=VARCHAR}
                   , SYSDATE
         )
@@ -98,5 +106,27 @@
            AND USER_NUMB != #{userNumb}
         </if>
     </select>
+
+    <!-- 회원 상태와 탈퇴 관련 일시를 변경한다. -->
+    <update id="uptUserStatus" parameterType="org.our.sadari.user.dto.UserDto">
+        UPDATE /* uptUserStatus */
+               TM_USERXM
+           SET USER_STAT = #{userStat}
+             , WTHD_DATE = #{wthdDate,jdbcType=TIMESTAMP}
+             , DELT_DATE = #{deltDate,jdbcType=TIMESTAMP}
+         WHERE USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 탈퇴 회원이 작성한 댓글을 화면에서 삭제된 댓글로 표시하도록 삭제 상태로 변경한다. -->
+    <update id="uptUserReplyDeleted" parameterType="long">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE /* uptUserReplyDeleted */
+               TB_REPLXX
+           SET DELT_YSNO = #{commYes}
+             , UPDT_DATE = SYSDATE
+         WHERE USER_NUMB = #{userNumb}
+           AND NVL(DELT_YSNO, #{commNo}) != #{commYes}
+    </update>
 
 </mapper>

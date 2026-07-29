@@ -13,6 +13,7 @@ import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
+import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 
 /**
  * fileName       : SchedulerTest
@@ -35,6 +36,10 @@ class SchedulerTest {
     @Mock
     private AlimDeleteService alimDeleteService;
 
+    // UserHardDelete 업무 처리 서비스
+    @Mock
+    private UserHardDeleteService userHardDeleteService;
+
     // 공통코드 캐시 조회 객체
     @Mock
     private CodeUtil codeUtil;
@@ -50,7 +55,7 @@ class SchedulerTest {
     @BeforeEach
     void setUp() {
         // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성한다
-        scheduler = new Scheduler(reportDateOverService, alimDeleteService, codeUtil);
+        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, codeUtil);
     }
 
     /**
@@ -135,5 +140,47 @@ class SchedulerTest {
 
         // 의존 객체가 예상한 인자로 호출되었는지 검증한다
         verify(alimDeleteService, never()).delAlim();
+    }
+
+    /**
+     * USER_HARD_DELETE 상세코드가 사용 중이면 영구 삭제 서비스를 호출하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delPendingUsersRunsWhenDetailCodeIsEnabled() {
+
+        // 영구 삭제 스케줄러 상세코드가 활성 상태인 조건을 설정한다
+        when(codeUtil.existsCode(
+                Constant.CODE_SCHD_CODE
+              , Constant.SCHEDULER_CODE_USER_HARD_DELETE
+        )).thenReturn(true);
+
+        // 영구 삭제 대기 회원 스케줄러를 실행한다
+        scheduler.delPendingUsers();
+
+        // 활성 상태에서 영구 삭제 서비스가 호출됐는지 검증한다
+        verify(userHardDeleteService).delPendingUsers();
+    }
+
+    /**
+     * USER_HARD_DELETE 상세코드가 중지 상태이면 영구 삭제 서비스를 호출하지 않는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delPendingUsersSkipsWhenDetailCodeIsDisabled() {
+
+        // 영구 삭제 스케줄러 상세코드가 비활성 상태인 조건을 설정한다
+        when(codeUtil.existsCode(
+                Constant.CODE_SCHD_CODE
+              , Constant.SCHEDULER_CODE_USER_HARD_DELETE
+        )).thenReturn(false);
+
+        // 영구 삭제 대기 회원 스케줄러를 실행한다
+        scheduler.delPendingUsers();
+
+        // 비활성 상태에서 영구 삭제 서비스가 호출되지 않았는지 검증한다
+        verify(userHardDeleteService, never()).delPendingUsers();
     }
 }

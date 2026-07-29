@@ -105,12 +105,14 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 고정 단어:
 
 - 사용자: `USER`
+- 번호: `NUMB`
 - 사용 여부: `USEE`
 - 여부: `YSNO`
 - 등록: `REGI`
 - 수정: `UPDT`
 - 관리자: `ADMN`
 - 아이디: `IDXX`
+- 정렬: `ORDR`
 
 고정 예시:
 

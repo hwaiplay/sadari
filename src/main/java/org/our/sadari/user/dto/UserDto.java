@@ -35,6 +35,15 @@ public class UserDto {
     @Schema(description = "사용자 권한", example = "ROLE_USER")
     private String userRole;
 
+    @Schema(description = "회원 상태", example = "ACTIVE")
+    private String userStat;
+
+    @Schema(description = "회원 탈퇴 요청일시")
+    private LocalDateTime wthdDate;
+
+    @Schema(description = "회원 영구 삭제 예정일시")
+    private LocalDateTime deltDate;
+
     @Schema(description = "가입일시")
     private LocalDateTime joinDate;
 

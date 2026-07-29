@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.UserIdEncryptionService;
@@ -121,6 +122,8 @@ public class AuthServiceImpl implements AuthService {
 
             // savedUser 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (StringUtil.isEmpty(savedUser)) {
+                // 신규 회원이 즉시 정상 이용 상태로 등록되도록 회원 상태를 설정한다
+                userDto.setUserStat(Constant.USER_STAT_ACTIVE);
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
@@ -133,12 +136,31 @@ public class AuthServiceImpl implements AuthService {
 
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
+                /*
+                 * 소프트 탈퇴 회원은 Kakao 재로그인을 복구 의사로 판단한다.
+                 * 기존 프로필과 관계 데이터는 유지하고 회원 상태와 탈퇴 일시만 정상 상태로 되돌린다.
+                 */
+                if (Constant.USER_STAT_WITHDRAWN.equals(savedUser.getUserStat())) {
+                    // 복구할 회원 번호를 상태 변경 요청에 설정한다
+                    savedUser.setUserNumb(savedUser.getUserNumb());
+                    // 정상 이용 회원 상태를 설정한다
+                    savedUser.setUserStat(Constant.USER_STAT_ACTIVE);
+                    // 소프트 탈퇴 요청일을 제거한다
+                    savedUser.setWthdDate(null);
+                    // 영구 삭제 예정일을 제거한다
+                    savedUser.setDeltDate(null);
+                    // 로그인 완료 전에 회원 상태를 정상으로 복구한다
+                    userMapper.uptUserStatus(savedUser);
+                }
+
                 // UserNumb 업무 값을 userDto DTO에 설정한다
                 userDto.setUserNumb(savedUser.getUserNumb());
                 // UserRole 업무 값을 userDto DTO에 설정한다
                 userDto.setUserRole(savedUser.getUserRole());
                 // 기존 사용자가 프로필에서 수정한 닉네임이 있으면 Kakao 기본 닉네임으로 다시 덮지 않고 DB 값을 사용한다.
                 userDto.setUserNick(savedUser.getUserNick());
+                // 로그인 세션에 반영할 현재 회원 상태를 설정한다
+                userDto.setUserStat(savedUser.getUserStat());
 
                 // savedUser.getProfNumb( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
                 if (StringUtil.isEmpty(savedUser.getProfNumb())) {
@@ -175,6 +197,7 @@ public class AuthServiceImpl implements AuthService {
                 userDto.getUserNumb()
               , refreshToken
               , userDto.getUserNick()
+              , userDto.getUserStat()
               , jwtProvider.getRefreshTokenValiditySeconds()
         );
 
