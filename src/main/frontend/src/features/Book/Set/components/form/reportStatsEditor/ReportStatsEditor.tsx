@@ -21,6 +21,7 @@ import * as styles from "./ReportStatsEditor.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const REPORT_STAT_STEPS = [0, 1, 2, 3] as const;
+type StepTransitionDirection = "forward" | "backward";
 
 type ReportStatsEditorProps = {
   statusCodes: CodeDetail[];
@@ -88,7 +89,7 @@ function getTodayDateSerial() {
  * @param startDate 독서 시작일
  * @param endDate 독서 종료일 또는 목표 종료일
  * @param isReadingStatus 읽는 중 상태 여부
- * @return N일 또는 N일째 형식의 기간 요약
+ * @return N일 형식의 기간 요약
  */
 function getPeriodSummary(startDate: string, endDate: string, isReadingStatus: boolean) {
 
@@ -112,12 +113,7 @@ function getPeriodSummary(startDate: string, endDate: string, isReadingStatus: b
   // 시작일을 포함한 독서일 수를 계산한다
   const durationDays = Math.floor((endSerial - startSerial) / MILLISECONDS_PER_DAY) + 1;
 
-  // 읽는 중인 독후감은 현재 몇 번째 독서일인지 표시한다
-  if (isReadingStatus) {
-    // "{0}일째"
-    return message("frontend.report.period.inProgressDays", [durationDays]);
-  }
-
+  // 읽는 중과 완료 및 중단 상태 모두 4열 요약에서는 경과 일수만 표시한다
   // "{0}일"
   return message("frontend.report.period.completedDays", [durationDays]);
 }
@@ -171,6 +167,8 @@ function ReportStatsEditor({
 }: ReportStatsEditorProps) {
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
+  const [stepTransitionDirection, setStepTransitionDirection] =
+    useState<StepTransitionDirection>("forward");
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const portalTarget = typeof document === "undefined" ? null : document.body;
   const isReadingStatus = status === REPORT_STATUS_READ;
@@ -192,11 +190,19 @@ function ReportStatsEditor({
   const publicOffLabel = message("frontend.report.public.off");
   // "닫기"
   const closeLabel = message("frontend.common.close");
+  // "취소"
+  const cancelLabel = message("frontend.common.cancel");
   // "이전"
   const previousLabel = message("frontend.common.previous");
   // "다음"
   const nextLabel = message("frontend.common.next");
+  // "확인"
+  const confirmLabel = message("frontend.common.confirm");
   const stepTitles = [statusTitle, publicTitle, gradeTitle, periodTitle];
+  const stepTransitionClassName =
+    stepTransitionDirection === "backward"
+      ? styles.stepSlideBackward
+      : styles.stepSlideForward;
   let statusLabel = statusFallbackLabel || "-";
 
   // 현재 상태 코드에 대응하는 서버 공통코드명을 4열 요약에 사용한다
@@ -265,8 +271,9 @@ function ReportStatsEditor({
       return;
     }
 
-    // 사용자가 선택한 독후감 입력 단계를 연다
+    // 요약 영역에서 직접 연 단계는 오른쪽에서 진입하는 기본 전환 방향을 사용한다
     onEditStart?.();
+    setStepTransitionDirection("forward");
     setActiveStep(nextStep);
   }
 
@@ -308,6 +315,9 @@ function ReportStatsEditor({
    */
   function handlePrevious() {
 
+    // 이전 단계 콘텐츠가 왼쪽에서 들어오도록 전환 방향을 먼저 설정한다
+    setStepTransitionDirection("backward");
+
     // 첫 단계보다 앞으로 이동하지 않도록 이전 단계 번호를 보정한다
     setActiveStep((currentStep) => Math.max(0, (currentStep ?? 0) - 1));
   }
@@ -319,6 +329,9 @@ function ReportStatsEditor({
    * @return 반환값이 없다
    */
   function handleNext() {
+
+    // 다음 단계 콘텐츠가 오른쪽에서 들어오도록 전환 방향을 먼저 설정한다
+    setStepTransitionDirection("forward");
 
     // 마지막 단계보다 뒤로 이동하지 않도록 다음 단계 번호를 보정한다
     setActiveStep((currentStep) =>
@@ -496,14 +509,22 @@ function ReportStatsEditor({
             >
               {/* 단계형 독후감 입력 모달 본문 영역 */}
               <section
-                className={styles.modal}
+                className={`${styles.modal} ${
+                  activeStep === REPORT_STAT_STEPS.length - 1
+                    ? styles.modalCalendar
+                    : ""
+                }`}
                 role="dialog"
                 aria-modal="true"
                 aria-labelledby="report-stats-modal-title"
               >
                 {/* 현재 입력 단계 제목과 닫기 영역 */}
                 <header className={styles.modalHeader}>
-                  <h2 className={styles.modalTitle} id="report-stats-modal-title">
+                  <h2
+                    className={`${styles.modalTitle} ${stepTransitionClassName}`}
+                    id="report-stats-modal-title"
+                    key={`title-${activeStep}`}
+                  >
                     {stepTitles[activeStep]}
                   </h2>
                   <button
@@ -525,7 +546,10 @@ function ReportStatsEditor({
                 </header>
 
                 {/* 현재 단계에 해당하는 독후감 입력 영역 */}
-                <div className={styles.modalBody}>
+                <div
+                  className={`${styles.modalBody} ${stepTransitionClassName}`}
+                  key={`body-${activeStep}`}
+                >
                   {/* 독서 상태 선택 영역 */}
                   {activeStep === 0 ? (
                     <div className={styles.optionGrid}>
@@ -595,6 +619,7 @@ function ReportStatsEditor({
                           message("frontend.report.placeholder.endDate")
                         }
                         onRangeChange={onRangeChange}
+                        inline
                       />
                     </div>
                   ) : null}
@@ -602,41 +627,45 @@ function ReportStatsEditor({
 
                 {/* 이전 단계와 현재 위치 및 다음 단계 이동 영역 */}
                 <footer className={styles.modalFooter}>
-                  <button
-                    className={styles.stepButton}
-                    type="button"
-                    aria-label={previousLabel}
-                    title={previousLabel}
-                    disabled={activeStep === 0}
-                    onClick={handlePrevious}
-                  >
-                    <svg
-                      className={styles.stepIcon}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
+                  {/* 첫 단계에서는 이전 이동 대신 현재 입력을 닫는 취소 버튼을 표시한다 */}
+                  {activeStep === 0 ? (
+                    <button
+                      className={styles.stepButton}
+                      type="button"
+                      onClick={handleClose}
                     >
-                      <path d="m15 5-7 7 7 7" />
-                    </svg>
-                  </button>
+                      {cancelLabel}
+                    </button>
+                  ) : (
+                    <button
+                      className={styles.stepButton}
+                      type="button"
+                      onClick={handlePrevious}
+                    >
+                      {previousLabel}
+                    </button>
+                  )}
                   <div className={styles.progressDots} aria-hidden="true">
                     {REPORT_STAT_STEPS.map(renderProgressDot)}
                   </div>
-                  <button
-                    className={styles.stepButton}
-                    type="button"
-                    aria-label={nextLabel}
-                    title={nextLabel}
-                    disabled={activeStep === REPORT_STAT_STEPS.length - 1}
-                    onClick={handleNext}
-                  >
-                    <svg
-                      className={styles.stepIcon}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
+                  {/* 마지막 독서기간 단계에서는 이동 화살표 대신 입력 완료 버튼을 표시한다 */}
+                  {activeStep === REPORT_STAT_STEPS.length - 1 ? (
+                    <button
+                      className={styles.confirmButton}
+                      type="button"
+                      onClick={handleClose}
                     >
-                      <path d="m9 5 7 7-7 7" />
-                    </svg>
-                  </button>
+                      {confirmLabel}
+                    </button>
+                  ) : (
+                    <button
+                      className={styles.stepButton}
+                      type="button"
+                      onClick={handleNext}
+                    >
+                      {nextLabel}
+                    </button>
+                  )}
                 </footer>
               </section>
             </div>,

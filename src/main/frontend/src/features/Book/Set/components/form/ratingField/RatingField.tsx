@@ -200,7 +200,6 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
       >
         {REPORT_GRADE_OPTIONS.map(renderStar)}
       </div>
-      <output className={styles.gradeValue}>{value}</output>
       <input className={styles.hiddenInput} type="hidden" name="grade" value={value} />
     </div>
   );
