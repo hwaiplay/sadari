@@ -24,12 +24,14 @@ export const buttonBase = style({
 
 export const buttonVariant = styleVariants({
   primary: {
-    background: vars.color.black,
-    color: "white",
+    border: `1px solid ${vars.color.gray700}`,
+    background: "#ffffff",
+    color: vars.color.gray900,
   },
   secondary: {
-    background: vars.color.black025,
-    color: "white",
+    border: `1px solid ${vars.color.gray400}`,
+    background: "#ffffff",
+    color: vars.color.gray600,
   },
   disable: {
     background: vars.color.gray200,
