@@ -34,6 +34,7 @@ import org.springframework.web.multipart.MultipartFile;
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
+ * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  */
 @Service
 @RequiredArgsConstructor
@@ -41,8 +42,6 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    // 닉네임 최대 길이 설정값
-    private static final int USER_NICK_MAX_LENGTH = 20;
     // 문자 사이에 단일 공백과 언더바 및 하이픈을 허용하는 닉네임 형식
     private static final Pattern USER_NICK_PATTERN =
             Pattern.compile("^[A-Za-z0-9가-힣]+(?:[ _-][A-Za-z0-9가-힣]+)*$");
@@ -204,7 +203,7 @@ public class UserServiceImpl implements UserService {
     private boolean isValidUserNick(String userNick) {
 
         // 닉네임이 최대 길이와 문자 사이의 단일 구분자 형식을 모두 충족하는지 반환한다
-        return userNick.length() <= USER_NICK_MAX_LENGTH && USER_NICK_PATTERN.matcher(userNick).matches();
+        return userNick.length() <= Constant.USER_NICK_MAX_LENGTH && USER_NICK_PATTERN.matcher(userNick).matches();
     }
 
     /**

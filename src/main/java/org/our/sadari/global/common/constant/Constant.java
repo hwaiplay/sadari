@@ -9,6 +9,7 @@ package org.our.sadari.global.common.constant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-07        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    자동 닉네임 공통코드와 발급 제한 추가
  */
 public final class Constant {
 
@@ -16,6 +17,12 @@ public final class Constant {
     public static final int REPORT_CONTENT_MAX_BYTES = 4000;
     // 탈퇴 사유 상세 내용 최대 바이트 설정값
     public static final int WITHDRAWAL_REASON_MAX_BYTES = 500;
+    // 사용자 닉네임 최대 길이 설정값
+    public static final int USER_NICK_MAX_LENGTH = 25;
+    // 자동 닉네임 연월과 네 자리 번호 및 구분자 길이
+    public static final int NICK_GENERATED_SUFFIX_LENGTH = 9;
+    // 닉네임 조합별 월간 최대 발급 번호
+    public static final int NICK_SEQUENCE_MAX_NUMBER = 9999;
 
     // 코드 읽기 상태 설정값
     public static final String CODE_READ_STAT = "READ_STAT";
@@ -33,6 +40,12 @@ public final class Constant {
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 회원 상태 공통코드
     public static final String CODE_USER_STAT = "USER_STAT";
+    // 자동 닉네임 주어 공통코드
+    public static final String CODE_NICK_SUBJ = "NICK_SUBJ";
+    // 자동 닉네임 서술어 공통코드
+    public static final String CODE_NICK_PRED = "NICK_PRED";
+    // 자동 닉네임 동물 명사 공통코드
+    public static final String CODE_NICK_ANML = "NICK_ANML";
     // 옵션 공개 여부 설정값
     public static final String OPT_PUBC_YSNO = "PUBC_YSNO";
 

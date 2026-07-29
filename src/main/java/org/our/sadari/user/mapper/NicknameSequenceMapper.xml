@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.user.mapper.NicknameSequenceMapper">
+
+    <!-- 동일한 닉네임 조합의 번호 발급을 행 잠금으로 직렬화하고 최대 번호를 초과하지 않게 증가시킨다. -->
+    <update id="uptNicknameSequence" parameterType="org.our.sadari.user.dto.NicknameSequenceDto">
+        <bind name="maxSequence" value="@org.our.sadari.global.common.constant.Constant@NICK_SEQUENCE_MAX_NUMBER" />
+        UPDATE /* uptNicknameSequence */
+               TB_NKSEQX
+           SET LAST_NUMB = LAST_NUMB + 1
+             , UPDT_DATE = SYSDATE
+         WHERE NICK_TEXT = #{nickText}
+           AND ISSU_YEAM = TO_CHAR(SYSDATE, 'YYMM')
+           AND LAST_NUMB <![CDATA[<]]> #{maxSequence}
+    </update>
+
+    <!-- 현재 연월에 처음 선택된 닉네임 조합의 최초 번호를 등록한다. -->
+    <insert id="setNicknameSequence" parameterType="org.our.sadari.user.dto.NicknameSequenceDto">
+        <bind name="firstSequence" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ONE" />
+        /* setNicknameSequence */
+        INSERT INTO TB_NKSEQX (
+                    NICK_TEXT
+                  , ISSU_YEAM
+                  , LAST_NUMB
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{nickText}
+                  , TO_CHAR(SYSDATE, 'YYMM')
+                  , #{firstSequence}
+                  , SYSDATE
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 현재 연월에 발급된 닉네임 조합의 마지막 번호를 조회한다. -->
+    <select id="getNicknameSequenceDtl" parameterType="org.our.sadari.user.dto.NicknameSequenceDto"
+            resultType="org.our.sadari.user.dto.NicknameSequenceDto">
+        SELECT /* getNicknameSequenceDtl */
+               N.NICK_TEXT
+             , N.ISSU_YEAM
+             , N.LAST_NUMB
+             , N.REGI_DATE
+             , N.UPDT_DATE
+          FROM TB_NKSEQX N
+         WHERE N.NICK_TEXT = #{nickText}
+           AND N.ISSU_YEAM = TO_CHAR(SYSDATE, 'YYMM')
+    </select>
+
+</mapper>
