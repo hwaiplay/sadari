@@ -40,6 +40,8 @@
 - 영구 삭제 시 `TM_USERXM` 회원 원본을 삭제합니다.
 - 로그인 이력은 보존하고, 정책상 보존 대상이 아닌 회원 연관 데이터는 삭제합니다.
 - 탈퇴 이력에는 원본 OAuth 식별값 대신 SHA-256 해시를 저장합니다.
+- 탈퇴 이력의 `USER_NUMB`는 탈퇴 당시 내부 회원번호를 감사 이력으로 보존합니다.
+- `TH_USWTHD.USER_NUMB`는 회원 원본 삭제 후에도 값을 유지해야 하므로 `TM_USERXM`과 FK로 연결하지 않습니다.
 
 ## 로컬 영구 탈퇴 테스트
 
@@ -73,3 +75,4 @@
 - `global/scheduler/mapper/UserHardDeleteMapper.xml`
 - `pages/Settings/WithdrawalPage.tsx`
 - `pages/Settings/WithdrawalPendingPage.tsx`
+- `pages/Settings/WithdrawalResultPage.tsx`
