@@ -508,7 +508,7 @@ function SocialProfilePage() {
         aria-label={message("frontend.profile.currentReading.title")}
       >
         <div className={styles.currentReadingSection}>
-          <h2 className={styles.currentReadingTitle}>
+          <h2 className={`${styles.currentReadingTitle} ${styles.socialSectionTitle}`}>
             {/* "현재 읽고 있는 책" */}
             {message("frontend.profile.currentReading.title")}
           </h2>
@@ -899,7 +899,7 @@ function SocialProfilePage() {
         {/* 상대 사용자의 월간 독서 요약 영역 */}
         <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
-              <p className={styles.goalAchievementTitle}>
+              <p className={`${styles.goalAchievementTitle} ${styles.socialSectionTitle}`}>
                 {/* "목표 달성 횟수" */}
                 {message("frontend.profile.goal.achievementTitle")}
               </p>

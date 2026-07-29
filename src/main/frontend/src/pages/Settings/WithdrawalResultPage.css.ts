@@ -89,7 +89,7 @@ export const description = style({
 export const guideSection = style({
   position: "relative",
   width: "100%",
-  padding: "28px 18px 14px",
+  padding: "20px 18px 14px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -97,18 +97,14 @@ export const guideSection = style({
 });
 
 export const sectionTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  margin: "0 0 10px",
+  padding: "0 0 0 6px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   letterSpacing: 0,
-  transform: "translateY(-50%)",
+  textAlign: "left",
 });
 
 export const guideList = style({

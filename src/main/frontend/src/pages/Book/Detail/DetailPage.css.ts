@@ -424,7 +424,7 @@ export const recordSection = style({
   position: "relative",
   width: "100%",
   minHeight: "180px",
-  padding: "48px 20px 24px",
+  padding: "20px 20px 24px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -434,21 +434,20 @@ export const recordSection = style({
 
 export const sectionTitle = style({
   margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  padding: "0 0 0 6px",
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   color: vars.color.black,
+  textAlign: "left",
 });
 
 export const recordTitleRow = style({
-  position: "absolute",
-  top: 0,
-  left: "13px",
+  width: "100%",
   display: "flex",
   alignItems: "center",
-  transform: "translateY(-50%)",
+  justifyContent: "flex-start",
+  marginBottom: "18px",
 });
 
 export const recordMetrics = style({
