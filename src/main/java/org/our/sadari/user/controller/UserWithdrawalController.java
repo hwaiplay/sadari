@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 대기 설명 반영
  */
 @RestController
 @RequiredArgsConstructor
@@ -76,7 +77,7 @@ public class UserWithdrawalController {
      * @return 복구 처리 결과
      */
     @PostMapping("/cancel")
-    @Operation(summary = "영구 탈퇴 취소", description = "30일 영구 삭제 대기를 취소하고 회원 상태를 복구한다.")
+    @Operation(summary = "영구 탈퇴 취소", description = "설정된 영구 삭제 대기를 취소하고 회원 상태를 복구한다.")
     public ResultData uptWithdrawalCancel(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 

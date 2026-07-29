@@ -26,6 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책에 맞춰 Kakao 닉네임 동의 범위 제거
  */
 @Component
 @Slf4j
@@ -56,7 +57,7 @@ public class KakaoAuthProvider {
                 .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
-                .queryParam("scope", "profile_nickname,profile_image")
+                .queryParam("scope", "profile_image")
                 .build()
                 .encode()
                 .toUriString();
@@ -77,7 +78,7 @@ public class KakaoAuthProvider {
                 .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
-                .queryParam("scope", "profile_nickname,profile_image")
+                .queryParam("scope", "profile_image")
                 .queryParam("prompt", "login")
                 .queryParam("state", state)
                 .build()
