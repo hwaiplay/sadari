@@ -32,6 +32,9 @@ import {
   type ReadingSummaryReport,
   type UserProfile,
 } from "@/features/User/api/userApi";
+import ProfileImage, {
+  DEFAULT_PROFILE_IMAGE,
+} from "@/features/User/components/ProfileImage";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import type { FormEvent, MouseEvent } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -39,7 +42,6 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const USER_NICK_MAX_LENGTH = 20;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
@@ -1777,7 +1779,7 @@ function ProfileEditPage() {
           <div className={styles.profileHeaderRow}>
             {/* 프로필 이미지와 이미지 변경 영역 */}
             <div className={styles.avatarWrap}>
-              <img
+              <ProfileImage
                 className={styles.profileImage}
                 src={previewImage}
                 alt={profile?.userNick ?? /* "프로필 수정" */ message("frontend.profile.edit")}
@@ -2161,9 +2163,9 @@ function ProfileEditPage() {
                     type="button"
                     onClick={() => handleFollowListUserClick(user.userNumb)}
                   >
-                    <img
+                    <ProfileImage
                       className={styles.followModalAvatar}
-                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      src={user.porfPath}
                       alt={user.userNick ?? /* "닉네임" */ message("frontend.profile.nick")}
                     />
                     <span className={styles.followModalText}>

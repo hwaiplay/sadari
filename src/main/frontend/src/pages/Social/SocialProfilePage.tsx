@@ -22,12 +22,12 @@ import type {
   ReadingSummaryReport,
   UserProfile,
 } from "@/features/User/api/userApi";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 type ReadingPeriod = "week" | "month" | "year";
 
 /**
@@ -865,9 +865,9 @@ function SocialProfilePage() {
         <section className={styles.socialProfileBody}>
           <div className={styles.socialProfileHeaderRow}>
             <div className={styles.avatarWrap}>
-              <img
+              <ProfileImage
                 className={styles.profileImage}
-                src={profile.porfPath || DEFAULT_PROFILE_IMAGE}
+                src={profile.porfPath}
                 alt={profile.userNick ?? message("frontend.profile.nick")}
               />
               {followStatName && (
@@ -1039,9 +1039,9 @@ function SocialProfilePage() {
                     type="button"
                     onClick={() => handleFollowListUserClick(user.userNumb)}
                   >
-                    <img
+                    <ProfileImage
                       className={styles.followModalAvatar}
-                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      src={user.porfPath}
                       alt={user.userNick ?? message("frontend.profile.nick")}
                     />
                     <span className={styles.followModalText}>

@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import {
   isUserProfileUpdatedEvent,
   USER_PROFILE_UPDATED_EVENT,
@@ -25,7 +26,6 @@ function Navigation({ isMain }: NavigationProps) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const navigate = useNavigate();
-  const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
 
   useEffect(() => {
 
@@ -91,9 +91,9 @@ function Navigation({ isMain }: NavigationProps) {
           aria-label={message("frontend.common.myPageIconAlt")}
           onClick={() => navigate("/mypage/profile")}
         >
-          <img
+          <ProfileImage
             className={styles.navProfileImage}
-            src={profileImage}
+            src={profile?.porfPath}
             alt={message("frontend.common.myPageIconAlt")}
           />
         </button>

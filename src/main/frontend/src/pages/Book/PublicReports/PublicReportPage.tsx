@@ -12,13 +12,13 @@ import {
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import CommentSheet from "./components/CommentSheet";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 
 type ReportSort = "LATEST" | "RATING";
 type ReportStatus = string;
@@ -311,9 +311,9 @@ function PublicReportPage() {
                           type="button"
                           onClick={() => handleProfileClick(report.userNumb)}
                         >
-                          <img
+                          <ProfileImage
                             className={styles.profileImage}
-                            src={report.porfPath || DEFAULT_PROFILE_IMAGE}
+                            src={report.porfPath}
                             alt=""
                           />
                           <span className={styles.writer}>
