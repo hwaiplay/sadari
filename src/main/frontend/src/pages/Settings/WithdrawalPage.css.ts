@@ -16,7 +16,7 @@ export const page = style({
 
 export const section = style({
   position: "relative",
-  padding: "28px 10px 20px",
+  padding: "20px 10px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -33,22 +33,18 @@ export const title = style({
 });
 
 export const withdrawalTypeSection = style({
-  paddingTop: "42px",
+  paddingTop: "20px",
 });
 
 export const standaloneTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  zIndex: 1,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
-  transform: "translateY(-50%)",
+  margin: "0 0 18px",
+  padding: "0 0 0 6px",
+  textAlign: "left",
 });
 
 export const helpButton = style({
   position: "absolute",
-  top: "11px",
+  top: "18px",
   right: "14px",
   display: "inline-flex",
   alignItems: "center",
