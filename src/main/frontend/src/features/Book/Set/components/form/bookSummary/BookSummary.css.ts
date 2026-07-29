@@ -2,15 +2,18 @@ import { style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
 export const coverArea = style({
+  width: "100%",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
   gap: "14px",
-  padding: "48px 24px 42px",
-  borderRadius: "14px",
-  backgroundColor: "rgb(255, 255, 255)",
-  boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
+  padding: "40px 22px 30px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+  boxSizing: "border-box",
 });
 
 export const coverFrame = style({
