@@ -9,15 +9,6 @@ export const starGroup = style({
   lineHeight: 1,
 });
 
-export const gradeValue = style({
-  minHeight: "27px",
-  fontFamily: "inherit",
-  fontSize: "22px",
-  fontWeight: 600,
-  lineHeight: 1.2,
-  color: "#333333",
-});
-
 export const starRow = style({
   display: "flex",
   alignItems: "center",

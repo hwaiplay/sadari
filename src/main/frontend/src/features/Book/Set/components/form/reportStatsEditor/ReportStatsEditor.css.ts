@@ -21,6 +21,28 @@ const modalContentFadeIn = keyframes({
   },
 });
 
+const stepSlideForwardKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(18px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
+
+const stepSlideBackwardKeyframes = keyframes({
+  from: {
+    opacity: 0,
+    transform: "translateX(-18px)",
+  },
+  to: {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
+
 export const statsSection = style({
   position: "relative",
   width: "100%",
@@ -142,7 +164,7 @@ export const modalOverlay = style({
 
 export const modal = style({
   width: "min(430px, 100%)",
-  minHeight: "350px",
+  height: "350px",
   maxHeight: "calc(100dvh - 40px)",
   padding: "22px",
   border: `1px solid ${vars.color.gray300}`,
@@ -151,12 +173,23 @@ export const modal = style({
   boxShadow: "0 20px 54px rgba(0, 0, 0, 0.16)",
   display: "flex",
   flexDirection: "column",
+  overflow: "hidden",
   boxSizing: "border-box",
   animation: `${modalContentFadeIn} 180ms ease-out both`,
+  transition: "height 520ms cubic-bezier(0.22, 1, 0.36, 1)",
   "@media": {
     "screen and (max-width: 480px)": {
-      minHeight: "330px",
+      height: "330px",
       padding: "20px 18px",
+    },
+  },
+});
+
+export const modalCalendar = style({
+  height: "462px",
+  "@media": {
+    "screen and (max-width: 480px)": {
+      height: "462px",
     },
   },
 });
@@ -166,6 +199,7 @@ export const modalHeader = style({
   alignItems: "center",
   justifyContent: "space-between",
   gap: "16px",
+  overflow: "hidden",
 });
 
 export const modalTitle = style({
@@ -219,6 +253,16 @@ export const modalBody = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
+  overflowX: "hidden",
+  overflowY: "hidden",
+});
+
+export const stepSlideForward = style({
+  animation: `${stepSlideForwardKeyframes} 300ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+});
+
+export const stepSlideBackward = style({
+  animation: `${stepSlideBackwardKeyframes} 300ms cubic-bezier(0.22, 1, 0.36, 1) both`,
 });
 
 export const optionGrid = style({
@@ -335,31 +379,29 @@ export const periodEditor = style({
 
 export const modalFooter = style({
   display: "grid",
-  gridTemplateColumns: "40px minmax(0, 1fr) 40px",
+  gridTemplateColumns: "64px minmax(0, 1fr) 64px",
   alignItems: "center",
   gap: "12px",
 });
 
 export const stepButton = style({
-  width: "40px",
+  width: "64px",
   height: "40px",
-  padding: 0,
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: "50%",
-  backgroundColor: "#ffffff",
+  padding: "0 8px",
+  border: 0,
+  borderRadius: "8px",
+  backgroundColor: "transparent",
   color: vars.color.gray700,
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
+  fontFamily: vars.font.semibold,
+  fontSize: "13px",
   cursor: "pointer",
   selectors: {
-    "&:hover:not(:disabled)": {
-      borderColor: vars.color.gray600,
+    "&:hover": {
       backgroundColor: "#f7f7f7",
-    },
-    "&:disabled": {
-      opacity: 0.28,
-      cursor: "default",
+      color: vars.color.gray900,
     },
     "&:focus-visible": {
       outline: "2px solid #8ab6a3",
@@ -368,15 +410,7 @@ export const stepButton = style({
   },
 });
 
-export const stepIcon = style({
-  width: "19px",
-  height: "19px",
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.8,
-  strokeLinecap: "round",
-  strokeLinejoin: "round",
-});
+export const confirmButton = style([stepButton]);
 
 export const progressDots = style({
   minWidth: 0,
