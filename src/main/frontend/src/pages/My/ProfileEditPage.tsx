@@ -42,7 +42,8 @@ import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
-const USER_NICK_MAX_LENGTH = 20;
+const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
+const USER_NICK_MAX_LENGTH = 25;
 const PROFILE_INTRO_MAX_LENGTH = 50;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
@@ -91,7 +92,7 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
  *
  * @author HanWon.Jang
  * @param value 사용자가 입력한 닉네임 원문
- * @return 허용 문자로 구성된 20자 이하 닉네임
+ * @return 허용 문자로 구성된 25자 이하 닉네임
  */
 const normalizeUserNick = (value: string) =>
   value.replace(USER_NICK_INPUT_REGEX, "").slice(0, USER_NICK_MAX_LENGTH);
@@ -1662,7 +1663,7 @@ function ProfileEditPage() {
     ) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 20자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
+        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
       );
       return;
     }

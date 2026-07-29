@@ -21,6 +21,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 설명 반영
  */
 @Component
 @RequiredArgsConstructor
@@ -87,7 +88,7 @@ public class Scheduler {
     }
 
     /**
-     * 매일 새벽 3시에 30일 유예기간이 끝난 회원을 영구 삭제한다.
+     * 매일 새벽 3시에 환경별 유예기간이 끝난 회원을 영구 삭제한다.
      *
      * @author SeungHyeon.Kang
      */

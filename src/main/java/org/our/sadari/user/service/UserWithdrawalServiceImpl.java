@@ -1,6 +1,7 @@
 package org.our.sadari.user.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.code.util.CodeUtil;
@@ -18,6 +19,7 @@ import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.mapper.UserWithdrawalMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,6 +40,7 @@ import java.util.UUID;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -49,8 +52,6 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
     private static final String WITHDRAWAL_STATE_PREFIX = "user:withdrawal:state:";
     // 탈퇴 재인증 요청 유효시간
     private static final Duration WITHDRAWAL_STATE_TTL = Duration.ofMinutes(10);
-    // 영구 삭제 대기 일수
-    private static final long HARD_DELETE_WAIT_DAYS = 30L;
     // 기타 탈퇴 사유 코드
     private static final String WITHDRAWAL_REASON_OTHER = "OTHER";
     // 탈퇴 요청 완료 상태
@@ -78,6 +79,25 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
     private final StringRedisTemplate redisTemplate;
     // 탈퇴 재인증 요청 직렬화 객체
     private final ObjectMapper objectMapper;
+
+    // 환경별 영구 삭제 유예기간
+    @Value("${withdrawal.hard-delete-wait-days:30}")
+    private long hardDeleteWaitDays;
+
+    /**
+     * 영구 삭제 유예기간 설정값이 유효한지 애플리케이션 시작 시 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @PostConstruct
+    private void validateConfiguration() {
+
+        // 음수 유예기간은 요청 시점보다 과거를 삭제 예정일로 만들기 때문에 실행을 차단한다
+        if (hardDeleteWaitDays < 0) {
+            // 잘못된 영구 삭제 유예기간이면 애플리케이션 시작을 중단한다
+            throw new IllegalStateException("withdrawal.hard-delete-wait-days는 0 이상이어야 합니다.");
+        }
+    }
 
     /**
      * 회원 탈퇴 요청을 검증하고 Kakao 재인증 URL을 발급한다.
@@ -245,12 +265,12 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             applyWithdrawalStatus(request, Constant.USER_STAT_WITHDRAWN, null);
         }
 
-        // 영구 탈퇴는 30일 동안 취소할 수 있는 삭제 대기 상태로 전환한다
+        // 영구 탈퇴는 환경별 유예기간 동안 취소할 수 있는 삭제 대기 상태로 전환한다
         else {
             // 영구 삭제 대기 이력 상태를 설정한다
             request.setWthdStat(WITHDRAWAL_STATUS_DELETE_PENDING);
-            // 요청일로부터 30일 뒤를 영구 삭제 예정일로 설정한다
-            request.setDeltDate(LocalDateTime.now().plusDays(HARD_DELETE_WAIT_DAYS));
+            // 요청일에 환경별 유예기간을 더해 영구 삭제 예정일을 설정한다
+            request.setDeltDate(LocalDateTime.now().plusDays(hardDeleteWaitDays));
             // 영구 삭제 대기 회원 상태를 적용한다
             applyWithdrawalStatus(request, Constant.USER_STAT_DELETE_PENDING, request.getDeltDate());
         }
