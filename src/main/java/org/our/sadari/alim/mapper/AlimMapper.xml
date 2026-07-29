@@ -19,6 +19,15 @@
            AND USEE_YSNO = #{commYes}
     </select>
 
+    <!-- 정상 이용 회원만 알림 수신 대상으로 인정한다. -->
+    <select id="getActiveAlimUserCnt" parameterType="long" resultType="int">
+        SELECT /* getActiveAlimUserCnt */
+               COUNT(1)
+          FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{userNumb}
+           AND U.USER_STAT = 'ACTIVE'
+    </select>
+
     <!-- 사용자별 알림 순번을 INSERT에서 계산하고 RETURNING INTO로 같은 호출 안에서 발송할 알림 번호를 DTO에 돌려준다. -->
     <insert id="setAlim" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto" statementType="CALLABLE">
         BEGIN

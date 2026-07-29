@@ -82,4 +82,13 @@ public interface AlimMapper {
      * @return 미읽음 알림 수
      */
     int getUnreadAlimCnt(@Param("userNumb") Long userNumb);
+
+    /**
+     * 알림 수신 회원이 정상 이용 상태인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 알림 수신 회원 번호
+     * @return 정상 이용 회원 수
+     */
+    int getActiveAlimUserCnt(@Param("userNumb") Long userNumb);
 }

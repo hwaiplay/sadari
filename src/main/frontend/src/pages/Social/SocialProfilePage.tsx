@@ -822,6 +822,24 @@ function SocialProfilePage() {
     return <main className={styles.page}>{message("frontend.common.invalidAccess")}</main>;
   }
 
+  // 탈퇴 회원은 기존 관계를 유지하되 프로필과 활동 정보를 공개하지 않습니다
+  if (profile.userStat && profile.userStat !== "ACTIVE") {
+    // 탈퇴 상태만 표시하는 제한된 공개 프로필 화면을 반환합니다
+    return (
+      <main className={styles.page}>
+        {/* 탈퇴 회원 공개 프로필 제한 안내 영역 */}
+        <section className={styles.profileShell}>
+          <section className={styles.socialProfileBody}>
+            <div className={styles.profileText}>
+              <h1 className={styles.profileName}>탈퇴한 사용자</h1>
+              <p className={styles.profileIntro}>탈퇴한 사용자의 정보는 표시되지 않아요.</p>
+            </div>
+          </section>
+        </section>
+      </main>
+    );
+  }
+
   return (
     /* 상대 사용자의 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>

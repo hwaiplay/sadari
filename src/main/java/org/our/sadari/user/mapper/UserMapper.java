@@ -39,4 +39,22 @@ public interface UserMapper {
 
     // getUserNickDuplicateCnt 조회로 후속 처리에 필요한 데이터를 가져온다
     int getUserNickDuplicateCnt(UserDto request);
+
+    /**
+     * 회원 상태와 탈퇴 관련 일시를 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param request 변경할 회원 번호와 상태 정보
+     * @return 변경된 회원 수
+     */
+    int uptUserStatus(UserDto request);
+
+    /**
+     * 탈퇴 회원이 작성한 댓글을 삭제 상태로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 탈퇴 회원 번호
+     * @return 삭제 상태로 변경된 댓글 수
+     */
+    int uptUserReplyDeleted(Long userNumb);
 }

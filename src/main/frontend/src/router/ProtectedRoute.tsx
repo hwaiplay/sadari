@@ -1,6 +1,6 @@
 import { message } from "@/app/messages/message";
 import type { ReactNode } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import Loading from "../components/Loading/Loading.tsx";
 import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 
@@ -14,7 +14,8 @@ import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
  */
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
-  const { isLoading, isAuthenticated } = useCheckAuth();
+  const location = useLocation();
+  const { isLoading, isAuthenticated, isDeletePending } = useCheckAuth();
 
   if (isLoading) {
     return <Loading title={message("frontend.common.loginLoading")} />;
@@ -22,6 +23,12 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+
+  // 영구 삭제 대기 회원은 일반 서비스 화면 대신 취소 전용 화면으로 이동합니다
+  if (isDeletePending && location.pathname !== "/withdrawal/pending") {
+    // 영구 삭제 예정일과 취소 버튼만 제공하는 화면으로 이동합니다
+    return <Navigate to="/withdrawal/pending" replace />;
   }
 
   return children;

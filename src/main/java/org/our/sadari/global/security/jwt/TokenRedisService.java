@@ -27,20 +27,24 @@ public class TokenRedisService {
     private static final String REFRESH_TOKEN_PREFIX = "auth:refresh:";
     // USER NICK 접두사 설정값
     private static final String USER_NICK_PREFIX = "auth:user:nick:";
+    // USER STATUS 접두사 설정값
+    private static final String USER_STATUS_PREFIX = "auth:user:status:";
     // 접근 TOKEN BLACKLIST 접두사 설정값
     private static final String ACCESS_TOKEN_BLACKLIST_PREFIX = "auth:blacklist:access:";
 
     // 로그인 사용자 정보를 원자적으로 저장하는 Lua 스크립트
     private static final String SET_LOGIN_USER_LUA = """
             -- Refresh Token을 지정된 로그인 유지시간 동안 저장한다
-            redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[3])
+            redis.call('SET', KEYS[1], ARGV[1], 'EX', ARGV[4])
             -- 닉네임이 비어 있으면 이전 로그인에서 남은 닉네임을 제거한다
             if ARGV[2] == '' then
                 redis.call('DEL', KEYS[2])
             else
                 -- 닉네임이 있으면 Refresh Token과 같은 만료시간으로 저장한다
-                redis.call('SET', KEYS[2], ARGV[2], 'EX', ARGV[3])
+                redis.call('SET', KEYS[2], ARGV[2], 'EX', ARGV[4])
             end
+            -- 회원 상태를 Refresh Token과 같은 만료시간으로 저장한다
+            redis.call('SET', KEYS[3], ARGV[3], 'EX', ARGV[4])
             -- 두 로그인 정보를 정상적으로 반영한 결과를 반환한다
             return 1
             """;
@@ -79,10 +83,11 @@ public class TokenRedisService {
      * @param ttlSeconds 토큰 유효 시간(초)
      */
     public void setLoginUserInfo(Long userNumb, String refreshToken, String userNick
-                               , Long ttlSeconds) {
+                               , String userStat, Long ttlSeconds) {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(refreshToken)
-                || StringUtil.isEmpty(ttlSeconds) || ttlSeconds <= 0) {
+                || StringUtil.isEmpty(userStat) || StringUtil.isEmpty(ttlSeconds)
+                || ttlSeconds <= 0) {
 
             throw new IllegalArgumentException("Login user Redis values are invalid.");
         }
@@ -93,11 +98,59 @@ public class TokenRedisService {
          */
         redisTemplate.execute(
                 SET_LOGIN_USER_SCRIPT
-              , List.of(getRefreshTokenKey(userNumb), getUserNickKey(userNumb))
+              , List.of(getRefreshTokenKey(userNumb), getUserNickKey(userNumb), getUserStatusKey(userNumb))
               , refreshToken
               , StringUtil.isEmpty(userNick) ? "" : userNick
+              , userStat
               , String.valueOf(ttlSeconds)
         );
+    }
+
+    /**
+     * 로그인 회원의 현재 이용 상태를 Redis에서 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 회원 번호
+     * @return 회원 상태 코드
+     */
+    public String getUserStatus(Long userNumb) {
+
+        // 회원 번호가 없으면 상태 캐시를 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            // 조회할 회원 상태가 없음을 반환한다
+            return null;
+        }
+
+        // 로그인 세션과 함께 저장된 회원 상태를 반환한다
+        return redisTemplate.opsForValue().get(getUserStatusKey(userNumb));
+    }
+
+    /**
+     * 로그인 세션의 남은 TTL을 유지하면서 회원 상태 캐시를 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 상태를 변경할 로그인 회원 번호
+     * @param userStat 변경할 회원 상태
+     */
+    public void uptUserStatus(Long userNumb, String userStat) {
+
+        // 회원 번호나 상태가 없으면 Redis 상태를 변경하지 않는다
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(userStat)) {
+            // 변경할 로그인 회원 상태가 없어 처리를 종료한다
+            return;
+        }
+
+        // Refresh Token의 남은 로그인 유지시간을 조회한다
+        Long ttlSeconds = redisTemplate.getExpire(getRefreshTokenKey(userNumb));
+
+        // 로그인 세션이 만료됐으면 회원 상태 캐시만 새로 생성하지 않는다
+        if (StringUtil.isEmpty(ttlSeconds) || ttlSeconds <= 0) {
+            // 만료된 세션의 상태 갱신을 종료한다
+            return;
+        }
+
+        // 현재 로그인 세션과 같은 남은 시간으로 회원 상태를 갱신한다
+        redisTemplate.opsForValue().set(getUserStatusKey(userNumb), userStat, Duration.ofSeconds(ttlSeconds));
     }
 
     /**
@@ -187,7 +240,7 @@ public class TokenRedisService {
         }
 
         // 더 이상 유효하지 않은 데이터를 삭제한다
-        redisTemplate.delete(List.of(getRefreshTokenKey(userNumb), getUserNickKey(userNumb)));
+        redisTemplate.delete(List.of(getRefreshTokenKey(userNumb), getUserNickKey(userNumb), getUserStatusKey(userNumb)));
     }
 
     /**
@@ -248,6 +301,18 @@ public class TokenRedisService {
     private String getUserNickKey(Long userNumb) {
         // 로그인 사용자 닉네임 저장용 Redis Key를 생성한다. (형식: auth:user:nick:{userNumb}) 결과를 반환한다
         return USER_NICK_PREFIX + userNumb;
+    }
+
+    /**
+     * 로그인 회원 상태 저장용 Redis 키를 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 회원 번호
+     * @return Redis 회원 상태 키
+     */
+    private String getUserStatusKey(Long userNumb) {
+        // 회원 상태 접두사와 회원 번호를 조합해 반환한다
+        return USER_STATUS_PREFIX + userNumb;
     }
 
     /**

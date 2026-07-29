@@ -16,6 +16,7 @@ const REFRESHABLE_AUTH_CODES = new Set([
   TOKEN_INVALID_CODE,
   TOKEN_EXPIRED_CODE,
 ]);
+const DELETE_PENDING_STATUS = "DELETE_PENDING";
 
 /**
  * use Check Auth 상태와 처리 함수를 제공한다
@@ -66,7 +67,7 @@ export const useCheckAuth = () => {
   }, [errorCode, refreshing, refreshAttempted, refetch]);
 
   if (isLoading || refreshing) {
-    return { isLoading: true, isAuthenticated: false };
+    return { isLoading: true, isAuthenticated: false, isDeletePending: false };
   }
 
   if (isError) {
@@ -75,21 +76,28 @@ export const useCheckAuth = () => {
       errorCode === TOKEN_EXPIRED_CODE ||
       refreshAttempted
     ) {
-      return { isLoading: false, isAuthenticated: false };
+      return { isLoading: false, isAuthenticated: false, isDeletePending: false };
     }
 
-    return { isLoading: false, isAuthenticated: false };
+    return { isLoading: false, isAuthenticated: false, isDeletePending: false };
   }
 
   if (data) {
     const code = data.code;
 
     if (code === 200) {
-      return { isLoading: false, isAuthenticated: true };
+      // 인증 응답의 회원 상태로 영구 삭제 대기 전용 화면 여부를 판단합니다
+      const userStat = (data.data as { userStat?: string } | undefined)?.userStat;
+      // 인증 성공 여부와 영구 삭제 대기 여부를 함께 반환합니다
+      return {
+        isLoading: false,
+        isAuthenticated: true,
+        isDeletePending: userStat === DELETE_PENDING_STATUS,
+      };
     }
 
-    return { isLoading: false, isAuthenticated: false };
+    return { isLoading: false, isAuthenticated: false, isDeletePending: false };
   }
 
-  return { isLoading: false, isAuthenticated: false };
+  return { isLoading: false, isAuthenticated: false, isDeletePending: false };
 };
