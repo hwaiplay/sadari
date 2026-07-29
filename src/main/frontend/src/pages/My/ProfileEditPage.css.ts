@@ -1,6 +1,18 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
+// 독서 활동 조회 완료 시 콘텐츠를 자연스럽게 표시하는 전환 효과
+const activityFadeIn = keyframes({
+  "0%": {
+    opacity: 0,
+    transform: "translateY(8px)",
+  },
+  "100%": {
+    opacity: 1,
+    transform: "translateY(0)",
+  },
+});
+
 export const page = style({
   width: "100%",
   minHeight: "100vh",
@@ -114,6 +126,14 @@ export const profileBody = style({
   flexDirection: "column",
   alignItems: "stretch",
   padding: "0 14px",
+});
+
+export const activityContent = style({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  animation: `${activityFadeIn} 320ms ease-out both`,
 });
 
 export const socialProfileBody = style([
