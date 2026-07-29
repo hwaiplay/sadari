@@ -197,11 +197,11 @@ export const description = style({
 
 export const selectButton = style({
   height: "44px",
-  border: `1px solid ${vars.color.black}`,
+  border: `1px solid ${vars.color.gray700}`,
   borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
-  fontFamily: vars.font.heading,
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
 });

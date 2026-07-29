@@ -37,10 +37,10 @@ export const searchInput = style({
 
 export const searchButton = style({
   height: "42px",
-  border: `1px solid ${vars.color.black}`,
+  border: `1px solid ${vars.color.gray700}`,
   borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
@@ -136,8 +136,11 @@ export const actionButton = style({
 export const primaryButton = style([
   actionButton,
   {
-    backgroundColor: vars.color.black,
-    color: "#ffffff",
+    borderColor: vars.color.gray700,
+    borderWidth: "1px",
+    backgroundColor: "#ffffff",
+    color: vars.color.gray900,
+    fontFamily: vars.font.semibold,
   },
 ]);
 

@@ -164,13 +164,14 @@ export const sortMenu = style({
 export const sortMenuItem = style({
   height: "30px",
   padding: "0 10px",
-  border: 0,
+  border: "1px solid transparent",
   borderRadius: "8px",
   backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.body,
   fontSize: "12px",
   textAlign: "left",
+  boxSizing: "border-box",
   cursor: "pointer",
 
   selectors: {
@@ -181,12 +182,14 @@ export const sortMenuItem = style({
 });
 
 export const sortMenuItemActive = style({
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  border: `1px solid ${vars.color.gray700}`,
+  backgroundColor: "#f3f3f3",
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
 
   selectors: {
     "&:hover": {
-      backgroundColor: vars.color.black,
+      backgroundColor: vars.color.gray100,
     },
   },
 });
