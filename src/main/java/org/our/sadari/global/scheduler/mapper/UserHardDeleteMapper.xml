@@ -23,7 +23,7 @@
          WHERE ROWNUM <![CDATA[ <= ]]> #{maxSize}
     </select>
 
-    <!-- 회원 연관 데이터를 참조 순서에 맞게 제거하고 로그인 이력은 회원 번호만 익명화한다. -->
+    <!-- 탈퇴 이력의 회원 번호는 보존하고 회원 연관 데이터를 참조 순서에 맞게 제거한다. -->
     <delete id="delHardDeleteUser" parameterType="long" statementType="CALLABLE">
         BEGIN
             /* delHardDeleteUser */
