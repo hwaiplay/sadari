@@ -29,11 +29,19 @@
 ## 영구 탈퇴 회원 삭제
 
 - 스케줄러 코드: `USER_HARD_DELETE`
-- 실행 시간: 매일 03:00
-- 영구 삭제 유예기간 30일이 지난 회원을 대상으로 합니다.
+- 운영 실행 시간: 매일 03:00
+- 운영 환경은 기본 30일의 영구 삭제 유예기간이 지난 회원을 대상으로 합니다.
+- 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` 환경변수로 조정할 수 있습니다.
 - 정책상 삭제 대상인 회원 연관 데이터와 `TM_USERXM` 회원 원본을 삭제합니다.
 - 로그인 이력은 보존합니다.
 - 한 번 실행할 때 `scheduler.max-size` 범위만 처리하고 다음 실행에서 나머지를 처리합니다.
+
+### 로컬 테스트 실행
+
+- `loc` 프로필에서 `withdrawal.hard-delete-test-enabled`가 `true`이면 10초마다 실행합니다.
+- 로컬 유예기간은 0일이므로 영구 탈퇴 요청 직후 다음 실행 주기에 삭제 대상이 됩니다.
+- `loc` 프로필에만 적용되며 운영에서는 테스트 스케줄러를 생성하지 않습니다.
+- 현재 연결된 DB에서 삭제 예정일이 지난 모든 회원이 대상이므로 공용 또는 운영 DB 연결에 사용하지 않습니다.
 
 ## 실행 로그
 
@@ -49,6 +57,7 @@
 ## 구현 근거
 
 - `global/scheduler/Scheduler.java`
+- `global/scheduler/LocalUserHardDeleteScheduler.java`
 - `global/scheduler/common/SchedulerLogSupport.java`
 - `global/scheduler/service/ReportDateOverServiceImpl.java`
 - `global/scheduler/service/AlimDeleteServiceImpl.java`

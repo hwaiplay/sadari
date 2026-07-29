@@ -56,12 +56,26 @@
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
+| `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |
 | `COOKIE_SAME_SITE` | `None` | 인증 쿠키 SameSite 정책 |
 | `LOGGING_LEVEL_ROOT` | `info` | 루트 로그 레벨 |
 | `LOGGING_LEVEL_APP` | `info` | 프로젝트 패키지 로그 레벨 |
+
+## 프로필 고정 설정
+
+- `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
+  `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
+- `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
+- 로컬 테스트 스케줄러는 10초마다 실행되며 현재 연결된 DB에서 삭제 예정일이 지난 모든 회원을
+  최대 처리 건수 범위까지 삭제하므로 공용 또는 운영 DB에 `loc` 프로필을 연결하면 안 됩니다.
+- `application-prod.yml`은 `withdrawal.hard-delete-test-enabled`를 `false`로 고정합니다.
+  이 값은 GitHub Actions 환경변수로 노출하지 않으므로 운영 배포에서 로컬 테스트 스케줄러를
+  활성화할 수 없습니다.
+- 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` Actions Variable로 조정할 수 있으며,
+  등록하지 않으면 30일을 사용합니다.
 
 ## EC2 사전 조건
 
