@@ -21,18 +21,21 @@ import org.our.sadari.user.dto.LoginHistoryDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.LoginHistoryMapper;
 import org.our.sadari.user.mapper.UserMapper;
+import org.our.sadari.user.service.NicknameGenerationService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 /**
  * fileName       : AuthServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-03-15
- * description    : 사용자 업무 로직을 구현한다
+ * description    : Kakao 계정 기반 회원 등록과 JWT 로그인 업무를 구현한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -57,9 +60,11 @@ public class AuthServiceImpl implements AuthService {
     private final FileService fileService;
     // UserIdEncryption 업무 처리 서비스
     private final UserIdEncryptionService userIdEncryptionService;
+    // NicknameGeneration 업무 처리 서비스
+    private final NicknameGenerationService nicknameGenerationService;
 
     /**
-     * Kakao 계정 확인과 JWT 로그인 처리한다.
+     * Kakao 계정으로 신규 회원 등록과 JWT 로그인을 처리한다
      *
      * @author SeungHyeon.Kang
      * @param code Kakao 로그인 인가 코드
@@ -99,7 +104,6 @@ public class AuthServiceImpl implements AuthService {
         String providerId = String.valueOf(kakaoAccountDto.id);
         // encryptForStorage 업무 로직을 userIdEncryptionService에 위임한다
         String encryptedProviderId = userIdEncryptionService.encryptForStorage(providerId);
-        String nickName = kakaoAccountDto.kakao_account.profile.nickname;
         String profileImg = kakaoAccountDto.kakao_account.profile.profile_image_url;
 
         // 카카오 로그인 사용자 정보를 담을 객체를 생성한다
@@ -117,11 +121,10 @@ public class AuthServiceImpl implements AuthService {
             userDto.setUserIdxx(encryptedProviderId);
             // UserRole 업무 값을 userDto DTO에 설정한다
             userDto.setUserRole(AuthConstant.ROLE_USER);
-            // UserNick 업무 값을 userDto DTO에 설정한다
-            userDto.setUserNick(nickName);
-
             // savedUser 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (StringUtil.isEmpty(savedUser)) {
+                // 카카오 닉네임 대신 서비스 정책에 맞는 중복 없는 최초 닉네임을 발급한다
+                userDto.setUserNick(nicknameGenerationService.setGeneratedNickname());
                 // 신규 회원이 즉시 정상 이용 상태로 등록되도록 회원 상태를 설정한다
                 userDto.setUserStat(Constant.USER_STAT_ACTIVE);
                 // User 업무 값을 userMapper DTO에 설정한다
@@ -177,6 +180,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
+            // 사용자 등록 일부만 커밋되지 않도록 로그인 쓰기 트랜잭션 전체를 롤백한다
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao user save failed. message={}", e.getMessage());
             // "인증에 실패했어요.\n다시 로그인 해주세요."

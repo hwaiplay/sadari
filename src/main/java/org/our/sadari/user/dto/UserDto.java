@@ -16,6 +16,7 @@ import lombok.Data;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-07-29        SeungHyeon.Kang    닉네임 허용 문자와 최대 길이 설명 확장
+ * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -27,7 +28,7 @@ public class UserDto {
     @Schema(description = "OAuth 제공자 사용자 ID")
     private String userIdxx;
 
-    @Schema(description = "최대 20자 닉네임. 한글, 영문, 숫자와 문자 사이의 단일 공백, 언더바, 하이픈을 사용할 수 있다.", example = "reader_31")
+    @Schema(description = "최대 25자 닉네임. 한글, 영문, 숫자와 문자 사이의 단일 공백, 언더바, 하이픈을 사용할 수 있다.", example = "마음이 따뜻한 코끼리_26090001")
     private String userNick;
 
     @Schema(description = "로그인 제공자", example = "KAKAO")
