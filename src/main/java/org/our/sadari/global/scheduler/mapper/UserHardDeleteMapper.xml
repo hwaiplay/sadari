@@ -5,17 +5,22 @@
     <!-- 삭제 예정일이 지난 영구 탈퇴 회원을 오래된 요청부터 제한 건수만큼 조회한다. -->
     <select id="getHardDeleteTargetList" parameterType="int" resultType="org.our.sadari.user.dto.UserWithdrawalDto">
         SELECT /* getHardDeleteTargetList */
-               W.WTHD_NUMB
-             , W.USER_NUMB
-             , W.DELT_DATE
-          FROM TH_USWTHD W
-          JOIN TM_USERXM U
-            ON W.USER_NUMB = U.USER_NUMB
-         WHERE W.WTHD_STAT = 'DELETE_PENDING'
-           AND U.USER_STAT = 'DELETE_PENDING'
-           AND W.DELT_DATE <![CDATA[ <= ]]> SYSDATE
-         ORDER BY W.DELT_DATE
-         FETCH FIRST #{maxSize} ROWS ONLY
+               TARGET.WTHD_NUMB
+             , TARGET.USER_NUMB
+             , TARGET.DELT_DATE
+          FROM (  SELECT W.WTHD_NUMB
+                       , W.USER_NUMB
+                       , W.DELT_DATE
+                    FROM TH_USWTHD W
+                    JOIN TM_USERXM U
+                      ON W.USER_NUMB = U.USER_NUMB
+                   WHERE W.WTHD_STAT = 'DELETE_PENDING'
+                     AND U.USER_STAT = 'DELETE_PENDING'
+                     AND W.DELT_DATE <![CDATA[ <= ]]> SYSDATE
+                ORDER BY W.DELT_DATE
+                       , W.WTHD_NUMB
+               ) TARGET
+         WHERE ROWNUM <![CDATA[ <= ]]> #{maxSize}
     </select>
 
     <!-- 회원 연관 데이터를 참조 순서에 맞게 제거하고 로그인 이력은 회원 번호만 익명화한다. -->
