@@ -11,6 +11,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-07        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    자동 닉네임 공통코드와 발급 제한 추가
  * 2026-07-30        SeungHyeon.Kang    계정 비활성화 상태와 유형 용어 정리
+ * 2026-07-30        SeungHyeon.Kang    팝업 사용 화면 구분 공통코드 추가
  */
 public final class Constant {
 
@@ -37,6 +38,8 @@ public final class Constant {
     public static final String CODE_EXCP_WORD = "EXCP_WORD";
     // 코드 알림 상황 설정값
     public static final String CODE_ALIM_SITU = "ALIM_SITU";
+    // 팝업 사용 화면 구분 공통코드
+    public static final String CODE_POPU_SITU = "POPU_SITU";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 회원 상태 공통코드
