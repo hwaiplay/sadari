@@ -151,7 +151,7 @@ export const weekDay = style({
 export const dayGrid = style({
   display: "grid",
   gridTemplateColumns: "repeat(7, 1fr)",
-  gap: 0,
+  gap: "5px 0",
   overflow: "hidden",
   borderRadius: "10px",
 });
@@ -180,8 +180,9 @@ export const dayButton = style({
   cursor: "pointer",
 
   ":hover": {
-    borderColor: vars.color.gray400,
-    backgroundColor: "#f7f7f7",
+    borderColor: "#e5f0eb",
+    backgroundColor: "#e5f0eb",
+
   },
 });
 

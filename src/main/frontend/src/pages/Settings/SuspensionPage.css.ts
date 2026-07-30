@@ -57,7 +57,8 @@ export const description = style({
   color: "#666d69",
   fontFamily: vars.font.body,
   fontSize: "14px",
-  lineHeight: 1.7,
+  lineHeight: 1.45,
+  whiteSpace: 'pre-line'
 });
 
 export const detailList = style({
