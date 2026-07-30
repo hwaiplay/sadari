@@ -17,6 +17,7 @@ const REFRESHABLE_AUTH_CODES = new Set([
   TOKEN_EXPIRED_CODE,
 ]);
 const DELETE_PENDING_STATUS = "DELETE_PENDING";
+const SUSPENDED_STATUS = "SUSPENDED";
 const ONBOARDING_COMPLETED = "Y";
 
 /**
@@ -72,6 +73,7 @@ export const useCheckAuth = () => {
       isLoading: true,
       isAuthenticated: false,
       isDeletePending: false,
+      isSuspended: false,
       isOnboardingRequired: false,
     };
   }
@@ -86,6 +88,7 @@ export const useCheckAuth = () => {
         isLoading: false,
         isAuthenticated: false,
         isDeletePending: false,
+        isSuspended: false,
         isOnboardingRequired: false,
       };
     }
@@ -94,6 +97,7 @@ export const useCheckAuth = () => {
       isLoading: false,
       isAuthenticated: false,
       isDeletePending: false,
+      isSuspended: false,
       isOnboardingRequired: false,
     };
   }
@@ -109,6 +113,7 @@ export const useCheckAuth = () => {
         isLoading: false,
         isAuthenticated: true,
         isDeletePending: authData?.userStat === DELETE_PENDING_STATUS,
+        isSuspended: authData?.userStat === SUSPENDED_STATUS,
         isOnboardingRequired: authData?.onbdYsno !== ONBOARDING_COMPLETED,
       };
     }
@@ -117,6 +122,7 @@ export const useCheckAuth = () => {
       isLoading: false,
       isAuthenticated: false,
       isDeletePending: false,
+      isSuspended: false,
       isOnboardingRequired: false,
     };
   }
@@ -125,6 +131,7 @@ export const useCheckAuth = () => {
     isLoading: false,
     isAuthenticated: false,
     isDeletePending: false,
+    isSuspended: false,
     isOnboardingRequired: false,
   };
 };

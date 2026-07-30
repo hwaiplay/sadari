@@ -16,6 +16,8 @@ export type WithdrawalStatus = {
   wthdStat: string;
 };
 
+export type WithdrawalCancelStatus = "ACTIVE" | "SUSPENDED";
+
 /**
  * 회원 탈퇴 정책을 저장하고 Kakao 재인증 URL을 요청합니다.
  *
@@ -56,5 +58,5 @@ export const uptWithdrawalCancelApi = async () => {
   // 영구 삭제 대기 취소를 서버에 요청합니다
   const response = await api.post("/user/withdrawal/cancel");
   // 공통 성공 코드가 확인된 취소 결과를 반환합니다
-  return assertResultDataSuccess(response.data);
+  return assertResultDataSuccess(response.data) as ResultData<WithdrawalCancelStatus>;
 };
