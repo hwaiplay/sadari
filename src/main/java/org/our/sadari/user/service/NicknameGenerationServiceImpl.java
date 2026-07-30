@@ -1,9 +1,11 @@
 package org.our.sadari.user.service;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ThreadLocalRandom;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.code.dto.CodeDto;
@@ -27,6 +29,8 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    주어별 네 개의 호환 서술어 옵션 적용
+ * 2026-07-30        SeungHyeon.Kang    닉네임 순번 키를 세부코드 조합으로 변경
  */
 @Service
 @RequiredArgsConstructor
@@ -101,8 +105,8 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
                 continue;
             }
 
-            // 선택한 닉네임 본문에 현재 연월의 다음 순번을 발급한다
-            NicknameSequenceDto sequenceDto = setNextNicknameSequence(nicknameText);
+            // 선택한 세부코드 조합에 현재 연월의 다음 순번을 발급한다
+            NicknameSequenceDto sequenceDto = setNextNicknameSequence(subject, predicate, animal);
 
             // 한 조합이 네 자리 최대 번호를 모두 사용했으면 다른 조합으로 발급을 이어간다
             if (StringUtil.isEmpty(sequenceDto)) {
@@ -145,7 +149,7 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
     }
 
     /**
-     * 주어와 같은 조합 식별값을 가진 서술어 목록을 조회한다
+     * 주어의 네 옵션에 등록된 서술어 코드와 일치하는 후보 목록을 조회한다
      *
      * @author SeungHyeon.Kang
      * @param subject 선택된 닉네임 주어 코드
@@ -155,11 +159,22 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
     private List<CodeDto> getCompatiblePredicateList(CodeDto subject, List<CodeDto> predicateList) {
         // 연결 가능한 서술어를 원본 정렬 순서대로 담을 목록을 생성한다
         List<CodeDto> compatiblePredicateList = new ArrayList<>();
+        // 중복 옵션을 제거하면서 주어에 등록된 서술어 코드 순서를 유지할 집합을 생성한다
+        Set<String> compatiblePredicateCodeSet = new LinkedHashSet<>();
+        // 주어의 첫 번째 호환 서술어 코드를 후보 집합에 추가한다
+        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt1Code());
+        // 주어의 두 번째 호환 서술어 코드를 후보 집합에 추가한다
+        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt2Code());
+        // 주어의 세 번째 호환 서술어 코드를 후보 집합에 추가한다
+        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt3Code());
+        // 주어의 네 번째 호환 서술어 코드를 후보 집합에 추가한다
+        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt4Code());
 
-        // 공통코드 옵션의 조합 식별값이 같은 서술어만 후보에 포함한다
+        // 주어 옵션에 직접 등록된 세부코드의 서술어만 무작위 선택 후보에 포함한다
         for (CodeDto predicate : predicateList) {
-            // 주어와 서술어의 조합 식별값이 같으면 자연스러운 문구 후보로 추가한다
-            if (!StringUtil.isEmpty(subject.getOpt1Code()) && subject.getOpt1Code().equals(predicate.getOpt1Code())) {
+            // 옵션 코드와 일치하는 활성 서술어만 자연스러운 문구 후보로 추가한다
+            if (!StringUtil.isEmpty(predicate.getComdCode())
+                    && compatiblePredicateCodeSet.contains(predicate.getComdCode().trim().toUpperCase(Locale.ROOT))) {
                 // 검증된 서술어를 무작위 선택 후보 목록에 추가한다
                 compatiblePredicateList.add(predicate);
             }
@@ -171,17 +186,53 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
     }
 
     /**
-     * 닉네임 본문과 현재 연월에 대응하는 다음 네 자리 번호를 원자적으로 발급한다
+     * 주어 옵션의 서술어 코드를 비교 가능한 대문자 값으로 후보 집합에 추가한다
      *
      * @author SeungHyeon.Kang
-     * @param nicknameText 순번을 발급할 닉네임 본문
+     * @param compatiblePredicateCodeSet 호환 서술어 코드를 담을 집합
+     * @param predicateCode 주어 옵션에 등록된 서술어 코드
+     */
+    private void addCompatiblePredicateCode(Set<String> compatiblePredicateCodeSet, String predicateCode) {
+        // 비어 있는 옵션은 실제 서술어 코드와 비교할 수 없으므로 후보에서 제외한다
+        if (StringUtil.isEmpty(predicateCode) || predicateCode.isBlank()) {
+            // 다음 옵션을 처리할 수 있도록 현재 빈 옵션 처리를 종료한다
+            return;
+        }
+
+        // 공통코드 대소문자 차이로 후보가 누락되지 않도록 정규화해 추가한다
+        compatiblePredicateCodeSet.add(predicateCode.trim().toUpperCase(Locale.ROOT));
+    }
+
+    /**
+     * 닉네임 세부코드 조합과 현재 연월에 대응하는 다음 네 자리 번호를 원자적으로 발급한다
+     *
+     * @author SeungHyeon.Kang
+     * @param subject 순번을 발급할 닉네임 주어 코드
+     * @param predicate 순번을 발급할 닉네임 서술어 코드
+     * @param animal 순번을 발급할 닉네임 동물 명사 코드
      * @return 발급 연월과 마지막 번호 또는 번호가 소진된 경우 null
      */
-    private NicknameSequenceDto setNextNicknameSequence(String nicknameText) {
+    private NicknameSequenceDto setNextNicknameSequence(CodeDto subject, CodeDto predicate, CodeDto animal) {
+        // 세 구성요소 객체가 모두 있어야 순번 행의 복합키를 완전하게 생성할 수 있다
+        if (StringUtil.hasEmpty(subject, predicate, animal)) {
+            // 불완전한 공통코드 조합이 순번 테이블에 전달되지 않도록 예외를 생성한다
+            throw new IllegalArgumentException("닉네임 순번 발급 코드가 비어 있습니다.");
+        }
+
+        // 세부코드 값이 모두 있어야 동일한 문구도 코드 기준으로 안정적으로 식별할 수 있다
+        if (StringUtil.hasEmpty(subject.getComdCode(), predicate.getComdCode(), animal.getComdCode())) {
+            // 빈 세부코드가 복합키 컬럼에 저장되지 않도록 예외를 생성한다
+            throw new IllegalArgumentException("닉네임 순번 발급 세부코드가 비어 있습니다.");
+        }
+
         // 닉네임 번호 발급 조건을 담을 객체를 생성한다
         NicknameSequenceDto sequenceRequest = new NicknameSequenceDto();
-        // 공통코드로 조합한 닉네임 본문을 번호 발급 조건에 설정한다
-        sequenceRequest.setNickText(nicknameText);
+        // 선택한 닉네임 주어 세부코드를 번호 발급 조건에 설정한다
+        sequenceRequest.setSubjCode(subject.getComdCode());
+        // 선택한 닉네임 서술어 세부코드를 번호 발급 조건에 설정한다
+        sequenceRequest.setPredCode(predicate.getComdCode());
+        // 선택한 닉네임 동물 명사 세부코드를 번호 발급 조건에 설정한다
+        sequenceRequest.setAnmlCode(animal.getComdCode());
 
         // 기존 행을 갱신하며 동일 조합의 동시 발급 요청을 Oracle 행 잠금으로 직렬화한다
         int updateCnt = nicknameSequenceMapper.uptNicknameSequence(sequenceRequest);

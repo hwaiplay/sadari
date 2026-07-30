@@ -20,6 +20,7 @@ import SettingsPage from "@/pages/Settings/SettingsPage";
 import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
 import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
 import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
+import WelcomePage from "@/pages/Welcome/WelcomePage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -62,6 +63,16 @@ const Router = () => {
           element={
             <ProtectedRoute>
               <WithdrawalPendingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 최초 로그인 웰컴 */}
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <WelcomePage />
             </ProtectedRoute>
           }
         />

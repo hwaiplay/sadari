@@ -317,6 +317,7 @@ const SearchBookPage = () => {
                     className={styles.resultCard}
                     key={`${book.isbn}-${index}`}
                   >
+                    {/* 검색된 도서의 표지 영역 */}
                     <div className={styles.coverArea}>
                       <div className={styles.coverFrame}>
                         <img
@@ -328,15 +329,21 @@ const SearchBookPage = () => {
                         />
                       </div>
                     </div>
-                    <div>
+
+                    {/* 검색된 도서의 제목과 저자 및 출판사 영역 */}
+                    <div className={styles.bookMeta}>
                       <h2 className={styles.bookTitle}>{title}</h2>
                       <p className={styles.meta}>
                         {author} / {publisher}
                       </p>
                     </div>
+
+                    {/* 검색된 도서의 소개 영역 */}
                     <p className={styles.description}>
                       {preview || message("frontend.common.noBookDescription")}
                     </p>
+
+                    {/* 검색된 도서의 상세보기와 선택 버튼 영역 */}
                     <div className={styles.actions}>
                       <button
                         className={styles.actionButton}

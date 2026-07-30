@@ -13,6 +13,7 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 기능 추가
  */
 public interface UserService {
     /**
@@ -36,4 +37,14 @@ public interface UserService {
      * @return 수정 후 최신 프로필 조회 결과
      */
     ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage, MultipartFile backgroundImage);
+
+    /**
+     * 최초 로그인 사용자의 닉네임을 저장하고 온보딩을 완료한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param userDto 사용자가 확정한 닉네임
+     * @return 온보딩 완료 후 최신 프로필 조회 결과
+     */
+    ResultData uptOnboarding(Long userNumb, UserDto userDto);
 }

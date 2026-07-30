@@ -14,15 +14,17 @@ import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth";
  */
 export default function PublicRoute({ children }: { children: ReactNode }) {
 
-  const { isLoading, isAuthenticated } = useCheckAuth();
+  const { isLoading, isAuthenticated, isOnboardingRequired } = useCheckAuth();
 
   if (isLoading) {
     return <Loading title={message("frontend.common.loginLoading")} />;
   }
 
   if (isAuthenticated) {
-    return <Navigate to="/home" replace />;
+    // 최초 로그인 상태면 공개 화면보다 웰컴 화면을 먼저 제공한다
+    return <Navigate to={isOnboardingRequired ? "/welcome" : "/home"} replace />;
   }
 
+  // 로그인하지 않은 사용자가 요청한 공개 화면을 반환한다
   return children;
 }

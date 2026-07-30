@@ -17,6 +17,7 @@ const REFRESHABLE_AUTH_CODES = new Set([
   TOKEN_EXPIRED_CODE,
 ]);
 const DELETE_PENDING_STATUS = "DELETE_PENDING";
+const ONBOARDING_COMPLETED = "Y";
 
 /**
  * use Check Auth 상태와 처리 함수를 제공한다
@@ -67,7 +68,12 @@ export const useCheckAuth = () => {
   }, [errorCode, refreshing, refreshAttempted, refetch]);
 
   if (isLoading || refreshing) {
-    return { isLoading: true, isAuthenticated: false, isDeletePending: false };
+    return {
+      isLoading: true,
+      isAuthenticated: false,
+      isDeletePending: false,
+      isOnboardingRequired: false,
+    };
   }
 
   if (isError) {
@@ -76,10 +82,20 @@ export const useCheckAuth = () => {
       errorCode === TOKEN_EXPIRED_CODE ||
       refreshAttempted
     ) {
-      return { isLoading: false, isAuthenticated: false, isDeletePending: false };
+      return {
+        isLoading: false,
+        isAuthenticated: false,
+        isDeletePending: false,
+        isOnboardingRequired: false,
+      };
     }
 
-    return { isLoading: false, isAuthenticated: false, isDeletePending: false };
+    return {
+      isLoading: false,
+      isAuthenticated: false,
+      isDeletePending: false,
+      isOnboardingRequired: false,
+    };
   }
 
   if (data) {
@@ -87,17 +103,28 @@ export const useCheckAuth = () => {
 
     if (code === 200) {
       // 인증 응답의 회원 상태로 영구 삭제 대기 전용 화면 여부를 판단합니다
-      const userStat = (data.data as { userStat?: string } | undefined)?.userStat;
-      // 인증 성공 여부와 영구 삭제 대기 여부를 함께 반환합니다
+      const authData = data.data as { userStat?: string; onbdYsno?: string } | undefined;
+      // 인증 성공 여부와 영구 삭제 대기 및 온보딩 진입 여부를 함께 반환합니다
       return {
         isLoading: false,
         isAuthenticated: true,
-        isDeletePending: userStat === DELETE_PENDING_STATUS,
+        isDeletePending: authData?.userStat === DELETE_PENDING_STATUS,
+        isOnboardingRequired: authData?.onbdYsno !== ONBOARDING_COMPLETED,
       };
     }
 
-    return { isLoading: false, isAuthenticated: false, isDeletePending: false };
+    return {
+      isLoading: false,
+      isAuthenticated: false,
+      isDeletePending: false,
+      isOnboardingRequired: false,
+    };
   }
 
-  return { isLoading: false, isAuthenticated: false, isDeletePending: false };
+  return {
+    isLoading: false,
+    isAuthenticated: false,
+    isDeletePending: false,
+    isOnboardingRequired: false,
+  };
 };
