@@ -76,7 +76,7 @@ sadari-admin 운영 조회 화면
 | `SCHD_CODE` | 스케줄러별 실행 중지·재개 |
 | `BADX_WORD`, `EXCP_WORD` | 비속어 차단 사전과 정상 표현 예외 사전 |
 | `NICK_SUBJ`, `NICK_PRED`, `NICK_ANML` | 신규 회원 자동 닉네임 조합 |
-| `USER_STAT` | 활성, 서비스 탈퇴, 영구 삭제 대기 상태 |
+| `USER_STAT` | 활성, 계정 비활성화, 영구 삭제 대기 상태 |
 | `WTHD_TYPE`, `WTHD_RSON` | 탈퇴 방식과 탈퇴 사유 검증 |
 
 사용자 구현 근거:

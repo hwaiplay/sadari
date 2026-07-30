@@ -1,11 +1,11 @@
-# 회원 탈퇴 정책
+# 계정 비활성화 및 영구 탈퇴 정책
 
 ## 공통 절차
 
-1. 사용자가 탈퇴 유형과 탈퇴 사유를 선택합니다.
+1. 사용자가 계정 비활성화 또는 영구 탈퇴와 처리 사유를 선택합니다.
 2. `OTHER` 사유를 선택하면 상세 사유를 필수로 입력합니다.
 3. 상세 탈퇴 사유는 UTF-8 기준 최대 500바이트까지 입력할 수 있습니다.
-4. 서버가 탈퇴 유형과 사유를 공통코드로 검증합니다.
+4. 서버가 계정 처리 유형과 사유를 공통코드로 검증합니다.
 5. 사용자가 최종 확인창에서 확인한 경우에만 재인증 요청을 생성합니다.
 6. 탈퇴 요청은 예측 불가능한 OAuth `state`와 함께 Redis에 10분간 저장합니다.
 7. Kakao 재인증 계정과 현재 로그인 계정이 일치해야 탈퇴를 진행합니다.
@@ -13,11 +13,13 @@
 
 확인창에서 취소하면 재인증 API를 호출하지 않으며 Kakao 화면으로 이동하지 않습니다.
 
-## 서비스 탈퇴
+화면의 비활성화와 영구 탈퇴 선택 카드에는 각 정책의 핵심 안내 한 줄만 표시하며, 도움말 버튼을 누르면 전체 정책을 비교할 수 있는 안내 팝업을 제공합니다.
 
-- 탈퇴 유형: `SOFT`
+## 계정 비활성화
+
+- 처리 유형: `SOFT`
 - 회원 상태: `WITHDRAWN`
-- 서비스 재로그인 시 기존 회원 계정을 복구할 수 있습니다.
+- 같은 Kakao 계정으로 재로그인하면 기존 회원 계정을 `ACTIVE` 상태로 다시 활성화합니다.
 - 회원 원본 정보와 로그인 이력은 유지합니다.
 - 작성한 독후감은 모두 비공개로 전환합니다.
 - 작성한 댓글은 삭제된 댓글 상태로 전환합니다.
@@ -25,11 +27,13 @@
 - 브라우저 푸시 구독은 비활성화합니다.
 - 팔로우 및 팔로워 관계는 유지합니다.
 - 다른 사용자가 탈퇴 회원 프로필에 접근하면 제공 정보를 제한합니다.
-- 탈퇴 과정에서 변경된 독후감 공개 상태, 알림, 푸시 구독은 계정 복구 시 자동 복원하지 않습니다.
+- 비활성화 과정에서 변경된 독후감 공개 상태, 댓글, 알림, 푸시 구독은 계정 재활성화 시 자동 복원하지 않습니다.
+- 계정이 다시 활성화된 로그인에는 “다시 돌아와서 반가워요” 팝업을 표시하고 자동 복원되지 않는 항목을 다시 안내합니다.
+- 일반 로그인에는 비활성화 계정 복귀 팝업을 표시하지 않습니다.
 
 ## 영구 탈퇴
 
-- 탈퇴 유형: `HARD`
+- 처리 유형: `HARD`
 - 회원 상태: `DELETE_PENDING`
 - 운영 환경은 신청 직후 삭제하지 않고 기본 30일의 유예기간을 둡니다.
 - 유예기간에는 영구 삭제 예정일을 사용자에게 표시합니다.
@@ -55,24 +59,28 @@
 
 - Kakao 연결 해제가 실패하면 회원 상태를 변경하지 않습니다.
 - 탈퇴 이력은 `UNLINK_PENDING` 상태로 기록하고 제한된 길이의 오류 내용을 저장합니다.
-- 외부 연결 해제에 성공해야 서비스 탈퇴 또는 영구 삭제 대기 상태를 적용합니다.
+- 외부 연결 해제에 성공해야 계정 비활성화 또는 영구 삭제 대기 상태를 적용합니다.
 
 ## 탈퇴 상태값
 
 | 상태 | 의미 |
 | --- | --- |
-| `COMPLETED` | 서비스 탈퇴 적용 완료 |
+| `COMPLETED` | 계정 비활성화 적용 완료 |
 | `UNLINK_PENDING` | Kakao 연결 해제 실패로 재처리 필요 |
 | `DELETE_PENDING` | 영구 삭제 유예기간 |
 | `RESTORED` | 영구 탈퇴 신청 취소 |
 
 ## 구현 근거
 
-- `user/service/UserWithdrawalServiceImpl.java`
-- `user/mapper/UserWithdrawalMapper.xml`
-- `global/scheduler/service/UserHardDeleteServiceImpl.java`
-- `global/scheduler/LocalUserHardDeleteScheduler.java`
-- `global/scheduler/mapper/UserHardDeleteMapper.xml`
-- `pages/Settings/WithdrawalPage.tsx`
-- `pages/Settings/WithdrawalPendingPage.tsx`
-- `pages/Settings/WithdrawalResultPage.tsx`
+- `src/main/java/org/our/sadari/user/service/UserWithdrawalServiceImpl.java`
+- `src/main/java/org/our/sadari/user/mapper/UserWithdrawalMapper.xml`
+- `src/main/java/org/our/sadari/global/security/dto/TokenDto.java`
+- `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
+- `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
+- `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
+- `src/main/java/org/our/sadari/global/scheduler/LocalUserHardDeleteScheduler.java`
+- `src/main/java/org/our/sadari/global/scheduler/mapper/UserHardDeleteMapper.xml`
+- `src/main/frontend/src/pages/Settings/WithdrawalPage.tsx`
+- `src/main/frontend/src/pages/Settings/WithdrawalPendingPage.tsx`
+- `src/main/frontend/src/pages/Settings/WithdrawalResultPage.tsx`
+- `src/main/frontend/src/pages/Oauth/Oauth.tsx`

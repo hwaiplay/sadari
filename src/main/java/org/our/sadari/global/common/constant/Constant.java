@@ -10,6 +10,7 @@ package org.our.sadari.global.common.constant;
  * -----------------------------------------------------------
  * 2026-07-07        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    자동 닉네임 공통코드와 발급 제한 추가
+ * 2026-07-30        SeungHyeon.Kang    계정 비활성화 상태와 유형 용어 정리
  */
 public final class Constant {
 
@@ -72,11 +73,11 @@ public final class Constant {
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";
-    // 소프트 탈퇴 회원 상태
+    // 계정 비활성화 회원 상태
     public static final String USER_STAT_WITHDRAWN = "WITHDRAWN";
     // 영구 삭제 대기 회원 상태
     public static final String USER_STAT_DELETE_PENDING = "DELETE_PENDING";
-    // 소프트 탈퇴 유형
+    // 계정 비활성화 유형
     public static final String WITHDRAWAL_TYPE_SOFT = "SOFT";
     // 영구 탈퇴 유형
     public static final String WITHDRAWAL_TYPE_HARD = "HARD";

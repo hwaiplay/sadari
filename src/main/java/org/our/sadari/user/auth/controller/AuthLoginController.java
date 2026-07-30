@@ -44,6 +44,7 @@ import java.util.Map;
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
+ * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
  */
 @RestController
 @RequiredArgsConstructor
@@ -207,8 +208,17 @@ public class AuthLoginController {
 
         // 발급된 토큰을 HttpOnly 쿠키에 담아 응답 헤더에 추가하고 프론트엔드로 리다이렉트한다.
         addTokenCookies(response, token.getAccessToken(), token.getRefreshToken());
-        // sendRedirect 호출로 검증된 알림 또는 응답을 전송한다
-        response.sendRedirect(frontDomain + "/oauth");
+        // 일반 로그인은 별도 안내 표시 없이 OAuth 완료 화면으로 이동한다
+        String oauthRedirectUrl = frontDomain + "/oauth";
+
+        // 이번 로그인에서 비활성화 계정이 복구된 경우에만 일회성 복귀 안내 표시를 전달한다
+        if (token.isAccountReactivated()) {
+            // OAuth 완료 화면이 복귀 정책 팝업을 표시할 수 있도록 정해진 쿼리값을 추가한다
+            oauthRedirectUrl += "?reactivated=Y";
+        }
+
+        // 인증 상태와 복귀 여부를 확인할 프론트엔드 OAuth 완료 화면으로 이동한다
+        response.sendRedirect(oauthRedirectUrl);
     }
 
     /**
