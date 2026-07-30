@@ -14,6 +14,7 @@ import org.our.sadari.user.dto.UserSuspensionDto;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    사용자 서버 동기화 대기 상태 수정 추가
+ * 2026-07-30        SeungHyeon.Kang    정지 이력 부재 시 회원 상태 보정 조회 추가
  */
 @Mapper
 public interface UserSuspensionMapper {
@@ -26,6 +27,15 @@ public interface UserSuspensionMapper {
      * @return 최신 활성 정지 이력
      */
     UserSuspensionDto getLatestActiveSuspension(@Param("userNumb") Long userNumb);
+
+    /**
+     * 정지 이력이 없는 회원의 현재 DB 상태를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 회원 번호
+     * @return 현재 DB 회원 상태
+     */
+    String getUserStatus(@Param("userNumb") Long userNumb);
 
     /**
      * 기간이 끝난 회원 정지를 만료 상태로 변경한다
