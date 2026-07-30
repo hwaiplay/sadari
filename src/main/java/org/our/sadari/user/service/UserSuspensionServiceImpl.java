@@ -27,6 +27,7 @@ import java.time.LocalDateTime;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    기간 만료 상태 변경 Outbox 전달 추가
+ * 2026-07-30        SeungHyeon.Kang    정지 이력 부재 시 로그인 상태 캐시 보정
  */
 @Service
 @RequiredArgsConstructor
@@ -63,6 +64,20 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         uptExpiredSuspension(userNumb);
         // 관리자 내부 메모를 포함하지 않는 최신 활성 정지 정보를 조회한다
         UserSuspensionDto suspension = userSuspensionMapper.getLatestActiveSuspension(userNumb);
+
+        // 활성 정지 이력이 없으면 해제 또는 만료된 DB 상태로 남은 정지 캐시를 보정한다
+        if (StringUtil.isEmpty(suspension)) {
+            // 정지 해제 이후의 현재 회원 상태를 DB에서 조회한다
+            String userStat = userSuspensionMapper.getUserStatus(userNumb);
+
+            // DB도 정지 상태라면 이력 불일치이므로 접근 제한을 임의로 해제하지 않는다
+            if (!StringUtil.isEmpty(userStat) && !Constant.USER_STAT_SUSPENDED.equals(userStat)) {
+                // 정지 화면과 일반 화면 사이의 반복 이동을 막도록 커밋 후 Redis 상태를 보정한다
+                syncUserStatusAfterCommit(userNumb, userStat);
+            }
+
+        }
+
         // 정지 해제 여부를 화면이 판단할 수 있도록 Null을 포함한 조회 결과를 반환한다
         return ResultData.success(suspension);
     }
