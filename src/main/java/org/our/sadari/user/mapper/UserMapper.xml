@@ -15,6 +15,7 @@
              , U.USER_PROV
              , U.USER_ROLE
              , U.USER_STAT
+             , U.ONBD_YSNO
              , U.WTHD_DATE
              , U.DELT_DATE
              , U.INTR_CNTN
@@ -39,6 +40,7 @@
              , U.USER_PROV
              , U.USER_ROLE
              , U.USER_STAT
+             , U.ONBD_YSNO
              , U.WTHD_DATE
              , U.DELT_DATE
              , U.INTR_CNTN
@@ -47,6 +49,14 @@
             ON U.PROF_NUMB = F.FILE_NUMB
      LEFT JOIN TM_FILEXM BF
             ON U.BGIM_NUMB = BF.FILE_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 사용자 번호로 최초 로그인 온보딩 완료 여부를 조회한다. -->
+    <select id="getUserOnboardingYsno" parameterType="long" resultType="string">
+        SELECT /* getUserOnboardingYsno */
+               U.ONBD_YSNO
+          FROM TM_USERXM U
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
@@ -66,6 +76,7 @@
                   , USER_PROV
                   , USER_ROLE
                   , USER_STAT
+                  , ONBD_YSNO
                   , INTR_CNTN
                   , JOIN_DATE
         ) VALUES (  #{userNumb}
@@ -76,6 +87,7 @@
                   , #{userProv,jdbcType=VARCHAR}
                   , #{userRole}
                   , #{userStat}
+                  , #{onbdYsno}
                   , #{intrCntn,jdbcType=VARCHAR}
                   , SYSDATE
         )
@@ -94,6 +106,18 @@
              , BGIM_NUMB = #{bgimNumb}
         </if>
          WHERE USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 최초 로그인 사용자의 닉네임 저장과 온보딩 완료를 한 번에 반영한다. -->
+    <update id="uptUserOnboarding" parameterType="org.our.sadari.user.dto.UserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE /* uptUserOnboarding */
+               TM_USERXM
+           SET USER_NICK = #{userNick}
+             , ONBD_YSNO = #{commYes}
+         WHERE USER_NUMB = #{userNumb}
+           AND ONBD_YSNO = #{commNo}
     </update>
 
     <!-- 본인을 제외하고 동일한 닉네임을 사용하는 회원 수를 조회한다. -->

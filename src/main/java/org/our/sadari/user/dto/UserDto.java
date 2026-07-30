@@ -17,6 +17,7 @@ import lombok.Data;
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-07-29        SeungHyeon.Kang    닉네임 허용 문자와 최대 길이 설명 확장
  * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
+ * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 여부 추가
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -39,6 +40,9 @@ public class UserDto {
 
     @Schema(description = "회원 상태", example = "ACTIVE")
     private String userStat;
+
+    @Schema(description = "최초 로그인 온보딩 완료 여부", example = "N")
+    private String onbdYsno;
 
     @Schema(description = "회원 탈퇴 요청일시")
     private LocalDateTime wthdDate;

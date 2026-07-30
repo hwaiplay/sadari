@@ -14,7 +14,12 @@ import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 const Oauth = () => {
 
   const navigate = useNavigate();
-  const { isLoading, isAuthenticated, isDeletePending } = useCheckAuth();
+  const {
+    isLoading,
+    isAuthenticated,
+    isDeletePending,
+    isOnboardingRequired,
+  } = useCheckAuth();
 
   useEffect(() => {
 
@@ -23,8 +28,14 @@ const Oauth = () => {
     }
 
     if (isAuthenticated) {
-      // 영구 삭제 대기 회원은 일반 홈 대신 탈퇴 취소 전용 화면으로 이동합니다
-      navigate(isDeletePending ? "/withdrawal/pending" : "/home", { replace: true });
+      // 회원 상태와 최초 로그인 여부에 맞는 첫 화면을 선택한다
+      const destination = isDeletePending
+        ? "/withdrawal/pending"
+        : isOnboardingRequired
+          ? "/welcome"
+          : "/home";
+      // 인증 직후 선택한 사용자 전용 화면으로 이동한다
+      navigate(destination, { replace: true });
       return;
     }
 
@@ -35,7 +46,7 @@ const Oauth = () => {
 
       navigate("/login", { replace: true });
     });
-  }, [isAuthenticated, isDeletePending, isLoading, navigate]);
+  }, [isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, navigate]);
 
   return <Loading title={message("frontend.common.loginLoading")} />;
 };

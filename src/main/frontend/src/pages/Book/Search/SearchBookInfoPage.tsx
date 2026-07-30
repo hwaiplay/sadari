@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/pages/Book/Search/SearchBookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * 검색 결과에서 선택한 도서의 상세 정보와 독후감 등록 진입 기능을 제공한다
  *
  * @author HanWon.Jang
  */
@@ -7,11 +7,12 @@ import { message } from "@/app/messages/message";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
-import { NaverApiResultType } from "@/features/Book/types/book.type";
+import type { NaverApiResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
-import * as styles from "@/pages/Book/Info/BookInfoPage.css";
+import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
+import * as bookInfoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
 /**
  * Search Book Info Page 화면 또는 컴포넌트를 구성한다
@@ -29,115 +30,197 @@ function SearchBookInfoPage() {
     Boolean(book?.isbn),
   );
 
+  // 검색 결과에서 전달된 도서가 없으면 상세 화면을 구성할 수 없음을 안내한다
   if (!book) {
-    return <h3>{message("frontend.common.noBookInfo")}</h3>;
+    // "도서 정보가 없습니다."
+    const noBookInfoMessage = message("frontend.common.noBookInfo");
+    // 검색 도서 정보가 없음을 알리는 안내 화면을 반환한다
+    return <h3>{noBookInfoMessage}</h3>;
   }
 
+  const selectedBook = book;
   const title = stripHtmlTags(book.title);
   const author = normalizeBookAuthor(book.author);
   const publisher = stripHtmlTags(book.publisher);
   const description = stripHtmlTags(book.description);
   const pubdate = formatCompactDate(stripHtmlTags(book.pubdate));
-  const ratingAverage = ratingAverageData?.data;
+  const rawRatingAverage = Number(ratingAverageData?.data);
+  const hasRatingAverage =
+    Number.isFinite(rawRatingAverage) && rawRatingAverage > 0;
+  const ratingAverage = hasRatingAverage ? rawRatingAverage : undefined;
+  // "등록된 책 소개가 없습니다."
+  const bookDescription =
+    description || message("frontend.common.noBookDescription");
   const pageStyle = {
     "--book-bg-image": `url("${book.image}")`,
+    "--book-bg-fade-height": "720px",
   } as CSSProperties;
 
+  /**
+   * 선택한 도서와 같은 ISBN의 공개 독후감 목록으로 이동한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  function goPublicReportsPage(): void {
+
+    // 선택한 도서 정보와 평균 평점을 공개 독후감 화면으로 전달한다
+    navigate(
+      `/book/public-reports/isbn?isbn=${encodeURIComponent(selectedBook.isbn)}`,
+      {
+        state: {
+          title,
+          author,
+          cover: selectedBook.image,
+          ratingAverage,
+        },
+      },
+    );
+  }
+
+  /**
+   * 선택한 도서를 사용하여 독후감 등록 화면으로 이동한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  function goSetReportPage(): void {
+
+    // 검색한 도서를 등록 화면의 초기 선택값으로 전달한다
+    navigate("/set", { state: { selectedBook } });
+  }
+
+  // 독후감 상세의 도서 정보 화면과 같은 구조로 검색 도서 정보를 반환한다
   return (
     /* 검색한 도서의 상세 정보 전체 영역 */
-    <main className={styles.page} style={pageStyle}>
-      <Container className={styles.content}>
-        {/* 도서 표지와 평점 요약 영역 */}
-        <section className={styles.header}>
-          <div className={styles.coverFrame}>
-            <img className={styles.coverImage} src={book.image} alt={title} />
+    <main className={detailStyles.page} style={pageStyle}>
+      <Container className={detailStyles.detail}>
+        {/* 도서 표지와 평균 평점 및 공개 독후감 이동 영역 */}
+        <section className={detailStyles.header}>
+          <div className={detailStyles.coverFrame}>
+            <img
+              className={detailStyles.coverImage}
+              src={book.image}
+              alt={title}
+            />
           </div>
-          <h1 className={styles.title}>{title}</h1>
-          <div className={styles.authorRatingLine}>
-            <p className={styles.meta}>{author}</p>
-            {ratingAverage && <span className={styles.metaSeparator}>|</span>}
-            {ratingAverage && (
-              <span
-                className={styles.ratingSummary}
-                aria-label={message("frontend.report.gradeValue", [
-                  ratingAverage,
-                ])}
-              >
-                <span className={styles.ratingStar}>{"\u2605"}</span>
-                <span className={styles.ratingValue}>{ratingAverage}</span>
+          <h1 className={detailStyles.title}>{title}</h1>
+
+          {/* 도서 평균 평점 영역 */}
+          <div className={detailStyles.bookAverageSummary}>
+            {hasRatingAverage ? (
+              <>
+                {/* 평균 평점이 있으면 평균 문구와 별 아이콘 및 점수를 표시한다 */}
+                <span className={detailStyles.bookAverageLabel}>
+                  {/* "평균" */}
+                  {message("frontend.book.ratingAverageShort")}
+                </span>
+                <svg
+                  className={detailStyles.bookAverageStar}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                <strong className={detailStyles.bookAverageScore}>
+                  {ratingAverage}
+                </strong>
+              </>
+            ) : (
+              <span className={detailStyles.bookAverageEmpty}>
+                {/* "아직 별점이 없습니다." */}
+                {message("frontend.book.ratingAverageEmpty")}
               </span>
             )}
           </div>
-          <button
-            className={styles.bookInfoButton}
-            type="button"
-            onClick={() =>
-              navigate(
-                `/book/public-reports/isbn?isbn=${encodeURIComponent(
-                  book.isbn,
-                )}`,
-                {
-                  state: {
-                    title,
-                    author,
-                    cover: book.image,
-                    ratingAverage,
-                  },
-                },
-              )
-            }
-          >
-            {/* "다른 사람이 쓴 독후감 보기" */}
-            {message("frontend.book.publicReports.button")}
-          </button>
+
+          {/* 같은 도서의 공개 독후감 이동 영역 */}
+          <div className={detailStyles.bookInfoActionRow}>
+            <button
+              className={detailStyles.bookInfoButton}
+              type="button"
+              onClick={goPublicReportsPage}
+            >
+              {/* "다른 사람이 쓴 독후감 보기" */}
+              {message("frontend.book.publicReports.button")}
+            </button>
+          </div>
         </section>
 
-        <div className={styles.contentPanel}>
-          {/* 저자와 출판 정보 영역 */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              {/* "도서 정보" */}
-              {message("frontend.common.bookInfo")}
-            </h2>
-            <div className={styles.infoGrid}>
-              <span className={styles.infoLabel}>
-                {/* "저자" */}
-                {message("frontend.common.author")}
-              </span>
-              <p className={styles.infoValue}>{author || "-"}</p>
-              <span className={styles.infoLabel}>
-                {/* "출판사" */}
-                {message("frontend.common.publisher")}
-              </span>
-              <p className={styles.infoValue}>{publisher || "-"}</p>
-              <span className={styles.infoLabel}>
-                {/* "출간일" */}
-                {message("frontend.common.publDate")}
-              </span>
-              <p className={styles.infoValue}>{pubdate || "-"}</p>
+        {/* 도서 정보와 책 소개 카드 영역 */}
+        <div className={detailStyles.contentPanel}>
+          {/* 저자와 출판사 및 출간일의 세로 요약 영역 */}
+          <section
+            className={detailStyles.reportStatsSection}
+            aria-label={/* "도서 정보" */ message("frontend.common.bookInfo")}
+          >
+            <div className={detailStyles.bookInfoRows}>
+              {/* 도서 저자 정보 행 */}
+              <div className={detailStyles.bookInfoRow}>
+                <span className={detailStyles.bookInfoLabel}>
+                  {/* "저자" */}
+                  {message("frontend.common.author")}
+                </span>
+                <strong className={detailStyles.bookInfoValue}>
+                  {author || "-"}
+                </strong>
+              </div>
+
+              {/* 도서 출판사 정보 행 */}
+              <div className={detailStyles.bookInfoRow}>
+                <span className={detailStyles.bookInfoLabel}>
+                  {/* "출판사" */}
+                  {message("frontend.common.publisher")}
+                </span>
+                <strong className={detailStyles.bookInfoValue}>
+                  {publisher || "-"}
+                </strong>
+              </div>
+
+              {/* 도서 출간일 정보 행 */}
+              <div className={detailStyles.bookInfoRow}>
+                <span className={detailStyles.bookInfoLabel}>
+                  {/* "출간일" */}
+                  {message("frontend.common.publDate")}
+                </span>
+                <strong className={detailStyles.bookInfoValue}>
+                  {pubdate || "-"}
+                </strong>
+              </div>
             </div>
           </section>
 
-          {/* 도서 소개 영역 */}
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>
-              {/* "책 소개" */}
-              {message("frontend.common.bookDescription")}
-            </h2>
-            <p className={styles.description}>
-              {description || message("frontend.common.noBookDescription")}
-            </p>
-          </section>
-
-          <button
-            className={styles.selectButton}
-            type="button"
-            onClick={() => navigate("/set", { state: { selectedBook: book } })}
-          >
-            {/* "이 책으로 기록하기" */}
-            {message("frontend.book.search.writeThisBook")}
-          </button>
+          {/* 배경 전환 위에 표시되는 도서 소개 영역 */}
+          <div className={detailStyles.recordArea}>
+            {/* 독후감 상세의 책 소개와 같은 도서 소개 카드 영역 */}
+            <section className={detailStyles.recordSection}>
+              <div className={detailStyles.recordTitleRow}>
+                <h2 className={detailStyles.sectionTitle}>
+                  {/* "책 소개" */}
+                  {message("frontend.common.bookDescription")}
+                </h2>
+              </div>
+              <p className={detailStyles.contentBox}>{bookDescription}</p>
+            </section>
+          </div>
         </div>
+
+        {/* 선택한 도서의 독후감 등록 이동 영역 */}
+        <button
+          className={bookInfoStyles.selectButton}
+          type="button"
+          onClick={goSetReportPage}
+        >
+          {/* "이 책으로 기록하기" */}
+          {message("frontend.book.search.writeThisBook")}
+        </button>
       </Container>
     </main>
   );
