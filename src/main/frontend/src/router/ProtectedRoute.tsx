@@ -19,6 +19,7 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     isLoading,
     isAuthenticated,
     isDeletePending,
+    isSuspended,
     isOnboardingRequired,
   } = useCheckAuth();
 
@@ -31,9 +32,27 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
   }
 
   // 영구 삭제 대기 회원은 일반 서비스 화면 대신 취소 전용 화면으로 이동합니다
-  if (isDeletePending && location.pathname !== "/withdrawal/pending") {
-    // 영구 삭제 예정일과 취소 버튼만 제공하는 화면으로 이동합니다
-    return <Navigate to="/withdrawal/pending" replace />;
+  if (isDeletePending) {
+    if (location.pathname !== "/withdrawal/pending") {
+      // 영구 삭제 예정일과 취소 버튼만 제공하는 화면으로 이동합니다
+      return <Navigate to="/withdrawal/pending" replace />;
+    }
+
+    // 영구 삭제 대기 상태는 온보딩 여부보다 우선해 전용 화면만 반환합니다
+    return children;
+  }
+
+  // 정지 회원은 정지 안내와 영구 탈퇴 화면 외의 서비스 화면에 접근할 수 없습니다.
+  if (isSuspended) {
+    if (
+      location.pathname !== "/suspension"
+      && location.pathname !== "/suspension/withdrawal"
+    ) {
+      return <Navigate to="/suspension" replace />;
+    }
+
+    // 관리자 정지 상태는 온보딩 여부보다 우선해 제한된 전용 화면만 반환합니다
+    return children;
   }
 
   // 온보딩을 완료하지 않은 신규 회원은 일반 서비스 화면보다 웰컴 화면을 먼저 확인한다

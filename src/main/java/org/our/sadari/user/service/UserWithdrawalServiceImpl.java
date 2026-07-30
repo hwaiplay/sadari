@@ -42,6 +42,7 @@ import java.util.UUID;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 적용
  * 2026-07-30        SeungHyeon.Kang    사용자 계정 처리 용어를 비활성화로 정리
+ * 2026-07-30        SeungHyeon.Kang    정지 회원 영구 탈퇴와 취소 상태 우선순위 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -80,6 +81,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
     private final StringRedisTemplate redisTemplate;
     // 탈퇴 재인증 요청 직렬화 객체
     private final ObjectMapper objectMapper;
+    // 관리자 정지 상태와 기간 만료 처리 서비스
+    private final UserSuspensionService userSuspensionService;
 
     // 환경별 영구 삭제 유예기간
     @Value("${withdrawal.hard-delete-wait-days:30}")
@@ -121,6 +124,15 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 공통코드에 등록되지 않은 탈퇴 유형이나 사유는 임의 요청으로 판단한다
         if (!codeUtil.existsCode("WTHD_TYPE", request.getWthdType())
                 || !codeUtil.existsCode("WTHD_RSON", request.getWthdRson())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 정지 회원은 재로그인으로 정지를 우회할 수 있는 계정 비활성화를 신청할 수 없다
+        UserDto requestUser = userMapper.getUserByNumb(userNumb);
+        if (!StringUtil.isEmpty(requestUser)
+                && Constant.USER_STAT_SUSPENDED.equals(requestUser.getUserStat())
+                && Constant.WITHDRAWAL_TYPE_SOFT.equals(request.getWthdType())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -231,6 +243,13 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
+        // 재인증 사이에 정지된 회원도 계정 비활성화로 제재 상태를 우회하지 못하게 다시 검증한다
+        if (Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                && Constant.WITHDRAWAL_TYPE_SOFT.equals(request.getWthdType())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
         // 탈퇴 이력에서 원본 OAuth 식별값을 복구할 수 없도록 SHA-256 해시만 저장한다
         request.setUserIdhs(createUserIdHash(providerId));
         // 탈퇴 요청 시각을 회원 상태에 반영한다
@@ -333,8 +352,10 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         UserDto user = new UserDto();
         // 복구할 회원 번호를 설정한다
         user.setUserNumb(userNumb);
-        // 정상 이용 회원 상태를 설정한다
-        user.setUserStat(Constant.USER_STAT_ACTIVE);
+        // 영구 탈퇴 신청 중에도 남아 있는 관리자 정지를 우선 적용할 복구 상태를 계산한다
+        String restoredUserStat = userSuspensionService.getStatusAfterWithdrawalCancel(userNumb);
+        // 남은 정지 효력을 반영한 회원 상태를 설정한다
+        user.setUserStat(restoredUserStat);
         // 탈퇴 요청일을 제거한다
         user.setWthdDate(null);
         // 영구 삭제 예정일을 제거한다
@@ -342,10 +363,10 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 회원을 정상 이용 상태로 복구한다
         userMapper.uptUserStatus(user);
         // 현재 로그인 세션도 즉시 정상 이용 상태로 변경한다
-        tokenRedisService.uptUserStatus(userNumb, Constant.USER_STAT_ACTIVE);
+        tokenRedisService.uptUserStatus(userNumb, restoredUserStat);
 
-        // 영구 삭제 대기 취소 완료 결과를 반환한다
-        return ResultData.success();
+        // 프론트엔드가 정지 안내 또는 정상 화면을 선택할 수 있도록 복구 상태를 반환한다
+        return ResultData.success(restoredUserStat);
     }
 
     /**

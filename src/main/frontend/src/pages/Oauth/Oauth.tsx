@@ -21,6 +21,7 @@ const Oauth = () => {
     isLoading,
     isAuthenticated,
     isDeletePending,
+    isSuspended,
     isOnboardingRequired,
   } = useCheckAuth();
 
@@ -34,9 +35,11 @@ const Oauth = () => {
       // 회원 상태와 최초 로그인 여부에 맞는 첫 화면을 선택한다
       const destination = isDeletePending
         ? "/withdrawal/pending"
-        : isOnboardingRequired
-          ? "/welcome"
-          : "/home";
+        : isSuspended
+          ? "/suspension"
+          : isOnboardingRequired
+            ? "/welcome"
+            : "/home";
 
       // 비활성화 계정 복귀 로그인은 정책을 다시 확인한 뒤 정상 서비스 화면으로 이동한다
       if (isAccountReactivated) {
@@ -74,7 +77,7 @@ const Oauth = () => {
 
       navigate("/login", { replace: true });
     });
-  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, navigate]);
+  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, isSuspended, navigate]);
 
   return <Loading title={message("frontend.common.loginLoading")} />;
 };

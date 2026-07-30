@@ -22,6 +22,7 @@ import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.LoginHistoryMapper;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.service.NicknameGenerationService;
+import org.our.sadari.user.service.UserSuspensionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
@@ -38,6 +39,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
  * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
+ * 2026-07-30        SeungHyeon.Kang    정지 회원 재가입 차단과 기간 만료 복구
  */
 @Service
 @RequiredArgsConstructor
@@ -64,6 +66,8 @@ public class AuthServiceImpl implements AuthService {
     private final UserIdEncryptionService userIdEncryptionService;
     // NicknameGeneration 업무 처리 서비스
     private final NicknameGenerationService nicknameGenerationService;
+    // 회원 정지 기간 만료와 로그인 상태 동기화 서비스
+    private final UserSuspensionService userSuspensionService;
 
     /**
      * Kakao 계정으로 신규 회원 등록과 JWT 로그인을 처리한다
@@ -117,6 +121,14 @@ public class AuthServiceImpl implements AuthService {
         try {
             // UserByIdxx 데이터를 DB에서 조회한다
             UserDto savedUser = userMapper.getUserByIdxx(encryptedProviderId);
+
+            // 기간 정지 종료 뒤 같은 카카오 계정으로 로그인하면 기존 계정을 복구한 뒤 상태를 다시 조회한다
+            if (!StringUtil.isEmpty(savedUser)
+                    && Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                    && userSuspensionService.uptExpiredSuspension(savedUser.getUserNumb())) {
+                // 만료 처리로 변경된 최신 회원 상태를 다시 조회한다
+                savedUser = userMapper.getUserByIdxx(encryptedProviderId);
+            }
 
             // UserProv 업무 값을 userDto DTO에 설정한다
             userDto.setUserProv(AuthConstant.PROV_KAKAO);
@@ -174,7 +186,8 @@ public class AuthServiceImpl implements AuthService {
                 userDto.setUserStat(savedUser.getUserStat());
 
                 // savedUser.getProfNumb( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
-                if (StringUtil.isEmpty(savedUser.getProfNumb())) {
+                if (!Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                        && StringUtil.isEmpty(savedUser.getProfNumb())) {
                     // ProfNumb 업무 값을 userDto DTO에 설정한다
                     userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                     // UserProfile 데이터를 DB에서 수정한다

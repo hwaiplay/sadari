@@ -9,15 +9,16 @@ package org.our.sadari.global.common.constant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-21        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    로그인 제공자 코드를 풀네임으로 변경
  */
 public class AuthConstant {
 
-    // 아래 처리 단계의 업무 목적을 설명한다.
-    public static final String PROV_KAKAO = "KA";
-    // 아래 처리 단계의 업무 목적을 설명한다.
-    public static final String PROV_GOOGLE = "GO";
-    // 아래 처리 단계의 업무 목적을 설명한다.
-    public static final String PROV_NAVER = "NA";
+    // Kakao 로그인 제공자 코드
+    public static final String PROV_KAKAO = "KAKAO";
+    // Google 로그인 제공자 코드
+    public static final String PROV_GOOGLE = "GOOGLE";
+    // Naver 로그인 제공자 코드
+    public static final String PROV_NAVER = "NAVER";
     // 아래 처리 단계의 업무 목적을 설명한다.
     public static final String ROLE_USER = "USER";
     // 아래 처리 단계의 업무 목적을 설명한다.
