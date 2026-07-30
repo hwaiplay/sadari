@@ -26,6 +26,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-07-30        SeungHyeon.Kang    영구 삭제 대기 및 관리자 정지 회원 접근 제한 추가
  * 2026-07-30        SeungHyeon.Kang    비활성화 회원의 일반 API 접근 제한 추가
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
+ * 2026-07-31        SeungHyeon.Kang    정지 회원의 Kakao 재로그인 경로 허용
  */
 @Component
 @RequiredArgsConstructor
@@ -35,6 +36,10 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN API URI 설정값
     private static final String REFRESH_TOKEN_API_URI = "/api/oauth/refresh";
+    // Kakao 로그인 시작 API URI 설정값
+    private static final String KAKAO_LOGIN_API_URI = "/api/oauth/kakao";
+    // Kakao 로그인 콜백 API URI 설정값
+    private static final String KAKAO_CALLBACK_API_URI = "/api/oauth/callback/kakao";
     // 영구 삭제 대기 회원에게 허용할 회원 탈퇴 API 접두사
     private static final String WITHDRAWAL_API_PREFIX = "/api/user/withdrawal";
     // 영구 삭제 대기 회원에게 허용할 로그아웃 API URI
@@ -87,7 +92,7 @@ public class JwtFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // 관리자 정지 회원은 정지 안내와 로그아웃 이외의 API를 사용할 수 없다
+            // 관리자 정지 회원은 정지 안내와 재로그인 및 로그아웃 이외의 API를 사용할 수 없다
             if (Constant.USER_STAT_SUSPENDED.equals(userStat)
                     && !isSuspendedAllowedPath(request.getRequestURI())) {
                 // 정지 회원의 일반 서비스 API 요청을 권한 없음으로 응답한다
@@ -174,7 +179,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 정지 회원에게 정지 안내와 로그아웃 관련 API만 허용한다
+     * 정지 회원에게 정지 안내와 Kakao 재로그인 및 로그아웃 관련 API만 허용한다
      *
      * @author SeungHyeon.Kang
      * @param requestUri 확인할 요청 URI
@@ -182,8 +187,10 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private boolean isSuspendedAllowedPath(String requestUri) {
 
-        // 정지 상태 확인과 인증 종료 경로만 허용한다
+        // 정지 안내에 필요한 Kakao 재로그인과 인증 종료 경로만 허용한다
         return SUSPENSION_STATUS_API_URI.equals(requestUri)
+                || KAKAO_LOGIN_API_URI.equals(requestUri)
+                || KAKAO_CALLBACK_API_URI.equals(requestUri)
                 || LOGOUT_API_URI.equals(requestUri)
                 || TOKEN_CHECK_API_URI.equals(requestUri);
     }
