@@ -23,6 +23,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    영구 삭제 대기 및 관리자 정지 회원 접근 제한 추가
+ * 2026-07-30        SeungHyeon.Kang    비활성화 회원의 일반 API 접근 제한 추가
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +40,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String LOGOUT_API_URI = "/api/oauth/logout";
     // 영구 삭제 대기 회원에게 허용할 토큰 검사 API URI
     private static final String TOKEN_CHECK_API_URI = "/api/oauth/tokenCheck";
+    // 정지 회원에게 허용할 정지 상태 조회 API URI
+    private static final String SUSPENSION_STATUS_API_URI = "/api/user/suspension";
 
     // Jwt 외부 연동 제공 객체
     private final JwtProvider jwtProvider;
@@ -61,13 +65,33 @@ public class JwtFilter extends OncePerRequestFilter {
         if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
             // getAuthentication 조회로 후속 처리에 필요한 데이터를 가져온다
             Authentication authentication = jwtProvider.getAuthentication(token);
+            // 한 요청에서 동일 Redis 회원 상태를 한 번만 조회한다
+            String userStat = tokenRedisService.getUserStatus(jwtProvider.getUserNumb(token));
 
             // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없다
-            if (Constant.USER_STAT_DELETE_PENDING.equals(tokenRedisService.getUserStatus(jwtProvider.getUserNumb(token)))
+            if (Constant.USER_STAT_DELETE_PENDING.equals(userStat)
                     && !isDeletePendingAllowedPath(request.getRequestURI())) {
                 // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답한다
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 // 영구 삭제 대기 회원 요청의 필터 처리를 종료한다
+                return;
+            }
+
+            // 비활성화 회원은 같은 Kakao 계정 재로그인과 로그아웃 이외의 일반 API를 사용할 수 없다
+            if (Constant.USER_STAT_WITHDRAWN.equals(userStat)
+                    && !isWithdrawnAllowedPath(request.getRequestURI())) {
+                // 비활성화 회원의 일반 서비스 API 요청을 권한 없음으로 응답한다
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 비활성화 회원 요청의 필터 처리를 종료한다
+                return;
+            }
+
+            // 관리자 정지 회원은 정지 안내와 영구 탈퇴 및 로그아웃 이외의 API를 사용할 수 없다
+            if (Constant.USER_STAT_SUSPENDED.equals(userStat)
+                    && !isSuspendedAllowedPath(request.getRequestURI())) {
+                // 정지 회원의 일반 서비스 API 요청을 권한 없음으로 응답한다
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 정지 회원 요청의 필터 처리를 종료한다
                 return;
             }
 
@@ -130,6 +154,36 @@ public class JwtFilter extends OncePerRequestFilter {
     private boolean isDeletePendingAllowedPath(String requestUri) {
         // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
         return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
+                || LOGOUT_API_URI.equals(requestUri)
+                || TOKEN_CHECK_API_URI.equals(requestUri);
+    }
+
+    /**
+     * 비활성화 회원에게 허용된 최소 인증 API 경로인지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @param requestUri 현재 요청 URI
+     * @return 허용 경로 여부
+     */
+    private boolean isWithdrawnAllowedPath(String requestUri) {
+
+        // 재로그인 전에는 인증 상태 확인과 로그아웃 경로만 허용한다
+        return LOGOUT_API_URI.equals(requestUri)
+                || TOKEN_CHECK_API_URI.equals(requestUri);
+    }
+
+    /**
+     * 정지 회원에게 정지 안내와 영구 탈퇴 및 로그아웃 관련 API만 허용한다
+     *
+     * @author SeungHyeon.Kang
+     * @param requestUri 확인할 요청 URI
+     * @return 정지 상태에서 접근할 수 있으면 true
+     */
+    private boolean isSuspendedAllowedPath(String requestUri) {
+
+        // 정지 상태 확인과 영구 탈퇴 및 인증 종료 경로만 허용한다
+        return SUSPENSION_STATUS_API_URI.equals(requestUri)
+                || requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || LOGOUT_API_URI.equals(requestUri)
                 || TOKEN_CHECK_API_URI.equals(requestUri);
     }

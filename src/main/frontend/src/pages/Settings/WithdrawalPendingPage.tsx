@@ -58,7 +58,7 @@ function WithdrawalPendingPage() {
     // 영구 탈퇴 취소 의사를 다시 확인합니다
     const confirmed = await sweetConfirm({
       title: "영구 탈퇴를 취소하시겠어요?",
-      text: "계정은 즉시 정상 이용 상태로 복구돼요.",
+      text: "관리자 이용 정지가 남아 있으면 정지 상태로 복구돼요.",
     });
 
     // 사용자가 확인하지 않으면 복구 요청을 보내지 않습니다
@@ -70,11 +70,11 @@ function WithdrawalPendingPage() {
     // API 실패를 사용자 안내로 전환하기 위한 처리 블록입니다
     try {
       // 영구 삭제 대기 취소를 서버에 요청합니다
-      await uptWithdrawalCancelApi();
+      const result = await uptWithdrawalCancelApi();
       // "영구 탈퇴가 취소됐어요."
       await sweetSuccess("영구 탈퇴가 취소됐어요.");
-      // 정상 서비스 홈으로 이동합니다
-      navigate("/home", { replace: true });
+      // 관리자 이용 정지가 남아 있으면 정지 안내로, 아니면 정상 서비스 홈으로 이동합니다
+      navigate(result.data === "SUSPENDED" ? "/suspension" : "/home", { replace: true });
     }
 
     // 복구 실패 내용을 사용자에게 안내합니다

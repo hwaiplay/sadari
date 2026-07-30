@@ -37,6 +37,7 @@ import org.our.sadari.user.service.NicknameGenerationService;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    로그인 제공자 풀네임 코드 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -68,6 +69,21 @@ class AuthServiceImplTest {
     // Kakao 로그인과 계정 재활성화 검증 대상
     @InjectMocks
     private AuthServiceImpl authService;
+
+    /**
+     * 로그인 제공자 코드가 축약형 없이 풀네임으로 정의되는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void loginProviderCodesUseFullNames() {
+        // Kakao 로그인과 사용자 및 로그인 이력 저장에 동일한 풀네임 코드가 사용되는지 검증한다
+        assertEquals("KAKAO", AuthConstant.PROV_KAKAO);
+        // Naver 제공자 확장 시에도 축약형이 다시 저장되지 않도록 풀네임 계약을 검증한다
+        assertEquals("NAVER", AuthConstant.PROV_NAVER);
+        // Google 제공자 확장 시에도 축약형이 다시 저장되지 않도록 풀네임 계약을 검증한다
+        assertEquals("GOOGLE", AuthConstant.PROV_GOOGLE);
+    }
 
     /**
      * 비활성화 회원이 같은 Kakao 계정으로 로그인하면 정상 상태로 복구하고 복귀 안내 여부를 반환하는지 검증한다

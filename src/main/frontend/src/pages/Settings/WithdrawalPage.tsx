@@ -57,11 +57,12 @@ const DEFAULT_HARD_POLICY_ITEMS = [
  * 계정 비활성화와 영구 탈퇴 정책을 비교해 선택하고 Kakao 재인증을 시작합니다.
  *
  * @author HanWon.Jang
+ * @param hardOnly 정지 회원에게 영구 탈퇴 선택지만 제공할지 여부
  * @return 계정 비활성화 및 영구 탈퇴 설정 화면
  */
-function WithdrawalPage() {
+function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
 
-  const [wthdType, setWthdType] = useState<WithdrawalType>("SOFT");
+  const [wthdType, setWthdType] = useState<WithdrawalType>(hardOnly ? "HARD" : "SOFT");
   const [wthdRson, setWthdRson] = useState<WithdrawalReason | "">("");
   const [rsonCntn, setRsonCntn] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -388,7 +389,7 @@ function WithdrawalPage() {
 
         {/* 비활성화와 영구 탈퇴의 핵심 차이를 한 줄로 비교하는 선택 카드 목록 */}
         <div className={styles.optionList}>
-          <label className={styles.option}>
+          {!hardOnly && <label className={styles.option}>
             <input
               className={styles.choiceInput}
               type="radio"
@@ -411,7 +412,7 @@ function WithdrawalPage() {
                 다시 로그인하면 기존 계정을 복구할 수 있어요.
               </small>
             </span>
-          </label>
+          </label>}
 
           <label className={styles.option}>
             <input
@@ -524,7 +525,7 @@ function WithdrawalPage() {
             {/* 비활성화와 영구 탈퇴 정책 비교 영역 */}
             <div className={styles.policyModalBody}>
               {/* 계정 비활성화 정책 영역 */}
-              <article className={styles.policyItem}>
+              {!hardOnly && <article className={styles.policyItem}>
                 <div className={styles.policyItemHeading}>
                   <strong className={styles.policyItemTitle}>
                     {/* "비활성화" */}
@@ -539,7 +540,7 @@ function WithdrawalPage() {
                   {/* 비활성화 정책 문구 목록 */}
                   {softPolicyItems.map(renderPolicyItem)}
                 </ul>
-              </article>
+              </article>}
 
               {/* 영구 탈퇴 정책 영역 */}
               <article className={styles.policyItem}>
