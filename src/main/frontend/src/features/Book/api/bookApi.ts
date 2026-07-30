@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/features/Book/api/bookApi.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * 도서 검색과 독후감 업무에 필요한 API 요청을 처리한다
  *
  * @author HanWon.Jang
  */
@@ -15,6 +15,30 @@ import {
   uptReportType,
 } from "../types/book.type";
 
+export type BookCoverColor = {
+  reptColr: string;
+  reptColrName: string;
+};
+
+/**
+ * 네이버 도서 표지 대표색과 가장 가까운 책장 색상 코드를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param bookCvim 대표색을 분석할 네이버 도서 표지 URL
+ * @return 표지 대표색과 가장 가까운 BOOK_COLR 코드
+ * @throws API 요청 또는 비동기 처리 실패 시 발생
+ */
+export const getBookCoverColorApi = async (
+  bookCvim: string,
+): Promise<BookCoverColor | undefined> => {
+
+  const res = await api.post<ResultData<BookCoverColor>>(
+    "/book/cover-color",
+    { bookCvim },
+  );
+  // 표지 대표색 분석 성공 응답의 책장 색상 데이터를 반환한다
+  return assertResultDataSuccess(res.data).data;
+};
 
 /**
  * set Report 정보를 설정하거나 등록한다
@@ -83,7 +107,7 @@ export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
 export type LikeTargetParams = {
   tagtType: string;
   tagtNumb: number;
-  // 알림 대상 DB 재조회를 없애기 위해 화면이 이미 조회한 독후감 작성자 번호를 함께 전송합니다.
+  // 알림 대상 DB 재조회를 없애기 위해 화면이 이미 조회한 독후감 작성자 번호를 함께 전송한다
   targetUserNumb: number;
 };
 

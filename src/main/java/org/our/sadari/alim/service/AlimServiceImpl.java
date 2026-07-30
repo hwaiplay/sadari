@@ -213,6 +213,12 @@ public class AlimServiceImpl implements AlimService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
+        // 탈퇴 또는 영구 삭제 대기 회원에게는 알림과 푸시를 새로 만들지 않는다
+        if (alimMapper.getActiveAlimUserCnt(userNumb) == 0) {
+            // 수신 제외 상태를 정상 생략 결과로 반환한다
+            return ResultData.success();
+        }
+
         // 치환 문구가 없는 알림도 발송할 수 있어 null Map은 빈 Map으로 보정한다.
         // 이렇게 하면 호출부가 치환값 없는 알림을 보낼 때 불필요하게 new HashMap<>()을 만들 필요가 없다.
         Map<String, Object> safeReplaceMap = StringUtil.isEmpty(replaceMap)

@@ -6,7 +6,7 @@ export const page = style({
   width: "100vw",
   marginLeft: "calc(50% - 50vw)",
   minHeight: "100vh",
-  backgroundColor: "#ffffff",
+  backgroundColor: vars.color.background,
   overflow: "hidden",
 
   selectors: {
@@ -16,32 +16,20 @@ export const page = style({
       top: "-36px",
       right: "-36px",
       left: "-36px",
-      height: "760px",
+      height: "var(--book-bg-fade-height, 680px)",
       zIndex: 0,
       backgroundImage: "var(--book-bg-image)",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "center top",
       backgroundSize: "cover",
-      filter: "blur(26px)",
+      filter: "blur(24px)",
       transform: "scale(1.12)",
       opacity: 0.86,
       pointerEvents: "none",
       maskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.94) 54%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.28) 86%, rgba(0, 0, 0, 0.08) 95%, rgba(0, 0, 0, 0) 100%)",
       WebkitMaskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
-    },
-    "&::after": {
-      content: "",
-      position: "absolute",
-      top: 0,
-      right: 0,
-      left: 0,
-      height: "860px",
-      zIndex: 0,
-      background:
-        "linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.18) 42%, rgba(255, 255, 255, 0.82) 78%, #ffffff 100%)",
-      pointerEvents: "none",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.94) 54%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.28) 86%, rgba(0, 0, 0, 0.08) 95%, rgba(0, 0, 0, 0) 100%)",
     },
   },
 });
@@ -52,50 +40,77 @@ export const form = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  padding: "28px 20px 28px",
+  padding: "28px 18px 36px",
   display: "flex",
   flexDirection: "column",
-  gap: "28px",
+  gap: "24px",
 });
 
 export const contentPanel = style({
   display: "flex",
   flexDirection: "column",
-  gap: "28px",
+  gap: "16px",
   minHeight: "auto",
-  padding: "28px 22px 26px",
-  borderRadius: "14px",
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
-  boxShadow: "0 -12px 32px rgba(0, 0, 0, 0.14)",
+});
+
+export const recordSection = style({
+  position: "relative",
+  width: "100%",
+  minHeight: "280px",
+  padding: "20px 20px 24px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+  boxSizing: "border-box",
 });
 
 export const saveButton = style({
-  width: "100%",
-  height: "44px",
-  border: `1px solid ${vars.color.black}`,
+  minWidth: "96px",
+  height: "40px",
+  padding: "0 18px",
+  border: `1px solid ${vars.color.gray600}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
-  color: vars.color.black,
-  fontFamily: vars.font.heading,
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
   fontSize: "14px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   gap: "7px",
   cursor: "pointer",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: vars.color.gray900,
+      backgroundColor: "#f8f8f8",
+    },
+  },
 });
 
 export const formActions = style({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "10px",
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "8px",
 });
+
+export const cancelButton = style([
+  saveButton,
+  {
+    borderColor: vars.color.gray400,
+    color: vars.color.gray700,
+  },
+]);
 
 export const deleteButton = style([
   saveButton,
   {
-    borderColor: "#d84a3a",
-    color: "#d84a3a",
+    marginRight: "auto",
+    borderColor: "#d9877d",
+    color: "#b84b3f",
   },
 ]);
 
@@ -151,13 +166,16 @@ export const statusPill = style({
   fontFamily: vars.font.semibold,
   fontSize: "13px",
   whiteSpace: "nowrap",
+  boxSizing: "border-box",
   cursor: "pointer",
 
   selectors: {
     [`${hiddenInput}:checked + &`]: {
-      backgroundColor: vars.color.black,
-      borderColor: vars.color.black,
-      color: "#ffffff",
+      borderWidth: "1px",
+      backgroundColor: "#f3f3f3",
+      borderColor: vars.color.gray700,
+      color: vars.color.gray900,
+      fontFamily: vars.font.semibold,
     },
   },
 });
@@ -226,12 +244,12 @@ export const textAreaWrap = style({
 
 export const textArea = style({
   width: "100%",
-  minHeight: "300px",
+  minHeight: "230px",
   resize: "vertical",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: "16px",
-  backgroundColor: "#ffffff",
-  padding: "14px 16px",
+  border: 0,
+  outline: 0,
+  backgroundColor: "transparent",
+  padding: 0,
   fontFamily: vars.font.body,
   fontSize: "14px",
   color: vars.color.black,

@@ -8,7 +8,6 @@ import DetailPage from "../pages/Book/Detail/DetailPage";
 import PublicRoute from "./PublicRoute";
 import BookSearchType from "../pages/Book/Search/SearchBookPage";
 import SetReportPage from "@/pages/Book/Set/SetReportPage";
-import UpdateReportPage from "@/pages/Book/Update/UpdateReportPage";
 import BookInfoPage from "@/pages/Book/Info/BookInfoPage";
 import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
@@ -18,9 +17,14 @@ import ProfileEditPage from "@/pages/My/ProfileEditPage";
 import SocialProfilePage from "@/pages/Social/SocialProfilePage";
 import AlimPage from "@/pages/Alim/AlimPage";
 import SettingsPage from "@/pages/Settings/SettingsPage";
+import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
+import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
+import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
+import WelcomePage from "@/pages/Welcome/WelcomePage";
+import SuspensionPage from "@/pages/Settings/SuspensionPage";
 
 /**
- * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성합니다.
+ * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
  *
  * @author HanWon.Jang
  * @return 애플리케이션 라우터 컴포넌트
@@ -48,6 +52,49 @@ const Router = () => {
             <PublicRoute>
               <Oauth />
             </PublicRoute>
+          }
+        />
+
+        {/* 회원 탈퇴 처리 결과 */}
+        <Route path="/withdrawal/result" element={<WithdrawalResultPage />} />
+
+        {/* 영구 삭제 대기 */}
+        <Route
+          path="/withdrawal/pending"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPendingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 관리자 이용 정지 안내 */}
+        <Route
+          path="/suspension"
+          element={
+            <ProtectedRoute>
+              <SuspensionPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 정지 회원의 영구 탈퇴 */}
+        <Route
+          path="/suspension/withdrawal"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPage hardOnly />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 최초 로그인 웰컴 */}
+        <Route
+          path="/welcome"
+          element={
+            <ProtectedRoute>
+              <WelcomePage />
+            </ProtectedRoute>
           }
         />
 
@@ -89,14 +136,12 @@ const Router = () => {
           {/* 기록하기 */}
           <Route path="/set" element={<SetReportPage />} />
 
-          {/* 독후감 수정 */}
-          <Route path="/book/upt/:id" element={<UpdateReportPage />} />
-
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
           <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
         </Route>
       </Routes>
     </>

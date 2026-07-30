@@ -1,0 +1,55 @@
+# 최초 로그인 웰컴 및 닉네임 정책
+
+## 개요
+
+- 목적: 신규 회원에게 Sadari의 주요 기능을 소개하고 서비스에서 사용할 닉네임을 확정합니다.
+- 적용 대상: Kakao 로그인으로 신규 등록되어 `TM_USERXM.ONBD_YSNO = 'N'`인 회원입니다.
+- 기준일: 2026-07-30
+
+## 정상 흐름
+
+1. 신규 회원을 등록할 때 중복되지 않는 랜덤 닉네임을 발급하고 온보딩 완료 여부를 `N`으로 저장합니다.
+2. 인증 확인 응답이 온보딩 미완료 상태이면 일반 서비스 화면보다 `/welcome`로 먼저 이동합니다.
+3. 웰컴 화면은 도서 표지 색상 추천, 독서 목표와 달력, 공개 기록과 소셜 기능을 슬라이드로 소개합니다.
+4. 마지막 슬라이드의 닉네임 입력에는 가입 시 발급한 랜덤 닉네임을 기본값으로 표시합니다.
+5. 사용자는 기본값을 유지하거나 닉네임을 수정한 뒤 시작하기를 누릅니다.
+6. 서버는 닉네임과 온보딩 완료 여부를 한 트랜잭션으로 저장합니다.
+7. 인증 상태를 다시 조회한 뒤 홈 화면으로 이동합니다.
+
+## 닉네임 검증
+
+- 닉네임은 25자 이하로 입력합니다.
+- 한글, 영문, 숫자를 사용할 수 있습니다.
+- 문자 사이에 단일 공백, 언더바 또는 하이픈을 사용할 수 있습니다.
+- 앞뒤 공백과 연속 구분자는 허용하지 않습니다.
+- 다른 회원과 중복되거나 비속어가 포함된 닉네임은 저장하지 않습니다.
+- 프론트엔드 검증을 통과하더라도 서버에서 같은 규칙을 다시 검증합니다.
+
+## 접근 및 실패 처리
+
+- 온보딩 미완료 회원이 일반 보호 경로에 접근하면 `/welcome`로 이동합니다.
+- 온보딩 완료 회원이 `/welcome`에 직접 접근하면 `/home`으로 이동합니다.
+- 영구 삭제 대기 상태는 온보딩보다 우선하며 탈퇴 취소 전용 화면으로 이동합니다.
+- 닉네임 저장에 실패하면 온보딩 완료 여부를 변경하지 않고 현재 화면에서 재시도할 수 있습니다.
+- DB 저장이 완료된 뒤에만 Redis의 로그인 사용자 닉네임을 갱신합니다.
+
+## 데이터 기준
+
+| 대상 | 값 | 의미 |
+| --- | --- | --- |
+| `TM_USERXM.ONBD_YSNO` | `N` | 최초 로그인 웰컴과 닉네임 확정 필요 |
+| `TM_USERXM.ONBD_YSNO` | `Y` | 온보딩 완료 |
+| `TM_USERXM.USER_NICK` | 문자열 | 가입 시 발급하거나 사용자가 확정한 닉네임 |
+
+기존 회원은 기능 적용 시 `ONBD_YSNO = 'Y'`로 이관하며, 이후 신규 회원의 기본값은 `N`입니다.
+
+## 구현 근거
+
+- `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
+- `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
+- `src/main/java/org/our/sadari/user/service/UserServiceImpl.java`
+- `src/main/java/org/our/sadari/user/mapper/UserMapper.xml`
+- `src/test/java/org/our/sadari/user/service/UserServiceImplTest.java`
+- `src/main/frontend/src/router/ProtectedRoute.tsx`
+- `src/main/frontend/src/pages/Welcome/WelcomePage.tsx`
+- `src/main/frontend/src/pages/Welcome/WelcomePage.css.ts`

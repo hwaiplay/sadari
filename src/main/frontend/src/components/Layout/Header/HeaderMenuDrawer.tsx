@@ -14,6 +14,7 @@ import { logoutApi } from "@/features/Auth/api/authApi";
 import { getPushConfigApi } from "@/features/Push/api/pushApi";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import {
   isUserProfileUpdatedEvent,
   USER_PROFILE_UPDATED_EVENT,
@@ -50,7 +51,6 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
   const clearAuth = useAuthStore((state) => state.clearAuth);
-  const profileImage = profile?.porfPath || "/img/common/icon-user.svg";
   const profileName = profile?.userNick || "사용자";
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
@@ -286,7 +286,11 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
               navigate("/mypage/profile");
             }}
           >
-            <img className={drawerStyles.drawerProfileImage} src={profileImage} alt="" />
+            <ProfileImage
+              className={drawerStyles.drawerProfileImage}
+              src={profile?.porfPath}
+              alt=""
+            />
             <div className={drawerStyles.drawerProfileMeta}>
               <strong className={drawerStyles.drawerProfileName}>{profileName}</strong>
               <span className={drawerStyles.drawerProfileSub}>{profileIntro}</span>
