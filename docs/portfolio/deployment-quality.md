@@ -6,7 +6,9 @@
 - 적용 범위: Gradle, Docker, Docker Compose, GitHub Actions, 테스트, 운영 한계
 - 기준일: 2026-07-30
 
-## 통합 빌드
+## 저장소별 빌드 범위
+
+### 사용자 서비스
 
 Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를 실행한 뒤 결과물을 Spring Boot 정적 리소스에 복사한다. 최종 산출물은 프론트와 백엔드를 함께 포함한 WAR다.
 
@@ -14,6 +16,21 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 - `build.gradle`
 - `src/main/frontend/package.json`
+
+### 관리자 서비스
+
+`sadari-admin`도 Spring Boot와 React를 한 저장소에서 관리하지만 현재 사용자 서비스의 Docker·GitHub Actions 파이프라인에는 포함되지 않는다.
+
+- 백엔드: Java 17, Spring Boot 4.1.0, MyBatis, Oracle, Redis
+- 프론트엔드: React 19, TypeScript 6, Vite 8
+- 테스트: Context Load 테스트 1건
+- 확인되지 않은 구성: Dockerfile, Docker Compose, GitHub Actions
+
+구현 근거:
+
+- `../sadari-admin/build.gradle`
+- `../sadari-admin/src/main/frontend/package.json`
+- `../sadari-admin/src/test/java/org/sadari/admin/sadariadmin/SadariAdminApplicationTests.java`
 
 ## 멀티 스테이지 Docker
 
@@ -127,6 +144,10 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 Oracle은 외부 접속 URL로 주입하므로 RDS for Oracle 또는 별도 Oracle DB에 연결할 수 있다. 현재 구성만으로 실제 RDS 사용 여부는 확정하지 않는다.
 
+사용자 서비스와 관리자 서비스의 연동은 `TM_CODEXM`, `TB_CODEXD`, `TB_ALTEMP`, `TM_URMENU`, `TL_SCLOGX`, `TL_SCFAIL`을 같은 Oracle 스키마에서 공유한다는 전제가 필요하다. 두 애플리케이션을 서로 다른 스키마에 배포하면 운영 설정과 실행 로그 연동이 끊어진다.
+
+관리자 서비스는 독립 인증 Cookie와 Redis 세션을 사용하므로 운영 배포 시 사용자 서비스와 Cookie 이름, 경로, 도메인, Redis Key Prefix가 충돌하지 않도록 분리해야 한다.
+
 ## 우선 개선 순서
 
 1. Oracle Testcontainers 또는 테스트 전용 DB 전략을 마련한다.
@@ -136,4 +157,5 @@ Oracle은 외부 접속 URL로 주입하므로 RDS for Oracle 또는 별도 Orac
 5. 배포 Health Check를 전용 Actuator Endpoint로 변경한다.
 6. 실패 배포의 자동 롤백 또는 이전 SHA 이미지 복구 절차를 추가한다.
 7. S3를 도입할 경우 업로드 인터페이스를 로컬·S3 구현체로 분리하고 기존 파일을 마이그레이션한다.
-
+8. `sadari-admin` 전용 Dockerfile과 CI/CD를 추가하고 사용자·관리자 두 애플리케이션의 공유 DB 마이그레이션 순서를 정의한다.
+9. 관리자 권한과 운영 설정 변경을 검증하는 통합 테스트를 배포 전 단계에 추가한다.

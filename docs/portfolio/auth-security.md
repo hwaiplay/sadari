@@ -87,6 +87,33 @@ Controller의 `@Operation`, `@Parameter`, DTO의 `@Schema`로 API 계약을 문�
 - `src/main/java/org/our/sadari/global/security/config/SecurityConfig.java`
 - `src/main/java/org/our/sadari/global/common/config/OpenApiConfig.java`
 
+## 관리자 서비스 인증과 권한
+
+`sadari-admin`은 사용자 Kakao OAuth·JWT와 분리된 관리자 인증 체계를 사용한다.
+
+1. `TM_ADMINX`에서 관리자 계정과 권한 코드를 조회한다.
+2. 로그인 성공 시 임의 UUID 토큰을 발급한다.
+3. 관리자 번호, 권한 코드·레벨, 이름과 부서를 Redis Hash에 저장한다.
+4. HttpOnly·SameSite Lax Cookie로 토큰을 전달한다.
+5. 요청마다 Redis TTL을 갱신해 활동 중인 세션을 연장한다.
+6. `MenuPermissionInterceptor`가 관리 API를 화면 메뉴 URL에 매핑하고 HTTP Method에 따라 조회·쓰기·삭제 권한을 검사한다.
+
+관리자 권한은 `TM_AUTHXM`, `TM_ADMENU`, `TB_AUTHMN`으로 관리하고 `TM_ADMINX.AUTH_CODE`로 관리자에게 그룹을 부여한다. 같은 그룹의 메뉴 권한 변경은 요청마다 DB에서 검사하므로 다음 요청부터 반영된다. 반면 특정 관리자의 권한 그룹 변경은 기존 Redis 세션에 이전 권한 코드가 남아 재로그인이나 세션 무효화가 필요하다.
+
+구현 근거:
+
+- `../sadari-admin/src/main/java/org/sadari/admin/sadariadmin/admin/service/impl/AdminRedisAuthServiceImpl.java`
+- `../sadari-admin/src/main/java/org/sadari/admin/sadariadmin/config/RedisAuthenticationFilter.java`
+- `../sadari-admin/src/main/java/org/sadari/admin/sadariadmin/config/MenuPermissionInterceptor.java`
+- `../sadari-admin/src/main/java/org/sadari/admin/sadariadmin/authgroup/service/impl/AuthGroupServiceImpl.java`
+
+### 확인된 보안 개선점
+
+- 관리자 비밀번호는 현재 단순 SHA-256 비교이므로 BCrypt 또는 Argon2로 교체해야 한다.
+- 신규 관리 API는 Spring Security와 권한 인터셉터 경로에 모두 등록해야 한다. 기본 거부 정책과 누락 검증 테스트가 필요하다.
+- 권한 그룹을 변경한 관리자의 Redis 세션을 즉시 삭제해야 한다.
+- 운영 HTTPS에서는 관리자 인증 Cookie에 `Secure`를 적용해야 한다.
+
 ## 이미지 업로드 검증
 
 `FileService`는 파일명 확장자와 클라이언트 Content-Type만 신뢰하지 않는다.
@@ -145,4 +172,4 @@ HttpClient는 리다이렉트를 따르지 않으며 타임아웃을 사용한�
 - Access Token을 Cookie로 사용하는 구조에서 CSRF 위협 모델을 다시 평가하고 필요한 보호를 적용한다.
 - 업로드 파일 검사에 악성코드 스캔과 객체 저장소 격리를 추가할 수 있다.
 - 보안 테스트를 CI 필수 단계로 연결해야 한다.
-
+- 관리자 계정의 적응형 비밀번호 해시, 로그인 실패 잠금, 세션 강제 만료와 관리 작업 감사 로그를 추가해야 한다.
