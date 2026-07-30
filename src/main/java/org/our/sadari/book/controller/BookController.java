@@ -3,12 +3,17 @@ package org.our.sadari.book.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.book.dto.BookCoverColorRequestDto;
+import org.our.sadari.book.service.BookCoverColorService;
 import org.our.sadari.book.service.BookSearchService;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.report.service.ReportService;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,16 +27,19 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    도서 표지 기반 책장 색상 자동 선택 API 추가
  */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/book")
-@Tag(name = "도서", description = "도서 검색과 ISBN 기준 공개 평점 평균 조회 API")
+@Tag(name = "도서", description = "도서 검색과 표지 색상 및 ISBN 기준 공개 평점 평균 조회 API")
 public class BookController {
 
     // BookSearch 업무 처리 서비스
     private final BookSearchService bookSearchService;
+    // 도서 표지 대표색 기반 책장 색상 선택 서비스
+    private final BookCoverColorService bookCoverColorService;
     // Report 업무 처리 서비스
     private final ReportService reportService;
 
@@ -60,5 +68,19 @@ public class BookController {
     public ResultData getRatingAverageByIsbn(@Parameter(description = "평점 평균을 조회할 도서 ISBN", example = "9788972756194")@RequestParam("isbn") String isbn) {
         // ISBN 기준 도서 평균 평점 조회 결과를 반환한다
         return reportService.getPublicRatingAverageByIsbn(isbn);
+    }
+
+    /**
+     * 네이버 도서 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param requestDto 대표색을 분석할 도서 표지 URL
+     * @return 표지 대표색과 가장 가까운 책장 색상 코드
+     */
+    @PostMapping("/cover-color")
+    @Operation(summary = "도서 표지 기반 책장 색상 조회", description = "네이버 도서 표지 대표색을 분석해 활성 BOOK_COLR 중 가장 가까운 색상 코드를 조회한다.")
+    public ResultData getBookCoverColor(@Valid @RequestBody BookCoverColorRequestDto requestDto) {
+        // 검증된 네이버 도서 표지 URL로 자동 책장 색상을 조회한다
+        return bookCoverColorService.getBookCoverColor(requestDto);
     }
 }

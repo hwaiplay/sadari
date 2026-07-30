@@ -3,8 +3,8 @@ package org.our.sadari.report.mapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
-import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
+import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.social.dto.SocialDto;
 
@@ -30,22 +30,22 @@ public interface ReportMapper {
     List<ReportDto> getReportList(ReportDto req);
 
     /**
-     * 지정한 기간 안에 완료된 독후감 수를 조회한다.
+     * 마이페이지의 기간별 독서량과 목표 달성 정보를 통합 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 사용자 번호와 기간 조건을 담은 요청 DTO
-     * @return 완료 독후감 수
+     * @param req 사용자 번호와 기간 및 목표 기준값
+     * @return 기간별 독서량과 목표 달성 집계
      */
-    int getReportCntByPeriod(MonthlyReadingSummaryDto req);
+    ReadingSummaryQueryDto getReadingSummary(ReadingSummaryQueryDto req);
 
     /**
-     * 지정한 기간 안에 완료된 독후감 목록을 조회한다.
+     * 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 사용자 번호와 기간 조건을 담은 요청 DTO
-     * @return 완료 독후감 목록
+     * @param req 사용자 번호와 현재 연도 기간 및 독서 상태
+     * @return 독서 요약에 표시할 독후감 목록
      */
-    List<ReportDto> getSummaryReportList(MonthlyReadingSummaryDto req);
+    List<ReportDto> getReadingSummaryReportList(ReadingSummaryQueryDto req);
 
     /**
      * 사용자, 목표 기간, 목표 유형에 해당하는 독서 목표를 조회한다.
@@ -64,15 +64,6 @@ public interface ReportMapper {
      * @return 반영 건수
      */
     int setReadingGoal(ReadingGoalDto req);
-
-    /**
-     * 목표 유형별 전체 목표 달성 횟수를 조회한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param req 사용자 번호와 목표 유형
-     * @return 목표 달성 횟수
-     */
-    int getReadingGoalAchvCnt(ReadingGoalDto req);
 
     /**
      * 독후감 상세와 연결된 도서 정보를 조회한다.

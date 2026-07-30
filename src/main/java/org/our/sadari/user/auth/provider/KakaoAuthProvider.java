@@ -26,6 +26,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책에 맞춰 Kakao 닉네임 동의 범위 제거
  */
 @Component
 @Slf4j
@@ -56,7 +57,30 @@ public class KakaoAuthProvider {
                 .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
-                .queryParam("scope", "profile_nickname,profile_image")
+                .queryParam("scope", "profile_image")
+                .build()
+                .encode()
+                .toUriString();
+    }
+
+    /**
+     * 회원 탈퇴 전 Kakao 계정을 다시 확인할 OAuth 인가 URL을 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param state Redis의 탈퇴 요청과 콜백을 연결할 일회성 상태값
+     * @return Kakao 재인증 화면 URL
+     */
+    public String getKakaoAuthorizationUrl(String state) {
+
+        // 기존 로그인 콜백을 재사용하되 state와 강제 로그인 옵션으로 탈퇴 재인증 요청을 구분한다
+        return UriComponentsBuilder
+                .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
+                .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
+                .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
+                .queryParam("response_type", "code")
+                .queryParam("scope", "profile_image")
+                .queryParam("prompt", "login")
+                .queryParam("state", state)
                 .build()
                 .encode()
                 .toUriString();
@@ -162,6 +186,32 @@ public class KakaoAuthProvider {
             log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
             throw e;
         }
+    }
+
+    /**
+     * 재인증한 Kakao Access Token으로 서비스와 Kakao 계정의 연결을 해제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tokenDto Kakao 재인증 토큰
+     */
+    public void unlinkKakaoAccount(KakaoTokenDto tokenDto) {
+
+        // Kakao 연결 해제 요청에 사용할 인증 헤더를 생성한다
+        HttpHeaders headers = new HttpHeaders();
+        // 재인증한 사용자 본인만 연결을 해제할 수 있도록 Access Token을 설정한다
+        headers.setBearerAuth(tokenDto.getAccess_token());
+        // Kakao API 요청 본문 형식을 설정한다
+        headers.add("Content-Type", "application/x-www-form-urlencoded;charset=utf-8");
+
+        // 인증 헤더를 포함한 Kakao 연결 해제 요청 객체를 생성한다
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        // Kakao 사용자 연결 해제 API가 성공해야 로컬 탈퇴 상태를 적용한다
+        new RestTemplate().exchange(
+                "https://kapi.kakao.com/v1/user/unlink",
+                HttpMethod.POST,
+                request,
+                String.class
+        );
     }
 
     /**

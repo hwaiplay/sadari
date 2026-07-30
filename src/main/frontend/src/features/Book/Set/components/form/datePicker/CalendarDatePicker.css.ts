@@ -84,6 +84,12 @@ export const popover = style({
   boxSizing: "border-box",
 });
 
+export const inlineCalendar = style({
+  width: "100%",
+  backgroundColor: "#ffffff",
+  boxSizing: "border-box",
+});
+
 export const header = style({
   display: "flex",
   alignItems: "center",
@@ -163,6 +169,7 @@ export const emptyDay = style({
 });
 
 export const dayButton = style({
+  position: "relative",
   height: "34px",
   border: "1px solid transparent",
   borderRadius: 0,
@@ -179,19 +186,35 @@ export const dayButton = style({
 });
 
 export const today = style({
-  borderColor: "#8ab6a3",
+  borderColor: "transparent",
   color: "#25624c",
+  selectors: {
+    "&::after": {
+      content: "",
+      position: "absolute",
+      top: 0,
+      left: "50%",
+      width: "32px",
+      height: "32px",
+      border: "1px solid #8ab6a3",
+      borderRadius: "50%",
+      transform: "translateX(-50%)",
+      pointerEvents: "none",
+      boxSizing: "border-box",
+    },
+  },
 });
 
 export const selected = style({
   borderRadius: "10px",
-  borderColor: vars.color.black,
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  border: `1px solid ${vars.color.gray700}`,
+  backgroundColor: "#f3f3f3",
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
 
   ":hover": {
-    borderColor: vars.color.black,
-    backgroundColor: vars.color.black,
+    borderColor: vars.color.gray700,
+    backgroundColor: vars.color.gray100,
   },
 });
 
@@ -228,8 +251,10 @@ export const rangeEnd = style({
 });
 
 export const rangeSameDay = style({
+  width: "34px",
+  justifySelf: "center",
   borderColor: "#e5f0eb",
-  borderRadius: "999px",
+  borderRadius: "50%",
   backgroundColor: "#e5f0eb",
   color: "#1f5d47",
 
@@ -237,6 +262,24 @@ export const rangeSameDay = style({
     borderColor: "#e5f0eb",
     backgroundColor: "#e5f0eb",
   },
+});
+
+export const selectedRange = style({
+  minHeight: "40px",
+  marginTop: "14px",
+  padding: "0 12px",
+  borderRadius: "10px",
+  backgroundColor: "#f5f7f6",
+  color: vars.color.gray700,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: vars.font.semibold,
+  fontSize: "13px",
+  lineHeight: 1.4,
+  textAlign: "center",
+  wordBreak: "keep-all",
+  boxSizing: "border-box",
 });
 
 export const footer = style({

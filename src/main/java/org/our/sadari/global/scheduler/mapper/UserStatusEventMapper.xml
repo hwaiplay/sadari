@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.global.scheduler.mapper.UserStatusEventMapper">
+
+    <!-- 등록 순서대로 처리할 회원 상태 변경 이벤트와 처리 시점의 DB 회원 상태를 조회한다. -->
+    <select id="getUserStatusEventList"
+            resultType="org.our.sadari.global.scheduler.dto.UserStatusEventDto">
+        SELECT /* getUserStatusEventList */
+               EVENT.EVNT_NUMB
+             , EVENT.EVNT_TYPE
+             , EVENT.USER_NUMB
+             , EVENT.SPND_NUMB
+             , USERX.USER_STAT
+             , EVENT.REGI_DATE
+          FROM (  SELECT OUTBOX.EVNT_NUMB
+                       , OUTBOX.EVNT_TYPE
+                       , OUTBOX.USER_NUMB
+                       , OUTBOX.SPND_NUMB
+                       , OUTBOX.REGI_DATE
+                    FROM TB_EVTBOX OUTBOX
+                ORDER BY OUTBOX.EVNT_NUMB
+               ) EVENT
+     LEFT JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = EVENT.USER_NUMB
+         WHERE ROWNUM <![CDATA[<=]]> #{maxSize}
+    </select>
+
+    <!-- 사용자 서버 반영이 필요한 회원 상태 변경 Outbox 이벤트를 등록한다. -->
+    <insert id="setUserStatusEvent"
+            parameterType="org.our.sadari.global.scheduler.dto.UserStatusEventDto">
+        <selectKey keyProperty="evntNumb" resultType="long" order="BEFORE">
+            SELECT TB_EVTBOX_SEQ.NEXTVAL
+              FROM DUAL
+        </selectKey>
+        /* setUserStatusEvent */
+        INSERT INTO TB_EVTBOX (
+                    EVNT_NUMB
+                  , EVNT_TYPE
+                  , USER_NUMB
+                  , SPND_NUMB
+                  , REGI_DATE
+        ) VALUES (  #{evntNumb}
+                  , #{evntType}
+                  , #{userNumb}
+                  , #{spndNumb}
+                  , SYSDATE
+        )
+    </insert>
+
+    <!-- 더 최신 이벤트가 없을 때 정지 이력을 사용자 서버 반영 완료 상태로 변경한다. -->
+    <update id="uptSuspensionSyncCompleted">
+        <bind name="suspensionSyncPending" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_PENDING"/>
+        <bind name="suspensionSyncCompleted" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_COMPLETED"/>
+        UPDATE /* uptSuspensionSyncCompleted */
+               TH_USSPND S
+           SET S.SYNC_STAT = #{suspensionSyncCompleted}
+         WHERE S.SPND_NUMB = #{spndNumb}
+           AND S.SYNC_STAT = #{suspensionSyncPending}
+           AND NOT EXISTS (
+                   SELECT 1
+                     FROM TB_EVTBOX E
+                    WHERE E.SPND_NUMB = S.SPND_NUMB
+                      AND E.EVNT_NUMB <![CDATA[>]]> #{evntNumb}
+               )
+    </update>
+
+    <!-- Redis 상태 동기화를 마친 Outbox 이벤트를 삭제한다. -->
+    <delete id="delUserStatusEvent">
+        DELETE /* delUserStatusEvent */
+          FROM TB_EVTBOX
+         WHERE EVNT_NUMB = #{evntNumb}
+    </delete>
+
+</mapper>

@@ -1,6 +1,18 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
+// 독서 활동 조회 완료 시 콘텐츠를 자연스럽게 표시하는 전환 효과
+const activityFadeIn = keyframes({
+  "0%": {
+    opacity: 0,
+    transform: "translateY(8px)",
+  },
+  "100%": {
+    opacity: 1,
+    transform: "translateY(0)",
+  },
+});
+
 export const page = style({
   width: "100%",
   minHeight: "100vh",
@@ -74,9 +86,10 @@ export const coverImageButton = style([
 export const coverSaveButton = style([
   coverProfileEditButton,
   {
-    backgroundColor: vars.color.black,
-    borderColor: vars.color.black,
-    color: "#ffffff",
+    backgroundColor: "rgba(255, 255, 255, 0.96)",
+    borderColor: vars.color.gray700,
+    borderWidth: "1px",
+    color: vars.color.gray900,
     selectors: {
       "&:disabled": {
         cursor: "default",
@@ -114,6 +127,14 @@ export const profileBody = style({
   flexDirection: "column",
   alignItems: "stretch",
   padding: "0 14px",
+});
+
+export const activityContent = style({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  animation: `${activityFadeIn} 320ms ease-out both`,
 });
 
 export const socialProfileBody = style([
@@ -315,7 +336,7 @@ export const readingSummaryRow = style({
 });
 
 export const goalAchievementSummary = style({
-  padding: "24px 8px 24px",
+  padding: "18px 8px 24px",
 });
 
 export const profileStatsSummary = style({
@@ -351,26 +372,20 @@ export const profileStatsButton = style({
 });
 
 export const currentReadingSection = style({
-  padding: "24px 4px 18px",
+  padding: "18px 4px",
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "18px",
 });
 
 export const currentReadingTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  zIndex: 1,
   margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  padding: 0,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   textAlign: "left",
   color: vars.color.black,
-  transform: "translateY(-50%)",
 });
 
 export const currentReadingList = style({
@@ -418,6 +433,10 @@ export const currentReadingText = style({
   gap: "5px",
 });
 
+export const myPageCurrentReadingText = style({
+  flex: 1,
+});
+
 export const currentReadingMeta = style({
   display: "flex",
   alignItems: "center",
@@ -434,19 +453,22 @@ export const currentReadingRemain = style({
 });
 
 export const goalAchievementTitle = style({
-  position: "absolute",
-  top: 0,
-  left: "22px",
-  zIndex: 1,
-  margin: 0,
-  padding: "0 9px",
-  backgroundColor: "#ffffff",
+  margin: "0 0 18px",
+  padding: 0,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
   textAlign: "left",
   color: vars.color.black,
-  transform: "translateY(-50%)",
+});
+
+export const myPageSectionTitle = style({
+  width: "100%",
+  textAlign: "center",
+});
+
+export const socialSectionTitle = style({
+  paddingLeft: "6px",
 });
 
 export const goalAchievementGrid = style({
@@ -1369,9 +1391,10 @@ export const quickStatusOption = style({
 export const quickStatusOptionActive = style([
   quickStatusOption,
   {
-    borderColor: vars.color.black,
-    backgroundColor: vars.color.black,
-    color: "#ffffff",
+    border: `1px solid ${vars.color.gray700}`,
+    backgroundColor: "#f3f3f3",
+    color: vars.color.gray900,
+    fontFamily: vars.font.semibold,
   },
 ]);
 
@@ -1586,9 +1609,9 @@ export const goalModalCancel = style([
 export const goalModalSave = style([
   goalModalButtonBase,
   {
-    border: `1px solid ${vars.color.black}`,
-    backgroundColor: vars.color.black,
-    color: "#ffffff",
+    border: `1px solid ${vars.color.gray700}`,
+    backgroundColor: "#ffffff",
+    color: vars.color.gray900,
     selectors: {
       "&:disabled": {
         cursor: "default",
