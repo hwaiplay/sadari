@@ -186,7 +186,7 @@ export const modal = style({
 });
 
 export const modalCalendar = style({
-  height: "462px",
+  height: "470px",
   "@media": {
     "screen and (max-width: 480px)": {
       height: "462px",
@@ -249,7 +249,7 @@ export const modalBody = style({
   position: "relative",
   flex: 1,
   minHeight: "210px",
-  padding: "28px 0 22px",
+  padding: "44px 0 22px",
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
