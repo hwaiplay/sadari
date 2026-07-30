@@ -113,13 +113,11 @@ function SuspensionPage() {
         {/* 이용 정지 상태 표시 영역 */}
         <div className={styles.mark} aria-hidden="true">!</div>
         {/* "서비스 이용 안내" */}
-        <p className={styles.eyebrow}>서비스 이용 안내</p>
         {/* "계정 이용이 정지되었어요" */}
         <h1 className={styles.heading}>계정 이용이 정지되었어요</h1>
         {/* 이용 정지 중 허용되는 계정 처리 안내 영역 */}
         <p className={styles.description}>
-          정지 기간에는 일반 서비스 이용과 계정 비활성화가 제한돼요.
-          영구 탈퇴와 로그아웃은 계속 이용할 수 있어요.
+          {`정지 기간에는 일반 서비스 이용과\n계정 비활성화가 제한돼요.`}
         </p>
 
         {/* 이용 정지 공개 사유와 기간 영역 */}
@@ -137,11 +135,6 @@ function SuspensionPage() {
             <dd className={styles.detailDescription}>{formatDateTime(suspension?.endxDate)}</dd>
           </div>
         </dl>
-
-        {/* 이용 정지 만료와 내부 메모 공개 범위 안내 영역 */}
-        <p className={styles.note}>
-          관리자 내부 처리 메모는 공개되지 않아요. 기간 정지는 종료 시각 이후 로그인할 때 자동 해제돼요.
-        </p>
 
         {/* 영구 탈퇴와 로그아웃 버튼 영역 */}
         <div className={styles.actions}>
