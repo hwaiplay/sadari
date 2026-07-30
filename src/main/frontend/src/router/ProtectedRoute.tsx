@@ -15,7 +15,12 @@ import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
 export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   const location = useLocation();
-  const { isLoading, isAuthenticated, isDeletePending } = useCheckAuth();
+  const {
+    isLoading,
+    isAuthenticated,
+    isDeletePending,
+    isOnboardingRequired,
+  } = useCheckAuth();
 
   if (isLoading) {
     return <Loading title={message("frontend.common.loginLoading")} />;
@@ -31,5 +36,18 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/withdrawal/pending" replace />;
   }
 
+  // 온보딩을 완료하지 않은 신규 회원은 일반 서비스 화면보다 웰컴 화면을 먼저 확인한다
+  if (isOnboardingRequired && location.pathname !== "/welcome") {
+    // 닉네임을 확정할 수 있는 최초 로그인 화면으로 이동한다
+    return <Navigate to="/welcome" replace />;
+  }
+
+  // 온보딩을 이미 완료한 사용자가 웰컴 경로를 직접 열면 홈으로 이동한다
+  if (!isOnboardingRequired && location.pathname === "/welcome") {
+    // 완료된 웰컴 화면이 다시 노출되지 않도록 홈 화면으로 이동한다
+    return <Navigate to="/home" replace />;
+  }
+
+  // 인증과 사용자 상태에 맞는 보호 화면을 반환한다
   return children;
 }

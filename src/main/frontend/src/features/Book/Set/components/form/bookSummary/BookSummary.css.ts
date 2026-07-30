@@ -74,7 +74,19 @@ export const bookInfoButton = style({
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "13px",
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
   cursor: "pointer",
+});
+
+export const bookInfoButtonIcon = style({
+  width: "15px",
+  height: "15px",
+  display: "block",
+  flexShrink: 0,
 });
 
 export const changeButton = style([

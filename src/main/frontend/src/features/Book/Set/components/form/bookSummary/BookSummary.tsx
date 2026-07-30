@@ -57,6 +57,20 @@ function BookSummary({
             >
               {showingBookInfo ? (
                 <>
+                  <svg
+                    className={styles.bookInfoButtonIcon}
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M15 6 9 12l6 6"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
                   {/* "돌아가기" */}
                   {message("frontend.report.backToReport")}
                 </>

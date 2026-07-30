@@ -37,7 +37,7 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 
-const CONTENT_FADE_OUT_MILLISECONDS = 180;
+const CONTENT_FADE_OUT_MILLISECONDS = 90;
 
 /**
  * 선택한 도서를 기준으로 독후감 등록 입력과 도서 정보 전환 화면을 구성한다
@@ -80,6 +80,7 @@ function SetReportPage() {
   const pageStyle = selectedBook?.image
     ? ({
         "--book-bg-image": `url("${selectedBook.image}")`,
+        "--book-bg-fade-height": showBookInfo ? "720px" : "680px",
       } as CSSProperties)
     : undefined;
 
