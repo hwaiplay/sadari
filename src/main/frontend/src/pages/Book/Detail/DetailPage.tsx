@@ -39,7 +39,7 @@ import * as styles from "./DetailPage.css";
 
 // 댓글 API 연결 전 기록 헤더의 댓글 수 배치를 확인하기 위한 임시 표시값이다
 const TEMPORARY_COMMENT_COUNT = 0;
-const CONTENT_FADE_OUT_MILLISECONDS = 180;
+const CONTENT_FADE_OUT_MILLISECONDS = 90;
 const RECORD_CARET_VIEWPORT_OFFSET_PIXELS = 32;
 
 type RecordCaretTarget = {

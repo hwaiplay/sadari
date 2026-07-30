@@ -3,6 +3,7 @@ package org.our.sadari.user.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.user.dto.UserDto;
@@ -11,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -46,6 +49,23 @@ public class UserController {
         // 로그인 사용자의 프로필 정보를 조회 결과를 반환한다
         return userService.getMe(userNumb);
     }
+
+    /**
+     * 최초 로그인 사용자의 닉네임을 확정하고 온보딩을 완료한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param userDto 사용자가 확정한 닉네임
+     * @return 온보딩 완료 후 최신 프로필 응답
+     */
+    @PutMapping("/onboarding")
+    @Operation(summary = "최초 로그인 온보딩 완료", description = "닉네임을 저장하고 최초 로그인 웰컴 화면을 완료한다.")
+    public ResultData uptOnboarding(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                   , @Valid @RequestBody UserDto userDto) {
+        // 최초 로그인 사용자의 닉네임 저장과 온보딩 완료 결과를 반환한다
+        return userService.uptOnboarding(userNumb, userDto);
+    }
+
     /**
      * 로그인 사용자의 프로필과 이미지를 수정한다
      *

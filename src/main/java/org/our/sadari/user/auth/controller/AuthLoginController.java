@@ -43,6 +43,7 @@ import java.util.Map;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -134,10 +135,24 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
+        // 검증된 토큰에서 현재 로그인 사용자 번호를 조회한다
+        Long userNumb = jwtProvider.getUserNumb(accessToken);
         // Redis 상태값이 없는 기존 세션은 정상 회원 상태로 보정한다
-        String userStat = tokenRedisService.getUserStatus(jwtProvider.getUserNumb(accessToken));
-        // 프론트엔드가 영구 삭제 대기 전용 화면을 선택할 수 있도록 현재 회원 상태를 반환한다
-        return ResultData.success(Map.of("userStat", StringUtil.isEmpty(userStat) ? Constant.USER_STAT_ACTIVE : userStat));
+        String userStat = tokenRedisService.getUserStatus(userNumb);
+        // 최초 로그인 전용 화면 진입 여부를 DB의 영속 상태로 조회한다
+        String onbdYsno = userMapper.getUserOnboardingYsno(userNumb);
+
+        // 토큰의 사용자가 DB에 없으면 정상 인증 상태로 응답하지 않는다
+        if (StringUtil.isEmpty(onbdYsno)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 프론트엔드가 회원 상태와 최초 로그인 화면을 한 번에 선택할 수 있도록 반환한다
+        return ResultData.success(Map.of(
+                "userStat", StringUtil.isEmpty(userStat) ? Constant.USER_STAT_ACTIVE : userStat
+              , "onbdYsno", onbdYsno
+        ));
     }
 
     /**

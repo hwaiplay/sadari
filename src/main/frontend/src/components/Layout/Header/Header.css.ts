@@ -1,5 +1,27 @@
-import { style } from "@vanilla-extract/css";
+import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+
+const headerContentSlideForwardKeyframes = keyframes({
+  "0%": {
+    opacity: 0,
+    transform: "translateX(28px)",
+  },
+  "100%": {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
+
+const headerContentSlideBackKeyframes = keyframes({
+  "0%": {
+    opacity: 0,
+    transform: "translateX(-28px)",
+  },
+  "100%": {
+    opacity: 1,
+    transform: "translateX(0)",
+  },
+});
 
 export const headerShell = style({
   position: "fixed",
@@ -30,16 +52,26 @@ export const header = style({
   position: "relative",
 });
 
-export const logo = style({
+export const headerCenter = style({
+  width: "calc(100% - 190px)",
+  height: "100%",
   margin: "0 auto",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  overflow: "hidden",
+});
+
+export const logo = style({
+  margin: 0,
   display: "inline-block",
   position: "relative",
   zIndex: 1,
 });
 
 export const routeTitle = style({
-  maxWidth: "calc(100% - 190px)",
-  margin: "0 auto",
+  maxWidth: "100%",
+  margin: 0,
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "19px",
@@ -48,6 +80,26 @@ export const routeTitle = style({
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
+});
+
+export const headerContentSlideForward = style({
+  animation: `${headerContentSlideForwardKeyframes} 280ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  willChange: "transform, opacity",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      animation: "none",
+    },
+  },
+});
+
+export const headerContentSlideBack = style({
+  animation: `${headerContentSlideBackKeyframes} 280ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  willChange: "transform, opacity",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      animation: "none",
+    },
+  },
 });
 
 export const backpageBtn = style({

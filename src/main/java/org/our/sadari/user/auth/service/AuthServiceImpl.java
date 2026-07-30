@@ -36,6 +36,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
+ * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
  */
 @Service
 @RequiredArgsConstructor
@@ -127,6 +128,8 @@ public class AuthServiceImpl implements AuthService {
                 userDto.setUserNick(nicknameGenerationService.setGeneratedNickname());
                 // 신규 회원이 즉시 정상 이용 상태로 등록되도록 회원 상태를 설정한다
                 userDto.setUserStat(Constant.USER_STAT_ACTIVE);
+                // 신규 회원이 닉네임을 확정할 때까지 웰컴 화면을 유지하도록 온보딩 상태를 설정한다
+                userDto.setOnbdYsno(Constant.COMM_NO);
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
