@@ -27,6 +27,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        HanWon.Jang        댓글 등록 알림 중복 차단 제외
  */
 @Service
 @RequiredArgsConstructor
@@ -258,9 +259,11 @@ public class AlimServiceImpl implements AlimService {
         // DeltYsno 업무 값을 alim DTO에 설정한다
         alim.setDeltYsno(Constant.COMM_NO);
 
-        // 최종 제목, 내용, 링크까지 완전히 같은 알림이 1시간 이내에 있으면 새 알림을 만들지 않는다.
-        // 좋아요나 팔로우 버튼을 반복 조작할 때 같은 알림이 짧은 시간에 쌓이는 것을 막기 위한 공통 발송 분기이다.
-        if (alimMapper.dupSameAlimInHour(alim) > 0) {
+        // 댓글은 등록 건마다 별도 이벤트이므로 같은 작성자와 독후감이어도 알림을 모두 저장한다
+        boolean isReplyReportAlim = Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode);
+
+        // 좋아요와 팔로우처럼 반복 조작으로 발생할 수 있는 동일 알림만 1시간 동안 중복 차단한다
+        if (!isReplyReportAlim && alimMapper.dupSameAlimInHour(alim) > 0) {
             // 알림 수신자와 템플릿 식별값으로 TB_ALTEMP의 사용 가능한 템플릿을 찾고, #{key} 형식의 상용구를 Map 값으로 치환해 TB_ALIMXX에 저장 결과를 성공 응답으로 반환한다
             return ResultData.success(alim);
         }
