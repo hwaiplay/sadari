@@ -15,6 +15,9 @@ import {
   REPORT_STATUS_DONE,
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
+import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
+import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
+import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import {
   delSocialFollowApi,
   getMyFollowListApi,
@@ -36,7 +39,7 @@ import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
-import type { FormEvent, MouseEvent } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -54,6 +57,29 @@ type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
+
+const DEFAULT_GOAL_HELP_ITEMS = [
+  // "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다."
+  "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다.",
+  // "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다."
+  "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다.",
+  // "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다."
+  "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다.",
+  // "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다."
+  "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다.",
+] as const;
+
+/**
+ * 관리자 설정 또는 기본 목표 내리기 정책 문구를 목록 항목으로 표시한다
+ *
+ * @author HanWon.Jang
+ * @param goalHelpItem 화면에 표시할 목표 내리기 정책 문구
+ * @return 목표 내리기 정책 목록 항목
+ */
+const renderGoalHelpItem = (goalHelpItem: string): ReactNode => {
+  // 개별 목표 내리기 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환한다
+  return <li key={goalHelpItem}>{goalHelpItem}</li>;
+};
 
 /**
  * is Active Follow Status 여부를 판정한다
@@ -304,6 +330,16 @@ function ProfileEditPage() {
     year: null,
   });
   const followListScrollTimeoutRef = useRef<number | null>(null);
+  // 목표 내리기 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회한다
+  const { data: goalHelpContent } = usePopupContent(
+    POPUP_CONTENT_KEYS.profileGoalDown,
+  );
+  // 목표 내리기 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  const goalHelpItems = parsePopupContentList(
+    goalHelpContent?.contFirs,
+    DEFAULT_GOAL_HELP_ITEMS,
+  );
+  // 열린 프로필 팝업 상태에 맞춰 배경 스크롤 잠금을 동기화한다
   useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType));
 
   /**
@@ -2415,10 +2451,8 @@ function ProfileEditPage() {
                 {/* "목표를 올리는 것은 언제나 가능하고, 목표를 내릴 때만 기간별 횟수와 가능 기간이 제한됩니다." */ message("frontend.profile.goal.helpLead")}
               </p>
               <ul className={styles.goalHelpList}>
-                <li>{/* "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpWeek")}</li>
-                <li>{/* "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpMonth")}</li>
-                <li>{/* "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpYear")}</li>
-                <li>{/* "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다." */ message("frontend.profile.goal.helpSameValue")}</li>
+                {/* 목표 내리기 정책 문구 목록 */}
+                {goalHelpItems.map(renderGoalHelpItem)}
               </ul>
             </div>
           </section>

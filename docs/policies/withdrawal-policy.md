@@ -15,6 +15,8 @@
 
 화면의 비활성화와 영구 탈퇴 선택 카드에는 각 정책의 핵심 안내 한 줄만 표시하며, 도움말 버튼을 누르면 전체 정책을 비교할 수 있는 안내 팝업을 제공합니다.
 
+도움말 팝업의 비활성화 목록은 `CT_POPUPX`의 `ACCOUNT`·`WITHDRAWAL_POLICY` 행에 있는 `CONT_FIRS`, 영구 탈퇴 목록은 `CONT_SECO`에서 조회합니다. 콘텐츠가 없거나 조회 및 JSON 검증에 실패하면 화면에 포함된 현재 기본 문구를 표시합니다. 세부 저장 및 조회 기준은 [사용자 안내 팝업 콘텐츠 정책](popup-content-policy.md)을 따릅니다.
+
 ## 계정 비활성화
 
 - 처리 유형: `SOFT`
@@ -84,3 +86,6 @@
 - `src/main/frontend/src/pages/Settings/WithdrawalPendingPage.tsx`
 - `src/main/frontend/src/pages/Settings/WithdrawalResultPage.tsx`
 - `src/main/frontend/src/pages/Oauth/Oauth.tsx`
+- `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
+- `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
+- `CT_POPUPX`
