@@ -69,12 +69,17 @@ public final class Constant {
     public static final String ALIM_SITU_FOLLOW = "FOLLOW";
     // 독후감 상태나 도서 정보에 의해 발생하는 알림 상황 코드
     public static final String ALIM_SITU_REPORT = "REPORT";
+    // 독후감 댓글에 의해 발생하는 알림 상황 코드
+    public static final String ALIM_SITU_REPLY = "REPLY";
+
     // 알림 템플릿 코드 좋아요 독후감 설정값
     public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";
     // 알림 템플릿 코드 팔로우 USER 설정값
     public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
+    // 알림 템플릿 코드 댓글 설정값
+    public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_LIKE";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";
