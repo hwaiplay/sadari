@@ -37,6 +37,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
  * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
+ * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
  */
 @Service
 @RequiredArgsConstructor
@@ -109,6 +110,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 카카오 로그인 사용자 정보를 담을 객체를 생성한다
         UserDto userDto = new UserDto();
+        // 일반 로그인과 비활성화 계정 복귀 로그인을 구분할 상태를 초기화한다
+        boolean accountReactivated = false;
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
@@ -143,7 +146,7 @@ public class AuthServiceImpl implements AuthService {
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
                 /*
-                 * 소프트 탈퇴 회원은 Kakao 재로그인을 복구 의사로 판단한다.
+                 * 비활성화 회원은 Kakao 재로그인을 계정 재활성화 의사로 판단한다.
                  * 기존 프로필과 관계 데이터는 유지하고 회원 상태와 탈퇴 일시만 정상 상태로 되돌린다.
                  */
                 if (Constant.USER_STAT_WITHDRAWN.equals(savedUser.getUserStat())) {
@@ -151,12 +154,14 @@ public class AuthServiceImpl implements AuthService {
                     savedUser.setUserNumb(savedUser.getUserNumb());
                     // 정상 이용 회원 상태를 설정한다
                     savedUser.setUserStat(Constant.USER_STAT_ACTIVE);
-                    // 소프트 탈퇴 요청일을 제거한다
+                    // 비활성화 요청일을 제거한다
                     savedUser.setWthdDate(null);
                     // 영구 삭제 예정일을 제거한다
                     savedUser.setDeltDate(null);
                     // 로그인 완료 전에 회원 상태를 정상으로 복구한다
                     userMapper.uptUserStatus(savedUser);
+                    // OAuth 완료 화면이 일반 로그인과 구분해 복귀 정책을 안내하도록 상태를 기록한다
+                    accountReactivated = true;
                 }
 
                 // UserNumb 업무 값을 userDto DTO에 설정한다
@@ -227,6 +232,6 @@ public class AuthServiceImpl implements AuthService {
         // 진단에 필요한 처리 상태를 디버그 로그로 남긴다
         log.debug("Kakao login JWT issued. userNumb={}", userDto.getUserNumb());
         // Kakao 계정 확인과 JWT 로그인 처리 결과를 성공 응답으로 반환한다
-        return ResultData.success(TokenDto.of(accessToken, refreshToken));
+        return ResultData.success(TokenDto.of(accessToken, refreshToken, accountReactivated));
     }
 }

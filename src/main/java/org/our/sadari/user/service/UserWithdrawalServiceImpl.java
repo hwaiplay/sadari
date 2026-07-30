@@ -35,12 +35,13 @@ import java.util.UUID;
  * fileName       : UserWithdrawalServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : Kakao 재인증을 거친 소프트 탈퇴와 영구 삭제 대기 업무를 처리한다
+ * description    : Kakao 재인증을 거친 계정 비활성화와 영구 삭제 대기 업무를 처리한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 적용
+ * 2026-07-30        SeungHyeon.Kang    사용자 계정 처리 용어를 비활성화로 정리
  */
 @Service
 @RequiredArgsConstructor
@@ -255,13 +256,13 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        // 소프트 탈퇴와 영구 삭제 대기는 서로 다른 회원 상태와 이력 상태를 적용한다
+        // 계정 비활성화와 영구 삭제 대기는 서로 다른 회원 상태와 이력 상태를 적용한다
         if (Constant.WITHDRAWAL_TYPE_SOFT.equals(request.getWthdType())) {
-            // 소프트 탈퇴 이력을 완료 상태로 설정한다
+            // 계정 비활성화 이력을 완료 상태로 설정한다
             request.setWthdStat(WITHDRAWAL_STATUS_COMPLETED);
             // 즉시 처리된 시각을 완료일로 설정한다
             request.setProcDate(LocalDateTime.now());
-            // 소프트 탈퇴 회원 상태를 적용한다
+            // 계정 비활성화 회원 상태를 적용한다
             applyWithdrawalStatus(request, Constant.USER_STAT_WITHDRAWN, null);
         }
 
