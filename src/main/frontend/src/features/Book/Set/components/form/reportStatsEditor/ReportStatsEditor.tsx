@@ -68,30 +68,14 @@ function getDateSerial(value: string) {
 }
 
 /**
- * 현재 로컬 날짜를 독서기간 계산에 사용할 UTC 기준 일련번호로 변환한다
- *
- * @author HanWon.Jang
- * @return 오늘 날짜의 UTC 기준 일련번호
- */
-function getTodayDateSerial() {
-
-  // 사용자 브라우저의 오늘 날짜를 기준으로 읽는 중인 기간을 계산한다
-  const today = new Date();
-
-  // 시간값을 제외한 오늘 날짜 일련번호를 반환한다
-  return Date.UTC(today.getFullYear(), today.getMonth(), today.getDate());
-}
-
-/**
- * 입력된 독서 상태와 기간을 상세 화면과 같은 일수 요약으로 변환한다
+ * 입력된 독서기간을 시작일과 종료일을 포함한 일수 요약으로 변환한다
  *
  * @author HanWon.Jang
  * @param startDate 독서 시작일
  * @param endDate 독서 종료일 또는 목표 종료일
- * @param isReadingStatus 읽는 중 상태 여부
  * @return N일 형식의 기간 요약
  */
-function getPeriodSummary(startDate: string, endDate: string, isReadingStatus: boolean) {
+function getPeriodSummary(startDate: string, endDate: string) {
 
   // 시작일과 종료일이 모두 입력된 경우에만 4열 영역에 기간을 표시한다
   if (!startDate || !endDate) {
@@ -101,8 +85,8 @@ function getPeriodSummary(startDate: string, endDate: string, isReadingStatus: b
 
   // 독서 시작일을 날짜 차이 계산 기준으로 변환한다
   const startSerial = getDateSerial(startDate);
-  // 읽는 중이면 오늘까지의 진행일을 사용하고 완료 또는 중단이면 저장할 종료일을 사용한다
-  const endSerial = isReadingStatus ? getTodayDateSerial() : getDateSerial(endDate);
+  // 읽는 중에는 목표 종료일을 사용하고 완료 또는 중단에는 실제 종료일을 사용한다
+  const endSerial = getDateSerial(endDate);
 
   // 유효하지 않거나 역전된 날짜는 저장 전 검증 대상이므로 요약값을 표시하지 않는다
   if (startSerial === null || endSerial === null || endSerial < startSerial) {
@@ -113,7 +97,7 @@ function getPeriodSummary(startDate: string, endDate: string, isReadingStatus: b
   // 시작일을 포함한 독서일 수를 계산한다
   const durationDays = Math.floor((endSerial - startSerial) / MILLISECONDS_PER_DAY) + 1;
 
-  // 읽는 중과 완료 및 중단 상태 모두 4열 요약에서는 경과 일수만 표시한다
+  // 읽는 중과 완료 및 중단 상태 모두 선택한 전체 기간의 일수만 표시한다
   // "{0}일"
   return message("frontend.report.period.completedDays", [durationDays]);
 }
@@ -172,7 +156,7 @@ function ReportStatsEditor({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const portalTarget = typeof document === "undefined" ? null : document.body;
   const isReadingStatus = status === REPORT_STATUS_READ;
-  const periodSummary = getPeriodSummary(startDate, endDate, isReadingStatus);
+  const periodSummary = getPeriodSummary(startDate, endDate);
   const periodText =
     startDate && endDate
       ? `${startDate.replaceAll("-", ".")} ~ ${endDate.replaceAll("-", ".")}`
