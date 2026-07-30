@@ -80,12 +80,35 @@ HTTP 상태가 200이어도 업무 응답의 `ResultData.code`가 200이 아닐 
 
 이 구조는 메뉴명을 화면 소스에 중복 작성하지 않고 DB 설정과 사용자 화면을 연결한다.
 
+`sadari-admin`의 사용자 메뉴 관리 화면은 상위·하위 메뉴명, URL, 정렬, 노출 여부와 사용 여부를 `TM_URMENU`에 저장한다. 사용자 Header는 경로가 변경될 때 메뉴 API를 다시 호출하므로 운영자가 변경한 메뉴명과 노출 설정을 다음 화면 이동에서 반영한다.
+
 구현 근거:
 
 - `src/main/java/org/our/sadari/menu/service/UserMenuServiceImpl.java`
 - `src/main/frontend/src/features/Menu/api/userMenuApi.ts`
 - `src/main/frontend/src/components/Layout/Header/Header.tsx`
 - `src/main/frontend/src/components/Layout/Header/HeaderMenuDrawer.tsx`
+- `../sadari-admin/src/main/frontend/src/pages/userMenu/UserMenuManagePage.tsx`
+
+## 관리자 운영 화면
+
+관리자 프론트는 사용자 화면을 복제한 별도 UI가 아니라 운영 데이터를 제어하고 실행 결과를 관찰하는 화면으로 구성된다.
+
+- 공통코드 마스터·세부코드 관리
+- 알림 상황별 템플릿 등록·수정
+- 사용자 Header·햄버거 메뉴 관리
+- 관리자 메뉴와 권한 그룹별 조회·쓰기·삭제 권한 관리
+- 관리자별 권한 그룹 일괄 부여
+- 스케줄러 실행 목록, 처리 건수와 실패 상세 조회
+
+관리자 프론트도 공통 API 클라이언트에서 HTTP 상태와 `ResultData.code === 200`을 함께 검증한다. 각 화면은 현재 관리자의 메뉴 권한을 조회해 쓰기·삭제 버튼 노출을 제어하고, 백엔드 인터셉터가 같은 권한을 다시 검사한다.
+
+구현 근거:
+
+- `../sadari-admin/src/main/frontend/src/App.tsx`
+- `../sadari-admin/src/main/frontend/src/api/client.ts`
+- `../sadari-admin/src/main/frontend/src/contexts/MenuPermissionContext.tsx`
+- `../sadari-admin/src/main/frontend/src/pages/scheduleLog/ScheduleLogDetailPage.tsx`
 
 ## 이미지 실패 복구
 
@@ -120,3 +143,4 @@ HTTP 상태가 200이어도 업무 응답의 `ResultData.code`가 200이 아닐 
 - 컴포넌트 단위 시각 회귀 테스트와 접근성 자동 검사를 CI에 추가한다.
 - 단계형 독후감 편집 팝업의 키보드 탐색과 Screen Reader 동작을 검증한다.
 - 전역 API 오류 표시 정책을 Toast, Modal, 인라인 오류로 세분화할 수 있다.
+- 관리자 설정 변경이 사용자 화면에 반영되는 시점을 표시하고 캐시 갱신 상태를 운영자에게 안내할 수 있다.

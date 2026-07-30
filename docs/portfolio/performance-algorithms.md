@@ -124,6 +124,19 @@ RGB 축의 단순 거리는 사람의 색상 인지 차이와 일치하지 않�
 - `src/main/java/org/our/sadari/global/common/code/util/CodeUtil.java`
 - `src/main/frontend/src/features/Common/utils/codeUtil.ts`
 
+### 관리자 변경과 캐시 일관성
+
+관리자는 `sadari-admin`에서 공통코드를 변경하지만 사용자 프론트는 10분 `staleTime`, 비속어 탐지 서비스는 10분 메모리 캐시를 사용한다. 이는 사용자 요청마다 운영 테이블을 조회하는 비용을 줄이는 대신 최대 10분의 전파 지연을 허용한 선택이다.
+
+`SCHD_CODE`는 스케줄러 실행 직전에 백엔드가 직접 조회하므로 다음 Cron 실행부터 변경을 반영한다. 사용자 메뉴와 알림 템플릿도 별도 장기 캐시 없이 다음 조회·발송에서 DB 값을 사용한다.
+
+향후 즉시 반영이 필요한 운영값은 관리자 저장 성공 후 Redis Pub/Sub 또는 애플리케이션 이벤트로 사용자 인스턴스의 캐시를 무효화할 수 있다.
+
+관리자 구현 근거:
+
+- `../sadari-admin/src/main/java/org/sadari/admin/sadariadmin/common/code/service/CodeManageService.java`
+- `../sadari-admin/src/main/frontend/src/pages/code/CodeDetailPage.tsx`
+
 ## 추가 측정 과제
 
 | 항목 | 현재 상태 | 필요한 검증 |
@@ -133,4 +146,4 @@ RGB 축의 단순 거리는 사람의 색상 인지 차이와 일치하지 않�
 | 비속어 탐지 | 알고리즘 구현 완료 | 사전 크기별 JMH 비교 |
 | 표지 색상 | 단위 테스트 존재 | 실제 표지 샘플의 사용자 평가 |
 | 코드 캐시 | 10분 적용 | 코드 변경 전파 지연 모니터링 |
-
+| 관리자 설정 전파 | 설정별 반영 시점이 다름 | 캐시 무효화 이벤트와 전파 지표 |
