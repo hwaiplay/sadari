@@ -158,16 +158,8 @@ function SuspensionPage() {
           </p>
         )}
 
-        {/* 영구 탈퇴와 로그아웃 버튼 영역 */}
+        {/* 정지 회원에게 허용된 로그아웃 버튼 영역 */}
         <div className={styles.actions}>
-          <button
-            className={styles.withdrawButton}
-            type="button"
-            onClick={() => navigate("/suspension/withdrawal")}
-          >
-            {/* "영구 탈퇴" */}
-            영구 탈퇴
-          </button>
           <button className={styles.logoutButton} type="button" onClick={handleLogout}>
             {/* "로그아웃" */}
             로그아웃

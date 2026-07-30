@@ -108,7 +108,7 @@ export const note = style({
 export const actions = style({
   marginTop: "26px",
   display: "grid",
-  gridTemplateColumns: "1fr 1fr",
+  gridTemplateColumns: "1fr",
   gap: "10px",
 });
 
@@ -119,13 +119,6 @@ const actionButton = {
   fontSize: "13px",
   cursor: "pointer",
 } as const;
-
-export const withdrawButton = style({
-  ...actionButton,
-  border: "1px solid #c9cbca",
-  backgroundColor: "#ffffff",
-  color: "#4e5451",
-});
 
 export const logoutButton = style({
   ...actionButton,

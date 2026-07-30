@@ -42,12 +42,9 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return children;
   }
 
-  // 정지 회원은 정지 안내와 영구 탈퇴 화면 외의 서비스 화면에 접근할 수 없습니다.
+  // 정지 회원은 정지 안내 화면 외의 서비스 화면에 접근할 수 없습니다.
   if (isSuspended) {
-    if (
-      location.pathname !== "/suspension"
-      && location.pathname !== "/suspension/withdrawal"
-    ) {
+    if (location.pathname !== "/suspension") {
       return <Navigate to="/suspension" replace />;
     }
 
