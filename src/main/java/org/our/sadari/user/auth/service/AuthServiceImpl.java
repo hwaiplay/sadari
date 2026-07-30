@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.UserIdEncryptionService;
@@ -20,18 +21,25 @@ import org.our.sadari.user.dto.LoginHistoryDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.LoginHistoryMapper;
 import org.our.sadari.user.mapper.UserMapper;
+import org.our.sadari.user.service.NicknameGenerationService;
+import org.our.sadari.user.service.UserSuspensionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 /**
  * fileName       : AuthServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-03-15
- * description    : 사용자 업무 로직을 구현한다
+ * description    : Kakao 계정 기반 회원 등록과 JWT 로그인 업무를 구현한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
+ * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
+ * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
+ * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
+ * 2026-07-30        SeungHyeon.Kang    정지 회원 재가입 차단과 기간 만료 복구
  */
 @Service
 @RequiredArgsConstructor
@@ -56,9 +64,13 @@ public class AuthServiceImpl implements AuthService {
     private final FileService fileService;
     // UserIdEncryption 업무 처리 서비스
     private final UserIdEncryptionService userIdEncryptionService;
+    // NicknameGeneration 업무 처리 서비스
+    private final NicknameGenerationService nicknameGenerationService;
+    // 회원 정지 기간 만료와 로그인 상태 동기화 서비스
+    private final UserSuspensionService userSuspensionService;
 
     /**
-     * Kakao 계정 확인과 JWT 로그인 처리한다.
+     * Kakao 계정으로 신규 회원 등록과 JWT 로그인을 처리한다
      *
      * @author SeungHyeon.Kang
      * @param code Kakao 로그인 인가 코드
@@ -98,16 +110,25 @@ public class AuthServiceImpl implements AuthService {
         String providerId = String.valueOf(kakaoAccountDto.id);
         // encryptForStorage 업무 로직을 userIdEncryptionService에 위임한다
         String encryptedProviderId = userIdEncryptionService.encryptForStorage(providerId);
-        String nickName = kakaoAccountDto.kakao_account.profile.nickname;
         String profileImg = kakaoAccountDto.kakao_account.profile.profile_image_url;
 
         // 카카오 로그인 사용자 정보를 담을 객체를 생성한다
         UserDto userDto = new UserDto();
+        // 일반 로그인과 비활성화 계정 복귀 로그인을 구분할 상태를 초기화한다
+        boolean accountReactivated = false;
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // UserByIdxx 데이터를 DB에서 조회한다
             UserDto savedUser = userMapper.getUserByIdxx(encryptedProviderId);
+
+            // 기간 정지 종료 뒤 같은 카카오 계정으로 로그인하면 기존 계정을 복구한 뒤 상태를 다시 조회한다
+            if (!StringUtil.isEmpty(savedUser)
+                    && Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                    && userSuspensionService.uptExpiredSuspension(savedUser.getUserNumb())) {
+                // 만료 처리로 변경된 최신 회원 상태를 다시 조회한다
+                savedUser = userMapper.getUserByIdxx(encryptedProviderId);
+            }
 
             // UserProv 업무 값을 userDto DTO에 설정한다
             userDto.setUserProv(AuthConstant.PROV_KAKAO);
@@ -116,11 +137,14 @@ public class AuthServiceImpl implements AuthService {
             userDto.setUserIdxx(encryptedProviderId);
             // UserRole 업무 값을 userDto DTO에 설정한다
             userDto.setUserRole(AuthConstant.ROLE_USER);
-            // UserNick 업무 값을 userDto DTO에 설정한다
-            userDto.setUserNick(nickName);
-
             // savedUser 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (StringUtil.isEmpty(savedUser)) {
+                // 카카오 닉네임 대신 서비스 정책에 맞는 중복 없는 최초 닉네임을 발급한다
+                userDto.setUserNick(nicknameGenerationService.setGeneratedNickname());
+                // 신규 회원이 즉시 정상 이용 상태로 등록되도록 회원 상태를 설정한다
+                userDto.setUserStat(Constant.USER_STAT_ACTIVE);
+                // 신규 회원이 닉네임을 확정할 때까지 웰컴 화면을 유지하도록 온보딩 상태를 설정한다
+                userDto.setOnbdYsno(Constant.COMM_NO);
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
@@ -133,15 +157,37 @@ public class AuthServiceImpl implements AuthService {
 
             // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환한다
             else {
+                /*
+                 * 비활성화 회원은 Kakao 재로그인을 계정 재활성화 의사로 판단한다.
+                 * 기존 프로필과 관계 데이터는 유지하고 회원 상태와 탈퇴 일시만 정상 상태로 되돌린다.
+                 */
+                if (Constant.USER_STAT_WITHDRAWN.equals(savedUser.getUserStat())) {
+                    // 복구할 회원 번호를 상태 변경 요청에 설정한다
+                    savedUser.setUserNumb(savedUser.getUserNumb());
+                    // 정상 이용 회원 상태를 설정한다
+                    savedUser.setUserStat(Constant.USER_STAT_ACTIVE);
+                    // 비활성화 요청일을 제거한다
+                    savedUser.setWthdDate(null);
+                    // 영구 삭제 예정일을 제거한다
+                    savedUser.setDeltDate(null);
+                    // 로그인 완료 전에 회원 상태를 정상으로 복구한다
+                    userMapper.uptUserStatus(savedUser);
+                    // OAuth 완료 화면이 일반 로그인과 구분해 복귀 정책을 안내하도록 상태를 기록한다
+                    accountReactivated = true;
+                }
+
                 // UserNumb 업무 값을 userDto DTO에 설정한다
                 userDto.setUserNumb(savedUser.getUserNumb());
                 // UserRole 업무 값을 userDto DTO에 설정한다
                 userDto.setUserRole(savedUser.getUserRole());
                 // 기존 사용자가 프로필에서 수정한 닉네임이 있으면 Kakao 기본 닉네임으로 다시 덮지 않고 DB 값을 사용한다.
                 userDto.setUserNick(savedUser.getUserNick());
+                // 로그인 세션에 반영할 현재 회원 상태를 설정한다
+                userDto.setUserStat(savedUser.getUserStat());
 
                 // savedUser.getProfNumb( 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
-                if (StringUtil.isEmpty(savedUser.getProfNumb())) {
+                if (!Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                        && StringUtil.isEmpty(savedUser.getProfNumb())) {
                     // ProfNumb 업무 값을 userDto DTO에 설정한다
                     userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                     // UserProfile 데이터를 DB에서 수정한다
@@ -155,6 +201,8 @@ public class AuthServiceImpl implements AuthService {
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
+            // 사용자 등록 일부만 커밋되지 않도록 로그인 쓰기 트랜잭션 전체를 롤백한다
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 실패 원인과 처리 대상을 오류 로그로 남긴다
             log.error("Kakao user save failed. message={}", e.getMessage());
             // "인증에 실패했어요.\n다시 로그인 해주세요."
@@ -175,6 +223,7 @@ public class AuthServiceImpl implements AuthService {
                 userDto.getUserNumb()
               , refreshToken
               , userDto.getUserNick()
+              , userDto.getUserStat()
               , jwtProvider.getRefreshTokenValiditySeconds()
         );
 
@@ -196,6 +245,6 @@ public class AuthServiceImpl implements AuthService {
         // 진단에 필요한 처리 상태를 디버그 로그로 남긴다
         log.debug("Kakao login JWT issued. userNumb={}", userDto.getUserNumb());
         // Kakao 계정 확인과 JWT 로그인 처리 결과를 성공 응답으로 반환한다
-        return ResultData.success(TokenDto.of(accessToken, refreshToken));
+        return ResultData.success(TokenDto.of(accessToken, refreshToken, accountReactivated));
     }
 }

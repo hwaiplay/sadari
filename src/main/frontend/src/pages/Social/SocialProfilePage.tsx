@@ -22,12 +22,12 @@ import type {
   ReadingSummaryReport,
   UserProfile,
 } from "@/features/User/api/userApi";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 type ReadingPeriod = "week" | "month" | "year";
 
 /**
@@ -508,7 +508,7 @@ function SocialProfilePage() {
         aria-label={message("frontend.profile.currentReading.title")}
       >
         <div className={styles.currentReadingSection}>
-          <h2 className={styles.currentReadingTitle}>
+          <h2 className={`${styles.currentReadingTitle} ${styles.socialSectionTitle}`}>
             {/* "현재 읽고 있는 책" */}
             {message("frontend.profile.currentReading.title")}
           </h2>
@@ -822,6 +822,24 @@ function SocialProfilePage() {
     return <main className={styles.page}>{message("frontend.common.invalidAccess")}</main>;
   }
 
+  // 탈퇴 회원은 기존 관계를 유지하되 프로필과 활동 정보를 공개하지 않습니다
+  if (profile.userStat && profile.userStat !== "ACTIVE") {
+    // 탈퇴 상태만 표시하는 제한된 공개 프로필 화면을 반환합니다
+    return (
+      <main className={styles.page}>
+        {/* 탈퇴 회원 공개 프로필 제한 안내 영역 */}
+        <section className={styles.profileShell}>
+          <section className={styles.socialProfileBody}>
+            <div className={styles.profileText}>
+              <h1 className={styles.profileName}>탈퇴한 사용자</h1>
+              <p className={styles.profileIntro}>탈퇴한 사용자의 정보는 표시되지 않아요.</p>
+            </div>
+          </section>
+        </section>
+      </main>
+    );
+  }
+
   return (
     /* 상대 사용자의 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>
@@ -847,9 +865,9 @@ function SocialProfilePage() {
         <section className={styles.socialProfileBody}>
           <div className={styles.socialProfileHeaderRow}>
             <div className={styles.avatarWrap}>
-              <img
+              <ProfileImage
                 className={styles.profileImage}
-                src={profile.porfPath || DEFAULT_PROFILE_IMAGE}
+                src={profile.porfPath}
                 alt={profile.userNick ?? message("frontend.profile.nick")}
               />
               {followStatName && (
@@ -881,7 +899,7 @@ function SocialProfilePage() {
         {/* 상대 사용자의 월간 독서 요약 영역 */}
         <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
-              <p className={styles.goalAchievementTitle}>
+              <p className={`${styles.goalAchievementTitle} ${styles.socialSectionTitle}`}>
                 {/* "목표 달성 횟수" */}
                 {message("frontend.profile.goal.achievementTitle")}
               </p>
@@ -1021,9 +1039,9 @@ function SocialProfilePage() {
                     type="button"
                     onClick={() => handleFollowListUserClick(user.userNumb)}
                   >
-                    <img
+                    <ProfileImage
                       className={styles.followModalAvatar}
-                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      src={user.porfPath}
                       alt={user.userNick ?? message("frontend.profile.nick")}
                     />
                     <span className={styles.followModalText}>

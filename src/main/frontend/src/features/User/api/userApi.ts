@@ -2,6 +2,8 @@ import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type UserProfile = {
+  userStat?: "ACTIVE" | "WITHDRAWN" | "SUSPENDED" | "DELETE_PENDING";
+  onbdYsno?: "Y" | "N";
   userNick?: string;
   porfPath?: string;
   bgimPath?: string;
@@ -79,6 +81,10 @@ export type UpdateUserProfileParams = {
   intrCntn: string;
   profileImage?: File | null;
   backgroundImage?: File | null;
+};
+
+export type UpdateOnboardingParams = {
+  userNick: string;
 };
 
 /**
@@ -160,6 +166,24 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
 
   return api.put("/user/uptProfile", formData).then((res) => {
 
+    return assertResultDataSuccess(res.data);
+  });
+};
+
+/**
+ * 최초 로그인 사용자의 닉네임을 저장하고 웰컴 화면을 완료한다
+ *
+ * @author HanWon.Jang
+ * @param params 사용자가 확정한 닉네임
+ * @return 온보딩 완료 후 최신 사용자 프로필 응답
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const updateOnboardingApi = (params: UpdateOnboardingParams) => {
+
+  // 닉네임 저장과 온보딩 완료를 같은 백엔드 트랜잭션으로 요청한다
+  return api.put("/user/onboarding", params).then((res) => {
+
+    // 공통 응답 코드가 성공인 경우에만 최신 프로필을 반환한다
     return assertResultDataSuccess(res.data);
   });
 };

@@ -1,5 +1,6 @@
 package org.our.sadari.report.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeFormatter;
@@ -24,6 +25,7 @@ import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
+import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.dto.SocialDto;
@@ -40,6 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -69,10 +72,6 @@ public class ReportServiceImpl implements ReportService {
     private static final int WEEK_GOAL_LOCK_REMAINING_DAYS = 3; // 주간 목표는 해당 주가 3일 남은 시점부터 목표 내리기를 잠근다.
     // 월간 목표 LOCK REMAINING 일수 설정값
     private static final int MONTH_GOAL_LOCK_REMAINING_DAYS = 7; // 월간 목표는 해당 월이 7일 남은 시점부터 목표 내리기를 잠근다.
-    // SUMMARY 독후감 ORDER 종료 날짜 내림차순 설정값
-    private static final String SUMMARY_REPORT_ORDER_END_DATE_DESC = "END_DATE_DESC";
-    // SUMMARY 독후감 ORDER 종료 날짜 ASC 설정값
-    private static final String SUMMARY_REPORT_ORDER_END_DATE_ASC = "END_DATE_ASC";
     // 독후감 FIELD 상태 키 설정값
     private static final String REPORT_FIELD_STATUS_KEY = "common.report.field.status";
     // 독후감 FIELD 시작 날짜 키 설정값
@@ -85,6 +84,10 @@ public class ReportServiceImpl implements ReportService {
     private static final String REPORT_FIELD_COLOR_KEY = "common.report.field.color";
     // 독후감 FIELD 내용 키 설정값
     private static final String REPORT_FIELD_CONTENT_KEY = "common.report.field.content";
+    // 독후감 별점 최대값
+    private static final BigDecimal REPORT_GRADE_MAX = BigDecimal.valueOf(5);
+    // 독후감 별점 허용 간격
+    private static final BigDecimal REPORT_GRADE_STEP = new BigDecimal("0.5");
 
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회한다.
@@ -125,173 +128,279 @@ public class ReportServiceImpl implements ReportService {
      */
     @Override
     public ResultData getMonthlyReadingSummary(Long userNumb) {
-        // ==========================================
-        // 1. 기준 날짜 정의 및 기간별 시작일 계산
-        // ==========================================
-
-        // 현재 날짜를 기준으로 설정 (모든 기간 계산의 원천 데이터)
+        // 독서량과 목표 기간 계산의 기준 날짜를 조회한다
         LocalDate today = LocalDate.now();
+        // 통합 집계 SQL에 전달할 기간과 공통코드 조건을 생성한다
+        ReadingSummaryQueryDto queryReq = getReadingSummaryQueryReq(userNumb, today);
+        // 기간별 독서량과 목표 및 누적 달성 횟수를 한 번에 조회한다
+        ReadingSummaryQueryDto queryResult = reportMapper.getReadingSummary(queryReq);
 
-        // 현재 주의 시작일(일요일 혹은 월요일, 설정된 GOAL_WEEK_FIELDS 기준) 계산
+        // 집계 SQL이 결과를 반환하지 않은 예외 상황에서도 빈 요약을 구성할 수 있도록 보정한다
+        if (StringUtil.isEmpty(queryResult)) {
+            // 집계 기본값을 담을 객체를 생성한다
+            queryResult = new ReadingSummaryQueryDto();
+        }
+
+        // 통합 집계 결과를 화면 응답 형식으로 변환한다
+        MonthlyReadingSummaryDto summary = getReadingSummaryResponse(queryResult, today);
+        // 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다
+        List<ReportDto> reportList = reportMapper.getReadingSummaryReportList(queryReq);
+        // 한 번 조회한 목록을 현재 주와 월 및 연도 화면 목록으로 분류한다
+        applyReadingSummaryReports(summary, reportList, today);
+
+        // 마이페이지의 기간별 독서량과 목표 달성 요약을 반환한다
+        return ResultData.success(summary);
+    }
+
+    /**
+     * 독서 요약 통합 조회에 사용할 기간과 공통코드 조건을 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 사용자 번호
+     * @param today 기간 계산 기준일
+     * @return 독서 요약 통합 조회 조건
+     */
+    private ReadingSummaryQueryDto getReadingSummaryQueryReq(Long userNumb, LocalDate today) {
+
+        // 현재 주 시작일을 계산한다
         LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);
-
-        // 현재 주 시작일에서 딱 1주일(7일)을 감산하여 직전 주의 시작일을 계산
-        LocalDate previousWeekStart = currentWeekStart.minusWeeks(1);
-
-        // 현재 월의 1일을 시작일로 설정
+        // 현재 월 시작일을 계산한다
         LocalDate currentMonthStart = today.withDayOfMonth(1);
+        // 현재 연도 시작일을 계산한다
+        LocalDate currentYearStart = today.withDayOfYear(1);
+        // 통합 조회 조건을 담을 객체를 생성한다
+        ReadingSummaryQueryDto req = new ReadingSummaryQueryDto();
+        // 조회할 사용자 번호를 설정한다
+        req.setUserNumb(userNumb);
+        // 집계에 사용할 완료 독서 상태를 설정한다
+        req.setDoneStat(Constant.REPORT_STAT_DONE);
+        // 현재 읽는 책 조회에 사용할 독서 상태를 설정한다
+        req.setReadStat(Constant.REPORT_STAT_READ);
+        // 주간 목표 유형을 설정한다
+        req.setWeekGoalType(Constant.GOAL_TYPE_WEEK);
+        // 월간 목표 유형을 설정한다
+        req.setMonthGoalType(Constant.GOAL_TYPE_MONTH);
+        // 연간 목표 유형을 설정한다
+        req.setYearGoalType(Constant.GOAL_TYPE_YEAR);
+        // 현재 주 시작일을 설정한다
+        req.setCurrentWeekStart(currentWeekStart.toString());
+        // 다음 주 시작일을 설정한다
+        req.setNextWeekStart(currentWeekStart.plusWeeks(1).toString());
+        // 이전 주 시작일을 설정한다
+        req.setPreviousWeekStart(currentWeekStart.minusWeeks(1).toString());
+        // 현재 월 시작일을 설정한다
+        req.setCurrentMonthStart(currentMonthStart.toString());
+        // 다음 월 시작일을 설정한다
+        req.setNextMonthStart(currentMonthStart.plusMonths(1).toString());
+        // 이전 월 시작일을 설정한다
+        req.setPreviousMonthStart(currentMonthStart.minusMonths(1).toString());
+        // 현재 연도 시작일을 설정한다
+        req.setCurrentYearStart(currentYearStart.toString());
+        // 이전 연도 시작일을 설정한다
+        req.setPreviousYearStart(currentYearStart.minusYears(1).toString());
+        // 다음 연도 시작일을 설정한다
+        req.setNextYearStart(currentYearStart.plusYears(1).toString());
+        // 현재 주 목표 기준값을 설정한다
+        req.setCurrentWeekGoalDate(getGoalDate(currentWeekStart, Constant.GOAL_TYPE_WEEK));
+        // 이전 주 목표 기준값을 설정한다
+        req.setPreviousWeekGoalDate(getGoalDate(currentWeekStart.minusWeeks(1), Constant.GOAL_TYPE_WEEK));
+        // 현재 월 목표 기준값을 설정한다
+        req.setCurrentMonthGoalDate(getGoalDate(currentMonthStart, Constant.GOAL_TYPE_MONTH));
+        // 이전 월 목표 기준값을 설정한다
+        req.setPreviousMonthGoalDate(getGoalDate(currentMonthStart.minusMonths(1), Constant.GOAL_TYPE_MONTH));
+        // 현재 연도 목표 기준값을 설정한다
+        req.setCurrentYearGoalDate(getGoalDate(currentYearStart, Constant.GOAL_TYPE_YEAR));
+        // 이전 연도 목표 기준값을 설정한다
+        req.setPreviousYearGoalDate(getGoalDate(currentYearStart.minusYears(1), Constant.GOAL_TYPE_YEAR));
 
-        // 현재 월 시작일에서 딱 1달을 감산하여 직전 월의 시작일(1일)을 계산
-        LocalDate previousMonthStart = currentMonthStart.minusMonths(1);
+        // 기간과 목표 기준값이 설정된 통합 조회 조건을 반환한다
+        return req;
+    }
 
-        // 현재 연도의 1월 1일을 시작일로 설정
+    /**
+     * 통합 집계 결과를 마이페이지 독서 요약 응답으로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param result 통합 집계 결과
+     * @param today 기간 계산 기준일
+     * @return 마이페이지 독서 요약 응답
+     */
+    private MonthlyReadingSummaryDto getReadingSummaryResponse(ReadingSummaryQueryDto result, LocalDate today) {
+
+        // 화면 응답에 사용할 독서 요약 객체를 생성한다
+        MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
+        // 주간 표시 코드를 설정한다
+        summary.setWeekCode(Constant.GOAL_TYPE_WEEK);
+        // 현재 주 완료 권수를 설정한다
+        summary.setCurrentWeekCount(result.getCurrentWeekCount());
+        // 이전 주 완료 권수를 설정한다
+        summary.setPreviousWeekCount(result.getPreviousWeekCount());
+        // 주간 완료 권수 차이를 설정한다
+        summary.setWeekCountDiff(result.getCurrentWeekCount() - result.getPreviousWeekCount());
+        // 현재 월 표시 코드를 설정한다
+        summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
+        // 현재 월 완료 권수를 설정한다
+        summary.setCurrentMonthCount(result.getCurrentMonthCount());
+        // 이전 월 완료 권수를 설정한다
+        summary.setPreviousMonthCount(result.getPreviousMonthCount());
+        // 월간 완료 권수 차이를 설정한다
+        summary.setCountDiff(result.getCurrentMonthCount() - result.getPreviousMonthCount());
+        // 현재 연도 표시 코드를 설정한다
+        summary.setYearCode(String.valueOf(today.getYear()));
+        // 현재 연도 완료 권수를 설정한다
+        summary.setCurrentYearCount(result.getCurrentYearCount());
+        // 이전 연도 완료 권수를 설정한다
+        summary.setPreviousYearCount(result.getPreviousYearCount());
+        // 연간 완료 권수 차이를 설정한다
+        summary.setYearCountDiff(result.getCurrentYearCount() - result.getPreviousYearCount());
+        // 현재 주 목표 권수를 설정한다
+        summary.setWeekGoalCnt(result.getWeekGoalCnt());
+        // 이전 주 목표 권수를 설정한다
+        summary.setPreviousWeekGoalCnt(result.getPreviousWeekGoalCnt());
+        // 현재 월 목표 권수를 설정한다
+        summary.setMonthGoalCnt(result.getMonthGoalCnt());
+        // 이전 월 목표 권수를 설정한다
+        summary.setPreviousMonthGoalCnt(result.getPreviousMonthGoalCnt());
+        // 현재 연도 목표 권수를 설정한다
+        summary.setYearGoalCnt(result.getYearGoalCnt());
+        // 이전 연도 목표 권수를 설정한다
+        summary.setPreviousYearGoalCnt(result.getPreviousYearGoalCnt());
+        // 주간 목표 설정 여부를 설정한다
+        summary.setWeekGoalSet(!StringUtil.isEmpty(result.getWeekGoalCnt()));
+        // 월간 목표 설정 여부를 설정한다
+        summary.setMonthGoalSet(!StringUtil.isEmpty(result.getMonthGoalCnt()));
+        // 연간 목표 설정 여부를 설정한다
+        summary.setYearGoalSet(!StringUtil.isEmpty(result.getYearGoalCnt()));
+        // 주간 목표 달성률을 설정한다
+        summary.setWeekGoalRate(getGoalRate(result.getCurrentWeekCount(), result.getWeekGoalCnt()));
+        // 월간 목표 달성률을 설정한다
+        summary.setMonthGoalRate(getGoalRate(result.getCurrentMonthCount(), result.getMonthGoalCnt()));
+        // 연간 목표 달성률을 설정한다
+        summary.setYearGoalRate(getGoalRate(result.getCurrentYearCount(), result.getYearGoalCnt()));
+        // 주간 목표 수정 가능 횟수를 설정한다
+        summary.setWeekGoalRemainUpdateCnt(getGoalRemainUpdateCount(
+                result.getWeekGoalCnt(), result.getWeekGoalUpdtCnt(), Constant.GOAL_TYPE_WEEK));
+        // 월간 목표 수정 가능 횟수를 설정한다
+        summary.setMonthGoalRemainUpdateCnt(getGoalRemainUpdateCount(
+                result.getMonthGoalCnt(), result.getMonthGoalUpdtCnt(), Constant.GOAL_TYPE_MONTH));
+        // 연간 목표 수정 가능 횟수를 설정한다
+        summary.setYearGoalRemainUpdateCnt(getGoalRemainUpdateCount(
+                result.getYearGoalCnt(), result.getYearGoalUpdtCnt(), Constant.GOAL_TYPE_YEAR));
+        // 주간 목표 수정 가능 잔여 일수를 설정한다
+        summary.setWeekGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_WEEK));
+        // 월간 목표 수정 가능 잔여 일수를 설정한다
+        summary.setMonthGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_MONTH));
+        // 연간 목표 수정 가능 잔여 일수를 설정한다
+        summary.setYearGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_YEAR));
+        // 주간 목표 수정 잠금 여부를 설정한다
+        summary.setWeekGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_WEEK));
+        // 월간 목표 수정 잠금 여부를 설정한다
+        summary.setMonthGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_MONTH));
+        // 연간 목표 수정 잠금 여부를 설정한다
+        summary.setYearGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_YEAR));
+        // 주간 목표 달성 횟수를 설정한다
+        summary.setWeekGoalAchvCnt(result.getWeekGoalAchvCnt());
+        // 월간 목표 달성 횟수를 설정한다
+        summary.setMonthGoalAchvCnt(result.getMonthGoalAchvCnt());
+        // 연간 목표 달성 횟수를 설정한다
+        summary.setYearGoalAchvCnt(result.getYearGoalAchvCnt());
+        // 전체 목표 달성 횟수를 설정한다
+        summary.setTotalGoalAchvCnt(
+                result.getWeekGoalAchvCnt() + result.getMonthGoalAchvCnt() + result.getYearGoalAchvCnt());
+
+        // 화면 응답 형식으로 변환한 독서 요약을 반환한다
+        return summary;
+    }
+
+    /**
+     * 한 번 조회한 독후감 목록을 현재 읽는 책과 주간 및 월간 및 연간 목록으로 분류한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param summary 목록을 설정할 독서 요약 응답
+     * @param reportList 현재 읽는 책과 올해 완료한 책 목록
+     * @param today 기간 계산 기준일
+     */
+    private void applyReadingSummaryReports(MonthlyReadingSummaryDto summary, List<ReportDto> reportList
+                                          , LocalDate today) {
+
+        // 현재 읽는 책을 담을 목록을 생성한다
+        List<ReportDto> currentReadingReports = new ArrayList<>();
+        // 현재 주에 완료한 책을 담을 목록을 생성한다
+        List<ReportDto> currentWeekReports = new ArrayList<>();
+        // 현재 월에 완료한 책을 담을 목록을 생성한다
+        List<ReportDto> currentMonthReports = new ArrayList<>();
+        // 현재 연도에 완료한 책을 담을 목록을 생성한다
+        List<ReportDto> currentYearReports = new ArrayList<>();
+        // 현재 주 시작일을 계산한다
+        LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);
+        // 현재 월 시작일을 계산한다
+        LocalDate currentMonthStart = today.withDayOfMonth(1);
+        // 현재 연도 시작일을 계산한다
         LocalDate currentYearStart = today.withDayOfYear(1);
 
-        // 현재 연도 시작일에서 딱 1년을 감산하여 직전 연도의 시작일(1월 1일)을 계산
-        LocalDate previousYearStart = currentYearStart.minusYears(1);
+        // 조회 결과가 있는 경우에만 각 화면 기간으로 목록을 분류한다
+        if (!StringUtil.isEmpty(reportList)) {
+            // 현재 읽는 책과 완료한 책을 상태 및 종료일 기준으로 순차 분류한다
+            for (ReportDto report : reportList) {
+                // 읽는 중인 독후감은 완료 기간과 관계없이 현재 읽는 책 목록에 포함한다
+                if (Constant.REPORT_STAT_READ.equals(report.getReptStat())) {
+                    // 현재 읽는 책 목록에 독후감을 추가한다
+                    currentReadingReports.add(report);
 
+                    continue;
+                }
 
-        // ==========================================
-        // 2. 기간별 집계 요청용 DTO 매개변수 빌드
-        // ==========================================
+                // 완료 상태가 아니거나 종료일이 없는 데이터는 기간별 완료 목록에서 제외한다
+                if (!Constant.REPORT_STAT_DONE.equals(report.getReptStat())
+                        || StringUtil.isEmpty(report.getReptEndt())) {
 
-        // [기간 경계 규칙] 이상(>=) ~ 미만(<) 구조를 일관되게 적용하여 데이터의 누락이나 중복 집계를 방지함
-        // 예: 이번 주 집계는 '이번 주 시작일(이상)'부터 '다음 주 시작일(미만)' 즉, 이번 주 마지막 날짜의 23시 59분 59초까지 포함하게 됨
+                    continue;
+                }
 
-        // 이번 주 집계 범위: [currentWeekStart] <= 독서 완료일 < [currentWeekStart + 1주]
-        MonthlyReadingSummaryDto currentWeekReq = getSummaryReportReq(
-                // 주간 목표 종료일을 시작일에서 일주일 뒤로 계산한다
-                userNumb, currentWeekStart, currentWeekStart.plusWeeks(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+                // 현재 연도에 완료한 독후감을 연간 목록에 추가한다
+                if (isReportInPeriod(report.getReptEndt(), currentYearStart, currentYearStart.plusYears(1))) {
+                    // 현재 연간 완료 목록에 독후감을 추가한다
+                    currentYearReports.add(report);
+                }
 
-        // 직전 주 집계 범위: [previousWeekStart] <= 독서 완료일 < [currentWeekStart] (이번 주 시작일 직전까지)
-        MonthlyReadingSummaryDto previousWeekReq = getSummaryReportReq(
-                userNumb, previousWeekStart, currentWeekStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+                // 현재 월에 완료한 독후감을 월간 목록에 추가한다
+                if (isReportInPeriod(report.getReptEndt(), currentMonthStart, currentMonthStart.plusMonths(1))) {
+                    // 현재 월간 완료 목록에 독후감을 추가한다
+                    currentMonthReports.add(report);
+                }
 
-        // 이번 달 집계 범위: [currentMonthStart] <= 독서 완료일 < [currentMonthStart + 1달]
-        MonthlyReadingSummaryDto currentMonthReq = getSummaryReportReq(
-                // 월간 목표 종료일을 시작일에서 한 달 뒤로 계산한다
-                userNumb, currentMonthStart, currentMonthStart.plusMonths(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+                // 현재 주에 완료한 독후감을 주간 목록에 추가한다
+                if (isReportInPeriod(report.getReptEndt(), currentWeekStart, currentWeekStart.plusWeeks(1))) {
+                    // 현재 주간 완료 목록에 독후감을 추가한다
+                    currentWeekReports.add(report);
+                }
+            }
+        }
 
-        // 직전 달 집계 범위: [previousMonthStart] <= 독서 완료일 < [currentMonthStart] (이번 달 시작일 직전까지)
-        MonthlyReadingSummaryDto previousMonthReq = getSummaryReportReq(
-                userNumb, previousMonthStart, currentMonthStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+        // 현재 읽는 책 목록을 응답에 설정한다
+        summary.setCurrentReadingReports(currentReadingReports);
+        // 현재 주 완료 목록을 응답에 설정한다
+        summary.setCurrentWeekReports(currentWeekReports);
+        // 현재 월 완료 목록을 응답에 설정한다
+        summary.setCurrentMonthReports(currentMonthReports);
+        // 현재 연도 완료 목록을 응답에 설정한다
+        summary.setCurrentYearReports(currentYearReports);
+    }
 
-        // 올해 집계 범위: [currentYearStart] <= 독서 완료일 < [currentYearStart + 1년]
-        MonthlyReadingSummaryDto currentYearReq = getSummaryReportReq(
-                // 연간 목표 종료일을 시작일에서 일 년 뒤로 계산한다
-                userNumb, currentYearStart, currentYearStart.plusYears(1), Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
+    /**
+     * 독서 종료일이 시작일 이상이고 종료 경계일 미만인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reptEndt 독서 종료일
+     * @param periodStart 기간 시작일
+     * @param periodEndExclusive 기간 종료 경계일
+     * @return 지정한 기간에 포함되는지 여부
+     */
+    private boolean isReportInPeriod(String reptEndt, LocalDate periodStart, LocalDate periodEndExclusive) {
 
-        // 작년 집계 범위: [previousYearStart] <= 독서 완료일 < [currentYearStart] (올해 시작일 직전까지)
-        MonthlyReadingSummaryDto previousYearReq = getSummaryReportReq(
-                userNumb, previousYearStart, currentYearStart, Constant.REPORT_STAT_DONE, SUMMARY_REPORT_ORDER_END_DATE_DESC);
-
-        // getSummaryReportReq 조회로 후속 처리에 필요한 데이터를 가져온다
-        MonthlyReadingSummaryDto currentReadingReq = getSummaryReportReq(
-                userNumb, Constant.REPORT_STAT_READ, SUMMARY_REPORT_ORDER_END_DATE_ASC);
-
-
-        // ==========================================
-        // 3. DB 조회 (완료 상태의 독후감 개수 집계)
-        // ==========================================
-
-        // 데이터 정합성을 위해 임시 저장(TEMP) 등이 아닌, 작성이 완전히 완료된(REPORT_STAT = 'DONE') 독후감만 DB에서 카운트함
-        int currentWeekCount = reportMapper.getReportCntByPeriod(currentWeekReq);
-        // ReportCntByPeriod 데이터를 DB에서 조회한다
-        int previousWeekCount = reportMapper.getReportCntByPeriod(previousWeekReq);
-        // ReportCntByPeriod 데이터를 DB에서 조회한다
-        int currentMonthCount = reportMapper.getReportCntByPeriod(currentMonthReq);
-        // ReportCntByPeriod 데이터를 DB에서 조회한다
-        int previousMonthCount = reportMapper.getReportCntByPeriod(previousMonthReq);
-        // ReportCntByPeriod 데이터를 DB에서 조회한다
-        int currentYearCount = reportMapper.getReportCntByPeriod(currentYearReq);
-        // ReportCntByPeriod 데이터를 DB에서 조회한다
-        int previousYearCount = reportMapper.getReportCntByPeriod(previousYearReq);
-
-
-        // ==========================================
-        // 4. 기간별 읽기 목표(Reading Goal) 상세 정보 조회
-        // ==========================================
-
-        // 사용자가 설정한 목표 권수를 조회하여 달성률을 계산할 수 있도록 함 (목표를 아예 설정하지 않은 상태도 null 처리를 통해 화면에서 인지 가능)
-        ReadingGoalDto currentWeekGoal = getReadingGoalDtl(userNumb, currentWeekStart, Constant.GOAL_TYPE_WEEK);
-        // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
-        ReadingGoalDto currentMonthGoal = getReadingGoalDtl(userNumb, currentMonthStart, Constant.GOAL_TYPE_MONTH);
-        // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
-        ReadingGoalDto currentYearGoal = getReadingGoalDtl(userNumb, currentYearStart, Constant.GOAL_TYPE_YEAR);
-        // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
-        ReadingGoalDto previousWeekGoal = getReadingGoalDtl(userNumb, previousWeekStart, Constant.GOAL_TYPE_WEEK);
-        // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
-        ReadingGoalDto previousMonthGoal = getReadingGoalDtl(userNumb, previousMonthStart, Constant.GOAL_TYPE_MONTH);
-        // getReadingGoalDtl 조회로 후속 처리에 필요한 데이터를 가져온다
-        ReadingGoalDto previousYearGoal = getReadingGoalDtl(userNumb, previousYearStart, Constant.GOAL_TYPE_YEAR);
-
-
-        // ==========================================
-        // 5. 화면 표시용 통합 요약 DTO 구성 및 전후 비교값 산출
-        // ==========================================
-
-        // 화면 뷰(UI)에서 현재 값, 이전 값, 그리고 성장세를 나타내는 증감량(Diff)을 한 번에 보여줄 수 있도록 가공하여 바인딩함
-        MonthlyReadingSummaryDto summary = new MonthlyReadingSummaryDto();
-
-        // 주간 데이터 바인딩 및 차이값(이번 주 완료 건수 - 지난 주 완료 건수) 계산
-        summary.setWeekCode(Constant.GOAL_TYPE_WEEK);
-        // CurrentWeekCount 업무 값을 summary DTO에 설정한다
-        summary.setCurrentWeekCount(currentWeekCount);
-        // PreviousWeekCount 업무 값을 summary DTO에 설정한다
-        summary.setPreviousWeekCount(previousWeekCount);
-        // WeekCountDiff 업무 값을 summary DTO에 설정한다
-        summary.setWeekCountDiff(currentWeekCount - previousWeekCount);
-
-        // 월간 데이터 바인딩: 월 코드명을 영문 3자리 대문자로 변환하여 지정 (예: 'JULY' -> 'JUL')
-        summary.setMonthCode(today.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH).toUpperCase(Locale.ENGLISH));
-        // CurrentMonthCount 업무 값을 summary DTO에 설정한다
-        summary.setCurrentMonthCount(currentMonthCount);
-        // PreviousMonthCount 업무 값을 summary DTO에 설정한다
-        summary.setPreviousMonthCount(previousMonthCount);
-        // CountDiff 업무 값을 summary DTO에 설정한다
-        summary.setCountDiff(currentMonthCount - previousMonthCount);
-
-        // 연간 데이터 바인딩: 현재 연도 숫자를 문자열 코드로 변환하여 지정 (예: '2026')
-        summary.setYearCode(String.valueOf(today.getYear()));
-        // CurrentYearCount 업무 값을 summary DTO에 설정한다
-        summary.setCurrentYearCount(currentYearCount);
-        // PreviousYearCount 업무 값을 summary DTO에 설정한다
-        summary.setPreviousYearCount(previousYearCount);
-        // YearCountDiff 업무 값을 summary DTO에 설정한다
-        summary.setYearCountDiff(currentYearCount - previousYearCount);
-
-
-        // ==========================================
-        // 6. 도메인 로직 기반 세부 메타데이터 주입
-        // ==========================================
-
-        // 1) 조회한 목표 권수 정보와 달성 여부를 요약 DTO에 바인딩
-        applyReadingGoal(summary, currentWeekGoal, currentMonthGoal, currentYearGoal);
-        // 이전 독서 목표를 이번 목표로 복사한다
-        applyPreviousReadingGoal(summary, previousWeekGoal, previousMonthGoal, previousYearGoal);
-
-        // 2) 목표 수정 제한 정보 계산 및 바인딩 (특정 시점이 지나면 수정 버튼을 비활성화하는 등의 비즈니스 규칙 처리)
-        applyReadingGoalUpdateMeta(summary, today, currentWeekGoal, currentMonthGoal, currentYearGoal);
-
-        // 3) 해당 사용자의 역대 누적 전체 목표 달성 횟수(배지나 통계용 데이터) 계산 및 바인딩
-        applyReadingGoalAchvCnt(summary, userNumb);
-
-
-        // ==========================================
-        // 7. 상세 목록 매핑 및 결과 반환
-        // ==========================================
-
-        // 사용자가 요약 카드 영역을 펼쳤을 때(Accordion 등) 즉시 책 목록을 렌더링할 수 있도록 상세 독후감 리스트도 함께 포함하여 응답함
-        summary.setCurrentWeekReports(reportMapper.getSummaryReportList(currentWeekReq));
-        // CurrentMonthReports 업무 값을 summary DTO에 설정한다
-        summary.setCurrentMonthReports(reportMapper.getSummaryReportList(currentMonthReq));
-        // CurrentYearReports 업무 값을 summary DTO에 설정한다
-        summary.setCurrentYearReports(reportMapper.getSummaryReportList(currentYearReq));
-        // CurrentReadingReports 업무 값을 summary DTO에 설정한다
-        summary.setCurrentReadingReports(reportMapper.getSummaryReportList(currentReadingReq));
-
-        // 마이페이지에 표시할 주간, 월간, 연간 독서량 요약과 목표 달성 정보를 조회 결과를 성공 응답으로 반환한다
-        return ResultData.success(summary);
+        // YYYY-MM-DD 형식의 문자열 순서가 날짜 순서와 같으므로 불필요한 날짜 변환 없이 범위를 비교한다
+        return reptEndt.compareTo(periodStart.toString()) >= 0
+                && reptEndt.compareTo(periodEndExclusive.toString()) < 0;
     }
 
     /**
@@ -314,150 +423,6 @@ public class ReportServiceImpl implements ReportService {
         req.setGoalType(goalType);
         // 목표 기준일과 목표 유형을 DB 조회용 GOAL_DATE 값으로 변환해 현재 목표를 조회 결과를 반환한다
         return reportMapper.getReadingGoalDtl(req);
-    }
-
-    /**
-     * 조회된 목표를 요약 DTO에 반영하고 현재 독서량 기준 달성률을 계산한다.
-     * 목표가 없는 유형은 화면에서 목표 설정 버튼을 노출할 수 있도록 설정 여부를 false로 유지한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param summary 마이페이지 요약 DTO
-     * @param weekGoal 현재 주간 목표
-     * @param monthGoal 현재 월간 목표
-     * @param yearGoal 현재 연간 목표
-     */
-    private void applyReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto weekGoal, ReadingGoalDto monthGoal
-                                , ReadingGoalDto yearGoal) {
-        // 주간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
-        if (!StringUtil.isEmpty(weekGoal)) {
-            // WeekGoalSet 업무 값을 summary DTO에 설정한다
-            summary.setWeekGoalSet(true);
-            // WeekGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setWeekGoalCnt(weekGoal.getGoalCnt());
-            // WeekGoalRate 업무 값을 summary DTO에 설정한다
-            summary.setWeekGoalRate(getGoalRate(summary.getCurrentWeekCount(), weekGoal.getGoalCnt()));
-        }
-
-        // 월간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
-        if (!StringUtil.isEmpty(monthGoal)) {
-            // MonthGoalSet 업무 값을 summary DTO에 설정한다
-            summary.setMonthGoalSet(true);
-            // MonthGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setMonthGoalCnt(monthGoal.getGoalCnt());
-            // MonthGoalRate 업무 값을 summary DTO에 설정한다
-            summary.setMonthGoalRate(getGoalRate(summary.getCurrentMonthCount(), monthGoal.getGoalCnt()));
-        }
-
-        // 연간 목표가 설정된 경우에만 목표 권수와 달성률을 화면 응답에 포함한다.
-        if (!StringUtil.isEmpty(yearGoal)) {
-            // YearGoalSet 업무 값을 summary DTO에 설정한다
-            summary.setYearGoalSet(true);
-            // YearGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setYearGoalCnt(yearGoal.getGoalCnt());
-            // YearGoalRate 업무 값을 summary DTO에 설정한다
-            summary.setYearGoalRate(getGoalRate(summary.getCurrentYearCount(), yearGoal.getGoalCnt()));
-        }
-    }
-
-    private void applyPreviousReadingGoal(MonthlyReadingSummaryDto summary, ReadingGoalDto weekGoal, ReadingGoalDto monthGoal
-                                        , ReadingGoalDto yearGoal) {
-        // weekGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (!StringUtil.isEmpty(weekGoal)) {
-            // PreviousWeekGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setPreviousWeekGoalCnt(weekGoal.getGoalCnt());
-        }
-
-        // monthGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (!StringUtil.isEmpty(monthGoal)) {
-            // PreviousMonthGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setPreviousMonthGoalCnt(monthGoal.getGoalCnt());
-        }
-
-        // yearGoal 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (!StringUtil.isEmpty(yearGoal)) {
-            // PreviousYearGoalCnt 업무 값을 summary DTO에 설정한다
-            summary.setPreviousYearGoalCnt(yearGoal.getGoalCnt());
-        }
-    }
-
-    /**
-     * 목표 내리기 잔여 횟수와 기간 마감 여부를 요약 DTO에 반영한다.
-     * 프론트 모달은 이 값을 사용해 내리기 버튼 상태와 안내 문구를 결정한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param summary 마이페이지 요약 DTO
-     * @param today 현재 날짜
-     * @param weekGoal 현재 주간 목표
-     * @param monthGoal 현재 월간 목표
-     * @param yearGoal 현재 연간 목표
-     */
-    private void applyReadingGoalUpdateMeta(MonthlyReadingSummaryDto summary, LocalDate today, ReadingGoalDto weekGoal
-                                          , ReadingGoalDto monthGoal, ReadingGoalDto yearGoal) {
-        // WeekGoalRemainUpdateCnt 업무 값을 summary DTO에 설정한다
-        summary.setWeekGoalRemainUpdateCnt(getGoalRemainUpdateCount(weekGoal, Constant.GOAL_TYPE_WEEK));
-        // MonthGoalRemainUpdateCnt 업무 값을 summary DTO에 설정한다
-        summary.setMonthGoalRemainUpdateCnt(getGoalRemainUpdateCount(monthGoal, Constant.GOAL_TYPE_MONTH));
-        // YearGoalRemainUpdateCnt 업무 값을 summary DTO에 설정한다
-        summary.setYearGoalRemainUpdateCnt(getGoalRemainUpdateCount(yearGoal, Constant.GOAL_TYPE_YEAR));
-        // WeekGoalEditableRemainDays 업무 값을 summary DTO에 설정한다
-        summary.setWeekGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_WEEK));
-        // MonthGoalEditableRemainDays 업무 값을 summary DTO에 설정한다
-        summary.setMonthGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_MONTH));
-        // YearGoalEditableRemainDays 업무 값을 summary DTO에 설정한다
-        summary.setYearGoalEditableRemainDays(getGoalEditableRemainDays(today, Constant.GOAL_TYPE_YEAR));
-        // WeekGoalUpdateLocked 업무 값을 summary DTO에 설정한다
-        summary.setWeekGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_WEEK));
-        // MonthGoalUpdateLocked 업무 값을 summary DTO에 설정한다
-        summary.setMonthGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_MONTH));
-        // YearGoalUpdateLocked 업무 값을 summary DTO에 설정한다
-        summary.setYearGoalUpdateLocked(isGoalUpdateLocked(today, Constant.GOAL_TYPE_YEAR));
-    }
-
-    /**
-     * 과거 전체 기간에서 목표를 실제로 달성한 횟수를 주간, 월간, 연간으로 나누어 반영한다.
-     * 현재 기간만 보는 독서량 요약과 달리 성공 횟수는 사용자의 전체 이력을 기준으로 집계한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param summary 마이페이지 요약 DTO
-     * @param userNumb 로그인 사용자 번호
-     */
-    private void applyReadingGoalAchvCnt(MonthlyReadingSummaryDto summary, Long userNumb) {
-        // getReadingGoalAchvCnt 조회로 후속 처리에 필요한 데이터를 가져온다
-        int weekGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_WEEK);
-        // getReadingGoalAchvCnt 조회로 후속 처리에 필요한 데이터를 가져온다
-        int monthGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_MONTH);
-        // getReadingGoalAchvCnt 조회로 후속 처리에 필요한 데이터를 가져온다
-        int yearGoalAchvCnt = getReadingGoalAchvCnt(userNumb, Constant.GOAL_TYPE_YEAR);
-
-        // WeekGoalAchvCnt 업무 값을 summary DTO에 설정한다
-        summary.setWeekGoalAchvCnt(weekGoalAchvCnt);
-        // MonthGoalAchvCnt 업무 값을 summary DTO에 설정한다
-        summary.setMonthGoalAchvCnt(monthGoalAchvCnt);
-        // YearGoalAchvCnt 업무 값을 summary DTO에 설정한다
-        summary.setYearGoalAchvCnt(yearGoalAchvCnt);
-        // TotalGoalAchvCnt 업무 값을 summary DTO에 설정한다
-        summary.setTotalGoalAchvCnt(weekGoalAchvCnt + monthGoalAchvCnt + yearGoalAchvCnt);
-    }
-
-    /**
-     * 목표 유형 하나에 대한 전체 달성 횟수를 Mapper를 통해 조회한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @param goalType 목표 유형
-     * @return 목표 달성 횟수
-     */
-    private int getReadingGoalAchvCnt(Long userNumb, String goalType) {
-        // 독서 목표 조회 또는 저장 조건을 담을 객체를 생성한다
-        ReadingGoalDto req = new ReadingGoalDto();
-        // UserNumb 업무 값을 req DTO에 설정한다
-        req.setUserNumb(userNumb);
-        // GoalType 업무 값을 req DTO에 설정한다
-        req.setGoalType(goalType);
-        // ReptStat 업무 값을 req DTO에 설정한다
-        req.setReptStat(Constant.REPORT_STAT_DONE);
-        // 목표 유형 하나에 대한 전체 달성 횟수를 Mapper를 통해 조회 결과를 반환한다
-        return reportMapper.getReadingGoalAchvCnt(req);
     }
 
     /**
@@ -776,23 +741,27 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 현재 목표의 사용 횟수를 기준으로 목표 내리기 잔여 횟수를 계산한다.
-     * 목표가 아직 없으면 유형별 전체 허용 횟수를 그대로 반환한다.
+     * 목표 권수와 사용한 수정 횟수를 기준으로 목표 내리기 잔여 횟수를 계산한다.
      *
      * @author SeungHyeon.Kang
-     * @param currentGoal 현재 목표
+     * @param goalCnt 현재 목표 권수
+     * @param goalUpdtCnt 사용한 목표 수정 횟수
      * @param goalType 목표 유형
      * @return 목표 내리기 잔여 횟수
      */
-    private int getGoalRemainUpdateCount(ReadingGoalDto currentGoal, String goalType) {
-        // 저장된 목표가 아직 없으면 유형별 전체 내리기 횟수를 잔여 횟수로 표시한다.
-        if (StringUtil.isEmpty(currentGoal)) {
-            // 현재 목표의 사용 횟수를 기준으로 목표 내리기 잔여 횟수를 계산 결과를 반환한다
+    private int getGoalRemainUpdateCount(Integer goalCnt, Integer goalUpdtCnt, String goalType) {
+
+        // 저장된 목표가 아직 없으면 유형별 전체 내리기 횟수를 잔여 횟수로 표시한다
+        if (StringUtil.isEmpty(goalCnt)) {
+            // 목표 유형에 허용된 전체 수정 횟수를 반환한다
             return getGoalUpdateLimit(goalType);
         }
 
-        // 현재 목표의 사용 횟수를 기준으로 목표 내리기 잔여 횟수를 계산 결과를 반환한다
-        return Math.max(0, getGoalUpdateLimit(goalType) - getGoalUpdateCount(currentGoal));
+        // 사용 횟수가 없으면 0으로 보정해 남은 수정 횟수를 계산한다
+        int usedUpdateCount = StringUtil.isEmpty(goalUpdtCnt) ? 0 : goalUpdtCnt;
+
+        // 목표 유형별 제한에서 사용한 횟수를 뺀 잔여 수정 횟수를 반환한다
+        return Math.max(0, getGoalUpdateLimit(goalType) - usedUpdateCount);
     }
 
     /**
@@ -870,47 +839,6 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 완료 독후감 기간 집계에 사용할 요청 DTO를 생성한다.
-     * 종료 경계는 중복 집계를 피하기 위해 exclusive 값으로 전달한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @param periodStart 기간 시작일
-     * @param periodEndExclusive 기간 종료 다음 일자
-     * @return 기간 집계 요청 DTO
-     */
-    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, LocalDate periodStart, LocalDate periodEndExclusive
-                                                       , String reptStat, String reportOrderType) {
-        // 월별 독서 요약 결과를 담을 객체를 생성한다
-        MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
-        // UserNumb 업무 값을 req DTO에 설정한다
-        req.setUserNumb(userNumb);
-        // PeriodStart 업무 값을 req DTO에 설정한다
-        req.setPeriodStart(periodStart.toString());
-        // PeriodEndExclusive 업무 값을 req DTO에 설정한다
-        req.setPeriodEndExclusive(periodEndExclusive.toString());
-        // ReptStat 업무 값을 req DTO에 설정한다
-        req.setReptStat(reptStat);
-        // ReportOrderType 업무 값을 req DTO에 설정한다
-        req.setReportOrderType(reportOrderType);
-        // 완료 독후감 기간 집계에 사용할 요청 DTO를 생성 결과를 반환한다
-        return req;
-    }
-
-    private MonthlyReadingSummaryDto getSummaryReportReq(Long userNumb, String reptStat, String reportOrderType) {
-        // 월별 독서 요약 결과를 담을 객체를 생성한다
-        MonthlyReadingSummaryDto req = new MonthlyReadingSummaryDto();
-        // UserNumb 업무 값을 req DTO에 설정한다
-        req.setUserNumb(userNumb);
-        // ReptStat 업무 값을 req DTO에 설정한다
-        req.setReptStat(reptStat);
-        // ReportOrderType 업무 값을 req DTO에 설정한다
-        req.setReportOrderType(reportOrderType);
-        // 요약 독후감 req 조회 결과를 반환한다
-        return req;
-    }
-
-            /**
      * 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 조회한다.
      * 사용자 번호를 조건에 포함해 다른 사용자의 비공개 독후감을 조회하지 못하도록 한다.
      *
@@ -1284,7 +1212,7 @@ public class ReportServiceImpl implements ReportService {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
             }
 
-            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 정수 범위를 벗어난 값은 저장하지 않는다.
+            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 0.5점 간격을 벗어난 값은 저장하지 않는다.
             if (!isValidReportGrade(reportDto.getReptGrde())) {
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
@@ -1356,7 +1284,7 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인한다.
+     * 별점 값이 숫자이며 0점부터 5점 범위 안의 0.5점 단위인지 확인한다.
      * 0점은 읽고있어요 상태에서 별점을 선택하지 않은 값을 저장하기 위한 내부 보정값으로 허용한다.
      *
      * @author SeungHyeon.Kang
@@ -1364,27 +1292,31 @@ public class ReportServiceImpl implements ReportService {
      * @return 유효한 별점 여부
      */
     private boolean isValidReportGrade(String reptGrde) {
-        // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다.
+        // 별점이 비어 있으면 호출한 검증 흐름에서 상태별 필수 여부를 먼저 판단하도록 false를 반환한다
         if (StringUtil.isEmpty(reptGrde)) {
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
+            // 비어 있는 별점의 검증 실패 여부를 반환한다
             return false;
         }
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 사용자 입력 문자열을 정밀한 소수로 변환해 부동소수점 오차 없이 0.5점 간격을 확인한다
         try {
-            // parseInt 호출로 입력값을 필요한 데이터 형식으로 변환한다
-            int grade = Integer.parseInt(reptGrde);
+            // 독후감 별점 문자열을 소수점 비교가 가능한 값으로 변환한다
+            BigDecimal grade = new BigDecimal(reptGrde);
+            boolean isWithinRange = grade.compareTo(BigDecimal.ZERO) >= 0
+                    && grade.compareTo(REPORT_GRADE_MAX) <= 0;
+            boolean isHalfPointStep = grade.remainder(REPORT_GRADE_STEP).compareTo(BigDecimal.ZERO) == 0;
 
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 결과를 반환한다
-            return grade >= 0 && grade <= 5;
+            // 허용 범위와 0.5점 간격을 모두 만족하는 별점 여부를 반환한다
+            return isWithinRange && isHalfPointStep;
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 숫자로 변환할 수 없는 외부 입력은 유효하지 않은 별점으로 처리한다
         catch (NumberFormatException e) {
-            // 별점 값이 숫자이며 0점부터 5점 범위 안의 정수인지 확인 판정값을 반환한다
+            // 숫자가 아닌 별점의 검증 실패 여부를 반환한다
             return false;
         }
     }
+
     private void setDefaultReportColor(ReportDto reportDto) {
         // 책장 색상은 필수값이며 공통코드에 등록된 색상 코드만 허용한다.
         if (StringUtil.isEmpty(reportDto.getReptColr()) || reportDto.getReptColr().isBlank()) {

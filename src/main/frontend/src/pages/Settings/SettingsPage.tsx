@@ -67,6 +67,20 @@ function SettingsPage() {
             ))}
           </div>
         </div>
+
+        <button
+          className={styles.withdrawMenuButton}
+          type="button"
+          onClick={() => navigate("/settings/withdrawal")}
+        >
+          <span>
+            {/* "계정 비활성화 및 탈퇴" */}
+            계정 비활성화 및 탈퇴
+          </span>
+          <svg className={styles.chevronIcon} viewBox="0 0 24 24" aria-hidden="true">
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        </button>
       </section>
     </main>
   );

@@ -15,6 +15,9 @@ import {
   REPORT_STATUS_DONE,
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
+import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
+import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
+import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import {
   delSocialFollowApi,
   getMyFollowListApi,
@@ -32,18 +35,20 @@ import {
   type ReadingSummaryReport,
   type UserProfile,
 } from "@/features/User/api/userApi";
+import ProfileImage, {
+  DEFAULT_PROFILE_IMAGE,
+} from "@/features/User/components/ProfileImage";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
-import type { FormEvent, MouseEvent } from "react";
+import type { FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
-const USER_NICK_MAX_LENGTH = 10;
+const USER_NICK_MAX_LENGTH = 25;
 const PROFILE_INTRO_MAX_LENGTH = 50;
-const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+$/;
-const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF]/g;
+const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
+const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
 const PROFILE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type ReadingPeriod = "week" | "month" | "year";
@@ -52,6 +57,29 @@ type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
+
+const DEFAULT_GOAL_HELP_ITEMS = [
+  // "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다."
+  "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다.",
+  // "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다."
+  "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다.",
+  // "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다."
+  "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다.",
+  // "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다."
+  "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다.",
+] as const;
+
+/**
+ * 관리자 설정 또는 기본 목표 내리기 정책 문구를 목록 항목으로 표시한다
+ *
+ * @author HanWon.Jang
+ * @param goalHelpItem 화면에 표시할 목표 내리기 정책 문구
+ * @return 목표 내리기 정책 목록 항목
+ */
+const renderGoalHelpItem = (goalHelpItem: string): ReactNode => {
+  // 개별 목표 내리기 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환한다
+  return <li key={goalHelpItem}>{goalHelpItem}</li>;
+};
 
 /**
  * is Active Follow Status 여부를 판정한다
@@ -84,12 +112,12 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
 };
 
 /**
- * 닉네임 입력값에서 한글/영문/숫자가 아닌 문자를 제거하고 최대 입력 길이를 제한합니다.
- * 사용자가 특수문자를 붙여 넣어도 저장 가능한 닉네임 형식만 상태에 반영합니다.
+ * 닉네임 입력값에서 허용하지 않은 문자를 제거하고 최대 입력 길이를 제한한다.
+ * 한글 조합 문자와 영문 및 숫자 외에는 공백, 언더바, 하이픈만 입력 상태에 반영한다.
  *
  * @author HanWon.Jang
  * @param value 사용자가 입력한 닉네임 원문
- * @return 한글/영문/숫자 10자 이하로 정리한 닉네임
+ * @return 허용 문자로 구성된 25자 이하 닉네임
  */
 const normalizeUserNick = (value: string) =>
   value.replace(USER_NICK_INPUT_REGEX, "").slice(0, USER_NICK_MAX_LENGTH);
@@ -302,6 +330,16 @@ function ProfileEditPage() {
     year: null,
   });
   const followListScrollTimeoutRef = useRef<number | null>(null);
+  // 목표 내리기 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회한다
+  const { data: goalHelpContent } = usePopupContent(
+    POPUP_CONTENT_KEYS.profileGoalDown,
+  );
+  // 목표 내리기 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  const goalHelpItems = parsePopupContentList(
+    goalHelpContent?.contFirs,
+    DEFAULT_GOAL_HELP_ITEMS,
+  );
+  // 열린 프로필 팝업 상태에 맞춰 배경 스크롤 잠금을 동기화한다
   useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType));
 
   /**
@@ -340,12 +378,41 @@ function ProfileEditPage() {
         }
       });
 
-    getMonthlyReadingSummaryApi().then((response) => {
+    /**
+     * 프로필과 독립적으로 독서 활동 요약을 조회한다
+     *
+     * @author HanWon.Jang
+     * @return 독서 활동 요약 조회 완료 Promise
+     */
+    const loadReadingSummary = async () => {
 
-      if (!ignore) {
-        setMonthlySummary(response.data as MonthlyReadingSummary);
+      // 독서 활동 조회 성공과 실패 및 종료 상태를 각각 처리한다
+      try {
+        // 프로필 하단에 표시할 독서 활동 요약을 조회한다
+        const response = await getMonthlyReadingSummaryApi();
+
+        // 컴포넌트가 유지되는 동안에만 독서 활동 요약을 화면 상태에 반영한다
+        if (!ignore) {
+          // 조회한 독서 활동 요약을 프로필 하단 영역에 설정한다
+          setMonthlySummary(response.data as MonthlyReadingSummary);
+        }
       }
-    });
+
+      // 독서 활동 조회 실패를 사용자에게 안내한다
+      catch (error) {
+        // 화면을 벗어난 뒤 발생한 응답은 사용자 알림을 띄우지 않는다
+        if (!ignore) {
+          void sweetError(
+            /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
+            getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+          );
+        }
+      }
+
+    };
+
+    // 프로필 조회와 병렬로 독서 활동 요약 조회를 시작한다
+    void loadReadingSummary();
 
     return () => {
 
@@ -695,7 +762,8 @@ function ProfileEditPage() {
       return;
     }
 
-    navigate(`/book/upt/${quickReport.reptNumb}`);
+    // 별도 수정 화면 대신 선택한 독후감의 상세 직접 편집 화면으로 이동한다
+    navigate(`/book/detail/${quickReport.reptNumb}`);
   };
 
   /**
@@ -873,7 +941,7 @@ function ProfileEditPage() {
       >
         <div className={styles.currentReadingSection}>
           {/* 현재 읽고 있는 책 제목 영역 */}
-          <h2 className={styles.currentReadingTitle}>
+          <h2 className={`${styles.currentReadingTitle} ${styles.myPageSectionTitle}`}>
             {/* "현재 읽고 있는 책" */ message("frontend.profile.currentReading.title")}
           </h2>
           {/* 현재 읽고 있는 책 목록 영역 */}
@@ -895,7 +963,7 @@ function ProfileEditPage() {
                     />
                   )}
                   {/* 현재 읽고 있는 책 정보 영역 */}
-                  <span className={styles.currentReadingText}>
+                  <span className={`${styles.currentReadingText} ${styles.myPageCurrentReadingText}`}>
                     <span
                       className={styles.readingSummaryBookTitleButton}
                       role="link"
@@ -1631,7 +1699,7 @@ function ProfileEditPage() {
     ) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임은 한글, 영문, 숫자 10자 이하로 입력해주세요." */ message("frontend.profile.nickKoreanOnly"),
+        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
       );
       return;
     }
@@ -1748,7 +1816,7 @@ function ProfileEditPage() {
           <div className={styles.profileHeaderRow}>
             {/* 프로필 이미지와 이미지 변경 영역 */}
             <div className={styles.avatarWrap}>
-              <img
+              <ProfileImage
                 className={styles.profileImage}
                 src={previewImage}
                 alt={profile?.userNick ?? /* "프로필 수정" */ message("frontend.profile.edit")}
@@ -1810,8 +1878,10 @@ function ProfileEditPage() {
           </div>
         </section>
 
-          {monthlySummary && (
-            <>
+          {/* 프로필 외 독서 활동 조회 결과 영역 */}
+          {monthlySummary ? (
+            /* 조회가 완료된 독서 활동 페이드 인 영역 */
+            <div className={styles.activityContent}>
               {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
               {renderProfileStats(monthlySummary)}
               {/* 현재 읽고 있는 책 영역 */}
@@ -1820,7 +1890,7 @@ function ProfileEditPage() {
               <section className={styles.monthlySummary} aria-label={/* "이번 달에 읽은 책" */ message("frontend.profile.monthlyReading.title")}>
                 {/* 주간과 월간 및 연간 목표 달성 횟수 영역 */}
                 <div className={styles.goalAchievementSummary}>
-                  <p className={styles.goalAchievementTitle}>
+                  <p className={`${styles.goalAchievementTitle} ${styles.myPageSectionTitle}`}>
                     {/* "목표 달성 횟수" */ message("frontend.profile.goal.achievementTitle")}
                   </p>
                   {/* 전체와 주간 및 월간 및 연간 목표 달성 통계 영역 */}
@@ -1916,8 +1986,8 @@ function ProfileEditPage() {
                     <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
               </button>
-            </>
-          )}
+            </div>
+          ) : null}
       </form>
 
       {/* 현재 읽는 책의 상태와 별점을 빠르게 수정하는 모달 영역 */}
@@ -2130,9 +2200,9 @@ function ProfileEditPage() {
                     type="button"
                     onClick={() => handleFollowListUserClick(user.userNumb)}
                   >
-                    <img
+                    <ProfileImage
                       className={styles.followModalAvatar}
-                      src={user.porfPath || DEFAULT_PROFILE_IMAGE}
+                      src={user.porfPath}
                       alt={user.userNick ?? /* "닉네임" */ message("frontend.profile.nick")}
                     />
                     <span className={styles.followModalText}>
@@ -2381,10 +2451,8 @@ function ProfileEditPage() {
                 {/* "목표를 올리는 것은 언제나 가능하고, 목표를 내릴 때만 기간별 횟수와 가능 기간이 제한됩니다." */ message("frontend.profile.goal.helpLead")}
               </p>
               <ul className={styles.goalHelpList}>
-                <li>{/* "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpWeek")}</li>
-                <li>{/* "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpMonth")}</li>
-                <li>{/* "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다." */ message("frontend.profile.goal.helpYear")}</li>
-                <li>{/* "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다." */ message("frontend.profile.goal.helpSameValue")}</li>
+                {/* 목표 내리기 정책 문구 목록 */}
+                {goalHelpItems.map(renderGoalHelpItem)}
               </ul>
             </div>
           </section>

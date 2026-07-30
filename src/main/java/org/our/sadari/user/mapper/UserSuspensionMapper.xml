@@ -1,0 +1,73 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.user.mapper.UserSuspensionMapper">
+    <!-- 회원에게 현재 활성 상태로 남아 있는 최신 정지 이력을 조회한다 -->
+    <select id="getLatestActiveSuspension"
+            resultType="org.our.sadari.user.dto.UserSuspensionDto">
+        <bind name="spndTypeCode" value="'SPND_TYPE'"/>
+        <bind name="spndRsonCode" value="'SPND_RSON'"/>
+        <bind name="spndStatCode" value="'SPND_STAT'"/>
+        SELECT /* getLatestActiveSuspension */
+               P.SPND_NUMB
+             , P.USER_NUMB
+             , P.PREV_STAT
+             , P.SPND_TYPE
+             , FN_GET_CODE_NAME(#{spndTypeCode}, P.SPND_TYPE, #{spndTypeCode}) AS SPND_TYPE_NAME
+             , P.SPND_RSON
+             , FN_GET_CODE_NAME(#{spndRsonCode}, P.SPND_RSON, #{spndRsonCode}) AS SPND_RSON_NAME
+             , P.SPND_STAT
+             , FN_GET_CODE_NAME(#{spndStatCode}, P.SPND_STAT, #{spndStatCode}) AS SPND_STAT_NAME
+             , P.STRT_DATE
+             , P.ENDX_DATE
+             , P.RLES_DATE
+          FROM (  SELECT S.SPND_NUMB
+                       , S.USER_NUMB
+                       , S.PREV_STAT
+                       , S.SPND_TYPE
+                       , S.SPND_RSON
+                       , S.SPND_STAT
+                       , S.STRT_DATE
+                       , S.ENDX_DATE
+                       , S.RLES_DATE
+                    FROM TH_USSPND S
+                   WHERE S.USER_NUMB = #{userNumb}
+                     AND S.SPND_STAT = 'ACTIVE'
+                ORDER BY S.REGI_DATE DESC
+                       , S.SPND_NUMB DESC
+               ) P
+         WHERE ROWNUM = 1
+    </select>
+
+    <!-- 기간이 끝난 활성 정지 이력을 만료 상태로 변경한다 -->
+    <update id="uptSuspensionExpired">
+        UPDATE /* uptSuspensionExpired */
+               TH_USSPND
+           SET SPND_STAT = 'EXPIRED'
+             , RLES_DATE = SYSDATE
+             , UPDT_DATE = SYSDATE
+         WHERE SPND_NUMB = #{spndNumb}
+           AND SPND_STAT = 'ACTIVE'
+           AND SPND_TYPE = 'PERIOD'
+           AND ENDX_DATE <![CDATA[<=]]> SYSDATE
+    </update>
+
+    <!-- 다른 우선 상태가 없을 때 정지 직전 회원 상태를 복구한다 -->
+    <update id="uptUserStatusAfterSuspension">
+        UPDATE /* uptUserStatusAfterSuspension */
+               TM_USERXM
+           SET USER_STAT = #{prevStat}
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT = 'SUSPENDED'
+    </update>
+
+    <!-- 회원 상태가 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다 -->
+    <update id="uptSuspensionSyncPending">
+        <bind name="suspensionSyncPending" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_PENDING"/>
+        UPDATE /* uptSuspensionSyncPending */
+               TH_USSPND
+           SET SYNC_STAT = #{suspensionSyncPending}
+         WHERE SPND_NUMB = #{spndNumb}
+    </update>
+</mapper>

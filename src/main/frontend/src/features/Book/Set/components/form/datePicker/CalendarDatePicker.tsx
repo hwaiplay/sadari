@@ -20,6 +20,8 @@ type CalendarDatePickerProps = {
   endValue?: string;
   endPlaceholder?: string;
   onRangeChange?: (startValue: string, endValue: string) => void;
+  // 날짜 입력 버튼 없이 달력을 화면 안에 바로 표시할지 여부
+  inline?: boolean;
 };
 
 const WEEK_DAY_KEYS = [
@@ -40,6 +42,7 @@ const WEEK_DAY_KEYS = [
  * @param label 날짜 입력 라벨
  * @param defaultValue 초기 선택 날짜
  * @param placeholder 날짜 미선택 상태에서 보여줄 문구
+ * @param inline 달력을 입력 영역 안에 바로 표시할지 여부
  * @return 달력 날짜 선택 컴포넌트
  */
 function CalendarDatePicker({
@@ -54,6 +57,7 @@ function CalendarDatePicker({
   endValue = "",
   endPlaceholder = message("frontend.report.placeholder.endDate"),
   onRangeChange,
+  inline = false,
 }: CalendarDatePickerProps) {
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -65,6 +69,15 @@ function CalendarDatePicker({
   const currentDateValue = value ?? selectedDate;
   const isRangePicker = Boolean(endName);
   const currentEndDateValue = endValue;
+  const isCalendarVisible = inline || isOpen;
+  const selectedRangeText = [
+    currentDateValue
+      ? currentDateValue.replaceAll("-", ".")
+      : placeholder,
+    currentEndDateValue
+      ? currentEndDateValue.replaceAll("-", ".")
+      : endPlaceholder,
+  ].join(" ~ ");
 
   useEffect(() => {
 
@@ -74,7 +87,8 @@ function CalendarDatePicker({
 
   useEffect(() => {
 
-    if (!isOpen) {
+    // 인라인 달력은 외부 클릭으로 닫지 않고 현재 입력 영역에 계속 표시한다
+    if (inline || !isOpen) {
       return;
     }
 
@@ -106,7 +120,7 @@ function CalendarDatePicker({
 
       document.removeEventListener("pointerdown", handlePointerDown);
     };
-  }, [isOpen]);
+  }, [inline, isOpen]);
 
   useEffect(() => {
     // 외부 state로 제어하는 날짜가 바뀌면 달력이 해당 월을 바라보도록 동기화합니다.
@@ -196,49 +210,45 @@ function CalendarDatePicker({
       {endName && (
         <input type="hidden" name={endName} value={currentEndDateValue} />
       )}
-      <button
-        className={styles.trigger}
-        id={`${name}Trigger`}
-        type="button"
-        aria-expanded={isOpen}
-        onClick={() => setIsOpen((prev) => !prev)}
-      >
-        <span
-          className={
-            currentDateValue || currentEndDateValue ? "" : styles.placeholder
-          }
+      {/* 팝오버 모드에서만 달력을 여는 날짜 입력 버튼을 표시한다 */}
+      {!inline ? (
+        <button
+          className={styles.trigger}
+          id={`${name}Trigger`}
+          type="button"
+          aria-expanded={isOpen}
+          onClick={() => setIsOpen((prev) => !prev)}
         >
-          {isRangePicker
-            ? [
-                currentDateValue
-                  ? currentDateValue.replaceAll("-", ".")
-                  : placeholder,
-                currentEndDateValue
-                  ? currentEndDateValue.replaceAll("-", ".")
-                  : endPlaceholder,
-              ].join(" ~ ")
-            : currentDateValue
-              ? currentDateValue.replaceAll("-", ".")
-              : placeholder}
-        </span>
-        <svg
-          className={styles.calendarIcon}
-          viewBox="0 0 24 24"
-          aria-hidden="true"
-        >
-          <path
-            d="M7 3v3M17 3v3M4.5 9.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z"
-            fill="none"
-            stroke="currentColor"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="1.8"
-          />
-        </svg>
-      </button>
+          <span
+            className={
+              currentDateValue || currentEndDateValue ? "" : styles.placeholder
+            }
+          >
+            {isRangePicker
+              ? selectedRangeText
+              : currentDateValue
+                ? currentDateValue.replaceAll("-", ".")
+                : placeholder}
+          </span>
+          <svg
+            className={styles.calendarIcon}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path
+              d="M7 3v3M17 3v3M4.5 9.5h15M6.5 5h11A2.5 2.5 0 0 1 20 7.5v10A2.5 2.5 0 0 1 17.5 20h-11A2.5 2.5 0 0 1 4 17.5v-10A2.5 2.5 0 0 1 6.5 5Z"
+              fill="none"
+              stroke="currentColor"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth="1.8"
+            />
+          </svg>
+        </button>
+      ) : null}
 
-      {isOpen && (
-        <div className={styles.popover}>
+      {isCalendarVisible ? (
+        <div className={inline ? styles.inlineCalendar : styles.popover}>
           <div className={styles.header}>
             <button
               className={styles.navButton}
@@ -302,6 +312,8 @@ function CalendarDatePicker({
               const isRangeStart = isRangePicker && dateValue === currentDateValue;
               const isRangeEnd = isRangePicker && dateValue === currentEndDateValue;
               const isRangeSameDay = isRangeStart && isRangeEnd;
+              // 종료일을 고르기 전에는 시작일을 반원 범위가 아닌 단독 원형 날짜로 표시한다
+              const isRangeSingleDay = isRangeStart && !currentEndDateValue;
               const isRangeInner =
                 isRangePicker &&
                 Boolean(currentDateValue) &&
@@ -312,7 +324,7 @@ function CalendarDatePicker({
                 styles.dayButton,
                 dateValue === todayValue ? styles.today : "",
                 isRangeInner ? styles.rangeInner : "",
-                isRangeSameDay
+                isRangeSameDay || isRangeSingleDay
                   ? styles.rangeSameDay
                   : isRangeStart
                     ? styles.rangeStart
@@ -338,19 +350,29 @@ function CalendarDatePicker({
             })}
           </div>
 
-          <div className={styles.footer}>
-            <button
-              className={styles.closeButton}
-              type="button"
-              onClick={() => setIsOpen(false)}
-            >
-              {isRangePicker
-                ? "완료"
-                : message("frontend.common.close")}
-            </button>
-          </div>
+          {/* 인라인 달력 아래에 현재 선택한 시작일과 종료일을 표시한다 */}
+          {inline && isRangePicker ? (
+            <div className={styles.selectedRange} aria-live="polite">
+              {selectedRangeText}
+            </div>
+          ) : null}
+
+          {/* 팝오버 모드에서만 달력 자체의 닫기 버튼을 표시한다 */}
+          {!inline ? (
+            <div className={styles.footer}>
+              <button
+                className={styles.closeButton}
+                type="button"
+                onClick={() => setIsOpen(false)}
+              >
+                {isRangePicker
+                  ? "완료"
+                  : message("frontend.common.close")}
+              </button>
+            </div>
+          ) : null}
         </div>
-      )}
+      ) : null}
     </div>
   );
 }

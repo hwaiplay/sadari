@@ -4,10 +4,18 @@
  * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import {
+  Link,
+  useLocation,
+  useNavigate,
+  useNavigationType,
+} from "react-router-dom";
 import {
   backpageBtn,
   header,
+  headerCenter,
+  headerContentSlideBack,
+  headerContentSlideForward,
   headerHidden,
   headerShell,
   logo,
@@ -24,6 +32,15 @@ import {
 
 const HEADER_SCROLL_DELTA = 4;
 
+type HeaderMenuTransitionDirection = "forward" | "back";
+
+type ResolvedHeaderMenu = {
+  pathname: string;
+  currentMenu: UserMenuItem | null;
+  menuList: UserMenuItem[];
+  transitionDirection: HeaderMenuTransitionDirection;
+};
+
 /**
  * Header 화면 또는 컴포넌트를 구성한다
  *
@@ -34,12 +51,22 @@ function Header() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const navigationType = useNavigationType();
   const isSubPage = location.pathname !== "/home";
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
+  const hasResolvedMenuRef = useRef(false);
   const [isHidden, setIsHidden] = useState(false);
-  const [currentMenu, setCurrentMenu] = useState<UserMenuItem | null>(null);
-  const [menuList, setMenuList] = useState<UserMenuItem[]>([]);
+  const [resolvedMenu, setResolvedMenu] = useState<ResolvedHeaderMenu | null>(
+    null,
+  );
+  const isMenuResolved = resolvedMenu?.pathname === location.pathname;
+  const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
+  const menuList = isMenuResolved ? resolvedMenu.menuList : [];
+  const headerContentSlide =
+    resolvedMenu?.transitionDirection === "back"
+      ? headerContentSlideBack
+      : headerContentSlideForward;
 
   /**
    * back Prev 사용자 동작을 처리한다
@@ -105,9 +132,10 @@ function Header() {
   useEffect(() => {
 
     let ignore = false;
-
-    // 경로가 바뀌면 이전 화면의 메뉴명이 잠시 남지 않도록 먼저 로고 표시 상태로 초기화한다.
-    setCurrentMenu(null);
+    const transitionDirection =
+      navigationType === "POP" && hasResolvedMenuRef.current
+        ? "back"
+        : "forward";
 
     getUserMenuApi(location.pathname)
       .then((response) => {
@@ -116,15 +144,26 @@ function Header() {
           return;
         }
 
-        setCurrentMenu(response.data?.currentMenu ?? null);
-        setMenuList(response.data?.menuList ?? []);
+        // 현재 경로의 메뉴명 유무가 확정된 뒤 헤더 중앙 콘텐츠를 한 번에 표시한다
+        hasResolvedMenuRef.current = true;
+        setResolvedMenu({
+          pathname: location.pathname,
+          currentMenu: response.data?.currentMenu ?? null,
+          menuList: response.data?.menuList ?? [],
+          transitionDirection,
+        });
       })
       .catch(() => {
 
         if (!ignore) {
           // 메뉴 조회 실패는 화면 진입을 막지 않고 기존 로고와 빈 햄버거 목록으로 대체한다.
-          setCurrentMenu(null);
-          setMenuList([]);
+          hasResolvedMenuRef.current = true;
+          setResolvedMenu({
+            pathname: location.pathname,
+            currentMenu: null,
+            menuList: [],
+            transitionDirection,
+          });
         }
       });
 
@@ -132,7 +171,7 @@ function Header() {
 
       ignore = true;
     };
-  }, [location.pathname]);
+  }, [location.pathname, navigationType]);
 
   return (
     /* 사용자 화면의 이전 이동과 현재 메뉴 표시 영역 */
@@ -156,17 +195,23 @@ function Header() {
             />
           </button>
         )}
-        {currentMenu?.menuName ? (
-          <h1 className={routeTitle}>{currentMenu.menuName}</h1>
-        ) : (
-          <Link to="/" className={logo}>
-            <img
-              src={"/img/common/logo-upper.svg"}
-              alt={message("frontend.common.logoAlt")}
-              width={100}
-            />
-          </Link>
-        )}
+        {/* 현재 경로의 메뉴 조회가 끝난 뒤 메뉴명 또는 로고를 표시하는 중앙 영역 */}
+        <div className={headerCenter}>
+          {isMenuResolved &&
+            (currentMenu?.menuName ? (
+              <h1 className={clsx(routeTitle, headerContentSlide)}>
+                {currentMenu.menuName}
+              </h1>
+            ) : (
+              <Link to="/" className={clsx(logo, headerContentSlide)}>
+                <img
+                  src={"/img/common/logo-upper.svg"}
+                  alt={message("frontend.common.logoAlt")}
+                  width={100}
+                />
+              </Link>
+            ))}
+        </div>
         <HeaderMenuDrawer menuList={menuList} />
       </Container>
     </header>

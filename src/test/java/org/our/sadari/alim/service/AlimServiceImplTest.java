@@ -158,6 +158,8 @@ class AlimServiceImplTest {
         // LinkUrlx 업무 값을 template DTO에 설정한다
         template.setLinkUrlx("/book/detail/");
 
+        // 알림 수신자가 정상 이용 회원인 조건을 설정한다
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
         // AlimTemp 데이터를 DB에서 조회한다
         when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
         // 한 시간 안에 동일한 알림이 중복 등록되지 않았는지 검증한다

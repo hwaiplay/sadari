@@ -26,7 +26,23 @@ export const viewFade = style({
 });
 
 export const contentSwitchFade = style({
-  animation: `${contentPanelFadeIn} 240ms ease-out both`,
+  animation: `${contentPanelFadeIn} 260ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+});
+
+const contentPanelFadeOut = keyframes({
+  "0%": {
+    opacity: 1,
+    filter: "blur(0)",
+  },
+  "100%": {
+    opacity: 0,
+    filter: "blur(2px)",
+  },
+});
+
+export const contentSwitchFadeOut = style({
+  pointerEvents: "none",
+  animation: `${contentPanelFadeOut} 90ms ease-in both`,
 });
 
 export const page = style({
@@ -34,7 +50,7 @@ export const page = style({
   width: "100vw",
   marginLeft: "calc(50% - 50vw)",
   minHeight: "100vh",
-  backgroundColor: "#ffffff",
+  backgroundColor: vars.color.background,
   overflow: "hidden",
 
   selectors: {
@@ -44,32 +60,20 @@ export const page = style({
       top: "-36px",
       right: "-36px",
       left: "-36px",
-      height: "760px",
+      height: "var(--book-bg-fade-height, 650px)",
       zIndex: 0,
       backgroundImage: "var(--book-bg-image)",
       backgroundRepeat: "no-repeat",
       backgroundPosition: "center top",
       backgroundSize: "cover",
-      filter: "blur(16px)",
+      filter: "blur(24px)",
       transform: "scale(1.12)",
       opacity: 0.86,
       pointerEvents: "none",
       maskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.94) 54%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.28) 86%, rgba(0, 0, 0, 0.08) 95%, rgba(0, 0, 0, 0) 100%)",
       WebkitMaskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
-    },
-    "&::after": {
-      content: "",
-      position: "absolute",
-      top: 0,
-      right: 0,
-      left: 0,
-      height: "860px",
-      zIndex: 0,
-      background:
-        "linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.18) 42%, rgba(255, 255, 255, 0.82) 78%, #ffffff 100%)",
-      pointerEvents: "none",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.94) 54%, rgba(0, 0, 0, 0.62) 72%, rgba(0, 0, 0, 0.28) 86%, rgba(0, 0, 0, 0.08) 95%, rgba(0, 0, 0, 0) 100%)",
     },
   },
 });
@@ -80,10 +84,10 @@ export const detail = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  padding: "28px 20px 28px",
+  padding: "28px 18px 36px",
   display: "flex",
   flexDirection: "column",
-  gap: "40px",
+  gap: "24px",
 });
 
 export const header = style({
@@ -92,10 +96,11 @@ export const header = style({
   alignItems: "center",
   textAlign: "center",
   gap: "14px",
-  padding: "48px 24px 42px",
-  borderRadius: "14px",
-  backgroundColor: "rgb(255, 255, 255)",
-  boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
+  padding: "40px 22px 30px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
 });
 
 export const coverFrame = style({
@@ -131,6 +136,47 @@ export const meta = style({
   color: "#666666",
 });
 
+export const bookAverageSummary = style({
+  minHeight: "19px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  color: vars.color.black,
+  lineHeight: 1,
+});
+
+export const bookAverageStar = style({
+  width: "18px",
+  height: "18px",
+  display: "block",
+  flexShrink: 0,
+  color: "#ffd45c",
+});
+
+export const bookAverageScore = style({
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  lineHeight: 1,
+  letterSpacing: 0,
+});
+
+export const bookAverageLabel = style({
+  marginRight: "2px",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1,
+  color: vars.color.gray600,
+  letterSpacing: 0,
+});
+
+export const bookAverageEmpty = style({
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.45,
+  color: vars.color.gray600,
+});
+
 export const bookInfoButton = style({
   height: "34px",
   padding: "0 14px",
@@ -140,38 +186,272 @@ export const bookInfoButton = style({
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "13px",
+  lineHeight: 1,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "6px",
   cursor: "pointer",
+});
+
+export const bookInfoActionRow = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  flexWrap: "wrap",
+  width: "100%",
+});
+
+export const bookInfoButtonIcon = style({
+  width: "15px",
+  height: "15px",
+  display: "block",
+  flexShrink: 0,
 });
 
 export const contentPanel = style({
   display: "flex",
   flexDirection: "column",
-  gap: "28px",
+  gap: "24px",
   minHeight: "auto",
-  padding: "28px 22px 26px",
-  borderRadius: "14px",
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
-  boxShadow: "0 -12px 32px rgba(0, 0, 0, 0.14)",
+  padding: 0,
 });
 
-export const section = style({
+export const reportStatsSection = style({
+  position: "relative",
+  width: "100%",
+  padding: "18px 14px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+  boxSizing: "border-box",
+});
+
+export const reportStatsGrid = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+  gap: "8px",
+});
+
+export const bookInfoRows = style({
   display: "flex",
   flexDirection: "column",
+});
+
+export const bookInfoRow = style({
+  minHeight: "50px",
+  padding: "9px 6px",
+  display: "grid",
+  gridTemplateColumns: "86px minmax(0, 1fr)",
+  alignItems: "center",
   gap: "12px",
+  borderBottom: `1px solid ${vars.color.gray200}`,
+  boxSizing: "border-box",
+  selectors: {
+    "&:last-child": {
+      borderBottom: 0,
+    },
+  },
+});
+
+export const bookInfoLabel = style({
+  fontFamily: vars.font.semibold,
+  fontSize: "13px",
+  lineHeight: 1.4,
+  color: vars.color.gray600,
+});
+
+export const bookInfoValue = style({
+  minWidth: 0,
+  fontFamily: vars.font.semibold,
+  fontSize: "15px",
+  lineHeight: 1.45,
+  color: vars.color.black,
+  letterSpacing: 0,
+  textAlign: "right",
+  wordBreak: "break-word",
+});
+
+export const reportStatsItem = style({
+  position: "relative",
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  textAlign: "center",
+});
+
+export const reportStatsLabel = style({
+  height: "30px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: vars.font.medium,
+  fontSize: "12px",
+  lineHeight: 1.25,
+  color: vars.color.gray600,
+  letterSpacing: 0,
+  whiteSpace: "normal",
+  wordBreak: "keep-all",
+});
+
+export const reportStatsValue = style({
+  minWidth: 0,
+  minHeight: "32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  fontFamily: vars.font.heading,
+  fontSize: "16px",
+  lineHeight: 1.2,
+  color: vars.color.black,
+  letterSpacing: 0,
+  whiteSpace: "normal",
+  wordBreak: "keep-all",
+});
+
+export const reportStatusRead = style({
+  color: vars.color.black,
+});
+
+export const reportStatusDone = style({
+  color: "#72a980",
+});
+
+export const reportStatusStop = style({
+  color: "#d98686",
+});
+
+export const reportGradeValue = style([
+  reportStatsValue,
+  {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "3px",
+  },
+]);
+
+export const reportGradeStar = style({
+  width: "18px",
+  height: "18px",
+  display: "block",
+  flexShrink: 0,
+  color: "#ffd45c",
+});
+
+export const periodStatButton = style({
+  position: "relative",
+  width: "100%",
+  minWidth: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  color: "inherit",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #8ab4e8",
+      outlineOffset: "4px",
+      borderRadius: "8px",
+    },
+  },
+});
+
+export const periodTooltip = style({
+  position: "absolute",
+  top: "calc(100% + 12px)",
+  right: 0,
+  zIndex: 5,
+  width: "max-content",
+  maxWidth: "220px",
+  padding: "9px 11px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "8px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.10)",
+  color: vars.color.gray700,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.4,
+  letterSpacing: 0,
+  whiteSpace: "nowrap",
+  opacity: 0,
+  visibility: "hidden",
+  transform: "translateY(-4px)",
+  transition: "opacity 160ms ease, transform 160ms ease, visibility 160ms ease",
+  pointerEvents: "none",
+  selectors: {
+    [`${periodStatButton}:hover &`]: {
+      opacity: 1,
+      visibility: "visible",
+      transform: "translateY(0)",
+    },
+    [`${periodStatButton}:focus-visible &`]: {
+      opacity: 1,
+      visibility: "visible",
+      transform: "translateY(0)",
+    },
+  },
+});
+
+export const periodTooltipOpen = style({
+  opacity: 1,
+  visibility: "visible",
+  transform: "translateY(0)",
+});
+
+export const recordArea = style({
+  position: "relative",
+  display: "flex",
+  flexDirection: "column",
+  gap: "24px",
+});
+
+export const recordSection = style({
+  position: "relative",
+  width: "100%",
+  minHeight: "180px",
+  padding: "20px 20px 24px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "22px",
+  backgroundColor: "#ffffff",
+  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+  boxSizing: "border-box",
 });
 
 export const sectionTitle = style({
   margin: 0,
-  fontFamily: vars.font.heading,
+  padding: "0 0 0 6px",
+  fontFamily: vars.font.semibold,
   fontSize: "15px",
+  lineHeight: 1.3,
   color: vars.color.black,
+  textAlign: "left",
 });
 
-export const sectionTitleRow = style({
+export const recordTitleRow = style({
+  width: "100%",
   display: "flex",
   alignItems: "center",
-  justifyContent: "space-between",
-  gap: "12px",
+  justifyContent: "flex-start",
+  marginBottom: "18px",
+});
+
+export const recordMetrics = style({
+  position: "absolute",
+  top: "14px",
+  right: "18px",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "8px",
 });
 
 export const likeButton = style({
@@ -179,12 +459,11 @@ export const likeButton = style({
   alignItems: "center",
   justifyContent: "center",
   gap: "4px",
-  minWidth: "48px",
-  height: "30px",
-  padding: "0 9px",
-  border: "1px solid #f0b8c2",
-  borderRadius: "999px",
-  backgroundColor: "#fff7f9",
+  minWidth: "38px",
+  height: "24px",
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
   color: "#d84a5f",
   fontFamily: vars.font.semibold,
   fontSize: "12px",
@@ -194,8 +473,7 @@ export const likeButton = style({
 
   selectors: {
     "&:hover": {
-      backgroundColor: "#fff1f4",
-      borderColor: "#e98597",
+      color: "#e98597",
     },
     "&:disabled": {
       cursor: "default",
@@ -205,57 +483,43 @@ export const likeButton = style({
 });
 
 export const likeIcon = style({
-  width: "18px",
-  height: "18px",
+  width: "17px",
+  height: "17px",
   flexShrink: 0,
 });
 
 export const likeCount = style({
-  minWidth: "16px",
+  minWidth: "14px",
   textAlign: "left",
 });
 
-export const statusPill = style({
-  width: "fit-content",
-  minHeight: "30px",
-  padding: "0 12px",
-  display: "flex",
+export const commentIndicator = style({
+  minWidth: "34px",
+  height: "24px",
+  display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  borderRadius: "999px",
-  backgroundColor: "#f5f5f5",
-  color: vars.color.black,
+  gap: "4px",
+  color: "#777777",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
-});
-
-export const dateStack = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-});
-
-export const dateValue = style({
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  color: vars.color.black,
-});
-
-export const stars = style({
-  display: "flex",
-  gap: "3px",
-  color: "#d3d7dc",
-  fontSize: "34px",
+  fontSize: "12px",
   lineHeight: 1,
 });
 
-export const starFilled = style({
-  color: "#ffd966",
+export const commentIcon = style({
+  width: "17px",
+  height: "17px",
+  display: "block",
+});
+
+export const commentCount = style({
+  minWidth: "10px",
+  textAlign: "left",
 });
 
 export const contentBox = style({
   margin: 0,
-  padding: "2px 0 0",
+  padding: 0,
   fontFamily: vars.font.body,
   fontSize: "14px",
   lineHeight: 1.8,
@@ -264,36 +528,106 @@ export const contentBox = style({
   wordBreak: "break-word",
 });
 
-export const actions = style({
+export const contentEditButton = style({
+  width: "100%",
+  minHeight: "118px",
+  margin: 0,
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.8,
+  color: vars.color.black,
   display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "flex-start",
+  textAlign: "left",
+  whiteSpace: "pre-wrap",
+  wordBreak: "break-word",
+  cursor: "text",
 });
 
-export const actionButton = style({
+export const recordEditor = style({
   width: "100%",
-  height: "44px",
-  border: `1px solid ${vars.color.black}`,
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+});
+
+export const recordByteCounter = style({
+  alignSelf: "flex-end",
+  fontFamily: vars.font.body,
+  fontSize: "11px",
+  lineHeight: 1.4,
+  color: vars.color.gray500,
+});
+
+export const recordTextArea = style({
+  width: "100%",
+  minHeight: "118px",
+  padding: 0,
+  border: 0,
+  outline: 0,
+  overflow: "hidden",
+  resize: "none",
+  backgroundColor: "transparent",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.8,
+  color: vars.color.black,
+  boxSizing: "border-box",
+});
+
+export const editActions = style({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "8px",
+  padding: "0 2px",
+});
+
+export const saveButton = style({
+  minWidth: "96px",
+  height: "40px",
+  padding: "0 18px",
+  border: `1px solid ${vars.color.gray600}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
-  color: vars.color.black,
+  color: vars.color.gray900,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "7px",
   cursor: "pointer",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:hover:not(:disabled)": {
+      borderColor: vars.color.gray900,
+      backgroundColor: "#f8f8f8",
+    },
+    "&:disabled": {
+      opacity: 0.5,
+      cursor: "default",
+    },
+  },
 });
 
-export const buttonIcon = style({
-  width: "17px",
-  height: "17px",
-  flexShrink: 0,
-});
+export const cancelButton = style([
+  saveButton,
+  {
+    borderColor: vars.color.gray400,
+    color: vars.color.gray700,
+  },
+]);
 
 export const deleteButton = style([
-  actionButton,
+  saveButton,
   {
-    borderColor: "#d84a3a",
-    color: "#d84a3a",
+    marginRight: "auto",
+    borderColor: "#d9877d",
+    color: "#b84b3f",
   },
 ]);
