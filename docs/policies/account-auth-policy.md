@@ -45,13 +45,23 @@
 | 상태 | 접근 정책 |
 | --- | --- |
 | `ACTIVE` | 정상 서비스 이용 |
-| `WITHDRAWN` | 일반 서비스 이용 제한, 재로그인 시 복구 흐름 적용 |
+| `WITHDRAWN` | 계정 비활성화 상태, 일반 서비스 이용 제한, 재로그인 시 재활성화 흐름 적용 |
 | `DELETE_PENDING` | 영구 삭제 대기 화면, 탈퇴 취소, 로그아웃 및 최소 인증 API만 허용 |
+
+## 비활성화 계정 복귀
+
+- `WITHDRAWN` 사용자가 같은 Kakao 계정으로 다시 로그인하면 회원 상태를 `ACTIVE`로 변경합니다.
+- OAuth 콜백은 이번 로그인에서 계정이 다시 활성화됐는지 일회성 표시로 프론트엔드에 전달합니다.
+- 인증 확인이 끝나면 “다시 돌아와서 반가워요” 팝업과 함께 비활성화 정책을 다시 안내합니다.
+- 비활성화 과정에서 비공개로 전환된 독후감 공개 설정, 삭제 상태가 된 댓글과 알림, 중지된 푸시 구독은 자동 복원하지 않습니다.
+- 복귀 안내를 닫은 뒤 정상 서비스 화면으로 이동하며, 일반 로그인에는 해당 팝업을 표시하지 않습니다.
 
 ## 구현 근거
 
-- `global/security/jwt/JwtProvider.java`
-- `global/security/jwt/JwtFilter.java`
-- `global/security/jwt/TokenRedisService.java`
-- `user/auth/controller/AuthLoginController.java`
-- `user/auth/service/AuthServiceImpl.java`
+- `src/main/java/org/our/sadari/global/security/jwt/JwtProvider.java`
+- `src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java`
+- `src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java`
+- `src/main/java/org/our/sadari/global/security/dto/TokenDto.java`
+- `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
+- `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
+- `src/main/frontend/src/pages/Oauth/Oauth.tsx`
