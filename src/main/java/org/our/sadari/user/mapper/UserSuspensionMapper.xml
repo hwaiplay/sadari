@@ -40,6 +40,14 @@
          WHERE ROWNUM = 1
     </select>
 
+    <!-- 활성 정지 이력이 없을 때 로그인 상태 캐시를 보정할 현재 DB 회원 상태를 조회한다 -->
+    <select id="getUserStatus" resultType="string">
+        SELECT /* getUserStatus */
+               U.USER_STAT
+          FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
     <!-- 기간이 끝난 활성 정지 이력을 만료 상태로 변경한다 -->
     <update id="uptSuspensionExpired">
         UPDATE /* uptSuspensionExpired */
