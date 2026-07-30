@@ -16,7 +16,7 @@ export const page = style({
       top: "-36px",
       right: "-36px",
       left: "-36px",
-      height: "760px",
+      height: "960px",
       zIndex: 0,
       backgroundImage: "var(--book-bg-image)",
       backgroundRepeat: "no-repeat",
@@ -27,9 +27,9 @@ export const page = style({
       opacity: 0.86,
       pointerEvents: "none",
       maskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 56%, rgba(0, 0, 0, 0.28) 88%, rgba(0, 0, 0, 0) 100%)",
       WebkitMaskImage:
-        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 34%, rgba(0, 0, 0, 0.28) 70%, rgba(0, 0, 0, 0) 100%)",
+        "linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.88) 56%, rgba(0, 0, 0, 0.28) 88%, rgba(0, 0, 0, 0) 100%)",
     },
     "&::after": {
       content: "",
@@ -37,10 +37,10 @@ export const page = style({
       top: 0,
       right: 0,
       left: 0,
-      height: "700px",
+      height: "960px",
       zIndex: 0,
       background:
-        "linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.22) 38%, rgba(255, 255, 255, 0.92) 68%, #ffffff 76%, #ffffff 100%)",
+        "linear-gradient(180deg, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.22) 58%, rgba(255, 255, 255, 0.92) 90%, #ffffff 100%)",
       pointerEvents: "none",
     },
   },
