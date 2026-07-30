@@ -16,11 +16,16 @@ export const page = style({
 
 export const section = style({
   position: "relative",
-  padding: "20px 10px",
+  padding: "26px 22px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
   boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
+  "@media": {
+    "screen and (max-width: 420px)": {
+      padding: "22px 16px",
+    },
+  },
 });
 
 export const title = style({
@@ -33,31 +38,35 @@ export const title = style({
 });
 
 export const withdrawalTypeSection = style({
-  paddingTop: "20px",
+  paddingTop: "26px",
+  "@media": {
+    "screen and (max-width: 420px)": {
+      paddingTop: "22px",
+    },
+  },
 });
 
 export const standaloneTitle = style({
-  margin: "0 0 18px",
-  padding: "0 0 0 6px",
+  margin: "0 0 22px",
   textAlign: "left",
 });
 
 export const helpButton = style({
   position: "absolute",
-  top: "18px",
-  right: "14px",
+  top: "22px",
+  right: "22px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  width: "20px",
-  height: "20px",
+  width: "26px",
+  height: "26px",
   padding: 0,
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "50%",
   backgroundColor: "#ffffff",
-  color: "#6f757b",
+  color: "#686e73",
   fontFamily: vars.font.semibold,
-  fontSize: "12px",
+  fontSize: "13px",
   lineHeight: 1,
   cursor: "pointer",
   transition: "border-color 160ms ease, color 160ms ease, background-color 160ms ease",
@@ -72,38 +81,49 @@ export const helpButton = style({
       outlineOffset: "2px",
     },
   },
+  "@media": {
+    "screen and (max-width: 420px)": {
+      top: "18px",
+      right: "16px",
+    },
+  },
+});
+
+export const optionList = style({
+  display: "grid",
+  gap: "14px",
 });
 
 export const option = style({
   display: "flex",
-  alignItems: "center",
-  gap: "12px",
-  minHeight: "76px",
-  marginBottom: "8px",
-  padding: "12px 14px",
+  alignItems: "flex-start",
+  gap: "14px",
+  padding: "16px 18px",
   border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "14px",
-  backgroundColor: "#f4f5f6",
-  color: "#8b9097",
+  borderRadius: "16px",
+  backgroundColor: "#f7f8f8",
+  color: "#73797f",
   cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease",
+  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
   selectors: {
-    "&:last-child": {
-      marginBottom: 0,
-    },
     "&:hover": {
       borderColor: vars.color.gray300,
-      backgroundColor: "#fafafa",
+      backgroundColor: "#fbfbfb",
     },
     "&:has(input:checked)": {
       borderColor: "#78b991",
       backgroundColor: "#eef8f2",
       color: "#34704d",
-      boxShadow: "0 5px 14px rgba(74, 143, 101, 0.12)",
+      boxShadow: "0 6px 16px rgba(74, 143, 101, 0.12)",
     },
     "&:has(input:focus-visible)": {
       outline: "2px solid #78b991",
       outlineOffset: "2px",
+    },
+  },
+  "@media": {
+    "screen and (max-width: 420px)": {
+      padding: "15px",
     },
   },
 });
@@ -122,14 +142,44 @@ export const choiceInput = style({
 
 export const optionText = style({
   display: "grid",
-  gap: "6px",
+  width: "100%",
+  gap: "8px",
+});
+
+export const optionHeading = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: "12px",
 });
 
 export const optionTitle = style({
   color: "inherit",
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  lineHeight: 1.3,
+  fontSize: "15px",
+  lineHeight: 1.35,
+});
+
+export const recoverBadge = style({
+  flex: "0 0 auto",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  backgroundColor: "#dff1e6",
+  color: "#34704d",
+  fontFamily: vars.font.semibold,
+  fontSize: "11px",
+  lineHeight: 1.2,
+});
+
+export const deleteBadge = style({
+  flex: "0 0 auto",
+  padding: "5px 9px",
+  borderRadius: "999px",
+  backgroundColor: "#fff0f0",
+  color: "#b74343",
+  fontFamily: vars.font.semibold,
+  fontSize: "11px",
+  lineHeight: 1.2,
 });
 
 export const optionDescription = style({
@@ -142,7 +192,7 @@ export const optionDescription = style({
 export const reasonList = style({
   display: "grid",
   gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "8px",
+  gap: "12px",
   "@media": {
     "screen and (max-width: 420px)": {
       gridTemplateColumns: "1fr",
@@ -154,20 +204,20 @@ export const reason = style({
   display: "flex",
   alignItems: "center",
   gap: "10px",
-  minHeight: "44px",
-  padding: "0 12px",
+  minHeight: "50px",
+  padding: "4px 16px",
   border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "12px",
-  backgroundColor: "#f4f5f6",
-  color: "#8b9097",
+  borderRadius: "13px",
+  backgroundColor: "#f7f8f8",
+  color: "#7b8187",
   fontFamily: vars.font.body,
   fontSize: "13px",
   cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease",
+  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
   selectors: {
     "&:hover": {
       borderColor: vars.color.gray300,
-      backgroundColor: "#fafafa",
+      backgroundColor: "#fbfbfb",
     },
     "&:has(input:checked)": {
       borderColor: "#78b991",
@@ -184,13 +234,13 @@ export const reason = style({
 
 export const textareaWrap = style({
   position: "relative",
-  marginTop: "14px",
+  marginTop: "18px",
 });
 
 export const textarea = style({
   width: "100%",
-  minHeight: "120px",
-  padding: "14px 14px 32px",
+  minHeight: "126px",
+  padding: "16px 16px 34px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "14px",
   backgroundColor: "#f8f9fa",
@@ -215,8 +265,8 @@ export const textarea = style({
 
 export const byteCounter = style({
   position: "absolute",
-  right: "12px",
-  bottom: "10px",
+  right: "14px",
+  bottom: "11px",
   color: "#8b9097",
   fontFamily: vars.font.body,
   fontSize: "11px",
@@ -226,7 +276,7 @@ export const byteCounter = style({
 
 export const withdrawButton = style({
   width: "100%",
-  minHeight: "48px",
+  minHeight: "50px",
   margin: "-8px 0 0",
   border: "1px solid #d84b4b",
   borderRadius: "999px",
@@ -330,15 +380,6 @@ export const policyModalHeader = style({
   gap: "16px",
 });
 
-export const policyModalEyebrow = style({
-  display: "block",
-  marginBottom: "5px",
-  color: "#4d8b66",
-  fontFamily: vars.font.semibold,
-  fontSize: "12px",
-  lineHeight: 1.3,
-});
-
 export const policyModalTitle = style({
   margin: 0,
   color: vars.color.black,
@@ -403,28 +444,6 @@ export const policyItemTitle = style({
   lineHeight: 1.35,
 });
 
-export const policyRecoverBadge = style({
-  flex: "0 0 auto",
-  padding: "4px 8px",
-  borderRadius: "999px",
-  backgroundColor: "#e7f5ec",
-  color: "#34704d",
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  lineHeight: 1.2,
-});
-
-export const policyDeleteBadge = style({
-  flex: "0 0 auto",
-  padding: "4px 8px",
-  borderRadius: "999px",
-  backgroundColor: "#fff0f0",
-  color: "#b74343",
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  lineHeight: 1.2,
-});
-
 export const policyList = style({
   display: "grid",
   gap: "7px",
@@ -437,23 +456,31 @@ export const policyList = style({
 });
 
 export const policyModalConfirm = style({
-  width: "100%",
-  minHeight: "44px",
-  marginTop: "18px",
-  border: "1px solid #78b991",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  width: "fit-content",
+  minWidth: "78px",
+  minHeight: "38px",
+  margin: "18px 0 0 auto",
+  padding: "0 18px",
+  border: `1px solid ${vars.color.gray700}`,
   borderRadius: "999px",
-  backgroundColor: "#eef8f2",
-  color: "#34704d",
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
   fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  fontSize: "13px",
   cursor: "pointer",
-  transition: "background-color 160ms ease, color 160ms ease",
+  boxSizing: "border-box",
+  transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#dff1e6",
+      borderColor: vars.color.gray700,
+      backgroundColor: vars.color.gray100,
+      color: vars.color.gray900,
     },
     "&:focus-visible": {
-      outline: "2px solid #78b991",
+      outline: `2px solid ${vars.color.gray700}`,
       outlineOffset: "2px",
     },
   },
