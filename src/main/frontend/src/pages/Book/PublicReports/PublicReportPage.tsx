@@ -12,10 +12,10 @@ import {
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import ReplySheet from "@/features/reply/ReplySheet";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
-import CommentSheet from "./components/CommentSheet";
 import * as styles from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
@@ -71,9 +71,6 @@ function PublicReportPage() {
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
   );
-  const [temporaryComments, setTemporaryComments] = useState<
-    Record<number, string[]>
-  >({});
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
@@ -165,25 +162,6 @@ function PublicReportPage() {
     if (userNumb) {
       navigate(`/social/profile/${userNumb}`);
     }
-  };
-
-  /**
-   * handle Submit Comment 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @param reptNumb rept Numb 입력값
-   * @param comment comment 입력값
-   * @return 반환값이 없다
-   */
-  const handleSubmitComment = (reptNumb: number, comment: string) => {
-
-    setTemporaryComments((prev) => ({
-      ...prev,
-      [reptNumb]: [
-        ...(prev[reptNumb] ?? []),
-        comment,
-      ],
-    }));
   };
 
   /**
@@ -404,10 +382,7 @@ function PublicReportPage() {
                       >
                         <img  src={"/img/icons/icon-comment.svg"} alt={"댓글"}/>
                         <span>
-                          {getCountLabel(
-                            (report.commentCnt ?? 0) +
-                              (temporaryComments[report.reptNumb]?.length ?? 0),
-                          )}
+                          {getCountLabel(report.replCnt)}
                         </span>
                       </button>
                     </div>
@@ -425,13 +400,9 @@ function PublicReportPage() {
         </div>
       </main>
       {commentReport ? (
-        <CommentSheet
+        <ReplySheet
           report={commentReport}
-          comments={temporaryComments[commentReport.reptNumb] ?? []}
           onClose={() => setCommentReport(null)}
-          onSubmitComment={(comment) =>
-            handleSubmitComment(commentReport.reptNumb, comment)
-          }
         />
       ) : null}
     </>

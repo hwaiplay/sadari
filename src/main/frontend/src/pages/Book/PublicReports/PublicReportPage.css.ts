@@ -117,6 +117,12 @@ export const ratingSummary = style({
   fontSize: "12px",
 });
 
+export const ratingStar = style({
+  color: "#f6c944",
+  fontSize: "12px",
+  lineHeight: 1,
+});
+
 export const filters = style({
   display: "flex",
   alignItems: "center",
@@ -152,6 +158,12 @@ export const itemTop = style({
   minWidth: 0,
 });
 
+export const itemHeader = style({
+  display: "flex",
+  alignItems: "center",
+  gap: "7px",
+  minWidth: 0,
+});
 
 export const profileButton = style({
   minWidth: 0,
