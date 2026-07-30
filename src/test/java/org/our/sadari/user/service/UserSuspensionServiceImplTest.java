@@ -13,6 +13,7 @@ import org.our.sadari.user.mapper.UserSuspensionMapper;
 
 import java.time.LocalDateTime;
 
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.never;
@@ -29,6 +30,7 @@ import static org.mockito.Mockito.when;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    기간 만료 Outbox 전달 검증 추가
+ * 2026-07-30        SeungHyeon.Kang    정지 해제 후 Redis 상태 보정 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserSuspensionServiceImplTest {
@@ -48,6 +50,34 @@ class UserSuspensionServiceImplTest {
     // 회원 정지 업무 검증 대상
     @InjectMocks
     private UserSuspensionServiceImpl userSuspensionService;
+
+    /**
+     * 활성 정지 이력이 없고 DB가 정상 상태이면 남은 Redis 정지 상태를 보정하는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void missingActiveSuspensionRestoresRedisFromDatabaseStatus() {
+        when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(null);
+        when(userSuspensionMapper.getUserStatus(7L)).thenReturn("ACTIVE");
+
+        assertNotNull(userSuspensionService.getUserSuspension(7L));
+        verify(tokenRedisService).uptUserStatus(7L, "ACTIVE");
+    }
+
+    /**
+     * DB가 여전히 정지 상태이면 활성 이력이 없어도 접근 제한을 임의로 해제하지 않는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void missingActiveSuspensionKeepsRedisWhenDatabaseIsSuspended() {
+        when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(null);
+        when(userSuspensionMapper.getUserStatus(7L)).thenReturn("SUSPENDED");
+
+        assertNotNull(userSuspensionService.getUserSuspension(7L));
+        verify(tokenRedisService, never()).uptUserStatus(any(Long.class), any(String.class));
+    }
 
     /**
      * 정지 만료 시 DB 회원 상태가 실제 복구된 경우에만 Redis 상태도 복구하는지 확인한다
