@@ -8,7 +8,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { formatDateValue } from "@/app/utils/dateUtil";
 import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { useNavigate, useParams } from "react-router-dom";
-import type { ChangeEvent, CSSProperties } from "react";
+import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
@@ -40,6 +40,75 @@ import * as styles from "./DetailPage.css";
 // 댓글 API 연결 전 기록 헤더의 댓글 수 배치를 확인하기 위한 임시 표시값이다
 const TEMPORARY_COMMENT_COUNT = 0;
 const CONTENT_FADE_OUT_MILLISECONDS = 180;
+const RECORD_CARET_VIEWPORT_OFFSET_PIXELS = 32;
+
+type RecordCaretTarget = {
+  // 편집 입력창에 복원할 기록 문자 위치
+  caretOffset: number;
+  // 기록 본문 시작점부터 클릭한 커서 줄까지의 세로 거리
+  caretTopOffset: number;
+};
+
+/**
+ * 읽기 상태의 기록 본문에서 사용자가 클릭한 문자와 커서 줄 위치를 계산한다
+ *
+ * @author HanWon.Jang
+ * @param event 기록 본문 클릭 이벤트
+ * @param contentLength 기록 본문 문자 길이
+ * @return 편집 입력창에 복원할 커서 문자와 세로 위치
+ */
+function getRecordCaretTarget(
+  event: MouseEvent<HTMLButtonElement>,
+  contentLength: number,
+): RecordCaretTarget {
+
+  const recordButton = event.currentTarget;
+  // 클릭한 커서 줄의 상대 위치를 계산할 기록 본문 영역을 조회한다
+  const recordButtonRect = recordButton.getBoundingClientRect();
+  let caretOffset = contentLength;
+  // 표준 좌표 기반 커서 API로 클릭한 문자 위치를 조회한다
+  const caretPosition = document.caretPositionFromPoint?.(
+    event.clientX,
+    event.clientY,
+  );
+
+  // 표준 API가 기록 텍스트 위치를 반환하면 클릭한 문자 오프셋을 사용한다
+  if (caretPosition
+          && caretPosition.offsetNode.nodeType === Node.TEXT_NODE
+          && recordButton.contains(caretPosition.offsetNode)) {
+    caretOffset = caretPosition.offset;
+  }
+
+  // 표준 API에서 기록 텍스트 위치를 찾지 못하면 WebKit 호환 API를 사용한다
+  if (caretOffset === contentLength) {
+    // WebKit 계열 브라우저에서 클릭한 문자 범위를 조회한다
+    const fallbackRange = document.caretRangeFromPoint?.(
+      event.clientX,
+      event.clientY,
+    );
+
+    // 호환 API가 기록 텍스트 위치를 반환하면 클릭한 문자 오프셋을 사용한다
+    if (fallbackRange
+            && fallbackRange.startContainer.nodeType === Node.TEXT_NODE
+            && recordButton.contains(fallbackRange.startContainer)) {
+      caretOffset = fallbackRange.startOffset;
+    }
+
+  }
+
+  // 커서 문자 위치가 실제 기록 길이를 넘지 않도록 보정한다
+  const normalizedCaretOffset = Math.min(caretOffset, contentLength);
+  // 키보드 편집은 본문 시작점으로 이동하고 포인터 편집은 실제 클릭 높이를 사용한다
+  const caretTopOffset = event.detail === 0
+    ? 0
+    : Math.max(event.clientY - recordButtonRect.top, 0);
+
+  // 입력창에 복원할 클릭 문자 위치와 본문 기준 세로 거리를 반환한다
+  return {
+    caretOffset: normalizedCaretOffset,
+    caretTopOffset,
+  };
+}
 
 /**
  * Detail Page 화면 또는 컴포넌트를 구성한다
@@ -61,6 +130,8 @@ function DetailPage() {
   const [isContentFadingOut, setIsContentFadingOut] = useState(false);
   const contentSwitchTimerRef = useRef<number | null>(null);
   const recordTextAreaRef = useRef<HTMLTextAreaElement | null>(null);
+  // 기록 편집으로 전환한 뒤 복원할 클릭 커서 위치를 보관한다
+  const recordCaretTargetRef = useRef<RecordCaretTarget | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isRecordEditing, setIsRecordEditing] = useState(false);
   const [status, setStatus] = useState<ReadingStatusType>("");
@@ -128,6 +199,35 @@ function DetailPage() {
     recordTextArea.style.height = "auto";
     // 스크롤 없이 전체 기록이 보이도록 현재 내용의 전체 높이를 입력창에 반영한다
     recordTextArea.style.height = `${recordTextArea.scrollHeight}px`;
+
+    const recordCaretTarget = recordCaretTargetRef.current;
+
+    // 기록 편집을 시작한 최초 렌더링에서만 클릭한 커서 위치를 복원한다
+    if (recordCaretTarget) {
+      // 입력 중 재렌더링에서 같은 이동이 반복되지 않도록 커서 복원 대상을 제거한다
+      recordCaretTargetRef.current = null;
+      // 커서를 복원하기 전 브라우저 기본 포커스 스크롤을 차단한다
+      recordTextArea.focus({ preventScroll: true });
+      // 클릭한 문자 위치가 현재 기록 길이를 넘지 않도록 보정한다
+      const caretOffset = Math.min(recordCaretTarget.caretOffset, content.length);
+      // 읽기 상태에서 클릭한 문자와 같은 위치에 편집 커서를 설정한다
+      recordTextArea.setSelectionRange(caretOffset, caretOffset);
+      // 입력창으로 전환된 뒤 커서 줄의 문서상 위치를 계산할 영역을 조회한다
+      const recordTextAreaRect = recordTextArea.getBoundingClientRect();
+      // 클릭한 커서 줄이 화면 상단 여백 아래에 오도록 목표 스크롤 위치를 계산한다
+      const scrollTop = Math.max(
+        window.scrollY + recordTextAreaRect.top
+          + recordCaretTarget.caretTopOffset
+          - RECORD_CARET_VIEWPORT_OFFSET_PIXELS,
+        0,
+      );
+      // 클릭한 커서 줄을 향해 화면이 부드럽게 올라가도록 스크롤한다
+      window.scrollTo({
+        top: scrollTop,
+        behavior: "smooth",
+      });
+    }
+
   }, [content, isRecordEditing]);
 
   /**
@@ -233,10 +333,13 @@ function DetailPage() {
    * 기록 본문을 클릭하면 테두리 없는 직접 입력 상태로 전환한다
    *
    * @author HanWon.Jang
+   * @param event 기록 본문 클릭 이벤트
    * @return 반환값이 없다
    */
-  function handleRecordEditStart() {
+  function handleRecordEditStart(event: MouseEvent<HTMLButtonElement>) {
 
+    // 읽기 상태에서 클릭한 문자와 커서 줄 위치를 편집 전환 후 복원할 대상으로 설정한다
+    recordCaretTargetRef.current = getRecordCaretTarget(event, content.length);
     // 기록 입력과 상세 편집 명령을 함께 활성화한다
     setIsRecordEditing(true);
     setIsEditing(true);
@@ -621,7 +724,7 @@ function DetailPage() {
               </div>
             </section>
 
-            {/* 책 소개 제목부터 하단 배경을 흰색으로 유지하는 도서 소개 영역 */}
+            {/* 배경 전환 위에 표시되는 도서 소개 영역 */}
             <div className={styles.recordArea}>
               {/* 독후감 기록 카드와 같은 위치의 책 소개 영역 */}
               <section className={styles.recordSection}>
@@ -691,7 +794,7 @@ function DetailPage() {
             onEditStart={handleEditStart}
           />
 
-          {/* 기록 제목부터 하단 배경을 흰색으로 유지하는 독후감 기록 영역 */}
+          {/* 배경 전환 위에 표시되는 독후감 기록 영역 */}
           <div className={styles.recordArea}>
             {/* 독후감 기록과 좋아요 및 댓글 지표 영역 */}
             <section className={styles.recordSection}>
@@ -750,7 +853,6 @@ function DetailPage() {
                     ref={recordTextAreaRef}
                     className={styles.recordTextArea}
                     value={content}
-                    autoFocus
                     aria-label={/* "기록" */ message("frontend.report.field.content")}
                     placeholder={contentPlaceholder}
                     onChange={handleContentChange}
