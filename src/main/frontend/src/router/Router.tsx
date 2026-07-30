@@ -21,6 +21,7 @@ import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
 import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
 import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
 import WelcomePage from "@/pages/Welcome/WelcomePage";
+import SuspensionPage from "@/pages/Settings/SuspensionPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -63,6 +64,26 @@ const Router = () => {
           element={
             <ProtectedRoute>
               <WithdrawalPendingPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 관리자 이용 정지 안내 */}
+        <Route
+          path="/suspension"
+          element={
+            <ProtectedRoute>
+              <SuspensionPage />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 정지 회원의 영구 탈퇴 */}
+        <Route
+          path="/suspension/withdrawal"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPage hardOnly />
             </ProtectedRoute>
           }
         />

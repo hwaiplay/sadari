@@ -43,6 +43,19 @@
 - `loc` 프로필에만 적용되며 운영에서는 테스트 스케줄러를 생성하지 않습니다.
 - 현재 연결된 DB에서 삭제 예정일이 지난 모든 회원이 대상이므로 공용 또는 운영 DB 연결에 사용하지 않습니다.
 
+## 회원 상태 Outbox 동기화
+
+- 스케줄러 코드: `USER_STATUS_SYNC`
+- 실행 주기: 5분마다
+- 관리자 서버가 회원 상태 변경과 같은 트랜잭션으로 저장한 `TB_EVTBOX` 이벤트를 등록 순서대로 조회합니다.
+- 이벤트에 상태값을 복제하지 않고 처리 시점의 `TM_USERXM.USER_STAT`을 조회해 사용자 서버 Redis에 반영합니다.
+- 한 번에 `scheduler.max-size` 범위만 처리합니다.
+- 전달 이벤트를 조회해 Redis 반영에 성공하면 해당 `TH_USSPND.SYNC_STAT`을 `COMPLETED`로 변경하고 `TB_EVTBOX` 행을 삭제합니다.
+- 더 최신 이벤트가 남아 있으면 정지 이력을 완료로 변경하지 않아 관리자에게 아직 반영 대기로 표시합니다.
+- 처리에 실패한 이벤트는 삭제하지 않고 다음 주기에 재시도합니다.
+- 회원 원본이 없으면 남은 로그인 Redis 정보를 제거합니다.
+- 별도 FCM 푸시는 전송하지 않습니다.
+
 ## 실행 로그
 
 - 실행 마스터 로그는 `TL_SCLOGX`에 저장합니다.
@@ -62,4 +75,6 @@
 - `global/scheduler/service/ReportDateOverServiceImpl.java`
 - `global/scheduler/service/AlimDeleteServiceImpl.java`
 - `global/scheduler/service/UserHardDeleteServiceImpl.java`
+- `global/scheduler/service/UserStatusEventServiceImpl.java`
+- `global/scheduler/mapper/UserStatusEventMapper.xml`
 - `global/scheduler/mapper/SchedulerLogMapper.xml`
