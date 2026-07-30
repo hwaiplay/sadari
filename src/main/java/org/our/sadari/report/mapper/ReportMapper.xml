@@ -387,7 +387,8 @@
              , P.PUBC_YSNO
              , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
              , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
-          FROM TM_BKINFO B
+             , NVL(RPL.REPL_CNT, 0) AS REPL_CNT
+        FROM TM_BKINFO B
     INNER JOIN TM_REPORT P
             ON B.BOOK_NUMB = P.BOOK_NUMB
     INNER JOIN TM_USERXM U
@@ -408,6 +409,12 @@
                      AND L.TAGT_TYPE = #{likeTargetReport}
                 ) UL
             ON UL.REPT_NUMB = P.REPT_NUMB
+     LEFT JOIN (   SELECT R.REPT_NUMB
+                        , COUNT(*) AS REPL_CNT
+                     FROM TB_REPLXX R
+                    GROUP BY R.REPT_NUMB
+                ) RPL
+            ON RPL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
            AND P.PUBC_YSNO = #{commYes}
            AND B.BOOK_ISBN = #{bookIsbn}
