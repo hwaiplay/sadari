@@ -82,6 +82,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 테이블 성격에 따라 다음 접두사를 사용합니다.
 
+- 사용자에게 노출되는 운영 콘텐츠 테이블: `CT_`
 - 마스터 테이블: `TM_`
 - 파생 테이블: `TB_`
 - 히스토리 테이블: `TH_`
@@ -97,7 +98,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 접두사 뒤에는 영문 대문자 6자리를 사용합니다. 의미 글자가 6자리보다 짧으면 오른쪽을 `X`로 채웁니다.
 
-- 허용: `TM_USERXM`, `TM_ADMINX`
+- 허용: `CT_POPUPX`, `TM_USERXM`, `TM_ADMINX`
 - 금지: `TM_USERS`, `TM_USER_INFO`
 
 ## 4. 컬럼 명명 규칙

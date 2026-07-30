@@ -15,6 +15,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [댓글 정책](reply-policy.md) | 댓글 식별, 대댓글 깊이, 삭제 표시 |
 | [알림 및 푸시 정책](notification-push-policy.md) | 알림 생성, 중복 방지, 읽음·삭제, FCM 구독 |
 | [메뉴 및 화면 노출 정책](menu-policy.md) | URL별 헤더, 햄버거 메뉴 노출 |
+| [사용자 안내 팝업 콘텐츠 정책](popup-content-policy.md) | 정책·도움말 팝업의 JSON 목록 저장, 조회 및 실패 대체 |
 | [콘텐츠 및 파일 정책](content-file-policy.md) | 비속어, 닉네임, 텍스트 정규화, 이미지 업로드 |
 | [스케줄러 운영 정책](scheduler-policy.md) | 스케줄러 실행 조건, 배치 크기, 실행 로그 |
 
@@ -38,6 +39,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | `WTHD_RSON` | 탈퇴 사유 |
 | `FOLW_STAT` | 팔로우 버튼 상태 |
 | `ALIM_SITU` | 알림 상황 |
+| `POPU_SITU` | 팝업 사용 화면 구분 |
 | `SCHD_CODE` | 스케줄러 활성 상태 |
 | `BADX_WORD` | 차단 비속어 |
 | `EXCP_WORD` | 비속어 예외 허용어 |

@@ -30,6 +30,9 @@
 
 - 화면에는 유형별 남은 변경 횟수와 변경 가능한 잔여 일수를 표시합니다.
 - 제한을 초과한 목표 낮추기 요청은 서버에서도 거절합니다.
+- 목표 내리기 도움말의 목록 문구는 `CT_POPUPX`의 `PROFILE`·`GOAL_DOWN` 행에 있는 `CONT_FIRS`에서 조회합니다.
+- 콘텐츠가 없거나 조회 및 JSON 검증에 실패하면 화면에 포함된 현재 기본 문구를 표시합니다.
+- 팝업 콘텐츠의 저장, 조회 및 계정 수명주기 기준은 [사용자 안내 팝업 콘텐츠 정책](popup-content-policy.md)을 따릅니다.
 
 ## 이전 목표 가져오기
 
@@ -55,3 +58,6 @@
 - `myPage/dto/ReadingGoalDto.java`
 - `myPage/dto/MonthlyReadingSummaryDto.java`
 - `pages/My/ProfileEditPage.tsx`
+- `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
+- `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
+- `CT_POPUPX`

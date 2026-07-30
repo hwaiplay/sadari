@@ -17,6 +17,9 @@ import {
   MAX_WITHDRAWAL_REASON_BYTES,
   truncateWithdrawalReasonByByte,
 } from "@/features/User/utils/withdrawalValidation";
+import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
+import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
+import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import * as styles from "./WithdrawalPage.css";
 
 const POLICY_MODAL_ANIMATION_MILLISECONDS = 180;
@@ -31,6 +34,24 @@ const WITHDRAWAL_REASONS: Array<{ value: WithdrawalReason; label: string }> = [
   // "기타"
   { value: "OTHER", label: "기타" },
 ];
+
+const DEFAULT_SOFT_POLICY_ITEMS = [
+  // "다시 로그인하면 기존 계정을 복구할 수 있어요."
+  "다시 로그인하면 기존 계정을 복구할 수 있어요.",
+  // "독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요."
+  "독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요.",
+  // "팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요."
+  "팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요.",
+] as const;
+
+const DEFAULT_HARD_POLICY_ITEMS = [
+  // "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요."
+  "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요.",
+  // "30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요."
+  "30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요.",
+  // "영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요."
+  "영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요.",
+] as const;
 
 /**
  * 계정 비활성화와 영구 탈퇴 정책을 비교해 선택하고 Kakao 재인증을 시작합니다.
@@ -49,6 +70,20 @@ function WithdrawalPage() {
   const policyCloseButtonRef = useRef<HTMLButtonElement>(null);
   const policyCloseTimerRef = useRef<number | null>(null);
   const policyHelpClosingRef = useRef(false);
+  // 계정 처리 정책 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회한다
+  const { data: withdrawalPolicyContent } = usePopupContent(
+    POPUP_CONTENT_KEYS.accountWithdrawalPolicy,
+  );
+  // 비활성화 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  const softPolicyItems = parsePopupContentList(
+    withdrawalPolicyContent?.contFirs,
+    DEFAULT_SOFT_POLICY_ITEMS,
+  );
+  // 영구 탈퇴 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  const hardPolicyItems = parsePopupContentList(
+    withdrawalPolicyContent?.contSeco,
+    DEFAULT_HARD_POLICY_ITEMS,
+  );
   const withdrawalReasonBytes = getWithdrawalReasonByteLength(rsonCntn);
 
   /**
@@ -317,6 +352,18 @@ function WithdrawalPage() {
     submitButtonLabel = "Kakao 재인증 후 영구 탈퇴";
   }
 
+  /**
+   * 관리자 설정 또는 기본 계정 처리 정책 문구를 목록 항목으로 표시한다
+   *
+   * @author HanWon.Jang
+   * @param policyItem 화면에 표시할 계정 처리 정책 문구
+   * @return 계정 처리 정책 목록 항목
+   */
+  const renderPolicyItem = (policyItem: string): React.ReactNode => {
+    // 개별 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환한다
+    return <li key={policyItem}>{policyItem}</li>;
+  };
+
   // 계정 처리 정책과 사유를 한 화면에서 선택하는 설정 화면을 반환합니다
   return (
     <main className={styles.page}>
@@ -489,18 +536,8 @@ function WithdrawalPage() {
                   </span>
                 </div>
                 <ul className={styles.policyList}>
-                  <li>
-                    {/* "다시 로그인하면 기존 계정을 복구할 수 있어요." */}
-                    다시 로그인하면 기존 계정을 복구할 수 있어요.
-                  </li>
-                  <li>
-                    {/* "독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요." */}
-                    독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요.
-                  </li>
-                  <li>
-                    {/* "팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요." */}
-                    팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요.
-                  </li>
+                  {/* 비활성화 정책 문구 목록 */}
+                  {softPolicyItems.map(renderPolicyItem)}
                 </ul>
               </article>
 
@@ -517,18 +554,8 @@ function WithdrawalPage() {
                   </span>
                 </div>
                 <ul className={styles.policyList}>
-                  <li>
-                    {/* "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요." */}
-                    신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요.
-                  </li>
-                  <li>
-                    {/* "30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요." */}
-                    30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요.
-                  </li>
-                  <li>
-                    {/* "영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요." */}
-                    영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요.
-                  </li>
+                  {/* 영구 탈퇴 정책 문구 목록 */}
+                  {hardPolicyItems.map(renderPolicyItem)}
                 </ul>
               </article>
             </div>
