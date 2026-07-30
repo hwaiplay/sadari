@@ -78,16 +78,6 @@ const Router = () => {
           }
         />
 
-        {/* 정지 회원의 영구 탈퇴 */}
-        <Route
-          path="/suspension/withdrawal"
-          element={
-            <ProtectedRoute>
-              <WithdrawalPage hardOnly />
-            </ProtectedRoute>
-          }
-        />
-
         {/* 최초 로그인 웰컴 */}
         <Route
           path="/welcome"

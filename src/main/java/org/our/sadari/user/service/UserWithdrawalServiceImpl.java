@@ -43,6 +43,7 @@ import java.util.UUID;
  * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 적용
  * 2026-07-30        SeungHyeon.Kang    사용자 계정 처리 용어를 비활성화로 정리
  * 2026-07-30        SeungHyeon.Kang    정지 회원 영구 탈퇴와 취소 상태 우선순위 적용
+ * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 요청 차단
  */
 @Service
 @RequiredArgsConstructor
@@ -128,11 +129,10 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 정지 회원은 재로그인으로 정지를 우회할 수 있는 계정 비활성화를 신청할 수 없다
+        // 정지 회원은 계정 처리를 통해 관리자 이용 정지를 우회할 수 없다
         UserDto requestUser = userMapper.getUserByNumb(userNumb);
         if (!StringUtil.isEmpty(requestUser)
-                && Constant.USER_STAT_SUSPENDED.equals(requestUser.getUserStat())
-                && Constant.WITHDRAWAL_TYPE_SOFT.equals(request.getWthdType())) {
+                && Constant.USER_STAT_SUSPENDED.equals(requestUser.getUserStat())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -243,9 +243,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 재인증 사이에 정지된 회원도 계정 비활성화로 제재 상태를 우회하지 못하게 다시 검증한다
-        if (Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
-                && Constant.WITHDRAWAL_TYPE_SOFT.equals(request.getWthdType())) {
+        // 재인증 사이에 정지된 회원도 계정 처리로 제재 상태를 우회하지 못하게 다시 검증한다
+        if (Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
