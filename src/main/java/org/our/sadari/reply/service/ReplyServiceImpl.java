@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional(readOnly = true)
 public class ReplyServiceImpl implements ReplyService {
 
-    // 댓글 내용의 Oracle VARCHAR2 저장 한도
+    // 댓글 내용 저장 한도
     private static final int REPLY_CONTENT_MAX_BYTES = 4000;
 
     // Reply 데이터 접근 객체
@@ -75,7 +75,7 @@ public class ReplyServiceImpl implements ReplyService {
         // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화한다
         String normalizedContent = StringUtil.normalizePlainText(replyDto.getReplCntn());
 
-        // 정규화 후 내용이 없거나 Oracle 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부한다
+        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부한다
         if (StringUtil.isEmpty(normalizedContent) || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);

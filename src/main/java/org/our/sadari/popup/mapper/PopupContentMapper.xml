@@ -17,7 +17,7 @@
     INNER JOIN TB_CODEXD SITU
             ON SITU.COMM_CODE = #{codePopuSitu}
            AND SITU.COMD_CODE = POPUP.POPU_SITU
-           AND NVL(SITU.USEE_YSNO, #{commYes}) = #{commYes}
+           AND COALESCE(SITU.USEE_YSNO, #{commYes}) = #{commYes}
          WHERE POPUP.POPU_SITU = #{popuSitu}
            AND POPUP.POPU_CODE = #{popuCode}
     </select>
