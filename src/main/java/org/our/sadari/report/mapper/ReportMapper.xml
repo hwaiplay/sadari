@@ -306,6 +306,7 @@
              , A.REPT_CNTN
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , COALESCE(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+             , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT
              , B.BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
