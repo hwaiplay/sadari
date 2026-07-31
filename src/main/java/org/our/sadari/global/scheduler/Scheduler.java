@@ -96,8 +96,8 @@ public class Scheduler {
      *
      * @author SeungHyeon.Kang
      */
-    //@Scheduled(cron = "0 0 3 * * *")
-    @Scheduled(cron = "*/10 * * * * *")//테스트
+    @Scheduled(cron = "0 0 3 * * *")
+    //@Scheduled(cron = "*/10 * * * * *")//테스트
     public void delPendingUsers() {
 
         // 공통코드에서 중지된 영구 삭제 스케줄러는 업무와 실행 로그를 만들지 않는다
@@ -117,7 +117,7 @@ public class Scheduler {
      *
      * @author SeungHyeon.Kang
      */
-    @Scheduled(cron = "0 */5 * * * *")
+    @Scheduled(cron = "*/30 * * * * *")//테스트
     public void syncUserStatusEvents() {
 
         // 공통코드에서 중지된 회원 상태 동기화 스케줄러는 업무와 실행 로그를 만들지 않는다
