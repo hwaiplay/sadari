@@ -37,7 +37,7 @@
                 ORDER BY S.REGI_DATE DESC
                        , S.SPND_NUMB DESC
                ) P
-         WHERE ROWNUM = 1
+         LIMIT 1
     </select>
 
     <!-- 활성 정지 이력이 없을 때 로그인 상태 캐시를 보정할 현재 DB 회원 상태를 조회한다 -->
@@ -53,12 +53,12 @@
         UPDATE /* uptSuspensionExpired */
                TH_USSPND
            SET SPND_STAT = 'EXPIRED'
-             , RLES_DATE = SYSDATE
-             , UPDT_DATE = SYSDATE
+             , RLES_DATE = CURRENT_TIMESTAMP
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE SPND_NUMB = #{spndNumb}
            AND SPND_STAT = 'ACTIVE'
            AND SPND_TYPE = 'PERIOD'
-           AND ENDX_DATE <![CDATA[<=]]> SYSDATE
+           AND ENDX_DATE <![CDATA[<=]]> CURRENT_TIMESTAMP
     </update>
 
     <!-- 다른 우선 상태가 없을 때 정지 직전 회원 상태를 복구한다 -->

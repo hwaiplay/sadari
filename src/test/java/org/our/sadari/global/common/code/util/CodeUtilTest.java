@@ -82,7 +82,7 @@ class CodeUtilTest {
     }
 
     /**
-     * 공통코드 목록이 비어 있으면 Oracle IN 조건을 생성하지 않고 잘못된 요청으로 거절하는지 검증한다.
+     * 공통코드 목록이 비어 있으면 IN 조건을 생성하지 않고 잘못된 요청으로 거절하는지 검증한다.
      *
      * @author SeungHyeon.Kang
      */

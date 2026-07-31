@@ -7,7 +7,7 @@
 import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import type {
-  NaverApiResultType,
+  BookSearchResultType,
   ReadingStatusType,
 } from "../../types/book.type";
 import {
@@ -29,7 +29,7 @@ import { useSetReport } from "./useSetReport";
  * @return 화면에서 사용할 상태와 처리 함수
  */
 export function useSetReportForm(
-  selectedBook: NaverApiResultType | undefined,
+  selectedBook: BookSearchResultType | undefined,
   validStatusCodes: string[],
   validReportColors: string[],
 ) {

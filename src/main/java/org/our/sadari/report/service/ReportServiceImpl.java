@@ -1245,7 +1245,7 @@ public class ReportServiceImpl implements ReportService {
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_DATE_RANGE_INVALID);
             }
 
-            // Oracle 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
+            // 데이터베이스 저장 한도를 넘는 본문은 DB 오류가 나기 전에 업무 검증으로 차단한다.
             if (hasReportContent && XssUtil.utf8ByteLength(reportDto.getReptCntn()) > Constant.REPORT_CONTENT_MAX_BYTES) {
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES);
