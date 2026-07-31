@@ -3,15 +3,10 @@
 <mapper namespace="org.our.sadari.user.mapper.UserWithdrawalMapper">
 
     <!-- 회원 탈퇴 처리 이력을 등록한다. -->
-    <insert id="setUserWithdrawal" parameterType="org.our.sadari.user.dto.UserWithdrawalDto">
-        <selectKey keyProperty="wthdNumb" resultType="long" order="BEFORE">
-            SELECT TH_USWTHD_SEQ.NEXTVAL
-              FROM DUAL
-        </selectKey>
+    <insert id="setUserWithdrawal" parameterType="org.our.sadari.user.dto.UserWithdrawalDto" useGeneratedKeys="true" keyProperty="wthdNumb">
         INSERT /* setUserWithdrawal */
           INTO TH_USWTHD (
-               WTHD_NUMB
-             , USER_NUMB
+               USER_NUMB
              , USER_IDHS
              , WTHD_TYPE
              , WTHD_RSON
@@ -22,14 +17,13 @@
              , PROC_DATE
              , ERRO_CNTN
         ) VALUES (
-               #{wthdNumb}
-             , #{userNumb}
+               #{userNumb}
              , #{userIdhs}
              , #{wthdType}
              , #{wthdRson}
              , #{rsonCntn,jdbcType=VARCHAR}
              , #{wthdStat}
-             , SYSDATE
+             , CURRENT_TIMESTAMP
              , #{deltDate,jdbcType=TIMESTAMP}
              , #{procDate,jdbcType=TIMESTAMP}
              , #{erroCntn,jdbcType=VARCHAR}
@@ -41,7 +35,7 @@
         UPDATE /* uptUserReportPrivate */
                TM_REPORT
            SET PUBC_YSNO = 'N'
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{userNumb}
     </update>
 
@@ -87,7 +81,7 @@
         UPDATE /* uptWithdrawalRestored */
                TH_USWTHD
            SET WTHD_STAT = 'RESTORED'
-             , RCOV_DATE = SYSDATE
+             , RCOV_DATE = CURRENT_TIMESTAMP
          WHERE WTHD_NUMB = #{wthdNumb}
            AND USER_NUMB = #{userNumb}
            AND WTHD_STAT = 'DELETE_PENDING'

@@ -234,7 +234,7 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
         // 선택한 닉네임 동물 명사 세부코드를 번호 발급 조건에 설정한다
         sequenceRequest.setAnmlCode(animal.getComdCode());
 
-        // 기존 행을 갱신하며 동일 조합의 동시 발급 요청을 Oracle 행 잠금으로 직렬화한다
+        // 기존 행을 갱신하며 동일 조합의 동시 발급 요청을 MySQL 행 잠금으로 직렬화한다
         int updateCnt = nicknameSequenceMapper.uptNicknameSequence(sequenceRequest);
 
         // 현재 연월에 처음 선택된 조합이면 최초 번호 행을 등록한다

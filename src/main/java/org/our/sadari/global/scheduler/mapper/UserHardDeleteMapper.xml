@@ -16,77 +16,17 @@
                       ON W.USER_NUMB = U.USER_NUMB
                    WHERE W.WTHD_STAT = 'DELETE_PENDING'
                      AND U.USER_STAT = 'DELETE_PENDING'
-                     AND W.DELT_DATE <![CDATA[ <= ]]> SYSDATE
+                     AND W.DELT_DATE <![CDATA[ <= ]]> CURRENT_TIMESTAMP
                 ORDER BY W.DELT_DATE
                        , W.WTHD_NUMB
                ) TARGET
-         WHERE ROWNUM <![CDATA[ <= ]]> #{maxSize}
+         LIMIT #{maxSize}
     </select>
 
     <!-- 탈퇴 이력의 회원 번호는 보존하고 회원 연관 데이터를 참조 순서에 맞게 제거한다. -->
     <delete id="delHardDeleteUser" parameterType="long" statementType="CALLABLE">
-        BEGIN
-            /* delHardDeleteUser */
-            UPDATE TB_LOGHIS
-               SET USER_NUMB = NULL
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TB_REPLXX
-             WHERE REPT_NUMB IN (
-                       SELECT REPT_NUMB
-                         FROM TM_REPORT
-                        WHERE USER_NUMB = #{userNumb}
-                   );
-
-            DELETE FROM TB_REPLXX
-             WHERE (REPT_NUMB, UPER_NUMB) IN (
-                       SELECT REPT_NUMB
-                            , REPL_NUMB
-                         FROM TB_REPLXX
-                        WHERE USER_NUMB = #{userNumb}
-                   );
-
-            DELETE FROM TB_REPLXX
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TB_LIKEXX
-             WHERE USER_NUMB = #{userNumb}
-                OR (
-                       TAGT_TYPE = 'REPORT'
-                   AND TAGT_NUMB IN (
-                           SELECT REPT_NUMB
-                             FROM TM_REPORT
-                            WHERE USER_NUMB = #{userNumb}
-                       )
-                   );
-
-            DELETE FROM TB_FOLLOW
-             WHERE USER_NUMB = #{userNumb}
-                OR FLOW_NUMB = #{userNumb};
-
-            DELETE FROM TB_ALIMXX
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TB_PSHSUB
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TM_GOALXM
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TM_REPORT
-             WHERE USER_NUMB = #{userNumb};
-
-            UPDATE TM_USERXM
-               SET PROF_NUMB = NULL
-                 , BGIM_NUMB = NULL
-             WHERE USER_NUMB = #{userNumb};
-
-            DELETE FROM TM_FILEXM
-             WHERE REGI_USER = #{userNumb};
-
-            DELETE FROM TM_USERXM
-             WHERE USER_NUMB = #{userNumb};
-        END;
+        /* delHardDeleteUser */
+        {CALL PR_DEL_HARD_DELETE_USER(#{userNumb})}
     </delete>
 
 </mapper>

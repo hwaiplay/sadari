@@ -8,11 +8,11 @@
         UPDATE /* uptNicknameSequence */
                TB_NKSEQX
            SET LAST_NUMB = LAST_NUMB + 1
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE SUBJ_CODE = #{subjCode}
            AND PRED_CODE = #{predCode}
            AND ANML_CODE = #{anmlCode}
-           AND ISSU_YEAM = TO_CHAR(SYSDATE, 'YYMM')
+           AND ISSU_YEAM = DATE_FORMAT(CURRENT_TIMESTAMP, '%y%m')
            AND LAST_NUMB <![CDATA[<]]> #{maxSequence}
     </update>
 
@@ -31,10 +31,10 @@
         ) VALUES (  #{subjCode}
                   , #{predCode}
                   , #{anmlCode}
-                  , TO_CHAR(SYSDATE, 'YYMM')
+                  , DATE_FORMAT(CURRENT_TIMESTAMP, '%y%m')
                   , #{firstSequence}
-                  , SYSDATE
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -53,7 +53,7 @@
          WHERE N.SUBJ_CODE = #{subjCode}
            AND N.PRED_CODE = #{predCode}
            AND N.ANML_CODE = #{anmlCode}
-           AND N.ISSU_YEAM = TO_CHAR(SYSDATE, 'YYMM')
+           AND N.ISSU_YEAM = DATE_FORMAT(CURRENT_TIMESTAMP, '%y%m')
     </select>
 
 </mapper>

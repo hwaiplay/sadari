@@ -41,8 +41,8 @@ import org.springframework.web.multipart.MultipartException;
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
 
-    // 오라클 값 초과 대용량 오류 코드 설정값
-    private static final int ORACLE_VALUE_TOO_LARGE_ERROR_CODE = 1461;
+    // MySQL 컬럼 데이터 길이 초과 오류 코드
+    private static final int MYSQL_DATA_TOO_LONG_ERROR_CODE = 1406;
 
     // 다국어 메시지 조회 객체
     private final MessageSource messageSource;
@@ -98,7 +98,7 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리한다.
+     * Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인별로 분기 처리한다.
      *
      * @author SeungHyeon.Kang
      * @param e 데이터 접근 예외
@@ -119,8 +119,10 @@ public class CommonExceptionHandler {
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        // Oracle ORA-01461 (바인딩된 값이 열의 크기보다 큼) 에러 발생 시 신고 내용/입력값 길이 초과 전용 메시지를 응답한다.
-        if (!StringUtil.isEmpty(sqlException) && sqlException.getErrorCode() == ORACLE_VALUE_TOO_LARGE_ERROR_CODE) {
+        // MySQL 데이터 길이 초과 오류이면 입력값 길이 초과 전용 메시지를 응답한다
+        if (!StringUtil.isEmpty(sqlException)
+                && (sqlException.getErrorCode() == MYSQL_DATA_TOO_LONG_ERROR_CODE
+                || "22001".equals(sqlException.getSQLState()))) {
             // "독후감 내용은 {0}byte 이하로 입력해주세요."
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
@@ -232,7 +234,7 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다.
+     * 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 JDBC 연결 실패 상태를 찾는다.
      * 각 API에서 직접 try/catch하지 않아도 커넥션풀, 트랜잭션, MyBatis, JDBC 드라이버가 감싼 연결 장애를 같은 ResultData 실패 응답으로 반환하기 위해 사용한다.
      *
      * @author SeungHyeon.Kang
@@ -248,33 +250,23 @@ public class CommonExceptionHandler {
                 || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
                 || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
                 || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
-            // 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다 판정값을 반환한다
+            // 예외 원인 체인에서 확인한 DB 연결 실패 판정값을 반환한다
             return true;
         }
 
         // sqlException 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (StringUtil.isEmpty(sqlException)) {
-            // 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다 판정값을 반환한다
+            // SQL 예외가 없으므로 연결 실패가 아닌 것으로 반환한다
             return false;
         }
 
-        /*
-         * Oracle JDBC에서 네트워크 어댑터 오류, 닫힌 커넥션, 응답 없음 등은 SQLException으로만 감싸져 올라오는 경우가 있다.
-         * 대표적인 연결 장애 errorCode와 SQLState 접두어(08)를 같이 확인해 커넥션 문제를 쿼리 오류와 분리한다.
-         */
-        // 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 Oracle JDBC 연결 실패 코드를 찾는다 결과를 반환한다
-        return "08".equals(getSqlStateClass(sqlException))
-                // getErrorCode 조회로 후속 처리에 필요한 데이터를 가져온다
-                || sqlException.getErrorCode() == 17002
-                // getErrorCode 조회로 후속 처리에 필요한 데이터를 가져온다
-                || sqlException.getErrorCode() == 17008
-                // getErrorCode 조회로 후속 처리에 필요한 데이터를 가져온다
-                || sqlException.getErrorCode() == 17410;
+        // SQLState 08 계열을 MySQL을 포함한 JDBC 연결 예외로 판정한다
+        return "08".equals(getSqlStateClass(sqlException));
     }
 
     /**
      * SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미한다.
-     * SQLState가 비어 있는 Oracle 예외도 있으므로 비어 있으면 null을 반환한다.
+     * SQLState가 비어 있으면 null을 반환한다.
      *
      * @author SeungHyeon.Kang
      * @param sqlException 확인할 SQL 예외

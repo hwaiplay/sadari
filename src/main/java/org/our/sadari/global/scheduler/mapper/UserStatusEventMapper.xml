@@ -22,28 +22,23 @@
                ) EVENT
      LEFT JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = EVENT.USER_NUMB
-         WHERE ROWNUM <![CDATA[<=]]> #{maxSize}
+         LIMIT #{maxSize}
     </select>
 
     <!-- 사용자 서버 반영이 필요한 회원 상태 변경 Outbox 이벤트를 등록한다. -->
     <insert id="setUserStatusEvent"
-            parameterType="org.our.sadari.global.scheduler.dto.UserStatusEventDto">
-        <selectKey keyProperty="evntNumb" resultType="long" order="BEFORE">
-            SELECT TB_EVTBOX_SEQ.NEXTVAL
-              FROM DUAL
-        </selectKey>
+            parameterType="org.our.sadari.global.scheduler.dto.UserStatusEventDto"
+            useGeneratedKeys="true" keyProperty="evntNumb">
         /* setUserStatusEvent */
         INSERT INTO TB_EVTBOX (
-                    EVNT_NUMB
-                  , EVNT_TYPE
+                    EVNT_TYPE
                   , USER_NUMB
                   , SPND_NUMB
                   , REGI_DATE
-        ) VALUES (  #{evntNumb}
-                  , #{evntType}
+        ) VALUES (  #{evntType}
                   , #{userNumb}
                   , #{spndNumb}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -53,7 +48,7 @@
         <bind name="suspensionSyncCompleted" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_COMPLETED"/>
         UPDATE /* uptSuspensionSyncCompleted */
                TH_USSPND S
-           SET S.SYNC_STAT = #{suspensionSyncCompleted}
+           SET SYNC_STAT = #{suspensionSyncCompleted}
          WHERE S.SPND_NUMB = #{spndNumb}
            AND S.SYNC_STAT = #{suspensionSyncPending}
            AND NOT EXISTS (

@@ -49,10 +49,13 @@ src/main/resources/application-loc.yml
 # application-prod.yml에는 환경변수 이름과 기본값만 두고 실제 운영 비밀값은 GitHub Secrets/EC2 .env로 관리한다.
 # 따라서 운영 설정 구조를 Docker 이미지에 포함할 수 있도록 이 파일은 Git에서 추적한다.
 
-# DB migration/seed scripts can contain operational schema and seed account data.
+# DB 초기 데이터 SQL에는 운영 스키마와 관리자 계정 정보가 포함될 수 있다.
 docs/db/*.sql
 docs/db/*.ddl
 docs/db/*.dml
+
+# 관리자 계정과 운영 기준정보가 포함되는 로컬 MySQL 초기 구축 출력
+scripts/db/mysql/output/
 
 # Firebase Admin SDK Private Key
 firebase-adminsdk-account

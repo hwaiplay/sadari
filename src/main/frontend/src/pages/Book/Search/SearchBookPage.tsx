@@ -6,7 +6,7 @@ import {
 import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { FormEvent, useEffect, useState } from "react";
 import api from "../../../app/api/axios";
-import { NaverApiResultType } from "@/features/Book/types/book.type";
+import { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
@@ -30,7 +30,7 @@ type SearchBookPageState = {
 const SearchBookPage = () => {
 
   const [searchKeyword, setSearchKeyword] = useState("");
-  const [bookResult, setBookResult] = useState<NaverApiResultType[] | null>(
+  const [bookResult, setBookResult] = useState<BookSearchResultType[] | null>(
     null,
   );
   const [nextStart, setNextStart] = useState(1);
@@ -56,7 +56,7 @@ const SearchBookPage = () => {
       `/book/search?query=${encodeURIComponent(keyword)}&start=${start}`,
     );
 
-    return (assertResultDataSuccess(response.data).data ?? []) as NaverApiResultType[];
+    return (assertResultDataSuccess(response.data).data ?? []) as BookSearchResultType[];
   };
 
   /**
@@ -71,7 +71,7 @@ const SearchBookPage = () => {
    */
   const saveSearchCache = (
     keyword: string,
-    result: NaverApiResultType[],
+    result: BookSearchResultType[],
     next: number,
     more: boolean,
   ) => {
@@ -168,7 +168,7 @@ const SearchBookPage = () => {
     try {
       const parsed = JSON.parse(cached) as {
         searchKeyword?: string;
-        bookResult?: NaverApiResultType[];
+        bookResult?: BookSearchResultType[];
         nextStart?: number;
         hasMore?: boolean;
       };
@@ -251,7 +251,7 @@ const SearchBookPage = () => {
    * @param book book 입력값
    * @return 반환값이 없다
    */
-  const handleSelectBook = (book: NaverApiResultType) => {
+  const handleSelectBook = (book: BookSearchResultType) => {
 
     navigate("/set", {
       state: { selectedBook: book },
@@ -265,7 +265,7 @@ const SearchBookPage = () => {
    * @param book book 입력값
    * @return 반환값이 없다
    */
-  const handleMoreInfo = (book: NaverApiResultType) => {
+  const handleMoreInfo = (book: BookSearchResultType) => {
 
     navigate("/book/search/info", {
       state: { book },

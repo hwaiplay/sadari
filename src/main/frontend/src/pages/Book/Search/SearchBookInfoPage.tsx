@@ -7,7 +7,7 @@ import { message } from "@/app/messages/message";
 import { useLocation, useNavigate } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
-import type { NaverApiResultType } from "@/features/Book/types/book.type";
+import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
@@ -24,7 +24,7 @@ function SearchBookInfoPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
-  const book = location.state?.book as NaverApiResultType | undefined;
+  const book = location.state?.book as BookSearchResultType | undefined;
   const { data: ratingAverageData } = useBookRatingAverageByIsbn(
     book?.isbn ?? "",
     Boolean(book?.isbn),
