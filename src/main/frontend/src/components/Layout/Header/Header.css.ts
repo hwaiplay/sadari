@@ -117,11 +117,11 @@ export const backpageBtn = style({
 
 export const hamburgerButton = style({
   position: "absolute",
-  right: "5px",
+  right: "16px",
   top: "50%",
   transform: "translateY(-50%)",
-  width: "40px",
-  height: "40px",
+  width: "32px",
+  height: "32px",
   border: 0,
   borderRadius: "50%",
   backgroundColor: "transparent",
@@ -144,11 +144,11 @@ export const hamburgerIcon = style({
 
 export const headerAlimButton = style({
   position: "absolute",
-  right: "49px",
+  right: "52px",
   top: "50%",
   transform: "translateY(-50%)",
-  width: "40px",
-  height: "40px",
+  width: "32px",
+  height: "32px",
   padding: 0,
   border: 0,
   borderRadius: "50%",
