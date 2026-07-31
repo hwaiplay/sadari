@@ -3,7 +3,7 @@ spring:
     url: ${DB_URL}
     username: ${DB_USERNAME}
     password: ${DB_PASSWORD}
-    driver-class-name: oracle.jdbc.OracleDriver
+    driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
       # 운영 DB 장애 시 요청 스레드가 오래 묶이지 않도록 커넥션 획득 대기시간을 1분으로 제한한다.
       connection-timeout: ${DB_CONNECTION_TIMEOUT:60000}
@@ -49,10 +49,10 @@ kakao:
     javaScript: ${KAKAO_JAVASCRIPT_KEY}
     nativeApp: ${KAKAO_NATIVE_APP_KEY:}
 
-naver:
-  key:
-    clientId: ${NAVER_CLIENT_ID}
-    clientSecret: ${NAVER_CLIENT_SECRET}
+# 카카오 도서 검색 API 주소는 공급자 계약 변경 시 코드 재빌드 없이 설정 파일에서 교체할 수 있게 관리한다.
+book:
+  search:
+    url: https://dapi.kakao.com/v3/search/book
 
 firebase:
   web:

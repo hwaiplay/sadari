@@ -14,7 +14,7 @@ import { clsx } from "clsx";
 import type { CSSProperties, FormEvent } from "react";
 import { useEffect, useRef, useState } from "react";
 import type {
-  NaverApiResultType,
+  BookSearchResultType,
   ReadingStatusType,
 } from "@/features/Book/types/book.type";
 import Loading from "@/components/Loading/Loading";
@@ -50,7 +50,7 @@ function SetReportPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const selectedBook = (
-    location.state as { selectedBook?: NaverApiResultType } | null
+    location.state as { selectedBook?: BookSearchResultType } | null
   )?.selectedBook;
 
   const [status, setStatus] = useState<ReadingStatusType>("");
@@ -115,7 +115,7 @@ function SetReportPage() {
     // 표지 분석이 끝나기 전에도 등록 가능한 활성 공통코드 기본값을 유지한다
     setReptColr(fallbackColorCode);
 
-    // 선택한 네이버 도서 표지와 활성 색상 목록이 준비된 경우에만 자동 색상을 조회한다
+    // 선택한 카카오 도서 표지와 활성 색상 목록이 준비된 경우에만 자동 색상을 조회한다
     if (selectedBook?.image && fallbackColorCode) {
       // 외부 이미지 분석은 백엔드에서 수행해 브라우저 CORS 제한을 피한다
       void getBookCoverColorApi(selectedBook.image)

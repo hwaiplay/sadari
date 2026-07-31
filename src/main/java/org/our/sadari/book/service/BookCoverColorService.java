@@ -11,6 +11,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import lombok.RequiredArgsConstructor;
@@ -34,14 +35,15 @@ import org.springframework.stereotype.Service;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    카카오 도서 표지 호스트 허용
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookCoverColorService {
 
-    // 네이버 도서 표지 이미지 허용 호스트
-    private static final String NAVER_BOOK_IMAGE_HOST = "shopping-phinf.pstatic.net";
+    // 기존 네이버 도서와 신규 카카오 도서 표지 이미지 허용 호스트
+    private static final Set<String> TRUSTED_BOOK_IMAGE_HOSTS = Set.of("shopping-phinf.pstatic.net", "search1.kakaocdn.net");
     // 표지 이미지 최대 응답 크기
     private static final int MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     // 표지 이미지 최대 가로 또는 세로 크기
@@ -71,7 +73,7 @@ public class BookCoverColorService {
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(IMAGE_CONNECT_TIMEOUT).followRedirects(HttpClient.Redirect.NEVER).build();
 
     /**
-     * 네이버 도서 표지 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
+     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param requestDto 대표색을 분석할 도서 표지 URL
@@ -89,7 +91,7 @@ public class BookCoverColorService {
 
         // 정렬 순서가 가장 빠른 활성 색상을 이미지 분석 실패 시 사용할 기본값으로 지정한다
         CodeDto fallbackColorCode = colorCodeList.get(0);
-        // 임의 외부 서버 접근을 차단하기 위해 네이버 표지 전용 HTTPS URL만 허용한다
+        // 임의 외부 서버 접근을 차단하기 위해 도서 검색 공급자의 표지 전용 HTTPS URL만 허용한다
         URI coverUri = getTrustedCoverUri(requestDto.getBookCvim());
 
         // 허용되지 않은 URL은 외부 요청을 보내지 않고 공통코드 기본값으로 보정한다
@@ -100,7 +102,7 @@ public class BookCoverColorService {
 
         // 외부 이미지 응답과 디코딩 실패를 기본 색상으로 복구하기 위한 블록이다
         try {
-            // 크기 제한 안에서 네이버 도서 표지 이미지를 내려받는다
+            // 크기 제한 안에서 신뢰된 도서 표지 이미지를 내려받는다
             BufferedImage coverImage = downloadCoverImage(coverUri);
 
             // 이미지가 비어 있거나 디코딩되지 않으면 기본 책장 색상을 사용한다
@@ -127,7 +129,7 @@ public class BookCoverColorService {
             return ResultData.success(createColorResponse(fallbackColorCode));
         }
 
-        // 네이버 이미지 통신 또는 이미지 디코딩 실패는 등록을 막지 않고 기본 색상으로 복구한다
+        // 도서 표지 이미지 통신 또는 디코딩 실패는 등록을 막지 않고 기본 색상으로 복구한다
         catch (IOException | RuntimeException e) {
             // 원본 URL 전체를 노출하지 않고 허용 호스트와 예외만 기록한다
             log.warn("도서 표지 대표색 분석에 실패했습니다. host={}", coverUri.getHost(), e);
@@ -138,13 +140,13 @@ public class BookCoverColorService {
     }
 
     /**
-     * 외부 요청에 사용할 수 있는 네이버 도서 표지 HTTPS 주소인지 검증한다
+     * 외부 요청에 사용할 수 있는 신뢰된 도서 표지 HTTPS 주소인지 검증한다
      *
      * @author SeungHyeon.Kang
      * @param bookCvim 검증할 도서 표지 URL
-     * @return 허용된 네이버 도서 표지 URI 또는 검증 실패 시 null
+     * @return 허용된 도서 표지 URI 또는 검증 실패 시 null
      */
-    private URI getTrustedCoverUri(String bookCvim) {
+    URI getTrustedCoverUri(String bookCvim) {
         // 빈 표지 URL은 URI 변환 전에 차단한다
         if (StringUtil.isEmpty(bookCvim) || bookCvim.isBlank()) {
             // 허용할 표지 URI가 없음을 반환한다
@@ -158,15 +160,15 @@ public class BookCoverColorService {
             String host = coverUri.getHost();
             int port = coverUri.getPort();
 
-            // HTTPS와 네이버 이미지 호스트 및 기본 HTTPS 포트만 허용해 SSRF 우회 경로를 차단한다
+            // HTTPS와 허용된 이미지 호스트 및 기본 HTTPS 포트만 허용해 SSRF 우회 경로를 차단한다
             if (!"https".equalsIgnoreCase(coverUri.getScheme()) || StringUtil.isEmpty(host)
-                    || !NAVER_BOOK_IMAGE_HOST.equals(host.toLowerCase(Locale.ROOT))
+                    || !TRUSTED_BOOK_IMAGE_HOSTS.contains(host.toLowerCase(Locale.ROOT))
                     || !StringUtil.isEmpty(coverUri.getUserInfo()) || (port != -1 && port != 443)) {
                 // 허용되지 않은 표지 URI임을 반환한다
                 return null;
             }
 
-            // 검증이 끝난 네이버 도서 표지 URI를 반환한다
+            // 검증이 끝난 도서 표지 URI를 반환한다
             return coverUri;
         }
 
@@ -178,16 +180,16 @@ public class BookCoverColorService {
     }
 
     /**
-     * 네이버 도서 표지를 제한된 크기로 내려받아 이미지로 변환한다
+     * 신뢰된 도서 표지를 제한된 크기로 내려받아 이미지로 변환한다
      *
      * @author SeungHyeon.Kang
-     * @param coverUri 검증이 끝난 네이버 도서 표지 URI
+     * @param coverUri 검증이 끝난 도서 표지 URI
      * @return 디코딩된 도서 표지 이미지 또는 유효하지 않은 응답의 null
      * @throws IOException 이미지 응답 읽기 또는 디코딩에 실패한 경우 발생
      * @throws InterruptedException 외부 이미지 요청 중 스레드가 중단된 경우 발생
      */
     private BufferedImage downloadCoverImage(URI coverUri) throws IOException, InterruptedException {
-        // 네이버 이미지 서버에 전달할 제한 시간과 응답 형식 헤더를 구성한다
+        // 도서 표지 이미지 서버에 전달할 제한 시간과 응답 형식 헤더를 구성한다
         HttpRequest request = HttpRequest.newBuilder(coverUri).timeout(IMAGE_REQUEST_TIMEOUT).header("Accept", "image/*").header("User-Agent", "Sadari-Book-Cover-Color/1.0").GET().build();
         // 응답 본문을 스트림으로 받아 설정한 최대 크기를 초과하지 않게 읽는다
         HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());

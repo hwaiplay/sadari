@@ -44,7 +44,7 @@
                       , SEND_DATE
                       , DELT_YSNO
             ) VALUES (  #{userNumb}
-                      , (  SELECT NVL(MAX(ALIM.ALIM_NUMB), 0) + 1
+                      , (  SELECT COALESCE(MAX(ALIM.ALIM_NUMB), 0) + 1
                              FROM TB_ALIMXX ALIM
                             WHERE ALIM.USER_NUMB = #{userNumb}
                         )
@@ -54,7 +54,7 @@
                       , #{alimCont}
                       , #{linkUrlx}
                       , #{readYsno}
-                      , SYSDATE
+                      , CURRENT_TIMESTAMP
                       , #{deltYsno}
             )
             RETURNING ALIM_NUMB
@@ -71,11 +71,11 @@
          WHERE USER_NUMB = #{userNumb}
            AND ALIM_SITU = #{alimSitu}
            AND TEMP_CODE = #{tempCode}
-           AND NVL(ALIM_TITL, ' ') = NVL(#{alimTitl}, ' ')
-           AND NVL(ALIM_CONT, ' ') = NVL(#{alimCont}, ' ')
-           AND NVL(LINK_URLX, ' ') = NVL(#{linkUrlx}, ' ')
-           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
-           AND SEND_DATE >= SYSDATE - (1 / 24)
+           AND COALESCE(ALIM_TITL, ' ') = COALESCE(#{alimTitl}, ' ')
+           AND COALESCE(ALIM_CONT, ' ') = COALESCE(#{alimCont}, ' ')
+           AND COALESCE(LINK_URLX, ' ') = COALESCE(#{linkUrlx}, ' ')
+           AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
+           AND SEND_DATE >= CURRENT_TIMESTAMP - (1 / 24)
     </select>
 
     <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 20개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->
@@ -106,8 +106,8 @@
                        , ALIMDETAIL.ALIM_CONT
                        , ALIMDETAIL.LINK_URLX
                        , ALIMDETAIL.READ_YSNO
-                       , TO_CHAR(ALIMDETAIL.READ_DATE, 'YYYY-MM-DD HH24:MI:SS') AS READ_DATE
-                       , TO_CHAR(ALIMDETAIL.SEND_DATE, 'YYYY-MM-DD HH24:MI:SS') AS SEND_DATE
+                       , DATE_FORMAT(ALIMDETAIL.READ_DATE, '%Y-%m-%d %H:%i:%s') AS READ_DATE
+                       , DATE_FORMAT(ALIMDETAIL.SEND_DATE, '%Y-%m-%d %H:%i:%s') AS SEND_DATE
                        , ALIMDETAIL.DELT_YSNO
                        , ALIMDETAIL.ALIM_ICON_CODE
                        , ALIMDETAIL.ALIM_ICON_NAME
@@ -132,10 +132,10 @@
                          LEFT JOIN TB_CODEXD CODE
                                 ON CODE.COMM_CODE = #{codeAlimSitu}
                                AND CODE.COMD_CODE = ALIM.ALIM_SITU
-                               AND CODE.OPT1_CODE = TO_CHAR(#{numberOne})
-                               AND NVL(CODE.USEE_YSNO, #{commYes}) = #{commYes}
+                               AND CODE.OPT1_CODE = CAST(#{numberOne} AS CHAR)
+                               AND COALESCE(CODE.USEE_YSNO, #{commYes}) = #{commYes}
                              WHERE ALIM.USER_NUMB = #{userNumb}
-                               AND NVL(ALIM.DELT_YSNO, #{commNo}) = #{commNo}
+                               AND COALESCE(ALIM.DELT_YSNO, #{commNo}) = #{commNo}
                          ) ALIMDETAIL
                ) ALIMPAGE
          WHERE ALIMPAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
@@ -149,11 +149,11 @@
         UPDATE /* uptAlimRead */
                TB_ALIMXX
            SET READ_YSNO = #{commYes}
-             , READ_DATE = SYSDATE
+             , READ_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{userNumb}
            AND ALIM_NUMB = #{alimNumb}
-           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
-           AND NVL(READ_YSNO, #{commNo}) = #{commNo}
+           AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
+           AND COALESCE(READ_YSNO, #{commNo}) = #{commNo}
     </update>
 
     <!-- 모두 지우기는 아직 화면에 로드하지 않은 알림도 제외해야 하므로 사용자 기준으로 삭제 여부를 일괄 갱신한다. -->
@@ -164,7 +164,7 @@
                TB_ALIMXX
            SET DELT_YSNO = #{commYes}
          WHERE USER_NUMB = #{userNumb}
-           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
+           AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
     </update>
 
     <!-- 햄버거 메뉴 배지용 미읽음 알림 수이다. 목록 조회 없이 숫자만 필요할 때 사용한다. -->
@@ -174,7 +174,7 @@
                COUNT(*)
           FROM TB_ALIMXX
          WHERE USER_NUMB = #{userNumb}
-           AND NVL(DELT_YSNO, #{commNo}) = #{commNo}
-           AND NVL(READ_YSNO, #{commNo}) = #{commNo}
+           AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
+           AND COALESCE(READ_YSNO, #{commNo}) = #{commNo}
     </select>
 </mapper>

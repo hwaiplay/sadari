@@ -20,22 +20,16 @@
 
     <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영한다. -->
     <insert id="setBook" parameterType="org.our.sadari.book.dto.BookDto" useGeneratedKeys="true" keyProperty="bookNumb">
-        <selectKey keyProperty="bookNumb" resultType="long" order="BEFORE">
-            SELECT TM_BKINFO_SEQ.NEXTVAL
-              FROM DUAL
-        </selectKey>
         /* setBook */
         INSERT INTO TM_BKINFO (
-                    BOOK_NUMB
-                  , BOOK_ATHR
+                    BOOK_ATHR
                   , BOOK_CVIM
                   , BOOK_ISBN
                   , BOOK_PUBL
                   , BOOK_TITL
                   , BOOK_DESC
                   , PUBL_DATE
-        ) VALUES (  #{bookNumb}
-                  , REPLACE(#{bookAthr}, '^', ', ')
+        ) VALUES (  REPLACE(#{bookAthr}, '^', ', ')
                   , #{bookCvim}
                   , #{bookIsbn}
                   , #{bookPubl}

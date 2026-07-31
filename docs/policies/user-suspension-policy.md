@@ -48,11 +48,11 @@
 
 ## 데이터 구조
 
-- 정지 이력 테이블은 `TH_USSPND`, 일련번호는 `TH_USSPND_SEQ`를 사용합니다.
+- 정지 이력 테이블은 `TH_USSPND`이며 관리자 INSERT 직전에 `MAX(SPND_NUMB) + 1`로 번호를 발급합니다.
 - 회원 원본이 영구 삭제된 뒤에도 제재 감사 이력을 보존할 수 있도록 `TM_USERXM` 외래키를 두지 않습니다.
 - `UK_TH_USSPND_ACTV` 함수 기반 고유 인덱스로 회원별 활성 정지 한 건을 보장합니다.
 - 공통코드는 `SPND_TYPE`, `SPND_RSON`, `SPND_STAT`, 회원 상태는 `USER_STAT.SUSPENDED`를 사용합니다.
-- 서비스 간 상태 변경 전달은 `TB_EVTBOX`, 일련번호는 `TB_EVTBOX_SEQ`를 사용합니다.
+- 서비스 간 상태 변경 전달은 `TB_EVTBOX`를 사용합니다. 사용자 서버 INSERT는 `AUTO_INCREMENT`, 관리자 서버 INSERT는 `MAX(EVNT_NUMB) + 1`로 번호를 발급합니다.
 - `TB_EVTBOX`는 이벤트 번호·유형·회원번호·정지 이력 번호·등록일시만 저장하는 임시 전달함이며 사용자 서버 처리 성공 후 행을 삭제합니다.
 - `TH_USSPND.SYNC_STAT`은 사용자 서버의 실제 반영 여부를 보존하며 상태 변경 시 `PENDING`, 사용자 서버 처리 성공 시 `COMPLETED`를 사용합니다.
 
@@ -64,8 +64,9 @@
 
 ## 구현 근거
 
-- `docs/db/05_user_suspension_oracle.sql`
-- `docs/db/06_user_status_outbox_oracle.sql`
+- `scripts/db/mysql/01-create.sql`
+- `scripts/db/mysql/03-reset-user-data.sql`
+- `scripts/db/mysql/routines.sql`
 - `src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java`
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/user/service/UserSuspensionServiceImpl.java`

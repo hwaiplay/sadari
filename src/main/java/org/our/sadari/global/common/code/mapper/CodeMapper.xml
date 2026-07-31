@@ -32,8 +32,9 @@
                <include refid="codeDetailColumnList" />
           FROM TB_CODEXD C
          WHERE C.COMM_CODE = #{commCode}
-           AND NVL(C.USEE_YSNO, #{commYes}) = #{commYes}
-      ORDER BY C.SORT_ORDR NULLS LAST
+           AND COALESCE(C.USEE_YSNO, #{commYes}) = #{commYes}
+      ORDER BY C.SORT_ORDR IS NULL
+             , C.SORT_ORDR
              , C.COMD_CODE
     </select>
 
@@ -47,9 +48,10 @@
                <foreach collection="commCodeList" item="commCode" open="(" separator="," close=")">
                    #{commCode}
                </foreach>
-           AND NVL(C.USEE_YSNO, #{commYes}) = #{commYes}
+           AND COALESCE(C.USEE_YSNO, #{commYes}) = #{commYes}
       ORDER BY C.COMM_CODE
-             , C.SORT_ORDR NULLS LAST
+             , C.SORT_ORDR IS NULL
+             , C.SORT_ORDR
              , C.COMD_CODE
     </select>
 
@@ -57,6 +59,5 @@
     <select id="getCodeName" resultType="string">
         SELECT /* getCodeName */
                FN_GET_CODE_NAME(#{commCode}, #{comdCode}, #{optCode})
-          FROM DUAL
     </select>
 </mapper>

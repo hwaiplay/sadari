@@ -52,7 +52,7 @@ export const getSocialReadingSummaryApi = async (userNumb: number) => {
 
 /**
  * 로그인 사용자와 다른 사용자 사이의 팔로우 버튼명을 조회합니다.
- * 서버는 Oracle 함수 FN_GET_FOLW_STAT 결과를 반환하므로 화면은 별도 관계 계산 없이 버튼명만 표시합니다.
+ * 서버는 MySQL 함수 FN_GET_FOLW_STAT 결과를 반환하므로 화면은 별도 관계 계산 없이 버튼명만 표시합니다.
  *
  * @author HanWon.Jang
  * @param userNumb 조회할 상대 사용자 번호
