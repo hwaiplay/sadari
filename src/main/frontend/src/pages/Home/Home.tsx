@@ -13,6 +13,7 @@ import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import {searchBar} from "./Home.css";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -169,9 +170,6 @@ function Home() {
     () => groupBooksBySort(bookList, sortType),
     [bookList, sortType],
   );
-  const selectedSortOption = SORT_OPTIONS.find(
-    (option) => option.value === sortType,
-  );
   const hasSearchCondition = appliedSearchKeyword.trim().length > 0;
 
   useEffect(() => {
@@ -214,7 +212,7 @@ function Home() {
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
     <div className={styles.homeContainer}>
       {/* 독후감 검색과 정렬 영역 */}
-      <form className={styles.sortBar} onSubmit={handleSearchSubmit}>
+      <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
         <label className={styles.searchLabel}>
           <span className={styles.hiddenLabel}>
             {/* "제목, 작가 검색" */}
@@ -253,45 +251,52 @@ function Home() {
             </svg>
           </button>
         </label>
+      </form>
 
-        <div className={styles.sortDropdown}>
-          <button
+      {/* 독후감 정렬 드롭다운 영역 */}
+      <div className={styles.sortDropdown}>
+        {/* "독후감 정렬" */}
+        <button
             className={styles.sortTrigger}
             type="button"
             aria-expanded={isSortOpen}
+            aria-haspopup="menu"
             aria-label={message("frontend.home.sort.label")}
             onClick={() => setIsSortOpen((prev) => !prev)}
-          >
-            <span>
-              {message(selectedSortOption?.labelKey ?? SORT_OPTIONS[0].labelKey)}
-            </span>
-            <span className={styles.sortArrow}>
-              {String.fromCharCode(isSortOpen ? 9650 : 9660)}
-            </span>
-          </button>
+        >
+          <img
+              className={styles.sortIcon}
+              src="/img/icons/arrow-sorting.svg"
+              alt=""
+          />
+        </button>
 
-          {isSortOpen && (
-            <div className={styles.sortMenu}>
+        {isSortOpen && (
+            /* 독후감 정렬 옵션 영역 */
+            <div className={styles.sortMenu} role="menu">
               {SORT_OPTIONS.map((option) => (
-                <button
-                  className={`${styles.sortMenuItem} ${
-                    sortType === option.value ? styles.sortMenuItemActive : ""
-                  }`}
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
+                  <button
+                      className={`${styles.sortMenuItem} ${
+                          sortType === option.value
+                              ? styles.sortMenuItemActive
+                              : ""
+                      }`}
+                      key={option.value}
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
 
-                    setSortType(option.value);
-                    setIsSortOpen(false);
-                  }}
-                >
-                  {message(option.labelKey)}
-                </button>
+                        setSortType(option.value);
+                        setIsSortOpen(false);
+                      }}
+                  >
+                    {message(option.labelKey)}
+                  </button>
               ))}
             </div>
-          )}
-        </div>
-      </form>
+        )}
+      </div>
+
       {bookList.length > 0 ? (
         <div className={styles.monthGroupStack}>
           {monthlyBookGroups.map((group) => (

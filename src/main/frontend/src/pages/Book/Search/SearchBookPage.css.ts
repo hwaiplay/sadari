@@ -1,8 +1,9 @@
 import { style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+import { media } from "@/app/styles/responsive.css";
 
 export const page = style({
-  minHeight: "100vh",
+  minHeight: "calc(100svh - 52px - 52px)",
   backgroundColor: vars.color.background,
 });
 
@@ -10,46 +11,101 @@ export const content = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  padding: "18px 20px 44px",
+  padding: "18px 0",
   display: "flex",
   flexDirection: "column",
   gap: "22px",
 });
 
-export const searchForm = style({
-  display: "grid",
-  gridTemplateColumns: "1fr 72px",
-  gap: "8px",
+export const searchBar = style({
+  boxSizing: "border-box",
+  display: "flex",
+  alignItems: "center",
+  gap: "10px",
+  width: "100%",
+  marginBottom: "12px",
+
+  "@media": {
+    [media.tablet]: {
+      padding: `0 ${vars.space.lg}`,
+    },
+  },
+});
+
+export const searchLabel = style({
+  position: "relative",
+  display: "block",
+  width: "100%",
+  minWidth: 0,
+  flex: 1,
+});
+
+export const hiddenLabel = style({
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
 });
 
 export const searchInput = style({
   width: "100%",
-  height: "42px",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: vars.radius.xl,
+  height: "38px",
+  padding: "0 38px 0 16px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
   backgroundColor: "#ffffff",
-  padding: "0 16px",
-  fontFamily: vars.font.body,
-  fontSize: "14px",
   color: vars.color.black,
-  boxSizing: "border-box",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  outline: "none",
+
+  selectors: {
+    "&::placeholder": {
+      color: vars.color.gray500,
+    },
+    "&:focus": {
+      borderColor: vars.color.black,
+    },
+  },
 });
 
 export const searchButton = style({
-  height: "42px",
-  border: `1px solid ${vars.color.gray700}`,
-  borderRadius: vars.radius.xl,
-  backgroundColor: "#ffffff",
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
+  position: "absolute",
+  top: "50%",
+  right: "6px",
+  width: "32px",
+  height: "32px",
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  transform: "translateY(-50%)",
   cursor: "pointer",
+
   selectors: {
+    "&:hover": {
+      backgroundColor: "#f3f3f3",
+    },
     "&:disabled": {
       opacity: 0.6,
       cursor: "not-allowed",
     },
   },
+});
+
+export const searchIcon = style({
+  width: "22px",
+  height: "22px",
+  flexShrink: 0,
 });
 
 export const resultList = style({
