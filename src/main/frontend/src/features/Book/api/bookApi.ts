@@ -21,10 +21,10 @@ export type BookCoverColor = {
 };
 
 /**
- * 네이버 도서 표지 대표색과 가장 가까운 책장 색상 코드를 조회한다
+ * 신뢰된 도서 검색 표지 대표색과 가장 가까운 책장 색상 코드를 조회한다
  *
  * @author HanWon.Jang
- * @param bookCvim 대표색을 분석할 네이버 도서 표지 URL
+ * @param bookCvim 대표색을 분석할 도서 검색 표지 URL
  * @return 표지 대표색과 가장 가까운 BOOK_COLR 코드
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */

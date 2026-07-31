@@ -2,32 +2,25 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.social.mapper.SocialMapper">
 
-    <!-- Oracle 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 팔로우 버튼명을 조회한다. -->
+    <!-- MySQL 함수 FN_GET_FOLW_STAT을 호출해 현재 관계에서 보여줄 팔로우 버튼명을 조회한다. -->
     <select id="getFollowStatusName" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto" resultType="string">
         SELECT /* getFollowStatusName */
                FN_GET_FOLW_STAT(#{userNumb}, #{flowNumb})
-          FROM DUAL
     </select>
 
-    <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MERGE로 한 번만 저장한다. -->
+    <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MySQL 업서트로 한 번만 저장한다. -->
     <insert id="setFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
         /* setFollow */
-        MERGE INTO TB_FOLLOW F
-        USING (  SELECT #{userNumb} AS USER_NUMB
-                      , #{flowNumb} AS FLOW_NUMB
-                   FROM DUAL
-               ) S
-           ON (    F.USER_NUMB = S.USER_NUMB
-               AND F.FLOW_NUMB = S.FLOW_NUMB
-           )
-         WHEN NOT MATCHED THEN
-       INSERT (    USER_NUMB
-                 , FLOW_NUMB
-                 , REGI_DATE
-       ) VALUES (  S.USER_NUMB
-                 , S.FLOW_NUMB
-                 , SYSDATE
-       )
+        INSERT INTO TB_FOLLOW (
+                    USER_NUMB
+                  , FLOW_NUMB
+                  , REGI_DATE
+        ) VALUES (  #{userNumb}
+                  , #{flowNumb}
+                  , CURRENT_TIMESTAMP
+        ) AS NEW
+        ON DUPLICATE KEY UPDATE
+               USER_NUMB = NEW.USER_NUMB
     </insert>
 
     <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제한다. -->
@@ -59,7 +52,7 @@
         ) VALUES (  #{userNumb}
                   , #{tagtType}
                   , #{tagtNumb}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -87,11 +80,10 @@
         SELECT /* getLikeDtl */
                R.TAGT_TYPE
              , R.TAGT_NUMB
-             , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
-             , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+             , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , COALESCE(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
           FROM (  SELECT #{tagtType} AS TAGT_TYPE
                        , #{tagtNumb} AS TAGT_NUMB
-                    FROM DUAL
                 ) R
      LEFT JOIN (  SELECT L.TAGT_TYPE
                        , L.TAGT_NUMB
@@ -122,12 +114,11 @@
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         SELECT /* getProfileStats */
                TARGET.USER_NUMB
-             , NVL(READSTATS.TOTAL_READ_BOOK_CNT, 0) AS TOTAL_READ_BOOK_CNT
-             , NVL(FOLLOWINGSTATS.FOLLOWING_CNT, 0) AS FOLLOWING_CNT
-             , NVL(FOLLOWERSTATS.FOLLOWER_CNT, 0) AS FOLLOWER_CNT
-             , NVL(LIKESTATS.RECEIVED_LIKE_CNT, 0) AS RECEIVED_LIKE_CNT
+             , COALESCE(READSTATS.TOTAL_READ_BOOK_CNT, 0) AS TOTAL_READ_BOOK_CNT
+             , COALESCE(FOLLOWINGSTATS.FOLLOWING_CNT, 0) AS FOLLOWING_CNT
+             , COALESCE(FOLLOWERSTATS.FOLLOWER_CNT, 0) AS FOLLOWER_CNT
+             , COALESCE(LIKESTATS.RECEIVED_LIKE_CNT, 0) AS RECEIVED_LIKE_CNT
           FROM (  SELECT #{userNumb} AS USER_NUMB
-                    FROM DUAL
                ) TARGET
      LEFT JOIN (  SELECT REPORT.USER_NUMB
                        , COUNT(*) AS TOTAL_READ_BOOK_CNT

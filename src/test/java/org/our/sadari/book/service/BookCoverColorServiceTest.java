@@ -1,9 +1,12 @@
 package org.our.sadari.book.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
+import java.net.URI;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -26,6 +29,7 @@ import org.our.sadari.global.common.result.ResultData;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-07-31        SeungHyeon.Kang    카카오 도서 표지 호스트 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class BookCoverColorServiceTest {
@@ -118,6 +122,37 @@ class BookCoverColorServiceTest {
         assertEquals(200, resultData.getCode());
         assertEquals("BLUE", responseDto.getReptColr());
         assertEquals("#6aa6d8", responseDto.getReptColrName());
+    }
+
+    /**
+     * 카카오 도서 검색의 HTTPS 표지 호스트만 외부 분석 대상으로 허용하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getTrustedCoverUriAllowsKakaoBookCoverHost() {
+        // 카카오 공식 도서 검색 응답 형식의 표지 URI를 검증한다
+        URI coverUri = bookCoverColorService.getTrustedCoverUri(
+                "https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover"
+        );
+        // 허용 목록에 등록된 카카오 표지 호스트인지 확인한다
+        assertNotNull(coverUri);
+        assertEquals("search1.kakaocdn.net", coverUri.getHost());
+    }
+
+    /**
+     * 카카오 호스트명을 접미사로 위장한 외부 주소를 차단하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getTrustedCoverUriRejectsDisguisedKakaoHost() {
+        // 허용 호스트명을 접미사로 사용한 외부 주소를 검증한다
+        URI coverUri = bookCoverColorService.getTrustedCoverUri(
+                "https://search1.kakaocdn.net.example.com/book-cover"
+        );
+        // 정확히 일치하지 않는 외부 호스트가 차단되었는지 확인한다
+        assertNull(coverUri);
     }
 
     /**

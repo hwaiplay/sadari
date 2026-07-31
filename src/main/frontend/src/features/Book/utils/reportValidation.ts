@@ -4,7 +4,7 @@ import {
   MAX_REPORT_CONTENT_BYTES,
   REPORT_STATUS_READ,
 } from "@/features/Book/constants/reportForm";
-import type { NaverApiResultType } from "@/features/Book/types/book.type";
+import type { BookSearchResultType } from "@/features/Book/types/book.type";
 
 const textEncoder = new TextEncoder();
 
@@ -223,7 +223,7 @@ export function validateReportForm(values: ReportFormValues) {
  * @param book 검증할 도서 검색 결과 객체
  * @return 검증 실패 메시지, 검증 성공 시 null
  */
-export function validateSelectedBook(book?: Partial<NaverApiResultType> | null) {
+export function validateSelectedBook(book?: Partial<BookSearchResultType> | null) {
 
   if (!book) {
     return message("frontend.validation.bookRequired");
