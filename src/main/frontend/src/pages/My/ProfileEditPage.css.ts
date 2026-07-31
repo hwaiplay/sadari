@@ -1006,7 +1006,7 @@ export const goalModalOverlay = style({
   width: "100vw",
   height: "100dvh",
   zIndex: 1200,
-  padding: "24px",
+  padding: "0 16px",
   backgroundColor: "rgba(0, 0, 0, 0.34)",
   display: "flex",
   // Center app modal dialogs vertically; popovers such as calendars/select boxes keep their own positioning.
