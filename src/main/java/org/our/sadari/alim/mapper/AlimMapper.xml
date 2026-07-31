@@ -28,38 +28,36 @@
            AND U.USER_STAT = 'ACTIVE'
     </select>
 
-    <!-- 사용자별 알림 순번을 INSERT에서 계산하고 RETURNING INTO로 같은 호출 안에서 발송할 알림 번호를 DTO에 돌려준다. -->
-    <insert id="setAlim" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto" statementType="CALLABLE">
-        BEGIN
-            /* setAlim */
-            INSERT INTO TB_ALIMXX (
-                        USER_NUMB
-                      , ALIM_NUMB
-                      , ALIM_SITU
-                      , TEMP_CODE
-                      , ALIM_TITL
-                      , ALIM_CONT
-                      , LINK_URLX
-                      , READ_YSNO
-                      , SEND_DATE
-                      , DELT_YSNO
-            ) VALUES (  #{userNumb}
-                      , (  SELECT COALESCE(MAX(ALIM.ALIM_NUMB), 0) + 1
-                             FROM TB_ALIMXX ALIM
-                            WHERE ALIM.USER_NUMB = #{userNumb}
-                        )
-                      , #{alimSitu}
-                      , #{tempCode}
-                      , #{alimTitl}
-                      , #{alimCont}
-                      , #{linkUrlx}
-                      , #{readYsno}
-                      , CURRENT_TIMESTAMP
-                      , #{deltYsno}
-            )
-            RETURNING ALIM_NUMB
-                 INTO #{alimNumb, mode=OUT, jdbcType=NUMERIC};
-        END;
+    <!-- 사용자별 알림 순번을 INSERT에서 계산하고 MySQL 연결별 생성값으로 같은 호출 안에서 발송할 알림 번호를 DTO에 돌려준다. -->
+    <insert id="setAlim" parameterType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
+        <selectKey keyProperty="alimNumb" resultType="long" order="AFTER">
+            SELECT LAST_INSERT_ID()
+        </selectKey>
+        /* setAlim */
+        INSERT INTO TB_ALIMXX (
+                    USER_NUMB
+                  , ALIM_NUMB
+                  , ALIM_SITU
+                  , TEMP_CODE
+                  , ALIM_TITL
+                  , ALIM_CONT
+                  , LINK_URLX
+                  , READ_YSNO
+                  , SEND_DATE
+                  , DELT_YSNO
+        )
+        SELECT #{userNumb}
+             , LAST_INSERT_ID(COALESCE(MAX(ALIM.ALIM_NUMB), 0) + 1)
+             , #{alimSitu}
+             , #{tempCode}
+             , #{alimTitl}
+             , #{alimCont}
+             , #{linkUrlx}
+             , #{readYsno}
+             , CURRENT_TIMESTAMP
+             , #{deltYsno}
+          FROM TB_ALIMXX ALIM
+         WHERE ALIM.USER_NUMB = #{userNumb}
     </insert>
 
     <!-- 같은 조건의 알림이 1시간 안에 이미 있으면 사용자가 같은 알림을 반복해서 받지 않도록 발송을 생략한다. -->
