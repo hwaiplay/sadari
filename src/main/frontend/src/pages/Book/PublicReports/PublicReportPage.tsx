@@ -17,6 +17,7 @@ import ProfileImage from "@/features/User/components/ProfileImage";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
+import {statusWrap} from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 
@@ -283,40 +284,35 @@ function PublicReportPage() {
                   /* 공개 독후감 개별 항목 영역 */
                   <article className={styles.item} key={report.reptNumb}>
                     <div className={styles.itemTop}>
-                      <div className={styles.itemHeader}>
-                        <button
-                          className={styles.profileButton}
-                          type="button"
-                          onClick={() => handleProfileClick(report.userNumb)}
-                        >
-                          <ProfileImage
-                            className={styles.profileImage}
-                            src={report.porfPath}
-                            alt=""
-                          />
-                          <span className={styles.writer}>
-                            {report.userNick || "-"}
-                          </span>
-                        </button>
+                      <button className={styles.profileButton} type="button" onClick={() => handleProfileClick(report.userNumb)}
+                      >
+                        <ProfileImage className={styles.profileImage} src={report.porfPath} alt=""
+                        />
+                        <span className={styles.writer}>
+                          {report.userNick || "-"}
+                        </span>
+                      </button>
+
+                      <div className={styles.statusWrap}>
+                        {/* 독서 상태 */}
                         <span
-                          className={getStatusClassName(reportStatus)}
+                            className={getStatusClassName(reportStatus)}
                         >
-                          {report.reptStatName ||
-                            statusNameByCode.get(reportStatus) ||
-                            reportStatus}
+                          {report.reptStatName || statusNameByCode.get(reportStatus) || reportStatus}
+                        </span>
+
+                        {/* 별점 */}
+                        <span
+                          className={styles.reportRating}
+                          aria-label={message("frontend.report.gradeValue", [
+                            rating,
+                          ])}
+                        >
+                          <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
+                          <span>{rating}</span>
                         </span>
                       </div>
 
-                      {/* 별점 */}
-                      <span
-                        className={styles.reportRating}
-                        aria-label={message("frontend.report.gradeValue", [
-                          rating,
-                        ])}
-                      >
-                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
-                        <span>{rating}</span>
-                      </span>
                     </div>
 
                     <div

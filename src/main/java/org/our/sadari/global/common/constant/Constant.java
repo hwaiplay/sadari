@@ -14,6 +14,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-30        SeungHyeon.Kang    팝업 사용 화면 구분 공통코드 추가
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 이벤트와 스케줄러 코드 추가
  * 2026-07-30        SeungHyeon.Kang    회원 정지 사용자 서버 동기화 상태 추가
+ * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
  */
 public final class Constant {
 
@@ -79,7 +80,7 @@ public final class Constant {
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
     // 알림 템플릿 코드 댓글 설정값
-    public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_LIKE";
+    public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_REPORT";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";
