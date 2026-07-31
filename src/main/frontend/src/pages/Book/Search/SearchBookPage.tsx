@@ -277,24 +277,49 @@ const SearchBookPage = () => {
     <main className={styles.page}>
       <Container className={styles.content}>
         {/* 도서 검색어 입력과 검색 실행 영역 */}
-        <form className={styles.searchForm} onSubmit={handleSearchClick}>
-          <input
-            className={styles.searchInput}
-            type="text"
-            name="searchKeyword"
-            id="searchKeyword"
-            placeholder={message("frontend.book.search.placeholder")}
-            value={searchKeyword}
-            onChange={(e) => setSearchKeyword(e.target.value)}
-          />
-          <button
-            className={styles.searchButton}
-            type="submit"
-            disabled={isSearching}
-          >
+        <form className={styles.searchBar} onSubmit={handleSearchClick}>
+          <label className={styles.searchLabel}>
+            <span className={styles.hiddenLabel}>
+              {/* "책 제목, 작가를 입력하세요" */}
+              {message("frontend.book.search.placeholder")}
+            </span>
+            <input
+              className={styles.searchInput}
+              type="text"
+              name="searchKeyword"
+              id="searchKeyword"
+              placeholder={message("frontend.book.search.placeholder")}
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+            />
             {/* "검색" */}
-            {message("frontend.book.search.button")}
-          </button>
+            <button
+              className={styles.searchButton}
+              type="submit"
+              disabled={isSearching}
+              aria-label={message("frontend.book.search.button")}
+            >
+              <svg
+                className={styles.searchIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+              >
+                <path
+                  d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                />
+                <path
+                  d="m15 15 4 4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </label>
         </form>
 
         {bookResult &&

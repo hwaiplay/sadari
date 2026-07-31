@@ -23,7 +23,7 @@ export const emptyTitle = style({
 
 export const homeContainer = style({
   minHeight: "100svh",
-  paddingTop: "82px",
+  paddingTop: "72px",
   paddingBottom: "96px",
   backgroundColor:'#fff',
 
@@ -32,13 +32,14 @@ export const homeContainer = style({
   maxWidth: "600px"
 });
 
-export const sortBar = style({
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) 118px",
+export const searchBar = style({
+  boxSizing: "border-box",
+  display: "flex",
   alignItems: "center",
   gap: "10px",
+  width: "100%",
   padding: `0 ${vars.space.md}`,
-  marginBottom: "24px",
+  marginBottom: "12px",
 
   "@media": {
     [media.tablet]: {
@@ -50,7 +51,9 @@ export const sortBar = style({
 export const searchLabel = style({
   position: "relative",
   display: "block",
+  width: "100%",
   minWidth: 0,
+  flex: 1,
 });
 
 export const hiddenLabel = style({
@@ -67,8 +70,8 @@ export const hiddenLabel = style({
 
 export const searchInput = style({
   width: "100%",
-  height: "32px",
-  padding: "0 38px 0 12px",
+  height: "38px",
+  padding: "0 38px 0 16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
@@ -90,9 +93,9 @@ export const searchInput = style({
 export const searchButton = style({
   position: "absolute",
   top: "50%",
-  right: "4px",
-  width: "26px",
-  height: "26px",
+  right: "6px",
+  width: "32px",
+  height: "32px",
   padding: 0,
   display: "inline-flex",
   alignItems: "center",
@@ -112,43 +115,41 @@ export const searchButton = style({
 });
 
 export const searchIcon = style({
-  width: "16px",
-  height: "16px",
+  width: "22px",
+  height: "22px",
   flexShrink: 0,
 });
 
 export const sortDropdown = style({
-  position: "relative",
+  display: "flex",
+  justifyContent: "flex-end",
+  paddingInline: '16px',
+  position: "relative"
 });
 
 export const sortTrigger = style({
-  width: "100%",
+  width: "32px",
   height: "32px",
-  padding: "0 10px 0 12px",
-  display: "flex",
+  padding: 0,
+  display: "inline-flex",
   alignItems: "center",
-  justifyContent: "space-between",
-  gap: "8px",
+  justifyContent: "center",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "999px",
+  borderRadius: "50%",
   backgroundColor: "#ffffff",
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "12px",
   cursor: "pointer",
 });
 
-export const sortArrow = style({
+export const sortIcon = style({
+  width: "22px",
+  height: "22px",
   flexShrink: 0,
-  fontSize: "9px",
-  color: vars.color.gray500,
-  lineHeight: 1,
 });
 
 export const sortMenu = style({
   position: "absolute",
   top: "38px",
-  right: 0,
+  right: '16px',
   zIndex: 5,
   width: "132px",
   padding: "6px",
