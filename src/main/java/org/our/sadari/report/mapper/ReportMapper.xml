@@ -318,6 +318,7 @@
              , A.REPT_CNTN
              , NVL(LC.LIKE_CNT, 0) AS LIKE_CNT
              , NVL(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+             , NVL(RC.REPL_CNT, 0) AS REPL_CNT
              , B.BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
@@ -350,6 +351,12 @@
                 GROUP BY P.BOOK_NUMB
                 ) G
             ON G.BOOK_NUMB = B.BOOK_NUMB
+     LEFT JOIN ( SELECT R.REPT_NUMB
+                        , COUNT(*) AS REPL_CNT
+                   FROM TB_REPLXX R
+               GROUP BY R.REPT_NUMB
+                ) RC
+            ON RC.REPT_NUMB = A.REPT_NUMB
          WHERE A.USER_NUMB = #{userNumb}
            AND A.REPT_NUMB = #{reptNumb}
     </select>

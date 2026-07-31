@@ -412,7 +412,7 @@ export const recordArea = style({
   position: "relative",
   display: "flex",
   flexDirection: "column",
-  gap: "24px",
+  gap: "14px",
 });
 
 export const recordSection = style({
@@ -588,10 +588,19 @@ export const editActions = style({
   padding: "0 2px",
 });
 
+export const recordActionButtons = style({
+  width: "100%",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "8px",
+  padding: "0 2px",
+});
+
 export const saveButton = style({
-  minWidth: "96px",
-  height: "40px",
-  padding: "0 18px",
+  minWidth: "76px",
+  height: "36px",
+  padding: "0 8px",
   border: `1px solid ${vars.color.gray600}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
@@ -620,6 +629,21 @@ export const cancelButton = style([
   {
     borderColor: vars.color.gray400,
     color: vars.color.gray700,
+  },
+]);
+
+export const recordActionButton = style([
+  saveButton,
+  {
+    minWidth: "78px",
+  },
+]);
+
+export const recordDeleteActionButton = style([
+  recordActionButton,
+  {
+    borderColor: "#d9877d",
+    color: "#b84b3f",
   },
 ]);
 

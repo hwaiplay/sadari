@@ -180,8 +180,7 @@ export const dayButton = style({
   cursor: "pointer",
 
   ":hover": {
-    borderColor: "#e5f0eb",
-    backgroundColor: "#e5f0eb",
+    fontFamily: vars.font.medium
 
   },
 });

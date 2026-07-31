@@ -79,6 +79,9 @@ export interface ReportDtoType {
   pubcYsnoName?: string;
   likeCnt?: number;
   likeYsno?: "Y" | "N";
+
+  // 댓글 수
+  replCnt?: number
   // 독후감 내용
   reptCntn: string;
 

@@ -6,7 +6,11 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { formatDateValue } from "@/app/utils/dateUtil";
-import { sweetConfirm, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import {
+  sweetConfirm,
+  sweetEditGuide,
+  sweetWarning,
+} from "@/app/lib/sweetAlert/sweetAlert";
 import { useNavigate, useParams } from "react-router-dom";
 import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
@@ -280,6 +284,30 @@ function DetailPage() {
   }
 
   /**
+   * 상세 화면을 편집 상태로 전환하고 수정 가능한 요소 선택 방법을 안내한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  function handleEditGuide() {
+
+    // 수정 가능한 요약과 기록 요소를 클릭할 수 있도록 상세 편집 상태를 활성화한다
+    handleEditStart();
+    // 수정 대상을 위에서부터 확인할 수 있도록 문서의 스크롤 위치를 최상단으로 이동한다
+    window.scrollTo({
+      top: 0,
+      left: 0,
+      behavior: "auto",
+    });
+    // "요소를 클릭하면 수정할 수 있어요"
+    void sweetEditGuide(
+      message("frontend.report.editGuide"),
+      message("frontend.report.field.status"),
+      message("frontend.report.status.reading"),
+    );
+  }
+
+  /**
    * 독서 상태 변경을 반영하고 읽는 중에서 완료 또는 중단으로 바뀌면 종료일 보정을 확인한다
    *
    * @author HanWon.Jang
@@ -288,15 +316,15 @@ function DetailPage() {
    */
   async function handleStatusChange(nextStatus: ReadingStatusType) {
 
-    // 선택한 독서 상태를 상세 화면 요약과 저장 요청에 즉시 반영한다
-    setStatus(nextStatus);
     const needsEndDateConfirm =
       initialStatus === REPORT_STATUS_READ &&
       status === REPORT_STATUS_READ &&
       (nextStatus === REPORT_STATUS_DONE || nextStatus === REPORT_STATUS_STOP);
 
-    // 읽는 중에서 완료나 중단으로 처음 전환하는 경우에만 종료일 변경을 확인한다
+    // 종료일 확인이 필요하지 않은 상태는 상세 화면 요약과 저장 요청에 즉시 반영한다
     if (!needsEndDateConfirm) {
+      // 사용자가 선택한 독서 상태를 편집값으로 설정한다
+      setStatus(nextStatus);
       return;
     }
 
@@ -308,10 +336,15 @@ function DetailPage() {
       cancelButtonText: message("frontend.common.cancel"),
     });
 
-    // 사용자가 날짜 보정에 동의하면 독서 종료일을 오늘로 설정한다
-    if (confirmed.isConfirmed) {
-      setEndDate(formatDateValue(new Date()));
+    // 사용자가 날짜 보정과 상태 변경을 취소하면 기존 독서 상태를 유지한다
+    if (!confirmed.isConfirmed) {
+      return;
     }
+
+    // 확인된 완료 또는 중단 상태를 상세 화면 요약과 저장 요청에 반영한다
+    setStatus(nextStatus);
+    // 확인된 독서 상태에 맞춰 독서 종료일을 오늘로 설정한다
+    setEndDate(formatDateValue(new Date()));
   }
 
   /**
@@ -804,48 +837,52 @@ function DetailPage() {
                   {message("frontend.report.field.content")}
                 </h2>
               </div>
-              {/* 기록 반응 지표 영역 */}
-              <div className={styles.recordMetrics}>
-                <button
-                  className={styles.likeButton}
-                  type="button"
-                  aria-label={/* "좋아요" */ message("frontend.report.like.aria")}
-                  aria-pressed={bookData.likeYsno === "Y"}
-                  disabled={likeMutation.isPending}
-                  onClick={handleLikeToggle}
-                >
-                  <svg
-                    className={styles.likeIcon}
-                    viewBox="0 0 24 24"
-                    aria-hidden="true"
+
+              {/* 편집 모드가 아닐 때만 좋아요 수, 댓글 수 노출 */}
+              {!isRecordEditing ? (
+                <div className={styles.recordMetrics}>
+                  <button
+                    className={styles.likeButton}
+                    type="button"
+                    aria-label={/* "좋아요" */ message("frontend.report.like.aria")}
+                    aria-pressed={bookData.likeYsno === "Y"}
+                    disabled={likeMutation.isPending}
+                    onClick={handleLikeToggle}
                   >
-                    <path
-                      d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
-                      fill={bookData.likeYsno === "Y" ? "currentColor" : "none"}
-                      stroke="currentColor"
-                      strokeWidth="1.8"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
-                  <span className={styles.likeCount}>
+                    <svg
+                      className={styles.likeIcon}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path
+                        d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
+                        fill={bookData.likeYsno === "Y" ? "currentColor" : "none"}
+                        stroke="currentColor"
+                        strokeWidth="1.8"
+                        strokeLinejoin="round"
+                      />
+                    </svg>
+                    <span className={styles.likeCount}>
                     {getLikeCountLabel(bookData.likeCnt)}
                   </span>
-                </button>
-                <span
-                  className={styles.commentIndicator}
-                  role="img"
-                  aria-label={/* "댓글" */ message("frontend.report.comment.aria")}
-                >
-                  <img
-                    className={styles.commentIcon}
-                    src="/img/icons/icon-comment.svg"
-                    alt=""
-                  />
-                  <span className={styles.commentCount}>
-                    {TEMPORARY_COMMENT_COUNT}
+                  </button>
+                  <span
+                    className={styles.commentIndicator}
+                    role="img"
+                    aria-label={/* "댓글" */ message("frontend.report.comment.aria")}
+                  >
+                    <img
+                      className={styles.commentIcon}
+                      src="/img/icons/icon-comment.svg"
+                      alt=""
+                    />
+                    <span className={styles.commentCount}>
+                      {bookData.replCnt}
+                    </span>
                   </span>
-                </span>
-              </div>
+                </div>
+              ) : null}
+
               {/* 기록 본문 직접 편집 영역 */}
               {isRecordEditing ? (
                 <div className={styles.recordEditor}>
@@ -903,7 +940,32 @@ function DetailPage() {
                   {message("frontend.report.save")}
                 </button>
               </div>
-            ) : null}
+            ) : (
+              /* 독후감 수정과 삭제 시작 버튼 영역 */
+              <div className={styles.recordActionButtons}>
+                <button
+                    className={styles.recordDeleteActionButton}
+                    type="button"
+                    disabled={isDeletePending || isUpdatePending}
+                    onClick={handleDelete}
+                >
+                  {/* "삭제" */}
+                  {message("frontend.report.delete")}
+                </button>
+
+                <button
+                  className={styles.recordActionButton}
+                  type="button"
+                  disabled={isDeletePending || isUpdatePending}
+                  onClick={handleEditGuide}
+                >
+                  {/* "수정" */}
+                  {message("frontend.report.updateAction")}
+                  {/*<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path></svg>*/}
+                </button>
+
+              </div>
+            )}
           </div>
         </div>
       </Container>

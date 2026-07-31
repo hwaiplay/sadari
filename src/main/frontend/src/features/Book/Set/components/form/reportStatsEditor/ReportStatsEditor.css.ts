@@ -150,7 +150,7 @@ export const gradeStar = style({
 export const modalOverlay = style({
   position: "fixed",
   inset: 0,
-  zIndex: 12000,
+  zIndex: 9998,
   width: "100%",
   height: "100dvh",
   padding: "20px",

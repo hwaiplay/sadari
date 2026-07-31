@@ -1125,12 +1125,6 @@ public class ReportServiceImpl implements ReportService {
         // ReptNumb 업무 값을 reportDto DTO에 설정한다
         reportDto.setReptNumb(reptNumb);
 
-        // 삭제 반영 건수가 없으면 본인 독후감이 아니거나 이미 삭제된 데이터로 판단한다.
-        if (reportMapper.delReport(reportDto) == 0) {
-            // "삭제에 실패했어요.\n다시 시도해주세요."
-            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
-        }
-
         // TB_LIKEXX는 TAGT_TYPE 기반 공용 좋아요 테이블이라 DB FK cascade를 걸 수 없다.
         // 독후감 삭제가 성공한 뒤 REPORT 대상 좋아요만 명시적으로 정리해 고아 좋아요 데이터를 남기지 않는다.
         SocialDto.LikeDto likeDto = new SocialDto.LikeDto();
@@ -1140,6 +1134,14 @@ public class ReportServiceImpl implements ReportService {
         likeDto.setTagtNumb(reportDto.getReptNumb());
         // LikeByTarget 데이터를 DB에서 삭제한다
         socialMapper.delLikeByTarget(likeDto);
+
+        // 삭제 반영 건수가 없으면 본인 독후감이 아니거나 이미 삭제된 데이터로 판단한다.
+        if (reportMapper.delReport(reportDto) == 0) {
+            // "삭제에 실패했어요.\n다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+
         // 로그인 사용자의 독후감을 삭제 결과를 성공 응답으로 반환한다
         return ResultData.success();
     }
