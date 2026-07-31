@@ -1107,8 +1107,12 @@ function ProfileEditPage() {
 
     setGoalCnt((prev) => {
 
-      const currentCount = Number(prev) || 1;
-      return String(Math.max(1, currentCount + amount));
+      const isEmptyGoalCount = prev.trim() === "";
+      const currentCount = Number(prev);
+      const nextCount = isEmptyGoalCount ? 1 : currentCount + amount;
+
+      // 빈 입력에서 스테퍼를 처음 조작하면 증감 방향과 관계없이 최소 목표인 1권부터 시작합니다.
+      return String(Math.max(1, nextCount));
     });
   };
 

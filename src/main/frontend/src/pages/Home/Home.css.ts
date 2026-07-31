@@ -183,8 +183,7 @@ export const sortMenuItem = style({
 });
 
 export const sortMenuItemActive = style({
-  border: `1px solid ${vars.color.gray700}`,
-  backgroundColor: "#f3f3f3",
+  backgroundColor: vars.color.gray100,
   color: vars.color.gray900,
   fontFamily: vars.font.semibold,
 
