@@ -273,9 +273,9 @@
                   , CURRENT_TIMESTAMP
         ) AS NEW
         ON DUPLICATE KEY UPDATE
-               UPDT_CNTT = CASE WHEN NEW.GOAL_CNTT <![CDATA[<]]> GOAL_CNTT
-                                     THEN COALESCE(UPDT_CNTT, 0) + 1
-                                ELSE COALESCE(UPDT_CNTT, 0)
+               UPDT_CNTT = CASE WHEN NEW.GOAL_CNTT <![CDATA[<]]> TM_GOALXM.GOAL_CNTT
+                                     THEN COALESCE(TM_GOALXM.UPDT_CNTT, 0) + 1
+                                ELSE COALESCE(TM_GOALXM.UPDT_CNTT, 0)
                             END
              , GOAL_CNTT = NEW.GOAL_CNTT
              , UPDT_DATE = CURRENT_TIMESTAMP
