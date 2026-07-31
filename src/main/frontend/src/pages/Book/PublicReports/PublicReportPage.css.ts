@@ -177,13 +177,14 @@ export const profileButton = style({
 });
 
 export const profileImage = style({
-  width: "32px",
-  height: "32px",
+  width: "30px",
+  height: "30px",
   flexShrink: 0,
   borderRadius: "50%",
   objectFit: "cover",
   backgroundColor: vars.color.gray300,
 });
+
 
 export const writer = style({
   minWidth: 0,
@@ -195,6 +196,13 @@ export const writer = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
 });
+
+export const statusWrap = style({
+  display: "flex",
+  alignItems: "center",
+  gap: "4px"
+})
+
 
 export const statusDone = style([
   statusPill,

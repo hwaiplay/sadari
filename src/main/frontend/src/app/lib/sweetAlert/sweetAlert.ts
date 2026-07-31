@@ -6,6 +6,7 @@ type SweetAlertOptions = {
   title: string;
   text?: string;
   html?: string;
+  content?: HTMLElement;
   icon?: SweetAlertIcon;
   confirmButtonText?: string;
   cancelButtonText?: string;
@@ -185,6 +186,61 @@ function ensureSweetAlertStyle() {
       text-align: left;
     }
 
+    .sadari-swal-edit-guide {
+      position: relative;
+      min-height: 108px;
+      margin-top: 18px;
+      border: 1px solid #e4ecea;
+      border-radius: 16px;
+      padding: 20px 24px;
+      background: #f7f9f8;
+      overflow: hidden;
+      box-sizing: border-box;
+    }
+
+    .sadari-swal-edit-guide-target {
+      position: relative;
+      display: inline-flex;
+      flex-direction: column;
+      align-items: flex-start;
+      isolation: isolate;
+    }
+
+    .sadari-swal-edit-guide-label,
+    .sadari-swal-edit-guide-value {
+      position: relative;
+      z-index: 1;
+    }
+
+    .sadari-swal-edit-guide-label {
+      color: #8a8f8d;
+      font-size: 13px;
+      font-weight: 600;
+      line-height: 1.4;
+    }
+
+    .sadari-swal-edit-guide-value {
+      margin-top: 8px;
+      color: #1f1f1f;
+      font-size: 19px;
+      font-weight: 700;
+      line-height: 1.4;
+    }
+
+    .sadari-swal-edit-guide-pulse {
+      position: absolute;
+      z-index: 0;
+      left: 72%;
+      bottom: 10px;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      background: rgba(82, 193, 188, 0.6);
+      transform: translate(-50%, 50%) scale(0.72);
+      animation: sadari-swal-edit-guide-tap 1.55s ease-in-out infinite;
+      pointer-events: none;
+    }
+
     .sadari-swal-actions {
       display: flex;
       justify-content: center;
@@ -219,6 +275,23 @@ function ensureSweetAlertStyle() {
       to {
         opacity: 1;
         transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes sadari-swal-edit-guide-tap {
+      0%, 100% {
+        opacity: 0.28;
+        transform: translate(-50%, 50%) scale(0.72);
+        box-shadow: 0 0 0 0 rgba(82, 193, 188, 0.26);
+      }
+      45% {
+        opacity: 0.72;
+        transform: translate(-50%, 50%) scale(1);
+        box-shadow: 0 0 0 8px rgba(82, 193, 188, 0);
+      }
+      72% {
+        opacity: 0.52;
+        transform: translate(-50%, 50%) scale(0.88);
       }
     }
 
@@ -367,6 +440,14 @@ function ensureSweetAlertStyle() {
         transform: scale(1);
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sadari-swal-edit-guide-pulse {
+        animation: none;
+        opacity: 0.58;
+        transform: translate(-50%, 50%) scale(0.88);
+      }
+    }
   `;
 
   document.head.appendChild(style);
@@ -442,7 +523,9 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     modal.append(icon, title);
 
-    if (options.html) {
+    if (options.content) {
+      modal.appendChild(options.content);
+    } else if (options.html) {
       const content = document.createElement("div");
       content.className = "sadari-swal-html";
       content.innerHTML = options.html;
@@ -566,6 +649,51 @@ export function sweetWarning(title: string, text?: string) {
 export function sweetInfo(title: string, text?: string) {
 
   return sweetAlert({ title, text, icon: "info" });
+}
+
+/**
+ * 수정 가능한 예시 요소와 클릭 강조 애니메이션을 포함한 안내 모달을 표시합니다.
+ *
+ * @author HanWon.Jang
+ * @param title 안내 모달 제목
+ * @param fieldLabel 수정 가능한 예시 요소의 항목명
+ * @param fieldValue 수정 가능한 예시 요소의 현재값
+ * @return 사용자 확인 결과 Promise
+ */
+export function sweetEditGuide(
+  title: string,
+  fieldLabel: string,
+  fieldValue: string,
+) {
+
+  // 번역된 문구를 HTML 문자열로 해석하지 않도록 안내 콘텐츠를 DOM 엘리먼트로 구성한다
+  const content = document.createElement("div");
+  content.className = "sadari-swal-html sadari-swal-edit-guide";
+  content.setAttribute("aria-hidden", "true");
+
+  const target = document.createElement("div");
+  target.className = "sadari-swal-edit-guide-target";
+
+  const label = document.createElement("span");
+  label.className = "sadari-swal-edit-guide-label";
+  label.textContent = fieldLabel;
+
+  const value = document.createElement("strong");
+  value.className = "sadari-swal-edit-guide-value";
+  value.textContent = fieldValue;
+
+  const pulse = document.createElement("span");
+  pulse.className = "sadari-swal-edit-guide-pulse";
+
+  target.append(label, value, pulse);
+  content.appendChild(target);
+
+  // 클릭 가능한 요소의 시각적 예시를 포함한 안내 모달을 반환한다
+  return sweetAlert({
+    title,
+    content,
+    icon: "info",
+  });
 }
 
 /**
