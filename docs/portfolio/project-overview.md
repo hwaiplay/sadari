@@ -10,7 +10,7 @@
 
 독서 기록 서비스는 단순한 메모 저장만으로는 지속적으로 사용하기 어렵다. Sadari는 다음 흐름을 하나의 서비스로 연결한다.
 
-1. NAVER 도서 API에서 실제 도서를 검색한다.
+1. 카카오 도서 API에서 실제 도서를 검색한다.
 2. 독서 상태, 기간, 평점, 공개 여부와 기록을 저장한다.
 3. 주간·월간·연간 목표와 달성 현황을 확인한다.
 4. 다른 사용자의 공개 독후감을 보고 팔로우와 좋아요로 관계를 형성한다.
@@ -26,7 +26,7 @@
 | `sadari` | 사용자 로그인, 도서·독후감·목표·소셜·알림·탈퇴와 스케줄러 실행 |
 | `sadari-admin` | 공통코드, 알림 템플릿, 사용자 메뉴, 관리자 권한과 스케줄러 로그 관리 |
 
-두 저장소는 HTTP로 직접 결합하지 않고 동일 Oracle 운영 테이블을 공유한다. 관리자가 운영값을 등록하면 사용자 서비스가 다음 요청이나 스케줄러 실행에서 이를 읽고, 사용자 스케줄러가 기록한 실행 결과는 관리자 화면에서 다시 조회한다.
+두 저장소는 HTTP로 직접 결합하지 않고 동일 MySQL 운영 테이블을 공유한다. 관리자가 운영값을 등록하면 사용자 서비스가 다음 요청이나 스케줄러 실행에서 이를 읽고, 사용자 스케줄러가 기록한 실행 결과는 관리자 화면에서 다시 조회한다.
 
 상세 구조는 [관리자와 사용자 서비스 연동](admin-user-integration.md)에 정리했다.
 
@@ -36,7 +36,7 @@
 | --- | --- |
 | 백엔드 | Java 17, Spring Boot 4.0.3, Spring MVC, Spring Security |
 | 인증 | Kakao OAuth, JJWT 0.13.0, HttpOnly Cookie, Redis |
-| 데이터 | Oracle, MyBatis 4.0.1, HikariCP |
+| 데이터 | MySQL 8.4, MyBatis 4.0.1, HikariCP |
 | 프론트엔드 | React 19, TypeScript 5.9, Vite 7 |
 | 상태 관리 | TanStack Query, Zustand |
 | 스타일 | vanilla-extract |
@@ -46,7 +46,7 @@
 
 버전 근거는 `build.gradle`과 `src/main/frontend/package.json`이다.
 
-관리자 애플리케이션은 Java 17, Spring Boot 4.1.0, Spring Security, Redis, Oracle·MyBatis와 React 19, TypeScript 6, Vite 8을 사용한다. 버전 근거는 `../sadari-admin/build.gradle`과 `../sadari-admin/src/main/frontend/package.json`이다.
+관리자 애플리케이션은 Java 17, Spring Boot 4.1.0, Spring Security, Redis, MySQL 8.4·MyBatis와 React 19, TypeScript 6, Vite 8을 사용한다. 버전 근거는 `../sadari-admin/build.gradle`과 `../sadari-admin/src/main/frontend/package.json`이다.
 
 ## 논리 아키텍처
 
@@ -64,11 +64,11 @@ Spring MVC Controller
     v
 Domain Service
     |
-    +------ MyBatis Mapper ------ Oracle
+    +------ MyBatis Mapper ------ MySQL 8.4
     |
     +------ Token Service ------- Redis
     |
-    +------ Kakao / NAVER / Firebase
+    +------ Kakao / Firebase
 
 Admin Browser
     |
@@ -77,7 +77,7 @@ sadari-admin
     |
     +------ Redis Admin Session
     |
-    +------ Oracle Shared Operation Tables
+    +------ MySQL Shared Operation Tables
                   |
                   +------ common code / template / user menu
                   +------ scheduler master / failure log
@@ -89,7 +89,7 @@ sadari-admin
 
 | 도메인 | 주요 책임 |
 | --- | --- |
-| `book` | NAVER 도서 검색, 도서 정보, 표지 색상 계산 |
+| `book` | 카카오 도서 검색, 도서 정보, 표지 색상 계산 |
 | `report` | 독후감 등록·수정·삭제, 상태·평점·기간 검증, 독서 요약 |
 | `myPage` | 내 프로필과 독서 활동 집계 |
 | `social` | 팔로우, 좋아요, 공개 프로필과 관계 상태 |
@@ -125,7 +125,7 @@ Spring Boot 빌드 과정에서 React 결과물을 `src/main/resources/static`�
 
 ### 독후감 등록
 
-1. 사용자가 NAVER 도서 검색 결과를 선택한다.
+1. 사용자가 카카오 도서 검색 결과를 선택한다.
 2. 프론트가 도서 정보와 독후감 값을 함께 전송한다.
 3. 서비스가 상태, 기간, 평점, 기록과 비속어를 검증한다.
 4. ISBN 기준 도서 마스터가 없으면 `TM_BKINFO`에 먼저 등록한다.

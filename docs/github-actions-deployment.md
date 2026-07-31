@@ -20,17 +20,15 @@
 | `EC2_SSH_PRIVATE_KEY` | EC2 key pair의 PEM 전체 내용 |
 | `GHCR_USERNAME` | GHCR 이미지를 읽을 GitHub 사용자명 |
 | `GHCR_TOKEN` | 해당 패키지에 `read:packages` 권한이 있는 GitHub PAT |
-| `DB_URL` | Oracle RDS JDBC URL |
+| `DB_URL` | MySQL 8.4 JDBC URL |
 | `DB_USERNAME` | 운영 DB 계정 |
 | `DB_PASSWORD` | 운영 DB 비밀번호 |
 | `FRONT_DOMAIN` | 외부에서 접속하는 프론트 HTTPS Origin |
 | `BACK_DOMAIN` | 외부에서 접속하는 백엔드 HTTPS Origin |
 | `JWT_SECRET` | JWT 서명용 충분히 긴 무작위 비밀키 |
-| `KAKAO_REST_API_KEY` | Kakao REST API 키 |
+| `KAKAO_REST_API_KEY` | Kakao 로그인과 도서 검색 API에 함께 사용하는 REST API 키 |
 | `KAKAO_JAVASCRIPT_KEY` | Kakao JavaScript 키 |
 | `KAKAO_NATIVE_APP_KEY` | Kakao Native App 키. 사용하지 않으면 빈 값 가능 |
-| `NAVER_CLIENT_ID` | Naver 도서 API Client ID |
-| `NAVER_CLIENT_SECRET` | Naver 도서 API Client Secret |
 | `FIREBASE_WEB_API_KEY` | Firebase Web App의 `apiKey` |
 | `FIREBASE_WEB_AUTH_DOMAIN` | Firebase Web App의 `authDomain` |
 | `FIREBASE_WEB_PROJECT_ID` | Firebase Web App의 `projectId` |
@@ -66,6 +64,12 @@
 
 ## 프로필 고정 설정
 
+- `application-loc.yml`은 `localhost:3306/sadari` MySQL 8.4를 사용하며 비밀번호는
+  `DB_PASSWORD` 환경변수로만 전달합니다.
+- `application-prod.yml`의 `DB_URL`은 MySQL JDBC URL을 사용하고 `DB_PASSWORD`는
+  GitHub Actions Secret으로 전달합니다.
+- 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
+  `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 기존 `KAKAO_REST_API_KEY` Secret을 사용합니다.
 - `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
   `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
 - `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
@@ -84,7 +88,7 @@
 - `curl`이 설치되어 있어야 배포 후 상태 검증이 가능합니다.
 - EC2 보안 그룹에서 SSH 포트는 필요한 관리 IP로 제한하고, 서비스 포트는 로드밸런서나
   리버스 프록시를 통해 공개하는 구성을 권장합니다.
-- EC2에서 Oracle RDS의 DB 포트로 접근할 수 있어야 하고, RDS 보안 그룹은 EC2 보안 그룹을
+- EC2에서 MySQL RDS의 `3306` 포트로 접근할 수 있어야 하고, RDS 보안 그룹은 EC2 보안 그룹을
   소스로 허용해야 합니다.
 - PWA와 Secure Cookie, Firebase Web Push를 사용하려면 최종 서비스 도메인에 HTTPS가 적용되어야 합니다.
 

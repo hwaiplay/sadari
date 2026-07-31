@@ -6,36 +6,27 @@
     <insert id="setPushSub" parameterType="org.our.sadari.push.dto.PushDto$PushSubDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         /* setPushSub */
-        MERGE INTO TB_PSHSUB P
-        USING (  SELECT #{userNumb} AS USER_NUMB
-                      , #{endpUrlx} AS ENDP_URLX
-                      , #{p256Keyx,jdbcType=VARCHAR} AS P256_KEYX
-                      , #{authKeyx,jdbcType=VARCHAR} AS AUTH_KEYX
-                   FROM DUAL
-               ) S
-           ON (    P.USER_NUMB = S.USER_NUMB
-               AND P.ENDP_URLX = S.ENDP_URLX
-           )
-         WHEN MATCHED THEN
-      UPDATE
-         SET P.P256_KEYX = S.P256_KEYX
-           , P.AUTH_KEYX = S.AUTH_KEYX
-           , P.USEE_YSNO = #{commYes}
-           , P.UPDT_DATE = SYSDATE
-         WHEN NOT MATCHED THEN
-       INSERT (    USER_NUMB
-                 , ENDP_URLX
-                 , P256_KEYX
-                 , AUTH_KEYX
-                 , USEE_YSNO
-                 , REGI_DATE
-       ) VALUES (  S.USER_NUMB
-                 , S.ENDP_URLX
-                 , S.P256_KEYX
-                 , S.AUTH_KEYX
-                 , #{commYes}
-                 , SYSDATE
-       )
+        INSERT INTO TB_PSHSUB (
+                    USER_NUMB
+                  , ENDP_URLX
+                  , P256_KEYX
+                  , AUTH_KEYX
+                  , USEE_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , #{endpUrlx}
+                  , #{p256Keyx,jdbcType=VARCHAR}
+                  , #{authKeyx,jdbcType=VARCHAR}
+                  , #{commYes}
+                  , CURRENT_TIMESTAMP
+                  , CURRENT_TIMESTAMP
+        ) AS NEW
+        ON DUPLICATE KEY UPDATE
+               P256_KEYX = NEW.P256_KEYX
+             , AUTH_KEYX = NEW.AUTH_KEYX
+             , USEE_YSNO = NEW.USEE_YSNO
+             , UPDT_DATE = CURRENT_TIMESTAMP
     </insert>
 
     <!-- 로그아웃이나 알림 끄기 시 token row를 삭제하지 않고 비활성화해 추적 가능성을 남긴다. -->
@@ -44,7 +35,7 @@
         UPDATE /* delPushSub */
                TB_PSHSUB
            SET USEE_YSNO = #{commNo}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{userNumb}
            AND ENDP_URLX = #{endpUrlx}
     </update>

@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    도서 표지 기반 책장 색상 자동 선택 API 추가
+ * 2026-07-31        SeungHyeon.Kang    카카오 도서 검색 API 적용
  */
 @Slf4j
 @RestController
@@ -44,16 +45,18 @@ public class BookController {
     private final ReportService reportService;
 
     /**
-     * 검색어와 검색 시작 위치를 사용하여 네이버 도서 API의 도서 목록을 검색한다.
+     * 검색어와 검색 시작 위치를 사용하여 카카오 도서 API의 도서 목록을 검색한다
      *
      * @author SeungHyeon.Kang
+     * @param query 카카오 도서 API에 전달할 검색어
+     * @param start 기존 화면 계약에서 사용하는 검색 결과 시작 위치
      * @return 검색된 도서 목록
      */
     @GetMapping("/search")
-    @Operation(summary = "도서 검색", description = "네이버 도서 API를 사용해 사용자가 입력한 검색어로 도서를 조회한다.")
+    @Operation(summary = "도서 검색", description = "카카오 도서 API를 사용해 사용자가 입력한 검색어로 도서를 조회한다.")
     public ResultData searchBooks(@Parameter(description = "도서 검색어", example = "히가시노 게이고")@RequestParam("query") String query
-                                , @Parameter(description = "네이버 검색 시작 위치", example = "1")@RequestParam(value = "start", defaultValue = "1") int start) {
-        // 검색어와 검색 시작 위치를 사용하여 네이버 도서 API의 도서 목록을 검색 결과를 반환한다
+                                , @Parameter(description = "도서 검색 시작 위치", example = "1")@RequestParam(value = "start", defaultValue = "1") int start) {
+        // 검색어와 검색 시작 위치를 사용하여 카카오 도서 목록을 조회한다
         return bookSearchService.searchBooks(query, start);
     }
 
@@ -71,16 +74,16 @@ public class BookController {
     }
 
     /**
-     * 네이버 도서 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
+     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param requestDto 대표색을 분석할 도서 표지 URL
      * @return 표지 대표색과 가장 가까운 책장 색상 코드
      */
     @PostMapping("/cover-color")
-    @Operation(summary = "도서 표지 기반 책장 색상 조회", description = "네이버 도서 표지 대표색을 분석해 활성 BOOK_COLR 중 가장 가까운 색상 코드를 조회한다.")
+    @Operation(summary = "도서 표지 기반 책장 색상 조회", description = "신뢰된 도서 검색 표지의 대표색을 분석해 활성 BOOK_COLR 중 가장 가까운 색상 코드를 조회한다.")
     public ResultData getBookCoverColor(@Valid @RequestBody BookCoverColorRequestDto requestDto) {
-        // 검증된 네이버 도서 표지 URL로 자동 책장 색상을 조회한다
+        // 검증된 도서 검색 표지 URL로 자동 책장 색상을 조회한다
         return bookCoverColorService.getBookCoverColor(requestDto);
     }
 }

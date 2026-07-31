@@ -137,7 +137,7 @@ Controller의 `@Operation`, `@Parameter`, DTO의 `@Schema`로 API 계약을 문�
 도서 표지 대표색 분석은 서버가 외부 URL을 다운로드하므로 SSRF 위험이 있다. `BookCoverColorService`는 다음 조건을 만족하는 URL만 허용한다.
 
 - HTTPS
-- NAVER 도서 이미지 호스트 `shopping-phinf.pstatic.net`
+- 카카오 도서 이미지 호스트 `search1.kakaocdn.net`과 기존 검색 결과 호환용 NAVER 호스트 `shopping-phinf.pstatic.net`
 - 사용자 정보가 없는 URI
 - 기본 포트 또는 443
 - 최대 5MB 응답

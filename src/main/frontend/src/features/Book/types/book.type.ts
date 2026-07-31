@@ -10,9 +10,9 @@
  */
 
 /**
- * "네이버 검색 결과 타입"
+ * 카카오 도서 검색 결과를 화면 계약으로 변환한 타입
  */
-export interface NaverApiResultType {
+export interface BookSearchResultType {
   // 책 제목
   title: string;
   // 저자

@@ -61,15 +61,10 @@
     </select>
 
     <!-- 신규 회원 정보를 등록한다. -->
-    <insert id="setUser" parameterType="org.our.sadari.user.dto.UserDto">
-        <selectKey keyProperty="userNumb" resultType="long" order="BEFORE">
-            SELECT TM_USERXM_SEQ.NEXTVAL
-              FROM DUAL
-        </selectKey>
+    <insert id="setUser" parameterType="org.our.sadari.user.dto.UserDto" useGeneratedKeys="true" keyProperty="userNumb">
         /* setUser */
         INSERT INTO TM_USERXM (
-                    USER_NUMB
-                  , PROF_NUMB
+                    PROF_NUMB
                   , BGIM_NUMB
                   , USER_IDXX
                   , USER_NICK
@@ -79,8 +74,7 @@
                   , ONBD_YSNO
                   , INTR_CNTN
                   , JOIN_DATE
-        ) VALUES (  #{userNumb}
-                  , #{profNumb,jdbcType=NUMERIC}
+        ) VALUES (  #{profNumb,jdbcType=NUMERIC}
                   , #{bgimNumb,jdbcType=NUMERIC}
                   , #{userIdxx}
                   , #{userNick}
@@ -89,7 +83,7 @@
                   , #{userStat}
                   , #{onbdYsno}
                   , #{intrCntn,jdbcType=VARCHAR}
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 
@@ -148,9 +142,9 @@
         UPDATE /* uptUserReplyDeleted */
                TB_REPLXX
            SET DELT_YSNO = #{commYes}
-             , UPDT_DATE = SYSDATE
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{userNumb}
-           AND NVL(DELT_YSNO, #{commNo}) != #{commYes}
+           AND COALESCE(DELT_YSNO, #{commNo}) != #{commYes}
     </update>
 
 </mapper>

@@ -21,7 +21,7 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 `sadari-admin`도 Spring Boot와 React를 한 저장소에서 관리하지만 현재 사용자 서비스의 Docker·GitHub Actions 파이프라인에는 포함되지 않는다.
 
-- 백엔드: Java 17, Spring Boot 4.1.0, MyBatis, Oracle, Redis
+- 백엔드: Java 17, Spring Boot 4.1.0, MyBatis, MySQL 8.4, Redis
 - 프론트엔드: React 19, TypeScript 6, Vite 8
 - 테스트: Context Load 테스트 1건
 - 확인되지 않은 구성: Dockerfile, Docker Compose, GitHub Actions
@@ -85,9 +85,9 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 다음 값은 저장소에 직접 기록하지 않고 GitHub Secrets 또는 운영 환경변수로 주입한다.
 
-- Oracle 접속 정보
+- MySQL 접속 정보
 - JWT 비밀키
-- Kakao와 NAVER API Key
+- Kakao 로그인과 도서 검색 API Key
 - Firebase Web 설정
 - Firebase 서비스 계정 JSON
 - EC2 SSH Key와 GHCR Token
@@ -124,7 +124,7 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 ### CI에서 테스트 제외
 
-현재 GitHub Actions의 검증 명령은 `-x test`를 사용한다. 일부 테스트가 Git에서 제외한 `application-loc.yml`, Oracle, Redis에 의존하기 때문이다.
+현재 GitHub Actions의 검증 명령은 `-x test`를 사용한다. 일부 테스트가 Git에서 제외한 `application-loc.yml`, MySQL, Redis에 의존하기 때문이다.
 
 따라서 다음 표현은 사용하지 않는다.
 
@@ -142,15 +142,15 @@ Gradle은 백엔드 빌드 전에 React 의존성을 설치하고 Vite 빌드를
 
 ### 저장소와 데이터베이스
 
-Oracle은 외부 접속 URL로 주입하므로 RDS for Oracle 또는 별도 Oracle DB에 연결할 수 있다. 현재 구성만으로 실제 RDS 사용 여부는 확정하지 않는다.
+MySQL은 외부 접속 URL로 주입하므로 Amazon RDS for MySQL 또는 별도 MySQL 8.4 서버에 연결할 수 있다. 현재 구성만으로 실제 RDS 사용 여부는 확정하지 않는다.
 
-사용자 서비스와 관리자 서비스의 연동은 `TM_CODEXM`, `TB_CODEXD`, `TB_ALTEMP`, `TM_URMENU`, `TL_SCLOGX`, `TL_SCFAIL`을 같은 Oracle 스키마에서 공유한다는 전제가 필요하다. 두 애플리케이션을 서로 다른 스키마에 배포하면 운영 설정과 실행 로그 연동이 끊어진다.
+사용자 서비스와 관리자 서비스의 연동은 `TM_CODEXM`, `TB_CODEXD`, `TB_ALTEMP`, `TM_URMENU`, `TL_SCLOGX`, `TL_SCFAIL`을 같은 MySQL 데이터베이스에서 공유한다는 전제가 필요하다. 두 애플리케이션을 서로 다른 데이터베이스에 배포하면 운영 설정과 실행 로그 연동이 끊어진다.
 
 관리자 서비스는 독립 인증 Cookie와 Redis 세션을 사용하므로 운영 배포 시 사용자 서비스와 Cookie 이름, 경로, 도메인, Redis Key Prefix가 충돌하지 않도록 분리해야 한다.
 
 ## 우선 개선 순서
 
-1. Oracle Testcontainers 또는 테스트 전용 DB 전략을 마련한다.
+1. MySQL Testcontainers 또는 테스트 전용 DB 전략을 마련한다.
 2. Redis를 CI Service Container로 실행한다.
 3. 단위 테스트와 통합 테스트를 분리한다.
 4. `test` 작업을 PR 필수 Check로 전환한다.

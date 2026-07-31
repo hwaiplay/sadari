@@ -62,7 +62,7 @@ public class CodeUtil {
      * @throws CustomException 공통코드 목록이 비어 있거나 허용 개수를 초과한 경우 발생
      */
     public Map<String, List<CodeDto>> getCodeGroupList(List<String> commCodeList) {
-        // 빈 IN 조건은 Oracle 문법 오류를 만들 수 있으므로 Mapper를 호출하기 전에 요청을 차단한다.
+        // 빈 IN 조건은 유효한 조회 조건이 아니므로 Mapper를 호출하기 전에 요청을 차단한다.
         if (StringUtil.isEmpty(commCodeList) || commCodeList.isEmpty() || commCodeList.size() > CODE_GROUP_QUERY_MAX_SIZE) {
 
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);

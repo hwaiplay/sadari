@@ -45,7 +45,7 @@ public class SocialServiceImpl implements SocialService {
 
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
-     * 버튼명 판단은 Oracle 함수 FN_GET_FOLW_STAT에 위임하여 화면, 서비스, SQL이 서로 다른 기준을 갖지 않도록 한다.
+     * 버튼명 판단은 MySQL 함수 FN_GET_FOLW_STAT에 위임하여 화면, 서비스, SQL이 서로 다른 기준을 갖지 않도록 한다.
      *
      * @author SeungHyeon.Kang
      * @param req 로그인 사용자 번호와 상대 사용자 번호
@@ -442,7 +442,7 @@ public class SocialServiceImpl implements SocialService {
     }
 
     /**
-     * Oracle 함수에서 받은 버튼명을 프론트엔드 응답 DTO로 감싼다.
+     * MySQL 함수에서 받은 버튼명을 프론트엔드 응답 DTO로 감싼다.
      * ResultData.data의 필드명을 고정해 화면에서 응답 구조를 안정적으로 사용할 수 있게 한다.
      *
      * @author SeungHyeon.Kang
@@ -454,7 +454,7 @@ public class SocialServiceImpl implements SocialService {
         SocialDto.FollowDto followDto = new SocialDto.FollowDto();
         // FollowStatName 업무 값을 followDto DTO에 설정한다
         followDto.setFollowStatName(followStatName);
-        // Oracle 함수에서 받은 버튼명을 프론트엔드 응답 DTO로 감싼다 결과를 반환한다
+        // MySQL 함수에서 받은 버튼명을 프론트엔드 응답 DTO로 감싼 결과를 반환한다
         return followDto;
     }
 

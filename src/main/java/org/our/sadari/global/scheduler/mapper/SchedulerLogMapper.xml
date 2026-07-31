@@ -3,23 +3,18 @@
 <mapper namespace="org.our.sadari.global.scheduler.mapper.SchedulerLogMapper">
 
     <!-- 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록한다. -->
-    <insert id="setSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto">
-        <selectKey keyProperty="runxNumb" resultType="long" order="BEFORE">
-            SELECT TL_SCLOGX_SEQ.NEXTVAL
-              FROM DUAL
-        </selectKey>
+    <insert id="setSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto"
+            useGeneratedKeys="true" keyProperty="runxNumb">
         INSERT /* setSchedulerLog */
                INTO TL_SCLOGX (
-                    RUNX_NUMB
-                  , SCHD_CODE
+                    SCHD_CODE
                   , METH_NAME
                   , EXEC_STAT
                   , STRT_DATE
                   , TRGT_CNTT
                   , SUCC_CNTT
                   , FAIL_CNTT
-        ) VALUES (  #{runxNumb}
-                  , #{schdCode}
+        ) VALUES (  #{schdCode}
                   , #{methName}
                   , #{execStat}
                   , #{strtDate}
@@ -34,7 +29,7 @@
         UPDATE /* uptSchedulerLog */
                TL_SCLOGX
            SET EXEC_STAT = #{execStat}
-             , FNSH_DATE = SYSTIMESTAMP
+             , FNSH_DATE = CURRENT_TIMESTAMP
              , TRGT_CNTT = #{trgtCntt}
              , SUCC_CNTT = #{succCntt}
              , FAIL_CNTT = #{failCntt}
@@ -44,7 +39,7 @@
 
     <!--
         동일 실행 내 MAX+1 실패 순번으로 TL_SCFAIL에 실패 상세 정보를 등록한다.
-        실패 유형에 따라 NULL이 되는 결과·예외 컬럼은 Oracle이 JdbcType.OTHER를 거부하므로 실제 컬럼 JDBC 타입을 명시한다.
+        실패 유형에 따라 NULL이 되는 결과·예외 컬럼은 드라이버가 타입을 안정적으로 판별하도록 실제 컬럼 JDBC 타입을 명시한다.
     -->
     <insert id="setSchedulerFail" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerFailDto">
         <bind name="numberZero" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ZERO" />
@@ -61,13 +56,13 @@
                   , FAIL_DATE
         )
         SELECT #{runxNumb}
-             , NVL(MAX(FAIL.FAIL_NUMB), #{numberZero}) + #{numberOne}
+             , COALESCE(MAX(FAIL.FAIL_NUMB), #{numberZero}) + #{numberOne}
              , #{failType}
              , #{rsltCode, jdbcType=NUMERIC}
              , #{rsltMesg, jdbcType=VARCHAR}
              , #{erroType, jdbcType=VARCHAR}
              , #{erroCntn, jdbcType=VARCHAR}
-             , SYSTIMESTAMP
+             , CURRENT_TIMESTAMP
           FROM TL_SCFAIL FAIL
          WHERE FAIL.RUNX_NUMB = #{runxNumb}
     </insert>

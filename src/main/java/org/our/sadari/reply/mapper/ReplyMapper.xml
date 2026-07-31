@@ -10,7 +10,7 @@
                R.REPT_NUMB
              , R.REPL_NUMB
              , R.UPER_NUMB
-             , NVL2(TO_CHAR(R.UPER_NUMB), 'N', 'Y') AS PARENT_YN
+             , IF(R.UPER_NUMB IS NULL, 'Y', 'N') AS PARENT_YN
              , R.USER_NUMB
              , CASE WHEN R.USER_NUMB = #{userNumb}
                          THEN #{commYes}
@@ -20,8 +20,8 @@
              , R.DELT_YSNO
              , R.REGI_DATE
              , R.UPDT_DATE
-             , NVL2(TO_CHAR(R.UPDT_DATE), 'Y', 'N') AS UPDT_YSNO
-             , FN_GET_CODE_NAME('UPDT_YSNO', NVL2(TO_CHAR(R.UPDT_DATE), 'Y', 'N')) AS UPDT_YSNO_NM
+             , IF(R.UPDT_DATE IS NULL, 'N', 'Y') AS UPDT_YSNO
+             , FN_GET_CODE_NAME('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL) AS UPDT_YSNO_NM
              , U.USER_NICK
              , F.FILE_PATH AS PORF_PATH
           FROM TB_REPLXX R
@@ -33,8 +33,8 @@
             ON P.REPT_NUMB = R.REPT_NUMB
            AND P.REPL_NUMB = R.UPER_NUMB
          WHERE R.REPT_NUMB = #{reptNumb}
-      ORDER BY NVL(P.REGI_DATE, R.REGI_DATE) DESC
-             , NVL(P.REPL_NUMB, R.REPL_NUMB) DESC
+      ORDER BY COALESCE(P.REGI_DATE, R.REGI_DATE) DESC
+             , COALESCE(P.REPL_NUMB, R.REPL_NUMB) DESC
              , CASE WHEN R.UPER_NUMB IS NULL
                          THEN 0
                     ELSE 1
@@ -44,14 +44,10 @@
     </select>
 
     <!-- 댓글 또는 답글을 신규 등록한다. -->
-    <insert id="setReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <selectKey keyProperty="replNumb" resultType="long" order="BEFORE">
-            SELECT TB_REPLXX_SEQ.NEXTVAL FROM DUAL
-        </selectKey>
+    <insert id="setReply" parameterType="org.our.sadari.reply.dto.ReplyDto" useGeneratedKeys="true" keyProperty="replNumb">
         /* setReply */
         INSERT INTO TB_REPLXX (
                     REPT_NUMB
-                  , REPL_NUMB
                   , UPER_NUMB
                   , USER_NUMB
                   , REPL_CNTN
@@ -59,13 +55,12 @@
                   , REGI_DATE
                   , UPDT_DATE
         ) VALUES (  #{reptNumb}
-                  , #{replNumb}
                   , #{uperNumb,jdbcType=NUMERIC}
                   , #{userNumb}
                   , #{replCntn}
                   , #{deltYsno}
-                  , SYSDATE
-                  , SYSDATE
+                  , CURRENT_TIMESTAMP
+                  , CURRENT_TIMESTAMP
         )
     </insert>
 

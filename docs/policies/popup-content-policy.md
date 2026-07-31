@@ -5,7 +5,7 @@
 - 목적: 사용자 화면의 정책·도움말 목록을 배포 없이 데이터베이스에서 변경할 수 있도록 관리합니다.
 - 적용 범위: 계정 처리 정책 안내와 목표 내리기 도움말의 목록 문구입니다.
 - 기준일: 2026-07-30
-- 현재 상태: 사용자 조회 API와 화면 연동은 구현되었으며 관리자 등록·수정 화면과 쓰기 API는 미적용입니다.
+- 현재 상태: 사용자 조회 API와 화면 연동 및 관리자 등록·수정 화면과 쓰기 API가 구현되었습니다.
 
 ## 식별 체계
 
@@ -29,7 +29,7 @@
 | `CONT_FOUR` | 네 번째 화면 영역의 문자열 JSON 배열 | 선택 |
 
 - 각 `CONT_*` 컬럼에는 HTML 태그가 아닌 JSON 문자열 배열을 저장합니다.
-- 운영 Oracle 11g는 `IS JSON` 제약을 지원하지 않으므로 초기 DML은 검증된 문자열 JSON 배열만 사용하고, 관리자 저장 기능에도 같은 검증을 적용합니다.
+- MySQL 8.4에서도 기존 문자열 컬럼 계약을 유지하므로 초기 DML과 관리자 저장 기능 모두 검증된 JSON 문자열 배열만 사용합니다.
 - 사용자 화면은 배열의 각 문자열을 React `<li>` 요소로 생성하며 원시 HTML을 렌더링하지 않습니다.
 - 빈 배열, 문자열이 아닌 항목, 공백 문구, JSON 파싱 오류는 유효하지 않은 콘텐츠로 처리합니다.
 - 같은 목록 안의 중복 문구는 사용자 화면에서 한 번만 표시합니다.
@@ -65,7 +65,8 @@
 
 ## 구현 근거
 
-- `docs/db/04_popup_content_oracle.sql`
+- `scripts/db/mysql/01-create.sql`
+- `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/popup/controller/PopupContentController.java`
 - `src/main/java/org/our/sadari/popup/service/PopupContentServiceImpl.java`
 - `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
