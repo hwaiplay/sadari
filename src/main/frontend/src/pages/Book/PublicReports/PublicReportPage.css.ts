@@ -50,8 +50,8 @@ export const headerWrap = style({
 });
 
 export const coverFrame = style({
-  width: "fit-content",
-  height: "100%",
+  width: "47px",
+  height: "70px",
   borderRadius: "3px",
   overflow: "hidden",
   flexShrink: 0,
@@ -69,7 +69,7 @@ export const headingArea = style({
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "7px",
+  gap: "3px",
 });
 
 export const bookTitle = style({
@@ -87,7 +87,7 @@ export const bookTitle = style({
 export const authorRatingLine = style({
   display: "flex",
   alignItems: "center",
-  gap: "2px",
+  gap: "6px",
   minWidth: 0,
 });
 

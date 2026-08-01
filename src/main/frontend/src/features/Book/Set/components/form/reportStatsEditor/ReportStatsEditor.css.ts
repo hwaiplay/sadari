@@ -118,7 +118,7 @@ export const statsValue = style({
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.heading,
-  fontSize: "16px",
+  fontSize: "14px",
   lineHeight: 1.2,
   color: vars.color.black,
   letterSpacing: 0,
@@ -193,10 +193,10 @@ export const modal = style({
 });
 
 export const modalCalendar = style({
-  height: "470px",
+  height: "500px",
   "@media": {
     "screen and (max-width: 480px)": {
-      height: "462px",
+      height: "500px",
     },
   },
 });

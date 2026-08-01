@@ -15,7 +15,7 @@ const activityFadeIn = keyframes({
 
 export const page = style({
   width: "100%",
-  minHeight: "100vh",
+  minHeight: "calc(100svh - 52px - 60px)",
   padding: "0 0 110px",
   backgroundColor: "#ffffff",
 });
@@ -169,8 +169,8 @@ export const avatarWrap = style({
 });
 
 export const profileImage = style({
-  width: "112px",
-  height: "112px",
+  width: "100px",
+  height: "100px",
   borderRadius: "50%",
   objectFit: "cover",
   border: "4px solid #ffffff",
@@ -245,11 +245,11 @@ export const profileIntro = style({
 
 export const socialFollowButton = style({
   position: "absolute",
-  right: "-13px",
-  bottom: "-7px",
-  minWidth: "58px",
-  height: "34px",
-  padding: "0 10px",
+  right: "-9px",
+  bottom: "18px",
+  minWidth: "54px",
+  height: "26px",
+  padding: "0 8px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
