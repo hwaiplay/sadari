@@ -2,8 +2,9 @@
 
 ## 적용 범위
 
-- 기준일은 2026년 7월 30일입니다.
+- 기준일은 2026년 8월 2일입니다.
 - 사용자 계정 비활성화, 복귀, 영구 탈퇴 유예·취소·삭제와 관리자 계정 처리 이력 조회에 적용합니다.
+- 설치형 웹앱의 정적 리소스 업데이트가 계정 상태에 미치는 영향도 적용 범위에 포함합니다.
 
 ## 공통 절차
 
@@ -96,6 +97,15 @@
 - 유예기간이 끝나 `TM_USERXM` 원본이 영구 삭제된 회원은 `현 사용자 관리` 대상에서 제외합니다.
 - 보존된 `TH_USWTHD` 이력의 별도 감사 조회 화면은 1차 구현 범위에 포함하지 않습니다.
 
+## 설치형 웹앱 업데이트
+
+- 설치형 웹앱 업데이트는 서비스워커, 화면 코드, 스타일, 아이콘 및 공개 정적 이미지만 갱신합니다.
+- 업데이트 확인과 정적 리소스 캐시 교체는 로그인 여부와 회원 상태에 관계없이 실행합니다.
+- `WITHDRAWN` 및 `DELETE_PENDING` 회원에게도 최신 제한 상태 화면을 제공하되 계정 상태와 사용자 데이터는 변경하지 않습니다.
+- 업데이트 과정에서는 인증 쿠키, 알림 데이터, 업로드 파일 및 사용자별 API 응답을 캐시에 저장하지 않습니다.
+- 계정 재활성화 또는 영구 탈퇴 취소 시 정적 리소스 업데이트 이력을 기준으로 사용자 데이터를 복원하지 않습니다.
+- 상세 캐시와 실패 처리 기준은 [설치형 웹앱 자동 업데이트 정책](pwa-update-policy.md)을 따릅니다.
+
 ## 구현 근거
 
 - `src/main/java/org/our/sadari/user/service/UserWithdrawalServiceImpl.java`
@@ -110,6 +120,8 @@
 - `src/main/frontend/src/pages/Settings/WithdrawalPendingPage.tsx`
 - `src/main/frontend/src/pages/Settings/WithdrawalResultPage.tsx`
 - `src/main/frontend/src/pages/Oauth/Oauth.tsx`
+- `src/main/frontend/src/app/pwa/registerServiceWorker.ts`
+- `src/main/frontend/public/service-worker.js`
 - `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `CT_POPUPX`
