@@ -10,6 +10,7 @@ import { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
+import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import * as styles from "./SearchBookPage.css";
 
 const SEARCH_STORAGE_KEY = "sadari:book-search";
@@ -37,6 +38,7 @@ const SearchBookPage = () => {
   const [hasMore, setHasMore] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [selectingBookIsbn, setSelectingBookIsbn] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -249,13 +251,27 @@ const SearchBookPage = () => {
    *
    * @author HanWon.Jang
    * @param book book 입력값
-   * @return 반환값이 없다
+   * @return 기존 독후감 확인과 화면 이동이 끝난 Promise
    */
-  const handleSelectBook = (book: BookSearchResultType) => {
+  const handleSelectBook = async (book: BookSearchResultType): Promise<void> => {
+    // 다른 도서의 기존 독후감 확인이 진행 중이면 중복 요청을 차단한다
+    if (selectingBookIsbn !== null) {
+      // 진행 중인 도서 선택 요청을 유지한다
+      return;
+    }
 
-    navigate("/set", {
-      state: { selectedBook: book },
-    });
+    // 선택 버튼의 중복 요청을 막기 위해 현재 ISBN을 진행 상태로 설정한다
+    setSelectingBookIsbn(book.isbn);
+    // 선택 흐름이 예외로 끝나도 버튼 진행 상태를 복원한다
+    try {
+      // 기존 독후감 수정과 추가 작성 선택 흐름으로 이동한다
+      await moveToReportEntry(book, navigate);
+    }
+
+    finally {
+      // 선택 안내가 끝난 뒤 다른 도서를 선택할 수 있도록 진행 상태를 해제한다
+      setSelectingBookIsbn(null);
+    }
   };
 
   /**
@@ -381,7 +397,8 @@ const SearchBookPage = () => {
                       <button
                         className={styles.primaryButton}
                         type="button"
-                        onClick={() => handleSelectBook(book)}
+                        onClick={() => void handleSelectBook(book)}
+                        disabled={selectingBookIsbn !== null}
                       >
                         {/* "선택" */}
                         {message("frontend.book.search.select")}

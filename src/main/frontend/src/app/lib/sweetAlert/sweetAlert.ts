@@ -15,6 +15,8 @@ type SweetAlertOptions = {
 
 type SweetAlertResult = {
   isConfirmed: boolean;
+  isSecondaryAction: boolean;
+  isDismissed: boolean;
 };
 
 const STYLE_ID = "sadari-sweet-alert-style";
@@ -473,7 +475,7 @@ function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
  *
  * @author HanWon.Jang
  * @param options 알림 모달 표시 옵션
- * @return 사용자의 확인 또는 취소 선택 결과 Promise
+ * @return 사용자의 확인, 보조 선택 또는 바깥 클릭 취소 결과 Promise
  */
 export function sweetAlert(options: SweetAlertOptions) {
 
@@ -547,7 +549,11 @@ export function sweetAlert(options: SweetAlertOptions) {
       cancelButton.textContent = options.cancelButtonText ?? "취소";
       cancelButton.addEventListener("click", () => {
 
-        close({ isConfirmed: false });
+        close({
+          isConfirmed: false,
+          isSecondaryAction: true,
+          isDismissed: false,
+        });
       });
       actions.appendChild(cancelButton);
     }
@@ -558,14 +564,23 @@ export function sweetAlert(options: SweetAlertOptions) {
     confirmButton.textContent = options.confirmButtonText ?? "확인";
     confirmButton.addEventListener("click", () => {
 
-      close({ isConfirmed: true });
+      close({
+        isConfirmed: true,
+        isSecondaryAction: false,
+        isDismissed: false,
+      });
     });
     actions.appendChild(confirmButton);
 
     overlay.addEventListener("click", (event) => {
 
-      if (event.target === overlay && options.showCancelButton) {
-        close({ isConfirmed: false });
+      // 알림 종류와 버튼 구성에 관계없이 화면 바깥을 누르면 아무 작업 없이 닫는다
+      if (event.target === overlay) {
+        close({
+          isConfirmed: false,
+          isSecondaryAction: false,
+          isDismissed: true,
+        });
       }
     });
 
