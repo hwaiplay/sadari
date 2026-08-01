@@ -42,8 +42,10 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class BookCoverColorService {
 
-    // 기존 네이버 도서와 신규 카카오 도서 표지 이미지 허용 호스트
-    private static final Set<String> TRUSTED_BOOK_IMAGE_HOSTS = Set.of("shopping-phinf.pstatic.net", "search1.kakaocdn.net");
+    // 기존 네이버 도서와 카카오 썸네일 및 Daum 도서 원본 이미지 허용 호스트
+    private static final Set<String> TRUSTED_BOOK_IMAGE_HOSTS = Set.of(
+            "shopping-phinf.pstatic.net", "search1.kakaocdn.net", "t1.daumcdn.net"
+    );
     // 표지 이미지 최대 응답 크기
     private static final int MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     // 표지 이미지 최대 가로 또는 세로 크기

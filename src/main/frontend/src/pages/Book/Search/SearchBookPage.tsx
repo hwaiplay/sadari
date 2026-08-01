@@ -11,6 +11,7 @@ import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
+import { handleBookCoverImageError } from "@/features/Book/utils/bookCoverImage";
 import * as styles from "./SearchBookPage.css";
 
 const SEARCH_STORAGE_KEY = "sadari:book-search";
@@ -364,6 +365,8 @@ const SearchBookPage = () => {
                         <img
                           className={styles.coverImage}
                           src={book.image}
+                          data-fallback-image={book.thumbnailImage}
+                          onError={handleBookCoverImageError}
                           alt={message("frontend.book.search.coverAlt", [
                             title,
                           ])}

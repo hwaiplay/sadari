@@ -141,6 +141,22 @@ class BookCoverColorServiceTest {
     }
 
     /**
+     * 카카오 썸네일에서 추출한 Daum 도서 원본 표지 호스트를 허용하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getTrustedCoverUriAllowsDaumOriginalBookCoverHost() {
+        // Daum 도서 원본 이미지 형식의 표지 URI를 검증한다
+        URI coverUri = bookCoverColorService.getTrustedCoverUri(
+                "https://t1.daumcdn.net/lbook/image/6253040?timestamp=20260115151223"
+        );
+        // 허용 목록에 등록된 Daum 원본 표지 호스트인지 확인한다
+        assertNotNull(coverUri);
+        assertEquals("t1.daumcdn.net", coverUri.getHost());
+    }
+
+    /**
      * 카카오 호스트명을 접미사로 위장한 외부 주소를 차단하는지 검증한다
      *
      * @author SeungHyeon.Kang
