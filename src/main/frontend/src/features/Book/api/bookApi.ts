@@ -20,6 +20,13 @@ export type BookCoverColor = {
   reptColrName: string;
 };
 
+export type ExistingReportByIsbn = {
+  // 동일 ISBN으로 가장 최근에 작성한 독후감 번호
+  reptNumb: number;
+  // 기존 독후감과 연결된 도서 ISBN
+  bookIsbn: string;
+};
+
 /**
  * 신뢰된 도서 검색 표지 대표색과 가장 가까운 책장 색상 코드를 조회한다
  *
@@ -104,6 +111,23 @@ export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
   return assertResultDataSuccess(res.data);
 };
 
+/**
+ * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다
+ *
+ * @author HanWon.Jang
+ * @param isbn 기존 독후감을 조회할 도서 ISBN
+ * @return 동일 ISBN의 최근 독후감 조회 응답
+ * @throws API 요청 또는 비동기 처리 실패 시 발생
+ */
+export const getMyReportByIsbnApi = async (isbn: string) => {
+  // ISBN을 안전하게 전달하여 로그인 사용자의 최근 독후감을 조회한다
+  const res = await api.get<ResultData<ExistingReportByIsbn | undefined>>(
+    `/book/reports/by-isbn?isbn=${encodeURIComponent(isbn)}`,
+  );
+  // 공통 응답 검증을 통과한 최근 독후감 조회 결과를 반환한다
+  return assertResultDataSuccess(res.data);
+};
+
 export type LikeTargetParams = {
   tagtType: string;
   tagtNumb: number;
@@ -168,12 +192,13 @@ export type UptReptStatusGradeParams = {
   data: {
     reptStat: string;
     reptGrde: string;
+    pubcYsno: "Y" | "N";
     reptEndt?: string;
   };
 };
 
 /**
- * upt Rept Status Grade 정보를 수정한다
+ * 마이페이지에서 독서 상태와 별점 및 공개 여부를 빠르게 수정한다
  *
  * @author HanWon.Jang
  * @param props props 입력값

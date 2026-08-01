@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    도서 표지 기반 책장 색상 자동 선택 API 추가
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 검색 API 적용
+ * 2026-08-01        Hanwon.Jang        읽는 중 독후감 평균 평점 제외 정책 추가
  */
 @Slf4j
 @RestController
@@ -67,7 +68,7 @@ public class BookController {
      * @return 처리 결과
      */
     @GetMapping("/ratingAverage/by-isbn")
-    @Operation(summary = "ISBN 공개 평점 평균 조회", description = "공개/비공개 여부와 관계없이 해당 ISBN으로 작성된 독후감 평점 평균을 조회한다.")
+    @Operation(summary = "ISBN 공개 평점 평균 조회", description = "공개 여부와 관계없이 해당 ISBN의 완료 또는 중단 독후감 평점 평균을 조회한다.")
     public ResultData getRatingAverageByIsbn(@Parameter(description = "평점 평균을 조회할 도서 ISBN", example = "9788972756194")@RequestParam("isbn") String isbn) {
         // ISBN 기준 도서 평균 평점 조회 결과를 반환한다
         return reportService.getPublicRatingAverageByIsbn(isbn);

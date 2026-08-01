@@ -17,6 +17,8 @@ import org.our.sadari.social.dto.SocialDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
+ * 2026-08-01        Hanwon.Jang        공개 목록과 빠른 수정 상태 정책 추가
  */
 @Mapper
 public interface ReportMapper {
@@ -75,6 +77,15 @@ public interface ReportMapper {
     ReportDto getReportDtl(ReportDto req);
 
     /**
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param req 로그인 사용자 번호와 조회할 ISBN
+     * @return 동일 ISBN의 최근 독후감 정보
+     */
+    ReportDto getReportByIsbnDtl(ReportDto req);
+
+    /**
      * 좋아요를 허용할 수 있는 공개 독후감 대상인지 조회한다.
      * TB_LIKEXX 변경은 SocialMapper에서 처리하지만, 대상 검증 기준은 TM_REPORT이므로 ReportMapper에서 관리한다.
      *
@@ -94,7 +105,7 @@ public interface ReportMapper {
     List<ReportDto> getPublicReportList(ReportDto req);
 
     /**
-     * ISBN 기준으로 연결된 완료 독후감의 평균 별점을 조회한다.
+     * ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param bookIsbn 조회할 도서 ISBN
@@ -121,10 +132,10 @@ public interface ReportMapper {
     int uptReport(ReportDto reportDto);
 
     /**
-     * 독후감의 읽기 상태와 별점만 수정한다.
+     * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다.
      *
      * @author SeungHyeon.Kang
-     * @param reportDto 사용자 번호, 독후감 번호, 읽기 상태, 별점
+     * @param reportDto 사용자 번호, 독후감 번호, 읽기 상태, 별점, 공개 여부
      * @return 반영 건수
      */
     int uptReptStatusGrade(ReportDto reportDto);

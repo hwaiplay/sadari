@@ -66,6 +66,16 @@
 
 - `application-loc.yml`은 `localhost:3306/sadari` MySQL 8.4를 사용하며 비밀번호는
   `DB_PASSWORD` 환경변수로만 전달합니다.
+- Tailnet 장치에서 로컬 OAuth를 검증할 때는 `application-loc.yml`의 `domain.front`와
+  `domain.back` 기본값을 같은 `https://<tailscale-device>.<tailnet>.ts.net` 주소로 설정하고
+  `app.cookie.secure=true`, `app.cookie.same-site=Lax`를 사용합니다.
+- Vite 개발 서버는 `DOMAIN_BACK=http://127.0.0.1:8080`을 주입하여 `/api` 요청을 로컬
+  Spring 서버로 전달합니다. 이 내부 전달에서는 브라우저의 개발 Origin을 제거하여 POST와 PUT 요청이
+  외부 CORS 요청으로 오인되지 않게 하며, Spring은 `domain.back`의 Tailscale 기본값으로 OAuth 콜백 URI를 생성합니다.
+- 프런트엔드는 HTTPS를 사용하는 `*.ts.net` 개발 주소에서도 서비스워커를 등록하여 Tailnet 장치의
+  PWA 설치와 오프라인 앱 셸 검증을 허용합니다.
+- 카카오 개발자 콘솔의 Redirect URI에는
+  `https://<tailscale-device>.<tailnet>.ts.net/api/oauth/callback/kakao`를 등록해야 합니다.
 - `application-prod.yml`의 `DB_URL`은 MySQL JDBC URL을 사용하고 `DB_PASSWORD`는
   GitHub Actions Secret으로 전달합니다.
 - 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
@@ -73,8 +83,10 @@
 - `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
   `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
 - `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
-- 로컬 테스트 스케줄러는 10초마다 실행되며 현재 연결된 DB에서 삭제 예정일이 지난 모든 회원을
-  최대 처리 건수 범위까지 삭제하므로 공용 또는 운영 DB에 `loc` 프로필을 연결하면 안 됩니다.
+- Tailnet OAuth 검증용 `application-loc.yml`은 공유 DB의 삭제 위험을 차단하도록
+  `scheduler.enabled=false`를 사용합니다.
+- 영구 탈퇴 테스트 스케줄러가 필요한 경우에는 격리된 로컬 DB를 연결한 뒤에만 일시적으로
+  `scheduler.enabled=true`를 사용해야 합니다.
 - `application-prod.yml`은 `withdrawal.hard-delete-test-enabled`를 `false`로 고정합니다.
   이 값은 GitHub Actions 환경변수로 노출하지 않으므로 운영 배포에서 로컬 테스트 스케줄러를
   활성화할 수 없습니다.

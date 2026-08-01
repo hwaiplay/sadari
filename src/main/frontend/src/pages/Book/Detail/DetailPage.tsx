@@ -11,7 +11,7 @@ import {
   sweetEditGuide,
   sweetWarning,
 } from "@/app/lib/sweetAlert/sweetAlert";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
@@ -51,6 +51,10 @@ type RecordCaretTarget = {
   caretOffset: number;
   // 기록 본문 시작점부터 클릭한 커서 줄까지의 세로 거리
   caretTopOffset: number;
+};
+
+type DetailPageState = {
+  startEditing?: boolean;
 };
 
 /**
@@ -124,6 +128,7 @@ function DetailPage() {
 
   const { id } = useParams();
   const idNum = Number(id);
+  const location = useLocation();
   const navigate = useNavigate();
   const { data, error, isError, isPending } = useBookDetail(idNum);
   const bookData = data?.data;
@@ -164,10 +169,11 @@ function DetailPage() {
     // 서버에서 조회한 독서 상태를 상세 직접 편집의 현재값과 복원 기준값으로 설정한다
     setStatus(bookData.reptStat ?? "");
     setInitialStatus(bookData.reptStat ?? "");
-    // 서버에서 조회한 평점을 숫자 입력 상태로 설정한다
-    setGrade(Number(bookData.reptGrde) || 0);
-    // 서버에서 조회한 공개 여부를 Y와 N 중 하나로 보정해 설정한다
-    setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
+    const isReadingReport = bookData.reptStat === REPORT_STATUS_READ;
+    // 읽는 중인 기존 데이터에 평점이 남아 있어도 선택 불가한 0점으로 화면을 보정한다
+    setGrade(isReadingReport ? 0 : Number(bookData.reptGrde) || 0);
+    // 읽는 중인 기존 데이터는 공개값이 남아 있어도 비공개로 화면을 보정한다
+    setPubcYsno(isReadingReport ? "N" : bookData.pubcYsno === "Y" ? "Y" : "N");
     // 서버에서 조회한 독서 시작일과 종료일을 기간 편집 상태로 설정한다
     setStartDate(bookData.reptStdt ?? "");
     setEndDate(bookData.reptEndt ?? "");
@@ -177,6 +183,22 @@ function DetailPage() {
       getReportContentStorageByteLength(bookData.reptCntn ?? ""),
     );
   }, [bookData]);
+
+  // 동일 ISBN 독후감 선택창에서 전달한 편집 진입 상태를 상세 조회 완료 후 반영한다
+  useEffect(() => {
+    const pageState = location.state as DetailPageState | null;
+
+    // 동일 ISBN 선택창에서 수정한 경우에만 상세 조회 직후 편집 명령을 표시한다
+    if (!bookData || pageState?.startEditing !== true) {
+      // 일반 상세 진입에서는 현재 읽기 상태를 유지한다
+      return;
+    }
+
+    // 기존 독후감 수정을 바로 시작할 수 있도록 상세 화면을 편집 상태로 전환한다
+    setIsEditing(true);
+    // 새로고침이나 재조회에서 편집 진입 상태가 반복 적용되지 않도록 이동 상태를 비운다
+    navigate(location.pathname, { replace: true, state: null });
+  }, [bookData, location.pathname, location.state, navigate]);
 
   useEffect(() => {
 
@@ -308,6 +330,27 @@ function DetailPage() {
   }
 
   /**
+   * 선택한 독서 상태를 반영하고 읽는 중에는 공개 여부와 평점을 초기화한다
+   *
+   * @author HanWon.Jang
+   * @param nextStatus 사용자가 선택한 다음 독서 상태 코드
+   * @return 반환값이 없다
+   */
+  function applyStatusSelection(nextStatus: ReadingStatusType): void {
+
+    // 선택한 상태를 상세 요약과 수정 요청에 반영한다
+    setStatus(nextStatus);
+
+    // 읽는 중으로 되돌리면 완료 또는 중단 상태에서 입력한 공개 여부와 평점을 제거한다
+    if (nextStatus === REPORT_STATUS_READ) {
+      // 선택 불가한 평점을 미선택 내부값으로 복원한다
+      setGrade(0);
+      // 다른 사용자에게 노출되지 않도록 공개 여부를 비공개로 복원한다
+      setPubcYsno("N");
+    }
+  }
+
+  /**
    * 독서 상태 변경을 반영하고 읽는 중에서 완료 또는 중단으로 바뀌면 종료일 보정을 확인한다
    *
    * @author HanWon.Jang
@@ -323,8 +366,8 @@ function DetailPage() {
 
     // 종료일 확인이 필요하지 않은 상태는 상세 화면 요약과 저장 요청에 즉시 반영한다
     if (!needsEndDateConfirm) {
-      // 사용자가 선택한 독서 상태를 편집값으로 설정한다
-      setStatus(nextStatus);
+      // 상태별 평점 및 공개 정책을 함께 적용해 편집값을 설정한다
+      applyStatusSelection(nextStatus);
       return;
     }
 
@@ -342,7 +385,7 @@ function DetailPage() {
     }
 
     // 확인된 완료 또는 중단 상태를 상세 화면 요약과 저장 요청에 반영한다
-    setStatus(nextStatus);
+    applyStatusSelection(nextStatus);
     // 확인된 독서 상태에 맞춰 독서 종료일을 오늘로 설정한다
     setEndDate(formatDateValue(new Date()));
   }
@@ -407,8 +450,9 @@ function DetailPage() {
     if (bookData) {
       setStatus(bookData.reptStat ?? "");
       setInitialStatus(bookData.reptStat ?? "");
-      setGrade(Number(bookData.reptGrde) || 0);
-      setPubcYsno(bookData.pubcYsno === "Y" ? "Y" : "N");
+      const isReadingReport = bookData.reptStat === REPORT_STATUS_READ;
+      setGrade(isReadingReport ? 0 : Number(bookData.reptGrde) || 0);
+      setPubcYsno(isReadingReport ? "N" : bookData.pubcYsno === "Y" ? "Y" : "N");
       setStartDate(bookData.reptStdt ?? "");
       setEndDate(bookData.reptEndt ?? "");
       setContent(bookData.reptCntn ?? "");
@@ -471,7 +515,10 @@ function DetailPage() {
       return;
     }
 
-    // 상세 화면이 보유한 값으로 별도 수정 페이지 없이 독후감 수정 요청을 전송한다
+    const normalizedGrade = status === REPORT_STATUS_READ ? "0" : String(grade);
+    const normalizedPubcYsno = status === REPORT_STATUS_READ ? "N" : pubcYsno;
+
+    // 상세 화면이 보유한 상태별 허용값으로 별도 수정 페이지 없이 독후감 수정 요청을 전송한다
     updateReport(
       {
         reptNumb: idNum,
@@ -479,9 +526,9 @@ function DetailPage() {
           reptStat: status,
           reptStdt: startDate,
           reptEndt: endDate,
-          reptGrde: String(grade),
+          reptGrde: normalizedGrade,
           reptColr: bookData.reptColr,
-          pubcYsno,
+          pubcYsno: normalizedPubcYsno,
           reptCntn: sanitizeText(content),
         },
       },
@@ -810,7 +857,7 @@ function DetailPage() {
               : styles.contentSwitchFade,
           )}
         >
-          {/* 독서 상태와 공개 여부 및 평점과 독서기간 직접 편집 영역 */}
+          {/* 읽는 중에는 2열, 완료와 중단에는 4열로 전환되는 독서 정보 직접 편집 영역 */}
           <ReportStatsEditor
             statusCodes={statusCodes}
             status={status}

@@ -1,6 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig, type HttpProxy, type ProxyOptions } from "vite";
 import react from "@vitejs/plugin-react";
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
+import type { ClientRequest } from "node:http";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "yaml";
@@ -14,6 +15,49 @@ type SpringProfileConfig = {
 const SPRING_PLACEHOLDER_PATTERN =
   /^\$\{([A-Z][A-Z0-9_]*)(?::([^}]*))?\}$/;
 const SPRING_PROFILE_PATTERN = /^[A-Za-z0-9_-]+$/;
+
+/**
+ * 브라우저가 로컬 개발 서버에 보낸 Origin을 내부 백엔드 프록시 요청에서 제거한다
+ *
+ * @author HanWon.Jang
+ * @param proxyRequest 백엔드로 전달할 프록시 요청
+ * @return 반환값이 없다
+ */
+function removeForwardedOrigin(proxyRequest: ClientRequest): void {
+
+  // 브라우저와 Vite 사이에서는 동일 출처 요청이므로 내부 전달 단계에서 외부 CORS 요청으로 오인되지 않게 한다
+  proxyRequest.removeHeader("origin");
+}
+
+/**
+ * 로컬 개발 프록시에 동일 출처 요청 헤더 보정 처리를 등록한다
+ *
+ * @author HanWon.Jang
+ * @param proxy Vite 개발 서버의 HTTP 프록시
+ * @return 반환값이 없다
+ */
+function configureDevelopmentProxy(proxy: HttpProxy.ProxyServer): void {
+
+  // POST와 PUT 저장 요청도 조회 요청과 같은 내부 프록시 흐름으로 처리되도록 Origin 보정을 등록한다
+  proxy.on("proxyReq", removeForwardedOrigin);
+}
+
+/**
+ * API와 업로드 경로에 공통으로 적용할 로컬 개발 프록시 옵션을 생성한다
+ *
+ * @author HanWon.Jang
+ * @param target 프록시 요청을 전달할 백엔드 주소
+ * @return 동일 출처 헤더 보정이 포함된 Vite 프록시 옵션
+ */
+function createDevelopmentProxyOptions(target: string): ProxyOptions {
+
+  // 운영 CORS 허용 범위를 넓히지 않고 로컬 개발 프록시에서만 요청 출처를 보정한다
+  return {
+    target,
+    changeOrigin: true,
+    configure: configureDevelopmentProxy,
+  };
+}
 
 /**
  * Spring yml의 환경변수 placeholder를 현재 프로세스 환경값으로 해석합니다.
@@ -94,14 +138,8 @@ export default defineConfig(({ command }) => {
     server: backendDomain
       ? {
           proxy: {
-            "/api": {
-              target: backendDomain,
-              changeOrigin: true,
-            },
-            "/uploads": {
-              target: backendDomain,
-              changeOrigin: true,
-            },
+            "/api": createDevelopmentProxyOptions(backendDomain),
+            "/uploads": createDevelopmentProxyOptions(backendDomain),
           },
         }
       : undefined,

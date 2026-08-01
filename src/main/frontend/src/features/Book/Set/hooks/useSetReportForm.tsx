@@ -18,6 +18,7 @@ import {
   validateSelectedBook,
 } from "@/features/Book/utils/reportValidation";
 import { useSetReport } from "./useSetReport";
+import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
 
 /**
  * use Set Report Form 상태와 처리 함수를 제공한다
@@ -88,8 +89,17 @@ export function useSetReportForm(
       return;
     }
 
-    const normalizedPubcYsno: "Y" | "N" = pubcYsno === "Y" ? "Y" : "N";
-    const normalizedGrade = grade ? String(grade) : "0";
+    const isReadingStatus = status === REPORT_STATUS_READ;
+    let normalizedPubcYsno: "Y" | "N" = "N";
+    let normalizedGrade = "0";
+
+    // 완료와 중단 상태에서만 사용자가 선택한 공개 여부와 평점을 저장 요청에 반영한다
+    if (!isReadingStatus) {
+      // 공개를 명시적으로 선택한 경우에만 공개값을 사용한다
+      normalizedPubcYsno = pubcYsno === "Y" ? "Y" : "N";
+      // 평점이 비어 있으면 미선택 내부값 0을 사용한다
+      normalizedGrade = grade ? String(grade) : "0";
+    }
     const data = {
       reptStat: status as ReadingStatusType,
       reptStdt: startDate as string,

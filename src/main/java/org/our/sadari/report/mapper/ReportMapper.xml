@@ -212,7 +212,7 @@
              , A.REPT_ENDT
              , A.REPT_GRDE
              , A.PUBC_YSNO
-             , REGEXP_REPLACE(B.BOOK_TITL, '[[:space:]]*\([^)]*\)[[:space:]]*$', '') AS BOOK_TITL
+             , REGEXP_REPLACE(B.BOOK_TITL, '[[:space:]]*[(][^)]*[)][[:space:]]*$', '') AS BOOK_TITL
              , B.BOOK_ATHR
              , B.BOOK_CVIM
              , B.BOOK_ISBN
@@ -349,9 +349,24 @@
            AND A.REPT_NUMB = #{reptNumb}
     </select>
 
+    <!-- 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다. -->
+    <select id="getReportByIsbnDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        SELECT /* getReportByIsbnDtl */
+               R.REPT_NUMB
+             , B.BOOK_ISBN
+          FROM TM_REPORT R
+    INNER JOIN TM_BKINFO B
+            ON B.BOOK_NUMB = R.BOOK_NUMB
+         WHERE R.USER_NUMB = #{userNumb}
+           AND B.BOOK_ISBN = #{bookIsbn}
+      ORDER BY R.REPT_NUMB DESC
+         LIMIT 1
+    </select>
+
     <!-- 좋아요 요청이 가능한 공개 독후감 대상인지 조회한다. -->
     <select id="getPublicReportLikeTargetCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicReportLikeTargetCnt */
                COUNT(*)
          FROM TM_REPORT R
@@ -359,16 +374,19 @@
            AND R.USER_NUMB = #{targetUserNumb}
            AND (
                R.USER_NUMB = #{userNumb}
-            OR R.PUBC_YSNO = #{commYes}
+            OR (    R.PUBC_YSNO = #{commYes}
+                AND R.REPT_STAT != #{reptStatRead}
+               )
            )
     </select>
 
-    <!-- ISBN 기준으로 다른 사용자의 공개 독후감을 조회하며, 독서 상태와 관계없이 전체 상태를 반환한다. -->
+    <!-- ISBN 기준으로 다른 사용자의 공개된 완료 또는 중단 독후감만 조회한다. -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicReportList */
                P.REPT_NUMB
              , P.USER_NUMB
@@ -412,11 +430,12 @@
             ON RPL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
            AND P.PUBC_YSNO = #{commYes}
+           AND P.REPT_STAT != #{reptStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
       ORDER BY P.REPT_NUMB DESC
     </select>
 
-    <!-- ISBN 기준으로 연결된 완료 독후감의 평균 별점을 조회한다. -->
+    <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->
     <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicRatingAverageByIsbn */
@@ -473,13 +492,14 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 독후감의 읽기 상태와 별점만 수정한다. -->
+    <!-- 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다. -->
     <update id="uptReptStatusGrade" parameterType="org.our.sadari.report.dto.ReportDto">
         UPDATE /* uptReptStatusGrade */
                TM_REPORT
         <set>
                REPT_STAT = #{reptStat}
              , REPT_GRDE = #{reptGrde}
+             , PUBC_YSNO = #{pubcYsno}
             <if test="reptEndt != null and reptEndt != ''">
              , REPT_ENDT = #{reptEndt}
             </if>
