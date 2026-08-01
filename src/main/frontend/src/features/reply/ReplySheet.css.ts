@@ -208,7 +208,7 @@ export const replyProfileImage = style({
 export const replyWriter = style({
   display: "inline-block",
   minWidth: 0,
-  maxWidth: "115px",
+  maxWidth: "190px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "16px",
