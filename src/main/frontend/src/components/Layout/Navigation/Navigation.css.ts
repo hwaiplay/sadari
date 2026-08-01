@@ -8,12 +8,12 @@ export const navContainer = style({
     left: 0,
     zIndex: 997,
     width: "auto",
-    height: vars.headerHeight,
+    height: `calc(${vars.headerHeight} + max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
     margin: "0 auto",
     display: "flex",
     alignItems: "center",
     background: '#fff',
-    padding: '0 clamp(16px, 8vw, 50px)',
+    padding: `0 clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
     boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
 });
@@ -28,13 +28,15 @@ export const navigation = style({
     display: "flex",
     justifyContent: "space-between",
     alignItems: "center",
-    width: "min(100%, clamp(320px, 56vw, 600px))",
+    // width: "min(100%, clamp(320px, 56vw, 600px))",
+    width: "100%",
+    height: "100%",
     margin: "0 auto",
 });
 
 export const navLink = style({
-    width: "24px",
-    height: "24px",
+    width: "40px",
+    height: "40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

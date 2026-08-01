@@ -623,7 +623,7 @@ function ReplySheet({
             <div className={styles.commentEmpty}>
               <img
                 className={styles.commentEmptyIcon}
-                src="/img/icons/noti-COMMENT.svg"
+                src="/img/icons/noti-REPLY.svg"
                 alt=""
               />
               <p className={styles.commentEmptyTitle}>
