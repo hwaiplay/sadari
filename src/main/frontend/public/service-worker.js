@@ -1,12 +1,15 @@
-const CACHE_NAME = "sadari-pwa-v1";
+const CACHE_PREFIX = "sadari-pwa-";
+const CACHE_NAME = `${CACHE_PREFIX}v2`;
 const APP_SHELL = [
   "/",
   "/favicon/site.webmanifest",
-  "/favicon/favicon.ico",
-  "/favicon/android-chrome-192x192.png",
-  "/favicon/android-chrome-512x512.png",
-  "/favicon/apple-touch-icon.png",
+  "/favicon/favicon.ico?v=20260802",
+  "/favicon/android-chrome-192x192.png?v=20260802",
+  "/favicon/android-chrome-512x512.png?v=20260802",
+  "/favicon/apple-touch-icon.png?v=20260802",
 ];
+const IMMUTABLE_CACHE_PATH_PREFIX_LIST = ["/assets/"];
+const REFRESHABLE_CACHE_PATH_PREFIX_LIST = ["/favicon/", "/fonts/", "/img/"];
 const AUTH_RETRY_RESULT_CODES = new Set([1001, 1002, 1003]);
 
 /**
@@ -69,83 +72,284 @@ async function uptAlimRead(alimNumb) {
   });
 }
 
-self.addEventListener("install", (event) => {
-  // 앱 설치 직후 기본 화면과 아이콘을 캐시해 최초 실행에 필요한 최소 자원을 준비한다.
-  event.waitUntil(
-    caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(APP_SHELL))
-      .then(() => self.skipWaiting()),
-  );
-});
+// 서비스워커 설치 시 오프라인 실행에 필요한 최소 앱 셸을 준비한다
+self.addEventListener("install", handleServiceWorkerInstall);
+// 새 서비스워커 활성화 시 이전 앱 셸 캐시를 정리한다
+self.addEventListener("activate", handleServiceWorkerActivate);
+// 화면 요청별 변경 가능성에 맞는 캐시 정책을 적용한다
+self.addEventListener("fetch", handleServiceWorkerFetch);
 
-self.addEventListener("activate", (event) => {
-  // 캐시 이름이 바뀌면 이전 버전 캐시를 제거해 오래된 JS/CSS가 계속 남지 않게 한다.
-  event.waitUntil(
-    caches.keys()
-      .then((cacheNames) => Promise.all(
-        cacheNames
-          .filter((cacheName) => cacheName !== CACHE_NAME)
-          .map((cacheName) => caches.delete(cacheName)),
-      ))
-      .then(() => self.clients.claim()),
-  );
-});
+/**
+ * 서비스워커 설치가 끝나기 전에 최신 앱 셸을 캐시에 저장한다
+ *
+ * @author HanWon.Jang
+ * @param {ExtendableEvent} event 서비스워커 설치 이벤트
+ * @return {void} 반환값이 없다
+ */
+function handleServiceWorkerInstall(event) {
 
-self.addEventListener("fetch", (event) => {
+  // 최신 앱 셸 저장과 대기 상태 해제가 끝날 때까지 설치 완료를 보류한다
+  event.waitUntil(setAppShellCache());
+}
+
+/**
+ * 오프라인 실행에 필요한 현재 버전의 기본 화면과 아이콘을 저장한다
+ *
+ * @author HanWon.Jang
+ * @return {Promise<void>} 앱 셸 저장 완료 Promise
+ */
+async function setAppShellCache() {
+
+  // 현재 앱 버전 전용 캐시를 연다
+  const cache = await caches.open(CACHE_NAME);
+  // 같은 버전에서 함께 사용해야 하는 기본 화면과 아이콘을 원자적으로 저장한다
+  await cache.addAll(APP_SHELL);
+  // 새 서비스워커가 기존 대기 버전을 건너뛰고 즉시 활성화될 수 있게 한다
+  await self.skipWaiting();
+}
+
+/**
+ * 서비스워커 활성화가 끝나기 전에 이전 사다리 앱 셸 캐시를 제거한다
+ *
+ * @author HanWon.Jang
+ * @param {ExtendableEvent} event 서비스워커 활성화 이벤트
+ * @return {void} 반환값이 없다
+ */
+function handleServiceWorkerActivate(event) {
+
+  // 이전 캐시 제거와 현재 화면 제어가 끝날 때까지 활성화 완료를 보류한다
+  event.waitUntil(activateLatestServiceWorker());
+}
+
+/**
+ * 이전 앱 셸 캐시를 제거하고 열린 화면을 최신 서비스워커 제어 대상으로 전환한다
+ *
+ * @author HanWon.Jang
+ * @return {Promise<void>} 최신 서비스워커 활성화 완료 Promise
+ */
+async function activateLatestServiceWorker() {
+
+  // 현재 출처에 저장된 캐시 이름을 조회한다
+  const cacheNameList = await caches.keys();
+  const deleteCachePromiseList = [];
+
+  // 사다리 앱이 만든 이전 버전 캐시만 골라 제거한다
+  for (const cacheName of cacheNameList) {
+    // 현재 버전이 아니면서 사다리 앱 접두사를 가진 캐시만 제거한다
+    if (cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME) {
+      // 이전 앱 셸 캐시 제거 작업을 활성화 완료 조건에 추가한다
+      deleteCachePromiseList.push(caches.delete(cacheName));
+    }
+
+  }
+
+  // 모든 이전 버전 캐시가 제거될 때까지 기다린다
+  await Promise.all(deleteCachePromiseList);
+  // 이미 열린 화면도 새 서비스워커가 즉시 제어하도록 전환한다
+  await self.clients.claim();
+}
+
+/**
+ * 요청 대상의 변경 가능성과 인증 범위에 따라 적합한 캐시 응답을 선택한다
+ *
+ * @author HanWon.Jang
+ * @param {FetchEvent} event 서비스워커 네트워크 요청 이벤트
+ * @return {void} 반환값이 없다
+ */
+function handleServiceWorkerFetch(event) {
+
   const request = event.request;
 
+  // 읽기 요청이 아니면 브라우저가 인증과 본문을 그대로 처리하도록 서비스워커에서 제외한다
   if (request.method !== "GET") {
+    // 변경 요청을 가로채지 않도록 종료한다
     return;
   }
 
+  // 동일 출처와 캐시 대상 경로를 판정할 요청 주소를 생성한다
   const requestUrl = new URL(request.url);
 
+  // 외부 출처 자원은 외부 서버의 캐시 정책을 존중하도록 서비스워커에서 제외한다
   if (requestUrl.origin !== self.location.origin) {
+    // 외부 자원 요청을 가로채지 않도록 종료한다
     return;
   }
 
-  // API와 업로드 파일은 사용자별 최신 데이터와 인증 상태가 중요하므로 서비스워커 캐시를 타지 않는다.
+  // API와 업로드 파일은 사용자별 최신 데이터와 인증 상태가 중요하므로 서비스워커 캐시에서 제외한다
   if (requestUrl.pathname.startsWith("/api") || requestUrl.pathname.startsWith("/uploads")) {
+    // 사용자 데이터 요청을 브라우저와 서버가 직접 처리하도록 종료한다
     return;
   }
 
+  // 화면 이동은 새 배포 화면을 우선하고 네트워크 장애 때만 저장된 앱 셸을 사용한다
   if (request.mode === "navigate") {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const responseClone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put("/", responseClone));
-          return response;
-        })
-        .catch(() => caches.match("/")),
-    );
+    // 최신 화면 우선 응답을 브라우저에 전달한다
+    event.respondWith(getNavigationResponse(request));
+    // 하나의 화면 요청에 캐시 전략이 중복 적용되지 않도록 종료한다
     return;
   }
 
-  event.respondWith(
-    caches.match(request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse;
-      }
+  // Vite 해시 파일은 내용이 바뀌면 주소도 바뀌므로 저장된 응답을 우선 사용한다
+  if (hasCachePathPrefix(requestUrl.pathname, IMMUTABLE_CACHE_PATH_PREFIX_LIST)) {
+    // 변경 불가능한 빌드 자원에 캐시 우선 응답을 적용한다
+    event.respondWith(getCacheFirstResponse(request));
+    // 하나의 정적 자원 요청에 캐시 전략이 중복 적용되지 않도록 종료한다
+    return;
+  }
 
-      return fetch(request).then((response) => {
-        const responseClone = response.clone();
+  // 같은 주소로 교체될 수 있는 아이콘과 화면 이미지는 서버의 최신 파일을 우선 사용한다
+  if (hasCachePathPrefix(requestUrl.pathname, REFRESHABLE_CACHE_PATH_PREFIX_LIST)) {
+    // 변경 가능한 정적 자원에 네트워크 우선 응답을 적용한다
+    event.respondWith(getNetworkFirstResponse(request));
+  }
+}
 
-        // Vite가 만드는 JS/CSS와 public 정적 자원만 캐시해 반복 방문 시 로딩 비용을 줄인다.
-        if (
-          requestUrl.pathname.startsWith("/assets/")
-          || requestUrl.pathname.startsWith("/favicon/")
-          || requestUrl.pathname.startsWith("/fonts/")
-          || requestUrl.pathname.startsWith("/img/")
-        ) {
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, responseClone));
-        }
+/**
+ * 화면 이동 시 서버의 최신 HTML을 사용하고 연결 장애 때 저장된 앱 셸을 반환한다
+ *
+ * @author HanWon.Jang
+ * @param {Request} request 화면 이동 요청
+ * @return {Promise<Response>} 최신 화면 또는 오프라인 앱 셸 응답
+ */
+async function getNavigationResponse(request) {
 
-        return response;
-      });
-    }),
-  );
-});
+  // 네트워크가 연결된 동안 최신 배포 화면을 조회한다
+  try {
+    const response = await fetch(request);
+
+    // 정상 응답만 오프라인 앱 셸로 교체해 오류 화면이 장기간 남지 않게 한다
+    if (response.ok) {
+      // 다음 오프라인 실행에 사용할 최신 기본 화면을 저장한다
+      await setRuntimeCacheResponse("/", response);
+    }
+
+    // 서버에서 받은 최신 화면 응답을 반환한다
+    return response;
+  }
+
+  catch {
+    // 네트워크 장애를 대신할 기본 화면을 캐시에서 조회한다
+    const cachedResponse = await caches.match("/");
+
+    // 저장된 앱 셸이 있으면 오프라인 화면을 제공한다
+    if (cachedResponse) {
+      // 마지막으로 저장된 기본 화면을 반환한다
+      return cachedResponse;
+    }
+
+    // 앱 셸도 없으면 브라우저가 연결 실패로 처리할 오류 응답을 반환한다
+    return Response.error();
+  }
+}
+
+/**
+ * 내용 해시가 있는 빌드 자원은 저장된 응답을 우선하고 없을 때 서버에서 내려받는다
+ *
+ * @author HanWon.Jang
+ * @param {Request} 빌드 정적 자원 요청
+ * @return {Promise<Response>} 캐시 또는 네트워크 정적 자원 응답
+ */
+async function getCacheFirstResponse(request) {
+
+  // 동일한 빌드 자원이 이미 저장되어 있는지 확인한다
+  const cachedResponse = await caches.match(request);
+
+  // 내용 해시가 같은 파일은 변경되지 않으므로 저장된 응답을 재사용한다
+  if (cachedResponse) {
+    // 저장된 빌드 자원 응답을 반환한다
+    return cachedResponse;
+  }
+
+  // 처음 요청된 빌드 자원을 서버에서 내려받는다
+  const response = await fetch(request);
+
+  // 정상 응답만 저장해 일시적인 오류가 캐시에 남지 않게 한다
+  if (response.ok) {
+    // 이후 요청에서 재사용할 빌드 자원을 저장한다
+    await setRuntimeCacheResponse(request, response);
+  }
+
+  // 서버에서 받은 빌드 자원 응답을 반환한다
+  return response;
+}
+
+/**
+ * 같은 주소로 교체될 수 있는 정적 자원은 서버를 우선하고 연결 장애 때 캐시를 사용한다
+ *
+ * @author HanWon.Jang
+ * @param {Request} 변경 가능한 정적 자원 요청
+ * @return {Promise<Response>} 네트워크 또는 캐시 정적 자원 응답
+ */
+async function getNetworkFirstResponse(request) {
+
+  // 연결 가능한 동안 최신 아이콘과 화면 이미지를 조회한다
+  try {
+    const response = await fetch(request);
+
+    // 정상 응답만 교체해 깨진 파일 응답이 캐시에 남지 않게 한다
+    if (response.ok) {
+      // 같은 주소의 이전 정적 자원을 최신 응답으로 교체한다
+      await setRuntimeCacheResponse(request, response);
+    }
+
+    // 서버에서 받은 최신 정적 자원 응답을 반환한다
+    return response;
+  }
+
+  catch {
+    // 네트워크 장애를 대신할 정적 자원을 캐시에서 조회한다
+    const cachedResponse = await caches.match(request);
+
+    // 이전에 저장된 자원이 있으면 연결 장애 중에도 화면을 유지한다
+    if (cachedResponse) {
+      // 마지막으로 저장된 정적 자원 응답을 반환한다
+      return cachedResponse;
+    }
+
+    // 캐시된 자원도 없으면 브라우저가 로드 실패로 처리할 오류 응답을 반환한다
+    return Response.error();
+  }
+}
+
+/**
+ * 최신 네트워크 응답을 현재 앱 버전 캐시에 복제해 저장한다
+ *
+ * @author HanWon.Jang
+ * @param {Request|string} request 저장할 요청 또는 앱 셸 경로
+ * @param {Response} response 복제해 저장할 정상 응답
+ * @return {Promise<void>} 정적 자원 저장 완료 Promise
+ */
+async function setRuntimeCacheResponse(request, response) {
+
+  // 현재 앱 버전 전용 캐시를 연다
+  const cache = await caches.open(CACHE_NAME);
+  // 브라우저에 반환할 원본 응답과 분리된 복제본을 저장한다
+  await cache.put(request, response.clone());
+}
+
+/**
+ * 요청 경로가 지정된 캐시 정책 접두사 중 하나에 포함되는지 판정한다
+ *
+ * @author HanWon.Jang
+ * @param {string} pathname 판정할 동일 출처 요청 경로
+ * @param {string[]} pathPrefixList 허용할 캐시 경로 접두사 목록
+ * @return {boolean} 캐시 정책 적용 대상 여부
+ */
+function hasCachePathPrefix(pathname, pathPrefixList) {
+
+  // 요청 경로와 일치하는 캐시 정책 접두사를 순서대로 확인한다
+  for (const pathPrefix of pathPrefixList) {
+    // 현재 접두사로 시작하면 해당 캐시 정책 적용 대상으로 판정한다
+    if (pathname.startsWith(pathPrefix)) {
+      // 일치하는 캐시 경로가 있음을 반환한다
+      return true;
+    }
+
+  }
+
+  // 일치하는 캐시 경로가 없음을 반환한다
+  return false;
+}
 
 self.addEventListener("push", (event) => {
   let payload = {};
@@ -169,8 +373,8 @@ self.addEventListener("push", (event) => {
   // 링크와 알림 번호는 notificationclick에서 이동 및 개별 읽음 처리에 사용하므로 notification data에 함께 저장한다.
   const showNotification = self.registration.showNotification(title, {
       body,
-      icon: "/favicon/android-chrome-192x192.png",
-      badge: "/favicon/favicon-32x32.png",
+      icon: "/favicon/android-chrome-192x192.png?v=20260802",
+      badge: "/favicon/favicon-32x32.png?v=20260802",
       data: {
         linkUrlx,
         alimNumb: Number.isFinite(alimNumb) ? alimNumb : null,
