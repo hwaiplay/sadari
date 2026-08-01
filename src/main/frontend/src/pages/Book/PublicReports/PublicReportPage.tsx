@@ -275,10 +275,10 @@ function PublicReportPage() {
                 );
                 const reportStatus = getReportStatus(report);
                 const isExpanded = Boolean(expandedReports[report.reptNumb]);
-                const reportContent =
-                  report.reptCntn || message("frontend.common.noWrittenReport");
+                const reportContent = report.reptCntn?.trim() ?? "";
+                const hasReportContent = reportContent.length > 0;
                 const isLongContent =
-                  reportContent.length > CONTENT_PREVIEW_LENGTH;
+                  hasReportContent && reportContent.length > CONTENT_PREVIEW_LENGTH;
 
                 return (
                   /* 공개 독후감 개별 항목 영역 */
@@ -315,36 +315,42 @@ function PublicReportPage() {
 
                     </div>
 
-                    <div
-                      className={
-                        isExpanded || !isLongContent
-                          ? styles.reportContentWrapOpen
-                          : styles.reportContentWrap
-                      }
-                    >
-                      <p className={styles.reportContent}>{reportContent}</p>
-                    </div>
+                    {hasReportContent ? (
+                      /* 공개 독후감 본문과 긴 내용 펼치기 영역 */
+                      <>
+                        <div
+                          className={
+                            isExpanded || !isLongContent
+                              ? styles.reportContentWrapOpen
+                              : styles.reportContentWrap
+                          }
+                        >
+                          <p className={styles.reportContent}>{reportContent}</p>
+                        </div>
 
-                    {isLongContent ? (
-                      <button
-                        className={styles.expandButton}
-                        type="button"
-                        aria-label={message(
-                          isExpanded
-                            ? "frontend.book.publicReports.collapse"
-                            : "frontend.book.publicReports.expand",
-                        )}
-                        onClick={() => handleToggleReport(report.reptNumb)}
-                      >
-                        <img
-                            className={
+                        {isLongContent ? (
+                          <button
+                            className={styles.expandButton}
+                            type="button"
+                            aria-label={message(
                               isExpanded
+                                ? "frontend.book.publicReports.collapse"
+                                : "frontend.book.publicReports.expand",
+                            )}
+                            onClick={() => handleToggleReport(report.reptNumb)}
+                          >
+                            <img
+                              className={
+                                isExpanded
                                   ? styles.expandArrowOpen
                                   : styles.expandArrow
-                            }
-                            src={"/img/icons/arrow-bottom.svg"}
-                            alt={"arrow"} />
-                      </button>
+                              }
+                              src={"/img/icons/arrow-bottom.svg"}
+                              alt={"arrow"}
+                            />
+                          </button>
+                        ) : null}
+                      </>
                     ) : null}
 
                     <div className={styles.itemMetrics}>

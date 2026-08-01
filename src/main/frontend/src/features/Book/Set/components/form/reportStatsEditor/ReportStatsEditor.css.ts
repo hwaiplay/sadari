@@ -60,6 +60,13 @@ export const statsGrid = style({
   gap: "8px",
 });
 
+export const statsGridCompact = style([
+  statsGrid,
+  {
+    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  },
+]);
+
 export const statsItem = style({
   position: "relative",
   minWidth: 0,

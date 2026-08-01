@@ -11,7 +11,7 @@ import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {searchBar} from "./Home.css";
 
@@ -161,6 +161,7 @@ function Home() {
   const [searchKeyword, setSearchKeyword] = useState("");
   const [appliedSearchKeyword, setAppliedSearchKeyword] = useState("");
   const [isSortOpen, setIsSortOpen] = useState(false);
+  const sortDropdownRef = useRef<HTMLDivElement>(null);
   const { data, isPending, isError, error } = useGetListQuery({
     bookKeyword: appliedSearchKeyword,
     sortType,
@@ -183,6 +184,44 @@ function Home() {
     setSearchKeyword("");
     setAppliedSearchKeyword("");
   }, [location.key, location.state]);
+
+  // 독후감 정렬 팝업이 열린 동안 화면 바깥 클릭으로 닫을 수 있게 감시한다
+  useEffect(() => {
+    // 정렬 팝업이 닫혀 있으면 문서 클릭 감시를 등록하지 않는다
+    if (!isSortOpen) {
+      // 정렬 팝업 외부 클릭 감시 없이 종료한다
+      return;
+    }
+
+    /**
+     * 독후감 정렬 팝업 바깥을 누르면 열린 옵션 목록을 닫는다
+     *
+     * @author HanWon.Jang
+     * @param event 문서 포인터 입력 이벤트
+     * @return 반환값이 없다
+     */
+    const handleSortOutsidePointerDown = (event: PointerEvent): void => {
+      const target = event.target;
+
+      // 정렬 버튼이나 옵션 목록 내부 입력은 현재 팝업 상태를 유지한다
+      if (target instanceof Node && sortDropdownRef.current?.contains(target)) {
+        // 정렬 팝업 내부 입력의 기본 동작을 계속 처리한다
+        return;
+      }
+
+      // 정렬 영역 바깥을 누르면 옵션 목록을 닫는다
+      setIsSortOpen(false);
+    };
+
+    // 정렬 팝업보다 먼저 바깥 입력을 확인하도록 문서 포인터 이벤트를 등록한다
+    document.addEventListener("pointerdown", handleSortOutsidePointerDown);
+
+    // 정렬 팝업이 닫히거나 화면이 해제될 때 문서 이벤트를 정리하는 함수를 반환한다
+    return () => {
+      // 더 이상 필요하지 않은 정렬 팝업 바깥 입력 감시를 해제한다
+      document.removeEventListener("pointerdown", handleSortOutsidePointerDown);
+    };
+  }, [isSortOpen]);
 
   /**
    * handle Search Submit 사용자 동작을 처리한다
@@ -254,7 +293,7 @@ function Home() {
       </form>
 
       {/* 독후감 정렬 드롭다운 영역 */}
-      <div className={styles.sortDropdown}>
+      <div className={styles.sortDropdown} ref={sortDropdownRef}>
         {/* "독후감 정렬" */}
         <button
             className={styles.sortTrigger}

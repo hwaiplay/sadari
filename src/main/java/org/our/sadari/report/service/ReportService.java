@@ -13,6 +13,8 @@ import org.our.sadari.report.dto.ReportDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 계약 추가
+ * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 계약 추가
  */
 public interface ReportService {
     /**
@@ -36,6 +38,16 @@ public interface ReportService {
     ResultData getDetail(Long userNumb, Long reptNumb);
 
     /**
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param bookIsbn 조회할 도서 ISBN
+     * @return 동일 ISBN의 최근 독후감 조회 결과
+     */
+    ResultData getReportByIsbnDtl(Long userNumb, String bookIsbn);
+
+    /**
      * ISBN 기준으로 공개 독후감 목록을 조회한다.
      *
      * @author SeungHyeon.Kang
@@ -47,7 +59,7 @@ public interface ReportService {
 
     /**
      * ISBN 기준으로 도서의 평균 별점을 조회한다.
-     * 평균 별점은 공개 여부와 관계없이 전체 독후감을 기준으로 계산한다.
+     * 평균 별점은 공개 여부와 관계없이 읽는 중 상태를 제외하고 계산한다.
      *
      * @author SeungHyeon.Kang
      * @param bookIsbn 조회할 도서 ISBN
@@ -101,12 +113,12 @@ public interface ReportService {
     ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto);
 
     /**
-     * 독후감의 읽기 상태와 별점만 수정한다.
+     * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @param reptNumb 수정할 독후감 번호
-     * @param reportDto 수정할 읽기 상태와 별점
+     * @param reportDto 수정할 읽기 상태와 별점 및 공개 여부
      * @return 수정 처리 결과
      */
     ResultData uptReptStatusGrade(Long userNumb, Long reptNumb, ReportDto reportDto);

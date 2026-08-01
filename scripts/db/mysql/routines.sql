@@ -33,7 +33,12 @@ BEGIN
     RETURN COALESCE(V_CODE_NAME, P_COMD_CODE);
 END$$
 
-DROP FUNCTION IF EXISTS FN_GET_LOCAL_DATE_STR$$
+DELIMITER ;
+
+DROP FUNCTION IF EXISTS FN_GET_LOCAL_DATE_STR;
+
+-- 도서 검색 응답의 8자리 날짜와 DATETIME 컬럼의 날짜 문자열을 같은 날짜 단위로 정규화한다
+-- 한국어 요청은 년월일 표기로 반환하고 그 외 언어는 시간 정보를 제외한 ISO 날짜로 반환한다
 CREATE FUNCTION FN_GET_LOCAL_DATE_STR(
     P_DATE_STR VARCHAR(255),
     P_LOCALE VARCHAR(50)
@@ -41,22 +46,29 @@ CREATE FUNCTION FN_GET_LOCAL_DATE_STR(
 DETERMINISTIC
 NO SQL
 SQL SECURITY INVOKER
-BEGIN
-    IF P_DATE_STR IS NULL THEN
-        RETURN NULL;
-    END IF;
+RETURN CASE
+           WHEN P_DATE_STR IS NULL
+               THEN NULL
+           WHEN P_DATE_STR REGEXP '^[0-9]{8}$'
+                    AND LOWER(COALESCE(P_LOCALE, 'ko')) LIKE 'ko%'
+               THEN CONCAT(SUBSTR(P_DATE_STR, 1, 4), '년 '
+                         , CAST(SUBSTR(P_DATE_STR, 5, 2) AS UNSIGNED), '월 '
+                         , CAST(SUBSTR(P_DATE_STR, 7, 2) AS UNSIGNED), '일')
+           WHEN P_DATE_STR REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}([ T].*)?$'
+                    AND LOWER(COALESCE(P_LOCALE, 'ko')) LIKE 'ko%'
+               THEN CONCAT(SUBSTR(P_DATE_STR, 1, 4), '년 '
+                         , CAST(SUBSTR(P_DATE_STR, 6, 2) AS UNSIGNED), '월 '
+                         , CAST(SUBSTR(P_DATE_STR, 9, 2) AS UNSIGNED), '일')
+           WHEN P_DATE_STR REGEXP '^[0-9]{8}$'
+               THEN CONCAT(SUBSTR(P_DATE_STR, 1, 4), '-'
+                         , SUBSTR(P_DATE_STR, 5, 2), '-'
+                         , SUBSTR(P_DATE_STR, 7, 2))
+           WHEN P_DATE_STR REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}([ T].*)?$'
+               THEN SUBSTR(P_DATE_STR, 1, 10)
+           ELSE P_DATE_STR
+       END;
 
-    IF LOWER(COALESCE(P_LOCALE, 'ko')) LIKE 'ko%'
-            AND P_DATE_STR REGEXP '^[0-9]{8}$' THEN
-        RETURN CONCAT(
-            SUBSTR(P_DATE_STR, 1, 4), '.',
-            SUBSTR(P_DATE_STR, 5, 2), '.',
-            SUBSTR(P_DATE_STR, 7, 2)
-        );
-    END IF;
-
-    RETURN P_DATE_STR;
-END$$
+DELIMITER $$
 
 DROP FUNCTION IF EXISTS FN_GET_FOLW_STAT$$
 CREATE FUNCTION FN_GET_FOLW_STAT(
