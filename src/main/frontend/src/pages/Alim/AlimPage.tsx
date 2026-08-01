@@ -350,43 +350,6 @@ function AlimPage() {
   };
 
   /**
-   * render Alim Icon 화면 요소를 구성한다
-   *
-   * @author HanWon.Jang
-   * @param alimIconName alim Icon Name 입력값
-   * @return 구성된 화면 요소
-   */
-  const renderAlimIcon = (alimIconName?: string) => {
-    // 알림 상황 공통코드의 OPT1_NAME으로 아이콘을 분기한다.
-    // 코드가 아직 등록되지 않은 상황은 기존 종 아이콘을 보여줘 알림 목록 자체는 깨지지 않게 한다.
-    if (alimIconName === "HEART") {
-      return (
-        <svg className={styles.alimHeartIcon} viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.6l-1-1a5.5 5.5 0 0 0-7.8 7.8l1 1L12 21l7.8-7.6 1-1a5.5 5.5 0 0 0 0-7.8Z" />
-        </svg>
-      );
-    }
-
-    if (alimIconName === "FOLLOW") {
-      return (
-        <svg className={styles.alimIcon} viewBox="0 0 24 24" aria-hidden="true">
-          <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
-          <circle cx="9" cy="7" r="4" />
-          <path d="M19 8v6" />
-          <path d="M22 11h-6" />
-        </svg>
-      );
-    }
-
-    return (
-      <svg className={styles.alimIcon} viewBox="0 0 24 24" aria-hidden="true">
-        <path d="M18 8a6 6 0 0 0-12 0c0 7-3 7-3 9h18c0-2-3-2-3-9" />
-        <path d="M13.73 21a2 2 0 0 1-3.46 0" />
-      </svg>
-    );
-  };
-
-  /**
    * get Alim Icon Wrap Class 정보를 조회한다
    *
    * @author HanWon.Jang
