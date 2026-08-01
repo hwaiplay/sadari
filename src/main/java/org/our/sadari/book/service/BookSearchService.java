@@ -3,9 +3,13 @@ package org.our.sadari.book.service;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookJsonDto;
+import org.our.sadari.book.dto.KakaoBookJsonDto;
+import org.our.sadari.book.util.BookCoverUrlUtil;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -84,10 +88,12 @@ public class BookSearchService {
                 return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
             }
 
-            // 카카오 JSON 응답을 기존 사용자 화면 계약의 도서 목록으로 변환한다
-            BookJsonDto bookJsonDto = objectMapper.readValue(response.getBody(), BookJsonDto.class);
+            // 카카오 원문 응답을 외부 API 전용 DTO로 역직렬화한다
+            KakaoBookJsonDto kakaoBookJsonDto = objectMapper.readValue(response.getBody(), KakaoBookJsonDto.class);
+            // 외부 필드명이 화면 응답 필드명을 바꾸지 않도록 명시적인 화면 DTO로 변환한다
+            List<BookJsonDto.BookDto> bookList = getBookList(kakaoBookJsonDto.getDocuments());
             // 검색어 기준 카카오 도서 목록을 성공 응답으로 반환한다
-            return ResultData.success(bookJsonDto.getItems());
+            return ResultData.success(bookList);
         }
 
         // 인증, 호출량 또는 요청 오류는 비밀값과 원문 응답을 제외한 상태 코드만 기록한다
@@ -136,5 +142,133 @@ public class BookSearchService {
 
         // 인증 헤더를 포함한 카카오 도서 검색 응답을 반환한다
         return restTemplate.exchange(uri, HttpMethod.GET, new HttpEntity<>(headers), String.class);
+    }
+
+    /**
+     * 카카오 도서 원문 목록을 사용자 화면 응답 목록으로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param kakaoBookList 카카오 도서 검색 API 원문 목록
+     * @return 원본 표지와 썸네일 대체 주소를 포함한 화면 도서 목록
+     */
+    private List<BookJsonDto.BookDto> getBookList(List<KakaoBookJsonDto.BookDto> kakaoBookList) {
+        // 카카오 응답에 documents가 없으면 빈 검색 결과로 처리한다
+        if (StringUtil.isEmpty(kakaoBookList)) {
+            // 화면에 전달할 빈 도서 목록을 반환한다
+            return List.of();
+        }
+
+        // 카카오 원문과 화면 계약을 분리하여 저장할 결과 목록을 생성한다
+        List<BookJsonDto.BookDto> bookList = new ArrayList<>();
+
+        // 개별 카카오 도서를 화면 필드명과 값 형식으로 변환한다
+        for (KakaoBookJsonDto.BookDto kakaoBook : kakaoBookList) {
+            // 변환된 도서를 화면 결과 목록에 추가한다
+            bookList.add(getBookDto(kakaoBook));
+        }
+
+        // 화면 계약으로 변환한 도서 목록을 반환한다
+        return bookList;
+    }
+
+    /**
+     * 카카오 도서 원문 항목을 기존 사용자 화면 필드로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param kakaoBook 카카오 도서 검색 API 원문 항목
+     * @return 기존 image 필드와 원본 표지 주소를 유지한 화면 도서 정보
+     */
+    private BookJsonDto.BookDto getBookDto(KakaoBookJsonDto.BookDto kakaoBook) {
+        // 화면 도서 필드를 명시적으로 설정할 응답 객체를 생성한다
+        BookJsonDto.BookDto bookDto = new BookJsonDto.BookDto();
+        // 카카오 도서 제목을 기존 화면 필드에 설정한다
+        bookDto.setTitle(getSafeText(kakaoBook.getTitle()));
+        // 카카오 저자 배열을 기존 구분 문자열로 변환하여 설정한다
+        bookDto.setAuthor(getAuthor(kakaoBook.getAuthors()));
+        // 카카오 출판사를 기존 화면 필드에 설정한다
+        bookDto.setPublisher(getSafeText(kakaoBook.getPublisher()));
+        // ISBN10과 ISBN13 중 기존 데이터와 호환되는 값을 설정한다
+        bookDto.setIsbn(getIsbn(kakaoBook.getIsbn()));
+        // 검증된 Daum 원본 표지를 기존 image 응답 필드에 설정한다
+        bookDto.setImage(BookCoverUrlUtil.getOriginalCoverUrl(kakaoBook.getThumbnail()));
+        // 원본 표지 실패 시 사용할 공식 카카오 썸네일을 별도 필드에 설정한다
+        bookDto.setThumbnailImage(getSafeText(kakaoBook.getThumbnail()));
+        // 카카오 도서 소개를 기존 화면 필드에 설정한다
+        bookDto.setDescription(getSafeText(kakaoBook.getContents()));
+        // 카카오 출간일시를 기존 yyyyMMdd 형식으로 변환하여 설정한다
+        bookDto.setPubdate(getPublishedDate(kakaoBook.getDatetime()));
+
+        // 외부 필드명과 분리된 사용자 화면 도서 정보를 반환한다
+        return bookDto;
+    }
+
+    /**
+     * 카카오 저자 배열을 기존 화면의 구분 문자열로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param authors 카카오 도서 저자 목록
+     * @return 캐럿 문자로 구분한 저자명 또는 빈 문자열
+     */
+    private String getAuthor(List<String> authors) {
+        // 저자가 없는 도서도 화면에서 안전하게 렌더링할 수 있도록 빈 문자열을 적용한다
+        if (StringUtil.isEmpty(authors)) {
+            // 비어 있는 저자명을 반환한다
+            return StringUtil.EMPTY;
+        }
+
+        // 기존 화면과 저장 로직이 사용하는 저자 구분 형식으로 반환한다
+        return String.join("^", authors);
+    }
+
+    /**
+     * 카카오 ISBN 문자열에서 기존 데이터와 호환되는 ISBN13을 우선 선택한다
+     *
+     * @author SeungHyeon.Kang
+     * @param isbn 공백으로 구분된 ISBN10 또는 ISBN13 문자열
+     * @return ISBN13 우선 식별값 또는 빈 문자열
+     */
+    private String getIsbn(String isbn) {
+        // ISBN이 없는 도서도 화면에서 안전하게 검증할 수 있도록 빈 문자열을 적용한다
+        if (StringUtil.isEmpty(isbn) || isbn.isBlank()) {
+            // 비어 있는 ISBN을 반환한다
+            return StringUtil.EMPTY;
+        }
+
+        // ISBN10과 ISBN13을 개별 후보로 분리한다
+        String[] isbnValues = isbn.trim().split("\\s+");
+        // 카카오 응답에서 마지막에 제공되는 ISBN13을 우선 반환한다
+        return isbnValues[isbnValues.length - 1];
+    }
+
+    /**
+     * 카카오 출간일시를 기존 화면의 yyyyMMdd 형식으로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param datetime ISO 8601 형식의 도서 출간일시
+     * @return yyyyMMdd 형식의 출간일 또는 빈 문자열
+     */
+    private String getPublishedDate(String datetime) {
+        // 출간일이 없는 도서도 화면에서 안전하게 렌더링할 수 있도록 빈 문자열을 적용한다
+        if (StringUtil.isEmpty(datetime)) {
+            // 비어 있는 출간일을 반환한다
+            return StringUtil.EMPTY;
+        }
+
+        // ISO 8601 날짜 부분만 yyyyMMdd 형식으로 변환한다
+        int dateEndIndex = Math.min(datetime.length(), 10);
+        // 기존 화면과 저장 로직이 사용하는 출간일 형식으로 반환한다
+        return datetime.substring(0, dateEndIndex).replace("-", StringUtil.EMPTY);
+    }
+
+    /**
+     * 외부 API 문자열의 null을 기존 화면 계약의 빈 문자열로 보정한다
+     *
+     * @author SeungHyeon.Kang
+     * @param text 카카오 도서 검색 응답 문자열
+     * @return null이 제거된 화면 문자열
+     */
+    private String getSafeText(String text) {
+        // null 외부 문자열은 화면에서 직접 참조할 수 있도록 빈 문자열로 반환한다
+        return StringUtil.isEmpty(text) ? StringUtil.EMPTY : text;
     }
 }
