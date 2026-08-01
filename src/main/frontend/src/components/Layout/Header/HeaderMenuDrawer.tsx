@@ -370,7 +370,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
         {/*</svg>*/}
         {unreadAlimCnt > 0 ? (
           <span className={headerAlimBadge}>
-            {unreadAlimCnt > 99 ? "99+" : unreadAlimCnt}
+            {/*{unreadAlimCnt > 99 ? "99+" : unreadAlimCnt}*/}
           </span>
         ) : null}
       </button>
