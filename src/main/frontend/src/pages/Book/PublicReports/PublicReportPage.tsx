@@ -86,13 +86,15 @@ function PublicReportPage() {
   }, [publicReportsQuery.data]);
 
   const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
-    // 전체 옵션만 화면 전용 값으로 두고 실제 독서 상태는 READ_STAT 상세코드의 사용 순서를 그대로 따릅니다.
+    // 전체 옵션은 화면 전용 값으로 두고 읽는 중 상태를 제외한 READ_STAT 상세코드의 사용 순서를 따릅니다.
     return [
       { value: "ALL", label: "전체" },
-      ...(reportStatusCodeQuery.data ?? []).map((code) => ({
-        value: code.comdCode,
-        label: code.comdName,
-      })),
+      ...(reportStatusCodeQuery.data ?? [])
+        .filter((code) => code.comdCode.toUpperCase() !== "READ")
+        .map((code) => ({
+          value: code.comdCode,
+          label: code.comdName,
+        })),
     ];
   }, [reportStatusCodeQuery.data]);
 
@@ -237,7 +239,7 @@ function PublicReportPage() {
                         <span className={styles.metaSeparator}>|</span>
                         <span className={styles.ratingSummary}>
                       <span className={styles.ratingStar}>
-                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
+                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} width={"14px"}/>
                       </span>
                       <span>{pageState.ratingAverage}</span>
                     </span>
