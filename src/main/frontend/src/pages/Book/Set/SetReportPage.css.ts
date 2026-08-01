@@ -5,7 +5,7 @@ export const page = style({
   position: "relative",
   width: "100vw",
   marginLeft: "calc(50% - 50vw)",
-  minHeight: "100vh",
+  minHeight: "calc(100svh - 52px - 60px)",
   backgroundColor: vars.color.background,
   overflow: "hidden",
 

@@ -67,6 +67,7 @@ export const logo = style({
   display: "inline-block",
   position: "relative",
   zIndex: 1,
+  paddingTop: "2px"
 });
 
 export const routeTitle = style({
@@ -165,9 +166,8 @@ export const headerAlimBadge = style({
   position: "absolute",
   top: "5px",
   right: "3px",
-  minWidth: "14px",
-  height: "14px",
-  padding: "0 5px",
+  width: "10px",
+  height: "10px",
   borderRadius: "999px",
   backgroundColor: "#ef4444",
   color: "#ffffff",
