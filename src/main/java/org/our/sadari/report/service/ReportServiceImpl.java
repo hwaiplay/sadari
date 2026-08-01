@@ -43,6 +43,8 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
+ * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
+ * 2026-08-01        Hanwon.Jang        읽는 중 독후감 비공개와 평점 미집계 정책 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -116,6 +118,33 @@ public class ReportServiceImpl implements ReportService {
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(list);
+    }
+
+    /**
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
+     * 조회 결과가 없으면 새 독후감 작성 흐름을 유지할 수 있도록 성공 응답에 빈 데이터를 담는다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param bookIsbn 조회할 도서 ISBN
+     * @return 동일 ISBN의 최근 독후감 조회 결과
+     */
+    @Override
+    public ResultData getReportByIsbnDtl(Long userNumb, String bookIsbn) {
+        // ISBN이 없으면 기존 독후감과 선택한 도서를 안전하게 비교할 수 없다
+        if (StringUtil.isEmpty(bookIsbn)) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        // 동일 ISBN의 기존 독후감 조회 조건을 담을 객체를 생성한다
+        ReportDto reportDto = new ReportDto();
+        // 로그인 사용자 본인의 독후감만 조회하도록 사용자 번호를 설정한다
+        reportDto.setUserNumb(userNumb);
+        // 외부 도서 검색 결과의 ISBN을 일반 텍스트로 보정해 조회 조건에 설정한다
+        reportDto.setBookIsbn(StringUtil.normalizePlainText(bookIsbn));
+        // 가장 최근에 작성한 동일 ISBN 독후감 조회 결과를 성공 응답으로 반환한다
+        return ResultData.success(reportMapper.getReportByIsbnDtl(reportDto));
     }
 
     /**
@@ -924,7 +953,7 @@ public class ReportServiceImpl implements ReportService {
 
     /**
      * ISBN 기준 도서 평균 별점을 조회한다.
-     * 평균 별점은 공개 여부와 무관하게 전체 독후감을 기준으로 계산한다.
+     * 평균 별점은 공개 여부와 무관하게 읽는 중 상태를 제외한 독후감을 기준으로 계산한다.
      *
      * @author SeungHyeon.Kang
      * @param bookIsbn 조회할 도서 ISBN
@@ -968,6 +997,8 @@ public class ReportServiceImpl implements ReportService {
         setDefaultPublicFlag(reportDto);
         // 독후감 입력값에서 허용하지 않는 스크립트 내용을 제거한다
         sanitizeReport(reportDto, true);
+        // 읽는 중 독후감은 공개 목록과 평점 집계에 들어가지 않도록 저장값을 제한한다
+        applyReadingStatusPolicy(reportDto);
 
         // validateReport 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ReportValidationResult validationResult = validateReport(reportDto, true);
@@ -1030,6 +1061,8 @@ public class ReportServiceImpl implements ReportService {
         setDefaultPublicFlag(reportDto);
         // 독후감 입력값에서 허용하지 않는 스크립트 내용을 제거한다
         sanitizeReport(reportDto, false);
+        // 읽는 중으로 되돌린 독후감은 기존 공개 여부와 평점을 제거한다
+        applyReadingStatusPolicy(reportDto);
 
         // validateReport 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ReportValidationResult validationResult = validateReport(reportDto, true);
@@ -1050,8 +1083,8 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정한다.
-     * 전체 독후감 수정 화면으로 이동하지 않아도 완료 여부와 평점만 즉시 반영할 수 있도록 별도 수정 범위를 사용한다.
+     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정한다.
+     * 전체 독후감 수정 화면으로 이동하지 않아도 완료 여부와 공개 범위를 즉시 반영할 수 있도록 별도 수정 범위를 사용한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -1076,6 +1109,12 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setReptGrde(StringUtil.normalizePlainText(reportDto.getReptGrde()));
         // ReptStat 업무 값을 reportDto DTO에 설정한다
         reportDto.setReptStat(StringUtil.normalizePlainText(reportDto.getReptStat()));
+        // PubcYsno 업무 값을 reportDto DTO에 설정한다
+        reportDto.setPubcYsno(StringUtil.normalizePlainText(reportDto.getPubcYsno()));
+        // 빠른 수정 요청에 공개 여부가 없으면 기존 클라이언트도 안전하게 비공개로 처리한다
+        setDefaultPublicFlag(reportDto);
+        // 읽는 중 상태를 빠른 수정 API로 전달해도 공개와 평점 정책을 우회하지 못하게 한다
+        applyReadingStatusPolicy(reportDto);
         // ReptEndt 업무 값을 reportDto DTO에 설정한다
         reportDto.setReptEndt(LocalDate.now().toString()); // 빠른 완료/중단 처리에서는 사용자가 저장한 시점을 실제 독서 종료일로 기록한다.
 
@@ -1206,18 +1245,18 @@ public class ReportServiceImpl implements ReportService {
             reportDto.setReptGrde("0");
         }
 
+        // 전체 편집과 빠른 수정 모두 허용 범위와 0.5점 간격을 벗어난 평점을 저장하지 않는다
+        if (!isValidReportGrade(reportDto.getReptGrde())) {
+            // 처리한 값을 결과 컬렉션에 추가한다
+            missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
+        }
+
         //등록 수정화면에서 행해지는 등록 및 수정은 모든 값을 입력받아야한다.
         if(isFullScan) {
             // 시작일은 상태와 관계없이 기간 계산에 필요하므로 필수값으로 검증한다.
             if (StringUtil.isEmpty(reportDto.getReptStdt())) {
                 // 처리한 값을 결과 컬렉션에 추가한다
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_START_DATE_KEY));
-            }
-
-            // 다 읽었어요 상태의 빈 평점이나 0점부터 5점까지의 0.5점 간격을 벗어난 값은 저장하지 않는다.
-            if (!isValidReportGrade(reportDto.getReptGrde())) {
-                // 처리한 값을 결과 컬렉션에 추가한다
-                missingFields.add(MessageUtils.getMessage(REPORT_FIELD_GRADE_KEY));
             }
 
             // 책장 색상은 필수값이며 BOOK_COLR 공통코드에 등록된 값만 저장한다.
@@ -1233,7 +1272,7 @@ public class ReportServiceImpl implements ReportService {
                 missingFields.add(MessageUtils.getMessage(REPORT_FIELD_CONTENT_KEY));
             }
 
-            // 필수값 누락이 하나라도 있으면 누락 항목 목록을 메시지 인자로 반환한다.
+            // 전체 입력에서 누락된 항목이 있으면 날짜와 본문 상세 검증보다 필수값 안내를 우선한다
             if (!missingFields.isEmpty()) {
                 // 새로 생성한 ReportValidationResult 객체를 반환한다
                 return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
@@ -1262,11 +1301,18 @@ public class ReportServiceImpl implements ReportService {
                 }
             }
 
-            // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다.
-            if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
-                // 새로 생성한 ReportValidationResult 객체를 반환한다
-                return new ReportValidationResult(ResultEnum.COMMON_INVALID_REQUEST);
-            }
+        }
+
+        // 전체 편집과 빠른 수정에 필요한 필수값이 하나라도 없으면 DB 변경 전에 안내한다
+        if (!missingFields.isEmpty()) {
+            // 새로 생성한 ReportValidationResult 객체를 반환한다
+            return new ReportValidationResult(ResultEnum.COMMON_REPORT_REQUIRED_MISSING, formatMissingFields(missingFields));
+        }
+
+        // 공개 여부는 Y 또는 N만 허용해 공개 독후감 조회 조건을 안정적으로 유지한다
+        if (!Constant.COMM_YES.equals(reportDto.getPubcYsno()) && !Constant.COMM_NO.equals(reportDto.getPubcYsno())) {
+            // 새로 생성한 ReportValidationResult 객체를 반환한다
+            return new ReportValidationResult(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
         // 조회하거나 생성할 값이 없음을 반환한다
@@ -1340,6 +1386,26 @@ public class ReportServiceImpl implements ReportService {
             // PubcYsno 업무 값을 reportDto DTO에 설정한다
             reportDto.setPubcYsno(Constant.COMM_NO);
         }
+    }
+
+    /**
+     * 읽고 있는 독후감의 평점과 공개 여부를 집계 및 공개 대상이 아닌 값으로 강제한다.
+     * 화면에서 숨긴 입력값을 조작하더라도 서버 저장 정책이 동일하게 유지되도록 한다.
+     *
+     * @author HanWon.Jang
+     * @param reportDto 상태별 저장 정책을 적용할 독후감 DTO
+     */
+    private void applyReadingStatusPolicy(ReportDto reportDto) {
+
+        // 읽는 중이 아닌 완료와 중단 독후감은 사용자가 선택한 평점과 공개 여부를 유지한다
+        if (!Constant.REPORT_STAT_READ.equals(reportDto.getReptStat())) {
+            return;
+        }
+
+        // 선택 불가한 평점은 집계에 사용되지 않는 내부값 0으로 저장한다
+        reportDto.setReptGrde("0");
+        // 읽는 중 독후감은 다른 사용자에게 노출되지 않도록 비공개로 저장한다
+        reportDto.setPubcYsno(Constant.COMM_NO);
     }
 
     /**

@@ -53,7 +53,7 @@ function SetReportPage() {
     location.state as { selectedBook?: BookSearchResultType } | null
   )?.selectedBook;
 
-  const [status, setStatus] = useState<ReadingStatusType>("");
+  const [status, setStatus] = useState<ReadingStatusType>(REPORT_STATUS_READ);
   const [grade, setGrade] = useState(0);
   const [reptColr, setReptColr] = useState("");
   const [pubcYsno, setPubcYsno] = useState<"Y" | "N">("N");
@@ -102,7 +102,8 @@ function SetReportPage() {
 
   useEffect(() => {
 
-    if (!status && statusCodes.length > 0) {
+    // 공통코드 변경으로 현재 상태가 더 이상 유효하지 않을 때만 첫 활성 상태로 보정한다
+    if (statusCodes.length > 0 && !statusCodes.some((item) => item.comdCode === status)) {
       setStatus(statusCodes[0].comdCode);
     }
   }, [status, statusCodes]);
@@ -174,6 +175,27 @@ function SetReportPage() {
     // 달력에서 확정한 기간을 4열 요약과 등록 요청에 함께 사용한다
     setStartDate(nextStartDate);
     setEndDate(nextEndDate);
+  }
+
+  /**
+   * 독서 상태를 변경하고 읽는 중에는 평점과 공개 여부를 선택 불가한 기본값으로 되돌린다
+   *
+   * @author HanWon.Jang
+   * @param nextStatus 사용자가 선택한 다음 독서 상태 코드
+   * @return 반환값이 없다
+   */
+  function handleStatusChange(nextStatus: ReadingStatusType): void {
+
+    // 선택한 독서 상태를 등록 요청과 요약 화면에 반영한다
+    setStatus(nextStatus);
+
+    // 읽는 중 독후감은 공개와 평점 대상이 아니므로 이전 완료 상태의 선택값을 제거한다
+    if (nextStatus === REPORT_STATUS_READ) {
+      // 선택 불가한 평점을 미선택 내부값으로 복원한다
+      setGrade(0);
+      // 공개 목록에 노출되지 않도록 비공개로 복원한다
+      setPubcYsno("N");
+    }
   }
 
   /**
@@ -327,7 +349,7 @@ function SetReportPage() {
                 : detailStyles.contentSwitchFade,
             )}
           >
-            {/* 독서 상태와 공개 여부 및 평점과 독서 기간을 수정하는 4열 요약 영역 */}
+            {/* 읽는 중에는 2열, 완료와 중단에는 4열로 전환되는 독서 정보 요약 영역 */}
             <ReportStatsEditor
               statusCodes={statusCodes}
               status={status}
@@ -336,7 +358,7 @@ function SetReportPage() {
               startDate={startDate}
               endDate={endDate}
               periodTitle={periodTitle}
-              onStatusChange={setStatus}
+              onStatusChange={handleStatusChange}
               onGradeChange={setGrade}
               onPublicChange={setPubcYsno}
               onRangeChange={handleRangeChange}

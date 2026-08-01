@@ -1,6 +1,6 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetConfirm, sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   formatDateValue,
   formatDashedDateToDot,
@@ -54,6 +54,7 @@ const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type ReadingPeriod = "week" | "month" | "year";
 type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
 type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
+type ProfileStatAction = FollowListType | "totalReadBook" | "receivedLike";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
 const MODAL_CLOSE_DELAY_MS = 180;
@@ -303,6 +304,7 @@ function ProfileEditPage() {
   const [quickReport, setQuickReport] = useState<ReadingSummaryReport | null>(null);
   const [quickStatus, setQuickStatus] = useState<QuickReadingStatus>(REPORT_STATUS_DONE);
   const [quickGrade, setQuickGrade] = useState(5);
+  const [quickPubcYsno, setQuickPubcYsno] = useState<"Y" | "N">("N");
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
   const [followListType, setFollowListType] = useState<FollowListType | null>(null);
@@ -494,6 +496,38 @@ function ProfileEditPage() {
   };
 
   /**
+   * 마이페이지 활동 통계 클릭에 따라 안내 알림 또는 팔로우 목록을 연다
+   *
+   * @author HanWon.Jang
+   * @param action 클릭한 활동 통계의 동작 유형
+   * @param summary 안내에 사용할 마이페이지 활동 집계
+   * @return 통계 안내 또는 팔로우 목록 열기가 끝난 Promise
+   */
+  const handleProfileStatClick = async (
+    action: ProfileStatAction,
+    summary: MonthlyReadingSummary,
+  ): Promise<void> => {
+    // 팔로우와 팔로워 통계는 기존 사용자 목록 모달을 연다
+    if (action === "following" || action === "followers") {
+      // 선택한 관계 유형의 사용자 목록을 조회해 표시한다
+      await handleFollowListOpen(action);
+      // 팔로우 목록을 연 뒤 통계 안내 처리를 종료한다
+      return;
+    }
+
+    // 총 읽은 책 통계는 완료한 책 권수를 안내한다
+    if (action === "totalReadBook") {
+      // "총 {0}권의 책을 끝까지 읽었어요!"
+      await sweetInfo(message("frontend.profile.stats.totalReadBookAlert", [summary.totalReadBookCnt ?? 0]));
+      // 총 읽은 책 안내를 표시한 뒤 처리를 종료한다
+      return;
+    }
+
+    // "독후감에 좋아요를 {0}개 받았어요"
+    await sweetInfo(message("frontend.profile.stats.receivedLikeAlert", [summary.receivedLikeCnt ?? 0]));
+  };
+
+  /**
    * handle Reading Diff Click 사용자 동작을 처리한다
    *
    * @author HanWon.Jang
@@ -626,7 +660,8 @@ function ProfileEditPage() {
     setClosingModal(null);
     setQuickReport(report);
     setQuickStatus(REPORT_STATUS_DONE);
-    setQuickGrade(Number.isFinite(reportGrade) ? reportGrade : 5);
+    setQuickGrade(Number.isFinite(reportGrade) && reportGrade > 0 ? reportGrade : 5);
+    setQuickPubcYsno("N");
   };
 
   /**
@@ -779,10 +814,7 @@ function ProfileEditPage() {
       return;
     }
 
-    if (
-      quickStatus === REPORT_STATUS_DONE
-      && !(REPORT_GRADE_VALUES as readonly number[]).includes(quickGrade)
-    ) {
+    if (!(REPORT_GRADE_VALUES as readonly number[]).includes(quickGrade)) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
         /* "평점" */ message("frontend.report.field.grade"),
@@ -796,7 +828,8 @@ function ProfileEditPage() {
         reptNumb: quickReport.reptNumb,
         data: {
           reptStat: quickStatus,
-          reptGrde: quickStatus === REPORT_STATUS_DONE ? String(quickGrade) : "0",
+          reptGrde: String(quickGrade),
+          pubcYsno: quickPubcYsno,
           reptEndt: quickStatus === REPORT_STATUS_DONE || quickStatus === REPORT_STATUS_STOP
             ? formatDateValue(new Date())
             : quickReport.reptEndt,
@@ -1032,26 +1065,30 @@ function ProfileEditPage() {
    */
   const renderProfileStats = (summary: MonthlyReadingSummary) => {
 
-    const stats = [
+    const stats: Array<{
+      label: string;
+      value: string;
+      action: ProfileStatAction;
+    }> = [
       {
         label: /* "총 읽은 책" */ message("frontend.profile.stats.totalReadBook"),
         value: /* "{0}권" */ message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
-        listType: null,
+        action: "totalReadBook",
       },
       {
         label: /* "팔로우" */ message("frontend.profile.stats.following"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
-        listType: "following" as FollowListType,
+        action: "following",
       },
       {
         label: /* "팔로워" */ message("frontend.profile.stats.follower"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
-        listType: "followers" as FollowListType,
+        action: "followers",
       },
       {
         label: /* "좋아요수" */ message("frontend.profile.stats.receivedLike"),
         value: /* "{0}개" */ message("frontend.profile.stats.likeCount", [summary.receivedLikeCnt ?? 0]),
-        listType: null,
+        action: "receivedLike",
       },
     ];
 
@@ -1064,21 +1101,14 @@ function ProfileEditPage() {
             {stats.map((stat) => (
               /* 프로필 활동 통계 개별 항목 영역 */
               <div className={styles.goalAchievementItem} key={stat.label}>
-                {stat.listType ? (
-                  <button
-                    className={styles.profileStatsButton}
-                    type="button"
-                    onClick={() => void handleFollowListOpen(stat.listType)}
-                  >
-                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
-                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
-                  </button>
-                ) : (
-                  <>
-                    <span className={styles.goalAchievementLabel}>{stat.label}</span>
-                    <strong className={styles.goalAchievementCount}>{stat.value}</strong>
-                  </>
-                )}
+                <button
+                  className={styles.profileStatsButton}
+                  type="button"
+                  onClick={() => void handleProfileStatClick(stat.action, summary)}
+                >
+                  <span className={styles.goalAchievementLabel}>{stat.label}</span>
+                  <strong className={styles.goalAchievementCount}>{stat.value}</strong>
+                </button>
               </div>
             ))}
           </div>
@@ -1994,7 +2024,7 @@ function ProfileEditPage() {
           ) : null}
       </form>
 
-      {/* 현재 읽는 책의 상태와 별점을 빠르게 수정하는 모달 영역 */}
+      {/* 현재 읽는 책의 상태와 별점 및 공개 여부를 빠르게 수정하는 모달 영역 */}
       {quickReport && createPortal((
         /* 현재 읽는 책 빠른 수정 모달 배경 영역 */
         <div
@@ -2025,7 +2055,7 @@ function ProfileEditPage() {
                   {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.quickTitle")}
                 </h2>
                 <p className={styles.quickReadingHelp}>
-                  {/* "독서 상태와 별점만 빠르게 수정할 수 있어요." */ message("frontend.profile.currentReading.quickHelp")}
+                  {/* "독서 상태와 별점, 공개 여부를 빠르게 수정할 수 있어요." */ message("frontend.profile.currentReading.quickHelp")}
                 </p>
               </div>
               <button
@@ -2075,37 +2105,75 @@ function ProfileEditPage() {
                 </button>
               </div>
               {/* 독서 완료와 중단 상태 선택 영역 */}
-              <div className={styles.quickStatusGroup}>
-                <button
-                  className={
-                    quickStatus === REPORT_STATUS_DONE
-                      ? styles.quickStatusOptionActive
-                      : styles.quickStatusOption
-                  }
-                  type="button"
-                  onClick={() => setQuickStatus(REPORT_STATUS_DONE)}
-                >
-                  {/* "다 읽었어요" */ message("frontend.report.status.done")}
-                </button>
-                <button
-                  className={
-                    quickStatus === REPORT_STATUS_STOP
-                      ? styles.quickStatusOptionActive
-                      : styles.quickStatusOption
-                  }
-                  type="button"
-                  onClick={() => setQuickStatus(REPORT_STATUS_STOP)}
-                >
-                  {/* "중단했어요" */ message("frontend.report.status.stopped")}
-                </button>
+              <div className={styles.quickField}>
+                <span className={styles.quickFieldLabel}>
+                  {/* "독서 상태" */ message("frontend.report.field.status")}
+                </span>
+                <div className={styles.quickStatusGroup}>
+                  <button
+                    className={
+                      quickStatus === REPORT_STATUS_DONE
+                        ? styles.quickStatusOptionActive
+                        : styles.quickStatusOption
+                    }
+                    type="button"
+                    onClick={() => setQuickStatus(REPORT_STATUS_DONE)}
+                  >
+                    {/* "다 읽었어요" */ message("frontend.report.status.done")}
+                  </button>
+                  <button
+                    className={
+                      quickStatus === REPORT_STATUS_STOP
+                        ? styles.quickStatusOptionActive
+                        : styles.quickStatusOption
+                    }
+                    type="button"
+                    onClick={() => setQuickStatus(REPORT_STATUS_STOP)}
+                  >
+                    {/* "중단했어요" */ message("frontend.report.status.stopped")}
+                  </button>
+                </div>
               </div>
+
               {/* 독후감 별점 설정 영역 */}
-              <div className={styles.quickStarGroup}>
-                <RatingField
-                  value={quickGrade}
-                  onChange={setQuickGrade}
-                  disabled={quickStatus !== REPORT_STATUS_DONE}
-                />
+              <div className={styles.quickField}>
+                <span className={styles.quickFieldLabel}>
+                  {/* "평점" */ message("frontend.report.field.grade")}
+                </span>
+                <div className={styles.quickStarGroup}>
+                  <RatingField value={quickGrade} onChange={setQuickGrade} />
+                </div>
+              </div>
+
+              {/* 완료 또는 중단 독후감의 공개 여부 선택 영역 */}
+              <div className={styles.quickField}>
+                <span className={styles.quickFieldLabel}>
+                  {/* "공개 여부" */ message("frontend.report.field.public")}
+                </span>
+                <div className={styles.quickStatusGroup}>
+                  <button
+                    className={
+                      quickPubcYsno === "Y"
+                        ? styles.quickStatusOptionActive
+                        : styles.quickStatusOption
+                    }
+                    type="button"
+                    onClick={() => setQuickPubcYsno("Y")}
+                  >
+                    {/* "공개" */ message("frontend.report.public.on")}
+                  </button>
+                  <button
+                    className={
+                      quickPubcYsno === "N"
+                        ? styles.quickStatusOptionActive
+                        : styles.quickStatusOption
+                    }
+                    type="button"
+                    onClick={() => setQuickPubcYsno("N")}
+                  >
+                    {/* "비공개" */ message("frontend.report.public.off")}
+                  </button>
+                </div>
               </div>
             </div>
 

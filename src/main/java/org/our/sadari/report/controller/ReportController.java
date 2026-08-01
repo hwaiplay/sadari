@@ -30,6 +30,8 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 API 추가
+ * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 정책 추가
  */
 @Slf4j
 @RestController
@@ -75,6 +77,23 @@ public class ReportController {
                               , @Parameter(description = "독후감 번호", example = "1") @PathVariable("bookNumb") Long bookNumb) {
         // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회 결과를 반환한다
         return reportService.getDetail(userNumb, bookNumb);
+    }
+
+    /**
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
+     * 도서 검색 화면에서 기존 독후감 수정과 추가 작성 중 하나를 선택할 수 있도록 독후감 번호를 제공한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param isbn 최근 독후감을 조회할 도서 ISBN
+     * @return 동일 ISBN의 최근 독후감 조회 결과
+     */
+    @GetMapping("/reports/by-isbn")
+    @Operation(summary = "ISBN 기준 내 최근 독후감 조회", description = "로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.")
+    public ResultData getReportByIsbnDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                       , @Parameter(description = "최근 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn) {
+        // 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감 조회 결과를 반환한다
+        return reportService.getReportByIsbnDtl(userNumb, isbn);
     }
 
     /**
@@ -131,21 +150,21 @@ public class ReportController {
     }
 
     /**
-     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정한다.
-     * 본문, 기간, 공개 여부 등 전체 독후감 수정 화면에서 다루는 값은 변경하지 않도록 별도 API로 분리한다.
+     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정한다.
+     * 본문과 시작일 등 전체 독후감 수정 화면에서 다루는 값은 변경하지 않도록 별도 API로 분리한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param reptNumb 수정할 독후감 번호
-     * @param request 수정할 독서 상태와 별점 정보
+     * @param request 수정할 독서 상태와 별점 및 공개 여부 정보
      * @return 수정 처리 결과
      */
     @PutMapping("/uptReport/status-grade/{reptNumb}")
-    @Operation(summary = "독서 상태와 별점 빠른 수정", description = "마이페이지 팝업에서 독서 상태와 별점만 빠르게 수정한다.")
+    @Operation(summary = "독서 상태와 별점 및 공개 여부 빠른 수정", description = "마이페이지 팝업에서 독서 상태와 별점 및 공개 여부를 빠르게 수정한다.")
     public ResultData uptReptStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
                                        , @RequestBody ReportDto request) {
-        // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점만 빠르게 수정 결과를 반환한다
+        // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정 결과를 반환한다
         return reportService.uptReptStatusGrade(userNumb, reptNumb, request);
     }
 

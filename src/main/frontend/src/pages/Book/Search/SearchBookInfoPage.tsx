@@ -5,12 +5,14 @@
  */
 import { message } from "@/app/messages/message";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
+import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
 import * as bookInfoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
@@ -25,6 +27,7 @@ function SearchBookInfoPage() {
   const location = useLocation();
   const navigate = useNavigate();
   const book = location.state?.book as BookSearchResultType | undefined;
+  const [isSelectingReport, setIsSelectingReport] = useState(false);
   const { data: ratingAverageData } = useBookRatingAverageByIsbn(
     book?.isbn ?? "",
     Boolean(book?.isbn),
@@ -82,12 +85,27 @@ function SearchBookInfoPage() {
    * 선택한 도서를 사용하여 독후감 등록 화면으로 이동한다
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 기존 독후감 확인과 화면 이동이 끝난 Promise
    */
-  function goSetReportPage(): void {
+  async function goSetReportPage(): Promise<void> {
+    // 기존 독후감 확인이 진행 중이면 중복 화면 이동을 차단한다
+    if (isSelectingReport) {
+      // 진행 중인 독후감 선택 요청을 유지한다
+      return;
+    }
 
-    // 검색한 도서를 등록 화면의 초기 선택값으로 전달한다
-    navigate("/set", { state: { selectedBook } });
+    // 이 책으로 기록하기 버튼의 중복 요청을 막도록 진행 상태를 설정한다
+    setIsSelectingReport(true);
+    // 선택 흐름이 예외로 끝나도 버튼 진행 상태를 복원한다
+    try {
+      // 기존 독후감 수정과 추가 작성 선택 흐름으로 이동한다
+      await moveToReportEntry(selectedBook, navigate);
+    }
+
+    finally {
+      // 선택 안내가 끝난 뒤 다시 시도할 수 있도록 진행 상태를 해제한다
+      setIsSelectingReport(false);
+    }
   }
 
   // 독후감 상세의 도서 정보 화면과 같은 구조로 검색 도서 정보를 반환한다
@@ -216,7 +234,8 @@ function SearchBookInfoPage() {
         <button
           className={bookInfoStyles.selectButton}
           type="button"
-          onClick={goSetReportPage}
+          onClick={() => void goSetReportPage()}
+          disabled={isSelectingReport}
         >
           {/* "이 책으로 기록하기" */}
           {message("frontend.book.search.writeThisBook")}

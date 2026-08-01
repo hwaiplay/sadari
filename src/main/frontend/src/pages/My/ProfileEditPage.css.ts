@@ -1102,6 +1102,11 @@ export const followModalItem = style({
   alignItems: "center",
   gap: "10px",
   textAlign: "left",
+  selectors: {
+    "&:last-child": {
+      borderBottom: 0,
+    },
+  },
 });
 
 export const followModalProfileButton = style({
@@ -1367,6 +1372,19 @@ export const quickStatusGroup = style({
   display: "grid",
   gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   gap: "8px",
+});
+
+export const quickField = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "8px",
+});
+
+export const quickFieldLabel = style({
+  fontFamily: vars.font.medium,
+  fontSize: "12px",
+  lineHeight: 1.35,
+  color: vars.color.gray600,
 });
 
 export const quickStatusOption = style({

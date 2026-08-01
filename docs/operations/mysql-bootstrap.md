@@ -71,11 +71,13 @@ GRANT ALL PRIVILEGES ON sadari.*
 SET GLOBAL log_bin_trust_function_creators = 1;
 ```
 
-5. `sadari` 연결로 돌아와 애플리케이션이 사용하는 `routines.sql`을 전체 실행합니다.
+5. `sadari` 연결로 돌아와 애플리케이션이 사용하는 `routines.sql`을 열고 `Alt+X` 또는 `SQL Editor > Execute SQL Script`로 전체 실행합니다.
 6. 관리자 권한 연결에서 `SET GLOBAL log_bin_trust_function_creators = 0;`을 실행해 임시 허용값을 복원합니다.
 7. 기존 개발 DB의 사용자 데이터를 지워야 할 때만 `03-reset-user-data.sql`을 실행합니다. 이 파일은 되돌릴 수 없는 `TRUNCATE`를 수행합니다.
 
 4번은 함수 생성 시 `ERROR 1419`가 발생하는 서버에서만 필요하며 `SYSTEM_VARIABLES_ADMIN` 또는 동등한 관리자 권한이 필요합니다. 서버 재시작 후 루틴을 다시 생성할 때는 전역값을 다시 확인합니다.
+
+`Ctrl+Enter`의 단일 문장 실행으로 `DROP FUNCTION`부터 `CREATE FUNCTION`까지 함께 선택하지 않습니다. DBeaver가 `DELIMITER`를 무시하도록 설정되어 있으면 `Preferences > Editors > SQL Editor > SQL Processing > Delimiters`에서 `Ignore native delimiter`를 해제한 뒤 다시 실행합니다. 저장 함수가 드라이버 실행에서 계속 실패하면 `Alt+N`의 Native Script 실행을 사용합니다.
 
 ## 검증
 
@@ -95,9 +97,12 @@ SELECT ROUTINE_TYPE, ROUTINE_NAME
   FROM INFORMATION_SCHEMA.ROUTINES
  WHERE ROUTINE_SCHEMA = 'sadari'
  ORDER BY ROUTINE_TYPE, ROUTINE_NAME;
+
+SELECT FN_GET_LOCAL_DATE_STR('2017-08-30 00:00:00', 'KO') AS KOREAN_DATE
+     , FN_GET_LOCAL_DATE_STR('20170830', 'EN') AS ENGLISH_DATE;
 ```
 
-성공 기준은 테이블 26개, `AUTO_INCREMENT` 컬럼 9개, 함수 4개, 프로시저 1개입니다. 신규 DB에서는 제외 대상 17개 테이블의 행 수가 모두 0이어야 합니다.
+성공 기준은 테이블 26개, `AUTO_INCREMENT` 컬럼 9개, 함수 4개, 프로시저 1개입니다. 날짜 함수 검증값은 각각 `2017년 8월 30일`, `2017-08-30`이어야 합니다. 신규 DB에서는 제외 대상 17개 테이블의 행 수가 모두 0이어야 합니다.
 
 ## 구현 근거
 

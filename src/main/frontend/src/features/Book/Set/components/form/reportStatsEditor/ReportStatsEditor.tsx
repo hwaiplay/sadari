@@ -1,5 +1,5 @@
 /**
- * 독후감 등록과 상세 직접 편집의 4열 요약 및 단계형 입력 모달을 구성한다
+ * 독후감 상태에 따라 2열 또는 4열 요약과 단계형 입력 모달을 구성한다
  *
  * @author HanWon.Jang
  */
@@ -21,6 +21,7 @@ import * as styles from "./ReportStatsEditor.css";
 
 const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 const REPORT_STAT_STEPS = [0, 1, 2, 3] as const;
+const READING_REPORT_STAT_STEPS = [0, 3] as const;
 type StepTransitionDirection = "forward" | "backward";
 
 type ReportStatsEditorProps = {
@@ -156,6 +157,11 @@ function ReportStatsEditor({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const portalTarget = typeof document === "undefined" ? null : document.body;
   const isReadingStatus = status === REPORT_STATUS_READ;
+  const availableSteps: readonly number[] = isReadingStatus
+    ? READING_REPORT_STAT_STEPS
+    : REPORT_STAT_STEPS;
+  const firstStep = availableSteps[0] ?? 0;
+  const lastStep = availableSteps[availableSteps.length - 1] ?? 3;
   const periodSummary = getPeriodSummary(startDate, endDate);
   const periodText =
     startDate && endDate
@@ -240,7 +246,7 @@ function ReportStatsEditor({
   }, [activeStep]);
 
   /**
-   * 선택한 4열 요약 항목의 입력 단계 모달을 연다
+   * 현재 독서 상태에서 노출된 요약 항목의 입력 단계 모달을 연다
    *
    * @author HanWon.Jang
    * @param event 단계 번호를 가진 요약 버튼 클릭 이벤트
@@ -250,8 +256,8 @@ function ReportStatsEditor({
 
     const nextStep = Number(event.currentTarget.dataset.step);
 
-    // 허용된 네 단계만 열어 잘못된 data 속성으로 빈 모달이 나타나지 않게 한다
-    if (!REPORT_STAT_STEPS.includes(nextStep as (typeof REPORT_STAT_STEPS)[number])) {
+    // 읽는 중에는 공개 여부와 평점 단계를 열지 않아 숨겨진 입력을 조작할 수 없게 한다
+    if (!availableSteps.includes(nextStep)) {
       return;
     }
 
@@ -302,8 +308,13 @@ function ReportStatsEditor({
     // 이전 단계 콘텐츠가 왼쪽에서 들어오도록 전환 방향을 먼저 설정한다
     setStepTransitionDirection("backward");
 
-    // 첫 단계보다 앞으로 이동하지 않도록 이전 단계 번호를 보정한다
-    setActiveStep((currentStep) => Math.max(0, (currentStep ?? 0) - 1));
+    // 현재 상태에서 실제로 노출되는 단계 순서를 기준으로 이전 입력으로 이동한다
+    setActiveStep((currentStep) => {
+
+      const currentStepIndex = availableSteps.indexOf(currentStep ?? firstStep);
+      // 첫 단계보다 앞으로 이동하지 않도록 이전 단계 위치를 보정해 반환한다
+      return availableSteps[Math.max(0, currentStepIndex - 1)] ?? firstStep;
+    });
   }
 
   /**
@@ -317,10 +328,13 @@ function ReportStatsEditor({
     // 다음 단계 콘텐츠가 오른쪽에서 들어오도록 전환 방향을 먼저 설정한다
     setStepTransitionDirection("forward");
 
-    // 마지막 단계보다 뒤로 이동하지 않도록 다음 단계 번호를 보정한다
-    setActiveStep((currentStep) =>
-      Math.min(REPORT_STAT_STEPS.length - 1, (currentStep ?? 0) + 1),
-    );
+    // 읽는 중에는 상태 다음에 공개 여부와 평점을 건너뛰고 목표 독서 기간으로 이동한다
+    setActiveStep((currentStep) => {
+
+      const currentStepIndex = availableSteps.indexOf(currentStep ?? firstStep);
+      // 마지막 단계보다 뒤로 이동하지 않도록 다음 단계 위치를 보정해 반환한다
+      return availableSteps[Math.min(availableSteps.length - 1, currentStepIndex + 1)] ?? lastStep;
+    });
   }
 
   /**
@@ -388,10 +402,10 @@ function ReportStatsEditor({
    * 현재 단계와 전체 단계 수를 표시하는 진행 점을 생성한다
    *
    * @author HanWon.Jang
-   * @param step 독후감 입력 단계 번호
+   * @param step 현재 상태에서 노출되는 독후감 입력 단계 번호
    * @return 현재 단계 여부가 반영된 진행 점
    */
-  function renderProgressDot(step: (typeof REPORT_STAT_STEPS)[number]) {
+  function renderProgressDot(step: number) {
 
     // 현재 단계가 강조된 진행 점을 반환한다
     return (
@@ -403,7 +417,7 @@ function ReportStatsEditor({
     );
   }
 
-  // 독후감 입력값을 유지하는 4열 요약과 단계형 모달을 반환한다
+  // 읽는 중에는 2열, 완료와 중단에는 4열로 구성된 요약과 단계형 모달을 반환한다
   return (
     <>
       {/* 모달이 닫혀도 기존 폼 전송 계약을 유지하는 독후감 요약 입력값 영역 */}
@@ -413,12 +427,12 @@ function ReportStatsEditor({
       <input type="hidden" name="startDate" value={startDate} />
       <input type="hidden" name="endDate" value={endDate} />
 
-      {/* 독서 상태와 공개 여부 및 평점과 독서기간 편집 진입 영역 */}
+      {/* 상태별로 허용된 독서 정보 편집 진입 영역 */}
       <section
         className={styles.statsSection}
         aria-label={/* "독후감 요약" */ message("frontend.report.summary.aria")}
       >
-        <div className={styles.statsGrid}>
+        <div className={isReadingStatus ? styles.statsGridCompact : styles.statsGrid}>
           {/* 독서 상태 편집 진입 영역 */}
           <button
             className={styles.statsItem}
@@ -432,41 +446,45 @@ function ReportStatsEditor({
             </strong>
           </button>
 
-          {/* 공개 여부 편집 진입 영역 */}
-          <button
-            className={styles.statsItem}
-            type="button"
-            data-step="1"
-            onClick={handleSummaryClick}
-          >
-            <span className={styles.statsLabel}>{publicTitle}</span>
-            <strong className={styles.statsValue}>
-              {pubcYsno === "Y" ? publicOnLabel : publicOffLabel}
-            </strong>
-          </button>
+          {/* 완료 또는 중단 상태에서만 공개 여부 편집을 허용하는 영역 */}
+          {!isReadingStatus ? (
+            <button
+              className={styles.statsItem}
+              type="button"
+              data-step="1"
+              onClick={handleSummaryClick}
+            >
+              <span className={styles.statsLabel}>{publicTitle}</span>
+              <strong className={styles.statsValue}>
+                {pubcYsno === "Y" ? publicOnLabel : publicOffLabel}
+              </strong>
+            </button>
+          ) : null}
 
-          {/* 평점 편집 진입 영역 */}
-          <button
-            className={styles.statsItem}
-            type="button"
-            data-step="2"
-            onClick={handleSummaryClick}
-          >
-            <span className={styles.statsLabel}>{gradeTitle}</span>
-            <strong className={styles.gradeValue}>
-              <svg className={styles.gradeStar} viewBox="0 0 24 24" aria-hidden="true">
-                <path
-                  d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
-                  fill="currentColor"
-                  stroke="currentColor"
-                  strokeWidth="1.4"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              {grade}
-            </strong>
-          </button>
+          {/* 완료 또는 중단 상태에서만 평점 편집을 허용하는 영역 */}
+          {!isReadingStatus ? (
+            <button
+              className={styles.statsItem}
+              type="button"
+              data-step="2"
+              onClick={handleSummaryClick}
+            >
+              <span className={styles.statsLabel}>{gradeTitle}</span>
+              <strong className={styles.gradeValue}>
+                <svg className={styles.gradeStar} viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
+                    fill="currentColor"
+                    stroke="currentColor"
+                    strokeWidth="1.4"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                {grade}
+              </strong>
+            </button>
+          ) : null}
 
           {/* 독서기간 편집 진입 영역 */}
           <button
@@ -535,7 +553,7 @@ function ReportStatsEditor({
                   key={`body-${activeStep}`}
                 >
                   {/* 독서 상태 선택 영역 */}
-                  {activeStep === 0 ? (
+                  {activeStep === firstStep ? (
                     <div className={styles.optionGrid}>
                       {statusCodes.map(renderStatusOption)}
                     </div>
@@ -630,10 +648,10 @@ function ReportStatsEditor({
                     </button>
                   )}
                   <div className={styles.progressDots} aria-hidden="true">
-                    {REPORT_STAT_STEPS.map(renderProgressDot)}
+                    {availableSteps.map(renderProgressDot)}
                   </div>
                   {/* 마지막 독서기간 단계에서는 이동 화살표 대신 입력 완료 버튼을 표시한다 */}
-                  {activeStep === REPORT_STAT_STEPS.length - 1 ? (
+                  {activeStep === lastStep ? (
                     <button
                       className={styles.confirmButton}
                       type="button"
