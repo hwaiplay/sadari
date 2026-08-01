@@ -853,12 +853,6 @@ function SocialProfilePage() {
               : undefined
           }
         >
-          {!profile.bgimPath && (
-            <p className={styles.coverEmptyText}>
-              {/* "배경사진을 선택해주세요." */}
-              {message("frontend.profile.background.empty")}
-            </p>
-          )}
         </div>
 
         {/* 상대 사용자 정보와 팔로우 상태 영역 */}
