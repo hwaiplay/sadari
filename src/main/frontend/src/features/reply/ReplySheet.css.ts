@@ -311,8 +311,8 @@ export const actionMenuRoot = style({
 });
 
 export const actionMenuTrigger = style({
-  width: "24px",
-  height: "24px",
+  width: "18px",
+  height: "18px",
   padding: 0,
   border: 0,
   borderRadius: "50%",
@@ -330,8 +330,8 @@ export const actionMenuTrigger = style({
 });
 
 export const actionMenuIcon = style({
-  width: "20px",
-  height: "20px",
+  width: "18px",
+  height: "18px",
   display: "block",
 });
 

@@ -49,7 +49,7 @@ export const page = style({
   position: "relative",
   width: "100vw",
   marginLeft: "calc(50% - 50vw)",
-  minHeight: "100vh",
+  minHeight: "calc(100svh - 52px - 60px)",
   backgroundColor: vars.color.background,
   overflow: "hidden",
 
@@ -429,7 +429,6 @@ export const recordSection = style({
 
 export const sectionTitle = style({
   margin: 0,
-  padding: "0 0 0 6px",
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   lineHeight: 1.3,
@@ -441,7 +440,7 @@ export const recordTitleRow = style({
   width: "100%",
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-start",
+  justifyContent: "space-between",
   marginBottom: "18px",
 });
 
@@ -496,10 +495,14 @@ export const likeCount = style({
 export const commentIndicator = style({
   minWidth: "34px",
   height: "24px",
+  padding: 0,
+  border: 0,
+  background: "transparent",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   gap: "4px",
+  cursor: "pointer",
   color: "#777777",
   fontFamily: vars.font.semibold,
   fontSize: "12px",
