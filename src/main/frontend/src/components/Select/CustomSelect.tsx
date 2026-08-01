@@ -13,6 +13,9 @@ type CustomSelectProps<T extends string> = {
   onChange: (value: T) => void;
   ariaLabel: string;
   className?: string;
+  triggerClassName?: string;
+  optionListClassName?: string;
+  optionClassName?: string;
 };
 
 /**
@@ -28,6 +31,9 @@ function CustomSelect<T extends string>({
   onChange,
   ariaLabel,
   className,
+  triggerClassName,
+  optionListClassName,
+  optionClassName,
 }: CustomSelectProps<T>) {
 
   const listboxId = useId();
@@ -135,7 +141,7 @@ function CustomSelect<T extends string>({
       }}
     >
       <button
-        className={styles.trigger}
+        className={clsx(styles.trigger, triggerClassName)}
         type="button"
         aria-label={ariaLabel}
         aria-haspopup="listbox"
@@ -147,7 +153,7 @@ function CustomSelect<T extends string>({
           setIsOpen((prev) => !prev);
         }}
       >
-        <span>{selectedOption?.label ?? ""}</span>
+        <span className={styles.triggerValue}>{selectedOption?.label ?? ""}</span>
         <svg
           className={clsx(styles.arrow, isOpen && styles.arrowOpen)}
           viewBox="0 0 12 12"
@@ -158,7 +164,11 @@ function CustomSelect<T extends string>({
       </button>
 
       {isOpen ? (
-        <div className={styles.optionList} id={listboxId} role="listbox">
+        <div
+          className={clsx(styles.optionList, optionListClassName)}
+          id={listboxId}
+          role="listbox"
+        >
           {options.map((option, index) => {
 
             const isSelected = option.value === value;
@@ -167,6 +177,7 @@ function CustomSelect<T extends string>({
               <button
                 className={clsx(
                   styles.option,
+                  optionClassName,
                   isSelected && styles.optionSelected,
                 )}
                 ref={(element) => {
