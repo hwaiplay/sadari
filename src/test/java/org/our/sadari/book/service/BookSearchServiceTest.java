@@ -60,6 +60,8 @@ class BookSearchServiceTest {
 
     // 카카오 도서 검색 서비스
     private BookSearchService bookSearchService;
+    // 화면 응답 필드명 검증 객체
+    private ObjectMapper objectMapper;
 
     /**
      * 각 테스트에서 카카오 도서 검색 서비스와 설정값을 구성한다
@@ -69,7 +71,7 @@ class BookSearchServiceTest {
     @BeforeEach
     void setUp() {
         // 카카오 JSON 응답을 변환할 객체를 생성한다
-        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper = new ObjectMapper();
         // 도서 검색 테스트 대상을 생성한다
         bookSearchService = new BookSearchService(restTemplate, objectMapper);
         // 테스트 요청이 사용할 카카오 도서 검색 주소를 설정한다
@@ -90,9 +92,10 @@ class BookSearchServiceTest {
      * 카카오 도서 응답을 기존 화면 필드와 페이지 계약으로 변환하는지 검증한다
      *
      * @author SeungHyeon.Kang
+     * @throws Exception 화면 응답 JSON 직렬화에 실패한 경우 발생
      */
     @Test
-    void searchBooksMapsKakaoResponseToExistingScreenContract() {
+    void searchBooksMapsKakaoResponseToExistingScreenContract() throws Exception {
         String responseBody = """
                 {
                   "meta": {"is_end": false, "pageable_count": 20, "total_count": 20},
@@ -103,7 +106,7 @@ class BookSearchServiceTest {
                       "datetime": "2014-11-17T00:00:00.000+09:00",
                       "isbn": "8996991341 9788996991342",
                       "publisher": "인플루엔셜",
-                      "thumbnail": "https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover",
+                      "thumbnail": "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6253040%3Ftimestamp%3D20260115151223",
                       "title": "미움받을 용기"
                     }
                   ]
@@ -127,8 +130,17 @@ class BookSearchServiceTest {
         assertEquals("기시미 이치로^고가 후미타케", bookDto.getAuthor());
         // ISBN10과 ISBN13 중 기존 데이터와 호환되는 ISBN13이 선택되었는지 확인한다
         assertEquals("9788996991342", bookDto.getIsbn());
-        // 카카오 도서 표지 URL이 기존 화면 필드에 설정되었는지 확인한다
-        assertEquals("https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover", bookDto.getImage());
+        // 카카오 썸네일의 Daum 원본 표지 URL이 기존 image 필드에 설정되었는지 확인한다
+        assertEquals("https://t1.daumcdn.net/lbook/image/6253040?timestamp=20260115151223", bookDto.getImage());
+        // 원본 표지 실패 시 사용할 공식 카카오 썸네일이 별도 필드에 유지되는지 확인한다
+        assertEquals(
+                "https://search1.kakaocdn.net/thumb/R120x174.q85/?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6253040%3Ftimestamp%3D20260115151223",
+                bookDto.getThumbnailImage()
+        );
+        // 외부 thumbnail 필드가 기존 image 응답 필드명을 바꾸지 않는지 직렬화 결과를 확인한다
+        String serializedBook = objectMapper.writeValueAsString(bookDto);
+        // 기존 프론트엔드 계약의 image 필드가 응답에 유지되는지 확인한다
+        assertTrue(serializedBook.contains("\"image\":\"https://t1.daumcdn.net/lbook/image/6253040"));
         // 카카오 도서 소개가 기존 화면 필드에 설정되었는지 확인한다
         assertEquals("도서 소개", bookDto.getDescription());
         // ISO 8601 출간일이 기존 yyyyMMdd 형식으로 변환되었는지 확인한다

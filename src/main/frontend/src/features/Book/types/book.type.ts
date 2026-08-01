@@ -23,6 +23,8 @@ export interface BookSearchResultType {
   isbn: string;
   // 책 표지 이미지
   image: string;
+  // 원본 표지 로드 실패 시 사용할 카카오 썸네일 이미지
+  thumbnailImage?: string;
   // 책 소개 내용
   description: string;
   // 출간일

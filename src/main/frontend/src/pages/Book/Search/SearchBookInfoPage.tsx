@@ -13,6 +13,7 @@ import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookR
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
+import { handleBookCoverImageError } from "@/features/Book/utils/bookCoverImage";
 import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
 import * as bookInfoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
@@ -119,6 +120,8 @@ function SearchBookInfoPage() {
             <img
               className={detailStyles.coverImage}
               src={book.image}
+              data-fallback-image={book.thumbnailImage}
+              onError={handleBookCoverImageError}
               alt={title}
             />
           </div>
