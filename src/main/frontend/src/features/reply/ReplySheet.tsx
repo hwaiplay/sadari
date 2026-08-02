@@ -152,7 +152,8 @@ type ReplyItemRenderOptions = {
 };
 
 type ReplySheetProps = {
-  report: Pick<PublicReportType, "reptNumb" | "userNick">;
+  report: Pick<PublicReportType, "reptNumb"> &
+    Partial<Pick<PublicReportType, "userNick">>;
   onClose: () => void;
 };
 
@@ -456,20 +457,20 @@ function ReplySheet({
               onKeyDown={handleActionMenuKeyDown}
             >
               {/* "더보기" */}
-              <button
-                className={styles.actionMenuTrigger}
-                type="button"
-                aria-label="더보기"
-                aria-haspopup="menu"
-                aria-expanded={openActionReplyNumb === reply.replNumb}
-                onClick={() => handleToggleActionMenu(reply.replNumb)}
-              >
-                <img
-                  className={styles.actionMenuIcon}
-                  src="/img/icons/icon-more.svg"
-                  alt=""
-                />
-              </button>
+              {/*<button*/}
+              {/*  className={styles.actionMenuTrigger}*/}
+              {/*  type="button"*/}
+              {/*  aria-label="더보기"*/}
+              {/*  aria-haspopup="menu"*/}
+              {/*  aria-expanded={openActionReplyNumb === reply.replNumb}*/}
+              {/*  onClick={() => handleToggleActionMenu(reply.replNumb)}*/}
+              {/*>*/}
+              {/*  <img*/}
+              {/*    className={styles.actionMenuIcon}*/}
+              {/*    src="/img/icons/icon-more.svg"*/}
+              {/*    alt=""*/}
+              {/*  />*/}
+              {/*</button>*/}
 
               {openActionReplyNumb === reply.replNumb ? (
                 /* 댓글 신고 및 사용자 차단 선택 메뉴 */
@@ -542,7 +543,9 @@ function ReplySheet({
         ref={sheetRef}
         role="dialog"
         aria-modal="true"
-        aria-label={`${report.userNick}님의 독후감 댓글`}
+        aria-label={report.userNick
+          ? `${report.userNick}님의 독후감 댓글`
+          : /* "댓글" */ message("frontend.report.comment.aria")}
         style={sheetStyle}
       >
         {/* 댓글 바텀시트 드래그와 키보드 닫기 영역 */}

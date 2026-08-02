@@ -10,7 +10,6 @@ export const trigger = style({
   minWidth: "112px",
   height: "32px",
   padding: "0 12px",
-  border: `1px solid ${vars.color.gray300}`,
   backgroundColor: "#ffffff",
   borderRadius: "99999px",
   color: vars.color.black,
@@ -21,6 +20,12 @@ export const trigger = style({
   alignItems: "center",
   gap: "7px",
   cursor: "pointer",
+});
+
+export const triggerValue = style({
+  display: "inline-flex",
+  alignItems: "center",
+  minWidth: 0,
 });
 
 export const arrow = style({
@@ -41,7 +46,7 @@ export const arrowOpen = style({
 export const optionList = style({
   position: "absolute",
   top: "calc(100% + 4px)",
-  left: 0,
+  right: 0,
   zIndex: 20,
   minWidth: "max(112px, 100%)",
   padding: "5px",
@@ -51,7 +56,7 @@ export const optionList = style({
   boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
   display: "flex",
   flexDirection: "column",
-  gap: "2px",
+  gap: "6px",
 });
 
 export const option = style({

@@ -120,78 +120,44 @@ export const searchIcon = style({
   flexShrink: 0,
 });
 
-export const sortDropdown = style({
+export const sortBar = style({
   display: "flex",
+  alignItems: "center",
   justifyContent: "flex-end",
-  paddingInline: '16px',
-  position: "relative"
+  width: "100%",
+  padding: `0 ${vars.space.md}`,
+  marginBottom: "20px",
+  boxSizing: "border-box",
+
+  "@media": {
+    [media.tablet]: {
+      padding: `0 ${vars.space.lg}`,
+    },
+  },
 });
 
-export const sortTrigger = style({
-  width: "32px",
+export const sortSelect = style({
+  zIndex: 2,
+});
+
+export const sortSelectTrigger = style({
+  minWidth: "auto",
   height: "32px",
   padding: 0,
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "50%",
-  backgroundColor: "#ffffff",
-  cursor: "pointer",
-});
-
-export const sortIcon = style({
-  width: "22px",
-  height: "22px",
-  flexShrink: 0,
-});
-
-export const sortMenu = style({
-  position: "absolute",
-  top: "38px",
-  right: '16px',
-  zIndex: 5,
-  width: "132px",
-  padding: "6px",
-  display: "flex",
-  flexDirection: "column",
-  gap: "2px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "12px",
-  backgroundColor: "#ffffff",
-  boxShadow: "0 12px 28px rgba(0, 0, 0, 0.12)",
-});
-
-export const sortMenuItem = style({
-  height: "30px",
-  padding: "0 10px",
-  border: "1px solid transparent",
-  borderRadius: "8px",
+  border: 0,
+  borderRadius: 0,
   backgroundColor: "transparent",
-  color: vars.color.black,
-  fontFamily: vars.font.body,
-  fontSize: "12px",
-  textAlign: "left",
-  boxSizing: "border-box",
-  cursor: "pointer",
-
-  selectors: {
-    "&:hover": {
-      backgroundColor: "#f5f5f5",
-    },
-  },
+  fontFamily: vars.font.medium,
+  fontSize: "14px",
+  gap: "10px",
 });
 
-export const sortMenuItemActive = style({
-  backgroundColor: vars.color.gray100,
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
+export const sortOptionList = style({
+  minWidth: "112px",
+});
 
-  selectors: {
-    "&:hover": {
-      backgroundColor: vars.color.gray100,
-    },
-  },
+export const sortSelectOption = style({
+  fontSize: "13px",
 });
 
 export const monthGroupStack = style({
@@ -216,7 +182,7 @@ export const monthLabel = style({
   fontSize: "12px",
   lineHeight: 1,
   color: vars.color.gray500,
-  backgroundColor:'#EBEBEB',
+  backgroundColor:vars.color.gray100,
   borderRadius: '999px',
   marginBottom:'8px',
   marginLeft: vars.space.md

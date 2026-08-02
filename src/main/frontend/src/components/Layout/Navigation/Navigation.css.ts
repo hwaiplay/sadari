@@ -32,6 +32,7 @@ export const navigation = style({
     width: "100%",
     height: "100%",
     margin: "0 auto",
+    maxWidth: "600px"
 });
 
 export const navLink = style({

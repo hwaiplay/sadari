@@ -24,7 +24,7 @@ const calendarSlideFromRightKeyframes = keyframes({
 });
 
 export const page = style({
-  minHeight: "100vh",
+  minHeight: "calc(100svh - 52px - 60px)",
   backgroundColor: "#ffffff",
 });
 
