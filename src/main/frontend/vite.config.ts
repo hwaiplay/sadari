@@ -3,13 +3,20 @@ import react from "@vitejs/plugin-react";
 import { vanillaExtractPlugin } from "@vanilla-extract/vite-plugin";
 import type { ClientRequest } from "node:http";
 import { readFileSync } from "node:fs";
-import path from "node:path";
+import * as path from "node:path";
 import { parse } from "yaml";
 
 type SpringProfileConfig = {
   domain?: {
     back?: string;
+    front?: string;
+    proxy?: string;
   };
+};
+
+type DevelopmentServerConfig = {
+  allowedHost: string;
+  proxyTarget: string;
 };
 
 const SPRING_PLACEHOLDER_PATTERN =
@@ -60,44 +67,49 @@ function createDevelopmentProxyOptions(target: string): ProxyOptions {
 }
 
 /**
- * Spring yml의 환경변수 placeholder를 현재 프로세스 환경값으로 해석합니다.
+ * Spring yml의 환경변수 placeholder를 현재 프로세스 환경값으로 해석한다
  *
  * @author HanWon.Jang
- * @param configuredValue yml의 domain.back 설정값
+ * @param configuredValue yml의 내부 프록시 설정값
  * @return 실제 Vite proxy 대상 URL
  */
 const resolveSpringValue = (configuredValue: string) => {
+
   const placeholder = SPRING_PLACEHOLDER_PATTERN.exec(configuredValue);
 
+  // 환경변수 placeholder가 아니면 yml에 작성된 고정값을 그대로 사용한다
   if (!placeholder) {
+    // yml에 작성된 고정 프록시 주소를 반환한다
     return configuredValue;
   }
 
   const [, environmentName, defaultValue] = placeholder;
   const resolvedValue = process.env[environmentName] ?? defaultValue;
 
-  // 운영 프로필로 개발 서버를 실행하면서 필수 환경변수가 없으면 잘못된 proxy로 조용히 실행하지 않고 즉시 중단합니다.
+  // 운영 프로필로 개발 서버를 실행하면서 필수 환경변수가 없으면 잘못된 proxy로 조용히 실행하지 않고 즉시 중단한다
   if (!resolvedValue) {
     throw new Error(
       `Spring yml placeholder ${environmentName} could not be resolved.`,
     );
   }
 
+  // 현재 프로세스 환경에 맞게 해석한 프록시 주소를 반환한다
   return resolvedValue;
 };
 
 /**
- * 현재 Spring profile의 application yml에서 백엔드 도메인을 읽습니다.
- * Vite 개발 서버와 Spring 서버가 서로 다른 주소를 사용하지 않도록 yml을 단일 설정 원본으로 사용합니다.
+ * 현재 Spring profile의 application yml에서 Vite 개발 서버 연결 설정을 읽는다
+ * 외부 Tailscale 호스트와 내부 API 전달 주소를 분리하여 프록시 순환과 임의 Host 요청을 차단한다
  *
  * @author HanWon.Jang
- * @return 검증된 백엔드 도메인 URL
+ * @return 검증된 Vite 허용 호스트와 내부 프록시 대상
  */
-const getBackendDomain = () => {
+const getDevelopmentServerConfig = (): DevelopmentServerConfig => {
+
   const activeProfile =
     process.env.SPRING_PROFILES_ACTIVE?.split(",")[0]?.trim() || "loc";
 
-  // 환경변수를 파일명에 사용하므로 경로 문자가 포함된 profile 값은 yml 디렉터리 밖을 읽지 못하게 차단합니다.
+  // 환경변수를 파일명에 사용하므로 경로 문자가 포함된 profile 값은 yml 디렉터리 밖을 읽지 못하게 차단한다
   if (!SPRING_PROFILE_PATTERN.test(activeProfile)) {
     throw new Error("SPRING_PROFILES_ACTIVE contains invalid characters.");
   }
@@ -109,37 +121,72 @@ const getBackendDomain = () => {
   const springConfig = parse(
     readFileSync(configPath, "utf8"),
   ) as SpringProfileConfig;
-  const configuredBackDomain = springConfig.domain?.back;
+  const configuredProxyTarget =
+    springConfig.domain?.proxy ?? springConfig.domain?.back;
+  const configuredPublicDomain =
+    springConfig.domain?.front ?? springConfig.domain?.back;
 
-  if (!configuredBackDomain) {
-    throw new Error(`domain.back is missing from ${configPath}.`);
+  // 내부 프록시와 이전 호환용 백엔드 주소가 모두 없으면 잘못된 개발 서버 실행을 차단한다
+  if (!configuredProxyTarget) {
+    throw new Error(
+      `domain.proxy and domain.back are missing from ${configPath}.`,
+    );
   }
 
-  const backendDomain = resolveSpringValue(configuredBackDomain);
-  const parsedDomain = new URL(backendDomain);
-
-  // HTTP(S)가 아닌 scheme을 proxy 대상으로 허용하면 로컬 파일 등 의도하지 않은 자원에 접근할 수 있어 차단합니다.
-  if (!["http:", "https:"].includes(parsedDomain.protocol)) {
-    throw new Error("domain.back must use http or https.");
+  // 외부 접속 주소가 없으면 Vite Host 허용 범위를 안전하게 확정할 수 없어 실행을 차단한다
+  if (!configuredPublicDomain) {
+    throw new Error(
+      `domain.front and domain.back are missing from ${configPath}.`,
+    );
   }
 
-  return backendDomain.replace(/\/+$/, "");
+  const backendProxyTarget = resolveSpringValue(configuredProxyTarget);
+  // 프록시 대상의 프로토콜을 검증할 URL 객체를 생성한다
+  const parsedProxyTarget = new URL(backendProxyTarget);
+  const publicDomain = resolveSpringValue(configuredPublicDomain);
+  // 휴대폰의 Tailscale 요청 Host를 허용 목록에 등록할 URL 객체를 생성한다
+  const parsedPublicDomain = new URL(publicDomain);
+
+  // HTTP(S)가 아닌 scheme을 proxy 대상으로 허용하면 로컬 파일 등 의도하지 않은 자원에 접근할 수 있어 차단한다
+  if (!["http:", "https:"].includes(parsedProxyTarget.protocol)) {
+    throw new Error("domain.proxy or domain.back must use http or https.");
+  }
+
+  // HTTP(S)가 아닌 외부 주소는 Vite Host 허용 목록에 등록하지 않는다
+  if (!["http:", "https:"].includes(parsedPublicDomain.protocol)) {
+    throw new Error("domain.front or domain.back must use http or https.");
+  }
+
+  // 외부 Tailscale 호스트와 후행 슬래시를 제거한 내부 프록시 대상을 반환한다
+  return {
+    allowedHost: parsedPublicDomain.hostname,
+    proxyTarget: backendProxyTarget.replace(/\/+$/, ""),
+  };
 };
 
 export default defineConfig(({ command }) => {
   /*
-   * proxy는 Vite 개발 서버에서만 필요합니다.
-   * 운영 build는 Spring이 정적 파일과 API를 같은 origin으로 제공하므로 로컬 yml 파일 없이도 생성할 수 있습니다.
+   * proxy는 Vite 개발 서버에서만 필요하다.
+   * 운영 build는 Spring이 정적 파일과 API를 같은 origin으로 제공하므로 로컬 yml 파일 없이도 생성할 수 있다.
    */
-  const backendDomain = command === "serve" ? getBackendDomain() : null;
+  const developmentServerConfig =
+    command === "serve" ? getDevelopmentServerConfig() : null;
 
+  // 개발 서버에서는 고정 포트와 내부 API 프록시를 적용하고 운영 빌드에서는 정적 자원 설정만 반환한다
   return {
     plugins: [react(), vanillaExtractPlugin()],
-    server: backendDomain
+    server: developmentServerConfig
       ? {
+          allowedHosts: [developmentServerConfig.allowedHost],
+          host: "127.0.0.1",
+          strictPort: true,
           proxy: {
-            "/api": createDevelopmentProxyOptions(backendDomain),
-            "/uploads": createDevelopmentProxyOptions(backendDomain),
+            "/api": createDevelopmentProxyOptions(
+              developmentServerConfig.proxyTarget,
+            ),
+            "/uploads": createDevelopmentProxyOptions(
+              developmentServerConfig.proxyTarget,
+            ),
           },
         }
       : undefined,
