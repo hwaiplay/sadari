@@ -13,7 +13,7 @@
 
     "allowImportingTsExtensions": true,
     // "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "isolatedModules": true,
     "noEmit": true,
 
@@ -21,5 +21,5 @@
 
     "strict": true
   },
-  "include": ["src"]
+  "include": ["src", "vite.config.ts"]
 }
