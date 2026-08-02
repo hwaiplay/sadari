@@ -39,10 +39,9 @@ import {
 } from "@/features/Book/utils/reportValidation";
 import type { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
+import ReplySheet from "@/features/reply/ReplySheet";
 import * as styles from "./DetailPage.css";
 
-// 댓글 API 연결 전 기록 헤더의 댓글 수 배치를 확인하기 위한 임시 표시값이다
-const TEMPORARY_COMMENT_COUNT = 0;
 const CONTENT_FADE_OUT_MILLISECONDS = 90;
 const RECORD_CARET_VIEWPORT_OFFSET_PIXELS = 32;
 
@@ -143,6 +142,7 @@ function DetailPage() {
   const recordCaretTargetRef = useRef<RecordCaretTarget | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [isRecordEditing, setIsRecordEditing] = useState(false);
+  const [isReplySheetOpen, setIsReplySheetOpen] = useState(false);
   const [status, setStatus] = useState<ReadingStatusType>("");
   const [initialStatus, setInitialStatus] = useState<ReadingStatusType>("");
   const [grade, setGrade] = useState(0);
@@ -883,52 +883,53 @@ function DetailPage() {
                   {/* "기록" */}
                   {message("frontend.report.field.content")}
                 </h2>
-              </div>
 
-              {/* 편집 모드가 아닐 때만 좋아요 수, 댓글 수 노출 */}
-              {!isRecordEditing ? (
-                <div className={styles.recordMetrics}>
-                  <button
-                    className={styles.likeButton}
-                    type="button"
-                    aria-label={/* "좋아요" */ message("frontend.report.like.aria")}
-                    aria-pressed={bookData.likeYsno === "Y"}
-                    disabled={likeMutation.isPending}
-                    onClick={handleLikeToggle}
-                  >
-                    <svg
-                      className={styles.likeIcon}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
-                        fill={bookData.likeYsno === "Y" ? "currentColor" : "none"}
-                        stroke="currentColor"
-                        strokeWidth="1.8"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                    <span className={styles.likeCount}>
+                {/* 편집 모드가 아닐 때만 좋아요 수, 댓글 수 노출 */}
+                {!isRecordEditing ? (
+                    <div className={styles.recordMetrics}>
+                      <button
+                          className={styles.likeButton}
+                          type="button"
+                          aria-label={/* "좋아요" */ message("frontend.report.like.aria")}
+                          aria-pressed={bookData.likeYsno === "Y"}
+                          disabled={likeMutation.isPending}
+                          onClick={handleLikeToggle}
+                      >
+                        <svg
+                            className={styles.likeIcon}
+                            viewBox="0 0 24 24"
+                            aria-hidden="true"
+                        >
+                          <path
+                              d="M12 20.4S4.5 16.1 3.1 10.6C2.2 7 4.3 4.5 7.1 4.5c1.7 0 3.2.9 4.1 2.2.9-1.3 2.4-2.2 4.1-2.2 2.8 0 4.9 2.5 4 6.1C17.9 16.1 12 20.4 12 20.4Z"
+                              fill={bookData.likeYsno === "Y" ? "currentColor" : "none"}
+                              stroke="currentColor"
+                              strokeWidth="1.8"
+                              strokeLinejoin="round"
+                          />
+                        </svg>
+                        <span className={styles.likeCount}>
                     {getLikeCountLabel(bookData.likeCnt)}
                   </span>
-                  </button>
-                  <span
-                    className={styles.commentIndicator}
-                    role="img"
-                    aria-label={/* "댓글" */ message("frontend.report.comment.aria")}
-                  >
+                      </button>
+                      <button
+                          className={styles.commentIndicator}
+                          type="button"
+                          aria-label={/* "댓글" */ message("frontend.report.comment.aria")}
+                          onClick={() => setIsReplySheetOpen(true)}
+                      >
                     <img
-                      className={styles.commentIcon}
-                      src="/img/icons/icon-comment.svg"
-                      alt=""
+                        className={styles.commentIcon}
+                        src="/img/icons/icon-comment.svg"
+                        alt=""
                     />
                     <span className={styles.commentCount}>
                       {bookData.replCnt}
                     </span>
-                  </span>
-                </div>
-              ) : null}
+                  </button>
+                    </div>
+                ) : null}
+              </div>
 
               {/* 기록 본문 직접 편집 영역 */}
               {isRecordEditing ? (
@@ -1016,6 +1017,12 @@ function DetailPage() {
           </div>
         </div>
       </Container>
+      {isReplySheetOpen ? (
+        <ReplySheet
+          report={{ reptNumb: idNum }}
+          onClose={() => setIsReplySheetOpen(false)}
+        />
+      ) : null}
     </main>
   );
 }

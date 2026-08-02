@@ -3,7 +3,7 @@ import { vars } from "@/app/styles/tokens.css";
 import { media } from "@/app/styles/responsive.css";
 
 export const page = style({
-  minHeight: "calc(100svh - 52px - 52px)",
+  minHeight: "calc(100svh - 52px - 60px)",
   backgroundColor: vars.color.background,
 });
 
@@ -54,14 +54,14 @@ export const hiddenLabel = style({
 
 export const searchInput = style({
   width: "100%",
-  height: "38px",
+  height: "42px",
   padding: "0 38px 0 16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.body,
-  fontSize: "12px",
+  fontSize: "16px",
   outline: "none",
 
   selectors: {
@@ -77,7 +77,7 @@ export const searchInput = style({
 export const searchButton = style({
   position: "absolute",
   top: "50%",
-  right: "6px",
+  right: "10px",
   width: "32px",
   height: "32px",
   padding: 0,
@@ -103,8 +103,8 @@ export const searchButton = style({
 });
 
 export const searchIcon = style({
-  width: "22px",
-  height: "22px",
+  width: "26px",
+  height: "26px",
   flexShrink: 0,
 });
 
