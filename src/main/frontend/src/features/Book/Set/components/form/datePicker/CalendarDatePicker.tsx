@@ -20,6 +20,7 @@ type CalendarDatePickerProps = {
   endValue?: string;
   endPlaceholder?: string;
   onRangeChange?: (startValue: string, endValue: string) => void;
+  allowFuture?: boolean;
   // 날짜 입력 버튼 없이 달력을 화면 안에 바로 표시할지 여부
   inline?: boolean;
 };
@@ -57,6 +58,7 @@ function CalendarDatePicker({
   endValue = "",
   endPlaceholder = message("frontend.report.placeholder.endDate"),
   onRangeChange,
+  allowFuture = true,
   inline = false,
 }: CalendarDatePickerProps) {
 
@@ -309,6 +311,8 @@ function CalendarDatePicker({
               }
 
               const dateValue = formatDateValue(new Date(viewYear, viewMonth, day));
+              // 미래 선택이 허용되지 않은 화면에서는 오늘 이후 날짜를 비활성화한다
+              const isDateDisabled = !allowFuture && dateValue > todayValue;
               const isRangeStart = isRangePicker && dateValue === currentDateValue;
               const isRangeEnd = isRangePicker && dateValue === currentEndDateValue;
               const isRangeSameDay = isRangeStart && isRangeEnd;
@@ -342,6 +346,7 @@ function CalendarDatePicker({
                   className={dayClassName}
                   key={dateValue}
                   type="button"
+                  disabled={isDateDisabled}
                   onClick={() => selectDay(day)}
                 >
                   {day}
