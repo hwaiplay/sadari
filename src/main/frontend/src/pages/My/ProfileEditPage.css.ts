@@ -1262,27 +1262,17 @@ export const goalHelpBody = style({
   marginTop: "18px",
 });
 
-export const quickReadingHelp = style({
-  margin: "6px 0 0",
-  fontFamily: vars.font.body,
-  fontSize: "12px",
-  lineHeight: 1.45,
-  color: "#777777",
-});
-
-export const quickReadingBody = style({
+export const currentReadingModalBody = style({
   marginTop: "18px",
   display: "flex",
   flexDirection: "column",
-  gap: "14px",
 });
 
-export const quickReadingBookInfo = style({
+export const currentReadingModalBookInfo = style({
   minHeight: "196px",
-  padding: "16px 16px 36px",
+  padding: "16px",
   borderRadius: "12px",
   backgroundColor: "#f7f8f8",
-  position: "relative",
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -1291,7 +1281,7 @@ export const quickReadingBookInfo = style({
   textAlign: "center",
 });
 
-export const quickReadingCover = style({
+export const currentReadingModalCover = style({
   width: "72px",
   height: "98px",
   borderRadius: "8px",
@@ -1300,7 +1290,7 @@ export const quickReadingCover = style({
   boxShadow: "0 8px 18px rgba(0, 0, 0, 0.12)",
 });
 
-export const quickReadingCoverPlaceholder = style({
+export const currentReadingModalCoverPlaceholder = style({
   width: "72px",
   height: "98px",
   borderRadius: "8px",
@@ -1308,7 +1298,7 @@ export const quickReadingCoverPlaceholder = style({
   display: "block",
 });
 
-export const quickReadingBookText = style({
+export const currentReadingModalBookText = style({
   width: "100%",
   minWidth: 0,
   display: "flex",
@@ -1317,7 +1307,7 @@ export const quickReadingBookText = style({
   gap: "8px",
 });
 
-export const quickReadingBookTitle = style({
+export const currentReadingModalBookTitle = style({
   margin: 0,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
@@ -1329,7 +1319,7 @@ export const quickReadingBookTitle = style({
   whiteSpace: "nowrap",
 });
 
-export const quickReadingBookMeta = style({
+export const currentReadingModalBookMeta = style({
   margin: 0,
   fontFamily: vars.font.body,
   fontSize: "12px",
@@ -1340,116 +1330,6 @@ export const quickReadingBookMeta = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
 });
-
-export const quickReadingEditButton = style({
-  position: "absolute",
-  right: "14px",
-  bottom: "11px",
-  minWidth: 0,
-  minHeight: "22px",
-  padding: "0",
-  border: 0,
-  backgroundColor: "transparent",
-  color: "#777777",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "2px",
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  lineHeight: 1,
-  cursor: "pointer",
-  transition: "color 160ms ease, transform 160ms ease",
-  selectors: {
-    "&:hover": {
-      color: vars.color.black,
-      transform: "translateX(1px)",
-    },
-  },
-});
-
-export const quickStatusGroup = style({
-  display: "grid",
-  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  gap: "8px",
-});
-
-export const quickField = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "8px",
-});
-
-export const quickFieldLabel = style({
-  fontFamily: vars.font.medium,
-  fontSize: "12px",
-  lineHeight: 1.35,
-  color: vars.color.gray600,
-});
-
-export const quickStatusOption = style({
-  minHeight: "38px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  color: "#666666",
-  fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  cursor: "pointer",
-  transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: "#cfd4da",
-      backgroundColor: "#fafafa",
-      color: vars.color.black,
-    },
-  },
-});
-
-export const quickStatusOptionActive = style([
-  quickStatusOption,
-  {
-    border: `1px solid ${vars.color.gray700}`,
-    backgroundColor: "#f3f3f3",
-    color: vars.color.gray900,
-    fontFamily: vars.font.semibold,
-  },
-]);
-
-export const quickStarGroup = style({
-  display: "flex",
-  justifyContent: "center",
-  gap: "4px",
-});
-
-export const quickStarButton = style({
-  width: "36px",
-  height: "36px",
-  border: 0,
-  borderRadius: "50%",
-  backgroundColor: "transparent",
-  color: "#d3d7dc",
-  fontSize: "28px",
-  lineHeight: 1,
-  cursor: "pointer",
-  transition: "color 140ms ease, transform 140ms ease, opacity 140ms ease",
-  selectors: {
-    "&:hover": {
-      transform: "translateY(-1px)",
-    },
-    "&:disabled": {
-      cursor: "default",
-      transform: "none",
-    },
-  },
-});
-
-export const quickStarButtonActive = style([
-  quickStarButton,
-  {
-    color: "#ffd34d",
-  },
-]);
 
 export const goalHelpLead = style({
   margin: "0 0 12px",
@@ -1636,5 +1516,15 @@ export const goalModalSave = style([
         opacity: 0.6,
       },
     },
+  },
+]);
+
+export const currentReadingModalEditButton = style([
+  goalModalSave,
+  {
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "4px",
   },
 ]);
