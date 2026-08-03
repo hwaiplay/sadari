@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : ReplyDto
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회 및 등록 데이터를 전달한다
+ * description    : 댓글과 답글의 조회, 등록, 수정 및 삭제 데이터를 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,6 +16,7 @@ import lombok.Data;
  * 2026-07-28        Hanwon.Jang        댓글 컬럼 정의
  * 2026-07-29        Hanwon.Jang        댓글 상태 조회 컬럼 정의
  * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 정의
+ * 2026-08-03        HanWon.Jang        댓글 수정 및 삭제 요청 용도 확장
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")

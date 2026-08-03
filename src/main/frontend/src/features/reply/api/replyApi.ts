@@ -8,13 +8,16 @@
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-28        Hanwon.Jang        댓글 등록 API 계약 연결
+ * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 계약 연결
  */
 import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 import type {
+  DelReplyResponse,
   GetReplyListResponse,
   ReplyDtoType,
   SetReplyResponse,
+  UptReplyResponse,
 } from "@/features/reply/types/reply.types";
 
 /**
@@ -34,6 +37,47 @@ export const setReplyApi = async (
   const response = await api.post<SetReplyResponse>("/reply", data);
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 등록 결과를 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+/**
+ * 로그인 사용자가 작성한 댓글 또는 답글의 내용을 수정한다
+ *
+ * @author HanWon.Jang
+ * @param data 수정할 독후감 번호와 댓글 번호 및 내용
+ * @return 수정된 댓글 번호를 포함한 공통 응답
+ * @throws 댓글 수정 API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const uptReplyApi = async (
+  data: Pick<ReplyDtoType, "reptNumb" | "replNumb" | "replCntn">,
+): Promise<UptReplyResponse> => {
+  // 복합 식별값을 경로에 포함하고 검증할 댓글 내용만 서버에 전달한다
+  const response = await api.put<UptReplyResponse>(
+    `/reply/${data.reptNumb}/${data.replNumb}`,
+    { replCntn: data.replCntn },
+  );
+
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 수정 결과를 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+/**
+ * 로그인 사용자가 작성한 댓글 또는 답글을 삭제 상태로 전환한다
+ *
+ * @author HanWon.Jang
+ * @param data 삭제할 독후감 번호와 댓글 번호
+ * @return 삭제된 댓글 번호를 포함한 공통 응답
+ * @throws 댓글 삭제 API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const delReplyApi = async (
+  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+): Promise<DelReplyResponse> => {
+  // 복합 식별값을 경로에 포함하여 작성자와 계정 상태를 서버에서 검증한다
+  const response = await api.delete<DelReplyResponse>(
+    `/reply/${data.reptNumb}/${data.replNumb}`,
+  );
+
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 삭제 결과를 반환한다
   return assertResultDataSuccess(response.data);
 };
 

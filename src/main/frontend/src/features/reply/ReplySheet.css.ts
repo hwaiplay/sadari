@@ -108,7 +108,7 @@ export const commentEmptyText = style({
   marginTop: "6px",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "12px",
+  fontSize: "14px",
   lineHeight: 1.55,
   textAlign: "center",
   wordBreak: "keep-all",
@@ -235,6 +235,14 @@ export const replyContent = style({
   wordBreak: "break-word",
 });
 
+export const deletedReplyContent = style([
+  replyContent,
+  {
+    color: vars.color.gray600,
+    fontStyle: "italic",
+  },
+]);
+
 export const replyMentionLink = style({
   color: vars.color.brand,
   textDecoration: "none",
@@ -321,12 +329,12 @@ export const actionMenuTrigger = style({
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
-  selectors: {
-    "&:hover, &:focus-visible": {
-      backgroundColor: vars.color.gray100,
-      outline: "none",
-    },
-  },
+  // selectors: {
+  //   "&:hover, &:focus-visible": {
+  //     backgroundColor: vars.color.gray100,
+  //     outline: "none",
+  //   },
+  // },
 });
 
 export const actionMenuIcon = style({
@@ -373,11 +381,60 @@ export const actionMenuOption = style({
   },
 });
 
+export const actionMenuOptionDanger = style([
+  actionMenuOption,
+  {
+    color: "#c94b4b",
+    selectors: {
+      "&:hover, &:focus-visible": {
+        backgroundColor: "#fff1f1",
+        color: "#a93636",
+      },
+      "&:disabled": {
+        color: vars.color.gray500,
+        cursor: "default",
+      },
+    },
+  },
+]);
+
+export const commentComposer = style({
+  flexShrink: 0,
+  borderTop: `1px solid ${vars.color.gray300}`,
+  backgroundColor: "#ffffff",
+});
+
+export const commentEditHeader = style({
+  minHeight: "30px",
+  padding: "8px 18px 0",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  color: vars.color.gray600,
+  fontFamily: vars.font.medium,
+  fontSize: "13px",
+});
+
+export const commentEditCancelButton = style({
+  padding: "3px 6px",
+  border: 0,
+  backgroundColor: "transparent",
+  color: vars.color.gray600,
+  fontFamily: vars.font.medium,
+  fontSize: "13px",
+  cursor: "pointer",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      color: vars.color.black,
+      outline: "none",
+      textDecoration: "underline",
+    },
+  },
+});
+
 export const commentForm = style({
   flexShrink: 0,
   padding: "10px 16px calc(10px + env(safe-area-inset-bottom))",
-  borderTop: `1px solid ${vars.color.gray300}`,
-  backgroundColor: "#ffffff",
   display: "flex",
   alignItems: "center",
   gap: "8px",
@@ -409,16 +466,18 @@ export const commentSubmitButton = style({
   flexShrink: 0,
   height: "40px",
   padding: "0 24px",
-  border: 0,
+  border: `1px solid ${vars.color.gray600}`,
   borderRadius: "21px",
-  backgroundColor: vars.color.black,
-  color: "#ffffff",
+  backgroundColor: "#ffffff",
+  color: vars.color.gray700,
   fontFamily: vars.font.medium,
   fontSize: "16px",
   cursor: "pointer",
   selectors: {
     "&:disabled": {
-      backgroundColor: vars.color.gray400,
+      borderColor: vars.color.gray300,
+      backgroundColor: vars.color.gray100,
+      color: vars.color.gray500,
       cursor: "default",
     },
   },

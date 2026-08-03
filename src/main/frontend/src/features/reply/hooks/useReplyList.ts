@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        HanWon.Jang        최초 생성
+ * 2026-08-03        HanWon.Jang        일반 함수 선언을 화살표 함수로 변경
  */
 import { useQuery } from "@tanstack/react-query";
 import { getReplyListApi } from "@/features/reply/api/replyApi";
@@ -20,7 +21,7 @@ export const REPLY_LIST_QUERY_KEY = "replyList";
  * @param reptNumb 댓글 목록을 조회할 독후감 번호
  * @return 댓글 목록의 조회 데이터와 요청 상태
  */
-export function useReplyList(reptNumb: number) {
+export const useReplyList = (reptNumb: number) => {
   // 동일한 독후감의 댓글 목록 요청과 캐시를 재사용한다
   return useQuery({
     queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
@@ -37,4 +38,4 @@ export function useReplyList(reptNumb: number) {
     },
     enabled: reptNumb > 0,
   });
-}
+};

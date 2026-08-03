@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : ReplyServiceImpl
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회 및 등록 업무 로직을 구현한다
+ * description    : 댓글과 답글의 조회, 등록, 수정 및 삭제 업무 로직을 구현한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 구현
  * 2026-07-29        HanWon.Jang        댓글 등록 시 독후감 작성자 알림 발송
  * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 조회
+ * 2026-08-03        HanWon.Jang        정상 이용 중인 본인 댓글 수정 및 논리 삭제 구현
  */
 @Service
 @RequiredArgsConstructor
@@ -76,7 +77,8 @@ public class ReplyServiceImpl implements ReplyService {
         String normalizedContent = StringUtil.normalizePlainText(replyDto.getReplCntn());
 
         // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부한다
-        if (StringUtil.isEmpty(normalizedContent) || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
+        if (StringUtil.isEmpty(normalizedContent)
+                || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -117,6 +119,109 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 등록된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다
         return ResultData.success(replyDto.getReplNumb());
+    }
+
+    /**
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다.
+     * 내용과 작성자 및 계정 상태를 검증하고 수정 일시를 갱신한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 댓글 작성자 사용자 번호
+     * @param reptNumb 수정할 댓글이 속한 독후감 번호
+     * @param replNumb 수정할 댓글 번호
+     * @param replyDto 변경할 댓글 내용
+     * @return 수정된 댓글 번호를 포함한 처리 결과
+     */
+    @Override
+    @Transactional
+    public ResultData uptReply(Long userNumb, Long reptNumb, Long replNumb, ReplyDto replyDto) {
+        // 인증 사용자와 수정 대상 및 댓글 내용이 없으면 변경 대상을 확정할 수 없으므로 요청을 거부한다
+        if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb, replyDto)
+                || StringUtil.isEmpty(replyDto.getReplCntn())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화한다
+        String normalizedContent = StringUtil.normalizePlainText(replyDto.getReplCntn());
+
+        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부한다
+        if (StringUtil.isEmpty(normalizedContent)
+                || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 댓글에 포함된 비속어를 찾아 공개 화면에 부적절한 내용으로 변경되지 않도록 한다
+        Optional<String> badWord = badWordDetectionService.findBadWord(normalizedContent);
+
+        // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 수정을 중단한다
+        if (badWord.isPresent()) {
+            // "입력한 내용에 사용할 수 없는 단어가 포함되어 있어요.\n확인 후 다시 입력해주세요.\n\n확인된 단어: {0}"
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
+        }
+
+        // URL에서 확정한 독후감 번호를 수정 조건으로 설정한다
+        replyDto.setReptNumb(reptNumb);
+        // URL에서 확정한 댓글 번호를 수정 조건으로 설정한다
+        replyDto.setReplNumb(replNumb);
+        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정한다
+        replyDto.setUserNumb(userNumb);
+        // 검증이 끝난 평문 댓글 내용을 변경값으로 설정한다
+        replyDto.setReplCntn(normalizedContent);
+
+        // 정상 이용 중인 작성자의 미삭제 댓글만 변경하도록 조건을 포함해 수정한다
+        int updateCnt = replyMapper.uptReply(replyDto);
+
+        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단한다
+        if (updateCnt == 0) {
+            // "수정에 실패했어요.\n다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 수정된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다
+        return ResultData.success(replNumb);
+    }
+
+    /**
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다.
+     * 자식 답글 구조를 유지하도록 원문 행은 보존하고 삭제 여부만 변경한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 댓글 작성자 사용자 번호
+     * @param reptNumb 삭제할 댓글이 속한 독후감 번호
+     * @param replNumb 삭제할 댓글 번호
+     * @return 삭제된 댓글 번호를 포함한 처리 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delReply(Long userNumb, Long reptNumb, Long replNumb) {
+        // 인증 사용자와 삭제 대상 번호가 없으면 변경 대상을 확정할 수 없으므로 요청을 거부한다
+        if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 댓글 삭제 조건을 담을 객체를 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 요청받은 독후감 번호를 삭제 조건으로 설정한다
+        replyDto.setReptNumb(reptNumb);
+        // 요청받은 댓글 번호를 삭제 조건으로 설정한다
+        replyDto.setReplNumb(replNumb);
+        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정한다
+        replyDto.setUserNumb(userNumb);
+
+        // 정상 이용 중인 작성자의 미삭제 댓글만 삭제 상태로 전환한다
+        int deleteCnt = replyMapper.delReply(replyDto);
+
+        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단한다
+        if (deleteCnt == 0) {
+            // "삭제에 실패했어요.\n다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+        // 삭제 상태로 전환된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다
+        return ResultData.success(replNumb);
     }
 
     /**

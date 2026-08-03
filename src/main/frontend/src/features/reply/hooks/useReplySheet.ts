@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        HanWon.Jang        최초 생성
+ * 2026-08-03        HanWon.Jang        일반 함수 선언을 화살표 함수로 변경
  */
 import { useEffect, useRef, useState } from "react";
 import type {
@@ -38,7 +39,7 @@ type UseReplySheetProps = {
  * @param props 댓글 바텀시트 닫기 처리 정보
  * @return 댓글 바텀시트가 사용할 참조와 이벤트 처리 함수
  */
-export function useReplySheet({ onClose }: UseReplySheetProps) {
+export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
   // 댓글 바텀시트가 열린 동안 배경 페이지의 스크롤을 잠근다
   useBodyScrollLock(true);
 
@@ -216,4 +217,4 @@ export function useReplySheet({ onClose }: UseReplySheetProps) {
     handlePointerMove,
     handlePointerEnd,
   };
-}
+};

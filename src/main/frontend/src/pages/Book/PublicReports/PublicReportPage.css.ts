@@ -425,6 +425,6 @@ export const empty = style({
   margin: "48px 0",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   textAlign: "center",
 });

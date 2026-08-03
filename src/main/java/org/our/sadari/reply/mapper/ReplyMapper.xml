@@ -2,10 +2,25 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.reply.mapper.ReplyMapper">
 
+    <!-- 공통 사용 설정값을 SQL 파라미터로 정의한다. -->
+    <sql id="bindCommYes">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+    </sql>
+
+    <!-- 공통 미사용 설정값을 SQL 파라미터로 정의한다. -->
+    <sql id="bindCommNo">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+    </sql>
+
+    <!-- 정상 이용 회원 상태를 SQL 파라미터로 정의한다. -->
+    <sql id="bindUserStatActive">
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+    </sql>
+
     <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
-        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <include refid="bindCommYes" />
+        <include refid="bindCommNo" />
         SELECT /* getReplyList */
                R.REPT_NUMB
              , R.REPL_NUMB
@@ -60,9 +75,50 @@
                   , #{replCntn}
                   , #{deltYsno}
                   , CURRENT_TIMESTAMP
-                  , CURRENT_TIMESTAMP
+                  , NULL
         )
     </insert>
+
+    <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다. -->
+    <update id="uptReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        UPDATE /* uptReply */
+               TB_REPLXX R
+           SET REPL_CNTN = #{replCntn}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE R.REPT_NUMB = #{reptNumb}
+           AND R.REPL_NUMB = #{replNumb}
+           AND R.USER_NUMB = #{userNumb}
+           AND R.DELT_YSNO = #{commNo}
+           AND EXISTS (
+                   SELECT 1
+                     FROM TM_USERXM U
+                    WHERE U.USER_NUMB = #{userNumb}
+                      AND U.USER_STAT = #{userStatActive}
+               )
+    </update>
+
+    <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다. -->
+    <update id="delReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommYes" />
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        UPDATE /* delReply */
+               TB_REPLXX R
+           SET DELT_YSNO = #{commYes}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE R.REPT_NUMB = #{reptNumb}
+           AND R.REPL_NUMB = #{replNumb}
+           AND R.USER_NUMB = #{userNumb}
+           AND R.DELT_YSNO = #{commNo}
+           AND EXISTS (
+                   SELECT 1
+                     FROM TM_USERXM U
+                    WHERE U.USER_NUMB = #{userNumb}
+                      AND U.USER_STAT = #{userStatActive}
+               )
+    </update>
 
     <!-- 댓글 등록 알림을 받을 독후감 작성자 사용자 번호를 조회한다. -->
     <select id="getReplyReportUserNumb" parameterType="long" resultType="long">

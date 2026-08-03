@@ -700,13 +700,12 @@ export function sweetEditGuide(
   const pulse = document.createElement("span");
   pulse.className = "sadari-swal-edit-guide-pulse";
 
-  target.append(label, value, pulse);
-  content.appendChild(target);
+  // target.append(label, value, pulse);
+  // content.appendChild(target);
 
   // 클릭 가능한 요소의 시각적 예시를 포함한 안내 모달을 반환한다
   return sweetAlert({
     title,
-    content,
     icon: "info",
   });
 }
