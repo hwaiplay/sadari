@@ -183,6 +183,12 @@ export const dayButton = style({
     fontFamily: vars.font.medium
 
   },
+
+  ":disabled": {
+    color: vars.color.gray400,
+    cursor: "not-allowed",
+    fontFamily: vars.font.body,
+  },
 });
 
 export const today = style({
