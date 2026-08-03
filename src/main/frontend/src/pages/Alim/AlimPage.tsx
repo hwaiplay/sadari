@@ -19,6 +19,7 @@ import {
   getPushConfigApi,
   setPushSubApi,
 } from "@/features/Push/api/pushApi";
+import type { ReactNode } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./AlimPage.css";
@@ -57,6 +58,84 @@ function setStoredPushEnabled(enabled: boolean) {
 }
 
 /**
+ * 푸시 알림의 현재 상태와 변경 진행 여부에 맞는 버튼 스타일을 조회한다
+ *
+ * @author HanWon.Jang
+ * @param isPushChanging 푸시 알림 변경 처리 진행 여부
+ * @param isPushEnabled 푸시 알림 활성 여부
+ * @return 푸시 알림 버튼 스타일 클래스
+ */
+function getPushButtonClass(isPushChanging: boolean, isPushEnabled: boolean): string {
+  // 토큰 발급 또는 서버 등록 중에는 기존 활성 상태보다 처리 중 상태를 우선 표시한다
+  if (isPushChanging) {
+    // 노란색 처리 중 버튼 스타일을 반환한다
+    return styles.pushButtonChanging;
+  }
+
+  // 처리 완료 후에는 현재 푸시 알림 활성 여부에 맞는 상태색을 표시한다
+  if (isPushEnabled) {
+    // 푸시 알림 켜짐 버튼 스타일을 반환한다
+    return styles.pushButton;
+  }
+
+  // 푸시 알림 꺼짐 버튼 스타일을 반환한다
+  return styles.pushButtonOff;
+}
+
+/**
+ * 푸시 알림의 현재 상태와 변경 진행 여부를 버튼 내용으로 구성한다
+ *
+ * @author HanWon.Jang
+ * @param isPushChanging 푸시 알림 변경 처리 진행 여부
+ * @param isPushEnabled 푸시 알림 활성 여부
+ * @return 푸시 알림 상태 문구와 처리 중 표시
+ */
+function renderPushButtonContent(isPushChanging: boolean, isPushEnabled: boolean): ReactNode {
+  // 처리 중에는 스피너와 함께 켜기 또는 끄기 작업에 맞는 진행 문구를 표시한다
+  if (isPushChanging) {
+    // 켜진 상태를 해제하는 동안에는 사용자가 현재 작업을 구분할 수 있게 해제 문구를 표시한다
+    if (isPushEnabled) {
+      // 푸시 알림 해제 진행 상태를 반환한다
+      return (
+        <>
+          <span className={styles.pushSpinner} aria-hidden="true" />
+          {/* "푸시 알림 해제 중..." */}
+          {message("frontend.push.changing.disable")}
+        </>
+      );
+    }
+
+    // 푸시 알림 설정 진행 상태를 반환한다
+    return (
+      <>
+        <span className={styles.pushSpinner} aria-hidden="true" />
+        {/* "푸시 알림 설정 중..." */}
+        {message("frontend.push.changing.enable")}
+      </>
+    );
+  }
+
+  // 처리 중이 아니면 실제 푸시 알림 활성 여부를 버튼에 표시한다
+  if (isPushEnabled) {
+    // 푸시 알림 켜짐 상태를 반환한다
+    return (
+      <>
+        {/* "푸시 알림 켜짐" */}
+        {message("frontend.push.enable")}
+      </>
+    );
+  }
+
+  // 푸시 알림 꺼짐 상태를 반환한다
+  return (
+    <>
+      {/* "푸시 알림 꺼짐" */}
+      {message("frontend.push.disable")}
+    </>
+  );
+}
+
+/**
  * 로그인 사용자의 알림 목록을 보여주는 페이지입니다.
  * 삭제되지 않은 알림을 모두 보여주며, 개별 링크 클릭으로 읽음 처리하고 모두 지우기로 목록에서 제거합니다.
  *
@@ -79,6 +158,9 @@ function AlimPage() {
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
   const pushTokenRef = useRef<string | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
+
+  // 변경 진행 여부를 우선 적용하여 푸시 알림 버튼의 현재 스타일을 조회한다
+  const pushButtonClass = getPushButtonClass(isPushChanging, isPushEnabled);
 
   const loadAlimList = useCallback(
     async (page: number) => {
@@ -384,17 +466,16 @@ function AlimPage() {
         </div>
         <div className={styles.headerActions}>
           <button
-            className={isPushEnabled ? styles.pushButton : styles.pushButtonOff}
+            className={pushButtonClass}
             type="button"
             aria-pressed={isPushEnabled}
+            aria-busy={isPushChanging}
+            aria-live="polite"
             disabled={isPushChanging}
             onClick={() => void handlePushToggle()}
           >
-            {message(
-              isPushEnabled
-                ? "frontend.push.enable"
-                : "frontend.push.disable",
-            )}
+            {/* 푸시 알림 현재 상태와 처리 진행 표시 영역 */}
+            {renderPushButtonContent(isPushChanging, isPushEnabled)}
           </button>
           <button
             className={styles.readAllButton}

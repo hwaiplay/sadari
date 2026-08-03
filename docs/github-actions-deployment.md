@@ -69,9 +69,13 @@
 - Tailnet 장치에서 로컬 OAuth를 검증할 때는 `application-loc.yml`의 `domain.front`와
   `domain.back` 기본값을 같은 `https://<tailscale-device>.<tailnet>.ts.net` 주소로 설정하고
   `app.cookie.secure=true`, `app.cookie.same-site=Lax`를 사용합니다.
-- Vite 개발 서버는 `DOMAIN_BACK=http://127.0.0.1:8080`을 주입하여 `/api` 요청을 로컬
-  Spring 서버로 전달합니다. 이 내부 전달에서는 브라우저의 개발 Origin을 제거하여 POST와 PUT 요청이
-  외부 CORS 요청으로 오인되지 않게 하며, Spring은 `domain.back`의 Tailscale 기본값으로 OAuth 콜백 URI를 생성합니다.
+- Vite 개발 서버는 `application-loc.yml`의 `domain.proxy=http://127.0.0.1:8080`을 읽어 `/api` 요청을
+  로컬 Spring 서버로 전달합니다. Vite는 Tailscale Serve 대상과 동일한 `127.0.0.1:5173`에 고정되며,
+  포트가 이미 사용 중이면 다른 포트로 이동하지 않고 시작에 실패하여 잘못된 프록시 연결을 차단합니다.
+- Vite Host 허용 목록에는 `domain.front`의 Tailnet 호스트만 추가하여 휴대폰 요청을 허용하고 임의 Host
+  헤더 요청은 차단합니다.
+- Vite의 내부 전달에서는 브라우저의 개발 Origin을 제거하여 POST와 PUT 요청이 외부 CORS 요청으로
+  오인되지 않게 하며, Spring은 `domain.back`의 Tailscale 기본값으로 OAuth 콜백 URI를 생성합니다.
 - 프런트엔드는 HTTPS를 사용하는 `*.ts.net` 개발 주소에서도 서비스워커를 등록하여 Tailnet 장치의
   PWA 설치와 오프라인 앱 셸 검증을 허용합니다.
 - 카카오 개발자 콘솔의 Redirect URI에는
