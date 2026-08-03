@@ -5,21 +5,28 @@
 - 사용자 닉네임
 - 사용자 한줄소개
 - 독후감 내용
+- 댓글 내용
 
 ## 비속어 사전
 
 - 차단어는 `BADX_WORD` 공통코드의 활성 상세코드에서 조회합니다.
 - 정상 허용어는 `EXCP_WORD` 공통코드의 활성 상세코드에서 조회합니다.
+- `BADX_WORD`에는 신체·성적 표현·성정체성·일반 단어처럼 불편할 수 있으나 욕설이 아닌 단어를 등록하지 않습니다.
+- 짧은 차단어만으로 탐지되는 조합어와 반복 문자 우회 표현은 별도 세부코드로 중복 등록하지 않습니다.
+- 발음이나 철자가 달라 정규화 로직으로 복원할 수 없는 욕설 변형만 별도 세부코드로 등록합니다.
+- 세부코드는 `WORD_0001`부터 연속해서 부여하며 `SORT_ORDR`도 같은 순번을 사용합니다.
 - 비속어와 예외 사전을 메모리에 적재하며 캐시 유효시간은 10분입니다.
 - 캐시 만료 시 한 스레드만 DB에서 사전을 다시 읽도록 동시성을 제어합니다.
 - 조회한 사전으로 아호-코라식 탐색기를 만들어 한 번의 입력 탐색으로 여러 단어를 검사합니다.
 
 ## 우회 표현과 예외
 
-- 공백을 삽입한 비속어를 탐지합니다.
-- 비속어 사이에 숫자 또는 특수문자를 삽입한 우회 표현을 탐지합니다.
-- 일반 한글이나 영문 글자가 비속어 사이에 들어간 경우는 자동 제거하지 않습니다.
+- 공백은 단어 경계로 보존하며 공백을 사이에 둔 글자를 하나의 비속어로 합치지 않습니다.
+- 공백이 없는 비속어 사이에 숫자 또는 특수문자를 삽입한 우회 표현을 탐지합니다.
+- 공백이 없는 단어 안에서 같은 문자를 두 번 이상 반복하면 반복 구간의 축약본과 제거본을 함께 검사합니다.
+- 일반 한글이나 영문 글자가 한 번만 비속어 사이에 들어간 경우는 자동 제거하지 않습니다.
 - `보이지`처럼 정상 단어가 과도하게 차단되는 것을 방지합니다.
+- `보지`, `게이`처럼 욕설이 아닌 신체·성정체성 표현은 차단하지 않습니다.
 - `시발점`처럼 비속어 문자열을 포함하지만 허용어 사전에 등록된 더 넓은 정상 표현은 허용합니다.
 - 여러 비속어가 동시에 탐지되면 사용자 안내 정확도를 위해 더 긴 단어를 우선합니다.
 - 차단 시 감지한 비속어를 실패 메시지에 포함합니다.
@@ -46,6 +53,14 @@
 - 프론트엔드와 백엔드에서 같은 본문 길이 제한을 검증합니다.
 - 프론트엔드 검증은 사용자 안내를 위한 것이며 최종 저장 판단은 백엔드 검증입니다.
 
+## 계정 수명주기
+
+- 비속어 검사는 활성 계정이 닉네임, 한줄소개, 독후감 또는 댓글을 저장하거나 수정하는 입력 시점에만 적용합니다.
+- 비속어 검사 결과와 정규화 중간값은 별도 데이터로 저장하지 않습니다.
+- `WITHDRAWN` 및 `DELETE_PENDING` 계정은 기존 접근 제한으로 콘텐츠 입력을 수행할 수 없으며 비속어 검사에서 별도 예외를 두지 않습니다.
+- 계정 비활성화, 영구 탈퇴, 취소 또는 복귀 시 비속어 사전과 검사 결과를 기준으로 콘텐츠를 추가 삭제하거나 복원하지 않습니다.
+- 비속어 검사 변경은 알림, 푸시 구독 및 소셜 관계 처리 범위를 변경하지 않습니다.
+
 ## 이미지 업로드
 
 - 사용자가 업로드할 수 있는 유형은 프로필 이미지와 배경 이미지입니다.
@@ -62,9 +77,13 @@
 
 ## 구현 근거
 
-- `global/common/service/BadWordDetectionService.java`
-- `global/file/service/FileService.java`
-- `user/service/UserServiceImpl.java`
-- `report/service/ReportServiceImpl.java`
-- `application-loc.yml`
-- `application-prod.yml`
+- `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
+- `src/test/java/org/our/sadari/global/common/service/BadWordDetectionServiceTest.java`
+- `scripts/db/mysql/04-reset-bad-word-data.sql`
+- `scripts/db/mysql/output/02-admin-insert.sql`
+- `src/main/java/org/our/sadari/global/file/service/FileService.java`
+- `src/main/java/org/our/sadari/user/service/UserServiceImpl.java`
+- `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
+- `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
+- `src/main/resources/application-loc.yml`
+- `src/main/resources/application-prod.yml`

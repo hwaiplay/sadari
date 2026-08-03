@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Queue;
+import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.code.dto.CodeDto;
 import org.our.sadari.global.common.code.util.CodeUtil;
@@ -18,11 +19,12 @@ import org.springframework.stereotype.Service;
  * fileName       : BadWordDetectionService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-21
- * description    : 공통 업무 계약을 정의한다
+ * description    : 공통코드 사전으로 사용자 입력의 비속어와 우회 표현을 탐지한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-21        SeungHyeon.Kang    최초 생성
+ * 2026-08-03        SeungHyeon.Kang    공백 경계와 반복 문자 우회 탐지 정책 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -30,6 +32,9 @@ public class BadWordDetectionService {
 
     // 비속어 목록을 메모리에 보관할 만료 시간이다. 10분으로 설정되어 있다.
     private static final long BAD_WORD_CACHE_TTL_MILLIS = 10 * 60 * 1000L;
+
+    // 공백이 아닌 같은 문자가 두 번 이상 연속된 우회 구간
+    private static final Pattern REPEATED_CHARACTER_PATTERN = Pattern.compile("([^\\p{javaWhitespace}\\p{Z}])\\1+");
 
     // 공통코드 데이터를 데이터베이스에서 조회해 오는 유틸리티 클래스이다.
     private final CodeUtil codeUtil;
@@ -42,14 +47,15 @@ public class BadWordDetectionService {
     /**
      * 입력된 문자열에서 탐지된 비속어 단어를 찾아 Optional 형태로 반환한다.
      * 비속어가 발견되더라도 같은 문자열 안에서 EXCP_WORD 허용어가 더 넓은 범위로 감싸고 있으면 정상 표현으로 보고 통과시킨다.
-     * 공백 제거본, 숫자·특수문자 제거본, 숫자 보존 정규화본을 순차적으로 검사한다.
-     * 한글이나 영문은 우회 문자로 제거하지 않으며 숫자, 특수문자 및 공백을 끼워 넣은 경우만 차단한다.
+     * 공백은 단어 경계로 보존하고 숫자·특수문자 제거본과 숫자 보존 정규화본을 순차적으로 검사한다.
+     * 공백이 없는 단어 안에서 같은 문자를 두 번 이상 반복한 구간은 한 글자로 축약한 값과 완전히 제거한 값을 추가 검사한다.
+     * 한글이나 영문 한 글자만 끼워 넣은 경우는 자동 제거하지 않는다.
      *
      * 예시 처리 과정:
-     * 입력값 "안 녕 씨 아 발 1 8 년"
-     * 1단계 blankRemovedValue = "안녕씨아발18년" (띄어쓰기 replace)
-     * 2단계 normalizedWithoutDigits = "안녕씨아발년" (숫자 및 특수문자 제거)
-     * 3단계 normalizedWithDigits = "안녕씨아발18년" (특수문자만 제거, 숫자 보존)
+     * 입력값 "시이이이이발"
+     * 1단계 normalizedWithoutDigits = "시이이이이발" (공백 보존, 숫자 및 특수문자 제거)
+     * 2단계 collapsedRepeatedValue = "시이발" (반복 구간을 한 글자로 축약)
+     * 3단계 removedRepeatedValue = "시발" (반복 구간을 제거)
      *
      * @author SeungHyeon.Kang
      * @param value 검사할 사용자 입력 문자열
@@ -66,21 +72,16 @@ public class BadWordDetectionService {
         // 메모리 캐시에서 아호-코라식 자동자를 가져온다. 만료되었다면 내부적으로 DB에서 비속어 사전을 다시 읽고 자동자를 재생성한다.
         BadWordCache cache = getBadWordCache();
 
-        // 1단계 변환: 공백을 모두 제거하여 띄어쓰기로 우회한 비속어를 검사하기 위한 문자열이다.
-        String blankRemovedValue = value.replace(" ", "");
-
-        // 2단계 변환: 한글과 영문만 남기고 특수문자 및 숫자를 모두 제거한 문자열이다.
+        // 1단계 변환: 공백 경계와 한글 및 영문만 남기고 특수문자와 숫자를 제거한 문자열이다.
         String normalizedWithoutDigits = normalizeObfuscatedBadWord(value, false);
 
-        // 3단계 변환: 숫자 포함 비속어 검사를 위해 숫자는 남겨두고 특수문자만 제거한 문자열이다.
+        // 2단계 변환: 숫자 포함 비속어 검사를 위해 공백 경계와 숫자를 남겨두고 특수문자만 제거한 문자열이다.
         String normalizedWithDigits = normalizeObfuscatedBadWord(value, true);
 
-        // Optional.or 메서드를 사용하여 단계별로 비속어를 탐지한다.
-        // 람다식을 사용한 지연 평가 방식으로 작동하므로
+        // 공백 경계를 유지한 정규화본과 반복 문자 변환본에서 일반 및 숫자 포함 비속어를 순차 탐지한다
         // 입력 문자열에서 처음 탐지된 비속어를 Optional로 반환한다
-        return findBadWord(cache.badWordMatcher(), cache.exceptionWordMatcher(), blankRemovedValue)
-                .or(() -> findBadWord(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits))
-                .or(() -> findDigitBadWord(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
+        return getBadWordDtlIncludingRepeatedCharacters(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits)
+                .or(() -> getBadWordDtlIncludingRepeatedCharacters(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
     }
 
     /**
@@ -202,21 +203,39 @@ public class BadWordDetectionService {
     }
 
     /**
-     * 숫자가 포함된 비속어 전용 아호-코라식 자동자로 특수문자만 제거된 입력 문자열을 비교한다.
-     * 숫자가 포함된 비속어를 일반 문자열 정규화 단계에서 검사하면 정상적인 단어가 잘못 걸리는 오탐을 방지하기 위함이다.
-     *
-     * 예시:
-     * 일반 문자열 정규화에서 숫자를 일률적으로 제거하면 "18년"이 "년"으로 변해 정상적인 문장이 오탐될 수 있다.
-     * 따라서 숫자가 들어간 비속어는 숫자를 보존한 상태에서 별도 매처로 검사한다.
+     * 정규화 문자열과 반복 문자 축약본 및 제거본에서 비속어를 순차적으로 탐지한다.
+     * 반복 문자를 한 글자로 줄이는 경우와 반복 구간 자체를 끼워 넣은 경우를 모두 차단한다.
      *
      * @author SeungHyeon.Kang
-     * @param digitMatcher 숫자 포함 비속어만 담은 아호-코라식 자동자
-     * @param value 숫자가 보존되고 특수문자만 제거된 입력 문자열
-     * @return 탐지된 숫자 포함 비속어
+     * @param matcher 비속어 사전으로 구성한 아호-코라식 자동자
+     * @param exceptionMatcher 예외 허용어 사전으로 구성한 아호-코라식 자동자
+     * @param value 공백 경계를 보존한 정규화 문자열
+     * @return 탐지된 비속어
      */
-    private Optional<String> findDigitBadWord(AhoCorasickMatcher digitMatcher, AhoCorasickMatcher digitExceptionMatcher, String value) {
-        // 숫자가 포함된 비속어 전용 아호-코라식 자동자로 특수문자만 제거된 입력 문자열을 비교 결과를 반환한다
-        return findBadWord(digitMatcher, digitExceptionMatcher, value);
+    private Optional<String> getBadWordDtlIncludingRepeatedCharacters(AhoCorasickMatcher matcher, AhoCorasickMatcher exceptionMatcher, String value) {
+        // 반복 문자가 없는 일반 입력은 기존 정규화 문자열을 한 번만 탐색한다
+        Optional<String> matchedWord = findBadWord(matcher, exceptionMatcher, value);
+
+        // 원본 정규화 문자열에서 비속어가 발견되면 반복 문자 변환 없이 결과를 확정한다
+        if (matchedWord.isPresent()) {
+            // 원본 정규화 문자열에서 탐지된 비속어를 반환한다
+            return matchedWord;
+        }
+
+        // 같은 문자가 두 번 이상 이어지지 않으면 추가 정규화와 자동자 재탐색을 생략한다
+        if (!REPEATED_CHARACTER_PATTERN.matcher(value).find()) {
+            // 반복 문자 우회가 없는 정상 입력의 빈 탐지 결과를 반환한다
+            return Optional.empty();
+        }
+
+        // 같은 문자 반복을 한 글자로 축약하여 원래 비속어 글자를 늘인 우회 표현을 복원한다
+        String collapsedRepeatedValue = REPEATED_CHARACTER_PATTERN.matcher(value).replaceAll("$1");
+        // 같은 문자 반복 구간을 제거하여 비속어 사이에 별도 문자를 반복 삽입한 우회 표현을 복원한다
+        String removedRepeatedValue = REPEATED_CHARACTER_PATTERN.matcher(value).replaceAll("");
+
+        // 정규화 문자열과 반복 문자 축약본 및 제거본에서 비속어를 순차적으로 탐지 결과를 반환한다
+        return findBadWord(matcher, exceptionMatcher, collapsedRepeatedValue)
+                .or(() -> findBadWord(matcher, exceptionMatcher, removedRepeatedValue));
     }
 
     /**
@@ -273,7 +292,7 @@ public class BadWordDetectionService {
     }
 
     /**
-     * 비속어 사이에 끼워 넣은 특수문자나 기호를 제거하기 위해 정규식을 사용하여 정규화한다.
+     * 비속어 사이에 끼워 넣은 특수문자나 기호를 제거하되 공백은 단어 경계로 보존한다.
      *
      * @author SeungHyeon.Kang
      * @param value 검사할 원본 문자열
@@ -281,12 +300,12 @@ public class BadWordDetectionService {
      * @return 유효한 문자만 남긴 정규화 문자열
      */
     private String normalizeObfuscatedBadWord(String value, boolean keepDigits) {
-        // keepDigits 옵션이 true이면 한글, 영문, 숫자를 제외한 모든 문자를 제거한다.
-        // keepDigits 옵션이 false이면 한글, 영문만 남기고 숫자까지 포함한 모든 특수문자를 제거한다.
+        // keepDigits 옵션이 true이면 한글, 영문, 숫자 및 공백을 제외한 모든 문자를 제거한다.
+        // keepDigits 옵션이 false이면 한글, 영문 및 공백만 남기고 숫자까지 포함한 모든 특수문자를 제거한다.
         // 유니코드 프로퍼티 표현식을 사용하여 완성형 및 조합형 한글과 영문 대소문자를 정확하게 판별한다.
         String allowedPattern = keepDigits
-                ? "[^\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}]"
-                : "[^\\p{IsHangul}\\p{IsAlphabetic}]";
+                ? "[^\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}\\p{javaWhitespace}\\p{Z}]"
+                : "[^\\p{IsHangul}\\p{IsAlphabetic}\\p{javaWhitespace}\\p{Z}]";
         // 비속어 사이에 끼워 넣은 특수문자나 기호를 제거하기 위해 정규식을 사용하여 정규화 결과를 반환한다
         return value.replaceAll(allowedPattern, "");
     }
