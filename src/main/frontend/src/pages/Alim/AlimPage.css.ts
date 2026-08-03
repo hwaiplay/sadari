@@ -69,6 +69,10 @@ export const pushButton = style([
   readAllButton,
   {
     minWidth: "92px",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: "6px",
     borderColor: "#2f9e44",
     color: "#2f9e44",
   },
@@ -89,6 +93,44 @@ export const pushButtonOff = style([
     },
   },
 ]);
+
+// 푸시 토큰 발급과 서버 등록이 끝날 때까지 버튼을 브랜드 골드 상태로 유지한다
+export const pushButtonChanging = style([
+  pushButton,
+  {
+    minWidth: "148px",
+    borderColor: "#d9b44a",
+    backgroundColor: "#ffffff",
+    color: "#d9b44a",
+    selectors: {
+      "&:disabled": {
+        borderColor: "#d9b44a",
+        backgroundColor: "#ffffff",
+        color: "#d9b44a",
+        cursor: "wait",
+      },
+    },
+  },
+]);
+
+// 푸시 등록 대기 상태가 계속 진행 중임을 전달하는 회전 동작을 생성한다
+const rotatePushSpinner = keyframes({
+  to: {
+    transform: "rotate(360deg)",
+  },
+});
+
+// 처리 중 버튼의 현재 글자색을 상속하여 테두리와 같은 골드색 회전 표시를 제공한다
+export const pushSpinner = style({
+  width: "12px",
+  height: "12px",
+  flex: "0 0 auto",
+  border: "2px solid currentColor",
+  borderRightColor: "transparent",
+  borderRadius: "50%",
+  boxSizing: "border-box",
+  animation: `${rotatePushSpinner} 700ms linear infinite`,
+});
 
 export const list = style({
   display: "flex",

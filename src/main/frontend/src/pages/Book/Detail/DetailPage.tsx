@@ -351,13 +351,46 @@ function DetailPage() {
   }
 
   /**
-   * 독서 상태 변경을 반영하고 읽는 중에서 완료 또는 중단으로 바뀌면 종료일 보정을 확인한다
+   * 독서 상태 변경에 따른 평점 및 공개 여부 초기화와 종료일 보정을 확인한다
    *
    * @author HanWon.Jang
    * @param nextStatus 사용자가 선택한 다음 독서 상태 코드
    * @return 반환값이 없다
    */
   async function handleStatusChange(nextStatus: ReadingStatusType) {
+
+    const needsReadingResetConfirm =
+      nextStatus === REPORT_STATUS_READ &&
+      (status === REPORT_STATUS_DONE || status === REPORT_STATUS_STOP);
+
+    // 완료 또는 중단 상태에서 읽는 중으로 되돌리면 평점과 공개 여부가 초기화되므로 먼저 사용자 확인을 받는다
+    if (needsReadingResetConfirm) {
+      // "독서 상태를 변경할까요?"
+      const readingResetTitle = message("frontend.report.readingResetConfirmTitle");
+      // "'읽고 있어요'로 변경하면 평점은 삭제되고 공개 여부는 비공개로 변경돼요. 계속할까요?"
+      const readingResetText = message("frontend.report.readingResetConfirmText");
+      // "확인"
+      const confirmButtonText = message("frontend.common.confirm");
+      // "취소"
+      const cancelButtonText = message("frontend.common.cancel");
+      // 평점 삭제와 공개 범위 변경에 동의하는 경우에만 읽는 중 상태를 적용한다
+      const confirmed = await sweetConfirm({
+        icon: "warning",
+        title: readingResetTitle,
+        text: readingResetText,
+        confirmButtonText,
+        cancelButtonText,
+      });
+
+      // 사용자가 초기화를 취소하면 기존 독서 상태와 평점 및 공개 여부를 유지한다
+      if (!confirmed.isConfirmed) {
+        return;
+      }
+
+      // 확인된 읽는 중 상태를 반영하면서 평점과 공개 여부를 정책 기본값으로 초기화한다
+      applyStatusSelection(nextStatus);
+      return;
+    }
 
     const needsEndDateConfirm =
       initialStatus === REPORT_STATUS_READ &&
