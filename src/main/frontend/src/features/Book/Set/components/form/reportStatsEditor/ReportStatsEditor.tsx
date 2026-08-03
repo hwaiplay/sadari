@@ -621,6 +621,7 @@ function ReportStatsEditor({
                           message("frontend.report.placeholder.endDate")
                         }
                         onRangeChange={onRangeChange}
+                        allowFuture={isReadingStatus}
                         inline
                       />
                     </div>
