@@ -10,6 +10,7 @@
  * 2026-07-28        Hanwon.Jang    댓글 정보 타입 정의
  * 2026-07-29        HanWon.Jang    댓글 계층과 수정 상태 타입 정의
  * 2026-07-29        HanWon.Jang    로그인 사용자 작성 댓글 여부 타입 정의
+ * 2026-08-03        HanWon.Jang    댓글 수정 및 삭제 API 응답 타입 정의
  */
 
 import type { ResultData } from "@/app/api/resultData";
@@ -58,6 +59,20 @@ export interface ReplyDtoType {
  * 댓글 등록 후 리턴 타입
  */
 export type SetReplyResponse = ResultData<number> & {
+    data: number;
+};
+
+/**
+ * 댓글 수정 후 리턴 타입
+ */
+export type UptReplyResponse = ResultData<number> & {
+    data: number;
+};
+
+/**
+ * 댓글 삭제 후 리턴 타입
+ */
+export type DelReplyResponse = ResultData<number> & {
     data: number;
 };
 

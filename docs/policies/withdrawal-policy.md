@@ -32,6 +32,8 @@
 - 회원 원본 정보와 로그인 이력은 유지합니다.
 - 작성한 독후감은 모두 비공개로 전환합니다.
 - 작성한 댓글은 삭제된 댓글 상태로 전환합니다.
+- 댓글 수정·삭제 메뉴와 API는 `ACTIVE` 상태에서 본인이 작성한 미삭제 댓글에만 제공합니다.
+- `WITHDRAWN` 상태에서는 본인 댓글 수정·삭제 메뉴를 표시하지 않으며 직접 API를 호출해도 처리하지 않습니다.
 - 수신 알림은 삭제 상태로 전환합니다.
 - 브라우저 푸시 구독은 비활성화합니다.
 - 팔로우 및 팔로워 관계는 유지합니다.
@@ -50,9 +52,11 @@
 - 관리자 이용 정지 중인 회원은 정지 해제 또는 기간 만료 전까지 영구 탈퇴를 신청할 수 없습니다.
 - 취소하면 유효한 관리자 이용 정지가 남아 있을 때는 `SUSPENDED`, 남아 있지 않을 때는 `ACTIVE`로 복구하고 탈퇴일과 삭제 예정일을 제거합니다.
 - 유예기간 동안에도 독후감 비공개, 댓글 삭제 상태, 알림 삭제 상태, 푸시 비활성화 정책을 적용합니다.
+- `DELETE_PENDING` 상태에서는 본인 댓글 수정·삭제 메뉴를 표시하지 않으며 직접 API를 호출해도 처리하지 않습니다.
 - 유예기간 종료 후 매일 03:00 영구 삭제 스케줄러가 대상 회원을 처리합니다.
 - 영구 삭제 시 `TM_USERXM` 회원 원본을 삭제합니다.
 - 로그인 이력은 보존하고, 정책상 보존 대상이 아닌 회원 연관 데이터는 삭제합니다.
+- 영구 삭제 시 작성 댓글 원문과 회원 연관 댓글 데이터를 물리 삭제하며 이후 복구하지 않습니다.
 - 탈퇴 이력에는 원본 OAuth 식별값 대신 SHA-256 해시를 저장합니다.
 - 탈퇴 이력의 `USER_NUMB`는 탈퇴 당시 내부 회원번호를 감사 이력으로 보존합니다.
 - `TH_USWTHD.USER_NUMB`는 회원 원본 삭제 후에도 값을 유지해야 하므로 `TM_USERXM`과 FK로 연결하지 않습니다.
@@ -123,6 +127,9 @@
 - `src/main/frontend/src/app/pwa/registerServiceWorker.ts`
 - `src/main/frontend/public/service-worker.js`
 - `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
+- `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
+- `src/main/java/org/our/sadari/reply/mapper/ReplyMapper.xml`
+- `src/main/frontend/src/features/reply/ReplySheetView.tsx`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `CT_POPUPX`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`

@@ -18,6 +18,14 @@ export const container = style({
   alignItems: "center",
 });
 
+export const inlineContainer = style({
+  minHeight: "240px",
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "center",
+  alignItems: "center",
+});
+
 export const spinner = style({
   width: "48px",
   height: "48px",

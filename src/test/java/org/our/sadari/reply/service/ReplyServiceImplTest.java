@@ -26,11 +26,12 @@ import org.our.sadari.reply.mapper.ReplyMapper;
  * fileName       : ReplyServiceImplTest
  * author         : Hanwon.Jang
  * date           : 2026-07-31
- * description    : 댓글 등록과 독후감 작성자 알림 연결을 검증한다
+ * description    : 댓글 등록 알림과 본인 댓글 수정 및 삭제 처리를 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-31        Hanwon.Jang        최초 생성
+ * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 서비스 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -51,7 +52,7 @@ class ReplyServiceImplTest {
     @Mock
     private TokenRedisService tokenRedisService;
 
-    // 댓글 등록 단위 테스트 대상
+    // 댓글 등록과 수정 및 삭제 단위 테스트 대상
     private ReplyServiceImpl replyService;
 
     /**
@@ -129,5 +130,73 @@ class ReplyServiceImplTest {
         );
         // 알림 문구에 댓글 작성자 닉네임이 전달되는지 확인한다
         assertEquals("댓글작성자", replaceMapCaptor.getValue().get("userName"));
+    }
+
+    /**
+     * 본인 댓글의 공백을 정규화한 내용을 댓글 식별값과 함께 수정하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void uptReplyUpdatesOwnedReplyWithNormalizedContent() {
+
+        // 수정할 댓글 내용을 담은 요청을 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 앞뒤 공백이 포함된 변경 내용을 댓글 요청에 설정한다
+        replyDto.setReplCntn("  수정한 댓글입니다.  ");
+
+        // 정규화한 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        when(badWordDetectionService.findBadWord("수정한 댓글입니다."))
+                .thenReturn(Optional.empty());
+        // 본인 댓글 한 건이 수정되는 조건을 구성한다
+        when(replyMapper.uptReply(replyDto)).thenReturn(1);
+
+        // 로그인 사용자가 작성한 댓글을 수정한다
+        ResultData result = replyService.uptReply(44L, 157L, 8L, replyDto);
+
+        // 댓글 수정 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 수정된 댓글 번호를 확인한다
+        assertEquals(8L, result.getData());
+        // URL에서 전달한 독후감 번호가 수정 조건에 설정됐는지 확인한다
+        assertEquals(157L, replyDto.getReptNumb());
+        // URL에서 전달한 댓글 번호가 수정 조건에 설정됐는지 확인한다
+        assertEquals(8L, replyDto.getReplNumb());
+        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인한다
+        assertEquals(44L, replyDto.getUserNumb());
+        // 정규화한 댓글 내용이 변경값으로 설정됐는지 확인한다
+        assertEquals("수정한 댓글입니다.", replyDto.getReplCntn());
+        // 작성자와 미삭제 및 정상 이용 계정 조건을 포함하는 Mapper가 호출됐는지 확인한다
+        verify(replyMapper).uptReply(replyDto);
+    }
+
+    /**
+     * 본인 댓글을 자식 답글 구조가 보존되는 논리 삭제 Mapper로 전달하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delReplyMarksOwnedReplyAsDeleted() {
+
+        // 댓글 삭제 조건을 검증할 캡처 객체를 생성한다
+        ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
+        // 정상 이용 중인 본인 댓글 한 건이 삭제 상태로 전환되는 조건을 구성한다
+        when(replyMapper.delReply(any(ReplyDto.class))).thenReturn(1);
+
+        // 로그인 사용자가 작성한 댓글을 삭제 상태로 전환한다
+        ResultData result = replyService.delReply(44L, 157L, 8L);
+
+        // 댓글 삭제 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 삭제된 댓글 번호를 확인한다
+        assertEquals(8L, result.getData());
+        // Mapper에 전달된 복합 식별값과 작성자 조건을 확인한다
+        verify(replyMapper).delReply(replyDtoCaptor.capture());
+        // 삭제할 댓글의 독후감 번호가 조건에 설정됐는지 확인한다
+        assertEquals(157L, replyDtoCaptor.getValue().getReptNumb());
+        // 삭제할 댓글 번호가 조건에 설정됐는지 확인한다
+        assertEquals(8L, replyDtoCaptor.getValue().getReplNumb());
+        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인한다
+        assertEquals(44L, replyDtoCaptor.getValue().getUserNumb());
     }
 }
