@@ -2,19 +2,11 @@ import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
-  formatDateValue,
   formatDashedDateToDot,
   getRemainDaysUntil,
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
-import { uptReptStatusGradeApi } from "@/features/Book/api/bookApi";
-import RatingField from "@/features/Book/Set/components/form/ratingField/RatingField";
-import {
-  REPORT_GRADE_VALUES,
-  REPORT_STATUS_DONE,
-  REPORT_STATUS_STOP,
-} from "@/features/Book/constants/reportForm";
 import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
@@ -52,8 +44,7 @@ const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11F
 const PROFILE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type ReadingPeriod = "week" | "month" | "year";
-type QuickReadingStatus = typeof REPORT_STATUS_DONE | typeof REPORT_STATUS_STOP;
-type ProfileModalType = "quick" | "goal" | "goalHelp" | "followList";
+type ProfileModalType = "currentReading" | "goal" | "goalHelp" | "followList";
 type ProfileStatAction = FollowListType | "totalReadBook" | "receivedLike";
 
 const GOAL_PERIODS: ReadingPeriod[] = ["week", "month", "year"];
@@ -301,10 +292,7 @@ function ProfileEditPage() {
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
-  const [quickReport, setQuickReport] = useState<ReadingSummaryReport | null>(null);
-  const [quickStatus, setQuickStatus] = useState<QuickReadingStatus>(REPORT_STATUS_DONE);
-  const [quickGrade, setQuickGrade] = useState(5);
-  const [quickPubcYsno, setQuickPubcYsno] = useState<"Y" | "N">("N");
+  const [currentReadingReport, setCurrentReadingReport] = useState<ReadingSummaryReport | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
   const [followListType, setFollowListType] = useState<FollowListType | null>(null);
@@ -325,7 +313,6 @@ function ProfileEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
-  const [isQuickSaving, setIsQuickSaving] = useState(false);
   const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
     week: null,
     month: null,
@@ -342,7 +329,9 @@ function ProfileEditPage() {
     DEFAULT_GOAL_HELP_ITEMS,
   );
   // 열린 프로필 팝업 상태에 맞춰 배경 스크롤 잠금을 동기화한다
-  useBodyScrollLock(Boolean(quickReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType));
+  useBodyScrollLock(
+    Boolean(currentReadingReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType),
+  );
 
   /**
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
@@ -621,8 +610,10 @@ function ProfileEditPage() {
 
       window.setTimeout(() => {
 
-        if (modal === "quick") {
-          setQuickReport(null);
+        // 현재 읽는 책 안내 모달은 선택한 독후감 상태를 비워 화면에서 제거한다
+        if (modal === "currentReading") {
+          // 닫기 애니메이션이 끝난 현재 읽는 책 안내 모달 상태를 초기화한다
+          setCurrentReadingReport(null);
         }
 
         if (modal === "goal") {
@@ -647,21 +638,18 @@ function ProfileEditPage() {
   };
 
   /**
-   * 현재 읽고 있는 책을 눌렀을 때 빠른 상태/별점 수정 모달을 엽니다.
-   * 아직 별점이 없는 독후감은 사용자가 바로 완료 처리할 수 있도록 기본값을 5점으로 보여줍니다.
+   * 현재 읽고 있는 책을 눌렀을 때 전체 수정 화면으로 연결하는 안내 모달을 연다
    *
    * @author HanWon.Jang
    * @param report 선택한 현재 읽고 있는 책 정보
+   * @return 반환값이 없다
    */
   const handleCurrentReadingClick = (report: ReadingSummaryReport) => {
 
-    const reportGrade = Number(report.reptGrde);
-
+    // 이전 모달의 닫기 애니메이션 상태가 새 안내 모달에 남지 않게 초기화한다
     setClosingModal(null);
-    setQuickReport(report);
-    setQuickStatus(REPORT_STATUS_DONE);
-    setQuickGrade(Number.isFinite(reportGrade) && reportGrade > 0 ? reportGrade : 5);
-    setQuickPubcYsno("N");
+    // 전체 수정 화면으로 전달할 현재 읽는 책을 안내 모달 상태에 설정한다
+    setCurrentReadingReport(report);
   };
 
   /**
@@ -786,71 +774,23 @@ function ProfileEditPage() {
   };
 
   /**
-   * handle Quick Edit Click 사용자 동작을 처리한다
+   * 선택한 현재 읽는 책의 상세 화면으로 이동하고 전체 편집을 바로 시작한다
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handleQuickEditClick = () => {
+  const handleCurrentReadingEditClick = () => {
 
-    if (!quickReport) {
+    // 선택한 현재 읽는 책이 없으면 잘못된 상세 경로로 이동하지 않는다
+    if (!currentReadingReport) {
+      // 수정 화면 이동 없이 현재 모달을 유지한다
       return;
     }
 
-    // 별도 수정 화면 대신 선택한 독후감의 상세 직접 편집 화면으로 이동한다
-    navigate(`/book/detail/${quickReport.reptNumb}`);
-  };
-
-  /**
-   * handle Quick Save Click 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없다
-   * @throws API 요청 또는 비동기 처리 실패 시 발생
-   */
-  const handleQuickSaveClick = async () => {
-
-    if (!quickReport) {
-      return;
-    }
-
-    if (!(REPORT_GRADE_VALUES as readonly number[]).includes(quickGrade)) {
-      void sweetWarning(
-        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "평점" */ message("frontend.report.field.grade"),
-      );
-      return;
-    }
-
-    try {
-      setIsQuickSaving(true);
-      await uptReptStatusGradeApi({
-        reptNumb: quickReport.reptNumb,
-        data: {
-          reptStat: quickStatus,
-          reptGrde: String(quickGrade),
-          pubcYsno: quickPubcYsno,
-          reptEndt: quickStatus === REPORT_STATUS_DONE || quickStatus === REPORT_STATUS_STOP
-            ? formatDateValue(new Date())
-            : quickReport.reptEndt,
-        },
-      });
-
-      const response = await getMonthlyReadingSummaryApi();
-      setMonthlySummary(response.data as MonthlyReadingSummary);
-      await closeProfileModal("quick");
-      await sweetSuccess(
-        /* "저장되었습니다." */ message("frontend.alert.saveSuccessTitle"),
-        /* "독후감이 저장되었습니다." */ message("frontend.report.saved"),
-      );
-    } catch (error) {
-      void sweetError(
-        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
-      );
-    } finally {
-      setIsQuickSaving(false);
-    }
+    // 선택한 독후감의 상세 화면이 처음부터 전체 편집 상태로 열리게 이동한다
+    navigate(`/book/detail/${currentReadingReport.reptNumb}`, {
+      state: { startEditing: true },
+    });
   };
 
   /**
@@ -1002,7 +942,7 @@ function ProfileEditPage() {
                       role="link"
                       tabIndex={0}
                       onClick={(event) => {
-                        // 제목은 카드의 빠른 수정 동작과 분리하여 도서 정보 화면으로 바로 이동합니다.
+                        // 제목은 카드의 전체 수정 안내 동작과 분리하여 도서 정보 화면으로 바로 이동한다
                         event.stopPropagation();
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
@@ -2024,175 +1964,89 @@ function ProfileEditPage() {
           ) : null}
       </form>
 
-      {/* 현재 읽는 책의 상태와 별점 및 공개 여부를 빠르게 수정하는 모달 영역 */}
-      {quickReport && createPortal((
-        /* 현재 읽는 책 빠른 수정 모달 배경 영역 */
+      {/* 현재 읽는 책의 전체 수정 화면으로 연결하는 모달 영역 */}
+      {currentReadingReport && createPortal((
+        /* 현재 읽는 책 전체 수정 안내 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
-            closingModal === "quick" ? styles.goalModalOverlayClosing : ""
+            closingModal === "currentReading" ? styles.goalModalOverlayClosing : ""
           }`}
           role="presentation"
           onMouseDown={(event) => {
 
             if (event.currentTarget === event.target) {
-              void closeProfileModal("quick");
+              void closeProfileModal("currentReading");
             }
           }}
         >
-          {/* 현재 읽는 책 빠른 수정 모달 본문 영역 */}
+          {/* 현재 읽는 책 전체 수정 안내 모달 본문 영역 */}
           <section
             className={`${styles.goalModal} ${
-              closingModal === "quick" ? styles.goalModalClosing : ""
+              closingModal === "currentReading" ? styles.goalModalClosing : ""
             }`}
             role="dialog"
             aria-modal="true"
-            aria-labelledby="quick-reading-title"
+            aria-labelledby="current-reading-title"
           >
-            {/* 현재 읽는 책 빠른 수정 모달 제목과 닫기 영역 */}
+            {/* 현재 읽는 책 전체 수정 안내 제목과 닫기 영역 */}
             <div className={styles.goalModalHeader}>
-              <div>
-                <h2 className={styles.goalModalTitle} id="quick-reading-title">
-                  {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.quickTitle")}
-                </h2>
-                <p className={styles.quickReadingHelp}>
-                  {/* "독서 상태와 별점, 공개 여부를 빠르게 수정할 수 있어요." */ message("frontend.profile.currentReading.quickHelp")}
-                </p>
-              </div>
+              <h2 className={styles.goalModalTitle} id="current-reading-title">
+                {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.completionPrompt")}
+              </h2>
               <button
                 className={styles.goalModalClose}
                 type="button"
                 aria-label={/* "닫기" */ message("frontend.common.close")}
-                onClick={() => void closeProfileModal("quick")}
+                onClick={() => void closeProfileModal("currentReading")}
               >
                 ×
               </button>
             </div>
 
-            {/* 현재 읽는 책 빠른 수정 입력 영역 */}
-            <div className={styles.quickReadingBody}>
-              {/* 빠른 수정 대상 도서 정보와 전체 수정 진입 영역 */}
-              <div className={styles.quickReadingBookInfo}>
-                {quickReport.bookCvim && (
+            {/* 전체 수정 대상 도서 정보 영역 */}
+            <div className={styles.currentReadingModalBody}>
+              <div className={styles.currentReadingModalBookInfo}>
+                {currentReadingReport.bookCvim && (
                   <img
-                    className={styles.quickReadingCover}
-                    src={quickReport.bookCvim}
+                    className={styles.currentReadingModalCover}
+                    src={currentReadingReport.bookCvim}
                     alt=""
                   />
                 )}
-                {!quickReport.bookCvim && (
-                  <span className={styles.quickReadingCoverPlaceholder} aria-hidden="true" />
+                {!currentReadingReport.bookCvim && (
+                  <span className={styles.currentReadingModalCoverPlaceholder} aria-hidden="true" />
                 )}
-                <div className={styles.quickReadingBookText}>
-                  <p className={styles.quickReadingBookTitle}>
-                    {quickReport.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
+                <div className={styles.currentReadingModalBookText}>
+                  <p className={styles.currentReadingModalBookTitle}>
+                    {currentReadingReport.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                   </p>
-                  {getTargetReadingPeriodText(quickReport) && (
-                    <p className={styles.quickReadingBookMeta}>
-                      {getTargetReadingPeriodText(quickReport)}
+                  {getTargetReadingPeriodText(currentReadingReport) && (
+                    <p className={styles.currentReadingModalBookMeta}>
+                      {getTargetReadingPeriodText(currentReadingReport)}
                     </p>
                   )}
-                </div>
-                <button
-                  className={styles.quickReadingEditButton}
-                  type="button"
-                  aria-label={/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}
-                  onClick={handleQuickEditClick}
-                >
-                  <span>{/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}</span>
-                  <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                    <path d="M5.25 2.92L9.33 7L5.25 11.08" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </button>
-              </div>
-              {/* 독서 완료와 중단 상태 선택 영역 */}
-              <div className={styles.quickField}>
-                <span className={styles.quickFieldLabel}>
-                  {/* "독서 상태" */ message("frontend.report.field.status")}
-                </span>
-                <div className={styles.quickStatusGroup}>
-                  <button
-                    className={
-                      quickStatus === REPORT_STATUS_DONE
-                        ? styles.quickStatusOptionActive
-                        : styles.quickStatusOption
-                    }
-                    type="button"
-                    onClick={() => setQuickStatus(REPORT_STATUS_DONE)}
-                  >
-                    {/* "다 읽었어요" */ message("frontend.report.status.done")}
-                  </button>
-                  <button
-                    className={
-                      quickStatus === REPORT_STATUS_STOP
-                        ? styles.quickStatusOptionActive
-                        : styles.quickStatusOption
-                    }
-                    type="button"
-                    onClick={() => setQuickStatus(REPORT_STATUS_STOP)}
-                  >
-                    {/* "중단했어요" */ message("frontend.report.status.stopped")}
-                  </button>
-                </div>
-              </div>
-
-              {/* 독후감 별점 설정 영역 */}
-              <div className={styles.quickField}>
-                <span className={styles.quickFieldLabel}>
-                  {/* "평점" */ message("frontend.report.field.grade")}
-                </span>
-                <div className={styles.quickStarGroup}>
-                  <RatingField value={quickGrade} onChange={setQuickGrade} />
-                </div>
-              </div>
-
-              {/* 완료 또는 중단 독후감의 공개 여부 선택 영역 */}
-              <div className={styles.quickField}>
-                <span className={styles.quickFieldLabel}>
-                  {/* "공개 여부" */ message("frontend.report.field.public")}
-                </span>
-                <div className={styles.quickStatusGroup}>
-                  <button
-                    className={
-                      quickPubcYsno === "Y"
-                        ? styles.quickStatusOptionActive
-                        : styles.quickStatusOption
-                    }
-                    type="button"
-                    onClick={() => setQuickPubcYsno("Y")}
-                  >
-                    {/* "공개" */ message("frontend.report.public.on")}
-                  </button>
-                  <button
-                    className={
-                      quickPubcYsno === "N"
-                        ? styles.quickStatusOptionActive
-                        : styles.quickStatusOption
-                    }
-                    type="button"
-                    onClick={() => setQuickPubcYsno("N")}
-                  >
-                    {/* "비공개" */ message("frontend.report.public.off")}
-                  </button>
                 </div>
               </div>
             </div>
 
-            {/* 현재 읽는 책 빠른 수정 취소와 저장 영역 */}
+            {/* 현재 읽는 책 안내 닫기와 전체 수정 진입 영역 */}
             <div className={styles.goalModalActions}>
               <button
                 className={styles.goalModalCancel}
                 type="button"
-                onClick={() => void closeProfileModal("quick")}
+                onClick={() => void closeProfileModal("currentReading")}
               >
                 {/* "닫기" */ message("frontend.profile.currentReading.close")}
               </button>
               <button
-                className={styles.goalModalSave}
+                className={styles.currentReadingModalEditButton}
                 type="button"
-                disabled={isQuickSaving}
-                onClick={handleQuickSaveClick}
+                onClick={handleCurrentReadingEditClick}
               >
-                {/* "저장" */ message("frontend.profile.currentReading.save")}
+                <span>{/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}</span>
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                  <path d="M5.25 2.92L9.33 7L5.25 11.08" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
               </button>
             </div>
           </section>
