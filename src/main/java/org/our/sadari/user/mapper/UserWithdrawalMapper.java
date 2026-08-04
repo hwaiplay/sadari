@@ -12,6 +12,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -51,6 +52,15 @@ public interface UserWithdrawalMapper {
      * @return 변경된 푸시 구독 수
      */
     int uptUserPushDisabled(Long userNumb);
+
+    /**
+     * 탈퇴 회원이 댓글에 등록한 좋아요를 삭제한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 탈퇴 회원 번호
+     * @return 삭제된 댓글 좋아요 수
+     */
+    int delUserReplyLike(Long userNumb);
 
     /**
      * 영구 삭제 대기 중인 최신 탈퇴 이력을 조회한다.

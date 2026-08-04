@@ -11,6 +11,7 @@
  * 2026-07-29        HanWon.Jang    댓글 계층과 수정 상태 타입 정의
  * 2026-07-29        HanWon.Jang    로그인 사용자 작성 댓글 여부 타입 정의
  * 2026-08-03        HanWon.Jang    댓글 수정 및 삭제 API 응답 타입 정의
+ * 2026-08-03        HanWon.Jang    댓글 좋아요 API 응답 타입 정의
  */
 
 import type { ResultData } from "@/app/api/resultData";
@@ -74,6 +75,18 @@ export type UptReplyResponse = ResultData<number> & {
  */
 export type DelReplyResponse = ResultData<number> & {
     data: number;
+};
+
+/**
+ * 댓글 좋아요 등록 또는 취소 후 리턴 타입
+ */
+export type ReplyLikeResponse = ResultData<
+    Pick<ReplyDtoType, "reptNumb" | "replNumb" | "likeCnt" | "likeYsno">
+> & {
+    data: Pick<
+        ReplyDtoType,
+        "reptNumb" | "replNumb" | "likeCnt" | "likeYsno"
+    >;
 };
 
 /**

@@ -197,6 +197,17 @@ const ReplyItem = ({
     controller.handleToggleActionMenu(reply.replNumb);
   };
 
+  /**
+   * 현재 댓글의 좋아요 상태에 따라 등록 또는 취소 처리를 시작한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleLikeClick = (): void => {
+    // 현재 댓글 식별값과 좋아요 상태를 기능 컨트롤러에 전달한다
+    controller.handleToggleReplyLike(reply);
+  };
+
   // 댓글 계층에 맞는 들여쓰기와 답글 및 좋아요 제어를 포함한 항목을 반환한다
   return (
     /* 등록된 댓글 개별 항목 영역 */
@@ -377,17 +388,23 @@ const ReplyItem = ({
           <button
             className={styles.replyLikeButton}
             type="button"
-            aria-label="좋아요"
+            aria-label={
+              reply.likeYsno === "Y"
+                ? /* "좋아요 취소" */ message("frontend.reply.unlikeAria")
+                : /* "좋아요" */ message("frontend.reply.likeAria")
+            }
             aria-pressed={reply.likeYsno === "Y"}
+            disabled={controller.isReplyLikePending}
+            onClick={handleLikeClick}
           >
             {reply.likeYsno === "Y" ? (
               <img
                 src="/img/icons/icon-heart-fill.svg"
-                alt="좋아요"
+                alt=""
                 width="20"
               />
             ) : (
-              <img src="/img/icons/icon-heart.svg" alt="좋아요" width="20" />
+              <img src="/img/icons/icon-heart.svg" alt="" width="20" />
             )}
             <span>{Number(reply.likeCnt) || 0}</span>
           </button>

@@ -108,13 +108,14 @@
 - 대상 유형 `TAGT_TYPE`
 - 대상 번호 `TAGT_NUMB`
 
-현재 서비스는 `REPORT` 유형만 허용하지만 DTO와 테이블은 댓글 등 다른 대상 유형을 확장할 수 있는 구조다. 서비스는 범용 테이블이라는 이유로 모든 문자열을 허용하지 않고 현재 지원하는 대상 유형을 검증한다.
+현재 서비스는 공개 독후감 `REPORT`와 미삭제 댓글 `REPLY` 유형을 허용한다. 독후감 좋아요는 social 도메인에서, 댓글 좋아요는 reply 도메인에서 대상의 공개·삭제 상태와 로그인 회원의 `ACTIVE` 상태를 각각 검증한다. 범용 테이블이라는 이유로 임의의 대상 유형 문자열을 저장하지 않는다.
 
 구현 근거:
 
 - `src/main/java/org/our/sadari/social/dto/SocialDto.java`
 - `src/main/java/org/our/sadari/social/service/SocialServiceImpl.java`
 - `src/main/java/org/our/sadari/social/mapper/SocialMapper.xml`
+- `src/main/java/org/our/sadari/reply/mapper/ReplyMapper.xml`
 
 ### 팔로우 상태의 중앙화
 
