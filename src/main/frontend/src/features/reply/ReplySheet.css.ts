@@ -105,6 +105,15 @@ export const commentEmpty = style({
   justifyContent: "center",
 });
 
+export const commentLoading = style({
+  width: "100%",
+  minHeight: 0,
+  flex: 1,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+});
+
 export const commentEmptyIcon = style({
   width: "42px",
   height: "42px",
