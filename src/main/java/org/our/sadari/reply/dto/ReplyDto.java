@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : ReplyDto
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정 및 삭제 데이터를 전달한다
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 데이터를 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -17,6 +17,8 @@ import lombok.Data;
  * 2026-07-29        Hanwon.Jang        댓글 상태 조회 컬럼 정의
  * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 정의
  * 2026-08-03        HanWon.Jang        댓글 수정 및 삭제 요청 용도 확장
+ * 2026-08-03        HanWon.Jang        댓글 좋아요 상태 및 집계 용도 확장
+ * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 용도 확장
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")
@@ -25,7 +27,7 @@ public class ReplyDto {
     @Schema(description = "댓글이 작성된 독후감 번호", example = "1")
     private Long reptNumb;
 
-    @Schema(description = "독후감별 댓글 번호", example = "10")
+    @Schema(description = "전체 댓글에서 유일한 댓글 번호", example = "10")
     private Long replNumb;
 
     @Schema(description = "답글이 참조하는 부모 댓글 번호", example = "3")
@@ -63,4 +65,13 @@ public class ReplyDto {
 
     @Schema(description = "댓글 수정 여부에 따라 화면에 표시할 문구", example = "수정됨")
     private String updtYsnoNm;
+
+    @Schema(description = "댓글 좋아요 수", example = "12")
+    private Long likeCnt;
+
+    @Schema(description = "로그인 사용자의 댓글 좋아요 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String likeYsno;
+
+    @Schema(description = "댓글 좋아요 알림을 받을 댓글 작성자 사용자 번호", example = "31", hidden = true)
+    private Long targetUserNumb;
 }

@@ -134,7 +134,7 @@ export const replyThread = style({
 export const replyItem = style({
   position: "relative",
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-start",
   justifyContent: "space-between",
   gap: "12px",
   minHeight: "92px",
@@ -302,6 +302,12 @@ export const replyLikeButton = style([
   {
     color: "#ff747c",
     flexDirection: "column",
+    selectors: {
+      "&:disabled": {
+        cursor: "wait",
+        opacity: 0.55,
+      },
+    },
   }
 ])
 
@@ -310,7 +316,7 @@ export const replyItemActions = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
-  gap: "6px",
+  gap: "4px",
 });
 
 export const actionMenuRoot = style({

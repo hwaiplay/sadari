@@ -22,13 +22,14 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ReplyController
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정 및 삭제 API를 제공한다
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 API를 제공한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-29        HanWon.Jang        댓글 조회 시 로그인 사용자 번호 전달
  * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 추가
+ * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -91,6 +92,42 @@ public class ReplyController {
                              , @Parameter(description = "삭제할 댓글 번호", example = "10") @PathVariable Long replNumb) {
         // 경로에서 확정한 댓글 식별값을 서비스에 전달한 삭제 결과를 반환한다
         return replyService.delReply(userNumb, reptNumb, replNumb);
+    }
+
+    /**
+     * 로그인 사용자의 미삭제 댓글 좋아요를 등록한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param reptNumb 좋아요 대상 댓글이 속한 독후감 번호
+     * @param replNumb 좋아요 대상 댓글 번호
+     * @return 변경 후 좋아요 상태와 좋아요 수
+     */
+    @PutMapping("/{reptNumb}/{replNumb}/likes")
+    @Operation(summary = "댓글 좋아요 등록", description = "정상 이용 중인 로그인 사용자가 미삭제 댓글에 좋아요를 등록한다.")
+    public ResultData setReplyLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
+                                 , @Parameter(description = "좋아요 대상 댓글 번호", example = "10") @PathVariable Long replNumb) {
+        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 등록 결과를 반환한다
+        return replyService.setReplyLike(userNumb, reptNumb, replNumb);
+    }
+
+    /**
+     * 로그인 사용자의 미삭제 댓글 좋아요를 취소한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param reptNumb 좋아요 대상 댓글이 속한 독후감 번호
+     * @param replNumb 좋아요 대상 댓글 번호
+     * @return 변경 후 좋아요 상태와 좋아요 수
+     */
+    @DeleteMapping("/{reptNumb}/{replNumb}/likes")
+    @Operation(summary = "댓글 좋아요 취소", description = "정상 이용 중인 로그인 사용자가 미삭제 댓글의 좋아요를 취소한다.")
+    public ResultData delReplyLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
+                                 , @Parameter(description = "좋아요 대상 댓글 번호", example = "10") @PathVariable Long replNumb) {
+        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 취소 결과를 반환한다
+        return replyService.delReplyLike(userNumb, reptNumb, replNumb);
     }
 
     /**
