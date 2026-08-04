@@ -3,31 +3,16 @@
 <mapper namespace="org.our.sadari.reply.mapper.ReplyMapper">
 
     <!-- 공통 사용 설정값을 SQL 파라미터로 정의한다. -->
-    <sql id="bindCommYes">
+    <sql id="bindList">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
-    </sql>
-
-    <!-- 공통 미사용 설정값을 SQL 파라미터로 정의한다. -->
-    <sql id="bindCommNo">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-    </sql>
-
-    <!-- 정상 이용 회원 상태를 SQL 파라미터로 정의한다. -->
-    <sql id="bindUserStatActive">
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
-    </sql>
-
-    <!-- 댓글 좋아요 대상 유형을 SQL 파라미터로 정의한다. -->
-    <sql id="bindLikeTargetReply">
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
     </sql>
 
     <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommYes" />
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
-        <include refid="bindLikeTargetReply" />
+        <include refid="bindList" />
         SELECT /* getReplyList */
                R.REPT_NUMB
              , R.REPL_NUMB
@@ -115,8 +100,7 @@
 
     <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다. -->
     <update id="uptReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
+        <include refid="bindList" />
         UPDATE /* uptReply */
                TB_REPLXX R
            SET REPL_CNTN = #{replCntn}
@@ -135,8 +119,7 @@
 
     <!-- 정상 이용 중인 로그인 사용자가 접근할 수 있는 미삭제 댓글과 알림 수신자를 조회한다. -->
     <select id="getReplyLikeTarget" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
+        <include refid="bindList" />
         SELECT /* getReplyLikeTarget */
                R.REPT_NUMB
              , R.REPL_NUMB
@@ -152,9 +135,7 @@
 
     <!-- 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록한다. -->
     <insert id="setReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
-        <include refid="bindLikeTargetReply" />
+        <include refid="bindList" />
         /* setReplyLike */
         INSERT IGNORE INTO TB_LIKEXX (
                USER_NUMB
@@ -180,9 +161,7 @@
 
     <!-- 정상 이용 중인 로그인 사용자가 등록한 미삭제 댓글 좋아요를 취소한다. -->
     <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
-        <include refid="bindLikeTargetReply" />
+        <include refid="bindList" />
         DELETE /* delReplyLike */ L
           FROM TB_LIKEXX L
          WHERE L.USER_NUMB = #{userNumb}
@@ -202,10 +181,7 @@
 
     <!-- 댓글 좋아요 수와 로그인 사용자의 좋아요 여부를 서버 기준으로 조회한다. -->
     <select id="getReplyLikeDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommYes" />
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
-        <include refid="bindLikeTargetReply" />
+        <include refid="bindList" />
         SELECT /* getReplyLikeDtl */
                #{reptNumb} AS REPT_NUMB
              , #{replNumb} AS REPL_NUMB
@@ -224,9 +200,7 @@
 
     <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다. -->
     <update id="delReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindCommYes" />
-        <include refid="bindCommNo" />
-        <include refid="bindUserStatActive" />
+        <include refid="bindList" />
         UPDATE /* delReply */
                TB_REPLXX R
            SET DELT_YSNO = #{commYes}
