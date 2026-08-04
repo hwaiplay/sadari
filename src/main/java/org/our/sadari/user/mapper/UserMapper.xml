@@ -147,4 +147,49 @@
            AND COALESCE(DELT_YSNO, #{commNo}) != #{commYes}
     </update>
 
+    <!-- 최초 로그인 화면에 노출할 활성 독서 관심분야 대분류와 세부코드를 조회한다. -->
+    <select id="getUserInterestCatalog" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
+        <bind name="categoryPrefix" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY_PREFIX" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getUserInterestCatalog */
+               CODE.COMM_CODE AS INTR_CGRP
+             , CODE.CODE_NAME AS INTR_CNAM
+             , DETAIL.COMD_CODE AS INTR_CODE
+             , DETAIL.COMD_NAME AS INTR_NAME
+             , CODE.SORT_ORDR AS CGRP_ORDR
+             , DETAIL.SORT_ORDR AS CODE_ORDR
+          FROM TM_CODEXM CODE
+    INNER JOIN TB_CODEXD DETAIL
+            ON CODE.COMM_CODE = DETAIL.COMM_CODE
+           AND COALESCE(DETAIL.USEE_YSNO, #{commYes}) = #{commYes}
+         WHERE CODE.COMM_CODE LIKE CONCAT(#{categoryPrefix}, '%')
+           AND COALESCE(CODE.USEE_YSNO, #{commYes}) = #{commYes}
+      ORDER BY COALESCE(CODE.SORT_ORDR, 9999)
+             , CODE.COMM_CODE
+             , COALESCE(DETAIL.SORT_ORDR, 9999)
+             , DETAIL.COMD_CODE
+    </select>
+
+    <!-- 로그인 사용자의 독서 관심분야를 전체 교체하기 전에 기존 선택을 삭제한다. -->
+    <delete id="delUserInterests" parameterType="long">
+        DELETE /* delUserInterests */
+          FROM TB_USINTR
+         WHERE USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 로그인 사용자가 선택한 유효한 독서 관심분야 한 건을 저장한다. -->
+    <insert id="setUserInterest">
+        /* setUserInterest */
+        INSERT INTO TB_USINTR (
+                    USER_NUMB
+                  , INTR_CGRP
+                  , INTR_CODE
+                  , REGI_DATE
+        ) VALUES (  #{userNumb}
+                  , #{interest.intrCgrp}
+                  , #{interest.intrCode}
+                  , CURRENT_TIMESTAMP
+        )
+    </insert>
+
 </mapper>

@@ -12,7 +12,7 @@ import org.our.sadari.social.dto.SocialDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       프로필 통계 공개 범위 조건 추가
+ * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  */
 public interface SocialService {
     /**

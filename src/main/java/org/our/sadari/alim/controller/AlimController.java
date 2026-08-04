@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.PutMapping;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       외부 알림 발송 API 제거
+ * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 API 제거
  */
 @RestController
 @RequiredArgsConstructor

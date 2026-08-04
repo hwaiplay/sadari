@@ -72,7 +72,7 @@ function isAuthEndpoint(url?: string) {
 /**
  * HTTP Method가 CSRF 검증 대상인 상태 변경 요청인지 판정한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param method Axios 요청의 HTTP Method
  * @return CSRF Token Header가 필요한 요청 여부
  */
@@ -86,7 +86,7 @@ function isCsrfProtectedMethod(method?: string) {
 /**
  * 요청 경로가 CSRF Token 자체를 조회하는 API인지 판정한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param url Axios 요청 경로
  * @return CSRF Token 조회 API 여부
  */
@@ -98,7 +98,7 @@ function isCsrfEndpoint(url?: string) {
 /**
  * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @return 상태 변경 요청 Header에 사용할 CSRF Token
  * @throws CSRF Token API가 실패하거나 Token 데이터가 없을 때 발생
  */
@@ -124,7 +124,7 @@ async function requestCsrfToken() {
 /**
  * 동시에 시작된 상태 변경 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param forceRefresh 기존 Token을 버리고 다시 조회할지 여부
  * @return 현재 브라우저 Cookie와 연결된 CSRF Token
  * @throws CSRF Token 조회 요청이 실패할 때 발생
@@ -166,7 +166,7 @@ async function getCsrfToken(forceRefresh = false) {
 /**
  * 상태 변경 Axios 요청에 현재 브라우저의 CSRF Token Header를 설정한다
  *
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  * @param config 전송 직전 Axios 요청 설정
  * @return CSRF Token Header가 반영된 Axios 요청 설정
  * @throws CSRF Token 조회 요청이 실패할 때 발생

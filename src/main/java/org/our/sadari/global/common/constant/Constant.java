@@ -33,6 +33,8 @@ public final class Constant {
     public static final String CODE_READ_STAT = "READ_STAT";
     // 코드 도서 색상 설정값
     public static final String CODE_BOOK_COLR = "BOOK_COLR";
+    // 독서 관심분야 공통코드 접두어
+    public static final String CODE_READING_CATEGORY_PREFIX = "CATE_";
     // 코드 공통 여부 설정값
     public static final String CODE_COMM_YSNO = "COMM_YSNO";
     // 코드 비속어 단어 설정값

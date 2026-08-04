@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 API 추가
+ * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +65,35 @@ public class UserController {
                                    , @Valid @RequestBody UserDto userDto) {
         // 최초 로그인 사용자의 닉네임 저장과 온보딩 완료 결과를 반환한다
         return userService.uptOnboarding(userNumb, userDto);
+    }
+
+    /**
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 대분류와 세부코드가 포함된 관심분야 목록
+     */
+    @GetMapping("/interests/catalog")
+    @Operation(summary = "독서 관심분야 목록 조회", description = "최초 로그인에서 선택할 활성 독서 관심분야를 조회한다.")
+    public ResultData getUserInterestCatalog() {
+        // 최초 로그인 사용자가 선택할 수 있는 활성 관심분야를 반환한다
+        return userService.getUserInterestCatalog();
+    }
+
+    /**
+     * 로그인 사용자의 독서 관심분야를 선택 목록으로 전체 교체한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param request 선택한 관심분야 목록
+     * @return 관심분야 저장 결과
+     */
+    @PutMapping("/interests")
+    @Operation(summary = "독서 관심분야 저장", description = "최초 로그인 사용자가 선택한 관심분야를 전체 교체한다.")
+    public ResultData uptUserInterests(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @Valid @RequestBody UserDto.UserInterestReqDto request) {
+        // 로그인 사용자의 관심분야 전체 교체 결과를 반환한다
+        return userService.uptUserInterests(userNumb, request);
     }
 
     /**
