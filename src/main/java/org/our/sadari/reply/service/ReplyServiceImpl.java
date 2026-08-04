@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : ReplyServiceImpl
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정 및 삭제 업무 로직을 구현한다
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 로직을 구현한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -30,6 +30,8 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-29        HanWon.Jang        댓글 등록 시 독후감 작성자 알림 발송
  * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 조회
  * 2026-08-03        HanWon.Jang        정상 이용 중인 본인 댓글 수정 및 논리 삭제 구현
+ * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 구현
+ * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 구현
  */
 @Service
 @RequiredArgsConstructor
@@ -94,7 +96,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 등록을 중단한다
         if (badWord.isPresent()) {
-            // "입력한 내용에 사용할 수 없는 단어가 포함되어 있어요.\n확인 후 다시 입력해주세요.\n\n확인된 단어: {0}"
+            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"에서 {0}은 탐지된 비속어이다
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
@@ -157,7 +159,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 수정을 중단한다
         if (badWord.isPresent()) {
-            // "입력한 내용에 사용할 수 없는 단어가 포함되어 있어요.\n확인 후 다시 입력해주세요.\n\n확인된 단어: {0}"
+            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"에서 {0}은 탐지된 비속어이다
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
@@ -222,6 +224,156 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 삭제 상태로 전환된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다
         return ResultData.success(replNumb);
+    }
+
+    /**
+     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록한다.
+     * 본인 댓글도 동일한 검증 기준으로 허용하고 신규 좋아요일 때 대상 댓글 작성자에게만 알림을 생성한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 좋아요를 등록할 사용자 번호
+     * @param reptNumb 좋아요 대상 댓글의 독후감 번호
+     * @param replNumb 좋아요 대상 댓글 번호
+     * @return 변경 후 댓글 좋아요 상태와 좋아요 수
+     */
+    @Override
+    @Transactional
+    public ResultData setReplyLike(Long userNumb, Long reptNumb, Long replNumb) {
+        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성한다
+        ReplyDto replyDto = createReplyLikeRequest(userNumb, reptNumb, replNumb);
+
+        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부한다
+        if (StringUtil.isEmpty(replyDto)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 정상 이용 사용자와 미삭제 댓글 여부를 검증하면서 정확한 댓글 작성자를 알림 수신자로 조회한다
+        ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
+
+        // 정상 이용 중인 사용자와 미삭제 댓글 조합이 아니면 좋아요 등록을 허용하지 않는다
+        if (StringUtil.isEmpty(likeTarget)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 복합 기본키 충돌 없이 현재 사용자의 댓글 좋아요를 등록한다
+        int insertCnt = replyMapper.setReplyLike(replyDto);
+
+        // 신규 좋아요가 등록된 경우에만 댓글 작성자에게 좋아요 알림을 발송한다
+        if (insertCnt > 0) {
+            // 댓글 또는 대댓글 작성자에게 전용 템플릿 알림과 푸시를 발송한다
+            sendReplyLikeAlim(userNumb, likeTarget);
+        }
+
+        // 등록 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환한다
+        return ResultData.success(replyMapper.getReplyLikeDtl(replyDto));
+    }
+
+    /**
+     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 취소한다.
+     * 존재하지 않는 좋아요 취소도 최종 상태가 동일하므로 멱등 성공으로 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 좋아요를 취소할 사용자 번호
+     * @param reptNumb 좋아요 대상 댓글의 독후감 번호
+     * @param replNumb 좋아요 대상 댓글 번호
+     * @return 변경 후 댓글 좋아요 상태와 좋아요 수
+     */
+    @Override
+    @Transactional
+    public ResultData delReplyLike(Long userNumb, Long reptNumb, Long replNumb) {
+        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성한다
+        ReplyDto replyDto = createReplyLikeRequest(userNumb, reptNumb, replNumb);
+
+        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부한다
+        if (StringUtil.isEmpty(replyDto)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 정상 이용 사용자와 미삭제 댓글 여부를 확인해 취소 가능한 좋아요 대상인지 조회한다
+        ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
+
+        // 정상 이용 중인 사용자와 미삭제 댓글 조합이 아니면 좋아요 취소도 허용하지 않는다
+        if (StringUtil.isEmpty(likeTarget)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 현재 사용자가 등록한 댓글 좋아요만 삭제한다
+        replyMapper.delReplyLike(replyDto);
+        // 취소 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환한다
+        return ResultData.success(replyMapper.getReplyLikeDtl(replyDto));
+    }
+
+    /**
+     * 댓글 좋아요 API의 인증 사용자와 복합 식별값을 Mapper 요청 객체로 변환한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 좋아요를 변경할 사용자 번호
+     * @param reptNumb 좋아요 대상 댓글의 독후감 번호
+     * @param replNumb 좋아요 대상 댓글 번호
+     * @return 유효한 댓글 좋아요 요청 객체 또는 null
+     */
+    private ReplyDto createReplyLikeRequest(Long userNumb, Long reptNumb, Long replNumb) {
+        // 누락되거나 양수가 아닌 식별값은 DB 조회 전에 차단한다
+        if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb)
+                || userNumb <= 0 || reptNumb <= 0 || replNumb <= 0) {
+            // 유효한 댓글 좋아요 요청을 만들 수 없음을 반환한다
+            return null;
+        }
+
+        // 댓글 좋아요 조회와 변경 조건을 담을 객체를 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 인증 사용자 번호를 좋아요 주체로 설정한다
+        replyDto.setUserNumb(userNumb);
+        // 독후감 번호를 댓글 소속 검증 조건으로 설정한다
+        replyDto.setReptNumb(reptNumb);
+        // 댓글 번호를 범용 좋아요 대상 번호로 설정한다
+        replyDto.setReplNumb(replNumb);
+        // 검증된 댓글 좋아요 요청 객체를 반환한다
+        return replyDto;
+    }
+
+    /**
+     * 신규 댓글 또는 대댓글 좋아요를 해당 댓글 작성자에게 알림으로 발송한다.
+     * 본인 댓글 좋아요와 작성자를 확인할 수 없는 댓글은 알림을 만들지 않는다.
+     *
+     * @author HanWon.Jang
+     * @param sendUserNumb 댓글 좋아요를 등록한 사용자 번호
+     * @param likeTarget 좋아요 대상 댓글과 알림 수신자 정보
+     */
+    private void sendReplyLikeAlim(Long sendUserNumb, ReplyDto likeTarget) {
+        // 댓글 작성자가 없거나 본인 댓글에 좋아요를 등록했으면 자기 자신에게 알림을 만들지 않는다
+        if (StringUtil.isEmpty(likeTarget.getTargetUserNumb())
+                || likeTarget.getTargetUserNumb().equals(sendUserNumb)) {
+            // 댓글 좋아요 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
+        // REPLY_LIKE 템플릿의 사용자명 치환에 사용할 좋아요 등록자의 최신 닉네임을 조회한다
+        String sendUserNick = tokenRedisService.getUserNick(sendUserNumb);
+
+        // 로그인 세션에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않는다
+        if (StringUtil.isEmpty(sendUserNick)) {
+            // 닉네임 치환이 불가능한 댓글 좋아요 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
+        // REPLY_LIKE 템플릿의 사용자명 치환값을 담을 객체를 생성한다
+        Map<String, Object> replaceMap = new HashMap<>();
+        // 좋아요 등록자의 닉네임을 템플릿 사용자명 치환값으로 설정한다
+        replaceMap.put("userName", sendUserNick);
+
+        // 댓글 작성자에게 좋아요 알림을 저장하고 해당 댓글이 속한 독후감 상세 링크로 푸시를 예약한다
+        alimService.sendAlim(
+                likeTarget.getTargetUserNumb()
+              , Constant.ALIM_SITU_LIKE
+              , Constant.ALIM_TEMP_CODE_REPLY_LIKE
+              , likeTarget.getReptNumb()
+              , replaceMap
+        );
     }
 
     /**

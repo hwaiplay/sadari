@@ -17,6 +17,8 @@ import org.our.sadari.reply.dto.ReplyDto;
  * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 메서드 정의
  * 2026-07-29        HanWon.Jang        댓글 알림 수신자 조회 메서드 정의
  * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 논리 삭제 메서드 정의
+ * 2026-08-03        HanWon.Jang        댓글 좋아요 등록, 취소 및 상태 조회 메서드 정의
+ * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 조회 메서드 정의
  */
 @Mapper
 public interface ReplyMapper {
@@ -56,6 +58,42 @@ public interface ReplyMapper {
      * @return 반영 건수
      */
     int delReply(ReplyDto replyDto);
+
+    /**
+     * 정상 이용 회원이 접근할 수 있는 미삭제 댓글과 해당 댓글 작성자를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param replyDto 로그인 사용자와 댓글 복합 식별값
+     * @return 접근 가능한 댓글과 알림 수신자 정보
+     */
+    ReplyDto getReplyLikeTarget(ReplyDto replyDto);
+
+    /**
+     * 로그인 사용자의 댓글 좋아요를 중복 없이 등록한다.
+     *
+     * @author HanWon.Jang
+     * @param replyDto 로그인 사용자와 댓글 복합 식별값
+     * @return 반영 건수
+     */
+    int setReplyLike(ReplyDto replyDto);
+
+    /**
+     * 로그인 사용자의 댓글 좋아요를 취소한다.
+     *
+     * @author HanWon.Jang
+     * @param replyDto 로그인 사용자와 댓글 복합 식별값
+     * @return 반영 건수
+     */
+    int delReplyLike(ReplyDto replyDto);
+
+    /**
+     * 댓글 좋아요 수와 로그인 사용자의 좋아요 여부를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param replyDto 로그인 사용자와 댓글 복합 식별값
+     * @return 댓글 좋아요 상태
+     */
+    ReplyDto getReplyLikeDtl(ReplyDto replyDto);
 
     /**
      * 댓글이 등록된 독후감의 작성자 사용자 번호를 조회한다.

@@ -66,6 +66,8 @@ public final class Constant {
     public static final String REPORT_STAT_STOP = "STOP";
     // 좋아요 대상 독후감 설정값
     public static final String LIKE_TARGET_REPORT = "REPORT";
+    // 좋아요 대상 댓글 설정값
+    public static final String LIKE_TARGET_REPLY = "REPLY";
     // 알림 상황 좋아요 설정값
     public static final String ALIM_SITU_LIKE = "LIKE";
     // 알림 상황 팔로우 설정값
@@ -83,6 +85,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
     // 알림 템플릿 코드 댓글 설정값
     public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_REPORT";
+    // 알림 템플릿 코드 댓글 좋아요 설정값
+    public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";
