@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
  * 2026-08-01        Hanwon.Jang        읽는 중 독후감 비공개와 평점 미집계 정책 추가
+ * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 조건 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -148,19 +149,20 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * 마이페이지에 표시할 주간, 월간, 연간 독서량 요약과 목표 달성 정보를 조회한다.
+     * 본인 또는 다른 사용자 화면에 표시할 주간, 월간, 연간 독서량 요약과 목표 달성 정보를 조회한다.
      * 현재 기간과 직전 기간을 같은 기준으로 비교해 증감값과 펼침 목록을 함께 구성한다.
      *
      * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
+     * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 다른 사용자 조회에 적용할 독후감 공개 여부
      * @return 독서량 요약, 목표 달성률, 목표 달성 횟수, 기간별 독후감 목록
      */
     @Override
-    public ResultData getMonthlyReadingSummary(Long userNumb) {
+    public ResultData getMonthlyReadingSummary(Long userNumb, String pubcYsno) {
         // 독서량과 목표 기간 계산의 기준 날짜를 조회한다
         LocalDate today = LocalDate.now();
         // 통합 집계 SQL에 전달할 기간과 공통코드 조건을 생성한다
-        ReadingSummaryQueryDto queryReq = getReadingSummaryQueryReq(userNumb, today);
+        ReadingSummaryQueryDto queryReq = getReadingSummaryQueryReq(userNumb, pubcYsno, today);
         // 기간별 독서량과 목표 및 누적 달성 횟수를 한 번에 조회한다
         ReadingSummaryQueryDto queryResult = reportMapper.getReadingSummary(queryReq);
 
@@ -186,10 +188,11 @@ public class ReportServiceImpl implements ReportService {
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 다른 사용자 조회에 적용할 독후감 공개 여부
      * @param today 기간 계산 기준일
      * @return 독서 요약 통합 조회 조건
      */
-    private ReadingSummaryQueryDto getReadingSummaryQueryReq(Long userNumb, LocalDate today) {
+    private ReadingSummaryQueryDto getReadingSummaryQueryReq(Long userNumb, String pubcYsno, LocalDate today) {
 
         // 현재 주 시작일을 계산한다
         LocalDate currentWeekStart = today.with(GOAL_WEEK_FIELDS.dayOfWeek(), 1);
@@ -205,6 +208,8 @@ public class ReportServiceImpl implements ReportService {
         req.setDoneStat(Constant.REPORT_STAT_DONE);
         // 현재 읽는 책 조회에 사용할 독서 상태를 설정한다
         req.setReadStat(Constant.REPORT_STAT_READ);
+        // 다른 사용자 화면에서 공개 독후감만 집계하도록 공개 여부를 설정한다
+        req.setPubcYsno(pubcYsno);
         // 주간 목표 유형을 설정한다
         req.setWeekGoalType(Constant.GOAL_TYPE_WEEK);
         // 월간 목표 유형을 설정한다
@@ -579,7 +584,7 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // 로그인 사용자의 독서 목표 권수를 저장 결과를 반환한다
-        return getMonthlyReadingSummary(userNumb);
+        return getMonthlyReadingSummary(userNumb, null);
     }
 
     /**
@@ -623,7 +628,7 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // 직전 기간(지난주, 지난달, 작년)에 설정되어 있던 독서 목표 데이터를 조회하여 현재 기간의 목표로 일괄 복사한 결과를 반환한다
-        return getMonthlyReadingSummary(userNumb);
+        return getMonthlyReadingSummary(userNumb, null);
     }
 
     /**

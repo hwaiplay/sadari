@@ -12,6 +12,7 @@ import org.our.sadari.social.dto.SocialDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       프로필 통계 공개 범위 조건 추가
  */
 public interface SocialService {
     /**
@@ -51,14 +52,15 @@ public interface SocialService {
     ResultData setLike(SocialDto.LikeDto req);
 
     /**
-     * 마이페이지 프로필 상단에 표시할 social 통계 값을 조회한다.
-     * Controller는 인증 사용자 번호만 넘기고, 팔로우/좋아요/완료 독서 집계 기준은 social 구현체에서 관리한다.
+     * 프로필 상단에 표시할 social 통계 값을 조회한다.
+     * 다른 사용자 프로필은 공개 독후감 조건을 전달하고, 본인 화면은 조건 없이 전체 독후감을 집계한다.
      *
      * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @return 마이페이지 프로필 통계 조회 결과
+     * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 적용할 독후감 공개 여부
+     * @return 프로필 통계 조회 결과
      */
-    ResultData getProfileStats(Long userNumb);
+    ResultData getProfileStats(Long userNumb, String pubcYsno);
 
     /**
      * 마이페이지 기존 호출부 호환을 위해 프로필 통계 조회를 위임한다.

@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.ResponseCookie;
+import org.springframework.security.web.csrf.CsrfToken;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -45,6 +46,7 @@ import java.util.Map;
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
+ * 2026-08-04        OpenAI.Codex       브라우저 CSRF Token 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -90,6 +92,20 @@ public class AuthLoginController {
     // 인증 쿠키의 SameSite 정책
     @Value("${app.cookie.same-site:Lax}")
     private String cookieSameSite;
+
+    /**
+     * 브라우저가 상태 변경 요청 Header에 포함할 CSRF Token을 조회한다.
+     *
+     * @author OpenAI.Codex
+     * @param csrfToken Spring Security가 현재 브라우저에 발급한 CSRF Token
+     * @return CSRF Token 문자열을 담은 성공 응답
+     */
+    @GetMapping("/csrf")
+    @Operation(summary = "CSRF Token 조회", description = "Cookie 인증 상태 변경 요청에 사용할 CSRF Token을 조회한다.")
+    public ResultData getCsrfToken(@Parameter(hidden = true) CsrfToken csrfToken) {
+        // 브라우저가 공통 요청 Header에 설정할 CSRF Token을 반환한다
+        return ResultData.success(csrfToken.getToken());
+    }
 
     /**
      * yml 설정으로 생성한 카카오 OAuth 인가 화면으로 브라우저를 이동시킨다.

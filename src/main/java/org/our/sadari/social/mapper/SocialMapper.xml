@@ -107,8 +107,8 @@
            AND UL.TAGT_NUMB = R.TAGT_NUMB
     </select>
 
-    <!-- 마이페이지 프로필 통계 영역에 표시할 집계 값이다.
-         팔로우/좋아요 테이블은 social 도메인 소유이므로 MyPageController는 이 쿼리를 직접 알지 않고 service 결과만 합쳐서 내려준다. -->
+    <!-- 본인 또는 다른 사용자 프로필에 표시할 통계를 같은 SQL로 집계한다.
+         공개 여부가 전달되면 총 읽은 책과 받은 좋아요를 공개 독후감 범위로 제한한다. -->
     <select id="getProfileStats" parameterType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto" resultType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto">
         <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
@@ -125,6 +125,9 @@
                     FROM TM_REPORT REPORT
                    WHERE REPORT.REPT_STAT = #{reportStatDone}
                      AND REPORT.USER_NUMB = #{userNumb}
+        <if test="pubcYsno != null and pubcYsno != ''">
+                     AND REPORT.PUBC_YSNO = #{pubcYsno}
+        </if>
                 GROUP BY REPORT.USER_NUMB
                ) READSTATS
             ON READSTATS.USER_NUMB = TARGET.USER_NUMB
@@ -149,6 +152,9 @@
                       ON REPORT.REPT_NUMB = LIKES.TAGT_NUMB
                    WHERE LIKES.TAGT_TYPE = #{likeTargetReport}
                      AND REPORT.USER_NUMB = #{userNumb}
+        <if test="pubcYsno != null and pubcYsno != ''">
+                     AND REPORT.PUBC_YSNO = #{pubcYsno}
+        </if>
                 GROUP BY REPORT.USER_NUMB
                ) LIKESTATS
             ON LIKESTATS.USER_NUMB = TARGET.USER_NUMB
