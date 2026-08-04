@@ -38,6 +38,14 @@ globalStyle("html, body", {
   fontFamily: "PretendardRegular",
 });
 
+globalStyle("body", {
+  msOverflowStyle: "none"
+});
+
+globalStyle("::-webkit-scrollbar", {
+  display: "none",
+})
+
 globalStyle("*", {
   margin: 0,
   padding: 0,
