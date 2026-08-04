@@ -46,7 +46,7 @@ import java.util.Map;
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
- * 2026-08-04        OpenAI.Codex       브라우저 CSRF Token 조회 API 추가
+ * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -96,7 +96,7 @@ public class AuthLoginController {
     /**
      * 브라우저가 상태 변경 요청 Header에 포함할 CSRF Token을 조회한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param csrfToken Spring Security가 현재 브라우저에 발급한 CSRF Token
      * @return CSRF Token 문자열을 담은 성공 응답
      */

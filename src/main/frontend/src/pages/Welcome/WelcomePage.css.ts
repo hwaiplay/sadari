@@ -481,6 +481,68 @@ export const nicknameCard = style({
   backdropFilter: "blur(14px)",
 });
 
+export const interestSection = style({
+  marginBottom: "22px",
+  paddingBottom: "20px",
+  borderBottom: "1px solid rgba(70, 63, 56, 0.12)",
+});
+
+export const interestTitle = style({
+  color: "#4f4942",
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+});
+
+export const interestHint = style({
+  marginTop: "6px",
+  color: "#7a736b",
+  fontSize: "11px",
+  lineHeight: 1.5,
+  wordBreak: "keep-all",
+});
+
+export const interestList = style({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: "8px",
+  maxHeight: "154px",
+  marginTop: "12px",
+  paddingRight: "4px",
+  overflowY: "auto",
+});
+
+export const interestButton = style({
+  minHeight: "34px",
+  padding: "7px 11px",
+  border: "1px solid #c9c2b9",
+  borderRadius: vars.radius.xl,
+  background: "#ffffff",
+  color: "#625b53",
+  cursor: "pointer",
+  fontSize: "11px",
+  transition: "border-color 150ms ease, background 150ms ease, color 150ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: "#7f8b9a",
+      background: "#f3f5f7",
+    },
+    "&:focus-visible": {
+      outline: "2px solid #7f8b9a",
+      outlineOffset: "2px",
+    },
+  },
+});
+
+export const interestButtonSelected = style([
+  interestButton,
+  {
+    borderColor: "#4e5968",
+    background: "#edf0f3",
+    color: "#343c47",
+    fontFamily: vars.font.semibold,
+  },
+]);
+
 export const nicknameLabel = style({
   display: "block",
   marginBottom: "10px",

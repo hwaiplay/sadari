@@ -15,7 +15,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
- * 2026-08-04        OpenAI.Codex       외부 알림 발송 요청 DTO 제거
+ * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 요청 DTO 제거
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {

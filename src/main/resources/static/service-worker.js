@@ -21,7 +21,7 @@ let csrfToken = null;
  *
  * @return {Promise<string>} 상태 변경 요청 Header에 사용할 CSRF Token
  * @throws CSRF Token API가 실패하거나 Token 데이터가 없을 때 발생
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  */
 async function requestCsrfToken() {
   // Service Worker도 화면과 같은 인증 Cookie를 사용해 CSRF Token을 조회한다
@@ -49,7 +49,7 @@ async function requestCsrfToken() {
  * @param {boolean} forceRefresh 기존 Token을 버리고 다시 조회할지 여부
  * @return {Promise<string>} 현재 브라우저 Cookie와 연결된 CSRF Token
  * @throws CSRF Token 조회 요청이 실패할 때 발생
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  */
 async function getCsrfToken(forceRefresh = false) {
   // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회한다
@@ -93,7 +93,7 @@ async function getCsrfToken(forceRefresh = false) {
  * @param {boolean} retry CSRF 오류 재시도를 허용할지 여부
  * @return {Promise<Response>} API 응답
  * @throws CSRF Token 조회 또는 API 통신이 실패할 때 발생
- * @author OpenAI.Codex
+ * @author SeungHyeon.Kang
  */
 async function requestWithCsrf(url, options, retry = true) {
   // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회한다

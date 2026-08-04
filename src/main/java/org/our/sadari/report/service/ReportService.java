@@ -15,7 +15,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 계약 추가
  * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 계약 추가
- * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 계약 추가
+ * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 계약 추가
  */
 public interface ReportService {
     /**

@@ -20,7 +20,7 @@ import {
   USER_PROFILE_UPDATED_EVENT,
 } from "@/features/User/lib/profileEvents";
 import { clsx } from "clsx";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -37,6 +37,11 @@ type HeaderMenuDrawerProps = {
   menuList?: UserMenuItem[];
 };
 
+type DrawerMenuGroup = {
+  primaryMenu: UserMenuItem;
+  secondaryMenus: UserMenuItem[];
+};
+
 /**
  * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시합니다.
  *
@@ -48,6 +53,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [expandedMenuNumb, setExpandedMenuNumb] = useState<string | null>(null);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -55,6 +61,28 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
   const portalTarget = typeof document === "undefined" ? null : document.body;
+  const drawerMenuGroups = useMemo<DrawerMenuGroup[]>(() => {
+
+    const secondaryMenuMap = new Map<string, UserMenuItem[]>();
+
+    menuList.forEach((item) => {
+
+      // 하위 메뉴만 상위 메뉴 번호별로 모아 1뎁스 바로 아래에 배치한다
+      if (item.subxNumb !== "0") {
+        const secondaryMenus = secondaryMenuMap.get(item.menuNumb) ?? [];
+        secondaryMenus.push(item);
+        secondaryMenuMap.set(item.menuNumb, secondaryMenus);
+      }
+    });
+
+    // SUBX_NUMB가 0인 행을 1뎁스로 사용하고 같은 MENU_NUMB의 행을 2뎁스로 연결한다
+    return menuList
+      .filter((item) => item.subxNumb === "0")
+      .map((primaryMenu) => ({
+        primaryMenu,
+        secondaryMenus: secondaryMenuMap.get(primaryMenu.menuNumb) ?? [],
+      }));
+  }, [menuList]);
 
   const refreshUnreadAlimCnt = useCallback(async () => {
 
@@ -328,28 +356,103 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
           </div>
         </section>
         <div className={drawerStyles.drawerMenu}>
-          {menuList.map((item) => (
-            <button
-              className={clsx(
-                drawerStyles.drawerMenuButton,
-                !item.menuUrlx && drawerStyles.drawerMenuDisabled,
-              )}
-              type="button"
-              disabled={!item.menuUrlx}
-              onClick={() => {
+          {drawerMenuGroups.map(({ primaryMenu, secondaryMenus }) => {
 
-                if (!item.menuUrlx) {
-                  return;
-                }
+            const hasSecondaryMenu = secondaryMenus.length > 0;
+            const isExpanded = expandedMenuNumb === primaryMenu.menuNumb;
+            const secondaryMenuId = `drawer-secondary-menu-${primaryMenu.menuNumb}`;
 
-                setIsDrawerOpen(false);
-                navigate(item.menuUrlx);
-              }}
-              key={`${item.menuNumb}-${item.subxNumb}`}
-            >
-              {item.menuName}
-            </button>
-          ))}
+            return (
+              <div
+                className={drawerStyles.drawerMenuGroup}
+                key={`${primaryMenu.menuNumb}-${primaryMenu.subxNumb}`}
+              >
+                <button
+                  className={clsx(
+                    drawerStyles.drawerMenuButton,
+                    isExpanded && drawerStyles.drawerMenuButtonOpen,
+                    !hasSecondaryMenu
+                      && !primaryMenu.menuUrlx
+                      && drawerStyles.drawerMenuDisabled,
+                  )}
+                  type="button"
+                  disabled={!hasSecondaryMenu && !primaryMenu.menuUrlx}
+                  aria-expanded={hasSecondaryMenu ? isExpanded : undefined}
+                  aria-controls={hasSecondaryMenu ? secondaryMenuId : undefined}
+                  onClick={() => {
+
+                    // 하위 메뉴가 있으면 화면을 이동하지 않고 해당 2뎁스만 펼치거나 접는다
+                    if (hasSecondaryMenu) {
+                      setExpandedMenuNumb((currentMenuNumb) =>
+                        currentMenuNumb === primaryMenu.menuNumb
+                          ? null
+                          : primaryMenu.menuNumb,
+                      );
+                      return;
+                    }
+
+                    // 이동 경로가 없는 단독 메뉴는 클릭 동작을 수행하지 않는다
+                    if (!primaryMenu.menuUrlx) {
+                      return;
+                    }
+
+                    setIsDrawerOpen(false);
+                    navigate(primaryMenu.menuUrlx);
+                  }}
+                >
+                  <span>{primaryMenu.menuName}</span>
+                  {hasSecondaryMenu ? (
+                    <svg
+                      className={clsx(
+                        drawerStyles.drawerMenuChevron,
+                        isExpanded && drawerStyles.drawerMenuChevronOpen,
+                      )}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                    >
+                      <path d="m9 18 6-6-6-6" />
+                    </svg>
+                  ) : null}
+                </button>
+
+                {hasSecondaryMenu ? (
+                  <div
+                    id={secondaryMenuId}
+                    className={clsx(
+                      drawerStyles.drawerSecondaryMenuWrap,
+                      isExpanded && drawerStyles.drawerSecondaryMenuWrapOpen,
+                    )}
+                  >
+                    <div className={drawerStyles.drawerSecondaryMenuInner}>
+                      {secondaryMenus.map((secondaryMenu) => (
+                        <button
+                          className={clsx(
+                            drawerStyles.drawerSecondaryMenuButton,
+                            !secondaryMenu.menuUrlx && drawerStyles.drawerMenuDisabled,
+                          )}
+                          type="button"
+                          disabled={!secondaryMenu.menuUrlx}
+                          onClick={() => {
+
+                            // 이동 경로가 없는 2뎁스 메뉴는 클릭 동작을 수행하지 않는다
+                            if (!secondaryMenu.menuUrlx) {
+                              return;
+                            }
+
+                            setIsDrawerOpen(false);
+                            navigate(secondaryMenu.menuUrlx);
+                          }}
+                          key={`${secondaryMenu.menuNumb}-${secondaryMenu.subxNumb}`}
+                        >
+                          {secondaryMenu.menuName}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            );
+          })}
         </div>
       </aside>
     </div>

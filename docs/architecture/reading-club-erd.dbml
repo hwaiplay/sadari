@@ -30,7 +30,14 @@ Table TM_REPORT [headercolor: #8C8C8C] {
 
 Table TM_CODEXM [headercolor: #8C8C8C] {
   COMM_CODE varchar(10) [pk]
-  SORT_ORDR decimal(38,0) [note: '이번 설계에서 추가 예정인 대분류 정렬 순서']
+  CODE_NAME varchar(50)
+  CODE_EXPL varchar(500)
+  SORT_ORDR decimal(38,0) [note: '대분류 표시 순서']
+  USEE_YSNO varchar(1)
+  REGI_ADMN varchar(100)
+  REGI_DATE datetime
+  UPDT_ADMN varchar(20)
+  UPDT_DATE datetime
 }
 
 Table TB_CODEXD [headercolor: #8C8C8C] {
@@ -137,11 +144,11 @@ Table TB_CLINVT [headercolor: #6C8EBF] {
 
 Table TB_CLQUES [headercolor: #6C8EBF] {
   CLUB_NUMB bigint [pk]
-  QUES_FIRS varchar(1000) [not null]
-  QUES_SECO varchar(1000)
-  QUES_THIR varchar(1000)
-  QUES_FOUR varchar(1000)
-  QUES_FIFT varchar(1000)
+  QUES_FIRS varchar(500) [not null]
+  QUES_SECO varchar(500)
+  QUES_THIR varchar(500)
+  QUES_FOUR varchar(500)
+  QUES_FIFT varchar(500)
   REGI_USER bigint
   REGI_DATE datetime(6) [not null]
   UPDT_USER bigint
@@ -152,16 +159,16 @@ Table TB_CLJOIN [headercolor: #6C8EBF] {
   CLUB_NUMB bigint [not null]
   APPL_NUMB bigint [not null, note: '모임별 MAX + 1']
   USER_NUMB bigint [note: '신청자. 물리 삭제 시 Null']
-  QUES_FIRS varchar(1000) [not null]
-  QUES_SECO varchar(1000)
-  QUES_THIR varchar(1000)
-  QUES_FOUR varchar(1000)
-  QUES_FIFT varchar(1000)
-  ANSR_FIRS text [note: '승인, 거절 또는 취소 즉시 Null']
-  ANSR_SECO text
-  ANSR_THIR text
-  ANSR_FOUR text
-  ANSR_FIFT text
+  QUES_FIRS varchar(500) [not null]
+  QUES_SECO varchar(500)
+  QUES_THIR varchar(500)
+  QUES_FOUR varchar(500)
+  QUES_FIFT varchar(500)
+  ANSR_FIRS varchar(2000) [note: '승인, 거절 또는 취소 즉시 Null']
+  ANSR_SECO varchar(2000)
+  ANSR_THIR varchar(2000)
+  ANSR_FOUR varchar(2000)
+  ANSR_FIFT varchar(2000)
   JOIN_STAT varchar(20) [not null]
   IDEM_KEYX varchar(64) [not null]
   APPL_DATE datetime(6) [not null]

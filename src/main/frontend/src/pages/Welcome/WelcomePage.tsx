@@ -3,8 +3,11 @@ import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
 import {
+  getUserInterestCatalogApi,
   getMyProfileApi,
+  updateUserInterestsApi,
   updateOnboardingApi,
+  type UserInterest,
   type UserProfile,
 } from "@/features/User/api/userApi";
 import { useQueryClient } from "@tanstack/react-query";
@@ -38,6 +41,8 @@ function WelcomePage() {
   const touchStartXRef = useRef<number | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [userNick, setUserNick] = useState("");
+  const [interestCatalog, setInterestCatalog] = useState<UserInterest[]>([]);
+  const [selectedInterestKeys, setSelectedInterestKeys] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -72,6 +77,23 @@ function WelcomePage() {
         if (!ignore) {
           // 닉네임 입력 화면을 사용할 수 있도록 로딩 상태를 해제한다
           setIsLoading(false);
+        }
+      });
+
+    // 관심분야 조회 실패가 웰컴 완료를 막지 않도록 프로필과 별도 흐름으로 조회한다
+    getUserInterestCatalogApi()
+      .then((catalog) => {
+        // 화면을 떠난 뒤 도착한 관심분야 응답은 선택 상태에 반영하지 않는다
+        if (!ignore) {
+          // 활성 공통코드로 구성된 관심분야를 선택 목록에 설정한다
+          setInterestCatalog(catalog);
+        }
+      })
+      .catch(() => {
+        // 공통코드 조회 실패 시 관심분야 단계를 건너뛰고 기존 웰컴 흐름을 유지한다
+        if (!ignore) {
+          // 선택할 수 없는 빈 관심분야 목록을 명시적으로 설정한다
+          setInterestCatalog([]);
         }
       });
 
@@ -199,6 +221,39 @@ function WelcomePage() {
   };
 
   /**
+   * 최초 로그인 사용자가 누른 독서 관심분야의 선택 상태를 전환한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 관심분야 선택 버튼 클릭 이벤트
+   * @return 반환값이 없다
+   */
+  const handleInterestToggle = (event: MouseEvent<HTMLButtonElement>): void => {
+    const interestKey = event.currentTarget.dataset.interestKey;
+
+    // 화면에 존재하는 관심분야 키만 선택 상태에 반영한다
+    if (!interestKey) {
+      // 유효한 관심분야가 없는 클릭 처리를 종료한다
+      return;
+    }
+
+    // 기존 Set을 직접 변경하지 않도록 새 선택 집합을 생성한다
+    setSelectedInterestKeys((currentKeys) => {
+      const nextKeys = new Set(currentKeys);
+      // 이미 선택한 관심분야는 다시 눌렀을 때 해제한다
+      if (nextKeys.has(interestKey)) {
+        // 선택 집합에서 현재 관심분야를 제거한다
+        nextKeys.delete(interestKey);
+      } else {
+        // 새 관심분야를 개수 제한 없이 선택 집합에 추가한다
+        nextKeys.add(interestKey);
+      }
+
+      // 변경된 관심분야 선택 집합을 반환한다
+      return nextKeys;
+    });
+  };
+
+  /**
    * 사용자가 확정한 닉네임을 저장하고 최초 로그인 웰컴 흐름을 완료한다
    *
    * @author HanWon.Jang
@@ -241,6 +296,24 @@ function WelcomePage() {
 
     // 닉네임 저장과 인증 상태 갱신 실패를 하나의 사용자 오류 흐름으로 처리한다
     try {
+      // 관심분야를 선택했다면 온보딩 완료 전에 별도 API로 저장을 시도한다
+      if (selectedInterestKeys.size > 0) {
+        const interestList = interestCatalog
+          .filter((interest) => selectedInterestKeys.has(`${interest.intrCgrp}:${interest.intrCode}`))
+          .map((interest) => ({ intrCgrp: interest.intrCgrp, intrCode: interest.intrCode }));
+
+        // 관심분야 저장 실패와 ONBD_YSNO 완료 처리를 분리하기 위한 블록이다
+        try {
+          // 유효한 공통코드 조합으로 사용자의 관심분야를 전체 교체한다
+          await updateUserInterestsApi({ interestList });
+        }
+
+        // 관심분야 저장 실패는 웰컴 화면을 본 사용자의 온보딩 완료를 막지 않는다
+        catch {
+          // 저장 실패 시 별도 상태를 만들지 않고 닉네임과 온보딩 완료 처리를 계속한다
+        }
+      }
+
       // 닉네임과 최초 로그인 완료 상태를 서버에 함께 저장한다
       await updateOnboardingApi({ userNick: normalizedUserNick });
       // 보호 라우트가 완료된 온보딩 상태를 사용하도록 인증 정보를 즉시 다시 조회한다
@@ -444,6 +517,40 @@ function WelcomePage() {
             </div>
             {/* 추천 닉네임 입력과 글자 수 안내 영역 */}
             <form className={styles.nicknameCard} onSubmit={handleStart}>
+              {/* 최초 로그인 독서 관심분야 선택 영역 */}
+              {interestCatalog.length > 0 ? (
+                <section className={styles.interestSection}>
+                  <h2 className={styles.interestTitle}>
+                    {/* "관심분야 선택" */}
+                    {message("frontend.welcome.interest.title")}
+                  </h2>
+                  <p className={styles.interestHint}>
+                    {/* "좋아하는 분야를 골라주세요. 선택하지 않고 시작할 수도 있어요." */}
+                    {message("frontend.welcome.interest.hint")}
+                  </p>
+                  {/* 독서 관심분야 선택 항목 목록 */}
+                  <div className={styles.interestList}>
+                    {interestCatalog.map((interest) => {
+                      const interestKey = `${interest.intrCgrp}:${interest.intrCode}`;
+                      const isSelected = selectedInterestKeys.has(interestKey);
+                      // 대분류와 세부코드를 구분할 수 있는 관심분야 버튼을 반환한다
+                      return (
+                        <button
+                          className={isSelected ? styles.interestButtonSelected : styles.interestButton}
+                          type="button"
+                          data-interest-key={interestKey}
+                          aria-pressed={isSelected}
+                          onClick={handleInterestToggle}
+                          key={interestKey}
+                        >
+                          {interest.intrCnam} · {interest.intrName}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </section>
+              ) : null}
+              {/* 최초 로그인 닉네임 입력 영역 */}
               <label className={styles.nicknameLabel} htmlFor="welcome-user-nick">
                 {/* "닉네임" */}
                 {message("frontend.profile.nick")}

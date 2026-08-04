@@ -23,13 +23,13 @@ import org.our.sadari.user.mapper.UserMapper;
 
 /**
  * fileName       : SocialServiceImplTest
- * author         : OpenAI.Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-04
  * description    : 프로필 통계 조회의 독후감 공개 범위 전달 정책을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-04        OpenAI.Codex       최초 생성
+ * 2026-08-04        SeungHyeon.Kang       최초 생성
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -60,7 +60,7 @@ class SocialServiceImplTest {
     /**
      * 각 테스트가 독립된 Mock 의존성을 사용하는 소셜 서비스 구현체를 구성한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
@@ -76,7 +76,7 @@ class SocialServiceImplTest {
     /**
      * 다른 사용자 프로필 통계가 총 읽은 책과 받은 좋아요에 공개 독후감 조건을 전달하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void getProfileStatsUsesPublicFilterForSocialProfile() {
@@ -95,7 +95,7 @@ class SocialServiceImplTest {
     /**
      * 본인 마이페이지 통계는 공개 여부와 관계없이 기존 전체 독후감 범위를 유지하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void getMyPageProfileStatsKeepsAllReports() {
