@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       공개 독후감만 소셜 요약과 통계에 포함
  */
 @RestController
 @RequiredArgsConstructor
@@ -116,8 +117,8 @@ public class SocialController {
             return ResultData.success(new MonthlyReadingSummaryDto());
         }
 
-        // getMonthlyReadingSummary 업무 로직을 reportService에 위임한다
-        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
+        // 다른 사용자 화면에는 공개 독후감과 목표만 제공하도록 공개 여부를 서버에서 고정한다
+        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb, Constant.COMM_YES);
 
         // 다른 사람 프로필도 마이페이지와 같은 통계 영역을 사용하므로 독서 요약 응답에 social 통계를 합쳐 내려준다.
         // 독서 요약이 실패하면 통계를 추가하지 않고 후속 응답 데이터 결합을 중단한다

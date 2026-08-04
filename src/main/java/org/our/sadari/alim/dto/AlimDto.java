@@ -3,7 +3,6 @@ package org.our.sadari.alim.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
-import java.util.Map;
 import lombok.Data;
 
 /**
@@ -16,6 +15,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
+ * 2026-08-04        OpenAI.Codex       외부 알림 발송 요청 DTO 제거
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
@@ -189,29 +189,4 @@ public class AlimDto {
         private int unreadCnt;
     }
 
-    /**
-     * 외부 API 또는 다른 서비스 구현체에서 발송할 알림 정보를 전달한다
-     *
-     * @author SeungHyeon.Kang
-     */
-    // 알림 템플릿과 수신자 및 치환값을 포함한 발송 요청
-    @Data
-    @Schema(description = "알림 발송 요청 DTO")
-    public static class AlimSendDto {
-
-        @Schema(description = "알림 상황", example = "LIKE")
-        private String alimSitu;
-
-        @Schema(description = "알림 템플릿 코드", example = "LIKE_REPORT")
-        private String tempCode;
-
-        @Schema(description = "수신 사용자 번호", example = "31")
-        private Long userNumb;
-
-        @Schema(description = "이동 대상 번호", example = "1")
-        private Long tagtNumb;
-
-        @Schema(description = "치환 값 Map")
-        private Map<String, Object> replaceMap;
-    }
 }

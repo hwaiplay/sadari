@@ -92,6 +92,14 @@ apply: always
 - 요청 필드명, 응답 필드명, 코드값 및 경로는 백엔드 API 계약과 동일하게 유지합니다.
 - 백엔드 API 계약이 변경되면 관련 타입, API 모듈, Query Key 및 화면 사용처를 같은 변경에서 수정합니다.
 
+### 3.4 CSRF Token 전송
+
+- Cookie 인증 API의 `POST`, `PUT`, `PATCH`, `DELETE` 요청은 공통 API Client가 CSRF Token을 조회하고 요청 Header에 자동으로 설정합니다.
+- 화면별 API 모듈에서 CSRF Header를 반복 구현하지 않고 공통 Axios Request Interceptor를 사용합니다.
+- Service Worker처럼 Axios를 사용할 수 없는 실행 환경은 같은 CSRF Token 조회 API와 Header 규칙을 공통 함수로 구현합니다.
+- CSRF Token 불일치로 `403`이 발생하면 Token을 한 번만 다시 조회하고 원 요청을 한 번만 재시도하여 무한 반복을 방지합니다.
+- 인증 갱신과 로그아웃 요청도 상태 변경 요청이므로 CSRF 검증에서 제외하지 않습니다.
+
 ## 4. 입력 검증 및 실패 처리
 
 ### 4.1 입력값 검증
