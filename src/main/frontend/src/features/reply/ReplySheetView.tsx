@@ -578,11 +578,13 @@ const ReplySheetView = ({
         <div className={styles.commentSheetBody}>
           {controller.replyListQuery.isPending ? (
             /* 댓글 목록 조회 진행 상태 영역 */
-            /* "목록 조회중" */
-            <Loading
-              title={message("frontend.common.loadingList")}
-              isFullScreen={false}
-            />
+            <div className={styles.commentLoading}>
+              {/* "목록 조회중" */}
+              <Loading
+                title={message("frontend.common.loadingList")}
+                isFullScreen={false}
+              />
+            </div>
           ) : controller.replyListQuery.isError ? (
             /* 댓글 목록 조회 실패 안내 영역 */
             <div className={styles.commentEmpty}>
