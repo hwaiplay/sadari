@@ -142,6 +142,31 @@ const ReplyItem = ({
   // 삭제된 댓글의 원문과 상호작용 제어를 화면에 노출하지 않도록 상태를 구분한다
   const isDeleted = reply.deltYsno === "Y";
 
+  // 삭제된 댓글은 기본 프로필 이미지와 삭제 안내 문구만 반환한다
+  if (isDeleted) {
+    return (
+      /* 삭제된 댓글 최소 정보 영역 */
+      <article
+        className={`${
+          isChild ? styles.childReplyItem : styles.replyItem
+        } ${styles.deletedReplyItem}`}
+        key={`${reportNumb}-${reply.replNumb}`}
+      >
+        <div className={styles.deletedReplyItemWrap}>
+          <img
+            className={styles.replyProfileImage}
+            src={DEFAULT_PROFILE_IMAGE}
+            alt=""
+          />
+          <span className={styles.deletedReplyContent}>
+            {/* "삭제된 댓글입니다." */}
+            {message("frontend.reply.deletedContent")}
+          </span>
+        </div>
+      </article>
+    );
+  }
+
   /**
    * 현재 댓글을 답글 대상으로 선택한다
    *
@@ -426,9 +451,9 @@ const ReplyThread = ({
   thread,
   controller,
 }: ReplyThreadProps) => {
-  const isExpanded = Boolean(
-    controller.expandedReplyMap[thread.parentReply.replNumb],
-  );
+  const isExpanded =
+    thread.parentReply.deltYsno === "Y" ||
+    Boolean(controller.expandedReplyMap[thread.parentReply.replNumb]);
 
   /**
    * 자식 댓글 한 건을 부모 댓글 아래의 들여쓰기 항목으로 표시한다

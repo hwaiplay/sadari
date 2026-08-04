@@ -13,10 +13,13 @@ const sheetEnter = keyframes({
 export const sheetLayer = style({
   position: "fixed",
   inset: 0,
+  width: "100%",
+  maxWidth: "100vw",
   zIndex: 1200,
   display: "flex",
   justifyContent: "center",
   alignItems: "flex-end",
+  overflowX: "hidden",
 });
 
 export const sheetBackdrop = style({
@@ -32,8 +35,11 @@ export const sheetBackdrop = style({
 export const commentSheet = style({
   position: "relative",
   zIndex: 1,
-  width: "min(100%, 600px)",
+  width: "100%",
+  maxWidth: "600px",
+  minWidth: 0,
   height: "85%",
+  boxSizing: "border-box",
   borderRadius: "22px 22px 0 0",
   backgroundColor: "#ffffff",
   display: "flex",
@@ -74,12 +80,21 @@ export const sheetHandle = style({
 });
 
 export const commentSheetBody = style({
+  width: "100%",
   minHeight: 0,
+  minWidth: 0,
+  boxSizing: "border-box",
   flex: 1,
   padding: "10px 20px 24px",
   display: "flex",
   flexDirection: "column",
   overflowY: "auto",
+  overflowX: "hidden",
+  "@media": {
+    "screen and (max-width: 480px)": {
+      padding: "10px 14px 20px",
+    },
+  },
 });
 
 export const commentEmpty = style({
@@ -116,6 +131,7 @@ export const commentEmptyText = style({
 
 export const replyList = style({
   width: "100%",
+  minWidth: 0,
   margin: 0,
   padding: 0,
   display: "flex",
@@ -126,6 +142,7 @@ export const replyList = style({
 
 export const replyThread = style({
   width: "100%",
+  minWidth: 0,
   display: "flex",
   flexDirection: "column",
   gap: "10px",
@@ -133,12 +150,21 @@ export const replyThread = style({
 
 export const replyItem = style({
   position: "relative",
+  width: "100%",
+  minWidth: 0,
+  maxWidth: "100%",
+  boxSizing: "border-box",
   display: "flex",
   alignItems: "flex-start",
   justifyContent: "space-between",
   gap: "12px",
   minHeight: "92px",
   backgroundColor: "#ffffff",
+  "@media": {
+    "screen and (max-width: 480px)": {
+      gap: "8px",
+    },
+  },
 });
 
 export const childReplyItem = style([
@@ -147,20 +173,48 @@ export const childReplyItem = style([
     width: "calc(100% - 44px)",
     minHeight: "56px",
     marginLeft: "44px",
-    alignItems: "flex-start"
+    alignItems: "flex-start",
+    "@media": {
+      "screen and (max-width: 480px)": {
+        width: "calc(100% - 28px)",
+        marginLeft: "28px",
+      },
+    },
   },
 ]);
 
 export const childReplyList = style({
+  width: "100%",
+  minWidth: 0,
   display: "flex",
   flexDirection: "column",
   gap: "8px",
 });
 
 export const replyItemWrap = style({
+  width: "100%",
+  minWidth: 0,
+  flex: 1,
   display: "flex",
   gap: "12px",
-})
+  "@media": {
+    "screen and (max-width: 480px)": {
+      gap: "10px",
+    },
+  },
+});
+
+export const deletedReplyItem = style({
+  minHeight: "56px",
+});
+
+export const deletedReplyItemWrap = style({
+  width: "100%",
+  minWidth: 0,
+  display: "flex",
+  alignItems: "center",
+  gap: "12px",
+});
 
 export const replyWriterProfileImgArea = style({
   display: "inline-flex",
@@ -191,6 +245,7 @@ export const replyTextArea = style({
 });
 
 export const replyWriterRow = style({
+  minWidth: 0,
   display: "flex",
   alignItems: "center",
   gap: "6px",
@@ -226,6 +281,7 @@ export const replyWriter = style({
 
 
 export const replyContent = style({
+  minWidth: 0,
   margin: 0,
   fontFamily: vars.font.body,
   fontSize: "16px",
@@ -233,6 +289,7 @@ export const replyContent = style({
   letterSpacing: "-1%",
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
+  overflowWrap: "anywhere",
 });
 
 export const deletedReplyContent = style([
@@ -405,6 +462,9 @@ export const actionMenuOptionDanger = style([
 ]);
 
 export const commentComposer = style({
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
   flexShrink: 0,
   borderTop: `1px solid ${vars.color.gray300}`,
   backgroundColor: "#ffffff",
@@ -439,11 +499,20 @@ export const commentEditCancelButton = style({
 });
 
 export const commentForm = style({
+  width: "100%",
+  minWidth: 0,
+  boxSizing: "border-box",
   flexShrink: 0,
   padding: "10px 16px calc(10px + env(safe-area-inset-bottom))",
   display: "flex",
   alignItems: "center",
   gap: "8px",
+  "@media": {
+    "screen and (max-width: 360px)": {
+      paddingLeft: "12px",
+      paddingRight: "12px",
+    },
+  },
 });
 
 export const commentInput = style({
@@ -479,6 +548,11 @@ export const commentSubmitButton = style({
   fontFamily: vars.font.medium,
   fontSize: "16px",
   cursor: "pointer",
+  "@media": {
+    "screen and (max-width: 360px)": {
+      padding: "0 16px",
+    },
+  },
   selectors: {
     "&:disabled": {
       borderColor: vars.color.gray300,
