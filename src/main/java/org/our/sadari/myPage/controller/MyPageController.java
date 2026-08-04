@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       본인 독서 요약 전체 범위 유지
  */
 @RestController
 @RequiredArgsConstructor
@@ -63,7 +64,7 @@ public class MyPageController {
     @Operation(summary = "독서 요약 조회", description = "로그인 사용자의 주간, 월간, 연간 독서 목표와 완료 독후감 요약을 조회한다.")
     public ResultData getMonthlyReadingSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
         // getMonthlyReadingSummary 업무 로직을 reportService에 위임한다
-        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb);
+        ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb, null);
 
         // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단한다
         // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않는다.

@@ -13,6 +13,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
+ * 2026-08-04        OpenAI.Codex       프로필 독후감 공개 범위 조회 조건 추가
  */
 @Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
@@ -69,7 +70,7 @@ public class SocialDto {
     }
 
     /**
-     * 마이페이지 상단 통계 영역에 표시할 social 집계 DTO이다.
+     * 프로필 상단 통계 영역에 표시할 social 집계 DTO이다.
      * 총 읽은 책은 독후감 완료 상태를 기준으로 세지만, 화면 요구사항상 팔로우/팔로워/좋아요와 함께 묶여 표시되므로
      * 조회 책임을 social 영역에 둔다.
      *
@@ -77,11 +78,14 @@ public class SocialDto {
      */
     // 프로필에 표시할 독서와 소셜 활동 집계
     @Data
-    @Schema(description = "마이페이지 프로필 통계 DTO")
+    @Schema(description = "프로필 통계 DTO")
     public static class ProfileStatsDto {
 
         @Schema(description = "로그인 사용자 번호", example = "31", hidden = true)
         private Long userNumb;
+
+        @Schema(description = "독후감 공개 여부 조회 조건", example = "Y", hidden = true)
+        private String pubcYsno;
 
         @Schema(description = "총 읽은 책 권수", example = "12")
         private int totalReadBookCnt;

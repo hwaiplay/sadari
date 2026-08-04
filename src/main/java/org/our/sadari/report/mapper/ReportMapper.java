@@ -19,6 +19,7 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
  * 2026-08-01        Hanwon.Jang        공개 목록과 빠른 수정 상태 정책 추가
+ * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 조회 조건 문서화
  */
 @Mapper
 public interface ReportMapper {
@@ -32,19 +33,19 @@ public interface ReportMapper {
     List<ReportDto> getReportList(ReportDto req);
 
     /**
-     * 마이페이지의 기간별 독서량과 목표 달성 정보를 통합 조회한다.
+     * 본인 또는 다른 사용자 프로필의 기간별 독서량과 목표 달성 정보를 통합 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 사용자 번호와 기간 및 목표 기준값
+     * @param req 사용자 번호, 선택적 공개 여부, 기간 및 목표 기준값
      * @return 기간별 독서량과 목표 달성 집계
      */
     ReadingSummaryQueryDto getReadingSummary(ReadingSummaryQueryDto req);
 
     /**
-     * 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다.
+     * 본인 또는 다른 사용자 프로필에 표시할 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 사용자 번호와 현재 연도 기간 및 독서 상태
+     * @param req 사용자 번호, 선택적 공개 여부, 현재 연도 기간 및 독서 상태
      * @return 독서 요약에 표시할 독후감 목록
      */
     List<ReportDto> getReadingSummaryReportList(ReadingSummaryQueryDto req);

@@ -11,6 +11,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       선택적 독후감 공개 범위 조건 추가
  */
 @Data
 public class ReadingSummaryQueryDto {
@@ -23,6 +24,9 @@ public class ReadingSummaryQueryDto {
 
     // 읽는 중 독서 상태 코드
     private String readStat;
+
+    // 다른 사용자 화면에 적용할 독후감 공개 여부
+    private String pubcYsno;
 
     // 주간 목표 유형 코드
     private String weekGoalType;

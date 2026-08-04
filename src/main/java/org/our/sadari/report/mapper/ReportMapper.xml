@@ -63,6 +63,9 @@
               WHERE A.USER_NUMB = #{userNumb}
                 AND A.REPT_STAT = #{doneStat}
                 AND A.REPT_ENDT IS NOT NULL
+        <if test="pubcYsno != null and pubcYsno != ''">
+                AND A.PUBC_YSNO = #{pubcYsno}
+        </if>
         )
            , PERIODCNT AS (
              SELECT COALESCE(SUM(CASE WHEN A.REPT_ENDT <![CDATA[>=]]> #{currentWeekStart}
@@ -220,6 +223,9 @@
      LEFT JOIN TM_BKINFO B
             ON A.BOOK_NUMB = B.BOOK_NUMB
          WHERE A.USER_NUMB = #{userNumb}
+        <if test="pubcYsno != null and pubcYsno != ''">
+           AND A.PUBC_YSNO = #{pubcYsno}
+        </if>
            AND (   A.REPT_STAT = #{readStat}
                 OR (    A.REPT_STAT = #{doneStat}
                     AND A.REPT_ENDT <![CDATA[>=]]> #{currentYearStart}

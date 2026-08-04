@@ -1,0 +1,524 @@
+Project sadari_reading_club {
+  database_type: 'MySQL'
+  Note: '독서 모임 1차 출시 예정 스키마. reading-club-design.md 및 reading-club-policy-decisions.md 기준.'
+}
+
+// ─────────────────────────────────────────────────────────────
+// 기존 테이블: 관계 확인에 필요한 핵심 컬럼만 표시
+// ─────────────────────────────────────────────────────────────
+
+Table TM_USERXM [headercolor: #8C8C8C] {
+  USER_NUMB bigint [pk, increment, note: '사용자 번호']
+}
+
+Table TM_BKINFO [headercolor: #8C8C8C] {
+  BOOK_NUMB bigint [pk, increment, note: '도서 번호']
+  BOOK_ISBN varchar(255) [unique, note: '도서 ISBN']
+}
+
+Table TM_REPORT [headercolor: #8C8C8C] {
+  REPT_NUMB bigint [pk, increment, note: '독후감 번호']
+  USER_NUMB bigint [not null, ref: > TM_USERXM.USER_NUMB]
+  BOOK_NUMB bigint [not null, ref: > TM_BKINFO.BOOK_NUMB]
+  REPT_STAT text [not null]
+  REPT_STDT text [not null]
+  REPT_ENDT text [not null]
+  REPT_GRDE text
+  REPT_CNTN text
+  PUBC_YSNO varchar(1) [not null]
+}
+
+Table TM_CODEXM [headercolor: #8C8C8C] {
+  COMM_CODE varchar(10) [pk]
+  SORT_ORDR decimal(38,0) [note: '이번 설계에서 추가 예정인 대분류 정렬 순서']
+}
+
+Table TB_CODEXD [headercolor: #8C8C8C] {
+  COMM_CODE varchar(10) [not null]
+  COMD_CODE varchar(20) [not null]
+  SORT_ORDR decimal(38,0)
+
+  indexes {
+    (COMM_CODE, COMD_CODE) [pk]
+  }
+}
+
+Table TM_ADMINX [headercolor: #8C8C8C] {
+  ADMN_NUMB bigint [pk, increment]
+}
+
+// ─────────────────────────────────────────────────────────────
+// 관심분야와 모임 기본
+// ─────────────────────────────────────────────────────────────
+
+Table TB_USINTR [headercolor: #0299E2] {
+  USER_NUMB bigint [not null]
+  INTR_CGRP varchar(10) [not null]
+  INTR_CODE varchar(20) [not null]
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (USER_NUMB, INTR_CGRP, INTR_CODE) [pk]
+    (INTR_CGRP, INTR_CODE, USER_NUMB) [name: 'IX_TB_USINTR_RECM']
+  }
+}
+
+Table TM_CLUBXM [headercolor: #0299E2] {
+  CLUB_NUMB bigint [pk, increment]
+  OWNR_NUMB bigint [note: '현재 모임장. 물리 삭제 시 Null']
+  CLUB_NAME varchar(100) [not null]
+  CLUB_CNTN varchar(2000) [not null]
+  CLUB_VISB varchar(20) [not null, note: 'PRIVATE 또는 PUBLIC']
+  JOIN_TYPE varchar(20) [not null, note: 'INVITE, OPEN 또는 APPROVAL']
+  CLUB_STAT varchar(20) [not null, note: 'ACTIVE, OWNER_ELECTION, PAUSED 또는 CLOSED']
+  MAXX_MEMB int [not null]
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+  CLOS_DATE datetime(6)
+
+  indexes {
+    (CLUB_VISB, CLUB_STAT, REGI_DATE, CLUB_NUMB) [name: 'IX_TM_CLUBXM_FIND']
+    (OWNR_NUMB, CLUB_STAT, CLUB_NUMB) [name: 'IX_TM_CLUBXM_OWNR']
+  }
+}
+
+Table TB_CLCATE [headercolor: #0299E2] {
+  CLUB_NUMB bigint [not null]
+  INTR_CGRP varchar(10) [not null]
+  INTR_CODE varchar(20) [not null]
+  SORT_ORDR tinyint [not null, note: '1~3, 1은 대표 카테고리']
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, INTR_CGRP, INTR_CODE) [pk]
+    (CLUB_NUMB, SORT_ORDR) [unique, name: 'UK_TB_CLCATE_SORT']
+    (INTR_CGRP, INTR_CODE, CLUB_NUMB) [name: 'IX_TB_CLCATE_RECM']
+  }
+}
+
+Table TB_CLMEMX [headercolor: #0299E2] {
+  CLUB_NUMB bigint [not null]
+  USER_NUMB bigint [not null]
+  MEMB_ROLE varchar(20) [not null, note: 'OWNER 또는 MEMBER']
+  MEMB_STAT varchar(20) [not null, note: 'ACTIVE, LEFT 또는 KICKED']
+  JOIN_PATH varchar(20) [not null, note: 'INVITE, OPEN 또는 APPROVAL']
+  JOIN_DATE datetime(6) [not null]
+  EXIT_DATE datetime(6)
+  BLOC_YSNO varchar(1) [not null, default: 'N', note: '강제 퇴장 후 재가입 차단 여부']
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, USER_NUMB) [pk]
+    (USER_NUMB, MEMB_STAT, CLUB_NUMB) [name: 'IX_TB_CLMEMX_USER']
+    (CLUB_NUMB, MEMB_STAT, USER_NUMB) [name: 'IX_TB_CLMEMX_CLUB']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 초대와 승인 가입
+// ─────────────────────────────────────────────────────────────
+
+Table TB_CLINVT [headercolor: #6C8EBF] {
+  CLUB_NUMB bigint [not null]
+  INVT_NUMB bigint [not null, note: '모임별 MAX + 1']
+  USER_NUMB bigint [note: '초대 대상. 물리 삭제 시 Null']
+  SEND_NUMB bigint [note: '초대 발송자. 물리 삭제 시 Null']
+  INVT_STAT varchar(20) [not null]
+  EXPR_DATE datetime(6) [not null, note: '발송 후 3일']
+  PROC_DATE datetime(6)
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, INVT_NUMB) [pk]
+    (CLUB_NUMB, INVT_STAT, EXPR_DATE) [name: 'IX_TB_CLINVT_SEAT']
+    (USER_NUMB, INVT_STAT, EXPR_DATE, CLUB_NUMB) [name: 'IX_TB_CLINVT_USER']
+  }
+}
+
+Table TB_CLQUES [headercolor: #6C8EBF] {
+  CLUB_NUMB bigint [pk]
+  QUES_FIRS varchar(1000) [not null]
+  QUES_SECO varchar(1000)
+  QUES_THIR varchar(1000)
+  QUES_FOUR varchar(1000)
+  QUES_FIFT varchar(1000)
+  REGI_USER bigint
+  REGI_DATE datetime(6) [not null]
+  UPDT_USER bigint
+  UPDT_DATE datetime(6) [not null]
+}
+
+Table TB_CLJOIN [headercolor: #6C8EBF] {
+  CLUB_NUMB bigint [not null]
+  APPL_NUMB bigint [not null, note: '모임별 MAX + 1']
+  USER_NUMB bigint [note: '신청자. 물리 삭제 시 Null']
+  QUES_FIRS varchar(1000) [not null]
+  QUES_SECO varchar(1000)
+  QUES_THIR varchar(1000)
+  QUES_FOUR varchar(1000)
+  QUES_FIFT varchar(1000)
+  ANSR_FIRS text [note: '승인, 거절 또는 취소 즉시 Null']
+  ANSR_SECO text
+  ANSR_THIR text
+  ANSR_FOUR text
+  ANSR_FIFT text
+  JOIN_STAT varchar(20) [not null]
+  IDEM_KEYX varchar(64) [not null]
+  APPL_DATE datetime(6) [not null]
+  PROC_USER bigint
+  PROC_DATE datetime(6)
+
+  indexes {
+    (CLUB_NUMB, APPL_NUMB) [pk]
+    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TB_CLJOIN_IDEM']
+    (CLUB_NUMB, USER_NUMB, JOIN_STAT) [name: 'IX_TB_CLJOIN_USER']
+    (USER_NUMB, JOIN_STAT, APPL_DATE) [name: 'IX_TB_CLJOIN_MINE']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 회차와 독후감 연결
+// ─────────────────────────────────────────────────────────────
+
+Table TM_CLRNDX [headercolor: #00A3A3] {
+  CLUB_NUMB bigint [not null]
+  ROND_NUMB bigint [not null, note: '모임별 MAX + 1']
+  BOOK_NUMB bigint [not null]
+  ROND_STAT varchar(20) [not null]
+  GOAL_STDT datetime(6) [not null]
+  GOAL_ENDT datetime(6) [not null]
+  OPEN_DATE datetime(6) [note: '모임원 독후감 공개 일시']
+  COMP_DATE datetime(6)
+  IDEM_KEYX varchar(64) [not null]
+  REGI_USER bigint
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, ROND_NUMB) [pk]
+    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TM_CLRNDX_IDEM']
+    (CLUB_NUMB, ROND_STAT, GOAL_ENDT) [name: 'IX_TM_CLRNDX_STAT']
+    (BOOK_NUMB, CLUB_NUMB, ROND_NUMB) [name: 'IX_TM_CLRNDX_BOOK']
+  }
+}
+
+Table TB_CLPART [headercolor: #00A3A3] {
+  CLUB_NUMB bigint [not null]
+  ROND_NUMB bigint [not null]
+  PART_NUMB bigint [not null, note: '모임·회차별 MAX + 1. 비식별 보존을 위한 참여 식별자']
+  USER_NUMB bigint [note: '물리 삭제 시 Null']
+  REPT_NUMB bigint [unique, note: '물리 삭제 또는 회차 연결 해제 시 Null']
+  GOAL_YSNO varchar(1) [note: '마감 전 Null, 달성 Y, 미달성 N']
+  ACHV_DATE datetime(6)
+  ANON_YSNO varchar(1) [not null, default: 'N']
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, ROND_NUMB, PART_NUMB) [pk]
+    (CLUB_NUMB, ROND_NUMB, USER_NUMB) [unique, name: 'UK_TB_CLPART_USER']
+    (CLUB_NUMB, ROND_NUMB, GOAL_YSNO) [name: 'IX_TB_CLPART_GOAL']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 다음 도서와 공통 투표
+// ─────────────────────────────────────────────────────────────
+
+Table TM_CLSELT [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  SELT_NUMB bigint [not null, note: '모임별 MAX + 1']
+  ROND_NUMB bigint [note: '선정 기준 회차']
+  BOOK_SELT varchar(20) [not null]
+  BOOK_NUMB bigint [note: '최종 선정 도서']
+  DUTY_STDT datetime(6)
+  DUTY_ENDT datetime(6)
+  PAUS_STDT datetime(6)
+  REMA_SECO int [note: '일시중지 시 남은 책임 초']
+  SELT_DATE datetime(6)
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, SELT_NUMB) [pk]
+    (CLUB_NUMB, BOOK_SELT, DUTY_ENDT) [name: 'IX_TM_CLSELT_DUTY']
+    (CLUB_NUMB, ROND_NUMB) [unique, name: 'UK_TM_CLSELT_ROND']
+  }
+}
+
+Table TB_CLRECM [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  SELT_NUMB bigint [not null]
+  RECM_NUMB bigint [not null, note: '모임·선정별 MAX + 1']
+  USER_NUMB bigint [note: '추천자. 물리 삭제 시 Null']
+  BOOK_NUMB bigint [not null]
+  RECM_CNTN varchar(1000)
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, SELT_NUMB, RECM_NUMB) [pk]
+    (CLUB_NUMB, SELT_NUMB, USER_NUMB, BOOK_NUMB) [unique, name: 'UK_TB_CLRECM_USER']
+    (CLUB_NUMB, SELT_NUMB, BOOK_NUMB) [name: 'IX_TB_CLRECM_BOOK']
+  }
+}
+
+Table TM_CLVOTX [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  VOTE_NUMB bigint [not null, note: '모임별 MAX + 1']
+  VOTE_TYPE varchar(20) [not null, note: 'BOOK 또는 OWNER']
+  VOTE_ROUN tinyint [not null, default: 1]
+  PRNT_VOTE bigint
+  SELT_NUMB bigint
+  ELCT_NUMB bigint
+  VOTE_TITL varchar(200) [not null]
+  VOTE_STAT varchar(20) [not null]
+  SECR_YSNO varchar(1) [not null, default: 'Y']
+  CHNG_YSNO varchar(1) [not null, default: 'Y']
+  STRT_DATE datetime(6) [not null]
+  ENDX_DATE datetime(6) [not null]
+  RSLT_NUMB bigint [note: '도서 번호 또는 당선 사용자 번호']
+  CLOS_DATE datetime(6)
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB) [pk]
+    (CLUB_NUMB, PRNT_VOTE) [name: 'IX_TM_CLVOTX_PRNT']
+    (CLUB_NUMB, VOTE_TYPE, VOTE_STAT, ENDX_DATE) [name: 'IX_TM_CLVOTX_STAT']
+    (CLUB_NUMB, SELT_NUMB, VOTE_ROUN) [unique, name: 'UK_TM_CLVOTX_SELT']
+    (CLUB_NUMB, ELCT_NUMB, VOTE_ROUN) [unique, name: 'UK_TM_CLVOTX_ELCT']
+  }
+}
+
+Table TB_CLVOPT [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  VOTE_NUMB bigint [not null]
+  TAGT_NUMB bigint [not null, note: 'BOOK이면 BOOK_NUMB, OWNER이면 USER_NUMB']
+  TAGT_NAME varchar(255) [not null, note: '선택지 표시명 스냅샷']
+  OPTI_STAT varchar(20) [not null]
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [pk]
+    (CLUB_NUMB, VOTE_NUMB, OPTI_STAT, TAGT_NUMB) [name: 'IX_TB_CLVOPT_STAT']
+  }
+}
+
+Table TB_CLVOTR [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  VOTE_NUMB bigint [not null]
+  USER_NUMB bigint [not null, note: '투표 시작 시 유권자 스냅샷. 사용자 FK 없음']
+  ELIG_YSNO varchar(1) [not null, default: 'Y']
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, USER_NUMB) [pk]
+  }
+}
+
+Table TB_CLVBAL [headercolor: #A680B8] {
+  CLUB_NUMB bigint [not null]
+  VOTE_NUMB bigint [not null]
+  USER_NUMB bigint [not null, note: '유권자 스냅샷 번호']
+  TAGT_NUMB bigint [not null]
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, USER_NUMB) [pk]
+    (CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [name: 'IX_TB_CLVBAL_RSLT']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 모임장 승계와 감사
+// ─────────────────────────────────────────────────────────────
+
+Table TM_CLOWNX [headercolor: #D79B00] {
+  CLUB_NUMB bigint [not null]
+  ELCT_NUMB bigint [not null, note: '모임별 MAX + 1']
+  PREV_OWNR bigint [note: '기존 모임장 감사값. 사용자 FK 없음']
+  ABSN_RSON varchar(20) [not null]
+  EVID_CNTN varchar(2000)
+  SELT_NUMB bigint [note: 'BOOK_OVERDUE 근거 선정 번호']
+  ELCT_STAT varchar(20) [not null]
+  EXTN_YSNO varchar(1) [not null, default: 'N']
+  STRT_DATE datetime(6) [not null]
+  ENDX_DATE datetime(6) [not null]
+  RSLT_USER bigint [note: '당선자 번호. 완료 시점 활성 자격 재검증']
+  CNFM_ADMN bigint
+  IDEM_KEYX varchar(64) [not null]
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, ELCT_NUMB) [pk]
+    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TM_CLOWNX_IDEM']
+    (CLUB_NUMB, ELCT_STAT, ENDX_DATE) [name: 'IX_TM_CLOWNX_STAT']
+  }
+}
+
+Table TH_CLOWNR [headercolor: #D79B00] {
+  CLUB_NUMB bigint [not null]
+  HIST_NUMB bigint [not null, note: '모임별 MAX + 1, 물리 삭제 금지']
+  ELCT_NUMB bigint
+  PREV_OWNR bigint [note: '사용자 FK를 두지 않는 감사값']
+  NEXT_OWNR bigint [note: '사용자 FK를 두지 않는 감사값']
+  ABSN_RSON varchar(20) [not null]
+  EVID_CNTN varchar(2000)
+  CHNG_DATE datetime(6) [not null]
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, HIST_NUMB) [pk]
+    (CLUB_NUMB, ELCT_NUMB) [name: 'IX_TH_CLOWNR_ELCT']
+  }
+}
+
+Table TH_CLKICK [headercolor: #D79B00] {
+  CLUB_NUMB bigint [not null]
+  KICK_NUMB bigint [not null, note: '모임별 MAX + 1, 물리 삭제 금지']
+  USER_NUMB bigint [note: '퇴장 대상. 물리 삭제 시 Null']
+  PROC_USER bigint [note: '처리 모임장. 물리 삭제 시 Null']
+  KICK_RSON varchar(1000) [not null]
+  KICK_DATE datetime(6) [not null]
+  RLES_DATE datetime(6) [note: '재가입 차단 해제 일시']
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, KICK_NUMB) [pk]
+    (CLUB_NUMB, USER_NUMB, KICK_DATE) [name: 'IX_TH_CLKICK_USER']
+  }
+}
+
+Table TH_CLADMN [headercolor: #D79B00] {
+  CLUB_NUMB bigint [not null]
+  HIST_NUMB bigint [not null, note: '모임별 MAX + 1, 물리 삭제 금지']
+  ADMN_NUMB bigint [not null]
+  ACTN_TYPE varchar(20) [not null]
+  BEFR_STAT varchar(20)
+  AFTR_STAT varchar(20) [not null]
+  ACTN_RSON varchar(2000) [not null]
+  REGI_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, HIST_NUMB) [pk]
+    (ADMN_NUMB, REGI_DATE, CLUB_NUMB) [name: 'IX_TH_CLADMN_ADMN']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 채팅: 모임별 MAX + 1 예외
+// ─────────────────────────────────────────────────────────────
+
+Table TM_CLCHAT [headercolor: #B85450] {
+  CHAT_NUMB bigint [pk, increment]
+  CLUB_NUMB bigint [not null]
+  USER_NUMB bigint [note: '발신자. 물리 삭제 시 Null']
+  CHAT_TYPE varchar(20) [not null]
+  CHAT_CNTN text [note: '물리 삭제 시 Null']
+  CLNT_UUID varchar(64) [not null, note: '클라이언트 재전송 멱등키']
+  DELT_YSNO varchar(1) [not null, default: 'N']
+  REGI_DATE datetime(6) [not null]
+  UPDT_DATE datetime(6) [not null]
+
+  indexes {
+    (CLUB_NUMB, CHAT_NUMB) [name: 'IX_TM_CLCHAT_CURS']
+    (CLUB_NUMB, CLNT_UUID) [unique, name: 'UK_TM_CLCHAT_CLNT']
+  }
+}
+
+// ─────────────────────────────────────────────────────────────
+// 관계
+// ─────────────────────────────────────────────────────────────
+
+Ref: TB_USINTR.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+Ref: TB_USINTR.(INTR_CGRP, INTR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete: restrict]
+
+Ref: TM_CLUBXM.OWNR_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLCATE.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TB_CLCATE.(INTR_CGRP, INTR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete: restrict]
+Ref: TB_CLMEMX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TB_CLMEMX.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref: TB_CLINVT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TB_CLINVT.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLINVT.SEND_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TM_CLUBXM.CLUB_NUMB - TB_CLQUES.CLUB_NUMB [delete: cascade]
+Ref: TB_CLQUES.REGI_USER > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLQUES.UPDT_USER > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLJOIN.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TB_CLJOIN.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLJOIN.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref: TM_CLRNDX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TM_CLRNDX.BOOK_NUMB > TM_BKINFO.BOOK_NUMB [delete: restrict]
+Ref: TM_CLRNDX.REGI_USER > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLPART.(CLUB_NUMB, ROND_NUMB) > TM_CLRNDX.(CLUB_NUMB, ROND_NUMB) [delete: cascade]
+Ref: TB_CLPART.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLPART.REPT_NUMB > TM_REPORT.REPT_NUMB [delete: set null]
+
+Ref: TM_CLSELT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TM_CLSELT.(CLUB_NUMB, ROND_NUMB) > TM_CLRNDX.(CLUB_NUMB, ROND_NUMB) [delete: restrict]
+Ref: TM_CLSELT.BOOK_NUMB > TM_BKINFO.BOOK_NUMB [delete: restrict]
+Ref: TB_CLRECM.(CLUB_NUMB, SELT_NUMB) > TM_CLSELT.(CLUB_NUMB, SELT_NUMB) [delete: cascade]
+Ref: TB_CLRECM.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLRECM.BOOK_NUMB > TM_BKINFO.BOOK_NUMB [delete: restrict]
+
+Ref: TM_CLOWNX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TM_CLOWNX.(CLUB_NUMB, SELT_NUMB) > TM_CLSELT.(CLUB_NUMB, SELT_NUMB) [delete: restrict]
+Ref: TM_CLOWNX.RSLT_USER > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TM_CLOWNX.CNFM_ADMN > TM_ADMINX.ADMN_NUMB [delete: set null]
+
+Ref: TM_CLVOTX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TM_CLVOTX.(CLUB_NUMB, PRNT_VOTE) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete: restrict]
+Ref: TM_CLVOTX.(CLUB_NUMB, SELT_NUMB) > TM_CLSELT.(CLUB_NUMB, SELT_NUMB) [delete: cascade]
+Ref: TM_CLVOTX.(CLUB_NUMB, ELCT_NUMB) > TM_CLOWNX.(CLUB_NUMB, ELCT_NUMB) [delete: cascade]
+Ref: TB_CLVOPT.(CLUB_NUMB, VOTE_NUMB) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete: cascade]
+Ref: TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete: cascade]
+Ref: TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) - TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) [delete: cascade]
+Ref: TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) > TB_CLVOPT.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [delete: restrict]
+
+Ref: TH_CLOWNR.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TH_CLOWNR.(CLUB_NUMB, ELCT_NUMB) > TM_CLOWNX.(CLUB_NUMB, ELCT_NUMB) [delete: restrict]
+Ref: TH_CLKICK.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TH_CLKICK.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TH_CLKICK.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TH_CLADMN.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TH_CLADMN.ADMN_NUMB > TM_ADMINX.ADMN_NUMB [delete: restrict]
+
+Ref: TM_CLCHAT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+Ref: TM_CLCHAT.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+TableGroup Existing {
+  TM_USERXM
+  TM_BKINFO
+  TM_REPORT
+  TM_CODEXM
+  TB_CODEXD
+  TM_ADMINX
+}
+
+TableGroup ReadingClub {
+  TB_USINTR
+  TM_CLUBXM
+  TB_CLCATE
+  TB_CLMEMX
+  TB_CLINVT
+  TB_CLQUES
+  TB_CLJOIN
+  TM_CLRNDX
+  TB_CLPART
+  TM_CLSELT
+  TB_CLRECM
+  TM_CLVOTX
+  TB_CLVOPT
+  TB_CLVOTR
+  TB_CLVBAL
+  TM_CLOWNX
+  TH_CLOWNR
+  TH_CLKICK
+  TH_CLADMN
+  TM_CLCHAT
+}
