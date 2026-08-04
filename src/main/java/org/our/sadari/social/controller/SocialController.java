@@ -128,7 +128,7 @@ public class SocialController {
         }
 
         // getProfileStats 업무 로직을 socialService에 위임한다
-        ResultData statsResult = socialService.getProfileStats(userNumb, Constant.COMM_YES);
+        ResultData statsResult = socialService.getProfileStats(userNumb);
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (statsResult.getCode() != 200) {

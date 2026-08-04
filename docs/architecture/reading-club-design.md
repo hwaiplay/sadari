@@ -291,17 +291,20 @@
 
 ### 모임 생성 독후감 판별 조인
 
-`TB_CLPART`에는 `CLUB_NUMB`, `ROND_NUMB`, `USER_NUMB`, `REPT_NUMB`, 회차 목표 달성 여부·확인 일시 및 등록·수정 일시를 저장한다. 전원이 자동 참여하므로 별도 참여 상태 컬럼은 두지 않는다. `REPT_NUMB`에는 고유 제약과 `TM_REPORT.REPT_NUMB` FK를 둔다.
+`TB_CLPART`에는 `CLUB_NUMB`, `ROND_NUMB`, 회차별 `PART_NUMB`, `USER_NUMB`, `REPT_NUMB`, 회차 목표 달성 여부·확인 일시, 비식별 여부 및 등록·수정 일시를 저장한다. 전원이 자동 참여하므로 별도 참여 상태 컬럼은 두지 않는다. `REPT_NUMB`에는 고유 제약과 `TM_REPORT.REPT_NUMB` FK를 둔다. 물리 삭제 후에도 참여 수와 목표 달성 집계를 유지할 수 있도록 `USER_NUMB`, `REPT_NUMB`는 Null을 허용하고 기본키에는 포함하지 않는다.
 
 | 컬럼 | 필수 | 키 | 역할 |
 | --- | --- | --- | --- |
 | `CLUB_NUMB` | Y | PK, FK | 모임 번호이자 `TM_CLRNDX` 복합 외래키의 선두 컬럼 |
 | `ROND_NUMB` | Y | PK, FK | 모임 안에서 발급한 회차 번호 |
-| `USER_NUMB` | Y | PK, FK | 회차 참여 회원 번호 |
-| `REPT_NUMB` | Y | UK, FK | 모임 회차가 생성한 `TM_REPORT` 독후감 번호 |
+| `PART_NUMB` | Y | PK | 모임·회차 안에서 `MAX + 1`로 발급하는 참여 번호 |
+| `USER_NUMB` | N | UK, FK | 회차 참여 회원 번호. 물리 삭제 시 Null |
+| `REPT_NUMB` | N | UK, FK | 모임 회차가 생성한 `TM_REPORT` 독후감 번호. 물리 삭제 또는 회차 연결 해제 시 Null |
 | `GOAL_YSNO` | N |  | 목표 종료 전 미판정 Null, 달성 `Y`, 마감 시 미달성 `N` |
 | `ACHV_DATE` | N |  | 목표 종료 전에 `DONE`을 확인한 일시. `GOAL_YSNO = 'Y'`일 때만 저장 |
+| `ANON_YSNO` | Y |  | 물리 삭제로 사용자·독후감 연결을 제거한 비식별 참여 여부 |
 | `REGI_DATE` | Y |  | 회차 참여 등록 일시 |
+| `UPDT_DATE` | Y |  | 회차 참여 수정 일시 |
 | `UPDT_DATE` | Y |  | 회차 참여 수정 일시 |
 
 `GOAL_YSNO`의 Null은 목표 미달성이 아니라 아직 마감되지 않은 미판정 상태를 뜻한다. `Y`이면 `ACHV_DATE`가 필수이고 Null 또는 `N`이면 `ACHV_DATE`는 Null이어야 한다. 회차별 달성 인원과 달성자 조회를 위해 `CLUB_NUMB`, `ROND_NUMB`, `GOAL_YSNO` 순서의 인덱스를 둔다.
@@ -476,7 +479,7 @@
 | `TB_CLQUES` | `CLUB_NUMB` | 승인형 모임의 현재 가입 질문 1~5, 모임당 한 행 |
 | `TB_CLJOIN` | `CLUB_NUMB`, `APPL_NUMB` | 신청 당시 질문 1~5 사본, `PENDING` 동안의 답변 1~5, 신청 상태, 처리자·처리 일시. 승인·거절 시 답변 즉시 삭제 |
 | `TM_CLRNDX` | `CLUB_NUMB`, `ROND_NUMB` | 모임, 도서, 공동 목표 기간, 회차 상태 |
-| `TB_CLPART` | `CLUB_NUMB`, `ROND_NUMB`, `USER_NUMB` | 자동 확정된 회차 참여자, 모임에서 생성된 `REPT_NUMB`, 회차 목표 달성 여부·확인 일시 |
+| `TB_CLPART` | `CLUB_NUMB`, `ROND_NUMB`, `PART_NUMB` | 자동 확정된 회차 참여자, Null 가능한 `USER_NUMB`·`REPT_NUMB`, 회차 목표 달성 여부·확인 일시 및 비식별 여부 |
 | `TM_CLSELT` | `CLUB_NUMB`, `SELT_NUMB` | 다음 도서 선정 상태, 모임장 확정 책임 시작·마감 일시 및 선정 도서 |
 | `TB_CLRECM` | `CLUB_NUMB`, `SELT_NUMB`, `RECM_NUMB` | 다음 도서 추천자, 도서, 추천 문구 |
 | `TM_CLOWNX` | `CLUB_NUMB`, `ELCT_NUMB` | 모임장 선거, 확정 부재 사유·근거, 선거 기간, 상태 및 당선자 |
@@ -488,13 +491,14 @@
 | `TH_CLKICK` | `CLUB_NUMB`, `KICK_NUMB` | 퇴장 대상, 처리자, 사유, 처리 일시 감사 이력 |
 | `TB_USINTR` | `USER_NUMB`, `INTR_CGRP`, `INTR_CODE` | 회원이 선택한 대분류·세부 관심분야 조합 |
 | `TH_CLOWNR` | `CLUB_NUMB`, `HIST_NUMB` | 모임장 변경 전후 회원, 승계 사유, 선거와 처리자 감사 이력 |
+| `TH_CLADMN` | `CLUB_NUMB`, `HIST_NUMB` | 관리자 모임 상태 조치의 전후 상태, 사유, 처리 관리자 및 일시 감사 이력 |
 
 ### 복합키와 모임별 번호 발급
 
 - 모임 자체의 `TM_CLUBXM.CLUB_NUMB`는 전역 `AUTO_INCREMENT` 단일 기본키로 발급한다.
 - 채팅을 제외한 모임 종속 테이블은 기본키와 부모 참조 외래키가 `CLUB_NUMB`로 시작하도록 한다. 따라서 다른 모임에서 같은 지역 번호가 발급되어도 서로 충돌하지 않는다.
 - `TB_CLCATE`, `TB_CLMEMX`, `TB_CLQUES`처럼 자연스럽게 유일성을 판별할 수 있는 관계는 별도 순번을 만들지 않고 자연 복합키를 사용한다.
-- 초대, 가입 신청, 회차, 도서 선정, 도서 추천, 퇴장 이력, 모임장 선거, 공통 투표 및 모임장 변경 이력처럼 번호가 필요한 데이터는 모임별 지역 번호를 사용한다. 지역 번호는 모임 안에서만 유일하며 화면 정렬 순서나 누락 없는 업무 번호를 의미하지 않는다.
+- 초대, 가입 신청, 회차, 회차 참여, 도서 선정, 도서 추천, 퇴장 이력, 모임장 선거, 공통 투표, 모임장 변경 이력 및 관리자 조치 이력처럼 번호가 필요한 데이터는 모임별 지역 번호를 사용한다. 회차 참여의 `PART_NUMB`는 같은 모임·회차 범위에서 발급하고, 나머지 지역 번호는 같은 모임 범위에서 발급한다. 지역 번호는 해당 부모 범위 안에서만 유일하며 화면 정렬 순서나 누락 없는 업무 번호를 의미하지 않는다.
 - 지역 번호는 별도 발급 테이블을 두지 않고 각 대상 테이블의 등록문 안에서 같은 `CLUB_NUMB` 범위의 `COALESCE(MAX(지역 번호), 0) + 1`을 계산해 저장한다. 번호 조회와 등록을 분리하지 않고 하나의 `INSERT ... SELECT` 문으로 처리한다.
 - 기본키 또는 고유 제약을 최종 중복 방어선으로 둔다. 같은 모임·같은 데이터 종류에 등록이 정확히 동시에 발생해 중복키가 나면 해당 트랜잭션을 롤백하고 요청을 재시도할 수 있게 한다.
 - 물리 삭제된 행이 당시 최대 번호였다면 그 번호가 나중에 다시 발급될 수 있다. 지역 번호는 모임 내부의 기술 식별자이므로 영구 불변 업무 번호로 노출하지 않고, 장기 감사 추적이 필요한 이력 행은 물리 삭제하지 않는다.

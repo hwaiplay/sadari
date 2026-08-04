@@ -81,7 +81,7 @@ class SocialServiceImplTest {
     @Test
     void getProfileStatsUsesPublicFilterForSocialProfile() {
         // 다른 사용자 프로필과 같은 공개 범위로 통계를 조회한다
-        socialService.getProfileStats(31L, Constant.COMM_YES);
+        socialService.getProfileStats(31L);
 
         // 프로필 통계 SQL에 전달된 조회 조건을 확인할 인자 Capture를 생성한다
         ArgumentCaptor<SocialDto.ProfileStatsDto> statsCaptor = ArgumentCaptor.forClass(SocialDto.ProfileStatsDto.class);

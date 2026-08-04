@@ -177,7 +177,7 @@ public class SocialServiceImpl implements SocialService {
     @Override
     public ResultData getMyPageProfileStats(Long userNumb) {
         // 마이페이지 프로필 상단 통계 값을 조회 결과를 반환한다
-        return getProfileStats(userNumb, null);
+        return getProfileStats(userNumb);
     }
 
     /**
@@ -190,7 +190,7 @@ public class SocialServiceImpl implements SocialService {
      * @return 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수
      */
     @Override
-    public ResultData getProfileStats(Long userNumb, String pubcYsno) {
+    public ResultData getProfileStats(Long userNumb) {
         // validateTargetUser 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateTargetUser(userNumb);
 
@@ -205,7 +205,6 @@ public class SocialServiceImpl implements SocialService {
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
         // 다른 사용자 프로필에 적용할 독후감 공개 범위를 설정한다
-        req.setPubcYsno(pubcYsno);
         // 사용자 프로필 통계 값을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(socialMapper.getProfileStats(req));
     }

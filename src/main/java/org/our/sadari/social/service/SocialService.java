@@ -57,10 +57,9 @@ public interface SocialService {
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
-     * @param pubcYsno 적용할 독후감 공개 여부
      * @return 프로필 통계 조회 결과
      */
-    ResultData getProfileStats(Long userNumb, String pubcYsno);
+    ResultData getProfileStats(Long userNumb);
 
     /**
      * 마이페이지 기존 호출부 호환을 위해 프로필 통계 조회를 위임한다.
