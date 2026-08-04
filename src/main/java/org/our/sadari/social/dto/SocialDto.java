@@ -13,7 +13,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
- * 2026-08-04        OpenAI.Codex       프로필 독후감 공개 범위 조회 조건 추가
+ * 2026-08-04        SeungHyeon.Kang       프로필 독후감 공개 범위 조회 조건 추가
  */
 @Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {

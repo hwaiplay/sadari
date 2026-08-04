@@ -11,7 +11,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       선택적 독후감 공개 범위 조건 추가
+ * 2026-08-04        SeungHyeon.Kang       선택적 독후감 공개 범위 조건 추가
  */
 @Data
 public class ReadingSummaryQueryDto {

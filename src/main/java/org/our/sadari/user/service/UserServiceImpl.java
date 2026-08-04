@@ -2,8 +2,11 @@ package org.our.sadari.user.service;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -36,6 +39,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
  * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
+ * 2026-08-04        OpenAI.Codex       최초 로그인 관심분야 조회와 저장 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -266,6 +270,82 @@ public class UserServiceImpl implements UserService {
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
         // 온보딩 완료 상태가 포함된 최신 사용자 프로필을 반환한다
         return getMe(userNumb);
+    }
+
+    /**
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
+     *
+     * @author OpenAI.Codex
+     * @return 대분류와 세부코드가 포함된 관심분야 목록
+     */
+    @Override
+    public ResultData getUserInterestCatalog() {
+        // 관리자 공통코드에서 활성 상태인 독서 관심분야를 조회한다
+        List<UserDto.UserInterestDto> interestCatalog = userMapper.getUserInterestCatalog();
+        // 최초 로그인 화면이 대분류별 선택 항목을 구성할 수 있도록 전체 목록을 반환한다
+        return ResultData.success(interestCatalog);
+    }
+
+    /**
+     * 로그인 사용자의 독서 관심분야를 검증한 선택 목록으로 전체 교체한다
+     *
+     * @author OpenAI.Codex
+     * @param userNumb 로그인 사용자 번호
+     * @param request 선택한 관심분야 목록
+     * @return 관심분야 저장 결과
+     */
+    @Override
+    @Transactional
+    public ResultData uptUserInterests(Long userNumb, UserDto.UserInterestReqDto request) {
+        // 인증 사용자와 요청 본문이 모두 있어야 본인의 관심분야를 변경할 수 있다
+        if (StringUtil.hasEmpty(userNumb, request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 요청 본문에서 사용자가 선택한 관심분야 목록을 가져온다
+        List<UserDto.UserInterestDto> requestedInterests = request.getInterestList();
+        // 빈 목록은 관심분야를 건너뛴 사용자에게 허용하므로 Null만 빈 목록으로 보정한다
+        if (StringUtil.isEmpty(requestedInterests)) {
+            // 검증과 저장에서 같은 빈 목록을 사용하도록 초기화한다
+            requestedInterests = List.of();
+        }
+
+        // 현재 활성 공통코드만 저장할 수 있도록 허용 조합을 구성한다
+        Set<String> validInterestKeys = new HashSet<>();
+        // 활성 관심분야의 대분류와 세부코드 조합을 허용 목록에 추가한다
+        for (UserDto.UserInterestDto interest : userMapper.getUserInterestCatalog()) {
+            // 대분류와 세부코드를 하나의 중복 방지 키로 저장한다
+            validInterestKeys.add(interest.getIntrCgrp() + ":" + interest.getIntrCode());
+        }
+
+        Set<String> requestedInterestKeys = new HashSet<>();
+        // 선택 목록의 유효성과 중복 여부를 저장 전에 모두 확인한다
+        for (UserDto.UserInterestDto interest : requestedInterests) {
+            // 비어 있거나 비활성인 코드 조합은 저장하지 않는다
+            if (StringUtil.isEmpty(interest) || StringUtil.hasEmpty(interest.getIntrCgrp(), interest.getIntrCode())) {
+                // "요청값이 올바르지 않아요."
+                return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+            }
+
+            String interestKey = interest.getIntrCgrp() + ":" + interest.getIntrCode();
+            // 공통코드에 없거나 같은 조합이 반복되면 전체 요청을 거절한다
+            if (!validInterestKeys.contains(interestKey) || !requestedInterestKeys.add(interestKey)) {
+                // "요청값이 올바르지 않아요."
+                return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+            }
+        }
+
+        // 전체 교체 정책에 따라 기존 관심분야를 먼저 삭제한다
+        userMapper.delUserInterests(userNumb);
+        // 검증된 선택 조합을 사용자 관심분야로 저장한다
+        for (UserDto.UserInterestDto interest : requestedInterests) {
+            // 같은 트랜잭션에서 선택 항목 한 건을 저장한다
+            userMapper.setUserInterest(userNumb, interest);
+        }
+
+        // 선택 항목이 없더라도 건너뛰기 상태를 정상 저장 결과로 반환한다
+        return ResultData.success();
     }
 
     /**

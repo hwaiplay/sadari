@@ -19,7 +19,7 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
  * 2026-08-01        Hanwon.Jang        공개 목록과 빠른 수정 상태 정책 추가
- * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 조회 조건 문서화
+ * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조회 조건 문서화
  */
 @Mapper
 public interface ReportMapper {

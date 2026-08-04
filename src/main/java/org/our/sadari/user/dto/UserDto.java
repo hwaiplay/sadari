@@ -2,6 +2,7 @@ package org.our.sadari.user.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import lombok.Data;
 
@@ -18,6 +19,7 @@ import lombok.Data;
  * 2026-07-29        SeungHyeon.Kang    닉네임 허용 문자와 최대 길이 설명 확장
  * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 여부 추가
+ * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 데이터 추가
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -67,4 +69,45 @@ public class UserDto {
 
     @Schema(description = "배경 이미지 경로")
     private String bgimPath;
+
+    /**
+     * 회원이 선택하거나 화면에 노출할 독서 관심분야 항목을 전달한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Data
+    @Schema(description = "독서 관심분야 항목")
+    public static class UserInterestDto {
+
+        @Schema(description = "관심분야 대분류 공통코드", example = "CATE_LITR")
+        private String intrCgrp;
+
+        @Schema(description = "관심분야 대분류명", example = "문학")
+        private String intrCnam;
+
+        @Schema(description = "관심분야 세부코드", example = "NOVEL")
+        private String intrCode;
+
+        @Schema(description = "관심분야 세부코드명", example = "소설")
+        private String intrName;
+
+        @Schema(description = "대분류 정렬 순서", example = "1")
+        private Integer cgrpOrdr;
+
+        @Schema(description = "세부코드 정렬 순서", example = "1")
+        private Integer codeOrdr;
+    }
+
+    /**
+     * 최초 로그인에서 저장할 독서 관심분야 목록을 전달한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Data
+    @Schema(description = "독서 관심분야 저장 요청")
+    public static class UserInterestReqDto {
+
+        @Schema(description = "선택한 독서 관심분야 목록")
+        private List<UserInterestDto> interestList;
+    }
 }

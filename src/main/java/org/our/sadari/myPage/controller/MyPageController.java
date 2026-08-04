@@ -40,7 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       본인 독서 요약 전체 범위 유지
+ * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
  */
 @RestController
 @RequiredArgsConstructor
