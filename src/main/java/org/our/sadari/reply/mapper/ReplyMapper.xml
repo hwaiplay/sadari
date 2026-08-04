@@ -17,10 +17,17 @@
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
     </sql>
 
+    <!-- 댓글 좋아요 대상 유형을 SQL 파라미터로 정의한다. -->
+    <sql id="bindLikeTargetReply">
+        <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+    </sql>
+
     <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindCommYes" />
         <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        <include refid="bindLikeTargetReply" />
         SELECT /* getReplyList */
                R.REPT_NUMB
              , R.REPL_NUMB
@@ -39,6 +46,16 @@
              , FN_GET_CODE_NAME('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL) AS UPDT_YSNO_NM
              , U.USER_NICK
              , F.FILE_PATH AS PORF_PATH
+             , CASE WHEN R.DELT_YSNO = #{commYes}
+                         THEN 0
+                    ELSE COALESCE(LC.LIKE_CNT, 0)
+                END AS LIKE_CNT
+             , CASE WHEN R.DELT_YSNO = #{commYes}
+                         THEN #{commNo}
+                    WHEN UL.USER_NUMB IS NULL
+                         THEN #{commNo}
+                    ELSE #{commYes}
+                END AS LIKE_YSNO
           FROM TB_REPLXX R
      LEFT JOIN TM_USERXM U
             ON R.USER_NUMB = U.USER_NUMB
@@ -47,6 +64,23 @@
      LEFT JOIN TB_REPLXX P
             ON P.REPT_NUMB = R.REPT_NUMB
            AND P.REPL_NUMB = R.UPER_NUMB
+     LEFT JOIN (  SELECT L.TAGT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_LIKEXX L
+                    JOIN TB_REPLXX LR
+                      ON LR.REPL_NUMB = L.TAGT_NUMB
+                     AND LR.REPT_NUMB = #{reptNumb}
+                    JOIN TM_USERXM LU
+                      ON LU.USER_NUMB = L.USER_NUMB
+                     AND LU.USER_STAT = #{userStatActive}
+                   WHERE L.TAGT_TYPE = #{likeTargetReply}
+                GROUP BY L.TAGT_NUMB
+               ) LC
+            ON LC.TAGT_NUMB = R.REPL_NUMB
+     LEFT JOIN TB_LIKEXX UL
+            ON UL.USER_NUMB = #{userNumb}
+           AND UL.TAGT_TYPE = #{likeTargetReply}
+           AND UL.TAGT_NUMB = R.REPL_NUMB
          WHERE R.REPT_NUMB = #{reptNumb}
       ORDER BY COALESCE(P.REGI_DATE, R.REGI_DATE) DESC
              , COALESCE(P.REPL_NUMB, R.REPL_NUMB) DESC
@@ -98,6 +132,95 @@
                       AND U.USER_STAT = #{userStatActive}
                )
     </update>
+
+    <!-- 정상 이용 중인 로그인 사용자가 접근할 수 있는 미삭제 댓글과 알림 수신자를 조회한다. -->
+    <select id="getReplyLikeTarget" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        SELECT /* getReplyLikeTarget */
+               R.REPT_NUMB
+             , R.REPL_NUMB
+             , R.USER_NUMB AS TARGET_USER_NUMB
+          FROM TB_REPLXX R
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = #{userNumb}
+           AND U.USER_STAT = #{userStatActive}
+         WHERE R.REPT_NUMB = #{reptNumb}
+           AND R.REPL_NUMB = #{replNumb}
+           AND R.DELT_YSNO = #{commNo}
+    </select>
+
+    <!-- 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록한다. -->
+    <insert id="setReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        <include refid="bindLikeTargetReply" />
+        /* setReplyLike */
+        INSERT IGNORE INTO TB_LIKEXX (
+               USER_NUMB
+             , TAGT_TYPE
+             , TAGT_NUMB
+             , REGI_DATE
+        ) SELECT #{userNumb}
+               , #{likeTargetReply}
+               , #{replNumb}
+               , CURRENT_TIMESTAMP
+            FROM DUAL
+           WHERE EXISTS (
+                   SELECT 1
+                     FROM TB_REPLXX R
+                     JOIN TM_USERXM U
+                       ON U.USER_NUMB = #{userNumb}
+                      AND U.USER_STAT = #{userStatActive}
+                    WHERE R.REPT_NUMB = #{reptNumb}
+                      AND R.REPL_NUMB = #{replNumb}
+                      AND R.DELT_YSNO = #{commNo}
+               )
+    </insert>
+
+    <!-- 정상 이용 중인 로그인 사용자가 등록한 미삭제 댓글 좋아요를 취소한다. -->
+    <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        <include refid="bindLikeTargetReply" />
+        DELETE /* delReplyLike */ L
+          FROM TB_LIKEXX L
+         WHERE L.USER_NUMB = #{userNumb}
+           AND L.TAGT_TYPE = #{likeTargetReply}
+           AND L.TAGT_NUMB = #{replNumb}
+           AND EXISTS (
+                   SELECT 1
+                     FROM TB_REPLXX R
+                     JOIN TM_USERXM U
+                       ON U.USER_NUMB = #{userNumb}
+                      AND U.USER_STAT = #{userStatActive}
+                    WHERE R.REPT_NUMB = #{reptNumb}
+                      AND R.REPL_NUMB = #{replNumb}
+                      AND R.DELT_YSNO = #{commNo}
+               )
+    </delete>
+
+    <!-- 댓글 좋아요 수와 로그인 사용자의 좋아요 여부를 서버 기준으로 조회한다. -->
+    <select id="getReplyLikeDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindCommYes" />
+        <include refid="bindCommNo" />
+        <include refid="bindUserStatActive" />
+        <include refid="bindLikeTargetReply" />
+        SELECT /* getReplyLikeDtl */
+               #{reptNumb} AS REPT_NUMB
+             , #{replNumb} AS REPL_NUMB
+             , COUNT(L.USER_NUMB) AS LIKE_CNT
+             , CASE WHEN MAX(CASE WHEN L.USER_NUMB = #{userNumb} THEN 1 ELSE 0 END) = 1
+                         THEN #{commYes}
+                    ELSE #{commNo}
+                END AS LIKE_YSNO
+          FROM TB_LIKEXX L
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = L.USER_NUMB
+           AND U.USER_STAT = #{userStatActive}
+         WHERE L.TAGT_TYPE = #{likeTargetReply}
+           AND L.TAGT_NUMB = #{replNumb}
+    </select>
 
     <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다. -->
     <update id="delReply" parameterType="org.our.sadari.reply.dto.ReplyDto">

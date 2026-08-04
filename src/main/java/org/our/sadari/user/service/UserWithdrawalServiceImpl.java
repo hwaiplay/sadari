@@ -402,6 +402,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         userWithdrawalMapper.uptUserAlimDeleted(request.getUserNumb());
         // 탈퇴 회원의 브라우저 푸시 구독을 모두 비활성화한다
         userWithdrawalMapper.uptUserPushDisabled(request.getUserNumb());
+        // 탈퇴 회원이 댓글에 등록한 좋아요를 삭제하며 복귀 시 자동 복원하지 않는다
+        userWithdrawalMapper.delUserReplyLike(request.getUserNumb());
     }
 
     /**

@@ -9,6 +9,7 @@
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-28        Hanwon.Jang        댓글 등록 API 계약 연결
  * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 계약 연결
+ * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 계약 연결
  */
 import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
@@ -16,6 +17,7 @@ import type {
   DelReplyResponse,
   GetReplyListResponse,
   ReplyDtoType,
+  ReplyLikeResponse,
   SetReplyResponse,
   UptReplyResponse,
 } from "@/features/reply/types/reply.types";
@@ -78,6 +80,46 @@ export const delReplyApi = async (
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 삭제 결과를 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+/**
+ * 로그인 사용자의 미삭제 댓글 좋아요를 등록한다
+ *
+ * @author HanWon.Jang
+ * @param data 좋아요 대상 댓글의 독후감 번호와 댓글 번호
+ * @return 변경 후 댓글 좋아요 상태와 좋아요 수
+ * @throws 댓글 좋아요 등록 API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const setReplyLikeApi = async (
+  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+): Promise<ReplyLikeResponse> => {
+  // 댓글 복합 식별값을 경로에 포함하여 좋아요 등록 API를 호출한다
+  const response = await api.put<ReplyLikeResponse>(
+    `/reply/${data.reptNumb}/${data.replNumb}/likes`,
+  );
+
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+/**
+ * 로그인 사용자의 미삭제 댓글 좋아요를 취소한다
+ *
+ * @author HanWon.Jang
+ * @param data 좋아요 대상 댓글의 독후감 번호와 댓글 번호
+ * @return 변경 후 댓글 좋아요 상태와 좋아요 수
+ * @throws 댓글 좋아요 취소 API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const delReplyLikeApi = async (
+  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+): Promise<ReplyLikeResponse> => {
+  // 댓글 복합 식별값을 경로에 포함하여 좋아요 취소 API를 호출한다
+  const response = await api.delete<ReplyLikeResponse>(
+    `/reply/${data.reptNumb}/${data.replNumb}/likes`,
+  );
+
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
   return assertResultDataSuccess(response.data);
 };
 

@@ -140,6 +140,7 @@ sadari-admin 운영 조회 화면
 | 발생 업무 | 상황 코드 | 템플릿 코드 | 주요 치환값 |
 | --- | --- | --- | --- |
 | 독후감 좋아요 | `LIKE` | `LIKE_REPORT` | 발신 사용자명 |
+| 댓글·대댓글 좋아요 | `LIKE` | `REPLY_LIKE` | 발신 사용자명 |
 | 사용자 팔로우 | `FOLLOW` | `FOLLOW_USER` | 발신 사용자명 |
 | 목표 독서기간 초과 | `REPORT` | `REPORT_DATE_OVER` | 도서 제목 `bookTitl` |
 

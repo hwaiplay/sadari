@@ -1,6 +1,7 @@
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useDelReply } from "@/features/reply/hooks/useDelReply";
 import { useReplyList } from "@/features/reply/hooks/useReplyList";
+import { useReplyLike } from "@/features/reply/hooks/useReplyLike";
 import { useReplySheet } from "@/features/reply/hooks/useReplySheet";
 import { useSetReplyForm } from "@/features/reply/hooks/useSetReplyForm";
 import type { ReplyDtoType } from "@/features/reply/types/reply.types";
@@ -158,7 +159,7 @@ const createReplyCollection = (
 };
 
 /**
- * 댓글 바텀시트의 조회, 등록, 수정, 삭제 및 화면 상호작용 상태를 통합 관리한다
+ * 댓글 바텀시트의 조회, 등록, 수정, 삭제, 좋아요 및 화면 상호작용 상태를 통합 관리한다
  *
  * @author HanWon.Jang
  * @param props 댓글을 조회할 독후감과 바텀시트 닫기 정보
@@ -195,6 +196,8 @@ export const useReplySheetController = ({
     reptNumb: report.reptNumb,
     onDeleted: handleReplyDeleted,
   });
+  // 댓글 좋아요 등록과 취소 API 및 목록 캐시 갱신 상태를 조회한다
+  const replyLike = useReplyLike(report.reptNumb);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const [expandedReplyMap, setExpandedReplyMap] = useState<
     Record<number, boolean>
@@ -398,6 +401,7 @@ export const useReplySheetController = ({
     ...sheetInteraction,
     ...replyForm,
     ...deleteReply,
+    ...replyLike,
     commentInputRef,
     expandedReplyMap,
     openActionReplyNumb,
