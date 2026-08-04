@@ -21,13 +21,13 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * fileName       : SecurityConfigTest
- * author         : OpenAI.Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-04
  * description    : Cookie 인증 API의 CSRF Token 발급과 검증 정책을 확인한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-04        OpenAI.Codex       최초 생성
+ * 2026-08-04        SeungHyeon.Kang       최초 생성
  */
 class SecurityConfigTest {
 
@@ -37,7 +37,7 @@ class SecurityConfigTest {
     /**
      * 운영 환경과 같은 Secure 및 SameSite 속성을 사용하는 보안 설정을 구성한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
@@ -54,7 +54,7 @@ class SecurityConfigTest {
     /**
      * CSRF Token 조회가 HttpOnly와 운영 Cookie 속성을 적용하고 발급한 Token으로 상태 변경 요청을 허용하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @throws Exception Servlet Filter 처리 중 오류가 발생할 때 전달한다
      */
     @Test
@@ -115,7 +115,7 @@ class SecurityConfigTest {
     /**
      * CSRF Token Header가 없는 상태 변경 요청을 Spring Security가 거부하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @throws Exception Servlet Filter 처리 중 오류가 발생할 때 전달한다
      */
     @Test

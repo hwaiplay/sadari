@@ -87,6 +87,19 @@ export type UpdateOnboardingParams = {
   userNick: string;
 };
 
+export type UserInterest = {
+  intrCgrp: string;
+  intrCnam: string;
+  intrCode: string;
+  intrName: string;
+  cgrpOrdr?: number;
+  codeOrdr?: number;
+};
+
+export type UpdateUserInterestsParams = {
+  interestList: Array<Pick<UserInterest, "intrCgrp" | "intrCode">>;
+};
+
 /**
  * get My Profile 정보를 조회한다
  *
@@ -184,6 +197,36 @@ export const updateOnboardingApi = (params: UpdateOnboardingParams) => {
   return api.put("/user/onboarding", params).then((res) => {
 
     // 공통 응답 코드가 성공인 경우에만 최신 프로필을 반환한다
+    return assertResultDataSuccess(res.data);
+  });
+};
+
+/**
+ * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 대분류와 세부코드가 포함된 관심분야 목록
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const getUserInterestCatalogApi = async (): Promise<UserInterest[]> => {
+  // 사용자 도메인의 활성 독서 관심분야 목록을 요청한다
+  const res = await api.get("/user/interests/catalog");
+  // 공통 응답 검증을 통과한 관심분야 목록을 반환한다
+  return (assertResultDataSuccess(res.data).data as UserInterest[] | undefined) ?? [];
+};
+
+/**
+ * 최초 로그인 사용자가 선택한 독서 관심분야를 전체 교체한다
+ *
+ * @author SeungHyeon.Kang
+ * @param params 선택한 관심분야 목록
+ * @return 관심분야 저장 응답
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const updateUserInterestsApi = (params: UpdateUserInterestsParams) => {
+  // 선택하지 않은 경우에도 빈 목록으로 기존 관심분야를 정리할 수 있도록 요청한다
+  return api.put("/user/interests", params).then((res) => {
+    // 공통 성공 코드가 확인된 저장 응답을 반환한다
     return assertResultDataSuccess(res.data);
   });
 };

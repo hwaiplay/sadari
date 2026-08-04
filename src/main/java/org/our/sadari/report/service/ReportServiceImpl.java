@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
  * 2026-08-01        Hanwon.Jang        읽는 중 독후감 비공개와 평점 미집계 정책 추가
- * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 조건 추가
+ * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  */
 @Service
 @RequiredArgsConstructor

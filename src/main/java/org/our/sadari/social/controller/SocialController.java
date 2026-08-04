@@ -34,7 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       공개 독후감만 소셜 요약과 통계에 포함
+ * 2026-08-04        SeungHyeon.Kang       공개 독후감만 소셜 요약과 통계에 포함
  */
 @RestController
 @RequiredArgsConstructor

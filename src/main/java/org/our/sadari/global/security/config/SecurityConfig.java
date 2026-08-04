@@ -29,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       Cookie 인증 API CSRF 보호 적용
+ * 2026-08-04        SeungHyeon.Kang       Cookie 인증 API CSRF 보호 적용
  */
 @Configuration
 @EnableWebSecurity
@@ -132,7 +132,7 @@ public class SecurityConfig {
     /**
      * 인증 Cookie와 같은 환경 속성을 사용하는 CSRF Cookie Repository를 구성한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @return CSRF Token을 HttpOnly Cookie로 저장하는 Repository
      */
     @Bean
@@ -148,7 +148,7 @@ public class SecurityConfig {
     /**
      * 인증 Cookie 설정과 일치하도록 CSRF Cookie 속성을 구성한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param cookie CSRF Cookie 응답 속성 Builder
      */
     private void uptCsrfCookie(ResponseCookie.ResponseCookieBuilder cookie) {

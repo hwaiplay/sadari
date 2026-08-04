@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.Test;
@@ -27,6 +28,7 @@ import org.our.sadari.user.mapper.UserMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       최초 로그인 관심분야 저장 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -87,5 +89,42 @@ class UserServiceImplTest {
         assertEquals("Y", ((Map<?, ?>) result.getData()).get("onbdYsno"));
         // DB 커밋 후처리 경로에서 로그인 세션의 닉네임을 같은 값으로 갱신하는지 확인한다
         verify(tokenRedisService).uptUserNick(31L, "차분한 독서가");
+    }
+
+    /**
+     * 활성 공통코드로 선택한 관심분야가 로그인 사용자의 목록으로 전체 교체되는지 검증한다
+     *
+     * @author OpenAI.Codex
+     */
+    @Test
+    void uptUserInterestsReplacesValidatedSelections() {
+        UserDto.UserInterestDto catalogInterest = new UserDto.UserInterestDto();
+        // 활성 관심분야 대분류 공통코드를 설정한다
+        catalogInterest.setIntrCgrp("CATE_LITR");
+        // 활성 관심분야 세부코드를 설정한다
+        catalogInterest.setIntrCode("NOVEL");
+
+        UserDto.UserInterestDto requestedInterest = new UserDto.UserInterestDto();
+        // 사용자가 선택한 대분류 공통코드를 설정한다
+        requestedInterest.setIntrCgrp("CATE_LITR");
+        // 사용자가 선택한 세부코드를 설정한다
+        requestedInterest.setIntrCode("NOVEL");
+
+        UserDto.UserInterestReqDto request = new UserDto.UserInterestReqDto();
+        // 최초 로그인에서 선택한 관심분야를 요청 목록에 설정한다
+        request.setInterestList(List.of(requestedInterest));
+
+        // 선택 조합이 활성 공통코드에 포함되도록 조회 결과를 구성한다
+        when(userMapper.getUserInterestCatalog()).thenReturn(List.of(catalogInterest));
+
+        // 유효한 관심분야 목록으로 전체 교체를 요청한다
+        ResultData result = userService.uptUserInterests(31L, request);
+
+        // 관심분야 전체 교체가 공통 성공 코드로 응답하는지 확인한다
+        assertEquals(200, result.getCode());
+        // 기존 관심분야가 신규 선택 저장 전에 정리되는지 확인한다
+        verify(userMapper).delUserInterests(31L);
+        // 검증된 관심분야가 로그인 사용자에게 저장되는지 확인한다
+        verify(userMapper).setUserInterest(31L, requestedInterest);
     }
 }

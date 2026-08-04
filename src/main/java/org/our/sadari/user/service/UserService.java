@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 기능 추가
+ * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 기능 추가
  */
 public interface UserService {
     /**
@@ -47,4 +48,22 @@ public interface UserService {
      * @return 온보딩 완료 후 최신 프로필 조회 결과
      */
     ResultData uptOnboarding(Long userNumb, UserDto userDto);
+
+    /**
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 대분류와 세부코드가 포함된 관심분야 목록
+     */
+    ResultData getUserInterestCatalog();
+
+    /**
+     * 로그인 사용자의 독서 관심분야를 선택 목록으로 전체 교체한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param request 선택한 관심분야 목록
+     * @return 관심분야 저장 결과
+     */
+    ResultData uptUserInterests(Long userNumb, UserDto.UserInterestReqDto request);
 }

@@ -23,13 +23,13 @@ import org.our.sadari.social.mapper.SocialMapper;
 
 /**
  * fileName       : ReportServiceImplTest
- * author         : OpenAI.Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-04
  * description    : 독서 요약 조회의 공개 범위 전달 정책을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-04        OpenAI.Codex       최초 생성
+ * 2026-08-04        SeungHyeon.Kang       최초 생성
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -60,7 +60,7 @@ class ReportServiceImplTest {
     /**
      * 각 테스트가 독립된 Mock 의존성을 사용하는 독후감 서비스 구현체를 구성한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
@@ -77,7 +77,7 @@ class ReportServiceImplTest {
     /**
      * 다른 사용자 소셜 요약이 집계와 목록 SQL 모두에 공개 독후감 조건을 전달하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void getMonthlyReadingSummaryUsesPublicFilterForSocialProfile() {
@@ -102,7 +102,7 @@ class ReportServiceImplTest {
     /**
      * 본인 마이페이지 요약은 공개 여부와 관계없이 기존 전체 독후감 범위를 유지하는지 검증한다.
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void getMonthlyReadingSummaryKeepsAllReportsForMyPage() {
