@@ -3,8 +3,8 @@
 ## 문서 목적
 
 - 목적: Sadari의 로그인 수명주기와 입력·외부 통신 보안 설계를 설명
-- 적용 범위: Kakao OAuth, JWT, Redis, 탈퇴 재인증, 파일 업로드, 표지 URL 검증
-- 기준일: 2026-07-30
+- 적용 범위: Kakao OAuth, JWT, Redis, CSRF, 탈퇴 재인증, 파일 업로드, 표지 URL 검증
+- 기준일: 2026-08-04
 
 ## Kakao OAuth와 사용자 식별값 보호
 
@@ -64,6 +64,25 @@ Access Token과 Refresh Token은 브라우저 JavaScript에서 읽을 수 없는
 - `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
 - `src/main/java/org/our/sadari/global/security/jwt/JwtProvider.java`
 - `src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java`
+
+## CSRF 보호
+
+Cookie 인증은 브라우저가 다른 출처에서 시작된 요청에도 인증 정보를 자동으로 전송할 수 있으므로 상태 변경 API에 CSRF 보호를 적용한다.
+
+1. `CookieCsrfTokenRepository`가 인증 Cookie와 같은 `Secure`, `SameSite`, `Path` 정책으로 CSRF Cookie를 발급한다.
+2. 프론트엔드는 `GET /api/oauth/csrf`의 공통 응답으로 현재 브라우저의 Token을 조회한다.
+3. 공통 Axios Request Interceptor가 `POST`, `PUT`, `PATCH`, `DELETE` 요청에 `X-XSRF-TOKEN` Header를 설정한다.
+4. Service Worker의 알림 읽음과 Token 재발급 요청도 같은 Token 조회 및 Header 규칙을 사용한다.
+5. Token 불일치로 `403`이 발생하면 새 Token을 조회하고 원 요청을 한 번만 재시도한다.
+
+CSRF Token Cookie는 HttpOnly로 유지한다. 프런트와 API가 다른 출처인 운영 구성에서도 프런트가 API 호스트의 Cookie 원문을 직접 읽지 않고, CORS가 허용한 Token 조회 응답만 사용한다.
+
+구현 근거:
+
+- `src/main/java/org/our/sadari/global/security/config/SecurityConfig.java`
+- `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
+- `src/main/frontend/src/app/api/axios.ts`
+- `src/main/frontend/public/service-worker.js`
 
 ## 프론트 재발급 동시성 제어
 
@@ -169,7 +188,6 @@ HttpClient는 리다이렉트를 따르지 않으며 타임아웃을 사용한�
 ## 향후 개선
 
 - OAuth 식별값 저장 암호화를 인증된 암호화 방식으로 교체한다.
-- Access Token을 Cookie로 사용하는 구조에서 CSRF 위협 모델을 다시 평가하고 필요한 보호를 적용한다.
 - 업로드 파일 검사에 악성코드 스캔과 객체 저장소 격리를 추가할 수 있다.
 - 보안 테스트를 CI 필수 단계로 연결해야 한다.
 - 관리자 계정의 적응형 비밀번호 해시, 로그인 실패 잠금, 세션 강제 만료와 관리 작업 감사 로그를 추가해야 한다.

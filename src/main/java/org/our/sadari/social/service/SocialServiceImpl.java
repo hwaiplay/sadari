@@ -26,6 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       프로필 통계 공개 범위 조건 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -176,19 +177,20 @@ public class SocialServiceImpl implements SocialService {
     @Override
     public ResultData getMyPageProfileStats(Long userNumb) {
         // 마이페이지 프로필 상단 통계 값을 조회 결과를 반환한다
-        return getProfileStats(userNumb);
+        return getProfileStats(userNumb, null);
     }
 
     /**
      * 사용자 프로필 통계 값을 조회한다.
-     * 마이페이지와 다른 사람 프로필이 같은 통계 기준을 사용해야 하므로 사용자 번호만 받아 공통 쿼리로 집계한다.
+     * 마이페이지와 다른 사람 프로필은 같은 SQL을 사용하고 공개 여부 조건으로 독후감 집계 범위만 구분한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 적용할 독후감 공개 여부
      * @return 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수
      */
     @Override
-    public ResultData getProfileStats(Long userNumb) {
+    public ResultData getProfileStats(Long userNumb, String pubcYsno) {
         // validateTargetUser 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateTargetUser(userNumb);
 
@@ -202,6 +204,8 @@ public class SocialServiceImpl implements SocialService {
         SocialDto.ProfileStatsDto req = new SocialDto.ProfileStatsDto();
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
+        // 다른 사용자 프로필에 적용할 독후감 공개 범위를 설정한다
+        req.setPubcYsno(pubcYsno);
         // 사용자 프로필 통계 값을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(socialMapper.getProfileStats(req));
     }

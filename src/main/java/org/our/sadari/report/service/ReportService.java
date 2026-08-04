@@ -15,6 +15,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 계약 추가
  * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 계약 추가
+ * 2026-08-04        OpenAI.Codex       독서 요약 공개 범위 계약 추가
  */
 public interface ReportService {
     /**
@@ -79,13 +80,14 @@ public interface ReportService {
     ResultData getBookList(Long userNumb, String bookKeyword, String sortType);
 
     /**
-     * 마이페이지에 표시할 주간, 월간, 연간 독서 요약과 목표 정보를 조회한다.
+     * 본인 또는 다른 사용자 화면에 표시할 주간, 월간, 연간 독서 요약과 목표 정보를 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
+     * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 다른 사용자 조회에 적용할 독후감 공개 여부
      * @return 독서 요약 및 목표 달성 정보
      */
-    ResultData getMonthlyReadingSummary(Long userNumb);
+    ResultData getMonthlyReadingSummary(Long userNumb, String pubcYsno);
 
     /**
      * 주간, 월간, 연간 독서 목표를 저장한다.

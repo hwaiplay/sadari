@@ -1,7 +1,5 @@
 package org.our.sadari.alim.controller;
 
-import org.our.sadari.global.common.util.StringUtil;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -28,11 +26,12 @@ import org.springframework.web.bind.annotation.PutMapping;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       외부 알림 발송 API 제거
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/alim")
-@Tag(name = "알림", description = "사용자 알림 목록 및 알림 발송 API")
+@Tag(name = "알림", description = "사용자 알림 목록과 읽음 및 삭제 상태 API")
 public class AlimController {
 
     // Alim 업무 처리 서비스
@@ -97,35 +96,4 @@ public class AlimController {
         return alimService.delAllAlim(loginUserNumb);
     }
 
-    /**
-     * 수신자, 알림 상황, 템플릿 코드, 대상 번호, 치환 Map으로 공통 알림 발송 메서드를 실행한다.
-     * 실제 서비스 로직에서 사용하는 sendAlim과 동일한 경로를 타므로 알림 도메인 자체에서도 발송 동작을 재사용할 수 있다.
-     *
-     * @author SeungHyeon.Kang
-     * @param request 알림 발송 요청
-     * @return 발송 결과
-     */
-    @PostMapping("/send")
-    @Operation(summary = "알림 발송", description = "알림 상황, 템플릿 코드, 치환 Map으로 사용자 알림을 발송한다.")
-    public ResultData sendAlim(@RequestBody AlimDto.AlimSendDto request) {
-        // request 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (StringUtil.isEmpty(request)) {
-            // 관리자 알림 발송 요청을 담을 객체를 생성한다
-            request = new AlimDto.AlimSendDto();
-        }
-
-        // 수신자, 알림 상황, 템플릿 코드, 대상 번호, 치환 Map으로 공통 알림 발송 메서드를 실행 결과를 반환한다
-        return alimService.sendAlim(
-                // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
-                request.getUserNumb(),
-                // getAlimSitu 조회로 후속 처리에 필요한 데이터를 가져온다
-                request.getAlimSitu(),
-                // getTempCode 조회로 후속 처리에 필요한 데이터를 가져온다
-                request.getTempCode(),
-                // getTagtNumb 조회로 후속 처리에 필요한 데이터를 가져온다
-                request.getTagtNumb(),
-                // getReplaceMap 조회로 후속 처리에 필요한 데이터를 가져온다
-                request.getReplaceMap()
-        );
-    }
 }

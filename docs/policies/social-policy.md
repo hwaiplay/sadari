@@ -1,5 +1,11 @@
 # 소셜 정책
 
+## 개요
+
+- 목적: 다른 사용자 프로필과 소셜 상호작용에서 공개 데이터 범위와 집계 기준을 일관되게 유지합니다.
+- 적용 범위: 팔로우, 좋아요, 프로필 독서 요약 및 소셜 알림입니다.
+- 기준일: 2026-08-04
+
 ## 팔로우 상태
 
 팔로우 관계는 방향이 있는 관계로 저장합니다.
@@ -37,7 +43,11 @@
 
 ## 프로필 공개 범위
 
-- 다른 사용자 프로필에서 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수를 제공합니다.
+- 다른 사용자 프로필에서 공개 독후감 기준 총 읽은 책과 받은 좋아요 수 및 팔로우와 팔로워 수를 제공합니다.
+- 정상 이용 회원의 주간, 월간, 연간 독서 목표는 다른 사용자 프로필에 제공합니다.
+- 다른 사용자 프로필의 총 읽은 책, 받은 좋아요, 독서량, 목표 달성 집계와 독서 목록에는 `TM_REPORT.PUBC_YSNO = 'Y'`인 공개 독후감만 반영합니다.
+- `TM_REPORT.PUBC_YSNO = 'N'`인 비공개 독후감은 제목, 저자, 표지, ISBN, 기간 및 평점을 포함하여 다른 사용자 응답에 제공하지 않습니다.
+- 본인 마이페이지의 독서 요약과 프로필 통계는 공개 여부와 관계없이 본인의 전체 독후감을 대상으로 유지합니다.
 - 탈퇴 회원의 팔로우 관계는 유지하지만 프로필에서 제공하는 정보는 제한합니다.
 - 다른 사용자에게 노출되는 독서 목록은 독후감 공개 정책을 따릅니다.
 
@@ -50,8 +60,11 @@
 
 ## 구현 근거
 
-- `social/service/SocialServiceImpl.java`
-- `social/mapper/SocialMapper.xml`
-- `social/dto/SocialDto.java`
-- `pages/Social/SocialProfilePage.tsx`
-- `pages/My/ProfileEditPage.tsx`
+- `src/main/java/org/our/sadari/social/service/SocialServiceImpl.java`
+- `src/main/java/org/our/sadari/social/mapper/SocialMapper.xml`
+- `src/main/java/org/our/sadari/social/dto/SocialDto.java`
+- `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
+- `src/main/java/org/our/sadari/report/mapper/ReportMapper.xml`
+- `src/main/java/org/our/sadari/myPage/dto/ReadingSummaryQueryDto.java`
+- `src/main/frontend/src/pages/Social/SocialProfilePage.tsx`
+- `src/main/frontend/src/pages/My/ProfileEditPage.tsx`

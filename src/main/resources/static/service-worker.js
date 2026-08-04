@@ -11,6 +11,115 @@ const APP_SHELL = [
 const IMMUTABLE_CACHE_PATH_PREFIX_LIST = ["/assets/"];
 const REFRESHABLE_CACHE_PATH_PREFIX_LIST = ["/favicon/", "/fonts/", "/img/"];
 const AUTH_RETRY_RESULT_CODES = new Set([1001, 1002, 1003]);
+const CSRF_HEADER_NAME = "X-XSRF-TOKEN";
+
+let csrfRequest = null;
+let csrfToken = null;
+
+/**
+ * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회한다.
+ *
+ * @return {Promise<string>} 상태 변경 요청 Header에 사용할 CSRF Token
+ * @throws CSRF Token API가 실패하거나 Token 데이터가 없을 때 발생
+ * @author OpenAI.Codex
+ */
+async function requestCsrfToken() {
+  // Service Worker도 화면과 같은 인증 Cookie를 사용해 CSRF Token을 조회한다
+  const response = await fetch("/api/oauth/csrf", {
+    method: "GET",
+    credentials: "include",
+  });
+  // 공통 응답의 상태 코드와 Token 값을 함께 검증하기 위해 JSON 데이터를 조회한다
+  const result = await response.json();
+
+  // 상태 코드 또는 Token 값이 유효하지 않으면 보호되지 않은 요청을 전송하지 않는다
+  if (!response.ok || Number(result?.code) !== 200
+          || typeof result?.data !== "string" || result.data.length === 0) {
+    // CSRF Token 누락을 알림 읽음 처리의 실패 경로로 전달한다
+    throw new Error("CSRF_TOKEN_MISSING");
+  }
+
+  // 검증된 CSRF Token을 반환한다
+  return result.data;
+}
+
+/**
+ * 동시에 시작된 Service Worker 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비한다.
+ *
+ * @param {boolean} forceRefresh 기존 Token을 버리고 다시 조회할지 여부
+ * @return {Promise<string>} 현재 브라우저 Cookie와 연결된 CSRF Token
+ * @throws CSRF Token 조회 요청이 실패할 때 발생
+ * @author OpenAI.Codex
+ */
+async function getCsrfToken(forceRefresh = false) {
+  // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회한다
+  if (forceRefresh) {
+    // 이후 요청이 거부된 Token을 재사용하지 않도록 Cache를 초기화한다
+    csrfToken = null;
+  }
+
+  // 이미 검증한 Token이 있으면 추가 네트워크 요청 없이 재사용한다
+  if (csrfToken) {
+    // Service Worker 상태 변경 요청에 사용할 CSRF Token을 반환한다
+    return csrfToken;
+  }
+
+  // 진행 중인 조회가 없을 때만 CSRF Token API를 한 번 호출한다
+  if (!csrfRequest) {
+    // 동시에 발생한 푸시 클릭이 같은 Token 조회 결과를 기다리게 한다
+    csrfRequest = requestCsrfToken();
+  }
+
+  // 성공과 실패 모두 진행 중 Promise를 정리해 이후 재시도를 허용한다
+  try {
+    // CSRF Token 조회 결과를 Service Worker Cache에 저장한다
+    csrfToken = await csrfRequest;
+    // 상태 변경 요청 Header에 사용할 CSRF Token을 반환한다
+    return csrfToken;
+  }
+
+  // Token 조회의 성공 여부와 관계없이 완료된 Promise를 정리한다
+  finally {
+    // 완료된 Promise를 제거해 필요할 때 새 Token을 조회할 수 있게 한다
+    csrfRequest = null;
+  }
+}
+
+/**
+ * Service Worker의 상태 변경 요청에 CSRF Token Header를 설정해 전송한다.
+ *
+ * @param {string} url 호출할 API 경로
+ * @param {RequestInit} options 상태 변경 요청 설정
+ * @param {boolean} retry CSRF 오류 재시도를 허용할지 여부
+ * @return {Promise<Response>} API 응답
+ * @throws CSRF Token 조회 또는 API 통신이 실패할 때 발생
+ * @author OpenAI.Codex
+ */
+async function requestWithCsrf(url, options, retry = true) {
+  // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회한다
+  const token = await getCsrfToken();
+  // 기존 요청 Header를 유지하면서 CSRF Token을 추가할 Header 객체를 생성한다
+  const headers = new Headers(options.headers);
+  // 브라우저가 자동으로 추가하지 않는 요청 Header에 CSRF Token을 설정한다
+  headers.set(CSRF_HEADER_NAME, token);
+  // 인증 Cookie와 CSRF Header를 함께 포함해 상태 변경 API를 호출한다
+  const response = await fetch(url, {
+    ...options,
+    credentials: "include",
+    headers,
+  });
+
+  // Cookie와 Header Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구한다
+  if (response.status === 403 && retry) {
+    // 서버 Cookie와 일치하는 최신 CSRF Token을 다시 조회한다
+    await getCsrfToken(true);
+    // 같은 상태 변경 요청을 최신 Token으로 한 번만 다시 전송한다
+    return requestWithCsrf(url, options, false);
+  }
+
+  // CSRF 검증을 거친 API 응답을 호출부에 반환한다
+  return response;
+}
 
 /**
  * 시스템 푸시 알림 클릭 시 인증 사용자의 해당 알림 한 건을 읽음 처리한다.
@@ -31,9 +140,8 @@ async function uptAlimRead(alimNumb) {
    */
   const requestRead = async () => {
 
-    const response = await fetch("/api/alim/read-status", {
+    const response = await requestWithCsrf("/api/alim/read-status", {
       method: "PUT",
-      credentials: "include",
       headers: {
         "Content-Type": "application/json",
       },
@@ -51,9 +159,8 @@ async function uptAlimRead(alimNumb) {
     readResult.response.status === 401
     || AUTH_RETRY_RESULT_CODES.has(resultCode)
   ) {
-    await fetch("/api/oauth/refresh", {
+    await requestWithCsrf("/api/oauth/refresh", {
       method: "POST",
-      credentials: "include",
     });
     readResult = await requestRead();
   }

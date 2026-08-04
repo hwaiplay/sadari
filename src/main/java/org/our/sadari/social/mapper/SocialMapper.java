@@ -12,6 +12,7 @@ import org.our.sadari.social.dto.SocialDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       프로필 통계 공개 범위 조건 문서화
  */
 @Mapper
 public interface SocialMapper {
@@ -88,12 +89,12 @@ public interface SocialMapper {
     SocialDto.LikeDto getLikeDtl(SocialDto.LikeDto req);
 
     /**
-     * 마이페이지 프로필 통계에 표시할 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수를 한 번에 조회한다.
-     * 해당 집계는 social 영역에서 관리하는 팔로우/좋아요 데이터를 포함하므로 MyPageController가 직접 SQL을 알지 않도록 분리한다.
+     * 프로필 통계에 표시할 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수를 한 번에 조회한다.
+     * 다른 사용자 프로필은 공개 독후감 조건을 적용하고 본인 마이페이지는 전체 독후감 집계를 유지한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 로그인 사용자 번호
-     * @return 마이페이지 프로필 통계
+     * @param req 사용자 번호와 선택적 독후감 공개 여부
+     * @return 프로필 통계
      */
     SocialDto.ProfileStatsDto getProfileStats(SocialDto.ProfileStatsDto req);
 

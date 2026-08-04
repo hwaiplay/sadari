@@ -9,11 +9,13 @@ import org.our.sadari.global.security.jwt.JwtFilter;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.ResponseCookie;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -27,6 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-04        OpenAI.Codex       Cookie 인증 API CSRF 보호 적용
  */
 @Configuration
 @EnableWebSecurity
@@ -37,6 +40,14 @@ public class SecurityConfig {
     @Value("${domain.front}")
     private String FRONT_DOMAIN; // CORS 허용을 위한 프론트엔드 도메인 주소
 
+    // HTTPS에서만 CSRF Cookie를 전송할지 여부
+    @Value("${app.cookie.secure:false}")
+    private boolean cookieSecure;
+
+    // CSRF Cookie의 SameSite 정책
+    @Value("${app.cookie.same-site:Lax}")
+    private String cookieSameSite;
+
     // jwt filter
     private final JwtFilter jwtFilter;
     /**
@@ -44,14 +55,15 @@ public class SecurityConfig {
      *
      * @author SeungHyeon.Kang
      * @param http API 접근 규칙을 설정할 HttpSecurity
+     * @param csrfTokenRepository CSRF Token을 Cookie에 저장할 Repository
      * @return 구성하거나 조회한 결과 객체
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CookieCsrfTokenRepository csrfTokenRepository) throws Exception {
 
         http
-                // REST API 환경이므로 불필요한 CSRF Protection 비활성화
-                .csrf(csrf -> csrf.disable())
+                // 브라우저가 자동 전송하는 인증 Cookie와 별도로 요청 Header의 CSRF Token을 검증한다
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
 
                 // JWT 기반 인증을 사용하므로 세션을 생성하지 않고 Stateless 상태로 관리
                 .sessionManagement(session ->
@@ -73,6 +85,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/oauth/kakao",
                                 "/api/oauth/callback/**",
+                                "/api/oauth/csrf",
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
@@ -114,6 +127,33 @@ public class SecurityConfig {
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
         // JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성 결과를 반환한다
         return http.build();
+    }
+
+    /**
+     * 인증 Cookie와 같은 환경 속성을 사용하는 CSRF Cookie Repository를 구성한다.
+     *
+     * @author OpenAI.Codex
+     * @return CSRF Token을 HttpOnly Cookie로 저장하는 Repository
+     */
+    @Bean
+    public CookieCsrfTokenRepository getCsrfTokenRepository() {
+        // CSRF Token을 브라우저 Cookie에 저장할 Repository를 생성한다
+        CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
+        // 인증 Cookie와 같은 전송 범위를 적용해 환경별 교차 출처 구성을 유지한다
+        repository.setCookieCustomizer(this::uptCsrfCookie);
+        // CSRF Token을 HttpOnly Cookie에 저장하는 Repository를 반환한다
+        return repository;
+    }
+
+    /**
+     * 인증 Cookie 설정과 일치하도록 CSRF Cookie 속성을 구성한다.
+     *
+     * @author OpenAI.Codex
+     * @param cookie CSRF Cookie 응답 속성 Builder
+     */
+    private void uptCsrfCookie(ResponseCookie.ResponseCookieBuilder cookie) {
+        // JavaScript가 Cookie 원문을 읽지 못하게 하고 HTTPS 및 SameSite 전송 정책을 인증 Cookie와 맞춘다
+        cookie.httpOnly(true).secure(cookieSecure).sameSite(cookieSameSite).path("/");
     }
 
     /**
