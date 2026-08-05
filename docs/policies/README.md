@@ -14,6 +14,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [독서 목표 정책](reading-goal-policy.md) | 주간·월간·연간 목표, 수정 제한, 이전 목표 복사 |
 | [소셜 정책](social-policy.md) | 팔로우 상태, 좋아요, 공개 프로필 및 목록 |
 | [댓글 정책](reply-policy.md) | 댓글 식별, 대댓글 깊이, 삭제 표시 |
+| [신고 접수 및 처리 정책](abuse-report-policy.md) | 사용자·독후감·댓글·모임 신고 대상, 사유, 처리 상태 및 보존 |
 | [알림 및 푸시 정책](notification-push-policy.md) | 알림 생성, 중복 방지, 읽음·삭제, FCM 구독 |
 | [메뉴 및 화면 노출 정책](menu-policy.md) | URL별 헤더, 햄버거 메뉴 노출 |
 | [사용자 안내 팝업 콘텐츠 정책](popup-content-policy.md) | 정책·도움말 팝업의 JSON 목록 저장, 조회 및 실패 대체 |
@@ -56,9 +57,12 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | `SCHD_CODE` | 스케줄러 활성 상태 |
 | `BADX_WORD` | 차단 비속어 |
 | `EXCP_WORD` | 비속어 예외 허용어 |
+| `CMPL_TAGT` | 신고 대상 유형 |
+| `CMPL_RSON` | 신고 사유 |
+| `CMPL_STAT` | 신고 처리 상태 |
 
 ## 관리 정보
 
-- 기준일: 2026-08-03
+- 기준일: 2026-08-05
 - 저장 위치: `docs/policies`
 - 구현 근거: `src/main/java`, `src/main/frontend/src`, `src/main/resources`

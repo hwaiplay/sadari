@@ -2,7 +2,7 @@
 
 ## 적용 범위
 
-- 기준일은 2026년 8월 4일입니다.
+- 기준일은 2026년 8월 5일입니다.
 - 사용자 계정 비활성화, 복귀, 영구 탈퇴 유예·취소·삭제와 관리자 계정 처리 이력 조회에 적용합니다.
 - 설치형 웹앱의 정적 리소스 업데이트가 계정 상태에 미치는 영향도 적용 범위에 포함합니다.
 - 독서 모임 기능이 출시된 뒤 적용할 모임장 부재·승계 연계 기준은 별도 절에 구분해 기록합니다.
@@ -66,6 +66,16 @@
 - 탈퇴 이력에는 원본 OAuth 식별값 대신 SHA-256 해시를 저장합니다.
 - 탈퇴 이력의 `USER_NUMB`는 탈퇴 당시 내부 회원번호를 감사 이력으로 보존합니다.
 - `TH_USWTHD.USER_NUMB`는 회원 원본 삭제 후에도 값을 유지해야 하므로 `TM_USERXM`과 FK로 연결하지 않습니다.
+
+## 신고 데이터 처리
+
+- `WITHDRAWN` 회원이 접수한 기존 신고는 유지하고 관리자만 조회할 수 있으며 신규 신고는 허용하지 않습니다.
+- `DELETE_PENDING` 유예기간에도 기존 신고를 유지하고 영구 탈퇴 취소 시 별도 복원 없이 같은 신고 이력을 유지합니다.
+- 회원 원본을 물리 삭제하면 `TH_CMPLNT.USER_NUMB`를 `NULL`로 변경하여 신고자를 익명화하고 신고 기록은 운영 이력으로 유지합니다.
+- 신고 대상 사용자 또는 콘텐츠가 삭제되어도 `TH_CMPLNT.TAGT_TYPE`과 `TAGT_NUMB`는 유지합니다.
+- 신고 이력에는 삭제된 신고 대상의 원문이나 프로필 사본을 별도로 저장하지 않습니다.
+- 신고 데이터 처리는 알림, 푸시 구독, 팔로우, 좋아요 및 기타 소셜 관계의 삭제·보존·복원 범위를 변경하지 않습니다.
+- 세부 신고 대상과 처리 상태는 [신고 접수 및 처리 정책](abuse-report-policy.md)을 따릅니다.
 
 ## 독서 모임 모임장 연계 예정 정책
 
@@ -179,7 +189,10 @@
 - `src/main/frontend/src/features/reply/ReplySheetView.tsx`
 - `src/main/frontend/src/features/reply/hooks/useReplyLike.ts`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
+- `scripts/db/mysql/01-create.sql`
+- `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
 - `CT_POPUPX`
+- `TH_CMPLNT`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`
 - `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/CurrentUserDetailPage.tsx`
