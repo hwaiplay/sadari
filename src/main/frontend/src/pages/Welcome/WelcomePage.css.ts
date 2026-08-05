@@ -26,7 +26,7 @@ export const page = style({
   display: "grid",
   gridTemplateRows: "auto minmax(0, 1fr) auto",
   width: "min(100%, 600px)",
-  minHeight: "100svh",
+  height: "100svh",
   margin: "0 auto",
   overflow: "hidden",
   color: vars.color.black,
@@ -64,7 +64,7 @@ export const viewport = style({
 
 export const track = style({
   display: "flex",
-  width: "400%",
+  width: "500%",
   height: "100%",
   transition: "transform 460ms cubic-bezier(0.22, 1, 0.36, 1)",
   willChange: "transform",
@@ -79,7 +79,7 @@ export const slide = style({
   display: "grid",
   gridTemplateRows: "auto minmax(240px, 1fr)",
   alignItems: "center",
-  width: "25%",
+  width: "20%",
   minWidth: 0,
   height: "100%",
   padding: "22px 30px 14px",
@@ -481,53 +481,70 @@ export const nicknameCard = style({
   backdropFilter: "blur(14px)",
 });
 
-export const interestSection = style({
-  marginBottom: "22px",
-  paddingBottom: "20px",
-  borderBottom: "1px solid rgba(70, 63, 56, 0.12)",
+export const interestCard = style({
+  alignSelf: "start",
+  width: "100%",
+  margin: "18px 0 12px",
+  padding: "24px",
+  border: "1px solid rgba(70, 63, 56, 0.12)",
+  borderRadius: "24px",
+  background: "rgba(255, 255, 255, 0.82)",
+  boxShadow: "0 24px 60px rgba(86, 72, 61, 0.12)",
+  backdropFilter: "blur(14px)",
+  boxSizing: "border-box",
+  "@media": {
+    "screen and (max-width: 420px)": {
+      padding: "20px 16px",
+    },
+  },
 });
 
-export const interestTitle = style({
+export const interestGroups = style({
+  display: "grid",
+  gap: "20px",
+});
+
+export const interestGroup = style({
+  paddingBottom: "18px",
+  borderBottom: "1px solid rgba(70, 63, 56, 0.1)",
+  selectors: {
+    "&:last-child": {
+      paddingBottom: 0,
+      borderBottom: 0,
+    },
+  },
+});
+
+export const interestGroupTitle = style({
   color: "#4f4942",
   fontFamily: vars.font.semibold,
   fontSize: "14px",
-});
-
-export const interestHint = style({
-  marginTop: "6px",
-  color: "#7a736b",
-  fontSize: "11px",
-  lineHeight: 1.5,
-  wordBreak: "keep-all",
 });
 
 export const interestList = style({
   display: "flex",
   flexWrap: "wrap",
   gap: "8px",
-  maxHeight: "154px",
   marginTop: "12px",
-  paddingRight: "4px",
-  overflowY: "auto",
 });
 
 export const interestButton = style({
   minHeight: "34px",
   padding: "7px 11px",
-  border: "1px solid #c9c2b9",
+  border: `1px solid ${vars.color.gray200}`,
   borderRadius: vars.radius.xl,
-  background: "#ffffff",
-  color: "#625b53",
+  background: "#f7f8f8",
+  color: "#7b8187",
   cursor: "pointer",
   fontSize: "11px",
-  transition: "border-color 150ms ease, background 150ms ease, color 150ms ease",
+  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease",
   selectors: {
     "&:hover": {
-      borderColor: "#7f8b9a",
-      background: "#f3f5f7",
+      borderColor: vars.color.gray300,
+      background: "#fbfbfb",
     },
     "&:focus-visible": {
-      outline: "2px solid #7f8b9a",
+      outline: "2px solid #78b991",
       outlineOffset: "2px",
     },
   },
@@ -536,10 +553,16 @@ export const interestButton = style({
 export const interestButtonSelected = style([
   interestButton,
   {
-    borderColor: "#4e5968",
-    background: "#edf0f3",
-    color: "#343c47",
+    borderColor: "#78b991",
+    background: "#eef8f2",
+    color: "#34704d",
     fontFamily: vars.font.semibold,
+    selectors: {
+      "&:hover": {
+        borderColor: "#78b991",
+        background: "#eef8f2",
+      },
+    },
   },
 ]);
 
@@ -594,34 +617,6 @@ export const nicknameHint = style({
   fontSize: "11px",
   lineHeight: 1.5,
   wordBreak: "keep-all",
-});
-
-export const startButton = style({
-  width: "100%",
-  height: "50px",
-  marginTop: "20px",
-  border: "1px solid #4e5968",
-  borderRadius: "14px",
-  background: "#ffffff",
-  color: "#343c47",
-  cursor: "pointer",
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  transition: "transform 150ms ease, background 150ms ease, box-shadow 150ms ease",
-  selectors: {
-    "&:hover:not(:disabled)": {
-      background: "#f1f3f5",
-      boxShadow: "0 8px 20px rgba(52, 60, 71, 0.1)",
-      transform: "translateY(-1px)",
-    },
-    "&:active:not(:disabled)": {
-      transform: "translateY(0)",
-    },
-    "&:disabled": {
-      cursor: "wait",
-      opacity: 0.55,
-    },
-  },
 });
 
 export const footer = style({

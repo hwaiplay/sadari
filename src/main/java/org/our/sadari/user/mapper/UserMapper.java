@@ -17,6 +17,7 @@ import org.our.sadari.user.dto.UserDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 조회와 완료 처리 추가
  * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 조회와 저장 추가
+ * 2026-08-05        SeungHyeon.Kang       회원 관심분야 단일 코드 저장 구조 반영
  */
 @Mapper
 public interface UserMapper {
@@ -101,7 +102,7 @@ public interface UserMapper {
      *
      * @author SeungHyeon.Kang
      * @param userNumb 저장할 사용자 번호
-     * @param interest 저장할 대분류와 세부코드
+     * @param interest 저장할 관심분야 세부코드
      * @return 등록된 관심분야 수
      */
     int setUserInterest(@Param("userNumb") Long userNumb
