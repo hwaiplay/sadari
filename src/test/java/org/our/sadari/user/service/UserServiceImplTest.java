@@ -1,12 +1,14 @@
 package org.our.sadari.user.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -14,10 +16,12 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.service.BadWordDetectionService;
+import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : UserServiceImplTest
@@ -28,7 +32,8 @@ import org.our.sadari.user.mapper.UserMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-08-04        OpenAI.Codex       최초 로그인 관심분야 저장 검증 추가
+ * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 저장 검증 추가
+ * 2026-08-05        SeungHyeon.Kang       관심분야 단일 코드 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -48,6 +53,23 @@ class UserServiceImplTest {
     // 온보딩 업무 검증 대상 서비스
     @InjectMocks
     private UserServiceImpl userService;
+
+    /**
+     * 관심분야 검증 실패 응답이 실제 공통 메시지를 조회할 수 있도록 테스트 메시지 소스를 초기화한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @BeforeEach
+    void setUpMessageSource() {
+        // 공통 응답 메시지를 실제 프로퍼티에서 읽을 메시지 소스를 생성한다
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        // 서버 공통 메시지 프로퍼티를 테스트 조회 기준으로 설정한다
+        messageSource.setBasename("messages");
+        // 한글 메시지 원문이 손상되지 않도록 프로퍼티 파일 인코딩을 설정한다
+        messageSource.setDefaultEncoding("UTF-8");
+        // ResultData 실패 응답이 초기화된 공통 메시지 소스를 사용하도록 등록한다
+        new MessageUtils().setMessageSource(messageSource);
+    }
 
     /**
      * 유효한 닉네임 저장 시 사용자 행과 Redis 닉네임을 갱신하고 완료 프로필을 반환하는지 검증한다
@@ -94,19 +116,15 @@ class UserServiceImplTest {
     /**
      * 활성 공통코드로 선택한 관심분야가 로그인 사용자의 목록으로 전체 교체되는지 검증한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      */
     @Test
     void uptUserInterestsReplacesValidatedSelections() {
         UserDto.UserInterestDto catalogInterest = new UserDto.UserInterestDto();
-        // 활성 관심분야 대분류 공통코드를 설정한다
-        catalogInterest.setIntrCgrp("CATE_LITR");
         // 활성 관심분야 세부코드를 설정한다
         catalogInterest.setIntrCode("NOVEL");
 
         UserDto.UserInterestDto requestedInterest = new UserDto.UserInterestDto();
-        // 사용자가 선택한 대분류 공통코드를 설정한다
-        requestedInterest.setIntrCgrp("CATE_LITR");
         // 사용자가 선택한 세부코드를 설정한다
         requestedInterest.setIntrCode("NOVEL");
 
@@ -114,7 +132,7 @@ class UserServiceImplTest {
         // 최초 로그인에서 선택한 관심분야를 요청 목록에 설정한다
         request.setInterestList(List.of(requestedInterest));
 
-        // 선택 조합이 활성 공통코드에 포함되도록 조회 결과를 구성한다
+        // 선택 코드가 CATE_CODE의 활성 하위 코드에 포함되도록 조회 결과를 구성한다
         when(userMapper.getUserInterestCatalog()).thenReturn(List.of(catalogInterest));
 
         // 유효한 관심분야 목록으로 전체 교체를 요청한다
@@ -126,5 +144,38 @@ class UserServiceImplTest {
         verify(userMapper).delUserInterests(31L);
         // 검증된 관심분야가 로그인 사용자에게 저장되는지 확인한다
         verify(userMapper).setUserInterest(31L, requestedInterest);
+    }
+
+    /**
+     * CATE_CODE의 활성 하위 코드가 아닌 관심분야는 기존 선택을 삭제하지 않고 거절하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptUserInterestsRejectsInactiveInterestCode() {
+        UserDto.UserInterestDto catalogInterest = new UserDto.UserInterestDto();
+        // 활성 관심분야 세부코드를 설정한다
+        catalogInterest.setIntrCode("NOVEL");
+
+        UserDto.UserInterestDto requestedInterest = new UserDto.UserInterestDto();
+        // 활성 허용 목록에 없는 관심분야 세부코드를 설정한다
+        requestedInterest.setIntrCode("INACTIVE_CODE");
+
+        UserDto.UserInterestReqDto request = new UserDto.UserInterestReqDto();
+        // 유효하지 않은 관심분야를 교체 요청 목록에 설정한다
+        request.setInterestList(List.of(requestedInterest));
+
+        // 서버가 비교할 CATE_CODE의 활성 하위 코드 목록을 구성한다
+        when(userMapper.getUserInterestCatalog()).thenReturn(List.of(catalogInterest));
+
+        // 비활성 관심분야 코드가 포함된 전체 교체를 요청한다
+        ResultData result = userService.uptUserInterests(31L, request);
+
+        // 유효하지 않은 공통코드 요청 오류를 반환하는지 확인한다
+        assertEquals(2009, result.getCode());
+        // 검증 실패 전에 기존 관심분야를 삭제하지 않는지 확인한다
+        verify(userMapper, never()).delUserInterests(31L);
+        // 검증하지 않은 관심분야를 저장하지 않는지 확인한다
+        verify(userMapper, never()).setUserInterest(31L, requestedInterest);
     }
 }

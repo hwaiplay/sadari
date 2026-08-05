@@ -32,7 +32,6 @@ Table TM_CODEXM [headercolor: #8C8C8C] {
   COMM_CODE varchar(10) [pk]
   CODE_NAME varchar(50)
   CODE_EXPL varchar(500)
-  SORT_ORDR decimal(38,0) [note: '대분류 표시 순서']
   USEE_YSNO varchar(1)
   REGI_ADMN varchar(100)
   REGI_DATE datetime
@@ -43,10 +42,12 @@ Table TM_CODEXM [headercolor: #8C8C8C] {
 Table TB_CODEXD [headercolor: #8C8C8C] {
   COMM_CODE varchar(10) [not null]
   COMD_CODE varchar(20) [not null]
+  UPPR_CODE varchar(20) [note: '같은 공통코드 안의 상위 세부코드']
   SORT_ORDR decimal(38,0)
 
   indexes {
     (COMM_CODE, COMD_CODE) [pk]
+    (COMM_CODE, UPPR_CODE, SORT_ORDR, COMD_CODE) [name: 'IX_TB_CODEXD_TREE']
   }
 }
 
@@ -60,13 +61,12 @@ Table TM_ADMINX [headercolor: #8C8C8C] {
 
 Table TB_USINTR [headercolor: #0299E2] {
   USER_NUMB bigint [not null]
-  INTR_CGRP varchar(10) [not null]
-  INTR_CODE varchar(20) [not null]
+  INTR_CODE varchar(20) [not null, note: 'CATE_CODE 하위 관심분야 세부코드']
   REGI_DATE datetime(6) [not null]
 
   indexes {
-    (USER_NUMB, INTR_CGRP, INTR_CODE) [pk]
-    (INTR_CGRP, INTR_CODE, USER_NUMB) [name: 'IX_TB_USINTR_RECM']
+    (USER_NUMB, INTR_CODE) [pk]
+    (INTR_CODE, USER_NUMB) [name: 'IX_TB_USINTR_RECM']
   }
 }
 
@@ -441,7 +441,7 @@ Table TM_CLCHAT [headercolor: #B85450] {
 // ─────────────────────────────────────────────────────────────
 
 Ref: TB_USINTR.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
-Ref: TB_USINTR.(INTR_CGRP, INTR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete: restrict]
+Ref: TB_CODEXD.(COMM_CODE, UPPR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete: restrict]
 
 Ref: TM_CLUBXM.OWNR_NUMB > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TB_CLCATE.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]

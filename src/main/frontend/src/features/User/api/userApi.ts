@@ -88,7 +88,6 @@ export type UpdateOnboardingParams = {
 };
 
 export type UserInterest = {
-  intrCgrp: string;
   intrCnam: string;
   intrCode: string;
   intrName: string;
@@ -97,7 +96,7 @@ export type UserInterest = {
 };
 
 export type UpdateUserInterestsParams = {
-  interestList: Array<Pick<UserInterest, "intrCgrp" | "intrCode">>;
+  interestList: Array<Pick<UserInterest, "intrCode">>;
 };
 
 /**

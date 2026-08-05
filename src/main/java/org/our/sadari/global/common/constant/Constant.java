@@ -15,6 +15,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 이벤트와 스케줄러 코드 추가
  * 2026-07-30        SeungHyeon.Kang    회원 정지 사용자 서버 동기화 상태 추가
  * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
+ * 2026-08-05        SeungHyeon.Kang       계층형 독서 관심분야 공통코드로 통합
  */
 public final class Constant {
 
@@ -33,8 +34,8 @@ public final class Constant {
     public static final String CODE_READ_STAT = "READ_STAT";
     // 코드 도서 색상 설정값
     public static final String CODE_BOOK_COLR = "BOOK_COLR";
-    // 독서 관심분야 공통코드 접두어
-    public static final String CODE_READING_CATEGORY_PREFIX = "CATE_";
+    // 계층형 독서 관심분야 공통코드
+    public static final String CODE_READING_CATEGORY = "CATE_CODE";
     // 코드 공통 여부 설정값
     public static final String CODE_COMM_YSNO = "COMM_YSNO";
     // 코드 비속어 단어 설정값

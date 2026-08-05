@@ -39,7 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
  * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
- * 2026-08-04        OpenAI.Codex       최초 로그인 관심분야 조회와 저장 추가
+ * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 조회와 저장 추가
+ * 2026-08-05        SeungHyeon.Kang       회원 관심분야 단일 코드 검증과 저장 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -275,7 +276,7 @@ public class UserServiceImpl implements UserService {
     /**
      * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @return 대분류와 세부코드가 포함된 관심분야 목록
      */
     @Override
@@ -289,7 +290,7 @@ public class UserServiceImpl implements UserService {
     /**
      * 로그인 사용자의 독서 관심분야를 검증한 선택 목록으로 전체 교체한다
      *
-     * @author OpenAI.Codex
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @param request 선택한 관심분야 목록
      * @return 관심분야 저장 결과
@@ -311,26 +312,26 @@ public class UserServiceImpl implements UserService {
             requestedInterests = List.of();
         }
 
-        // 현재 활성 공통코드만 저장할 수 있도록 허용 조합을 구성한다
-        Set<String> validInterestKeys = new HashSet<>();
-        // 활성 관심분야의 대분류와 세부코드 조합을 허용 목록에 추가한다
+        // 현재 활성 CATE_CODE 하위 세부코드만 저장할 수 있도록 허용 코드를 구성한다
+        Set<String> validInterestCodes = new HashSet<>();
+        // 활성 관심분야 세부코드를 허용 목록에 추가한다
         for (UserDto.UserInterestDto interest : userMapper.getUserInterestCatalog()) {
-            // 대분류와 세부코드를 하나의 중복 방지 키로 저장한다
-            validInterestKeys.add(interest.getIntrCgrp() + ":" + interest.getIntrCode());
+            // CATE_CODE 그룹은 고정값이므로 세부코드만 저장 검증에 사용한다
+            validInterestCodes.add(interest.getIntrCode());
         }
 
-        Set<String> requestedInterestKeys = new HashSet<>();
+        Set<String> requestedInterestCodes = new HashSet<>();
         // 선택 목록의 유효성과 중복 여부를 저장 전에 모두 확인한다
         for (UserDto.UserInterestDto interest : requestedInterests) {
-            // 비어 있거나 비활성인 코드 조합은 저장하지 않는다
-            if (StringUtil.isEmpty(interest) || StringUtil.hasEmpty(interest.getIntrCgrp(), interest.getIntrCode())) {
+            // 비어 있거나 비활성인 관심분야 세부코드는 저장하지 않는다
+            if (StringUtil.isEmpty(interest) || StringUtil.isEmpty(interest.getIntrCode())) {
                 // "요청값이 올바르지 않아요."
                 return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
             }
 
-            String interestKey = interest.getIntrCgrp() + ":" + interest.getIntrCode();
-            // 공통코드에 없거나 같은 조합이 반복되면 전체 요청을 거절한다
-            if (!validInterestKeys.contains(interestKey) || !requestedInterestKeys.add(interestKey)) {
+            // CATE_CODE의 활성 하위 코드가 아니거나 같은 코드가 반복되면 전체 요청을 거절한다
+            if (!validInterestCodes.contains(interest.getIntrCode())
+                    || !requestedInterestCodes.add(interest.getIntrCode())) {
                 // "요청값이 올바르지 않아요."
                 return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
             }

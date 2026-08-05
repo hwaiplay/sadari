@@ -21,15 +21,18 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./WelcomePage.css";
 
-const LAST_SLIDE_INDEX = 3;
-const SLIDE_COUNT = 4;
+const NICKNAME_SLIDE_INDEX = 3;
+const INTEREST_SLIDE_INDEX = 4;
+const LAST_SLIDE_INDEX = INTEREST_SLIDE_INDEX;
+const SLIDE_COUNT = 5;
 const USER_NICK_MAX_LENGTH = 25;
+const MIN_INTEREST_SELECTION_COUNT = 2;
 const SWIPE_THRESHOLD_PX = 48;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
 
 /**
- * 최초 로그인 사용자에게 서비스 특징과 닉네임 설정 흐름을 슬라이드로 제공한다
+ * 최초 로그인 사용자에게 서비스 특징과 닉네임 및 관심분야 설정 흐름을 슬라이드로 제공한다
  *
  * @author HanWon.Jang
  * @return 최초 로그인 웰컴 페이지
@@ -45,12 +48,13 @@ function WelcomePage() {
   const [selectedInterestKeys, setSelectedInterestKeys] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const interestGroups = groupUserInterests(interestCatalog);
 
   useEffect(() => {
 
     let ignore = false;
 
-    // 가입 시 서버가 발급한 고유 랜덤 닉네임을 마지막 슬라이드의 기본값으로 조회한다
+    // 가입 시 서버가 발급한 고유 랜덤 닉네임을 닉네임 설정 슬라이드의 기본값으로 조회한다
     getMyProfileApi()
       .then((response) => {
 
@@ -90,7 +94,7 @@ function WelcomePage() {
         }
       })
       .catch(() => {
-        // 공통코드 조회 실패 시 관심분야 단계를 건너뛰고 기존 웰컴 흐름을 유지한다
+        // 공통코드 조회 실패 시 빈 관심분야 단계에서도 웰컴을 완료할 수 있게 기존 흐름을 유지한다
         if (!ignore) {
           // 선택할 수 없는 빈 관심분야 목록을 명시적으로 설정한다
           setInterestCatalog([]);
@@ -122,6 +126,40 @@ function WelcomePage() {
   };
 
   /**
+   * 닉네임을 서버 정책에 맞게 정규화하고 다음 단계로 이동할 수 있는지 확인한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 검증된 닉네임이며 입력이 잘못되면 null
+   */
+  const getValidatedUserNick = (): string | null => {
+
+    const normalizedUserNick = userNick.trim();
+
+    // 닉네임이 비어 있으면 서버 요청 전에 입력 위치를 안내한다
+    if (!normalizedUserNick) {
+      void sweetWarning(
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "닉네임을 입력해주세요." */ message("frontend.profile.nickRequired"),
+      );
+      // 비어 있는 닉네임은 다음 단계와 저장에 사용하지 않는다
+      return null;
+    }
+
+    // 서버 정책과 다른 길이 또는 문자 조합이면 다음 단계 전에 입력 규칙을 안내한다
+    if (normalizedUserNick.length > USER_NICK_MAX_LENGTH || !USER_NICK_REGEX.test(normalizedUserNick)) {
+      void sweetWarning(
+        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
+      );
+      // 형식이 맞지 않는 닉네임은 다음 단계와 저장에 사용하지 않는다
+      return null;
+    }
+
+    // 앞뒤 공백을 제거해 확정한 닉네임을 반환한다
+    return normalizedUserNick;
+  };
+
+  /**
    * 현재 슬라이드에서 다음 소개 또는 닉네임 설정 화면으로 이동한다
    *
    * @author HanWon.Jang
@@ -129,11 +167,38 @@ function WelcomePage() {
    */
   const handleNext = (): void => {
 
+    // 닉네임 다음에는 검증을 통과한 사용자만 관심분야 단계로 이동한다
+    if (activeSlide === NICKNAME_SLIDE_INDEX) {
+      const normalizedUserNick = getValidatedUserNick();
+      // 닉네임 검증에 실패하면 현재 입력 단계에 머문다
+      if (!normalizedUserNick) {
+        // 사용자가 입력값을 수정할 수 있도록 다음 단계 이동을 중단한다
+        return;
+      }
+
+      // 최종 저장에서도 같은 닉네임을 사용하도록 정규화한 값을 반영한다
+      setUserNick(normalizedUserNick);
+    }
+
     // 마지막 슬라이드 이전에서만 오른쪽 슬라이드로 이동한다
     if (activeSlide < LAST_SLIDE_INDEX) {
       // 현재 위치보다 한 단계 뒤의 소개 화면을 선택한다
       setActiveSlide((currentSlide) => currentSlide + 1);
     }
+  };
+
+  /**
+   * 닉네임 폼 제출 시 검증을 거쳐 관심분야 선택 단계로 이동한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 닉네임 설정 폼 제출 이벤트
+   * @return 반환값이 없다
+   */
+  const handleNicknameNext = (event: FormEvent<HTMLFormElement>): void => {
+
+    event.preventDefault();
+    // 공통 다음 이동 로직에서 닉네임을 검증하고 관심분야 단계를 연다
+    handleNext();
   };
 
   /**
@@ -254,34 +319,67 @@ function WelcomePage() {
   };
 
   /**
-   * 사용자가 확정한 닉네임을 저장하고 최초 로그인 웰컴 흐름을 완료한다
+   * 대분류에 속한 모든 소분류 관심분야의 선택 상태를 한 번에 전환한다
    *
-   * @author HanWon.Jang
-   * @param event 닉네임 설정 폼 제출 이벤트
-   * @return 온보딩 완료 처리 Promise
+   * @author SeungHyeon.Kang
+   * @param event 관심분야 대분류 전체 선택 버튼 클릭 이벤트
+   * @return 반환값이 없다
    */
-  const handleStart = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleInterestCategorySelectionToggle = (event: MouseEvent<HTMLButtonElement>): void => {
 
-    event.preventDefault();
-    const normalizedUserNick = userNick.trim();
-
-    // 닉네임이 비어 있으면 서버 요청 전에 입력 위치를 안내한다
-    if (!normalizedUserNick) {
-      void sweetWarning(
-        /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임을 입력해주세요." */ message("frontend.profile.nickRequired"),
-      );
-      // 비어 있는 닉네임 저장 요청을 중단한다
+    const categoryName = event.currentTarget.dataset.categoryName;
+    const interestGroup = interestGroups.find((group) => group.categoryName === categoryName);
+    // 화면에 없는 대분류나 소분류가 없는 대분류는 선택 상태를 변경하지 않는다
+    if (!interestGroup || interestGroup.interests.length === 0) {
+      // 변경할 소분류가 없는 전체 선택 처리를 종료한다
       return;
     }
 
-    // 서버 정책과 다른 길이 또는 문자 조합이면 저장 전에 입력 규칙을 안내한다
-    if (normalizedUserNick.length > USER_NICK_MAX_LENGTH || !USER_NICK_REGEX.test(normalizedUserNick)) {
+    const categoryInterestCodes = interestGroup.interests.map((interest) => interest.intrCode);
+    // 하나라도 선택되지 않은 소분류가 있으면 전체 선택하고 모두 선택되어 있으면 전체 해제한다
+    setSelectedInterestKeys((currentKeys) => {
+      const nextKeys = new Set(currentKeys);
+      const shouldSelectAll = categoryInterestCodes.some((interestCode) => !currentKeys.has(interestCode));
+      // 대분류의 모든 소분류를 동일한 다음 선택 상태로 맞춘다
+      categoryInterestCodes.forEach((interestCode) => {
+        // 전체 선택 상태로 전환할 때 현재 소분류를 선택 집합에 추가한다
+        if (shouldSelectAll) {
+          nextKeys.add(interestCode);
+        } else {
+          // 전체 해제 상태로 전환할 때 현재 소분류를 선택 집합에서 제거한다
+          nextKeys.delete(interestCode);
+        }
+      });
+
+      // 대분류 전체 선택 결과가 반영된 새 선택 집합을 반환한다
+      return nextKeys;
+    });
+  };
+
+  /**
+   * 사용자가 확정한 닉네임과 관심분야를 저장하고 최초 로그인 웰컴 흐름을 완료한다
+   *
+   * @author HanWon.Jang
+   * @return 온보딩 완료 처리 Promise
+   */
+  const handleStart = async (): Promise<void> => {
+
+    const normalizedUserNick = getValidatedUserNick();
+
+    // 이전 단계 이후 닉네임 상태가 변경되었으면 최종 저장을 중단한다
+    if (!normalizedUserNick) {
+      // 닉네임 설정 단계로 돌아가 입력값을 수정할 수 있도록 저장 요청을 종료한다
+      setActiveSlide(NICKNAME_SLIDE_INDEX);
+      return;
+    }
+
+    // 관심분야를 최소 선택 개수보다 적게 골랐다면 저장 전에 선택 기준을 안내한다
+    if (selectedInterestKeys.size < MIN_INTEREST_SELECTION_COUNT) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
+        /* "관심분야를 2개 이상 선택해주세요." */ message("frontend.welcome.interest.minimumRequired"),
       );
-      // 형식이 맞지 않는 닉네임 저장 요청을 중단한다
+      // 사용자가 관심분야를 추가 선택할 수 있도록 현재 단계에서 저장 요청을 종료한다
       return;
     }
 
@@ -296,23 +394,12 @@ function WelcomePage() {
 
     // 닉네임 저장과 인증 상태 갱신 실패를 하나의 사용자 오류 흐름으로 처리한다
     try {
-      // 관심분야를 선택했다면 온보딩 완료 전에 별도 API로 저장을 시도한다
-      if (selectedInterestKeys.size > 0) {
-        const interestList = interestCatalog
-          .filter((interest) => selectedInterestKeys.has(`${interest.intrCgrp}:${interest.intrCode}`))
-          .map((interest) => ({ intrCgrp: interest.intrCgrp, intrCode: interest.intrCode }));
+      const interestList = interestCatalog
+        .filter((interest) => selectedInterestKeys.has(interest.intrCode))
+        .map((interest) => ({ intrCode: interest.intrCode }));
 
-        // 관심분야 저장 실패와 ONBD_YSNO 완료 처리를 분리하기 위한 블록이다
-        try {
-          // 유효한 공통코드 조합으로 사용자의 관심분야를 전체 교체한다
-          await updateUserInterestsApi({ interestList });
-        }
-
-        // 관심분야 저장 실패는 웰컴 화면을 본 사용자의 온보딩 완료를 막지 않는다
-        catch {
-          // 저장 실패 시 별도 상태를 만들지 않고 닉네임과 온보딩 완료 처리를 계속한다
-        }
-      }
+      // 유효한 공통코드 조합으로 사용자의 관심분야를 전체 교체한다
+      await updateUserInterestsApi({ interestList });
 
       // 닉네임과 최초 로그인 완료 상태를 서버에 함께 저장한다
       await updateOnboardingApi({ userNick: normalizedUserNick });
@@ -337,12 +424,32 @@ function WelcomePage() {
     }
   };
 
+  /**
+   * 웰컴 하단 기본 버튼으로 다음 단계 이동 또는 최종 온보딩 완료를 실행한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleFooterPrimaryAction = (): void => {
+
+    // 마지막 관심분야 단계에서는 다음 이동 대신 웰컴 완료 저장을 실행한다
+    if (activeSlide === LAST_SLIDE_INDEX) {
+      // 비동기 저장 결과는 저장 상태와 공통 오류 안내에서 처리한다
+      void handleStart();
+      // 최종 저장과 다음 슬라이드 이동이 함께 실행되지 않도록 종료한다
+      return;
+    }
+
+    // 마지막 단계 전에는 현재 화면에 맞는 다음 슬라이드로 이동한다
+    handleNext();
+  };
+
   // 가입 시 발급된 닉네임을 조회하는 동안 공통 로딩 화면을 반환한다
   if (isLoading) {
     return <Loading title={/* "로그인 중" */ message("frontend.common.loginLoading")} />;
   }
 
-  // 서비스 소개와 닉네임 설정을 한 화면에서 넘겨보는 웰컴 페이지를 반환한다
+  // 서비스 소개와 닉네임 및 관심분야 설정을 단계별로 넘겨보는 웰컴 페이지를 반환한다
   return (
     <main className={styles.page}>
       {/* 웰컴 화면 상단 브랜드와 현재 진행 상태 영역 */}
@@ -366,7 +473,7 @@ function WelcomePage() {
       >
         <div
           className={styles.track}
-          style={{ transform: `translate3d(-${activeSlide * 25}%, 0, 0)` }}
+          style={{ transform: `translate3d(-${activeSlide * 20}%, 0, 0)` }}
         >
           {/* 도서 표지 대표색과 자동 책장 색상 소개 영역 */}
           <section className={styles.slide} aria-hidden={activeSlide !== 0}>
@@ -500,10 +607,10 @@ function WelcomePage() {
           </section>
 
           {/* 랜덤 추천 닉네임 확인과 수정 영역 */}
-          <section className={styles.slide} aria-hidden={activeSlide !== LAST_SLIDE_INDEX}>
+          <section className={styles.slide} aria-hidden={activeSlide !== NICKNAME_SLIDE_INDEX}>
             <div className={styles.copy}>
               <p className={styles.eyebrow}>
-                {/* "마지막으로, 당신의 이름" */}
+                {/* "이제, 당신의 이름" */}
                 {message("frontend.welcome.nickname.eyebrow")}
               </p>
               <h1 className={styles.title}>
@@ -516,40 +623,7 @@ function WelcomePage() {
               </p>
             </div>
             {/* 추천 닉네임 입력과 글자 수 안내 영역 */}
-            <form className={styles.nicknameCard} onSubmit={handleStart}>
-              {/* 최초 로그인 독서 관심분야 선택 영역 */}
-              {interestCatalog.length > 0 ? (
-                <section className={styles.interestSection}>
-                  <h2 className={styles.interestTitle}>
-                    {/* "관심분야 선택" */}
-                    {message("frontend.welcome.interest.title")}
-                  </h2>
-                  <p className={styles.interestHint}>
-                    {/* "좋아하는 분야를 골라주세요. 선택하지 않고 시작할 수도 있어요." */}
-                    {message("frontend.welcome.interest.hint")}
-                  </p>
-                  {/* 독서 관심분야 선택 항목 목록 */}
-                  <div className={styles.interestList}>
-                    {interestCatalog.map((interest) => {
-                      const interestKey = `${interest.intrCgrp}:${interest.intrCode}`;
-                      const isSelected = selectedInterestKeys.has(interestKey);
-                      // 대분류와 세부코드를 구분할 수 있는 관심분야 버튼을 반환한다
-                      return (
-                        <button
-                          className={isSelected ? styles.interestButtonSelected : styles.interestButton}
-                          type="button"
-                          data-interest-key={interestKey}
-                          aria-pressed={isSelected}
-                          onClick={handleInterestToggle}
-                          key={interestKey}
-                        >
-                          {interest.intrCnam} · {interest.intrName}
-                        </button>
-                      );
-                    })}
-                  </div>
-                </section>
-              ) : null}
+            <form className={styles.nicknameCard} onSubmit={handleNicknameNext}>
               {/* 최초 로그인 닉네임 입력 영역 */}
               <label className={styles.nicknameLabel} htmlFor="welcome-user-nick">
                 {/* "닉네임" */}
@@ -574,13 +648,69 @@ function WelcomePage() {
                 {/* "한글, 영문, 숫자와 한 칸의 공백·언더바·하이픈을 사용할 수 있어요." */}
                 {message("frontend.welcome.nickname.hint")}
               </p>
-              <button className={styles.startButton} type="submit" disabled={isSaving}>
-                {/* "시작하기" / "저장 중" */}
-                {isSaving
-                  ? message("frontend.common.saving")
-                  : message("frontend.welcome.start")}
-              </button>
             </form>
+          </section>
+
+          {/* 대분류별 독서 관심분야 선택 영역 */}
+          <section className={styles.slide} aria-hidden={activeSlide !== INTEREST_SLIDE_INDEX}>
+            <div className={styles.copy}>
+              <p className={styles.eyebrow}>
+                {/* "마지막으로, 당신의 취향" */}
+                {message("frontend.welcome.interest.eyebrow")}
+              </p>
+              <h1 className={styles.title}>
+                {/* "어떤 책을 좋아하세요?" */}
+                {message("frontend.welcome.interest.title")}
+              </h1>
+              <p className={styles.description}>
+                {/* "사용자닉네임 님이 좋아하는 분야를 골라주세요. 2개 이상 선택해주세요." */}
+                {message("frontend.welcome.interest.hint", [userNick.trim()])}
+              </p>
+            </div>
+            {/* 대분류 제목 아래 소분류 선택 항목을 묶어 표시하는 영역 */}
+            <section className={styles.interestCard}>
+              <div className={styles.interestGroups}>
+                {interestGroups.map((group) => {
+                  const isGroupSelected = group.interests.length > 0
+                    && group.interests.every((interest) => selectedInterestKeys.has(interest.intrCode));
+                  // 대분류 제목과 전체 선택 상태가 반영된 소분류 관심분야 묶음을 반환한다
+                  return (
+                    /* 관심분야 대분류와 소분류 개별 묶음 영역 */
+                    <section className={styles.interestGroup} key={group.categoryName}>
+                      <h2 className={styles.interestGroupTitle}>{group.categoryName}</h2>
+                      <div className={styles.interestList}>
+                        <button
+                          className={isGroupSelected ? styles.interestButtonSelected : styles.interestButton}
+                          type="button"
+                          data-category-name={group.categoryName}
+                          aria-pressed={isGroupSelected}
+                          onClick={handleInterestCategorySelectionToggle}
+                        >
+                          {group.categoryName} 전체
+                        </button>
+                        {group.interests.map((interest) => {
+                          const interestKey = interest.intrCode;
+                          const isSelected = selectedInterestKeys.has(interestKey);
+                          // 현재 대분류에 속한 소분류 관심분야 선택 버튼을 반환한다
+                          return (
+                            <button
+                              className={isSelected ? styles.interestButtonSelected : styles.interestButton}
+                              type="button"
+                              data-interest-key={interestKey}
+                              aria-pressed={isSelected}
+                              onClick={handleInterestToggle}
+                              key={interestKey}
+                            >
+                              {interest.intrName}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </section>
+                  );
+                })}
+              </div>
+            </section>
           </section>
         </div>
       </div>
@@ -617,11 +747,19 @@ function WelcomePage() {
             onClick={handleSlideSelect}
           />
           <button
-            className={activeSlide === LAST_SLIDE_INDEX ? styles.dotActive : styles.dot}
+            className={activeSlide === NICKNAME_SLIDE_INDEX ? styles.dotActive : styles.dot}
             type="button"
             data-slide="3"
             aria-label={message("frontend.welcome.slideButton", [4])}
-            aria-current={activeSlide === LAST_SLIDE_INDEX ? "step" : undefined}
+            aria-current={activeSlide === NICKNAME_SLIDE_INDEX ? "step" : undefined}
+            onClick={handleSlideSelect}
+          />
+          <button
+            className={activeSlide === INTEREST_SLIDE_INDEX ? styles.dotActive : styles.dot}
+            type="button"
+            data-slide="4"
+            aria-label={message("frontend.welcome.slideButton", [5])}
+            aria-current={activeSlide === INTEREST_SLIDE_INDEX ? "step" : undefined}
             onClick={handleSlideSelect}
           />
         </div>
@@ -638,16 +776,62 @@ function WelcomePage() {
           <button
             className={styles.nextButton}
             type="button"
-            disabled={activeSlide === LAST_SLIDE_INDEX}
-            onClick={handleNext}
+            disabled={isSaving}
+            onClick={handleFooterPrimaryAction}
           >
-            {/* "다음" */}
-            {message("frontend.welcome.next")}
+            {activeSlide === LAST_SLIDE_INDEX ? (
+              isSaving ? (
+                <>
+                  {/* "저장 중" */}
+                  {message("frontend.common.saving")}
+                </>
+              ) : (
+                <>
+                  {/* "시작하기" */}
+                  {message("frontend.welcome.start")}
+                </>
+              )
+            ) : (
+              <>
+                {/* "다음" */}
+                {message("frontend.welcome.next")}
+              </>
+            )}
           </button>
         </div>
       </footer>
     </main>
   );
+}
+
+type UserInterestGroup = {
+  categoryName: string;
+  interests: UserInterest[];
+};
+
+/**
+ * 관심분야 목록을 대분류 이름별 소분류 묶음으로 변환한다
+ *
+ * @author SeungHyeon.Kang
+ * @param interests 서버 정렬 순서가 적용된 관심분야 목록
+ * @return 대분류별 소분류 관심분야 목록
+ */
+function groupUserInterests(interests: UserInterest[]): UserInterestGroup[] {
+
+  const groupsByCategory = new Map<string, UserInterest[]>();
+
+  // 서버가 정렬한 순서를 유지하면서 같은 대분류의 소분류를 하나의 목록으로 모은다
+  interests.forEach((interest) => {
+    const categoryInterests = groupsByCategory.get(interest.intrCnam) ?? [];
+    // 기존 배열을 직접 변경하지 않고 현재 관심분야가 포함된 새 목록을 저장한다
+    groupsByCategory.set(interest.intrCnam, [...categoryInterests, interest]);
+  });
+
+  // 대분류가 처음 나타난 순서대로 화면에서 사용할 관심분야 묶음을 반환한다
+  return Array.from(groupsByCategory, ([categoryName, categoryInterests]) => ({
+    categoryName,
+    interests: categoryInterests,
+  }));
 }
 
 export default WelcomePage;
