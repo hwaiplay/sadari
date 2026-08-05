@@ -5,8 +5,10 @@ type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question";
 type SweetAlertOptions = {
   title: string;
   text?: string;
+  texts?: readonly string[];
   html?: string;
   content?: HTMLElement;
+  customClass?: string;
   icon?: SweetAlertIcon;
   confirmButtonText?: string;
   cancelButtonText?: string;
@@ -263,6 +265,28 @@ function ensureSweetAlertStyle() {
       cursor: pointer;
     }
 
+    .sadari-swal-user-block .sadari-swal-title {
+      font-family: "PretendardSemiBold", system-ui, sans-serif;
+      font-size: 20px;
+      font-weight: 600;
+      white-space: pre-line;
+      margin-bottom: 24px !important;
+    }
+
+    .sadari-swal-user-block .sadari-swal-text {
+      font-family: "PretendardRegular", system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 400;
+      text-align: left !important;
+      margin-top: 14px !important;
+    }
+
+    .sadari-swal-user-block .sadari-swal-button {
+      font-family: "PretendardMedium", system-ui, sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
     .sadari-swal-cancel {
       border-color: #cfd4d9;
       background: #ffffff;
@@ -507,7 +531,9 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     lockBodyScroll();
     overlay.className = "sadari-swal-overlay";
-    modal.className = "sadari-swal-modal";
+    modal.className = ["sadari-swal-modal", options.customClass]
+      .filter(Boolean)
+      .join(" ");
     modal.setAttribute("role", "alertdialog");
     modal.setAttribute("aria-modal", "true");
 
@@ -532,6 +558,14 @@ export function sweetAlert(options: SweetAlertOptions) {
       content.className = "sadari-swal-html";
       content.innerHTML = options.html;
       modal.appendChild(content);
+    } else if (options.texts) {
+      // 여러 안내 문구를 각각 독립된 문단으로 제공해 항목별 스타일과 접근성을 유지한다.
+      options.texts.forEach((textContent) => {
+        const text = document.createElement("p");
+        text.className = "sadari-swal-text";
+        text.textContent = textContent;
+        modal.appendChild(text);
+      });
     } else if (options.text) {
       const text = document.createElement("p");
       text.className = "sadari-swal-text";

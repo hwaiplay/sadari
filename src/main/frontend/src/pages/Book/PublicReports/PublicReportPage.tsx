@@ -2,6 +2,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
+import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
@@ -14,7 +15,7 @@ import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 import ReplySheet from "@/features/reply/ReplySheet";
 import ProfileImage from "@/features/User/components/ProfileImage";
-import { useMemo, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
 import {statusWrap} from "./PublicReportPage.css";
@@ -72,9 +73,6 @@ const PublicReportPage = () => {
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
   );
-  const [openActionReportNumb, setOpenActionReportNumb] = useState<
-    number | null
-  >(null);
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
@@ -141,83 +139,6 @@ const PublicReportPage = () => {
       ...prev,
       [reptNumb]: !prev[reptNumb],
     }));
-  };
-
-  /**
-   * 선택한 독후감의 신고 및 차단 메뉴를 펼치거나 닫는다
-   *
-   * @author HanWon.Jang
-   * @param reptNumb 액션 메뉴를 변경할 독후감 번호
-   * @return 반환값이 없다
-   */
-  const handleToggleActionMenu = (reptNumb: number): void => {
-    /**
-     * 현재 열린 독후감과 선택한 독후감을 비교하여 다음 메뉴 상태를 결정한다
-     *
-     * @author HanWon.Jang
-     * @param currentReptNumb 현재 액션 메뉴가 열린 독후감 번호
-     * @return 새로 액션 메뉴를 열 독후감 번호 또는 닫힘 상태
-     */
-    const getNextOpenActionReportNumb = (
-      currentReptNumb: number | null,
-    ): number | null => {
-      // 같은 독후감은 메뉴를 닫고 다른 독후감은 해당 메뉴를 열도록 다음 번호를 반환한다
-      return currentReptNumb === reptNumb ? null : reptNumb;
-    };
-
-    // 하나의 독후감 액션 메뉴만 열리도록 현재 메뉴 상태를 변경한다
-    setOpenActionReportNumb(getNextOpenActionReportNumb);
-  };
-
-  /**
-   * 독후감 액션 메뉴에서 포커스가 완전히 벗어나면 메뉴를 닫는다
-   *
-   * @author HanWon.Jang
-   * @param event 독후감 액션 메뉴 영역의 포커스 이탈 이벤트
-   * @return 반환값이 없다
-   */
-  const handleActionMenuBlur = (event: FocusEvent<HTMLDivElement>): void => {
-    // 메뉴 내부의 다른 버튼으로 포커스가 이동하는 동안에는 열린 상태를 유지한다
-    if (event.currentTarget.contains(event.relatedTarget)) {
-      // 메뉴 내부 포커스 이동은 닫기 처리 없이 종료한다
-      return;
-    }
-
-    // 메뉴 밖으로 포커스가 이동하면 현재 열린 독후감 액션 메뉴를 닫는다
-    setOpenActionReportNumb(null);
-  };
-
-  /**
-   * Escape 키로 열린 독후감 액션 메뉴를 닫는다
-   *
-   * @author HanWon.Jang
-   * @param event 독후감 액션 메뉴 영역의 키보드 이벤트
-   * @return 반환값이 없다
-   */
-  const handleActionMenuKeyDown = (
-    event: KeyboardEvent<HTMLDivElement>,
-  ): void => {
-    // Escape 키가 아닌 입력은 메뉴 내부 버튼의 기본 동작을 유지한다
-    if (event.key !== "Escape") {
-      // 별도 키보드 처리 없이 종료한다
-      return;
-    }
-
-    // 브라우저의 추가 Escape 동작을 막고 현재 독후감 액션 메뉴를 닫는다
-    event.preventDefault();
-    // 열린 독후감 액션 메뉴 번호를 초기화한다
-    setOpenActionReportNumb(null);
-  };
-
-  /**
-   * 신고 또는 차단 메뉴를 선택하면 열린 메뉴를 닫는다
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없다
-   */
-  const handleCloseActionMenu = (): void => {
-    // 선택한 액션의 메뉴 표시 상태를 초기화한다
-    setOpenActionReportNumb(null);
   };
 
   /**
@@ -394,55 +315,18 @@ const PublicReportPage = () => {
                           <span>{rating}</span>
                         </span>
 
-                        {/* "더보기" */}
-                        <div
-                          className={styles.actionMenuRoot}
-                          onBlur={handleActionMenuBlur}
-                          onKeyDown={handleActionMenuKeyDown}
-                        >
-                          <button
-                              className={styles.actionMenuTrigger}
-                              type="button"
-                              aria-label="더보기"
-                              aria-haspopup="menu"
-                              aria-expanded={
-                                openActionReportNumb === report.reptNumb
-                              }
-                              onClick={() =>
-                                handleToggleActionMenu(report.reptNumb)
-                              }
-                          >
-                            <img
-                                className={styles.actionMenuIcon}
-                                src="/img/icons/icon-more.svg"
-                                alt=""
-                            />
-                          </button>
-
-                          {openActionReportNumb === report.reptNumb ? (
-                            /* 신고 및 차단 선택 메뉴 */
-                            <div className={styles.actionMenu} role="menu">
-                              {/* "신고하기" */}
-                              <button
-                                className={styles.actionMenuOption}
-                                type="button"
-                                role="menuitem"
-                                onClick={handleCloseActionMenu}
-                              >
-                                신고하기
-                              </button>
-                              {/* "차단하기" */}
-                              <button
-                                className={styles.actionMenuOption}
-                                type="button"
-                                role="menuitem"
-                                onClick={handleCloseActionMenu}
-                              >
-                                차단하기
-                              </button>
-                            </div>
-                          ) : null}
-                        </div>
+                        {/* 신고 및 차단 더보기 메뉴 */}
+                        <UserActionMenu
+                          userNick={report.userNick}
+                          reportTarget={{
+                            targetType: "REPORT",
+                            targetNumb: report.reptNumb,
+                            reportNumb: report.reptNumb,
+                            userNumb: report.userNumb,
+                            userNick: report.userNick,
+                            content: report.reptCntn,
+                          }}
+                        />
                       </div>
 
                     </div>

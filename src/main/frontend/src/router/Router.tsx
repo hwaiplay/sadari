@@ -22,6 +22,8 @@ import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
 import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
 import WelcomePage from "@/pages/Welcome/WelcomePage";
 import SuspensionPage from "@/pages/Settings/SuspensionPage";
+import UserReportPage from "@/pages/UserReport/UserReportPage";
+import UserReportCompletePage from "@/pages/UserReport/UserReportCompletePage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -132,6 +134,15 @@ const Router = () => {
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
+
+          {/* 사용자 콘텐츠 신고 사유 선택 */}
+          <Route path="/user-report" element={<UserReportPage />} />
+
+          {/* 사용자 콘텐츠 신고 완료 */}
+          <Route
+            path="/user-report/complete"
+            element={<UserReportCompletePage />}
+          />
         </Route>
       </Routes>
     </>

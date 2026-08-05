@@ -45,7 +45,7 @@ function Layout({ isMainLayout = true }: { isMainLayout?: boolean }) {
       <main
         style={{
           paddingTop: isMainLayout ? vars.headerHeight : 0,
-          paddingBottom: `calc(${vars.headerHeight} + max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
+          paddingBottom: `calc(${vars.navHeight} + max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
         }}
       >
         <div className={pageTransitionViewport}>
