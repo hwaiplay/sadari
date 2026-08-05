@@ -12,6 +12,7 @@ import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
+import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
@@ -19,7 +20,7 @@ type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
 type MonthlyBookGroup = {
   key: string;
-  label: string;
+  label: ReactNode;
   books: HomeBookType[];
 };
 
@@ -81,10 +82,41 @@ function getGradeGroup(book: HomeBookType) {
   const rawGrade = Number(book.reptGrde);
   const grade = Number.isFinite(rawGrade) ? Math.max(0, Math.min(5, rawGrade)) : 0;
   const starCount = Math.floor(grade);
-  const gradeLabel =
-    grade === 0
-      ? "0"
-      : String.fromCharCode(9733).repeat(starCount);
+  const gradeIcons: ReactNode[] = [];
+
+  // 평점이 없을 때도 평점 기준 그룹임을 식별할 수 있도록 빈 별을 표시한다
+  if (grade === 0) {
+    // 빈 별 아이콘을 평점 그룹 라벨에 추가한다
+    gradeIcons.push(
+      <img
+        key="empty-star"
+        src="/img/icons/icon-star-rate-empty.svg"
+        alt=""
+        aria-hidden="true"
+      />,
+    );
+
+  } else {
+    // 평점 수만큼 채워진 별을 표시한다
+    for (let index = 0; index < starCount; index += 1) {
+      // 채워진 별 아이콘을 평점 그룹 라벨에 추가한다
+      gradeIcons.push(
+        <img
+          key={`filled-star-${index}`}
+          src="/img/icons/icon-star-rate.svg"
+          alt=""
+          aria-hidden="true"
+        />,
+      );
+    }
+
+  }
+
+  const gradeLabel = (
+    <span aria-label={`평점 ${starCount}점`}>
+      {gradeIcons}
+    </span>
+  );
 
   return {
     key: String(starCount),
