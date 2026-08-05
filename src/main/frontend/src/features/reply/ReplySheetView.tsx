@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
+import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import type {
   ReplySheetController,
@@ -329,7 +330,7 @@ const ReplyItem = ({
 
       {/* 댓글 더보기와 좋아요 영역 */}
       <div className={styles.replyItemActions}>
-        {!isDeleted ? (
+        {!isDeleted && reply.myReplyYn === "Y" ? (
           /* 댓글 작성자 일치 여부에 맞는 선택 메뉴 영역 */
           <div
             className={styles.actionMenuRoot}
@@ -355,57 +356,45 @@ const ReplyItem = ({
             {controller.openActionReplyNumb === reply.replNumb ? (
               /* 본인 댓글 수정 및 삭제 또는 다른 사용자 신고 및 차단 선택 메뉴 */
               <div className={styles.actionMenu} role="menu">
-                {reply.myReplyYn === "Y" ? (
-                  <>
-                    {/* "수정하기" */}
-                    <button
-                      className={styles.actionMenuOption}
-                      type="button"
-                      role="menuitem"
-                      onClick={handleEditClick}
-                    >
-                      {/* "수정하기" */}
-                      {message("frontend.reply.edit")}
-                    </button>
-                    {/* "삭제하기" */}
-                    <button
-                      className={styles.actionMenuOptionDanger}
-                      type="button"
-                      role="menuitem"
-                      disabled={
-                        controller.deletingReplyNumb === reply.replNumb
-                      }
-                      onClick={handleDeleteClick}
-                    >
-                      {/* "삭제하기" */}
-                      {message("frontend.reply.delete")}
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    {/* "신고하기" */}
-                    <button
-                      className={styles.actionMenuOption}
-                      type="button"
-                      role="menuitem"
-                      onClick={controller.handleCloseActionMenu}
-                    >
-                      신고하기
-                    </button>
-                    {/* "차단하기" */}
-                    <button
-                      className={styles.actionMenuOption}
-                      type="button"
-                      role="menuitem"
-                      onClick={controller.handleCloseActionMenu}
-                    >
-                      차단하기
-                    </button>
-                  </>
-                )}
+                {/* "수정하기" */}
+                <button
+                  className={styles.actionMenuOption}
+                  type="button"
+                  role="menuitem"
+                  onClick={handleEditClick}
+                >
+                  {/* "수정하기" */}
+                  {message("frontend.reply.edit")}
+                </button>
+                {/* "삭제하기" */}
+                <button
+                  className={styles.actionMenuOptionDanger}
+                  type="button"
+                  role="menuitem"
+                  disabled={controller.deletingReplyNumb === reply.replNumb}
+                  onClick={handleDeleteClick}
+                >
+                  {/* "삭제하기" */}
+                  {message("frontend.reply.delete")}
+                </button>
               </div>
             ) : null}
           </div>
+        ) : null}
+
+        {!isDeleted && reply.myReplyYn !== "Y" ? (
+          /* 다른 사용자 신고 및 차단 선택 메뉴 영역 */
+          <UserActionMenu
+            userNick={reply.userNick}
+            reportTarget={{
+              targetType: "REPLY",
+              targetNumb: reply.replNumb,
+              reportNumb,
+              userNumb: reply.userNumb,
+              userNick: reply.userNick,
+              content: reply.replCntn,
+            }}
+          />
         ) : null}
 
         {!isDeleted ? (

@@ -264,12 +264,12 @@ export const actionMenuTrigger = style({
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
-  selectors: {
-    "&:hover, &:focus-visible": {
-      backgroundColor: vars.color.gray100,
-      outline: "none",
-    },
-  },
+  // selectors: {
+  //   "&:hover, &:focus-visible": {
+  //     backgroundColor: vars.color.gray100,
+  //     outline: "none",
+  //   },
+  // },
 });
 
 export const actionMenuIcon = style({
