@@ -5,10 +5,10 @@
  */
 
 import { message } from "@/app/messages/message";
+import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { useMutation } from "@tanstack/react-query";
-import { useNavigate } from "react-router-dom";
 import { delReportApi } from "../api/bookApi";
 
 /**
@@ -19,22 +19,59 @@ import { delReportApi } from "../api/bookApi";
  */
 export const useDeleteMutation = () => {
 
-  const navigate = useNavigate();
+  // 삭제 완료 후 이전 상세 이력을 남기지 않도록 홈 루트 이동 함수를 조회한다
+  const moveHome = useHomeNavigation();
 
+  /**
+   * 독후감 삭제 완료 안내가 닫히면 앱의 홈 루트로 이동한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleDeleteAlertClosed = (): void => {
+
+    // 삭제한 독후감 상세 이력이 다시 노출되지 않도록 홈 루트로 이동한다
+    moveHome();
+  };
+
+  /**
+   * 독후감 삭제 성공을 안내한 뒤 홈 루트 복귀를 예약한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleDeleteSuccess = (): void => {
+
+    // "삭제되었습니다."
+    const deleteSuccessTitle = message("frontend.alert.deleteSuccessTitle");
+    // "삭제되었습니다."
+    void sweetSuccess(deleteSuccessTitle).then(handleDeleteAlertClosed);
+  };
+
+  /**
+   * 독후감 삭제 실패 원인을 공통 오류 문구로 안내한다
+   *
+   * @author SeungHyeon.Kang
+   * @param error 독후감 삭제 요청에서 발생한 오류
+   * @return 반환값이 없다
+   */
+  const handleDeleteError = (error: unknown): void => {
+
+    // "수정에 실패했습니다."
+    const deleteFailedTitle = message("frontend.alert.updateFailedTitle");
+    // "다시 시도해주세요."
+    const retryMessage = message("frontend.common.tryAgain");
+    // 서버 메시지가 없으면 공통 재시도 문구로 삭제 실패 내용을 구성한다
+    const deleteErrorMessage = getApiErrorMessage(error, retryMessage);
+    // "수정에 실패했습니다."
+    // "다시 시도해주세요."
+    void sweetError(deleteFailedTitle, deleteErrorMessage);
+  };
+
+  // 독후감 삭제 요청과 성공 및 실패 화면 처리를 결합한 Mutation을 반환한다
   return useMutation({
     mutationFn: delReportApi,
-    onSuccess: () => {
-
-      void sweetSuccess(
-        message("frontend.alert.deleteSuccessTitle"),
-      ).then(() => navigate("/home"));
-    },
-    onError: (error: unknown) => {
-
-      void sweetError(
-        message("frontend.alert.updateFailedTitle"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
-      );
-    },
+    onSuccess: handleDeleteSuccess,
+    onError: handleDeleteError,
   });
 };
