@@ -5,11 +5,11 @@
  */
 import { message } from "@/app/messages/message";
 import {
-  Link,
   useLocation,
   useNavigate,
   useNavigationType,
 } from "react-router-dom";
+import HomeLink from "@/components/Button/HomeLink/HomeLink";
 import {
   backpageBtn,
   header,
@@ -203,13 +203,13 @@ function Header() {
                 {currentMenu.menuName}
               </h1>
             ) : (
-              <Link to="/" className={clsx(logo, headerContentSlide)}>
+              <HomeLink className={clsx(logo, headerContentSlide)}>
                 <img
                   src={"/img/common/logo-upper.svg"}
                   alt={message("frontend.common.logoAlt")}
                   width={100}
                 />
-              </Link>
+              </HomeLink>
             ))}
         </div>
         <HeaderMenuDrawer menuList={menuList} />

@@ -1,7 +1,7 @@
 import { message } from "@/app/messages/message";
 import { sweetAlert } from "@/app/lib/sweetAlert/sweetAlert";
+import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { useCallback, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import * as styles from "./ErrorPage.css";
 
 /**
@@ -12,8 +12,8 @@ import * as styles from "./ErrorPage.css";
  */
 const ErrorPage = () => {
 
-  // 등록되지 않은 URL 안내를 닫은 뒤 이동할 홈 경로를 준비한다
-  const navigate = useNavigate();
+  // 잘못된 주소와 그 아래의 앱 이력을 제거하도록 홈 루트 이동 함수를 조회한다
+  const moveHome = useHomeNavigation();
 
   /**
    * 등록되지 않은 URL 안내가 종료되면 사용자를 홈 화면으로 이동한다
@@ -22,9 +22,9 @@ const ErrorPage = () => {
    * @return 반환값이 없다
    */
   const handleAlertClosed = useCallback((): void => {
-    // 경고 알럿이 닫힌 뒤 빈 라우트 화면에 머물지 않도록 홈으로 이동한다
-    navigate("/home", { replace: true });
-  }, [navigate]);
+    // 경고 알럿이 닫힌 뒤 빈 라우트 화면에 머물지 않도록 홈 루트로 이동한다
+    moveHome();
+  }, [moveHome]);
 
   /**
    * 등록되지 않은 URL을 공통 SweetAlert 경고와 홈 이동 버튼으로 안내한다

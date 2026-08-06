@@ -1,5 +1,6 @@
 import { message } from "@/app/messages/message";
-import { Link, useNavigate } from "react-router-dom";
+import HomeLink from "@/components/Button/HomeLink/HomeLink";
+import { useNavigate } from "react-router-dom";
 import { backpageBtn, header, headerHidden, headerShell } from "./Header.css";
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
@@ -99,14 +100,14 @@ function SubPageHeader() {
                 alt={message("frontend.common.backIconAlt")}
             />
           </button>
-          <Link to="/">
+          <HomeLink>
             {/* [주석] 필수 입력 값 누락 시 노출: "서비스 로고 이미지" */}
             <img
                 src={"/img/common/logo-b.svg"}
                 alt={message("frontend.common.logoAlt")}
                 width={100}
             />
-          </Link>
+          </HomeLink>
           <HeaderMenuDrawer />
         </Container>
       </header>

@@ -4,6 +4,7 @@
  * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
+import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
 import * as styles from "./SetReportPage.css";
@@ -49,6 +50,8 @@ function SetReportPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  // 등록 취소 시 검색과 입력 이력을 제거하도록 홈 루트 이동 함수를 조회한다
+  const moveHome = useHomeNavigation();
   const selectedBook = (
     location.state as { selectedBook?: BookSearchResultType } | null
   )?.selectedBook;
@@ -206,8 +209,8 @@ function SetReportPage() {
    */
   function handleCancel() {
 
-    // 등록 과정의 검색 이력이 다시 노출되지 않도록 홈 화면으로 대체 이동한다
-    navigate("/", { replace: true });
+    // 등록 과정의 검색 이력이 다시 노출되지 않도록 앱의 홈 루트로 이동한다
+    moveHome();
   }
 
   /**
