@@ -172,7 +172,7 @@ function SetReportPage() {
    */
   function handleRangeChange(nextStartDate: string, nextEndDate: string) {
 
-    // 달력에서 확정한 기간을 4열 요약과 등록 요청에 함께 사용한다
+    // 달력에서 확정한 기간을 세로 행 요약과 등록 요청에 함께 사용한다
     setStartDate(nextStartDate);
     setEndDate(nextEndDate);
   }
@@ -349,7 +349,7 @@ function SetReportPage() {
                 : detailStyles.contentSwitchFade,
             )}
           >
-            {/* 읽는 중에는 2열, 완료와 중단에는 4열로 전환되는 독서 정보 요약 영역 */}
+            {/* 독서 상태에 따라 허용된 항목을 세로 행으로 표시하는 독서 정보 요약 영역 */}
             <ReportStatsEditor
               statusCodes={statusCodes}
               status={status}

@@ -294,7 +294,7 @@ function DetailPage() {
   };
 
   /**
-   * 4열 요약 항목을 누른 최초 시점부터 상세 화면을 편집 상태로 전환한다
+   * 세로 행 요약 항목을 누른 최초 시점부터 상세 화면을 편집 상태로 전환한다
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
@@ -433,7 +433,7 @@ function DetailPage() {
    */
   function handleRangeChange(nextStartDate: string, nextEndDate: string) {
 
-    // 선택한 기간을 4열 요약과 저장 요청에 함께 사용할 수 있도록 설정한다
+    // 선택한 기간을 세로 행 요약과 저장 요청에 함께 사용할 수 있도록 설정한다
     setStartDate(nextStartDate);
     setEndDate(nextEndDate);
   }
@@ -890,7 +890,7 @@ function DetailPage() {
               : styles.contentSwitchFade,
           )}
         >
-          {/* 읽는 중에는 2열, 완료와 중단에는 4열로 전환되는 독서 정보 직접 편집 영역 */}
+          {/* 독서 상태에 따라 허용된 항목을 세로 행으로 표시하는 독서 정보 직접 편집 영역 */}
           <ReportStatsEditor
             statusCodes={statusCodes}
             status={status}

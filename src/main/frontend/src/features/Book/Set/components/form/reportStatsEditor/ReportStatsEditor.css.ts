@@ -54,76 +54,63 @@ export const statsSection = style({
   boxSizing: "border-box",
 });
 
-export const statsGrid = style({
-  display: "grid",
-  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
-  gap: "8px",
+export const statsRows = style({
+  display: "flex",
+  flexDirection: "column",
 });
-
-export const statsGridCompact = style([
-  statsGrid,
-  {
-    gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-  },
-]);
 
 export const statsItem = style({
   position: "relative",
+  width: "100%",
   minWidth: 0,
-  minHeight: "70px",
-  padding: "4px 2px",
+  minHeight: "50px",
+  padding: "9px 6px",
   border: 0,
-  borderRadius: "10px",
+  borderBottom: `1px solid ${vars.color.gray200}`,
+  borderRadius: 0,
   backgroundColor: "transparent",
-  display: "flex",
-  flexDirection: "column",
+  display: "grid",
+  gridTemplateColumns: "86px minmax(0, 1fr)",
   alignItems: "center",
-  justifyContent: "center",
-  gap: "4px",
-  textAlign: "center",
+  gap: "12px",
+  color: "inherit",
+  textAlign: "left",
+  boxSizing: "border-box",
   cursor: "pointer",
-  transition: "background-color 160ms ease, transform 160ms ease",
+  transition: "background-color 160ms ease",
   selectors: {
+    "&:last-child": {
+      borderBottom: 0,
+    },
     "&:hover": {
       backgroundColor: "#f6f8f7",
     },
-    "&:active": {
-      transform: "translateY(1px)",
-    },
     "&:focus-visible": {
       outline: "2px solid #8ab6a3",
-      outlineOffset: "2px",
+      outlineOffset: 0,
     },
   },
 });
 
 export const statsLabel = style({
-  height: "30px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontFamily: vars.font.medium,
-  fontSize: "12px",
-  lineHeight: 1.25,
+  fontFamily: vars.font.semibold,
+  fontSize: "13px",
+  lineHeight: 1.4,
   color: vars.color.gray600,
-  letterSpacing: 0,
-  whiteSpace: "normal",
-  wordBreak: "keep-all",
 });
 
 export const statsValue = style({
   minWidth: 0,
-  minHeight: "32px",
   display: "flex",
   alignItems: "center",
-  justifyContent: "center",
-  fontFamily: vars.font.heading,
-  fontSize: "14px",
-  lineHeight: 1.2,
+  justifyContent: "flex-end",
+  fontFamily: vars.font.semibold,
+  fontSize: "15px",
+  lineHeight: 1.45,
   color: vars.color.black,
   letterSpacing: 0,
-  whiteSpace: "normal",
-  wordBreak: "keep-all",
+  textAlign: "right",
+  wordBreak: "break-word",
 });
 
 export const statusRead = style({
@@ -141,7 +128,6 @@ export const statusStop = style({
 export const gradeValue = style([
   statsValue,
   {
-    display: "inline-flex",
     gap: "3px",
   },
 ]);
