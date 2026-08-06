@@ -62,6 +62,12 @@ public class UserDto {
     @Schema(description = "배경 이미지 파일 번호")
     private Long bgimNumb;
 
+    @Schema(description = "최종 저장할 프로필 이미지 임시 식별값")
+    private String profileImageDraftToken;
+
+    @Schema(description = "최종 저장할 배경 이미지 임시 식별값")
+    private String backgroundImageDraftToken;
+
     @Schema(description = "한줄소개", example = "추리소설을 좋아합니다.")
     private String intrCntn;
 

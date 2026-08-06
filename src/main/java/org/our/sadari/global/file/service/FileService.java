@@ -1,6 +1,7 @@
 package org.our.sadari.global.file.service;
 
 import java.awt.Graphics2D;
+import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
@@ -12,9 +13,14 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.time.LocalDate;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Stream;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -24,6 +30,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.dto.FileDto;
+import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
 import org.springframework.beans.factory.annotation.Value;
@@ -74,12 +81,27 @@ public class FileService {
     private static final int EXIF_ORIENTATION_TAG = 0x0112;
     // EXIF APP1 구간의 고정 헤더값
     private static final byte[] EXIF_HEADER = {'E', 'x', 'i', 'f', 0x00, 0x00};
+    // 프로필 이미지 임시 저장 루트 디렉터리 설정값
+    private static final String PROFILE_IMAGE_DRAFT_ROOT_DIR = "profile-image-drafts";
+    // 임시 이미지가 유지되는 최대 시간
+    private static final Duration PROFILE_IMAGE_DRAFT_TTL = Duration.ofMinutes(30);
+    // 프로필 미리보기 한 변의 최대 길이
+    private static final int PROFILE_PREVIEW_MAX_EDGE = 512;
+    // 배경 미리보기 한 변의 최대 길이
+    private static final int BACKGROUND_PREVIEW_MAX_EDGE = 1600;
+    // 임시 원본 파일명 구분값
+    private static final String DRAFT_ORIGINAL_MARKER = ".original";
+    // 임시 미리보기 파일명 구분값
+    private static final String DRAFT_PREVIEW_MARKER = ".preview";
 
     // File 데이터 접근 객체
     private final FileMapper fileMapper;
 
     // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
     private Path uploadRootPath = Paths.get(UPLOAD_ROOT_DIR).toAbsolutePath().normalize();
+
+    // 공개 업로드 경로와 분리된 프로필 이미지 임시 저장 루트 경로
+    private Path profileImageDraftRootPath = Paths.get(PROFILE_IMAGE_DRAFT_ROOT_DIR).toAbsolutePath().normalize();
 
     // 업로드 가능한 이미지 최대 바이트 크기
     @Value("${app.upload.max-image-bytes:10485760}")
@@ -117,6 +139,23 @@ public class FileService {
         String originalName = normalizeOriginalName(imageFile.getOriginalFilename());
         // 암호화 또는 전송에 사용할 바이트 배열로 변환한다
         ValidatedImage validatedImage = validateAndNormalizeImage(imageFile.getBytes());
+        // 검증이 끝난 이미지 픽셀을 영구 저장하고 파일 번호를 반환한다
+        return setValidatedImage(validatedImage, originalName, imageType, regiUser);
+    }
+
+    /**
+     * 검증된 이미지 픽셀을 날짜별 영구 경로에 저장하고 파일 메타정보를 등록한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param validatedImage 서버 검증과 방향 보정을 마친 이미지
+     * @param originalName 메타정보에 기록할 원본 파일명
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @param regiUser 파일을 등록한 회원 번호
+     * @return 파일 테이블에 생성된 파일 번호
+     * @throws IOException 파일 저장 중 오류가 발생한 경우
+     */
+    private Long setValidatedImage(ValidatedImage validatedImage, String originalName, String imageType
+                                  , Long regiUser) throws IOException {
         // 검증된 이미지 형식에 대응하는 파일 확장자를 결정한다
         String storedName = createStoredFileName(validatedImage.extension());
         // 업로드 날짜를 저장 경로와 접근 경로에 동일하게 적용한다
@@ -287,6 +326,233 @@ public class FileService {
             log.warn("Kakao profile image download failed. userIdxx={}, message={}", userIdxx, e.getMessage());
             // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
             return setExternalImage(profileImageUrl, userIdxx, Constant.FILE_TYPE_PROFILE, regiUser);
+        }
+    }
+
+    /**
+     * 선택한 프로필 또는 배경 이미지를 비공개 임시 저장소에 보관하고 축소 미리보기를 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param imageFile 사용자가 선택한 이미지
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @param userNumb 로그인 사용자 번호
+     * @return 임시 저장 식별값과 서버 미리보기
+     * @throws IOException 임시 파일 저장 중 오류가 발생한 경우
+     */
+    public ProfileImageDraftDto setProfileImageDraft(MultipartFile imageFile, String imageType
+                                                    , Long userNumb) throws IOException {
+        // 인증 정보와 파일이 없으면 사용자별 임시 저장을 시작하지 않는다
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(imageFile) || imageFile.isEmpty()) {
+            throw new InvalidImageFileException("Profile image draft is empty.");
+        }
+
+        // 허용된 프로필과 배경 유형만 사용자 임시 경로로 변환한다
+        validateImageType(imageType);
+        // 서버에서 시그니처와 크기 및 EXIF 방향을 검증하고 픽셀을 정규화한다
+        ValidatedImage validatedImage = validateAndNormalizeImage(imageFile.getBytes());
+        // 화면 표시용 미리보기는 대상별 제한 크기로 별도 축소한다
+        ValidatedImage previewImage = createPreviewImage(
+                validatedImage,
+                Constant.FILE_TYPE_PROFILE.equals(imageType)
+                        ? PROFILE_PREVIEW_MAX_EDGE
+                        : BACKGROUND_PREVIEW_MAX_EDGE
+        );
+        // 임시 파일명을 추측하기 어렵게 UUID 식별값을 생성한다
+        String draftToken = UUID.randomUUID().toString();
+        // 사용자와 이미지 유형별 전용 디렉터리를 계산한다
+        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+        // 새 임시 원본과 미리보기를 기록할 경로를 생성한다
+        Path originalPath = draftDirectory.resolve(getDraftFileName(
+                draftToken,
+                DRAFT_ORIGINAL_MARKER,
+                validatedImage.extension()
+        ));
+        Path previewPath = draftDirectory.resolve(getDraftFileName(
+                draftToken,
+                DRAFT_PREVIEW_MARKER,
+                previewImage.extension()
+        ));
+        boolean draftSaved = false;
+
+        try {
+            // 사용자별 비공개 임시 디렉터리를 생성한다
+            Files.createDirectories(draftDirectory);
+            // 검증과 방향 보정을 마친 원본 픽셀을 최종 저장 전까지 보관한다
+            Files.write(originalPath, validatedImage.bytes(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            // 모바일 화면에서 원본을 디코딩하지 않도록 축소 미리보기를 별도 기록한다
+            Files.write(previewPath, previewImage.bytes(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
+            // 두 파일이 모두 준비된 뒤 이전 선택본을 제거해 실패 시 기존 미리보기를 유지한다
+            delOtherProfileImageDraftFiles(draftDirectory, draftToken);
+            draftSaved = true;
+            // 같은 로그인 사용자가 앱을 다시 열어도 만료 전 선택본을 복원할 응답을 반환한다
+            return createProfileImageDraftDto(imageType, draftToken, previewPath, previewImage.mimeType(), originalPath);
+        }
+
+        finally {
+            // 임시 저장 도중 실패한 신규 파일은 다음 요청에 노출되지 않게 즉시 정리한다
+            if (!draftSaved) {
+                Files.deleteIfExists(originalPath);
+                Files.deleteIfExists(previewPath);
+            }
+        }
+    }
+
+    /**
+     * 로그인 사용자의 만료되지 않은 프로필과 배경 임시 이미지를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 복원 가능한 임시 이미지 목록
+     */
+    public List<ProfileImageDraftDto> getProfileImageDraftList(Long userNumb) {
+        // 인증 사용자 번호가 없으면 다른 사용자의 임시 경로를 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            return List.of();
+        }
+
+        // 프로필과 배경 임시 선택본을 각각 조회해 만료되지 않은 값만 반환한다
+        return Stream.of(Constant.FILE_TYPE_PROFILE, Constant.FILE_TYPE_BACKGROUND)
+                .map(imageType -> getProfileImageDraft(userNumb, imageType))
+                .filter(java.util.Objects::nonNull)
+                .toList();
+    }
+
+    /**
+     * 임시 이미지 식별값을 로그인 사용자와 유형에 맞춰 영구 파일로 승격한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftToken 임시 이미지 식별값
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @param userNumb 로그인 사용자 번호
+     * @return 신규 영구 파일 번호, 식별값이 없으면 null
+     * @throws IOException 파일 저장 중 오류가 발생한 경우
+     */
+    public Long setUploadedImageDraft(String draftToken, String imageType, Long userNumb) throws IOException {
+        // 이미지가 변경되지 않은 저장 요청은 기존 파일 번호를 유지한다
+        if (StringUtil.isEmpty(draftToken)) {
+            return null;
+        }
+
+        // 사용자와 이미지 유형 및 UUID 식별값을 모두 검증한다
+        validateImageType(imageType);
+        validateDraftToken(draftToken);
+        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+        Path originalPath = findDraftPath(draftDirectory, draftToken, DRAFT_ORIGINAL_MARKER);
+
+        // 사용자 전용 경로에 없거나 보존 시간이 지난 임시 이미지는 저장에 사용하지 않는다
+        if (StringUtil.isEmpty(originalPath) || isExpiredDraft(originalPath)) {
+            delProfileImageDraft(userNumb, imageType);
+            throw new InvalidImageFileException("Profile image draft expired.");
+        }
+
+        // 비공개 임시 원본의 실제 시그니처로 최종 저장 형식을 다시 확인한다
+        byte[] imageBytes = Files.readAllBytes(originalPath);
+        ImageFormat imageFormat = detectImageFormat(imageBytes);
+        if (StringUtil.isEmpty(imageFormat)) {
+            throw new InvalidImageFileException("Profile image draft format is invalid.");
+        }
+
+        ValidatedImage validatedImage = new ValidatedImage(
+                imageBytes,
+                imageFormat.mimeType(),
+                imageFormat.extension()
+        );
+        // 날짜별 영구 저장과 DB 메타정보 등록을 완료한다
+        Long fileNumb = setValidatedImage(validatedImage, "profile-image" + validatedImage.extension(), imageType, userNumb);
+        // 사용자 프로필 UPDATE까지 커밋된 경우에만 재시도를 위한 임시 원본을 제거한다
+        registerCommitDraftCleanup(draftDirectory, draftToken);
+        // 승격된 영구 파일 번호를 반환한다
+        return fileNumb;
+    }
+
+    /**
+     * 로그인 사용자의 특정 유형 임시 이미지를 모두 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     */
+    public void delProfileImageDraft(Long userNumb, String imageType) {
+        // 안전한 사용자 및 이미지 유형 경로만 삭제 대상으로 허용한다
+        if (StringUtil.isEmpty(userNumb)) {
+            return;
+        }
+
+        validateImageType(imageType);
+        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, imageType));
+    }
+
+    /**
+     * 로그아웃과 계정 상태 변경 시 로그인 사용자의 모든 임시 이미지를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 삭제할 사용자 번호
+     */
+    public void delAllProfileImageDrafts(Long userNumb) {
+        // 사용자 번호가 없으면 임시 저장 루트에 접근하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            return;
+        }
+
+        // 프로필과 배경 임시 파일을 각각 안전한 하위 경로에서 제거한다
+        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, Constant.FILE_TYPE_PROFILE));
+        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, Constant.FILE_TYPE_BACKGROUND));
+    }
+
+    /**
+     * 계정 상태 변경 트랜잭션이 커밋된 뒤 사용자의 모든 임시 이미지를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 삭제할 사용자 번호
+     */
+    public void delAllProfileImageDraftsAfterCommit(Long userNumb) {
+        // 트랜잭션 밖에서는 이미 확정된 상태에 맞춰 즉시 임시 이미지를 삭제한다
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            delAllProfileImageDrafts(userNumb);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * 계정 상태 변경이 커밋된 경우에만 사용자 임시 이미지를 삭제한다.
+             *
+             * @author SeungHyeon.Kang
+             * @param status 트랜잭션 종료 상태
+             */
+            @Override
+            public void afterCompletion(int status) {
+                // 롤백된 계정 상태에서는 사용자가 편집을 계속할 수 있도록 임시 선택본을 유지한다
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    return;
+                }
+
+                // 확정된 비활성화 또는 영구 탈퇴 상태의 사용자 임시 이미지를 모두 삭제한다
+                delAllProfileImageDrafts(userNumb);
+            }
+        });
+    }
+
+    /**
+     * 보존 시간이 지난 모든 사용자 임시 이미지를 정리한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    public void delExpiredProfileImageDrafts() {
+        // 임시 저장 루트가 없으면 정리 작업을 종료한다
+        if (!Files.isDirectory(profileImageDraftRootPath)) {
+            return;
+        }
+
+        try (Stream<Path> pathStream = Files.walk(profileImageDraftRootPath)) {
+            // 파일 수정 시각이 보존 시간을 지난 임시 파일만 삭제한다
+            pathStream.filter(Files::isRegularFile)
+                    .filter(this::isExpiredDraft)
+                    .forEach(this::delDraftFileSafely);
+        }
+
+        catch (IOException e) {
+            // 정기 정리 실패는 다음 실행에서 재시도할 수 있도록 운영 로그에 남긴다
+            log.error("Expired profile image draft cleanup failed.", e);
         }
     }
 
@@ -464,6 +730,323 @@ public class FileService {
     private String createStoredFileName(String extension) {
         // 서버가 검증해 결정한 확장자로 충돌 없는 저장 파일명을 생성한 결과를 반환한다
         return UUID.randomUUID() + extension;
+    }
+
+    /**
+     * 사용자와 이미지 유형에 제한된 비공개 임시 저장 경로를 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 임시 이미지 전용 디렉터리
+     */
+    private Path getProfileImageDraftDirectory(Long userNumb, String imageType) {
+        // 숫자 사용자 번호와 고정 유형 디렉터리만 조합해 경로 주입을 차단한다
+        Path draftDirectory = profileImageDraftRootPath
+                .resolve(String.valueOf(userNumb))
+                .resolve(getUploadDirectoryName(imageType))
+                .normalize();
+
+        // 계산된 경로가 임시 저장 루트를 벗어나면 파일 시스템 접근을 차단한다
+        if (!draftDirectory.startsWith(profileImageDraftRootPath)) {
+            throw new InvalidImageFileException("Profile image draft path is invalid.");
+        }
+
+        // 사용자별 이미지 유형 임시 디렉터리를 반환한다
+        return draftDirectory;
+    }
+
+    /**
+     * 임시 이미지 식별값과 용도 및 확장자를 안전한 파일명으로 결합한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftToken UUID 임시 이미지 식별값
+     * @param marker 원본 또는 미리보기 구분값
+     * @param extension 서버 검증 이미지 확장자
+     * @return 임시 저장 파일명
+     */
+    private String getDraftFileName(String draftToken, String marker, String extension) {
+        // 서버가 생성하고 검증한 값만 조합한 임시 파일명을 반환한다
+        return draftToken + marker + extension;
+    }
+
+    /**
+     * 클라이언트가 전달한 임시 이미지 식별값이 UUID 형식인지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftToken 검증할 임시 이미지 식별값
+     */
+    private void validateDraftToken(String draftToken) {
+        // 경로 문자나 임의 파일명을 사용할 수 없도록 UUID 파싱 결과만 허용한다
+        try {
+            UUID.fromString(draftToken);
+        }
+
+        catch (IllegalArgumentException e) {
+            throw new InvalidImageFileException("Profile image draft token is invalid.", e);
+        }
+    }
+
+    /**
+     * 특정 임시 이미지 식별값에 대응하는 원본 또는 미리보기 파일을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftDirectory 사용자별 임시 디렉터리
+     * @param draftToken 임시 이미지 식별값
+     * @param marker 원본 또는 미리보기 구분값
+     * @return 일치하는 임시 파일 경로, 없으면 null
+     */
+    private Path findDraftPath(Path draftDirectory, String draftToken, String marker) {
+        // 사용자별 임시 디렉터리가 없으면 복원할 파일이 없다
+        if (!Files.isDirectory(draftDirectory)) {
+            return null;
+        }
+
+        try (Stream<Path> pathStream = Files.list(draftDirectory)) {
+            // UUID와 용도 구분값이 일치하는 서버 생성 파일만 조회한다
+            return pathStream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().startsWith(draftToken + marker))
+                    .findFirst()
+                    .orElse(null);
+        }
+
+        catch (IOException e) {
+            // 임시 저장소 조회 실패는 일반 파일 저장 실패 흐름으로 전환한다
+            throw new InvalidImageFileException("Profile image draft could not be read.", e);
+        }
+    }
+
+    /**
+     * 사용자와 이미지 유형에 남은 최신 임시 선택본을 복원한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 복원할 임시 이미지, 없으면 null
+     */
+    private ProfileImageDraftDto getProfileImageDraft(Long userNumb, String imageType) {
+        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+
+        // 임시 디렉터리가 없으면 복원할 선택본이 없다
+        if (!Files.isDirectory(draftDirectory)) {
+            return null;
+        }
+
+        try (Stream<Path> pathStream = Files.list(draftDirectory)) {
+            Path originalPath = pathStream
+                    .filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().contains(DRAFT_ORIGINAL_MARKER))
+                    .max(Comparator.comparingLong(this::getLastModifiedMillis))
+                    .orElse(null);
+
+            // 원본이 없거나 만료되었으면 해당 유형의 남은 임시 파일을 정리한다
+            if (StringUtil.isEmpty(originalPath) || isExpiredDraft(originalPath)) {
+                delFilesInDirectory(draftDirectory);
+                return null;
+            }
+
+            String fileName = originalPath.getFileName().toString();
+            String draftToken = fileName.substring(0, fileName.indexOf(DRAFT_ORIGINAL_MARKER));
+            Path previewPath = findDraftPath(draftDirectory, draftToken, DRAFT_PREVIEW_MARKER);
+
+            // 원본과 한 쌍인 미리보기가 없으면 불완전한 임시 선택본을 제거한다
+            if (StringUtil.isEmpty(previewPath)) {
+                delFilesInDirectory(draftDirectory);
+                return null;
+            }
+
+            // 미리보기 시그니처로 Data URL MIME 형식을 결정한다
+            byte[] previewBytes = Files.readAllBytes(previewPath);
+            ImageFormat previewFormat = detectImageFormat(previewBytes);
+            if (StringUtil.isEmpty(previewFormat)) {
+                delFilesInDirectory(draftDirectory);
+                return null;
+            }
+
+            // 같은 로그인 사용자에게만 서버 미리보기와 만료 시각을 반환한다
+            return createProfileImageDraftDto(
+                    imageType,
+                    draftToken,
+                    previewPath,
+                    previewFormat.mimeType(),
+                    originalPath
+            );
+        }
+
+        catch (IOException e) {
+            // 복원 실패는 프로필 본문 조회를 방해하지 않고 운영 로그에 남긴다
+            log.warn("Profile image draft restore failed. userNumb={}, imageType={}", userNumb, imageType, e);
+            return null;
+        }
+    }
+
+    /**
+     * 임시 이미지 응답 객체를 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @param draftToken 임시 이미지 식별값
+     * @param previewPath 축소 미리보기 경로
+     * @param previewMimeType 미리보기 MIME 형식
+     * @param originalPath 만료 시각 기준이 되는 임시 원본 경로
+     * @return 임시 이미지 응답
+     * @throws IOException 미리보기 파일을 읽을 수 없는 경우
+     */
+    private ProfileImageDraftDto createProfileImageDraftDto(String imageType, String draftToken
+                                                            , Path previewPath, String previewMimeType
+                                                            , Path originalPath) throws IOException {
+        ProfileImageDraftDto draftDto = new ProfileImageDraftDto();
+        // ImageType 업무 값을 draftDto DTO에 설정한다
+        draftDto.setImageType(imageType);
+        // DraftToken 업무 값을 draftDto DTO에 설정한다
+        draftDto.setDraftToken(draftToken);
+        // 작은 서버 미리보기만 인증 응답 본문에 포함하고 실제 임시 경로는 노출하지 않는다
+        draftDto.setPreviewDataUrl(
+                "data:" + previewMimeType + ";base64," + Base64.getEncoder().encodeToString(Files.readAllBytes(previewPath))
+        );
+        // 원본 생성 시각으로부터 고정된 30분 만료 시각을 설정한다
+        draftDto.setExpiresAt(Instant.ofEpochMilli(Files.getLastModifiedTime(originalPath).toMillis())
+                .plus(PROFILE_IMAGE_DRAFT_TTL));
+        // 로그인 사용자의 임시 이미지 정보를 반환한다
+        return draftDto;
+    }
+
+    /**
+     * 방향 보정이 끝난 이미지를 화면 표시용 제한 크기로 축소한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param sourceImage 검증과 방향 보정을 마친 이미지
+     * @param maxEdge 미리보기 한 변의 최대 길이
+     * @return 축소된 서버 미리보기
+     */
+    private ValidatedImage createPreviewImage(ValidatedImage sourceImage, int maxEdge) {
+        try {
+            BufferedImage decodedImage = ImageIO.read(new ByteArrayInputStream(sourceImage.bytes()));
+            if (StringUtil.isEmpty(decodedImage)) {
+                throw new InvalidImageFileException("Profile image preview decoding failed.");
+            }
+
+            double scale = Math.min(1.0, (double) maxEdge / Math.max(decodedImage.getWidth(), decodedImage.getHeight()));
+            int targetWidth = Math.max(1, (int) Math.round(decodedImage.getWidth() * scale));
+            int targetHeight = Math.max(1, (int) Math.round(decodedImage.getHeight() * scale));
+            int targetType = decodedImage.getColorModel().hasAlpha() ? BufferedImage.TYPE_INT_ARGB : BufferedImage.TYPE_INT_RGB;
+            BufferedImage previewImage = new BufferedImage(targetWidth, targetHeight, targetType);
+            Graphics2D graphics = previewImage.createGraphics();
+
+            try {
+                // 고해상도 원본을 축소할 때 계단 현상을 줄이는 보간 설정을 적용한다
+                graphics.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BICUBIC);
+                graphics.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                graphics.drawImage(decodedImage, 0, 0, targetWidth, targetHeight, null);
+            }
+
+            finally {
+                graphics.dispose();
+            }
+
+            ImageFormat imageFormat = ".png".equals(sourceImage.extension()) ? ImageFormat.PNG : ImageFormat.JPEG;
+            ByteArrayOutputStream previewOutput = new ByteArrayOutputStream();
+            boolean encoded = ImageIO.write(previewImage, imageFormat.imageIoName(), previewOutput);
+
+            if (!encoded || previewOutput.size() == 0) {
+                throw new InvalidImageFileException("Profile image preview encoding failed.");
+            }
+
+            return new ValidatedImage(previewOutput.toByteArray(), imageFormat.mimeType(), imageFormat.extension());
+        }
+
+        catch (IOException e) {
+            throw new InvalidImageFileException("Profile image preview could not be created.", e);
+        }
+    }
+
+    /**
+     * 새 임시 선택본을 제외한 같은 유형의 이전 파일을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftDirectory 사용자별 임시 디렉터리
+     * @param retainedToken 유지할 신규 임시 이미지 식별값
+     * @throws IOException 임시 디렉터리를 조회할 수 없는 경우
+     */
+    private void delOtherProfileImageDraftFiles(Path draftDirectory, String retainedToken) throws IOException {
+        try (Stream<Path> pathStream = Files.list(draftDirectory)) {
+            pathStream.filter(Files::isRegularFile)
+                    .filter(path -> !path.getFileName().toString().startsWith(retainedToken + "."))
+                    .forEach(this::delDraftFileSafely);
+        }
+    }
+
+    /**
+     * 임시 이미지 디렉터리 안의 파일만 안전하게 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftDirectory 삭제할 임시 파일이 있는 디렉터리
+     */
+    private void delFilesInDirectory(Path draftDirectory) {
+        // 계산된 경로가 임시 저장 루트 밖이면 삭제를 실행하지 않는다
+        if (!draftDirectory.startsWith(profileImageDraftRootPath) || !Files.isDirectory(draftDirectory)) {
+            return;
+        }
+
+        try (Stream<Path> pathStream = Files.list(draftDirectory)) {
+            pathStream.filter(Files::isRegularFile).forEach(this::delDraftFileSafely);
+        }
+
+        catch (IOException e) {
+            log.error("Profile image draft cleanup failed. path={}", draftDirectory, e);
+        }
+    }
+
+    /**
+     * 임시 파일 하나를 삭제하고 실패를 운영 로그에 남긴다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftPath 삭제할 임시 파일 경로
+     */
+    private void delDraftFileSafely(Path draftPath) {
+        // 임시 저장 루트의 일반 파일만 삭제 대상으로 허용한다
+        if (!draftPath.normalize().startsWith(profileImageDraftRootPath) || !Files.isRegularFile(draftPath)) {
+            return;
+        }
+
+        try {
+            Files.deleteIfExists(draftPath);
+        }
+
+        catch (IOException e) {
+            log.error("Profile image draft file cleanup failed. path={}", draftPath, e);
+        }
+    }
+
+    /**
+     * 임시 파일이 30분 보존 시간을 지났는지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftPath 확인할 임시 파일
+     * @return 만료 여부
+     */
+    private boolean isExpiredDraft(Path draftPath) {
+        return Instant.ofEpochMilli(getLastModifiedMillis(draftPath))
+                .plus(PROFILE_IMAGE_DRAFT_TTL)
+                .isBefore(Instant.now());
+    }
+
+    /**
+     * 파일 수정 시각을 정렬과 만료 계산에 사용할 밀리초 값으로 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param path 확인할 파일 경로
+     * @return 파일 수정 시각, 조회 실패 시 최소값
+     */
+    private long getLastModifiedMillis(Path path) {
+        try {
+            return Files.getLastModifiedTime(path).toMillis();
+        }
+
+        catch (IOException e) {
+            return Long.MIN_VALUE;
+        }
     }
 
     /**
@@ -1175,6 +1758,64 @@ public class FileService {
                 }
             }
         });
+    }
+
+    /**
+     * 프로필 저장 트랜잭션이 커밋된 경우에만 승격을 마친 임시 이미지 쌍을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftDirectory 사용자별 임시 디렉터리
+     * @param draftToken 삭제할 임시 이미지 식별값
+     */
+    private void registerCommitDraftCleanup(Path draftDirectory, String draftToken) {
+        // 트랜잭션 밖에서 영구 저장이 완료되었다면 임시 파일을 즉시 삭제한다
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            delDraftTokenFiles(draftDirectory, draftToken);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * DB 커밋 성공 시에만 임시 원본과 미리보기를 정리한다.
+             *
+             * @author SeungHyeon.Kang
+             * @param status 트랜잭션 종료 상태
+             */
+            @Override
+            public void afterCompletion(int status) {
+                // 롤백 시에는 사용자가 다시 저장할 수 있도록 만료 전 임시 이미지를 유지한다
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    return;
+                }
+
+                // 최종 프로필에 반영된 임시 원본과 미리보기를 삭제한다
+                delDraftTokenFiles(draftDirectory, draftToken);
+            }
+        });
+    }
+
+    /**
+     * 특정 임시 이미지 식별값에 대응하는 원본과 미리보기 파일을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param draftDirectory 사용자별 임시 디렉터리
+     * @param draftToken 삭제할 임시 이미지 식별값
+     */
+    private void delDraftTokenFiles(Path draftDirectory, String draftToken) {
+        // 안전한 사용자별 디렉터리 안에서만 식별값 파일을 조회한다
+        if (!draftDirectory.startsWith(profileImageDraftRootPath) || !Files.isDirectory(draftDirectory)) {
+            return;
+        }
+
+        try (Stream<Path> pathStream = Files.list(draftDirectory)) {
+            pathStream.filter(Files::isRegularFile)
+                    .filter(path -> path.getFileName().toString().startsWith(draftToken + "."))
+                    .forEach(FileService.this::delDraftFileSafely);
+        }
+
+        catch (IOException e) {
+            log.error("Committed profile image draft cleanup failed. path={}", draftDirectory, e);
+        }
     }
 
     /**

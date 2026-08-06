@@ -15,6 +15,7 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
@@ -72,6 +73,8 @@ public class AuthLoginController {
     private final UserMapper userMapper;
     // 회원 탈퇴 업무 처리 서비스
     private final UserWithdrawalService userWithdrawalService;
+    // 로그아웃 시 사용자 프로필 임시 이미지를 정리할 파일 서비스
+    private final FileService fileService;
 
     // OAuth 완료 후 이동할 프런트엔드 도메인
     @Value("${domain.front}")
@@ -267,7 +270,6 @@ public class AuthLoginController {
     public ResultData refresh(@Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) {
         // extractRefreshToken 호출로 요청에서 인증 토큰을 추출한다
         String refreshToken = extractRefreshToken(request);
-
         // Refresh Token의 존재 여부 및 위변조/만료 상태를 검증한다.
         if (StringUtil.isEmpty(refreshToken) || !jwtProvider.validateToken(refreshToken)) {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
@@ -335,9 +337,13 @@ public class AuthLoginController {
         String accessToken = extractAccessToken(request);
         // extractRefreshToken 호출로 요청에서 인증 토큰을 추출한다
         String refreshToken = extractRefreshToken(request);
+        // 유효한 Access 또는 Refresh Token에서 임시 이미지 정리에 사용할 사용자 번호를 복원한다
+        Long logoutUserNumb = null;
 
         // 유효한 Access Token인 경우 남은 유효시간 동안 재사용하지 못하도록 jti를 Redis 블랙리스트에 등록한다.
         if (!StringUtil.isEmpty(accessToken) && jwtProvider.validateToken(accessToken)) {
+            // Refresh Token이 없더라도 로그아웃 사용자의 임시 이미지를 정리할 번호를 보관한다
+            logoutUserNumb = jwtProvider.getUserNumb(accessToken);
             // AccessTokenBlacklist 업무 값을 tokenRedisService DTO에 설정한다
             tokenRedisService.setAccessTokenBlacklist(
                     // getTokenId 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -349,8 +355,18 @@ public class AuthLoginController {
 
         // 유효한 Refresh Token인 경우 재발급에 사용되지 못하도록 Redis에서 제거한다.
         if (!StringUtil.isEmpty(refreshToken) && jwtProvider.validateToken(refreshToken)) {
+            // 로그아웃하는 사용자 번호를 토큰 제거와 임시 파일 정리에 함께 사용한다
+            Long userNumb = jwtProvider.getUserNumb(refreshToken);
+            // Refresh Token의 로그인 사용자 번호를 최종 로그아웃 대상으로 설정한다
+            logoutUserNumb = userNumb;
             // delLoginUserInfo 업무 로직을 tokenRedisService에 위임한다
-            tokenRedisService.delLoginUserInfo(jwtProvider.getUserNumb(refreshToken));
+            tokenRedisService.delLoginUserInfo(userNumb);
+        }
+
+        // 유효한 인증 토큰에서 사용자를 확인한 경우 저장하지 않은 임시 이미지를 모두 삭제한다
+        if (!StringUtil.isEmpty(logoutUserNumb)) {
+            // 저장하지 않은 프로필과 배경 임시 원본 및 미리보기를 즉시 삭제한다
+            fileService.delAllProfileImageDrafts(logoutUserNumb);
         }
 
         // 브라우저의 토큰 쿠키를 삭제(만료 처리)한다.

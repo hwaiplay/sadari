@@ -12,6 +12,7 @@ import org.our.sadari.global.common.service.UserIdEncryptionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.security.jwt.TokenRedisService;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.user.auth.dto.KakaoAccountDto;
 import org.our.sadari.user.auth.dto.KakaoTokenDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
@@ -84,6 +85,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
     private final ObjectMapper objectMapper;
     // 관리자 정지 상태와 기간 만료 처리 서비스
     private final UserSuspensionService userSuspensionService;
+    // 계정 상태 변경 시 저장하지 않은 프로필 임시 이미지를 정리할 파일 서비스
+    private final FileService fileService;
 
     // 환경별 영구 삭제 유예기간
     @Value("${withdrawal.hard-delete-wait-days:30}")
@@ -296,6 +299,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
 
         // 탈퇴 처리 후 기존 Refresh Token과 닉네임 캐시를 제거한다
         tokenRedisService.delLoginUserInfo(request.getUserNumb());
+        // 비활성화와 영구 삭제 대기 전환 모두 저장하지 않은 임시 프로필 이미지를 즉시 삭제한다
+        fileService.delAllProfileImageDraftsAfterCommit(request.getUserNumb());
         // 프론트엔드가 완료 화면을 구분할 수 있도록 탈퇴 유형을 반환한다
         return ResultData.success(request.getWthdType());
     }

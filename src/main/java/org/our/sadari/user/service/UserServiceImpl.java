@@ -103,6 +103,84 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
+     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 비공개 임시 저장소에 보관한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageFile 임시 저장할 이미지
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 서버 미리보기와 임시 식별값
+     */
+    @Override
+    public ResultData setProfileImageDraft(Long userNumb, MultipartFile imageFile, String imageType) {
+        // 인증 사용자 번호가 없으면 사용자별 임시 경로를 생성하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        try {
+            // 서버가 검증과 방향 보정 및 축소를 완료한 임시 이미지 정보를 반환한다
+            return ResultData.success(fileService.setProfileImageDraft(imageFile, imageType, userNumb));
+        }
+
+        catch (InvalidImageFileException e) {
+            // 허용 형식과 크기 및 해상도를 벗어난 파일은 공통 이미지 안내로 응답한다
+            return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
+        }
+
+        catch (IOException e) {
+            // 임시 저장소 쓰기 실패는 일반 저장 실패로 응답하고 원인을 기록한다
+            log.error("프로필 이미지 임시 저장에 실패했습니다. userNumb={}, imageType={}", userNumb, imageType, e);
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
+        }
+    }
+
+    /**
+     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 복원 가능한 임시 이미지 목록
+     */
+    @Override
+    public ResultData getProfileImageDraftList(Long userNumb) {
+        // 인증 사용자 번호가 없으면 사용자별 임시 저장소를 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 같은 로그인 사용자의 프로필과 배경 임시 선택본만 반환한다
+        return ResultData.success(fileService.getProfileImageDraftList(userNumb));
+    }
+
+    /**
+     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 삭제 처리 결과
+     */
+    @Override
+    public ResultData delProfileImageDraft(Long userNumb, String imageType) {
+        // 인증 사용자 번호가 없으면 임시 저장소 삭제를 시작하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        try {
+            // 취소한 이미지 유형의 임시 원본과 미리보기를 즉시 제거한다
+            fileService.delProfileImageDraft(userNumb, imageType);
+            return ResultData.success();
+        }
+
+        catch (InvalidImageFileException e) {
+            // 허용하지 않은 이미지 유형은 잘못된 요청으로 응답한다
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+    }
+
+    /**
      * 로그인 사용자의 프로필 정보를 수정한다.
      * 화면에서 별도 닉네임 중복 검사 API를 호출하지 않으므로 저장 요청에서 중복과 욕설을 최종 검증한다.
      *
@@ -169,9 +247,13 @@ public class UserServiceImpl implements UserService {
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // ProfNumb 업무 값을 userDto DTO에 설정한다
-            userDto.setProfNumb(fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, userNumb));          //새로운 프로필 사진 존재시 파일 저장
+            userDto.setProfNumb(!StringUtil.isEmpty(userDto.getProfileImageDraftToken())
+                    ? fileService.setUploadedImageDraft(userDto.getProfileImageDraftToken(), Constant.FILE_TYPE_PROFILE, userNumb)
+                    : fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, userNumb));          //새로운 프로필 사진 존재시 파일 저장
             // BgimNumb 업무 값을 userDto DTO에 설정한다
-            userDto.setBgimNumb(fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, userNumb));    //새로운 배경 사진 존재시 파일 저장
+            userDto.setBgimNumb(!StringUtil.isEmpty(userDto.getBackgroundImageDraftToken())
+                    ? fileService.setUploadedImageDraft(userDto.getBackgroundImageDraftToken(), Constant.FILE_TYPE_BACKGROUND, userNumb)
+                    : fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, userNumb));    //새로운 배경 사진 존재시 파일 저장
 
         }
 

@@ -92,6 +92,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
                 // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
                 fileService.delPhysicalFileListAfterCommit(fileList);
+                // 탈퇴 요청 시 이미 정리된 임시 이미지가 남아 있는 경우를 방어적으로 다시 삭제한다
+                fileService.delAllProfileImageDraftsAfterCommit(target.getUserNumb());
                 // 정상 삭제된 회원 수를 누적한다
                 successCnt++;
             }

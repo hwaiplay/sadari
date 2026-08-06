@@ -10,8 +10,10 @@ import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -130,5 +132,53 @@ public class UserController {
                           , @Parameter(description = "배경 이미지 파일") @RequestParam(value = "backgroundImage", required = false) MultipartFile backgroundImage) {
         // 로그인 사용자의 프로필과 이미지를 수정 결과를 반환한다
         return userService.uptMe(userNumb, userDto, profileImage, backgroundImage);
+    }
+
+    /**
+     * 앨범에서 선택한 프로필 또는 배경 이미지를 사용자 전용 임시 저장소에 보관한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageFile 임시 저장할 이미지
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 서버가 생성한 미리보기와 임시 식별값
+     */
+    @PostMapping(value = "/profile-image-drafts", consumes = "multipart/form-data")
+    @Operation(summary = "프로필 이미지 임시 저장", description = "선택한 이미지를 비공개 임시 저장소에 보관하고 서버 미리보기를 반환한다.")
+    public ResultData setProfileImageDraft(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                         , @RequestParam("imageFile") MultipartFile imageFile
+                                         , @RequestParam("imageType") String imageType) {
+        // 로그인 사용자 전용 임시 이미지 저장 결과를 반환한다
+        return userService.setProfileImageDraft(userNumb, imageFile, imageType);
+    }
+
+    /**
+     * 앱 재시작 뒤에도 만료되지 않은 임시 이미지 선택본을 복원한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 복원 가능한 임시 이미지 목록
+     */
+    @GetMapping("/profile-image-drafts")
+    @Operation(summary = "프로필 이미지 임시 선택 조회", description = "로그인 사용자의 만료되지 않은 임시 이미지 선택본을 조회한다.")
+    public ResultData getProfileImageDraftList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
+        // 로그인 사용자에게만 해당 사용자의 임시 이미지 목록을 반환한다
+        return userService.getProfileImageDraftList(userNumb);
+    }
+
+    /**
+     * 프로필 편집 취소 시 특정 유형의 임시 이미지를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 삭제 처리 결과
+     */
+    @DeleteMapping("/profile-image-drafts")
+    @Operation(summary = "프로필 이미지 임시 선택 삭제", description = "취소한 프로필 또는 배경 임시 이미지를 즉시 삭제한다.")
+    public ResultData delProfileImageDraft(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                         , @RequestParam("imageType") String imageType) {
+        // 로그인 사용자의 해당 유형 임시 이미지 삭제 결과를 반환한다
+        return userService.delProfileImageDraft(userNumb, imageType);
     }
 }

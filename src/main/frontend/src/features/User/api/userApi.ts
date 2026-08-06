@@ -79,8 +79,17 @@ export type ReadingGoalParams = {
 export type UpdateUserProfileParams = {
   userNick: string;
   intrCntn: string;
-  profileImage?: File | null;
-  backgroundImage?: File | null;
+  profileImageDraftToken?: string | null;
+  backgroundImageDraftToken?: string | null;
+};
+
+export type ProfileImageType = "PROFILE" | "BACKGROUND";
+
+export type ProfileImageDraft = {
+  imageType: ProfileImageType;
+  draftToken: string;
+  previewDataUrl: string;
+  expiresAt: string;
 };
 
 export type UpdateOnboardingParams = {
@@ -168,12 +177,12 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
   formData.append("userNick", params.userNick);
   formData.append("intrCntn", params.intrCntn);
 
-  if (params.profileImage) {
-    formData.append("profileImage", params.profileImage);
+  if (params.profileImageDraftToken) {
+    formData.append("profileImageDraftToken", params.profileImageDraftToken);
   }
 
-  if (params.backgroundImage) {
-    formData.append("backgroundImage", params.backgroundImage);
+  if (params.backgroundImageDraftToken) {
+    formData.append("backgroundImageDraftToken", params.backgroundImageDraftToken);
   }
 
   return api.put("/user/uptProfile", formData).then((res) => {
@@ -212,6 +221,59 @@ export const getUserInterestCatalogApi = async (): Promise<UserInterest[]> => {
   const res = await api.get("/user/interests/catalog");
   // 공통 응답 검증을 통과한 관심분야 목록을 반환한다
   return (assertResultDataSuccess(res.data).data as UserInterest[] | undefined) ?? [];
+};
+
+/**
+ * 앨범에서 선택한 프로필 또는 배경 이미지를 사용자 전용 임시 저장소에 보관한다
+ *
+ * @author SeungHyeon.Kang
+ * @param imageFile 사용자가 선택한 원본 이미지
+ * @param imageType 프로필 또는 배경 이미지 구분값
+ * @return 서버가 방향 보정과 축소를 완료한 미리보기와 임시 식별값
+ * @throws API 요청 또는 이미지 검증 실패 시 발생
+ */
+export const setProfileImageDraftApi = (
+  imageFile: File,
+  imageType: ProfileImageType,
+): Promise<ProfileImageDraft> => {
+  const formData = new FormData();
+  // 서버에서 파일 시그니처와 방향을 검증할 원본 이미지를 전달한다
+  formData.append("imageFile", imageFile);
+  // 임시 저장 경로와 미리보기 제한 크기를 결정할 이미지 유형을 전달한다
+  formData.append("imageType", imageType);
+
+  return api.post("/user/profile-image-drafts", formData).then((res) => {
+    // 공통 성공 응답에서 로그인 사용자의 임시 이미지 정보만 반환한다
+    return assertResultDataSuccess(res.data).data as ProfileImageDraft;
+  });
+};
+
+/**
+ * 앱 재시작 뒤에도 만료되지 않은 프로필 이미지 임시 선택본을 복원한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 같은 로그인 사용자의 복원 가능한 임시 이미지 목록
+ * @throws API 요청 실패 시 발생
+ */
+export const getProfileImageDraftListApi = async (): Promise<ProfileImageDraft[]> => {
+  // 공개 파일 URL 없이 인증 응답 본문으로 작은 서버 미리보기를 조회한다
+  const res = await api.get("/user/profile-image-drafts");
+  return (assertResultDataSuccess(res.data).data as ProfileImageDraft[] | undefined) ?? [];
+};
+
+/**
+ * 프로필 편집을 취소한 이미지 유형의 임시 원본과 미리보기를 삭제한다
+ *
+ * @author SeungHyeon.Kang
+ * @param imageType 삭제할 프로필 또는 배경 이미지 구분값
+ * @return 삭제 처리 응답
+ * @throws API 요청 실패 시 발생
+ */
+export const delProfileImageDraftApi = (imageType: ProfileImageType) => {
+  // 쿼리 파라미터로 고정 유형만 전달해 사용자 전용 임시 파일을 삭제한다
+  return api.delete("/user/profile-image-drafts", { params: { imageType } }).then((res) => {
+    return assertResultDataSuccess(res.data);
+  });
 };
 
 /**
