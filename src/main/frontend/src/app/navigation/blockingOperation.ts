@@ -8,16 +8,23 @@ type BlockingOperationOptions = {
 
 type BlockingOperationTask<T> = () => Promise<T>;
 
+type NavigationGuardEntry = "base" | "sentinel";
+
+type NavigationGuardMarker = {
+  id: string;
+  entry: NavigationGuardEntry;
+};
+
 const NAVIGATION_GUARD_STATE_KEY = "sadariBlockingOperation";
-const NAVIGATION_RELEASE_TIMEOUT_MILLISECONDS = 1_000;
 
 const activeOperationIds = new Set<number>();
 let nextOperationId = 0;
+let nextNavigationGuardId = 0;
 let modalAbortController: AbortController | null = null;
+let activeNavigationGuardId: string | null = null;
 let isNavigationGuardActive = false;
-let isNavigationGuardReleasing = false;
-let navigationReleaseTimer: number | null = null;
-let navigationReleaseResolver: (() => void) | null = null;
+let isPopStateListenerRegistered = false;
+let lastObservedNavigationGuardMarker: NavigationGuardMarker | null = null;
 
 /**
  * 현재 History State를 보존하면서 이동 차단 표식을 추가할 객체로 변환한다
@@ -37,6 +44,103 @@ function getHistoryState(): Record<string, unknown> {
 }
 
 /**
+ * History State에서 Sadari 이동 차단 표식을 타입 안전하게 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param state 확인할 History State
+ * @return 유효한 이동 차단 표식 또는 표식이 없을 때 null
+ */
+function getNavigationGuardMarker(state: unknown): NavigationGuardMarker | null {
+  // History State가 객체가 아니면 이동 차단 표식을 읽지 않는다
+  if (typeof state !== "object" || state === null) {
+    // 유효한 이동 차단 표식이 없음을 반환한다
+    return null;
+  }
+
+  const marker = (state as Record<string, unknown>)[NAVIGATION_GUARD_STATE_KEY];
+
+  // 이동 차단 표식이 객체가 아니면 이전 버전의 값이나 잘못된 값을 사용하지 않는다
+  if (typeof marker !== "object" || marker === null) {
+    // 유효한 이동 차단 표식이 없음을 반환한다
+    return null;
+  }
+
+  const markerRecord = marker as Record<string, unknown>;
+  const markerId = markerRecord.id;
+  const markerEntry = markerRecord.entry;
+
+  // 식별자와 History 항목 구분값이 모두 유효할 때만 이동 차단 표식으로 인정한다
+  if (typeof markerId !== "string"
+      || (markerEntry !== "base" && markerEntry !== "sentinel")) {
+    // 유효하지 않은 이동 차단 표식을 무시하도록 null을 반환한다
+    return null;
+  }
+
+  // 검증된 이동 차단 식별자와 History 항목 구분값을 반환한다
+  return {
+    id: markerId,
+    entry: markerEntry,
+  };
+}
+
+/**
+ * 새로운 이동 차단 History 쌍을 구분할 식별자를 생성한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 현재 브라우저 세션에서 사용할 이동 차단 식별자
+ */
+function createNavigationGuardId(): string {
+  nextNavigationGuardId += 1;
+
+  // 페이지 재시작 이후에도 기존 History 표식과 충돌하지 않도록 시간과 순번을 조합한다
+  return `${Date.now()}-${nextNavigationGuardId}`;
+}
+
+/**
+ * 현재 History 항목을 이동 차단 기준 항목으로 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @param guardId 이동 차단 History 쌍의 식별자
+ * @return 반환값이 없다
+ */
+function replaceNavigationGuardBaseEntry(guardId: string): void {
+  const guardState = {
+    ...getHistoryState(),
+    [NAVIGATION_GUARD_STATE_KEY]: {
+      id: guardId,
+      entry: "base" satisfies NavigationGuardEntry,
+    },
+  };
+
+  // 저장 중 뒤로가기가 현재 화면과 같은 URL의 기준 항목에서 멈추도록 현재 항목을 표시한다
+  window.history.replaceState(guardState, "", window.location.href);
+  // 이후 popstate 방향을 판별하도록 현재 기준 항목을 마지막 관찰값으로 기록한다
+  lastObservedNavigationGuardMarker = getNavigationGuardMarker(guardState);
+}
+
+/**
+ * 현재 URL에 이동 차단용 최상단 History 항목을 추가한다
+ *
+ * @author SeungHyeon.Kang
+ * @param guardId 이동 차단 History 쌍의 식별자
+ * @return 반환값이 없다
+ */
+function pushNavigationGuardSentinelEntry(guardId: string): void {
+  const guardState = {
+    ...getHistoryState(),
+    [NAVIGATION_GUARD_STATE_KEY]: {
+      id: guardId,
+      entry: "sentinel" satisfies NavigationGuardEntry,
+    },
+  };
+
+  // 저장 중 뒤로가기가 실제 이전 화면에 도달하기 전에 같은 URL의 차단 항목을 만나도록 추가한다
+  window.history.pushState(guardState, "", window.location.href);
+  // pushState는 popstate를 발생시키지 않으므로 현재 차단 항목을 직접 관찰값으로 기록한다
+  lastObservedNavigationGuardMarker = getNavigationGuardMarker(guardState);
+}
+
+/**
  * 처리 중 새로고침과 창 닫기를 브라우저가 지원하는 기본 확인 절차로 차단한다
  *
  * @author SeungHyeon.Kang
@@ -46,164 +150,125 @@ function getHistoryState(): Record<string, unknown> {
 function handleBeforeUnload(event: BeforeUnloadEvent): void {
   // 서버 처리 결과가 확정되기 전에 문서가 종료되지 않도록 기본 이탈 동작을 취소한다
   event.preventDefault();
-  // 브라우저별 기본 이탈 확인 절차가 실행되도록 반환 값을 설정한다
+  // 브라우저별 기본 이탈 확인 절차가 실행되도록 반환값을 설정한다
   event.returnValue = "";
 }
 
 /**
- * 이동 차단 History 항목 제거가 끝난 뒤 이벤트와 대기 상태를 정리한다
+ * History 이동 방향과 저장 진행 상태에 따라 실제 화면 이탈이나 내부 중복 항목을 처리한다
  *
  * @author SeungHyeon.Kang
+ * @param event 이동한 대상 History State를 포함한 이벤트
  * @return 반환값이 없다
  */
-function completeNavigationGuardRelease(): void {
-  // 해제 대기 제한 시간이 남아 있으면 이후 중복 정리를 막기 위해 제거한다
-  if (navigationReleaseTimer !== null) {
-    // 현재 이동 가드 해제용 제한 시간만 제거한다
-    window.clearTimeout(navigationReleaseTimer);
-    // 다음 이동 가드가 새 제한 시간을 등록할 수 있도록 참조를 비운다
-    navigationReleaseTimer = null;
-  }
+function handlePopState(event: PopStateEvent): void {
+  const previousMarker = lastObservedNavigationGuardMarker;
+  const currentMarker = getNavigationGuardMarker(event.state);
 
-  // 처리 중에만 필요한 브라우저 이탈 이벤트를 제거한다
-  window.removeEventListener("beforeunload", handleBeforeUnload);
-  // 현재 이동 가드의 뒤로가기 감시 이벤트를 제거한다
-  window.removeEventListener("popstate", handlePopState);
-  isNavigationGuardActive = false;
-  isNavigationGuardReleasing = false;
+  // 이후 History 이동 방향을 비교할 수 있도록 이동 대상의 표식을 관찰값으로 기록한다
+  lastObservedNavigationGuardMarker = currentMarker;
 
-  const resolveRelease = navigationReleaseResolver;
-  navigationReleaseResolver = null;
-
-  // 이동 가드 해제를 기다리는 요청이 있으면 History 정리가 끝났음을 전달한다
-  if (resolveRelease) {
-    // 상태 변경 API 응답이 호출 화면으로 돌아갈 수 있도록 해제 Promise를 완료한다
-    resolveRelease();
-  }
-
-  // 기존 가드를 해제하는 사이 새 작업이 시작됐으면 현재 위치에 새 가드를 즉시 설치한다
-  if (activeOperationIds.size > 0) {
-    // 새 상태 변경 작업이 끝날 때까지 현재 화면 이동을 다시 차단한다
-    activateNavigationGuard();
-  }
-}
-
-/**
- * PWA 스와이프와 브라우저 뒤로가기가 처리 중 화면을 벗어나지 못하게 현재 위치를 복원한다
- *
- * @author SeungHyeon.Kang
- * @return 반환값이 없다
- */
-function handlePopState(): void {
-  // 정상적인 가드 해제 이동이면 현재 위치를 다시 쌓지 않고 정리를 완료한다
-  if (isNavigationGuardReleasing) {
-    // 같은 URL의 원래 History 항목으로 돌아온 뒤 이동 차단 이벤트를 해제한다
-    completeNavigationGuardRelease();
-    // 가드 제거용 뒤로가기가 사용자 이동으로 처리되지 않도록 종료한다
+  // 상태 변경 작업 중 차단 쌍의 기준 항목으로 돌아오면 같은 URL의 차단 항목을 즉시 복원한다
+  if (isNavigationGuardActive && activeNavigationGuardId !== null
+      && currentMarker?.id === activeNavigationGuardId && currentMarker.entry === "base") {
+    // PWA 스와이프와 하드웨어 뒤로가기가 실제 이전 화면으로 이어지지 않도록 차단 항목을 복원한다
+    pushNavigationGuardSentinelEntry(activeNavigationGuardId);
+    // 저장 중 뒤로가기 처리를 현재 화면에서 종료한다
     return;
   }
 
-  // 상태 변경 작업이 남아 있으면 뒤로가기가 도착한 현재 URL에 차단 항목을 다시 추가한다
-  if (activeOperationIds.size > 0) {
-    // 연속 스와이프에도 현재 화면을 유지하도록 동일 URL의 가드 항목을 복원한다
-    pushNavigationGuardEntry();
+  // 상태 변경 작업 중 예상하지 못한 History 위치로 이동하면 가능한 경우 기존 차단 항목으로 복귀한다
+  if (isNavigationGuardActive) {
+    // 사용자가 저장 중인 화면에서 벗어나지 않도록 브라우저의 다음 History 항목으로 복귀한다
+    window.history.forward();
+    // 저장 중 예외 History 이동 처리를 종료한다
+    return;
+  }
+
+  // 저장 완료 후 사용자가 뒤로갈 때 차단 항목에서 기준 항목으로 이동한 경우 내부 중복 항목만 건너뛴다
+  if (previousMarker?.entry === "sentinel" && currentMarker?.entry === "base"
+      && previousMarker.id === currentMarker.id) {
+    // 저장 완료 시에는 이동하지 않고 이후 사용자의 뒤로가기 시점에만 실제 이전 화면으로 이동한다
+    window.history.back();
   }
 }
 
 /**
- * 현재 URL과 React Router State를 유지한 이동 차단용 History 항목을 추가한다
+ * 저장 완료 뒤에도 남은 내부 History 쌍을 처리할 애플리케이션 수명 이벤트를 한 번 등록한다
  *
  * @author SeungHyeon.Kang
  * @return 반환값이 없다
  */
-function pushNavigationGuardEntry(): void {
-  const guardState = {
-    ...getHistoryState(),
-    [NAVIGATION_GUARD_STATE_KEY]: true,
-  };
+function ensurePopStateListener(): void {
+  // 이미 등록된 애플리케이션 수명 이벤트는 중복 등록하지 않는다
+  if (isPopStateListenerRegistered) {
+    // 기존 이벤트가 이후 History 이동도 처리하도록 등록 절차를 종료한다
+    return;
+  }
 
-  // 뒤로가기가 먼저 같은 URL의 원래 항목에 도착하도록 차단 항목을 현재 위치에 쌓는다
-  window.history.pushState(guardState, "", window.location.href);
+  // 저장 완료 후 사용자가 실제 뒤로갈 때 내부 기준 항목을 건너뛸 수 있도록 계속 감시한다
+  window.addEventListener("popstate", handlePopState);
+  isPopStateListenerRegistered = true;
 }
 
 /**
- * 상태 변경 작업 동안 현재 화면을 유지하도록 브라우저 이동 가드를 활성화한다
+ * 상태 변경 작업 동안 현재 화면을 유지할 History 가드를 활성화한다
  *
  * @author SeungHyeon.Kang
  * @return 반환값이 없다
  */
 function activateNavigationGuard(): void {
-  // 이미 활성화됐거나 기존 가드를 해제 중이면 중복 History 항목을 만들지 않는다
-  if (isNavigationGuardActive || isNavigationGuardReleasing) {
-    // 현재 이동 가드 상태를 유지하고 활성화 처리를 종료한다
+  // 이미 활성화된 가드는 중첩 요청이 완료될 때까지 그대로 유지한다
+  if (isNavigationGuardActive) {
+    // 중복 History 항목을 만들지 않고 활성화 처리를 종료한다
     return;
   }
 
+  // 저장 완료 후 남은 History 항목도 처리할 공통 감시 이벤트를 준비한다
+  ensurePopStateListener();
+
+  const currentMarker = getNavigationGuardMarker(window.history.state);
+
+  // 현재 항목이 이전 작업에서 만든 차단 항목이면 새 중복 항목 없이 재사용한다
+  if (currentMarker?.entry === "sentinel") {
+    activeNavigationGuardId = currentMarker.id;
+    // 현재 차단 항목부터 이동 방향을 추적하도록 관찰값을 갱신한다
+    lastObservedNavigationGuardMarker = currentMarker;
+  }
+
+  // 현재 항목을 재사용할 수 없으면 기준 항목과 차단 항목을 새로 구성한다
+  else {
+    const guardId = createNavigationGuardId();
+    activeNavigationGuardId = guardId;
+    // 현재 React Router 위치를 이동 차단 History 쌍의 기준 항목으로 표시한다
+    replaceNavigationGuardBaseEntry(guardId);
+    // 사용자의 뒤로가기를 받을 같은 URL의 차단 항목을 추가한다
+    pushNavigationGuardSentinelEntry(guardId);
+  }
+
   isNavigationGuardActive = true;
-  // PWA 스와이프와 브라우저 뒤로가기 결과를 현재 화면으로 복원하도록 감시한다
-  window.addEventListener("popstate", handlePopState);
   // 새로고침과 창 닫기는 브라우저가 제공하는 기본 이탈 확인 절차로 보호한다
   window.addEventListener("beforeunload", handleBeforeUnload);
-  // 사용자의 뒤로가기가 실제 이전 화면 대신 동일 URL에 도착하도록 가드 항목을 추가한다
-  pushNavigationGuardEntry();
 }
 
 /**
- * 처리 완료 후 동일 URL의 이동 차단 History 항목을 제거한다
+ * 상태 변경 완료 후 History 위치를 이동하지 않고 현재 화면의 이동 차단 상태만 해제한다
  *
  * @author SeungHyeon.Kang
- * @return 이동 차단 History 항목 제거 완료 Promise
+ * @return 반환값이 없다
  */
-function releaseNavigationGuard(): Promise<void> {
-  // 활성화된 이동 가드가 없으면 추가 History 조작 없이 완료한다
+function deactivateNavigationGuard(): void {
+  // 활성화된 이동 가드가 없으면 브라우저 상태를 변경하지 않는다
   if (!isNavigationGuardActive) {
-    // 제거할 이동 차단 항목이 없는 완료 Promise를 반환한다
-    return Promise.resolve();
+    // 저장 완료 후 중복 해제 요청을 종료한다
+    return;
   }
 
-  // 이미 해제 중이면 최초 해제 작업이 완료될 때까지 같은 Promise를 공유한다
-  if (isNavigationGuardReleasing) {
-    // 진행 중인 이동 가드 해제 완료를 기다리는 Promise를 반환한다
-    return new Promise((resolve) => {
-      const previousResolver = navigationReleaseResolver;
-
-      /**
-       * 기존 해제 대기자와 추가 대기자를 함께 완료한다
-       *
-       * @author SeungHyeon.Kang
-       * @return 반환값이 없다
-       */
-      navigationReleaseResolver = () => {
-        // 먼저 등록된 상태 변경 요청의 해제 대기를 완료한다
-        previousResolver?.();
-        // 추가로 등록된 상태 변경 요청의 해제 대기를 완료한다
-        resolve();
-      };
-    });
-  }
-
-  isNavigationGuardReleasing = true;
-
-  // 동일 URL로 쌓은 가드 항목을 제거한 뒤 API 호출 화면에 응답을 전달한다
-  return new Promise((resolve) => {
-    navigationReleaseResolver = resolve;
-
-    /**
-     * 일부 브라우저에서 popstate가 오지 않아도 처리 중 화면이 영구 잠기지 않게 가드를 정리한다
-     *
-     * @author SeungHyeon.Kang
-     * @return 반환값이 없다
-     */
-    const handleReleaseTimeout = (): void => {
-      // 브라우저가 History 이동 이벤트를 전달하지 않은 경우 남은 이벤트와 대기 상태를 해제한다
-      completeNavigationGuardRelease();
-    };
-
-    // History 이동 이벤트가 누락되는 예외 상황의 최대 대기 시간을 설정한다
-    navigationReleaseTimer = window.setTimeout(handleReleaseTimeout, NAVIGATION_RELEASE_TIMEOUT_MILLISECONDS);
-    // 동일 URL의 직전 원본 History 항목으로 돌아가 차단용 항목을 제거한다
-    window.history.back();
-  });
+  // 저장 완료 직후 popstate가 발생하지 않도록 History 이동 없이 논리 가드만 비활성화한다
+  isNavigationGuardActive = false;
+  activeNavigationGuardId = null;
+  // 저장 결과가 확정되었으므로 새로고침과 창 닫기 보호 이벤트를 해제한다
+  window.removeEventListener("beforeunload", handleBeforeUnload);
 }
 
 /**
@@ -235,40 +300,39 @@ export function beginBlockingOperation(options: BlockingOperationOptions = {}): 
     });
   }
 
-  // 호출부가 작업 완료 시 정확한 요청을 해제할 수 있도록 식별값을 반환한다
+  // 호출부가 작업 완료 후 정확한 요청만 해제하도록 식별값을 반환한다
   return operationId;
 }
 
 /**
- * 상태 변경 작업을 완료하고 마지막 요청이면 처리 중 모달과 이동 가드를 해제한다
+ * 상태 변경 작업을 완료하고 마지막 요청이면 처리 중 모달과 이동 차단을 해제한다
  *
  * @author SeungHyeon.Kang
- * @param operationId 완료한 상태 변경 작업 식별값
+ * @param operationId 완료된 상태 변경 작업 식별값
  * @return 처리 중 화면과 이동 가드 정리 완료 Promise
  */
-export async function endBlockingOperation(operationId: number): Promise<void> {
+export function endBlockingOperation(operationId: number): Promise<void> {
   // 이미 완료된 요청은 다른 상태 변경 작업의 진행 상태에 영향을 주지 않는다
   if (!activeOperationIds.delete(operationId)) {
-    // 중복 해제 요청을 별도 화면 변경 없이 종료한다
-    return;
+    // 중복 해제 요청을 완료된 Promise로 종료한다
+    return Promise.resolve();
   }
 
   // 다른 상태 변경 작업이 남아 있으면 공통 모달과 이동 가드를 유지한다
   if (activeOperationIds.size > 0) {
     // 마지막 요청이 완료될 때까지 현재 처리 중 화면을 유지한다
-    return;
+    return Promise.resolve();
   }
 
-  // 호출 화면이 후속 성공 또는 실패 알림을 열기 전에 차단용 History 항목을 제거한다
-  await releaseNavigationGuard();
+  // 성공 또는 실패 알림이 열리기 전에 History 이동 없이 논리 가드만 해제한다
+  deactivateNavigationGuard();
+  // 작업 완료 신호로 버튼 없는 처리 중 모달을 닫는다
+  modalAbortController?.abort();
+  // 다음 최초 작업에서 새 모달 제어 객체를 만들도록 참조를 비운다
+  modalAbortController = null;
 
-  // 가드 해제 중 새 작업이 시작되지 않았을 때만 현재 처리 중 모달을 닫는다
-  if (activeOperationIds.size === 0) {
-    // 작업 완료 신호로 버튼 없는 처리 중 모달을 자동으로 닫는다
-    modalAbortController?.abort();
-    // 다음 최초 작업이 새 모달 제어 객체를 만들도록 참조를 비운다
-    modalAbortController = null;
-  }
+  // 호출부가 정리 완료 뒤 후속 알림과 라우팅을 실행하도록 완료된 Promise를 반환한다
+  return Promise.resolve();
 }
 
 /**
@@ -278,7 +342,7 @@ export async function endBlockingOperation(operationId: number): Promise<void> {
  * @param task 처리 중 화면을 유지할 비동기 상태 변경 작업
  * @param options 작업별 처리 중 문구
  * @return 상태 변경 작업의 완료 결과
- * @throws 전달받은 상태 변경 작업이 실패할 때 발생
+ * @throws 전달받은 상태 변경 작업에 실패하면 발생한다
  */
 export async function runBlockingOperation<T>(
   task: BlockingOperationTask<T>,
@@ -299,3 +363,6 @@ export async function runBlockingOperation<T>(
     await endBlockingOperation(operationId);
   }
 }
+
+// 페이지를 다시 연 뒤에도 기존 이동 차단 History 쌍을 처리하도록 애플리케이션 수명 이벤트를 준비한다
+ensurePopStateListener();
