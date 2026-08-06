@@ -215,6 +215,20 @@ export const getUserInterestCatalogApi = async (): Promise<UserInterest[]> => {
 };
 
 /**
+ * 로그인 사용자가 현재 선택한 독서 관심분야를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 현재 저장된 관심분야 목록
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const getUserInterestListApi = async (): Promise<UserInterest[]> => {
+  // 로그인 사용자의 관심분야 목록을 요청한다
+  const res = await api.get("/user/interests");
+  // 공통 응답 검증을 통과한 목록을 반환한다
+  return (assertResultDataSuccess(res.data).data as UserInterest[] | undefined) ?? [];
+};
+
+/**
  * 최초 로그인 사용자가 선택한 독서 관심분야를 전체 교체한다
  *
  * @author SeungHyeon.Kang

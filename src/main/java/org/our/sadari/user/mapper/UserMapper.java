@@ -5,7 +5,6 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.user.dto.UserDto;
 
-
 /**
  * fileName       : UserMapper
  * author         : SeungHyeon.Kang
@@ -16,11 +15,12 @@ import org.our.sadari.user.dto.UserDto;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 조회와 완료 처리 추가
- * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 조회와 저장 추가
- * 2026-08-05        SeungHyeon.Kang       회원 관심분야 단일 코드 저장 구조 반영
+ * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
+ * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 저장과 현재 선택 조회 반영
  */
 @Mapper
 public interface UserMapper {
+
     /**
      * 아래 코드의 처리 목적을 설명한다.
      */
@@ -87,6 +87,15 @@ public interface UserMapper {
      * @return 대분류와 세부코드가 포함된 관심분야 목록
      */
     List<UserDto.UserInterestDto> getUserInterestCatalog();
+
+    /**
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 선택한 관심분야 목록
+     */
+    List<UserDto.UserInterestDto> getUserInterestList(Long userNumb);
 
     /**
      * 로그인 사용자의 기존 독서 관심분야를 전체 삭제한다

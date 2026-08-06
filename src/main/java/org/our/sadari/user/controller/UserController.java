@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
+
 /**
  * fileName       : UserController
  * author         : SeungHyeon.Kang
@@ -27,7 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 API 추가
- * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 API 추가
+ * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 선택 API 추가
+ * 2026-08-05        SeungHyeon.Kang    현재 선택한 관심분야 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -78,6 +80,20 @@ public class UserController {
     public ResultData getUserInterestCatalog() {
         // 최초 로그인 사용자가 선택할 수 있는 활성 관심분야를 반환한다
         return userService.getUserInterestCatalog();
+    }
+
+    /**
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 선택한 관심분야 목록
+     */
+    @GetMapping("/interests")
+    @Operation(summary = "내 독서 관심분야 조회", description = "로그인 사용자가 현재 저장한 독서 관심분야를 조회한다.")
+    public ResultData getUserInterestList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
+        // 로그인 사용자가 현재 선택한 관심분야를 반환한다
+        return userService.getUserInterestList(userNumb);
     }
 
     /**
