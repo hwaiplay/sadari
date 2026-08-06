@@ -20,19 +20,24 @@ import {
 } from "@/features/Social/api/socialApi";
 import {
   copyPreviousReadingGoalApi,
+  delProfileImageDraftApi,
   getMyProfileApi,
   getMonthlyReadingSummaryApi,
+  getProfileImageDraftListApi,
+  setProfileImageDraftApi,
   updateReadingGoalApi,
   updateMyProfileApi,
   type MonthlyReadingSummary,
   type ReadingSummaryReport,
   type UserProfile,
+  type ProfileImageDraft,
+  type ProfileImageType,
 } from "@/features/User/api/userApi";
 import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
-import type { FormEvent, MouseEvent, ReactNode } from "react";
+import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -288,8 +293,8 @@ function ProfileEditPage() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [userNick, setUserNick] = useState("");
   const [intrCntn, setIntrCntn] = useState("");
-  const [profileImage, setProfileImage] = useState<File | null>(null);
-  const [backgroundImage, setBackgroundImage] = useState<File | null>(null);
+  const [profileImageDraftToken, setProfileImageDraftToken] = useState<string | null>(null);
+  const [backgroundImageDraftToken, setBackgroundImageDraftToken] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
@@ -342,25 +347,55 @@ function ProfileEditPage() {
    * @param nextProfile 서버에서 조회하거나 저장 후 반환한 사용자 프로필 정보
    */
   const syncProfileState = (nextProfile: UserProfile) => {
-
     setProfile(nextProfile);
     setUserNick(nextProfile?.userNick ?? "");
     setIntrCntn(nextProfile?.intrCntn ?? "");
     setPreviewImage(nextProfile?.porfPath || DEFAULT_PROFILE_IMAGE);
     setPreviewBackground(nextProfile?.bgimPath || "");
-    setProfileImage(null);
-    setBackgroundImage(null);
+    setProfileImageDraftToken(null);
+    setBackgroundImageDraftToken(null);
+  };
+
+  /**
+   * 서버에 남아 있는 임시 이미지 선택본을 화면 미리보기와 저장 식별값에 반영한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param drafts 같은 로그인 사용자의 복원 가능한 임시 이미지 목록
+   */
+  const restoreProfileImageDrafts = (drafts: ProfileImageDraft[]) => {
+    // 프로필과 배경 선택본을 각각 기존 사용자 정보 영역에만 반영한다
+    drafts.forEach((draft) => {
+      if (draft.imageType === "PROFILE") {
+        setProfileImageDraftToken(draft.draftToken);
+        setPreviewImage(draft.previewDataUrl);
+        return;
+      }
+
+      if (draft.imageType === "BACKGROUND") {
+        setBackgroundImageDraftToken(draft.draftToken);
+        setPreviewBackground(draft.previewDataUrl);
+      }
+    });
+
+    // 앱 재시작으로 복원된 선택본이 있으면 사용자 정보 편집 상태를 함께 복원한다
+    if (drafts.length > 0) {
+      setIsEditMode(true);
+    }
   };
 
   useEffect(() => {
 
     let ignore = false;
 
-    getMyProfileApi()
-      .then((response) => {
+    Promise.all([
+      getMyProfileApi(),
+      getProfileImageDraftListApi().catch(() => []),
+    ])
+      .then(([response, drafts]) => {
 
         if (!ignore) {
           syncProfileState(response.data as UserProfile);
+          restoreProfileImageDrafts(drafts);
         }
       })
       .finally(() => {
@@ -458,6 +493,7 @@ function ProfileEditPage() {
       if (followListScrollTimeoutRef.current) {
         window.clearTimeout(followListScrollTimeoutRef.current);
       }
+
     };
   }, []);
 
@@ -531,24 +567,25 @@ function ProfileEditPage() {
   };
 
   /**
-   * 사용자가 선택한 이미지 파일을 프로필 또는 배경 대상에 맞춰 미리보기로 반영합니다.
-   * 서버와 같은 JPG/PNG 및 10MB 조건을 통과한 파일만 미리보기에 반영합니다.
+   * 사용자가 선택한 이미지를 서버 비공개 임시 저장소에 올리고 서버 미리보기만 화면에 반영한다.
+   * 브라우저가 고해상도 원본을 디코딩하지 않아 모바일 PWA의 메모리 회수를 피한다.
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param file 사용자가 선택한 이미지 파일
-   * @param target 이미지가 적용될 영역 구분값
+   * @param imageType 프로필 또는 배경 이미지 구분값
    */
-  const applyImagePreview = (file: File | undefined, target: "profile" | "background") => {
-
+  const applyImagePreview = async (
+    file: File | undefined,
+    imageType: ProfileImageType,
+  ): Promise<void> => {
+    // 앨범 선택이 취소된 경우 기존 임시 선택본과 미리보기를 유지한다
     if (!file) {
       return;
     }
 
-    if (
-      !PROFILE_IMAGE_MIME_TYPES.has(file.type.toLowerCase()) ||
-      file.size > PROFILE_IMAGE_MAX_BYTES
-    ) {
-      // 사용자에게 표시: "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
+    // 서버와 동일한 MIME 형식과 파일 크기 범위를 벗어나면 업로드를 시작하지 않는다
+    if (!PROFILE_IMAGE_MIME_TYPES.has(file.type.toLowerCase())
+        || file.size > PROFILE_IMAGE_MAX_BYTES) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
         /* "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요." */ message("frontend.profile.imageOnly"),
@@ -556,16 +593,58 @@ function ProfileEditPage() {
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
+    try {
+      // 방향 보정과 해상도 검증 및 축소 처리를 서버에 위임한다
+      const draft = await setProfileImageDraftApi(file, imageType);
 
-    if (target === "profile") {
-      setProfileImage(file);
-      setPreviewImage(previewUrl);
-      return;
+      if (imageType === "PROFILE") {
+        // 서버가 반환한 작은 미리보기와 최종 저장용 임시 식별값만 브라우저 상태에 둔다
+        setProfileImageDraftToken(draft.draftToken);
+        setPreviewImage(draft.previewDataUrl);
+        return;
+      }
+
+      // 배경 이미지도 원본 File 객체 없이 서버 미리보기와 임시 식별값만 유지한다
+      setBackgroundImageDraftToken(draft.draftToken);
+      setPreviewBackground(draft.previewDataUrl);
     }
 
-    setBackgroundImage(file);
-    setPreviewBackground(previewUrl);
+    catch (error) {
+      void sweetWarning(
+        /* "이미지를 불러올 수 없습니다." */ message("frontend.profile.imagePreviewFailedTitle"),
+        getApiErrorMessage(error, /* "선택한 이미지의 안전한 미리보기를 만들 수 없습니다. 다른 이미지를 선택해주세요." */ message("frontend.profile.imagePreviewFailed")),
+      );
+    }
+  };
+
+  /**
+   * 앨범에서 선택한 배경 이미지 파일을 안전한 미리보기 처리로 전달한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 배경 이미지 파일 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleBackgroundImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비운다
+    event.currentTarget.value = "";
+    // 검증과 축소가 끝난 배경 이미지만 화면 선택 상태에 반영한다
+    void applyImagePreview(file, "BACKGROUND");
+  };
+
+  /**
+   * 앨범에서 선택한 프로필 이미지 파일을 안전한 미리보기 처리로 전달한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 프로필 이미지 파일 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleProfileImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비운다
+    event.currentTarget.value = "";
+    // 검증과 축소가 끝난 프로필 이미지만 화면 선택 상태에 반영한다
+    void applyImagePreview(file, "PROFILE");
   };
 
   /**
@@ -1650,6 +1729,46 @@ function ProfileEditPage() {
   };
 
   /**
+   * 프로필 편집을 취소하고 서버 임시 이미지와 화면 입력값을 저장 전 상태로 되돌린다.
+   *
+   * @author SeungHyeon.Kang
+   * @param event 편집 취소 버튼 클릭 이벤트
+   * @return 임시 이미지 삭제 완료 Promise
+   */
+  const handleEditCancel = async (event: MouseEvent<HTMLButtonElement>): Promise<void> => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    try {
+      const deleteRequests: Promise<unknown>[] = [];
+
+      // 사용자가 선택한 프로필 임시 원본과 미리보기를 즉시 삭제한다
+      if (profileImageDraftToken) {
+        deleteRequests.push(delProfileImageDraftApi("PROFILE"));
+      }
+
+      // 사용자가 선택한 배경 임시 원본과 미리보기를 즉시 삭제한다
+      if (backgroundImageDraftToken) {
+        deleteRequests.push(delProfileImageDraftApi("BACKGROUND"));
+      }
+
+      await Promise.all(deleteRequests);
+      // 기존 사용자 정보와 이미지 위치를 그대로 유지한 조회 상태로 복원한다
+      if (profile) {
+        syncProfileState(profile);
+      }
+      setIsEditMode(false);
+    }
+
+    catch (error) {
+      void sweetError(
+        /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+      );
+    }
+  };
+
+  /**
    * 닉네임 필수값을 확인한 뒤 프로필 수정 API를 호출해 텍스트와 이미지 파일을 함께 저장합니다.
    * 저장에 성공하면 서버가 반환한 최신 프로필 정보로 화면을 갱신하고 조회 모드로 되돌립니다.
    *
@@ -1694,8 +1813,8 @@ function ProfileEditPage() {
     const submitProfileChanges = () => updateMyProfileApi({
       userNick: userNick.trim(),
       intrCntn: intrCntn.trim(),
-      profileImage,
-      backgroundImage,
+      profileImageDraftToken,
+      backgroundImageDraftToken,
     });
 
     try {
@@ -1749,72 +1868,82 @@ function ProfileEditPage() {
 
           {/* 배경 이미지 변경과 프로필 저장 및 수정 버튼 영역 */}
           <div className={styles.coverActionGroup}>
-            {isEditMode && (
-              <label className={styles.coverImageButton}>
-                <svg
-                  className={styles.actionIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                </svg>
-                {/* "배경 변경" */ message("frontend.profile.backgroundChange")}
-                <input
-                  className={styles.hiddenInput}
-                  type="file"
-                  accept="image/jpeg,image/png"
-                  onChange={(event) =>
-                    applyImagePreview(event.currentTarget.files?.[0], "background")
-                  }
-                />
-              </label>
-            )}
-
             {isEditMode ? (
-              <button
-                className={isSaving ? styles.coverSaveButtonSaving : styles.coverSaveButton}
-                type="submit"
-                aria-busy={isSaving}
-                aria-live="polite"
-                disabled={isSaving}
-              >
-                {isSaving ? (
-                  <>
-                    <span className={styles.profileSaveSpinner} aria-hidden="true" />
-                    {/* "프로필 저장 중..." */}
-                    {message("frontend.profile.saving")}
-                  </>
-                ) : (
-                  <>
+                <>
+                  {/* 1. 취소 버튼 (배경 변경 왼쪽으로 이동) */}
+                  <button
+                      className={styles.coverProfileEditButton}
+                      type="button"
+                      onClick={(event) => void handleEditCancel(event)}
+                      disabled={isSaving}
+                  >
+                    {/* "취소" */ message("frontend.common.cancel")}
+                  </button>
+
+                  {/* 2. 배경 변경 버튼 */}
+                  <label className={styles.coverImageButton}>
                     <svg
+                        className={styles.actionIcon}
+                        viewBox="0 0 24 24"
+                        aria-hidden="true"
+                        focusable="false"
+                    >
+                      <path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                    </svg>
+                    {/* "배경 변경" */ message("frontend.profile.backgroundChange")}
+                    <input
+                        className={styles.hiddenInput}
+                        type="file"
+                        accept="image/jpeg,image/png"
+                        onChange={handleBackgroundImageChange}
+                    />
+                  </label>
+
+                  {/* 3. 저장 버튼 */}
+                  <button
+                      className={isSaving ? styles.coverSaveButtonSaving : styles.coverSaveButton}
+                      type="submit"
+                      aria-busy={isSaving}
+                      aria-live="polite"
+                      disabled={isSaving}
+                  >
+                    {isSaving ? (
+                        <>
+                          <span className={styles.profileSaveSpinner} aria-hidden="true" />
+                          {/* "프로필 저장 중..." */}
+                          {message("frontend.profile.saving")}
+                        </>
+                    ) : (
+                        <>
+                          <svg
+                              className={styles.actionIcon}
+                              viewBox="0 0 24 24"
+                              aria-hidden="true"
+                              focusable="false"
+                          >
+                            <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
+                          </svg>
+                          {/* "저장" */ message("frontend.report.save")}
+                        </>
+                    )}
+                  </button>
+                </>
+            ) : (
+                <button
+                    className={styles.coverProfileEditButton}
+                    type="button"
+                    onClick={handleEditModeClick}
+                >
+                  <svg
                       className={styles.actionIcon}
                       viewBox="0 0 24 24"
                       aria-hidden="true"
                       focusable="false"
-                    >
-                      <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
-                    </svg>
-                    {/* "저장" */ message("frontend.report.save")}
-                  </>
-                )}
-              </button>
-            ) : (
-              <button
-                className={styles.coverProfileEditButton}
-                type="button"
-                onClick={handleEditModeClick}
-              >
-                <svg
-                  className={styles.actionIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3L17.7 4.6a2.1 2.1 0 0 0-3 0L4 15.3V20Zm2-2v-1.9L16.1 6l1.9 1.9L7.9 18H6Z" />
-                </svg>
-                {/* "프로필 수정" */ message("frontend.profile.edit")}
-              </button>
+                  >
+                    <path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3L17.7 4.6a2.1 2.1 0 0 0-3 0L4 15.3V20Zm2-2v-1.9L16.1 6l1.9 1.9L7.9 18H6Z" />
+                  </svg>
+                  {/* "프로필 수정" */ message("frontend.profile.edit")}
+                </button>
             )}
           </div>
         </section>
@@ -1844,9 +1973,7 @@ function ProfileEditPage() {
                     className={styles.hiddenInput}
                     type="file"
                     accept="image/jpeg,image/png"
-                    onChange={(event) =>
-                      applyImagePreview(event.currentTarget.files?.[0], "profile")
-                    }
+                    onChange={handleProfileImageChange}
                   />
                 </label>
               )}
@@ -1888,7 +2015,7 @@ function ProfileEditPage() {
         </section>
 
           {/* 프로필 외 독서 활동 조회 결과 영역 */}
-          {monthlySummary ? (
+          {!isEditMode && monthlySummary ? (
             /* 조회가 완료된 독서 활동 페이드 인 영역 */
             <div className={styles.activityContent}>
               {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}

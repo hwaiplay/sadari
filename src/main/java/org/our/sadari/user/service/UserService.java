@@ -42,6 +42,36 @@ public interface UserService {
     ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage, MultipartFile backgroundImage);
 
     /**
+     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 임시 저장한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageFile 임시 저장할 이미지
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 서버 미리보기와 임시 식별값
+     */
+    ResultData setProfileImageDraft(Long userNumb, MultipartFile imageFile, String imageType);
+
+    /**
+     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 복원 가능한 임시 이미지 목록
+     */
+    ResultData getProfileImageDraftList(Long userNumb);
+
+    /**
+     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param imageType 프로필 또는 배경 이미지 구분값
+     * @return 삭제 처리 결과
+     */
+    ResultData delProfileImageDraft(Long userNumb, String imageType);
+
+    /**
      * 최초 로그인 사용자의 닉네임을 저장하고 온보딩을 완료한다.
      *
      * @author SeungHyeon.Kang

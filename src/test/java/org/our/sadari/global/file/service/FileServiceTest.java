@@ -18,6 +18,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -28,6 +29,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.file.dto.FileDto;
+import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
 import org.springframework.mock.web.MockMultipartFile;
@@ -78,6 +80,55 @@ class FileServiceTest {
         ReflectionTestUtils.setField(fileService, "maxImageDimension", 8_192);
         // 테스트 파일이 실제 프로젝트 uploads 디렉터리에 생성되지 않도록 임시 루트 경로를 설정한다
         ReflectionTestUtils.setField(fileService, "uploadRootPath", uploadRootPath);
+        // 프로필 임시 이미지도 테스트 전용 경로에만 생성되도록 별도 루트를 설정한다
+        ReflectionTestUtils.setField(fileService, "profileImageDraftRootPath", uploadRootPath.resolve("drafts"));
+    }
+
+    /**
+     * 프로필 임시 이미지를 다시 선택하면 이전 물리 파일을 제거하고 서버 미리보기만 반환하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     * @throws IOException 테스트 이미지 생성 또는 임시 파일 확인 중 오류가 발생한 경우
+     */
+    @Test
+    void setProfileImageDraftReplacesPreviousDraftFiles() throws IOException {
+        MockMultipartFile firstImage = new MockMultipartFile(
+                "imageFile",
+                "first.png",
+                "image/png",
+                createPngBytes()
+        );
+        MockMultipartFile secondImage = new MockMultipartFile(
+                "imageFile",
+                "second.png",
+                "image/png",
+                createPngBytes()
+        );
+
+        // 첫 번째 프로필 이미지를 사용자 전용 임시 저장소에 보관한다
+        ProfileImageDraftDto firstDraft = fileService.setProfileImageDraft(
+                firstImage,
+                Constant.FILE_TYPE_PROFILE,
+                31L
+        );
+        // 같은 사용자가 프로필 이미지를 다시 선택해 이전 임시 선택본을 교체한다
+        ProfileImageDraftDto secondDraft = fileService.setProfileImageDraft(
+                secondImage,
+                Constant.FILE_TYPE_PROFILE,
+                31L
+        );
+
+        Path draftDirectory = uploadRootPath.resolve("drafts").resolve("31").resolve("profile");
+        try (Stream<Path> draftFiles = Files.list(draftDirectory)) {
+            // 최신 원본과 축소 미리보기 두 파일만 남는지 확인한다
+            assertEquals(2L, draftFiles.count());
+        }
+        // 재선택 시 임시 식별값이 새로 발급되는지 확인한다
+        assertFalse(firstDraft.getDraftToken().equals(secondDraft.getDraftToken()));
+        // 공개 임시 URL 대신 서버가 생성한 PNG Data URL을 반환하는지 확인한다
+        assertTrue(secondDraft.getPreviewDataUrl().startsWith("data:image/png;base64,"));
+        // 임시 선택본이 30분 만료 시각을 포함하는지 확인한다
+        assertTrue(secondDraft.getExpiresAt().isAfter(java.time.Instant.now()));
     }
 
     /**

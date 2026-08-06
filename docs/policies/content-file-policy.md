@@ -84,6 +84,17 @@
 - 외부 URL만 메타정보로 저장된 이미지는 로컬 물리 파일 삭제 대상에서 제외하고 `TM_FILEXM` 메타정보만 삭제합니다.
 - 외부 Kakao 프로필 이미지는 외부 다운로드 실패가 로그인 전체 실패로 이어지지 않도록 대체 경로 저장을 허용합니다.
 
+### 프로필 이미지 임시 선택본
+
+- 모바일 PWA에서 앨범 이미지를 선택하면 브라우저가 고해상도 원본을 직접 디코딩하지 않고 서버의 비공개 임시 저장소로 전송합니다.
+- 서버는 영구 저장과 동일한 시그니처, 파일 크기, 해상도 및 EXIF 방향 검증을 적용하고, 방향 보정이 끝난 원본과 화면용 축소 미리보기를 분리해 저장합니다.
+- 임시 파일은 공개 `/uploads` 경로와 `TM_FILEXM`에 등록하지 않으며 로그인 사용자와 이미지 유형으로 격리합니다. 화면에는 실제 임시 경로 대신 인증 응답의 축소 Data URL과 UUID 식별값만 전달합니다.
+- 임시 선택본은 생성 후 최대 30분 유지합니다. 같은 사용자가 앱을 다시 실행하면 만료 전 선택본을 복원하고, 만료 파일은 10분 주기의 정리 작업과 조회 시점 정리로 삭제합니다.
+- 같은 유형 이미지를 다시 선택하면 새 임시 원본과 미리보기 생성에 성공한 뒤 이전 선택본을 삭제합니다. 새 선택 처리에 실패하면 이전 선택본을 유지합니다.
+- 편집 취소, 최종 저장 성공, 로그아웃, 계정 비활성화, 영구 탈퇴 요청 및 회원 물리 삭제 시 해당 사용자의 임시 원본과 미리보기를 삭제합니다.
+- 최종 프로필 저장은 임시 원본을 `uploads/profile/yyMMdd` 또는 `uploads/background/yyMMdd`로 승격하고 `TM_FILEXM` 메타정보와 사용자 참조가 모두 커밋된 뒤 임시 선택본을 삭제합니다. 트랜잭션이 롤백되면 만료 전 재시도를 위해 임시 선택본을 유지합니다.
+- 임시 선택본은 공개 프로필, 알림, 푸시, 팔로우 및 다른 소셜 관계에 영향을 주지 않습니다.
+
 ## 구현 근거
 
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
@@ -91,7 +102,10 @@
 - `scripts/db/mysql/04-reset-bad-word-data.sql`
 - `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/global/file/service/FileService.java`
+- `src/main/java/org/our/sadari/global/file/dto/ProfileImageDraftDto.java`
+- `src/main/java/org/our/sadari/global/scheduler/ProfileImageDraftCleanupScheduler.java`
 - `src/main/java/org/our/sadari/user/service/UserServiceImpl.java`
+- `src/main/frontend/src/pages/My/ProfileEditPage.tsx`
 - `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
 - `src/main/resources/application-loc.yml`

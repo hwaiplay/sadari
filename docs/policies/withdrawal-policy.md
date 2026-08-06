@@ -46,6 +46,7 @@
 - 비활성화 과정에서 변경된 독후감 공개 상태, 댓글, 알림, 푸시 구독은 계정 재활성화 시 자동 복원하지 않습니다.
 - 계정이 다시 활성화된 로그인에는 “다시 돌아와서 반가워요” 팝업을 표시하고 자동 복원되지 않는 항목을 다시 안내합니다.
 - 일반 로그인에는 비활성화 계정 복귀 팝업을 표시하지 않습니다.
+- 계정 비활성화가 완료되면 저장하지 않은 프로필 및 배경 이미지 임시 선택본은 즉시 물리 삭제하며, 재로그인으로 계정을 복구해도 복원하지 않습니다.
 
 ## 영구 탈퇴
 
@@ -70,6 +71,8 @@
 - 탈퇴 이력에는 원본 OAuth 식별값 대신 SHA-256 해시를 저장합니다.
 - 탈퇴 이력의 `USER_NUMB`는 탈퇴 당시 내부 회원번호를 감사 이력으로 보존합니다.
 - `TH_USWTHD.USER_NUMB`는 회원 원본 삭제 후에도 값을 유지해야 하므로 `TM_USERXM`과 FK로 연결하지 않습니다.
+- 영구 탈퇴 요청으로 `DELETE_PENDING` 상태가 적용되면 저장하지 않은 프로필 및 배경 이미지 임시 선택본은 즉시 물리 삭제합니다. 유예기간 안에 탈퇴를 취소해도 해당 임시 선택본은 복원하지 않습니다.
+- 유예기간 종료 후 회원 물리 삭제 시에도 사용자별 임시 저장소를 방어적으로 다시 정리합니다.
 
 ## 신고 데이터 처리
 
@@ -188,6 +191,7 @@
 - `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
 - `src/main/java/org/our/sadari/global/file/service/FileService.java`
+- `src/main/java/org/our/sadari/global/scheduler/ProfileImageDraftCleanupScheduler.java`
 - `src/main/java/org/our/sadari/global/file/mapper/FileMapper.xml`
 - `src/main/java/org/our/sadari/global/scheduler/LocalUserHardDeleteScheduler.java`
 - `src/main/java/org/our/sadari/global/scheduler/mapper/UserHardDeleteMapper.xml`
