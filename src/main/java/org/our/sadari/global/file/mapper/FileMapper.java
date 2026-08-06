@@ -1,5 +1,6 @@
 package org.our.sadari.global.file.mapper;
 
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.global.file.dto.FileDto;
 
@@ -12,16 +13,44 @@ import org.our.sadari.global.file.dto.FileDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-14        SeungHyeon.Kang    최초 생성
+ * 2026-08-06        SeungHyeon.Kang    파일 교체와 영구 탈퇴 삭제 쿼리 추가
  */
 @Mapper
 public interface FileMapper {
+
     /**
-     * 아래 코드의 처리 목적을 설명한다.
+     * 업로드한 이미지 파일의 저장 메타정보를 등록한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileDto 등록할 파일 메타정보
+     * @return 등록된 파일 메타정보 수
      */
     int setFile(FileDto fileDto);
 
     /**
-     * 아래 코드의 처리 목적을 설명한다.
+     * 파일 번호로 이미지 파일 메타정보를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileNumb 조회할 파일 번호
+     * @return 조회된 파일 메타정보
      */
     FileDto getFileByNumb(Long fileNumb);
+
+    /**
+     * 파일 등록 사용자 번호로 영구 삭제할 파일 메타정보를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param regiUser 파일을 등록한 사용자 번호
+     * @return 사용자가 등록한 파일 메타정보 목록
+     */
+    List<FileDto> getFileListByRegiUser(Long regiUser);
+
+    /**
+     * 사용자 프로필과 배경에서 참조하지 않는 파일 메타정보를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileNumb 삭제할 파일 번호
+     * @return 삭제된 파일 메타정보 수
+     */
+    int delFileIfUnreferenced(Long fileNumb);
 }

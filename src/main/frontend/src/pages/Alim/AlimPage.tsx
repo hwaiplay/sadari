@@ -1,5 +1,6 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { message } from "@/app/messages/message";
 import {
   notifyFirebasePushEnabled,
@@ -337,15 +338,21 @@ function AlimPage() {
     const wasPushEnabled = isPushEnabled;
     setIsPushChanging(true);
 
-    try {
+    /**
+     * 현재 푸시 알림 상태에 맞춰 브라우저 토큰을 서버에 등록하거나 비활성화한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 푸시 알림 설정 변경 완료 Promise
+     * @throws 권한 요청과 Firebase Token 또는 구독 API 처리가 실패할 때 발생
+     */
+    const changePushSetting = async (): Promise<void> => {
       // 켜짐 상태에서 다시 누르면 현재 브라우저 token만 비활성화하고 버튼을 꺼짐 상태로 전환한다.
       if (wasPushEnabled) {
         const token = await getCurrentPushToken();
         await delPushSubApi({ endpUrlx: token });
         setIsPushEnabled(false);
         setStoredPushEnabled(false);
-        // "푸시 알림이 꺼졌습니다."
-        void sweetSuccess(message("frontend.push.disable.successTitle"));
+        // 푸시 알림 해제 작업이 끝났으므로 설정 변경 처리를 종료한다
         return;
       }
 
@@ -361,6 +368,27 @@ function AlimPage() {
       setIsPushEnabled(true);
       setStoredPushEnabled(true);
       notifyFirebasePushEnabled();
+    };
+
+    try {
+      // Firebase 권한 요청부터 서버 구독 변경 완료까지 버튼 없는 모달과 화면 이동 차단을 유지한다
+      await runBlockingOperation(changePushSetting, {
+        // "푸시 알림 해제 중..." 또는 "푸시 알림 설정 중..."
+        title: message(
+          wasPushEnabled
+            ? "frontend.push.changing.disable"
+            : "frontend.push.changing.enable",
+        ),
+      });
+
+      // 변경 전 상태가 켜짐이면 구독 해제 완료 문구를 표시한다
+      if (wasPushEnabled) {
+        // "푸시 알림이 꺼졌습니다."
+        void sweetSuccess(message("frontend.push.disable.successTitle"));
+        // 구독 해제 성공 뒤 설정 완료 문구가 중복 표시되지 않도록 종료한다
+        return;
+      }
+
       // "푸시 알림이 켜졌습니다."
       void sweetSuccess(message("frontend.push.enable.successTitle"));
     } catch (error) {

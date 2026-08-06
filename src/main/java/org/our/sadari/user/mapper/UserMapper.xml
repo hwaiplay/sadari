@@ -52,6 +52,17 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
+    <!-- 프로필 이미지 교체가 완료될 때까지 현재 사용자 파일 번호를 잠금 조회한다. -->
+    <select id="getUserFileForUpdate" parameterType="long" resultType="org.our.sadari.user.dto.UserDto">
+        SELECT /* getUserFileForUpdate */
+               U.USER_NUMB
+             , U.PROF_NUMB
+             , U.BGIM_NUMB
+          FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{userNumb}
+           FOR UPDATE
+    </select>
+
     <!-- 사용자 번호로 최초 로그인 온보딩 완료 여부를 조회한다. -->
     <select id="getUserOnboardingYsno" parameterType="long" resultType="string">
         SELECT /* getUserOnboardingYsno */

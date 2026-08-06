@@ -37,4 +37,33 @@
           FROM TM_FILEXM
          WHERE FILE_NUMB = #{fileNumb}
     </select>
+
+    <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회한다. -->
+    <select id="getFileListByRegiUser" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
+        SELECT /* getFileListByRegiUser */
+               FILE_NUMB
+             , ORIG_NAME
+             , STOR_NAME
+             , FILE_PATH
+             , FILE_SIZE
+             , MIME_TYPE
+             , REGI_USER
+             , REGI_DATE
+          FROM TM_FILEXM
+         WHERE REGI_USER = #{regiUser}
+      ORDER BY FILE_NUMB
+    </select>
+
+    <!-- 사용자 프로필과 배경에서 더 이상 참조하지 않는 파일 메타 정보를 삭제한다. -->
+    <delete id="delFileIfUnreferenced" parameterType="long">
+        DELETE /* delFileIfUnreferenced */
+          FROM TM_FILEXM
+         WHERE FILE_NUMB = #{fileNumb}
+           AND NOT EXISTS (
+                   SELECT 1
+                     FROM TM_USERXM U
+                    WHERE U.PROF_NUMB = #{fileNumb}
+                       OR U.BGIM_NUMB = #{fileNumb}
+               )
+    </delete>
 </mapper>

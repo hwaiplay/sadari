@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sadari-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}v2`;
+const CACHE_NAME = `${CACHE_PREFIX}v4`;
 const APP_SHELL = [
   "/",
   "/favicon/site.webmanifest",
@@ -229,7 +229,7 @@ function handleServiceWorkerActivate(event) {
 }
 
 /**
- * 이전 앱 셸 캐시를 제거하고 열린 화면을 최신 서비스워커 제어 대상으로 전환한다
+ * 이전 앱 셸 캐시를 제거하고 다음 앱 실행에 최신 서비스워커를 적용한다
  *
  * @author HanWon.Jang
  * @return {Promise<void>} 최신 서비스워커 활성화 완료 Promise
@@ -250,10 +250,8 @@ async function activateLatestServiceWorker() {
 
   }
 
-  // 모든 이전 버전 캐시가 제거될 때까지 기다린다
+  // 열린 화면의 편집 상태는 유지하면서 모든 이전 버전 캐시가 제거될 때까지 기다린다
   await Promise.all(deleteCachePromiseList);
-  // 이미 열린 화면도 새 서비스워커가 즉시 제어하도록 전환한다
-  await self.clients.claim();
 }
 
 /**

@@ -1,5 +1,7 @@
 package org.our.sadari.global.file.service;
 
+import java.awt.Graphics2D;
+import java.awt.geom.AffineTransform;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -9,7 +11,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Iterator;
+import java.util.List;
 import java.util.UUID;
 import javax.imageio.ImageIO;
 import javax.imageio.ImageReader;
@@ -38,6 +43,8 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-14        SeungHyeon.Kang    최초 생성
+ * 2026-08-06        SeungHyeon.Kang    날짜별 이미지 저장과 교체 및 영구 탈퇴 파일 삭제 추가
+ * 2026-08-06        SeungHyeon.Kang    JPEG EXIF 방향을 픽셀에 반영하는 이미지 정규화 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -48,6 +55,8 @@ public class FileService {
     private static final String UPLOAD_ROOT_DIR = "uploads";
     // 업로드 접근 접두사 설정값
     private static final String UPLOAD_ACCESS_PREFIX = "/uploads/";
+    // 업로드 일자 디렉터리 형식
+    private static final DateTimeFormatter UPLOAD_DATE_FORMATTER = DateTimeFormatter.ofPattern("yyMMdd");
     // 기본 이미지 EXTENSION 설정값
     private static final String DEFAULT_IMAGE_EXTENSION = ".jpg";
     private static final byte[] JPEG_SIGNATURE = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF};
@@ -55,9 +64,22 @@ public class FileService {
     private static final byte[] PNG_SIGNATURE = {
             (byte) 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A
     };
+    // JPEG APP1 메타정보 구간을 식별하는 마커값
+    private static final int JPEG_APP1_MARKER = 0xE1;
+    // JPEG 이미지 데이터 시작을 식별하는 마커값
+    private static final int JPEG_START_OF_SCAN_MARKER = 0xDA;
+    // JPEG 이미지 종료를 식별하는 마커값
+    private static final int JPEG_END_OF_IMAGE_MARKER = 0xD9;
+    // TIFF 메타정보에서 이미지 방향을 식별하는 태그값
+    private static final int EXIF_ORIENTATION_TAG = 0x0112;
+    // EXIF APP1 구간의 고정 헤더값
+    private static final byte[] EXIF_HEADER = {'E', 'x', 'i', 'f', 0x00, 0x00};
 
     // File 데이터 접근 객체
     private final FileMapper fileMapper;
+
+    // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
+    private Path uploadRootPath = Paths.get(UPLOAD_ROOT_DIR).toAbsolutePath().normalize();
 
     // 업로드 가능한 이미지 최대 바이트 크기
     @Value("${app.upload.max-image-bytes:10485760}")
@@ -97,9 +119,11 @@ public class FileService {
         ValidatedImage validatedImage = validateAndNormalizeImage(imageFile.getBytes());
         // 검증된 이미지 형식에 대응하는 파일 확장자를 결정한다
         String storedName = createStoredFileName(validatedImage.extension());
+        // 업로드 날짜를 저장 경로와 접근 경로에 동일하게 적용한다
+        String uploadDate = getUploadDate();
 
-        // getUploadPath 조회로 후속 처리에 필요한 데이터를 가져온다
-        Path uploadPath = getUploadPath(imageType);
+        // 이미지 유형과 업로드 날짜에 맞는 저장 경로를 조회한다
+        Path uploadPath = getUploadPath(imageType, uploadDate);
         // 파일 저장에 필요한 디렉터리를 생성한다
         Files.createDirectories(uploadPath);
         // 기준 경로와 하위 경로를 결합한다
@@ -125,8 +149,8 @@ public class FileService {
             fileDto.setOrigName(originalName);
             // StorName 업무 값을 fileDto DTO에 설정한다
             fileDto.setStorName(storedName);
-            // FilePath 업무 값을 fileDto DTO에 설정한다
-            fileDto.setFilePath(getAccessPrefix(imageType) + storedName);
+            // 날짜 디렉터리가 포함된 브라우저 접근 경로를 설정한다
+            fileDto.setFilePath(getAccessPrefix(imageType, uploadDate) + storedName);
             // FileSize 업무 값을 fileDto DTO에 설정한다
             fileDto.setFileSize((long) validatedImage.bytes().length);
             // MimeType 업무 값을 fileDto DTO에 설정한다
@@ -197,8 +221,10 @@ public class FileService {
             ValidatedImage validatedImage = validateAndNormalizeImage(imageBytes);
             // 검증된 이미지 형식에 대응하는 파일 확장자를 결정한다
             String storedName = createStoredFileName(validatedImage.extension());
-            // getUploadPath 조회로 후속 처리에 필요한 데이터를 가져온다
-            Path uploadPath = getUploadPath(Constant.FILE_TYPE_PROFILE);
+            // 업로드 날짜를 저장 경로와 접근 경로에 동일하게 적용한다
+            String uploadDate = getUploadDate();
+            // 프로필 이미지 유형과 업로드 날짜에 맞는 저장 경로를 조회한다
+            Path uploadPath = getUploadPath(Constant.FILE_TYPE_PROFILE, uploadDate);
             // 파일 저장에 필요한 디렉터리를 생성한다
             Files.createDirectories(uploadPath);
             // 기준 경로와 하위 경로를 결합한다
@@ -221,8 +247,8 @@ public class FileService {
                 fileDto.setOrigName("kakao-profile-" + userIdxx);
                 // StorName 업무 값을 fileDto DTO에 설정한다
                 fileDto.setStorName(storedName);
-                // FilePath 업무 값을 fileDto DTO에 설정한다
-                fileDto.setFilePath(getAccessPrefix(Constant.FILE_TYPE_PROFILE) + storedName);
+                // 날짜 디렉터리가 포함된 브라우저 접근 경로를 설정한다
+                fileDto.setFilePath(getAccessPrefix(Constant.FILE_TYPE_PROFILE, uploadDate) + storedName);
                 // FileSize 업무 값을 fileDto DTO에 설정한다
                 fileDto.setFileSize((long) validatedImage.bytes().length);
                 // MimeType 업무 값을 fileDto DTO에 설정한다
@@ -265,6 +291,85 @@ public class FileService {
     }
 
     /**
+     * 파일 등록 사용자 번호로 영구 탈퇴 시 삭제할 파일 메타정보를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param regiUser 파일을 등록한 사용자 번호
+     * @return 사용자가 등록한 파일 메타정보 목록
+     */
+    public List<FileDto> getFileListByRegiUser(Long regiUser) {
+        // 사용자 번호가 없으면 다른 사용자의 파일을 잘못 조회하지 않도록 빈 목록을 반환한다
+        if (StringUtil.isEmpty(regiUser)) {
+            // 영구 삭제할 파일이 없는 상태를 반환한다
+            return List.of();
+        }
+
+        // 영구 탈퇴 트랜잭션이 삭제하기 전에 사용자가 등록한 파일 정보를 조회한다
+        List<FileDto> fileList = fileMapper.getFileListByRegiUser(regiUser);
+
+        // Mapper가 Null을 반환해도 영구 탈퇴 반복 처리가 중단되지 않도록 빈 목록으로 보정한다
+        if (StringUtil.isEmpty(fileList)) {
+            // 영구 삭제할 파일이 없는 상태를 반환한다
+            return List.of();
+        }
+
+        // 영구 탈퇴 대상 사용자가 등록한 파일 메타정보 목록을 반환한다
+        return fileList;
+    }
+
+    /**
+     * 사용자 프로필과 배경에서 더 이상 참조하지 않는 파일 메타정보를 삭제하고 커밋 후 물리 파일을 정리한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileNumb 교체 전 파일 번호
+     */
+    public void delFile(Long fileNumb) {
+        // 교체 전 파일 번호가 없으면 기존 파일 정리 대상이 아니므로 종료한다
+        if (StringUtil.isEmpty(fileNumb)) {
+            // 기존 파일 정리를 종료한다
+            return;
+        }
+
+        // 물리 파일 삭제 경로를 커밋 이후에도 사용할 수 있도록 메타정보를 먼저 조회한다
+        FileDto fileDto = fileMapper.getFileByNumb(fileNumb);
+
+        // 이미 정리된 파일 번호이면 중복 삭제를 성공 상태로 처리한다
+        if (StringUtil.isEmpty(fileDto)) {
+            // 중복 파일 정리를 종료한다
+            return;
+        }
+
+        // 다른 프로필이나 배경에서 참조하지 않는 파일 메타정보만 삭제한다
+        int deleteCnt = fileMapper.delFileIfUnreferenced(fileNumb);
+
+        // 다른 이미지 컬럼이 같은 파일을 참조하면 해당 참조가 교체될 때까지 물리 파일을 유지한다
+        if (deleteCnt != 1) {
+            // 아직 참조 중인 파일 정리를 종료한다
+            return;
+        }
+
+        // DB 참조와 메타정보 삭제가 커밋된 뒤에만 교체 전 물리 파일을 삭제한다
+        registerCommitCleanup(List.of(fileDto));
+    }
+
+    /**
+     * 영구 탈퇴 트랜잭션이 커밋된 뒤 사용자가 등록한 물리 파일을 모두 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileList 영구 탈퇴 전에 조회한 파일 메타정보 목록
+     */
+    public void delPhysicalFileListAfterCommit(List<FileDto> fileList) {
+        // 영구 탈퇴 대상 파일이 없으면 커밋 후 정리 작업을 등록하지 않는다
+        if (StringUtil.isEmpty(fileList)) {
+            // 영구 탈퇴 물리 파일 정리를 종료한다
+            return;
+        }
+
+        // 회원과 파일 메타정보 삭제가 커밋된 뒤 물리 파일을 제거하도록 정리 작업을 등록한다
+        registerCommitCleanup(List.copyOf(fileList));
+    }
+
+    /**
      * 외부 이미지 URL 자체를 파일 경로로 저장한다.
      *
      * @author SeungHyeon.Kang
@@ -299,11 +404,12 @@ public class FileService {
      *
      * @author SeungHyeon.Kang
      * @param imageType 이미지 파일 타입
+     * @param uploadDate yyMMdd 형식의 업로드 날짜
      * @return 서버 파일 시스템 저장 경로
      */
-    private Path getUploadPath(String imageType) {
-        // 이미지 타입에 맞는 서버 저장 경로를 반환한 결과를 반환한다
-        return Paths.get(UPLOAD_ROOT_DIR, getUploadDirectoryName(imageType)).toAbsolutePath().normalize();
+    private Path getUploadPath(String imageType, String uploadDate) {
+        // 이미지 유형 아래에 업로드 날짜 디렉터리를 포함한 저장 경로를 반환한다
+        return uploadRootPath.resolve(getUploadDirectoryName(imageType)).resolve(uploadDate).normalize();
     }
 
     /**
@@ -311,11 +417,23 @@ public class FileService {
      *
      * @author SeungHyeon.Kang
      * @param imageType 이미지 파일 타입
+     * @param uploadDate yyMMdd 형식의 업로드 날짜
      * @return 브라우저 접근 URL prefix
      */
-    private String getAccessPrefix(String imageType) {
-        // 이미지 타입에 맞는 브라우저 접근 URL prefix를 반환한 결과를 반환한다
-        return UPLOAD_ACCESS_PREFIX + getUploadDirectoryName(imageType) + "/";
+    private String getAccessPrefix(String imageType, String uploadDate) {
+        // 이미지 유형과 업로드 날짜가 포함된 브라우저 접근 경로 접두사를 반환한다
+        return UPLOAD_ACCESS_PREFIX + getUploadDirectoryName(imageType) + "/" + uploadDate + "/";
+    }
+
+    /**
+     * 현재 서버 날짜를 이미지 저장 디렉터리 형식으로 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @return yyMMdd 형식의 업로드 날짜
+     */
+    private String getUploadDate() {
+        // 동일한 날짜 기준으로 저장 경로와 접근 경로를 구성할 업로드 날짜를 반환한다
+        return LocalDate.now().format(UPLOAD_DATE_FORMATTER);
     }
 
     /**
@@ -417,6 +535,9 @@ public class FileService {
             throw new InvalidImageFileException("Only JPEG and PNG image signatures are allowed.");
         }
 
+        // JPEG에 기록된 촬영 방향을 재인코딩 전에 픽셀에 적용할 값으로 조회한다
+        int exifOrientation = getExifOrientation(originalBytes, imageFormat);
+
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try (
                 // 이미지 형식 검증에 사용할 입력 스트림을 담을 객체를 생성한다
@@ -477,10 +598,13 @@ public class FileService {
                     throw new InvalidImageFileException("Image decoding failed.");
                 }
 
+                // EXIF 방향값을 실제 픽셀 방향에 반영해 메타정보가 제거된 뒤에도 표시 방향을 유지한다
+                BufferedImage orientedImage = uptImageOrientation(decodedImage, exifOrientation);
+
                 // 정규화한 이미지 데이터를 누적할 출력 스트림을 담을 객체를 생성한다
                 ByteArrayOutputStream normalizedOutput = new ByteArrayOutputStream();
                 // 검증된 업로드 파일을 저장 경로에 기록한다
-                boolean encoded = ImageIO.write(decodedImage, imageFormat.imageIoName(), normalizedOutput);
+                boolean encoded = ImageIO.write(orientedImage, imageFormat.imageIoName(), normalizedOutput);
 
                 // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
                 if (!encoded || normalizedOutput.size() == 0 || normalizedOutput.size() > maxImageBytes) {
@@ -562,6 +686,451 @@ public class FileService {
 
         // 파일 바이트가 지정된 시그니처로 시작하는지 확인한다 판정값을 반환한다
         return true;
+    }
+
+    /**
+     * JPEG APP1 메타정보에서 촬영 당시 이미지 방향값을 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param bytes 검사할 원본 이미지 바이트
+     * @param imageFormat 판별된 이미지 형식
+     * @return EXIF Orientation 값, 값이 없거나 손상되었으면 1
+     */
+    private int getExifOrientation(byte[] bytes, ImageFormat imageFormat) {
+        // PNG에는 JPEG APP1 메타정보가 없으므로 방향 보정을 적용하지 않는다
+        if (imageFormat != ImageFormat.JPEG) {
+            // 원본 픽셀 방향을 유지하는 기본 방향값을 반환한다
+            return 1;
+        }
+
+        int markerOffset = JPEG_SIGNATURE.length - 1;
+
+        // 압축 이미지 데이터가 시작되기 전의 JPEG 메타정보 구간만 순차 검사한다
+        while (markerOffset + 4 <= bytes.length) {
+            // JPEG 마커 시작값이 아니면 손상된 메타정보로 보고 기본 방향을 사용한다
+            if ((bytes[markerOffset] & 0xFF) != 0xFF) {
+                // 손상된 메타정보 대신 원본 픽셀 방향을 유지한다
+                return 1;
+            }
+
+            int marker = bytes[markerOffset + 1] & 0xFF;
+
+            // 압축 이미지 또는 파일 종료 지점 이후의 바이트는 EXIF 메타정보로 해석하지 않는다
+            if (marker == JPEG_START_OF_SCAN_MARKER || marker == JPEG_END_OF_IMAGE_MARKER) {
+                // EXIF 방향값이 없는 이미지의 기본 방향을 반환한다
+                return 1;
+            }
+
+            // JPEG 구간 길이를 네트워크 바이트 순서로 조회한다
+            int segmentLength = getUnsignedShort(bytes, markerOffset + 2, false);
+
+            // 구간 길이가 헤더보다 짧거나 파일 범위를 벗어나면 손상된 메타정보로 처리한다
+            if (segmentLength < 2 || markerOffset + 2L + segmentLength > bytes.length) {
+                // 손상된 메타정보 대신 원본 픽셀 방향을 유지한다
+                return 1;
+            }
+
+            int segmentDataOffset = markerOffset + 4;
+            int segmentDataLength = segmentLength - 2;
+
+            // APP1 구간이 EXIF 헤더로 시작할 때만 TIFF 방향 태그를 조회한다
+            if (marker == JPEG_APP1_MARKER && isExifHeader(bytes, segmentDataOffset, segmentDataLength)) {
+                // 검증된 EXIF TIFF 구간에서 이미지 방향값을 반환한다
+                return getTiffOrientation(bytes, segmentDataOffset + EXIF_HEADER.length
+                        , segmentDataLength - EXIF_HEADER.length);
+            }
+
+            // 현재 JPEG 구간 전체 길이만큼 다음 마커 위치로 이동한다
+            markerOffset += segmentLength + 2;
+        }
+
+        // EXIF Orientation 태그가 없는 이미지의 기본 방향값을 반환한다
+        return 1;
+    }
+
+    /**
+     * JPEG APP1 데이터가 EXIF 고정 헤더로 시작하는지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param bytes 검사할 원본 이미지 바이트
+     * @param offset APP1 데이터 시작 위치
+     * @param length APP1 데이터 길이
+     * @return EXIF 헤더 일치 여부
+     */
+    private boolean isExifHeader(byte[] bytes, int offset, int length) {
+        // EXIF 고정 헤더보다 짧은 APP1 구간은 다른 메타정보로 처리한다
+        if (length < EXIF_HEADER.length || offset + EXIF_HEADER.length > bytes.length) {
+            // EXIF 메타정보가 아님을 반환한다
+            return false;
+        }
+
+        // APP1 선두 바이트를 EXIF 고정 헤더와 순차 비교한다
+        for (int index = 0; index < EXIF_HEADER.length; index++) {
+            // 한 바이트라도 다르면 EXIF 메타정보로 해석하지 않는다
+            if (bytes[offset + index] != EXIF_HEADER[index]) {
+                // EXIF 메타정보가 아님을 반환한다
+                return false;
+            }
+        }
+
+        // APP1 데이터가 EXIF 고정 헤더와 일치함을 반환한다
+        return true;
+    }
+
+    /**
+     * EXIF TIFF 구간의 첫 번째 이미지 디렉터리에서 방향 태그를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param bytes 검사할 원본 이미지 바이트
+     * @param tiffOffset TIFF 헤더 시작 위치
+     * @param tiffLength TIFF 데이터 길이
+     * @return EXIF Orientation 값, 값이 없거나 손상되었으면 1
+     */
+    private int getTiffOrientation(byte[] bytes, int tiffOffset, int tiffLength) {
+        // TIFF 헤더와 첫 번째 이미지 디렉터리 위치를 읽을 수 없는 구간은 기본 방향으로 처리한다
+        if (tiffLength < 8 || tiffOffset < 0 || tiffOffset + (long) tiffLength > bytes.length) {
+            // 손상된 TIFF 메타정보 대신 원본 픽셀 방향을 유지한다
+            return 1;
+        }
+
+        boolean littleEndian;
+
+        // Intel 바이트 순서로 기록된 TIFF 메타정보를 구분한다
+        if (bytes[tiffOffset] == 0x49 && bytes[tiffOffset + 1] == 0x49) {
+            littleEndian = true;
+        }
+
+        // Motorola 바이트 순서로 기록된 TIFF 메타정보를 구분한다
+        else if (bytes[tiffOffset] == 0x4D && bytes[tiffOffset + 1] == 0x4D) {
+            littleEndian = false;
+        }
+
+        // 지원하지 않는 바이트 순서는 손상된 메타정보로 처리한다
+        else {
+            // 해석할 수 없는 TIFF 메타정보의 기본 방향값을 반환한다
+            return 1;
+        }
+
+        // TIFF 고정 식별값이 아니면 이미지 디렉터리를 읽지 않는다
+        if (getUnsignedShort(bytes, tiffOffset + 2, littleEndian) != 42) {
+            // 유효하지 않은 TIFF 메타정보의 기본 방향값을 반환한다
+            return 1;
+        }
+
+        // TIFF 기준 상대 위치를 파일 내 절대 위치로 변환한다
+        long directoryOffset = tiffOffset + getUnsignedInt(bytes, tiffOffset + 4, littleEndian);
+        long tiffEndOffset = tiffOffset + (long) tiffLength;
+
+        // 첫 번째 이미지 디렉터리의 항목 수를 읽을 수 없는 위치는 기본 방향으로 처리한다
+        if (directoryOffset < tiffOffset || directoryOffset + 2 > tiffEndOffset) {
+            // 손상된 이미지 디렉터리 위치의 기본 방향값을 반환한다
+            return 1;
+        }
+
+        // 검증된 이미지 디렉터리의 태그 항목 수를 조회한다
+        int entryCount = getUnsignedShort(bytes, (int) directoryOffset, littleEndian);
+
+        // 첫 번째 이미지 디렉터리의 태그를 선언된 항목 수만큼 순차 검사한다
+        for (int index = 0; index < entryCount; index++) {
+            long entryOffset = directoryOffset + 2L + index * 12L;
+
+            // 선언된 태그 항목이 TIFF 구간을 벗어나면 손상된 메타정보로 처리한다
+            if (entryOffset + 12 > tiffEndOffset) {
+                // 손상된 태그 목록 대신 원본 픽셀 방향을 유지한다
+                return 1;
+            }
+
+            // 현재 TIFF 태그 번호를 조회한다
+            int tag = getUnsignedShort(bytes, (int) entryOffset, littleEndian);
+
+            // 이미지 방향 이외의 태그는 후속 항목에서 계속 탐색한다
+            if (tag != EXIF_ORIENTATION_TAG) {
+                // 다음 TIFF 태그 항목을 확인한다
+                continue;
+            }
+
+            // Orientation은 SHORT 한 개로 저장되어야 하므로 타입과 개수를 함께 검증한다
+            if (getUnsignedShort(bytes, (int) entryOffset + 2, littleEndian) != 3
+                    || getUnsignedInt(bytes, (int) entryOffset + 4, littleEndian) != 1) {
+                // 유효하지 않은 방향 태그 대신 원본 픽셀 방향을 유지한다
+                return 1;
+            }
+
+            // SHORT 한 개는 태그 값 영역의 선두 두 바이트에 직접 저장된다
+            int orientation = getUnsignedShort(bytes, (int) entryOffset + 8, littleEndian);
+
+            // EXIF 표준이 정의한 여덟 방향값만 픽셀 변환에 사용한다
+            if (orientation >= 1 && orientation <= 8) {
+                // 검증된 EXIF 이미지 방향값을 반환한다
+                return orientation;
+            }
+
+            // 허용 범위 밖의 방향값은 원본 픽셀 방향으로 보정한다
+            return 1;
+        }
+
+        // 이미지 디렉터리에 Orientation 태그가 없으면 원본 픽셀 방향을 유지한다
+        return 1;
+    }
+
+    /**
+     * 바이트 배열의 두 바이트를 부호 없는 정수로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param bytes 변환할 바이트 배열
+     * @param offset 값의 시작 위치
+     * @param littleEndian 리틀 엔디언 여부
+     * @return 0부터 65535까지의 부호 없는 정수값
+     */
+    private int getUnsignedShort(byte[] bytes, int offset, boolean littleEndian) {
+        // TIFF 바이트 순서에 따라 하위 바이트부터 조합한다
+        if (littleEndian) {
+            // 리틀 엔디언으로 조합한 부호 없는 정수값을 반환한다
+            return (bytes[offset] & 0xFF) | ((bytes[offset + 1] & 0xFF) << 8);
+        }
+
+        // 네트워크 또는 Motorola 바이트 순서로 조합한 부호 없는 정수값을 반환한다
+        return ((bytes[offset] & 0xFF) << 8) | (bytes[offset + 1] & 0xFF);
+    }
+
+    /**
+     * 바이트 배열의 네 바이트를 부호 없는 정수로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param bytes 변환할 바이트 배열
+     * @param offset 값의 시작 위치
+     * @param littleEndian 리틀 엔디언 여부
+     * @return 0부터 4294967295까지의 부호 없는 정수값
+     */
+    private long getUnsignedInt(byte[] bytes, int offset, boolean littleEndian) {
+        // TIFF 바이트 순서에 따라 하위 바이트부터 조합한다
+        if (littleEndian) {
+            // 리틀 엔디언으로 조합한 부호 없는 정수값을 반환한다
+            return (bytes[offset] & 0xFFL)
+                    | ((bytes[offset + 1] & 0xFFL) << 8)
+                    | ((bytes[offset + 2] & 0xFFL) << 16)
+                    | ((bytes[offset + 3] & 0xFFL) << 24);
+        }
+
+        // 네트워크 또는 Motorola 바이트 순서로 조합한 부호 없는 정수값을 반환한다
+        return ((bytes[offset] & 0xFFL) << 24)
+                | ((bytes[offset + 1] & 0xFFL) << 16)
+                | ((bytes[offset + 2] & 0xFFL) << 8)
+                | (bytes[offset + 3] & 0xFFL);
+    }
+
+    /**
+     * EXIF 방향값을 실제 이미지 픽셀에 적용한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param sourceImage 원본 방향의 디코딩 이미지
+     * @param orientation EXIF Orientation 값
+     * @return 촬영 당시 표시 방향으로 변환한 이미지
+     */
+    private BufferedImage uptImageOrientation(BufferedImage sourceImage, int orientation) {
+        // 방향 보정이 필요하지 않으면 추가 이미지 할당 없이 원본을 사용한다
+        if (orientation == 1) {
+            // 원본 픽셀 방향의 이미지를 반환한다
+            return sourceImage;
+        }
+
+        // 픽셀 좌표 변환과 출력 크기 계산에 사용할 원본 너비를 조회한다
+        int sourceWidth = sourceImage.getWidth();
+        // 픽셀 좌표 변환과 출력 크기 계산에 사용할 원본 높이를 조회한다
+        int sourceHeight = sourceImage.getHeight();
+        AffineTransform transform;
+
+        // EXIF 방향값에 대응하는 미러링과 회전 좌표 변환을 선택한다
+        switch (orientation) {
+            // 좌우가 반전된 픽셀을 수평으로 복원한다
+            case 2:
+                transform = new AffineTransform(-1, 0, 0, 1, sourceWidth, 0);
+                break;
+            // 상하좌우가 반전된 픽셀을 180도 회전한다
+            case 3:
+                transform = new AffineTransform(-1, 0, 0, -1, sourceWidth, sourceHeight);
+                break;
+            // 상하가 반전된 픽셀을 수직으로 복원한다
+            case 4:
+                transform = new AffineTransform(1, 0, 0, -1, 0, sourceHeight);
+                break;
+            // 좌우 반전과 반시계 방향 회전이 함께 기록된 픽셀을 복원한다
+            case 5:
+                transform = new AffineTransform(0, 1, 1, 0, 0, 0);
+                break;
+            // 시계 방향 90도 표시 방향을 실제 픽셀에 적용한다
+            case 6:
+                transform = new AffineTransform(0, 1, -1, 0, sourceHeight, 0);
+                break;
+            // 좌우 반전과 시계 방향 회전이 함께 기록된 픽셀을 복원한다
+            case 7:
+                transform = new AffineTransform(0, -1, -1, 0, sourceHeight, sourceWidth);
+                break;
+            // 반시계 방향 90도 표시 방향을 실제 픽셀에 적용한다
+            case 8:
+                transform = new AffineTransform(0, -1, 1, 0, 0, sourceWidth);
+                break;
+            // 허용되지 않은 방향값은 호출자가 검증했더라도 원본 방향으로 안전하게 처리한다
+            default:
+                // 변환할 수 없는 방향값에서는 원본 이미지를 반환한다
+                return sourceImage;
+        }
+
+        int targetWidth = sourceWidth;
+        int targetHeight = sourceHeight;
+
+        // 90도 계열 회전은 출력 이미지의 가로와 세로 크기를 서로 교환한다
+        if (orientation >= 5 && orientation <= 8) {
+            targetWidth = sourceHeight;
+            targetHeight = sourceWidth;
+        }
+
+        // 사용자 정의 이미지 형식은 알파 채널 여부에 맞는 표준 픽셀 형식으로 보정한다
+        int targetType = sourceImage.getType();
+
+        // 사용자 정의 색상 모델은 BufferedImage 생성자에서 직접 재사용할 수 없어 표준 형식으로 변환한다
+        if (targetType == BufferedImage.TYPE_CUSTOM) {
+            // 알파 채널이 있는 사용자 정의 이미지는 투명도를 유지하는 표준 형식으로 변환한다
+            if (sourceImage.getColorModel().hasAlpha()) {
+                targetType = BufferedImage.TYPE_INT_ARGB;
+            }
+
+            // 알파 채널이 없는 사용자 정의 이미지는 불투명 표준 형식으로 변환한다
+            else {
+                targetType = BufferedImage.TYPE_INT_RGB;
+            }
+        }
+
+        // 방향이 반영된 픽셀을 담을 출력 이미지를 생성한다
+        BufferedImage orientedImage = new BufferedImage(targetWidth, targetHeight, targetType);
+        // 원본 픽셀을 좌표 변환하여 출력 이미지에 그릴 그래픽 객체를 생성한다
+        Graphics2D graphics = orientedImage.createGraphics();
+
+        // 그래픽 자원이 예외 상황에서도 해제되도록 이미지 변환을 격리한다
+        try {
+            // EXIF 방향에 대응하는 좌표 변환으로 원본 픽셀을 출력 이미지에 기록한다
+            graphics.drawImage(sourceImage, transform, null);
+        }
+
+        // 이미지 변환이 끝나면 네이티브 그래픽 자원을 해제한다
+        finally {
+            // 이미지 변환에 사용한 그래픽 자원을 해제한다
+            graphics.dispose();
+        }
+
+        // EXIF 표시 방향이 실제 픽셀에 반영된 이미지를 반환한다
+        return orientedImage;
+    }
+
+    /**
+     * DB 트랜잭션이 커밋된 뒤 교체되거나 영구 탈퇴로 제거된 물리 파일을 삭제하도록 정리 작업을 등록한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileList 커밋 후 삭제할 파일 메타정보 목록
+     */
+    private void registerCommitCleanup(List<FileDto> fileList) {
+        // 트랜잭션 밖에서 호출되면 이미 완료된 DB 처리에 맞춰 물리 파일을 즉시 정리한다
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            // 트랜잭션이 없는 호출의 물리 파일을 즉시 삭제한다
+            delPhysicalFileList(fileList);
+            // 즉시 물리 파일 정리를 마친다
+            return;
+        }
+
+        // DB 최종 상태에 따라 물리 파일 삭제 여부를 결정할 동기화 작업을 등록한다
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            /**
+             * DB 커밋이 완료된 경우에만 기존 물리 파일을 삭제한다.
+             *
+             * @author SeungHyeon.Kang
+             * @param status 트랜잭션 종료 상태
+             * @return 반환값이 없다
+             */
+            @Override
+            public void afterCompletion(int status) {
+                // 롤백된 DB가 기존 파일을 계속 참조할 수 있으므로 커밋 외 상태에서는 물리 파일을 유지한다
+                if (status != TransactionSynchronization.STATUS_COMMITTED) {
+                    // 기존 물리 파일을 유지하고 커밋 후 정리를 종료한다
+                    return;
+                }
+
+                // DB에서 참조와 메타정보가 제거된 물리 파일을 삭제한다
+                delPhysicalFileList(fileList);
+            }
+        });
+    }
+
+    /**
+     * 로컬 업로드 경로로 확인된 물리 파일을 목록 단위로 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileList 삭제할 파일 메타정보 목록
+     */
+    private void delPhysicalFileList(List<FileDto> fileList) {
+        // 하나의 파일 삭제 실패가 나머지 영구 탈퇴 파일 정리를 중단하지 않도록 개별 처리한다
+        for (FileDto fileDto : fileList) {
+            // 외부 URL과 허용된 업로드 경로 밖의 값은 로컬 파일 삭제 대상에서 제외한다
+            Path storedPath = getStoredPath(fileDto);
+
+            // 로컬 업로드 파일 경로가 아니면 메타정보 삭제만 유지한다
+            if (StringUtil.isEmpty(storedPath)) {
+                // 다음 파일 메타정보를 확인한다
+                continue;
+            }
+
+            // 파일 시스템 오류를 파일별로 격리해 나머지 삭제 대상을 계속 처리한다
+            try {
+                // DB에서 참조가 제거된 로컬 이미지 파일을 삭제한다
+                Files.deleteIfExists(storedPath);
+            }
+
+            // 커밋 이후 물리 삭제 실패는 롤백할 수 없으므로 운영 로그에 재정리 대상을 남긴다
+            catch (IOException e) {
+                // 파일 번호와 안전하게 검증된 저장 경로를 오류 로그로 남긴다
+                log.error("Committed image file cleanup failed. fileNumb={}, path={}", fileDto.getFileNumb(), storedPath, e);
+            }
+        }
+    }
+
+    /**
+     * 파일 접근 경로를 업로드 루트 아래의 안전한 로컬 저장 경로로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param fileDto 경로와 서버 저장 파일명이 포함된 파일 메타정보
+     * @return 삭제 가능한 로컬 저장 경로, 외부 URL 또는 허용 범위 밖이면 null
+     */
+    private Path getStoredPath(FileDto fileDto) {
+        // 파일 메타정보나 필수 경로가 없으면 로컬 파일로 판단하지 않는다
+        if (StringUtil.isEmpty(fileDto) || StringUtil.hasEmpty(fileDto.getFilePath(), fileDto.getStorName())) {
+            // 삭제할 수 있는 로컬 저장 경로가 없음을 반환한다
+            return null;
+        }
+
+        // 외부 이미지 URL과 이전 연동 경로는 로컬 업로드 파일이 아니므로 물리 삭제에서 제외한다
+        if (!fileDto.getFilePath().startsWith(UPLOAD_ACCESS_PREFIX)) {
+            // 외부 경로는 로컬 저장 경로가 아님을 반환한다
+            return null;
+        }
+
+        // 브라우저 접근 접두사를 제외한 프로필 또는 배경 하위 경로를 추출한다
+        String relativePath = fileDto.getFilePath().substring(UPLOAD_ACCESS_PREFIX.length());
+        // 업로드 루트를 기준으로 정규화해 상위 디렉터리 이동 문자를 제거한다
+        Path storedPath = uploadRootPath.resolve(relativePath).normalize();
+        // 프로필 이미지가 저장될 수 있는 루트 경로를 계산한다
+        Path profileRoot = uploadRootPath.resolve(getUploadDirectoryName(Constant.FILE_TYPE_PROFILE)).normalize();
+        // 배경 이미지가 저장될 수 있는 루트 경로를 계산한다
+        Path backgroundRoot = uploadRootPath.resolve(getUploadDirectoryName(Constant.FILE_TYPE_BACKGROUND)).normalize();
+
+        // 이미지 유형 루트 자체이거나 허용된 이미지 디렉터리 밖이면 삭제 요청을 차단한다
+        if (storedPath.equals(profileRoot) || storedPath.equals(backgroundRoot)
+                || (!storedPath.startsWith(profileRoot) && !storedPath.startsWith(backgroundRoot))
+                || !fileDto.getStorName().equals(storedPath.getFileName().toString())) {
+            // 안전한 업로드 파일 경로가 아님을 반환한다
+            return null;
+        }
+
+        // 업로드 루트와 저장 파일명이 검증된 로컬 경로를 반환한다
+        return storedPath;
     }
 
     /**
