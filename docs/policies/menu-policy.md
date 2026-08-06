@@ -23,6 +23,14 @@
 - 이 기능은 화면 표시 정책이며, 보안이 필요한 URL의 최종 접근 권한은 Spring Security에서 별도로 검증해야 합니다.
 - Swagger와 API 문서는 관리자 역할만 접근할 수 있습니다.
 
+## 등록되지 않은 URL
+
+- 로그인 사용자가 프론트엔드 라우터에 등록되지 않은 URL에 접근하면 전용 안내 알럿을 표시합니다.
+- 안내는 공통 SweetAlert의 경고 알럿으로 표시하며 페이지를 찾을 수 없다는 설명과 홈 이동 버튼만 제공합니다. 공통 헤더와 하단 내비게이션은 표시하지 않습니다.
+- 영구 삭제 대기와 관리자 이용 정지 등 일반 화면 접근이 제한된 계정은 URL 안내보다 기존 제한 전용 화면을 우선 표시합니다.
+- 미인증 사용자는 기존 인증 정책에 따라 로그인 화면으로 이동합니다.
+- 등록되지 않은 URL 안내는 사용자 데이터를 생성·수정·보존·삭제·복원하지 않으며 알림, 푸시 구독 및 소셜 관계에도 영향을 주지 않습니다.
+
 ## 구현 근거
 
 - `menu/service/UserMenuServiceImpl.java`
@@ -30,3 +38,6 @@
 - `components/Layout/Header/Header.tsx`
 - `components/Layout/Header/HeaderMenuDrawer.tsx`
 - `features/Menu/api/userMenuApi.ts`
+- `router/Router.tsx`
+- `router/ProtectedRoute.tsx`
+- `pages/Error/ErrorPage.tsx`

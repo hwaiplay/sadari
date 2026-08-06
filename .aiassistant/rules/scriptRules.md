@@ -253,7 +253,7 @@ if (userNumb !== undefined && resultData.code === 200
 
 - JSDoc은 `/**`로 시작하고 `*/`로 끝내며 각 내부 줄은 `*`로 시작합니다.
 - 첫 문장에는 함수의 실제 업무 대상과 처리 목적을 구체적으로 작성합니다.
-- 모든 함수에 `@author`를 작성하며 작성자 이름의 성과 이름 사이에는 마침표를 사용합니다.
+- 모든 함수에 `@author SeungHyeon.Kang`을 작성합니다.
 - 파라미터가 있으면 모든 파라미터에 `@param`과 설명을 작성합니다.
 - 반환 여부와 관계없이 모든 함수에 `@return`과 반환값의 의미를 작성합니다.
 - 예외가 발생하거나 Promise가 reject될 수 있으면 `@throws`와 발생 조건을 작성합니다.
@@ -263,7 +263,7 @@ if (userNumb !== undefined && resultData.code === 200
 /**
  * 독후감 번호를 사용하여 독후감 상세 화면으로 이동한다
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param reptNumb 이동할 독후감 번호
  * @return 반환값이 없다
  */

@@ -171,6 +171,29 @@
              , DETAIL.COMD_CODE
     </select>
 
+    <!-- 로그인 사용자가 현재 선택한 관심분야를 공통코드 표시 정보와 함께 조회한다. -->
+    <select id="getUserInterestList" parameterType="long" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
+        <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
+        SELECT /* getUserInterestList */
+               PARENT.COMD_NAME AS INTR_CNAM
+             , INTEREST.INTR_CODE
+             , DETAIL.COMD_NAME AS INTR_NAME
+             , PARENT.SORT_ORDR AS CGRP_ORDR
+             , DETAIL.SORT_ORDR AS CODE_ORDR
+          FROM TB_USINTR INTEREST
+          JOIN TB_CODEXD DETAIL
+            ON DETAIL.COMM_CODE = #{categoryCode}
+           AND DETAIL.COMD_CODE = INTEREST.INTR_CODE
+     LEFT JOIN TB_CODEXD PARENT
+            ON PARENT.COMM_CODE = DETAIL.COMM_CODE
+           AND PARENT.COMD_CODE = DETAIL.UPPR_CODE
+         WHERE INTEREST.USER_NUMB = #{userNumb}
+      ORDER BY COALESCE(PARENT.SORT_ORDR, 9999)
+             , PARENT.COMD_CODE
+             , COALESCE(DETAIL.SORT_ORDR, 9999)
+             , DETAIL.COMD_CODE
+    </select>
+
     <!-- 로그인 사용자의 독서 관심분야를 전체 교체하기 전에 기존 선택을 삭제한다. -->
     <delete id="delUserInterests" parameterType="long">
         DELETE /* delUserInterests */

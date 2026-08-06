@@ -39,8 +39,8 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
  * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
- * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 조회와 저장 추가
- * 2026-08-05        SeungHyeon.Kang       회원 관심분야 단일 코드 검증과 저장 반영
+ * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
+ * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 검증과 현재 선택 조회 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -285,6 +285,27 @@ public class UserServiceImpl implements UserService {
         List<UserDto.UserInterestDto> interestCatalog = userMapper.getUserInterestCatalog();
         // 최초 로그인 화면이 대분류별 선택 항목을 구성할 수 있도록 전체 목록을 반환한다
         return ResultData.success(interestCatalog);
+    }
+
+    /**
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 선택한 관심분야 목록
+     */
+    @Override
+    public ResultData getUserInterestList(Long userNumb) {
+        // 인증 사용자 번호가 없으면 관심분야를 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            // "인증에 실패했어요. 다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 사용자가 현재 저장한 독서 관심분야를 조회한다
+        List<UserDto.UserInterestDto> interests = userMapper.getUserInterestList(userNumb);
+        // 현재 선택된 독서 관심분야 목록을 반환한다
+        return ResultData.success(interests);
     }
 
     /**

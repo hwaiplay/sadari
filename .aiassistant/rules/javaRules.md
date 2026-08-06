@@ -184,7 +184,7 @@ log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수
 - 모든 클래스 선언 바로 위에는 파일 정보와 변경 이력을 확인할 수 있는 클래스 Javadoc을 작성합니다.
 - 클래스 Javadoc은 `fileName`, `author`, `date`, `description` 순서로 파일 정보를 작성합니다.
 - `fileName`에는 확장자를 제외한 실제 클래스명을 작성합니다.
-- `author`에는 작성자의 영문 성과 이름 사이를 마침표로 구분하여 작성합니다. 예: `SeungHyeon.Kang`
+- `author`에는 항상 `SeungHyeon.Kang`을 작성합니다.
 - `date`에는 클래스 최초 생성일을 `yyyy-MM-dd` 형식으로 작성합니다.
 - `description`에는 해당 클래스의 역할을 한 문장으로 작성합니다.
 - 파일 정보 아래에는 구분선과 `DATE`, `AUTHOR`, `NOTE` 열을 사용하여 변경 이력을 작성합니다.
@@ -233,7 +233,7 @@ public class BookController {
 
 - `@author`, `@param`, `@return`, `@throws`를 해당 항목이 존재할 때 순서대로 작성합니다.
 - `@param`과 `@return`에는 대상의 의미를 반드시 작성합니다.
-- 작성자 이름의 성과 이름 사이에는 마침표를 사용합니다. 예: `SeungHyeon.Kang`
+- `@author`에는 항상 `SeungHyeon.Kang`을 작성합니다.
 
 ### 7.5 메서드 Javadoc 예시
 

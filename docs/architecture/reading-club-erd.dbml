@@ -91,15 +91,14 @@ Table TM_CLUBXM [headercolor: #0299E2] {
 
 Table TB_CLCATE [headercolor: #0299E2] {
   CLUB_NUMB bigint [not null]
-  INTR_CGRP varchar(10) [not null]
   INTR_CODE varchar(20) [not null]
   SORT_ORDR tinyint [not null, note: '1~3, 1은 대표 카테고리']
   REGI_DATE datetime(6) [not null]
 
   indexes {
-    (CLUB_NUMB, INTR_CGRP, INTR_CODE) [pk]
+    (CLUB_NUMB, INTR_CODE) [pk]
     (CLUB_NUMB, SORT_ORDR) [unique, name: 'UK_TB_CLCATE_SORT']
-    (INTR_CGRP, INTR_CODE, CLUB_NUMB) [name: 'IX_TB_CLCATE_RECM']
+    (INTR_CODE, CLUB_NUMB) [name: 'IX_TB_CLCATE_RECM']
   }
 }
 
@@ -107,40 +106,27 @@ Table TB_CLMEMX [headercolor: #0299E2] {
   CLUB_NUMB bigint [not null]
   USER_NUMB bigint [not null]
   MEMB_ROLE varchar(20) [not null, note: 'OWNER 또는 MEMBER']
-  MEMB_STAT varchar(20) [not null, note: 'ACTIVE, LEFT 또는 KICKED']
-  JOIN_PATH varchar(20) [not null, note: 'INVITE, OPEN 또는 APPROVAL']
-  JOIN_DATE datetime(6) [not null]
+  MEMB_STAT varchar(20) [not null, note: 'INVITED, ACTIVE, LEFT 또는 KICKED']
+  SEND_NUMB bigint [note: '초대 발송자. INVITED일 때만 사용하며 물리 삭제 시 Null']
+  INVT_DATE datetime(6) [note: '초대 발송 일시. INVITED일 때 필수']
+  EXPR_DATE datetime(6) [note: '초대 만료 일시. INVITED일 때 필수, 발송 후 3일']
+  JOIN_DATE datetime(6) [note: '가입 확정 일시. INVITED일 때 Null']
   EXIT_DATE datetime(6)
   BLOC_YSNO varchar(1) [not null, default: 'N', note: '강제 퇴장 후 재가입 차단 여부']
+  REGI_DATE datetime(6) [not null]
   UPDT_DATE datetime(6) [not null]
 
   indexes {
     (CLUB_NUMB, USER_NUMB) [pk]
     (USER_NUMB, MEMB_STAT, CLUB_NUMB) [name: 'IX_TB_CLMEMX_USER']
     (CLUB_NUMB, MEMB_STAT, USER_NUMB) [name: 'IX_TB_CLMEMX_CLUB']
+    (CLUB_NUMB, MEMB_STAT, EXPR_DATE) [name: 'IX_TB_CLMEMX_SEAT']
   }
 }
 
 // ─────────────────────────────────────────────────────────────
-// 초대와 승인 가입
+// 승인 가입
 // ─────────────────────────────────────────────────────────────
-
-Table TB_CLINVT [headercolor: #6C8EBF] {
-  CLUB_NUMB bigint [not null]
-  INVT_NUMB bigint [not null, note: '모임별 MAX + 1']
-  USER_NUMB bigint [note: '초대 대상. 물리 삭제 시 Null']
-  SEND_NUMB bigint [note: '초대 발송자. 물리 삭제 시 Null']
-  INVT_STAT varchar(20) [not null]
-  EXPR_DATE datetime(6) [not null, note: '발송 후 3일']
-  PROC_DATE datetime(6)
-  REGI_DATE datetime(6) [not null]
-
-  indexes {
-    (CLUB_NUMB, INVT_NUMB) [pk]
-    (CLUB_NUMB, INVT_STAT, EXPR_DATE) [name: 'IX_TB_CLINVT_SEAT']
-    (USER_NUMB, INVT_STAT, EXPR_DATE, CLUB_NUMB) [name: 'IX_TB_CLINVT_USER']
-  }
-}
 
 Table TB_CLQUES [headercolor: #6C8EBF] {
   CLUB_NUMB bigint [pk]
@@ -158,7 +144,7 @@ Table TB_CLQUES [headercolor: #6C8EBF] {
 Table TB_CLJOIN [headercolor: #6C8EBF] {
   CLUB_NUMB bigint [not null]
   APPL_NUMB bigint [not null, note: '모임별 MAX + 1']
-  USER_NUMB bigint [note: '신청자. 물리 삭제 시 Null']
+  USER_NUMB bigint [not null, note: '신청자. 물리 삭제 시 신청 행 연쇄 삭제']
   QUES_FIRS varchar(500) [not null]
   QUES_SECO varchar(500)
   QUES_THIR varchar(500)
@@ -170,14 +156,12 @@ Table TB_CLJOIN [headercolor: #6C8EBF] {
   ANSR_FOUR varchar(2000)
   ANSR_FIFT varchar(2000)
   JOIN_STAT varchar(20) [not null]
-  IDEM_KEYX varchar(64) [not null]
   APPL_DATE datetime(6) [not null]
   PROC_USER bigint
   PROC_DATE datetime(6)
 
   indexes {
     (CLUB_NUMB, APPL_NUMB) [pk]
-    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TB_CLJOIN_IDEM']
     (CLUB_NUMB, USER_NUMB, JOIN_STAT) [name: 'IX_TB_CLJOIN_USER']
     (USER_NUMB, JOIN_STAT, APPL_DATE) [name: 'IX_TB_CLJOIN_MINE']
   }
@@ -445,18 +429,14 @@ Ref: TB_CODEXD.(COMM_CODE, UPPR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete
 
 Ref: TM_CLUBXM.OWNR_NUMB > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TB_CLCATE.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
-Ref: TB_CLCATE.(INTR_CGRP, INTR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE) [delete: restrict]
 Ref: TB_CLMEMX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
 Ref: TB_CLMEMX.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
-
-Ref: TB_CLINVT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
-Ref: TB_CLINVT.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
-Ref: TB_CLINVT.SEND_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLMEMX.SEND_NUMB > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TM_CLUBXM.CLUB_NUMB - TB_CLQUES.CLUB_NUMB [delete: cascade]
 Ref: TB_CLQUES.REGI_USER > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TB_CLQUES.UPDT_USER > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TB_CLJOIN.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
-Ref: TB_CLJOIN.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+Ref: TB_CLJOIN.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
 Ref: TB_CLJOIN.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
 
 Ref: TM_CLRNDX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
@@ -512,7 +492,6 @@ TableGroup ReadingClub {
   TM_CLUBXM
   TB_CLCATE
   TB_CLMEMX
-  TB_CLINVT
   TB_CLQUES
   TB_CLJOIN
   TM_CLRNDX

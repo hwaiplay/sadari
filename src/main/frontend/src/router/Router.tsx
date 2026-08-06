@@ -24,6 +24,11 @@ import WelcomePage from "@/pages/Welcome/WelcomePage";
 import SuspensionPage from "@/pages/Settings/SuspensionPage";
 import UserReportPage from "@/pages/UserReport/UserReportPage";
 import UserReportCompletePage from "@/pages/UserReport/UserReportCompletePage";
+import ErrorPage from "@/pages/Error/ErrorPage";
+import MyClubPage from "@/pages/ReadingClub/MyClubPage";
+import FindClubPage from "@/pages/ReadingClub/FindClubPage";
+import ClubCreatePage from "@/pages/ReadingClub/ClubCreatePage";
+import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -135,6 +140,12 @@ const Router = () => {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
 
+          {/* 독서 모임 1차 기능 */}
+          <Route path="/reading-clubs/mine" element={<MyClubPage />} />
+          <Route path="/reading-clubs/find" element={<FindClubPage />} />
+          <Route path="/reading-clubs/new" element={<ClubCreatePage />} />
+          <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
+
           {/* 사용자 콘텐츠 신고 사유 선택 */}
           <Route path="/user-report" element={<UserReportPage />} />
 
@@ -144,6 +155,16 @@ const Router = () => {
             element={<UserReportCompletePage />}
           />
         </Route>
+
+        {/* 등록되지 않은 URL 안내 */}
+        <Route
+          path="*"
+          element={
+            <ProtectedRoute>
+              <ErrorPage />
+            </ProtectedRoute>
+          }
+        />
       </Routes>
     </>
   );
