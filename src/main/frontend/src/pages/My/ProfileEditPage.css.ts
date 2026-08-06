@@ -13,6 +13,13 @@ const activityFadeIn = keyframes({
   },
 });
 
+// 이미지 업로드를 포함한 프로필 저장이 계속 진행 중임을 전달하는 회전 동작
+const rotateProfileSaveSpinner = keyframes({
+  to: {
+    transform: "rotate(360deg)",
+  },
+});
+
 export const page = style({
   width: "100%",
   minHeight: "calc(100svh - 52px - 60px)",
@@ -98,6 +105,38 @@ export const coverSaveButton = style([
     },
   },
 ]);
+
+// 프로필 저장 요청이 끝날 때까지 버튼을 푸시 설정과 같은 골드색 진행 상태로 유지한다
+export const coverSaveButtonSaving = style([
+  coverSaveButton,
+  {
+    minWidth: "126px",
+    borderColor: "#d9b44a",
+    backgroundColor: "rgba(255, 255, 255, 0.96)",
+    color: "#d9b44a",
+    selectors: {
+      "&:disabled": {
+        borderColor: "#d9b44a",
+        backgroundColor: "rgba(255, 255, 255, 0.96)",
+        color: "#d9b44a",
+        cursor: "wait",
+        opacity: 1,
+      },
+    },
+  },
+]);
+
+// 저장 중 버튼의 현재 글자색을 상속하여 골드색 회전 표시를 제공한다
+export const profileSaveSpinner = style({
+  width: "12px",
+  height: "12px",
+  flex: "0 0 auto",
+  border: "2px solid currentColor",
+  borderRightColor: "transparent",
+  borderRadius: "50%",
+  boxSizing: "border-box",
+  animation: `${rotateProfileSaveSpinner} 700ms linear infinite`,
+});
 
 export const actionIcon = style({
   width: "14px",

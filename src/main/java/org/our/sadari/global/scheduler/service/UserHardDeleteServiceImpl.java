@@ -4,6 +4,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.file.dto.FileDto;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.UserHardDeleteMapper;
@@ -25,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -38,6 +41,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
 
     // 영구 삭제 대상 데이터 접근 객체
     private final UserHardDeleteMapper userHardDeleteMapper;
+    // 영구 탈퇴 회원의 물리 파일 정리 서비스
+    private final FileService fileService;
     // 스케줄러 로그 안전 처리 객체
     private final SchedulerLogSupport schedulerLogSupport;
 
@@ -81,8 +86,12 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
         try {
             // 조회된 영구 삭제 대상 회원을 순차 처리한다
             for (UserWithdrawalDto target : targets) {
+                // 프로시저가 파일 메타정보를 삭제하기 전에 커밋 후 사용할 물리 파일 경로를 조회한다
+                List<FileDto> fileList = fileService.getFileListByRegiUser(target.getUserNumb());
                 // 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 삭제한다
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
+                // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
+                fileService.delPhysicalFileListAfterCommit(fileList);
                 // 정상 삭제된 회원 수를 누적한다
                 successCnt++;
             }

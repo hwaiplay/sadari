@@ -1,6 +1,6 @@
 import { lockBodyScroll, unlockBodyScroll } from "@/app/utils/modalUtil";
 
-type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question";
+type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question" | "loading";
 
 type SweetAlertOptions = {
   title: string;
@@ -13,6 +13,9 @@ type SweetAlertOptions = {
   confirmButtonText?: string;
   cancelButtonText?: string;
   showCancelButton?: boolean;
+  showConfirmButton?: boolean;
+  allowOutsideClick?: boolean;
+  closeSignal?: AbortSignal;
 };
 
 type SweetAlertResult = {
@@ -29,6 +32,7 @@ const ICON_LABEL: Record<SweetAlertIcon, string> = {
   warning: "!",
   info: "i",
   question: "?",
+  loading: "",
 };
 
 const ICON_CLASS: Record<SweetAlertIcon, string> = {
@@ -37,6 +41,7 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
   warning: "sadari-swal-icon-warning",
   info: "sadari-swal-icon-info",
   question: "sadari-swal-icon-question",
+  loading: "sadari-swal-icon-loading",
 };
 
 /**
@@ -165,6 +170,12 @@ function ensureSweetAlertStyle() {
       animation: sadari-swal-pop-mark 500ms ease-out 160ms both;
     }
 
+    .sadari-swal-icon-loading {
+      border-color: #e8ddd0;
+      border-top-color: #c99545;
+      animation: sadari-swal-loading-spin 850ms linear infinite;
+    }
+
     .sadari-swal-title {
       margin: 0;
       color: #1f1f1f;
@@ -250,6 +261,10 @@ function ensureSweetAlertStyle() {
       justify-content: center;
       gap: 10px;
       margin-top: 22px;
+    }
+
+    .sadari-swal-actions:empty {
+      display: none;
     }
 
     .sadari-swal-button {
@@ -467,6 +482,12 @@ function ensureSweetAlertStyle() {
       }
     }
 
+    @keyframes sadari-swal-loading-spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
     @media (prefers-reduced-motion: reduce) {
       .sadari-swal-edit-guide-pulse {
         animation: none;
@@ -507,10 +528,23 @@ export function sweetAlert(options: SweetAlertOptions) {
 
   return new Promise<SweetAlertResult>((resolve) => {
 
+    // 호출 전에 작업이 끝난 안내 모달은 화면에 추가하지 않고 닫힘 결과로 완료한다
+    if (options.closeSignal?.aborted) {
+      // 이미 종료된 작업의 모달 Promise를 닫힘 상태로 완료한다
+      resolve({
+        isConfirmed: false,
+        isSecondaryAction: false,
+        isDismissed: true,
+      });
+      // 종료된 작업의 DOM 생성을 차단하도록 모달 처리를 종료한다
+      return;
+    }
+
     const overlay = document.createElement("div");
     const modal = document.createElement("div");
     const iconType = options.icon ?? "info";
     let isClosed = false;
+    let closeSignalHandler: (() => void) | null = null;
 
     /**
      * close 사용자 동작을 처리한다
@@ -526,8 +560,37 @@ export function sweetAlert(options: SweetAlertOptions) {
       }
 
       isClosed = true;
+
+      // 외부 작업 종료 신호 구독이 남아 다른 알림까지 닫지 않도록 현재 모달의 구독을 제거한다
+      if (closeSignalHandler && options.closeSignal) {
+        // 현재 모달에 연결한 작업 종료 이벤트만 해제한다
+        options.closeSignal.removeEventListener("abort", closeSignalHandler);
+      }
+
       resolve(closeSweetAlert(overlay, result));
     };
+
+    /**
+     * 비동기 작업이 끝나면 처리 중 모달을 사용자 입력 없이 닫는다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    closeSignalHandler = () => {
+
+      // 완료된 작업의 안내 모달을 닫힘 상태로 정리한다
+      close({
+        isConfirmed: false,
+        isSecondaryAction: false,
+        isDismissed: true,
+      });
+    };
+
+    // 작업 종료 신호가 제공되면 현재 모달만 자동으로 닫을 수 있도록 구독한다
+    if (options.closeSignal) {
+      // 작업이 끝나는 최초 신호만 처리하도록 일회성 이벤트를 등록한다
+      options.closeSignal.addEventListener("abort", closeSignalHandler, { once: true });
+    }
 
     lockBodyScroll();
     overlay.className = "sadari-swal-overlay";
@@ -536,6 +599,8 @@ export function sweetAlert(options: SweetAlertOptions) {
       .join(" ");
     modal.setAttribute("role", "alertdialog");
     modal.setAttribute("aria-modal", "true");
+    modal.setAttribute("aria-busy", iconType === "loading" ? "true" : "false");
+    modal.tabIndex = -1;
 
     const icon = document.createElement("div");
     icon.className = `sadari-swal-icon ${ICON_CLASS[iconType]}`;
@@ -575,9 +640,11 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     const actions = document.createElement("div");
     actions.className = "sadari-swal-actions";
+    let cancelButton: HTMLButtonElement | null = null;
 
+    // 취소 또는 보조 동작이 필요한 모달에만 취소 버튼을 제공한다
     if (options.showCancelButton) {
-      const cancelButton = document.createElement("button");
+      cancelButton = document.createElement("button");
       cancelButton.className = "sadari-swal-button sadari-swal-cancel";
       cancelButton.type = "button";
       cancelButton.textContent = options.cancelButtonText ?? "취소";
@@ -592,24 +659,30 @@ export function sweetAlert(options: SweetAlertOptions) {
       actions.appendChild(cancelButton);
     }
 
-    const confirmButton = document.createElement("button");
-    confirmButton.className = "sadari-swal-button";
-    confirmButton.type = "button";
-    confirmButton.textContent = options.confirmButtonText ?? "확인";
-    confirmButton.addEventListener("click", () => {
+    let confirmButton: HTMLButtonElement | null = null;
 
-      close({
-        isConfirmed: true,
-        isSecondaryAction: false,
-        isDismissed: false,
+    // 뒤로가기 취소 안내처럼 보조 버튼만 필요한 모달에는 확인 버튼을 만들지 않는다
+    if (options.showConfirmButton !== false) {
+      confirmButton = document.createElement("button");
+      confirmButton.className = "sadari-swal-button";
+      confirmButton.type = "button";
+      confirmButton.textContent = options.confirmButtonText ?? "확인";
+      confirmButton.addEventListener("click", () => {
+
+        // 사용자의 확인 선택으로 현재 알림을 완료한다
+        close({
+          isConfirmed: true,
+          isSecondaryAction: false,
+          isDismissed: false,
+        });
       });
-    });
-    actions.appendChild(confirmButton);
+      actions.appendChild(confirmButton);
+    }
 
     overlay.addEventListener("click", (event) => {
 
-      // 알림 종류와 버튼 구성에 관계없이 화면 바깥을 누르면 아무 작업 없이 닫는다
-      if (event.target === overlay) {
+      // 작업 중 뒤로가기 차단 모달은 바깥 영역을 눌러도 유지하고 일반 알림만 닫는다
+      if (event.target === overlay && options.allowOutsideClick !== false) {
         close({
           isConfirmed: false,
           isSecondaryAction: false,
@@ -623,10 +696,50 @@ export function sweetAlert(options: SweetAlertOptions) {
       event.stopPropagation();
     });
 
-    modal.appendChild(actions);
+    // 버튼이 없는 처리 중 모달에는 빈 버튼 영역을 추가하지 않는다
+    if (actions.childElementCount > 0) {
+      // 사용자가 선택할 수 있는 알림 동작을 모달 하단에 추가한다
+      modal.appendChild(actions);
+    }
+
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    confirmButton.focus();
+
+    // 사용 가능한 기본 동작이 있으면 해당 버튼에 포커스를 두고 버튼이 없으면 모달 본문을 선택한다
+    if (confirmButton) {
+      // 일반 알림의 기본 확인 동작에 포커스를 설정한다
+      confirmButton.focus();
+    } else {
+      // 버튼 없는 처리 중 모달은 모달 본문에 포커스를 두어 배경 화면 조작을 차단한다
+      modal.focus();
+    }
+  });
+}
+
+type SweetBlockingOperationOptions = {
+  title: string;
+  text?: string;
+  closeSignal: AbortSignal;
+};
+
+/**
+ * 상태 변경 작업이 끝날 때까지 닫을 수 없는 처리 중 모달을 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @param options 처리 중 문구와 작업 종료 신호
+ * @return 작업 완료 신호에 따라 자동으로 닫히는 알림 처리 결과 Promise
+ */
+export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
+
+  // 사용자가 서버 처리 도중 화면을 이탈하지 않도록 모든 닫기 버튼을 제거한 모달을 반환한다
+  return sweetAlert({
+    title: options.title,
+    text: options.text,
+    icon: "loading",
+    showCancelButton: false,
+    showConfirmButton: false,
+    allowOutsideClick: false,
+    closeSignal: options.closeSignal,
   });
 }
 

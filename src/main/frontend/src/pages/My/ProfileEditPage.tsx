@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -1659,6 +1660,12 @@ function ProfileEditPage() {
 
     event.preventDefault();
 
+    // 이미지 업로드가 끝나기 전에 Enter 또는 저장 버튼으로 같은 요청이 중복 제출되지 않게 차단한다
+    if (isSaving) {
+      // 진행 중인 프로필 저장 요청만 유지하도록 제출 처리를 종료한다
+      return;
+    }
+
     if (!userNick.trim()) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
@@ -1678,13 +1685,25 @@ function ProfileEditPage() {
       return;
     }
 
+    /**
+     * 현재 프로필 입력값과 선택 이미지를 사용자 수정 API에 전달한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 저장 후 서버가 반환한 최신 프로필 응답 Promise
+     */
+    const submitProfileChanges = () => updateMyProfileApi({
+      userNick: userNick.trim(),
+      intrCntn: intrCntn.trim(),
+      profileImage,
+      backgroundImage,
+    });
+
     try {
       setIsSaving(true);
-      const response = await updateMyProfileApi({
-        userNick: userNick.trim(),
-        intrCntn: intrCntn.trim(),
-        profileImage,
-        backgroundImage,
+      // 파일 업로드를 포함한 프로필 저장이 끝날 때까지 버튼 없는 모달과 화면 이동 차단을 유지한다
+      const response = await runBlockingOperation(submitProfileChanges, {
+        // "프로필 저장 중..."
+        title: message("frontend.profile.saving"),
       });
       const nextProfile = response.data as UserProfile;
       syncProfileState(nextProfile);
@@ -1753,16 +1772,32 @@ function ProfileEditPage() {
             )}
 
             {isEditMode ? (
-              <button className={styles.coverSaveButton} type="submit" disabled={isSaving}>
-                <svg
-                  className={styles.actionIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
-                </svg>
-                {/* "저장" */ message("frontend.report.save")}
+              <button
+                className={isSaving ? styles.coverSaveButtonSaving : styles.coverSaveButton}
+                type="submit"
+                aria-busy={isSaving}
+                aria-live="polite"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <span className={styles.profileSaveSpinner} aria-hidden="true" />
+                    {/* "프로필 저장 중..." */}
+                    {message("frontend.profile.saving")}
+                  </>
+                ) : (
+                  <>
+                    <svg
+                      className={styles.actionIcon}
+                      viewBox="0 0 24 24"
+                      aria-hidden="true"
+                      focusable="false"
+                    >
+                      <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
+                    </svg>
+                    {/* "저장" */ message("frontend.report.save")}
+                  </>
+                )}
               </button>
             ) : (
               <button

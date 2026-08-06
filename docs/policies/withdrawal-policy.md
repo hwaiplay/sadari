@@ -2,7 +2,7 @@
 
 ## 적용 범위
 
-- 기준일은 2026년 8월 5일입니다.
+- 기준일은 2026년 8월 6일입니다.
 - 사용자 계정 비활성화, 복귀, 영구 탈퇴 유예·취소·삭제와 관리자 계정 처리 이력 조회에 적용합니다.
 - 설치형 웹앱의 정적 리소스 업데이트가 계정 상태에 미치는 영향도 적용 범위에 포함합니다.
 - 독서 모임 기능이 출시된 뒤 적용할 모임장 부재·승계 연계 기준은 별도 절에 구분해 기록합니다.
@@ -41,6 +41,8 @@
 - 브라우저 푸시 구독은 비활성화합니다.
 - 팔로우 및 팔로워 관계는 유지합니다.
 - 다른 사용자가 탈퇴 회원 프로필에 접근하면 제공 정보를 제한합니다.
+- 프로필과 배경 이미지의 물리 파일 및 `TM_FILEXM` 메타정보는 유지하고 다른 사용자의 접근만 제한합니다.
+- 같은 Kakao 계정으로 재로그인해 `ACTIVE` 상태로 복귀하면 유지한 프로필과 배경 이미지를 다시 노출합니다.
 - 비활성화 과정에서 변경된 독후감 공개 상태, 댓글, 알림, 푸시 구독은 계정 재활성화 시 자동 복원하지 않습니다.
 - 계정이 다시 활성화된 로그인에는 “다시 돌아와서 반가워요” 팝업을 표시하고 자동 복원되지 않는 항목을 다시 안내합니다.
 - 일반 로그인에는 비활성화 계정 복귀 팝업을 표시하지 않습니다.
@@ -59,6 +61,8 @@
 - `DELETE_PENDING` 상태에서는 본인 댓글 수정·삭제 메뉴를 표시하지 않으며 직접 API를 호출해도 처리하지 않습니다.
 - 유예기간 종료 후 매일 03:00 영구 삭제 스케줄러가 대상 회원을 처리합니다.
 - 영구 삭제 시 `TM_USERXM` 회원 원본을 삭제합니다.
+- `DELETE_PENDING` 유예기간에는 취소 가능성을 위해 프로필과 배경 이미지 파일을 유지합니다.
+- 유예기간이 끝나 회원 원본을 물리 삭제하면 해당 회원이 등록한 프로필과 배경 이미지의 물리 파일 및 `TM_FILEXM` 메타정보를 모두 삭제하며 이후 복구하지 않습니다.
 - 로그인 이력은 보존하고, 정책상 보존 대상이 아닌 회원 연관 데이터는 삭제합니다.
 - 영구 삭제 시 작성 댓글 원문과 회원 연관 댓글 데이터를 물리 삭제하며 이후 복구하지 않습니다.
 - 영구 삭제 시 회원이 등록한 댓글 좋아요와 물리 삭제되는 댓글을 대상으로 한 좋아요를 모두 삭제합니다.
@@ -183,6 +187,8 @@
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
+- `src/main/java/org/our/sadari/global/file/service/FileService.java`
+- `src/main/java/org/our/sadari/global/file/mapper/FileMapper.xml`
 - `src/main/java/org/our/sadari/global/scheduler/LocalUserHardDeleteScheduler.java`
 - `src/main/java/org/our/sadari/global/scheduler/mapper/UserHardDeleteMapper.xml`
 - `src/main/frontend/src/pages/Settings/WithdrawalPage.tsx`

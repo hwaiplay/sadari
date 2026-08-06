@@ -41,6 +41,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
  * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
  * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 검증과 현재 선택 조회 반영
+ * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 후 기존 파일 삭제 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -156,6 +157,15 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
         }
 
+        // 동시에 들어온 프로필 수정이 서로의 신규 파일을 고아 파일로 만들지 않도록 현재 사용자 행을 잠금 조회한다
+        UserDto currentUser = userMapper.getUserFileForUpdate(userNumb);
+
+        // 인증 사용자 행이 사라진 경우 파일을 새로 만들지 않고 인증 실패로 종료한다
+        if (StringUtil.isEmpty(currentUser)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // ProfNumb 업무 값을 userDto DTO에 설정한다
@@ -190,6 +200,20 @@ public class UserServiceImpl implements UserService {
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 새 프로필 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리한다
+        if (!StringUtil.isEmpty(userDto.getProfNumb()) && !StringUtil.isEmpty(currentUser.getProfNumb())
+                && !userDto.getProfNumb().equals(currentUser.getProfNumb())) {
+            // DB 커밋 이후에만 이전 프로필 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록한다
+            fileService.delFile(currentUser.getProfNumb());
+        }
+
+        // 새 배경 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리한다
+        if (!StringUtil.isEmpty(userDto.getBgimNumb()) && !StringUtil.isEmpty(currentUser.getBgimNumb())
+                && !userDto.getBgimNumb().equals(currentUser.getBgimNumb())) {
+            // DB 커밋 이후에만 이전 배경 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록한다
+            fileService.delFile(currentUser.getBgimNumb());
         }
 
         /*

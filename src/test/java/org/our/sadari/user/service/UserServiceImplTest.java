@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.MessageUtils;
@@ -22,6 +23,7 @@ import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.mock.web.MockMultipartFile;
 
 /**
  * fileName       : UserServiceImplTest
@@ -34,6 +36,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 저장 검증 추가
  * 2026-08-05        SeungHyeon.Kang       관심분야 단일 코드 검증 추가
+ * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 파일 정리 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -177,5 +180,67 @@ class UserServiceImplTest {
         verify(userMapper, never()).delUserInterests(31L);
         // 검증하지 않은 관심분야를 저장하지 않는지 확인한다
         verify(userMapper, never()).setUserInterest(31L, requestedInterest);
+    }
+
+    /**
+     * 프로필과 배경 이미지를 교체하면 사용자 참조 변경 뒤 기존 파일 정리를 요청하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 파일 저장 서비스 모의 호출에서 오류가 발생한 경우
+     */
+    @Test
+    void uptMeDeletesReplacedProfileAndBackgroundFiles() throws Exception {
+        // 프로필 수정 요청 DTO를 생성한다
+        UserDto request = new UserDto();
+        // 수정할 닉네임을 설정한다
+        request.setUserNick("차분한 독서가");
+        // 수정할 한줄소개를 설정한다
+        request.setIntrCntn("책과 함께 쉬어갑니다");
+
+        // 교체 전 파일 번호를 담을 현재 사용자 정보를 생성한다
+        UserDto currentUser = new UserDto();
+        // 교체 전 프로필 파일 번호를 설정한다
+        currentUser.setProfNumb(10L);
+        // 교체 전 배경 파일 번호를 설정한다
+        currentUser.setBgimNumb(20L);
+
+        // 수정 완료 응답에 사용할 최신 사용자 정보를 생성한다
+        UserDto updatedUser = new UserDto();
+        // 수정된 사용자 번호를 설정한다
+        updatedUser.setUserNumb(31L);
+        // 수정된 사용자 닉네임을 설정한다
+        updatedUser.setUserNick("차분한 독서가");
+
+        // 파일 교체 요청에 사용할 프로필 이미지 파일을 생성한다
+        MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.png", "image/png", new byte[] {1});
+        // 파일 교체 요청에 사용할 배경 이미지 파일을 생성한다
+        MockMultipartFile backgroundImage = new MockMultipartFile("backgroundImage", "background.png", "image/png", new byte[] {2});
+
+        // 닉네임과 한줄소개가 비속어 검사를 통과하도록 결과를 설정한다
+        when(badWordDetectionService.findBadWord("차분한 독서가")).thenReturn(Optional.empty());
+        // 한줄소개 비속어 검사가 정상 통과하도록 결과를 설정한다
+        when(badWordDetectionService.findBadWord("책과 함께 쉬어갑니다")).thenReturn(Optional.empty());
+        // 다른 사용자와 닉네임이 중복되지 않도록 조회 결과를 설정한다
+        when(userMapper.getUserNickDuplicateCnt(request)).thenReturn(0);
+        // 동시 수정 잠금 조회에서 교체 전 파일 번호를 반환하도록 설정한다
+        when(userMapper.getUserFileForUpdate(31L)).thenReturn(currentUser);
+        // 신규 프로필 파일 번호를 반환하도록 설정한다
+        when(fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, 31L)).thenReturn(11L);
+        // 신규 배경 파일 번호를 반환하도록 설정한다
+        when(fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, 31L)).thenReturn(21L);
+        // 사용자 프로필 UPDATE가 정상 반영되도록 결과를 설정한다
+        when(userMapper.uptUserProfile(request)).thenReturn(1);
+        // 수정 완료 응답에서 최신 사용자 정보를 반환하도록 설정한다
+        when(userMapper.getUserByNumb(31L)).thenReturn(updatedUser);
+
+        // 프로필과 배경 이미지가 포함된 사용자 프로필 수정을 요청한다
+        ResultData result = userService.uptMe(31L, request, profileImage, backgroundImage);
+
+        // 프로필 수정이 공통 성공 코드로 응답하는지 확인한다
+        assertEquals(200, result.getCode());
+        // 사용자 참조에서 교체된 이전 프로필 파일 정리를 요청하는지 확인한다
+        verify(fileService).delFile(10L);
+        // 사용자 참조에서 교체된 이전 배경 파일 정리를 요청하는지 확인한다
+        verify(fileService).delFile(20L);
     }
 }

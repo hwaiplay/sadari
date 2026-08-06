@@ -7,11 +7,16 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { queryClient } from "@/app/query/queryClient";
+import {
+  beginBlockingOperation,
+  endBlockingOperation,
+} from "@/app/navigation/blockingOperation";
 import { assertResultDataSuccess, type ResultData } from "./resultData";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
   _csrfRetry?: boolean;
+  _blockingOperationId?: number;
 };
 
 const API_TIMEOUT_MILLISECONDS = 60_000;
@@ -67,6 +72,32 @@ function isRefreshableAuthCode(code: number) {
 function isAuthEndpoint(url?: string) {
 
   return url === "/oauth/refresh" || url === "/oauth/logout";
+}
+
+/**
+ * 요청 경로가 저장 없이 계산 결과만 조회하는 POST API인지 판정한다
+ *
+ * @author SeungHyeon.Kang
+ * @param url Axios 요청 경로
+ * @return 상태 변경 처리 중 모달에서 제외할 조회성 POST 여부
+ */
+function isNonSavingPostEndpoint(url?: string): boolean {
+  // 도서 표지색 분석은 서버 데이터를 변경하지 않으므로 저장 작업으로 분류하지 않는다
+  return url === "/book/cover-color";
+}
+
+/**
+ * Axios 요청이 사용자 데이터 또는 외부 설정을 변경하는 작업인지 판정한다
+ *
+ * @author SeungHyeon.Kang
+ * @param config 전송할 Axios 요청 설정
+ * @return 처리 중 모달과 화면 이동 차단이 필요한 요청 여부
+ */
+function isBlockingOperationRequest(config: InternalAxiosRequestConfig): boolean {
+  // 조회 요청과 인증 유지 요청 및 조회성 POST는 사용자 저장 작업에서 제외한다
+  return isCsrfProtectedMethod(config.method)
+    && !isAuthEndpoint(config.url)
+    && !isNonSavingPostEndpoint(config.url);
 }
 
 /**
@@ -186,8 +217,62 @@ async function setCsrfHeader(config: InternalAxiosRequestConfig) {
   return config;
 }
 
-// 모든 상태 변경 요청이 화면별 구현 없이 동일한 CSRF 검증을 통과하도록 요청 Interceptor를 등록한다
-api.interceptors.request.use(setCsrfHeader);
+/**
+ * 상태 변경 요청의 이동 차단을 시작한 뒤 CSRF Token Header를 준비한다
+ *
+ * @author SeungHyeon.Kang
+ * @param config 전송 직전 Axios 요청 설정
+ * @return 이동 차단 식별값과 CSRF Token Header가 반영된 요청 설정
+ * @throws CSRF Token 조회 요청이 실패할 때 발생
+ */
+async function prepareRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
+  const blockingConfig = config as RetryableRequestConfig;
+
+  // 재시도가 아닌 최초 상태 변경 요청이면 공통 처리 중 모달과 이동 가드를 시작한다
+  if (isBlockingOperationRequest(config) && blockingConfig._blockingOperationId === undefined) {
+    // 요청 완료 시 같은 작업만 해제할 수 있도록 이동 차단 식별값을 설정한다
+    blockingConfig._blockingOperationId = beginBlockingOperation();
+  }
+
+  // CSRF Token 준비 실패도 처리 중 화면을 정리하도록 요청 전 단계를 격리한다
+  try {
+    // 상태 변경 요청에 현재 인증 Cookie와 연결된 CSRF Token Header를 설정한다
+    return await setCsrfHeader(blockingConfig);
+  }
+
+  // CSRF Token을 준비하지 못하면 서버 전송 없이 종료되는 요청의 이동 가드를 해제한다
+  catch (error) {
+    // 요청 전 단계에서 시작한 처리 중 모달과 이동 가드를 정리한다
+    await finishBlockingRequest(blockingConfig);
+    // 호출 화면의 기존 실패 경로가 원인을 처리할 수 있도록 오류를 다시 전달한다
+    throw error;
+  }
+}
+
+/**
+ * Axios 상태 변경 요청에 연결된 처리 중 모달과 이동 가드를 해제한다
+ *
+ * @author SeungHyeon.Kang
+ * @param config 완료되거나 실패한 Axios 요청 설정
+ * @return 요청별 이동 차단 정리 완료 Promise
+ */
+async function finishBlockingRequest(config?: RetryableRequestConfig): Promise<void> {
+  const operationId = config?._blockingOperationId;
+
+  // 조회 요청 또는 이미 정리된 상태 변경 요청은 추가 화면 변경 없이 종료한다
+  if (!config || operationId === undefined) {
+    // 해제할 공통 처리 중 작업이 없는 상태로 완료한다
+    return;
+  }
+
+  // 재시도 응답 체인에서 같은 요청이 다시 해제되지 않도록 식별값을 먼저 제거한다
+  delete config._blockingOperationId;
+  // 후속 화면 처리 전에 버튼 없는 모달과 동일 URL History 가드를 정리한다
+  await endBlockingOperation(operationId);
+}
+
+// 모든 상태 변경 요청이 화면별 구현 없이 동일한 이동 차단과 CSRF 검증을 적용받도록 요청 Interceptor를 등록한다
+api.interceptors.request.use(prepareRequest);
 
 /**
  * refresh Session 기능을 처리한다
@@ -326,6 +411,22 @@ api.interceptors.response.use(
     } catch (refreshError) {
       return Promise.reject(refreshError);
     }
+  },
+);
+
+// 상태 변경 요청의 최종 성공 또는 실패 응답이 확정되면 공통 처리 중 화면을 해제한다
+api.interceptors.response.use(
+  async (response) => {
+    // 호출 화면의 성공 처리 전에 현재 요청의 이동 차단 History 항목을 제거한다
+    await finishBlockingRequest(response.config as RetryableRequestConfig);
+    // 정리가 끝난 Axios 응답을 기존 호출부에 반환한다
+    return response;
+  },
+  async (error: AxiosError) => {
+    // 호출 화면의 오류 처리 전에 실패한 요청의 처리 중 모달과 이동 가드를 해제한다
+    await finishBlockingRequest(error.config as RetryableRequestConfig | undefined);
+    // 기존 API 실패 경로가 사용자 메시지를 표시할 수 있도록 Axios 오류를 반환한다
+    return Promise.reject(error);
   },
 );
 
