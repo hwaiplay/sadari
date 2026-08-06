@@ -1,5 +1,5 @@
 /**
- * 독후감 상태에 따라 2열 또는 4열 요약과 단계형 입력 모달을 구성한다
+ * 독후감 상태에 따라 세로 행 요약과 단계형 입력 모달을 구성한다
  *
  * @author HanWon.Jang
  */
@@ -78,7 +78,7 @@ function getDateSerial(value: string) {
  */
 function getPeriodSummary(startDate: string, endDate: string) {
 
-  // 시작일과 종료일이 모두 입력된 경우에만 4열 영역에 기간을 표시한다
+  // 시작일과 종료일이 모두 입력된 경우에만 기간 정보 행에 값을 표시한다
   if (!startDate || !endDate) {
     // 아직 입력되지 않은 기간 표시값을 반환한다
     return "-";
@@ -104,7 +104,7 @@ function getPeriodSummary(startDate: string, endDate: string) {
 }
 
 /**
- * 독서 상태 코드에 맞는 4열 요약 글자색을 결정한다
+ * 독서 상태 코드에 맞는 행 요약 글자색을 결정한다
  *
  * @author HanWon.Jang
  * @param status 독서 상태 코드
@@ -129,11 +129,11 @@ function getStatusValueClassName(status: ReadingStatusType) {
 }
 
 /**
- * 독후감 입력값을 4열로 요약하고 선택한 항목을 단계형 모달에서 수정한다
+ * 독후감 입력값을 세로 행으로 요약하고 선택한 항목을 단계형 모달에서 수정한다
  *
  * @author HanWon.Jang
- * @param props 독후감 4열 입력값과 변경 콜백
- * @return 독후감 4열 요약과 단계형 편집 모달
+ * @param props 독후감 행별 입력값과 변경 콜백
+ * @return 독후감 세로 행 요약과 단계형 편집 모달
  */
 function ReportStatsEditor({
   statusCodes,
@@ -195,7 +195,7 @@ function ReportStatsEditor({
       : styles.stepSlideForward;
   let statusLabel = statusFallbackLabel || "-";
 
-  // 현재 상태 코드에 대응하는 서버 공통코드명을 4열 요약에 사용한다
+  // 현재 상태 코드에 대응하는 서버 공통코드명을 독서 상태 정보 행에 사용한다
   for (const statusCode of statusCodes) {
     // 현재 선택값과 일치한 코드명을 찾으면 이후 불필요한 순회를 중단한다
     if (statusCode.comdCode === status) {
@@ -275,7 +275,7 @@ function ReportStatsEditor({
    */
   function handleClose() {
 
-    // 4열 요약이 최신 입력값을 보여주도록 모달 상태만 제거한다
+    // 세로 행 요약이 최신 입력값을 보여주도록 모달 상태만 제거한다
     setActiveStep(null);
   }
 
@@ -417,7 +417,7 @@ function ReportStatsEditor({
     );
   }
 
-  // 읽는 중에는 2열, 완료와 중단에는 4열로 구성된 요약과 단계형 모달을 반환한다
+  // 현재 독서 상태에서 허용된 항목을 세로 행으로 구성한 요약과 단계형 모달을 반환한다
   return (
     <>
       {/* 모달이 닫혀도 기존 폼 전송 계약을 유지하는 독후감 요약 입력값 영역 */}
@@ -432,7 +432,7 @@ function ReportStatsEditor({
         className={styles.statsSection}
         aria-label={/* "독후감 요약" */ message("frontend.report.summary.aria")}
       >
-        <div className={isReadingStatus ? styles.statsGridCompact : styles.statsGrid}>
+        <div className={styles.statsRows}>
           {/* 독서 상태 편집 진입 영역 */}
           <button
             className={styles.statsItem}
