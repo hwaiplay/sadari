@@ -31,8 +31,12 @@ import {
 import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
+import {
+  createSafeImagePreview,
+  ImagePreviewError,
+} from "@/features/User/lib/imagePreview";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
-import type { FormEvent, MouseEvent, ReactNode } from "react";
+import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
@@ -44,6 +48,8 @@ const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
 const PROFILE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
+const PROFILE_PREVIEW_MAX_EDGE = 512;
+const BACKGROUND_PREVIEW_MAX_EDGE = 1_600;
 type ReadingPeriod = "week" | "month" | "year";
 type ProfileModalType = "currentReading" | "goal" | "goalHelp" | "followList";
 type ProfileStatAction = FollowListType | "totalReadBook" | "receivedLike";
@@ -320,6 +326,8 @@ function ProfileEditPage() {
     year: null,
   });
   const followListScrollTimeoutRef = useRef<number | null>(null);
+  const profilePreviewUrlRef = useRef<string | null>(null);
+  const backgroundPreviewUrlRef = useRef<string | null>(null);
   // 목표 내리기 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회한다
   const { data: goalHelpContent } = usePopupContent(
     POPUP_CONTENT_KEYS.profileGoalDown,
@@ -342,6 +350,21 @@ function ProfileEditPage() {
    * @param nextProfile 서버에서 조회하거나 저장 후 반환한 사용자 프로필 정보
    */
   const syncProfileState = (nextProfile: UserProfile) => {
+    // 이전 프로필 미리보기 Blob이 남아 있으면 디코딩 메모리를 즉시 반환한다
+    if (profilePreviewUrlRef.current !== null) {
+      // 서버 프로필 경로로 교체하기 전에 로컬 프로필 미리보기 URL을 해제한다
+      URL.revokeObjectURL(profilePreviewUrlRef.current);
+      // 다음 선택 파일의 URL만 관리하도록 프로필 미리보기 참조를 비운다
+      profilePreviewUrlRef.current = null;
+    }
+
+    // 이전 배경 미리보기 Blob이 남아 있으면 디코딩 메모리를 즉시 반환한다
+    if (backgroundPreviewUrlRef.current !== null) {
+      // 서버 배경 경로로 교체하기 전에 로컬 배경 미리보기 URL을 해제한다
+      URL.revokeObjectURL(backgroundPreviewUrlRef.current);
+      // 다음 선택 파일의 URL만 관리하도록 배경 미리보기 참조를 비운다
+      backgroundPreviewUrlRef.current = null;
+    }
 
     setProfile(nextProfile);
     setUserNick(nextProfile?.userNick ?? "");
@@ -458,6 +481,18 @@ function ProfileEditPage() {
       if (followListScrollTimeoutRef.current) {
         window.clearTimeout(followListScrollTimeoutRef.current);
       }
+
+      // 프로필 화면이 정상적으로 해제될 때 남은 로컬 프로필 미리보기 메모리를 반환한다
+      if (profilePreviewUrlRef.current !== null) {
+        // 컴포넌트가 더 이상 표시하지 않는 프로필 미리보기 URL을 해제한다
+        URL.revokeObjectURL(profilePreviewUrlRef.current);
+      }
+
+      // 프로필 화면이 정상적으로 해제될 때 남은 로컬 배경 미리보기 메모리를 반환한다
+      if (backgroundPreviewUrlRef.current !== null) {
+        // 컴포넌트가 더 이상 표시하지 않는 배경 미리보기 URL을 해제한다
+        URL.revokeObjectURL(backgroundPreviewUrlRef.current);
+      }
     };
   }, []);
 
@@ -538,34 +573,128 @@ function ProfileEditPage() {
    * @param file 사용자가 선택한 이미지 파일
    * @param target 이미지가 적용될 영역 구분값
    */
-  const applyImagePreview = (file: File | undefined, target: "profile" | "background") => {
-
+  const applyImagePreview = async (
+    file: File | undefined,
+    target: "profile" | "background",
+  ): Promise<void> => {
+    // 앨범 선택이 취소된 경우 기존 선택 파일과 미리보기를 유지한다
     if (!file) {
+      // 파일 선택 취소 처리를 종료한다
       return;
     }
 
-    if (
-      !PROFILE_IMAGE_MIME_TYPES.has(file.type.toLowerCase()) ||
-      file.size > PROFILE_IMAGE_MAX_BYTES
-    ) {
-      // 사용자에게 표시: "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
+    // 서버와 동일한 MIME 형식과 파일 크기 범위를 벗어나면 원본 이미지 디코딩을 시작하지 않는다
+    if (!PROFILE_IMAGE_MIME_TYPES.has(file.type.toLowerCase())
+        || file.size > PROFILE_IMAGE_MAX_BYTES) {
+      // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
         /* "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요." */ message("frontend.profile.imageOnly"),
       );
+      // 허용되지 않은 이미지 파일 처리를 종료한다
       return;
     }
 
-    const previewUrl = URL.createObjectURL(file);
+    // 원본 이미지를 DOM에 직접 표시하지 않고 제한된 크기의 미리보기를 만드는 과정만 격리한다
+    try {
+      const previewMaxEdge = target === "profile"
+        ? PROFILE_PREVIEW_MAX_EDGE
+        : BACKGROUND_PREVIEW_MAX_EDGE;
+      // 이미지 헤더를 먼저 검증하고 모바일 메모리에 안전한 크기로 축소된 미리보기를 생성한다
+      const preview = await createSafeImagePreview(file, previewMaxEdge);
 
-    if (target === "profile") {
-      setProfileImage(file);
-      setPreviewImage(previewUrl);
-      return;
+      // 프로필 사진은 기존 로컬 미리보기를 해제한 뒤 새 선택 파일과 축소 이미지를 반영한다
+      if (target === "profile") {
+        // 반복 선택으로 남은 이전 프로필 Blob URL이 있으면 메모리에서 해제한다
+        if (profilePreviewUrlRef.current !== null) {
+          // 화면에서 교체할 이전 프로필 미리보기 URL을 해제한다
+          URL.revokeObjectURL(profilePreviewUrlRef.current);
+        }
+
+        // 이후 저장이나 화면 해제 시 새 프로필 Blob URL을 정리하도록 참조를 기록한다
+        profilePreviewUrlRef.current = preview.url;
+        // 서버 저장에는 축소본이 아닌 사용자가 선택한 원본 파일을 사용한다
+        setProfileImage(file);
+        // 화면에는 모바일 메모리 사용량을 제한한 축소 미리보기만 표시한다
+        setPreviewImage(preview.url);
+        // 프로필 사진 선택 처리를 종료한다
+        return;
+      }
+
+      // 반복 선택으로 남은 이전 배경 Blob URL이 있으면 메모리에서 해제한다
+      if (backgroundPreviewUrlRef.current !== null) {
+        // 화면에서 교체할 이전 배경 미리보기 URL을 해제한다
+        URL.revokeObjectURL(backgroundPreviewUrlRef.current);
+      }
+
+      // 이후 저장이나 화면 해제 시 새 배경 Blob URL을 정리하도록 참조를 기록한다
+      backgroundPreviewUrlRef.current = preview.url;
+      // 서버 저장에는 축소본이 아닌 사용자가 선택한 원본 파일을 사용한다
+      setBackgroundImage(file);
+      // 화면에는 모바일 메모리 사용량을 제한한 축소 미리보기만 표시한다
+      setPreviewBackground(preview.url);
     }
 
-    setBackgroundImage(file);
-    setPreviewBackground(previewUrl);
+    // 이미지 헤더와 해상도 또는 브라우저 축소 처리 실패를 사용자 안내로 전환한다
+    catch (error) {
+      // 서버 제한을 넘는 고해상도 이미지는 저장 전에 정확한 허용 범위를 안내한다
+      if (error instanceof ImagePreviewError && error.code === "invalid-dimensions") {
+        // "이미지 해상도는 한 변 8192px 이하이면서 전체 2천만 픽셀 이하여야 합니다."
+        void sweetWarning(
+          /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+          /* "이미지 해상도는 한 변 8192px 이하이면서 전체 2천만 픽셀 이하여야 합니다." */ message("frontend.profile.imageDimensions"),
+        );
+        // 해상도 제한 안내 후 이미지 선택 처리를 종료한다
+        return;
+      }
+
+      // 실제 형식이 JPG 또는 PNG가 아니면 파일 확장자와 무관하게 형식 안내를 표시한다
+      if (error instanceof ImagePreviewError && error.code === "invalid-format") {
+        // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요."
+        void sweetWarning(
+          /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
+          /* "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 선택해주세요." */ message("frontend.profile.imageOnly"),
+        );
+        // 이미지 형식 안내 후 이미지 선택 처리를 종료한다
+        return;
+      }
+
+      // "선택한 이미지의 안전한 미리보기를 만들 수 없습니다. 다른 이미지를 선택해주세요."
+      void sweetWarning(
+        /* "이미지를 불러올 수 없습니다." */ message("frontend.profile.imagePreviewFailedTitle"),
+        /* "선택한 이미지의 안전한 미리보기를 만들 수 없습니다. 다른 이미지를 선택해주세요." */ message("frontend.profile.imagePreviewFailed"),
+      );
+    }
+  };
+
+  /**
+   * 앨범에서 선택한 배경 이미지 파일을 안전한 미리보기 처리로 전달한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 배경 이미지 파일 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleBackgroundImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비운다
+    event.currentTarget.value = "";
+    // 검증과 축소가 끝난 배경 이미지만 화면 선택 상태에 반영한다
+    void applyImagePreview(file, "background");
+  };
+
+  /**
+   * 앨범에서 선택한 프로필 이미지 파일을 안전한 미리보기 처리로 전달한다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 프로필 이미지 파일 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleProfileImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    const file = event.currentTarget.files?.[0];
+    // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비운다
+    event.currentTarget.value = "";
+    // 검증과 축소가 끝난 프로필 이미지만 화면 선택 상태에 반영한다
+    void applyImagePreview(file, "profile");
   };
 
   /**
@@ -1764,9 +1893,7 @@ function ProfileEditPage() {
                   className={styles.hiddenInput}
                   type="file"
                   accept="image/jpeg,image/png"
-                  onChange={(event) =>
-                    applyImagePreview(event.currentTarget.files?.[0], "background")
-                  }
+                  onChange={handleBackgroundImageChange}
                 />
               </label>
             )}
@@ -1844,9 +1971,7 @@ function ProfileEditPage() {
                     className={styles.hiddenInput}
                     type="file"
                     accept="image/jpeg,image/png"
-                    onChange={(event) =>
-                      applyImagePreview(event.currentTarget.files?.[0], "profile")
-                    }
+                    onChange={handleProfileImageChange}
                   />
                 </label>
               )}
