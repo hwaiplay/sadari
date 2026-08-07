@@ -2,7 +2,7 @@
 
 ## 적용 범위
 
-- 기준일은 2026년 8월 6일입니다.
+- 기준일은 2026년 8월 7일입니다.
 - 사용자 계정 비활성화, 복귀, 영구 탈퇴 유예·취소·삭제와 관리자 계정 처리 이력 조회에 적용합니다.
 - 설치형 웹앱의 정적 리소스 업데이트가 계정 상태에 미치는 영향도 적용 범위에 포함합니다.
 - 독서 모임 기능이 출시된 뒤 적용할 모임장 부재·승계 연계 기준은 별도 절에 구분해 기록합니다.
@@ -152,11 +152,27 @@
 ## 관리자 계정 처리 이력 조회
 
 - 관리자 `현 사용자 관리` 상세에서는 `TM_USERXM` 원본 행이 존재하는 회원의 `TH_USWTHD` 이력만 읽기 전용으로 확인합니다.
+- 관리자 `현 사용자 관리` 상세와 `신고 관리` 상세에서는 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 회원에게 보존된 프로필 및 배경 이미지가 있을 때만 보기 버튼을 제공하고 관리자 인증 모달에서 이미지를 확인합니다.
+- 이미지 버튼은 목록 그리드의 열을 늘리지 않고 상세 정보의 기존 셀 또는 기존 열 구조를 유지하는 별도 행에 배치하며, 이미지가 없으면 미등록 상태를 표시합니다.
 - 비활성화와 영구 탈퇴의 처리 유형, 코드화된 사유, 처리 상태, 요청일, 삭제 예정일, 처리일 및 복구일을 제공합니다.
 - 자유 입력 상세 사유와 외부 연동 오류문구는 관리자 API와 화면에 제공하지 않습니다.
 - 관리자 화면에서 비활성화 복구, 영구 탈퇴 취소, 유예기간 변경 및 즉시 삭제를 수행할 수 없습니다.
 - 유예기간이 끝나 `TM_USERXM` 원본이 영구 삭제된 회원은 `현 사용자 관리` 대상에서 제외합니다.
+- 회원 원본과 이미지가 물리 삭제된 뒤에는 관리자 화면에도 이미지 버튼을 제공하지 않으며, 보존 신고 이력에 프로필 또는 배경 이미지 사본을 만들지 않습니다.
 - 보존된 `TH_USWTHD` 이력의 별도 감사 조회 화면은 1차 구현 범위에 포함하지 않습니다.
+
+## 공지사항 접근 및 보존
+
+- 공지사항 목록, 상세와 본문 이미지는 `ACTIVE` 회원에게만 제공합니다.
+- `WITHDRAWN`, `DELETE_PENDING`, `SUSPENDED` 회원은 공지사항 화면과 공지 전용 파일 URL에 접근할 수 없습니다.
+- 공지사항 상세 조회 이력은 사용자 본인과 시스템만 접근할 수 있는 비공개 데이터로 보존합니다.
+- `WITHDRAWN`, `DELETE_PENDING`, `SUSPENDED` 상태에서는 공지 접근과 신규 조회 이력 생성을 중지하며 기존 조회 이력은 유지합니다.
+- 공지사항과 공지 전용 첨부 이미지는 관리자 소유 운영 데이터이므로 회원의 비활성화, 영구 탈퇴 요청, 취소 또는 물리 삭제와 관계없이 유지합니다.
+- 복귀하거나 영구 탈퇴를 취소한 회원은 기존 공지 읽음 상태를 그대로 사용합니다.
+- 유예기간 후 회원이 물리 삭제되면 해당 사용자의 공지 조회 이력도 함께 삭제합니다.
+- 공지 조회 이력은 알림, 푸시 구독 또는 소셜 관계에 추가 영향을 주지 않습니다.
+- 관리자가 공지 자체를 삭제하면 회원 상태와 관계없이 해당 공지의 모든 사용자 조회 이력을 삭제하며, 재활성화 또는 영구 탈퇴 취소 시 복원하지 않습니다.
+- 공지사항 버전과 배포 및 파일 처리의 세부 기준은 [공지사항 운영 정책](notice-policy.md)을 따릅니다.
 
 ## 설치형 웹앱 업데이트
 
@@ -213,4 +229,7 @@
 - `CT_POPUPX`
 - `TH_CMPLNT`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`
+- `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/complaint/mapper/ComplaintMapper.xml`
+- `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/file/controller/FileResourceController.java`
 - `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/CurrentUserDetailPage.tsx`
+- `sadari-admin` 저장소 `src/main/frontend/src/pages/complaint/ComplaintDetailPage.tsx`

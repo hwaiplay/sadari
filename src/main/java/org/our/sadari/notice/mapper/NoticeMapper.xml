@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.notice.mapper.NoticeMapper">
+    <!-- 공지사항 접근자가 현재 활성 회원인지 확인한다 -->
+    <select id="getActiveUserCnt" resultType="int">
+        SELECT /* getActiveUserCnt */
+               COUNT(1)
+         FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT = #{userStat}
+    </select>
+
+    <!-- 현재 배포 중인 공지사항을 최근 배포 순서로 조회한다 -->
+    <select id="getNoticeList" resultType="org.our.sadari.notice.dto.NoticeDto">
+        SELECT /* getNoticeList */
+               N.NOTI_NUMB
+             , N.VERS_NUMB
+             , N.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , N.NOTI_TITL
+             , N.TOPX_YSNO
+             , CASE WHEN V.USER_NUMB IS NULL THEN #{no} ELSE #{yes} END AS READ_YSNO
+             , N.DPLY_DATE
+          FROM CT_NOTICE N
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = N.CATE_CGRP
+           AND C.COMD_CODE = N.CATE_CODE
+     LEFT JOIN TB_USVIEW V
+            ON V.VIEW_TYPE = #{viewType}
+           AND V.TAGT_NUMB = N.NOTI_NUMB
+           AND V.USER_NUMB = #{userNumb}
+         WHERE N.DPLY_YSNO = #{yes}
+      ORDER BY CASE WHEN N.TOPX_YSNO = #{yes} THEN 0 ELSE 1 END
+             , N.DPLY_DATE DESC
+             , N.NOTI_NUMB DESC
+         LIMIT #{startRow}, #{pageSize}
+    </select>
+
+    <!-- 주키에 해당하는 현재 배포 버전 상세만 조회한다 -->
+    <select id="getNoticeDtl" resultType="org.our.sadari.notice.dto.NoticeDto">
+        SELECT /* getNoticeDtl */
+               N.NOTI_NUMB
+             , N.VERS_NUMB
+             , N.CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , N.NOTI_TITL
+             , N.NOTI_CNTN
+             , N.TOPX_YSNO
+             , N.DPLY_DATE
+          FROM CT_NOTICE N
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = N.CATE_CGRP
+           AND C.COMD_CODE = N.CATE_CODE
+         WHERE N.NOTI_NUMB = #{notiNumb}
+           AND N.DPLY_YSNO = #{yes}
+    </select>
+
+    <!-- 사용자가 처음 상세를 조회한 공지사항의 읽음 이력을 멱등하게 저장한다 -->
+    <insert id="setNoticeView">
+        INSERT IGNORE /* setNoticeView */
+          INTO TB_USVIEW (
+               VIEW_TYPE
+             , TAGT_NUMB
+             , USER_NUMB
+             , REGI_DATE
+        ) VALUES (
+               #{viewType}
+             , #{tagtNumb}
+             , #{userNumb}
+             , CURRENT_TIMESTAMP
+        )
+    </insert>
+</mapper>

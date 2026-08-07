@@ -18,6 +18,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [알림 및 푸시 정책](notification-push-policy.md) | 알림 생성, 중복 방지, 읽음·삭제, FCM 구독 |
 | [메뉴 및 화면 노출 정책](menu-policy.md) | URL별 헤더, 햄버거 메뉴 노출 |
 | [사용자 안내 팝업 콘텐츠 정책](popup-content-policy.md) | 정책·도움말 팝업의 JSON 목록 저장, 조회 및 실패 대체 |
+| [공지사항 운영 정책](notice-policy.md) | 공지 버전, 배포, Summernote 본문과 전용 이미지 보존 |
 | [콘텐츠 및 파일 정책](content-file-policy.md) | 비속어, 닉네임, 텍스트 정규화, 이미지 업로드 |
 | [스케줄러 운영 정책](scheduler-policy.md) | 스케줄러 실행 조건, 배치 크기, 실행 로그 |
 | [설치형 웹앱 자동 업데이트 정책](pwa-update-policy.md) | 서비스워커 갱신, 정적 자원 캐시, 홈 화면 아이콘 업데이트 |
@@ -63,6 +64,6 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 
 ## 관리 정보
 
-- 기준일: 2026-08-05
+- 기준일: 2026-08-07
 - 저장 위치: `docs/policies`
 - 구현 근거: `src/main/java`, `src/main/frontend/src`, `src/main/resources`

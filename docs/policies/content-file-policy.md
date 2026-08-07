@@ -65,7 +65,10 @@
 - `WITHDRAWN` 계정의 프로필과 배경 이미지 파일 및 `TM_FILEXM` 메타정보는 유지하고 다른 사용자의 프로필 접근만 제한합니다.
 - `WITHDRAWN` 계정이 재로그인으로 `ACTIVE` 상태가 되면 유지한 프로필과 배경 이미지를 다시 노출합니다.
 - `DELETE_PENDING` 유예기간에는 영구 탈퇴 취소 가능성을 위해 프로필과 배경 이미지 파일을 유지합니다.
+- 관리자 `현 사용자 관리` 상세와 `신고 관리` 상세에서는 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 회원의 보존된 프로필 및 배경 이미지에 보기 버튼을 제공하고 관리자 인증을 거친 모달에서만 표시합니다.
+- 관리자 목록에는 이미지 썸네일이나 별도 이미지 열을 추가하지 않으며, 이미지 경로가 없거나 저장소 조회에 실패하면 미등록 또는 조회 실패 상태를 표시합니다.
 - 유예기간이 끝나 회원 원본이 물리 삭제되면 해당 회원이 등록한 프로필과 배경 이미지의 물리 파일 및 `TM_FILEXM` 메타정보를 모두 삭제하며 복원하지 않습니다.
+- 물리 삭제 뒤 보존되는 신고 이력에는 프로필 또는 배경 이미지 사본을 저장하지 않으므로 관리자도 해당 이미지를 조회할 수 없습니다.
 
 ## 이미지 업로드
 
@@ -87,6 +90,13 @@
 - 프로필 또는 배경 이미지가 교체되면 사용자 참조와 기존 `TM_FILEXM` 메타정보 삭제를 같은 트랜잭션에서 처리하고, 커밋이 완료된 뒤 기존 물리 파일을 삭제합니다.
 - 외부 URL만 메타정보로 저장된 이미지는 로컬 물리 파일 삭제 대상에서 제외하고 `TM_FILEXM` 메타정보만 삭제합니다.
 - 외부 Kakao 프로필 이미지는 외부 다운로드 실패가 로그인 전체 실패로 이어지지 않도록 대체 경로 저장을 허용합니다.
+
+### 공지사항 이미지
+
+- 관리자 공지 이미지는 사용자 이미지와 분리된 `notice/yyMMdd/{UUID}.jpg|png` 객체 키에 저장합니다.
+- 관리자가 공지를 삭제하면 모든 버전 본문에서 공지 전용 이미지 경로를 수집해 로컬 또는 S3의 실제 객체와 공지 및 사용자 조회 이력을 함께 삭제합니다.
+- 공지 삭제는 사용자 계정 상태와 무관하며 계정 복귀 시 파일이나 조회 이력을 복원하지 않습니다.
+- 저장소 삭제 실패 시 데이터베이스 삭제를 롤백하고 이미 삭제된 파일은 재시도 시 멱등하게 처리합니다.
 
 ### 프로필 이미지 임시 선택본
 
@@ -116,3 +126,5 @@
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
 - `src/main/resources/application-loc.yml`
 - `src/main/resources/application-prod.yml`
+- `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/file/controller/FileResourceController.java`
+- `sadari-admin` 저장소 `src/main/frontend/src/components/ImagePreviewButton.tsx`

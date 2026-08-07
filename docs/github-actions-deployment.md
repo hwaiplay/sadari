@@ -143,7 +143,7 @@ Actions Variables에는 다음 값을 등록합니다.
 
 `vars.STORAGE_PROVIDER`가 없거나 빈 값이면 워크플로의 `STORAGE_PROVIDER`는 `s3`가 됩니다. 이 선택은 Secret 유무와 무관합니다. `STORAGE_PROVIDER=s3`일 때 `STORAGE_S3_BUCKET` Variable과 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` Secrets는 필수이며 배포 묶음 생성 전에 누락 여부를 검증합니다. 따라서 Secret Key가 없으면 `local`로 전환되는 것이 아니라 배포가 실패합니다. `local`일 때는 세 값을 요구하지 않습니다.
 
-로컬 `loc` 프로파일은 기본적으로 `STORAGE_PROVIDER=local`을 사용합니다. 운영 S3 연결을 로컬에서 검증할 때만 `STORAGE_PROVIDER=s3`, `STORAGE_S3_BUCKET`, `STORAGE_S3_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`를 환경변수로 지정합니다.
+로컬 `loc` 프로파일도 사용자·관리자 애플리케이션 모두 기본적으로 `STORAGE_PROVIDER=s3`를 사용합니다. 로컬 디스크를 사용할 때는 두 애플리케이션에 `STORAGE_PROVIDER=local`과 동일한 `STORAGE_LOCAL_ROOT`를 명시합니다.
 
 관리자 애플리케이션도 같은 `STORAGE_PROVIDER`, `STORAGE_LOCAL_ROOT`, `STORAGE_S3_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` 이름을 사용합니다. Windows에서 `local`을 선택할 때 두 앱의 기본값은 `C:/shared/sadari-uploads`입니다. `s3`을 선택하면 실행 장비와 관계없이 같은 버킷을 지정하며, `local`을 선택하면 두 애플리케이션 프로세스가 실제로 접근할 수 있는 동일한 절대 디렉터리 또는 공유 볼륨을 `STORAGE_LOCAL_ROOT`로 지정합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유할 수 없습니다.
 

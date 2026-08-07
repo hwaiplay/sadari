@@ -145,6 +145,10 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 - `REGI_DATE`: 등록일시
 - `UPDT_ADMN`: 수정자 아이디
 - `UPDT_DATE`: 수정일시
+- `DPLY_ADMN`: 배포자 아이디
+- `DPLY_DATE`: 배포일시
+
+관리 컬럼의 물리 배치와 조회 배치는 반드시 `REGI_ADMN`, `REGI_DATE`, `UPDT_ADMN`, `UPDT_DATE`, `DPLY_ADMN`, `DPLY_DATE` 순서를 사용합니다.
 
 수정할 수 없는 이력성 테이블에는 해당 관리 컬럼을 강제하지 않습니다.
 
@@ -469,13 +473,16 @@ SELECT B.BOOK_NUMB
 
 ### 14.1 운영 필수 초기 데이터
 
-- 공통코드, 관리자 메뉴, 사용자 메뉴 등 신규 기능을 운영 환경에서 사용하는 데 필요한 기준 데이터나 초기 데이터를 추가 또는 변경하면 같은 작업에서 실행 가능한 DML을 `scripts/db/mysql/output/02-admin-insert.sql`에 추가하거나 수정합니다.
+- 공통코드를 추가하거나 변경할 때는 `scripts/db/mysql/output/02-admin-insert.sql`만 수정합니다.
+- 공통코드 추가를 위한 별도 SQL 파일을 생성하거나 `scripts/db/mysql/01-create.sql` 및 다른 SQL 파일에 중복 DML을 작성하지 않습니다.
+- 관리자 메뉴, 사용자 메뉴 등 신규 기능을 운영 환경에서 사용하는 데 필요한 다른 기준 데이터나 초기 데이터를 추가 또는 변경하면 같은 작업에서 실행 가능한 DML을 `scripts/db/mysql/output/02-admin-insert.sql`에 추가하거나 수정합니다.
 - 개발 DB에만 데이터를 등록하고 `scripts/db/mysql/output/02-admin-insert.sql` 반영을 생략한 상태로 작업을 완료하지 않습니다.
 
-### 14.2 신규 테이블
+### 14.2 스키마 정의
 
-- 테이블을 추가하면 같은 작업에서 해당 테이블의 전체 생성 DDL을 `scripts/db/mysql/01-create.sql`에 추가합니다.
-- 신규 테이블에 필요한 PK, FK, 인덱스 및 테이블·컬럼 코멘트를 `scripts/db/mysql/01-create.sql`의 생성 DDL에 함께 반영하여 신규 운영 환경에서 해당 파일만으로 동일한 스키마를 생성할 수 있게 합니다.
+- 테이블, 컬럼, PK, FK, 제약조건 및 인덱스를 추가하거나 변경할 때는 `scripts/db/mysql/01-create.sql`의 `CREATE TABLE` 정의만 수정합니다.
+- 스키마 정리를 위한 `ALTER` 문이나 기능별 CREATE 및 마이그레이션 SQL 파일을 생성하지 않습니다.
+- 필요한 PK, FK, 인덱스 및 테이블·컬럼 코멘트를 `scripts/db/mysql/01-create.sql`의 생성 DDL에 함께 반영하여 신규 운영 환경에서 해당 파일만으로 동일한 스키마를 생성할 수 있게 합니다.
 
 ### 14.3 구글 스프레드시트 테이블 명세 동기화
 

@@ -46,6 +46,8 @@ public final class Constant {
     public static final String CODE_ALIM_SITU = "ALIM_SITU";
     // 팝업 사용 화면 구분 공통코드
     public static final String CODE_POPU_SITU = "POPU_SITU";
+    // 공지사항 카테고리 공통코드
+    public static final String CODE_NOTICE_CATEGORY = "NOTI_CATE";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 회원 상태 공통코드
@@ -155,6 +157,8 @@ public final class Constant {
     public static final String COMM_YES = "Y";
     // 공통 미사용 설정값
     public static final String COMM_NO = "N";
+    // 사용자 조회 이력의 공지사항 대상 유형
+    public static final String VIEW_TYPE_NOTICE = "NOTICE";
 
     // 정렬 종료 날짜 내림차순 설정값
     public static final String SORT_END_DATE_DESC = "END_DATE_DESC";
