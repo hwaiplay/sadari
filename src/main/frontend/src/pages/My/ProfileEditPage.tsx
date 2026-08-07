@@ -45,8 +45,8 @@ import * as styles from "./ProfileEditPage.css";
 
 const USER_NICK_MAX_LENGTH = 25;
 const PROFILE_INTRO_MAX_LENGTH = 50;
-const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
-const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
+const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[_-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
+const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF_-]/g;
 const PROFILE_IMAGE_MAX_BYTES = 10 * 1024 * 1024;
 const PROFILE_IMAGE_MIME_TYPES = new Set(["image/jpeg", "image/png"]);
 type ReadingPeriod = "week" | "month" | "year";
@@ -111,7 +111,7 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
 
 /**
  * 닉네임 입력값에서 허용하지 않은 문자를 제거하고 최대 입력 길이를 제한한다.
- * 한글 조합 문자와 영문 및 숫자 외에는 공백, 언더바, 하이픈만 입력 상태에 반영한다.
+ * 한글 조합 문자와 영문 및 숫자 외에는 언더바와 하이픈만 입력 상태에 반영한다.
  *
  * @author HanWon.Jang
  * @param value 사용자가 입력한 닉네임 원문
@@ -1799,7 +1799,7 @@ function ProfileEditPage() {
     ) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
+        /* "닉네임은 공백 없이 한글, 영문, 숫자와 문자 사이의 단일 언더바 또는 하이픈을 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
       );
       return;
     }

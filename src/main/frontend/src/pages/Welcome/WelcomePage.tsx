@@ -28,8 +28,8 @@ const SLIDE_COUNT = 5;
 const USER_NICK_MAX_LENGTH = 25;
 const MIN_INTEREST_SELECTION_COUNT = 2;
 const SWIPE_THRESHOLD_PX = 48;
-const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[ _-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
-const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF _-]/g;
+const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[_-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
+const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF_-]/g;
 
 /**
  * 최초 로그인 사용자에게 서비스 특징과 닉네임 및 관심분야 설정 흐름을 슬라이드로 제공한다
@@ -149,7 +149,7 @@ function WelcomePage() {
     if (normalizedUserNick.length > USER_NICK_MAX_LENGTH || !USER_NICK_REGEX.test(normalizedUserNick)) {
       void sweetWarning(
         /* "입력이 필요합니다." */ message("frontend.alert.inputRequired"),
-        /* "닉네임은 한글, 영문, 숫자와 문자 사이의 공백, 언더바, 하이픈을 한 칸씩 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
+        /* "닉네임은 공백 없이 한글, 영문, 숫자와 문자 사이의 단일 언더바 또는 하이픈을 사용해 25자 이하로 입력해주세요." */ message("frontend.profile.nickFormat"),
       );
       // 형식이 맞지 않는 닉네임은 다음 단계와 저장에 사용하지 않는다
       return null;
@@ -645,7 +645,7 @@ function WelcomePage() {
                 </span>
               </div>
               <p className={styles.nicknameHint}>
-                {/* "한글, 영문, 숫자와 한 칸의 공백·언더바·하이픈을 사용할 수 있어요." */}
+                {/* "공백 없이 한글, 영문, 숫자와 단일 언더바·하이픈을 사용할 수 있어요." */}
                 {message("frontend.welcome.nickname.hint")}
               </p>
             </form>

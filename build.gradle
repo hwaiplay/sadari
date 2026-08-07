@@ -32,6 +32,7 @@ repositories {
 }
 
 def jjwtVersion = '0.13.0'
+def awsSdkVersion = '2.51.1'
 
 dependencies {
 
@@ -80,6 +81,10 @@ dependencies {
 
 	// Firebase Cloud Messaging 서버 발송을 위한 공식 Admin SDK
 	implementation 'com.google.firebase:firebase-admin:9.10.0'
+
+	// AWS S3와 향후 S3 호환 스토리지에 파일을 저장하기 위한 공식 SDK
+	implementation platform("software.amazon.awssdk:bom:${awsSdkVersion}")
+	implementation 'software.amazon.awssdk:s3'
 
 	/*
 	 * JWT API와 런타임 구현체 버전이 다르면 parserBuilder/setSubject 같은 메서드 호출 시

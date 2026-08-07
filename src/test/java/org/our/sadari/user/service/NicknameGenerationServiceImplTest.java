@@ -36,6 +36,7 @@ import org.springframework.dao.DuplicateKeyException;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    주어별 네 개 호환 서술어 조합 검증
  * 2026-07-30        SeungHyeon.Kang    순번 발급 요청의 세부코드 조합 검증
+ * 2026-08-07        SeungHyeon.Kang    공백 없는 자동 닉네임 조합 검증
  */
 @ExtendWith(MockitoExtension.class)
 class NicknameGenerationServiceImplTest {
@@ -93,7 +94,7 @@ class NicknameGenerationServiceImplTest {
         String generatedNickname = nicknameGenerationService.setGeneratedNickname();
 
         // 현재 연월의 첫 번째 번호가 붙은 닉네임인지 검증한다
-        assertEquals("마음이 따뜻한 코끼리_26090001", generatedNickname);
+        assertEquals("마음이따뜻한코끼리_26090001", generatedNickname);
         // 최초 순번 행 등록 요청에 전달된 세부코드 조합을 조회한다
         ArgumentCaptor<NicknameSequenceDto> sequenceCaptor = ArgumentCaptor.forClass(NicknameSequenceDto.class);
         // 닉네임 문구 대신 세부코드 세 개가 순번 발급 키로 전달되었는지 검증할 요청을 수집한다
@@ -128,7 +129,7 @@ class NicknameGenerationServiceImplTest {
         String generatedNickname = nicknameGenerationService.setGeneratedNickname();
 
         // 선행 가입자 다음의 두 번째 번호가 붙은 닉네임인지 검증한다
-        assertEquals("마음이 따뜻한 코끼리_26090002", generatedNickname);
+        assertEquals("마음이따뜻한코끼리_26090002", generatedNickname);
     }
 
     /**
@@ -158,10 +159,10 @@ class NicknameGenerationServiceImplTest {
         String generatedNickname = nicknameGenerationService.setGeneratedNickname();
         // 호기심이에 등록한 네 개 서술어 중 하나로만 닉네임이 만들어지는지 검증한다
         assertTrue(Set.of(
-                "호기심이 가득한 코끼리_26090001"
-              , "호기심이 넘치는 코끼리_26090001"
-              , "호기심이 반짝이는 코끼리_26090001"
-              , "호기심이 풍부한 코끼리_26090001"
+                "호기심이가득한코끼리_26090001"
+              , "호기심이넘치는코끼리_26090001"
+              , "호기심이반짝이는코끼리_26090001"
+              , "호기심이풍부한코끼리_26090001"
         ).contains(generatedNickname));
     }
 

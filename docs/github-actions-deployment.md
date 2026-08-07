@@ -37,6 +37,8 @@
 | `FIREBASE_WEB_APP_ID` | Firebase Web App의 `appId` |
 | `FIREBASE_VAPID_PUBLIC_KEY` | Firebase Cloud Messaging의 Web Push 공개키 |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin SDK 서비스 계정 JSON 전체 원문 |
+| `AWS_ACCESS_KEY_ID` | S3 전용 IAM 사용자의 Access Key ID |
+| `AWS_SECRET_ACCESS_KEY` | S3 전용 IAM 사용자의 Secret Access Key |
 
 `GITHUB_TOKEN`은 Actions 실행 시 GitHub가 자동 발급하므로 직접 등록하지 않습니다. 이 토큰은
 워크플로에서 GHCR 이미지 push에 사용됩니다. EC2의 pull에는 별도 `GHCR_TOKEN`이 필요합니다.
@@ -119,3 +121,32 @@
 현재 `SadariApplicationTests`는 Git에서 제외된 로컬 설정과 실제 DB/Redis를 요구하므로 CI에서
 자동 실행하지 않습니다. 추후 Testcontainers나 독립 `application-test.yml`을 추가하면 워크플로의
 `-x test`를 제거해 통합 테스트까지 배포 차단 조건으로 사용할 수 있습니다.
+
+## S3 파일 저장소 설정
+
+운영 환경의 영구 이미지는 비공개 S3 버킷에 저장합니다. 브라우저는 S3 객체 URL에 직접 접근하지 않고 기존 `/uploads/{type}/{yyMMdd}/{uuid}.{ext}` 경로를 호출하며, 백엔드가 IAM 권한으로 객체를 조회해 전달합니다. 따라서 버킷의 모든 퍼블릭 액세스 차단을 활성화하고 CORS와 공개 버킷 정책은 설정하지 않습니다.
+
+S3 인증은 GitHub Actions Secrets의 `AWS_ACCESS_KEY_ID`와 `AWS_SECRET_ACCESS_KEY`를 운영 `.env`에 주입하고 AWS SDK 정적 자격 증명 공급자로 사용합니다. 해당 Access Key를 발급한 IAM 사용자에는 대상 버킷 객체의 `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`만 허용합니다. 현재 구현은 버킷 목록 조회를 수행하지 않으므로 `s3:ListBucket` 권한은 필요하지 않습니다.
+
+장기 Access Key는 유출 시 만료 전까지 계속 사용할 수 있으므로 저장소나 로그에 기록하지 않고 GitHub Secrets와 운영 서버의 권한이 제한된 `.env`에만 보관합니다. 키를 교체할 때는 IAM에서 새 키를 발급하고 두 Actions Secrets를 함께 변경한 뒤 배포 검증이 끝난 후 이전 키를 비활성화합니다.
+
+Actions Variables에는 다음 값을 등록합니다.
+
+| 이름 | 기본값 | 용도 |
+| --- | --- | --- |
+| `STORAGE_PROVIDER` | `s3` | 운영 파일 저장소 구현 |
+| `STORAGE_LOCAL_ROOT` | `C:/shared/sadari-uploads` | Windows에서 `local` 저장소를 선택했을 때의 공용 루트 디렉터리 |
+| `STORAGE_S3_BUCKET` | 없음 | 영구 이미지를 저장할 비공개 S3 버킷 이름 |
+| `STORAGE_S3_REGION` | `ap-northeast-2` | S3 버킷 리전 |
+| `STORAGE_S3_ENDPOINT` | 빈 값 | AWS S3에서는 비워 두며 S3 호환 저장소 전환 시에만 지정 |
+| `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | AWS S3에서는 `false`, 일부 S3 호환 저장소에서는 `true` |
+
+`vars.STORAGE_PROVIDER`가 없거나 빈 값이면 워크플로의 `STORAGE_PROVIDER`는 `s3`가 됩니다. 이 선택은 Secret 유무와 무관합니다. `STORAGE_PROVIDER=s3`일 때 `STORAGE_S3_BUCKET` Variable과 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` Secrets는 필수이며 배포 묶음 생성 전에 누락 여부를 검증합니다. 따라서 Secret Key가 없으면 `local`로 전환되는 것이 아니라 배포가 실패합니다. `local`일 때는 세 값을 요구하지 않습니다.
+
+로컬 `loc` 프로파일은 기본적으로 `STORAGE_PROVIDER=local`을 사용합니다. 운영 S3 연결을 로컬에서 검증할 때만 `STORAGE_PROVIDER=s3`, `STORAGE_S3_BUCKET`, `STORAGE_S3_REGION`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`를 환경변수로 지정합니다.
+
+관리자 애플리케이션도 같은 `STORAGE_PROVIDER`, `STORAGE_LOCAL_ROOT`, `STORAGE_S3_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` 이름을 사용합니다. Windows에서 `local`을 선택할 때 두 앱의 기본값은 `C:/shared/sadari-uploads`입니다. `s3`을 선택하면 실행 장비와 관계없이 같은 버킷을 지정하며, `local`을 선택하면 두 애플리케이션 프로세스가 실제로 접근할 수 있는 동일한 절대 디렉터리 또는 공유 볼륨을 `STORAGE_LOCAL_ROOT`로 지정합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유할 수 없습니다.
+
+`C:/shared/sadari-uploads`는 Windows 절대경로이므로 macOS에서는 같은 위치로 사용할 수 없습니다. Mac mini 디스크를 직접 사용할 때는 두 앱 모두 `STORAGE_PROVIDER=local`, `STORAGE_LOCAL_ROOT=/Users/Shared/sadari-uploads`처럼 macOS 절대경로를 지정합니다. Mac mini의 S3 호환 저장소로 전환할 때는 `STORAGE_S3_ENDPOINT`와 `STORAGE_S3_PATH_STYLE_ACCESS`를 해당 제품 설정에 맞게 변경합니다.
+
+기존 로컬 영구 이미지 파일은 자동 이전하지 않습니다. 운영 컨테이너의 `sadari-uploads` Named Volume 연결은 제거했으며, 배포 전환 전에 기존 파일 보존이 필요한 경우 별도 마이그레이션을 수행해야 합니다. 프로필 편집 중 생성되는 30분 임시 이미지는 공개 경로와 분리된 컨테이너 임시 디렉터리에 계속 저장하며 재배포 시 소실될 수 있습니다.

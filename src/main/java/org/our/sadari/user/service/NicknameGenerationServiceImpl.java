@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    주어별 네 개의 호환 서술어 옵션 적용
  * 2026-07-30        SeungHyeon.Kang    닉네임 순번 키를 세부코드 조합으로 변경
+ * 2026-08-07        SeungHyeon.Kang    자동 발급 닉네임 공백 제거
  */
 @Service
 @RequiredArgsConstructor
@@ -97,8 +98,8 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
             CodeDto predicate = getRandomCode(compatiblePredicateList);
             // 동물 명사 공통코드 중 하나를 무작위로 선택한다
             CodeDto animal = getRandomCode(animalList);
-            // 공통코드 표시명을 공백으로 연결해 닉네임 본문을 구성한다
-            String nicknameText = String.join(" ", subject.getComdName(), predicate.getComdName(), animal.getComdName());
+            // 사용자 닉네임 공백 금지 정책에 맞춰 공통코드 표시명을 바로 연결한다
+            String nicknameText = String.join("", subject.getComdName(), predicate.getComdName(), animal.getComdName());
 
             // 자동 발급 접미사를 포함해 25자를 넘는 코드 조합은 저장 정책에 맞지 않아 제외한다
             if (nicknameText.length() + Constant.NICK_GENERATED_SUFFIX_LENGTH > Constant.USER_NICK_MAX_LENGTH) {
