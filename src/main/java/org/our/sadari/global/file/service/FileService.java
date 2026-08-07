@@ -33,6 +33,7 @@ import org.our.sadari.global.file.dto.FileDto;
 import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
+import org.our.sadari.global.file.storage.FileStorage;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -52,6 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-14        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    날짜별 이미지 저장과 교체 및 영구 탈퇴 파일 삭제 추가
  * 2026-08-06        SeungHyeon.Kang    JPEG EXIF 방향을 픽셀에 반영하는 이미지 정규화 추가
+ * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
  */
 @Service
 @RequiredArgsConstructor
@@ -59,7 +61,6 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileService {
 
     // 업로드 루트 디렉터리 설정값
-    private static final String UPLOAD_ROOT_DIR = "uploads";
     // 업로드 접근 접두사 설정값
     private static final String UPLOAD_ACCESS_PREFIX = "/uploads/";
     // 업로드 일자 디렉터리 형식
@@ -97,9 +98,10 @@ public class FileService {
     // File 데이터 접근 객체
     private final FileMapper fileMapper;
 
-    // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
-    private Path uploadRootPath = Paths.get(UPLOAD_ROOT_DIR).toAbsolutePath().normalize();
+    // 실행 환경에 따라 로컬 또는 S3로 연결되는 영구 이미지 저장소
+    private final FileStorage fileStorage;
 
+    // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
     // 공개 업로드 경로와 분리된 프로필 이미지 임시 저장 루트 경로
     private Path profileImageDraftRootPath = Paths.get(PROFILE_IMAGE_DRAFT_ROOT_DIR).toAbsolutePath().normalize();
 
@@ -162,11 +164,9 @@ public class FileService {
         String uploadDate = getUploadDate();
 
         // 이미지 유형과 업로드 날짜에 맞는 저장 경로를 조회한다
-        Path uploadPath = getUploadPath(imageType, uploadDate);
+        String objectKey = getObjectKey(imageType, uploadDate, storedName);
         // 파일 저장에 필요한 디렉터리를 생성한다
-        Files.createDirectories(uploadPath);
         // 기준 경로와 하위 경로를 결합한다
-        Path storedPath = uploadPath.resolve(storedName);
         boolean fileMetadataSaved = false;
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
@@ -175,12 +175,7 @@ public class FileService {
              * 원본 바이트를 그대로 보관하면 이미지 뒤에 붙인 실행 파일이나 메타데이터도 함께 저장될 수 있다.
              * 디코딩한 픽셀을 새 JPG/PNG로 재인코딩한 결과만 신규 파일로 생성해 검증되지 않은 데이터를 제거한다.
              */
-            Files.write(
-                    storedPath
-                  , validatedImage.bytes()
-                  , StandardOpenOption.CREATE_NEW
-                  , StandardOpenOption.WRITE
-            );
+            fileStorage.setFile(objectKey, validatedImage.bytes(), validatedImage.mimeType());
 
             // 업로드 파일의 저장 정보를 담을 객체를 생성한다
             FileDto fileDto = new FileDto();
@@ -209,7 +204,7 @@ public class FileService {
              * 뒤에서 사용자 프로필 UPDATE가 실패하면 DB 메타정보는 트랜잭션으로 롤백되지만 실제 파일은 자동 복구되지 않는다.
              * 현재 트랜잭션의 최종 상태를 확인해 롤백 시 물리 파일까지 함께 제거하도록 정리 작업을 예약한다.
              */
-            registerRollbackCleanup(storedPath);
+            registerRollbackCleanup(objectKey);
             fileMetadataSaved = true;
             // 사용자가 업로드한 이미지 파일을 프로젝트 내부 저장소에 저장하고 파일 번호를 반환한 결과를 반환한다
             return fileDto.getFileNumb();
@@ -220,7 +215,7 @@ public class FileService {
             // DB 메타정보 저장 전에 실패한 파일을 남기면 접근되지 않는 파일이 누적되므로 즉시 정리한다.
             if (!fileMetadataSaved) {
                 // 검증 중 생성된 임시 파일이 있으면 삭제한다
-                Files.deleteIfExists(storedPath);
+                fileStorage.delFile(objectKey);
             }
         }
     }
@@ -263,22 +258,15 @@ public class FileService {
             // 업로드 날짜를 저장 경로와 접근 경로에 동일하게 적용한다
             String uploadDate = getUploadDate();
             // 프로필 이미지 유형과 업로드 날짜에 맞는 저장 경로를 조회한다
-            Path uploadPath = getUploadPath(Constant.FILE_TYPE_PROFILE, uploadDate);
+            String objectKey = getObjectKey(Constant.FILE_TYPE_PROFILE, uploadDate, storedName);
             // 파일 저장에 필요한 디렉터리를 생성한다
-            Files.createDirectories(uploadPath);
             // 기준 경로와 하위 경로를 결합한다
-            Path storedPath = uploadPath.resolve(storedName);
             boolean fileMetadataSaved = false;
 
             // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
             try {
                 // 검증된 업로드 파일을 저장 경로에 기록한다
-                Files.write(
-                        storedPath
-                      , validatedImage.bytes()
-                      , StandardOpenOption.CREATE_NEW
-                      , StandardOpenOption.WRITE
-                );
+                fileStorage.setFile(objectKey, validatedImage.bytes(), validatedImage.mimeType());
 
                 // 업로드 파일의 저장 정보를 담을 객체를 생성한다
                 FileDto fileDto = new FileDto();
@@ -304,7 +292,7 @@ public class FileService {
                 }
 
                 // DB 저장이 롤백되면 업로드 파일도 제거되도록 정리 작업을 등록한다
-                registerRollbackCleanup(storedPath);
+                registerRollbackCleanup(objectKey);
                 fileMetadataSaved = true;
                 // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
                 return fileDto.getFileNumb();
@@ -315,7 +303,7 @@ public class FileService {
                 // 메타정보 저장 전 실패한 외부 프로필 파일도 서버에 남기지 않는다.
                 if (!fileMetadataSaved) {
                     // 검증 중 생성된 임시 파일이 있으면 삭제한다
-                    Files.deleteIfExists(storedPath);
+                    fileStorage.delFile(objectKey);
                 }
             }
         }
@@ -666,16 +654,17 @@ public class FileService {
     }
 
     /**
-     * 이미지 타입에 맞는 서버 저장 경로를 반환한다.
+     * 이미지 타입과 업로드 날짜 및 저장 파일명으로 저장소 객체 키를 생성한다.
      *
      * @author SeungHyeon.Kang
      * @param imageType 이미지 파일 타입
      * @param uploadDate yyMMdd 형식의 업로드 날짜
-     * @return 서버 파일 시스템 저장 경로
+     * @param storedName 서버가 생성한 저장 파일명
+     * @return 저장소에서 사용할 상대 객체 키
      */
-    private Path getUploadPath(String imageType, String uploadDate) {
-        // 이미지 유형 아래에 업로드 날짜 디렉터리를 포함한 저장 경로를 반환한다
-        return uploadRootPath.resolve(getUploadDirectoryName(imageType)).resolve(uploadDate).normalize();
+    private String getObjectKey(String imageType, String uploadDate, String storedName) {
+        // 이미지 유형 아래에 업로드 날짜와 파일명을 포함한 객체 키를 반환한다
+        return getUploadDirectoryName(imageType) + "/" + uploadDate + "/" + storedName;
     }
 
     /**
@@ -1644,7 +1633,7 @@ public class FileService {
     }
 
     /**
-     * 로컬 업로드 경로로 확인된 물리 파일을 목록 단위로 삭제한다.
+     * 내부 업로드 경로로 확인된 저장소 객체를 목록 단위로 삭제한다.
      *
      * @author SeungHyeon.Kang
      * @param fileList 삭제할 파일 메타정보 목록
@@ -1652,44 +1641,44 @@ public class FileService {
     private void delPhysicalFileList(List<FileDto> fileList) {
         // 하나의 파일 삭제 실패가 나머지 영구 탈퇴 파일 정리를 중단하지 않도록 개별 처리한다
         for (FileDto fileDto : fileList) {
-            // 외부 URL과 허용된 업로드 경로 밖의 값은 로컬 파일 삭제 대상에서 제외한다
-            Path storedPath = getStoredPath(fileDto);
+            // 외부 URL과 허용된 업로드 경로 밖의 값은 영구 객체 삭제 대상에서 제외한다
+            String objectKey = getStoredObjectKey(fileDto);
 
-            // 로컬 업로드 파일 경로가 아니면 메타정보 삭제만 유지한다
-            if (StringUtil.isEmpty(storedPath)) {
+            // 내부 업로드 객체 키가 아니면 메타정보 삭제만 유지한다
+            if (StringUtil.isEmpty(objectKey)) {
                 // 다음 파일 메타정보를 확인한다
                 continue;
             }
 
-            // 파일 시스템 오류를 파일별로 격리해 나머지 삭제 대상을 계속 처리한다
+            // 저장소 오류를 파일별로 격리해 나머지 삭제 대상을 계속 처리한다
             try {
-                // DB에서 참조가 제거된 로컬 이미지 파일을 삭제한다
-                Files.deleteIfExists(storedPath);
+                // DB에서 참조가 제거된 영구 이미지 객체를 삭제한다
+                fileStorage.delFile(objectKey);
             }
 
             // 커밋 이후 물리 삭제 실패는 롤백할 수 없으므로 운영 로그에 재정리 대상을 남긴다
             catch (IOException e) {
                 // 파일 번호와 안전하게 검증된 저장 경로를 오류 로그로 남긴다
-                log.error("Committed image file cleanup failed. fileNumb={}, path={}", fileDto.getFileNumb(), storedPath, e);
+                log.error("Committed image file cleanup failed. fileNumb={}, objectKey={}", fileDto.getFileNumb(), objectKey, e);
             }
         }
     }
 
     /**
-     * 파일 접근 경로를 업로드 루트 아래의 안전한 로컬 저장 경로로 변환한다.
+     * 파일 접근 경로를 안전한 영구 저장소 객체 키로 변환한다.
      *
      * @author SeungHyeon.Kang
      * @param fileDto 경로와 서버 저장 파일명이 포함된 파일 메타정보
-     * @return 삭제 가능한 로컬 저장 경로, 외부 URL 또는 허용 범위 밖이면 null
+     * @return 삭제 가능한 저장소 객체 키, 외부 URL 또는 허용 범위 밖이면 null
      */
-    private Path getStoredPath(FileDto fileDto) {
-        // 파일 메타정보나 필수 경로가 없으면 로컬 파일로 판단하지 않는다
+    private String getStoredObjectKey(FileDto fileDto) {
+        // 파일 메타정보나 필수 경로가 없으면 내부 저장소 객체로 판단하지 않는다
         if (StringUtil.isEmpty(fileDto) || StringUtil.hasEmpty(fileDto.getFilePath(), fileDto.getStorName())) {
             // 삭제할 수 있는 로컬 저장 경로가 없음을 반환한다
             return null;
         }
 
-        // 외부 이미지 URL과 이전 연동 경로는 로컬 업로드 파일이 아니므로 물리 삭제에서 제외한다
+        // 외부 이미지 URL과 이전 연동 경로는 내부 업로드 객체가 아니므로 물리 삭제에서 제외한다
         if (!fileDto.getFilePath().startsWith(UPLOAD_ACCESS_PREFIX)) {
             // 외부 경로는 로컬 저장 경로가 아님을 반환한다
             return null;
@@ -1698,31 +1687,31 @@ public class FileService {
         // 브라우저 접근 접두사를 제외한 프로필 또는 배경 하위 경로를 추출한다
         String relativePath = fileDto.getFilePath().substring(UPLOAD_ACCESS_PREFIX.length());
         // 업로드 루트를 기준으로 정규화해 상위 디렉터리 이동 문자를 제거한다
-        Path storedPath = uploadRootPath.resolve(relativePath).normalize();
+        Path storedPath = Paths.get(relativePath).normalize();
         // 프로필 이미지가 저장될 수 있는 루트 경로를 계산한다
-        Path profileRoot = uploadRootPath.resolve(getUploadDirectoryName(Constant.FILE_TYPE_PROFILE)).normalize();
+        Path profileRoot = Paths.get(getUploadDirectoryName(Constant.FILE_TYPE_PROFILE)).normalize();
         // 배경 이미지가 저장될 수 있는 루트 경로를 계산한다
-        Path backgroundRoot = uploadRootPath.resolve(getUploadDirectoryName(Constant.FILE_TYPE_BACKGROUND)).normalize();
+        Path backgroundRoot = Paths.get(getUploadDirectoryName(Constant.FILE_TYPE_BACKGROUND)).normalize();
 
         // 이미지 유형 루트 자체이거나 허용된 이미지 디렉터리 밖이면 삭제 요청을 차단한다
-        if (storedPath.equals(profileRoot) || storedPath.equals(backgroundRoot)
+        if (storedPath.isAbsolute() || storedPath.getNameCount() != 3
                 || (!storedPath.startsWith(profileRoot) && !storedPath.startsWith(backgroundRoot))
                 || !fileDto.getStorName().equals(storedPath.getFileName().toString())) {
             // 안전한 업로드 파일 경로가 아님을 반환한다
             return null;
         }
 
-        // 업로드 루트와 저장 파일명이 검증된 로컬 경로를 반환한다
-        return storedPath;
+        // 운영체제 경로 구분자를 S3 객체 키 구분자로 통일해 검증된 상대 키를 반환한다
+        return storedPath.toString().replace('\\', '/');
     }
 
     /**
      * DB 트랜잭션이 롤백될 때 이미 생성한 실제 이미지 파일도 함께 제거하도록 정리 작업을 등록한다.
      *
      * @author SeungHyeon.Kang
-     * @param storedPath 트랜잭션 롤백 시 삭제할 실제 파일 경로
+     * @param objectKey 트랜잭션 롤백 시 삭제할 저장소 객체 키
      */
-    private void registerRollbackCleanup(Path storedPath) {
+    private void registerRollbackCleanup(String objectKey) {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             // DB 트랜잭션이 롤백될 때 이미 생성한 실제 이미지 파일도 함께 제거하도록 정리 작업을 등록한 결과를 반환한다
@@ -1748,13 +1737,13 @@ public class FileService {
                 // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
                 try {
                     // 검증 중 생성된 임시 파일이 있으면 삭제한다
-                    Files.deleteIfExists(storedPath);
+                    fileStorage.delFile(objectKey);
                 }
 
                 // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
                 catch (IOException e) {
                     // 실패 원인과 처리 대상을 오류 로그로 남긴다
-                    log.error("Rolled-back image file cleanup failed. path={}", storedPath, e);
+                    log.error("Rolled-back image file cleanup failed. objectKey={}", objectKey, e);
                 }
             }
         });

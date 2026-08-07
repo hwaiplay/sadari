@@ -42,6 +42,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
  * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 검증과 현재 선택 조회 반영
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 후 기존 파일 삭제 추가
+ * 2026-08-07        SeungHyeon.Kang    닉네임 공백 입력 금지
  */
 @Service
 @RequiredArgsConstructor
@@ -49,9 +50,9 @@ import org.springframework.web.multipart.MultipartFile;
 @Transactional(readOnly = true)
 public class UserServiceImpl implements UserService {
 
-    // 문자 사이에 단일 공백과 언더바 및 하이픈을 허용하는 닉네임 형식
+    // 한글과 영문 및 숫자 사이에 단일 언더바 또는 하이픈만 허용하는 닉네임 형식
     private static final Pattern USER_NICK_PATTERN =
-            Pattern.compile("^[A-Za-z0-9가-힣]+(?:[ _-][A-Za-z0-9가-힣]+)*$");
+            Pattern.compile("^[A-Za-z0-9가-힣]+(?:[_-][A-Za-z0-9가-힣]+)*$");
 
     // User 데이터 접근 객체
     private final UserMapper userMapper;

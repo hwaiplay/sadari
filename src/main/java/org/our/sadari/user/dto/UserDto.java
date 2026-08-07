@@ -21,6 +21,7 @@ import lombok.Data;
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 여부 추가
  * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 데이터 추가
  * 2026-08-05        SeungHyeon.Kang       관심분야 요청에서 공통코드 그룹 제거
+ * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 계약 반영
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -32,7 +33,7 @@ public class UserDto {
     @Schema(description = "OAuth 제공자 사용자 ID")
     private String userIdxx;
 
-    @Schema(description = "최대 25자 닉네임. 한글, 영문, 숫자와 문자 사이의 단일 공백, 언더바, 하이픈을 사용할 수 있다.", example = "마음이 따뜻한 코끼리_26090001")
+    @Schema(description = "최대 25자 닉네임. 공백 없이 한글, 영문, 숫자와 문자 사이의 단일 언더바 또는 하이픈을 사용할 수 있다.", example = "마음이따뜻한코끼리_26090001")
     private String userNick;
 
     @Schema(description = "로그인 제공자", example = "KAKAO")

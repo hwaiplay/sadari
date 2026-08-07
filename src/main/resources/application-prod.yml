@@ -74,6 +74,17 @@ jwt:
   refresh-token-validity-in-seconds: ${JWT_REFRESH_TOKEN_SECONDS:86400}
 
 app:
+  storage:
+    # S3를 사용하지 않는 Windows 실행 환경은 사용자·관리자 앱이 같은 공유 디렉터리를 사용한다.
+    provider: ${STORAGE_PROVIDER:s3}
+    local-root: ${STORAGE_LOCAL_ROOT:C:/shared/sadari-uploads}
+    s3:
+      bucket: ${STORAGE_S3_BUCKET}
+      region: ${STORAGE_S3_REGION:ap-northeast-2}
+      endpoint: ${STORAGE_S3_ENDPOINT:}
+      path-style-access: ${STORAGE_S3_PATH_STYLE_ACCESS:false}
+      access-key: ${AWS_ACCESS_KEY_ID}
+      secret-key: ${AWS_SECRET_ACCESS_KEY}
   upload:
     # 운영 환경에서도 파일 검증 기준을 환경변수로 조정하되 기본값은 로컬과 동일하게 유지한다.
     max-image-bytes: ${UPLOAD_MAX_IMAGE_BYTES:10485760}

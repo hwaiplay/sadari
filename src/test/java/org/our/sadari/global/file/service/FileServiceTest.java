@@ -32,6 +32,7 @@ import org.our.sadari.global.file.dto.FileDto;
 import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
+import org.our.sadari.global.file.storage.LocalFileStorage;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -71,7 +72,7 @@ class FileServiceTest {
     @BeforeEach
     void setUp() {
         // 파일 검증 서비스 단위 테스트 대상을 담을 객체를 생성한다
-        fileService = new FileService(fileMapper);
+        fileService = new FileService(fileMapper, new LocalFileStorage(uploadRootPath.toString()));
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageBytes", 10_485_760L);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
@@ -79,7 +80,6 @@ class FileServiceTest {
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageDimension", 8_192);
         // 테스트 파일이 실제 프로젝트 uploads 디렉터리에 생성되지 않도록 임시 루트 경로를 설정한다
-        ReflectionTestUtils.setField(fileService, "uploadRootPath", uploadRootPath);
         // 프로필 임시 이미지도 테스트 전용 경로에만 생성되도록 별도 루트를 설정한다
         ReflectionTestUtils.setField(fileService, "profileImageDraftRootPath", uploadRootPath.resolve("drafts"));
     }

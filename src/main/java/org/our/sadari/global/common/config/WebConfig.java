@@ -1,6 +1,5 @@
 package org.our.sadari.global.common.config;
 
-import java.nio.file.Paths;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.*;
@@ -14,6 +13,7 @@ import org.springframework.web.servlet.config.annotation.*;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-23        SeungHyeon.Kang    최초 생성
+ * 2026-08-07        SeungHyeon.Kang    업로드 파일 제공을 저장소 컨트롤러로 이관
  */
 @Configuration
 public class WebConfig implements WebMvcConfigurer {
@@ -35,20 +35,5 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(FRONT_DOMAIN)
                 .allowedMethods("*")
                 .allowCredentials(true);
-    }
-
-    /**
-     * 업로드 파일을 브라우저에서 접근할 수 있도록 정적 리소스 핸들러를 등록한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param registry 정적 리소스 핸들러 레지스트리
-     */
-    @Override
-    public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        // DB에는 파일 시스템 절대 경로가 아닌 /uploads 하위 접근 URL만 저장하므로 여기서 실제 디렉터리를 연결한다.
-        String uploadPath = Paths.get("uploads").toAbsolutePath().normalize().toUri().toString();
-        // 업로드 파일을 제공할 정적 리소스 경로를 등록한다
-        registry.addResourceHandler("/uploads/**")
-                .addResourceLocations(uploadPath);
     }
 }

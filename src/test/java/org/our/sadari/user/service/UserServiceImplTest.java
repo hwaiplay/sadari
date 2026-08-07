@@ -37,6 +37,7 @@ import org.springframework.mock.web.MockMultipartFile;
  * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 저장 검증 추가
  * 2026-08-05        SeungHyeon.Kang       관심분야 단일 코드 검증 추가
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 파일 정리 검증 추가
+ * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -84,18 +85,18 @@ class UserServiceImplTest {
 
         UserDto request = new UserDto();
         // 온보딩에서 확정할 사용자 닉네임을 요청 DTO에 설정한다
-        request.setUserNick("차분한 독서가");
+        request.setUserNick("차분한독서가");
 
         UserDto savedUser = new UserDto();
         // 저장 후 조회될 사용자 번호를 설정한다
         savedUser.setUserNumb(31L);
         // 저장 후 조회될 닉네임을 설정한다
-        savedUser.setUserNick("차분한 독서가");
+        savedUser.setUserNick("차분한독서가");
         // 온보딩 완료 상태를 설정한다
         savedUser.setOnbdYsno("Y");
 
         // 유효한 닉네임에는 비속어가 없도록 탐지 결과를 구성한다
-        when(badWordDetectionService.findBadWord("차분한 독서가")).thenReturn(Optional.empty());
+        when(badWordDetectionService.findBadWord("차분한독서가")).thenReturn(Optional.empty());
         // 다른 회원과 닉네임이 중복되지 않도록 조회 결과를 구성한다
         when(userMapper.getUserNickDuplicateCnt(request)).thenReturn(0);
         // 닉네임과 온보딩 완료 UPDATE가 한 행에 반영되도록 결과를 구성한다
@@ -109,11 +110,34 @@ class UserServiceImplTest {
         // 온보딩 완료 API가 공통 성공 코드로 응답하는지 확인한다
         assertEquals(200, result.getCode());
         // 완료 응답에 저장한 닉네임이 포함되는지 확인한다
-        assertEquals("차분한 독서가", ((Map<?, ?>) result.getData()).get("userNick"));
+        assertEquals("차분한독서가", ((Map<?, ?>) result.getData()).get("userNick"));
         // 완료 응답에 온보딩 완료 상태가 포함되는지 확인한다
         assertEquals("Y", ((Map<?, ?>) result.getData()).get("onbdYsno"));
         // DB 커밋 후처리 경로에서 로그인 세션의 닉네임을 같은 값으로 갱신하는지 확인한다
-        verify(tokenRedisService).uptUserNick(31L, "차분한 독서가");
+        verify(tokenRedisService).uptUserNick(31L, "차분한독서가");
+    }
+
+    /**
+     * 공백이 포함된 닉네임은 온보딩 완료와 저장 처리 전에 거절하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptOnboardingRejectsNicknameWithSpace() {
+        // 공백 포함 닉네임 검증에 사용할 요청 DTO를 생성한다
+        UserDto request = new UserDto();
+        // 저장할 수 없는 공백 포함 닉네임을 요청 DTO에 설정한다
+        request.setUserNick("차분한 독서가");
+
+        // 공백 포함 닉네임으로 최초 로그인 온보딩 완료를 요청한다
+        ResultData result = userService.uptOnboarding(31L, request);
+
+        // 잘못된 닉네임 형식에 대응하는 공통 요청 오류인지 확인한다
+        assertEquals(2009, result.getCode());
+        // 형식 검증을 통과하지 못한 닉네임은 중복 조회에 사용하지 않는지 확인한다
+        verify(userMapper, never()).getUserNickDuplicateCnt(request);
+        // 형식 검증을 통과하지 못한 닉네임을 저장하지 않는지 확인한다
+        verify(userMapper, never()).uptUserOnboarding(request);
     }
 
     /**
@@ -193,7 +217,7 @@ class UserServiceImplTest {
         // 프로필 수정 요청 DTO를 생성한다
         UserDto request = new UserDto();
         // 수정할 닉네임을 설정한다
-        request.setUserNick("차분한 독서가");
+        request.setUserNick("차분한독서가");
         // 수정할 한줄소개를 설정한다
         request.setIntrCntn("책과 함께 쉬어갑니다");
 
@@ -209,7 +233,7 @@ class UserServiceImplTest {
         // 수정된 사용자 번호를 설정한다
         updatedUser.setUserNumb(31L);
         // 수정된 사용자 닉네임을 설정한다
-        updatedUser.setUserNick("차분한 독서가");
+        updatedUser.setUserNick("차분한독서가");
 
         // 파일 교체 요청에 사용할 프로필 이미지 파일을 생성한다
         MockMultipartFile profileImage = new MockMultipartFile("profileImage", "profile.png", "image/png", new byte[] {1});
@@ -217,7 +241,7 @@ class UserServiceImplTest {
         MockMultipartFile backgroundImage = new MockMultipartFile("backgroundImage", "background.png", "image/png", new byte[] {2});
 
         // 닉네임과 한줄소개가 비속어 검사를 통과하도록 결과를 설정한다
-        when(badWordDetectionService.findBadWord("차분한 독서가")).thenReturn(Optional.empty());
+        when(badWordDetectionService.findBadWord("차분한독서가")).thenReturn(Optional.empty());
         // 한줄소개 비속어 검사가 정상 통과하도록 결과를 설정한다
         when(badWordDetectionService.findBadWord("책과 함께 쉬어갑니다")).thenReturn(Optional.empty());
         // 다른 사용자와 닉네임이 중복되지 않도록 조회 결과를 설정한다

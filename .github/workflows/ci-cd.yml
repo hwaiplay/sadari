@@ -120,6 +120,8 @@ jobs:
       GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
       GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
       FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
 
       DB_URL: ${{ secrets.DB_URL }}
       DB_USERNAME: ${{ secrets.DB_USERNAME }}
@@ -151,6 +153,13 @@ jobs:
       COOKIE_SAME_SITE: ${{ vars.COOKIE_SAME_SITE || 'None' }}
       LOGGING_LEVEL_ROOT: ${{ vars.LOGGING_LEVEL_ROOT || 'info' }}
       LOGGING_LEVEL_APP: ${{ vars.LOGGING_LEVEL_APP || 'info' }}
+      # 저장소 선택은 자격 증명 유무가 아니라 STORAGE_PROVIDER Variable만으로 결정한다.
+      STORAGE_PROVIDER: ${{ vars.STORAGE_PROVIDER || 's3' }}
+      STORAGE_LOCAL_ROOT: ${{ vars.STORAGE_LOCAL_ROOT || 'C:/shared/sadari-uploads' }}
+      STORAGE_S3_BUCKET: ${{ vars.STORAGE_S3_BUCKET }}
+      STORAGE_S3_REGION: ${{ vars.STORAGE_S3_REGION || 'ap-northeast-2' }}
+      STORAGE_S3_ENDPOINT: ${{ vars.STORAGE_S3_ENDPOINT }}
+      STORAGE_S3_PATH_STYLE_ACCESS: ${{ vars.STORAGE_S3_PATH_STYLE_ACCESS || 'false' }}
 
     steps:
       - name: Checkout deployment files
@@ -169,6 +178,11 @@ jobs:
             FIREBASE_WEB_STORAGE_BUCKET FIREBASE_WEB_MESSAGING_SENDER_ID
             FIREBASE_WEB_APP_ID FIREBASE_VAPID_PUBLIC_KEY FRONT_DOMAIN BACK_DOMAIN
           )
+
+          # S3 저장소를 선택한 배포에서만 버킷과 장기 자격 증명을 필수로 검증한다.
+          if [[ "$STORAGE_PROVIDER" == "s3" ]]; then
+            required_names+=(STORAGE_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY)
+          fi
 
           for name in "${required_names[@]}"; do
             if [[ -z "${!name:-}" ]]; then
@@ -231,6 +245,14 @@ jobs:
           write_env SERVER_PORT "8080"
           write_env LOGGING_LEVEL_ROOT "$LOGGING_LEVEL_ROOT"
           write_env LOGGING_LEVEL_APP "$LOGGING_LEVEL_APP"
+          write_env STORAGE_PROVIDER "$STORAGE_PROVIDER"
+          write_env STORAGE_LOCAL_ROOT "$STORAGE_LOCAL_ROOT"
+          write_env STORAGE_S3_BUCKET "$STORAGE_S3_BUCKET"
+          write_env STORAGE_S3_REGION "$STORAGE_S3_REGION"
+          write_env STORAGE_S3_ENDPOINT "$STORAGE_S3_ENDPOINT"
+          write_env STORAGE_S3_PATH_STYLE_ACCESS "$STORAGE_S3_PATH_STYLE_ACCESS"
+          write_env AWS_ACCESS_KEY_ID "$AWS_ACCESS_KEY_ID"
+          write_env AWS_SECRET_ACCESS_KEY "$AWS_SECRET_ACCESS_KEY"
 
           printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" \
             > .deploy/secrets/firebase-service-account.json
