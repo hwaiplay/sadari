@@ -89,7 +89,8 @@ public class SecurityConfig {
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
-                                "/uploads/**",
+                                "/uploads/profile/**",
+                                "/uploads/background/**",
                                 // 도서 검색 API
                                 "/api/book/search"
                         // 인증 없이 접근 가능한 공개 API 경로를 설정한다

@@ -29,6 +29,8 @@ import MyClubPage from "@/pages/ReadingClub/MyClubPage";
 import FindClubPage from "@/pages/ReadingClub/FindClubPage";
 import ClubCreatePage from "@/pages/ReadingClub/ClubCreatePage";
 import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
+import NoticeListPage from "@/pages/Notice/NoticeListPage";
+import NoticeDetailPage from "@/pages/Notice/NoticeDetailPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -139,6 +141,11 @@ const Router = () => {
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
+
+          {/* 사용자 메뉴 경로에 연결한 배포 공지사항 목록과 상세 */}
+          <Route path="/notice" element={<Navigate to="/notice/list" replace />} />
+          <Route path="/notice/list" element={<NoticeListPage />} />
+          <Route path="/notice/list/:noticeNumb" element={<NoticeDetailPage />} />
 
           {/* 독서 모임 1차 기능 */}
           <Route path="/reading-clubs/mine" element={<MyClubPage />} />
