@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.menu.mapper.UserMenuMapper">
 
-    <!-- 메뉴 URL과 일치하거나 슬래시로 구분된 하위 상세 경로이면 가장 긴 메뉴 URL을 우선 선택한다. -->
+    <!-- 끝 슬래시를 제외한 메뉴 URL과 일치하거나 하위 상세 경로이면 가장 긴 메뉴 URL을 우선 선택한다. -->
     <select id="getCurrentUserMenu" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         SELECT /* getCurrentUserMenu */
                MENUMATCH.MENU_NUMB
@@ -18,8 +18,8 @@
                     FROM TM_URMENU MENU
                    WHERE MENU.MENU_URLX IS NOT NULL
                      AND LENGTH(MENU.MENU_URLX) != 0
-                     AND (   MENU.MENU_URLX = #{menuUrlx}
-                          OR #{menuUrlx} LIKE CONCAT(MENU.MENU_URLX, '/%')
+                     AND (   TRIM(TRAILING '/' FROM MENU.MENU_URLX) = TRIM(TRAILING '/' FROM #{menuUrlx})
+                          OR TRIM(TRAILING '/' FROM #{menuUrlx}) LIKE CONCAT(TRIM(TRAILING '/' FROM MENU.MENU_URLX), '/%')
                          )
                 ORDER BY LENGTH(MENU.MENU_URLX) DESC
                ) MENUMATCH
