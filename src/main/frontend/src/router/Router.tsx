@@ -140,6 +140,7 @@ const Router = () => {
           <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/alim" element={<AlimPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
 
           {/* 사용자 메뉴 경로에 연결한 배포 공지사항 목록과 상세 */}

@@ -15,9 +15,11 @@ import org.our.sadari.menu.dto.UserMenuDto;
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    3단계 사용자 메뉴 조회 구조 적용
+ * 2026-08-10        SeungHyeon.Kang    화면별 하위 사용자 메뉴 조회 추가
  */
 @Mapper
 public interface UserMenuMapper {
+
     /**
      * 현재 URL과 정확히 일치하거나 동적 상세 URL의 접두 경로와 일치하는 메뉴 한 건을 조회한다.
      *
@@ -34,4 +36,13 @@ public interface UserMenuMapper {
      * @return 부모가 노출 중인 사용자 메뉴 평면 목록
      */
     List<UserMenuDto.UserMenuItemDto> getVisibleUserMenuList();
+
+    /**
+     * 기준 화면의 사용 중 메뉴를 부모로 하는 노출 가능한 하위 메뉴를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname
+     * @return 트리 구성 기준 화면과 그 아래의 노출 가능한 메뉴 평면 목록
+     */
+    List<UserMenuDto.UserMenuItemDto> getUserMenuChildList(@Param("menuUrlx") String menuUrlx);
 }

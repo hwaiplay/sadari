@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    최대 3단계 사용자 메뉴 트리 구성
+ * 2026-08-10        SeungHyeon.Kang    화면별 하위 사용자 메뉴 트리 조회 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -69,6 +70,32 @@ public class UserMenuServiceImpl implements UserMenuService {
         response.setMenuList(menuTree);
         // 사용자 메뉴 조회 성공 응답을 반환한다
         return ResultData.success(response);
+    }
+
+    /**
+     * 기준 화면 아래의 노출 가능한 사용자 메뉴 트리를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname
+     * @return 기준 화면의 직계 하위 메뉴부터 시작하는 메뉴 트리
+     */
+    @Override
+    public ResultData getUserMenuChildList(String menuUrlx) {
+        // 빈 경로로 전체 메뉴가 조회되지 않도록 기준 화면 경로를 검증한다
+        if (StringUtil.isEmpty(menuUrlx)) {
+            // "요청값이 올바르지 않습니다."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 트리 기준 화면과 그 아래의 노출 가능한 메뉴를 평면 목록으로 조회한다
+        List<UserMenuDto.UserMenuItemDto> pageMenuList = userMenuMapper.getUserMenuChildList(menuUrlx);
+        // 기준 화면 메뉴를 루트로 하는 전체 트리로 변환한다
+        List<UserMenuDto.UserMenuItemDto> pageMenuTree = getMenuTree(pageMenuList);
+        // 조회된 기준 화면이 없으면 설정 화면에 표시할 빈 메뉴 목록을 사용한다
+        List<UserMenuDto.UserMenuItemDto> childMenuTree = pageMenuTree.isEmpty()
+                ? List.of() : pageMenuTree.get(0).getChildList();
+        // 화면에서 렌더링할 하위 메뉴 트리 조회 성공 응답을 반환한다
+        return ResultData.success(childMenuTree);
     }
 
     /**

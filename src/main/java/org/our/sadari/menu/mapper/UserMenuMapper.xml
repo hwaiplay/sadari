@@ -72,4 +72,54 @@
              , MENU_NUMB
     </select>
 
+    <!-- 기준 화면을 트리 루트로 포함하고 그 아래의 노출 가능한 하위 메뉴를 최대 3단계까지 조회한다. -->
+    <select id="getUserMenuChildList" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        WITH RECURSIVE PAGE_MENU AS (
+            SELECT ROOT.MENU_NUMB
+                 , ROOT.PARN_NUMB
+                 , ROOT.MENU_LEVL
+                 , ROOT.MENU_NAME
+                 , ROOT.MENU_URLX
+                 , ROOT.SORT_ORDR
+              FROM (  SELECT MENU.MENU_NUMB
+                           , MENU.PARN_NUMB
+                           , MENU.MENU_LEVL
+                           , MENU.MENU_NAME
+                           , MENU.MENU_URLX
+                           , MENU.SORT_ORDR
+                        FROM TM_URMENU MENU
+                       WHERE TRIM(TRAILING '/' FROM MENU.MENU_URLX) = TRIM(TRAILING '/' FROM #{menuUrlx})
+                         AND MENU.USEE_YSNO = #{commYes}
+                    ORDER BY MENU.MENU_NUMB
+                       LIMIT 1
+                   ) ROOT
+            UNION ALL
+            SELECT CHILD.MENU_NUMB
+                 , CHILD.PARN_NUMB
+                 , CHILD.MENU_LEVL
+                 , CHILD.MENU_NAME
+                 , CHILD.MENU_URLX
+                 , CHILD.SORT_ORDR
+              FROM TM_URMENU CHILD
+              JOIN PAGE_MENU PARENT
+                ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
+             WHERE CHILD.SHOW_YSNO = #{commYes}
+               AND CHILD.USEE_YSNO = #{commYes}
+               AND CHILD.MENU_LEVL &lt;= 3
+        )
+        SELECT /* getUserMenuChildList */
+               MENU_NUMB
+             , PARN_NUMB
+             , MENU_LEVL
+             , MENU_NAME
+             , MENU_URLX
+             , SORT_ORDR
+          FROM PAGE_MENU
+      ORDER BY MENU_LEVL
+             , PARN_NUMB
+             , COALESCE(SORT_ORDR, 9999)
+             , MENU_NUMB
+    </select>
+
 </mapper>

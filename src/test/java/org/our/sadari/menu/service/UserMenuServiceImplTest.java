@@ -26,6 +26,7 @@ import org.our.sadari.menu.mapper.UserMenuMapper;
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-10        SeungHyeon.Kang    3단계 메뉴 트리 구성 검증 추가
+ * 2026-08-10        SeungHyeon.Kang    설정 화면 하위 메뉴 트리 조회 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
@@ -116,6 +117,41 @@ class UserMenuServiceImplTest {
         assertNull(data.getCurrentMenu());
         // 필요한 값으로 불변 객체를 생성한다
         assertEquals(List.of(), data.getMenuList());
+    }
+
+    /**
+     * 설정 화면 조회에서는 설정 루트를 제외하고 2·3단계 메뉴 트리만 반환하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    @SuppressWarnings("unchecked")
+    void getUserMenuChildListReturnsSettingsChildren() {
+        // 설정 화면 메뉴를 트리 구성 기준으로 생성한다
+        UserMenuDto.UserMenuItemDto settingsMenu = getMenu(8L, null, 1, "설정", 1);
+        // 설정 화면에서 바로 이동할 알림 설정 메뉴를 생성한다
+        UserMenuDto.UserMenuItemDto notificationMenu = getMenu(14L, 8L, 2, "알림 설정", 1);
+        // 3단계 관리 항목을 묶는 사용자 관리 메뉴를 생성한다
+        UserMenuDto.UserMenuItemDto userManagementMenu = getMenu(18L, 8L, 2, "사용자 관리", 2);
+        // 사용자 관리 아래에 표시할 팔로우 관리 메뉴를 생성한다
+        UserMenuDto.UserMenuItemDto followingMenu = getMenu(19L, 18L, 3, "팔로우 관리", 1);
+
+        // 설정 화면과 그 아래의 노출 가능한 메뉴 평면 목록을 조회하도록 구성한다
+        when(userMenuMapper.getUserMenuChildList("/settings"))
+                .thenReturn(List.of(followingMenu, userManagementMenu, settingsMenu, notificationMenu));
+
+        // 설정 화면의 하위 사용자 메뉴 트리를 조회한다
+        ResultData result = userMenuService.getUserMenuChildList("/settings");
+        // 공통 응답에서 설정 화면에 표시할 2단계 메뉴 목록을 조회한다
+        List<UserMenuDto.UserMenuItemDto> data =
+                (List<UserMenuDto.UserMenuItemDto>) result.getData();
+
+        // 설정 화면의 직계 하위 메뉴가 정렬 순서대로 반환됐는지 검증한다
+        assertEquals(List.of(notificationMenu, userManagementMenu), data);
+        // 사용자 관리의 3단계 메뉴가 하위 목록으로 연결됐는지 검증한다
+        assertEquals(List.of(followingMenu), userManagementMenu.getChildList());
+        // 설정 화면 경로로 하위 메뉴 조회 Mapper가 호출됐는지 검증한다
+        verify(userMenuMapper).getUserMenuChildList("/settings");
     }
 
     /**

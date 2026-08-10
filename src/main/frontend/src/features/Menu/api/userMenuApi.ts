@@ -30,3 +30,18 @@ export const getUserMenuApi = async (menuUrlx: string) => {
   });
   return assertResultDataSuccess(response.data);
 };
+
+/**
+ * 기준 화면 아래의 노출 가능한 사용자 메뉴 트리를 조회합니다.
+ *
+ * @author HanWon.Jang
+ * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname
+ * @return 기준 화면의 직계 하위 메뉴부터 시작하는 메뉴 목록
+ */
+export const getUserMenuChildListApi = async (menuUrlx: string) => {
+
+  const response = await api.get<{ data: UserMenuItem[] }>("/user-menu/children", {
+    params: { menuUrlx },
+  });
+  return assertResultDataSuccess(response.data);
+};
