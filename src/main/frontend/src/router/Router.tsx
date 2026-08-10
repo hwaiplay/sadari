@@ -17,6 +17,7 @@ import ProfileEditPage from "@/pages/My/ProfileEditPage";
 import SocialProfilePage from "@/pages/Social/SocialProfilePage";
 import AlimPage from "@/pages/Alim/AlimPage";
 import SettingsPage from "@/pages/Settings/SettingsPage";
+import ServiceInfoPage from "@/pages/Settings/ServiceInfoPage";
 import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
 import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
 import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
@@ -142,6 +143,7 @@ const Router = () => {
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/alim" element={<AlimPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
+          <Route path="/settings/service-info" element={<ServiceInfoPage />} />
 
           {/* 사용자 메뉴 경로에 연결한 배포 공지사항 목록과 상세 */}
           <Route path="/notice" element={<Navigate to="/notice/list" replace />} />
