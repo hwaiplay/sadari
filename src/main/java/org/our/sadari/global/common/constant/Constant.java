@@ -48,6 +48,8 @@ public final class Constant {
     public static final String CODE_POPU_SITU = "POPU_SITU";
     // 공지사항 카테고리 공통코드
     public static final String CODE_NOTICE_CATEGORY = "NOTI_CATE";
+    // 서비스 정보 카테고리 공통코드
+    public static final String CODE_SERVICE_INFO_CATEGORY = "SVIF_CATE";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 회원 상태 공통코드

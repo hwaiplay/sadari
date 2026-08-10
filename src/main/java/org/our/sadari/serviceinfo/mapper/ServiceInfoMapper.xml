@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.serviceinfo.mapper.ServiceInfoMapper">
+    <!-- 서비스 정보 접근자가 현재 활성 회원인지 확인한다 -->
+    <select id="getActiveUserCnt" resultType="int">
+        SELECT /* getActiveUserCnt */ COUNT(1)
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT = #{userStat}
+    </select>
+
+    <!-- 활성 카테고리를 모두 표시하고 각 카테고리의 현재 배포 버전을 연결한다 -->
+    <select id="getServiceInfoList" resultType="org.our.sadari.serviceinfo.dto.ServiceInfoDto">
+        SELECT /* getServiceInfoList */
+               C.COMD_CODE AS CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , S.VERS_NUMB
+             , S.SVCI_TITL
+             , S.SVCI_CNTN
+             , S.UPDT_DATE
+             , S.DPLY_DATE
+          FROM TB_CODEXD C
+     LEFT JOIN CT_SVINFO S
+            ON S.CATE_CGRP = C.COMM_CODE
+           AND S.CATE_CODE = C.COMD_CODE
+           AND S.DPLY_YSNO = #{yes}
+         WHERE C.COMM_CODE = #{cateCgrp}
+           AND C.USEE_YSNO = #{yes}
+      ORDER BY C.SORT_ORDR
+             , C.COMD_CODE
+    </select>
+</mapper>
