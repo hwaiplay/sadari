@@ -1,7 +1,10 @@
 package org.our.sadari.menu.service;
 
-import java.util.Collections;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -15,56 +18,127 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : UserMenuServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 사용자 메뉴 업무 로직을 구현한다
+ * description    : 사용자 메뉴 조회와 트리 구성을 처리한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    최대 3단계 사용자 메뉴 트리 구성
  */
 @Service
 @RequiredArgsConstructor
+@Transactional(readOnly = true)
 public class UserMenuServiceImpl implements UserMenuService {
 
-    // UserMenu 데이터 접근 객체
+    /** 같은 상위 메뉴 안의 메뉴 정렬 기준 */
+    private static final Comparator<UserMenuDto.UserMenuItemDto> MENU_COMPARATOR =
+            Comparator.comparing(UserMenuDto.UserMenuItemDto::getSortOrdr,
+                                  Comparator.nullsLast(Integer::compareTo))
+                      .thenComparing(UserMenuDto.UserMenuItemDto::getMenuNumb);
+
+    /** 사용자 메뉴 데이터 접근 객체 */
     private final UserMenuMapper userMenuMapper;
 
     /**
-     * 현재 URL 메뉴와 노출 메뉴 목록을 조회 전용 트랜잭션에서 함께 반환한다.
-     * 현재 URL에 해당하는 데이터가 없는 것은 정상 분기이며 currentMenu를 null로 반환한다.
+     * 현재 URL 메뉴와 사용자 햄버거 메뉴 트리를 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param menuUrlx 브라우저의 현재 pathname
-     * @return 현재 메뉴와 햄버거 메뉴 목록
+     * @param menuUrlx 브라우저 현재 경로
+     * @return 현재 메뉴와 최대 3단계 메뉴 트리
      */
     @Override
-    @Transactional(readOnly = true)
     public ResultData getUserMenu(String menuUrlx) {
-        // menuUrlx 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
+        // 빈 경로로 메뉴 일치 조회가 실행되지 않도록 요청값을 검증한다
         if (StringUtil.isEmpty(menuUrlx)) {
-            // "요청값이 올바르지 않아요."
+            // "요청값이 올바르지 않습니다."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        UserMenuDto.UserMenuItemDto currentMenu =
-                // CurrentUserMenu 데이터를 DB에서 조회한다
-                userMenuMapper.getCurrentUserMenu(menuUrlx);
-        List<UserMenuDto.UserMenuItemDto> menuList =
-                // VisibleUserMenuList 데이터를 DB에서 조회한다
-                userMenuMapper.getVisibleUserMenuList();
+        // 현재 경로와 가장 구체적으로 일치하는 사용 중 메뉴를 조회한다
+        UserMenuDto.UserMenuItemDto currentMenu = userMenuMapper.getCurrentUserMenu(menuUrlx);
+        // 노출 가능한 부모에서 이어지는 사용자 메뉴를 평면 목록으로 조회한다
+        List<UserMenuDto.UserMenuItemDto> visibleMenuList = userMenuMapper.getVisibleUserMenuList();
+        // 평면 목록을 부모 메뉴의 하위 목록에 연결한 트리로 변환한다
+        List<UserMenuDto.UserMenuItemDto> menuTree = getMenuTree(visibleMenuList);
 
-        // 비정상적으로 null 목록이 반환되어도 프론트가 별도 null 분기 없이 빈 메뉴를 렌더링하도록 보정한다.
+        // 현재 메뉴와 사용자 메뉴 트리를 담을 응답 객체를 생성한다
+        UserMenuDto.UserMenuResDto response = new UserMenuDto.UserMenuResDto();
+        // 현재 URL과 일치하는 메뉴를 응답에 설정한다
+        response.setCurrentMenu(currentMenu);
+        // 최대 3단계 사용자 메뉴 트리를 응답에 설정한다
+        response.setMenuList(menuTree);
+        // 사용자 메뉴 조회 성공 응답을 반환한다
+        return ResultData.success(response);
+    }
+
+    /**
+     * 부모 번호를 기준으로 평면 메뉴 목록을 트리로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuList 부모가 노출 중인 사용자 메뉴 평면 목록
+     * @return 같은 상위 메뉴 안에서 정렬된 사용자 메뉴 트리
+     */
+    private List<UserMenuDto.UserMenuItemDto> getMenuTree(
+            List<UserMenuDto.UserMenuItemDto> menuList) {
+        // 조회 결과가 없으면 변경할 수 없는 빈 메뉴 목록을 반환한다
         if (StringUtil.isEmpty(menuList)) {
-            // 조회 결과가 없을 때 사용할 빈 목록을 생성한다
-            menuList = Collections.emptyList();
+            // 빈 사용자 메뉴 트리를 반환한다
+            return List.of();
         }
 
-        // 사용자 메뉴 조회 응답을 담을 객체를 생성한다
-        UserMenuDto.UserMenuResDto response = new UserMenuDto.UserMenuResDto();
-        // CurrentMenu 업무 값을 response DTO에 설정한다
-        response.setCurrentMenu(currentMenu);
-        // MenuList 업무 값을 response DTO에 설정한다
-        response.setMenuList(menuList);
-        // 현재 URL 메뉴와 노출 메뉴 목록을 조회 전용 트랜잭션에서 함께 반환한 결과를 성공 응답으로 반환한다
-        return ResultData.success(response);
+        // 메뉴 번호로 부모 객체를 찾기 위한 순서 보존 맵을 생성한다
+        Map<Long, UserMenuDto.UserMenuItemDto> menuMap = new LinkedHashMap<>();
+        // 최상위 메뉴를 모을 목록을 생성한다
+        List<UserMenuDto.UserMenuItemDto> rootMenuList = new ArrayList<>();
+
+        // 모든 메뉴의 하위 목록을 초기화하고 번호별 조회 맵에 저장한다
+        for (UserMenuDto.UserMenuItemDto menu : menuList) {
+            // 이전 매핑 결과가 응답에 섞이지 않도록 빈 하위 목록을 설정한다
+            menu.setChildList(new ArrayList<>());
+            // 메뉴 번호로 부모를 찾을 수 있도록 현재 메뉴를 저장한다
+            menuMap.put(menu.getMenuNumb(), menu);
+        }
+
+        // 각 메뉴를 최상위 목록 또는 부모 메뉴 하위 목록에 연결한다
+        for (UserMenuDto.UserMenuItemDto menu : menuList) {
+            // 상위 메뉴 번호가 없으면 최상위 메뉴 목록에 추가한다
+            if (menu.getParnNumb() == null) {
+                // 최상위 사용자 메뉴를 트리 루트 목록에 추가한다
+                rootMenuList.add(menu);
+                continue;
+            }
+
+            // 현재 메뉴가 참조하는 상위 메뉴를 조회한다
+            UserMenuDto.UserMenuItemDto parentMenu = menuMap.get(menu.getParnNumb());
+            // 노출 가능한 상위 메뉴가 있을 때만 현재 메뉴를 트리에 연결한다
+            if (parentMenu != null) {
+                // 현재 메뉴를 상위 메뉴의 하위 목록에 추가한다
+                parentMenu.getChildList().add(menu);
+            }
+        }
+
+        // 최상위 메뉴와 모든 하위 메뉴를 정렬한다
+        sortMenuTree(rootMenuList);
+        // 완성된 사용자 메뉴 트리를 반환한다
+        return rootMenuList;
+    }
+
+    /**
+     * 같은 상위 메뉴에 속한 메뉴를 정렬하고 하위 메뉴에도 재귀 적용한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuList 같은 상위 메뉴에 속한 메뉴 목록
+     */
+    private void sortMenuTree(List<UserMenuDto.UserMenuItemDto> menuList) {
+        // 정렬 순서와 메뉴 번호를 기준으로 현재 단계 메뉴를 정렬한다
+        menuList.sort(MENU_COMPARATOR);
+        // 모든 메뉴의 하위 메뉴 목록에도 같은 정렬 기준을 적용한다
+        for (UserMenuDto.UserMenuItemDto menu : menuList) {
+            // 하위 메뉴가 있을 때만 다음 단계 정렬을 수행한다
+            if (!menu.getChildList().isEmpty()) {
+                // 하위 메뉴 트리를 같은 기준으로 정렬한다
+                sortMenuTree(menu.getChildList());
+            }
+        }
     }
 }

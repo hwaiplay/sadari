@@ -2,11 +2,13 @@ import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type UserMenuItem = {
-  menuNumb: string;
-  subxNumb: string;
+  menuNumb: number;
+  parnNumb?: number | null;
+  menuLevl: number;
   menuName?: string;
   menuUrlx?: string;
   sortOrdr?: number;
+  childList: UserMenuItem[];
 };
 
 export type UserMenuData = {

@@ -25,6 +25,7 @@ import org.our.sadari.menu.mapper.UserMenuMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    3단계 메뉴 트리 구성 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {
@@ -59,15 +60,17 @@ class UserMenuServiceImplTest {
         // MenuName 업무 값을 currentMenu DTO에 설정한다
         currentMenu.setMenuName("독후감 상세보기");
 
-        // 사용자 메뉴 목록 항목을 담을 객체를 생성한다
-        UserMenuDto.UserMenuItemDto visibleMenu = new UserMenuDto.UserMenuItemDto();
-        // MenuName 업무 값을 visibleMenu DTO에 설정한다
-        visibleMenu.setMenuName("독후감 달력");
+        // 최상위 사용자 메뉴 목록 항목을 담을 객체를 생성한다
+        UserMenuDto.UserMenuItemDto visibleMenu = getMenu(1L, null, 1, "독후감 달력", 1);
+        // 2단계 사용자 메뉴 목록 항목을 담을 객체를 생성한다
+        UserMenuDto.UserMenuItemDto secondMenu = getMenu(2L, 1L, 2, "독서 모임", 1);
+        // 3단계 사용자 메뉴 목록 항목을 담을 객체를 생성한다
+        UserMenuDto.UserMenuItemDto thirdMenu = getMenu(3L, 2L, 3, "내 모임", 1);
 
         // CurrentUserMenu 데이터를 DB에서 조회한다
         when(userMenuMapper.getCurrentUserMenu("/book/detail/1")).thenReturn(currentMenu);
         // VisibleUserMenuList 데이터를 DB에서 조회한다
-        when(userMenuMapper.getVisibleUserMenuList()).thenReturn(List.of(visibleMenu));
+        when(userMenuMapper.getVisibleUserMenuList()).thenReturn(List.of(thirdMenu, visibleMenu, secondMenu));
 
         // getUserMenu 업무 로직을 userMenuService에 위임한다
         ResultData result = userMenuService.getUserMenu("/book/detail/1");
@@ -80,6 +83,10 @@ class UserMenuServiceImplTest {
         assertEquals(currentMenu, data.getCurrentMenu());
         // 필요한 값으로 불변 객체를 생성한다
         assertEquals(List.of(visibleMenu), data.getMenuList());
+        // 2단계 메뉴가 최상위 메뉴의 하위 목록에 연결됐는지 검증한다
+        assertEquals(List.of(secondMenu), visibleMenu.getChildList());
+        // 3단계 메뉴가 2단계 메뉴의 하위 목록에 연결됐는지 검증한다
+        assertEquals(List.of(thirdMenu), secondMenu.getChildList());
         // 의존 객체가 예상한 인자로 호출되었는지 검증한다
         verify(userMenuMapper).getCurrentUserMenu("/book/detail/1");
         // 의존 객체가 예상한 인자로 호출되었는지 검증한다
@@ -109,5 +116,34 @@ class UserMenuServiceImplTest {
         assertNull(data.getCurrentMenu());
         // 필요한 값으로 불변 객체를 생성한다
         assertEquals(List.of(), data.getMenuList());
+    }
+
+    /**
+     * 사용자 메뉴 테스트 항목을 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuNumb 메뉴 번호
+     * @param parnNumb 상위 메뉴 번호
+     * @param menuLevl 메뉴 단계
+     * @param menuName 메뉴 이름
+     * @param sortOrdr 정렬 순서
+     * @return 사용자 메뉴 테스트 항목
+     */
+    private UserMenuDto.UserMenuItemDto getMenu(Long menuNumb, Long parnNumb, Integer menuLevl,
+                                                 String menuName, Integer sortOrdr) {
+        // 사용자 메뉴 테스트 항목을 생성한다
+        UserMenuDto.UserMenuItemDto menu = new UserMenuDto.UserMenuItemDto();
+        // 테스트 메뉴 번호를 설정한다
+        menu.setMenuNumb(menuNumb);
+        // 테스트 상위 메뉴 번호를 설정한다
+        menu.setParnNumb(parnNumb);
+        // 테스트 메뉴 단계를 설정한다
+        menu.setMenuLevl(menuLevl);
+        // 테스트 메뉴 이름을 설정한다
+        menu.setMenuName(menuName);
+        // 테스트 정렬 순서를 설정한다
+        menu.setSortOrdr(sortOrdr);
+        // 생성한 사용자 메뉴 테스트 항목을 반환한다
+        return menu;
     }
 }

@@ -14,6 +14,7 @@ import org.our.sadari.menu.dto.UserMenuDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    3단계 사용자 메뉴 조회 구조 적용
  */
 @Mapper
 public interface UserMenuMapper {
@@ -30,7 +31,7 @@ public interface UserMenuMapper {
      * 노출 여부와 사용 여부가 모두 Y인 햄버거 메뉴 목록을 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @return 정렬 순서에 따른 사용자 메뉴 목록
+     * @return 부모가 노출 중인 사용자 메뉴 평면 목록
      */
     List<UserMenuDto.UserMenuItemDto> getVisibleUserMenuList();
 }
