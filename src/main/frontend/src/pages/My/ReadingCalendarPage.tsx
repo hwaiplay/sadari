@@ -310,7 +310,7 @@ function ReadingCalendarPage() {
                 <button
                   className={styles.scheduleItem}
                   type="button"
-                  onClick={() => navigate(`/book/detail/${report.reptNumb}`)}
+                  onClick={() => navigate(`/report/detail/${report.reptNumb}`)}
                   key={report.reptNumb}
                 >
                   <span

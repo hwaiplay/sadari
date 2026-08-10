@@ -80,7 +80,7 @@ function Navigation({ isMain }: NavigationProps) {
             <path d="M5.3 25.3v-12c0-.8.4-1.6 1.1-2.1l8-6c1-.7 2.2-.7 3.2 0l8 6c.7.5 1.1 1.3 1.1 2.1v12c0 1.5-1.2 2.7-2.7 2.7h-4c-.7 0-1.3-.6-1.3-1.3V20c0-.7-.6-1.3-1.3-1.3h-2.7c-.7 0-1.3.6-1.3 1.3v6.7c0 .7-.6 1.3-1.3 1.3h-4c-1.5 0-2.7-1.2-2.7-2.7Z" fill="#333333" />
           </svg>
         </HomeLink>
-        <LinkButton link="/set" className={clsx(styles.navLink, styles.navLink__set)}>
+        <LinkButton link="/report/set" className={clsx(styles.navLink, styles.navLink__set)}>
           <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
             <path d="M36 26H26v10a2 2 0 0 1-4 0V26H12a2 2 0 0 1 0-4h10V12a2 2 0 0 1 4 0v10h10a2 2 0 0 1 0 4Z" fill="#333333" />
           </svg>

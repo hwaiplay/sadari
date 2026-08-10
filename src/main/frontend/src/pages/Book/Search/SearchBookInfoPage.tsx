@@ -70,7 +70,7 @@ function SearchBookInfoPage() {
 
     // 선택한 도서 정보와 평균 평점을 공개 독후감 화면으로 전달한다
     navigate(
-      `/book/public-reports/isbn?isbn=${encodeURIComponent(selectedBook.isbn)}`,
+      `/report/public-reports/isbn?isbn=${encodeURIComponent(selectedBook.isbn)}`,
       {
         state: {
           title,

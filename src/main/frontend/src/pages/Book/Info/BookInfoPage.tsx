@@ -90,7 +90,7 @@ function BookInfoPage() {
             type="button"
             onClick={() =>
               navigate(
-                `/book/public-reports/isbn?isbn=${encodeURIComponent(
+                `/report/public-reports/isbn?isbn=${encodeURIComponent(
                   bookInfo.bookIsbn,
                 )}`,
                 {

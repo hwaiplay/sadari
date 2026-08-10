@@ -375,7 +375,7 @@ public class AlimServiceImpl implements AlimService {
 
     /**
      * 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다.
-     * 예를 들어 TB_ALTEMP.LINK_URLX가 /book/detail/이고 tagtNumb가 10이면 /book/detail/10으로 저장된다.
+     * 예를 들어 TB_ALTEMP.LINK_URLX가 /report/detail/이고 tagtNumb가 10이면 /report/detail/10으로 저장된다.
      *
      * @author SeungHyeon.Kang
      * @param linkUrlx 템플릿에 저장된 기본 링크

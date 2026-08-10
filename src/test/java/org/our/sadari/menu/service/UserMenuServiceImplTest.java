@@ -68,12 +68,12 @@ class UserMenuServiceImplTest {
         UserMenuDto.UserMenuItemDto thirdMenu = getMenu(3L, 2L, 3, "내 모임", 1);
 
         // CurrentUserMenu 데이터를 DB에서 조회한다
-        when(userMenuMapper.getCurrentUserMenu("/book/detail/1")).thenReturn(currentMenu);
+        when(userMenuMapper.getCurrentUserMenu("/report/detail/1")).thenReturn(currentMenu);
         // VisibleUserMenuList 데이터를 DB에서 조회한다
         when(userMenuMapper.getVisibleUserMenuList()).thenReturn(List.of(thirdMenu, visibleMenu, secondMenu));
 
         // getUserMenu 업무 로직을 userMenuService에 위임한다
-        ResultData result = userMenuService.getUserMenu("/book/detail/1");
+        ResultData result = userMenuService.getUserMenu("/report/detail/1");
         // 공통 응답에 포함된 업무 데이터를 조회한다
         UserMenuDto.UserMenuResDto data = (UserMenuDto.UserMenuResDto) result.getData();
 
@@ -88,7 +88,7 @@ class UserMenuServiceImplTest {
         // 3단계 메뉴가 2단계 메뉴의 하위 목록에 연결됐는지 검증한다
         assertEquals(List.of(thirdMenu), secondMenu.getChildList());
         // 의존 객체가 예상한 인자로 호출되었는지 검증한다
-        verify(userMenuMapper).getCurrentUserMenu("/book/detail/1");
+        verify(userMenuMapper).getCurrentUserMenu("/report/detail/1");
         // 의존 객체가 예상한 인자로 호출되었는지 검증한다
         verify(userMenuMapper).getVisibleUserMenuList();
     }

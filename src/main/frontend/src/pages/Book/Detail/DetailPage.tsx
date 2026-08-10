@@ -672,7 +672,7 @@ function DetailPage() {
 
     // 현재 조회된 도서 정보를 전달해 공개 독후감 목록의 헤더를 즉시 구성한다
     navigate(
-      `/book/public-reports/isbn?isbn=${encodedBookIsbn}`,
+      `/report/public-reports/isbn?isbn=${encodedBookIsbn}`,
       {
         state: {
           title: bookData.bookTitl,

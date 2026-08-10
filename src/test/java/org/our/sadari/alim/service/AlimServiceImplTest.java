@@ -156,7 +156,7 @@ class AlimServiceImplTest {
         // TempCont 업무 값을 template DTO에 설정한다
         template.setTempCont("#{sender}님이 좋아요를 눌렀습니다.");
         // LinkUrlx 업무 값을 template DTO에 설정한다
-        template.setLinkUrlx("/book/detail/");
+        template.setLinkUrlx("/report/detail/");
 
         // 알림 수신자가 정상 이용 회원인 조건을 설정한다
         when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
@@ -190,7 +190,7 @@ class AlimServiceImplTest {
                 31L
               , "좋아요 알림"
               , "테스트님이 좋아요를 눌렀습니다."
-              , "/book/detail/10"
+              , "/report/detail/10"
               , 7L
         );
     }
