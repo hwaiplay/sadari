@@ -92,8 +92,7 @@ public class FileStorageConfig {
      */
     @Bean
     @ConditionalOnProperty(name = "app.storage.provider", havingValue = "s3")
-    public FileStorage s3FileStorage(S3Client s3Client
-                                   , @Value("${app.storage.s3.bucket}") String bucket) {
+    public FileStorage s3FileStorage(S3Client s3Client, @Value("${app.storage.s3.bucket}") String bucket) {
 
         // 비공개 S3 버킷을 사용하는 이미지 저장소를 반환한다
         return new S3FileStorage(s3Client, bucket);

@@ -4,20 +4,24 @@
 
     <!-- 끝 슬래시를 제외한 메뉴 URL과 일치하거나 하위 상세 경로이면 가장 긴 메뉴 URL을 우선 선택한다. -->
     <select id="getCurrentUserMenu" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getCurrentUserMenu */
                MENUMATCH.MENU_NUMB
-             , MENUMATCH.SUBX_NUMB
+             , MENUMATCH.PARN_NUMB
+             , MENUMATCH.MENU_LEVL
              , MENUMATCH.MENU_NAME
              , MENUMATCH.MENU_URLX
              , MENUMATCH.SORT_ORDR
           FROM (  SELECT MENU.MENU_NUMB
-                       , MENU.SUBX_NUMB
+                       , MENU.PARN_NUMB
+                       , MENU.MENU_LEVL
                        , MENU.MENU_NAME
                        , MENU.MENU_URLX
                        , MENU.SORT_ORDR
                     FROM TM_URMENU MENU
                    WHERE MENU.MENU_URLX IS NOT NULL
                      AND LENGTH(MENU.MENU_URLX) != 0
+                     AND MENU.USEE_YSNO = #{commYes}
                      AND (   TRIM(TRAILING '/' FROM MENU.MENU_URLX) = TRIM(TRAILING '/' FROM #{menuUrlx})
                           OR TRIM(TRAILING '/' FROM #{menuUrlx}) LIKE CONCAT(TRIM(TRAILING '/' FROM MENU.MENU_URLX), '/%')
                          )
@@ -29,18 +33,43 @@
     <!-- 햄버거 메뉴에는 운영자가 노출하고 현재 사용하도록 설정한 메뉴만 정렬 순서대로 제공한다. -->
     <select id="getVisibleUserMenuList" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        WITH RECURSIVE VISIBLE_MENU AS (
+            SELECT MENU_NUMB
+                 , PARN_NUMB
+                 , MENU_LEVL
+                 , MENU_NAME
+                 , MENU_URLX
+                 , SORT_ORDR
+              FROM TM_URMENU
+             WHERE PARN_NUMB IS NULL
+               AND SHOW_YSNO = #{commYes}
+               AND USEE_YSNO = #{commYes}
+            UNION ALL
+            SELECT CHILD.MENU_NUMB
+                 , CHILD.PARN_NUMB
+                 , CHILD.MENU_LEVL
+                 , CHILD.MENU_NAME
+                 , CHILD.MENU_URLX
+                 , CHILD.SORT_ORDR
+              FROM TM_URMENU CHILD
+              JOIN VISIBLE_MENU PARENT
+                ON PARENT.MENU_NUMB = CHILD.PARN_NUMB
+             WHERE CHILD.SHOW_YSNO = #{commYes}
+               AND CHILD.USEE_YSNO = #{commYes}
+               AND CHILD.MENU_LEVL &lt;= 3
+        )
         SELECT /* getVisibleUserMenuList */
                MENU_NUMB
-             , SUBX_NUMB
+             , PARN_NUMB
+             , MENU_LEVL
              , MENU_NAME
              , MENU_URLX
              , SORT_ORDR
-          FROM TM_URMENU
-         WHERE SHOW_YSNO = #{commYes}
-           AND USEE_YSNO = #{commYes}
-      ORDER BY COALESCE(SORT_ORDR, 9999)
+          FROM VISIBLE_MENU
+      ORDER BY MENU_LEVL
+             , COALESCE(PARN_NUMB, 0)
+             , COALESCE(SORT_ORDR, 9999)
              , MENU_NUMB
-             , SUBX_NUMB
     </select>
 
 </mapper>

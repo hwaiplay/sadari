@@ -20,7 +20,7 @@ import {
   USER_PROFILE_UPDATED_EVENT,
 } from "@/features/User/lib/profileEvents";
 import { clsx } from "clsx";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import {
@@ -37,10 +37,108 @@ type HeaderMenuDrawerProps = {
   menuList?: UserMenuItem[];
 };
 
-type DrawerMenuGroup = {
-  primaryMenu: UserMenuItem;
-  secondaryMenus: UserMenuItem[];
+type DrawerMenuTreeItemProps = {
+  menu: UserMenuItem;
+  expandedMenuNumbs: number[];
+  onToggle: (menuNumb: number) => void;
+  onMove: (menuUrlx: string) => void;
 };
+
+/**
+ * 최대 3단계 사용자 메뉴 항목과 하위 아코디언을 재귀적으로 표시합니다.
+ *
+ * @author SeungHyeon.Kang
+ * @param menu 표시할 사용자 메뉴
+ * @param expandedMenuNumbs 펼쳐진 사용자 메뉴 번호 목록
+ * @param onToggle 하위 메뉴 펼침 상태 변경 함수
+ * @param onMove 사용자 메뉴 경로 이동 함수
+ * @return 사용자 메뉴 트리 항목
+ */
+function DrawerMenuTreeItem({
+  menu,
+  expandedMenuNumbs,
+  onToggle,
+  onMove,
+}: DrawerMenuTreeItemProps) {
+  const childList = menu.childList ?? [];
+  const hasChildMenu = childList.length > 0;
+  const isExpanded = expandedMenuNumbs.includes(menu.menuNumb);
+  const childMenuId = `drawer-child-menu-${menu.menuNumb}`;
+  const menuButtonClass = menu.menuLevl === 1
+    ? drawerStyles.drawerMenuButton
+    : menu.menuLevl === 2
+      ? drawerStyles.drawerSecondaryMenuButton
+      : drawerStyles.drawerTertiaryMenuButton;
+
+  // 사용자 메뉴 한 항목과 해당 항목의 하위 메뉴 아코디언을 반환합니다.
+  return (
+    <div className={drawerStyles.drawerMenuGroup}>
+      {/* 사용자 메뉴 이동 또는 하위 메뉴 펼침 버튼 영역 */}
+      <button
+        className={clsx(
+          menuButtonClass,
+          menu.menuLevl === 1 && isExpanded && drawerStyles.drawerMenuButtonOpen,
+          !hasChildMenu && !menu.menuUrlx && drawerStyles.drawerMenuDisabled,
+        )}
+        type="button"
+        disabled={!hasChildMenu && !menu.menuUrlx}
+        aria-expanded={hasChildMenu ? isExpanded : undefined}
+        aria-controls={hasChildMenu ? childMenuId : undefined}
+        onClick={() => {
+          // 하위 메뉴가 있으면 현재 메뉴의 아코디언 상태를 변경합니다.
+          if (hasChildMenu) {
+            onToggle(menu.menuNumb);
+            return;
+          }
+
+          // 이동 경로가 있는 최하위 메뉴만 해당 사용자 화면으로 이동합니다.
+          if (menu.menuUrlx) {
+            onMove(menu.menuUrlx);
+          }
+        }}
+      >
+        <span>{menu.menuName}</span>
+        {hasChildMenu ? (
+          <svg
+            className={clsx(
+              drawerStyles.drawerMenuChevron,
+              isExpanded && drawerStyles.drawerMenuChevronOpen,
+            )}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="m9 18 6-6-6-6" />
+          </svg>
+        ) : null}
+      </button>
+
+      {hasChildMenu ? (
+        /* 하위 사용자 메뉴 아코디언 영역 */
+        <div
+          id={childMenuId}
+          className={clsx(
+            drawerStyles.drawerSecondaryMenuWrap,
+            isExpanded && drawerStyles.drawerSecondaryMenuWrapOpen,
+          )}
+        >
+          {/* 하위 사용자 메뉴 목록 영역 */}
+          <div className={drawerStyles.drawerSecondaryMenuInner}>
+            {childList.map((childMenu) => (
+              /* 하위 사용자 메뉴 개별 항목 영역 */
+              <DrawerMenuTreeItem
+                key={childMenu.menuNumb}
+                menu={childMenu}
+                expandedMenuNumbs={expandedMenuNumbs}
+                onToggle={onToggle}
+                onMove={onMove}
+              />
+            ))}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
 
 /**
  * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시합니다.
@@ -53,7 +151,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [expandedMenuNumb, setExpandedMenuNumb] = useState<string | null>(null);
+  const [expandedMenuNumbs, setExpandedMenuNumbs] = useState<number[]>([]);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -61,28 +159,47 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
   const portalTarget = typeof document === "undefined" ? null : document.body;
-  const drawerMenuGroups = useMemo<DrawerMenuGroup[]>(() => {
 
-    const secondaryMenuMap = new Map<string, UserMenuItem[]>();
+  /**
+   * 사용자 메뉴 아코디언 펼침 상태를 변경합니다.
+   *
+   * @author SeungHyeon.Kang
+   * @param menuNumb 펼침 상태를 변경할 메뉴 번호
+   * @return 반환값이 없습니다.
+   */
+  const handleMenuToggle = (menuNumb: number): void => {
+    // 선택한 메뉴 번호의 기존 포함 여부에 따라 펼침 목록에서 추가하거나 제거합니다.
+    setExpandedMenuNumbs((currentMenuNumbs) => (
+      currentMenuNumbs.includes(menuNumb)
+        ? currentMenuNumbs.filter((currentMenuNumb) => currentMenuNumb !== menuNumb)
+        : [...currentMenuNumbs, menuNumb]
+    ));
+  };
 
-    menuList.forEach((item) => {
+  /**
+   * 햄버거 메뉴를 닫고 선택한 사용자 화면으로 이동합니다.
+   *
+   * @author SeungHyeon.Kang
+   * @param menuUrlx 이동할 사용자 화면 경로
+   * @return 반환값이 없습니다.
+   */
+  const handleMenuMove = (menuUrlx: string): void => {
+    // 메뉴 선택 뒤 배경 클릭 영역이 남지 않도록 햄버거 메뉴를 닫습니다.
+    setIsDrawerOpen(false);
+    // 선택한 사용자 메뉴 경로로 이동합니다.
+    navigate(menuUrlx);
+  };
 
-      // 하위 메뉴만 상위 메뉴 번호별로 모아 1뎁스 바로 아래에 배치한다
-      if (item.subxNumb !== "0") {
-        const secondaryMenus = secondaryMenuMap.get(item.menuNumb) ?? [];
-        secondaryMenus.push(item);
-        secondaryMenuMap.set(item.menuNumb, secondaryMenus);
-      }
-    });
-
-    // SUBX_NUMB가 0인 행을 1뎁스로 사용하고 같은 MENU_NUMB의 행을 2뎁스로 연결한다
-    return menuList
-      .filter((item) => item.subxNumb === "0")
-      .map((primaryMenu) => ({
-        primaryMenu,
-        secondaryMenus: secondaryMenuMap.get(primaryMenu.menuNumb) ?? [],
-      }));
-  }, [menuList]);
+  /**
+   * 열린 햄버거 메뉴를 닫는다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleDrawerClose = (): void => {
+    // 명시적인 닫기 동작과 배경 클릭이 같은 메뉴 상태를 갱신하게 한다
+    setIsDrawerOpen(false);
+  };
 
   const refreshUnreadAlimCnt = useCallback(async () => {
 
@@ -296,13 +413,30 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
           isDrawerOpen && drawerStyles.drawerBackdropVisible,
         )}
         type="button"
-        aria-label={message("frontend.common.close")}
-        onClick={() => setIsDrawerOpen(false)}
+        aria-label={/* "닫기" */ message("frontend.common.close")}
+        onClick={handleDrawerClose}
       />
       <aside
         className={clsx(drawerStyles.drawer, isDrawerOpen && drawerStyles.drawerOpen)}
         aria-label="마이페이지 메뉴"
       >
+        {/* 햄버거 메뉴 닫기 버튼 영역 */}
+        <button
+          className={drawerStyles.drawerCloseButton}
+          type="button"
+          aria-label={/* "닫기" */ message("frontend.common.close")}
+          title={/* "닫기" */ message("frontend.common.close")}
+          onClick={handleDrawerClose}
+        >
+          <svg
+            className={drawerStyles.drawerCloseIcon}
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path d="M6 6l12 12M18 6 6 18" />
+          </svg>
+        </button>
+
         {/* 사용자 프로필과 메뉴 닫기 영역 */}
         <section className={drawerStyles.drawerHeader}>
           <button
@@ -355,104 +489,18 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
             </button>
           </div>
         </section>
+        {/* 최대 3단계 사용자 메뉴 트리 영역 */}
         <div className={drawerStyles.drawerMenu}>
-          {drawerMenuGroups.map(({ primaryMenu, secondaryMenus }) => {
-
-            const hasSecondaryMenu = secondaryMenus.length > 0;
-            const isExpanded = expandedMenuNumb === primaryMenu.menuNumb;
-            const secondaryMenuId = `drawer-secondary-menu-${primaryMenu.menuNumb}`;
-
-            return (
-              <div
-                className={drawerStyles.drawerMenuGroup}
-                key={`${primaryMenu.menuNumb}-${primaryMenu.subxNumb}`}
-              >
-                <button
-                  className={clsx(
-                    drawerStyles.drawerMenuButton,
-                    isExpanded && drawerStyles.drawerMenuButtonOpen,
-                    !hasSecondaryMenu
-                      && !primaryMenu.menuUrlx
-                      && drawerStyles.drawerMenuDisabled,
-                  )}
-                  type="button"
-                  disabled={!hasSecondaryMenu && !primaryMenu.menuUrlx}
-                  aria-expanded={hasSecondaryMenu ? isExpanded : undefined}
-                  aria-controls={hasSecondaryMenu ? secondaryMenuId : undefined}
-                  onClick={() => {
-
-                    // 하위 메뉴가 있으면 화면을 이동하지 않고 해당 2뎁스만 펼치거나 접는다
-                    if (hasSecondaryMenu) {
-                      setExpandedMenuNumb((currentMenuNumb) =>
-                        currentMenuNumb === primaryMenu.menuNumb
-                          ? null
-                          : primaryMenu.menuNumb,
-                      );
-                      return;
-                    }
-
-                    // 이동 경로가 없는 단독 메뉴는 클릭 동작을 수행하지 않는다
-                    if (!primaryMenu.menuUrlx) {
-                      return;
-                    }
-
-                    setIsDrawerOpen(false);
-                    navigate(primaryMenu.menuUrlx);
-                  }}
-                >
-                  <span>{primaryMenu.menuName}</span>
-                  {hasSecondaryMenu ? (
-                    <svg
-                      className={clsx(
-                        drawerStyles.drawerMenuChevron,
-                        isExpanded && drawerStyles.drawerMenuChevronOpen,
-                      )}
-                      viewBox="0 0 24 24"
-                      aria-hidden="true"
-                    >
-                      <path d="m9 18 6-6-6-6" />
-                    </svg>
-                  ) : null}
-                </button>
-
-                {hasSecondaryMenu ? (
-                  <div
-                    id={secondaryMenuId}
-                    className={clsx(
-                      drawerStyles.drawerSecondaryMenuWrap,
-                      isExpanded && drawerStyles.drawerSecondaryMenuWrapOpen,
-                    )}
-                  >
-                    <div className={drawerStyles.drawerSecondaryMenuInner}>
-                      {secondaryMenus.map((secondaryMenu) => (
-                        <button
-                          className={clsx(
-                            drawerStyles.drawerSecondaryMenuButton,
-                            !secondaryMenu.menuUrlx && drawerStyles.drawerMenuDisabled,
-                          )}
-                          type="button"
-                          disabled={!secondaryMenu.menuUrlx}
-                          onClick={() => {
-
-                            // 이동 경로가 없는 2뎁스 메뉴는 클릭 동작을 수행하지 않는다
-                            if (!secondaryMenu.menuUrlx) {
-                              return;
-                            }
-
-                            setIsDrawerOpen(false);
-                            navigate(secondaryMenu.menuUrlx);
-                          }}
-                          key={`${secondaryMenu.menuNumb}-${secondaryMenu.subxNumb}`}
-                        >
-                          {secondaryMenu.menuName}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                ) : null}
-              </div>
-            );
-          })}
+          {menuList.map((menu) => (
+            /* 최상위 사용자 메뉴 개별 항목 영역 */
+            <DrawerMenuTreeItem
+              key={menu.menuNumb}
+              menu={menu}
+              expandedMenuNumbs={expandedMenuNumbs}
+              onToggle={handleMenuToggle}
+              onMove={handleMenuMove}
+            />
+          ))}
         </div>
       </aside>
     </div>

@@ -131,6 +131,43 @@ export const drawerOpen = style({
 
 });
 
+export const drawerCloseButton = style({
+    position: "absolute",
+    top: "12px",
+    right: "12px",
+    zIndex: 2,
+    width: "40px",
+    height: "40px",
+    padding: 0,
+    border: 0,
+    borderRadius: "50%",
+    backgroundColor: "transparent",
+    color: "#555555",
+    display: "inline-flex",
+    alignItems: "center",
+    justifyContent: "center",
+    cursor: "pointer",
+    selectors: {
+        "&:hover": {
+            backgroundColor: vars.color.gray100,
+        },
+        "&:focus-visible": {
+            outline: "2px solid #78b991",
+            outlineOffset: "2px",
+        },
+    },
+});
+
+export const drawerCloseIcon = style({
+    width: "22px",
+    height: "22px",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.8,
+    strokeLinecap: "round",
+    strokeLinejoin: "round",
+});
+
 export const drawerProfileSummaryButton = style({
     gridColumn: "1 / -1",
     display: "grid",
@@ -138,9 +175,10 @@ export const drawerProfileSummaryButton = style({
     alignItems: "center",
     gap: "14px",
     width: "100%",
-    padding: 0,
+    padding: "0 36px 0 0",
     border: 0,
     backgroundColor: "transparent",
+    boxSizing: "border-box",
     textAlign: "left",
     cursor: "pointer",
 });
@@ -321,6 +359,34 @@ export const drawerSecondaryMenuButton = style({
     fontSize: "13px",
     textAlign: "left",
     cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
+    selectors: {
+        "&:hover": {
+            backgroundColor: "#f7f8fa",
+        },
+        "&:focus-visible": {
+            outline: "2px solid #8ab4e8",
+            outlineOffset: "-2px",
+        },
+    },
+});
+
+export const drawerTertiaryMenuButton = style({
+    width: "100%",
+    height: "40px",
+    padding: "0 20px 0 38px",
+    border: 0,
+    backgroundColor: "transparent",
+    color: "#666666",
+    fontFamily: vars.font.body,
+    fontSize: "12px",
+    textAlign: "left",
+    cursor: "pointer",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "space-between",
     selectors: {
         "&:hover": {
             backgroundColor: "#f7f8fa",
