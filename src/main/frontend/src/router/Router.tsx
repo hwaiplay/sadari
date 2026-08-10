@@ -117,14 +117,14 @@ const Router = () => {
           }
         >
           {/* 독후감 상세보기 */}
-          <Route path="/book/detail/:id" element={<DetailPage />} />
+          <Route path="/report/detail/:id" element={<DetailPage />} />
 
           {/* 도서 정보 상세보기 */}
           <Route path="/book/info/:id" element={<BookInfoPage />} />
 
           {/* 공개 독후감 목록 */}
           <Route
-            path="/book/public-reports/isbn"
+            path="/report/public-reports/isbn"
             element={<PublicReportPage />}
           />
 
@@ -133,7 +133,7 @@ const Router = () => {
           <Route path="/book/search/info" element={<SearchBookInfoPage />} />
 
           {/* 기록하기 */}
-          <Route path="/set" element={<SetReportPage />} />
+          <Route path="/report/set" element={<SetReportPage />} />
 
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
           <Route path="/mypage/profile" element={<ProfileEditPage />} />

@@ -432,7 +432,7 @@ public class SocialServiceImpl implements SocialService {
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         replaceMap.put("userName", sendUserNick);
 
-        // 링크 기본값은 TB_ALTEMP.LINK_URLX(/book/detail/)를 사용하고, tagtNumb만 넘겨 서비스에서 최종 링크를 조합한다.
+        // 링크 기본값은 TB_ALTEMP.LINK_URLX(/report/detail/)를 사용하고, tagtNumb만 넘겨 서비스에서 최종 링크를 조합한다.
         alimService.sendAlim(
                 // getTargetUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
                 req.getTargetUserNumb()

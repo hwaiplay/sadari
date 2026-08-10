@@ -671,7 +671,7 @@ function ProfileEditPage() {
    */
   const handleSummaryReportClick = (reptNumb: number) => {
 
-    navigate(`/book/detail/${reptNumb}`);
+    navigate(`/report/detail/${reptNumb}`);
   };
 
   /**
@@ -868,7 +868,7 @@ function ProfileEditPage() {
     }
 
     // 선택한 독후감의 상세 화면이 처음부터 전체 편집 상태로 열리게 이동한다
-    navigate(`/book/detail/${currentReadingReport.reptNumb}`, {
+    navigate(`/report/detail/${currentReadingReport.reptNumb}`, {
       state: { startEditing: true },
     });
   };

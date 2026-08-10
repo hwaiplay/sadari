@@ -23,7 +23,7 @@ export async function moveToReportEntry(
   // ISBN이 없으면 등록 화면의 기존 도서 검증에서 안내할 수 있도록 바로 이동한다
   if (bookIsbn.length === 0) {
     // 선택한 도서를 새 독후감 등록 화면의 초기값으로 전달한다
-    navigate("/set", { state: { selectedBook: book } });
+    navigate("/report/set", { state: { selectedBook: book } });
     // 동일 ISBN 조회 없이 등록 화면 이동을 종료한다
     return;
   }
@@ -37,7 +37,7 @@ export async function moveToReportEntry(
     // 동일 ISBN 독후감이 없으면 현재와 같은 신규 등록 화면으로 이동한다
     if (!existingReport?.reptNumb) {
       // 선택한 도서를 새 독후감 등록 화면의 초기값으로 전달한다
-      navigate("/set", { state: { selectedBook: book } });
+      navigate("/report/set", { state: { selectedBook: book } });
       // 기존 독후감 선택 안내 없이 등록 화면 이동을 종료한다
       return;
     }
@@ -67,7 +67,7 @@ export async function moveToReportEntry(
     // 기존 독후감 수정을 선택하면 가장 최근 독후감의 편집 흐름으로 이동한다
     if (selection.isConfirmed) {
       // 상세 조회 직후 편집 명령이 표시되도록 이동 상태를 함께 전달한다
-      navigate(`/book/detail/${existingReport.reptNumb}`, {
+      navigate(`/report/detail/${existingReport.reptNumb}`, {
         state: { startEditing: true },
       });
       // 기존 독후감 수정 화면 이동을 종료한다
@@ -77,7 +77,7 @@ export async function moveToReportEntry(
     // 두 번째 선택인 추가 작성을 명시적으로 누른 경우에만 독후감 등록 화면으로 이동한다
     if (selection.isSecondaryAction) {
       // 동일 도서를 초기값으로 둔 독후감 등록 화면에 전달한다
-      navigate("/set", { state: { selectedBook: book } });
+      navigate("/report/set", { state: { selectedBook: book } });
     }
   } catch (error) {
     // "독후감 확인에 실패했어요."

@@ -24,7 +24,7 @@ function Book({
 
   return (
     <Link
-      to={`/book/detail/${reptNumb}`}
+      to={`/report/detail/${reptNumb}`}
       className={`${styles.book} ${className ?? ""}`}
       aria-label={bookTitl}
     >

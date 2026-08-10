@@ -416,7 +416,7 @@ function SocialProfilePage() {
       return;
     }
 
-    navigate(`/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`, {
+    navigate(`/report/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`, {
       state: {
         title: report.bookTitl,
         author: report.bookAthr,
@@ -545,7 +545,7 @@ function SocialProfilePage() {
 
                         // 다른 사용자 도서는 특정 독후감의 공개 여부와 무관하게 ISBN 기반 도서 정보로 이동합니다.
                         navigate(
-                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          `/report/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
                           {
                             state: {
                               title: report.bookTitl,
@@ -740,7 +740,7 @@ function SocialProfilePage() {
 
                         // 공개 여부와 관계없이 제목에서는 ISBN 기준 도서 정보 화면으로 이동합니다.
                         navigate(
-                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          `/report/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
                           {
                             state: {
                               title: report.bookTitl,
@@ -768,7 +768,7 @@ function SocialProfilePage() {
                         }
 
                         navigate(
-                          `/book/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
+                          `/report/public-reports/isbn?isbn=${encodeURIComponent(report.bookIsbn)}`,
                           {
                             state: {
                               title: report.bookTitl,
