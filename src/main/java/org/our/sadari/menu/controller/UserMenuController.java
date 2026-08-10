@@ -19,11 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-10        SeungHyeon.Kang    화면별 하위 사용자 메뉴 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user-menu")
-@Tag(name = "사용자 메뉴", description = "사용자 화면의 헤더 및 햄버거 메뉴 조회 API")
+@Tag(name = "사용자 메뉴", description = "사용자 화면의 헤더, 햄버거 및 화면별 하위 메뉴 조회 API")
 public class UserMenuController {
 
     // UserMenu 업무 처리 서비스
@@ -41,5 +42,19 @@ public class UserMenuController {
     public ResultData getUserMenu(@RequestParam String menuUrlx) {
         // 현재 URL에 해당하는 메뉴명과 노출 가능한 햄버거 메뉴 목록을 조회한 결과를 반환한다
         return userMenuService.getUserMenu(menuUrlx);
+    }
+
+    /**
+     * 기준 화면의 하위 사용자 메뉴 트리를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname
+     * @return 노출 가능한 직계 하위 메뉴부터 시작하는 최대 3단계 메뉴 트리
+     */
+    @GetMapping("/children")
+    @Operation(summary = "화면 하위 사용자 메뉴 조회", description = "기준 화면 아래의 노출 가능한 사용자 메뉴 트리를 조회한다.")
+    public ResultData getUserMenuChildList(@RequestParam String menuUrlx) {
+        // 기준 화면의 메뉴 번호를 부모로 사용하는 노출 메뉴 트리 조회 결과를 반환한다
+        return userMenuService.getUserMenuChildList(menuUrlx);
     }
 }

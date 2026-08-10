@@ -16,6 +16,10 @@ export const menu = style({
   borderTop: `1px solid ${vars.color.gray200}`,
 });
 
+export const menuItem = style({
+  width: "100%",
+});
+
 export const primaryMenuButton = style({
   width: "100%",
   minHeight: "58px",
@@ -33,7 +37,7 @@ export const primaryMenuButton = style({
   cursor: "pointer",
 });
 
-// 사용자 관리가 펼쳐진 동안 1뎁스 아래 선을 숨기고 하위 메뉴 마지막으로 이동시킨다.
+// 하위 메뉴가 펼쳐진 동안 상위 메뉴 아래 선을 숨기고 하위 메뉴 마지막으로 이동시킨다.
 export const primaryMenuButtonOpen = style({
   borderBottomColor: "transparent",
 });
@@ -108,3 +112,12 @@ export const withdrawMenuButton = style([
     borderTop: `1px solid ${vars.color.gray200}`,
   },
 ]);
+
+export const statusMessage = style({
+  margin: 0,
+  padding: "24px 4px",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  textAlign: "center",
+});
