@@ -29,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
- * 2026-08-04        SeungHyeon.Kang       Cookie 인증 API CSRF 보호 적용
+ * 2026-08-04        SeungHyeon.Kang    Cookie 인증 API CSRF 보호 적용
  */
 @Configuration
 @EnableWebSecurity
@@ -50,6 +50,7 @@ public class SecurityConfig {
 
     // jwt filter
     private final JwtFilter jwtFilter;
+
     /**
      * JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성한다
      *
