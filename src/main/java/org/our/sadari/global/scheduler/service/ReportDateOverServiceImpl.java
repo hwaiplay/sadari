@@ -98,7 +98,7 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // ReportDateOverTargetList 데이터를 DB에서 조회한다
-            List<ReportDto> targetList = reportDateOverMapper.getReportDateOverTargetList(maxSize);
+            List<ReportDto> targetList = reportDateOverMapper.getOverdueReportList(maxSize);
 
             // MyBatis는 일반적으로 빈 List를 반환하지만 비정상 null 반환도 대상 없음으로 보정해 NPE를 차단한다.
             if (StringUtil.isEmpty(targetList) || targetList.isEmpty()) {
@@ -197,8 +197,8 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                 }
             }
 
-            // getSchedulerExecutionStatus 조회로 후속 처리에 필요한 데이터를 가져온다
-            executionStatus = schedulerLogSupport.getSchedulerExecutionStatus(successCnt, failureCnt);
+            // getSchedulerExecStatus 조회로 후속 처리에 필요한 데이터를 가져온다
+            executionStatus = schedulerLogSupport.getSchedulerExecStatus(successCnt, failureCnt);
         }
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다

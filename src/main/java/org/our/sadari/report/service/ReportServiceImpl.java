@@ -175,9 +175,9 @@ public class ReportServiceImpl implements ReportService {
         // 통합 집계 결과를 화면 응답 형식으로 변환한다
         MonthlyReadingSummaryDto summary = getReadingSummaryResponse(queryResult, today);
         // 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다
-        List<ReportDto> reportList = reportMapper.getReadingSummaryReportList(queryReq);
+        List<ReportDto> reportList = reportMapper.getReadingSummaryList(queryReq);
         // 한 번 조회한 목록을 현재 주와 월 및 연도 화면 목록으로 분류한다
-        applyReadingSummaryReports(summary, reportList, today);
+        applyReadingSummary(summary, reportList, today);
 
         // 마이페이지의 기간별 독서량과 목표 달성 요약을 반환한다
         return ResultData.success(summary);
@@ -354,7 +354,7 @@ public class ReportServiceImpl implements ReportService {
      * @param reportList 현재 읽는 책과 올해 완료한 책 목록
      * @param today 기간 계산 기준일
      */
-    private void applyReadingSummaryReports(MonthlyReadingSummaryDto summary, List<ReportDto> reportList
+    private void applyReadingSummary(MonthlyReadingSummaryDto summary, List<ReportDto> reportList
                                           , LocalDate today) {
 
         // 현재 읽는 책을 담을 목록을 생성한다
@@ -614,12 +614,12 @@ public class ReportServiceImpl implements ReportService {
 
         // 2. 주간, 월간, 연간 목표 순으로 직전 기간의 목표를 복사 처리하고 성공한 총 건수를 누적한다.
         int copiedCount = 0;
-        // copyPreviousReadingGoalByType 호출로 이전 목표값을 새 목표에 반영한다
-        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentWeekStart, previousWeekStart, Constant.GOAL_TYPE_WEEK);
-        // copyPreviousReadingGoalByType 호출로 이전 목표값을 새 목표에 반영한다
-        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentMonthStart, previousMonthStart, Constant.GOAL_TYPE_MONTH);
-        // copyPreviousReadingGoalByType 호출로 이전 목표값을 새 목표에 반영한다
-        copiedCount += copyPreviousReadingGoalByType(userNumb, today, currentYearStart, previousYearStart, Constant.GOAL_TYPE_YEAR);
+        // copyPrevReadingGoal 호출로 이전 목표값을 새 목표에 반영한다
+        copiedCount += copyPrevReadingGoal(userNumb, today, currentWeekStart, previousWeekStart, Constant.GOAL_TYPE_WEEK);
+        // copyPrevReadingGoal 호출로 이전 목표값을 새 목표에 반영한다
+        copiedCount += copyPrevReadingGoal(userNumb, today, currentMonthStart, previousMonthStart, Constant.GOAL_TYPE_MONTH);
+        // copyPrevReadingGoal 호출로 이전 목표값을 새 목표에 반영한다
+        copiedCount += copyPrevReadingGoal(userNumb, today, currentYearStart, previousYearStart, Constant.GOAL_TYPE_YEAR);
 
         // 3. 복사된 목표가 단 1건도 없는 경우(이미 목표가 존재하거나 이전 목표 데이터가 없는 경우) 요청 실패로 응답한다.
         if (copiedCount == 0) {
@@ -642,7 +642,7 @@ public class ReportServiceImpl implements ReportService {
      * @param goalType 목표 타입 (WEEK / MONTH / YEAR)
      * @return 목표 복사 성공 여부 (성공: 1, 실패/스킵: 0)
      */
-    private int copyPreviousReadingGoalByType(Long userNumb, LocalDate today, LocalDate currentDate
+    private int copyPrevReadingGoal(Long userNumb, LocalDate today, LocalDate currentDate
                                             , LocalDate previousDate, String goalType) {
         // 1. 이미 현재 기간에 설정된 목표가 존재하는 경우 덮어쓰지 않고 즉시 스킵한다.
         ReadingGoalDto currentGoal = getReadingGoalDtl(userNumb, currentDate, goalType);
@@ -965,7 +965,7 @@ public class ReportServiceImpl implements ReportService {
      * @return 평균 별점 조회 결과
      */
     @Override
-    public ResultData getPublicRatingAverageByIsbn(String bookIsbn) {
+    public ResultData getPublicRatingAvgByIsbn(String bookIsbn) {
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
             // "조회 결과가 없어요."
@@ -973,7 +973,7 @@ public class ReportServiceImpl implements ReportService {
         }
 
         // ISBN 기준 도서 평균 별점을 조회 결과를 성공 응답으로 반환한다
-        return ResultData.success(reportMapper.getPublicRatingAverageByIsbn(StringUtil.normalizePlainText(bookIsbn)));
+        return ResultData.success(reportMapper.getPublicRatingAvgByIsbn(StringUtil.normalizePlainText(bookIsbn)));
     }
 
     /**

@@ -195,7 +195,7 @@ public class JwtProvider {
      * @author SeungHyeon.Kang
      * @return Refresh Token 유효기간(초)
      */
-    public long getRefreshTokenValiditySeconds() {
+    public long getRefreshTokenValidSec() {
         // Refresh Token의 설정된 전체 유효기간(초)을 반환한다
         return TimeUnit.MILLISECONDS.toSeconds(refreshTokenValidityMilliSeconds);
     }

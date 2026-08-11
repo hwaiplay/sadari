@@ -70,7 +70,7 @@ class ReportServiceImplTest {
         when(reportMapper.getReadingSummary(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(new ReadingSummaryQueryDto());
         // 독서 요약 목록 SQL이 빈 목록을 반환하도록 설정한다
-        when(reportMapper.getReadingSummaryReportList(any(ReadingSummaryQueryDto.class)))
+        when(reportMapper.getReadingSummaryList(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(List.of());
     }
 
@@ -80,7 +80,7 @@ class ReportServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getMonthlyReadingSummaryUsesPublicFilterForSocialProfile() {
+    void getSocialSummaryPublic() {
         // 소셜 프로필과 같은 공개 범위로 독서 요약을 조회한다
         reportService.getMonthlyReadingSummary(31L, Constant.COMM_YES);
 
@@ -91,7 +91,7 @@ class ReportServiceImplTest {
         // 독서량과 목표 달성 집계 SQL의 조회 조건을 Capture한다
         verify(reportMapper).getReadingSummary(summaryCaptor.capture());
         // 현재 읽는 책과 완료 독후감 목록 SQL의 조회 조건을 Capture한다
-        verify(reportMapper).getReadingSummaryReportList(reportListCaptor.capture());
+        verify(reportMapper).getReadingSummaryList(reportListCaptor.capture());
 
         // 집계 SQL이 공개 독후감만 계산하도록 공개 여부가 전달되었는지 확인한다
         assertEquals(Constant.COMM_YES, summaryCaptor.getValue().getPubcYsno());
@@ -105,7 +105,7 @@ class ReportServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getMonthlyReadingSummaryKeepsAllReportsForMyPage() {
+    void getMySummaryKeepsAll() {
         // 마이페이지와 같은 전체 범위로 독서 요약을 조회한다
         reportService.getMonthlyReadingSummary(31L, null);
 
@@ -116,7 +116,7 @@ class ReportServiceImplTest {
         // 독서량과 목표 달성 집계 SQL의 조회 조건을 Capture한다
         verify(reportMapper).getReadingSummary(summaryCaptor.capture());
         // 현재 읽는 책과 완료 독후감 목록 SQL의 조회 조건을 Capture한다
-        verify(reportMapper).getReadingSummaryReportList(reportListCaptor.capture());
+        verify(reportMapper).getReadingSummaryList(reportListCaptor.capture());
 
         // 집계 SQL의 공개 여부 조건이 비어 있어 본인 전체 독후감을 유지하는지 확인한다
         assertNull(summaryCaptor.getValue().getPubcYsno());

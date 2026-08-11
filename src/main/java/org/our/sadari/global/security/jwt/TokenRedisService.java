@@ -258,7 +258,7 @@ public class TokenRedisService {
         }
 
         // 문자열 형태의 Redis 값을 처리할 연산 객체를 조회한다
-        redisTemplate.opsForValue().set(getAccessTokenBlacklistKey(tokenId), "logout", Duration.ofSeconds(ttlSeconds));
+        redisTemplate.opsForValue().set(getTokenBlacklistKey(tokenId), "logout", Duration.ofSeconds(ttlSeconds));
     }
 
     /**
@@ -276,7 +276,7 @@ public class TokenRedisService {
         }
 
         // 전달받은 Access Token 식별자(jti)가 Redis 블랙리스트에 존재하는지 검증 결과를 반환한다
-        return Boolean.TRUE.equals(redisTemplate.hasKey(getAccessTokenBlacklistKey(tokenId)));
+        return Boolean.TRUE.equals(redisTemplate.hasKey(getTokenBlacklistKey(tokenId)));
     }
 
     /**
@@ -322,7 +322,7 @@ public class TokenRedisService {
      * @param tokenId Access Token 고유 식별자 (jti)
      * @return Redis Key 문자열
      */
-    private String getAccessTokenBlacklistKey(String tokenId) {
+    private String getTokenBlacklistKey(String tokenId) {
         // Access Token 블랙리스트 저장용 Redis Key를 생성한다. (형식: auth:blacklist:access:{tokenId}) 결과를 반환한다
         return ACCESS_TOKEN_BLACKLIST_PREFIX + tokenId;
     }

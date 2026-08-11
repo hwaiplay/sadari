@@ -76,11 +76,11 @@ class ReportDateOverServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendReportDateOverAlimUsesConfiguredMaxSizeAndReportDto() {
+    void sendOverdueUsesConfig() {
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
         ReportDto target = createTarget(10L, 31L, "나미야 잡화점의 기적");
         // ReportDateOverTargetList 데이터를 DB에서 조회한다
-        when(reportDateOverMapper.getReportDateOverTargetList(100)).thenReturn(List.of(target));
+        when(reportDateOverMapper.getOverdueReportList(100)).thenReturn(List.of(target));
         // sendAlim 업무 로직을 alimService에 위임한다
         when(alimService.sendAlim(
                 // 검증할 호출 인자의 동등 조건을 지정한다
@@ -131,13 +131,13 @@ class ReportDateOverServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendReportDateOverAlimContinuesAfterSingleFailure() {
+    void sendOverdueContinues() {
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
         ReportDto failedTarget = createTarget(10L, 31L, "첫 번째 책");
         // createTarget 호출로 후속 처리에 필요한 객체를 생성한다
         ReportDto nextTarget = createTarget(11L, 32L, "두 번째 책");
         // ReportDateOverTargetList 데이터를 DB에서 조회한다
-        when(reportDateOverMapper.getReportDateOverTargetList(100))
+        when(reportDateOverMapper.getOverdueReportList(100))
                 .thenReturn(List.of(failedTarget, nextTarget));
         // sendAlim 업무 로직을 alimService에 위임한다
         when(alimService.sendAlim(
@@ -205,9 +205,9 @@ class ReportDateOverServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendReportDateOverAlimUpdatesNoDataStatus() {
+    void sendOverdueSetsNoData() {
         // ReportDateOverTargetList 데이터를 DB에서 조회한다
-        when(reportDateOverMapper.getReportDateOverTargetList(100)).thenReturn(List.of());
+        when(reportDateOverMapper.getOverdueReportList(100)).thenReturn(List.of());
 
         // sendReportDateOverAlim 업무 로직을 schedulerService에 위임한다
         schedulerService.sendReportDateOverAlim();

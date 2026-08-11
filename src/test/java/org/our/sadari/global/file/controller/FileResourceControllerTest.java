@@ -65,7 +65,7 @@ class FileResourceControllerTest {
      * @throws IOException 컨트롤러 조회 계약상 발생 가능
      */
     @Test
-    void getFileRejectsInvalidStoredName() throws IOException {
+    void getFileRejectsBadName() throws IOException {
 
         // 허용되지 않은 파일명으로 공개 이미지 조회 계약을 실행한다
         ResponseEntity<byte[]> response = new FileResourceController(fileStorage)

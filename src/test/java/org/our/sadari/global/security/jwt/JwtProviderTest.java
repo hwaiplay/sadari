@@ -73,7 +73,7 @@ class JwtProviderTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void createAndValidateRefreshToken() {
+    void validateNewRefreshToken() {
         // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createRefreshToken(31L);
 
@@ -81,8 +81,8 @@ class JwtProviderTest {
         assertTrue(jwtProvider.validateToken(token));
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
         assertEquals(31L, jwtProvider.getUserNumb(token));
-        // getRefreshTokenValiditySeconds 조회로 후속 처리에 필요한 데이터를 가져온다
-        assertEquals(REFRESH_TOKEN_SECONDS, jwtProvider.getRefreshTokenValiditySeconds());
+        // getRefreshTokenValidSec 조회로 후속 처리에 필요한 데이터를 가져온다
+        assertEquals(REFRESH_TOKEN_SECONDS, jwtProvider.getRefreshTokenValidSec());
     }
 
     /**

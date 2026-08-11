@@ -53,7 +53,7 @@ class SchedulerLogServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSchedulerLogReturnsGeneratedRunNumber() {
+    void setSchedLogReturnsRun() {
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto runDto = new SchedulerLogDto.SchedulerRunDto();
         // SchdCode 업무 값을 runDto DTO에 설정한다
@@ -86,7 +86,7 @@ class SchedulerLogServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSchedulerFailRejectsMissingRunNumber() {
+    void setSchedFailMissingRun() {
         // 스케줄러 실패 상세 정보를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerFailDto failDto = new SchedulerLogDto.SchedulerFailDto();
         // FailType 업무 값을 failDto DTO에 설정한다
@@ -105,7 +105,7 @@ class SchedulerLogServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptSchedulerLogRejectsMissingMasterRow() {
+    void uptSchedLogMissingMaster() {
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto runDto = new SchedulerLogDto.SchedulerRunDto();
         // RunxNumb 업무 값을 runDto DTO에 설정한다

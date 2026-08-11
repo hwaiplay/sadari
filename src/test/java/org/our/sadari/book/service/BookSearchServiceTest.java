@@ -95,7 +95,7 @@ class BookSearchServiceTest {
      * @throws Exception 화면 응답 JSON 직렬화에 실패한 경우 발생
      */
     @Test
-    void searchBooksMapsKakaoResponseToExistingScreenContract() throws Exception {
+    void getBooksMapsKakaoResult() throws Exception {
         String responseBody = """
                 {
                   "meta": {"is_end": false, "pageable_count": 20, "total_count": 20},
@@ -162,7 +162,7 @@ class BookSearchServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void searchBooksReturnsCommonFailureWhenKakaoRejectsRequest() {
+    void getBooksKakaoFailure() {
         // 카카오 API가 인증 오류를 반환하는 외부 통신 흐름을 설정한다
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));

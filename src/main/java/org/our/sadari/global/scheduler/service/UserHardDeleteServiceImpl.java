@@ -91,9 +91,9 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
                 // 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 삭제한다
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
                 // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
-                fileService.delPhysicalFileListAfterCommit(fileList);
+                fileService.delFilesAfterCommit(fileList);
                 // 탈퇴 요청 시 이미 정리된 임시 이미지가 남아 있는 경우를 방어적으로 다시 삭제한다
-                fileService.delAllProfileImageDraftsAfterCommit(target.getUserNumb());
+                fileService.delProfileDraftsOnCommit(target.getUserNumb());
                 // 정상 삭제된 회원 수를 누적한다
                 successCnt++;
             }
@@ -116,7 +116,7 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
         // 최종 실패 건수를 실행 로그에 설정한다
         schedulerRun.setFailCntt(failureCnt);
         // 성공과 실패 건수에 따른 최종 실행 상태를 설정한다
-        schedulerRun.setExecStat(schedulerLogSupport.getSchedulerExecutionStatus(successCnt, failureCnt));
+        schedulerRun.setExecStat(schedulerLogSupport.getSchedulerExecStatus(successCnt, failureCnt));
         // 나노초 실행 시간을 밀리초 단위로 변환해 설정한다
         schedulerRun.setExecMsec(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime));
         // 대상이 존재한 스케줄러 실행 로그를 등록한다

@@ -71,7 +71,7 @@ public class BookController {
     @Operation(summary = "ISBN 공개 평점 평균 조회", description = "공개 여부와 관계없이 해당 ISBN의 완료 또는 중단 독후감 평점 평균을 조회한다.")
     public ResultData getRatingAverageByIsbn(@Parameter(description = "평점 평균을 조회할 도서 ISBN", example = "9788972756194")@RequestParam("isbn") String isbn) {
         // ISBN 기준 도서 평균 평점 조회 결과를 반환한다
-        return reportService.getPublicRatingAverageByIsbn(isbn);
+        return reportService.getPublicRatingAvgByIsbn(isbn);
     }
 
     /**

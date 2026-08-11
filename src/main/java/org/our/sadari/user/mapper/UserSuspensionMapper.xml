@@ -62,8 +62,8 @@
     </update>
 
     <!-- 다른 우선 상태가 없을 때 정지 직전 회원 상태를 복구한다 -->
-    <update id="uptUserStatusAfterSuspension">
-        UPDATE /* uptUserStatusAfterSuspension */
+    <update id="uptUserStatusAfterSuspend">
+        UPDATE /* uptUserStatusAfterSuspend */
                TM_USERXM
            SET USER_STAT = #{prevStat}
          WHERE USER_NUMB = #{userNumb}

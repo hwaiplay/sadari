@@ -4,8 +4,8 @@ import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { message } from "@/app/messages/message";
 import {
   notifyFirebasePushEnabled,
-  requestFirebaseMessagingToken,
-  requestPushNotificationPermission,
+  requestFirebaseToken,
+  requestPushPermission,
 } from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
 import {
@@ -14,7 +14,7 @@ import {
   uptAlimReadApi,
   type AlimItem,
 } from "@/features/Alim/api/alimApi";
-import { notifyUnreadAlimCntChanged } from "@/features/Alim/lib/alimEvents";
+import { notifyUnreadAlimChange } from "@/features/Alim/lib/alimEvents";
 import {
   delPushSubApi,
   getPushConfigApi,
@@ -184,7 +184,7 @@ function AlimPage() {
         ));
         setHasNext(Boolean(data.hasNext));
         setNextPage(data.nextPage ?? page + 1);
-        notifyUnreadAlimCntChanged(data.unreadCnt ?? 0);
+        notifyUnreadAlimChange(data.unreadCnt ?? 0);
       } catch (error) {
         void sweetError(
           message("frontend.alim.list.failedTitle"),
@@ -263,7 +263,7 @@ function AlimPage() {
 
       // 서버는 아직 불러오지 않은 알림까지 모두 삭제 처리하므로 추가 페이지 요청을 즉시 중단한다.
       setHasNext(false);
-      notifyUnreadAlimCntChanged(response.data?.unreadCnt ?? 0);
+      notifyUnreadAlimChange(response.data?.unreadCnt ?? 0);
 
       // 현재 화면에 카드가 있으면 순차적으로 오른쪽 퇴장시킨 뒤 목록을 비워 빈 상태 문구로 전환한다.
       if (alimList.length > 0) {
@@ -316,7 +316,7 @@ function AlimPage() {
 
     const configResponse = await getPushConfigApi();
     const token = pushTokenRef.current
-      ?? await requestFirebaseMessagingToken(configResponse.data);
+      ?? await requestFirebaseToken(configResponse.data);
 
     pushTokenRef.current = token;
     return token;
@@ -358,7 +358,7 @@ function AlimPage() {
 
       // 브라우저 권한 요청은 버튼 클릭 직후 실행해야 팝업이 차단되지 않는다.
       // Firebase 설정 API를 기다린 뒤 요청하면 사용자 액션으로 인정되지 않아 컨펌창이 뜨지 않을 수 있다.
-      await requestPushNotificationPermission();
+      await requestPushPermission();
 
       const token = await getCurrentPushToken();
 
@@ -439,7 +439,7 @@ function AlimPage() {
 
     try {
       const response = await uptAlimReadApi(alim.alimNumb);
-      notifyUnreadAlimCntChanged(response.data?.unreadCnt ?? 0);
+      notifyUnreadAlimChange(response.data?.unreadCnt ?? 0);
       // 읽은 알림도 알림센터에 유지하므로 제거하지 않고 상태만 바꾸어 어두운 스타일을 즉시 적용한다.
       setAlimList((prevList) => (
         prevList.map((item) => (

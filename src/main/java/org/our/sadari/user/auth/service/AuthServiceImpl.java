@@ -224,7 +224,7 @@ public class AuthServiceImpl implements AuthService {
               , refreshToken
               , userDto.getUserNick()
               , userDto.getUserStat()
-              , jwtProvider.getRefreshTokenValiditySeconds()
+              , jwtProvider.getRefreshTokenValidSec()
         );
 
         // 로그인 이력 저장 데이터를 담을 객체를 생성한다

@@ -56,7 +56,7 @@ class SchedulerLogSupportTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSchedulerLogSafelyReturnsNullWhenLogStorageFails() {
+    void setSchedLogNullOnFail() {
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
         // FailCntt 업무 값을 schedulerRunDto DTO에 설정한다
@@ -78,7 +78,7 @@ class SchedulerLogSupportTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSchedulerFailSafelySkipsWhenRunNumberIsMissing() {
+    void setSchedFailSkipsNoRun() {
         // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정한다
         schedulerLogSupport.setSchedulerFailSafely(
                 null
@@ -98,7 +98,7 @@ class SchedulerLogSupportTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setSchedulerFailSafelyMapsExceptionInformation() {
+    void setSchedFailMapsError() {
         // 잘못된 입력 상황을 재현할 예외를 담을 객체를 생성한다
         RuntimeException exception = new IllegalArgumentException("invalid target");
 
@@ -130,7 +130,7 @@ class SchedulerLogSupportTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptSchedulerLogSafelySuppressesLogStorageFailure() {
+    void uptSchedLogIgnoresFailure() {
         // 스케줄러 실행 로그를 담을 객체를 생성한다
         SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
         // RunxNumb 업무 값을 schedulerRunDto DTO에 설정한다
@@ -150,21 +150,21 @@ class SchedulerLogSupportTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getSchedulerExecutionStatusUsesSuccessAndFailureCounts() {
+    void getSchedulerStatusByCnt() {
         // 실제 처리 결과가 예상값과 일치하는지 검증한다
         assertEquals(
                 Constant.SCHEDULER_EXEC_SUCCESS
-              , schedulerLogSupport.getSchedulerExecutionStatus(3, 0)
+              , schedulerLogSupport.getSchedulerExecStatus(3, 0)
         );
         // 실제 처리 결과가 예상값과 일치하는지 검증한다
         assertEquals(
                 Constant.SCHEDULER_EXEC_PARTIAL
-              , schedulerLogSupport.getSchedulerExecutionStatus(2, 1)
+              , schedulerLogSupport.getSchedulerExecStatus(2, 1)
         );
         // 실제 처리 결과가 예상값과 일치하는지 검증한다
         assertEquals(
                 Constant.SCHEDULER_EXEC_FAILURE
-              , schedulerLogSupport.getSchedulerExecutionStatus(0, 2)
+              , schedulerLogSupport.getSchedulerExecStatus(0, 2)
         );
     }
 }

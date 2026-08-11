@@ -89,7 +89,7 @@ public class FirebaseMessagingProvider {
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // Firebase 인증정보로 메시징 클라이언트를 초기화한다
-            initializeFirebaseMessaging();
+            initFirebaseMessaging();
         }
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
@@ -162,7 +162,7 @@ public class FirebaseMessagingProvider {
      *
      * @author SeungHyeon.Kang
      */
-    private void initializeFirebaseMessaging() throws Exception {
+    private void initFirebaseMessaging() throws Exception {
         // Firebase 인증 파일 경로의 classpath 접두사를 정규화한다
         String resolvedCredentialsPath = normalizeCredentialsPath(credentialsPath);
         // 처리 상태를 정보 로그로 남긴다
@@ -186,8 +186,8 @@ public class FirebaseMessagingProvider {
         try (InputStream inputStream = resource.getInputStream()) {
             // createFirebaseOptions 호출로 후속 처리에 필요한 객체를 생성한다
             Object options = createFirebaseOptions(sdkClasses, inputStream);
-            // getOrInitializeFirebaseApp 조회로 후속 처리에 필요한 데이터를 가져온다
-            Object app = getOrInitializeFirebaseApp(sdkClasses, options);
+            // getFirebaseApp 조회로 후속 처리에 필요한 데이터를 가져온다
+            Object app = getFirebaseApp(sdkClasses, options);
 
             // Firebase 메시징 클래스의 런타임 타입을 확인한다
             firebaseMessagingClass = sdkClasses.firebaseMessagingClass();
@@ -246,7 +246,7 @@ public class FirebaseMessagingProvider {
      * @param options FirebaseOptions 객체
      * @return FirebaseApp 객체
      */
-    private Object getOrInitializeFirebaseApp(FirebaseSdkClasses sdkClasses, Object options) throws Exception {
+    private Object getFirebaseApp(FirebaseSdkClasses sdkClasses, Object options) throws Exception {
         // Firebase 애플리케이션 클래스의 런타임 타입을 확인한다
         List<?> appList = (List<?>) invokeStatic(sdkClasses.firebaseAppClass(), "getApps");
 

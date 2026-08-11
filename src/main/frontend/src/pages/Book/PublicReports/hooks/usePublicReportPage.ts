@@ -12,7 +12,7 @@ import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import type { CustomSelectOption } from "@/components/Select/CustomSelect";
 import {
-  usePublicReportLikeMutation,
+  usePublicReportLike,
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
@@ -131,7 +131,7 @@ export function usePublicReportPage() {
   // 공개 독후감 필터와 상태명 표시에 사용할 독서 상태 공통코드를 조회한다
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   // 공개 독후감 좋아요 변경 요청 상태를 조회한다
-  const likeMutation = usePublicReportLikeMutation();
+  const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   // 공개 독후감 API 응답이 없을 때도 화면에서 안전하게 빈 목록을 사용한다

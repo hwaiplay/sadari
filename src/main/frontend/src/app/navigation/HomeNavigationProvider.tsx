@@ -126,7 +126,7 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
    * @author SeungHyeon.Kang
    * @return 반환값이 없다
    */
-  function completePendingHomeNavigation(): void {
+  function completePendingHomeNav(): void {
 
     // 루트 복귀를 기다리는 요청이 없으면 일반 라우팅 흐름을 유지한다
     if (pendingNavigationRef.current === null) {
@@ -155,7 +155,7 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
   }
 
   // POP 위치 변경이 끝나면 앱 진입 항목을 홈으로 교체한다
-  useEffect(completePendingHomeNavigation, [location.key, navigate]);
+  useEffect(completePendingHomeNav, [location.key, navigate]);
 
   // 전체 화면에서 홈 루트 이동 함수를 사용할 수 있는 컨텍스트를 반환한다
   return (

@@ -121,8 +121,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
         }
 
         // 영구 삭제 대기 같은 우선 상태가 없을 때만 정지 직전 상태를 복구한다
-        int restoredCount =
-                userSuspensionMapper.uptUserStatusAfterSuspension(userNumb, suspension.getPrevStat());
+        int restoredCount = userSuspensionMapper.uptUserStatusAfterSuspend(userNumb, suspension.getPrevStat());
         // 영구 삭제 대기 같은 우선 상태가 없을 때만 로그인 세션도 복구 상태로 갱신한다
         if (restoredCount > 0) {
             // 실제 회원 상태가 복구된 정지 이력을 사용자 서버 반영 대기 상태로 되돌린다
@@ -174,7 +173,7 @@ public class UserSuspensionServiceImpl implements UserSuspensionService {
      */
     @Transactional
     @Override
-    public String getStatusAfterWithdrawalCancel(Long userNumb) {
+    public String getWithdrawalCancelStatus(Long userNumb) {
 
         // 취소 시점에 기간이 끝난 정지 이력을 먼저 만료 처리한다
         uptExpiredSuspension(userNumb);

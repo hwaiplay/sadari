@@ -70,14 +70,14 @@ class UserStatusEventServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void syncUserStatusEventsUpdatesRedisCompletesSuspensionAndDeletesEvent() {
+    void syncStatusCompletesEvent() {
 
         // 정지 상태로 변경된 테스트용 Outbox 이벤트를 생성한다
         UserStatusEventDto event = createEvent(1L, 10L, Constant.USER_STAT_SUSPENDED);
         // 한 건의 처리 대상 이벤트가 조회되도록 설정한다
         when(userStatusEventMapper.getUserStatusEventList(100)).thenReturn(List.of(event));
         // 한 건 성공한 스케줄러 실행 상태를 성공으로 판정하도록 설정한다
-        when(schedulerLogSupport.getSchedulerExecutionStatus(1, 0))
+        when(schedulerLogSupport.getSchedulerExecStatus(1, 0))
             .thenReturn(Constant.SCHEDULER_EXEC_SUCCESS);
         // 실행 이력과 종료 이력을 연결할 실행 번호를 반환하도록 설정한다
         when(schedulerLogSupport.setSchedulerLogSafely(any(SchedulerLogDto.SchedulerRunDto.class)))
@@ -89,7 +89,7 @@ class UserStatusEventServiceImplTest {
         // 처리 시점의 DB 회원 상태가 Redis에 반영됐는지 확인한다
         verify(tokenRedisService).uptUserStatus(10L, Constant.USER_STAT_SUSPENDED);
         // Redis 반영에 성공한 정지 이력이 실제 반영 완료 상태로 변경됐는지 확인한다
-        verify(userStatusEventMapper).uptSuspensionSyncCompleted(101L, 1L);
+        verify(userStatusEventMapper).uptSuspensionSyncDone(101L, 1L);
         // 사용자 서버 처리가 끝난 임시 전달 이벤트가 삭제됐는지 확인한다
         verify(userStatusEventMapper).delUserStatusEvent(1L);
         // 처리 결과가 스케줄러 실행 이력에 반영됐는지 확인한다
@@ -102,7 +102,7 @@ class UserStatusEventServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void syncUserStatusEventsKeepsFailedEventForRetry() {
+    void syncStatusKeepsFailure() {
 
         // Redis 장애 재시도 조건을 검증할 테스트용 이벤트를 생성한다
         UserStatusEventDto event = createEvent(2L, 20L, Constant.USER_STAT_SUSPENDED);
@@ -112,7 +112,7 @@ class UserStatusEventServiceImplTest {
         org.mockito.Mockito.doThrow(new IllegalStateException("Redis unavailable"))
             .when(tokenRedisService).uptUserStatus(20L, Constant.USER_STAT_SUSPENDED);
         // 성공 없이 한 건 실패한 실행 상태를 실패로 판정하도록 설정한다
-        when(schedulerLogSupport.getSchedulerExecutionStatus(0, 1))
+        when(schedulerLogSupport.getSchedulerExecStatus(0, 1))
             .thenReturn(Constant.SCHEDULER_EXEC_FAILURE);
         // 실패 상세 이력과 연결할 실행 번호를 반환하도록 설정한다
         when(schedulerLogSupport.setSchedulerLogSafely(any(SchedulerLogDto.SchedulerRunDto.class)))
@@ -122,7 +122,7 @@ class UserStatusEventServiceImplTest {
         userStatusEventService.syncUserStatusEvents();
 
         // 실패한 정지 이력을 실제 반영 완료 상태로 변경하지 않았는지 확인한다
-        verify(userStatusEventMapper, never()).uptSuspensionSyncCompleted(102L, 2L);
+        verify(userStatusEventMapper, never()).uptSuspensionSyncDone(102L, 2L);
         // 실패한 전달 이벤트가 다음 주기에 남도록 삭제하지 않았는지 확인한다
         verify(userStatusEventMapper, never()).delUserStatusEvent(2L);
         // Redis 장애가 스케줄러 실패 상세 이력에 기록됐는지 확인한다
@@ -141,7 +141,7 @@ class UserStatusEventServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void syncUserStatusEventsSkipsEmptyOutbox() {
+    void syncStatusSkipsEmpty() {
 
         // 처리할 이벤트가 없는 Outbox 조회 결과를 설정한다
         when(userStatusEventMapper.getUserStatusEventList(100)).thenReturn(Collections.emptyList());

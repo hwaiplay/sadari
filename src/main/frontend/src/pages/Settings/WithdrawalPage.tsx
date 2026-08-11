@@ -13,9 +13,9 @@ import {
   type WithdrawalType,
 } from "@/features/User/api/withdrawalApi";
 import {
-  getWithdrawalReasonByteLength,
+  getWithdrawReasonByteLen,
   MAX_WITHDRAWAL_REASON_BYTES,
-  truncateWithdrawalReasonByByte,
+  truncateWithdrawalReason,
 } from "@/features/User/utils/withdrawalValidation";
 import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
@@ -85,7 +85,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     withdrawalPolicyContent?.contSeco,
     DEFAULT_HARD_POLICY_ITEMS,
   );
-  const withdrawalReasonBytes = getWithdrawalReasonByteLength(rsonCntn);
+  const withdrawalReasonBytes = getWithdrawReasonByteLen(rsonCntn);
 
   /**
    * 비활성화와 영구 탈퇴 정책을 비교할 수 있는 도움말 팝업을 엽니다.
@@ -235,10 +235,10 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
    * @param event 사유 입력 이벤트
    * @return 반환값 없음
    */
-  const handleWithdrawalReasonChange = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
+  const handleWithdrawalReason = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
 
     // 다중 바이트 문자를 포함한 입력을 500바이트 안으로 제한합니다
-    const limitedReason = truncateWithdrawalReasonByByte(event.target.value);
+    const limitedReason = truncateWithdrawalReason(event.target.value);
     // 검증된 비활성화 및 탈퇴 사유를 입력 영역에 반영합니다
     setRsonCntn(limitedReason);
   };
@@ -468,7 +468,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
             className={styles.textarea}
             value={rsonCntn}
             placeholder="이유를 직접 입력해주세요."
-            onChange={handleWithdrawalReasonChange}
+            onChange={handleWithdrawalReason}
           />
 
           {/* 비활성화 및 탈퇴 사유 UTF-8 바이트 표시 영역 */}

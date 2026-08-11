@@ -325,7 +325,7 @@ function WelcomePage() {
    * @param event 관심분야 대분류 전체 선택 버튼 클릭 이벤트
    * @return 반환값이 없다
    */
-  const handleInterestCategorySelectionToggle = (event: MouseEvent<HTMLButtonElement>): void => {
+  const handleCategoryToggle = (event: MouseEvent<HTMLButtonElement>): void => {
 
     const categoryName = event.currentTarget.dataset.categoryName;
     const interestGroup = interestGroups.find((group) => group.categoryName === categoryName);
@@ -684,7 +684,7 @@ function WelcomePage() {
                           type="button"
                           data-category-name={group.categoryName}
                           aria-pressed={isGroupSelected}
-                          onClick={handleInterestCategorySelectionToggle}
+                          onClick={handleCategoryToggle}
                         >
                           {group.categoryName} 전체
                         </button>

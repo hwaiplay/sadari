@@ -38,7 +38,7 @@ export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
  * @author HanWon.Jang
  * @return 화면에서 사용할 상태와 처리 함수
  */
-export const usePublicReportLikeMutation = () => {
+export const usePublicReportLike = () => {
 
   const queryClient = useQueryClient();
 

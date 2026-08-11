@@ -12,7 +12,7 @@ import {
   getSocialFollowStatusApi,
   getSocialFollowListApi,
   getSocialProfileApi,
-  getSocialReadingSummaryApi,
+  getSocialReadingApi,
   setSocialFollowApi,
   type FollowListType,
   type FollowUser,
@@ -153,7 +153,7 @@ function SocialProfilePage() {
 
     Promise.all([
       getSocialProfileApi(targetUserNumb),
-      getSocialReadingSummaryApi(targetUserNumb),
+      getSocialReadingApi(targetUserNumb),
       getSocialFollowStatusApi(targetUserNumb),
     ])
       .then(([profileResponse, summaryResponse, followStatusResponse]) => {
@@ -233,7 +233,7 @@ function SocialProfilePage() {
           : await setSocialFollowApi(targetUserNumb);
 
       setFollowStatName(response.data?.followStatName ?? "");
-      const summaryResponse = await getSocialReadingSummaryApi(targetUserNumb);
+      const summaryResponse = await getSocialReadingApi(targetUserNumb);
       setSummary(summaryResponse.data as MonthlyReadingSummary);
     } catch {
       void sweetWarning(
@@ -364,7 +364,7 @@ function SocialProfilePage() {
         ),
       );
 
-      const summaryResponse = await getSocialReadingSummaryApi(targetUserNumb);
+      const summaryResponse = await getSocialReadingApi(targetUserNumb);
       setSummary(summaryResponse.data as MonthlyReadingSummary);
     } catch (error) {
       void sweetError(
@@ -383,7 +383,7 @@ function SocialProfilePage() {
    * @author HanWon.Jang
    * @param period 펼침 상태를 변경할 기간 구분값
    */
-  const handleToggleReadingSummary = (period: ReadingPeriod) => {
+  const handleReadingSummary = (period: ReadingPeriod) => {
 
     setExpandedSummary((prev) => ({
       ...prev,
@@ -495,7 +495,7 @@ function SocialProfilePage() {
    * @param reports 현재 읽고 있는 독후감 목록
    * @return 현재 읽고 있는 책 섹션 JSX
    */
-  const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+  const renderCurrentReports = (reports: ReadingSummaryReport[] = []) => {
 
     if (reports.length === 0) {
       return null;
@@ -638,7 +638,7 @@ function SocialProfilePage() {
             onClick={() => {
 
               if (hasReports) {
-                handleToggleReadingSummary(period);
+                handleReadingSummary(period);
               }
             }}
           >
@@ -889,7 +889,7 @@ function SocialProfilePage() {
           </div>
 
           {renderProfileStats(summary)}
-          {renderCurrentReadingReports(summary.currentReadingReports)}
+          {renderCurrentReports(summary.currentReadingReports)}
         {/* 상대 사용자의 월간 독서 요약 영역 */}
         <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
