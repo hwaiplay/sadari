@@ -4,7 +4,7 @@
 
 - 목적: Sadari 프론트엔드의 상태 관리, 오류 처리와 사용자 경험 설계를 설명
 - 적용 범위: API 계층, 인증 복구, 서버 상태 캐시, 주요 상호작용, PWA
-- 기준일: 2026-07-30
+- 기준일: 2026-08-11
 
 ## API 성공 기준의 통일
 
@@ -19,23 +19,31 @@ HTTP 상태가 200이어도 업무 응답의 `ResultData.code`가 200이 아닐 
 - `src/main/frontend/src/features/Social/api/socialApi.ts`
 - `src/main/frontend/src/features/Alim/api/alimApi.ts`
 
-## 토큰 재발급 루프 방지
+## 토큰 재발급과 탭 인증 동기화
 
 `src/main/frontend/src/app/api/axios.ts`는 Access Token 만료 응답을 받으면 Refresh Token으로 재발급한 뒤 원래 요청을 재시도한다.
 
 안정성을 위해 다음 제어를 적용한다.
 
-- 동시에 발생한 실패 요청이 하나의 `refreshRequest` Promise를 공유
+- 같은 탭에서 동시에 발생한 실패 요청이 하나의 `refreshRequest` Promise를 공유
 - 원 요청에 재시도 여부 기록
 - Refresh와 Logout API는 인터셉터 재발급 대상에서 제외
 - 재발급 실패 시 인증 상태를 정리하고 로그인 경로로 이동
 
 `useCheckAuth`도 한 화면 생명주기에서 Refresh 시도를 한 번으로 제한해 인증 확인과 로그인 화면이 반복되는 현상을 차단한다.
 
+서로 다른 탭과 서비스워커는 메모리 Promise를 공유할 수 없으므로 서버가 Redis Lua 스크립트로 기기별 Refresh Token을 원자 회전한다. 기본 10초 유예시간 동안 직전 Token을 제출한 동시 요청에도 같은 최신 Token을 반환해 탭 사이의 재발급 경쟁이 로그인 종료로 이어지지 않게 한다.
+
+사용자가 현재 디바이스 또는 전체 디바이스 로그아웃을 선택하면 프론트는 서버 세션 정리 후 `BroadcastChannel`과 `storage` 이벤트를 발행한다. 같은 브라우저 프로필의 다른 탭은 인증 Store와 Query 캐시를 비우고 로그인 화면으로 이동한다.
+
 구현 근거:
 
 - `src/main/frontend/src/app/api/axios.ts`
 - `src/main/frontend/src/features/Auth/hooks/useCheckAuth.tsx`
+- `src/main/frontend/src/features/Auth/lib/logoutFlow.ts`
+- `src/main/frontend/src/features/Auth/lib/authEvents.ts`
+- `src/main/frontend/src/features/Auth/components/AuthSyncProvider.tsx`
+- `src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java`
 
 ## 서버 상태와 화면 상태의 분리
 
