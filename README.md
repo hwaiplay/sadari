@@ -17,7 +17,7 @@ Sadari는 도서 검색, 독서 기록과 목표, 소셜 활동, 독서 모임, 
 | 관점 | 구현 내용 |
 | --- | --- |
 | 데이터 일관성 | 도서 마스터와 독후감 등록을 하나의 트랜잭션으로 처리하고, DB 커밋 결과에 맞춰 푸시 발송과 파일 정리를 수행합니다. |
-| 인증과 세션 | Kakao OAuth 2.0, JWT, HttpOnly Cookie, CSRF Token, Redis 세션 메타데이터와 로그아웃 블랙리스트를 결합했습니다. |
+| 인증과 세션 | Kakao OAuth 2.0, `sid`를 포함한 JWT, HttpOnly Cookie, CSRF Token과 Redis 기기별 세션을 결합했습니다. |
 | 조회 성능 | 마이페이지 독서 요약 SQL 왕복을 최대 19회에서 2회로 통합했습니다. 이는 소스 기준 호출 횟수 감소이며 응답 시간 개선율을 뜻하지 않습니다. |
 | 서비스 간 정합성 | 관리자 회원 상태 변경을 DB Outbox에 기록하고, 사용자 서비스가 성공한 이벤트만 삭제해 Redis 반영 실패를 재시도합니다. |
 | 파일 보안 | 이미지 시그니처·디코더·해상도를 검증하고 EXIF 방향 보정과 재인코딩을 거쳐 비공개 S3 또는 로컬 저장소에 보관합니다. |
@@ -35,7 +35,7 @@ Sadari는 도서 검색, 독서 기록과 목표, 소셜 활동, 독서 모임, 
 | 콘텐츠 안전 | 닉네임·한줄소개·독후감·댓글의 비속어 입력 차단 | 공통코드 사전, 10분 캐시, Aho-Corasick 탐지와 허용어 범위 예외 처리 |
 | 독서 모임 | 모임 생성, 가입과 활동 관리 | 모임 상태·권한·정원 정책, 가입 요청과 멤버십 처리 |
 | 알림과 푸시 | 서비스 알림, PWA 웹 푸시 | 템플릿 알림, 중복 방지, 커밋 후 FCM 발송, 구독 관리 |
-| 계정 | 로그인, 비활성화, 탈퇴 예약과 취소 | Redis 세션, 상태 기반 접근 제한, `WITHDRAWN`·`DELETE_PENDING` 수명주기 |
+| 계정 | 로그인, 현재·전체 디바이스 로그아웃, 비활성화, 탈퇴 예약과 취소 | Redis 기기별 세션, 상태 기반 접근 제한, `WITHDRAWN`·`DELETE_PENDING` 수명주기 |
 
 ## 시스템 구성
 
@@ -96,13 +96,16 @@ flowchart LR
 
 ### 2. 인증 상태를 토큰 한 장이 아닌 수명주기로 관리
 
-Kakao OAuth 로그인 이후 Access Token과 Refresh Token을 발급하고 HttpOnly Cookie로 전달합니다. Redis에는 Refresh Token, 닉네임과 계정 상태를 동일 TTL로 저장하며, 여러 키의 저장과 갱신은 Lua 스크립트로 원자적으로 처리합니다. 로그아웃한 Access Token의 `jti`는 남은 만료 시간 동안 블랙리스트로 유지합니다.
+Kakao OAuth 로그인 이후 기기별 세션 식별자 `sid`를 포함한 Access Token과 Refresh Token을 발급하고 HttpOnly Cookie로 전달합니다. Redis에는 `auth:session:{sid}` Hash와 회원별 `sid` Set을 생성해 로그인마다 독립된 Refresh Token 세션을 관리합니다. 세션과 회원별 색인은 Refresh Token 유효시간으로 만료·갱신하고, 닉네임은 활성 세션 TTL 캐시로, 계정 상태는 로그아웃으로 지워지지 않는 별도 캐시로 유지합니다.
 
-`JwtFilter`는 서명과 만료만 확인하지 않고 Redis의 계정 상태도 함께 검사합니다. 비활성화 계정과 영구 탈퇴 대기 계정은 허용된 복구·취소 흐름을 제외한 API 접근이 제한됩니다.
+`JwtFilter`는 서명과 만료뿐 아니라 JWT의 `sid`가 Redis에서 해당 회원의 활성 세션인지 확인하고 계정 상태 캐시가 없으면 DB 원본으로 보정합니다. 비활성화 계정과 영구 탈퇴 대기 계정은 허용된 복구·취소 흐름을 제외한 API 접근이 제한됩니다.
 
-쿠키 인증을 사용하더라도 CSRF 보호를 끄지 않았습니다. 상태 변경 요청은 서버가 발급한 CSRF Token을 `X-XSRF-TOKEN` Header로 검증하며, 브라우저에서 Token 불일치가 발생하면 새 Token을 받은 뒤 원 요청을 한 번만 재시도합니다. 여러 API가 동시에 인증 만료를 감지해도 하나의 Refresh 요청 Promise를 공유해 토큰 재발급 폭주를 막습니다.
+쿠키 인증을 사용하더라도 CSRF 보호를 끄지 않았습니다. 상태 변경 요청은 서버가 발급한 CSRF Token을 `X-XSRF-TOKEN` Header로 검증하며, 브라우저에서 Token 불일치가 발생하면 새 Token을 받은 뒤 원 요청을 한 번만 재시도합니다. 한 탭의 여러 API는 하나의 Refresh 요청 Promise를 공유하고, 여러 탭과 서비스워커의 동시 재발급은 Redis Lua 회전과 기본 10초 유예시간으로 같은 최신 토큰에 수렴합니다.
+
+로그아웃 Alert에서는 현재 디바이스와 전체 디바이스를 구분합니다. 현재 디바이스 로그아웃은 현재 `sid`와 브라우저 푸시 구독만 제거하고, 전체 디바이스 로그아웃은 회원의 모든 `sid`와 푸시 구독을 비활성화합니다. 같은 브라우저 프로필의 탭은 Cookie를 공유하므로 `BroadcastChannel`과 `storage` 이벤트로 로그아웃 상태를 즉시 동기화합니다. 로그아웃한 Access Token의 `jti`는 남은 만료 시간 동안 Redis 블랙리스트에 유지합니다.
 
 - [인증과 보안 설계](docs/portfolio/auth-security.md)
+- [계정 및 인증 정책](docs/policies/account-auth-policy.md)
 - [Spring Security·CSRF·CORS 설정](src/main/java/org/our/sadari/global/security/config/SecurityConfig.java)
 - [Redis 토큰·사용자 상태 관리](src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java)
 - [JWT 요청 필터](src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java)
