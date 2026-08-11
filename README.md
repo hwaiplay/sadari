@@ -1,6 +1,6 @@
 # Sadari
 
-> 읽고, 기록하고, 함께 성장하는 독서 기록 플랫폼
+> 독서의 즐거움에 오르다
 
 [![Sadari CI/CD](https://github.com/hwaiplay/sadari/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hwaiplay/sadari/actions/workflows/ci-cd.yml)
 ![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)
