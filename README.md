@@ -18,79 +18,79 @@ Sadari는 도서 검색, 독서 기록과 목표, 소셜 활동, 독서 모임, 
 | --- | --- |
 | 데이터 일관성 | 도서 마스터와 독후감 등록을 하나의 트랜잭션으로 처리하고, DB 커밋 결과에 맞춰 푸시 발송과 파일 정리를 수행합니다. |
 | 인증과 세션 | Kakao OAuth 2.0, JWT Access/Refresh Token, HttpOnly Cookie, Redis 세션 메타데이터와 로그아웃 블랙리스트를 결합했습니다. |
+| 인증과 세션 | Kakao OAuth 2.0, JWT, HttpOnly Cookie, CSRF Token, Redis 세션 메타데이터와 로그아웃 블랙리스트를 결합했습니다. |
 | 조회 성능 | 마이페이지 독서 요약 SQL 왕복을 최대 19회에서 2회로 통합했습니다. 이는 소스 기준 호출 횟수 감소이며 응답 시간 개선율을 뜻하지 않습니다. |
 | 운영 가능성 | 관리자가 공통 코드, 알림 템플릿, 사용자 메뉴와 스케줄러 상태를 관리하고 실행·실패 로그를 확인할 수 있습니다. |
+| 서비스 간 정합성 | 관리자 회원 상태 변경을 DB Outbox에 기록하고, 사용자 서비스가 성공한 이벤트만 삭제해 Redis 반영 실패를 재시도합니다. |
+| 파일 보안 | 이미지 시그니처·디코더·해상도를 검증하고 EXIF 방향 보정과 재인코딩을 거쳐 비공개 S3 또는 로컬 저장소에 보관합니다. |
+| 운영 가능성 | 관리자가 공통 코드, 알림 템플릿, 사용자 메뉴와 스케줄러 상태를 관리하고 실행 건수·처리 시간·실패 원인을 확인할 수 있습니다. |
 | 배포 자동화 | 멀티 스테이지 Docker 빌드, GHCR 이미지 배포, EC2 Docker Compose 갱신과 HTTP 상태 확인을 GitHub Actions로 구성했습니다. |
+
+## 숫자로 보는 현재 구현
+
+아래 값은 현재 저장소의 소스 구조에서 계산한 값이며 운영 성능 측정값이 아닙니다.
+
+| 항목 | 소스 기준 값 | 의미 |
+| --- | ---: | --- |
+| 운영 Java 소스 | 154개 | API, 도메인 서비스, 보안, 스케줄러와 저장소 구현 |
+| REST Controller | 19개 | 도서·기록·소셜·모임·알림·계정 등 사용자 API |
+| MyBatis Mapper XML | 23개 | 업무 SQL을 도메인별로 분리 |
+| `@Test` 메서드 | 102개 | 서비스, 보안, 파일, 스케줄러와 API 계약 검증 자산 |
+| 최상위 도메인 패키지 | 14개 | `book`, `report`, `social`, `readingClub`, `user`, `global` 등 |
+| 독서 요약 SQL 왕복 | 최대 19회 → 2회 | 소스 경로 기준 약 89.5% 감소 |
 
 ## 주요 기능
 
 | 영역 | 사용자 경험 | 백엔드 구현 |
-| --- | --- | --- |
-| 도서 | Kakao 도서 검색, 표지 색상 탐색 | 검색 API 연동, 표지 대표색 추출, CIELAB 거리 기반 공통 색상 매칭 |
-| 독서 기록 | 읽기 상태, 별점, 독후감, 기간별 독서량 | 도서·독후감 원자적 등록, 공개 범위, 목표 집계와 목록 조회 |
-| 독서 목표 | 주간·월간·연간 목표와 달성 현황 | 기간 경계 계산, 이전 목표 복사, 조건부 집계 |
-| 소셜 | 팔로우, 프로필, 좋아요, 댓글 | 공개 데이터 범위 제어, 대상 유형 기반 반응 데이터 모델 |
-| 독서 모임 | 모임 생성, 가입과 활동 관리 | 모임 상태·권한·정원 정책, 가입 요청과 멤버십 처리 |
-| 알림과 푸시 | 서비스 알림, PWA 웹 푸시 | 템플릿 알림, 중복 방지, 커밋 후 FCM 발송, 구독 관리 |
-| 계정 | 로그인, 비활성화, 탈퇴 예약과 취소 | Redis 세션, 상태 기반 접근 제한, `WITHDRAWN`·`DELETE_PENDING` 수명주기 |
-
-## 시스템 구성
-
-```mermaid
-flowchart LR
-    USER["사용자"] --> PWA["React PWA"]
-    ADMIN["관리자"] --> ADMIN_APP["Sadari Admin"]
-
-    PWA --> API["Sadari API / Spring Boot"]
-    KAKAO["Kakao OAuth / Book API"] --> API
 
     API --> MYSQL[("MySQL 8.4")]
     ADMIN_APP --> MYSQL
+    MYSQL --> OUTBOX["회원 상태 Outbox"]
+    OUTBOX --> SCHEDULER["제한 배치 / 실패 재시도"]
+    SCHEDULER --> REDIS
     API <--> REDIS[("Redis 7")]
     API --> S3["Private S3 / Local Storage"]
     API --> FCM["Firebase Cloud Messaging"]
 
-    ACTIONS["GitHub Actions"] --> GHCR["GHCR"]
-    GHCR --> EC2["EC2 / Docker Compose"]
-```
-
-사용자 서비스와 관리자 서비스는 서로의 API를 직접 호출하지 않습니다. 두 서비스가 공유하는 운영 테이블에 쓰기 주체와 읽기 주체를 구분해, 사용자 요청 경로와 운영 제어 경로의 결합도를 낮췄습니다.
-
-## 백엔드 설계 하이라이트
-
-### 1. 반복 조회를 집계 SQL과 단일 목록 조회로 통합
-
-마이페이지는 기간별 독서량, 목표, 달성 횟수와 도서 목록을 만들기 위해 최대 19번의 SQL을 실행하고 있었습니다. 완료 독후감을 CTE와 조건부 집계로 한 번 집계하고, 현재 읽는 책과 올해 완료 목록을 한 번 조회한 뒤 애플리케이션에서 기간별로 분류하도록 변경했습니다.
-
-| 항목 | 개선 전 | 개선 후 |
-| --- | ---: | ---: |
-| 전체 SQL 호출 | 최대 19회 | 2회 |
-| 집계 SQL | 15회 | 1회 |
-| 목록 SQL | 4회 | 1회 |
-
-호출 횟수는 약 89.5% 감소했습니다. 이 값은 코드 경로에서 계산한 SQL 왕복 감소율이며, 운영 환경의 평균·P95 응답 시간은 별도 측정이 필요합니다.
-
-- [성능 개선 과정과 트레이드오프](docs/performance/my-page-reading-summary-optimization.md)
-- [집계 SQL](src/main/java/org/our/sadari/report/mapper/ReportMapper.xml)
-
-### 2. 인증 상태를 토큰 한 장이 아닌 수명주기로 관리
-
-Kakao OAuth 로그인 이후 Access Token과 Refresh Token을 발급하고 HttpOnly Cookie로 전달합니다. Redis에는 Refresh Token, 닉네임과 계정 상태를 동일 TTL로 저장하며, 여러 키의 저장과 갱신은 Lua 스크립트로 원자적으로 처리합니다. 로그아웃한 Access Token의 `jti`는 남은 만료 시간 동안 블랙리스트로 유지합니다.
-
 `JwtFilter`는 서명과 만료만 확인하지 않고 Redis의 계정 상태도 함께 검사합니다. 비활성화 계정과 영구 탈퇴 대기 계정은 허용된 복구·취소 흐름을 제외한 API 접근이 제한됩니다.
 
+쿠키 인증을 사용하더라도 CSRF 보호를 끄지 않았습니다. 상태 변경 요청은 서버가 발급한 CSRF Token을 `X-XSRF-TOKEN` Header로 검증하며, 브라우저에서 Token 불일치가 발생하면 새 Token을 받은 뒤 원 요청을 한 번만 재시도합니다. 여러 API가 동시에 인증 만료를 감지해도 하나의 Refresh 요청 Promise를 공유해 토큰 재발급 폭주를 막습니다.
+
 - [인증과 보안 설계](docs/portfolio/auth-security.md)
+- [Spring Security·CSRF·CORS 설정](src/main/java/org/our/sadari/global/security/config/SecurityConfig.java)
 - [Redis 토큰·사용자 상태 관리](src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java)
 - [JWT 요청 필터](src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java)
+- [CSRF·Refresh 단일 요청 처리](src/main/frontend/src/app/api/axios.ts)
 - [계정 수명주기 정책](docs/policies/withdrawal-policy.md)
 
 ### 3. DB와 외부 시스템의 완료 시점을 분리
+| 스케줄러 설정 | 실행 가능 여부와 배치 제한 확인 |
+| 스케줄러 로그 | 실행 결과, 처리 건수와 실패 원인 기록 |
 
-외부 시스템 호출을 DB 트랜잭션 안에서 성공한 것으로 간주하지 않습니다.
+사용자 메뉴는 `TM_URMENU`의 관리자 설정을 MySQL 재귀 CTE로 최대 3단계까지 조립합니다. 현재 URL과 가장 길게 일치하는 메뉴를 찾고 활성·노출 상태가 유효한 하위 트리만 반환하므로, 사용자 앱을 다시 배포하지 않고도 메뉴 구조와 노출 여부를 바꿀 수 있습니다.
 
-- 알림 데이터가 커밋된 뒤에만 FCM 푸시를 발송합니다.
-- DB가 새 파일을 참조한 뒤 기존 물리 파일을 삭제합니다.
-- DB가 롤백되면 해당 요청에서 먼저 생성한 물리 파일을 정리합니다.
-- 도서 마스터가 없을 때 도서와 독후감 등록을 하나의 트랜잭션으로 처리합니다.
+- [사용자·관리자 연동 구조](docs/portfolio/admin-user-integration.md)
+- [사용자 메뉴 재귀 조회 SQL](src/main/java/org/our/sadari/menu/mapper/UserMenuMapper.xml)
+- [스케줄러 정책](docs/policies/scheduler-policy.md)
 
-이를 통해 푸시는 발송됐지만 알림이 없는 상태, 롤백된 DB가 삭제된 파일을 계속 참조하는 상태, 도서만 남고 독후감 등록이 실패하는 상태를 줄였습니다.
+### 5. 서비스 문제에 맞춘 알고리즘 적용
+### 5. DB Outbox로 관리자 상태 변경을 Redis에 전달
+
+관리자 서비스가 사용자를 정지하거나 해제할 때 DB 원본만 바뀌고 사용자 서비스의 Redis 상태가 남는 문제를 별도 이벤트 전달 흐름으로 해결했습니다.
+
+```mermaid
+sequenceDiagram
+    participant A as Sadari Admin
+    participant DB as MySQL
+    participant B as User Status Scheduler
+    participant R as Redis
+
+    A->>DB: 회원 상태와 Outbox 이벤트를 같은 트랜잭션으로 저장
+    B->>DB: 등록 순서대로 제한 건수 조회
+    B->>DB: 처리 시점의 최신 회원 상태 조회
+    B->>R: 로그인 세션 상태 갱신 또는 제거
+    alt Redis 반영 성공
+        B->>DB: 동기화 완료 표시 후 이벤트 삭제
+    else Redis 반영 실패
+        B-->>DB: 이벤트 유지
+        Note over B,DB: 다음 실행 주기에 재시도
