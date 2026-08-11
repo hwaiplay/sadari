@@ -8,13 +8,13 @@
         LIMIT 조건을 최외곽에 적용해 정렬된 전체 후보 중 최대 maxSize건만 JVM 메모리로 반환한다.
         이미 같은 독후감 링크로 REPORT_DATE_OVER 알림을 저장한 경우에는 다음 실행에서 다시 선택하지 않는다.
     -->
-    <select id="getReportDateOverTargetList" resultType="org.our.sadari.report.dto.ReportDto">
+    <select id="getOverdueReportList" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="alimSituReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_REPORT" />
         <bind name="tempCodeReportDateOver" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPORT_DATE_OVER" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="lookbackDays" value="@org.our.sadari.global.common.constant.Constant@REPORT_DATE_OVER_LOOKBACK_DAYS" />
-        SELECT /* getReportDateOverTargetList */
+        SELECT /* getOverdueReportList */
                DATEOVERREPORT.REPT_NUMB
              , DATEOVERREPORT.USER_NUMB
              , DATEOVERREPORT.BOOK_TITL

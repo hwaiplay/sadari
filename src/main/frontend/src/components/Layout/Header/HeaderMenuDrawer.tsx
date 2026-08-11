@@ -1,13 +1,13 @@
 import { message } from "@/app/messages/message";
 import {
   FIREBASE_PUSH_ENABLED_EVENT,
-  subscribeFirebaseForegroundMessages,
+  subscribeFirebaseMessages,
 } from "@/app/pwa/firebaseMessaging";
 import { queryClient } from "@/app/query/queryClient";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { getUnreadAlimCntApi } from "@/features/Alim/api/alimApi";
 import {
-  isUnreadAlimCntChangedEvent,
+  isUnreadAlimChangeEvent,
   UNREAD_ALIM_CNT_CHANGED_EVENT,
 } from "@/features/Alim/lib/alimEvents";
 import { logoutApi } from "@/features/Auth/api/authApi";
@@ -292,7 +292,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
      * @param event event 입력값
      * @return 반환값이 없다
      */
-    const handleServiceWorkerMessage = (event: MessageEvent) => {
+    const handleSwMessage = (event: MessageEvent) => {
       // 푸시 수신뿐 아니라 시스템 알림 클릭으로 읽음 상태가 바뀐 경우에도 배지 수를 다시 조회한다.
       if (
         event.data?.type === "SADARI_ALIM_RECEIVED"
@@ -320,22 +320,22 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
      * @param event event 입력값
      * @return 반환값이 없다
      */
-    const handleUnreadAlimCntChanged = (event: Event) => {
+    const handleUnreadAlimChange = (event: Event) => {
 
-      if (isUnreadAlimCntChangedEvent(event)) {
+      if (isUnreadAlimChangeEvent(event)) {
         setUnreadAlimCnt(event.detail);
       }
     };
 
-    navigator.serviceWorker?.addEventListener("message", handleServiceWorkerMessage);
+    navigator.serviceWorker?.addEventListener("message", handleSwMessage);
     window.addEventListener("focus", handleWindowFocus);
-    window.addEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
+    window.addEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimChange);
 
     return () => {
 
-      navigator.serviceWorker?.removeEventListener("message", handleServiceWorkerMessage);
+      navigator.serviceWorker?.removeEventListener("message", handleSwMessage);
       window.removeEventListener("focus", handleWindowFocus);
-      window.removeEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimCntChanged);
+      window.removeEventListener(UNREAD_ALIM_CNT_CHANGED_EVENT, handleUnreadAlimChange);
     };
   }, [refreshUnreadAlimCnt]);
 
@@ -351,7 +351,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
      * @return 처리 결과
      * @throws API 요청 또는 비동기 처리 실패 시 발생
      */
-    const initializeForegroundMessages = async () => {
+    const initForegroundMessages = async () => {
 
       if (!("Notification" in window) || Notification.permission !== "granted") {
         return;
@@ -360,7 +360,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       try {
         const response = await getPushConfigApi();
         const unsubscribeForegroundMessages =
-          await subscribeFirebaseForegroundMessages(
+          await subscribeFirebaseMessages(
             response.data,
             () => void refreshUnreadAlimCnt(),
           );
@@ -385,10 +385,10 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
      */
     const handlePushEnabled = () => {
 
-      void initializeForegroundMessages();
+      void initForegroundMessages();
     };
 
-    void initializeForegroundMessages();
+    void initForegroundMessages();
     window.addEventListener(FIREBASE_PUSH_ENABLED_EVENT, handlePushEnabled);
 
     return () => {

@@ -28,8 +28,8 @@ public class ProfileImageDraftCleanupScheduler {
      * @author SeungHyeon.Kang
      */
     @Scheduled(fixedDelayString = "${scheduler.profile-image-draft-cleanup-delay-ms:600000}")
-    public void delExpiredProfileImageDrafts() {
+    public void delExpiredProfileDrafts() {
         // 만료된 사용자별 임시 원본과 미리보기 정리를 파일 서비스에 위임한다
-        fileService.delExpiredProfileImageDrafts();
+        fileService.delExpiredProfileDrafts();
     }
 }

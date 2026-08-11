@@ -348,7 +348,7 @@ public class FileService {
         // 임시 파일명을 추측하기 어렵게 UUID 식별값을 생성한다
         String draftToken = UUID.randomUUID().toString();
         // 사용자와 이미지 유형별 전용 디렉터리를 계산한다
-        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+        Path draftDirectory = getProfileDraftDir(userNumb, imageType);
         // 새 임시 원본과 미리보기를 기록할 경로를 생성한다
         Path originalPath = draftDirectory.resolve(getDraftFileName(
                 draftToken,
@@ -370,10 +370,10 @@ public class FileService {
             // 모바일 화면에서 원본을 디코딩하지 않도록 축소 미리보기를 별도 기록한다
             Files.write(previewPath, previewImage.bytes(), StandardOpenOption.CREATE_NEW, StandardOpenOption.WRITE);
             // 두 파일이 모두 준비된 뒤 이전 선택본을 제거해 실패 시 기존 미리보기를 유지한다
-            delOtherProfileImageDraftFiles(draftDirectory, draftToken);
+            delOtherProfileDrafts(draftDirectory, draftToken);
             draftSaved = true;
             // 같은 로그인 사용자가 앱을 다시 열어도 만료 전 선택본을 복원할 응답을 반환한다
-            return createProfileImageDraftDto(imageType, draftToken, previewPath, previewImage.mimeType(), originalPath);
+            return createProfileDraftDto(imageType, draftToken, previewPath, previewImage.mimeType(), originalPath);
         }
 
         finally {
@@ -424,7 +424,7 @@ public class FileService {
         // 사용자와 이미지 유형 및 UUID 식별값을 모두 검증한다
         validateImageType(imageType);
         validateDraftToken(draftToken);
-        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+        Path draftDirectory = getProfileDraftDir(userNumb, imageType);
         Path originalPath = findDraftPath(draftDirectory, draftToken, DRAFT_ORIGINAL_MARKER);
 
         // 사용자 전용 경로에 없거나 보존 시간이 지난 임시 이미지는 저장에 사용하지 않는다
@@ -448,7 +448,7 @@ public class FileService {
         // 날짜별 영구 저장과 DB 메타정보 등록을 완료한다
         Long fileNumb = setValidatedImage(validatedImage, "profile-image" + validatedImage.extension(), imageType, userNumb);
         // 사용자 프로필 UPDATE까지 커밋된 경우에만 재시도를 위한 임시 원본을 제거한다
-        registerCommitDraftCleanup(draftDirectory, draftToken);
+        setDraftCleanupOnCommit(draftDirectory, draftToken);
         // 승격된 영구 파일 번호를 반환한다
         return fileNumb;
     }
@@ -467,7 +467,7 @@ public class FileService {
         }
 
         validateImageType(imageType);
-        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, imageType));
+        delFilesInDirectory(getProfileDraftDir(userNumb, imageType));
     }
 
     /**
@@ -483,8 +483,8 @@ public class FileService {
         }
 
         // 프로필과 배경 임시 파일을 각각 안전한 하위 경로에서 제거한다
-        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, Constant.FILE_TYPE_PROFILE));
-        delFilesInDirectory(getProfileImageDraftDirectory(userNumb, Constant.FILE_TYPE_BACKGROUND));
+        delFilesInDirectory(getProfileDraftDir(userNumb, Constant.FILE_TYPE_PROFILE));
+        delFilesInDirectory(getProfileDraftDir(userNumb, Constant.FILE_TYPE_BACKGROUND));
     }
 
     /**
@@ -493,7 +493,7 @@ public class FileService {
      * @author SeungHyeon.Kang
      * @param userNumb 삭제할 사용자 번호
      */
-    public void delAllProfileImageDraftsAfterCommit(Long userNumb) {
+    public void delProfileDraftsOnCommit(Long userNumb) {
         // 트랜잭션 밖에서는 이미 확정된 상태에 맞춰 즉시 임시 이미지를 삭제한다
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             delAllProfileImageDrafts(userNumb);
@@ -525,7 +525,7 @@ public class FileService {
      *
      * @author SeungHyeon.Kang
      */
-    public void delExpiredProfileImageDrafts() {
+    public void delExpiredProfileDrafts() {
         // 임시 저장 루트가 없으면 정리 작업을 종료한다
         if (!Files.isDirectory(profileImageDraftRootPath)) {
             return;
@@ -612,7 +612,7 @@ public class FileService {
      * @author SeungHyeon.Kang
      * @param fileList 영구 탈퇴 전에 조회한 파일 메타정보 목록
      */
-    public void delPhysicalFileListAfterCommit(List<FileDto> fileList) {
+    public void delFilesAfterCommit(List<FileDto> fileList) {
         // 영구 탈퇴 대상 파일이 없으면 커밋 후 정리 작업을 등록하지 않는다
         if (StringUtil.isEmpty(fileList)) {
             // 영구 탈퇴 물리 파일 정리를 종료한다
@@ -729,7 +729,7 @@ public class FileService {
      * @param imageType 프로필 또는 배경 이미지 구분값
      * @return 임시 이미지 전용 디렉터리
      */
-    private Path getProfileImageDraftDirectory(Long userNumb, String imageType) {
+    private Path getProfileDraftDir(Long userNumb, String imageType) {
         // 숫자 사용자 번호와 고정 유형 디렉터리만 조합해 경로 주입을 차단한다
         Path draftDirectory = profileImageDraftRootPath
                 .resolve(String.valueOf(userNumb))
@@ -815,7 +815,7 @@ public class FileService {
      * @return 복원할 임시 이미지, 없으면 null
      */
     private ProfileImageDraftDto getProfileImageDraft(Long userNumb, String imageType) {
-        Path draftDirectory = getProfileImageDraftDirectory(userNumb, imageType);
+        Path draftDirectory = getProfileDraftDir(userNumb, imageType);
 
         // 임시 디렉터리가 없으면 복원할 선택본이 없다
         if (!Files.isDirectory(draftDirectory)) {
@@ -854,7 +854,7 @@ public class FileService {
             }
 
             // 같은 로그인 사용자에게만 서버 미리보기와 만료 시각을 반환한다
-            return createProfileImageDraftDto(
+            return createProfileDraftDto(
                     imageType,
                     draftToken,
                     previewPath,
@@ -882,7 +882,7 @@ public class FileService {
      * @return 임시 이미지 응답
      * @throws IOException 미리보기 파일을 읽을 수 없는 경우
      */
-    private ProfileImageDraftDto createProfileImageDraftDto(String imageType, String draftToken
+    private ProfileImageDraftDto createProfileDraftDto(String imageType, String draftToken
                                                             , Path previewPath, String previewMimeType
                                                             , Path originalPath) throws IOException {
         ProfileImageDraftDto draftDto = new ProfileImageDraftDto();
@@ -958,7 +958,7 @@ public class FileService {
      * @param retainedToken 유지할 신규 임시 이미지 식별값
      * @throws IOException 임시 디렉터리를 조회할 수 없는 경우
      */
-    private void delOtherProfileImageDraftFiles(Path draftDirectory, String retainedToken) throws IOException {
+    private void delOtherProfileDrafts(Path draftDirectory, String retainedToken) throws IOException {
         try (Stream<Path> pathStream = Files.list(draftDirectory)) {
             pathStream.filter(Files::isRegularFile)
                     .filter(path -> !path.getFileName().toString().startsWith(retainedToken + "."))
@@ -1756,7 +1756,7 @@ public class FileService {
      * @param draftDirectory 사용자별 임시 디렉터리
      * @param draftToken 삭제할 임시 이미지 식별값
      */
-    private void registerCommitDraftCleanup(Path draftDirectory, String draftToken) {
+    private void setDraftCleanupOnCommit(Path draftDirectory, String draftToken) {
         // 트랜잭션 밖에서 영구 저장이 완료되었다면 임시 파일을 즉시 삭제한다
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             delDraftTokenFiles(draftDirectory, draftToken);

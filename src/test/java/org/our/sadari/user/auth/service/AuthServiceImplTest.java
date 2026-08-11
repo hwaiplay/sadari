@@ -76,7 +76,7 @@ class AuthServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void loginProviderCodesUseFullNames() {
+    void loginCodesUseFullNames() {
         // Kakao 로그인과 사용자 및 로그인 이력 저장에 동일한 풀네임 코드가 사용되는지 검증한다
         assertEquals("KAKAO", AuthConstant.PROV_KAKAO);
         // Naver 제공자 확장 시에도 축약형이 다시 저장되지 않도록 풀네임 계약을 검증한다
@@ -92,7 +92,7 @@ class AuthServiceImplTest {
      * @throws Exception Kakao 인증 응답 대역 구성 중 발생
      */
     @Test
-    void kakaoLoginReactivatesWithdrawnAccount() throws Exception {
+    void kakaoLoginReactivates() throws Exception {
         // Kakao 토큰 교환 결과를 로그인 서비스에 제공할 객체를 생성한다
         KakaoTokenDto kakaoToken = new KakaoTokenDto();
         // Kakao 프로필 이미지가 포함된 계정 응답을 생성한다
@@ -125,7 +125,7 @@ class AuthServiceImplTest {
         // 재활성화된 회원에게 Refresh Token을 발급하도록 결과를 구성한다
         when(jwtProvider.createRefreshToken(31L)).thenReturn("refresh-token");
         // Redis 로그인 세션의 유지 시간을 설정하도록 결과를 구성한다
-        when(jwtProvider.getRefreshTokenValiditySeconds()).thenReturn(3600L);
+        when(jwtProvider.getRefreshTokenValidSec()).thenReturn(3600L);
 
         // 같은 Kakao 계정으로 비활성화 회원의 재로그인을 요청한다
         ResultData result = authService.kakaoLogin("authorization-code", "127.0.0.1", "test-agent");

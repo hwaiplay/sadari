@@ -43,10 +43,10 @@
     </insert>
 
     <!-- 더 최신 이벤트가 없을 때 정지 이력을 사용자 서버 반영 완료 상태로 변경한다. -->
-    <update id="uptSuspensionSyncCompleted">
+    <update id="uptSuspensionSyncDone">
         <bind name="suspensionSyncPending" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_PENDING"/>
         <bind name="suspensionSyncCompleted" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_COMPLETED"/>
-        UPDATE /* uptSuspensionSyncCompleted */
+        UPDATE /* uptSuspensionSyncDone */
                TH_USSPND S
            SET SYNC_STAT = #{suspensionSyncCompleted}
          WHERE S.SPND_NUMB = #{spndNumb}

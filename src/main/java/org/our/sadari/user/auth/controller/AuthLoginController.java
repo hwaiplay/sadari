@@ -254,7 +254,7 @@ public class AuthLoginController {
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.TEXT_HTML)
-                .body(createOauthCallbackErrorHtml());
+                .body(createOauthErrorHtml());
     }
 
     /**
@@ -313,7 +313,7 @@ public class AuthLoginController {
               , newRefreshToken
               , savedUser.getUserNick()
               , savedUser.getUserStat()
-              , jwtProvider.getRefreshTokenValiditySeconds()
+              , jwtProvider.getRefreshTokenValidSec()
         );
 
         // 발급한 액세스 토큰과 리프레시 토큰을 보안 쿠키에 저장한다
@@ -397,7 +397,7 @@ public class AuthLoginController {
      * @author SeungHyeon.Kang
      * @return OAuth 콜백 오류 화면 HTML
      */
-    private String createOauthCallbackErrorHtml() {
+    private String createOauthErrorHtml() {
         // OAuth 콜백 오류 화면의 HTML 문자열을 생성 결과를 반환한다
         return """
                 <!doctype html>

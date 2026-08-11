@@ -81,7 +81,7 @@ class UserServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptOnboardingUpdatesNicknameAndCompletionState() {
+    void uptOnboardCompletes() {
 
         UserDto request = new UserDto();
         // 온보딩에서 확정할 사용자 닉네임을 요청 DTO에 설정한다
@@ -123,7 +123,7 @@ class UserServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptOnboardingRejectsNicknameWithSpace() {
+    void uptOnboardRejectsSpace() {
         // 공백 포함 닉네임 검증에 사용할 요청 DTO를 생성한다
         UserDto request = new UserDto();
         // 저장할 수 없는 공백 포함 닉네임을 요청 DTO에 설정한다
@@ -146,7 +146,7 @@ class UserServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptUserInterestsReplacesValidatedSelections() {
+    void uptInterestsReplacesAll() {
         UserDto.UserInterestDto catalogInterest = new UserDto.UserInterestDto();
         // 활성 관심분야 세부코드를 설정한다
         catalogInterest.setIntrCode("NOVEL");
@@ -179,7 +179,7 @@ class UserServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptUserInterestsRejectsInactiveInterestCode() {
+    void uptRejectsInactiveCode() {
         UserDto.UserInterestDto catalogInterest = new UserDto.UserInterestDto();
         // 활성 관심분야 세부코드를 설정한다
         catalogInterest.setIntrCode("NOVEL");
@@ -213,7 +213,7 @@ class UserServiceImplTest {
      * @throws Exception 파일 저장 서비스 모의 호출에서 오류가 발생한 경우
      */
     @Test
-    void uptMeDeletesReplacedProfileAndBackgroundFiles() throws Exception {
+    void uptMeDeletesOldImages() throws Exception {
         // 프로필 수정 요청 DTO를 생성한다
         UserDto request = new UserDto();
         // 수정할 닉네임을 설정한다

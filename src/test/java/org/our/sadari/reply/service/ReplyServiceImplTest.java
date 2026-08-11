@@ -95,7 +95,7 @@ class ReplyServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void setReplySendsReplyReportAlimToReportWriter() {
+    void setReplySendsAlim() {
 
         // 등록할 댓글 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -155,7 +155,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyRejectsDetectedBadWordBeforeDatabaseWrite() {
+    void setReplyRejectsBadWord() {
 
         // 비속어 검증 대상 댓글 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -185,7 +185,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void uptReplyUpdatesOwnedReplyWithNormalizedContent() {
+    void uptReplyNormalizesContent() {
 
         // 수정할 댓글 내용을 담은 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -223,7 +223,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void uptReplyRejectsDetectedBadWordBeforeDatabaseWrite() {
+    void uptReplyRejectsBadWord() {
 
         // 비속어 검증 대상 댓글 수정 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -251,7 +251,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void delReplyMarksOwnedReplyAsDeleted() {
+    void delReplyMarksOwnedDeleted() {
 
         // 댓글 삭제 조건을 검증할 캡처 객체를 생성한다
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
@@ -281,7 +281,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeReturnsUpdatedLikeDetail() {
+    void setReplyLikeReturnsDtl() {
 
         // 좋아요 등록 요청 조건을 검증할 캡처 객체를 생성한다
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
@@ -346,7 +346,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void delReplyLikeReturnsUpdatedLikeDetail() {
+    void delReplyLikeReturnsDtl() {
 
         // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글 조건을 생성한다
         ReplyDto likeTarget = new ReplyDto();
@@ -382,7 +382,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeRejectsUnavailableTarget() {
+    void setReplyLikeRejectsTarget() {
 
         // 정상 이용 사용자와 미삭제 댓글 조건을 만족하지 않는 요청을 구성한다
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(null);
@@ -402,7 +402,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeDoesNotNotifyForExistingLike() {
+    void setReplyLikeNoRenotify() {
 
         // 이미 좋아요가 등록된 미삭제 댓글과 작성자 정보를 생성한다
         ReplyDto likeTarget = new ReplyDto();
@@ -434,7 +434,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeDoesNotNotifyOwnChildReply() {
+    void setReplyLikeNoSelfAlim() {
 
         // 본인이 작성한 대댓글 좋아요 대상 정보를 생성한다
         ReplyDto likeTarget = new ReplyDto();

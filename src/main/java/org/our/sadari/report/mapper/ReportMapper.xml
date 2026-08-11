@@ -205,8 +205,8 @@
     </select>
 
     <!-- 현재 읽는 책과 올해 완료한 책을 기간별 중복 조회 없이 한 번에 조회한다. -->
-    <select id="getReadingSummaryReportList" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.report.dto.ReportDto">
-        SELECT /* getReadingSummaryReportList */
+    <select id="getReadingSummaryList" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.report.dto.ReportDto">
+        SELECT /* getReadingSummaryList */
                A.REPT_NUMB
              , A.USER_NUMB
              , A.BOOK_NUMB
@@ -370,10 +370,10 @@
     </select>
 
     <!-- 좋아요 요청이 가능한 공개 독후감 대상인지 조회한다. -->
-    <select id="getPublicReportLikeTargetCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
+    <select id="getPublicReportLikeCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
-        SELECT /* getPublicReportLikeTargetCnt */
+        SELECT /* getPublicReportLikeCnt */
                COUNT(*)
          FROM TM_REPORT R
          WHERE R.REPT_NUMB = #{tagtNumb}
@@ -442,9 +442,9 @@
     </select>
 
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->
-    <select id="getPublicRatingAverageByIsbn" resultType="java.math.BigDecimal">
+    <select id="getPublicRatingAvgByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
-        SELECT /* getPublicRatingAverageByIsbn */
+        SELECT /* getPublicRatingAvgByIsbn */
                ROUND(AVG(CAST(P.REPT_GRDE AS UNSIGNED)), 1)
           FROM TM_BKINFO B
     INNER JOIN TM_REPORT P

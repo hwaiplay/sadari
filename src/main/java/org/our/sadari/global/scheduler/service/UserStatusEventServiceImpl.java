@@ -94,7 +94,7 @@ public class UserStatusEventServiceImpl implements UserStatusEventService {
                 }
 
                 // 더 최신 전달 이벤트가 없을 때 정지 이력에 실제 사용자 서버 반영 완료를 기록한다
-                userStatusEventMapper.uptSuspensionSyncCompleted(event.getSpndNumb(), event.getEvntNumb());
+                userStatusEventMapper.uptSuspensionSyncDone(event.getSpndNumb(), event.getEvntNumb());
                 // Redis와 정지 이력 처리가 끝난 전달 이벤트만 삭제해 장애 시 다음 주기에 재시도한다
                 userStatusEventMapper.delUserStatusEvent(event.getEvntNumb());
                 // 정상 처리된 이벤트 수를 누적한다
@@ -130,7 +130,7 @@ public class UserStatusEventServiceImpl implements UserStatusEventService {
         // 다음 주기에 재시도할 이벤트 수를 설정한다
         schedulerRun.setFailCntt(failureCnt);
         // 성공과 실패 건수로 최종 실행 상태를 설정한다
-        schedulerRun.setExecStat(schedulerLogSupport.getSchedulerExecutionStatus(successCnt, failureCnt));
+        schedulerRun.setExecStat(schedulerLogSupport.getSchedulerExecStatus(successCnt, failureCnt));
         // 스케줄러 전체 실행 시간을 밀리초 단위로 설정한다
         schedulerRun.setExecMsec(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime));
         // 처리 대상이 있는 실행의 마스터 로그를 등록한다

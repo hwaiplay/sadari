@@ -45,7 +45,7 @@ function escapeHtmlForStorage(value: string) {
  * @param value 독후감 내용 입력값
  * @return DB 저장 기준 UTF-8 byte 길이
  */
-export function getReportContentStorageByteLength(value: string) {
+export function getReportContentByteLen(value: string) {
 
   return getUtf8ByteLength(escapeHtmlForStorage(sanitizeText(value)));
 }
@@ -67,7 +67,7 @@ export function truncateUtf8Bytes(
   let result = "";
 
   for (const char of value) {
-    const charBytes = getReportContentStorageByteLength(char);
+    const charBytes = getReportContentByteLen(char);
 
     if (bytes + charBytes > maxBytes) {
       break;
@@ -207,7 +207,7 @@ export function validateReportForm(values: ReportFormValues) {
     return message("frontend.validation.invalidDateRange");
   }
 
-  if (getReportContentStorageByteLength(content) > MAX_REPORT_CONTENT_BYTES) {
+  if (getReportContentByteLen(content) > MAX_REPORT_CONTENT_BYTES) {
     return message("frontend.validation.contentByteLimit", [
       MAX_REPORT_CONTENT_BYTES,
     ]);

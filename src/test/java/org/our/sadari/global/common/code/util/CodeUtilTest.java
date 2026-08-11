@@ -55,7 +55,7 @@ class CodeUtilTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getCodeGroupListNormalizesAndGroupsRequestedCodes() {
+    void getNormalizedCodeGroups() {
         // 필요한 값으로 불변 객체를 생성한다
         List<String> normalizedCommCodeList = List.of("READ_STAT", "BOOK_COLR");
         // getCodeDto 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -87,7 +87,7 @@ class CodeUtilTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getCodeGroupListRejectsEmptyRequestBeforeMapperCall() {
+    void getCodeGroupsRejectsEmpty() {
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인한다
         CustomException exception = assertThrows(
                 CustomException.class

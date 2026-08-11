@@ -85,9 +85,9 @@ public class PushServiceImpl implements PushService {
     @Override
     public ResultData getFirebaseWebConfig() {
         // 웹 설정 누락값을 Firebase 서비스 계정 정보로 보완한다
-        applyFirebaseWebFallbackFromServiceAccount();
-        // getMissingFirebaseWebConfigList 조회로 후속 처리에 필요한 데이터를 가져온다
-        List<String> missingConfigList = getMissingFirebaseWebConfigList();
+        applyFirebaseWebFallback();
+        // getMissingFirebaseConfig 조회로 후속 처리에 필요한 데이터를 가져온다
+        List<String> missingConfigList = getMissingFirebaseConfig();
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!missingConfigList.isEmpty()) {
@@ -126,7 +126,7 @@ public class PushServiceImpl implements PushService {
      *
      * @author SeungHyeon.Kang
      */
-    private void applyFirebaseWebFallbackFromServiceAccount() {
+    private void applyFirebaseWebFallback() {
         // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
         if (!StringUtil.isEmpty(projectId) || StringUtil.isEmpty(credentialsPath)) {
             // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환한다
@@ -216,7 +216,7 @@ public class PushServiceImpl implements PushService {
      * @author SeungHyeon.Kang
      * @return 누락된 설정 property 이름 목록
      */
-    private List<String> getMissingFirebaseWebConfigList() {
+    private List<String> getMissingFirebaseConfig() {
 
         List<String> missingConfigList = new ArrayList<>();
 

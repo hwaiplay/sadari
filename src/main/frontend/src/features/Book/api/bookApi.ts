@@ -103,7 +103,7 @@ export const getPublicReportsByIsbnApi = async (isbn: string) => {
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const getBookRatingAverageByIsbnApi = async (isbn: string) => {
+export const getBookRatingAvgApi = async (isbn: string) => {
 
   const res = await api.get(
     `/book/ratingAverage/by-isbn?isbn=${encodeURIComponent(isbn)}`,

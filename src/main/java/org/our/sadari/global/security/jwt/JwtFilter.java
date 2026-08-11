@@ -71,7 +71,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없다
             if (Constant.USER_STAT_DELETE_PENDING.equals(userStat)
-                    && !isDeletePendingAllowedPath(request.getRequestURI())) {
+                    && !isDeletePendingPath(request.getRequestURI())) {
                 // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답한다
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 // 영구 삭제 대기 회원 요청의 필터 처리를 종료한다
@@ -152,7 +152,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param requestUri 현재 요청 URI
      * @return 허용 경로 여부
      */
-    private boolean isDeletePendingAllowedPath(String requestUri) {
+    private boolean isDeletePendingPath(String requestUri) {
         // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
         return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || LOGOUT_API_URI.equals(requestUri)

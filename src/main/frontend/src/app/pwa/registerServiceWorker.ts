@@ -39,8 +39,8 @@ function setServiceWorker(): void {
 
   // 서비스워커 원본 캐시를 우회해 앱을 열 때마다 최신 업데이트 스크립트를 확인한다
   navigator.serviceWorker.register("/service-worker.js", { updateViaCache: "none" })
-    .then(handleServiceWorkerRegistration)
-    .catch(handleServiceWorkerRegistrationFailure);
+    .then(handleSwRegistration)
+    .catch(handleSwRegisterFailure);
 }
 
 /**
@@ -50,10 +50,10 @@ function setServiceWorker(): void {
  * @param registration 업데이트를 확인할 서비스워커 등록 정보
  * @return 반환값이 없다
  */
-function handleServiceWorkerRegistration(registration: ServiceWorkerRegistration): void {
+function handleSwRegistration(registration: ServiceWorkerRegistration): void {
 
   // 브라우저의 기본 확인 주기와 관계없이 현재 접속 시점에 최신 서비스워커를 조회한다
-  registration.update().catch(handleServiceWorkerRegistrationFailure);
+  registration.update().catch(handleSwRegisterFailure);
 }
 
 /**
@@ -62,7 +62,7 @@ function handleServiceWorkerRegistration(registration: ServiceWorkerRegistration
  * @author HanWon.Jang
  * @return 반환값이 없다
  */
-function handleServiceWorkerRegistrationFailure(): void {
+function handleSwRegisterFailure(): void {
 
   // PWA 등록은 보조 기능이므로 실패해도 기본 화면 사용을 유지한다
 }

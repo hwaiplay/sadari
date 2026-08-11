@@ -24,5 +24,5 @@ public interface ReportDateOverMapper {
      * @param maxSize SQL에서 반환할 최대 행 수
      * @return 목표 독서기간 초과 알림 대상 목록
      */
-    List<ReportDto> getReportDateOverTargetList(@Param("maxSize") int maxSize);
+    List<ReportDto> getOverdueReportList(@Param("maxSize") int maxSize);
 }

@@ -87,7 +87,7 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
             // 주어 공통코드 중 하나를 무작위로 선택한다
             CodeDto subject = getRandomCode(subjectList);
             // 선택한 주어와 자연스럽게 연결되는 서술어 목록을 조회한다
-            List<CodeDto> compatiblePredicateList = getCompatiblePredicateList(subject, predicateList);
+            List<CodeDto> compatiblePredicateList = getCompatiblePredList(subject, predicateList);
 
             // 주어에 연결된 서술어가 없으면 잘못된 코드 조합을 제외하고 다시 선택한다
             if (compatiblePredicateList.isEmpty()) {
@@ -157,19 +157,19 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
      * @param predicateList 전체 닉네임 서술어 코드 목록
      * @return 주어와 자연스럽게 연결되는 서술어 목록
      */
-    private List<CodeDto> getCompatiblePredicateList(CodeDto subject, List<CodeDto> predicateList) {
+    private List<CodeDto> getCompatiblePredList(CodeDto subject, List<CodeDto> predicateList) {
         // 연결 가능한 서술어를 원본 정렬 순서대로 담을 목록을 생성한다
         List<CodeDto> compatiblePredicateList = new ArrayList<>();
         // 중복 옵션을 제거하면서 주어에 등록된 서술어 코드 순서를 유지할 집합을 생성한다
         Set<String> compatiblePredicateCodeSet = new LinkedHashSet<>();
         // 주어의 첫 번째 호환 서술어 코드를 후보 집합에 추가한다
-        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt1Code());
+        addCompatiblePredCode(compatiblePredicateCodeSet, subject.getOpt1Code());
         // 주어의 두 번째 호환 서술어 코드를 후보 집합에 추가한다
-        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt2Code());
+        addCompatiblePredCode(compatiblePredicateCodeSet, subject.getOpt2Code());
         // 주어의 세 번째 호환 서술어 코드를 후보 집합에 추가한다
-        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt3Code());
+        addCompatiblePredCode(compatiblePredicateCodeSet, subject.getOpt3Code());
         // 주어의 네 번째 호환 서술어 코드를 후보 집합에 추가한다
-        addCompatiblePredicateCode(compatiblePredicateCodeSet, subject.getOpt4Code());
+        addCompatiblePredCode(compatiblePredicateCodeSet, subject.getOpt4Code());
 
         // 주어 옵션에 직접 등록된 세부코드의 서술어만 무작위 선택 후보에 포함한다
         for (CodeDto predicate : predicateList) {
@@ -193,7 +193,7 @@ public class NicknameGenerationServiceImpl implements NicknameGenerationService 
      * @param compatiblePredicateCodeSet 호환 서술어 코드를 담을 집합
      * @param predicateCode 주어 옵션에 등록된 서술어 코드
      */
-    private void addCompatiblePredicateCode(Set<String> compatiblePredicateCodeSet, String predicateCode) {
+    private void addCompatiblePredCode(Set<String> compatiblePredicateCodeSet, String predicateCode) {
         // 비어 있는 옵션은 실제 서술어 코드와 비교할 수 없으므로 후보에서 제외한다
         if (StringUtil.isEmpty(predicateCode) || predicateCode.isBlank()) {
             // 다음 옵션을 처리할 수 있도록 현재 빈 옵션 처리를 종료한다

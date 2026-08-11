@@ -22,7 +22,7 @@ class BookCoverUrlUtilTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getOriginalCoverUrlConvertsTrustedKakaoThumbnail() {
+    void getKakaoOriginalCover() {
         String thumbnailUrl = "https://search1.kakaocdn.net/thumb/R120x174.q85/"
                 + "?fname=http%3A%2F%2Ft1.daumcdn.net%2Flbook%2Fimage%2F6253040%3Ftimestamp%3D20260115151223";
 
@@ -39,7 +39,7 @@ class BookCoverUrlUtilTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getOriginalCoverUrlRejectsDisguisedOriginalHost() {
+    void getCoverRejectsFakeHost() {
         String thumbnailUrl = "https://search1.kakaocdn.net/thumb/R120x174.q85/"
                 + "?fname=https%3A%2F%2Ft1.daumcdn.net.example.com%2Flbook%2Fimage%2F1";
 
@@ -56,7 +56,7 @@ class BookCoverUrlUtilTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getOriginalCoverUrlKeepsNonKakaoImage() {
+    void getNonKakaoCover() {
         String imageUrl = "https://shopping-phinf.pstatic.net/main_123/123.jpg";
 
         // 카카오 썸네일이 아닌 기존 도서 표지 URL을 변환한다

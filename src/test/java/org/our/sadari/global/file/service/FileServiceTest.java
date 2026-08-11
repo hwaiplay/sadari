@@ -91,7 +91,7 @@ class FileServiceTest {
      * @throws IOException 테스트 이미지 생성 또는 임시 파일 확인 중 오류가 발생한 경우
      */
     @Test
-    void setProfileImageDraftReplacesPreviousDraftFiles() throws IOException {
+    void setProfileDraftReplaces() throws IOException {
         MockMultipartFile firstImage = new MockMultipartFile(
                 "imageFile",
                 "first.png",
@@ -137,7 +137,7 @@ class FileServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setUploadedImageRejectsTextDisguisedAsPng() {
+    void setImageRejectsFakePng() {
         // 허용하지 않는 이미지 입력을 재현할 테스트 파일을 담을 객체를 생성한다
         MockMultipartFile disguisedFile = new MockMultipartFile("profileImage", "profile.png", "image/png", "not-an-image".getBytes(StandardCharsets.UTF_8));
 
@@ -160,7 +160,7 @@ class FileServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setUploadedImageRejectsInvalidJpegBody() {
+    void setImageRejectsBadJpeg() {
 
         byte[] invalidJpeg = {
                 (byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 0x00, 0x01, 0x02
@@ -188,7 +188,7 @@ class FileServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setUploadedImageRejectsOversizedFile() {
+    void setImageRejectsOversize() {
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageBytes", 4L);
         // 허용하지 않는 이미지 입력을 재현할 테스트 파일을 담을 객체를 생성한다
@@ -214,7 +214,7 @@ class FileServiceTest {
      * @throws IOException 테스트 이미지 생성 또는 파일 확인 중 오류가 발생한 경우
      */
     @Test
-    void setUploadedImageStoresFileInDateDirectory() throws IOException {
+    void setImageStoresByDate() throws IOException {
         // 파일 메타정보 등록 성공과 생성 파일 번호를 모의 응답으로 설정한다
         doAnswer(invocation -> {
             // 등록 요청에 전달된 파일 메타정보를 가져온다
@@ -257,7 +257,7 @@ class FileServiceTest {
      * @throws IOException 테스트 이미지 생성 또는 저장 파일 확인 중 오류가 발생한 경우
      */
     @Test
-    void setUploadedImageAppliesExifClockwiseOrientation() throws IOException {
+    void setImageAppliesExif() throws IOException {
         // 파일 메타정보 등록 성공과 생성 파일 번호를 모의 응답으로 설정한다
         doAnswer(invocation -> {
             // 등록 요청에 전달된 파일 메타정보를 가져온다
@@ -310,7 +310,7 @@ class FileServiceTest {
      * @throws IOException 테스트용 물리 파일 생성 중 오류가 발생한 경우
      */
     @Test
-    void delFileDeletesPhysicalFileAfterCommit() throws IOException {
+    void delFileAfterCommit() throws IOException {
         // 날짜별 프로필 저장 디렉터리를 생성한다
         Path profileDirectory = Files.createDirectories(uploadRootPath.resolve("profile").resolve("260804"));
         // 교체 전 프로필 물리 파일을 생성한다
@@ -364,7 +364,7 @@ class FileServiceTest {
      * @throws IOException 테스트용 디렉터리 생성 중 오류가 발생한 경우
      */
     @Test
-    void delFileKeepsImageTypeRootForInvalidMetadata() throws IOException {
+    void delFileKeepsInvalidRoot() throws IOException {
         // 삭제되어서는 안 되는 프로필 이미지 유형 루트 디렉터리를 생성한다
         Path profileRoot = Files.createDirectories(uploadRootPath.resolve("profile"));
 

@@ -73,15 +73,15 @@ public class BadWordDetectionService {
         BadWordCache cache = getBadWordCache();
 
         // 1단계 변환: 공백 경계와 한글 및 영문만 남기고 특수문자와 숫자를 제거한 문자열이다.
-        String normalizedWithoutDigits = normalizeObfuscatedBadWord(value, false);
+        String normalizedWithoutDigits = normalizeBadWord(value, false);
 
         // 2단계 변환: 숫자 포함 비속어 검사를 위해 공백 경계와 숫자를 남겨두고 특수문자만 제거한 문자열이다.
-        String normalizedWithDigits = normalizeObfuscatedBadWord(value, true);
+        String normalizedWithDigits = normalizeBadWord(value, true);
 
         // 공백 경계를 유지한 정규화본과 반복 문자 변환본에서 일반 및 숫자 포함 비속어를 순차 탐지한다
         // 입력 문자열에서 처음 탐지된 비속어를 Optional로 반환한다
-        return getBadWordDtlIncludingRepeatedCharacters(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits)
-                .or(() -> getBadWordDtlIncludingRepeatedCharacters(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
+        return getRepeatedBadWordDtl(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits)
+                .or(() -> getRepeatedBadWordDtl(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
     }
 
     /**
@@ -119,8 +119,8 @@ public class BadWordDetectionService {
             // 데이터베이스에서 최신 비속어 목록과 예외 허용어 목록을 다시 읽어온다.
             // 두 사전을 같은 캐시 생명주기로 관리해야 BADX_WORD만 새로 반영되고 EXCP_WORD는 예전 상태로 남는 불일치를 막을 수 있다.
             List<String> reloadedBadWords = loadBadWordsFromCodeList();
-            // loadExceptionWordsFromCodeList 호출로 처리에 사용할 기준 데이터를 적재한다
-            List<String> reloadedExceptionWords = loadExceptionWordsFromCodeList();
+            // getExceptionWordList 호출로 처리에 사용할 기준 데이터를 적재한다
+            List<String> reloadedExceptionWords = getExceptionWordList();
             // 컬렉션 데이터를 순차 처리할 스트림을 생성한다
             List<String> digitBadWords = reloadedBadWords.stream()
                     .filter(this::hasDigit)
@@ -171,7 +171,7 @@ public class BadWordDetectionService {
      * @author SeungHyeon.Kang
      * @return 데이터베이스에서 조회한 비속어 예외 허용어 문자열 리스트
      */
-    private List<String> loadExceptionWordsFromCodeList() {
+    private List<String> getExceptionWordList() {
         // 데이터베이스의 공통코드 테이블에서 EXCP_WORD 리스트를 조회하여 문자열 목록으로 변환 결과를 반환한다
         return codeUtil.getCodeList(Constant.CODE_EXCP_WORD).stream()
                 .map(CodeDto::getComdName)
@@ -199,7 +199,7 @@ public class BadWordDetectionService {
         // matcher 내부에는 모든 비속어가 트라이와 실패 링크로 컴파일되어 있다.
         // 따라서 단어 600개를 각각 contains로 검사하지 않고 입력 문자열의 글자 흐름을 한 번만 따라가며 매칭 결과를 찾는다.
         // 아호-코라식 자동자를 사용해 입력 문자열에 포함된 비속어가 있는지 탐지 결과를 반환한다
-        return findLongestBadWordOutsideException(matcher.findMatches(value), exceptionMatcher.findMatches(value));
+        return getLongestBadWordMatch(matcher.findMatches(value), exceptionMatcher.findMatches(value));
     }
 
     /**
@@ -212,7 +212,7 @@ public class BadWordDetectionService {
      * @param value 공백 경계를 보존한 정규화 문자열
      * @return 탐지된 비속어
      */
-    private Optional<String> getBadWordDtlIncludingRepeatedCharacters(AhoCorasickMatcher matcher, AhoCorasickMatcher exceptionMatcher, String value) {
+    private Optional<String> getRepeatedBadWordDtl(AhoCorasickMatcher matcher, AhoCorasickMatcher exceptionMatcher, String value) {
         // 반복 문자가 없는 일반 입력은 기존 정규화 문자열을 한 번만 탐색한다
         Optional<String> matchedWord = findBadWord(matcher, exceptionMatcher, value);
 
@@ -251,7 +251,7 @@ public class BadWordDetectionService {
      * @param exceptionMatches EXCP_WORD 사전으로 탐지한 허용어 위치 목록
      * @return 허용어 범위 밖에서 발견된 가장 긴 비속어
      */
-    private Optional<String> findLongestBadWordOutsideException(List<MatchedWord> badWordMatches, List<MatchedWord> exceptionMatches) {
+    private Optional<String> getLongestBadWordMatch(List<MatchedWord> badWordMatches, List<MatchedWord> exceptionMatches) {
 
         String longestMatchedWord = null;
 
@@ -299,7 +299,7 @@ public class BadWordDetectionService {
      * @param keepDigits 숫자 보존 여부 옵션
      * @return 유효한 문자만 남긴 정규화 문자열
      */
-    private String normalizeObfuscatedBadWord(String value, boolean keepDigits) {
+    private String normalizeBadWord(String value, boolean keepDigits) {
         // keepDigits 옵션이 true이면 한글, 영문, 숫자 및 공백을 제외한 모든 문자를 제거한다.
         // keepDigits 옵션이 false이면 한글, 영문 및 공백만 남기고 숫자까지 포함한 모든 특수문자를 제거한다.
         // 유니코드 프로퍼티 표현식을 사용하여 완성형 및 조합형 한글과 영문 대소문자를 정확하게 판별한다.

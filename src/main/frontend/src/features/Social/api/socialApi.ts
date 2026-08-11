@@ -42,7 +42,7 @@ export const getSocialProfileApi = async (userNumb: number) => {
  * @param userNumb 조회할 사용자 번호
  * @return 독서 활동 요약 조회 API 응답
  */
-export const getSocialReadingSummaryApi = async (userNumb: number) => {
+export const getSocialReadingApi = async (userNumb: number) => {
 
   const res = await api.get<{ data: MonthlyReadingSummary }>(
     `/social/profile/${userNumb}/reading-summary`,

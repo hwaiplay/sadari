@@ -300,7 +300,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 탈퇴 처리 후 기존 Refresh Token과 닉네임 캐시를 제거한다
         tokenRedisService.delLoginUserInfo(request.getUserNumb());
         // 비활성화와 영구 삭제 대기 전환 모두 저장하지 않은 임시 프로필 이미지를 즉시 삭제한다
-        fileService.delAllProfileImageDraftsAfterCommit(request.getUserNumb());
+        fileService.delProfileDraftsOnCommit(request.getUserNumb());
         // 프론트엔드가 완료 화면을 구분할 수 있도록 탈퇴 유형을 반환한다
         return ResultData.success(request.getWthdType());
     }
@@ -357,7 +357,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 복구할 회원 번호를 설정한다
         user.setUserNumb(userNumb);
         // 영구 탈퇴 신청 중에도 남아 있는 관리자 정지를 우선 적용할 복구 상태를 계산한다
-        String restoredUserStat = userSuspensionService.getStatusAfterWithdrawalCancel(userNumb);
+        String restoredUserStat = userSuspensionService.getWithdrawalCancelStatus(userNumb);
         // 남은 정지 효력을 반영한 회원 상태를 설정한다
         user.setUserStat(restoredUserStat);
         // 탈퇴 요청일을 제거한다
