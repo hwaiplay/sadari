@@ -1,0 +1,18 @@
+flowchart LR
+    USER["사용자"] --> PWA["React PWA"]
+    ADMIN["관리자"] --> ADMIN_APP["Sadari Admin"]
+
+    PWA --> API["Sadari API / Spring Boot"]
+    KAKAO["Kakao OAuth / Book API"] --> API
+
+    API --> MYSQL[("MySQL 8.4")]
+    ADMIN_APP --> MYSQL
+    MYSQL --> OUTBOX["회원 상태 Outbox"]
+    OUTBOX --> SCHEDULER["제한 배치 / 실패 재시도"]
+    SCHEDULER --> REDIS
+    API <--> REDIS[("Redis 7")]
+    API --> S3["Private S3 / Local Storage"]
+    API --> FCM["Firebase Cloud Messaging"]
+
+    ACTIONS["GitHub Actions"] --> GHCR["GHCR"]
+    GHCR --> EC2["EC2 / Docker Compose"]
