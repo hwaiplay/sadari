@@ -9,6 +9,7 @@ import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.UserHardDeleteMapper;
+import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -28,6 +29,7 @@ import java.util.concurrent.TimeUnit;
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
+ * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -43,6 +45,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
     private final UserHardDeleteMapper userHardDeleteMapper;
     // 영구 탈퇴 회원의 물리 파일 정리 서비스
     private final FileService fileService;
+    // 영구 탈퇴 회원의 Redis 세션과 상태 캐시 정리 서비스
+    private final TokenRedisService tokenRedisService;
     // 스케줄러 로그 안전 처리 객체
     private final SchedulerLogSupport schedulerLogSupport;
 
@@ -90,6 +94,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
                 List<FileDto> fileList = fileService.getFileListByRegiUser(target.getUserNumb());
                 // 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 삭제한다
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
+                // 회원 원본과 함께 모든 기기 세션 및 Redis 인증 캐시를 물리 삭제한다
+                tokenRedisService.delAllUserInfo(target.getUserNumb());
                 // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
                 fileService.delFilesAfterCommit(fileList);
                 // 탈퇴 요청 시 이미 정리된 임시 이미지가 남아 있는 경우를 방어적으로 다시 삭제한다

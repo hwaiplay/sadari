@@ -300,7 +300,7 @@ export const useReplySheetController = ({
     // 선택 메뉴가 수정 입력창 위에 남지 않도록 열린 메뉴를 닫는다
     setOpenActionReplyNumb(null);
     // 선택한 댓글 번호와 원문을 하단 댓글 입력 상태에 반영한다
-    replyForm.handleStartEditReply(reply.replNumb, reply.replCntn);
+    replyForm.handleStartEditReply(reply.replNumb, reply.replCntn, reply.editVersion);
     // 입력값 렌더링이 끝난 프레임에 수정 입력 위치를 설정한다
     window.requestAnimationFrame(focusCommentInput);
   };

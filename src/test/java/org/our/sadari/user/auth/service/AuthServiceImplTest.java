@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.ArgumentMatchers.eq;
 
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
@@ -121,9 +123,9 @@ class AuthServiceImplTest {
         // 암호화한 Kakao 식별값으로 비활성화 회원이 조회되도록 결과를 구성한다
         when(userMapper.getUserByIdxx("encrypted-provider-id")).thenReturn(savedUser);
         // 재활성화된 회원에게 Access Token을 발급하도록 결과를 구성한다
-        when(jwtProvider.createAccessToken(31L, AuthConstant.ROLE_USER)).thenReturn("access-token");
+        when(jwtProvider.createAccessToken(eq(31L), eq(AuthConstant.ROLE_USER), anyString())).thenReturn("access-token");
         // 재활성화된 회원에게 Refresh Token을 발급하도록 결과를 구성한다
-        when(jwtProvider.createRefreshToken(31L)).thenReturn("refresh-token");
+        when(jwtProvider.createRefreshToken(eq(31L), anyString())).thenReturn("refresh-token");
         // Redis 로그인 세션의 유지 시간을 설정하도록 결과를 구성한다
         when(jwtProvider.getRefreshTokenValidSec()).thenReturn(3600L);
 
@@ -144,11 +146,12 @@ class AuthServiceImplTest {
         verify(userMapper).uptUserStatus(savedUser);
         // Redis 로그인 상태에도 재활성화된 회원 상태가 저장되는지 검증한다
         verify(tokenRedisService).setLoginUserInfo(
-                31L
-              , "refresh-token"
-              , "돌아온 독서가"
-              , Constant.USER_STAT_ACTIVE
-              , 3600L
+                eq(31L)
+              , anyString()
+              , eq("refresh-token")
+              , eq("돌아온 독서가")
+              , eq(Constant.USER_STAT_ACTIVE)
+              , eq(3600L)
         );
     }
 

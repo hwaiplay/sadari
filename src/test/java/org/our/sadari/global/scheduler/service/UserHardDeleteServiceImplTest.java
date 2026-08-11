@@ -17,6 +17,7 @@ import org.our.sadari.global.file.dto.FileDto;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.mapper.UserHardDeleteMapper;
+import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -39,6 +40,9 @@ class UserHardDeleteServiceImplTest {
     // 영구 탈퇴 회원 파일 정리 서비스 대역
     @Mock
     private FileService fileService;
+    // 영구 탈퇴 회원 인증 정보 정리 서비스 대역
+    @Mock
+    private TokenRedisService tokenRedisService;
     // 스케줄러 로그 안전 처리 객체 대역
     @Mock
     private SchedulerLogSupport schedulerLogSupport;
@@ -95,6 +99,8 @@ class UserHardDeleteServiceImplTest {
         deleteOrder.verify(fileService).getFileListByRegiUser(31L);
         // 파일 경로 확보 뒤 회원과 파일 메타정보를 삭제하는지 확인한다
         deleteOrder.verify(userHardDeleteMapper).delHardDeleteUser(31L);
+        // 회원 원본 삭제와 함께 모든 Redis 세션 및 인증 캐시를 제거하는지 확인한다
+        verify(tokenRedisService).delAllUserInfo(31L);
         // DB 삭제 뒤 커밋 후 물리 파일 정리를 등록하는지 확인한다
         deleteOrder.verify(fileService).delFilesAfterCommit(List.of(profileFile));
         // 영구 삭제 실행 결과를 스케줄러 로그에 최종 반영하는지 확인한다

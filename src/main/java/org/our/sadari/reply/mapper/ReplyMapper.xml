@@ -27,6 +27,10 @@
              , R.DELT_YSNO
              , R.REGI_DATE
              , R.UPDT_DATE
+             , SHA2(CONCAT_WS('|'
+                    , COALESCE(R.REPL_CNTN, '')
+                    , COALESCE(R.DELT_YSNO, '')
+               ), 256) AS EDIT_VERSION
              , IF(R.UPDT_DATE IS NULL, 'N', 'Y') AS UPDT_YSNO
              , FN_GET_CODE_NAME('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL) AS UPDT_YSNO_NM
              , U.USER_NICK
@@ -109,6 +113,10 @@
            AND R.REPL_NUMB = #{replNumb}
            AND R.USER_NUMB = #{userNumb}
            AND R.DELT_YSNO = #{commNo}
+           AND SHA2(CONCAT_WS('|'
+                    , COALESCE(R.REPL_CNTN, '')
+                    , COALESCE(R.DELT_YSNO, '')
+               ), 256) = #{editVersion}
            AND EXISTS (
                    SELECT 1
                      FROM TM_USERXM U

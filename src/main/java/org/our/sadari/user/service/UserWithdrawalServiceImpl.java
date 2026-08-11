@@ -398,6 +398,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         user.setDeltDate(deleteDate);
         // 회원 상태와 탈퇴 일시를 변경한다
         userMapper.uptUserStatus(user);
+        // 세션 삭제와 분리된 Redis 계정 상태도 즉시 제한 상태로 갱신한다
+        tokenRedisService.uptUserStatus(request.getUserNumb(), userStat);
         // 탈퇴 회원이 작성한 댓글을 삭제된 댓글 상태로 변경한다
         userMapper.uptUserReplyDeleted(request.getUserNumb());
 

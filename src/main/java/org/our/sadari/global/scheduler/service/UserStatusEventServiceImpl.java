@@ -86,8 +86,8 @@ public class UserStatusEventServiceImpl implements UserStatusEventService {
 
                 // 영구 삭제로 회원 원본이 없으면 남은 로그인 정보를 제거한다
                 if (StringUtil.isEmpty(event.getUserStat())) {
-                    // 삭제된 회원의 Refresh Token과 상태 캐시를 함께 제거한다
-                    tokenRedisService.delLoginUserInfo(event.getUserNumb());
+                    // 삭제된 회원의 모든 기기 세션과 상태 캐시를 함께 제거한다
+                    tokenRedisService.delAllUserInfo(event.getUserNumb());
                 } else {
                     // 처리 시점의 DB 회원 상태를 기존 로그인 세션 TTL로 Redis에 반영한다
                     tokenRedisService.uptUserStatus(event.getUserNumb(), event.getUserStat());

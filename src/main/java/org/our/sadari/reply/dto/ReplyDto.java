@@ -74,4 +74,7 @@ public class ReplyDto {
 
     @Schema(description = "댓글 좋아요 알림을 받을 댓글 작성자 사용자 번호", example = "31", hidden = true)
     private Long targetUserNumb;
+
+    @Schema(description = "댓글 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
+    private String editVersion;
 }

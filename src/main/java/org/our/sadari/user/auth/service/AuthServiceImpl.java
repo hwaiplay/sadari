@@ -2,6 +2,7 @@ package org.our.sadari.user.auth.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
@@ -209,10 +210,12 @@ public class AuthServiceImpl implements AuthService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String accessToken = jwtProvider.createAccessToken(userDto.getUserNumb(), userDto.getUserRole());
-        // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String refreshToken = jwtProvider.createRefreshToken(userDto.getUserNumb());
+        // 이번 브라우저 로그인을 다른 기기 세션과 구분할 식별자를 생성한다
+        String sessionId = UUID.randomUUID().toString();
+        // 동일 기기 세션 식별자를 포함한 Access Token을 생성한다
+        String accessToken = jwtProvider.createAccessToken(userDto.getUserNumb(), userDto.getUserRole(), sessionId);
+        // 동일 기기 세션 식별자를 포함한 Refresh Token을 생성한다
+        String refreshToken = jwtProvider.createRefreshToken(userDto.getUserNumb(), sessionId);
 
         /*
          * 알림 발송 시 발신자 닉네임을 다시 DB에서 조회하지 않도록 로그인 시점의 최신 닉네임을 Refresh Token과 함께 저장한다.
@@ -221,6 +224,7 @@ public class AuthServiceImpl implements AuthService {
         tokenRedisService.setLoginUserInfo(
                 // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
                 userDto.getUserNumb()
+              , sessionId
               , refreshToken
               , userDto.getUserNick()
               , userDto.getUserStat()

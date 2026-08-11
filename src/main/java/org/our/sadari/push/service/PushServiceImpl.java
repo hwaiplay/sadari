@@ -274,6 +274,8 @@ public class PushServiceImpl implements PushService {
 
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
+        // 동일 브라우저 token이 과거 계정으로 푸시를 받지 않도록 다른 계정 구독을 먼저 비활성화한다
+        pushMapper.uptOtherPushDisabled(req);
         // PushSub 업무 값을 pushMapper DTO에 설정한다
         pushMapper.setPushSub(req);
         // 로그인 사용자의 현재 브라우저 FCM token을 저장한 결과를 성공 응답으로 반환한다
@@ -303,6 +305,28 @@ public class PushServiceImpl implements PushService {
         // PushSub 데이터를 DB에서 삭제한다
         pushMapper.delPushSub(req);
         // 로그인 사용자의 현재 브라우저 FCM token을 비활성화한 결과를 성공 응답으로 반환한다
+        return ResultData.success();
+    }
+
+    /**
+     * 전체 기기 로그아웃 시 로그인 회원의 모든 브라우저 푸시 구독을 비활성화한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 비활성화 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delAllPushSub(Long userNumb) {
+        // 회원 번호가 없으면 다른 사용자의 구독에 영향을 주지 않도록 요청을 거절한다
+        if (StringUtil.isEmpty(userNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 회원의 모든 기기 FCM token을 비활성화한다
+        pushMapper.delAllPushSub(userNumb);
+        // 전체 기기 푸시 구독 정리 성공을 반환한다
         return ResultData.success();
     }
 

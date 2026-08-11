@@ -310,6 +310,15 @@
              , A.PUBC_YSNO
              , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}) AS PUBC_YSNO_NAME
              , A.REPT_CNTN
+             , SHA2(CONCAT_WS('|'
+                    , COALESCE(A.REPT_STAT, '')
+                    , COALESCE(A.REPT_STDT, '')
+                    , COALESCE(A.REPT_ENDT, '')
+                    , COALESCE(A.REPT_GRDE, '')
+                    , COALESCE(A.REPT_COLR, '')
+                    , COALESCE(A.PUBC_YSNO, '')
+                    , COALESCE(A.REPT_CNTN, '')
+               ), 256) AS EDIT_VERSION
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , COALESCE(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
              , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT
@@ -496,6 +505,15 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE REPT_NUMB = #{reptNumb}
            AND USER_NUMB = #{userNumb}
+           AND SHA2(CONCAT_WS('|'
+                    , COALESCE(REPT_STAT, '')
+                    , COALESCE(REPT_STDT, '')
+                    , COALESCE(REPT_ENDT, '')
+                    , COALESCE(REPT_GRDE, '')
+                    , COALESCE(REPT_COLR, '')
+                    , COALESCE(PUBC_YSNO, '')
+                    , COALESCE(REPT_CNTN, '')
+               ), 256) = #{editVersion}
     </update>
 
     <!-- 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다. -->
