@@ -32,8 +32,22 @@ export const refreshTokenApi = async () => {
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const logoutApi = async () => {
+export type LogoutScope = "CURRENT" | "ALL";
 
-  const res = await api.post("/oauth/logout");
+export type LogoutRequest = {
+  scope: LogoutScope;
+  pushToken?: string;
+};
+
+/**
+ * 선택한 범위의 로그인 세션과 푸시 구독을 종료한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param data 현재 기기 또는 전체 기기 로그아웃 요청
+ * @return 처리 결과
+ */
+export const logoutApi = async (data: LogoutRequest) => {
+
+  const res = await api.post("/oauth/logout", data);
   return assertResultDataSuccess(res.data);
 };

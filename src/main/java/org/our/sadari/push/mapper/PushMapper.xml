@@ -29,6 +29,18 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
     </insert>
 
+    <!-- 한 브라우저 FCM token은 마지막으로 구독을 등록한 계정만 활성 상태로 소유한다. -->
+    <update id="uptOtherPushDisabled" parameterType="org.our.sadari.push.dto.PushDto$PushSubDto">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE /* uptOtherPushDisabled */
+               TB_PSHSUB
+           SET USEE_YSNO = #{commNo}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE ENDP_URLX = #{endpUrlx}
+           AND USER_NUMB <![CDATA[ <> ]]> #{userNumb}
+           AND USEE_YSNO <![CDATA[ <> ]]> #{commNo}
+    </update>
+
     <!-- 로그아웃이나 알림 끄기 시 token row를 삭제하지 않고 비활성화해 추적 가능성을 남긴다. -->
     <update id="delPushSub" parameterType="org.our.sadari.push.dto.PushDto$PushSubDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -38,6 +50,17 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{userNumb}
            AND ENDP_URLX = #{endpUrlx}
+    </update>
+
+    <!-- 전체 기기 로그아웃 시 회원에게 연결된 활성 FCM token을 모두 비활성화한다. -->
+    <update id="delAllPushSub" parameterType="long">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE /* delAllPushSub */
+               TB_PSHSUB
+           SET USEE_YSNO = #{commNo}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE USER_NUMB = #{userNumb}
+           AND USEE_YSNO <![CDATA[ <> ]]> #{commNo}
     </update>
 
     <!-- 알림 수신자에게 등록된 활성 FCM token만 조회한다. -->

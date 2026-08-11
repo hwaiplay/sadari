@@ -137,7 +137,7 @@ Spring Boot 빌드 과정에서 React 결과물을 `src/main/resources/static`�
 1. Kakao OAuth 콜백에서 사용자 정보를 조회한다.
 2. OAuth 식별값을 암호화한 값으로 기존 회원을 조회하거나 신규 회원을 생성한다.
 3. Access Token과 Refresh Token을 발급한다.
-4. 토큰은 HttpOnly Cookie로 전달하고 Refresh Token, 닉네임, 회원 상태를 Redis에 저장한다.
+4. 토큰은 HttpOnly Cookie로 전달하고 기기별 `sid` Refresh Token 세션, 닉네임, 회원 상태를 Redis에 저장한다.
 5. 이후 요청은 `JwtFilter`가 토큰과 블랙리스트, 회원 상태를 검증한다.
 
 ### 소셜 알림

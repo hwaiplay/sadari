@@ -1051,7 +1051,8 @@ public class ReportServiceImpl implements ReportService {
     @Transactional
     public ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto) {
         // 대상 독후감 번호가 없으면 상세, 수정, 삭제 대상을 특정할 수 없으므로 실패 처리한다.
-        if (StringUtil.isEmpty(reptNumb)) {
+        if (StringUtil.isEmpty(reptNumb) || StringUtil.isEmpty(reportDto)
+                || StringUtil.isEmpty(reportDto.getEditVersion())) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -1079,8 +1080,8 @@ public class ReportServiceImpl implements ReportService {
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (reportMapper.uptReport(reportDto) == 0) {
-            // "수정에 실패했어요.\n다시 시도해주세요."
-            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+            // 다른 탭이나 기기에서 먼저 변경한 원본을 덮어쓰지 않도록 충돌 결과를 반환한다
+            return ResultData.fail(ResultEnum.COMMON_EDIT_CONFLICT);
         }
 
         // 기존 독후감 정보를 수정 결과를 성공 응답으로 반환한다

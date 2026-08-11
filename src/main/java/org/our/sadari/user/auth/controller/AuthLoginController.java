@@ -6,16 +6,19 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.global.file.service.FileService;
+import org.our.sadari.push.dto.PushDto;
+import org.our.sadari.push.service.PushService;
+import org.our.sadari.user.auth.dto.AuthLogoutDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
@@ -32,6 +35,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
@@ -48,6 +52,7 @@ import java.util.Map;
  * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
  * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
+ * 2026-08-11        SeungHyeon.Kang    기기별 재발급과 선택형 로그아웃 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -75,6 +80,8 @@ public class AuthLoginController {
     private final UserWithdrawalService userWithdrawalService;
     // 로그아웃 시 사용자 프로필 임시 이미지를 정리할 파일 서비스
     private final FileService fileService;
+    // 로그아웃 범위에 따라 브라우저 푸시 구독을 정리할 서비스
+    private final PushService pushService;
 
     // OAuth 완료 후 이동할 프런트엔드 도메인
     @Value("${domain.front}")
@@ -157,21 +164,31 @@ public class AuthLoginController {
 
         // 검증된 토큰에서 현재 로그인 사용자 번호를 조회한다
         Long userNumb = jwtProvider.getUserNumb(accessToken);
-        // Redis 상태값이 없는 기존 세션은 정상 회원 상태로 보정한다
-        String userStat = tokenRedisService.getUserStatus(userNumb);
-        // 최초 로그인 전용 화면 진입 여부를 DB의 영속 상태로 조회한다
-        String onbdYsno = userMapper.getUserOnboardingYsno(userNumb);
+        // 토큰에 연결된 현재 기기 세션이 로그아웃되지 않았는지 확인한다
+        String sessionId = jwtProvider.getSessionId(accessToken);
 
+        // 전체 또는 현재 기기 로그아웃으로 세션이 제거된 토큰은 인증에 사용할 수 없다
+        if (!tokenRedisService.isSessionActive(userNumb, sessionId)) {
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
+        }
+
+        // 계정 상태를 Redis 누락값으로 추정하지 않고 DB 원본에서 조회한다
+        UserDto savedUser = userMapper.getUserByNumb(userNumb);
         // 토큰의 사용자가 DB에 없으면 정상 인증 상태로 응답하지 않는다
-        if (StringUtil.isEmpty(onbdYsno)) {
+        if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())
+                || StringUtil.isEmpty(savedUser.getOnbdYsno())) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
+        // 필터와 다음 요청이 같은 상태를 사용하도록 DB 원본 상태를 Redis에 보정한다
+        tokenRedisService.uptUserStatus(userNumb, savedUser.getUserStat());
+
         // 프론트엔드가 회원 상태와 최초 로그인 화면을 한 번에 선택할 수 있도록 반환한다
         return ResultData.success(Map.of(
-                "userStat", StringUtil.isEmpty(userStat) ? Constant.USER_STAT_ACTIVE : userStat
-              , "onbdYsno", onbdYsno
+                "userStat", savedUser.getUserStat()
+              , "onbdYsno", savedUser.getOnbdYsno()
         ));
     }
 
@@ -280,11 +297,11 @@ public class AuthLoginController {
 
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
         Long userNumb = jwtProvider.getUserNumb(refreshToken);
-        // getRefreshToken 업무 로직을 tokenRedisService에 위임한다
-        String savedRefreshToken = tokenRedisService.getRefreshToken(userNumb);
+        // Refresh Token에 연결된 기기별 세션 식별자를 조회한다
+        String sessionId = jwtProvider.getSessionId(refreshToken);
 
-        // Redis에 저장된 Refresh Token과 전달받은 쿠키의 Refresh Token이 일치하는지 비교 검증한다.
-        if (StringUtil.isEmpty(savedRefreshToken) || !savedRefreshToken.equals(refreshToken)) {
+        // 세션 식별자가 없거나 이미 로그아웃된 세션이면 재발급을 중단한다
+        if (StringUtil.isEmpty(sessionId) || !tokenRedisService.isSessionActive(userNumb, sessionId)) {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
@@ -302,19 +319,29 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String newAccessToken = jwtProvider.createAccessToken(userNumb, savedUser.getUserRole());
-        // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String newRefreshToken = jwtProvider.createRefreshToken(userNumb);
-
-        // 신규 발급된 Refresh Token을 Redis 저장소에 저장(RTR 패턴)하고, 쿠키에도 새로 발급된 토큰들을 내려준다.
-        tokenRedisService.setLoginUserInfo(
+        // 같은 기기 세션 식별자를 유지한 Refresh Token 후보를 생성한다
+        String proposedRefreshToken = jwtProvider.createRefreshToken(userNumb, sessionId);
+        // 다중 탭 동시 요청을 하나의 회전 결과로 합쳐 Redis에 저장된 최신 토큰을 조회한다
+        String newRefreshToken = tokenRedisService.rotateRefreshToken(
                 userNumb
-              , newRefreshToken
-              , savedUser.getUserNick()
-              , savedUser.getUserStat()
+              , sessionId
+              , refreshToken
+              , proposedRefreshToken
               , jwtProvider.getRefreshTokenValidSec()
         );
+
+        // 현재 토큰이나 직전 유예 토큰이 아니면 탈취 또는 만료 세션으로 판단한다
+        if (StringUtil.isEmpty(newRefreshToken)) {
+            // 더 이상 사용할 수 없는 인증 쿠키를 제거한다
+            expireTokenCookies(response);
+            // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.TOKEN_INVALID);
+        }
+
+        // 회전 결과와 같은 세션을 가리키는 Access Token을 발급한다
+        String newAccessToken = jwtProvider.createAccessToken(userNumb, savedUser.getUserRole(), sessionId);
+        // DB 원본 계정 상태를 별도 Redis 캐시에 반영한다
+        tokenRedisService.uptUserStatus(userNumb, savedUser.getUserStat());
 
         // 발급한 액세스 토큰과 리프레시 토큰을 보안 쿠키에 저장한다
         addTokenCookies(response, newAccessToken, newRefreshToken);
@@ -326,24 +353,31 @@ public class AuthLoginController {
      * Access Token 블랙리스트 등록과 Refresh Token 삭제한다.
      *
      * @author SeungHyeon.Kang
+     * @param req 로그아웃 범위와 현재 브라우저 푸시 token
      * @param request HTTP 요청 정보
      * @param response HTTP 응답 작성 객체
      * @return 처리 결과
      */
     @PostMapping("/logout")
-    @Operation(summary = "로그아웃", description = "Access Token을 Redis 블랙리스트에 등록하고 Refresh Token을 제거한 뒤 토큰 쿠키를 만료시킨다.")
-    public ResultData logout(@Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) {
+    @Operation(summary = "로그아웃", description = "현재 기기 또는 전체 기기의 로그인 세션과 푸시 구독을 정리한다.")
+    public ResultData logout(@Valid @RequestBody(required = false) AuthLogoutDto req
+                           , @Parameter(hidden = true) HttpServletRequest request
+                           , @Parameter(hidden = true) HttpServletResponse response) {
         // extractAccessToken 호출로 요청에서 인증 토큰을 추출한다
         String accessToken = extractAccessToken(request);
         // extractRefreshToken 호출로 요청에서 인증 토큰을 추출한다
         String refreshToken = extractRefreshToken(request);
         // 유효한 Access 또는 Refresh Token에서 임시 이미지 정리에 사용할 사용자 번호를 복원한다
         Long logoutUserNumb = null;
+        // 현재 기기 세션만 제거할 때 사용할 식별자를 복원한다
+        String logoutSessionId = null;
 
         // 유효한 Access Token인 경우 남은 유효시간 동안 재사용하지 못하도록 jti를 Redis 블랙리스트에 등록한다.
         if (!StringUtil.isEmpty(accessToken) && jwtProvider.validateToken(accessToken)) {
             // Refresh Token이 없더라도 로그아웃 사용자의 임시 이미지를 정리할 번호를 보관한다
             logoutUserNumb = jwtProvider.getUserNumb(accessToken);
+            // Access Token에 연결된 현재 기기 세션 식별자를 보관한다
+            logoutSessionId = jwtProvider.getSessionId(accessToken);
             // AccessTokenBlacklist 업무 값을 tokenRedisService DTO에 설정한다
             tokenRedisService.setAccessTokenBlacklist(
                     // getTokenId 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -359,12 +393,36 @@ public class AuthLoginController {
             Long userNumb = jwtProvider.getUserNumb(refreshToken);
             // Refresh Token의 로그인 사용자 번호를 최종 로그아웃 대상으로 설정한다
             logoutUserNumb = userNumb;
-            // delLoginUserInfo 업무 로직을 tokenRedisService에 위임한다
-            tokenRedisService.delLoginUserInfo(userNumb);
+            // Refresh Token에 연결된 현재 기기 세션 식별자를 최종 대상으로 설정한다
+            logoutSessionId = jwtProvider.getSessionId(refreshToken);
         }
 
         // 유효한 인증 토큰에서 사용자를 확인한 경우 저장하지 않은 임시 이미지를 모두 삭제한다
         if (!StringUtil.isEmpty(logoutUserNumb)) {
+            // 요청 본문이 없는 이전 클라이언트는 안전한 현재 기기 로그아웃으로 처리한다
+            String logoutScope = StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getScope())
+                    ? "CURRENT" : req.getScope();
+
+            // 전체 기기 로그아웃은 회원의 모든 세션과 푸시 구독을 비활성화한다
+            if ("ALL".equals(logoutScope)) {
+                // 모든 기기 Refresh Token 세션을 제거한다
+                tokenRedisService.delLoginUserInfo(logoutUserNumb);
+                // 모든 기기 FCM token을 비활성화한다
+                pushService.delAllPushSub(logoutUserNumb);
+            } else {
+                // 현재 기기 Refresh Token 세션만 제거한다
+                tokenRedisService.delLoginSession(logoutUserNumb, logoutSessionId);
+                // 현재 브라우저 FCM token을 확인할 수 있을 때만 해당 구독을 비활성화한다
+                if (!StringUtil.isEmpty(req) && !StringUtil.isEmpty(req.getPushToken())) {
+                    // 푸시 비활성화 요청 DTO를 생성한다
+                    PushDto.PushSubDto pushSub = new PushDto.PushSubDto();
+                    // 현재 브라우저에서 조회한 FCM token을 설정한다
+                    pushSub.setEndpUrlx(req.getPushToken());
+                    // 현재 브라우저의 푸시 구독만 비활성화한다
+                    pushService.delPushSub(logoutUserNumb, pushSub);
+                }
+            }
+
             // 저장하지 않은 프로필과 배경 임시 원본 및 미리보기를 즉시 삭제한다
             fileService.delAllProfileImageDrafts(logoutUserNumb);
         }

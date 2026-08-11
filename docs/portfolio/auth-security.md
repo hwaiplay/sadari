@@ -30,13 +30,14 @@ Kakao 로그인 성공 시 Provider 사용자 식별값을 내부 회원 조회 
 
 - Access Token 재발급에 사용한다.
 - Access Token보다 긴 유효시간을 갖는다.
-- Redis의 `auth:refresh:{userNumb}`에 저장해 서버에서 세션을 폐기할 수 있다.
+- Redis의 `auth:session:{sid}`와 `auth:user:sessions:{userNumb}`에 기기별로 저장해 현재 기기와 전체 기기 세션을 구분해 폐기할 수 있다.
 
 ### 로그인 사용자 메타데이터
 
 로그인 시 다음 데이터를 Redis에 함께 저장한다.
 
-- `auth:refresh:{userNumb}`: Refresh Token
+- `auth:session:{sid}`: 기기별 현재·직전 Refresh Token과 회전 유예 정보
+- `auth:user:sessions:{userNumb}`: 회원의 활성 기기 세션 목록
 - `auth:user:nick:{userNumb}`: 닉네임
 - `auth:user:status:{userNumb}`: 회원 상태
 

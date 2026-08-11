@@ -40,6 +40,8 @@ export interface ReplyDtoType {
     regiDate: string;
     // 댓글 수정 일시
     updtDate?: string | null;
+    // 다른 탭이나 기기의 선행 수정 여부를 확인할 원본 내용 해시
+    editVersion: string;
     // 댓글 수정 여부
     updtYsno: "Y" | "N";
     // 댓글 수정 여부에 따라 화면에 표시할 문구

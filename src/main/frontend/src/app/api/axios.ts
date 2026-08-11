@@ -12,6 +12,7 @@ import {
   endBlockingOperation,
 } from "@/app/navigation/blockingOperation";
 import { assertResultDataSuccess, type ResultData } from "./resultData";
+import { publishAuthLogout } from "@/features/Auth/lib/authEvents";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -313,7 +314,7 @@ async function resetSessionToLogin() {
   // 서버 logout API로 쿠키를 만료시킨 뒤 이동해야 /login과 /home 사이의 반복 이동을 막을 수 있다.
   if (!logoutRequest) {
     logoutRequest = api
-      .post("/oauth/logout")
+      .post("/oauth/logout", { scope: "CURRENT" })
       .catch(() => undefined)
       .finally(() => {
 
@@ -322,6 +323,8 @@ async function resetSessionToLogin() {
   }
 
   await logoutRequest;
+  // 자동 인증 복구 실패도 같은 브라우저의 다른 탭에 즉시 전파합니다
+  publishAuthLogout();
 
   if (window.location.pathname !== "/login") {
     window.location.replace("/login");

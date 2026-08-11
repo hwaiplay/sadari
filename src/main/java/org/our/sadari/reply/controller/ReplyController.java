@@ -4,8 +4,10 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.reply.dto.ReplyDto;
 import org.our.sadari.reply.service.ReplyService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-29        HanWon.Jang        댓글 조회 시 로그인 사용자 번호 전달
  * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 추가
  * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 추가
+ * 2026-08-11        SeungHyeon.Kang    다중 탭 댓글 수정 충돌 409 응답 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +67,7 @@ public class ReplyController {
      * @param reptNumb 수정할 댓글이 속한 독후감 번호
      * @param replNumb 수정할 댓글 번호
      * @param request 변경할 댓글 내용
+     * @param response 수정 충돌 HTTP 상태를 기록할 응답 객체
      * @return 수정된 댓글 번호를 포함한 처리 결과
      */
     @PutMapping("/{reptNumb}/{replNumb}")
@@ -71,9 +75,16 @@ public class ReplyController {
     public ResultData uptReply(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                              , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
                              , @Parameter(description = "수정할 댓글 번호", example = "10") @PathVariable Long replNumb
-                             , @Valid @RequestBody ReplyDto request) {
+                             , @Valid @RequestBody ReplyDto request
+                             , @Parameter(hidden = true) HttpServletResponse response) {
+        // 원본 버전을 포함한 댓글 수정 결과를 조회한다
+        ResultData result = replyService.uptReply(userNumb, reptNumb, replNumb, request);
+        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답한다
+        if (result.getCode() == ResultEnum.COMMON_EDIT_CONFLICT.getCode()) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+        }
         // 경로에서 확정한 댓글 식별값과 변경 내용을 서비스에 전달한 수정 결과를 반환한다
-        return replyService.uptReply(userNumb, reptNumb, replNumb, request);
+        return result;
     }
 
     /**

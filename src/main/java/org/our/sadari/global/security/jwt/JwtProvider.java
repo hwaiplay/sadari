@@ -27,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-11        SeungHyeon.Kang    기기별 로그인 세션 식별자 클레임 추가
  */
 @Component
 public class JwtProvider {
@@ -74,9 +75,10 @@ public class JwtProvider {
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호 (PK)
      * @param role 사용자 권한 (예: USER, ADMIN)
+     * @param sessionId 기기별 로그인 세션 식별자
      * @return 생성된 Access Token 문자열
      */
-    public String createAccessToken(Long userNumb, String role) {
+    public String createAccessToken(Long userNumb, String role, String sessionId) {
         // JWT 만료 시각을 담을 객체를 생성한다
         Date now = new Date();
         // 회원 번호와 권한 정보를 바탕으로 Access Token을 발급 결과를 반환한다
@@ -84,6 +86,7 @@ public class JwtProvider {
                 .subject(String.valueOf(userNumb))
                 .id(UUID.randomUUID().toString())
                 .claim("role", role)
+                .claim("sid", sessionId)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
                 // 0.13 API의 알고리즘 레지스트리를 명시해 서명 알고리즘을 HS256으로 고정한다.
@@ -96,14 +99,17 @@ public class JwtProvider {
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호 (PK)
+     * @param sessionId 기기별 로그인 세션 식별자
      * @return 생성된 Refresh Token 문자열
      */
-    public String createRefreshToken(Long userNumb) {
+    public String createRefreshToken(Long userNumb, String sessionId) {
         // JWT 만료 시각을 담을 객체를 생성한다
         Date now = new Date();
         // 회원 번호를 바탕으로 Access Token 재발급용 Refresh Token을 발급 결과를 반환한다
         return Jwts.builder()
                 .subject(String.valueOf(userNumb))
+                .id(UUID.randomUUID().toString())
+                .claim("sid", sessionId)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + refreshTokenValidityMilliSeconds))
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -173,6 +179,18 @@ public class JwtProvider {
     public String getTokenId(String token) {
         // JWT 토큰에서 고유 식별자(jti)를 추출 결과를 반환한다
         return getClaims(token).getId();
+    }
+
+    /**
+     * JWT 토큰에서 기기별 로그인 세션 식별자(sid)를 추출한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param token JWT 토큰
+     * @return 로그인 세션 식별자
+     */
+    public String getSessionId(String token) {
+        // 동일 브라우저의 Access Token과 Refresh Token을 연결하는 세션 식별자를 반환한다
+        return getClaims(token).get("sid", String.class);
     }
 
     /**

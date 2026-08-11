@@ -563,6 +563,7 @@ function DetailPage() {
           reptColr: bookData.reptColr,
           pubcYsno: normalizedPubcYsno,
           reptCntn: sanitizeText(content),
+          editVersion: bookData.editVersion,
         },
       },
       {

@@ -3,16 +3,13 @@ import {
   FIREBASE_PUSH_ENABLED_EVENT,
   subscribeFirebaseMessages,
 } from "@/app/pwa/firebaseMessaging";
-import { queryClient } from "@/app/query/queryClient";
-import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { getUnreadAlimCntApi } from "@/features/Alim/api/alimApi";
 import {
   isUnreadAlimChangeEvent,
   UNREAD_ALIM_CNT_CHANGED_EVENT,
 } from "@/features/Alim/lib/alimEvents";
-import { logoutApi } from "@/features/Auth/api/authApi";
+import { runLogout, selectLogoutScope } from "@/features/Auth/lib/logoutFlow";
 import { getPushConfigApi } from "@/features/Push/api/pushApi";
-import { useAuthStore } from "@/features/Auth/store/authStore";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import {
@@ -154,7 +151,6 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const [expandedMenuNumbs, setExpandedMenuNumbs] = useState<number[]>([]);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
-  const clearAuth = useAuthStore((state) => state.clearAuth);
   const profileName = profile?.userNick || "사용자";
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
@@ -220,22 +216,18 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
    */
   const handleLogout = async () => {
 
-    const confirmed = await sweetConfirm({
-      title: message("frontend.auth.logoutConfirmTitle"),
-      confirmButtonText: message("frontend.auth.logout"),
-      cancelButtonText: message("frontend.common.cancel"),
-    });
+    // Alert에서 현재 기기 또는 전체 기기 로그아웃 범위를 선택한다
+    const logoutScope = await selectLogoutScope();
 
-    if (!confirmed.isConfirmed) {
+    // 취소하면 현재 인증 상태와 메뉴를 유지한다
+    if (!logoutScope) {
       return;
     }
 
     try {
-      await logoutApi();
+      // 선택한 범위의 서버 세션과 브라우저 푸시 구독을 정리한다
+      await runLogout(logoutScope);
     } finally {
-      clearAuth();
-      // Logout changes the auth state immediately; clearing the cached check prevents /login -> /home loops.
-      queryClient.removeQueries({ queryKey: ["auth"] });
       setIsDrawerOpen(false);
       navigate("/login", { replace: true });
     }

@@ -11,15 +11,18 @@ type SweetAlertOptions = {
   customClass?: string;
   icon?: SweetAlertIcon;
   confirmButtonText?: string;
+  denyButtonText?: string;
   cancelButtonText?: string;
   showCancelButton?: boolean;
   showConfirmButton?: boolean;
+  showDenyButton?: boolean;
   allowOutsideClick?: boolean;
   closeSignal?: AbortSignal;
 };
 
 type SweetAlertResult = {
   isConfirmed: boolean;
+  isDenied: boolean;
   isSecondaryAction: boolean;
   isDismissed: boolean;
 };
@@ -267,6 +270,14 @@ function ensureSweetAlertStyle() {
       display: none;
     }
 
+    .sadari-swal-logout .sadari-swal-actions {
+      flex-direction: column-reverse;
+    }
+
+    .sadari-swal-logout .sadari-swal-button {
+      width: 100%;
+    }
+
     .sadari-swal-button {
       min-width: 86px;
       height: 38px;
@@ -482,6 +493,12 @@ function ensureSweetAlertStyle() {
       }
     }
 
+    .sadari-swal-deny {
+      border-color: #b43f3f;
+      background: #ffffff;
+      color: #b43f3f;
+    }
+
     @keyframes sadari-swal-loading-spin {
       to {
         transform: rotate(360deg);
@@ -533,6 +550,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       // 이미 종료된 작업의 모달 Promise를 닫힘 상태로 완료한다
       resolve({
         isConfirmed: false,
+        isDenied: false,
         isSecondaryAction: false,
         isDismissed: true,
       });
@@ -581,6 +599,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       // 완료된 작업의 안내 모달을 닫힘 상태로 정리한다
       close({
         isConfirmed: false,
+        isDenied: false,
         isSecondaryAction: false,
         isDismissed: true,
       });
@@ -652,11 +671,31 @@ export function sweetAlert(options: SweetAlertOptions) {
 
         close({
           isConfirmed: false,
+          isDenied: false,
           isSecondaryAction: true,
           isDismissed: false,
         });
       });
       actions.appendChild(cancelButton);
+    }
+
+    // 현재 동작과 구분되는 두 번째 확정 선택이 필요할 때 거부 버튼을 제공한다
+    if (options.showDenyButton) {
+      const denyButton = document.createElement("button");
+      denyButton.className = "sadari-swal-button sadari-swal-deny";
+      denyButton.type = "button";
+      denyButton.textContent = options.denyButtonText ?? "다른 선택";
+      denyButton.addEventListener("click", () => {
+
+        // 사용자의 두 번째 확정 선택으로 현재 알림을 완료한다
+        close({
+          isConfirmed: false,
+          isDenied: true,
+          isSecondaryAction: false,
+          isDismissed: false,
+        });
+      });
+      actions.appendChild(denyButton);
     }
 
     let confirmButton: HTMLButtonElement | null = null;
@@ -672,6 +711,7 @@ export function sweetAlert(options: SweetAlertOptions) {
         // 사용자의 확인 선택으로 현재 알림을 완료한다
         close({
           isConfirmed: true,
+          isDenied: false,
           isSecondaryAction: false,
           isDismissed: false,
         });
@@ -685,6 +725,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       if (event.target === overlay && options.allowOutsideClick !== false) {
         close({
           isConfirmed: false,
+          isDenied: false,
           isSecondaryAction: false,
           isDismissed: true,
         });

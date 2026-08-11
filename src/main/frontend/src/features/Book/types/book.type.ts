@@ -102,6 +102,8 @@ export interface ReportDtoType {
   publDate: string;
   // 평균 별점
   bookAvgGrde?: number | string | null;
+  // 다른 탭이나 기기의 선행 수정 여부를 확인할 원본 내용 해시
+  editVersion?: string;
 }
 
 /**
@@ -124,6 +126,8 @@ export interface uptReportType {
     pubcYsno: "Y" | "N";
     // 독후감 내용
     reptCntn: string;
+    // 상세 조회 시 받은 원본 내용 해시
+    editVersion: string;
   };
 }
 
@@ -156,6 +160,8 @@ export interface PublicReportType {
 export interface ReportDetailType extends ReportDtoType {
   // 상세 조회에서는 좋아요 알림 수신자를 요청에 포함해야 하므로 작성자 번호가 항상 필요합니다.
   userNumb: number;
+  // 상세 수정 요청에 반드시 포함할 원본 내용 해시
+  editVersion: string;
 }
 
 // 홈화면에 보이는 독후감 타입

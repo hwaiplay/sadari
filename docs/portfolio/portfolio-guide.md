@@ -29,8 +29,8 @@ Sadari는 카카오 도서 검색을 기반으로 독후감과 독서 목표를 
 
 ### 인증·보안
 
-- Kakao OAuth 이후 Access/Refresh JWT를 HttpOnly Cookie로 발급하고 Redis에 Refresh Token, 닉네임, 회원 상태를 Lua로 원자 저장했다.
-- 로그아웃 Access Token을 남은 TTL 동안 Redis 블랙리스트로 관리하고 프론트 동시 재발급 요청을 하나의 Promise로 직렬화해 인증 무한 루프를 방지했다.
+- Kakao OAuth 이후 Access/Refresh JWT에 기기별 `sid`를 포함해 HttpOnly Cookie로 발급하고 Redis에 기기별 Refresh Token 세션, 닉네임, 회원 상태를 Lua로 원자 저장했다.
+- 현재·전체 디바이스 로그아웃, Access Token 블랙리스트, 다중 탭 Refresh Token 원자 회전과 BroadcastChannel 인증 동기화를 적용해 한 기기 로그아웃이 다른 기기 세션을 끊거나 동시 재발급이 세션을 파괴하지 않게 했다.
 - 이미지 업로드에서 확장자가 아닌 파일 시그니처, 디코더 형식, 해상도, 픽셀 수를 검증하고 재인코딩해 위장 파일 저장을 차단했다.
 
 ### 데이터와 트랜잭션
