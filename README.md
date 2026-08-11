@@ -39,26 +39,7 @@ Sadari는 도서 검색, 독서 기록과 목표, 소셜 활동, 독서 모임, 
 
 ## 시스템 구성
 
-```mermaid
-flowchart LR
-    USER["사용자"] --> PWA["React PWA"]
-    ADMIN["관리자"] --> ADMIN_APP["Sadari Admin"]
-
-    PWA --> API["Sadari API / Spring Boot"]
-    KAKAO["Kakao OAuth / Book API"] --> API
-
-    API --> MYSQL[("MySQL 8.4")]
-    ADMIN_APP --> MYSQL
-    MYSQL --> OUTBOX["회원 상태 Outbox"]
-    OUTBOX --> SCHEDULER["제한 배치 / 실패 재시도"]
-    SCHEDULER --> REDIS
-    API <--> REDIS[("Redis 7")]
-    API --> S3["Private S3 / Local Storage"]
-    API --> FCM["Firebase Cloud Messaging"]
-
-    ACTIONS["GitHub Actions"] --> GHCR["GHCR"]
-    GHCR --> EC2["EC2 / Docker Compose"]
-```
+[![Sadari 시스템 구성도](docs/diagrams/system-architecture.svg)](docs/diagrams/system-architecture.svg)
 
 사용자 서비스와 관리자 서비스는 서로의 API를 직접 호출하지 않습니다. 두 서비스가 공유하는 운영 테이블에 쓰기 주체와 읽기 주체를 구분해, 사용자 요청 경로와 운영 제어 경로의 결합도를 낮췄습니다.
 
@@ -149,24 +130,7 @@ Kakao OAuth 로그인 이후 기기별 세션 식별자 `sid`를 포함한 Acces
 
 관리자 서비스가 사용자를 정지하거나 해제할 때 DB 원본만 바뀌고 사용자 서비스의 Redis 상태가 남는 문제를 별도 이벤트 전달 흐름으로 해결했습니다.
 
-```mermaid
-sequenceDiagram
-    participant A as Sadari Admin
-    participant DB as MySQL
-    participant B as User Status Scheduler
-    participant R as Redis
-
-    A->>DB: 회원 상태와 Outbox 이벤트를 같은 트랜잭션으로 저장
-    B->>DB: 등록 순서대로 제한 건수 조회
-    B->>DB: 처리 시점의 최신 회원 상태 조회
-    B->>R: 로그인 세션 상태 갱신 또는 제거
-    alt Redis 반영 성공
-        B->>DB: 동기화 완료 표시 후 이벤트 삭제
-    else Redis 반영 실패
-        B-->>DB: 이벤트 유지
-        Note over B,DB: 다음 실행 주기에 재시도
-    end
-```
+[![DB Outbox 회원 상태 동기화 흐름도](docs/diagrams/user-status-outbox.svg)](docs/diagrams/user-status-outbox.svg)
 
 이벤트에는 복제된 상태값 대신 회원 식별값을 저장하고, 소비 시점의 최신 DB 상태를 읽습니다. 빠르게 연속된 정지·해제 이벤트가 있어도 오래된 상태를 Redis에 덮어쓰지 않습니다. 한 이벤트가 실패해도 다음 회원 처리를 계속하며 대상·성공·실패 건수, 실행 시간과 대표 실패 원인을 스케줄러 이력으로 남깁니다.
 
