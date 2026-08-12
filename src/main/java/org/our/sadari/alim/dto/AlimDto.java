@@ -16,6 +16,7 @@ import lombok.Data;
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 요청 DTO 제거
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 조인 응답 필드 추가
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
@@ -48,6 +49,7 @@ public class AlimDto {
 
         @Schema(description = "이동 URL")
         private String linkUrlx;
+
 
         @Schema(description = "사용 여부", example = "Y", allowableValues = {"Y", "N"})
         private String useeYsno;
@@ -97,11 +99,12 @@ public class AlimDto {
         @Schema(description = "삭제 여부", example = "N", allowableValues = {"Y", "N"})
         private String deltYsno;
 
-        @Schema(description = "알림 아이콘 옵션 코드", example = "1")
-        private String alimIconCode;
 
-        @Schema(description = "알림 아이콘 이름", example = "HEART")
-        private String alimIconName;
+        @Schema(description = "알림 아이콘 MIME 유형", example = "image/svg+xml")
+        private String alimIconMimeType;
+
+        @Schema(description = "Base64로 인코딩되는 알림 아이콘 바이너리")
+        private byte[] alimIconData;
     }
 
     /**

@@ -79,9 +79,7 @@
     <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 20개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->
     <select id="getMyAlimList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimListReqDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
-        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
-        <bind name="codeAlimSitu" value="@org.our.sadari.global.common.constant.Constant@CODE_ALIM_SITU" />
-        <bind name="numberOne" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ONE" />
+        <bind name="alimSituDefault" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_DEFAULT" />
         SELECT /* getMyAlimList */
                ALIMPAGE.USER_NUMB
              , ALIMPAGE.ALIM_NUMB
@@ -94,8 +92,8 @@
              , ALIMPAGE.READ_DATE
              , ALIMPAGE.SEND_DATE
              , ALIMPAGE.DELT_YSNO
-             , ALIMPAGE.ALIM_ICON_CODE
-             , ALIMPAGE.ALIM_ICON_NAME
+             , COALESCE(ICON.MIME_TYPE, DEFAULT_ICON.MIME_TYPE) AS ALIM_ICON_MIME_TYPE
+             , COALESCE(ICON.ICON_DATA, DEFAULT_ICON.ICON_DATA) AS ALIM_ICON_DATA
           FROM (  SELECT ALIMDETAIL.USER_NUMB
                        , ALIMDETAIL.ALIM_NUMB
                        , ALIMDETAIL.ALIM_SITU
@@ -107,8 +105,6 @@
                        , DATE_FORMAT(ALIMDETAIL.READ_DATE, '%Y-%m-%d %H:%i:%s') AS READ_DATE
                        , DATE_FORMAT(ALIMDETAIL.SEND_DATE, '%Y-%m-%d %H:%i:%s') AS SEND_DATE
                        , ALIMDETAIL.DELT_YSNO
-                       , ALIMDETAIL.ALIM_ICON_CODE
-                       , ALIMDETAIL.ALIM_ICON_NAME
                        , ROW_NUMBER() OVER(
                              ORDER BY ALIMDETAIL.SEND_DATE DESC
                                     , ALIMDETAIL.ALIM_NUMB DESC
@@ -124,18 +120,15 @@
                                  , ALIM.READ_DATE
                                  , ALIM.SEND_DATE
                                  , ALIM.DELT_YSNO
-                                 , CODE.OPT1_CODE AS ALIM_ICON_CODE
-                                 , CODE.OPT1_NAME AS ALIM_ICON_NAME
                               FROM TB_ALIMXX ALIM
-                         LEFT JOIN TB_CODEXD CODE
-                                ON CODE.COMM_CODE = #{codeAlimSitu}
-                               AND CODE.COMD_CODE = ALIM.ALIM_SITU
-                               AND CODE.OPT1_CODE = CAST(#{numberOne} AS CHAR)
-                               AND COALESCE(CODE.USEE_YSNO, #{commYes}) = #{commYes}
                              WHERE ALIM.USER_NUMB = #{userNumb}
                                AND COALESCE(ALIM.DELT_YSNO, #{commNo}) = #{commNo}
                          ) ALIMDETAIL
                ) ALIMPAGE
+     LEFT JOIN TM_ALICON ICON
+            ON ICON.ALIM_SITU = ALIMPAGE.ALIM_SITU
+     LEFT JOIN TM_ALICON DEFAULT_ICON
+            ON DEFAULT_ICON.ALIM_SITU = #{alimSituDefault}
          WHERE ALIMPAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
       ORDER BY ALIMPAGE.ROW_NUMB
     </select>

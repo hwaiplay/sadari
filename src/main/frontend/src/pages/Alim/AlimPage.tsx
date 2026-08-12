@@ -459,27 +459,6 @@ function AlimPage() {
     }
   };
 
-  /**
-   * get Alim Icon Wrap Class 정보를 조회한다
-   *
-   * @author HanWon.Jang
-   * @param alimIconName alim Icon Name 입력값
-   * @return 처리 결과
-   */
-  const getAlimIconWrapClass = (alimIconName?: string) => {
-    // DB 공통코드의 OPT1_NAME을 화면 스타일로 매핑한다.
-    // LIKE는 HEART, FOLLOW는 FOLLOW로 내려오며, 신규 상황 코드가 추가되면 기본 파란 종 아이콘 스타일을 사용한다.
-    if (alimIconName === "HEART") {
-      return styles.alimIconWrapLike;
-    }
-
-    if (alimIconName === "FOLLOW") {
-      return styles.alimIconWrapFollow;
-    }
-
-    return styles.alimIconWrap;
-  };
-
   if (isLoading) {
     return <Loading title={message("frontend.common.loadingList")} />;
   }
@@ -541,8 +520,19 @@ function AlimPage() {
               } : undefined}
               key={`${alim.userNumb}-${alim.alimNumb}`}
             >
-              <span className={getAlimIconWrapClass(alim.alimIconName)} aria-hidden="true">
-                <img src={`/img/icons/noti-${alim.alimSitu}.svg`} alt={"icon"} />
+              <span className={styles.alimIconWrap} aria-hidden="true">
+                <img
+                  className={styles.alimIconImage}
+                  src={alim.alimIconMimeType && alim.alimIconData
+                    ? `data:${alim.alimIconMimeType};base64,${alim.alimIconData}`
+                    : "/img/icons/noti-DEFAULT.svg"}
+                  alt=""
+                  onError={(event) => {
+                    // 조인된 아이콘 데이터가 손상되었으면 반복 처리를 막고 정적 기본 아이콘으로 대체한다.
+                    event.currentTarget.onerror = null;
+                    event.currentTarget.src = "/img/icons/noti-DEFAULT.svg";
+                  }}
+                />
               </span>
               <span className={styles.itemText}>
                 <span className={styles.itemContent}>{alim.alimCont}</span>
