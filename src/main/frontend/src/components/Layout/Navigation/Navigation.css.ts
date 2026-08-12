@@ -1,4 +1,4 @@
-import {style} from "@vanilla-extract/css";
+import {globalStyle, style} from "@vanilla-extract/css";
 import {vars} from "@/app/styles/tokens.css";
 
 export const navContainer = style({
@@ -13,7 +13,7 @@ export const navContainer = style({
     display: "flex",
     alignItems: "center",
     background: '#fff',
-    padding: `0 clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
+    padding: `6px clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
     boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
 });
@@ -36,41 +36,23 @@ export const navigation = style({
 });
 
 export const navLink = style({
-    width: "40px",
-    height: "40px",
     display: "flex",
     alignItems: "center",
     justifyContent: "center",
-    borderRadius: vars.radius.xl,
-});
-
-export const navLink__set = style({
-    width: '70px',
-    height: '70px',
-    border: '5px solid #fff',
-    backgroundColor: vars.color.gray100,
-    boxShadow: 'rgb(0 0 0 / 7%) 0px -9px 18px 0px',
-    marginBottom: '35px'
-})
-
-export const navIcon = style({
-    width: "24px",
-    height: "24px",
-    display: "block",
-});
-
-export const navProfileButton = style({
-    width: "40px",
-    height: "40px",
+    flexDirection: "column",
+    gap: "2px",
     padding: 0,
     border: 0,
-    borderRadius: vars.radius.xl,
-    backgroundColor: "#ffffff",
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
+    // borderRadius: vars.radius.xl,
+    textDecoration: "none",
+    background: "transparent",
     cursor: "pointer",
 });
+
+export const navLinkText = style({
+    fontSize: "12px",
+    color: vars.color.gray500
+})
 
 export const navProfileImage = style({
     width: "30px",
@@ -80,6 +62,20 @@ export const navProfileImage = style({
     objectFit: "cover",
     border: `1px solid ${vars.color.gray300}`,
     backgroundColor: "#ffffff",
+});
+
+export const navLinkActive = style({});
+
+globalStyle(`${navLinkActive} svg path`, {
+    fill: vars.color.gray900,
+});
+
+globalStyle(`${navLinkActive} ${navLinkText}`, {
+    color: vars.color.gray900,
+});
+
+globalStyle(`${navLinkActive} ${navProfileImage}`, {
+    borderColor: vars.color.gray900,
 });
 
 export const drawerOverlay = style({
@@ -354,9 +350,9 @@ export const drawerSecondaryMenuButton = style({
     padding: "0 20px",
     border: 0,
     backgroundColor: "transparent",
-    color: "#555555",
+    color: vars.color.gray600,
     fontFamily: vars.font.body,
-    fontSize: "13px",
+    fontSize: "14px",
     textAlign: "left",
     cursor: "pointer",
     display: "flex",
