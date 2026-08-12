@@ -95,7 +95,7 @@ class ReplyServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void setReplySendsReplyReportAlimToReportWriter() {
+    void setReplySendsAlim() {
 
         // 등록할 댓글 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -155,7 +155,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyRejectsDetectedBadWordBeforeDatabaseWrite() {
+    void setReplyRejectsBadWord() {
 
         // 비속어 검증 대상 댓글 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
@@ -185,12 +185,14 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void uptReplyUpdatesOwnedReplyWithNormalizedContent() {
+    void uptReplyNormalizesContent() {
 
         // 수정할 댓글 내용을 담은 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
         // 앞뒤 공백이 포함된 변경 내용을 댓글 요청에 설정한다
         replyDto.setReplCntn("  수정한 댓글입니다.  ");
+        // 다른 탭의 선행 수정 여부를 비교할 원본 해시를 설정한다
+        replyDto.setEditVersion("original-version");
 
         // 정규화한 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
         when(badWordDetectionService.findBadWord("수정한 댓글입니다."))
@@ -223,12 +225,14 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void uptReplyRejectsDetectedBadWordBeforeDatabaseWrite() {
+    void uptReplyRejectsBadWord() {
 
         // 비속어 검증 대상 댓글 수정 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
         // 특수문자로 우회한 비속어가 포함된 변경 내용을 설정한다
         replyDto.setReplCntn("시*발");
+        // 비속어 검증까지 도달하도록 유효한 원본 해시를 설정한다
+        replyDto.setEditVersion("original-version");
 
         // 공통 비속어 필터가 특수문자 우회 표현에서 비속어를 탐지하는 조건을 구성한다
         when(badWordDetectionService.findBadWord("시*발"))
@@ -246,12 +250,41 @@ class ReplyServiceImplTest {
     }
 
     /**
+     * 다른 탭에서 먼저 수정한 댓글은 기존 원문을 덮어쓰지 않고 충돌로 반환하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptReplyReturnsConflict() {
+        // 선택 시점 원본 해시와 변경 내용을 담은 댓글 요청을 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 변경할 안전한 댓글 내용을 설정한다
+        replyDto.setReplCntn("수정할 댓글입니다.");
+        // 이미 오래된 상태가 된 원본 해시를 설정한다
+        replyDto.setEditVersion("stale-version");
+
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        when(badWordDetectionService.findBadWord("수정할 댓글입니다."))
+                .thenReturn(Optional.empty());
+        // DB 내용 해시가 달라 수정 행이 없는 조건을 구성한다
+        when(replyMapper.uptReply(replyDto)).thenReturn(0);
+
+        // 오래된 원본 해시로 댓글 수정을 요청한다
+        ResultData result = replyService.uptReply(44L, 157L, 8L, replyDto);
+
+        // 다중 탭 선행 수정 전용 충돌 코드를 반환하는지 확인한다
+        assertEquals(ResultEnum.COMMON_EDIT_CONFLICT.getCode(), result.getCode());
+        // 원본을 덮어쓰지 않도록 조건부 수정 Mapper를 한 번만 호출했는지 확인한다
+        verify(replyMapper).uptReply(replyDto);
+    }
+
+    /**
      * 본인 댓글을 자식 답글 구조가 보존되는 논리 삭제 Mapper로 전달하는지 검증한다.
      *
      * @author HanWon.Jang
      */
     @Test
-    void delReplyMarksOwnedReplyAsDeleted() {
+    void delReplyMarksOwnedDeleted() {
 
         // 댓글 삭제 조건을 검증할 캡처 객체를 생성한다
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
@@ -281,7 +314,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeReturnsUpdatedLikeDetail() {
+    void setReplyLikeReturnsDtl() {
 
         // 좋아요 등록 요청 조건을 검증할 캡처 객체를 생성한다
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
@@ -346,7 +379,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void delReplyLikeReturnsUpdatedLikeDetail() {
+    void delReplyLikeReturnsDtl() {
 
         // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글 조건을 생성한다
         ReplyDto likeTarget = new ReplyDto();
@@ -382,7 +415,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeRejectsUnavailableTarget() {
+    void setReplyLikeRejectsTarget() {
 
         // 정상 이용 사용자와 미삭제 댓글 조건을 만족하지 않는 요청을 구성한다
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(null);
@@ -402,7 +435,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeDoesNotNotifyForExistingLike() {
+    void setReplyLikeNoRenotify() {
 
         // 이미 좋아요가 등록된 미삭제 댓글과 작성자 정보를 생성한다
         ReplyDto likeTarget = new ReplyDto();
@@ -434,7 +467,7 @@ class ReplyServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void setReplyLikeDoesNotNotifyOwnChildReply() {
+    void setReplyLikeNoSelfAlim() {
 
         // 본인이 작성한 대댓글 좋아요 대상 정보를 생성한다
         ReplyDto likeTarget = new ReplyDto();

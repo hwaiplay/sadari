@@ -13,8 +13,8 @@ export type AlimItem = {
   readDate?: string;
   sendDate?: string;
   deltYsno?: "Y" | "N";
-  alimIconCode?: string;
-  alimIconName?: "HEART" | "FOLLOW" | string;
+  alimIconMimeType?: string;
+  alimIconData?: string;
 };
 
 export type AlimListData = {

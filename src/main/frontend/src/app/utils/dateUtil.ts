@@ -217,7 +217,7 @@ export function formatCompactDateToKorean(value?: string) {
  * @param value 8자리 날짜 문자열 (예: "20260715")
  * @return "Month DDth, YYYY" 포맷의 영문 날짜 문자열 (파싱 불가 시 원본 반환)
  */
-export function formatCompactDateToEnglish(value?: string) {
+export function formatCompactDateEnglish(value?: string) {
 
   if (!value) {
     return "";
@@ -254,7 +254,7 @@ export function formatCompactDate(value?: string) {
   }
 
   // 그 외의 기본 시스템 로케일은 서구권 표준 영문 표기법을 디폴트로 사용합니다.
-  return formatCompactDateToEnglish(value);
+  return formatCompactDateEnglish(value);
 }
 
 /**

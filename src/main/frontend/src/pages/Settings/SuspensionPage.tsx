@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
-import { checkAuthApi, logoutApi } from "@/features/Auth/api/authApi";
+import { checkAuthApi } from "@/features/Auth/api/authApi";
+import { runLogout, selectLogoutScope } from "@/features/Auth/lib/logoutFlow";
 import {
   getUserSuspensionApi,
   type UserSuspension,
@@ -95,22 +96,30 @@ function SuspensionPage() {
   }, [navigate, queryClient]);
 
   /**
-   * 현재 로그인 세션을 종료하고 로그인 화면으로 이동합니다.
+   * 선택한 범위의 로그인 세션을 종료하고 로그인 화면으로 이동한다.
    *
    * @author HanWon.Jang
-   * @return 반환값이 없습니다
+   * @return 반환값이 없다
    */
   const handleLogout = async (): Promise<void> => {
 
-    // 서버 로그아웃 실패가 발생해도 현재 제한 화면에서는 로그인 화면으로 이동합니다
-    try {
-      // Refresh Token과 회원 상태 캐시를 제거하도록 로그아웃을 요청합니다
-      await logoutApi();
+    // 제한 화면에서도 같은 Alert로 현재 기기 또는 전체 기기 로그아웃 범위를 선택한다
+    const logoutScope = await selectLogoutScope();
+
+    // 사용자가 취소하면 정지 안내 화면을 유지한다
+    if (!logoutScope) {
+      return;
     }
 
-    // 로그아웃 요청 결과와 관계없이 로그인 화면으로 이동합니다
+    // 서버 로그아웃 실패가 발생해도 현재 제한 화면에서는 로그인 화면으로 이동한다
+    try {
+      // 선택한 범위의 로그인 세션과 푸시 구독을 정리한다
+      await runLogout(logoutScope);
+    }
+
+    // 로그아웃 요청 결과와 관계없이 로그인 화면으로 이동한다
     finally {
-      // 인증이 필요한 정지 화면에서 공개 로그인 화면으로 이동합니다
+      // 인증이 필요한 정지 화면에서 공개 로그인 화면으로 이동한다
       navigate("/login", { replace: true });
     }
   };

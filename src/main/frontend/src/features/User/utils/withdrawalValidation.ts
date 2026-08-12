@@ -9,7 +9,7 @@ export const MAX_WITHDRAWAL_REASON_BYTES = 500;
  * @param value 바이트 수를 계산할 탈퇴 사유
  * @return UTF-8 기준 바이트 수
  */
-export function getWithdrawalReasonByteLength(value: string): number {
+export function getWithdrawReasonByteLen(value: string): number {
 
   // 브라우저의 UTF-8 인코더로 계산한 탈퇴 사유 바이트 수를 반환한다
   return textEncoder.encode(value).length;
@@ -23,7 +23,7 @@ export function getWithdrawalReasonByteLength(value: string): number {
  * @param maxBytes 허용할 최대 UTF-8 바이트 수
  * @return 최대 바이트 안에 포함되는 탈퇴 사유
  */
-export function truncateWithdrawalReasonByByte(
+export function truncateWithdrawalReason(
   value: string,
   maxBytes = MAX_WITHDRAWAL_REASON_BYTES,
 ): string {
@@ -34,7 +34,7 @@ export function truncateWithdrawalReasonByByte(
   // 유니코드 문자를 순서대로 계산해 다중 바이트 문자 중간이 잘리지 않게 제한한다
   for (const character of value) {
     // 현재 문자 한 개가 차지하는 UTF-8 바이트 수를 계산한다
-    const characterBytes = getWithdrawalReasonByteLength(character);
+    const characterBytes = getWithdrawReasonByteLen(character);
 
     // 다음 문자를 추가했을 때 최대 바이트를 넘으면 입력 반영을 중단한다
     if (byteLength + characterBytes > maxBytes) {

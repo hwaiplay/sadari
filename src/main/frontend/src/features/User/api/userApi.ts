@@ -127,7 +127,7 @@ export const getMyProfileApi = async () => {
  * @author HanWon.Jang
  * @return 월간/연간 완료 독서 요약 API 응답
  */
-export const getMonthlyReadingSummaryApi = async () => {
+export const getMonthlyReadingApi = async () => {
 
   const res = await api.get("/user/monthly-reading-summary");
   return assertResultDataSuccess(res.data);
@@ -155,7 +155,7 @@ export const updateReadingGoalApi = (params: ReadingGoalParams) => {
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const copyPreviousReadingGoalApi = () => {
+export const copyPrevReadingGoalApi = () => {
 
   return api.post("/user/reading-goal/previous").then((res) => {
 
@@ -255,7 +255,7 @@ export const setProfileImageDraftApi = (
  * @return 같은 로그인 사용자의 복원 가능한 임시 이미지 목록
  * @throws API 요청 실패 시 발생
  */
-export const getProfileImageDraftListApi = async (): Promise<ProfileImageDraft[]> => {
+export const getProfileDraftListApi = async (): Promise<ProfileImageDraft[]> => {
   // 공개 파일 URL 없이 인증 응답 본문으로 작은 서버 미리보기를 조회한다
   const res = await api.get("/user/profile-image-drafts");
   return (assertResultDataSuccess(res.data).data as ProfileImageDraft[] | undefined) ?? [];

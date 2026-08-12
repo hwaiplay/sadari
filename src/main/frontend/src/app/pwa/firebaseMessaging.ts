@@ -24,7 +24,7 @@ export function notifyFirebasePushEnabled() {
  * @author HanWon.Jang
  * @return 허용된 알림 권한
  */
-export async function requestPushNotificationPermission() {
+export async function requestPushPermission() {
 
   if (!window.isSecureContext) {
     throw new Error("PUSH_INSECURE_CONTEXT");
@@ -127,7 +127,7 @@ function getFirebaseApp(config: FirebaseWebConfig) {
  * @param config 서버에서 받은 Firebase Web 설정
  * @return FCM registration token
  */
-export async function requestFirebaseMessagingToken(config: FirebaseWebConfig) {
+export async function requestFirebaseToken(config: FirebaseWebConfig) {
 
   const supported = await isSupported();
 
@@ -160,7 +160,7 @@ export async function requestFirebaseMessagingToken(config: FirebaseWebConfig) {
  * @param listener 포그라운드 메시지 수신 콜백
  * @return 구독 해제 함수. 미지원 환경에서는 아무 작업도 하지 않는 함수를 반환합니다.
  */
-export async function subscribeFirebaseForegroundMessages(
+export async function subscribeFirebaseMessages(
   config: FirebaseWebConfig,
   listener: () => void,
 ) {

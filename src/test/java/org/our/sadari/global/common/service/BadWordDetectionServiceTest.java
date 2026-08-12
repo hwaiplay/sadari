@@ -58,7 +58,7 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findBadWordDetectsRepeatedCharactersInsideSingleToken() {
+    void getBadWordRepeatedChars() {
         // 반복 구간을 제거해야 복원되는 비속어를 탐지하는지 확인한다
         assertEquals(Optional.of("시발"), badWordDetectionService.findBadWord("시이이이이발"));
         // 원래 비속어 글자를 반복한 표현을 축약하여 탐지하는지 확인한다
@@ -73,7 +73,7 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findBadWordDoesNotCrossWhitespaceBoundary() {
+    void getBadWordKeepsSpaces() {
         // 정상 문장의 서로 다른 단어에 걸친 시 발 문자열을 허용하는지 확인한다
         assertTrue(badWordDetectionService.findBadWord("한번 시작 시 발행해야함").isEmpty());
         // 여러 일반 공백으로 분리한 문자열을 하나의 비속어로 합치지 않는지 확인한다
@@ -92,7 +92,7 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findBadWordStillDetectsNonWhitespaceObfuscation() {
+    void getBadWordObfuscation() {
         // 공백이 없는 특수문자를 제거해 복원되는 비속어를 탐지하는지 확인한다
         assertEquals(Optional.of("시발"), badWordDetectionService.findBadWord("시!발"));
         // 숫자를 보존한 전용 사전으로 숫자 포함 비속어를 탐지하는지 확인한다
@@ -105,7 +105,7 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findBadWordKeepsExceptionCoverageAfterRepeatedCharacterNormalization() {
+    void getBadWordKeepsExceptions() {
         // 반복 문자 우회 정규화 후 시발점 전체가 허용어로 감싸지는지 확인한다
         assertTrue(badWordDetectionService.findBadWord("시이이이이발점").isEmpty());
     }
@@ -116,7 +116,7 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findBadWordAllowsNonProfanityDiscomfortWords() {
+    void getBadWordAllowsSafeTerms() {
         // 신체 표현을 비속어로 차단하지 않는지 확인한다
         assertTrue(badWordDetectionService.findBadWord("보지").isEmpty());
         // 성정체성 표현을 비속어로 차단하지 않는지 확인한다

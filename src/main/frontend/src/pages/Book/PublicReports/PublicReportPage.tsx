@@ -7,7 +7,7 @@ import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
 import {
-  usePublicReportLikeMutation,
+  usePublicReportLike,
   usePublicReportsByIsbn,
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
@@ -82,7 +82,7 @@ const PublicReportPage = () => {
   const isValidIsbn = isbn.trim().length > 0;
   const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
-  const likeMutation = usePublicReportLikeMutation();
+  const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {

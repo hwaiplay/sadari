@@ -4,7 +4,7 @@
  * @author HanWon.Jang
  */
 import { useQuery } from "@tanstack/react-query";
-import { getBookRatingAverageByIsbnApi } from "../../api/bookApi";
+import { getBookRatingAvgApi } from "../../api/bookApi";
 
 /**
  * use Book Rating Average By Isbn 상태와 처리 함수를 제공한다
@@ -14,7 +14,7 @@ import { getBookRatingAverageByIsbnApi } from "../../api/bookApi";
  * @param enabled enabled 입력값
  * @return 화면에서 사용할 상태와 처리 함수
  */
-export const useBookRatingAverageByIsbn = (
+export const useBookRatingAvg = (
   isbn: string,
   enabled: boolean,
 ) => {
@@ -23,7 +23,7 @@ export const useBookRatingAverageByIsbn = (
     queryKey: ["bookRatingAverage", isbn],
     queryFn: async () => {
 
-      return await getBookRatingAverageByIsbnApi(isbn);
+      return await getBookRatingAvgApi(isbn);
     },
     enabled: enabled && isbn.trim().length > 0,
   });

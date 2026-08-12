@@ -138,7 +138,7 @@ public final class DateUtil {
      * @param value 검사하거나 변환할 값
      * @return 처리 결과
      */
-    public static String formatCompactDateToEnglish(String value) {
+    public static String formatCompactDateEnglish(String value) {
         // value 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
         if (StringUtil.isEmpty(value)) {
             // 영문 표기 날짜 문자열 변환 결과를 반환한다
@@ -182,7 +182,7 @@ public final class DateUtil {
         }
 
         // yyyyMMdd 날짜 문자열 변환 결과를 반환한다
-        return formatCompactDateToEnglish(value);
+        return formatCompactDateEnglish(value);
     }
 
     /**

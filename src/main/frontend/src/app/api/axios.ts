@@ -12,6 +12,7 @@ import {
   endBlockingOperation,
 } from "@/app/navigation/blockingOperation";
 import { assertResultDataSuccess, type ResultData } from "./resultData";
+import { publishAuthLogout } from "@/features/Auth/lib/authEvents";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -93,7 +94,7 @@ function isNonSavingPostEndpoint(url?: string): boolean {
  * @param config 전송할 Axios 요청 설정
  * @return 처리 중 모달과 화면 이동 차단이 필요한 요청 여부
  */
-function isBlockingOperationRequest(config: InternalAxiosRequestConfig): boolean {
+function isBlockingRequest(config: InternalAxiosRequestConfig): boolean {
   // 조회 요청과 인증 유지 요청 및 조회성 POST는 사용자 저장 작업에서 제외한다
   return isCsrfProtectedMethod(config.method)
     && !isAuthEndpoint(config.url)
@@ -229,7 +230,7 @@ async function prepareRequest(config: InternalAxiosRequestConfig): Promise<Inter
   const blockingConfig = config as RetryableRequestConfig;
 
   // 재시도가 아닌 최초 상태 변경 요청이면 공통 처리 중 모달과 이동 가드를 시작한다
-  if (isBlockingOperationRequest(config) && blockingConfig._blockingOperationId === undefined) {
+  if (isBlockingRequest(config) && blockingConfig._blockingOperationId === undefined) {
     // 요청 완료 시 같은 작업만 해제할 수 있도록 이동 차단 식별값을 설정한다
     blockingConfig._blockingOperationId = beginBlockingOperation();
   }
@@ -302,7 +303,7 @@ function refreshSession() {
  * @return 반환값이 없다
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-async function resetSessionAndRedirectToLogin() {
+async function resetSessionToLogin() {
   // /user/me는 로그인 후 화면에서 현재 세션의 사용자 정보를 확정하는 API다.
   // 인증성 실패 코드가 오면 토큰과 사용자 데이터가 불일치한 상태이므로 세션을 비우고 로그인부터 다시 시킨다.
   useAuthStore.getState().clearAuth();
@@ -313,7 +314,7 @@ async function resetSessionAndRedirectToLogin() {
   // 서버 logout API로 쿠키를 만료시킨 뒤 이동해야 /login과 /home 사이의 반복 이동을 막을 수 있다.
   if (!logoutRequest) {
     logoutRequest = api
-      .post("/oauth/logout")
+      .post("/oauth/logout", { scope: "CURRENT" })
       .catch(() => undefined)
       .finally(() => {
 
@@ -322,6 +323,8 @@ async function resetSessionAndRedirectToLogin() {
   }
 
   await logoutRequest;
+  // 자동 인증 복구 실패도 같은 브라우저의 다른 탭에 즉시 전파합니다
+  publishAuthLogout();
 
   if (window.location.pathname !== "/login") {
     window.location.replace("/login");
@@ -346,7 +349,7 @@ api.interceptors.response.use(
         await refreshSession();
         return api(originalRequest);
       } catch {
-        await resetSessionAndRedirectToLogin();
+        await resetSessionToLogin();
         return Promise.reject(response);
       }
     }
@@ -355,7 +358,7 @@ api.interceptors.response.use(
       originalRequest.url === "/user/me" &&
       AUTH_FAILURE_CODES.has(resultCode)
     ) {
-      void resetSessionAndRedirectToLogin();
+      void resetSessionToLogin();
     }
 
     return response;
@@ -391,7 +394,7 @@ api.interceptors.response.use(
       originalRequest?.url === "/user/me" &&
       AUTH_FAILURE_CODES.has(getResultCode(error.response?.data))
     ) {
-      void resetSessionAndRedirectToLogin();
+      void resetSessionToLogin();
     }
 
     if (

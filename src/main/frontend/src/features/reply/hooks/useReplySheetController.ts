@@ -300,7 +300,7 @@ export const useReplySheetController = ({
     // 선택 메뉴가 수정 입력창 위에 남지 않도록 열린 메뉴를 닫는다
     setOpenActionReplyNumb(null);
     // 선택한 댓글 번호와 원문을 하단 댓글 입력 상태에 반영한다
-    replyForm.handleStartEditReply(reply.replNumb, reply.replCntn);
+    replyForm.handleStartEditReply(reply.replNumb, reply.replCntn, reply.editVersion);
     // 입력값 렌더링이 끝난 프레임에 수정 입력 위치를 설정한다
     window.requestAnimationFrame(focusCommentInput);
   };
@@ -334,7 +334,7 @@ export const useReplySheetController = ({
      * @param currentReplNumb 현재 액션 메뉴가 열린 댓글 번호
      * @return 새로 액션 메뉴를 열 댓글 번호 또는 닫힘 상태
      */
-    const getNextOpenActionReplyNumb = (
+    const getNextActionReplyNumb = (
       currentReplNumb: number | null,
     ): number | null => {
       // 같은 댓글은 메뉴를 닫고 다른 댓글은 해당 메뉴를 열도록 다음 번호를 반환한다
@@ -342,7 +342,7 @@ export const useReplySheetController = ({
     };
 
     // 하나의 댓글 액션 메뉴만 열리도록 현재 메뉴 상태를 변경한다
-    setOpenActionReplyNumb(getNextOpenActionReplyNumb);
+    setOpenActionReplyNumb(getNextActionReplyNumb);
   };
 
   /**

@@ -51,12 +51,12 @@ export const setReplyApi = async (
  * @throws 댓글 수정 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const uptReplyApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replNumb" | "replCntn">,
+  data: Pick<ReplyDtoType, "reptNumb" | "replNumb" | "replCntn" | "editVersion">,
 ): Promise<UptReplyResponse> => {
   // 복합 식별값을 경로에 포함하고 검증할 댓글 내용만 서버에 전달한다
   const response = await api.put<UptReplyResponse>(
     `/reply/${data.reptNumb}/${data.replNumb}`,
-    { replCntn: data.replCntn },
+    { replCntn: data.replCntn, editVersion: data.editVersion },
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 수정 결과를 반환한다

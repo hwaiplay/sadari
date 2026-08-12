@@ -79,7 +79,7 @@ class SocialServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getProfileStatsUsesPublicFilterForSocialProfile() {
+    void getProfileStatsPublic() {
         // 다른 사용자 프로필과 같은 공개 범위로 통계를 조회한다
         socialService.getProfileStats(31L);
 
@@ -98,7 +98,7 @@ class SocialServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getMyPageProfileStatsKeepsAllReports() {
+    void getMyStatsKeepsAll() {
         // 본인 마이페이지와 같은 전체 범위로 통계를 조회한다
         socialService.getMyPageProfileStats(31L);
 

@@ -74,7 +74,7 @@ public class CommonExceptionHandler {
      * @return 400 BAD_REQUEST 응답
      */
     @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ResultData> handleMethodArgumentNotValidException(MethodArgumentNotValidException e, Locale locale) {
+    public ResponseEntity<ResultData> handleInvalidArgument(MethodArgumentNotValidException e, Locale locale) {
         // "요청값이 올바르지 않아요."
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
@@ -114,7 +114,7 @@ public class CommonExceptionHandler {
          * DataAccessException은 SQL 문법 오류, 제약조건 오류, 커넥션 획득 실패를 모두 감싼다.
          * 모든 DB 장애를 400으로 내려주면 프론트가 "요청값 오류"로 오해하므로, 커넥션 계열 원인은 먼저 분리한다.
          */
-        if (isDatabaseConnectionFailure(e)) {
+        if (isDbConnectionFailure(e)) {
             // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -143,9 +143,9 @@ public class CommonExceptionHandler {
      * @return 예외 처리 결과
      */
     @ExceptionHandler(MyBatisSystemException.class)
-    public ResponseEntity<ResultData> handleMyBatisSystemException(MyBatisSystemException e, Locale locale) {
+    public ResponseEntity<ResultData> handleMyBatisException(MyBatisSystemException e, Locale locale) {
         // 예외 체인에서 DB 연결 실패 여부를 판별한다
-        ResultEnum resultEnum = isDatabaseConnectionFailure(e)
+        ResultEnum resultEnum = isDbConnectionFailure(e)
                 ? ResultEnum.COMMON_DB_CONNECTION_FAILED
                 : ResultEnum.COMMON_INVALID_REQUEST;
         // 두 값이 동일한지 안전하게 비교한다
@@ -172,12 +172,12 @@ public class CommonExceptionHandler {
             PersistenceException.class,
             SQLException.class
     })
-    public ResponseEntity<ResultData> handleDatabaseConnectionException(Exception e, Locale locale) {
+    public ResponseEntity<ResultData> handleDbConnectException(Exception e, Locale locale) {
         /*
          * 위 예외들은 DB 연결 실패 외의 SQL 실행 오류도 감쌀 수 있다.
          * 실제 원인 체인을 확인해 연결 장애이면 503, 그 외 DB 오류이면 기존 공통 요청 오류로 응답한다.
          */
-        if (isDatabaseConnectionFailure(e)) {
+        if (isDbConnectionFailure(e)) {
             // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -198,7 +198,7 @@ public class CommonExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResultData> handleRuntimeException(RuntimeException e, Locale locale) {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
-        if (isDatabaseConnectionFailure(e)) {
+        if (isDbConnectionFailure(e)) {
             // 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착 결과를 반환한다
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -241,7 +241,7 @@ public class CommonExceptionHandler {
      * @param throwable 확인할 최상위 예외
      * @return DB 연결 실패 여부
      */
-    private boolean isDatabaseConnectionFailure(Throwable throwable) {
+    private boolean isDbConnectionFailure(Throwable throwable) {
         // 예외 체인에서 데이터베이스 예외를 찾는다
         SQLException sqlException = findSqlException(throwable);
 

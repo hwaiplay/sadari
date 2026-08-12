@@ -103,7 +103,7 @@ function createNavigationGuardId(): string {
  * @param guardId 이동 차단 History 쌍의 식별자
  * @return 반환값이 없다
  */
-function replaceNavigationGuardBaseEntry(guardId: string): void {
+function replaceNavGuardBase(guardId: string): void {
   const guardState = {
     ...getHistoryState(),
     [NAVIGATION_GUARD_STATE_KEY]: {
@@ -125,7 +125,7 @@ function replaceNavigationGuardBaseEntry(guardId: string): void {
  * @param guardId 이동 차단 History 쌍의 식별자
  * @return 반환값이 없다
  */
-function pushNavigationGuardSentinelEntry(guardId: string): void {
+function pushNavGuardSentinel(guardId: string): void {
   const guardState = {
     ...getHistoryState(),
     [NAVIGATION_GUARD_STATE_KEY]: {
@@ -172,7 +172,7 @@ function handlePopState(event: PopStateEvent): void {
   if (isNavigationGuardActive && activeNavigationGuardId !== null
       && currentMarker?.id === activeNavigationGuardId && currentMarker.entry === "base") {
     // PWA 스와이프와 하드웨어 뒤로가기가 실제 이전 화면으로 이어지지 않도록 차단 항목을 복원한다
-    pushNavigationGuardSentinelEntry(activeNavigationGuardId);
+    pushNavGuardSentinel(activeNavigationGuardId);
     // 저장 중 뒤로가기 처리를 현재 화면에서 종료한다
     return;
   }
@@ -241,9 +241,9 @@ function activateNavigationGuard(): void {
     const guardId = createNavigationGuardId();
     activeNavigationGuardId = guardId;
     // 현재 React Router 위치를 이동 차단 History 쌍의 기준 항목으로 표시한다
-    replaceNavigationGuardBaseEntry(guardId);
+    replaceNavGuardBase(guardId);
     // 사용자의 뒤로가기를 받을 같은 URL의 차단 항목을 추가한다
-    pushNavigationGuardSentinelEntry(guardId);
+    pushNavGuardSentinel(guardId);
   }
 
   isNavigationGuardActive = true;

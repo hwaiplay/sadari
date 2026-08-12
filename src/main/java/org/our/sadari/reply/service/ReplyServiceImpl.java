@@ -139,7 +139,8 @@ public class ReplyServiceImpl implements ReplyService {
     public ResultData uptReply(Long userNumb, Long reptNumb, Long replNumb, ReplyDto replyDto) {
         // 인증 사용자와 수정 대상 및 댓글 내용이 없으면 변경 대상을 확정할 수 없으므로 요청을 거부한다
         if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb, replyDto)
-                || StringUtil.isEmpty(replyDto.getReplCntn())) {
+                || StringUtil.isEmpty(replyDto.getReplCntn())
+                || StringUtil.isEmpty(replyDto.getEditVersion())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -177,8 +178,8 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단한다
         if (updateCnt == 0) {
-            // "수정에 실패했어요.\n다시 시도해주세요."
-            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+            // 다른 탭이나 기기의 선행 수정 내용을 덮어쓰지 않도록 충돌 결과를 반환한다
+            return ResultData.fail(ResultEnum.COMMON_EDIT_CONFLICT);
         }
 
         // 수정된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환한다

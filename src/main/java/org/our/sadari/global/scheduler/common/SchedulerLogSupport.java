@@ -157,7 +157,7 @@ public class SchedulerLogSupport {
      * @param failureCnt 실패 건수
      * @return 성공, 일부 실패, 실패 중 하나의 실행 상태
      */
-    public String getSchedulerExecutionStatus(int successCnt, int failureCnt) {
+    public String getSchedulerExecStatus(int successCnt, int failureCnt) {
         // 실패가 한 건도 없으면 조회된 모든 대상이 성공한 상태이다.
         if (failureCnt == 0) {
             // 성공 및 실패 건수를 기준으로 스케줄러 마스터 로그에 저장할 최종 실행 상태를 결정 결과를 반환한다

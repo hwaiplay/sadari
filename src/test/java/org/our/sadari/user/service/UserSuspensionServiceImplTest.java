@@ -57,7 +57,7 @@ class UserSuspensionServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void missingActiveSuspensionRestoresRedisFromDatabaseStatus() {
+    void missingSuspRestoresRedis() {
         when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(null);
         when(userSuspensionMapper.getUserStatus(7L)).thenReturn("ACTIVE");
 
@@ -71,7 +71,7 @@ class UserSuspensionServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void missingActiveSuspensionKeepsRedisWhenDatabaseIsSuspended() {
+    void missingSuspKeepsRedis() {
         when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(null);
         when(userSuspensionMapper.getUserStatus(7L)).thenReturn("SUSPENDED");
 
@@ -85,11 +85,11 @@ class UserSuspensionServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void expiredSuspensionUpdatesRedisOnlyWhenUserStatusIsRestored() {
+    void expiredSuspRestoresRedis() {
         UserSuspensionDto suspension = createExpiredSuspension();
         when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(suspension);
         when(userSuspensionMapper.uptSuspensionExpired(31L)).thenReturn(1);
-        when(userSuspensionMapper.uptUserStatusAfterSuspension(7L, "ACTIVE")).thenReturn(1);
+        when(userSuspensionMapper.uptUserStatusAfterSuspend(7L, "ACTIVE")).thenReturn(1);
         when(userSuspensionMapper.uptSuspensionSyncPending(31L)).thenReturn(1);
         when(userStatusEventMapper.setUserStatusEvent(any(UserStatusEventDto.class))).thenReturn(1);
 
@@ -105,11 +105,11 @@ class UserSuspensionServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void expiredSuspensionPreservesHigherPriorityUserStatus() {
+    void expiredSuspKeepsPriority() {
         UserSuspensionDto suspension = createExpiredSuspension();
         when(userSuspensionMapper.getLatestActiveSuspension(7L)).thenReturn(suspension);
         when(userSuspensionMapper.uptSuspensionExpired(31L)).thenReturn(1);
-        when(userSuspensionMapper.uptUserStatusAfterSuspension(7L, "ACTIVE")).thenReturn(0);
+        when(userSuspensionMapper.uptUserStatusAfterSuspend(7L, "ACTIVE")).thenReturn(0);
 
         assertTrue(userSuspensionService.uptExpiredSuspension(7L));
         verify(userSuspensionMapper, never()).uptSuspensionSyncPending(31L);

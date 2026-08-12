@@ -59,7 +59,7 @@ class AlimDeleteServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimRecordsDeletedCountAsSuccess() {
+    void delAlimCountsSuccess() {
         // 성공 실행 로그에 사용할 실행 번호를 설정한다
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
         // Alim 데이터를 DB에서 삭제한다
@@ -94,7 +94,7 @@ class AlimDeleteServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimSkipsLogWhenNothingWasDeleted() {
+    void delAlimSkipsEmptyLog() {
         // Alim 데이터를 DB에서 삭제한다
         when(alimDeleteMapper.delAlim()).thenReturn(0);
 
@@ -111,7 +111,7 @@ class AlimDeleteServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimRecordsFailureAndRethrowsDeleteException() {
+    void delAlimRethrowsFailure() {
         // 실패 상세 로그에 연결할 실행 번호를 설정한다
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
         // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성한다

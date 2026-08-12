@@ -4,10 +4,12 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -32,6 +34,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 API 추가
  * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 정책 추가
+ * 2026-08-11        SeungHyeon.Kang    다중 탭 독후감 수정 충돌 409 응답 추가
  */
 @Slf4j
 @RestController
@@ -138,15 +141,23 @@ public class ReportController {
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param reptNumb 수정할 독후감 번호
      * @param request 수정할 독후감 정보
+     * @param response 수정 충돌 HTTP 상태를 기록할 응답 객체
      * @return 수정된 독후감 번호
      */
     @PutMapping("/uptReport/{reptNumb}")
     @Operation(summary = "독후감 수정", description = "기존 독후감의 도서, 기간, 상태, 별점, 공개 여부, 본문을 수정한다.")
     public ResultData uptReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
-                              , @Valid @RequestBody ReportDto request) {
+                              , @Valid @RequestBody ReportDto request
+                              , @Parameter(hidden = true) HttpServletResponse response) {
+        // 원본 버전을 포함한 독후감 수정 결과를 조회한다
+        ResultData result = reportService.uptReport(userNumb, reptNumb, request);
+        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답한다
+        if (result.getCode() == ResultEnum.COMMON_EDIT_CONFLICT.getCode()) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+        }
         // 기존 독후감 정보를 수정 결과를 반환한다
-        return reportService.uptReport(userNumb, reptNumb, request);
+        return result;
     }
 
     /**

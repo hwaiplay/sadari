@@ -24,6 +24,15 @@ public interface PushService {
     ResultData delPushSub(Long userNumb, PushDto.PushSubDto req);
 
     /**
+     * 전체 기기 로그아웃 시 회원의 모든 푸시 구독을 비활성화한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 전체 로그아웃 회원 번호
+     * @return 구독 비활성화 결과
+     */
+    ResultData delAllPushSub(Long userNumb);
+
+    /**
      * 알림 수신자의 활성 FCM 토큰으로 알림 내용과 클릭 이동 정보를 발송한다.
      *
      * @author SeungHyeon.Kang

@@ -55,7 +55,7 @@ class UserMenuServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getUserMenuReturnsCurrentMenuAndVisibleList() {
+    void getCurrentVisibleMenu() {
         // 사용자 메뉴 목록 항목을 담을 객체를 생성한다
         UserMenuDto.UserMenuItemDto currentMenu = new UserMenuDto.UserMenuItemDto();
         // MenuName 업무 값을 currentMenu DTO에 설정한다
@@ -100,7 +100,7 @@ class UserMenuServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getUserMenuReturnsNullCurrentMenuWhenUrlIsNotRegistered() {
+    void getMenuNullForUnknownUrl() {
         // CurrentUserMenu 데이터를 DB에서 조회한다
         when(userMenuMapper.getCurrentUserMenu(anyString())).thenReturn(null);
         // VisibleUserMenuList 데이터를 DB에서 조회한다
@@ -126,7 +126,7 @@ class UserMenuServiceImplTest {
      */
     @Test
     @SuppressWarnings("unchecked")
-    void getUserMenuChildListReturnsSettingsChildren() {
+    void getSettingsMenuChildren() {
         // 설정 화면 메뉴를 트리 구성 기준으로 생성한다
         UserMenuDto.UserMenuItemDto settingsMenu = getMenu(8L, null, 1, "설정", 1);
         // 설정 화면에서 바로 이동할 알림 설정 메뉴를 생성한다

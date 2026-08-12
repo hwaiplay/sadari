@@ -101,6 +101,11 @@ public enum ResultEnum {
     PUSH_CONFIG_MISSING(2017, "push.alert.0001"),
 
     /**
+     * 다른 탭이나 기기에서 먼저 수정해 현재 편집 원본이 오래된 경우의 실패 코드이다.
+     */
+    COMMON_EDIT_CONFLICT(2019, "common.alert.0019"),
+
+    /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
