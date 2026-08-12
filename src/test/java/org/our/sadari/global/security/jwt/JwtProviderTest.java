@@ -55,7 +55,7 @@ class JwtProviderTest {
     @Test
     void createAndParseAccessToken() {
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String token = jwtProvider.createAccessToken(31L, "USER");
+        String token = jwtProvider.createAccessToken(31L, "USER", "session-1");
 
         // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         assertTrue(jwtProvider.validateToken(token));
@@ -65,6 +65,8 @@ class JwtProviderTest {
         assertEquals("USER", jwtProvider.getRole(token));
         // getTokenId 조회로 후속 처리에 필요한 데이터를 가져온다
         assertNotNull(jwtProvider.getTokenId(token));
+        // 기기별 세션 식별자가 Access Token에 포함되는지 검증한다
+        assertEquals("session-1", jwtProvider.getSessionId(token));
     }
 
     /**
@@ -73,16 +75,18 @@ class JwtProviderTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void createAndValidateRefreshToken() {
+    void validateNewRefreshToken() {
         // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String token = jwtProvider.createRefreshToken(31L);
+        String token = jwtProvider.createRefreshToken(31L, "session-1");
 
         // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         assertTrue(jwtProvider.validateToken(token));
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
         assertEquals(31L, jwtProvider.getUserNumb(token));
-        // getRefreshTokenValiditySeconds 조회로 후속 처리에 필요한 데이터를 가져온다
-        assertEquals(REFRESH_TOKEN_SECONDS, jwtProvider.getRefreshTokenValiditySeconds());
+        // Access Token과 같은 기기 세션 식별자가 Refresh Token에도 포함되는지 검증한다
+        assertEquals("session-1", jwtProvider.getSessionId(token));
+        // getRefreshTokenValidSec 조회로 후속 처리에 필요한 데이터를 가져온다
+        assertEquals(REFRESH_TOKEN_SECONDS, jwtProvider.getRefreshTokenValidSec());
     }
 
     /**
@@ -93,7 +97,7 @@ class JwtProviderTest {
     @Test
     void rejectTamperedToken() {
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
-        String token = jwtProvider.createAccessToken(31L, "USER");
+        String token = jwtProvider.createAccessToken(31L, "USER", "session-1");
         // Bearer 접두사 뒤에 토큰이 포함되어 있는지 확인한다
         char replacement = token.endsWith("A") ? 'B' : 'A';
         // 요청한 범위의 문자열을 추출한다

@@ -48,7 +48,7 @@ public interface ReportMapper {
      * @param req 사용자 번호, 선택적 공개 여부, 현재 연도 기간 및 독서 상태
      * @return 독서 요약에 표시할 독후감 목록
      */
-    List<ReportDto> getReadingSummaryReportList(ReadingSummaryQueryDto req);
+    List<ReportDto> getReadingSummaryList(ReadingSummaryQueryDto req);
 
     /**
      * 사용자, 목표 기간, 목표 유형에 해당하는 독서 목표를 조회한다.
@@ -94,7 +94,7 @@ public interface ReportMapper {
      * @param req 독후감 번호, 요청 사용자 번호와 화면에서 전달한 작성자 번호
      * @return 좋아요 허용 대상 수
      */
-    int getPublicReportLikeTargetCnt(SocialDto.LikeDto req);
+    int getPublicReportLikeCnt(SocialDto.LikeDto req);
 
     /**
      * ISBN 기준 공개 독후감 목록을 조회한다.
@@ -112,7 +112,7 @@ public interface ReportMapper {
      * @param bookIsbn 조회할 도서 ISBN
      * @return 평균 별점
      */
-    BigDecimal getPublicRatingAverageByIsbn(String bookIsbn);
+    BigDecimal getPublicRatingAvgByIsbn(String bookIsbn);
 
     /**
      * 신규 독후감을 저장한다.

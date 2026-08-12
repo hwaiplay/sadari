@@ -28,6 +28,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-29        HanWon.Jang        댓글 등록 알림 중복 차단 제외
+ * 2026-08-12        SeungHyeon.Kang    발송 알림 아이콘 번호 저장
+ * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 전환
  */
 @Service
 @RequiredArgsConstructor

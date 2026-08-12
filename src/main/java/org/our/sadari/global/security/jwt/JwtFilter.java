@@ -9,6 +9,8 @@ import java.io.IOException;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
@@ -26,6 +28,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-07-30        SeungHyeon.Kang    영구 삭제 대기 및 관리자 정지 회원 접근 제한 추가
  * 2026-07-30        SeungHyeon.Kang    비활성화 회원의 일반 API 접근 제한 추가
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
+ * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
  */
 @Component
 @RequiredArgsConstructor
@@ -48,6 +51,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private final JwtProvider jwtProvider;
     // TokenRedis 업무 처리 서비스
     private final TokenRedisService tokenRedisService;
+    // Redis 상태 캐시 누락 시 계정 원본 상태를 조회할 데이터 접근 객체
+    private final UserMapper userMapper;
 
     /**
      * HTTP 요청 헤더/쿠키에서 Access Token을 추출하여 유효성 및 블랙리스트 등록 여부를 검증한 후 SecurityContext에 인증 객체를 등록한다.
@@ -64,14 +69,45 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // Access Token이 존재하고, 서명/만료시간이 유효하며, Redis 블랙리스트(로그아웃된 토큰)에 등록되지 않은 경우 인증 객체를 생성한다.
         if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
+            // 토큰에 기록된 회원 번호를 조회한다
+            Long userNumb = jwtProvider.getUserNumb(token);
+            // 토큰에 기록된 기기별 로그인 세션 식별자를 조회한다
+            String sessionId = jwtProvider.getSessionId(token);
+
+            // 현재 또는 전체 기기 로그아웃으로 제거된 세션이면 인증 객체를 만들지 않는다
+            if (!tokenRedisService.isSessionActive(userNumb, sessionId)) {
+                // 인증 없이 남은 필터 체인을 수행한다
+                filterChain.doFilter(request, response);
+                // 제거된 세션의 요청 처리를 종료한다
+                return;
+            }
+
             // getAuthentication 조회로 후속 처리에 필요한 데이터를 가져온다
             Authentication authentication = jwtProvider.getAuthentication(token);
             // 한 요청에서 동일 Redis 회원 상태를 한 번만 조회한다
-            String userStat = tokenRedisService.getUserStatus(jwtProvider.getUserNumb(token));
+            String userStat = tokenRedisService.getUserStatus(userNumb);
+
+            // 상태 캐시가 없으면 ACTIVE로 추정하지 않고 DB 계정 원본으로 보정한다
+            if (StringUtil.isEmpty(userStat)) {
+                // 계정 원본을 회원 번호로 조회한다
+                UserDto savedUser = userMapper.getUserByNumb(userNumb);
+                // 물리 삭제됐거나 조회할 수 없는 회원은 인증 객체를 만들지 않는다
+                if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())) {
+                    // 인증 없이 남은 필터 체인을 수행한다
+                    filterChain.doFilter(request, response);
+                    // 존재하지 않는 회원의 요청 처리를 종료한다
+                    return;
+                }
+
+                // DB의 현재 계정 상태를 이번 요청 판단값으로 사용한다
+                userStat = savedUser.getUserStat();
+                // 다음 요청부터 같은 상태를 사용하도록 Redis 캐시를 채운다
+                tokenRedisService.uptUserStatus(userNumb, userStat);
+            }
 
             // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없다
             if (Constant.USER_STAT_DELETE_PENDING.equals(userStat)
-                    && !isDeletePendingAllowedPath(request.getRequestURI())) {
+                    && !isDeletePendingPath(request.getRequestURI())) {
                 // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답한다
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 // 영구 삭제 대기 회원 요청의 필터 처리를 종료한다
@@ -152,7 +188,7 @@ public class JwtFilter extends OncePerRequestFilter {
      * @param requestUri 현재 요청 URI
      * @return 허용 경로 여부
      */
-    private boolean isDeletePendingAllowedPath(String requestUri) {
+    private boolean isDeletePendingPath(String requestUri) {
         // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
         return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || LOGOUT_API_URI.equals(requestUri)

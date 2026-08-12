@@ -4,7 +4,7 @@
 
 - 목적: Sadari 구현을 이력서, 포트폴리오 본문, 기술 면접과 시연에 활용할 수 있는 형태로 변환
 - 적용 범위: 핵심 문장, 문제 해결 사례, 시연 순서, 예상 질문
-- 기준일: 2026-07-30
+- 기준일: 2026-08-11
 
 ## 포트폴리오 제목 예시
 
@@ -29,8 +29,8 @@ Sadari는 카카오 도서 검색을 기반으로 독후감과 독서 목표를 
 
 ### 인증·보안
 
-- Kakao OAuth 이후 Access/Refresh JWT를 HttpOnly Cookie로 발급하고 Redis에 Refresh Token, 닉네임, 회원 상태를 Lua로 원자 저장했다.
-- 로그아웃 Access Token을 남은 TTL 동안 Redis 블랙리스트로 관리하고 프론트 동시 재발급 요청을 하나의 Promise로 직렬화해 인증 무한 루프를 방지했다.
+- Kakao OAuth 이후 Access/Refresh JWT에 기기별 `sid`를 포함해 HttpOnly Cookie로 발급하고, Redis의 기기별 Refresh Token 세션과 회원별 세션 색인을 Lua로 원자 생성했다. 닉네임은 세션 TTL 캐시로, 회원 상태는 로그아웃과 분리된 무기한 캐시로 관리했다.
+- 현재·전체 디바이스 로그아웃, Access Token 블랙리스트, 다중 탭 Refresh Token 원자 회전과 BroadcastChannel 인증 동기화를 적용해 한 기기 로그아웃이 다른 기기 세션을 끊거나 동시 재발급이 세션을 파괴하지 않게 했다.
 - 이미지 업로드에서 확장자가 아닌 파일 시그니처, 디코더 형식, 해상도, 픽셀 수를 검증하고 재인코딩해 위장 파일 저장을 차단했다.
 
 ### 데이터와 트랜잭션
@@ -116,16 +116,18 @@ Access Token 만료 시 여러 API가 동시에 Refresh를 요청하거나 Refre
 
 **행동**
 
-재발급 Promise를 하나로 공유하고 요청별 재시도 상태를 기록했다. Refresh와 Logout 경로를 재발급 대상에서 제외하고 인증 Hook도 한 번만 복구를 시도하게 했다.
+한 탭에서는 재발급 Promise를 하나로 공유하고 요청별 재시도 상태를 기록했다. 서로 다른 탭과 서비스워커의 요청은 Redis Lua 스크립트로 기기별 Refresh Token을 원자 회전하고 10초 유예시간 동안 같은 최신 Token을 반환하게 했다. Refresh와 Logout 경로를 재발급 대상에서 제외하고 인증 Hook도 한 번만 복구를 시도하게 했다.
 
 **결과**
 
-동시 API 실패를 단일 Refresh 요청으로 수렴시키고 재발급 실패 시 로그인 상태를 명확히 종료했다.
+한 탭의 동시 API 실패는 단일 Refresh 요청으로 수렴시키고 탭 사이의 재발급 경쟁은 같은 서버 회전 결과로 통합했다. 재발급 실패나 로그아웃은 BroadcastChannel 인증 이벤트로 같은 브라우저의 탭에 전파해 로그인 상태를 명확히 종료했다.
 
 **근거**
 
 - `src/main/frontend/src/app/api/axios.ts`
 - `src/main/frontend/src/features/Auth/hooks/useCheckAuth.tsx`
+- `src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java`
+- `src/main/frontend/src/features/Auth/lib/authEvents.ts`
 
 ### 사례 5. 사용자 기능과 관리자 운영의 단절
 
@@ -173,7 +175,7 @@ Access Token 만료 시 여러 API가 동시에 Refresh를 요청하거나 Refre
 
 ### Redis가 없으면 로그인할 수 없는가
 
-현재 Refresh Token, 블랙리스트, 회원 상태와 닉네임 캐시가 Redis에 있으므로 인증 수명주기의 핵심 의존성이다. Redis 장애 정책과 고가용성 구성은 운영 배포 단계에서 추가해야 한다.
+기기별 Refresh Token 세션, Access Token 블랙리스트, 회원 상태와 닉네임 캐시가 Redis에 있으므로 인증 수명주기의 핵심 의존성이다. Redis에서 `sid` 세션을 확인할 수 없으면 서명과 만료가 정상인 JWT도 인증하지 않는다. Redis 장애 정책과 고가용성 구성은 운영 배포 단계에서 추가해야 한다.
 
 ### FCM 발송이 실패하면 알림도 실패해야 하는가
 

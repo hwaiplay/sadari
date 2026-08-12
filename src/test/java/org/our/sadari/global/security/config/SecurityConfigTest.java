@@ -58,7 +58,7 @@ class SecurityConfigTest {
      * @throws Exception Servlet Filter 처리 중 오류가 발생할 때 전달한다
      */
     @Test
-    void csrfTokenCookieAllowsRequestWithMatchingHeader() throws Exception {
+    void csrfAllowsMatchingHeader() throws Exception {
         // 운영 Cookie 속성을 사용하는 CSRF Token Repository를 조회한다
         CookieCsrfTokenRepository repository = securityConfig.getCsrfTokenRepository();
         // Spring Security의 기본 XOR Token 처리까지 포함할 CSRF Filter를 생성한다
@@ -119,7 +119,7 @@ class SecurityConfigTest {
      * @throws Exception Servlet Filter 처리 중 오류가 발생할 때 전달한다
      */
     @Test
-    void csrfFilterRejectsRequestWithoutTokenHeader() throws Exception {
+    void csrfRejectsMissingHeader() throws Exception {
         // 운영 Cookie 속성을 사용하는 CSRF Token Repository를 조회한다
         CookieCsrfTokenRepository repository = securityConfig.getCsrfTokenRepository();
         // 상태 변경 요청의 CSRF 검증을 수행할 Filter를 생성한다

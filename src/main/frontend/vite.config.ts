@@ -56,7 +56,7 @@ function configureDevelopmentProxy(proxy: HttpProxy.ProxyServer): void {
  * @param target 프록시 요청을 전달할 백엔드 주소
  * @return 동일 출처 헤더 보정이 포함된 Vite 프록시 옵션
  */
-function createDevelopmentProxyOptions(target: string): ProxyOptions {
+function createDevProxyOptions(target: string): ProxyOptions {
 
   // 운영 CORS 허용 범위를 넓히지 않고 로컬 개발 프록시에서만 요청 출처를 보정한다
   return {
@@ -104,7 +104,7 @@ const resolveSpringValue = (configuredValue: string) => {
  * @author HanWon.Jang
  * @return 검증된 Vite 허용 호스트와 내부 프록시 대상
  */
-const getDevelopmentServerConfig = (): DevelopmentServerConfig => {
+const getDevServerConfig = (): DevelopmentServerConfig => {
 
   const activeProfile =
     process.env.SPRING_PROFILES_ACTIVE?.split(",")[0]?.trim() || "loc";
@@ -170,7 +170,7 @@ export default defineConfig(({ command }) => {
    * 운영 build는 Spring이 정적 파일과 API를 같은 origin으로 제공하므로 로컬 yml 파일 없이도 생성할 수 있다.
    */
   const developmentServerConfig =
-    command === "serve" ? getDevelopmentServerConfig() : null;
+    command === "serve" ? getDevServerConfig() : null;
 
   // 개발 서버에서는 고정 포트와 내부 API 프록시를 적용하고 운영 빌드에서는 정적 자원 설정만 반환한다
   return {
@@ -181,10 +181,10 @@ export default defineConfig(({ command }) => {
           host: "127.0.0.1",
           strictPort: true,
           proxy: {
-            "/api": createDevelopmentProxyOptions(
+            "/api": createDevProxyOptions(
               developmentServerConfig.proxyTarget,
             ),
-            "/uploads": createDevelopmentProxyOptions(
+            "/uploads": createDevProxyOptions(
               developmentServerConfig.proxyTarget,
             ),
           },

@@ -79,7 +79,7 @@ class NicknameGenerationServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setGeneratedNicknameIssuesFirstSequence() {
+    void setNicknameFirstSequence() {
         // 현재 연월에 닉네임 조합이 아직 없도록 번호 갱신 결과를 설정한다
         when(nicknameSequenceMapper.uptNicknameSequence(any(NicknameSequenceDto.class))).thenReturn(0);
         // 닉네임 조합의 최초 번호 등록 결과를 설정한다
@@ -113,7 +113,7 @@ class NicknameGenerationServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setGeneratedNicknameRetriesConcurrentInitialInsert() {
+    void setNicknameRetriesInsert() {
         // 최초 갱신에는 행이 없고 동시 등록 충돌 후 재시도에는 행이 갱신되도록 설정한다
         when(nicknameSequenceMapper.uptNicknameSequence(any(NicknameSequenceDto.class))).thenReturn(0, 1);
         // 다른 가입 요청이 최초 번호 행을 먼저 등록한 상황을 재현한다
@@ -138,7 +138,7 @@ class NicknameGenerationServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setGeneratedNicknameUsesOneOfFourCompatiblePredicateOptions() {
+    void setNicknameUsesPredicates() {
         // 네 개의 호환 서술어가 등록된 공통코드 그룹으로 현재 테스트의 기본 데이터를 교체한다
         when(codeUtil.getCodeGroupList(List.of(
                 Constant.CODE_NICK_SUBJ

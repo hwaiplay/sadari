@@ -66,7 +66,7 @@ public interface ReportService {
      * @param bookIsbn 조회할 도서 ISBN
      * @return 평균 별점 조회 결과
      */
-    ResultData getPublicRatingAverageByIsbn(String bookIsbn);
+    ResultData getPublicRatingAvgByIsbn(String bookIsbn);
 
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회한다.

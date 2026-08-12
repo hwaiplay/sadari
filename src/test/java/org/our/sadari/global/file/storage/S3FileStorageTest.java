@@ -43,7 +43,7 @@ class S3FileStorageTest {
      * @throws IOException S3 저장소 계약상 발생 가능
      */
     @Test
-    void setFileWritesPrivateObjectMetadata() throws IOException {
+    void setFilePrivateMetadata() throws IOException {
 
         // 테스트 버킷을 사용하는 이미지 저장소를 생성한다
         S3FileStorage fileStorage = new S3FileStorage(s3Client, "test-bucket");
@@ -68,7 +68,7 @@ class S3FileStorageTest {
      * @throws IOException S3 저장소 계약상 발생 가능
      */
     @Test
-    void getFileReturnsEmptyForMissingObject() throws IOException {
+    void getFileEmptyWhenMissing() throws IOException {
 
         // 객체 조회 시 S3의 404 응답이 발생하도록 구성한다
         when(s3Client.getObjectAsBytes(any(GetObjectRequest.class)))

@@ -663,9 +663,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 신청 사용자 번호를 설정한다
         result.setUserNumb(userNumb);
         // 질문 사본을 고정 컬럼에 설정한다
-        setApplicationQuestionFields(result, questions);
+        setApplicationQuestions(result, questions);
         // 답변을 고정 컬럼에 설정한다
-        setApplicationAnswerFields(result, answers);
+        setApplicationAnswers(result, answers);
         // 저장용 신청 DTO를 반환한다
         return result;
     }
@@ -683,7 +683,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         target.setQuesFift(getListValue(values, 4));
     }
 
-    private void setApplicationQuestionFields(ReadingClubDto.ApplicationDto target, List<String> values) {
+    private void setApplicationQuestions(ReadingClubDto.ApplicationDto target, List<String> values) {
         // 질문 사본을 순서별 컬럼에 설정한다
         target.setQuesFirs(getListValue(values, 0));
         // 두 번째 질문 사본을 설정한다
@@ -696,7 +696,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         target.setQuesFift(getListValue(values, 4));
     }
 
-    private void setApplicationAnswerFields(ReadingClubDto.ApplicationDto target, List<String> values) {
+    private void setApplicationAnswers(ReadingClubDto.ApplicationDto target, List<String> values) {
         // 답변을 질문과 같은 순서의 컬럼에 설정한다
         target.setAnsrFirs(getListValue(values, 0));
         // 두 번째 가입 답변을 설정한다

@@ -16,6 +16,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-30        SeungHyeon.Kang    회원 정지 사용자 서버 동기화 상태 추가
  * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
  * 2026-08-05        SeungHyeon.Kang       계층형 독서 관심분야 공통코드로 통합
+ * 2026-08-12        OpenAI Codex        알림 아이콘 기본 상황 코드 추가
  */
 public final class Constant {
 
@@ -81,6 +82,8 @@ public final class Constant {
     public static final String ALIM_SITU_REPORT = "REPORT";
     // 독후감 댓글에 의해 발생하는 알림 상황 코드
     public static final String ALIM_SITU_REPLY = "REPLY";
+    // 상황별 아이콘이 등록되지 않았을 때 사용하는 기본 알림 상황 코드
+    public static final String ALIM_SITU_DEFAULT = "DEFAULT";
 
     // 알림 템플릿 코드 좋아요 독후감 설정값
     public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";

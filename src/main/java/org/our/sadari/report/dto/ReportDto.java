@@ -91,4 +91,7 @@ public class ReportDto extends BookDto {
 
     @Schema(description = "독후감 목록 정렬 유형", example = "END_DATE_DESC")
     private String sortType;
+
+    @Schema(description = "상세 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
+    private String editVersion;
 }

@@ -56,6 +56,7 @@
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
+| `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
 | `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
@@ -109,6 +110,19 @@
 - EC2에서 MySQL RDS의 `3306` 포트로 접근할 수 있어야 하고, RDS 보안 그룹은 EC2 보안 그룹을
   소스로 허용해야 합니다.
 - PWA와 Secure Cookie, Firebase Web Push를 사용하려면 최종 서비스 도메인에 HTTPS가 적용되어야 합니다.
+
+## 기기별 인증 세션 전환
+
+`sid` 기반 기기별 세션을 처음 배포할 때는 기존 사용자별 단일 Refresh Token 키와 새 세션 키가 일시적으로 함께 존재할 수 있습니다.
+
+1. 모든 애플리케이션 인스턴스를 새 버전으로 교체하고 구버전 인스턴스가 요청을 처리하지 않는지 확인합니다.
+2. `sid`가 없는 기존 JWT는 새 버전에서 인증할 수 없으므로 사용자가 한 번 다시 로그인할 수 있음을 배포 공지와 점검 항목에 포함합니다.
+3. Redis에서 `SCAN`을 사용해 구형 `auth:refresh:*` 키의 존재와 TTL을 확인합니다. 운영 Redis에서 전체 키를 한 번에 조회하는 `KEYS` 명령은 사용하지 않습니다.
+4. 구형 키의 TTL이 남아 있으면 자연 만료를 기다릴 수 있습니다. 즉시 정리해야 하면 구버전 인스턴스 종료를 확인한 뒤 `UNLINK`를 사용해 비동기로 삭제합니다.
+5. 새 로그인 후 `auth:session:{sid}`, `auth:user:sessions:{userNumb}`, `auth:user:nick:{userNumb}`와 `auth:user:status:{userNumb}`가 생성되는지 확인합니다.
+6. 현재 디바이스 로그아웃은 현재 `auth:session:{sid}`만 제거하고, 전체 디바이스 로그아웃은 회원별 Set에 연결된 모든 세션을 제거하는지 확인합니다.
+
+현재 버전은 구형 `auth:refresh:{userNumb}`를 읽거나 생성하지 않으며 새 로그아웃 처리에서도 해당 키를 삭제하지 않습니다. 구버전과 새 버전을 동시에 운영하는 동안 구형 키를 먼저 삭제하면 구버전 사용자의 재발급이 실패하므로 배포 순서를 지켜야 합니다.
 
 ## 최초 설정 순서
 

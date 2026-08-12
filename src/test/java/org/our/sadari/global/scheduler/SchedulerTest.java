@@ -70,7 +70,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendReportDateOverAlimRunsWhenDetailCodeIsEnabled() {
+    void sendOverdueWhenEnabled() {
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -91,7 +91,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendReportDateOverAlimSkipsWhenDetailCodeIsDisabled() {
+    void sendOverdueSkipsDisabled() {
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -112,7 +112,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimRunsWhenDetailCodeIsEnabled() {
+    void delAlimWhenEnabled() {
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -133,7 +133,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAlimSkipsWhenDetailCodeIsDisabled() {
+    void delAlimSkipsDisabled() {
         // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
@@ -154,7 +154,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delPendingUsersRunsWhenDetailCodeIsEnabled() {
+    void delUsersWhenEnabled() {
 
         // 영구 삭제 스케줄러 상세코드가 활성 상태인 조건을 설정한다
         when(codeUtil.existsCode(
@@ -175,7 +175,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delPendingUsersSkipsWhenDetailCodeIsDisabled() {
+    void delUsersSkipsDisabled() {
 
         // 영구 삭제 스케줄러 상세코드가 비활성 상태인 조건을 설정한다
         when(codeUtil.existsCode(
@@ -196,7 +196,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void syncUserStatusEventsRunsWhenDetailCodeIsEnabled() {
+    void syncStatusWhenEnabled() {
 
         // 회원 상태 동기화 스케줄러 상세코드를 활성 상태로 설정한다
         when(codeUtil.existsCode(
@@ -217,7 +217,7 @@ class SchedulerTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void syncUserStatusEventsSkipsWhenDetailCodeIsDisabled() {
+    void syncStatusSkipsDisabled() {
 
         // 회원 상태 동기화 스케줄러 상세코드를 중지 상태로 설정한다
         when(codeUtil.existsCode(

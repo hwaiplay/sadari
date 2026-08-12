@@ -6,7 +6,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 
 | 문서 | 주요 내용 |
 | --- | --- |
-| [계정 및 인증 정책](account-auth-policy.md) | Kakao 로그인, JWT, Redis 세션, 로그아웃 |
+| [계정 및 인증 정책](account-auth-policy.md) | Kakao 로그인, `sid` JWT, Redis 기기별 세션, 현재·전체 디바이스 로그아웃 |
 | [최초 로그인 웰컴 및 닉네임 정책](user-onboarding-policy.md) | 서비스 소개 슬라이드, 랜덤 닉네임 확정, 최초 1회 노출 |
 | [계정 비활성화 및 영구 탈퇴 정책](withdrawal-policy.md) | 계정 비활성화, 영구 탈퇴, 재인증, 복귀 및 삭제 |
 | [관리자 회원 이용 정지 정책](user-suspension-policy.md) | 기간·무기한 정지, 동일 Kakao 계정 차단, 해제와 상태 우선순위 |

@@ -33,7 +33,7 @@ import {
   REPORT_STATUS_READ,
 } from "@/features/Book/constants/reportForm";
 import {
-  getReportContentStorageByteLength,
+  getReportContentByteLen,
   normalizeBookAuthor,
   stripHtmlTags,
   truncateUtf8Bytes,
@@ -391,7 +391,7 @@ function SetReportPage() {
                       e.currentTarget.value = nextValue;
                       // 화면의 현재 기록 바이트 수를 저장 기준으로 갱신한다
                       setContentByteLength(
-                        getReportContentStorageByteLength(nextValue),
+                        getReportContentByteLen(nextValue),
                       );
                     }}
                   />

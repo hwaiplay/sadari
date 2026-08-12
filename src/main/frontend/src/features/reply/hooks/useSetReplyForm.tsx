@@ -37,6 +37,7 @@ export const useSetReplyForm = ({
   const [commentInput, setCommentInput] = useState("");
   const [uperNumb, setUperNumb] = useState<number | null>(null);
   const [editingReplyNumb, setEditingReplyNumb] = useState<number | null>(null);
+  const [editingReplyVersion, setEditingReplyVersion] = useState<string | null>(null);
 
   /**
    * 댓글 입력값과 답글 및 수정 대상을 일반 댓글 등록 상태로 초기화한다
@@ -49,6 +50,7 @@ export const useSetReplyForm = ({
     setCommentInput("");
     setUperNumb(null);
     setEditingReplyNumb(null);
+    setEditingReplyVersion(null);
   };
 
   // 댓글 등록 요청의 진행 상태와 성공 및 실패 경로를 관리한다
@@ -157,6 +159,7 @@ export const useSetReplyForm = ({
     setUperNumb(parentReplyNumb);
     // 답글 작성과 댓글 수정을 동시에 진행하지 않도록 수정 대상을 초기화한다
     setEditingReplyNumb(null);
+    setEditingReplyVersion(null);
     // 사용자가 바로 답글 내용을 이어 쓸 수 있도록 언급 닉네임을 입력한다
     setCommentInput(`@${userNick} `);
   };
@@ -167,11 +170,14 @@ export const useSetReplyForm = ({
    * @author HanWon.Jang
    * @param replNumb 수정할 댓글 번호
    * @param replCntn 수정 입력창에 표시할 현재 댓글 내용
+   * @param editVersion 선택 시점의 댓글 원본 해시
    * @return 반환값이 없다
    */
-  const handleStartEditReply = (replNumb: number, replCntn: string): void => {
+  const handleStartEditReply = (replNumb: number, replCntn: string, editVersion: string): void => {
     // 수정 요청에서 사용할 댓글 번호를 설정한다
     setEditingReplyNumb(replNumb);
+    // 저장 시 다른 탭의 선행 수정 여부를 비교할 원본 해시를 보관한다
+    setEditingReplyVersion(editVersion);
     // 수정 중인 댓글을 답글로 잘못 등록하지 않도록 부모 번호를 초기화한다
     setUperNumb(null);
     // 사용자가 기존 원문을 바로 변경할 수 있도록 현재 댓글 내용을 입력한다
@@ -213,12 +219,13 @@ export const useSetReplyForm = ({
     }
 
     // 수정 대상이 있으면 복합 식별값과 정규화된 내용을 댓글 수정 API에 전달한다
-    if (editingReplyNumb !== null) {
+    if (editingReplyNumb !== null && editingReplyVersion !== null) {
       // 작성 중인 댓글의 식별값과 변경할 내용을 수정 요청으로 전송한다
       uptReplyMutation.mutate({
         reptNumb,
         replNumb: editingReplyNumb,
         replCntn: comment,
+        editVersion: editingReplyVersion,
       });
       // 같은 제출 이벤트에서 신규 댓글 등록까지 이어지지 않도록 종료한다
       return;

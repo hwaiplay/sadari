@@ -49,7 +49,7 @@ class ServiceInfoServiceImplTest {
 
     /** 비활성 사용자는 서비스 정보 카테고리와 배포본을 조회하지 못한다. */
     @Test
-    void getServiceInfoListRejectsInactiveUser() {
+    void getServiceInfoInactive() {
         when(serviceInfoMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(0);
 
         ResultData result = serviceInfoService.getServiceInfoList(7L);
@@ -60,7 +60,7 @@ class ServiceInfoServiceImplTest {
 
     /** 활성 사용자에게 공통코드 카테고리와 현재 배포본 조회 결과를 그대로 제공한다. */
     @Test
-    void getServiceInfoListReturnsDeployedCategoryRowsForActiveUser() {
+    void getDeployedServiceInfo() {
         List<ServiceInfoDto> rows = List.of(new ServiceInfoDto());
         when(serviceInfoMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
         when(serviceInfoMapper.getServiceInfoList("SVIF_CATE", "Y")).thenReturn(rows);

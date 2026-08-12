@@ -59,7 +59,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findNearestBookColorSelectsMatchingPaletteColor() {
+    void getNearestBookColor() {
 
         // 비교할 파란색과 코랄색 책장 공통코드를 생성한다
         CodeDto blueColorCode = createColorCode("BLUE", "#6aa6d8");
@@ -82,7 +82,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void findNearestBookColorUsesFallbackForWhiteImage() {
+    void getBookColorWhiteFallback() {
 
         // 분석 실패 시 사용할 기본 책장 공통코드를 생성한다
         CodeDto fallbackColorCode = createColorCode("BLUE", "#6aa6d8");
@@ -104,7 +104,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getBookCoverColorUsesFallbackForUntrustedHost() {
+    void getCoverColorHostFallback() {
 
         // 이미지 분석 실패 시 사용할 기본 책장 공통코드를 생성한다
         CodeDto fallbackColorCode = createColorCode("BLUE", "#6aa6d8");
@@ -130,7 +130,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getTrustedCoverUriAllowsKakaoBookCoverHost() {
+    void getTrustedKakaoCover() {
         // 카카오 공식 도서 검색 응답 형식의 표지 URI를 검증한다
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover"
@@ -146,7 +146,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getTrustedCoverUriAllowsDaumOriginalBookCoverHost() {
+    void getTrustedDaumCover() {
         // Daum 도서 원본 이미지 형식의 표지 URI를 검증한다
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://t1.daumcdn.net/lbook/image/6253040?timestamp=20260115151223"
@@ -162,7 +162,7 @@ class BookCoverColorServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getTrustedCoverUriRejectsDisguisedKakaoHost() {
+    void getCoverRejectsFakeKakao() {
         // 허용 호스트명을 접미사로 사용한 외부 주소를 검증한다
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://search1.kakaocdn.net.example.com/book-cover"

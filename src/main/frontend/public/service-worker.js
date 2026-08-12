@@ -180,9 +180,9 @@ async function uptAlimRead(alimNumb) {
 }
 
 // 서비스워커 설치 시 오프라인 실행에 필요한 최소 앱 셸을 준비한다
-self.addEventListener("install", handleServiceWorkerInstall);
+self.addEventListener("install", handleSwInstall);
 // 새 서비스워커 활성화 시 이전 앱 셸 캐시를 정리한다
-self.addEventListener("activate", handleServiceWorkerActivate);
+self.addEventListener("activate", handleSwActivate);
 // 화면 요청별 변경 가능성에 맞는 캐시 정책을 적용한다
 self.addEventListener("fetch", handleServiceWorkerFetch);
 
@@ -193,7 +193,7 @@ self.addEventListener("fetch", handleServiceWorkerFetch);
  * @param {ExtendableEvent} event 서비스워커 설치 이벤트
  * @return {void} 반환값이 없다
  */
-function handleServiceWorkerInstall(event) {
+function handleSwInstall(event) {
 
   // 최신 앱 셸 저장과 대기 상태 해제가 끝날 때까지 설치 완료를 보류한다
   event.waitUntil(setAppShellCache());
@@ -222,10 +222,10 @@ async function setAppShellCache() {
  * @param {ExtendableEvent} event 서비스워커 활성화 이벤트
  * @return {void} 반환값이 없다
  */
-function handleServiceWorkerActivate(event) {
+function handleSwActivate(event) {
 
   // 이전 캐시 제거와 현재 화면 제어가 끝날 때까지 활성화 완료를 보류한다
-  event.waitUntil(activateLatestServiceWorker());
+  event.waitUntil(activateLatestSw());
 }
 
 /**
@@ -234,7 +234,7 @@ function handleServiceWorkerActivate(event) {
  * @author HanWon.Jang
  * @return {Promise<void>} 최신 서비스워커 활성화 완료 Promise
  */
-async function activateLatestServiceWorker() {
+async function activateLatestSw() {
 
   // 현재 출처에 저장된 캐시 이름을 조회한다
   const cacheNameList = await caches.keys();

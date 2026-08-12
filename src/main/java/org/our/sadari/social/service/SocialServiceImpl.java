@@ -394,7 +394,7 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
-        if (reportMapper.getPublicReportLikeTargetCnt(req) == 0) {
+        if (reportMapper.getPublicReportLikeCnt(req) == 0) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }

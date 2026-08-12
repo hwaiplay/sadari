@@ -23,11 +23,11 @@ import {
   type FollowUser,
 } from "@/features/Social/api/socialApi";
 import {
-  copyPreviousReadingGoalApi,
+  copyPrevReadingGoalApi,
   delProfileImageDraftApi,
   getMyProfileApi,
-  getMonthlyReadingSummaryApi,
-  getProfileImageDraftListApi,
+  getMonthlyReadingApi,
+  getProfileDraftListApi,
   setProfileImageDraftApi,
   updateReadingGoalApi,
   updateMyProfileApi,
@@ -151,7 +151,7 @@ const joinKoreanList = (items: string[]) => items.join(", ");
  * @param summary summary 입력값
  * @return 처리 결과
  */
-const getCopyablePreviousGoalPeriods = (summary: MonthlyReadingSummary | null) =>
+const getCopyableGoalPeriods = (summary: MonthlyReadingSummary | null) =>
   GOAL_PERIODS.filter((period) => {
 
     if (!summary) {
@@ -198,7 +198,7 @@ const getPreviousGoalCount = (summary: MonthlyReadingSummary, period: ReadingPer
  * @param periods periods 입력값
  * @return 처리 결과
  */
-const getCopyPreviousGoalConfirmText = (summary: MonthlyReadingSummary, periods: ReadingPeriod[]) => {
+const getCopyGoalConfirmText = (summary: MonthlyReadingSummary, periods: ReadingPeriod[]) => {
 
   if (periods.length === 1) {
     const period = periods[0];
@@ -255,7 +255,7 @@ const getReadingEndDateText = (report: ReadingSummaryReport) => {
  * @param report 목표 독서기간을 표시할 독후감 요약 정보
  * @return 목표 독서기간 표시 문구
  */
-const getTargetReadingPeriodText = (report: ReadingSummaryReport) => {
+const getReadingPeriodText = (report: ReadingSummaryReport) => {
 
   const periodText = [
     formatDashedDateToDot(report.reptStdt),
@@ -393,7 +393,7 @@ function ProfileEditPage() {
 
     Promise.all([
       getMyProfileApi(),
-      getProfileImageDraftListApi().catch(() => []),
+      getProfileDraftListApi().catch(() => []),
     ])
       .then(([response, drafts]) => {
 
@@ -420,7 +420,7 @@ function ProfileEditPage() {
       // 독서 활동 조회 성공과 실패 및 종료 상태를 각각 처리한다
       try {
         // 프로필 하단에 표시할 독서 활동 요약을 조회한다
-        const response = await getMonthlyReadingSummaryApi();
+        const response = await getMonthlyReadingApi();
 
         // 컴포넌트가 유지되는 동안에만 독서 활동 요약을 화면 상태에 반영한다
         if (!ignore) {
@@ -628,7 +628,7 @@ function ProfileEditPage() {
    * @param event 배경 이미지 파일 입력 변경 이벤트
    * @return 반환값이 없다
    */
-  const handleBackgroundImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
+  const handleBgImageChange = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.currentTarget.files?.[0];
     // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비운다
     event.currentTarget.value = "";
@@ -658,7 +658,7 @@ function ProfileEditPage() {
    * @author HanWon.Jang
    * @param period 열거나 닫을 독서 요약 기간 구분값
    */
-  const handleToggleReadingSummary = (period: ReadingPeriod) => {
+  const handleReadingSummary = (period: ReadingPeriod) => {
 
     setExpandedSummary((prev) => ({
       ...prev,
@@ -845,7 +845,7 @@ function ProfileEditPage() {
         ),
       );
 
-      const summaryResponse = await getMonthlyReadingSummaryApi();
+      const summaryResponse = await getMonthlyReadingApi();
       setMonthlySummary(summaryResponse.data as MonthlyReadingSummary);
     } catch (error) {
       void sweetError(
@@ -863,7 +863,7 @@ function ProfileEditPage() {
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handleCurrentReadingEditClick = () => {
+  const handleReadingEditClick = () => {
 
     // 선택한 현재 읽는 책이 없으면 잘못된 상세 경로로 이동하지 않는다
     if (!currentReadingReport) {
@@ -887,12 +887,12 @@ function ProfileEditPage() {
   const handleGoalModalOpen = async () => {
 
     let nextSummary = monthlySummary;
-    const copyablePreviousGoalPeriods = getCopyablePreviousGoalPeriods(nextSummary);
+    const copyablePreviousGoalPeriods = getCopyableGoalPeriods(nextSummary);
 
     if (nextSummary && copyablePreviousGoalPeriods.length > 0) {
       const confirmResult = await sweetConfirm({
         title: /* "지난 목표를 가져올까요?" */ message("frontend.profile.goal.copyPreviousTitle"),
-        text: getCopyPreviousGoalConfirmText(nextSummary, copyablePreviousGoalPeriods),
+        text: getCopyGoalConfirmText(nextSummary, copyablePreviousGoalPeriods),
         confirmButtonText: /* "가져오기" */ message("frontend.profile.goal.copyPreviousConfirm"),
         cancelButtonText: /* "직접 설정" */ message("frontend.profile.goal.copyPreviousCancel"),
       });
@@ -900,7 +900,7 @@ function ProfileEditPage() {
       if (confirmResult.isConfirmed) {
         try {
           setIsGoalSaving(true);
-          const response = await copyPreviousReadingGoalApi();
+          const response = await copyPrevReadingGoalApi();
           nextSummary = response.data as MonthlyReadingSummary;
           setMonthlySummary(nextSummary);
           await sweetSuccess(
@@ -984,7 +984,7 @@ function ProfileEditPage() {
    * @param reports 현재 읽고 있는 독후감 목록
    * @return 현재 읽고 있는 책 섹션 JSX
    */
-  const renderCurrentReadingReports = (reports: ReadingSummaryReport[] = []) => {
+  const renderCurrentReports = (reports: ReadingSummaryReport[] = []) => {
 
     if (reports.length === 0) {
       return null;
@@ -1537,7 +1537,7 @@ function ProfileEditPage() {
             onClick={() => {
 
               if (hasReports) {
-                handleToggleReadingSummary(period);
+                handleReadingSummary(period);
               }
             }}
           >
@@ -1891,7 +1891,7 @@ function ProfileEditPage() {
                         className={styles.hiddenInput}
                         type="file"
                         accept="image/jpeg,image/png"
-                        onChange={handleBackgroundImageChange}
+                        onChange={handleBgImageChange}
                     />
                   </label>
 
@@ -2017,7 +2017,7 @@ function ProfileEditPage() {
               {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
               {renderProfileStats(monthlySummary)}
               {/* 현재 읽고 있는 책 영역 */}
-              {renderCurrentReadingReports(monthlySummary.currentReadingReports)}
+              {renderCurrentReports(monthlySummary.currentReadingReports)}
               {/* 목표 달성 횟수와 기간별 독서 목표 영역 */}
               <section className={styles.monthlySummary} aria-label={/* "이번 달에 읽은 책" */ message("frontend.profile.monthlyReading.title")}>
                 {/* 주간과 월간 및 연간 목표 달성 횟수 영역 */}
@@ -2174,9 +2174,9 @@ function ProfileEditPage() {
                   <p className={styles.currentReadingModalBookTitle}>
                     {currentReadingReport.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                   </p>
-                  {getTargetReadingPeriodText(currentReadingReport) && (
+                  {getReadingPeriodText(currentReadingReport) && (
                     <p className={styles.currentReadingModalBookMeta}>
-                      {getTargetReadingPeriodText(currentReadingReport)}
+                      {getReadingPeriodText(currentReadingReport)}
                     </p>
                   )}
                 </div>
@@ -2195,7 +2195,7 @@ function ProfileEditPage() {
               <button
                 className={styles.currentReadingModalEditButton}
                 type="button"
-                onClick={handleCurrentReadingEditClick}
+                onClick={handleReadingEditClick}
               >
                 <span>{/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}</span>
                 <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">

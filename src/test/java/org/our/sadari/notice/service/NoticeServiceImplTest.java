@@ -47,7 +47,7 @@ class NoticeServiceImplTest {
 
     /** 비활성 사용자는 배포 공지 목록 SQL을 실행하지 못한다. */
     @Test
-    void getNoticeListRejectsInactiveUser() {
+    void getNoticeRejectsInactive() {
         when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(0);
 
         boolean active = noticeService.isActiveUser(7L);
@@ -58,7 +58,7 @@ class NoticeServiceImplTest {
 
     /** 활성 사용자의 목록은 21번째 행으로 다음 페이지 여부를 계산한다. */
     @Test
-    void getNoticeListReturnsTwentyRowsAndHasNext() {
+    void getNoticeListHasNext() {
         when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
         List<NoticeDto> rows = new ArrayList<>();
         for (int index = 0; index < 21; index++) {
@@ -77,7 +77,7 @@ class NoticeServiceImplTest {
 
     /** 활성 사용자가 배포 공지 상세를 열면 읽음 이력을 저장한다. */
     @Test
-    void getNoticeDetailStoresReadHistory() {
+    void getNoticeDtlStoresRead() {
         when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
         NoticeDto notice = new NoticeDto();
         notice.setNotiNumb(11L);

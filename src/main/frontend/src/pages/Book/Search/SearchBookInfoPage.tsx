@@ -9,7 +9,7 @@ import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
-import { useBookRatingAverageByIsbn } from "@/features/Book/Detail/hook/useBookRatingAverage";
+import { useBookRatingAvg } from "@/features/Book/Detail/hook/useBookRatingAverage";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
@@ -32,7 +32,7 @@ function SearchBookInfoPage() {
   const navigate = useNavigate();
   const book = location.state?.book as BookSearchResultType | undefined;
   const [isSelectingReport, setIsSelectingReport] = useState(false);
-  const { data: ratingAverageData } = useBookRatingAverageByIsbn(
+  const { data: ratingAverageData } = useBookRatingAvg(
     book?.isbn ?? "",
     Boolean(book?.isbn),
   );

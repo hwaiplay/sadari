@@ -28,6 +28,8 @@ import org.our.sadari.push.service.PushService;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
+ * 2026-08-12        SeungHyeon.Kang    발송 알림 아이콘 번호 검증 추가
+ * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 반영
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -60,7 +62,7 @@ class AlimServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getMyAlimListReturnsUnreadItemsWithoutUpdatingReadStatus() {
+    void getAlimListKeepsUnread() {
         // 알림 목록 항목을 담을 객체를 생성한다
         AlimDto.AlimItemDto alimItem = new AlimDto.AlimItemDto();
         // AlimNumb 업무 값을 alimItem DTO에 설정한다
@@ -95,7 +97,7 @@ class AlimServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptAlimReadUpdatesClickedItemAndReturnsUnreadCount() {
+    void uptAlimReadReturnsCnt() {
         // 알림 읽음 처리 조건을 담을 객체를 생성한다
         AlimDto.AlimReadReqDto req = new AlimDto.AlimReadReqDto();
         // AlimNumb 업무 값을 req DTO에 설정한다
@@ -128,7 +130,7 @@ class AlimServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delAllAlimUpdatesDeleteStatusAndReturnsZeroUnreadCount() {
+    void delAllAlimReturnsZero() {
         // delAllAlim 업무 로직을 alimService에 위임한다
         ResultData result = alimService.delAllAlim(31L);
         // 공통 응답에 포함된 업무 데이터를 조회한다
@@ -148,7 +150,7 @@ class AlimServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendAlimPassesInsertedAlimNumbToPushService() {
+    void sendAlimUsesInsertedNumb() {
         // 알림 발송에 사용할 템플릿 정보를 담을 객체를 생성한다
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
         // AlimTitl 업무 값을 template DTO에 설정한다

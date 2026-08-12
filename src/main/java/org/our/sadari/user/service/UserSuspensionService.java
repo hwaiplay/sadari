@@ -39,5 +39,5 @@ public interface UserSuspensionService {
      * @param userNumb 영구 탈퇴를 취소할 회원 번호
      * @return 유효한 정지가 있으면 SUSPENDED, 없으면 ACTIVE
      */
-    String getStatusAfterWithdrawalCancel(Long userNumb);
+    String getWithdrawalCancelStatus(Long userNumb);
 }

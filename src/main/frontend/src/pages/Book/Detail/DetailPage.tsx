@@ -20,7 +20,7 @@ import {
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
-import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
+import { usePublicReportLike } from "@/features/Book/Detail/hook/usePublicReports";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
 import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import Loading from "@/components/Loading/Loading";
@@ -37,7 +37,7 @@ import {
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
 import {
-  getReportContentStorageByteLength,
+  getReportContentByteLen,
   sanitizeText,
   truncateUtf8Bytes,
   validateReportForm,
@@ -136,7 +136,7 @@ function DetailPage() {
   const navigate = useNavigate();
   const { data, error, isError, isPending } = useBookDetail(idNum);
   const bookData = data?.data;
-  const likeMutation = usePublicReportLikeMutation();
+  const likeMutation = usePublicReportLike();
   const { mutate: updateReport, isPending: isUpdatePending } = useUpdateMutation();
   const { mutate: deleteReport, isPending: isDeletePending } = useDeleteMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
@@ -185,7 +185,7 @@ function DetailPage() {
     // 서버에서 조회한 기록과 저장 기준 바이트 길이를 함께 설정한다
     setContent(bookData.reptCntn ?? "");
     setContentByteLength(
-      getReportContentStorageByteLength(bookData.reptCntn ?? ""),
+      getReportContentByteLen(bookData.reptCntn ?? ""),
     );
   }, [bookData]);
 
@@ -473,7 +473,7 @@ function DetailPage() {
 
     // 보정한 기록 본문과 저장 기준 바이트 길이를 함께 갱신한다
     setContent(nextContent);
-    setContentByteLength(getReportContentStorageByteLength(nextContent));
+    setContentByteLength(getReportContentByteLen(nextContent));
   }
 
   /**
@@ -495,7 +495,7 @@ function DetailPage() {
       setEndDate(bookData.reptEndt ?? "");
       setContent(bookData.reptCntn ?? "");
       setContentByteLength(
-        getReportContentStorageByteLength(bookData.reptCntn ?? ""),
+        getReportContentByteLen(bookData.reptCntn ?? ""),
       );
     }
 
@@ -569,6 +569,7 @@ function DetailPage() {
           reptColr: bookData.reptColr,
           pubcYsno: normalizedPubcYsno,
           reptCntn: sanitizeText(content),
+          editVersion: bookData.editVersion,
         },
       },
       {

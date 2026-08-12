@@ -54,8 +54,7 @@ public interface UserSuspensionMapper {
      * @param prevStat 정지 직전 회원 상태
      * @return 변경된 회원 건수
      */
-    int uptUserStatusAfterSuspension(@Param("userNumb") Long userNumb
-                                   , @Param("prevStat") String prevStat);
+    int uptUserStatusAfterSuspend(@Param("userNumb") Long userNumb, @Param("prevStat") String prevStat);
 
     /**
      * 회원 상태가 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다

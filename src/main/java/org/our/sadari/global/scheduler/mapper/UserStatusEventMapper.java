@@ -47,7 +47,7 @@ public interface UserStatusEventMapper {
      * @param evntNumb 현재 처리 중인 이벤트 번호
      * @return 반영 완료 상태로 변경된 정지 이력 수
      */
-    int uptSuspensionSyncCompleted(@Param("spndNumb") Long spndNumb
+    int uptSuspensionSyncDone(@Param("spndNumb") Long spndNumb
                                  , @Param("evntNumb") Long evntNumb);
 
     /**

@@ -9,7 +9,7 @@ type UnreadAlimCntChangedEvent = CustomEvent<number>;
  * @param unreadAlimCnt unread Alim Cnt 입력값
  * @return 반환값이 없다
  */
-export function notifyUnreadAlimCntChanged(unreadAlimCnt: number) {
+export function notifyUnreadAlimChange(unreadAlimCnt: number) {
 
   window.dispatchEvent(
     new CustomEvent<number>(UNREAD_ALIM_CNT_CHANGED_EVENT, {
@@ -25,7 +25,7 @@ export function notifyUnreadAlimCntChanged(unreadAlimCnt: number) {
  * @param event event 입력값
  * @return 판정 결과
  */
-export function isUnreadAlimCntChangedEvent(
+export function isUnreadAlimChangeEvent(
   event: Event,
 ): event is UnreadAlimCntChangedEvent {
 
