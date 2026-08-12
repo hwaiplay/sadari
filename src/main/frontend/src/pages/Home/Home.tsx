@@ -14,7 +14,9 @@ import Loading from "@/components/Loading/Loading";
 import { HomeBookType } from "@/features/Book/types/book.type";
 import type { ReactNode } from "react";
 import { useEffect, useMemo, useState } from "react";
+import { createPortal } from "react-dom";
 import { useLocation, useNavigate } from "react-router-dom";
+import LinkButton from "@/components/Button/LinkButton/LinkButton";
 
 type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
 
@@ -252,6 +254,7 @@ function Home() {
   }
 
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
+      <>
     <div className={styles.homeContainer}>
       {/* 독후감 검색과 정렬 영역 */}
       <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
@@ -338,6 +341,8 @@ function Home() {
             </section>
           ))}
         </div>
+
+
       ) : (
         <div className={styles.emptySearchResult}>
           <p className={styles.emptySearchText}>
@@ -378,6 +383,18 @@ function Home() {
         </div>
       )}
     </div>
+
+  {/* 홈에서만 표시하면서 페이지 전환 transform의 영향을 받지 않는 독후감 등록 링크 */}
+  {createPortal(
+    <LinkButton link="/report/set" className={styles.reportSetButton}>
+      <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+        <path d="M36 26H26v10a2 2 0 0 1-4 0V26H12a2 2 0 0 1 0-4h10V12a2 2 0 0 1 4 0v10h10a2 2 0 0 1 0 4Z" fill="currentColor" />
+      </svg>
+    </LinkButton>,
+    document.body,
+  )}
+
+  </>
   ) : (
     <Container className={styles.emptyHomeContainer}>
       <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>

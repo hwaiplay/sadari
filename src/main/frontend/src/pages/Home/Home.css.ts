@@ -2,13 +2,31 @@ import { style } from "@vanilla-extract/css";
 import { vars } from "../../app/styles/tokens.css";
 import { media } from "../../app/styles/responsive.css";
 
+export const reportSetButton = style({
+  position: "fixed",
+  right: "max(24px, calc((100vw - 600px) / 2 + 24px))",
+  bottom: `calc(${vars.headerHeight} + max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)) + 24px)`,
+  zIndex: 998,
+  width: "62px",
+  height: "62px",
+  borderRadius: "50%",
+  backgroundColor: vars.color.gray600,
+  color: "#ffffff",
+  alignItems: "center",
+  justifyContent: "center",
+  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
+});
+
 export const emptyHomeContainer = style({
   width: "100%",
   minHeight: "100svh",
   padding: 0,
-  // backgroundImage: 'url("/img/common/background-empty.png")',
-  // backgroundRepeat: "no-repeat",
-  // backgroundSize: "cover",
   backgroundColor:'#fff',
   display: "flex",
   alignItems: "center",
@@ -157,7 +175,7 @@ export const sortOptionList = style({
 });
 
 export const sortSelectOption = style({
-  fontSize: "13px",
+  fontSize: "14px",
 });
 
 export const monthGroupStack = style({
@@ -205,7 +223,7 @@ export const emptySearchResult = style({
 export const emptySearchText = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   color: vars.color.gray500,
 });
 
