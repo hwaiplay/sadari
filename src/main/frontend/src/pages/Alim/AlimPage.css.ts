@@ -185,28 +185,19 @@ export const alimIconWrap = style({
   width: "34px",
   height: "34px",
   borderRadius: "50%",
-  backgroundColor: "#eef6ff",
-  color: "#3182ce",
+  overflow: "hidden",
+  backgroundColor: "transparent",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
 });
 
-export const alimIconWrapLike = style([
-  alimIconWrap,
-  {
-    backgroundColor: "#ffe3ec",
-    color: "#e03131",
-  },
-]);
-
-export const alimIconWrapFollow = style([
-  alimIconWrap,
-  {
-    backgroundColor: "#eafaf1",
-    color: "#2f9e44",
-  },
-]);
+export const alimIconImage = style({
+  width: "34px",
+  height: "34px",
+  display: "block",
+  objectFit: "contain",
+});
 
 export const alimIcon = style({
   width: "17px",
