@@ -108,7 +108,7 @@ export const eyebrow = style({
   marginBottom: "14px",
   color: "#6d6155",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   letterSpacing: "0.08em",
 });
 
@@ -569,9 +569,9 @@ export const interestButtonSelected = style([
 export const nicknameLabel = style({
   display: "block",
   marginBottom: "10px",
-  color: "#4f4942",
+  color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
 });
 
 export const nicknameInputWrap = style({
@@ -663,10 +663,10 @@ const navigationButton = style({
   border: "1px solid #8d857d",
   borderRadius: "13px",
   background: "rgba(255, 255, 255, 0.7)",
-  color: "#4f4942",
+  color: vars.color.gray600,
   cursor: "pointer",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   transition: "background 150ms ease, opacity 150ms ease",
   selectors: {
     "&:hover:not(:disabled)": {

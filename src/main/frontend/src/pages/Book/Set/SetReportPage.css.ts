@@ -65,59 +65,11 @@ export const recordSection = style({
   boxSizing: "border-box",
 });
 
-export const saveButton = style({
-  minWidth: "96px",
-  height: "40px",
-  padding: "0 18px",
-  border: `1px solid ${vars.color.gray600}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "7px",
-  cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray900,
-      backgroundColor: "#f8f8f8",
-    },
-  },
-});
-
 export const formActions = style({
   width: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-end",
+  display: "grid",
   gap: "8px",
-});
-
-export const cancelButton = style([
-  saveButton,
-  {
-    borderColor: vars.color.gray400,
-    color: vars.color.gray700,
-  },
-]);
-
-export const deleteButton = style([
-  saveButton,
-  {
-    marginRight: "auto",
-    borderColor: "#d9877d",
-    color: "#b84b3f",
-  },
-]);
-
-export const buttonIcon = style({
-  width: "17px",
-  height: "17px",
-  flexShrink: 0,
+  gridTemplateColumns: "1fr 1fr"
 });
 
 export const searchBookArea = style({
@@ -130,112 +82,10 @@ export const searchBookArea = style({
   boxShadow: "0 18px 38px rgba(0, 0, 0, 0.18)",
 });
 
-export const fieldStack = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "12px",
-});
-
-export const statusContainer = style({
-  display: "flex",
-  gap: "10px",
-  width: "100%",
-});
-
-export const statusOption = style({
-  flex: 1,
-  minWidth: 0,
-});
-
 export const hiddenInput = style({
   position: "absolute",
   opacity: 0,
   pointerEvents: "none",
-});
-
-export const statusPill = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  minHeight: "36px",
-  padding: "0 12px",
-  borderRadius: "999px",
-  border: `1px solid ${vars.color.gray400}`,
-  backgroundColor: "#f7f7f7",
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  cursor: "pointer",
-
-  selectors: {
-    [`${hiddenInput}:checked + &`]: {
-      borderWidth: "1px",
-      backgroundColor: "#f3f3f3",
-      borderColor: vars.color.gray700,
-      color: vars.color.gray900,
-      fontFamily: vars.font.semibold,
-    },
-  },
-});
-
-export const dateRow = style({
-  display: "none",
-});
-
-export const inputLabel = style({
-  fontFamily: vars.font.body,
-  fontSize: "13px",
-  color: vars.color.black,
-});
-
-export const input = style({
-  width: "100%",
-  height: "36px",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  padding: "0 16px",
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  color: vars.color.black,
-  boxSizing: "border-box",
-});
-
-export const starGroup = style({
-  display: "flex",
-  alignItems: "center",
-  flexWrap: "wrap",
-  gap: "3px",
-  color: "#d3d7dc",
-  fontSize: "34px",
-  lineHeight: 1,
-});
-
-export const starLabel = style({
-  minWidth: "auto",
-  height: "auto",
-  border: 0,
-  borderRadius: 0,
-  backgroundColor: "transparent",
-  color: "inherit",
-  fontSize: "inherit",
-  lineHeight: 1,
-  textAlign: "center",
-  cursor: "pointer",
-  boxSizing: "border-box",
-  transition: "color 0.15s ease",
-
-  selectors: {
-    "&:hover": {
-      color: "#ffd966",
-    },
-  },
-});
-
-export const starActive = style({
-  color: "#ffd966",
 });
 
 export const textAreaWrap = style({
@@ -245,7 +95,7 @@ export const textAreaWrap = style({
 export const textArea = style({
   width: "100%",
   minHeight: "230px",
-  resize: "vertical",
+  resize: "none",
   border: 0,
   outline: 0,
   backgroundColor: "transparent",
@@ -262,40 +112,6 @@ export const counter = style({
   right: "4px",
   fontSize: "11px",
   color: vars.color.gray500,
-});
-
-export const publicToggleRow = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "14px",
-});
-
-export const publicToggleControl = style({
-  display: "inline-flex",
-  alignItems: "center",
-  flexShrink: 0,
-  cursor: "pointer",
-});
-
-export const publicToggleText = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "4px",
-  minWidth: 0,
-});
-
-export const publicToggleState = style({
-  fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  color: vars.color.black,
-});
-
-export const publicToggleHelp = style({
-  fontFamily: vars.font.body,
-  fontSize: "12px",
-  lineHeight: 1.45,
-  color: "#777777",
 });
 
 export const switchTrack = style({

@@ -118,7 +118,7 @@ export const guideRow = style({
   padding: "14px 4px",
   borderBottom: `1px solid ${vars.color.gray200}`,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.55,
   selectors: {
     "&:last-child": {

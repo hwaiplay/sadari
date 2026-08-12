@@ -17,6 +17,8 @@ const UserReportPage = () => {
   const reportState = location.state as UserReportLocationState | null;
   const [selectedReason, setSelectedReason] = useState("");
   const [detailReason, setDetailReason] = useState("");
+  const isSubmitDisabled = !selectedReason
+    || (selectedReason === OTHER_REASON && !detailReason.trim());
 
   // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동한다.
   if (!reportState?.target) {
@@ -67,29 +69,23 @@ const UserReportPage = () => {
   /** 화면 전용 신고 정보를 완료 페이지로 전달한다. */
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+
+    if (isSubmitDisabled) {
+      return;
+    }
+
     navigate("/user-report/complete", {
       state: {
         target,
         selectedReason,
-        detailReason: selectedReason === OTHER_REASON ? detailReason : "",
+        detailReason,
       },
     });
   };
 
   return (
     /* 신고 사유 선택 페이지 영역 */
-    <form className={styles.page} onSubmit={handleSubmit}>
-      <header className={styles.heading}>
-        <h1 className={styles.title}>
-          {/* "신고하는 이유" */}
-          {message("frontend.userReport.title")}
-        </h1>
-        <p className={styles.description}>
-          {/* "회원님의 신고는 익명으로 처리됩니다" */}
-          {message("frontend.userReport.anonymousDescription")}
-        </p>
-      </header>
-
+    <form className={styles.reportPage} onSubmit={handleSubmit}>
       {/* 신고 대상 정보 영역 */}
       <article className={styles.targetCard}>
         <div className={styles.targetMeta}>
@@ -100,43 +96,52 @@ const UserReportPage = () => {
         <p className={styles.targetContent}>{target.content || emptyContent}</p>
       </article>
 
-      {/* 임시 신고 사유 목록 영역 */}
-      <fieldset className={styles.reasonFieldset}>
-        {reportReasons.map((reason) => (
-          <label className={styles.reasonOption} key={reason.value}>
-            <input
-              className={styles.radio}
-              type="radio"
-              name="reportReason"
-              value={reason.value}
-              checked={selectedReason === reason.value}
-              onChange={handleReasonChange}
-            />
-            <span>{reason.label}</span>
-          </label>
-        ))}
-      </fieldset>
+      <div className={styles.reasonArea}>
+        <div className={styles.heading}>
+          <h1 className={styles.title}>
+            {/* "신고 사유" */}
+            {message("frontend.userReport.title")}
+          </h1>
+          <p className={styles.description}>
+            {/* "회원님의 신고는 익명으로 처리돼요." */}
+            {message("frontend.userReport.anonymousDescription")}
+          </p>
+        </div>
 
-      {selectedReason === OTHER_REASON ? (
-        /* 기타 상세 신고 사유 입력 영역 */
-        <div className={styles.detailArea}>
-          <textarea
+        {/* 임시 신고 사유 목록 영역 */}
+        <fieldset className={styles.reasonFieldset}>
+          {reportReasons.map((reason) => (
+              <label className={styles.reasonOption} key={reason.value}>
+                <input
+                    className={styles.radio}
+                    type="radio"
+                    name="reportReason"
+                    value={reason.value}
+                    checked={selectedReason === reason.value}
+                    onChange={handleReasonChange}
+                />
+                <span>{reason.label}</span>
+              </label>
+          ))}
+        </fieldset>
+
+        {/* 상세 신고 사유 입력 영역 */}
+        <textarea
             className={styles.detailTextarea}
             value={detailReason}
             maxLength={500}
             placeholder={detailPlaceholder}
             aria-label={detailAria}
             onChange={handleDetailChange}
-          />
+        />
         </div>
-      ) : null}
 
       {/* 신고 완료 화면 이동 영역 */}
       <footer className={styles.footer}>
         <button
           className={styles.nextButton}
           type="submit"
-          disabled={!selectedReason}
+          disabled={isSubmitDisabled}
         >
           {/* "다음" */}
           {message("frontend.common.next")}

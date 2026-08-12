@@ -21,6 +21,7 @@ import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import * as styles from "./WithdrawalPage.css";
+import {accountOption} from "./WithdrawalPage.css";
 
 const POLICY_MODAL_ANIMATION_MILLISECONDS = 180;
 
@@ -86,6 +87,9 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     DEFAULT_HARD_POLICY_ITEMS,
   );
   const withdrawalReasonBytes = getWithdrawalReasonByteLength(rsonCntn);
+  const isSubmitDisabled = isSubmitting
+    || !wthdRson
+    || (wthdRson === "OTHER" && !rsonCntn.trim());
 
   /**
    * 비활성화와 영구 탈퇴 정책을 비교할 수 있는 도움말 팝업을 엽니다.
@@ -344,13 +348,13 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
   // 비활성화 선택 상태에는 실행 결과를 명확히 표시합니다
   else if (wthdType === "SOFT") {
     // "Kakao 재인증 후 비활성화"
-    submitButtonLabel = "Kakao 재인증 후 비활성화";
+    submitButtonLabel = "카카오 재인증 후 비활성화";
   }
 
   // 영구 탈퇴 선택 상태에는 되돌리기 어려운 실행 결과를 명확히 표시합니다
   else {
     // "Kakao 재인증 후 영구 탈퇴"
-    submitButtonLabel = "Kakao 재인증 후 영구 탈퇴";
+    submitButtonLabel = "카카오 재인증 후 영구 탈퇴";
   }
 
   /**
@@ -389,7 +393,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
 
         {/* 비활성화와 영구 탈퇴의 핵심 차이를 한 줄로 비교하는 선택 카드 목록 */}
         <div className={styles.optionList}>
-          {!hardOnly && <label className={styles.option}>
+          {!hardOnly && <label className={styles.accountOption}>
             <input
               className={styles.choiceInput}
               type="radio"
@@ -479,7 +483,12 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       </section>
 
       {/* Kakao 재인증을 거친 계정 처리 시작 버튼 영역 */}
-      <button className={styles.withdrawButton} type="button" disabled={isSubmitting} onClick={handleWithdrawal}>
+      <button
+        className={styles.withdrawButton}
+        type="button"
+        disabled={isSubmitDisabled}
+        onClick={handleWithdrawal}
+      >
         {submitButtonLabel}
       </button>
 
@@ -517,8 +526,10 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
                 aria-label="계정 처리 정책 도움말 닫기"
                 onClick={handlePolicyHelpClose}
               >
-                {/* "×" */}
-                ×
+                <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M8.73622 1.46368L5.70577 4.49414L8.73622 7.5246C8.89697 7.68534 8.98728 7.90336 8.98728 8.13069C8.98728 8.35802 8.89697 8.57604 8.73622 8.73678C8.57548 8.89753 8.35746 8.98783 8.13013 8.98783C7.9028 8.98783 7.68479 8.89753 7.52404 8.73678L4.49358 5.70632L1.46312 8.73678C1.30238 8.89753 1.08436 8.98783 0.857033 8.98783C0.629705 8.98783 0.411687 8.89753 0.250942 8.73678C0.0901961 8.57604 -0.000109398 8.35802 -0.000109398 8.13069C-0.000109398 7.90336 0.0901964 7.68534 0.250942 7.5246L3.2814 4.49414L0.250942 1.46368C0.0901967 1.30294 -0.000109296 1.08492 -0.000109296 0.857591C-0.000109296 0.630262 0.0901965 0.412245 0.250942 0.251499C0.411687 0.0907539 0.629705 0.0004477 0.857034 0.0004477C1.08436 0.0004477 1.30238 0.0907537 1.46313 0.251499L4.49358 3.28196L7.52404 0.251499C7.68479 0.0907531 7.90281 0.000447093 8.13013 0.000447093C8.35746 0.000447093 8.57548 0.0907535 8.73622 0.251499C8.89697 0.412244 8.98728 0.630262 8.98728 0.85759C8.98728 1.08492 8.89697 1.30294 8.73622 1.46368Z" fill="#293038"/>
+                </svg>
+
               </button>
             </header>
 

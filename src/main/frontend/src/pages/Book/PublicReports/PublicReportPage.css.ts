@@ -3,13 +3,13 @@ import { vars } from "@/app/styles/tokens.css";
 
 const statusPill = style({
   flexShrink: 0,
-  padding: "5px 10px",
+  padding: "4px 8px",
   borderRadius: "999px",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.medium,
-  fontSize: "12px",
+  fontSize: "11px",
   lineHeight: 1,
   letterSpacing: "-1%",
   whiteSpace: "nowrap",
@@ -134,7 +134,7 @@ export const filters = style({
 export const list = style({
   display: "flex",
   flexDirection: "column",
-  gap: "16px",
+  gap: "14px",
 
 });
 
@@ -142,9 +142,9 @@ export const item = style({
   position: "relative",
   display: "flex",
   flexDirection: "column",
-  gap: "8px",
+  gap: "10px",
   minHeight: "172px",
-  padding: "12px",
+  padding: "16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -155,13 +155,6 @@ export const itemTop = style({
   alignItems: "center",
   justifyContent: "space-between",
   gap: "8px",
-  minWidth: 0,
-});
-
-export const itemHeader = style({
-  display: "flex",
-  alignItems: "center",
-  gap: "7px",
   minWidth: 0,
 });
 
@@ -200,7 +193,7 @@ export const writer = style({
 export const statusWrap = style({
   display: "flex",
   alignItems: "center",
-  gap: "4px"
+  gap: "8px"
 })
 
 
@@ -208,8 +201,8 @@ export const statusDone = style([
   statusPill,
   {
     border: `1px solid ${vars.color.brand}`,
-    backgroundColor: "#DAEEF8",
-    color: vars.color.brand,
+    backgroundColor: vars.color.brandBg,
+    color: vars.color.brandText,
   },
 ]);
 
@@ -225,8 +218,8 @@ export const statusReading = style([
 export const statusStopped = style([
   statusPill,
   {
-    border: `1px solid ${vars.color.gray400}`,
-    backgroundColor: "#f7f7f7",
+    border: `1px solid ${vars.color.gray300}`,
+    backgroundColor: vars.color.gray100,
     color: vars.color.gray600,
   },
 ]);
@@ -241,79 +234,10 @@ export const reportRating = style({
   fontSize: "14px",
 });
 
-export const itemActionArea = style({
-  flexShrink: 0,
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-});
-
-export const actionMenuRoot = style({
-  position: "relative",
-  display: "inline-flex",
-});
-
-export const actionMenuTrigger = style({
-  width: "24px",
-  height: "24px",
-  padding: 0,
-  border: 0,
-  borderRadius: "50%",
-  backgroundColor: "transparent",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  // selectors: {
-  //   "&:hover, &:focus-visible": {
-  //     backgroundColor: vars.color.gray100,
-  //     outline: "none",
-  //   },
-  // },
-});
-
-export const actionMenuIcon = style({
-  width: "20px",
-  height: "20px",
+export const reportRatingIcon = style({
   display: "block",
-});
-
-export const actionMenu = style({
-  position: "absolute",
-  top: "calc(100% + 4px)",
-  right: 0,
-  zIndex: 30,
-  minWidth: "112px",
-  padding: "5px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "16px",
-  backgroundColor: "#ffffff",
-  boxShadow: "0 8px 24px rgba(0, 0, 0, 0.12)",
-  display: "flex",
-  flexDirection: "column",
-  gap: "2px",
-});
-
-export const actionMenuOption = style({
-  width: "100%",
-  minHeight: "34px",
-  padding: "0 10px",
-  border: 0,
-  borderRadius: "10px",
-  backgroundColor: "transparent",
-  color: vars.color.black,
-  fontFamily: vars.font.body,
-  fontSize: "16px",
-  textAlign: "left",
-  whiteSpace: "nowrap",
-  cursor: "pointer",
-  selectors: {
-    "&:hover, &:focus-visible": {
-      backgroundColor: vars.color.gray100,
-      color: vars.color.black,
-      outline: "none",
-    },
-  },
+  width: "14px",
+  height: "14px",
 });
 
 export const reportContentWrap = style({

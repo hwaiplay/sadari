@@ -29,14 +29,6 @@ export const title = style({
   color: vars.color.black,
 });
 
-export const subtitle = style({
-  margin: 0,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
-  lineHeight: 1.45,
-  color: "#777777",
-});
-
 export const readAllButton = style({
   flex: "0 0 auto",
   minWidth: "76px",

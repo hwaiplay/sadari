@@ -14,19 +14,26 @@ import { vars } from "@/app/styles/tokens.css";
 export const searchBtn = style({
   width: "112px",
   height: "166px",
-  borderRadius: "6px",
+  borderRadius: "12px",
   backgroundColor: "#ffffff",
-  border: `1px solid ${vars.color.gray500}`,
+  border: `1px solid ${vars.color.gray300}`,
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
   textDecoration: "none",
+  transition: "background-color 160ms ease",
+
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray100
+    }
+  }
 });
 
 export const searchBtnText = style({
-  color: vars.color.gray500,
+  color: vars.color.gray600,
   fontSize: vars.fontSize.body,
-  marginTop: "19px",
+  marginTop: "14px",
   marginBottom: 0,
 });

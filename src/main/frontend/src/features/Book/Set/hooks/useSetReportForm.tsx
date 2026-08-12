@@ -120,7 +120,8 @@ export function useSetReportForm(
     const confirmed = await sweetConfirm({
       title: message("frontend.alert.saveConfirmTitle"),
       text: message("frontend.report.saveConfirmText"),
-      confirmButtonText: message("frontend.report.save"),
+      // "저장하기"
+      confirmButtonText: message("frontend.common.save"),
       cancelButtonText: message("frontend.common.cancel"),
     });
 

@@ -46,7 +46,7 @@ const stepSlideBackwardKeyframes = keyframes({
 export const statsSection = style({
   position: "relative",
   width: "100%",
-  padding: "18px 14px",
+  padding: "16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -64,13 +64,13 @@ export const statsItem = style({
   width: "100%",
   minWidth: 0,
   minHeight: "50px",
-  padding: "9px 6px",
+  padding: "6px",
   border: 0,
   borderBottom: `1px solid ${vars.color.gray200}`,
   borderRadius: 0,
   backgroundColor: "transparent",
-  display: "grid",
-  gridTemplateColumns: "86px minmax(0, 1fr)",
+  display: "flex",
+  justifyContent: "space-between",
   alignItems: "center",
   gap: "12px",
   color: "inherit",
@@ -94,7 +94,7 @@ export const statsItem = style({
 
 export const statsLabel = style({
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.4,
   color: vars.color.gray600,
 });
@@ -118,11 +118,11 @@ export const statusRead = style({
 });
 
 export const statusDone = style({
-  color: "#72a980",
+  color: vars.color.brandText,
 });
 
 export const statusStop = style({
-  color: "#d98686",
+  color: vars.color.negative,
 });
 
 export const gradeValue = style([
@@ -286,7 +286,7 @@ export const optionButton = style({
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.3,
   textAlign: "center",
   wordBreak: "keep-all",
@@ -389,7 +389,7 @@ export const stepButton = style({
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
   selectors: {
     "&:hover": {

@@ -6,6 +6,7 @@
 import { message } from "@/app/messages/message";
 import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { formatCompactDate } from "@/app/utils/dateUtil";
+import { ActionButton } from "@/components/Button/ActionButton";
 import FormField from "@/features/Book/Set/components/form/field/FormField";
 import * as styles from "./SetReportPage.css";
 import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
@@ -23,6 +24,7 @@ import { useSetReportForm } from "@/features/Book/Set/hooks/useSetReportForm";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
 import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor";
 import { getBookCoverColorApi } from "@/features/Book/api/bookApi";
+import { getBookCoverImageSource } from "@/features/Book/utils/bookCoverImage";
 import {
   MAX_REPORT_CONTENT_BYTES,
   REPORT_COLOR_CODE_GROUP,
@@ -80,9 +82,9 @@ function SetReportPage() {
     validStatusCodes,
     validReportColors,
   );
-  const pageStyle = selectedBook?.image
+  const pageStyle = selectedBook
     ? ({
-        "--book-bg-image": `url("${selectedBook.image}")`,
+        "--book-bg-image": `url("${getBookCoverImageSource(selectedBook.image)}")`,
         "--book-bg-fade-height": showBookInfo ? "720px" : "680px",
       } as CSSProperties)
     : undefined;
@@ -258,7 +260,7 @@ function SetReportPage() {
       <form className={styles.form} onSubmit={formAction}>
         {/* 표지 대표색을 기반으로 자동 선택된 책장 색상 값 */}
         <input type="hidden" name="reptColr" value={reptColr} />
-        {selectedBook?.image ? (
+        {selectedBook ? (
           <BookSummary
             image={selectedBook.image}
             title={selectedBook.title}
@@ -399,39 +401,41 @@ function SetReportPage() {
 
             {/* 독후감 등록 취소와 저장 명령 영역 */}
             <div className={styles.formActions}>
-              <button
-                className={styles.cancelButton}
-                type="button"
+              <ActionButton
+                variant="secondary"
                 onClick={handleCancel}
               >
                 {/* "취소" */}
                 {message("frontend.common.cancel")}
-              </button>
-              <button className={styles.saveButton} type="submit">
-                <svg
-                  className={styles.buttonIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M5 4h11l3 3v13H5V4Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinejoin="round"
-                  />
-                  <path
-                    d="M8 4v6h8M8 17h8"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-                {/* "저장" */}
-                {message("frontend.report.save")}
-              </button>
+              </ActionButton>
+              <ActionButton
+                type="submit"
+                icon={(
+                  <svg
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                  >
+                    <path
+                      d="M5 4h11l3 3v13H5V4Z"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinejoin="round"
+                    />
+                    <path
+                      d="M8 4v6h8M8 17h8"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="1.8"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  </svg>
+                )}
+              >
+                {/* "저장하기" */}
+                {message("frontend.common.save")}
+              </ActionButton>
             </div>
           </div>
         )}

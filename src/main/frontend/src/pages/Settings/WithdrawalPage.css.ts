@@ -4,9 +4,8 @@ import { vars } from "@/app/styles/tokens.css";
 export const page = style({
   width: "100%",
   maxWidth: "600px",
-  minHeight: "calc(100svh - 110px)",
-  margin: "12px 0",
-  padding: "18px 0 110px",
+  minHeight: "calc(100svh - 112px)",
+  padding: "28px 0 20px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
   display: "flex",
@@ -16,23 +15,15 @@ export const page = style({
 
 export const section = style({
   position: "relative",
-  padding: "26px 22px",
-  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
-  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
-  "@media": {
-    "screen and (max-width: 420px)": {
-      padding: "22px 16px",
-    },
-  },
 });
 
 export const title = style({
   margin: 0,
   color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontFamily: vars.font.heading,
+  fontSize: "17px",
   lineHeight: 1.3,
   letterSpacing: 0,
 });
@@ -47,14 +38,14 @@ export const withdrawalTypeSection = style({
 });
 
 export const standaloneTitle = style({
-  margin: "0 0 22px",
+  margin: "0 0 18px",
   textAlign: "left",
 });
 
 export const helpButton = style({
   position: "absolute",
   top: "22px",
-  right: "22px",
+  right: "0",
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
@@ -64,9 +55,9 @@ export const helpButton = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "50%",
   backgroundColor: "#ffffff",
-  color: "#686e73",
+  color: vars.color.gray600,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1,
   cursor: "pointer",
   transition: "border-color 160ms ease, color 160ms ease, background-color 160ms ease",
@@ -96,24 +87,22 @@ export const optionList = style({
 
 export const option = style({
   display: "flex",
-  alignItems: "flex-start",
-  gap: "14px",
   padding: "16px 18px",
-  border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "16px",
-  backgroundColor: "#f7f8f8",
-  color: "#73797f",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray600,
   cursor: "pointer",
   transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
   selectors: {
     "&:hover": {
-      borderColor: vars.color.gray300,
-      backgroundColor: "#fbfbfb",
+      backgroundColor:  vars.color.gray200,
+      color: vars.color.black
     },
     "&:has(input:checked)": {
-      borderColor: "#78b991",
-      backgroundColor: "#eef8f2",
-      color: "#34704d",
+      borderColor: vars.color.brandText,
+      backgroundColor: vars.color.brandBg,
+      color: vars.color.brandText,
       boxShadow: "0 6px 16px rgba(74, 143, 101, 0.12)",
     },
     "&:has(input:focus-visible)": {
@@ -127,6 +116,14 @@ export const option = style({
     },
   },
 });
+
+export const accountOption = style([
+  option,
+  {
+    alignItems: "flex-start",
+    gap: "14px",
+  }
+])
 
 export const choiceInput = style({
   position: "absolute",
@@ -143,7 +140,7 @@ export const choiceInput = style({
 export const optionText = style({
   display: "grid",
   width: "100%",
-  gap: "8px",
+  gap: "4px",
 });
 
 export const optionHeading = style({
@@ -156,29 +153,29 @@ export const optionHeading = style({
 export const optionTitle = style({
   color: "inherit",
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "16px",
   lineHeight: 1.35,
 });
 
 export const recoverBadge = style({
   flex: "0 0 auto",
-  padding: "5px 9px",
+  padding: "4px 10px",
   borderRadius: "999px",
-  backgroundColor: "#dff1e6",
-  color: "#34704d",
+  backgroundColor: vars.color.gray600,
+  color: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.2,
 });
 
 export const deleteBadge = style({
   flex: "0 0 auto",
-  padding: "5px 9px",
+  padding: "4px 10px",
   borderRadius: "999px",
-  backgroundColor: "#fff0f0",
-  color: "#b74343",
+  backgroundColor: vars.color.negativeBg,
+  color: vars.color.negativeText,
   fontFamily: vars.font.semibold,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.2,
 });
 
@@ -200,37 +197,16 @@ export const reasonList = style({
   },
 });
 
-export const reason = style({
-  display: "flex",
-  alignItems: "center",
-  gap: "10px",
-  minHeight: "50px",
-  padding: "4px 16px",
-  border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "13px",
-  backgroundColor: "#f7f8f8",
-  color: "#7b8187",
-  fontFamily: vars.font.body,
-  fontSize: "13px",
-  cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray300,
-      backgroundColor: "#fbfbfb",
-    },
-    "&:has(input:checked)": {
-      borderColor: "#78b991",
-      backgroundColor: "#eef8f2",
-      color: "#34704d",
-      boxShadow: "0 5px 14px rgba(74, 143, 101, 0.12)",
-    },
-    "&:has(input:focus-visible)": {
-      outline: "2px solid #78b991",
-      outlineOffset: "2px",
-    },
-  },
-});
+export const reason = style([
+  option,
+  {
+    alignItems: "center",
+    minHeight: "48px",
+    padding: "4px 16px",
+    fontFamily: vars.font.body,
+    fontSize: "14px",
+  }
+]);
 
 export const textareaWrap = style({
   position: "relative",
@@ -242,56 +218,58 @@ export const textarea = style({
   minHeight: "126px",
   padding: "16px 16px 34px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "14px",
+  borderRadius: "12px",
   backgroundColor: "#f8f9fa",
   color: vars.color.black,
-  resize: "vertical",
+  resize: "none",
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.55,
   outline: "none",
   boxSizing: "border-box",
   transition: "border-color 160ms ease, background-color 160ms ease",
   selectors: {
     "&:focus": {
-      borderColor: vars.color.black,
+      borderColor: vars.color.gray400,
       backgroundColor: "#ffffff",
     },
     "&::placeholder": {
-      color: "#999999",
+      color: vars.color.gray600,
     },
   },
 });
 
 export const byteCounter = style({
-  position: "absolute",
-  right: "14px",
-  bottom: "11px",
-  color: "#8b9097",
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "10px",
   lineHeight: 1.2,
   pointerEvents: "none",
+  textAlign: "right",
+  width: "100%",
+  display: "inline-block"
 });
 
 export const withdrawButton = style({
   width: "100%",
-  minHeight: "50px",
-  margin: "-8px 0 0",
-  border: "1px solid #d84b4b",
-  borderRadius: "999px",
-  background: "#ffffff",
-  color: "#c83f3f",
+  minHeight: "48px",
+  margin: "auto 0 0",
+  border: `1px solid ${vars.color.negativeText}`,
+  borderRadius: "8px",
+  background: vars.color.negativeBg,
+  color: vars.color.negativeText,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   cursor: "pointer",
-  transition: "background-color 160ms ease, color 160ms ease, opacity 160ms ease",
+  transition: "background-color 160ms ease, opacity 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#fff5f5",
+      backgroundColor: "#FFCDD4",
     },
     "&:disabled": {
-      opacity: 0.55,
+      backgroundColor: '#ffffff',
+      border: `1px solid ${vars.color.gray300}`,
+      color: vars.color.gray500,
       cursor: "default",
     },
   },
@@ -347,7 +325,7 @@ export const policyModalBackdrop = style({
   width: "100%",
   height: "100dvh",
   padding: "20px",
-  backgroundColor: "rgba(0, 0, 0, 0.34)",
+  backgroundColor: "rgba(0, 0, 0, 0.5)",
   boxSizing: "border-box",
   animation: `${policyBackdropFadeIn} 180ms ease-out both`,
 });
@@ -399,16 +377,11 @@ export const policyModalClose = style({
   padding: 0,
   border: 0,
   borderRadius: "50%",
-  backgroundColor: "#f3f4f4",
-  color: "#555b60",
-  fontFamily: vars.font.body,
-  fontSize: "23px",
-  lineHeight: 1,
+  backgroundColor: vars.color.gray100,
   cursor: "pointer",
   selectors: {
     "&:hover": {
-      backgroundColor: "#e9ebeb",
-      color: vars.color.black,
+      backgroundColor: vars.color.gray200,
     },
     "&:focus-visible": {
       outline: "2px solid #78b991",
@@ -425,9 +398,9 @@ export const policyModalBody = style({
 
 export const policyItem = style({
   padding: "16px",
-  border: `1px solid ${vars.color.gray200}`,
+  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "12px",
-  backgroundColor: "#f8f9f9",
+  backgroundColor: vars.color.gray100,
 });
 
 export const policyItemHeading = style({
@@ -440,7 +413,7 @@ export const policyItemHeading = style({
 export const policyItemTitle = style({
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "16px",
   lineHeight: 1.35,
 });
 
@@ -449,9 +422,9 @@ export const policyList = style({
   gap: "7px",
   margin: "12px 0 0",
   paddingLeft: "18px",
-  color: "#62676c",
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.55,
 });
 
@@ -464,20 +437,17 @@ export const policyModalConfirm = style({
   minHeight: "38px",
   margin: "18px 0 0 auto",
   padding: "0 18px",
-  border: `1px solid ${vars.color.gray700}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  color: vars.color.gray900,
+  borderRadius: "8px",
+  backgroundColor: vars.color.gray900,
+  color: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
   boxSizing: "border-box",
   transition: "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
   selectors: {
     "&:hover": {
-      borderColor: vars.color.gray700,
-      backgroundColor: vars.color.gray100,
-      color: vars.color.gray900,
+      backgroundColor: vars.color.darkGray,
     },
     "&:focus-visible": {
       outline: `2px solid ${vars.color.gray700}`,

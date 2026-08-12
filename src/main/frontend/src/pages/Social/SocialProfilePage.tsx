@@ -8,6 +8,10 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
+import {
   delSocialFollowApi,
   getSocialFollowStatusApi,
   getSocialFollowListApi,
@@ -522,13 +526,12 @@ function SocialProfilePage() {
 
               return (
                 <div className={styles.currentReadingCard} key={report.reptNumb}>
-                  {report.bookCvim && (
-                    <img
-                      className={styles.readingSummaryCover}
-                      src={report.bookCvim}
-                      alt=""
-                    />
-                  )}
+                  <img
+                    className={styles.readingSummaryCover}
+                    src={getBookCoverImageSource(report.bookCvim)}
+                    onError={handleBookCoverImageError}
+                    alt=""
+                  />
                   <span className={styles.currentReadingText}>
                     <button
                       className={styles.readingSummaryBookTitleButton}
@@ -714,13 +717,12 @@ function SocialProfilePage() {
                   key={report.reptNumb}
                   onClick={() => handleSummaryReportClick(report)}
                 >
-                  {report.bookCvim && (
-                    <img
-                      className={styles.readingSummaryCover}
-                      src={report.bookCvim}
-                      alt=""
-                    />
-                  )}
+                  <img
+                    className={styles.readingSummaryCover}
+                    src={getBookCoverImageSource(report.bookCvim)}
+                    onError={handleBookCoverImageError}
+                    alt=""
+                  />
                   <span className={styles.readingSummaryBookText}>
                     <span
                       className={styles.readingSummaryBookTitleButton}

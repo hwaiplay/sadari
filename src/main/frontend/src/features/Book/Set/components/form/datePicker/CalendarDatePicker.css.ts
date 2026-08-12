@@ -37,7 +37,7 @@ export const wrapperNoLabel = style({
 
 export const label = style({
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   color: vars.color.black,
   whiteSpace: "nowrap",
 });
@@ -176,7 +176,7 @@ export const dayButton = style({
   backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
 
   ":hover": {
@@ -281,7 +281,7 @@ export const selectedRange = style({
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.4,
   textAlign: "center",
   wordBreak: "keep-all",

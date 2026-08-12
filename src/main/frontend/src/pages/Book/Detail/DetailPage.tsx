@@ -16,11 +16,16 @@ import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import { usePublicReportLikeMutation } from "@/features/Book/Detail/hook/usePublicReports";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
 import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import Loading from "@/components/Loading/Loading";
 import { Container } from "@/components/Layout/Container/Container";
+import { ActionButton } from "@/components/Button/ActionButton";
 import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor";
 import {
   MAX_REPORT_CONTENT_BYTES,
@@ -539,7 +544,8 @@ function DetailPage() {
     const confirmed = await sweetConfirm({
       title: message("frontend.alert.saveConfirmTitle"),
       text: message("frontend.report.saveConfirmText"),
-      confirmButtonText: message("frontend.report.save"),
+      // "저장하기"
+      confirmButtonText: message("frontend.common.save"),
       cancelButtonText: message("frontend.common.cancel"),
     });
 
@@ -590,7 +596,8 @@ function DetailPage() {
       icon: "warning",
       title: message("frontend.alert.deleteConfirmTitle"),
       text: message("frontend.report.deleteConfirmText"),
-      confirmButtonText: message("frontend.report.delete"),
+      // "삭제하기"
+      confirmButtonText: message("frontend.common.delete"),
       cancelButtonText: message("frontend.common.cancel"),
     });
 
@@ -629,7 +636,7 @@ function DetailPage() {
   }
 
   const pageStyle = {
-    "--book-bg-image": `url("${bookData.bookCvim}")`,
+    "--book-bg-image": `url("${getBookCoverImageSource(bookData.bookCvim)}")`,
   } as CSSProperties;
   const isReadingStatus = status === REPORT_STATUS_READ;
   // 읽는 중인 독후감은 저장된 종료일이 목표일이므로 목표 독서기간으로 구분한다
@@ -711,7 +718,8 @@ function DetailPage() {
             <div className={styles.coverFrame}>
               <img
                 className={styles.coverImage}
-                src={bookData.bookCvim}
+                src={getBookCoverImageSource(bookData.bookCvim)}
+                onError={handleBookCoverImageError}
                 alt={bookData.bookTitl}
               />
             </div>
@@ -865,7 +873,8 @@ function DetailPage() {
           <div className={styles.coverFrame}>
             <img
               className={styles.coverImage}
-              src={bookData.bookCvim}
+              src={getBookCoverImageSource(bookData.bookCvim)}
+              onError={handleBookCoverImageError}
               alt={bookData.bookTitl}
             />
           </div>
@@ -990,60 +999,52 @@ function DetailPage() {
               )}
             </section>
 
-            {/* 최초 편집 시도 이후에만 표시되는 삭제와 취소 및 저장 명령 영역 */}
+            {/* 최초 편집 시도 이후에만 표시되는 취소와 저장 명령 영역 */}
             {isEditing ? (
               <div className={styles.editActions}>
-                <button
-                  className={styles.deleteButton}
-                  type="button"
-                  disabled={isDeletePending || isUpdatePending}
-                  onClick={handleDelete}
-                >
-                  {/* "삭제" */}
-                  {message("frontend.report.delete")}
-                </button>
-                <button
-                  className={styles.cancelButton}
-                  type="button"
+                <ActionButton
+                  variant="secondary"
+                  size="lg"
+                  width="half"
                   disabled={isDeletePending || isUpdatePending}
                   onClick={handleEditCancel}
                 >
                   {/* "취소" */}
                   {message("frontend.common.cancel")}
-                </button>
-                <button
-                  className={styles.saveButton}
-                  type="button"
+                </ActionButton>
+                <ActionButton
+                  size="lg"
+                  width="half"
                   disabled={isDeletePending || isUpdatePending}
                   onClick={handleEditSave}
                 >
-                  {/* "저장" */}
-                  {message("frontend.report.save")}
-                </button>
+                  {/* "저장하기" */}
+                  {message("frontend.common.save")}
+                </ActionButton>
               </div>
             ) : (
               /* 독후감 수정과 삭제 시작 버튼 영역 */
               <div className={styles.recordActionButtons}>
-                <button
-                    className={styles.recordDeleteActionButton}
-                    type="button"
-                    disabled={isDeletePending || isUpdatePending}
-                    onClick={handleDelete}
+                <ActionButton
+                  variant="danger"
+                  size="lg"
+                  width="half"
+                  disabled={isDeletePending || isUpdatePending}
+                  onClick={handleDelete}
                 >
-                  {/* "삭제" */}
-                  {message("frontend.report.delete")}
-                </button>
+                  {/* "삭제하기" */}
+                  {message("frontend.common.delete")}
+                </ActionButton>
 
-                <button
-                  className={styles.recordActionButton}
-                  type="button"
+                <ActionButton
+                  size="lg"
+                  width="half"
                   disabled={isDeletePending || isUpdatePending}
                   onClick={handleEditGuide}
                 >
-                  {/* "수정" */}
-                  {message("frontend.report.updateAction")}
-                  {/*<svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" stroke-width="1.5" stroke-miterlimit="10" stroke-linecap="round" stroke-linejoin="round"></path></svg>*/}
-                </button>
+                  {/* "수정하기" */}
+                  {message("frontend.common.update")}
+                </ActionButton>
 
               </div>
             )}

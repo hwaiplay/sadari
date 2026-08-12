@@ -12,6 +12,10 @@ import {
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 import ReplySheet from "@/features/reply/ReplySheet";
 import ProfileImage from "@/features/User/components/ProfileImage";
@@ -220,15 +224,14 @@ const PublicReportPage = () => {
           {/* 도서 표지와 공개 독후감 요약 영역 */}
           <section className={styles.header}>
             <div className={styles.headerWrap}>
-              {pageState.cover ? (
-                  <div className={styles.coverFrame}>
-                    <img
-                        className={styles.coverImage}
-                        src={pageState.cover}
-                        alt={pageState.title ?? message("frontend.common.bookInfo")}
-                    />
-                  </div>
-              ) : null}
+              <div className={styles.coverFrame}>
+                <img
+                  className={styles.coverImage}
+                  src={getBookCoverImageSource(pageState.cover)}
+                  onError={handleBookCoverImageError}
+                  alt={pageState.title ?? message("frontend.common.bookInfo")}
+                />
+              </div>
               <div className={styles.headingArea}>
                 <h1 className={styles.bookTitle}>{pageState.title ?? "-"}</h1>
                 <div className={styles.authorRatingLine}>
@@ -287,6 +290,8 @@ const PublicReportPage = () => {
                   /* 공개 독후감 개별 항목 영역 */
                   <article className={styles.item} key={report.reptNumb}>
                     <div className={styles.itemTop}>
+                      <div className={styles.statusWrap}>
+
                       <button className={styles.profileButton} type="button" onClick={() => handleProfileClick(report.userNumb)}
                       >
                         <ProfileImage className={styles.profileImage} src={report.porfPath} alt=""
@@ -296,24 +301,13 @@ const PublicReportPage = () => {
                         </span>
                       </button>
 
-                      <div className={styles.statusWrap}>
-                        {/* 독서 상태 */}
-                        <span
-                            className={getStatusClassName(reportStatus)}
-                        >
+                      {/* 독서 상태 */}
+                      <span
+                          className={getStatusClassName(reportStatus)}
+                      >
                           {report.reptStatName || statusNameByCode.get(reportStatus) || reportStatus}
                         </span>
-
-                        {/* 별점 */}
-                        <span
-                          className={styles.reportRating}
-                          aria-label={message("frontend.report.gradeValue", [
-                            rating,
-                          ])}
-                        >
-                          <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} />
-                          <span>{rating}</span>
-                        </span>
+                      </div>
 
                         {/* 신고 및 차단 더보기 메뉴 */}
                         <UserActionMenu
@@ -327,7 +321,37 @@ const PublicReportPage = () => {
                             content: report.reptCntn,
                           }}
                         />
-                      </div>
+
+                    </div>
+
+                    <div>
+
+                    {/* 별점 */}
+                    <span
+                        className={styles.reportRating}
+                        aria-label={message("frontend.report.gradeValue", [
+                          rating,
+                        ])}
+                    >
+                      {Array.from({ length: 5 }, (_, index) => {
+                        const starValue = index + 1;
+                        const iconName = rating >= starValue
+                          ? "icon-star-rate"
+                          : rating >= starValue - 0.5
+                            ? "icon-star-rate-half"
+                            : "icon-star-rate-empty";
+
+                        return (
+                          <img
+                            className={styles.reportRatingIcon}
+                            key={starValue}
+                            src={`/img/icons/${iconName}.svg`}
+                            alt=""
+                            aria-hidden="true"
+                          />
+                        );
+                      })}
+                    </span>
 
                     </div>
 

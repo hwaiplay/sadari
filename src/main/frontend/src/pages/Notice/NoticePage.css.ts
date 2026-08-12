@@ -148,7 +148,7 @@ export const moreButton = style({
   color: vars.color.black,
   backgroundColor: vars.color.background,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
   selectors: {
     "&:hover": {
@@ -174,7 +174,7 @@ export const retryButton = style({
   backgroundColor: vars.color.background,
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
   selectors: {
     "&:hover": {

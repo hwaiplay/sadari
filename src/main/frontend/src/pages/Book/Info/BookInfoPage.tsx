@@ -10,6 +10,10 @@ import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import type { ReportDtoType } from "@/features/Book/types/book.type";
 import * as styles from "./BookInfoPage.css";
 
@@ -49,7 +53,7 @@ function BookInfoPage() {
   }
 
   const pageStyle = {
-    "--book-bg-image": `url("${bookInfo.bookCvim}")`,
+    "--book-bg-image": `url("${getBookCoverImageSource(bookInfo.bookCvim)}")`,
   } as CSSProperties;
 
   return (
@@ -61,7 +65,8 @@ function BookInfoPage() {
           <div className={styles.coverFrame}>
             <img
               className={styles.coverImage}
-              src={bookInfo.bookCvim}
+              src={getBookCoverImageSource(bookInfo.bookCvim)}
+              onError={handleBookCoverImageError}
               alt={bookInfo.bookTitl}
             />
           </div>

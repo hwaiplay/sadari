@@ -235,7 +235,7 @@ export const scheduleText = style({
 
 export const scheduleTitle = style({
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   color: vars.color.black,
   overflow: "hidden",
   textOverflow: "ellipsis",

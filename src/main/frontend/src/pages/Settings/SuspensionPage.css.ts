@@ -74,7 +74,7 @@ export const detailItem = style({
   justifyContent: "space-between",
   gap: "16px",
   borderBottom: `1px solid ${vars.color.gray200}`,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.5,
   selectors: {
     "&:last-child": {
@@ -116,7 +116,7 @@ const actionButton = {
   minHeight: "46px",
   borderRadius: "12px",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
 } as const;
 

@@ -4,6 +4,10 @@
  * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import * as styles from "./BookSummary.css";
 
 type BookSummaryProps = {
@@ -41,7 +45,12 @@ function BookSummary({
   return (
     <div className={styles.coverArea}>
       <div className={styles.coverFrame}>
-        <img className={styles.coverImage} src={image} alt={title} />
+        <img
+          className={styles.coverImage}
+          src={getBookCoverImageSource(image)}
+          onError={handleBookCoverImageError}
+          alt={title}
+        />
       </div>
       <div className={styles.bookMeta}>
         <h1 className={styles.bookTitle}>{title}</h1>

@@ -1,10 +1,12 @@
-import { useEffect, useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { clsx } from "clsx";
 import * as styles from "./CustomSelect.css";
 
 export type CustomSelectOption<T extends string> = {
   value: T;
   label: string;
+  className?: string;
+  disabled?: boolean;
 };
 
 type CustomSelectProps<T extends string> = {
@@ -16,6 +18,8 @@ type CustomSelectProps<T extends string> = {
   triggerClassName?: string;
   optionListClassName?: string;
   optionClassName?: string;
+  triggerContent?: ReactNode;
+  showArrow?: boolean;
 };
 
 /**
@@ -34,6 +38,8 @@ function CustomSelect<T extends string>({
   triggerClassName,
   optionListClassName,
   optionClassName,
+  triggerContent,
+  showArrow = true,
 }: CustomSelectProps<T>) {
 
   const listboxId = useId();
@@ -87,6 +93,10 @@ function CustomSelect<T extends string>({
    * @return 반환값이 없다
    */
   const handleSelect = (option: CustomSelectOption<T>) => {
+
+    if (option.disabled) {
+      return;
+    }
 
     onChange(option.value);
     setActiveIndex(
@@ -153,14 +163,18 @@ function CustomSelect<T extends string>({
           setIsOpen((prev) => !prev);
         }}
       >
-        <span className={styles.triggerValue}>{selectedOption?.label ?? ""}</span>
-        <svg
-          className={clsx(styles.arrow, isOpen && styles.arrowOpen)}
-          viewBox="0 0 12 12"
-          aria-hidden="true"
-        >
-          <path d="m2.5 4.25 3.5 3.5 3.5-3.5" />
-        </svg>
+        <span className={styles.triggerValue}>
+          {triggerContent ?? selectedOption?.label ?? ""}
+        </span>
+        {showArrow ? (
+          <svg
+            className={clsx(styles.arrow, isOpen && styles.arrowOpen)}
+            viewBox="0 0 12 12"
+            aria-hidden="true"
+          >
+            <path d="m2.5 4.25 3.5 3.5 3.5-3.5" />
+          </svg>
+        ) : null}
       </button>
 
       {isOpen ? (
@@ -178,6 +192,7 @@ function CustomSelect<T extends string>({
                 className={clsx(
                   styles.option,
                   optionClassName,
+                  option.className,
                   isSelected && styles.optionSelected,
                 )}
                 ref={(element) => {
@@ -187,6 +202,7 @@ function CustomSelect<T extends string>({
                 type="button"
                 role="option"
                 aria-selected={isSelected}
+                disabled={option.disabled}
                 key={option.value}
                 onMouseEnter={() => setActiveIndex(index)}
                 onClick={() => handleSelect(option)}
