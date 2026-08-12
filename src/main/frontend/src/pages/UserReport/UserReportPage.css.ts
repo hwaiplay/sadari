@@ -8,30 +8,51 @@ export const page = style({
   flexDirection: "column",
 });
 
-export const heading = style({ marginBottom: "28px" });
+export const reportPage = style([
+  page,
+  {
+    width: "100%",
+    maxWidth: "600px",
+    minHeight: "calc(100svh - 112px)",
+    padding: "28px 0 20px",
+    backgroundColor: "#ffffff",
+    boxSizing: "border-box",
+    gap: "24px",
+  },
+]);
+
+export const heading = style({
+  paddingTop: "26px",
+  marginBottom: "12px",
+  "@media": {
+    "screen and (max-width: 420px)": {
+      paddingTop: "22px",
+    },
+  },
+});
 
 export const title = style({
   margin: 0,
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
-  fontSize: "18px",
-  lineHeight: 1.4,
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: "20px",
+  lineHeight: 1.3,
+  letterSpacing: 0,
 });
 
 export const description = style({
-  margin: "8px 0 0",
+  margin: "2px 0 0",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: "14px",
-  lineHeight: 1.5,
+  lineHeight: 1.55,
 });
 
 export const targetCard = style({
-  marginBottom: "28px",
-  padding: "16px",
+  padding: "16px 18px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "16px",
-  backgroundColor: vars.color.background,
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
 });
 
 export const targetMeta = style({
@@ -40,7 +61,7 @@ export const targetMeta = style({
   gap: "8px",
   color: vars.color.gray600,
   fontFamily: vars.font.medium,
-  fontSize: "13px",
+  fontSize: "14px",
 });
 
 export const targetNick = style({ color: vars.color.gray900 });
@@ -59,78 +80,133 @@ export const targetContent = style({
   overflowWrap: "anywhere",
 });
 
+export  const reasonArea = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: "12px"
+})
+
 export const reasonFieldset = style({
   margin: 0,
   padding: 0,
   border: 0,
-  display: "flex",
-  flexDirection: "column",
-});
-
-export const reasonOption = style({
-  minHeight: "52px",
-  display: "flex",
-  alignItems: "center",
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
   gap: "12px",
-  borderBottom: `1px solid ${vars.color.gray200}`,
-  color: vars.color.gray900,
-  fontFamily: vars.font.body,
-  fontSize: "15px",
-  cursor: "pointer",
-});
-
-export const radio = style({
-  width: "18px",
-  height: "18px",
-  margin: 0,
-  accentColor: vars.color.brand,
-  flexShrink: 0,
-});
-
-export const detailArea = style({ marginTop: "14px" });
-
-export const detailTextarea = style({
-  width: "100%",
-  minHeight: "120px",
-  padding: "14px",
-  boxSizing: "border-box",
-  resize: "vertical",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: "12px",
-  color: vars.color.gray900,
-  backgroundColor: vars.color.background,
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  lineHeight: 1.6,
-  selectors: {
-    "&:focus": {
-      borderColor: vars.color.gray700,
-      outline: "none",
+  "@media": {
+    "screen and (max-width: 420px)": {
+      gridTemplateColumns: "1fr",
     },
-    "&::placeholder": { color: vars.color.gray500 },
   },
 });
 
-export const footer = style({ marginTop: "auto", paddingTop: "32px" });
+export const reasonOption = style({
+  display: "flex",
+  alignItems: "center",
+  minHeight: "48px",
+  padding: "4px 16px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  cursor: "pointer",
+  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray200,
+      color: vars.color.black,
+    },
+    "&:has(input:checked)": {
+      borderColor: vars.color.brandText,
+      backgroundColor: vars.color.brandBg,
+      color: vars.color.brandText,
+      boxShadow: "0 6px 16px rgba(74, 143, 101, 0.12)",
+    },
+    "&:has(input:focus-visible)": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+    "&:last-child": {
+      gridColumn: "1 / -1",
+    },
+  },
+  "@media": {
+    "screen and (max-width: 420px)": {
+      selectors: {
+        "&:last-child": {
+          gridColumn: "auto",
+        },
+      },
+    },
+  },
+});
+
+export const radio = style({
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+});
+
+export const detailTextarea = style({
+  width: "100%",
+  minHeight: "126px",
+  padding: "16px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "12px",
+  backgroundColor: "#f8f9fa",
+  color: vars.color.black,
+  resize: "none",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.55,
+  outline: "none",
+  boxSizing: "border-box",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+  selectors: {
+    "&:focus": {
+      borderColor: vars.color.gray400,
+      backgroundColor: "#ffffff",
+    },
+    "&::placeholder": {
+      color: vars.color.gray600,
+    },
+  },
+});
+
+export const footer = style({
+  marginTop: "auto",
+});
 
 export const nextButton = style({
   width: "100%",
-  height: "48px",
-  border: `1px solid ${vars.color.gray700}`,
-  borderRadius: "14px",
-  backgroundColor: vars.color.background,
-  color: vars.color.gray900,
+  minHeight: "48px",
+  borderRadius: "8px",
+  backgroundColor: vars.color.gray900,
+  color: "#ffffff",
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "14px",
   cursor: "pointer",
+  transition: "background-color 160ms ease, opacity 160ms ease",
   selectors: {
+    "&:hover:not(:disabled)": {
+      backgroundColor: vars.color.darkGray,
+    },
     "&:disabled": {
-      borderColor: vars.color.gray300,
+      backgroundColor: '#ffffff',
+      border: `1px solid ${vars.color.gray300}`,
       color: vars.color.gray500,
-      cursor: "not-allowed",
+      cursor: "default",
     },
     "&:focus-visible": {
-      outline: `2px solid ${vars.color.gray500}`,
+      outline: `2px solid ${vars.color.negativeText}`,
       outlineOffset: "2px",
     },
   },

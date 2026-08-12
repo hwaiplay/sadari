@@ -310,7 +310,7 @@ export const deletedReplyContent = style([
 ]);
 
 export const replyMentionLink = style({
-  color: vars.color.brand,
+  color: vars.color.brandText,
   textDecoration: "none",
   selectors: {
     "&:focus-visible": {
@@ -392,6 +392,7 @@ export const actionMenuRoot = style({
 
 export const actionMenuTrigger = style({
   width: "18px",
+  minWidth: "18px",
   height: "18px",
   padding: 0,
   border: 0,
@@ -400,6 +401,7 @@ export const actionMenuTrigger = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
+  gap: 0,
   cursor: "pointer",
   // selectors: {
   //   "&:hover, &:focus-visible": {
@@ -487,7 +489,7 @@ export const commentEditHeader = style({
   justifyContent: "space-between",
   color: vars.color.gray600,
   fontFamily: vars.font.medium,
-  fontSize: "13px",
+  fontSize: "14px",
 });
 
 export const commentEditCancelButton = style({
@@ -496,7 +498,7 @@ export const commentEditCancelButton = style({
   backgroundColor: "transparent",
   color: vars.color.gray600,
   fontFamily: vars.font.medium,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
   selectors: {
     "&:hover, &:focus-visible": {

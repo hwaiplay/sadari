@@ -170,9 +170,9 @@ export const bookTitle = style({
 export const meta = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.5,
-  color: "#666666",
+  color: vars.color.gray600,
   textAlign: "center",
 });
 
@@ -203,7 +203,7 @@ export const actionButton = style({
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1,
   display: "inline-flex",
   alignItems: "center",

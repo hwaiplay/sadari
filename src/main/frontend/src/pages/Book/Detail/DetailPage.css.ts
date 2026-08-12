@@ -131,7 +131,7 @@ export const title = style({
 export const meta = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.45,
   color: "#666666",
 });
@@ -172,7 +172,7 @@ export const bookAverageLabel = style({
 
 export const bookAverageEmpty = style({
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.45,
   color: vars.color.gray600,
 });
@@ -185,7 +185,7 @@ export const bookInfoButton = style({
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1,
   display: "inline-flex",
   alignItems: "center",
@@ -258,7 +258,7 @@ export const bookInfoRow = style({
 
 export const bookInfoLabel = style({
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.4,
   color: vars.color.gray600,
 });
@@ -419,7 +419,7 @@ export const recordSection = style({
   position: "relative",
   width: "100%",
   minHeight: "180px",
-  padding: "20px 20px 24px",
+  padding: "22px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -441,16 +441,15 @@ export const recordTitleRow = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  marginBottom: "18px",
+  marginBottom: "14px",
 });
 
 export const recordMetrics = style({
-  position: "absolute",
   top: "14px",
   right: "18px",
   display: "inline-flex",
   alignItems: "center",
-  gap: "8px",
+  gap: "4px",
 });
 
 export const likeButton = style({
@@ -471,9 +470,6 @@ export const likeButton = style({
   flexShrink: 0,
 
   selectors: {
-    "&:hover": {
-      color: "#e98597",
-    },
     "&:disabled": {
       cursor: "default",
       opacity: 0.55,
@@ -599,62 +595,3 @@ export const recordActionButtons = style({
   gap: "8px",
   padding: "0 2px",
 });
-
-export const saveButton = style({
-  minWidth: "76px",
-  height: "36px",
-  padding: "0 8px",
-  border: `1px solid ${vars.color.gray600}`,
-  borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease",
-  selectors: {
-    "&:hover:not(:disabled)": {
-      borderColor: vars.color.gray900,
-      backgroundColor: "#f8f8f8",
-    },
-    "&:disabled": {
-      opacity: 0.5,
-      cursor: "default",
-    },
-  },
-});
-
-export const cancelButton = style([
-  saveButton,
-  {
-    borderColor: vars.color.gray400,
-    color: vars.color.gray700,
-  },
-]);
-
-export const recordActionButton = style([
-  saveButton,
-  {
-    minWidth: "78px",
-  },
-]);
-
-export const recordDeleteActionButton = style([
-  recordActionButton,
-  {
-    borderColor: "#d9877d",
-    color: "#b84b3f",
-  },
-]);
-
-export const deleteButton = style([
-  saveButton,
-  {
-    marginRight: "auto",
-    borderColor: "#d9877d",
-    color: "#b84b3f",
-  },
-]);

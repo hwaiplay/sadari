@@ -278,7 +278,7 @@ export const profileIntro = style({
   fontFamily: vars.font.body,
   fontSize: "14px",
   lineHeight: 1.55,
-  color: "#666666",
+  color: vars.color.gray600,
   wordBreak: "break-word",
 });
 
@@ -316,7 +316,7 @@ export const profileNameInput = style({
   margin: 0,
   padding: "0 12px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius:'999px',
+  borderRadius:'8px',
   backgroundColor: "#f8f9fa",
   color: vars.color.black,
   fontFamily: vars.font.heading,
@@ -326,7 +326,7 @@ export const profileNameInput = style({
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
   selectors: {
     "&:focus": {
-      borderColor: vars.color.black,
+      borderColor: vars.color.gray600,
       backgroundColor: "#ffffff",
     },
   },
@@ -338,7 +338,7 @@ export const profileIntroInput = style({
   height: "80px",
   padding: "9px 12px",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: '16px',
+  borderRadius: '8px',
   backgroundColor: "#f8f9fa",
   color: "#666666",
   fontFamily: vars.font.body,
@@ -349,7 +349,7 @@ export const profileIntroInput = style({
   boxShadow: "inset 0 1px 0 rgba(255, 255, 255, 0.8)",
   selectors: {
     "&:focus": {
-      borderColor: vars.color.black,
+      borderColor: vars.color.gray600,
       backgroundColor: "#ffffff",
     },
   },
@@ -359,7 +359,7 @@ export const monthlySummary = style({
   position: "relative",
   width: "100%",
   marginTop: "24px",
-  padding: "6px 14px",
+  padding: "20px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
   backgroundColor: "#ffffff",
@@ -411,7 +411,6 @@ export const profileStatsButton = style({
 });
 
 export const currentReadingSection = style({
-  padding: "18px 4px",
   display: "flex",
   flexDirection: "column",
   gap: "18px",
@@ -421,11 +420,12 @@ export const currentReadingTitle = style({
   margin: 0,
   padding: 0,
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "14px",
   lineHeight: 1.3,
   textAlign: "left",
   color: vars.color.black,
-});
+})
+;
 
 export const currentReadingList = style({
   display: "flex",
@@ -469,7 +469,7 @@ export const currentReadingText = style({
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "5px",
+  gap: "4px",
 });
 
 export const myPageCurrentReadingText = style({
@@ -528,7 +528,7 @@ export const goalAchievementLabel = style({
   fontFamily: vars.font.body,
   fontSize: "12px",
   lineHeight: 1.2,
-  color: "#777777",
+  color: vars.color.gray600
 });
 
 export const goalAchievementCount = style({
@@ -570,8 +570,8 @@ export const readingSummaryChevron = style({
   height: "28px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "50%",
-  backgroundColor: "#f8f9fa",
-  color: "#666666",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray600,
   lineHeight: 1,
   display: "inline-flex",
   alignItems: "center",
@@ -583,9 +583,6 @@ export const readingSummaryChevron = style({
 export const readingSummaryChevronOpen = style([
   readingSummaryChevron,
   {
-    color: vars.color.black,
-    backgroundColor: "#ffffff",
-    borderColor: "#cfd4da",
     transform: "rotate(180deg)",
   },
 ]);
@@ -643,7 +640,7 @@ export const readingSummaryReport = style({
   transition: "background-color 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#f8f9fa",
+      backgroundColor: vars.color.gray100,
     },
     "&:last-child": {
       borderBottom: 0,
@@ -719,13 +716,11 @@ export const readingSummaryBookTitleButton = style([
     cursor: "pointer",
     selectors: {
       "&:hover": {
-        textDecoration: "underline",
         textUnderlineOffset: "3px",
       },
       "&:focus-visible": {
         outline: "2px solid #8ab4e8",
         outlineOffset: "2px",
-        textDecoration: "underline",
         textUnderlineOffset: "3px",
       },
     },
@@ -863,16 +858,16 @@ const monthlyDiffBase = style({
 export const monthlyDiffUp = style([
   monthlyDiffBase,
   {
-    backgroundColor: "#e4f6e9",
-    color: "#2f8f64",
+    backgroundColor: vars.color.brandBg,
+    color: vars.color.brandText,
   },
 ]);
 
 export const monthlyDiffDown = style([
   monthlyDiffBase,
   {
-    backgroundColor: "#fdeaea",
-    color: "#c94b4b",
+    backgroundColor: vars.color.negativeBg,
+    color: vars.color.negativeText,
   },
 ]);
 
@@ -882,8 +877,8 @@ export const monthlyDiffNeutral = style({
   padding: "0 9px",
   border: 0,
   borderRadius: "999px",
-  backgroundColor: "#f3f4f5",
-  color: "#777777",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: "12px",
   lineHeight: 1,
@@ -952,7 +947,7 @@ export const goalProgressTarget = style({
   fontFamily: vars.font.body,
   fontSize: "12px",
   lineHeight: 1,
-  color: "#888888",
+  color: vars.color.gray600,
   textAlign: "center",
   transform: "translateY(1px)",
 });
@@ -960,7 +955,7 @@ export const goalProgressTarget = style({
 export const goalProgressTrack = style({
   height: "12px",
   borderRadius: "999px",
-  backgroundColor: "#eeeeee",
+  backgroundColor: vars.color.gray200,
   overflow: "hidden",
 });
 
@@ -973,49 +968,14 @@ export const goalProgressFill = style({
   transition: "width 220ms ease, background-color 180ms ease",
 });
 
-export const goalProgressMonth = style([
-  goalProgressFill,
-  {
-    backgroundColor: "#ff929c",
-  },
-]);
-
-export const goalProgressYear = style([
-  goalProgressFill,
-  {
-    backgroundColor: "#8fd7f4",
-  },
-]);
-
 export const goalProgressRate = style({
   fontFamily: vars.font.heading,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1,
   textAlign: "center",
   whiteSpace: "nowrap",
   color: "#999999",
   transition: "color 180ms ease",
-});
-
-export const goalProgressRateMonth = style([
-  goalProgressRate,
-  {
-    color: "#ff929c",
-  },
-]);
-
-export const goalProgressRateYear = style([
-  goalProgressRate,
-  {
-    color: "#8fd7f4",
-  },
-]);
-
-export const goalProgressText = style({
-  margin: "-2px 16px 8px 50px",
-  fontFamily: vars.font.body,
-  fontSize: "11px",
-  color: "#888888",
 });
 
 export const goalSettingButton = style({
@@ -1037,7 +997,6 @@ export const goalSettingButton = style({
     },
   },
 });
-
 
 export const goalModalOverlay = style({
   position: "fixed",
@@ -1072,7 +1031,7 @@ export const goalModal = style({
   overflowY: "auto",
   borderRadius: "18px",
   backgroundColor: "#ffffff",
-  padding: "22px 20px 18px",
+  padding: "20px",
   boxShadow: "0 22px 58px rgba(0, 0, 0, 0.24)",
   animation: `${keyframes({
     from: { opacity: 0, transform: "translateY(8px)" },
@@ -1181,7 +1140,7 @@ export const followModalName = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.25,
   color: vars.color.black,
 });
@@ -1200,10 +1159,9 @@ export const followModalStatusButton = style({
   minWidth: "58px",
   minHeight: "30px",
   padding: "0 10px",
-  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
-  backgroundColor: "#ffffff",
-  color: vars.color.black,
+  backgroundColor: vars.color.brandBg,
+  color: vars.color.brandText,
   fontFamily: vars.font.semibold,
   fontSize: "12px",
   cursor: "pointer",
@@ -1223,9 +1181,9 @@ export const followModalEmpty = style({
   margin: "12px 0 4px",
   padding: "24px 0",
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.5,
-  color: "#777777",
+  color:vars.color.gray600,
   textAlign: "center",
 });
 
@@ -1239,8 +1197,8 @@ export const goalModalClosing = style({
 export const goalHelpModal = style([
   goalModal,
   {
-    width: "min(440px, 100%)",
-  },
+    height: "348px"
+  }
 ]);
 
 export const goalModalHeader = style({
@@ -1373,9 +1331,9 @@ export const currentReadingModalBookMeta = style({
 export const goalHelpLead = style({
   margin: "0 0 12px",
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.55,
-  color: "#555555",
+  color: vars.color.gray600,
 });
 
 export const goalHelpList = style({
@@ -1385,7 +1343,7 @@ export const goalHelpList = style({
   flexDirection: "column",
   gap: "9px",
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.55,
   color: vars.color.black,
 });
@@ -1402,7 +1360,7 @@ export const goalInputLabel = style({
   flexDirection: "column",
   gap: "7px",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   color: vars.color.black,
   textAlign: "center",
 });
@@ -1428,7 +1386,7 @@ export const goalStepper = style({
 
 export const goalStepperButton = style({
   border: 0,
-  backgroundColor: "#f0f1f2",
+  backgroundColor: vars.color.gray100,
   color: "#555555",
   fontFamily: vars.font.heading,
   fontSize: "18px",
@@ -1438,15 +1396,23 @@ export const goalStepperButton = style({
   alignItems: "center",
   justifyContent: "center",
   transition: "background-color 160ms ease, color 160ms ease",
+});
+
+export const goalStepperDecreaseButton = style({
+  gridRow: "3",
   selectors: {
-    "&:first-child": {
-      gridRow: "3",
-    },
-    "&:last-child": {
-      gridRow: "1",
-    },
     "&:hover": {
-      backgroundColor: "#e7e9eb",
+      backgroundColor: vars.color.gray200,
+      color: vars.color.black,
+    },
+  },
+});
+
+export const goalStepperIncreaseButton = style({
+  gridRow: "1",
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray200,
       color: vars.color.black,
     },
   },
@@ -1477,7 +1443,7 @@ export const goalLimitInfo = style({
   minHeight: "52px",
   padding: "8px 7px",
   borderRadius: "9px",
-  backgroundColor: "#f7f8f8",
+  backgroundColor: vars.color.gray100,
   display: "flex",
   flexDirection: "column",
   alignItems: "center",
@@ -1492,7 +1458,7 @@ export const goalLimitPill = style({
   backgroundColor: "#edf7f1",
   color: "#3b8f64",
   fontFamily: vars.font.semibold,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1,
   overflow: "hidden",
   textOverflow: "ellipsis",
@@ -1502,9 +1468,9 @@ export const goalLimitPill = style({
 export const goalLimitMuted = style({
   maxWidth: "100%",
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.25,
-  color: "#777777",
+  color: vars.color.gray600,
   overflow: "hidden",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
@@ -1518,20 +1484,22 @@ export const goalLimitDanger = style([
 ]);
 
 export const goalModalActions = style({
-  display: "flex",
-  justifyContent: "flex-end",
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
   gap: "8px",
   marginTop: "20px",
 });
 
 const goalModalButtonBase = style({
   minWidth: "76px",
-  height: "36px",
-  borderRadius: "999px",
+  height: "46px",
+  borderRadius: "8px",
   padding: "0 14px",
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
+  transition: "background-color 160ms ease",
+
 });
 
 export const goalModalCancel = style([
@@ -1540,16 +1508,27 @@ export const goalModalCancel = style([
     border: `1px solid ${vars.color.gray300}`,
     backgroundColor: "#ffffff",
     color: vars.color.black,
+
+    selectors: {
+      "&:hover": {
+        border: `1px solid ${vars.color.gray600}`,
+        backgroundColor: vars.color.gray100,
+      },
+    }
   },
 ]);
 
 export const goalModalSave = style([
   goalModalButtonBase,
   {
-    border: `1px solid ${vars.color.gray700}`,
-    backgroundColor: "#ffffff",
-    color: vars.color.gray900,
+    border: `1px solid ${vars.color.gray900}`,
+    backgroundColor: vars.color.gray900,
+    color: "#ffffff",
     selectors: {
+      "&:hover": {
+        border: `1px solid ${vars.color.darkGray}`,
+        backgroundColor: vars.color.darkGray,
+      },
       "&:disabled": {
         cursor: "default",
         opacity: 0.6,

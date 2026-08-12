@@ -1,8 +1,13 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
+import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
+import CustomSelect, {
+  type CustomSelectOption,
+} from "@/components/Select/CustomSelect";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import ProfileImage from "@/features/User/components/ProfileImage";
 import type {
   ReplySheetController,
   ReplyThread as ReplyThreadType,
@@ -13,8 +18,9 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import * as styles from "./ReplySheet.css";
 
-const DEFAULT_PROFILE_IMAGE = "/img/common/icon-user.svg";
 const REPLY_MENTION_PATTERN = /(@[A-Za-z0-9\uAC00-\uD7A3]+)/g;
+
+type ReplyAction = "" | "UPDATE" | "DELETE";
 
 type ReplySheetViewProps = {
   report: Pick<PublicReportType, "reptNumb"> &
@@ -154,9 +160,8 @@ const ReplyItem = ({
         key={`${reportNumb}-${reply.replNumb}`}
       >
         <div className={styles.deletedReplyItemWrap}>
-          <img
+          <ProfileImage
             className={styles.replyProfileImage}
-            src={DEFAULT_PROFILE_IMAGE}
             alt=""
           />
           <span className={styles.deletedReplyContent}>
@@ -212,15 +217,37 @@ const ReplyItem = ({
     controller.handleDeleteReply(reply.replNumb);
   };
 
+  const replyActionOptions: readonly CustomSelectOption<ReplyAction>[] = [
+    {
+      value: "UPDATE",
+      label: message("frontend.common.update"),
+      className: styles.actionMenuOption,
+    },
+    {
+      value: "DELETE",
+      label: message("frontend.common.delete"),
+      className: styles.actionMenuOptionDanger,
+      disabled: controller.deletingReplyNumb === reply.replNumb,
+    },
+  ];
+
   /**
-   * 현재 댓글의 액션 메뉴를 펼치거나 닫는다
+   * 본인 댓글 메뉴에서 선택한 수정 또는 삭제 작업을 실행한다
    *
    * @author HanWon.Jang
+   * @param action 선택한 댓글 작업
    * @return 반환값이 없다
    */
-  const handleActionMenuClick = (): void => {
-    // 현재 댓글 번호의 액션 메뉴 표시 상태만 변경한다
-    controller.handleToggleActionMenu(reply.replNumb);
+  const handleReplyActionChange = (action: ReplyAction): void => {
+
+    if (action === "UPDATE") {
+      handleEditClick();
+      return;
+    }
+
+    if (action === "DELETE") {
+      handleDeleteClick();
+    }
   };
 
   /**
@@ -249,9 +276,9 @@ const ReplyItem = ({
             to={profilePath}
             aria-label={`${reply.userNick || "사용자"} 프로필 보기`}
           >
-            <img
+            <ProfileImage
               className={styles.replyProfileImage}
-              src={reply.porfPath || DEFAULT_PROFILE_IMAGE}
+              src={reply.porfPath}
               alt=""
             />
           </Link>
@@ -332,54 +359,23 @@ const ReplyItem = ({
       <div className={styles.replyItemActions}>
         {!isDeleted && reply.myReplyYn === "Y" ? (
           /* 댓글 작성자 일치 여부에 맞는 선택 메뉴 영역 */
-          <div
+          <CustomSelect<ReplyAction>
             className={styles.actionMenuRoot}
-            onBlur={controller.handleActionMenuBlur}
-            onKeyDown={controller.handleActionMenuKeyDown}
-          >
-            {/* "더보기" */}
-            <button
-              className={styles.actionMenuTrigger}
-              type="button"
-              aria-label="더보기"
-              aria-haspopup="menu"
-              aria-expanded={controller.openActionReplyNumb === reply.replNumb}
-              onClick={handleActionMenuClick}
-            >
+            triggerClassName={styles.actionMenuTrigger}
+            optionListClassName={styles.actionMenu}
+            value=""
+            options={replyActionOptions}
+            onChange={handleReplyActionChange}
+            ariaLabel="더보기"
+            showArrow={false}
+            triggerContent={
               <img
                 className={styles.actionMenuIcon}
                 src="/img/icons/icon-more.svg"
                 alt=""
               />
-            </button>
-
-            {controller.openActionReplyNumb === reply.replNumb ? (
-              /* 본인 댓글 수정 및 삭제 또는 다른 사용자 신고 및 차단 선택 메뉴 */
-              <div className={styles.actionMenu} role="menu">
-                {/* "수정하기" */}
-                <button
-                  className={styles.actionMenuOption}
-                  type="button"
-                  role="menuitem"
-                  onClick={handleEditClick}
-                >
-                  {/* "수정하기" */}
-                  {message("frontend.reply.edit")}
-                </button>
-                {/* "삭제하기" */}
-                <button
-                  className={styles.actionMenuOptionDanger}
-                  type="button"
-                  role="menuitem"
-                  disabled={controller.deletingReplyNumb === reply.replNumb}
-                  onClick={handleDeleteClick}
-                >
-                  {/* "삭제하기" */}
-                  {message("frontend.reply.delete")}
-                </button>
-              </div>
-            ) : null}
-          </div>
+            }
+          />
         ) : null}
 
         {!isDeleted && reply.myReplyYn !== "Y" ? (
@@ -642,7 +638,7 @@ const ReplySheetView = ({
               aria-label={message("frontend.reply.inputAria")}
               onChange={controller.handleCommentInputChange}
             />
-            <button
+            <ActionButton
               className={styles.commentSubmitButton}
               type="submit"
               disabled={controller.isSubmitDisabled}
@@ -658,7 +654,7 @@ const ReplySheetView = ({
                   {message("frontend.reply.create")}
                 </>
               )}
-            </button>
+            </ActionButton>
           </form>
         </div>
       </section>

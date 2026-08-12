@@ -86,7 +86,7 @@ export const title = style({
 export const meta = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.45,
   color: "#666666",
 });
@@ -105,7 +105,7 @@ export const ratingSummary = style({
   gap: "3px",
   flexShrink: 0,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1,
   color: vars.color.black,
 });
@@ -160,14 +160,14 @@ export const infoGrid = style({
 
 export const infoLabel = style({
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  color: "#777777",
+  fontSize: "14px",
+  color: vars.color.gray600,
 });
 
 export const infoValue = style({
   margin: 0,
   fontFamily: vars.font.body,
-  fontSize: "13px",
+  fontSize: "14px",
   lineHeight: 1.5,
   color: vars.color.black,
   wordBreak: "break-word",
@@ -202,37 +202,6 @@ export const bookInfoButton = style({
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
   cursor: "pointer",
-});
-
-export const bookInfoActionRow = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  flexWrap: "wrap",
-  width: "100%",
-});
-
-export const reportBackButton = style({
-  height: "34px",
-  display: "inline-flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "5px",
-  padding: "0 13px",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: vars.radius.xl,
-  backgroundColor: "#ffffff",
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  cursor: "pointer",
-});
-
-export const reportBackIcon = style({
-  width: "15px",
-  height: "15px",
-  flexShrink: 0,
 });

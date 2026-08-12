@@ -10,7 +10,7 @@ export const reportSetButton = style({
   width: "62px",
   height: "62px",
   borderRadius: "50%",
-  backgroundColor: vars.color.gray600,
+  backgroundColor: vars.color.gray500,
   color: "#ffffff",
   alignItems: "center",
   justifyContent: "center",

@@ -16,7 +16,7 @@ export const trigger = style({
   cursor: "pointer",
 });
 
-export const triggerIcon = style({ width: "18px", height: "18px", display: "block" });
+export const triggerIcon = style({ width: "18px", height: "18px", display: "block", transform: "rotate(90deg)" });
 
 export const menu = style({
   position: "absolute",
@@ -47,6 +47,9 @@ export const menuOption = style({
   textAlign: "left",
   cursor: "pointer",
   selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray100
+    },
     "&:focus-visible": {
       outline: `2px solid ${vars.color.gray500}`,
       outlineOffset: "-2px",

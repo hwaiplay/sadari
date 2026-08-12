@@ -1,5 +1,9 @@
 import { message } from "@/app/messages/message";
 import { HomeBookType } from "@/features/Book/types/book.type";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import { Link } from "react-router-dom";
 import * as styles from "./Book.css";
 
@@ -29,11 +33,12 @@ function Book({
       aria-label={bookTitl}
     >
       <div className={styles.coverWrap}>
-        {bookCvim ? (
-          <img className={styles.cover} src={bookCvim} alt={bookTitl} />
-        ) : (
-          <div className={styles.coverFallback}>{bookTitl}</div>
-        )}
+        <img
+          className={styles.cover}
+          src={getBookCoverImageSource(bookCvim)}
+          onError={handleBookCoverImageError}
+          alt={bookTitl}
+        />
         {readingYn === "Y" && (
           <span className={styles.readingBadge}>
             {/* "읽고 있어요" */}

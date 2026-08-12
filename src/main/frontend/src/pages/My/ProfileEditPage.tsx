@@ -8,6 +8,10 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
@@ -945,18 +949,18 @@ function ProfileEditPage() {
   const getGoalProgressColor = (rate: number) => {
 
     if (rate >= 100) {
-      return "#9edfc2";
+      return "#9EDFC2";
     }
 
     if (rate >= 70) {
-      return "#9ed8f2";
+      return "#F7D98B";
     }
 
     if (rate >= 40) {
-      return "#f7d98b";
+      return "#F4A7AD";
     }
 
-    return "#f4a7ad";
+    return "#F4A7AD";
   };
 
   /**
@@ -1008,13 +1012,12 @@ function ProfileEditPage() {
               const content = (
                 <>
                   {/* 현재 읽고 있는 책 표지 영역 */}
-                  {report.bookCvim && (
-                    <img
-                      className={styles.readingSummaryCover}
-                      src={report.bookCvim}
-                      alt=""
-                    />
-                  )}
+                  <img
+                    className={styles.readingSummaryCover}
+                    src={getBookCoverImageSource(report.bookCvim)}
+                    onError={handleBookCoverImageError}
+                    alt=""
+                  />
                   {/* 현재 읽고 있는 책 정보 영역 */}
                   <span className={`${styles.currentReadingText} ${styles.myPageCurrentReadingText}`}>
                     <span
@@ -1561,13 +1564,7 @@ function ProfileEditPage() {
                 }
                 aria-hidden="true"
               >
-                <svg
-                  className={styles.readingSummaryChevronIcon}
-                  viewBox="0 0 24 24"
-                  focusable="false"
-                >
-                  <path d="M7.4 9.6 12 14.2l4.6-4.6 1.4 1.4-6 6-6-6 1.4-1.4Z" />
-                </svg>
+                <img src={"/img/icons/arrow-bottom.svg"} width={"14px"} />
               </span>
             )}
           </button>
@@ -1647,13 +1644,12 @@ function ProfileEditPage() {
                   onClick={() => handleSummaryReportClick(report.reptNumb)}
                 >
                   {/* 완료 도서 표지 영역 */}
-                  {report.bookCvim && (
-                    <img
-                      className={styles.readingSummaryCover}
-                      src={report.bookCvim}
-                      alt=""
-                    />
-                  )}
+                  <img
+                    className={styles.readingSummaryCover}
+                    src={getBookCoverImageSource(report.bookCvim)}
+                    onError={handleBookCoverImageError}
+                    alt=""
+                  />
                   {/* 완료 도서 제목과 저자 및 별점 영역 */}
                   <span className={styles.readingSummaryBookText}>
                     <span
@@ -1923,7 +1919,7 @@ function ProfileEditPage() {
                           >
                             <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
                           </svg>
-                          {/* "저장" */ message("frontend.report.save")}
+                          {/* "저장" */ message("frontend.profile.save")}
                         </>
                     )}
                   </button>
@@ -2168,16 +2164,12 @@ function ProfileEditPage() {
             {/* 전체 수정 대상 도서 정보 영역 */}
             <div className={styles.currentReadingModalBody}>
               <div className={styles.currentReadingModalBookInfo}>
-                {currentReadingReport.bookCvim && (
-                  <img
-                    className={styles.currentReadingModalCover}
-                    src={currentReadingReport.bookCvim}
-                    alt=""
-                  />
-                )}
-                {!currentReadingReport.bookCvim && (
-                  <span className={styles.currentReadingModalCoverPlaceholder} aria-hidden="true" />
-                )}
+                <img
+                  className={styles.currentReadingModalCover}
+                  src={getBookCoverImageSource(currentReadingReport.bookCvim)}
+                  onError={handleBookCoverImageError}
+                  alt=""
+                />
                 <div className={styles.currentReadingModalBookText}>
                   <p className={styles.currentReadingModalBookTitle}>
                     {currentReadingReport.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
@@ -2378,11 +2370,13 @@ function ProfileEditPage() {
             {/* 기간별 목표 권수 입력 영역 */}
             <div className={styles.goalModalBody}>
               {/* 주간 목표 권수 입력과 수정 제한 안내 영역 */}
-              <label className={styles.goalInputLabel}>
-                <span>{/* "주간" */ message("frontend.profile.goal.weekLabel")}</span>
+              <div className={styles.goalInputLabel}>
+                <label htmlFor="week-goal-count">
+                  {/* "주간" */ message("frontend.profile.goal.weekLabel")}
+                </label>
                 <div className={styles.goalStepper}>
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperDecreaseButton}`}
                     type="button"
                     aria-label={`${/* "주간" */ message("frontend.profile.goal.weekLabel")} 감소`}
                     onClick={() => handleGoalCountStep("week", -1)}
@@ -2390,6 +2384,7 @@ function ProfileEditPage() {
                     -
                   </button>
                   <input
+                    id="week-goal-count"
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={weekGoalCnt}
@@ -2399,7 +2394,7 @@ function ProfileEditPage() {
                     }
                   />
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperIncreaseButton}`}
                     type="button"
                     aria-label={`${/* "주간" */ message("frontend.profile.goal.weekLabel")} 증가`}
                     onClick={() => handleGoalCountStep("week", 1)}
@@ -2408,13 +2403,15 @@ function ProfileEditPage() {
                   </button>
                 </div>
                 {renderGoalLimitInfo("week")}
-              </label>
+              </div>
               {/* 월간 목표 권수 입력과 수정 제한 안내 영역 */}
-              <label className={styles.goalInputLabel}>
-                <span>{/* "월간" */ message("frontend.profile.goal.monthLabel")}</span>
+              <div className={styles.goalInputLabel}>
+                <label htmlFor="month-goal-count">
+                  {/* "월간" */ message("frontend.profile.goal.monthLabel")}
+                </label>
                 <div className={styles.goalStepper}>
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperDecreaseButton}`}
                     type="button"
                     aria-label={`${/* "월간" */ message("frontend.profile.goal.monthLabel")} 감소`}
                     onClick={() => handleGoalCountStep("month", -1)}
@@ -2422,6 +2419,7 @@ function ProfileEditPage() {
                     -
                   </button>
                   <input
+                    id="month-goal-count"
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={monthGoalCnt}
@@ -2431,7 +2429,7 @@ function ProfileEditPage() {
                     }
                   />
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperIncreaseButton}`}
                     type="button"
                     aria-label={`${/* "월간" */ message("frontend.profile.goal.monthLabel")} 증가`}
                     onClick={() => handleGoalCountStep("month", 1)}
@@ -2440,13 +2438,15 @@ function ProfileEditPage() {
                   </button>
                 </div>
                 {renderGoalLimitInfo("month")}
-              </label>
+              </div>
               {/* 연간 목표 권수 입력과 수정 제한 안내 영역 */}
-              <label className={styles.goalInputLabel}>
-                <span>{/* "연간" */ message("frontend.profile.goal.yearLabel")}</span>
+              <div className={styles.goalInputLabel}>
+                <label htmlFor="year-goal-count">
+                  {/* "연간" */ message("frontend.profile.goal.yearLabel")}
+                </label>
                 <div className={styles.goalStepper}>
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperDecreaseButton}`}
                     type="button"
                     aria-label={`${/* "연간" */ message("frontend.profile.goal.yearLabel")} 감소`}
                     onClick={() => handleGoalCountStep("year", -1)}
@@ -2454,6 +2454,7 @@ function ProfileEditPage() {
                     -
                   </button>
                   <input
+                    id="year-goal-count"
                     className={styles.goalInput}
                     inputMode="numeric"
                     value={yearGoalCnt}
@@ -2463,7 +2464,7 @@ function ProfileEditPage() {
                     }
                   />
                   <button
-                    className={styles.goalStepperButton}
+                    className={`${styles.goalStepperButton} ${styles.goalStepperIncreaseButton}`}
                     type="button"
                     aria-label={`${/* "연간" */ message("frontend.profile.goal.yearLabel")} 증가`}
                     onClick={() => handleGoalCountStep("year", 1)}
@@ -2472,7 +2473,7 @@ function ProfileEditPage() {
                   </button>
                 </div>
                 {renderGoalLimitInfo("year")}
-              </label>
+              </div>
             </div>
             {/* 독서 목표 설정 취소와 저장 영역 */}
             <div className={styles.goalModalActions}>
@@ -2489,7 +2490,7 @@ function ProfileEditPage() {
                 disabled={isGoalSaving}
                 onClick={handleGoalSubmit}
               >
-                {/* "저장" */ message("frontend.report.save")}
+                {/* "저장" */ message("frontend.profile.save")}
               </button>
             </div>
           </section>
