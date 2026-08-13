@@ -17,14 +17,18 @@ import {
   pageTransitionViewport,
 } from "./Layout.css";
 
+type LayoutProps = {
+  isMainLayout?: boolean;
+};
+
 /**
  * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용합니다.
  *
  * @author HanWon.Jang
- * @param isMainLayout 메인 컨테이너와 헤더 여백 적용 여부
+ * @param props 레이아웃 표시 옵션
  * @return 공통 레이아웃 컴포넌트
  */
-function Layout({ isMainLayout = true }: { isMainLayout?: boolean }) {
+function Layout({ isMainLayout = true }: LayoutProps) {
 
   const location = useLocation();
   const navigationType = useNavigationType();

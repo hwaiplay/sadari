@@ -11,6 +11,26 @@ export const page = style({
   backgroundColor: "#ffffff",
 });
 
+export const listPage = style([
+  page,
+  {
+    paddingRight: "2px",
+    paddingLeft: "2px",
+  },
+]);
+
+export const intro = style({
+  marginBottom: "22px",
+});
+
+export const description = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.55,
+});
+
 export const list = style({
   display: "flex",
   flexDirection: "column",
@@ -19,24 +39,23 @@ export const list = style({
 
 export const item = style({
   width: "100%",
-  minHeight: "78px",
-  padding: "14px 15px",
+  minHeight: "102px",
+  padding: "15px 16px",
   border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "12px",
-  backgroundColor: "#ffffff",
+  borderRadius: vars.radius.md,
+  backgroundColor: vars.color.background,
   color: vars.color.black,
-  display: "block",
-  alignItems: "center",
   textAlign: "left",
   cursor: "pointer",
-  transition: "background-color 160ms ease",
+  transition: "background-color 160ms ease, border-color 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#f7f8fa",
+      borderColor: vars.color.gray300,
+      backgroundColor: vars.color.gray100,
     },
     "&:focus-visible": {
-      outline: "2px solid #78b991",
-      outlineOffset: "-2px",
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "2px",
     },
   },
 });
@@ -51,7 +70,6 @@ export const itemText = style({
   minWidth: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "5px",
 });
 
 export const title = style({
@@ -62,7 +80,7 @@ export const title = style({
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
-  lineHeight: 1.5,
+  lineHeight: 1.45,
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
 });
@@ -84,7 +102,7 @@ export const titleRow = style({
 
 export const category = style({
   flexShrink: 0,
-  padding: "2px 7px",
+  padding: "3px 8px",
   borderRadius: vars.radius.xl,
   backgroundColor: vars.color.gray100,
   color: vars.color.gray700,
@@ -115,10 +133,19 @@ export const unreadDot = style({
 
 export const date = style({
   display: "block",
-  color: "#9a9a9a",
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "12px",
-  lineHeight: 1.3,
+  fontSize: vars.fontSize.caption,
+  lineHeight: 1.4,
+});
+
+export const itemBottom = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-start",
+  flexWrap: "wrap",
+  gap: "6px",
+  marginTop: "10px",
 });
 
 export const statusPanel = style({
@@ -205,11 +232,18 @@ export const detailHeader = style({
   borderBottom: `1px solid ${vars.color.gray200}`,
 });
 
+export const detailInfo = style({
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "7px",
+  marginTop: "4px",
+});
+
 export const detailMeta = style({
   display: "flex",
   alignItems: "center",
   gap: "7px",
-  marginBottom: "10px",
 });
 
 export const detailTitle = style({

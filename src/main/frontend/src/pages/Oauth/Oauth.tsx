@@ -16,6 +16,7 @@ const Oauth = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const isAccountReactivated = searchParams.get("reactivated") === "Y";
+  const isSuspendedSignupBlocked = searchParams.get("blocked") === "suspension";
   const reactivationNoticeShownRef = useRef(false);
   const {
     isLoading,
@@ -70,14 +71,32 @@ const Oauth = () => {
       return;
     }
 
-    void sweetError(
-      message("frontend.alert.authFailedTitle"),
-      message("frontend.auth.failedRedirect"),
-    ).then(() => {
+    let errorTitle: string;
+    let errorMessage: string;
 
+    // 탈퇴한 과거 회원 번호에 유효 제재가 남아 있으면 재가입 제한 사유를 안내한다
+    if (isSuspendedSignupBlocked) {
+      // "가입할 수 없는 계정이에요."
+      errorTitle = message("frontend.auth.suspendedSignupTitle");
+      // "이용 정지가 남아 있어 이 카카오 계정으로 가입할 수 없어요."
+      errorMessage = message("frontend.auth.suspendedSignupBlocked");
+    }
+
+    // 일반 OAuth 실패에는 기존 인증 오류 안내를 유지한다
+    else {
+      // "인증에 실패했습니다."
+      errorTitle = message("frontend.alert.authFailedTitle");
+      // "로그인 페이지로 이동합니다."
+      errorMessage = message("frontend.auth.failedRedirect");
+    }
+
+    // 판별한 인증 실패 사유를 안내한 뒤 로그인 화면으로 이동한다
+    void sweetError(errorTitle, errorMessage).then(() => {
+
+      // 실패한 OAuth 화면을 기록에 남기지 않고 로그인 화면으로 교체한다
       navigate("/login", { replace: true });
     });
-  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, isSuspended, navigate]);
+  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, isSuspended, isSuspendedSignupBlocked, navigate]);
 
   return <Loading title={message("frontend.common.loginLoading")} />;
 };

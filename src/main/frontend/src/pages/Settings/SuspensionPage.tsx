@@ -2,6 +2,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { checkAuthApi } from "@/features/Auth/api/authApi";
 import { runLogout, selectLogoutScope } from "@/features/Auth/lib/logoutFlow";
+import { getSuspInquiryNumbApi } from "@/features/Inquiry/api/inquiryApi";
 import {
   getUserSuspensionApi,
   type UserSuspension,
@@ -44,6 +45,7 @@ function SuspensionPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [suspension, setSuspension] = useState<UserSuspension | null>(null);
+  const [suspInquiryNumb, setSuspInquiryNumb] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -73,6 +75,10 @@ function SuspensionPage() {
           return;
         }
 
+        // 활성 정지가 확인된 뒤 해당 정지 이후 접수한 최신 이의제기 번호를 조회한다
+        const inquiryNumb = await getSuspInquiryNumbApi();
+        // 현재 정지 이후 접수한 이의제기 문의 번호를 버튼 이동값으로 보관한다
+        setSuspInquiryNumb(inquiryNumb);
         // 사용자에게 공개할 정지 정보를 화면 상태에 반영합니다
         setSuspension(result.data);
       }
@@ -142,7 +148,7 @@ function SuspensionPage() {
         <h1 className={styles.heading}>계정 이용이 정지되었어요</h1>
         {/* 이용 정지 중 허용되는 계정 처리 안내 영역 */}
         <p className={styles.description}>
-          {`정지 기간에는 일반 서비스 이용과\n계정 비활성화가 제한돼요.`}
+          {`정지 기간에는 일반 서비스 이용과 계정 비활성화가 제한돼요.\n영구 탈퇴를 신청해도 이용 정지 이력은 유지돼요.`}
         </p>
 
         {/* 활성 정지 이력이 있을 때만 공개 사유와 기간을 표시한다 */}
@@ -169,6 +175,23 @@ function SuspensionPage() {
 
         {/* 정지 회원에게 허용된 로그아웃 버튼 영역 */}
         <div className={styles.actions}>
+          <button
+            className={styles.withdrawalButton}
+            type="button"
+            onClick={() => navigate("/suspension/withdrawal")}
+          >
+            {/* "영구 탈퇴" */}
+            영구 탈퇴
+          </button>
+          <button
+            className={styles.inquiryButton}
+            type="button"
+            onClick={() => navigate(suspInquiryNumb
+              ? `/inquiry/detail/${suspInquiryNumb}`
+              : "/inquiry/write?category=SUSPENSION_APPEAL")}
+          >
+            {suspInquiryNumb ? "문의내역보기" : "이용정지 문의하기"}
+          </button>
           <button className={styles.logoutButton} type="button" onClick={handleLogout}>
             {/* "로그아웃" */}
             로그아웃
