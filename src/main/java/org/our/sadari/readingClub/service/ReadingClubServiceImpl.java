@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    활성 모임원 프로필 접근 정책 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -41,6 +42,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final String JOIN_INVITE = "INVITE";
     // 운영 중인 모임 상태 코드
     private static final String CLUB_ACTIVE = "ACTIVE";
+    // 현재 모임에 참여 중인 활성 모임원 상태 코드
+    private static final String MEMBER_ACTIVE = "ACTIVE";
     // 승인된 가입 신청 상태 코드
     private static final String APPLICATION_APPROVED = "APPROVED";
     // 거절된 가입 신청 상태 코드
@@ -134,6 +137,37 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         fillClubRelation(club, true);
         // 완성된 상세 정보를 반환한다
         return ResultData.success(club);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @return 모임원 프로필 목록 조회 결과
+     */
+    @Override
+    public ResultData getClubMemberList(Long userNumb, Long clubNumb) {
+
+        // 모임원 관계 조회에 필요한 식별값을 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 요청 사용자의 현재 모임원 관계를 조회한다
+        ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, userNumb);
+        // 활성 모임원만 다른 모임원의 프로필을 조회할 수 있다
+        if (StringUtil.isEmpty(member) || !MEMBER_ACTIVE.equals(member.getMembStat())) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 활성 계정과 프로필 노출 상태를 모두 만족하는 모임원을 조회한다
+        List<ReadingClubDto.MemberProfileDto> members = readingClubMapper.getClubMemberList(clubNumb);
+        // 접근 가능한 모임원 프로필 목록을 반환한다
+        return ResultData.success(members);
     }
 
     /**
