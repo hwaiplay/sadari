@@ -41,13 +41,17 @@ type ResolvedHeaderMenu = {
   transitionDirection: HeaderMenuTransitionDirection;
 };
 
+type HeaderProps = {
+  menuEnabled?: boolean;
+};
+
 /**
  * Header 화면 또는 컴포넌트를 구성한다
  *
  * @author HanWon.Jang
  * @return 구성된 화면 요소
  */
-function Header() {
+function Header({ menuEnabled = true }: HeaderProps) {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -137,6 +141,21 @@ function Header() {
         ? "back"
         : "forward";
 
+    if (!menuEnabled) {
+      hasResolvedMenuRef.current = true;
+      setResolvedMenu({
+        pathname: location.pathname,
+        currentMenu: null,
+        menuList: [],
+        transitionDirection,
+      });
+
+      return () => {
+
+        ignore = true;
+      };
+    }
+
     getUserMenuApi(location.pathname)
       .then((response) => {
 
@@ -171,7 +190,7 @@ function Header() {
 
       ignore = true;
     };
-  }, [location.pathname, navigationType]);
+  }, [location.pathname, menuEnabled, navigationType]);
 
   return (
     /* 사용자 화면의 이전 이동과 현재 메뉴 표시 영역 */
@@ -212,7 +231,7 @@ function Header() {
               </HomeLink>
             ))}
         </div>
-        <HeaderMenuDrawer menuList={menuList} />
+        {menuEnabled && <HeaderMenuDrawer menuList={menuList} />}
       </Container>
     </header>
   );

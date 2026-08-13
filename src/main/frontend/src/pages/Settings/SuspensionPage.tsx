@@ -169,6 +169,20 @@ function SuspensionPage() {
 
         {/* 정지 회원에게 허용된 로그아웃 버튼 영역 */}
         <div className={styles.actions}>
+          <button
+            className={styles.inquiryButton}
+            type="button"
+            onClick={() => navigate("/inquiry/write?category=SUSPENSION_APPEAL")}
+          >
+            이용정지 문의하기
+          </button>
+          <button
+            className={styles.inquiryListButton}
+            type="button"
+            onClick={() => navigate("/inquiry/list")}
+          >
+            문의 내역 보기
+          </button>
           <button className={styles.logoutButton} type="button" onClick={handleLogout}>
             {/* "로그아웃" */}
             로그아웃
