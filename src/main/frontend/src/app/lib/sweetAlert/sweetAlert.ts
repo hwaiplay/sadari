@@ -181,16 +181,16 @@ function ensureSweetAlertStyle() {
 
     .sadari-swal-title {
       margin: 0;
-      color: #1f1f1f;
-      font-size: 19px;
-      font-weight: 700;
+      color: #293038;
+      font-size: 18px;
+      font-weight: 600;
       line-height: 1.35;
       letter-spacing: 0;
     }
 
     .sadari-swal-text {
-      margin: 12px 0 0;
-      color: #5f6368;
+      margin: 4px 0 0;
+      color: #293038;
       font-size: 14px;
       line-height: 1.6;
       white-space: pre-line;
@@ -198,7 +198,7 @@ function ensureSweetAlertStyle() {
 
     .sadari-swal-html {
       margin: 12px 0 0;
-      color: #5f6368;
+      color: #293038;
       font-size: 14px;
       line-height: 1.6;
       text-align: left;
@@ -280,14 +280,14 @@ function ensureSweetAlertStyle() {
 
     .sadari-swal-button {
       min-width: 86px;
-      height: 38px;
+      height: 42px;
       border-radius: 8px;
       border: 1px solid #293038;
       padding: 0 16px;
       background: #293038;
       color: #ffffff;
       font-size: 14px;
-      font-weight: 600;
+      font-weight: 500;
       line-height: 1;
       cursor: pointer;
     }
