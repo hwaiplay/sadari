@@ -12,6 +12,7 @@
         <bind name="memberInvited" value="'INVITED'" />
         <bind name="applicationPending" value="'PENDING'" />
         <bind name="userActive" value="'ACTIVE'" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
     </sql>
 
@@ -311,6 +312,25 @@
           FROM TB_CLMEMX
          WHERE CLUB_NUMB = #{clubNumb}
            AND USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 실제 프로필 연동 전까지 활성 모임원에게 공통 기본 프로필 이미지를 제공한다. -->
+    <select id="getClubMemberList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberProfileDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getClubMemberList */
+               MEMBER.USER_NUMB
+             , USERX.USER_NICK
+             , '/img/common/icon-user.svg' AS PORF_PATH
+             , MEMBER.MEMB_ROLE
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+      ORDER BY CASE WHEN MEMBER.MEMB_ROLE = #{ownerRole} THEN 0 ELSE 1 END
+             , MEMBER.JOIN_DATE
+             , MEMBER.USER_NUMB
     </select>
 
     <!-- 모임 정원에서 제외할 만료된 초대 예약석을 물리 삭제한다. -->

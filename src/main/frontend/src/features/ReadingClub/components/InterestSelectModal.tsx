@@ -1,6 +1,10 @@
+import { message } from "@/app/messages/message";
+import { ActionButton } from "@/components/Button/ActionButton";
 import type { UserInterest } from "@/features/User/api/userApi";
 import { useMemo, useState } from "react";
-import * as styles from "@/pages/ReadingClub/ReadingClub.css";
+import { createPortal } from "react-dom";
+import * as styles from "./InterestSelectModal.css.ts";
+import {style} from "@vanilla-extract/css";
 
 type InterestSelectModalProps = {
   catalog: UserInterest[];
@@ -53,17 +57,28 @@ export default function InterestSelectModal({
     });
   };
 
-  // 웰컴 관심분야 선택과 같은 칩 구조의 팝업을 반환한다
-  return (
+  // 페이지 전환 stacking context 밖에서 최상위 관심분야 선택 팝업을 반환한다
+  return createPortal(
     <div className={styles.overlay} role="presentation">
       <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="interest-modal-title">
         {/* 팝업 제목과 선택 조건 영역 */}
         <header className={styles.modalHeader}>
           <div>
-            <h2 id="interest-modal-title" className={styles.modalTitle}>관심분야 선택</h2>
-            <p className={styles.modalDescription}>좋아하는 독서 분야를 선택해 주세요.{maximum ? ` 최대 ${maximum}개까지 선택할 수 있어요.` : ""}</p>
+            <h2 id="interest-modal-title" className={styles.modalTitle}>
+              {/* 관심 카테고리 선택 */}
+              {message("frontend.readingClub.interest.title")}
+            </h2>
+            <p className={styles.modalDescription}>
+              {/* 좋아하는 독서 분야를 선택해 주세요 */}
+              {message("frontend.readingClub.interest.description")}
+              {maximum ? `\n${message("frontend.readingClub.interest.maximum", [maximum])}` : ""}
+            </p>
           </div>
-          {onClose && <button className={styles.button} type="button" onClick={onClose}>닫기</button>}
+          {onClose && (
+            <button className={styles.closeButton} type="button" onClick={onClose}>
+              <img src="/img/icons/icon-close.svg" alt={message("frontend.readingClub.interest.close")} />
+            </button>
+          )}
         </header>
         {/* 대분류별 관심분야 선택 칩 영역 */}
         <div className={styles.modalBody}>
@@ -82,9 +97,20 @@ export default function InterestSelectModal({
         </div>
         {/* 선택 저장 영역 */}
         <footer className={styles.modalActions}>
-          <button className={styles.button} type="button" disabled={selectedCodes.size < minimum} onClick={() => onSave(Array.from(selectedCodes))}>선택 완료</button>
+          <ActionButton
+            type="button"
+            variant="primary"
+            size="md"
+            width="full"
+            disabled={selectedCodes.size < minimum}
+            onClick={() => onSave(Array.from(selectedCodes))}
+          >
+            {/* 선택 완료 */}
+            {message("frontend.readingClub.interest.save")}
+          </ActionButton>
         </footer>
       </section>
-    </div>
+    </div>,
+    document.body,
   );
 }

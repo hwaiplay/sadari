@@ -28,7 +28,7 @@ import UserReportCompletePage from "@/pages/UserReport/UserReportCompletePage";
 import ErrorPage from "@/pages/Error/ErrorPage";
 import MyClubPage from "@/pages/ReadingClub/MyClubPage";
 import FindClubPage from "@/pages/ReadingClub/FindClubPage";
-import ClubCreatePage from "@/pages/ReadingClub/ClubCreatePage";
+import SetClubPage from "@/pages/ReadingClub/SetClubPage.tsx";
 import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
 import NoticeListPage from "@/pages/Notice/NoticeListPage";
 import NoticeDetailPage from "@/pages/Notice/NoticeDetailPage";
@@ -153,7 +153,7 @@ const Router = () => {
           {/* 독서 모임 1차 기능 */}
           <Route path="/reading-clubs/mine" element={<MyClubPage />} />
           <Route path="/reading-clubs/find" element={<FindClubPage />} />
-          <Route path="/reading-clubs/new" element={<ClubCreatePage />} />
+          <Route path="/reading-clubs/set" element={<SetClubPage />} />
           <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}

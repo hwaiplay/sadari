@@ -20,7 +20,9 @@ export const button = style({
       outlineOffset: "2px",
     },
     "&:disabled": {
-      opacity: 0.5,
+      borderColor: vars.color.gray300,
+      background: "#ffffff",
+      color: vars.color.gray500,
       cursor: "default",
     },
   },
@@ -40,7 +42,7 @@ export const variant = styleVariants({
   secondary: {
     borderColor: vars.color.gray400,
     backgroundColor: "#ffffff",
-    color: vars.color.gray700,
+    color: vars.color.gray900,
     selectors: {
       "&:hover:not(:disabled)": {
         borderColor: vars.color.gray500,
