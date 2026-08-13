@@ -105,7 +105,7 @@ export const statsValue = style({
   alignItems: "center",
   justifyContent: "flex-end",
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "14px",
   lineHeight: 1.45,
   color: vars.color.black,
   letterSpacing: 0,
@@ -113,17 +113,34 @@ export const statsValue = style({
   wordBreak: "break-word",
 });
 
-export const statusRead = style({
-  color: vars.color.black,
-});
+export const readingStatus =style({
+  borderRadius: 99999,
+  padding:'4px 10px',
+})
 
-export const statusDone = style({
-  color: vars.color.brandText,
-});
+export const statusRead = style([
+  readingStatus,
+  {
+    backgroundColor: vars.color.gray600,
+    color: "#ffffff",
+  }
+]);
 
-export const statusStop = style({
-  color: vars.color.negative,
-});
+export const statusDone = style([
+  readingStatus,
+  {
+    color: vars.color.brandText,
+    backgroundColor: vars.color.brandBg,
+  }
+]);
+
+export const statusStop = style([
+  readingStatus,
+  {
+    color: vars.color.negative,
+    backgroundColor: vars.color.negativeBg,
+  }
+]);
 
 export const gradeValue = style([
   statsValue,

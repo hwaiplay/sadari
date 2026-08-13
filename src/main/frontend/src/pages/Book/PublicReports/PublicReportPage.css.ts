@@ -209,8 +209,8 @@ export const statusDone = style([
 export const statusReading = style([
   statusPill,
   {
-    border: "1px solid #696969",
-    backgroundColor: "#696969",
+    border: `1px solid ${vars.color.gray600}`,
+    backgroundColor: vars.color.gray600,
     color: "#ffffff",
   },
 ]);
