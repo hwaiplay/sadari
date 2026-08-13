@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
+ * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  */
 @Service
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public class SocialServiceImpl implements SocialService {
 
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
-     * 버튼명 판단은 MySQL 함수 FN_GET_FOLW_STAT에 위임하여 화면, 서비스, SQL이 서로 다른 기준을 갖지 않도록 한다.
+     * 버튼명 판단은 소셜 Mapper가 팔로우 관계와 공통코드를 함께 조회하여 화면과 서버가 같은 기준을 사용하게 한다.
      *
      * @author SeungHyeon.Kang
      * @param req 로그인 사용자 번호와 상대 사용자 번호
