@@ -17,6 +17,7 @@ package org.our.sadari.global.common.constant;
  * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
  * 2026-08-05        SeungHyeon.Kang       계층형 독서 관심분야 공통코드로 통합
  * 2026-08-12        OpenAI Codex        알림 아이콘 기본 상황 코드 추가
+ * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 추가
  */
 public final class Constant {
 
@@ -55,6 +56,8 @@ public final class Constant {
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 회원 상태 공통코드
     public static final String CODE_USER_STAT = "USER_STAT";
+    // 팔로우 버튼 상태 공통코드
+    public static final String CODE_FOLLOW_STAT = "FOLW_STAT";
     // 자동 닉네임 주어 공통코드
     public static final String CODE_NICK_SUBJ = "NICK_SUBJ";
     // 자동 닉네임 서술어 공통코드
@@ -74,6 +77,12 @@ public final class Constant {
     public static final String LIKE_TARGET_REPORT = "REPORT";
     // 좋아요 대상 댓글 설정값
     public static final String LIKE_TARGET_REPLY = "REPLY";
+    // 상대를 팔로우하지 않는 기본 버튼 상태
+    public static final String FOLLOW_STAT_FOLLOW = "FOLLOW";
+    // 로그인 사용자가 상대를 팔로우하는 버튼 상태
+    public static final String FOLLOW_STAT_FOLLOWING = "FOLLOWING";
+    // 상대만 로그인 사용자를 팔로우하여 맞팔로우할 수 있는 버튼 상태
+    public static final String FOLLOW_STAT_BOTH_FOLW = "BOTH_FOLW";
     // 알림 상황 좋아요 설정값
     public static final String ALIM_SITU_LIKE = "LIKE";
     // 알림 상황 팔로우 설정값
