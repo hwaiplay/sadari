@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    정지 회원 문의 유형 강제와 현재 정지 문의 조회 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -36,6 +37,17 @@ public class InquiryServiceImpl implements InquiryService {
     private static final String SUSPENSION_APPEAL = "SUSPENSION_APPEAL";
     // 고객문의 데이터 접근 객체
     private final InquiryMapper inquiryMapper;
+
+    @Override
+    public ResultData getSuspInquiryNumb(Long userNumb) {
+
+        if (!Constant.USER_STAT_SUSPENDED.equals(getUserStat(userNumb))) {
+            // 정지 상태가 아닌 계정에는 정지 이의제기 이동 정보를 제공하지 않는다
+            return ResultData.fail(ResultEnum.FORBIDDEN);
+        }
+        // 현재 활성 정지 이후 작성된 최신 이의제기 번호가 없으면 null을 반환한다
+        return ResultData.success(inquiryMapper.getSuspInquiryNumb(userNumb));
+    }
 
     @Override
     public ResultData getInquiryList(Long userNumb, int page) {
@@ -85,7 +97,8 @@ public class InquiryServiceImpl implements InquiryService {
     @Transactional
     public ResultData setInquiry(Long userNumb, InquiryCreateDto inquiryCreateDto) {
 
-        if (!isInquiryUser(userNumb)) {
+        String userStat = getUserStat(userNumb);
+        if (!isInquiryUserStat(userStat)) {
             // 고객문의 접근이 허용되지 않은 계정 상태 안내를 반환한다
             return ResultData.fail(ResultEnum.FORBIDDEN);
         }
@@ -95,6 +108,11 @@ public class InquiryServiceImpl implements InquiryService {
         }
         if (inquiryMapper.getInquiryCategoryCnt(inquiryCreateDto.getInqrCatg()) != 1) {
             // 사용 중이지 않은 고객문의 카테고리 안내를 반환한다
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        if (Constant.USER_STAT_SUSPENDED.equals(userStat)
+                && !SUSPENSION_APPEAL.equals(inquiryCreateDto.getInqrCatg().trim())) {
+            // 정지 회원은 화면 값 변조 여부와 관계없이 이용정지 이의제기만 접수할 수 있다
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
@@ -128,11 +146,37 @@ public class InquiryServiceImpl implements InquiryService {
      */
     private boolean isInquiryUser(Long userNumb) {
 
+        String userStat = getUserStat(userNumb);
+        // 정상 회원과 이용정지 회원만 1차 고객문의에 접근하도록 상태를 반환한다
+        return isInquiryUserStat(userStat);
+    }
+
+    /**
+     * 인증 사용자의 현재 계정 상태를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 사용자 번호
+     * @return 현재 계정 상태 또는 인증 사용자가 없으면 null
+     */
+    private String getUserStat(Long userNumb) {
+
         if (StringUtil.isEmpty(userNumb)) {
-            // 인증 사용자가 없으면 고객문의 접근을 허용하지 않는다
-            return false;
+            // 인증 사용자가 없으면 상태 조회를 수행하지 않는다
+            return null;
         }
-        String userStat = inquiryMapper.getUserStat(userNumb);
+        // 고객문의 접근 판정에 사용할 계정 원본 상태를 반환한다
+        return inquiryMapper.getUserStat(userNumb);
+    }
+
+    /**
+     * 고객문의 기능을 이용할 수 있는 계정 상태인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userStat 확인할 계정 상태
+     * @return 정상 또는 이용정지 상태이면 true
+     */
+    private boolean isInquiryUserStat(String userStat) {
+
         // 정상 회원과 이용정지 회원만 1차 고객문의에 접근하도록 상태를 반환한다
         return Constant.USER_STAT_ACTIVE.equals(userStat)
                 || Constant.USER_STAT_SUSPENDED.equals(userStat);

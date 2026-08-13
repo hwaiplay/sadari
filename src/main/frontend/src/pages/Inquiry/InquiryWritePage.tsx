@@ -1,5 +1,6 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
+import { useCheckAuth } from "@/features/Auth/hooks/useCheckAuth";
 import { setInquiryApi } from "@/features/Inquiry/api/inquiryApi";
 import { type ChangeEvent, type FormEvent, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -50,6 +51,7 @@ function getInitialCategory(requestedCategory: string | null): InquiryCategory {
 function InquiryWritePage() {
 
   const navigate = useNavigate();
+  const { isSuspended } = useCheckAuth();
   const [searchParams] = useSearchParams();
   const requestedCategory = searchParams.get("category");
   const [inqrCatg, setInqrCatg] = useState<InquiryCategory>(getInitialCategory(requestedCategory));
@@ -104,7 +106,7 @@ function InquiryWritePage() {
 
     try {
       const inqrNumb = await setInquiryApi({
-        inqrCatg,
+        inqrCatg: isSuspended ? "SUSPENSION_APPEAL" : inqrCatg,
         inqrTitl: inqrTitl.trim(),
         inqrCntn: inqrCntn.trim(),
       });
@@ -129,16 +131,22 @@ function InquiryWritePage() {
           <span className={styles.label}>
             문의 유형<span className={styles.required} aria-hidden="true">*</span>
           </span>
-          <CustomSelect<InquiryCategory>
-            value={inqrCatg}
-            options={categories}
-            ariaLabel="문의 유형 선택"
-            className={styles.categorySelect}
-            triggerClassName={styles.categorySelectTrigger}
-            optionListClassName={styles.categoryOptionList}
-            optionClassName={styles.categoryOption}
-            onChange={setInqrCatg}
-          />
+          {isSuspended ? (
+            <div className={styles.fixedCategory} aria-label="문의 유형">
+              이용정지 이의제기
+            </div>
+          ) : (
+            <CustomSelect<InquiryCategory>
+              value={inqrCatg}
+              options={categories}
+              ariaLabel="문의 유형 선택"
+              className={styles.categorySelect}
+              triggerClassName={styles.categorySelectTrigger}
+              optionListClassName={styles.categoryOptionList}
+              optionClassName={styles.categoryOption}
+              onChange={setInqrCatg}
+            />
+          )}
         </div>
 
         <div className={styles.field}>

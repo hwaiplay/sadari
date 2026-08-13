@@ -12,8 +12,18 @@ import org.our.sadari.inquiry.dto.InquiryCreateDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    현재 정지 이의제기 문의 조회 계약 추가
  */
 public interface InquiryService {
+
+    /**
+     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @return 현재 이용정지에 연결된 최신 문의 번호 응답
+     */
+    ResultData getSuspInquiryNumb(Long userNumb);
 
     ResultData getInquiryList(Long userNumb, int page);
 

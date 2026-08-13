@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    현재 정지 이의제기 문의 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -31,6 +32,21 @@ public class InquiryController {
 
     // 고객문의 업무 처리 서비스
     private final InquiryService inquiryService;
+
+    /**
+     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @return 현재 이용정지에 연결된 최신 문의 번호
+     */
+    @GetMapping("/suspension-appeal")
+    public ResultData getSuspInquiryNumb(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
+
+        // 정지 안내 화면의 문의 버튼 이동에 사용할 본인 문의 번호를 반환한다
+        return inquiryService.getSuspInquiryNumb(userNumb);
+    }
 
     @GetMapping
     public ResultData getInquiryList(

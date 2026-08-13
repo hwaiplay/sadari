@@ -15,6 +15,7 @@ import org.our.sadari.inquiry.dto.InquiryDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    현재 정지 이의제기 문의 번호 조회 추가
  */
 @Mapper
 public interface InquiryMapper {
@@ -24,6 +25,15 @@ public interface InquiryMapper {
     int getInquiryCategoryCnt(@Param("inqrCatg") String inqrCatg);
 
     Long getLatestSuspensionNumb(@Param("userNumb") Long userNumb);
+
+    /**
+     * 현재 활성 정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 사용자 번호
+     * @return 현재 정지에 연결된 최신 문의 번호
+     */
+    Long getSuspInquiryNumb(@Param("userNumb") Long userNumb);
 
     int getOpenSuspensionInquiryCnt(@Param("userNumb") Long userNumb, @Param("spndNumb") Long spndNumb);
 

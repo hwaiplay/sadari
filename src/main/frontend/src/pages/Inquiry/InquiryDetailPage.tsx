@@ -1,8 +1,10 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import Loading from "@/components/Loading/Loading";
+import { useCheckAuth } from "@/features/Auth/hooks/useCheckAuth";
 import { getInquiryDetailApi, type Inquiry } from "@/features/Inquiry/api/inquiryApi";
+import { clsx } from "clsx";
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "./InquiryPage.css";
 
 /**
@@ -13,9 +15,37 @@ import * as styles from "./InquiryPage.css";
  */
 function InquiryDetailPage() {
 
+  const navigate = useNavigate();
+  const { isSuspended } = useCheckAuth();
   const { inqrNumb } = useParams();
   const [inquiry, setInquiry] = useState<Inquiry | null>(null);
   const [error, setError] = useState("");
+
+  /**
+   * 정지 회원을 문의 상세 진입 전 정지 안내 화면으로 이동시킵니다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없습니다
+   */
+  const handleSuspensionBack = (): void => {
+
+    navigate("/suspension", { replace: true });
+  };
+
+  // 정지 회원이 문의 상세와 오류 화면에서 빠져나갈 수 있는 전용 이동 버튼입니다
+  const suspensionBackButton = isSuspended ? (
+    <div className={styles.suspensionBackBar}>
+      <div className={styles.suspensionBackInner}>
+        <button
+          className={styles.submitButton}
+          type="button"
+          onClick={handleSuspensionBack}
+        >
+          돌아가기
+        </button>
+      </div>
+    </div>
+  ) : null;
 
   useEffect(() => {
 
@@ -50,24 +80,26 @@ function InquiryDetailPage() {
 
   if (!inquiry && !error) {
     return (
-      <div className={styles.page}>
+      <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
         <Loading title="고객문의를 불러오는 중입니다" isFullScreen={false} />
+        {suspensionBackButton}
       </div>
     );
   }
 
   if (error || !inquiry) {
     return (
-      <div className={styles.page}>
+      <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
         <section className={styles.statusPanel} aria-live="polite">
           <p className={styles.statusText}>{error}</p>
         </section>
+        {suspensionBackButton}
       </div>
     );
   }
 
   return (
-    <div className={styles.page}>
+    <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
       <article>
         <header className={styles.detailHeader}>
           <h2 className={styles.detailTitle}>{inquiry.inqrTitl}</h2>
@@ -104,6 +136,7 @@ function InquiryDetailPage() {
           <p className={styles.statusText}>답변을 준비하고 있습니다.<br />조금만 기다려주세요.</p>
         )}
       </section>
+      {suspensionBackButton}
     </div>
   );
 }

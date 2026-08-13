@@ -9,6 +9,10 @@ export const page = style({
   boxSizing: "border-box",
 });
 
+export const suspendedDetailPage = style({
+  paddingBottom: `calc(112px + env(safe-area-inset-bottom, 0px))`,
+});
+
 export const intro = style({
   display: "flex",
   alignItems: "flex-start",
@@ -268,6 +272,22 @@ export const categorySelectTrigger = style({
   },
 });
 
+export const fixedCategory = style({
+  display: "flex",
+  alignItems: "center",
+  width: "100%",
+  height: "48px",
+  padding: "0 15px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "10px",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray700,
+  fontFamily: vars.font.medium,
+  fontSize: "14px",
+  lineHeight: 1.4,
+  boxSizing: "border-box",
+});
+
 export const categoryOptionList = style({
   top: "calc(100% + 8px)",
   right: "auto",
@@ -406,6 +426,26 @@ export const submitButton = style({
       outlineOffset: "2px",
     },
   },
+});
+
+export const suspensionBackBar = style({
+  position: "fixed",
+  right: "var(--sadari-scrollbar-compensation, 0px)",
+  bottom: 0,
+  left: 0,
+  zIndex: 40,
+  padding: `12px 0 max(12px, env(safe-area-inset-bottom, 0px))`,
+  backgroundColor: vars.color.background,
+  boxShadow: "0 -6px 24px rgb(0 0 0 / 8%)",
+  boxSizing: "border-box",
+});
+
+export const suspensionBackInner = style({
+  width: "100%",
+  maxWidth: "600px",
+  margin: "0 auto",
+  padding: `0 ${vars.space.md}`,
+  boxSizing: "border-box",
 });
 
 export const error = style({

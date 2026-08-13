@@ -22,6 +22,7 @@ import org.our.sadari.user.dto.LoginHistoryDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.LoginHistoryMapper;
 import org.our.sadari.user.mapper.UserMapper;
+import org.our.sadari.user.mapper.UserWithdrawalMapper;
 import org.our.sadari.user.service.NicknameGenerationService;
 import org.our.sadari.user.service.UserSuspensionService;
 import org.springframework.stereotype.Service;
@@ -41,6 +42,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
  * 2026-07-30        SeungHyeon.Kang    정지 회원 재가입 차단과 기간 만료 복구
+ * 2026-08-13        SeungHyeon.Kang    탈퇴 후에도 남은 유효 제재 기준 Kakao 재가입 차단
  */
 @Service
 @RequiredArgsConstructor
@@ -69,6 +71,8 @@ public class AuthServiceImpl implements AuthService {
     private final NicknameGenerationService nicknameGenerationService;
     // 회원 정지 기간 만료와 로그인 상태 동기화 서비스
     private final UserSuspensionService userSuspensionService;
+    // 탈퇴 식별 이력과 이용 정지를 연결해 재가입 가능 여부를 조회하는 데이터 접근 객체
+    private final UserWithdrawalMapper userWithdrawalMapper;
 
     /**
      * Kakao 계정으로 신규 회원 등록과 JWT 로그인을 처리한다
@@ -140,6 +144,13 @@ public class AuthServiceImpl implements AuthService {
             userDto.setUserRole(AuthConstant.ROLE_USER);
             // savedUser 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
             if (StringUtil.isEmpty(savedUser)) {
+                // 과거 탈퇴 계정의 회원 번호 중 하나라도 유효한 정지가 남아 있으면 새 회원 번호를 발급하지 않는다
+                String userIdHash = userIdEncryptionService.hashForAudit(providerId);
+                if (userWithdrawalMapper.getActiveSuspensionCountByUserIdHash(userIdHash) > 0) {
+                    // 관리자 해제 전에는 같은 Kakao 계정의 재가입과 로그인을 차단한다
+                    return ResultData.fail(ResultEnum.AUTH_WITHDRAWN_SUSPENDED);
+                }
+
                 // 카카오 닉네임 대신 서비스 정책에 맞는 중복 없는 최초 닉네임을 발급한다
                 userDto.setUserNick(nicknameGenerationService.setGeneratedNickname());
                 // 신규 회원이 즉시 정상 이용 상태로 등록되도록 회원 상태를 설정한다

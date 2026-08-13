@@ -134,9 +134,9 @@ export const inquiryButton = style({
   color: "#ffffff",
 });
 
-export const inquiryListButton = style({
+export const withdrawalButton = style({
   ...actionButton,
-  border: "1px solid #78b991",
-  backgroundColor: "#eef8f2",
-  color: "#34704d",
+  border: `1px solid ${vars.color.gray300}`,
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
 });

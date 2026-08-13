@@ -11,6 +11,7 @@ import lombok.Getter;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-25        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 계정 인증 코드 추가
  */
 @Getter
 public enum ResultEnum {
@@ -128,7 +129,12 @@ public enum ResultEnum {
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
-    FORBIDDEN(1004, "auth.common.forbidden");
+    FORBIDDEN(1004, "auth.common.forbidden"),
+
+    /**
+     * 탈퇴한 과거 회원 번호에 유효한 이용 정지가 남아 신규 가입할 수 없는 경우이다.
+     */
+    AUTH_WITHDRAWN_SUSPENDED(1005, "auth.withdrawn.suspended");
 
     // 공통 응답 결과 코드
     private final int code;
