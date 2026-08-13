@@ -9,6 +9,14 @@ export const page = style({
   boxSizing: "border-box",
 });
 
+export const listPage = style([
+  page,
+  {
+    display: "flex",
+    flexDirection: "column",
+  },
+]);
+
 export const detailPage = style({
   paddingRight: "18px",
   paddingLeft: "18px",
@@ -19,15 +27,7 @@ export const suspendedDetailPage = style({
 });
 
 export const intro = style({
-  display: "flex",
-  alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: "16px",
   marginBottom: "22px",
-});
-
-export const introText = style({
-  minWidth: 0,
 });
 
 export const sectionTitle = style({
@@ -39,11 +39,16 @@ export const sectionTitle = style({
 });
 
 export const description = style({
-  margin: "5px 0 0",
+  margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: "13px",
   lineHeight: 1.55,
+});
+
+export const listWriteArea = style({
+  marginTop: "auto",
+  paddingTop: "24px",
 });
 
 export const actionButton = style({

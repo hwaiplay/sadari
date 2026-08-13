@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
 import { getInquiryListApi, type Inquiry } from "@/features/Inquiry/api/inquiryApi";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
@@ -88,15 +89,10 @@ function InquiryListPage() {
   }
 
   return (
-    <div className={styles.page}>
-      <section className={styles.intro} aria-labelledby="inquiry-list-title">
-        <div className={styles.introText}>
-          <h2 id="inquiry-list-title" className={styles.sectionTitle}>문의 내역</h2>
-          <p className={styles.description}>문의하신 내용과 관리자 답변을 확인할 수 있어요.</p>
-        </div>
-        <button className={styles.actionButton} type="button" onClick={handleWrite}>
-          문의하기
-        </button>
+    <div className={styles.listPage}>
+      {/* 고객문의 목록 안내 영역 */}
+      <section className={styles.intro} aria-label="고객문의 안내">
+        <p className={styles.description}>문의하신 내용과 관리자 답변을 확인할 수 있어요.</p>
       </section>
 
       {error && inquiries.length === 0 ? (
@@ -160,6 +156,14 @@ function InquiryListPage() {
       {error && inquiries.length > 0 && (
         <p className={styles.error} aria-live="polite">{error}</p>
       )}
+
+      {/* 고객문의 작성 버튼 영역 */}
+      <div className={styles.listWriteArea}>
+        <ActionButton variant="primary" size="lg" width="full" onClick={handleWrite}>
+          {/* "문의하기" */}
+          문의하기
+        </ActionButton>
+      </div>
     </div>
   );
 }
