@@ -10,6 +10,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [최초 로그인 웰컴 및 닉네임 정책](user-onboarding-policy.md) | 서비스 소개 슬라이드, 랜덤 닉네임 확정, 최초 1회 노출 |
 | [계정 비활성화 및 영구 탈퇴 정책](withdrawal-policy.md) | 계정 비활성화, 영구 탈퇴, 재인증, 복귀 및 삭제 |
 | [관리자 회원 이용 정지 정책](user-suspension-policy.md) | 기간·무기한 정지, 동일 Kakao 계정 차단, 해제와 상태 우선순위 |
+| [관리자 사용자 통계 정책](user-statistics-policy.md) | 실시간 사용자 현황, 활성 회원, 유지율과 이탈 추세 |
 | [독서 및 독후감 정책](reading-report-policy.md) | 독서 상태, 기간, 별점, 공개 여부, 도서 저장 |
 | [독서 목표 정책](reading-goal-policy.md) | 주간·월간·연간 목표, 수정 제한, 이전 목표 복사 |
 | [소셜 정책](social-policy.md) | 팔로우 상태, 좋아요, 공개 프로필 및 목록 |
