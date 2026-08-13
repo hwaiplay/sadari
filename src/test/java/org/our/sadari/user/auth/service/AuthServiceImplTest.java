@@ -11,6 +11,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.BeforeEach;
@@ -38,6 +39,9 @@ import org.our.sadari.user.mapper.UserWithdrawalMapper;
 import org.our.sadari.user.service.NicknameGenerationService;
 import org.our.sadari.user.service.UserSuspensionService;
 import org.springframework.context.support.StaticMessageSource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
 
 /**
  * fileName       : AuthServiceImplTest
@@ -50,6 +54,7 @@ import org.springframework.context.support.StaticMessageSource;
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 풀네임 코드 검증
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 Kakao 계정 재가입 차단 검증
+ * 2026-08-13        SeungHyeon.Kang    Kakao OAuth HTTP 오류 인증 실패 변환 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -120,6 +125,37 @@ class AuthServiceImplTest {
         assertEquals("NAVER", AuthConstant.PROV_NAVER);
         // Google 제공자 확장 시에도 축약형이 다시 저장되지 않도록 풀네임 계약을 검증한다
         assertEquals("GOOGLE", AuthConstant.PROV_GOOGLE);
+    }
+
+    /**
+     * Kakao가 인가 코드 교환을 거절하면 HTTP 예외 대신 공통 인증 실패를 반환하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception Kakao 인증 응답 대역 구성 중 발생
+     */
+    @Test
+    void kakaoLoginHandlesKakao4xx() throws Exception {
+        // 만료되거나 재사용된 인가 코드에 대한 Kakao 400 응답 예외를 생성한다
+        HttpClientErrorException kakaoException = HttpClientErrorException.create(
+                HttpStatus.BAD_REQUEST,
+                "Bad Request",
+                HttpHeaders.EMPTY,
+                new byte[0],
+                StandardCharsets.UTF_8
+        );
+
+        // 토큰 교환 단계에서 Kakao 인증 거절 예외가 발생하도록 구성한다
+        when(kakaoAuthProvider.getKakaoToken("expired-authorization-code")).thenThrow(kakaoException);
+
+        // 거절된 Kakao 인가 코드로 로그인을 요청한다
+        ResultData result = authService.kakaoLogin("expired-authorization-code", "127.0.0.1", "test-agent");
+
+        // 원시 HTTP 예외 대신 공통 인증 실패 코드가 반환되는지 검증한다
+        assertEquals(1001, result.getCode());
+        // 토큰 교환 실패 뒤 Kakao 사용자 정보 조회를 시작하지 않는지 검증한다
+        verify(kakaoAuthProvider, never()).getKakaoAccount(any(KakaoTokenDto.class));
+        // 외부 인증이 완료되지 않은 상태에서 회원 조회를 시작하지 않는지 검증한다
+        verify(userMapper, never()).getUserByIdxx(anyString());
     }
 
     /**

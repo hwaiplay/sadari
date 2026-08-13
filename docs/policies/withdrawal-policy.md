@@ -284,7 +284,7 @@
 - `src/main/frontend/src/features/reply/hooks/useReplyLike.ts`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `scripts/db/mysql/01-create.sql`
-- `scripts/db/mysql/05-withdrawn-suspension-index.sql`
+- `scripts/db/mysql/04-user-statistics-indexes.sql`
 - `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
 - `CT_POPUPX`

@@ -9,6 +9,11 @@ export const page = style({
   boxSizing: "border-box",
 });
 
+export const detailPage = style({
+  paddingRight: "18px",
+  paddingLeft: "18px",
+});
+
 export const suspendedDetailPage = style({
   paddingBottom: `calc(112px + env(safe-area-inset-bottom, 0px))`,
 });
