@@ -46,6 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String TOKEN_CHECK_API_URI = "/api/oauth/tokenCheck";
     // 정지 회원에게 허용할 정지 상태 조회 API URI
     private static final String SUSPENSION_STATUS_API_URI = "/api/user/suspension";
+    // 정지 회원에게 허용할 고객문의 API 접두사
+    private static final String INQUIRY_API_PREFIX = "/api/inquiries";
 
     // Jwt 외부 연동 제공 객체
     private final JwtProvider jwtProvider;
@@ -218,8 +220,10 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private boolean isSuspendedAllowedPath(String requestUri) {
 
-        // 정지 상태 확인과 인증 종료 경로만 허용한다
+        // 정지 상태 확인과 본인 고객문의 및 인증 종료 경로만 허용한다
         return SUSPENSION_STATUS_API_URI.equals(requestUri)
+                || requestUri.equals(INQUIRY_API_PREFIX)
+                || requestUri.startsWith(INQUIRY_API_PREFIX + "/")
                 || LOGOUT_API_URI.equals(requestUri)
                 || TOKEN_CHECK_API_URI.equals(requestUri);
     }

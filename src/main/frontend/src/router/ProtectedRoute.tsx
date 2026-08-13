@@ -44,7 +44,11 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
 
   // 정지 회원은 정지 안내 화면 외의 서비스 화면에 접근할 수 없습니다.
   if (isSuspended) {
-    if (location.pathname !== "/suspension") {
+    const isInquiryPath = location.pathname === "/inquiry/list"
+      || location.pathname === "/inquiry/write"
+      || location.pathname.startsWith("/inquiry/detail/");
+
+    if (location.pathname !== "/suspension" && !isInquiryPath) {
       return <Navigate to="/suspension" replace />;
     }
 

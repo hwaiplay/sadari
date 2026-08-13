@@ -126,3 +126,17 @@ export const logoutButton = style({
   backgroundColor: vars.color.black,
   color: "#ffffff",
 });
+
+export const inquiryButton = style({
+  ...actionButton,
+  border: "1px solid #34704d",
+  backgroundColor: "#34704d",
+  color: "#ffffff",
+});
+
+export const inquiryListButton = style({
+  ...actionButton,
+  border: "1px solid #78b991",
+  backgroundColor: "#eef8f2",
+  color: "#34704d",
+});
