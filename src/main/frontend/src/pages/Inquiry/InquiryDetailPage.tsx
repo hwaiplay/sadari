@@ -80,7 +80,7 @@ function InquiryDetailPage() {
 
   if (!inquiry && !error) {
     return (
-      <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
+      <div className={clsx(styles.page, styles.detailPage, isSuspended && styles.suspendedDetailPage)}>
         <Loading title="고객문의를 불러오는 중입니다" isFullScreen={false} />
         {suspensionBackButton}
       </div>
@@ -89,7 +89,7 @@ function InquiryDetailPage() {
 
   if (error || !inquiry) {
     return (
-      <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
+      <div className={clsx(styles.page, styles.detailPage, isSuspended && styles.suspendedDetailPage)}>
         <section className={styles.statusPanel} aria-live="polite">
           <p className={styles.statusText}>{error}</p>
         </section>
@@ -99,7 +99,7 @@ function InquiryDetailPage() {
   }
 
   return (
-    <div className={clsx(styles.page, isSuspended && styles.suspendedDetailPage)}>
+    <div className={clsx(styles.page, styles.detailPage, isSuspended && styles.suspendedDetailPage)}>
       <article>
         <header className={styles.detailHeader}>
           <h2 className={styles.detailTitle}>{inquiry.inqrTitl}</h2>

@@ -477,14 +477,16 @@ SELECT B.BOOK_NUMB
 - 공통코드 추가를 위한 별도 SQL 파일을 생성하거나 `scripts/db/mysql/01-create.sql` 및 다른 SQL 파일에 중복 DML을 작성하지 않습니다.
 - 관리자 메뉴, 사용자 메뉴 등 신규 기능을 운영 환경에서 사용하는 데 필요한 다른 기준 데이터나 초기 데이터를 추가 또는 변경하면 같은 작업에서 실행 가능한 DML을 `scripts/db/mysql/output/02-admin-insert.sql`에 추가하거나 수정합니다.
 - 개발 DB에만 데이터를 등록하고 `scripts/db/mysql/output/02-admin-insert.sql` 반영을 생략한 상태로 작업을 완료하지 않습니다.
-- 테이블 구조 또는 기준 데이터 변경을 위해 `03-*.sql`, `09-*.sql` 같은 기능별 DDL, DML 또는 마이그레이션 SQL 파일을 새로 만들지 않습니다.
-- 실행 중인 데이터베이스에 변경을 반영할 때도 `01-create.sql`과 `02-admin-insert.sql`을 원본으로 먼저 갱신하고, 실제 적용 명령은 별도 SQL 파일로 보관하지 않습니다.
+- 테이블 구조 또는 기준 데이터 변경을 위해 `03-*.sql`, `05-*.sql`, `09-*.sql` 같은 기능별 DDL, DML 또는 마이그레이션 SQL 파일을 새로 만들지 않습니다.
+- 실행 중인 데이터베이스에 변경을 반영할 때도 `01-create.sql`과 `02-admin-insert.sql`을 원본으로 먼저 갱신하고, 인덱스 적용용 `04-user-statistics-indexes.sql` 외에는 실제 적용 명령을 별도 SQL 파일로 보관하지 않습니다.
 
 ### 14.2 스키마 정의
 
-- 테이블, 컬럼, PK, FK, 제약조건 및 인덱스를 추가하거나 변경할 때는 `scripts/db/mysql/01-create.sql`의 `CREATE TABLE` 정의만 수정합니다.
-- 스키마 정리를 위한 `ALTER` 문이나 기능별 CREATE 및 마이그레이션 SQL 파일을 생성하지 않습니다.
-- 필요한 PK, FK, 인덱스 및 테이블·컬럼 코멘트를 `scripts/db/mysql/01-create.sql`의 생성 DDL에 함께 반영하여 신규 운영 환경에서 해당 파일만으로 동일한 스키마를 생성할 수 있게 합니다.
+- 테이블, 컬럼, PK, FK 및 제약조건을 추가하거나 변경할 때는 `scripts/db/mysql/01-create.sql`의 `CREATE TABLE` 정의를 수정합니다.
+- 인덱스를 추가하거나 변경할 때는 신규 운영 환경용 `scripts/db/mysql/01-create.sql`의 `CREATE TABLE` 정의와 기존 운영 환경 적용용 `scripts/db/mysql/04-user-statistics-indexes.sql`을 같은 작업에서 함께 수정합니다.
+- 인덱스 적용 `ALTER TABLE`은 `scripts/db/mysql/04-user-statistics-indexes.sql`에만 작성하고 `05-*.sql` 등 별도 인덱스 SQL 파일을 생성하지 않습니다.
+- 인덱스 이외의 스키마 정리를 위한 `ALTER` 문이나 기능별 CREATE 및 마이그레이션 SQL 파일을 생성하지 않습니다.
+- 필요한 PK, FK, 제약조건, 인덱스 및 테이블·컬럼 코멘트를 `scripts/db/mysql/01-create.sql`의 생성 DDL에 함께 반영하여 신규 운영 환경에서 해당 파일만으로 동일한 스키마를 생성할 수 있게 합니다.
 
 ### 14.3 구글 스프레드시트 테이블 명세 동기화
 

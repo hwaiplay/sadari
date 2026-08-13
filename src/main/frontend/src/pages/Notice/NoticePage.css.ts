@@ -205,11 +205,18 @@ export const detailHeader = style({
   borderBottom: `1px solid ${vars.color.gray200}`,
 });
 
+export const detailInfo = style({
+  display: "flex",
+  alignItems: "center",
+  flexWrap: "wrap",
+  gap: "7px",
+  marginTop: "4px",
+});
+
 export const detailMeta = style({
   display: "flex",
   alignItems: "center",
   gap: "7px",
-  marginBottom: "10px",
 });
 
 export const detailTitle = style({

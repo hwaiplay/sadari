@@ -28,6 +28,8 @@ import org.our.sadari.user.service.UserSuspensionService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.interceptor.TransactionAspectSupport;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
 
 /**
  * fileName       : AuthServiceImpl
@@ -43,6 +45,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
  * 2026-07-30        SeungHyeon.Kang    정지 회원 재가입 차단과 기간 만료 복구
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후에도 남은 유효 제재 기준 Kakao 재가입 차단
+ * 2026-08-13        SeungHyeon.Kang    Kakao OAuth HTTP 예외 인증 실패 변환
  */
 @Service
 @RequiredArgsConstructor
@@ -103,9 +106,25 @@ public class AuthServiceImpl implements AuthService {
             kakaoAccountDto = kakaoAuthProvider.getKakaoAccount(kakaoTokenDto);
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 만료되거나 재사용된 인가 코드 등 Kakao가 거절한 인증 요청은 공통 인증 실패로 변환한다
+        catch (HttpClientErrorException e) {
+            // Kakao 오류 응답 본문과 인가 코드를 제외하고 상태 코드만 경고 로그에 남긴다
+            log.warn("Kakao OAuth request rejected. status={}", e.getStatusCode().value());
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // Kakao 서버 오류와 연결 실패도 원시 통신 예외가 컨트롤러 밖으로 전파되지 않도록 변환한다
+        catch (RestClientException e) {
+            // 외부 응답 본문이나 인증값을 기록하지 않고 장애 종류만 오류 로그에 남긴다
+            log.error("Kakao OAuth request failed. type={}", e.getClass().getSimpleName());
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // Kakao 성공 응답을 DTO로 변환할 수 없으면 공통 인증 실패로 변환한다
         catch (JsonProcessingException e) {
-            // 실패 원인과 처리 대상을 오류 로그로 남긴다
+            // 외부 응답 원문을 제외하고 파싱 실패 메시지만 오류 로그에 남긴다
             log.error("Kakao OAuth response parse failed. message={}", e.getMessage());
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
