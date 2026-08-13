@@ -29,6 +29,8 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-07-30        SeungHyeon.Kang    비활성화 회원의 일반 API 접근 제한 추가
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
  * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
+ * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 API 접근 허용
+ * 2026-08-13        SeungHyeon.Kang    제한 상태의 허용된 변경 요청을 위한 CSRF Token 조회 허용
  */
 @Component
 @RequiredArgsConstructor
@@ -44,6 +46,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String LOGOUT_API_URI = "/api/oauth/logout";
     // 영구 삭제 대기 회원에게 허용할 토큰 검사 API URI
     private static final String TOKEN_CHECK_API_URI = "/api/oauth/tokenCheck";
+    // 제한 상태 회원의 허용된 변경 요청에 사용할 CSRF Token API URI
+    private static final String CSRF_TOKEN_API_URI = "/api/oauth/csrf";
     // 정지 회원에게 허용할 정지 상태 조회 API URI
     private static final String SUSPENSION_STATUS_API_URI = "/api/user/suspension";
     // 정지 회원에게 허용할 고객문의 API 접두사
@@ -194,7 +198,8 @@ public class JwtFilter extends OncePerRequestFilter {
         // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
         return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || LOGOUT_API_URI.equals(requestUri)
-                || TOKEN_CHECK_API_URI.equals(requestUri);
+                || TOKEN_CHECK_API_URI.equals(requestUri)
+                || CSRF_TOKEN_API_URI.equals(requestUri);
     }
 
     /**
@@ -208,7 +213,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 재로그인 전에는 인증 상태 확인과 로그아웃 경로만 허용한다
         return LOGOUT_API_URI.equals(requestUri)
-                || TOKEN_CHECK_API_URI.equals(requestUri);
+                || TOKEN_CHECK_API_URI.equals(requestUri)
+                || CSRF_TOKEN_API_URI.equals(requestUri);
     }
 
     /**
@@ -222,9 +228,11 @@ public class JwtFilter extends OncePerRequestFilter {
 
         // 정지 상태 확인과 본인 고객문의 및 인증 종료 경로만 허용한다
         return SUSPENSION_STATUS_API_URI.equals(requestUri)
+                || requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || requestUri.equals(INQUIRY_API_PREFIX)
                 || requestUri.startsWith(INQUIRY_API_PREFIX + "/")
                 || LOGOUT_API_URI.equals(requestUri)
-                || TOKEN_CHECK_API_URI.equals(requestUri);
+                || TOKEN_CHECK_API_URI.equals(requestUri)
+                || CSRF_TOKEN_API_URI.equals(requestUri);
     }
 }

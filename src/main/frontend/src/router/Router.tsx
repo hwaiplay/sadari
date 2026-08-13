@@ -92,6 +92,16 @@ const Router = () => {
           }
         />
 
+        {/* 이용 정지 회원의 영구 탈퇴 전용 화면 */}
+        <Route
+          path="/suspension/withdrawal"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPage hardOnly />
+            </ProtectedRoute>
+          }
+        />
+
         {/* 정상 및 이용정지 사용자의 고객문의 화면 */}
         <Route
           element={

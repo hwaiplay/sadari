@@ -32,6 +32,23 @@
          LIMIT 1
     </select>
 
+    <!-- 현재 활성 정지가 시작된 뒤 접수한 최신 이의제기 문의 번호를 조회한다 -->
+    <select id="getSuspInquiryNumb" resultType="long">
+        SELECT /* getSuspInquiryNumb */
+               I.INQR_NUMB
+          FROM CT_INQURY I
+          JOIN TH_USSPND S
+            ON S.SPND_NUMB = I.SPND_NUMB
+           AND S.USER_NUMB = I.USER_NUMB
+         WHERE I.USER_NUMB = #{userNumb}
+           AND I.INQR_CATG = 'SUSPENSION_APPEAL'
+           AND I.REGI_DATE >= S.STRT_DATE
+           AND S.SPND_STAT = 'ACTIVE'
+      ORDER BY I.REGI_DATE DESC
+             , I.INQR_NUMB DESC
+         LIMIT 1
+    </select>
+
     <!-- 동일 정지 이력에 처리 중인 이의제기가 있는지 확인한다 -->
     <select id="getOpenSuspensionInquiryCnt" resultType="int">
         SELECT /* getOpenSuspensionInquiryCnt */

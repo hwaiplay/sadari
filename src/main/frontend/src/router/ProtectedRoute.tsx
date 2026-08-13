@@ -47,8 +47,9 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     const isInquiryPath = location.pathname === "/inquiry/list"
       || location.pathname === "/inquiry/write"
       || location.pathname.startsWith("/inquiry/detail/");
+    const isHardWithdrawalPath = location.pathname === "/suspension/withdrawal";
 
-    if (location.pathname !== "/suspension" && !isInquiryPath) {
+    if (location.pathname !== "/suspension" && !isInquiryPath && !isHardWithdrawalPath) {
       return <Navigate to="/suspension" replace />;
     }
 

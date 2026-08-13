@@ -36,6 +36,19 @@ export type InquiryCreate = {
 };
 
 /**
+ * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 현재 정지에 연결된 최신 문의 번호 또는 문의가 없으면 null
+ */
+export async function getSuspInquiryNumbApi(): Promise<number | null> {
+
+  const response = await api.get<ResultData<number | null>>("/inquiries/suspension-appeal");
+  const result = assertResultDataSuccess(response.data);
+  return typeof result.data === "number" ? result.data : null;
+}
+
+/**
  * 인증 사용자의 고객문의 목록을 조회한다
  *
  * @author SeungHyeon.Kang

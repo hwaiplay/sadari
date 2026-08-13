@@ -84,18 +84,23 @@
 - 영구 탈퇴 요청으로 `DELETE_PENDING` 상태가 적용되면 저장하지 않은 프로필 및 배경 이미지 임시 선택본은 즉시 물리 삭제합니다. 유예기간 안에 탈퇴를 취소해도 해당 임시 선택본은 복원하지 않습니다.
 - 유예기간 종료 후 회원 물리 삭제 시에도 사용자별 임시 저장소를 방어적으로 다시 정리합니다.
 
-## 2차 회원 탈퇴정책 개발 범위
+## 2차 회원 탈퇴정책
 
-이 절은 2차 개발 예정 범위이며 현재 구현에는 아직 적용되지 않았습니다. 2차 개발은 고객문의 기능 확장 없이 정지 회원의 영구탈퇴와 탈퇴 후 동일 Kakao 계정의 제재 판정만 처리합니다.
+이 절은 2026년 8월 13일부터 적용한 2차 회원 탈퇴정책입니다. 고객문의 기능은 확장하지 않고 정지 회원의 영구탈퇴와 탈퇴 후 동일 Kakao 계정의 제재 판정만 처리합니다.
 
 - `SUSPENDED` 회원도 일반 영구탈퇴와 동일하게 30일 유예가 적용되는 영구탈퇴를 신청할 수 있게 변경합니다.
 - 영구탈퇴를 신청해 `DELETE_PENDING`으로 전환되어도 기존 이용정지 이력과 유효한 제재는 유지합니다.
 - 유예기간 중 관리자가 제재를 해제해도 회원 상태는 `DELETE_PENDING`으로 유지하고, 사용자가 영구탈퇴를 취소하면 남은 유효 제재 여부에 따라 `SUSPENDED` 또는 `ACTIVE`로 복구합니다.
 - 유예기간 종료 후 회원 원본을 물리 삭제하더라도 `TH_USWTHD.USER_IDHS`의 Kakao 식별값 해시와 탈퇴 당시 `USER_NUMB`를 유지하고, 해당 회원번호의 `TH_USSPND` 이용정지 이력을 보존합니다.
 - 로그인 시 Kakao 식별값을 현재 탈퇴 처리와 같은 SHA-256 방식으로 해시하여 `TH_USWTHD.USER_IDHS`에서 기존 `USER_NUMB`를 찾고, 해당 회원번호에 활성 제재가 남아 있으면 신규 가입을 차단합니다.
-- 관리자는 물리 삭제된 회원 원본을 복구하지 않고 보존된 Kakao 식별값에 연결된 제재만 해제할 수 있습니다.
+- 같은 Kakao 식별값에 여러 과거 `USER_NUMB`가 연결되어 있으면 그중 하나라도 유효한 제재가 남아 있는 동안 신규 가입을 차단합니다.
+- 기간 정지는 `ENDX_DATE`가 현재보다 미래일 때만 유효하며, 무기한 정지는 관리자 해제 전까지 유효합니다.
+- 관리자는 `현 사용자 관리 > 삭제회원 제재` 화면(`/sadari/adm/user/deleted-suspensions`)에서 물리 삭제된 회원 원본을 복구하지 않고 과거 `USER_NUMB`에 남은 제재만 해제할 수 있습니다.
+- 삭제 회원 제재 화면과 API에는 `USER_IDHS`를 제공하지 않으며 과거 `USER_NUMB`, 제재번호, 사유, 기간과 감사정보만 제공합니다.
+- 삭제 회원 제재 해제에는 관리자 내부 메모가 필수이며 `TH_USSPND`에 해제 관리자, 해제일시와 해제 메모를 기록합니다.
 - 제재 해제 뒤 같은 Kakao 계정으로 가입하면 새 `USER_NUMB`를 발급하고 탈퇴 전 프로필, 활동, 고객문의 및 답변을 새 계정에 연결하거나 복원하지 않습니다.
-- `TH_USWTHD.USER_IDHS` 조회 인덱스, 여러 탈퇴 이력이 있을 때의 회원번호 선택 기준, 보존기간과 물리 삭제 회원 제재 해제 감사 이력은 구현 전에 확정합니다.
+- `TH_USWTHD.USER_IDHS`, `USER_NUMB` 복합 인덱스로 탈퇴 식별값과 과거 회원번호 연결 조회를 지원합니다.
+- `TH_USWTHD`와 `TH_USSPND`는 현재 별도 만료기간을 두지 않는 감사 이력으로 보존합니다.
 
 ## 신고 데이터 처리
 
@@ -110,11 +115,12 @@
 ## 고객문의 데이터 처리
 
 - `ACTIVE`와 `SUSPENDED` 회원은 1차 고객문의 기능을 이용할 수 있습니다.
+- `SUSPENDED` 회원은 현재 정지에 연결되는 `SUSPENSION_APPEAL` 문의만 접수할 수 있고, 정지 화면에서 현재 정지 이후 접수한 최신 문의를 다시 조회할 수 있습니다.
 - `WITHDRAWN`과 `DELETE_PENDING` 회원은 기존 문의를 유지하되 1차 고객문의 화면과 API에 접근할 수 없습니다.
 - `WITHDRAWN` 회원이 같은 Kakao 계정으로 재로그인해 기존 계정이 `ACTIVE`로 복귀하면 유지된 본인 문의와 답변을 다시 조회할 수 있습니다.
 - 회원 원본을 물리 삭제하면 `CT_INQURY.USER_NUMB`를 `NULL`로 변경해 작성자를 비식별화하고 문의와 답변은 관리자 운영 이력으로 보존합니다.
 - 물리 삭제 뒤 새로 생성된 회원 계정에는 탈퇴 전 문의와 답변을 연결하거나 복원하지 않습니다.
-- 정지 회원의 영구탈퇴 허용, 활성 제재가 연결된 Kakao 계정의 재가입 차단과 관리자 해제는 이 문서의 2차 회원 탈퇴정책 개발 범위에서 처리합니다.
+- 정지 회원의 영구탈퇴 허용, 활성 제재가 연결된 Kakao 계정의 재가입 차단과 관리자 해제는 이 문서의 2차 회원 탈퇴정책에 따라 처리합니다.
 - 세부 기준은 [고객문의 및 관리자 답변 정책](customer-inquiry-policy.md)을 따릅니다.
 
 ## 독서 모임 모임장 연계 예정 정책
@@ -257,6 +263,7 @@
 - `src/main/java/org/our/sadari/user/mapper/UserWithdrawalMapper.xml`
 - `src/main/java/org/our/sadari/global/security/dto/TokenDto.java`
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
+- `src/main/java/org/our/sadari/global/common/service/UserIdEncryptionService.java`
 - `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
 - `src/main/java/org/our/sadari/global/file/service/FileService.java`
@@ -277,6 +284,7 @@
 - `src/main/frontend/src/features/reply/hooks/useReplyLike.ts`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `scripts/db/mysql/01-create.sql`
+- `scripts/db/mysql/05-withdrawn-suspension-index.sql`
 - `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
 - `CT_POPUPX`
@@ -285,4 +293,5 @@
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/complaint/mapper/ComplaintMapper.xml`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/file/controller/FileResourceController.java`
 - `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/CurrentUserDetailPage.tsx`
+- `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/DeletedSuspensionPage.tsx`
 - `sadari-admin` 저장소 `src/main/frontend/src/pages/complaint/ComplaintDetailPage.tsx`

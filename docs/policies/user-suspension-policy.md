@@ -28,8 +28,9 @@
 - 정지 등록 시 현재 회원 상태를 `PREV_STAT`에 보관하고 `TM_USERXM.USER_STAT`을 `SUSPENDED`로 변경합니다.
 - 동일 Kakao 계정의 암호화 식별값을 보존하므로 같은 계정으로 재로그인하거나 가입을 다시 시도해도 기존 정지 회원으로 처리합니다.
 - `SUSPENDED` 회원은 정지 안내 조회, 로그아웃과 최소 인증 API만 이용할 수 있습니다.
-- 정지 회원은 정지 해제 또는 기간 만료 전까지 계정 비활성화와 영구 탈퇴를 신청할 수 없습니다.
-- 정지 회원의 30일 유예 영구탈퇴 허용은 현재 구현이 아닌 [2차 회원 탈퇴정책 개발 범위](withdrawal-policy.md#2차-회원-탈퇴정책-개발-범위)이며, 구현 전까지 현행 차단 정책을 유지합니다.
+- 정지 회원은 정지 해제 또는 기간 만료 전까지 계정 비활성화를 신청할 수 없습니다.
+- 정지 회원도 [2차 회원 탈퇴정책](withdrawal-policy.md#2차-회원-탈퇴정책)에 따라 30일 유예 영구탈퇴를 신청할 수 있으며, 탈퇴 후에도 유효 제재는 유지됩니다.
+- 물리 삭제 뒤 같은 Kakao 계정으로 재가입하면 탈퇴 이력의 식별값 해시와 과거 회원번호에 남은 유효 제재를 확인하며, 하나라도 유효하면 신규 가입을 차단합니다.
 - 관리자 상태 변경과 `TB_EVTBOX` 이벤트는 같은 DB 트랜잭션으로 저장합니다.
 - 사용자 서버는 5분마다 이벤트를 확인하고 처리 시점의 `TM_USERXM.USER_STAT`을 자체 Redis에 반영합니다.
 - 이미 발급된 로그인 세션의 정지·해제 상태는 정상 운영 시 최대 5분 안에 반영됩니다.
@@ -46,6 +47,8 @@
 - 회원 상태가 여전히 `SUSPENDED`일 때만 `PREV_STAT`으로 복구합니다.
 - 영구 삭제 대기처럼 더 우선하는 상태가 적용되어 있으면 관리자 해제나 기간 만료가 그 상태를 덮어쓰지 않습니다.
 - 영구 탈퇴를 취소할 때 유효한 정지가 남아 있으면 `SUSPENDED`로 복구합니다.
+- 물리 삭제된 회원의 제재 해제는 `현 사용자 관리 > 삭제회원 제재`에서 처리하며 회원 원본 복구나 사용자 서버 상태 이벤트를 생성하지 않습니다.
+- 삭제 회원 제재 해제에는 내부 메모가 필수이며 해제 관리자와 해제일시를 함께 기록합니다.
 
 ## 데이터 구조
 
@@ -77,3 +80,4 @@
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/service/impl/CurrentUserServiceImpl.java`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`
 - `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/CurrentUserDetailPage.tsx`
+- `sadari-admin` 저장소 `src/main/frontend/src/pages/currentUser/DeletedSuspensionPage.tsx`
