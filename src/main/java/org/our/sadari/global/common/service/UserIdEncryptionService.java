@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.HexFormat;
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import org.our.sadari.global.common.util.StringUtil;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-08-13        SeungHyeon.Kang    탈퇴 이력 비교용 식별값 해시 생성 추가
  */
 @Service
 public class UserIdEncryptionService {
@@ -74,6 +76,34 @@ public class UserIdEncryptionService {
         catch (Exception e) {
 
             throw new IllegalStateException("USER_IDXX encryption failed.", e);
+        }
+    }
+
+    /**
+     * 탈퇴 이력 비교에 사용할 OAuth 사용자 식별값의 SHA-256 해시를 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param plainUserId 외부 OAuth 제공자의 원본 사용자 식별값
+     * @return 64자리 소문자 SHA-256 해시
+     */
+    public String hashForAudit(String plainUserId) {
+
+        // 원본 식별값이 없으면 비교 가능한 감사용 해시를 생성하지 않는다
+        if (StringUtil.isEmpty(plainUserId)) {
+            return plainUserId;
+        }
+
+        // JVM 기본 제공 SHA-256으로 복구할 수 없는 비교값을 생성한다
+        try {
+            // 원본 식별값을 고정 길이 해시 바이트로 변환한다
+            MessageDigest digest = MessageDigest.getInstance("SHA-256");
+            // DB의 USER_IDHS 형식과 같은 소문자 16진수 문자열을 반환한다
+            return HexFormat.of().formatHex(digest.digest(plainUserId.getBytes(StandardCharsets.UTF_8)));
+        }
+
+        // 필수 해시 알고리즘을 사용할 수 없으면 식별 이력 저장과 가입 판별을 중단한다
+        catch (Exception e) {
+            throw new IllegalStateException("USER_IDHS hash generation failed.", e);
         }
     }
 
