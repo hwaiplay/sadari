@@ -98,20 +98,23 @@ function NoticeDetailPage() {
   return (
     /* 배포된 공지사항 상세 전체 영역 */
     <main className={styles.page}>
-      {/* 공지사항 제목과 배포일 영역 */}
+      {/* 공지사항 제목과 배포 정보 영역 */}
       <header className={styles.detailHeader}>
-        <div className={styles.detailMeta}>
-          {notice.topxYsno === "Y" && (
-            <svg className={styles.pinIcon} viewBox="0 0 24 24" aria-label="상단 고정">
-              <path d="m14 4 6 6-2 2-2.5-1.5-3 3 .5 3.5-2 2-6-6 2-2 3.5.5 3-3L12 6l2-2Z" />
-            </svg>
-          )}
-          <span className={styles.category}>{notice.cateName}</span>
-        </div>
         <h1 className={styles.detailTitle}>{notice.notiTitl}</h1>
-        <time className={styles.date} dateTime={notice.dplyDate}>
-          {displayDate}
-        </time>
+        {/* 배포일과 상단 고정 여부 및 카테고리 영역 */}
+        <div className={styles.detailInfo}>
+          <time className={styles.date} dateTime={notice.dplyDate}>
+            {displayDate}
+          </time>
+          <div className={styles.detailMeta}>
+            {notice.topxYsno === "Y" && (
+              <svg className={styles.pinIcon} viewBox="0 0 24 24" aria-label="상단 고정">
+                <path d="m14 4 6 6-2 2-2.5-1.5-3 3 .5 3.5-2 2-6-6 2-2 3.5.5 3-3L12 6l2-2Z" />
+              </svg>
+            )}
+            <span className={styles.category}>{notice.cateName}</span>
+          </div>
+        </div>
       </header>
 
       {/* 본문은 관리자 서버에서 허용 태그와 공지 전용 이미지 경로만 남겨 저장한 HTML이다. */}

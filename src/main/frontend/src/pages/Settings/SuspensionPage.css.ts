@@ -126,3 +126,17 @@ export const logoutButton = style({
   backgroundColor: vars.color.black,
   color: "#ffffff",
 });
+
+export const inquiryButton = style({
+  ...actionButton,
+  border: "1px solid #34704d",
+  backgroundColor: "#34704d",
+  color: "#ffffff",
+});
+
+export const withdrawalButton = style({
+  ...actionButton,
+  border: `1px solid ${vars.color.gray300}`,
+  backgroundColor: "#ffffff",
+  color: vars.color.gray900,
+});

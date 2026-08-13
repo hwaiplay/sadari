@@ -169,11 +169,13 @@ function NoticeListPage() {
               <span className={styles.title}>{notice.notiTitl}</span>
               {notice.readYsno === "N" && <span className={styles.unreadDot} aria-label="읽지 않음" />}
             </span>
+          </span>
+          <span className={styles.itemBottom}>
+            <time className={styles.date} dateTime={notice.dplyDate}>
+              {displayDate}
+            </time>
             <span className={styles.category}>{notice.cateName}</span>
           </span>
-          <time className={styles.date} dateTime={notice.dplyDate}>
-            {displayDate}
-          </time>
         </span>
       </button>
     );
@@ -183,7 +185,7 @@ function NoticeListPage() {
   if (isLoading && notices.length === 0 && !error) {
     // 공지사항 최초 조회 상태 화면을 반환한다.
     return (
-      <main className={styles.page}>
+      <main className={styles.listPage}>
         {/* 공지사항 최초 조회 상태 영역 */}
         <Loading title={NOTICE_LOADING_TITLE} isFullScreen={false} />
       </main>
@@ -193,7 +195,13 @@ function NoticeListPage() {
   // 공지사항 목록과 조회 상태 및 다음 페이지 제어 화면을 반환한다.
   return (
     /* 배포된 사용자 공지사항 목록 전체 영역 */
-    <main className={styles.page}>
+    <main className={styles.listPage}>
+      {/* 공지사항 목록 안내 영역 */}
+      <section className={styles.intro} aria-label="공지사항 안내">
+        {/* "사다리의 새로운 소식과 주요 안내를 확인할 수 있어요." */}
+        <p className={styles.description}>사다리의 새로운 소식과 주요 안내를 확인할 수 있어요.</p>
+      </section>
+
       {error && notices.length === 0 ? (
         /* 공지사항 조회 실패 안내와 재시도 영역 */
         <section className={styles.statusPanel} aria-live="polite">

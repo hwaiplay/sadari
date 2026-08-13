@@ -106,4 +106,20 @@
            AND WTHD_STAT = 'DELETE_PENDING'
     </update>
 
+    <!-- 같은 OAuth 식별값으로 탈퇴한 과거 회원 번호 중 현재 유효한 이용 정지가 있는지 조회한다. -->
+    <select id="getActiveSuspensionCountByUserIdHash" parameterType="string" resultType="int">
+        SELECT /* getActiveSuspensionCountByUserIdHash */
+               COUNT(1)
+          FROM DUAL
+         WHERE EXISTS (
+                   SELECT 1
+                     FROM TH_USWTHD W
+                     JOIN TH_USSPND S
+                       ON S.USER_NUMB = W.USER_NUMB
+                    WHERE W.USER_IDHS = #{userIdhs}
+                      AND S.SPND_STAT = 'ACTIVE'
+                      AND (S.SPND_TYPE = 'INDEFINITE' OR S.ENDX_DATE > CURRENT_TIMESTAMP)
+               )
+    </select>
+
 </mapper>

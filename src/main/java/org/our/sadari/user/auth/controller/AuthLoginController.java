@@ -53,6 +53,7 @@ import java.util.Map;
  * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
  * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
  * 2026-08-11        SeungHyeon.Kang    기기별 재발급과 선택형 로그아웃 추가
+ * 2026-08-13        SeungHyeon.Kang    탈퇴 뒤 유효 제재가 남은 계정의 로그인 차단 안내 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -234,7 +235,15 @@ public class AuthLoginController {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
             // sendRedirect 호출로 검증된 알림 또는 응답을 전송한다
-            response.sendRedirect(frontDomain + "/oauth");
+            String failureRedirectUrl = frontDomain + "/oauth";
+
+            // 탈퇴 계정에 유효한 정지가 남은 경우 일반 인증 실패와 구분해 정확한 안내를 표시한다
+            if (ResultEnum.AUTH_WITHDRAWN_SUSPENDED.getCode() == loginResult.getCode()) {
+                failureRedirectUrl += "?blocked=suspension";
+            }
+
+            // 실패 사유에 맞는 OAuth 완료 화면으로 이동한다
+            response.sendRedirect(failureRedirectUrl);
             // Kakao 인가 코드 기준 로그인 결과를 반환한다
             return;
         }

@@ -13,7 +13,8 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
- * 2026-08-14        SeungHyeon.Kang    탈퇴 회원의 모임원 프로필 숨김 메서드 추가
+ * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
+ * 2026-08-14      HanWon.Jang    탈퇴 회원의 모임원 프로필 숨김 메서드 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -57,7 +58,7 @@ public interface UserWithdrawalMapper {
     /**
      * 탈퇴 회원의 모임원 프로필을 모임 목록에서 숨긴다.
      *
-     * @author SeungHyeon.Kang
+     * @author Hanwon.Jang
      * @param userNumb 탈퇴 회원 번호
      * @return 변경된 모임원 관계 수
      */
@@ -89,4 +90,13 @@ public interface UserWithdrawalMapper {
      * @return 변경된 이력 수
      */
     int uptWithdrawalRestored(UserWithdrawalDto request);
+
+    /**
+     * 같은 OAuth 식별값으로 탈퇴한 모든 과거 회원 번호에 유효한 이용 정지가 있는지 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userIdhs OAuth 사용자 식별값의 SHA-256 해시
+     * @return 유효한 이용 정지가 있으면 1, 없으면 0
+     */
+    int getActiveSuspensionCountByUserIdHash(String userIdhs);
 }

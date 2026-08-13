@@ -25,11 +25,8 @@ import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
 import java.time.Duration;
 import java.time.LocalDateTime;
-import java.util.HexFormat;
 import java.util.UUID;
 
 /**
@@ -45,7 +42,8 @@ import java.util.UUID;
  * 2026-07-30        SeungHyeon.Kang    사용자 계정 처리 용어를 비활성화로 정리
  * 2026-07-30        SeungHyeon.Kang    정지 회원 영구 탈퇴와 취소 상태 우선순위 적용
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 요청 차단
- * 2026-08-14        SeungHyeon.Kang    탈퇴 회원의 모임원 프로필 노출 중지
+ * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 허용과 식별값 해시 공통화
+ * 2026-08-14        Hanwon.Jang    탈퇴 회원의 모임원 프로필 노출 중지
  */
 @Service
 @RequiredArgsConstructor
@@ -133,10 +131,11 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 정지 회원은 계정 처리를 통해 관리자 이용 정지를 우회할 수 없다
+        // 정지 회원은 복구 가능한 비활성화만 제한하고 제재를 보존하는 영구 탈퇴는 허용한다
         UserDto requestUser = userMapper.getUserByNumb(userNumb);
         if (!StringUtil.isEmpty(requestUser)
-                && Constant.USER_STAT_SUSPENDED.equals(requestUser.getUserStat())) {
+                && Constant.USER_STAT_SUSPENDED.equals(requestUser.getUserStat())
+                && !Constant.WITHDRAWAL_TYPE_HARD.equals(request.getWthdType())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -247,14 +246,15 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 재인증 사이에 정지된 회원도 계정 처리로 제재 상태를 우회하지 못하게 다시 검증한다
-        if (Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())) {
+        // 재인증 사이에 정지됐으면 제재를 보존하는 영구 탈퇴만 계속 허용한다
+        if (Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
+                && !Constant.WITHDRAWAL_TYPE_HARD.equals(request.getWthdType())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
         // 탈퇴 이력에서 원본 OAuth 식별값을 복구할 수 없도록 SHA-256 해시만 저장한다
-        request.setUserIdhs(createUserIdHash(providerId));
+        request.setUserIdhs(userIdEncryptionService.hashForAudit(providerId));
         // 탈퇴 요청 시각을 회원 상태에 반영한다
         request.setRequDate(LocalDateTime.now());
 
@@ -414,29 +414,6 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         userWithdrawalMapper.uptClubMemberProfileHidden(request.getUserNumb());
         // 탈퇴 회원이 댓글에 등록한 좋아요를 삭제하며 복귀 시 자동 복원하지 않는다
         userWithdrawalMapper.delUserReplyLike(request.getUserNumb());
-    }
-
-    /**
-     * 탈퇴 이력에 저장할 OAuth 사용자 식별값의 SHA-256 해시를 생성한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param providerId Kakao 원본 사용자 식별값
-     * @return 64자리 SHA-256 해시
-     */
-    private String createUserIdHash(String providerId) {
-
-        // 단방향 해시 알고리즘으로 원본 식별값을 복구할 수 없게 변환한다
-        try {
-            // SHA-256 해시 계산 객체를 생성한다
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            // 해시 바이트를 소문자 16진수 문자열로 변환해 반환한다
-            return HexFormat.of().formatHex(digest.digest(providerId.getBytes(StandardCharsets.UTF_8)));
-        }
-
-        // JVM에서 해시 알고리즘을 사용할 수 없으면 탈퇴 이력을 저장하지 않는다
-        catch (Exception e) {
-            throw new IllegalStateException("회원 식별값 해시 생성 실패", e);
-        }
     }
 
     /**

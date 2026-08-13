@@ -44,6 +44,7 @@ function CustomSelect<T extends string>({
 
   const listboxId = useId();
   const rootRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLButtonElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
   const selectedIndex = Math.max(
     0,
@@ -106,6 +107,7 @@ function CustomSelect<T extends string>({
       ),
     );
     setIsOpen(false);
+    triggerRef.current?.focus();
   };
 
   /**
@@ -119,6 +121,7 @@ function CustomSelect<T extends string>({
 
     if (event.key === "Escape") {
       setIsOpen(false);
+      triggerRef.current?.focus();
       return;
     }
 
@@ -152,6 +155,7 @@ function CustomSelect<T extends string>({
     >
       <button
         className={clsx(styles.trigger, triggerClassName)}
+        ref={triggerRef}
         type="button"
         aria-label={ariaLabel}
         aria-haspopup="listbox"
@@ -177,42 +181,46 @@ function CustomSelect<T extends string>({
         ) : null}
       </button>
 
-      {isOpen ? (
-        <div
-          className={clsx(styles.optionList, optionListClassName)}
-          id={listboxId}
-          role="listbox"
-        >
-          {options.map((option, index) => {
+      <div
+        className={clsx(
+          styles.optionList,
+          isOpen && styles.optionListOpen,
+          optionListClassName,
+        )}
+        id={listboxId}
+        role="listbox"
+        aria-hidden={!isOpen}
+      >
+        {options.map((option, index) => {
 
-            const isSelected = option.value === value;
+          const isSelected = option.value === value;
 
-            return (
-              <button
-                className={clsx(
-                  styles.option,
-                  optionClassName,
-                  option.className,
-                  isSelected && styles.optionSelected,
-                )}
-                ref={(element) => {
+          return (
+            <button
+              className={clsx(
+                styles.option,
+                optionClassName,
+                option.className,
+                isSelected && styles.optionSelected,
+              )}
+              ref={(element) => {
 
-                  optionRefs.current[index] = element;
-                }}
-                type="button"
-                role="option"
-                aria-selected={isSelected}
-                disabled={option.disabled}
-                key={option.value}
-                onMouseEnter={() => setActiveIndex(index)}
-                onClick={() => handleSelect(option)}
-              >
-                {option.label}
-              </button>
-            );
-          })}
-        </div>
-      ) : null}
+                optionRefs.current[index] = element;
+              }}
+              type="button"
+              role="option"
+              aria-selected={isSelected}
+              disabled={option.disabled}
+              tabIndex={isOpen ? 0 : -1}
+              key={option.value}
+              onMouseEnter={() => setActiveIndex(index)}
+              onClick={() => handleSelect(option)}
+            >
+              {option.label}
+            </button>
+          );
+        })}
+      </div>
     </div>
   );
 }

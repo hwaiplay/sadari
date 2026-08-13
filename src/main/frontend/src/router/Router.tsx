@@ -32,6 +32,10 @@ import SetClubPage from "@/pages/ReadingClub/SetClubPage.tsx";
 import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
 import NoticeListPage from "@/pages/Notice/NoticeListPage";
 import NoticeDetailPage from "@/pages/Notice/NoticeDetailPage";
+import InquiryListPage from "@/pages/Inquiry/InquiryListPage";
+import InquiryWritePage from "@/pages/Inquiry/InquiryWritePage";
+import InquiryDetailPage from "@/pages/Inquiry/InquiryDetailPage";
+import InquiryLayout from "@/pages/Inquiry/InquiryLayout";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -87,6 +91,29 @@ const Router = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* 이용 정지 회원의 영구 탈퇴 전용 화면 */}
+        <Route
+          path="/suspension/withdrawal"
+          element={
+            <ProtectedRoute>
+              <WithdrawalPage hardOnly />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* 정상 및 이용정지 사용자의 고객문의 화면 */}
+        <Route
+          element={
+            <ProtectedRoute>
+              <InquiryLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="/inquiry/list" element={<InquiryListPage />} />
+          <Route path="/inquiry/write" element={<InquiryWritePage />} />
+          <Route path="/inquiry/detail/:inqrNumb" element={<InquiryDetailPage />} />
+        </Route>
 
         {/* 최초 로그인 웰컴 */}
         <Route

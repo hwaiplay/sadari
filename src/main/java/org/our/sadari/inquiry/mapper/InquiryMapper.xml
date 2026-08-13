@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.inquiry.mapper.InquiryMapper">
+    <!-- 고객문의 접근 판단에 사용할 현재 회원 상태를 조회한다 -->
+    <select id="getUserStat" resultType="string">
+        SELECT /* getUserStat */
+               USER_STAT
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 활성 고객문의 카테고리 코드인지 확인한다 -->
+    <select id="getInquiryCategoryCnt" resultType="int">
+        SELECT /* getInquiryCategoryCnt */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = 'INQR_CATG'
+           AND COMD_CODE = #{inqrCatg}
+           AND USEE_YSNO = 'Y'
+    </select>
+
+    <!-- 이용정지 이의제기에 연결할 가장 최근 정지 이력을 조회한다 -->
+    <select id="getLatestSuspensionNumb" resultType="long">
+        SELECT /* getLatestSuspensionNumb */
+               SPND_NUMB
+          FROM TH_USSPND
+         WHERE USER_NUMB = #{userNumb}
+      ORDER BY REGI_DATE DESC
+             , SPND_NUMB DESC
+         LIMIT 1
+    </select>
+
+    <!-- 현재 활성 정지가 시작된 뒤 접수한 최신 이의제기 문의 번호를 조회한다 -->
+    <select id="getSuspInquiryNumb" resultType="long">
+        SELECT /* getSuspInquiryNumb */
+               I.INQR_NUMB
+          FROM CT_INQURY I
+          JOIN TH_USSPND S
+            ON S.SPND_NUMB = I.SPND_NUMB
+           AND S.USER_NUMB = I.USER_NUMB
+         WHERE I.USER_NUMB = #{userNumb}
+           AND I.INQR_CATG = 'SUSPENSION_APPEAL'
+           AND I.REGI_DATE >= S.STRT_DATE
+           AND S.SPND_STAT = 'ACTIVE'
+      ORDER BY I.REGI_DATE DESC
+             , I.INQR_NUMB DESC
+         LIMIT 1
+    </select>
+
+    <!-- 동일 정지 이력에 처리 중인 이의제기가 있는지 확인한다 -->
+    <select id="getOpenSuspensionInquiryCnt" resultType="int">
+        SELECT /* getOpenSuspensionInquiryCnt */
+               COUNT(1)
+          FROM CT_INQURY
+         WHERE USER_NUMB = #{userNumb}
+           AND SPND_NUMB = #{spndNumb}
+           AND INQR_CATG = 'SUSPENSION_APPEAL'
+           AND INQR_STAT IN ('INQR_RECEIVED', 'INQR_REVIEWING')
+    </select>
+
+    <!-- 사용자의 고객문의를 접수 상태로 등록한다 -->
+    <insert id="setInquiry" useGeneratedKeys="true" keyProperty="inquiry.inqrNumb" keyColumn="INQR_NUMB">
+        INSERT /* setInquiry */
+          INTO CT_INQURY (
+               USER_NUMB
+             , INQR_CATG
+             , INQR_TITL
+             , INQR_CNTN
+             , INQR_STAT
+             , SPND_NUMB
+        ) VALUES (
+               #{userNumb}
+             , #{inquiry.inqrCatg}
+             , #{inquiry.inqrTitl}
+             , #{inquiry.inqrCntn}
+             , 'INQR_RECEIVED'
+             , #{inquiry.spndNumb}
+        )
+    </insert>
+
+    <!-- 본인이 작성한 고객문의를 최근 순서로 조회한다 -->
+    <select id="getInquiryList" resultType="org.our.sadari.inquiry.dto.InquiryDto">
+        SELECT /* getInquiryList */
+               I.INQR_NUMB
+             , I.INQR_CATG
+             , C.COMD_NAME AS INQR_CATG_NAME
+             , I.INQR_TITL
+             , I.INQR_STAT
+             , S.COMD_NAME AS INQR_STAT_NAME
+             , I.SPND_NUMB
+             , I.REGI_DATE
+             , I.ANSW_DATE
+             , (SELECT COUNT(1)
+                  FROM CT_INQANS A
+                 WHERE A.INQR_NUMB = I.INQR_NUMB
+                   AND A.READ_YSNO = 'N') AS UNREAD_COUNT
+          FROM CT_INQURY I
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = 'INQR_CATG'
+           AND C.COMD_CODE = I.INQR_CATG
+     LEFT JOIN TB_CODEXD S
+            ON S.COMM_CODE = 'INQR_STAT'
+           AND S.COMD_CODE = I.INQR_STAT
+         WHERE I.USER_NUMB = #{userNumb}
+      ORDER BY I.REGI_DATE DESC
+             , I.INQR_NUMB DESC
+         LIMIT #{startRow}, #{pageSize}
+    </select>
+
+    <!-- 본인이 작성한 고객문의 상세를 조회한다 -->
+    <select id="getInquiryDtl" resultType="org.our.sadari.inquiry.dto.InquiryDto">
+        SELECT /* getInquiryDtl */
+               I.INQR_NUMB
+             , I.INQR_CATG
+             , C.COMD_NAME AS INQR_CATG_NAME
+             , I.INQR_TITL
+             , I.INQR_CNTN
+             , I.INQR_STAT
+             , S.COMD_NAME AS INQR_STAT_NAME
+             , I.SPND_NUMB
+             , I.REGI_DATE
+             , I.ANSW_DATE
+          FROM CT_INQURY I
+     LEFT JOIN TB_CODEXD C
+            ON C.COMM_CODE = 'INQR_CATG'
+           AND C.COMD_CODE = I.INQR_CATG
+     LEFT JOIN TB_CODEXD S
+            ON S.COMM_CODE = 'INQR_STAT'
+           AND S.COMD_CODE = I.INQR_STAT
+         WHERE I.INQR_NUMB = #{inqrNumb}
+           AND I.USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 고객문의에 등록된 관리자 답변을 시간 순서로 조회한다 -->
+    <select id="getInquiryAnswerList" resultType="org.our.sadari.inquiry.dto.InquiryAnswerDto">
+        SELECT /* getInquiryAnswerList */
+               ANSW_NUMB
+             , ANSW_CNTN
+             , READ_YSNO
+             , REGI_DATE
+          FROM CT_INQANS
+         WHERE INQR_NUMB = #{inqrNumb}
+      ORDER BY REGI_DATE
+             , ANSW_NUMB
+    </select>
+
+    <!-- 본인 문의의 읽지 않은 관리자 답변을 모두 읽음 처리한다 -->
+    <update id="uptInquiryAnswerRead">
+        UPDATE /* uptInquiryAnswerRead */ CT_INQANS A
+          JOIN CT_INQURY I
+            ON I.INQR_NUMB = A.INQR_NUMB
+           AND I.USER_NUMB = #{userNumb}
+           SET A.READ_YSNO = 'Y'
+             , A.READ_DATE = COALESCE(A.READ_DATE, CURRENT_TIMESTAMP(6))
+         WHERE A.INQR_NUMB = #{inqrNumb}
+           AND A.READ_YSNO = 'N'
+    </update>
+</mapper>
