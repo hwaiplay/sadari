@@ -36,6 +36,7 @@ import InquiryListPage from "@/pages/Inquiry/InquiryListPage";
 import InquiryWritePage from "@/pages/Inquiry/InquiryWritePage";
 import InquiryDetailPage from "@/pages/Inquiry/InquiryDetailPage";
 import InquiryLayout from "@/pages/Inquiry/InquiryLayout";
+import ReadingTimerPage from "@/pages/Timer/ReadingTimerPage";
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -165,6 +166,8 @@ const Router = () => {
 
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
+          {/* 독서 타이머와 주간 출석 */}
+          <Route path="/timer" element={<ReadingTimerPage />} />
           <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
           <Route path="/alim" element={<AlimPage />} />
           <Route path="/settings" element={<SettingsPage />} />

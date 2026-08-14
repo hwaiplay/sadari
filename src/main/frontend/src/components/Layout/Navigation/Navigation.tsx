@@ -1,5 +1,10 @@
 import { message } from "@/app/messages/message";
 import HomeLink from "@/components/Button/HomeLink/HomeLink";
+import { getReadingTimerSummaryApi } from "@/features/Timer/api/readingTimerApi";
+import {
+  isReadingTimerRunningChangeEvent,
+  READING_TIMER_RUNNING_CHANGED_EVENT,
+} from "@/features/Timer/lib/readingTimerEvents";
 import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import {
@@ -7,7 +12,7 @@ import {
   USER_PROFILE_UPDATED_EVENT,
 } from "@/features/User/lib/profileEvents";
 import { clsx } from "clsx";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as styles from "./Navigation.css";
 
@@ -25,11 +30,28 @@ type NavigationProps = {
 function Navigation({ isMain }: NavigationProps) {
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  const [isTimerRunning, setIsTimerRunning] = useState(false);
   const { pathname } = useLocation();
   const isHomeActive = pathname === "/home";
   const isPeedActive = pathname === "/peed" || pathname.startsWith("/peed/");
   const isTimerActive = pathname === "/timer" || pathname.startsWith("/timer/");
   const isMyPageActive = pathname === "/mypage" || pathname.startsWith("/mypage/");
+
+  /**
+   * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 상태 조회 완료 Promise
+   */
+  const refreshTimerRunning = useCallback(async (): Promise<void> => {
+
+    try {
+      const response = await getReadingTimerSummaryApi();
+      setIsTimerRunning(response.data?.activeTimer?.tmrxStat === "RUNNING");
+    } catch {
+      // 보조 상태 표시 조회 실패는 화면 접근을 막지 않고 기존 표시를 유지한다
+    }
+  }, []);
 
   useEffect(() => {
 
@@ -71,6 +93,47 @@ function Navigation({ isMain }: NavigationProps) {
     };
   }, []);
 
+  useEffect(() => {
+
+    void refreshTimerRunning();
+
+    /**
+     * 창이 다시 활성화되면 다른 탭이나 기기에서 변경된 서버 상태를 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    const handleWindowFocus = (): void => {
+
+      void refreshTimerRunning();
+    };
+
+    /**
+     * 현재 앱에서 변경된 독서 타이머 실행 여부를 네비게이션에 즉시 반영한다
+     *
+     * @author SeungHyeon.Kang
+     * @param event 독서 타이머 실행 상태 변경 이벤트
+     * @return 반환값이 없다
+     */
+    const handleTimerRunningChange = (event: Event): void => {
+
+      // 검증된 공통 이벤트의 실행 여부만 네비게이션 상태에 반영한다
+      if (isReadingTimerRunningChangeEvent(event)) {
+        setIsTimerRunning(event.detail);
+      }
+    };
+
+    window.addEventListener("focus", handleWindowFocus);
+    window.addEventListener(READING_TIMER_RUNNING_CHANGED_EVENT, handleTimerRunningChange);
+
+    // 네비게이션이 해제되면 창과 타이머 상태 이벤트 구독을 함께 정리한다
+    return () => {
+
+      window.removeEventListener("focus", handleWindowFocus);
+      window.removeEventListener(READING_TIMER_RUNNING_CHANGED_EVENT, handleTimerRunningChange);
+    };
+  }, [refreshTimerRunning]);
+
   return (
     <>
       <div className={clsx(styles.navContainer, isMain && styles.whiteBg)}>
@@ -106,12 +169,17 @@ function Navigation({ isMain }: NavigationProps) {
           <Link
             className={clsx(styles.navLink, isTimerActive && styles.navLinkActive)}
             to="/timer"
-            aria-label={message("frontend.common.timer")}
+            aria-label={isTimerRunning
+              ? `${message("frontend.common.timer")} (${message("frontend.timer.status.running")})`
+              : message("frontend.common.timer")}
             aria-current={isTimerActive ? "page" : undefined}
           >
-             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
-               <path d="M14 2.3335C7.57168 2.3335 2.33334 7.57183 2.33334 14.0002C2.33334 20.4285 7.57168 25.6668 14 25.6668C20.4283 25.6668 25.6667 20.4285 25.6667 14.0002C25.6667 7.57183 20.4283 2.3335 14 2.3335ZM19.075 18.1652C18.9117 18.4452 18.62 18.5968 18.3167 18.5968C18.165 18.5968 18.0133 18.5618 17.8733 18.4685L14.2567 16.3102C13.3583 15.7735 12.6933 14.5952 12.6933 13.5568V8.7735C12.6933 8.29516 13.09 7.8985 13.5683 7.8985C14.0467 7.8985 14.4433 8.29516 14.4433 8.7735V13.5568C14.4433 13.9768 14.7933 14.5952 15.155 14.8052L18.7717 16.9635C19.1917 17.2085 19.3317 17.7452 19.075 18.1652Z" fill="#C1C1C1"/>
-             </svg>
+             <span className={styles.navIconWrap}>
+               <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                 <path d="M14 2.3335C7.57168 2.3335 2.33334 7.57183 2.33334 14.0002C2.33334 20.4285 7.57168 25.6668 14 25.6668C20.4283 25.6668 25.6667 20.4285 25.6667 14.0002C25.6667 7.57183 20.4283 2.3335 14 2.3335ZM19.075 18.1652C18.9117 18.4452 18.62 18.5968 18.3167 18.5968C18.165 18.5968 18.0133 18.5618 17.8733 18.4685L14.2567 16.3102C13.3583 15.7735 12.6933 14.5952 12.6933 13.5568V8.7735C12.6933 8.29516 13.09 7.8985 13.5683 7.8985C14.0467 7.8985 14.4433 8.29516 14.4433 8.7735V13.5568C14.4433 13.9768 14.7933 14.5952 15.155 14.8052L18.7717 16.9635C19.1917 17.2085 19.3317 17.7452 19.075 18.1652Z" fill="#C1C1C1"/>
+               </svg>
+               {isTimerRunning ? <span className={styles.timerRunningBadge} aria-hidden="true" /> : null}
+             </span>
              <p className={styles.navLinkText}>{message("frontend.common.timer")}</p>
           </Link>
 

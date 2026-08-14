@@ -18,6 +18,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-05        SeungHyeon.Kang       계층형 독서 관심분야 공통코드로 통합
  * 2026-08-12        OpenAI Codex        알림 아이콘 기본 상황 코드 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 추가
+ * 2026-08-14        SeungHyeon.Kang    독서 타이머 상태와 상세 정리 스케줄러 코드 추가
  */
 public final class Constant {
 
@@ -54,6 +55,8 @@ public final class Constant {
     public static final String CODE_SERVICE_INFO_CATEGORY = "SVIF_CATE";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
+    // 독서 타이머 상태 공통코드
+    public static final String CODE_TIMER_STAT = "TMRX_STAT";
     // 회원 상태 공통코드
     public static final String CODE_USER_STAT = "USER_STAT";
     // 팔로우 버튼 상태 공통코드
@@ -73,6 +76,12 @@ public final class Constant {
     public static final String REPORT_STAT_DONE = "DONE";
     // 독후감 상태 STOP 설정값
     public static final String REPORT_STAT_STOP = "STOP";
+    // 측정 중인 독서 타이머 상태
+    public static final String TIMER_STAT_RUNNING = "RUNNING";
+    // 일시정지된 독서 타이머 상태
+    public static final String TIMER_STAT_PAUSED = "PAUSED";
+    // 완료된 독서 타이머 상태
+    public static final String TIMER_STAT_COMPLETED = "COMPLETED";
     // 좋아요 대상 독후감 설정값
     public static final String LIKE_TARGET_REPORT = "REPORT";
     // 좋아요 대상 댓글 설정값
@@ -140,6 +149,8 @@ public final class Constant {
     public static final String SCHEDULER_CODE_USER_HARD_DELETE = "USER_HARD_DELETE";
     // 회원 상태 변경 Outbox를 사용자 Redis에 반영하는 스케줄러 상세코드
     public static final String SCHEDULER_CODE_USER_STATUS_SYNC = "USER_STATUS_SYNC";
+    // 보존기간이 지난 독서 타이머 상세를 삭제하는 스케줄러 세부코드
+    public static final String SCHEDULER_CODE_TIMER_DETAIL_DELETE = "TIMER_DETAIL_DELETE";
 
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수
