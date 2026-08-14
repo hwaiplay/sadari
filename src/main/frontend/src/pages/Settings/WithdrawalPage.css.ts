@@ -6,12 +6,18 @@ export const page = style({
   width: "100%",
   maxWidth: "600px",
   minHeight: "calc(100svh - 112px)",
+  margin: "0 auto",
   padding: "28px 0 20px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
   gap: "34px",
+});
+
+export const standalonePage = style({
+  paddingLeft: vars.space.md,
+  paddingRight: vars.space.md,
 });
 
 export const section = style({

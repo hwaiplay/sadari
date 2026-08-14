@@ -13,7 +13,9 @@ type SweetAlertOptions = {
   confirmButtonText?: string;
   denyButtonText?: string;
   cancelButtonText?: string;
+  closeButtonLabel?: string;
   showCancelButton?: boolean;
+  showCloseButton?: boolean;
   showConfirmButton?: boolean;
   showDenyButton?: boolean;
   allowOutsideClick?: boolean;
@@ -79,6 +81,7 @@ function ensureSweetAlertStyle() {
     }
 
     .sadari-swal-modal {
+      position: relative;
       width: min(360px, 100%);
       max-height: calc(100dvh - 48px);
       overflow-y: auto;
@@ -278,6 +281,37 @@ function ensureSweetAlertStyle() {
       width: 100%;
     }
 
+    .sadari-swal-close {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      display: inline-flex;
+      width: 36px;
+      height: 36px;
+      align-items: center;
+      justify-content: center;
+      border: 0;
+      border-radius: 50%;
+      padding: 0;
+      background: transparent;
+      cursor: pointer;
+    }
+
+    .sadari-swal-close:hover {
+      background: #f3f4f5;
+    }
+
+    .sadari-swal-close:focus-visible {
+      outline: 2px solid #78b991;
+      outline-offset: 2px;
+    }
+
+    .sadari-swal-close img {
+      display: block;
+      width: 14px;
+      height: 14px;
+    }
+
     .sadari-swal-button {
       min-width: 86px;
       height: 42px;
@@ -290,6 +324,11 @@ function ensureSweetAlertStyle() {
       font-weight: 500;
       line-height: 1;
       cursor: pointer;
+      transition: background 160ms ease
+    }
+
+    .sadari-swal-button:hover {
+      background: #171A1F;
     }
 
     .sadari-swal-user-block .sadari-swal-title {
@@ -498,6 +537,11 @@ function ensureSweetAlertStyle() {
       border-color: #b43f3f;
       background: #ffffff;
       color: #b43f3f;
+      transition: background 160ms ease
+    }
+
+    .sadari-swal-deny:hover {
+      background: #FFF1F3;
     }
 
     @keyframes sadari-swal-loading-spin {
@@ -621,6 +665,39 @@ export function sweetAlert(options: SweetAlertOptions) {
     modal.setAttribute("aria-modal", "true");
     modal.setAttribute("aria-busy", iconType === "loading" ? "true" : "false");
     modal.tabIndex = -1;
+
+    /**
+     * 우측 상단 닫기 버튼을 기존 취소 선택과 같은 결과로 처리한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    const handleCloseButtonClick = (): void => {
+      // 사용자의 닫기 선택으로 현재 알림을 취소 완료한다
+      close({
+        isConfirmed: false,
+        isDenied: false,
+        isSecondaryAction: true,
+        isDismissed: false,
+      });
+    };
+
+    // 하단 취소 버튼 대신 우측 상단 닫기 버튼을 요청한 모달에만 제공한다
+    if (options.showCloseButton) {
+      const closeButton = document.createElement("button");
+      closeButton.className = "sadari-swal-close";
+      closeButton.type = "button";
+      closeButton.setAttribute("aria-label", options.closeButtonLabel ?? "취소");
+
+      const closeIcon = document.createElement("img");
+      closeIcon.src = "/img/icons/icon-close.svg";
+      closeIcon.alt = "";
+      closeIcon.setAttribute("aria-hidden", "true");
+
+      closeButton.appendChild(closeIcon);
+      closeButton.addEventListener("click", handleCloseButtonClick);
+      modal.appendChild(closeButton);
+    }
 
     const icon = document.createElement("div");
     icon.className = `sadari-swal-icon ${ICON_CLASS[iconType]}`;
@@ -794,12 +871,13 @@ export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
  */
 export function sweetConfirm(options: SweetAlertOptions) {
 
+  // 호출 화면이 취소 버튼 노출 여부를 지정하면 해당 설정을 유지한다
   return sweetAlert({
     icon: "question",
     confirmButtonText: "확인",
     cancelButtonText: "취소",
     ...options,
-    showCancelButton: true,
+    showCancelButton: options.showCancelButton ?? true,
   });
 }
 

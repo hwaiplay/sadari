@@ -70,7 +70,7 @@ export const size = styleVariants({
     fontSize: "14px",
   },
   md: {
-    height: "40px",
+    height: "42px",
   },
   lg: {
     height: "46px",
