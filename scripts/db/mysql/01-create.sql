@@ -669,7 +669,6 @@ CREATE TABLE `TB_CLMEMX` (
   `JOIN_DATE` datetime(6) DEFAULT NULL COMMENT '가입 확정 일시',
   `EXIT_DATE` datetime(6) DEFAULT NULL COMMENT '모임 탈퇴 또는 퇴장 일시',
   `BLOC_YSNO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'N' COMMENT '재가입 차단 여부',
-  `PROF_YSNO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'Y' COMMENT '모임원 프로필 노출 여부',
   `REGI_DATE` datetime(6) NOT NULL COMMENT '등록 일시',
   `UPDT_DATE` datetime(6) NOT NULL COMMENT '수정 일시',
   PRIMARY KEY (`CLUB_NUMB`,`USER_NUMB`),
