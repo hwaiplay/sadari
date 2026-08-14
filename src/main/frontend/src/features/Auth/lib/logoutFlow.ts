@@ -25,7 +25,9 @@ export async function selectLogoutScope(): Promise<LogoutScope | null> {
     // "전체 디바이스 로그아웃"
     denyButtonText: message("frontend.auth.logoutAll"),
     // "취소"
-    cancelButtonText: message("frontend.common.cancel"),
+    closeButtonLabel: message("frontend.common.cancel"),
+    showCancelButton: false,
+    showCloseButton: true,
     showDenyButton: true,
     customClass: "sadari-swal-logout",
   });

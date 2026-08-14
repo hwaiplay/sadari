@@ -43,6 +43,7 @@ import java.util.UUID;
  * 2026-07-30        SeungHyeon.Kang    정지 회원 영구 탈퇴와 취소 상태 우선순위 적용
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 요청 차단
  * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 허용과 식별값 해시 공통화
+ * 2026-08-14        Hanwon.Jang    탈퇴 회원의 모임원 프로필 노출 중지
  */
 @Service
 @RequiredArgsConstructor
@@ -409,6 +410,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         userWithdrawalMapper.uptUserAlimDeleted(request.getUserNumb());
         // 탈퇴 회원의 브라우저 푸시 구독을 모두 비활성화한다
         userWithdrawalMapper.uptUserPushDisabled(request.getUserNumb());
+        // 탈퇴 회원의 모임원 프로필을 숨기며 복귀 시 자동 노출하지 않는다
+        userWithdrawalMapper.uptClubMemberProfileHidden(request.getUserNumb());
         // 탈퇴 회원이 댓글에 등록한 좋아요를 삭제하며 복귀 시 자동 복원하지 않는다
         userWithdrawalMapper.delUserReplyLike(request.getUserNumb());
     }

@@ -66,6 +66,13 @@ export type ClubApplication = {
   applDate: string;
 };
 
+export type ClubMemberProfile = {
+  userNumb: number;
+  userNick?: string;
+  porfPath?: string;
+  membRole: "OWNER" | "MEMBER";
+};
+
 /** 로그인 사용자의 활성 모임을 조회한다. @author SeungHyeon.Kang @return 내 모임 목록 */
 export const getMyClubListApi = async (): Promise<ReadingClub[]> => {
   // 내 모임 목록을 서버에 요청한다
@@ -88,6 +95,21 @@ export const getClubDtlApi = async (clubNumb: number): Promise<ReadingClub> => {
   const response = await api.get(`/reading-clubs/${clubNumb}`);
   // 공통 성공 검증을 통과한 상세를 반환한다
   return assertResultDataSuccess(response.data).data as ReadingClub;
+};
+
+/**
+ * 활성 모임원 프로필을 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param clubNumb 모임 번호
+ * @return 프로필 노출이 허용된 모임원 목록
+ * @throws 모임 상세 조회 실패 또는 접근 권한이 없을 때 발생
+ */
+export const getClubMemberListApi = async (clubNumb: number): Promise<ClubMemberProfile[]> => {
+  // 같은 모임의 활성 회원에게 허용된 모임원 프로필을 요청한다
+  const response = await api.get(`/reading-clubs/${clubNumb}/members`);
+  // 공통 성공 검증을 통과한 목록을 반환한다
+  return (assertResultDataSuccess(response.data).data as ClubMemberProfile[] | undefined) ?? [];
 };
 
 /** 새 모임을 생성한다. @author SeungHyeon.Kang @param params 모임 생성 입력값 @return 생성된 모임 상세 */

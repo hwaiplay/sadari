@@ -28,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -82,6 +83,22 @@ public class ReadingClubController {
                                 , @PathVariable Long clubNumb) {
         // 로그인 사용자 관점의 모임 상세를 반환한다
         return readingClubService.getClubDtl(userNumb, clubNumb);
+    }
+
+    /**
+     * 활성 모임원에게 같은 모임의 공개 가능한 활성 모임원 프로필 목록을 제공한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @return 모임원 프로필 목록 조회 결과
+     */
+    @GetMapping("/{clubNumb}/members")
+    @Operation(summary = "모임원 프로필 목록 조회")
+    public ResultData getClubMemberList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                       , @PathVariable Long clubNumb) {
+        // 같은 모임의 활성 모임원 프로필 목록을 반환한다
+        return readingClubService.getClubMemberList(userNumb, clubNumb);
     }
 
     /**

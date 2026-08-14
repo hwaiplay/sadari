@@ -97,7 +97,7 @@ export const titleRow = style({
   minWidth: 0,
   display: "flex",
   alignItems: "center",
-  gap: "7px",
+  gap: "4px",
 });
 
 export const category = style({

@@ -36,6 +36,9 @@ export const suspendedDetailPage = style({
 
 export const intro = style({
   marginBottom: "22px",
+  display: "flex",
+  alignItems: "center",
+  gap: '6px'
 });
 
 export const sectionTitle = style({
@@ -43,16 +46,18 @@ export const sectionTitle = style({
   color: vars.color.black,
   fontFamily: vars.font.heading,
   fontSize: "20px",
-  lineHeight: 1.4,
 });
 
 export const description = style({
   margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
   lineHeight: 1.55,
 });
+
+export const descriptionSlash = style({
+})
 
 export const listWriteArea = style({
   marginTop: "auto",
@@ -197,8 +202,8 @@ export const statusText = style({
   margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: "14px",
-  lineHeight: 1.6,
+  fontSize: "16px",
+  lineHeight: 1.5,
   textAlign: "center",
 });
 

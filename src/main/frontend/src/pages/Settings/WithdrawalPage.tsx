@@ -21,7 +21,6 @@ import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import * as styles from "./WithdrawalPage.css";
-import {accountOption} from "./WithdrawalPage.css";
 
 const POLICY_MODAL_ANIMATION_MILLISECONDS = 180;
 
@@ -88,8 +87,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
   );
   const withdrawalReasonBytes = getWithdrawReasonByteLen(rsonCntn);
   const isSubmitDisabled = isSubmitting
-    || !wthdRson
-    || (wthdRson === "OTHER" && !rsonCntn.trim());
+    || !wthdRson;
 
   /**
    * 비활성화와 영구 탈퇴 정책을 비교할 수 있는 도움말 팝업을 엽니다.
@@ -371,7 +369,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
 
   // 계정 처리 정책과 사유를 한 화면에서 선택하는 설정 화면을 반환합니다
   return (
-    <main className={styles.page}>
+    <main className={hardOnly ? `${styles.page} ${styles.standalonePage}` : styles.page}>
       {/* 계정 처리 방식 선택 영역 */}
       <section className={`${styles.section} ${styles.withdrawalTypeSection}`}>
         <h2 className={`${styles.title} ${styles.standaloneTitle}`}>
@@ -467,11 +465,11 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
 
         {/* 기타 사유 직접 입력 영역 */}
         <div className={styles.textareaWrap}>
-          {/* "이유를 직접 입력해주세요." */}
+          {/* "상세 사유를 입력해주세요" */}
           <textarea
             className={styles.textarea}
             value={rsonCntn}
-            placeholder="이유를 직접 입력해주세요."
+            placeholder="상세 사유를 입력해주세요"
             onChange={handleWithdrawalReason}
           />
 

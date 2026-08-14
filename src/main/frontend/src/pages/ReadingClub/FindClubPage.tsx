@@ -1,11 +1,12 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import { getFindClubListApi, type ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import InterestSelectModal from "@/features/ReadingClub/components/InterestSelectModal";
 import { getUserInterestCatalogApi, getUserInterestListApi, updateUserInterestsApi, type UserInterest } from "@/features/User/api/userApi";
 import { type FormEvent, useEffect, useState } from "react";
 import ClubCard from "./ClubCard";
-import * as styles from "./ReadingClub.css";
+import * as styles from "./FindClubPage.css";
 
 /** 관심분야를 선행 조건으로 공개 모임 검색 화면을 구성한다. @author SeungHyeon.Kang @return 모임 찾기 화면 */
 export default function FindClubPage() {
@@ -30,7 +31,10 @@ export default function FindClubPage() {
       setSelectedInterests(nextSelected);
       // 관심분야가 있으면 공개 모임을 즉시 조회한다
       if (nextSelected.length > 0) await loadClubs("");
-    }).catch((error) => void sweetError("조회하지 못했어요", getApiErrorMessage(error, "다시 시도해 주세요."))).finally(() => setIsLoading(false));
+    }).catch((error) => void sweetError(
+      message("frontend.readingClub.error.fetchTitle"),
+      getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+    )).finally(() => setIsLoading(false));
   }, []);
 
   /** 검색 폼을 제출한다. @author SeungHyeon.Kang @param event 폼 제출 이벤트 @return 반환값이 없다 */
@@ -56,13 +60,13 @@ export default function FindClubPage() {
     <div className={styles.page}>
       <form onSubmit={submitSearch}>
         <label className={styles.searchLabel}>
-          <span className={styles.hiddenLabel}>모임 검색</span>
-          <input className={styles.searchInput} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder="모임명이나 소개로 검색" />
-          <button className={styles.searchButton} type="submit" aria-label="검색">⌕</button>
+          <span className={styles.hiddenLabel}>{message("frontend.readingClub.find.searchLabel")}</span>
+          <input className={styles.searchInput} value={keyword} onChange={(event) => setKeyword(event.target.value)} placeholder={message("frontend.readingClub.find.searchPlaceholder")} />
+          <button className={styles.searchButton} type="submit" aria-label={message("frontend.readingClub.find.searchButton")}>⌕</button>
         </label>
       </form>
       {selectedInterests.length > 0 && <div className={styles.chips}>{selectedInterests.map((interest) => <span className={styles.chip} key={interest.intrCode}>{interest.intrName}</span>)}</div>}
-      {isLoading ? <p className={styles.loading}>모임을 불러오고 있어요.</p> : clubs.length > 0 ? <div className={styles.list}>{clubs.map((club) => <ClubCard club={club} key={club.clubNumb} />)}</div> : selectedInterests.length > 0 && <p className={styles.empty}>조건에 맞는 공개 모임이 아직 없어요.</p>}
+        {isLoading ? <p className={styles.loading}>{message("frontend.readingClub.common.loading")}</p> : clubs.length > 0 ? <div className={styles.list}>{clubs.map((club) => <ClubCard club={club} key={club.clubNumb} />)}</div> : selectedInterests.length > 0 && <p className={styles.empty}>{message("frontend.readingClub.find.empty")}</p>}
       {/* 관심분야가 한 개도 없으면 닫을 수 없는 필수 선택 팝업을 노출한다 */}
       {!isLoading && selectedInterests.length === 0 && <InterestSelectModal catalog={catalog} initialCodes={[]} minimum={1} onSave={(codes) => void saveInterests(codes)} />}
     </div>
