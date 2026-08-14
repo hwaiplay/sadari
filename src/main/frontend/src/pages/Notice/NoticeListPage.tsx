@@ -200,6 +200,7 @@ function NoticeListPage() {
     <main className={styles.listPage}>
       {/* 공지사항 목록 안내 영역 */}
       <section className={styles.intro} aria-label="공지사항 안내">
+        <img src={"/img/icons/icon-megaphone.svg"} alt="" aria-hidden="true" />
         {/* "사다리의 새로운 소식과 주요 안내를 확인할 수 있어요." */}
         <p className={styles.description}>사다리의 새로운 소식과 주요 안내를 확인할 수 있어요.</p>
       </section>

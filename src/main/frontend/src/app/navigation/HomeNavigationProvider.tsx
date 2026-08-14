@@ -35,6 +35,18 @@ type StandaloneNavigator = Navigator & {
   standalone?: boolean;
 };
 
+type CloseWatcherInstance = EventTarget & {
+  destroy: () => void;
+};
+
+type CloseWatcherConstructor = new () => CloseWatcherInstance;
+
+type WindowWithCloseWatcher = Window & {
+  CloseWatcher?: CloseWatcherConstructor;
+};
+
+type RestoreExitGuard = () => void;
+
 // 앱 전체에서 동일한 홈 루트 복귀 정책을 사용하도록 이동 함수를 공유한다
 const HomeNavigationContext = createContext<HomeNavigation | null>(null);
 
@@ -52,6 +64,26 @@ const isStandalonePwa = (): boolean => {
 
   // 표준 display mode 또는 iOS 전용 상태 중 하나가 설치 실행을 나타내면 PWA로 판정한다
   return isStandaloneDisplay || standaloneNavigator.standalone === true;
+};
+
+/**
+ * 현재 브라우저가 기기 고유의 뒤로가기 요청을 전달하는 CloseWatcher를 제공하는지 확인한다
+ *
+ * @author SeungHyeon.Kang
+ * @return CloseWatcher 생성자 또는 미지원 환경일 때 null
+ */
+const getCloseWatcherClass = (): CloseWatcherConstructor | null => {
+
+  const closeWatcherConstructor = (window as WindowWithCloseWatcher).CloseWatcher;
+
+  // CloseWatcher를 지원하지 않는 브라우저는 History 가드 방식으로 처리한다
+  if (typeof closeWatcherConstructor !== "function") {
+    // 지원 생성자가 없어 폴백 처리를 위한 null을 반환한다
+    return null;
+  }
+
+  // 모바일 기기의 닫기 요청을 직접 받을 생성자를 반환한다
+  return closeWatcherConstructor;
 };
 
 /**
@@ -127,8 +159,8 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
   const pendingNavigationRef = useRef<PendingHomeNavigation | null>(null);
   // 종료 확인 모달이 중복 표시되지 않도록 현재 표시 여부를 보관한다
   const exitPromptOpenRef = useRef(false);
-  // 종료 확인 뒤 가드 이력을 벗어나는 POP을 일반 홈 뒤로가기로 처리하지 않도록 표시한다
-  const exitConfirmedRef = useRef(false);
+  // History 이동 없이 기기 뒤로가기를 받을 현재 CloseWatcher를 보관한다
+  const closeWatcherRef = useRef<CloseWatcherInstance | null>(null);
 
   /**
    * 현재 화면 아래의 앱 이력을 제거하고 홈을 세션 루트로 배치한다
@@ -227,15 +259,16 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
   }, [location.pathname, location.state, navigate]);
 
   /**
-   * PWA 홈 뒤로가기 확인 결과에 따라 현재 앱 창을 종료한다
+   * PWA 홈의 두 번째 뒤로가기 종료 방법을 안내하고 취소 시 감지 수단을 복원한다
    *
    * @author SeungHyeon.Kang
-   * @return 종료 확인 처리 완료 Promise
+   * @param restoreExitGuard 취소 뒤 현재 브라우저의 종료 감지 수단을 복원할 함수
+   * @return 종료 안내 처리 완료 Promise
    */
-  const confirmPwaExit = useCallback(async (): Promise<void> => {
+  const showPwaExitGuide = useCallback(async (restoreExitGuard: RestoreExitGuard): Promise<void> => {
 
-    // PWA 종료 여부와 확인 시 동작을 사용자에게 안내한다
-    const result = await sweetConfirm({
+    // 첫 번째 뒤로가기 뒤 다음 시스템 뒤로가기가 앱 종료 동작임을 안내한다
+    await sweetConfirm({
       // "앱 종료 안내"
       title: message("frontend.pwa.exitConfirmTitle"),
       // "종료를 원하시면 뒤로가기 버튼을 한 번 더 눌러주세요."
@@ -246,29 +279,14 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
       allowOutsideClick: false,
     });
 
-    // 완료된 모달 뒤에 다음 뒤로가기 확인을 받을 수 있도록 표시 상태를 해제한다
+    // 취소로 닫힌 안내 뒤 다음 첫 번째 뒤로가기를 다시 받을 수 있도록 표시 상태를 해제한다
     exitPromptOpenRef.current = false;
-
-    // 취소한 경우 동일 URL의 종료 가드가 다음 뒤로가기를 계속 받게 한다
-    if (!result.isConfirmed) {
-      // 홈 화면을 유지하고 종료 처리를 완료한다
-      return;
-    }
-
-    // 설치형 PWA 창을 사용자 확인 동작 안에서 종료한다
-    window.close();
-
-    // 브라우저가 직접 창 닫기를 허용하지 않으면 루트 이력 뒤로 이동해 운영체제 종료 동작에 위임한다
-    if (!window.closed) {
-      // 다음 POP은 종료용 이동이므로 확인 모달을 다시 표시하지 않도록 기록한다
-      exitConfirmedRef.current = true;
-      // 동일 URL의 종료 가드에서 앱의 첫 이력으로 이동한다
-      window.history.back();
-    }
+    // 사용자가 취소했을 때만 현재 브라우저에 맞는 다음 종료 감지 수단을 복원한다
+    restoreExitGuard();
   }, []);
 
   /**
-   * PWA 홈에 동일 URL의 종료 가드를 설치하고 뒤로가기 종료 확인을 처리한다
+   * PWA 홈에 브라우저별 종료 감지 수단을 설치하고 뒤로가기 종료 안내를 처리한다
    *
    * @author SeungHyeon.Kang
    * @return 홈 화면을 벗어날 때 실행할 이벤트 정리 함수 또는 반환값 없음
@@ -286,12 +304,130 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
     }
 
     const historyState = window.history.state as RouterHistoryState | null;
+    const closeWatcherConstructor = getCloseWatcherClass();
+
+    // 지원 브라우저는 History 항목을 추가하지 않고 기기 고유의 닫기 요청을 직접 처리한다
+    if (closeWatcherConstructor !== null) {
+      // 이전 배포에서 남은 종료 가드가 현재 항목이면 기본 홈 항목으로 먼저 이동한다
+      if (historyState?.sadariHomeExitGuard === true) {
+        // 기존 가드를 앞으로 보내 다음 닫기 요청이 추가 History를 거치지 않게 한다
+        window.history.back();
+        // 기본 홈 항목 도착 후 Effect가 다시 실행되도록 현재 설치를 종료한다
+        return undefined;
+      }
+
+      // 중첩 함수에서도 지원 생성자의 null 가능성이 다시 확장되지 않도록 타입을 확정한다
+      const supportedCloseWatcher = closeWatcherConstructor;
+      let isCloseWatcherActive = true;
+
+      /**
+       * 현재 홈 화면의 다음 기기 뒤로가기를 받을 CloseWatcher를 설치한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 반환값이 없다
+       */
+      function installCloseWatcher(): void {
+
+        // 홈 Effect가 해제됐거나 이미 감시 중이면 CloseWatcher를 중복 생성하지 않는다
+        if (!isCloseWatcherActive || window.location.pathname !== HOME_PATH
+            || closeWatcherRef.current !== null) {
+          // 현재 화면에는 새 CloseWatcher가 필요하지 않아 처리를 종료한다
+          return;
+        }
+
+        // 첫 번째 기기 뒤로가기만 소비할 CloseWatcher를 생성한다
+        const closeWatcher = new supportedCloseWatcher();
+        // Effect 정리와 취소 후 재설치를 위해 현재 감시 객체를 보관한다
+        closeWatcherRef.current = closeWatcher;
+
+        /**
+         * 첫 번째 기기 뒤로가기를 종료 안내로 전환하고 두 번째 요청은 운영체제에 남긴다
+         *
+         * @author SeungHyeon.Kang
+         * @return 반환값이 없다
+         */
+        function handleDeviceCloseRequest(): void {
+
+          // 한 번 사용하면 자동 해제되는 CloseWatcher와 현재 참조가 일치할 때만 비운다
+          if (closeWatcherRef.current === closeWatcher) {
+            // 두 번째 기기 뒤로가기가 운영체제 기본 종료로 전달되도록 참조를 제거한다
+            closeWatcherRef.current = null;
+          }
+
+          // 홈 Effect 해제와 동시에 도착한 닫기 요청에는 종료 안내를 표시하지 않는다
+          if (!isCloseWatcherActive || window.location.pathname !== HOME_PATH) {
+            // 현재 홈 종료 흐름이 아니므로 안내 처리를 종료한다
+            return;
+          }
+
+          // 안내 중에는 새 CloseWatcher를 만들지 않아 두 번째 요청이 앱 종료로 이어지게 한다
+          exitPromptOpenRef.current = true;
+          // 취소 버튼을 누른 경우에만 다음 첫 번째 뒤로가기를 받을 CloseWatcher를 다시 설치한다
+          void showPwaExitGuide(installCloseWatcher);
+        }
+
+        // Android 뒤로가기 등 기기 고유 닫기 요청을 한 번만 처리한다
+        closeWatcher.addEventListener("close", handleDeviceCloseRequest, { once: true });
+      }
+
+      // 현재 홈에서 첫 번째 시스템 뒤로가기를 받을 CloseWatcher를 설치한다
+      installCloseWatcher();
+
+      /**
+       * 홈 화면을 벗어날 때 현재 CloseWatcher를 해제한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 반환값이 없다
+       */
+      function removeCloseWatcher(): void {
+
+        // 완료 대기 중인 안내가 CloseWatcher를 다시 설치하지 못하도록 Effect를 비활성화한다
+        isCloseWatcherActive = false;
+        // 다른 화면의 기기 뒤로가기를 홈 종료 요청으로 소비하지 않도록 감시 객체를 제거한다
+        closeWatcherRef.current?.destroy();
+        // 다음 홈 진입에서 새 감시 객체를 설치할 수 있도록 참조를 비운다
+        closeWatcherRef.current = null;
+        // 다음 홈 진입이 이전 안내 표시 상태를 상속하지 않도록 초기화한다
+        exitPromptOpenRef.current = false;
+      }
+
+      // CloseWatcher 방식의 홈 종료 Effect 정리 함수를 반환한다
+      return removeCloseWatcher;
+    }
 
     // 현재 홈 항목이 가드가 아니면 동일 URL 항목을 한 개만 추가해 이전 화면 노출을 차단한다
     if (historyState?.sadariHomeExitGuard !== true) {
       // React Router 상태를 보존한 종료 가드를 생성한다
       const guardState = getHomeExitGuardState();
       // PWA 뒤로가기가 앱 외부나 이전 화면보다 동일 URL 가드를 먼저 만나도록 추가한다
+      window.history.pushState(guardState, "", window.location.href);
+    }
+
+    /**
+     * 미지원 브라우저에서 취소 후 동일 URL History 종료 가드를 복원한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    function restoreHistoryGuard(): void {
+
+      // 안내가 닫히기 전에 다른 화면으로 이동했으면 해당 화면의 History를 변경하지 않는다
+      if (window.location.pathname !== HOME_PATH) {
+        // 홈 종료 가드를 복원할 수 없는 화면이므로 처리를 종료한다
+        return;
+      }
+
+      const currentState = window.history.state as RouterHistoryState | null;
+
+      // 앞으로가기로 이미 종료 가드에 도착한 경우에는 동일 URL 항목을 중복 추가하지 않는다
+      if (currentState?.sadariHomeExitGuard === true) {
+        // 현재 가드를 다음 뒤로가기에서 그대로 사용하도록 처리를 종료한다
+        return;
+      }
+
+      // 취소 뒤 다음 첫 번째 뒤로가기를 다시 감지할 종료 가드 상태를 생성한다
+      const guardState = getHomeExitGuardState();
+      // 사용자가 취소했을 때만 동일 URL 가드를 복원해 다음 종료 안내를 준비한다
       window.history.pushState(guardState, "", window.location.href);
     }
 
@@ -306,37 +442,22 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
 
       const poppedState = event.state as RouterHistoryState | null;
 
-      // 종료 확인 뒤 가드 아래의 첫 이력에 도착하면 더 이전 이동을 운영체제에 위임한다
-      if (exitConfirmedRef.current) {
-        // 종료용 POP이 다시 확인 흐름에 들어오지 않도록 표시를 해제한다
-        exitConfirmedRef.current = false;
-        // PWA 첫 이력의 기본 뒤로가기 동작으로 앱을 종료한다
-        window.history.back();
-        // 종료 이동 이후 동일 URL 가드를 복원하지 않도록 처리를 종료한다
-        return;
-      }
-
       // 앞으로가기로 종료 가드에 도착한 경우에는 별도 확인 없이 홈을 유지한다
       if (poppedState?.sadariHomeExitGuard === true) {
         // 가드 자체의 POP을 종료 요청으로 중복 처리하지 않는다
         return;
       }
 
-      // 이탈한 가드 항목을 즉시 복원해 확인 중 추가 뒤로가기가 이전 화면을 노출하지 않게 한다
-      const guardState = getHomeExitGuardState();
-      // 사용자가 확인하거나 취소할 때까지 현재 홈 URL을 유지한다
-      window.history.pushState(guardState, "", window.location.href);
-
       // 종료 확인이 이미 표시 중이면 같은 제스처의 중복 이벤트를 무시한다
       if (exitPromptOpenRef.current) {
-        // 현재 종료 확인 모달이 사용자 선택을 계속 받도록 처리를 종료한다
+        // 가드를 다시 추가하지 않아 현재 제스처를 운영체제의 기본 종료 흐름으로 유지한다
         return;
       }
 
       // 종료 확인 모달이 한 번만 표시되도록 진행 상태를 기록한다
       exitPromptOpenRef.current = true;
-      // PWA 종료 여부를 사용자에게 확인하고 선택 결과를 비동기로 처리한다
-      void confirmPwaExit();
+      // 다음 뒤로가기가 앱 종료 동작임을 안내하고 취소 결과를 비동기로 처리한다
+      void showPwaExitGuide(restoreHistoryGuard);
     }
 
     // 홈 가드 아래 항목으로 이동하는 뒤로가기를 종료 확인 흐름으로 받는다
@@ -356,7 +477,7 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
 
     // 홈 화면 Effect가 해제될 때 사용할 이벤트 정리 함수를 반환한다
     return removeHomeExitListener;
-  }, [confirmPwaExit, location.pathname]);
+  }, [location.pathname, showPwaExitGuide]);
 
   // POP 위치 변경이 끝나면 앱 진입 항목을 홈으로 교체한다
   useEffect(completePendingHomeNav, [completePendingHomeNav, location.key]);
