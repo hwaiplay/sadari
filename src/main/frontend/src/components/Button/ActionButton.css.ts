@@ -4,7 +4,7 @@ import { style, styleVariants } from "@vanilla-extract/css";
 export const button = style({
   minWidth: "76px",
   padding: "0 16px",
-  border: "1px solid transparent",
+  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "8px",
   fontFamily: vars.font.medium,
   fontSize: "14px",
@@ -30,7 +30,6 @@ export const button = style({
 
 export const variant = styleVariants({
   primary: {
-    borderColor: "transparent",
     backgroundColor: vars.color.gray900,
     color: "#ffffff",
     selectors: {
@@ -40,23 +39,20 @@ export const variant = styleVariants({
     },
   },
   secondary: {
-    borderColor: vars.color.gray400,
     backgroundColor: "#ffffff",
     color: vars.color.gray900,
     selectors: {
       "&:hover:not(:disabled)": {
-        borderColor: vars.color.gray500,
-        backgroundColor: "#fbfbfb",
+        backgroundColor: vars.color.gray100,
       },
     },
   },
   danger: {
-    borderColor: vars.color.negative,
-    backgroundColor: "#ffffff",
+    backgroundColor: vars.color.negativeBg,
     color: vars.color.negativeText,
     selectors: {
       "&:hover:not(:disabled)": {
-        backgroundColor: vars.color.negativeBg,
+        backgroundColor: vars.color.negativeHover,
       },
     },
   },
@@ -104,4 +100,9 @@ export const icon = style({
 export const label = style({
   display: "inline-flex",
   alignItems: "center",
+  selectors: {
+    "&:empty": {
+      display: "none",
+    },
+  },
 });
