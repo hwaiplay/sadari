@@ -21,13 +21,16 @@ export const listPage = style([
 
 export const intro = style({
   marginBottom: "22px",
+  display: "flex",
+  alignItems: "center",
+  gap: "6px",
 });
 
 export const description = style({
   margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
   lineHeight: 1.55,
 });
 
