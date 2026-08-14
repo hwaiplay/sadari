@@ -3,6 +3,7 @@ package org.our.sadari.myPage.controller;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
@@ -18,6 +19,8 @@ import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
+import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
+import org.our.sadari.myPage.service.ReadingStatisticsService;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.social.dto.SocialDto;
@@ -41,17 +44,72 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
+ * 2026-08-14        SeungHyeon.Kang    본인 전용 독서 통계 지연 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    독서 통계 연도 선택 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    타이머 화면 독서 잔디 전용 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/user")
-@Tag(name = "마이페이지", description = "독서 목표, 독서 요약, 독서 캘린더 API")
+@Tag(name = "마이페이지", description = "독서 목표, 독서 요약, 독서 캘린더, 독서 통계 API")
 public class MyPageController {
 
     // Report 업무 처리 서비스
     private final ReportService reportService;
     // Social 업무 처리 서비스
     private final SocialService socialService;
+    // 마이페이지 본인 전용 독서 통계 서비스
+    private final ReadingStatisticsService readingStatisticsService;
+
+    /**
+     * 로그인 사용자의 선택 연도 독서 시간 잔디만 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리 대상 사용자 번호
+     * @param readYear 조회할 연도, 없으면 현재 연도
+     * @return 조회 가능한 연도와 날짜별 독서 시간 잔디
+     */
+    @GetMapping("/reading-heatmap")
+    @Operation(summary = "독서 잔디 조회", description = "로그인 사용자 본인의 연도별 독서 시간 잔디만 조회한다.")
+    public ResultData getReadingHeatmap(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                       , @Parameter(description = "조회할 연도", example = "2026")
+                                         @RequestParam(required = false) Integer readYear) {
+        // 타이머 화면에 필요한 선택 연도 독서 잔디만 조회한다
+        return readingStatisticsService.getReadingHeatmap(userNumb, readYear);
+    }
+
+    /**
+     * 로그인 사용자의 선택 연도 독서 시간과 독서 상태 분포를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 처리 대상 사용자 번호
+     * @param readYear 조회할 연도, 없으면 현재 연도
+     * @return 선택 연도의 잔디와 상태 비율 통계
+     */
+    @GetMapping("/reading-statistics")
+    @Operation(summary = "독서 통계 조회", description = "로그인 사용자 본인의 연도별 독서 시간과 독후감 상태 분포를 조회한다.")
+    public ResultData getReadingStats(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @Parameter(description = "조회할 연도", example = "2026")
+                                       @RequestParam(required = false) Integer readYear) {
+        // 스크롤로 통계 영역에 진입한 로그인 사용자의 선택 연도 통계를 조회한다
+        return readingStatisticsService.getReadingStats(userNumb, readYear);
+    }
+
+    /**
+     * 로그인 사용자의 독서 통계 공개 범위를 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 설정을 변경할 로그인 사용자 번호
+     * @param setting 선택한 공개 여부
+     * @return 저장된 공개 여부 코드
+     */
+    @PutMapping("/reading-statistics/settings")
+    @Operation(summary = "독서 통계 공개 설정 수정", description = "로그인 사용자 본인의 독서 통계를 다른 사용자에게 공개할지 변경한다.")
+    public ResultData uptReadingStatsSetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                            , @Valid @RequestBody ReadingStatisticsSettingDto setting) {
+        // 인증 사용자 번호를 기준으로 독서 통계 공개 범위를 변경한다
+        return readingStatisticsService.uptReadingStatsSetting(userNumb, setting);
+    }
 
     /**
      * 로그인 사용자의 월간 독서 활동 요약 조회한다.

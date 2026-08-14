@@ -375,7 +375,7 @@ export const readingSummaryRow = style({
 });
 
 export const goalAchievementSummary = style({
-  padding: "18px 8px 24px",
+  padding: "0 8px 24px",
 });
 
 export const profileStatsSummary = style({
@@ -1543,6 +1543,5 @@ export const currentReadingModalEditButton = style([
     display: "inline-flex",
     alignItems: "center",
     justifyContent: "center",
-    gap: "4px",
   },
 ]);
