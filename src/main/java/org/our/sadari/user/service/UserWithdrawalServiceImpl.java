@@ -20,6 +20,7 @@ import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.mapper.UserWithdrawalMapper;
+import org.our.sadari.timer.service.ReadingTimerService;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,7 @@ import java.util.UUID;
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 요청 차단
  * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 허용과 식별값 해시 공통화
  * 2026-08-14        Hanwon.Jang    탈퇴 회원의 모임원 프로필 노출 중지
+ * 2026-08-14        SeungHyeon.Kang    계정 상태 변경 전 독서 타이머 종료 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -86,6 +88,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
     private final UserSuspensionService userSuspensionService;
     // 계정 상태 변경 시 저장하지 않은 프로필 임시 이미지를 정리할 파일 서비스
     private final FileService fileService;
+    // 계정 상태 변경 직전 실행 중인 독서 시간을 확정하는 타이머 서비스
+    private final ReadingTimerService readingTimerService;
 
     // 환경별 영구 삭제 유예기간
     @Value("${withdrawal.hard-delete-wait-days:30}")
@@ -386,6 +390,9 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
                                      , LocalDateTime deleteDate) {
         // 탈퇴 이력을 먼저 등록해 상태 변경의 업무 근거를 남긴다
         userWithdrawalMapper.setUserWithdrawal(request);
+
+        // 계정이 비활성 상태가 되기 전에 실행 중인 독서 시간을 확정하고 세션을 완료한다
+        readingTimerService.uptTimerWithdrawal(request.getUserNumb());
 
         // 회원 상태 변경 요청 객체를 생성한다
         UserDto user = new UserDto();

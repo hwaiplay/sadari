@@ -49,6 +49,26 @@ export const navLink = style({
     cursor: "pointer",
 });
 
+export const navIconWrap = style({
+    position: "relative",
+    display: "inline-flex",
+    width: "28px",
+    height: "28px",
+    flexShrink: 0,
+});
+
+export const timerRunningBadge = style({
+    position: "absolute",
+    top: "-1px",
+    right: "-1px",
+    width: "10px",
+    height: "10px",
+    borderRadius: "999px",
+    backgroundColor: "#ef4444",
+    boxSizing: "border-box",
+    pointerEvents: "none",
+});
+
 export const navLinkText = style({
     fontSize: "12px",
     color: vars.color.gray500
