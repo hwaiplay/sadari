@@ -1,20 +1,29 @@
 import { message } from "@/app/messages/message";
 import { ActionButton } from "@/components/Button/ActionButton";
+import Skeleton from "@/components/Skeleton/Skeleton";
 import InterestSelectModal from "@/features/ReadingClub/components/InterestSelectModal";
 import { createPortal } from "react-dom";
-import { useSetClubPage } from "../../features/ReadingClub/hooks/useSetClubPage.ts";
+import {
+  type SetClubPageMode,
+  useSetClubPage,
+} from "@/features/ReadingClub/hooks/useSetClubPage.ts";
 import * as styles from "./SetClubPage.css";
 
 const SET_CLUB_FORM_ID = "set-club-form";
 
+type SetClubPageProps = {
+  mode?: SetClubPageMode;
+};
+
 /**
- * 모임 공개 범위, 가입 방식, 카테고리와 정원을 입력하는 생성 화면을 구성한다
+ * 모임 공개 범위, 가입 방식, 카테고리와 정원을 입력하는 저장 화면을 구성한다
  *
- * @author SeungHyeon.Kang
- * @return 새 모임 만들기 화면
+ * @author Hanwon.Jang
+ * @param props 모임 폼 동작 모드
+ * @return 모임 만들기 또는 수정 화면
  */
-export default function SetClubPage() {
-  // 모임 생성 화면 로직 훅에서 입력 상태와 사용자 이벤트 처리 함수를 가져온다
+export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
+  // 모임 저장 화면 로직 훅에서 입력 상태와 사용자 이벤트 처리 함수를 가져온다
   const {
     addQuestion,
     catalog,
@@ -23,6 +32,8 @@ export default function SetClubPage() {
     handleDescriptionChange,
     handleNameChange,
     isCategoryOpen,
+    isEditMode,
+    isLoading,
     isSaving,
     openCategoryModal,
     removeCategory,
@@ -35,7 +46,20 @@ export default function SetClubPage() {
     setCapacity,
     submitForm,
     updateQuestion,
-  } = useSetClubPage();
+  } = useSetClubPage(mode);
+
+  // 수정할 모임 정보를 조회하는 동안 폼 크기의 스켈레톤을 표시한다
+  if (isLoading) {
+    return (
+      <main
+        className={styles.page}
+        aria-busy="true"
+        aria-label={message("frontend.readingClub.set.loading")}
+      >
+        <Skeleton width="100%" height={620} borderRadius={20} />
+      </main>
+    );
+  }
 
   // 선택 카드와 삭제 버튼의 공통 상태 스타일을 적용한 모임 생성 폼을 반환한다
   return (
@@ -261,7 +285,7 @@ export default function SetClubPage() {
         )}
       </div>
 
-      {/* 모임 만들기 버튼 */}
+      {/* 모임 저장 버튼 */}
       {createPortal(
         <div className={styles.fixedSubmitArea}>
           <ActionButton
@@ -273,8 +297,12 @@ export default function SetClubPage() {
             disabled={isSaving}
           >
             {isSaving
-              ? message("frontend.readingClub.set.saving")
-              : message("frontend.readingClub.set.submit")}
+              ? (isEditMode
+                ? message("frontend.readingClub.set.editSaving")
+                : message("frontend.readingClub.set.saving"))
+              : (isEditMode
+                ? message("frontend.readingClub.set.editSubmit")
+                : message("frontend.readingClub.set.submit"))}
           </ActionButton>
         </div>,
         document.body,

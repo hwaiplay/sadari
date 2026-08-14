@@ -1,5 +1,6 @@
 // src/components/common/Loading.css.ts
 import { style, keyframes } from "@vanilla-extract/css";
+import {vars} from "@/app/styles/tokens.css.ts";
 
 const spin = keyframes({
   "0%": {
@@ -31,7 +32,7 @@ export const spinner = style({
   height: "48px",
   borderRadius: "50%",
   border: "5px solid rgba(0,0,0,0.1)",
-  borderTop: "5px solid #4f46e5", // 포인트 컬러
+  borderTop: `5px solid ${vars.color.brand}`, // 포인트 컬러
   animation: `${spin} 0.8s linear infinite`,
 });
 

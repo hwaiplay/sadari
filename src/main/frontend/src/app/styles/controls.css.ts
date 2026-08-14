@@ -1,6 +1,17 @@
 import { style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
+/**
+ * fileName       : controls.css
+ * author         : Hanwon.Jang
+ * date           : 2026-08-14
+ * description    : 선택, 버튼 요소 등에 공통 컬러 스타일을 정의
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-14        Hanwon.Jang    주석 추가
+ */
+
 export const selectableOption = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "12px",
@@ -38,7 +49,7 @@ export const destructiveButton = style({
   transition: "background-color 160ms ease, opacity 160ms ease",
   selectors: {
     "&:hover": {
-      backgroundColor: "#FFCDD4",
+      backgroundColor: vars.color.negativeHover,
     },
     "&:focus-visible": {
       outline: `2px solid ${vars.color.negative}`,

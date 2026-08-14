@@ -61,7 +61,7 @@ export const header = style({
 export const coverFrame = style({
   width: "126px",
   aspectRatio: "2 / 3",
-  borderRadius: "6px",
+  borderRadius: "8px",
   overflow: "hidden",
   backgroundColor: "#ffffff",
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",

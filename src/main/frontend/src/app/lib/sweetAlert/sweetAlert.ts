@@ -358,6 +358,9 @@ function ensureSweetAlertStyle() {
       background: #ffffff;
       color: #1f1f1f;
     }
+    .sadari-swal-cancel:hover {
+      background: #F6F8F9;
+    }
 
     @keyframes sadari-swal-open {
       from {

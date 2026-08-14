@@ -14,7 +14,7 @@ export const reportPage = style([
     width: "100%",
     maxWidth: "600px",
     minHeight: "calc(100svh - 112px)",
-    padding: "28px 0 20px",
+    padding: "20px 0 20px",
     backgroundColor: "#ffffff",
     boxSizing: "border-box",
     gap: "24px",

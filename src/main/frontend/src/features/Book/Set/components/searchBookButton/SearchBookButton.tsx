@@ -1,17 +1,23 @@
 
 import { message } from "@/app/messages/message";
-import { Link } from "react-router-dom";
+import { Link, type To } from "react-router-dom";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
+
+type SearchBookButtonProps = {
+  to?: To;
+};
 
 /**
  * 도서 검색 화면으로 이동하는 버튼을 표시한다
  * @author HanWon.Jang
+ * @param props 이동할 도서 검색 경로
  * @return 도서 검색 화면 이동 버튼
  */
-const SearchBookButton = () => {
+const SearchBookButton = ({ to = "/book/search" }: SearchBookButtonProps) => {
 
+  // 개인 또는 모임 흐름에서 지정한 도서 검색 화면 이동 버튼을 반환한다
   return (
-    <Link to="/book/search" className={searchBtn}>
+    <Link to={to} className={searchBtn}>
       <svg
         width="27"
         height="27"

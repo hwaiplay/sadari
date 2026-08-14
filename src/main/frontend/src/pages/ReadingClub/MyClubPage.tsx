@@ -1,5 +1,6 @@
 import type { ClubInvitation, ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import { message } from "@/app/messages/message";
+import Skeleton from "@/components/Skeleton/Skeleton";
 import { Link } from "react-router-dom";
 import {
   getClubCategory,
@@ -10,11 +11,16 @@ import {
 import * as styles from "./MyClubPage.css";
 
 /**
- * 내 모임과 받은 초대를 피그마 기준의 모바일 카드 화면으로 구성한다
- *
- * @author SeungHyeon.Kang
- * @return 내 모임 화면
+ * fileName       : MyClubPage
+ * author         : Hanwon.Jang
+ * date           : 2026-08-14
+ * description    : 내 모임 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-14        Hanwon.Jang    주석 추가
  */
+
 export default function MyClubPage() {
   // 화면 로직 훅에서 조회 상태와 사용자 이벤트 처리 함수를 가져온다
   const {
@@ -32,7 +38,7 @@ export default function MyClubPage() {
   /**
    * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param invitation 표시할 받은 초대
    * @return 받은 초대 카드
    */
@@ -76,7 +82,7 @@ export default function MyClubPage() {
   /**
    * 진행 중인 모임 한 건을 피그마 비율의 카드로 구성한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param club 표시할 모임
    * @return 진행 중인 모임 카드
    */
@@ -176,10 +182,16 @@ export default function MyClubPage() {
         </h2>
         {/* 참여 중인 모임 카드 목록 영역 */}
         {isLoading ? (
-          <p className={styles.empty}>
+          <div className={styles.clubList}>
+            {/* 진행 중인 모임 카드 로딩 영역 */}
             {/* "모임을 불러오고 있어요." */}
-            {message("frontend.readingClub.common.loading")}
-          </p>
+            <Skeleton
+              width="100%"
+              height={156}
+              borderRadius={22}
+              ariaLabel={message("frontend.readingClub.common.loading")}
+            />
+          </div>
         ) : clubs.length > 0 ? (
           <div className={styles.clubList}>{clubs.map(renderClub)}</div>
         ) : (

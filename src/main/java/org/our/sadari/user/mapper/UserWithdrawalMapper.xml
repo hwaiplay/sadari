@@ -64,16 +64,6 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 계정 비활성화 또는 영구 삭제 대기 전환 시 모임원 프로필을 숨긴다. -->
-    <update id="uptClubMemberProfileHidden" parameterType="long">
-        UPDATE /* uptClubMemberProfileHidden */
-               TB_CLMEMX
-           SET PROF_YSNO = 'N'
-             , UPDT_DATE = CURRENT_TIMESTAMP(6)
-         WHERE USER_NUMB = #{userNumb}
-           AND PROF_YSNO = 'Y'
-    </update>
-
     <!-- 계정 비활성화 또는 영구 삭제 대기 전환 시 회원이 댓글에 등록한 좋아요를 삭제한다. -->
     <delete id="delUserReplyLike" parameterType="long">
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
