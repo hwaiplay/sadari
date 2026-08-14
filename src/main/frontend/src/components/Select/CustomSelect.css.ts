@@ -10,7 +10,7 @@ export const trigger = style({
   minWidth: "112px",
   height: "32px",
   padding: "0 12px",
-  backgroundColor: "#ffffff",
+  background: "transparent",
   borderRadius: "99999px",
   color: vars.color.black,
   fontFamily: vars.font.medium,
@@ -20,6 +20,7 @@ export const trigger = style({
   alignItems: "center",
   gap: "7px",
   cursor: "pointer",
+  transition: "background 160ms ease"
 });
 
 export const triggerValue = style({
