@@ -11,6 +11,7 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
+import org.our.sadari.myPage.service.ReadingStatisticsService;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.service.SocialService;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -35,6 +37,8 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       공개 독후감만 소셜 요약과 통계에 포함
+ * 2026-08-14        SeungHyeon.Kang    공개 허용 독서 통계 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 연도 선택 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -48,6 +52,8 @@ public class SocialController {
     private final ReportService reportService;
     // Social 업무 처리 서비스
     private final SocialService socialService;
+    // 다른 사용자 프로필에 공개 독서 통계를 제공할 서비스
+    private final ReadingStatisticsService readingStatisticsService;
 
     /**
      * 사용자 번호로 공개 프로필 정보를 조회한다.
@@ -155,6 +161,23 @@ public class SocialController {
 
         // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(summary);
+    }
+
+    /**
+     * 사용자 번호로 공개 허용된 독서 통계를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 공개 통계를 조회할 사용자 번호
+     * @param readYear 조회할 연도, 없으면 현재 연도
+     * @return 공개 허용 시 연도별 독서 통계, 비공개 또는 제한 계정이면 빈 데이터
+     */
+    @GetMapping("/profile/{userNumb}/reading-statistics")
+    @Operation(summary = "공개 독서 통계 조회", description = "정상 이용 회원이 공개를 허용한 연도별 독서 통계를 다른 사용자 프로필에 제공한다.")
+    public ResultData getPublicReadingStats(
+            @Parameter(description = "공개 통계를 조회할 사용자 번호", example = "31") @PathVariable Long userNumb
+          , @Parameter(description = "조회할 연도", example = "2026") @RequestParam(required = false) Integer readYear) {
+        // 서버가 계정 상태와 공개 설정을 검증한 다른 사용자용 독서 통계를 조회한다
+        return readingStatisticsService.getPublicReadingStats(userNumb, readYear);
     }
 
     /**

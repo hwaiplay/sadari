@@ -39,6 +39,15 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
+    <!-- 계정 제한 전환 시 독서 통계 공개를 해제하며 복귀 후 자동 공개하지 않는다. -->
+    <update id="uptReadingStatsPrivate">
+        UPDATE /* uptReadingStatsPrivate */
+               TM_USSETX
+           SET RSTA_YSNO = #{privateYsno}
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE USER_NUMB = #{userNumb}
+    </update>
+
     <!-- 탈퇴 회원이 수신한 알림을 삭제 상태로 변경한다. -->
     <update id="uptUserAlimDeleted" parameterType="long">
         UPDATE /* uptUserAlimDeleted */

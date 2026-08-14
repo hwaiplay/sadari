@@ -1,6 +1,7 @@
 package org.our.sadari.user.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 
 /**
@@ -15,6 +16,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
  * 2026-08-14      HanWon.Jang    탈퇴 회원의 모임원 프로필 숨김 메서드 추가
+ * 2026-08-14        SeungHyeon.Kang    탈퇴 회원의 독서 통계 공개 해제 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -36,6 +38,16 @@ public interface UserWithdrawalMapper {
      * @return 변경된 독후감 수
      */
     int uptUserReportPrivate(Long userNumb);
+
+    /**
+     * 계정 비활성화 또는 영구 삭제 대기 회원의 독서 통계를 비공개로 변경한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 탈퇴 회원 번호
+     * @param privateYsno 비공개 여부 코드
+     * @return 변경된 회원 수
+     */
+    int uptReadingStatsPrivate(@Param("userNumb") Long userNumb, @Param("privateYsno") String privateYsno);
 
     /**
      * 회원의 알림을 모두 삭제 상태로 변경한다.

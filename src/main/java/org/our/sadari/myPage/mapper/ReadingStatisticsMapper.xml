@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.myPage.mapper.ReadingStatisticsMapper">
+
+    <!-- 회원의 통계 공개 범위를 계정 상태와 함께 조회한다. -->
+    <select id="getReadingStatsSetting" resultType="org.our.sadari.myPage.dto.ReadingStatisticsSettingDto">
+        SELECT /* getReadingStatsSetting */
+               U.USER_NUMB
+             , COALESCE(S.RSTA_YSNO, #{privateYsno}) AS PUBLIC_YSNO
+             , U.USER_STAT
+          FROM TM_USERXM U
+     LEFT JOIN TM_USSETX S
+            ON S.USER_NUMB = U.USER_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 회원의 독서 시간 기록이 존재하는 연도 목록을 최근 연도부터 조회한다. -->
+    <select id="getReadingYearList" resultType="int">
+        SELECT /* getReadingYearList */
+               YEAR(D.READ_DATE) AS READ_YEAR
+          FROM TB_RDATDX D
+         WHERE D.USER_NUMB = #{userNumb}
+      GROUP BY YEAR(D.READ_DATE)
+      ORDER BY READ_YEAR DESC
+    </select>
+
+    <!-- 회원이 선택한 연도의 잔디에 사용할 일별 독서 시간을 조회한다. -->
+    <select id="getDailyTimeList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Daily">
+        SELECT /* getDailyTimeList */
+               D.READ_DATE
+             , D.READ_SECS
+          FROM TB_RDATDX D
+         WHERE D.USER_NUMB = #{userNumb}
+           AND D.READ_DATE BETWEEN #{periodStart} AND #{periodEnd}
+      ORDER BY D.READ_DATE
+    </select>
+
+    <!-- 본인 마이페이지 독서 상태 비율에 사용할 독후감 수를 집계한다. -->
+    <select id="getStatusCountList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Status">
+        SELECT /* getStatusCountList */
+               R.REPT_STAT
+             , COUNT(*) AS REPT_CNT
+          FROM TM_REPORT R
+         WHERE R.USER_NUMB = #{userNumb}
+           AND R.REPT_STAT IN (#{readStat}, #{doneStat}, #{stopStat})
+      GROUP BY R.REPT_STAT
+    </select>
+
+    <!-- 회원이 타이머로 실제 독서한 날짜를 연속 기록 계산용으로 조회한다. -->
+    <select id="getReadingDateList" resultType="java.time.LocalDate">
+        SELECT /* getReadingDateList */
+               D.READ_DATE
+          FROM TB_RDATDX D
+         WHERE D.USER_NUMB = #{userNumb}
+           AND D.READ_SECS &gt; 0
+      ORDER BY D.READ_DATE
+    </select>
+
+    <!-- 현재 연도에 완료한 타이머의 확정 시간을 도서별로 합산해 상위 세 권을 조회한다. -->
+    <select id="getTopBookTimeList" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
+            resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$BookTime">
+        SELECT /* getTopBookTimeList */
+               MAX(R.REPT_NUMB) AS REPT_NUMB
+             , R.BOOK_NUMB
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+             , SUM(GREATEST(T.READ_SECS, 0)) AS READ_SECS
+          FROM TM_RDTMRX T
+          JOIN TM_REPORT R
+            ON R.REPT_NUMB = T.REPT_NUMB
+           AND R.USER_NUMB = T.USER_NUMB
+          JOIN TM_BKINFO B
+            ON B.BOOK_NUMB = R.BOOK_NUMB
+         WHERE T.USER_NUMB = #{userNumb}
+           AND T.TMRX_STAT = #{completedStat}
+           AND T.ENDX_DATE &gt;= #{timerStart}
+           AND T.ENDX_DATE &lt; #{timerEnd}
+           AND T.READ_SECS &gt; 0
+      GROUP BY R.BOOK_NUMB
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_CVIM
+      ORDER BY READ_SECS DESC
+             , R.BOOK_NUMB DESC
+         LIMIT 3
+    </select>
+
+    <!-- 저장된 유효한 양수 별점의 소수점을 버리고 0점부터 5점까지 정수 점수별로 집계한다. -->
+    <select id="getRatingCountList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Rating">
+        SELECT /* getRatingCountList */
+               FLOOR(CAST(R.REPT_GRDE AS DECIMAL(2, 1))) AS REPT_GRDE
+             , COUNT(*) AS REPT_CNT
+          FROM TM_REPORT R
+         WHERE R.USER_NUMB = #{userNumb}
+           AND R.REPT_GRDE REGEXP '^(0\\.5|[1-4](\\.0|\\.5)?|5(\\.0)?)$'
+      GROUP BY FLOOR(CAST(R.REPT_GRDE AS DECIMAL(2, 1)))
+      ORDER BY REPT_GRDE DESC
+    </select>
+
+    <!-- 현재 연도와 전년도 같은 날짜 범위의 독서 시간과 독서일 및 완독 권수를 비교한다. -->
+    <select id="getYearComparison" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
+            resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$YearComparison">
+        SELECT /* getYearComparison */
+               #{currentYear} AS CURRENT_YEAR
+             , #{previousYear} AS PREVIOUS_YEAR
+             , COALESCE((
+                   SELECT SUM(D.READ_SECS)
+                     FROM TB_RDATDX D
+                    WHERE D.USER_NUMB = #{userNumb}
+                      AND D.READ_DATE &gt;= #{currentStart}
+                      AND D.READ_DATE &lt; #{currentEnd}
+               ), 0) AS CURRENT_READ_SECS
+             , COALESCE((
+                   SELECT SUM(D.READ_SECS)
+                     FROM TB_RDATDX D
+                    WHERE D.USER_NUMB = #{userNumb}
+                      AND D.READ_DATE &gt;= #{previousStart}
+                      AND D.READ_DATE &lt; #{previousEnd}
+               ), 0) AS PREVIOUS_READ_SECS
+             , COALESCE((
+                   SELECT COUNT(*)
+                     FROM TB_RDATDX D
+                    WHERE D.USER_NUMB = #{userNumb}
+                      AND D.READ_DATE &gt;= #{currentStart}
+                      AND D.READ_DATE &lt; #{currentEnd}
+                      AND D.READ_SECS &gt; 0
+               ), 0) AS CURRENT_READ_DAYS
+             , COALESCE((
+                   SELECT COUNT(*)
+                     FROM TB_RDATDX D
+                    WHERE D.USER_NUMB = #{userNumb}
+                      AND D.READ_DATE &gt;= #{previousStart}
+                      AND D.READ_DATE &lt; #{previousEnd}
+                      AND D.READ_SECS &gt; 0
+               ), 0) AS PREVIOUS_READ_DAYS
+             , COALESCE((
+                   SELECT COUNT(*)
+                     FROM TM_REPORT R
+                    WHERE R.USER_NUMB = #{userNumb}
+                      AND R.REPT_STAT = #{doneStat}
+                      AND R.REPT_ENDT &gt;= DATE_FORMAT(#{currentStart}, '%Y-%m-%d')
+                      AND R.REPT_ENDT &lt; DATE_FORMAT(#{currentEnd}, '%Y-%m-%d')
+               ), 0) AS CURRENT_DONE_BOOKS
+             , COALESCE((
+                   SELECT COUNT(*)
+                     FROM TM_REPORT R
+                    WHERE R.USER_NUMB = #{userNumb}
+                      AND R.REPT_STAT = #{doneStat}
+                      AND R.REPT_ENDT &gt;= DATE_FORMAT(#{previousStart}, '%Y-%m-%d')
+                      AND R.REPT_ENDT &lt; DATE_FORMAT(#{previousEnd}, '%Y-%m-%d')
+               ), 0) AS PREVIOUS_DONE_BOOKS
+    </select>
+
+    <!-- 정상 이용 회원이 선택한 독서 통계 공개 여부를 범용 회원 설정 행에 저장한다. -->
+    <insert id="uptReadingStatsSetting" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsSettingDto">
+        /* uptReadingStatsSetting */
+        INSERT INTO TM_USSETX (
+                    USER_NUMB
+                  , RSTA_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , #{publicYsno}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+        ON DUPLICATE KEY UPDATE
+               RSTA_YSNO = VALUES(RSTA_YSNO)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+    </insert>
+</mapper>

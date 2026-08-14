@@ -19,6 +19,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-12        OpenAI Codex        알림 아이콘 기본 상황 코드 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 추가
  * 2026-08-14        SeungHyeon.Kang    독서 타이머 상태와 상세 정리 스케줄러 코드 추가
+ * 2026-08-14        SeungHyeon.Kang    독서 통계 표시 개월 수 상수 제거
  */
 public final class Constant {
 

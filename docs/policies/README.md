@@ -14,6 +14,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [독서 및 독후감 정책](reading-report-policy.md) | 독서 상태, 기간, 별점, 공개 여부, 도서 저장 |
 | [독서 목표 정책](reading-goal-policy.md) | 주간·월간·연간 목표, 수정 제한, 이전 목표 복사 |
 | [독서 타이머 및 주간 출석 정책](reading-timer-attendance-policy.md) | 서버 시간 측정, 일일 10분 출석, 주간 현황과 보존 기준 |
+| [마이페이지 독서 통계 정책](my-page-reading-statistics-policy.md) | 연도별 독서 시간 잔디, 독서 상태 비율, 공개 범위와 지연 조회 |
 | [소셜 정책](social-policy.md) | 팔로우 상태, 좋아요, 공개 프로필 및 목록 |
 | [댓글 정책](reply-policy.md) | 댓글 식별, 대댓글 깊이, 삭제 표시 |
 | [신고 접수 및 처리 정책](abuse-report-policy.md) | 사용자·독후감·댓글·모임 신고 대상, 사유, 처리 상태 및 보존 |

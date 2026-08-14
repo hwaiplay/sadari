@@ -35,7 +35,7 @@ export const card = style({
   marginBottom: "10px",
   padding: "16px",
   border: `1px solid ${vars.color.gray200}`,
-  borderRadius: vars.radius.md,
+  borderRadius: "22px",
   backgroundColor: vars.color.background,
   boxSizing: "border-box",
 });
@@ -108,118 +108,399 @@ export const dayMinutes = style({
 });
 
 export const timerCard = style([card, {
-  padding: "24px 16px",
-  textAlign: "center",
+  padding: "20px",
+  "@media": {
+    "screen and (max-width: 340px)": {
+      padding: "12px",
+    },
+  },
 }]);
 
-export const status = style({
-  display: "inline-flex",
-  padding: "6px 10px",
-  borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.brandBg,
-  color: vars.color.brandText,
-  fontFamily: vars.font.semibold,
-  fontSize: "12px",
-});
-
-export const clock = style({
-  margin: "18px 0 8px",
-  color: vars.color.black,
-  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  fontSize: "46px",
-  fontWeight: 700,
-  letterSpacing: "-2px",
-});
-
-export const book = style({
-  minHeight: "20px",
-  margin: "0 0 20px",
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
-});
-
-export const bookSelect = style({
+export const timerLayout = style({
   display: "flex",
-  width: "100%",
-  marginBottom: "12px",
-});
-
-export const bookSelectTrigger = style({
-  width: "100%",
-  height: "48px",
-  padding: "0 14px 0 15px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "10px",
-  backgroundColor: vars.color.background,
-  color: vars.color.black,
-  fontFamily: vars.font.medium,
-  fontSize: "14px",
-  lineHeight: 1.4,
-  boxShadow: "none",
-  transition: "border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray400,
-      backgroundColor: "#fbfcfc",
+  alignItems: "stretch",
+  gap: "18px",
+  minWidth: 0,
+  "@media": {
+    "screen and (max-width: 380px)": {
+      gap: "14px",
     },
-    "&:focus-visible, &[aria-expanded='true']": {
-      borderColor: vars.color.brandText,
-      backgroundColor: vars.color.background,
-      outline: "none",
-      boxShadow: `0 0 0 3px ${vars.color.brandBg}`,
+    "screen and (max-width: 340px)": {
+      gap: "10px",
     },
   },
 });
 
-export const bookOptionList = style({
-  top: "calc(100% + 8px)",
-  right: "auto",
-  left: 0,
-  zIndex: 30,
-  width: "100%",
-  maxHeight: "260px",
-  padding: "6px",
+export const bookCoverColumn = style({
+  width: "104px",
+  flex: "0 0 104px",
+});
+
+export const bookCoverFrame = style({
+  position: "relative",
+  display: "block",
+  width: "104px",
+  aspectRatio: "2 / 3",
+  padding: 0,
   border: `1px solid ${vars.color.gray200}`,
-  borderRadius: "12px",
-  backgroundColor: vars.color.background,
-  boxShadow: "0 12px 30px rgba(21, 21, 21, 0.12)",
-  gap: "3px",
-  overflowY: "auto",
+  borderRadius: "6px",
+  overflow: "hidden",
+  backgroundColor: vars.color.gray100,
+  boxShadow: "0 10px 24px rgba(0, 0, 0, 0.14)",
   boxSizing: "border-box",
 });
 
-export const bookOption = style({
-  minHeight: "42px",
-  padding: "0 12px",
-  borderRadius: "8px",
+export const bookCoverButton = style([bookCoverFrame, {
   color: vars.color.gray700,
-  fontFamily: vars.font.body,
-  fontSize: "14px",
-  transition: "background-color 140ms ease, color 140ms ease",
+  cursor: "pointer",
+  transition: "border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
   selectors: {
-    "&:hover, &:focus-visible": {
-      backgroundColor: vars.color.gray100,
-      color: vars.color.black,
-      outline: "none",
+    "&:hover": {
+      borderColor: vars.color.gray400,
+      boxShadow: "0 12px 26px rgba(0, 0, 0, 0.18)",
+      transform: "translateY(-1px)",
     },
-    "&[aria-selected='true']": {
-      backgroundColor: vars.color.brandBg,
-      color: vars.color.brandText,
-      fontFamily: vars.font.semibold,
+    "&[data-empty='true']": {
+      border: 0,
+      backgroundColor: vars.color.background,
+      backgroundImage: `
+        repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
+        repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
+        repeating-linear-gradient(180deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
+        repeating-linear-gradient(180deg, ${vars.color.gray500} 0 9px, transparent 9px 16px)
+      `,
+      backgroundPosition: "top left, bottom left, top left, top right",
+      backgroundSize: "100% 2px, 100% 2px, 2px 100%, 2px 100%",
+      backgroundRepeat: "no-repeat",
+      boxShadow: "none",
+    },
+    "&[data-empty='true']:hover": {
+      borderColor: vars.color.gray500,
+      boxShadow: "none",
+      transform: "none",
+    },
+    "&:focus-visible": {
+      borderColor: vars.color.brandText,
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "3px",
     },
   },
+}]);
+
+export const emptyBookCover = style({
+  boxShadow: "none",
+  selectors: {
+    "&:hover": {
+      boxShadow: "none",
+      transform: "none",
+    },
+  },
+});
+
+export const coverImage = style({
+  display: "block",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+});
+
+export const bookCoverPlaceholder = style({
+  position: "relative",
+  display: "flex",
+  width: "100%",
+  height: "100%",
+  padding: "16px 10px",
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  backgroundColor: "transparent",
+  color: vars.color.gray600,
+  fontFamily: vars.font.semibold,
+  fontSize: "13px",
+  lineHeight: 1.35,
+  textAlign: "center",
+  boxSizing: "border-box",
+});
+
+export const bookPlaceholderPlus = style({
+  position: "absolute",
+  top: "50%",
+  left: "50%",
+  display: "block",
+  color: vars.color.gray700,
+  fontFamily: vars.font.body,
+  fontSize: "36px",
+  fontWeight: 300,
+  lineHeight: 1,
+  transform: "translate(-50%, -50%)",
+});
+
+export const bookPlaceholderText = style({
+  position: "absolute",
+  right: "8px",
+  bottom: "24px",
+  left: "8px",
+  textAlign: "center",
+});
+
+export const coverActionLabel = style({
+  position: "absolute",
+  right: "8px",
+  bottom: "8px",
+  left: "8px",
+  minHeight: "30px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "0 8px",
+  borderRadius: "6px",
+  backgroundColor: "rgba(21, 21, 21, 0.72)",
+  color: "#ffffff",
+  fontFamily: vars.font.semibold,
+  fontSize: "12px",
+  lineHeight: 1.2,
+  boxSizing: "border-box",
+});
+
+export const timerPanel = style({
+  height: "156px",
+  minWidth: 0,
+  flex: "1 1 auto",
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "stretch",
+  justifyContent: "flex-start",
+  gap: "8px",
+  paddingTop: "10px",
+  boxSizing: "border-box",
+});
+
+export const clock = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
+  fontSize: "clamp(34px, 10vw, 44px)",
+  fontWeight: 700,
+  letterSpacing: "-1.5px",
+  lineHeight: 1,
+  whiteSpace: "nowrap",
+  "@media": {
+    "screen and (max-width: 340px)": {
+      fontSize: "30px",
+      letterSpacing: "-1px",
+    },
+  },
+});
+
+export const book = style({
+  minHeight: "36px",
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.4,
+  overflow: "hidden",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
 });
 
 export const actions = style({
   display: "flex",
-  justifyContent: "center",
-  gap: "10px",
-  flexWrap: "wrap",
+  flexWrap: "nowrap",
+  gap: "8px",
+  width: "100%",
+  marginTop: "auto",
 });
 
 export const actionButton = style({
-  minWidth: "126px",
+  minWidth: 0,
+  flex: "1 1 0",
+  boxSizing: "border-box",
+  "@media": {
+    "screen and (max-width: 340px)": {
+      padding: "0 6px",
+      fontSize: "12px",
+    },
+  },
+});
+
+export const modalOverlay = style({
+  position: "fixed",
+  inset: 0,
+  zIndex: 1300,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "16px",
+  backgroundColor: "rgba(21, 21, 21, 0.42)",
+  boxSizing: "border-box",
+});
+
+export const bookModal = style({
+  width: "min(480px, 100%)",
+  maxHeight: "calc(100dvh - 32px)",
+  display: "flex",
+  flexDirection: "column",
+  border: `1px solid ${vars.color.gray200}`,
+  borderRadius: "22px",
+  overflow: "hidden",
+  backgroundColor: vars.color.background,
+  boxShadow: "0 24px 64px rgba(21, 21, 21, 0.24)",
+});
+
+export const modalHeader = style({
+  display: "flex",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: "16px",
+  padding: "20px 20px 16px",
+});
+
+export const modalTitle = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: "20px",
+  lineHeight: 1.35,
+});
+
+export const modalDescription = style({
+  margin: "7px 0 0",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.5,
+});
+
+export const modalClose = style({
+  width: "36px",
+  height: "36px",
+  flex: "0 0 36px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "9px",
+  border: `1px solid ${vars.color.gray200}`,
+  borderRadius: vars.radius.xl,
+  backgroundColor: vars.color.background,
+  cursor: "pointer",
+  boxSizing: "border-box",
+  transition: "border-color 150ms ease, background-color 150ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: vars.color.gray300,
+      backgroundColor: vars.color.gray100,
+    },
+    "&:focus-visible": {
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "2px",
+    },
+  },
+});
+
+export const modalBody = style({
+  minHeight: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  padding: "16px 20px",
+  overflowY: "auto",
+});
+
+export const modalBookOption = style({
+  width: "100%",
+  minHeight: "104px",
+  display: "grid",
+  gridTemplateColumns: "58px minmax(0, 1fr)",
+  alignItems: "center",
+  gap: "14px",
+  padding: "8px 14px 8px 8px",
+  border: `1px solid ${vars.color.gray200}`,
+  borderRadius: "12px",
+  backgroundColor: "#f7f8f8",
+  color: vars.color.gray700,
+  textAlign: "left",
+  cursor: "pointer",
+  boxSizing: "border-box",
+  transition: "border-color 150ms ease, background-color 150ms ease, color 150ms ease",
+  selectors: {
+    "&:hover": {
+      borderColor: vars.color.gray300,
+      backgroundColor: "#fbfbfb",
+    },
+    "&:focus-visible": {
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "2px",
+    },
+    "&[data-selected='true']": {
+      borderColor: "#78b991",
+      backgroundColor: "#eef8f2",
+      color: "#34704d",
+    },
+  },
+});
+
+export const modalBookCover = style({
+  width: "58px",
+  aspectRatio: "2 / 3",
+  display: "block",
+  borderRadius: "4px",
+  overflow: "hidden",
+  backgroundColor: vars.color.gray100,
+  boxShadow: "0 5px 12px rgba(21, 21, 21, 0.14)",
+});
+
+export const modalBookText = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "7px",
+});
+
+export const modalBookTitle = style({
+  color: "inherit",
+  fontFamily: vars.font.semibold,
+  fontSize: "15px",
+  lineHeight: 1.45,
+  overflow: "hidden",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 2,
+});
+
+export const modalBookState = style({
+  color: vars.color.brandText,
+  fontFamily: vars.font.medium,
+  fontSize: "12px",
+});
+
+export const modalEmpty = style({
+  margin: 0,
+  padding: "36px 16px",
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.5,
+  textAlign: "center",
+});
+
+export const modalFooter = style({
+  display: "grid",
+  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+  gap: "10px",
+  padding: "14px 20px 20px",
+});
+
+export const modalFooterButton = style({
+  width: "100%",
+  minWidth: 0,
+  padding: "0 8px",
+  fontSize: "13px",
+  boxSizing: "border-box",
 });
 
 export const empty = style({
@@ -230,61 +511,42 @@ export const empty = style({
   lineHeight: 1.5,
 });
 
-export const recentList = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
+export const heatmapCard = style([card, {
+  marginTop: "24px",
+  padding: "20px",
+}]);
+
+export const heatmapState = style({
   margin: 0,
-  padding: 0,
-  listStyle: "none",
-});
-
-export const recentItem = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  gap: "12px",
-  paddingTop: "10px",
-  borderTop: `1px solid ${vars.color.gray200}`,
-});
-
-export const recentBook = style({
-  minWidth: 0,
-  color: vars.color.black,
+  padding: "24px 12px",
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: "13px",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
+  lineHeight: 1.5,
+  textAlign: "center",
 });
 
-export const recentBookLink = style({
-  display: "inline-block",
-  maxWidth: "100%",
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontWeight: 700,
-  textDecoration: "none",
-  overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  verticalAlign: "bottom",
-  selectors: {
-    "&:hover": {
-      textDecoration: "underline",
-      textUnderlineOffset: "3px",
-    },
-    "&:focus-visible": {
-      borderRadius: "2px",
-      outline: `2px solid ${vars.color.brand}`,
-      outlineOffset: "2px",
-    },
-  },
+export const heatmapError = style({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "12px",
+  padding: "24px 12px",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "13px",
+  lineHeight: 1.5,
+  textAlign: "center",
 });
 
-export const recentTime = style({
-  flex: "0 0 auto",
-  color: vars.color.brandText,
-  fontFamily: vars.font.semibold,
-  fontSize: "12px",
+export const heatmapRetry = style({
+  minHeight: "34px",
+  padding: "0 12px",
+  border: `1px solid ${vars.color.gray400}`,
+  borderRadius: "8px",
+  backgroundColor: vars.color.background,
+  color: vars.color.gray700,
+  fontFamily: vars.font.medium,
+  fontSize: "13px",
+  cursor: "pointer",
 });

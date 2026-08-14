@@ -48,6 +48,7 @@ import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
+import ReadingStatisticsSection from "./ReadingStatisticsSection";
 
 const USER_NICK_MAX_LENGTH = 25;
 const PROFILE_INTRO_MAX_LENGTH = 50;
@@ -729,7 +730,7 @@ function ProfileEditPage() {
   };
 
   /**
-   * 현재 읽고 있는 책을 눌렀을 때 전체 수정 화면으로 연결하는 안내 모달을 연다
+   * 현재 읽고 있는 책을 눌렀을 때 수정 화면으로 연결하는 안내 모달을 연다
    *
    * @author HanWon.Jang
    * @param report 선택한 현재 읽고 있는 책 정보
@@ -739,7 +740,7 @@ function ProfileEditPage() {
 
     // 이전 모달의 닫기 애니메이션 상태가 새 안내 모달에 남지 않게 초기화한다
     setClosingModal(null);
-    // 전체 수정 화면으로 전달할 현재 읽는 책을 안내 모달 상태에 설정한다
+    // 수정 화면으로 전달할 현재 읽는 책을 안내 모달 상태에 설정한다
     setCurrentReadingReport(report);
   };
 
@@ -1032,7 +1033,7 @@ function ProfileEditPage() {
                       role="link"
                       tabIndex={0}
                       onClick={(event) => {
-                        // 제목은 카드의 전체 수정 안내 동작과 분리하여 도서 정보 화면으로 바로 이동한다
+                        // 제목은 카드의 수정 안내 동작과 분리하여 도서 정보 화면으로 바로 이동한다
                         event.stopPropagation();
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
@@ -2125,13 +2126,15 @@ function ProfileEditPage() {
                     <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="#8a8a8a" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
                   </svg>
               </button>
+              {/* 스크롤 진입 시 조회하는 본인 전용 독서 통계 영역 */}
+              <ReadingStatisticsSection />
             </div>
           ) : null}
       </form>
 
-      {/* 현재 읽는 책의 전체 수정 화면으로 연결하는 모달 영역 */}
+      {/* 현재 읽는 책의 수정 화면으로 연결하는 모달 영역 */}
       {currentReadingReport && createPortal((
-        /* 현재 읽는 책 전체 수정 안내 모달 배경 영역 */
+        /* 현재 읽는 책 수정 안내 모달 배경 영역 */
         <div
           className={`${styles.goalModalOverlay} ${
             closingModal === "currentReading" ? styles.goalModalOverlayClosing : ""
@@ -2144,7 +2147,7 @@ function ProfileEditPage() {
             }
           }}
         >
-          {/* 현재 읽는 책 전체 수정 안내 모달 본문 영역 */}
+          {/* 현재 읽는 책 수정 안내 모달 본문 영역 */}
           <section
             className={`${styles.goalModal} ${
               closingModal === "currentReading" ? styles.goalModalClosing : ""
@@ -2153,7 +2156,7 @@ function ProfileEditPage() {
             aria-modal="true"
             aria-labelledby="current-reading-title"
           >
-            {/* 현재 읽는 책 전체 수정 안내 제목과 닫기 영역 */}
+            {/* 현재 읽는 책 수정 안내 제목과 닫기 영역 */}
             <div className={styles.goalModalHeader}>
               <h2 className={styles.goalModalTitle} id="current-reading-title">
                 {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.completionPrompt")}
@@ -2168,7 +2171,7 @@ function ProfileEditPage() {
               </button>
             </div>
 
-            {/* 전체 수정 대상 도서 정보 영역 */}
+            {/* 수정 대상 도서 정보 영역 */}
             <div className={styles.currentReadingModalBody}>
               <div className={styles.currentReadingModalBookInfo}>
                 <img
@@ -2190,7 +2193,7 @@ function ProfileEditPage() {
               </div>
             </div>
 
-            {/* 현재 읽는 책 안내 닫기와 전체 수정 진입 영역 */}
+            {/* 현재 읽는 책 안내 닫기와 수정 진입 영역 */}
             <div className={styles.goalModalActions}>
               <button
                 className={styles.goalModalCancel}
@@ -2204,10 +2207,7 @@ function ProfileEditPage() {
                 type="button"
                 onClick={handleReadingEditClick}
               >
-                <span>{/* "전체 수정" */ message("frontend.profile.currentReading.editFull")}</span>
-                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-                  <path d="M5.25 2.92L9.33 7L5.25 11.08" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
-                </svg>
+                <span>{/* "수정하기" */ message("frontend.profile.currentReading.edit")}</span>
               </button>
             </div>
           </section>

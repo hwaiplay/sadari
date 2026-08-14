@@ -413,6 +413,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
 
         // 탈퇴 회원의 기존 독후감을 모두 비공개로 변경한다
         userWithdrawalMapper.uptUserReportPrivate(request.getUserNumb());
+        // 탈퇴 회원의 독서 통계 공개를 해제하며 복귀 후 자동 공개하지 않는다
+        userWithdrawalMapper.uptReadingStatsPrivate(request.getUserNumb(), Constant.COMM_NO);
         // 탈퇴 회원이 수신한 알림을 모두 삭제 상태로 변경한다
         userWithdrawalMapper.uptUserAlimDeleted(request.getUserNumb());
         // 탈퇴 회원의 브라우저 푸시 구독을 모두 비활성화한다
