@@ -92,7 +92,10 @@ function InquiryListPage() {
     <div className={styles.listPage}>
       {/* 고객문의 목록 안내 영역 */}
       <section className={styles.intro} aria-label="고객문의 안내">
-        <p className={styles.description}>문의하신 내용과 관리자 답변을 확인할 수 있어요.</p>
+        <img src={"/img/icons/icon-megaphone.svg"} alt={"아이콘"} />
+        <p className={styles.description}>
+          문의하신 내용과 관리자 답변을 확인할 수 있어요.
+        </p>
       </section>
 
       {error && inquiries.length === 0 ? (
@@ -126,14 +129,14 @@ function InquiryListPage() {
                 <time className={styles.meta} dateTime={inquiry.regiDate}>
                   {new Date(inquiry.regiDate).toLocaleDateString("ko-KR")}
                 </time>
-                <span className={styles.itemMetaGroup}>
-                  <span className={styles.category}>{inquiry.inqrCatgName}</span>
-                  <span className={styles.state}>{inquiry.inqrStatName}</span>
-                </span>
+                 <span className={styles.itemMetaGroup}>
+                <span className={styles.category}>{inquiry.inqrCatgName}</span>
+                <span className={styles.state}>{inquiry.inqrStatName}</span>
+              </span>
                 {inquiry.unreadCount > 0 && (
                   <span className={styles.unread}>
                     <span className={styles.unreadDot} aria-hidden="true" />
-                    새 답변 {inquiry.unreadCount}
+                    새 답변
                   </span>
                 )}
               </span>
