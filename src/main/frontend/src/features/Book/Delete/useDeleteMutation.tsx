@@ -23,29 +23,19 @@ export const useDeleteMutation = () => {
   const moveHome = useHomeNavigation();
 
   /**
-   * 독후감 삭제 완료 안내가 닫히면 앱의 홈 루트로 이동한다
-   *
-   * @author SeungHyeon.Kang
-   * @return 반환값이 없다
-   */
-  const handleDeleteAlertClosed = (): void => {
-
-    // 삭제한 독후감 상세 이력이 다시 노출되지 않도록 홈 루트로 이동한다
-    moveHome();
-  };
-
-  /**
-   * 독후감 삭제 성공을 안내한 뒤 홈 루트 복귀를 예약한다
+   * 독후감 삭제 성공 즉시 홈 루트로 이동한 뒤 완료 결과를 안내한다
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없다
    */
   const handleDeleteSuccess = (): void => {
 
+    // 삭제한 독후감 상세 화면이 남지 않도록 성공 응답 즉시 홈 루트로 이동한다
+    moveHome();
     // "삭제되었습니다."
     const deleteSuccessTitle = message("frontend.alert.deleteSuccessTitle");
     // "삭제되었습니다."
-    void sweetSuccess(deleteSuccessTitle).then(handleDeleteAlertClosed);
+    void sweetSuccess(deleteSuccessTitle);
   };
 
   /**

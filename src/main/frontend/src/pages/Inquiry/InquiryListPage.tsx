@@ -133,7 +133,8 @@ function InquiryListPage() {
                 {inquiry.unreadCount > 0 && (
                   <span className={styles.unread}>
                     <span className={styles.unreadDot} aria-hidden="true" />
-                    새 답변 {inquiry.unreadCount}
+                    {/* "새 답변" */}
+                    새 답변
                   </span>
                 )}
               </span>
