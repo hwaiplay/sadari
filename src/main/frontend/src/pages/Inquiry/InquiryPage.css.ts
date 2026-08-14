@@ -17,6 +17,14 @@ export const listPage = style([
   },
 ]);
 
+export const writePage = style([
+  page,
+  {
+    display: "flex",
+    flexDirection: "column",
+  },
+]);
+
 export const detailPage = style({
   paddingRight: "18px",
   paddingLeft: "18px",
@@ -232,6 +240,7 @@ export const formIntro = style({
 });
 
 export const form = style({
+  flex: 1,
   display: "flex",
   flexDirection: "column",
   gap: "22px",
@@ -242,6 +251,13 @@ export const field = style({
   flexDirection: "column",
   gap: "9px",
 });
+
+export const contentField = style([
+  field,
+  {
+    flex: 1,
+  },
+]);
 
 export const label = style({
   color: vars.color.black,
@@ -366,8 +382,9 @@ export const input = style({
 });
 
 export const textarea = style({
+  flex: 1,
   width: "100%",
-  minHeight: "230px",
+  minHeight: "300px",
   padding: "13px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: vars.radius.sm,
@@ -417,18 +434,18 @@ export const count = style({
 export const submitButton = style({
   width: "100%",
   height: "48px",
-  marginTop: "4px",
-  border: `1px solid ${vars.color.gray900}`,
+  marginTop: "auto",
+  border: `1px solid ${vars.color.gray400}`,
   borderRadius: vars.radius.md,
-  backgroundColor: vars.color.gray900,
-  color: vars.color.background,
+  backgroundColor: vars.color.background,
+  color: vars.color.gray700,
   fontFamily: vars.font.semibold,
   fontSize: "15px",
   cursor: "pointer",
   selectors: {
     "&:hover": {
-      borderColor: vars.color.gray700,
-      backgroundColor: vars.color.gray700,
+      borderColor: vars.color.gray600,
+      backgroundColor: vars.color.gray100,
     },
     "&:disabled": {
       borderColor: vars.color.gray200,
@@ -437,7 +454,7 @@ export const submitButton = style({
       cursor: "default",
     },
     "&:focus-visible": {
-      outline: `2px solid ${vars.color.gray700}`,
+      outline: `2px solid ${vars.color.brand}`,
       outlineOffset: "2px",
     },
   },

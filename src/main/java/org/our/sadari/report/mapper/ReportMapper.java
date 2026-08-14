@@ -20,6 +20,7 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
  * 2026-08-01        Hanwon.Jang        공개 목록과 빠른 수정 상태 정책 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조회 조건 문서화
+ * 2026-08-14        SeungHyeon.Kang    독후감 삭제 전 댓글과 좋아요 정리 메서드 추가
  */
 @Mapper
 public interface ReportMapper {
@@ -140,6 +141,42 @@ public interface ReportMapper {
      * @return 반영 건수
      */
     int uptReptStatusGrade(ReportDto reportDto);
+
+    /**
+     * 독후감에 연결된 댓글과 답글의 좋아요를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportDto 사용자 번호와 독후감 번호
+     * @return 반영 건수
+     */
+    int delReportReplyLikes(ReportDto reportDto);
+
+    /**
+     * 독후감에 연결된 대댓글을 부모 댓글보다 먼저 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportDto 사용자 번호와 독후감 번호
+     * @return 반영 건수
+     */
+    int delReportChildReplies(ReportDto reportDto);
+
+    /**
+     * 독후감에 연결된 최상위 댓글을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportDto 사용자 번호와 독후감 번호
+     * @return 반영 건수
+     */
+    int delReportReplies(ReportDto reportDto);
+
+    /**
+     * 독후감에 연결된 좋아요를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportDto 사용자 번호와 독후감 번호
+     * @return 반영 건수
+     */
+    int delReportLikes(ReportDto reportDto);
 
     /**
      * 로그인 사용자의 독후감을 삭제한다.

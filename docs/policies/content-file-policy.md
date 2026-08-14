@@ -6,6 +6,10 @@
 - 사용자 한줄소개
 - 독후감 내용
 - 댓글 내용
+- 고객문의 제목과 본문
+- 향후 추가되는 사용자의 작성 가능 문자열
+
+향후 채팅 기능은 실시간 대화 정책과 처리 방식이 별도로 확정될 때까지 공통 비속어 검사 대상에서 제외합니다.
 
 ## 비속어 사전
 
@@ -51,13 +55,15 @@
 ## 텍스트 입력
 
 - 사용자 입력은 저장 전 일반 문자열로 정규화합니다.
+- 사용자가 작성한 문자열은 공개 여부와 관계없이 백엔드 Service에서 저장 또는 수정 전에 비속어를 최종 검증합니다.
 - 독후감 본문은 UTF-8 기준 최대 4,000바이트입니다.
 - 프론트엔드와 백엔드에서 같은 본문 길이 제한을 검증합니다.
 - 프론트엔드 검증은 사용자 안내를 위한 것이며 최종 저장 판단은 백엔드 검증입니다.
 
 ## 계정 수명주기
 
-- 비속어 검사는 활성 계정이 닉네임, 한줄소개, 독후감 또는 댓글을 저장하거나 수정하는 입력 시점에만 적용합니다.
+- 비속어 검사는 각 기능의 입력 권한이 있는 계정이 사용자 작성 문자열을 저장하거나 수정하는 시점에 적용합니다.
+- `SUSPENDED` 계정은 고객문의 정책에 따라 허용된 이용정지 이의제기의 제목과 본문에 동일한 비속어 검사를 적용합니다.
 - 비속어 검사 결과와 정규화 중간값은 별도 데이터로 저장하지 않습니다.
 - `WITHDRAWN` 및 `DELETE_PENDING` 계정은 기존 접근 제한으로 콘텐츠 입력을 수행할 수 없으며 비속어 검사에서 별도 예외를 두지 않습니다.
 - 계정 비활성화, 영구 탈퇴, 취소 또는 복귀 시 비속어 사전과 검사 결과를 기준으로 콘텐츠를 추가 삭제하거나 복원하지 않습니다.
@@ -124,6 +130,7 @@
 - `src/main/frontend/src/pages/My/ProfileEditPage.tsx`
 - `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
+- `src/main/java/org/our/sadari/inquiry/service/InquiryServiceImpl.java`
 - `src/main/resources/application-loc.yml`
 - `src/main/resources/application-prod.yml`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/file/controller/FileResourceController.java`

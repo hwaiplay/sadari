@@ -3,6 +3,8 @@ package org.our.sadari.report.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -11,13 +13,16 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
+import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.mapper.SocialMapper;
 
@@ -30,6 +35,7 @@ import org.our.sadari.social.mapper.SocialMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-04        SeungHyeon.Kang       최초 생성
+ * 2026-08-14        SeungHyeon.Kang    독후감 참조 데이터 삭제 순서 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -67,10 +73,10 @@ class ReportServiceImplTest {
         // 독서 요약 서비스 단위 테스트 대상을 생성한다
         reportService = new ReportServiceImpl(reportMapper, socialMapper, bookMapper, codeUtil, badWordDetectionService);
         // 독서 요약 집계 SQL이 빈 기본 집계 결과를 반환하도록 설정한다
-        when(reportMapper.getReadingSummary(any(ReadingSummaryQueryDto.class)))
+        lenient().when(reportMapper.getReadingSummary(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(new ReadingSummaryQueryDto());
         // 독서 요약 목록 SQL이 빈 목록을 반환하도록 설정한다
-        when(reportMapper.getReadingSummaryList(any(ReadingSummaryQueryDto.class)))
+        lenient().when(reportMapper.getReadingSummaryList(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(List.of());
     }
 
@@ -122,5 +128,34 @@ class ReportServiceImplTest {
         assertNull(summaryCaptor.getValue().getPubcYsno());
         // 목록 SQL의 공개 여부 조건이 비어 있어 본인 전체 독후감을 유지하는지 확인한다
         assertNull(reportListCaptor.getValue().getPubcYsno());
+    }
+
+    /**
+     * 독후감 삭제 시 외래키 참조 데이터가 부모 독후감보다 먼저 삭제되는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delReportDeletesReferencesFirst() {
+        // 부모 독후감 삭제가 성공하는 조건을 설정한다
+        when(reportMapper.delReport(any(ReportDto.class))).thenReturn(1);
+
+        // 댓글이 연결된 독후감 삭제를 요청한다
+        ResultData result = reportService.delReport(7L, 31L);
+
+        // 독후감 삭제 성공 응답이 반환되는지 확인한다
+        assertEquals(200, result.getCode());
+        // 외래키와 공용 대상 데이터를 정리하는 호출 순서를 검증할 객체를 생성한다
+        InOrder deleteOrder = inOrder(reportMapper);
+        // 댓글 대상 좋아요가 댓글보다 먼저 삭제되는지 확인한다
+        deleteOrder.verify(reportMapper).delReportReplyLikes(any(ReportDto.class));
+        // 대댓글이 최상위 댓글보다 먼저 삭제되는지 확인한다
+        deleteOrder.verify(reportMapper).delReportChildReplies(any(ReportDto.class));
+        // 대댓글 정리 뒤 나머지 댓글이 삭제되는지 확인한다
+        deleteOrder.verify(reportMapper).delReportReplies(any(ReportDto.class));
+        // 독후감 대상 좋아요가 부모 독후감보다 먼저 삭제되는지 확인한다
+        deleteOrder.verify(reportMapper).delReportLikes(any(ReportDto.class));
+        // 모든 참조 데이터가 정리된 뒤 부모 독후감이 삭제되는지 확인한다
+        deleteOrder.verify(reportMapper).delReport(any(ReportDto.class));
     }
 }
