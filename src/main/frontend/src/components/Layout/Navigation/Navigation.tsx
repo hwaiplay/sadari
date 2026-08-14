@@ -15,6 +15,7 @@ import { clsx } from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as styles from "./Navigation.css";
+import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
 
 type NavigationProps = {
   isMain: boolean;
@@ -32,9 +33,13 @@ function Navigation({ isMain }: NavigationProps) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isTimerRunning, setIsTimerRunning] = useState(false);
   const { pathname } = useLocation();
-  const isHomeActive = pathname === "/home";
-  const isPeedActive = pathname === "/peed" || pathname.startsWith("/peed/");
-  const isTimerActive = pathname === "/timer" || pathname.startsWith("/timer/");
+  const isHomeActive = pathname === BOTTOM_NAV_PATH.home;
+  const isPeedActive =
+    pathname === BOTTOM_NAV_PATH.feed
+    || pathname.startsWith(`${BOTTOM_NAV_PATH.feed}/`);
+  const isTimerActive =
+    pathname === BOTTOM_NAV_PATH.timer
+    || pathname.startsWith(`${BOTTOM_NAV_PATH.timer}/`);
   const isMyPageActive = pathname === "/mypage" || pathname.startsWith("/mypage/");
 
   /**
@@ -152,7 +157,7 @@ function Navigation({ isMain }: NavigationProps) {
           {/* 피드 */}
           <Link
             className={clsx(styles.navLink, isPeedActive && styles.navLinkActive)}
-            to="/peed"
+            to={BOTTOM_NAV_PATH.feed}
             aria-label={message("frontend.common.peed")}
             aria-current={isPeedActive ? "page" : undefined}
           >
@@ -168,7 +173,7 @@ function Navigation({ isMain }: NavigationProps) {
            {/* 타이머 */}
           <Link
             className={clsx(styles.navLink, isTimerActive && styles.navLinkActive)}
-            to="/timer"
+            to={BOTTOM_NAV_PATH.timer}
             aria-label={isTimerRunning
               ? `${message("frontend.common.timer")} (${message("frontend.timer.status.running")})`
               : message("frontend.common.timer")}
@@ -186,7 +191,7 @@ function Navigation({ isMain }: NavigationProps) {
           {/* 마이페이지 */}
           <Link
             className={clsx(styles.navLink, isMyPageActive && styles.navLinkActive)}
-            to="/mypage/profile"
+            to={BOTTOM_NAV_PATH.myPage}
             aria-label={message("frontend.common.myPageIconAlt")}
             aria-current={isMyPageActive ? "page" : undefined}
           >

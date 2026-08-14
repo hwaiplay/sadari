@@ -42,6 +42,7 @@ const STATUS_DISPLAY_ORDER: Record<ReadingStatusCount["reptStat"], number> = {
   READ: 1,
   STOP: 2,
 };
+const SCROLLBAR_HIDE_DELAY_MS = 650;
 const VISIBILITY_OPTIONS = ["Y", "N"] as const;
 
 type ReadingStatisticsSectionProps = {
@@ -124,6 +125,8 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
   const isPositionedRef = useRef(false);
   // 초기 우측 이동과 사용자의 실제 스크롤 조작을 구분할 상태 참조를 생성한다
   const hasUserIntentRef = useRef(false);
+  // 사용자가 가로 스크롤을 멈춘 뒤 표시를 숨길 타이머 참조를 생성한다
+  const scrollbarTimerRef = useRef<number | null>(null);
   // 가로 오버플로가 있을 때만 안내를 노출할 화면 상태를 생성한다
   const [isHintVisible, setIsHintVisible] = useState(false);
   // 첫 스크롤 뒤 안내 문구의 지연 페이드아웃을 적용할 화면 상태를 생성한다
@@ -192,6 +195,48 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
   useEffect(prepareOverflowMeasure, [prepareOverflowMeasure]);
 
   /**
+   * 대기 중인 스크롤바 숨김 타이머를 해제한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const clearScrollbarTimer = useCallback((): void => {
+    // 활성 타이머가 있을 때만 해제해 다음 스크롤의 숨김 시점을 다시 계산한다
+    if (scrollbarTimerRef.current !== null) {
+      window.clearTimeout(scrollbarTimerRef.current);
+      // 해제된 타이머가 다시 참조되지 않도록 빈 상태를 기록한다
+      scrollbarTimerRef.current = null;
+    }
+  }, []);
+
+  /**
+   * 가로 스크롤바를 숨김 상태로 전환한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const hideScrollbar = useCallback((): void => {
+    // 스크롤 조작이 멈춘 뒤 스크롤바가 천천히 투명해지도록 표시 상태를 해제한다
+    setIsScrollbarVisible(false);
+    // 완료된 타이머를 빈 상태로 기록한다
+    scrollbarTimerRef.current = null;
+  }, []);
+
+  /**
+   * 잔디 영역이 해제될 때 남아 있는 스크롤바 타이머를 정리한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 스크롤바 숨김 타이머 정리 함수
+   */
+  const prepareScrollCleanup = useCallback((): (() => void) => {
+    // Effect 정리 단계에서 같은 타이머 해제 함수를 실행하도록 반환한다
+    return clearScrollbarTimer;
+  }, [clearScrollbarTimer]);
+
+  // 화면 이탈 후 스크롤바 상태를 변경하지 않도록 숨김 타이머를 정리한다
+  useEffect(prepareScrollCleanup, [prepareScrollCleanup]);
+
+  /**
    * 포인터와 휠 및 키보드 입력을 사용자의 실제 스크롤 의도로 기록한다
    *
    * @author SeungHyeon.Kang
@@ -209,17 +254,25 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
    * @return 반환값이 없다
    */
   const handleHorizontalScroll = (): void => {
-    // 초기 우측 위치 설정 또는 이미 숨긴 안내에는 중복 상태 변경을 실행하지 않는다
-    if (!hasUserIntentRef.current || isDismissedRef.current) {
+    // 초기 우측 위치 설정은 사용자 조작으로 처리하지 않는다
+    if (!hasUserIntentRef.current) {
       return;
     }
 
-    // 현재 잔디에서 안내 애니메이션이 반복되지 않도록 감지 상태를 기록한다
-    isDismissedRef.current = true;
-    // 사용자가 안내를 읽을 수 있도록 첫 이동 뒤 지연 페이드아웃 상태를 적용한다
-    setIsHintDismissed(true);
-    // 실제 스크롤이 시작된 뒤에만 현재 위치를 확인할 스크롤바를 표시한다
+    // 최초 사용자 스크롤에서만 안내 문구의 페이드아웃을 시작한다
+    if (!isDismissedRef.current) {
+      // 현재 잔디에서 안내 애니메이션이 반복되지 않도록 감지 상태를 기록한다
+      isDismissedRef.current = true;
+      // 사용자가 안내를 읽을 수 있도록 첫 이동 뒤 지연 페이드아웃 상태를 적용한다
+      setIsHintDismissed(true);
+    }
+
+    // 연속 스크롤 중에는 이전 숨김 예약을 취소해 표시를 유지한다
+    clearScrollbarTimer();
+    // 실제 스크롤이 진행되는 동안 현재 위치를 확인할 스크롤바를 표시한다
     setIsScrollbarVisible(true);
+    // 마지막 스크롤 입력 이후 스크롤바가 천천히 사라지기 시작할 시점을 예약한다
+    scrollbarTimerRef.current = window.setTimeout(hideScrollbar, SCROLLBAR_HIDE_DELAY_MS);
   };
 
   // 안내가 사라지는 동안에도 같은 요소를 유지해 지연 페이드아웃을 적용한다
