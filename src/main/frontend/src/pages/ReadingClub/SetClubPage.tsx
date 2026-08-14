@@ -6,7 +6,7 @@ import { createPortal } from "react-dom";
 import {
   type SetClubPageMode,
   useSetClubPage,
-} from "../../features/ReadingClub/hooks/useSetClubPage.ts";
+} from "@/features/ReadingClub/hooks/useSetClubPage.ts";
 import * as styles from "./SetClubPage.css";
 
 const SET_CLUB_FORM_ID = "set-club-form";
