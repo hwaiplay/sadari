@@ -83,6 +83,69 @@ export type UpdateUserProfileParams = {
   backgroundImageDraftToken?: string | null;
 };
 
+export type ReadingTimeDaily = {
+  readDate: string;
+  readSecs: number;
+};
+
+export type ReadingStatusCount = {
+  reptStat: "READ" | "DONE" | "STOP";
+  reptCnt: number;
+};
+
+export type ReadingStreak = {
+  currentStreakDays: number;
+  longestStreakDays: number;
+};
+
+export type ReadingBookTime = {
+  reptNumb?: number | null;
+  bookNumb: number;
+  bookTitl?: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  readSecs: number;
+};
+
+export type ReadingRatingCount = {
+  reptGrde: number;
+  reptCnt: number;
+};
+
+export type ReadingYearComparison = {
+  currentYear: number;
+  previousYear: number;
+  currentReadSecs: number;
+  previousReadSecs: number;
+  currentReadDays: number;
+  previousReadDays: number;
+  currentDoneBooks: number;
+  previousDoneBooks: number;
+};
+
+export type ReadingStatistics = {
+  heatmapStart: string;
+  heatmapEnd: string;
+  heatmapList: ReadingTimeDaily[];
+  statusList: ReadingStatusCount[];
+  streak: ReadingStreak;
+  topBookList: ReadingBookTime[];
+  ratingList: ReadingRatingCount[];
+  yearComparison: ReadingYearComparison;
+  selectedYear: number;
+  availableYears: number[];
+  publicYsno: "Y" | "N";
+};
+
+export type ReadingHeatmap = Pick<
+  ReadingStatistics,
+  "heatmapStart" | "heatmapEnd" | "heatmapList" | "selectedYear" | "availableYears"
+>;
+
+export type ReadingStatisticsSettingParams = {
+  publicYsno: "Y" | "N";
+};
+
 export type ProfileImageType = "PROFILE" | "BACKGROUND";
 
 export type ProfileImageDraft = {
@@ -131,6 +194,69 @@ export const getMonthlyReadingApi = async () => {
 
   const res = await api.get("/user/monthly-reading-summary");
   return assertResultDataSuccess(res.data);
+};
+
+/**
+ * 타이머 화면에 표시할 선택 연도의 독서 시간 잔디만 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param readYear 조회할 연도, 없으면 현재 연도
+ * @param signal 화면 이탈 시 조회를 취소할 요청 신호
+ * @return 조회 가능한 연도와 날짜별 독서 시간 잔디
+ * @throws API 요청 또는 비동기 처리 실패 시 발생
+ */
+export const getReadingHeatmapApi = async (
+  readYear?: number,
+  signal?: AbortSignal,
+): Promise<ReadingHeatmap> => {
+
+  // 전체 독서 통계 없이 선택 연도의 잔디 데이터만 요청한다
+  const res = await api.get("/user/reading-heatmap", {
+    params: readYear === undefined ? undefined : { readYear },
+    signal,
+  });
+  // 공통 응답 코드가 검증된 독서 잔디 데이터만 반환한다
+  return assertResultDataSuccess(res.data).data as ReadingHeatmap;
+};
+
+/**
+ * 스크롤로 마이페이지 통계 영역에 진입한 사용자의 독서 시간과 상태 분포를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param readYear 조회할 연도, 없으면 현재 연도
+ * @param signal 화면 이탈 시 조회를 취소할 요청 신호
+ * @return 선택 연도의 잔디와 독서 상태 통계 API 응답
+ * @throws API 요청 또는 비동기 처리 실패 시 발생
+ */
+export const getReadingStatsApi = async (
+  readYear?: number,
+  signal?: AbortSignal,
+): Promise<ReadingStatistics> => {
+
+  // 본인 전용 독서 통계를 화면 이탈 시 취소할 수 있는 조회 요청으로 전달한다
+  const res = await api.get("/user/reading-statistics", {
+    params: readYear === undefined ? undefined : { readYear },
+    signal,
+  });
+  // 공통 응답 코드가 검증된 독서 통계 데이터만 반환한다
+  return assertResultDataSuccess(res.data).data as ReadingStatistics;
+};
+
+/**
+ * 마이페이지에서 선택한 독서 통계 공개 여부를 저장한다
+ *
+ * @author SeungHyeon.Kang
+ * @param params 다른 사용자 공개 여부
+ * @return 저장된 공개 여부 코드
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const uptReadingStatsSettingApi = async (
+  params: ReadingStatisticsSettingParams,
+): Promise<"Y" | "N"> => {
+  // 로그인 회원의 범용 설정에 독서 통계 공개 여부를 저장한다
+  const res = await api.put("/user/reading-statistics/settings", params);
+  // 공통 성공 응답 검증을 통과한 공개 여부 코드를 반환한다
+  return assertResultDataSuccess(res.data).data as "Y" | "N";
 };
 
 /**

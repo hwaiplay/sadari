@@ -395,13 +395,14 @@
            )
     </select>
 
-    <!-- ISBN 기준으로 다른 사용자의 공개된 완료 또는 중단 독후감만 조회한다. -->
+    <!-- ISBN 기준 활성 사용자의 공개 독후감을 조회하고 로그인 사용자가 팔로우하는 작성자의 글을 우선 배치한다. -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getPublicReportList */
                P.REPT_NUMB
              , P.USER_NUMB
@@ -416,6 +417,7 @@
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , COALESCE(UL.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
              , COALESCE(RPL.REPL_CNT, 0) AS REPL_CNT
+             , CASE WHEN FW.USER_NUMB IS NOT NULL THEN #{commYes} ELSE #{commNo} END AS FOLLOW_YSNO
         FROM TM_BKINFO B
     INNER JOIN TM_REPORT P
             ON B.BOOK_NUMB = P.BOOK_NUMB
@@ -423,6 +425,9 @@
             ON P.USER_NUMB = U.USER_NUMB
      LEFT JOIN TM_FILEXM F
             ON U.PROF_NUMB = F.FILE_NUMB
+     LEFT JOIN TB_FOLLOW FW
+            ON FW.USER_NUMB = #{userNumb}
+           AND FW.FLOW_NUMB = P.USER_NUMB
      LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX L
@@ -444,10 +449,12 @@
                 ) RPL
             ON RPL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
+           AND U.USER_STAT = #{userStatActive}
            AND P.PUBC_YSNO = #{commYes}
            AND P.REPT_STAT != #{reptStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
-      ORDER BY P.REPT_NUMB DESC
+      ORDER BY CASE WHEN FW.USER_NUMB IS NOT NULL THEN 0 ELSE 1 END
+             , P.REPT_NUMB DESC
     </select>
 
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->

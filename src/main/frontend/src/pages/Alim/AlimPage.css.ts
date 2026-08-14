@@ -250,13 +250,3 @@ export const empty = style({
   fontSize: "14px",
   color: "#777777",
 });
-
-export const scrollTarget = style({
-  minHeight: "38px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  fontFamily: vars.font.body,
-  fontSize: "12px",
-  color: "#777777",
-});

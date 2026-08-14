@@ -30,6 +30,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-07-29        HanWon.Jang        댓글 등록 알림 중복 차단 제외
  * 2026-08-12        SeungHyeon.Kang    발송 알림 아이콘 번호 저장
  * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 전환
+ * 2026-08-14        SeungHyeon.Kang    사용자 알림 10개 단위 조회 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -37,7 +38,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
 public class AlimServiceImpl implements AlimService {
 
     // 알림 페이지 크기 설정값
-    private static final int ALIM_PAGE_SIZE = 20;
+    private static final int ALIM_PAGE_SIZE = 10;
 
     // Alim 데이터 접근 객체
     private final AlimMapper alimMapper;

@@ -153,6 +153,7 @@ export interface PublicReportType {
   likeCnt?: number;
   replCnt?: number;
   likeYsno?: "Y" | "N";
+  followYsno?: "Y" | "N";
   commentCnt?: number;
 }
 

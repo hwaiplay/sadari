@@ -15,6 +15,7 @@ import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
 import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 import org.our.sadari.global.scheduler.service.UserStatusEventService;
+import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
 
 /**
  * fileName       : SchedulerTest
@@ -46,6 +47,10 @@ class SchedulerTest {
     @Mock
     private UserStatusEventService userStatusEventService;
 
+    // 독서 타이머 상세 정리 서비스
+    @Mock
+    private TimerDetailDeleteService timerDetailDeleteService;
+
     // 공통코드 캐시 조회 객체
     @Mock
     private CodeUtil codeUtil;
@@ -61,7 +66,7 @@ class SchedulerTest {
     @BeforeEach
     void setUp() {
         // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성한다
-        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService, codeUtil);
+        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService, timerDetailDeleteService, codeUtil);
     }
 
     /**

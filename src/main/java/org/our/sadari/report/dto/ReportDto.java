@@ -19,6 +19,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 설명 추가
+ * 2026-08-14        SeungHyeon.Kang    공개 독후감 작성자 팔로우 여부 응답 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -79,6 +80,9 @@ public class ReportDto extends BookDto {
 
     @Schema(description = "로그인 사용자의 좋아요 여부", example = "Y", allowableValues = {"Y", "N"})
     private String likeYsno;
+
+    @Schema(description = "로그인 사용자의 독후감 작성자 팔로우 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String followYsno;
 
     @Schema(description = "독후감이 받은 댓글 수", example = "12")
     private Long replCnt;

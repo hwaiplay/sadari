@@ -17,6 +17,7 @@ import lombok.Data;
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 요청 DTO 제거
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 조인 응답 필드 추가
+ * 2026-08-14        SeungHyeon.Kang    알림 목록 10개 단위 조회 설명 반영
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
@@ -108,7 +109,7 @@ public class AlimDto {
     }
 
     /**
-     * 알림 목록을 20개 단위로 끊어 조회하기 위한 요청 DTO이다.
+     * 알림 목록을 10개 단위로 끊어 조회하기 위한 요청 DTO이다.
      * 화면에서 스크롤로 다음 페이지를 요청할 때도 같은 DTO를 사용하며, 실제 조회 범위는 서비스에서 보정한다.
      *
      * @author SeungHyeon.Kang

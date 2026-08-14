@@ -2,6 +2,7 @@ import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 import type {
   MonthlyReadingSummary,
+  ReadingStatistics,
   UserProfile,
 } from "@/features/User/api/userApi";
 
@@ -48,6 +49,30 @@ export const getSocialReadingApi = async (userNumb: number) => {
     `/social/profile/${userNumb}/reading-summary`,
   );
   return assertResultDataSuccess(res.data);
+};
+
+/**
+ * 다른 사용자가 공개한 독서 통계를 선택 연도 기준으로 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param userNumb 공개 통계를 조회할 사용자 번호
+ * @param readYear 조회할 연도, 없으면 현재 연도
+ * @param signal 화면 이탈 시 조회를 취소할 요청 신호
+ * @return 공개 허용 시 독서 통계, 비공개이면 빈 데이터
+ * @throws API 요청 또는 업무 검증 실패 시 발생
+ */
+export const getSocialReadingStatsApi = async (
+  userNumb: number,
+  readYear?: number,
+  signal?: AbortSignal,
+): Promise<ReadingStatistics | null> => {
+  // 프로필 주인이 공개한 독서 통계를 화면 이탈 시 취소 가능한 요청으로 조회한다
+  const res = await api.get(`/social/profile/${userNumb}/reading-statistics`, {
+    params: readYear === undefined ? undefined : { readYear },
+    signal,
+  });
+  // 공개 설정이 켜진 경우에만 통계 객체를 반환한다
+  return (assertResultDataSuccess(res.data).data as ReadingStatistics | null | undefined) ?? null;
 };
 
 /**

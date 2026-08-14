@@ -76,7 +76,7 @@
            AND SEND_DATE >= CURRENT_TIMESTAMP - (1 / 24)
     </select>
 
-    <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 20개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->
+    <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 10개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->
     <select id="getMyAlimList" parameterType="org.our.sadari.alim.dto.AlimDto$AlimListReqDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimItemDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="alimSituDefault" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_DEFAULT" />

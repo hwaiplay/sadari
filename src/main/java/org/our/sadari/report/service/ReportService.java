@@ -16,6 +16,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 계약 추가
  * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 계약 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 계약 추가
+ * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 계약 반영
  */
 public interface ReportService {
     /**
@@ -49,7 +50,7 @@ public interface ReportService {
     ResultData getReportByIsbnDtl(Long userNumb, String bookIsbn);
 
     /**
-     * ISBN 기준으로 공개 독후감 목록을 조회한다.
+     * ISBN 기준 활성 사용자의 공개 독후감을 팔로우 작성자 우선으로 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
