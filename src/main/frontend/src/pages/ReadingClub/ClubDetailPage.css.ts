@@ -1,5 +1,5 @@
 import { vars } from "@/app/styles/tokens.css";
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 
 export const page = style({
   display: "flex",
@@ -8,16 +8,63 @@ export const page = style({
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
-  padding: "28px 0 104px",
+  padding: "20px 0 104px",
 });
 
 export const clubSummary = style({
+  position: "relative",
   display: "flex",
   flexDirection: "column",
   gap: 14,
-  padding: 20,
+  padding: "20px 60px 20px 20px",
   borderRadius: 20,
   background: vars.color.gray100,
+});
+
+export const moreSelect = style({
+  position: "absolute",
+  top: 14,
+  right: 14,
+  zIndex: 10,
+});
+
+export const moreButton = style({
+  width: 36,
+  minWidth: 36,
+  height: 36,
+  padding: 0,
+  justifyContent: "center",
+  selectors: {
+    "&:hover, &:focus-visible": {
+      background: vars.color.gray200,
+      outline: "none",
+    },
+  },
+});
+
+export const moreIcon = style({
+  display: "block",
+  width: 20,
+  height: 20,
+});
+
+export const moreOptionList = style({
+  minWidth: 120,
+});
+
+export const moreOption = style({
+  minHeight: 36,
+  fontSize: 14,
+});
+
+export const dangerOption = style({
+  color: vars.color.negativeText,
+  selectors: {
+    "&:hover, &:focus-visible": {
+      background: vars.color.negativeBg,
+      color: vars.color.negativeText,
+    },
+  },
 });
 
 export const chips = style({ display: "flex", flexWrap: "wrap", gap: 6 });
@@ -41,7 +88,7 @@ export const summaryText = style({
 export const detailTitle = style({
   margin: 0,
   color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.heading,
   fontSize: 18,
   lineHeight: "27px",
 });
@@ -96,20 +143,46 @@ export const readingCardHeader = style({
 export const readingEmpty = style({
   display: "flex",
   flex: 1,
+  flexDirection: "column",
   alignItems: "center",
   justifyContent: "center",
-  gap: 18,
-  color: vars.color.gray500,
+  gap: 12,
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: "20px",
 });
 
-export const emptyBookImage = style({
-  width: 72,
-  height: 106,
+export const readingBook = style({
+  display: "flex",
+  flex: 1,
+  flexDirection: "column",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 8,
+});
+
+export const currentBookImage = style({
+  width: 96,
+  height: 144,
   borderRadius: 4,
   objectFit: "cover",
+});
+
+export const currentBookTitle = style({
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "24px",
+  textAlign: "center",
+});
+
+export const currentBookAuthor = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+  textAlign: "center",
 });
 
 export const memberHeader = style({
@@ -149,21 +222,29 @@ export const memberProfileItem = style({
   height: 36,
 });
 
+export const memberProfilesOverlapped = style({
+  gap: 0,
+});
+
+globalStyle(`${memberProfilesOverlapped} > ${memberProfileItem}:not(:first-child)`, {
+  marginLeft: "-18px",
+});
+
 export const memberProfileImage = style({
   display: "block",
   width: "100%",
   height: "100%",
   boxSizing: "border-box",
-  border: `1px solid ${vars.color.gray200}`,
+  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "50%",
   background: vars.color.gray200,
   objectFit: "cover",
 });
 
 export const memberCountText = style({
-  color: vars.color.gray500,
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
+  fontSize: 14,
 });
 
 export const clubNavigation = style({
@@ -181,7 +262,7 @@ export const navigationRow = style({
   background: "transparent",
   color: vars.color.gray900,
   fontFamily: vars.font.semibold,
-  fontSize: 14,
+  fontSize: 16,
   textAlign: "left",
   cursor: "pointer",
 });
@@ -189,13 +270,13 @@ export const navigationRow = style({
 export const navigationDescription = style({
   display: "block",
   marginTop: 4,
-  color: vars.color.gray500,
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: 12,
   fontWeight: 400,
 });
 
-export const chevron = style({ color: vars.color.gray500, fontSize: 25, fontWeight: 300 });
+export const chevron = style({ color: vars.color.gray500, fontSize: 24, fontWeight: 300 });
 
 export const panel = style({
   display: "flex",
@@ -211,7 +292,7 @@ export const panelDescription = style({
   margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: 1.6,
 });
 
@@ -250,15 +331,14 @@ export const avatar = style({
   objectFit: "cover",
 });
 
-export const profileName = style({ display: "block", fontFamily: vars.font.semibold, fontSize: 13 });
-export const profileIntro = style({ display: "block", marginTop: 3, color: vars.color.gray500, fontFamily: vars.font.body, fontSize: 11 });
+export const profileName = style({ display: "block", fontFamily: vars.font.semibold, fontSize: 14 });
 
 export const application = style({
   display: "flex",
   flexDirection: "column",
   gap: 12,
   padding: "16px 0",
-  borderBottom: `1px solid ${vars.color.gray200}`,
+  borderBottom: `1px solid ${vars.color.gray300}`,
   selectors: { "&:last-child": { borderBottom: 0 } },
 });
 
@@ -268,13 +348,11 @@ export const actions = style({ display: "flex", flexWrap: "wrap", gap: 8 });
 export const empty = style({
   margin: 0,
   padding: "32px 18px",
-  color: vars.color.gray500,
+  color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
+  fontSize: 14,
   textAlign: "center",
 });
-
-export const loading = style([empty, { padding: "70px 18px" }]);
 
 export const fixedActionArea = style({
   position: "fixed",

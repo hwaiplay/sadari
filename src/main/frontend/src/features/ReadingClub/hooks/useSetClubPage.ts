@@ -1,10 +1,18 @@
 import { getApiErrorMessage } from "@/app/api/resultData.ts";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert.ts";
 import { message } from "@/app/messages/message.ts";
-import { createClubApi, type ClubCreateParams } from "@/features/ReadingClub/api/readingClubApi.ts";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation.ts";
+import {
+  createClubApi,
+  getClubDtlApi,
+  type ClubCreateParams,
+  uptClubApi,
+} from "@/features/ReadingClub/api/readingClubApi.ts";
 import { getUserInterestCatalogApi, type UserInterest } from "@/features/User/api/userApi.ts";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
+
+export type SetClubPageMode = "create" | "edit";
 
 const INITIAL_CLUB_FORM: ClubCreateParams = {
   clubName: "",
@@ -17,32 +25,97 @@ const INITIAL_CLUB_FORM: ClubCreateParams = {
 };
 
 /**
- * 모임 생성 화면의 입력 상태와 카테고리 조회 및 제출 처리를 관리한다
+ * 모임 생성 및 수정 화면의 입력 상태와 카테고리 조회 및 제출 처리를 관리한다
  *
- * @author SeungHyeon.Kang
- * @return 모임 생성 화면 상태와 이벤트 처리 함수
+ * @author Hanwon.Jang
+ * @param mode 모임 폼 동작 모드
+ * @return 모임 생성 및 수정 화면 상태와 이벤트 처리 함수
  */
-export function useSetClubPage() {
+export function useSetClubPage(mode: SetClubPageMode = "create") {
   const navigate = useNavigate();
+  const { clubNumb: clubNumbParam } = useParams();
+  const clubNumb = Number(clubNumbParam);
   const [catalog, setCatalog] = useState<UserInterest[]>([]);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSaving, setIsSaving] = useState(false);
   const [form, setForm] = useState<ClubCreateParams>(INITIAL_CLUB_FORM);
 
   useEffect(() => {
-    // 카테고리 선택 팝업의 활성 관심분야를 조회한다
-    void getUserInterestCatalogApi()
-      .then(setCatalog)
-      .catch((error) => void sweetError(
+    // 잘못된 수정 경로에서는 서버에 상세 조회를 요청하지 않는다
+    if (mode === "edit" && !Number.isFinite(clubNumb)) {
+      // "모임 정보를 불러오지 못했어요"
+      void sweetError(
         message("frontend.readingClub.error.fetchTitle"),
-        getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
-      ));
-  }, []);
+        message("frontend.readingClub.common.retry"),
+      );
+      // 안전한 내 모임 목록으로 이동한다
+      navigate("/reading-clubs/mine", { replace: true });
+      // 잘못된 경로 처리를 마치고 로딩 상태를 해제한다
+      setIsLoading(false);
+      return;
+    }
+
+    // 수정 화면은 관심분야와 기존 모임 상세를 함께 조회한다
+    const pageRequest = mode === "edit"
+      ? Promise.all([getUserInterestCatalogApi(), getClubDtlApi(clubNumb)])
+      : Promise.all([getUserInterestCatalogApi(), Promise.resolve(null)]);
+
+    void pageRequest
+      .then(([nextCatalog, detail]) => {
+        // 카테고리 선택 팝업에 활성 관심분야를 설정한다
+        setCatalog(nextCatalog);
+
+        // 생성 화면은 빈 입력 상태를 유지한다
+        if (!detail) {
+          return;
+        }
+
+        // 모임장이 아닌 사용자는 수정 화면에 접근할 수 없다
+        if (detail.membRole !== "OWNER") {
+          // "모임을 수정할 수 없어요"
+          void sweetError(
+            message("frontend.readingClub.set.editAccessTitle"),
+            message("frontend.readingClub.set.editAccessDescription"),
+          );
+          // 접근 가능한 모임 상세 화면으로 되돌린다
+          navigate(`/reading-clubs/${clubNumb}`, { replace: true });
+          return;
+        }
+
+        // 서버 상세를 수정 폼 입력값으로 변환한다
+        setForm({
+          clubName: detail.clubName,
+          clubCntn: detail.clubCntn,
+          clubVisb: detail.clubVisb,
+          joinType: detail.joinType,
+          maxxMemb: detail.maxxMemb,
+          categoryList: detail.categoryList?.map((category) => category.intrCode) ?? [],
+          questionList: detail.questionList ?? [],
+        });
+      })
+      .catch((error) => {
+        // "모임 정보를 불러오지 못했어요"
+        void sweetError(
+          message("frontend.readingClub.error.fetchTitle"),
+          getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+        );
+
+        // 수정 대상 조회에 실패하면 상세 화면으로 되돌린다
+        if (mode === "edit" && Number.isFinite(clubNumb)) {
+          navigate(`/reading-clubs/${clubNumb}`, { replace: true });
+        }
+      })
+      .finally(() => {
+        // 초기 조회가 끝나면 폼 화면을 표시한다
+        setIsLoading(false);
+      });
+  }, [clubNumb, mode, navigate]);
 
   /**
    * 모임 이름 입력값을 생성 상태에 반영한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param event 모임 이름 입력 이벤트
    * @return 반환값이 없다
    */
@@ -54,7 +127,7 @@ export function useSetClubPage() {
   /**
    * 모임 소개 입력값을 생성 상태에 반영한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param event 모임 소개 입력 이벤트
    * @return 반환값이 없다
    */
@@ -66,7 +139,7 @@ export function useSetClubPage() {
   /**
    * 공개 범위를 변경하고 허용 가입 방식으로 보정한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param clubVisb 공개 범위
    * @return 반환값이 없다
    */
@@ -83,7 +156,7 @@ export function useSetClubPage() {
   /**
    * 즉시 가입 방식을 선택하고 기존 승인 질문을 제거한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const selectOpenJoin = (): void => {
@@ -94,7 +167,7 @@ export function useSetClubPage() {
   /**
    * 승인 가입 방식을 선택하고 첫 질문 입력란을 준비한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const selectApprovalJoin = (): void => {
@@ -109,7 +182,7 @@ export function useSetClubPage() {
   /**
    * 정원을 허용 범위로 보정해 변경한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param value 새 정원
    * @return 반환값이 없다
    */
@@ -124,7 +197,7 @@ export function useSetClubPage() {
   /**
    * 승인 질문 한 항목을 변경한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param index 질문 순서
    * @param value 질문 내용
    * @return 반환값이 없다
@@ -142,7 +215,7 @@ export function useSetClubPage() {
   /**
    * 선택한 승인 질문을 생성 상태에서 제거한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param index 제거할 질문 순서
    * @return 반환값이 없다
    */
@@ -157,7 +230,7 @@ export function useSetClubPage() {
   /**
    * 승인 질문 입력란을 하나 추가한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const addQuestion = (): void => {
@@ -168,7 +241,7 @@ export function useSetClubPage() {
   /**
    * 선택한 관심 카테고리를 모임 생성 목록에서 제거한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param intrCode 제거할 관심 카테고리 코드
    * @return 반환값이 없다
    */
@@ -183,7 +256,7 @@ export function useSetClubPage() {
   /**
    * 관심 카테고리 선택 팝업을 연다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const openCategoryModal = (): void => {
@@ -194,7 +267,7 @@ export function useSetClubPage() {
   /**
    * 관심 카테고리 선택 팝업을 닫는다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const closeCategoryModal = (): void => {
@@ -205,7 +278,7 @@ export function useSetClubPage() {
   /**
    * 팝업에서 선택한 관심 카테고리를 생성 상태에 저장한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param categoryList 선택한 관심 카테고리 코드 목록
    * @return 반환값이 없다
    */
@@ -217,9 +290,9 @@ export function useSetClubPage() {
   };
 
   /**
-   * 모임 생성 폼을 제출한다
+   * 모임 생성 또는 수정 폼을 제출한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param event 폼 제출 이벤트
    * @return 반환값이 없다
    */
@@ -227,35 +300,50 @@ export function useSetClubPage() {
     // 브라우저 기본 제출을 막는다
     event.preventDefault();
 
-    // 모임 생성에 필요한 필수 입력을 모두 확인한다
+    // 모임 저장에 필요한 필수 입력을 모두 확인한다
     if (!form.clubName.trim() || !form.clubCntn.trim() || form.categoryList.length === 0
         || (form.joinType === "APPROVAL" && (form.questionList.length === 0
-        || form.questionList.some((question) => !question.trim())))) {
+        || form.questionList.some((question) => !question.trim())))
+        || (mode === "edit" && !Number.isFinite(clubNumb))) {
       // "입력을 확인해 주세요"
       void sweetError(
         message("frontend.readingClub.set.validationTitle"),
         message("frontend.readingClub.set.validationDescription"),
       );
-      // 필수 입력이 누락된 모임 생성 요청을 중단한다
+      // 필수 입력이 누락되거나 수정 대상이 잘못된 저장 요청을 중단한다
       return;
     }
 
-    // 모임 생성 요청의 중복 제출을 막는다
+    // 모임 저장 요청의 중복 제출을 막는다
     setIsSaving(true);
 
     try {
-      // 입력한 모임과 첫 회원 관계를 생성한다
-      const club = await createClubApi(form);
-      // 생성된 모임 상세 화면으로 이동한다
+      // 입력값을 현재 화면 모드에 맞춰 생성 또는 수정한다
+      const club = await runBlockingOperation(
+        () => mode === "edit" ? uptClubApi(clubNumb, form) : createClubApi(form),
+        {
+          title: mode === "edit"
+            ? message("frontend.readingClub.set.editSaving")
+            : message("frontend.readingClub.set.saving"),
+        },
+      );
+      // 저장된 모임 상세 화면으로 이동한다
       navigate(`/reading-clubs/${club.clubNumb}`, { replace: true });
     } catch (error) {
-      // "모임을 만들지 못했어요"
+      // "모임을 저장하지 못했어요"
       void sweetError(
-        message("frontend.readingClub.set.createErrorTitle"),
-        getApiErrorMessage(error, message("frontend.readingClub.set.createErrorDescription")),
+        mode === "edit"
+          ? message("frontend.readingClub.set.updateErrorTitle")
+          : message("frontend.readingClub.set.createErrorTitle"),
+        getApiErrorMessage(
+          error,
+          mode === "edit"
+            ? message("frontend.readingClub.set.updateErrorDescription")
+            : message("frontend.readingClub.set.createErrorDescription"),
+        ),
       );
     } finally {
-      // 모임 생성 요청이 끝나면 제출 버튼을 다시 활성화한다
+      // 모임 저장 요청이 끝나면 제출 버튼을 다시 활성화한다
       setIsSaving(false);
     }
   };
@@ -271,7 +359,9 @@ export function useSetClubPage() {
     handleDescriptionChange,
     handleNameChange,
     isCategoryOpen,
+    isLoading,
     isSaving,
+    isEditMode: mode === "edit",
     openCategoryModal,
     removeCategory,
     removeQuestion,

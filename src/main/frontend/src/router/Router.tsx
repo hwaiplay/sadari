@@ -29,7 +29,11 @@ import ErrorPage from "@/pages/Error/ErrorPage";
 import MyClubPage from "@/pages/ReadingClub/MyClubPage";
 import FindClubPage from "@/pages/ReadingClub/FindClubPage";
 import SetClubPage from "@/pages/ReadingClub/SetClubPage.tsx";
+import EditClubPage from "@/pages/ReadingClub/EditClubPage.tsx";
 import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
+import ClubManagementPage from "@/pages/ReadingClub/ClubManagementPage";
+import ClubMemberManagementPage from "@/pages/ReadingClub/ClubMemberManagementPage";
+import SetClubReadingPage from "@/pages/ReadingClub/SetClubReadingPage";
 import NoticeListPage from "@/pages/Notice/NoticeListPage";
 import NoticeDetailPage from "@/pages/Notice/NoticeDetailPage";
 import InquiryListPage from "@/pages/Inquiry/InquiryListPage";
@@ -164,12 +168,23 @@ const Router = () => {
           {/* 기록하기 */}
           <Route path="/report/set" element={<SetReportPage />} />
 
+          {/* 독후감 달력*/}
           <Route path="/mypage/reading-calendar" element={<ReadingCalendarPage />} />
+
+          {/* 마이페이지 */}
           <Route path="/mypage/profile" element={<ProfileEditPage />} />
+
+
+          {/* 유저 페이지 */}
+          <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
+
+          {/* 알림 페이지 */}
+          <Route path="/alim" element={<AlimPage />} />
+
           {/* 독서 타이머와 주간 출석 */}
           <Route path="/timer" element={<ReadingTimerPage />} />
-          <Route path="/social/profile/:userNumb" element={<SocialProfilePage />} />
-          <Route path="/alim" element={<AlimPage />} />
+
+          {/* 환경설정 */}
           <Route path="/settings" element={<SettingsPage />} />
           <Route path="/settings/alim" element={<AlimPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
@@ -184,6 +199,12 @@ const Router = () => {
           <Route path="/reading-clubs/mine" element={<MyClubPage />} />
           <Route path="/reading-clubs/find" element={<FindClubPage />} />
           <Route path="/reading-clubs/set" element={<SetClubPage />} />
+          <Route path="/reading-clubs/:clubNumb/books/search" element={<BookSearchType />} />
+          <Route path="/reading-clubs/:clubNumb/books/search/info" element={<SearchBookInfoPage />} />
+          <Route path="/reading-clubs/:clubNumb/readings/set" element={<SetClubReadingPage />} />
+          <Route path="/reading-clubs/:clubNumb/edit" element={<EditClubPage />} />
+          <Route path="/reading-clubs/:clubNumb/manage" element={<ClubManagementPage />} />
+          <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
           <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}

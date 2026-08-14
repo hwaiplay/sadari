@@ -4,7 +4,7 @@
  * @author HanWon.Jang
  */
 import { message } from "@/app/messages/message";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
@@ -30,8 +30,12 @@ function SearchBookInfoPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { clubNumb: clubNumbParam } = useParams<{ clubNumb: string }>();
+  const isClubBookSearch = clubNumbParam !== undefined;
+  const clubNumb = Number(clubNumbParam);
+  const hasValidClubNumb = Number.isSafeInteger(clubNumb) && clubNumb > 0;
   const book = location.state?.book as BookSearchResultType | undefined;
-  const [isSelectingReport, setIsSelectingReport] = useState(false);
+  const [isSelectingBook, setIsSelectingBook] = useState(false);
   const { data: ratingAverageData } = useBookRatingAvg(
     book?.isbn ?? "",
     Boolean(book?.isbn),
@@ -91,15 +95,34 @@ function SearchBookInfoPage() {
    * @author HanWon.Jang
    * @return 기존 독후감 확인과 화면 이동이 끝난 Promise
    */
-  async function goSetReportPage(): Promise<void> {
+  async function goSelectedBookPage(): Promise<void> {
     // 기존 독후감 확인이 진행 중이면 중복 화면 이동을 차단한다
-    if (isSelectingReport) {
+    if (isSelectingBook) {
       // 진행 중인 독후감 선택 요청을 유지한다
       return;
     }
 
     // 이 책으로 기록하기 버튼의 중복 요청을 막도록 진행 상태를 설정한다
-    setIsSelectingReport(true);
+    // 모임 독서용 검색에서는 개인 독후감 작성 여부를 확인하지 않는다.
+    if (isClubBookSearch) {
+      // 올바르지 않은 모임 번호로는 독서 등록 URL을 만들지 않는다.
+      if (!hasValidClubNumb) {
+        // 모임 목록으로 돌아가 다시 진입하도록 한다.
+        navigate("/reading-clubs/mine", { replace: true });
+        // 잘못된 모임 번호의 책 선택을 종료한다.
+        return;
+      }
+
+      // 독서 등록 화면 구현 전까지 책 정보와 ISBN을 예정된 URL로 전달한다.
+      navigate(
+        `/reading-clubs/${clubNumb}/readings/set?isbn=${encodeURIComponent(selectedBook.isbn)}`,
+        { state: { book: selectedBook } },
+      );
+      // 모임 독서 등록 URL 이동 후 개인 독후감 흐름을 실행하지 않는다.
+      return;
+    }
+
+    setIsSelectingBook(true);
     // 선택 흐름이 예외로 끝나도 버튼 진행 상태를 복원한다
     try {
       // 기존 독후감 수정과 추가 작성 선택 흐름으로 이동한다
@@ -108,7 +131,7 @@ function SearchBookInfoPage() {
 
     finally {
       // 선택 안내가 끝난 뒤 다시 시도할 수 있도록 진행 상태를 해제한다
-      setIsSelectingReport(false);
+      setIsSelectingBook(false);
     }
   }
 
@@ -240,11 +263,17 @@ function SearchBookInfoPage() {
         <button
           className={bookInfoStyles.selectButton}
           type="button"
-          onClick={() => void goSetReportPage()}
-          disabled={isSelectingReport}
+          onClick={() => void goSelectedBookPage()}
+          disabled={isSelectingBook}
         >
           {/* "이 책으로 기록하기" */}
-          {message("frontend.book.search.writeThisBook")}
+          {isClubBookSearch
+            ? /* "이 책 선택하기" */ message(
+                "frontend.readingClub.reading.selectBook",
+              )
+            : /* "이 책으로 기록하기" */ message(
+                "frontend.book.search.writeThisBook",
+              )}
         </button>
       </Container>
     </main>

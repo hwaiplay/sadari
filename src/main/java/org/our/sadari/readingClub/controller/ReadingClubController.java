@@ -28,7 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 API 추가
+ * 2026-08-14        Hanwon.Jang    모임원 프로필 목록 조회 API 추가
+ * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 API 추가
+ * 2026-08-14        Hanwon.Jang        모임 독서 회차 등록 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -38,6 +40,24 @@ public class ReadingClubController {
 
     // 독서 모임 생성과 참여 업무 서비스
     private final ReadingClubService readingClubService;
+
+    /**
+     * 모임 독서 회차와 활성 멤버별 읽는 중 독후감을 하나의 요청으로 등록한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 등록을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param request 선택 도서와 목표 독서 기간
+     * @return 생성된 회차 번호
+     */
+    @PostMapping("/{clubNumb}/readings")
+    @Operation(summary = "모임 독서 등록")
+    public ResultData setReading(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                , @PathVariable Long clubNumb
+                                , @Valid @RequestBody ReadingClubDto.ReadingCreateReqDto request) {
+        // 회차와 활성 멤버별 독후감을 같은 트랜잭션으로 생성한 결과를 반환한다
+        return readingClubService.setReading(userNumb, clubNumb, request);
+    }
 
     /**
      * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회한다.
@@ -88,7 +108,7 @@ public class ReadingClubController {
     /**
      * 활성 모임원에게 같은 모임의 공개 가능한 활성 모임원 프로필 목록을 제공한다.
      *
-     * @author SeungHyeon.Kang
+     * @author Hanwon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
      * @param clubNumb 조회할 모임 번호
      * @return 모임원 프로필 목록 조회 결과
@@ -115,6 +135,40 @@ public class ReadingClubController {
                              , @Valid @RequestBody ReadingClubDto.ClubCreateReqDto request) {
         // 모임과 개설자 회원 관계를 한 트랜잭션으로 생성한 결과를 반환한다
         return readingClubService.setClub(userNumb, request);
+    }
+
+    /**
+     * 현재 모임장이 모임 기본 정보와 운영 설정을 수정한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 로그인 사용자 번호
+     * @param clubNumb 수정할 모임 번호
+     * @param request 수정할 모임 정보
+     * @return 수정된 모임 상세 조회 결과
+     */
+    @PutMapping("/{clubNumb}")
+    @Operation(summary = "모임 수정")
+    public ResultData uptClub(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                            , @PathVariable Long clubNumb
+                            , @Valid @RequestBody ReadingClubDto.ClubCreateReqDto request) {
+        // 현재 모임장 권한과 운영 제약을 적용한 수정 결과를 반환한다
+        return readingClubService.uptClub(userNumb, clubNumb, request);
+    }
+
+    /**
+     * 현재 모임장이 모임과 종속 데이터를 복구 불가능하게 삭제한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 로그인 사용자 번호
+     * @param clubNumb 삭제할 모임 번호
+     * @return 모임 물리 삭제 결과
+     */
+    @DeleteMapping("/{clubNumb}")
+    @Operation(summary = "모임 삭제")
+    public ResultData delClub(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                            , @PathVariable Long clubNumb) {
+        // 현재 모임장만 실행할 수 있는 물리 삭제 결과를 반환한다
+        return readingClubService.delClub(userNumb, clubNumb);
     }
 
     /**
@@ -149,6 +203,22 @@ public class ReadingClubController {
                                              , @PathVariable Long clubNumb) {
         // 아직 모임 관계가 없는 활성 맞팔 후보를 반환한다
         return readingClubService.getInviteCandidateList(userNumb, clubNumb);
+    }
+
+    /**
+     * 모임장이 활성 회원에게 발송한 유효한 초대 목록을 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 보낸 초대 목록 조회 결과
+     */
+    @GetMapping("/{clubNumb}/invitations/sent")
+    @Operation(summary = "보낸 모임 초대 조회")
+    public ResultData getSentInvitationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                            , @PathVariable Long clubNumb) {
+        // 활성 회원에게 발송한 만료 전 초대 목록을 반환한다
+        return readingClubService.getSentInvitationList(userNumb, clubNumb);
     }
 
     /**

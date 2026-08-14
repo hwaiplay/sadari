@@ -6,7 +6,7 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "100svh",
   margin: "0 auto",
-  padding: "28px 18px 38px",
+  padding: "20px 18px 38px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
   display: "flex",

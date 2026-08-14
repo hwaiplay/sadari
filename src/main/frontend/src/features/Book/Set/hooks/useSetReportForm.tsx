@@ -1,7 +1,12 @@
 /**
- * src/main/frontend/src/features/Book/Set/hooks/useSetReportForm.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
- *
- * @author HanWon.Jang
+ * fileName       : useSetReportForm
+ * author         : Hanwon.Jang
+ * date           : 2026-08-14
+ * description    : 독후감 등록 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-14        Hanwon.Jang    최초 생성
  */
 
 import { message } from "@/app/messages/message";

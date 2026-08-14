@@ -1,209 +1,48 @@
-/**
- * src/main/frontend/src/pages/Home/Home.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
- *
- * @author HanWon.Jang
- */
 import { message } from "@/app/messages/message";
-import { getApiErrorMessage } from "@/app/api/resultData";
 import { Container } from "@/components/Layout/Container/Container";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import CustomSelect from "@/components/Select/CustomSelect";
 import Book from "@/features/Home/components/Book";
-import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
 import * as styles from "./Home.css";
 import Loading from "@/components/Loading/Loading";
-import { HomeBookType } from "@/features/Book/types/book.type";
-import type { ReactNode } from "react";
-import { useEffect, useMemo, useState } from "react";
+import type { HomeBookType } from "@/features/Book/types/book.type";
 import { createPortal } from "react-dom";
-import { useLocation, useNavigate } from "react-router-dom";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
-
-type HomeSortType = "END_DATE_DESC" | "START_DATE_DESC" | "GRADE_DESC";
-
-type MonthlyBookGroup = {
-  key: string;
-  label: ReactNode;
-  books: HomeBookType[];
-};
-
-const SORT_OPTIONS: Array<{
-  value: HomeSortType;
-  labelKey: string;
-}> = [
-  {
-    value: "END_DATE_DESC",
-    labelKey: "frontend.home.sort.endDateDesc",
-  },
-  {
-    value: "START_DATE_DESC",
-    labelKey: "frontend.home.sort.startDateDesc",
-  },
-  {
-    value: "GRADE_DESC",
-    labelKey: "frontend.home.sort.gradeDesc",
-  },
-];
+import { useHome } from "../../features/Home/hook/useHome.tsx";
 
 /**
- * get Month Group 정보를 조회한다
- *
- * @author HanWon.Jang
- * @param book book 입력값
- * @param sortType sort Type 입력값
- * @return 처리 결과
+ * fileName       : Home
+ * author         : Hanwon.Jang
+ * date           : 2026-08-14
+ * description    : 메인 홈 화면
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-14        Hanwon.Jang    주석 추가
  */
-function getMonthGroup(book: HomeBookType, sortType: HomeSortType) {
 
-  const targetDate =
-    sortType === "START_DATE_DESC" ? book.reptStdt : book.reptEndt;
-  const match = targetDate?.match(/^(\d{4})-(\d{2})/);
-
-  if (!match) {
-    return {
-      key: "unknown",
-      label: "?좎쭨 ?놁쓬",
-    };
-  }
-
-  const [, year, month] = match;
-  return {
-    key: `${year}-${month}`,
-    label: `${year.slice(2)}.${month}`,
-  };
-}
-
-/**
- * get Grade Group 정보를 조회한다
- *
- * @author HanWon.Jang
- * @param book book 입력값
- * @return 처리 결과
- */
-function getGradeGroup(book: HomeBookType) {
-
-  const rawGrade = Number(book.reptGrde);
-  const grade = Number.isFinite(rawGrade) ? Math.max(0, Math.min(5, rawGrade)) : 0;
-  const starCount = Math.floor(grade);
-  const gradeIcons: ReactNode[] = [];
-
-  // 평점이 없을 때도 평점 기준 그룹임을 식별할 수 있도록 빈 별을 표시한다
-  if (grade === 0) {
-    // 빈 별 아이콘을 평점 그룹 라벨에 추가한다
-    gradeIcons.push(
-      <img
-        key="empty-star"
-        src="/img/icons/icon-star-rate-empty.svg"
-        alt=""
-        aria-hidden="true"
-      />,
-    );
-
-  } else {
-    // 평점 수만큼 채워진 별을 표시한다
-    for (let index = 0; index < starCount; index += 1) {
-      // 채워진 별 아이콘을 평점 그룹 라벨에 추가한다
-      gradeIcons.push(
-        <img
-          key={`filled-star-${index}`}
-          src="/img/icons/icon-star-rate.svg"
-          alt=""
-          aria-hidden="true"
-        />,
-      );
-    }
-
-  }
-
-  const gradeLabel = (
-    <span aria-label={`평점 ${starCount}점`}>
-      {gradeIcons}
-    </span>
-  );
-
-  return {
-    key: String(starCount),
-    label: gradeLabel,
-  };
-}
-
-/**
- * group Books By Sort 기능을 처리한다
- *
- * @author HanWon.Jang
- * @param bookList book List 입력값
- * @param sortType sort Type 입력값
- * @return 처리 결과
- */
-function groupBooksBySort(bookList: HomeBookType[], sortType: HomeSortType) {
-
-  return bookList.reduce<MonthlyBookGroup[]>((groups, book) => {
-
-    const monthGroup =
-      sortType === "GRADE_DESC"
-        ? getGradeGroup(book)
-        : getMonthGroup(book, sortType);
-    const currentGroup = groups[groups.length - 1];
-
-    if (currentGroup?.key === monthGroup.key) {
-      currentGroup.books.push(book);
-      return groups;
-    }
-
-    groups.push({
-      ...monthGroup,
-      books: [book],
-    });
-    return groups;
-  }, []);
-}
-
-/**
- * chunk Books 기능을 처리한다
- *
- * @author HanWon.Jang
- * @param bookList book List 입력값
- * @param size size 입력값
- * @return 처리 결과
- */
-function chunkBooks(bookList: HomeBookType[], size: number) {
-
-  return Array.from({ length: Math.ceil(bookList.length / size) }, (_, index) =>
-    bookList.slice(index * size, index * size + size),
-  );
-}
-
-/**
- * get Home Error Message 정보를 조회한다
- *
- * @author HanWon.Jang
- * @param error error 입력값
- * @return 처리 결과
- */
-function getHomeErrorMessage(error: unknown) {
-
-  return getApiErrorMessage(error, message("frontend.common.tryAgain"));
-}
-
-/**
- * Home 화면 또는 컴포넌트를 구성한다
- *
- * @author HanWon.Jang
- * @return 구성된 화면 요소
- */
 function Home() {
 
-  const location = useLocation();
-  const navigate = useNavigate();
-  const [sortType, setSortType] = useState<HomeSortType>("END_DATE_DESC");
-  const [searchKeyword, setSearchKeyword] = useState("");
-  const [appliedSearchKeyword, setAppliedSearchKeyword] = useState("");
-  const { data, isPending, isError, error } = useGetListQuery({
-    bookKeyword: appliedSearchKeyword,
+  // 홈 화면 렌더링에 필요한 조회 상태와 사용자 동작을 조회한다
+  const {
+    data,
+    isPending,
+    isError,
+    errorMessage,
+    bookList,
+    bookGroups,
     sortType,
-  });
-  const bookList = data?.data ?? [];
+    sortOptions,
+    searchKeyword,
+    appliedSearchKeyword,
+    hasSearchCondition,
+    handleSearchChange,
+    handleSearchSubmit,
+    handleSortChange,
+    handleBookSearch,
+  } = useHome();
+
   const {
     visibleItems: visibleBookList,
     hasNext: hasNextBook,
@@ -212,57 +51,25 @@ function Home() {
     bookList,
     `${appliedSearchKeyword}:${sortType}`,
   );
-  const monthlyBookGroups = useMemo(
-    () => groupBooksBySort(visibleBookList, sortType),
-    [sortType, visibleBookList],
-  );
-  const sortOptions = useMemo(
-    () =>
-      SORT_OPTIONS.map((option) => ({
-        value: option.value,
-        label: message(option.labelKey),
-      })),
-    [],
-  );
-  const hasSearchCondition = appliedSearchKeyword.trim().length > 0;
 
-  useEffect(() => {
 
-    const state = location.state as { resetHomeSearch?: boolean } | null;
-
-    if (!state?.resetHomeSearch) {
-      return;
-    }
-
-    setSearchKeyword("");
-    setAppliedSearchKeyword("");
-  }, [location.key, location.state]);
-
-  /**
-   * handle Search Submit 사용자 동작을 처리한다
-   *
-   * @author HanWon.Jang
-   * @param event event 입력값
-   * @return 반환값이 없다
-   */
-  const handleSearchSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-
-    event.preventDefault();
-    setAppliedSearchKeyword(searchKeyword.trim());
-  };
-
+  // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
+    // 홈 독후감 목록 로딩 화면을 반환한다
     return <Loading title={message("frontend.common.loadingList")} />;
   }
 
+  // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시한다
   if (isError) {
+    // 홈 독후감 목록 오류 화면을 반환한다
     return (
       <Container className={styles.emptyHomeContainer}>
-        <h1 className={styles.emptyTitle}>{getHomeErrorMessage(error)}</h1>
+        <h1 className={styles.emptyTitle}>{errorMessage}</h1>
       </Container>
     );
   }
 
+  // 조회 성공 여부와 검색 상태에 맞는 홈 화면을 반환한다
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
       <>
     <div className={styles.homeContainer}>
@@ -278,7 +85,7 @@ function Home() {
             type="search"
             value={searchKeyword}
             placeholder={message("frontend.home.search.label")}
-            onChange={(event) => setSearchKeyword(event.target.value)}
+            onChange={handleSearchChange}
           />
           <button
             className={styles.searchButton}
@@ -318,13 +125,13 @@ function Home() {
           triggerClassName={styles.sortSelectTrigger}
           optionListClassName={styles.sortOptionList}
           optionClassName={styles.sortSelectOption}
-          onChange={setSortType}
+          onChange={handleSortChange}
         />
       </div>
 
       {bookList.length > 0 ? (
         <div className={styles.monthGroupStack}>
-          {monthlyBookGroups.map((group) => (
+          {bookGroups.map((group) => (
             /* 등록 월별 독후감 목록 영역 */
             <section className={styles.monthGroup} key={group.key}>
               <div className={styles.monthGroup__inner}>
@@ -336,7 +143,7 @@ function Home() {
                   {group.label}
                 </div>
                 <div className={styles.bookGrid}>
-                  {chunkBooks(group.books, 3).map((rowBooks, rowIndex) => (
+                  {group.rows.map((rowBooks, rowIndex) => (
                     <div
                       className={styles.bookRow}
                       key={`${group.key}-${rowIndex}`}
@@ -366,12 +173,7 @@ function Home() {
           <button
             className={styles.emptySearchButton}
             type="button"
-            onClick={() => {
-              // 독후감 검색 결과가 없을 때 같은 검색어를 도서 검색 화면에 전달해 즉시 도서 API 검색을 실행한다.
-              navigate("/book/search", {
-                state: { initialSearchKeyword: appliedSearchKeyword.trim() },
-              });
-            }}
+            onClick={handleBookSearch}
           >
             {/* ""{0}"으로 도서검색하기" */}
             <span>
@@ -411,7 +213,15 @@ function Home() {
   </>
   ) : (
     <Container className={styles.emptyHomeContainer}>
-      <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>
+      <LinkButton link="/report/set" className={styles.emptySetReportButton}>
+        <div className={styles.emptyPlusCircle}>
+          <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M15.4286 11.1413H11.1429V15.427C11.1429 15.6544 11.0526 15.8724 10.8919 16.0331C10.7311 16.1939 10.5131 16.2842 10.2858 16.2842C10.0584 16.2842 9.84042 16.1939 9.67968 16.0331C9.51893 15.8724 9.42862 15.6544 9.42862 15.427V11.1413H5.14291C4.91558 11.1413 4.69756 11.051 4.53682 10.8903C4.37607 10.7295 4.28577 10.5115 4.28577 10.2842C4.28577 10.0569 4.37607 9.83883 4.53682 9.67809C4.69756 9.51734 4.91558 9.42704 5.14291 9.42704H9.42862V5.14132C9.42862 4.91399 9.51893 4.69598 9.67968 4.53523C9.84042 4.37449 10.0584 4.28418 10.2858 4.28418C10.5131 4.28418 10.7311 4.37449 10.8919 4.53523C11.0526 4.69598 11.1429 4.91399 11.1429 5.14132V9.42704H15.4286C15.656 9.42704 15.874 9.51734 16.0347 9.67809C16.1955 9.83883 16.2858 10.0569 16.2858 10.2842C16.2858 10.5115 16.1955 10.7295 16.0347 10.8903C15.874 11.051 15.656 11.1413 15.4286 11.1413Z" fill="#333333"/>
+          </svg>
+        </div>
+        <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>
+        <p className={styles.emptyDescription}>{message("frontend.home.emptyDescription")}</p>
+      </LinkButton>
     </Container>
   );
 }

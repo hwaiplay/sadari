@@ -30,6 +30,7 @@ export const vars = createGlobalTheme(":root", {
     negative: "#F4A7AD",
     negativeBg: "#FFF1F3",
     negativeText: "#D84A5F",
+    negativeHover: "#FFDCE1",
     yellow: "#F7D98B",
     yellowBg: "#FFF7E3",
     yellowText: "#FFAF3F",

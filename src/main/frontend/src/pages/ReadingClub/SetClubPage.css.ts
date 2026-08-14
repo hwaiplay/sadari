@@ -9,7 +9,7 @@ export const page = style({
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
-  padding: "28px 0 38px",
+  padding: "20px 0 38px",
 });
 
 export const form = style({
@@ -54,7 +54,7 @@ export const input = style({
   outline: "none",
   selectors: {
     "&::placeholder": { color: vars.color.gray500 },
-    "&:focus": { borderColor: vars.color.black },
+    "&:focus": { outline: "2px solid #78b991", outlineOffset: 1 },
   },
 });
 
@@ -146,7 +146,7 @@ export const description = style({
   margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
+  fontSize: 14,
   lineHeight: 1.6,
   whiteSpace: "pre-wrap",
 });
@@ -234,5 +234,5 @@ export const questionSubjectContainer = style({
 
 export const questionSubjectLabel = style({
   fontFamily: vars.font.semibold,
-  fontSize: 15,
+  fontSize: 16,
 });
