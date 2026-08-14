@@ -14,6 +14,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
+ * 2026-08-14      HanWon.Jang    탈퇴 회원의 모임원 프로필 숨김 메서드 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -53,6 +54,15 @@ public interface UserWithdrawalMapper {
      * @return 변경된 푸시 구독 수
      */
     int uptUserPushDisabled(Long userNumb);
+
+    /**
+     * 탈퇴 회원의 모임원 프로필을 모임 목록에서 숨긴다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 탈퇴 회원 번호
+     * @return 변경된 모임원 관계 수
+     */
+    int uptClubMemberProfileHidden(Long userNumb);
 
     /**
      * 탈퇴 회원이 댓글에 등록한 좋아요를 삭제한다.

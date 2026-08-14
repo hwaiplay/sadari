@@ -21,7 +21,7 @@ import { useSetReport } from "./useSetReport";
 import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
 
 /**
- * use Set Report Form 상태와 처리 함수를 제공한다
+ * useSetReportForm 상태와 처리 함수를 제공한다
  *
  * @author HanWon.Jang
  * @param selectedBook selected Book 입력값
@@ -38,7 +38,7 @@ export function useSetReportForm(
   const { mutate, isPending } = useSetReport();
 
   /**
-   * handle Submit 사용자 동작을 처리한다
+   * handleSubmit 사용자 동작을 처리한다
    *
    * @author HanWon.Jang
    * @param form form 입력값

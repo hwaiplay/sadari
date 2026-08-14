@@ -12,6 +12,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 계약 추가
  */
 public interface ReadingClubService {
 
@@ -43,6 +44,16 @@ public interface ReadingClubService {
      * @return 모임 상세 조회 결과
      */
     ResultData getClubDtl(Long userNumb, Long clubNumb);
+
+    /**
+     * 활성 모임원에게 같은 모임의 공개 가능한 활성 모임원 프로필 목록을 제공한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @return 모임원 프로필 목록 조회 결과
+     */
+    ResultData getClubMemberList(Long userNumb, Long clubNumb);
 
     /**
      * 모임 정보와 카테고리 및 가입 질문을 저장하고 개설자를 모임장으로 등록한다.

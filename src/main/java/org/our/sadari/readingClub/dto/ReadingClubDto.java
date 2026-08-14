@@ -20,6 +20,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    모임원 프로필 응답 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -226,6 +227,33 @@ public final class ReadingClubDto {
         private LocalDateTime exprDate;
         // 탈퇴 후 재가입 차단 여부
         private String blocYsno;
+    }
+
+    /**
+     * fileName       : MemberProfileDto
+     * author         : SeungHyeon.Kang
+     * date           : 2026-08-13
+     * description    : 모임 상세 화면에 노출할 활성 모임원의 프로필 정보를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-13        SeungHyeon.Kang    최초 생성
+     */
+    @Data
+    @Schema(description = "모임원 프로필")
+    public static class MemberProfileDto {
+
+        @Schema(description = "모임원 사용자 번호")
+        private Long userNumb;
+
+        @Schema(description = "모임원 닉네임")
+        private String userNick;
+
+        @Schema(description = "모임원 프로필 이미지 경로")
+        private String porfPath;
+
+        @Schema(description = "모임 내 역할", allowableValues = {"OWNER", "MEMBER"})
+        private String membRole;
     }
 
     /**

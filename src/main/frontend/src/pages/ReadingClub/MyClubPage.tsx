@@ -1,86 +1,215 @@
+import type { ClubInvitation, ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
+import { message } from "@/app/messages/message";
+import { Link } from "react-router-dom";
 import {
-  acceptClubInvitationApi,
-  declineClubInvitationApi,
-  getClubInvitationListApi,
-  getMyClubListApi,
-  type ClubInvitation,
-  type ReadingClub,
-} from "@/features/ReadingClub/api/readingClubApi";
-import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
-import ClubCard from "./ClubCard";
-import * as styles from "./ReadingClub.css";
+  getClubCategory,
+  getClubMeta,
+  getMemberProgress,
+  useMyClubPage,
+} from "@/features/ReadingClub/hooks/useMyClubPage";
+import * as styles from "./MyClubPage.css";
 
-/** 내 모임과 받은 초대를 한 화면에 구성한다. @author SeungHyeon.Kang @return 내 모임 화면 */
+/**
+ * 내 모임과 받은 초대를 피그마 기준의 모바일 카드 화면으로 구성한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 내 모임 화면
+ */
 export default function MyClubPage() {
-  const navigate = useNavigate();
-  const [clubs, setClubs] = useState<ReadingClub[]>([]);
-  const [invitations, setInvitations] = useState<ClubInvitation[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  // 화면 로직 훅에서 조회 상태와 사용자 이벤트 처리 함수를 가져온다
+  const {
+    clubs,
+    invitations,
+    isInvitationOpen,
+    isLoading,
+    handleInvitationToggle,
+    handleClubKeyDown,
+    handleClubClick,
+    handleAcceptInvitation,
+    handleDeclineInvitation,
+  } = useMyClubPage();
 
-  /** 내 모임과 받은 초대를 새로 조회한다. @author SeungHyeon.Kang @return 반환값이 없다 */
-  const loadPage = async (): Promise<void> => {
-    // 두 목록을 동시에 조회해 화면 대기 시간을 줄인다
-    const [clubList, invitationList] = await Promise.all([getMyClubListApi(), getClubInvitationListApi()]);
-    // 내 모임 목록을 화면 상태에 반영한다
-    setClubs(clubList);
-    // 받은 초대 목록을 화면 상태에 반영한다
-    setInvitations(invitationList);
-  };
+  /**
+   * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
+   *
+   * @author SeungHyeon.Kang
+   * @param invitation 표시할 받은 초대
+   * @return 받은 초대 카드
+   */
+  const renderInvitation = (invitation: ClubInvitation) => (
+    /* 받은 초대 개별 항목 영역 */
+    <article className={styles.invitationItem} key={invitation.clubNumb}>
+      {/* 초대 모임명과 발신자 안내 영역 */}
+      <div className={styles.invitationCopy}>
+        <h3 className={styles.invitationName}>{invitation.clubName}</h3>
+        <p className={styles.invitationSender}>
+          {/* "모임장님이 모임에 초대했어요." */}
+          {message("frontend.readingClub.my.invitationSender", [
+            invitation.senderNick ?? message("frontend.readingClub.my.defaultSender"),
+          ])}
+        </p>
+      </div>
+      {/* 초대 수락과 거절 버튼 영역 */}
+      <div className={styles.invitationActions}>
+        <button
+          className={styles.invitationAccept}
+          type="button"
+          data-club-numb={invitation.clubNumb}
+          onClick={handleAcceptInvitation}
+        >
+          {/* "수락" */}
+          {message("frontend.readingClub.my.accept")}
+        </button>
+        <button
+          className={styles.invitationDecline}
+          type="button"
+          data-club-numb={invitation.clubNumb}
+          onClick={handleDeclineInvitation}
+        >
+          {/* "거절" */}
+          {message("frontend.readingClub.my.decline")}
+        </button>
+      </div>
+    </article>
+  );
 
-  useEffect(() => {
-    // 최초 진입 데이터를 조회한다
-    void loadPage().catch((error) => void sweetError("조회하지 못했어요", getApiErrorMessage(error, "다시 시도해 주세요."))).finally(() => setIsLoading(false));
-  }, []);
+  /**
+   * 진행 중인 모임 한 건을 피그마 비율의 카드로 구성한다
+   *
+   * @author SeungHyeon.Kang
+   * @param club 표시할 모임
+   * @return 진행 중인 모임 카드
+   */
+  const renderClub = (club: ReadingClub) => (
+    /* 진행 중인 모임 개별 항목 영역 */
+    <article
+      className={styles.clubCard}
+      key={club.clubNumb}
+      role="button"
+      tabIndex={0}
+      data-club-numb={club.clubNumb}
+      onClick={handleClubClick}
+      onKeyDown={handleClubKeyDown}
+    >
+      {/* 모임 대표 이미지 영역 */}
+      <img className={styles.clubCover} src="/img/common/no-image.png" alt="" />
+      {/* 모임 기본 정보와 참여 현황 영역 */}
+      <div className={styles.clubInfo}>
+        {/* 모임 분류와 운영 상태 영역 */}
+        <div className={styles.clubTop}>
+          <span className={styles.clubCategory}>{getClubCategory(club)}</span>
+          <span className={styles.clubStatus}>
+            {/* "운영 중" */}
+            {message("frontend.readingClub.my.operating")}
+          </span>
+        </div>
+        <h3 className={styles.clubName}>{club.clubName}</h3>
+        <p className={styles.clubMeta}>{getClubMeta(club)}</p>
+        {/* 모임 참여 인원 진행률 영역 */}
+        <div className={styles.progressTrack} aria-hidden="true">
+          <span className={styles.progressValue} style={{ width: `${getMemberProgress(club)}%` }} />
+        </div>
+        <p className={styles.progressText}>
+          {message("frontend.readingClub.my.memberProgress", [club.memberCnt, club.maxxMemb])}
+        </p>
+      </div>
+    </article>
+  );
 
-  /** 받은 초대를 수락한다. @author SeungHyeon.Kang @param clubNumb 모임 번호 @return 반환값이 없다 */
-  const acceptInvitation = async (clubNumb: number): Promise<void> => {
-    // 예약석을 활성 회원으로 전환한다
-    await acceptClubInvitationApi(clubNumb);
-    // 변경된 내 모임과 초대 목록을 다시 조회한다
-    await loadPage();
-  };
-
-  /** 받은 초대를 거절한다. @author SeungHyeon.Kang @param clubNumb 모임 번호 @return 반환값이 없다 */
-  const declineInvitation = async (clubNumb: number): Promise<void> => {
-    // 초대 예약석을 삭제한다
-    await declineClubInvitationApi(clubNumb);
-    // 변경된 목록을 다시 조회한다
-    await loadPage();
-  };
-
-  // 로딩 중에는 단일 안내만 반환한다
-  if (isLoading) return <div className={styles.loading}>모임을 불러오고 있어요.</div>;
-
-  // 내 모임, 받은 초대와 새 모임 만들기 영역을 반환한다
+  // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환한다
   return (
     <div className={styles.page}>
+      {/* 모임 검색 진입 영역 */}
+      <Link className={styles.searchTrigger} to="/reading-clubs/find">
+        <span>
+          {/* "모임 이름을 검색해보세요" */}
+          {message("frontend.readingClub.my.searchPlaceholder")}
+        </span>
+        <img className={styles.searchIcon} src="/img/icons/icon-search.svg" alt="" />
+      </Link>
+
+      {/* 받은 초대 요약 영역 */}
       {invitations.length > 0 && (
-        <section className={styles.section}>
-          <h2 className={styles.sectionTitle}>받은 초대</h2>
-          <div className={styles.list}>{invitations.map((invitation) => (
-            <article className={styles.card} key={invitation.clubNumb}>
-              <div className={styles.cardTop}><h3 className={styles.cardTitle}>{invitation.clubName}</h3><span className={styles.badge}>3일 내 응답</span></div>
-              <p className={styles.description}>{invitation.senderNick ?? "모임장"}님이 모임에 초대했어요.</p>
-              <div className={styles.actions}>
-                <button className={styles.button} type="button" onClick={() => void acceptInvitation(invitation.clubNumb)}>수락</button>
-                <button className={styles.buttonDanger} type="button" onClick={() => void declineInvitation(invitation.clubNumb)}>거절</button>
-              </div>
-            </article>
-          ))}</div>
+        <section className={styles.invitationSummary}>
+          {/* 받은 초대 안내 영역 */}
+          <div className={styles.invitationSummaryTop}>
+            <img className={styles.invitationIcon} src="/img/icons/icon-notification.svg" alt="" />
+            <div className={styles.invitationSummaryCopy}>
+              <h2 className={styles.invitationSummaryTitle}>
+                {/* "확인할 초대가 있어요" */}
+                {message("frontend.readingClub.my.invitationNotice")}
+              </h2>
+              <p className={styles.invitationSummaryText}>
+                {/* "받은 초대 N · 진행 중 N" */}
+                {message("frontend.readingClub.my.invitationSummary", [invitations.length, clubs.length])}
+              </p>
+            </div>
+          </div>
+          {/* 받은 초대 상세 확인 버튼 영역 */}
+          <div className={styles.invitationSummaryAction}>
+            <button className={styles.quickButton} type="button" onClick={handleInvitationToggle}>
+              {/* "바로 확인" 또는 "접기" */}
+              {isInvitationOpen
+                ? message("frontend.readingClub.my.collapse")
+                : message("frontend.readingClub.my.checkNow")}
+            </button>
+          </div>
         </section>
       )}
-      <section className={styles.section}>
-        <h2 className={styles.sectionTitle}>진행 중인 모임</h2>
-        {clubs.length > 0 ? <div className={styles.list}>{clubs.map((club) => <ClubCard club={club} key={club.clubNumb} />)}</div> : <p className={styles.empty}>아직 참여 중인 모임이 없어요.</p>}
+
+      {/* 받은 초대 상세 목록 영역 */}
+      {isInvitationOpen && invitations.length > 0 && (
+        <section className={styles.invitationDetail}>
+          <h2 className={styles.sectionTitle}>
+            {/* "받은 초대" */}
+            {message("frontend.readingClub.my.receivedInvitation")}
+          </h2>
+          <div className={styles.invitationList}>{invitations.map(renderInvitation)}</div>
+        </section>
+      )}
+
+      {/* 진행 중인 모임 목록 영역 */}
+      <section className={styles.clubSection}>
+        <h2 className={styles.sectionTitle}>
+          {/* "진행 중인 모임 N" */}
+          {message("frontend.readingClub.my.activeClubCount", [clubs.length])}
+        </h2>
+        {/* 참여 중인 모임 카드 목록 영역 */}
+        {isLoading ? (
+          <p className={styles.empty}>
+            {/* "모임을 불러오고 있어요." */}
+            {message("frontend.readingClub.common.loading")}
+          </p>
+        ) : clubs.length > 0 ? (
+          <div className={styles.clubList}>{clubs.map(renderClub)}</div>
+        ) : (
+          <p className={styles.empty}>
+            {/* "아직 참여 중인 모임이 없어요." */}
+            {message("frontend.readingClub.my.empty")}
+          </p>
+        )}
       </section>
-      {/* 목록 아래 새 모임 만들기 진입 영역 */}
-      <section className={styles.createArea}>
-        <div className={styles.createCopy}><h2 className={styles.createTitle}>함께 읽을 사람을 모아보세요</h2><p className={styles.createDescription}>공개 범위와 가입 방식을 직접 정할 수 있어요.</p></div>
-        <button className={styles.button} type="button" onClick={() => navigate("/reading-clubs/new")}>새 모임 만들기</button>
-      </section>
+
+      {/* 모임 찾기 진입 영역 */}
+      <Link className={styles.findClub} to="/reading-clubs/find">
+        <span className={styles.findClubCopy}>
+          <strong className={styles.findClubTitle}>
+            {/* "모임 찾기" */}
+            {message("frontend.readingClub.my.findTitle")}
+          </strong>
+          <span className={styles.findClubDescription}>
+            {/* "나에게 맞는 모임을 찾아보세요" */}
+            {message("frontend.readingClub.my.findDescription")}
+          </span>
+        </span>
+        <span className={styles.findClubArrow} aria-hidden="true">›</span>
+      </Link>
+
+      {/* 새 모임 만들기 플로팅 버튼 영역 */}
+      {/* "새 모임 만들기" */}
+      <Link className={styles.createButton} to="/reading-clubs/set" aria-label={message("frontend.readingClub.my.create")}>
+        <img className={styles.createIcon} src="/img/common/icon-add.svg" alt="" />
+      </Link>
     </div>
   );
 }

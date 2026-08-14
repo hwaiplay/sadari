@@ -1,16 +1,23 @@
 import { keyframes, style } from "@vanilla-extract/css";
+import { destructiveButton, selectableOption } from "@/app/styles/controls.css";
 import { vars } from "@/app/styles/tokens.css";
 
 export const page = style({
   width: "100%",
   maxWidth: "600px",
   minHeight: "calc(100svh - 112px)",
+  margin: "0 auto",
   padding: "28px 0 20px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
   gap: "34px",
+});
+
+export const standalonePage = style({
+  paddingLeft: vars.space.md,
+  paddingRight: vars.space.md,
 });
 
 export const section = style({
@@ -85,37 +92,14 @@ export const optionList = style({
   gap: "14px",
 });
 
-export const option = style({
-  display: "flex",
-  padding: "16px 18px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: "12px",
-  backgroundColor: vars.color.gray100,
-  color: vars.color.gray600,
-  cursor: "pointer",
-  transition: "border-color 160ms ease, background-color 160ms ease, color 160ms ease, box-shadow 160ms ease",
-  selectors: {
-    "&:hover": {
-      backgroundColor:  vars.color.gray200,
-      color: vars.color.black
-    },
-    "&:has(input:checked)": {
-      borderColor: vars.color.brandText,
-      backgroundColor: vars.color.brandBg,
-      color: vars.color.brandText,
-      boxShadow: "0 6px 16px rgba(74, 143, 101, 0.12)",
-    },
-    "&:has(input:focus-visible)": {
-      outline: "2px solid #78b991",
-      outlineOffset: "2px",
-    },
+export const option = style([
+  selectableOption,
+  {
+    display: "flex",
+    padding: "16px 18px",
+    cursor: "pointer",
   },
-  "@media": {
-    "screen and (max-width: 420px)": {
-      padding: "15px",
-    },
-  },
-});
+]);
 
 export const accountOption = style([
   option,
@@ -250,30 +234,18 @@ export const byteCounter = style({
   display: "inline-block"
 });
 
-export const withdrawButton = style({
-  width: "100%",
-  minHeight: "48px",
-  margin: "auto 0 0",
-  border: `1px solid ${vars.color.negativeText}`,
-  borderRadius: "8px",
-  background: vars.color.negativeBg,
-  color: vars.color.negativeText,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
-  transition: "background-color 160ms ease, opacity 160ms ease",
-  selectors: {
-    "&:hover": {
-      backgroundColor: "#FFCDD4",
-    },
-    "&:disabled": {
-      backgroundColor: '#ffffff',
-      border: `1px solid ${vars.color.gray300}`,
-      color: vars.color.gray500,
-      cursor: "default",
-    },
+export const withdrawButton = style([
+  destructiveButton,
+  {
+    width: "100%",
+    minHeight: "48px",
+    margin: "auto 0 0",
+    borderRadius: "8px",
+    fontFamily: vars.font.semibold,
+    fontSize: "14px",
+    cursor: "pointer",
   },
-});
+]);
 
 const policyBackdropFadeIn = keyframes({
   from: {

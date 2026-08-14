@@ -14,6 +14,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 메서드 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -149,6 +150,15 @@ public interface ReadingClubMapper {
      */
     ReadingClubDto.MemberDto getClubMember(@Param("clubNumb") Long clubNumb
                                           , @Param("userNumb") Long userNumb);
+
+    /**
+     * 활성 계정이면서 프로필 노출에 동의한 활성 모임원 목록을 가입 순서로 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 조회할 모임 번호
+     * @return 모임원 프로필 목록
+     */
+    List<ReadingClubDto.MemberProfileDto> getClubMemberList(Long clubNumb);
 
     /**
      * 모임의 만료된 초대 예약석을 물리 삭제한다.

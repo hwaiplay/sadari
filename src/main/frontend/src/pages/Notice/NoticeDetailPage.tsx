@@ -108,9 +108,11 @@ function NoticeDetailPage() {
           </time>
           <div className={styles.detailMeta}>
             {notice.topxYsno === "Y" && (
-              <svg className={styles.pinIcon} viewBox="0 0 24 24" aria-label="상단 고정">
-                <path d="m14 4 6 6-2 2-2.5-1.5-3 3 .5 3.5-2 2-6-6 2-2 3.5.5 3-3L12 6l2-2Z" />
+              <svg width="19" height="19" viewBox="0 0 19 19" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M11 2L17 8L15 10L12.5 8.5L9.5 11.5L10 15L8 17L2 11L4 9L7.5 9.5L10.5 6.5L9 4L11 2Z" fill="#2F8F64"/>
+                <path d="M4.39415 14.0967L2 16.4908" stroke="#2F8F64" stroke-linecap="square"/>
               </svg>
+
             )}
             <span className={styles.category}>{notice.cateName}</span>
           </div>
