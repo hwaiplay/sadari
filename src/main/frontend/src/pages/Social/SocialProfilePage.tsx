@@ -7,6 +7,8 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -133,6 +135,14 @@ function SocialProfilePage() {
   const [isFollowListLoading, setIsFollowListLoading] = useState(false);
   const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
   const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
+  const {
+    visibleItems: visibleFollowUsers,
+    hasNext: hasNextFollowUser,
+    loadMore: loadMoreFollowUser,
+  } = useProgressiveList(
+    followUsers,
+    `${targetUserNumb}:${followListType ?? "closed"}`,
+  );
   const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
     week: false,
     month: false,
@@ -1028,7 +1038,7 @@ function SocialProfilePage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && followUsers.map((user) => (
+              {!isFollowListLoading && visibleFollowUsers.map((user) => (
                 <div className={styles.followModalItem} key={user.userNumb}>
                   <button
                     className={styles.followModalProfileButton}
@@ -1065,6 +1075,10 @@ function SocialProfilePage() {
                   )}
                 </div>
               ))}
+              <InfiniteScrollTrigger
+                hasNext={!isFollowListLoading && hasNextFollowUser}
+                onLoadMore={loadMoreFollowUser}
+              />
             </div>
           </section>
         </div>

@@ -219,24 +219,6 @@ export const primaryButton = style([
   },
 ]);
 
-export const loadMoreButton = style({
-  width: "100%",
-  height: "42px",
-  border: `1px solid ${vars.color.gray400}`,
-  borderRadius: vars.radius.xl,
-  backgroundColor: "#ffffff",
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
-  selectors: {
-    "&:disabled": {
-      opacity: 0.6,
-      cursor: "not-allowed",
-    },
-  },
-});
-
 export const emptyMessage = style({
   margin: "40px 0 0",
   fontFamily: vars.font.body,

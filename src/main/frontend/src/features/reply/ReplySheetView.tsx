@@ -2,6 +2,8 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
@@ -436,6 +438,14 @@ const ReplyThread = ({
   thread,
   controller,
 }: ReplyThreadProps) => {
+  const {
+    visibleItems: visibleChildReplies,
+    hasNext: hasNextChildReply,
+    loadMore: loadMoreChildReply,
+  } = useProgressiveList(
+    thread.childReplies,
+    `${reportNumb}:${thread.parentReply.replNumb}`,
+  );
   const isExpanded =
     thread.parentReply.deltYsno === "Y" ||
     Boolean(controller.expandedReplyMap[thread.parentReply.replNumb]);
@@ -480,7 +490,11 @@ const ReplyThread = ({
       {isExpanded ? (
         /* 선택한 부모 댓글의 자식 댓글 목록 영역 */
         <div className={styles.childReplyList}>
-          {thread.childReplies.map(renderChildReply)}
+          {visibleChildReplies.map(renderChildReply)}
+          <InfiniteScrollTrigger
+            hasNext={hasNextChildReply}
+            onLoadMore={loadMoreChildReply}
+          />
         </div>
       ) : null}
     </div>
@@ -499,6 +513,14 @@ const ReplySheetView = ({
   onClose,
   controller,
 }: ReplySheetViewProps) => {
+  const {
+    visibleItems: visibleReplyThreads,
+    hasNext: hasNextReplyThread,
+    loadMore: loadMoreReplyThread,
+  } = useProgressiveList(
+    controller.replyThreads,
+    String(report.reptNumb),
+  );
   /**
    * 부모 댓글 묶음을 현재 독후감의 댓글 목록 항목으로 표시한다
    *
@@ -583,7 +605,11 @@ const ReplySheetView = ({
           ) : controller.replyThreads.length > 0 ? (
             /* 등록된 댓글 목록 영역 */
             <div className={styles.replyList}>
-              {controller.replyThreads.map(renderReplyThread)}
+              {visibleReplyThreads.map(renderReplyThread)}
+              <InfiniteScrollTrigger
+                hasNext={hasNextReplyThread}
+                onLoadMore={loadMoreReplyThread}
+              />
             </div>
           ) : (
             /* 댓글 빈 목록 안내 영역 */

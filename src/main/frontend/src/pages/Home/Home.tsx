@@ -6,6 +6,8 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { Container } from "@/components/Layout/Container/Container";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import CustomSelect from "@/components/Select/CustomSelect";
 import Book from "@/features/Home/components/Book";
 import { useGetListQuery } from "@/features/Home/hook/useGetListQuery";
@@ -202,9 +204,17 @@ function Home() {
     sortType,
   });
   const bookList = data?.data ?? [];
+  const {
+    visibleItems: visibleBookList,
+    hasNext: hasNextBook,
+    loadMore: loadMoreBook,
+  } = useProgressiveList(
+    bookList,
+    `${appliedSearchKeyword}:${sortType}`,
+  );
   const monthlyBookGroups = useMemo(
-    () => groupBooksBySort(bookList, sortType),
-    [bookList, sortType],
+    () => groupBooksBySort(visibleBookList, sortType),
+    [sortType, visibleBookList],
   );
   const sortOptions = useMemo(
     () =>
@@ -340,6 +350,10 @@ function Home() {
               </div>
             </section>
           ))}
+          <InfiniteScrollTrigger
+            hasNext={hasNextBook}
+            onLoadMore={loadMoreBook}
+          />
         </div>
 
 

@@ -8,6 +8,7 @@ import {
   requestPushPermission,
 } from "@/app/pwa/firebaseMessaging";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import {
   getMyAlimListApi,
   delAllAlimApi,
@@ -156,7 +157,6 @@ function AlimPage() {
   const [readingAlimNumb, setReadingAlimNumb] = useState<number | null>(null);
   const [isPushEnabled, setIsPushEnabled] = useState(getInitialPushEnabled);
   const [isPushChanging, setIsPushChanging] = useState(false);
-  const observerTargetRef = useRef<HTMLDivElement | null>(null);
   const pushTokenRef = useRef<string | null>(null);
   const dismissTimerRef = useRef<number | null>(null);
 
@@ -215,32 +215,6 @@ function AlimPage() {
       }
     };
   }, []);
-
-  useEffect(() => {
-
-    const target = observerTargetRef.current;
-
-    if (!target || !hasNext || isLoading || isFetchingMore) {
-      return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-
-      const [entry] = entries;
-
-      // 하단 감지 영역이 보이는 순간 다음 미읽음 알림 20개를 요청한다.
-      if (entry?.isIntersecting) {
-        void loadAlimList(nextPage);
-      }
-    });
-
-    observer.observe(target);
-
-    return () => {
-
-      observer.disconnect();
-    };
-  }, [hasNext, isFetchingMore, isLoading, loadAlimList, nextPage]);
 
   /**
    * handle Delete All 사용자 동작을 처리한다
@@ -540,9 +514,13 @@ function AlimPage() {
               </span>
             </button>
           ))}
-          <div className={styles.scrollTarget} ref={observerTargetRef}>
-            {isFetchingMore ? message("frontend.alim.loadingMore") : null}
-          </div>
+          <InfiniteScrollTrigger
+            hasNext={hasNext}
+            isLoading={isLoading || isFetchingMore}
+            onLoadMore={() => void loadAlimList(nextPage)}
+          >
+            {message("frontend.alim.loadingMore")}
+          </InfiniteScrollTrigger>
         </section>
       )}
     </main>

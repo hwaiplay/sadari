@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import { getInquiryListApi, type Inquiry } from "@/features/Inquiry/api/inquiryApi";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -143,15 +144,14 @@ function InquiryListPage() {
         </section>
       )}
 
-      {hasNext && inquiries.length > 0 && (
-        <button
-          className={styles.moreButton}
-          type="button"
-          disabled={isLoading}
-          onClick={() => void loadPage(page + 1)}
+      {inquiries.length > 0 && (
+        <InfiniteScrollTrigger
+          hasNext={hasNext}
+          isLoading={isLoading}
+          onLoadMore={() => void loadPage(page + 1)}
         >
-          {isLoading ? "불러오는 중..." : "더 보기"}
-        </button>
+          불러오는 중...
+        </InfiniteScrollTrigger>
       )}
 
       {error && inquiries.length > 0 && (

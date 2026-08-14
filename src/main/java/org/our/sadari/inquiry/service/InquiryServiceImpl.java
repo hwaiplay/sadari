@@ -28,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    정지 회원 문의 유형 강제와 현재 정지 문의 조회 추가
  * 2026-08-14        SeungHyeon.Kang    고객문의 제목과 본문 비속어 검증 추가
+ * 2026-08-14        SeungHyeon.Kang    사용자 문의내역 10개 단위 조회 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -35,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class InquiryServiceImpl implements InquiryService {
 
     // 사용자 화면의 페이지당 고객문의 개수
-    private static final int PAGE_SIZE = 20;
+    private static final int PAGE_SIZE = 10;
     // 이용정지 이의제기 카테고리 코드
     private static final String SUSPENSION_APPEAL = "SUSPENSION_APPEAL";
     // 고객문의 데이터 접근 객체

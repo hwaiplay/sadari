@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    사용자 공지사항 10개 단위 조회 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class NoticeServiceImpl implements NoticeService {
 
     // 사용자 화면의 페이지당 공지 개수
-    private static final int PAGE_SIZE = 20;
+    private static final int PAGE_SIZE = 10;
     // 공지사항 데이터 접근 객체
     private final NoticeMapper noticeMapper;
 
