@@ -35,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 API 추가
  * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 정책 추가
  * 2026-08-11        SeungHyeon.Kang    다중 탭 독후감 수정 충돌 409 응답 추가
+ * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 API 반영
  */
 @Slf4j
 @RestController
@@ -109,7 +110,7 @@ public class ReportController {
      * @return 공개 독후감 목록 조회 결과
      */
     @GetMapping("/publicReports/by-isbn")
-    @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서에 대해 다른 사용자가 공개한 독후감 목록을 조회한다.")
+    @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서에 대해 활성 사용자가 공개한 독후감을 팔로우 작성자 우선으로 조회한다.")
     public ResultData getPublicReportsByIsbn(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                            , @Parameter(description = "공개 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn) {
         // ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회 결과를 반환한다

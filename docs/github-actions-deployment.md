@@ -58,6 +58,10 @@
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
 | `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
+| `TIMER_ATTENDANCE_MIN_SECONDS` | `600` | 하루 독서 출석 인정에 필요한 최소 누적 시간(초) |
+| `TIMER_MAX_SESSION_SECONDS` | `14400` | 단일 독서 타이머 세션에 기록할 수 있는 최대 시간(초) |
+| `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
+| `TIMER_DETAIL_RETENTION_DAYS` | `365` | 완료된 독서 타이머 세션 상세 보존기간(일) |
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |

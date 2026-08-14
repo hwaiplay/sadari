@@ -112,6 +112,21 @@ public enum ResultEnum {
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
 
     /**
+     * 사용자 소유 독서 타이머 세션을 찾을 수 없는 경우의 실패 코드이다.
+     */
+    TIMER_SESSION_NOT_FOUND(2021, "timer.alert.0001"),
+
+    /**
+     * 허용되지 않은 독서 타이머 상태 전환을 요청한 경우의 실패 코드이다.
+     */
+    TIMER_STATE_INVALID(2022, "timer.alert.0002"),
+
+    /**
+     * 타이머에 연결할 수 없는 독후감을 요청한 경우의 실패 코드이다.
+     */
+    TIMER_BOOK_INVALID(2023, "timer.alert.0003"),
+
+    /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
      */
     AUTH_FAIL(1001, "auth.common.fail"),

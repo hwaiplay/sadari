@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import { getNoticeListApi, type Notice } from "@/features/Notice/api/noticeApi";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -230,26 +231,16 @@ function NoticeListPage() {
         </section>
       )}
 
-      {/* 다음 공지사항 페이지 조회 영역 */}
-      {hasNext && notices.length > 0 && (
-        <button
-          className={styles.moreButton}
-          type="button"
-          disabled={isLoading}
-          onClick={handleLoadMore}
+      {/* 다음 공지사항 페이지 자동 조회 영역 */}
+      {notices.length > 0 && (
+        <InfiniteScrollTrigger
+          hasNext={hasNext}
+          isLoading={isLoading}
+          onLoadMore={handleLoadMore}
         >
-          {isLoading ? (
-            <>
-              {/* "불러오는 중..." */}
-              불러오는 중...
-            </>
-          ) : (
-            <>
-              {/* "더 보기" */}
-              더 보기
-            </>
-          )}
-        </button>
+          {/* "불러오는 중..." */}
+          불러오는 중...
+        </InfiniteScrollTrigger>
       )}
 
       {/* 다음 페이지 조회 실패 안내 영역 */}

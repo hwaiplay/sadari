@@ -7,6 +7,8 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -27,6 +29,7 @@ import type {
   UserProfile,
 } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
@@ -133,6 +136,14 @@ function SocialProfilePage() {
   const [isFollowListLoading, setIsFollowListLoading] = useState(false);
   const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
   const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
+  const {
+    visibleItems: visibleFollowUsers,
+    hasNext: hasNextFollowUser,
+    loadMore: loadMoreFollowUser,
+  } = useProgressiveList(
+    followUsers,
+    `${targetUserNumb}:${followListType ?? "closed"}`,
+  );
   const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
     week: false,
     month: false,
@@ -893,7 +904,7 @@ function SocialProfilePage() {
           {renderProfileStats(summary)}
           {renderCurrentReports(summary.currentReadingReports)}
         {/* 상대 사용자의 월간 독서 요약 영역 */}
-        <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
+          <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
             <div className={styles.goalAchievementSummary}>
               <p className={`${styles.goalAchievementTitle} ${styles.socialSectionTitle}`}>
                 {/* "목표 달성 횟수" */}
@@ -970,6 +981,8 @@ function SocialProfilePage() {
               summary.currentYearReports,
             )}
           </section>
+          {/* 스크롤 진입 시 공개 여부를 확인하는 상대 사용자의 독서 통계 영역 */}
+          <ReadingStatisticsSection key={targetUserNumb} targetUserNumb={targetUserNumb} />
         </section>
       </section>
 
@@ -1028,7 +1041,7 @@ function SocialProfilePage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && followUsers.map((user) => (
+              {!isFollowListLoading && visibleFollowUsers.map((user) => (
                 <div className={styles.followModalItem} key={user.userNumb}>
                   <button
                     className={styles.followModalProfileButton}
@@ -1065,6 +1078,10 @@ function SocialProfilePage() {
                   )}
                 </div>
               ))}
+              <InfiniteScrollTrigger
+                hasNext={!isFollowListLoading && hasNextFollowUser}
+                onLoadMore={loadMoreFollowUser}
+              />
             </div>
           </section>
         </div>

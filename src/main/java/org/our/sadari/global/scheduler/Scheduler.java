@@ -8,6 +8,7 @@ import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
 import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 import org.our.sadari.global.scheduler.service.UserStatusEventService;
+import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.scheduling.annotation.Schedules;
@@ -24,6 +25,7 @@ import org.springframework.stereotype.Component;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 유예기간 설명 반영
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 5분 동기화 추가
+ * 2026-08-14        SeungHyeon.Kang    독서 타이머 상세 보존기간 정리 추가
  */
 @Component
 @RequiredArgsConstructor
@@ -40,6 +42,8 @@ public class Scheduler {
     private final UserHardDeleteService userHardDeleteService;
     // 회원 상태 변경 Outbox Redis 동기화 업무 서비스
     private final UserStatusEventService userStatusEventService;
+    // 보존기간이 지난 독서 타이머 상세를 정리하는 서비스
+    private final TimerDetailDeleteService timerDetailDeleteService;
 
     // TB_CODEXD에서 스케줄러 상세코드의 활성 여부를 조회하는 공통 코드 유틸리티
     private final CodeUtil codeUtil;
@@ -130,6 +134,27 @@ public class Scheduler {
 
         // 대기 중인 회원 상태 변경 이벤트를 사용자 Redis에 반영한다
         userStatusEventService.syncUserStatusEvents();
+    }
+
+    /**
+     * 매일 새벽 3시 30분에 보존기간이 지난 독서 타이머 세션 상세를 삭제한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Scheduled(cron = "0 30 3 * * *")
+    public void delExpiredTimer() {
+
+        // 공통코드에서 중지된 타이머 상세 정리 스케줄러는 실행하지 않는다
+        if (!codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_TIMER_DETAIL_DELETE)) {
+            // 사용 중지 상태를 운영 로그에 남긴다
+            log.info("독서 타이머 상세 정리 스케줄러가 사용 중지 상태여서 실행하지 않습니다. 공통코드={}, 상세코드={}"
+                    , Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_TIMER_DETAIL_DELETE);
+            // 사용 중지된 스케줄러 처리를 종료한다
+            return;
+        }
+
+        // 보존기간이 지난 완료 세션 상세를 삭제한다
+        timerDetailDeleteService.delExpiredTimer();
     }
 
 }

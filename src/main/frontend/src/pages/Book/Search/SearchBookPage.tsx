@@ -2,6 +2,7 @@ import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -153,18 +154,14 @@ const SearchBookPage = () => {
                   </article>
                 );
               })}
-              {hasMore && (
-                <button
-                  className={styles.loadMoreButton}
-                  type="button"
-                  onClick={() => void handleLoadMore()}
-                  disabled={isLoadingMore}
-                >
-                  {isLoadingMore
-                    ? message("frontend.book.search.loadingMore")
-                    : message("frontend.book.search.loadMore")}
-                </button>
-              )}
+
+              <InfiniteScrollTrigger
+                hasNext={hasMore}
+                isLoading={isLoadingMore}
+                onLoadMore={() => void handleLoadMore()}
+              >
+                {message("frontend.book.search.loadingMore")}
+              </InfiniteScrollTrigger>
             </div>
           ) : (
             <p className={styles.emptyMessage}>

@@ -2,6 +2,8 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import CustomSelect, {
   type CustomSelectOption,
@@ -120,15 +122,33 @@ const PublicReportPage = () => {
         ? reports
         : reports.filter((report) => getReportStatus(report) === status);
 
-    if (sort === "RATING") {
-      return [...filteredReports].sort(
-        (left, right) =>
-          (Number(right.reptGrde) || 0) - (Number(left.reptGrde) || 0),
-      );
-    }
+    return [...filteredReports].sort((left, right) => {
 
-    return filteredReports;
+      const followPriority = Number(right.followYsno === "Y")
+        - Number(left.followYsno === "Y");
+
+      // 팔로우 작성자 여부가 다르면 팔로우 중인 작성자의 독후감을 먼저 배치한다.
+      if (followPriority !== 0) {
+        return followPriority;
+      }
+
+      const ratingPriority = (Number(right.reptGrde) || 0)
+        - (Number(left.reptGrde) || 0);
+
+      // 별점순에서는 같은 팔로우 그룹 안에서 높은 별점을 먼저 배치한다.
+      if (sort === "RATING" && ratingPriority !== 0) {
+        return ratingPriority;
+      }
+
+      // 동일 우선순위에서는 최근 등록된 독후감을 먼저 배치한다.
+      return right.reptNumb - left.reptNumb;
+    });
   }, [reports, sort, status]);
+  const {
+    visibleItems: displayedReports,
+    hasNext: hasNextReport,
+    loadMore: loadMoreReport,
+  } = useProgressiveList(visibleReports, `${isbn}:${sort}:${status}`);
 
   /**
    * handle Toggle Report 사용자 동작을 처리한다
@@ -270,10 +290,10 @@ const PublicReportPage = () => {
             />
           </section>
 
-          {visibleReports.length > 0 ? (
+          {displayedReports.length > 0 ? (
             /* 공개 독후감 목록 영역 */
             <section className={styles.list}>
-              {visibleReports.map((report) => {
+              {displayedReports.map((report) => {
 
                 const rating = Math.max(
                   0,
@@ -431,6 +451,10 @@ const PublicReportPage = () => {
                   </article>
                 );
               })}
+              <InfiniteScrollTrigger
+                hasNext={hasNextReport}
+                onLoadMore={loadMoreReport}
+              />
             </section>
           ) : (
             <p className={styles.empty}>

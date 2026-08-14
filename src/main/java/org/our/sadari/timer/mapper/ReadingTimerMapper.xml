@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.timer.mapper.ReadingTimerMapper">
+
+    <!-- 동시 시작 요청을 직렬화하기 위해 사용자 행을 잠근다. -->
+    <select id="getUserLock" resultType="java.lang.Long">
+        SELECT /* getUserLock */ USER_NUMB
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+           FOR UPDATE
+    </select>
+
+    <!-- 로그인 사용자의 읽는 중 독후감인지 확인한다. -->
+    <select id="getReadingReportCnt" resultType="int">
+        SELECT /* getReadingReportCnt */ COUNT(1)
+          FROM TM_REPORT
+         WHERE USER_NUMB = #{userNumb}
+           AND REPT_NUMB = #{reptNumb}
+           AND REPT_STAT = #{readStat}
+    </select>
+
+    <!-- 완료되지 않은 사용자 타이머 한 건을 조회한다. -->
+    <select id="getActiveTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getActiveTimerDtl */ TIMER.TMRX_NUMB, TIMER.USER_NUMB, TIMER.REPT_NUMB, TIMER.TMRX_STAT,
+               TIMER.STRT_DATE, TIMER.LAST_STRT, TIMER.ENDX_DATE, TIMER.READ_SECS,
+               TIMER.REGI_DATE, TIMER.UPDT_DATE, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
+          FROM TM_RDTMRX TIMER
+     LEFT JOIN TM_REPORT REPORT ON REPORT.REPT_NUMB = TIMER.REPT_NUMB
+     LEFT JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = REPORT.BOOK_NUMB
+         WHERE TIMER.USER_NUMB = #{userNumb}
+           AND TIMER.TMRX_STAT IN (#{runningStat}, #{pausedStat})
+      ORDER BY TIMER.TMRX_NUMB DESC
+         LIMIT 1
+    </select>
+
+    <!-- 사용자 소유 타이머 한 건을 조회한다. -->
+    <select id="getTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getTimerDtl */ TMRX_NUMB, USER_NUMB, REPT_NUMB, TMRX_STAT, STRT_DATE, LAST_STRT,
+               ENDX_DATE, READ_SECS, REGI_DATE, UPDT_DATE
+          FROM TM_RDTMRX
+         WHERE USER_NUMB = #{userNumb}
+           AND TMRX_NUMB = #{tmrxNumb}
+    </select>
+
+    <!-- 타이머에 연결할 수 있는 읽는 중 도서를 조회한다. -->
+    <select id="getReadingBookList" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getReadingBookList */ REPORT.REPT_NUMB, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
+          FROM TM_REPORT REPORT
+          JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = REPORT.BOOK_NUMB
+         WHERE REPORT.USER_NUMB = #{userNumb}
+           AND REPORT.REPT_STAT = #{readStat}
+      ORDER BY REPORT.REPT_NUMB DESC
+    </select>
+
+    <!-- 오늘 완료된 타이머를 조회한다. -->
+    <select id="getTodayCompletedTimerList" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getTodayCompletedTimerList */ TIMER.TMRX_NUMB, TIMER.REPT_NUMB, TIMER.TMRX_STAT, TIMER.STRT_DATE,
+               TIMER.ENDX_DATE, TIMER.READ_SECS, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
+          FROM TM_RDTMRX TIMER
+     LEFT JOIN TM_REPORT REPORT ON REPORT.REPT_NUMB = TIMER.REPT_NUMB
+     LEFT JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = REPORT.BOOK_NUMB
+         WHERE TIMER.USER_NUMB = #{userNumb}
+           AND TIMER.TMRX_STAT = #{completedStat}
+           AND TIMER.ENDX_DATE &gt;= #{todayStart}
+           AND TIMER.ENDX_DATE &lt; #{tomorrowStart}
+      ORDER BY TIMER.ENDX_DATE DESC, TIMER.TMRX_NUMB DESC
+    </select>
+
+    <!-- 월요일부터 일요일까지 저장된 일별 독서 시간을 조회한다. -->
+    <select id="getDailyList" resultType="org.our.sadari.timer.dto.ReadingTimerDto$Daily">
+        SELECT /* getDailyList */ READ_DATE, READ_SECS
+          FROM TB_RDATDX
+         WHERE USER_NUMB = #{userNumb}
+           AND READ_DATE BETWEEN #{weekStart} AND #{weekEnd}
+      ORDER BY READ_DATE
+    </select>
+
+    <!-- 새 독서 타이머 세션을 등록한다. -->
+    <insert id="setTimer" useGeneratedKeys="true" keyProperty="tmrxNumb" keyColumn="TMRX_NUMB">
+        /* setTimer */
+        INSERT INTO TM_RDTMRX (USER_NUMB, REPT_NUMB, TMRX_STAT, STRT_DATE, LAST_STRT,
+                               READ_SECS, REGI_DATE, UPDT_DATE)
+        VALUES (#{userNumb}, #{reptNumb}, #{tmrxStat}, #{strtDate}, #{lastStrt},
+                #{readSecs}, #{regiDate}, #{updtDate})
+    </insert>
+
+    <!-- 상태 전환으로 확정된 세션 값을 수정한다. -->
+    <update id="uptTimer">
+        UPDATE /* uptTimer */
+               TM_RDTMRX
+           SET TMRX_STAT = #{tmrxStat},
+               LAST_STRT = #{lastStrt},
+               ENDX_DATE = #{endxDate},
+               READ_SECS = #{readSecs},
+               UPDT_DATE = #{updtDate}
+         WHERE TMRX_NUMB = #{tmrxNumb}
+           AND USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 확정 독서 시간을 사용자와 날짜별로 누적한다. -->
+    <insert id="setReadingDaily">
+        /* setReadingDaily */
+        INSERT INTO TB_RDATDX (USER_NUMB, READ_DATE, READ_SECS, UPDT_DATE)
+        VALUES (#{userNumb}, #{readDate}, #{readSecs}, #{updtDate})
+        ON DUPLICATE KEY UPDATE READ_SECS = READ_SECS + VALUES(READ_SECS),
+                                UPDT_DATE = VALUES(UPDT_DATE)
+    </insert>
+
+    <!-- 보존기간이 지난 완료 세션 상세를 삭제한다. -->
+    <delete id="delExpiredTimer">
+        DELETE /* delExpiredTimer */
+          FROM TM_RDTMRX
+         WHERE TMRX_STAT = #{completedStat}
+           AND ENDX_DATE &lt; #{expireDate}
+    </delete>
+</mapper>
