@@ -17,6 +17,8 @@ import {
   headerContentSlideBack,
   headerContentSlideForward,
   headerHidden,
+  headerRouteTitle,
+  headerRouteTitleWithBack,
   headerShell,
   logo,
   routeTitle,
@@ -29,6 +31,7 @@ import {
   getUserMenuApi,
   type UserMenuItem,
 } from "@/features/Menu/api/userMenuApi";
+import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
 
 const HEADER_SCROLL_DELTA = 4;
 
@@ -56,7 +59,13 @@ function Header({ menuEnabled = true }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const navigationType = useNavigationType();
-  const isSubPage = location.pathname !== "/home";
+  const isHomeRoute = location.pathname === BOTTOM_NAV_PATH.home;
+  const isBottomNavRoot =
+    isHomeRoute
+    || location.pathname === BOTTOM_NAV_PATH.feed
+    || location.pathname === BOTTOM_NAV_PATH.timer
+    || location.pathname === BOTTOM_NAV_PATH.myPage;
+  const hasBackButton = !isBottomNavRoot;
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
   const hasResolvedMenuRef = useRef(false);
@@ -200,8 +209,8 @@ function Header({ menuEnabled = true }: HeaderProps) {
         isHidden && headerHidden,
       )}
     >
-      <Container className={clsx(header, isSubPage && "_sub")}>
-        {isSubPage && (
+      <Container className={clsx(header, hasBackButton && "_sub")}>
+        {hasBackButton && (
           <button
             className={backpageBtn}
             type="button"
@@ -214,14 +223,17 @@ function Header({ menuEnabled = true }: HeaderProps) {
             />
           </button>
         )}
-        {/* 현재 경로의 메뉴 조회가 끝난 뒤 메뉴명 또는 로고를 표시하는 중앙 영역 */}
-        <div className={headerCenter}>
+        {/* 홈 로고와 메뉴명은 왼쪽에 표시하고 다른 경로의 대체 로고는 중앙에 표시하는 영역 */}
+        <div
+          className={clsx(
+            headerCenter,
+            (isHomeRoute || currentMenu?.menuName) && headerRouteTitle,
+            currentMenu?.menuName && hasBackButton && headerRouteTitleWithBack,
+          )}
+        >
+          {/* 홈 화면은 메뉴 조회 결과와 관계없이 왼쪽에 서비스 로고를 표시하는 영역 */}
           {isMenuResolved &&
-            (currentMenu?.menuName ? (
-              <h1 className={clsx(routeTitle, headerContentSlide)}>
-                {currentMenu.menuName}
-              </h1>
-            ) : (
+            (isHomeRoute || !currentMenu?.menuName ? (
               <HomeLink className={clsx(logo, headerContentSlide)}>
                 <img
                   src={"/img/common/logo-upper.svg"}
@@ -229,6 +241,10 @@ function Header({ menuEnabled = true }: HeaderProps) {
                   width={100}
                 />
               </HomeLink>
+            ) : (
+              <h1 className={clsx(routeTitle, headerContentSlide)}>
+                {currentMenu.menuName}
+              </h1>
             ))}
         </div>
         {menuEnabled && <HeaderMenuDrawer menuList={menuList} />}

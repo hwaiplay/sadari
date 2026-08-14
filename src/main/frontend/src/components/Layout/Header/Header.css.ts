@@ -32,7 +32,6 @@ export const headerShell = style({
   width: "100%",
   height: vars.headerHeight,
   backgroundColor: "rgba(255, 255, 255, 0.96)",
-  boxShadow: "0 8px 22px rgba(0, 0, 0, 0.08)",
   transform: "translateY(0)",
   transition: "transform 180ms ease",
   willChange: "transform",
@@ -40,7 +39,6 @@ export const headerShell = style({
 
 export const headerHidden = style({
   transform: "translateY(-100%)",
-  boxShadow: "none"
 });
 
 export const header = style({
@@ -60,6 +58,19 @@ export const headerCenter = style({
   alignItems: "center",
   justifyContent: "center",
   overflow: "hidden",
+});
+
+export const headerRouteTitle = style({
+  position: "absolute",
+  left: "16px",
+  right: "100px",
+  width: "auto",
+  margin: 0,
+  justifyContent: "flex-start",
+});
+
+export const headerRouteTitleWithBack = style({
+  left: "52px",
 });
 
 export const logo = style({

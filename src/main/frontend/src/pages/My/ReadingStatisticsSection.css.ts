@@ -143,7 +143,12 @@ export const scrollHint = style({
   pointerEvents: "none",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
   opacity: 1,
-  transition: "opacity 520ms ease 650ms",
+  transition: "opacity 1400ms ease-out 120ms",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      transition: "none",
+    },
+  },
 });
 
 export const scrollHintDismissed = style({
@@ -169,7 +174,7 @@ export const horizontalScroll = style({
     "&::-webkit-scrollbar-thumb": {
       borderRadius: "999px",
       backgroundColor: "transparent",
-      transition: "background-color 220ms ease",
+      transition: "background-color 1100ms ease-out",
     },
     "&:focus-visible": {
       outline: "2px solid #78b991",
@@ -184,6 +189,7 @@ export const horizontalScrollActive = style({
   selectors: {
     "&::-webkit-scrollbar-thumb": {
       backgroundColor: vars.color.gray300,
+      transition: "background-color 140ms ease-out",
     },
   },
 });
