@@ -1,16 +1,27 @@
 package org.our.sadari.readingClub.service;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.alim.service.AlimService;
+import org.our.sadari.book.mapper.BookMapper;
+import org.our.sadari.global.common.code.util.CodeUtil;
+import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
+import org.our.sadari.report.dto.ReportDto;
+import org.our.sadari.report.mapper.ReportMapper;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,6 +35,9 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    활성 모임원 프로필 접근 정책 적용
+ * 2026-08-14        Hanwon.Jang        회원 초대 알림 발송 연동
+ * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 처리 추가
+ * 2026-08-14        Hanwon.Jang        회차와 활성 멤버별 읽는 중 독후감 일괄 등록 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -53,6 +67,122 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private final ReadingClubMapper readingClubMapper;
     // 사용자 입력 비속어 검사 서비스
     private final BadWordDetectionService badWordDetectionService;
+    // 사용자 알림과 푸시 발송 서비스
+    private final AlimService alimService;
+    // 도서 마스터 데이터 접근 Mapper
+    private final BookMapper bookMapper;
+    // 멤버별 독후감 데이터 접근 Mapper
+    private final ReportMapper reportMapper;
+    // 독후감 기본 책갈피 색상 공통코드 조회 도구
+    private final CodeUtil codeUtil;
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 등록을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param request 선택 도서와 목표 독서 기간
+     * @return 생성된 회차 번호
+     */
+    @Override
+    @Transactional
+    public ResultData setReading(Long userNumb, Long clubNumb, ReadingClubDto.ReadingCreateReqDto request) {
+
+        // 모임과 등록 요청의 필수 참조값이 없으면 저장을 시작하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request) || !isValidReadingRequest(request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 같은 모임의 회차 번호 계산과 동시 등록을 직렬화하기 위해 모임 행을 잠근다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        // 활성 계정인 현재 모임장만 독서를 등록할 수 있다
+        if (StringUtil.isEmpty(club) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || readingClubMapper.getActiveOwnerCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 네트워크 재시도로 같은 요청 키가 전달되면 기존 회차를 다시 반환한다
+        Long existingRondNumb = readingClubMapper.getReadingRoundByIdempotency(clubNumb, request.getIdemKeyx());
+        if (!StringUtil.isEmpty(existingRondNumb)) {
+            // 이미 생성된 회차 번호를 성공 결과로 반환한다
+            return ResultData.success(Map.of("rondNumb", existingRondNumb));
+        }
+
+        // 예정 또는 진행 중인 독서가 있으면 중복 회차 생성을 차단한다
+        if (readingClubMapper.getOngoingRoundCnt(clubNumb) > 0) {
+            // "저장할 수 없어요. 입력 내용을 확인해주세요."
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
+        }
+
+        // 계정과 멤버 관계가 모두 활성인 사용자만 이번 회차에 자동 참여시킨다
+        List<Long> memberUserNumbList = readingClubMapper.getActiveMemberUserNumbList(clubNumb);
+        // 모임장이 포함된 활성 멤버 목록이 없으면 불완전한 회차를 만들지 않는다
+        if (StringUtil.isEmpty(memberUserNumbList) || memberUserNumbList.isEmpty()
+                || !memberUserNumbList.contains(userNumb)) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 자동 생성 독후감에 사용할 활성 책갈피 색상의 첫 값을 조회한다
+        String reportColor = codeUtil.getFirstCode(Constant.CODE_BOOK_COLR);
+        if (StringUtil.isEmpty(reportColor)) {
+            // 설정 누락은 부분 저장 없이 서버 오류로 롤백한다
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // ISBN 기준으로 등록된 도서가 없을 때만 도서 마스터를 생성한다
+        if (bookMapper.dupBook(request) == 0) {
+            // 신규 도서 마스터를 저장한다
+            int savedBookCnt = bookMapper.setBook(request);
+            if (savedBookCnt != 1 || StringUtil.isEmpty(request.getBookNumb())) {
+                // 도서 마스터 생성 실패는 전체 등록을 롤백한다
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            // 기존 ISBN의 도서 번호를 이번 회차에 연결한다
+            request.setBookNumb(bookMapper.getBookNumbByIsbn(request.getBookIsbn()));
+        }
+
+        // 기존 도서 조회 결과가 없으면 외래키가 없는 회차 생성을 차단한다
+        if (StringUtil.isEmpty(request.getBookNumb())) {
+            // 도서 연결 실패는 전체 등록을 롤백한다
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 잠긴 모임 범위에서 다음 회차 번호를 계산한다
+        request.setRondNumb(readingClubMapper.getNextReadingRoundNumb(clubNumb));
+        if (StringUtil.isEmpty(request.getRondNumb())
+                || readingClubMapper.setReadingRound(clubNumb, userNumb, request) != 1) {
+            // 회차 생성 실패는 도서와 멤버 독후감까지 모두 롤백한다
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        long partNumb = 1L;
+        // 활성 멤버마다 같은 도서와 목표 기간의 읽는 중 독후감을 만든다
+        for (Long memberUserNumb : memberUserNumbList) {
+            // 현재 멤버의 자동 생성 독후감 값을 구성한다
+            ReportDto report = toReadingReport(memberUserNumb, request, reportColor);
+            if (reportMapper.setReport(report) != 1 || StringUtil.isEmpty(report.getReptNumb())) {
+                // 멤버 한 명의 독후감 생성 실패도 전체 등록을 롤백한다
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            // 생성된 독후감을 이번 모임 독서 참여 정보와 연결한다
+            int savedParticipantCnt = readingClubMapper.setReadingParticipant(
+                    clubNumb, request.getRondNumb(), partNumb, memberUserNumb, report.getReptNumb());
+            if (savedParticipantCnt != 1) {
+                // 참여 연결 실패는 회차와 모든 멤버 독후감을 롤백한다
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+            partNumb++;
+        }
+
+        // 생성된 회차 번호를 등록 완료 결과로 반환한다
+        return ResultData.success(Map.of("rondNumb", request.getRondNumb()));
+    }
 
     /**
      * {@inheritDoc}
@@ -164,7 +294,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 활성 계정과 프로필 노출 상태를 모두 만족하는 모임원을 조회한다
+        // 활성 계정인 활성 모임원과 프로필 이미지 경로를 조회한다
         List<ReadingClubDto.MemberProfileDto> members = readingClubMapper.getClubMemberList(clubNumb);
         // 접근 가능한 모임원 프로필 목록을 반환한다
         return ResultData.success(members);
@@ -211,6 +341,131 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 생성된 모임 상세를 반환한다
         return getClubDtl(userNumb, request.getClubNumb());
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 수정할 모임 번호
+     * @param request 수정할 모임 정보
+     * @return 수정된 모임 상세 조회 결과
+     */
+    @Override
+    @Transactional
+    public ResultData uptClub(Long userNumb, Long clubNumb, ReadingClubDto.ClubCreateReqDto request) {
+        // 모임 수정에 필요한 사용자와 대상 및 요청 본문을 먼저 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 권한과 운영 제약을 같은 트랜잭션에서 판단하도록 모임 마스터 행을 잠근다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        // 현재 운영 중인 모임의 모임장만 모임 정보를 수정할 수 있다
+        if (!isOwner(club, userNumb) || !CLUB_ACTIVE.equals(club.getClubStat())) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 수정 입력을 정규화하고 허용된 공개 범위와 가입 방식 조합인지 검증한다
+        if (!isValidClubRequest(request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 모임명과 소개 및 승인 질문의 비속어를 저장 전에 검사한다
+        if (hasBadWord(request)) {
+            // "욕설이나 비속어는 사용할 수 없어요. 감지된 단어: 모임 정보"
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, "모임 정보");
+        }
+
+        // 현재 활성 회원과 유효한 예약 초대보다 작은 정원으로 줄일 수 없다
+        if (readingClubMapper.getOccupiedSeatCnt(clubNumb) > request.getMaxxMemb()) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 예정 또는 진행 중 회차가 있으면 기존 콘텐츠 공개 범위가 달라지지 않게 한다
+        if (!club.getClubVisb().equals(request.getClubVisb())
+                && readingClubMapper.getOngoingRoundCnt(clubNumb) > 0) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 처리 대기 신청이 있으면 신청 당시 가입 정책이 달라지지 않게 한다
+        if (!club.getJoinType().equals(request.getJoinType())
+                && readingClubMapper.getPendingApplicationCnt(clubNumb) > 0) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 권한 조건을 SQL에도 적용해 검증 이후의 소유권 또는 운영 상태 변경을 방어한다
+        if (readingClubMapper.uptClub(userNumb, clubNumb, request) == 0) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 활성 계정의 수정 권한이 확정된 뒤 만료된 초대 예약석을 정리한다
+        readingClubMapper.delExpiredInvitation(clubNumb);
+
+        // 기존 카테고리를 지운 뒤 요청 순서대로 유효한 관계를 다시 구성한다
+        readingClubMapper.delClubCategory(clubNumb);
+        // 선택한 모든 카테고리를 순서값과 함께 저장한다
+        for (int index = 0; index < request.getCategoryList().size(); index++) {
+            // 카테고리 한 건을 새 노출 순서로 저장한다
+            readingClubMapper.setClubCategory(clubNumb, request.getCategoryList().get(index), index + 1);
+        }
+
+        // 승인형 가입 방식은 이후 신청에 사용할 현재 질문을 등록하거나 수정한다
+        if (JOIN_APPROVAL.equals(request.getJoinType())) {
+            // 요청 질문 목록을 고정 컬럼 DTO로 변환한다
+            ReadingClubDto.QuestionDto question = toQuestion(clubNumb, request.getQuestionList());
+            // 기존 질문 행이 없으면 수정 대신 신규 질문 행을 등록한다
+            if (readingClubMapper.uptClubQuestion(userNumb, question) == 0) {
+                // 승인형으로 새로 전환된 모임의 질문 행을 등록한다
+                readingClubMapper.setClubQuestion(userNumb, question);
+            }
+        }
+
+        // 수정된 카테고리와 질문을 포함한 모임 상세를 반환한다
+        return getClubDtl(userNumb, clubNumb);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 삭제할 모임 번호
+     * @return 모임 물리 삭제 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delClub(Long userNumb, Long clubNumb) {
+        // 모임 삭제에 필요한 사용자 번호와 대상 모임 번호를 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 삭제 권한과 운영 상태를 한 트랜잭션에서 확정하도록 모임 마스터 행을 잠근다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        // 현재 운영 중인 모임의 모임장만 복구 불가능한 삭제를 실행할 수 있다
+        if (!isOwner(club, userNumb) || !CLUB_ACTIVE.equals(club.getClubStat())) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 소유권과 운영 상태를 SQL에서도 다시 확인하며 모임 종속 데이터는 외래키로 함께 삭제한다
+        if (readingClubMapper.delClub(userNumb, clubNumb) == 0) {
+            // "삭제에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+        // 개인 독후감과 공용 도서를 제외한 모임 및 종속 데이터 삭제 성공을 반환한다
+        return ResultData.success();
     }
 
     /**
@@ -327,6 +582,26 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /**
      * {@inheritDoc}
      *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 보낸 초대 목록 조회 결과
+     */
+    @Override
+    public ResultData getSentInvitationList(Long userNumb, Long clubNumb) {
+        // 현재 모임장만 활성 회원에게 발송한 초대 목록을 조회할 수 있다
+        if (!isOwner(readingClubMapper.getClubDtl(clubNumb, userNumb), userNumb)) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 비활성화 또는 삭제 대기 회원을 제외한 유효한 보낸 초대 목록을 반환한다
+        return ResultData.success(readingClubMapper.getSentInvitationList(clubNumb, userNumb));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 모임 번호
@@ -389,6 +664,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         for (Long targetUserNumb : targetUserNumbList) {
             // 초대 대상 한 명의 예약석을 등록한다
             readingClubMapper.setInvitation(clubNumb, targetUserNumb, userNumb);
+            // 초대받은 활성 회원의 알림센터에 모임장과 모임명이 포함된 초대 알림을 저장하고 푸시를 예약한다
+            alimService.sendAlim(
+                    targetUserNumb
+                  , Constant.ALIM_SITU_CLUB
+                  , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+                  , clubNumb
+                  , Map.of("userName", club.getOwnrNick(), "clubName", club.getClubName())
+            );
         }
 
         // 초대 저장 성공 응답을 반환한다
@@ -479,7 +762,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     public ResultData delOwnerInvitation(Long userNumb, Long clubNumb, Long targetUserNumb) {
         // 현재 모임장만 특정 대상의 예약석을 취소할 수 있다
         if (!isOwner(readingClubMapper.getClubForUpdate(clubNumb), userNumb)
-                || readingClubMapper.delInvitation(clubNumb, targetUserNumb) == 0) {
+                || readingClubMapper.delOwnerInvitation(clubNumb, targetUserNumb, userNumb) == 0) {
             // "삭제에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
@@ -781,6 +1064,74 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // Null이 제거된 순서 목록을 반환한다
         return result;
+    }
+
+    /**
+     * 모임 독서 등록 요청의 도서 필드와 목표 기간을 정규화하고 검증한다.
+     *
+     * @author Hanwon.Jang
+     * @param request 검증할 모임 독서 등록 요청
+     * @return 저장 가능한 요청이면 true
+     */
+    private boolean isValidReadingRequest(ReadingClubDto.ReadingCreateReqDto request) {
+
+        // 외부 도서 검색 결과도 서버 저장 규격에 맞춰 길이와 공백을 정규화한다
+        request.setBookTitl(StringUtil.normalizePlainText(request.getBookTitl(), 500));
+        request.setBookAthr(StringUtil.normalizePlainText(request.getBookAthr(), 500));
+        request.setBookPubl(StringUtil.normalizePlainText(request.getBookPubl(), 500));
+        request.setBookIsbn(StringUtil.normalizePlainText(request.getBookIsbn(), 100));
+        request.setBookCvim(StringUtil.normalizePlainText(request.getBookCvim(), 1000));
+        request.setBookDesc(StringUtil.normalizePlainText(request.getBookDesc(), 4000));
+        request.setPublDate(StringUtil.normalizePlainText(request.getPublDate(), 10));
+        request.setGoalStdt(StringUtil.normalizePlainText(request.getGoalStdt(), 10));
+        request.setGoalEndt(StringUtil.normalizePlainText(request.getGoalEndt(), 10));
+        request.setIdemKeyx(StringUtil.normalizePlainText(request.getIdemKeyx(), 64));
+
+        // 독후감 등록과 동일한 도서 필수값과 회차 키 및 기간을 요구한다
+        if (StringUtil.hasEmpty(request.getBookTitl(), request.getBookAthr(), request.getBookPubl()
+                              , request.getBookIsbn(), request.getBookCvim(), request.getBookDesc()
+                              , request.getGoalStdt(), request.getGoalEndt(), request.getIdemKeyx())) {
+            // 필수값 누락을 검증 실패로 반환한다
+            return false;
+        }
+
+        try {
+            // ISO 날짜만 허용하고 시작일이 종료일보다 늦지 않은지 확인한다
+            LocalDate startDate = LocalDate.parse(request.getGoalStdt());
+            LocalDate endDate = LocalDate.parse(request.getGoalEndt());
+            // 날짜 범위 검증 결과를 반환한다
+            return !startDate.isAfter(endDate);
+        } catch (DateTimeParseException exception) {
+            // 형식이 맞지 않는 날짜는 저장 요청에서 제외한다
+            return false;
+        }
+    }
+
+    /**
+     * 모임 독서 회차의 도서와 목표 기간으로 멤버별 읽는 중 독후감을 구성한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 자동 생성 대상 사용자 번호
+     * @param request 모임 독서 회차 정보
+     * @param reportColor 기본 책갈피 색상 코드
+     * @return 자동 생성할 읽는 중 독후감
+     */
+    private ReportDto toReadingReport(Long userNumb, ReadingClubDto.ReadingCreateReqDto request
+                                     , String reportColor) {
+
+        // 자동 생성 독후감 DTO를 구성한다
+        ReportDto report = new ReportDto();
+        report.setUserNumb(userNumb);
+        report.setBookNumb(request.getBookNumb());
+        report.setReptStat(Constant.REPORT_STAT_READ);
+        report.setReptStdt(request.getGoalStdt());
+        report.setReptEndt(request.getGoalEndt());
+        report.setReptGrde("0");
+        report.setReptColr(reportColor);
+        report.setPubcYsno(Constant.COMM_NO);
+        report.setReptCntn("");
+        // 동일한 목표 기간의 읽는 중 독후감을 반환한다
+        return report;
     }
 
     private List<String> normalizeTextList(List<String> values, int maxLength) {

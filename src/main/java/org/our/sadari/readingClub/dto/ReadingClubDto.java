@@ -6,10 +6,13 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import org.our.sadari.book.dto.BookDto;
 
 /**
  * fileName       : ReadingClubDto
@@ -21,9 +24,44 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    모임원 프로필 응답 DTO 추가
+ * 2026-08-14        Hanwon.Jang    모임 독서 등록 요청 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
+
+    /**
+     * fileName       : ReadingCreateReqDto
+     * author         : Hanwon.Jang
+     * date           : 2026-08-14
+     * description    : 모임 독서 회차와 멤버별 독후감 생성에 필요한 도서와 목표 기간을 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-14        Hanwon.Jang    최초 생성
+     */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Schema(description = "모임 독서 등록 요청")
+    public static class ReadingCreateReqDto extends BookDto {
+
+        @NotBlank
+        @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
+        @Schema(description = "목표 독서 시작일", example = "2026-08-14")
+        private String goalStdt;
+
+        @NotBlank
+        @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
+        @Schema(description = "목표 독서 종료일", example = "2026-08-31")
+        private String goalEndt;
+
+        @NotBlank
+        @Size(max = 64)
+        @Schema(description = "중복 등록 방지 키")
+        private String idemKeyx;
+
+        @Schema(description = "생성된 모임 독서 회차 번호", hidden = true)
+        private Long rondNumb;
+    }
 
     /**
      * fileName       : ClubCreateReqDto
@@ -34,6 +72,7 @@ public final class ReadingClubDto {
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
      * 2026-08-05        SeungHyeon.Kang    최초 생성
+     * 2026-08-14        Hanwon.Jang        현재 독서 회차와 도서 요약 필드 추가
      */
     @Data
     @Schema(description = "독서 모임 생성 요청")
@@ -85,6 +124,7 @@ public final class ReadingClubDto {
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
      * 2026-08-05        SeungHyeon.Kang    최초 생성
+     * 2026-08-14        Hanwon.Jang        현재 독서 관련 추가
      */
     @Data
     @Schema(description = "독서 모임 조회 항목")
@@ -134,6 +174,21 @@ public final class ReadingClubDto {
 
         @Schema(description = "로그인 사용자의 관심분야 정확 일치 수")
         private Integer matchCnt;
+
+        @Schema(description = "현재 예정 또는 진행 중인 모임별 회차 번호")
+        private Long currentRondNumb;
+
+        @Schema(description = "현재 독서 또는 다음 독서의 모임 내 순번")
+        private Long readingOrdr;
+
+        @Schema(description = "현재 독서 도서 제목")
+        private String currentBookTitl;
+
+        @Schema(description = "현재 독서 도서 저자")
+        private String currentBookAthr;
+
+        @Schema(description = "현재 독서 도서 표지 이미지 URL")
+        private String currentBookCvim;
 
         @Schema(description = "카테고리 코드와 이름 목록")
         private List<CategoryDto> categoryList;
@@ -338,6 +393,42 @@ public final class ReadingClubDto {
 
         @Schema(description = "한 줄 소개")
         private String intrCntn;
+
+        @Schema(description = "관심분야 표시 문구")
+        private String intrText;
+    }
+
+    /**
+     * fileName       : SentInvitationDto
+     * author         : Hanwon.Jang
+     * date           : 2026-08-14
+     * description    : 모임장이 발송한 유효한 초대 대상 정보를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-14        Hanwon.Jang    최초 생성
+     */
+    @Data
+    @Schema(description = "보낸 모임 초대")
+    public static class SentInvitationDto {
+
+        @Schema(description = "초대 대상 사용자 번호")
+        private Long userNumb;
+
+        @Schema(description = "초대 대상 닉네임")
+        private String userNick;
+
+        @Schema(description = "초대 대상 프로필 이미지 경로")
+        private String porfPath;
+
+        @Schema(description = "관심분야 표시 문구")
+        private String intrText;
+
+        @Schema(description = "초대 발송 일시")
+        private LocalDateTime invtDate;
+
+        @Schema(description = "초대 만료 일시")
+        private LocalDateTime exprDate;
     }
 
     /**

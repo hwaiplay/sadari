@@ -4,78 +4,93 @@ import { style } from "@vanilla-extract/css";
 export const card = style({
   display: "flex",
   flexDirection: "column",
-  gap: 11,
-  padding: "19px 18px",
+  width: "100%",
+  overflow: "hidden",
   border: `1px solid ${vars.color.gray300}`,
-  borderRadius: 18,
-  background: "#fff",
-  cursor: "pointer",
-  transition: "border-color 160ms ease, transform 160ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray500,
-      transform: "translateY(-1px)",
-    },
-  },
+  borderRadius: 22,
+  background: vars.color.background,
+  boxSizing: "border-box",
 });
 
-export const cardTop = style({
+export const summary = style({
   display: "flex",
+  flexDirection: "column",
   alignItems: "flex-start",
-  justifyContent: "space-between",
-  gap: 12,
-});
-
-export const cardTitle = style({
-  margin: 0,
-  fontFamily: vars.font.heading,
-  fontSize: 17,
-  lineHeight: 1.35,
-});
-
-export const badge = style({
-  padding: "5px 9px",
-  borderRadius: 999,
+  gap: 10,
+  padding: 20,
   background: vars.color.gray100,
-  fontFamily: vars.font.semibold,
-  fontSize: 11,
-  whiteSpace: "nowrap",
+});
+
+export const categoryChips = style({
+  display: "flex",
+  flexWrap: "wrap",
+  gap: 6,
+  minHeight: 22,
+});
+
+export const categoryChip = style({
+  padding: "4px 12px",
+  borderRadius: 200,
+  background: vars.color.gray900,
+  color: vars.color.background,
+  fontFamily: vars.font.medium,
+  fontSize: 12,
+  lineHeight: 1.2,
+  letterSpacing: "-0.12px",
+});
+
+export const clubCopy = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+});
+
+export const clubTitle = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: 18,
+  lineHeight: 1.2,
+  letterSpacing: "-0.18px",
+});
+
+export const clubMeta = style({
+  margin: 0,
+  color: vars.color.gray900,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: 1.2,
+  letterSpacing: "-0.14px",
+});
+
+export const actionArea = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 20,
+  padding: 20,
 });
 
 export const description = style({
+  width: "100%",
+  minHeight: 17,
   margin: 0,
+  overflow: "hidden",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 13,
-  lineHeight: 1.6,
-  whiteSpace: "pre-wrap",
-});
-
-export const chips = style({
-  display: "flex",
-  flexWrap: "wrap",
-  gap: 8,
-});
-
-export const chip = style({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: 4,
-  padding: "8px 14px",
-  borderRadius: 999,
-  background: vars.color.brandBg,
-  color: vars.color.brandText,
-  fontFamily: vars.font.body,
   fontSize: 14,
-  lineHeight: 1,
+  lineHeight: 1.2,
+  letterSpacing: "-0.14px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 });
 
-export const meta = style({
-  display: "flex",
-  flexWrap: "wrap",
-  gap: "7px 12px",
-  color: vars.color.gray500,
-  fontFamily: vars.font.body,
-  fontSize: 12,
+export const actionButton = style({
+  height: 44,
+  fontFamily: vars.font.semibold,
+  letterSpacing: "-0.14px",
+});
+
+export const actionIcon = style({
+  width: 16,
+  height: 16,
 });

@@ -15,9 +15,77 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 메서드 추가
+ * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 메서드 추가
+ * 2026-08-14        Hanwon.Jang    모임 독서 회차와 참여자 등록 메서드 추가
  */
 @Mapper
 public interface ReadingClubMapper {
+
+    /**
+     * 같은 중복 방지 키로 이미 생성된 모임 독서 회차를 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param idemKeyx 중복 등록 방지 키
+     * @return 기존 회차 번호
+     */
+    Long getReadingRoundByIdempotency(@Param("clubNumb") Long clubNumb
+                                     , @Param("idemKeyx") String idemKeyx);
+
+    /**
+     * 활성 계정인 모임장이 현재 활성 멤버 관계를 유지하는지 확인한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param userNumb 모임장 사용자 번호
+     * @return 등록 권한 관계 수
+     */
+    int getActiveOwnerCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 모임 독서에 자동 참여할 활성 계정의 활성 멤버 번호를 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @return 자동 참여 사용자 번호 목록
+     */
+    List<Long> getActiveMemberUserNumbList(Long clubNumb);
+
+    /**
+     * 잠긴 모임 안에서 다음 독서 회차 번호를 계산한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @return 다음 회차 번호
+     */
+    Long getNextReadingRoundNumb(Long clubNumb);
+
+    /**
+     * 선택 도서와 목표 기간으로 모임 독서 회차를 생성한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param userNumb 등록 모임장 사용자 번호
+     * @param request 독서 회차 등록 정보
+     * @return 등록 건수
+     */
+    int setReadingRound(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                       , @Param("request") ReadingClubDto.ReadingCreateReqDto request);
+
+    /**
+     * 자동 생성된 멤버 독후감을 모임 독서 참여 정보와 연결한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @param partNumb 참여 순번
+     * @param userNumb 참여 사용자 번호
+     * @param reptNumb 자동 생성 독후감 번호
+     * @return 등록 건수
+     */
+    int setReadingParticipant(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
+                             , @Param("partNumb") long partNumb, @Param("userNumb") Long userNumb
+                             , @Param("reptNumb") Long reptNumb);
 
     /**
      * 사용자가 저장한 관심분야 수를 조회한다.
@@ -46,7 +114,29 @@ public interface ReadingClubMapper {
      * @return 생성된 모임 수
      */
     int setClub(@Param("userNumb") Long userNumb
+               , @Param("request") ReadingClubDto.ClubCreateReqDto request);
+
+    /**
+     * 현재 모임장이 소유한 운영 중 모임의 기본 정보와 운영 설정을 수정한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 수정할 모임 번호
+     * @param request 수정할 모임 정보
+     * @return 수정된 모임 수
+     */
+    int uptClub(@Param("userNumb") Long userNumb, @Param("clubNumb") Long clubNumb
               , @Param("request") ReadingClubDto.ClubCreateReqDto request);
+
+    /**
+     * 현재 모임장이 소유한 운영 중 모임을 물리 삭제한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 삭제할 모임 번호
+     * @return 삭제된 모임 수
+     */
+    int delClub(@Param("userNumb") Long userNumb, @Param("clubNumb") Long clubNumb);
 
     /**
      * 모임 카테고리 한 건을 등록한다.
@@ -58,8 +148,17 @@ public interface ReadingClubMapper {
      * @return 등록된 카테고리 수
      */
     int setClubCategory(@Param("clubNumb") Long clubNumb
-                      , @Param("intrCode") String intrCode
-                      , @Param("sortOrdr") int sortOrdr);
+                       , @Param("intrCode") String intrCode
+                       , @Param("sortOrdr") int sortOrdr);
+
+    /**
+     * 모임 수정 전에 기존 카테고리 관계를 삭제한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 수정할 모임 번호
+     * @return 삭제된 카테고리 수
+     */
+    int delClubCategory(Long clubNumb);
 
     /**
      * 모임 개설자를 활성 모임장 회원으로 등록한다.
@@ -80,7 +179,18 @@ public interface ReadingClubMapper {
      * @return 등록된 질문 행 수
      */
     int setClubQuestion(@Param("userNumb") Long userNumb
-                      , @Param("question") ReadingClubDto.QuestionDto question);
+                       , @Param("question") ReadingClubDto.QuestionDto question);
+
+    /**
+     * 승인형 모임의 현재 가입 질문을 수정한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 질문 수정 사용자 번호
+     * @param question 수정할 질문 값
+     * @return 수정된 질문 행 수
+     */
+    int uptClubQuestion(@Param("userNumb") Long userNumb
+                       , @Param("question") ReadingClubDto.QuestionDto question);
 
     /**
      * 로그인 사용자가 활성 회원인 모임 목록을 조회한다.
@@ -152,7 +262,7 @@ public interface ReadingClubMapper {
                                           , @Param("userNumb") Long userNumb);
 
     /**
-     * 활성 계정이면서 프로필 노출에 동의한 활성 모임원 목록을 가입 순서로 조회한다.
+     * 활성 계정인 활성 모임원 목록과 프로필 이미지 경로를 가입 순서로 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param clubNumb 조회할 모임 번호
@@ -186,6 +296,24 @@ public interface ReadingClubMapper {
      * @return 현재 점유 좌석 수
      */
     int getOccupiedSeatCnt(Long clubNumb);
+
+    /**
+     * 공개 범위 변경을 제한하는 예정 또는 진행 중 회차 수를 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @return 예정 또는 진행 중 회차 수
+     */
+    int getOngoingRoundCnt(Long clubNumb);
+
+    /**
+     * 가입 방식 변경을 제한하는 처리 대기 신청 수를 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @return 처리 대기 가입 신청 수
+     */
+    int getPendingApplicationCnt(Long clubNumb);
 
     /**
      * 공개 즉시 가입 사용자를 활성 일반 회원으로 등록한다.
@@ -232,6 +360,17 @@ public interface ReadingClubMapper {
                                                                   , @Param("ownerNumb") Long ownerNumb);
 
     /**
+     * 모임장이 발송한 유효한 초대 중 활성 회원에게 보낸 목록을 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param ownerNumb 모임장 사용자 번호
+     * @return 활성 회원에게 발송한 유효한 초대 목록
+     */
+    List<ReadingClubDto.SentInvitationDto> getSentInvitationList(@Param("clubNumb") Long clubNumb
+                                                                , @Param("ownerNumb") Long ownerNumb);
+
+    /**
      * 로그인 사용자에게 도착한 유효한 초대 목록을 조회한다.
      *
      * @author SeungHyeon.Kang
@@ -259,6 +398,19 @@ public interface ReadingClubMapper {
      * @return 삭제된 초대 수
      */
     int delInvitation(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 모임장이 활성 회원에게 발송한 유효한 초대를 취소한다.
+     *
+     * @author Hanwon.Jang
+     * @param clubNumb 모임 번호
+     * @param userNumb 초대 대상 사용자 번호
+     * @param ownerNumb 모임장 사용자 번호
+     * @return 삭제한 초대 수
+     */
+    int delOwnerInvitation(@Param("clubNumb") Long clubNumb
+                         , @Param("userNumb") Long userNumb
+                         , @Param("ownerNumb") Long ownerNumb);
 
     /**
      * 승인형 모임의 처리 중 신청을 조회한다.
