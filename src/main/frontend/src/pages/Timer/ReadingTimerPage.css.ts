@@ -108,7 +108,7 @@ export const dayMinutes = style({
 });
 
 export const timerCard = style([card, {
-  padding: "20px",
+  padding: "18px",
   "@media": {
     "screen and (max-width: 340px)": {
       padding: "12px",
@@ -117,29 +117,63 @@ export const timerCard = style([card, {
 }]);
 
 export const timerLayout = style({
-  display: "flex",
+  display: "grid",
+  gridTemplateColumns: "90px minmax(0, 1fr)",
   alignItems: "stretch",
-  gap: "18px",
+  gap: "16px",
   minWidth: 0,
+  transition: "grid-template-columns 520ms cubic-bezier(0.22, 1, 0.36, 1), gap 520ms cubic-bezier(0.22, 1, 0.36, 1)",
   "@media": {
     "screen and (max-width: 380px)": {
-      gap: "14px",
+      gap: "12px",
     },
     "screen and (max-width: 340px)": {
       gap: "10px",
+    },
+    "(prefers-reduced-motion: reduce)": {
+      transition: "none",
+    },
+  },
+});
+
+export const timerLayoutWithoutBook = style({
+  gridTemplateColumns: "0 minmax(0, 1fr)",
+  gap: 0,
+  "@media": {
+    "screen and (max-width: 380px)": {
+      gap: 0,
+    },
+    "screen and (max-width: 340px)": {
+      gap: 0,
     },
   },
 });
 
 export const bookCoverColumn = style({
-  width: "104px",
-  flex: "0 0 104px",
+  width: "90px",
+  minWidth: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  opacity: 1,
+  transition: "width 520ms cubic-bezier(0.22, 1, 0.36, 1), opacity 260ms ease",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      transition: "none",
+    },
+  },
+});
+
+export const bookCoverColumnHidden = style({
+  width: 0,
+  opacity: 0,
+  pointerEvents: "none",
 });
 
 export const bookCoverFrame = style({
   position: "relative",
   display: "block",
-  width: "104px",
+  width: "90px",
   aspectRatio: "2 / 3",
   padding: 0,
   border: `1px solid ${vars.color.gray200}`,
@@ -153,7 +187,7 @@ export const bookCoverFrame = style({
 export const bookCoverButton = style([bookCoverFrame, {
   color: vars.color.gray700,
   cursor: "pointer",
-  transition: "border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
+  transition: "border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease, transform 160ms ease",
   selectors: {
     "&:hover": {
       borderColor: vars.color.gray400,
@@ -162,7 +196,7 @@ export const bookCoverButton = style([bookCoverFrame, {
     },
     "&[data-empty='true']": {
       border: 0,
-      backgroundColor: vars.color.background,
+      backgroundColor: "#fbfcfc",
       backgroundImage: `
         repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
         repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
@@ -186,16 +220,6 @@ export const bookCoverButton = style([bookCoverFrame, {
     },
   },
 }]);
-
-export const emptyBookCover = style({
-  boxShadow: "none",
-  selectors: {
-    "&:hover": {
-      boxShadow: "none",
-      transform: "none",
-    },
-  },
-});
 
 export const coverImage = style({
   display: "block",
@@ -270,36 +294,53 @@ export const timerPanel = style({
   display: "flex",
   flexDirection: "column",
   alignItems: "stretch",
-  justifyContent: "flex-start",
-  gap: "8px",
-  paddingTop: "10px",
+  justifyContent: "center",
+  gap: "4px",
+  padding: "10px 2px",
   boxSizing: "border-box",
+  transition: "padding 520ms cubic-bezier(0.22, 1, 0.36, 1)",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      transition: "none",
+    },
+  },
+});
+
+export const timerPanelWithoutBook = style({
+  width: "min(100%, 320px)",
+  justifySelf: "center",
+  justifyContent: "center",
+  gap: "12px",
+  padding: "12px 0",
 });
 
 export const clock = style({
   margin: 0,
-  color: vars.color.black,
+  color: vars.color.gray900,
   fontFamily: "ui-monospace, SFMono-Regular, Menlo, monospace",
-  fontSize: "clamp(34px, 10vw, 44px)",
-  fontWeight: 700,
-  letterSpacing: "-1.5px",
+  fontSize: "clamp(40px, 11vw, 52px)",
+  fontWeight: 800,
+  fontVariantNumeric: "tabular-nums",
+  letterSpacing: "-2px",
   lineHeight: 1,
+  textAlign: "center",
   whiteSpace: "nowrap",
   "@media": {
     "screen and (max-width: 340px)": {
-      fontSize: "30px",
+      fontSize: "clamp(30px, 10vw, 34px)",
       letterSpacing: "-1px",
     },
   },
 });
 
 export const book = style({
-  minHeight: "36px",
+  minHeight: "30px",
   margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
+  color: vars.color.gray700,
+  fontFamily: vars.font.medium,
   fontSize: "13px",
-  lineHeight: 1.4,
+  lineHeight: 1.35,
+  textAlign: "center",
   overflow: "hidden",
   display: "-webkit-box",
   WebkitBoxOrient: "vertical",
@@ -309,14 +350,21 @@ export const book = style({
 export const actions = style({
   display: "flex",
   flexWrap: "nowrap",
-  gap: "8px",
+  gap: "7px",
   width: "100%",
-  marginTop: "auto",
+  marginTop: 0,
+});
+
+export const actionsWithoutBook = style({
+  alignSelf: "center",
+  width: "min(100%, 300px)",
+  marginTop: 0,
 });
 
 export const actionButton = style({
   minWidth: 0,
   flex: "1 1 0",
+  borderRadius: "10px",
   boxSizing: "border-box",
   "@media": {
     "screen and (max-width: 340px)": {

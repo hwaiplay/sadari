@@ -478,6 +478,8 @@ export default function ReadingTimerPage() {
   const activeTimer = summary?.activeTimer;
   const selectedBook = getSelectedBook(summary?.currentReadingList, selectedReport);
   const displayedBook = activeTimer ?? selectedBook;
+  // 연결 도서가 없는 실행 세션에서는 표지와 도서 안내를 숨긴다
+  const isTimerWithoutBook = Boolean(activeTimer && !activeTimer.bookTitl);
 
   /**
    * API 응답을 화면 상태와 카운터에 함께 반영한다
@@ -739,74 +741,69 @@ export default function ReadingTimerPage() {
 
       {/* 도서 표지와 독서 타이머 실행 영역 */}
       <section className={styles.timerCard} aria-label={message("frontend.timer.section.label")}>
-        <div className={styles.timerLayout}>
+        <div className={clsx(styles.timerLayout, isTimerWithoutBook && styles.timerLayoutWithoutBook)}>
           {/* 선택 도서 표지와 도서 선택 진입 영역 */}
-          <div className={styles.bookCoverColumn}>
-            {!activeTimer ? (
-              <button
-                className={styles.bookCoverButton}
-                type="button"
-                data-empty={!displayedBook}
-                aria-label={displayedBook
-                  ? message("frontend.timer.book.change")
-                  : message("frontend.timer.book.select")}
-                onClick={openBookModal}
-              >
-                {displayedBook ? (
+          <div className={clsx(styles.bookCoverColumn, isTimerWithoutBook && styles.bookCoverColumnHidden)}>
+            {!isTimerWithoutBook && (
+              !activeTimer ? (
+                <button
+                  className={styles.bookCoverButton}
+                  type="button"
+                  data-empty={!displayedBook}
+                  aria-label={displayedBook
+                    ? message("frontend.timer.book.change")
+                    : message("frontend.timer.book.select")}
+                  onClick={openBookModal}
+                >
+                  {displayedBook ? (
+                    <img
+                      className={styles.coverImage}
+                      src={getBookCoverImageSource(displayedBook.bookCvim)}
+                      onError={handleBookCoverImageError}
+                      alt={displayedBook.bookTitl ?? message("frontend.timer.book.none")}
+                    />
+                  ) : (
+                    <span className={styles.bookCoverPlaceholder}>
+                      <span className={styles.bookPlaceholderPlus} aria-hidden="true">+</span>
+                      <span className={styles.bookPlaceholderText}>
+                        {/* "도서 선택" */}
+                        {message("frontend.timer.book.choose")}
+                      </span>
+                    </span>
+                  )}
+                  {displayedBook && (
+                    <span className={styles.coverActionLabel}>
+                      {/* "도서 변경" */}
+                      {message("frontend.timer.book.change")}
+                    </span>
+                  )}
+                </button>
+              ) : (
+                <div className={styles.bookCoverFrame}>
                   <img
                     className={styles.coverImage}
-                    src={getBookCoverImageSource(displayedBook.bookCvim)}
+                    src={getBookCoverImageSource(displayedBook?.bookCvim)}
                     onError={handleBookCoverImageError}
-                    alt={displayedBook.bookTitl ?? message("frontend.timer.book.none")}
+                    alt={displayedBook?.bookTitl ?? ""}
                   />
-                ) : (
-                  <span className={styles.bookCoverPlaceholder}>
-                    <span className={styles.bookPlaceholderPlus} aria-hidden="true">+</span>
-                    <span className={styles.bookPlaceholderText}>
-                      {/* "도서 선택" */}
-                      {message("frontend.timer.book.choose")}
-                    </span>
-                  </span>
-                )}
-                {displayedBook && (
-                  <span className={styles.coverActionLabel}>
-                    {/* "도서 변경" */}
-                    {message("frontend.timer.book.change")}
-                  </span>
-                )}
-              </button>
-            ) : (
-              <div className={clsx(styles.bookCoverFrame, !displayedBook?.bookTitl && styles.emptyBookCover)}>
-                {displayedBook?.bookTitl ? (
-                  <img
-                    className={styles.coverImage}
-                    src={getBookCoverImageSource(displayedBook.bookCvim)}
-                    onError={handleBookCoverImageError}
-                    alt={displayedBook.bookTitl}
-                  />
-                ) : (
-                  <span className={styles.bookCoverPlaceholder}>
-                    <span>
-                      {/* "연결된 도서 없음" */}
-                      {message("frontend.timer.book.none")}
-                    </span>
-                  </span>
-                )}
-              </div>
+                </div>
+              )
             )}
           </div>
 
           {/* 타이머 시간과 도서 및 실행 버튼 영역 */}
-          <div className={styles.timerPanel}>
+          <div className={clsx(styles.timerPanel, isTimerWithoutBook && styles.timerPanelWithoutBook)}>
             <p className={styles.clock} aria-live="off">
               {formatSeconds(activeTimer ? displaySeconds : todaySeconds)}
             </p>
-            <p className={styles.book}>
-              {displayedBook?.bookTitl
-                ?? /* "읽고 있는 도서를 선택해주세요" */ message("frontend.timer.book.suggest")}
-            </p>
+            {!isTimerWithoutBook && (
+              <p className={styles.book}>
+                {displayedBook?.bookTitl
+                  ?? /* "읽고 있는 도서를 선택해주세요" */ message("frontend.timer.book.suggest")}
+              </p>
+            )}
             {/* 타이머 시작과 상태 변경 버튼 영역 */}
-            <div className={styles.actions}>
+            <div className={clsx(styles.actions, isTimerWithoutBook && styles.actionsWithoutBook)}>
               {!activeTimer && (
                 <ActionButton
                   variant="primary"
