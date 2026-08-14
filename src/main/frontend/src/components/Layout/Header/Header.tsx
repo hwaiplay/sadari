@@ -67,6 +67,8 @@ function Header({ menuEnabled = true }: HeaderProps) {
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
+  const isClubManagementPage = /^\/reading-clubs\/\d+\/manage$/.test(location.pathname);
+  const isClubMemberPage = /^\/reading-clubs\/\d+\/manage\/members$/.test(location.pathname);
   const headerContentSlide =
     resolvedMenu?.transitionDirection === "back"
       ? headerContentSlideBack
@@ -216,8 +218,18 @@ function Header({ menuEnabled = true }: HeaderProps) {
         )}
         {/* 현재 경로의 메뉴 조회가 끝난 뒤 메뉴명 또는 로고를 표시하는 중앙 영역 */}
         <div className={headerCenter}>
-          {isMenuResolved &&
-            (currentMenu?.menuName ? (
+          {(isMenuResolved || isClubManagementPage || isClubMemberPage) &&
+            (isClubMemberPage ? (
+              <h1 className={clsx(routeTitle, headerContentSlide)}>
+                {/* "멤버/가입 관리" */}
+                {message("frontend.readingClub.memberManage.title")}
+              </h1>
+            ) : isClubManagementPage ? (
+              <h1 className={clsx(routeTitle, headerContentSlide)}>
+                {/* "모임 관리" */}
+                {message("frontend.readingClub.management.title")}
+              </h1>
+            ) : currentMenu?.menuName ? (
               <h1 className={clsx(routeTitle, headerContentSlide)}>
                 {currentMenu.menuName}
               </h1>

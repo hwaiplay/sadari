@@ -13,8 +13,21 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 계약 추가
+ * 2026-08-14        Hanwon.Jang    모임 수정과 물리 삭제 계약 추가
+ * 2026-08-14        Hanwon.Jang    모임 독서 일괄 등록 계약 추가
  */
 public interface ReadingClubService {
+
+    /**
+     * 모임 독서 회차와 모든 활성 멤버의 읽는 중 독후감을 함께 생성한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 등록을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param request 선택 도서와 목표 독서 기간
+     * @return 생성된 회차 번호
+     */
+    ResultData setReading(Long userNumb, Long clubNumb, ReadingClubDto.ReadingCreateReqDto request);
 
     /**
      * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회한다.
@@ -66,6 +79,27 @@ public interface ReadingClubService {
     ResultData setClub(Long userNumb, ReadingClubDto.ClubCreateReqDto request);
 
     /**
+     * 현재 모임장이 모임 정보와 카테고리 및 가입 질문을 수정한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 수정할 모임 번호
+     * @param request 수정할 모임 정보
+     * @return 수정된 모임 상세 조회 결과
+     */
+    ResultData uptClub(Long userNumb, Long clubNumb, ReadingClubDto.ClubCreateReqDto request);
+
+    /**
+     * 현재 모임장이 모임과 외래키로 연결된 종속 데이터를 물리 삭제한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 삭제할 모임 번호
+     * @return 모임 물리 삭제 결과
+     */
+    ResultData delClub(Long userNumb, Long clubNumb);
+
+    /**
      * 공개 모임의 가입 방식에 따라 활성 회원을 등록하거나 승인 신청을 저장한다.
      *
      * @author SeungHyeon.Kang
@@ -85,6 +119,16 @@ public interface ReadingClubService {
      * @return 맞팔로우 초대 후보 목록 조회 결과
      */
     ResultData getInviteCandidateList(Long userNumb, Long clubNumb);
+
+    /**
+     * 모임장이 활성 회원에게 발송한 유효한 초대 목록을 조회한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 보낸 초대 목록 조회 결과
+     */
+    ResultData getSentInvitationList(Long userNumb, Long clubNumb);
 
     /**
      * 선택한 맞팔로우 사용자에게 모임 초대를 발송하고 정원 내 좌석을 예약한다.

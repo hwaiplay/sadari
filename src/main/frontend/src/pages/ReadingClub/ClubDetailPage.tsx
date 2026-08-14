@@ -1,15 +1,27 @@
 import { message } from "@/app/messages/message";
 import { ActionButton } from "@/components/Button/ActionButton";
+import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
+import Skeleton from "@/components/Skeleton/Skeleton";
+import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
+import clsx from "clsx";
 import { createPortal } from "react-dom";
 import * as styles from "./ClubDetailPage.css";
+
+// 모임 상세에 한 번에 표시할 프로필 이미지 수를 제한한다
+const MEMBER_PROFILE_VISIBLE_LIMIT = 10;
+type ClubDetailAction = "" | "EDIT" | "DELETE";
 
 /**
  * 모임원 한 명의 프로필 이미지 항목을 표시한다
  *
- * @author SeungHyeon.Kang
+ * @author Hanwon.Jang
  * @param member 표시할 모임원 프로필
  * @return 모임원 프로필 이미지 항목
  */
@@ -31,40 +43,87 @@ function renderMemberProfile(member: ClubMemberProfile) {
 /**
  * 모임 소개와 현재 독서, 멤버 및 모임장 관리 영역을 표시한다.
  *
- * @author SeungHyeon.Kang
+ * @author Hanwon.Jang
  * @return 모임 상세 화면
  */
 export default function ClubDetailPage() {
   const {
     answers,
     applications,
-    candidates,
     canJoin,
     club,
+    isDeleting,
     members,
-    selectedCandidates,
     handleAnswerChange,
     handleApplicationDecision,
-    handleCandidateToggle,
-    handleInviteCandidates,
+    handleClubManagement,
+    handleClubAction,
     handleJoinClub,
     handleReportWrite,
   } = useClubDetailPage();
 
   // 상세 데이터가 준비되기 전에는 로딩 안내를 표시한다.
   if (!club) {
-    return <div className={styles.loading}>{message("frontend.readingClub.common.loading")}</div>;
+    return (
+      <main
+        className={styles.page}
+        aria-busy="true"
+        aria-label={message("frontend.readingClub.common.loading")}
+      >
+        <Skeleton width="100%" height={156} borderRadius={20} />
+        <Skeleton width="100%" height={289} borderRadius={22} />
+        <Skeleton width="100%" height={80} borderRadius={18} />
+        <Skeleton width="100%" height={108} borderRadius={12} />
+      </main>
+    );
   }
 
   const visibility = club.clubVisb === "PUBLIC"
     ? message("frontend.readingClub.common.visibility.public")
     : message("frontend.readingClub.common.visibility.private");
   const isActiveMember = club.membStat === "ACTIVE";
+  // 프로필 이미지는 최대 10명까지만 표시한다
+  const memberProfiles = members.slice(0, MEMBER_PROFILE_VISIBLE_LIMIT);
+  // 10명을 초과한 모임원 수만 추가 인원 문구로 표시한다
+  const additionalMemberCount = Math.max(members.length - MEMBER_PROFILE_VISIBLE_LIMIT, 0);
+  // 추가 인원이 있는 경우 표시 프로필을 겹쳐 배치한다
+  const hasAdditionalMembers = additionalMemberCount > 0;
+  // 예정 또는 진행 중인 회차 번호가 있으면 현재 독서 정보를 표시한다
+  const hasCurrentReading = Number.isFinite(club.currentRondNumb);
+  // 첫 회차가 아직 없으면 다음 독서 순번을 1로 표시한다
+  const readingOrder = club.readingOrdr ?? 1;
+  const clubActionOptions: readonly CustomSelectOption<ClubDetailAction>[] = [
+    {
+      value: "EDIT",
+      label: message("frontend.readingClub.detail.edit"),
+      disabled: isDeleting,
+    },
+    {
+      value: "DELETE",
+      label: message("frontend.readingClub.detail.delete"),
+      className: styles.dangerOption,
+      disabled: isDeleting,
+    },
+  ];
 
   return (
     <>
       <main className={styles.page}>
         <header className={styles.clubSummary}>
+          {club.membRole === "OWNER" ? (
+            <CustomSelect<ClubDetailAction>
+              className={styles.moreSelect}
+              triggerClassName={styles.moreButton}
+              optionListClassName={styles.moreOptionList}
+              optionClassName={styles.moreOption}
+              value=""
+              options={clubActionOptions}
+              ariaLabel={message("frontend.readingClub.detail.more")}
+              triggerContent={<img className={styles.moreIcon} src="/img/icons/icon-more.svg" alt="" />}
+              showArrow={false}
+              onChange={handleClubAction}
+            />
+          ) : null}
           <div className={styles.chips}>
             {club.categoryList?.map((category) => (
               <span className={styles.chip} key={category.intrCode}>{category.intrName}</span>
@@ -89,16 +148,36 @@ export default function ClubDetailPage() {
               <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.currentReading")}</h2>
               <div className={styles.currentReadingCard}>
                 <div className={styles.readingCardHeader}>
-                  <strong>{message("frontend.readingClub.detail.readingRoundUnavailable")}</strong>
+                  <strong>
+                    {/* "{0}번째 독서" */}
+                    {message("frontend.readingClub.detail.readingOrder", [readingOrder])}
+                  </strong>
                 </div>
-                <div className={styles.readingEmpty}>
-                  <img className={styles.emptyBookImage} src="/img/common/no-image.png" alt="" />
-                  <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
-                </div>
+                {hasCurrentReading ? (
+                  <div className={styles.readingBook}>
+                    <img
+                      className={styles.currentBookImage}
+                      src={getBookCoverImageSource(club.currentBookCvim)}
+                      onError={handleBookCoverImageError}
+                      alt={club.currentBookTitl ?? ""}
+                    />
+                    <strong className={styles.currentBookTitle}>{club.currentBookTitl}</strong>
+                    {club.currentBookAthr ? (
+                      <span className={styles.currentBookAuthor}>{club.currentBookAthr}</span>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className={styles.readingEmpty}>
+                    {/* 현재 독서가 없으면 공통 책 검색 버튼으로 검색 화면에 이동한다 */}
+                    <SearchBookButton to={`/reading-clubs/${club.clubNumb}/books/search`} />
+                    <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
+                  </div>
+                )}
               </div>
             </section>
 
             <section className={styles.section}>
+              {/* 함께 읽는 멤버 */}
               <div className={styles.memberHeader}>
                 <h2 className={styles.sectionTitle}>
                   {message("frontend.readingClub.detail.members", [club.memberCnt])}
@@ -115,12 +194,19 @@ export default function ClubDetailPage() {
               </div>
               <div className={styles.memberSummary} aria-label={message("frontend.readingClub.detail.members", [club.memberCnt])}>
                 {/* 참여한 모임원 프로필 이미지 목록 영역 */}
-                <ul className={styles.memberProfiles}>
-                  {members.map(renderMemberProfile)}
+                <ul
+                  className={clsx(
+                    styles.memberProfiles,
+                    hasAdditionalMembers && styles.memberProfilesOverlapped,
+                  )}
+                >
+                  {memberProfiles.map(renderMemberProfile)}
                 </ul>
-                <span className={styles.memberCountText}>
-                  {message("frontend.readingClub.common.memberCount", [club.memberCnt])}
-                </span>
+                {hasAdditionalMembers ? (
+                  <span className={styles.memberCountText}>
+                    +{message("frontend.readingClub.common.memberCount", [additionalMemberCount])}
+                  </span>
+                ) : null}
               </div>
             </section>
 
@@ -132,11 +218,17 @@ export default function ClubDetailPage() {
                     {message("frontend.readingClub.detail.nextVoteDescription")}
                   </small>
                 </span>
-                <span className={styles.chevron} aria-hidden="true">›</span>
+                <img
+                  src="/img/icons/icon-chevron-right.svg"
+                  alt="arrow"
+                />
               </button>
               <button className={styles.navigationRow} type="button">
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
-                <span className={styles.chevron} aria-hidden="true">›</span>
+                <img
+                  src="/img/icons/icon-chevron-right.svg"
+                  alt="arrow"
+                />
               </button>
             </nav>
           </>
@@ -179,67 +271,36 @@ export default function ClubDetailPage() {
           </section>
         ) : null}
 
-        {club.membRole === "OWNER" ? (
+        {club.membRole === "OWNER" && club.joinType === "APPROVAL" ? (
           <section className={styles.management}>
             <section className={styles.panel}>
-              <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.inviteFollowers")}</h2>
-              {candidates.length ? (
-                <>
-                  {candidates.map((candidate) => (
-                    <label className={styles.profileRow} key={candidate.userNumb}>
-                      <ProfileImage className={styles.avatar} src={candidate.porfPath} alt="" />
-                      <span>
-                        <strong className={styles.profileName}>{candidate.userNick}</strong>
-                        <span className={styles.profileIntro}>{candidate.intrCntn}</span>
-                      </span>
-                      <input
-                        type="checkbox"
-                        checked={selectedCandidates.has(candidate.userNumb)}
-                        onChange={() => handleCandidateToggle(candidate.userNumb)}
-                      />
-                    </label>
+              <h2 className={styles.sectionTitle}>
+                {message("frontend.readingClub.detail.pendingApplications", [applications.length])}
+              </h2>
+              {applications.length ? applications.map((application) => (
+                <article className={styles.application} key={application.applNumb}>
+                  <div className={styles.profileRow}>
+                    <ProfileImage className={styles.avatar} src={application.porfPath} alt="" />
+                    <strong className={styles.profileName}>{application.userNick}</strong>
+                    <span />
+                  </div>
+                  {application.questionList.map((question, index) => (
+                    <div className={styles.qa} key={question}>
+                      <strong>{message("frontend.readingClub.detail.question", [question])}</strong>
+                      <span>{message("frontend.readingClub.detail.answer", [application.answerList[index]])}</span>
+                    </div>
                   ))}
-                  <ActionButton
-                    width="full"
-                    disabled={!selectedCandidates.size}
-                    onClick={handleInviteCandidates}
-                  >
-                    {message("frontend.readingClub.detail.inviteSelected")}
-                  </ActionButton>
-                </>
-              ) : <p className={styles.empty}>{message("frontend.readingClub.detail.noCandidates")}</p>}
+                  <div className={styles.actions}>
+                    <ActionButton onClick={() => handleApplicationDecision(application.applNumb, "APPROVED")}>
+                      {message("frontend.readingClub.detail.approve")}
+                    </ActionButton>
+                    <ActionButton variant="danger" onClick={() => handleApplicationDecision(application.applNumb, "REJECTED")}>
+                      {message("frontend.readingClub.detail.reject")}
+                    </ActionButton>
+                  </div>
+                </article>
+              )) : <p className={styles.empty}>{message("frontend.readingClub.detail.noApplications")}</p>}
             </section>
-
-            {club.joinType === "APPROVAL" ? (
-              <section className={styles.panel}>
-                <h2 className={styles.sectionTitle}>
-                  {message("frontend.readingClub.detail.pendingApplications", [applications.length])}
-                </h2>
-                {applications.length ? applications.map((application) => (
-                  <article className={styles.application} key={application.applNumb}>
-                    <div className={styles.profileRow}>
-                      <ProfileImage className={styles.avatar} src={application.porfPath} alt="" />
-                      <strong className={styles.profileName}>{application.userNick}</strong>
-                      <span />
-                    </div>
-                    {application.questionList.map((question, index) => (
-                      <div className={styles.qa} key={question}>
-                        <strong>{message("frontend.readingClub.detail.question", [question])}</strong>
-                        <span>{message("frontend.readingClub.detail.answer", [application.answerList[index]])}</span>
-                      </div>
-                    ))}
-                    <div className={styles.actions}>
-                      <ActionButton onClick={() => handleApplicationDecision(application.applNumb, "APPROVED")}>
-                        {message("frontend.readingClub.detail.approve")}
-                      </ActionButton>
-                      <ActionButton variant="danger" onClick={() => handleApplicationDecision(application.applNumb, "REJECTED")}>
-                        {message("frontend.readingClub.detail.reject")}
-                      </ActionButton>
-                    </div>
-                  </article>
-                )) : <p className={styles.empty}>{message("frontend.readingClub.detail.noApplications")}</p>}
-              </section>
-            ) : null}
           </section>
         ) : null}
       </main>
@@ -248,7 +309,8 @@ export default function ClubDetailPage() {
         <div className={styles.fixedActionArea}>
           {/* 모임장이라면 모임 관리 버튼 노출 */}
           {club.membRole === 'OWNER' ? (
-            <ActionButton variant={"secondary"} size="lg" width="full" onClick={handleReportWrite}>
+            <ActionButton variant="secondary" size="lg" width="full" onClick={handleClubManagement}>
+              {/* "모임 관리하기" */}
               {message("frontend.readingClub.detail.managementClub")}
             </ActionButton>
           ):null}

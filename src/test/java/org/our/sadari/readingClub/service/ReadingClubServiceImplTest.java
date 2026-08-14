@@ -2,32 +2,47 @@ package org.our.sadari.readingClub.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Map;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
+import org.mockito.ArgumentCaptor;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.alim.service.AlimService;
+import org.our.sadari.book.mapper.BookMapper;
+import org.our.sadari.global.common.code.util.CodeUtil;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
+import org.our.sadari.report.mapper.ReportMapper;
+import org.our.sadari.report.dto.ReportDto;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : ReadingClubServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 독서 모임 서비스의 모임원 프로필 접근 정책을 검증한다
+ * description    : 독서 모임 서비스의 모임원 프로필과 가입 신청 접근 정책을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        Hanwon.Jang        제한 계정 신청 처리 차단 검증 추가
+ * 2026-08-14        Hanwon.Jang        회원 초대 알림 발송 검증 추가
+ * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 검증 추가
+ * 2026-08-14        Hanwon.Jang        모임 독서 자동 참여와 계정 상태 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -39,6 +54,22 @@ class ReadingClubServiceImplTest {
     // 사용자 입력 비속어 검사 서비스
     @Mock
     private BadWordDetectionService badWordDetectionService;
+
+    // 사용자 알림과 푸시 발송 서비스
+    @Mock
+    private AlimService alimService;
+
+    // 도서 마스터 데이터 접근 객체
+    @Mock
+    private BookMapper bookMapper;
+
+    // 독후감 데이터 접근 객체
+    @Mock
+    private ReportMapper reportMapper;
+
+    // 공통코드 조회 도구
+    @Mock
+    private CodeUtil codeUtil;
 
     // 독서 모임 서비스 단위 테스트 대상
     private ReadingClubServiceImpl readingClubService;
@@ -60,16 +91,368 @@ class ReadingClubServiceImplTest {
         new MessageUtils().setMessageSource(messageSource);
 
         // 독서 모임 서비스 단위 테스트 대상을 생성한다
-        readingClubService = new ReadingClubServiceImpl(readingClubMapper, badWordDetectionService);
+        readingClubService = new ReadingClubServiceImpl(
+                readingClubMapper, badWordDetectionService, alimService, bookMapper, reportMapper, codeUtil);
     }
 
     /**
-     * 활성 모임원이 프로필 노출 조건을 통과한 모임원 목록을 조회하는지 검증한다.
+     * 모임 독서를 등록하면 모든 활성 멤버에게 같은 기간의 읽는 중 독후감과 참여 관계를 생성하는지 검증한다.
      *
-     * @author SeungHyeon.Kang
+     * @author Hanwon.Jang
      */
     @Test
-    void getClubMemberListReturnsVisibleMembersForActiveMember() {
+    void setReadingCreatesReadReportsForAllActiveMembers() {
+
+        // 활성 모임장과 선택 도서 및 목표 기간 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setOwnrNumb(20L);
+        ReadingClubDto.ReadingCreateReqDto request = createReadingRequest();
+
+        // 모임장 권한과 활성 멤버 및 도서 연결이 모두 유효하도록 조회 결과를 설정한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingRoundByIdempotency(10L, "reading-request-1")).thenReturn(null);
+        when(readingClubMapper.getOngoingRoundCnt(10L)).thenReturn(0);
+        when(readingClubMapper.getActiveMemberUserNumbList(10L)).thenReturn(List.of(20L, 30L));
+        when(codeUtil.getFirstCode(Constant.CODE_BOOK_COLR)).thenReturn("GREEN");
+        when(bookMapper.dupBook(request)).thenReturn(1);
+        when(bookMapper.getBookNumbByIsbn("9781234567890")).thenReturn(99L);
+        when(readingClubMapper.getNextReadingRoundNumb(10L)).thenReturn(1L);
+        when(readingClubMapper.setReadingRound(10L, 20L, request)).thenReturn(1);
+        when(readingClubMapper.setReadingParticipant(any(), any(), any(Long.class), any(), any())).thenReturn(1);
+        doAnswer(invocation -> {
+            // 호출 순서에 따라 생성 키를 부여해 참여 연결 검증이 가능하게 한다
+            ReportDto report = invocation.getArgument(0);
+            report.setReptNumb(report.getUserNumb() + 100L);
+            return 1;
+        }).when(reportMapper).setReport(any(ReportDto.class));
+
+        // 모임 독서 등록을 실행한다
+        ResultData result = readingClubService.setReading(20L, 10L, request);
+
+        // 회차 생성 성공과 멤버별 독후감의 상태 및 동일 기간을 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(Map.of("rondNumb", 1L), result.getData());
+        ArgumentCaptor<ReportDto> reportCaptor = ArgumentCaptor.forClass(ReportDto.class);
+        verify(reportMapper, times(2)).setReport(reportCaptor.capture());
+        assertEquals(List.of(20L, 30L), reportCaptor.getAllValues().stream().map(ReportDto::getUserNumb).toList());
+        assertEquals(List.of("READ", "READ"), reportCaptor.getAllValues().stream().map(ReportDto::getReptStat).toList());
+        assertEquals(List.of("2026-08-14", "2026-08-14"), reportCaptor.getAllValues().stream().map(ReportDto::getReptStdt).toList());
+        assertEquals(List.of("2026-08-31", "2026-08-31"), reportCaptor.getAllValues().stream().map(ReportDto::getReptEndt).toList());
+        verify(readingClubMapper).setReadingParticipant(10L, 1L, 1L, 20L, 120L);
+        verify(readingClubMapper).setReadingParticipant(10L, 1L, 2L, 30L, 130L);
+    }
+
+    /**
+     * 활성 계정인 모임장 관계가 아니면 모임 독서와 멤버 독후감을 생성하지 않는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void setReadingRejectsInactiveOwnerAccount() {
+
+        // 운영 중인 모임과 형식이 유효한 등록 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingCreateReqDto request = createReadingRequest();
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(0);
+
+        // 비활성 계정의 모임 독서 등록을 요청한다
+        ResultData result = readingClubService.setReading(20L, 10L, request);
+
+        // 접근 거부 응답과 저장 Mapper 미호출을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).setReadingRound(any(), any(), any());
+        verify(reportMapper, never()).setReport(any());
+    }
+
+    /**
+     * 모임 독서 등록 테스트에 사용할 선택 도서와 목표 기간을 구성한다.
+     *
+     * @author Hanwon.Jang
+     * @return 유효한 모임 독서 등록 요청
+     */
+    private ReadingClubDto.ReadingCreateReqDto createReadingRequest() {
+
+        // 외부 도서 검색 결과와 목표 기간 및 중복 방지 키를 설정한다
+        ReadingClubDto.ReadingCreateReqDto request = new ReadingClubDto.ReadingCreateReqDto();
+        request.setBookTitl("테스트 도서");
+        request.setBookAthr("테스트 저자");
+        request.setBookPubl("테스트 출판사");
+        request.setBookIsbn("9781234567890");
+        request.setBookCvim("https://example.com/book.jpg");
+        request.setBookDesc("테스트 도서 소개");
+        request.setPublDate("2026-08-01");
+        request.setGoalStdt("2026-08-14");
+        request.setGoalEndt("2026-08-31");
+        request.setIdemKeyx("reading-request-1");
+        // 테스트용 등록 요청을 반환한다
+        return request;
+    }
+
+    /**
+     * 모임장이 활성 맞팔 회원을 초대하면 예약석 저장과 초대 알림 발송을 함께 수행하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void setInvitationSendsClubInvitationAlim() {
+        // 초대 권한과 알림 문구를 제공할 운영 중인 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 알림 사용자명 치환값으로 사용할 모임장 닉네임을 설정한다
+        club.setOwnrNick("모임장");
+        // 알림 모임명 치환값으로 사용할 모임명을 설정한다
+        club.setClubName("함께 읽는 모임");
+        // 초대가 가능한 운영 상태를 설정한다
+        club.setClubStat("ACTIVE");
+        // 초대 예약석을 확보할 수 있는 정원을 설정한다
+        club.setMaxxMemb(10);
+
+        // 한 명의 맞팔 회원을 선택한 초대 요청을 구성한다
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 초대 대상 사용자 번호를 설정한다
+        request.setUserNumbList(List.of(30L));
+
+        // 모임 잠금과 좌석 및 맞팔 검증을 모두 통과하도록 조회 결과를 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.getMutualFollowCnt(20L, 30L)).thenReturn(1);
+        when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(null);
+
+        // 모임장으로 활성 맞팔 회원을 초대한다
+        ResultData result = readingClubService.setInvitation(20L, 10L, request);
+
+        // 초대 성공과 예약석 저장 및 템플릿 기반 알림 발송을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).setInvitation(10L, 30L, 20L);
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , 10L
+              , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
+        );
+    }
+
+    /**
+     * 모임장이 운영 제약을 지키는 입력으로 모임 정보와 관계 데이터를 수정하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptClubUpdatesOwnedActiveClub() {
+        // 수정 권한과 기존 운영 설정을 가진 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 수정 가능한 운영 상태를 설정한다
+        club.setClubStat("ACTIVE");
+        // 공개 범위 변경 검사가 필요하지 않은 기존 값을 설정한다
+        club.setClubVisb("PUBLIC");
+        // 가입 방식 변경 검사가 필요하지 않은 기존 값을 설정한다
+        club.setJoinType("OPEN");
+
+        // 수정할 모임 기본 정보와 운영 설정을 구성한다
+        ReadingClubDto.ClubCreateReqDto request = new ReadingClubDto.ClubCreateReqDto();
+        // 수정할 모임명을 설정한다
+        request.setClubName("수정한 모임");
+        // 수정할 모임 소개를 설정한다
+        request.setClubCntn("수정한 소개");
+        // 유지할 공개 범위를 설정한다
+        request.setClubVisb("PUBLIC");
+        // 유지할 가입 방식을 설정한다
+        request.setJoinType("OPEN");
+        // 현재 점유 좌석보다 큰 정원을 설정한다
+        request.setMaxxMemb(10);
+        // 새로 저장할 카테고리 목록을 설정한다
+        request.setCategoryList(List.of("NOVEL"));
+        // 즉시 가입 방식에는 질문이 없도록 설정한다
+        request.setQuestionList(List.of());
+
+        // 수정 완료 뒤 반환할 상세 정보를 구성한다
+        ReadingClubDto.ClubViewDto updatedClub = new ReadingClubDto.ClubViewDto();
+        // 상세 조회 대상 모임 번호를 설정한다
+        updatedClub.setClubNumb(10L);
+        // 상세 조회에서 질문을 결합하지 않는 가입 방식을 설정한다
+        updatedClub.setJoinType("OPEN");
+
+        // 권한과 입력 및 좌석 검증부터 수정 후 상세 조회까지 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getValidCategoryCnt(List.of("NOVEL"))).thenReturn(1);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(2);
+        when(readingClubMapper.uptClub(20L, 10L, request)).thenReturn(1);
+        when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(updatedClub);
+        when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of());
+
+        // 모임장으로 모임 정보를 수정한다
+        ResultData result = readingClubService.uptClub(20L, 10L, request);
+
+        // 수정 성공과 카테고리 관계 갱신을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).delClubCategory(10L);
+        verify(readingClubMapper).setClubCategory(10L, "NOVEL", 1);
+    }
+
+    /**
+     * 모임장이 현재 점유 좌석보다 작은 정원으로 모임을 수정하지 못하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptClubRejectsCapacityBelowOccupiedSeats() {
+        // 수정 권한을 가진 운영 중 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 수정 가능한 운영 상태를 설정한다
+        club.setClubStat("ACTIVE");
+        // 기존 공개 범위를 설정한다
+        club.setClubVisb("PUBLIC");
+        // 기존 가입 방식을 설정한다
+        club.setJoinType("OPEN");
+
+        // 현재 좌석보다 작은 정원을 가진 수정 요청을 구성한다
+        ReadingClubDto.ClubCreateReqDto request = new ReadingClubDto.ClubCreateReqDto();
+        // 유효한 모임명을 설정한다
+        request.setClubName("수정한 모임");
+        // 유효한 모임 소개를 설정한다
+        request.setClubCntn("수정한 소개");
+        // 유지할 공개 범위를 설정한다
+        request.setClubVisb("PUBLIC");
+        // 유지할 가입 방식을 설정한다
+        request.setJoinType("OPEN");
+        // 점유 좌석보다 작은 정원을 설정한다
+        request.setMaxxMemb(2);
+        // 유효한 카테고리 목록을 설정한다
+        request.setCategoryList(List.of("NOVEL"));
+        // 질문이 필요 없는 가입 방식의 빈 질문 목록을 설정한다
+        request.setQuestionList(List.of());
+
+        // 권한과 입력은 통과하지만 현재 세 좌석이 점유된 상태를 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getValidCategoryCnt(List.of("NOVEL"))).thenReturn(1);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(3);
+
+        // 현재 점유 좌석보다 작은 정원으로 수정을 요청한다
+        ResultData result = readingClubService.uptClub(20L, 10L, request);
+
+        // 수정 거절과 모임 마스터 미수정을 검증한다
+        assertEquals(ResultEnum.COMMON_UPDATE_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).uptClub(20L, 10L, request);
+    }
+
+    /**
+     * 계정 상태 SQL 가드를 통과하지 못한 모임장의 수정 후속 저장을 차단하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptClubRejectsRestrictedOwnerAtGuardedUpdate() {
+        // 소유 관계는 남아 있지만 계정 상태 SQL 가드가 필요한 모임을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 요청 사용자를 기존 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 소유 모임 자체는 운영 상태로 설정한다
+        club.setClubStat("ACTIVE");
+        // 공개 범위 변경 검사가 필요하지 않은 기존 값을 설정한다
+        club.setClubVisb("PUBLIC");
+        // 가입 방식 변경 검사가 필요하지 않은 기존 값을 설정한다
+        club.setJoinType("OPEN");
+
+        // 기본 유효성 검사를 통과할 수정 요청을 구성한다
+        ReadingClubDto.ClubCreateReqDto request = new ReadingClubDto.ClubCreateReqDto();
+        // 유효한 모임명을 설정한다
+        request.setClubName("수정한 모임");
+        // 유효한 소개를 설정한다
+        request.setClubCntn("수정한 소개");
+        // 유지할 공개 범위를 설정한다
+        request.setClubVisb("PUBLIC");
+        // 유지할 가입 방식을 설정한다
+        request.setJoinType("OPEN");
+        // 현재 좌석보다 큰 정원을 설정한다
+        request.setMaxxMemb(10);
+        // 유효한 카테고리를 설정한다
+        request.setCategoryList(List.of("NOVEL"));
+        // 즉시 가입에는 질문을 사용하지 않는다
+        request.setQuestionList(List.of());
+
+        // 입력 검증은 통과하지만 활성 계정 조건이 포함된 수정 SQL은 실패하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getValidCategoryCnt(List.of("NOVEL"))).thenReturn(1);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(2);
+        when(readingClubMapper.uptClub(20L, 10L, request)).thenReturn(0);
+
+        // 계정 제한 상태를 SQL 가드로 모사해 모임 수정을 요청한다
+        ResultData result = readingClubService.uptClub(20L, 10L, request);
+
+        // 수정 거절 뒤 만료 초대와 관계 데이터를 변경하지 않았는지 검증한다
+        assertEquals(ResultEnum.COMMON_UPDATE_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).delExpiredInvitation(10L);
+        verify(readingClubMapper, never()).delClubCategory(10L);
+    }
+
+    /**
+     * 모임장이 운영 중인 자신의 모임을 물리 삭제하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void delClubDeletesOwnedActiveClub() {
+        // 삭제 권한을 가진 운영 중 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 삭제 가능한 운영 상태를 설정한다
+        club.setClubStat("ACTIVE");
+
+        // 모임 잠금 조회와 소유권 조건이 포함된 삭제가 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.delClub(20L, 10L)).thenReturn(1);
+
+        // 모임장으로 모임 물리 삭제를 요청한다
+        ResultData result = readingClubService.delClub(20L, 10L);
+
+        // 삭제 성공과 모임 마스터 삭제 호출을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).delClub(20L, 10L);
+    }
+
+    /**
+     * 계정 상태 SQL 가드를 통과하지 못한 모임장의 물리 삭제를 차단하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void delClubRejectsRestrictedOwnerAtGuardedDelete() {
+        // 소유 관계는 남아 있지만 계정 상태 SQL 가드가 필요한 모임을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 요청 사용자를 기존 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 소유 모임 자체는 운영 상태로 설정한다
+        club.setClubStat("ACTIVE");
+
+        // 활성 계정 조건이 포함된 삭제 SQL이 대상을 찾지 못하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.delClub(20L, 10L)).thenReturn(0);
+
+        // 계정 제한 상태를 SQL 가드로 모사해 모임 삭제를 요청한다
+        ResultData result = readingClubService.delClub(20L, 10L);
+
+        // 물리 삭제가 거절되는지 검증한다
+        assertEquals(ResultEnum.COMMON_DELETE_REJECTED.getCode(), result.getCode());
+    }
+
+    /**
+     * 활성 모임원이 활성 모임원 목록을 조회하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void getClubMemberListReturnsActiveMembersForActiveMember() {
         // 조회 요청 사용자의 활성 모임원 관계를 구성한다
         ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
         requester.setMembStat("ACTIVE");
@@ -80,7 +463,7 @@ class ReadingClubServiceImplTest {
         profile.setUserNick("모임원");
         profile.setMembRole("MEMBER");
 
-        // 조회 요청 사용자의 모임원 관계와 노출 가능한 목록을 반환한다
+        // 조회 요청 사용자의 모임원 관계와 활성 모임원 목록을 반환한다
         when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(requester);
         when(readingClubMapper.getClubMemberList(10L)).thenReturn(List.of(profile));
 
@@ -109,5 +492,89 @@ class ReadingClubServiceImplTest {
         // 접근 거절 코드와 목록 SQL 미호출을 검증한다
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getClubMemberList(10L);
+    }
+
+    /**
+     * 활성 신청자로 조회되지 않는 처리 대기 신청의 승인을 차단하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptApplicationRejectsHiddenApplicant() {
+        // 가입 신청 처리 권한을 가진 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+
+        // 승인 요청 상태를 구성한다
+        ReadingClubDto.ApplicationDecisionReqDto request = new ReadingClubDto.ApplicationDecisionReqDto();
+        // 처리 상태를 승인으로 설정한다
+        request.setJoinStat("APPROVED");
+
+        // 모임장 권한은 유효하지만 제한 계정의 신청은 활성 신청 조회에서 제외되도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        // 계정 제한으로 숨겨진 신청은 잠금 조회 결과에도 포함하지 않는다
+        when(readingClubMapper.getApplicationForUpdate(10L, 30L)).thenReturn(null);
+
+        // 숨겨진 신청을 승인하려는 요청을 처리한다
+        ResultData result = readingClubService.uptApplication(20L, 10L, 30L, request);
+
+        // 수정 거절 코드와 신청 상태 미변경을 검증한다
+        assertEquals(ResultEnum.COMMON_UPDATE_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).uptJoinApplication(10L, 30L, 20L, "APPROVED");
+    }
+
+    /**
+     * 모임장이 활성 회원에게 보낸 유효한 초대 목록을 조회하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void getSentInvitationListReturnsVisibleInvitationsForOwner() {
+        // 보낸 초대 조회 권한을 가진 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 활성 회원에게 보낸 유효한 초대 정보를 구성한다
+        ReadingClubDto.SentInvitationDto invitation = new ReadingClubDto.SentInvitationDto();
+        // 초대 대상 사용자 번호를 설정한다
+        invitation.setUserNumb(30L);
+
+        // 모임장 권한과 계정 상태 필터가 적용된 보낸 초대 목록을 반환한다
+        when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
+        when(readingClubMapper.getSentInvitationList(10L, 20L)).thenReturn(List.of(invitation));
+
+        // 모임장으로 보낸 초대 목록을 조회한다
+        ResultData result = readingClubService.getSentInvitationList(20L, 10L);
+
+        // 성공 응답과 조회 목록을 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(List.of(invitation), result.getData());
+        verify(readingClubMapper).getSentInvitationList(10L, 20L);
+    }
+
+    /**
+     * 모임장이 활성 회원에게 보낸 초대만 취소하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void delOwnerInvitationCancelsVisibleInvitation() {
+        // 초대 취소 권한을 가진 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+
+        // 모임장 권한과 활성 대상 초대 삭제 결과를 반환한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.delOwnerInvitation(10L, 30L, 20L)).thenReturn(1);
+
+        // 활성 회원에게 보낸 초대를 취소한다
+        ResultData result = readingClubService.delOwnerInvitation(20L, 10L, 30L);
+
+        // 성공 응답과 모임장 전용 삭제 호출을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).delOwnerInvitation(10L, 30L, 20L);
+        verify(readingClubMapper, never()).delInvitation(10L, 30L);
     }
 }

@@ -1,0 +1,431 @@
+/**
+ * fileName       : ClubMemberManagementPage.css
+ * author         : Hanwon.Jang
+ * date           : 2026-08-14
+ * description    : 멤버와 가입 신청 관리 화면 및 모달 스타일을 정의한다
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-14        Hanwon.Jang        최초 생성
+ */
+import { vars } from "@/app/styles/tokens.css";
+import { style } from "@vanilla-extract/css";
+
+export const page = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 38,
+  width: "100%",
+  minHeight: `calc(100vh - ${vars.headerHeight} - ${vars.navHeight})`,
+  paddingTop: 20,
+  paddingBottom: 28,
+  boxSizing: "border-box",
+  background: vars.color.background,
+});
+
+export const section = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+});
+
+export const sectionTitle = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "20px",
+  letterSpacing: "-0.16px",
+});
+
+export const cardList = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 12,
+});
+
+export const profileCard = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  width: "100%",
+  minHeight: 74,
+  padding: 16,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 22,
+  boxSizing: "border-box",
+  background: vars.color.background,
+});
+
+export const profileSummary = style({
+  display: "flex",
+  minWidth: 0,
+  alignItems: "center",
+  gap: 10,
+});
+
+export const avatar = style({
+  width: 40,
+  height: 40,
+  flexShrink: 0,
+  borderRadius: "50%",
+  background: vars.color.gray100,
+  objectFit: "cover",
+});
+
+export const profileName = style({
+  overflow: "hidden",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "20px",
+  letterSpacing: "-0.16px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const answerButton = style({
+  display: "inline-flex",
+  minWidth: 96,
+  height: 34,
+  flexShrink: 0,
+  alignItems: "center",
+  justifyContent: "center",
+  gap: 4,
+  marginLeft: 10,
+  padding: "0 14px",
+  border: 0,
+  borderRadius: 200,
+  background: vars.color.brandBg,
+  color: vars.color.brandText,
+  fontFamily: vars.font.medium,
+  fontSize: 14,
+  lineHeight: "14px",
+  letterSpacing: "-0.14px",
+  cursor: "pointer",
+  transition: "filter 160ms ease",
+  selectors: {
+    "&:hover": {
+      filter: "brightness(0.96)",
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
+export const answerChevron = style({
+  width: 12,
+  height: 12,
+  objectFit: "contain",
+});
+
+export const moreButton = style({
+  display: "inline-flex",
+  width: 38,
+  height: 38,
+  flexShrink: 0,
+  alignItems: "center",
+  justifyContent: "center",
+  border: 0,
+  borderRadius: "50%",
+  background: "transparent",
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      background: vars.color.gray100,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
+export const moreIcon = style({
+  width: 22,
+  height: 22,
+  objectFit: "contain",
+});
+
+export const emptyText = style({
+  margin: 0,
+  padding: "18px 0",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+});
+
+export const managementMenu = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+});
+
+export const menuButton = style({
+  display: "flex",
+  width: "100%",
+  minHeight: 62,
+  alignItems: "center",
+  justifyContent: "space-between",
+  padding: "10px 0",
+  border: 0,
+  boxSizing: "border-box",
+  background: vars.color.background,
+  textAlign: "left",
+  cursor: "pointer",
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
+export const menuText = style({
+  display: "flex",
+  minWidth: 0,
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: 4,
+});
+
+export const menuTitle = style({
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "20px",
+});
+
+export const menuDescription = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "16px",
+  letterSpacing: "-0.12px",
+});
+
+export const menuChevron = style({
+  width: 18,
+  height: 18,
+  flexShrink: 0,
+  objectFit: "contain",
+});
+
+export const restrictionButton = style([
+  menuButton,
+  {
+    minHeight: 40,
+  },
+]);
+
+export const restrictionTitle = style({
+  color: vars.color.negativeText,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "20px",
+});
+
+export const overlay = style({
+  position: "fixed",
+  zIndex: 999,
+  inset: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 24,
+  boxSizing: "border-box",
+  background: "rgba(0, 0, 0, 0.34)",
+});
+
+export const inviteOverlay = style([
+  overlay,
+  {
+    padding: 0,
+  },
+]);
+
+export const modal = style({
+  display: "flex",
+  width: "calc(100% - 32px)",
+  maxHeight: "calc(100dvh - 48px)",
+  flexDirection: "column",
+  gap: 18,
+  overflowY: "auto",
+  padding: 24,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 22,
+  boxSizing: "border-box",
+  background: vars.color.background,
+});
+
+export const inviteModal = style([
+  modal,
+  {
+    maxHeight: "100dvh",
+    gap: 20,
+    padding: 20,
+    border: 0,
+  },
+]);
+
+export const modalHeader = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 16,
+});
+
+export const modalTitle = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 18,
+  lineHeight: "24px",
+});
+
+export const inviteModalTitle = style([
+  modalTitle,
+  {
+    fontFamily: vars.font.heading,
+    lineHeight: "normal",
+  },
+]);
+
+export const closeButton = style({
+  display: "inline-flex",
+  width: 36,
+  height: 36,
+  flexShrink: 0,
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  background: vars.color.background,
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      background: vars.color.gray100,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
+export const inviteCloseButton = style([
+  closeButton,
+  {
+    width: 26,
+    height: 26,
+  },
+]);
+
+export const closeIcon = style({
+  width: 14,
+  height: 14,
+});
+
+export const answerList = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 14,
+});
+
+export const answerItem = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+});
+
+export const questionText = style({
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 14,
+  lineHeight: "20px",
+});
+
+export const answerText = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+  whiteSpace: "pre-wrap",
+});
+
+export const modalActions = style({
+  display: "flex",
+  gap: 8,
+});
+
+export const candidateList = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+});
+
+export const invitationCard = style({
+  display: "flex",
+  width: "100%",
+  minHeight: 74,
+  alignItems: "center",
+  gap: 10,
+  padding: 16,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 22,
+  boxSizing: "border-box",
+  background: vars.color.background,
+});
+
+export const candidateInfo = style({
+  display: "flex",
+  minWidth: 0,
+  flex: 1,
+  flexDirection: "column",
+  gap: 2,
+});
+
+export const invitationInterest = style({
+  overflow: "hidden",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 10,
+  lineHeight: "12px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const inviteActionButton = style({
+  minWidth: 76,
+  height: 26,
+  flexShrink: 0,
+  padding: "0 14px",
+  border: 0,
+  borderRadius: 200,
+  background: vars.color.brandBg,
+  color: vars.color.brandText,
+  lineHeight: "14px",
+  selectors: {
+    "&:hover:not(:disabled)": {
+      background: vars.color.brandBg,
+      filter: "brightness(0.96)",
+    },
+  },
+});
+
+export const cancelInviteButton = style({
+  minWidth: 76,
+  height: 26,
+  flexShrink: 0,
+  padding: "0 14px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 200,
+  background: vars.color.background,
+  color: vars.color.gray600,
+  lineHeight: "14px",
+});

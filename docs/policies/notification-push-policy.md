@@ -11,6 +11,8 @@
 - 푸시는 부가 기능이므로 푸시 실패가 이미 저장된 알림을 롤백하지 않습니다.
 - 댓글 또는 대댓글 좋아요가 신규 등록되면 해당 댓글 작성자에게만 `LIKE`·`REPLY_LIKE` 알림과 푸시를 생성합니다.
 - 본인 댓글 좋아요, 중복 좋아요 등록 및 좋아요 취소에는 댓글 좋아요 알림을 생성하지 않습니다.
+- 모임장이 활성 맞팔 회원을 초대하면 초대 대상자에게 `CLUB`·`INVITE_CLUB` 알림을 저장하고, 활성 푸시 구독이 있으면 커밋 후 푸시를 발송합니다.
+- `INVITE_CLUB` 템플릿에는 `#{userName}`으로 모임장 닉네임을, `#{clubName}`으로 모임명을 전달하며 링크 대상 번호에는 모임 번호를 사용합니다.
 
 ## 중복 방지
 
@@ -66,8 +68,9 @@
 
 ## 계정 수명주기
 
-- `WITHDRAWN` 또는 `DELETE_PENDING` 수신자에게는 새 댓글 좋아요 알림과 푸시를 생성하지 않습니다.
+- `WITHDRAWN` 또는 `DELETE_PENDING` 수신자에게는 댓글 좋아요와 독서 모임 초대를 포함한 새 알림과 푸시를 생성하지 않습니다.
 - 수신자가 비활성화 또는 영구 삭제 대기 상태로 전환되면 받은 알림을 삭제 상태로 변경하고 복귀 시 자동 복원하지 않습니다.
+- 계정 복귀 시 유효한 독서 모임 초대가 다시 표시되더라도 기존 초대 알림을 복원하거나 재발송하지 않습니다.
 - `WITHDRAWN` 또는 `DELETE_PENDING` 전환 시 모든 기기 푸시 구독을 비활성화하며, 재로그인이나 탈퇴 취소만으로 자동 활성화하지 않습니다. 사용자가 다시 명시적으로 푸시 알림을 켜야 합니다.
 - 영구 삭제 시 `TB_PSHSUB`의 회원 푸시 구독 행을 물리 삭제합니다.
 - 댓글 좋아요 발신자가 탈퇴하거나 대상 댓글이 삭제돼도 이미 발송된 알림은 수신자의 기록으로 유지합니다.
@@ -85,7 +88,9 @@
 - `features/Push/firebaseMessaging.ts`
 - `reply/service/ReplyServiceImpl.java`
 - `reply/mapper/ReplyMapper.xml`
+- `src/main/java/org/our/sadari/readingClub/service/ReadingClubServiceImpl.java`
+- `src/main/java/org/our/sadari/readingClub/mapper/ReadingClubMapper.xml`
 - `global/common/constant/Constant.java`
-- `TB_ALTEMP`의 `LIKE`·`REPLY_LIKE` 템플릿
+- `TB_ALTEMP`의 `LIKE`·`REPLY_LIKE`, `CLUB`·`INVITE_CLUB` 템플릿
 - `TM_ALICON.ALIM_SITU`, `TB_ALTEMP.ALIM_SITU`, `TB_ALIMXX.ALIM_SITU`
 - `sadari-admin` 저장소 `alimicon` 패키지와 `pages/alim/AlimIconDetailPage.tsx`

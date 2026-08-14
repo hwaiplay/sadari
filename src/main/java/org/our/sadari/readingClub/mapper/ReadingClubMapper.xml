@@ -11,10 +11,120 @@
         <bind name="memberActive" value="'ACTIVE'" />
         <bind name="memberInvited" value="'INVITED'" />
         <bind name="applicationPending" value="'PENDING'" />
+        <bind name="roundScheduled" value="'SCHEDULED'" />
+        <bind name="roundReading" value="'READING'" />
         <bind name="userActive" value="'ACTIVE'" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
     </sql>
+
+    <!-- 같은 요청 키로 이미 생성된 모임 독서 회차를 조회한다. -->
+    <select id="getReadingRoundByIdempotency" resultType="long">
+        SELECT /* getReadingRoundByIdempotency */
+               ROND_NUMB
+          FROM TM_CLRNDX
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND IDEM_KEYX = #{idemKeyx}
+    </select>
+
+    <!-- 활성 계정인 모임장이 활성 멤버 관계를 유지하는지 확인한다. -->
+    <select id="getActiveOwnerCnt" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT /* getActiveOwnerCnt */
+               COUNT(*)
+          FROM TM_CLUBXM CLUB
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = CLUB.CLUB_NUMB
+           AND MEMBER.USER_NUMB = CLUB.OWNR_NUMB
+           AND MEMBER.MEMB_ROLE = #{ownerRole}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = CLUB.OWNR_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE CLUB.CLUB_NUMB = #{clubNumb}
+           AND CLUB.OWNR_NUMB = #{userNumb}
+           AND CLUB.CLUB_STAT = #{clubActive}
+    </select>
+
+    <!-- 회차 등록 시점의 활성 계정과 활성 모임 멤버를 조회한다. -->
+    <select id="getActiveMemberUserNumbList" parameterType="long" resultType="long">
+        <include refid="clubCodeBinds" />
+        SELECT /* getActiveMemberUserNumbList */
+               MEMBER.USER_NUMB
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+      ORDER BY CASE WHEN MEMBER.MEMB_ROLE = #{ownerRole} THEN 0 ELSE 1 END
+             , MEMBER.JOIN_DATE
+             , MEMBER.USER_NUMB
+    </select>
+
+    <!-- 모임 행 잠금 안에서 다음 회차 번호를 계산한다. -->
+    <select id="getNextReadingRoundNumb" parameterType="long" resultType="long">
+        SELECT /* getNextReadingRoundNumb */
+               COALESCE(MAX(ROND_NUMB), 0) + 1
+          FROM TM_CLRNDX
+         WHERE CLUB_NUMB = #{clubNumb}
+    </select>
+
+    <!-- 선택 도서와 목표 기간으로 모임 독서 회차를 생성한다. -->
+    <insert id="setReadingRound">
+        <include refid="clubCodeBinds" />
+        INSERT /* setReadingRound */ INTO TM_CLRNDX (
+                    CLUB_NUMB
+                  , ROND_NUMB
+                  , BOOK_NUMB
+                  , ROND_STAT
+                  , GOAL_STDT
+                  , GOAL_ENDT
+                  , OPEN_DATE
+                  , IDEM_KEYX
+                  , REGI_USER
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{clubNumb}
+                  , #{request.rondNumb}
+                  , #{request.bookNumb}
+                  , CASE WHEN #{request.goalStdt} <![CDATA[<=]]> CURRENT_DATE THEN #{roundReading}
+                         ELSE #{roundScheduled}
+                    END
+                  , #{request.goalStdt}
+                  , #{request.goalEndt}
+                  , CASE WHEN #{request.goalStdt} <![CDATA[<=]]> CURRENT_DATE THEN CURRENT_TIMESTAMP(6)
+                         ELSE NULL
+                    END
+                  , #{request.idemKeyx}
+                  , #{userNumb}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+    </insert>
+
+    <!-- 자동 생성된 독후감과 모임 독서 참여 정보를 연결한다. -->
+    <insert id="setReadingParticipant">
+        <include refid="clubCodeBinds" />
+        INSERT /* setReadingParticipant */ INTO TB_CLPART (
+                    CLUB_NUMB
+                  , ROND_NUMB
+                  , PART_NUMB
+                  , USER_NUMB
+                  , REPT_NUMB
+                  , ANON_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{clubNumb}
+                  , #{rondNumb}
+                  , #{partNumb}
+                  , #{userNumb}
+                  , #{reptNumb}
+                  , #{commNo}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+    </insert>
 
     <!-- 사용자가 저장한 독서 관심분야 수를 조회한다. -->
     <select id="getUserInterestCnt" parameterType="long" resultType="int">
@@ -66,6 +176,43 @@
         )
     </insert>
 
+    <!-- 현재 모임장이 소유한 운영 중 모임의 기본 정보와 운영 설정을 수정한다. -->
+    <update id="uptClub">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptClub */ TM_CLUBXM
+           SET CLUB_NAME = #{request.clubName}
+             , CLUB_CNTN = #{request.clubCntn}
+             , CLUB_VISB = #{request.clubVisb}
+             , JOIN_TYPE = #{request.joinType}
+             , MAXX_MEMB = #{request.maxxMemb}
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND OWNR_NUMB = #{userNumb}
+           AND CLUB_STAT = #{clubActive}
+           AND EXISTS (
+               SELECT 1
+                 FROM TM_USERXM USERX
+                WHERE USERX.USER_NUMB = #{userNumb}
+                  AND USERX.USER_STAT = #{userActive}
+           )
+    </update>
+
+    <!-- 현재 모임장이 소유한 운영 중 모임과 외래키 종속 데이터를 물리 삭제한다. -->
+    <delete id="delClub">
+        <include refid="clubCodeBinds" />
+        DELETE /* delClub */
+          FROM TM_CLUBXM
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND OWNR_NUMB = #{userNumb}
+           AND CLUB_STAT = #{clubActive}
+           AND EXISTS (
+               SELECT 1
+                 FROM TM_USERXM USERX
+                WHERE USERX.USER_NUMB = #{userNumb}
+                  AND USERX.USER_STAT = #{userActive}
+           )
+    </delete>
+
     <!-- 독서 모임에 선택된 관심분야 세부코드 한 건을 등록한다. -->
     <insert id="setClubCategory">
         /* setClubCategory */
@@ -80,6 +227,13 @@
                   , CURRENT_TIMESTAMP(6)
         )
     </insert>
+
+    <!-- 모임 수정 전에 기존 카테고리 관계를 삭제한다. -->
+    <delete id="delClubCategory" parameterType="long">
+        DELETE /* delClubCategory */
+          FROM TB_CLCATE
+         WHERE CLUB_NUMB = #{clubNumb}
+    </delete>
 
     <!-- 모임 개설자를 활성 모임장 회원으로 등록한다. -->
     <insert id="setOwnerMember">
@@ -104,6 +258,19 @@
                   , CURRENT_TIMESTAMP(6)
         )
     </insert>
+
+    <!-- 승인형 모임의 현재 가입 질문을 수정한다. -->
+    <update id="uptClubQuestion">
+        UPDATE /* uptClubQuestion */ TB_CLQUES
+           SET QUES_FIRS = #{question.quesFirs,jdbcType=VARCHAR}
+             , QUES_SECO = #{question.quesSeco,jdbcType=VARCHAR}
+             , QUES_THIR = #{question.quesThir,jdbcType=VARCHAR}
+             , QUES_FOUR = #{question.quesFour,jdbcType=VARCHAR}
+             , QUES_FIFT = #{question.quesFift,jdbcType=VARCHAR}
+             , UPDT_USER = #{userNumb}
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{question.clubNumb}
+    </update>
 
     <!-- 승인형 모임의 현재 가입 질문을 모임당 한 행으로 등록한다. -->
     <insert id="setClubQuestion">
@@ -178,7 +345,7 @@
              , CLUB.CLUB_NUMB DESC
     </select>
 
-    <!-- 공개 모임을 사용자 관심분야 일치 수와 최신 등록 순으로 조회한다. -->
+    <!-- 공개 모임에서 로그인 사용자 소유 모임을 제외하고 관심분야 일치 수와 최신 등록 순으로 조회한다. -->
     <select id="getFindClubList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         <include refid="clubCodeBinds" />
         SELECT /* getFindClubList */
@@ -216,6 +383,7 @@
             ON MATCHED.CLUB_NUMB = CLUB.CLUB_NUMB
          WHERE CLUB.CLUB_VISB = #{clubPublic}
            AND CLUB.CLUB_STAT = #{clubActive}
+           AND CLUB.OWNR_NUMB <![CDATA[<>]]> #{userNumb}
         <if test="keyword != null and keyword != ''">
             <bind name="keywordLike" value="'%' + keyword + '%'" />
            AND (
@@ -237,6 +405,27 @@
              , MINE.MEMB_STAT
              , MINE.MEMB_ROLE
              , PENDING.JOIN_STAT
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_NUMB
+               END AS CURRENT_ROND_NUMB
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} AND CURRENT_ROUND.ROND_NUMB IS NOT NULL
+                       THEN CURRENT_ROUND.ROND_NUMB
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                       THEN COALESCE((  SELECT MAX(ROUNDX.ROND_NUMB)
+                                          FROM TM_CLRNDX ROUNDX
+                                         WHERE ROUNDX.CLUB_NUMB = CLUB.CLUB_NUMB
+                                      ), 0) + 1
+               END AS READING_ORDR
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_TITL
+               END AS CURRENT_BOOK_TITL
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_ATHR
+               END AS CURRENT_BOOK_ATHR
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_CVIM
+               END AS CURRENT_BOOK_CVIM
           FROM TM_CLUBXM CLUB
      LEFT JOIN TM_USERXM OWNER
             ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
@@ -248,23 +437,36 @@
             ON PENDING.CLUB_NUMB = CLUB.CLUB_NUMB
            AND PENDING.USER_NUMB = #{userNumb}
            AND PENDING.JOIN_STAT = #{applicationPending}
+     LEFT JOIN TM_CLRNDX CURRENT_ROUND
+            ON CURRENT_ROUND.CLUB_NUMB = CLUB.CLUB_NUMB
+           AND CURRENT_ROUND.ROND_NUMB = (
+               SELECT MAX(ACTIVE_ROUND.ROND_NUMB)
+                 FROM TM_CLRNDX ACTIVE_ROUND
+                WHERE ACTIVE_ROUND.CLUB_NUMB = CLUB.CLUB_NUMB
+                  AND ACTIVE_ROUND.ROND_STAT IN (#{roundScheduled}, #{roundReading})
+           )
+     LEFT JOIN TM_BKINFO CURRENT_BOOK
+            ON CURRENT_BOOK.BOOK_NUMB = CURRENT_ROUND.BOOK_NUMB
          WHERE CLUB.CLUB_NUMB = #{clubNumb}
     </select>
 
     <!-- 정원과 권한 변경을 직렬화하기 위해 모임 마스터 행을 잠가 조회한다. -->
     <select id="getClubForUpdate" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         SELECT /* getClubForUpdate */
-               CLUB_NUMB
-             , OWNR_NUMB
-             , CLUB_NAME
-             , CLUB_CNTN
-             , CLUB_VISB
-             , JOIN_TYPE
-             , CLUB_STAT
-             , MAXX_MEMB
-             , REGI_DATE
-          FROM TM_CLUBXM
-         WHERE CLUB_NUMB = #{clubNumb}
+               CLUB.CLUB_NUMB
+             , CLUB.OWNR_NUMB
+             , OWNER.USER_NICK AS OWNR_NICK
+             , CLUB.CLUB_NAME
+             , CLUB.CLUB_CNTN
+             , CLUB.CLUB_VISB
+             , CLUB.JOIN_TYPE
+             , CLUB.CLUB_STAT
+             , CLUB.MAXX_MEMB
+             , CLUB.REGI_DATE
+          FROM TM_CLUBXM CLUB
+          JOIN TM_USERXM OWNER
+            ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
+         WHERE CLUB.CLUB_NUMB = #{clubNumb}
            FOR UPDATE
     </select>
 
@@ -320,12 +522,14 @@
         SELECT /* getClubMemberList */
                MEMBER.USER_NUMB
              , USERX.USER_NICK
-             , '/img/common/icon-user.svg' AS PORF_PATH
+             , FILEX.FILE_PATH AS PORF_PATH
              , MEMBER.MEMB_ROLE
           FROM TB_CLMEMX MEMBER
           JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = MEMBER.USER_NUMB
            AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TM_FILEXM FILEX
+            ON FILEX.FILE_NUMB = USERX.PROF_NUMB
          WHERE MEMBER.CLUB_NUMB = #{clubNumb}
            AND MEMBER.MEMB_STAT = #{memberActive}
       ORDER BY CASE WHEN MEMBER.MEMB_ROLE = #{ownerRole} THEN 0 ELSE 1 END
@@ -437,11 +641,20 @@
     <!-- 기존 모임 관계와 처리 중 신청이 없는 맞팔로우 초대 후보를 조회한다. -->
     <select id="getInviteCandidateList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$InviteCandidateDto">
         <include refid="clubCodeBinds" />
+        <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getInviteCandidateList */
                USERX.USER_NUMB
              , USERX.USER_NICK
              , USERX.INTR_CNTN
              , FILEX.FILE_PATH AS PORF_PATH
+             , ( SELECT GROUP_CONCAT(DETAIL.COMD_NAME ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
+                   FROM TB_USINTR INTEREST
+                   JOIN TB_CODEXD DETAIL
+                     ON DETAIL.COMM_CODE = #{categoryCode}
+                    AND DETAIL.COMD_CODE = INTEREST.INTR_CODE
+                    AND COALESCE(DETAIL.USEE_YSNO, #{commYes}) = #{commYes}
+                  WHERE INTEREST.USER_NUMB = USERX.USER_NUMB
+               ) AS INTR_TEXT
           FROM TB_FOLLOW OWNERFLOW
           JOIN TB_FOLLOW USERFLOW
             ON USERFLOW.USER_NUMB = OWNERFLOW.FLOW_NUMB
@@ -457,6 +670,9 @@
                      FROM TB_CLMEMX MEMBER
                     WHERE MEMBER.CLUB_NUMB = #{clubNumb}
                       AND MEMBER.USER_NUMB = USERX.USER_NUMB
+                      AND (MEMBER.MEMB_STAT = #{memberActive}
+                           OR (MEMBER.MEMB_STAT = #{memberInvited}
+                               AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)))
                )
            AND NOT EXISTS (
                    SELECT 1
@@ -467,6 +683,58 @@
                )
       ORDER BY USERX.USER_NICK
              , USERX.USER_NUMB
+    </select>
+
+    <!-- 공개 범위 변경을 제한하는 예정 또는 진행 중 회차 수를 조회한다. -->
+    <select id="getOngoingRoundCnt" parameterType="long" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT /* getOngoingRoundCnt */
+               COUNT(*)
+          FROM TM_CLRNDX
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND ROND_STAT IN (#{roundScheduled}, #{roundReading})
+    </select>
+
+    <!-- 가입 방식 변경을 제한하는 처리 대기 신청 수를 조회한다. -->
+    <select id="getPendingApplicationCnt" parameterType="long" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT /* getPendingApplicationCnt */
+               COUNT(*)
+          FROM TB_CLJOIN
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND JOIN_STAT = #{applicationPending}
+    </select>
+
+    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 목록을 조회한다. -->
+    <select id="getSentInvitationList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$SentInvitationDto">
+        <include refid="clubCodeBinds" />
+        <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
+        SELECT /* getSentInvitationList */
+               MEMBER.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , ( SELECT GROUP_CONCAT(DETAIL.COMD_NAME ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
+                   FROM TB_USINTR INTEREST
+                   JOIN TB_CODEXD DETAIL
+                     ON DETAIL.COMM_CODE = #{categoryCode}
+                    AND DETAIL.COMD_CODE = INTEREST.INTR_CODE
+                    AND COALESCE(DETAIL.USEE_YSNO, #{commYes}) = #{commYes}
+                  WHERE INTEREST.USER_NUMB = USERX.USER_NUMB
+               ) AS INTR_TEXT
+             , MEMBER.INVT_DATE
+             , MEMBER.EXPR_DATE
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TM_FILEXM FILEX
+            ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.SEND_NUMB = #{ownerNumb}
+           AND MEMBER.MEMB_STAT = #{memberInvited}
+           AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)
+      ORDER BY MEMBER.INVT_DATE DESC
+             , MEMBER.USER_NUMB
     </select>
 
     <!-- 로그인 사용자에게 도착한 만료 전 모임 초대 목록을 조회한다. -->
@@ -515,6 +783,21 @@
          WHERE CLUB_NUMB = #{clubNumb}
            AND USER_NUMB = #{userNumb}
            AND MEMB_STAT = #{memberInvited}
+    </delete>
+
+    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 예약석을 취소한다. -->
+    <delete id="delOwnerInvitation">
+        <include refid="clubCodeBinds" />
+        DELETE /* delOwnerInvitation */ MEMBER
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.SEND_NUMB = #{ownerNumb}
+           AND MEMBER.MEMB_STAT = #{memberInvited}
+           AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)
     </delete>
 
     <!-- 동일 모임과 사용자의 처리 중 가입 신청을 조회한다. -->
@@ -607,6 +890,7 @@
           FROM TB_CLJOIN APPLICATION
           JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = APPLICATION.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
      LEFT JOIN TM_FILEXM FILEX
             ON FILEX.FILE_NUMB = USERX.PROF_NUMB
          WHERE APPLICATION.CLUB_NUMB = #{clubNumb}
@@ -619,15 +903,18 @@
     <select id="getApplicationForUpdate" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />
         SELECT /* getApplicationForUpdate */
-               CLUB_NUMB
-             , APPL_NUMB
-             , USER_NUMB
-             , JOIN_STAT
-             , APPL_DATE
-          FROM TB_CLJOIN
-         WHERE CLUB_NUMB = #{clubNumb}
-           AND APPL_NUMB = #{applNumb}
-           AND JOIN_STAT = #{applicationPending}
+               APPLICATION.CLUB_NUMB
+             , APPLICATION.APPL_NUMB
+             , APPLICATION.USER_NUMB
+             , APPLICATION.JOIN_STAT
+             , APPLICATION.APPL_DATE
+          FROM TB_CLJOIN APPLICATION
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = APPLICATION.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE APPLICATION.CLUB_NUMB = #{clubNumb}
+           AND APPLICATION.APPL_NUMB = #{applNumb}
+           AND APPLICATION.JOIN_STAT = #{applicationPending}
            FOR UPDATE
     </select>
 

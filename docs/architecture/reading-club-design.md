@@ -5,7 +5,7 @@
 - 목적: 비공개 초대형 모임과 공개 가입형 모임에서 같은 도서와 목표 기간을 공유하고, 개인 독서 기록과 모임 독후감을 연결해 반복 독서를 운영하는 기능을 설계한다.
 - 적용 범위: 관심분야 설정, 모임 탐색·개설·가입·초대·퇴장, 회차, 개인 독서 기록, 독후감 공유, 다음 도서 추천·투표, 채팅·알림 및 모임장 선거이다.
 - 기준일: 2026년 8월 5일이다.
-- 구현 상태: 2026년 8월 5일 기준 1차 범위인 관심분야 필수 선택 팝업, 모임 생성·찾기·가입, 모임장의 맞팔 초대와 가입 승인을 구현한다. 기반 테이블은 `TB_USINTR`, `TM_CLUBXM`, `TB_CLCATE`, `TB_CLMEMX`, `TB_CLQUES`, `TB_CLJOIN`, `TM_CLRNDX`, `TB_CLPART`이며 회차 이후 기능은 후속 개발 범위다.
+- 구현 상태: 2026년 8월 14일 기준 관심분야 필수 선택 팝업, 모임 생성·찾기·가입, 모임장의 맞팔 초대와 가입 승인, 모임 독서 회차 및 활성 멤버별 `READ` 독후감 일괄 생성을 구현한다. 기반 테이블은 `TB_USINTR`, `TM_CLUBXM`, `TB_CLCATE`, `TB_CLMEMX`, `TB_CLQUES`, `TB_CLJOIN`, `TM_CLRNDX`, `TB_CLPART`이다.
 - 정책 상태: 1차 출시의 정원, 가입·초대, 회차, 독후감, 퇴장, 다음 도서, 채팅, 메뉴, 관리자 운영, 모임장 선거 및 계정 수명주기 정책을 [독서 모임 정책 결정 항목](../policies/reading-club-policy-decisions.md)의 확정값으로 적용한다. 공통 신고의 대상·보존 정책은 [신고 접수 및 처리 정책](../policies/abuse-report-policy.md)에 확정했으며 신고 API·관리자 심사와 사용자 차단 세부 정책은 후속 출시에서 확정한다.
 
 ## 설계 결론
@@ -194,6 +194,8 @@
 6. 참여자별 `TM_REPORT`를 `READ`, 비공개 `N`, 같은 `BOOK_NUMB`, 같은 목표 시작일 및 종료일로 생성한다.
 7. `TB_CLPART`에 회원별 `REPT_NUMB`를 연결하고 목표 달성 여부는 아직 미판정인 Null로 저장한다.
 8. 한 건이라도 실패하면 회차, 참여 관계 및 자동 생성 독후감을 모두 롤백한다.
+
+모임 상세는 활성 모임원에게만 현재 `SCHEDULED` 또는 `READING` 회차와 연결 도서 요약을 제공한다. 현재 회차가 없으면 마지막 모임별 `ROND_NUMB`에 1을 더한 다음 독서 순번을 표시하고 `/reading-clubs/{clubNumb}/books/search`로 이동할 수 있게 한다. 해당 경로는 개인 책 검색과 같은 검색 컴포넌트를 렌더링하지만 책 선택 동작은 `/reading-clubs/{clubNumb}/readings/set?isbn={isbn}`로 분기한다. 독서 등록 화면은 목표 기간만 입력받고 `POST /api/reading-clubs/{clubNumb}/readings`가 회차와 활성 멤버별 독후감을 생성한다.
 
 참여 선택, 참여 응답 마감, 불참 및 휴식 상태는 두지 않는다. 회차 확정 뒤 가입한 회원은 현재 회차에 소급 포함하지 않고 다음 회차부터 자동 참여시킨다.
 
@@ -721,7 +723,7 @@ Figma 설계 화면은 다음 사용자 흐름을 한 세트로 제공한다.
 - 목표 결과와 모임원 독후감 목록을 한 화면에 축약하지 않는다. 목표 결과에서 `모임원 독후감 보기`를 선택해 작성자별 목록으로 이동하고 각 카드에서 전체 독후감 상세로 이동한다.
 - 본문이 없는 연결 독후감은 작성자 카드로 만들지 않고 미작성 건수만 이름 없이 안내한다.
 - 회차 참여 여부를 별도 선택하는 UI는 두지 않는다. 도서 확정 시 모든 활성 모임원의 개인 독후감이 자동 생성된다는 안내를 제공한다.
-- 다음 독서 시작의 도서 선택은 기존 도서 검색 API·검색창·결과 카드를 재사용하며, 선택 뒤에는 선택 도서 한 건과 `다른 책 검색` 동작만 표시한다.
+- 다음 독서 시작의 도서 선택은 기존 도서 검색 API·검색창·결과 카드와 상세 화면을 재사용한다. 모임 검색 경로와 개인 검색 경로를 분리해 모임에서 선택한 책은 독서 등록 URL로 전달하고, 개인 검색의 독후감 등록 흐름은 유지한다. 독서 등록 화면에는 선택 도서 한 건과 책 변경 동작 및 공동 목표 기간만 표시한다.
 - 다음 독서 목표 기간은 독후감 등록 화면의 기간 범위 달력을 재사용하고 시작일·종료일이 모두 선택된 경우에만 생성 요청을 허용한다.
 - 회차 종료 후 미완료 회원은 개인 독후감의 `읽고 있어요` 상태를 유지하며, 모임 결과 화면에서는 이름을 노출하지 않는다.
 - 1차 출시에서 제외한 공통 신고·차단 버튼이나 관리자 신고 심사 화면은 시안에 포함하지 않는다.
@@ -739,13 +741,15 @@ URI는 구현 시 프로젝트의 기존 API 버전 정책과 조정하되 명�
 | `GET` | `/api/reading-clubs` | 관심분야 보유 회원의 공개 추천·검색 목록 조회 |
 | `POST` | `/api/reading-clubs` | 모임 개설 |
 | `GET` | `/api/reading-clubs/{clubNumb}` | 모임 상세 조회 |
+| `PUT` | `/api/reading-clubs/{clubNumb}` | 활성 모임장의 모임 정보 수정 |
+| `DELETE` | `/api/reading-clubs/{clubNumb}` | 활성 모임장의 모임 및 종속 데이터 물리 삭제 |
 | `POST` | `/api/reading-clubs/{clubNumb}/members` | 공개 즉시 가입 |
 | `DELETE` | `/api/reading-clubs/{clubNumb}/members/{userNumb}` | 모임장 퇴장 처리 또는 본인 탈퇴 |
 | `POST` | `/api/reading-clubs/{clubNumb}/applications` | 승인 가입 신청 |
 | `PUT` | `/api/reading-clubs/{clubNumb}/applications/{applNumb}` | 신청 승인·거절 |
 | `POST` | `/api/reading-clubs/{clubNumb}/invitations` | 맞팔 회원 초대 |
 | `PUT` | `/api/reading-club-invitations/{invtNumb}` | 초대 수락·거절 |
-| `POST` | `/api/reading-clubs/{clubNumb}/rounds` | 회차 확정과 개인 독후감 일괄 생성 |
+| `POST` | `/api/reading-clubs/{clubNumb}/readings` | 활성 모임장의 회차 확정과 활성 멤버별 `READ` 독후감 일괄 생성 |
 | `PUT` | `/api/reading-club-rounds/{rondNumb}/my-report` | 실제 기간과 개인 독후감 수정 |
 | `GET` | `/api/reading-club-rounds/{rondNumb}/goal-result` | 전체 참여 인원, 달성 인원 및 달성자 목록 조회 |
 | `GET` | `/api/reading-club-rounds/{rondNumb}/reports` | 작성자·상태·목표 달성 여부·본문 일부를 포함한 모임 연결 독후감 목록 조회 |
