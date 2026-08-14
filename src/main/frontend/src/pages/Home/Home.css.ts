@@ -25,7 +25,7 @@ export const reportSetButton = style({
 
 export const emptyHomeContainer = style({
   width: "100%",
-  minHeight: "100svh",
+  minHeight: "calc(100svh - 68px)",
   padding: 0,
   backgroundColor:'#fff',
   display: "flex",
@@ -33,10 +33,48 @@ export const emptyHomeContainer = style({
   justifyContent: "center",
 });
 
+export const emptySetReportButton = style({
+  background: '#fff',
+  border: `1px dashed ${vars.color.gray300}`,
+  padding: 20,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  flexDirection: "column",
+  gap: 10,
+  borderRadius: 22,
+  width: "calc(100% - 32px)",
+  textDecoration: "none",
+  transition: "background 160ms ease",
+
+  selectors: {
+    '&:hover': {
+      background: vars.color.gray100,
+    }
+  }
+})
+
+export const emptyPlusCircle = style({
+  backgroundColor: vars.color.gray200,
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  borderRadius: 999,
+  width: 36,
+  height: 36
+})
+
 export const emptyTitle = style({
-  fontSize: vars.fontSize.title,
+  fontSize: 18,
   fontFamily: vars.font.heading,
   textAlign: "center",
+  color: vars.color.black
+});
+
+export const emptyDescription = style({
+  fontSize: vars.fontSize.body,
+  textAlign: "center",
+  color: vars.color.gray600
 });
 
 export const homeContainer = style({
