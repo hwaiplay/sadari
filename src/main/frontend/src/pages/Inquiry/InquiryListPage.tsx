@@ -130,12 +130,13 @@ function InquiryListPage() {
                   {new Date(inquiry.regiDate).toLocaleDateString("ko-KR")}
                 </time>
                  <span className={styles.itemMetaGroup}>
-                <span className={styles.category}>{inquiry.inqrCatgName}</span>
-                <span className={styles.state}>{inquiry.inqrStatName}</span>
-              </span>
+                  <span className={styles.category}>{inquiry.inqrCatgName}</span>
+                  <span className={styles.state}>{inquiry.inqrStatName}</span>
+                </span>
                 {inquiry.unreadCount > 0 && (
                   <span className={styles.unread}>
                     <span className={styles.unreadDot} aria-hidden="true" />
+                    {/* "새 답변" */}
                     새 답변
                   </span>
                 )}
