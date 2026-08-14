@@ -29,6 +29,7 @@ import org.our.sadari.notice.mapper.NoticeMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성
+ * 2026-08-14        SeungHyeon.Kang    사용자 공지사항 10개 단위 조회 검증 반영
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
@@ -53,24 +54,24 @@ class NoticeServiceImplTest {
         boolean active = noticeService.isActiveUser(7L);
 
         assertFalse(active);
-        verify(noticeMapper, never()).getNoticeList(7L, "NOTICE", "Y", "N", 0, 21);
+        verify(noticeMapper, never()).getNoticeList(7L, "NOTICE", "Y", "N", 0, 11);
     }
 
-    /** 활성 사용자의 목록은 21번째 행으로 다음 페이지 여부를 계산한다. */
+    /** 활성 사용자의 목록은 11번째 행으로 다음 페이지 여부를 계산한다. */
     @Test
     void getNoticeListHasNext() {
         when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
         List<NoticeDto> rows = new ArrayList<>();
-        for (int index = 0; index < 21; index++) {
+        for (int index = 0; index < 11; index++) {
             rows.add(new NoticeDto());
         }
-        when(noticeMapper.getNoticeList(7L, "NOTICE", "Y", "N", 0, 21)).thenReturn(rows);
+        when(noticeMapper.getNoticeList(7L, "NOTICE", "Y", "N", 0, 11)).thenReturn(rows);
 
         ResultData result = noticeService.getNoticeList(7L, 1);
         NoticePageDto page = assertInstanceOf(NoticePageDto.class, result.getData());
 
         assertEquals(200, result.getCode());
-        assertEquals(20, page.list().size());
+        assertEquals(10, page.list().size());
         assertTrue(page.hasNext());
         assertFalse(page.list().isEmpty());
     }

@@ -8,6 +8,8 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -323,6 +325,11 @@ function ProfileEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
+  const {
+    visibleItems: visibleFollowUsers,
+    hasNext: hasNextFollowUser,
+    loadMore: loadMoreFollowUser,
+  } = useProgressiveList(followUsers, followListType ?? "closed");
   const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
     week: null,
     month: null,
@@ -2271,7 +2278,7 @@ function ProfileEditPage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && followUsers.map((user) => (
+              {!isFollowListLoading && visibleFollowUsers.map((user) => (
                 /* 팔로우 사용자 개별 항목 영역 */
                 <div className={styles.followModalItem} key={user.userNumb}>
                   {/* 팔로우 사용자 프로필 정보 영역 */}
@@ -2311,6 +2318,10 @@ function ProfileEditPage() {
                   )}
                 </div>
               ))}
+              <InfiniteScrollTrigger
+                hasNext={!isFollowListLoading && hasNextFollowUser}
+                onLoadMore={loadMoreFollowUser}
+              />
             </div>
           </section>
         </div>

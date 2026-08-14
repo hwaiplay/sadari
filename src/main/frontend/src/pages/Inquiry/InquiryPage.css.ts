@@ -202,32 +202,6 @@ export const statusText = style({
   textAlign: "center",
 });
 
-export const moreButton = style({
-  width: "100%",
-  height: "44px",
-  marginTop: "18px",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: vars.radius.md,
-  backgroundColor: vars.color.background,
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
-  selectors: {
-    "&:hover": {
-      backgroundColor: vars.color.gray100,
-    },
-    "&:disabled": {
-      color: vars.color.gray600,
-      cursor: "default",
-    },
-    "&:focus-visible": {
-      outline: `2px solid ${vars.color.brand}`,
-      outlineOffset: "2px",
-    },
-  },
-});
-
 export const formIntro = style({
   marginBottom: "26px",
   paddingBottom: "22px",

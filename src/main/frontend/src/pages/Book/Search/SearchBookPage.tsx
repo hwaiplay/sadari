@@ -9,6 +9,7 @@ import api from "../../../app/api/axios";
 import { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useLocation, useNavigate, useNavigationType } from "react-router-dom";
 import { Container } from "@/components/Layout/Container/Container";
+import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import {
@@ -413,18 +414,13 @@ const SearchBookPage = () => {
                   </article>
                 );
               })}
-              {hasMore && (
-                <button
-                  className={styles.loadMoreButton}
-                  type="button"
-                  onClick={handleLoadMore}
-                  disabled={isLoadingMore}
-                >
-                  {isLoadingMore
-                    ? message("frontend.book.search.loadingMore")
-                    : message("frontend.book.search.loadMore")}
-                </button>
-              )}
+              <InfiniteScrollTrigger
+                hasNext={hasMore}
+                isLoading={isLoadingMore}
+                onLoadMore={() => void handleLoadMore()}
+              >
+                {message("frontend.book.search.loadingMore")}
+              </InfiniteScrollTrigger>
             </div>
           ) : (
             <p className={styles.emptyMessage}>
