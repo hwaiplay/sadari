@@ -236,14 +236,13 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
 
     // PWA 종료 여부와 확인 시 동작을 사용자에게 안내한다
     const result = await sweetConfirm({
-      // "앱을 종료할까요?"
+      // "앱 종료 안내"
       title: message("frontend.pwa.exitConfirmTitle"),
-      // "확인을 누르면 앱이 종료돼요."
+      // "종료를 원하시면 뒤로가기 버튼을 한 번 더 눌러주세요."
       text: message("frontend.pwa.exitConfirmText"),
-      // "확인"
-      confirmButtonText: message("frontend.common.confirm"),
       // "취소"
       cancelButtonText: message("frontend.common.cancel"),
+      showConfirmButton: false,
       allowOutsideClick: false,
     });
 
