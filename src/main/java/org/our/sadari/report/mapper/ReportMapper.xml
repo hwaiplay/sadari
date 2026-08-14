@@ -533,6 +533,53 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
+    <!-- 로그인 사용자의 독후감에 연결된 댓글과 답글의 좋아요를 삭제한다. -->
+    <delete id="delReportReplyLikes" parameterType="org.our.sadari.report.dto.ReportDto">
+        <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        DELETE /* delReportReplyLikes */ L
+          FROM TB_LIKEXX L
+    INNER JOIN TB_REPLXX R
+            ON R.REPL_NUMB = L.TAGT_NUMB
+           AND R.REPT_NUMB = #{reptNumb}
+    INNER JOIN TM_REPORT P
+            ON P.REPT_NUMB = R.REPT_NUMB
+           AND P.USER_NUMB = #{userNumb}
+         WHERE L.TAGT_TYPE = #{likeTargetReply}
+    </delete>
+
+    <!-- 로그인 사용자의 독후감에 연결된 대댓글을 부모 댓글보다 먼저 삭제한다. -->
+    <delete id="delReportChildReplies" parameterType="org.our.sadari.report.dto.ReportDto">
+        DELETE /* delReportChildReplies */ C
+          FROM TB_REPLXX C
+    INNER JOIN TM_REPORT P
+            ON P.REPT_NUMB = C.REPT_NUMB
+           AND P.USER_NUMB = #{userNumb}
+         WHERE C.REPT_NUMB = #{reptNumb}
+           AND C.UPER_NUMB IS NOT NULL
+    </delete>
+
+    <!-- 로그인 사용자의 독후감에 연결된 최상위 댓글을 삭제한다. -->
+    <delete id="delReportReplies" parameterType="org.our.sadari.report.dto.ReportDto">
+        DELETE /* delReportReplies */ R
+          FROM TB_REPLXX R
+    INNER JOIN TM_REPORT P
+            ON P.REPT_NUMB = R.REPT_NUMB
+           AND P.USER_NUMB = #{userNumb}
+         WHERE R.REPT_NUMB = #{reptNumb}
+    </delete>
+
+    <!-- 로그인 사용자의 독후감에 연결된 좋아요를 삭제한다. -->
+    <delete id="delReportLikes" parameterType="org.our.sadari.report.dto.ReportDto">
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        DELETE /* delReportLikes */ L
+          FROM TB_LIKEXX L
+    INNER JOIN TM_REPORT P
+            ON P.REPT_NUMB = L.TAGT_NUMB
+           AND P.USER_NUMB = #{userNumb}
+         WHERE L.TAGT_TYPE = #{likeTargetReport}
+           AND L.TAGT_NUMB = #{reptNumb}
+    </delete>
+
     <!-- 로그인 사용자의 독후감을 삭제한다. -->
     <delete id="delReport" parameterType="org.our.sadari.report.dto.ReportDto">
         DELETE /* delReport */

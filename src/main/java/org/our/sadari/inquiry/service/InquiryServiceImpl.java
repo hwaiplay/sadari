@@ -2,10 +2,12 @@ package org.our.sadari.inquiry.service;
 
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.inquiry.dto.InquiryAnswerDto;
 import org.our.sadari.inquiry.dto.InquiryCreateDto;
@@ -25,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    정지 회원 문의 유형 강제와 현재 정지 문의 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    고객문의 제목과 본문 비속어 검증 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -37,6 +40,8 @@ public class InquiryServiceImpl implements InquiryService {
     private static final String SUSPENSION_APPEAL = "SUSPENSION_APPEAL";
     // 고객문의 데이터 접근 객체
     private final InquiryMapper inquiryMapper;
+    // 고객문의 제목과 본문 비속어 검사 서비스
+    private final BadWordDetectionService badWordDetectionService;
 
     @Override
     public ResultData getSuspInquiryNumb(Long userNumb) {
@@ -106,6 +111,16 @@ public class InquiryServiceImpl implements InquiryService {
             // 필수 고객문의 입력값 오류 안내를 반환한다
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
+        String title = inquiryCreateDto.getInqrTitl().trim();
+        String content = inquiryCreateDto.getInqrCntn().trim();
+        // 고객이 작성한 제목과 본문에서 저장을 차단할 비속어를 조회한다
+        Optional<String> badWord = badWordDetectionService.findBadWord(title)
+                .or(() -> badWordDetectionService.findBadWord(content));
+        // 비속어가 발견되면 감지된 단어를 안내하고 문의 접수를 중단한다
+        if (badWord.isPresent()) {
+            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
+        }
         if (inquiryMapper.getInquiryCategoryCnt(inquiryCreateDto.getInqrCatg()) != 1) {
             // 사용 중이지 않은 고객문의 카테고리 안내를 반환한다
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
@@ -118,8 +133,8 @@ public class InquiryServiceImpl implements InquiryService {
 
         InquiryDto inquiry = new InquiryDto();
         inquiry.setInqrCatg(inquiryCreateDto.getInqrCatg().trim());
-        inquiry.setInqrTitl(inquiryCreateDto.getInqrTitl().trim());
-        inquiry.setInqrCntn(inquiryCreateDto.getInqrCntn().trim());
+        inquiry.setInqrTitl(title);
+        inquiry.setInqrCntn(content);
         if (SUSPENSION_APPEAL.equals(inquiry.getInqrCatg())) {
             Long spndNumb = inquiryMapper.getLatestSuspensionNumb(userNumb);
             if (StringUtil.isEmpty(spndNumb)) {
