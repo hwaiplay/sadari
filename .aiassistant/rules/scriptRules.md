@@ -327,10 +327,17 @@ await sweetWarning(message("frontend.login.required"));
 
 ```tsx
 <h2 className={styles.sectionTitle}>
-  {/* 공개 설정 */}
-  {message("frontend.report.field.public")}
+  {/* "공개 여부" */}
+  {message("frontend.common.visibility")}
 </h2>
 ```
+
+### 11.3 공통 메시지 키
+
+- 둘 이상의 화면이나 기능에서 의미와 기본 문구가 같은 메시지는 `frontend.common.*` 키를 우선 사용합니다.
+- 공통 키를 추가하거나 기존 키로 통합하기 전에 기본 언어와 지원 언어의 문구 및 치환 파라미터가 모두 호환되는지 확인합니다.
+- 번역 결과만 우연히 같거나 화면 맥락, 동작, 상태의 의미가 다른 메시지는 기능별 키를 유지합니다.
+- 기능별 키를 공통 키로 교체한 뒤에는 정적 참조와 동적 키 조합을 모두 검색하고, 참조가 남지 않은 중복 키를 모든 언어 메시지 파일에서 함께 제거합니다.
 
 ## 12. 화면 영역 접근성 및 DOM
 

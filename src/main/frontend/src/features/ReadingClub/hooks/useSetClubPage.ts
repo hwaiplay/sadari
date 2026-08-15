@@ -47,7 +47,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
       // "모임 정보를 불러오지 못했어요"
       void sweetError(
         message("frontend.readingClub.error.fetchTitle"),
-        message("frontend.readingClub.common.retry"),
+        /* "다시 시도해주세요." */ message("frontend.common.tryAgain"),
       );
       // 안전한 내 모임 목록으로 이동한다
       navigate("/reading-clubs/mine", { replace: true });
@@ -98,7 +98,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
         // "모임 정보를 불러오지 못했어요"
         void sweetError(
           message("frontend.readingClub.error.fetchTitle"),
-          getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+          getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
 
         // 수정 대상 조회에 실패하면 상세 화면으로 되돌린다

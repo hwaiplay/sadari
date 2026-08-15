@@ -156,7 +156,7 @@ export default function MyClubPage() {
             <button className={styles.quickButton} type="button" onClick={handleInvitationToggle}>
               {/* "바로 확인" 또는 "접기" */}
               {isInvitationOpen
-                ? message("frontend.readingClub.my.collapse")
+                ? /* "접기" */ message("frontend.common.collapse")
                 : message("frontend.readingClub.my.checkNow")}
             </button>
           </div>

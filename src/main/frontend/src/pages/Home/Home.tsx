@@ -90,7 +90,7 @@ function Home() {
           <button
             className={styles.searchButton}
             type="submit"
-            aria-label={message("frontend.home.search.button")}
+            aria-label={/* "검색" */ message("frontend.common.search")}
           >
             <svg
               className={styles.searchIcon}

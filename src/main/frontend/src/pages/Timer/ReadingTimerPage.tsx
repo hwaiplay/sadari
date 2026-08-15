@@ -240,7 +240,7 @@ function ReadingBookModal({ books, selectedReport, onSelect, onClose }: ReadingB
           </span>
           <span className={styles.modalBookState}>
             {/* "읽는 중" */}
-            {message("frontend.timer.book.modal.reading")}
+            {message("frontend.common.reading")}
           </span>
         </span>
       </button>
@@ -302,7 +302,7 @@ function ReadingBookModal({ books, selectedReport, onSelect, onClose }: ReadingB
             onClick={handleBookConfirm}
           >
             {/* "선택" */}
-            {message("frontend.timer.book.modal.select")}
+            {message("frontend.common.select")}
           </ActionButton>
         </footer>
       </section>
@@ -766,7 +766,8 @@ export default function ReadingTimerPage() {
         <div className={styles.weekGrid}>
           {summary?.weekList.map((day, index) => (
             <div key={day.readDate} className={clsx(styles.day, (day.attended || (day.today && liveAttendanceAchieved)) && styles.attendedDay, day.today && styles.todayDay)}>
-              <span className={styles.dayName}>{message(`frontend.timer.day.${DAY_MESSAGE_KEYS[index]}`)}</span>
+              {/* "일"~"토" */}
+              <span className={styles.dayName}>{message(`frontend.common.week.${DAY_MESSAGE_KEYS[index]}`)}</span>
               <span className={styles.dayMark} aria-label={day.attended || (day.today && liveAttendanceAchieved) ? message("frontend.timer.attended") : message("frontend.timer.notAttended")}>
                 {day.attended || (day.today && liveAttendanceAchieved) ? "✓" : "·"}
               </span>
