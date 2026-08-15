@@ -1,8 +1,11 @@
 package org.our.sadari.book.mapper;
 
-import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.book.dto.BookDto;
+import org.our.sadari.book.dto.PopularBookDto;
 
 /**
  * fileName       : BookMapper
@@ -13,6 +16,8 @@ import org.our.sadari.book.dto.BookDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
+ * 2026-08-16        SeungHyeon.Kang    이번 달 인기 도서 집계 조회 추가
+ * 2026-08-16        SeungHyeon.Kang    기간별 인기 도서 집계와 평균 평점 조회 적용
  */
 @Mapper
 public interface BookMapper {
@@ -42,5 +47,16 @@ public interface BookMapper {
      * @return 반영 건수
      */
     int setBook(BookDto bookDto);
+
+    /**
+     * 선택 기간의 독후감 고유 작성자 수 기준 인기 도서를 최대 10권 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param periodStart 집계 기간의 시작 일시
+     * @param nextPeriodStart 다음 집계 기간의 시작 일시
+     * @return 독후감 작성자 수가 많은 순서의 인기 도서 목록
+     */
+    List<PopularBookDto> getPopularBookList(@Param("periodStart") LocalDateTime periodStart
+                                           , @Param("nextPeriodStart") LocalDateTime nextPeriodStart);
 
 }

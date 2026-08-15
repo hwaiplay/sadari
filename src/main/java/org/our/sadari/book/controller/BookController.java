@@ -8,16 +8,17 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookCoverColorRequestDto;
 import org.our.sadari.book.service.BookCoverColorService;
+import org.our.sadari.book.service.BookPopularService;
 import org.our.sadari.book.service.BookSearchService;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.report.service.ReportService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 /**
  * fileName       : BookController
@@ -32,18 +33,22 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 검색 API 적용
  * 2026-08-01        Hanwon.Jang        읽는 중 독후감 평균 평점 제외 정책 추가
  * 2026-08-16        SeungHyeon.Kang    로그인 회원 도서 검색 제한과 50권 페이지 응답 적용
+ * 2026-08-16        SeungHyeon.Kang    이번 달 인기 도서 목록 API 추가
+ * 2026-08-16        SeungHyeon.Kang    주간과 월간 및 연간 인기 도서 선택 API 적용
  */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/book")
-@Tag(name = "도서", description = "도서 검색과 표지 색상 및 ISBN 기준 공개 평점 평균 조회 API")
+@Tag(name = "도서", description = "기간별 인기 도서와 도서 검색 및 표지 색상과 ISBN 기준 공개 평점 평균 조회 API")
 public class BookController {
 
     // BookSearch 업무 처리 서비스
     private final BookSearchService bookSearchService;
     // 도서 표지 대표색 기반 책장 색상 선택 서비스
     private final BookCoverColorService bookCoverColorService;
+    // 기간별 독후감 작성자 수 기준 인기 도서 조회 서비스
+    private final BookPopularService bookPopularService;
     // Report 업무 처리 서비스
     private final ReportService reportService;
 
@@ -63,6 +68,21 @@ public class BookController {
                                 , @Parameter(description = "50권 페이지의 검색 시작 위치", example = "1") @RequestParam(value = "start", defaultValue = "1") int start) {
         // 로그인 회원과 검색어 및 50권 페이지 시작 위치로 카카오 도서 목록을 조회한다
         return bookSearchService.searchBooks(userNumb, query, start);
+    }
+
+    /**
+     * 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 인기 도서를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param period 주간과 월간 및 연간 중 조회할 집계 기간
+     * @return 독후감 고유 작성자 수 기준 상위 10권의 도서 목록
+     */
+    @GetMapping("/popular")
+    @Operation(summary = "기간별 인기 도서 조회", description = "현재 주와 달 또는 연도의 TM_REPORT에 남아 있는 모든 독후감의 고유 작성자 수를 도서별로 집계해 상위 10권과 도서 평균 평점을 조회한다.")
+    public ResultData getPopularBookList(@Parameter(description = "인기 도서 집계 기간", example = "monthly")
+                                         @RequestParam(value = "period", defaultValue = "monthly") String period) {
+        // 선택 기간의 독후감 고유 작성자 수 기준 인기 도서 목록을 조회한다
+        return bookPopularService.getPopularBookList(period);
     }
 
     /**

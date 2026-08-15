@@ -23,6 +23,17 @@
 
 10권 단위로 카카오 API를 직접 호출하던 구조와 비교하면 50권을 확인하는 데 필요한 외부 호출 수는 최대 5회에서 1회로 감소합니다. 이는 소스 호출 구조에서 계산한 값이며 네트워크 응답 시간 개선을 측정한 결과는 아닙니다.
 
+## 기간별 인기 도서
+
+- 검색 화면에 처음 진입하고 복원할 직접 검색 결과가 없으면 `GET /api/book/popular?period=monthly`로 월간 인기 도서를 최대 10권 조회합니다.
+- 사용자는 검색 입력창 아래 오른쪽의 선택 목록에서 `weekly`, `monthly`, `yearly`에 해당하는 주간·월간·연간 인기 도서를 변경할 수 있습니다.
+- `Asia/Seoul` 기준으로 주간은 현재 주 월요일부터 다음 월요일 전까지, 월간은 현재 달 1일부터 다음 달 1일 전까지, 연간은 현재 연도 1월 1일부터 다음 연도 1월 1일 전까지 `TM_REPORT.REGI_DATE`를 집계합니다.
+- 회원 상태, 독서 상태 및 독후감 공개 여부와 관계없이 `TM_REPORT`에 남아 있는 모든 독후감을 집계합니다.
+- 작성자 수가 많은 도서부터 정렬하고, 동률이면 가장 최근 독후감 등록 시각과 도서 번호 순으로 정렬해 1위부터 10위까지 순위를 부여합니다.
+- 인기 도서 평균 평점은 도서 정보 화면과 동일하게 읽는 중인 독후감을 제외하고 공개 여부와 관계없이 해당 도서의 전체 완료·중단 독후감 평점으로 계산합니다.
+- 인기 도서 카드는 도서 소개를 표시하지 않고 출판사 위치에 도서 정보 화면과 같은 별 아이콘 및 평균 평점을 표시합니다. 순위와 작성자 수는 도서 표지 아래와 제목 위에 표시합니다.
+- 직접 검색 결과는 기존 출판사와 세 줄 도서 소개를 유지하며, 검색 결과가 반환되면 인기 도서 기간 선택, 순위, 작성자 수 및 평균 평점을 숨깁니다.
+
 ## 회원별 요청 제한
 
 | 제한 | 기본값 | 집계 대상 | 만료 |
@@ -58,6 +69,10 @@
 - 유예기간이 지나 회원이 물리 삭제되면 회원별 제한 키를 즉시 삭제합니다.
 - 공용 검색 결과 캐시는 사용자와 연결되지 않으므로 계정 비활성화, 영구 탈퇴 신청·취소 및 물리 삭제로 변경하지 않고 TTL 만료까지 유지합니다.
 - 도서 검색 제한과 캐시는 독후감 공개 범위, 댓글, 알림, 푸시 구독 및 소셜 관계를 변경하거나 복원하지 않습니다.
+- 주간·월간·연간 인기 도서 집계는 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING`, `SUSPENDED` 등 회원 상태를 조건으로 사용하지 않습니다.
+- 계정 상태가 변경되어도 `TM_REPORT`에 독후감이 남아 있는 동안에는 모든 기간의 인기 도서 작성자 수와 평균 평점에 포함합니다.
+- 유예기간이 지나 회원과 `TM_REPORT`가 물리 삭제되면 해당 독후감은 모든 기간 집계에서 영구 제외되며 별도 인기 순위 또는 평균 평점 이력으로 복원하지 않습니다.
+- 기간별 인기 도서 조회는 독후감 공개 설정, 댓글, 알림, 푸시 구독 및 소셜 관계를 변경하지 않습니다.
 
 ## 실패 및 운영 확인
 
@@ -71,10 +86,14 @@
 - `src/main/java/org/our/sadari/book/controller/BookController.java`
 - `src/main/java/org/our/sadari/book/service/BookSearchService.java`
 - `src/main/java/org/our/sadari/book/service/BookSearchProtectionService.java`
+- `src/main/java/org/our/sadari/book/service/BookPopularService.java`
+- `src/main/java/org/our/sadari/book/mapper/BookMapper.xml`의 `getPopularBookList`
+- `src/main/java/org/our/sadari/book/dto/PopularBookDto.java`
 - `src/main/java/org/our/sadari/book/dto/BookSearchResponseDto.java`
 - `src/main/java/org/our/sadari/book/dto/KakaoBookJsonDto.java`
 - `src/main/java/org/our/sadari/global/security/config/SecurityConfig.java`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
 - `src/main/frontend/src/features/Book/Search/hook/useSearchBookPage.ts`
+- `src/main/frontend/src/pages/Book/Search/SearchBookPage.tsx`
 - `src/main/resources/application-prod.yml`
 - `BOOK_SEARCH_RATE_LIMITED`

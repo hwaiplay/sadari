@@ -13,6 +13,12 @@
  * 카카오 도서 검색 결과를 화면 계약으로 변환한 타입
  */
 export interface BookSearchResultType {
+  // 기간별 인기 도서에서만 전달되는 1부터 시작하는 순위
+  rank?: number;
+  // 기간별 인기 도서에서만 전달되는 고유 독후감 작성자 수
+  reportCount?: number;
+  // 기간별 인기 도서에서만 전달되는 읽는 중 제외 전체 평균 별점
+  ratingAverage?: number | string | null;
   // 책 제목
   title: string;
   // 저자
@@ -30,6 +36,9 @@ export interface BookSearchResultType {
   // 출간일
   pubdate: string;
 }
+
+// 인기 도서 화면에서 선택할 수 있는 현재 집계 기간
+export type PopularBookPeriodType = "weekly" | "monthly" | "yearly";
 
 /**
  * 카카오 도서 검색의 50권 페이지와 다음 조회 상태 타입

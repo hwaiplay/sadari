@@ -18,6 +18,43 @@
          WHERE BOOK_ISBN = #{bookIsbn}
     </select>
 
+    <!-- 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 고유 독후감 작성자 수 기준 인기 도서를 조회한다. -->
+    <select id="getPopularBookList" resultType="org.our.sadari.book.dto.PopularBookDto">
+        <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        SELECT /* getPopularBookList */
+               COALESCE(B.BOOK_TITL, '') AS TITLE
+             , COALESCE(B.BOOK_ATHR, '') AS AUTHOR
+             , COALESCE(B.BOOK_PUBL, '') AS PUBLISHER
+             , COALESCE(B.BOOK_ISBN, '') AS ISBN
+             , COALESCE(B.BOOK_CVIM, '') AS IMAGE
+             , COALESCE(B.BOOK_DESC, '') AS DESCRIPTION
+             , COALESCE(DATE_FORMAT(B.PUBL_DATE, '%Y%m%d'), '') AS PUBDATE
+             , P.REPORT_COUNT
+             , ( SELECT ROUND(AVG(CAST(G.REPT_GRDE AS UNSIGNED)), 1)
+                   FROM TM_REPORT G
+                  WHERE G.BOOK_NUMB = B.BOOK_NUMB
+                    AND G.REPT_STAT != #{reptStatRead}
+               ) AS RATING_AVERAGE
+          FROM (
+                SELECT R.BOOK_NUMB AS BOOK_NUMB
+                     , COUNT(DISTINCT R.USER_NUMB) AS REPORT_COUNT
+                     , MAX(R.REGI_DATE) AS LATEST_REPORT_DATE
+                  FROM TM_REPORT R
+                 WHERE R.REGI_DATE <![CDATA[>=]]> #{periodStart}
+                   AND R.REGI_DATE <![CDATA[<]]> #{nextPeriodStart}
+              GROUP BY R.BOOK_NUMB
+              ORDER BY REPORT_COUNT DESC
+                     , LATEST_REPORT_DATE DESC
+                     , R.BOOK_NUMB
+                 LIMIT 10
+               ) P
+          JOIN TM_BKINFO B
+            ON B.BOOK_NUMB = P.BOOK_NUMB
+      ORDER BY P.REPORT_COUNT DESC
+             , P.LATEST_REPORT_DATE DESC
+             , P.BOOK_NUMB
+    </select>
+
     <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영한다. -->
     <insert id="setBook" parameterType="org.our.sadari.book.dto.BookDto" useGeneratedKeys="true" keyProperty="bookNumb">
         /* setBook */

@@ -1,15 +1,35 @@
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
+import CustomSelect, {
+  type CustomSelectOption,
+} from "@/components/Select/CustomSelect";
+import BookRatingSummary from "@/features/Book/components/BookRatingSummary/BookRatingSummary";
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import Loading from "@/components/Loading/Loading";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
+import type { PopularBookPeriodType } from "@/features/Book/types/book.type";
 import * as styles from "./SearchBookPage.css";
 
 const DESCRIPTION_PREVIEW_LENGTH = 90;
+const POPULAR_PERIOD_OPTIONS: readonly CustomSelectOption<PopularBookPeriodType>[] = [
+  {
+    value: "weekly",
+    label: /* "주간 인기 도서" */ message("frontend.book.search.popularWeekly"),
+  },
+  {
+    value: "monthly",
+    label: /* "월간 인기 도서" */ message("frontend.book.search.popularMonthly"),
+  },
+  {
+    value: "yearly",
+    label: /* "연간 인기 도서" */ message("frontend.book.search.popularYearly"),
+  },
+];
 
 /**
  * 책 검색 입력과 결과 목록을 표시하고 사용자 동작을 검색 훅에 전달한다.
@@ -23,11 +43,15 @@ const SearchBookPage = () => {
     bookResult,
     handleLoadMore,
     handleMoreInfo,
+    handlePopularPeriodChange,
     handleSearchClick,
     handleSelectBook,
     hasMore,
+    isInitialLoading,
     isLoadingMore,
+    isPopularMode,
     isSearching,
+    popularPeriod,
     searchKeyword,
     selectingBookIsbn,
     setSearchKeyword,
@@ -37,53 +61,79 @@ const SearchBookPage = () => {
   return (
     <main className={styles.page}>
       <Container className={styles.content}>
-        {/* 책 검색어 입력과 검색 실행 영역 */}
-        <form className={styles.searchBar} onSubmit={handleSearchClick}>
-          <label className={styles.searchLabel}>
-            <span className={styles.hiddenLabel}>
-              {/* "책 제목, 저자를 입력하세요" */}
-              {message("frontend.book.search.placeholder")}
-            </span>
-            <input
-              className={styles.searchInput}
-              type="text"
-              name="searchKeyword"
-              id="searchKeyword"
-              placeholder={message("frontend.book.search.placeholder")}
-              value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
-            />
-            {/* "검색" */}
-            <button
-              className={styles.searchButton}
-              type="submit"
-              disabled={isSearching}
-              aria-label={/* "검색" */ message("frontend.common.search")}
-            >
-              <svg
-                className={styles.searchIcon}
-                viewBox="0 0 24 24"
-                aria-hidden="true"
+        {/* 책 검색 입력과 인기 도서 기간 선택 영역 */}
+        <section className={styles.searchSection}>
+          {/* 책 검색어 입력과 검색 실행 영역 */}
+          <form className={styles.searchBar} onSubmit={handleSearchClick}>
+            <label className={styles.searchLabel}>
+              <span className={styles.hiddenLabel}>
+                {/* "책 제목, 저자를 입력하세요" */}
+                {message("frontend.book.search.placeholder")}
+              </span>
+              <input
+                className={styles.searchInput}
+                type="text"
+                name="searchKeyword"
+                id="searchKeyword"
+                placeholder={message("frontend.book.search.placeholder")}
+                value={searchKeyword}
+                onChange={(event) => setSearchKeyword(event.target.value)}
+              />
+              {/* "검색" */}
+              <button
+                className={styles.searchButton}
+                type="submit"
+                disabled={isSearching}
+                aria-label={/* "검색" */ message("frontend.common.search")}
               >
-                <path
-                  d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                />
-                <path
-                  d="m15 15 4 4"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="1.8"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-          </label>
-        </form>
+                <svg
+                  className={styles.searchIcon}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                  />
+                  <path
+                    d="m15 15 4 4"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.8"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+            </label>
+          </form>
 
-        {bookResult &&
+          {isPopularMode && (
+            /* 기간별 인기 도서 선택 영역 */
+            <div className={styles.popularPeriodBar}>
+              <CustomSelect
+                value={popularPeriod}
+                options={POPULAR_PERIOD_OPTIONS}
+                ariaLabel={
+                  /* "인기 도서 기간" */ message(
+                    "frontend.book.search.popularPeriodLabel",
+                  )
+                }
+                className={styles.popularPeriodSelect}
+                triggerClassName={styles.popularPeriodSelectTrigger}
+                optionListClassName={styles.popularPeriodOptionList}
+                optionClassName={styles.popularPeriodOption}
+                onChange={handlePopularPeriodChange}
+              />
+            </div>
+          )}
+        </section>
+
+        {isInitialLoading ? (
+          /* 선택 기간의 인기 도서 조회 상태 영역 */
+          <Loading isFullScreen={false} />
+        ) : bookResult &&
           (bookResult.length > 0 ? (
             <div className={styles.resultList}>
               {bookResult.map((book, index) => {
@@ -118,18 +168,50 @@ const SearchBookPage = () => {
                       </div>
                     </div>
 
-                    {/* 검색된 책의 제목과 저자 및 출판사 영역 */}
+                    {/* 인기 도서는 표지 아래와 제목 위에 순위 및 작성자 수를 표시한다. */}
+                    {isPopularMode &&
+                      book.rank !== undefined &&
+                      book.reportCount !== undefined && (
+                        <p className={styles.popularRank}>
+                          {/* "{순위}위 · {작성자 수}명" */}
+                          {message("frontend.book.search.popularRank", [
+                            book.rank,
+                            book.reportCount,
+                          ])}
+                        </p>
+                      )}
+
+                    {/* 검색된 책의 제목과 저자 및 출판사 또는 평균 평점 영역 */}
                     <div className={styles.bookMeta}>
                       <h2 className={styles.bookTitle}>{title}</h2>
-                      <p className={styles.meta}>
-                        {author} / {publisher}
-                      </p>
+                      {isPopularMode ? (
+                        /* 인기 도서는 출판사 대신 도서 정보와 같은 평균 별점을 표시한다. */
+                        <div className={styles.authorRatingLine}>
+                          <p className={styles.meta}>{author}</p>
+                          {/* 평균 평점이 있으면 저자 옆에 구분선과 도서 평균 별점을 표시한다. */}
+                          {book.ratingAverage !== null &&
+                            book.ratingAverage !== undefined &&
+                            book.ratingAverage !== "" && (
+                              <>
+                                <span className={styles.metaSeparator}>|</span>
+                                <BookRatingSummary rating={book.ratingAverage} />
+                              </>
+                            )}
+                        </div>
+                      ) : (
+                        /* 직접 검색 결과는 기존 저자와 출판사 정보를 유지한다. */
+                        <p className={styles.meta}>
+                          {author} / {publisher}
+                        </p>
+                      )}
                     </div>
 
-                    {/* 검색된 책의 소개 영역 */}
-                    <p className={styles.description}>
-                      {preview || message("frontend.common.noBookDescription")}
-                    </p>
+                    {!isPopularMode && (
+                      /* 직접 검색 결과에서만 도서 소개를 세 줄까지 표시한다. */
+                      <p className={styles.description}>
+                        {preview || message("frontend.common.noBookDescription")}
+                      </p>
+                    )}
 
                     {/* 검색된 책의 상세보기와 선택 버튼 영역 */}
                     <div className={styles.actions}>
@@ -165,8 +247,17 @@ const SearchBookPage = () => {
             </div>
           ) : (
             <p className={styles.emptyMessage}>
-              {/* "검색 결과가 없습니다." */}
-              {message("frontend.book.search.noResult")}
+              {isPopularMode ? (
+                <>
+                  {/* "선택한 기간의 인기 도서가 아직 없습니다." */}
+                  {message("frontend.book.search.popularEmpty")}
+                </>
+              ) : (
+                <>
+                  {/* "검색 결과가 없습니다." */}
+                  {message("frontend.book.search.noResult")}
+                </>
+              )}
             </p>
           ))}
       </Container>
