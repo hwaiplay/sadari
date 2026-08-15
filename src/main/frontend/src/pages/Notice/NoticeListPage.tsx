@@ -7,9 +7,6 @@ import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./NoticePage.css";
 
-// "공지사항을 불러오는 중입니다"
-const NOTICE_LOADING_TITLE = "공지사항을 불러오는 중입니다";
-
 /**
  * 현재 배포 중인 공지사항을 최근 배포 순서로 표시한다.
  *
@@ -189,7 +186,7 @@ function NoticeListPage() {
     return (
       <main className={styles.listPage}>
         {/* 공지사항 최초 조회 상태 영역 */}
-        <Loading title={NOTICE_LOADING_TITLE} isFullScreen={false} />
+        <Loading isFullScreen={false} />
       </main>
     );
   }

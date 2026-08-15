@@ -39,7 +39,7 @@ function BookInfoPage() {
   }
 
   if (!routeBookInfo && isPending) {
-    return <Loading title={message("frontend.report.loading.bookInfo")} />;
+    return <Loading />;
   }
 
   if (!routeBookInfo && isError) {

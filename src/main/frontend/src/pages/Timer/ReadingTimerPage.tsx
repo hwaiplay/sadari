@@ -743,7 +743,7 @@ export default function ReadingTimerPage() {
   // 최초 조회 중에는 공통 로딩 화면을 반환한다
   if (isLoading) {
     // 독서 타이머 로딩 화면을 표시한다
-    return <Loading title={message("frontend.timer.loading")} />;
+    return <Loading />;
   }
 
   return (

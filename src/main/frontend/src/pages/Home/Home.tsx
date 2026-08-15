@@ -56,7 +56,7 @@ function Home() {
   // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
     // 홈 독후감 목록 로딩 화면을 반환한다
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시한다

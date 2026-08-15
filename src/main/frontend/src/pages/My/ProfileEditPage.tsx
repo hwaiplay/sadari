@@ -1854,7 +1854,7 @@ function ProfileEditPage() {
   };
 
   if (isLoading) {
-    return <Loading title={/* "목록 조회중" */ message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (
@@ -2271,9 +2271,12 @@ function ProfileEditPage() {
               onScroll={handleFollowListScroll}
             >
               {isFollowListLoading && (
-                <p className={styles.followModalEmpty}>
-                  {/* "목록 조회중" */ message("frontend.common.loadingList")}
-                </p>
+                /* 팔로우 사용자 목록을 불러오는 동안 모달 안에 소형 공통 회전 링을 표시한다 */
+                <Loading
+                  title={/* "목록 조회 중" */ message("frontend.common.loadingList")}
+                  isFullScreen={false}
+                  isCompact
+                />
               )}
               {!isFollowListLoading && followUsers.length === 0 && (
                 <p className={styles.followModalEmpty}>

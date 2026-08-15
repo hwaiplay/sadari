@@ -97,7 +97,7 @@ function SettingsPage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (

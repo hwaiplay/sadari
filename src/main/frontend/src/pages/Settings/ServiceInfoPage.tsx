@@ -54,7 +54,7 @@ function ServiceInfoPage() {
 
   // 목록 조회 중에는 공통 로딩 화면을 반환한다.
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   // 서비스 정보 카테고리 아코디언 화면을 반환한다.

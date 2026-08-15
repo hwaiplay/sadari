@@ -6,9 +6,6 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import * as styles from "./NoticePage.css";
 
-// "공지사항을 불러오는 중입니다"
-const NOTICE_LOADING_TITLE = "공지사항을 불러오는 중입니다";
-
 /**
  * 현재 배포 중인 공지사항 본문을 표시한다.
  *
@@ -86,7 +83,7 @@ function NoticeDetailPage() {
     return (
       <main className={styles.page}>
         {/* 공지사항 상세 조회 상태 영역 */}
-        <Loading title={NOTICE_LOADING_TITLE} isFullScreen={false} />
+        <Loading isFullScreen={false} />
       </main>
     );
   }

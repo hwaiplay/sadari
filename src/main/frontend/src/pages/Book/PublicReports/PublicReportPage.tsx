@@ -199,7 +199,7 @@ const PublicReportPage = () => {
   }
 
   if (publicReportsQuery.isPending) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   if (publicReportsQuery.isError) {

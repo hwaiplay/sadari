@@ -625,7 +625,7 @@ function DetailPage() {
   };
 
   if (isPending) {
-    return <Loading title={message("frontend.report.loading.detail")} />;
+    return <Loading />;
   }
 
   if (isError) {
