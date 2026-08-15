@@ -311,15 +311,23 @@ function ReadingBookModal({ books, selectedReport, onSelect, onClose }: ReadingB
   );
 }
 
+type TimerReadingHeatmapProps = {
+  refreshKey: number;
+};
+
 /**
  * 타이머 화면에 전체 독서 통계 없이 연도별 독서 잔디만 조회해 표시한다
  *
  * @author SeungHyeon.Kang
+ * @param props 독서 잔디 갱신 번호
  * @return 독서 잔디 카드
  */
-function TimerReadingHeatmap() {
+function TimerReadingHeatmap(props: TimerReadingHeatmapProps) {
+  const { refreshKey } = props;
   // 화면 이탈과 연도 변경 시 이전 잔디 조회를 취소할 요청 참조를 생성한다
   const abortControllerRef = useRef<AbortController | null>(null);
+  // 이미 처리한 타이머 완료 갱신 번호를 저장한다
+  const appliedRefreshKeyRef = useRef(refreshKey);
   // 타이머 화면에 표시할 선택 연도의 독서 잔디 상태를 생성한다
   const [heatmap, setHeatmap] = useState<ReadingHeatmap | null>(null);
   // 독서 잔디 조회 진행 상태를 생성한다
@@ -402,6 +410,28 @@ function TimerReadingHeatmap() {
   useEffect(prepareHeatmap, [prepareHeatmap]);
 
   /**
+   * 독서 타이머 완료 후 현재 선택 연도의 잔디를 다시 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const refreshCompletedHeatmap = useCallback((): void => {
+    // 이미 처리한 완료 갱신 번호는 중복 조회하지 않는다
+    if (appliedRefreshKeyRef.current === refreshKey) {
+      // 추가 잔디 조회 없이 갱신 처리를 종료한다
+      return;
+    }
+
+    // 현재 완료 갱신 번호를 처리 완료 상태로 저장한다
+    appliedRefreshKeyRef.current = refreshKey;
+    // 사용자가 보고 있던 연도의 최신 독서 시간을 다시 조회한다
+    void loadHeatmap(heatmap?.selectedYear);
+  }, [heatmap?.selectedYear, loadHeatmap, refreshKey]);
+
+  // 타이머 완료 갱신 번호가 변경되면 독서 잔디를 다시 조회한다
+  useEffect(refreshCompletedHeatmap, [refreshCompletedHeatmap]);
+
+  /**
    * 잔디에서 선택한 조회 연도를 전용 API에 반영한다
    *
    * @author SeungHyeon.Kang
@@ -475,6 +505,7 @@ export default function ReadingTimerPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isChanging, setIsChanging] = useState(false);
   const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
   const activeTimer = summary?.activeTimer;
   const selectedBook = getSelectedBook(summary?.currentReadingList, selectedReport);
   const displayedBook = activeTimer ?? selectedBook;
@@ -605,6 +636,12 @@ export default function ReadingTimerPage() {
       if (response.data) {
         // 서버가 반환한 최신 요약을 화면에 설정한다
         applySummary(response.data);
+
+        // 완료된 독서 시간이 잔디에 즉시 반영되도록 갱신 번호를 변경한다
+        if (targetStatus === "COMPLETED") {
+          // 잔디 컴포넌트가 기존 조회 API를 다시 실행하도록 완료 횟수를 증가시킨다
+          setHeatmapRefreshKey(heatmapRefreshKey + 1);
+        }
       }
     } catch (error) {
       // 상태 변경 실패 원인을 사용자에게 표시한다
@@ -852,7 +889,7 @@ export default function ReadingTimerPage() {
       </section>
 
       {/* 연도별 독서 시간 잔디 영역 */}
-      <TimerReadingHeatmap />
+      <TimerReadingHeatmap refreshKey={heatmapRefreshKey} />
 
       {/* 현재 읽는 도서 선택 모달 영역 */}
       {isBookModalOpen && !activeTimer && (
