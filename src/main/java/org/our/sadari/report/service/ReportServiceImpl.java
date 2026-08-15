@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-01        Hanwon.Jang        읽는 중 독후감 비공개와 평점 미집계 정책 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 반영
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 허용 정렬 코드 검증 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -931,16 +932,17 @@ public class ReportServiceImpl implements ReportService {
     }
 
     /**
-     * ISBN 기준 활성 사용자의 공개 독후감을 팔로우 작성자 우선으로 조회한다.
+     * ISBN 기준 활성 사용자의 공개 독후감을 요청한 정렬 기준으로 조회한다.
      * 로그인 사용자의 좋아요와 작성자 팔로우 여부를 함께 표시하기 위해 사용자 번호를 Mapper에 전달한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @param bookIsbn 조회할 도서 ISBN
+     * @param sortType 공개 독후감 정렬 코드
      * @return 공개 독후감 목록 조회 결과
      */
     @Override
-    public ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn) {
+    public ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn, String sortType) {
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
             // "조회 결과가 없어요."
@@ -953,6 +955,18 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setUserNumb(userNumb);
         // BookIsbn 업무 값을 reportDto DTO에 설정한다
         reportDto.setBookIsbn(StringUtil.normalizePlainText(bookIsbn));
+        // 외부 정렬 코드를 허용 목록과 비교할 수 있는 문자열로 정규화한다
+        String normalizedSortType = StringUtil.normalizePlainText(sortType);
+        // 허용된 정렬 코드가 아니면 친구와 팔로잉 우선 기본순으로 보정한다
+        if (!Constant.SORT_RELATION_DESC.equals(normalizedSortType)
+                && !Constant.SORT_LATEST_DESC.equals(normalizedSortType)
+                && !Constant.SORT_GRADE_DESC.equals(normalizedSortType)
+                && !Constant.SORT_LIKE_DESC.equals(normalizedSortType)) {
+            normalizedSortType = Constant.SORT_RELATION_DESC;
+        }
+
+        // 검증된 정렬 코드를 Mapper 조건으로 설정한다
+        reportDto.setSortType(normalizedSortType);
         // ISBN 기준으로 공개 독후감 목록을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(reportMapper.getPublicReportList(reportDto));
     }

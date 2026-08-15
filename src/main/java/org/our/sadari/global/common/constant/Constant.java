@@ -21,6 +21,8 @@ package org.our.sadari.global.common.constant;
  * 2026-08-14        SeungHyeon.Kang    독서 타이머 상태와 상세 정리 스케줄러 코드 추가
  * 2026-08-14        SeungHyeon.Kang    독서 통계 표시 개월 수 상수 제거
  * 2026-08-14        Hanwon.Jang        독서 모임 초대 알림 코드 추가
+ * 2026-08-15        SeungHyeon.Kang    상호 팔로우 친구 버튼 상태 추가
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 관계순과 최신순 및 추천순 정렬 코드 추가
  */
 public final class Constant {
 
@@ -94,6 +96,8 @@ public final class Constant {
     public static final String FOLLOW_STAT_FOLLOWING = "FOLLOWING";
     // 상대만 로그인 사용자를 팔로우하여 맞팔로우할 수 있는 버튼 상태
     public static final String FOLLOW_STAT_BOTH_FOLW = "BOTH_FOLW";
+    // 로그인 사용자와 상대가 서로 팔로우하는 친구 버튼 상태
+    public static final String FOLLOW_STAT_FRIEND = "FRIEND";
     // 알림 상황 좋아요 설정값
     public static final String ALIM_SITU_LIKE = "LIKE";
     // 알림 상황 팔로우 설정값
@@ -197,6 +201,12 @@ public final class Constant {
     public static final String SORT_START_DATE_DESC = "START_DATE_DESC";
     // 정렬 평점 내림차순 설정값
     public static final String SORT_GRADE_DESC = "GRADE_DESC";
+    // 공개 독후감 친구와 팔로잉 우선 기본 정렬 설정값
+    public static final String SORT_RELATION_DESC = "RELATION_DESC";
+    // 공개 독후감 최신순 정렬 설정값
+    public static final String SORT_LATEST_DESC = "LATEST_DESC";
+    // 공개 독후감 좋아요 내림차순 정렬 설정값
+    public static final String SORT_LIKE_DESC = "LIKE_DESC";
 
     // 파일 유형 프로필 설정값
     public static final String FILE_TYPE_PROFILE = "PROFILE";

@@ -14,6 +14,7 @@ import {
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import type { PublicReportSortType } from "@/features/Book/api/bookApi";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -24,16 +25,16 @@ import ProfileImage from "@/features/User/components/ProfileImage";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
-import {statusWrap} from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 
-type ReportSort = "LATEST" | "RATING";
 type ReportStatus = string;
 
-const SORT_OPTIONS: readonly CustomSelectOption<ReportSort>[] = [
-  { value: "LATEST", label: "최신순" },
-  { value: "RATING", label: "별점순" },
+const SORT_OPTIONS: readonly CustomSelectOption<PublicReportSortType>[] = [
+  { value: "RELATION_DESC", label: "기본순" },
+  { value: "LATEST_DESC", label: "최신순" },
+  { value: "GRADE_DESC", label: "별점순" },
+  { value: "LIKE_DESC", label: "추천순" },
 ];
 
 type PublicReportPageState = {
@@ -74,7 +75,7 @@ const PublicReportPage = () => {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
-  const [sort, setSort] = useState<ReportSort>("LATEST");
+  const [sort, setSort] = useState<PublicReportSortType>("RELATION_DESC");
   const [status, setStatus] = useState<ReportStatus>("ALL");
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
@@ -82,7 +83,7 @@ const PublicReportPage = () => {
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, isValidIsbn);
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
@@ -122,28 +123,9 @@ const PublicReportPage = () => {
         ? reports
         : reports.filter((report) => getReportStatus(report) === status);
 
-    return [...filteredReports].sort((left, right) => {
-
-      const followPriority = Number(right.followYsno === "Y")
-        - Number(left.followYsno === "Y");
-
-      // 팔로우 작성자 여부가 다르면 팔로우 중인 작성자의 독후감을 먼저 배치한다.
-      if (followPriority !== 0) {
-        return followPriority;
-      }
-
-      const ratingPriority = (Number(right.reptGrde) || 0)
-        - (Number(left.reptGrde) || 0);
-
-      // 별점순에서는 같은 팔로우 그룹 안에서 높은 별점을 먼저 배치한다.
-      if (sort === "RATING" && ratingPriority !== 0) {
-        return ratingPriority;
-      }
-
-      // 동일 우선순위에서는 최근 등록된 독후감을 먼저 배치한다.
-      return right.reptNumb - left.reptNumb;
-    });
-  }, [reports, sort, status]);
+    // 정렬은 서버 SQL에서 완료되므로 화면에서는 독서 상태 필터만 적용한다.
+    return filteredReports;
+  }, [reports, status]);
   const {
     visibleItems: displayedReports,
     hasNext: hasNextReport,
@@ -330,17 +312,19 @@ const PublicReportPage = () => {
                       </div>
 
                         {/* 신고 및 차단 더보기 메뉴 */}
-                        <UserActionMenu
-                          userNick={report.userNick}
-                          reportTarget={{
-                            targetType: "REPORT",
-                            targetNumb: report.reptNumb,
-                            reportNumb: report.reptNumb,
-                            userNumb: report.userNumb,
-                            userNick: report.userNick,
-                            content: report.reptCntn,
-                          }}
-                        />
+                        <div className={styles.actionMenuWrap}>
+                          <UserActionMenu
+                            userNick={report.userNick}
+                            reportTarget={{
+                              targetType: "REPORT",
+                              targetNumb: report.reptNumb,
+                              reportNumb: report.reptNumb,
+                              userNumb: report.userNumb,
+                              userNick: report.userNick,
+                              content: report.reptCntn,
+                            }}
+                          />
+                        </div>
 
                     </div>
 

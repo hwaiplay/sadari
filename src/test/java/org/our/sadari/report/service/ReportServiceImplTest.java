@@ -36,6 +36,7 @@ import org.our.sadari.social.mapper.SocialMapper;
  * -----------------------------------------------------------
  * 2026-08-04        SeungHyeon.Kang       최초 생성
  * 2026-08-14        SeungHyeon.Kang    독후감 참조 데이터 삭제 순서 검증 추가
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -78,6 +79,48 @@ class ReportServiceImplTest {
         // 독서 요약 목록 SQL이 빈 목록을 반환하도록 설정한다
         lenient().when(reportMapper.getReadingSummaryList(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(List.of());
+    }
+
+    /**
+     * 공개 독후감의 추천순 요청을 Mapper 정렬 조건으로 전달하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getPublicUsesLikeSort() {
+        // 공개 독후감 SQL이 빈 목록을 반환하도록 설정한다
+        when(reportMapper.getPublicReportList(any(ReportDto.class))).thenReturn(List.of());
+
+        // 좋아요가 많은 순으로 공개 독후감을 조회한다
+        reportService.getPublicReportsByIsbn(31L, "9788972756194", Constant.SORT_LIKE_DESC);
+
+        // Mapper에 전달된 정렬 코드를 확인할 인자 Capture를 생성한다
+        ArgumentCaptor<ReportDto> reportCaptor = ArgumentCaptor.forClass(ReportDto.class);
+        // 공개 독후감 SQL 조회 인자를 Capture한다
+        verify(reportMapper).getPublicReportList(reportCaptor.capture());
+        // 요청한 추천순 코드가 변경 없이 전달됐는지 검증한다
+        assertEquals(Constant.SORT_LIKE_DESC, reportCaptor.getValue().getSortType());
+    }
+
+    /**
+     * 허용되지 않은 공개 독후감 정렬 코드를 관계 우선 기본순으로 보정하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getPublicDefaultsSort() {
+        // 공개 독후감 SQL이 빈 목록을 반환하도록 설정한다
+        when(reportMapper.getPublicReportList(any(ReportDto.class))).thenReturn(List.of());
+
+        // 허용 목록에 없는 정렬 코드로 공개 독후감을 조회한다
+        reportService.getPublicReportsByIsbn(31L, "9788972756194", "UNKNOWN_DESC");
+
+        // Mapper에 전달된 정렬 코드를 확인할 인자 Capture를 생성한다
+        ArgumentCaptor<ReportDto> reportCaptor = ArgumentCaptor.forClass(ReportDto.class);
+        // 공개 독후감 SQL 조회 인자를 Capture한다
+        verify(reportMapper).getPublicReportList(reportCaptor.capture());
+        // 허용되지 않은 정렬이 관계 우선 기본순으로 보정됐는지 검증한다
+        assertEquals(Constant.SORT_RELATION_DESC, reportCaptor.getValue().getSortType());
     }
 
     /**

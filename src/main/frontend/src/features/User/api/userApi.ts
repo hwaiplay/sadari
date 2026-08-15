@@ -3,6 +3,7 @@ import { assertResultDataSuccess } from "@/app/api/resultData";
 
 export type UserProfile = {
   userStat?: "ACTIVE" | "WITHDRAWN" | "SUSPENDED" | "DELETE_PENDING";
+  userStatName?: string;
   onbdYsno?: "Y" | "N";
   userNick?: string;
   porfPath?: string;

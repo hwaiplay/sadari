@@ -20,6 +20,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 설명 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 작성자 팔로우 여부 응답 추가
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 허용값 문서화
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -93,7 +94,8 @@ public class ReportDto extends BookDto {
     @Schema(description = "책 제목 또는 작가명 검색어", example = "히가시노 게이고")
     private String bookKeyword;
 
-    @Schema(description = "독후감 목록 정렬 유형", example = "END_DATE_DESC")
+    @Schema(description = "독후감 목록 정렬 유형", example = "RELATION_DESC"
+          , allowableValues = {"RELATION_DESC", "LATEST_DESC", "GRADE_DESC", "LIKE_DESC", "END_DATE_DESC", "START_DATE_DESC"})
     private String sortType;
 
     @Schema(description = "상세 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")

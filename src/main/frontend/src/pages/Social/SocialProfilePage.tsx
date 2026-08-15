@@ -1,6 +1,6 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetAlert, sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -23,6 +23,7 @@ import {
   type FollowListType,
   type FollowUser,
 } from "@/features/Social/api/socialApi";
+import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import type {
   MonthlyReadingSummary,
   ReadingSummaryReport,
@@ -36,19 +37,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
 type ReadingPeriod = "week" | "month" | "year";
-
-/**
- * 팔로우 버튼이 관계가 맺어진 상태를 표시하는지 판단합니다.
- * 팔로잉과 맞팔로우는 이미 관계가 존재하거나 상대가 나를 팔로우 중인 상태라서 초록색으로 강조합니다.
- *
- * @author HanWon.Jang
- * @param followStatName 서버에서 내려준 팔로우 버튼명
- * @return 강조 색상 적용 여부
- */
-const isActiveFollowStatus = (followStatName: string) => {
-
-  return followStatName === "팔로잉" || followStatName === "맞팔로우";
-};
 
 /**
  * 독후감 요약 목록에 표시할 독서 기간을 조합합니다.
@@ -166,15 +154,40 @@ function SocialProfilePage() {
       };
     }
 
-    Promise.all([
-      getSocialProfileApi(targetUserNumb),
-      getSocialReadingApi(targetUserNumb),
-      getSocialFollowStatusApi(targetUserNumb),
-    ])
-      .then(([profileResponse, summaryResponse, followStatusResponse]) => {
+    // 후속 API 호출 전에 대상 회원의 최신 상태를 먼저 조회한다.
+    getSocialProfileApi(targetUserNumb)
+      .then(async (profileResponse) => {
+
+        const nextProfile = profileResponse.data as UserProfile;
+
+        // 정상 이용 상태가 아니면 상태를 안내하고 프로필 세부 조회를 중단한다.
+        if (nextProfile.userStat && nextProfile.userStat !== "ACTIVE") {
+          const userStatus = `${nextProfile.userStat}(${nextProfile.userStatName ?? "-"})`;
+          // 접근할 수 없는 회원 상태를 안내한다.
+          const alertResult = await sweetAlert({
+            // "현재 접근할 수 없는 회원이에요."
+            title: message("frontend.social.restrictedProfile.title"),
+            // "회원 상태는 {0}입니다. 확인하면 이전 화면으로 이동해요."
+            text: message("frontend.social.restrictedProfile.text", [userStatus]),
+            icon: "warning",
+            allowOutsideClick: false,
+          });
+
+          // 상태 안내를 확인하면 진입 전 화면으로 돌아간다.
+          if (!ignore && alertResult.isConfirmed) {
+            navigate(-1);
+          }
+          return;
+        }
+
+        // 정상 회원에게만 독서 활동과 팔로우 관계를 병렬로 조회한다.
+        const [summaryResponse, followStatusResponse] = await Promise.all([
+          getSocialReadingApi(targetUserNumb),
+          getSocialFollowStatusApi(targetUserNumb),
+        ]);
 
         if (!ignore) {
-          setProfile(profileResponse.data as UserProfile);
+          setProfile(nextProfile);
           setSummary(summaryResponse.data as MonthlyReadingSummary);
           setFollowStatName(followStatusResponse.data?.followStatName ?? "");
         }
@@ -198,7 +211,7 @@ function SocialProfilePage() {
 
       ignore = true;
     };
-  }, [targetUserNumb]);
+  }, [navigate, targetUserNumb]);
 
   useEffect(() => {
 
@@ -211,39 +224,51 @@ function SocialProfilePage() {
   }, []);
 
   /**
-   * 팔로우 버튼 클릭 시 현재 버튼명에 맞춰 팔로우 또는 언팔로우 API를 호출합니다.
-   * 버튼명이 "팔로잉"이면 이미 내가 상대를 팔로우 중인 상태이므로 삭제하고, 그 외에는 팔로우 관계를 저장합니다.
+   * 프로필 팔로우 버튼의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출한다
+   * 팔로잉과 친구는 내가 상대를 팔로우 중인 상태이므로 삭제하고, 그 외에는 팔로우 관계를 저장한다
    *
    * @author HanWon.Jang
-   * @return
+   * @return 팔로우 관계와 프로필 통계 갱신이 끝난 Promise
+   * @throws 팔로우 또는 프로필 통계 요청 실패 시 발생
    */
   const handleFollowButtonClick = async () => {
 
+    // 중복 클릭 중에는 현재 팔로우 요청이 끝날 때까지 추가 조작을 차단한다
     if (isFollowUpdating) {
+      // 진행 중인 팔로우 요청을 유지하고 추가 요청 없이 종료한다
       return;
     }
 
-    if (followStatName === "팔로잉") {
+    // 현재 버튼명으로 로그인 사용자가 만든 팔로우 관계의 존재 여부를 판정한다
+    const isFollowing = isFollowedByMe(followStatName);
+
+    // 팔로잉 또는 친구 상태를 해제하기 전에 사용자 확인을 받는다
+    if (isFollowing) {
       const result = await sweetConfirm({
-        // "언팔로우하시겠습니까?"
+        // "언팔로우하시겠어요?"
         title: message("frontend.social.unfollow.title"),
-        // "팔로잉 목록에서 삭제됩니다."
+        // "팔로잉 목록에서 삭제돼요."
         text: message("frontend.social.unfollow.text"),
         // "언팔로우"
         confirmButtonText: message("frontend.social.unfollow.confirm"),
+        // "취소"
         cancelButtonText: message("frontend.common.cancel"),
       });
 
+      // 사용자가 취소하면 기존 관계를 유지한다
       if (!result.isConfirmed) {
+        // 팔로우 관계 변경 없이 종료한다
         return;
       }
     }
 
+    // 팔로우 관계 변경이 끝날 때까지 버튼을 비활성화한다
     setIsFollowUpdating(true);
 
+    // 현재 관계에 맞는 팔로우 등록 또는 삭제 요청을 실행한다
     try {
       const response =
-        followStatName === "팔로잉"
+        isFollowing
           ? await delSocialFollowApi(targetUserNumb)
           : await setSocialFollowApi(targetUserNumb);
 
@@ -337,28 +362,40 @@ function SocialProfilePage() {
   };
 
   /**
-   * handle Follow Status Click 사용자 동작을 처리한다
+   * 팔로우 목록 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출한다
    *
    * @author HanWon.Jang
-   * @param user user 입력값
-   * @return 반환값이 없다
-   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   * @param user 관계를 변경할 팔로우 목록 사용자
+   * @return 팔로우 관계와 프로필 통계 갱신이 끝난 Promise
+   * @throws 팔로우 또는 프로필 통계 요청 실패 시 발생
    */
   const handleFollowStatusClick = async (user: FollowUser) => {
 
+    // 다른 관계 변경이 진행 중이거나 내 계정 행이면 추가 조작을 허용하지 않는다
     if (followUpdatingUserNumb || user.meYsno === "Y") {
+      // 현재 목록 상태를 유지하고 종료한다
       return;
     }
 
-    if (user.followStatName === "팔로잉") {
+    // 목록 사용자를 내가 팔로우 중인지 버튼명으로 판정한다
+    const isFollowing = isFollowedByMe(user.followStatName);
+
+    // 팔로잉 또는 친구 상태를 해제하기 전에 사용자 확인을 받는다
+    if (isFollowing) {
       const result = await sweetConfirm({
+        // "언팔로우하시겠어요?"
         title: message("frontend.social.unfollow.title"),
+        // "팔로잉 목록에서 삭제돼요."
         text: message("frontend.social.unfollow.text"),
+        // "언팔로우"
         confirmButtonText: message("frontend.social.unfollow.confirm"),
+        // "취소"
         cancelButtonText: message("frontend.common.cancel"),
       });
 
+      // 사용자가 취소하면 기존 관계를 유지한다
       if (!result.isConfirmed) {
+        // 팔로우 관계 변경 없이 종료한다
         return;
       }
     }
@@ -367,7 +404,7 @@ function SocialProfilePage() {
 
     try {
       const response =
-        user.followStatName === "팔로잉"
+        isFollowing
           ? await delSocialFollowApi(user.userNumb)
           : await setSocialFollowApi(user.userNumb);
 
@@ -879,11 +916,8 @@ function SocialProfilePage() {
               />
               {followStatName && (
                 <button
-                  className={`${styles.socialFollowButton} ${
-                    isActiveFollowStatus(followStatName)
-                      ? styles.socialFollowButtonActive
-                      : ""
-                  }`}
+                  className={styles.socialFollowButton}
+                  data-follow-status={followStatName}
                   type="button"
                   disabled={isFollowUpdating}
                   onClick={handleFollowButtonClick}
@@ -1064,11 +1098,8 @@ function SocialProfilePage() {
                   </button>
                   {user.meYsno !== "Y" && (
                     <button
-                      className={`${styles.followModalStatusButton} ${
-                        isActiveFollowStatus(user.followStatName ?? "")
-                          ? styles.followModalStatusButtonActive
-                          : ""
-                      }`}
+                      className={styles.followModalStatusButton}
+                      data-follow-status={user.followStatName}
                       type="button"
                       disabled={followUpdatingUserNumb === user.userNumb}
                       onClick={() => void handleFollowStatusClick(user)}

@@ -298,15 +298,27 @@ export const socialFollowButton = style({
   boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
   cursor: "pointer",
   selectors: {
+    "&:hover:not(:disabled)": {
+      backgroundColor: vars.color.gray100,
+    },
+    "&[data-follow-status='팔로잉']": {
+      color: "#2f9e44",
+    },
+    "&[data-follow-status='맞팔로우']": {
+      color: "#2f9e44",
+    },
+    "&[data-follow-status='친구']": {
+      color: "#2563eb",
+      backgroundColor: "#eaf4ff",
+    },
+    "&[data-follow-status='친구']:hover:not(:disabled)": {
+      backgroundColor: "#dbeafe",
+    },
     "&:disabled": {
       cursor: "default",
       opacity: 0.62,
     },
   },
-});
-
-export const socialFollowButtonActive = style({
-  color: "#2f9e44",
 });
 
 export const profileNameInput = style({
@@ -1150,7 +1162,7 @@ export const followModalIntro = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",
   fontFamily: vars.font.body,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1.35,
   color: "#777777",
 });
@@ -1166,15 +1178,27 @@ export const followModalStatusButton = style({
   fontSize: "12px",
   cursor: "pointer",
   selectors: {
+    "&:hover:not(:disabled)": {
+      backgroundColor: vars.color.gray100,
+    },
+    "&[data-follow-status='팔로잉']": {
+      color: "#2f9e44",
+    },
+    "&[data-follow-status='맞팔로우']": {
+      color: "#2f9e44",
+    },
+    "&[data-follow-status='친구']": {
+      color: "#2563eb",
+      backgroundColor: "#eaf4ff",
+    },
+    "&[data-follow-status='친구']:hover:not(:disabled)": {
+      backgroundColor: "#dbeafe",
+    },
     "&:disabled": {
       cursor: "default",
       opacity: 0.62,
     },
   },
-});
-
-export const followModalStatusButtonActive = style({
-  color: "#2f9e44",
 });
 
 export const followModalEmpty = style({
