@@ -490,16 +490,24 @@ export const myPageCurrentReadingText = style({
 
 export const currentReadingMeta = style({
   display: "flex",
-  alignItems: "center",
+  alignItems: "flex-end",
   justifyContent: "space-between",
   gap: "8px",
+});
+
+export const currentReadingBookMetaGroup = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: "4px",
 });
 
 export const currentReadingRemain = style({
   flexShrink: 0,
   fontFamily: vars.font.semibold,
   fontSize: "12px",
-  lineHeight: 1,
+  lineHeight: 1.25,
   whiteSpace: "nowrap",
 });
 

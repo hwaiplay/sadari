@@ -1047,12 +1047,22 @@ function ProfileEditPage() {
                     >
                       {report.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                     </span>
-                    {/* 저자와 목표 종료일 및 남은 기간 영역 */}
+                    {/* 저자 아래에 목표 종료일을 배치하고 오른쪽에 남은 기간을 표시하는 영역 */}
                     <span className={styles.currentReadingMeta}>
-                      <span className={styles.readingSummaryBookMeta}>
-                        {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
-                          .filter(Boolean)
-                          .join(" | ")}
+                      <span className={styles.currentReadingBookMetaGroup}>
+                        {/* 현재 읽는 책의 저자명 */}
+                        {report.bookAthr && (
+                          <span className={styles.readingSummaryBookMeta}>{report.bookAthr}</span>
+                        )}
+                        {/* 현재 읽는 책의 목표 독서 종료일 */}
+                        {report.reptEndt && (
+                          <span className={styles.readingSummaryBookMeta}>
+                            {/* "종료일 {0}" */}
+                            {message("frontend.profile.currentReading.endDate", [
+                              formatDashedDateToDot(report.reptEndt),
+                            ])}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={styles.currentReadingRemain}

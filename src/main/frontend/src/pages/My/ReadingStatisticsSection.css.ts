@@ -422,7 +422,7 @@ export const topBookItem = style({
   gap: "10px",
   "@media": {
     "screen and (max-width: 390px)": {
-      gridTemplateColumns: "28px 36px minmax(0, 1fr)",
+      gridTemplateColumns: "28px 36px minmax(0, 1fr) max-content",
       gap: "8px",
     },
   },
@@ -501,13 +501,6 @@ export const topBookTime = style({
   fontSize: "12px",
   color: "#34704d",
   whiteSpace: "nowrap",
-  "@media": {
-    "screen and (max-width: 390px)": {
-      gridColumn: "2 / 4",
-      justifySelf: "end",
-      marginTop: "-8px",
-    },
-  },
 });
 
 export const emptyState = style({
