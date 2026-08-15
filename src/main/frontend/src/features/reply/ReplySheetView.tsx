@@ -403,7 +403,7 @@ const ReplyItem = ({
             aria-label={
               reply.likeYsno === "Y"
                 ? /* "좋아요 취소" */ message("frontend.reply.unlikeAria")
-                : /* "좋아요" */ message("frontend.reply.likeAria")
+                : /* "좋아요" */ message("frontend.common.like")
             }
             aria-pressed={reply.likeYsno === "Y"}
             disabled={controller.isReplyLikePending}
@@ -563,7 +563,7 @@ const ReplySheetView = ({
         aria-label={
           report.userNick
             ? `${report.userNick}님의 독후감 댓글`
-            : /* "댓글" */ message("frontend.report.comment.aria")
+            : /* "댓글" */ message("frontend.common.comment")
         }
         style={controller.sheetStyle}
       >

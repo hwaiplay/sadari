@@ -29,7 +29,7 @@ const UserReportPage = () => {
   // "독후감"
   const reportTargetLabel = message("frontend.userReport.target.report");
   // "댓글"
-  const replyTargetLabel = message("frontend.userReport.target.reply");
+  const replyTargetLabel = message("frontend.common.comment");
   const targetTypeLabel =
     target.targetType === "REPORT" ? reportTargetLabel : replyTargetLabel;
   // "마음에 들지 않습니다"

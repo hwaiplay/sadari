@@ -933,7 +933,7 @@ function DetailPage() {
                       <button
                           className={styles.likeButton}
                           type="button"
-                          aria-label={/* "좋아요" */ message("frontend.report.like.aria")}
+                          aria-label={/* "좋아요" */ message("frontend.common.like")}
                           aria-pressed={bookData.likeYsno === "Y"}
                           disabled={likeMutation.isPending}
                           onClick={handleLikeToggle}
@@ -958,7 +958,7 @@ function DetailPage() {
                       <button
                           className={styles.commentIndicator}
                           type="button"
-                          aria-label={/* "댓글" */ message("frontend.report.comment.aria")}
+                          aria-label={/* "댓글" */ message("frontend.common.comment")}
                           onClick={() => setIsReplySheetOpen(true)}
                       >
                     <img

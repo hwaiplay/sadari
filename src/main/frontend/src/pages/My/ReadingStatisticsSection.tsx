@@ -402,12 +402,12 @@ const getComparisonRows = (statistics: ReadingStatistics): ReadingComparisonRow[
     {
       key: "doneBooks",
       label: message("frontend.profile.readingStats.comparisonDoneBooks"),
-      currentValue: message("frontend.profile.readingStats.statusCount", [comparison.currentDoneBooks]),
-      previousValue: message("frontend.profile.readingStats.statusCount", [comparison.previousDoneBooks]),
+      currentValue: /* "{0}권" */ message("frontend.common.bookCount", [comparison.currentDoneBooks]),
+      previousValue: /* "{0}권" */ message("frontend.common.bookCount", [comparison.previousDoneBooks]),
       difference: doneBooksDifference,
       differenceLabel: getDifferenceLabel(
         doneBooksDifference,
-        message("frontend.profile.readingStats.statusCount", [Math.abs(doneBooksDifference)]),
+        /* "{0}권" */ message("frontend.common.bookCount", [Math.abs(doneBooksDifference)]),
       ),
     },
   ];
@@ -657,7 +657,7 @@ const getStatusName = (reptStat: ReadingStatusCount["reptStat"]): string => {
   // 읽는 중 상태의 화면 문구를 반환한다
   if (reptStat === "READ") {
     // "읽는 중"
-    return message("frontend.profile.readingStats.statusRead");
+    return message("frontend.common.reading");
   }
 
   // 완독 상태의 화면 문구를 반환한다
@@ -1048,7 +1048,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
         <span className={styles.statusName}>{getStatusName(status.reptStat)}</span>
         <strong className={styles.statusCount}>
           {/* "{0}권" */}
-          {message("frontend.profile.readingStats.statusCount", [status.reptCnt])}
+          {message("frontend.common.bookCount", [status.reptCnt])}
         </strong>
       </div>
     );
@@ -1164,7 +1164,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
         </div>
         <strong className={styles.ratingCount}>
           {/* "{0}권" */}
-          {message("frontend.profile.readingStats.statusCount", [rating.reptCnt])}
+          {message("frontend.common.bookCount", [rating.reptCnt])}
         </strong>
       </div>
     );
@@ -1209,8 +1209,8 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
   const renderVisibilityOption = (publicYsno: "Y" | "N") => {
     // 공개 여부 코드에 대응하는 화면 문구 키를 결정한다
     const labelKey = publicYsno === "Y"
-      ? "frontend.profile.readingStats.public"
-      : "frontend.profile.readingStats.private";
+      ? /* "공개" */ "frontend.common.public"
+      : /* "비공개" */ "frontend.common.private";
     // 선택 여부가 시각적으로 구분되는 공개 범위 버튼을 반환한다
     return (
       <button
@@ -1417,7 +1417,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
       {isOwner && statistics && (
         <button className={styles.settingButton} type="button" onClick={handleSettingsOpen}>
           {/* "공개 여부" */}
-          {message("frontend.profile.readingStats.settingButton")}
+          {message("frontend.common.visibility")}
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -1434,7 +1434,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
             <header className={styles.modalHeader}>
               <h2 className={styles.modalTitle} id="reading-statistics-settings-title">
                 {/* "공개 여부" */}
-                {message("frontend.profile.readingStats.settingTitle")}
+                {message("frontend.common.visibility")}
               </h2>
               <button
                 className={styles.modalClose}
@@ -1452,7 +1452,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
               {/* 독서 통계 공개 여부 선택과 안내 영역 */}
               <fieldset
                 className={styles.settingFieldset}
-                aria-label={message("frontend.profile.readingStats.visibilityTitle")}
+                aria-label={/* "공개 여부" */ message("frontend.common.visibility")}
                 aria-describedby="reading-statistics-visibility-help"
               >
                 <p className={styles.settingHelp} id="reading-statistics-visibility-help">

@@ -98,6 +98,8 @@ apply: always
 - 조건에 따라 서로 다른 문구를 호출하면 각 메시지 호출 바로 위에 해당 분기의 실제 문구를 개별 작성합니다.
 - 서버에서 이미 완성된 표시 문구를 받아 그대로 렌더링하는 경우에는 메시지 함수 호출이 아니므로 실제 문구 주석을 강제하지 않습니다.
 - 메시지 프로퍼티의 문구가 변경되면 호출부의 실제 문구 주석도 같은 변경에서 함께 수정합니다.
+- 둘 이상의 화면에서 의미와 기본 문구가 같은 메시지는 `frontend.common.*` 키를 우선 사용합니다.
+- 번역 결과만 같거나 화면 맥락, 동작, 상태의 의미가 다르면 기능별 메시지 키를 유지합니다.
 
 ## 4. JSX 메시지 주석 형식
 
@@ -113,7 +115,7 @@ apply: always
 <section className={styles.section}>
   <h2 className={styles.sectionTitle}>
     {/* "공개 여부" */}
-    {message("frontend.report.field.public")}
+    {message("frontend.common.visibility")}
   </h2>
 
   <div className={styles.statusPill}>
@@ -121,12 +123,12 @@ apply: always
       (bookData.pubcYsno === "Y" ? (
         <>
           {/* "공개" */}
-          {message("frontend.report.public.on")}
+          {message("frontend.common.public")}
         </>
       ) : (
         <>
           {/* "비공개" */}
-          {message("frontend.report.public.off")}
+          {message("frontend.common.private")}
         </>
       ))}
   </div>

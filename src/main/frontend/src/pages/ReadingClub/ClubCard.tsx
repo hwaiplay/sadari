@@ -100,7 +100,7 @@ export default function ClubCard({ club }: ClubCardProps) {
   // 모임 상세 화면 이동에 사용할 라우터 함수를 조회한다
   const navigate = useNavigate();
   // "공개"
-  const visibilityLabel = message("frontend.readingClub.common.visibility.public");
+  const visibilityLabel = message("frontend.common.public");
   // 모임 가입 방식 표시 문구를 조회한다
   const joinTypeLabel = getJoinTypeLabel(club.joinType);
   // 로그인 사용자의 모임 관계에 맞는 행동 문구를 조회한다

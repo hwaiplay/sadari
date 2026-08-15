@@ -95,7 +95,7 @@ export default function FindClubPage() {
   // "모임 이름을 검색해보세요"
   const searchPlaceholder = message("frontend.readingClub.find.searchPlaceholder");
   // "검색"
-  const searchButtonLabel = message("frontend.readingClub.find.searchButton");
+  const searchButtonLabel = message("frontend.common.search");
   // "모임을 불러오고 있어요."
   const loadingLabel = message("frontend.readingClub.common.loading");
 

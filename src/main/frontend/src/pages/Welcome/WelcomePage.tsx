@@ -771,7 +771,7 @@ function WelcomePage() {
             onClick={handlePrevious}
           >
             {/* "이전" */}
-            {message("frontend.welcome.previous")}
+            {message("frontend.common.previous")}
           </button>
           <button
             className={styles.nextButton}
@@ -794,7 +794,7 @@ function WelcomePage() {
             ) : (
               <>
                 {/* "다음" */}
-                {message("frontend.welcome.next")}
+                {message("frontend.common.next")}
               </>
             )}
           </button>

@@ -58,7 +58,7 @@ const SearchBookPage = () => {
               className={styles.searchButton}
               type="submit"
               disabled={isSearching}
-              aria-label={message("frontend.book.search.button")}
+              aria-label={/* "검색" */ message("frontend.common.search")}
             >
               <svg
                 className={styles.searchIcon}
@@ -148,7 +148,7 @@ const SearchBookPage = () => {
                         disabled={selectingBookIsbn !== null}
                       >
                         {/* "선택" */}
-                        {message("frontend.book.search.select")}
+                        {/* "선택" */ message("frontend.common.select")}
                       </button>
                     </div>
                   </article>

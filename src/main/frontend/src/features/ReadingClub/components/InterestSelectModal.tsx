@@ -76,7 +76,7 @@ export default function InterestSelectModal({
           </div>
           {onClose && (
             <button className={styles.closeButton} type="button" onClick={onClose}>
-              <img src="/img/icons/icon-close.svg" alt={message("frontend.readingClub.interest.close")} />
+              <img src="/img/icons/icon-close.svg" alt={/* "닫기" */ message("frontend.common.close")} />
             </button>
           )}
         </header>

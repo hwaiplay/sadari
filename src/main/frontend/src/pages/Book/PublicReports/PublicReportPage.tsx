@@ -378,7 +378,7 @@ const PublicReportPage = () => {
                             type="button"
                             aria-label={message(
                               isExpanded
-                                ? "frontend.book.publicReports.collapse"
+                                ? "frontend.common.collapse"
                                 : "frontend.book.publicReports.expand",
                             )}
                             onClick={() => handleToggleReport(report.reptNumb)}

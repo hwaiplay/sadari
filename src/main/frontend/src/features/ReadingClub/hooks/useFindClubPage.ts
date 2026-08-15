@@ -65,8 +65,8 @@ export const useFindClubPage = () => {
   const showLoadError = useCallback((error: unknown): void => {
     // "조회하지 못했어요"
     const errorTitle = message("frontend.readingClub.error.fetchTitle");
-    // "다시 시도해 주세요."
-    const retryMessage = message("frontend.readingClub.common.retry");
+    // "다시 시도해주세요."
+    const retryMessage = message("frontend.common.tryAgain");
     // 서버 오류 문구가 없을 때 공통 재시도 안내로 보정한다
     const errorMessage = getApiErrorMessage(error, retryMessage);
     // 모임 조회 실패 원인을 사용자에게 표시한다

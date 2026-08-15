@@ -1110,16 +1110,16 @@ function ProfileEditPage() {
     }> = [
       {
         label: /* "총 읽은 책" */ message("frontend.profile.stats.totalReadBook"),
-        value: /* "{0}권" */ message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
+        value: /* "{0}권" */ message("frontend.common.bookCount", [summary.totalReadBookCnt ?? 0]),
         action: "totalReadBook",
       },
       {
-        label: /* "팔로우" */ message("frontend.profile.stats.following"),
+        label: /* "팔로우" */ message("frontend.common.following"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
         action: "following",
       },
       {
-        label: /* "팔로워" */ message("frontend.profile.stats.follower"),
+        label: /* "팔로워" */ message("frontend.common.followers"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
         action: "followers",
       },
@@ -2086,7 +2086,7 @@ function ProfileEditPage() {
                   "week",
                   monthlySummary.weekCode,
                   "frontend.profile.weeklyReading.title",
-                  "frontend.profile.weeklyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentWeekCount,
                   monthlySummary.weekCountDiff,
                   "frontend.profile.weeklyReading.diffAria",
@@ -2098,7 +2098,7 @@ function ProfileEditPage() {
                   "month",
                   monthlySummary.monthCode,
                   "frontend.profile.monthlyReading.title",
-                  "frontend.profile.monthlyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentMonthCount,
                   monthlySummary.countDiff,
                   "frontend.profile.monthlyReading.diffAria",
@@ -2110,7 +2110,7 @@ function ProfileEditPage() {
                   "year",
                   monthlySummary.yearCode,
                   "frontend.profile.yearlyReading.title",
-                  "frontend.profile.yearlyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentYearCount,
                   monthlySummary.yearCountDiff,
                   "frontend.profile.yearlyReading.diffAria",
@@ -2207,14 +2207,14 @@ function ProfileEditPage() {
                 type="button"
                 onClick={() => void closeProfileModal("currentReading")}
               >
-                {/* "닫기" */ message("frontend.profile.currentReading.close")}
+                {/* "닫기" */ message("frontend.common.close")}
               </button>
               <button
                 className={styles.currentReadingModalEditButton}
                 type="button"
                 onClick={handleReadingEditClick}
               >
-                <span>{/* "수정하기" */ message("frontend.profile.currentReading.edit")}</span>
+                <span>{/* "수정하기" */ message("frontend.common.update")}</span>
               </button>
             </div>
           </section>
@@ -2251,8 +2251,8 @@ function ProfileEditPage() {
                 {/* "팔로우" 또는 "팔로워" */}
                 {message(
                   followListType === "following"
-                    ? "frontend.profile.followingList.title"
-                    : "frontend.profile.followerList.title",
+                    ? "frontend.common.following"
+                    : "frontend.common.followers",
                 )}
               </h2>
               <button

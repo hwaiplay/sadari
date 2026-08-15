@@ -17,13 +17,13 @@ type CalendarReport = {
 };
 
 const WEEKDAY_KEYS = [
-  "frontend.calendar.week.sun",
-  "frontend.calendar.week.mon",
-  "frontend.calendar.week.tue",
-  "frontend.calendar.week.wed",
-  "frontend.calendar.week.thu",
-  "frontend.calendar.week.fri",
-  "frontend.calendar.week.sat",
+  "frontend.common.week.sun",
+  "frontend.common.week.mon",
+  "frontend.common.week.tue",
+  "frontend.common.week.wed",
+  "frontend.common.week.thu",
+  "frontend.common.week.fri",
+  "frontend.common.week.sat",
 ];
 
 type MonthMoveDirection = "prev" | "next";

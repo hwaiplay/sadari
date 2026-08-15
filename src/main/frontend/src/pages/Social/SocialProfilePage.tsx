@@ -489,16 +489,16 @@ function SocialProfilePage() {
     const stats = [
       {
         label: message("frontend.profile.stats.totalReadBook"),
-        value: message("frontend.profile.stats.bookCount", [summaryData.totalReadBookCnt ?? 0]),
+        value: /* "{0}권" */ message("frontend.common.bookCount", [summaryData.totalReadBookCnt ?? 0]),
         listType: null,
       },
       {
-        label: message("frontend.profile.stats.following"),
+        label: /* "팔로우" */ message("frontend.common.following"),
         value: message("frontend.profile.stats.userCount", [summaryData.followingCnt ?? 0]),
         listType: "following" as FollowListType,
       },
       {
-        label: message("frontend.profile.stats.follower"),
+        label: /* "팔로워" */ message("frontend.common.followers"),
         value: message("frontend.profile.stats.userCount", [summaryData.followerCnt ?? 0]),
         listType: "followers" as FollowListType,
       },
@@ -992,7 +992,7 @@ function SocialProfilePage() {
               "week",
               summary.weekCode,
               "frontend.profile.weeklyReading.title",
-              "frontend.profile.weeklyReading.count",
+              "frontend.common.bookCount",
               summary.currentWeekCount,
               summary.currentWeekReports,
             )}
@@ -1001,7 +1001,7 @@ function SocialProfilePage() {
               "month",
               summary.monthCode,
               "frontend.profile.monthlyReading.title",
-              "frontend.profile.monthlyReading.count",
+              "frontend.common.bookCount",
               summary.currentMonthCount,
               summary.currentMonthReports,
             )}
@@ -1010,7 +1010,7 @@ function SocialProfilePage() {
               "year",
               summary.yearCode,
               "frontend.profile.yearlyReading.title",
-              "frontend.profile.yearlyReading.count",
+              "frontend.common.bookCount",
               summary.currentYearCount,
               summary.currentYearReports,
             )}
@@ -1042,8 +1042,8 @@ function SocialProfilePage() {
               <h2 className={styles.goalModalTitle} id="follow-list-title">
                 {message(
                   followListType === "following"
-                    ? "frontend.profile.followingList.title"
-                    : "frontend.profile.followerList.title",
+                    ? "frontend.common.following"
+                    : "frontend.common.followers",
                 )}
               </h2>
               <button
