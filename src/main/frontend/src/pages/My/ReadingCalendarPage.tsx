@@ -301,7 +301,7 @@ function ReadingCalendarPage() {
         {selectedReports.length > 0 ? (
           <>
             {/* 선택한 날짜의 독서 기록 목록 영역 */}
-            <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
+            <section className={styles.scheduleList} aria-label={message("frontend.calendar.selectedList")}>
             {selectedReports.map((report) => {
 
               const backgroundColor = report.reptColr || "#e5e5e5";
@@ -333,7 +333,8 @@ function ReadingCalendarPage() {
           </>
         ) : (
           <p className={styles.emptyMessage}>
-            선택한 날짜에 읽고 있던 책이 없습니다.
+            {/* "선택한 날짜에 읽고 있던 책이 없습니다." */}
+            {message("frontend.calendar.selectedEmpty")}
           </p>
         )}
       </Container>

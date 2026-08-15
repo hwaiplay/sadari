@@ -220,14 +220,16 @@ export default function ClubDetailPage() {
                 </span>
                 <img
                   src="/img/icons/icon-chevron-right.svg"
-                  alt="arrow"
+                  alt=""
+                  aria-hidden="true"
                 />
               </button>
               <button className={styles.navigationRow} type="button">
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
                 <img
                   src="/img/icons/icon-chevron-right.svg"
-                  alt="arrow"
+                  alt=""
+                  aria-hidden="true"
                 />
               </button>
             </nav>

@@ -1,4 +1,5 @@
 import { lockBodyScroll, unlockBodyScroll } from "@/app/utils/modalUtil";
+import { message } from "@/app/messages/message";
 
 type SweetAlertIcon = "success" | "error" | "warning" | "info" | "question" | "loading";
 
@@ -690,7 +691,8 @@ export function sweetAlert(options: SweetAlertOptions) {
       const closeButton = document.createElement("button");
       closeButton.className = "sadari-swal-close";
       closeButton.type = "button";
-      closeButton.setAttribute("aria-label", options.closeButtonLabel ?? "취소");
+      // "취소"
+      closeButton.setAttribute("aria-label", options.closeButtonLabel ?? message("frontend.common.cancel"));
 
       const closeIcon = document.createElement("img");
       closeIcon.src = "/img/icons/icon-close.svg";
@@ -747,7 +749,8 @@ export function sweetAlert(options: SweetAlertOptions) {
       cancelButton = document.createElement("button");
       cancelButton.className = "sadari-swal-button sadari-swal-cancel";
       cancelButton.type = "button";
-      cancelButton.textContent = options.cancelButtonText ?? "취소";
+      // "취소"
+      cancelButton.textContent = options.cancelButtonText ?? message("frontend.common.cancel");
       cancelButton.addEventListener("click", () => {
 
         close({
@@ -765,7 +768,8 @@ export function sweetAlert(options: SweetAlertOptions) {
       const denyButton = document.createElement("button");
       denyButton.className = "sadari-swal-button sadari-swal-deny";
       denyButton.type = "button";
-      denyButton.textContent = options.denyButtonText ?? "다른 선택";
+      // "다른 선택"
+      denyButton.textContent = options.denyButtonText ?? message("frontend.common.alternativeChoice");
       denyButton.addEventListener("click", () => {
 
         // 사용자의 두 번째 확정 선택으로 현재 알림을 완료한다
@@ -786,7 +790,8 @@ export function sweetAlert(options: SweetAlertOptions) {
       confirmButton = document.createElement("button");
       confirmButton.className = "sadari-swal-button";
       confirmButton.type = "button";
-      confirmButton.textContent = options.confirmButtonText ?? "확인";
+      // "확인"
+      confirmButton.textContent = options.confirmButtonText ?? message("frontend.common.confirm");
       confirmButton.addEventListener("click", () => {
 
         // 사용자의 확인 선택으로 현재 알림을 완료한다
@@ -877,8 +882,10 @@ export function sweetConfirm(options: SweetAlertOptions) {
   // 호출 화면이 취소 버튼 노출 여부를 지정하면 해당 설정을 유지한다
   return sweetAlert({
     icon: "question",
-    confirmButtonText: "확인",
-    cancelButtonText: "취소",
+    // "확인"
+    confirmButtonText: message("frontend.common.confirm"),
+    // "취소"
+    cancelButtonText: message("frontend.common.cancel"),
     ...options,
     showCancelButton: options.showCancelButton ?? true,
   });

@@ -30,10 +30,10 @@ const CONTENT_PREVIEW_LENGTH = 180;
 type ReportStatus = string;
 
 const SORT_OPTIONS: readonly CustomSelectOption<PublicReportSortType>[] = [
-  { value: "RELATION_DESC", label: "기본순" },
-  { value: "LATEST_DESC", label: "최신순" },
-  { value: "GRADE_DESC", label: "별점순" },
-  { value: "LIKE_DESC", label: "추천순" },
+  { value: "RELATION_DESC", label: /* "기본순" */ message("frontend.book.publicReports.sort.default") },
+  { value: "LATEST_DESC", label: /* "최신순" */ message("frontend.book.publicReports.sort.latest") },
+  { value: "GRADE_DESC", label: /* "별점순" */ message("frontend.home.sort.gradeDesc") },
+  { value: "LIKE_DESC", label: /* "추천순" */ message("frontend.book.publicReports.sort.recommended") },
 ];
 
 type PublicReportPageState = {
@@ -95,7 +95,7 @@ const PublicReportPage = () => {
   const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
     // 전체 옵션은 화면 전용 값으로 두고 읽는 중 상태를 제외한 READ_STAT 상세코드의 사용 순서를 따릅니다.
     return [
-      { value: "ALL", label: "전체" },
+      { value: "ALL", label: /* "전체" */ message("frontend.common.all") },
       ...(reportStatusCodeQuery.data ?? [])
         .filter((code) => code.comdCode.toUpperCase() !== "READ")
         .map((code) => ({
@@ -231,7 +231,7 @@ const PublicReportPage = () => {
                         <span className={styles.metaSeparator}>|</span>
                         <span className={styles.ratingSummary}>
                       <span className={styles.ratingStar}>
-                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} width={"14px"}/>
+                        <img src={"/img/icons/icon-star-rate.svg"} alt="" aria-hidden="true" width={"14px"}/>
                       </span>
                       <span>{pageState.ratingAverage}</span>
                     </span>
@@ -243,17 +243,17 @@ const PublicReportPage = () => {
           </section>
 
           {/* 공개 독후감 정렬과 독서 상태 필터 영역 */}
-          <section className={styles.filters} aria-label="독후감 필터">
+          <section className={styles.filters} aria-label={message("frontend.book.publicReports.filterLabel")}>
             <CustomSelect
               value={sort}
               options={SORT_OPTIONS}
-              ariaLabel="독후감 정렬"
+              ariaLabel={message("frontend.home.sort.label")}
               onChange={setSort}
             />
             <CustomSelect
               value={status}
               options={statusOptions}
-              ariaLabel="독서 상태"
+              ariaLabel={message("frontend.report.field.status")}
               onChange={setStatus}
             />
           </section>
@@ -376,7 +376,8 @@ const PublicReportPage = () => {
                                   : styles.expandArrow
                               }
                               src={"/img/icons/arrow-bottom.svg"}
-                              alt={"arrow"}
+                              alt=""
+                              aria-hidden="true"
                             />
                           </button>
                         ) : null}
@@ -387,7 +388,7 @@ const PublicReportPage = () => {
                       <button
                         className={styles.metricButton}
                         type="button"
-                        aria-label="좋아요"
+                        aria-label={message("frontend.common.like")}
                         aria-pressed={report.likeYsno === "Y"}
                         disabled={likeMutation.isPending}
                         onClick={() =>
@@ -400,8 +401,8 @@ const PublicReportPage = () => {
                       >
                         {
                           report.likeYsno === "Y"
-                              ? <img  src={"/img/icons/icon-heart-fill.svg"} alt={"좋아요"}/>
-                              : <img  src={"/img/icons/icon-heart.svg"} alt={"좋아요"}/>
+                              ? <img src={"/img/icons/icon-heart-fill.svg"} alt="" aria-hidden="true"/>
+                              : <img src={"/img/icons/icon-heart.svg"} alt="" aria-hidden="true"/>
                         }
 
                         <span>{getCountLabel(report.likeCnt)}</span>
@@ -409,10 +410,10 @@ const PublicReportPage = () => {
                       <button
                         className={styles.commentButton}
                         type="button"
-                        aria-label="댓글 보기"
+                        aria-label={message("frontend.book.publicReports.viewComments")}
                         onClick={() => setCommentReport(report)}
                       >
-                        <img  src={"/img/icons/icon-comment.svg"} alt={"댓글"}/>
+                        <img src={"/img/icons/icon-comment.svg"} alt="" aria-hidden="true"/>
                         <span>
                           {getCountLabel(report.replCnt)}
                         </span>
@@ -433,7 +434,7 @@ const PublicReportPage = () => {
           ) : (
             <p className={styles.empty}>
               {reports.length > 0
-                ? "선택한 조건에 맞는 독후감이 없어요."
+                ? /* "선택한 조건에 맞는 독후감이 없어요." */ message("frontend.book.publicReports.filteredEmpty")
                 : message("frontend.book.publicReports.empty")}
             </p>
           )}

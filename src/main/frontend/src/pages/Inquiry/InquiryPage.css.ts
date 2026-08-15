@@ -4,7 +4,7 @@ import { vars } from "@/app/styles/tokens.css";
 export const page = style({
   width: "100%",
   minHeight: `calc(100svh - ${vars.headerHeight} - ${vars.navHeight} - max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
-  padding: "20px 2px 32px",
+  padding: "20px 0 32px",
   backgroundColor: vars.color.background,
   boxSizing: "border-box",
 });
@@ -14,6 +14,7 @@ export const listPage = style([
   {
     display: "flex",
     flexDirection: "column",
+    paddingTop: "10px",
   },
 ]);
 
@@ -36,9 +37,6 @@ export const suspendedDetailPage = style({
 
 export const intro = style({
   marginBottom: "22px",
-  display: "flex",
-  alignItems: "center",
-  gap: '6px'
 });
 
 export const sectionTitle = style({

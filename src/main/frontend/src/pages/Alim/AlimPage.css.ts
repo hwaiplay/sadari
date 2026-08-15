@@ -6,7 +6,7 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "100svh",
   margin: "0 auto",
-  padding: "20px 18px 96px",
+  padding: "10px 0 96px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
 });
@@ -20,13 +20,12 @@ export const header = style({
   marginBottom: "22px",
 });
 
-export const title = style({
+export const description = style({
   margin: 0,
-  fontFamily: vars.font.heading,
-  fontSize: "22px",
-  lineHeight: 1.25,
-  letterSpacing: '-0.5px',
   color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
+  lineHeight: 1.55,
 });
 
 export const readAllButton = style({

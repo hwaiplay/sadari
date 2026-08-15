@@ -684,7 +684,7 @@ function WelcomePage() {
                           aria-pressed={isGroupSelected}
                           onClick={handleCategoryToggle}
                         >
-                          {group.categoryName} 전체
+                          {message("frontend.welcome.interest.all", [group.categoryName])}
                         </button>
                         {group.interests.map((interest) => {
                           const interestKey = interest.intrCode;

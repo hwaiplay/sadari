@@ -440,11 +440,12 @@ function AlimPage() {
   return (
     /* 알림 설정과 수신 내역 전체 영역 */
     <main className={styles.page}>
-      {/* 푸시 알림 설정과 전체 삭제 영역 */}
+      {/* 알림센터 페이지 설명과 알림 설정 및 전체 삭제 영역 */}
       <section className={styles.header}>
-        <div>
-          <p className={styles.title}>{message("frontend.alim.subtitle")}</p>
-        </div>
+        <p className={styles.description}>
+          {/* "내게 온 소식을 확인해보세요" */}
+          {message("frontend.alim.subtitle")}
+        </p>
         <div className={styles.headerActions}>
           <button
             className={pushButtonClass}

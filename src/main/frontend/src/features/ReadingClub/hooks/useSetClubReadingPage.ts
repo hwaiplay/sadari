@@ -11,6 +11,7 @@
 
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { getBookCoverImageSource } from "@/features/Book/utils/bookCoverImage";
@@ -101,12 +102,18 @@ export function useSetClubReadingPage() {
 
     event.preventDefault();
     if (!hasValidClubNumb || !selectedBook) {
-      await sweetWarning("책 정보가 없어요.", "모임에서 읽을 책을 다시 선택해주세요.");
+      // "책 정보가 없어요."
+      await sweetWarning(
+        message("frontend.readingClub.reading.bookMissingTitle"),
+        // "모임에서 읽을 책을 다시 선택해주세요."
+        message("frontend.readingClub.reading.bookMissingDescription"),
+      );
       handleBookChange();
       return;
     }
     if (!startDate || !endDate) {
-      await sweetWarning("목표 독서 기간을 선택해주세요.");
+      // "목표 독서 기간을 선택해주세요."
+      await sweetWarning(message("frontend.readingClub.reading.periodRequired"));
       return;
     }
 
@@ -119,19 +126,23 @@ export function useSetClubReadingPage() {
         bookPubl: stripHtmlTags(selectedBook.publisher),
         bookIsbn: stripHtmlTags(selectedBook.isbn),
         bookCvim: selectedBook.image || "/img/common/no-image.png",
-        bookDesc: stripHtmlTags(selectedBook.description) || "도서 소개가 없습니다.",
+        bookDesc: stripHtmlTags(selectedBook.description)
+          || /* "도서 소개가 없습니다." */ message("frontend.readingClub.reading.noBookDescription"),
         publDate: stripHtmlTags(selectedBook.pubdate),
         goalStdt: startDate,
         goalEndt: endDate,
         idemKeyx: idempotencyKeyRef.current,
       });
-      await sweetSuccess("모임 독서가 등록됐어요.");
+      // "모임 독서가 등록됐어요."
+      await sweetSuccess(message("frontend.readingClub.reading.savedTitle"));
       navigate(`/reading-clubs/${clubNumb}`, { replace: true });
     } catch (error) {
       // 서버 공통 응답의 원인을 사용자에게 표시하고 동일 요청 키로 재시도할 수 있게 유지한다
       await sweetError(
-        "모임 독서를 등록하지 못했어요.",
-        getApiErrorMessage(error, "잠시 후 다시 시도해주세요."),
+        // "모임 독서를 등록하지 못했어요."
+        message("frontend.readingClub.reading.saveFailedTitle"),
+        // "잠시 후 다시 시도해주세요."
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
       setIsPending(false);

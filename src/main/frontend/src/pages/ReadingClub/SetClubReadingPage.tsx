@@ -10,6 +10,7 @@
  */
 
 import { ActionButton } from "@/components/Button/ActionButton";
+import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
 import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
@@ -42,7 +43,8 @@ function SetClubReadingPage() {
 
   if (isPending) {
     // 멤버별 독후감까지 저장하는 동안 화면 이동을 차단한다
-    return <Loading title="모임 독서를 등록하고 있어요" />;
+    // "모임 독서를 등록하고 있어요"
+    return <Loading title={message("frontend.readingClub.reading.saving")} />;
   }
 
   return (
@@ -61,15 +63,21 @@ function SetClubReadingPage() {
           />
         ) : (
           <section className={styles.emptyState}>
-            <p className={styles.emptyText}>모임에서 읽을 책을 다시 선택해주세요.</p>
-            <ActionButton onClick={handleBookChange}>책 검색하기</ActionButton>
+            <p className={styles.emptyText}>
+              {/* "모임에서 읽을 책을 다시 선택해주세요." */}
+              {message("frontend.readingClub.reading.bookMissingDescription")}
+            </p>
+            <ActionButton onClick={handleBookChange}>
+              {/* "책 검색하기" */}
+              {message("frontend.book.search.open")}
+            </ActionButton>
           </section>
         )}
 
         {selectedBook ? (
           <div className={reportStyles.contentPanel}>
             <section className={clsx(statsStyles.statsSection, styles.periodSection)}>
-              <FormField title="목표 독서 기간">
+              <FormField title={message("frontend.report.field.targetPeriod")}>
                 <CalendarDatePicker
                   name="goalStdt"
                   value={startDate}
@@ -83,10 +91,12 @@ function SetClubReadingPage() {
 
             <div className={reportStyles.formActions}>
               <ActionButton variant="secondary" onClick={handleCancel}>
-                취소
+                {/* "취소" */}
+                {message("frontend.common.cancel")}
               </ActionButton>
               <ActionButton type="submit">
-                저장하기
+                {/* "저장하기" */}
+                {message("frontend.common.save")}
               </ActionButton>
             </div>
           </div>

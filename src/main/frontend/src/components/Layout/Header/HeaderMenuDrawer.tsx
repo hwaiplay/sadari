@@ -146,7 +146,8 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const [expandedMenuNumbs, setExpandedMenuNumbs] = useState<number[]>([]);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
-  const profileName = profile?.userNick || "사용자";
+  // "사용자"
+  const profileName = profile?.userNick || message("frontend.common.user");
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
   const portalTarget = typeof document === "undefined" ? null : document.body;
@@ -367,7 +368,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       />
       <aside
         className={clsx(drawerStyles.drawer, isDrawerOpen && drawerStyles.drawerOpen)}
-        aria-label="마이페이지 메뉴"
+        aria-label={message("frontend.header.myPageMenu")}
       >
         {/* 햄버거 메뉴 닫기 버튼 영역 */}
         <button
@@ -477,14 +478,14 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       <button
         className={hamburgerButton}
         type="button"
-        aria-label="메뉴 열기"
+        aria-label={message("frontend.header.openMenu")}
         aria-expanded={isDrawerOpen}
         onClick={() => setIsDrawerOpen(true)}
       >
         {/*<svg className={hamburgerIcon} viewBox="0 0 24 24" aria-hidden="true">*/}
         {/*  <path d="M4 7h16M4 12h16M4 17h16" />*/}
         {/*</svg>*/}
-        <img src={"/img/icons/icon-hamburger.svg"} alt={"메뉴 열기"}/>
+        <img src={"/img/icons/icon-hamburger.svg"} alt={message("frontend.header.openMenu")}/>
 
       </button>
       {portalTarget ? createPortal(drawer, portalTarget) : null}

@@ -84,7 +84,8 @@ function getMonthGroup(
     // 날짜가 없는 독후감의 그룹 정보를 반환한다
     return {
       key: "unknown",
-      label: "날짜 없음",
+      // "날짜 없음"
+      label: message("frontend.home.dateUnknown"),
     };
   }
 

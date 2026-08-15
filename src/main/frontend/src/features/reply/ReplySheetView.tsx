@@ -276,7 +276,9 @@ const ReplyItem = ({
           <Link
             className={styles.replyProfileLink}
             to={profilePath}
-            aria-label={`${reply.userNick || "사용자"} 프로필 보기`}
+            aria-label={message("frontend.profile.view", [
+              reply.userNick || /* "사용자" */ message("frontend.common.user"),
+            ])}
           >
             <ProfileImage
               className={styles.replyProfileImage}
@@ -332,7 +334,7 @@ const ReplyItem = ({
                 onClick={handleReplyClick}
               >
                 {/* "답글 달기" */}
-                답글 달기
+                {message("frontend.reply.writeChild")}
               </button>
             ) : null}
             {!isChild && childCount > 0 ? (
@@ -341,15 +343,17 @@ const ReplyItem = ({
                 type="button"
                 aria-expanded={isExpanded}
                 aria-label={
-                  isExpanded ? "답글 숨기기" : `답글 ${childCount}개 더보기`
+                  isExpanded
+                    ? /* "답글 숨기기" */ message("frontend.reply.hideChildren")
+                    : /* "답글 {0}개 더보기" */ message("frontend.reply.showChildren", [childCount])
                 }
                 onClick={handleToggleChildReplies}
               >
                 <span>
                   {/* "답글 n개 더보기" 또는 "답글 숨기기" */}
                   {isExpanded
-                    ? "답글 숨기기"
-                    : `답글 ${childCount}개 더보기`}
+                    ? /* "답글 숨기기" */ message("frontend.reply.hideChildren")
+                    : /* "답글 {0}개 더보기" */ message("frontend.reply.showChildren", [childCount])}
                 </span>
               </button>
             ) : null}
@@ -368,7 +372,7 @@ const ReplyItem = ({
             value=""
             options={replyActionOptions}
             onChange={handleReplyActionChange}
-            ariaLabel="더보기"
+            ariaLabel={message("frontend.userAction.more")}
             showArrow={false}
             triggerContent={
               <img
@@ -554,7 +558,7 @@ const ReplySheetView = ({
         aria-modal="true"
         aria-label={
           report.userNick
-            ? `${report.userNick}님의 독후감 댓글`
+            ? message("frontend.reply.dialogLabel", [report.userNick])
             : /* "댓글" */ message("frontend.common.comment")
         }
         style={controller.sheetStyle}
@@ -563,7 +567,7 @@ const ReplySheetView = ({
         {/* "아래로 당겨 닫기" */}
         <div
           className={styles.sheetHandle}
-          aria-label="아래로 당겨 닫기"
+          aria-label={message("frontend.reply.dragToClose")}
           role="button"
           tabIndex={0}
           onKeyDown={controller.handleHandleKeyDown}
@@ -617,11 +621,11 @@ const ReplySheetView = ({
               />
               <p className={styles.commentEmptyTitle}>
                 {/* "아직 댓글이 없어요." */}
-                아직 댓글이 없어요.
+                {message("frontend.reply.emptyTitle")}
               </p>
               <p className={styles.commentEmptyText}>
                 {/* "첫 번째 댓글을 남겨보세요." */}
-                첫 번째 댓글을 남겨보세요.
+                {message("frontend.reply.emptyDescription")}
               </p>
             </div>
           )}

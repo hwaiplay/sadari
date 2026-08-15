@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import { sweetConfirm, sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   getWithdrawalStatusApi,
@@ -36,7 +37,11 @@ function WithdrawalPendingPage() {
       // 상태 조회 실패 내용을 사용자에게 안내합니다
       catch (error) {
         // "탈퇴 상태를 확인할 수 없어요."
-        await sweetError("탈퇴 상태를 확인할 수 없어요.", getApiErrorMessage(error, "잠시 후 다시 시도해주세요."));
+        await sweetError(
+          message("frontend.withdrawal.pending.loadFailedTitle"),
+          // "잠시 후 다시 시도해주세요."
+          getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        );
       }
 
       // 상태 조회 완료 후 로딩 표시를 종료합니다
@@ -57,8 +62,10 @@ function WithdrawalPendingPage() {
 
     // 영구 탈퇴 취소 의사를 다시 확인합니다
     const confirmed = await sweetConfirm({
-      title: "영구 탈퇴를 취소하시겠어요?",
-      text: "관리자 이용 정지가 남아 있으면 정지 상태로 복구돼요.",
+      // "영구 탈퇴를 취소하시겠어요?"
+      title: message("frontend.withdrawal.pending.cancelConfirmTitle"),
+      // "관리자 이용 정지가 남아 있으면 정지 상태로 복구돼요."
+      text: message("frontend.withdrawal.pending.cancelConfirmText"),
     });
 
     // 사용자가 확인하지 않으면 복구 요청을 보내지 않습니다
@@ -72,7 +79,7 @@ function WithdrawalPendingPage() {
       // 영구 삭제 대기 취소를 서버에 요청합니다
       const result = await uptWithdrawalCancelApi();
       // "영구 탈퇴가 취소됐어요."
-      await sweetSuccess("영구 탈퇴가 취소됐어요.");
+      await sweetSuccess(message("frontend.withdrawal.pending.cancelSuccess"));
       // 관리자 이용 정지가 남아 있으면 정지 안내로, 아니면 정상 서비스 홈으로 이동합니다
       navigate(result.data === "SUSPENDED" ? "/suspension" : "/home", { replace: true });
     }
@@ -80,14 +87,19 @@ function WithdrawalPendingPage() {
     // 복구 실패 내용을 사용자에게 안내합니다
     catch (error) {
       // "영구 탈퇴를 취소하지 못했어요."
-      await sweetError("영구 탈퇴를 취소하지 못했어요.", getApiErrorMessage(error, "잠시 후 다시 시도해주세요."));
+      await sweetError(
+        message("frontend.withdrawal.pending.cancelFailedTitle"),
+        // "잠시 후 다시 시도해주세요."
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
     }
   };
 
   // 영구 삭제 대기 상태를 조회하는 동안 간단한 로딩 화면을 반환합니다
   if (isLoading) {
     // 삭제 예정일 조회 중 안내 화면을 반환합니다
-    return <main className={styles.page}>탈퇴 상태를 확인하고 있어요.</main>;
+    // "탈퇴 상태를 확인하고 있어요."
+    return <main className={styles.page}>{message("frontend.withdrawal.pending.loading")}</main>;
   }
 
   // 영구 삭제 대기 전용 화면을 반환합니다
@@ -96,15 +108,22 @@ function WithdrawalPendingPage() {
       {/* 영구 삭제 예정일과 취소 기능 영역 */}
       <section className={styles.panel}>
         <div className={styles.pendingMark}>30</div>
-        <h1 className={styles.heading}>계정이 영구 삭제 대기 중이에요</h1>
+        <h1 className={styles.heading}>
+          {/* "계정이 영구 삭제 대기 중이에요" */}
+          {message("frontend.withdrawal.pending.title")}
+        </h1>
         <p className={styles.description}>
-          영구 삭제 예정일
+          {/* "영구 삭제 예정일" */}
+          {message("frontend.withdrawal.pending.deleteDate")}
           <strong className={styles.date}>
-            {status?.deltDate ? new Date(status.deltDate).toLocaleString("ko-KR") : "확인할 수 없음"}
+            {status?.deltDate
+              ? new Date(status.deltDate).toLocaleString(navigator.language)
+              : /* "확인할 수 없음" */ message("frontend.common.unavailable")}
           </strong>
         </p>
         <button className={styles.cancelButton} type="button" onClick={handleCancel}>
-          영구 탈퇴 취소
+          {/* "영구 탈퇴 취소" */}
+          {message("frontend.withdrawal.pending.cancel")}
         </button>
       </section>
     </main>

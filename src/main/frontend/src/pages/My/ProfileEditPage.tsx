@@ -70,13 +70,13 @@ const MODAL_CLOSE_DELAY_MS = 180;
 
 const DEFAULT_GOAL_HELP_ITEMS = [
   // "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다."
-  "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpWeek"),
   // "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다."
-  "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpMonth"),
   // "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다."
-  "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpYear"),
   // "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다."
-  "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다.",
+  message("frontend.profile.goal.helpSameValue"),
 ] as const;
 
 /**
@@ -93,19 +93,19 @@ const renderGoalHelpItem = (goalHelpItem: string): ReactNode => {
 
 const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: string; singular: string }> = {
   week: {
-    current: "이번 주",
-    previous: "지난 주",
-    singular: "이번주의",
+    current: /* "이번 주" */ message("frontend.profile.goal.copy.week.current"),
+    previous: /* "지난 주" */ message("frontend.profile.goal.copy.week.previous"),
+    singular: /* "이번주의" */ message("frontend.profile.goal.copy.week.singular"),
   },
   month: {
-    current: "이번 달",
-    previous: "지난 달",
-    singular: "이번 달의",
+    current: /* "이번 달" */ message("frontend.profile.goal.copy.month.current"),
+    previous: /* "지난 달" */ message("frontend.profile.goal.copy.month.previous"),
+    singular: /* "이번 달의" */ message("frontend.profile.goal.copy.month.singular"),
   },
   year: {
-    current: "올해",
-    previous: "작년",
-    singular: "올해의",
+    current: /* "올해" */ message("frontend.profile.goal.copy.year.current"),
+    previous: /* "작년" */ message("frontend.profile.goal.copy.year.previous"),
+    singular: /* "올해의" */ message("frontend.profile.goal.copy.year.singular"),
   },
 };
 
