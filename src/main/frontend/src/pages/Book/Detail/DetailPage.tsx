@@ -986,7 +986,7 @@ function DetailPage() {
                     onChange={handleContentChange}
                   />
                   <span className={styles.recordByteCounter}>
-                    ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} byte)
+                    ({contentByteLength}/{MAX_REPORT_CONTENT_BYTES} {message("frontend.common.byte")})
                   </span>
                 </div>
               ) : (

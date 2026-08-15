@@ -842,8 +842,14 @@ function SocialProfilePage() {
         <section className={styles.profileShell}>
           <section className={styles.socialProfileBody}>
             <div className={styles.profileText}>
-              <h1 className={styles.profileName}>탈퇴한 사용자</h1>
-              <p className={styles.profileIntro}>탈퇴한 사용자의 정보는 표시되지 않아요.</p>
+              <h1 className={styles.profileName}>
+                {/* "탈퇴한 사용자" */}
+                {message("frontend.social.withdrawnUser.title")}
+              </h1>
+              <p className={styles.profileIntro}>
+                {/* "탈퇴한 사용자의 정보는 표시되지 않아요." */}
+                {message("frontend.social.withdrawnUser.description")}
+              </p>
             </div>
           </section>
         </section>

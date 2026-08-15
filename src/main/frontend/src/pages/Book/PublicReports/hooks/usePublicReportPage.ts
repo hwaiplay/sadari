@@ -19,6 +19,7 @@ import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import type { PublicReportSortType } from "@/features/Book/api/bookApi";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import { message } from "@/app/messages/message";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 
@@ -147,7 +148,7 @@ export function usePublicReportPage() {
   >(() => {
     // 화면 전용 전체 옵션 뒤에 서버가 관리하는 독서 상태 옵션을 반환한다
     return [
-      { value: "ALL", label: "전체" },
+      { value: "ALL", label: /* "전체" */ message("frontend.common.all") },
       ...(reportStatusCodeQuery.data ?? []).map((code) => ({
         value: code.comdCode,
         label: code.comdName,

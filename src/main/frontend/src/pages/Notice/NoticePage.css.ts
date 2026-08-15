@@ -14,16 +14,14 @@ export const page = style({
 export const listPage = style([
   page,
   {
-    paddingRight: "2px",
-    paddingLeft: "2px",
+    paddingTop: "10px",
+    paddingRight: 0,
+    paddingLeft: 0,
   },
 ]);
 
 export const intro = style({
   marginBottom: "22px",
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
 });
 
 export const description = style({

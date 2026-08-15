@@ -751,10 +751,9 @@ export default function ReadingTimerPage() {
 
   return (
     <main className={styles.page}>
-      {/* 독서 습관 안내 영역 */}
-      <section className={styles.intro} aria-label="독서 습관 안내">
-        <img className={styles.introIcon} src="/img/icons/icon-megaphone.svg" alt="" aria-hidden="true" />
-        <p className={styles.description}>
+      {/* 독서 타이머 페이지 설명 영역 */}
+      <section className={styles.intro} aria-labelledby="reading-timer-description">
+        <p id="reading-timer-description" className={styles.description}>
           {/* "하루 10분을 읽으면 이번 주 출석이 채워져요." */}
           {message("frontend.timer.description")}
         </p>

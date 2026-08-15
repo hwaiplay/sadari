@@ -371,7 +371,7 @@ function CalendarDatePicker({
                 onClick={() => setIsOpen(false)}
               >
                 {isRangePicker
-                  ? "완료"
+                  ? /* "완료" */ message("frontend.common.done")
                   : message("frontend.common.close")}
               </button>
             </div>

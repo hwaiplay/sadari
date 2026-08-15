@@ -66,7 +66,8 @@ const UserReportCompletePage = () => {
           <img
             className={styles.arrowIcon}
             src="/img/icons/arrow-bottom.svg"
-            alt="화살표 아이콘"
+            alt=""
+            aria-hidden="true"
           />
         </button>
       </div>

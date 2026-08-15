@@ -176,7 +176,7 @@ function SetReportPage() {
               <FormField title={message("frontend.report.field.content")}>
                 <div className={styles.textAreaWrap}>
                   <span className={styles.counter}>
-                    ({contentByteLength}/{maxContentBytes} byte)
+                    ({contentByteLength}/{maxContentBytes} {message("frontend.common.byte")})
                   </span>
                   <textarea
                     className={styles.textArea}

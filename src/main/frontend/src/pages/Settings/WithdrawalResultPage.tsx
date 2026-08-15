@@ -1,4 +1,5 @@
 import { Link, useSearchParams } from "react-router-dom";
+import { message } from "@/app/messages/message";
 import * as styles from "./WithdrawalResultPage.css";
 
 /**
@@ -23,13 +24,13 @@ function WithdrawalResultPage() {
     // "!"
     statusSymbol = "!";
     // "탈퇴 요청을 처리하지 못했어요"
-    heading = "탈퇴 요청을 처리하지 못했어요";
+    heading = message("frontend.withdrawal.result.failedTitle");
     // "계정 정보는 변경되지 않았어요. 잠시 후 다시 시도해주세요."
-    description = "계정 정보는 변경되지 않았어요. 잠시 후 다시 시도해주세요.";
+    description = message("frontend.withdrawal.result.failedDescription");
     // "처리 실패"
-    statusLabel = "처리 실패";
+    statusLabel = message("frontend.withdrawal.result.failedStatus");
     // "로그인 후 설정에서 탈퇴 절차를 다시 진행해주세요."
-    guide = "로그인 후 설정에서 탈퇴 절차를 다시 진행해주세요.";
+    guide = message("frontend.withdrawal.result.failedGuide");
   }
 
   // 영구 탈퇴 성공은 설정된 유예기간에 따라 삭제가 진행되는 상태로 안내합니다
@@ -37,13 +38,13 @@ function WithdrawalResultPage() {
     // "✓"
     statusSymbol = "✓";
     // "영구 탈퇴 신청이 완료됐어요"
-    heading = "영구 탈퇴 신청이 완료됐어요";
+    heading = message("frontend.withdrawal.result.hardTitle");
     // "설정된 유예기간이 지나면 계정과 관련 데이터가 영구 삭제돼요."
-    description = "설정된 유예기간이 지나면 계정과 관련 데이터가 영구 삭제돼요.";
+    description = message("frontend.withdrawal.result.hardDescription");
     // "영구 탈퇴 신청 완료"
-    statusLabel = "영구 탈퇴 신청 완료";
+    statusLabel = message("frontend.withdrawal.result.hardStatus");
     // "삭제 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요."
-    guide = "삭제 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요.";
+    guide = message("frontend.withdrawal.result.hardGuide");
   }
 
   // 계정 비활성화 성공은 재로그인 시 기존 계정을 다시 활성화할 수 있음을 안내합니다
@@ -51,13 +52,13 @@ function WithdrawalResultPage() {
     // "✓"
     statusSymbol = "✓";
     // "계정 비활성화가 완료됐어요"
-    heading = "계정 비활성화가 완료됐어요";
+    heading = message("frontend.withdrawal.result.softTitle");
     // "Sadari 이용을 멈추고 계정을 안전하게 비활성화했어요."
-    description = "Sadari 이용을 멈추고 계정을 안전하게 비활성화했어요.";
+    description = message("frontend.withdrawal.result.softDescription");
     // "계정 비활성화 완료"
-    statusLabel = "계정 비활성화 완료";
+    statusLabel = message("frontend.withdrawal.result.softStatus");
     // "다시 Kakao 로그인을 하면 기존 계정을 활성화할 수 있어요."
-    guide = "다시 Kakao 로그인을 하면 기존 계정을 활성화할 수 있어요.";
+    guide = message("frontend.withdrawal.result.softGuide");
   }
 
   // 회원 탈퇴 처리 결과와 후속 안내 화면을 반환합니다
@@ -70,7 +71,7 @@ function WithdrawalResultPage() {
         <img
           className={styles.logo}
           src="/img/common/logo-upper.svg"
-          alt="Sadari"
+          alt={message("frontend.common.logoAlt")}
         />
       </header>
 
@@ -89,7 +90,7 @@ function WithdrawalResultPage() {
         <section className={styles.guideSection}>
           <h2 className={styles.sectionTitle}>
             {/* "계정 처리 안내" */}
-            계정 처리 안내
+            {message("frontend.withdrawal.result.guideTitle")}
           </h2>
 
           {/* 처리 상태와 후속 이용 안내 목록 영역 */}
@@ -97,7 +98,7 @@ function WithdrawalResultPage() {
             <div className={styles.guideRow}>
               <dt className={styles.guideLabel}>
                 {/* "처리 상태" */}
-                처리 상태
+                {message("frontend.withdrawal.result.statusLabel")}
               </dt>
               <dd className={`${styles.guideValue} ${isSuccess ? styles.successText : styles.failText}`}>
                 {statusLabel}
@@ -106,7 +107,7 @@ function WithdrawalResultPage() {
             <div className={styles.guideRow}>
               <dt className={styles.guideLabel}>
                 {/* "이용 안내" */}
-                이용 안내
+                {message("frontend.withdrawal.result.usageGuide")}
               </dt>
               <dd className={styles.guideValue}>{guide}</dd>
             </div>
@@ -116,7 +117,7 @@ function WithdrawalResultPage() {
         {/* 로그인 화면 이동 영역 */}
         <Link className={styles.primaryLink} to="/login">
           {/* "로그인 화면으로 이동" */}
-          로그인 화면으로 이동
+          {message("frontend.withdrawal.result.login")}
         </Link>
       </div>
     </main>

@@ -55,8 +55,8 @@ const Oauth = () => {
         // "다시 돌아와서 반가워요"
         // "계정이 다시 활성화됐어요. 비활성화하면서 비공개·삭제·중지된 독후감 공개 설정, 댓글, 알림과 푸시 구독은 자동 복원되지 않아요."
         void sweetSuccess(
-          "다시 돌아와서 반가워요",
-          "계정이 다시 활성화됐어요. 비활성화하면서 비공개·삭제·중지된 독후감 공개 설정, 댓글, 알림과 푸시 구독은 자동 복원되지 않아요.",
+          message("frontend.oauth.reactivatedTitle"),
+          message("frontend.oauth.reactivatedDescription"),
         ).then(() => {
 
           // 복귀 정책을 확인한 사용자를 선택한 정상 서비스 화면으로 이동한다

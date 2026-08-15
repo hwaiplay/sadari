@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
 import { useCheckAuth } from "@/features/Auth/hooks/useCheckAuth";
 import { getInquiryDetailApi, type Inquiry } from "@/features/Inquiry/api/inquiryApi";
@@ -63,7 +64,8 @@ function InquiryDetailPage() {
           type="button"
           onClick={handleSuspensionBack}
         >
-          돌아가기
+          {/* "돌아가기" */}
+          {message("frontend.inquiry.detail.back")}
         </button>
       </div>
     </div>
@@ -74,7 +76,8 @@ function InquiryDetailPage() {
     const target = Number(inqrNumb);
 
     if (!Number.isInteger(target) || target < 1) {
-      setError("올바르지 않은 고객문의 번호입니다.");
+      // "올바르지 않은 고객문의 번호입니다."
+      setError(message("frontend.inquiry.detail.invalidNumber"));
       return;
     }
 
@@ -90,7 +93,8 @@ function InquiryDetailPage() {
       .catch((loadError) => {
 
         if (!ignore) {
-          setError(getApiErrorMessage(loadError, "고객문의를 불러오지 못했습니다."));
+          // "고객문의를 불러오지 못했습니다."
+          setError(getApiErrorMessage(loadError, message("frontend.inquiry.list.loadFailed")));
         }
       });
 
@@ -140,13 +144,19 @@ function InquiryDetailPage() {
       </article>
 
       <section className={styles.answerSection} aria-labelledby="inquiry-answer-title">
-        <h3 id="inquiry-answer-title" className={styles.answerHeading}>관리자 답변</h3>
+        <h3 id="inquiry-answer-title" className={styles.answerHeading}>
+          {/* "관리자 답변" */}
+          {message("frontend.inquiry.detail.answerTitle")}
+        </h3>
         {inquiry.answers?.length ? (
           <div className={styles.answers}>
             {inquiry.answers.map((answer) => (
               <article className={styles.answer} key={answer.answNumb}>
                 <div className={styles.answerMeta}>
-                  <strong className={styles.answerAuthor}>사다리 고객센터</strong>
+                  <strong className={styles.answerAuthor}>
+                    {/* "사다리 고객센터" */}
+                    {message("frontend.inquiry.detail.supportName")}
+                  </strong>
                   <time className={styles.meta} dateTime={answer.regiDate}>
                     {/* 관리자 답변 등록일시 표시 영역 */}
                     {formatInquiryDateTime(answer.regiDate)}
@@ -157,7 +167,13 @@ function InquiryDetailPage() {
             ))}
           </div>
         ) : (
-          <p className={styles.statusText}>답변을 준비하고 있습니다.<br />조금만 기다려주세요.</p>
+          <p className={styles.statusText}>
+            {/* "답변을 준비하고 있습니다." */}
+            {message("frontend.inquiry.detail.waitingTitle")}
+            <br />
+            {/* "조금만 기다려주세요." */}
+            {message("frontend.inquiry.detail.waitingDescription")}
+          </p>
         )}
       </section>
       {suspensionBackButton}

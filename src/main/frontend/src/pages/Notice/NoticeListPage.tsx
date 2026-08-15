@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
@@ -59,7 +60,7 @@ function NoticeListPage() {
       setHasNext(data.hasNext);
     } catch (loadError) {
       // "공지사항을 불러오지 못했습니다."
-      setError(getApiErrorMessage(loadError, "공지사항을 불러오지 못했습니다."));
+      setError(getApiErrorMessage(loadError, message("frontend.notice.list.loadFailed")));
     } finally {
       // 요청 성공 여부와 관계없이 로딩 상태를 종료한다.
       setIsLoading(false);
@@ -166,7 +167,12 @@ function NoticeListPage() {
             )}
             <span className={styles.titleWithUnread}>
               <span className={styles.title}>{notice.notiTitl}</span>
-              {notice.readYsno === "N" && <span className={styles.unreadDot} aria-label="읽지 않음" />}
+              {notice.readYsno === "N" && (
+                <>
+                  {/* "읽지 않음" */}
+                  <span className={styles.unreadDot} aria-label={message("frontend.notice.list.unread")} />
+                </>
+              )}
             </span>
           </span>
           <span className={styles.itemBottom}>
@@ -195,11 +201,12 @@ function NoticeListPage() {
   return (
     /* 배포된 사용자 공지사항 목록 전체 영역 */
     <main className={styles.listPage}>
-      {/* 공지사항 목록 안내 영역 */}
-      <section className={styles.intro} aria-label="공지사항 안내">
-        <img src={"/img/icons/icon-megaphone.svg"} alt="" aria-hidden="true" />
-        {/* "사다리의 새로운 소식과 주요 안내를 확인할 수 있어요." */}
-        <p className={styles.description}>사다리의 새로운 소식과 주요 안내를 확인할 수 있어요.</p>
+      {/* 공지사항 페이지 설명 영역 */}
+      <section className={styles.intro} aria-labelledby="notice-list-description">
+        <p id="notice-list-description" className={styles.description}>
+          {/* "사다리의 새로운 소식과 주요 안내를 확인할 수 있어요." */}
+          {message("frontend.notice.list.description")}
+        </p>
       </section>
 
       {error && notices.length === 0 ? (
@@ -213,20 +220,25 @@ function NoticeListPage() {
             onClick={handleRetry}
           >
             {/* "다시 시도" */}
-            다시 시도
+            {message("frontend.common.retry")}
           </button>
         </section>
       ) : notices.length === 0 ? (
         /* 등록된 공지사항이 없는 상태 안내 영역 */
         <section className={styles.statusPanel} aria-live="polite">
-          {/* "등록된 공지사항이 없습니다." */}
-          <p className={styles.statusText}>등록된 공지사항이 없습니다.</p>
+          <p className={styles.statusText}>
+            {/* "등록된 공지사항이 없습니다." */}
+            {message("frontend.notice.list.empty")}
+          </p>
         </section>
       ) : (
         /* 최근 배포 순서의 공지사항 목록 영역 */
-        <section className={styles.list} aria-label="공지사항 목록">
-          {notices.map(renderNoticeItem)}
-        </section>
+        <>
+          {/* "공지사항 목록" */}
+          <section className={styles.list} aria-label={message("frontend.notice.list.label")}>
+            {notices.map(renderNoticeItem)}
+          </section>
+        </>
       )}
 
       {/* 다음 공지사항 페이지 자동 조회 영역 */}
@@ -237,7 +249,7 @@ function NoticeListPage() {
           onLoadMore={handleLoadMore}
         >
           {/* "불러오는 중..." */}
-          불러오는 중...
+          {message("frontend.common.loadingMore")}
         </InfiniteScrollTrigger>
       )}
 

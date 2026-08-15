@@ -4,22 +4,13 @@ import { vars } from "@/app/styles/tokens.css";
 export const page = style({
   width: "100%",
   minHeight: `calc(100svh - ${vars.headerHeight} - ${vars.navHeight} - max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
-  padding: "20px 0 32px",
+  padding: "10px 0 32px",
   backgroundColor: vars.color.background,
   boxSizing: "border-box",
 });
 
 export const intro = style({
   marginBottom: "22px",
-  display: "flex",
-  alignItems: "center",
-  gap: "6px",
-});
-
-export const introIcon = style({
-  width: "20px",
-  height: "20px",
-  flexShrink: 0,
 });
 
 export const description = style({
