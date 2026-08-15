@@ -99,33 +99,12 @@ export const authorRatingLine = style({
   maxWidth: "100%",
 });
 
-export const ratingSummary = style({
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "3px",
-  flexShrink: 0,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  lineHeight: 1,
-  color: vars.color.black,
-});
-
 export const metaSeparator = style({
   flexShrink: 0,
   fontFamily: vars.font.body,
   fontSize: "12px",
   lineHeight: 1,
   color: vars.color.gray500,
-});
-
-export const ratingStar = style({
-  color: "#ffd966",
-  fontSize: "15px",
-  lineHeight: 1,
-});
-
-export const ratingValue = style({
-  lineHeight: 1,
 });
 
 export const contentPanel = style({
@@ -148,7 +127,7 @@ export const section = style({
 export const sectionTitle = style({
   margin: 0,
   fontFamily: vars.font.heading,
-  fontSize: "15px",
+  fontSize: "16px",
   color: vars.color.black,
 });
 
@@ -181,17 +160,6 @@ export const description = style({
   color: vars.color.black,
   whiteSpace: "pre-wrap",
   wordBreak: "break-word",
-});
-
-export const selectButton = style({
-  height: "44px",
-  border: `1px solid ${vars.color.gray700}`,
-  borderRadius: vars.radius.xl,
-  backgroundColor: "#ffffff",
-  color: vars.color.gray900,
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
 });
 
 export const bookInfoButton = style({

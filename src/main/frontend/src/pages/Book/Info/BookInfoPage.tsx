@@ -9,6 +9,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
+import BookRatingSummary from "@/features/Book/components/BookRatingSummary/BookRatingSummary";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import {
   getBookCoverImageSource,
@@ -77,17 +78,7 @@ function BookInfoPage() {
               <span className={styles.metaSeparator}>|</span>
             )}
             {bookInfo.bookAvgGrde && (
-              <span
-                className={styles.ratingSummary}
-                aria-label={message("frontend.report.gradeValue", [
-                  bookInfo.bookAvgGrde,
-                ])}
-              >
-                <span className={styles.ratingStar}>{"\u2605"}</span>
-                <span className={styles.ratingValue}>
-                  {bookInfo.bookAvgGrde}
-                </span>
-              </span>
+              <BookRatingSummary rating={bookInfo.bookAvgGrde} />
             )}
           </div>
           <button

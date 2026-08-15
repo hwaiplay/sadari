@@ -8,10 +8,11 @@ import { message } from "@/app/messages/message";
 import type {
   BookSearchPageType,
   BookSearchResultType,
+  PopularBookPeriodType,
 } from "@/features/Book/types/book.type";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import type { FormEvent } from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useLocation,
   useNavigate,
@@ -59,6 +60,27 @@ async function fetchBooks(
 }
 
 /**
+ * 선택 기간의 독후감 고유 작성자 수 기준 인기 도서를 조회한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param period 주간과 월간 및 연간 중 조회할 인기 도서 기간
+ * @return 순위와 독후감 작성자 수 및 평균 평점을 포함한 인기 도서 최대 10권
+ * @throws 인기 도서 API 요청 또는 공통 응답 검증에 실패하면 발생한다
+ */
+async function fetchPopularBooks(
+  period: PopularBookPeriodType,
+): Promise<BookSearchResultType[]> {
+
+  // 로그인 회원의 검색 화면에 표시할 선택 기간의 인기 도서를 요청한다.
+  const response = await api.get(
+    `/book/popular?period=${encodeURIComponent(period)}`,
+  );
+
+  // 공통 응답 검증을 통과한 선택 기간의 인기 도서 목록을 반환한다.
+  return (assertResultDataSuccess(response.data).data ?? []) as BookSearchResultType[];
+}
+
+/**
  * 책 검색 화면 복원에 필요한 상태를 세션 저장소에 보관한다.
  *
  * @author HanWon.Jang
@@ -87,8 +109,14 @@ export function useSearchBookPage() {
   const [nextStart, setNextStart] = useState<number | null>(null);
   const [isEnd, setIsEnd] = useState(true);
   const [isSearching, setIsSearching] = useState(false);
+  const [isInitialLoading, setIsInitialLoading] = useState(true);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPopularMode, setIsPopularMode] = useState(true);
+  const [popularPeriod, setPopularPeriod] =
+    useState<PopularBookPeriodType>("monthly");
   const [selectingBookIsbn, setSelectingBookIsbn] = useState<string | null>(null);
+  const popularLoadingPeriodRef = useRef<PopularBookPeriodType | null>(null);
+  const resultRequestIdRef = useRef(0);
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -96,6 +124,94 @@ export function useSearchBookPage() {
   const isClubBookSearch = clubNumbParam !== undefined;
   const clubNumb = Number(clubNumbParam);
   const hasValidClubNumb = Number.isSafeInteger(clubNumb) && clubNumb > 0;
+
+  /**
+   * 검색 화면 최초 진입과 기간 변경에 표시할 인기 도서를 조회한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param period 주간과 월간 및 연간 중 조회할 인기 도서 기간
+   * @return 인기 도서 조회가 끝나면 완료되는 Promise
+   */
+  const loadPopularBooks = useCallback(async (
+    period: PopularBookPeriodType,
+  ): Promise<void> => {
+
+    // React 개발 모드에서 같은 기간의 인기 도서 요청이 겹치면 기존 요청의 화면 반영을 기다린다.
+    if (popularLoadingPeriodRef.current === period) {
+      // 이미 실행 중인 같은 기간의 인기 도서 조회를 유지하고 중복 API 호출을 종료한다.
+      return;
+    }
+
+    // 완료 전까지 동일 기간의 요청은 막고 다른 기간 선택은 최신 요청으로 허용하도록 진행 상태를 기록한다.
+    popularLoadingPeriodRef.current = period;
+    // 인기 도서 응답보다 늦게 시작한 직접 검색이 우선하도록 요청 순번을 발급한다.
+    const requestId = ++resultRequestIdRef.current;
+
+    try {
+      // 페이지 최초 인기 도서 조회 상태를 화면에 반영한다.
+      setIsInitialLoading(true);
+      // 기간 선택 목록과 인기 도서 카드가 표시되는 초기 화면 모드를 유지한다.
+      setIsPopularMode(true);
+      // 선택 기간의 독후감 작성자 수 기준 상위 도서를 조회한다.
+      const popularBookList = await fetchPopularBooks(period);
+
+      // 인기 도서 조회 뒤 직접 검색이 시작됐으면 오래된 인기 응답으로 목록을 덮어쓰지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 직접 검색이 화면을 갱신하도록 이전 인기 응답 처리를 종료한다.
+        return;
+      }
+
+      // 인기 도서 최대 10권을 검색 결과와 같은 목록 영역에 설정한다.
+      setBookResult(popularBookList);
+      // 인기 도서는 최대 10권 전체를 한 번에 노출한다.
+      setVisibleCount(popularBookList.length);
+      // 인기 도서에는 다음 카카오 검색 위치가 없음을 설정한다.
+      setNextStart(null);
+      // 인기 도서 목록은 추가 페이지가 없는 종료 상태로 설정한다.
+      setIsEnd(true);
+      // 기간 선택과 순위 및 작성자 수가 표시되도록 초기 화면 모드를 설정한다.
+      setIsPopularMode(true);
+    } catch (error) {
+      // 인기 도서 조회 뒤 직접 검색이 시작됐으면 이전 요청의 오류를 사용자에게 표시하지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 직접 검색 흐름을 유지하고 오래된 인기 조회 오류 처리를 종료한다.
+        return;
+      }
+
+      console.error("기간별 인기 도서 조회 중 오류 발생: ", error);
+      // "책 검색에 실패했습니다. 다시 시도해주세요."
+      await sweetError(
+        message("frontend.alert.searchFailedTitle"),
+        getApiErrorMessage(error, message("frontend.book.search.failed")),
+      );
+      // 조회 실패 뒤 검색 결과 없음 상태를 화면에 표시한다.
+      setBookResult([]);
+    } finally {
+      // 현재 요청이 마지막으로 시작한 기간 조회이면 다음 선택을 받을 수 있도록 진행 상태를 해제한다.
+      if (popularLoadingPeriodRef.current === period) {
+        popularLoadingPeriodRef.current = null;
+      }
+      // 최신 요청인 경우에만 페이지 최초 조회 상태를 해제한다.
+      if (requestId === resultRequestIdRef.current) {
+        // 성공과 실패에 관계없이 최신 인기 도서 최초 조회 상태를 해제한다.
+        setIsInitialLoading(false);
+      }
+    }
+  }, []);
+
+  /**
+   * 주간과 월간 및 연간 인기 도서 선택을 화면과 조회 결과에 반영한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param period 사용자가 선택한 인기 도서 집계 기간
+   * @return 반환값이 없다
+   */
+  function handlePopularPeriodChange(period: PopularBookPeriodType): void {
+
+    // 선택한 기간을 표시하고 해당 기간의 인기 도서 목록을 새로 조회한다.
+    setPopularPeriod(period);
+    void loadPopularBooks(period);
+  }
 
   /**
    * 검색어로 첫 페이지를 조회하고 화면과 세션 캐시를 갱신한다.
@@ -118,13 +234,24 @@ export function useSearchBookPage() {
         return;
       }
 
+      // 직접 검색이 진행되면 이전 인기 도서 응답이 목록을 덮어쓰지 못하도록 요청 순번을 갱신한다.
+      const requestId = ++resultRequestIdRef.current;
+
       // 첫 페이지 조회 중임을 화면에 반영한다.
       setIsSearching(true);
+      // 사용자가 직접 검색하면 인기 도서 최초 로딩 화면을 종료한다.
+      setIsInitialLoading(false);
       // 새 조회가 끝나기 전에는 이전 추가 노출 상태를 초기화한다.
       setIsEnd(true);
 
       // 카카오 API에서 검색 결과의 첫 50권 페이지를 조회한다.
       const responseData = await fetchBooks(keyword, 1);
+
+      // 더 늦게 시작한 검색이 있으면 오래된 검색 응답으로 목록을 덮어쓰지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 검색 요청이 화면을 갱신하도록 이전 응답 처리를 종료한다.
+        return;
+      }
       const firstVisibleCount = Math.min(
         SEARCH_PAGE_SIZE,
         responseData.bookList.length,
@@ -135,6 +262,8 @@ export function useSearchBookPage() {
       setVisibleCount(firstVisibleCount);
       setNextStart(responseData.nextStart ?? null);
       setIsEnd(responseData.end);
+      // 직접 검색 결과에서는 인기 안내와 순위 정보를 숨긴다.
+      setIsPopularMode(false);
       // 상세 화면 복귀를 위해 최신 검색 상태를 저장한다.
       saveSearchCache({
         searchKeyword: keyword,
@@ -165,6 +294,8 @@ export function useSearchBookPage() {
     if (initialSearchKeyword.length > 0) {
       sessionStorage.removeItem(SEARCH_STORAGE_KEY);
       setSearchKeyword(initialSearchKeyword);
+      // 전달받은 검색어 조회는 인기 도서 최초 로딩과 구분한다.
+      setIsInitialLoading(false);
       void executeBookSearch(initialSearchKeyword);
       // 전달받은 검색어 처리 뒤 캐시 복원 흐름을 종료한다.
       return;
@@ -176,7 +307,9 @@ export function useSearchBookPage() {
     // 새로 검색 화면에 진입하면 이전 검색 결과를 남기지 않는다.
     if (!shouldRestoreSearch) {
       sessionStorage.removeItem(SEARCH_STORAGE_KEY);
-      // 신규 진입의 캐시 복원 처리를 종료한다.
+      // 신규 진입의 빈 화면 대신 기본 월간 인기 도서를 조회한다.
+      void loadPopularBooks("monthly");
+      // 신규 진입의 인기 도서 조회를 시작하고 캐시 복원 처리를 종료한다.
       return;
     }
 
@@ -184,7 +317,9 @@ export function useSearchBookPage() {
 
     // 복원할 검색 상태가 없으면 현재 빈 화면을 유지한다.
     if (!cached) {
-      // 저장된 검색 상태가 없는 복원 처리를 종료한다.
+      // 저장된 직접 검색이 없으면 기본 월간 인기 도서를 다시 조회한다.
+      void loadPopularBooks("monthly");
+      // 인기 도서 조회를 시작하고 빈 캐시 복원 처리를 종료한다.
       return;
     }
 
@@ -197,11 +332,17 @@ export function useSearchBookPage() {
       setVisibleCount(parsed.visibleCount ?? SEARCH_PAGE_SIZE);
       setNextStart(parsed.nextStart ?? null);
       setIsEnd(parsed.end ?? true);
+      // 복원한 목록은 사용자가 직접 조회한 검색 결과로 표시한다.
+      setIsPopularMode(false);
+      // 세션 검색 결과 복원이 끝났으므로 페이지 최초 로딩 상태를 해제한다.
+      setIsInitialLoading(false);
     } catch {
       // 손상된 검색 캐시는 다음 진입에 재사용되지 않도록 제거한다.
       sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+      // 손상된 직접 검색 캐시 대신 기본 월간 인기 도서를 조회한다.
+      void loadPopularBooks("monthly");
     }
-  }, [executeBookSearch, location.key, location.state, navigationType]);
+  }, [executeBookSearch, loadPopularBooks, location.key, location.state, navigationType]);
 
   /**
    * 검색 폼 제출을 막고 현재 입력된 검색어를 조회한다.
@@ -389,11 +530,15 @@ export function useSearchBookPage() {
     bookResult: visibleBookResult,
     handleLoadMore,
     handleMoreInfo,
+    handlePopularPeriodChange,
     handleSearchClick,
     handleSelectBook,
     hasMore,
+    isInitialLoading,
     isLoadingMore,
+    isPopularMode,
     isSearching,
+    popularPeriod,
     searchKeyword,
     selectingBookIsbn,
     setSearchKeyword,

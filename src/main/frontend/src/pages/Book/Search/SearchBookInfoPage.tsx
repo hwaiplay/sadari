@@ -7,6 +7,7 @@ import { message } from "@/app/messages/message";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import type { CSSProperties } from "react";
+import { ActionButton } from "@/components/Button/ActionButton";
 import { Container } from "@/components/Layout/Container/Container";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAvg } from "@/features/Book/Detail/hook/useBookRatingAverage";
@@ -18,7 +19,6 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
-import * as bookInfoStyles from "@/pages/Book/Info/BookInfoPage.css";
 
 /**
  * Search Book Info Page 화면 또는 컴포넌트를 구성한다
@@ -260,9 +260,10 @@ function SearchBookInfoPage() {
         </div>
 
         {/* 선택한 도서의 독후감 등록 이동 영역 */}
-        <button
-          className={bookInfoStyles.selectButton}
-          type="button"
+        <ActionButton
+          variant="primary"
+          size="lg"
+          width="full"
           onClick={() => void goSelectedBookPage()}
           disabled={isSelectingBook}
         >
@@ -274,7 +275,7 @@ function SearchBookInfoPage() {
             : /* "이 책으로 기록하기" */ message(
                 "frontend.book.search.writeThisBook",
               )}
-        </button>
+        </ActionButton>
       </Container>
     </main>
   );
