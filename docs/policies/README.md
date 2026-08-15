@@ -12,6 +12,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [관리자 회원 이용 정지 정책](user-suspension-policy.md) | 기간·무기한 정지, 동일 Kakao 계정 차단, 해제와 상태 우선순위 |
 | [관리자 사용자 통계 정책](user-statistics-policy.md) | 실시간 사용자 현황, 활성 회원, 유지율과 이탈 추세 |
 | [독서 및 독후감 정책](reading-report-policy.md) | 독서 상태, 기간, 별점, 공개 여부, 도서 저장 |
+| [도서 검색 및 외부 API 쿼터 보호 정책](book-search-policy.md) | 50권 선조회, Redis 요청 제한, 공용 캐시와 앱 전체 쿼터 보호 |
 | [독서 목표 정책](reading-goal-policy.md) | 주간·월간·연간 목표, 수정 제한, 이전 목표 복사 |
 | [독서 타이머 및 주간 출석 정책](reading-timer-attendance-policy.md) | 서버 시간 측정, 일일 10분 출석, 주간 현황과 보존 기준 |
 | [마이페이지 독서 통계 정책](my-page-reading-statistics-policy.md) | 연도별 독서 시간 잔디, 독서 상태 비율, 공개 범위와 지연 조회 |
@@ -68,6 +69,6 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 
 ## 관리 정보
 
-- 기준일: 2026-08-14
+- 기준일: 2026-08-16
 - 저장 위치: `docs/policies`
 - 구현 근거: `src/main/java`, `src/main/frontend/src`, `src/main/resources`
