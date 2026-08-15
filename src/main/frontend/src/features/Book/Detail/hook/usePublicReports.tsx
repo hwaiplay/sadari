@@ -10,6 +10,7 @@ import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import {
   getPublicReportsByIsbnApi,
   setPublicReportLikeApi,
+  type PublicReportSortType,
 } from "../../api/bookApi";
 
 /**
@@ -17,16 +18,21 @@ import {
  *
  * @author HanWon.Jang
  * @param isbn isbn 입력값
+ * @param sortType 공개 독후감 정렬 코드
  * @param enabled enabled 입력값
  * @return 화면에서 사용할 상태와 처리 함수
  */
-export const usePublicReportsByIsbn = (isbn: string, enabled: boolean) => {
+export const usePublicReportsByIsbn = (
+  isbn: string,
+  sortType: PublicReportSortType,
+  enabled: boolean,
+) => {
 
   return useQuery({
-    queryKey: ["publicReports", "isbn", isbn],
+    queryKey: ["publicReports", "isbn", isbn, sortType],
     queryFn: async () => {
 
-      return await getPublicReportsByIsbnApi(isbn);
+      return await getPublicReportsByIsbnApi(isbn, sortType);
     },
     enabled: enabled && isbn.trim().length > 0,
   });

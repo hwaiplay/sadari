@@ -9,7 +9,7 @@ const statusPill = style({
   alignItems: "center",
   justifyContent: "center",
   fontFamily: vars.font.medium,
-  fontSize: "11px",
+  fontSize: "12px",
   lineHeight: 1,
   letterSpacing: "-1%",
   whiteSpace: "nowrap",
@@ -159,13 +159,17 @@ export const itemTop = style({
 });
 
 export const profileButton = style({
+  flex: "1 1 auto",
   minWidth: 0,
+  overflow: "hidden",
   padding: 0,
   border: 0,
   backgroundColor: "transparent",
   display: "inline-flex",
   alignItems: "center",
+  justifyContent: "flex-start",
   gap: "6px",
+  textAlign: "left",
   cursor: "pointer",
 });
 
@@ -180,8 +184,9 @@ export const profileImage = style({
 
 
 export const writer = style({
+  flex: "0 1 auto",
   minWidth: 0,
-  maxWidth: "220px",
+  maxWidth: "100%",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "16px",
@@ -191,10 +196,18 @@ export const writer = style({
 });
 
 export const statusWrap = style({
+  flex: "1 1 auto",
+  minWidth: 0,
+  overflow: "hidden",
   display: "flex",
   alignItems: "center",
-  gap: "8px"
-})
+  gap: "8px",
+});
+
+export const actionMenuWrap = style({
+  display: "flex",
+  flexShrink: 0,
+});
 
 
 export const statusDone = style([

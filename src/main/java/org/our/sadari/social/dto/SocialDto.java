@@ -14,6 +14,7 @@ import lombok.Data;
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-08-04        SeungHyeon.Kang       프로필 독후감 공개 범위 조회 조건 추가
+ * 2026-08-15        SeungHyeon.Kang    팔로우 버튼의 친구 상태 API 계약 추가
  */
 @Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
@@ -35,7 +36,8 @@ public class SocialDto {
         @Schema(description = "상대 사용자 번호", example = "32")
         private Long flowNumb;
 
-        @Schema(description = "화면에 표시할 팔로우 버튼명", example = "팔로우")
+        @Schema(description = "화면에 표시할 팔로우 버튼명", example = "팔로우"
+              , allowableValues = {"팔로우", "팔로잉", "맞팔로우", "친구"})
         private String followStatName;
     }
 
@@ -141,7 +143,8 @@ public class SocialDto {
         @Schema(description = "한줄소개")
         private String intrCntn;
 
-        @Schema(description = "팔로우 상태명", example = "팔로잉")
+        @Schema(description = "팔로우 상태명", example = "팔로잉"
+              , allowableValues = {"팔로우", "팔로잉", "맞팔로우", "친구"})
         private String followStatName;
 
         @Schema(description = "내 계정 여부", example = "N", allowableValues = {"Y", "N"})

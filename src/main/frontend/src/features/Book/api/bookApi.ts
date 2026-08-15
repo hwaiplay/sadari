@@ -15,6 +15,12 @@ import {
   uptReportType,
 } from "../types/book.type";
 
+export type PublicReportSortType =
+  | "RELATION_DESC"
+  | "LATEST_DESC"
+  | "GRADE_DESC"
+  | "LIKE_DESC";
+
 export type BookCoverColor = {
   reptColr: string;
   reptColrName: string;
@@ -84,14 +90,19 @@ export const getDetailApi = async (bookNumb: number) => {
  *
  * @author HanWon.Jang
  * @param isbn isbn 입력값
+ * @param sortType 공개 독후감 정렬 코드
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const getPublicReportsByIsbnApi = async (isbn: string) => {
+export const getPublicReportsByIsbnApi = async (
+  isbn: string,
+  sortType: PublicReportSortType,
+) => {
 
-  const res = await api.get(
-    `/book/publicReports/by-isbn?isbn=${encodeURIComponent(isbn)}`,
-  );
+  // ISBN과 서버가 검증할 정렬 코드를 조회 파라미터로 전달한다.
+  const res = await api.get("/book/publicReports/by-isbn", {
+    params: { isbn, sortType },
+  });
   return assertResultDataSuccess(res.data);
 };
 

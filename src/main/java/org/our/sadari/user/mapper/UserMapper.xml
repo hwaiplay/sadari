@@ -29,6 +29,7 @@
 
     <!-- 사용자 번호로 회원과 프로필 이미지 정보를 조회한다. -->
     <select id="getUserByNumb" parameterType="long" resultType="org.our.sadari.user.dto.UserDto">
+        <bind name="codeUserStat" value="@org.our.sadari.global.common.constant.Constant@CODE_USER_STAT" />
         SELECT /* getUserByNumb */
                U.USER_NUMB
              , U.PROF_NUMB
@@ -40,6 +41,7 @@
              , U.USER_PROV
              , U.USER_ROLE
              , U.USER_STAT
+             , FN_GET_CODE_NAME(#{codeUserStat}, U.USER_STAT, NULL) AS USER_STAT_NAME
              , U.ONBD_YSNO
              , U.WTHD_DATE
              , U.DELT_DATE
