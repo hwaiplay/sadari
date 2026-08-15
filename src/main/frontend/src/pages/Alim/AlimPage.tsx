@@ -434,7 +434,7 @@ function AlimPage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (

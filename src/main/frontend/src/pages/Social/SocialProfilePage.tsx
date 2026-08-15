@@ -865,7 +865,7 @@ function SocialProfilePage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   if (!profile || !summary) {
@@ -1062,7 +1062,7 @@ function SocialProfilePage() {
             >
               {isFollowListLoading && (
                 <p className={styles.followModalEmpty}>
-                  {/* "목록 조회중" */}
+                  {/* "목록 조회 중" */}
                   {message("frontend.common.loadingList")}
                 </p>
               )}

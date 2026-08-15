@@ -13,6 +13,7 @@ type NavigationGuardEntry = "base" | "sentinel";
 type NavigationGuardMarker = {
   id: string;
   entry: NavigationGuardEntry;
+  isHistoryIndexAdjusted: boolean;
 };
 
 const NAVIGATION_GUARD_STATE_KEY = "sadariBlockingOperation";
@@ -68,6 +69,7 @@ function getNavigationGuardMarker(state: unknown): NavigationGuardMarker | null 
   const markerRecord = marker as Record<string, unknown>;
   const markerId = markerRecord.id;
   const markerEntry = markerRecord.entry;
+  const isHistoryIndexAdjusted = markerRecord.isHistoryIndexAdjusted === true;
 
   // 식별자와 History 항목 구분값이 모두 유효할 때만 이동 차단 표식으로 인정한다
   if (typeof markerId !== "string"
@@ -80,6 +82,7 @@ function getNavigationGuardMarker(state: unknown): NavigationGuardMarker | null 
   return {
     id: markerId,
     entry: markerEntry,
+    isHistoryIndexAdjusted,
   };
 }
 
@@ -109,6 +112,7 @@ function replaceNavGuardBase(guardId: string): void {
     [NAVIGATION_GUARD_STATE_KEY]: {
       id: guardId,
       entry: "base" satisfies NavigationGuardEntry,
+      isHistoryIndexAdjusted: false,
     },
   };
 
@@ -131,6 +135,7 @@ function pushNavGuardSentinel(guardId: string): void {
     [NAVIGATION_GUARD_STATE_KEY]: {
       id: guardId,
       entry: "sentinel" satisfies NavigationGuardEntry,
+      isHistoryIndexAdjusted: false,
     },
   };
 
@@ -138,6 +143,44 @@ function pushNavGuardSentinel(guardId: string): void {
   window.history.pushState(guardState, "", window.location.href);
   // pushState는 popstate를 발생시키지 않으므로 현재 차단 항목을 직접 관찰값으로 기록한다
   lastObservedNavigationGuardMarker = getNavigationGuardMarker(guardState);
+}
+
+/**
+ * 완료된 이동 차단 항목을 React Router의 정상 이력 인덱스로 승격한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 반환값이 없다
+ */
+function adjustReleasedGuardIndex(): void {
+
+  // 현재 History 깊이와 React Router 인덱스를 비교할 상태를 조회한다
+  const historyState = getHistoryState();
+  // 현재 항목이 이동 차단 과정에서 만든 내부 항목인지 확인한다
+  const currentMarker = getNavigationGuardMarker(historyState);
+  const currentHistoryIndex = historyState.idx;
+
+  // 현재 항목이 미보정 차단 항목이 아니면 React Router 인덱스를 변경하지 않는다
+  if (currentMarker?.entry !== "sentinel"
+          || currentMarker.isHistoryIndexAdjusted
+          || typeof currentHistoryIndex !== "number") {
+    // 일반 화면과 이미 보정된 PWA 세션의 History 상태를 유지한다
+    return;
+  }
+
+  const adjustedState = {
+    ...historyState,
+    idx: currentHistoryIndex + 1,
+    [NAVIGATION_GUARD_STATE_KEY]: {
+      id: currentMarker.id,
+      entry: currentMarker.entry,
+      isHistoryIndexAdjusted: true,
+    },
+  };
+
+  // 동일 URL 차단 항목을 실제 History 깊이와 일치하는 Router 인덱스로 교체한다
+  window.history.replaceState(adjustedState, "", window.location.href);
+  // 이후 뒤로가기에서 차단 기준 항목을 한 번에 건너뛸 수 있도록 관찰값을 갱신한다
+  lastObservedNavigationGuardMarker = getNavigationGuardMarker(adjustedState);
 }
 
 /**
@@ -264,6 +307,8 @@ function deactivateNavigationGuard(): void {
     return;
   }
 
+  // 완료된 동일 URL 항목을 정상 이력으로 계산해 홈 이동 거리가 실제 History 깊이와 일치하게 한다
+  adjustReleasedGuardIndex();
   // 저장 완료 직후 popstate가 발생하지 않도록 History 이동 없이 논리 가드만 비활성화한다
   isNavigationGuardActive = false;
   activeNavigationGuardId = null;
@@ -364,5 +409,7 @@ export async function runBlockingOperation<T>(
   }
 }
 
+// 이전 PWA 실행에서 미보정 상태로 남은 동일 URL 항목도 현재 세션의 정상 이력으로 승격한다
+adjustReleasedGuardIndex();
 // 페이지를 다시 연 뒤에도 기존 이동 차단 History 쌍을 처리하도록 애플리케이션 수명 이벤트를 준비한다
 ensurePopStateListener();

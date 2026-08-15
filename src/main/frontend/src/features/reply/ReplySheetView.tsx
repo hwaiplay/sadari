@@ -586,7 +586,7 @@ const ReplySheetView = ({
           {controller.replyListQuery.isPending ? (
             /* 댓글 목록 조회 진행 상태 영역 */
             <div className={styles.commentLoading}>
-              {/* "목록 조회중" */}
+              {/* "목록 조회 중" */}
               <Loading
                 title={message("frontend.common.loadingList")}
                 isFullScreen={false}

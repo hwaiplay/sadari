@@ -27,6 +27,21 @@ export const inlineContainer = style({
   alignItems: "center",
 });
 
+export const compactContainer = style({
+  width: "100%",
+  minHeight: "82px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+});
+
+// 기존 회전 링의 모양과 애니메이션을 유지하면서 모달 안에서만 작게 표시한다
+export const compactSpinner = style({
+  width: "48px",
+  height: "48px",
+  transform: "scale(0.55)",
+});
+
 export const spinner = style({
   width: "48px",
   height: "48px",

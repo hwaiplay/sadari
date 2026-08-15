@@ -103,7 +103,7 @@ function InquiryDetailPage() {
   if (!inquiry && !error) {
     return (
       <div className={clsx(styles.page, styles.detailPage, isSuspended && styles.suspendedDetailPage)}>
-        <Loading title="고객문의를 불러오는 중입니다" isFullScreen={false} />
+        <Loading isFullScreen={false} />
         {suspensionBackButton}
       </div>
     );

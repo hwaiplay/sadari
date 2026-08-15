@@ -84,7 +84,7 @@ function InquiryListPage() {
   if (isLoading && inquiries.length === 0 && !error) {
     return (
       <div className={styles.page}>
-        <Loading title="고객문의를 불러오는 중입니다" isFullScreen={false} />
+        <Loading isFullScreen={false} />
       </div>
     );
   }
