@@ -8,7 +8,6 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -16,13 +15,13 @@ import {
 import {
   delSocialFollowApi,
   getSocialFollowStatusApi,
-  getSocialFollowListApi,
   getSocialProfileApi,
   getSocialReadingApi,
   setSocialFollowApi,
   type FollowListType,
   type FollowUser,
 } from "@/features/Social/api/socialApi";
+import { useFollowListModal } from "@/features/Social/hooks/useFollowListModal";
 import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import type {
   MonthlyReadingSummary,
@@ -30,6 +29,10 @@ import type {
   UserProfile,
 } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import {
+  getReadingEndDateText,
+  getReadingGradeText,
+} from "@/features/User/utils/profileReadingFormat";
 import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -37,33 +40,6 @@ import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
 type ReadingPeriod = "week" | "month" | "year";
-
-/**
- * 독후감 요약 목록에 표시할 독서 기간을 조합합니다.
- * 시작일과 종료일 중 일부만 존재해도 불필요한 구분자가 표시되지 않도록 빈 값을 제거합니다.
- *
- * @author HanWon.Jang
- * @param report 독서 기간을 표시할 독후감 요약 정보
- * @return 화면에 표시할 독서 기간 문자열
- */
-const getReadingEndDateText = (report: ReadingSummaryReport) => {
-
-  return formatDashedDateToDot(report.reptEndt);
-};
-
-/**
- * 숫자 평점을 5개 별 표시 문자열로 변환합니다.
- * 서버 응답이 비어 있거나 숫자로 바꿀 수 없는 경우 0점으로 처리해 화면 표시를 안정적으로 유지합니다.
- *
- * @author HanWon.Jang
- * @param grade 서버에서 내려온 평점 문자열
- * @return 5개 기준 별점 문자열
- */
-const getReadingGradeText = (grade?: string) => {
-
-  const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
-  return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
-};
 
 /**
  * 목표 달성률에 따라 파스텔톤 진행 막대 색상을 반환합니다.
@@ -119,19 +95,19 @@ function SocialProfilePage() {
   const [summary, setSummary] = useState<MonthlyReadingSummary | null>(null);
   const [followStatName, setFollowStatName] = useState("");
   const [isFollowUpdating, setIsFollowUpdating] = useState(false);
-  const [followListType, setFollowListType] = useState<FollowListType | null>(null);
-  const [followUsers, setFollowUsers] = useState<FollowUser[]>([]);
-  const [isFollowListLoading, setIsFollowListLoading] = useState(false);
   const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
   const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
   const {
-    visibleItems: visibleFollowUsers,
-    hasNext: hasNextFollowUser,
-    loadMore: loadMoreFollowUser,
-  } = useProgressiveList(
+    followListType,
     followUsers,
-    `${targetUserNumb}:${followListType ?? "closed"}`,
-  );
+    isFollowListLoading,
+    isNextFollowLoading,
+    hasNextFollowUser,
+    openFollowList,
+    loadMoreFollow,
+    closeFollowList,
+    setFollowUsers,
+  } = useFollowListModal({ targetUserNumb, isMyProfile: false });
   const [expandedSummary, setExpandedSummary] = useState<Record<ReadingPeriod, boolean>>({
     week: false,
     month: false,
@@ -294,24 +270,10 @@ function SocialProfilePage() {
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleFollowListOpen = async (type: FollowListType) => {
-
-    setFollowListType(type);
-    setFollowUsers([]);
+    // 새 모달을 열 때 스크롤 상태를 초기화한다
     setIsFollowListScrolling(false);
-    setIsFollowListLoading(true);
-
-    try {
-      const response = await getSocialFollowListApi(targetUserNumb, type);
-      setFollowUsers((response.data ?? []) as FollowUser[]);
-    } catch (error) {
-      void sweetError(
-        message("frontend.common.invalidAccess"),
-        getApiErrorMessage(error, message("frontend.common.tryAgain")),
-      );
-      setFollowListType(null);
-    } finally {
-      setIsFollowListLoading(false);
-    }
+    // 다른 사용자의 팔로우 목록 모달을 열고 첫 서버 페이지를 조회한다
+    await openFollowList(type);
   };
 
   /**
@@ -321,9 +283,8 @@ function SocialProfilePage() {
    * @return 반환값이 없다
    */
   const handleFollowListClose = () => {
-
-    setFollowListType(null);
-    setFollowUsers([]);
+    // 공통 팔로우 목록과 페이지 상태를 초기화한다
+    closeFollowList();
     setIsFollowListScrolling(false);
   };
 
@@ -1061,10 +1022,7 @@ function SocialProfilePage() {
               onScroll={handleFollowListScroll}
             >
               {isFollowListLoading && (
-                <p className={styles.followModalEmpty}>
-                  {/* "목록 조회 중" */}
-                  {message("frontend.common.loadingList")}
-                </p>
+                <Loading isFullScreen={false} />
               )}
               {!isFollowListLoading && followUsers.length === 0 && (
                 <p className={styles.followModalEmpty}>
@@ -1075,7 +1033,7 @@ function SocialProfilePage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && visibleFollowUsers.map((user) => (
+              {!isFollowListLoading && followUsers.map((user) => (
                 <div className={styles.followModalItem} key={user.userNumb}>
                   <button
                     className={styles.followModalProfileButton}
@@ -1111,7 +1069,11 @@ function SocialProfilePage() {
               ))}
               <InfiniteScrollTrigger
                 hasNext={!isFollowListLoading && hasNextFollowUser}
-                onLoadMore={loadMoreFollowUser}
+                isLoading={isNextFollowLoading}
+                onLoadMore={() => {
+                  // 목록 하단에 도달하면 다음 팔로우 사용자 서버 페이지를 조회한다
+                  void loadMoreFollow();
+                }}
               />
             </div>
           </section>

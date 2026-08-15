@@ -265,7 +265,11 @@ export function useHome() {
     bookKeyword: appliedSearchKeyword,
     sortType,
   });
-  const bookList = homeQuery.data?.data ?? [];
+  // 서버 페이지가 바뀔 때만 독후감 목록을 화면 정렬 순서대로 연결한다
+  const bookList = useMemo(
+    () => homeQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [],
+    [homeQuery.data?.pages],
+  );
 
   /**
    * 현재 독후감 목록과 정렬 기준으로 화면 그룹을 계산한다
@@ -378,7 +382,7 @@ export function useHome() {
 
   // 홈 화면이 계산 없이 사용할 조회 상태와 사용자 동작을 반환한다
   return {
-    data: homeQuery.data,
+    data: homeQuery.data?.pages[0],
     isPending: homeQuery.isPending,
     isError: homeQuery.isError,
     errorMessage,
@@ -389,6 +393,9 @@ export function useHome() {
     searchKeyword,
     appliedSearchKeyword,
     hasSearchCondition,
+    hasNextBook: Boolean(homeQuery.hasNextPage),
+    isNextBookLoading: homeQuery.isFetchingNextPage,
+    loadMoreBook: homeQuery.fetchNextPage,
     handleSearchChange,
     handleSearchSubmit,
     handleSortChange,

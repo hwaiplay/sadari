@@ -11,6 +11,28 @@
         <bind name="followStatFriend" value="@org.our.sadari.global.common.constant.Constant@FOLLOW_STAT_FRIEND" />
     </sql>
 
+    <!-- 팔로잉과 팔로워 목록이 같은 사용자 정보와 관계 상태 컬럼을 사용한다. -->
+    <sql id="followListColumnList">
+               U.USER_NUMB
+             , U.USER_NICK
+             , U.INTR_CNTN
+             , F.FILE_PATH AS PORF_PATH
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN #{commYes}
+                   ELSE #{commNo}
+               END AS ME_YSNO
+             , CASE
+                   WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
+                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFriend}, NULL)
+                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollowing}, NULL)
+                   WHEN REVERSEFOLLOW.USER_NUMB IS NOT NULL
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatBothFolw}, NULL)
+                   ELSE FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollow}, NULL)
+               END AS FOLLOW_STAT_NAME
+    </sql>
+
     <!-- 양방향 팔로우 관계를 직접 조회해 현재 관계에서 보여줄 공통코드 버튼명을 반환한다. -->
     <select id="getFollowStatusName" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto" resultType="string">
         <include refid="followStatusBindList" />
@@ -152,6 +174,9 @@
                     FROM TM_REPORT REPORT
                    WHERE REPORT.REPT_STAT = #{reportStatDone}
                      AND REPORT.USER_NUMB = #{userNumb}
+        <if test="pubcYsno != null and pubcYsno != ''">
+                     AND REPORT.PUBC_YSNO = #{pubcYsno}
+        </if>
                 GROUP BY REPORT.USER_NUMB
                ) READSTATS
             ON READSTATS.USER_NUMB = TARGET.USER_NUMB
@@ -176,6 +201,9 @@
                       ON REPORT.REPT_NUMB = LIKES.TAGT_NUMB
                    WHERE LIKES.TAGT_TYPE = #{likeTargetReport}
                      AND REPORT.USER_NUMB = #{userNumb}
+        <if test="pubcYsno != null and pubcYsno != ''">
+                     AND REPORT.PUBC_YSNO = #{pubcYsno}
+        </if>
                 GROUP BY REPORT.USER_NUMB
                ) LIKESTATS
             ON LIKESTATS.USER_NUMB = TARGET.USER_NUMB
@@ -188,24 +216,7 @@
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <include refid="followStatusBindList" />
         SELECT /* getFollowingList */
-               U.USER_NUMB
-             , U.USER_NICK
-             , U.INTR_CNTN
-             , F.FILE_PATH AS PORF_PATH
-             , CASE
-                   WHEN U.USER_NUMB = #{loginUserNumb} THEN #{commYes}
-                   ELSE #{commNo}
-               END AS ME_YSNO
-             , CASE
-                   WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
-                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFriend}, NULL)
-                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollowing}, NULL)
-                   WHEN REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatBothFolw}, NULL)
-                   ELSE FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollow}, NULL)
-               END AS FOLLOW_STAT_NAME
+        <include refid="followListColumnList" />
           FROM TB_FOLLOW FL
     INNER JOIN TM_USERXM U
             ON U.USER_NUMB = FL.FLOW_NUMB
@@ -225,6 +236,7 @@
              , CASE WHEN U.USER_NUMB = #{loginUserNumb} THEN 0 ELSE 1 END
              , FL.REGI_DATE DESC
              , U.USER_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
     <!-- 특정 사용자를 팔로우하는 사용자 목록을 조회한다.
@@ -234,24 +246,7 @@
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <include refid="followStatusBindList" />
         SELECT /* getFollowerList */
-               U.USER_NUMB
-             , U.USER_NICK
-             , U.INTR_CNTN
-             , F.FILE_PATH AS PORF_PATH
-             , CASE
-                   WHEN U.USER_NUMB = #{loginUserNumb} THEN #{commYes}
-                   ELSE #{commNo}
-               END AS ME_YSNO
-             , CASE
-                   WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
-                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFriend}, NULL)
-                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollowing}, NULL)
-                   WHEN REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatBothFolw}, NULL)
-                   ELSE FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollow}, NULL)
-               END AS FOLLOW_STAT_NAME
+        <include refid="followListColumnList" />
           FROM TB_FOLLOW FL
     INNER JOIN TM_USERXM U
             ON U.USER_NUMB = FL.USER_NUMB
@@ -271,5 +266,6 @@
              , CASE WHEN U.USER_NUMB = #{loginUserNumb} THEN 0 ELSE 1 END
              , FL.REGI_DATE DESC
              , U.USER_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
     </select>
 </mapper>

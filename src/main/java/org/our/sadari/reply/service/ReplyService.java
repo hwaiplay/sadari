@@ -86,7 +86,8 @@ public interface ReplyService {
      * @author Hanwon.Jang
      * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
+     * @param page 조회할 부모 댓글 페이지 번호
      * @return 독후감에 대한 댓글 조회 결과
      */
-    ResultData getReplyList(Long userNumb, Long reptNumb);
+    ResultData getReplyList(Long userNumb, Long reptNumb, int page);
 }

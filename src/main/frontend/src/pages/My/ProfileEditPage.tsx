@@ -2,6 +2,7 @@ import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
+import { queryClient } from "@/app/query/queryClient";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -9,7 +10,6 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -19,16 +19,15 @@ import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import {
   delSocialFollowApi,
-  getMyFollowListApi,
   setSocialFollowApi,
   type FollowListType,
   type FollowUser,
 } from "@/features/Social/api/socialApi";
+import { useFollowListModal } from "@/features/Social/hooks/useFollowListModal";
 import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import {
   copyPrevReadingGoalApi,
   delProfileImageDraftApi,
-  getMyProfileApi,
   getMonthlyReadingApi,
   getProfileDraftListApi,
   setProfileImageDraftApi,
@@ -40,9 +39,14 @@ import {
   type ProfileImageDraft,
   type ProfileImageType,
 } from "@/features/User/api/userApi";
+import { getMyProfileOptions } from "@/features/User/hooks/useMyProfileQuery";
 import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
+import {
+  getReadingEndDateText,
+  getReadingGradeText,
+} from "@/features/User/utils/profileReadingFormat";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
@@ -227,19 +231,6 @@ const formatReadingDiff = (diff: number) => {
 };
 
 /**
- * 독후감 요약 목록에 표시할 독서 기간을 시작일과 종료일 기준으로 조합합니다.
- * 시작일 또는 종료일 중 하나만 내려오는 예외 상황에서도 비어 있는 구분자가 보이지 않도록 처리합니다.
- *
- * @author HanWon.Jang
- * @param report 독서 기간을 표시할 독후감 요약 정보
- * @return 화면에 표시할 독서 기간 문자열
- */
-const getReadingEndDateText = (report: ReadingSummaryReport) => {
-
-  return formatDashedDateToDot(report.reptEndt);
-};
-
-/**
  * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환합니다.
  * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환합니다.
  *
@@ -259,20 +250,6 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
   return periodText
     ? /* "목표 독서기간: {0}" */ message("frontend.profile.currentReading.targetPeriod", [periodText])
     : "";
-};
-
-/**
- * 독후감 평점을 5개의 별 문자열로 변환합니다.
- * 완료 독후감 목록의 평점은 숫자 형태로 내려오므로 0점부터 5점 사이로 보정해 화면 표시가 깨지지 않게 합니다.
- *
- * @author HanWon.Jang
- * @param grade 서버에서 내려온 평점 문자열
- * @return 5개 기준의 별점 표시 문자열
- */
-const getReadingGradeText = (grade?: string) => {
-
-  const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
-  return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
 };
 
 /**
@@ -297,9 +274,6 @@ function ProfileEditPage() {
   const [currentReadingReport, setCurrentReadingReport] = useState<ReadingSummaryReport | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
-  const [followListType, setFollowListType] = useState<FollowListType | null>(null);
-  const [followUsers, setFollowUsers] = useState<FollowUser[]>([]);
-  const [isFollowListLoading, setIsFollowListLoading] = useState(false);
   const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
   const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
   const [closingModal, setClosingModal] = useState<ProfileModalType | null>(null);
@@ -316,10 +290,16 @@ function ProfileEditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
   const {
-    visibleItems: visibleFollowUsers,
-    hasNext: hasNextFollowUser,
-    loadMore: loadMoreFollowUser,
-  } = useProgressiveList(followUsers, followListType ?? "closed");
+    followListType,
+    followUsers,
+    isFollowListLoading,
+    isNextFollowLoading,
+    hasNextFollowUser,
+    openFollowList,
+    loadMoreFollow,
+    closeFollowList,
+    setFollowUsers,
+  } = useFollowListModal({ isMyProfile: true });
   const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
     week: null,
     month: null,
@@ -389,13 +369,13 @@ function ProfileEditPage() {
     let ignore = false;
 
     Promise.all([
-      getMyProfileApi(),
+      queryClient.fetchQuery(getMyProfileOptions()),
       getProfileDraftListApi().catch(() => []),
     ])
-      .then(([response, drafts]) => {
+      .then(([nextProfile, drafts]) => {
 
         if (!ignore) {
-          syncProfileState(response.data as UserProfile);
+          syncProfileState(nextProfile);
           restoreProfileImageDrafts(drafts);
         }
       })
@@ -707,8 +687,7 @@ function ProfileEditPage() {
         }
 
         if (modal === "followList") {
-          setFollowListType(null);
-          setFollowUsers([]);
+          closeFollowList();
           setIsFollowListScrolling(false);
         }
 
@@ -742,25 +721,11 @@ function ProfileEditPage() {
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleFollowListOpen = async (type: FollowListType) => {
-
+    // 이전 모달의 닫기 상태를 초기화하고 공통 팔로우 목록 첫 페이지를 조회한다
     setClosingModal(null);
-    setFollowListType(type);
-    setFollowUsers([]);
     setIsFollowListScrolling(false);
-    setIsFollowListLoading(true);
-
-    try {
-      const response = await getMyFollowListApi(type);
-      setFollowUsers((response.data ?? []) as FollowUser[]);
-    } catch (error) {
-      void sweetError(
-        /* "잘못된 접근입니다" */ message("frontend.common.invalidAccess"),
-        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
-      );
-      setFollowListType(null);
-    } finally {
-      setIsFollowListLoading(false);
-    }
+    // 본인 팔로우 목록 모달을 열고 첫 서버 페이지를 조회한다
+    await openFollowList(type);
   };
 
   /**
@@ -2288,7 +2253,7 @@ function ProfileEditPage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && visibleFollowUsers.map((user) => (
+              {!isFollowListLoading && followUsers.map((user) => (
                 /* 팔로우 사용자 개별 항목 영역 */
                 <div className={styles.followModalItem} key={user.userNumb}>
                   {/* 팔로우 사용자 프로필 정보 영역 */}
@@ -2327,7 +2292,11 @@ function ProfileEditPage() {
               ))}
               <InfiniteScrollTrigger
                 hasNext={!isFollowListLoading && hasNextFollowUser}
-                onLoadMore={loadMoreFollowUser}
+                isLoading={isNextFollowLoading}
+                onLoadMore={() => {
+                  // 목록 하단에 도달하면 다음 팔로우 사용자 서버 페이지를 조회한다
+                  void loadMoreFollow();
+                }}
               />
             </div>
           </section>

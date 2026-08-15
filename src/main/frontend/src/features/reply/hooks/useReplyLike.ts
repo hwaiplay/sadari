@@ -17,9 +17,7 @@ import {
 } from "@/features/reply/api/replyApi";
 import { REPLY_LIST_QUERY_KEY } from "@/features/reply/hooks/useReplyList";
 import type {
-  GetReplyListResponse,
   ReplyDtoType,
-  ReplyLikeResponse,
 } from "@/features/reply/types/reply.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
@@ -43,60 +41,11 @@ export const useReplyLike = (reptNumb: number) => {
    * 서버가 반환한 댓글 좋아요 상태를 현재 댓글 목록의 동일 댓글에 반영한다
    *
    * @author HanWon.Jang
-   * @param response 댓글 좋아요 API 성공 응답
    * @return 반환값이 없다
    */
-  const updateReplyLikeCache = (response: ReplyLikeResponse): void => {
-    /**
-     * 기존 댓글 목록에서 변경 대상 댓글의 좋아요 상태만 교체한다
-     *
-     * @author HanWon.Jang
-     * @param currentResponse 현재 댓글 목록 캐시
-     * @return 좋아요 상태가 반영된 새 댓글 목록 캐시
-     */
-    const getNextReplyList = (
-      currentResponse: GetReplyListResponse | undefined,
-    ): GetReplyListResponse | undefined => {
-      // 아직 조회되지 않은 캐시는 임의로 생성하지 않고 기존 상태를 반환한다
-      if (!currentResponse) {
-        // 캐시 미조회 상태를 그대로 반환한다
-        return currentResponse;
-      }
-
-      /**
-       * API 응답의 댓글 번호와 일치하는 댓글에 최신 좋아요 상태를 반영한다
-       *
-       * @author HanWon.Jang
-       * @param reply 현재 댓글 목록의 댓글 한 건
-       * @return 좋아요 상태가 반영된 댓글 정보
-       */
-      const updateReply = (reply: ReplyDtoType): ReplyDtoType => {
-        // 변경 대상이 아닌 댓글은 기존 객체를 그대로 재사용한다
-        if (reply.replNumb !== response.data.replNumb) {
-          // 변경하지 않은 댓글 정보를 반환한다
-          return reply;
-        }
-
-        // 서버가 확정한 좋아요 수와 현재 사용자 상태를 반영한 댓글을 반환한다
-        return {
-          ...reply,
-          likeCnt: response.data.likeCnt,
-          likeYsno: response.data.likeYsno,
-        };
-      };
-
-      // 공통 응답 정보는 유지하고 댓글 목록만 새 배열로 교체한다
-      return {
-        ...currentResponse,
-        data: currentResponse.data.map(updateReply),
-      };
-    };
-
-    // 현재 독후감 댓글 목록 캐시에 서버의 최종 좋아요 상태를 반영한다
-    queryClient.setQueryData<GetReplyListResponse>(
-      [REPLY_LIST_QUERY_KEY, reptNumb],
-      getNextReplyList,
-    );
+  const updateReplyLikeCache = (): void => {
+    // 서버가 변경 결과를 확정한 댓글 목록 페이지만 다시 조회한다
+    void queryClient.invalidateQueries({ queryKey: [REPLY_LIST_QUERY_KEY, reptNumb] });
   };
 
   /**

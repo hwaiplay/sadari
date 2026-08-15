@@ -6,7 +6,6 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import java.math.BigDecimal;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -21,6 +20,8 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.myPage.dto.ReadingHeatmapDto;
+import org.our.sadari.myPage.dto.ReadingHeatmapRowDto;
+import org.our.sadari.myPage.dto.ReadingStatisticsAggregateDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsQueryDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
@@ -87,10 +88,10 @@ class ReadingStatisticsServiceImplTest {
         // 잔디 조회 전에 정상 계정 상태를 반환하도록 설정한다
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
         // 현재 연도만 잔디에서 선택할 수 있도록 설정한다
-        when(readingStatisticsMapper.getReadingYearList(1L)).thenReturn(List.of(2026));
+        when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
+                                                        , LocalDate.of(2026, 8, 14)))
+                .thenReturn(getHeatmapRows(List.of(2026), daily));
         // 현재 날짜의 40분 독서 기록 한 건을 반환하도록 설정한다
-        when(readingStatisticsMapper.getDailyTimeList(1L, LocalDate.of(2026, 1, 1)
-                                                        , LocalDate.of(2026, 8, 14))).thenReturn(List.of(daily));
 
         // 전체 통계 대신 타이머 화면의 현재 연도 독서 잔디만 조회한다
         ResultData result = readingStatisticsService.getReadingHeatmap(1L, null);
@@ -103,15 +104,12 @@ class ReadingStatisticsServiceImplTest {
         // 마지막 날짜의 40분 독서 시간이 유지되는지 확인한다
         assertEquals(2400L, heatmap.getHeatmapList().get(225).getReadSecs());
         // 잔디 전용 조회에서 독서 상태 집계를 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getStatusCountList(any(), any(), any(), any());
+        verify(readingStatisticsMapper, never()).getStatsAggregate(any());
         // 잔디 전용 조회에서 연속 독서 날짜를 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getReadingDateList(any());
         // 잔디 전용 조회에서 책별 독서 시간 순위를 호출하지 않았는지 확인한다
         verify(readingStatisticsMapper, never()).getTopBookTimeList(any(ReadingStatisticsQueryDto.class));
         // 잔디 전용 조회에서 별점 분포를 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getRatingCountList(any());
         // 잔디 전용 조회에서 연도 비교 통계를 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getYearComparison(any(ReadingStatisticsQueryDto.class));
     }
 
     /**
@@ -123,24 +121,20 @@ class ReadingStatisticsServiceImplTest {
     void getReadingStatsFillsCurrentYear() {
 
         ReadingStatisticsDto.Daily daily = new ReadingStatisticsDto.Daily(LocalDate.of(2026, 8, 14), 1800L);
-        ReadingStatisticsDto.Status doneStatus = new ReadingStatisticsDto.Status(Constant.REPORT_STAT_DONE, 3L);
         // 범용 회원 설정 행이 없는 기본값과 같은 정상 회원 설정을 생성한다
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE);
+        // 통합 SQL이 반환할 상태, 연속 기록, 별점 및 연도 비교 집계를 생성한다
+        ReadingStatisticsAggregateDto aggregate = getAggregate();
         // 회원 설정과 계정 상태를 정상 조회하도록 설정한다
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
         // 현재 연도와 기록이 있는 과거 연도를 조회 가능 목록으로 설정한다
-        when(readingStatisticsMapper.getReadingYearList(1L)).thenReturn(List.of(2026, 2025));
+        when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
+                                                        , LocalDate.of(2026, 8, 14)))
+                .thenReturn(getHeatmapRows(List.of(2026, 2025), daily));
         // 현재 연도 중 오늘 하루의 독서 시간만 조회되도록 설정한다
-        when(readingStatisticsMapper.getDailyTimeList(1L, LocalDate.of(2026, 1, 1)
-                                                        , LocalDate.of(2026, 8, 14))).thenReturn(List.of(daily));
         // 완독 상태만 존재하고 읽는 중과 중단 상태는 없는 조회 결과를 설정한다
-        when(readingStatisticsMapper.getStatusCountList(1L, Constant.REPORT_STAT_READ
-                                                        , Constant.REPORT_STAT_DONE
-                                                        , Constant.REPORT_STAT_STOP)).thenReturn(List.of(doneStatus));
+        when(readingStatisticsMapper.getStatsAggregate(any(ReadingStatisticsQueryDto.class))).thenReturn(aggregate);
         // 최근 3일이 이어진 타이머 기록으로 현재 및 최장 연속 기록을 설정한다
-        when(readingStatisticsMapper.getReadingDateList(1L)).thenReturn(List.of(LocalDate.of(2026, 8, 12)
-                                                                             , LocalDate.of(2026, 8, 13)
-                                                                             , LocalDate.of(2026, 8, 14)));
         // 올해 책별 독서 시간 순위가 네 권 조회되어도 화면 응답은 세 권으로 제한되도록 설정한다
         when(readingStatisticsMapper.getTopBookTimeList(any(ReadingStatisticsQueryDto.class)))
                 .thenReturn(List.of(new ReadingStatisticsDto.BookTime(31L, 15L, "사다리 독서법", "홍길동", null, 7200L)
@@ -148,13 +142,7 @@ class ReadingStatisticsServiceImplTest {
                                   , new ReadingStatisticsDto.BookTime(33L, 17L, "세 번째 책", "이독서", null, 3600L)
                                   , new ReadingStatisticsDto.BookTime(34L, 18L, "네 번째 책", "박통계", null, 1800L)));
         // 정수와 반점 별점이 함께 존재하는 별점 분포 원천을 설정한다
-        when(readingStatisticsMapper.getRatingCountList(1L))
-                .thenReturn(List.of(new ReadingStatisticsDto.Rating(BigDecimal.valueOf(5D), 1L)
-                                  , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(4.5D), 2L)
-                                  , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(0.5D), 3L)));
         // 현재 연도와 이전 연도 같은 기간의 독서 기록 비교값을 설정한다
-        when(readingStatisticsMapper.getYearComparison(any(ReadingStatisticsQueryDto.class)))
-                .thenReturn(new ReadingStatisticsDto.YearComparison(2026, 2025, 7200L, 3600L, 3L, 2L, 2L, 1L));
 
         // 고정 날짜를 기준으로 현재 연도 본인 독서 통계를 조회한다
         ResultData result = readingStatisticsService.getReadingStats(1L, null);
@@ -206,14 +194,11 @@ class ReadingStatisticsServiceImplTest {
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO))
                 .thenReturn(getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE));
         // 2025년에 독서 기록이 존재하도록 조회 가능 연도를 설정한다
-        when(readingStatisticsMapper.getReadingYearList(1L)).thenReturn(List.of(2025));
+        when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2025, 1, 1)
+                                                        , LocalDate.of(2025, 12, 31)))
+                .thenReturn(getHeatmapRows(List.of(2025)));
         // 과거 연도 전체 기간의 독서 시간이 없도록 설정한다
-        when(readingStatisticsMapper.getDailyTimeList(1L, LocalDate.of(2025, 1, 1)
-                                                        , LocalDate.of(2025, 12, 31))).thenReturn(List.of());
         // 독서 상태 집계가 없는 빈 서재로 설정한다
-        when(readingStatisticsMapper.getStatusCountList(1L, Constant.REPORT_STAT_READ
-                                                        , Constant.REPORT_STAT_DONE
-                                                        , Constant.REPORT_STAT_STOP)).thenReturn(List.of());
 
         // 기록이 있는 과거 연도의 본인 독서 통계를 조회한다
         ResultData result = readingStatisticsService.getReadingStats(1L, 2025);
@@ -239,7 +224,9 @@ class ReadingStatisticsServiceImplTest {
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO))
                 .thenReturn(getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE));
         // 2025년만 독서 기록이 존재하도록 조회 가능 연도를 설정한다
-        when(readingStatisticsMapper.getReadingYearList(1L)).thenReturn(List.of(2025));
+        when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2024, 1, 1)
+                                                        , LocalDate.of(2024, 12, 31)))
+                .thenReturn(getHeatmapRows(List.of(2025)));
 
         // 기록이 없는 2024년의 본인 독서 통계를 조회한다
         ResultData result = readingStatisticsService.getReadingStats(1L, 2024);
@@ -247,9 +234,8 @@ class ReadingStatisticsServiceImplTest {
         // 잘못된 연도 요청 실패 응답인지 확인한다
         assertEquals(2009, result.getCode());
         // 조회할 수 없는 연도에는 일별 독서 시간 SQL을 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getDailyTimeList(any(), any(), any());
+        verify(readingStatisticsMapper, never()).getStatsAggregate(any());
         // 조회할 수 없는 연도에는 독후감 상태 SQL을 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getStatusCountList(any(), any(), any(), any());
     }
 
     /**
@@ -266,9 +252,8 @@ class ReadingStatisticsServiceImplTest {
         // 잘못된 요청 실패 응답인지 확인한다
         assertEquals(2009, result.getCode());
         // 사용자 번호가 없을 때 연도 목록 SQL을 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getReadingYearList(any());
+        verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
         // 사용자 번호가 없을 때 일별 독서 시간 SQL을 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getDailyTimeList(any(), any(), any());
     }
 
     /**
@@ -292,7 +277,7 @@ class ReadingStatisticsServiceImplTest {
         // 비공개 설정에서는 공개할 데이터가 없는지 확인한다
         assertEquals(null, result.getData());
         // 비공개 설정에서는 연도 목록 SQL을 호출하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getReadingYearList(any());
+        verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
     }
 
     /**
@@ -308,21 +293,16 @@ class ReadingStatisticsServiceImplTest {
         // 공개 통계 조회에서 공개 회원 설정을 반환하도록 설정한다
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
         // 현재 연도만 조회할 수 있도록 저장된 과거 연도는 없는 것으로 설정한다
-        when(readingStatisticsMapper.getReadingYearList(1L)).thenReturn(List.of());
+        when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
+                                                        , LocalDate.of(2026, 8, 14)))
+                .thenReturn(getHeatmapRows(List.of()));
         // 공개 응답의 잔디를 빈 기록으로 구성하도록 일별 독서 시간은 없는 것으로 설정한다
-        when(readingStatisticsMapper.getDailyTimeList(1L, LocalDate.of(2026, 1, 1)
-                                                        , LocalDate.of(2026, 8, 14))).thenReturn(List.of());
         // 공개 응답의 독서 상태를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정한다
-        when(readingStatisticsMapper.getStatusCountList(1L, Constant.REPORT_STAT_READ
-                                                        , Constant.REPORT_STAT_DONE
-                                                        , Constant.REPORT_STAT_STOP)).thenReturn(List.of());
         // 공개 응답의 연속 독서일을 0일로 구성하도록 독서 날짜는 없는 것으로 설정한다
-        when(readingStatisticsMapper.getReadingDateList(1L)).thenReturn(List.of());
         // 공개 화면에 표시할 올해 가장 오래 읽은 책 한 권과 내부 독후감 번호를 설정한다
         when(readingStatisticsMapper.getTopBookTimeList(any(ReadingStatisticsQueryDto.class)))
                 .thenReturn(List.of(new ReadingStatisticsDto.BookTime(31L, 15L, "사다리 독서법", "홍길동", null, 7200L)));
         // 공개 응답의 별점 분포를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정한다
-        when(readingStatisticsMapper.getRatingCountList(1L)).thenReturn(List.of());
 
         // 공개 회원의 다른 사용자용 독서 통계를 조회한다
         ResultData result = readingStatisticsService.getPublicReadingStats(1L, null);
@@ -355,13 +335,11 @@ class ReadingStatisticsServiceImplTest {
         // 제한 계정의 본인 통계 접근 거절 응답인지 확인한다
         assertEquals(2020, result.getCode());
         // 제한 계정에서는 연속 기록 원천을 조회하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getReadingDateList(any());
+        verify(readingStatisticsMapper, never()).getStatsAggregate(any());
         // 제한 계정에서는 올해 책별 독서 시간 원천을 조회하지 않았는지 확인한다
         verify(readingStatisticsMapper, never()).getTopBookTimeList(any());
         // 제한 계정에서는 별점 분포 원천을 조회하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getRatingCountList(any());
         // 제한 계정에서는 연도 비교 원천을 조회하지 않았는지 확인한다
-        verify(readingStatisticsMapper, never()).getYearComparison(any());
     }
 
     /**
@@ -389,7 +367,87 @@ class ReadingStatisticsServiceImplTest {
         // 인증 회원 번호가 설정된 요청으로 범용 회원 설정을 저장했는지 확인한다
         verify(readingStatisticsMapper).uptReadingStatsSetting(request);
         // 공개 여부 저장은 독서 시간 원천을 다시 조회하지 않는지 확인한다
-        verify(readingStatisticsMapper, never()).getDailyTimeList(any(), any(), any());
+        verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
+    }
+
+    /**
+     * 조회 가능 연도와 일별 독서 시간을 통합 Mapper 결과로 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @param yearList 조회 가능 연도 목록
+     * @param dailyList 일별 독서 시간 목록
+     * @return 연도 및 일별 시간이 포함된 통합 행 목록
+     */
+    private List<ReadingHeatmapRowDto> getHeatmapRows(List<Integer> yearList
+                                                      , ReadingStatisticsDto.Daily... dailyList) {
+        // 연도 행과 일별 행을 순서대로 담을 테스트 목록을 생성한다
+        List<ReadingHeatmapRowDto> rowList = new java.util.ArrayList<>();
+
+        // 조회 가능한 각 연도를 통합 결과의 연도 행으로 변환한다
+        for (Integer year : yearList) {
+            // 연도 식별값을 담을 테스트 행을 생성한다
+            ReadingHeatmapRowDto row = new ReadingHeatmapRowDto();
+            // 연도 행임을 구분할 유형을 설정한다
+            row.setRowType(ReadingHeatmapRowDto.ROW_TYPE_YEAR);
+            // 조회 가능한 독서 연도를 설정한다
+            row.setReadYear(year);
+            // 구성한 연도 행을 통합 결과에 추가한다
+            rowList.add(row);
+        }
+
+        // 선택 연도의 일별 시간을 통합 결과의 일별 행으로 변환한다
+        for (ReadingStatisticsDto.Daily daily : dailyList) {
+            // 일별 독서 시간을 담을 테스트 행을 생성한다
+            ReadingHeatmapRowDto row = new ReadingHeatmapRowDto();
+            // 일별 행임을 구분할 유형을 설정한다
+            row.setRowType(ReadingHeatmapRowDto.ROW_TYPE_DAILY);
+            // 일별 독서 날짜를 설정한다
+            row.setReadDate(daily.getReadDate());
+            // 일별 확정 독서 시간을 설정한다
+            row.setReadSecs(daily.getReadSecs());
+            // 구성한 일별 행을 통합 결과에 추가한다
+            rowList.add(row);
+        }
+
+        // Mapper가 반환할 통합 행 목록을 반환한다
+        return rowList;
+    }
+
+    /**
+     * 전체 독서 통계 테스트에 사용할 통합 집계 결과를 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 상태, 연속 기록, 별점 및 연도 비교 집계값
+     */
+    private ReadingStatisticsAggregateDto getAggregate() {
+        // 화면 검증값을 담을 통합 집계 결과를 생성한다
+        ReadingStatisticsAggregateDto aggregate = new ReadingStatisticsAggregateDto();
+        // 완독 독후감 수를 설정한다
+        aggregate.setDoneCount(3L);
+        // 현재 연속 독서일을 설정한다
+        aggregate.setCurrentStreakDays(3);
+        // 최장 연속 독서일을 설정한다
+        aggregate.setLongestStreakDays(3);
+        // 0점대 독후감 수를 설정한다
+        aggregate.setRatingZeroCount(3L);
+        // 4점대 독후감 수를 설정한다
+        aggregate.setRatingFourCount(2L);
+        // 5점 독후감 수를 설정한다
+        aggregate.setRatingFiveCount(1L);
+        // 현재 연도 독서 시간을 설정한다
+        aggregate.setCurrentReadSecs(7200L);
+        // 이전 연도 독서 시간을 설정한다
+        aggregate.setPreviousReadSecs(3600L);
+        // 현재 연도 독서일 수를 설정한다
+        aggregate.setCurrentReadDays(3L);
+        // 이전 연도 독서일 수를 설정한다
+        aggregate.setPreviousReadDays(2L);
+        // 현재 연도 완독 권수를 설정한다
+        aggregate.setCurrentDoneBooks(2L);
+        // 이전 연도 완독 권수를 설정한다
+        aggregate.setPreviousDoneBooks(1L);
+        // 구성한 통합 집계 결과를 반환한다
+        return aggregate;
     }
 
     /**

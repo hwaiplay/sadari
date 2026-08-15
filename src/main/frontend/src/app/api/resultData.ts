@@ -10,6 +10,12 @@ export type ResultData<T = unknown> = {
   data?: T;
 };
 
+export type PageData<T> = {
+  list: T[];
+  page: number;
+  hasNext: boolean;
+};
+
 export class ResultDataError extends Error {
   result: ResultData;
 

@@ -21,6 +21,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 설명 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 작성자 팔로우 여부 응답 추가
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 허용값 문서화
+ * 2026-08-15        SeungHyeon.Kang    목록 페이지 조회 조건 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -100,4 +101,10 @@ public class ReportDto extends BookDto {
 
     @Schema(description = "상세 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
     private String editVersion;
+
+    @Schema(description = "목록 조회 시작 위치", example = "0", hidden = true)
+    private Integer pageOffset;
+
+    @Schema(description = "다음 페이지 판정을 포함한 조회 건수", example = "13", hidden = true)
+    private Integer pageLimit;
 }

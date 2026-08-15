@@ -3,10 +3,10 @@ import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { message } from "@/app/messages/message";
 import {
-  notifyFirebasePushEnabled,
   requestFirebaseToken,
   requestPushPermission,
 } from "@/app/pwa/firebaseMessaging";
+import { notifyFirebasePushEnabled } from "@/app/pwa/pushEvents";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import {
