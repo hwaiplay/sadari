@@ -14,6 +14,7 @@ import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.service.BadWordDetectionService;
@@ -48,11 +49,15 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 허용 정렬 코드 검증 추가
+ * 2026-08-15        SeungHyeon.Kang    홈과 공개 독후감 페이지 조회 추가
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReportServiceImpl implements ReportService {
+
+    // 홈과 공개 목록이 한 번에 조회할 화면 항목 수
+    private static final int PAGE_SIZE = 12;
 
     // Report 데이터 접근 객체
     private final ReportMapper reportMapper;
@@ -121,6 +126,52 @@ public class ReportServiceImpl implements ReportService {
         List<ReportDto> list = reportMapper.getReportList(reportDto);
         // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(list);
+    }
+
+    /**
+     * 로그인 사용자의 독후감을 페이지 단위로 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param bookKeyword 책 제목 또는 작가명 검색어
+     * @param sortType 목록 정렬 유형
+     * @param page 조회할 페이지 번호
+     * @return 현재 페이지 독후감과 다음 페이지 여부
+     */
+    @Override
+    public ResultData getBookPage(Long userNumb, String bookKeyword, String sortType, int page) {
+        // 인증 사용자 번호가 없으면 다른 사용자의 독후감 목록을 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 페이지 조회 조건을 담을 객체를 생성한다
+        ReportDto reportDto = new ReportDto();
+        // 로그인 사용자 번호를 조회 조건으로 설정한다
+        reportDto.setUserNumb(userNumb);
+        // 검색어를 화면 표시 제어문자 없이 조회 조건으로 설정한다
+        reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
+        // 허용된 정렬 유형을 조회 조건으로 설정한다
+        reportDto.setSortType(normalizeListSortType(sortType));
+        // 읽는 중 여부 표시 기준 상태를 설정한다
+        reportDto.setReptStat(Constant.REPORT_STAT_READ);
+        // 현재 페이지의 시작 위치를 조회 조건으로 설정한다
+        reportDto.setPageOffset((normalizedPage - 1) * PAGE_SIZE);
+        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 조회한다
+        reportDto.setPageLimit(PAGE_SIZE + 1);
+        // 페이지 조건으로 제한한 독후감 목록을 조회한다
+        List<ReportDto> searchedList = reportMapper.getReportList(reportDto);
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReportDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 제한 건수보다 한 건 더 조회되었는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > PAGE_SIZE;
+        // 화면에는 현재 페이지 크기만 전달한다
+        List<ReportDto> visibleList = hasNext ? safeList.subList(0, PAGE_SIZE) : safeList;
+        // 현재 페이지 독후감과 다음 페이지 여부를 반환한다
+        return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
     /**
@@ -939,10 +990,13 @@ public class ReportServiceImpl implements ReportService {
      * @param userNumb 로그인 사용자 번호
      * @param bookIsbn 조회할 도서 ISBN
      * @param sortType 공개 독후감 정렬 코드
+     * @param reptStat 공개 독후감 상태 필터
+     * @param page 조회할 페이지 번호
      * @return 공개 독후감 목록 조회 결과
      */
     @Override
-    public ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn, String sortType) {
+    public ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn, String sortType
+                                            , String reptStat, int page) {
         // ISBN이 없으면 도서를 특정할 수 없으므로 공개 독후감 또는 평균 별점을 조회하지 않는다.
         if (StringUtil.isEmpty(bookIsbn)) {
             // "조회 결과가 없어요."
@@ -967,8 +1021,32 @@ public class ReportServiceImpl implements ReportService {
 
         // 검증된 정렬 코드를 Mapper 조건으로 설정한다
         reportDto.setSortType(normalizedSortType);
-        // ISBN 기준으로 공개 독후감 목록을 조회 결과를 성공 응답으로 반환한다
-        return ResultData.success(reportMapper.getPublicReportList(reportDto));
+        // 완료와 중단 상태만 서버 필터로 허용하고 전체 요청은 조건을 비운다
+        String normalizedReptStat = StringUtil.normalizePlainText(reptStat);
+
+        // 완료 또는 중단 상태이면 페이지 원본 조회 단계에 적용한다
+        if (Constant.REPORT_STAT_DONE.equals(normalizedReptStat)
+                || Constant.REPORT_STAT_STOP.equals(normalizedReptStat)) {
+            // 검증된 독서 상태를 공개 목록 조회 조건으로 설정한다
+            reportDto.setReptStat(normalizedReptStat);
+        }
+
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 현재 페이지의 시작 위치를 조회 조건으로 설정한다
+        reportDto.setPageOffset((normalizedPage - 1) * PAGE_SIZE);
+        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 조회한다
+        reportDto.setPageLimit(PAGE_SIZE + 1);
+        // ISBN과 상태 및 정렬 조건으로 범위를 제한한 공개 독후감을 조회한다
+        List<ReportDto> searchedList = reportMapper.getPublicReportList(reportDto);
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReportDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 제한 건수보다 한 건 더 조회되었는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > PAGE_SIZE;
+        // 화면에는 현재 페이지 크기만 전달한다
+        List<ReportDto> visibleList = hasNext ? safeList.subList(0, PAGE_SIZE) : safeList;
+        // ISBN 기준 공개 독후감 페이지와 다음 페이지 여부를 반환한다
+        return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
     /**

@@ -3,7 +3,6 @@ import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import CustomSelect, {
   type CustomSelectOption,
@@ -83,14 +82,14 @@ const PublicReportPage = () => {
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {
-
-    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
+    // 조회된 공개 독후감 서버 페이지를 화면 순서대로 연결해 반환한다
+    return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
   }, [publicReportsQuery.data]);
 
   const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
@@ -116,21 +115,8 @@ const PublicReportPage = () => {
     );
   }, [reportStatusCodeQuery.data]);
 
-  const visibleReports = useMemo(() => {
-
-    const filteredReports =
-      status === "ALL"
-        ? reports
-        : reports.filter((report) => getReportStatus(report) === status);
-
-    // 정렬은 서버 SQL에서 완료되므로 화면에서는 독서 상태 필터만 적용한다.
-    return filteredReports;
-  }, [reports, status]);
-  const {
-    visibleItems: displayedReports,
-    hasNext: hasNextReport,
-    loadMore: loadMoreReport,
-  } = useProgressiveList(visibleReports, `${isbn}:${sort}:${status}`);
+  const displayedReports = reports;
+  const hasNextReport = Boolean(publicReportsQuery.hasNextPage);
 
   /**
    * handle Toggle Report 사용자 동작을 처리한다
@@ -437,7 +423,11 @@ const PublicReportPage = () => {
               })}
               <InfiniteScrollTrigger
                 hasNext={hasNextReport}
-                onLoadMore={loadMoreReport}
+                isLoading={publicReportsQuery.isFetchingNextPage}
+                onLoadMore={() => {
+                  // 목록 하단에 도달하면 다음 공개 독후감 서버 페이지를 조회한다
+                  void publicReportsQuery.fetchNextPage();
+                }}
               />
             </section>
           ) : (

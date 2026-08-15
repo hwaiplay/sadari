@@ -189,13 +189,16 @@ public class SocialController {
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로잉 목록 조회 결과
      */
     @GetMapping("/me/following")
     @Operation(summary = "내 팔로잉 목록 조회", description = "로그인 사용자가 팔로우하는 사용자 목록을 조회한다.")
-    public ResultData getMyFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+    public ResultData getMyFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                       , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                         @RequestParam(value = "page", defaultValue = "1") int page) {
         // 로그인 사용자의 팔로잉 목록을 조회한 결과를 반환한다
-        return socialService.getFollowingList(loginUserNumb, loginUserNumb);
+        return socialService.getFollowingList(loginUserNumb, loginUserNumb, page);
     }
 
     /**
@@ -204,13 +207,16 @@ public class SocialController {
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로워 목록 조회 결과
      */
     @GetMapping("/me/followers")
     @Operation(summary = "내 팔로워 목록 조회", description = "로그인 사용자를 팔로우하는 사용자 목록을 조회한다.")
-    public ResultData getMyFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
+    public ResultData getMyFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                      , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                        @RequestParam(value = "page", defaultValue = "1") int page) {
         // 로그인 사용자의 팔로워 목록을 조회한 결과를 반환한다
-        return socialService.getFollowerList(loginUserNumb, loginUserNumb);
+        return socialService.getFollowerList(loginUserNumb, loginUserNumb, page);
     }
 
     /**
@@ -220,14 +226,17 @@ public class SocialController {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로잉 목록 조회 결과
      */
     @GetMapping("/profile/{userNumb}/following")
     @Operation(summary = "팔로잉 목록 조회", description = "특정 사용자가 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
-                                     , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb) {
+                                     , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb
+                                     , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                       @RequestParam(value = "page", defaultValue = "1") int page) {
         // 특정 사용자의 팔로잉 목록을 조회한 결과를 반환한다
-        return socialService.getFollowingList(loginUserNumb, userNumb);
+        return socialService.getFollowingList(loginUserNumb, userNumb, page);
     }
 
     /**
@@ -237,14 +246,17 @@ public class SocialController {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로워 목록 조회 결과
      */
     @GetMapping("/profile/{userNumb}/followers")
     @Operation(summary = "팔로워 목록 조회", description = "특정 사용자를 팔로우하는 사용자 목록을 조회한다.")
     public ResultData getFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
-                                    , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb) {
+                                    , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb
+                                    , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                      @RequestParam(value = "page", defaultValue = "1") int page) {
         // 특정 사용자의 팔로워 목록을 조회한 결과를 반환한다
-        return socialService.getFollowerList(loginUserNumb, userNumb);
+        return socialService.getFollowerList(loginUserNumb, userNumb, page);
     }
 
     /**

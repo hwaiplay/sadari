@@ -7,6 +7,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { queryClient } from "@/app/query/queryClient";
+import { sessionQueryKeys } from "@/app/query/queryKeys";
 import {
   beginBlockingOperation,
   endBlockingOperation,
@@ -307,8 +308,11 @@ async function resetSessionToLogin() {
   // /user/me는 로그인 후 화면에서 현재 세션의 사용자 정보를 확정하는 API다.
   // 인증성 실패 코드가 오면 토큰과 사용자 데이터가 불일치한 상태이므로 세션을 비우고 로그인부터 다시 시킨다.
   useAuthStore.getState().clearAuth();
-  // Remove stale successful tokenCheck data so /login does not redirect back to /home after logout.
-  queryClient.removeQueries({ queryKey: ["auth"] });
+  // 인증 복구 실패 계정의 인증과 사용자 서버 상태가 다음 로그인에 재사용되지 않도록 제거한다
+  for (const queryKey of sessionQueryKeys) {
+    // 현재 세션에 속한 공통 Query Cache를 제거한다
+    queryClient.removeQueries({ queryKey });
+  }
 
   // accessToken/refreshToken은 HttpOnly 쿠키라 브라우저 코드에서 직접 삭제할 수 없다.
   // 서버 logout API로 쿠키를 만료시킨 뒤 이동해야 /login과 /home 사이의 반복 이동을 막을 수 있다.

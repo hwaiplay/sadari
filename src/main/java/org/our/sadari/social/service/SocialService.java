@@ -78,9 +78,10 @@ public interface SocialService {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로잉 목록 조회 결과
      */
-    ResultData getFollowingList(Long loginUserNumb, Long userNumb);
+    ResultData getFollowingList(Long loginUserNumb, Long userNumb, int page);
 
     /**
      * 특정 사용자를 팔로우하는 사용자 목록을 조회한다.
@@ -89,7 +90,8 @@ public interface SocialService {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로워 목록 조회 결과
      */
-    ResultData getFollowerList(Long loginUserNumb, Long userNumb);
+    ResultData getFollowerList(Long loginUserNumb, Long userNumb, int page);
 }

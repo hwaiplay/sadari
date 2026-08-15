@@ -513,14 +513,6 @@ const ReplySheetView = ({
   onClose,
   controller,
 }: ReplySheetViewProps) => {
-  const {
-    visibleItems: visibleReplyThreads,
-    hasNext: hasNextReplyThread,
-    loadMore: loadMoreReplyThread,
-  } = useProgressiveList(
-    controller.replyThreads,
-    String(report.reptNumb),
-  );
   /**
    * 부모 댓글 묶음을 현재 독후감의 댓글 목록 항목으로 표시한다
    *
@@ -605,10 +597,14 @@ const ReplySheetView = ({
           ) : controller.replyThreads.length > 0 ? (
             /* 등록된 댓글 목록 영역 */
             <div className={styles.replyList}>
-              {visibleReplyThreads.map(renderReplyThread)}
+              {controller.replyThreads.map(renderReplyThread)}
               <InfiniteScrollTrigger
-                hasNext={hasNextReplyThread}
-                onLoadMore={loadMoreReplyThread}
+                hasNext={Boolean(controller.replyListQuery.hasNextPage)}
+                isLoading={controller.replyListQuery.isFetchingNextPage}
+                onLoadMore={() => {
+                  // 댓글 목록 하단에 도달하면 다음 부모 댓글 서버 페이지를 조회한다
+                  void controller.replyListQuery.fetchNextPage();
+                }}
               />
             </div>
           ) : (

@@ -1,46 +1,49 @@
 import { Navigate, Route, Routes } from "react-router-dom";
-import LoginPage from "../pages/Login/LoginPage";
-import Oauth from "../pages/Oauth/Oauth";
 import ProtectedRoute from "./ProtectedRoute";
 import Layout from "../components/Layout/Layout";
-import Home from "../pages/Home/Home";
-import DetailPage from "../pages/Book/Detail/DetailPage";
 import PublicRoute from "./PublicRoute";
-import BookSearchType from "../pages/Book/Search/SearchBookPage";
-import SetReportPage from "@/pages/Book/Set/SetReportPage";
-import BookInfoPage from "@/pages/Book/Info/BookInfoPage";
-import SearchBookInfoPage from "@/pages/Book/Search/SearchBookInfoPage";
 import ScrollToTop from "@/components/Layout/ScrollTop";
-import ReadingCalendarPage from "@/pages/My/ReadingCalendarPage";
-import PublicReportPage from "@/pages/Book/PublicReports/PublicReportPage";
-import ProfileEditPage from "@/pages/My/ProfileEditPage";
-import SocialProfilePage from "@/pages/Social/SocialProfilePage";
-import AlimPage from "@/pages/Alim/AlimPage";
-import SettingsPage from "@/pages/Settings/SettingsPage";
-import ServiceInfoPage from "@/pages/Settings/ServiceInfoPage";
-import WithdrawalPage from "@/pages/Settings/WithdrawalPage";
-import WithdrawalResultPage from "@/pages/Settings/WithdrawalResultPage";
-import WithdrawalPendingPage from "@/pages/Settings/WithdrawalPendingPage";
-import WelcomePage from "@/pages/Welcome/WelcomePage";
-import SuspensionPage from "@/pages/Settings/SuspensionPage";
-import UserReportPage from "@/pages/UserReport/UserReportPage";
-import UserReportCompletePage from "@/pages/UserReport/UserReportCompletePage";
-import ErrorPage from "@/pages/Error/ErrorPage";
-import MyClubPage from "@/pages/ReadingClub/MyClubPage";
-import FindClubPage from "@/pages/ReadingClub/FindClubPage";
-import SetClubPage from "@/pages/ReadingClub/SetClubPage.tsx";
-import EditClubPage from "@/pages/ReadingClub/EditClubPage.tsx";
-import ClubDetailPage from "@/pages/ReadingClub/ClubDetailPage";
-import ClubManagementPage from "@/pages/ReadingClub/ClubManagementPage";
-import ClubMemberManagementPage from "@/pages/ReadingClub/ClubMemberManagementPage";
-import SetClubReadingPage from "@/pages/ReadingClub/SetClubReadingPage";
-import NoticeListPage from "@/pages/Notice/NoticeListPage";
-import NoticeDetailPage from "@/pages/Notice/NoticeDetailPage";
-import InquiryListPage from "@/pages/Inquiry/InquiryListPage";
-import InquiryWritePage from "@/pages/Inquiry/InquiryWritePage";
-import InquiryDetailPage from "@/pages/Inquiry/InquiryDetailPage";
-import InquiryLayout from "@/pages/Inquiry/InquiryLayout";
-import ReadingTimerPage from "@/pages/Timer/ReadingTimerPage";
+import Loading from "@/components/Loading/Loading";
+import { lazy, Suspense } from "react";
+
+const LoginPage = lazy(() => import("@/pages/Login/LoginPage"));
+const Oauth = lazy(() => import("@/pages/Oauth/Oauth"));
+const Home = lazy(() => import("@/pages/Home/Home"));
+const DetailPage = lazy(() => import("@/pages/Book/Detail/DetailPage"));
+const BookSearchType = lazy(() => import("@/pages/Book/Search/SearchBookPage"));
+const SetReportPage = lazy(() => import("@/pages/Book/Set/SetReportPage"));
+const BookInfoPage = lazy(() => import("@/pages/Book/Info/BookInfoPage"));
+const SearchBookInfoPage = lazy(() => import("@/pages/Book/Search/SearchBookInfoPage"));
+const ReadingCalendarPage = lazy(() => import("@/pages/My/ReadingCalendarPage"));
+const PublicReportPage = lazy(() => import("@/pages/Book/PublicReports/PublicReportPage"));
+const ProfileEditPage = lazy(() => import("@/pages/My/ProfileEditPage"));
+const SocialProfilePage = lazy(() => import("@/pages/Social/SocialProfilePage"));
+const AlimPage = lazy(() => import("@/pages/Alim/AlimPage"));
+const SettingsPage = lazy(() => import("@/pages/Settings/SettingsPage"));
+const ServiceInfoPage = lazy(() => import("@/pages/Settings/ServiceInfoPage"));
+const WithdrawalPage = lazy(() => import("@/pages/Settings/WithdrawalPage"));
+const WithdrawalResultPage = lazy(() => import("@/pages/Settings/WithdrawalResultPage"));
+const WithdrawalPendingPage = lazy(() => import("@/pages/Settings/WithdrawalPendingPage"));
+const WelcomePage = lazy(() => import("@/pages/Welcome/WelcomePage"));
+const SuspensionPage = lazy(() => import("@/pages/Settings/SuspensionPage"));
+const UserReportPage = lazy(() => import("@/pages/UserReport/UserReportPage"));
+const UserReportCompletePage = lazy(() => import("@/pages/UserReport/UserReportCompletePage"));
+const ErrorPage = lazy(() => import("@/pages/Error/ErrorPage"));
+const MyClubPage = lazy(() => import("@/pages/ReadingClub/MyClubPage"));
+const FindClubPage = lazy(() => import("@/pages/ReadingClub/FindClubPage"));
+const SetClubPage = lazy(() => import("@/pages/ReadingClub/SetClubPage"));
+const EditClubPage = lazy(() => import("@/pages/ReadingClub/EditClubPage"));
+const ClubDetailPage = lazy(() => import("@/pages/ReadingClub/ClubDetailPage"));
+const ClubManagementPage = lazy(() => import("@/pages/ReadingClub/ClubManagementPage"));
+const ClubMemberManagementPage = lazy(() => import("@/pages/ReadingClub/ClubMemberManagementPage"));
+const SetClubReadingPage = lazy(() => import("@/pages/ReadingClub/SetClubReadingPage"));
+const NoticeListPage = lazy(() => import("@/pages/Notice/NoticeListPage"));
+const NoticeDetailPage = lazy(() => import("@/pages/Notice/NoticeDetailPage"));
+const InquiryListPage = lazy(() => import("@/pages/Inquiry/InquiryListPage"));
+const InquiryWritePage = lazy(() => import("@/pages/Inquiry/InquiryWritePage"));
+const InquiryDetailPage = lazy(() => import("@/pages/Inquiry/InquiryDetailPage"));
+const InquiryLayout = lazy(() => import("@/pages/Inquiry/InquiryLayout"));
+const ReadingTimerPage = lazy(() => import("@/pages/Timer/ReadingTimerPage"));
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -51,7 +54,7 @@ import ReadingTimerPage from "@/pages/Timer/ReadingTimerPage";
 const Router = () => {
 
   return (
-    <>
+    <Suspense fallback={<Loading />}>
       <ScrollToTop />
       <Routes>
         {/* 로그인 */}
@@ -227,7 +230,7 @@ const Router = () => {
           }
         />
       </Routes>
-    </>
+    </Suspense>
   );
 };
 

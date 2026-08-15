@@ -128,7 +128,7 @@ export function usePublicReportPage() {
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
   // ISBN별 공개 독후감 목록의 서버 상태를 조회한다
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
   // 공개 독후감 필터와 상태명 표시에 사용할 독서 상태 공통코드를 조회한다
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   // 공개 독후감 좋아요 변경 요청 상태를 조회한다
@@ -137,8 +137,8 @@ export function usePublicReportPage() {
 
   // 공개 독후감 API 응답이 없을 때도 화면에서 안전하게 빈 목록을 사용한다
   const reports = useMemo(() => {
-    // 공개 독후감 공통 응답의 목록 데이터를 반환한다
-    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
+    // 조회된 공개 독후감 서버 페이지를 화면 정렬 순서대로 연결해 반환한다
+    return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
   }, [publicReportsQuery.data]);
 
   // 전체 필터와 서버 공통코드 순서를 결합한 독서 상태 옵션을 생성한다

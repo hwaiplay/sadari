@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { queryClient } from "@/app/query/queryClient";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
@@ -9,13 +10,13 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import {
-  getReadingTimerSummaryApi,
   setReadingTimerApi,
   uptReadingTimerApi,
   type ReadingTimer,
   type ReadingTimerSummary,
   type TimerStatus,
 } from "@/features/Timer/api/readingTimerApi";
+import { getTimerSummaryOptions } from "@/features/Timer/hooks/useTimerSummaryQuery";
 import { notifyReadingTimerRunningChange } from "@/features/Timer/lib/readingTimerEvents";
 import { getReadingHeatmapApi, type ReadingHeatmap } from "@/features/User/api/userApi";
 import { ReadingHeatmapChart } from "@/pages/My/ReadingStatisticsSection";
@@ -522,6 +523,8 @@ export default function ReadingTimerPage() {
 
     // 서버 요약을 화면 상태에 설정한다
     setSummary(nextSummary);
+    // 내비게이션과 같은 서버 요약을 사용하도록 공통 Query 캐시를 갱신한다
+    queryClient.setQueryData(getTimerSummaryOptions().queryKey, nextSummary);
     // 서버 기준 현재 세션 누적 시간을 카운터에 설정한다
     setDisplaySeconds(nextSummary.activeTimer?.readSecs ?? 0);
     // 네비게이션 표시가 상태 변경 응답과 즉시 일치하도록 실행 여부를 알린다
@@ -532,13 +535,13 @@ export default function ReadingTimerPage() {
 
     let ignore = false;
     // 화면 진입 시 서버 기준 타이머 요약을 조회한다
-    getReadingTimerSummaryApi()
-      .then((response) => {
+    queryClient.fetchQuery(getTimerSummaryOptions())
+      .then((nextSummary) => {
 
         // 언마운트된 화면에는 응답을 반영하지 않는다
-        if (!ignore && response.data) {
+        if (!ignore) {
           // 조회한 타이머 요약을 화면에 반영한다
-          applySummary(response.data);
+          applySummary(nextSummary);
         }
       })
       .catch((error) => {

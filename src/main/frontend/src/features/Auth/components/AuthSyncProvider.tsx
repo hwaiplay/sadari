@@ -1,4 +1,5 @@
 import { queryClient } from "@/app/query/queryClient";
+import { sessionQueryKeys } from "@/app/query/queryKeys";
 import { subscribeAuthEvents } from "@/features/Auth/lib/authEvents";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { type PropsWithChildren, useEffect } from "react";
@@ -19,7 +20,11 @@ export default function AuthSyncProvider({ children }: PropsWithChildren) {
       }
 
       useAuthStore.getState().clearAuth();
-      queryClient.removeQueries({ queryKey: ["auth"] });
+      // 다른 탭에서 끝난 계정의 인증과 사용자 서버 상태를 현재 탭에서도 제거한다
+      for (const queryKey of sessionQueryKeys) {
+        // 현재 세션에 속한 공통 Query Cache를 제거한다
+        queryClient.removeQueries({ queryKey });
+      }
 
       if (window.location.pathname !== "/login") {
         window.location.replace("/login");

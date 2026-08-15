@@ -1,16 +1,12 @@
 import { message } from "@/app/messages/message";
 import HomeLink from "@/components/Button/HomeLink/HomeLink";
-import { getReadingTimerSummaryApi } from "@/features/Timer/api/readingTimerApi";
 import {
   isReadingTimerRunningChangeEvent,
   READING_TIMER_RUNNING_CHANGED_EVENT,
 } from "@/features/Timer/lib/readingTimerEvents";
-import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
-import {
-  isUserProfileUpdatedEvent,
-  USER_PROFILE_UPDATED_EVENT,
-} from "@/features/User/lib/profileEvents";
+import { useMyProfileQuery } from "@/features/User/hooks/useMyProfileQuery";
+import { useTimerSummaryQuery } from "@/features/Timer/hooks/useTimerSummaryQuery";
 import { clsx } from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
@@ -30,8 +26,15 @@ type NavigationProps = {
  */
 function Navigation({ isMain }: NavigationProps) {
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
-  const [isTimerRunning, setIsTimerRunning] = useState(false);
+  // 공통 Query Key로 헤더와 프로필 화면의 사용자 조회를 재사용한다
+  const myProfileQuery = useMyProfileQuery();
+  // 타이머 페이지와 같은 요약 요청 및 캐시를 재사용한다
+  const timerSummaryQuery = useTimerSummaryQuery();
+  const refetchTimerSummary = timerSummaryQuery.refetch;
+  const profile = myProfileQuery.data ?? null;
+  const [timerRunningOverride, setTimerRunningOverride] = useState<boolean | null>(null);
+  const isTimerRunning = timerRunningOverride
+    ?? (timerSummaryQuery.data?.activeTimer?.tmrxStat === "RUNNING");
   const { pathname } = useLocation();
   const isHomeActive = pathname === BOTTOM_NAV_PATH.home;
   const isPeedActive =
@@ -49,59 +52,13 @@ function Navigation({ isMain }: NavigationProps) {
    * @return 상태 조회 완료 Promise
    */
   const refreshTimerRunning = useCallback(async (): Promise<void> => {
-
-    try {
-      const response = await getReadingTimerSummaryApi();
-      setIsTimerRunning(response.data?.activeTimer?.tmrxStat === "RUNNING");
-    } catch {
-      // 보조 상태 표시 조회 실패는 화면 접근을 막지 않고 기존 표시를 유지한다
-    }
-  }, []);
+    // 창 포커스 시 공통 Query를 갱신해 타이머 페이지와 최신 서버 상태를 공유한다
+    await refetchTimerSummary();
+    // 서버 응답이 다시 계산되도록 일시적 이벤트 덮어쓰기를 해제한다
+    setTimerRunningOverride(null);
+  }, [refetchTimerSummary]);
 
   useEffect(() => {
-
-    let ignore = false;
-    /**
-     * handle Profile Updated 사용자 동작을 처리한다
-     *
-     * @author HanWon.Jang
-     * @param event event 입력값
-     * @return 반환값이 없다
-     */
-    const handleProfileUpdated = (event: Event) => {
-
-      if (isUserProfileUpdatedEvent(event)) {
-        setProfile(event.detail);
-      }
-    };
-
-    getMyProfileApi()
-      .then((response) => {
-
-        if (!ignore) {
-          setProfile(response.data);
-        }
-      })
-      .catch(() => {
-
-        if (!ignore) {
-          setProfile(null);
-        }
-      });
-
-    window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
-
-    return () => {
-
-      ignore = true;
-      window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
-    };
-  }, []);
-
-  useEffect(() => {
-
-    void refreshTimerRunning();
-
     /**
      * 창이 다시 활성화되면 다른 탭이나 기기에서 변경된 서버 상태를 확인한다
      *
@@ -124,7 +81,7 @@ function Navigation({ isMain }: NavigationProps) {
 
       // 검증된 공통 이벤트의 실행 여부만 네비게이션 상태에 반영한다
       if (isReadingTimerRunningChangeEvent(event)) {
-        setIsTimerRunning(event.detail);
+        setTimerRunningOverride(event.detail);
       }
     };
 

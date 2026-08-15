@@ -14,46 +14,34 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 회원의 독서 시간 기록이 존재하는 연도 목록을 최근 연도부터 조회한다. -->
-    <select id="getReadingYearList" resultType="int">
-        SELECT /* getReadingYearList */
-               YEAR(D.READ_DATE) AS READ_YEAR
-          FROM TB_RDATDX D
-         WHERE D.USER_NUMB = #{userNumb}
-      GROUP BY YEAR(D.READ_DATE)
-      ORDER BY READ_YEAR DESC
-    </select>
-
-    <!-- 회원이 선택한 연도의 잔디에 사용할 일별 독서 시간을 조회한다. -->
-    <select id="getDailyTimeList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Daily">
-        SELECT /* getDailyTimeList */
-               D.READ_DATE
-             , D.READ_SECS
-          FROM TB_RDATDX D
-         WHERE D.USER_NUMB = #{userNumb}
-           AND D.READ_DATE BETWEEN #{periodStart} AND #{periodEnd}
-      ORDER BY D.READ_DATE
-    </select>
-
-    <!-- 본인 마이페이지 독서 상태 비율에 사용할 독후감 수를 집계한다. -->
-    <select id="getStatusCountList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Status">
-        SELECT /* getStatusCountList */
-               R.REPT_STAT
-             , COUNT(*) AS REPT_CNT
-          FROM TM_REPORT R
-         WHERE R.USER_NUMB = #{userNumb}
-           AND R.REPT_STAT IN (#{readStat}, #{doneStat}, #{stopStat})
-      GROUP BY R.REPT_STAT
-    </select>
-
-    <!-- 회원이 타이머로 실제 독서한 날짜를 연속 기록 계산용으로 조회한다. -->
-    <select id="getReadingDateList" resultType="java.time.LocalDate">
-        SELECT /* getReadingDateList */
-               D.READ_DATE
-          FROM TB_RDATDX D
-         WHERE D.USER_NUMB = #{userNumb}
-           AND D.READ_SECS &gt; 0
-      ORDER BY D.READ_DATE
+    <!-- 조회 가능한 기록 연도와 선택 연도의 일별 독서 시간을 한 SQL에서 조회한다. -->
+    <select id="getHeatmapRowList" resultType="org.our.sadari.myPage.dto.ReadingHeatmapRowDto">
+        <bind name="rowTypeYear" value="@org.our.sadari.myPage.dto.ReadingHeatmapRowDto@ROW_TYPE_YEAR" />
+        <bind name="rowTypeDaily" value="@org.our.sadari.myPage.dto.ReadingHeatmapRowDto@ROW_TYPE_DAILY" />
+        SELECT /* getHeatmapRowList */
+               H.ROW_TYPE
+             , H.READ_YEAR
+             , H.READ_DATE
+             , H.READ_SECS
+          FROM (  SELECT #{rowTypeYear} AS ROW_TYPE
+                       , YEAR(Y.READ_DATE) AS READ_YEAR
+                       , NULL AS READ_DATE
+                       , 0 AS READ_SECS
+                    FROM TB_RDATDX Y
+                   WHERE Y.USER_NUMB = #{userNumb}
+                GROUP BY YEAR(Y.READ_DATE)
+                   UNION ALL
+                  SELECT #{rowTypeDaily} AS ROW_TYPE
+                       , YEAR(D.READ_DATE) AS READ_YEAR
+                       , D.READ_DATE
+                       , D.READ_SECS
+                    FROM TB_RDATDX D
+                   WHERE D.USER_NUMB = #{userNumb}
+                     AND D.READ_DATE BETWEEN #{periodStart} AND #{periodEnd}
+               ) H
+      ORDER BY H.ROW_TYPE DESC
+             , H.READ_YEAR DESC
+             , H.READ_DATE
     </select>
 
     <!-- 현재 연도에 완료한 타이머의 확정 시간을 도서별로 합산해 상위 세 권을 조회한다. -->
@@ -86,70 +74,110 @@
          LIMIT 3
     </select>
 
-    <!-- 저장된 유효한 양수 별점의 소수점을 버리고 0점부터 5점까지 정수 점수별로 집계한다. -->
-    <select id="getRatingCountList" resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$Rating">
-        SELECT /* getRatingCountList */
-               FLOOR(CAST(R.REPT_GRDE AS DECIMAL(2, 1))) AS REPT_GRDE
-             , COUNT(*) AS REPT_CNT
-          FROM TM_REPORT R
-         WHERE R.USER_NUMB = #{userNumb}
-           AND R.REPT_GRDE REGEXP '^(0\\.5|[1-4](\\.0|\\.5)?|5(\\.0)?)$'
-      GROUP BY FLOOR(CAST(R.REPT_GRDE AS DECIMAL(2, 1)))
-      ORDER BY REPT_GRDE DESC
-    </select>
-
-    <!-- 현재 연도와 전년도 같은 날짜 범위의 독서 시간과 독서일 및 완독 권수를 비교한다. -->
-    <select id="getYearComparison" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
-            resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$YearComparison">
-        SELECT /* getYearComparison */
-               #{currentYear} AS CURRENT_YEAR
-             , #{previousYear} AS PREVIOUS_YEAR
-             , COALESCE((
-                   SELECT SUM(D.READ_SECS)
-                     FROM TB_RDATDX D
-                    WHERE D.USER_NUMB = #{userNumb}
-                      AND D.READ_DATE &gt;= #{currentStart}
-                      AND D.READ_DATE &lt; #{currentEnd}
-               ), 0) AS CURRENT_READ_SECS
-             , COALESCE((
-                   SELECT SUM(D.READ_SECS)
-                     FROM TB_RDATDX D
-                    WHERE D.USER_NUMB = #{userNumb}
-                      AND D.READ_DATE &gt;= #{previousStart}
-                      AND D.READ_DATE &lt; #{previousEnd}
-               ), 0) AS PREVIOUS_READ_SECS
-             , COALESCE((
-                   SELECT COUNT(*)
-                     FROM TB_RDATDX D
-                    WHERE D.USER_NUMB = #{userNumb}
-                      AND D.READ_DATE &gt;= #{currentStart}
-                      AND D.READ_DATE &lt; #{currentEnd}
-                      AND D.READ_SECS &gt; 0
-               ), 0) AS CURRENT_READ_DAYS
-             , COALESCE((
-                   SELECT COUNT(*)
-                     FROM TB_RDATDX D
-                    WHERE D.USER_NUMB = #{userNumb}
-                      AND D.READ_DATE &gt;= #{previousStart}
-                      AND D.READ_DATE &lt; #{previousEnd}
-                      AND D.READ_SECS &gt; 0
-               ), 0) AS PREVIOUS_READ_DAYS
-             , COALESCE((
-                   SELECT COUNT(*)
-                     FROM TM_REPORT R
-                    WHERE R.USER_NUMB = #{userNumb}
-                      AND R.REPT_STAT = #{doneStat}
-                      AND R.REPT_ENDT &gt;= DATE_FORMAT(#{currentStart}, '%Y-%m-%d')
-                      AND R.REPT_ENDT &lt; DATE_FORMAT(#{currentEnd}, '%Y-%m-%d')
-               ), 0) AS CURRENT_DONE_BOOKS
-             , COALESCE((
-                   SELECT COUNT(*)
-                     FROM TM_REPORT R
-                    WHERE R.USER_NUMB = #{userNumb}
-                      AND R.REPT_STAT = #{doneStat}
-                      AND R.REPT_ENDT &gt;= DATE_FORMAT(#{previousStart}, '%Y-%m-%d')
-                      AND R.REPT_ENDT &lt; DATE_FORMAT(#{previousEnd}, '%Y-%m-%d')
-               ), 0) AS PREVIOUS_DONE_BOOKS
+    <!-- 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 SQL에서 집계한다. -->
+    <select id="getStatsAggregate" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
+            resultType="org.our.sadari.myPage.dto.ReadingStatisticsAggregateDto">
+        <bind name="readStat" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="stopStat" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_STOP" />
+        WITH POSITIVEDATE AS (
+             SELECT D.READ_DATE
+                  , TO_DAYS(D.READ_DATE) - ROW_NUMBER() OVER (ORDER BY D.READ_DATE) AS STREAK_GROUP
+               FROM TB_RDATDX D
+              WHERE D.USER_NUMB = #{userNumb}
+                AND D.READ_SECS <![CDATA[>]]> 0
+                AND D.READ_DATE <![CDATA[<=]]> #{today}
+        )
+           , STREAKGROUP AS (
+             SELECT MAX(P.READ_DATE) AS END_DATE
+                  , COUNT(*) AS STREAK_DAYS
+               FROM POSITIVEDATE P
+           GROUP BY P.STREAK_GROUP
+        )
+           , STREAKSUMMARY AS (
+             SELECT COALESCE(MAX(CASE WHEN S.END_DATE IN (#{today}, DATE_SUB(#{today}, INTERVAL 1 DAY))
+                                          THEN S.STREAK_DAYS
+                                     ELSE 0
+                                 END), 0) AS CURRENT_STREAK_DAYS
+                  , COALESCE(MAX(S.STREAK_DAYS), 0) AS LONGEST_STREAK_DAYS
+               FROM STREAKGROUP S
+        )
+           , TIMERCOMPARE AS (
+             SELECT COALESCE(SUM(CASE WHEN D.READ_DATE <![CDATA[>=]]> #{currentStart} AND D.READ_DATE <![CDATA[<]]> #{currentEnd}
+                                          THEN GREATEST(D.READ_SECS, 0)
+                                     ELSE 0
+                                 END), 0) AS CURRENT_READ_SECS
+                  , COALESCE(SUM(CASE WHEN D.READ_DATE <![CDATA[>=]]> #{previousStart} AND D.READ_DATE <![CDATA[<]]> #{previousEnd}
+                                          THEN GREATEST(D.READ_SECS, 0)
+                                     ELSE 0
+                                 END), 0) AS PREVIOUS_READ_SECS
+                  , COALESCE(SUM(CASE WHEN D.READ_DATE <![CDATA[>=]]> #{currentStart} AND D.READ_DATE <![CDATA[<]]> #{currentEnd}
+                                           AND D.READ_SECS <![CDATA[>]]> 0
+                                          THEN 1
+                                     ELSE 0
+                                 END), 0) AS CURRENT_READ_DAYS
+                  , COALESCE(SUM(CASE WHEN D.READ_DATE <![CDATA[>=]]> #{previousStart} AND D.READ_DATE <![CDATA[<]]> #{previousEnd}
+                                           AND D.READ_SECS <![CDATA[>]]> 0
+                                          THEN 1
+                                     ELSE 0
+                                 END), 0) AS PREVIOUS_READ_DAYS
+               FROM TB_RDATDX D
+              WHERE D.USER_NUMB = #{userNumb}
+        )
+           , REPORTBASE AS (
+             SELECT R.REPT_STAT
+                  , R.REPT_ENDT
+                  , CASE WHEN R.REPT_GRDE REGEXP '^(0\\.5|[1-4](\\.0|\\.5)?|5(\\.0)?)$'
+                             THEN FLOOR(CAST(R.REPT_GRDE AS DECIMAL(2, 1)))
+                        ELSE NULL
+                    END AS RATING_VALUE
+               FROM TM_REPORT R
+              WHERE R.USER_NUMB = #{userNumb}
+        )
+           , REPORTSUMMARY AS (
+             SELECT COALESCE(SUM(CASE WHEN R.REPT_STAT = #{readStat} THEN 1 ELSE 0 END), 0) AS READ_COUNT
+                  , COALESCE(SUM(CASE WHEN R.REPT_STAT = #{doneStat} THEN 1 ELSE 0 END), 0) AS DONE_COUNT
+                  , COALESCE(SUM(CASE WHEN R.REPT_STAT = #{stopStat} THEN 1 ELSE 0 END), 0) AS STOP_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 0 THEN 1 ELSE 0 END), 0) AS RATING_ZERO_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 1 THEN 1 ELSE 0 END), 0) AS RATING_ONE_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 2 THEN 1 ELSE 0 END), 0) AS RATING_TWO_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 3 THEN 1 ELSE 0 END), 0) AS RATING_THREE_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 4 THEN 1 ELSE 0 END), 0) AS RATING_FOUR_COUNT
+                  , COALESCE(SUM(CASE WHEN R.RATING_VALUE = 5 THEN 1 ELSE 0 END), 0) AS RATING_FIVE_COUNT
+                  , COALESCE(SUM(CASE WHEN R.REPT_STAT = #{doneStat}
+                                           AND R.REPT_ENDT <![CDATA[>=]]> DATE_FORMAT(#{currentStart}, '%Y-%m-%d')
+                                           AND R.REPT_ENDT <![CDATA[<]]> DATE_FORMAT(#{currentEnd}, '%Y-%m-%d')
+                                          THEN 1
+                                     ELSE 0
+                                 END), 0) AS CURRENT_DONE_BOOKS
+                  , COALESCE(SUM(CASE WHEN R.REPT_STAT = #{doneStat}
+                                           AND R.REPT_ENDT <![CDATA[>=]]> DATE_FORMAT(#{previousStart}, '%Y-%m-%d')
+                                           AND R.REPT_ENDT <![CDATA[<]]> DATE_FORMAT(#{previousEnd}, '%Y-%m-%d')
+                                          THEN 1
+                                     ELSE 0
+                                 END), 0) AS PREVIOUS_DONE_BOOKS
+               FROM REPORTBASE R
+        )
+        SELECT /* getStatsAggregate */
+               R.READ_COUNT
+             , R.DONE_COUNT
+             , R.STOP_COUNT
+             , S.CURRENT_STREAK_DAYS
+             , S.LONGEST_STREAK_DAYS
+             , R.RATING_ZERO_COUNT
+             , R.RATING_ONE_COUNT
+             , R.RATING_TWO_COUNT
+             , R.RATING_THREE_COUNT
+             , R.RATING_FOUR_COUNT
+             , R.RATING_FIVE_COUNT
+             , T.CURRENT_READ_SECS
+             , T.PREVIOUS_READ_SECS
+             , T.CURRENT_READ_DAYS
+             , T.PREVIOUS_READ_DAYS
+             , R.CURRENT_DONE_BOOKS
+             , R.PREVIOUS_DONE_BOOKS
+          FROM REPORTSUMMARY R
+    CROSS JOIN STREAKSUMMARY S
+    CROSS JOIN TIMERCOMPARE T
     </select>
 
     <!-- 정상 이용 회원이 선택한 독서 통계 공개 여부를 범용 회원 설정 행에 저장한다. -->

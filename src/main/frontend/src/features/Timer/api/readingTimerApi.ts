@@ -42,10 +42,14 @@ export type ReadingTimerSummary = {
  * @author SeungHyeon.Kang
  * @return 독서 타이머 화면 요약
  */
-export async function getReadingTimerSummaryApi() {
+export async function getReadingTimerSummaryApi(): Promise<
+  ResultData<ReadingTimerSummary> & { data: ReadingTimerSummary }
+> {
 
   // 서버가 계산한 타이머와 출석 현황을 조회한다
-  const response = await api.get<ResultData<ReadingTimerSummary>>("/reading-timer/summary");
+  const response = await api.get<ResultData<ReadingTimerSummary> & { data: ReadingTimerSummary }>(
+    "/reading-timer/summary",
+  );
   // 공통 응답 성공 여부를 검증한 결과를 반환한다
   return assertResultDataSuccess(response.data);
 }

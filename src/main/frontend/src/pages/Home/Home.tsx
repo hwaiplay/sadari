@@ -1,7 +1,6 @@
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import CustomSelect from "@/components/Select/CustomSelect";
 import Book from "@/features/Home/components/Book";
 import * as styles from "./Home.css";
@@ -37,21 +36,14 @@ function Home() {
     searchKeyword,
     appliedSearchKeyword,
     hasSearchCondition,
+    hasNextBook,
+    isNextBookLoading,
+    loadMoreBook,
     handleSearchChange,
     handleSearchSubmit,
     handleSortChange,
     handleBookSearch,
   } = useHome();
-
-  const {
-    visibleItems: visibleBookList,
-    hasNext: hasNextBook,
-    loadMore: loadMoreBook,
-  } = useProgressiveList(
-    bookList,
-    `${appliedSearchKeyword}:${sortType}`,
-  );
-
 
   // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
@@ -159,7 +151,11 @@ function Home() {
           ))}
           <InfiniteScrollTrigger
             hasNext={hasNextBook}
-            onLoadMore={loadMoreBook}
+            isLoading={isNextBookLoading}
+            onLoadMore={() => {
+              // 목록 하단에 도달하면 다음 서버 페이지를 조회한다
+              void loadMoreBook();
+            }}
           />
         </div>
 

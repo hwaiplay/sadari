@@ -92,7 +92,7 @@ class ReportServiceImplTest {
         when(reportMapper.getPublicReportList(any(ReportDto.class))).thenReturn(List.of());
 
         // 좋아요가 많은 순으로 공개 독후감을 조회한다
-        reportService.getPublicReportsByIsbn(31L, "9788972756194", Constant.SORT_LIKE_DESC);
+        reportService.getPublicReportsByIsbn(31L, "9788972756194", Constant.SORT_LIKE_DESC, "ALL", 1);
 
         // Mapper에 전달된 정렬 코드를 확인할 인자 Capture를 생성한다
         ArgumentCaptor<ReportDto> reportCaptor = ArgumentCaptor.forClass(ReportDto.class);
@@ -113,7 +113,7 @@ class ReportServiceImplTest {
         when(reportMapper.getPublicReportList(any(ReportDto.class))).thenReturn(List.of());
 
         // 허용 목록에 없는 정렬 코드로 공개 독후감을 조회한다
-        reportService.getPublicReportsByIsbn(31L, "9788972756194", "UNKNOWN_DESC");
+        reportService.getPublicReportsByIsbn(31L, "9788972756194", "UNKNOWN_DESC", "ALL", 1);
 
         // Mapper에 전달된 정렬 코드를 확인할 인자 Capture를 생성한다
         ArgumentCaptor<ReportDto> reportCaptor = ArgumentCaptor.forClass(ReportDto.class);

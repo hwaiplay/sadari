@@ -4,12 +4,11 @@ import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
 import {
   getUserInterestCatalogApi,
-  getMyProfileApi,
   updateUserInterestsApi,
   updateOnboardingApi,
   type UserInterest,
-  type UserProfile,
 } from "@/features/User/api/userApi";
+import { getMyProfileOptions } from "@/features/User/hooks/useMyProfileQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   ChangeEvent,
@@ -55,12 +54,11 @@ function WelcomePage() {
     let ignore = false;
 
     // 가입 시 서버가 발급한 고유 랜덤 닉네임을 닉네임 설정 슬라이드의 기본값으로 조회한다
-    getMyProfileApi()
-      .then((response) => {
+    queryClient.fetchQuery(getMyProfileOptions())
+      .then((profile) => {
 
         // 화면을 떠난 뒤 도착한 프로필 응답은 입력 상태에 반영하지 않는다
         if (!ignore) {
-          const profile = response.data as UserProfile;
           // 서버가 발급한 닉네임을 사용자가 바로 확정하거나 수정할 수 있도록 입력값에 설정한다
           setUserNick(profile.userNick ?? "");
         }

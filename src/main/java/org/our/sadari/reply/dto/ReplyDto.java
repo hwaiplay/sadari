@@ -19,6 +19,7 @@ import lombok.Data;
  * 2026-08-03        HanWon.Jang        댓글 수정 및 삭제 요청 용도 확장
  * 2026-08-03        HanWon.Jang        댓글 좋아요 상태 및 집계 용도 확장
  * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 용도 확장
+ * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 조건 추가
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")
@@ -77,4 +78,10 @@ public class ReplyDto {
 
     @Schema(description = "댓글 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
     private String editVersion;
+
+    @Schema(description = "부모 댓글 조회 시작 위치", example = "0", hidden = true)
+    private Integer pageOffset;
+
+    @Schema(description = "다음 페이지 판정을 포함한 부모 댓글 조회 건수", example = "11", hidden = true)
+    private Integer pageLimit;
 }
