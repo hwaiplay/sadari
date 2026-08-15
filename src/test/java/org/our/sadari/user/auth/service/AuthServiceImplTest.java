@@ -55,6 +55,7 @@ import org.springframework.web.client.HttpClientErrorException;
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 풀네임 코드 검증
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 Kakao 계정 재가입 차단 검증
  * 2026-08-13        SeungHyeon.Kang    Kakao OAuth HTTP 오류 인증 실패 변환 검증
+ * 2026-08-16        SeungHyeon.Kang    테스트 간 Locale 변경에도 공통 인증 메시지 검증 안정화
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -107,6 +108,8 @@ class AuthServiceImplTest {
         // 테스트 실행 JVM 기본 언어에서도 같은 차단 메시지를 조회하도록 등록한다
         messageSource.addMessage("auth.withdrawn.suspended", java.util.Locale.getDefault(), "가입할 수 없는 계정입니다.");
         // 예외 경로가 발생해도 원래 실패 원인을 가리지 않도록 공통 인증 메시지를 등록한다
+        messageSource.addMessage("auth.common.fail", java.util.Locale.KOREAN, "인증에 실패했습니다.");
+        // 테스트 실행 JVM 기본 언어에서도 공통 인증 메시지를 조회하도록 등록한다
         messageSource.addMessage("auth.common.fail", java.util.Locale.getDefault(), "인증에 실패했습니다.");
         // 공통 결과 객체가 테스트 메시지 소스를 사용하도록 초기화한다
         new MessageUtils().setMessageSource(messageSource);

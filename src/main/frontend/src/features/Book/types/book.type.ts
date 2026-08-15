@@ -32,6 +32,18 @@ export interface BookSearchResultType {
 }
 
 /**
+ * 카카오 도서 검색의 50권 페이지와 다음 조회 상태 타입
+ */
+export interface BookSearchPageType {
+  // 카카오 API에서 한 번에 조회한 최대 50권의 도서 목록
+  bookList: BookSearchResultType[];
+  // 현재 응답이 카카오 도서 검색의 마지막 페이지인지 나타내는 값
+  end: boolean;
+  // 다음 50권을 조회할 검색 결과 시작 위치
+  nextStart?: number | null;
+}
+
+/**
  * "책 타입"
  */
 export interface BookDtoType {

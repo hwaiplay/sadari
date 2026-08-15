@@ -2,6 +2,7 @@ package org.our.sadari.global.scheduler.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.book.service.BookSearchProtectionService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.dto.FileDto;
@@ -30,6 +31,7 @@ import java.util.concurrent.TimeUnit;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
  * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
+ * 2026-08-16        SeungHyeon.Kang    영구 탈퇴 회원의 도서 검색 제한 데이터 삭제 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -47,6 +49,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
     private final FileService fileService;
     // 영구 탈퇴 회원의 Redis 세션과 상태 캐시 정리 서비스
     private final TokenRedisService tokenRedisService;
+    // 영구 탈퇴 회원의 Redis 도서 검색 제한 정리 서비스
+    private final BookSearchProtectionService bookSearchProtectionService;
     // 스케줄러 로그 안전 처리 객체
     private final SchedulerLogSupport schedulerLogSupport;
 
@@ -96,6 +100,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
                 // 회원 원본과 함께 모든 기기 세션 및 Redis 인증 캐시를 물리 삭제한다
                 tokenRedisService.delAllUserInfo(target.getUserNumb());
+                // 회원 원본과 연결된 분간 및 일간 도서 검색 제한 키를 물리 삭제한다
+                bookSearchProtectionService.delUserLimits(target.getUserNumb());
                 // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
                 fileService.delFilesAfterCommit(fileList);
                 // 탈퇴 요청 시 이미 정리된 임시 이미지가 남아 있는 경우를 방어적으로 다시 삭제한다

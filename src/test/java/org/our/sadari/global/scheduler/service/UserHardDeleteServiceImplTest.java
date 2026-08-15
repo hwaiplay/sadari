@@ -13,6 +13,7 @@ import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.book.service.BookSearchProtectionService;
 import org.our.sadari.global.file.dto.FileDto;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
@@ -30,6 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-06        SeungHyeon.Kang    최초 생성
+ * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 키 삭제 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserHardDeleteServiceImplTest {
@@ -43,6 +45,9 @@ class UserHardDeleteServiceImplTest {
     // 영구 탈퇴 회원 인증 정보 정리 서비스 대역
     @Mock
     private TokenRedisService tokenRedisService;
+    // 영구 탈퇴 회원 도서 검색 제한 정리 서비스 대역
+    @Mock
+    private BookSearchProtectionService bookSearchProtectionService;
     // 스케줄러 로그 안전 처리 객체 대역
     @Mock
     private SchedulerLogSupport schedulerLogSupport;
@@ -101,6 +106,8 @@ class UserHardDeleteServiceImplTest {
         deleteOrder.verify(userHardDeleteMapper).delHardDeleteUser(31L);
         // 회원 원본 삭제와 함께 모든 Redis 세션 및 인증 캐시를 제거하는지 확인한다
         verify(tokenRedisService).delAllUserInfo(31L);
+        // 회원 원본 삭제와 함께 분간 및 일간 도서 검색 제한을 제거하는지 확인한다
+        verify(bookSearchProtectionService).delUserLimits(31L);
         // DB 삭제 뒤 커밋 후 물리 파일 정리를 등록하는지 확인한다
         deleteOrder.verify(fileService).delFilesAfterCommit(List.of(profileFile));
         // 영구 삭제 실행 결과를 스케줄러 로그에 최종 반영하는지 확인한다

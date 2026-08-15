@@ -8,6 +8,7 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookJsonDto;
+import org.our.sadari.book.dto.BookSearchResponseDto;
 import org.our.sadari.book.dto.KakaoBookJsonDto;
 import org.our.sadari.book.util.BookCoverUrlUtil;
 import org.our.sadari.global.common.result.ResultData;
@@ -34,18 +35,19 @@ import org.springframework.web.util.UriComponentsBuilder;
  * -----------------------------------------------------------
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    종료된 네이버 API를 카카오 도서 검색 API로 교체
+ * 2026-08-16        SeungHyeon.Kang    50권 조회와 Redis 쿼터 보호 및 공용 캐시 적용
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookSearchService {
 
-    // 표시 건수 설정값
-    private static final int DISPLAY_COUNT = 10;
+    // 카카오 도서 검색 API의 요청당 최대 조회 건수
+    private static final int DISPLAY_COUNT = 50;
     // 최소 시작 설정값
     private static final int MIN_START = 1;
     // 카카오 도서 검색의 최대 50페이지를 기존 시작 위치 계약으로 환산한 설정값
-    private static final int MAX_START = 491;
+    private static final int MAX_START = 2451;
     // 카카오 REST API 인증 스킴
     private static final String KAKAO_AUTH_SCHEME = "KakaoAK ";
 
@@ -61,39 +63,71 @@ public class BookSearchService {
     private final RestTemplate restTemplate;
     // Object 데이터 접근 객체
     private final ObjectMapper objectMapper;
+    // 회원별 검색 제한과 공용 검색 캐시 및 앱 전체 쿼터 보호 서비스
+    private final BookSearchProtectionService bookSearchProtectionService;
 
     /**
      * 검색어 기준 카카오 도서 목록을 검색한다
      *
      * @author SeungHyeon.Kang
+     * @param userNumb 도서 검색을 요청한 로그인 회원 번호
      * @param query 카카오 도서 API에 전달할 검색어
      * @param start 기존 화면 계약에서 사용하는 검색 결과 시작 위치
      * @return 사용자 화면 형식으로 변환된 도서 검색 결과
      */
-    public ResultData searchBooks(String query, int start) {
-        // 비어 있는 검색어나 카카오 API 범위를 벗어난 시작 위치는 외부 요청 전에 차단한다
-        if (StringUtil.isEmpty(query) || start < MIN_START || start > MAX_START) {
+    public ResultData searchBooks(Long userNumb, String query, int start) {
+        // 인증값과 검색어 및 50권 페이지 경계가 올바르지 않으면 외부 요청 전에 차단한다
+        if (StringUtil.hasEmpty(userNumb, query) || start < MIN_START || start > MAX_START
+                || (start - MIN_START) % DISPLAY_COUNT != 0) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
+        // 악성 반복 요청과 Redis 장애가 카카오 일일 쿼터를 소모하지 않도록 회원 제한을 먼저 검사한다
+        if (!bookSearchProtectionService.isRequestAllowed(userNumb)) {
+            // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
+        }
+
         // 카카오 API 통신과 응답 변환 실패를 공통 검색 실패 응답으로 격리한다
         try {
-            // 사용자 검색어로 카카오 도서 검색 API를 호출한다
-            ResponseEntity<String> response = requestKakaoBookSearch(query, start);
+            // 기존 시작 위치를 카카오 API의 1부터 시작하는 50권 페이지 번호로 변환한다
+            int page = ((start - MIN_START) / DISPLAY_COUNT) + 1;
+            // 동일 검색어와 페이지의 짧은 공용 캐시를 먼저 조회한다
+            KakaoBookJsonDto kakaoBookJsonDto = bookSearchProtectionService.getCachedSearch(query, page);
 
-            // 본문이 없는 외부 응답은 정상 검색 결과로 해석하지 않는다
-            if (StringUtil.isEmpty(response.getBody())) {
-                // "검색에 실패했어요.\n다시 시도해주세요."
-                return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
+            // 공용 캐시에 검색 결과가 없을 때만 카카오 일일 쿼터를 예약하고 외부 API를 호출한다
+            if (StringUtil.isEmpty(kakaoBookJsonDto)) {
+                // 앱 전체 실제 호출이 비상 여유를 침범하면 카카오 요청 전에 차단한다
+                if (!bookSearchProtectionService.reserveProviderCall()) {
+                    // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
+                    return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
+                }
+
+                // 사용자 검색어로 카카오 도서 검색 API에서 최대 50권을 호출한다
+                ResponseEntity<String> response = requestKakaoBookSearch(query.trim(), page);
+
+                // 본문이 없는 외부 응답은 정상 검색 결과로 해석하지 않는다
+                if (StringUtil.isEmpty(response.getBody())) {
+                    // "검색에 실패했어요.\n다시 시도해주세요."
+                    return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
+                }
+
+                // 카카오 원문 응답을 외부 API 전용 DTO로 역직렬화한다
+                kakaoBookJsonDto = objectMapper.readValue(response.getBody(), KakaoBookJsonDto.class);
+                // 같은 검색어의 반복 호출이 카카오 쿼터를 다시 소모하지 않도록 공용 캐시에 저장한다
+                bookSearchProtectionService.setCachedSearch(query, page, kakaoBookJsonDto);
             }
 
-            // 카카오 원문 응답을 외부 API 전용 DTO로 역직렬화한다
-            KakaoBookJsonDto kakaoBookJsonDto = objectMapper.readValue(response.getBody(), KakaoBookJsonDto.class);
             // 외부 필드명이 화면 응답 필드명을 바꾸지 않도록 명시적인 화면 DTO로 변환한다
             List<BookJsonDto.BookDto> bookList = getBookList(kakaoBookJsonDto.getDocuments());
-            // 검색어 기준 카카오 도서 목록을 성공 응답으로 반환한다
-            return ResultData.success(bookList);
+            // 카카오 메타정보가 없으면 추가 호출로 쿼터를 소모하지 않도록 마지막 페이지로 처리한다
+            boolean isEnd = StringUtil.isEmpty(kakaoBookJsonDto.getMeta()) || kakaoBookJsonDto.getMeta().isEnd()
+                    || start == MAX_START;
+            // 마지막 페이지가 아닐 때만 다음 50권 검색의 기존 시작 위치를 계산한다
+            Integer nextStart = isEnd ? null : start + DISPLAY_COUNT;
+            // 화면이 10권씩 나눠 표시할 최대 50권과 정확한 다음 페이지 정보를 반환한다
+            return ResultData.success(new BookSearchResponseDto(bookList, isEnd, nextStart));
         }
 
         // 인증, 호출량 또는 요청 오류는 비밀값과 원문 응답을 제외한 상태 코드만 기록한다
@@ -114,16 +148,14 @@ public class BookSearchService {
     }
 
     /**
-     * 기존 시작 위치를 카카오 페이지 번호로 변환하여 도서 검색 API를 호출한다
+     * 검색어와 페이지 번호로 카카오 도서 검색 API에서 최대 50권을 호출한다
      *
      * @author SeungHyeon.Kang
      * @param query 카카오 도서 API에 전달할 검색어
-     * @param start 기존 화면 계약에서 사용하는 검색 결과 시작 위치
+     * @param page 카카오 도서 검색 페이지 번호
      * @return 카카오 도서 검색 API의 HTTP 응답
      */
-    private ResponseEntity<String> requestKakaoBookSearch(String query, int start) {
-        // 기존 시작 위치를 카카오 API의 1부터 시작하는 페이지 번호로 변환한다
-        int page = ((start - MIN_START) / DISPLAY_COUNT) + 1;
+    private ResponseEntity<String> requestKakaoBookSearch(String query, int page) {
         // 카카오 인증 헤더를 담을 객체를 생성한다
         HttpHeaders headers = new HttpHeaders();
         // 서버 전용 REST API 키를 카카오 인증 형식으로 설정한다
