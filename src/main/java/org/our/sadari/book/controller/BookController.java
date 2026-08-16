@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookCoverColorRequestDto;
 import org.our.sadari.book.service.BookCoverColorService;
 import org.our.sadari.book.service.BookPopularService;
+import org.our.sadari.book.service.BookSearchProtectionService;
 import org.our.sadari.book.service.BookSearchService;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.report.service.ReportService;
@@ -35,12 +36,13 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-16        SeungHyeon.Kang    로그인 회원 도서 검색 제한과 50권 페이지 응답 적용
  * 2026-08-16        SeungHyeon.Kang    이번 달 인기 도서 목록 API 추가
  * 2026-08-16        SeungHyeon.Kang    주간과 월간 및 연간 인기 도서 선택 API 적용
+ * 2026-08-16        SeungHyeon.Kang    최근 인기 검색어 조회 API 추가
  */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/book")
-@Tag(name = "도서", description = "기간별 인기 도서와 도서 검색 및 표지 색상과 ISBN 기준 공개 평점 평균 조회 API")
+@Tag(name = "도서", description = "인기 도서와 인기 검색어 및 도서 검색과 표지 색상 및 ISBN 기준 공개 평점 평균 조회 API")
 public class BookController {
 
     // BookSearch 업무 처리 서비스
@@ -49,6 +51,8 @@ public class BookController {
     private final BookCoverColorService bookCoverColorService;
     // 기간별 독후감 작성자 수 기준 인기 도서 조회 서비스
     private final BookPopularService bookPopularService;
+    // Redis 도서 검색 인기 검색어 조회 서비스
+    private final BookSearchProtectionService bookSearchProtectionService;
     // Report 업무 처리 서비스
     private final ReportService reportService;
 
@@ -83,6 +87,23 @@ public class BookController {
                                          @RequestParam(value = "period", defaultValue = "monthly") String period) {
         // 선택 기간의 독후감 고유 작성자 수 기준 인기 도서 목록을 조회한다
         return bookPopularService.getPopularBookList(period);
+    }
+
+    /**
+     * 최근 설정 기간의 고유 회원 검색 수를 기준으로 안전한 인기 검색어를 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 비속어와 개인정보형 문자열을 제외한 인기 검색어 목록
+    */
+    @GetMapping("/popular-search-keywords")
+    @Operation(
+            summary = "도서 인기 검색어 조회"
+          , description = "최근 설정 기간의 결과가 있는 첫 페이지 검색을 고유 회원 기준으로 집계하고 "
+            + "비속어와 개인정보형 검색어를 제외한 상위 검색어를 조회한다."
+    )
+    public ResultData getPopularKeywordList() {
+        // 현재 비속어 사전과 최소 회원 수 정책을 통과한 최근 인기 검색어를 조회한다
+        return ResultData.success(bookSearchProtectionService.getPopularKeywordList());
     }
 
     /**

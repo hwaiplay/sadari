@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -46,6 +47,7 @@ import org.springframework.web.client.RestTemplate;
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
  * 2026-08-16        SeungHyeon.Kang    50권 응답과 Redis 쿼터 보호 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    검색 성공 첫 페이지 인기 검색어 집계 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchServiceTest {
@@ -176,6 +178,50 @@ class BookSearchServiceTest {
         assertTrue(uriCaptor.getValue().getQuery().contains("size=50"));
         // 카카오 원문 결과가 같은 검색어의 반복 호출을 줄일 공용 캐시에 저장되는지 확인한다
         verify(bookSearchProtectionService).setCachedSearch(eq("미움받을 용기"), eq(2), any(KakaoBookJsonDto.class));
+        // 추가 페이지 조회가 같은 검색어의 인기 점수를 반복 증가시키지 않는지 확인한다
+        verify(bookSearchProtectionService, never()).setPopularKeyword(7L, "미움받을 용기");
+    }
+
+    /**
+     * 결과가 존재하는 첫 페이지 검색만 인기 검색어 후보에 반영하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 테스트용 카카오 검색 응답 변환에 실패한 경우 발생
+     */
+    @Test
+    void ranksFirstPageKeyword() throws Exception {
+        String cachedJson = """
+                {
+                  "meta": {"is_end": true, "pageable_count": 1, "total_count": 1},
+                  "documents": [
+                    {
+                      "authors": ["헤르만 헤세"],
+                      "contents": "한 소년의 성장 이야기",
+                      "datetime": "2009-01-20T00:00:00.000+09:00",
+                      "isbn": "9788937460449",
+                      "publisher": "민음사",
+                      "thumbnail": "https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover",
+                      "title": "데미안"
+                    }
+                  ]
+                }
+                """;
+        // 외부 호출 없이 사용할 검색 결과가 있는 첫 페이지 공용 캐시를 생성한다
+        KakaoBookJsonDto cachedResult = objectMapper.readValue(cachedJson, KakaoBookJsonDto.class);
+        // 로그인 회원의 분간 및 일간 검색 요청을 허용한다
+        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(true);
+        // 같은 검색어의 첫 페이지가 공용 캐시에 존재하도록 설정한다
+        when(bookSearchProtectionService.getCachedSearch("데미안", 1)).thenReturn(cachedResult);
+
+        // 결과가 있는 첫 페이지 도서 검색을 실행한다
+        ResultData resultData = bookSearchService.searchBooks(7L, "데미안", 1);
+
+        // 캐시 적중 검색도 정상 성공 응답을 유지하는지 확인한다
+        assertEquals(200, resultData.getCode());
+        // 결과가 존재하는 첫 페이지의 검색 의도가 인기 검색어 집계에 전달되는지 확인한다
+        verify(bookSearchProtectionService).setPopularKeyword(7L, "데미안");
+        // 인기 검색어 집계를 위해 카카오 외부 호출을 추가하지 않는지 확인한다
+        verifyNoInteractions(restTemplate);
     }
 
     /**

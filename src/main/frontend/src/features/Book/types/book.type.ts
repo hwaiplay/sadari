@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-04-02       HanWon.Jang       최초 생성
+ * 2026-08-16       SeungHyeon.Kang   도서 인기 검색어 응답 타입 추가
  */
 
 /**
@@ -39,6 +40,16 @@ export interface BookSearchResultType {
 
 // 인기 도서 화면에서 선택할 수 있는 현재 집계 기간
 export type PopularBookPeriodType = "weekly" | "monthly" | "yearly";
+
+/**
+ * 최근 고유 회원 검색 수 기준 도서 인기 검색어 타입
+ */
+export interface PopularSearchKeywordType {
+  // 비속어와 개인정보형 문자열을 제외한 최근 검색 순위
+  rank: number;
+  // 검색 입력과 즉시 조회에 사용할 정규화된 검색어
+  keyword: string;
+}
 
 /**
  * 카카오 도서 검색의 50권 페이지와 다음 조회 상태 타입

@@ -66,6 +66,9 @@
 | `BOOK_SEARCH_RATE_LIMIT_PER_DAY` | `200` | 회원별 24시간 도서 검색 요청 한도 |
 | `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` | `27000` | 비상 쿼터를 제외한 앱 전체 24시간 카카오 도서 검색 실제 호출 한도 |
 | `BOOK_SEARCH_CACHE_TTL_SECONDS` | `600` | 사용자와 연결하지 않은 도서 검색 결과 Redis 캐시 유효시간(초) |
+| `BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS` | `7` | 인기 검색어 점수 합산과 회원별 동일 검색어 중복 제한 기간(일) |
+| `BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT` | `3` | 인기 검색어 공용 화면 노출에 필요한 최소 고유 회원 수 |
+| `BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE` | `10` | 검색 화면에 전달할 인기 검색어 최대 건수 |
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |
@@ -96,8 +99,11 @@
 - 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
   `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 기존 `KAKAO_REST_API_KEY` Secret을 사용합니다.
 - 운영 도서 검색은 요청당 최대 50권을 조회하며 회원별 분간·일간 제한, 앱 전체 실제 호출 제한과 10분 공용 캐시를 Redis에서 관리합니다.
+- 도서 인기 검색어는 최근 7일의 일별 Redis 점수를 합산하고 동일 회원의 같은 검색어를 기간 내 한 번만 반영하며 최소 3명 이상인 상위 10건을 제공합니다.
+- 운영의 `book.search.popular-keyword-user-dedup-enabled`는 순위 조작 방지를 위해 `true`로 고정하며 환경변수로 노출하지 않습니다.
+- 로컬의 `book.search.popular-keyword-user-dedup-enabled`는 한 계정의 반복 검색으로 화면을 검증할 수 있도록 `false`를 사용하고 최소 노출 인원은 `1`로 설정합니다.
 - `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` 기본값은 카카오 도서 검색 일일 30,000건 중 3,000건을 장애 대응과 운영 확인용으로 남기는 `27,000`입니다.
-- 도서 검색 제한값과 캐시 유효시간은 공개 가능한 운영 정책이므로 Actions Variables로 관리하며 Redis가 제한을 확인할 수 없으면 외부 호출을 중단합니다.
+- 도서 검색 제한값, 캐시 유효시간과 인기 검색어 집계 기준은 공개 가능한 운영 정책이므로 Actions Variables로 관리합니다. Redis가 검색 제한을 확인할 수 없으면 외부 호출을 중단하고 인기 검색어 집계나 조회만 실패하면 일반 도서 검색은 유지합니다.
 - `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
   `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
 - `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
