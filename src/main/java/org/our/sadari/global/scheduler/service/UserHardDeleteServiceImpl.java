@@ -32,6 +32,7 @@ import java.util.concurrent.TimeUnit;
  * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
  * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
  * 2026-08-16        SeungHyeon.Kang    영구 탈퇴 회원의 도서 검색 제한 데이터 삭제 추가
+ * 2026-08-16        SeungHyeon.Kang    인기 검색어 회원별 중복 방지 데이터 삭제 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -102,6 +103,8 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
                 tokenRedisService.delAllUserInfo(target.getUserNumb());
                 // 회원 원본과 연결된 분간 및 일간 도서 검색 제한 키를 물리 삭제한다
                 bookSearchProtectionService.delUserLimits(target.getUserNumb());
+                // 익명 인기 점수는 유지하고 회원 번호와 연결된 검색어 중복 방지 키를 물리 삭제한다
+                bookSearchProtectionService.delUserKeywordData(target.getUserNumb());
                 // 회원과 파일 메타정보 삭제가 커밋된 뒤 해당 회원의 로컬 물리 파일을 모두 삭제한다
                 fileService.delFilesAfterCommit(fileList);
                 // 탈퇴 요청 시 이미 정리된 임시 이미지가 남아 있는 경우를 방어적으로 다시 삭제한다

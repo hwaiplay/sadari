@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    종료된 네이버 API를 카카오 도서 검색 API로 교체
  * 2026-08-16        SeungHyeon.Kang    50권 조회와 Redis 쿼터 보호 및 공용 캐시 적용
+ * 2026-08-16        SeungHyeon.Kang    검색 성공 첫 페이지의 인기 검색어 집계 추가
  */
 @Slf4j
 @Service
@@ -121,6 +122,13 @@ public class BookSearchService {
 
             // 외부 필드명이 화면 응답 필드명을 바꾸지 않도록 명시적인 화면 DTO로 변환한다
             List<BookJsonDto.BookDto> bookList = getBookList(kakaoBookJsonDto.getDocuments());
+
+            // 결과가 있는 첫 페이지 검색만 인기 검색어 후보로 반영해 추가 페이지와 빈 검색을 제외한다
+            if (start == MIN_START && !StringUtil.isEmpty(bookList)) {
+                // 검색 성공 응답과 독립된 Redis 인기 검색어 집계를 시도한다
+                bookSearchProtectionService.setPopularKeyword(userNumb, query);
+            }
+
             // 카카오 메타정보가 없으면 추가 호출로 쿼터를 소모하지 않도록 마지막 페이지로 처리한다
             boolean isEnd = StringUtil.isEmpty(kakaoBookJsonDto.getMeta()) || kakaoBookJsonDto.getMeta().isEnd()
                     || start == MAX_START;

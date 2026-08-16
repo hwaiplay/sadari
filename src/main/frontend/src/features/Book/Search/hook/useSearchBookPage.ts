@@ -9,6 +9,7 @@ import type {
   BookSearchPageType,
   BookSearchResultType,
   PopularBookPeriodType,
+  PopularSearchKeywordType,
 } from "@/features/Book/types/book.type";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import type { FormEvent } from "react";
@@ -81,6 +82,22 @@ async function fetchPopularBooks(
 }
 
 /**
+ * 최근 고유 회원 검색 수를 기준으로 안전한 도서 인기 검색어를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 순위와 정규화된 검색어를 포함한 인기 검색어 최대 10건
+ * @throws 인기 검색어 API 요청 또는 공통 응답 검증에 실패하면 발생한다
+ */
+async function getPopularKeywords(): Promise<PopularSearchKeywordType[]> {
+
+  // 검색 화면의 한 줄 세로 슬라이더에 표시할 최근 인기 검색어를 요청한다
+  const response = await api.get("/book/popular-search-keywords");
+
+  // 공통 응답 검증을 통과한 안전한 인기 검색어 목록을 반환한다
+  return (assertResultDataSuccess(response.data).data ?? []) as PopularSearchKeywordType[];
+}
+
+/**
  * 책 검색 화면 복원에 필요한 상태를 세션 저장소에 보관한다.
  *
  * @author HanWon.Jang
@@ -114,6 +131,9 @@ export function useSearchBookPage() {
   const [isPopularMode, setIsPopularMode] = useState(true);
   const [popularPeriod, setPopularPeriod] =
     useState<PopularBookPeriodType>("monthly");
+  const [popularKeywordList, setPopularKeywordList] = useState<
+    PopularSearchKeywordType[]
+  >([]);
   const [selectingBookIsbn, setSelectingBookIsbn] = useState<string | null>(null);
   const popularLoadingPeriodRef = useRef<PopularBookPeriodType | null>(null);
   const resultRequestIdRef = useRef(0);
@@ -124,6 +144,43 @@ export function useSearchBookPage() {
   const isClubBookSearch = clubNumbParam !== undefined;
   const clubNumb = Number(clubNumbParam);
   const hasValidClubNumb = Number.isSafeInteger(clubNumb) && clubNumb > 0;
+
+  /**
+   * 검색 화면의 부가 영역에 표시할 안전한 인기 검색어를 독립적으로 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 인기 검색어 조회가 끝나면 완료되는 Promise
+   */
+  const loadPopularKeywords = useCallback(async (): Promise<void> => {
+
+    // 인기 검색어 장애는 도서 검색과 인기 도서 목록을 막지 않도록 별도 실패 경로로 처리한다
+    try {
+      // 최근 고유 회원 검색 수 기준의 안전한 인기 검색어를 조회한다
+      const popularKeywords = await getPopularKeywords();
+      // 조회된 인기 검색어를 세로 슬라이더 표시 순서로 설정한다
+      setPopularKeywordList(popularKeywords);
+    }
+
+    // 인기 검색어 부가 조회 실패는 사용자 오류 알림 없이 영역만 숨긴다
+    catch {
+      // 도서 검색과 인기 도서 목록을 유지하고 인기 검색어만 빈 상태로 전환한다
+      setPopularKeywordList([]);
+    }
+  }, []);
+
+  /**
+   * 검색 화면 진입 시 인기 검색어 부가 조회를 시작한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const startPopularKeywordLoad = useCallback((): void => {
+    // 인기 도서 최초 조회와 독립적으로 인기 검색어를 불러온다
+    void loadPopularKeywords();
+  }, [loadPopularKeywords]);
+
+  // 화면 진입 시 한 번 인기 검색어 부가 데이터를 조회한다
+  useEffect(startPopularKeywordLoad, [startPopularKeywordLoad]);
 
   /**
    * 검색 화면 최초 진입과 기간 변경에 표시할 인기 도서를 조회한다.
@@ -272,6 +329,8 @@ export function useSearchBookPage() {
         nextStart: responseData.nextStart ?? null,
         end: responseData.end,
       });
+      // 방금 반영된 검색어를 새로고침 없이 세로 슬라이더에서 확인할 수 있도록 목록을 갱신한다
+      await loadPopularKeywords();
     } catch (error) {
       console.error("도서 검색 중 오류 발생: ", error);
       // 검색 실패 원인을 공통 오류 알림으로 표시한다.
@@ -283,7 +342,21 @@ export function useSearchBookPage() {
       // 성공과 실패에 관계없이 첫 페이지 조회 상태를 해제한다.
       setIsSearching(false);
     }
-  }, []);
+  }, [loadPopularKeywords]);
+
+  /**
+   * 클릭하거나 터치한 인기 검색어를 입력창에 반영하고 즉시 첫 페이지를 조회한다
+   *
+   * @author SeungHyeon.Kang
+   * @param keyword 사용자가 선택한 현재 인기 검색어
+   * @return 인기 검색어 조회 처리가 끝나면 완료되는 Promise
+   */
+  async function handlePopularKeywordSelect(keyword: string): Promise<void> {
+    // 사용자가 선택한 검색어를 입력창에도 동일하게 표시한다
+    setSearchKeyword(keyword);
+    // 별도 제출 동작 없이 선택한 검색어로 도서 첫 페이지를 즉시 조회한다
+    await executeBookSearch(keyword);
+  }
 
   useEffect(() => {
 
@@ -531,6 +604,7 @@ export function useSearchBookPage() {
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
+    handlePopularKeywordSelect,
     handleSearchClick,
     handleSelectBook,
     hasMore,
@@ -539,6 +613,7 @@ export function useSearchBookPage() {
     isPopularMode,
     isSearching,
     popularPeriod,
+    popularKeywordList,
     searchKeyword,
     selectingBookIsbn,
     setSearchKeyword,

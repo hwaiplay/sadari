@@ -61,6 +61,14 @@ book:
     provider-call-limit-per-day: ${BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY:27000}
     # 사용자 식별값 없이 검색어 해시와 50권 페이지로 공유하는 Redis 캐시 유효시간이다.
     cache-ttl-seconds: ${BOOK_SEARCH_CACHE_TTL_SECONDS:600}
+    # 인기 검색어 합산과 회원별 중복 제한에 사용할 최근 기간이다.
+    popular-keyword-window-days: ${BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS:7}
+    # 운영 순위 조작을 막기 위해 같은 회원의 같은 검색어는 집계 기간에 한 번만 반영한다.
+    popular-keyword-user-dedup-enabled: true
+    # 한 검색어를 공용 화면에 표시하기 위해 필요한 최소 고유 회원 수이다.
+    popular-keyword-min-user-count: ${BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT:3}
+    # 검색 화면의 세로 슬라이더에 전달할 인기 검색어 최대 건수이다.
+    popular-keyword-max-size: ${BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE:10}
 
 firebase:
   web:

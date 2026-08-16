@@ -5,6 +5,7 @@ import CustomSelect, {
   type CustomSelectOption,
 } from "@/components/Select/CustomSelect";
 import BookRatingSummary from "@/features/Book/components/BookRatingSummary/BookRatingSummary";
+import { PopularKeywordSlider } from "@/features/Book/Search/components/PopularKeywordSlider";
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
@@ -19,17 +20,22 @@ const DESCRIPTION_PREVIEW_LENGTH = 90;
 const POPULAR_PERIOD_OPTIONS: readonly CustomSelectOption<PopularBookPeriodType>[] = [
   {
     value: "weekly",
-    label: /* "주간 인기 도서" */ message("frontend.book.search.popularWeekly"),
+    label: /* "주간" */ message("frontend.book.search.popularWeeklyOption"),
   },
   {
     value: "monthly",
-    label: /* "월간 인기 도서" */ message("frontend.book.search.popularMonthly"),
+    label: /* "월간" */ message("frontend.book.search.popularMonthlyOption"),
   },
   {
     value: "yearly",
-    label: /* "연간 인기 도서" */ message("frontend.book.search.popularYearly"),
+    label: /* "연간" */ message("frontend.book.search.popularYearlyOption"),
   },
 ];
+const POPULAR_PERIOD_LABELS: Readonly<Record<PopularBookPeriodType, string>> = {
+  weekly: /* "주간 인기 도서" */ message("frontend.book.search.popularWeekly"),
+  monthly: /* "월간 인기 도서" */ message("frontend.book.search.popularMonthly"),
+  yearly: /* "연간 인기 도서" */ message("frontend.book.search.popularYearly"),
+};
 
 /**
  * 책 검색 입력과 결과 목록을 표시하고 사용자 동작을 검색 훅에 전달한다.
@@ -44,6 +50,7 @@ const SearchBookPage = () => {
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
+    handlePopularKeywordSelect,
     handleSearchClick,
     handleSelectBook,
     hasMore,
@@ -52,6 +59,7 @@ const SearchBookPage = () => {
     isPopularMode,
     isSearching,
     popularPeriod,
+    popularKeywordList,
     searchKeyword,
     selectingBookIsbn,
     setSearchKeyword,
@@ -61,7 +69,7 @@ const SearchBookPage = () => {
   return (
     <main className={styles.page}>
       <Container className={styles.content}>
-        {/* 책 검색 입력과 인기 도서 기간 선택 영역 */}
+        {/* 책 검색 입력과 인기 검색어 및 인기 도서 기간 선택 영역 */}
         <section className={styles.searchSection}>
           {/* 책 검색어 입력과 검색 실행 영역 */}
           <form className={styles.searchBar} onSubmit={handleSearchClick}>
@@ -109,23 +117,34 @@ const SearchBookPage = () => {
             </label>
           </form>
 
+          {/* 인기 도서 모드에서만 인기 검색어와 기간 선택을 같은 높이의 한 행으로 제공한다 */}
           {isPopularMode && (
-            /* 기간별 인기 도서 선택 영역 */
-            <div className={styles.popularPeriodBar}>
-              <CustomSelect
-                value={popularPeriod}
-                options={POPULAR_PERIOD_OPTIONS}
-                ariaLabel={
-                  /* "인기 도서 기간" */ message(
-                    "frontend.book.search.popularPeriodLabel",
-                  )
-                }
-                className={styles.popularPeriodSelect}
-                triggerClassName={styles.popularPeriodSelectTrigger}
-                optionListClassName={styles.popularPeriodOptionList}
-                optionClassName={styles.popularPeriodOption}
-                onChange={handlePopularPeriodChange}
+            <div className={styles.popularControlBar}>
+              {/* 최근 인기 검색어 한 건씩 왼쪽 영역에서 세로로 교체하고 즉시 검색하는 영역 */}
+              <PopularKeywordSlider
+                keywordList={popularKeywordList}
+                isDisabled={isSearching}
+                onSelect={handlePopularKeywordSelect}
               />
+
+              {/* 같은 행 오른쪽의 기간별 인기 도서 선택 영역 */}
+              <div className={styles.popularPeriodBar}>
+                <CustomSelect
+                  value={popularPeriod}
+                  options={POPULAR_PERIOD_OPTIONS}
+                  ariaLabel={
+                    /* "인기 도서 기간" */ message(
+                      "frontend.book.search.popularPeriodLabel",
+                    )
+                  }
+                  triggerContent={POPULAR_PERIOD_LABELS[popularPeriod]}
+                  className={styles.popularPeriodSelect}
+                  triggerClassName={styles.popularPeriodSelectTrigger}
+                  optionListClassName={styles.popularPeriodOptionList}
+                  optionClassName={styles.popularPeriodOption}
+                  onChange={handlePopularPeriodChange}
+                />
+              </div>
             </div>
           )}
         </section>

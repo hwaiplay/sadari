@@ -21,7 +21,7 @@ export const searchSection = style({
   width: "100%",
   display: "flex",
   flexDirection: "column",
-  gap: "20px",
+  gap: "10px",
   marginBottom: 0,
 });
 
@@ -116,19 +116,30 @@ export const searchIcon = style({
   flexShrink: 0,
 });
 
-export const popularPeriodBar = style({
+export const popularControlBar = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "flex-end",
   width: "100%",
-  padding: `0 ${vars.space.md}`,
+  minWidth: 0,
+  height: "32px",
+  padding: 0,
+  gap: "8px",
   boxSizing: "border-box",
 
   "@media": {
     [media.tablet]: {
-      padding: `0 ${vars.space.lg}`,
+      padding: `0 calc(${vars.space.lg} - ${vars.space.md})`,
     },
   },
+});
+
+export const popularPeriodBar = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  flexShrink: 0,
+  height: "32px",
 });
 
 export const popularPeriodSelect = style({

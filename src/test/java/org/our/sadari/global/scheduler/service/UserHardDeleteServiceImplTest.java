@@ -32,6 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * -----------------------------------------------------------
  * 2026-08-06        SeungHyeon.Kang    최초 생성
  * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 키 삭제 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    인기 검색어 회원별 중복 방지 키 삭제 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserHardDeleteServiceImplTest {
@@ -108,6 +109,8 @@ class UserHardDeleteServiceImplTest {
         verify(tokenRedisService).delAllUserInfo(31L);
         // 회원 원본 삭제와 함께 분간 및 일간 도서 검색 제한을 제거하는지 확인한다
         verify(bookSearchProtectionService).delUserLimits(31L);
+        // 익명 인기 점수는 유지하고 회원별 인기 검색어 중복 방지 정보를 제거하는지 확인한다
+        verify(bookSearchProtectionService).delUserKeywordData(31L);
         // DB 삭제 뒤 커밋 후 물리 파일 정리를 등록하는지 확인한다
         deleteOrder.verify(fileService).delFilesAfterCommit(List.of(profileFile));
         // 영구 삭제 실행 결과를 스케줄러 로그에 최종 반영하는지 확인한다
