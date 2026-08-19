@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.notice.dto.NoticeDto;
 import org.our.sadari.notice.dto.NoticePageDto;
+import org.our.sadari.notice.dto.UnreadNoticeDto;
 import org.our.sadari.notice.mapper.NoticeMapper;
 
 /**
@@ -30,6 +31,7 @@ import org.our.sadari.notice.mapper.NoticeMapper;
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    사용자 공지사항 10개 단위 조회 검증 반영
+ * 2026-08-19        SeungHyeon.Kang    홈 미읽음 공지 제목 조회 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class NoticeServiceImplTest {
@@ -74,6 +76,34 @@ class NoticeServiceImplTest {
         assertEquals(10, page.list().size());
         assertTrue(page.hasNext());
         assertFalse(page.list().isEmpty());
+    }
+
+    /** 비활성 사용자는 홈 미읽음 공지 제목 SQL을 실행하지 못한다. */
+    @Test
+    void getUnreadRejectsInactive() {
+        when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(0);
+
+        boolean active = noticeService.isActiveUser(7L);
+
+        assertFalse(active);
+        verify(noticeMapper, never()).getUnreadNoticeList(7L, "NOTICE", "Y");
+    }
+
+    /** 활성 사용자의 홈에는 읽음 이력이 없는 배포 공지 제목만 전달한다. */
+    @Test
+    void getUnreadNoticeList() {
+        when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
+        UnreadNoticeDto notice = new UnreadNoticeDto();
+        notice.setNotiNumb(11L);
+        notice.setNotiTitl("서비스 점검 안내");
+        List<UnreadNoticeDto> rows = List.of(notice);
+        when(noticeMapper.getUnreadNoticeList(7L, "NOTICE", "Y")).thenReturn(rows);
+
+        ResultData result = noticeService.getUnreadNoticeList(7L);
+
+        assertEquals(200, result.getCode());
+        assertEquals(rows, result.getData());
+        verify(noticeMapper).getUnreadNoticeList(7L, "NOTICE", "Y");
     }
 
     /** 활성 사용자가 배포 공지 상세를 열면 읽음 이력을 저장한다. */
