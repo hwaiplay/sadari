@@ -8,6 +8,7 @@ import Loading from "@/components/Loading/Loading";
 import type { HomeBookType } from "@/features/Book/types/book.type";
 import { createPortal } from "react-dom";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
+import { UnreadNoticeSlider } from "@/features/Notice/components/UnreadNoticeSlider";
 import { useHome } from "../../features/Home/hook/useHome.tsx";
 
 /**
@@ -19,6 +20,7 @@ import { useHome } from "../../features/Home/hook/useHome.tsx";
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang    주석 추가
+ * 2026-08-19        SeungHyeon.Kang    미읽음 공지 제목 슬라이드 추가
  */
 
 function Home() {
@@ -106,6 +108,9 @@ function Home() {
           </button>
         </label>
       </form>
+
+      {/* 로그인 사용자가 읽지 않은 공지사항 제목 슬라이드 영역 */}
+      <UnreadNoticeSlider />
 
       {/* 독후감 정렬 영역 */}
       <div className={styles.sortBar}>

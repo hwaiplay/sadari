@@ -19,6 +19,8 @@ export type NoticePage = {
   hasNext: boolean;
 };
 
+export type UnreadNotice = Pick<Notice, "notiNumb" | "notiTitl">;
+
 /**
  * 현재 배포 중인 공지사항 목록 페이지를 조회한다.
  *
@@ -40,6 +42,23 @@ export async function getNoticeListApi(page: number): Promise<NoticePage> {
 
   // 검증된 공지사항 목록 응답을 반환한다.
   return result.data;
+}
+
+/**
+ * 홈 화면에 표시할 로그인 사용자의 미읽음 공지 제목 목록을 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 현재 배포 중인 미읽음 공지 번호와 제목 목록
+ * @throws 공통 응답 실패 시 발생
+ */
+export async function getUnreadNoticeListApi(): Promise<UnreadNotice[]> {
+  // 로그인 사용자의 읽음 이력이 없는 현재 배포 공지 목록 API를 호출한다
+  const response = await api.get<ResultData<UnreadNotice[]>>("/notices/unread");
+  // 공통 성공 코드가 확인된 미읽음 공지 목록 응답을 추출한다
+  const result = assertResultDataSuccess(response.data);
+
+  // 응답 데이터가 없으면 홈 슬라이드를 숨길 수 있도록 빈 목록을 반환한다
+  return result.data ?? [];
 }
 
 /**

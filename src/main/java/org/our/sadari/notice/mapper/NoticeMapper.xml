@@ -38,6 +38,23 @@
          LIMIT #{startRow}, #{pageSize}
     </select>
 
+    <!-- 홈 화면에 표시할 로그인 사용자의 미읽음 배포 공지 번호와 제목을 조회한다 -->
+    <select id="getUnreadNoticeList" resultType="org.our.sadari.notice.dto.UnreadNoticeDto">
+        SELECT /* getUnreadNoticeList */
+               N.NOTI_NUMB
+             , N.NOTI_TITL
+          FROM CT_NOTICE N
+     LEFT JOIN TB_USVIEW V
+            ON V.VIEW_TYPE = #{viewType}
+           AND V.TAGT_NUMB = N.NOTI_NUMB
+           AND V.USER_NUMB = #{userNumb}
+         WHERE N.DPLY_YSNO = #{yes}
+           AND V.USER_NUMB IS NULL
+      ORDER BY CASE WHEN N.TOPX_YSNO = #{yes} THEN 0 ELSE 1 END
+             , N.DPLY_DATE DESC
+             , N.NOTI_NUMB DESC
+    </select>
+
     <!-- 주키에 해당하는 현재 배포 버전 상세만 조회한다 -->
     <select id="getNoticeDtl" resultType="org.our.sadari.notice.dto.NoticeDto">
         SELECT /* getNoticeDtl */
