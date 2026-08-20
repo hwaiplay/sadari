@@ -12,32 +12,49 @@ export const content = style({
   width: "100%",
   margin: "0 auto",
   padding: "18px 0",
-  display: "flex",
-  flexDirection: "column",
-  gap: "22px",
-});
-
-export const searchSection = style({
-  width: "100%",
-  display: "flex",
-  flexDirection: "column",
-  gap: "10px",
-  marginBottom: 0,
 });
 
 export const searchBar = style({
+  position: "sticky",
+  top: vars.headerHeight,
+  zIndex: 996,
   boxSizing: "border-box",
   display: "flex",
   alignItems: "center",
   gap: "10px",
   width: "100%",
+  height: vars.headerHeight,
+  padding: "5px 0",
   marginBottom: 0,
+  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  isolation: "isolate",
+  transition: "top 180ms ease",
+  willChange: "top",
+
+  selectors: {
+    "&::before": {
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: "50%",
+      zIndex: -1,
+      width: "100vw",
+      backgroundColor: "rgba(255, 255, 255, 0.96)",
+      content: '""',
+      pointerEvents: "none",
+      transform: "translateX(-50%)",
+    },
+  },
 
   "@media": {
     [media.tablet]: {
-      padding: `0 ${vars.space.lg}`,
+      padding: `5px ${vars.space.lg}`,
     },
   },
+});
+
+export const searchBarHeaderHidden = style({
+  top: 0,
 });
 
 export const searchLabel = style({
@@ -66,7 +83,7 @@ export const searchInput = style({
   padding: "0 38px 0 16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
-  backgroundColor: "#ffffff",
+  backgroundColor: "rgba(255, 255, 255, 0.96)",
   color: vars.color.black,
   fontFamily: vars.font.body,
   fontSize: "16px",
@@ -123,6 +140,7 @@ export const popularControlBar = style({
   width: "100%",
   minWidth: 0,
   height: "32px",
+  marginTop: "10px",
   padding: 0,
   gap: "8px",
   boxSizing: "border-box",
@@ -132,6 +150,10 @@ export const popularControlBar = style({
       padding: `0 calc(${vars.space.lg} - ${vars.space.md})`,
     },
   },
+});
+
+export const resultSection = style({
+  marginTop: "22px",
 });
 
 export const popularPeriodBar = style({
