@@ -283,30 +283,25 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
             onSave={saveCategories}
           />
         )}
-      </div>
 
-      {/* 모임 저장 버튼 */}
-      {createPortal(
-        <div className={styles.fixedSubmitArea}>
-          <ActionButton
-            type="submit"
-            form={SET_CLUB_FORM_ID}
-            variant="primary"
-            size="lg"
-            width="full"
-            disabled={isSaving}
-          >
-            {isSaving
-              ? (isEditMode
-                ? message("frontend.readingClub.set.editSaving")
-                : message("frontend.readingClub.set.saving"))
-              : (isEditMode
-                ? message("frontend.readingClub.set.editSubmit")
-                : message("frontend.readingClub.set.submit"))}
-          </ActionButton>
-        </div>,
-        document.body,
-      )}
+        {/* 모임 저장 버튼 */}
+        <ActionButton
+          type="submit"
+          form={SET_CLUB_FORM_ID}
+          variant="primary"
+          size="lg"
+          width="full"
+          disabled={isSaving}
+        >
+          {isSaving
+            ? (isEditMode
+              ? message("frontend.readingClub.set.editSaving")
+              : message("frontend.readingClub.set.saving"))
+            : (isEditMode
+              ? message("frontend.readingClub.set.editSubmit")
+              : message("frontend.readingClub.set.submit"))}
+        </ActionButton>
+      </div>
     </>
   );
 }

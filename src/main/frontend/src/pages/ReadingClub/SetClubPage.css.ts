@@ -9,7 +9,7 @@ export const page = style({
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
-  padding: "20px 0 38px",
+  padding: "20px 0 34px",
 });
 
 export const form = style({
@@ -17,16 +17,6 @@ export const form = style({
   flexDirection: "column",
   gap: 26,
   paddingBottom: 68,
-});
-
-export const fixedSubmitArea = style({
-  position: "fixed",
-  left: "50%",
-  bottom: 80,
-  zIndex: 998,
-  width: "calc(100% - 32px)",
-  maxWidth: 568,
-  transform: "translateX(-50%)",
 });
 
 export const field = style({
