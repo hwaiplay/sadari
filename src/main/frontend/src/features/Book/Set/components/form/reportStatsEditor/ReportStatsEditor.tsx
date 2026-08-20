@@ -175,13 +175,13 @@ function ReportStatsEditor({
   // "독서 상태"
   const statusTitle = message("frontend.report.field.status");
   // "공개 여부"
-  const publicTitle = message("frontend.report.field.public");
+  const publicTitle = message("frontend.common.visibility");
   // "평점"
   const gradeTitle = message("frontend.report.field.grade");
   // "공개"
-  const publicOnLabel = message("frontend.report.public.on");
+  const publicOnLabel = message("frontend.common.public");
   // "비공개"
-  const publicOffLabel = message("frontend.report.public.off");
+  const publicOffLabel = message("frontend.common.private");
   // "닫기"
   const closeLabel = message("frontend.common.close");
   // "취소"

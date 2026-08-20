@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import {
   sweetConfirm,
   sweetError,
@@ -26,31 +27,31 @@ const POLICY_MODAL_ANIMATION_MILLISECONDS = 180;
 
 const WITHDRAWAL_REASONS: Array<{ value: WithdrawalReason; label: string }> = [
   // "서비스를 자주 사용하지 않아요"
-  { value: "LOW_USAGE", label: "서비스를 자주 사용하지 않아요" },
+  { value: "LOW_USAGE", label: message("frontend.withdrawal.reason.lowUsage") },
   // "이용이 불편해요"
-  { value: "INCONVENIENT", label: "이용이 불편해요" },
+  { value: "INCONVENIENT", label: message("frontend.withdrawal.reason.inconvenient") },
   // "개인정보가 걱정돼요"
-  { value: "PRIVACY", label: "개인정보가 걱정돼요" },
+  { value: "PRIVACY", label: message("frontend.withdrawal.reason.privacy") },
   // "기타"
-  { value: "OTHER", label: "기타" },
+  { value: "OTHER", label: message("frontend.withdrawal.reason.other") },
 ];
 
 const DEFAULT_SOFT_POLICY_ITEMS = [
   // "다시 로그인하면 기존 계정을 복구할 수 있어요."
-  "다시 로그인하면 기존 계정을 복구할 수 있어요.",
+  message("frontend.withdrawal.policy.soft.recover"),
   // "독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요."
-  "독후감은 비공개로 전환되고 알림과 푸시 구독은 복구되지 않아요.",
+  message("frontend.withdrawal.policy.soft.visibility"),
   // "팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요."
-  "팔로우 관계는 유지되지만 다른 사용자에게 보이는 프로필 정보는 제한돼요.",
+  message("frontend.withdrawal.policy.soft.social"),
 ] as const;
 
 const DEFAULT_HARD_POLICY_ITEMS = [
   // "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요."
-  "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요.",
+  message("frontend.withdrawal.policy.hard.cancelPeriod"),
   // "30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요."
-  "30일이 지나면 회원 정보와 관련 데이터가 영구 삭제돼요.",
+  message("frontend.withdrawal.policy.hard.delete"),
   // "영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요."
-  "영구 삭제가 완료된 계정과 데이터는 복구할 수 없어요.",
+  message("frontend.withdrawal.policy.hard.irreversible"),
 ] as const;
 
 /**
@@ -256,7 +257,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     // 필수 사유가 없으면 재인증 요청을 보내지 않습니다
     if (!wthdRson) {
       // "사유를 선택해주세요."
-      await sweetWarning("사유를 선택해주세요.");
+      await sweetWarning(message("frontend.withdrawal.validation.reasonRequired"));
       // 필수 입력 확인 이후 처리를 종료합니다
       return;
     }
@@ -264,7 +265,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     // 기타 사유는 상세 내용을 반드시 입력받습니다
     if (wthdRson === "OTHER" && !rsonCntn.trim()) {
       // "기타 사유를 입력해주세요."
-      await sweetWarning("기타 사유를 입력해주세요.");
+      await sweetWarning(message("frontend.withdrawal.validation.otherRequired"));
       // 기타 사유 확인 이후 처리를 종료합니다
       return;
     }
@@ -275,17 +276,17 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     // 비활성화는 재로그인 복구 범위와 자동 복원되지 않는 데이터를 다시 안내합니다
     if (wthdType === "SOFT") {
       // "계정을 비활성화하시겠어요?"
-      confirmTitle = "계정을 비활성화하시겠어요?";
+      confirmTitle = message("frontend.withdrawal.confirm.softTitle");
       // "다시 로그인하면 계정은 활성화되지만 독후감 공개 설정과 댓글, 알림, 푸시 구독은 자동 복원되지 않아요."
-      confirmText = "다시 로그인하면 계정은 활성화되지만 독후감 공개 설정과 댓글, 알림, 푸시 구독은 자동 복원되지 않아요.";
+      confirmText = message("frontend.withdrawal.confirm.softText");
     }
 
     // 영구 탈퇴는 유예기간과 유예기간 안의 취소 가능 여부를 다시 안내합니다
     else {
       // "영구 탈퇴를 신청하시겠어요?"
-      confirmTitle = "영구 탈퇴를 신청하시겠어요?";
+      confirmTitle = message("frontend.withdrawal.confirm.hardTitle");
       // "30일 뒤 계정과 관련 데이터가 영구 삭제돼요. 삭제 전에는 신청을 취소할 수 있어요."
-      confirmText = "30일 뒤 계정과 관련 데이터가 영구 삭제돼요. 삭제 전에는 신청을 취소할 수 있어요.";
+      confirmText = message("frontend.withdrawal.confirm.hardText");
     }
 
     // 계정 처리 유형별 영향을 확인한 사용자만 Kakao 재인증을 진행합니다
@@ -314,7 +315,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
 
       // 서버가 재인증 URL을 반환하지 않으면 화면 이동을 중단합니다
       if (!result.data?.authUrl) {
-        throw new Error("Kakao 재인증 URL이 없습니다.");
+        throw new Error("WITHDRAWAL_REAUTH_URL_MISSING");
       }
 
       // 브라우저 전체 페이지를 Kakao 재인증 화면으로 이동합니다
@@ -325,7 +326,10 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     catch (error) {
       // "계정 처리 요청을 시작할 수 없어요."
       // "잠시 후 다시 시도해주세요."
-      await sweetError("계정 처리 요청을 시작할 수 없어요.", getApiErrorMessage(error, "잠시 후 다시 시도해주세요."));
+      await sweetError(
+        message("frontend.withdrawal.error.startTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
     }
 
     // 재인증 화면으로 이동하지 못한 경우 버튼을 다시 활성화합니다
@@ -340,19 +344,19 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
   // 재인증 URL을 요청하는 동안 현재 처리 상태를 버튼에 표시합니다
   if (isSubmitting) {
     // "재인증 준비 중"
-    submitButtonLabel = "재인증 준비 중";
+    submitButtonLabel = message("frontend.withdrawal.submit.preparing");
   }
 
   // 비활성화 선택 상태에는 실행 결과를 명확히 표시합니다
   else if (wthdType === "SOFT") {
     // "Kakao 재인증 후 비활성화"
-    submitButtonLabel = "카카오 재인증 후 비활성화";
+    submitButtonLabel = message("frontend.withdrawal.submit.soft");
   }
 
   // 영구 탈퇴 선택 상태에는 되돌리기 어려운 실행 결과를 명확히 표시합니다
   else {
     // "Kakao 재인증 후 영구 탈퇴"
-    submitButtonLabel = "카카오 재인증 후 영구 탈퇴";
+    submitButtonLabel = message("frontend.withdrawal.submit.hard");
   }
 
   /**
@@ -374,7 +378,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       <section className={`${styles.section} ${styles.withdrawalTypeSection}`}>
         <h2 className={`${styles.title} ${styles.standaloneTitle}`}>
           {/* "계정 처리 방식" */}
-          계정 처리 방식
+          {message("frontend.withdrawal.type.title")}
         </h2>
 
         {/* 계정 처리 정책 도움말 버튼 영역 */}
@@ -382,7 +386,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
         <button
           className={styles.helpButton}
           type="button"
-          aria-label="계정 처리 정책 도움말"
+          aria-label={message("frontend.withdrawal.policy.helpLabel")}
           onClick={handlePolicyHelpOpen}
         >
           {/* "?" */}
@@ -402,16 +406,16 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
               <span className={styles.optionHeading}>
                 <strong className={styles.optionTitle}>
                   {/* "비활성화" */}
-                  비활성화
+                  {message("frontend.withdrawal.type.soft")}
                 </strong>
                 <span className={styles.recoverBadge}>
                   {/* "복구 가능" */}
-                  복구 가능
+                  {message("frontend.withdrawal.type.recoverable")}
                 </span>
               </span>
               <small className={styles.optionDescription}>
                 {/* "다시 로그인하면 기존 계정을 복구할 수 있어요." */}
-                다시 로그인하면 기존 계정을 복구할 수 있어요.
+                {message("frontend.withdrawal.policy.soft.recover")}
               </small>
             </span>
           </label>}
@@ -427,16 +431,16 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
               <span className={styles.optionHeading}>
                 <strong className={styles.optionTitle}>
                   {/* "영구 탈퇴" */}
-                  영구 탈퇴
+                  {message("frontend.withdrawal.type.hard")}
                 </strong>
                 <span className={styles.deleteBadge}>
                   {/* "30일 유예" */}
-                  30일 유예
+                  {message("frontend.withdrawal.type.gracePeriod")}
                 </span>
               </span>
               <small className={styles.optionDescription}>
                 {/* "신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요." */}
-                신청 후 30일 동안 영구 탈퇴를 취소할 수 있어요.
+                {message("frontend.withdrawal.policy.hard.cancelPeriod")}
               </small>
             </span>
           </label>
@@ -447,7 +451,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       <section className={styles.section}>
         <h2 className={`${styles.title} ${styles.standaloneTitle}`}>
           {/* "비활성화 및 탈퇴 사유" */}
-          비활성화 및 탈퇴 사유
+          {message("frontend.withdrawal.reason.title")}
         </h2>
         <div className={styles.reasonList}>
           {WITHDRAWAL_REASONS.map((reason) => (
@@ -469,13 +473,13 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
           <textarea
             className={styles.textarea}
             value={rsonCntn}
-            placeholder="상세 사유를 입력해주세요"
+            placeholder={message("frontend.withdrawal.reason.placeholder")}
             onChange={handleWithdrawalReason}
           />
 
           {/* 비활성화 및 탈퇴 사유 UTF-8 바이트 표시 영역 */}
           <span className={styles.byteCounter}>
-            {withdrawalReasonBytes}/{MAX_WITHDRAWAL_REASON_BYTES} byte
+            {withdrawalReasonBytes}/{MAX_WITHDRAWAL_REASON_BYTES} {message("frontend.common.byte")}
           </span>
         </div>
       </section>
@@ -513,7 +517,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
               <div>
                 <h2 className={styles.policyModalTitle} id="withdrawal-policy-title">
                   {/* "계정 처리 정책 안내" */}
-                  계정 처리 정책 안내
+                  {message("frontend.withdrawal.policy.title")}
                 </h2>
               </div>
               {/* "계정 처리 정책 도움말 닫기" */}
@@ -521,7 +525,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
                 ref={policyCloseButtonRef}
                 className={styles.policyModalClose}
                 type="button"
-                aria-label="계정 처리 정책 도움말 닫기"
+                aria-label={message("frontend.withdrawal.policy.closeLabel")}
                 onClick={handlePolicyHelpClose}
               >
                 <svg width="9" height="9" viewBox="0 0 9 9" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -538,11 +542,11 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
                 <div className={styles.policyItemHeading}>
                   <strong className={styles.policyItemTitle}>
                     {/* "비활성화" */}
-                    비활성화
+                    {message("frontend.withdrawal.type.soft")}
                   </strong>
                   <span className={styles.recoverBadge}>
                     {/* "복구 가능" */}
-                    복구 가능
+                    {message("frontend.withdrawal.type.recoverable")}
                   </span>
                 </div>
                 <ul className={styles.policyList}>
@@ -556,11 +560,11 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
                 <div className={styles.policyItemHeading}>
                   <strong className={styles.policyItemTitle}>
                     {/* "영구 탈퇴" */}
-                    영구 탈퇴
+                    {message("frontend.withdrawal.type.hard")}
                   </strong>
                   <span className={styles.deleteBadge}>
                     {/* "30일 유예" */}
-                    30일 유예
+                    {message("frontend.withdrawal.type.gracePeriod")}
                   </span>
                 </div>
                 <ul className={styles.policyList}>
@@ -573,7 +577,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
             {/* 계정 처리 정책 도움말 확인 버튼 영역 */}
             <button className={styles.policyModalConfirm} type="button" onClick={handlePolicyHelpClose}>
               {/* "확인" */}
-              확인
+              {message("frontend.common.confirm")}
             </button>
           </section>
         </div>,

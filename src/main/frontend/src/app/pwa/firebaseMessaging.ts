@@ -2,19 +2,6 @@ import { initializeApp, getApp, getApps, type FirebaseOptions } from "firebase/a
 import { getMessaging, getToken, isSupported, onMessage } from "firebase/messaging";
 import type { FirebaseWebConfig } from "@/features/Push/api/pushApi";
 
-export const FIREBASE_PUSH_ENABLED_EVENT = "sadari:firebase-push-enabled";
-
-/**
- * notify Firebase Push Enabled 사용자 동작을 처리한다
- *
- * @author HanWon.Jang
- * @return 반환값이 없다
- */
-export function notifyFirebasePushEnabled() {
-
-  window.dispatchEvent(new Event(FIREBASE_PUSH_ENABLED_EVENT));
-}
-
 /**
  * 사용자의 버튼 클릭 흐름 안에서 브라우저 알림 권한을 요청합니다.
  *

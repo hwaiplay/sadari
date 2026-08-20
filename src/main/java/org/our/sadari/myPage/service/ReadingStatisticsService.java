@@ -11,9 +11,7 @@ import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    연속 기록과 책별 시간 및 별점과 연도 비교 통계 추가
- * 2026-08-14        SeungHyeon.Kang    타이머 화면 독서 잔디 전용 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 독서 통계 계약
  */
 public interface ReadingStatisticsService {
 

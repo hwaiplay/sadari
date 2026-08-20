@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성
+ * 2026-08-20        SeungHyeon.Kang    세션 최대시간 8시간 확대
  */
 @Getter
 @Setter
@@ -24,7 +25,7 @@ public class ReadingTimerProperties {
     // 하루 출석으로 인정할 최소 독서 시간 초
     private long attendanceMinSeconds = 600L;
     // 단일 세션에서 기록할 수 있는 최대 독서 시간 초
-    private long maxSessionSeconds = 14400L;
+    private long maxSessionSeconds = 28800L;
     // 일별 출석 경계를 계산할 서비스 시간대
     private String zoneId = "Asia/Seoul";
     // 완료 세션 상세 보존 일수

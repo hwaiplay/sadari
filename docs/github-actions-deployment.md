@@ -59,9 +59,16 @@
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
 | `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `TIMER_ATTENDANCE_MIN_SECONDS` | `600` | 하루 독서 출석 인정에 필요한 최소 누적 시간(초) |
-| `TIMER_MAX_SESSION_SECONDS` | `14400` | 단일 독서 타이머 세션에 기록할 수 있는 최대 시간(초) |
+| `TIMER_MAX_SESSION_SECONDS` | `28800` | 단일 독서 타이머 세션과 목표시간 알림에 적용하는 최대 시간(초) |
 | `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
 | `TIMER_DETAIL_RETENTION_DAYS` | `365` | 완료된 독서 타이머 세션 상세 보존기간(일) |
+| `BOOK_SEARCH_RATE_LIMIT_PER_MINUTE` | `20` | 회원별 60초 도서 검색 요청 한도 |
+| `BOOK_SEARCH_RATE_LIMIT_PER_DAY` | `200` | 회원별 24시간 도서 검색 요청 한도 |
+| `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` | `27000` | 비상 쿼터를 제외한 앱 전체 24시간 카카오 도서 검색 실제 호출 한도 |
+| `BOOK_SEARCH_CACHE_TTL_SECONDS` | `600` | 사용자와 연결하지 않은 도서 검색 결과 Redis 캐시 유효시간(초) |
+| `BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS` | `7` | 인기 검색어 점수 합산과 회원별 동일 검색어 중복 제한 기간(일) |
+| `BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT` | `3` | 인기 검색어 공용 화면 노출에 필요한 최소 고유 회원 수 |
+| `BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE` | `10` | 검색 화면에 전달할 인기 검색어 최대 건수 |
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |
@@ -91,6 +98,12 @@
   GitHub Actions Secret으로 전달합니다.
 - 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
   `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 기존 `KAKAO_REST_API_KEY` Secret을 사용합니다.
+- 운영 도서 검색은 요청당 최대 50권을 조회하며 회원별 분간·일간 제한, 앱 전체 실제 호출 제한과 10분 공용 캐시를 Redis에서 관리합니다.
+- 도서 인기 검색어는 최근 7일의 일별 Redis 점수를 합산하고 동일 회원의 같은 검색어를 기간 내 한 번만 반영하며 최소 3명 이상인 상위 10건을 제공합니다.
+- 운영의 `book.search.popular-keyword-user-dedup-enabled`는 순위 조작 방지를 위해 `true`로 고정하며 환경변수로 노출하지 않습니다.
+- 로컬의 `book.search.popular-keyword-user-dedup-enabled`는 한 계정의 반복 검색으로 화면을 검증할 수 있도록 `false`를 사용하고 최소 노출 인원은 `1`로 설정합니다.
+- `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` 기본값은 카카오 도서 검색 일일 30,000건 중 3,000건을 장애 대응과 운영 확인용으로 남기는 `27,000`입니다.
+- 도서 검색 제한값, 캐시 유효시간과 인기 검색어 집계 기준은 공개 가능한 운영 정책이므로 Actions Variables로 관리합니다. Redis가 검색 제한을 확인할 수 없으면 외부 호출을 중단하고 인기 검색어 집계나 조회만 실패하면 일반 도서 검색은 유지합니다.
 - `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
   `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
 - `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
@@ -114,6 +127,15 @@
 - EC2에서 MySQL RDS의 `3306` 포트로 접근할 수 있어야 하고, RDS 보안 그룹은 EC2 보안 그룹을
   소스로 허용해야 합니다.
 - PWA와 Secure Cookie, Firebase Web Push를 사용하려면 최종 서비스 도메인에 HTTPS가 적용되어야 합니다.
+
+## 독서 타이머 8시간 및 목표 알림 배포
+
+- 애플리케이션 배포 전에 `scripts/db/mysql/01-create.sql`의 중요도 순서대로 `TM_RDTMRX`를 재구성해야 합니다. 기존 테이블 끝에 컬럼을 단순 추가하지 않습니다.
+- 유지보수 창에서 애플리케이션을 중지하고 DB 스냅샷을 만든 뒤, 교체 테이블을 기준 DDL로 생성해 기존 10개 컬럼을 명시적으로 복사합니다. 신규 `TARG_SECS`, `ALRM_DATE`, `SEND_DATE`는 기존 세션에 `NULL`로 둡니다.
+- 원본과 교체 테이블의 전체 행 수, 사용자별 활성 세션 수, `READ_SECS` 합계, FK 및 인덱스를 대조한 뒤 원자적 이름 교환으로 전환합니다. 검증 전 원본 테이블을 삭제하지 않습니다.
+- 재구성된 테이블에는 `IX_TM_RDTMRX_ALRM (TMRX_STAT, SEND_DATE, ALRM_DATE, TMRX_NUMB)`가 있어야 합니다.
+- `scripts/db/mysql/output/02-admin-insert.sql`을 적용해 `BOOK_TIMER_OVER` 스케줄러 상세코드와 알림 템플릿을 등록합니다. 기존 동일 코드의 관리자 문구와 사용 여부는 덮어쓰지 않습니다.
+- GitHub Actions Variable `TIMER_MAX_SESSION_SECONDS`를 별도로 등록했다면 `28800`으로 변경합니다. 기존 `14400` 값이 남아 있으면 화면과 서버가 8시간 설정을 거부합니다.
 
 ## 기기별 인증 세션 전환
 

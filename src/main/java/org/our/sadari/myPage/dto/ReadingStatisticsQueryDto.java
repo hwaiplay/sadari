@@ -13,6 +13,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성
+ * 2026-08-15        SeungHyeon.Kang    통합 연속 기록 집계 기준일 추가
  */
 @Data
 public class ReadingStatisticsQueryDto {
@@ -39,4 +40,6 @@ public class ReadingStatisticsQueryDto {
     private String completedStat;
     // 완독 독후감 상태 코드
     private String doneStat;
+    // 연속 독서 기록 계산 기준일
+    private LocalDate today;
 }

@@ -9,18 +9,15 @@ package org.our.sadari.global.common.constant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-07        SeungHyeon.Kang    최초 생성
- * 2026-07-29        SeungHyeon.Kang    자동 닉네임 공통코드와 발급 제한 추가
- * 2026-07-30        SeungHyeon.Kang    계정 비활성화 상태와 유형 용어 정리
- * 2026-07-30        SeungHyeon.Kang    팝업 사용 화면 구분 공통코드 추가
- * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 이벤트와 스케줄러 코드 추가
- * 2026-07-30        SeungHyeon.Kang    회원 정지 사용자 서버 동기화 상태 추가
- * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
- * 2026-08-05        SeungHyeon.Kang    계층형 독서 관심분야 공통코드로 통합
- * 2026-08-12        SeungHyeon.Kang    알림 아이콘 기본 상황 코드 추가
- * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 추가
- * 2026-08-14        SeungHyeon.Kang    독서 타이머 상태와 상세 정리 스케줄러 코드 추가
- * 2026-08-14        SeungHyeon.Kang    독서 통계 표시 개월 수 상수 제거
- * 2026-08-14        Hanwon.Jang        독서 모임 초대 알림 코드 추가
+ * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책 추가
+ * 2026-07-30        SeungHyeon.Kang    계정·팝업·회원 상태 코드 정리
+ * 2026-07-31        Hanwon.Jang        댓글 알림 코드 수정
+ * 2026-08-05        SeungHyeon.Kang    독서 관심분야 코드 통합
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 코드 추가
+ * 2026-08-13        SeungHyeon.Kang    팔로우 상태 코드 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
+ * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
+ * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  */
 public final class Constant {
 
@@ -55,6 +52,10 @@ public final class Constant {
     public static final String CODE_NOTICE_CATEGORY = "NOTI_CATE";
     // 서비스 정보 카테고리 공통코드
     public static final String CODE_SERVICE_INFO_CATEGORY = "SVIF_CATE";
+    // 고객문의 카테고리 공통코드
+    public static final String CODE_INQUIRY_CATEGORY = "INQR_CATG";
+    // 고객문의 상태 공통코드
+    public static final String CODE_INQUIRY_STATUS = "INQR_STAT";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 독서 타이머 상태 공통코드
@@ -94,6 +95,8 @@ public final class Constant {
     public static final String FOLLOW_STAT_FOLLOWING = "FOLLOWING";
     // 상대만 로그인 사용자를 팔로우하여 맞팔로우할 수 있는 버튼 상태
     public static final String FOLLOW_STAT_BOTH_FOLW = "BOTH_FOLW";
+    // 로그인 사용자와 상대가 서로 팔로우하는 친구 버튼 상태
+    public static final String FOLLOW_STAT_FRIEND = "FRIEND";
     // 알림 상황 좋아요 설정값
     public static final String ALIM_SITU_LIKE = "LIKE";
     // 알림 상황 팔로우 설정값
@@ -113,6 +116,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
+    // 설정한 독서 타이머 목표시간이 지난 경우 사용하는 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_BOOK_TIMER_OVER = "BOOK_TIMER_OVER";
     // 알림 템플릿 코드 댓글 설정값
     public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_REPORT";
     // 알림 템플릿 코드 댓글 좋아요 설정값
@@ -157,6 +162,8 @@ public final class Constant {
     public static final String SCHEDULER_CODE_USER_STATUS_SYNC = "USER_STATUS_SYNC";
     // 보존기간이 지난 독서 타이머 상세를 삭제하는 스케줄러 세부코드
     public static final String SCHEDULER_CODE_TIMER_DETAIL_DELETE = "TIMER_DETAIL_DELETE";
+    // 독서 타이머 목표시간 알림 스케줄러를 식별하는 로그 및 상세코드
+    public static final String SCHEDULER_CODE_BOOK_TIMER_OVER = "BOOK_TIMER_OVER";
 
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수
@@ -197,6 +204,12 @@ public final class Constant {
     public static final String SORT_START_DATE_DESC = "START_DATE_DESC";
     // 정렬 평점 내림차순 설정값
     public static final String SORT_GRADE_DESC = "GRADE_DESC";
+    // 공개 독후감 친구와 팔로잉 우선 기본 정렬 설정값
+    public static final String SORT_RELATION_DESC = "RELATION_DESC";
+    // 공개 독후감 최신순 정렬 설정값
+    public static final String SORT_LATEST_DESC = "LATEST_DESC";
+    // 공개 독후감 좋아요 내림차순 정렬 설정값
+    public static final String SORT_LIKE_DESC = "LIKE_DESC";
 
     // 파일 유형 프로필 설정값
     public static final String FILE_TYPE_PROFILE = "PROFILE";

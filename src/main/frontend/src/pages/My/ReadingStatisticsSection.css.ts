@@ -143,7 +143,12 @@ export const scrollHint = style({
   pointerEvents: "none",
   boxShadow: "0 4px 12px rgba(0, 0, 0, 0.12)",
   opacity: 1,
-  transition: "opacity 520ms ease 650ms",
+  transition: "opacity 1400ms ease-out 120ms",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      transition: "none",
+    },
+  },
 });
 
 export const scrollHintDismissed = style({
@@ -169,7 +174,7 @@ export const horizontalScroll = style({
     "&::-webkit-scrollbar-thumb": {
       borderRadius: "999px",
       backgroundColor: "transparent",
-      transition: "background-color 220ms ease",
+      transition: "background-color 1100ms ease-out",
     },
     "&:focus-visible": {
       outline: "2px solid #78b991",
@@ -184,6 +189,7 @@ export const horizontalScrollActive = style({
   selectors: {
     "&::-webkit-scrollbar-thumb": {
       backgroundColor: vars.color.gray300,
+      transition: "background-color 140ms ease-out",
     },
   },
 });
@@ -416,7 +422,7 @@ export const topBookItem = style({
   gap: "10px",
   "@media": {
     "screen and (max-width: 390px)": {
-      gridTemplateColumns: "28px 36px minmax(0, 1fr)",
+      gridTemplateColumns: "28px 36px minmax(0, 1fr) max-content",
       gap: "8px",
     },
   },
@@ -495,13 +501,6 @@ export const topBookTime = style({
   fontSize: "12px",
   color: "#34704d",
   whiteSpace: "nowrap",
-  "@media": {
-    "screen and (max-width: 390px)": {
-      gridColumn: "2 / 4",
-      justifySelf: "end",
-      marginTop: "-8px",
-    },
-  },
 });
 
 export const emptyState = style({

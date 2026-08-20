@@ -1,4 +1,5 @@
 import { isAxiosError } from "axios";
+import { message } from "@/app/messages/message";
 
 export const RESULT_SUCCESS_CODE = 200;
 export const DB_CONNECTION_FAILED_CODE = 2014;
@@ -8,6 +9,12 @@ export type ResultData<T = unknown> = {
   code?: number;
   message?: string;
   data?: T;
+};
+
+export type PageData<T> = {
+  list: T[];
+  page: number;
+  hasNext: boolean;
 };
 
 export class ResultDataError extends Error {
@@ -66,7 +73,8 @@ export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
      * 사용자에게 같은 원인 메시지를 보여준다. timeout은 서버가 응답하지 못하는 대표 케이스라 DB 장애 화면과 같은 문구로 안내한다.
      */
     if (resultCode === DB_CONNECTION_FAILED_CODE || error.code === "ECONNABORTED") {
-      return "데이터베이스에 연결할 수 없어요.\n잠시 후 다시 시도해주세요.";
+      // "데이터베이스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
+      return message("frontend.common.databaseConnectionFailed");
     }
 
     return error.response?.data?.message ?? fallbackMessage;

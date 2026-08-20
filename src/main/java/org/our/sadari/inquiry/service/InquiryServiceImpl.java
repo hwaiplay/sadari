@@ -25,10 +25,8 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-13        SeungHyeon.Kang    최초 생성
- * 2026-08-13        SeungHyeon.Kang    정지 회원 문의 유형 강제와 현재 정지 문의 조회 추가
- * 2026-08-14        SeungHyeon.Kang    고객문의 제목과 본문 비속어 검증 추가
- * 2026-08-14        SeungHyeon.Kang    사용자 문의내역 10개 단위 조회 반영
+ * 2026-08-13        SeungHyeon.Kang    최초 생성 및 정지 문의 처리
+ * 2026-08-14        SeungHyeon.Kang    문의 검증·목록 조회 추가
  */
 @Service
 @RequiredArgsConstructor

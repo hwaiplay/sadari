@@ -47,7 +47,8 @@ export default function ClubManagementPage() {
           <img
             className={styles.chevronIcon}
             src="/img/icons/icon-chevron-right.svg"
-            alt="arrow"
+            alt=""
+            aria-hidden="true"
           />
         </button>
 
@@ -60,7 +61,8 @@ export default function ClubManagementPage() {
           <img
             className={styles.chevronIcon}
             src="/img/icons/icon-chevron-right.svg"
-            alt="arrow"
+            alt=""
+            aria-hidden="true"
           />
         </div>
       </nav>

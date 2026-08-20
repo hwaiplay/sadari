@@ -514,17 +514,14 @@
     <select id="getClubCategoryList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$CategoryDto">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getClubCategoryList */
-               CATEGORY.INTR_CODE
-             , DETAIL.COMD_NAME AS INTR_NAME
-             , PARENT.COMD_NAME AS INTR_CNAM
+             CATEGORY.INTR_CODE
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.UPPR_CODE, NULL) AS INTR_CNAM
              , CATEGORY.SORT_ORDR
           FROM TB_CLCATE CATEGORY
           JOIN TB_CODEXD DETAIL
             ON DETAIL.COMM_CODE = #{categoryCode}
            AND DETAIL.COMD_CODE = CATEGORY.INTR_CODE
-     LEFT JOIN TB_CODEXD PARENT
-            ON PARENT.COMM_CODE = DETAIL.COMM_CODE
-           AND PARENT.COMD_CODE = DETAIL.UPPR_CODE
          WHERE CATEGORY.CLUB_NUMB = #{clubNumb}
       ORDER BY CATEGORY.SORT_ORDR
     </select>
@@ -687,7 +684,8 @@
              , USERX.USER_NICK
              , USERX.INTR_CNTN
              , FILEX.FILE_PATH AS PORF_PATH
-             , ( SELECT GROUP_CONCAT(DETAIL.COMD_NAME ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
+             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL)
+                                      ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
                    FROM TB_USINTR INTEREST
                    JOIN TB_CODEXD DETAIL
                      ON DETAIL.COMM_CODE = #{categoryCode}
@@ -753,7 +751,8 @@
                MEMBER.USER_NUMB
              , USERX.USER_NICK
              , FILEX.FILE_PATH AS PORF_PATH
-             , ( SELECT GROUP_CONCAT(DETAIL.COMD_NAME ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
+             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL)
+                                      ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
                    FROM TB_USINTR INTEREST
                    JOIN TB_CODEXD DETAIL
                      ON DETAIL.COMM_CODE = #{categoryCode}

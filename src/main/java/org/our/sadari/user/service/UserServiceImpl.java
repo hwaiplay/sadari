@@ -36,13 +36,13 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
- * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
- * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
+ * 2026-07-29        SeungHyeon.Kang    닉네임 검증·길이 정책 정리
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
  * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
  * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 검증과 현재 선택 조회 반영
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 후 기존 파일 삭제 추가
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 입력 금지
+ * 2026-08-19        SeungHyeon.Kang    프로필과 온보딩 닉네임 검증 공통화
  */
 @Service
 @RequiredArgsConstructor
@@ -209,31 +209,13 @@ public class UserServiceImpl implements UserService {
         // IntrCntn 업무 값을 userDto DTO에 설정한다
         userDto.setIntrCntn(StringUtil.normalizePlainText(userDto.getIntrCntn(), 50));
 
-        // 닉네임이 비어 있으면 프로필 저장 요청을 거절한다
-        if (StringUtil.isEmpty(userDto.getUserNick())) {
-            // "요청값이 올바르지 않아요."
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
+        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증한다
+        Optional<ResultData> validationResult = validateUserNick(userDto, userDto.getIntrCntn());
 
-        // 화면 검증을 우회한 요청도 같은 닉네임 문자와 구분자 규칙으로 차단한다
-        if (!isValidUserNick(userDto.getUserNick())) {
-            // "요청값이 올바르지 않아요."
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
-
-        // 닉네임과 한줄소개에서 저장을 차단할 비속어를 조회한다
-        Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick())
-                .or(() -> badWordDetectionService.findBadWord(userDto.getIntrCntn()));
-        // 닉네임이나 한줄소개에 비속어가 있으면 감지된 단어와 함께 요청을 거절한다
-        if (badWord.isPresent()) {
-            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
-            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
-        }
-
-        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단한다
-        if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
-            // "이미 사용 중인 닉네임이에요."
-            return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
+        // 공통 닉네임 검증에 실패하면 파일과 사용자 정보를 변경하지 않는다
+        if (validationResult.isPresent()) {
+            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환한다
+            return validationResult.get();
         }
 
         // 동시에 들어온 프로필 수정이 서로의 신규 파일을 고아 파일로 만들지 않도록 현재 사용자 행을 잠금 조회한다
@@ -336,31 +318,13 @@ public class UserServiceImpl implements UserService {
         // 닉네임 형식 검증 전에 앞뒤 공백만 제거한다
         userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick()));
 
-        // 닉네임이 비어 있으면 온보딩 완료 요청을 거절한다
-        if (StringUtil.isEmpty(userDto.getUserNick())) {
-            // "요청값이 올바르지 않아요."
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
+        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증한다
+        Optional<ResultData> validationResult = validateUserNick(userDto, null);
 
-        // 화면 검증을 우회한 요청도 프로필과 동일한 닉네임 규칙으로 차단한다
-        if (!isValidUserNick(userDto.getUserNick())) {
-            // "요청값이 올바르지 않아요."
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
-
-        // 온보딩 닉네임에 저장을 차단할 비속어가 있는지 조회한다
-        Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick());
-
-        // 비속어가 포함된 닉네임은 신규 사용자의 첫 프로필로 저장하지 않는다
-        if (badWord.isPresent()) {
-            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
-            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
-        }
-
-        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단한다
-        if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
-            // "이미 사용 중인 닉네임이에요."
-            return ResultData.fail(ResultEnum.USER_NICK_DUPLICATED);
+        // 공통 닉네임 검증에 실패하면 온보딩 완료 상태를 변경하지 않는다
+        if (validationResult.isPresent()) {
+            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환한다
+            return validationResult.get();
         }
 
         // 닉네임 저장과 온보딩 완료 상태를 동일한 사용자 행에 원자적으로 반영한다
@@ -475,6 +439,46 @@ public class UserServiceImpl implements UserService {
 
         // 선택 항목이 없더라도 건너뛰기 상태를 정상 저장 결과로 반환한다
         return ResultData.success();
+    }
+
+    /**
+     * 프로필 수정과 온보딩에서 사용하는 닉네임 형식과 비속어 및 중복 정책을 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userDto 로그인 사용자와 정규화한 닉네임을 담은 요청
+     * @param additionalText 닉네임과 함께 검사할 한줄소개
+     * @return 검증 실패 응답 또는 검증 통과를 나타내는 빈 값
+     */
+    private Optional<ResultData> validateUserNick(UserDto userDto, String additionalText) {
+        // 닉네임이 비어 있거나 허용 문자와 구분자 및 길이 정책을 위반하면 저장하지 않는다
+        if (StringUtil.isEmpty(userDto.getUserNick()) || !isValidUserNick(userDto.getUserNick())) {
+            // "요청값이 올바르지 않아요."
+            return Optional.of(ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST));
+        }
+
+        // 닉네임에서 저장을 차단할 비속어를 먼저 조회한다
+        Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick());
+
+        // 프로필 수정은 한줄소개도 닉네임과 같은 비속어 정책으로 검사한다
+        if (badWord.isEmpty() && !StringUtil.isEmpty(additionalText)) {
+            // 닉네임을 통과한 요청의 한줄소개에서 저장을 차단할 비속어를 조회한다
+            badWord = badWordDetectionService.findBadWord(additionalText);
+        }
+
+        // 닉네임이나 한줄소개에 비속어가 있으면 감지된 단어와 함께 요청을 거절한다
+        if (badWord.isPresent()) {
+            // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
+            return Optional.of(ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get()));
+        }
+
+        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단한다
+        if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
+            // "이미 사용 중인 닉네임이에요."
+            return Optional.of(ResultData.fail(ResultEnum.USER_NICK_DUPLICATED));
+        }
+
+        // 닉네임 저장 정책을 모두 통과한 결과를 반환한다
+        return Optional.empty();
     }
 
     /**

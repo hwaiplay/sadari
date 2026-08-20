@@ -14,8 +14,9 @@ export const page = style({
 export const listPage = style([
   page,
   {
-    paddingRight: "2px",
-    paddingLeft: "2px",
+    paddingTop: "10px",
+    paddingRight: 0,
+    paddingLeft: 0,
   },
 ]);
 
@@ -25,9 +26,9 @@ export const intro = style({
 
 export const description = style({
   margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
   lineHeight: 1.55,
 });
 
@@ -98,17 +99,6 @@ export const titleRow = style({
   display: "flex",
   alignItems: "center",
   gap: "4px",
-});
-
-export const category = style({
-  flexShrink: 0,
-  padding: "3px 8px",
-  borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.gray100,
-  color: vars.color.gray700,
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  lineHeight: 1.5,
 });
 
 export const pinIcon = style({

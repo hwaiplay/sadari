@@ -3,7 +3,6 @@ import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import CustomSelect, {
   type CustomSelectOption,
@@ -14,6 +13,7 @@ import {
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import type { PublicReportSortType } from "@/features/Book/api/bookApi";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -24,16 +24,16 @@ import ProfileImage from "@/features/User/components/ProfileImage";
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
-import {statusWrap} from "./PublicReportPage.css";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 
-type ReportSort = "LATEST" | "RATING";
 type ReportStatus = string;
 
-const SORT_OPTIONS: readonly CustomSelectOption<ReportSort>[] = [
-  { value: "LATEST", label: "최신순" },
-  { value: "RATING", label: "별점순" },
+const SORT_OPTIONS: readonly CustomSelectOption<PublicReportSortType>[] = [
+  { value: "RELATION_DESC", label: /* "기본순" */ message("frontend.book.publicReports.sort.default") },
+  { value: "LATEST_DESC", label: /* "최신순" */ message("frontend.book.publicReports.sort.latest") },
+  { value: "GRADE_DESC", label: /* "별점순" */ message("frontend.home.sort.gradeDesc") },
+  { value: "LIKE_DESC", label: /* "추천순" */ message("frontend.book.publicReports.sort.recommended") },
 ];
 
 type PublicReportPageState = {
@@ -74,7 +74,7 @@ const PublicReportPage = () => {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
-  const [sort, setSort] = useState<ReportSort>("LATEST");
+  const [sort, setSort] = useState<PublicReportSortType>("RELATION_DESC");
   const [status, setStatus] = useState<ReportStatus>("ALL");
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
@@ -82,20 +82,20 @@ const PublicReportPage = () => {
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
 
   const reports = useMemo(() => {
-
-    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
+    // 조회된 공개 독후감 서버 페이지를 화면 순서대로 연결해 반환한다
+    return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
   }, [publicReportsQuery.data]);
 
   const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
     // 전체 옵션은 화면 전용 값으로 두고 읽는 중 상태를 제외한 READ_STAT 상세코드의 사용 순서를 따릅니다.
     return [
-      { value: "ALL", label: "전체" },
+      { value: "ALL", label: /* "전체" */ message("frontend.common.all") },
       ...(reportStatusCodeQuery.data ?? [])
         .filter((code) => code.comdCode.toUpperCase() !== "READ")
         .map((code) => ({
@@ -115,40 +115,8 @@ const PublicReportPage = () => {
     );
   }, [reportStatusCodeQuery.data]);
 
-  const visibleReports = useMemo(() => {
-
-    const filteredReports =
-      status === "ALL"
-        ? reports
-        : reports.filter((report) => getReportStatus(report) === status);
-
-    return [...filteredReports].sort((left, right) => {
-
-      const followPriority = Number(right.followYsno === "Y")
-        - Number(left.followYsno === "Y");
-
-      // 팔로우 작성자 여부가 다르면 팔로우 중인 작성자의 독후감을 먼저 배치한다.
-      if (followPriority !== 0) {
-        return followPriority;
-      }
-
-      const ratingPriority = (Number(right.reptGrde) || 0)
-        - (Number(left.reptGrde) || 0);
-
-      // 별점순에서는 같은 팔로우 그룹 안에서 높은 별점을 먼저 배치한다.
-      if (sort === "RATING" && ratingPriority !== 0) {
-        return ratingPriority;
-      }
-
-      // 동일 우선순위에서는 최근 등록된 독후감을 먼저 배치한다.
-      return right.reptNumb - left.reptNumb;
-    });
-  }, [reports, sort, status]);
-  const {
-    visibleItems: displayedReports,
-    hasNext: hasNextReport,
-    loadMore: loadMoreReport,
-  } = useProgressiveList(visibleReports, `${isbn}:${sort}:${status}`);
+  const displayedReports = reports;
+  const hasNextReport = Boolean(publicReportsQuery.hasNextPage);
 
   /**
    * handle Toggle Report 사용자 동작을 처리한다
@@ -217,7 +185,7 @@ const PublicReportPage = () => {
   }
 
   if (publicReportsQuery.isPending) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   if (publicReportsQuery.isError) {
@@ -263,7 +231,7 @@ const PublicReportPage = () => {
                         <span className={styles.metaSeparator}>|</span>
                         <span className={styles.ratingSummary}>
                       <span className={styles.ratingStar}>
-                        <img src={"/img/icons/icon-star-rate.svg"} alt={"rate"} width={"14px"}/>
+                        <img src={"/img/icons/icon-star-rate.svg"} alt="" aria-hidden="true" width={"14px"}/>
                       </span>
                       <span>{pageState.ratingAverage}</span>
                     </span>
@@ -275,17 +243,17 @@ const PublicReportPage = () => {
           </section>
 
           {/* 공개 독후감 정렬과 독서 상태 필터 영역 */}
-          <section className={styles.filters} aria-label="독후감 필터">
+          <section className={styles.filters} aria-label={message("frontend.book.publicReports.filterLabel")}>
             <CustomSelect
               value={sort}
               options={SORT_OPTIONS}
-              ariaLabel="독후감 정렬"
+              ariaLabel={message("frontend.home.sort.label")}
               onChange={setSort}
             />
             <CustomSelect
               value={status}
               options={statusOptions}
-              ariaLabel="독서 상태"
+              ariaLabel={message("frontend.report.field.status")}
               onChange={setStatus}
             />
           </section>
@@ -330,17 +298,19 @@ const PublicReportPage = () => {
                       </div>
 
                         {/* 신고 및 차단 더보기 메뉴 */}
-                        <UserActionMenu
-                          userNick={report.userNick}
-                          reportTarget={{
-                            targetType: "REPORT",
-                            targetNumb: report.reptNumb,
-                            reportNumb: report.reptNumb,
-                            userNumb: report.userNumb,
-                            userNick: report.userNick,
-                            content: report.reptCntn,
-                          }}
-                        />
+                        <div className={styles.actionMenuWrap}>
+                          <UserActionMenu
+                            userNick={report.userNick}
+                            reportTarget={{
+                              targetType: "REPORT",
+                              targetNumb: report.reptNumb,
+                              reportNumb: report.reptNumb,
+                              userNumb: report.userNumb,
+                              userNick: report.userNick,
+                              content: report.reptCntn,
+                            }}
+                          />
+                        </div>
 
                     </div>
 
@@ -394,7 +364,7 @@ const PublicReportPage = () => {
                             type="button"
                             aria-label={message(
                               isExpanded
-                                ? "frontend.book.publicReports.collapse"
+                                ? "frontend.common.collapse"
                                 : "frontend.book.publicReports.expand",
                             )}
                             onClick={() => handleToggleReport(report.reptNumb)}
@@ -406,7 +376,8 @@ const PublicReportPage = () => {
                                   : styles.expandArrow
                               }
                               src={"/img/icons/arrow-bottom.svg"}
-                              alt={"arrow"}
+                              alt=""
+                              aria-hidden="true"
                             />
                           </button>
                         ) : null}
@@ -417,7 +388,7 @@ const PublicReportPage = () => {
                       <button
                         className={styles.metricButton}
                         type="button"
-                        aria-label="좋아요"
+                        aria-label={message("frontend.common.like")}
                         aria-pressed={report.likeYsno === "Y"}
                         disabled={likeMutation.isPending}
                         onClick={() =>
@@ -430,8 +401,8 @@ const PublicReportPage = () => {
                       >
                         {
                           report.likeYsno === "Y"
-                              ? <img  src={"/img/icons/icon-heart-fill.svg"} alt={"좋아요"}/>
-                              : <img  src={"/img/icons/icon-heart.svg"} alt={"좋아요"}/>
+                              ? <img src={"/img/icons/icon-heart-fill.svg"} alt="" aria-hidden="true"/>
+                              : <img src={"/img/icons/icon-heart.svg"} alt="" aria-hidden="true"/>
                         }
 
                         <span>{getCountLabel(report.likeCnt)}</span>
@@ -439,10 +410,10 @@ const PublicReportPage = () => {
                       <button
                         className={styles.commentButton}
                         type="button"
-                        aria-label="댓글 보기"
+                        aria-label={message("frontend.book.publicReports.viewComments")}
                         onClick={() => setCommentReport(report)}
                       >
-                        <img  src={"/img/icons/icon-comment.svg"} alt={"댓글"}/>
+                        <img src={"/img/icons/icon-comment.svg"} alt="" aria-hidden="true"/>
                         <span>
                           {getCountLabel(report.replCnt)}
                         </span>
@@ -453,13 +424,17 @@ const PublicReportPage = () => {
               })}
               <InfiniteScrollTrigger
                 hasNext={hasNextReport}
-                onLoadMore={loadMoreReport}
+                isLoading={publicReportsQuery.isFetchingNextPage}
+                onLoadMore={() => {
+                  // 목록 하단에 도달하면 다음 공개 독후감 서버 페이지를 조회한다
+                  void publicReportsQuery.fetchNextPage();
+                }}
               />
             </section>
           ) : (
             <p className={styles.empty}>
               {reports.length > 0
-                ? "선택한 조건에 맞는 독후감이 없어요."
+                ? /* "선택한 조건에 맞는 독후감이 없어요." */ message("frontend.book.publicReports.filteredEmpty")
                 : message("frontend.book.publicReports.empty")}
             </p>
           )}

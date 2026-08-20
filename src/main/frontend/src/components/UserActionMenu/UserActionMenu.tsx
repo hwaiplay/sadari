@@ -1,13 +1,17 @@
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./UserActionMenu.css";
 import type { SafetyReportTarget } from "./userActionMenu.types";
 
 const BLOCK_DESCRIPTIONS = [
-  "· 차단된 사람은 사다리에서 회원님의 프로필 또는 독후감 콘텐츠를 찾을 수 없게 됩니다.",
-  "· 상대방에게는 회원님이 차단한 사실을 알리지 않습니다.",
-  "· 설정에서 언제든지 차단을 해제할 수 있습니다.",
+  // "· 차단된 사람은 사다리에서 회원님의 프로필 또는 독후감 콘텐츠를 찾을 수 없게 됩니다."
+  message("frontend.userAction.block.description.hidden"),
+  // "· 상대방에게는 회원님이 차단한 사실을 알리지 않습니다."
+  message("frontend.userAction.block.description.private"),
+  // "· 설정에서 언제든지 차단을 해제할 수 있습니다."
+  message("frontend.userAction.block.description.reversible"),
 ] as const;
 
 type UserActionMenuProps = {
@@ -30,10 +34,12 @@ export const confirmUserBlock = async (
 ): Promise<boolean> => {
   // "{닉네임} 님을 차단 하시겠어요?"
   const result = await sweetConfirm({
-    title: `${userNick}\n님을 차단 하시겠어요?`,
+    title: message("frontend.userAction.block.confirmTitle", [userNick]),
     texts: BLOCK_DESCRIPTIONS,
-    confirmButtonText: "차단",
-    cancelButtonText: "취소",
+    // "차단"
+    confirmButtonText: message("frontend.userAction.block.confirm"),
+    // "취소"
+    cancelButtonText: message("frontend.common.cancel"),
     customClass: "sadari-swal-user-block",
   });
 
@@ -108,7 +114,7 @@ const UserActionMenu = ({
         ref={triggerRef}
         className={styles.trigger}
         type="button"
-        aria-label="더보기"
+        aria-label={message("frontend.userAction.more")}
         aria-haspopup="menu"
         aria-expanded={isMenuOpen}
         onClick={handleToggleMenu}
@@ -128,7 +134,8 @@ const UserActionMenu = ({
             role="menuitem"
             onClick={handleReportClick}
           >
-            신고하기
+            {/* "신고하기" */}
+            {message("frontend.userAction.report")}
           </button>
           <button
             className={styles.menuOption}
@@ -136,7 +143,8 @@ const UserActionMenu = ({
             role="menuitem"
             onClick={handleBlockClick}
           >
-            차단하기
+            {/* "차단하기" */}
+            {message("frontend.userAction.block.action")}
           </button>
         </div>
       ) : null}

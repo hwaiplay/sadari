@@ -26,6 +26,15 @@
 - `TB_ALIMXX.DELT_YSNO = 'Y'`인 알림을 물리 삭제합니다.
 - 삭제 대상이 없으면 불필요한 실행 로그를 남기지 않습니다.
 
+## 독서 타이머 목표시간 알림
+
+- 스케줄러 코드와 템플릿 코드는 `BOOK_TIMER_OVER`입니다.
+- 10초마다 실행하며 한 번에 `scheduler.max-size` 범위만 조회합니다.
+- `RUNNING` 상태이고 `ALRM_DATE`가 현재 시각 이하이며 `SEND_DATE`가 없는 정상 이용 회원의 세션만 대상으로 합니다.
+- 대상 세션은 별도 트랜잭션에서 행 잠금 후 다시 검증하여 다중 인스턴스의 중복 발송을 막습니다.
+- 알림 저장과 `SEND_DATE` 갱신은 같은 트랜잭션으로 처리하며 실패한 세션은 다음 실행에서 재시도합니다.
+- 일시정지, 완료, `WITHDRAWN` 또는 `DELETE_PENDING` 전환으로 `ALRM_DATE`가 제거된 세션은 발송하지 않습니다.
+
 ## 영구 탈퇴 회원 삭제
 
 - 스케줄러 코드: `USER_HARD_DELETE`
@@ -77,12 +86,12 @@
 
 ## 구현 근거
 
-- `global/scheduler/Scheduler.java`
-- `global/scheduler/LocalUserHardDeleteScheduler.java`
-- `global/scheduler/common/SchedulerLogSupport.java`
-- `global/scheduler/service/ReportDateOverServiceImpl.java`
-- `global/scheduler/service/AlimDeleteServiceImpl.java`
-- `global/scheduler/service/UserHardDeleteServiceImpl.java`
-- `global/scheduler/service/UserStatusEventServiceImpl.java`
-- `global/scheduler/mapper/UserStatusEventMapper.xml`
-- `global/scheduler/mapper/SchedulerLogMapper.xml`
+- `src/main/java/org/our/sadari/global/scheduler/Scheduler.java`
+- `src/main/java/org/our/sadari/global/scheduler/common/SchedulerLogSupport.java`
+- `src/main/java/org/our/sadari/global/scheduler/service/ReportDateOverServiceImpl.java`
+- `src/main/java/org/our/sadari/global/scheduler/service/AlimDeleteServiceImpl.java`
+- `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
+- `src/main/java/org/our/sadari/global/scheduler/service/UserStatusEventServiceImpl.java`
+- `src/main/java/org/our/sadari/timer/service/ReadingTimerServiceImpl.java`
+- `src/main/java/org/our/sadari/global/scheduler/mapper/UserStatusEventMapper.xml`
+- `src/main/java/org/our/sadari/global/scheduler/mapper/SchedulerLogMapper.xml`

@@ -2,6 +2,7 @@ import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
+import { queryClient } from "@/app/query/queryClient";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -9,7 +10,6 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -19,15 +19,15 @@ import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
 import {
   delSocialFollowApi,
-  getMyFollowListApi,
   setSocialFollowApi,
   type FollowListType,
   type FollowUser,
 } from "@/features/Social/api/socialApi";
+import { useFollowListModal } from "@/features/Social/hooks/useFollowListModal";
+import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import {
   copyPrevReadingGoalApi,
   delProfileImageDraftApi,
-  getMyProfileApi,
   getMonthlyReadingApi,
   getProfileDraftListApi,
   setProfileImageDraftApi,
@@ -39,9 +39,14 @@ import {
   type ProfileImageDraft,
   type ProfileImageType,
 } from "@/features/User/api/userApi";
+import { getMyProfileOptions } from "@/features/User/hooks/useMyProfileQuery";
 import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
+import {
+  getReadingEndDateText,
+  getReadingGradeText,
+} from "@/features/User/utils/profileReadingFormat";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
@@ -66,13 +71,13 @@ const MODAL_CLOSE_DELAY_MS = 180;
 
 const DEFAULT_GOAL_HELP_ITEMS = [
   // "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다."
-  "주간 목표는 월요일부터 일요일까지를 한 주로 보고, 최대 1회까지 내릴 수 있습니다. 해당 주가 3일 남은 시점부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpWeek"),
   // "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다."
-  "월간 목표는 최대 3회까지 내릴 수 있고, 해당 월이 7일 남은 시점부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpMonth"),
   // "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다."
-  "연간 목표는 최대 5회까지 내릴 수 있고, 12월 1일부터는 내릴 수 없습니다.",
+  message("frontend.profile.goal.helpYear"),
   // "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다."
-  "같은 목표 권수를 다시 저장하는 경우는 목표 내리기 횟수를 소모하지 않습니다.",
+  message("frontend.profile.goal.helpSameValue"),
 ] as const;
 
 /**
@@ -87,33 +92,21 @@ const renderGoalHelpItem = (goalHelpItem: string): ReactNode => {
   return <li key={goalHelpItem}>{goalHelpItem}</li>;
 };
 
-/**
- * is Active Follow Status 여부를 판정한다
- *
- * @author HanWon.Jang
- * @param followStatName follow Stat Name 입력값
- * @return 판정 결과
- */
-const isActiveFollowStatus = (followStatName?: string) => {
-
-  return followStatName === "팔로잉" || followStatName === "맞팔로우";
-};
-
 const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: string; singular: string }> = {
   week: {
-    current: "이번 주",
-    previous: "지난 주",
-    singular: "이번주의",
+    current: /* "이번 주" */ message("frontend.profile.goal.copy.week.current"),
+    previous: /* "지난 주" */ message("frontend.profile.goal.copy.week.previous"),
+    singular: /* "이번주의" */ message("frontend.profile.goal.copy.week.singular"),
   },
   month: {
-    current: "이번 달",
-    previous: "지난 달",
-    singular: "이번 달의",
+    current: /* "이번 달" */ message("frontend.profile.goal.copy.month.current"),
+    previous: /* "지난 달" */ message("frontend.profile.goal.copy.month.previous"),
+    singular: /* "이번 달의" */ message("frontend.profile.goal.copy.month.singular"),
   },
   year: {
-    current: "올해",
-    previous: "작년",
-    singular: "올해의",
+    current: /* "올해" */ message("frontend.profile.goal.copy.year.current"),
+    previous: /* "작년" */ message("frontend.profile.goal.copy.year.previous"),
+    singular: /* "올해의" */ message("frontend.profile.goal.copy.year.singular"),
   },
 };
 
@@ -239,19 +232,6 @@ const formatReadingDiff = (diff: number) => {
 };
 
 /**
- * 독후감 요약 목록에 표시할 독서 기간을 시작일과 종료일 기준으로 조합합니다.
- * 시작일 또는 종료일 중 하나만 내려오는 예외 상황에서도 비어 있는 구분자가 보이지 않도록 처리합니다.
- *
- * @author HanWon.Jang
- * @param report 독서 기간을 표시할 독후감 요약 정보
- * @return 화면에 표시할 독서 기간 문자열
- */
-const getReadingEndDateText = (report: ReadingSummaryReport) => {
-
-  return formatDashedDateToDot(report.reptEndt);
-};
-
-/**
  * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환합니다.
  * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환합니다.
  *
@@ -271,20 +251,6 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
   return periodText
     ? /* "목표 독서기간: {0}" */ message("frontend.profile.currentReading.targetPeriod", [periodText])
     : "";
-};
-
-/**
- * 독후감 평점을 5개의 별 문자열로 변환합니다.
- * 완료 독후감 목록의 평점은 숫자 형태로 내려오므로 0점부터 5점 사이로 보정해 화면 표시가 깨지지 않게 합니다.
- *
- * @author HanWon.Jang
- * @param grade 서버에서 내려온 평점 문자열
- * @return 5개 기준의 별점 표시 문자열
- */
-const getReadingGradeText = (grade?: string) => {
-
-  const gradeNumber = Math.max(0, Math.min(5, Math.floor(Number(grade) || 0)));
-  return `${"\u2605".repeat(gradeNumber)}${"\u2606".repeat(5 - gradeNumber)}`;
 };
 
 /**
@@ -309,9 +275,6 @@ function ProfileEditPage() {
   const [currentReadingReport, setCurrentReadingReport] = useState<ReadingSummaryReport | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
   const [isGoalHelpModalOpen, setIsGoalHelpModalOpen] = useState(false);
-  const [followListType, setFollowListType] = useState<FollowListType | null>(null);
-  const [followUsers, setFollowUsers] = useState<FollowUser[]>([]);
-  const [isFollowListLoading, setIsFollowListLoading] = useState(false);
   const [isFollowListScrolling, setIsFollowListScrolling] = useState(false);
   const [followUpdatingUserNumb, setFollowUpdatingUserNumb] = useState<number | null>(null);
   const [closingModal, setClosingModal] = useState<ProfileModalType | null>(null);
@@ -328,10 +291,16 @@ function ProfileEditPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
   const {
-    visibleItems: visibleFollowUsers,
-    hasNext: hasNextFollowUser,
-    loadMore: loadMoreFollowUser,
-  } = useProgressiveList(followUsers, followListType ?? "closed");
+    followListType,
+    followUsers,
+    isFollowListLoading,
+    isNextFollowLoading,
+    hasNextFollowUser,
+    openFollowList,
+    loadMoreFollow,
+    closeFollowList,
+    setFollowUsers,
+  } = useFollowListModal({ isMyProfile: true });
   const diffTooltipRefs = useRef<Record<ReadingPeriod, HTMLDivElement | null>>({
     week: null,
     month: null,
@@ -401,13 +370,13 @@ function ProfileEditPage() {
     let ignore = false;
 
     Promise.all([
-      getMyProfileApi(),
+      queryClient.fetchQuery(getMyProfileOptions()),
       getProfileDraftListApi().catch(() => []),
     ])
-      .then(([response, drafts]) => {
+      .then(([nextProfile, drafts]) => {
 
         if (!ignore) {
-          syncProfileState(response.data as UserProfile);
+          syncProfileState(nextProfile);
           restoreProfileImageDrafts(drafts);
         }
       })
@@ -719,8 +688,7 @@ function ProfileEditPage() {
         }
 
         if (modal === "followList") {
-          setFollowListType(null);
-          setFollowUsers([]);
+          closeFollowList();
           setIsFollowListScrolling(false);
         }
 
@@ -754,25 +722,11 @@ function ProfileEditPage() {
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleFollowListOpen = async (type: FollowListType) => {
-
+    // 이전 모달의 닫기 상태를 초기화하고 공통 팔로우 목록 첫 페이지를 조회한다
     setClosingModal(null);
-    setFollowListType(type);
-    setFollowUsers([]);
     setIsFollowListScrolling(false);
-    setIsFollowListLoading(true);
-
-    try {
-      const response = await getMyFollowListApi(type);
-      setFollowUsers((response.data ?? []) as FollowUser[]);
-    } catch (error) {
-      void sweetError(
-        /* "잘못된 접근입니다" */ message("frontend.common.invalidAccess"),
-        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
-      );
-      setFollowListType(null);
-    } finally {
-      setIsFollowListLoading(false);
-    }
+    // 본인 팔로우 목록 모달을 열고 첫 서버 페이지를 조회한다
+    await openFollowList(type);
   };
 
   /**
@@ -812,28 +766,36 @@ function ProfileEditPage() {
   };
 
   /**
-   * handle Follow Status Click 사용자 동작을 처리한다
+   * 내 팔로우 목록 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출한다
    *
    * @author HanWon.Jang
-   * @param user user 입력값
-   * @return 반환값이 없다
-   * @throws API 요청 또는 비동기 처리 실패 시 발생
+   * @param user 관계를 변경할 팔로우 목록 사용자
+   * @return 팔로우 관계와 내 프로필 통계 갱신이 끝난 Promise
+   * @throws 팔로우 또는 내 프로필 통계 요청 실패 시 발생
    */
   const handleFollowStatusClick = async (user: FollowUser) => {
 
+    // 다른 관계 변경이 진행 중이거나 내 계정 행이면 추가 조작을 허용하지 않는다
     if (followUpdatingUserNumb || user.meYsno === "Y") {
+      // 현재 목록 상태를 유지하고 종료한다
       return;
     }
 
-    if (user.followStatName === "팔로잉") {
+    // 목록 사용자를 내가 팔로우 중인지 버튼명으로 판정한다
+    const isFollowing = isFollowedByMe(user.followStatName);
+
+    // 팔로잉 또는 친구 상태를 해제하기 전에 사용자 확인을 받는다
+    if (isFollowing) {
       const result = await sweetConfirm({
-        title: /* "언팔로우하시겠습니까?" */ message("frontend.social.unfollow.title"),
-        text: /* "팔로잉 목록에서 삭제됩니다." */ message("frontend.social.unfollow.text"),
+        title: /* "언팔로우하시겠어요?" */ message("frontend.social.unfollow.title"),
+        text: /* "팔로잉 목록에서 삭제돼요." */ message("frontend.social.unfollow.text"),
         confirmButtonText: /* "언팔로우" */ message("frontend.social.unfollow.confirm"),
         cancelButtonText: /* "취소" */ message("frontend.common.cancel"),
       });
 
+      // 사용자가 취소하면 기존 관계를 유지한다
       if (!result.isConfirmed) {
+        // 팔로우 관계 변경 없이 종료한다
         return;
       }
     }
@@ -842,7 +804,7 @@ function ProfileEditPage() {
 
     try {
       const response =
-        user.followStatName === "팔로잉"
+        isFollowing
           ? await delSocialFollowApi(user.userNumb)
           : await setSocialFollowApi(user.userNumb);
 
@@ -1025,12 +987,22 @@ function ProfileEditPage() {
                     >
                       {report.bookTitl || /* "도서 정보가 없습니다." */ message("frontend.common.noBookInfo")}
                     </span>
-                    {/* 저자와 목표 종료일 및 남은 기간 영역 */}
+                    {/* 저자 아래에 목표 종료일을 배치하고 오른쪽에 남은 기간을 표시하는 영역 */}
                     <span className={styles.currentReadingMeta}>
-                      <span className={styles.readingSummaryBookMeta}>
-                        {[report.bookAthr, formatDashedDateToDot(report.reptEndt)]
-                          .filter(Boolean)
-                          .join(" | ")}
+                      <span className={styles.currentReadingBookMetaGroup}>
+                        {/* 현재 읽는 책의 저자명 */}
+                        {report.bookAthr && (
+                          <span className={styles.readingSummaryBookMeta}>{report.bookAthr}</span>
+                        )}
+                        {/* 현재 읽는 책의 목표 독서 종료일 */}
+                        {report.reptEndt && (
+                          <span className={styles.readingSummaryBookMeta}>
+                            {/* "종료일 {0}" */}
+                            {message("frontend.profile.currentReading.endDate", [
+                              formatDashedDateToDot(report.reptEndt),
+                            ])}
+                          </span>
+                        )}
                       </span>
                       <span
                         className={styles.currentReadingRemain}
@@ -1078,16 +1050,16 @@ function ProfileEditPage() {
     }> = [
       {
         label: /* "총 읽은 책" */ message("frontend.profile.stats.totalReadBook"),
-        value: /* "{0}권" */ message("frontend.profile.stats.bookCount", [summary.totalReadBookCnt ?? 0]),
+        value: /* "{0}권" */ message("frontend.common.bookCount", [summary.totalReadBookCnt ?? 0]),
         action: "totalReadBook",
       },
       {
-        label: /* "팔로우" */ message("frontend.profile.stats.following"),
+        label: /* "팔로우" */ message("frontend.common.following"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followingCnt ?? 0]),
         action: "following",
       },
       {
-        label: /* "팔로워" */ message("frontend.profile.stats.follower"),
+        label: /* "팔로워" */ message("frontend.common.followers"),
         value: /* "{0}명" */ message("frontend.profile.stats.userCount", [summary.followerCnt ?? 0]),
         action: "followers",
       },
@@ -1822,7 +1794,7 @@ function ProfileEditPage() {
   };
 
   if (isLoading) {
-    return <Loading title={/* "목록 조회중" */ message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (
@@ -2054,7 +2026,7 @@ function ProfileEditPage() {
                   "week",
                   monthlySummary.weekCode,
                   "frontend.profile.weeklyReading.title",
-                  "frontend.profile.weeklyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentWeekCount,
                   monthlySummary.weekCountDiff,
                   "frontend.profile.weeklyReading.diffAria",
@@ -2066,7 +2038,7 @@ function ProfileEditPage() {
                   "month",
                   monthlySummary.monthCode,
                   "frontend.profile.monthlyReading.title",
-                  "frontend.profile.monthlyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentMonthCount,
                   monthlySummary.countDiff,
                   "frontend.profile.monthlyReading.diffAria",
@@ -2078,7 +2050,7 @@ function ProfileEditPage() {
                   "year",
                   monthlySummary.yearCode,
                   "frontend.profile.yearlyReading.title",
-                  "frontend.profile.yearlyReading.count",
+                  "frontend.common.bookCount",
                   monthlySummary.currentYearCount,
                   monthlySummary.yearCountDiff,
                   "frontend.profile.yearlyReading.diffAria",
@@ -2175,14 +2147,14 @@ function ProfileEditPage() {
                 type="button"
                 onClick={() => void closeProfileModal("currentReading")}
               >
-                {/* "닫기" */ message("frontend.profile.currentReading.close")}
+                {/* "닫기" */ message("frontend.common.close")}
               </button>
               <button
                 className={styles.currentReadingModalEditButton}
                 type="button"
                 onClick={handleReadingEditClick}
               >
-                <span>{/* "수정하기" */ message("frontend.profile.currentReading.edit")}</span>
+                <span>{/* "수정하기" */ message("frontend.common.update")}</span>
               </button>
             </div>
           </section>
@@ -2219,8 +2191,8 @@ function ProfileEditPage() {
                 {/* "팔로우" 또는 "팔로워" */}
                 {message(
                   followListType === "following"
-                    ? "frontend.profile.followingList.title"
-                    : "frontend.profile.followerList.title",
+                    ? "frontend.common.following"
+                    : "frontend.common.followers",
                 )}
               </h2>
               <button
@@ -2239,9 +2211,12 @@ function ProfileEditPage() {
               onScroll={handleFollowListScroll}
             >
               {isFollowListLoading && (
-                <p className={styles.followModalEmpty}>
-                  {/* "목록 조회중" */ message("frontend.common.loadingList")}
-                </p>
+                /* 팔로우 사용자 목록을 불러오는 동안 모달 안에 소형 공통 회전 링을 표시한다 */
+                <Loading
+                  title={/* "목록 조회 중" */ message("frontend.common.loadingList")}
+                  isFullScreen={false}
+                  isCompact
+                />
               )}
               {!isFollowListLoading && followUsers.length === 0 && (
                 <p className={styles.followModalEmpty}>
@@ -2253,7 +2228,7 @@ function ProfileEditPage() {
                   )}
                 </p>
               )}
-              {!isFollowListLoading && visibleFollowUsers.map((user) => (
+              {!isFollowListLoading && followUsers.map((user) => (
                 /* 팔로우 사용자 개별 항목 영역 */
                 <div className={styles.followModalItem} key={user.userNumb}>
                   {/* 팔로우 사용자 프로필 정보 영역 */}
@@ -2279,11 +2254,8 @@ function ProfileEditPage() {
                   {/* 팔로우 상태 확인과 변경 영역 */}
                   {user.meYsno !== "Y" && (
                     <button
-                      className={`${styles.followModalStatusButton} ${
-                        isActiveFollowStatus(user.followStatName)
-                          ? styles.followModalStatusButtonActive
-                          : ""
-                      }`}
+                      className={styles.followModalStatusButton}
+                      data-follow-status={user.followStatName}
                       type="button"
                       disabled={followUpdatingUserNumb === user.userNumb}
                       onClick={() => void handleFollowStatusClick(user)}
@@ -2295,7 +2267,11 @@ function ProfileEditPage() {
               ))}
               <InfiniteScrollTrigger
                 hasNext={!isFollowListLoading && hasNextFollowUser}
-                onLoadMore={loadMoreFollowUser}
+                isLoading={isNextFollowLoading}
+                onLoadMore={() => {
+                  // 목록 하단에 도달하면 다음 팔로우 사용자 서버 페이지를 조회한다
+                  void loadMoreFollow();
+                }}
               />
             </div>
           </section>

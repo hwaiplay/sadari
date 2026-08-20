@@ -16,7 +16,7 @@ function InquiryLayout() {
   const { isLoading, isSuspended } = useCheckAuth();
 
   if (isLoading) {
-    return <Loading title="고객문의 화면을 준비하고 있습니다" />;
+    return <Loading />;
   }
 
   if (!isSuspended) {

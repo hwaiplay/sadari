@@ -3,6 +3,12 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.inquiry.mapper.InquiryMapper">
+    <!-- 고객문의 카테고리와 상태 코드 그룹을 조회 SQL에서 공통으로 사용한다 -->
+    <sql id="inquiryCodeBinds">
+        <bind name="inquiryCategoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_CATEGORY" />
+        <bind name="inquiryStatusCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_STATUS" />
+    </sql>
+
     <!-- 고객문의 접근 판단에 사용할 현재 회원 상태를 조회한다 -->
     <select id="getUserStat" resultType="string">
         SELECT /* getUserStat */
@@ -13,10 +19,11 @@
 
     <!-- 활성 고객문의 카테고리 코드인지 확인한다 -->
     <select id="getInquiryCategoryCnt" resultType="int">
+        <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryCategoryCnt */
                COUNT(1)
           FROM TB_CODEXD
-         WHERE COMM_CODE = 'INQR_CATG'
+         WHERE COMM_CODE = #{inquiryCategoryCode}
            AND COMD_CODE = #{inqrCatg}
            AND USEE_YSNO = 'Y'
     </select>
@@ -82,13 +89,14 @@
 
     <!-- 본인이 작성한 고객문의를 최근 순서로 조회한다 -->
     <select id="getInquiryList" resultType="org.our.sadari.inquiry.dto.InquiryDto">
+        <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryList */
                I.INQR_NUMB
              , I.INQR_CATG
-             , C.COMD_NAME AS INQR_CATG_NAME
+             , FN_GET_CODE_NAME(#{inquiryCategoryCode}, I.INQR_CATG, NULL) AS INQR_CATG_NAME
              , I.INQR_TITL
              , I.INQR_STAT
-             , S.COMD_NAME AS INQR_STAT_NAME
+             , FN_GET_CODE_NAME(#{inquiryStatusCode}, I.INQR_STAT, NULL) AS INQR_STAT_NAME
              , I.SPND_NUMB
              , I.REGI_DATE
              , I.ANSW_DATE
@@ -97,12 +105,6 @@
                  WHERE A.INQR_NUMB = I.INQR_NUMB
                    AND A.READ_YSNO = 'N') AS UNREAD_COUNT
           FROM CT_INQURY I
-     LEFT JOIN TB_CODEXD C
-            ON C.COMM_CODE = 'INQR_CATG'
-           AND C.COMD_CODE = I.INQR_CATG
-     LEFT JOIN TB_CODEXD S
-            ON S.COMM_CODE = 'INQR_STAT'
-           AND S.COMD_CODE = I.INQR_STAT
          WHERE I.USER_NUMB = #{userNumb}
       ORDER BY I.REGI_DATE DESC
              , I.INQR_NUMB DESC
@@ -111,24 +113,19 @@
 
     <!-- 본인이 작성한 고객문의 상세를 조회한다 -->
     <select id="getInquiryDtl" resultType="org.our.sadari.inquiry.dto.InquiryDto">
+        <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryDtl */
                I.INQR_NUMB
              , I.INQR_CATG
-             , C.COMD_NAME AS INQR_CATG_NAME
+             , FN_GET_CODE_NAME(#{inquiryCategoryCode}, I.INQR_CATG, NULL) AS INQR_CATG_NAME
              , I.INQR_TITL
              , I.INQR_CNTN
              , I.INQR_STAT
-             , S.COMD_NAME AS INQR_STAT_NAME
+             , FN_GET_CODE_NAME(#{inquiryStatusCode}, I.INQR_STAT, NULL) AS INQR_STAT_NAME
              , I.SPND_NUMB
              , I.REGI_DATE
              , I.ANSW_DATE
           FROM CT_INQURY I
-     LEFT JOIN TB_CODEXD C
-            ON C.COMM_CODE = 'INQR_CATG'
-           AND C.COMD_CODE = I.INQR_CATG
-     LEFT JOIN TB_CODEXD S
-            ON S.COMM_CODE = 'INQR_STAT'
-           AND S.COMD_CODE = I.INQR_STAT
          WHERE I.INQR_NUMB = #{inqrNumb}
            AND I.USER_NUMB = #{userNumb}
     </select>

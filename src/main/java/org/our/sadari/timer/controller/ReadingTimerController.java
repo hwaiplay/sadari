@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성
+ * 2026-08-20        SeungHyeon.Kang    도서별 누적시간 페이지 조회 분리
  */
 @RestController
 @RequiredArgsConstructor
@@ -43,11 +45,28 @@ public class ReadingTimerController {
      * @return 타이머 화면 요약 데이터
      */
     @GetMapping("/summary")
-    @Operation(summary = "독서 타이머 요약 조회", description = "현재 세션, 일별 독서 시간, 주간 출석과 최근 세션을 조회한다.")
+    @Operation(summary = "독서 타이머 요약 조회", description = "현재 세션, 일별 독서 시간과 주간 출석을 조회한다.")
     public ResultData getTimerSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
         // 로그인 사용자의 타이머 화면 요약 데이터를 반환한다
         return readingTimerService.getTimerSummary(userNumb);
+    }
+
+    /**
+     * 도서별 누적 독서 시간을 최근 완료 기록순으로 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param page 조회할 페이지 번호
+     * @return 현재 페이지 도서별 누적시간과 다음 페이지 여부
+     */
+    @GetMapping("/book-times")
+    @Operation(summary = "도서별 누적 독서 시간 조회", description = "최근 완료 기록순으로 한 페이지에 20권씩 조회한다.")
+    public ResultData getBookTimePage(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                    , @RequestParam(defaultValue = "1") int page) {
+
+        // 로그인 사용자의 도서별 누적 독서 시간 페이지를 반환한다
+        return readingTimerService.getBookTimePage(userNumb, page);
     }
 
     /**

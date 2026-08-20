@@ -28,8 +28,7 @@ import org.our.sadari.push.service.PushService;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
- * 2026-08-12        SeungHyeon.Kang    발송 알림 아이콘 번호 검증 추가
- * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 반영
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {

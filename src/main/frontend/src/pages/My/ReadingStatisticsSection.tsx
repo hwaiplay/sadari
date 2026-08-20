@@ -42,6 +42,7 @@ const STATUS_DISPLAY_ORDER: Record<ReadingStatusCount["reptStat"], number> = {
   READ: 1,
   STOP: 2,
 };
+const SCROLLBAR_HIDE_DELAY_MS = 650;
 const VISIBILITY_OPTIONS = ["Y", "N"] as const;
 
 type ReadingStatisticsSectionProps = {
@@ -51,6 +52,7 @@ type ReadingStatisticsSectionProps = {
 type ReadingHeatmapChartProps = {
   heatmap: ReadingHeatmap;
   onYearChange: (readYearValue: string) => void;
+  titleClassName?: string;
 };
 
 type HeatmapMonthMarker = {
@@ -124,6 +126,8 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
   const isPositionedRef = useRef(false);
   // 초기 우측 이동과 사용자의 실제 스크롤 조작을 구분할 상태 참조를 생성한다
   const hasUserIntentRef = useRef(false);
+  // 사용자가 가로 스크롤을 멈춘 뒤 표시를 숨길 타이머 참조를 생성한다
+  const scrollbarTimerRef = useRef<number | null>(null);
   // 가로 오버플로가 있을 때만 안내를 노출할 화면 상태를 생성한다
   const [isHintVisible, setIsHintVisible] = useState(false);
   // 첫 스크롤 뒤 안내 문구의 지연 페이드아웃을 적용할 화면 상태를 생성한다
@@ -192,6 +196,48 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
   useEffect(prepareOverflowMeasure, [prepareOverflowMeasure]);
 
   /**
+   * 대기 중인 스크롤바 숨김 타이머를 해제한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const clearScrollbarTimer = useCallback((): void => {
+    // 활성 타이머가 있을 때만 해제해 다음 스크롤의 숨김 시점을 다시 계산한다
+    if (scrollbarTimerRef.current !== null) {
+      window.clearTimeout(scrollbarTimerRef.current);
+      // 해제된 타이머가 다시 참조되지 않도록 빈 상태를 기록한다
+      scrollbarTimerRef.current = null;
+    }
+  }, []);
+
+  /**
+   * 가로 스크롤바를 숨김 상태로 전환한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const hideScrollbar = useCallback((): void => {
+    // 스크롤 조작이 멈춘 뒤 스크롤바가 천천히 투명해지도록 표시 상태를 해제한다
+    setIsScrollbarVisible(false);
+    // 완료된 타이머를 빈 상태로 기록한다
+    scrollbarTimerRef.current = null;
+  }, []);
+
+  /**
+   * 잔디 영역이 해제될 때 남아 있는 스크롤바 타이머를 정리한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 스크롤바 숨김 타이머 정리 함수
+   */
+  const prepareScrollCleanup = useCallback((): (() => void) => {
+    // Effect 정리 단계에서 같은 타이머 해제 함수를 실행하도록 반환한다
+    return clearScrollbarTimer;
+  }, [clearScrollbarTimer]);
+
+  // 화면 이탈 후 스크롤바 상태를 변경하지 않도록 숨김 타이머를 정리한다
+  useEffect(prepareScrollCleanup, [prepareScrollCleanup]);
+
+  /**
    * 포인터와 휠 및 키보드 입력을 사용자의 실제 스크롤 의도로 기록한다
    *
    * @author SeungHyeon.Kang
@@ -209,17 +255,25 @@ function HorizontalScrollArea({ children, hint }: HorizontalScrollAreaProps) {
    * @return 반환값이 없다
    */
   const handleHorizontalScroll = (): void => {
-    // 초기 우측 위치 설정 또는 이미 숨긴 안내에는 중복 상태 변경을 실행하지 않는다
-    if (!hasUserIntentRef.current || isDismissedRef.current) {
+    // 초기 우측 위치 설정은 사용자 조작으로 처리하지 않는다
+    if (!hasUserIntentRef.current) {
       return;
     }
 
-    // 현재 잔디에서 안내 애니메이션이 반복되지 않도록 감지 상태를 기록한다
-    isDismissedRef.current = true;
-    // 사용자가 안내를 읽을 수 있도록 첫 이동 뒤 지연 페이드아웃 상태를 적용한다
-    setIsHintDismissed(true);
-    // 실제 스크롤이 시작된 뒤에만 현재 위치를 확인할 스크롤바를 표시한다
+    // 최초 사용자 스크롤에서만 안내 문구의 페이드아웃을 시작한다
+    if (!isDismissedRef.current) {
+      // 현재 잔디에서 안내 애니메이션이 반복되지 않도록 감지 상태를 기록한다
+      isDismissedRef.current = true;
+      // 사용자가 안내를 읽을 수 있도록 첫 이동 뒤 지연 페이드아웃 상태를 적용한다
+      setIsHintDismissed(true);
+    }
+
+    // 연속 스크롤 중에는 이전 숨김 예약을 취소해 표시를 유지한다
+    clearScrollbarTimer();
+    // 실제 스크롤이 진행되는 동안 현재 위치를 확인할 스크롤바를 표시한다
     setIsScrollbarVisible(true);
+    // 마지막 스크롤 입력 이후 스크롤바가 천천히 사라지기 시작할 시점을 예약한다
+    scrollbarTimerRef.current = window.setTimeout(hideScrollbar, SCROLLBAR_HIDE_DELAY_MS);
   };
 
   // 안내가 사라지는 동안에도 같은 요소를 유지해 지연 페이드아웃을 적용한다
@@ -349,12 +403,12 @@ const getComparisonRows = (statistics: ReadingStatistics): ReadingComparisonRow[
     {
       key: "doneBooks",
       label: message("frontend.profile.readingStats.comparisonDoneBooks"),
-      currentValue: message("frontend.profile.readingStats.statusCount", [comparison.currentDoneBooks]),
-      previousValue: message("frontend.profile.readingStats.statusCount", [comparison.previousDoneBooks]),
+      currentValue: /* "{0}권" */ message("frontend.common.bookCount", [comparison.currentDoneBooks]),
+      previousValue: /* "{0}권" */ message("frontend.common.bookCount", [comparison.previousDoneBooks]),
       difference: doneBooksDifference,
       differenceLabel: getDifferenceLabel(
         doneBooksDifference,
-        message("frontend.profile.readingStats.statusCount", [Math.abs(doneBooksDifference)]),
+        /* "{0}권" */ message("frontend.common.bookCount", [Math.abs(doneBooksDifference)]),
       ),
     },
   ];
@@ -470,9 +524,10 @@ const getHeatmapMonths = (dailyList: ReadingTimeDaily[], heatmapOffset: number):
  * @author SeungHyeon.Kang
  * @param heatmap 조회 가능한 연도와 날짜별 독서 시간
  * @param onYearChange 잔디 조회 연도 변경 함수
+ * @param titleClassName 화면별 독서 잔디 제목 스타일
  * @return 연도 선택과 월별 독서 시간 잔디 및 강도 범례
  */
-export function ReadingHeatmapChart({ heatmap, onYearChange }: ReadingHeatmapChartProps) {
+export function ReadingHeatmapChart({ heatmap, onYearChange, titleClassName }: ReadingHeatmapChartProps) {
   const heatmapOffset = getHeatmapOffset(heatmap.heatmapList[0]?.readDate);
   const heatmapMonths = getHeatmapMonths(heatmap.heatmapList, heatmapOffset);
   const heatmapColumns = Math.ceil((heatmapOffset + heatmap.heatmapList.length) / 7);
@@ -542,7 +597,7 @@ export function ReadingHeatmapChart({ heatmap, onYearChange }: ReadingHeatmapCha
     <section className={styles.chartBlock}>
       {/* 독서 잔디 제목과 연도 선택 영역 */}
       <div className={styles.chartHeader}>
-        <h3 className={styles.chartHeaderTitle}>
+        <h3 className={titleClassName ?? styles.chartHeaderTitle}>
           {/* "독서 잔디" */}
           {message("frontend.profile.readingStats.heatmapTitle")}
         </h3>
@@ -604,7 +659,7 @@ const getStatusName = (reptStat: ReadingStatusCount["reptStat"]): string => {
   // 읽는 중 상태의 화면 문구를 반환한다
   if (reptStat === "READ") {
     // "읽는 중"
-    return message("frontend.profile.readingStats.statusRead");
+    return message("frontend.common.reading");
   }
 
   // 완독 상태의 화면 문구를 반환한다
@@ -995,7 +1050,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
         <span className={styles.statusName}>{getStatusName(status.reptStat)}</span>
         <strong className={styles.statusCount}>
           {/* "{0}권" */}
-          {message("frontend.profile.readingStats.statusCount", [status.reptCnt])}
+          {message("frontend.common.bookCount", [status.reptCnt])}
         </strong>
       </div>
     );
@@ -1010,9 +1065,10 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
    * @return 올해 오래 읽은 책 한 항목
    */
   const renderTopBook = (bookTime: ReadingBookTime, index: number) => {
-    // 제목과 저자가 비어 있어도 순위 항목의 구조가 유지되도록 대체 문구를 결정한다
+    // "제목 없는 책"
     const bookTitle = bookTime.bookTitl?.trim() || message("frontend.profile.readingStats.unknownBook");
-    const bookAuthor = bookTime.bookAthr?.trim() || message("frontend.profile.readingStats.unknownAuthor");
+    // "저자 정보 없음"
+    const bookAuthor = bookTime.bookAthr?.trim() || message("frontend.common.unknownAuthor");
     // 공개 프로필 응답처럼 독후감 번호가 없는 경우에는 링크를 만들지 않도록 안전한 번호를 계산한다
     const reportNumber = bookTime.reptNumb ?? 0;
     // 본인 화면에서 양수 독후감 번호가 확인된 항목만 링크 버튼으로 제공한다
@@ -1111,7 +1167,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
         </div>
         <strong className={styles.ratingCount}>
           {/* "{0}권" */}
-          {message("frontend.profile.readingStats.statusCount", [rating.reptCnt])}
+          {message("frontend.common.bookCount", [rating.reptCnt])}
         </strong>
       </div>
     );
@@ -1156,8 +1212,8 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
   const renderVisibilityOption = (publicYsno: "Y" | "N") => {
     // 공개 여부 코드에 대응하는 화면 문구 키를 결정한다
     const labelKey = publicYsno === "Y"
-      ? "frontend.profile.readingStats.public"
-      : "frontend.profile.readingStats.private";
+      ? /* "공개" */ "frontend.common.public"
+      : /* "비공개" */ "frontend.common.private";
     // 선택 여부가 시각적으로 구분되는 공개 범위 버튼을 반환한다
     return (
       <button
@@ -1364,7 +1420,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
       {isOwner && statistics && (
         <button className={styles.settingButton} type="button" onClick={handleSettingsOpen}>
           {/* "공개 여부" */}
-          {message("frontend.profile.readingStats.settingButton")}
+          {message("frontend.common.visibility")}
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
             <path d="M5.19751 11.62L9.00083 7.81668C9.44999 7.36752 9.44999 6.63252 9.00083 6.18335L5.19751 2.38" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
           </svg>
@@ -1381,7 +1437,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
             <header className={styles.modalHeader}>
               <h2 className={styles.modalTitle} id="reading-statistics-settings-title">
                 {/* "공개 여부" */}
-                {message("frontend.profile.readingStats.settingTitle")}
+                {message("frontend.common.visibility")}
               </h2>
               <button
                 className={styles.modalClose}
@@ -1399,7 +1455,7 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
               {/* 독서 통계 공개 여부 선택과 안내 영역 */}
               <fieldset
                 className={styles.settingFieldset}
-                aria-label={message("frontend.profile.readingStats.visibilityTitle")}
+                aria-label={/* "공개 여부" */ message("frontend.common.visibility")}
                 aria-describedby="reading-statistics-visibility-help"
               >
                 <p className={styles.settingHelp} id="reading-statistics-visibility-help">

@@ -14,7 +14,7 @@
  * 2026-08-03        HanWon.Jang    댓글 좋아요 API 응답 타입 정의
  */
 
-import type { ResultData } from "@/app/api/resultData";
+import type { PageData, ResultData } from "@/app/api/resultData";
 
 /**
  * 댓글 정보 타입
@@ -94,6 +94,6 @@ export type ReplyLikeResponse = ResultData<
 /**
  * 댓글 목록 조회 후 리턴 타입
  */
-export type GetReplyListResponse = ResultData<ReplyDtoType[]> & {
-    data: ReplyDtoType[];
+export type GetReplyListResponse = ResultData<PageData<ReplyDtoType>> & {
+    data: PageData<ReplyDtoType>;
 };

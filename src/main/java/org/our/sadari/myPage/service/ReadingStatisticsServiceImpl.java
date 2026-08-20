@@ -17,6 +17,8 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.myPage.dto.ReadingHeatmapDto;
+import org.our.sadari.myPage.dto.ReadingHeatmapRowDto;
+import org.our.sadari.myPage.dto.ReadingStatisticsAggregateDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsQueryDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
@@ -33,12 +35,8 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    연도별 잔디 조회와 공개 통계 조회 추가
- * 2026-08-14        SeungHyeon.Kang    연속 기록과 책별 시간 및 별점과 연도 비교 통계 추가
- * 2026-08-14        SeungHyeon.Kang    별점 분포를 소수점 버림한 1점 단위로 변경
- * 2026-08-14        SeungHyeon.Kang    올해 상위 도서를 독후감 번호와 함께 세 권으로 제한
- * 2026-08-14        SeungHyeon.Kang    독서 잔디 전용 조회와 공통 구성 로직 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 독서 통계 처리
+ * 2026-08-15        SeungHyeon.Kang    잔디와 통계 집계 SQL 왕복 통합
  */
 @Service
 @Transactional(readOnly = true)
@@ -264,25 +262,37 @@ public class ReadingStatisticsServiceImpl implements ReadingStatisticsService {
             // 임의 연도 요청은 호출부가 공통 오류로 처리하도록 빈 결과를 반환한다
             return null;
         }
-        // 독서 상태 비율은 선택 연도와 별개인 현재 서재 상태 전체를 기준으로 조회한다
-        List<ReadingStatisticsDto.Status> storedStatusList = readingStatisticsMapper.getStatusCountList(userNumb
-                                                                                                      , Constant.REPORT_STAT_READ
-                                                                                                      , Constant.REPORT_STAT_DONE
-                                                                                                      , Constant.REPORT_STAT_STOP);
-        // 전체 타이머 집계 날짜를 현재 및 최장 연속 독서일 계산용으로 조회한다
-        List<LocalDate> readingDateList = readingStatisticsMapper.getReadingDateList(userNumb);
         // 현재 연도와 전년도 같은 기간을 사용하는 추가 통계 조회 조건을 구성한다
         ReadingStatisticsQueryDto statisticsQuery = getStatisticsQuery(userNumb, today);
+        // 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 번에 집계한다
+        ReadingStatisticsAggregateDto aggregate = readingStatisticsMapper.getStatsAggregate(statisticsQuery);
         // 현재 연도에 완료한 타이머 시간을 도서별로 합산한 상위 세 권을 조회한다
         List<ReadingStatisticsDto.BookTime> topBookList = readingStatisticsMapper.getTopBookTimeList(statisticsQuery);
-        // 전체 독후감의 유효한 양수 별점을 점수별로 조회한다
-        List<ReadingStatisticsDto.Rating> storedRatingList = readingStatisticsMapper.getRatingCountList(userNumb);
-        // 현재 연도와 전년도 같은 기간의 독서 기록을 조회한다
-        ReadingStatisticsDto.YearComparison yearComparison = readingStatisticsMapper.getYearComparison(statisticsQuery);
+        // 통합 집계가 비어도 화면 구조를 유지할 기본값 객체를 생성한다
+        ReadingStatisticsAggregateDto safeAggregate = StringUtil.isEmpty(aggregate)
+                ? new ReadingStatisticsAggregateDto()
+                : aggregate;
+        // 상태 집계 컬럼을 기존 화면 목록 구조로 변환한다
+        List<ReadingStatisticsDto.Status> storedStatusList = List.of(
+                new ReadingStatisticsDto.Status(Constant.REPORT_STAT_READ, safeAggregate.getReadCount())
+              , new ReadingStatisticsDto.Status(Constant.REPORT_STAT_DONE, safeAggregate.getDoneCount())
+              , new ReadingStatisticsDto.Status(Constant.REPORT_STAT_STOP, safeAggregate.getStopCount())
+        );
+        // 별점 집계 컬럼을 기존 화면 목록 구조로 변환한다
+        List<ReadingStatisticsDto.Rating> storedRatingList = List.of(
+                new ReadingStatisticsDto.Rating(BigDecimal.ZERO, safeAggregate.getRatingZeroCount())
+              , new ReadingStatisticsDto.Rating(BigDecimal.ONE, safeAggregate.getRatingOneCount())
+              , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(2L), safeAggregate.getRatingTwoCount())
+              , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(3L), safeAggregate.getRatingThreeCount())
+              , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(4L), safeAggregate.getRatingFourCount())
+              , new ReadingStatisticsDto.Rating(BigDecimal.valueOf(5L), safeAggregate.getRatingFiveCount())
+        );
+        // 연도 비교 집계 컬럼을 기존 화면 응답 구조로 변환한다
+        ReadingStatisticsDto.YearComparison yearComparison = new ReadingStatisticsDto.YearComparison(statisticsQuery.getCurrentYear(), statisticsQuery.getPreviousYear(), safeAggregate.getCurrentReadSecs(), safeAggregate.getPreviousReadSecs(), safeAggregate.getCurrentReadDays(), safeAggregate.getPreviousReadDays(), safeAggregate.getCurrentDoneBooks(), safeAggregate.getPreviousDoneBooks());
         // 읽는 중, 완독, 중단 상태가 0건이어도 모두 표시할 상태 목록을 생성한다
         List<ReadingStatisticsDto.Status> statusList = getStatusList(storedStatusList);
-        // 오늘 또는 어제까지 이어진 현재 기록과 전체 최장 기록을 계산한다
-        ReadingStatisticsDto.Streak streak = getStreak(readingDateList, today);
+        // SQL이 계산한 현재 및 최장 연속 독서일을 화면 응답으로 변환한다
+        ReadingStatisticsDto.Streak streak = new ReadingStatisticsDto.Streak(Math.max(0, safeAggregate.getCurrentStreakDays()), Math.max(0, safeAggregate.getLongestStreakDays()));
         // 책별 시간이 음수가 되거나 목록 수가 세 권을 넘지 않도록 화면 응답을 보정한다
         List<ReadingStatisticsDto.BookTime> safeTopBookList = getTopBookList(topBookList, includeReportLink);
         // 0건인 별점도 막대그래프에 표시하도록 소수점 버림한 1점 단위 전체 목록을 구성한다
@@ -329,8 +339,52 @@ public class ReadingStatisticsServiceImpl implements ReadingStatisticsService {
     private ReadingHeatmapDto getHeatmap(Long userNumb, Integer readYear, LocalDate today) {
         // 현재 연도는 기록이 없어도 항상 조회할 수 있도록 기준값으로 보관한다
         int currentYear = today.getYear();
-        // 저장된 독서 기록이 존재하는 연도를 최근 연도부터 조회한다
-        List<Integer> storedYearList = readingStatisticsMapper.getReadingYearList(userNumb);
+        // 연도가 없으면 현재 연도를 기본 조회 대상으로 사용한다
+        int selectedYear = StringUtil.isEmpty(readYear) ? currentYear : readYear;
+
+        // 미래 연도와 LocalDate가 지원하지 않는 연도는 DB 조회 전에 차단한다
+        if (selectedYear < 1 || selectedYear > currentYear) {
+            // 호출부가 잘못된 연도 요청으로 처리하도록 빈 결과를 반환한다
+            return null;
+        }
+
+        // 선택 연도의 첫날부터 잔디 원천 데이터를 조회한다
+        LocalDate periodStart = LocalDate.of(selectedYear, 1, 1);
+        // 현재 연도는 오늘까지, 과거 연도는 마지막 날까지 조회한다
+        LocalDate periodEnd = selectedYear == currentYear ? today : LocalDate.of(selectedYear, 12, 31);
+        // 조회 가능한 연도와 선택 연도의 일별 독서 시간을 한 SQL에서 조회한다
+        List<ReadingHeatmapRowDto> heatmapRowList = readingStatisticsMapper.getHeatmapRowList(userNumb
+                                                                                            , periodStart
+                                                                                            , periodEnd);
+        // 저장된 연도 행을 최근 연도 순서로 보관할 목록을 생성한다
+        List<Integer> storedYearList = new ArrayList<>();
+        // 선택 연도 일별 시간 행을 잔디 변환용 목록에 보관한다
+        List<ReadingStatisticsDto.Daily> storedDailyList = new ArrayList<>();
+
+        // 통합 조회 행을 연도 목록과 일별 독서 시간으로 구분한다
+        if (!StringUtil.isEmpty(heatmapRowList)) {
+            // 각 행 유형에 맞는 화면 원천 목록을 구성한다
+            for (ReadingHeatmapRowDto row : heatmapRowList) {
+                // 연도 행은 조회 가능한 연도 목록에 추가한다
+                if (ReadingHeatmapRowDto.ROW_TYPE_YEAR.equals(row.getRowType())) {
+                    // 값이 있는 기록 연도만 선택 목록 원천에 추가한다
+                    if (!StringUtil.isEmpty(row.getReadYear())) {
+                        // 기록이 존재하는 연도를 추가한다
+                        storedYearList.add(row.getReadYear());
+                    }
+
+                    continue;
+                }
+
+                // 일별 행은 날짜와 시간을 선택 연도 잔디 원천으로 추가한다
+                if (ReadingHeatmapRowDto.ROW_TYPE_DAILY.equals(row.getRowType())
+                        && !StringUtil.isEmpty(row.getReadDate())) {
+                    // 선택 날짜의 독서 시간을 잔디 원천 목록에 추가한다
+                    storedDailyList.add(new ReadingStatisticsDto.Daily(row.getReadDate(), row.getReadSecs()));
+                }
+            }
+        }
+
         // 화면에 전달할 연도 목록은 현재 연도를 첫 항목으로 보장한다
         List<Integer> availableYears = new ArrayList<>();
         // 현재 연도는 빈 잔디도 조회할 수 있도록 항상 추가한다
@@ -352,23 +406,12 @@ public class ReadingStatisticsServiceImpl implements ReadingStatisticsService {
 
         }
 
-        // 연도가 없으면 현재 연도를 기본 조회 대상으로 사용한다
-        int selectedYear = StringUtil.isEmpty(readYear) ? currentYear : readYear;
-
         // 현재 연도 또는 실제 기록이 존재하는 연도만 조회할 수 있다
         if (!availableYears.contains(selectedYear)) {
             // 임의 연도 요청은 호출부가 공통 오류로 처리하도록 빈 결과를 반환한다
             return null;
         }
 
-        // 선택 연도의 첫날부터 잔디를 구성한다
-        LocalDate periodStart = LocalDate.of(selectedYear, 1, 1);
-        // 현재 연도는 오늘까지, 과거 연도는 마지막 날까지 조회한다
-        LocalDate periodEnd = selectedYear == currentYear ? today : LocalDate.of(selectedYear, 12, 31);
-        // 잔디를 구성할 선택 연도의 일별 독서 시간을 기존 Mapper로 조회한다
-        List<ReadingStatisticsDto.Daily> storedDailyList = readingStatisticsMapper.getDailyTimeList(userNumb
-                                                                                                  , periodStart
-                                                                                                  , periodEnd);
         // 저장된 날짜만 빠르게 찾을 수 있도록 날짜별 독서 시간을 보관한다
         Map<LocalDate, Long> dailyTimeMap = new HashMap<>();
 
@@ -521,56 +564,11 @@ public class ReadingStatisticsServiceImpl implements ReadingStatisticsService {
         query.setCompletedStat(Constant.TIMER_STAT_COMPLETED);
         // 완독한 독후감만 연도별 완료 권수에 포함하도록 상태를 설정한다
         query.setDoneStat(Constant.REPORT_STAT_DONE);
+        // 연속 독서 기록이 오늘 또는 어제까지 이어졌는지 판정할 기준일을 설정한다
+        query.setToday(today);
 
         // 현재 및 이전 연도의 같은 기간이 구성된 조회 조건을 반환한다
         return query;
-    }
-
-    /**
-     * 전체 독서 날짜에서 현재 및 최장 연속 독서일을 계산한다
-     *
-     * @author SeungHyeon.Kang
-     * @param readingDateList 타이머 확정 시간이 존재하는 날짜 목록
-     * @param today 현재 연속 기록 판정 기준일
-     * @return 현재 및 최장 연속 독서일
-     */
-    private ReadingStatisticsDto.Streak getStreak(List<LocalDate> readingDateList, LocalDate today) {
-        LocalDate previousDate = null;
-        int runningDays = 0;
-        int longestDays = 0;
-
-        // 날짜순 원천 목록에서 중복과 미래 날짜를 제외하고 연속 구간을 계산한다
-        if (!StringUtil.isEmpty(readingDateList)) {
-            // 저장된 독서 날짜를 오래된 순서대로 연결한다
-            for (LocalDate readDate : readingDateList) {
-                // 날짜가 없거나 미래 또는 직전 날짜와 중복인 행은 연속 기록에서 제외한다
-                if (StringUtil.isEmpty(readDate) || readDate.isAfter(today) || readDate.equals(previousDate)) {
-
-                    continue;
-                }
-
-                // 직전 독서일의 다음 날이면 현재 연속 구간을 이어간다
-                if (!StringUtil.isEmpty(previousDate) && readDate.equals(previousDate.plusDays(1L))) {
-                    runningDays++;
-                } else {
-                    // 하루 이상 비어 있으면 새 연속 구간을 시작한다
-                    runningDays = 1;
-                }
-
-                // 지금까지 확인한 연속 구간의 최대 길이를 보관한다
-                longestDays = Math.max(longestDays, runningDays);
-                // 다음 날짜와 연속 여부를 비교할 최근 독서일을 갱신한다
-                previousDate = readDate;
-            }
-
-        }
-
-        // 오늘 아직 읽지 않았어도 어제까지 이어진 기록은 현재 연속으로 유지한다
-        boolean isCurrent = !StringUtil.isEmpty(previousDate) && !previousDate.isBefore(today.minusDays(1L));
-        int currentDays = isCurrent ? runningDays : 0;
-
-        // 현재 및 전체 최장 연속 독서일을 반환한다
-        return new ReadingStatisticsDto.Streak(currentDays, longestDays);
     }
 
     /**

@@ -29,6 +29,7 @@
 
     <!-- 사용자 번호로 회원과 프로필 이미지 정보를 조회한다. -->
     <select id="getUserByNumb" parameterType="long" resultType="org.our.sadari.user.dto.UserDto">
+        <bind name="codeUserStat" value="@org.our.sadari.global.common.constant.Constant@CODE_USER_STAT" />
         SELECT /* getUserByNumb */
                U.USER_NUMB
              , U.PROF_NUMB
@@ -40,6 +41,7 @@
              , U.USER_PROV
              , U.USER_ROLE
              , U.USER_STAT
+             , FN_GET_CODE_NAME(#{codeUserStat}, U.USER_STAT, NULL) AS USER_STAT_NAME
              , U.ONBD_YSNO
              , U.WTHD_DATE
              , U.DELT_DATE
@@ -163,9 +165,9 @@
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getUserInterestCatalog */
-               CATEGORY.COMD_NAME AS INTR_CNAM
+               FN_GET_CODE_NAME(CATEGORY.COMM_CODE, CATEGORY.COMD_CODE, NULL) AS INTR_CNAM
              , DETAIL.COMD_CODE AS INTR_CODE
-             , DETAIL.COMD_NAME AS INTR_NAME
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
              , CATEGORY.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_CODEXD CATEGORY
@@ -186,9 +188,9 @@
     <select id="getUserInterestList" parameterType="long" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getUserInterestList */
-               PARENT.COMD_NAME AS INTR_CNAM
+               FN_GET_CODE_NAME(PARENT.COMM_CODE, PARENT.COMD_CODE, NULL) AS INTR_CNAM
              , INTEREST.INTR_CODE
-             , DETAIL.COMD_NAME AS INTR_NAME
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
              , PARENT.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_USINTR INTEREST

@@ -28,9 +28,9 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-07-29        HanWon.Jang        댓글 등록 알림 중복 차단 제외
- * 2026-08-12        SeungHyeon.Kang    발송 알림 아이콘 번호 저장
- * 2026-08-12        SeungHyeon.Kang    알림 상황 기준 아이콘 조회 전환
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 정리
  * 2026-08-14        SeungHyeon.Kang    사용자 알림 10개 단위 조회 반영
+ * 2026-08-20        SeungHyeon.Kang    타이머 알림 중복 제외
  */
 @Service
 @RequiredArgsConstructor
@@ -264,9 +264,11 @@ public class AlimServiceImpl implements AlimService {
 
         // 댓글은 등록 건마다 별도 이벤트이므로 같은 작성자와 독후감이어도 알림을 모두 저장한다
         boolean isReplyReportAlim = Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode);
+        // 타이머 알림은 세션마다 별도 이벤트이므로 한 시간 안에도 각각 저장한다
+        boolean isBookTimerOverAlim = Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER.equals(tempCode);
 
         // 좋아요와 팔로우처럼 반복 조작으로 발생할 수 있는 동일 알림만 1시간 동안 중복 차단한다
-        if (!isReplyReportAlim && alimMapper.dupSameAlimInHour(alim) > 0) {
+        if (!isReplyReportAlim && !isBookTimerOverAlim && alimMapper.dupSameAlimInHour(alim) > 0) {
             // 알림 수신자와 템플릿 식별값으로 TB_ALTEMP의 사용 가능한 템플릿을 찾고, #{key} 형식의 상용구를 Map 값으로 치환해 TB_ALIMXX에 저장 결과를 성공 응답으로 반환한다
             return ResultData.success(alim);
         }

@@ -13,6 +13,15 @@
     <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
+        WITH PARENTPAGE AS (
+             SELECT P.REPL_NUMB
+               FROM TB_REPLXX P
+              WHERE P.REPT_NUMB = #{reptNumb}
+                AND P.UPER_NUMB IS NULL
+           ORDER BY P.REGI_DATE DESC
+                  , P.REPL_NUMB DESC
+              LIMIT #{pageOffset}, #{pageLimit}
+        )
         SELECT /* getReplyList */
                R.REPT_NUMB
              , R.REPL_NUMB
@@ -46,6 +55,8 @@
                     ELSE #{commYes}
                 END AS LIKE_YSNO
           FROM TB_REPLXX R
+    INNER JOIN PARENTPAGE PAGE
+            ON PAGE.REPL_NUMB = COALESCE(R.UPER_NUMB, R.REPL_NUMB)
      LEFT JOIN TM_USERXM U
             ON R.USER_NUMB = U.USER_NUMB
      LEFT JOIN TM_FILEXM F

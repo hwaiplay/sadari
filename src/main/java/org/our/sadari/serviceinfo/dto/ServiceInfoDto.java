@@ -11,8 +11,7 @@ import lombok.Data;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-10        SeungHyeon.Kang    최초 생성
- * 2026-08-10        SeungHyeon.Kang    최근 수정 일시 응답 추가
+ * 2026-08-10        SeungHyeon.Kang    최초 생성 및 수정 일시 추가
  */
 @Data
 public class ServiceInfoDto {

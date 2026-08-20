@@ -51,8 +51,7 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-14        SeungHyeon.Kang    최초 생성
- * 2026-08-06        SeungHyeon.Kang    날짜별 이미지 저장과 교체 및 영구 탈퇴 파일 삭제 추가
- * 2026-08-06        SeungHyeon.Kang    JPEG EXIF 방향을 픽셀에 반영하는 이미지 정규화 추가
+ * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 처리 추가
  * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
  */
 @Service

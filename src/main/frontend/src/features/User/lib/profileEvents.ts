@@ -4,10 +4,8 @@
  * @author HanWon.Jang
  */
 import type { UserProfile } from "@/features/User/api/userApi";
-
-export const USER_PROFILE_UPDATED_EVENT = "sadari:user-profile-updated";
-
-type UserProfileUpdatedEvent = CustomEvent<UserProfile>;
+import { queryClient } from "@/app/query/queryClient";
+import { queryKeys } from "@/app/query/queryKeys";
 
 /**
  * notify User Profile Updated 사용자 동작을 처리한다
@@ -17,24 +15,6 @@ type UserProfileUpdatedEvent = CustomEvent<UserProfile>;
  * @return 반환값이 없다
  */
 export function notifyUserProfileUpdated(profile: UserProfile) {
-
-  window.dispatchEvent(
-    new CustomEvent<UserProfile>(USER_PROFILE_UPDATED_EVENT, {
-      detail: profile,
-    }),
-  );
-}
-
-/**
- * is User Profile Updated Event 여부를 판정한다
- *
- * @author HanWon.Jang
- * @param event event 입력값
- * @return 판정 결과
- */
-export function isUserProfileUpdatedEvent(
-  event: Event,
-): event is UserProfileUpdatedEvent {
-
-  return event.type === USER_PROFILE_UPDATED_EVENT && "detail" in event;
+  // 프로필 저장 결과를 공통 Query 캐시에 반영해 모든 화면을 함께 갱신한다
+  queryClient.setQueryData(queryKeys.myProfile, profile);
 }

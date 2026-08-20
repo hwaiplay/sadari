@@ -97,14 +97,14 @@ function SettingsPage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (
     /* 사용자 설정 메뉴 전체 영역 */
     <main className={styles.page}>
       {/* 관리자 사용자 메뉴에서 조회한 설정 하위 메뉴 영역 */}
-      <section className={styles.menu} aria-label="설정 메뉴">
+      <section className={styles.menu} aria-label={message("frontend.settings.menuLabel")}>
         {hasError && (
           <p className={styles.statusMessage}>{message("frontend.common.tryAgain")}</p>
         )}

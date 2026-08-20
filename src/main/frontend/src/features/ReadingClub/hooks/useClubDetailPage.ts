@@ -64,7 +64,7 @@ export const useClubDetailPage = () => {
   const handleLoadError = useCallback((error: unknown): void => {
     void sweetError(
       message("frontend.readingClub.error.fetchTitle"),
-      getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+      getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
     );
   }, []);
 
@@ -110,7 +110,7 @@ export const useClubDetailPage = () => {
       .then(loadPage)
       .catch((error: unknown) => void sweetError(
         message("frontend.readingClub.error.joinTitle"),
-        getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       ));
   };
 
@@ -172,7 +172,7 @@ export const useClubDetailPage = () => {
       icon: "warning",
       title: message("frontend.readingClub.detail.deleteConfirmTitle"),
       text: message("frontend.readingClub.detail.deleteConfirmDescription"),
-      confirmButtonText: message("frontend.readingClub.detail.delete"),
+      confirmButtonText: /* "삭제하기" */ message("frontend.common.delete"),
       cancelButtonText: message("frontend.common.cancel"),
     });
 

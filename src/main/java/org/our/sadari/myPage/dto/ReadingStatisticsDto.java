@@ -16,10 +16,7 @@ import lombok.NoArgsConstructor;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    연속 독서와 책별 시간 및 별점과 연도 비교 통계 추가
- * 2026-08-14        SeungHyeon.Kang    별점 분포를 소수점 버림한 1점 단위로 변경
- * 2026-08-14        SeungHyeon.Kang    올해 상위 도서의 독후감 이동 번호 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 독서 통계 확장
  */
 @Data
 @Schema(description = "본인 및 공개 프로필 독서 통계 DTO")

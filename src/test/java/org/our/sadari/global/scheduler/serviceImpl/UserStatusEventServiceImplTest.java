@@ -29,8 +29,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    정지 동기화 완료와 전달 이벤트 삭제 검증으로 변경
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 이벤트 완료 검증
  */
 @ExtendWith(MockitoExtension.class)
 class UserStatusEventServiceImplTest {

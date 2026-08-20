@@ -32,10 +32,10 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 API 추가
- * 2026-08-01        Hanwon.Jang        상태별 공개 및 평점 저장 정책 추가
+ * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 API 추가
  * 2026-08-11        SeungHyeon.Kang    다중 탭 독후감 수정 충돌 409 응답 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 API 반영
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 API
  */
 @Slf4j
 @RestController
@@ -55,15 +55,17 @@ public class ReportController {
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param bookKeyword 책 제목 또는 작가명 검색어
      * @param sortType 목록 정렬 유형
+     * @param page 조회할 페이지 번호
      * @return 독후감 목록 조회 결과
      */
     @GetMapping("/getBookList")
     @Operation(summary = "내 독후감 목록 조회", description = "로그인 사용자의 독후감을 책 제목 또는 작가명 검색어와 정렬 조건으로 조회한다.")
     public ResultData getBookList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @Parameter(description = "책 제목 또는 작가명 검색어", example = "용의자") @RequestParam(value = "bookKeyword", required = false) String bookKeyword
-                                , @Parameter(description = "정렬 유형", example = Constant.SORT_END_DATE_DESC) @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType) {
+                                , @Parameter(description = "정렬 유형", example = Constant.SORT_END_DATE_DESC) @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType
+                                , @Parameter(description = "조회할 페이지 번호", example = "1") @RequestParam(value = "page", defaultValue = "1") int page) {
         // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회 결과를 반환한다
-        return reportService.getBookList(userNumb, bookKeyword, sortType);
+        return reportService.getBookPage(userNumb, bookKeyword, sortType, page);
     }
 
     /**
@@ -107,14 +109,23 @@ public class ReportController {
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param isbn 공개 독후감을 조회할 도서 ISBN
+     * @param sortType 공개 독후감 정렬 코드
+     * @param reptStat 공개 독후감 상태 필터
+     * @param page 조회할 페이지 번호
      * @return 공개 독후감 목록 조회 결과
      */
     @GetMapping("/publicReports/by-isbn")
-    @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서에 대해 활성 사용자가 공개한 독후감을 팔로우 작성자 우선으로 조회한다.")
+    @Operation(summary = "ISBN 공개 독후감 목록 조회", description = "해당 ISBN 도서의 공개 독후감을 관계순과 최신순 및 별점순 및 추천순으로 조회한다.")
     public ResultData getPublicReportsByIsbn(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
-                                           , @Parameter(description = "공개 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn) {
+                                           , @Parameter(description = "공개 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn
+                                           , @Parameter(description = "공개 독후감 정렬 코드", example = "RELATION_DESC")
+                                             @RequestParam(value = "sortType", defaultValue = Constant.SORT_RELATION_DESC) String sortType
+                                           , @Parameter(description = "독서 상태 필터", example = "DONE")
+                                             @RequestParam(value = "reptStat", defaultValue = "ALL") String reptStat
+                                           , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                             @RequestParam(value = "page", defaultValue = "1") int page) {
         // ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회 결과를 반환한다
-        return reportService.getPublicReportsByIsbn(userNumb, isbn);
+        return reportService.getPublicReportsByIsbn(userNumb, isbn, sortType, reptStat, page);
     }
 
     /**

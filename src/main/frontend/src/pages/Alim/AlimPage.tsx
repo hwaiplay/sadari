@@ -3,10 +3,10 @@ import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { message } from "@/app/messages/message";
 import {
-  notifyFirebasePushEnabled,
   requestFirebaseToken,
   requestPushPermission,
 } from "@/app/pwa/firebaseMessaging";
+import { notifyFirebasePushEnabled } from "@/app/pwa/pushEvents";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import {
@@ -434,17 +434,18 @@ function AlimPage() {
   };
 
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   return (
     /* 알림 설정과 수신 내역 전체 영역 */
     <main className={styles.page}>
-      {/* 푸시 알림 설정과 전체 삭제 영역 */}
+      {/* 알림센터 페이지 설명과 알림 설정 및 전체 삭제 영역 */}
       <section className={styles.header}>
-        <div>
-          <p className={styles.title}>{message("frontend.alim.subtitle")}</p>
-        </div>
+        <p className={styles.description}>
+          {/* "내게 온 소식을 확인해보세요" */}
+          {message("frontend.alim.subtitle")}
+        </p>
         <div className={styles.headerActions}>
           <button
             className={pushButtonClass}

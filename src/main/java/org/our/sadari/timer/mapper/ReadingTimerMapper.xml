@@ -21,9 +21,22 @@
 
     <!-- 완료되지 않은 사용자 타이머 한 건을 조회한다. -->
     <select id="getActiveTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
-        SELECT /* getActiveTimerDtl */ TIMER.TMRX_NUMB, TIMER.USER_NUMB, TIMER.REPT_NUMB, TIMER.TMRX_STAT,
-               TIMER.STRT_DATE, TIMER.LAST_STRT, TIMER.ENDX_DATE, TIMER.READ_SECS,
-               TIMER.REGI_DATE, TIMER.UPDT_DATE, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
+        SELECT /* getActiveTimerDtl */
+               TIMER.TMRX_NUMB
+             , TIMER.USER_NUMB
+             , TIMER.REPT_NUMB
+             , TIMER.TMRX_STAT
+             , TIMER.TARG_SECS
+             , TIMER.READ_SECS
+             , TIMER.ALRM_DATE
+             , TIMER.SEND_DATE
+             , TIMER.STRT_DATE
+             , TIMER.LAST_STRT
+             , TIMER.ENDX_DATE
+             , TIMER.REGI_DATE
+             , TIMER.UPDT_DATE
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_CVIM
           FROM TM_RDTMRX TIMER
      LEFT JOIN TM_REPORT REPORT ON REPORT.REPT_NUMB = TIMER.REPT_NUMB
      LEFT JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = REPORT.BOOK_NUMB
@@ -35,8 +48,20 @@
 
     <!-- 사용자 소유 타이머 한 건을 조회한다. -->
     <select id="getTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
-        SELECT /* getTimerDtl */ TMRX_NUMB, USER_NUMB, REPT_NUMB, TMRX_STAT, STRT_DATE, LAST_STRT,
-               ENDX_DATE, READ_SECS, REGI_DATE, UPDT_DATE
+        SELECT /* getTimerDtl */
+               TMRX_NUMB
+             , USER_NUMB
+             , REPT_NUMB
+             , TMRX_STAT
+             , TARG_SECS
+             , READ_SECS
+             , ALRM_DATE
+             , SEND_DATE
+             , STRT_DATE
+             , LAST_STRT
+             , ENDX_DATE
+             , REGI_DATE
+             , UPDT_DATE
           FROM TM_RDTMRX
          WHERE USER_NUMB = #{userNumb}
            AND TMRX_NUMB = #{tmrxNumb}
@@ -66,6 +91,38 @@
       ORDER BY TIMER.ENDX_DATE DESC, TIMER.TMRX_NUMB DESC
     </select>
 
+    <!-- 보존 중인 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회한다. -->
+    <select id="getBookTimeList" resultType="org.our.sadari.timer.dto.ReadingTimerDto$BookTime">
+        SELECT /* getBookTimeList */
+               CAST(SUBSTRING_INDEX(
+                   GROUP_CONCAT(REPORT.REPT_NUMB ORDER BY TIMER.ENDX_DATE DESC, TIMER.TMRX_NUMB DESC)
+                 , ','
+                 , 1
+               ) AS UNSIGNED) AS REPT_NUMB
+             , REPORT.BOOK_NUMB
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+             , SUM(GREATEST(TIMER.READ_SECS, 0)) AS READ_SECS
+             , MAX(TIMER.ENDX_DATE) AS LAST_READ_DATE
+          FROM TM_RDTMRX TIMER
+          JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = TIMER.REPT_NUMB
+           AND REPORT.USER_NUMB = TIMER.USER_NUMB
+          JOIN TM_BKINFO BOOK
+            ON BOOK.BOOK_NUMB = REPORT.BOOK_NUMB
+         WHERE TIMER.USER_NUMB = #{userNumb}
+           AND TIMER.TMRX_STAT = #{completedStat}
+           AND TIMER.READ_SECS <![CDATA[>]]> 0
+      GROUP BY REPORT.BOOK_NUMB
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+      ORDER BY LAST_READ_DATE DESC
+             , REPORT.BOOK_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
+    </select>
+
     <!-- 월요일부터 일요일까지 저장된 일별 독서 시간을 조회한다. -->
     <select id="getDailyList" resultType="org.our.sadari.timer.dto.ReadingTimerDto$Daily">
         SELECT /* getDailyList */ READ_DATE, READ_SECS
@@ -78,23 +135,95 @@
     <!-- 새 독서 타이머 세션을 등록한다. -->
     <insert id="setTimer" useGeneratedKeys="true" keyProperty="tmrxNumb" keyColumn="TMRX_NUMB">
         /* setTimer */
-        INSERT INTO TM_RDTMRX (USER_NUMB, REPT_NUMB, TMRX_STAT, STRT_DATE, LAST_STRT,
-                               READ_SECS, REGI_DATE, UPDT_DATE)
-        VALUES (#{userNumb}, #{reptNumb}, #{tmrxStat}, #{strtDate}, #{lastStrt},
-                #{readSecs}, #{regiDate}, #{updtDate})
+        INSERT INTO TM_RDTMRX (
+               USER_NUMB
+             , REPT_NUMB
+             , TMRX_STAT
+             , TARG_SECS
+             , READ_SECS
+             , ALRM_DATE
+             , SEND_DATE
+             , STRT_DATE
+             , LAST_STRT
+             , REGI_DATE
+             , UPDT_DATE
+        ) VALUES (
+               #{userNumb}
+             , #{reptNumb}
+             , #{tmrxStat}
+             , #{targSecs}
+             , #{readSecs}
+             , #{alrmDate}
+             , #{sendDate}
+             , #{strtDate}
+             , #{lastStrt}
+             , #{regiDate}
+             , #{updtDate}
+        )
     </insert>
 
     <!-- 상태 전환으로 확정된 세션 값을 수정한다. -->
     <update id="uptTimer">
         UPDATE /* uptTimer */
                TM_RDTMRX
-           SET TMRX_STAT = #{tmrxStat},
-               LAST_STRT = #{lastStrt},
-               ENDX_DATE = #{endxDate},
-               READ_SECS = #{readSecs},
-               UPDT_DATE = #{updtDate}
+           SET TMRX_STAT = #{tmrxStat}
+             , READ_SECS = #{readSecs}
+             , ALRM_DATE = #{alrmDate}
+             , LAST_STRT = #{lastStrt}
+             , ENDX_DATE = #{endxDate}
+             , UPDT_DATE = #{updtDate}
          WHERE TMRX_NUMB = #{tmrxNumb}
            AND USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 목표시간이 지나 알림 발송을 기다리는 정상 회원의 실행 세션 번호를 조회한다. -->
+    <select id="getDueTimerAlimList" resultType="java.lang.Long">
+        SELECT /* getDueTimerAlimList */
+               TIMER.TMRX_NUMB
+          FROM TM_RDTMRX TIMER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = TIMER.USER_NUMB
+           AND USERX.USER_STAT = #{activeUserStat}
+         WHERE TIMER.TMRX_STAT = #{runningStat}
+           AND TIMER.TARG_SECS IS NOT NULL
+           AND TIMER.ALRM_DATE &lt;= #{alarmDate}
+           AND TIMER.SEND_DATE IS NULL
+      ORDER BY TIMER.ALRM_DATE
+             , TIMER.TMRX_NUMB
+         LIMIT #{maxSize}
+    </select>
+
+    <!-- 대상 단위 트랜잭션에서 발송 조건을 다시 확인하고 세션 행을 잠근다. -->
+    <select id="getDueTimerAlimDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getDueTimerAlimDtl */
+               TIMER.TMRX_NUMB
+             , TIMER.USER_NUMB
+             , TIMER.TMRX_STAT
+             , TIMER.TARG_SECS
+             , TIMER.READ_SECS
+             , TIMER.ALRM_DATE
+             , TIMER.SEND_DATE
+          FROM TM_RDTMRX TIMER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = TIMER.USER_NUMB
+           AND USERX.USER_STAT = #{activeUserStat}
+         WHERE TIMER.TMRX_NUMB = #{tmrxNumb}
+           AND TIMER.TMRX_STAT = #{runningStat}
+           AND TIMER.TARG_SECS IS NOT NULL
+           AND TIMER.ALRM_DATE &lt;= #{alarmDate}
+           AND TIMER.SEND_DATE IS NULL
+           FOR UPDATE
+    </select>
+
+    <!-- 알림 저장 성공 뒤 세션의 발송 일시를 기록하고 예약 일시를 비운다. -->
+    <update id="uptTimerAlimSent">
+        UPDATE /* uptTimerAlimSent */
+               TM_RDTMRX
+           SET ALRM_DATE = NULL
+             , SEND_DATE = #{sendDate}
+             , UPDT_DATE = #{updtDate}
+         WHERE TMRX_NUMB = #{tmrxNumb}
+           AND SEND_DATE IS NULL
     </update>
 
     <!-- 확정 독서 시간을 사용자와 날짜별로 누적한다. -->

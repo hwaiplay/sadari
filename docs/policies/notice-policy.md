@@ -3,7 +3,7 @@
 ## 개요
 
 - 적용 대상은 관리자 공지사항 작성·버전·배포 기능과 사용자 공지 목록·상세·이미지 조회 기능입니다.
-- 기준일은 2026-08-07입니다.
+- 기준일은 2026-08-19입니다.
 - 이 문서는 현재 구현된 공지사항 데이터와 접근 정책의 기준 문서입니다.
 
 ## 목적과 소유권
@@ -42,6 +42,9 @@
 - 사용자 상세 조회 시 `TB_USVIEW`에 `VIEW_TYPE = 'NOTICE'`, 공지 번호와 사용자 번호를 복합키로 한 최초 읽음 이력을 멱등하게 저장합니다.
 - 읽음 이력은 해당 사용자와 시스템만 접근할 수 있으며 다른 사용자에게 공개하지 않습니다.
 - 목록에서 읽음 이력이 없는 공지는 빨간 점으로 표시하고 상세 조회가 성공하면 읽음으로 전환합니다.
+- 홈 화면은 현재 배포 공지 중 로그인 사용자의 읽음 이력이 없는 공지 제목만 최근 배포 순서로 조회하여 검색 영역 아래의 한 줄 가로 슬라이드에 표시합니다.
+- 홈 슬라이드는 제목만 노출하며 제목을 선택하면 공지 상세로 이동하고, 상세 조회가 성공한 시점에 기존 정책과 동일하게 읽음 이력을 저장합니다.
+- 홈 미읽음 공지 조회가 실패하거나 미읽음 공지가 없으면 기존 홈 콘텐츠를 유지하고 공지 슬라이드를 표시하지 않습니다.
 - 새 버전을 배포하면 해당 공지 번호의 기존 읽음 이력을 삭제하여 모든 활성 사용자에게 다시 미읽음으로 표시합니다.
 - `WITHDRAWN`, `DELETE_PENDING`, `SUSPENDED` 상태에서는 공지 접근과 신규 읽음 이력 생성을 중지하지만 기존 읽음 이력은 유지합니다.
 - 계정 재활성화 또는 영구 탈퇴 취소 시 기존 읽음 상태를 그대로 복원합니다.
@@ -62,7 +65,11 @@
 - `scripts/db/mysql/01-create.sql`
 - `src/main/java/org/our/sadari/notice/controller/NoticeController.java`
 - `src/main/java/org/our/sadari/notice/controller/NoticeFileController.java`
+- `src/main/java/org/our/sadari/notice/dto/UnreadNoticeDto.java`
 - `src/main/java/org/our/sadari/notice/mapper/NoticeMapper.xml`
+- `src/main/frontend/src/features/Notice/components/UnreadNoticeSlider.tsx`
+- `src/main/frontend/src/features/Notice/api/noticeApi.ts`
+- `src/main/frontend/src/pages/Home/Home.tsx`
 - `src/main/frontend/src/pages/Notice/NoticeListPage.tsx`
 - `src/main/frontend/src/pages/Notice/NoticeDetailPage.tsx`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/notice`

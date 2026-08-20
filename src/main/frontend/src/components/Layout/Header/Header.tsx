@@ -1,7 +1,7 @@
 /**
  * src/main/frontend/src/components/Layout/Header/Header.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  */
 import { message } from "@/app/messages/message";
 import {
@@ -17,6 +17,8 @@ import {
   headerContentSlideBack,
   headerContentSlideForward,
   headerHidden,
+  headerRouteTitle,
+  headerRouteTitleWithBack,
   headerShell,
   logo,
   routeTitle,
@@ -25,10 +27,9 @@ import { Container } from "../Container/Container";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
 import HeaderMenuDrawer from "./HeaderMenuDrawer";
-import {
-  getUserMenuApi,
-  type UserMenuItem,
-} from "@/features/Menu/api/userMenuApi";
+import type { UserMenuItem } from "@/features/Menu/api/userMenuApi";
+import { useUserMenuQuery } from "@/features/Menu/hooks/useUserMenuQuery";
+import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
 
 const HEADER_SCROLL_DELTA = 4;
 
@@ -56,7 +57,13 @@ function Header({ menuEnabled = true }: HeaderProps) {
   const location = useLocation();
   const navigate = useNavigate();
   const navigationType = useNavigationType();
-  const isSubPage = location.pathname !== "/home";
+  const isHomeRoute = location.pathname === BOTTOM_NAV_PATH.home;
+  const isBottomNavRoot =
+    isHomeRoute
+    || location.pathname === BOTTOM_NAV_PATH.feed
+    || location.pathname === BOTTOM_NAV_PATH.timer
+    || location.pathname === BOTTOM_NAV_PATH.myPage;
+  const hasBackButton = !isBottomNavRoot;
   const lastScrollYRef = useRef(0);
   const isHiddenRef = useRef(false);
   const hasResolvedMenuRef = useRef(false);
@@ -64,11 +71,14 @@ function Header({ menuEnabled = true }: HeaderProps) {
   const [resolvedMenu, setResolvedMenu] = useState<ResolvedHeaderMenu | null>(
     null,
   );
+  // 로딩 화면과 같은 Query Key를 사용하여 경로별 메뉴 조회 요청을 공유한다
+  const {
+    data: userMenuData,
+    isError: isUserMenuError,
+  } = useUserMenuQuery(location.pathname, menuEnabled);
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
-  const isClubManagementPage = /^\/reading-clubs\/\d+\/manage$/.test(location.pathname);
-  const isClubMemberPage = /^\/reading-clubs\/\d+\/manage\/members$/.test(location.pathname);
   const headerContentSlide =
     resolvedMenu?.transitionDirection === "back"
       ? headerContentSlideBack
@@ -137,62 +147,48 @@ function Header({ menuEnabled = true }: HeaderProps) {
 
   useEffect(() => {
 
-    let ignore = false;
     const transitionDirection =
       navigationType === "POP" && hasResolvedMenuRef.current
         ? "back"
         : "forward";
 
+    // 메뉴가 비활성화된 레이아웃은 조회 결과 없이 헤더 표시 상태만 확정한다
     if (!menuEnabled) {
+      // 메뉴를 사용하지 않는 경로도 헤더 콘텐츠 표시를 시작할 수 있게 확정한다
       hasResolvedMenuRef.current = true;
+      // 현재 경로에 메뉴가 없는 헤더 상태를 저장한다
       setResolvedMenu({
         pathname: location.pathname,
         currentMenu: null,
         menuList: [],
         transitionDirection,
       });
-
-      return () => {
-
-        ignore = true;
-      };
+      // 비활성화된 메뉴의 추가 처리를 중단한다
+      return;
     }
 
-    getUserMenuApi(location.pathname)
-      .then((response) => {
+    // 메뉴 API가 아직 진행 중이면 이전 경로의 메뉴를 현재 경로에 표시하지 않는다
+    if (!userMenuData && !isUserMenuError) {
+      // 현재 경로의 메뉴 조회가 확정될 때까지 상태 반영을 보류한다
+      return;
+    }
 
-        if (ignore) {
-          return;
-        }
-
-        // 현재 경로의 메뉴명 유무가 확정된 뒤 헤더 중앙 콘텐츠를 한 번에 표시한다
-        hasResolvedMenuRef.current = true;
-        setResolvedMenu({
-          pathname: location.pathname,
-          currentMenu: response.data?.currentMenu ?? null,
-          menuList: response.data?.menuList ?? [],
-          transitionDirection,
-        });
-      })
-      .catch(() => {
-
-        if (!ignore) {
-          // 메뉴 조회 실패는 화면 진입을 막지 않고 기존 로고와 빈 햄버거 목록으로 대체한다.
-          hasResolvedMenuRef.current = true;
-          setResolvedMenu({
-            pathname: location.pathname,
-            currentMenu: null,
-            menuList: [],
-            transitionDirection,
-          });
-        }
-      });
-
-    return () => {
-
-      ignore = true;
-    };
-  }, [location.pathname, menuEnabled, navigationType]);
+    // 현재 경로의 메뉴명 유무가 확정된 뒤 헤더 중앙 콘텐츠를 한 번에 표시한다
+    hasResolvedMenuRef.current = true;
+    // 메뉴 조회 실패도 빈 메뉴 상태로 확정하여 화면 진입을 막지 않는다
+    setResolvedMenu({
+      pathname: location.pathname,
+      currentMenu: userMenuData?.currentMenu ?? null,
+      menuList: userMenuData?.menuList ?? [],
+      transitionDirection,
+    });
+  }, [
+    isUserMenuError,
+    location.pathname,
+    menuEnabled,
+    navigationType,
+    userMenuData,
+  ]);
 
   return (
     /* 사용자 화면의 이전 이동과 현재 메뉴 표시 영역 */
@@ -202,8 +198,8 @@ function Header({ menuEnabled = true }: HeaderProps) {
         isHidden && headerHidden,
       )}
     >
-      <Container className={clsx(header, isSubPage && "_sub")}>
-        {isSubPage && (
+      <Container className={clsx(header, hasBackButton && "_sub")}>
+        {hasBackButton && (
           <button
             className={backpageBtn}
             type="button"
@@ -216,24 +212,17 @@ function Header({ menuEnabled = true }: HeaderProps) {
             />
           </button>
         )}
-        {/* 현재 경로의 메뉴 조회가 끝난 뒤 메뉴명 또는 로고를 표시하는 중앙 영역 */}
-        <div className={headerCenter}>
-          {(isMenuResolved || isClubManagementPage || isClubMemberPage) &&
-            (isClubMemberPage ? (
-              <h1 className={clsx(routeTitle, headerContentSlide)}>
-                {/* "멤버/가입 관리" */}
-                {message("frontend.readingClub.memberManage.title")}
-              </h1>
-            ) : isClubManagementPage ? (
-              <h1 className={clsx(routeTitle, headerContentSlide)}>
-                {/* "모임 관리" */}
-                {message("frontend.readingClub.management.title")}
-              </h1>
-            ) : currentMenu?.menuName ? (
-              <h1 className={clsx(routeTitle, headerContentSlide)}>
-                {currentMenu.menuName}
-              </h1>
-            ) : (
+        {/* 홈 로고와 메뉴명은 왼쪽에 표시하고 다른 경로의 대체 로고는 중앙에 표시하는 영역 */}
+        <div
+          className={clsx(
+            headerCenter,
+            (isHomeRoute || currentMenu?.menuName) && headerRouteTitle,
+            currentMenu?.menuName && hasBackButton && headerRouteTitleWithBack,
+          )}
+        >
+          {/* 홈 화면은 메뉴 조회 결과와 관계없이 왼쪽에 서비스 로고를 표시하는 영역 */}
+          {isMenuResolved &&
+            (isHomeRoute || !currentMenu?.menuName ? (
               <HomeLink className={clsx(logo, headerContentSlide)}>
                 <img
                   src={"/img/common/logo-upper.svg"}
@@ -241,6 +230,10 @@ function Header({ menuEnabled = true }: HeaderProps) {
                   width={100}
                 />
               </HomeLink>
+            ) : (
+              <h1 className={clsx(routeTitle, headerContentSlide)}>
+                {currentMenu.menuName}
+              </h1>
             ))}
         </div>
         {menuEnabled && <HeaderMenuDrawer menuList={menuList} />}

@@ -14,8 +14,8 @@ import java.time.LocalDateTime;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 응답 설명 반영
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 설명
+ * 2026-08-20        SeungHyeon.Kang    목표알림·도서누적 정보·독후감연결
  */
 @Data
 public class ReadingTimerDto {
@@ -32,14 +32,20 @@ public class ReadingTimerDto {
     private String bookCvim;
     @Schema(description = "타이머 상태")
     private String tmrxStat;
+    @Schema(description = "알림 목표 독서 시간 초")
+    private Long targSecs;
+    @Schema(description = "확정 독서 시간 초")
+    private long readSecs;
+    @Schema(description = "목표시간 알림 예정 일시")
+    private LocalDateTime alrmDate;
+    @Schema(description = "목표시간 알림 발송 일시")
+    private LocalDateTime sendDate;
     @Schema(description = "세션 시작 일시")
     private LocalDateTime strtDate;
     @Schema(description = "최근 측정 시작 일시")
     private LocalDateTime lastStrt;
     @Schema(description = "세션 완료 일시")
     private LocalDateTime endxDate;
-    @Schema(description = "확정 독서 시간 초")
-    private long readSecs;
     @Schema(description = "등록 일시")
     private LocalDateTime regiDate;
     @Schema(description = "수정 일시")
@@ -54,6 +60,8 @@ public class ReadingTimerDto {
     public static class Request {
         @Schema(description = "연결할 독후감 번호")
         private Long reptNumb;
+        @Schema(description = "알림 목표 독서 시간 초", minimum = "60", maximum = "28800")
+        private Long targSecs;
         @Schema(description = "변경할 타이머 상태", allowableValues = {"RUNNING", "PAUSED", "COMPLETED"})
         private String tmrxStat;
     }
@@ -73,6 +81,30 @@ public class ReadingTimerDto {
         private boolean attended;
         @Schema(description = "오늘 여부")
         private boolean today;
+    }
+
+    /**
+     * 도서별 타이머 누적시간과 최근 기록 시각을 전달한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Data
+    public static class BookTime {
+
+        @Schema(description = "최근 완료 타이머의 연결 독후감 번호")
+        private Long reptNumb;
+        @Schema(description = "도서 번호")
+        private Long bookNumb;
+        @Schema(description = "도서 제목")
+        private String bookTitl;
+        @Schema(description = "도서 저자")
+        private String bookAthr;
+        @Schema(description = "도서 표지 URL")
+        private String bookCvim;
+        @Schema(description = "도서별 누적 독서 시간 초")
+        private long readSecs;
+        @Schema(description = "해당 도서의 최근 타이머 완료 일시")
+        private LocalDateTime lastReadDate;
     }
 
     /**

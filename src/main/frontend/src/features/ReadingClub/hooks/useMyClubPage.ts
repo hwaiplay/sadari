@@ -40,8 +40,8 @@ export const getClubCategory = (club: ReadingClub): string => {
 export const getClubMeta = (club: ReadingClub): string => {
   // 공개 코드에 맞는 다국어 공개 범위를 결정한다
   const visibility = club.clubVisb === "PUBLIC"
-    ? message("frontend.readingClub.common.visibility.public")
-    : message("frontend.readingClub.common.visibility.private");
+    ? /* "공개" */ message("frontend.common.public")
+    : /* "비공개" */ message("frontend.common.private");
 
   // 공개 범위와 현재 참여 인원을 함께 반환한다
   return `${visibility} · ${message("frontend.readingClub.common.memberCount", [club.memberCnt])}`;
@@ -106,7 +106,7 @@ export const useMyClubPage = () => {
     // "조회하지 못했어요"
     void sweetError(
       message("frontend.readingClub.error.fetchTitle"),
-      getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+      getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
     );
   }, []);
 
@@ -235,7 +235,7 @@ export const useMyClubPage = () => {
     // "초대를 수락하지 못했어요"
     void sweetError(
       message("frontend.readingClub.error.acceptInvitationTitle"),
-      getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+      getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
     );
   };
 
@@ -250,7 +250,7 @@ export const useMyClubPage = () => {
     // "초대를 거절하지 못했어요"
     void sweetError(
       message("frontend.readingClub.error.declineInvitationTitle"),
-      getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+      getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
     );
   };
 
