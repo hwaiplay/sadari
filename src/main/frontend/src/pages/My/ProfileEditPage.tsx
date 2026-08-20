@@ -43,6 +43,7 @@ import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
 } from "@/features/User/components/ProfileImage";
 import { notifyUserProfileUpdated } from "@/features/User/lib/profileEvents";
+import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -944,32 +945,6 @@ function ProfileEditPage() {
    */
   const normalizeGoalCount = (value: string) =>
     value.replace(/[^0-9]/g, "").replace(/^0+/, "");
-
-  /**
-   * 목표 달성률에 따라 진행 막대와 달성률 텍스트에 사용할 파스텔 색상을 반환합니다.
-   * 낮은 달성률은 부드러운 붉은색으로 경고성을 주고, 목표에 가까워질수록 노랑/파랑/초록 계열로
-   * 변하게 하여 사용자가 현재 진행 상태를 숫자를 읽기 전에도 빠르게 구분할 수 있게 합니다.
-   *
-   * @author HanWon.Jang
-   * @param rate 현재 목표 달성률
-   * @return 달성률 구간에 대응하는 파스텔 색상 코드
-   */
-  const getGoalProgressColor = (rate: number) => {
-
-    if (rate >= 100) {
-      return "#9EDFC2";
-    }
-
-    if (rate >= 70) {
-      return "#F7D98B";
-    }
-
-    if (rate >= 40) {
-      return "#F4A7AD";
-    }
-
-    return "#F4A7AD";
-  };
 
   /**
    * get Reading Remain Rate 정보를 조회한다

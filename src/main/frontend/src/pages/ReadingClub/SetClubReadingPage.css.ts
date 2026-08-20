@@ -12,13 +12,8 @@
 import { vars } from "@/app/styles/tokens.css";
 import { style } from "@vanilla-extract/css";
 
-export const pageTop = style({
+export const formTop = style({
   paddingTop: "20px",
-  boxSizing: "border-box",
-});
-
-export const periodSection = style({
-  cursor: "default",
 });
 
 export const emptyState = style({

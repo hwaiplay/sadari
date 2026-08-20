@@ -125,19 +125,41 @@ export const currentReadingCard = style({
   minHeight: 256,
   boxSizing: "border-box",
   flexDirection: "column",
-  gap: 18,
+  gap: 16,
   padding: 20,
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: 22,
-  background: "#fff",
+  background: vars.color.background,
 });
 
 export const readingCardHeader = style({
-  minHeight: 21,
-  color: vars.color.gray900,
+  position: "relative",
+  display: "flex",
+  minHeight: 23,
+  alignItems: "center",
+  justifyContent: "center",
+});
+
+export const readingOrder = style({
+  color: vars.color.gray600,
   fontFamily: vars.font.semibold,
   fontSize: 14,
+  fontWeight: 600,
+  lineHeight: "20px",
   textAlign: "center",
+});
+
+export const dDay = style({
+  position: "absolute",
+  top: 0,
+  right: 0,
+  padding: "4px 8px",
+  borderRadius: 200,
+  background: vars.color.brandBg,
+  color: vars.color.brandText,
+  fontFamily: vars.font.semibold,
+  fontSize: 12,
+  lineHeight: "16px",
 });
 
 export const readingEmpty = style({
@@ -153,36 +175,158 @@ export const readingEmpty = style({
   lineHeight: "20px",
 });
 
-export const readingBook = style({
+export const currentReadingContent = style({
   display: "flex",
   flex: 1,
+  minWidth: 0,
   flexDirection: "column",
+  gap: 15,
+});
+
+export const readingBook = style({
+  display: "flex",
+  width: "100%",
+  height: 132,
   alignItems: "center",
-  justifyContent: "center",
-  gap: 8,
+  gap: 16,
 });
 
 export const currentBookImage = style({
-  width: 96,
-  height: 144,
-  borderRadius: 4,
+  width: 90,
+  height: 132,
+  boxSizing: "border-box",
+  flexShrink: 0,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 6,
   objectFit: "cover",
 });
 
+export const currentBookInformation = style({
+  display: "flex",
+  height: "100%",
+  minWidth: 0,
+  flex: 1,
+  boxSizing: "border-box",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  padding: "10px 0",
+});
+
+export const currentBookSummary = style({
+  display: "flex",
+  minWidth: 0,
+  flexDirection: "column",
+  gap: 6,
+});
+
+export const currentBookIdentity = style({
+  display: "flex",
+  minWidth: 0,
+  flexDirection: "column",
+  gap: 4,
+});
+
 export const currentBookTitle = style({
+  display: "block",
+  maxWidth: "100%",
+  overflow: "hidden",
   color: vars.color.gray900,
   fontFamily: vars.font.semibold,
   fontSize: 16,
-  lineHeight: "24px",
-  textAlign: "center",
+  lineHeight: "20px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
 });
 
 export const currentBookAuthor = style({
+  display: "block",
+  maxWidth: "100%",
+  overflow: "hidden",
   color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "16px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+
+export const currentReadingPeriod = style({
+  color: vars.color.gray900,
+  fontFamily: vars.font.medium,
+  fontSize: 14,
+  lineHeight: "20px",
+  whiteSpace: "nowrap",
+});
+
+export const myReadingStatus = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 6,
+});
+
+export const myReadingStatusLabel = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "16px",
+});
+
+export const myReadingStatusValue = style({
+  display: "flex",
+  alignItems: "center",
+  gap: 4,
+  color: vars.color.brandText,
   fontFamily: vars.font.body,
   fontSize: 14,
   lineHeight: "20px",
-  textAlign: "center",
+});
+
+export const readingStatusDot = style({
+  width: 5,
+  height: 5,
+  flexShrink: 0,
+  borderRadius: "50%",
+  background: vars.color.brandText,
+});
+
+export const readingStatusUnavailable = style({
+  color: vars.color.gray600,
+});
+
+globalStyle(`${readingStatusUnavailable} > ${readingStatusDot}`, {
+  background: vars.color.gray600,
+});
+
+export const goalStatus = style({
+  display: "flex",
+  width: "100%",
+  flexDirection: "column",
+  gap: 6,
+});
+
+export const goalProgressTrack = style({
+  width: "100%",
+  height: 10,
+  overflow: "hidden",
+  borderRadius: 200,
+  background: vars.color.gray200,
+});
+
+export const goalProgressFill = style({
+  display: "block",
+  height: "100%",
+  minWidth: 0,
+  maxWidth: "100%",
+  borderRadius: 200,
+  transition: "width 220ms ease, background-color 180ms ease",
+});
+
+export const goalAchievementText = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "16px",
 });
 
 export const memberHeader = style({

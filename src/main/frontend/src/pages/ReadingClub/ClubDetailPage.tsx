@@ -1,4 +1,5 @@
 import { message } from "@/app/messages/message";
+import { formatDashedDateToDot, getRemainDaysUntil } from "@/app/utils/dateUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
 import Skeleton from "@/components/Skeleton/Skeleton";
@@ -9,6 +10,7 @@ import {
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
 import clsx from "clsx";
 import { createPortal } from "react-dom";
@@ -92,6 +94,32 @@ export default function ClubDetailPage() {
   const hasCurrentReading = Number.isFinite(club.currentRondNumb);
   // 첫 회차가 아직 없으면 다음 독서 순번을 1로 표시한다
   const readingOrder = club.readingOrdr ?? 1;
+  // API 일시값에서 화면과 날짜 계산에 사용할 로컬 날짜 부분만 분리한다
+  const goalStartDate = club.currentGoalStdt?.slice(0, 10);
+  const goalEndDate = club.currentGoalEndt?.slice(0, 10);
+  const formattedGoalStartDate = formatDashedDateToDot(goalStartDate);
+  const formattedGoalEndDate = formatDashedDateToDot(goalEndDate);
+  // 같은 연도의 종료일은 피그마 표기처럼 연도를 생략한다
+  const readingPeriod = goalStartDate?.slice(0, 4) === goalEndDate?.slice(0, 4)
+    ? `${formattedGoalStartDate} ~ ${formattedGoalEndDate.slice(5)}`
+    : `${formattedGoalStartDate} ~ ${formattedGoalEndDate}`;
+  const remainingDays = Math.max(0, getRemainDaysUntil(goalEndDate));
+  const goalMemberCount = Math.max(0, club.currentGoalMembCnt ?? 0);
+  const goalAchievementCount = Math.min(
+    goalMemberCount,
+    Math.max(0, club.currentGoalAchvCnt ?? 0),
+  );
+  const goalAchievementRate = goalMemberCount > 0
+    ? (goalAchievementCount / goalMemberCount) * 100
+    : 0;
+  const goalProgressColor = getGoalProgressColor(goalAchievementRate);
+  const currentReportStatusLabel = club.currentReportStat === "DONE"
+    ? message("frontend.report.status.done")
+    : club.currentReportStat === "STOP"
+      ? message("frontend.report.status.stopped")
+      : club.currentReportStat === "READ"
+        ? message("frontend.report.status.reading")
+        : message("frontend.readingClub.detail.readingParticipationUnavailable");
   const clubActionOptions: readonly CustomSelectOption<ClubDetailAction>[] = [
     {
       value: "EDIT",
@@ -148,23 +176,72 @@ export default function ClubDetailPage() {
               <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.currentReading")}</h2>
               <div className={styles.currentReadingCard}>
                 <div className={styles.readingCardHeader}>
-                  <strong>
+                  <strong className={styles.readingOrder}>
                     {/* "{0}번째 독서" */}
                     {message("frontend.readingClub.detail.readingOrder", [readingOrder])}
                   </strong>
+                  {hasCurrentReading && goalEndDate ? (
+                    <span className={styles.dDay}>
+                      {/* "D-{0}" */}
+                      {message("frontend.readingClub.detail.dDay", [remainingDays])}
+                    </span>
+                  ) : null}
                 </div>
                 {hasCurrentReading ? (
-                  <div className={styles.readingBook}>
-                    <img
-                      className={styles.currentBookImage}
-                      src={getBookCoverImageSource(club.currentBookCvim)}
-                      onError={handleBookCoverImageError}
-                      alt={club.currentBookTitl ?? ""}
-                    />
-                    <strong className={styles.currentBookTitle}>{club.currentBookTitl}</strong>
-                    {club.currentBookAthr ? (
-                      <span className={styles.currentBookAuthor}>{club.currentBookAthr}</span>
-                    ) : null}
+                  <div className={styles.currentReadingContent}>
+                    <div className={styles.readingBook}>
+                      <img
+                        className={styles.currentBookImage}
+                        src={getBookCoverImageSource(club.currentBookCvim)}
+                        onError={handleBookCoverImageError}
+                        alt={club.currentBookTitl ?? ""}
+                      />
+                      <div className={styles.currentBookInformation}>
+                        <div className={styles.currentBookSummary}>
+                          <div className={styles.currentBookIdentity}>
+                            <strong className={styles.currentBookTitle}>{club.currentBookTitl}</strong>
+                            {club.currentBookAthr ? (
+                              <span className={styles.currentBookAuthor}>{club.currentBookAthr}</span>
+                            ) : null}
+                          </div>
+                          {goalStartDate && goalEndDate ? (
+                            <span className={styles.currentReadingPeriod}>{readingPeriod}</span>
+                          ) : null}
+                        </div>
+                        <div className={styles.myReadingStatus}>
+                          <span className={styles.myReadingStatusLabel}>
+                            {message("frontend.readingClub.detail.myReadingStatus")}
+                          </span>
+                          <span
+                            className={clsx(
+                              styles.myReadingStatusValue,
+                              !club.currentReportStat && styles.readingStatusUnavailable,
+                            )}
+                          >
+                            <span className={styles.readingStatusDot} aria-hidden="true" />
+                            {currentReportStatusLabel}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className={styles.goalStatus}>
+                      <div className={styles.goalProgressTrack}>
+                        <span
+                          className={styles.goalProgressFill}
+                          style={{
+                            width: `${goalAchievementRate}%`,
+                            backgroundColor: goalProgressColor,
+                          }}
+                        />
+                      </div>
+                      <span className={styles.goalAchievementText}>
+                        {/* "{0}/{1}명 목표 달성" */}
+                        {message("frontend.readingClub.detail.goalAchievement", [
+                          goalAchievementCount,
+                          goalMemberCount,
+                        ])}
+                      </span>
+                    </div>
                   </div>
                 ) : (
                   <div className={styles.readingEmpty}>

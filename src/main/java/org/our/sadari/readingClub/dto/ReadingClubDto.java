@@ -25,6 +25,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang    모임원 프로필 응답 DTO 추가
  * 2026-08-14        Hanwon.Jang    모임 독서 등록 요청 DTO 추가
+ * 2026-08-15        Hanwon.Jang    현재 독서 목표 현황 응답 필드 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -125,6 +126,7 @@ public final class ReadingClubDto {
      * -----------------------------------------------------------
      * 2026-08-05        SeungHyeon.Kang    최초 생성
      * 2026-08-14        Hanwon.Jang        현재 독서 관련 추가
+     * 2026-08-15        Hanwon.Jang        현재 독서 기간과 목표 달성 현황 추가
      */
     @Data
     @Schema(description = "독서 모임 조회 항목")
@@ -189,6 +191,21 @@ public final class ReadingClubDto {
 
         @Schema(description = "현재 독서 도서 표지 이미지 URL")
         private String currentBookCvim;
+
+        @Schema(description = "현재 독서 공동 목표 시작 일시")
+        private LocalDateTime currentGoalStdt;
+
+        @Schema(description = "현재 독서 공동 목표 종료 일시")
+        private LocalDateTime currentGoalEndt;
+
+        @Schema(description = "로그인 사용자의 현재 독서 상태")
+        private String currentReportStat;
+
+        @Schema(description = "현재 독서 목표를 달성한 활성 참여 인원 수")
+        private Integer currentGoalAchvCnt;
+
+        @Schema(description = "현재 독서에 참여 중인 활성 인원 수")
+        private Integer currentGoalMembCnt;
 
         @Schema(description = "카테고리 코드와 이름 목록")
         private List<CategoryDto> categoryList;

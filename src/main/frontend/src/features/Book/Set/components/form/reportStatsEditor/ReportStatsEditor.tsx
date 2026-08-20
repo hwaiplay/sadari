@@ -38,6 +38,7 @@ type ReportStatsEditorProps = {
   onPublicChange: (pubcYsno: "Y" | "N") => void;
   onRangeChange: (startDate: string, endDate: string) => void;
   onEditStart?: () => void;
+  periodOnly?: boolean;
 };
 
 /**
@@ -149,6 +150,7 @@ function ReportStatsEditor({
   onPublicChange,
   onRangeChange,
   onEditStart,
+  periodOnly = false,
 }: ReportStatsEditorProps) {
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
@@ -157,9 +159,11 @@ function ReportStatsEditor({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const portalTarget = typeof document === "undefined" ? null : document.body;
   const isReadingStatus = status === REPORT_STATUS_READ;
-  const availableSteps: readonly number[] = isReadingStatus
-    ? READING_REPORT_STAT_STEPS
-    : REPORT_STAT_STEPS;
+  const availableSteps: readonly number[] = periodOnly
+    ? [3]
+    : isReadingStatus
+      ? READING_REPORT_STAT_STEPS
+      : REPORT_STAT_STEPS;
   const firstStep = availableSteps[0] ?? 0;
   const lastStep = availableSteps[availableSteps.length - 1] ?? 3;
   const periodSummary = getPeriodSummary(startDate, endDate);
@@ -434,20 +438,22 @@ function ReportStatsEditor({
       >
         <div className={styles.statsRows}>
           {/* 독서 상태 편집 진입 영역 */}
-          <button
-            className={styles.statsItem}
-            type="button"
-            data-step="0"
-            onClick={handleSummaryClick}
-          >
-            <span className={styles.statsLabel}>{statusTitle}</span>
-            <strong className={`${styles.statsValue} ${getStatusValueClassName(status)}`}>
-              {statusLabel}
-            </strong>
-          </button>
+          {!periodOnly ? (
+            <button
+              className={styles.statsItem}
+              type="button"
+              data-step="0"
+              onClick={handleSummaryClick}
+            >
+              <span className={styles.statsLabel}>{statusTitle}</span>
+              <strong className={`${styles.statsValue} ${getStatusValueClassName(status)}`}>
+                {statusLabel}
+              </strong>
+            </button>
+          ) : null}
 
           {/* 완료 또는 중단 상태에서만 공개 여부 편집을 허용하는 영역 */}
-          {!isReadingStatus ? (
+          {!periodOnly && !isReadingStatus ? (
             <button
               className={styles.statsItem}
               type="button"
@@ -462,7 +468,7 @@ function ReportStatsEditor({
           ) : null}
 
           {/* 완료 또는 중단 상태에서만 평점 편집을 허용하는 영역 */}
-          {!isReadingStatus ? (
+          {!periodOnly && !isReadingStatus ? (
             <button
               className={styles.statsItem}
               type="button"
@@ -553,7 +559,7 @@ function ReportStatsEditor({
                   key={`body-${activeStep}`}
                 >
                   {/* 독서 상태 선택 영역 */}
-                  {activeStep === firstStep ? (
+                  {activeStep === 0 ? (
                     <div className={styles.optionGrid}>
                       {statusCodes.map(renderStatusOption)}
                     </div>
@@ -631,7 +637,7 @@ function ReportStatsEditor({
                 {/* 이전 단계와 현재 위치 및 다음 단계 이동 영역 */}
                 <footer className={styles.modalFooter}>
                   {/* 첫 단계에서는 이전 이동 대신 현재 입력을 닫는 취소 버튼을 표시한다 */}
-                  {activeStep === 0 ? (
+                  {activeStep === firstStep ? (
                     <button
                       className={styles.stepButton}
                       type="button"

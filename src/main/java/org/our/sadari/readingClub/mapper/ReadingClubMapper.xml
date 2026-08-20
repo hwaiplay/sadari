@@ -426,6 +426,21 @@
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_CVIM
                END AS CURRENT_BOOK_CVIM
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.GOAL_STDT
+               END AS CURRENT_GOAL_STDT
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.GOAL_ENDT
+               END AS CURRENT_GOAL_ENDT
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_REPORT.REPT_STAT
+               END AS CURRENT_REPORT_STAT
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN COALESCE(CURRENT_GOAL.GOAL_ACHV_CNT, 0)
+               END AS CURRENT_GOAL_ACHV_CNT
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN COALESCE(CURRENT_GOAL.GOAL_MEMB_CNT, 0)
+               END AS CURRENT_GOAL_MEMB_CNT
           FROM TM_CLUBXM CLUB
      LEFT JOIN TM_USERXM OWNER
             ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
@@ -445,9 +460,34 @@
                 WHERE ACTIVE_ROUND.CLUB_NUMB = CLUB.CLUB_NUMB
                   AND ACTIVE_ROUND.ROND_STAT IN (#{roundScheduled}, #{roundReading})
            )
-     LEFT JOIN TM_BKINFO CURRENT_BOOK
-            ON CURRENT_BOOK.BOOK_NUMB = CURRENT_ROUND.BOOK_NUMB
-         WHERE CLUB.CLUB_NUMB = #{clubNumb}
+      LEFT JOIN TM_BKINFO CURRENT_BOOK
+             ON CURRENT_BOOK.BOOK_NUMB = CURRENT_ROUND.BOOK_NUMB
+      LEFT JOIN TB_CLPART CURRENT_PART
+             ON CURRENT_PART.CLUB_NUMB = CURRENT_ROUND.CLUB_NUMB
+            AND CURRENT_PART.ROND_NUMB = CURRENT_ROUND.ROND_NUMB
+            AND CURRENT_PART.USER_NUMB = #{userNumb}
+      LEFT JOIN TM_REPORT CURRENT_REPORT
+             ON CURRENT_REPORT.REPT_NUMB = CURRENT_PART.REPT_NUMB
+            AND CURRENT_REPORT.USER_NUMB = #{userNumb}
+      LEFT JOIN (
+                SELECT PART.CLUB_NUMB
+                     , PART.ROND_NUMB
+                     , COUNT(*) AS GOAL_MEMB_CNT
+                     , SUM(CASE WHEN PART.GOAL_YSNO = #{commYes} THEN 1 ELSE 0 END) AS GOAL_ACHV_CNT
+                  FROM TB_CLPART PART
+                  JOIN TB_CLMEMX MEMBER
+                    ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+                   AND MEMBER.USER_NUMB = PART.USER_NUMB
+                   AND MEMBER.MEMB_STAT = #{memberActive}
+                  JOIN TM_USERXM USERX
+                    ON USERX.USER_NUMB = PART.USER_NUMB
+                   AND USERX.USER_STAT = #{userActive}
+              GROUP BY PART.CLUB_NUMB
+                     , PART.ROND_NUMB
+                ) CURRENT_GOAL
+             ON CURRENT_GOAL.CLUB_NUMB = CURRENT_ROUND.CLUB_NUMB
+            AND CURRENT_GOAL.ROND_NUMB = CURRENT_ROUND.ROND_NUMB
+          WHERE CLUB.CLUB_NUMB = #{clubNumb}
     </select>
 
     <!-- 정원과 권한 변경을 직렬화하기 위해 모임 마스터 행을 잠가 조회한다. -->
