@@ -14,12 +14,13 @@ import {
   getGoalProgressText,
   useMyClubPage,
 } from "@/features/ReadingClub/hooks/useMyClubPage";
+import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDeadline";
 import * as styles from "./MyClubPage.css";
 
 /**
  * 참여 중인 모임의 카테고리와 현재 독서 현황을 목록으로 표시한다
  *
- * @author SeungHyeon.Kang
+ * @author SeungHyeon.Kang, Hanwon.Jang
  * @return 내 모임 목록 화면
  */
 export default function MyClubPage() {
@@ -39,7 +40,7 @@ export default function MyClubPage() {
   /**
    * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param invitation 표시할 받은 초대
    * @return 받은 초대 카드
    */
@@ -81,53 +82,63 @@ export default function MyClubPage() {
   );
 
   /**
-   * 진행 중인 모임 한 건을 피그마 비율의 카드로 구성한다
+   * 진행 중인 모임 한 건을 카드 형태로 구성한다
    *
-   * @author SeungHyeon.Kang
+   * @author Hanwon.Jang
    * @param club 표시할 모임
    * @return 진행 중인 모임 카드
-   */
-  const renderClub = (club: ReadingClub) => (
-    /* 진행 중인 모임 개별 항목 영역 */
-    <article
-      className={styles.clubCard}
-      key={club.clubNumb}
-      role="button"
-      tabIndex={0}
-      data-club-numb={club.clubNumb}
-      onClick={handleClubClick}
-      onKeyDown={handleClubKeyDown}
-    >
-      {/* 모임 대표 이미지 영역 */}
-      <img
-        className={styles.clubCover}
-        src={getBookCoverImageSource(club.currentBookCvim)}
-        onError={handleBookCoverImageError}
-        alt={club.currentBookTitl ?? ""}
-        loading="lazy"
-      />
-      {/* 모임 기본 정보와 참여 현황 영역 */}
-      <div className={styles.clubInfo}>
-        {/* 모임 분류와 운영 상태 영역 */}
-        <div className={styles.clubTop}>
-          <span className={styles.clubCategory}>{getClubCategory(club)}</span>
-          <span className={styles.clubStatus}>
-            {/* "운영 중" */}
-            {message("frontend.readingClub.my.operating")}
-          </span>
+  */
+  const renderClub = (club: ReadingClub) => {
+    // 두 모임 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회한다
+    const readingDeadline = getReadingDeadline(club.currentGoalEndt);
+
+    // 현재 독서 종료일까지 남은 기간을 포함한 모임 카드를 반환한다
+    return (
+      /* 진행 중인 모임 개별 항목 영역 */
+      <article
+        className={styles.clubCard}
+        key={club.clubNumb}
+        role="button"
+        tabIndex={0}
+        data-club-numb={club.clubNumb}
+        onClick={handleClubClick}
+        onKeyDown={handleClubKeyDown}
+      >
+        {/* 모임 대표 이미지 영역 */}
+        <img
+          className={styles.clubCover}
+          src={getBookCoverImageSource(club.currentBookCvim)}
+          onError={handleBookCoverImageError}
+          alt={club.currentBookTitl ?? ""}
+          loading="lazy"
+        />
+        {/* 모임 기본 정보와 참여 현황 영역 */}
+        <div className={styles.clubInfo}>
+          {/* 모임 분류와 현재 독서 종료일 영역 */}
+          <div className={styles.clubTop}>
+            <span className={styles.clubCategory}>{getClubCategory(club)}</span>
+            {readingDeadline ? (
+              <span
+                className={styles.clubStatus}
+                data-ended={readingDeadline.state === "ENDED"}
+              >
+                {readingDeadline.label}
+              </span>
+            ) : null}
+          </div>
+          <h3 className={styles.clubName}>{club.clubName}</h3>
+          <p className={styles.clubMeta}>{getClubMeta(club)}</p>
+          {/* 모임 목표 달성 현황 영역 */}
+          <div className={styles.progressTrack} aria-hidden="true">
+            <span className={styles.progressValue} style={{ width: `${getGoalProgress(club)}%` }} />
+          </div>
+          <p className={styles.progressText}>
+            {getGoalProgressText(club)}
+          </p>
         </div>
-        <h3 className={styles.clubName}>{club.clubName}</h3>
-        <p className={styles.clubMeta}>{getClubMeta(club)}</p>
-        {/* 모임 목표 달성 현황 영역 */}
-        <div className={styles.progressTrack} aria-hidden="true">
-          <span className={styles.progressValue} style={{ width: `${getGoalProgress(club)}%` }} />
-        </div>
-        <p className={styles.progressText}>
-          {getGoalProgressText(club)}
-        </p>
-      </div>
-    </article>
-  );
+      </article>
+    );
+  };
 
   // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환한다
   return (

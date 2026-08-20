@@ -1521,7 +1521,7 @@ function ProfileEditPage() {
                 }
                 aria-hidden="true"
               >
-                <img src={"/img/icons/arrow-bottom.svg"} width={"14px"} />
+                <img src={"/img/icons/arrow-bottom.svg"} width={"14px"} alt="arrow" />
               </span>
             )}
           </button>

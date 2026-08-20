@@ -189,7 +189,7 @@ await sweetWarning(requiredMessage);
 - 배경이 `vars.color.gray900`인 클릭 요소는 `hover` 배경에 `vars.color.darkGray`를 사용합니다.
 - 배경이 `vars.color.negativeBg`인 클릭 요소는 `hover` 배경에 `vars.color.negativeHover`를 사용합니다.
 - 기본 배경이 투명한 클릭 요소도 화면 구조에 맞는 `hover` 상태를 제공하며, 별도 의미 색상이 없으면 `vars.color.gray100`을 우선 사용합니다.
-- `ClubManagementPage`의 `menuRow`처럼 별도 테두리나 카드 배경 없이 페이지 배경 위에서 전체 너비를 차지하며 다른 화면으로 이동하는 단순 메뉴 행에는 `hover` 스타일을 적용하지 않습니다.
+- 별도 테두리나 카드 배경 없이 페이지 배경 위에서 전체 너비를 차지하며 다른 화면으로 이동하는 단순 메뉴 행에는 `hover` 스타일을 적용하지 않습니다.
 - 비활성화된 클릭 요소에는 `hover` 상태를 적용하지 않습니다.
 
 ### 7.2 선택형 카드와 칩 상태 스타일

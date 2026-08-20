@@ -160,6 +160,12 @@ export const dDay = style({
   fontFamily: vars.font.semibold,
   fontSize: 12,
   lineHeight: "16px",
+  selectors: {
+    '&[data-ended="true"]': {
+      background: vars.color.gray200,
+      color: vars.color.gray600,
+    },
+  },
 });
 
 export const readingEmpty = style({
@@ -175,7 +181,7 @@ export const readingEmpty = style({
   lineHeight: "20px",
 });
 
-export const managementReadingBtn = style({
+export const managementBtn = style({
   fontSize: "14px",
   fontFamily: vars.font.medium,
   color: vars.color.gray600,
@@ -183,7 +189,23 @@ export const managementReadingBtn = style({
   alignItems: "center",
   justifyContent: "flex-end",
   marginTop: "8px",
+  transition: 'color 160ms ease',
+  selectors: {
+    '&:hover':{
+      color: vars.color.gray900
+    }
+  }
 });
+
+export const managementReadingBtn = style([
+  managementBtn,
+  {marginTop: "8px"}
+]);
+
+export const managementMembersBtn = style([
+  managementBtn,
+  {marginTop: "16px"}
+]);
 
 export const currentReadingContent = style({
   display: "flex",
@@ -517,7 +539,4 @@ export const fixedActionArea = style({
   width: "calc(100% - 32px)",
   maxWidth: 568,
   margin: "0 auto",
-  display:"grid",
-  gridTemplateColumns: '1fr 1fr',
-  gap: '10px'
 });
