@@ -413,7 +413,7 @@
              , F.FILE_PATH AS PORF_PATH
              , P.BOOK_NUMB
              , P.REPT_STAT
-             , COALESCE(C.COMD_NAME, P.REPT_STAT) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, P.REPT_STAT, NULL) AS REPT_STAT_NAME
              , P.REPT_GRDE
              , P.REPT_CNTN
              , P.PUBC_YSNO
@@ -428,10 +428,6 @@
             ON P.USER_NUMB = U.USER_NUMB
      LEFT JOIN TM_FILEXM F
             ON U.PROF_NUMB = F.FILE_NUMB
-     LEFT JOIN TB_CODEXD C
-            ON C.COMM_CODE = #{codeReadStat}
-           AND C.COMD_CODE = P.REPT_STAT
-           AND COALESCE(C.USEE_YSNO, #{commYes}) = #{commYes}
      LEFT JOIN TB_FOLLOW FW
             ON FW.USER_NUMB = #{userNumb}
            AND FW.FLOW_NUMB = P.USER_NUMB

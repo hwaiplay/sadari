@@ -3,6 +3,7 @@ import { message } from "@/app/messages/message";
 import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import { getNoticeDetailApi, type Notice } from "@/features/Notice/api/noticeApi";
+import { NoticeCategoryBadge } from "@/features/Notice/components/NoticeCategoryBadge";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import * as styles from "./NoticePage.css";
@@ -112,7 +113,7 @@ function NoticeDetailPage() {
               </svg>
 
             )}
-            <span className={styles.category}>{notice.cateName}</span>
+            <NoticeCategoryBadge categoryName={notice.cateName} />
           </div>
         </div>
       </header>
