@@ -1,4 +1,4 @@
-import api from "@/app/api/axios";
+import api, { type SadariRequestConfig } from "@/app/api/axios";
 import {
   assertResultDataSuccess,
   type PageData,
@@ -112,12 +112,19 @@ export async function setReadingTimerApi(reptNumb?: number, targSecs?: number) {
  * @author SeungHyeon.Kang
  * @param tmrxNumb 변경할 타이머 세션 번호
  * @param tmrxStat 변경할 타이머 상태
+ * @param skipBlockingOperation 공통 처리 중 알림과 이동 차단 제외 여부
  * @return 상태 변경 후 독서 타이머 화면 요약
  */
-export async function uptReadingTimerApi(tmrxNumb: number, tmrxStat: TimerStatus) {
+export async function uptReadingTimerApi(tmrxNumb: number, tmrxStat: TimerStatus, skipBlockingOperation = false) {
 
+  // 호출 화면의 즉시 제어 정책을 공통 Axios 처리 중 화면 설정에 전달한다
+  const requestConfig: SadariRequestConfig = { skipBlockingOperation };
   // 사용자 소유 세션의 목표 상태를 서버에 전달한다
-  const response = await api.patch<ResultData<ReadingTimerSummary>>(`/reading-timer/sessions/${tmrxNumb}`, { tmrxStat });
+  const response = await api.patch<ResultData<ReadingTimerSummary>>(
+    `/reading-timer/sessions/${tmrxNumb}`,
+    { tmrxStat },
+    requestConfig,
+  );
   // 공통 응답 성공 여부를 검증한 결과를 반환한다
   return assertResultDataSuccess(response.data);
 }

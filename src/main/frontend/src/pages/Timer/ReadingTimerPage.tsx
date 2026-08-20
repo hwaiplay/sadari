@@ -1566,7 +1566,7 @@ export default function ReadingTimerPage() {
                 >
                   {targetSeconds ? (
                     <>
-                      {/* "타이머 {0}" */}
+                      {/* "{0}" */}
                       {message("frontend.timer.setting.buttonValue", [formatTimerSetting(targetSeconds)])}
                     </>
                   ) : (
