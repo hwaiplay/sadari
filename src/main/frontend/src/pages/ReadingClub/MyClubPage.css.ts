@@ -299,7 +299,7 @@ export const findClubArrow = style({
 export const createButton = style({
   position: "fixed",
   right: "max(24px, calc((100vw - 600px) / 2 + 24px))",
-  bottom: `calc(20px + env(safe-area-inset-bottom, 0px))`,
+  bottom: `calc(${vars.headerHeight} + max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)) + 24px)`,
   zIndex: 20,
   width: 62,
   height: 62,
@@ -312,6 +312,7 @@ export const createButton = style({
   alignItems: "center",
   justifyContent: "center",
   cursor: "pointer",
+  color: "#fff",
   transition: "filter 160ms ease",
   selectors: {
     "&:hover": {filter: "brightness(0.95)"},
