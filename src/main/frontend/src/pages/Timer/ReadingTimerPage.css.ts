@@ -1,5 +1,7 @@
 import { style } from "@vanilla-extract/css";
+import { selectableOption } from "@/app/styles/controls.css";
 import { vars } from "@/app/styles/tokens.css";
+import { searchBtn } from "@/features/Book/Set/components/searchBookButton/SearchBookButton.css";
 
 export const page = style({
   width: "100%",
@@ -185,27 +187,24 @@ export const bookCoverButton = style([bookCoverFrame, {
       boxShadow: "0 12px 26px rgba(0, 0, 0, 0.18)",
       transform: "translateY(-1px)",
     },
-    "&[data-empty='true']": {
-      border: 0,
-      backgroundColor: "#fbfcfc",
-      backgroundImage: `
-        repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
-        repeating-linear-gradient(90deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
-        repeating-linear-gradient(180deg, ${vars.color.gray500} 0 9px, transparent 9px 16px),
-        repeating-linear-gradient(180deg, ${vars.color.gray500} 0 9px, transparent 9px 16px)
-      `,
-      backgroundPosition: "top left, bottom left, top left, top right",
-      backgroundSize: "100% 2px, 100% 2px, 2px 100%, 2px 100%",
-      backgroundRepeat: "no-repeat",
-      boxShadow: "none",
-    },
-    "&[data-empty='true']:hover": {
-      borderColor: vars.color.gray500,
-      boxShadow: "none",
-      transform: "none",
-    },
     "&:focus-visible": {
       borderColor: vars.color.brandText,
+      outline: `2px solid ${vars.color.brand}`,
+      outlineOffset: "3px",
+    },
+  },
+}]);
+
+export const emptyBookCoverButton = style([searchBtn, {
+  width: "90px",
+  height: "135px",
+  flex: "0 0 90px",
+  padding: 0,
+  color: vars.color.gray600,
+  cursor: "pointer",
+  boxSizing: "border-box",
+  selectors: {
+    "&:focus-visible": {
       outline: `2px solid ${vars.color.brand}`,
       outlineOffset: "3px",
     },
@@ -217,46 +216,6 @@ export const coverImage = style({
   width: "100%",
   height: "100%",
   objectFit: "cover",
-});
-
-export const bookCoverPlaceholder = style({
-  position: "relative",
-  display: "flex",
-  width: "100%",
-  height: "100%",
-  padding: "16px 10px",
-  flexDirection: "column",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "8px",
-  backgroundColor: "transparent",
-  color: vars.color.gray600,
-  fontFamily: vars.font.semibold,
-  fontSize: "13px",
-  lineHeight: 1.35,
-  textAlign: "center",
-  boxSizing: "border-box",
-});
-
-export const bookPlaceholderPlus = style({
-  position: "absolute",
-  top: "50%",
-  left: "50%",
-  display: "block",
-  color: vars.color.gray700,
-  fontFamily: vars.font.body,
-  fontSize: "36px",
-  fontWeight: 300,
-  lineHeight: 1,
-  transform: "translate(-50%, -50%)",
-});
-
-export const bookPlaceholderText = style({
-  position: "absolute",
-  right: "8px",
-  bottom: "24px",
-  left: "8px",
-  textAlign: "center",
 });
 
 export const coverActionLabel = style({
@@ -542,6 +501,176 @@ export const modalFooterButton = style({
   boxSizing: "border-box",
 });
 
+export const timerSettingModal = style([bookModal, {
+  width: "min(420px, 100%)",
+  borderRadius: "18px",
+  backgroundColor: "#ffffff",
+}]);
+
+export const timerSettingClose = style({
+  width: "32px",
+  height: "32px",
+  flex: "0 0 32px",
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  backgroundColor: "#f3f4f5",
+  color: vars.color.black,
+  fontSize: "22px",
+  lineHeight: 1,
+  cursor: "pointer",
+  transition: "background-color 160ms ease",
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray200,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
+});
+
+export const timerSettingBody = style({
+  padding: "8px 20px 0",
+});
+
+export const timerSettingGrid = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+  gap: "10px",
+});
+
+export const timerSettingField = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  gap: "7px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  textAlign: "center",
+});
+
+export const timerSettingStepper = style({
+  minHeight: "104px",
+  display: "grid",
+  gridTemplateRows: "32px 40px 32px",
+  overflow: "hidden",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "10px",
+  backgroundColor: "#fafafa",
+  transition: "background-color 160ms ease, box-shadow 160ms ease",
+  selectors: {
+    "&:focus-within": {
+      backgroundColor: "#ffffff",
+      boxShadow: `0 0 0 2px ${vars.color.gray300}`,
+    },
+  },
+});
+
+export const timerSettingStepButton = style({
+  padding: 0,
+  border: 0,
+  backgroundColor: vars.color.gray100,
+  color: vars.color.gray700,
+  fontFamily: vars.font.heading,
+  fontSize: "18px",
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray200,
+    },
+  },
+});
+
+export const timerSettingInput = style({
+  width: "100%",
+  minWidth: 0,
+  padding: 0,
+  border: 0,
+  outline: 0,
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: "22px",
+  textAlign: "center",
+  boxSizing: "border-box",
+});
+
+export const timerSettingPresetList = style({
+  display: "grid",
+  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+  gap: "8px",
+  marginTop: "14px",
+});
+
+export const timerSettingPreset = style([
+  selectableOption,
+  {
+    position: "relative",
+    minWidth: 0,
+    minHeight: "42px",
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: "0 8px",
+    borderRadius: "10px",
+    fontFamily: vars.font.semibold,
+    fontSize: "14px",
+    lineHeight: 1,
+    textAlign: "center",
+    cursor: "pointer",
+    boxSizing: "border-box",
+    selectors: {
+      "&:has(input:checked)": {
+        boxShadow: "none",
+      },
+      "&[data-selected='true']": {
+        boxShadow: "none",
+      },
+    },
+  },
+]);
+
+export const timerSettingPresetInput = style({
+  position: "absolute",
+  width: "1px",
+  height: "1px",
+  padding: 0,
+  margin: "-1px",
+  overflow: "hidden",
+  clip: "rect(0, 0, 0, 0)",
+  whiteSpace: "nowrap",
+  border: 0,
+});
+
+export const timerSettingGuide = style({
+  minHeight: "22px",
+  margin: "14px 0 0",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.5,
+  textAlign: "center",
+});
+
+export const modalActions = style({
+  display: "grid",
+  gridTemplateColumns: "1fr 1fr",
+  gap: "8px",
+  padding: "20px",
+});
+
+export const modalActionButton = style({
+  width: "100%",
+  minWidth: 0,
+  borderRadius: "8px",
+});
+
 export const empty = style({
   margin: 0,
   color: vars.color.gray600,
@@ -550,9 +679,10 @@ export const empty = style({
   lineHeight: 1.5,
 });
 
-export const heatmapCard = style([card, {
-  marginTop: "24px",
-  padding: "20px",
+export const heatmapCard = card;
+
+export const heatmapTitle = style([cardTitle, {
+  margin: 0,
 }]);
 
 export const heatmapState = style({
@@ -588,4 +718,110 @@ export const heatmapRetry = style({
   fontFamily: vars.font.medium,
   fontSize: "13px",
   cursor: "pointer",
+});
+
+export const bookTimeCard = style([card, {
+  marginTop: "10px",
+  padding: "18px",
+  border: `1px solid ${vars.color.gray300}`,
+}]);
+
+export const bookTimeList = style({
+  display: "flex",
+  flexDirection: "column",
+});
+
+export const bookTimeItem = style({
+  minWidth: 0,
+  display: "grid",
+  gridTemplateColumns: "48px minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: "12px",
+  padding: "12px 0",
+  borderRadius: "8px",
+  color: "inherit",
+  textDecoration: "none",
+  transition: "background-color 160ms ease",
+  selectors: {
+    "& + &": {
+      borderTop: `1px solid ${vars.color.gray300}`,
+    },
+    "&:hover": {
+      backgroundColor: vars.color.gray100,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
+  "@media": {
+    "screen and (max-width: 380px)": {
+      gridTemplateColumns: "44px minmax(0, 1fr) auto",
+      gap: "10px",
+    },
+  },
+});
+
+export const bookTimeCover = style({
+  width: "48px",
+  height: "72px",
+  display: "block",
+  borderRadius: "4px",
+  objectFit: "cover",
+  backgroundColor: vars.color.gray100,
+  "@media": {
+    "screen and (max-width: 380px)": {
+      width: "44px",
+      height: "66px",
+    },
+  },
+});
+
+export const bookTimeInfo = style({
+  minWidth: 0,
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "flex-start",
+  gap: "5px",
+});
+
+export const bookTimeBookTitle = style({
+  width: "100%",
+  overflow: "hidden",
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  lineHeight: 1.35,
+  color: vars.color.gray900,
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+});
+
+export const bookTimeBookAuthor = style({
+  width: "100%",
+  overflow: "hidden",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.3,
+  color: vars.color.gray600,
+  whiteSpace: "nowrap",
+  textOverflow: "ellipsis",
+});
+
+export const bookTimeValue = style({
+  color: "#34704d",
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  fontVariantNumeric: "tabular-nums",
+  lineHeight: 1.45,
+  whiteSpace: "nowrap",
+});
+
+export const bookTimeEmpty = style({
+  margin: 0,
+  padding: "28px 12px 20px",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+  lineHeight: 1.5,
+  textAlign: "center",
 });

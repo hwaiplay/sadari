@@ -121,7 +121,7 @@ scheduler:
 # 독서 타이머는 서울 시간대 기준 하루 10분을 출석으로 인정하고 세션 상세를 1년 보존한다.
 reading-timer:
   attendance-min-seconds: ${TIMER_ATTENDANCE_MIN_SECONDS:600}
-  max-session-seconds: ${TIMER_MAX_SESSION_SECONDS:14400}
+  max-session-seconds: ${TIMER_MAX_SESSION_SECONDS:28800}
   zone-id: ${TIMER_ZONE_ID:Asia/Seoul}
   detail-retention-days: ${TIMER_DETAIL_RETENTION_DAYS:365}
 

@@ -13,6 +13,7 @@ import lombok.Getter;
  * 2026-03-25        SeungHyeon.Kang    최초 생성
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 계정 인증 코드 추가
  * 2026-08-16        SeungHyeon.Kang    도서 검색 요청 제한 코드 추가
+ * 2026-08-20        SeungHyeon.Kang    타이머 목표시간 검증 코드 추가
  */
 @Getter
 public enum ResultEnum {
@@ -126,6 +127,11 @@ public enum ResultEnum {
      * 타이머에 연결할 수 없는 독후감을 요청한 경우의 실패 코드이다.
      */
     TIMER_BOOK_INVALID(2023, "timer.alert.0003"),
+
+    /**
+     * 독서 타이머 알림 목표시간이 허용 범위를 벗어난 경우의 실패 코드이다.
+     */
+    TIMER_TARGET_INVALID(2025, "timer.alert.0004"),
 
     /**
      * 회원 또는 앱 전체의 도서 검색 호출 제한을 초과한 경우의 실패 코드이다.

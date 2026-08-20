@@ -13,6 +13,7 @@
 - 본인 댓글 좋아요, 중복 좋아요 등록 및 좋아요 취소에는 댓글 좋아요 알림을 생성하지 않습니다.
 - 모임장이 활성 맞팔 회원을 초대하면 초대 대상자에게 `CLUB`·`INVITE_CLUB` 알림을 저장하고, 활성 푸시 구독이 있으면 커밋 후 푸시를 발송합니다.
 - `INVITE_CLUB` 템플릿에는 `#{userName}`으로 모임장 닉네임을, `#{clubName}`으로 모임명을 전달하며 링크 대상 번호에는 모임 번호를 사용합니다.
+- 독서 타이머 목표시간이 지나면 `REPORT` 상황의 `BOOK_TIMER_OVER` 템플릿에 `#{timerTime}`을 전달하고 `/timer`로 이동하는 알림을 저장합니다.
 
 ## 중복 방지
 
@@ -20,6 +21,7 @@
 - 동일한 알림이 최근 1시간 이내에 있으면 새 알림 생성을 생략합니다.
 - 반복적인 좋아요 또는 팔로우 조작으로 같은 알림이 누적되는 것을 방지합니다.
 - 댓글 좋아요 취소 후 1시간 안에 같은 표시 내용과 링크로 다시 좋아요가 등록되면 새 알림 생성을 생략합니다.
+- `BOOK_TIMER_OVER`는 세션마다 독립된 목표시간 이벤트이므로 댓글 등록 알림과 같이 1시간 중복 차단 대상에서 제외합니다.
 
 ## 알림센터
 
@@ -72,6 +74,7 @@
 - 수신자가 비활성화 또는 영구 삭제 대기 상태로 전환되면 받은 알림을 삭제 상태로 변경하고 복귀 시 자동 복원하지 않습니다.
 - 계정 복귀 시 유효한 독서 모임 초대가 다시 표시되더라도 기존 초대 알림을 복원하거나 재발송하지 않습니다.
 - `WITHDRAWN` 또는 `DELETE_PENDING` 전환 시 모든 기기 푸시 구독을 비활성화하며, 재로그인이나 탈퇴 취소만으로 자동 활성화하지 않습니다. 사용자가 다시 명시적으로 푸시 알림을 켜야 합니다.
+- 계정 상태 전환 전에 예약된 `BOOK_TIMER_OVER` 알림은 취소하며 복귀 또는 탈퇴 취소 뒤 자동 복원하거나 재발송하지 않습니다.
 - 영구 삭제 시 `TB_PSHSUB`의 회원 푸시 구독 행을 물리 삭제합니다.
 - 댓글 좋아요 발신자가 탈퇴하거나 대상 댓글이 삭제돼도 이미 발송된 알림은 수신자의 기록으로 유지합니다.
 - 유지된 알림은 수신자의 모두 지우기와 알림 삭제 스케줄러 및 영구 탈퇴 정책에 따라 정리합니다.
@@ -80,17 +83,19 @@
 
 ## 구현 근거
 
-- `alim/service/AlimServiceImpl.java`
-- `alim/mapper/AlimMapper.xml`
-- `push/service/PushServiceImpl.java`
-- `push/service/FirebaseMessagingProvider.java`
-- `pages/Alim/AlimPage.tsx`
-- `features/Push/firebaseMessaging.ts`
-- `reply/service/ReplyServiceImpl.java`
-- `reply/mapper/ReplyMapper.xml`
+- `src/main/java/org/our/sadari/alim/service/AlimServiceImpl.java`
+- `src/main/java/org/our/sadari/alim/mapper/AlimMapper.xml`
+- `src/main/java/org/our/sadari/push/service/PushServiceImpl.java`
+- `src/main/java/org/our/sadari/push/service/FirebaseMessagingProvider.java`
+- `src/main/frontend/src/pages/Alim/AlimPage.tsx`
+- `src/main/frontend/src/app/pwa/firebaseMessaging.ts`
+- `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
+- `src/main/java/org/our/sadari/reply/mapper/ReplyMapper.xml`
 - `src/main/java/org/our/sadari/readingClub/service/ReadingClubServiceImpl.java`
 - `src/main/java/org/our/sadari/readingClub/mapper/ReadingClubMapper.xml`
-- `global/common/constant/Constant.java`
+- `src/main/java/org/our/sadari/global/common/constant/Constant.java`
+- `src/main/java/org/our/sadari/timer/service/ReadingTimerServiceImpl.java`
 - `TB_ALTEMP`의 `LIKE`·`REPLY_LIKE`, `CLUB`·`INVITE_CLUB` 템플릿
+- `TB_ALTEMP`의 `REPORT`·`BOOK_TIMER_OVER` 템플릿
 - `TM_ALICON.ALIM_SITU`, `TB_ALTEMP.ALIM_SITU`, `TB_ALIMXX.ALIM_SITU`
 - `sadari-admin` 저장소 `alimicon` 패키지와 `pages/alim/AlimIconDetailPage.tsx`

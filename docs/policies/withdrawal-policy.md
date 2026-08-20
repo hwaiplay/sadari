@@ -130,11 +130,17 @@
 ## 독서 타이머 및 출석 데이터 처리
 
 - `WITHDRAWN`과 `DELETE_PENDING` 전환 시 진행 중이거나 일시정지된 독서 타이머를 즉시 완료 처리하고 이후 타이머 화면과 API 접근을 중지합니다.
+- 계정 상태 전환으로 타이머를 완료할 때 아직 발송되지 않은 목표시간 예약 `ALRM_DATE`를 제거하며 복귀 또는 영구 탈퇴 취소 시 자동 복원하지 않습니다.
 - `WITHDRAWN`과 `DELETE_PENDING` 상태에서는 일반 네비게이션의 타이머 실행 표시를 제공하지 않으며, 계정 복귀 후 새 타이머가 `RUNNING` 상태가 된 경우에만 다시 표시합니다.
 - 계정 제한 전까지 확정된 세션 상세와 날짜별 누적 독서 시간은 유지합니다.
 - 계정 비활성화 복귀 또는 영구 탈퇴 취소 시 보존된 타이머 기록과 출석 이력을 다시 제공합니다.
+- 도서별 누적 독서 시간 목록은 보존 중인 완료 세션 상세를 기준으로 계산하므로 `WITHDRAWN`과 `DELETE_PENDING` 상태에서는 페이지 조회 API까지 차단해 숨기고, 계정 복귀 또는 영구 탈퇴 취소 시 보존된 기록 범위에서 20권 단위로 다시 제공합니다.
+- 도서별 누적 독서 시간의 독후감 이동 링크는 계정 제한 중 함께 숨기며, 계정 복귀 또는 영구 탈퇴 취소 뒤 보존된 본인 독후감 연결만 다시 제공합니다. 연결 독후감의 접근·공개·보존·삭제는 기존 독후감 정책을 따르며 별도 공개 또는 복원 동작을 추가하지 않습니다.
 - 완료된 세션 상세는 종료일 기준 1년 동안 보존하며 날짜별 누적값은 회원 원본이 물리 삭제될 때까지 유지합니다.
+- 목표시간 `TARG_SECS`, 알림 예정 일시 `ALRM_DATE`, 발송 일시 `SEND_DATE`는 해당 타이머 세션 상세의 보존·삭제 범위를 그대로 따릅니다.
+- 상태 전환 전에 이미 저장된 `BOOK_TIMER_OVER` 알림은 받은 알림의 기존 삭제·미복원 정책을 따릅니다.
 - 유예기간이 끝나 회원이 물리 삭제되면 `TM_RDTMRX`와 `TB_RDATDX`의 회원 데이터를 모두 삭제하고 복구하지 않습니다.
+- 회원 원본 물리 삭제 뒤에는 도서별 누적 독서 시간도 별도 집계나 스냅샷으로 보존하지 않으며 복구하지 않습니다.
 - 마이페이지 독서 통계는 `ACTIVE` 상태의 본인에게 제공하며, 공개를 허용한 경우에만 다른 사용자의 프로필에도 제공합니다. `WITHDRAWN`과 `DELETE_PENDING` 상태에서는 본인 화면과 공개 프로필 모두에서 통계를 제공하지 않습니다.
 - `WITHDRAWN` 또는 `DELETE_PENDING` 전환 시 본인과 공개 프로필의 모든 연도 독서 통계를 숨기고 회원 설정 `TM_USSETX.RSTA_YSNO`를 `N`으로 변경합니다. 설정 행이 없는 회원은 기본값이 비공개이므로 새 행을 생성하지 않습니다.
 - 계정 복귀 또는 영구 탈퇴 취소 후에도 독서 통계 공개 여부를 자동 복원하지 않으며 회원이 다시 공개로 설정해야 합니다.
@@ -318,6 +324,9 @@
 
 - `src/main/java/org/our/sadari/user/service/UserWithdrawalServiceImpl.java`
 - `src/main/java/org/our/sadari/user/mapper/UserWithdrawalMapper.xml`
+- `src/main/java/org/our/sadari/timer/dto/ReadingTimerDto.java`
+- `src/main/java/org/our/sadari/timer/mapper/ReadingTimerMapper.xml`
+- `src/main/frontend/src/pages/Timer/ReadingTimerPage.tsx`
 - `src/main/java/org/our/sadari/global/security/dto/TokenDto.java`
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/global/common/service/UserIdEncryptionService.java`
@@ -326,7 +335,6 @@
 - `src/main/java/org/our/sadari/global/file/service/FileService.java`
 - `src/main/java/org/our/sadari/global/scheduler/ProfileImageDraftCleanupScheduler.java`
 - `src/main/java/org/our/sadari/global/file/mapper/FileMapper.xml`
-- `src/main/java/org/our/sadari/global/scheduler/LocalUserHardDeleteScheduler.java`
 - `src/main/java/org/our/sadari/global/scheduler/mapper/UserHardDeleteMapper.xml`
 - `src/main/frontend/src/pages/Settings/WithdrawalPage.tsx`
 - `src/main/frontend/src/pages/Settings/WithdrawalPendingPage.tsx`
