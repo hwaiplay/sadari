@@ -32,8 +32,7 @@ import java.util.Map;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 조회 적용
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 처리
  */
 @Service
 @Transactional(readOnly = true)

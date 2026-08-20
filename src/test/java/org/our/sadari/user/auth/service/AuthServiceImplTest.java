@@ -51,10 +51,8 @@ import org.springframework.web.client.HttpClientErrorException;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    로그인 제공자 풀네임 코드 검증
- * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 Kakao 계정 재가입 차단 검증
- * 2026-08-13        SeungHyeon.Kang    Kakao OAuth HTTP 오류 인증 실패 변환 검증
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 로그인 제공자 검증
+ * 2026-08-13        SeungHyeon.Kang    재가입 차단·OAuth 예외 검증
  * 2026-08-16        SeungHyeon.Kang    테스트 간 Locale 변경에도 공통 인증 메시지 검증 안정화
  */
 @ExtendWith(MockitoExtension.class)

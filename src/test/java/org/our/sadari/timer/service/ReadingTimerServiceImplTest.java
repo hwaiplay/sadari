@@ -34,8 +34,7 @@ import static org.mockito.Mockito.when;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 조회 범위 검증
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingTimerServiceImplTest {

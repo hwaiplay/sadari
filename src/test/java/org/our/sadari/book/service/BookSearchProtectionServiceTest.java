@@ -44,9 +44,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-16        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    비속어 제외 인기 검색어 집계와 조회 검증 추가
- * 2026-08-16        SeungHyeon.Kang    로컬 반복 검색 집계 설정 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchProtectionServiceTest {

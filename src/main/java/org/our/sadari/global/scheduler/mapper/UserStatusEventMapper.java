@@ -14,9 +14,7 @@ import java.util.List;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    이벤트 삭제를 처리 완료 상태 수정으로 변경
- * 2026-07-30        SeungHyeon.Kang    처리 완료 이벤트 삭제와 정지 동기화 상태 수정으로 변경
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 이벤트 상태 처리
  */
 @Mapper
 public interface UserStatusEventMapper {

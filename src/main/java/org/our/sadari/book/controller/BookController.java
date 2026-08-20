@@ -33,10 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-30        SeungHyeon.Kang    도서 표지 기반 책장 색상 자동 선택 API 추가
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 검색 API 적용
  * 2026-08-01        Hanwon.Jang        읽는 중 독후감 평균 평점 제외 정책 추가
- * 2026-08-16        SeungHyeon.Kang    로그인 회원 도서 검색 제한과 50권 페이지 응답 적용
- * 2026-08-16        SeungHyeon.Kang    이번 달 인기 도서 목록 API 추가
- * 2026-08-16        SeungHyeon.Kang    주간과 월간 및 연간 인기 도서 선택 API 적용
- * 2026-08-16        SeungHyeon.Kang    최근 인기 검색어 조회 API 추가
+ * 2026-08-16        SeungHyeon.Kang    인기 도서·검색어 조회 API 추가
  */
 @Slf4j
 @RestController

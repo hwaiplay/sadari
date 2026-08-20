@@ -14,8 +14,7 @@ import org.our.sadari.menu.dto.UserMenuDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
- * 2026-08-10        SeungHyeon.Kang    3단계 사용자 메뉴 조회 구조 적용
- * 2026-08-10        SeungHyeon.Kang    화면별 하위 사용자 메뉴 조회 추가
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 계층 조회 추가
  */
 @Mapper
 public interface UserMenuMapper {

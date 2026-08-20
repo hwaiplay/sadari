@@ -31,8 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-29        HanWon.Jang        댓글 조회 시 로그인 사용자 번호 전달
- * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 추가
- * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 추가
+ * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 API
  * 2026-08-11        SeungHyeon.Kang    다중 탭 댓글 수정 충돌 409 응답 추가
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
  */

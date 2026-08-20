@@ -29,8 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    주어별 네 개의 호환 서술어 옵션 적용
- * 2026-07-30        SeungHyeon.Kang    닉네임 순번 키를 세부코드 조합으로 변경
+ * 2026-07-30        SeungHyeon.Kang    닉네임 조합·순번 정책 정리
  * 2026-08-07        SeungHyeon.Kang    자동 발급 닉네임 공백 제거
  */
 @Service

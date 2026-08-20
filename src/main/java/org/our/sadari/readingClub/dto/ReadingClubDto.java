@@ -23,8 +23,7 @@ import org.our.sadari.book.dto.BookDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    모임원 프로필 응답 DTO 추가
- * 2026-08-14        Hanwon.Jang    모임 독서 등록 요청 DTO 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·독서 등록 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {

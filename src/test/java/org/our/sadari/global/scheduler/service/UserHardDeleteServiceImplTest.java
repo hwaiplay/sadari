@@ -31,8 +31,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-06        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 키 삭제 검증 추가
- * 2026-08-16        SeungHyeon.Kang    인기 검색어 회원별 중복 방지 키 삭제 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 키 삭제 검증
  */
 @ExtendWith(MockitoExtension.class)
 class UserHardDeleteServiceImplTest {

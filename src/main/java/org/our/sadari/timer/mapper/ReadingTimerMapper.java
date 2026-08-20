@@ -16,8 +16,7 @@ import java.util.List;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 조회 범위 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 조회
  */
 @Mapper
 public interface ReadingTimerMapper {

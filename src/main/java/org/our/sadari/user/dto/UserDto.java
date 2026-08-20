@@ -16,8 +16,7 @@ import lombok.Data;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
- * 2026-07-29        SeungHyeon.Kang    닉네임 허용 문자와 최대 길이 설명 확장
- * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
+ * 2026-07-29        SeungHyeon.Kang    닉네임 문자·길이 설명 정리
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 온보딩 완료 여부 추가
  * 2026-08-04        SeungHyeon.Kang       최초 로그인 관심분야 선택 데이터 추가
  * 2026-08-05        SeungHyeon.Kang       관심분야 요청에서 공통코드 그룹 제거

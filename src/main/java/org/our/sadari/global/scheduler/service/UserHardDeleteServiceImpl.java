@@ -31,8 +31,7 @@ import java.util.concurrent.TimeUnit;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
  * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
- * 2026-08-16        SeungHyeon.Kang    영구 탈퇴 회원의 도서 검색 제한 데이터 삭제 추가
- * 2026-08-16        SeungHyeon.Kang    인기 검색어 회원별 중복 방지 데이터 삭제 추가
+ * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 데이터 삭제 추가
  */
 @Service
 @RequiredArgsConstructor

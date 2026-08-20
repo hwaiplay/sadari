@@ -25,9 +25,7 @@ import java.time.LocalDateTime;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    기간 만료 상태 변경 Outbox 전달 추가
- * 2026-07-30        SeungHyeon.Kang    정지 이력 부재 시 로그인 상태 캐시 보정
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 정지 상태 동기화
  */
 @Service
 @RequiredArgsConstructor

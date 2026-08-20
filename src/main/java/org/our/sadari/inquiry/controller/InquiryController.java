@@ -22,8 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-13        SeungHyeon.Kang    최초 생성
- * 2026-08-13        SeungHyeon.Kang    현재 정지 이의제기 문의 조회 API 추가
+ * 2026-08-13        SeungHyeon.Kang    최초 생성 및 정지 문의 조회 API
  */
 @RestController
 @RequiredArgsConstructor

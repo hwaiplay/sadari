@@ -29,12 +29,9 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-28        Hanwon.Jang        최초 생성
- * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 구현
- * 2026-07-29        HanWon.Jang        댓글 등록 시 독후감 작성자 알림 발송
- * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 조회
- * 2026-08-03        HanWon.Jang        정상 이용 중인 본인 댓글 수정 및 논리 삭제 구현
- * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 구현
+ * 2026-07-28        Hanwon.Jang        최초 생성 및 댓글 조회·등록
+ * 2026-07-29        Hanwon.Jang        댓글 알림·작성 여부 조회 추가
+ * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 처리 추가
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 구현
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
  */

@@ -36,8 +36,7 @@ import org.springframework.web.multipart.MultipartFile;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-20        SeungHyeon.Kang    최초 생성
- * 2026-07-29        SeungHyeon.Kang    닉네임 공백 및 허용 특수문자와 20자 길이 검증 추가
- * 2026-07-29        SeungHyeon.Kang    닉네임 최대 길이를 25자로 확장
+ * 2026-07-29        SeungHyeon.Kang    닉네임 검증·길이 정책 정리
  * 2026-07-30        SeungHyeon.Kang    최초 로그인 닉네임 확정과 온보딩 완료 처리 추가
  * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
  * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 검증과 현재 선택 조회 반영
