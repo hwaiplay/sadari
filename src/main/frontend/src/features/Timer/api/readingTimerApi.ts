@@ -1,5 +1,9 @@
 import api from "@/app/api/axios";
-import { assertResultDataSuccess, type ResultData } from "@/app/api/resultData";
+import {
+  assertResultDataSuccess,
+  type PageData,
+  type ResultData,
+} from "@/app/api/resultData";
 
 export type TimerStatus = "RUNNING" | "PAUSED" | "COMPLETED";
 
@@ -9,6 +13,9 @@ export type ReadingTimer = {
   bookTitl?: string;
   bookCvim?: string;
   tmrxStat: TimerStatus;
+  targSecs?: number;
+  alrmDate?: string;
+  sendDate?: string;
   strtDate: string;
   lastStrt?: string;
   endxDate?: string;
@@ -20,6 +27,16 @@ export type ReadingTimerDaily = {
   readSecs: number;
   attended: boolean;
   today: boolean;
+};
+
+export type ReadingTimerBookTime = {
+  reptNumb: number;
+  bookNumb: number;
+  bookTitl: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  readSecs: number;
+  lastReadDate: string;
 };
 
 export type ReadingTimerSummary = {
@@ -55,16 +72,36 @@ export async function getReadingTimerSummaryApi(): Promise<
 }
 
 /**
+ * 도서별 누적 독서 시간을 최근 완료 기록순으로 20권씩 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param page 조회할 페이지 번호
+ * @return 도서별 누적 독서 시간 페이지 응답
+ */
+export async function getBookTimePageApi(page: number): Promise<
+  ResultData<PageData<ReadingTimerBookTime>> & { data: PageData<ReadingTimerBookTime> }
+> {
+
+  // 서버가 제한한 도서별 누적 독서 시간 페이지를 조회한다
+  const response = await api.get<
+    ResultData<PageData<ReadingTimerBookTime>> & { data: PageData<ReadingTimerBookTime> }
+  >("/reading-timer/book-times", { params: { page } });
+  // 공통 응답 성공 여부를 검증한 페이지 데이터를 반환한다
+  return assertResultDataSuccess(response.data);
+}
+
+/**
  * 선택한 읽는 중 도서와 연결하거나 도서 없이 타이머를 시작한다
  *
  * @author SeungHyeon.Kang
  * @param reptNumb 연결할 독후감 번호
+ * @param targSecs 알림 목표 독서 시간 초
  * @return 시작 후 독서 타이머 화면 요약
  */
-export async function setReadingTimerApi(reptNumb?: number) {
+export async function setReadingTimerApi(reptNumb?: number, targSecs?: number) {
 
-  // 선택한 독후감 번호를 시작 요청에 전달한다
-  const response = await api.post<ResultData<ReadingTimerSummary>>("/reading-timer/sessions", { reptNumb });
+  // 선택한 독후감 번호와 알림 목표시간을 시작 요청에 전달한다
+  const response = await api.post<ResultData<ReadingTimerSummary>>("/reading-timer/sessions", { reptNumb, targSecs });
   // 공통 응답 성공 여부를 검증한 결과를 반환한다
   return assertResultDataSuccess(response.data);
 }

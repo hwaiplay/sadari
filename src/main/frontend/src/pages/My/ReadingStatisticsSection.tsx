@@ -52,6 +52,7 @@ type ReadingStatisticsSectionProps = {
 type ReadingHeatmapChartProps = {
   heatmap: ReadingHeatmap;
   onYearChange: (readYearValue: string) => void;
+  titleClassName?: string;
 };
 
 type HeatmapMonthMarker = {
@@ -523,9 +524,10 @@ const getHeatmapMonths = (dailyList: ReadingTimeDaily[], heatmapOffset: number):
  * @author SeungHyeon.Kang
  * @param heatmap 조회 가능한 연도와 날짜별 독서 시간
  * @param onYearChange 잔디 조회 연도 변경 함수
+ * @param titleClassName 화면별 독서 잔디 제목 스타일
  * @return 연도 선택과 월별 독서 시간 잔디 및 강도 범례
  */
-export function ReadingHeatmapChart({ heatmap, onYearChange }: ReadingHeatmapChartProps) {
+export function ReadingHeatmapChart({ heatmap, onYearChange, titleClassName }: ReadingHeatmapChartProps) {
   const heatmapOffset = getHeatmapOffset(heatmap.heatmapList[0]?.readDate);
   const heatmapMonths = getHeatmapMonths(heatmap.heatmapList, heatmapOffset);
   const heatmapColumns = Math.ceil((heatmapOffset + heatmap.heatmapList.length) / 7);
@@ -595,7 +597,7 @@ export function ReadingHeatmapChart({ heatmap, onYearChange }: ReadingHeatmapCha
     <section className={styles.chartBlock}>
       {/* 독서 잔디 제목과 연도 선택 영역 */}
       <div className={styles.chartHeader}>
-        <h3 className={styles.chartHeaderTitle}>
+        <h3 className={titleClassName ?? styles.chartHeaderTitle}>
           {/* "독서 잔디" */}
           {message("frontend.profile.readingStats.heatmapTitle")}
         </h3>
@@ -1063,9 +1065,10 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
    * @return 올해 오래 읽은 책 한 항목
    */
   const renderTopBook = (bookTime: ReadingBookTime, index: number) => {
-    // 제목과 저자가 비어 있어도 순위 항목의 구조가 유지되도록 대체 문구를 결정한다
+    // "제목 없는 책"
     const bookTitle = bookTime.bookTitl?.trim() || message("frontend.profile.readingStats.unknownBook");
-    const bookAuthor = bookTime.bookAthr?.trim() || message("frontend.profile.readingStats.unknownAuthor");
+    // "저자 정보 없음"
+    const bookAuthor = bookTime.bookAthr?.trim() || message("frontend.common.unknownAuthor");
     // 공개 프로필 응답처럼 독후감 번호가 없는 경우에는 링크를 만들지 않도록 안전한 번호를 계산한다
     const reportNumber = bookTime.reptNumb ?? 0;
     // 본인 화면에서 양수 독후감 번호가 확인된 항목만 링크 버튼으로 제공한다

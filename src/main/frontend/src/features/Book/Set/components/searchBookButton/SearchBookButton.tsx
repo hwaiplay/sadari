@@ -1,29 +1,36 @@
 
 import { message } from "@/app/messages/message";
 import { Link, type To } from "react-router-dom";
+import type { ReactNode } from "react";
 import { searchBtn, searchBtnText } from "./SearchBookButton.css";
 
 type SearchBookButtonProps = {
   to?: To;
 };
 
-/**
- * 도서 검색 화면으로 이동하는 버튼을 표시한다
- * @author HanWon.Jang
- * @param props 이동할 도서 검색 경로
- * @return 도서 검색 화면 이동 버튼
- */
-const SearchBookButton = ({ to = "/book/search" }: SearchBookButtonProps) => {
+type SearchBookButtonContentProps = {
+  children?: ReactNode;
+};
 
-  // 개인 또는 모임 흐름에서 지정한 도서 검색 화면 이동 버튼을 반환한다
+/**
+ * 도서 검색 진입 요소의 공통 아이콘과 문구를 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @param props 화면 맥락에 맞는 선택 문구
+ * @return 도서 검색 진입 요소의 공통 내용
+ */
+export function SearchBookButtonContent({ children }: SearchBookButtonContentProps) {
+
+  // 도서 검색 진입 요소에서 공유하는 아이콘과 문구를 반환한다
   return (
-    <Link to={to} className={searchBtn}>
+    <>
       <svg
         width="27"
         height="27"
         viewBox="0 0 27 27"
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
+        aria-hidden="true"
       >
         <path
           d="M13.2736 1.5V25.5"
@@ -39,9 +46,30 @@ const SearchBookButton = ({ to = "/book/search" }: SearchBookButtonProps) => {
         />
       </svg>
       <p className={searchBtnText}>
-        {/* "책 검색하기" */}
-        {message("frontend.book.search.open")}
+        {children ?? (
+          <>
+            {/* "책 검색하기" */}
+            {message("frontend.book.search.open")}
+          </>
+        )}
       </p>
+    </>
+  );
+}
+
+/**
+ * 도서 검색 화면으로 이동하는 버튼을 표시한다
+ * @author SeungHyeon.Kang
+ * @param props 이동할 도서 검색 경로
+ * @return 도서 검색 화면 이동 버튼
+ */
+const SearchBookButton = ({ to = "/book/search" }: SearchBookButtonProps) => {
+
+  // 개인 또는 모임 흐름에서 지정한 도서 검색 화면 이동 버튼을 반환한다
+  return (
+    <Link to={to} className={searchBtn}>
+      {/* 도서 검색 진입 아이콘과 안내 문구 영역 */}
+      <SearchBookButtonContent />
     </Link>
   );
 };

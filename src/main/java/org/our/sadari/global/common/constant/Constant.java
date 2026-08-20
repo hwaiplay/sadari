@@ -17,7 +17,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-13        SeungHyeon.Kang    팔로우 상태 코드 추가
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
- * 2026-08-20        SeungHyeon.Kang    고객문의 코드 추가
+ * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  */
 public final class Constant {
 
@@ -116,6 +116,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPORT_DATE_OVER = "REPORT_DATE_OVER";
+    // 설정한 독서 타이머 목표시간이 지난 경우 사용하는 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_BOOK_TIMER_OVER = "BOOK_TIMER_OVER";
     // 알림 템플릿 코드 댓글 설정값
     public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_REPORT";
     // 알림 템플릿 코드 댓글 좋아요 설정값
@@ -160,6 +162,8 @@ public final class Constant {
     public static final String SCHEDULER_CODE_USER_STATUS_SYNC = "USER_STATUS_SYNC";
     // 보존기간이 지난 독서 타이머 상세를 삭제하는 스케줄러 세부코드
     public static final String SCHEDULER_CODE_TIMER_DETAIL_DELETE = "TIMER_DETAIL_DELETE";
+    // 독서 타이머 목표시간 알림 스케줄러를 식별하는 로그 및 상세코드
+    public static final String SCHEDULER_CODE_BOOK_TIMER_OVER = "BOOK_TIMER_OVER";
 
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수

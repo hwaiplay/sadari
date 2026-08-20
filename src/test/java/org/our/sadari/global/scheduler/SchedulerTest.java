@@ -16,6 +16,7 @@ import org.our.sadari.global.scheduler.service.ReportDateOverService;
 import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 import org.our.sadari.global.scheduler.service.UserStatusEventService;
 import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
+import org.our.sadari.timer.service.ReadingTimerService;
 
 /**
  * fileName       : SchedulerTest
@@ -27,6 +28,7 @@ import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 스케줄러 분기 검증 추가
+ * 2026-08-20        SeungHyeon.Kang    타이머 알림 실행 분기 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerTest {
@@ -50,6 +52,9 @@ class SchedulerTest {
     // 독서 타이머 상세 정리 서비스
     @Mock
     private TimerDetailDeleteService timerDetailDeleteService;
+    // 독서 타이머 목표시간 알림 업무 처리 서비스
+    @Mock
+    private ReadingTimerService readingTimerService;
 
     // 공통코드 캐시 조회 객체
     @Mock
@@ -66,7 +71,8 @@ class SchedulerTest {
     @BeforeEach
     void setUp() {
         // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성한다
-        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService, timerDetailDeleteService, codeUtil);
+        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService
+                                , timerDetailDeleteService, readingTimerService, codeUtil);
     }
 
     /**
@@ -235,5 +241,37 @@ class SchedulerTest {
 
         // 중지 상태에서 Outbox 동기화 서비스가 호출되지 않았는지 확인한다
         verify(userStatusEventService, never()).syncUserStatusEvents();
+    }
+
+    /**
+     * BOOK_TIMER_OVER 상세코드가 사용 중이면 독서 타이머 목표시간 알림을 실행하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void sendTimerAlimWhenEnabled() {
+
+        // 독서 타이머 알림 스케줄러 상세코드를 활성 상태로 설정한다
+        when(codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER)).thenReturn(true);
+        // 독서 타이머 목표시간 알림 스케줄러를 실행한다
+        scheduler.sendTimerAlim();
+        // 활성 상태에서 알림 서비스가 호출됐는지 확인한다
+        verify(readingTimerService).sendTimerAlim();
+    }
+
+    /**
+     * BOOK_TIMER_OVER 상세코드가 중지 상태이면 독서 타이머 목표시간 알림을 생략하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void sendTimerAlimSkipsDisabled() {
+
+        // 독서 타이머 알림 스케줄러 상세코드를 중지 상태로 설정한다
+        when(codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER)).thenReturn(false);
+        // 독서 타이머 목표시간 알림 스케줄러를 실행한다
+        scheduler.sendTimerAlim();
+        // 중지 상태에서 알림 서비스가 호출되지 않았는지 확인한다
+        verify(readingTimerService, never()).sendTimerAlim();
     }
 }
