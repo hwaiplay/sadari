@@ -9,7 +9,7 @@ import Navigation from "./Navigation/Navigation";
 import { vars } from "@/app/styles/tokens.css";
 import { Container } from "./Container/Container";
 import { clsx } from "clsx";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   pageTransitionBack,
   pageTransitionBase,
@@ -19,6 +19,10 @@ import {
 
 type LayoutProps = {
   isMainLayout?: boolean;
+};
+
+export type LayoutOutletContext = {
+  isHeaderHidden: boolean;
 };
 
 /**
@@ -33,6 +37,7 @@ function Layout({ isMainLayout = true }: LayoutProps) {
   const location = useLocation();
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
+  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
   const shouldAnimate = hasMountedRef.current;
   const transitionClassName =
     navigationType === "POP" ? pageTransitionBack : pageTransitionForward;
@@ -44,7 +49,7 @@ function Layout({ isMainLayout = true }: LayoutProps) {
 
   return (
     <div>
-      <Header />
+      <Header onHiddenChange={setIsHeaderHidden} />
       {/* 현재 경로에 연결된 페이지 표시 영역 */}
       <main
         style={{
@@ -62,10 +67,10 @@ function Layout({ isMainLayout = true }: LayoutProps) {
           >
             {isMainLayout ? (
               <Container>
-                <Outlet />
+                <Outlet context={{ isHeaderHidden }} />
               </Container>
             ) : (
-              <Outlet />
+              <Outlet context={{ isHeaderHidden }} />
             )}
           </div>
         </div>

@@ -44,15 +44,17 @@ type ResolvedHeaderMenu = {
 
 type HeaderProps = {
   menuEnabled?: boolean;
+  onHiddenChange?: (isHidden: boolean) => void;
 };
 
 /**
  * Header 화면 또는 컴포넌트를 구성한다
  *
  * @author HanWon.Jang
+ * @param props 메뉴 사용 여부와 헤더 숨김 상태 전달 함수
  * @return 구성된 화면 요소
  */
-function Header({ menuEnabled = true }: HeaderProps) {
+function Header({ menuEnabled = true, onHiddenChange }: HeaderProps) {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -115,7 +117,10 @@ function Header({ menuEnabled = true }: HeaderProps) {
       if (currentScrollY <= 0) {
         if (isHiddenRef.current) {
           isHiddenRef.current = false;
+          // 헤더를 화면에 다시 표시한다
           setIsHidden(false);
+          // 현재 페이지의 고정 영역이 헤더 아래로 이동하도록 노출 상태를 전달한다
+          onHiddenChange?.(false);
         }
 
         lastScrollYRef.current = currentScrollY;
@@ -131,7 +136,10 @@ function Header({ menuEnabled = true }: HeaderProps) {
 
       if (isHiddenRef.current !== shouldHide) {
         isHiddenRef.current = shouldHide;
+        // 스크롤 방향에 맞는 헤더 표시 상태를 적용한다
         setIsHidden(shouldHide);
+        // 현재 페이지의 고정 영역이 헤더 위치 변화에 맞춰 이동하도록 상태를 전달한다
+        onHiddenChange?.(shouldHide);
       }
 
       lastScrollYRef.current = currentScrollY;
@@ -143,7 +151,7 @@ function Header({ menuEnabled = true }: HeaderProps) {
 
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [location.pathname]);
+  }, [location.pathname, onHiddenChange]);
 
   useEffect(() => {
 

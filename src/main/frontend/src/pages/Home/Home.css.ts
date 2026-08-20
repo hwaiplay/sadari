@@ -89,19 +89,46 @@ export const homeContainer = style({
 });
 
 export const searchBar = style({
+  position: "sticky",
+  top: vars.headerHeight,
+  zIndex: 996,
   boxSizing: "border-box",
   display: "flex",
   alignItems: "center",
   gap: "10px",
   width: "100%",
-  padding: `0 ${vars.space.md}`,
+  height: vars.headerHeight,
+  padding: `5px ${vars.space.md}`,
   marginBottom: "12px",
+  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  isolation: "isolate",
+  transition: "top 180ms ease",
+  willChange: "top",
+
+  selectors: {
+    "&::before": {
+      position: "absolute",
+      top: 0,
+      bottom: 0,
+      left: "50%",
+      zIndex: -1,
+      width: "100vw",
+      backgroundColor: "rgba(255, 255, 255, 0.96)",
+      content: '""',
+      pointerEvents: "none",
+      transform: "translateX(-50%)",
+    },
+  },
 
   "@media": {
     [media.tablet]: {
-      padding: `0 ${vars.space.lg}`,
+      padding: `5px ${vars.space.lg}`,
     },
   },
+});
+
+export const searchBarHeaderHidden = style({
+  top: 0,
 });
 
 export const searchLabel = style({
