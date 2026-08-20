@@ -223,6 +223,10 @@ export const completePage = style([
 
 export const completeHeading = style({ textAlign: "center" });
 
+export const completeIcon = style({
+  marginBottom: '10px'
+})
+
 export const completeTitle = style({
   margin: 0,
   color: vars.color.gray900,
