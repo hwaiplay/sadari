@@ -27,7 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : ReadingClubServiceImpl
- * author         : SeungHyeon.Kang
+ * author         : eungHyeon.Kang, HanWon.Jang
  * date           : 2026-08-05
  * description    : 독서 모임 생성, 탐색, 가입, 초대와 승인 업무를 처리한다
  * ===========================================================
@@ -35,13 +35,15 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
- * 2026-08-20        Hanwon.Jang        현재 독서 수정 처리 추가
+ * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReadingClubServiceImpl implements ReadingClubService {
 
+    // 공통 업무 성공 응답 코드
+    private static final int RESULT_SUCCESS_CODE = 200;
     // 공개 모임 공개 범위 코드
     private static final String CLUB_PUBLIC = "PUBLIC";
     // 비공개 모임 공개 범위 코드
@@ -742,13 +744,18 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             // 초대 대상 한 명의 예약석을 등록한다
             readingClubMapper.setInvitation(clubNumb, targetUserNumb, userNumb);
             // 초대받은 활성 회원의 알림센터에 모임장과 모임명이 포함된 초대 알림을 저장하고 푸시를 예약한다
-            alimService.sendAlim(
+            ResultData alimResult = alimService.sendAlim(
                     targetUserNumb
                   , Constant.ALIM_SITU_CLUB
                   , Constant.ALIM_TEMP_CODE_INVITE_CLUB
                   , clubNumb
                   , Map.of("userName", club.getOwnrNick(), "clubName", club.getClubName())
             );
+            // 템플릿 누락 등으로 알림 저장에 실패하면 초대만 남지 않도록 전체 트랜잭션을 롤백한다
+            if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+                // "저장에 실패했어요. 다시 시도해주세요."
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
         }
 
         // 초대 저장 성공 응답을 반환한다
