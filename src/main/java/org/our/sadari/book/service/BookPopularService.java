@@ -26,8 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-16        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    주간과 월간 및 연간 집계 기간 선택 추가
+ * 2026-08-16        SeungHyeon.Kang    최초 생성 및 기간별 집계 추가
  */
 @Service
 @RequiredArgsConstructor

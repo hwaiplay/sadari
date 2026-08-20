@@ -46,8 +46,7 @@ import org.springframework.web.client.RestTemplate;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    50권 응답과 Redis 쿼터 보호 검증 추가
- * 2026-08-16        SeungHyeon.Kang    검색 성공 첫 페이지 인기 검색어 집계 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchServiceTest {

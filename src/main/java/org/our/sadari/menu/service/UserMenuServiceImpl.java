@@ -23,8 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
- * 2026-08-10        SeungHyeon.Kang    최대 3단계 사용자 메뉴 트리 구성
- * 2026-08-10        SeungHyeon.Kang    화면별 하위 사용자 메뉴 트리 조회 추가
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 트리 조회 추가
  */
 @Service
 @RequiredArgsConstructor

@@ -20,8 +20,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 설명 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 작성자 팔로우 여부 응답 추가
- * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 허용값 문서화
- * 2026-08-15        SeungHyeon.Kang    목록 페이지 조회 조건 추가
+ * 2026-08-15        SeungHyeon.Kang    공개 목록 조회 조건 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)

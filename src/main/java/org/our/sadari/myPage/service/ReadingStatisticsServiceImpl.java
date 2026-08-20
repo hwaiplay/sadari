@@ -35,12 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    연도별 잔디 조회와 공개 통계 조회 추가
- * 2026-08-14        SeungHyeon.Kang    연속 기록과 책별 시간 및 별점과 연도 비교 통계 추가
- * 2026-08-14        SeungHyeon.Kang    별점 분포를 소수점 버림한 1점 단위로 변경
- * 2026-08-14        SeungHyeon.Kang    올해 상위 도서를 독후감 번호와 함께 세 권으로 제한
- * 2026-08-14        SeungHyeon.Kang    독서 잔디 전용 조회와 공통 구성 로직 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 독서 통계 처리
  * 2026-08-15        SeungHyeon.Kang    잔디와 통계 집계 SQL 왕복 통합
  */
 @Service

@@ -16,8 +16,7 @@ import org.our.sadari.book.dto.PopularBookDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    이번 달 인기 도서 집계 조회 추가
- * 2026-08-16        SeungHyeon.Kang    기간별 인기 도서 집계와 평균 평점 조회 적용
+ * 2026-08-16        SeungHyeon.Kang    기간별 인기 도서 조회 추가
  */
 @Mapper
 public interface BookMapper {

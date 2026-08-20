@@ -31,8 +31,7 @@ import org.our.sadari.global.common.result.ResultEnum;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-16        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    기간별 집계 경계와 잘못된 기간 검증 추가
+ * 2026-08-16        SeungHyeon.Kang    최초 생성 및 기간별 집계 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookPopularServiceTest {

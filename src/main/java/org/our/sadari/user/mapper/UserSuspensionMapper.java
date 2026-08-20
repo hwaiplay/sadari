@@ -12,9 +12,7 @@ import org.our.sadari.user.dto.UserSuspensionDto;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    사용자 서버 동기화 대기 상태 수정 추가
- * 2026-07-30        SeungHyeon.Kang    정지 이력 부재 시 회원 상태 보정 조회 추가
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 정지 상태 처리
  */
 @Mapper
 public interface UserSuspensionMapper {

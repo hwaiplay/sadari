@@ -9,21 +9,15 @@ package org.our.sadari.global.common.constant;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-07        SeungHyeon.Kang    최초 생성
- * 2026-07-29        SeungHyeon.Kang    자동 닉네임 공통코드와 발급 제한 추가
- * 2026-07-30        SeungHyeon.Kang    계정 비활성화 상태와 유형 용어 정리
- * 2026-07-30        SeungHyeon.Kang    팝업 사용 화면 구분 공통코드 추가
- * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 이벤트와 스케줄러 코드 추가
- * 2026-07-30        SeungHyeon.Kang    회원 정지 사용자 서버 동기화 상태 추가
- * 2026-07-31        Hanwon.Jang        댓글 등록 알림 템플릿 코드 수정
- * 2026-08-05        SeungHyeon.Kang    계층형 독서 관심분야 공통코드로 통합
- * 2026-08-12        SeungHyeon.Kang    알림 아이콘 기본 상황 코드 추가
- * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 추가
- * 2026-08-14        SeungHyeon.Kang    독서 타이머 상태와 상세 정리 스케줄러 코드 추가
- * 2026-08-14        SeungHyeon.Kang    독서 통계 표시 개월 수 상수 제거
- * 2026-08-14        Hanwon.Jang        독서 모임 초대 알림 코드 추가
- * 2026-08-15        SeungHyeon.Kang    상호 팔로우 친구 버튼 상태 추가
- * 2026-08-15        SeungHyeon.Kang    공개 독후감 관계순과 최신순 및 추천순 정렬 코드 추가
- * 2026-08-20        SeungHyeon.Kang    고객문의 공통코드 그룹 추가
+ * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책 추가
+ * 2026-07-30        SeungHyeon.Kang    계정·팝업·회원 상태 코드 정리
+ * 2026-07-31        Hanwon.Jang        댓글 알림 코드 수정
+ * 2026-08-05        SeungHyeon.Kang    독서 관심분야 코드 통합
+ * 2026-08-12        SeungHyeon.Kang    알림 아이콘 코드 추가
+ * 2026-08-13        SeungHyeon.Kang    팔로우 상태 코드 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
+ * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
+ * 2026-08-20        SeungHyeon.Kang    고객문의 코드 추가
  */
 public final class Constant {
 

@@ -44,12 +44,10 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
- * 2026-08-01        SeungHyeon.Kang    ISBN 기준 최근 독후감 조회 추가
- * 2026-08-01        Hanwon.Jang        읽는 중 독후감 비공개와 평점 미집계 정책 추가
+ * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 정책 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 반영
- * 2026-08-15        SeungHyeon.Kang    공개 독후감 허용 정렬 코드 검증 추가
- * 2026-08-15        SeungHyeon.Kang    홈과 공개 독후감 페이지 조회 추가
+ * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 추가
  */
 @Service
 @RequiredArgsConstructor

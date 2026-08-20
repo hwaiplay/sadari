@@ -36,11 +36,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    연속 기록과 책별 시간 및 별점과 연도 비교 검증 추가
- * 2026-08-14        SeungHyeon.Kang    소수점 별점의 버림 집계 검증 추가
- * 2026-08-14        SeungHyeon.Kang    올해 상위 도서 세 권 제한과 독후감 번호 검증 추가
- * 2026-08-14        SeungHyeon.Kang    독서 잔디 전용 Mapper 호출 범위 검증 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 독서 통계 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingStatisticsServiceImplTest {

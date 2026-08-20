@@ -35,8 +35,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * -----------------------------------------------------------
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    종료된 네이버 API를 카카오 도서 검색 API로 교체
- * 2026-08-16        SeungHyeon.Kang    50권 조회와 Redis 쿼터 보호 및 공용 캐시 적용
- * 2026-08-16        SeungHyeon.Kang    검색 성공 첫 페이지의 인기 검색어 집계 추가
+ * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 처리 추가
  */
 @Slf4j
 @Service

@@ -13,8 +13,7 @@ import lombok.NoArgsConstructor;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-16        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    기간별 인기 도서 평균 평점 추가
+ * 2026-08-16        SeungHyeon.Kang    최초 생성 및 평균 평점 추가
  */
 @Data
 @NoArgsConstructor

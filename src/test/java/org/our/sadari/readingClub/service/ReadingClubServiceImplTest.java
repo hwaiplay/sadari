@@ -39,10 +39,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
- * 2026-08-14        Hanwon.Jang        제한 계정 신청 처리 차단 검증 추가
- * 2026-08-14        Hanwon.Jang        회원 초대 알림 발송 검증 추가
- * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 검증 추가
- * 2026-08-14        Hanwon.Jang        모임 독서 자동 참여와 계정 상태 검증 추가
+ * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {

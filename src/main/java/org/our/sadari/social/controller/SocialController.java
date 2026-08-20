@@ -37,8 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       공개 독후감만 소셜 요약과 통계에 포함
- * 2026-08-14        SeungHyeon.Kang    공개 허용 독서 통계 조회 추가
- * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 연도 선택 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 조회 추가
  * 2026-08-15        SeungHyeon.Kang    접근 제한 회원 소셜 프로필 상태명 응답 추가
  */
 @RestController

@@ -25,12 +25,10 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    영구 삭제 대기 및 관리자 정지 회원 접근 제한 추가
- * 2026-07-30        SeungHyeon.Kang    비활성화 회원의 일반 API 접근 제한 추가
+ * 2026-07-30        SeungHyeon.Kang    제한 회원 API 접근 제어 추가
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
  * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
- * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 API 접근 허용
- * 2026-08-13        SeungHyeon.Kang    제한 상태의 허용된 변경 요청을 위한 CSRF Token 조회 허용
+ * 2026-08-13        SeungHyeon.Kang    제한 상태 CSRF·탈퇴 접근 허용
  */
 @Component
 @RequiredArgsConstructor

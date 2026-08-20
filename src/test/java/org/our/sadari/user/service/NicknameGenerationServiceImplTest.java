@@ -34,8 +34,7 @@ import org.springframework.dao.DuplicateKeyException;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    주어별 네 개 호환 서술어 조합 검증
- * 2026-07-30        SeungHyeon.Kang    순번 발급 요청의 세부코드 조합 검증
+ * 2026-07-30        SeungHyeon.Kang    닉네임 조합·순번 검증
  * 2026-08-07        SeungHyeon.Kang    공백 없는 자동 닉네임 조합 검증
  */
 @ExtendWith(MockitoExtension.class)

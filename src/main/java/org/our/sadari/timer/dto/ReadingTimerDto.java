@@ -14,8 +14,7 @@ import java.time.LocalDateTime;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 응답 설명 반영
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 설명
  */
 @Data
 public class ReadingTimerDto {

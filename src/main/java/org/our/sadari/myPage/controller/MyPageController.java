@@ -44,9 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
- * 2026-08-14        SeungHyeon.Kang    본인 전용 독서 통계 지연 조회 추가
- * 2026-08-14        SeungHyeon.Kang    독서 통계 연도 선택 조회 추가
- * 2026-08-14        SeungHyeon.Kang    타이머 화면 독서 잔디 전용 조회 추가
+ * 2026-08-14        SeungHyeon.Kang    독서 통계·잔디 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor

@@ -36,9 +36,7 @@ import org.springframework.stereotype.Service;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-16        SeungHyeon.Kang    최초 생성
- * 2026-08-16        SeungHyeon.Kang    비속어 제외 인기 검색어 집계와 조회 추가
- * 2026-08-16        SeungHyeon.Kang    프로필별 회원 검색어 중복 집계 설정 추가
+ * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 처리
  */
 @Service
 @RequiredArgsConstructor
