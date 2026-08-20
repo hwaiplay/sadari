@@ -1,6 +1,7 @@
 import type { ClubInvitation, ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import { message } from "@/app/messages/message";
 import Skeleton from "@/components/Skeleton/Skeleton";
+import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   getClubCategory,
@@ -217,11 +218,16 @@ export default function MyClubPage() {
         <span className={styles.findClubArrow} aria-hidden="true">›</span>
       </Link>
 
-      {/* 새 모임 만들기 플로팅 버튼 영역 */}
-      {/* "새 모임 만들기" */}
-      <Link className={styles.createButton} to="/reading-clubs/set" aria-label={message("frontend.readingClub.my.create")}>
-        <img className={styles.createIcon} src="/img/common/icon-add.svg" alt="" />
-      </Link>
+      {/* 페이지 전환 transform의 영향을 받지 않는 새 모임 만들기 플로팅 버튼 영역 */}
+      {createPortal(
+        <Link className={styles.createButton} to="/reading-clubs/set" aria-label={message("frontend.readingClub.my.create")}>
+          {/* "새 모임 만들기" */}
+          <svg width="48" height="48" viewBox="0 0 48 48" fill="none" aria-hidden="true">
+            <path d="M36 26H26v10a2 2 0 0 1-4 0V26H12a2 2 0 0 1 0-4h10V12a2 2 0 0 1 4 0v10h10a2 2 0 0 1 0 4Z" fill="currentColor" />
+          </svg>
+        </Link>,
+        document.body,
+      )}
     </div>
   );
 }
