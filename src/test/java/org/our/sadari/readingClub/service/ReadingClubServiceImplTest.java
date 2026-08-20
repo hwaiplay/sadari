@@ -1,6 +1,7 @@
 package org.our.sadari.readingClub.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.any;
@@ -20,6 +21,7 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
@@ -32,7 +34,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : ReadingClubServiceImplTest
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-08-13
  * description    : 독서 모임 서비스의 목록 관계 데이터와 접근 정책을 검증한다
  * ===========================================================
@@ -40,7 +42,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
- * 2026-08-20        Hanwon.Jang        내 모임 카테고리·현재 독서 수정 검증 추가
+ * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -408,6 +410,14 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
         when(readingClubMapper.getMutualFollowCnt(20L, 30L)).thenReturn(1);
         when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(null);
+        // INVITE_CLUB 템플릿 기반 알림 저장이 성공하도록 결과를 구성한다
+        when(alimService.sendAlim(
+                30L
+              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , 10L
+              , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
+        )).thenReturn(ResultData.success());
 
         // 모임장으로 활성 맞팔 회원을 초대한다
         ResultData result = readingClubService.setInvitation(20L, 10L, request);
@@ -422,6 +432,57 @@ class ReadingClubServiceImplTest {
               , 10L
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
         );
+    }
+
+    /**
+     * 초대 알림 저장이 실패하면 초대 처리도 성공으로 확정하지 않는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void setInvitationThrowsWhenInvitationAlimFails() {
+        // 초대 권한과 알림 문구를 제공할 운영 중인 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 알림 사용자명 치환값으로 사용할 모임장 닉네임을 설정한다
+        club.setOwnrNick("모임장");
+        // 알림 모임명 치환값으로 사용할 모임명을 설정한다
+        club.setClubName("함께 읽는 모임");
+        // 초대가 가능한 운영 상태를 설정한다
+        club.setClubStat("ACTIVE");
+        // 초대 예약석을 확보할 수 있는 정원을 설정한다
+        club.setMaxxMemb(10);
+
+        // 한 명의 맞팔 회원을 선택한 초대 요청을 구성한다
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 초대 대상 사용자 번호를 설정한다
+        request.setUserNumbList(List.of(30L));
+
+        // 모임 잠금과 좌석 및 맞팔 검증을 모두 통과하도록 조회 결과를 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.getMutualFollowCnt(20L, 30L)).thenReturn(1);
+        when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(null);
+        // 사용할 수 있는 초대 알림 템플릿이 없는 실패 결과를 구성한다
+        when(alimService.sendAlim(
+                30L
+              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , 10L
+              , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
+        )).thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
+
+        // 초대 알림을 저장할 수 없으면 트랜잭션을 롤백할 예외가 발생하는지 검증한다
+        CustomException exception = assertThrows(
+                CustomException.class
+              , () -> readingClubService.setInvitation(20L, 10L, request)
+        );
+
+        // 사용자에게는 초대 저장 실패로 응답하도록 공통 결과 코드를 검증한다
+        assertEquals(ResultEnum.COMMON_SAVE_REJECTED, exception.getResultEnum());
+        // 알림 저장 전에 초대 예약석 저장을 시도했는지 검증한다
+        verify(readingClubMapper).setInvitation(10L, 30L, 20L);
     }
 
     /**
