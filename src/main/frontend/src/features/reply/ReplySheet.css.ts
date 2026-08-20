@@ -250,7 +250,7 @@ export const replyBody = style({
 export const replyTextArea = style({
   display: "flex",
   flexDirection: "column",
-  gap: "2px",
+  gap: "4px",
 });
 
 export const replyWriterRow = style({
@@ -325,7 +325,7 @@ export const replyItemMetrics = style({
   minHeight: "24px",
   display: "flex",
   flexDirection: "column",
-  gap: "6px",
+  gap: "10px",
   marginTop: "6px",
 });
 
