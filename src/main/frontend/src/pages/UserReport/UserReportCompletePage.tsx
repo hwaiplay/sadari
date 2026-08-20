@@ -30,6 +30,13 @@ const UserReportCompletePage = () => {
     /* 신고 완료 안내 페이지 영역 */
     <section className={styles.completePage}>
       <header className={styles.completeHeading}>
+        <div className={styles.completeIcon}>
+          <svg width="42" height="42" viewBox="0 0 42 42" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="42" height="42" rx="21" fill="#293038"/>
+            <path d="M12 20.9546L18.0155 26.97L30.9579 15" stroke="white" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+
         <h1 className={styles.completeTitle}>
           {/* "소중한 의견 감사합니다" */}
           {message("frontend.userReport.complete.title")}
