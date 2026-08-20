@@ -1,6 +1,7 @@
 package org.our.sadari.report.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
@@ -8,7 +9,12 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.Validation;
+import jakarta.validation.Validator;
+import jakarta.validation.ValidatorFactory;
 import java.util.List;
+import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -30,13 +36,14 @@ import org.our.sadari.social.mapper.SocialMapper;
  * fileName       : ReportServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-04
- * description    : 독서 요약 조회의 공개 범위 전달 정책을 검증한다
+ * description    : 독후감 서비스의 조회와 등록 및 삭제 정책을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-04        SeungHyeon.Kang       최초 생성
  * 2026-08-14        SeungHyeon.Kang    독후감 참조 데이터 삭제 순서 검증 추가
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 검증 추가
+ * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -171,6 +178,40 @@ class ReportServiceImplTest {
         assertNull(summaryCaptor.getValue().getPubcYsno());
         // 목록 SQL의 공개 여부 조건이 비어 있어 본인 전체 독후감을 유지하는지 확인한다
         assertNull(reportListCaptor.getValue().getPubcYsno());
+    }
+
+    /**
+     * 빈 책장 색상이 Controller DTO 검증을 통과해 Service 기본값 보정까지 전달되는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void blankColorUsesServiceRule() {
+        // 독후감 등록의 Controller 필수 입력값을 가진 요청 DTO를 생성한다
+        ReportDto reportDto = new ReportDto();
+        // 읽는 중 독후감 상태를 요청 DTO에 설정한다
+        reportDto.setReptStat(Constant.REPORT_STAT_READ);
+        // 목표 독서 시작일을 요청 DTO에 설정한다
+        reportDto.setReptStdt("2026-08-20");
+        // 목표 독서 종료일을 요청 DTO에 설정한다
+        reportDto.setReptEndt("2026-08-31");
+        // Service 기본값 보정 대상인 빈 책장 색상을 요청 DTO에 설정한다
+        reportDto.setReptColr("");
+
+        // Jakarta Bean Validation 실행 자원을 테스트 범위에서 생성하고 종료한다
+        try (ValidatorFactory validatorFactory = Validation.buildDefaultValidatorFactory()) {
+            // Controller와 같은 Bean Validation 규칙을 실행할 검증기를 조회한다
+            Validator validator = validatorFactory.getValidator();
+            // 타이머 등록 요청과 같은 빈 색상 DTO의 제약 위반 목록을 조회한다
+            Set<ConstraintViolation<ReportDto>> violations = validator.validate(reportDto);
+            // 책장 색상 필드에 선행 제약 위반이 남아 있는지 판정한다
+            boolean hasColorViolation = violations.stream()
+                    .map(violation -> violation.getPropertyPath().toString())
+                    .anyMatch("reptColr"::equals);
+
+            // 빈 색상은 Service의 공통코드 기본값 보정 전에 거부되지 않아야 한다
+            assertFalse(hasColorViolation);
+        }
     }
 
     /**

@@ -1,6 +1,7 @@
 import { style } from "@vanilla-extract/css";
 import { selectableOption } from "@/app/styles/controls.css";
 import { vars } from "@/app/styles/tokens.css";
+import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import { searchBtn } from "@/features/Book/Set/components/searchBookButton/SearchBookButton.css";
 
 export const page = style({
@@ -391,39 +392,20 @@ export const modalDescription = style({
   lineHeight: 1.5,
 });
 
-export const modalClose = style({
-  width: "36px",
-  height: "36px",
-  flex: "0 0 36px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: "9px",
-  border: `1px solid ${vars.color.gray200}`,
-  borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.background,
-  cursor: "pointer",
-  boxSizing: "border-box",
-  transition: "border-color 150ms ease, background-color 150ms ease",
-  selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray300,
-      backgroundColor: vars.color.gray100,
-    },
-    "&:focus-visible": {
-      outline: `2px solid ${vars.color.brand}`,
-      outlineOffset: "2px",
-    },
-  },
-});
-
 export const modalBody = style({
   minHeight: 0,
   display: "flex",
   flexDirection: "column",
-  gap: "10px",
+  gap: "2px",
   padding: "16px 20px",
   overflowY: "auto",
+});
+
+export const modalBookList = style({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
 });
 
 export const modalBookOption = style({
@@ -494,10 +476,13 @@ export const modalBookState = style({
 });
 
 export const modalEmpty = style({
-  margin: 0,
   padding: "36px 16px",
   borderRadius: "12px",
   backgroundColor: vars.color.gray100,
+});
+
+export const modalEmptyText = style({
+  margin: 0,
   color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: "14px",
@@ -505,12 +490,12 @@ export const modalEmpty = style({
   textAlign: "center",
 });
 
-export const modalFooter = style({
-  display: "grid",
-  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
-  gap: "10px",
-  padding: "14px 20px 20px",
-});
+export const modalFooter = style([
+  modalControlStyles.pairedActions,
+  {
+    padding: "14px 20px 20px",
+  },
+]);
 
 export const modalFooterButton = style({
   width: "100%",
@@ -525,33 +510,6 @@ export const timerSettingModal = style([bookModal, {
   borderRadius: "18px",
   backgroundColor: "#ffffff",
 }]);
-
-export const timerSettingClose = style({
-  width: "32px",
-  height: "32px",
-  flex: "0 0 32px",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  padding: 0,
-  border: 0,
-  borderRadius: "50%",
-  backgroundColor: "#f3f4f5",
-  color: vars.color.black,
-  fontSize: "22px",
-  lineHeight: 1,
-  cursor: "pointer",
-  transition: "background-color 160ms ease",
-  selectors: {
-    "&:hover": {
-      backgroundColor: vars.color.gray200,
-    },
-    "&:focus-visible": {
-      outline: "2px solid #78b991",
-      outlineOffset: "2px",
-    },
-  },
-});
 
 export const timerSettingBody = style({
   padding: "8px 20px 0",
@@ -572,6 +530,42 @@ export const timerSettingField = style({
   fontFamily: vars.font.semibold,
   fontSize: "14px",
   textAlign: "center",
+});
+
+export const modalSearchButton = style({
+  alignSelf: "flex-end",
+  minHeight: "28px",
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  color: "#8a8a8a",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "4px",
+  fontFamily: vars.font.semibold,
+  fontSize: "12px",
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray100,
+      color: "#555555",
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
+});
+
+export const modalSearchIcon = style({
+  width: "15px",
+  height: "15px",
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 2,
+  strokeLinecap: "round",
+  strokeLinejoin: "round",
+  flexShrink: 0,
 });
 
 export const timerSettingStepper = style({
@@ -677,12 +671,12 @@ export const timerSettingGuide = style({
   textAlign: "center",
 });
 
-export const modalActions = style({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "8px",
-  padding: "20px",
-});
+export const modalActions = style([
+  modalControlStyles.pairedActions,
+  {
+    padding: "20px",
+  },
+]);
 
 export const modalActionButton = style({
   width: "100%",
