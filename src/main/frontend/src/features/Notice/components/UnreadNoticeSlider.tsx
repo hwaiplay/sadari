@@ -22,7 +22,7 @@ const NOTICE_END_HOLD_MS = 3000;
 const EMPTY_NOTICE_LIST: readonly UnreadNotice[] = [];
 
 /**
- * 카테고리와 제목 길이에 비례한 가로 슬라이드 시간을 계산한다
+ * 공지 제목 길이에 비례한 가로 슬라이드 시간을 계산한다
  *
  * @author SeungHyeon.Kang
  * @param notice 슬라이드로 표시할 미읽음 공지
@@ -30,8 +30,8 @@ const EMPTY_NOTICE_LIST: readonly UnreadNotice[] = [];
  */
 function getMarqueeDuration(notice: UnreadNotice): number {
 
-  // 배지 여백을 포함한 전체 문구 길이를 기준으로 읽기 쉬운 이동 속도를 유지한다
-  const contentLength = notice.cateName.length + notice.notiTitl.length + 6;
+  // 고정 카테고리를 제외한 제목 길이를 기준으로 읽기 쉬운 이동 속도를 유지한다
+  const contentLength = notice.notiTitl.length;
 
   // 짧은 제목도 너무 빠르게 지나가지 않도록 최소 표시 시간을 보장한다
   return Math.max(
@@ -57,7 +57,7 @@ export function UnreadNoticeSlider() {
   const [activeIndex, setActiveIndex] = useState(0);
   // 사용자가 제목을 읽거나 조작하는 동안 자동 교체를 멈춘다
   const [isPaused, setIsPaused] = useState(false);
-  // 한 건 공지의 카테고리가 왼쪽 경계에 도달한 뒤 다음 순환 전까지 대기하는 상태를 관리한다
+  // 한 건 공지의 이어 붙인 제목이 왼쪽 경계에 도달한 뒤 다음 순환 전까지 대기하는 상태를 관리한다
   const [isSingleNoticeHolding, setIsSingleNoticeHolding] = useState(false);
   // 다건 공지의 마지막 글자가 화면에 들어온 뒤 대기하는 상태를 관리한다
   const [isMarqueeDone, setIsMarqueeDone] = useState(false);
@@ -124,7 +124,7 @@ export function UnreadNoticeSlider() {
   useEffect(setNoticeHoldTimer, [setNoticeHoldTimer]);
 
   /**
-   * 한 건 공지의 카테고리가 왼쪽 경계에 도달하면 3초 뒤 가로 순환을 재개한다
+   * 한 건 공지의 이어 붙인 제목이 왼쪽 경계에 도달하면 3초 뒤 가로 순환을 재개한다
    *
    * @author SeungHyeon.Kang
    * @return 예약된 타이머를 해제할 정리 함수 또는 미예약 상태
@@ -147,7 +147,7 @@ export function UnreadNoticeSlider() {
       setIsSingleNoticeHolding(false);
     }
 
-    // 카테고리가 왼쪽 경계에 걸린 상태를 3초 유지한 뒤 다음 가로 순환을 재개한다
+    // 이어 붙인 제목이 왼쪽 경계에 걸린 상태를 3초 유지한 뒤 다음 가로 순환을 재개한다
     const timerId = window.setTimeout(releaseSingleNoticeHold, NOTICE_LEFT_EDGE_HOLD_MS);
 
     /**
@@ -165,7 +165,7 @@ export function UnreadNoticeSlider() {
     return clearSingleNoticeHoldTimer;
   }, [isSingleNoticeHolding, noticeList.length]);
 
-  // 한 건 공지의 카테고리가 왼쪽 경계에 도달한 시점부터 3초 대기 시간을 관리한다
+  // 한 건 공지의 이어 붙인 제목이 왼쪽 경계에 도달한 시점부터 3초 대기 시간을 관리한다
   useEffect(setSingleNoticeHoldTimer, [setSingleNoticeHoldTimer]);
 
   /**
@@ -228,7 +228,7 @@ export function UnreadNoticeSlider() {
   }
 
   /**
-   * 한 건 공지의 이어 붙인 카테고리가 왼쪽 경계에 도달하면 다음 순환을 잠시 멈춘다
+   * 한 건 공지의 이어 붙인 제목이 왼쪽 경계에 도달하면 다음 순환을 잠시 멈춘다
    *
    * @author SeungHyeon.Kang
    * @param event 한 건 공지의 가로 반복 경계 이벤트
@@ -242,7 +242,7 @@ export function UnreadNoticeSlider() {
       return;
     }
 
-    // 이어 붙인 카테고리가 왼쪽 끝에 걸린 현재 위치에서 3초 대기를 시작한다
+    // 이어 붙인 제목이 왼쪽 끝에 걸린 현재 위치에서 3초 대기를 시작한다
     setIsSingleNoticeHolding(true);
   }
 
@@ -281,7 +281,7 @@ export function UnreadNoticeSlider() {
       onFocus={handleNoticePause}
       onBlur={handleNoticeResume}
     >
-      {/* 카테고리와 제목을 한 묶음으로 왼쪽 순환시키는 미읽음 공지 영역 */}
+      {/* 카테고리를 고정하고 제목만 가로 순환시키는 미읽음 공지 영역 */}
       <div className={styles.viewport} aria-live="off">
         <Link
           key={`${activeNotice.notiNumb}-${activeIndex}`}
@@ -289,6 +289,10 @@ export function UnreadNoticeSlider() {
           to={`/notice/list/${activeNotice.notiNumb}`}
           aria-label={noticeActionLabel}
         >
+          {/* 현재 공지에 해당하는 고정 카테고리 영역 */}
+          <NoticeCategoryBadge categoryName={activeNotice.cateName} />
+
+          {/* 현재 공지 제목만 가로로 이동하는 영역 */}
           <span className={styles.marqueeViewport}>
             <span
               className={marqueeTrackClass}
@@ -296,15 +300,11 @@ export function UnreadNoticeSlider() {
               onAnimationEnd={handleMarqueeEnd}
               onAnimationIteration={handleSingleMarqueeIteration}
             >
-              <span className={styles.noticeContent}>
-                <NoticeCategoryBadge categoryName={activeNotice.cateName} />
-                <span className={styles.noticeTitle}>{activeNotice.notiTitl}</span>
-              </span>
-              {/* 한 건일 때 끝난 문구 바로 뒤에 같은 공지의 시작 부분을 이어 붙이는 영역 */}
+              <span className={styles.noticeTitle}>{activeNotice.notiTitl}</span>
+              {/* 한 건일 때 끝난 제목 바로 뒤에 같은 제목을 이어 붙이는 영역 */}
               {isSingleNotice && (
-                <span className={styles.noticeContent} aria-hidden="true">
-                  <NoticeCategoryBadge categoryName={activeNotice.cateName} />
-                  <span className={styles.noticeTitle}>{activeNotice.notiTitl}</span>
+                <span className={styles.noticeTitle} aria-hidden="true">
+                  {activeNotice.notiTitl}
                 </span>
               )}
             </span>
