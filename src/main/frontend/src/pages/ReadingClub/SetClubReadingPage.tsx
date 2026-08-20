@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
+ * 2026-08-20        Hanwon.Jang        현재 독서 수정 화면 지원
  */
 
 import { ActionButton } from "@/components/Button/ActionButton";
@@ -31,7 +32,10 @@ function SetClubReadingPage() {
     selectedBook,
     startDate,
     endDate,
+    isEditMode,
+    isLoading,
     isPending,
+    bookChangeAllowed,
     pageStyle,
     handleRangeChange,
     handleBookChange,
@@ -39,10 +43,14 @@ function SetClubReadingPage() {
     handleFormSubmit,
   } = useSetClubReadingPage();
 
-  if (isPending) {
-    // 멤버별 독후감까지 저장하는 동안 화면 이동을 차단한다
-    // "모임 독서를 등록하고 있어요"
-    return <Loading title={message("frontend.readingClub.reading.saving")} />;
+  if (isLoading || isPending) {
+    // 최신 수정값 조회 또는 멤버별 독후감 동기화가 끝날 때까지 화면 이동을 차단한다
+    const loadingMessageKey = isLoading
+      ? "frontend.readingClub.reading.loading"
+      : isEditMode
+        ? "frontend.readingClub.reading.updating"
+        : "frontend.readingClub.reading.saving";
+    return <Loading title={message(loadingMessageKey)} />;
   }
 
   return (
@@ -60,7 +68,7 @@ function SetClubReadingPage() {
             title={selectedBook.title}
             author={selectedBook.author}
             publisher={selectedBook.publisher}
-            onChangeBook={handleBookChange}
+            onChangeBook={bookChangeAllowed ? handleBookChange : undefined}
           />
         ) : (
           <section className={styles.emptyState}>
@@ -77,6 +85,12 @@ function SetClubReadingPage() {
 
         {selectedBook ? (
           <div className={reportStyles.contentPanel}>
+            {isEditMode && !bookChangeAllowed ? (
+              <p className={styles.bookChangeNotice}>
+                {/* "작성된 독후감이 있어 도서는 변경할 수 없어요. 독서 기간은 변경할 수 있어요." */}
+                {message("frontend.readingClub.reading.bookChangeLocked")}
+              </p>
+            ) : null}
             <ReportStatsEditor
               periodOnly
               statusCodes={[]}
@@ -85,7 +99,7 @@ function SetClubReadingPage() {
               pubcYsno="N"
               startDate={startDate}
               endDate={endDate}
-              periodTitle="목표 독서 기간"
+              periodTitle={/* "목표 독서 기간" */ message("frontend.readingClub.reading.periodTitle")}
               onStatusChange={() => undefined}
               onGradeChange={() => undefined}
               onPublicChange={() => undefined}

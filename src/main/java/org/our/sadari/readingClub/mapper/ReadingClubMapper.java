@@ -15,6 +15,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 메서드 추가
+ * 2026-08-20        SeungHyeon.Kang    현재 독서 수정 메서드 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -84,6 +85,62 @@ public interface ReadingClubMapper {
     int setReadingParticipant(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
                              , @Param("partNumb") long partNumb, @Param("userNumb") Long userNumb
                              , @Param("reptNumb") Long reptNumb);
+
+    /**
+     * 수정할 예정 또는 진행 중인 모임 독서 회차를 잠가 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 잠긴 모임 독서 회차와 도서 정보
+     */
+    ReadingClubDto.ReadingManageDto getReadingForUpdate(@Param("clubNumb") Long clubNumb
+                                                        , @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 현재 회차에 연결된 독후감 행을 잠가 작성 여부 검사와 변경을 직렬화한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 잠긴 연결 독후감 번호 목록
+     */
+    List<Long> getReadingReportNumbListForUpdate(@Param("clubNumb") Long clubNumb
+                                                 , @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 자동 생성 초기값에서 변경된 연결 독후감 수를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 작성 또는 상태 변경된 독후감 수
+     */
+    int getWrittenReadingReportCnt(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 현재 모임 독서 회차의 도서와 목표 기간을 수정한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @param request 수정할 도서와 목표 기간
+     * @return 수정된 회차 수
+     */
+    int uptReading(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
+                  , @Param("request") ReadingClubDto.ReadingUpdateReqDto request);
+
+    /**
+     * 현재 회차에 연결된 모든 독후감의 도서와 목표 기간을 동기화한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @param request 수정할 도서와 목표 기간
+     * @return 수정된 독후감 수
+     */
+    int uptReadingReportList(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
+                            , @Param("request") ReadingClubDto.ReadingUpdateReqDto request);
 
     /**
      * 사용자가 저장한 관심분야 수를 조회한다.

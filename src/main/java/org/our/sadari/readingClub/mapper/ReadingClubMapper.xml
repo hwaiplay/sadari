@@ -14,6 +14,7 @@
         <bind name="roundScheduled" value="'SCHEDULED'" />
         <bind name="roundReading" value="'READING'" />
         <bind name="userActive" value="'ACTIVE'" />
+        <bind name="reportRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="reportDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -126,6 +127,96 @@
                   , CURRENT_TIMESTAMP(6)
         )
     </insert>
+
+    <!-- 동시 수정을 직렬화하기 위해 예정 또는 진행 중인 독서 회차와 도서를 잠가 조회한다. -->
+    <select id="getReadingForUpdate" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingManageDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getReadingForUpdate */
+               ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.ROND_STAT
+             , ROUNDX.GOAL_STDT
+             , ROUNDX.GOAL_ENDT
+             , BOOK.BOOK_NUMB
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_PUBL
+             , BOOK.BOOK_ISBN
+             , BOOK.BOOK_CVIM
+             , BOOK.BOOK_DESC
+             , DATE_FORMAT(BOOK.PUBL_DATE, '%Y-%m-%d') AS PUBL_DATE
+          FROM TM_CLRNDX ROUNDX
+          JOIN TM_BKINFO BOOK
+            ON BOOK.BOOK_NUMB = ROUNDX.BOOK_NUMB
+         WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
+           AND ROUNDX.ROND_NUMB = #{rondNumb}
+           AND ROUNDX.ROND_STAT IN (#{roundScheduled}, #{roundReading})
+           FOR UPDATE
+    </select>
+
+    <!-- 작성 여부 검사와 도서 및 기간 동기화 사이에 독후감이 변경되지 않도록 연결 행을 잠근다. -->
+    <select id="getReadingReportNumbListForUpdate" resultType="long">
+        SELECT /* getReadingReportNumbListForUpdate */
+               REPORT.REPT_NUMB
+          FROM TB_CLPART PART
+          JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+         ORDER BY REPORT.REPT_NUMB
+           FOR UPDATE
+    </select>
+
+    <!-- 자동 생성 초기 상태에서 본문, 상태 또는 평점이 변경된 연결 독후감을 집계한다. -->
+    <select id="getWrittenReadingReportCnt" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT /* getWrittenReadingReportCnt */
+               COUNT(*)
+          FROM TB_CLPART PART
+          JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+           AND (   REPORT.REPT_STAT != #{reportRead}
+                OR TRIM(COALESCE(REPORT.REPT_CNTN, '')) != ''
+                OR CAST(COALESCE(REPORT.REPT_GRDE, '0') AS DECIMAL(3, 1)) > 0
+               )
+    </select>
+
+    <!-- 현재 회차의 도서, 목표 기간과 날짜 기준 회차 상태를 함께 수정한다. -->
+    <update id="uptReading">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptReading */
+               TM_CLRNDX
+           SET BOOK_NUMB = #{request.bookNumb}
+             , GOAL_STDT = #{request.goalStdt}
+             , GOAL_ENDT = #{request.goalEndt}
+             , ROND_STAT = CASE WHEN #{request.goalStdt} <![CDATA[<=]]> CURRENT_DATE THEN #{roundReading}
+                                ELSE #{roundScheduled}
+                           END
+             , OPEN_DATE = CASE WHEN #{request.goalStdt} <![CDATA[<=]]> CURRENT_DATE
+                                THEN COALESCE(OPEN_DATE, CURRENT_TIMESTAMP(6))
+                                ELSE NULL
+                           END
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND ROND_NUMB = #{rondNumb}
+           AND ROND_STAT IN (#{roundScheduled}, #{roundReading})
+    </update>
+
+    <!-- 회차 참여자에게 자동 생성된 독후감의 도서와 목표 기간을 같은 값으로 동기화한다. -->
+    <update id="uptReadingReportList">
+        UPDATE /* uptReadingReportList */
+               TM_REPORT REPORT
+          JOIN TB_CLPART PART
+            ON PART.REPT_NUMB = REPORT.REPT_NUMB
+           SET REPORT.BOOK_NUMB = #{request.bookNumb}
+             , REPORT.REPT_STDT = #{request.goalStdt}
+             , REPORT.REPT_ENDT = #{request.goalEndt}
+             , REPORT.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+    </update>
 
     <!-- 사용자가 저장한 독서 관심분야 수를 조회한다. -->
     <select id="getUserInterestCnt" parameterType="long" resultType="int">
@@ -480,11 +571,42 @@
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_TITL
                END AS CURRENT_BOOK_TITL
              , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_NUMB
+               END AS CURRENT_BOOK_NUMB
+             , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_ATHR
                END AS CURRENT_BOOK_ATHR
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_CVIM
                END AS CURRENT_BOOK_CVIM
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_PUBL
+               END AS CURRENT_BOOK_PUBL
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_ISBN
+               END AS CURRENT_BOOK_ISBN
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_DESC
+               END AS CURRENT_BOOK_DESC
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                       THEN DATE_FORMAT(CURRENT_BOOK.PUBL_DATE, '%Y-%m-%d')
+               END AS CURRENT_PUBL_DATE
+             , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} AND MINE.MEMB_ROLE = #{ownerRole}
+                       THEN NOT EXISTS (
+                           SELECT 1
+                             FROM TB_CLPART MANAGE_PART
+                             JOIN TM_REPORT MANAGE_REPORT
+                               ON MANAGE_REPORT.REPT_NUMB = MANAGE_PART.REPT_NUMB
+                            WHERE MANAGE_PART.CLUB_NUMB = CURRENT_ROUND.CLUB_NUMB
+                              AND MANAGE_PART.ROND_NUMB = CURRENT_ROUND.ROND_NUMB
+                              AND (   MANAGE_REPORT.REPT_STAT != #{reportRead}
+                                   OR TRIM(COALESCE(MANAGE_REPORT.REPT_CNTN, '')) != ''
+                                   OR CAST(COALESCE(MANAGE_REPORT.REPT_GRDE, '0') AS DECIMAL(3, 1)) > 0
+                                  )
+                       )
+               END AS CURRENT_BOOK_CHANGE_ALLOWED
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.GOAL_STDT
                END AS CURRENT_GOAL_STDT

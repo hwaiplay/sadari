@@ -14,6 +14,7 @@ import lombok.Getter;
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 계정 인증 코드 추가
  * 2026-08-16        SeungHyeon.Kang    도서 검색 요청 제한 코드 추가
  * 2026-08-20        SeungHyeon.Kang    타이머 목표시간 검증 코드 추가
+ * 2026-08-20        Hanwon.Jang        모임 독서 변경 검증 코드 추가
  */
 @Getter
 public enum ResultEnum {
@@ -137,6 +138,11 @@ public enum ResultEnum {
      * 회원 또는 앱 전체의 도서 검색 호출 제한을 초과한 경우의 실패 코드이다.
      */
     BOOK_SEARCH_RATE_LIMITED(2024, "book.alert.0001"),
+
+    /**
+     * 작성 또는 상태 변경된 모임원 독후감이 있어 현재 회차의 도서를 변경할 수 없는 경우이다.
+     */
+    READING_CLUB_BOOK_CHANGE_REJECTED(2026, "readingClub.alert.0001"),
 
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.

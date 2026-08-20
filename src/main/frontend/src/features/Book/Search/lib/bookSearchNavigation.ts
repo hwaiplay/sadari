@@ -20,6 +20,7 @@ export type SearchBookPageState = {
   keepSearchResult?: boolean;
   entrySource?: typeof READING_TIMER_SEARCH_SOURCE;
   timerBook?: BookSearchResultType;
+  clubReadingEditRondNumb?: number;
 };
 
 /**

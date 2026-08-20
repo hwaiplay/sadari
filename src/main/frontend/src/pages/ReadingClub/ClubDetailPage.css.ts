@@ -4,7 +4,7 @@ import { globalStyle, style } from "@vanilla-extract/css";
 export const page = style({
   display: "flex",
   flexDirection: "column",
-  gap: 18,
+  gap: 34,
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
@@ -173,6 +173,16 @@ export const readingEmpty = style({
   fontFamily: vars.font.body,
   fontSize: 14,
   lineHeight: "20px",
+});
+
+export const managementReadingBtn = style({
+  fontSize: "14px",
+  fontFamily: vars.font.medium,
+  color: vars.color.gray600,
+  textDecoration: "none",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  marginTop: "8px",
 });
 
 export const currentReadingContent = style({

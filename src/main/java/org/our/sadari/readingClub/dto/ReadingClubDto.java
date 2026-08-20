@@ -25,7 +25,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·독서 등록 DTO 추가
  * 2026-08-15        Hanwon.Jang    현재 독서 목표 현황 응답 필드 추가
- * 2026-08-20        SeungHyeon.Kang    현재 독후감 편집 연결 추가
+ * 2026-08-20        Hanwon.Jang        현재 독후감 편집·독서 관리 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -62,6 +62,63 @@ public final class ReadingClubDto {
 
         @Schema(description = "생성된 모임 독서 회차 번호", hidden = true)
         private Long rondNumb;
+    }
+
+    /**
+     * fileName       : ReadingUpdateReqDto
+     * author         : Hanwon.Jang
+     * date           : 2026-08-20
+     * description    : 현재 모임 독서의 도서와 목표 기간 수정값을 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-20        Hanwon.Jang        최초 생성
+     */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Schema(description = "모임 독서 수정 요청")
+    public static class ReadingUpdateReqDto extends BookDto {
+
+        @NotBlank
+        @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
+        @Schema(description = "목표 독서 시작일", example = "2026-08-14")
+        private String goalStdt;
+
+        @NotBlank
+        @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
+        @Schema(description = "목표 독서 종료일", example = "2026-08-31")
+        private String goalEndt;
+    }
+
+    /**
+     * fileName       : ReadingManageDto
+     * author         : Hanwon.Jang
+     * date           : 2026-08-20
+     * description    : 모임 독서 수정 검증에 필요한 잠긴 회차 정보를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-20        Hanwon.Jang        최초 생성
+     */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Schema(description = "모임 독서 관리 정보")
+    public static class ReadingManageDto extends BookDto {
+
+        @Schema(description = "모임 번호")
+        private Long clubNumb;
+
+        @Schema(description = "모임별 회차 번호")
+        private Long rondNumb;
+
+        @Schema(description = "회차 상태")
+        private String rondStat;
+
+        @Schema(description = "목표 독서 시작일")
+        private String goalStdt;
+
+        @Schema(description = "목표 독서 종료일")
+        private String goalEndt;
     }
 
     /**
@@ -186,11 +243,29 @@ public final class ReadingClubDto {
         @Schema(description = "현재 독서 도서 제목")
         private String currentBookTitl;
 
+        @Schema(description = "현재 독서 도서 번호")
+        private Long currentBookNumb;
+
         @Schema(description = "현재 독서 도서 저자")
         private String currentBookAthr;
 
         @Schema(description = "현재 독서 도서 표지 이미지 URL")
         private String currentBookCvim;
+
+        @Schema(description = "현재 독서 도서 출판사")
+        private String currentBookPubl;
+
+        @Schema(description = "현재 독서 도서 ISBN")
+        private String currentBookIsbn;
+
+        @Schema(description = "현재 독서 도서 설명")
+        private String currentBookDesc;
+
+        @Schema(description = "현재 독서 도서 출간일")
+        private String currentPublDate;
+
+        @Schema(description = "현재 독서 도서 변경 가능 여부")
+        private Boolean currentBookChangeAllowed;
 
         @Schema(description = "현재 독서 공동 목표 시작 일시")
         private LocalDateTime currentGoalStdt;

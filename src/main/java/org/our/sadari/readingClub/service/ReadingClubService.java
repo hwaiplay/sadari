@@ -13,6 +13,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 계약 추가
+ * 2026-08-20        Hanwon.Jang        현재 독서 수정 계약 추가
  */
 public interface ReadingClubService {
 
@@ -26,6 +27,19 @@ public interface ReadingClubService {
      * @return 생성된 회차 번호
      */
     ResultData setReading(Long userNumb, Long clubNumb, ReadingClubDto.ReadingCreateReqDto request);
+
+    /**
+     * 현재 모임 독서의 도서와 목표 기간을 연결 독후감에 함께 반영한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 수정을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 수정할 회차 번호
+     * @param request 수정할 도서와 목표 기간
+     * @return 수정된 회차 번호
+     */
+    ResultData uptReading(Long userNumb, Long clubNumb, Long rondNumb
+                         , ReadingClubDto.ReadingUpdateReqDto request);
 
     /**
      * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회한다.

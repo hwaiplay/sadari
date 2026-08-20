@@ -136,9 +136,14 @@ function SearchBookInfoPage() {
         return;
       }
 
-      // 독서 등록 화면 구현 전까지 책 정보와 ISBN을 예정된 URL로 전달한다.
+      // 독서 수정에서 진입했다면 같은 회차의 수정 화면으로 선택 도서를 돌려보낸다.
+      const editRondNumb = Number(pageState.clubReadingEditRondNumb);
+      const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
+        ? `/reading-clubs/${clubNumb}/${editRondNumb}/edit`
+        : `/reading-clubs/${clubNumb}/set`;
+      // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달한다.
       navigate(
-        `/reading-clubs/${clubNumb}/readings/set?isbn=${encodeURIComponent(selectedBook.isbn)}`,
+        `${readingEntryPath}?isbn=${encodeURIComponent(selectedBook.isbn)}`,
         { state: { book: selectedBook } },
       );
       // 모임 독서 등록 URL 이동 후 개인 독후감 흐름을 실행하지 않는다.

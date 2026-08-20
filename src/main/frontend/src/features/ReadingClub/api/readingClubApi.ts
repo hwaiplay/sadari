@@ -26,9 +26,15 @@ export type ReadingClub = {
   matchCnt?: number;
   currentRondNumb?: number;
   readingOrdr?: number;
+  currentBookNumb?: number;
   currentBookTitl?: string;
   currentBookAthr?: string;
   currentBookCvim?: string;
+  currentBookPubl?: string;
+  currentBookIsbn?: string;
+  currentBookDesc?: string;
+  currentPublDate?: string;
+  currentBookChangeAllowed?: boolean;
   currentGoalStdt?: string;
   currentGoalEndt?: string;
   currentReportStat?: "READ" | "DONE" | "STOP";
@@ -107,6 +113,8 @@ export type ClubReadingCreateParams = {
   idemKeyx: string;
 };
 
+export type ClubReadingUpdateParams = Omit<ClubReadingCreateParams, "idemKeyx">;
+
 export type ClubReadingCreateResult = {
   rondNumb: number;
 };
@@ -125,8 +133,33 @@ export const createClubReadingApi = async (
 ): Promise<ClubReadingCreateResult> => {
 
   // 모임 독서 등록 정보를 서버에 전달한다
-  const response = await api.post(`/reading-clubs/${clubNumb}/readings`, params);
+  const response = await api.post(`/reading-clubs/${clubNumb}/setBook`, params);
   // 공통 성공 응답에서 생성된 회차 번호를 반환한다
+  return assertResultDataSuccess(response.data).data as ClubReadingCreateResult;
+};
+
+/**
+ * 현재 모임 독서의 도서와 목표 기간을 수정한다.
+ *
+ * @author Hanwon.Jang
+ * @param clubNumb 모임 번호
+ * @param rondNumb 수정할 회차 번호
+ * @param params 선택 도서와 목표 독서 기간
+ * @return 수정된 모임 독서 회차 번호
+ * @throws 현재 모임장 권한이 없거나 수정 요청이 거절되면 발생
+ */
+export const updateClubReadingApi = async (
+  clubNumb: number,
+  rondNumb: number,
+  params: ClubReadingUpdateParams,
+): Promise<ClubReadingCreateResult> => {
+
+  // 모임장 권한으로 현재 회차의 도서와 목표 기간 수정을 요청한다
+  const response = await api.put(
+    `/reading-clubs/${clubNumb}/${rondNumb}/updateClub`,
+    params,
+  );
+  // 공통 성공 검증을 통과한 수정 회차 번호를 반환한다
   return assertResultDataSuccess(response.data).data as ClubReadingCreateResult;
 };
 

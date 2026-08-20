@@ -37,7 +37,7 @@ const CONTENT_FADE_OUT_MILLISECONDS = 90;
 /**
  * 독후감 등록 페이지의 상태와 이벤트 처리 함수를 제공한다.
  *
- * @author SeungHyeon.Kang
+ * @author Hanwon.Jang
  * @return 독후감 등록 페이지에서 사용하는 상태와 이벤트 처리 함수
  */
 export function useSetReportPage() {
@@ -161,7 +161,7 @@ export function useSetReportPage() {
   /**
    * 독후감 등록 폼을 검증하고 저장한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 폼 제출 이벤트
    * @return 반환값이 없다
    */
@@ -174,7 +174,7 @@ export function useSetReportPage() {
   /**
    * 선택한 독서 기간을 등록 상태에 반영한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param nextStartDate 독서 시작일
    * @param nextEndDate 독서 종료일
    * @return 반환값이 없다
@@ -191,7 +191,7 @@ export function useSetReportPage() {
   /**
    * 독서 상태를 변경하고 상태에 맞지 않는 값을 초기화한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param nextStatus 변경할 독서 상태
    * @return 반환값이 없다
    */
@@ -208,7 +208,7 @@ export function useSetReportPage() {
   /**
    * 독후감 평점을 변경한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param nextGrade 변경할 평점
    * @return 반환값이 없다
    */
@@ -220,7 +220,7 @@ export function useSetReportPage() {
   /**
    * 독후감 공개 여부를 변경한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param nextPubcYsno 변경할 공개 여부
    * @return 반환값이 없다
    */
@@ -232,7 +232,7 @@ export function useSetReportPage() {
   /**
    * 독후감 등록을 취소하고 이전 기본 화면으로 이동한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   function handleCancel(): void {
@@ -243,7 +243,7 @@ export function useSetReportPage() {
   /**
    * 책 요약과 책 상세 정보 영역을 전환한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   function handleBookInfoToggle(): void {
@@ -264,7 +264,7 @@ export function useSetReportPage() {
   /**
    * 책 검색 결과를 유지한 채 선택 도서 변경 화면으로 이동한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   function handleBookChange(): void {
@@ -275,7 +275,7 @@ export function useSetReportPage() {
   /**
    * 독후감 내용을 저장 가능한 바이트 수로 제한하고 길이를 갱신한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 독후감 내용 변경 이벤트
    * @return 반환값이 없다
    */
