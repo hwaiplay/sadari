@@ -47,10 +47,9 @@ export const searchInput = style({
   letterSpacing: "-0.16px",
   outline: "none",
   selectors: {
-    "&:focus": {
-      outline: `2px solid ${vars.color.gray900}`,
-      outlineOffset: 2,
-    },
+    // "&:focus": {
+    //   boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)"
+    // },
     "&::placeholder": {
       color: vars.color.gray600,
     },
@@ -167,10 +166,6 @@ export const clubList = style({
   display: "flex",
   flexDirection: "column",
   gap: 14,
-});
-
-export const cardSkeleton = style({
-  border: `1px solid ${vars.color.gray300}`,
 });
 
 export const empty = style({
