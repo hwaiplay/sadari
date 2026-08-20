@@ -150,17 +150,6 @@ export const useClubDetailPage = () => {
   };
 
   /**
-   * 현재 모임의 모임장 전용 관리 메뉴 화면으로 이동한다
-   *
-   * @author Hanwon.Jang
-   * @return 반환값이 없다
-   */
-  const handleClubManagement = (): void => {
-    // 현재 모임 번호를 유지하여 모임장 전용 관리 메뉴로 이동한다
-    navigate(`/reading-clubs/${clubNumb}/manage`);
-  };
-
-  /**
    * 현재 모임의 수정 화면으로 이동한다.
    *
    * @author Hanwon.Jang
@@ -256,7 +245,6 @@ export const useClubDetailPage = () => {
     members,
     handleAnswerChange,
     handleApplicationDecision,
-    handleClubManagement,
     handleClubAction,
     handleJoinClub,
     handleReportWrite,
