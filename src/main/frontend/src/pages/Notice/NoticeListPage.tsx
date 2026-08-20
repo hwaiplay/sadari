@@ -4,6 +4,7 @@ import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import { getNoticeListApi, type Notice } from "@/features/Notice/api/noticeApi";
+import { NoticeCategoryBadge } from "@/features/Notice/components/NoticeCategoryBadge";
 import { type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./NoticePage.css";
@@ -179,7 +180,7 @@ function NoticeListPage() {
             <time className={styles.date} dateTime={notice.dplyDate}>
               {displayDate}
             </time>
-            <span className={styles.category}>{notice.cateName}</span>
+            <NoticeCategoryBadge categoryName={notice.cateName} />
           </span>
         </span>
       </button>

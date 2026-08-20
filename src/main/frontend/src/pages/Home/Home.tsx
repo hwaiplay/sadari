@@ -109,21 +109,24 @@ function Home() {
         </label>
       </form>
 
-      {/* 로그인 사용자가 읽지 않은 공지사항 제목 슬라이드 영역 */}
-      <UnreadNoticeSlider />
+      {/* 읽지 않은 공지사항 제목과 독후감 정렬 영역 */}
+      <div className={styles.noticeSortBar}>
+        {/* 로그인 사용자가 읽지 않은 공지사항 카테고리와 제목 안내 영역 */}
+        <UnreadNoticeSlider />
 
-      {/* 독후감 정렬 영역 */}
-      <div className={styles.sortBar}>
-        <CustomSelect
-          value={sortType}
-          options={sortOptions}
-          ariaLabel={message("frontend.home.sort.label")}
-          className={styles.sortSelect}
-          triggerClassName={styles.sortSelectTrigger}
-          optionListClassName={styles.sortOptionList}
-          optionClassName={styles.sortSelectOption}
-          onChange={handleSortChange}
-        />
+        {/* 독후감 정렬 영역 */}
+        <div className={styles.sortBar}>
+          <CustomSelect
+            value={sortType}
+            options={sortOptions}
+            ariaLabel={message("frontend.home.sort.label")}
+            className={styles.sortSelect}
+            triggerClassName={styles.sortSelectTrigger}
+            optionListClassName={styles.sortOptionList}
+            optionClassName={styles.sortSelectOption}
+            onChange={handleSortChange}
+          />
+        </div>
       </div>
 
       {bookList.length > 0 ? (

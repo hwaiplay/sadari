@@ -176,11 +176,12 @@ export const searchIcon = style({
   flexShrink: 0,
 });
 
-export const sortBar = style({
+export const noticeSortBar = style({
   display: "flex",
   alignItems: "center",
-  justifyContent: "flex-end",
+  gap: "12px",
   width: "100%",
+  height: "32px",
   padding: `0 ${vars.space.md}`,
   marginBottom: "20px",
   boxSizing: "border-box",
@@ -190,6 +191,14 @@ export const sortBar = style({
       padding: `0 ${vars.space.lg}`,
     },
   },
+});
+
+export const sortBar = style({
+  display: "flex",
+  alignItems: "center",
+  flexShrink: 0,
+  height: "32px",
+  marginLeft: "auto",
 });
 
 export const sortSelect = style({

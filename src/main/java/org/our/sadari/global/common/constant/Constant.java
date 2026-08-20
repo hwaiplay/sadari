@@ -23,6 +23,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-14        Hanwon.Jang        독서 모임 초대 알림 코드 추가
  * 2026-08-15        SeungHyeon.Kang    상호 팔로우 친구 버튼 상태 추가
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 관계순과 최신순 및 추천순 정렬 코드 추가
+ * 2026-08-20        SeungHyeon.Kang    고객문의 공통코드 그룹 추가
  */
 public final class Constant {
 
@@ -57,6 +58,10 @@ public final class Constant {
     public static final String CODE_NOTICE_CATEGORY = "NOTI_CATE";
     // 서비스 정보 카테고리 공통코드
     public static final String CODE_SERVICE_INFO_CATEGORY = "SVIF_CATE";
+    // 고객문의 카테고리 공통코드
+    public static final String CODE_INQUIRY_CATEGORY = "INQR_CATG";
+    // 고객문의 상태 공통코드
+    public static final String CODE_INQUIRY_STATUS = "INQR_STAT";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 독서 타이머 상태 공통코드

@@ -101,17 +101,6 @@ export const titleRow = style({
   gap: "4px",
 });
 
-export const category = style({
-  flexShrink: 0,
-  padding: "3px 8px",
-  borderRadius: vars.radius.xl,
-  backgroundColor: vars.color.gray100,
-  color: vars.color.gray700,
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  lineHeight: 1.5,
-});
-
 export const pinIcon = style({
   width: "16px",
   height: "16px",

@@ -165,9 +165,9 @@
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getUserInterestCatalog */
-               CATEGORY.COMD_NAME AS INTR_CNAM
+               FN_GET_CODE_NAME(CATEGORY.COMM_CODE, CATEGORY.COMD_CODE, NULL) AS INTR_CNAM
              , DETAIL.COMD_CODE AS INTR_CODE
-             , DETAIL.COMD_NAME AS INTR_NAME
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
              , CATEGORY.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_CODEXD CATEGORY
@@ -188,9 +188,9 @@
     <select id="getUserInterestList" parameterType="long" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getUserInterestList */
-               PARENT.COMD_NAME AS INTR_CNAM
+               FN_GET_CODE_NAME(PARENT.COMM_CODE, PARENT.COMD_CODE, NULL) AS INTR_CNAM
              , INTEREST.INTR_CODE
-             , DETAIL.COMD_NAME AS INTR_NAME
+             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
              , PARENT.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_USINTR INTEREST

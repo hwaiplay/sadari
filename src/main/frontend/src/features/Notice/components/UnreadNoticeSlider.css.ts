@@ -1,15 +1,41 @@
 import { vars } from "@/app/styles/tokens.css";
-import { media } from "@/app/styles/responsive.css";
 import { keyframes, style } from "@vanilla-extract/css";
 
-const noticeSlideLeft = keyframes({
+const noticeMarqueeLeft = keyframes({
+  "0%": {
+    transform: "translateX(0)",
+  },
+  "100%": {
+    transform: "translateX(calc(-50% - 12px))",
+  },
+});
+
+const noticeMarqueeRevealEnd = keyframes({
+  "0%": {
+    transform: "translateX(0)",
+  },
+  "100%": {
+    transform: "translateX(min(0px, calc(100cqw - 100%)))",
+  },
+});
+
+const noticeMarqueeStatic = keyframes({
+  "0%": {
+    transform: "translateX(0)",
+  },
+  "100%": {
+    transform: "translateX(0)",
+  },
+});
+
+const noticeSlideUp = keyframes({
   "0%": {
     opacity: 0,
-    transform: "translateX(100%)",
+    transform: "translateY(100%)",
   },
   "100%": {
     opacity: 1,
-    transform: "translateX(0)",
+    transform: "translateY(0)",
   },
 });
 
@@ -17,16 +43,11 @@ export const slider = style({
   boxSizing: "border-box",
   display: "flex",
   alignItems: "center",
-  width: `calc(100% - ${vars.space.md} - ${vars.space.md})`,
+  flex: 1,
+  minWidth: 0,
+  width: "auto",
   height: "32px",
-  margin: `0 ${vars.space.md} 12px`,
-
-  "@media": {
-    [media.tablet]: {
-      width: `calc(100% - ${vars.space.lg} - ${vars.space.lg})`,
-      margin: `0 ${vars.space.lg} 12px`,
-    },
-  },
+  margin: 0,
 });
 
 export const viewport = style({
@@ -42,9 +63,10 @@ export const noticeLink = style({
   inset: 0,
   height: "32px",
   minWidth: 0,
-  padding: "0 8px",
+  padding: "0 8px 0 0",
   display: "flex",
   alignItems: "center",
+  gap: "4px",
   borderRadius: "6px",
   backgroundColor: "transparent",
   color: vars.color.black,
@@ -53,9 +75,7 @@ export const noticeLink = style({
   lineHeight: 1.4,
   textDecoration: "none",
   overflow: "hidden",
-  textOverflow: "ellipsis",
-  whiteSpace: "nowrap",
-  animation: `${noticeSlideLeft} 300ms cubic-bezier(0.22, 1, 0.36, 1) both`,
+  animation: `${noticeSlideUp} 300ms cubic-bezier(0.4, 0, 0.2, 1)`,
 
   selectors: {
     "&:hover": {
@@ -72,4 +92,58 @@ export const noticeLink = style({
       animation: "none",
     },
   },
+});
+
+export const marqueeViewport = style({
+  minWidth: 0,
+  flex: 1,
+  display: "block",
+  overflow: "hidden",
+  containerType: "inline-size",
+});
+
+export const marqueeTrack = style({
+  width: "max-content",
+  display: "flex",
+  alignItems: "center",
+  gap: "24px",
+  animationTimingFunction: "linear",
+  willChange: "transform",
+});
+
+export const singleMarqueeTrack = style({
+  animationName: noticeMarqueeLeft,
+  animationIterationCount: "infinite",
+
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      animationName: noticeMarqueeStatic,
+      willChange: "auto",
+    },
+  },
+});
+
+export const multipleMarqueeTrack = style({
+  animationName: noticeMarqueeRevealEnd,
+  animationIterationCount: 1,
+  animationFillMode: "forwards",
+
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      animationName: noticeMarqueeStatic,
+      willChange: "auto",
+    },
+  },
+});
+
+export const noticeContent = style({
+  flex: "none",
+  display: "flex",
+  alignItems: "center",
+  gap: "4px",
+});
+
+export const noticeTitle = style({
+  display: "block",
+  whiteSpace: "nowrap",
 });
