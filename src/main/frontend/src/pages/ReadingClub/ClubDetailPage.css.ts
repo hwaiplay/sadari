@@ -262,7 +262,7 @@ export const currentReadingPeriod = style({
 export const myReadingStatus = style({
   display: "flex",
   flexDirection: "column",
-  gap: 6,
+  gap: 2,
 });
 
 export const myReadingStatusLabel = style({

@@ -25,6 +25,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·독서 등록 DTO 추가
  * 2026-08-15        Hanwon.Jang    현재 독서 목표 현황 응답 필드 추가
+ * 2026-08-20        SeungHyeon.Kang    현재 독후감 편집 연결 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -199,6 +200,9 @@ public final class ReadingClubDto {
 
         @Schema(description = "로그인 사용자의 현재 독서 상태")
         private String currentReportStat;
+
+        @Schema(description = "로그인 사용자의 현재 독서 독후감 번호")
+        private Long currentReportNumb;
 
         @Schema(description = "현재 독서 목표를 달성한 활성 참여 인원 수")
         private Integer currentGoalAchvCnt;

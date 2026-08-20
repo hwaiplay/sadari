@@ -43,6 +43,7 @@ import java.util.UUID;
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 요청 차단
  * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 허용과 식별값 해시 공통화
  * 2026-08-14        SeungHyeon.Kang    계정 상태 변경 전 독서 타이머 종료 추가
+ * 2026-08-20        SeungHyeon.Kang    탈퇴 회원의 모임 목표 참여 자동 복원 차단 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -412,6 +413,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         userWithdrawalMapper.uptUserReportPrivate(request.getUserNumb());
         // 탈퇴 회원의 독서 통계 공개를 해제하며 복귀 후 자동 공개하지 않는다
         userWithdrawalMapper.uptReadingStatsPrivate(request.getUserNumb(), Constant.COMM_NO);
+        // 탈퇴 회원의 모임 회차 참여 연결을 비식별화해 복귀 후 목표 달성 집계에 자동 복원하지 않는다
+        userWithdrawalMapper.uptClubParticipantAnonymous(request.getUserNumb(), Constant.COMM_YES);
         // 탈퇴 회원이 수신한 알림을 모두 삭제 상태로 변경한다
         userWithdrawalMapper.uptUserAlimDeleted(request.getUserNumb());
         // 탈퇴 회원의 브라우저 푸시 구독을 모두 비활성화한다

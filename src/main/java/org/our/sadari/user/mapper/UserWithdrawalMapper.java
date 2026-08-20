@@ -16,6 +16,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
  * 2026-08-14        Hanwon.Jang,SeungHyeon.Kang    탈퇴 회원 공개 정보 해제 추가
+ * 2026-08-20        SeungHyeon.Kang    탈퇴 회원의 모임 회차 참여 비식별 처리 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -47,6 +48,16 @@ public interface UserWithdrawalMapper {
      * @return 변경된 회원 수
      */
     int uptReadingStatsPrivate(@Param("userNumb") Long userNumb, @Param("privateYsno") String privateYsno);
+
+    /**
+     * 계정 비활성화 또는 영구 삭제 대기 회원의 모임 회차 참여 연결을 비식별화한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 탈퇴 회원 번호
+     * @param anonymousYsno 비식별 참여 여부 코드
+     * @return 변경된 모임 회차 참여 수
+     */
+    int uptClubParticipantAnonymous(@Param("userNumb") Long userNumb, @Param("anonymousYsno") String anonymousYsno);
 
     /**
      * 회원의 알림을 모두 삭제 상태로 변경한다.

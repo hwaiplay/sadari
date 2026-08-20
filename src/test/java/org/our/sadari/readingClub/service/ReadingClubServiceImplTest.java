@@ -34,12 +34,13 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : ReadingClubServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 독서 모임 서비스의 모임원 프로필과 가입 신청 접근 정책을 검증한다
+ * description    : 독서 모임 서비스의 목록 관계 데이터와 접근 정책을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
+ * 2026-08-20        SeungHyeon.Kang    내 모임 카테고리 결합 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -139,6 +140,42 @@ class ReadingClubServiceImplTest {
         assertEquals(List.of("2026-08-31", "2026-08-31"), reportCaptor.getAllValues().stream().map(ReportDto::getReptEndt).toList());
         verify(readingClubMapper).setReadingParticipant(10L, 1L, 1L, 20L, 120L);
         verify(readingClubMapper).setReadingParticipant(10L, 1L, 2L, 30L, 130L);
+    }
+
+    /**
+     * 내 모임 목록에 모임별 대표 카테고리 정보를 결합하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getMyClubListCombinesCategoryList() {
+        // 현재 도서 표지가 포함된 내 모임 조회 결과를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 관계 데이터 조회에 사용할 모임 번호를 설정한다
+        club.setClubNumb(10L);
+        // 목록 API가 유지해야 하는 현재 도서 표지를 설정한다
+        club.setCurrentBookCvim("https://example.com/book.jpg");
+        // 대표 카테고리 조회 결과를 구성한다
+        ReadingClubDto.CategoryDto category = new ReadingClubDto.CategoryDto();
+        // 화면에 표시할 카테고리 코드를 설정한다
+        category.setIntrCode("NOVEL");
+        // 화면에 표시할 카테고리명을 설정한다
+        category.setIntrName("소설");
+
+        // 내 모임과 모임별 카테고리 조회 결과를 반환하도록 구성한다
+        when(readingClubMapper.getMyClubList(20L)).thenReturn(List.of(club));
+        // 대표 카테고리 관계를 목록 후처리에 제공한다
+        when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of(category));
+
+        // 로그인 사용자의 내 모임 목록을 조회한다
+        ResultData result = readingClubService.getMyClubList(20L);
+
+        // 카테고리와 도서 표지를 유지한 성공 응답을 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(List.of(club), result.getData());
+        assertEquals("소설", club.getCategoryList().get(0).getIntrName());
+        assertEquals("https://example.com/book.jpg", club.getCurrentBookCvim());
+        verify(readingClubMapper).getClubCategoryList(10L);
     }
 
     /**

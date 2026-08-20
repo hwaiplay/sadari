@@ -20,10 +20,14 @@ import { useNavigate } from "react-router-dom";
  * @return 첫 번째 관심분야명 또는 기본 문구
  */
 export const getClubCategory = (club: ReadingClub): string => {
-  // 관심분야명이 있으면 카드 분류로 사용한다
-  if (club.categoryList?.[0]?.intrName) {
-    // 첫 번째 관심분야명을 반환한다
-    return club.categoryList[0].intrName;
+  // 대표 카테고리의 세부명부터 대분류명과 코드 순서로 표시값을 보정한다
+  const categoryName = club.categoryList?.[0]?.intrName
+    ?? club.categoryList?.[0]?.intrCnam
+    ?? club.categoryList?.[0]?.intrCode;
+  // 카테고리 표시값이 있으면 카드 분류로 사용한다
+  if (categoryName) {
+    // 첫 번째 카테고리의 표시 가능한 값을 반환한다
+    return categoryName;
   }
 
   // 관심분야가 없는 모임의 기본 분류를 반환한다
@@ -48,21 +52,47 @@ export const getClubMeta = (club: ReadingClub): string => {
 };
 
 /**
- * 현재 참여 인원을 정원 대비 백분율로 변환한다
+ * 현재 독서 목표를 달성한 인원을 목표 참여 인원 대비 백분율로 변환한다
  *
  * @author SeungHyeon.Kang
  * @param club 표시할 모임
- * @return 0부터 100 사이의 참여율
+ * @return 0부터 100 사이의 목표 달성률
  */
-export const getMemberProgress = (club: ReadingClub): number => {
-  // 정원이 없으면 0으로 나누지 않도록 빈 진행률을 반환한다
-  if (club.maxxMemb <= 0) {
-    // 빈 진행률을 반환한다
+export const getGoalProgress = (club: ReadingClub): number => {
+  // 진행 중인 독서 목표가 없으면 빈 진행률을 표시한다
+  if (!club.currentRondNumb) {
+    // 도서 선정 중인 모임의 빈 진행률을 반환한다
     return 0;
   }
 
-  // 카드 너비를 넘지 않는 참여율을 반환한다
-  return Math.min(100, Math.round((club.memberCnt / club.maxxMemb) * 100));
+  // 모임장을 포함한 참여 인원이 항상 한 명 이상 표시되도록 보정한다
+  const goalMemberCnt = Math.max(1, club.currentGoalMembCnt ?? 0);
+  // 비정상 집계값이 진행률 범위를 벗어나지 않도록 달성 인원을 보정한다
+  const goalAchvCnt = Math.min(goalMemberCnt, Math.max(0, club.currentGoalAchvCnt ?? 0));
+  // 카드 너비를 넘지 않는 목표 달성률을 반환한다
+  return Math.round((goalAchvCnt / goalMemberCnt) * 100);
+};
+
+/**
+ * 현재 독서 목표의 달성 인원 문구 또는 도서 선정 상태를 구성한다
+ *
+ * @author SeungHyeon.Kang
+ * @param club 표시할 모임
+ * @return 목표 달성 인원 또는 도서 선정 상태 문구
+ */
+export const getGoalProgressText = (club: ReadingClub): string => {
+  // 진행 중인 독서 목표가 없으면 다음 도서를 정하는 상태로 안내한다
+  if (!club.currentRondNumb) {
+    // "도서 선정 중"
+    return message("frontend.readingClub.my.selectingBook");
+  }
+
+  // 모임장을 포함한 참여 인원이 항상 한 명 이상 표시되도록 보정한다
+  const goalMemberCnt = Math.max(1, club.currentGoalMembCnt ?? 0);
+  // 비정상 집계값이 참여 인원 범위를 벗어나지 않도록 달성 인원을 보정한다
+  const goalAchvCnt = Math.min(goalMemberCnt, Math.max(0, club.currentGoalAchvCnt ?? 0));
+  // "{달성 인원}/{참여 인원}명 목표 달성"
+  return message("frontend.readingClub.my.goalAchievement", [goalAchvCnt, goalMemberCnt]);
 };
 
 /**
