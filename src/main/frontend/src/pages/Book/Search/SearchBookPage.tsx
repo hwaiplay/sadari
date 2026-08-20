@@ -15,6 +15,9 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { PopularBookPeriodType } from "@/features/Book/types/book.type";
+import type { LayoutOutletContext } from "@/components/Layout/Layout";
+import { useOutletContext } from "react-router-dom";
+import { clsx } from "clsx";
 import * as styles from "./SearchBookPage.css";
 
 const DESCRIPTION_PREVIEW_LENGTH = 90;
@@ -46,6 +49,8 @@ const POPULAR_PERIOD_LABELS: Readonly<Record<PopularBookPeriodType, string>> = {
  */
 const SearchBookPage = () => {
 
+  // 공통 헤더의 표시 상태를 검색 입력 고정 위치와 동기화한다
+  const { isHeaderHidden } = useOutletContext<LayoutOutletContext>();
   const {
     bookResult,
     handleLoadMore,
@@ -70,96 +75,100 @@ const SearchBookPage = () => {
     saveTimerReport,
     setSearchKeyword,
   } = useSearchBookPage();
+  // 헤더가 숨겨진 동안 검색 입력 영역이 화면 최상단을 채우도록 스타일을 구성한다
+  const searchBarClassName = clsx(
+    styles.searchBar,
+    isHeaderHidden && styles.searchBarHeaderHidden,
+  );
 
   // 책 검색 입력과 조회 결과 목록 화면을 반환한다.
   return (
     <main className={styles.page}>
       <Container className={styles.content}>
-        {/* 책 검색 입력과 인기 검색어 및 인기 도서 기간 선택 영역 */}
-        <section className={styles.searchSection}>
-          {/* 책 검색어 입력과 검색 실행 영역 */}
-          <form className={styles.searchBar} onSubmit={handleSearchClick}>
-            <label className={styles.searchLabel}>
-              <span className={styles.hiddenLabel}>
-                {/* "책 제목, 저자를 입력하세요" */}
-                {message("frontend.book.search.placeholder")}
-              </span>
-              <input
-                className={styles.searchInput}
-                type="text"
-                name="searchKeyword"
-                id="searchKeyword"
-                placeholder={message("frontend.book.search.placeholder")}
-                value={searchKeyword}
-                onChange={(event) => setSearchKeyword(event.target.value)}
-              />
-              {/* "검색" */}
-              <button
-                className={styles.searchButton}
-                type="submit"
-                disabled={isSearching}
-                aria-label={/* "검색" */ message("frontend.common.search")}
+        {/* 스크롤 중에도 헤더 위치에 맞춰 유지되는 책 검색어 입력과 검색 실행 영역 */}
+        <form className={searchBarClassName} onSubmit={handleSearchClick}>
+          <label className={styles.searchLabel}>
+            <span className={styles.hiddenLabel}>
+              {/* "책 제목, 저자를 입력하세요" */}
+              {message("frontend.book.search.placeholder")}
+            </span>
+            <input
+              className={styles.searchInput}
+              type="text"
+              name="searchKeyword"
+              id="searchKeyword"
+              placeholder={message("frontend.book.search.placeholder")}
+              value={searchKeyword}
+              onChange={(event) => setSearchKeyword(event.target.value)}
+            />
+            {/* "검색" */}
+            <button
+              className={styles.searchButton}
+              type="submit"
+              disabled={isSearching}
+              aria-label={/* "검색" */ message("frontend.common.search")}
+            >
+              <svg
+                className={styles.searchIcon}
+                viewBox="0 0 24 24"
+                aria-hidden="true"
               >
-                <svg
-                  className={styles.searchIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                  />
-                  <path
-                    d="m15 15 4 4"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="1.8"
-                    strokeLinecap="round"
-                  />
-                </svg>
-              </button>
-            </label>
-          </form>
-
-          {/* 인기 도서 모드에서만 인기 검색어와 기간 선택을 같은 높이의 한 행으로 제공한다 */}
-          {isPopularMode && (
-            <div className={styles.popularControlBar}>
-              {/* 최근 인기 검색어 한 건씩 왼쪽 영역에서 세로로 교체하고 즉시 검색하는 영역 */}
-              <PopularKeywordSlider
-                keywordList={popularKeywordList}
-                isDisabled={isSearching}
-                onSelect={handlePopularKeywordSelect}
-              />
-
-              {/* 같은 행 오른쪽의 기간별 인기 도서 선택 영역 */}
-              <div className={styles.popularPeriodBar}>
-                <CustomSelect
-                  value={popularPeriod}
-                  options={POPULAR_PERIOD_OPTIONS}
-                  ariaLabel={
-                    /* "인기 도서 기간" */ message(
-                      "frontend.book.search.popularPeriodLabel",
-                    )
-                  }
-                  triggerContent={POPULAR_PERIOD_LABELS[popularPeriod]}
-                  className={styles.popularPeriodSelect}
-                  triggerClassName={styles.popularPeriodSelectTrigger}
-                  optionListClassName={styles.popularPeriodOptionList}
-                  optionClassName={styles.popularPeriodOption}
-                  onChange={handlePopularPeriodChange}
+                <path
+                  d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
                 />
-              </div>
-            </div>
-          )}
-        </section>
+                <path
+                  d="m15 15 4 4"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            </button>
+          </label>
+        </form>
 
-        {isInitialLoading ? (
-          /* 선택 기간의 인기 도서 조회 상태 영역 */
-          <Loading isFullScreen={false} />
-        ) : bookResult &&
-          (bookResult.length > 0 ? (
+        {/* 인기 도서 모드에서만 인기 검색어와 기간 선택을 같은 높이의 한 행으로 제공한다 */}
+        {isPopularMode && (
+          <div className={styles.popularControlBar}>
+            {/* 최근 인기 검색어 한 건씩 왼쪽 영역에서 세로로 교체하고 즉시 검색하는 영역 */}
+            <PopularKeywordSlider
+              keywordList={popularKeywordList}
+              isDisabled={isSearching}
+              onSelect={handlePopularKeywordSelect}
+            />
+
+            {/* 같은 행 오른쪽의 기간별 인기 도서 선택 영역 */}
+            <div className={styles.popularPeriodBar}>
+              <CustomSelect
+                value={popularPeriod}
+                options={POPULAR_PERIOD_OPTIONS}
+                ariaLabel={
+                  /* "인기 도서 기간" */ message(
+                    "frontend.book.search.popularPeriodLabel",
+                  )
+                }
+                triggerContent={POPULAR_PERIOD_LABELS[popularPeriod]}
+                className={styles.popularPeriodSelect}
+                triggerClassName={styles.popularPeriodSelectTrigger}
+                optionListClassName={styles.popularPeriodOptionList}
+                optionClassName={styles.popularPeriodOption}
+                onChange={handlePopularPeriodChange}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* 검색 또는 인기 도서 조회 결과 영역 */}
+        <section className={styles.resultSection}>
+          {isInitialLoading ? (
+            /* 선택 기간의 인기 도서 조회 상태 영역 */
+            <Loading isFullScreen={false} />
+          ) : bookResult &&
+            (bookResult.length > 0 ? (
             <div className={styles.resultList}>
               {bookResult.map((book, index) => {
 
@@ -284,7 +293,8 @@ const SearchBookPage = () => {
                 </>
               )}
             </p>
-          ))}
+            ))}
+        </section>
       </Container>
 
       {/* 타이머에서 선택한 도서의 읽는 중 독후감 목표기간 입력 모달 */}
