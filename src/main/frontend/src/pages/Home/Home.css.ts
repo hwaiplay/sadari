@@ -14,7 +14,7 @@ export const reportSetButton = style({
   color: "#ffffff",
   alignItems: "center",
   justifyContent: "center",
-  boxShadow: "0 8px 20px rgba(0, 0, 0, 0.18)",
+  boxShadow: "0 0px 20px rgba(0, 0, 0, 0.1)",
   selectors: {
     "&:focus-visible": {
       outline: "2px solid #78b991",

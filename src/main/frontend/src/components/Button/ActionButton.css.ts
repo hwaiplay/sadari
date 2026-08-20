@@ -31,6 +31,7 @@ export const button = style({
 export const variant = styleVariants({
   primary: {
     backgroundColor: vars.color.gray900,
+    borderColor: vars.color.gray900,
     color: "#ffffff",
     selectors: {
       "&:hover:not(:disabled)": {
