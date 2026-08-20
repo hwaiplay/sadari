@@ -12,9 +12,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 계약 추가
- * 2026-08-14        Hanwon.Jang    모임 수정과 물리 삭제 계약 추가
- * 2026-08-14        Hanwon.Jang    모임 독서 일괄 등록 계약 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 계약 추가
  */
 public interface ReadingClubService {
 

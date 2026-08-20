@@ -24,8 +24,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-07        SeungHyeon.Kang    최초 생성
- * 2026-08-07        SeungHyeon.Kang    환경변수 장기 자격 증명을 S3 클라이언트에 적용
+ * 2026-08-07        SeungHyeon.Kang    최초 생성 및 S3 자격 증명 적용
  */
 @Configuration
 public class FileStorageConfig {

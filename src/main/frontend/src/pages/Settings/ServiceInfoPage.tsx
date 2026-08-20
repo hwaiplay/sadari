@@ -54,7 +54,7 @@ function ServiceInfoPage() {
 
   // 목록 조회 중에는 공통 로딩 화면을 반환한다.
   if (isLoading) {
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   // 서비스 정보 카테고리 아코디언 화면을 반환한다.
@@ -62,7 +62,7 @@ function ServiceInfoPage() {
     /* 서비스 정보 카테고리와 배포 정책 전체 영역 */
     <main className={styles.page}>
       {/* 서비스 정보 카테고리 아코디언 목록 영역 */}
-      <section className={styles.list} aria-label="서비스 정보">
+      <section className={styles.list} aria-label={message("frontend.serviceInfo.label")}>
         {hasError ? (
           <p className={styles.empty}>{message("frontend.common.tryAgain")}</p>
         ) : serviceInfoList.map((serviceInfo) => {
@@ -92,13 +92,16 @@ function ServiceInfoPage() {
                   {serviceInfo.svciCntn ? (
                     <div className={styles.content} dangerouslySetInnerHTML={{ __html: serviceInfo.svciCntn }} />
                   ) : (
-                    <p className={`${styles.content} ${styles.empty}`}>배포된 내용이 없습니다.</p>
+                    <p className={`${styles.content} ${styles.empty}`}>
+                      {/* "배포된 내용이 없습니다." */}
+                      {message("frontend.serviceInfo.empty")}
+                    </p>
                   )}
                   {displayModifiedDate && (
                     /* 현재 배포 서비스 정보의 최근 수정일 영역 */
                     <footer className={styles.modifiedDate}>
                       {/* "최근 수정일" */}
-                      <span>최근 수정일</span>
+                      <span>{message("frontend.serviceInfo.modifiedDate")}</span>
                       <time dateTime={modifiedDate ?? undefined}>{displayModifiedDate}</time>
                     </footer>
                   )}

@@ -25,8 +25,7 @@ import java.util.concurrent.TimeUnit;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    성공 이벤트를 정지 동기화 완료 후 삭제
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 이벤트 완료 처리
  */
 @Service
 @RequiredArgsConstructor

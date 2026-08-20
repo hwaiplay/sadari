@@ -4,6 +4,7 @@ import {
   ResultDataError,
 } from "@/app/api/resultData";
 import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
 import { useCheckAuth } from "@/features/Auth/hooks/useCheckAuth";
 import { setInquiryApi } from "@/features/Inquiry/api/inquiryApi";
@@ -14,11 +15,11 @@ import * as styles from "./InquiryPage.css";
 type InquiryCategory = "GENERAL" | "ACCOUNT" | "SUSPENSION_APPEAL" | "BUG" | "SUGGESTION";
 
 const categories: readonly CustomSelectOption<InquiryCategory>[] = [
-  { value: "GENERAL", label: "일반 문의" },
-  { value: "ACCOUNT", label: "계정 문의" },
-  { value: "SUSPENSION_APPEAL", label: "이용정지 이의제기" },
-  { value: "BUG", label: "오류 신고" },
-  { value: "SUGGESTION", label: "서비스 제안" },
+  { value: "GENERAL", label: /* "일반 문의" */ message("frontend.inquiry.category.general") },
+  { value: "ACCOUNT", label: /* "계정 문의" */ message("frontend.inquiry.category.account") },
+  { value: "SUSPENSION_APPEAL", label: /* "이용정지 이의제기" */ message("frontend.inquiry.category.suspensionAppeal") },
+  { value: "BUG", label: /* "오류 신고" */ message("frontend.inquiry.category.bug") },
+  { value: "SUGGESTION", label: /* "서비스 제안" */ message("frontend.inquiry.category.suggestion") },
 ];
 
 /**
@@ -104,7 +105,11 @@ function InquiryWritePage() {
     // 제목이나 문의 내용이 비어 있으면 서버 요청 전에 입력 보완을 안내한다
     if (!canSubmit) {
       // "입력 내용을 확인해주세요."
-      await sweetWarning("입력 내용을 확인해주세요.", "제목과 문의 내용을 입력해주세요.");
+      await sweetWarning(
+        message("frontend.common.checkInput"),
+        // "제목과 문의 내용을 입력해주세요."
+        message("frontend.inquiry.write.required"),
+      );
       // 필수 입력값이 준비될 때까지 문의 접수를 중단한다
       return;
     }
@@ -129,19 +134,20 @@ function InquiryWritePage() {
     // 서버가 반환한 실패 원인에 맞는 공통 알럿을 표시한다
     catch (saveError) {
       // 문의 접수 실패 응답에서 사용자 안내 문구를 안전하게 조회한다
-      const saveErrorMessage = getApiErrorMessage(saveError, "고객문의를 접수하지 못했습니다.");
+      // "고객문의를 접수하지 못했습니다."
+      const saveErrorMessage = getApiErrorMessage(saveError, message("frontend.inquiry.write.saveFailed"));
 
       // 비속어가 포함된 경우에는 입력란 아래 문구 대신 다른 작성 화면과 같은 경고 알럿을 사용한다
       if (saveError instanceof ResultDataError
           && Number(saveError.result.code) === BAD_WORD_INCLUDED_CODE) {
         // "입력 내용을 확인해주세요."
-        await sweetWarning("입력 내용을 확인해주세요.", saveErrorMessage);
+        await sweetWarning(message("frontend.common.checkInput"), saveErrorMessage);
         // 비속어 안내 후 일반 오류 알럿이 중복 표시되지 않도록 종료한다
         return;
       }
 
       // "문의 접수에 실패했습니다."
-      await sweetError("문의 접수에 실패했습니다.", saveErrorMessage);
+      await sweetError(message("frontend.inquiry.write.saveFailedTitle"), saveErrorMessage);
     }
 
     // 성공과 실패 모두에서 문의 접수 버튼을 다시 사용할 수 있도록 상태를 해제한다
@@ -156,8 +162,14 @@ function InquiryWritePage() {
     <div className={styles.writePage}>
       {/* 문의 접수 안내 영역 */}
       <section className={styles.formIntro} aria-labelledby="inquiry-write-title">
-        <h2 id="inquiry-write-title" className={styles.sectionTitle}>무엇을 도와드릴까요?</h2>
-        <p className={styles.description}>문의 내용을 자세히 남겨주시면 확인 후 답변드리겠습니다.</p>
+        <h2 id="inquiry-write-title" className={styles.sectionTitle}>
+          {/* "무엇을 도와드릴까요?" */}
+          {message("frontend.inquiry.write.title")}
+        </h2>
+        <p className={styles.description}>
+          {/* "문의 내용을 자세히 남겨주시면 확인 후 답변드리겠습니다." */}
+          {message("frontend.inquiry.write.description")}
+        </p>
       </section>
 
       {/* 문의 유형과 제목 및 내용 입력 영역 */}
@@ -165,17 +177,19 @@ function InquiryWritePage() {
         {/* 문의 유형 선택 영역 */}
         <div className={styles.field}>
           <span className={styles.label}>
-            문의 유형<span className={styles.required} aria-hidden="true">*</span>
+            {/* "문의 유형" */}
+            {message("frontend.inquiry.write.categoryLabel")}<span className={styles.required} aria-hidden="true">*</span>
           </span>
           {isSuspended ? (
-            <div className={styles.fixedCategory} aria-label="문의 유형">
-              이용정지 이의제기
+            <div className={styles.fixedCategory} aria-label={message("frontend.inquiry.write.categoryLabel")}>
+              {/* "이용정지 이의제기" */}
+              {message("frontend.inquiry.category.suspensionAppeal")}
             </div>
           ) : (
             <CustomSelect<InquiryCategory>
               value={inqrCatg}
               options={categories}
-              ariaLabel="문의 유형 선택"
+              ariaLabel={message("frontend.inquiry.write.categorySelect")}
               className={styles.categorySelect}
               triggerClassName={styles.categorySelectTrigger}
               optionListClassName={styles.categoryOptionList}
@@ -188,13 +202,14 @@ function InquiryWritePage() {
         {/* 문의 제목 입력 영역 */}
         <div className={styles.field}>
           <label className={styles.label} htmlFor="inquiry-title">
-            제목<span className={styles.required} aria-hidden="true">*</span>
+            {/* "제목" */}
+            {message("frontend.inquiry.write.titleLabel")}<span className={styles.required} aria-hidden="true">*</span>
           </label>
           <input
             id="inquiry-title"
             className={styles.input}
             maxLength={200}
-            placeholder="문의 제목을 입력해주세요"
+            placeholder={message("frontend.inquiry.write.titlePlaceholder")}
             value={inqrTitl}
             onChange={handleTitleChange}
           />
@@ -207,18 +222,22 @@ function InquiryWritePage() {
         {/* 문의 내용 입력 영역 */}
         <div className={styles.contentField}>
           <label className={styles.label} htmlFor="inquiry-content">
-            문의 내용<span className={styles.required} aria-hidden="true">*</span>
+            {/* "문의 내용" */}
+            {message("frontend.inquiry.write.contentLabel")}<span className={styles.required} aria-hidden="true">*</span>
           </label>
           <textarea
             id="inquiry-content"
             className={styles.textarea}
             maxLength={4000}
-            placeholder="불편한 점이나 궁금한 내용을 구체적으로 입력해주세요"
+            placeholder={message("frontend.inquiry.write.contentPlaceholder")}
             value={inqrCntn}
             onChange={handleContentChange}
           />
           <div className={styles.fieldFooter}>
-            <p className={styles.helper}>개인정보나 비밀번호는 입력하지 마세요.</p>
+            <p className={styles.helper}>
+              {/* "개인정보나 비밀번호는 입력하지 마세요." */}
+              {message("frontend.inquiry.write.privacyHelp")}
+            </p>
             <span className={styles.count}>{inqrCntn.length} / 4,000</span>
           </div>
         </div>
@@ -229,7 +248,17 @@ function InquiryWritePage() {
           type="submit"
           disabled={isSaving || !canSubmit}
         >
-          {isSaving ? "접수 중입니다" : "문의 접수"}
+          {isSaving ? (
+            <>
+              {/* "접수 중입니다" */}
+              {message("frontend.inquiry.write.saving")}
+            </>
+          ) : (
+            <>
+              {/* "문의 접수" */}
+              {message("frontend.inquiry.write.submit")}
+            </>
+          )}
         </button>
       </form>
     </div>

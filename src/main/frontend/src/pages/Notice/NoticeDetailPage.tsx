@@ -1,13 +1,12 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
 import { getNoticeDetailApi, type Notice } from "@/features/Notice/api/noticeApi";
+import { NoticeCategoryBadge } from "@/features/Notice/components/NoticeCategoryBadge";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import * as styles from "./NoticePage.css";
-
-// "공지사항을 불러오는 중입니다"
-const NOTICE_LOADING_TITLE = "공지사항을 불러오는 중입니다";
 
 /**
  * 현재 배포 중인 공지사항 본문을 표시한다.
@@ -34,7 +33,7 @@ function NoticeDetailPage() {
     // 숫자가 아닌 주소로 접근하면 서버를 호출하지 않고 잘못된 주소를 안내한다.
     if (!Number.isInteger(parsedNoticeNumb) || parsedNoticeNumb < 1) {
       // "공지사항 주소가 올바르지 않습니다."
-      setError("공지사항 주소가 올바르지 않습니다.");
+      setError(message("frontend.notice.detail.invalidAddress"));
       // 잘못된 주소로 상세 API를 호출하지 않고 현재 조회 흐름을 종료한다.
       return;
     }
@@ -56,7 +55,7 @@ function NoticeDetailPage() {
 
       catch (loadError) {
         // "공지사항을 불러오지 못했습니다."
-        setError(getApiErrorMessage(loadError, "공지사항을 불러오지 못했습니다."));
+        setError(getApiErrorMessage(loadError, message("frontend.notice.list.loadFailed")));
       }
     };
 
@@ -86,7 +85,7 @@ function NoticeDetailPage() {
     return (
       <main className={styles.page}>
         {/* 공지사항 상세 조회 상태 영역 */}
-        <Loading title={NOTICE_LOADING_TITLE} isFullScreen={false} />
+        <Loading isFullScreen={false} />
       </main>
     );
   }
@@ -114,7 +113,7 @@ function NoticeDetailPage() {
               </svg>
 
             )}
-            <span className={styles.category}>{notice.cateName}</span>
+            <NoticeCategoryBadge categoryName={notice.cateName} />
           </div>
         </div>
       </header>

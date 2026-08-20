@@ -14,8 +14,7 @@ import org.our.sadari.inquiry.dto.InquiryDto;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-13        SeungHyeon.Kang    최초 생성
- * 2026-08-13        SeungHyeon.Kang    현재 정지 이의제기 문의 번호 조회 추가
+ * 2026-08-13        SeungHyeon.Kang    최초 생성 및 정지 문의 조회
  */
 @Mapper
 public interface InquiryMapper {

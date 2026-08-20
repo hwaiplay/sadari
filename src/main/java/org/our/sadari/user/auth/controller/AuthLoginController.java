@@ -49,8 +49,7 @@ import java.util.Map;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    인증 응답에 최초 로그인 온보딩 상태 추가
- * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 안내 표시 전달
+ * 2026-07-30        SeungHyeon.Kang    온보딩·계정 복귀 상태 응답
  * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
  * 2026-08-11        SeungHyeon.Kang    기기별 재발급과 선택형 로그아웃 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴 뒤 유효 제재가 남은 계정의 로그인 차단 안내 추가

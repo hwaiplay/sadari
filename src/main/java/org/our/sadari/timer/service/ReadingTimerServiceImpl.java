@@ -1,15 +1,24 @@
 package org.our.sadari.timer.service;
 
+import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
+import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.timer.config.ReadingTimerProperties;
 import org.our.sadari.timer.dto.ReadingTimerDto;
 import org.our.sadari.timer.mapper.ReadingTimerMapper;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.time.Clock;
 import java.time.DayOfWeek;
@@ -23,26 +32,41 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * fileName       : ReadingTimerServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 서버 시간으로 독서 세션을 확정하고 주간 출석을 계산한다
+ * description    : 독서 세션과 주간 출석 및 목표시간 알림 업무를 처리한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 조회 적용
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 처리
+ * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 조회 통합
  */
 @Service
+@Slf4j
 @Transactional(readOnly = true)
 public class ReadingTimerServiceImpl implements ReadingTimerService {
+
+    // 공통 성공 응답 코드
+    private static final int RESULT_SUCCESS_CODE = 200;
+    // 도서별 누적 독서 시간 한 페이지 표시 건수
+    private static final int BOOK_TIME_PAGE_SIZE = 20;
 
     // 독서 타이머 데이터 접근 객체
     private final ReadingTimerMapper readingTimerMapper;
     // 독서 타이머 운영 기준
     private final ReadingTimerProperties properties;
+    // 알림 저장과 푸시 발송 업무 서비스
+    private final AlimService alimService;
+    // 스케줄러 로그 안전 처리 객체
+    private final SchedulerLogSupport schedulerLogSupport;
+    // 대상 세션별 신규 트랜잭션 실행 객체
+    private final TransactionTemplate timerTransactionTemplate;
+    // 스케줄러 1회 최대 처리 건수
+    private final int maxSize;
     // 서버 현재 일시를 제공하는 시계
     private final Clock clock;
     // 일별 출석 경계를 계산할 시간대
@@ -54,11 +78,18 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
      * @author SeungHyeon.Kang
      * @param readingTimerMapper 독서 타이머 데이터 접근 객체
      * @param properties 독서 타이머 운영 기준
+     * @param alimService 알림 저장과 푸시 발송 업무 서비스
+     * @param schedulerLogSupport 스케줄러 로그 안전 처리 객체
+     * @param transactionManager 대상 세션별 트랜잭션 관리자
+     * @param maxSize 한 번에 조회할 최대 건수
      */
     @Autowired
-    public ReadingTimerServiceImpl(ReadingTimerMapper readingTimerMapper, ReadingTimerProperties properties) {
+    public ReadingTimerServiceImpl(ReadingTimerMapper readingTimerMapper, ReadingTimerProperties properties, AlimService alimService
+                                 , SchedulerLogSupport schedulerLogSupport, PlatformTransactionManager transactionManager
+                                 , @Value("${scheduler.max-size:100}") int maxSize) {
 
-        this(readingTimerMapper, properties, Clock.system(ZoneId.of(properties.getZoneId())));
+        this(readingTimerMapper, properties, alimService, schedulerLogSupport, transactionManager
+           , Clock.system(ZoneId.of(properties.getZoneId())), maxSize);
     }
 
     /**
@@ -67,12 +98,26 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
      * @author SeungHyeon.Kang
      * @param readingTimerMapper 독서 타이머 데이터 접근 객체
      * @param properties 독서 타이머 운영 기준
+     * @param alimService 알림 저장과 푸시 발송 업무 서비스
+     * @param schedulerLogSupport 스케줄러 로그 안전 처리 객체
+     * @param transactionManager 대상 세션별 트랜잭션 관리자
      * @param clock 현재 일시 제공 시계
+     * @param maxSize 한 번에 조회할 최대 건수
      */
-    ReadingTimerServiceImpl(ReadingTimerMapper readingTimerMapper, ReadingTimerProperties properties, Clock clock) {
+    ReadingTimerServiceImpl(ReadingTimerMapper readingTimerMapper, ReadingTimerProperties properties, AlimService alimService
+                          , SchedulerLogSupport schedulerLogSupport, PlatformTransactionManager transactionManager
+                          , Clock clock, int maxSize) {
 
         this.readingTimerMapper = readingTimerMapper;
         this.properties = properties;
+        this.alimService = alimService;
+        this.schedulerLogSupport = schedulerLogSupport;
+        // 대상 세션마다 독립된 커밋과 롤백을 적용할 트랜잭션 실행 객체를 생성한다
+        TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        // 한 세션 실패가 다른 세션 처리에 영향을 주지 않도록 신규 트랜잭션 전파를 설정한다
+        transactionTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        this.timerTransactionTemplate = transactionTemplate;
+        this.maxSize = maxSize;
         this.clock = clock;
         this.zoneId = ZoneId.of(properties.getZoneId());
     }
@@ -91,6 +136,46 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         LocalDateTime now = getNow();
         // 현재 타이머와 주간 출석 현황을 조합해 반환한다
         return ResultData.success(getSummary(userNumb, now));
+    }
+
+    /**
+     * 로그인 사용자의 도서별 누적 독서 시간을 최근 기록순으로 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param page 조회할 페이지 번호
+     * @return 현재 페이지 도서별 누적시간과 다음 페이지 여부
+     */
+    @Override
+    public ResultData getBookTimePage(Long userNumb, int page) {
+
+        // 인증 사용자 번호가 없으면 다른 사용자의 타이머 기록을 조회하지 않는다
+        if (StringUtil.isEmpty(userNumb)) {
+            // 인증 실패 공통 응답을 반환한다
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 현재 페이지의 시작 위치를 계산한다
+        int pageOffset = (normalizedPage - 1) * BOOK_TIME_PAGE_SIZE;
+        // 다음 페이지 판정용 한 건을 더해 도서별 누적시간을 조회한다
+        List<ReadingTimerDto.BookTime> searchedList = readingTimerMapper.getBookTimeList(
+                userNumb
+              , Constant.TIMER_STAT_COMPLETED
+              , pageOffset
+              , BOOK_TIME_PAGE_SIZE + 1
+        );
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReadingTimerDto.BookTime> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 표시 건수보다 한 건 더 조회됐는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > BOOK_TIME_PAGE_SIZE;
+        // 화면에는 현재 페이지 크기인 최대 20건만 전달한다
+        List<ReadingTimerDto.BookTime> visibleList = hasNext
+                ? safeList.subList(0, BOOK_TIME_PAGE_SIZE)
+                : safeList;
+        // 현재 페이지 목록과 다음 페이지 여부를 공통 페이지 응답으로 반환한다
+        return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
     /**
@@ -119,6 +204,12 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             // 타이머에 연결할 수 없는 도서 안내를 반환한다
             return ResultData.fail(ResultEnum.TIMER_BOOK_INVALID);
         }
+        // 알림 목표시간을 설정했다면 단일 세션 최대시간 안의 양수인지 검증한다
+        if (!StringUtil.isEmpty(request) && !StringUtil.isEmpty(request.getTargSecs())
+                && !isTargetSeconds(request.getTargSecs())) {
+            // 허용 범위를 벗어난 목표시간 안내를 반환한다
+            return ResultData.fail(ResultEnum.TIMER_TARGET_INVALID);
+        }
 
         // 새 세션에 동일한 서버 시작 시각을 적용한다
         LocalDateTime now = getNow();
@@ -129,12 +220,18 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         timerDto.setReptNumb(StringUtil.isEmpty(request) ? null : request.getReptNumb());
         // 새 세션을 실행 중 상태로 설정한다
         timerDto.setTmrxStat(Constant.TIMER_STAT_RUNNING);
+        // 요청한 알림 목표시간을 새 세션에 설정한다
+        timerDto.setTargSecs(StringUtil.isEmpty(request) ? null : request.getTargSecs());
+        // 확정 독서 시간을 0초로 설정한다
+        timerDto.setReadSecs(Constant.NUMBER_ZERO);
+        // 목표시간이 있으면 최초 시작 시각 기준 알림 예정 일시를 설정한다
+        timerDto.setAlrmDate(StringUtil.isEmpty(timerDto.getTargSecs()) ? null : now.plusSeconds(timerDto.getTargSecs()));
+        // 새 세션에는 알림 발송 일시가 없다
+        timerDto.setSendDate(null);
         // 세션 최초 시작 일시를 설정한다
         timerDto.setStrtDate(now);
         // 현재 측정 구간 시작 일시를 설정한다
         timerDto.setLastStrt(now);
-        // 확정 독서 시간을 0초로 설정한다
-        timerDto.setReadSecs(Constant.NUMBER_ZERO);
         // 등록 일시를 설정한다
         timerDto.setRegiDate(now);
         // 수정 일시를 설정한다
@@ -196,11 +293,15 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             timerDto.setLastStrt(now);
             // 완료 일시를 비운다
             timerDto.setEndxDate(null);
+            // 아직 발송하지 않은 목표 알림을 남은 독서시간 기준으로 다시 예약한다
+            timerDto.setAlrmDate(getAlarmDate(timerDto, now));
         } else {
             // 측정하지 않는 상태에서는 최근 시작 시각을 비운다
             timerDto.setLastStrt(null);
             // 완료 상태일 때만 완료 일시를 기록한다
             timerDto.setEndxDate(Constant.TIMER_STAT_COMPLETED.equals(targetStat) ? now : null);
+            // 일시정지와 완료 상태에서는 예약 알림을 해제한다
+            timerDto.setAlrmDate(null);
         }
         // 요청한 상태를 세션에 설정한다
         timerDto.setTmrxStat(targetStat);
@@ -210,6 +311,130 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         readingTimerMapper.uptTimer(timerDto);
         // 변경 결과가 반영된 화면 요약을 반환한다
         return ResultData.success(getSummary(userNumb, now));
+    }
+
+    /**
+     * 목표시간 알림 대상별 신규 트랜잭션을 실행하고 결과 로그를 저장한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Override
+    public void sendTimerAlim() {
+
+        long startNanoTime = System.nanoTime();
+        LocalDateTime alarmDate = getNow();
+        // 독서 타이머 목표시간 알림 실행 정보를 담을 객체를 생성한다
+        SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
+        // 스케줄러 식별 코드를 설정한다
+        schedulerRunDto.setSchdCode(Constant.SCHEDULER_CODE_BOOK_TIMER_OVER);
+        // 실행 메서드 이름을 설정한다
+        schedulerRunDto.setMethName(Thread.currentThread().getStackTrace()[1].getMethodName());
+        // 실행 시작 상태를 설정한다
+        schedulerRunDto.setExecStat(Constant.SCHEDULER_EXEC_RUNNING);
+        // 실행 시작 일시를 설정한다
+        schedulerRunDto.setStrtDate(alarmDate);
+        Long runxNumb = null;
+        int targetCnt = 0;
+        int successCnt = 0;
+        int failureCnt = 0;
+        String executionStatus = Constant.SCHEDULER_EXEC_RUNNING;
+
+        // 한 주기의 대상 조회와 건별 발송 실패를 스케줄러 실행 결과로 집계한다
+        try {
+            // 목표시간이 지난 실행 세션을 최대 처리 건수 안에서 조회한다
+            List<Long> targetList = readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING
+                                                                         , Constant.USER_STAT_ACTIVE, alarmDate, maxSize);
+            // 발송 대상이 없으면 실행 로그 없이 종료한다
+            if (StringUtil.isEmpty(targetList) || targetList.isEmpty()) {
+                // 대상 없음 상태를 설정한다
+                executionStatus = Constant.SCHEDULER_EXEC_NO_DATA;
+                // 독서 타이머 목표시간 알림 배치를 종료한다
+                return;
+            }
+
+            targetCnt = targetList.size();
+            // 조회한 세션을 대상 단위 트랜잭션으로 순차 처리한다
+            for (Long tmrxNumb : targetList) {
+                // 한 대상 실패가 다음 세션 발송을 막지 않도록 예외를 건별로 격리한다
+                try {
+                    // 세션 잠금과 알림 저장 및 발송 일시 수정을 신규 트랜잭션에서 처리한다
+                    timerTransactionTemplate.executeWithoutResult(transactionStatus -> sendTimerAlimTarget(tmrxNumb, alarmDate));
+                    successCnt++;
+                }
+
+                // 대상 세션 처리 예외를 기록하고 나머지 발송을 계속한다
+                catch (RuntimeException e) {
+                    failureCnt++;
+                    // 현재 실패 건수를 실행 로그에 설정한다
+                    schedulerRunDto.setFailCntt(failureCnt);
+                    // 전체 대상 건수를 실행 로그에 설정한다
+                    schedulerRunDto.setTrgtCntt(targetCnt);
+                    // 최초 실패 시 마스터 로그를 생성한다
+                    if (StringUtil.isEmpty(runxNumb)) {
+                        // 실패 상세를 연결할 실행 번호를 생성한다
+                        runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                    }
+
+                    // 대상 단위 예외 상세를 저장한다
+                    schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
+                                                              , null, null, e);
+                    // 다음 대상 처리를 계속할 수 있도록 실패 세션을 로그로 남긴다
+                    log.error("독서 타이머 목표시간 알림 발송 중 오류가 발생했습니다. 세션 번호={}", tmrxNumb, e);
+                }
+            }
+
+            // 성공과 실패 건수로 최종 실행 상태를 계산한다
+            executionStatus = schedulerLogSupport.getSchedulerExecStatus(successCnt, failureCnt);
+        }
+
+        // 배치 대상 조회 자체가 실패하면 실행 실패 이력을 남기고 호출 계층에 예외를 전달한다
+        catch (RuntimeException e) {
+            failureCnt++;
+            executionStatus = Constant.SCHEDULER_EXEC_FAILURE;
+            // 배치 예외 건수를 실행 로그에 설정한다
+            schedulerRunDto.setFailCntt(failureCnt);
+            // 마스터 로그가 없으면 생성한다
+            if (StringUtil.isEmpty(runxNumb)) {
+                // 실패 상세를 연결할 실행 번호를 생성한다
+                runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+            }
+
+            // 배치 조회 또는 처리 예외 상세를 저장한다
+            schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
+                                                      , null, null, e);
+            // 스케줄러 실행 실패를 운영 로그에 남긴다
+            log.error("독서 타이머 목표시간 알림 스케줄러 실행 중 오류가 발생했습니다.", e);
+            throw e;
+        }
+
+        // 대상 또는 실패가 있는 실행만 운영 이력에 남겨 빈 로그 누적을 막는다
+        finally {
+            // 실제 처리 결과가 있는 실행만 종료 로그를 구성한다
+            if (targetCnt > 0 || failureCnt > 0) {
+                // 실행 번호를 최종 로그에 설정한다
+                schedulerRunDto.setRunxNumb(runxNumb);
+                // 최종 실행 상태를 설정한다
+                schedulerRunDto.setExecStat(executionStatus);
+                // 전체 대상 건수를 설정한다
+                schedulerRunDto.setTrgtCntt(targetCnt);
+                // 성공 건수를 설정한다
+                schedulerRunDto.setSuccCntt(successCnt);
+                // 실패 건수를 설정한다
+                schedulerRunDto.setFailCntt(failureCnt);
+                // 실행 소요시간을 밀리초로 설정한다
+                schedulerRunDto.setExecMsec(TimeUnit.NANOSECONDS.toMillis(System.nanoTime() - startNanoTime));
+                // 처리 결과가 있는데 마스터 로그가 없으면 최종 로그를 생성한다
+                if (StringUtil.isEmpty(runxNumb)) {
+                    // 최종 건수로 실행 로그를 생성한다
+                    runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
+                    // 생성한 실행 번호를 최종 로그에 설정한다
+                    schedulerRunDto.setRunxNumb(runxNumb);
+                }
+
+                // 실행 종료 상태와 건수를 반영한다
+                schedulerLogSupport.uptSchedulerLogSafely(schedulerRunDto);
+            }
+        }
     }
 
     /**
@@ -242,6 +467,8 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         timerDto.setLastStrt(null);
         // 계정 처리 시점을 완료 일시로 설정한다
         timerDto.setEndxDate(now);
+        // 계정 제한 이후 발송되지 않도록 예약 알림을 해제한다
+        timerDto.setAlrmDate(null);
         // 수정 일시를 설정한다
         timerDto.setUpdtDate(now);
         // 완료된 세션 값을 저장한다
@@ -260,6 +487,76 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
 
         // 운영 보존기간 이전에 완료된 세션 상세를 삭제한다
         return readingTimerMapper.delExpiredTimer(Constant.TIMER_STAT_COMPLETED, getNow().minusDays(properties.getDetailRetentionDays()));
+    }
+
+    /**
+     * 세션 행 잠금 안에서 알림과 발송 완료 일시를 함께 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tmrxNumb 독서 타이머 세션 번호
+     * @param alarmDate 발송 대상 조회 기준 일시
+     */
+    private void sendTimerAlimTarget(Long tmrxNumb, LocalDateTime alarmDate) {
+
+        // 신규 트랜잭션에서 발송 조건을 다시 검증하며 대상 세션 행을 잠근다
+        ReadingTimerDto timerDto = readingTimerMapper.getDueTimerAlimDtl(tmrxNumb, Constant.TIMER_STAT_RUNNING
+                                                                       , Constant.USER_STAT_ACTIVE, alarmDate);
+        // 다른 실행에서 먼저 발송했거나 상태가 바뀐 세션은 정상적으로 건너뛴다
+        if (StringUtil.isEmpty(timerDto)) {
+            // 처리할 대상이 없는 정상 흐름을 종료한다
+            return;
+        }
+
+        // 세션별 목표시간을 템플릿 치환값으로 전달하여 공통 알림을 저장한다
+        ResultData result = alimService.sendAlim(
+                // 알림 수신 사용자 번호를 전달한다
+                timerDto.getUserNumb()
+              , Constant.ALIM_SITU_REPORT
+              , Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER
+              , null
+              , Map.of("timerTime", formatTimerTime(timerDto.getTargSecs()))
+        );
+        // 알림 저장이 거부되면 발송 일시를 남기지 않고 다음 실행에서 재시도한다
+        if (StringUtil.isEmpty(result) || result.getCode() != RESULT_SUCCESS_CODE) {
+            // 대상 단위 트랜잭션을 롤백하도록 예외를 발생시킨다
+            throw new IllegalStateException("독서 타이머 목표시간 알림 발송이 거부되었습니다.");
+        }
+
+        // 알림 저장에 성공한 기준 일시를 발송 일시로 설정한다
+        timerDto.setSendDate(alarmDate);
+        // 예약 알림을 해제한다
+        timerDto.setAlrmDate(null);
+        // 세션 수정 일시를 발송 기준 일시로 설정한다
+        timerDto.setUpdtDate(alarmDate);
+        // 발송 완료 일시를 세션에 저장한다
+        readingTimerMapper.uptTimerAlimSent(timerDto);
+    }
+
+    /**
+     * 초 단위 목표시간을 알림 문구용 시·분 문자열로 변환한다
+     *
+     * @author SeungHyeon.Kang
+     * @param targetSeconds 목표 독서 시간 초
+     * @return 알림 템플릿 치환 문자열
+     */
+    private String formatTimerTime(long targetSeconds) {
+
+        long hours = targetSeconds / 3600L;
+        long minutes = (targetSeconds % 3600L) / 60L;
+        // 한 시간 미만 목표는 분 단위로 표시한다
+        if (hours == 0L) {
+            // 최소 설정 단위에 맞춘 분 문자열을 반환한다
+            return Math.max(1L, minutes) + "분";
+        }
+
+        // 정각 목표는 시간만 표시한다
+        if (minutes == 0L) {
+            // 시간 단위 문자열을 반환한다
+            return hours + "시간";
+        }
+
+        // 시간과 분이 모두 있는 목표 문자열을 반환한다
+        return hours + "시간 " + minutes + "분";
     }
 
     /**
@@ -473,6 +770,40 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         return Constant.TIMER_STAT_RUNNING.equals(timerStat)
                 || Constant.TIMER_STAT_PAUSED.equals(timerStat)
                 || Constant.TIMER_STAT_COMPLETED.equals(timerStat);
+    }
+
+    /**
+     * 요청한 알림 목표시간이 단일 세션 허용 범위인지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @param targetSeconds 검증할 목표 독서 시간 초
+     * @return 1분 이상 최대 세션 시간 이하이면 true
+     */
+    private boolean isTargetSeconds(long targetSeconds) {
+
+        // 1분 이상이며 단일 세션 최대시간을 넘지 않는 값만 허용한다
+        return targetSeconds >= 60L && targetSeconds <= properties.getMaxSessionSeconds();
+    }
+
+    /**
+     * 일시정지 세션을 재개할 때 아직 읽어야 할 시간으로 알림 예정 일시를 계산한다
+     *
+     * @author SeungHyeon.Kang
+     * @param timerDto 재개할 독서 타이머 세션
+     * @param now 재개 서버 일시
+     * @return 알림 예정 일시 또는 예약할 알림이 없으면 null
+     */
+    private LocalDateTime getAlarmDate(ReadingTimerDto timerDto, LocalDateTime now) {
+
+        // 목표시간이 없거나 이미 알림을 발송한 세션은 다시 예약하지 않는다
+        if (StringUtil.isEmpty(timerDto.getTargSecs()) || !StringUtil.isEmpty(timerDto.getSendDate())) {
+            // 예약할 알림이 없는 상태를 반환한다
+            return null;
+        }
+
+        long remainingSeconds = Math.max(0L, timerDto.getTargSecs() - timerDto.getReadSecs());
+        // 남은 목표시간을 재개 시각에 더한 알림 예정 일시를 반환한다
+        return now.plusSeconds(remainingSeconds);
     }
 
     /**

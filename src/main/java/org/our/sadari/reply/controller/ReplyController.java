@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -30,9 +31,9 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang        최초 생성
  * 2026-07-29        HanWon.Jang        댓글 조회 시 로그인 사용자 번호 전달
- * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 추가
- * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 추가
+ * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 API
  * 2026-08-11        SeungHyeon.Kang    다중 탭 댓글 수정 충돌 409 응답 추가
+ * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -147,14 +148,17 @@ public class ReplyController {
      * @author Hanwon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
+     * @param page 조회할 부모 댓글 페이지 번호
      * @return 독후감 댓글과 답글 목록 조회 결과
      */
     @GetMapping("/{reptNumb}")
     @Operation(summary = "댓글 목록 조회", description = "독후감 번호에 연결된 댓글과 답글 목록을 조회한다.")
     public ResultData getReplyList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Parameter(description = "댓글 목록을 조회할 독후감 번호", example = "1")
-                                   @PathVariable Long reptNumb) {
+                                   @PathVariable Long reptNumb
+                                 , @Parameter(description = "조회할 부모 댓글 페이지 번호", example = "1")
+                                   @RequestParam(value = "page", defaultValue = "1") int page) {
         // 로그인 사용자 번호를 포함한 댓글과 답글 목록 조회 결과를 반환한다
-        return replyService.getReplyList(userNumb, reptNumb);
+        return replyService.getReplyList(userNumb, reptNumb, page);
     }
 }

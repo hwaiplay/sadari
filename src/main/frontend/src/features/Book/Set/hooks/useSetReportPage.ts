@@ -90,8 +90,8 @@ export function useSetReportPage() {
       } as CSSProperties)
     : undefined;
   const periodTitle = status === REPORT_STATUS_READ
-    ? "목표 독서 기간"
-    : "독서 기간";
+    ? /* "목표 독서 기간" */ message("frontend.report.field.targetPeriod")
+    : /* "독서 기간" */ message("frontend.report.field.period");
   const selectedBookAuthor = normalizeBookAuthor(selectedBook?.author);
   const selectedBookPublisher = stripHtmlTags(selectedBook?.publisher);
   const selectedBookPublishDate = formatCompactDate(

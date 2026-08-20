@@ -1,11 +1,15 @@
 package org.our.sadari.reply.service;
 
 import java.util.HashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
@@ -25,18 +29,19 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-28        Hanwon.Jang        최초 생성
- * 2026-07-28        Hanwon.Jang        댓글 조회 및 등록 구현
- * 2026-07-29        HanWon.Jang        댓글 등록 시 독후감 작성자 알림 발송
- * 2026-07-29        HanWon.Jang        로그인 사용자 작성 댓글 여부 조회
- * 2026-08-03        HanWon.Jang        정상 이용 중인 본인 댓글 수정 및 논리 삭제 구현
- * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 구현
+ * 2026-07-28        Hanwon.Jang        최초 생성 및 댓글 조회·등록
+ * 2026-07-29        Hanwon.Jang        댓글 알림·작성 여부 조회 추가
+ * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 처리 추가
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 구현
+ * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ReplyServiceImpl implements ReplyService {
+
+    // 댓글 바텀시트가 한 번에 조회할 부모 댓글 수
+    private static final int REPLY_PAGE_SIZE = 10;
 
     // 댓글 내용 저장 한도
     private static final int REPLY_CONTENT_MAX_BYTES = 4000;
@@ -425,10 +430,11 @@ public class ReplyServiceImpl implements ReplyService {
      * @author Hanwon.Jang
      * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
+     * @param page 조회할 부모 댓글 페이지 번호
      * @return 독후감 댓글과 답글 목록 조회 결과
      */
     @Override
-    public ResultData getReplyList(Long userNumb, Long reptNumb) {
+    public ResultData getReplyList(Long userNumb, Long reptNumb, int page) {
         // 로그인 사용자 번호가 없으면 본인 댓글 여부를 판별할 수 없으므로 조회를 중단한다
         if (StringUtil.isEmpty(userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
@@ -447,8 +453,50 @@ public class ReplyServiceImpl implements ReplyService {
         replyDto.setReptNumb(reptNumb);
         // 각 댓글의 로그인 사용자 작성 여부를 조회할 사용자 번호를 설정한다
         replyDto.setUserNumb(userNumb);
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 부모 댓글 페이지 시작 위치를 조회 조건으로 설정한다
+        replyDto.setPageOffset((normalizedPage - 1) * REPLY_PAGE_SIZE);
+        // 다음 부모 댓글 페이지 판정용 한 건을 추가해 조회한다
+        replyDto.setPageLimit(REPLY_PAGE_SIZE + 1);
+        // 현재 부모 댓글 페이지와 연결된 답글을 함께 조회한다
+        List<ReplyDto> searchedList = replyMapper.getReplyList(replyDto);
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReplyDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 조회 순서를 유지하며 부모 댓글 식별값을 중복 없이 수집한다
+        Set<Long> parentNumbSet = new LinkedHashSet<>();
 
-        // 독후감 번호에 연결된 댓글과 답글 목록을 성공 응답으로 반환한다
-        return ResultData.success(replyMapper.getReplyList(replyDto));
+        // 각 행의 부모 댓글 번호를 현재 페이지 순서대로 확인한다
+        for (ReplyDto reply : safeList) {
+            // 부모 댓글은 자기 번호를, 답글은 참조 부모 번호를 페이지 식별값으로 사용한다
+            Long parentNumb = StringUtil.isEmpty(reply.getUperNumb()) ? reply.getReplNumb() : reply.getUperNumb();
+            // 현재 행이 속한 부모 댓글 번호를 페이지 집합에 추가한다
+            parentNumbSet.add(parentNumb);
+        }
+
+        // 제한 수보다 부모 댓글이 한 건 더 있으면 다음 페이지가 존재한다
+        boolean hasNext = parentNumbSet.size() > REPLY_PAGE_SIZE;
+        // 화면에 전달할 부모 댓글 번호만 현재 페이지 크기로 제한한다
+        Set<Long> visibleParentNumbSet = new LinkedHashSet<>();
+        // 부모 댓글 순서를 유지하며 현재 페이지 크기만 선택한다
+        for (Long parentNumb : parentNumbSet) {
+            // 화면 페이지 크기에 도달하면 다음 페이지 판정용 부모 댓글을 제외한다
+            if (visibleParentNumbSet.size() >= REPLY_PAGE_SIZE) {
+
+                break;
+            }
+
+            // 현재 페이지에 포함할 부모 댓글 번호를 추가한다
+            visibleParentNumbSet.add(parentNumb);
+        }
+
+        // 다음 페이지 판정용 부모 댓글과 연결 답글을 응답에서 제외한다
+        List<ReplyDto> visibleList = safeList.stream()
+                .filter(reply -> visibleParentNumbSet.contains(
+                        StringUtil.isEmpty(reply.getUperNumb()) ? reply.getReplNumb() : reply.getUperNumb()
+                ))
+                .toList();
+        // 부모 댓글 페이지와 각 부모의 답글 및 다음 페이지 여부를 반환한다
+        return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 }

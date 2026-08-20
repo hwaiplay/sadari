@@ -1,4 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
+import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
 import { useCheckAuth } from "@/features/Auth/hooks/useCheckAuth";
 import { getInquiryDetailApi, type Inquiry } from "@/features/Inquiry/api/inquiryApi";
@@ -6,6 +7,28 @@ import { clsx } from "clsx";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "./InquiryPage.css";
+
+/**
+ * 고객문의와 관리자 답변의 등록일시를 분 단위로 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @param value 표시할 등록일시
+ * @return 초와 날짜 끝 마침표를 제외한 한국어 등록일시
+ */
+function formatInquiryDateTime(value: string): string {
+  // 문의 상세에서 초를 숨기고 한국어 오전과 오후 표기를 유지한다
+  const displayDate = new Date(value).toLocaleString("ko-KR", {
+    year: "numeric",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
+    hour12: true,
+  });
+
+  // 날짜와 오전 또는 오후 사이의 마지막 마침표를 제거한 표시값을 반환한다
+  return displayDate.replace(/\.\s*(?=오전|오후)/, " ");
+}
 
 /**
  * 본인이 접수한 고객문의 본문과 관리자 답변을 표시합니다.
@@ -41,7 +64,8 @@ function InquiryDetailPage() {
           type="button"
           onClick={handleSuspensionBack}
         >
-          돌아가기
+          {/* "돌아가기" */}
+          {message("frontend.inquiry.detail.back")}
         </button>
       </div>
     </div>
@@ -52,7 +76,8 @@ function InquiryDetailPage() {
     const target = Number(inqrNumb);
 
     if (!Number.isInteger(target) || target < 1) {
-      setError("올바르지 않은 고객문의 번호입니다.");
+      // "올바르지 않은 고객문의 번호입니다."
+      setError(message("frontend.inquiry.detail.invalidNumber"));
       return;
     }
 
@@ -68,7 +93,8 @@ function InquiryDetailPage() {
       .catch((loadError) => {
 
         if (!ignore) {
-          setError(getApiErrorMessage(loadError, "고객문의를 불러오지 못했습니다."));
+          // "고객문의를 불러오지 못했습니다."
+          setError(getApiErrorMessage(loadError, message("frontend.inquiry.list.loadFailed")));
         }
       });
 
@@ -81,7 +107,7 @@ function InquiryDetailPage() {
   if (!inquiry && !error) {
     return (
       <div className={clsx(styles.page, styles.detailPage, isSuspended && styles.suspendedDetailPage)}>
-        <Loading title="고객문의를 불러오는 중입니다" isFullScreen={false} />
+        <Loading isFullScreen={false} />
         {suspensionBackButton}
       </div>
     );
@@ -105,7 +131,8 @@ function InquiryDetailPage() {
           <h2 className={styles.detailTitle}>{inquiry.inqrTitl}</h2>
           <div className={styles.detailMeta}>
             <time className={styles.detailDate} dateTime={inquiry.regiDate}>
-              {new Date(inquiry.regiDate).toLocaleString("ko-KR")}
+              {/* 고객문의 등록일시 표시 영역 */}
+              {formatInquiryDateTime(inquiry.regiDate)}
             </time>
             <span className={styles.itemMetaGroup}>
               <span className={styles.category}>{inquiry.inqrCatgName}</span>
@@ -117,15 +144,22 @@ function InquiryDetailPage() {
       </article>
 
       <section className={styles.answerSection} aria-labelledby="inquiry-answer-title">
-        <h3 id="inquiry-answer-title" className={styles.answerHeading}>관리자 답변</h3>
+        <h3 id="inquiry-answer-title" className={styles.answerHeading}>
+          {/* "관리자 답변" */}
+          {message("frontend.inquiry.detail.answerTitle")}
+        </h3>
         {inquiry.answers?.length ? (
           <div className={styles.answers}>
             {inquiry.answers.map((answer) => (
               <article className={styles.answer} key={answer.answNumb}>
                 <div className={styles.answerMeta}>
-                  <strong className={styles.answerAuthor}>사다리 고객센터</strong>
+                  <strong className={styles.answerAuthor}>
+                    {/* "사다리 고객센터" */}
+                    {message("frontend.inquiry.detail.supportName")}
+                  </strong>
                   <time className={styles.meta} dateTime={answer.regiDate}>
-                    {new Date(answer.regiDate).toLocaleString("ko-KR")}
+                    {/* 관리자 답변 등록일시 표시 영역 */}
+                    {formatInquiryDateTime(answer.regiDate)}
                   </time>
                 </div>
                 <p className={styles.answerBody}>{answer.answCntn}</p>
@@ -133,7 +167,13 @@ function InquiryDetailPage() {
             ))}
           </div>
         ) : (
-          <p className={styles.statusText}>답변을 준비하고 있습니다.<br />조금만 기다려주세요.</p>
+          <p className={styles.statusText}>
+            {/* "답변을 준비하고 있습니다." */}
+            {message("frontend.inquiry.detail.waitingTitle")}
+            <br />
+            {/* "조금만 기다려주세요." */}
+            {message("frontend.inquiry.detail.waitingDescription")}
+          </p>
         )}
       </section>
       {suspensionBackButton}

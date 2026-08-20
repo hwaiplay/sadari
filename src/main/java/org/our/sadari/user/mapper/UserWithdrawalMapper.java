@@ -15,8 +15,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * 2026-07-29        SeungHyeon.Kang    최초 생성
  * 2026-08-03        HanWon.Jang        탈퇴 회원의 댓글 좋아요 삭제 메서드 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
- * 2026-08-14        HanWon.Jang        탈퇴 회원의 모임원 프로필 숨김 메서드 추가
- * 2026-08-14        SeungHyeon.Kang    탈퇴 회원의 독서 통계 공개 해제 추가
+ * 2026-08-14        Hanwon.Jang,SeungHyeon.Kang    탈퇴 회원 공개 정보 해제 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {

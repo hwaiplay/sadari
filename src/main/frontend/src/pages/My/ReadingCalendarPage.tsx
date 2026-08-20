@@ -17,13 +17,13 @@ type CalendarReport = {
 };
 
 const WEEKDAY_KEYS = [
-  "frontend.calendar.week.sun",
-  "frontend.calendar.week.mon",
-  "frontend.calendar.week.tue",
-  "frontend.calendar.week.wed",
-  "frontend.calendar.week.thu",
-  "frontend.calendar.week.fri",
-  "frontend.calendar.week.sat",
+  "frontend.common.week.sun",
+  "frontend.common.week.mon",
+  "frontend.common.week.tue",
+  "frontend.common.week.wed",
+  "frontend.common.week.thu",
+  "frontend.common.week.fri",
+  "frontend.common.week.sat",
 ];
 
 type MonthMoveDirection = "prev" | "next";
@@ -301,7 +301,7 @@ function ReadingCalendarPage() {
         {selectedReports.length > 0 ? (
           <>
             {/* 선택한 날짜의 독서 기록 목록 영역 */}
-            <section className={styles.scheduleList} aria-label="선택한 날짜의 독서 목록">
+            <section className={styles.scheduleList} aria-label={message("frontend.calendar.selectedList")}>
             {selectedReports.map((report) => {
 
               const backgroundColor = report.reptColr || "#e5e5e5";
@@ -333,7 +333,8 @@ function ReadingCalendarPage() {
           </>
         ) : (
           <p className={styles.emptyMessage}>
-            선택한 날짜에 읽고 있던 책이 없습니다.
+            {/* "선택한 날짜에 읽고 있던 책이 없습니다." */}
+            {message("frontend.calendar.selectedEmpty")}
           </p>
         )}
       </Container>

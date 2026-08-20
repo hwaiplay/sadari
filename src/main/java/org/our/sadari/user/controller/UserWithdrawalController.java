@@ -23,8 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-29        SeungHyeon.Kang    최초 생성
- * 2026-07-29        SeungHyeon.Kang    환경별 영구 삭제 대기 설명 반영
+ * 2026-07-29        SeungHyeon.Kang    최초 생성 및 삭제 대기 설명 반영
  * 2026-07-30        SeungHyeon.Kang    사용자 계정 처리 용어를 비활성화와 영구 탈퇴로 정리
  */
 @RestController

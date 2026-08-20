@@ -47,8 +47,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
- * 2026-08-06        SeungHyeon.Kang    날짜별 저장 경로와 커밋 후 파일 삭제 검증 추가
- * 2026-08-06        SeungHyeon.Kang    JPEG EXIF 방향 보정 회귀 검증 추가
+ * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceTest {

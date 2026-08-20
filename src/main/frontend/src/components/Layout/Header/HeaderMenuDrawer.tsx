@@ -1,8 +1,5 @@
 import { message } from "@/app/messages/message";
-import {
-  FIREBASE_PUSH_ENABLED_EVENT,
-  subscribeFirebaseMessages,
-} from "@/app/pwa/firebaseMessaging";
+import { FIREBASE_PUSH_ENABLED_EVENT } from "@/app/pwa/pushEvents";
 import { getUnreadAlimCntApi } from "@/features/Alim/api/alimApi";
 import {
   isUnreadAlimChangeEvent,
@@ -10,12 +7,8 @@ import {
 } from "@/features/Alim/lib/alimEvents";
 import { runLogout, selectLogoutScope } from "@/features/Auth/lib/logoutFlow";
 import { getPushConfigApi } from "@/features/Push/api/pushApi";
-import { getMyProfileApi, type UserProfile } from "@/features/User/api/userApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
-import {
-  isUserProfileUpdatedEvent,
-  USER_PROFILE_UPDATED_EVENT,
-} from "@/features/User/lib/profileEvents";
+import { useMyProfileQuery } from "@/features/User/hooks/useMyProfileQuery";
 import { clsx } from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
@@ -146,12 +139,15 @@ function DrawerMenuTreeItem({
  */
 function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
-  const [profile, setProfile] = useState<UserProfile | null>(null);
+  // 헤더와 내비게이션 및 프로필 화면이 공유하는 로그인 사용자 프로필을 조회한다
+  const myProfileQuery = useMyProfileQuery();
+  const profile = myProfileQuery.data ?? null;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [expandedMenuNumbs, setExpandedMenuNumbs] = useState<number[]>([]);
   const [unreadAlimCnt, setUnreadAlimCnt] = useState(0);
   const navigate = useNavigate();
-  const profileName = profile?.userNick || "사용자";
+  // "사용자"
+  const profileName = profile?.userNick || message("frontend.common.user");
   const profileIntro =
     profile?.intrCntn || message("frontend.profile.intro.empty");
   const portalTarget = typeof document === "undefined" ? null : document.body;
@@ -235,46 +231,6 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
   useEffect(() => {
 
-    let ignore = false;
-    /**
-     * handle Profile Updated 사용자 동작을 처리한다
-     *
-     * @author HanWon.Jang
-     * @param event event 입력값
-     * @return 반환값이 없다
-     */
-    const handleProfileUpdated = (event: Event) => {
-
-      if (isUserProfileUpdatedEvent(event)) {
-        setProfile(event.detail);
-      }
-    };
-
-    getMyProfileApi()
-      .then((response) => {
-
-        if (!ignore) {
-          setProfile(response.data);
-        }
-      })
-      .catch(() => {
-
-        if (!ignore) {
-          setProfile(null);
-        }
-      });
-
-    window.addEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
-
-    return () => {
-
-      ignore = true;
-      window.removeEventListener(USER_PROFILE_UPDATED_EVENT, handleProfileUpdated);
-    };
-  }, []);
-
-  useEffect(() => {
-
     void refreshUnreadAlimCnt();
 
     /**
@@ -351,8 +307,10 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
       try {
         const response = await getPushConfigApi();
-        const unsubscribeForegroundMessages =
-          await subscribeFirebaseMessages(
+        // 알림 권한이 허용된 사용자에게만 Firebase 메시징 모듈을 지연 로드한다
+        const { subscribeFirebaseMessages } = await import("@/app/pwa/firebaseMessaging");
+        // 지연 로드된 SDK로 포그라운드 메시지 수신을 시작한다
+        const unsubscribeForegroundMessages = await subscribeFirebaseMessages(
             response.data,
             () => void refreshUnreadAlimCnt(),
           );
@@ -410,7 +368,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       />
       <aside
         className={clsx(drawerStyles.drawer, isDrawerOpen && drawerStyles.drawerOpen)}
-        aria-label="마이페이지 메뉴"
+        aria-label={message("frontend.header.myPageMenu")}
       >
         {/* 햄버거 메뉴 닫기 버튼 영역 */}
         <button
@@ -520,14 +478,14 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       <button
         className={hamburgerButton}
         type="button"
-        aria-label="메뉴 열기"
+        aria-label={message("frontend.header.openMenu")}
         aria-expanded={isDrawerOpen}
         onClick={() => setIsDrawerOpen(true)}
       >
         {/*<svg className={hamburgerIcon} viewBox="0 0 24 24" aria-hidden="true">*/}
         {/*  <path d="M4 7h16M4 12h16M4 17h16" />*/}
         {/*</svg>*/}
-        <img src={"/img/icons/icon-hamburger.svg"} alt={"메뉴 열기"}/>
+        <img src={"/img/icons/icon-hamburger.svg"} alt={message("frontend.header.openMenu")}/>
 
       </button>
       {portalTarget ? createPortal(drawer, portalTarget) : null}

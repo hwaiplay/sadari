@@ -81,8 +81,8 @@ export default function ClubDetailPage() {
   }
 
   const visibility = club.clubVisb === "PUBLIC"
-    ? message("frontend.readingClub.common.visibility.public")
-    : message("frontend.readingClub.common.visibility.private");
+    ? /* "공개" */ message("frontend.common.public")
+    : /* "비공개" */ message("frontend.common.private");
   const isActiveMember = club.membStat === "ACTIVE";
   // 프로필 이미지는 최대 10명까지만 표시한다
   const memberProfiles = members.slice(0, MEMBER_PROFILE_VISIBLE_LIMIT);
@@ -123,12 +123,12 @@ export default function ClubDetailPage() {
   const clubActionOptions: readonly CustomSelectOption<ClubDetailAction>[] = [
     {
       value: "EDIT",
-      label: message("frontend.readingClub.detail.edit"),
+      label: /* "수정하기" */ message("frontend.common.update"),
       disabled: isDeleting,
     },
     {
       value: "DELETE",
-      label: message("frontend.readingClub.detail.delete"),
+      label: /* "삭제하기" */ message("frontend.common.delete"),
       className: styles.dangerOption,
       disabled: isDeleting,
     },
@@ -297,14 +297,16 @@ export default function ClubDetailPage() {
                 </span>
                 <img
                   src="/img/icons/icon-chevron-right.svg"
-                  alt="arrow"
+                  alt=""
+                  aria-hidden="true"
                 />
               </button>
               <button className={styles.navigationRow} type="button">
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
                 <img
                   src="/img/icons/icon-chevron-right.svg"
-                  alt="arrow"
+                  alt=""
+                  aria-hidden="true"
                 />
               </button>
             </nav>

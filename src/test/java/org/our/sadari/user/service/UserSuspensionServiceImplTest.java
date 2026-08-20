@@ -28,9 +28,7 @@ import static org.mockito.Mockito.when;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    기간 만료 Outbox 전달 검증 추가
- * 2026-07-30        SeungHyeon.Kang    정지 해제 후 Redis 상태 보정 검증 추가
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 정지 상태 검증
  */
 @ExtendWith(MockitoExtension.class)
 class UserSuspensionServiceImplTest {

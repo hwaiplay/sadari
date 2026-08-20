@@ -41,11 +41,8 @@ import org.springframework.web.client.RestClientException;
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
- * 2026-07-30        SeungHyeon.Kang    신규 회원 온보딩 미완료 상태 저장
- * 2026-07-30        SeungHyeon.Kang    비활성화 계정 복귀 여부 전달
- * 2026-07-30        SeungHyeon.Kang    정지 회원 재가입 차단과 기간 만료 복구
- * 2026-08-13        SeungHyeon.Kang    탈퇴 후에도 남은 유효 제재 기준 Kakao 재가입 차단
- * 2026-08-13        SeungHyeon.Kang    Kakao OAuth HTTP 예외 인증 실패 변환
+ * 2026-07-30        SeungHyeon.Kang    온보딩·계정 복귀·정지 처리
+ * 2026-08-13        SeungHyeon.Kang    재가입 차단·OAuth 예외 처리
  */
 @Service
 @RequiredArgsConstructor

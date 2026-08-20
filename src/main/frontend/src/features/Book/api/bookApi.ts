@@ -6,6 +6,7 @@
 import api from "@/app/api/axios";
 import {
   assertResultDataSuccess,
+  type PageData,
   type ResultData,
 } from "@/app/api/resultData";
 import {
@@ -14,6 +15,14 @@ import {
   ReportDtoType,
   uptReportType,
 } from "../types/book.type";
+import type { HomeBookType } from "../types/book.type";
+import type { PublicReportType } from "../types/book.type";
+
+export type PublicReportSortType =
+  | "RELATION_DESC"
+  | "LATEST_DESC"
+  | "GRADE_DESC"
+  | "LIKE_DESC";
 
 export type BookCoverColor = {
   reptColr: string;
@@ -84,14 +93,27 @@ export const getDetailApi = async (bookNumb: number) => {
  *
  * @author HanWon.Jang
  * @param isbn isbn 입력값
+ * @param sortType 공개 독후감 정렬 코드
+ * @param reptStat 공개 독후감 상태 필터
+ * @param page 조회할 페이지 번호
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const getPublicReportsByIsbnApi = async (isbn: string) => {
+export const getPublicReportsByIsbnApi = async (
+  isbn: string,
+  sortType: PublicReportSortType,
+  reptStat: string,
+  page: number,
+): Promise<ResultData<PageData<PublicReportType>>> => {
 
-  const res = await api.get(
-    `/book/publicReports/by-isbn?isbn=${encodeURIComponent(isbn)}`,
+  // ISBN과 정렬 및 상태와 현재 페이지를 서버 조회 조건으로 전달한다
+  const res = await api.get<ResultData<PageData<PublicReportType>>>(
+    "/book/publicReports/by-isbn",
+    {
+      params: { isbn, sortType, reptStat, page },
+    },
   );
+  // 검증된 공개 독후감 페이지 응답을 반환한다
   return assertResultDataSuccess(res.data);
 };
 
@@ -154,6 +176,7 @@ export const setPublicReportLikeApi = (data: LikeTargetParams) => {
 export type BookListParams = {
   bookKeyword?: string;
   sortType?: string;
+  page?: number;
 };
 
 /**
@@ -164,9 +187,15 @@ export type BookListParams = {
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const getListApi = async (params: BookListParams = {}) => {
+export const getListApi = async (
+  params: BookListParams = {},
+): Promise<ResultData<PageData<HomeBookType>>> => {
 
-  const res = await api.get(`/book/getBookList`, { params });
+  const res = await api.get<ResultData<PageData<HomeBookType>>>(
+    "/book/getBookList",
+    { params },
+  );
+  // 검증된 홈 독후감 페이지 응답을 반환한다
   return assertResultDataSuccess(res.data);
 };
 

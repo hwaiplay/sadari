@@ -1,7 +1,7 @@
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
-import { requestFirebaseToken } from "@/app/pwa/firebaseMessaging";
 import { queryClient } from "@/app/query/queryClient";
+import { sessionQueryKeys } from "@/app/query/queryKeys";
 import { getPushConfigApi } from "@/features/Push/api/pushApi";
 import { logoutApi, type LogoutScope } from "@/features/Auth/api/authApi";
 import { useAuthStore } from "@/features/Auth/store/authStore";
@@ -57,6 +57,8 @@ async function getCurrentPushToken(): Promise<string | undefined> {
 
   try {
     const response = await getPushConfigApi();
+    // 현재 기기 로그아웃에서 푸시 토큰이 실제로 필요할 때만 Firebase SDK를 지연 로드한다
+    const { requestFirebaseToken } = await import("@/app/pwa/firebaseMessaging");
     return await requestFirebaseToken(response.data);
   } catch {
     // 푸시 token 조회 실패가 인증 세션 로그아웃을 막지 않게 한다
@@ -79,7 +81,11 @@ export async function runLogout(scope: LogoutScope): Promise<void> {
     await logoutApi({ scope, pushToken });
   } finally {
     useAuthStore.getState().clearAuth();
-    queryClient.removeQueries({ queryKey: ["auth"] });
+    // 다음 로그인 계정에 이전 인증과 사용자 데이터가 노출되지 않도록 세션 캐시를 제거한다
+    for (const queryKey of sessionQueryKeys) {
+      // 현재 세션에 속한 공통 Query Cache를 제거한다
+      queryClient.removeQueries({ queryKey });
+    }
     publishAuthLogout();
   }
 }

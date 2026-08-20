@@ -13,8 +13,7 @@ import java.time.LocalDateTime;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-30        SeungHyeon.Kang    최초 생성
- * 2026-07-30        SeungHyeon.Kang    정지 이력 식별값 추가
+ * 2026-07-30        SeungHyeon.Kang    최초 생성 및 정지 이력 추가
  */
 @Data
 @Schema(description = "회원 상태 변경 Outbox 이벤트 DTO", hidden = true)

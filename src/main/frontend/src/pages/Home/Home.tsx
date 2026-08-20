@@ -1,7 +1,6 @@
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
-import { useProgressiveList } from "@/components/InfiniteScroll/useProgressiveList";
 import CustomSelect from "@/components/Select/CustomSelect";
 import Book from "@/features/Home/components/Book";
 import * as styles from "./Home.css";
@@ -9,6 +8,7 @@ import Loading from "@/components/Loading/Loading";
 import type { HomeBookType } from "@/features/Book/types/book.type";
 import { createPortal } from "react-dom";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
+import { UnreadNoticeSlider } from "@/features/Notice/components/UnreadNoticeSlider";
 import { useHome } from "../../features/Home/hook/useHome.tsx";
 
 /**
@@ -20,6 +20,7 @@ import { useHome } from "../../features/Home/hook/useHome.tsx";
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang    주석 추가
+ * 2026-08-19        SeungHyeon.Kang    미읽음 공지 제목 슬라이드 추가
  */
 
 function Home() {
@@ -37,26 +38,19 @@ function Home() {
     searchKeyword,
     appliedSearchKeyword,
     hasSearchCondition,
+    hasNextBook,
+    isNextBookLoading,
+    loadMoreBook,
     handleSearchChange,
     handleSearchSubmit,
     handleSortChange,
     handleBookSearch,
   } = useHome();
 
-  const {
-    visibleItems: visibleBookList,
-    hasNext: hasNextBook,
-    loadMore: loadMoreBook,
-  } = useProgressiveList(
-    bookList,
-    `${appliedSearchKeyword}:${sortType}`,
-  );
-
-
   // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
     // 홈 독후감 목록 로딩 화면을 반환한다
-    return <Loading title={message("frontend.common.loadingList")} />;
+    return <Loading />;
   }
 
   // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시한다
@@ -90,7 +84,7 @@ function Home() {
           <button
             className={styles.searchButton}
             type="submit"
-            aria-label={message("frontend.home.search.button")}
+            aria-label={/* "검색" */ message("frontend.common.search")}
           >
             <svg
               className={styles.searchIcon}
@@ -115,18 +109,24 @@ function Home() {
         </label>
       </form>
 
-      {/* 독후감 정렬 영역 */}
-      <div className={styles.sortBar}>
-        <CustomSelect
-          value={sortType}
-          options={sortOptions}
-          ariaLabel={message("frontend.home.sort.label")}
-          className={styles.sortSelect}
-          triggerClassName={styles.sortSelectTrigger}
-          optionListClassName={styles.sortOptionList}
-          optionClassName={styles.sortSelectOption}
-          onChange={handleSortChange}
-        />
+      {/* 읽지 않은 공지사항 제목과 독후감 정렬 영역 */}
+      <div className={styles.noticeSortBar}>
+        {/* 로그인 사용자가 읽지 않은 공지사항 카테고리와 제목 안내 영역 */}
+        <UnreadNoticeSlider />
+
+        {/* 독후감 정렬 영역 */}
+        <div className={styles.sortBar}>
+          <CustomSelect
+            value={sortType}
+            options={sortOptions}
+            ariaLabel={message("frontend.home.sort.label")}
+            className={styles.sortSelect}
+            triggerClassName={styles.sortSelectTrigger}
+            optionListClassName={styles.sortOptionList}
+            optionClassName={styles.sortSelectOption}
+            onChange={handleSortChange}
+          />
+        </div>
       </div>
 
       {bookList.length > 0 ? (
@@ -159,7 +159,11 @@ function Home() {
           ))}
           <InfiniteScrollTrigger
             hasNext={hasNextBook}
-            onLoadMore={loadMoreBook}
+            isLoading={isNextBookLoading}
+            onLoadMore={() => {
+              // 목록 하단에 도달하면 다음 서버 페이지를 조회한다
+              void loadMoreBook();
+            }}
           />
         </div>
 

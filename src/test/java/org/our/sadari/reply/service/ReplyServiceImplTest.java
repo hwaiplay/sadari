@@ -36,9 +36,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-31        Hanwon.Jang        최초 생성
- * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 서비스 검증 추가
- * 2026-08-03        HanWon.Jang        댓글 등록 및 수정 비속어 차단 검증 추가
- * 2026-08-03        HanWon.Jang        댓글 좋아요 등록, 취소 및 접근 제한 검증 추가
+ * 2026-08-03        Hanwon.Jang        댓글 변경·비속어·좋아요 검증
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 검증 추가
  */
 @ExtendWith(MockitoExtension.class)

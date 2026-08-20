@@ -118,7 +118,7 @@ export const useClubMemberManage = () => {
         // "멤버 정보를 불러오지 못했어요"
         void sweetError(
           message("frontend.readingClub.memberManage.fetchTitle"),
-          getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+          getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
       // 성공 여부와 관계없이 로딩 화면을 종료한다
@@ -184,7 +184,7 @@ export const useClubMemberManage = () => {
         // "가입 신청을 처리하지 못했어요"
         void sweetError(
           message("frontend.readingClub.memberManage.decisionTitle"),
-          getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+          getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
       // 성공 여부와 관계없이 다음 관리 작업을 허용한다
@@ -279,7 +279,7 @@ export const useClubMemberManage = () => {
         // "보낸 초대를 취소하지 못했어요"
         void sweetError(
           message("frontend.readingClub.memberManage.cancelInviteErrorTitle"),
-          getApiErrorMessage(error, message("frontend.readingClub.common.retry")),
+          getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
       // 성공 여부와 관계없이 다음 관리 작업을 허용한다

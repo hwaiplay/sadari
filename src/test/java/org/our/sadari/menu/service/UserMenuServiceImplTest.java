@@ -25,8 +25,7 @@ import org.our.sadari.menu.mapper.UserMenuMapper;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
- * 2026-08-10        SeungHyeon.Kang    3단계 메뉴 트리 구성 검증 추가
- * 2026-08-10        SeungHyeon.Kang    설정 화면 하위 메뉴 트리 조회 검증 추가
+ * 2026-08-10        SeungHyeon.Kang    사용자 메뉴 트리 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserMenuServiceImplTest {

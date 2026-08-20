@@ -13,8 +13,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * -----------------------------------------------------------
  * 2026-07-28        Hanwon.Jang    최초 생성
  * 2026-07-29        HanWon.Jang    댓글 조회 로그인 사용자 조건 추가
- * 2026-08-03        HanWon.Jang    본인 댓글 수정 및 삭제 계약 추가
- * 2026-08-03        HanWon.Jang    댓글 좋아요 등록 및 취소 계약 추가
+ * 2026-08-03        Hanwon.Jang    댓글 수정·삭제·좋아요 계약
  * 2026-08-04        HanWon.Jang    댓글 및 대댓글 좋아요 알림 계약 추가
  */
 public interface ReplyService {
@@ -86,7 +85,8 @@ public interface ReplyService {
      * @author Hanwon.Jang
      * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
      * @param reptNumb 댓글 목록을 조회할 독후감 번호
+     * @param page 조회할 부모 댓글 페이지 번호
      * @return 독후감에 대한 댓글 조회 결과
      */
-    ResultData getReplyList(Long userNumb, Long reptNumb);
+    ResultData getReplyList(Long userNumb, Long reptNumb, int page);
 }

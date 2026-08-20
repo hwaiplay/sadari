@@ -1,10 +1,12 @@
 package org.our.sadari.social.service;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -28,11 +30,15 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
+ * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class SocialServiceImpl implements SocialService {
+
+    // 팔로우 목록 모달이 한 번에 조회할 사용자 수
+    private static final int FOLLOW_PAGE_SIZE = 10;
 
     // Social 데이터 접근 객체
     private final SocialMapper socialMapper;
@@ -177,8 +183,8 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getMyPageProfileStats(Long userNumb) {
-        // 마이페이지 프로필 상단 통계 값을 조회 결과를 반환한다
-        return getProfileStats(userNumb);
+        // 본인 화면은 공개 여부 조건 없이 전체 독후감을 포함한 통계를 반환한다
+        return getProfileStatsResult(userNumb, null);
     }
 
     /**
@@ -191,6 +197,19 @@ public class SocialServiceImpl implements SocialService {
      */
     @Override
     public ResultData getProfileStats(Long userNumb) {
+        // 다른 사용자 화면은 공개 독후감만 포함한 통계를 반환한다
+        return getProfileStatsResult(userNumb, Constant.COMM_YES);
+    }
+
+    /**
+     * 사용자 프로필 통계를 화면별 독후감 공개 범위로 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회할 사용자 번호
+     * @param pubcYsno 독후감 공개 범위, null이면 전체 범위
+     * @return 화면 범위에 맞춘 사용자 프로필 통계
+     */
+    private ResultData getProfileStatsResult(Long userNumb, String pubcYsno) {
         // validateTargetUser 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateTargetUser(userNumb);
 
@@ -205,6 +224,7 @@ public class SocialServiceImpl implements SocialService {
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
         // 다른 사용자 프로필에 적용할 독후감 공개 범위를 설정한다
+        req.setPubcYsno(pubcYsno);
         // 사용자 프로필 통계 값을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(socialMapper.getProfileStats(req));
     }
@@ -216,10 +236,11 @@ public class SocialServiceImpl implements SocialService {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로잉 목록
      */
     @Override
-    public ResultData getFollowingList(Long loginUserNumb, Long userNumb) {
+    public ResultData getFollowingList(Long loginUserNumb, Long userNumb, int page) {
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
@@ -230,9 +251,11 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // createFollowListReq 호출로 후속 처리에 필요한 객체를 생성한다
-        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb);
-        // 특정 사용자가 팔로우하는 사용자 목록을 조회 결과를 성공 응답으로 반환한다
-        return ResultData.success(socialMapper.getFollowingList(req));
+        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, page);
+        // 페이지 조건으로 특정 사용자가 팔로우하는 사용자 목록을 조회한다
+        List<SocialDto.FollowUserDto> searchedList = socialMapper.getFollowingList(req);
+        // 팔로잉 목록의 현재 페이지와 다음 페이지 여부를 반환한다
+        return getFollowPage(searchedList, Math.max(page, 1));
     }
 
     /**
@@ -242,10 +265,11 @@ public class SocialServiceImpl implements SocialService {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로워 목록
      */
     @Override
-    public ResultData getFollowerList(Long loginUserNumb, Long userNumb) {
+    public ResultData getFollowerList(Long loginUserNumb, Long userNumb, int page) {
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
@@ -256,9 +280,11 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // createFollowListReq 호출로 후속 처리에 필요한 객체를 생성한다
-        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb);
-        // 특정 사용자를 팔로우하는 사용자 목록을 조회 결과를 성공 응답으로 반환한다
-        return ResultData.success(socialMapper.getFollowerList(req));
+        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, page);
+        // 페이지 조건으로 특정 사용자를 팔로우하는 사용자 목록을 조회한다
+        List<SocialDto.FollowUserDto> searchedList = socialMapper.getFollowerList(req);
+        // 팔로워 목록의 현재 페이지와 다음 페이지 여부를 반환한다
+        return getFollowPage(searchedList, Math.max(page, 1));
     }
 
     /**
@@ -350,17 +376,45 @@ public class SocialServiceImpl implements SocialService {
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param page 조회할 페이지 번호
      * @return 팔로우 목록 조회 조건 DTO
      */
-    private SocialDto.FollowListReqDto createFollowListReq(Long loginUserNumb, Long userNumb) {
+    private SocialDto.FollowListReqDto createFollowListReq(Long loginUserNumb, Long userNumb, int page) {
         // 팔로우 목록 조회 조건을 담을 객체를 생성한다
         SocialDto.FollowListReqDto req = new SocialDto.FollowListReqDto();
         // LoginUserNumb 업무 값을 req DTO에 설정한다
         req.setLoginUserNumb(loginUserNumb);
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 현재 팔로우 목록 페이지의 시작 위치를 설정한다
+        req.setPageOffset((normalizedPage - 1) * FOLLOW_PAGE_SIZE);
+        // 다음 페이지 판정용 한 건을 추가한 조회 수를 설정한다
+        req.setPageLimit(FOLLOW_PAGE_SIZE + 1);
         // 팔로우/팔로워 목록 조회 DTO를 생성 결과를 반환한다
         return req;
+    }
+
+    /**
+     * 팔로우 조회 결과를 현재 페이지 크기로 제한하고 다음 페이지 여부를 구성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param searchedList 다음 페이지 판정용 한 건이 포함된 사용자 목록
+     * @param page 현재 페이지 번호
+     * @return 팔로우 사용자 페이지 응답
+     */
+    private ResultData getFollowPage(List<SocialDto.FollowUserDto> searchedList, int page) {
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<SocialDto.FollowUserDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 제한 건수보다 한 건 더 조회되었는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > FOLLOW_PAGE_SIZE;
+        // 화면에는 현재 페이지 크기만 전달한다
+        List<SocialDto.FollowUserDto> visibleList = hasNext
+                ? safeList.subList(0, FOLLOW_PAGE_SIZE)
+                : safeList;
+        // 현재 페이지 사용자 목록과 다음 페이지 여부를 반환한다
+        return ResultData.success(new PageDto<>(visibleList, page, hasNext));
     }
 
     /**

@@ -28,9 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        Hanwon.Jang    모임원 프로필 목록 조회 API 추가
- * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 API 추가
- * 2026-08-14        Hanwon.Jang        모임 독서 회차 등록 API 추가
+ * 2026-08-14        Hanwon.Jang        모임원·수정·독서 API 추가
  */
 @RestController
 @RequiredArgsConstructor

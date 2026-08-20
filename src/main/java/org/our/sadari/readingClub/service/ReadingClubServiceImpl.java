@@ -34,10 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    활성 모임원 프로필 접근 정책 적용
- * 2026-08-14        Hanwon.Jang        회원 초대 알림 발송 연동
- * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 처리 추가
- * 2026-08-14        Hanwon.Jang        회차와 활성 멤버별 읽는 중 독후감 일괄 등록 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
  */
 @Service
 @RequiredArgsConstructor

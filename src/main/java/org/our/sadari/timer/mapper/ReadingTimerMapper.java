@@ -16,8 +16,8 @@ import java.util.List;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-14        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    오늘 완료 타이머 조회 범위 추가
+ * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 조회
+ * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 조회 추가
  */
 @Mapper
 public interface ReadingTimerMapper {
@@ -81,6 +81,20 @@ public interface ReadingTimerMapper {
     List<ReadingTimerDto> getTodayCompletedTimerList(@Param("userNumb") Long userNumb, @Param("completedStat") String completedStat
                                                    , @Param("todayStart") LocalDateTime todayStart, @Param("tomorrowStart") LocalDateTime tomorrowStart);
     /**
+     * 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param completedStat 완료 상태
+     * @param pageOffset 현재 페이지 시작 위치
+     * @param pageLimit 다음 페이지 판정용 제한 건수
+     * @return 최근 완료 기록순 도서별 누적 독서 시간 페이지 후보 목록
+     */
+    List<ReadingTimerDto.BookTime> getBookTimeList(@Param("userNumb") Long userNumb
+                                                 , @Param("completedStat") String completedStat
+                                                 , @Param("pageOffset") int pageOffset
+                                                 , @Param("pageLimit") int pageLimit);
+    /**
      * 지정한 주간 범위의 일별 확정 독서 시간을 조회한다
      *
      * @author SeungHyeon.Kang
@@ -106,6 +120,38 @@ public interface ReadingTimerMapper {
      * @return 수정 건수
      */
     int uptTimer(ReadingTimerDto timerDto);
+    /**
+     * 목표시간이 지나 알림 발송을 기다리는 실행 세션 번호를 제한 조회한다
+     *
+     * @author SeungHyeon.Kang
+     * @param runningStat 실행 중 상태
+     * @param activeUserStat 정상 이용 회원 상태
+     * @param alarmDate 알림 발송 기준 일시
+     * @param maxSize 한 번에 조회할 최대 건수
+     * @return 발송 대상 타이머 세션 번호 목록
+     */
+    List<Long> getDueTimerAlimList(@Param("runningStat") String runningStat, @Param("activeUserStat") String activeUserStat
+                                  , @Param("alarmDate") LocalDateTime alarmDate, @Param("maxSize") int maxSize);
+    /**
+     * 발송 대상 여부를 다시 확인하고 동시 발송을 막도록 타이머 세션을 잠근다
+     *
+     * @author SeungHyeon.Kang
+     * @param tmrxNumb 독서 타이머 세션 번호
+     * @param runningStat 실행 중 상태
+     * @param activeUserStat 정상 이용 회원 상태
+     * @param alarmDate 알림 발송 기준 일시
+     * @return 발송 대상 독서 타이머 세션
+     */
+    ReadingTimerDto getDueTimerAlimDtl(@Param("tmrxNumb") Long tmrxNumb, @Param("runningStat") String runningStat
+                                      , @Param("activeUserStat") String activeUserStat, @Param("alarmDate") LocalDateTime alarmDate);
+    /**
+     * 목표시간 알림 발송 완료 일시를 저장하고 예약을 해제한다
+     *
+     * @author SeungHyeon.Kang
+     * @param timerDto 발송 완료 타이머 세션
+     * @return 수정 건수
+     */
+    int uptTimerAlimSent(ReadingTimerDto timerDto);
     /**
      * 사용자와 날짜별 확정 독서 시간을 누적한다
      *

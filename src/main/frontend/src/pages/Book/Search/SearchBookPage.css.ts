@@ -17,13 +17,21 @@ export const content = style({
   gap: "22px",
 });
 
+export const searchSection = style({
+  width: "100%",
+  display: "flex",
+  flexDirection: "column",
+  gap: "10px",
+  marginBottom: 0,
+});
+
 export const searchBar = style({
   boxSizing: "border-box",
   display: "flex",
   alignItems: "center",
   gap: "10px",
   width: "100%",
-  marginBottom: "12px",
+  marginBottom: 0,
 
   "@media": {
     [media.tablet]: {
@@ -108,6 +116,56 @@ export const searchIcon = style({
   flexShrink: 0,
 });
 
+export const popularControlBar = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  width: "100%",
+  minWidth: 0,
+  height: "32px",
+  padding: 0,
+  gap: "8px",
+  boxSizing: "border-box",
+
+  "@media": {
+    [media.tablet]: {
+      padding: `0 calc(${vars.space.lg} - ${vars.space.md})`,
+    },
+  },
+});
+
+export const popularPeriodBar = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  flexShrink: 0,
+  height: "32px",
+});
+
+export const popularPeriodSelect = style({
+  zIndex: 2,
+});
+
+export const popularPeriodSelectTrigger = style({
+  minWidth: "auto",
+  height: "32px",
+  padding: 0,
+  border: 0,
+  borderRadius: 0,
+  backgroundColor: "transparent",
+  fontFamily: vars.font.medium,
+  fontSize: "14px",
+  gap: "10px",
+});
+
+export const popularPeriodOptionList = style({
+  minWidth: "128px",
+});
+
+export const popularPeriodOption = style({
+  fontSize: "14px",
+});
+
 export const resultList = style({
   display: "flex",
   flexDirection: "column",
@@ -125,6 +183,15 @@ export const resultCard = style({
   backgroundColor: "rgba(255, 255, 255, 0.96)",
   boxShadow: "0 8px 22px rgba(0, 0, 0, 0.05)",
   boxSizing: "border-box",
+});
+
+export const popularRank = style({
+  alignSelf: "center",
+  margin: 0,
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  lineHeight: 1.4,
+  color: vars.color.black,
 });
 
 export const coverArea = style({
@@ -184,6 +251,26 @@ export const description = style({
   lineHeight: 1.7,
   color: vars.color.black,
   wordBreak: "break-word",
+  display: "-webkit-box",
+  WebkitBoxOrient: "vertical",
+  WebkitLineClamp: 3,
+  overflow: "hidden",
+});
+
+export const authorRatingLine = style({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "8px",
+  maxWidth: "100%",
+});
+
+export const metaSeparator = style({
+  flexShrink: 0,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1,
+  color: vars.color.gray500,
 });
 
 export const actions = style({

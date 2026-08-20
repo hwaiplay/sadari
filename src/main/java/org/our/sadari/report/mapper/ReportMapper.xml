@@ -49,6 +49,9 @@
       ORDER BY A.REPT_ENDT DESC, A.REPT_NUMB DESC
             </otherwise>
         </choose>
+        <if test="pageOffset != null and pageLimit != null">
+         LIMIT #{pageOffset}, #{pageLimit}
+        </if>
     </select>
 
     <!-- 기간별 독서량과 현재 및 이전 목표 및 누적 달성 횟수를 한 번에 조회한다. -->
@@ -395,7 +398,7 @@
            )
     </select>
 
-    <!-- ISBN 기준 활성 사용자의 공개 독후감을 조회하고 로그인 사용자가 팔로우하는 작성자의 글을 우선 배치한다. -->
+    <!-- ISBN 기준 활성 사용자의 공개 독후감을 관계 기본순 또는 사용자가 선택한 정렬로 조회한다. -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -428,10 +431,18 @@
      LEFT JOIN TB_FOLLOW FW
             ON FW.USER_NUMB = #{userNumb}
            AND FW.FLOW_NUMB = P.USER_NUMB
+     LEFT JOIN TB_FOLLOW RF
+            ON RF.USER_NUMB = P.USER_NUMB
+           AND RF.FLOW_NUMB = #{userNumb}
      LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX L
+              INNER JOIN TM_REPORT LR
+                      ON LR.REPT_NUMB = L.TAGT_NUMB
+              INNER JOIN TM_BKINFO LB
+                      ON LB.BOOK_NUMB = LR.BOOK_NUMB
                    WHERE L.TAGT_TYPE = #{likeTargetReport}
+                     AND LB.BOOK_ISBN = #{bookIsbn}
                 GROUP BY L.TAGT_NUMB
                 ) LC
             ON LC.REPT_NUMB = P.REPT_NUMB
@@ -445,6 +456,11 @@
      LEFT JOIN (   SELECT R.REPT_NUMB
                         , COUNT(*) AS REPL_CNT
                      FROM TB_REPLXX R
+               INNER JOIN TM_REPORT RR
+                       ON RR.REPT_NUMB = R.REPT_NUMB
+               INNER JOIN TM_BKINFO RB
+                       ON RB.BOOK_NUMB = RR.BOOK_NUMB
+                    WHERE RB.BOOK_ISBN = #{bookIsbn}
                     GROUP BY R.REPT_NUMB
                 ) RPL
             ON RPL.REPT_NUMB = P.REPT_NUMB
@@ -453,8 +469,34 @@
            AND P.PUBC_YSNO = #{commYes}
            AND P.REPT_STAT != #{reptStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
-      ORDER BY CASE WHEN FW.USER_NUMB IS NOT NULL THEN 0 ELSE 1 END
-             , P.REPT_NUMB DESC
+        <if test="reptStat != null and reptStat != ''">
+           AND P.REPT_STAT = #{reptStat}
+        </if>
+        <choose>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_LATEST_DESC">
+                ORDER BY P.REPT_NUMB DESC
+            </when>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_GRADE_DESC">
+                ORDER BY CAST(P.REPT_GRDE AS DECIMAL(3, 1)) DESC
+                       , P.REPT_NUMB DESC
+            </when>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_LIKE_DESC">
+                ORDER BY COALESCE(LC.LIKE_CNT, 0) DESC
+                       , P.REPT_NUMB DESC
+            </when>
+            <otherwise>
+                ORDER BY CASE WHEN FW.USER_NUMB IS NOT NULL AND RF.USER_NUMB IS NOT NULL
+                                  THEN 0
+                              WHEN FW.USER_NUMB IS NOT NULL
+                                  THEN 1
+                             ELSE 2
+                         END
+                       , P.REPT_NUMB DESC
+            </otherwise>
+        </choose>
+        <if test="pageOffset != null and pageLimit != null">
+         LIMIT #{pageOffset}, #{pageLimit}
+        </if>
     </select>
 
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->

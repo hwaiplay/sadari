@@ -19,6 +19,7 @@ import org.junit.jupiter.api.Test;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
+ * 2026-08-16        SeungHyeon.Kang    JWT 서명 조작 검증의 Base64URL 비결정성 제거
  */
 class JwtProviderTest {
 
@@ -98,10 +99,14 @@ class JwtProviderTest {
     void rejectTamperedToken() {
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createAccessToken(31L, "USER", "session-1");
-        // Bearer 접두사 뒤에 토큰이 포함되어 있는지 확인한다
-        char replacement = token.endsWith("A") ? 'B' : 'A';
-        // 요청한 범위의 문자열을 추출한다
-        String tamperedToken = token.substring(0, token.length() - 1) + replacement;
+        // Base64URL 끝의 미사용 비트를 피하도록 서명의 첫 문자를 찾는다
+        int signatureStart = token.lastIndexOf('.') + 1;
+        // 실제 서명 바이트가 달라지도록 첫 문자를 다른 값으로 교체한다
+        char replacement = token.charAt(signatureStart) == 'A' ? 'B' : 'A';
+        // 헤더와 페이로드는 유지하면서 서명의 첫 문자만 조작한다
+        String tamperedToken = token.substring(0, signatureStart)
+                + replacement
+                + token.substring(signatureStart + 1);
 
         // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         assertFalse(jwtProvider.validateToken(tamperedToken));

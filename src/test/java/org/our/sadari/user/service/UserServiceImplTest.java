@@ -16,6 +16,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.global.file.service.FileService;
@@ -38,6 +39,7 @@ import org.springframework.mock.web.MockMultipartFile;
  * 2026-08-05        SeungHyeon.Kang       관심분야 단일 코드 검증 추가
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 파일 정리 검증 추가
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 검증 추가
+ * 2026-08-19        SeungHyeon.Kang    공통 닉네임 검증 경로 회귀 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -137,6 +139,32 @@ class UserServiceImplTest {
         // 형식 검증을 통과하지 못한 닉네임은 중복 조회에 사용하지 않는지 확인한다
         verify(userMapper, never()).getUserNickDuplicateCnt(request);
         // 형식 검증을 통과하지 못한 닉네임을 저장하지 않는지 확인한다
+        verify(userMapper, never()).uptUserOnboarding(request);
+    }
+
+    /**
+     * 다른 회원이 사용 중인 닉네임은 온보딩 완료 상태를 변경하지 않고 거절하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptOnboardRejectsDuplicate() {
+        // 닉네임 중복 검증에 사용할 온보딩 요청을 생성한다
+        UserDto request = new UserDto();
+        // 다른 회원이 사용 중인 닉네임을 요청 DTO에 설정한다
+        request.setUserNick("차분한독서가");
+
+        // 중복 검증까지 진행되도록 닉네임 비속어 검사 결과를 구성한다
+        when(badWordDetectionService.findBadWord("차분한독서가")).thenReturn(Optional.empty());
+        // 다른 회원이 같은 닉네임을 사용하는 조회 결과를 구성한다
+        when(userMapper.getUserNickDuplicateCnt(request)).thenReturn(1);
+
+        // 중복된 닉네임으로 최초 로그인 온보딩 완료를 요청한다
+        ResultData result = userService.uptOnboarding(31L, request);
+
+        // 공통 닉네임 중복 오류를 반환하는지 확인한다
+        assertEquals(ResultEnum.USER_NICK_DUPLICATED.getCode(), result.getCode());
+        // 중복 닉네임으로 온보딩 완료 상태를 저장하지 않는지 확인한다
         verify(userMapper, never()).uptUserOnboarding(request);
     }
 
@@ -266,5 +294,35 @@ class UserServiceImplTest {
         verify(fileService).delFile(10L);
         // 사용자 참조에서 교체된 이전 배경 파일 정리를 요청하는지 확인한다
         verify(fileService).delFile(20L);
+    }
+
+    /**
+     * 프로필 한줄소개에 비속어가 있으면 사용자와 파일을 변경하지 않고 거절하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptMeRejectsIntroBadWord() {
+        // 한줄소개 비속어 검증에 사용할 프로필 수정 요청을 생성한다
+        UserDto request = new UserDto();
+        // 형식 검증을 통과할 닉네임을 요청 DTO에 설정한다
+        request.setUserNick("차분한독서가");
+        // 저장을 차단할 비속어가 포함된 한줄소개를 요청 DTO에 설정한다
+        request.setIntrCntn("금지표현");
+
+        // 한줄소개 검사까지 진행되도록 닉네임 비속어 검사 결과를 구성한다
+        when(badWordDetectionService.findBadWord("차분한독서가")).thenReturn(Optional.empty());
+        // 한줄소개에서 탐지할 비속어를 반환하도록 결과를 구성한다
+        when(badWordDetectionService.findBadWord("금지표현")).thenReturn(Optional.of("금지표현"));
+
+        // 비속어가 포함된 한줄소개로 프로필 수정을 요청한다
+        ResultData result = userService.uptMe(31L, request, null, null);
+
+        // 공통 비속어 포함 오류를 반환하는지 확인한다
+        assertEquals(ResultEnum.COMMON_BAD_WORD_INCLUDED.getCode(), result.getCode());
+        // 비속어 검증에 실패한 프로필 정보를 저장하지 않는지 확인한다
+        verify(userMapper, never()).uptUserProfile(request);
+        // 비속어 검증에 실패한 요청은 현재 파일 정보를 잠금 조회하지 않는지 확인한다
+        verify(userMapper, never()).getUserFileForUpdate(31L);
     }
 }

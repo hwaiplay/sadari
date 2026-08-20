@@ -207,7 +207,11 @@ export const useReplySheetController = ({
   >(null);
   // 선택한 독후감의 댓글과 답글 목록을 서버 캐시에서 조회한다
   const replyListQuery = useReplyList(report.reptNumb);
-  const replies = replyListQuery.data?.data;
+  // 서버 페이지가 바뀔 때만 부모 댓글과 연결 답글을 정렬 순서대로 연결한다
+  const replies = useMemo(
+    () => replyListQuery.data?.pages.flatMap((page) => page.data.list) ?? [],
+    [replyListQuery.data?.pages],
+  );
 
   /**
    * 현재 서버 댓글 목록을 화면에서 사용할 부모별 댓글 묶음으로 구성한다
@@ -217,7 +221,7 @@ export const useReplySheetController = ({
    */
   const getReplyCollection = (): ReplyCollection => {
     // 현재 조회 결과를 부모 댓글과 답글의 화면 구조로 변환하여 반환한다
-    return createReplyCollection(replies ?? []);
+    return createReplyCollection(replies);
   };
 
   // 서버 댓글 목록이 바뀔 때만 계층과 언급 링크 정보를 다시 계산한다

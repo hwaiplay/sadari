@@ -14,9 +14,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
- * 2026-08-14        SeungHyeon.Kang    모임원 프로필 목록 조회 메서드 추가
- * 2026-08-14        Hanwon.Jang        모임 수정과 물리 삭제 메서드 추가
- * 2026-08-14        Hanwon.Jang    모임 독서 회차와 참여자 등록 메서드 추가
+ * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 메서드 추가
  */
 @Mapper
 public interface ReadingClubMapper {

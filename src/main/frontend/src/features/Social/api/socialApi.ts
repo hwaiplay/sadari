@@ -1,5 +1,6 @@
 import api from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
+import type { PageData, ResultData } from "@/app/api/resultData";
 import type {
   MonthlyReadingSummary,
   ReadingStatistics,
@@ -124,35 +125,45 @@ export const delSocialFollowApi = async (userNumb: number) => {
 };
 
 /**
- * get My Follow List 정보를 조회한다
+ * 로그인 사용자의 팔로우 또는 팔로워 한 페이지를 조회한다
  *
- * @author HanWon.Jang
- * @param type type 입력값
- * @return 처리 결과
- * @throws API 요청 또는 비동기 처리 실패 시 발생
+ * @author SeungHyeon.Kang
+ * @param type 조회할 팔로우 목록 유형
+ * @param page 조회할 페이지 번호
+ * @return 팔로우 사용자 페이지 응답
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
-export const getMyFollowListApi = async (type: FollowListType) => {
+export const getMyFollowPageApi = async (
+  type: FollowListType,
+  page: number,
+): Promise<ResultData<PageData<FollowUser>>> => {
 
-  const res = await api.get<{ data: FollowUser[] }>(`/social/me/${type}`);
+  const res = await api.get<ResultData<PageData<FollowUser>>>(`/social/me/${type}`, {
+    params: { page },
+  });
   return assertResultDataSuccess(res.data);
 };
 
 /**
- * get Social Follow List 정보를 조회한다
+ * 다른 사용자의 팔로우 또는 팔로워 한 페이지를 조회한다
  *
- * @author HanWon.Jang
- * @param userNumb user Numb 입력값
- * @param type type 입력값
- * @return 처리 결과
- * @throws API 요청 또는 비동기 처리 실패 시 발생
+ * @author SeungHyeon.Kang
+ * @param userNumb 목록 주인 사용자 번호
+ * @param type 조회할 팔로우 목록 유형
+ * @param page 조회할 페이지 번호
+ * @return 팔로우 사용자 페이지 응답
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
-export const getSocialFollowListApi = async (
+export const getSocialFollowPageApi = async (
   userNumb: number,
   type: FollowListType,
-) => {
+  page: number,
+): Promise<ResultData<PageData<FollowUser>>> => {
 
-  const res = await api.get<{ data: FollowUser[] }>(
+  const res = await api.get<ResultData<PageData<FollowUser>>>(
     `/social/profile/${userNumb}/${type}`,
+    { params: { page } },
   );
+  // 검증된 다른 사용자 팔로우 목록 페이지를 반환한다
   return assertResultDataSuccess(res.data);
 };

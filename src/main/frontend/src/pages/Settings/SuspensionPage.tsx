@@ -1,5 +1,6 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import { checkAuthApi } from "@/features/Auth/api/authApi";
 import { runLogout, selectLogoutScope } from "@/features/Auth/lib/logoutFlow";
 import { getSuspInquiryNumbApi } from "@/features/Inquiry/api/inquiryApi";
@@ -27,7 +28,7 @@ const formatDateTime = (value?: string | null): string => {
   // 종료 일시가 없는 무기한 정지는 기간 대신 유형을 표시합니다
   if (!value) {
     // "무기한"
-    return "무기한";
+    return message("frontend.suspension.indefinite");
   }
 
   // 브라우저의 한국어 날짜 형식으로 변환한 일시를 반환합니다
@@ -88,8 +89,8 @@ function SuspensionPage() {
         // "이용 정지 정보를 확인할 수 없어요."
         // "잠시 후 다시 시도해주세요."
         await sweetError(
-          "이용 정지 정보를 확인할 수 없어요.",
-          getApiErrorMessage(error, "잠시 후 다시 시도해주세요."),
+          message("frontend.suspension.loadFailedTitle"),
+          getApiErrorMessage(error, message("frontend.common.tryAgain")),
         );
       }
 
@@ -133,7 +134,7 @@ function SuspensionPage() {
   // 정지 정보를 조회하는 동안 안내 화면을 반환합니다
   if (isLoading) {
     // "이용 정지 정보를 확인하고 있어요."
-    return <main className={styles.page}>이용 정지 정보를 확인하고 있어요.</main>;
+    return <main className={styles.page}>{message("frontend.suspension.loading")}</main>;
   }
 
   // 공개 정지 정보와 허용된 계정 처리 동작만 포함한 전용 화면을 반환합니다
@@ -145,31 +146,31 @@ function SuspensionPage() {
         <div className={styles.mark} aria-hidden="true">!</div>
         {/* "서비스 이용 안내" */}
         {/* "계정 이용이 정지되었어요" */}
-        <h1 className={styles.heading}>계정 이용이 정지되었어요</h1>
+        <h1 className={styles.heading}>{message("frontend.suspension.title")}</h1>
         {/* 이용 정지 중 허용되는 계정 처리 안내 영역 */}
         <p className={styles.description}>
-          {`정지 기간에는 일반 서비스 이용과 계정 비활성화가 제한돼요.\n영구 탈퇴를 신청해도 이용 정지 이력은 유지돼요.`}
+          {message("frontend.suspension.description")}
         </p>
 
         {/* 활성 정지 이력이 있을 때만 공개 사유와 기간을 표시한다 */}
         {suspension ? (
           <dl className={styles.detailList}>
             <div className={styles.detailItem}>
-              <dt className={styles.detailTerm}>정지 사유</dt>
+              <dt className={styles.detailTerm}>{message("frontend.suspension.reason")}</dt>
               <dd className={styles.detailDescription}>{suspension.spndRsonName}</dd>
             </div>
             <div className={styles.detailItem}>
-              <dt className={styles.detailTerm}>정지 시작</dt>
+              <dt className={styles.detailTerm}>{message("frontend.suspension.start")}</dt>
               <dd className={styles.detailDescription}>{formatDateTime(suspension.strtDate)}</dd>
             </div>
             <div className={styles.detailItem}>
-              <dt className={styles.detailTerm}>정지 종료</dt>
+              <dt className={styles.detailTerm}>{message("frontend.suspension.end")}</dt>
               <dd className={styles.detailDescription}>{formatDateTime(suspension.endxDate)}</dd>
             </div>
           </dl>
         ) : (
           <p className={styles.note}>
-            정지 상태와 상세 이력이 일치하지 않아요. 로그아웃 후 다시 로그인하거나 관리자에게 문의해주세요.
+            {message("frontend.suspension.mismatch")}
           </p>
         )}
 
@@ -181,7 +182,7 @@ function SuspensionPage() {
             onClick={() => navigate("/suspension/withdrawal")}
           >
             {/* "영구 탈퇴" */}
-            영구 탈퇴
+            {message("frontend.withdrawal.type.hard")}
           </button>
           <button
             className={styles.inquiryButton}
@@ -190,11 +191,13 @@ function SuspensionPage() {
               ? `/inquiry/detail/${suspInquiryNumb}`
               : "/inquiry/write?category=SUSPENSION_APPEAL")}
           >
-            {suspInquiryNumb ? "문의내역보기" : "이용정지 문의하기"}
+            {suspInquiryNumb
+              ? /* "문의내역보기" */ message("frontend.suspension.viewInquiry")
+              : /* "이용정지 문의하기" */ message("frontend.suspension.writeInquiry")}
           </button>
           <button className={styles.logoutButton} type="button" onClick={handleLogout}>
             {/* "로그아웃" */}
-            로그아웃
+            {message("frontend.auth.logout")}
           </button>
         </div>
       </section>

@@ -17,11 +17,13 @@ import {
 } from "@/features/Book/Detail/hook/usePublicReports";
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import type { PublicReportSortType } from "@/features/Book/api/bookApi";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import { message } from "@/app/messages/message";
 
 const CONTENT_PREVIEW_LENGTH = 180;
 
-export type ReportSort = "LATEST" | "RATING";
+export type ReportSort = PublicReportSortType;
 export type ReportStatus = string;
 export type ReportStatusTone = "done" | "reading" | "stopped";
 
@@ -118,7 +120,7 @@ export function usePublicReportPage() {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
-  const [sort, setSort] = useState<ReportSort>("LATEST");
+  const [sort, setSort] = useState<ReportSort>("RELATION_DESC");
   const [status, setStatus] = useState<ReportStatus>("ALL");
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
@@ -127,7 +129,7 @@ export function usePublicReportPage() {
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
   // ISBN별 공개 독후감 목록의 서버 상태를 조회한다
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
   // 공개 독후감 필터와 상태명 표시에 사용할 독서 상태 공통코드를 조회한다
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   // 공개 독후감 좋아요 변경 요청 상태를 조회한다
@@ -136,8 +138,8 @@ export function usePublicReportPage() {
 
   // 공개 독후감 API 응답이 없을 때도 화면에서 안전하게 빈 목록을 사용한다
   const reports = useMemo(() => {
-    // 공개 독후감 공통 응답의 목록 데이터를 반환한다
-    return (publicReportsQuery.data?.data ?? []) as PublicReportType[];
+    // 조회된 공개 독후감 서버 페이지를 화면 정렬 순서대로 연결해 반환한다
+    return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
   }, [publicReportsQuery.data]);
 
   // 전체 필터와 서버 공통코드 순서를 결합한 독서 상태 옵션을 생성한다
@@ -146,7 +148,7 @@ export function usePublicReportPage() {
   >(() => {
     // 화면 전용 전체 옵션 뒤에 서버가 관리하는 독서 상태 옵션을 반환한다
     return [
-      { value: "ALL", label: "전체" },
+      { value: "ALL", label: /* "전체" */ message("frontend.common.all") },
       ...(reportStatusCodeQuery.data ?? []).map((code) => ({
         value: code.comdCode,
         label: code.comdName,
@@ -171,16 +173,8 @@ export function usePublicReportPage() {
       status === "ALL"
         ? reports
         : reports.filter((report) => getReportStatus(report) === status);
-    const sortedReports =
-      sort === "RATING"
-        ? [...filteredReports].sort(
-            (left, right) =>
-              (Number(right.reptGrde) || 0) - (Number(left.reptGrde) || 0),
-          )
-        : filteredReports;
-
     // 화면 렌더링에 필요한 파생값을 공개 독후감 데이터와 함께 반환한다
-    return sortedReports.map((report) => {
+    return filteredReports.map((report) => {
       const rating = Math.max(
         0,
         Math.min(5, Number(report.reptGrde) || 0),

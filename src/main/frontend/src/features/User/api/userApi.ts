@@ -1,8 +1,9 @@
 import api from "@/app/api/axios";
-import { assertResultDataSuccess } from "@/app/api/resultData";
+import { assertResultDataSuccess, type ResultData } from "@/app/api/resultData";
 
 export type UserProfile = {
   userStat?: "ACTIVE" | "WITHDRAWN" | "SUSPENDED" | "DELETE_PENDING";
+  userStatName?: string;
   onbdYsno?: "Y" | "N";
   userNick?: string;
   porfPath?: string;
@@ -178,9 +179,10 @@ export type UpdateUserInterestsParams = {
  * @return 처리 결과
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const getMyProfileApi = async () => {
+export const getMyProfileApi = async (): Promise<ResultData<UserProfile> & { data: UserProfile }> => {
 
-  const res = await api.get("/user/me");
+  const res = await api.get<ResultData<UserProfile> & { data: UserProfile }>("/user/me");
+  // 검증된 로그인 사용자 프로필 응답을 반환한다
   return assertResultDataSuccess(res.data);
 };
 

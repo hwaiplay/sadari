@@ -1,6 +1,7 @@
 package org.our.sadari.book.dto;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.List;
 import lombok.Data;
@@ -20,8 +21,26 @@ import lombok.Data;
 @Schema(description = "카카오 도서 검색 API 원문 응답 DTO", hidden = true)
 public class KakaoBookJsonDto {
 
+    // 카카오 도서 검색 API의 페이지 메타정보
+    private MetaDto meta;
+
     // 카카오 도서 검색 API의 documents 목록
     private List<BookDto> documents;
+
+    /**
+     * 카카오 도서 검색 API가 반환하는 페이지 메타정보를 정의한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Data
+    @JsonIgnoreProperties(ignoreUnknown = true)
+    @Schema(description = "카카오 도서 검색 페이지 메타정보 DTO", hidden = true)
+    public static class MetaDto {
+
+        // 현재 응답이 마지막 검색 페이지인지 나타내는 값
+        @JsonProperty("is_end")
+        private boolean end;
+    }
 
     /**
      * 카카오 도서 검색 API가 반환하는 개별 도서 원문 필드를 정의한다

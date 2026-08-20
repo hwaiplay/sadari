@@ -26,13 +26,13 @@ type CalendarDatePickerProps = {
 };
 
 const WEEK_DAY_KEYS = [
-  "frontend.calendar.week.sun",
-  "frontend.calendar.week.mon",
-  "frontend.calendar.week.tue",
-  "frontend.calendar.week.wed",
-  "frontend.calendar.week.thu",
-  "frontend.calendar.week.fri",
-  "frontend.calendar.week.sat",
+  "frontend.common.week.sun",
+  "frontend.common.week.mon",
+  "frontend.common.week.tue",
+  "frontend.common.week.wed",
+  "frontend.common.week.thu",
+  "frontend.common.week.fri",
+  "frontend.common.week.sat",
 ];
 
 /**
@@ -371,7 +371,7 @@ function CalendarDatePicker({
                 onClick={() => setIsOpen(false)}
               >
                 {isRangePicker
-                  ? "완료"
+                  ? /* "완료" */ message("frontend.common.done")
                   : message("frontend.common.close")}
               </button>
             </div>
