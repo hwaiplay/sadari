@@ -91,6 +91,8 @@ export const useDeleteMutation = () => {
 
     // 서버의 외래키 정리 결과까지 반영하도록 다음 사용 시 타이머 요약을 다시 조회한다
     void queryClient.invalidateQueries({ queryKey: queryKeys.readingTimerSummary });
+    // 삭제한 독후감으로 집계된 도서별 누적 독서시간 페이지가 다시 표시되지 않도록 캐시를 제거한다
+    queryClient.removeQueries({ queryKey: queryKeys.readingTimerBookTimes });
     // 삭제한 독후감 상세 화면이 남지 않도록 성공 응답 즉시 홈 루트로 이동한다
     moveHome();
     // "삭제되었습니다."
