@@ -8,6 +8,7 @@ import {
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -1014,7 +1015,7 @@ function SocialProfilePage() {
                 )}
               </h2>
               <button
-                className={styles.goalModalClose}
+                className={modalControlStyles.roundClose}
                 type="button"
                 aria-label={message("frontend.common.close")}
                 onClick={handleFollowListClose}

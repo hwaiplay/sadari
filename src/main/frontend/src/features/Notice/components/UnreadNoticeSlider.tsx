@@ -17,7 +17,7 @@ import * as styles from "./UnreadNoticeSlider.css";
 
 const MIN_MARQUEE_DURATION_MS = 6000;
 const MARQUEE_CHARACTER_DURATION_MS = 220;
-const NOTICE_START_HOLD_MS = 3000;
+const NOTICE_LEFT_EDGE_HOLD_MS = 3000;
 const NOTICE_END_HOLD_MS = 3000;
 const EMPTY_NOTICE_LIST: readonly UnreadNotice[] = [];
 
@@ -57,6 +57,8 @@ export function UnreadNoticeSlider() {
   const [activeIndex, setActiveIndex] = useState(0);
   // 사용자가 제목을 읽거나 조작하는 동안 자동 교체를 멈춘다
   const [isPaused, setIsPaused] = useState(false);
+  // 한 건 공지의 카테고리가 왼쪽 경계에 도달한 뒤 다음 순환 전까지 대기하는 상태를 관리한다
+  const [isSingleNoticeHolding, setIsSingleNoticeHolding] = useState(false);
   // 다건 공지의 마지막 글자가 화면에 들어온 뒤 대기하는 상태를 관리한다
   const [isMarqueeDone, setIsMarqueeDone] = useState(false);
   const noticeList = unreadNoticeQuery.data ?? EMPTY_NOTICE_LIST;
@@ -122,6 +124,51 @@ export function UnreadNoticeSlider() {
   useEffect(setNoticeHoldTimer, [setNoticeHoldTimer]);
 
   /**
+   * 한 건 공지의 카테고리가 왼쪽 경계에 도달하면 3초 뒤 가로 순환을 재개한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 예약된 타이머를 해제할 정리 함수 또는 미예약 상태
+   */
+  const setSingleNoticeHoldTimer = useCallback((): (() => void) | undefined => {
+    // 한 건 공지의 반복 경계에서만 다음 순환 재개를 예약한다
+    if (!isSingleNoticeHolding || noticeList.length !== 1) {
+      // 순환 재개 타이머를 만들지 않은 Effect 정리 상태를 반환한다
+      return undefined;
+    }
+
+    /**
+     * 왼쪽 경계에서 제공한 확인 시간이 끝나면 한 건 공지의 가로 순환을 재개한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    function releaseSingleNoticeHold(): void {
+      // 다음 회차가 왼쪽 경계에서 출발할 수 있도록 반복 대기 상태를 해제한다
+      setIsSingleNoticeHolding(false);
+    }
+
+    // 카테고리가 왼쪽 경계에 걸린 상태를 3초 유지한 뒤 다음 가로 순환을 재개한다
+    const timerId = window.setTimeout(releaseSingleNoticeHold, NOTICE_LEFT_EDGE_HOLD_MS);
+
+    /**
+     * 공지 상태가 바뀌거나 컴포넌트가 해제되면 기존 순환 재개 예약을 취소한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    function clearSingleNoticeHoldTimer(): void {
+      // 이전 공지의 대기 시간이 새 공지의 가로 순환에 영향을 주지 않도록 예약을 제거한다
+      window.clearTimeout(timerId);
+    }
+
+    // 다음 Effect 실행 전에 한 건 공지의 순환 재개 예약을 정리할 함수를 반환한다
+    return clearSingleNoticeHoldTimer;
+  }, [isSingleNoticeHolding, noticeList.length]);
+
+  // 한 건 공지의 카테고리가 왼쪽 경계에 도달한 시점부터 3초 대기 시간을 관리한다
+  useEffect(setSingleNoticeHoldTimer, [setSingleNoticeHoldTimer]);
+
+  /**
    * 새 미읽음 공지 목록을 받으면 첫 번째 공지부터 다시 표시한다
    *
    * @author SeungHyeon.Kang
@@ -130,6 +177,8 @@ export function UnreadNoticeSlider() {
   const resetActiveNotice = useCallback((): void => {
     // 새 목록의 첫 공지가 가로 이동을 완료하지 않은 상태로 표시되도록 초기화한다
     setIsMarqueeDone(false);
+    // 새 목록은 첫 공지의 최초 표시 대기부터 시작하도록 반복 경계 대기 상태를 초기화한다
+    setIsSingleNoticeHolding(false);
     // 상세 조회로 목록이 줄어든 경우에도 유효한 첫 항목부터 표시한다
     setActiveIndex(0);
   }, [noticeList]);
@@ -178,6 +227,25 @@ export function UnreadNoticeSlider() {
     setIsMarqueeDone(true);
   }
 
+  /**
+   * 한 건 공지의 이어 붙인 카테고리가 왼쪽 경계에 도달하면 다음 순환을 잠시 멈춘다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 한 건 공지의 가로 반복 경계 이벤트
+   * @return 반환값이 없다
+   */
+  function handleSingleMarqueeIteration(event: AnimationEvent<HTMLSpanElement>): void {
+
+    // 하위 요소의 이벤트이거나 공지가 한 건이 아니면 반복 경계 대기를 적용하지 않는다
+    if (event.target !== event.currentTarget || noticeList.length !== 1) {
+      // 현재 애니메이션 상태를 유지하고 반복 경계 처리를 종료한다
+      return;
+    }
+
+    // 이어 붙인 카테고리가 왼쪽 끝에 걸린 현재 위치에서 3초 대기를 시작한다
+    setIsSingleNoticeHolding(true);
+  }
+
   // 조회 중이거나 실패했거나 미읽음 공지가 없으면 홈의 기존 영역을 유지한다
   if (unreadNoticeQuery.isPending || unreadNoticeQuery.isError || activeNotice === undefined) {
     // 표시할 제목이 없는 미읽음 공지 안내를 렌더링하지 않는다
@@ -193,10 +261,10 @@ export function UnreadNoticeSlider() {
   const marqueeTrackClass = isSingleNotice
     ? `${styles.marqueeTrack} ${styles.singleMarqueeTrack}`
     : `${styles.marqueeTrack} ${styles.multipleMarqueeTrack}`;
-  // 사용자 상호작용 중에는 현재 위치에서 가로 슬라이드를 멈춘다
-  const marqueePlayState = isPaused ? "paused" : "running";
+  // 사용자 상호작용 중이거나 한 건 공지가 반복 경계에 있으면 현재 위치에서 가로 슬라이드를 멈춘다
+  const marqueePlayState = isPaused || isSingleNoticeHolding ? "paused" : "running";
   const marqueeStyle = {
-    animationDelay: `${NOTICE_START_HOLD_MS}ms`,
+    animationDelay: `${NOTICE_LEFT_EDGE_HOLD_MS}ms`,
     animationDuration: `${marqueeDuration}ms`,
     animationPlayState: marqueePlayState,
   } satisfies CSSProperties;
@@ -226,6 +294,7 @@ export function UnreadNoticeSlider() {
               className={marqueeTrackClass}
               style={marqueeStyle}
               onAnimationEnd={handleMarqueeEnd}
+              onAnimationIteration={handleSingleMarqueeIteration}
             >
               <span className={styles.noticeContent}>
                 <NoticeCategoryBadge categoryName={activeNotice.cateName} />

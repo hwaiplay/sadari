@@ -8,8 +8,10 @@ import {
   getRemainDaysUntil,
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
+import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -2109,7 +2111,7 @@ function ProfileEditPage() {
                 {/* "다 읽으셨나요?" */ message("frontend.profile.currentReading.completionPrompt")}
               </h2>
               <button
-                className={styles.goalModalClose}
+                className={modalControlStyles.roundClose}
                 type="button"
                 aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("currentReading")}
@@ -2142,20 +2144,22 @@ function ProfileEditPage() {
 
             {/* 현재 읽는 책 안내 닫기와 수정 진입 영역 */}
             <div className={styles.goalModalActions}>
-              <button
-                className={styles.goalModalCancel}
-                type="button"
+              <ActionButton
+                variant="secondary"
+                size="lg"
+                width="full"
                 onClick={() => void closeProfileModal("currentReading")}
               >
                 {/* "닫기" */ message("frontend.common.close")}
-              </button>
-              <button
-                className={styles.currentReadingModalEditButton}
-                type="button"
+              </ActionButton>
+              <ActionButton
+                variant="primary"
+                size="lg"
+                width="full"
                 onClick={handleReadingEditClick}
               >
                 <span>{/* "수정하기" */ message("frontend.common.update")}</span>
-              </button>
+              </ActionButton>
             </div>
           </section>
         </div>
@@ -2196,7 +2200,7 @@ function ProfileEditPage() {
                 )}
               </h2>
               <button
-                className={styles.goalModalClose}
+                className={modalControlStyles.roundClose}
                 type="button"
                 aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("followList")}
@@ -2320,7 +2324,7 @@ function ProfileEditPage() {
                   {/* "도움말" */ message("frontend.profile.goal.helpButton")}
                 </button>
                 <button
-                  className={styles.goalModalClose}
+                  className={modalControlStyles.roundClose}
                   type="button"
                   aria-label={/* "닫기" */ message("frontend.common.close")}
                   onClick={() => void closeProfileModal("goal")}
@@ -2439,21 +2443,23 @@ function ProfileEditPage() {
             </div>
             {/* 독서 목표 설정 취소와 저장 영역 */}
             <div className={styles.goalModalActions}>
-              <button
-                className={styles.goalModalCancel}
-                type="button"
+              <ActionButton
+                variant="secondary"
+                size="lg"
+                width="full"
                 onClick={() => void closeProfileModal("goal")}
               >
                 {/* "취소" */ message("frontend.common.cancel")}
-              </button>
-              <button
-                className={styles.goalModalSave}
-                type="button"
+              </ActionButton>
+              <ActionButton
+                variant="primary"
+                size="lg"
+                width="full"
                 disabled={isGoalSaving}
                 onClick={handleGoalSubmit}
               >
                 {/* "저장" */ message("frontend.profile.save")}
-              </button>
+              </ActionButton>
             </div>
           </section>
         </div>
@@ -2488,7 +2494,7 @@ function ProfileEditPage() {
                 {/* "목표 내리기" */ message("frontend.profile.goal.helpTitle")}
               </h2>
               <button
-                className={styles.goalModalClose}
+                className={modalControlStyles.roundClose}
                 type="button"
                 aria-label={/* "닫기" */ message("frontend.common.close")}
                 onClick={() => void closeProfileModal("goalHelp")}

@@ -1,5 +1,6 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 
 // 독서 활동 조회 완료 시 콘텐츠를 자연스럽게 표시하는 전환 효과
 const activityFadeIn = keyframes({
@@ -1275,18 +1276,6 @@ export const goalModalTitle = style({
   color: vars.color.black,
 });
 
-export const goalModalClose = style({
-  width: "32px",
-  height: "32px",
-  border: 0,
-  borderRadius: "50%",
-  backgroundColor: "#f3f4f5",
-  color: vars.color.black,
-  fontSize: "22px",
-  lineHeight: 1,
-  cursor: "pointer",
-});
-
 export const goalHelpBody = style({
   marginTop: "18px",
 });
@@ -1515,65 +1504,9 @@ export const goalLimitDanger = style([
   },
 ]);
 
-export const goalModalActions = style({
-  display: "grid",
-  gridTemplateColumns: "1fr 1fr",
-  gap: "8px",
-  marginTop: "20px",
-});
-
-const goalModalButtonBase = style({
-  minWidth: "76px",
-  height: "46px",
-  borderRadius: "8px",
-  padding: "0 14px",
-  fontFamily: vars.font.semibold,
-  fontSize: "14px",
-  cursor: "pointer",
-  transition: "background-color 160ms ease",
-
-});
-
-export const goalModalCancel = style([
-  goalModalButtonBase,
+export const goalModalActions = style([
+  modalControlStyles.pairedActions,
   {
-    border: `1px solid ${vars.color.gray300}`,
-    backgroundColor: "#ffffff",
-    color: vars.color.black,
-
-    selectors: {
-      "&:hover": {
-        border: `1px solid ${vars.color.gray600}`,
-        backgroundColor: vars.color.gray100,
-      },
-    }
-  },
-]);
-
-export const goalModalSave = style([
-  goalModalButtonBase,
-  {
-    border: `1px solid ${vars.color.gray900}`,
-    backgroundColor: vars.color.gray900,
-    color: "#ffffff",
-    selectors: {
-      "&:hover": {
-        border: `1px solid ${vars.color.darkGray}`,
-        backgroundColor: vars.color.darkGray,
-      },
-      "&:disabled": {
-        cursor: "default",
-        opacity: 0.6,
-      },
-    },
-  },
-]);
-
-export const currentReadingModalEditButton = style([
-  goalModalSave,
-  {
-    display: "inline-flex",
-    alignItems: "center",
-    justifyContent: "center",
+    marginTop: "20px",
   },
 ]);

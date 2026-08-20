@@ -3,15 +3,34 @@ import {
   assertResultDataSuccess,
   getApiErrorMessage,
 } from "@/app/api/resultData";
-import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import {
+  sweetError,
+  sweetSuccess,
+  sweetWarning,
+} from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { queryClient } from "@/app/query/queryClient";
+import { setReportApi } from "@/features/Book/api/bookApi";
+import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
+import {
+  getTimerReturnPath,
+  READING_TIMER_SEARCH_SOURCE,
+  type SearchBookPageState,
+} from "@/features/Book/Search/lib/bookSearchNavigation";
 import type {
   BookSearchPageType,
   BookSearchResultType,
   PopularBookPeriodType,
   PopularSearchKeywordType,
+  ReportDtoType,
 } from "@/features/Book/types/book.type";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
+import { getTimerSummaryOptions } from "@/features/Timer/hooks/useTimerSummaryQuery";
+import {
+  normalizeBookAuthor,
+  sanitizeText,
+  stripHtmlTags,
+} from "@/features/Book/utils/reportValidation";
 import type { FormEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -23,11 +42,6 @@ import {
 
 const SEARCH_STORAGE_KEY = "sadari:book-search:v2";
 const SEARCH_PAGE_SIZE = 10;
-
-type SearchBookPageState = {
-  initialSearchKeyword?: string;
-  keepSearchResult?: boolean;
-};
 
 type SearchBookCache = {
   searchKeyword?: string;
@@ -144,6 +158,13 @@ export function useSearchBookPage() {
   const isClubBookSearch = clubNumbParam !== undefined;
   const clubNumb = Number(clubNumbParam);
   const hasValidClubNumb = Number.isSafeInteger(clubNumb) && clubNumb > 0;
+  const pageState = (location.state ?? {}) as SearchBookPageState;
+  const isTimerBookSearch =
+    !isClubBookSearch &&
+    pageState.entrySource === READING_TIMER_SEARCH_SOURCE;
+  const [timerPeriodBook, setTimerPeriodBook] =
+    useState<BookSearchResultType | null>(pageState.timerBook ?? null);
+  const [isTimerReportSaving, setIsTimerReportSaving] = useState(false);
 
   /**
    * 검색 화면의 부가 영역에 표시할 안전한 인기 검색어를 독립적으로 조회한다
@@ -528,6 +549,14 @@ export function useSearchBookPage() {
    */
   async function handleSelectBook(book: BookSearchResultType): Promise<void> {
 
+    // 독서 타이머에서 진입한 검색은 독후감 등록 화면 대신 목표기간 달력을 바로 연다.
+    if (isTimerBookSearch) {
+      // 선택한 도서를 타이머 전용 목표 독서기간 모달에 전달한다.
+      setTimerPeriodBook(book);
+      // 기존 독후감 확인과 일반 등록 화면 이동을 실행하지 않는다.
+      return;
+    }
+
     // 다른 책의 개인 독후감 확인이 진행 중이면 중복 선택을 차단한다.
     if (selectingBookIsbn !== null) {
       // 진행 중인 책 선택 요청을 유지하고 새 요청을 종료한다.
@@ -594,8 +623,135 @@ export function useSearchBookPage() {
 
     // 선택한 책 정보를 개인 책 상세 화면으로 전달한다.
     navigate("/book/search/info", {
-      state: { book },
+      state: {
+        book,
+        entrySource: isTimerBookSearch
+          ? READING_TIMER_SEARCH_SOURCE
+          : undefined,
+      },
     });
+  }
+
+  /**
+   * 타이머에서 시작한 도서 등록 흐름을 현재 읽는 도서 모달로 돌려보낸다.
+   *
+   * @author SeungHyeon.Kang
+   * @param selectedReport 새로 등록해 선택 상태로 표시할 독후감 번호
+   * @return 반환값이 없다
+   */
+  function returnToTimer(selectedReport?: number): void {
+
+    // PWA History State 교체 후에도 모달 재실행 정보가 남도록 타이머 복귀 경로를 생성한다.
+    const timerReturnPath = getTimerReturnPath(selectedReport);
+    // 검색 화면 이력을 타이머로 교체하고 현재 읽는 도서 모달 및 신규 도서 선택 정보를 전달한다.
+    navigate(timerReturnPath, { replace: true });
+  }
+
+  /**
+   * 타이머 전용 목표 독서기간 모달을 닫고 현재 읽는 도서 모달로 돌아간다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  function closeTimerPeriod(): void {
+
+    // 독후감 저장 중에는 화면을 이탈해 처리 결과를 잃지 않게 한다.
+    if (isTimerReportSaving) {
+      // 진행 중인 저장 요청을 유지하고 닫기 처리를 종료한다.
+      return;
+    }
+
+    // 선택한 검색 도서 임시 상태를 비운다.
+    setTimerPeriodBook(null);
+    // 독서 타이머의 현재 읽는 도서 모달로 돌아간다.
+    returnToTimer();
+  }
+
+  /**
+   * 선택한 도서와 목표 독서기간으로 읽는 중 독후감을 등록한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param startDate 목표 독서 시작일
+   * @param endDate 목표 독서 종료일
+   * @return 독후감 등록과 타이머 복귀가 끝나면 완료되는 Promise
+   */
+  async function saveTimerReport(
+    startDate: string,
+    endDate: string,
+  ): Promise<void> {
+
+    // 선택 도서가 없거나 저장 중이면 중복 등록 요청을 보내지 않는다.
+    if (!timerPeriodBook || isTimerReportSaving) {
+      // 등록할 수 없는 현재 상태의 처리를 종료한다.
+      return;
+    }
+
+    // 타이머에서 생성하는 독후감은 기존 읽는 중 정책의 비공개와 미평점 값을 사용한다.
+    const reportData: ReportDtoType = {
+      reptStat: REPORT_STATUS_READ,
+      reptStdt: startDate,
+      reptEndt: endDate,
+      reptGrde: "0",
+      reptColr: "",
+      pubcYsno: "N" as const,
+      reptCntn: "",
+      bookTitl: stripHtmlTags(timerPeriodBook.title),
+      bookAthr: normalizeBookAuthor(timerPeriodBook.author),
+      bookPubl: stripHtmlTags(timerPeriodBook.publisher),
+      bookIsbn: sanitizeText(timerPeriodBook.isbn),
+      bookCvim: sanitizeText(timerPeriodBook.image),
+      bookDesc: stripHtmlTags(timerPeriodBook.description),
+      publDate: stripHtmlTags(timerPeriodBook.pubdate),
+    };
+    let savedReportNumber: number | undefined;
+
+    try {
+      // 모달 안에 공통 소형 회전 링을 표시하도록 저장 상태를 시작한다.
+      setIsTimerReportSaving(true);
+      // 기존 독후감 등록 API로 읽는 중 독후감과 도서 정보를 함께 저장한다.
+      const reportResponse = await setReportApi(reportData);
+      // 타이머 복귀 화면에서 방금 등록한 도서를 선택하도록 신규 독후감 번호를 보관한다.
+      savedReportNumber = reportResponse.data;
+      const timerSummaryOptions = getTimerSummaryOptions();
+      // 등록 전 캐시가 타이머 복귀 화면에 남지 않도록 공용 요약을 만료 처리한다.
+      await queryClient.invalidateQueries({
+        queryKey: timerSummaryOptions.queryKey,
+        refetchType: "none",
+      });
+      try {
+        // 타이머 복귀 전에 최신 현재 읽는 도서 목록을 강제로 조회해 공용 캐시에 저장한다.
+        await queryClient.fetchQuery({
+          ...timerSummaryOptions,
+          staleTime: 0,
+        });
+      } catch {
+        // 사전 조회 실패는 등록 성공을 취소하지 않고 타이머 화면의 진입 조회에서 다시 시도하도록 만료 상태를 유지한다.
+        await queryClient.invalidateQueries({
+          queryKey: timerSummaryOptions.queryKey,
+          refetchType: "none",
+        });
+      }
+      // 기존 독후감 등록 완료 메시지로 저장 성공을 안내한다.
+      await sweetSuccess(
+        message("frontend.alert.saveSuccessTitle"),
+        message("frontend.report.saved"),
+      );
+    } catch (error) {
+      // 기존 독후감 등록 실패 메시지와 서버 오류 원인을 사용자에게 표시한다.
+      await sweetError(
+        message("frontend.alert.createFailedTitle"),
+        getApiErrorMessage(error, message("frontend.report.createFailed")),
+      );
+    } finally {
+      // 성공과 실패에 관계없이 저장 진행 상태를 해제한다.
+      setIsTimerReportSaving(false);
+    }
+
+    // 독후감 저장과 성공 안내가 완료된 경우에만 새 도서를 다시 조회할 타이머로 돌아간다.
+    if (savedReportNumber !== undefined) {
+      // 현재 검색 화면을 타이머로 교체하고 신규 도서가 선택된 도서 선택 모달을 다시 연다.
+      returnToTimer(savedReportNumber);
+    }
   }
 
   // 책 검색 화면이 렌더링과 이벤트 연결에 사용할 값을 반환한다.
@@ -612,10 +768,15 @@ export function useSearchBookPage() {
     isLoadingMore,
     isPopularMode,
     isSearching,
+    isTimerBookSearch,
+    isTimerReportSaving,
     popularPeriod,
     popularKeywordList,
     searchKeyword,
     selectingBookIsbn,
+    timerPeriodBook,
+    closeTimerPeriod,
+    saveTimerReport,
     setSearchKeyword,
   };
 }
