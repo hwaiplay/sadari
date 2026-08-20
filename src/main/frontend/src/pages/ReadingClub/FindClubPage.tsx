@@ -61,7 +61,6 @@ const renderLoadingCard = (key: string) => {
   // Figma 추천 카드와 같은 너비와 높이를 유지하는 스켈레톤을 반환한다
   return (
     <Skeleton
-      className={styles.cardSkeleton}
       width="100%"
       height={240}
       borderRadius={22}

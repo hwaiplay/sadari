@@ -209,6 +209,7 @@ function Header({ menuEnabled = true }: HeaderProps) {
             <img
               src={"/img/common/icon-backpage.svg"}
               alt={message("frontend.common.backIconAlt")}
+              width={"100%"}
             />
           </button>
         )}
