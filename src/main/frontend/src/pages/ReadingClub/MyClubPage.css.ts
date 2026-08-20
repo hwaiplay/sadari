@@ -209,7 +209,13 @@ export const clubStatus = style({
   fontSize: 12,
   lineHeight: 1.35,
   letterSpacing: "-0.12px",
-  whiteSpace: "nowrap"
+  whiteSpace: "nowrap",
+  selectors: {
+    '&[data-ended="true"]': {
+      background: vars.color.gray200,
+      color: vars.color.gray600,
+    },
+  },
 });
 export const clubName = style({
   margin: "5px 0 0",

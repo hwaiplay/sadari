@@ -1,5 +1,5 @@
 import { message } from "@/app/messages/message";
-import { formatDashedDateToDot, getRemainDaysUntil } from "@/app/utils/dateUtil";
+import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
@@ -13,6 +13,7 @@ import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubAp
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
+import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDeadline";
 import clsx from "clsx";
 import { createPortal } from "react-dom";
 import * as styles from "./ClubDetailPage.css";
@@ -59,7 +60,6 @@ export default function ClubDetailPage() {
     members,
     handleAnswerChange,
     handleApplicationDecision,
-    handleClubManagement,
     handleClubAction,
     handleJoinClub,
     handleReportWrite,
@@ -104,7 +104,8 @@ export default function ClubDetailPage() {
   const readingPeriod = goalStartDate?.slice(0, 4) === goalEndDate?.slice(0, 4)
     ? `${formattedGoalStartDate} ~ ${formattedGoalEndDate.slice(5)}`
     : `${formattedGoalStartDate} ~ ${formattedGoalEndDate}`;
-  const remainingDays = Math.max(0, getRemainDaysUntil(goalEndDate));
+  // 목록과 상세 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회한다
+  const readingDeadline = getReadingDeadline(club.currentGoalEndt);
   // 현재 회차에는 모임장이 반드시 참여하므로 빈 집계도 한 명으로 표시한다
   const goalMemberCount = Math.max(1, club.currentGoalMembCnt ?? 0);
   const goalAchievementCount = Math.min(
@@ -184,10 +185,12 @@ export default function ClubDetailPage() {
                     {/* "{0}번째 독서" */}
                     {message("frontend.readingClub.detail.readingOrder", [readingOrder])}
                   </strong>
-                  {hasCurrentReading && goalEndDate ? (
-                    <span className={styles.dDay}>
-                      {/* "D-{0}" */}
-                      {message("frontend.readingClub.detail.dDay", [remainingDays])}
+                  {hasCurrentReading && readingDeadline ? (
+                    <span
+                      className={styles.dDay}
+                      data-ended={readingDeadline.state === "ENDED"}
+                    >
+                      {readingDeadline.label}
                     </span>
                   ) : null}
                 </div>
@@ -273,6 +276,7 @@ export default function ClubDetailPage() {
             </section>
 
             <section className={styles.section}>
+              <div>
               {/* 함께 읽는 멤버 */}
               <div className={styles.memberHeader}>
                 <h2 className={styles.sectionTitle}>
@@ -303,6 +307,20 @@ export default function ClubDetailPage() {
                     +{message("frontend.readingClub.common.memberCount", [additionalMemberCount])}
                   </span>
                 ) : null}
+              </div>
+
+              {/* 멤버 관리는 활성 모임장에게만 제공한다 */}
+              {club.membRole === "OWNER" ? (
+                <LinkButton
+                  link={`/reading-clubs/${club.clubNumb}/manage/members`}
+                  className={styles.managementMembersBtn}
+                >
+                  {message("frontend.readingClub.management.members")}
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                </LinkButton>
+              ) : null}
               </div>
             </section>
 
@@ -405,13 +423,6 @@ export default function ClubDetailPage() {
 
       {isActiveMember ? createPortal(
         <div className={styles.fixedActionArea}>
-          {/* 모임장이라면 모임 관리 버튼 노출 */}
-          {club.membRole === 'OWNER' ? (
-            <ActionButton variant="secondary" size="lg" width="full" onClick={handleClubManagement}>
-              {/* "모임 관리하기" */}
-              {message("frontend.readingClub.detail.managementClub")}
-            </ActionButton>
-          ):null}
           {/* "내 독후감 쓰기" */}
           <ActionButton size="lg" width="full" onClick={handleReportWrite}>
             {club.currentReportStat === 'DONE'
