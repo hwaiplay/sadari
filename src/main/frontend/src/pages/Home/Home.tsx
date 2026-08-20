@@ -8,6 +8,7 @@ import Loading from "@/components/Loading/Loading";
 import type { HomeBookType } from "@/features/Book/types/book.type";
 import { createPortal } from "react-dom";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
+import { HomeTimerPlayer } from "@/features/Home/components/HomeTimerPlayer";
 import { UnreadNoticeSlider } from "@/features/Notice/components/UnreadNoticeSlider";
 import { useHome } from "../../features/Home/hook/useHome.tsx";
 
@@ -50,22 +51,34 @@ function Home() {
   // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
     // 홈 독후감 목록 로딩 화면을 반환한다
-    return <Loading />;
+    return (
+      <>
+        {/* 홈에서 복원한 활성 독서 타이머 플레이어 영역 */}
+        <HomeTimerPlayer />
+        <Loading />
+      </>
+    );
   }
 
   // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시한다
   if (isError) {
     // 홈 독후감 목록 오류 화면을 반환한다
     return (
-      <Container className={styles.emptyHomeContainer}>
-        <h1 className={styles.emptyTitle}>{errorMessage}</h1>
-      </Container>
+      <>
+        {/* 홈에서 복원한 활성 독서 타이머 플레이어 영역 */}
+        <HomeTimerPlayer />
+        <Container className={styles.emptyHomeContainer}>
+          <h1 className={styles.emptyTitle}>{errorMessage}</h1>
+        </Container>
+      </>
     );
   }
 
   // 조회 성공 여부와 검색 상태에 맞는 홈 화면을 반환한다
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
       <>
+    {/* 홈 활성 독서 타이머 플레이어 영역 */}
+    <HomeTimerPlayer />
     <div className={styles.homeContainer}>
       {/* 독후감 검색과 정렬 영역 */}
       <form className={styles.searchBar} onSubmit={handleSearchSubmit}>
@@ -216,17 +229,21 @@ function Home() {
 
   </>
   ) : (
-    <Container className={styles.emptyHomeContainer}>
-      <LinkButton link="/report/set" className={styles.emptySetReportButton}>
-        <div className={styles.emptyPlusCircle}>
-          <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M15.4286 11.1413H11.1429V15.427C11.1429 15.6544 11.0526 15.8724 10.8919 16.0331C10.7311 16.1939 10.5131 16.2842 10.2858 16.2842C10.0584 16.2842 9.84042 16.1939 9.67968 16.0331C9.51893 15.8724 9.42862 15.6544 9.42862 15.427V11.1413H5.14291C4.91558 11.1413 4.69756 11.051 4.53682 10.8903C4.37607 10.7295 4.28577 10.5115 4.28577 10.2842C4.28577 10.0569 4.37607 9.83883 4.53682 9.67809C4.69756 9.51734 4.91558 9.42704 5.14291 9.42704H9.42862V5.14132C9.42862 4.91399 9.51893 4.69598 9.67968 4.53523C9.84042 4.37449 10.0584 4.28418 10.2858 4.28418C10.5131 4.28418 10.7311 4.37449 10.8919 4.53523C11.0526 4.69598 11.1429 4.91399 11.1429 5.14132V9.42704H15.4286C15.656 9.42704 15.874 9.51734 16.0347 9.67809C16.1955 9.83883 16.2858 10.0569 16.2858 10.2842C16.2858 10.5115 16.1955 10.7295 16.0347 10.8903C15.874 11.051 15.656 11.1413 15.4286 11.1413Z" fill="#333333"/>
-          </svg>
-        </div>
-        <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>
-        <p className={styles.emptyDescription}>{message("frontend.home.emptyDescription")}</p>
-      </LinkButton>
-    </Container>
+    <>
+      {/* 홈 활성 독서 타이머 플레이어 영역 */}
+      <HomeTimerPlayer />
+      <Container className={styles.emptyHomeContainer}>
+        <LinkButton link="/report/set" className={styles.emptySetReportButton}>
+          <div className={styles.emptyPlusCircle}>
+            <svg width="21" height="21" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M15.4286 11.1413H11.1429V15.427C11.1429 15.6544 11.0526 15.8724 10.8919 16.0331C10.7311 16.1939 10.5131 16.2842 10.2858 16.2842C10.0584 16.2842 9.84042 16.1939 9.67968 16.0331C9.51893 15.8724 9.42862 15.6544 9.42862 15.427V11.1413H5.14291C4.91558 11.1413 4.69756 11.051 4.53682 10.8903C4.37607 10.7295 4.28577 10.5115 4.28577 10.2842C4.28577 10.0569 4.37607 9.83883 4.53682 9.67809C4.69756 9.51734 4.91558 9.42704 5.14291 9.42704H9.42862V5.14132C9.42862 4.91399 9.51893 4.69598 9.67968 4.53523C9.84042 4.37449 10.0584 4.28418 10.2858 4.28418C10.5131 4.28418 10.7311 4.37449 10.8919 4.53523C11.0526 4.69598 11.1429 4.91399 11.1429 5.14132V9.42704H15.4286C15.656 9.42704 15.874 9.51734 16.0347 9.67809C16.1955 9.83883 16.2858 10.0569 16.2858 10.2842C16.2858 10.5115 16.1955 10.7295 16.0347 10.8903C15.874 11.051 15.656 11.1413 15.4286 11.1413Z" fill="#333333"/>
+            </svg>
+          </div>
+          <h1 className={styles.emptyTitle}>{message("frontend.home.empty")}</h1>
+          <p className={styles.emptyDescription}>{message("frontend.home.emptyDescription")}</p>
+        </LinkButton>
+      </Container>
+    </>
   );
 }
 

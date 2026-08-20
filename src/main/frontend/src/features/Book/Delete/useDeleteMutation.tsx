@@ -8,8 +8,54 @@ import { message } from "@/app/messages/message";
 import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { queryClient } from "@/app/query/queryClient";
+import { queryKeys } from "@/app/query/queryKeys";
+import type { ReadingTimer, ReadingTimerSummary } from "@/features/Timer/api/readingTimerApi";
 import { useMutation } from "@tanstack/react-query";
 import { delReportApi } from "../api/bookApi";
+
+/**
+ * 삭제한 독후감을 타이머 요약의 도서 연결 정보에서 제거한다
+ *
+ * @author SeungHyeon.Kang
+ * @param summary 삭제 전 타이머 요약 캐시
+ * @param reptNumb 삭제한 독후감 번호
+ * @return 삭제한 도서가 제외된 타이머 요약
+ */
+const removeDeletedTimerBook = (summary: ReadingTimerSummary, reptNumb: number): ReadingTimerSummary => {
+  // 삭제되지 않은 읽는 중 도서만 담을 새 목록을 생성한다
+  const currentReadingList: ReadingTimer[] = [];
+
+  // 삭제 성공 직후 도서 선택 모달에서 제거할 항목을 구분한다
+  for (const readingBook of summary.currentReadingList) {
+    // 삭제한 독후감과 다른 도서만 타이머 선택 목록에 유지한다
+    if (readingBook.reptNumb !== reptNumb) {
+      // 유지 대상 도서를 새 목록에 추가한다
+      currentReadingList.push(readingBook);
+    }
+  }
+
+  // 기존 실행 세션을 삭제 결과에 맞게 보정할 값으로 사용한다
+  let activeTimer = summary.activeTimer;
+
+  // 삭제한 독후감에 연결된 실행 세션이면 캐시에서도 도서 연결 표시를 비운다
+  if (activeTimer?.reptNumb === reptNumb) {
+    // 외래키의 삭제 시 연결 해제 결과를 서버 재조회 전에 먼저 반영한다
+    activeTimer = {
+      ...activeTimer,
+      reptNumb: undefined,
+      bookTitl: undefined,
+      bookCvim: undefined,
+    };
+  }
+
+  // 삭제 결과가 즉시 반영된 현재 도서 목록과 실행 세션을 반환한다
+  return {
+    ...summary,
+    activeTimer,
+    currentReadingList,
+  };
+};
 
 /**
  * use Delete Mutation 상태와 처리 함수를 제공한다
@@ -26,10 +72,27 @@ export const useDeleteMutation = () => {
    * 독후감 삭제 성공 즉시 홈 루트로 이동한 뒤 완료 결과를 안내한다
    *
    * @author SeungHyeon.Kang
+   * @param _response 검증이 끝난 독후감 삭제 응답
+   * @param reptNumb 삭제한 독후감 번호
    * @return 반환값이 없다
    */
-  const handleDeleteSuccess = (): void => {
+  const handleDeleteSuccess = (_response: unknown, reptNumb: number): void => {
 
+    // 삭제 전 타이머 요약 캐시가 있으면 화면 이동 전에 즉시 정리한다
+    const timerSummary = queryClient.getQueryData<ReadingTimerSummary>(queryKeys.readingTimerSummary);
+
+    // 캐시된 목록이 있을 때 삭제한 도서가 다시 표시되지 않도록 갱신한다
+    if (timerSummary) {
+      // 삭제한 독후감의 도서 연결을 타이머 요약에서 제거한다
+      const nextTimerSummary = removeDeletedTimerBook(timerSummary, reptNumb);
+      // 홈 플레이어와 타이머 화면이 함께 사용하는 요약 캐시에 삭제 결과를 반영한다
+      queryClient.setQueryData(queryKeys.readingTimerSummary, nextTimerSummary);
+    }
+
+    // 서버의 외래키 정리 결과까지 반영하도록 다음 사용 시 타이머 요약을 다시 조회한다
+    void queryClient.invalidateQueries({ queryKey: queryKeys.readingTimerSummary });
+    // 삭제한 독후감으로 집계된 도서별 누적 독서시간 페이지가 다시 표시되지 않도록 캐시를 제거한다
+    queryClient.removeQueries({ queryKey: queryKeys.readingTimerBookTimes });
     // 삭제한 독후감 상세 화면이 남지 않도록 성공 응답 즉시 홈 루트로 이동한다
     moveHome();
     // "삭제되었습니다."

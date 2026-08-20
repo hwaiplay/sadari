@@ -7,11 +7,20 @@ import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
+import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import { SearchBookButtonContent } from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
+import {
+  READING_TIMER_MODAL_OPEN,
+  READING_TIMER_MODAL_PARAM,
+  READING_TIMER_REPORT_PARAM,
+  READING_TIMER_SEARCH_SOURCE,
+  type ReadingTimerPageState,
+  type SearchBookPageState,
+} from "@/features/Book/Search/lib/bookSearchNavigation";
 import {
   setReadingTimerApi,
   uptReadingTimerApi,
@@ -36,7 +45,7 @@ import {
   type MouseEvent as ReactMouseEvent,
 } from "react";
 import { createPortal } from "react-dom";
-import { Link } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import * as styles from "./ReadingTimerPage.css";
 
 const DAY_MESSAGE_KEYS = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
@@ -213,6 +222,7 @@ type ReadingBookModalProps = {
   books: ReadingTimer[];
   selectedReport: string;
   onSelect: (reportNumber: string) => void;
+  onAddBook: () => void;
   onClose: () => void;
 };
 
@@ -223,10 +233,17 @@ type ReadingBookModalProps = {
  * @param books 현재 읽고 있는 도서 목록
  * @param selectedReport 현재 선택된 독후감 번호
  * @param onSelect 도서 선택 시 실행할 함수
+ * @param onAddBook 도서 검색 화면으로 이동할 때 실행할 함수
  * @param onClose 모달 닫기 시 실행할 함수
  * @return 타이머 도서 선택 모달
  */
-function ReadingBookModal({ books, selectedReport, onSelect, onClose }: ReadingBookModalProps) {
+function ReadingBookModal({
+  books,
+  selectedReport,
+  onSelect,
+  onAddBook,
+  onClose,
+}: ReadingBookModalProps) {
 
   // 모달 안에서 고른 도서를 선택 버튼으로 확정하기 전까지 임시로 보관한다
   const [pendingReport, setPendingReport] = useState(selectedReport);
@@ -402,22 +419,41 @@ function ReadingBookModal({ books, selectedReport, onSelect, onClose }: ReadingB
             </p>
           </div>
           <button
-            className={styles.modalClose}
+            className={modalControlStyles.roundClose}
             type="button"
-            aria-label={message("frontend.timer.book.modal.close")}
+            aria-label={/* "도서 선택 닫기" */ message("frontend.timer.book.modal.close")}
             onClick={onClose}
           >
-            <img src="/img/icons/icon-close.svg" alt="" aria-hidden="true" />
+            ×
           </button>
         </header>
         {/* 현재 읽는 도서 선택 목록 영역 */}
         <div className={styles.modalBody}>
-          {books.length ? books.map(renderBookOption) : (
-            <p className={styles.modalEmpty}>
-              {/* "현재 읽고 있는 도서가 없습니다." */}
-              {message("frontend.timer.book.modal.empty")}
-            </p>
-          )}
+          <div className={styles.modalBookList}>
+            {books.length ? books.map(renderBookOption) : (
+              <div className={styles.modalEmpty}>
+                <p className={styles.modalEmptyText}>
+                  {/* "현재 읽고 있는 도서가 없습니다." */}
+                  {message("frontend.timer.book.modal.empty")}
+                </p>
+              </div>
+            )}
+          </div>
+          <button
+            className={styles.modalSearchButton}
+            type="button"
+            onClick={onAddBook}
+          >
+            {/* "도서 검색하기" */}
+            <span>{message("frontend.timer.book.modal.search")}</span>
+            <svg
+              className={styles.modalSearchIcon}
+              viewBox="0 0 24 24"
+              aria-hidden="true"
+            >
+              <path d="M9 6l6 6-6 6" />
+            </svg>
+          </button>
         </div>
         {/* 도서 연결 해제와 선택 확정 버튼 영역 */}
         <footer className={styles.modalFooter}>
@@ -692,7 +728,7 @@ function TimerSettingModal({ targetSeconds, maxSeconds, onSave, onClose }: Timer
           </div>
           {/* "타이머 설정 닫기" */}
           <button
-            className={styles.timerSettingClose}
+            className={modalControlStyles.roundClose}
             type="button"
             aria-label={message("frontend.timer.setting.close")}
             onClick={onClose}
@@ -1052,13 +1088,26 @@ function TimerReadingHeatmap(props: TimerReadingHeatmapProps) {
  */
 export default function ReadingTimerPage() {
 
+  const location = useLocation();
+  const navigate = useNavigate();
   const bookTimeQuery = useBookTimeQuery();
+  const timerPageState = (location.state ?? {}) as ReadingTimerPageState;
+  // PWA History State가 유실된 복귀도 처리하도록 현재 URL의 일회성 모달 정보를 조회한다.
+  const timerReturnParams = new URLSearchParams(location.search);
+  const querySelectedReport = timerReturnParams.get(READING_TIMER_REPORT_PARAM) ?? "";
+  // URL로 전달된 독후감 번호는 양의 정수 형식일 때만 현재 도서 선택에 사용한다.
+  const validQueryReport = /^\d+$/.test(querySelectedReport)
+    ? querySelectedReport
+    : "";
+  const returnedSelectedReport = timerPageState.selectedReport ?? validQueryReport;
+  const shouldReopenBookModal = timerPageState.reopenBookModal === true
+    || timerReturnParams.get(READING_TIMER_MODAL_PARAM) === READING_TIMER_MODAL_OPEN;
   const [summary, setSummary] = useState<ReadingTimerSummary>();
-  const [selectedReport, setSelectedReport] = useState("");
+  const [selectedReport, setSelectedReport] = useState(returnedSelectedReport);
   const [displaySeconds, setDisplaySeconds] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [isChanging, setIsChanging] = useState(false);
-  const [isBookModalOpen, setIsBookModalOpen] = useState(false);
+  const [isBookModalOpen, setIsBookModalOpen] = useState(shouldReopenBookModal);
   const [isTimerSettingModalOpen, setIsTimerSettingModalOpen] = useState(false);
   const [targetSeconds, setTargetSeconds] = useState<number>();
   const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
@@ -1073,6 +1122,39 @@ export default function ReadingTimerPage() {
   const isTimerWithoutBook = Boolean(activeTimer && !activeTimer.bookTitl);
   // 목표시간 설정과 현재 세션 상태를 반영한 타이머 표시 초를 계산한다
   const timerClockSeconds = getTimerClockSecs(displaySeconds, activeTimer, targetSeconds);
+
+  /**
+   * 검색 화면에서 전달한 신규 도서 선택 상태로 현재 읽는 도서 모달을 다시 연다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const reopenReturnedBookModal = useCallback((): void => {
+
+    // 도서 모달 재실행 상태가 없는 일반 타이머 진입은 변경하지 않는다.
+    if (!shouldReopenBookModal) {
+      // 다시 열 도서 모달이 없으므로 처리를 종료한다.
+      return;
+    }
+
+    // 도서 검색에서 신규 등록한 독후감을 현재 선택 도서로 반영한다.
+    setSelectedReport(returnedSelectedReport);
+    // 타이머 화면이 기존 컴포넌트를 재사용해도 현재 읽는 도서 모달을 명시적으로 연다.
+    setIsBookModalOpen(true);
+    const currentHistoryState = window.history.state;
+    const clearedHistoryState = typeof currentHistoryState === "object" && currentHistoryState !== null
+      ? { ...currentHistoryState, usr: null }
+      : currentHistoryState;
+    // 공통 레이아웃의 location.key 재마운트를 일으키지 않고 일회성 복귀 정보만 현재 주소에서 제거한다.
+    window.history.replaceState(clearedHistoryState, "", location.pathname);
+  }, [
+    location.pathname,
+    returnedSelectedReport,
+    shouldReopenBookModal,
+  ]);
+
+  // 도서 검색에서 돌아온 한 번의 신규 도서 선택 상태를 화면에 반영하고 소비한다.
+  useEffect(reopenReturnedBookModal, [reopenReturnedBookModal]);
 
   /**
    * API 응답을 화면 상태와 카운터에 함께 반영한다
@@ -1242,6 +1324,21 @@ export default function ReadingTimerPage() {
 
     // 타이머 화면으로 돌아가도록 도서 선택 모달을 숨긴다
     setIsBookModalOpen(false);
+  };
+
+  /**
+   * 현재 읽는 도서를 추가할 수 있도록 타이머 진입 상태와 함께 공용 도서 검색 화면을 연다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const openBookSearch = (): void => {
+
+    const searchState: SearchBookPageState = {
+      entrySource: READING_TIMER_SEARCH_SOURCE,
+    };
+    // 선택 결과를 타이머 전용 목표기간 등록 흐름으로 처리하도록 진입 출처를 전달한다.
+    navigate("/book/search", { state: searchState });
   };
 
   /**
@@ -1469,7 +1566,7 @@ export default function ReadingTimerPage() {
                 >
                   {targetSeconds ? (
                     <>
-                      {/* "타이머 {0}" */}
+                      {/* "{0}" */}
                       {message("frontend.timer.setting.buttonValue", [formatTimerSetting(targetSeconds)])}
                     </>
                   ) : (
@@ -1580,6 +1677,7 @@ export default function ReadingTimerPage() {
           books={summary?.currentReadingList ?? []}
           selectedReport={selectedReport}
           onSelect={selectBook}
+          onAddBook={openBookSearch}
           onClose={closeBookModal}
         />
       )}

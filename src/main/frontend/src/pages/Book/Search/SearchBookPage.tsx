@@ -6,6 +6,7 @@ import CustomSelect, {
 } from "@/components/Select/CustomSelect";
 import BookRatingSummary from "@/features/Book/components/BookRatingSummary/BookRatingSummary";
 import { PopularKeywordSlider } from "@/features/Book/Search/components/PopularKeywordSlider";
+import TimerReadingPeriodModal from "@/features/Book/Search/components/TimerReadingPeriodModal";
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
@@ -58,10 +59,15 @@ const SearchBookPage = () => {
     isLoadingMore,
     isPopularMode,
     isSearching,
+    isTimerBookSearch,
+    isTimerReportSaving,
     popularPeriod,
     popularKeywordList,
     searchKeyword,
     selectingBookIsbn,
+    timerPeriodBook,
+    closeTimerPeriod,
+    saveTimerReport,
     setSearchKeyword,
   } = useSearchBookPage();
 
@@ -280,6 +286,15 @@ const SearchBookPage = () => {
             </p>
           ))}
       </Container>
+
+      {/* 타이머에서 선택한 도서의 읽는 중 독후감 목표기간 입력 모달 */}
+      {isTimerBookSearch && timerPeriodBook ? (
+        <TimerReadingPeriodModal
+          isSaving={isTimerReportSaving}
+          onClose={closeTimerPeriod}
+          onConfirm={saveTimerReport}
+        />
+      ) : null}
     </main>
   );
 };

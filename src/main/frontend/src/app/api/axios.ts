@@ -4,7 +4,7 @@
  * @author HanWon.Jang
  */
 // src/api/axios.ts
-import axios, { AxiosError, type InternalAxiosRequestConfig } from "axios";
+import axios, { AxiosError, type AxiosRequestConfig, type InternalAxiosRequestConfig } from "axios";
 import { useAuthStore } from "@/features/Auth/store/authStore";
 import { queryClient } from "@/app/query/queryClient";
 import { sessionQueryKeys } from "@/app/query/queryKeys";
@@ -19,6 +19,11 @@ type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
   _csrfRetry?: boolean;
   _blockingOperationId?: number;
+  skipBlockingOperation?: boolean;
+};
+
+export type SadariRequestConfig = AxiosRequestConfig & {
+  skipBlockingOperation?: boolean;
 };
 
 const API_TIMEOUT_MILLISECONDS = 60_000;
@@ -96,10 +101,12 @@ function isNonSavingPostEndpoint(url?: string): boolean {
  * @return 처리 중 모달과 화면 이동 차단이 필요한 요청 여부
  */
 function isBlockingRequest(config: InternalAxiosRequestConfig): boolean {
+  const requestConfig = config as RetryableRequestConfig;
   // 조회 요청과 인증 유지 요청 및 조회성 POST는 사용자 저장 작업에서 제외한다
   return isCsrfProtectedMethod(config.method)
     && !isAuthEndpoint(config.url)
-    && !isNonSavingPostEndpoint(config.url);
+    && !isNonSavingPostEndpoint(config.url)
+    && requestConfig.skipBlockingOperation !== true;
 }
 
 /**

@@ -15,6 +15,10 @@ import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import { formatCompactDate } from "@/app/utils/dateUtil";
 import { moveToReportEntry } from "@/features/Book/utils/reportEntry";
 import {
+  READING_TIMER_SEARCH_SOURCE,
+  type SearchBookPageState,
+} from "@/features/Book/Search/lib/bookSearchNavigation";
+import {
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
@@ -34,7 +38,13 @@ function SearchBookInfoPage() {
   const isClubBookSearch = clubNumbParam !== undefined;
   const clubNumb = Number(clubNumbParam);
   const hasValidClubNumb = Number.isSafeInteger(clubNumb) && clubNumb > 0;
-  const book = location.state?.book as BookSearchResultType | undefined;
+  const pageState = (location.state ?? {}) as SearchBookPageState & {
+    book?: BookSearchResultType;
+  };
+  const book = pageState.book;
+  const isTimerBookSearch =
+    !isClubBookSearch &&
+    pageState.entrySource === READING_TIMER_SEARCH_SOURCE;
   const [isSelectingBook, setIsSelectingBook] = useState(false);
   const { data: ratingAverageData } = useBookRatingAvg(
     book?.isbn ?? "",
@@ -99,6 +109,19 @@ function SearchBookInfoPage() {
     // 기존 독후감 확인이 진행 중이면 중복 화면 이동을 차단한다
     if (isSelectingBook) {
       // 진행 중인 독후감 선택 요청을 유지한다
+      return;
+    }
+
+    // 타이머 진입 흐름은 선택 도서를 공용 검색 화면의 목표기간 모달로 전달한다.
+    if (isTimerBookSearch) {
+      const searchState: SearchBookPageState = {
+        entrySource: READING_TIMER_SEARCH_SOURCE,
+        keepSearchResult: true,
+        timerBook: selectedBook,
+      };
+      // 상세 화면을 검색 화면으로 교체하고 선택 직후 목표 독서기간 모달을 연다.
+      navigate("/book/search", { replace: true, state: searchState });
+      // 일반 독후감 확인과 등록 화면 이동을 실행하지 않는다.
       return;
     }
 
