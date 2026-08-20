@@ -12,9 +12,7 @@
 import { ActionButton } from "@/components/Button/ActionButton";
 import Loading from "@/components/Loading/Loading";
 import BookSummary from "@/features/Book/Set/components/form/bookSummary/BookSummary";
-import CalendarDatePicker from "@/features/Book/Set/components/form/datePicker/CalendarDatePicker";
-import FormField from "@/features/Book/Set/components/form/field/FormField";
-import * as statsStyles from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor.css";
+import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor";
 import { useSetClubReadingPage } from "@/features/ReadingClub/hooks/useSetClubReadingPage";
 import * as reportStyles from "@/pages/Book/Set/SetReportPage.css";
 import { clsx } from "clsx";
@@ -47,10 +45,13 @@ function SetClubReadingPage() {
 
   return (
     <main
-      className={clsx(reportStyles.page, styles.pageTop)}
+      className={reportStyles.page}
       style={pageStyle}
     >
-      <form className={reportStyles.form} onSubmit={handleFormSubmit}>
+      <form
+        className={clsx(reportStyles.form, styles.formTop)}
+        onSubmit={handleFormSubmit}
+      >
         {selectedBook ? (
           <BookSummary
             image={selectedBook.image}
@@ -68,18 +69,20 @@ function SetClubReadingPage() {
 
         {selectedBook ? (
           <div className={reportStyles.contentPanel}>
-            <section className={clsx(statsStyles.statsSection, styles.periodSection)}>
-              <FormField title="목표 독서 기간">
-                <CalendarDatePicker
-                  name="goalStdt"
-                  value={startDate}
-                  endName="goalEndt"
-                  endValue={endDate}
-                  allowFuture
-                  onRangeChange={handleRangeChange}
-                />
-              </FormField>
-            </section>
+            <ReportStatsEditor
+              periodOnly
+              statusCodes={[]}
+              status="READ"
+              grade={0}
+              pubcYsno="N"
+              startDate={startDate}
+              endDate={endDate}
+              periodTitle="목표 독서 기간"
+              onStatusChange={() => undefined}
+              onGradeChange={() => undefined}
+              onPublicChange={() => undefined}
+              onRangeChange={handleRangeChange}
+            />
 
             <div className={reportStyles.formActions}>
               <ActionButton variant="secondary" onClick={handleCancel}>

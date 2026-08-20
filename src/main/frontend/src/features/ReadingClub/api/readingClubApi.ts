@@ -29,6 +29,11 @@ export type ReadingClub = {
   currentBookTitl?: string;
   currentBookAthr?: string;
   currentBookCvim?: string;
+  currentGoalStdt?: string;
+  currentGoalEndt?: string;
+  currentReportStat?: "READ" | "DONE" | "STOP";
+  currentGoalAchvCnt?: number;
+  currentGoalMembCnt?: number;
   categoryList?: ClubCategory[];
   questionList?: string[];
   regiDate?: string;
