@@ -66,7 +66,7 @@ export const noticeLink = style({
   padding: "0 8px 0 0",
   display: "flex",
   alignItems: "center",
-  gap: "4px",
+  gap: "2px",
   borderRadius: "6px",
   backgroundColor: "transparent",
   color: vars.color.black,
@@ -136,14 +136,8 @@ export const multipleMarqueeTrack = style({
   },
 });
 
-export const noticeContent = style({
-  flex: "none",
-  display: "flex",
-  alignItems: "center",
-  gap: "4px",
-});
-
 export const noticeTitle = style({
+  flex: "none",
   display: "block",
   whiteSpace: "nowrap",
 });
