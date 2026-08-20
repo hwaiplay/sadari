@@ -40,7 +40,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
- * 2026-08-20        SeungHyeon.Kang    내 모임 카테고리 결합 검증 추가
+ * 2026-08-20        Hanwon.Jang        내 모임 카테고리·현재 독서 수정 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -203,6 +203,134 @@ class ReadingClubServiceImplTest {
     }
 
     /**
+     * 기존 도서를 유지한 기간 수정은 연결 독후감 작성 여부와 관계없이 함께 반영하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptReadingUpdatesPeriodWithSameBook() {
+
+        // 활성 모임장과 현재 회차 및 같은 ISBN의 수정 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
+        reading.setBookNumb(99L);
+        reading.setBookIsbn("9781234567890");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9781234567890");
+
+        // 모임장 접근과 현재 회차 잠금 및 수정 성공 결과를 설정한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingForUpdate(10L, 1L)).thenReturn(reading);
+        when(readingClubMapper.getReadingReportNumbListForUpdate(10L, 1L)).thenReturn(List.of(120L));
+        when(readingClubMapper.uptReading(10L, 1L, request)).thenReturn(1);
+
+        // 같은 도서의 목표 기간 수정을 실행한다
+        ResultData result = readingClubService.uptReading(20L, 10L, 1L, request);
+
+        // 성공 응답과 기존 도서 번호 및 연결 독후감 기간 동기화를 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(Map.of("rondNumb", 1L), result.getData());
+        assertEquals(99L, request.getBookNumb());
+        verify(readingClubMapper, never()).getWrittenReadingReportCnt(10L, 1L);
+        verify(readingClubMapper).uptReadingReportList(10L, 1L, request);
+        verify(bookMapper, never()).dupBook(any());
+    }
+
+    /**
+     * 작성된 연결 독후감이 하나라도 있으면 다른 도서로 변경하지 않는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptReadingRejectsBookChangeAfterReportWritten() {
+
+        // 활성 모임장과 현재 도서 및 다른 ISBN의 수정 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
+        reading.setBookNumb(99L);
+        reading.setBookIsbn("9781234567890");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9780987654321");
+
+        // 연결 독후감 잠금 뒤 작성된 독후감 한 건이 조회되도록 설정한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingForUpdate(10L, 1L)).thenReturn(reading);
+        when(readingClubMapper.getReadingReportNumbListForUpdate(10L, 1L)).thenReturn(List.of(120L));
+        when(readingClubMapper.getWrittenReadingReportCnt(10L, 1L)).thenReturn(1);
+
+        // 작성된 독후감이 있는 회차의 도서 변경을 요청한다
+        ResultData result = readingClubService.uptReading(20L, 10L, 1L, request);
+
+        // 정책 전용 실패 응답과 모든 변경 Mapper 미호출을 검증한다
+        assertEquals(ResultEnum.READING_CLUB_BOOK_CHANGE_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).uptReading(any(), any(), any());
+        verify(readingClubMapper, never()).uptReadingReportList(any(), any(), any());
+        verify(bookMapper, never()).dupBook(any());
+    }
+
+    /**
+     * 작성된 독후감이 없으면 다른 도서와 기간을 회차 및 연결 독후감에 반영하는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptReadingChangesBookBeforeReportWritten() {
+
+        // 활성 모임장과 현재 도서 및 다른 ISBN의 수정 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
+        reading.setBookNumb(99L);
+        reading.setBookIsbn("9781234567890");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9780987654321");
+
+        // 작성된 독후감이 없고 변경 도서가 도서 마스터에 존재하도록 설정한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingForUpdate(10L, 1L)).thenReturn(reading);
+        when(readingClubMapper.getReadingReportNumbListForUpdate(10L, 1L)).thenReturn(List.of(120L));
+        when(readingClubMapper.getWrittenReadingReportCnt(10L, 1L)).thenReturn(0);
+        when(bookMapper.dupBook(request)).thenReturn(1);
+        when(bookMapper.getBookNumbByIsbn("9780987654321")).thenReturn(100L);
+        when(readingClubMapper.uptReading(10L, 1L, request)).thenReturn(1);
+
+        // 현재 회차의 도서와 목표 기간 수정을 실행한다
+        ResultData result = readingClubService.uptReading(20L, 10L, 1L, request);
+
+        // 새 도서 번호와 회차 및 연결 독후감 동기화 성공을 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(100L, request.getBookNumb());
+        verify(readingClubMapper).uptReading(10L, 1L, request);
+        verify(readingClubMapper).uptReadingReportList(10L, 1L, request);
+    }
+
+    /**
+     * 비활성 계정의 모임장은 현재 독서 수정에 접근할 수 없는지 검증한다.
+     *
+     * @author Hanwon.Jang
+     */
+    @Test
+    void uptReadingRejectsInactiveOwnerAccount() {
+
+        // 운영 중인 모임과 유효한 수정 요청을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9781234567890");
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(0);
+
+        // 비활성 계정의 모임 독서 수정을 요청한다
+        ResultData result = readingClubService.uptReading(20L, 10L, 1L, request);
+
+        // 접근 거부 응답과 회차 조회 및 수정 미실행을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getReadingForUpdate(any(), any());
+        verify(readingClubMapper, never()).uptReading(any(), any(), any());
+    }
+
+    /**
      * 모임 독서 등록 테스트에 사용할 선택 도서와 목표 기간을 구성한다.
      *
      * @author Hanwon.Jang
@@ -223,6 +351,30 @@ class ReadingClubServiceImplTest {
         request.setGoalEndt("2026-08-31");
         request.setIdemKeyx("reading-request-1");
         // 테스트용 등록 요청을 반환한다
+        return request;
+    }
+
+    /**
+     * 현재 독서 수정 테스트에 사용할 도서와 목표 기간을 구성한다.
+     *
+     * @author Hanwon.Jang
+     * @param bookIsbn 수정 요청에 사용할 ISBN
+     * @return 유효한 현재 독서 수정 요청
+     */
+    private ReadingClubDto.ReadingUpdateReqDto createReadingUpdateRequest(String bookIsbn) {
+
+        // 외부 도서 검색 결과와 변경할 목표 기간을 설정한다
+        ReadingClubDto.ReadingUpdateReqDto request = new ReadingClubDto.ReadingUpdateReqDto();
+        request.setBookTitl("수정 테스트 도서");
+        request.setBookAthr("테스트 저자");
+        request.setBookPubl("테스트 출판사");
+        request.setBookIsbn(bookIsbn);
+        request.setBookCvim("https://example.com/updated-book.jpg");
+        request.setBookDesc("수정 테스트 도서 소개");
+        request.setPublDate("2026-08-01");
+        request.setGoalStdt("2026-08-20");
+        request.setGoalEndt("2026-09-10");
+        // 테스트용 수정 요청을 반환한다
         return request;
     }
 

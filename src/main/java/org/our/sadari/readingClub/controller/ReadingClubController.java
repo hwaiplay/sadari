@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임원·수정·독서 API 추가
+ * 2026-08-20        Hanwon.Jang        현재 독서 수정 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -48,13 +49,32 @@ public class ReadingClubController {
      * @param request 선택 도서와 목표 독서 기간
      * @return 생성된 회차 번호
      */
-    @PostMapping("/{clubNumb}/readings")
+    @PostMapping("/{clubNumb}/setBook")
     @Operation(summary = "모임 독서 등록")
     public ResultData setReading(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @PathVariable Long clubNumb
                                 , @Valid @RequestBody ReadingClubDto.ReadingCreateReqDto request) {
         // 회차와 활성 멤버별 독후감을 같은 트랜잭션으로 생성한 결과를 반환한다
         return readingClubService.setReading(userNumb, clubNumb, request);
+    }
+
+    /**
+     * 현재 모임 독서의 도서와 목표 기간을 수정한다.
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 수정을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 수정할 회차 번호
+     * @param request 수정할 도서와 목표 기간
+     * @return 수정된 회차 번호
+     */
+    @PutMapping("/{clubNumb}/{rondNumb}/updateClub")
+    @Operation(summary = "현재 모임 독서 수정")
+    public ResultData uptReading(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                , @PathVariable Long clubNumb, @PathVariable Long rondNumb
+                                , @Valid @RequestBody ReadingClubDto.ReadingUpdateReqDto request) {
+        // 모임장 권한과 연결 독후감 작성 여부를 적용한 수정 결과를 반환한다
+        return readingClubService.uptReading(userNumb, clubNumb, rondNumb, request);
     }
 
     /**

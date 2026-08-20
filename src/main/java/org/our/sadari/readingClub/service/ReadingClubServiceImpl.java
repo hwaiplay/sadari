@@ -35,6 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
+ * 2026-08-20        Hanwon.Jang        현재 독서 수정 처리 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -179,6 +180,85 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 생성된 회차 번호를 등록 완료 결과로 반환한다
         return ResultData.success(Map.of("rondNumb", request.getRondNumb()));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author Hanwon.Jang
+     * @param userNumb 수정을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 수정할 회차 번호
+     * @param request 수정할 도서와 목표 기간
+     * @return 수정된 회차 번호
+     */
+    @Override
+    @Transactional
+    public ResultData uptReading(Long userNumb, Long clubNumb, Long rondNumb
+                                , ReadingClubDto.ReadingUpdateReqDto request) {
+
+        // 모임과 회차 및 수정 요청의 필수 참조값이 없으면 변경을 시작하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb, request)
+                || !isValidReadingUpdateRequest(request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 계정 상태와 모임장 관계를 같은 잠금 범위에서 검증하기 위해 모임 행을 먼저 잠근다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        if (StringUtil.isEmpty(club) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || readingClubMapper.getActiveOwnerCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 완료되지 않은 수정 대상 회차를 잠가 동시 독후감 작성과 도서 변경을 직렬화한다
+        ReadingClubDto.ReadingManageDto reading = readingClubMapper.getReadingForUpdate(clubNumb, rondNumb);
+        if (StringUtil.isEmpty(reading)) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        // 작성 여부 검사와 연결 정보 변경이 끝날 때까지 현재 회차의 독후감 행을 잠근다
+        readingClubMapper.getReadingReportNumbListForUpdate(clubNumb, rondNumb);
+
+        // ISBN이 달라진 경우에만 연결 독후감 작성 여부에 따른 도서 변경 정책을 적용한다
+        boolean bookChanged = !request.getBookIsbn().equals(reading.getBookIsbn());
+        if (bookChanged && readingClubMapper.getWrittenReadingReportCnt(clubNumb, rondNumb) > 0) {
+            // "작성된 독후감이 있어 도서를 변경할 수 없어요."
+            return ResultData.fail(ResultEnum.READING_CLUB_BOOK_CHANGE_REJECTED);
+        }
+
+        // 기존 도서를 유지하면 도서 마스터를 다시 조회하거나 생성하지 않는다
+        if (!bookChanged) {
+            request.setBookNumb(reading.getBookNumb());
+        } else if (bookMapper.dupBook(request) == 0) {
+            // 변경할 도서가 공용 도서 마스터에 없으면 새 도서를 먼저 등록한다
+            int savedBookCnt = bookMapper.setBook(request);
+            if (savedBookCnt != 1 || StringUtil.isEmpty(request.getBookNumb())) {
+                // 도서 등록 실패는 회차와 독후감이 일부 변경되지 않도록 전체 작업을 롤백한다
+                throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+        } else {
+            // 이미 존재하는 ISBN의 도서 번호를 수정 대상 회차에 연결한다
+            request.setBookNumb(bookMapper.getBookNumbByIsbn(request.getBookIsbn()));
+        }
+
+        // 유효한 도서 번호가 없으면 회차와 독후감의 기존 연결을 유지한다
+        if (StringUtil.isEmpty(request.getBookNumb())) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 회차와 모든 연결 독후감의 도서 및 목표 기간을 같은 트랜잭션으로 변경한다
+        if (readingClubMapper.uptReading(clubNumb, rondNumb, request) != 1) {
+            // 회차 수정 실패는 연결 독후감까지 변경되지 않도록 전체 작업을 롤백한다
+            throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+        readingClubMapper.uptReadingReportList(clubNumb, rondNumb, request);
+
+        // 수정 완료한 현재 회차 번호를 반환한다
+        return ResultData.success(Map.of("rondNumb", rondNumb));
     }
 
     /**
@@ -1100,6 +1180,46 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return !startDate.isAfter(endDate);
         } catch (DateTimeParseException exception) {
             // 형식이 맞지 않는 날짜는 저장 요청에서 제외한다
+            return false;
+        }
+    }
+
+    /**
+     * 모임 독서 수정 요청의 도서 필드와 목표 기간을 정규화하고 검증한다.
+     *
+     * @author Hanwon.Jang
+     * @param request 검증할 모임 독서 수정 요청
+     * @return 수정 가능한 요청이면 true
+     */
+    private boolean isValidReadingUpdateRequest(ReadingClubDto.ReadingUpdateReqDto request) {
+
+        // 외부 도서 검색 결과와 기간을 서버 저장 규격에 맞춰 정규화한다
+        request.setBookTitl(StringUtil.normalizePlainText(request.getBookTitl(), 500));
+        request.setBookAthr(StringUtil.normalizePlainText(request.getBookAthr(), 500));
+        request.setBookPubl(StringUtil.normalizePlainText(request.getBookPubl(), 500));
+        request.setBookIsbn(StringUtil.normalizePlainText(request.getBookIsbn(), 100));
+        request.setBookCvim(StringUtil.normalizePlainText(request.getBookCvim(), 1000));
+        request.setBookDesc(StringUtil.normalizePlainText(request.getBookDesc(), 4000));
+        request.setPublDate(StringUtil.normalizePlainText(request.getPublDate(), 10));
+        request.setGoalStdt(StringUtil.normalizePlainText(request.getGoalStdt(), 10));
+        request.setGoalEndt(StringUtil.normalizePlainText(request.getGoalEndt(), 10));
+
+        // 도서 연결과 목표 기간 수정에 필요한 필수값을 모두 요구한다
+        if (StringUtil.hasEmpty(request.getBookTitl(), request.getBookAthr(), request.getBookPubl()
+                              , request.getBookIsbn(), request.getBookCvim(), request.getBookDesc()
+                              , request.getGoalStdt(), request.getGoalEndt())) {
+            // 필수값 누락을 검증 실패로 반환한다
+            return false;
+        }
+
+        try {
+            // ISO 날짜만 허용하고 시작일이 종료일보다 늦지 않은지 확인한다
+            LocalDate startDate = LocalDate.parse(request.getGoalStdt());
+            LocalDate endDate = LocalDate.parse(request.getGoalEndt());
+            // 날짜 범위 검증 결과를 반환한다
+            return !startDate.isAfter(endDate);
+        } catch (DateTimeParseException exception) {
+            // 형식이 맞지 않는 날짜는 수정 요청에서 제외한다
             return false;
         }
     }

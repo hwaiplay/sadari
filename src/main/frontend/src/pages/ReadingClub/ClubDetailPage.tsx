@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { formatDashedDateToDot, getRemainDaysUntil } from "@/app/utils/dateUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
+import LinkButton from "@/components/Button/LinkButton/LinkButton";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
 import Skeleton from "@/components/Skeleton/Skeleton";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
@@ -175,7 +176,9 @@ export default function ClubDetailPage() {
           <>
             <section className={styles.section}>
               <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.currentReading")}</h2>
-              <div className={styles.currentReadingCard}>
+
+              <div>
+                <div className={styles.currentReadingCard}>
                 <div className={styles.readingCardHeader}>
                   <strong className={styles.readingOrder}>
                     {/* "{0}번째 독서" */}
@@ -251,6 +254,21 @@ export default function ClubDetailPage() {
                     <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
                   </div>
                 )}
+                </div>
+
+                {/* 현재 독서 관리는 활성 모임장에게만 제공한다 */}
+                {club.membRole === "OWNER" && hasCurrentReading ? (
+                  <LinkButton
+                    link={`/reading-clubs/${club.clubNumb}/${club.currentRondNumb}/edit`}
+                    className={styles.managementReadingBtn}
+                  >
+                    {message("frontend.readingClub.management.reading")}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  </LinkButton>
+                ) : null}
+
               </div>
             </section>
 

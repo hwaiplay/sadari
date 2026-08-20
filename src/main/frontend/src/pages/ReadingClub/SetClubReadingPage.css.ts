@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
+ * 2026-08-20        Hanwon.Jang        도서 변경 제한 안내 추가
  */
 
 import { vars } from "@/app/styles/tokens.css";
@@ -36,4 +37,14 @@ export const emptyText = style({
   fontSize: "14px",
   lineHeight: 1.5,
   textAlign: "center",
+});
+
+export const bookChangeNotice = style({
+  margin: "0 0 16px",
+  padding: "12px 14px",
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
+  color: vars.color.negativeText,
+  fontSize: "14px",
+  lineHeight: 1.5,
 });

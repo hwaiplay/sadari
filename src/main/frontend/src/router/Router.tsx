@@ -204,7 +204,8 @@ const Router = () => {
           <Route path="/reading-clubs/set" element={<SetClubPage />} />
           <Route path="/reading-clubs/:clubNumb/books/search" element={<BookSearchType />} />
           <Route path="/reading-clubs/:clubNumb/books/search/info" element={<SearchBookInfoPage />} />
-          <Route path="/reading-clubs/:clubNumb/readings/set" element={<SetClubReadingPage />} />
+          <Route path="/reading-clubs/:clubNumb/set" element={<SetClubReadingPage />} />
+          <Route path="/reading-clubs/:clubNumb/:rondNumb/edit" element={<SetClubReadingPage />} />
           <Route path="/reading-clubs/:clubNumb/edit" element={<EditClubPage />} />
           <Route path="/reading-clubs/:clubNumb/manage" element={<ClubManagementPage />} />
           <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
