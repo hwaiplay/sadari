@@ -1,5 +1,6 @@
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { clsx } from "clsx";
 import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./UserActionMenu.css";
@@ -17,6 +18,7 @@ const BLOCK_DESCRIPTIONS = [
 type UserActionMenuProps = {
   userNick: string;
   reportTarget: SafetyReportTarget;
+  triggerIconClassName?: string;
   onBlockConfirm?: () => void;
 };
 
@@ -62,6 +64,7 @@ export const confirmUserBlock = async (
 const UserActionMenu = ({
   userNick,
   reportTarget,
+  triggerIconClassName,
   onBlockConfirm,
 }: UserActionMenuProps) => {
   const navigate = useNavigate();
@@ -120,9 +123,9 @@ const UserActionMenu = ({
         onClick={handleToggleMenu}
       >
         <img
-          className={styles.triggerIcon}
+          className={clsx(styles.triggerIcon, triggerIconClassName)}
           src="/img/icons/icon-more.svg"
-          alt=""
+          alt="icon"
         />
       </button>
 
