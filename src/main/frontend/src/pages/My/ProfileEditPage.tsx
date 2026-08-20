@@ -2329,7 +2329,7 @@ function ProfileEditPage() {
                   aria-label={/* "닫기" */ message("frontend.common.close")}
                   onClick={() => void closeProfileModal("goal")}
                 >
-                  ×
+                  <img src={'/img/icons/icon-close.svg'} alt={"close"} width={"12px"}/>
                 </button>
               </div>
             </div>
@@ -2458,7 +2458,7 @@ function ProfileEditPage() {
                 disabled={isGoalSaving}
                 onClick={handleGoalSubmit}
               >
-                {/* "저장" */ message("frontend.profile.save")}
+                {/* "저장하기" */ message("frontend.common.save")}
               </ActionButton>
             </div>
           </section>

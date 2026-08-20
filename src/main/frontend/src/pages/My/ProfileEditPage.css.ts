@@ -807,7 +807,7 @@ export const monthlyCalendarRing = style({
   left: "7px",
   right: "7px",
   height: "2px",
-  backgroundColor: vars.color.black,
+  backgroundColor: vars.color.gray900,
   selectors: {
     "&::before": {
       content: "",
@@ -817,7 +817,7 @@ export const monthlyCalendarRing = style({
       width: "3px",
       height: "7px",
       borderRadius: "999px",
-      backgroundColor: vars.color.black,
+      backgroundColor: vars.color.gray900,
     },
     "&::after": {
       content: "",
@@ -827,7 +827,7 @@ export const monthlyCalendarRing = style({
       width: "3px",
       height: "7px",
       borderRadius: "999px",
-      backgroundColor: vars.color.black,
+      backgroundColor: vars.color.gray900,
     },
   },
 });
@@ -837,7 +837,7 @@ export const monthlyCalendarMonth = style({
   fontFamily: vars.font.heading,
   fontSize: "11px",
   lineHeight: 1,
-  color: vars.color.black,
+  color: vars.color.gray900,
 });
 
 export const monthlySummaryText = style({
@@ -1050,7 +1050,7 @@ export const goalModal = style({
   width: "min(600px, 100%)",
   maxHeight: "calc(100dvh - 48px)",
   overflowY: "auto",
-  borderRadius: "18px",
+  borderRadius: "22px",
   backgroundColor: "#ffffff",
   padding: "20px",
   boxShadow: "0 22px 58px rgba(0, 0, 0, 0.24)",
@@ -1390,19 +1390,19 @@ export const goalStepper = style({
   minHeight: "104px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "10px",
-  backgroundColor: "#fafafa",
+  backgroundColor: "#fff",
   overflow: "hidden",
   display: "grid",
   gridTemplateRows: "32px 40px 32px",
   gridTemplateColumns: "1fr",
   alignItems: "stretch",
   transition: "border-color 160ms ease, background-color 160ms ease",
-  selectors: {
-    "&:focus-within": {
-      borderColor: vars.color.black,
-      backgroundColor: "#ffffff",
-    },
-  },
+  // selectors: {
+  //   "&:focus-within": {
+  //     borderColor: vars.color.black,
+  //     backgroundColor: "#ffffff",
+  //   },
+  // },
 });
 
 export const goalStepperButton = style({
