@@ -104,7 +104,8 @@ export default function ClubDetailPage() {
     ? `${formattedGoalStartDate} ~ ${formattedGoalEndDate.slice(5)}`
     : `${formattedGoalStartDate} ~ ${formattedGoalEndDate}`;
   const remainingDays = Math.max(0, getRemainDaysUntil(goalEndDate));
-  const goalMemberCount = Math.max(0, club.currentGoalMembCnt ?? 0);
+  // 현재 회차에는 모임장이 반드시 참여하므로 빈 집계도 한 명으로 표시한다
+  const goalMemberCount = Math.max(1, club.currentGoalMembCnt ?? 0);
   const goalAchievementCount = Math.min(
     goalMemberCount,
     Math.max(0, club.currentGoalAchvCnt ?? 0),
@@ -393,8 +394,13 @@ export default function ClubDetailPage() {
               {message("frontend.readingClub.detail.managementClub")}
             </ActionButton>
           ):null}
+          {/* "내 독후감 쓰기" */}
           <ActionButton size="lg" width="full" onClick={handleReportWrite}>
-            {message("frontend.readingClub.detail.writeReport")}
+            {club.currentReportStat === 'DONE'
+              ? message("frontend.readingClub.detail.viewReport")
+
+              : message("frontend.readingClub.detail.writeReport")
+            }
           </ActionButton>
         </div>,
         document.body,

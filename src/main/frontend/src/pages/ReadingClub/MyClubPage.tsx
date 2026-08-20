@@ -1,27 +1,27 @@
 import type { ClubInvitation, ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import { message } from "@/app/messages/message";
 import Skeleton from "@/components/Skeleton/Skeleton";
+import {
+  getBookCoverImageSource,
+  handleBookCoverImageError,
+} from "@/features/Book/utils/bookCoverImage";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import {
   getClubCategory,
   getClubMeta,
-  getMemberProgress,
+  getGoalProgress,
+  getGoalProgressText,
   useMyClubPage,
 } from "@/features/ReadingClub/hooks/useMyClubPage";
 import * as styles from "./MyClubPage.css";
 
 /**
- * fileName       : MyClubPage
- * author         : Hanwon.Jang
- * date           : 2026-08-14
- * description    : 내 모임 페이지
- * ===========================================================
- * DATE              AUTHOR             NOTE
- * -----------------------------------------------------------
- * 2026-08-14        Hanwon.Jang    주석 추가
+ * 참여 중인 모임의 카테고리와 현재 독서 현황을 목록으로 표시한다
+ *
+ * @author SeungHyeon.Kang
+ * @return 내 모임 목록 화면
  */
-
 export default function MyClubPage() {
   // 화면 로직 훅에서 조회 상태와 사용자 이벤트 처리 함수를 가져온다
   const {
@@ -39,7 +39,7 @@ export default function MyClubPage() {
   /**
    * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
    *
-   * @author Hanwon.Jang
+   * @author SeungHyeon.Kang
    * @param invitation 표시할 받은 초대
    * @return 받은 초대 카드
    */
@@ -83,7 +83,7 @@ export default function MyClubPage() {
   /**
    * 진행 중인 모임 한 건을 피그마 비율의 카드로 구성한다
    *
-   * @author Hanwon.Jang
+   * @author SeungHyeon.Kang
    * @param club 표시할 모임
    * @return 진행 중인 모임 카드
    */
@@ -99,7 +99,13 @@ export default function MyClubPage() {
       onKeyDown={handleClubKeyDown}
     >
       {/* 모임 대표 이미지 영역 */}
-      <img className={styles.clubCover} src="/img/common/no-image.png" alt="" />
+      <img
+        className={styles.clubCover}
+        src={getBookCoverImageSource(club.currentBookCvim)}
+        onError={handleBookCoverImageError}
+        alt={club.currentBookTitl ?? ""}
+        loading="lazy"
+      />
       {/* 모임 기본 정보와 참여 현황 영역 */}
       <div className={styles.clubInfo}>
         {/* 모임 분류와 운영 상태 영역 */}
@@ -112,12 +118,12 @@ export default function MyClubPage() {
         </div>
         <h3 className={styles.clubName}>{club.clubName}</h3>
         <p className={styles.clubMeta}>{getClubMeta(club)}</p>
-        {/* 모임 참여 인원 진행률 영역 */}
+        {/* 모임 목표 달성 현황 영역 */}
         <div className={styles.progressTrack} aria-hidden="true">
-          <span className={styles.progressValue} style={{ width: `${getMemberProgress(club)}%` }} />
+          <span className={styles.progressValue} style={{ width: `${getGoalProgress(club)}%` }} />
         </div>
         <p className={styles.progressText}>
-          {message("frontend.readingClub.my.memberProgress", [club.memberCnt, club.maxxMemb])}
+          {getGoalProgressText(club)}
         </p>
       </div>
     </article>

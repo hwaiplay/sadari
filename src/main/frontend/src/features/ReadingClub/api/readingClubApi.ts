@@ -32,6 +32,7 @@ export type ReadingClub = {
   currentGoalStdt?: string;
   currentGoalEndt?: string;
   currentReportStat?: "READ" | "DONE" | "STOP";
+  currentReportNumb?: number;
   currentGoalAchvCnt?: number;
   currentGoalMembCnt?: number;
   categoryList?: ClubCategory[];

@@ -129,13 +129,24 @@ export const useClubDetailPage = () => {
   };
 
   /**
-   * 독후감 작성 화면으로 이동한다.
+   * 현재 모임 독서의 독후감 편집 화면으로 이동한다.
    *
    * @author Hanwon.Jang
    * @return 반환값이 없다
    */
   const handleReportWrite = (): void => {
-    navigate("/report/set");
+    // 현재 독서와 연결된 자동 생성 독후감이 없으면 일반 등록 화면을 유지한다
+    if (!Number.isFinite(club?.currentReportNumb)) {
+      // 선택할 도서가 없는 일반 독후감 등록 화면으로 이동한다
+      navigate("/report/set");
+      // 현재 독서 독후감 편집 화면 이동을 중단한다
+      return;
+    }
+
+    // 현재 모임 독서의 책과 목표 기간이 설정된 기존 독후감을 바로 편집한다
+    navigate(`/report/detail/${club?.currentReportNumb}`, {
+      state: { startEditing: true },
+    });
   };
 
   /**
