@@ -1,7 +1,7 @@
-import { vars } from "@/app/styles/tokens.css.ts";
-import { style } from "@vanilla-extract/css";
+import {vars} from "@/app/styles/tokens.css.ts";
+import {style} from "@vanilla-extract/css";
 
-export const root = style({ position: "relative", display: "inline-flex" });
+export const root = style({position: "relative", display: "inline-flex"});
 
 export const trigger = style({
   width: "18px",
@@ -16,7 +16,11 @@ export const trigger = style({
   cursor: "pointer",
 });
 
-export const triggerIcon = style({ width: "18px", height: "18px", display: "block", transform: "rotate(90deg)" });
+export const triggerIcon = style({
+  width: "18px",
+  height: "18px",
+  display: "block"
+});
 
 export const menu = style({
   position: "absolute",

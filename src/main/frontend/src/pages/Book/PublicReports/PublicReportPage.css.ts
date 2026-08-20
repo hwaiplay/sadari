@@ -168,7 +168,7 @@ export const profileButton = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "flex-start",
-  gap: "6px",
+  gap: "8px",
   textAlign: "left",
   cursor: "pointer",
 });
@@ -207,6 +207,10 @@ export const statusWrap = style({
 export const actionMenuWrap = style({
   display: "flex",
   flexShrink: 0,
+});
+
+export const actionMenuTriggerIcon = style({
+  transform: "rotate(90deg)",
 });
 
 

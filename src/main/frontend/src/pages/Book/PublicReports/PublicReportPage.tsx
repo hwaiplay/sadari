@@ -301,6 +301,7 @@ const PublicReportPage = () => {
                         <div className={styles.actionMenuWrap}>
                           <UserActionMenu
                             userNick={report.userNick}
+                            triggerIconClassName={styles.actionMenuTriggerIcon}
                             reportTarget={{
                               targetType: "REPORT",
                               targetNumb: report.reptNumb,
