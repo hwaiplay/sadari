@@ -378,7 +378,7 @@ const ReplyItem = ({
               <img
                 className={styles.actionMenuIcon}
                 src="/img/icons/icon-more.svg"
-                alt=""
+                alt="icon"
               />
             }
           />
