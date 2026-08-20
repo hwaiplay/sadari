@@ -4,7 +4,7 @@
 
 - 기준일: 2026-08-20
 - 적용 대상: `ACTIVE` 상태의 로그인 회원
-- 적용 화면: `/timer`
+- 적용 화면: `/timer`, 활성 세션이 있는 `/` 홈 화면
 - 목적: 서버에서 측정한 독서 시간을 날짜별로 누적하고 월요일부터 일요일까지의 주간 출석 현황을 제공합니다.
 
 ## 핵심 기준
@@ -49,6 +49,10 @@
 - 오늘 누적 독서시간은 별도 카드 없이 이번 주 출석 제목 오른쪽에 분 단위로 표시합니다.
 - 오늘은 출석 여부와 별개로 현재 날짜임을 구분합니다.
 - 진행 중인 타이머는 다른 화면으로 이동하거나 화면을 새로 열어도 서버의 활성 세션을 기준으로 복원합니다.
+- 홈 화면은 `RUNNING` 또는 `PAUSED` 활성 세션이 있을 때 독후감 등록 버튼 왼쪽에 음악 플레이어 형태의 타이머를 표시합니다. 플레이어에는 연결 도서가 있으면 표지, 현재 시간, 도서 제목을 표시하며 일시정지·재개·정지 저장 명령을 제공합니다.
+- 홈 타이머 플레이어는 흰색 반투명 배경과 배경 흐림, 독후감 등록 버튼과 같은 둥근 모서리 및 회색 테두리를 사용합니다. 도서 없이 시작한 세션은 표지 영역을 표시하지 않고 도서 미연결 상태를 안내합니다.
+- 홈 플레이어의 정지 저장은 세션을 `COMPLETED`로 변경하고 서버가 마지막 측정 구간과 날짜별 누적값을 저장한 뒤 플레이어를 아래 방향으로 내리며 제거합니다.
+- 홈 플레이어의 일시정지·재개·완료 결과는 타이머 화면과 하단 네비게이션이 사용하는 공통 타이머 요약 캐시에 즉시 반영합니다.
 - 활성 세션이 없는 최초 화면의 타이머 시간은 오늘 누적시간과 분리해 항상 `00:00:00`으로 표시합니다.
 - 시작 전 실행 버튼 영역은 왼쪽 `타이머 설정`, 오른쪽 `독서 시작`을 같은 너비로 배치합니다.
 - 타이머 설정 모달은 시간과 분을 입력하며 기본 선택값은 30분, 최대 선택값은 8시간입니다.
@@ -77,7 +81,7 @@
 - 날짜별 누적 독서 시간과 출석 데이터는 계정이 물리 삭제될 때까지 보존합니다.
 - `WITHDRAWN`과 `DELETE_PENDING` 전환 시 진행 중이거나 일시정지된 세션을 즉시 `COMPLETED`로 종료하고 일반 타이머 화면과 API 접근을 중지합니다.
 - 계정 상태 전환으로 완료하는 세션은 아직 발송하지 않은 `ALRM_DATE`를 즉시 제거하며 복귀 또는 탈퇴 취소 뒤 자동 복원하지 않습니다.
-- `WITHDRAWN`과 `DELETE_PENDING` 상태에서는 일반 네비게이션의 타이머 실행 표시를 제공하지 않으며, 계정 복귀 후 새 `RUNNING` 세션이 시작된 경우에만 다시 표시합니다.
+- `WITHDRAWN`과 `DELETE_PENDING` 상태에서는 일반 네비게이션의 타이머 실행 표시와 홈 타이머 플레이어를 제공하지 않으며, 계정 복귀 후 새 활성 세션이 시작된 경우에만 다시 표시합니다.
 - 계정 비활성화 복귀 또는 영구 탈퇴 취소 시 보존된 세션 상세와 날짜별 출석 이력을 다시 제공합니다.
 - 계정 비활성화 복귀 또는 영구 탈퇴 취소 시 보존된 완료 세션을 기준으로 도서별 누적 독서 시간 목록을 20권 단위로 다시 제공합니다.
 - 계정 복귀 또는 영구 탈퇴 취소 뒤 누적 목록의 독후감 이동은 보존된 본인 독후감 연결만 다시 제공하며, 독후감의 접근·공개·보존·삭제는 기존 독후감 정책을 그대로 따릅니다.
@@ -112,6 +116,7 @@
 - `src/main/java/org/our/sadari/timer/service/ReadingTimerServiceImpl.java`
 - `src/main/java/org/our/sadari/timer/mapper/ReadingTimerMapper.xml`
 - `src/main/frontend/src/pages/Timer/ReadingTimerPage.tsx`
+- `src/main/frontend/src/features/Home/components/HomeTimerPlayer.tsx`
 - `src/main/frontend/src/features/Book/Search/components/TimerReadingPeriodModal.tsx`
 - `src/main/frontend/src/features/Book/Search/hook/useSearchBookPage.ts`
 - `src/main/frontend/src/components/Layout/Navigation/Navigation.tsx`
