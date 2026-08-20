@@ -1366,8 +1366,21 @@ export default function ReadingTimerPage() {
       {/* 이번 주 출석 현황 */}
       <section className={styles.card} aria-labelledby="timer-week-title">
         <div className={styles.weekHeader}>
-          <h2 id="timer-week-title" className={styles.cardTitle}>{message("frontend.timer.week.title")}</h2>
-          <span className={styles.weekCount}>{message("frontend.timer.week.count", [displayedAttendanceCount])}</span>
+          <h2 id="timer-week-title" className={styles.weekTitle}>
+            {/* "이번 주 출석" */}
+            {message("frontend.timer.week.title")}
+          </h2>
+          {/* 오늘 누적 독서시간과 이번 주 출석 일수 영역 */}
+          <div className={styles.weekMeta}>
+            <span className={styles.weekTodayMinutes}>
+              {/* "오늘 {0}분" */}
+              {message("frontend.timer.week.todayMinutes", [Math.floor(todaySeconds / 60)])}
+            </span>
+            <span className={styles.weekCount}>
+              {/* "{0}/7일" */}
+              {message("frontend.timer.week.count", [displayedAttendanceCount])}
+            </span>
+          </div>
         </div>
         <div className={styles.weekGrid}>
           {summary?.weekList.map((day, index) => (
@@ -1506,12 +1519,6 @@ export default function ReadingTimerPage() {
             </div>
           </div>
         </div>
-      </section>
-
-      {/* 오늘 누적 및 출석 기준 */}
-      <section className={styles.card} aria-labelledby="timer-today-title">
-        <h2 id="timer-today-title" className={styles.cardTitle}>{message("frontend.timer.today.title")}</h2>
-        <p className={styles.empty}>{message("frontend.timer.today.summary", [Math.floor(todaySeconds / 60), Math.floor((summary?.attendanceMinSecs ?? 600) / 60)])}</p>
       </section>
 
       {/* 연도별 독서 시간 잔디 영역 */}

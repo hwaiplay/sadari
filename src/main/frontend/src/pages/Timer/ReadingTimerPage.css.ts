@@ -48,10 +48,29 @@ export const weekHeader = style({
   marginBottom: "14px",
 });
 
+export const weekTitle = style([cardTitle, {
+  margin: 0,
+}]);
+
+export const weekMeta = style({
+  minWidth: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "flex-end",
+  gap: "10px",
+  whiteSpace: "nowrap",
+});
+
+export const weekTodayMinutes = style({
+  color: vars.color.gray700,
+  fontFamily: vars.font.medium,
+  fontSize: "14px",
+});
+
 export const weekCount = style({
   color: vars.color.brandText,
   fontFamily: vars.font.semibold,
-  fontSize: "13px",
+  fontSize: "14px",
 });
 
 export const weekGrid = style({
@@ -669,14 +688,6 @@ export const modalActionButton = style({
   width: "100%",
   minWidth: 0,
   borderRadius: "8px",
-});
-
-export const empty = style({
-  margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: "13px",
-  lineHeight: 1.5,
 });
 
 export const heatmapCard = card;
