@@ -13,21 +13,21 @@ import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useState }
 import { useNavigate } from "react-router-dom";
 
 /**
- * 모임의 첫 번째 관심분야명을 카드 상단에 표시할 문구로 변환한다
+ * 모임의 모든 관심분야명을 카드 상단에 표시할 문구로 변환한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @param club 표시할 모임
- * @return 첫 번째 관심분야명 또는 기본 문구
+ * @return 전체 관심분야명 또는 기본 문구
  */
 export const getClubCategory = (club: ReadingClub): string => {
-  // 대표 카테고리의 세부명부터 대분류명과 코드 순서로 표시값을 보정한다
-  const categoryName = club.categoryList?.[0]?.intrName
-    ?? club.categoryList?.[0]?.intrCnam
-    ?? club.categoryList?.[0]?.intrCode;
-  // 카테고리 표시값이 있으면 카드 분류로 사용한다
-  if (categoryName) {
-    // 첫 번째 카테고리의 표시 가능한 값을 반환한다
-    return categoryName;
+  // 각 카테고리의 세부명부터 대분류명과 코드 순서로 표시값을 보정한다
+  const categoryNames = club.categoryList
+    ?.map((category) => category.intrName ?? category.intrCnam ?? category.intrCode)
+    .filter((categoryName): categoryName is string => Boolean(categoryName)) ?? [];
+  // 카테고리 표시값이 있으면 모든 분류를 카드에 함께 표시한다
+  if (categoryNames.length > 0) {
+    // 전체 카테고리의 표시 가능한 값을 쉼표로 구분해 반환한다
+    return categoryNames.join(" · ");
   }
 
   // 관심분야가 없는 모임의 기본 분류를 반환한다
@@ -37,7 +37,7 @@ export const getClubCategory = (club: ReadingClub): string => {
 /**
  * 모임 공개 범위와 현재 참여 인원을 카드 설명으로 구성한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang, SeungHyeon.Kang
  * @param club 표시할 모임
  * @return 공개 범위와 참여 인원 문구
  */
@@ -54,7 +54,7 @@ export const getClubMeta = (club: ReadingClub): string => {
 /**
  * 현재 독서 목표를 달성한 인원을 목표 참여 인원 대비 백분율로 변환한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @param club 표시할 모임
  * @return 0부터 100 사이의 목표 달성률
  */
@@ -76,7 +76,7 @@ export const getGoalProgress = (club: ReadingClub): number => {
 /**
  * 현재 독서 목표의 달성 인원 문구 또는 도서 선정 상태를 구성한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @param club 표시할 모임
  * @return 목표 달성 인원 또는 도서 선정 상태 문구
  */
@@ -98,7 +98,7 @@ export const getGoalProgressText = (club: ReadingClub): string => {
 /**
  * 내 모임 화면의 조회 상태와 초대 처리 및 상세 이동을 관리한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang, SeungHyeon.Kang
  * @return 내 모임 화면 상태와 이벤트 처리 함수
  */
 export const useMyClubPage = () => {
@@ -112,7 +112,7 @@ export const useMyClubPage = () => {
   /**
    * 내 모임과 받은 초대를 동시에 새로 조회한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    * @throws 모임 또는 초대 목록 조회에 실패하면 발생한다
    */
@@ -128,7 +128,7 @@ export const useMyClubPage = () => {
   /**
    * 최초 모임 목록 조회 실패를 사용자 공통 알림으로 처리한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param error 모임 목록 조회 오류
    * @return 반환값이 없다
    */
@@ -143,7 +143,7 @@ export const useMyClubPage = () => {
   /**
    * 최초 모임 목록 조회 완료 후 로딩 화면을 해제한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   const handleLoadComplete = useCallback((): void => {
@@ -154,7 +154,7 @@ export const useMyClubPage = () => {
   /**
    * 페이지 최초 진입 시 모임과 초대 목록 조회를 시작한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return Effect 정리 함수가 없다
    */
   const initializePage = useCallback((): void => {
@@ -172,7 +172,7 @@ export const useMyClubPage = () => {
   /**
    * 받은 초대를 수락하고 최신 모임 목록을 반영한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param clubNumb 수락할 모임 번호
    * @return 반환값이 없다
    * @throws 초대 수락 또는 목록 갱신에 실패하면 발생한다
@@ -187,7 +187,7 @@ export const useMyClubPage = () => {
   /**
    * 받은 초대를 거절하고 최신 초대 목록을 반영한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param clubNumb 거절할 모임 번호
    * @return 반환값이 없다
    * @throws 초대 거절 또는 목록 갱신에 실패하면 발생한다
@@ -202,7 +202,7 @@ export const useMyClubPage = () => {
   /**
    * 받은 초대 상세 목록의 표시 상태를 전환한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   const handleInvitationToggle = (): void => {
@@ -213,7 +213,7 @@ export const useMyClubPage = () => {
   /**
    * 선택한 모임 상세 화면으로 이동한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param clubNumb 이동할 모임 번호
    * @return 반환값이 없다
    */
@@ -225,7 +225,7 @@ export const useMyClubPage = () => {
   /**
    * 키보드 Enter 입력으로 선택한 모임 상세 화면에 이동한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 카드 키보드 이벤트
    * @return 반환값이 없다
    */
@@ -241,7 +241,7 @@ export const useMyClubPage = () => {
   /**
    * 포인터로 선택한 모임 카드의 상세 화면에 이동한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 모임 카드 클릭 이벤트
    * @return 반환값이 없다
    */
@@ -257,7 +257,7 @@ export const useMyClubPage = () => {
   /**
    * 초대 수락 실패를 사용자 공통 알림으로 처리한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param error 초대 수락 오류
    * @return 반환값이 없다
    */
@@ -272,7 +272,7 @@ export const useMyClubPage = () => {
   /**
    * 초대 거절 실패를 사용자 공통 알림으로 처리한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang, SeungHyeon.Kang
    * @param error 초대 거절 오류
    * @return 반환값이 없다
    */
@@ -287,7 +287,7 @@ export const useMyClubPage = () => {
   /**
    * 선택한 받은 초대를 수락한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 초대 수락 버튼 이벤트
    * @return 반환값이 없다
    */
@@ -303,7 +303,7 @@ export const useMyClubPage = () => {
   /**
    * 선택한 받은 초대를 거절한다
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @param event 초대 거절 버튼 이벤트
    * @return 반환값이 없다
    */
