@@ -11,7 +11,8 @@ export const content = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  padding: "12px 0",
+  // 레이아웃의 헤더 높이 여백 직후 검색 영역을 배치해 고정 해제 시 위치 차이를 없앤다
+  padding: "0 0 12px",
 });
 
 export const searchBar = style({
