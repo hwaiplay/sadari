@@ -255,7 +255,7 @@ export const sortSelectOption = style({
 export const monthGroupStack = style({
   display: "flex",
   flexDirection: "column",
-  gap: "54px",
+  gap: "35px",
 });
 
 export const monthGroup = style({
