@@ -79,7 +79,8 @@ export const emptyDescription = style({
 
 export const homeContainer = style({
   minHeight: "100svh",
-  paddingTop: `calc(${vars.headerHeight} + 14px)`,
+  // 일반 흐름에서도 검색 영역을 고정 상태와 같은 헤더 하단 위치에 배치한다
+  paddingTop: vars.headerHeight,
   paddingBottom: "96px",
   backgroundColor:'#fff',
 
