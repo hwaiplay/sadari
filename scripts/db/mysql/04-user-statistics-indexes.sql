@@ -38,3 +38,11 @@ ALTER TABLE `TH_USSPND`
 -- 탈퇴한 OAuth 계정의 과거 회원 번호와 유효 제재 연결 조회를 지원한다.
 ALTER TABLE `TH_USWTHD`
     ADD INDEX `IX_TH_USWTHD_IDHS` (`USER_IDHS`, `USER_NUMB`);
+
+-- 동일 사용자의 동일 대상 재신고와 동시 요청 중복 접수를 차단한다.
+ALTER TABLE `TH_CMPLNT`
+    ADD UNIQUE INDEX `UK_TH_CMPLNT_USER_TAGT` (`USER_NUMB`, `TAGT_TYPE`, `TAGT_NUMB`);
+
+-- 현재 사용자 상세의 받은 신고 이력을 최신순으로 조회한다.
+ALTER TABLE `TH_CMPLNT`
+    ADD INDEX `IX_TH_CMPLNT_TAGT_USER` (`TAGT_USER`, `REGI_DATE`, `CMPL_NUMB`);

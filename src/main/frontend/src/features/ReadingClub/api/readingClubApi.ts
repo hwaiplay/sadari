@@ -13,7 +13,7 @@ export type ReadingClub = {
   ownrNumb?: number;
   ownrNick?: string;
   clubName: string;
-  clubCntn: string;
+  clubCntn: string | null;
   clubVisb: "PUBLIC" | "PRIVATE";
   joinType: "OPEN" | "APPROVAL" | "INVITE";
   clubStat: string;
