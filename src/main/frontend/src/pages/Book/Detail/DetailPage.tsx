@@ -21,6 +21,9 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import { usePublicReportLike } from "@/features/Book/Detail/hook/usePublicReports";
+import { useReportAlimSetting } from "@/features/Book/Detail/hook/useReportAlimSetting";
+import ReportAlimMenu from "@/features/Book/Detail/components/ReportAlimMenu";
+import type { ReportAlimType } from "@/features/Book/api/bookApi";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
 import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import Loading from "@/components/Loading/Loading";
@@ -137,6 +140,7 @@ function DetailPage() {
   const { data, error, isError, isPending } = useBookDetail(idNum);
   const bookData = data?.data;
   const likeMutation = usePublicReportLike();
+  const reportAlimMutation = useReportAlimSetting(idNum);
   const { mutate: updateReport, isPending: isUpdatePending } = useUpdateMutation();
   const { mutate: deleteReport, isPending: isDeletePending } = useDeleteMutation();
   const [showBookInfo, setShowBookInfo] = useState(false);
@@ -704,8 +708,23 @@ function DetailPage() {
     likeMutation.mutate({
       tagtType: "REPORT",
       tagtNumb: idNum,
-      targetUserNumb: bookData.userNumb,
     });
+  };
+
+  /**
+   * 현재 독후감의 유형별 알림 사용 여부를 변경한다
+   *
+   * @author SeungHyeon.Kang
+   * @param alimType 변경할 좋아요 또는 댓글 알림 유형
+   * @param useYsno 변경할 알림 사용 여부
+   * @return 반환값이 없다
+   */
+  const handleReportAlimChange = (
+    alimType: ReportAlimType,
+    useYsno: "Y" | "N",
+  ): void => {
+    // 현재 상세 독후감과 사용자가 선택한 유형별 설정을 서버에 반영한다
+    reportAlimMutation.mutate({ reptNumb: idNum, alimType, useYsno });
   };
 
   // 같은 상세 API에서 받은 도서 정보를 사용해 추가 조회 없이 도서 정보 화면을 구성한다
@@ -970,6 +989,12 @@ function DetailPage() {
                       {bookData.replCnt}
                     </span>
                   </button>
+                      <ReportAlimMenu
+                        likeAlimYsno={bookData.likeAlimYsno ?? "Y"}
+                        replyAlimYsno={bookData.replyAlimYsno ?? "Y"}
+                        disabled={reportAlimMutation.isPending}
+                        onChange={handleReportAlimChange}
+                      />
                     </div>
                 ) : null}
               </div>

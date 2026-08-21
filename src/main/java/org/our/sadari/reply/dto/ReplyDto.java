@@ -17,6 +17,7 @@ import lombok.Data;
  * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 필드 추가
  * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 용도 확장
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 조건 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감 댓글 알림 설정 추가
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")
@@ -72,6 +73,9 @@ public class ReplyDto {
 
     @Schema(description = "댓글 좋아요 알림을 받을 댓글 작성자 사용자 번호", example = "31", hidden = true)
     private Long targetUserNumb;
+
+    @Schema(description = "독후감 작성자의 댓글과 답글 알림 여부", example = "Y", allowableValues = {"Y", "N"}, hidden = true)
+    private String replyAlimYsno;
 
     @Schema(description = "댓글 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
     private String editVersion;

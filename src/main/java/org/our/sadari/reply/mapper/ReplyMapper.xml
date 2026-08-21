@@ -236,10 +236,11 @@
                )
     </update>
 
-    <!-- 댓글 등록 알림을 받을 독후감 작성자 사용자 번호를 조회한다. -->
-    <select id="getReplyReportUserNumb" parameterType="long" resultType="long">
-        SELECT /* getReplyReportUserNumb */
-               USER_NUMB
+    <!-- 댓글 등록 알림을 받을 독후감 작성자와 댓글 알림 설정을 조회한다. -->
+    <select id="getReplyReportAlimDtl" parameterType="long" resultType="org.our.sadari.reply.dto.ReplyDto">
+        SELECT /* getReplyReportAlimDtl */
+               USER_NUMB AS TARGET_USER_NUMB
+             , RPAL_YSNO AS REPLY_ALIM_YSNO
           FROM TM_REPORT
          WHERE REPT_NUMB = #{reptNumb}
     </select>
