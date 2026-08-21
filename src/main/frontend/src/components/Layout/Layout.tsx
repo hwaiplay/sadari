@@ -9,7 +9,7 @@ import Navigation from "./Navigation/Navigation";
 import { vars } from "@/app/styles/tokens.css";
 import { Container } from "./Container/Container";
 import { clsx } from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   pageTransitionBack,
   pageTransitionBase,
@@ -19,10 +19,6 @@ import {
 
 type LayoutProps = {
   isMainLayout?: boolean;
-};
-
-export type LayoutOutletContext = {
-  isHeaderHidden: boolean;
 };
 
 /**
@@ -37,7 +33,7 @@ function Layout({ isMainLayout = true }: LayoutProps) {
   const location = useLocation();
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
-  const [isHeaderHidden, setIsHeaderHidden] = useState(false);
+  const layoutRef = useRef<HTMLDivElement | null>(null);
   const shouldAnimate = hasMountedRef.current;
   const transitionClassName =
     navigationType === "POP" ? pageTransitionBack : pageTransitionForward;
@@ -47,9 +43,31 @@ function Layout({ isMainLayout = true }: LayoutProps) {
     hasMountedRef.current = true;
   }, []);
 
+  /**
+   * 헤더 아래 고정 영역이 스크롤 중 헤더와 같은 속도로 이동하게 거리를 적용한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param headerOffset 헤더가 화면 위로 이동한 거리
+   * @return 반환값이 없다
+   */
+  const handleHeaderOffsetChange = useCallback((headerOffset: number): void => {
+
+    // 레이아웃 요소가 준비되지 않았으면 위치 갱신을 종료한다
+    if (!layoutRef.current) {
+      // 헤더 아래 영역의 현재 위치를 유지한다
+      return;
+    }
+
+    // 하위 고정 영역이 공유할 헤더 이동 거리 CSS 변수를 갱신한다
+    layoutRef.current.style.setProperty(
+      "--header-scroll-offset",
+      `${headerOffset}px`,
+    );
+  }, []);
+
   return (
-    <div>
-      <Header onHiddenChange={setIsHeaderHidden} />
+    <div ref={layoutRef}>
+      <Header onOffsetChange={handleHeaderOffsetChange} />
       {/* 현재 경로에 연결된 페이지 표시 영역 */}
       <main
         style={{
@@ -67,10 +85,10 @@ function Layout({ isMainLayout = true }: LayoutProps) {
           >
             {isMainLayout ? (
               <Container>
-                <Outlet context={{ isHeaderHidden }} />
+                <Outlet />
               </Container>
             ) : (
-              <Outlet context={{ isHeaderHidden }} />
+              <Outlet />
             )}
           </div>
         </div>

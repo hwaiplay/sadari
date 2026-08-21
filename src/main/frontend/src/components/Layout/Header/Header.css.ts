@@ -1,5 +1,6 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
+import { HEADER_BACKGROUND_COLOR } from "./headerStyle";
 
 const headerContentSlideForwardKeyframes = keyframes({
   "0%": {
@@ -31,14 +32,9 @@ export const headerShell = style({
   zIndex: 997,
   width: "100%",
   height: vars.headerHeight,
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  backgroundColor: HEADER_BACKGROUND_COLOR,
   transform: "translateY(0)",
-  transition: "transform 180ms ease",
   willChange: "transform",
-});
-
-export const headerHidden = style({
-  transform: "translateY(-100%)",
 });
 
 export const header = style({

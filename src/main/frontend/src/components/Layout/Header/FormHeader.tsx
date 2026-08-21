@@ -1,91 +1,42 @@
 import { message } from "@/app/messages/message";
 import HomeLink from "@/components/Button/HomeLink/HomeLink";
 import { useNavigate } from "react-router-dom";
-import { backpageBtn, header, headerHidden, headerShell } from "./Header.css";
+import { backpageBtn, header, headerShell } from "./Header.css";
 import { Container } from "../Container/Container";
 import { clsx } from "clsx";
-import { useEffect, useRef, useState } from "react";
 import HeaderMenuDrawer from "./HeaderMenuDrawer";
-
-const HEADER_SCROLL_DELTA = 4;
+import { useScrollHeader } from "./useScrollHeader";
 
 /**
- * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링합니다.
+ * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링한다.
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 서브 페이지 헤더 컴포넌트
  */
 function SubPageHeader() {
 
   const navigate = useNavigate();
-  const lastScrollYRef = useRef(0);
-  const isHiddenRef = useRef(false);
-  const [isHidden, setIsHidden] = useState(false);
+  // 스크롤 이동량과 같은 거리로 움직일 전용 헤더 상태를 구성한다
+  const { headerRef } = useScrollHeader();
 
   /**
-   * 브라우저 히스토리를 기반으로 이전 페이지로 이동합니다.
+   * 브라우저 히스토리를 기반으로 이전 페이지로 이동한다.
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
    */
-  const backPrev = () => {
+  const backPrev = (): void => {
 
+    // 브라우저의 직전 화면으로 이동한다
     navigate(-1);
   };
 
-  useEffect(() => {
-
-    lastScrollYRef.current = window.scrollY;
-
-    /**
-     * 등록/수정 화면의 전용 헤더도 일반 헤더와 동일하게 스크롤 방향에 따라 숨김 상태를 전환합니다.
-     * 헤더 배경, 로고, 뒤로가기 버튼이 각각 따로 움직이지 않도록 하나의 래퍼 상태만 변경합니다.
-     *
-     * @author HanWon.Jang
-     */
-    const handleScroll = () => {
-
-      const currentScrollY = window.scrollY;
-      const scrollDiff = currentScrollY - lastScrollYRef.current;
-
-      // 모바일 사파리 등의 바운스 백(Bounce-back) 효과로 인해 스크롤 위치가 음수가 되는 경우 헤더 노출을 고정합니다.
-      if (currentScrollY <= 0) {
-        if (isHiddenRef.current) {
-          isHiddenRef.current = false;
-          setIsHidden(false);
-        }
-
-        lastScrollYRef.current = currentScrollY;
-        return;
-      }
-
-      // 미세한 스크롤 조작 시 상태가 너무 자주 바뀌어 렌더링 저하가 일어나는 것을 방지하기 위해 임계값(DELTA) 미만은 무시합니다.
-      if (Math.abs(scrollDiff) < HEADER_SCROLL_DELTA) {
-        return;
-      }
-
-      // 스크롤이 아래로 내려가면 헤더를 숨기고(true), 위로 올라가면 다시 헤더를 보여줍니다(false).
-      const shouldHide = scrollDiff > 0;
-
-      // 불필요한 상태(State) 업데이트와 렌더링 낭비를 줄이기 위해, 이전 숨김 상태와 실시간 계산된 상태가 다를 때만 갱신합니다.
-      if (isHiddenRef.current !== shouldHide) {
-        isHiddenRef.current = shouldHide;
-        setIsHidden(shouldHide);
-      }
-
-      lastScrollYRef.current = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, []);
-
   return (
     /* 등록과 수정 화면의 상단 이동 및 제목 영역 */
-    <header className={clsx(headerShell, isHidden && headerHidden)}>
+    <header
+      ref={headerRef}
+      className={headerShell}
+    >
         <Container className={clsx(header, "_form")}>
           {/* [주석] 필수 입력 값 누락 시 노출: "이전 페이지로 이동" */}
           <button

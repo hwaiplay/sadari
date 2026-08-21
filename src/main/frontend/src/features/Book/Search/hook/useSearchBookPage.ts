@@ -379,6 +379,23 @@ export function useSearchBookPage() {
     await executeBookSearch(keyword);
   }
 
+  /**
+   * 클릭하거나 키보드로 선택한 작가명을 입력창에 반영하고 즉시 조회한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param author 사용자가 선택한 도서의 작가명
+   * @return 작가명 조회 처리가 끝나면 완료되는 Promise
+   */
+  async function handleAuthorSelect(author: string): Promise<void> {
+
+    const keyword = author.trim();
+
+    // 선택한 작가명을 검색 입력창에 동일하게 표시한다.
+    setSearchKeyword(keyword);
+    // 별도 검색 버튼 조작 없이 선택한 작가명으로 도서 첫 페이지를 즉시 조회한다.
+    await executeBookSearch(keyword);
+  }
+
   useEffect(() => {
 
     const state = (location.state ?? {}) as SearchBookPageState;
@@ -780,6 +797,7 @@ export function useSearchBookPage() {
   // 책 검색 화면이 렌더링과 이벤트 연결에 사용할 값을 반환한다.
   return {
     bookResult: visibleBookResult,
+    handleAuthorSelect,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,

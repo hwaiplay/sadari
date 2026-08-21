@@ -11,7 +11,7 @@ import {
   sweetEditGuide,
   sweetWarning,
 } from "@/app/lib/sweetAlert/sweetAlert";
-import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
 import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
@@ -822,9 +822,28 @@ function DetailPage() {
                     {/* "저자" */}
                     {message("frontend.common.author")}
                   </span>
-                  <strong className={styles.bookInfoValue}>
-                    {bookData.bookAthr || "-"}
-                  </strong>
+                  {bookData.bookAthr?.trim() ? (
+                    <>
+                      {/* 저자명이 있으면 해당 저자명 검색 화면으로 이동하는 링크를 표시한다 */}
+                      <Link
+                        className={styles.bookInfoSearchLink}
+                        to="/book/search"
+                        state={{
+                          initialSearchKeyword: bookData.bookAthr.trim(),
+                        }}
+                      >
+                        {bookData.bookAthr}
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      {/* 저자명이 없으면 검색할 수 없는 기존 대체값을 표시한다 */}
+                      <strong className={styles.bookInfoValue}>
+                        {/* "-" */}
+                        {message("frontend.common.emptyValue")}
+                      </strong>
+                    </>
+                  )}
                 </div>
 
                 {/* 도서 출판사 정보 행 */}
@@ -833,9 +852,28 @@ function DetailPage() {
                     {/* "출판사" */}
                     {message("frontend.common.publisher")}
                   </span>
-                  <strong className={styles.bookInfoValue}>
-                    {bookData.bookPubl || "-"}
-                  </strong>
+                  {bookData.bookPubl?.trim() ? (
+                    <>
+                      {/* 출판사명이 있으면 해당 출판사 검색 화면으로 이동하는 링크를 표시한다 */}
+                      <Link
+                        className={styles.bookInfoSearchLink}
+                        to="/book/search"
+                        state={{
+                          initialSearchKeyword: bookData.bookPubl.trim(),
+                        }}
+                      >
+                        {bookData.bookPubl}
+                      </Link>
+                    </>
+                  ) : (
+                    <>
+                      {/* 출판사명이 없으면 검색할 수 없는 기존 대체값을 표시한다 */}
+                      <strong className={styles.bookInfoValue}>
+                        {/* "-" */}
+                        {message("frontend.common.emptyValue")}
+                      </strong>
+                    </>
+                  )}
                 </div>
 
                 {/* 도서 출간일 정보 행 */}
