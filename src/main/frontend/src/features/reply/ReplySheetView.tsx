@@ -20,7 +20,7 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import * as styles from "./ReplySheet.css";
 
-const REPLY_MENTION_PATTERN = /(@[A-Za-z0-9\uAC00-\uD7A3]+)/g;
+const REPLY_MENTION_PATTERN = /(@[A-Za-z0-9_\uAC00-\uD7A3]+)/g;
 
 type ReplyAction = "" | "UPDATE" | "DELETE";
 
@@ -95,7 +95,7 @@ const renderReplyContent = (
       continue;
     }
 
-    const userNick = contentPart.slice(1);
+    const userNick = contentPart;
     const profilePath = profilePathByNick.get(userNick);
 
     // 댓글 목록에서 사용자를 확인할 수 없는 언급은 잘못된 프로필로 연결하지 않는다
