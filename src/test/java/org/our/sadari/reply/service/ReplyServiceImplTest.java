@@ -29,7 +29,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : ReplyServiceImplTest
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-07-31
  * description    : 댓글 등록 알림과 본인 댓글 수정 및 삭제 처리를 검증한다
  * ===========================================================
@@ -38,6 +38,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-07-31        Hanwon.Jang        최초 생성
  * 2026-08-03        Hanwon.Jang        댓글 변경·비속어·좋아요 검증
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 검증 추가
+ * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 닉네임 DB 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -324,12 +325,12 @@ class ReplyServiceImplTest {
         likeTarget.setReplNumb(8L);
         // 좋아요 알림을 받을 댓글 작성자 번호를 설정한다
         likeTarget.setTargetUserNumb(31L);
+        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정한다
+        likeTarget.setUserNick("좋아요사용자");
         // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성한다
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
         // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성한다
         when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
-        // 댓글 좋아요 등록자의 최신 닉네임이 조회되는 조건을 구성한다
-        when(tokenRedisService.getUserNick(44L)).thenReturn("좋아요사용자");
         // 댓글 좋아요 등록 후 반환할 최신 상태를 생성한다
         ReplyDto likeDetail = new ReplyDto();
         // 좋아요 등록 후 집계 수를 설정한다
@@ -367,6 +368,8 @@ class ReplyServiceImplTest {
         );
         // 알림 문구에 좋아요 등록자 닉네임이 전달되는지 확인한다
         assertEquals("좋아요사용자", replaceMapCaptor.getValue().get("userName"));
+        // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
+        verifyNoInteractions(tokenRedisService);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
         assertEquals(likeDetail, result.getData());
     }

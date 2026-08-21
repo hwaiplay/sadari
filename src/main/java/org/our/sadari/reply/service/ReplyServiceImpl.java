@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : ReplyServiceImpl
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-07-28
  * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 로직을 구현한다
  * ===========================================================
@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 처리 추가
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 구현
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
+ * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  */
 @Service
 @RequiredArgsConstructor
@@ -358,12 +359,12 @@ public class ReplyServiceImpl implements ReplyService {
             return;
         }
 
-        // REPLY_LIKE 템플릿의 사용자명 치환에 사용할 좋아요 등록자의 최신 닉네임을 조회한다
-        String sendUserNick = tokenRedisService.getUserNick(sendUserNumb);
+        // 대상 검증 SQL에서 함께 조회한 활성 좋아요 등록자의 최신 닉네임을 사용한다
+        String sendUserNick = likeTarget.getUserNick();
 
-        // 로그인 세션에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않는다
+        // 회원 원본에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않는다
         if (StringUtil.isEmpty(sendUserNick)) {
-            // 닉네임 치환이 불가능한 댓글 좋아요 알림 처리 없이 호출부로 반환한다
+            // 발신자 닉네임이 없는 댓글 좋아요 알림 처리 없이 호출부로 반환한다
             return;
         }
 
