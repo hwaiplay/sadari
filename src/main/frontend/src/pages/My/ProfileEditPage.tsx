@@ -1,6 +1,6 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetConfirm, sweetError, sweetInfo, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError, sweetInfo, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { queryClient } from "@/app/query/queryClient";
 import {
@@ -873,13 +873,32 @@ function ProfileEditPage() {
       if (confirmResult.isConfirmed) {
         try {
           setIsGoalSaving(true);
-          const response = await copyPrevReadingGoalApi();
-          nextSummary = response.data as MonthlyReadingSummary;
-          setMonthlySummary(nextSummary);
-          await sweetSuccess(
-            /* "목표가 저장되었습니다." */ message("frontend.profile.goal.savedTitle"),
-            /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ message("frontend.profile.goal.saved"),
-          );
+
+          /**
+           * 지난 독서 목표를 복사하고 현재 요약 상태에 반영한다
+           *
+           * @author SeungHyeon.Kang
+           * @return 복사한 월간 독서 요약 Promise
+           * @throws 지난 목표 복사 또는 응답 검증에 실패하면 발생한다
+           */
+          const copyPreviousGoal = async (): Promise<MonthlyReadingSummary> => {
+            // 서버에서 복사된 지난 목표와 최신 독서 요약을 조회한다
+            const response = await copyPrevReadingGoalApi();
+            // 이후 목표 입력에도 사용할 최신 요약을 반환값으로 보관한다
+            const copiedSummary = response.data as MonthlyReadingSummary;
+            // 화면의 목표와 달성 현황을 복사 결과로 갱신한다
+            setMonthlySummary(copiedSummary);
+            // 호출부에서 최신 목표 요약을 이어서 사용할 수 있도록 반환한다
+            return copiedSummary;
+          };
+
+          // 목표 복사 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환한다
+          nextSummary = await runBlockingOperation(copyPreviousGoal, {
+            success: {
+              /* "목표가 저장되었습니다." */ title: message("frontend.profile.goal.savedTitle"),
+              /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ text: message("frontend.profile.goal.saved"),
+            },
+          });
           return;
         } catch (error) {
           void sweetError(
@@ -1412,17 +1431,34 @@ function ProfileEditPage() {
 
     try {
       setIsGoalSaving(true);
-      const response = await updateReadingGoalApi({
-        weekGoalCnt: nextWeekGoalCnt,
-        monthGoalCnt: nextMonthGoalCnt,
-        yearGoalCnt: nextYearGoalCnt,
+
+      /**
+       * 독서 목표를 저장하고 화면 요약 및 목표 모달 상태를 갱신한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 독서 목표 저장 완료 Promise
+       * @throws 독서 목표 저장 또는 목표 모달 정리에 실패하면 발생한다
+       */
+      const saveReadingGoal = async (): Promise<void> => {
+        // 입력한 주간, 월간, 연간 목표를 서버에 저장한다
+        const response = await updateReadingGoalApi({
+          weekGoalCnt: nextWeekGoalCnt,
+          monthGoalCnt: nextMonthGoalCnt,
+          yearGoalCnt: nextYearGoalCnt,
+        });
+        // 화면의 목표와 달성 현황을 최신 응답으로 갱신한다
+        setMonthlySummary(response.data as MonthlyReadingSummary);
+        // 저장이 끝난 목표 설정 모달을 닫는다
+        await closeProfileModal("goal");
+      };
+
+      // 목표 저장 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환한다
+      await runBlockingOperation(saveReadingGoal, {
+        success: {
+          /* "목표가 저장되었습니다." */ title: message("frontend.profile.goal.savedTitle"),
+          /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ text: message("frontend.profile.goal.saved"),
+        },
       });
-      setMonthlySummary(response.data as MonthlyReadingSummary);
-      await closeProfileModal("goal");
-      await sweetSuccess(
-        /* "목표가 저장되었습니다." */ message("frontend.profile.goal.savedTitle"),
-        /* "주간, 월간, 연간 독서 목표를 반영했습니다." */ message("frontend.profile.goal.saved"),
-      );
     } catch (error) {
       void sweetError(
         /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),
@@ -1761,30 +1797,36 @@ function ProfileEditPage() {
      * 현재 프로필 입력값과 선택 이미지를 사용자 수정 API에 전달한다
      *
      * @author SeungHyeon.Kang
-     * @return 저장 후 서버가 반환한 최신 프로필 응답 Promise
+     * @return 프로필 저장과 화면 상태 반영 완료 Promise
+     * @throws 프로필 저장 또는 응답 검증에 실패하면 발생한다
      */
-    const submitProfileChanges = () => updateMyProfileApi({
-      userNick: userNick.trim(),
-      intrCntn: intrCntn.trim(),
-      profileImageDraftToken,
-      backgroundImageDraftToken,
-    });
+    const submitProfileChanges = async (): Promise<void> => {
+      // 현재 입력값과 업로드 초안 토큰을 서버에 저장한다
+      const response = await updateMyProfileApi({
+        userNick: userNick.trim(),
+        intrCntn: intrCntn.trim(),
+        profileImageDraftToken,
+        backgroundImageDraftToken,
+      });
+      // 저장 응답을 프로필 화면과 전역 사용자 상태에 함께 반영한다
+      const nextProfile = response.data as UserProfile;
+      syncProfileState(nextProfile);
+      notifyUserProfileUpdated(nextProfile);
+      // 저장된 프로필을 읽기 화면으로 전환한다
+      setIsEditMode(false);
+    };
 
     try {
       setIsSaving(true);
       // 파일 업로드를 포함한 프로필 저장이 끝날 때까지 버튼 없는 모달과 화면 이동 차단을 유지한다
-      const response = await runBlockingOperation(submitProfileChanges, {
+      await runBlockingOperation(submitProfileChanges, {
         // "프로필 저장 중..."
         title: message("frontend.profile.saving"),
+        success: {
+          /* "프로필이 저장되었습니다." */ title: message("frontend.profile.savedTitle"),
+          /* "수정한 프로필을 반영했습니다." */ text: message("frontend.profile.saved"),
+        },
       });
-      const nextProfile = response.data as UserProfile;
-      syncProfileState(nextProfile);
-      notifyUserProfileUpdated(nextProfile);
-      setIsEditMode(false);
-      await sweetSuccess(
-        /* "프로필이 저장되었습니다." */ message("frontend.profile.savedTitle"),
-        /* "수정한 프로필을 반영했습니다." */ message("frontend.profile.saved"),
-      );
     } catch (error) {
       void sweetError(
         /* "수정에 실패했습니다." */ message("frontend.alert.updateFailedTitle"),

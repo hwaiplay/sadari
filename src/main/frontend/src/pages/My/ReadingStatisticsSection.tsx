@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
 import {
@@ -1002,23 +1003,36 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
 
     // 저장 성공과 실패 및 완료 상태를 각각 처리한다
     try {
-      // 선택한 독서 통계 공개 설정을 저장한다
-      const response = await uptReadingStatsSettingApi({
-        publicYsno: selectedPublic,
+      /**
+       * 독서 통계 공개 설정 저장과 현재 화면 상태 반영을 함께 실행한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 독서 통계 공개 설정 저장 완료 Promise
+       * @throws 독서 통계 공개 설정 저장 또는 응답 검증에 실패하면 발생한다
+       */
+      const saveReadingStatisticsSetting = async (): Promise<void> => {
+        // 선택한 독서 통계 공개 설정을 저장한다
+        const response = await uptReadingStatsSettingApi({
+          publicYsno: selectedPublic,
+        });
+        // 갱신된 공개 상태를 현재 연도별 통계 화면에 반영한다
+        if (statistics) {
+          // 그래프 데이터는 유지하고 저장된 공개 여부만 변경한다
+          setStatistics({ ...statistics, publicYsno: response });
+        }
+        // 저장이 완료된 독서 통계 설정 모달을 닫는다
+        setIsSettingsOpen(false);
+      };
+
+      // 설정 반영 후 처리 중 알림을 같은 저장 성공 알림으로 전환한다
+      await runBlockingOperation(saveReadingStatisticsSetting, {
+        success: {
+          // "통계 공개 여부가 저장되었습니다."
+          title: message("frontend.profile.readingStats.savedTitle"),
+          // "선택한 공개 여부를 반영했습니다."
+          text: message("frontend.profile.readingStats.saved"),
+        },
       });
-      // 갱신된 공개 상태를 현재 연도별 통계 화면에 반영한다
-      if (statistics) {
-        // 그래프 데이터는 유지하고 저장된 공개 여부만 변경한다
-        setStatistics({ ...statistics, publicYsno: response });
-      }
-      // 저장이 완료된 독서 통계 설정 모달을 닫는다
-      setIsSettingsOpen(false);
-      // "통계 설정이 저장되었습니다."
-      await sweetSuccess(
-        message("frontend.profile.readingStats.savedTitle"),
-        // "선택한 공개 여부를 반영했습니다."
-        message("frontend.profile.readingStats.saved"),
-      );
 
     } catch (error) {
       // "통계 설정을 저장하지 못했습니다."

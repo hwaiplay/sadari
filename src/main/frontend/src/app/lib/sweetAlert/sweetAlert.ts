@@ -21,6 +21,7 @@ type SweetAlertOptions = {
   showDenyButton?: boolean;
   allowOutsideClick?: boolean;
   closeSignal?: AbortSignal;
+  blockingCompletion?: SweetBlockingCompletionOptions;
 };
 
 type SweetAlertResult = {
@@ -30,7 +31,18 @@ type SweetAlertResult = {
   isDismissed: boolean;
 };
 
+export type SweetBlockingCompletionOptions = {
+  title: string;
+  text?: string;
+};
+
+type SweetBlockingCompletionReason = {
+  marker: symbol;
+  completion: SweetBlockingCompletionOptions;
+};
+
 const STYLE_ID = "sadari-sweet-alert-style";
+const SWEET_BLOCKING_COMPLETION_MARKER = Symbol("sadariSweetBlockingCompletion");
 
 const ICON_LABEL: Record<SweetAlertIcon, string> = {
   success: "✓",
@@ -49,6 +61,54 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
   question: "sadari-swal-icon-question",
   loading: "sadari-swal-icon-loading",
 };
+
+/**
+ * 처리 중 모달 종료 사유에서 같은 모달에 표시할 성공 정보를 조회한다
+ *
+ * @author SeungHyeon.Kang
+ * @param reason 작업 종료 신호에 포함된 사유
+ * @return 유효한 성공 전환 정보 또는 일반 종료일 때 null
+ */
+function getSweetBlockingCompletion(
+  reason: unknown,
+): SweetBlockingCompletionOptions | null {
+  // 종료 사유가 객체가 아니면 기존처럼 처리 중 모달을 닫는다
+  if (typeof reason !== "object" || reason === null) {
+    // 성공 전환 정보가 없음을 반환한다
+    return null;
+  }
+
+  const completionReason = reason as SweetBlockingCompletionReason;
+
+  // 이 모듈이 생성한 완료 표식과 제목이 모두 있을 때만 성공 전환으로 처리한다
+  if (completionReason.marker !== SWEET_BLOCKING_COMPLETION_MARKER
+      || typeof completionReason.completion?.title !== "string") {
+    // 다른 Abort 사유를 성공 화면으로 잘못 표시하지 않도록 null을 반환한다
+    return null;
+  }
+
+  // 검증된 성공 전환 문구를 반환한다
+  return completionReason.completion;
+}
+
+/**
+ * 처리 중 모달의 DOM을 유지한 채 성공 상태로 전환하도록 완료 신호를 전달한다
+ *
+ * @author SeungHyeon.Kang
+ * @param controller 현재 처리 중 모달에 연결된 종료 제어 객체
+ * @param completion 성공 제목과 선택 본문
+ * @return 반환값이 없다
+ */
+export function completeSweetBlockingOperation(
+  controller: AbortController,
+  completion: SweetBlockingCompletionOptions,
+): void {
+  // 일반 종료와 구분되는 내부 표식을 사유에 담아 같은 모달의 성공 전환을 요청한다
+  controller.abort({
+    marker: SWEET_BLOCKING_COMPLETION_MARKER,
+    completion,
+  } satisfies SweetBlockingCompletionReason);
+}
 
 /**
  * SweetAlert 모달에 필요한 스타일 태그를 한 번만 주입합니다.
@@ -94,6 +154,14 @@ function ensureSweetAlertStyle() {
       text-align: center;
       box-sizing: border-box;
       animation: sadari-swal-open 150ms ease-out;
+    }
+
+    .sadari-swal-modal-measuring {
+      position: fixed;
+      visibility: hidden;
+      width: min(360px, calc(100vw - 48px));
+      animation: none;
+      pointer-events: none;
     }
 
     .sadari-swal-icon {
@@ -582,6 +650,73 @@ function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
 }
 
 /**
+ * 처리 중 모달을 열기 전에 예정된 성공 알림의 실제 높이를 측정해 같은 크기를 확보한다
+ *
+ * @author SeungHyeon.Kang
+ * @param modal 크기를 확보할 처리 중 알림 모달
+ * @param completion 처리 완료 후 표시할 성공 제목과 선택 본문
+ * @param confirmButtonText 성공 알림에 표시할 확인 버튼 문구
+ * @return 반환값이 없다
+ */
+function reserveSweetBlockingCompletionHeight(
+  modal: HTMLDivElement,
+  completion: SweetBlockingCompletionOptions,
+  confirmButtonText: string,
+): void {
+  // 실제 모달 구조와 반응형 너비를 그대로 사용하는 화면 밖 측정용 복사본을 생성한다
+  const measurementModal = modal.cloneNode(true) as HTMLDivElement;
+  measurementModal.classList.add("sadari-swal-modal-measuring");
+  // 순간적으로 추가되는 측정 복사본을 보조기기가 별도 알림으로 인식하지 않게 한다
+  measurementModal.setAttribute("aria-hidden", "true");
+  measurementModal.removeAttribute("role");
+
+  const measurementIcon = measurementModal.querySelector<HTMLElement>(".sadari-swal-icon");
+  const measurementIconLabel = measurementModal.querySelector<HTMLElement>(".sadari-swal-icon-label");
+  const measurementTitle = measurementModal.querySelector<HTMLElement>(".sadari-swal-title");
+  const measurementProcessingText = measurementModal.querySelector<HTMLElement>(".sadari-swal-text");
+
+  // 성공 상태의 아이콘과 제목으로 바꿔 글자 줄바꿈까지 포함한 높이를 계산한다
+  if (measurementIcon && measurementIconLabel && measurementTitle) {
+    measurementIcon.className = `sadari-swal-icon ${ICON_CLASS.success}`;
+    measurementIconLabel.textContent = ICON_LABEL.success;
+    measurementTitle.textContent = completion.title;
+  }
+
+  // 성공 본문이 있으면 처리 중 본문 위치에서 실제 성공 문구 높이를 측정한다
+  if (completion.text) {
+    const measurementCompletionText = measurementProcessingText ?? document.createElement("p");
+    measurementCompletionText.className = "sadari-swal-text";
+    measurementCompletionText.textContent = completion.text;
+
+    // 처리 중 본문이 없던 모달은 성공 제목 바로 뒤에 측정용 본문을 추가한다
+    if (!measurementProcessingText && measurementTitle) {
+      measurementTitle.insertAdjacentElement("afterend", measurementCompletionText);
+    }
+  }
+
+  // 성공 본문이 없으면 처리 중 안내 문구를 제외한 실제 완료 높이를 계산한다
+  else {
+    measurementProcessingText?.remove();
+  }
+
+  const measurementActions = document.createElement("div");
+  measurementActions.className = "sadari-swal-actions";
+  const measurementConfirmButton = document.createElement("button");
+  measurementConfirmButton.className = "sadari-swal-button";
+  measurementConfirmButton.type = "button";
+  measurementConfirmButton.textContent = confirmButtonText;
+  measurementActions.appendChild(measurementConfirmButton);
+  measurementModal.appendChild(measurementActions);
+
+  // 첫 화면이 그려지기 전에 성공 알림의 실제 반응형 높이를 브라우저에서 계산한다
+  document.body.appendChild(measurementModal);
+  const completionHeight = measurementModal.getBoundingClientRect().height;
+  measurementModal.remove();
+  // 로딩 내용이 더 길지 않은 일반 흐름에서는 처음부터 성공 알림과 같은 높이를 유지한다
+  modal.style.minHeight = `${completionHeight}px`;
+}
+
+/**
  * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시합니다.
  *
  * @author HanWon.Jang
@@ -609,7 +744,7 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     const overlay = document.createElement("div");
     const modal = document.createElement("div");
-    const iconType = options.icon ?? "info";
+    let iconType = options.icon ?? "info";
     let isClosed = false;
     let closeSignalHandler: (() => void) | null = null;
 
@@ -636,29 +771,6 @@ export function sweetAlert(options: SweetAlertOptions) {
 
       resolve(closeSweetAlert(overlay, result));
     };
-
-    /**
-     * 비동기 작업이 끝나면 처리 중 모달을 사용자 입력 없이 닫는다
-     *
-     * @author SeungHyeon.Kang
-     * @return 반환값이 없다
-     */
-    closeSignalHandler = () => {
-
-      // 완료된 작업의 안내 모달을 닫힘 상태로 정리한다
-      close({
-        isConfirmed: false,
-        isDenied: false,
-        isSecondaryAction: false,
-        isDismissed: true,
-      });
-    };
-
-    // 작업 종료 신호가 제공되면 현재 모달만 자동으로 닫을 수 있도록 구독한다
-    if (options.closeSignal) {
-      // 작업이 끝나는 최초 신호만 처리하도록 일회성 이벤트를 등록한다
-      options.closeSignal.addEventListener("abort", closeSignalHandler, { once: true });
-    }
 
     lockBodyScroll();
     overlay.className = "sadari-swal-overlay";
@@ -785,24 +897,126 @@ export function sweetAlert(options: SweetAlertOptions) {
 
     let confirmButton: HTMLButtonElement | null = null;
 
+    /**
+     * 하단 확인 버튼 선택으로 현재 알림 모달을 완료한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    const handleConfirmButtonClick = (): void => {
+      // 사용자의 확인 선택으로 현재 알림을 완료한다
+      close({
+        isConfirmed: true,
+        isDenied: false,
+        isSecondaryAction: false,
+        isDismissed: false,
+      });
+    };
+
+    /**
+     * 현재 알림을 완료할 공통 확인 버튼을 생성한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 확인 선택을 처리하는 버튼
+     */
+    const createConfirmButton = (): HTMLButtonElement => {
+      const button = document.createElement("button");
+      button.className = "sadari-swal-button";
+      button.type = "button";
+      // "확인"
+      button.textContent = options.confirmButtonText ?? message("frontend.common.confirm");
+      button.addEventListener("click", handleConfirmButtonClick);
+      // 공통 확인 동작이 연결된 버튼을 반환한다
+      return button;
+    };
+
     // 뒤로가기 취소 안내처럼 보조 버튼만 필요한 모달에는 확인 버튼을 만들지 않는다
     if (options.showConfirmButton !== false) {
-      confirmButton = document.createElement("button");
-      confirmButton.className = "sadari-swal-button";
-      confirmButton.type = "button";
-      // "확인"
-      confirmButton.textContent = options.confirmButtonText ?? message("frontend.common.confirm");
-      confirmButton.addEventListener("click", () => {
-
-        // 사용자의 확인 선택으로 현재 알림을 완료한다
-        close({
-          isConfirmed: true,
-          isDenied: false,
-          isSecondaryAction: false,
-          isDismissed: false,
-        });
-      });
+      confirmButton = createConfirmButton();
       actions.appendChild(confirmButton);
+    }
+
+    /**
+     * 처리 중 모달의 기존 DOM을 성공 아이콘과 완료 문구 및 확인 버튼으로 교체한다
+     *
+     * @author SeungHyeon.Kang
+     * @param completion 성공 제목과 선택 본문
+     * @return 반환값이 없다
+     */
+    const transitionToSuccess = (
+      completion: SweetBlockingCompletionOptions,
+    ): void => {
+      iconType = "success";
+      // 보조기기가 처리 완료 상태와 바뀐 제목을 다시 안내할 수 있도록 상태 속성을 갱신한다
+      modal.setAttribute("aria-busy", "false");
+      modal.setAttribute("aria-live", "polite");
+      // 같은 아이콘 엘리먼트의 클래스를 변경해 로딩 링을 성공 표시로 전환한다
+      icon.className = `sadari-swal-icon ${ICON_CLASS[iconType]}`;
+      iconLabel.textContent = ICON_LABEL[iconType];
+      title.textContent = completion.title;
+
+      const processingText = modal.querySelector<HTMLElement>(".sadari-swal-text");
+
+      // 완료 본문이 있으면 기존 처리 중 본문을 같은 위치에서 교체한다
+      if (completion.text) {
+        const completionText = processingText ?? document.createElement("p");
+        completionText.className = "sadari-swal-text";
+        completionText.textContent = completion.text;
+
+        // 처리 중 모달에 본문이 없었던 경우 제목 다음 위치에 완료 본문을 추가한다
+        if (!processingText) {
+          title.insertAdjacentElement("afterend", completionText);
+        }
+      } else {
+        // 완료 본문을 지정하지 않았으면 처리 중 안내 문구를 제거한다
+        processingText?.remove();
+      }
+
+      // 처리 중에는 없던 확인 버튼을 성공 상태에서 하나만 제공한다
+      actions.replaceChildren();
+      confirmButton = createConfirmButton();
+      actions.appendChild(confirmButton);
+
+      // 버튼이 없어서 붙이지 않았던 작업 영역을 같은 모달 하단에 추가한다
+      if (!actions.isConnected) {
+        modal.appendChild(actions);
+      }
+
+      // 크기는 처음부터 확보되어 있으므로 내용 전환 직후 확인 버튼으로 조작 위치를 이동한다
+      if (modal.isConnected) {
+        confirmButton.focus();
+      }
+    };
+
+    /**
+     * 비동기 작업 종료 사유에 따라 처리 중 모달을 닫거나 같은 모달에서 성공 상태로 전환한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    closeSignalHandler = () => {
+      const completion = getSweetBlockingCompletion(options.closeSignal?.reason);
+
+      // 성공 전환 정보가 있으면 기존 모달을 제거하지 않고 완료 상태만 바꾼다
+      if (completion) {
+        transitionToSuccess(completion);
+        // 성공 모달은 사용자가 확인할 때까지 유지하도록 일반 닫기 처리를 종료한다
+        return;
+      }
+
+      // 완료 정보가 없는 작업은 기존처럼 처리 중 모달을 자동으로 닫는다
+      close({
+        isConfirmed: false,
+        isDenied: false,
+        isSecondaryAction: false,
+        isDismissed: true,
+      });
+    };
+
+    // 작업 종료 신호가 제공되면 현재 모달만 닫거나 완료 상태로 전환하도록 구독한다
+    if (options.closeSignal) {
+      // 작업이 끝나는 최초 신호만 처리하도록 일회성 이벤트를 등록한다
+      options.closeSignal.addEventListener("abort", closeSignalHandler, { once: true });
     }
 
     overlay.addEventListener("click", (event) => {
@@ -832,6 +1046,17 @@ export function sweetAlert(options: SweetAlertOptions) {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
+    // 완료 문구를 미리 아는 처리 중 알림은 첫 렌더링부터 성공 알림 높이를 확보한다
+    if (options.blockingCompletion) {
+      // "확인"
+      const completionConfirmButtonText = options.confirmButtonText ?? message("frontend.common.confirm");
+      reserveSweetBlockingCompletionHeight(
+        modal,
+        options.blockingCompletion,
+        completionConfirmButtonText,
+      );
+    }
+
     // 사용 가능한 기본 동작이 있으면 해당 버튼에 포커스를 두고 버튼이 없으면 모달 본문을 선택한다
     if (confirmButton) {
       // 일반 알림의 기본 확인 동작에 포커스를 설정한다
@@ -847,6 +1072,7 @@ type SweetBlockingOperationOptions = {
   title: string;
   text?: string;
   closeSignal: AbortSignal;
+  completion?: SweetBlockingCompletionOptions;
 };
 
 /**
@@ -867,6 +1093,7 @@ export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
     showConfirmButton: false,
     allowOutsideClick: false,
     closeSignal: options.closeSignal,
+    blockingCompletion: options.completion,
   });
 }
 
