@@ -519,55 +519,110 @@ export const emptyState = style({
   color: vars.color.gray600,
 });
 
-export const ratingList = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: "9px",
+export const ratingChart = style({
+  display: "grid",
+  gridTemplateColumns: "52px minmax(0, 1fr) 52px",
+  gridTemplateRows: "18px 140px 24px",
+  width: "100%",
+  minWidth: 0,
 });
 
-export const ratingRow = style({
+export const ratingTickList = style({
+  gridColumn: 1,
+  gridRow: 2,
+  display: "flex",
+  flexDirection: "column",
+  justifyContent: "space-between",
+  alignItems: "flex-end",
+  paddingRight: "6px",
+});
+
+export const ratingTick = style({
+  fontFamily: vars.font.medium,
+  fontSize: "10px",
+  lineHeight: 1,
+  color: vars.color.gray600,
+  transform: "translateY(-50%)",
+});
+
+export const ratingPlotGrid = style({
+  gridColumn: 2,
+  gridRow: 2,
+  zIndex: 0,
+  width: "100%",
+  height: "100%",
+  borderLeft: `1px solid ${vars.color.gray300}`,
+  borderBottom: `1px solid ${vars.color.gray300}`,
+  backgroundImage: `repeating-linear-gradient(to right, ${vars.color.gray300} 0 2px, transparent 2px 6px), repeating-linear-gradient(to right, ${vars.color.gray300} 0 2px, transparent 2px 6px)`,
+  backgroundPosition: "0 0, 0 50%",
+  backgroundRepeat: "no-repeat",
+  backgroundSize: "100% 1px, 100% 1px",
+  boxSizing: "border-box",
+});
+
+export const ratingBars = style({
+  gridColumn: 2,
+  gridRow: "1 / span 3",
+  zIndex: 1,
   display: "grid",
-  gridTemplateColumns: "30px minmax(0, 1fr) 38px",
-  alignItems: "center",
-  gap: "9px",
+  gridTemplateColumns: "repeat(6, minmax(0, 1fr))",
+  gap: "8px",
+  minWidth: 0,
+});
+
+export const ratingBar = style({
+  display: "grid",
+  gridTemplateRows: "18px 140px 24px",
+  minWidth: 0,
+});
+
+export const ratingCount = style({
+  alignSelf: "start",
+  fontFamily: vars.font.semibold,
+  fontSize: "10px",
+  lineHeight: 1,
+  textAlign: "center",
+  color: vars.color.gray900,
+  whiteSpace: "nowrap",
+});
+
+export const ratingTrack = style({
+  alignSelf: "stretch",
+  justifySelf: "center",
+  width: "min(60%, 26px)",
+  height: "100%",
+  overflow: "hidden",
+  borderRadius: "7px 7px 3px 3px",
+  backgroundColor: "#eef2ef",
+  display: "flex",
+  alignItems: "flex-end",
+});
+
+export const ratingFill = style({
+  display: "block",
+  width: "100%",
+  minHeight: 0,
+  borderRadius: "inherit",
+  background: "linear-gradient(180deg, #9edfc2 0%, #34704d 100%)",
+  transition: "height 220ms ease",
 });
 
 export const ratingGrade = style({
+  alignSelf: "end",
+  justifySelf: "center",
   fontFamily: vars.font.semibold,
-  fontSize: "11px",
+  fontSize: "12px",
+  lineHeight: 1,
   color: vars.color.gray700,
   display: "inline-flex",
   alignItems: "center",
-  gap: "3px",
+  gap: "2px",
 });
 
 export const ratingStar = style({
   color: "#e4b94f",
   fontSize: "12px",
   lineHeight: 1,
-});
-
-export const ratingTrack = style({
-  height: "9px",
-  overflow: "hidden",
-  borderRadius: "999px",
-  backgroundColor: "#eef2ef",
-});
-
-export const ratingFill = style({
-  display: "block",
-  minWidth: 0,
-  height: "100%",
-  borderRadius: "inherit",
-  background: "linear-gradient(90deg, #9edfc2 0%, #34704d 100%)",
-  transition: "width 220ms ease",
-});
-
-export const ratingCount = style({
-  textAlign: "right",
-  fontFamily: vars.font.semibold,
-  fontSize: "11px",
-  color: vars.color.gray900,
 });
 
 export const comparisonTable = style({

@@ -24,7 +24,7 @@ const rotateProfileSaveSpinner = keyframes({
 export const page = style({
   width: "100%",
   minHeight: "calc(100svh - 52px - 60px)",
-  padding: "0 0 110px",
+  padding: 0,
   backgroundColor: "#ffffff",
 });
 
@@ -394,6 +394,13 @@ export const goalAchievementSummary = style({
 export const profileStatsSummary = style({
   padding: "9px 8px 14px",
 });
+
+export const myProfileStatsSummary = style([
+  profileStatsSummary,
+  {
+    padding: "4px 8px 8px",
+  },
+]);
 
 export const profileStatsTitle = style({
   margin: "0 0 16px",

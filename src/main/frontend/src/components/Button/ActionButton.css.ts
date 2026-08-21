@@ -101,6 +101,7 @@ export const icon = style({
 export const label = style({
   display: "inline-flex",
   alignItems: "center",
+  whiteSpace: "nowrap",
   selectors: {
     "&:empty": {
       display: "none",
