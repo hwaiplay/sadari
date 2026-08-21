@@ -41,6 +41,7 @@ export type ReadingTimerBookTime = {
 
 export type ReadingTimerSummary = {
   activeTimer?: ReadingTimer;
+  clientSyncMillis?: number;
   weekStart: string;
   weekEnd: string;
   serverDate: string;
