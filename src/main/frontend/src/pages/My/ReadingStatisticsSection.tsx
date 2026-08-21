@@ -442,27 +442,27 @@ const getRatingMaxCount = (ratingList: ReadingRatingCount[]): number => {
  * @return 0부터 4까지의 잔디 색상 수준
  */
 const getHeatmapLevel = (readSecs: number): number => {
-  // 기록이 없으면 가장 옅은 빈 잔디 색상을 사용한다
-  if (readSecs <= 0) {
+  // 10분 미만은 기록이 없는 날을 포함해 첫 번째 잔디 색상을 사용한다
+  if (readSecs < 600) {
     return 0;
   }
 
-  // 출석 기준인 10분 미만은 첫 번째 독서 색상을 사용한다
-  if (readSecs < 600) {
+  // 30분 미만은 두 번째 잔디 색상을 사용한다
+  if (readSecs < 1800) {
     return 1;
   }
 
-  // 30분 미만은 두 번째 독서 색상을 사용한다
-  if (readSecs < 1800) {
+  // 한 시간 미만은 세 번째 잔디 색상을 사용한다
+  if (readSecs < 3600) {
     return 2;
   }
 
-  // 한 시간 미만은 세 번째 독서 색상을 사용한다
-  if (readSecs < 3600) {
+  // 네 시간 미만은 네 번째 잔디 색상을 사용한다
+  if (readSecs < 14400) {
     return 3;
   }
 
-  // 한 시간 이상은 가장 진한 독서 색상을 사용한다
+  // 네 시간 이상은 가장 진한 다섯 번째 잔디 색상을 사용한다
   return 4;
 };
 
