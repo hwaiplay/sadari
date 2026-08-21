@@ -15,6 +15,7 @@ import {
   uptReadingTimerApi,
 } from "@/features/Timer/api/readingTimerApi";
 import { getTimerSummaryOptions, useTimerSummaryQuery } from "@/features/Timer/hooks/useTimerSummaryQuery";
+import { getLiveTimerSecs, syncTimerSummary } from "@/features/Timer/lib/readingTimerClock";
 import { notifyReadingTimerRunningChange } from "@/features/Timer/lib/readingTimerEvents";
 import { clsx } from "clsx";
 import { useEffect, useRef, useState } from "react";
@@ -85,13 +86,13 @@ export function HomeTimerPlayer() {
       return;
     }
 
-    // 서버가 확정한 누적 독서 시간을 홈 플레이어에 반영한다
-    setElapsedSeconds(activeTimer.readSecs);
+    // 캐시 수신 시각부터 실제로 흐른 시간을 포함해 홈 플레이어에 반영한다
+    setElapsedSeconds(getLiveTimerSecs(timerSummaryQuery.data));
     // 새 활성 세션에는 이전 완료 애니메이션 상태를 적용하지 않는다
     setClosingTimer(undefined);
     // 활성 세션 플레이어를 정상 위치에 표시한다
     setIsExiting(false);
-  }, [activeTimer]);
+  }, [activeTimer, timerSummaryQuery.data]);
 
   useEffect(() => {
     // 실행 상태가 아닌 세션에는 화면용 초 증가를 적용하지 않는다
@@ -108,9 +109,8 @@ export function HomeTimerPlayer() {
      */
     const tickPlayer = (): void => {
 
-      const maxSessionSeconds = timerSummaryQuery.data?.maxSessionSecs ?? 28800;
-      // 서버의 최대 세션 인정시간 안에서만 화면 표시 시간을 증가시킨다
-      setElapsedSeconds((currentSeconds) => Math.min(maxSessionSeconds, currentSeconds + 1));
+      // interval 지연과 백그라운드 정지를 건너뛰도록 동기화 시각부터 실제 경과 초를 다시 계산한다
+      setElapsedSeconds(getLiveTimerSecs(timerSummaryQuery.data));
     };
 
     // 실행 중인 홈 플레이어를 1초 간격으로 갱신한다
@@ -130,7 +130,7 @@ export function HomeTimerPlayer() {
 
     // 홈 플레이어 상태 변경 시 실행할 반복 작업 정리 함수를 반환한다
     return clearPlayerInterval;
-  }, [activeTimer?.tmrxStat, timerSummaryQuery.data?.maxSessionSecs]);
+  }, [activeTimer?.tmrxStat, timerSummaryQuery.data]);
 
   useEffect(() => {
     /**
@@ -161,10 +161,12 @@ export function HomeTimerPlayer() {
    */
   const applySummary = (nextSummary: ReadingTimerSummary): void => {
 
+    // 상태 변경 응답에 최초 브라우저 수신 시각을 기록한다
+    const syncedSummary = syncTimerSummary(nextSummary);
     // 타이머 화면과 내비게이션이 즉시 같은 결과를 사용하도록 공통 캐시를 갱신한다
-    queryClient.setQueryData(getTimerSummaryOptions().queryKey, nextSummary);
+    queryClient.setQueryData(getTimerSummaryOptions().queryKey, syncedSummary);
     // 하단 내비게이션의 실행 표시를 서버 상태와 즉시 일치시킨다
-    notifyReadingTimerRunningChange(nextSummary.activeTimer?.tmrxStat === "RUNNING");
+    notifyReadingTimerRunningChange(syncedSummary.activeTimer?.tmrxStat === "RUNNING");
   };
 
   /**

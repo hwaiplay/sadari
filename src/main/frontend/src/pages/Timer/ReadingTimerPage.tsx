@@ -31,6 +31,7 @@ import {
 } from "@/features/Timer/api/readingTimerApi";
 import { getTimerSummaryOptions } from "@/features/Timer/hooks/useTimerSummaryQuery";
 import { useBookTimeQuery } from "@/features/Timer/hooks/useBookTimeQuery";
+import { getLiveTimerSecs, syncTimerSummary } from "@/features/Timer/lib/readingTimerClock";
 import { notifyReadingTimerRunningChange } from "@/features/Timer/lib/readingTimerEvents";
 import { getReadingHeatmapApi, type ReadingHeatmap } from "@/features/User/api/userApi";
 import { ReadingHeatmapChart } from "@/pages/My/ReadingStatisticsSection";
@@ -1164,14 +1165,16 @@ export default function ReadingTimerPage() {
    */
   const applySummary = useCallback((nextSummary: ReadingTimerSummary) => {
 
+    // 상태 변경 응답에 최초 브라우저 수신 시각을 기록하고 캐시 재사용 시에는 기존 기준을 유지한다
+    const syncedSummary = syncTimerSummary(nextSummary);
     // 서버 요약을 화면 상태에 설정한다
-    setSummary(nextSummary);
+    setSummary(syncedSummary);
     // 내비게이션과 같은 서버 요약을 사용하도록 공통 Query 캐시를 갱신한다
-    queryClient.setQueryData(getTimerSummaryOptions().queryKey, nextSummary);
-    // 서버 기준 현재 세션 누적 시간을 카운터에 설정한다
-    setDisplaySeconds(nextSummary.activeTimer?.readSecs ?? 0);
+    queryClient.setQueryData(getTimerSummaryOptions().queryKey, syncedSummary);
+    // 캐시가 오래되어도 수신 후 실제로 흐른 시간을 포함해 화면 카운터에 설정한다
+    setDisplaySeconds(getLiveTimerSecs(syncedSummary));
     // 네비게이션 표시가 상태 변경 응답과 즉시 일치하도록 실행 여부를 알린다
-    notifyReadingTimerRunningChange(nextSummary.activeTimer?.tmrxStat === "RUNNING");
+    notifyReadingTimerRunningChange(syncedSummary.activeTimer?.tmrxStat === "RUNNING");
   }, []);
 
   useEffect(() => {
@@ -1217,13 +1220,14 @@ export default function ReadingTimerPage() {
       return undefined;
     }
     /**
-     * 서버가 준 누적 시간에서 화면 표시 초를 1초 증가시킨다
+     * 서버 응답 수신 후 실제 경과시간을 기준으로 화면 표시 초를 다시 계산한다
      *
      * @author SeungHyeon.Kang
+     * @return 반환값이 없다
      */
-    const tickTimer = () => {
-      // 단일 세션 최대 시간을 넘지 않도록 화면 초를 증가시킨다
-      setDisplaySeconds((currentSeconds) => Math.min(summary.maxSessionSecs, currentSeconds + 1));
+    const tickTimer = (): void => {
+      // interval 지연이나 백그라운드 정지와 관계없이 공통 기준 시각의 현재 초를 반영한다
+      setDisplaySeconds(getLiveTimerSecs(summary));
     };
     // 실행 중 화면 카운터를 1초 간격으로 갱신한다
     const intervalId = window.setInterval(tickTimer, 1000);
@@ -1231,7 +1235,7 @@ export default function ReadingTimerPage() {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [summary?.activeTimer?.tmrxStat, summary?.maxSessionSecs]);
+  }, [summary]);
 
   /**
    * 도서 선택값으로 새 독서 타이머를 시작한다
