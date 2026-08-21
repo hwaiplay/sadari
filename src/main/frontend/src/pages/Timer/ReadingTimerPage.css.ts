@@ -287,7 +287,7 @@ export const timerPanelWithoutBook = style({
 export const clock = style({
   margin: 0,
   color: vars.color.gray900,
-  fontFamily: "PretendardExtraBold, system-ui, sans-serif",
+  fontFamily: "PretendardBold, system-ui, sans-serif",
   fontSize: "clamp(40px, 11vw, 52px)",
   fontVariantNumeric: "tabular-nums",
   letterSpacing: "-2px",
