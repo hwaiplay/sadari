@@ -1094,7 +1094,7 @@ function ProfileEditPage() {
     return (
       /* 프로필 활동 통계 영역 */
       <section className={styles.monthlySummary} aria-label={/* "내 활동" */ message("frontend.profile.stats.title")}>
-        <div className={styles.profileStatsSummary}>
+        <div className={styles.myProfileStatsSummary}>
           {/* 총 읽은 책과 팔로우 및 좋아요 통계 영역 */}
           <div className={styles.goalAchievementGrid}>
             {stats.map((stat) => (

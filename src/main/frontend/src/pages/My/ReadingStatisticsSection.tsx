@@ -416,7 +416,7 @@ const getComparisonRows = (statistics: ReadingStatistics): ReadingComparisonRow[
 };
 
 /**
- * 별점 분포 막대의 상대 너비를 계산할 최대 독후감 수를 조회한다
+ * 별점 분포 세로 막대의 상대 높이를 계산할 최대 독후감 수를 조회한다
  *
  * @author SeungHyeon.Kang
  * @param ratingList 정수 별점별 독후감 수 목록
@@ -431,8 +431,30 @@ const getRatingMaxCount = (ratingList: ReadingRatingCount[]): number => {
     ratingMaxCount = Math.max(ratingMaxCount, Math.max(0, rating.reptCnt));
   }
 
-  // 막대 너비 비율의 분모로 사용할 최대 독후감 수를 반환한다
+  // 막대 높이 비율의 분모로 사용할 최대 독후감 수를 반환한다
   return ratingMaxCount;
+};
+
+/**
+ * 별점 세로 막대그래프의 권수 축에 표시할 상단과 중간 및 0권 눈금을 구성한다
+ *
+ * @author SeungHyeon.Kang
+ * @param ratingList 정수 별점별 독후감 수 목록
+ * @return 큰 값부터 0까지 배치할 권수 축 눈금 목록
+ */
+const getRatingAxisTicks = (ratingList: ReadingRatingCount[]): number[] => {
+  // 모든 별점이 0권이어도 축 높이를 유지하도록 상단 기준을 최소 1권으로 계산한다
+  const ratingAxisMax = Math.max(1, getRatingMaxCount(ratingList));
+  // 정수 권수 눈금이 상단과 중복되지 않도록 중간 눈금을 계산한다
+  const middleTick = Math.ceil(ratingAxisMax / 2);
+
+  // 상단 기준이 1권이면 중복되는 중간 눈금을 제외한 두 눈금을 반환한다
+  if (middleTick === ratingAxisMax) {
+    return [ratingAxisMax, 0];
+  }
+
+  // 권수 축의 상단과 중간 및 기준선 눈금을 반환한다
+  return [ratingAxisMax, middleTick, 0];
 };
 
 /**
@@ -1151,38 +1173,56 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
   };
 
   /**
-   * 한 별점의 독후감 수를 최대 건수에 비례하는 막대로 렌더링한다
+   * 권수 축 한 눈금을 권 단위 문구로 렌더링한다
+   *
+   * @author SeungHyeon.Kang
+   * @param ratingTick 권수 축에 표시할 독후감 수
+   * @return 권 단위가 포함된 권수 축 눈금 한 항목
+   */
+  const renderRatingTick = (ratingTick: number) => {
+    // 별도 축 제목 없이 단위를 확인할 수 있는 권수 눈금을 반환한다
+    return (
+      <span className={styles.ratingTick} key={ratingTick}>
+        {/* "{0}권" */}
+        {message("frontend.common.bookCount", [ratingTick])}
+      </span>
+    );
+  };
+
+  /**
+   * 한 별점의 독후감 수를 권수 축에 비례하는 세로 막대로 렌더링한다
    *
    * @author SeungHyeon.Kang
    * @param rating 별점과 해당 독후감 수
-   * @return 별점 분포 막대 한 항목
+   * @return 별점 분포 세로 막대 한 항목
    */
   const renderRating = (rating: ReadingRatingCount) => {
     // 서버 집계값이 소수로 전달되더라도 화면에는 버림 처리한 정수 별점만 표시한다
     const ratingGrade = Math.floor(rating.reptGrde);
-    // 현재 별점 분포에서 가장 많은 독후감 수를 막대 너비 기준으로 조회한다
-    const ratingMaxCount = getRatingMaxCount(statistics?.ratingList ?? []);
-    // 전체 건수가 0이면 빈 막대를 유지하고 나머지는 최대 건수에 대한 비율을 계산한다
-    const ratingWidth = ratingMaxCount > 0 ? (Math.max(0, rating.reptCnt) / ratingMaxCount) * 100 : 0;
+    // 음수인 비정상 집계값이 차트 높이와 화면 권수에 반영되지 않도록 보정한다
+    const ratingCount = Math.max(0, rating.reptCnt);
+    // 권수 축의 상단 기준에 대한 현재 별점의 세로 막대 높이를 계산한다
+    const ratingHeight = (ratingCount / ratingAxisMax) * 100;
 
-    // 별점과 비례 막대 및 해당 권수를 한 행으로 반환한다
+    // 별점과 권수 및 세로 막대를 한 열로 반환한다
     return (
-      /* 별점별 독후감 수 막대 개별 항목 영역 */
-      <div className={styles.ratingRow} key={ratingGrade}>
-        <span
-          className={styles.ratingGrade}
-          aria-label={message("frontend.profile.readingStats.ratingGrade", [ratingGrade])}
-        >
-          {ratingGrade}
-          <span className={styles.ratingStar} aria-hidden="true">★</span>
-        </span>
-        <div className={styles.ratingTrack} aria-hidden="true">
-          <span className={styles.ratingFill} style={{ width: `${ratingWidth}%` }} />
-        </div>
-        <strong className={styles.ratingCount}>
-          {/* "{0}권" */}
-          {message("frontend.common.bookCount", [rating.reptCnt])}
+      /* 별점별 독후감 수 세로 막대 개별 항목 영역 */
+      <div
+        className={styles.ratingBar}
+        key={ratingGrade}
+        role="listitem"
+        aria-label={/* "별점 {0}, {1}권" */ message("frontend.profile.readingStats.ratingBarAria", [ratingGrade, ratingCount])}
+      >
+        <strong className={styles.ratingCount} aria-hidden="true">
+          {ratingCount}
         </strong>
+        <div className={styles.ratingTrack} aria-hidden="true">
+          <span className={styles.ratingFill} style={{ height: `${ratingHeight}%` }} />
+        </div>
+        <span className={styles.ratingGrade} aria-hidden="true">
+          {ratingGrade}
+          <span className={styles.ratingStar}>★</span>
+        </span>
       </div>
     );
   };
@@ -1263,6 +1303,14 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
 
   // 통계가 준비된 경우에만 현재 및 이전 연도의 비교 행을 구성한다
   const comparisonRows = statistics ? getComparisonRows(statistics) : [];
+  // 통계가 준비되기 전에도 세로 막대그래프의 기본 권수 축을 유지한다
+  const ratingAxisTicks = getRatingAxisTicks(statistics?.ratingList ?? []);
+  // 첫 번째 권수 눈금을 모든 세로 막대 높이의 상단 기준으로 사용한다
+  const ratingAxisMax = ratingAxisTicks[0] ?? 1;
+  // 서버의 5점부터 0점 순서를 가로축의 0점부터 5점 순서로 바꿀 복사본을 생성한다
+  const ratingChartList = statistics ? [...statistics.ratingList] : [];
+  // 원본 서버 상태는 유지하고 복사한 별점 목록만 오름차순 표시 순서로 뒤집는다
+  ratingChartList.reverse();
   // 본인 화면과 공개 프로필에 맞는 독서 통계 제목 문구 키를 결정한다
   const sectionTitleKey = isOwner
     ? "frontend.profile.readingStats.title"
@@ -1405,7 +1453,14 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
                 {/* "별점 분포" */}
                 {message("frontend.profile.readingStats.ratingTitle")}
               </h3>
-              <div className={styles.ratingList}>{statistics.ratingList.map(renderRating)}</div>
+              {/* 권 단위 세로축과 별점 눈금을 사용하는 별점별 세로 막대그래프 영역 */}
+              <div className={styles.ratingChart}>
+                <div className={styles.ratingTickList}>{ratingAxisTicks.map(renderRatingTick)}</div>
+                <div className={styles.ratingPlotGrid} aria-hidden="true" />
+                <div className={styles.ratingBars} role="list">
+                  {ratingChartList.map(renderRating)}
+                </div>
+              </div>
             </section>
 
             {/* 현재 연도와 이전 연도의 같은 기간 독서 기록 비교 영역 */}

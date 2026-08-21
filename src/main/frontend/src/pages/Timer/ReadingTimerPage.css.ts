@@ -336,7 +336,7 @@ export const actionButton = style({
   borderRadius: "10px",
   boxSizing: "border-box",
   "@media": {
-    "screen and (max-width: 340px)": {
+    "screen and (max-width: 400px)": {
       padding: "0 6px",
       fontSize: "12px",
     },
