@@ -1,10 +1,17 @@
-import { sweetBlockingOperation } from "@/app/lib/sweetAlert/sweetAlert";
+import {
+  completeSweetBlockingOperation,
+  sweetBlockingOperation,
+  type SweetBlockingCompletionOptions,
+} from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 
 type BlockingOperationOptions = {
   title?: string;
   text?: string;
+  success?: BlockingOperationCompletion;
 };
+
+export type BlockingOperationCompletion = SweetBlockingCompletionOptions;
 
 type BlockingOperationTask<T> = () => Promise<T>;
 
@@ -22,6 +29,7 @@ const activeOperationIds = new Set<number>();
 let nextOperationId = 0;
 let nextNavigationGuardId = 0;
 let modalAbortController: AbortController | null = null;
+let modalResultPromise: Promise<unknown> | null = null;
 let activeNavigationGuardId: string | null = null;
 let isNavigationGuardActive = false;
 let isPopStateListenerRegistered = false;
@@ -337,11 +345,12 @@ export function beginBlockingOperation(options: BlockingOperationOptions = {}): 
     // 상태 변경 응답이 확정될 때까지 현재 화면의 이동을 차단한다
     activateNavigationGuard();
     // "처리 중입니다."
-    void sweetBlockingOperation({
+    modalResultPromise = sweetBlockingOperation({
       title: options.title ?? message("frontend.common.processing"),
       // "처리가 완료될 때까지 잠시만 기다려주세요."
       text: options.text ?? message("frontend.common.processingWait"),
       closeSignal: modalAbortController.signal,
+      completion: options.success,
     });
   }
 
@@ -354,30 +363,44 @@ export function beginBlockingOperation(options: BlockingOperationOptions = {}): 
  *
  * @author SeungHyeon.Kang
  * @param operationId 완료된 상태 변경 작업 식별값
+ * @param completion 같은 모달에 표시할 선택 성공 정보
  * @return 처리 중 화면과 이동 가드 정리 완료 Promise
  */
-export function endBlockingOperation(operationId: number): Promise<void> {
+export async function endBlockingOperation(
+  operationId: number,
+  completion?: BlockingOperationCompletion,
+): Promise<void> {
   // 이미 완료된 요청은 다른 상태 변경 작업의 진행 상태에 영향을 주지 않는다
   if (!activeOperationIds.delete(operationId)) {
-    // 중복 해제 요청을 완료된 Promise로 종료한다
-    return Promise.resolve();
+    // 중복 해제 요청을 추가 화면 변경 없이 종료한다
+    return;
   }
 
   // 다른 상태 변경 작업이 남아 있으면 공통 모달과 이동 가드를 유지한다
   if (activeOperationIds.size > 0) {
-    // 마지막 요청이 완료될 때까지 현재 처리 중 화면을 유지한다
-    return Promise.resolve();
+    // 마지막 요청이 완료될 때까지 현재 처리 중 화면을 유지하고 종료한다
+    return;
   }
 
+  const completedModalPromise = modalResultPromise;
   // 성공 또는 실패 알림이 열리기 전에 History 이동 없이 논리 가드만 해제한다
   deactivateNavigationGuard();
-  // 작업 완료 신호로 버튼 없는 처리 중 모달을 닫는다
-  modalAbortController?.abort();
+  // 성공 정보를 지정한 작업은 현재 DOM을 유지한 채 로딩 상태를 성공 상태로 전환한다
+  if (modalAbortController && completion) {
+    completeSweetBlockingOperation(modalAbortController, completion);
+  } else {
+    // 완료 정보가 없는 작업은 기존처럼 버튼 없는 처리 중 모달을 닫는다
+    modalAbortController?.abort();
+  }
   // 다음 최초 작업에서 새 모달 제어 객체를 만들도록 참조를 비운다
   modalAbortController = null;
+  // 다음 작업이 이전 모달의 확인 완료 Promise를 기다리지 않도록 참조를 비운다
+  modalResultPromise = null;
 
-  // 호출부가 정리 완료 뒤 후속 알림과 라우팅을 실행하도록 완료된 Promise를 반환한다
-  return Promise.resolve();
+  // 성공 전환을 요청한 호출부는 사용자가 같은 모달을 확인한 뒤 후속 처리를 실행하게 한다
+  if (completedModalPromise) {
+    await completedModalPromise;
+  }
 }
 
 /**
@@ -396,16 +419,21 @@ export async function runBlockingOperation<T>(
   // API 요청 전에 필요한 파일 처리와 권한 요청부터 화면 이동을 차단한다
   const operationId = beginBlockingOperation(options);
 
-  // 성공과 실패 모두 공통 이동 가드가 해제되도록 상태 변경 작업을 격리한다
+  // 성공은 같은 모달의 완료 상태로 전환하고 실패는 처리 중 모달만 닫도록 분리한다
   try {
+    const taskResult = await task();
+    // 성공 문구가 있으면 같은 모달에서 완료 상태로 전환하고 사용자 확인까지 기다린다
+    await endBlockingOperation(operationId, options.success);
     // 호출 화면이 처리 결과를 이어서 사용할 수 있도록 비동기 작업 결과를 반환한다
-    return await task();
+    return taskResult;
   }
 
-  // 상태 변경 결과와 관계없이 처리 중 화면과 이동 가드를 해제한다
-  finally {
-    // 후속 성공 또는 실패 알림이 열리기 전에 버튼 없는 처리 중 모달을 닫는다
+  // 실패한 작업은 성공 상태로 전환하지 않고 기존 오류 경로가 이어지게 한다
+  catch (error) {
+    // 오류 알림이 열리기 전에 버튼 없는 처리 중 모달을 닫는다
     await endBlockingOperation(operationId);
+    // 호출 화면이 기존 실패 문구를 표시할 수 있도록 원래 오류를 다시 전달한다
+    throw error;
   }
 }
 

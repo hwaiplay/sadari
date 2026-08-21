@@ -1,5 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { message } from "@/app/messages/message";
 import {
@@ -353,18 +353,15 @@ function AlimPage() {
             ? "frontend.push.changing.disable"
             : "frontend.push.changing.enable",
         ),
+        success: {
+          // "푸시 알림이 꺼졌습니다." 또는 "푸시 알림이 켜졌습니다."
+          title: message(
+            wasPushEnabled
+              ? "frontend.push.disable.successTitle"
+              : "frontend.push.enable.successTitle",
+          ),
+        },
       });
-
-      // 변경 전 상태가 켜짐이면 구독 해제 완료 문구를 표시한다
-      if (wasPushEnabled) {
-        // "푸시 알림이 꺼졌습니다."
-        void sweetSuccess(message("frontend.push.disable.successTitle"));
-        // 구독 해제 성공 뒤 설정 완료 문구가 중복 표시되지 않도록 종료한다
-        return;
-      }
-
-      // "푸시 알림이 켜졌습니다."
-      void sweetSuccess(message("frontend.push.enable.successTitle"));
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "";
       const detailMessage =

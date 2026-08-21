@@ -11,8 +11,9 @@
  */
 
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetSuccess, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { getBookCoverImageSource } from "@/features/Book/utils/bookCoverImage";
@@ -265,20 +266,40 @@ export function useSetClubReadingPage() {
     setIsPending(true);
     try {
       const params = toReadingParams(selectedBook, startDate, endDate);
-      if (isEditMode) {
-        await updateClubReadingApi(clubNumb, rondNumb, params);
-      } else {
+
+      /**
+       * 현재 화면 모드에 맞는 모임 독서 저장 API를 호출한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 모임 독서 저장 완료 Promise
+       * @throws 모임 독서 등록 또는 수정에 실패하면 발생한다
+       */
+      const saveClubReading = async (): Promise<void> => {
+        // 수정 화면이면 현재 회차의 도서 또는 기간을 변경한다
+        if (isEditMode) {
+          await updateClubReadingApi(clubNumb, rondNumb, params);
+          // 수정 요청이 끝났으므로 등록 API를 호출하지 않는다
+          return;
+        }
+
+        // 등록 화면이면 중복 방지 키와 함께 새 모임 독서를 생성한다
         await createClubReadingApi(clubNumb, {
           ...params,
           idemKeyx: idempotencyKeyRef.current,
         });
-      }
-      // 수정은 "모임 독서를 수정했어요.", 등록은 "모임 독서가 등록됐어요."
-      await sweetSuccess(message(
-        isEditMode
-          ? "frontend.readingClub.reading.updatedTitle"
-          : "frontend.readingClub.reading.savedTitle",
-      ));
+      };
+
+      // 저장 완료 후 처리 중 알림을 닫지 않고 성공 알림으로 전환한다
+      await runBlockingOperation(saveClubReading, {
+        success: {
+          // 수정은 "모임 독서를 수정했어요.", 등록은 "모임 독서가 등록됐어요."
+          title: message(
+            isEditMode
+              ? "frontend.readingClub.reading.updatedTitle"
+              : "frontend.readingClub.reading.savedTitle",
+          ),
+        },
+      });
       navigate(`/reading-clubs/${clubNumb}`, { replace: true });
     } catch (error) {
       // 수정은 "모임 독서를 수정하지 못했어요.", 등록은 "모임 독서를 등록하지 못했어요."
