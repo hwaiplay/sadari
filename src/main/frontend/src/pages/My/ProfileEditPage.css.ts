@@ -51,6 +51,21 @@ export const cover = style({
   backgroundPosition: "center",
 });
 
+export const coverImageViewerButton = style({
+  position: "absolute",
+  inset: 0,
+  zIndex: 1,
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "inherit",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "rgba(21, 21, 21, 0.08)",
+    },
+  },
+});
+
 export const coverActionGroup = style({
   position: "absolute",
   right: "14px",
@@ -216,6 +231,13 @@ export const profileImage = style({
   border: "4px solid #ffffff",
   backgroundColor: "#ffffff",
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
+});
+
+export const profileImageViewerButton = style({
+  display: "block",
+  width: "100px",
+  height: "100px",
+  borderRadius: "50%",
 });
 
 export const avatarCameraButton = style({

@@ -16,7 +16,7 @@ type ProfileImageProps = Omit<
  * @param source 서버 또는 이미지 미리보기에서 전달받은 프로필 이미지 경로
  * @return 사용할 프로필 이미지 경로
  */
-function normalizeProfileImgSrc(source?: string | null) {
+export function normalizeProfileImageSource(source?: string | null) {
 
   // 문자열 경로의 불필요한 공백을 제거해 공백만 있는 값을 이미지 요청에 사용하지 않게 한다
   const normalizedSource = source?.trim() ?? "";
@@ -55,7 +55,7 @@ function normalizeProfileImgSrc(source?: string | null) {
 function ProfileImage({ src, ...imageProps }: ProfileImageProps) {
 
   // 화면에 전달할 프로필 이미지 경로를 빈 값 정책에 맞게 보정한다
-  const imageSource = normalizeProfileImgSrc(src);
+  const imageSource = normalizeProfileImageSource(src);
 
   /**
    * 원본 이미지 로드 실패 시 기본 프로필 이미지로 한 번만 교체한다.
