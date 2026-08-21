@@ -143,6 +143,7 @@ const UserReportPage = () => {
       });
       // 저장 성공이 확인된 신고만 완료 화면으로 전달한다
       navigate("/user-report/complete", {
+        replace: true,
         state: {
           target,
           selectedReason,
