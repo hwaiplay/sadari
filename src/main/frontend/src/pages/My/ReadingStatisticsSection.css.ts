@@ -521,7 +521,7 @@ export const emptyState = style({
 
 export const ratingChart = style({
   display: "grid",
-  gridTemplateColumns: "52px minmax(0, 1fr) 52px",
+  gridTemplateColumns: "40px minmax(0, 1fr) 40px",
   gridTemplateRows: "18px 140px 24px",
   width: "100%",
   minWidth: 0,
@@ -577,7 +577,10 @@ export const ratingBar = style({
 });
 
 export const ratingCount = style({
-  alignSelf: "start",
+  position: "absolute",
+  left: "50%",
+  bottom: "calc(100% + 4px)",
+  transform: "translateX(-50%)",
   fontFamily: vars.font.semibold,
   fontSize: "10px",
   lineHeight: 1,
@@ -587,18 +590,19 @@ export const ratingCount = style({
 });
 
 export const ratingTrack = style({
+  gridRow: 2,
   alignSelf: "stretch",
   justifySelf: "center",
   width: "min(60%, 26px)",
   height: "100%",
-  overflow: "hidden",
+  overflow: "visible",
   borderRadius: "7px 7px 3px 3px",
-  backgroundColor: "#eef2ef",
   display: "flex",
   alignItems: "flex-end",
 });
 
 export const ratingFill = style({
+  position: "relative",
   display: "block",
   width: "100%",
   minHeight: 0,
@@ -608,6 +612,7 @@ export const ratingFill = style({
 });
 
 export const ratingGrade = style({
+  gridRow: 3,
   alignSelf: "end",
   justifySelf: "center",
   fontFamily: vars.font.semibold,
@@ -620,9 +625,11 @@ export const ratingGrade = style({
 });
 
 export const ratingStar = style({
-  color: "#e4b94f",
-  fontSize: "12px",
-  lineHeight: 1,
+  width: "14px",
+  height: "14px",
+  display: "block",
+  flexShrink: 0,
+  color: "#ffd45c",
 });
 
 export const comparisonTable = style({

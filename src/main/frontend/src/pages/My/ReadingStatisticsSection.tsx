@@ -1213,15 +1213,28 @@ function ReadingStatisticsSection({ targetUserNumb }: ReadingStatisticsSectionPr
         role="listitem"
         aria-label={/* "별점 {0}, {1}권" */ message("frontend.profile.readingStats.ratingBarAria", [ratingGrade, ratingCount])}
       >
-        <strong className={styles.ratingCount} aria-hidden="true">
-          {ratingCount}
-        </strong>
         <div className={styles.ratingTrack} aria-hidden="true">
-          <span className={styles.ratingFill} style={{ height: `${ratingHeight}%` }} />
+          <span className={styles.ratingFill} style={{ height: `${ratingHeight}%` }}>
+            {/* 0권은 숨기고 양수 권수만 실제 막대 바로 위에 표시한다 */}
+            {ratingCount > 0 && (
+              <strong className={styles.ratingCount}>
+                {ratingCount}
+              </strong>
+            )}
+          </span>
         </div>
         <span className={styles.ratingGrade} aria-hidden="true">
+          <svg className={styles.ratingStar} viewBox="0 0 24 24">
+            <path
+              d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
+              fill="currentColor"
+              stroke="currentColor"
+              strokeWidth="1.4"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
           {ratingGrade}
-          <span className={styles.ratingStar}>★</span>
         </span>
       </div>
     );
