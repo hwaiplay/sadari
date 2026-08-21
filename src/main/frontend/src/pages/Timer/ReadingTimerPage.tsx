@@ -1112,6 +1112,7 @@ export default function ReadingTimerPage() {
   const [isTimerSettingModalOpen, setIsTimerSettingModalOpen] = useState(false);
   const [targetSeconds, setTargetSeconds] = useState<number>();
   const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
+  const autoCompletedTimerRef = useRef<number | undefined>(undefined);
   const bookTimeList = useMemo(() => {
     // 조회된 도서별 누적시간 서버 페이지를 최근 기록순으로 연결해 반환한다
     return bookTimeQuery.data?.pages.flatMap((page) => page.data.list) ?? [];
@@ -1268,8 +1269,13 @@ export default function ReadingTimerPage() {
    *
    * @author SeungHyeon.Kang
    * @param targetStatus 변경할 타이머 상태
+   * @param skipBlockingOperation 자동 완료 시 공통 처리 중 화면 제외 여부
+   * @return 상태 변경 요청이 끝나면 완료되는 Promise
    */
-  const changeTimer = async (targetStatus: TimerStatus) => {
+  const changeTimer = useCallback(async (
+    targetStatus: TimerStatus,
+    skipBlockingOperation = false,
+  ): Promise<void> => {
 
     const timerNumber = summary?.activeTimer?.tmrxNumb;
     // 현재 세션이 없으면 상태 변경 요청을 보내지 않는다
@@ -1281,7 +1287,7 @@ export default function ReadingTimerPage() {
     setIsChanging(true);
     try {
       // 사용자 소유 세션의 상태 변경을 요청한다
-      const response = await uptReadingTimerApi(timerNumber, targetStatus);
+      const response = await uptReadingTimerApi(timerNumber, targetStatus, skipBlockingOperation);
       // 변경 결과가 있으면 화면에 반영한다
       if (response.data) {
         // 서버가 반환한 최신 요약을 화면에 설정한다
@@ -1304,7 +1310,29 @@ export default function ReadingTimerPage() {
       // 상태 변경 처리 상태를 종료한다
       setIsChanging(false);
     }
-  };
+  }, [applySummary, summary?.activeTimer?.tmrxNumb]);
+
+  useEffect(() => {
+
+    const runningTimer = summary?.activeTimer;
+    // 목표시간이 없는 세션과 아직 목표에 도달하지 않은 세션은 자동 완료하지 않는다
+    if (runningTimer?.tmrxStat !== "RUNNING"
+        || typeof runningTimer.targSecs !== "number"
+        || displaySeconds < runningTimer.targSecs) {
+      // 자동 완료 조건이 아닌 정상 흐름을 종료한다
+      return;
+    }
+    // 같은 세션의 자동 완료 요청을 화면 렌더링마다 반복하지 않는다
+    if (autoCompletedTimerRef.current === runningTimer.tmrxNumb) {
+      // 이미 자동 완료를 요청한 세션의 후속 처리를 종료한다
+      return;
+    }
+
+    // 네트워크 응답을 기다리는 동안 같은 세션이 다시 요청되지 않도록 번호를 보관한다
+    autoCompletedTimerRef.current = runningTimer.tmrxNumb;
+    // 목표시간 종료를 사용자 입력 없이 완료하므로 별도 처리 중 화면 없이 서버에 저장한다
+    void changeTimer("COMPLETED", true);
+  }, [changeTimer, displaySeconds, summary?.activeTimer]);
 
   /**
    * 현재 읽는 도서를 선택할 수 있도록 도서 선택 모달을 연다

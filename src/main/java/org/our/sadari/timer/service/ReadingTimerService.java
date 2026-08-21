@@ -13,6 +13,7 @@ import org.our.sadari.timer.dto.ReadingTimerDto;
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성
  * 2026-08-20        SeungHyeon.Kang    목표시간 알림 통합·도서누적 페이지 조회
+ * 2026-08-21        SeungHyeon.Kang    목표시간 종료 자동 완료 반영
  */
 public interface ReadingTimerService {
 
@@ -57,7 +58,7 @@ public interface ReadingTimerService {
     ResultData uptTimer(Long userNumb, Long tmrxNumb, ReadingTimerDto.Request request);
 
     /**
-     * 목표 독서시간이 지난 실행 세션의 알림을 발송한다
+     * 목표 독서시간이 지난 실행 세션을 완료하고 알림을 발송한다
      *
      * @author SeungHyeon.Kang
      */

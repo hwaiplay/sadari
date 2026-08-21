@@ -11,6 +11,7 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.timer.config.ReadingTimerProperties;
 import org.our.sadari.timer.dto.ReadingTimerDto;
@@ -40,6 +41,7 @@ import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -53,6 +55,7 @@ import static org.mockito.Mockito.when;
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 검증
  * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 검증
+ * 2026-08-21        SeungHyeon.Kang    목표시간 자동 완료와 알림 재시도 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingTimerServiceImplTest {
@@ -91,6 +94,10 @@ class ReadingTimerServiceImplTest {
         messageSource.addMessage("timer.alert.0004", Locale.KOREAN, "목표시간 오류");
         // 테스트 실행 환경의 기본 영어 로케일에도 같은 검증 메시지를 등록한다
         messageSource.addMessage("timer.alert.0004", Locale.ENGLISH, "Invalid target time");
+        // 알림 저장 실패 결과에 사용할 테스트 메시지를 등록한다
+        messageSource.addMessage("common.alert.0004", Locale.KOREAN, "조회 결과 없음");
+        // 기본 영어 로케일에도 알림 저장 실패 메시지를 등록한다
+        messageSource.addMessage("common.alert.0004", Locale.ENGLISH, "No data");
         // 공통 메시지 유틸리티에 테스트 메시지 소스를 설정한다
         new MessageUtils().setMessageSource(messageSource);
         Clock clock = Clock.fixed(Instant.parse("2026-08-14T15:01:00Z"), ZoneId.of("Asia/Seoul"));
@@ -274,27 +281,95 @@ class ReadingTimerServiceImplTest {
     }
 
     /**
-     * 목표시간이 지난 세션에 알림을 저장하고 발송 일시를 기록하는지 검증한다
+     * 목표시간에 도달한 화면 상태 변경 요청이 목표시각 기준 자동 완료로 전환되는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptTimerCompletesTargetOver() {
+
+        LocalDateTime targetEndDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        ReadingTimerDto activeTimer = createTimer(Constant.TIMER_STAT_RUNNING, LocalDateTime.of(2026, 8, 15, 0, 0));
+        // 1분 목표시간을 설정한다
+        activeTimer.setTargSecs(60L);
+        // 목표 종료시각을 예약 일시로 설정한다
+        activeTimer.setAlrmDate(targetEndDate);
+        ReadingTimerDto.Request request = new ReadingTimerDto.Request();
+        // 목표시간과 동시에 들어온 일시정지 요청을 설정한다
+        request.setTmrxStat(Constant.TIMER_STAT_PAUSED);
+        // 사용자 소유 실행 세션을 조회 결과로 설정한다
+        when(readingTimerMapper.getTimerDtl(1L, 10L)).thenReturn(activeTimer);
+
+        // 목표시간 도달 시점의 상태 변경 요청을 처리한다
+        ResultData result = readingTimerService.uptTimer(1L, 10L, request);
+
+        // 자동 완료 상태 변경이 성공했는지 확인한다
+        assertEquals(200, result.getCode());
+        // 요청한 일시정지보다 자동 완료 상태가 우선 적용됐는지 확인한다
+        assertEquals(Constant.TIMER_STAT_COMPLETED, activeTimer.getTmrxStat());
+        // 목표시간인 60초만 확정됐는지 확인한다
+        assertEquals(60L, activeTimer.getReadSecs());
+        // 목표 종료시각이 완료 일시로 저장됐는지 확인한다
+        assertEquals(targetEndDate, activeTimer.getEndxDate());
+        // 알림 재시도 전까지 목표 예약 일시가 유지되는지 확인한다
+        assertEquals(targetEndDate, activeTimer.getAlrmDate());
+        // 목표시간 자동 완료 상태를 저장했는지 검증한다
+        verify(readingTimerMapper).uptTimer(activeTimer);
+    }
+
+    /**
+     * 활성 세션이 없어도 계정 상태 변경 시 대기 중인 목표시간 알림을 취소하는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptTimerWithdrawalCancelsAlim() {
+
+        LocalDateTime withdrawalDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        // 활성 타이머가 없는 계정 상태를 설정한다
+        when(readingTimerMapper.getActiveTimerDtl(1L, Constant.TIMER_STAT_RUNNING, Constant.TIMER_STAT_PAUSED)).thenReturn(null);
+
+        // 계정 비활성화 또는 영구 탈퇴 전 타이머 정리를 실행한다
+        readingTimerService.uptTimerWithdrawal(1L);
+
+        // 자동 완료 뒤 알림 재시도 중인 세션까지 예약 취소했는지 검증한다
+        verify(readingTimerMapper).uptTimerAlimCancel(1L, withdrawalDate);
+    }
+
+    /**
+     * 목표시간이 지난 세션을 목표시각에 완료하고 알림 발송 일시를 기록하는지 검증한다
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendTimerAlimStoresSendDate() {
 
-        LocalDateTime alarmDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        LocalDateTime schedulerDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        LocalDateTime targetEndDate = LocalDateTime.of(2026, 8, 15, 0, 0, 55);
         ReadingTimerDto timerDto = new ReadingTimerDto();
         // 테스트 타이머 세션 번호를 설정한다
         timerDto.setTmrxNumb(10L);
         // 테스트 알림 수신자 번호를 설정한다
         timerDto.setUserNumb(31L);
+        // 자동 완료 전 실행 중 상태를 설정한다
+        timerDto.setTmrxStat(Constant.TIMER_STAT_RUNNING);
         // 1시간 30분 목표시간을 설정한다
         timerDto.setTargSecs(5400L);
+        // 목표시간 전체를 측정할 최근 시작 시각을 설정한다
+        timerDto.setLastStrt(LocalDateTime.of(2026, 8, 14, 22, 30, 55));
+        // 아직 확정하지 않은 독서시간을 0초로 설정한다
+        timerDto.setReadSecs(0L);
+        // 스케줄러 실행보다 5초 앞선 실제 목표 종료시각을 설정한다
+        timerDto.setAlrmDate(targetEndDate);
         // 이번 실행에서 처리할 목표시간 경과 세션을 설정한다
-        when(readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING, Constant.USER_STAT_ACTIVE
-                                                  , alarmDate, 100)).thenReturn(List.of(10L));
-        // 신규 트랜잭션의 세션 잠금 조회 결과를 설정한다
+        when(readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING, Constant.TIMER_STAT_COMPLETED
+                                                  , Constant.USER_STAT_ACTIVE, schedulerDate, 100)).thenReturn(List.of(10L));
+        // 자동 완료 트랜잭션의 실행 세션 잠금 조회 결과를 설정한다
         when(readingTimerMapper.getDueTimerAlimDtl(10L, Constant.TIMER_STAT_RUNNING
-                                                 , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(timerDto);
+                                                 , Constant.USER_STAT_ACTIVE, schedulerDate)).thenReturn(timerDto);
+        // 자동 완료 커밋 뒤 알림 트랜잭션의 완료 세션 조회 결과를 설정한다
+        when(readingTimerMapper.getTimerAlimDtl(10L, Constant.TIMER_STAT_COMPLETED
+                                              , Constant.USER_STAT_ACTIVE, schedulerDate)).thenReturn(timerDto);
         // 공통 알림 저장 성공 결과를 설정한다
         when(alimService.sendAlim(eq(31L), eq(Constant.ALIM_SITU_REPORT)
                                 , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any())).thenReturn(ResultData.success());
@@ -306,14 +381,28 @@ class ReadingTimerServiceImplTest {
         verify(alimService).sendAlim(eq(31L), eq(Constant.ALIM_SITU_REPORT)
                                   , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null)
                                   , argThat(replaceMap -> "1시간 30분".equals(replaceMap.get("timerTime"))));
+        // 목표 종료시각까지의 1시간 30분만 세션에 확정됐는지 확인한다
+        assertEquals(5400L, timerDto.getReadSecs());
+        // 목표시간이 끝난 세션이 완료 상태로 변경됐는지 확인한다
+        assertEquals(Constant.TIMER_STAT_COMPLETED, timerDto.getTmrxStat());
+        // 스케줄러 지연 시각이 아닌 실제 목표시각이 완료 일시인지 확인한다
+        assertEquals(targetEndDate, timerDto.getEndxDate());
+        // 완료 세션의 최근 시작 시각이 제거됐는지 확인한다
+        assertNull(timerDto.getLastStrt());
+        // 자정 전 독서시간이 8월 14일 집계에 저장됐는지 확인한다
+        verify(readingTimerMapper).setReadingDaily(31L, LocalDate.of(2026, 8, 14), 5345L, targetEndDate);
+        // 자정 후 독서시간이 8월 15일 집계에 저장됐는지 확인한다
+        verify(readingTimerMapper).setReadingDaily(31L, LocalDate.of(2026, 8, 15), 55L, targetEndDate);
         // 발송 기준 일시가 세션에 저장됐는지 확인한다
-        assertEquals(alarmDate, timerDto.getSendDate());
+        assertEquals(schedulerDate, timerDto.getSendDate());
         // 발송 뒤 예약 일시가 해제됐는지 확인한다
         assertNull(timerDto.getAlrmDate());
+        // 자동 완료 세션의 상태와 확정시간을 먼저 수정했는지 검증한다
+        verify(readingTimerMapper).uptTimer(timerDto);
         // 발송 완료 세션을 수정했는지 검증한다
         verify(readingTimerMapper).uptTimerAlimSent(timerDto);
-        // 대상 세션 트랜잭션이 독립적으로 커밋됐는지 검증한다
-        verify(transactionManager).commit(transactionStatus);
+        // 자동 완료와 알림 트랜잭션이 각각 독립적으로 커밋됐는지 검증한다
+        verify(transactionManager, times(2)).commit(transactionStatus);
     }
 
     /**
@@ -326,11 +415,14 @@ class ReadingTimerServiceImplTest {
 
         LocalDateTime alarmDate = LocalDateTime.of(2026, 8, 15, 0, 1);
         // 이번 실행에서 확인할 목표시간 경과 세션을 설정한다
-        when(readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING, Constant.USER_STAT_ACTIVE
-                                                  , alarmDate, 100)).thenReturn(List.of(10L));
+        when(readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING, Constant.TIMER_STAT_COMPLETED
+                                                  , Constant.USER_STAT_ACTIVE, alarmDate, 100)).thenReturn(List.of(10L));
         // 다른 실행에서 먼저 처리한 세션은 잠금 조회에서 반환하지 않는다
         when(readingTimerMapper.getDueTimerAlimDtl(10L, Constant.TIMER_STAT_RUNNING
                                                  , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(null);
+        // 완료된 알림 재시도 대상도 아닌 세션으로 설정한다
+        when(readingTimerMapper.getTimerAlimDtl(10L, Constant.TIMER_STAT_COMPLETED
+                                              , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(null);
 
         // 더 이상 대상이 아닌 세션의 목표시간 알림 실행 주기를 처리한다
         readingTimerService.sendTimerAlim();
@@ -339,6 +431,53 @@ class ReadingTimerServiceImplTest {
         verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
         // 세션 발송 일시가 수정되지 않았는지 검증한다
         verify(readingTimerMapper, never()).uptTimerAlimSent(any());
+    }
+
+    /**
+     * 알림 저장 실패가 먼저 커밋된 목표시간 자동 완료를 되돌리지 않는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void sendTimerAlimKeepsCompletion() {
+
+        LocalDateTime alarmDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        ReadingTimerDto timerDto = createTimer(Constant.TIMER_STAT_RUNNING, LocalDateTime.of(2026, 8, 15, 0, 0));
+        // 1분 목표시간을 설정한다
+        timerDto.setTargSecs(60L);
+        // 정확한 목표 종료시각을 예약 일시로 설정한다
+        timerDto.setAlrmDate(alarmDate);
+        // 자동 완료와 알림 재시도 대상 세션을 설정한다
+        when(readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING, Constant.TIMER_STAT_COMPLETED
+                                                  , Constant.USER_STAT_ACTIVE, alarmDate, 100)).thenReturn(List.of(10L));
+        // 자동 완료할 실행 세션을 반환한다
+        when(readingTimerMapper.getDueTimerAlimDtl(10L, Constant.TIMER_STAT_RUNNING
+                                                 , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(timerDto);
+        // 완료 뒤 알림을 발송할 같은 세션을 반환한다
+        when(readingTimerMapper.getTimerAlimDtl(10L, Constant.TIMER_STAT_COMPLETED
+                                              , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(timerDto);
+        // 알림 저장 거절 결과를 설정한다
+        when(alimService.sendAlim(eq(1L), eq(Constant.ALIM_SITU_REPORT)
+                                , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any()))
+                .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
+
+        // 목표시간 자동 완료와 알림 발송 주기를 실행한다
+        readingTimerService.sendTimerAlim();
+
+        // 알림 실패와 관계없이 목표시간까지의 독서시간이 확정됐는지 확인한다
+        assertEquals(60L, timerDto.getReadSecs());
+        // 먼저 커밋된 세션이 완료 상태를 유지하는지 확인한다
+        assertEquals(Constant.TIMER_STAT_COMPLETED, timerDto.getTmrxStat());
+        // 다음 스케줄러 주기에 알림을 재시도하도록 예약 일시가 유지되는지 확인한다
+        assertEquals(alarmDate, timerDto.getAlrmDate());
+        // 자동 완료 상태는 데이터베이스에 저장했는지 검증한다
+        verify(readingTimerMapper).uptTimer(timerDto);
+        // 실패한 알림의 발송 일시는 저장하지 않았는지 검증한다
+        verify(readingTimerMapper, never()).uptTimerAlimSent(any());
+        // 자동 완료 트랜잭션만 커밋됐는지 확인한다
+        verify(transactionManager).commit(transactionStatus);
+        // 알림 트랜잭션은 롤백됐는지 확인한다
+        verify(transactionManager).rollback(transactionStatus);
     }
 
     /**
