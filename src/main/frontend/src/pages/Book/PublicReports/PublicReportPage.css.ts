@@ -29,18 +29,13 @@ export const content = style({
 
 export const header = style({
   position: "sticky",
-  top: vars.headerHeight,
+  top: `calc(${vars.headerHeight} - var(--header-scroll-offset, 0px))`,
   zIndex: 996,
   width: "100svw",
   height: "90px",
   marginLeft: "calc(50% - 50svw)",
   backgroundColor: "#ffffff",
   boxShadow: "0px 3px 10px rgba(0, 0, 0, 0.08)",
-  transition: "top 180ms ease",
-});
-
-export const headerGlobalHidden = style({
-  top: 0,
 });
 
 export const headerWrap = style({

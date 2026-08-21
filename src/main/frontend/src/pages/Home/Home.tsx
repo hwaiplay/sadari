@@ -1,6 +1,5 @@
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
-import type { LayoutOutletContext } from "@/components/Layout/Layout";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import CustomSelect from "@/components/Select/CustomSelect";
 import Book from "@/features/Home/components/Book";
@@ -13,7 +12,8 @@ import { HomeTimerPlayer } from "@/features/Home/components/HomeTimerPlayer";
 import { UnreadNoticeSlider } from "@/features/Notice/components/UnreadNoticeSlider";
 import { useHome } from "../../features/Home/hook/useHome.tsx";
 import { clsx } from "clsx";
-import { useOutletContext } from "react-router-dom";
+import * as stickyStyles from "@/components/Search/StickySearchBar/StickySearchBar.css";
+import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySearch";
 
 /**
  * fileName       : Home
@@ -29,8 +29,8 @@ import { useOutletContext } from "react-router-dom";
 
 function Home() {
 
-  // 공통 헤더의 표시 상태를 홈 검색 입력 고정 위치와 동기화한다
-  const { isHeaderHidden } = useOutletContext<LayoutOutletContext>();
+  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회한다
+  const { isSticky, sentinelRef } = useStickySearch();
   // 홈 화면 렌더링에 필요한 조회 상태와 사용자 동작을 조회한다
   const {
     data,
@@ -52,12 +52,6 @@ function Home() {
     handleSortChange,
     handleBookSearch,
   } = useHome();
-  // 헤더가 숨겨진 동안 홈 검색 영역이 화면 최상단을 채우도록 스타일을 구성한다
-  const searchBarClassName = clsx(
-    styles.searchBar,
-    isHeaderHidden && styles.searchBarHeaderHidden,
-  );
-
   // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
   if (isPending) {
     // 홈 독후감 목록 로딩 화면을 반환한다
@@ -90,8 +84,21 @@ function Home() {
     {/* 홈 활성 독서 타이머 플레이어 영역 */}
     <HomeTimerPlayer />
     <div className={styles.homeContainer}>
+      {/* 홈 검색 영역이 실제 고정되는 시점을 감지하는 화면 경계 */}
+      <span
+        ref={sentinelRef}
+        className={stickyStyles.sentinel}
+        aria-hidden="true"
+      />
       {/* 스크롤 중에도 헤더 위치에 맞춰 유지되는 독후감 검색 입력 영역 */}
-      <form className={searchBarClassName} onSubmit={handleSearchSubmit}>
+      <form
+        className={clsx(
+          styles.searchBar,
+          stickyStyles.surface,
+          isSticky && stickyStyles.stuck,
+        )}
+        onSubmit={handleSearchSubmit}
+      >
         <label className={styles.searchLabel}>
           <span className={styles.hiddenLabel}>
             {/* "제목, 작가 검색" */}

@@ -16,7 +16,6 @@ import {
   headerCenter,
   headerContentSlideBack,
   headerContentSlideForward,
-  headerHidden,
   headerRouteTitle,
   headerRouteTitleWithBack,
   headerShell,
@@ -30,8 +29,7 @@ import HeaderMenuDrawer from "./HeaderMenuDrawer";
 import type { UserMenuItem } from "@/features/Menu/api/userMenuApi";
 import { useUserMenuQuery } from "@/features/Menu/hooks/useUserMenuQuery";
 import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
-
-const HEADER_SCROLL_DELTA = 4;
+import { useScrollHeader } from "./useScrollHeader";
 
 type HeaderMenuTransitionDirection = "forward" | "back";
 
@@ -44,17 +42,17 @@ type ResolvedHeaderMenu = {
 
 type HeaderProps = {
   menuEnabled?: boolean;
-  onHiddenChange?: (isHidden: boolean) => void;
+  onOffsetChange?: (headerOffset: number) => void;
 };
 
 /**
  * Header 화면 또는 컴포넌트를 구성한다
  *
- * @author HanWon.Jang
- * @param props 메뉴 사용 여부와 헤더 숨김 상태 전달 함수
+ * @author SeungHyeon.Kang
+ * @param props 메뉴 사용 여부와 헤더 이동 거리 전달 함수
  * @return 구성된 화면 요소
  */
-function Header({ menuEnabled = true, onHiddenChange }: HeaderProps) {
+function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -66,12 +64,14 @@ function Header({ menuEnabled = true, onHiddenChange }: HeaderProps) {
     || location.pathname === BOTTOM_NAV_PATH.timer
     || location.pathname === BOTTOM_NAV_PATH.myPage;
   const hasBackButton = !isBottomNavRoot;
-  const lastScrollYRef = useRef(0);
-  const isHiddenRef = useRef(false);
   const hasResolvedMenuRef = useRef(false);
-  const [isHidden, setIsHidden] = useState(false);
   const [resolvedMenu, setResolvedMenu] = useState<ResolvedHeaderMenu | null>(
     null,
+  );
+  // 스크롤 이동량과 같은 거리로 움직일 헤더 상태를 구성한다
+  const { headerRef } = useScrollHeader(
+    onOffsetChange,
+    location.pathname,
   );
   // 로딩 화면과 같은 Query Key를 사용하여 경로별 메뉴 조회 요청을 공유한다
   const {
@@ -96,62 +96,6 @@ function Header({ menuEnabled = true, onHiddenChange }: HeaderProps) {
 
     navigate(-1);
   };
-
-  useEffect(() => {
-
-    lastScrollYRef.current = window.scrollY;
-
-    /**
-     * 작은 스크롤 이동에도 헤더 전체가 반응하도록 스크롤 방향을 기준으로 표시 상태를 전환합니다.
-     * 화면 최상단에서는 이전 화면에서 숨김 상태였더라도 헤더를 다시 노출합니다.
-     *
-     * @author HanWon.Jang
-     * @return
-     */
-    const handleScroll = () => {
-
-      const currentScrollY = window.scrollY;
-      const scrollDiff = currentScrollY - lastScrollYRef.current;
-
-      // 최상단에서는 사용자가 길을 잃지 않도록 헤더를 항상 보여줍니다.
-      if (currentScrollY <= 0) {
-        if (isHiddenRef.current) {
-          isHiddenRef.current = false;
-          // 헤더를 화면에 다시 표시한다
-          setIsHidden(false);
-          // 현재 페이지의 고정 영역이 헤더 아래로 이동하도록 노출 상태를 전달한다
-          onHiddenChange?.(false);
-        }
-
-        lastScrollYRef.current = currentScrollY;
-        return;
-      }
-
-      // 아주 미세한 흔들림은 무시하고, 의도된 스크롤 방향 변화에만 헤더를 움직입니다.
-      if (Math.abs(scrollDiff) < HEADER_SCROLL_DELTA) {
-        return;
-      }
-
-      const shouldHide = scrollDiff > 0;
-
-      if (isHiddenRef.current !== shouldHide) {
-        isHiddenRef.current = shouldHide;
-        // 스크롤 방향에 맞는 헤더 표시 상태를 적용한다
-        setIsHidden(shouldHide);
-        // 현재 페이지의 고정 영역이 헤더 위치 변화에 맞춰 이동하도록 상태를 전달한다
-        onHiddenChange?.(shouldHide);
-      }
-
-      lastScrollYRef.current = currentScrollY;
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-
-    return () => {
-
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [location.pathname, onHiddenChange]);
 
   useEffect(() => {
 
@@ -201,10 +145,8 @@ function Header({ menuEnabled = true, onHiddenChange }: HeaderProps) {
   return (
     /* 사용자 화면의 이전 이동과 현재 메뉴 표시 영역 */
     <header
-      className={clsx(
-        headerShell,
-        isHidden && headerHidden,
-      )}
+      ref={headerRef}
+      className={headerShell}
     >
       <Container className={clsx(header, hasBackButton && "_sub")}>
         {hasBackButton && (

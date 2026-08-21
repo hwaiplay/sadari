@@ -79,7 +79,7 @@ export const emptyDescription = style({
 
 export const homeContainer = style({
   minHeight: "100svh",
-  paddingTop: "72px",
+  paddingTop: `calc(${vars.headerHeight} + 14px)`,
   paddingBottom: "96px",
   backgroundColor:'#fff',
 
@@ -90,7 +90,7 @@ export const homeContainer = style({
 
 export const searchBar = style({
   position: "sticky",
-  top: vars.headerHeight,
+  top: `calc(${vars.headerHeight} - var(--header-scroll-offset, 0px))`,
   zIndex: 996,
   boxSizing: "border-box",
   display: "flex",
@@ -100,35 +100,13 @@ export const searchBar = style({
   height: vars.headerHeight,
   padding: `5px ${vars.space.md}`,
   marginBottom: "12px",
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
-  isolation: "isolate",
-  transition: "top 180ms ease",
   willChange: "top",
-
-  selectors: {
-    "&::before": {
-      position: "absolute",
-      top: 0,
-      bottom: 0,
-      left: "50%",
-      zIndex: -1,
-      width: "100vw",
-      backgroundColor: "rgba(255, 255, 255, 0.96)",
-      content: '""',
-      pointerEvents: "none",
-      transform: "translateX(-50%)",
-    },
-  },
 
   "@media": {
     [media.tablet]: {
       padding: `5px ${vars.space.lg}`,
     },
   },
-});
-
-export const searchBarHeaderHidden = style({
-  top: 0,
 });
 
 export const searchLabel = style({
@@ -157,7 +135,7 @@ export const searchInput = style({
   padding: "0 38px 0 16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
-  backgroundColor: "#ffffff",
+  backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.body,
   fontSize: "16px",
