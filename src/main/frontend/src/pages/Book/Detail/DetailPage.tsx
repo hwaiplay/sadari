@@ -17,6 +17,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import {
+  BOOK_COVER_FALLBACK_IMAGE,
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
@@ -27,6 +28,7 @@ import type { ReportAlimType } from "@/features/Book/api/bookApi";
 import { useUpdateMutation } from "@/features/Book/Update/useUpdateMutation";
 import { useDeleteMutation } from "@/features/Book/Delete/useDeleteMutation";
 import Loading from "@/components/Loading/Loading";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import { Container } from "@/components/Layout/Container/Container";
 import { ActionButton } from "@/components/Button/ActionButton";
 import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEditor/ReportStatsEditor";
@@ -735,14 +737,19 @@ function DetailPage() {
         <Container className={styles.detail}>
           {/* 도서 표지와 도서 정보 전환 영역 */}
           <section className={styles.header}>
-            <div className={styles.coverFrame}>
+            <FullscreenImageButton
+              className={styles.coverFrame}
+              source={getBookCoverImageSource(bookData.bookCvim)}
+              fallbackSource={BOOK_COVER_FALLBACK_IMAGE}
+              alt={bookData.bookTitl}
+            >
               <img
                 className={styles.coverImage}
                 src={getBookCoverImageSource(bookData.bookCvim)}
                 onError={handleBookCoverImageError}
                 alt={bookData.bookTitl}
               />
-            </div>
+            </FullscreenImageButton>
             <h1 className={styles.title}>{bookData.bookTitl}</h1>
 
             {/* 독후감 상세의 저자 표시 줄과 높이를 맞춘 도서 평균 평점 영역 */}
@@ -914,14 +921,19 @@ function DetailPage() {
       <Container className={styles.detail}>
         {/* 도서 표지와 독후감 전환 영역 */}
         <section className={styles.header}>
-          <div className={styles.coverFrame}>
+          <FullscreenImageButton
+            className={styles.coverFrame}
+            source={getBookCoverImageSource(bookData.bookCvim)}
+            fallbackSource={BOOK_COVER_FALLBACK_IMAGE}
+            alt={bookData.bookTitl}
+          >
             <img
               className={styles.coverImage}
               src={getBookCoverImageSource(bookData.bookCvim)}
               onError={handleBookCoverImageError}
               alt={bookData.bookTitl}
             />
-          </div>
+          </FullscreenImageButton>
           <h1 className={styles.title}>{bookData.bookTitl}</h1>
           <p className={styles.meta}>{bookData.bookAthr}</p>
           <button

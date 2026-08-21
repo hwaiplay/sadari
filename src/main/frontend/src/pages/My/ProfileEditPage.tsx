@@ -9,6 +9,7 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import { ActionButton } from "@/components/Button/ActionButton";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
@@ -44,6 +45,7 @@ import {
 import { getMyProfileOptions } from "@/features/User/hooks/useMyProfileQuery";
 import ProfileImage, {
   DEFAULT_PROFILE_IMAGE,
+  normalizeProfileImageSource,
 } from "@/features/User/components/ProfileImage";
 import {
   getReadingEndDateText,
@@ -1855,6 +1857,15 @@ function ProfileEditPage() {
               : undefined
           }
         >
+          {previewBackground && (
+            <FullscreenImageButton
+              className={styles.coverImageViewerButton}
+              source={previewBackground}
+              alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+            >
+              <span aria-hidden="true" />
+            </FullscreenImageButton>
+          )}
           {!previewBackground && (
             <p className={styles.coverEmptyText}>
               {/* "배경사진을 선택해주세요." */ message("frontend.profile.background.empty")}
@@ -1949,11 +1960,18 @@ function ProfileEditPage() {
           <div className={styles.profileHeaderRow}>
             {/* 프로필 이미지와 이미지 변경 영역 */}
             <div className={styles.avatarWrap}>
-              <ProfileImage
-                className={styles.profileImage}
-                src={previewImage}
-                alt={profile?.userNick ?? /* "프로필 수정" */ message("frontend.profile.edit")}
-              />
+              <FullscreenImageButton
+                className={styles.profileImageViewerButton}
+                source={normalizeProfileImageSource(previewImage)}
+                fallbackSource={DEFAULT_PROFILE_IMAGE}
+                alt={/* "프로필 사진" */ message("frontend.imageViewer.profileAlt")}
+              >
+                <ProfileImage
+                  className={styles.profileImage}
+                  src={previewImage}
+                  alt={profile?.userNick ?? /* "프로필 수정" */ message("frontend.profile.edit")}
+                />
+              </FullscreenImageButton>
               {isEditMode && (
                 <label className={styles.avatarCameraButton}>
                   <svg
