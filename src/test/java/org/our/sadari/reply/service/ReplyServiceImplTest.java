@@ -39,7 +39,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-07-31        Hanwon.Jang        최초 생성
  * 2026-08-03        Hanwon.Jang        댓글 변경·비속어·좋아요 검증
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 검증 추가
- * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 검증 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감 설정·좋아요 상황 통합 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -393,6 +393,8 @@ class ReplyServiceImplTest {
 
         // 댓글 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
+        // 독후감과 댓글 좋아요가 LIKE 상황 코드로 통합됐는지 확인한다
+        assertEquals("LIKE", Constant.ALIM_SITU_LIKE);
         // 댓글 좋아요 전용 템플릿 코드가 확정된 REPLY_LIKE 값인지 확인한다
         assertEquals("REPLY_LIKE", Constant.ALIM_TEMP_CODE_REPLY_LIKE);
         // 댓글 좋아요가 등록 Mapper에 전달됐는지 확인한다

@@ -95,11 +95,27 @@ export const noticeLink = style({
 });
 
 export const marqueeViewport = style({
+  position: "relative",
+  zIndex: 0,
   minWidth: 0,
   flex: 1,
   display: "block",
+  marginLeft: "-10px",
+  padding: "0 12px",
+  boxSizing: "border-box",
   overflow: "hidden",
   containerType: "inline-size",
+  maskImage:
+    "linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%)",
+  WebkitMaskImage:
+    "linear-gradient(to right, transparent 0, #000 10px, #000 calc(100% - 12px), transparent 100%)",
+});
+
+export const categoryLayer = style({
+  position: "relative",
+  zIndex: 1,
+  flexShrink: 0,
+  display: "inline-flex",
 });
 
 export const marqueeTrack = style({

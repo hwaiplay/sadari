@@ -787,20 +787,6 @@ function DetailPage() {
                 type="button"
                 onClick={showReportDetailView}
               >
-                <svg
-                  className={styles.bookInfoButtonIcon}
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                >
-                  <path
-                    d="M15 6 9 12l6 6"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
                 {/* "돌아가기" */}
                 {message("frontend.report.backToReport")}
               </button>
@@ -809,7 +795,7 @@ function DetailPage() {
                 type="button"
                 onClick={goPublicReportsPage}
               >
-                {/* "다른 사람이 쓴 독후감 보기" */}
+                {/* "다른 독후감 둘러보기" */}
                 {message("frontend.book.publicReports.button")}
               </button>
             </div>
