@@ -27,6 +27,7 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
+import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.dto.SocialDto;
@@ -48,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요·댓글 알림 설정 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -1177,6 +1179,76 @@ public class ReportServiceImpl implements ReportService {
 
         // 기존 독후감 정보를 수정 결과를 성공 응답으로 반환한다
         return ResultData.success(reportDto.getReptNumb());
+    }
+
+    /**
+     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경한다.
+     * 독후감 공개 여부와 관계없이 작성자 본인은 설정할 수 있으며, 유형별 전용 컬럼만 수정한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param reptNumb 수정할 독후감 번호
+     * @param alimType 변경할 알림 유형
+     * @param reportAlimDto 변경할 알림 사용 여부
+     * @return 변경된 알림 사용 여부
+     */
+    @Override
+    @Transactional
+    public ResultData uptReportAlim(Long userNumb, Long reptNumb, String alimType
+                                  , ReportAlimDto reportAlimDto) {
+        // 인증 사용자, 변경 대상, 설정 유형과 사용 여부가 없으면 수정 대상을 확정할 수 없으므로 요청을 거부한다
+        if (StringUtil.hasEmpty(userNumb, reptNumb, alimType, reportAlimDto)
+                || StringUtil.isEmpty(reportAlimDto.getUseYsno())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // URL에서 받은 알림 유형을 대소문자와 앞뒤 공백 차이 없이 비교하도록 정규화한다
+        String normalizedAlimType = alimType.trim().toLowerCase(Locale.ROOT);
+        // 본문에서 받은 사용 여부를 공통 Y 또는 N 값과 비교할 수 있도록 정규화한다
+        String normalizedUseYsno = reportAlimDto.getUseYsno().trim().toUpperCase(Locale.ROOT);
+
+        // 허용하지 않은 알림 유형이나 Y 또는 N 이외의 값은 DB 변경 전에 거부한다
+        if ((!Constant.REPORT_ALIM_LIKE.equals(normalizedAlimType)
+                && !Constant.REPORT_ALIM_REPLY.equals(normalizedAlimType))
+                || (!Constant.COMM_YES.equals(normalizedUseYsno)
+                && !Constant.COMM_NO.equals(normalizedUseYsno))) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 인증 정보에서 확인한 사용자 번호를 소유자 변경 조건으로 설정한다
+        reportAlimDto.setUserNumb(userNumb);
+        // URL에서 확정한 독후감 번호를 변경 조건으로 설정한다
+        reportAlimDto.setReptNumb(reptNumb);
+        // 정규화한 알림 유형을 응답과 업무 분기에 사용할 값으로 설정한다
+        reportAlimDto.setAlimType(normalizedAlimType);
+        // 정규화한 알림 사용 여부를 DB 변경값으로 설정한다
+        reportAlimDto.setUseYsno(normalizedUseYsno);
+
+        // 요청 유형에 해당하는 알림 설정 컬럼 하나의 변경 건수를 저장한다
+        int updateCnt;
+
+        // 좋아요 유형이면 독후감 좋아요 알림 컬럼만 변경한다
+        if (Constant.REPORT_ALIM_LIKE.equals(normalizedAlimType)) {
+            // 독후감 좋아요 알림 사용 여부를 소유자 조건으로 변경한다
+            updateCnt = reportMapper.uptLikeAlim(reportAlimDto);
+        }
+
+        // 댓글 유형이면 독후감 댓글 알림 컬럼만 변경한다
+        else {
+            // 독후감 댓글 알림 사용 여부를 소유자 조건으로 변경한다
+            updateCnt = reportMapper.uptReplyAlim(reportAlimDto);
+        }
+
+        // 작성자 소유 독후감이 없어 반영된 행이 없으면 다른 사용자 데이터 접근 요청으로 거부한다
+        if (updateCnt == 0) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 화면에서 즉시 현재 메뉴 문구를 갱신할 수 있도록 변경된 설정 정보를 반환한다
+        return ResultData.success(reportAlimDto);
     }
 
     /**

@@ -18,6 +18,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감 알림 설정 유형 추가
  */
 public final class Constant {
 
@@ -79,6 +80,10 @@ public final class Constant {
     public static final String REPORT_STAT_DONE = "DONE";
     // 독후감 상태 STOP 설정값
     public static final String REPORT_STAT_STOP = "STOP";
+    // 독후감 좋아요 알림 설정 유형
+    public static final String REPORT_ALIM_LIKE = "like";
+    // 독후감 댓글 알림 설정 유형
+    public static final String REPORT_ALIM_REPLY = "reply";
     // 측정 중인 독서 타이머 상태
     public static final String TIMER_STAT_RUNNING = "RUNNING";
     // 일시정지된 독서 타이머 상태

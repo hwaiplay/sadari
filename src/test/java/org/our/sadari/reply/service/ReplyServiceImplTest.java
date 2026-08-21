@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-07-31        Hanwon.Jang        최초 생성
  * 2026-08-03        Hanwon.Jang        댓글 변경·비속어·좋아요 검증
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 검증 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -109,8 +111,14 @@ class ReplyServiceImplTest {
                 .thenReturn(Optional.empty());
         // 댓글 한 건이 저장되는 조건을 구성한다
         when(replyMapper.setReply(replyDto)).thenReturn(1);
-        // 독후감 작성자 사용자 번호가 조회되는 조건을 구성한다
-        when(replyMapper.getReplyReportUserNumb(157L)).thenReturn(31L);
+        // 독후감 작성자와 켜진 댓글 알림 설정이 조회되는 조건을 구성한다
+        ReplyDto reportAlim = new ReplyDto();
+        // 알림 수신자 독후감 작성자 번호를 설정한다
+        reportAlim.setTargetUserNumb(31L);
+        // 독후감 댓글 알림을 켠 상태로 설정한다
+        reportAlim.setReplyAlimYsno(Constant.COMM_YES);
+        // 댓글 알림 수신자와 설정 조회 결과를 구성한다
+        when(replyMapper.getReplyReportAlimDtl(157L)).thenReturn(reportAlim);
         // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
         when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
         // 알림 저장이 정상 처리되는 조건을 구성한다
@@ -145,6 +153,47 @@ class ReplyServiceImplTest {
         );
         // 알림 문구에 댓글 작성자 닉네임이 전달되는지 확인한다
         assertEquals("댓글작성자", replaceMapCaptor.getValue().get("userName"));
+    }
+
+    /**
+     * 독후감 작성자가 댓글 알림을 끈 경우 댓글은 저장하고 알림은 생성하지 않는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void setReplySkipsAlimWhenDisabled() {
+        // 등록할 댓글 요청을 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 독후감 번호를 댓글 요청에 설정한다
+        replyDto.setReptNumb(157L);
+        // 생성될 댓글 번호를 댓글 요청에 설정한다
+        replyDto.setReplNumb(9L);
+        // 댓글 내용을 댓글 요청에 설정한다
+        replyDto.setReplCntn("알림 없이 저장됩니다.");
+
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        when(badWordDetectionService.findBadWord("알림 없이 저장됩니다."))
+                .thenReturn(Optional.empty());
+        // 댓글 한 건이 저장되는 조건을 구성한다
+        when(replyMapper.setReply(replyDto)).thenReturn(1);
+        // 댓글 알림을 끈 독후감 작성자 조회 결과를 생성한다
+        ReplyDto reportAlim = new ReplyDto();
+        // 알림 수신자 독후감 작성자 번호를 설정한다
+        reportAlim.setTargetUserNumb(31L);
+        // 독후감 댓글 알림을 끈 상태로 설정한다
+        reportAlim.setReplyAlimYsno(Constant.COMM_NO);
+        // 댓글 알림 수신자와 설정 조회 결과를 구성한다
+        when(replyMapper.getReplyReportAlimDtl(157L)).thenReturn(reportAlim);
+
+        // 댓글 알림을 끈 독후감에 댓글을 등록한다
+        ResultData result = replyService.setReply(44L, replyDto);
+
+        // 댓글 등록 자체는 성공하는지 확인한다
+        assertEquals(200, result.getCode());
+        // 알림 저장 서비스가 호출되지 않는지 확인한다
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
+        verifyNoInteractions(tokenRedisService);
     }
 
     /**

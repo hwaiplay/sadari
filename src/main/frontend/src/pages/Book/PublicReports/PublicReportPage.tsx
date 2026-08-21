@@ -410,7 +410,6 @@ const PublicReportPage = () => {
                           likeMutation.mutate({
                             tagtType: "REPORT",
                             tagtNumb: report.reptNumb,
-                            targetUserNumb: report.userNumb,
                           })
                         }
                       >

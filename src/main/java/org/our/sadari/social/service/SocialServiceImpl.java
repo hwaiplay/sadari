@@ -31,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -432,9 +433,8 @@ public class SocialServiceImpl implements SocialService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // req.getTagtType( 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
-        if (StringUtil.isEmpty(req.getTagtType()) || StringUtil.isEmpty(req.getTagtNumb())
-                || StringUtil.isEmpty(req.getTargetUserNumb())) {
+        // 대상 유형 또는 대상 번호가 없으면 좋아요 대상을 확정할 수 없으므로 요청을 거부한다
+        if (StringUtil.isEmpty(req.getTagtType()) || StringUtil.isEmpty(req.getTagtNumb())) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -448,11 +448,19 @@ public class SocialServiceImpl implements SocialService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
-        if (reportMapper.getPublicReportLikeCnt(req) == 0) {
+        // 독후감 작성자와 알림 설정은 클라이언트 값을 신뢰하지 않고 대상 독후감에서 조회한다
+        SocialDto.LikeDto likeTarget = reportMapper.getReportLikeDtl(req);
+
+        // 본인 독후감 또는 접근 가능한 공개 독후감이 아니면 좋아요를 허용하지 않는다
+        if (StringUtil.isEmpty(likeTarget)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
+
+        // 서버에서 확인한 독후감 작성자 번호를 알림 수신자로 설정한다
+        req.setTargetUserNumb(likeTarget.getTargetUserNumb());
+        // 서버에서 확인한 독후감별 좋아요 알림 여부를 후속 알림 처리 조건으로 설정한다
+        req.setLikeAlimYsno(likeTarget.getLikeAlimYsno());
 
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
@@ -466,6 +474,12 @@ public class SocialServiceImpl implements SocialService {
      * @param req 좋아요 요청 DTO
      */
     private void sendReportLikeAlim(SocialDto.LikeDto req) {
+        // 독후감 작성자가 좋아요 알림을 껐으면 알림 저장과 푸시 예약을 모두 생략한다
+        if (!Constant.COMM_YES.equals(req.getLikeAlimYsno())) {
+            // 독후감 좋아요 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
         // 본인이 작성한 독후감에 본인이 좋아요를 누른 경우에는 자기 자신에게 알림을 만들 필요가 없어 중단한다.
         if (req.getTargetUserNumb().equals(req.getUserNumb())) {
             // 독후감 좋아요가 새로 등록된 경우 독후감 작성자에게 좋아요 알림을 발송 결과를 반환한다
