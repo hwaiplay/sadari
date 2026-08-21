@@ -12,6 +12,11 @@
 import { globalStyle } from "@vanilla-extract/css";
 import { globalFontFace } from "@vanilla-extract/css";
 
+globalFontFace("PretendardExtraBold", {
+  src: 'url("/fonts/PretendardVariable.woff2") format("woff2")',
+  fontWeight: 800,
+});
+
 globalFontFace("PretendardBold", {
   src: 'url("/fonts/PretendardVariable.woff2") format("woff2")',
   fontWeight: 700,
