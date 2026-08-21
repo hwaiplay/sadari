@@ -170,7 +170,7 @@ export default function ClubDetailPage() {
               ])}
             </p>
           </div>
-          <p className={styles.description}>{club.clubCntn}</p>
+          <p className={styles.description}>{club.clubCntn || "-"}</p>
         </header>
 
         {isActiveMember ? (
