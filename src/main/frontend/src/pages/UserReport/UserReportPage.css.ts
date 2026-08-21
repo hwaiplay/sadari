@@ -128,9 +128,6 @@ export const reasonOption = style({
       outline: "2px solid #78b991",
       outlineOffset: "2px",
     },
-    "&:last-child": {
-      gridColumn: "1 / -1",
-    },
   },
   "@media": {
     "screen and (max-width: 420px)": {

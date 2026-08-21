@@ -108,6 +108,7 @@
 
 ## 신고 데이터 처리
 
+- 신규 독후감·댓글 신고는 `ACTIVE` 회원만 접수할 수 있으며, 같은 대상의 중복 신고와 본인이 작성한 콘텐츠 신고는 차단합니다.
 - `WITHDRAWN` 회원이 접수한 기존 신고는 유지하고 관리자만 조회할 수 있으며 신규 신고는 허용하지 않습니다.
 - `DELETE_PENDING` 유예기간에도 기존 신고를 유지하고 영구 탈퇴 취소 시 별도 복원 없이 같은 신고 이력을 유지합니다.
 - 회원 원본을 물리 삭제하면 `TH_CMPLNT.USER_NUMB`를 `NULL`로 변경하여 신고자를 익명화하고 신고 기록은 운영 이력으로 유지합니다.
@@ -357,7 +358,6 @@
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `scripts/db/mysql/01-create.sql`
 - `scripts/db/mysql/04-user-statistics-indexes.sql`
-- `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
 - `CT_POPUPX`
 - `TH_CMPLNT`

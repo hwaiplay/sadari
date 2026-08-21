@@ -2,11 +2,11 @@
 
 ## 개요
 
-- 기준일은 2026년 8월 5일입니다.
+- 기준일은 2026년 8월 21일입니다.
 - 사용자, 독후감, 댓글 및 향후 독서 모임에 대한 공통 신고 데이터 구조에 적용합니다.
-- 현재 구현 범위는 공통코드, `TH_CMPLNT` 테이블 및 관리자 신고 조회·처리 화면입니다.
+- 현재 구현 범위는 공통코드, `TH_CMPLNT` 테이블, 독후감·댓글 신고 접수 API와 사용자 화면 및 관리자 신고 조회·처리 화면입니다.
 - 사용자 신고 대상은 관리자 신고 상세에서 기존 회원 이용정지 기능을 동일하게 사용할 수 있습니다.
-- 신고 등록 API와 사용자 신고 화면 및 콘텐츠 대상 제재는 미적용 상태입니다.
+- 사용자 프로필과 독서 모임 신고 접수 및 콘텐츠 대상 자동 제재는 미적용 상태입니다.
 
 ## 신고 대상
 
@@ -21,9 +21,10 @@
 
 - `TH_CMPLNT`에는 `TAGT_TYPE`과 `TAGT_NUMB`를 함께 저장합니다.
 - 여러 대상 테이블을 하나의 외래키로 참조할 수 없으므로 `TAGT_NUMB`에는 물리 외래키를 생성하지 않습니다.
-- 신고 등록 구현 시 서버는 `TAGT_TYPE`별 허용 테이블과 식별 컬럼을 고정 매핑하고 대상의 존재 여부와 신고 가능 상태를 검증해야 합니다.
+- 서버는 `TAGT_TYPE`별 허용 테이블과 식별 컬럼을 고정 매핑하고 대상의 존재 여부와 신고 가능 상태를 검증합니다.
 - 새로운 신고 대상은 `CMPL_TAGT` 상세코드와 서버의 대상 검증 매핑을 추가하며 테이블 구조는 변경하지 않습니다.
 - `CMPL_CLUB`은 향후 독서 모임 신고에 사용할 예약 코드이며 관련 화면과 API가 출시되기 전에는 신고 요청값으로 허용하지 않습니다.
+- 현재 사용자 신고 API는 공개된 작성 완료 독후감 `CMPL_BOOK_REPORT`와 해당 독후감의 미삭제 댓글 `CMPL_REPLY`만 허용합니다.
 
 ## 신고 사유
 
@@ -38,8 +39,8 @@
 | `CMPL_ILLEGAL` | 불법 및 권리 침해 | 불법 정보와 저작권 등 권리 침해 |
 | `CMPL_OTHER` | 기타 | 정형 사유로 분류되지 않는 신고 |
 
-- `CMPL_OTHER`를 선택하는 신고 화면과 API를 구현할 때는 `CMPL_CNTN`을 필수로 검증합니다.
-- `CMPL_CNTN`은 최대 1,000자로 저장하며 사용자 화면에서는 DB 문자 수와 별도로 UTF-8 바이트 제한을 확정해야 합니다.
+- `CMPL_OTHER`를 선택하면 신고 화면과 API에서 `CMPL_CNTN`을 필수로 검증합니다.
+- `CMPL_CNTN`은 화면과 API에서 최대 1,000자로 제한하여 저장합니다.
 
 ## 처리 상태
 
@@ -72,11 +73,12 @@
 
 ## 중복과 접근 범위
 
-- 동일 사용자의 동일 대상 중복 신고 허용 여부는 신고 API 구현 전에 별도로 확정합니다.
-- 현재 테이블은 심사 재접수와 정책 변경 가능성을 막지 않기 위해 중복 신고를 제한하는 고유키를 생성하지 않습니다.
+- 동일 사용자는 처리 상태와 관계없이 같은 유형·번호의 대상을 한 번만 신고할 수 있습니다.
+- 서비스의 활성 회원 행 잠금과 `UK_TH_CMPLNT_USER_TAGT` 고유키를 함께 적용하여 동시 요청을 포함한 중복 신고를 차단합니다.
+- 사용자는 본인이 작성한 독후감이나 댓글을 신고할 수 없습니다. 대상 작성자는 클라이언트 전달값을 신뢰하지 않고 서버에서 조회합니다.
 - 일반 사용자는 본인이 등록한 신고를 포함한 신고 심사 내역을 조회하지 않습니다.
 - 신고 데이터와 관리자 처리 내용은 관리자만 조회할 수 있습니다.
-- 신고 등록 구현 시 `ACTIVE` 계정만 신고할 수 있으며 자기 자신과 본인 소유 콘텐츠의 신고 허용 여부를 별도로 검증해야 합니다.
+- `ACTIVE` 계정만 신고할 수 있습니다.
 
 ## 계정 수명주기와 데이터 보존
 
@@ -102,7 +104,7 @@
 | 3 | `TAGT_TYPE` | `varchar(20)` | N | 없음 | `CMPL_TAGT`의 전역 유일 세부코드 | 신고 대상 유형 |
 | 4 | `TAGT_NUMB` | `bigint` | N | 없음 | 대상 유형별 업무 번호, 물리 FK 없음 | 신고 대상 번호 |
 | 5 | `CMPL_RSON` | `varchar(20)` | N | 없음 | `CMPL_RSON`의 전역 유일 세부코드 | 신고 사유 |
-| 6 | `CMPL_CNTN` | `varchar(1000)` | Y | `NULL` | `CMPL_OTHER` 사유 선택 시 API 필수 검증 예정 | 신고 상세 내용 |
+| 6 | `CMPL_CNTN` | `varchar(1000)` | Y | `NULL` | `CMPL_OTHER` 사유 선택 시 API 필수 | 신고 상세 내용 |
 | 7 | `CMPL_STAT` | `varchar(20)` | N | `CMPL_RECEIVED` | `CMPL_STAT`의 전역 유일 세부코드 | 신고 처리 상태 |
 | 8 | `PROC_CNTN` | `varchar(1000)` | Y | `NULL` | 관리자 처리 시 입력 | 관리자 처리 내용 |
 | 9 | `PROC_ADMN` | `bigint` | Y | `NULL` | `TM_ADMINX.ADMN_NUMB` FK | 처리 관리자 번호 |
@@ -115,21 +117,23 @@
 | 구분 | 이름 | 컬럼 또는 참조 | 목적 및 삭제 정책 |
 | --- | --- | --- | --- |
 | PK | `PRIMARY` | `CMPL_NUMB` | 신고 단건 식별 |
+| 고유키 | `UK_TH_CMPLNT_USER_TAGT` | `USER_NUMB`, `TAGT_TYPE`, `TAGT_NUMB` | 동일 신고자의 동일 콘텐츠 중복 신고 차단 |
 | 인덱스 | `IX_TH_CMPLNT_TAGT` | `TAGT_TYPE`, `TAGT_NUMB`, `CMPL_STAT`, `REGI_DATE` | 대상별 신고와 처리 상태 조회 |
 | 인덱스 | `IX_TH_CMPLNT_USER` | `USER_NUMB`, `REGI_DATE` | 신고자별 접수 이력 조회 |
 | 인덱스 | `IX_TH_CMPLNT_STAT` | `CMPL_STAT`, `REGI_DATE`, `CMPL_NUMB` | 관리자 처리 대기 목록 조회 |
 | FK | `FK_TH_CMPLNT_USER` | `USER_NUMB` → `TM_USERXM.USER_NUMB` | 회원 물리 삭제 시 `ON DELETE SET NULL`로 신고자 익명화 |
 | FK | `FK_TH_CMPLNT_PROC` | `PROC_ADMN` → `TM_ADMINX.ADMN_NUMB` | 실제 관리자 계정만 처리자로 저장 |
 
-`TB_CODEXD.COMD_CODE`는 관리자 등록 단계에서 전체 공통코드 그룹을 대상으로 중복을 검사하므로 `TH_CMPLNT`에는 공통코드 그룹을 저장하지 않고 세부코드만 저장합니다. `TAGT_TYPE`, `CMPL_RSON`, `CMPL_STAT`의 활성 코드 여부는 신고 등록과 처리 API에서 각각 검증해야 합니다.
+`TB_CODEXD.COMD_CODE`는 관리자 등록 단계에서 전체 공통코드 그룹을 대상으로 중복을 검사하므로 `TH_CMPLNT`에는 공통코드 그룹을 저장하지 않고 세부코드만 저장합니다. 신고 등록 API는 허용 대상 유형과 활성 `CMPL_RSON` 코드를 검증하고 신규 상태를 `CMPL_RECEIVED`로 저장합니다.
 
 `TAGT_NUMB`는 `TAGT_TYPE`에 따라 사용자, 독후감, 댓글 또는 모임 번호를 가리키므로 단일 물리 외래키를 만들지 않습니다. 신고 등록 API는 대상 유형별 원본 테이블을 고정 매핑하여 대상 존재 여부를 검증해야 합니다.
 
 ## 구현 근거
 
 - `scripts/db/mysql/01-create.sql`
-- `scripts/db/mysql/output/02-admin-insert.sql`
 - `TH_CMPLNT`
+- `src/main/java/org/our/sadari/complaint`
+- `src/main/frontend/src/pages/UserReport/UserReportPage.tsx`
 - `CMPL_TAGT`
 - `CMPL_RSON`
 - `CMPL_STAT`

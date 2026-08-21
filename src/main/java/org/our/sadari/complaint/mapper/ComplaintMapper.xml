@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.complaint.mapper.ComplaintMapper">
+
+    <!-- 신고 접수 권한을 검증하고 같은 신고자의 동시 요청을 직렬화하도록 활성 회원 행을 잠근다 -->
+    <select id="getActiveUserNumbForUpdate" resultType="long">
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getActiveUserNumbForUpdate */
+               USER_NUMB
+          FROM TM_USERXM
+         WHERE USER_NUMB = #{userNumb}
+           AND USER_STAT = #{userStatActive}
+           FOR UPDATE
+    </select>
+
+    <!-- 사용 중인 신고 사유 공통코드인지 확인한다 -->
+    <select id="getComplaintReasonCnt" resultType="int">
+        <bind name="complaintReasonCode" value="@org.our.sadari.global.common.constant.Constant@CODE_COMPLAINT_REASON" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getComplaintReasonCnt */
+               COUNT(1)
+          FROM TB_CODEXD
+         WHERE COMM_CODE = #{complaintReasonCode}
+           AND COMD_CODE = #{cmplRson}
+           AND USEE_YSNO = #{commYes}
+    </select>
+
+    <!-- 활성 회원이 공개한 작성 완료 독후감의 작성자 번호를 조회한다 -->
+    <select id="getReportOwnerNumb" resultType="long">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getReportOwnerNumb */
+               R.USER_NUMB
+          FROM TM_REPORT R
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = R.USER_NUMB
+           AND U.USER_STAT = #{userStatActive}
+         WHERE R.REPT_NUMB = #{tagtNumb}
+           AND R.PUBC_YSNO = #{commYes}
+           AND R.REPT_STAT != #{reportStatRead}
+    </select>
+
+    <!-- 활성 회원의 공개 독후감에 등록된 활성 회원의 미삭제 댓글 작성자 번호를 조회한다 -->
+    <select id="getReplyOwnerNumb" resultType="long">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getReplyOwnerNumb */
+               R.USER_NUMB
+          FROM TB_REPLXX R
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = R.USER_NUMB
+           AND U.USER_STAT = #{userStatActive}
+          JOIN TM_REPORT P
+            ON P.REPT_NUMB = R.REPT_NUMB
+           AND P.PUBC_YSNO = #{commYes}
+           AND P.REPT_STAT != #{reportStatRead}
+          JOIN TM_USERXM PU
+            ON PU.USER_NUMB = P.USER_NUMB
+           AND PU.USER_STAT = #{userStatActive}
+         WHERE R.REPL_NUMB = #{tagtNumb}
+           AND R.DELT_YSNO = #{commNo}
+    </select>
+
+    <!-- 동일 신고자가 같은 유형과 번호의 대상을 이미 신고했는지 확인한다 -->
+    <select id="getDupComplaintCnt" parameterType="org.our.sadari.complaint.dto.ComplaintDto" resultType="int">
+        SELECT /* getDupComplaintCnt */
+               COUNT(1)
+          FROM TH_CMPLNT
+         WHERE USER_NUMB = #{userNumb}
+           AND TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </select>
+
+    <!-- 검증된 신고를 관리자 검토 대기 상태로 등록한다 -->
+    <insert id="setComplaint" parameterType="org.our.sadari.complaint.dto.ComplaintDto"
+            useGeneratedKeys="true" keyProperty="cmplNumb" keyColumn="CMPL_NUMB">
+        <bind name="complaintReceived" value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_RECEIVED" />
+        /* setComplaint */
+        INSERT INTO TH_CMPLNT (
+                    USER_NUMB
+                  , TAGT_TYPE
+                  , TAGT_NUMB
+                  , CMPL_RSON
+                  , CMPL_CNTN
+                  , CMPL_STAT
+        ) VALUES (
+                    #{userNumb}
+                  , #{tagtType}
+                  , #{tagtNumb}
+                  , #{cmplRson}
+                  , #{cmplCntn}
+                  , #{complaintReceived}
+        )
+    </insert>
+</mapper>
