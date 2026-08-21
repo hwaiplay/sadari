@@ -143,6 +143,7 @@
                R.REPT_NUMB
              , R.REPL_NUMB
              , R.USER_NUMB AS TARGET_USER_NUMB
+             , U.USER_NICK
           FROM TB_REPLXX R
           JOIN TM_USERXM U
             ON U.USER_NUMB = #{userNumb}
