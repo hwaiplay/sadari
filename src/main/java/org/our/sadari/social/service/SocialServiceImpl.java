@@ -31,7 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
- * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 적용
+ * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  */
 @Service
 @RequiredArgsConstructor
@@ -560,7 +560,7 @@ public class SocialServiceImpl implements SocialService {
         alimService.sendAlim(
                 // getFlowNumb 조회로 후속 처리에 필요한 데이터를 가져온다
                 req.getFlowNumb()
-              , Constant.ALIM_SITU_FOLLOW
+              , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_FOLLOW_USER
               , req.getUserNumb()
               , replaceMap

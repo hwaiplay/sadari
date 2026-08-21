@@ -203,13 +203,6 @@ export const bookInfoActionRow = style({
   width: "100%",
 });
 
-export const bookInfoButtonIcon = style({
-  width: "15px",
-  height: "15px",
-  display: "block",
-  flexShrink: 0,
-});
-
 export const contentPanel = style({
   display: "flex",
   flexDirection: "column",

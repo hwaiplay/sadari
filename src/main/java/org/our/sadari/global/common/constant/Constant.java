@@ -18,7 +18,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
- * 2026-08-21        SeungHyeon.Kang    독후감 알림 설정 유형 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  */
 public final class Constant {
 
@@ -104,14 +104,12 @@ public final class Constant {
     public static final String FOLLOW_STAT_FRIEND = "FRIEND";
     // 알림 상황 좋아요 설정값
     public static final String ALIM_SITU_LIKE = "LIKE";
-    // 알림 상황 팔로우 설정값
-    public static final String ALIM_SITU_FOLLOW = "FOLLOW";
+    // 팔로우 요청과 독서 모임이 공유하는 알림 상황 코드
+    public static final String ALIM_SITU_FOLLOW_CLUB = "FOLLOW";
     // 독후감 상태나 도서 정보에 의해 발생하는 알림 상황 코드
     public static final String ALIM_SITU_REPORT = "REPORT";
     // 독후감 댓글에 의해 발생하는 알림 상황 코드
     public static final String ALIM_SITU_REPLY = "REPLY";
-    // 독서 모임에서 발생하는 알림 상황 코드
-    public static final String ALIM_SITU_CLUB = "CLUB";
     // 상황별 아이콘이 등록되지 않았을 때 사용하는 기본 알림 상황 코드
     public static final String ALIM_SITU_DEFAULT = "DEFAULT";
 

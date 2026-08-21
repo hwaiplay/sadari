@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
+ * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
  */
 @Service
 @RequiredArgsConstructor
@@ -746,7 +747,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             // 초대받은 활성 회원의 알림센터에 모임장과 모임명이 포함된 초대 알림을 저장하고 푸시를 예약한다
             ResultData alimResult = alimService.sendAlim(
                     targetUserNumb
-                  , Constant.ALIM_SITU_CLUB
+                  , Constant.ALIM_SITU_FOLLOW_CLUB
                   , Constant.ALIM_TEMP_CODE_INVITE_CLUB
                   , clubNumb
                   , Map.of("userName", club.getOwnrNick(), "clubName", club.getClubName())

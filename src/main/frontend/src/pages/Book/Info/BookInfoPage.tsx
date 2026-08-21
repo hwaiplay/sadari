@@ -100,7 +100,7 @@ function BookInfoPage() {
               )
             }
           >
-            {/* "다른 사람이 쓴 독후감 보기" */}
+            {/* "다른 독후감 둘러보기" */}
             {message("frontend.book.publicReports.button")}
           </button>
         </section>
