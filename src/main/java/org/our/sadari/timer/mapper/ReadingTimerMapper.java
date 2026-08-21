@@ -18,6 +18,7 @@ import java.util.List;
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 조회
  * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 조회 추가
+ * 2026-08-21        SeungHyeon.Kang    목표시간 자동 완료 및 알림 취소 추가
  */
 @Mapper
 public interface ReadingTimerMapper {
@@ -121,16 +122,18 @@ public interface ReadingTimerMapper {
      */
     int uptTimer(ReadingTimerDto timerDto);
     /**
-     * 목표시간이 지나 알림 발송을 기다리는 실행 세션 번호를 제한 조회한다
+     * 목표시간 자동 완료 또는 알림 재시도를 기다리는 세션 번호를 제한 조회한다
      *
      * @author SeungHyeon.Kang
      * @param runningStat 실행 중 상태
+     * @param completedStat 완료 상태
      * @param activeUserStat 정상 이용 회원 상태
      * @param alarmDate 알림 발송 기준 일시
      * @param maxSize 한 번에 조회할 최대 건수
      * @return 발송 대상 타이머 세션 번호 목록
      */
-    List<Long> getDueTimerAlimList(@Param("runningStat") String runningStat, @Param("activeUserStat") String activeUserStat
+    List<Long> getDueTimerAlimList(@Param("runningStat") String runningStat, @Param("completedStat") String completedStat
+                                  , @Param("activeUserStat") String activeUserStat
                                   , @Param("alarmDate") LocalDateTime alarmDate, @Param("maxSize") int maxSize);
     /**
      * 발송 대상 여부를 다시 확인하고 동시 발송을 막도록 타이머 세션을 잠근다
@@ -145,6 +148,18 @@ public interface ReadingTimerMapper {
     ReadingTimerDto getDueTimerAlimDtl(@Param("tmrxNumb") Long tmrxNumb, @Param("runningStat") String runningStat
                                       , @Param("activeUserStat") String activeUserStat, @Param("alarmDate") LocalDateTime alarmDate);
     /**
+     * 자동 완료 세션의 알림 재시도 조건을 확인하고 세션 행을 잠근다
+     *
+     * @author SeungHyeon.Kang
+     * @param tmrxNumb 독서 타이머 세션 번호
+     * @param completedStat 완료 상태
+     * @param activeUserStat 정상 이용 회원 상태
+     * @param alarmDate 알림 발송 기준 일시
+     * @return 알림 발송 대상 완료 세션
+     */
+    ReadingTimerDto getTimerAlimDtl(@Param("tmrxNumb") Long tmrxNumb, @Param("completedStat") String completedStat
+                                   , @Param("activeUserStat") String activeUserStat, @Param("alarmDate") LocalDateTime alarmDate);
+    /**
      * 목표시간 알림 발송 완료 일시를 저장하고 예약을 해제한다
      *
      * @author SeungHyeon.Kang
@@ -152,6 +167,15 @@ public interface ReadingTimerMapper {
      * @return 수정 건수
      */
     int uptTimerAlimSent(ReadingTimerDto timerDto);
+    /**
+     * 계정 상태 변경 시 아직 발송되지 않은 목표시간 예약을 취소한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 상태를 변경할 사용자 번호
+     * @param updtDate 예약 취소 일시
+     * @return 수정 건수
+     */
+    int uptTimerAlimCancel(@Param("userNumb") Long userNumb, @Param("updtDate") LocalDateTime updtDate);
     /**
      * 사용자와 날짜별 확정 독서 시간을 누적한다
      *

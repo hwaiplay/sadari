@@ -49,7 +49,7 @@ export const timerPageLink = style({
   display: "flex",
   alignItems: "center",
   gap: "10px",
-  padding: "0 10px 0 20px",
+  padding: "0 10px 0 25px",
   borderRadius: "25px",
   color: "inherit",
   textDecoration: "none",

@@ -18,7 +18,7 @@ import { getTimerSummaryOptions, useTimerSummaryQuery } from "@/features/Timer/h
 import { getLiveTimerSecs, syncTimerSummary } from "@/features/Timer/lib/readingTimerClock";
 import { notifyReadingTimerRunningChange } from "@/features/Timer/lib/readingTimerEvents";
 import { clsx } from "clsx";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { Link } from "react-router-dom";
 import * as styles from "./HomeTimerPlayer.css";
@@ -77,6 +77,7 @@ export function HomeTimerPlayer() {
   const [isChanging, setIsChanging] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
   const exitTimerRef = useRef<number | undefined>(undefined);
+  const autoCompletedTimerRef = useRef<number | undefined>(undefined);
   const visibleTimer = activeTimer ?? closingTimer;
 
   useEffect(() => {
@@ -159,7 +160,7 @@ export function HomeTimerPlayer() {
    * @param nextSummary 서버가 계산한 최신 타이머 요약
    * @return 반환값이 없다
    */
-  const applySummary = (nextSummary: ReadingTimerSummary): void => {
+  const applySummary = useCallback((nextSummary: ReadingTimerSummary): void => {
 
     // 상태 변경 응답에 최초 브라우저 수신 시각을 기록한다
     const syncedSummary = syncTimerSummary(nextSummary);
@@ -167,7 +168,7 @@ export function HomeTimerPlayer() {
     queryClient.setQueryData(getTimerSummaryOptions().queryKey, syncedSummary);
     // 하단 내비게이션의 실행 표시를 서버 상태와 즉시 일치시킨다
     notifyReadingTimerRunningChange(syncedSummary.activeTimer?.tmrxStat === "RUNNING");
-  };
+  }, []);
 
   /**
    * 완료 저장이 끝난 홈 타이머 플레이어를 화면 아래로 내린 뒤 제거한다
@@ -176,7 +177,7 @@ export function HomeTimerPlayer() {
    * @param completedTimer 완료 처리 직전의 활성 타이머
    * @return 반환값이 없다
    */
-  const closeCompletedPlayer = (completedTimer: ReadingTimer): void => {
+  const closeCompletedPlayer = useCallback((completedTimer: ReadingTimer): void => {
 
     // 서버 응답에서 활성 세션이 사라져도 애니메이션 동안 표시할 세션을 보관한다
     setClosingTimer(completedTimer);
@@ -201,16 +202,20 @@ export function HomeTimerPlayer() {
 
     // CSS 전환 시간 뒤 이전 타이머 플레이어를 완전히 제거한다
     exitTimerRef.current = window.setTimeout(finishPlayerExit, PLAYER_EXIT_DURATION_MS);
-  };
+  }, []);
 
   /**
    * 현재 홈 독서 타이머를 요청한 상태로 변경한다
    *
    * @author SeungHyeon.Kang
    * @param targetStatus 변경할 타이머 상태
+   * @param forceSkipBlocking 자동 완료 시 공통 처리 중 화면 강제 제외 여부
    * @return 상태 변경 요청이 끝나면 완료되는 Promise
    */
-  const changeTimerStatus = async (targetStatus: TimerStatus): Promise<void> => {
+  const changeTimerStatus = useCallback(async (
+    targetStatus: TimerStatus,
+    forceSkipBlocking = false,
+  ): Promise<void> => {
 
     // 활성 세션이 없거나 상태 변경 중이면 중복 요청을 보내지 않는다
     if (!activeTimer || isChanging) {
@@ -222,7 +227,7 @@ export function HomeTimerPlayer() {
     setIsChanging(true);
     try {
       // 재생과 일시정지는 플레이어 안에서 즉시 처리하므로 화면 전체 처리 중 알림을 생략한다
-      const skipBlockingOperation = targetStatus !== "COMPLETED";
+      const skipBlockingOperation = forceSkipBlocking || targetStatus !== "COMPLETED";
       // 사용자 소유 타이머의 일시정지, 재개 또는 완료 저장을 서버에 요청한다
       const response = await uptReadingTimerApi(activeTimer.tmrxNumb, targetStatus, skipBlockingOperation);
 
@@ -257,7 +262,28 @@ export function HomeTimerPlayer() {
       // 서버 요청이 끝나면 홈 플레이어 제어를 다시 허용한다
       setIsChanging(false);
     }
-  };
+  }, [activeTimer, applySummary, closeCompletedPlayer, isChanging]);
+
+  useEffect(() => {
+
+    // 목표시간이 없는 세션과 아직 목표에 도달하지 않은 세션은 자동 완료하지 않는다
+    if (activeTimer?.tmrxStat !== "RUNNING"
+        || typeof activeTimer.targSecs !== "number"
+        || elapsedSeconds < activeTimer.targSecs) {
+      // 자동 완료 조건이 아닌 정상 흐름을 종료한다
+      return;
+    }
+    // 같은 홈 세션의 자동 완료 요청을 화면 갱신마다 반복하지 않는다
+    if (autoCompletedTimerRef.current === activeTimer.tmrxNumb) {
+      // 이미 자동 완료를 요청한 세션의 후속 처리를 종료한다
+      return;
+    }
+
+    // 서버 응답을 기다리는 동안 같은 세션이 다시 요청되지 않도록 번호를 보관한다
+    autoCompletedTimerRef.current = activeTimer.tmrxNumb;
+    // 목표시간 종료를 사용자 입력 없이 완료하므로 별도 처리 중 화면 없이 서버에 저장한다
+    void changeTimerStatus("COMPLETED", true);
+  }, [activeTimer, changeTimerStatus, elapsedSeconds]);
 
   /**
    * 실행 중인 홈 독서 타이머를 일시정지한다
