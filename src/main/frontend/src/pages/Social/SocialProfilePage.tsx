@@ -869,11 +869,9 @@ function SocialProfilePage() {
   const targetUserNick = profile.userNick || emptyValue;
   // 한줄소개 앞뒤 공백을 제거하여 실제 신고 선택지 표시 여부를 판단한다
   const profileIntroduction = profile.intrCntn?.trim();
-  // 프로필 전체 신고에는 현재 닉네임과 한줄소개 스냅샷을 함께 구성한다
-  const userProfileContent = profileIntroduction
-    ? `${targetUserNick}\n${profileIntroduction}`
-    : targetUserNick;
-  // 다른 활성 사용자의 프로필에서 신고할 수 있는 현재 사용자 프로필 대상을 구성한다
+  // 사용자 계정 신고는 세부 신고 대상과 겹치지 않도록 현재 닉네임만 표시한다
+  const userProfileContent = targetUserNick;
+  // 다른 활성 사용자의 프로필에서 신고할 수 있는 현재 사용자 계정 대상을 구성한다
   const userProfileTarget = {
     targetType: "USER" as const,
     targetNumb: targetUserNumb,
@@ -881,10 +879,10 @@ function SocialProfilePage() {
     userNick: targetUserNick,
     content: userProfileContent,
   };
-  // 현재 화면에 실제로 표시된 프로필 사진과 한줄소개만 세부 신고 선택지에 포함한다
+  // 현재 화면에 실제로 표시된 이미지와 한줄소개만 세부 신고 선택지에 포함한다
   const profileReportOptions: SafetyReportOption[] = [
     {
-      // "사용자 프로필 신고"
+      // "사용자 계정 신고"
       label: message("frontend.social.report.user"),
       target: userProfileTarget,
     },
@@ -905,6 +903,25 @@ function SocialProfilePage() {
         userNumb: targetUserNumb,
         userNick: targetUserNick,
         content: profileImageTargetContent,
+      },
+    });
+  }
+
+  // 실제 배경사진이 있는 사용자만 접수 시점 이미지 증거를 신고할 수 있게 한다
+  if (profile.bgimPath) {
+    // "배경사진 신고"
+    const backgroundImageReportLabel = message("frontend.social.report.backgroundImage");
+    // "배경사진"
+    const backgroundImageTargetContent = message("frontend.userReport.target.backgroundImage");
+    // 배경 이미지 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: backgroundImageReportLabel,
+      target: {
+        targetType: "BACKGROUND" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: backgroundImageTargetContent,
       },
     });
   }

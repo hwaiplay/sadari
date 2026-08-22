@@ -39,8 +39,7 @@ import org.springframework.dao.DuplicateKeyException;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성·버전별 자동 조치와 증거 보관 검증
- * 2026-08-22        SeungHyeon.Kang    상세 내용 길이와 비속어 검증 추가
+ * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거와 입력 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceImplTest {
@@ -300,6 +299,63 @@ class ComplaintServiceImplTest {
         // 프로필 사진 자동 조치가 성공해 신고 번호를 반환하는지 확인한다
         assertEquals(200, result.getCode());
         assertEquals(96L, result.getData());
+    }
+
+    /** 배경사진의 유효 신고가 5건 누적되면 프로필과 독립적으로 기본 배경 상태로 변경한다. */
+    @Test
+    void setComplaintResetsBackgroundAtThreshold() throws java.io.IOException {
+        // 다섯 번째 배경사진 신고 요청을 생성한다
+        ComplaintCreateDto request = createRequest(
+                Constant.COMPLAINT_TARGET_BACKGROUND, "CMPL_PRIVACY", null
+        );
+        // 활성 신고자와 유효한 대상 및 사유 코드를 설정한다
+        when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET,
+                Constant.COMPLAINT_TARGET_BACKGROUND)).thenReturn(1);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_REASON,
+                "CMPL_PRIVACY")).thenReturn(1);
+        // 현재 배경사진 파일과 대상 사용자를 잠금 조회한 결과를 생성한다
+        ComplaintDto target = createTarget(31L, "배경사진: unsafe-background.jpg");
+        target.setFileNumb(502L);
+        target.setFilePath("/uploads/background/260822/unsafe-background.jpg");
+        target.setStorName("unsafe-background.jpg");
+        target.setOrigName("unsafe-background.jpg");
+        when(complaintMapper.getBackgroundTargetDtl(31L, 7L)).thenReturn(target);
+        // 신고 시점의 실제 배경사진 원본을 저장소에서 조회하도록 설정한다
+        when(fileStorage.getFile("background/260822/unsafe-background.jpg"))
+                .thenReturn(java.util.Optional.of(new StoredFile(new byte[]{4, 5, 6}, "image/jpeg")));
+        when(complaintMapper.getEvidenceNumb(eq(Constant.COMPLAINT_TARGET_BACKGROUND)
+                , eq(31L), anyString())).thenReturn(null);
+        // 관리자 전용 이미지 증거 번호가 신규 저장 뒤 DTO에 반영되도록 설정한다
+        doAnswer(invocation -> {
+            org.our.sadari.complaint.dto.ComplaintEvidenceDto evidence = invocation.getArgument(0);
+            evidence.setEvdcNumb(802L);
+            return 1;
+        }).when(complaintMapper).setEvidence(any(org.our.sadari.complaint.dto.ComplaintEvidenceDto.class));
+        // 신규 신고 번호가 자동 조치 결과와 연결되도록 설정한다
+        doAnswer(invocation -> {
+            ComplaintDto complaint = invocation.getArgument(0);
+            complaint.setCmplNumb(97L);
+            return 1;
+        }).when(complaintMapper).setComplaint(any(ComplaintDto.class), eq(7L));
+        when(complaintMapper.getAutoActionCmplCnt(
+                eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString())).thenReturn(5);
+        when(complaintMapper.uptAutoBackground(31L)).thenReturn(1);
+        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        when(complaintMapper.uptAutoComplaints(
+                eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString(),
+                eq("누적 신고 5건에 따른 배경사진 기본 이미지 초기화")
+        )).thenReturn(5);
+
+        // 다섯 번째 배경사진 신고를 접수한다
+        ResultData result = complaintService.setComplaint(7L, request);
+
+        // 배경사진 참조만 제거하고 해당 파일을 정리하는지 확인한다
+        verify(complaintMapper).uptAutoBackground(31L);
+        verify(complaintMapper, never()).uptAutoProfile(31L);
+        verify(fileService).delFile(502L);
+        assertEquals(200, result.getCode());
+        assertEquals(97L, result.getData());
     }
 
     /** 삭제되었거나 본인 소유여서 서버가 조회하지 못한 대상은 신고를 저장하지 않는다. */

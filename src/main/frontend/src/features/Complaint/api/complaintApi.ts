@@ -6,6 +6,7 @@ export type ComplaintTargetType =
   | "CMPL_BOOK_REPORT"
   | "CMPL_REPLY"
   | "CMPL_PROF_IMAGE"
+  | "CMPL_BG_IMAGE"
   | "CMPL_INTRO";
 
 export type ComplaintReason =

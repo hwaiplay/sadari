@@ -48,16 +48,33 @@
            AND TAGT_HASH = #{tagtHash}
     </select>
 
-    <!-- 다른 활성 사용자의 프로필 소유자와 닉네임 및 한줄소개를 신고 시점 정보로 조회한다 -->
+    <!-- 다른 활성 사용자의 계정 소유자와 닉네임을 신고 시점 정보로 조회한다 -->
     <select id="getUserTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
         <include refid="bindComplaint" />
         SELECT /* getUserTargetDtl */
                U.USER_NUMB AS TAGT_USER
-             , CONCAT('닉네임: ', U.USER_NICK
-                    , CASE WHEN NULLIF(TRIM(U.INTR_CNTN), '') IS NULL THEN ''
-                           ELSE CONCAT('\n한줄소개: ', U.INTR_CNTN)
-                       END) AS TAGT_CNTN
+             , CONCAT('닉네임: ', U.USER_NICK) AS TAGT_CNTN
           FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{tagtNumb}
+           AND U.USER_NUMB != #{userNumb}
+           AND U.USER_STAT = #{userStatActive}
+           FOR UPDATE
+    </select>
+
+    <!-- 다른 활성 사용자의 현재 배경사진과 비공개 증거 생성용 메타정보를 잠금 조회한다 -->
+    <select id="getBackgroundTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
+        <include refid="bindComplaint" />
+        SELECT /* getBackgroundTargetDtl */
+               U.USER_NUMB AS TAGT_USER
+             , F.FILE_NUMB
+             , CONCAT('배경사진: ', COALESCE(F.ORIG_NAME, F.STOR_NAME, '파일명 없음')) AS TAGT_CNTN
+             , F.ORIG_NAME
+             , F.STOR_NAME
+             , F.FILE_PATH
+             , F.MIME_TYPE
+          FROM TM_USERXM U
+          JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.BGIM_NUMB
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
@@ -143,7 +160,7 @@
            AND TAGT_HASH = #{tagtHash}
     </select>
 
-    <!-- 프로필 사진 신고 시점의 실제 이미지 원본을 관리자 전용 증거로 저장한다 -->
+    <!-- 이미지 신고 시점의 실제 원본을 관리자 전용 증거로 저장한다 -->
     <insert id="setEvidence" parameterType="org.our.sadari.complaint.dto.ComplaintEvidenceDto"
             useGeneratedKeys="true" keyProperty="evdcNumb" keyColumn="EVDC_NUMB">
         /* setEvidence */
@@ -242,6 +259,18 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{tagtUser}
            AND PROF_NUMB IS NOT NULL
+           AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+    </update>
+
+    <!-- 누적 신고 임계치에 도달한 배경사진 참조를 제거해 기본 이미지 상태로 변경한다 -->
+    <update id="uptAutoBackground">
+        <include refid="bindComplaint" />
+        UPDATE /* uptAutoBackground */
+               TM_USERXM
+           SET BGIM_NUMB = NULL
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE USER_NUMB = #{tagtUser}
+           AND BGIM_NUMB IS NOT NULL
            AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
     </update>
 

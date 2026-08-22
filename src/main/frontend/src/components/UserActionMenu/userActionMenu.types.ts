@@ -1,4 +1,4 @@
-export type SafetyReportTargetType = "USER" | "REPORT" | "REPLY" | "PROFILE" | "INTRO";
+export type SafetyReportTargetType = "USER" | "REPORT" | "REPLY" | "PROFILE" | "BACKGROUND" | "INTRO";
 
 export type SafetyReportTarget = {
   targetType: SafetyReportTargetType;

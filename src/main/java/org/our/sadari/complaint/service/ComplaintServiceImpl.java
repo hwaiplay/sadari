@@ -36,8 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성·버전별 자동 조치와 이미지 증거 보관 추가
- * 2026-08-22        SeungHyeon.Kang    상세 내용 500자 제한과 비속어 검증 추가
+ * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거 및 입력 검증 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -52,6 +51,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             Constant.COMPLAINT_TARGET_REPORT,
             Constant.COMPLAINT_TARGET_REPLY,
             Constant.COMPLAINT_TARGET_PROFILE,
+            Constant.COMPLAINT_TARGET_BACKGROUND,
             Constant.COMPLAINT_TARGET_INTRO
     );
     // 신고 데이터 접근 객체
@@ -126,10 +126,10 @@ public class ComplaintServiceImpl implements ComplaintService {
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        // 텍스트 또는 실제 프로필 이미지 원본으로 변경 불가능한 대상 버전 해시를 계산한다
+        // 텍스트 또는 실제 이미지 원본으로 변경 불가능한 대상 버전 해시를 계산한다
         byte[] evidenceBytes = getEvidenceBytes(tagtType, target);
-        if (Constant.COMPLAINT_TARGET_PROFILE.equals(tagtType) && evidenceBytes == null) {
-            // 프로필 원본 증거를 확보하지 못한 신고는 파일명만으로 접수하지 않는다
+        if (isImageTarget(tagtType) && evidenceBytes == null) {
+            // 이미지 원본 증거를 확보하지 못한 신고는 파일명만으로 접수하지 않는다
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
         // 같은 번호의 수정 전후 콘텐츠가 섞이지 않도록 현재 버전 해시를 설정한다
@@ -153,10 +153,10 @@ public class ComplaintServiceImpl implements ComplaintService {
         complaint.setTagtUser(target.getTagtUser());
         // 원본 테이블에서 조회한 접수 시점 대상 내용을 설정한다
         complaint.setTagtCntn(target.getTagtCntn());
-        // 프로필 사진 자동 조치 뒤 파일을 정리할 현재 파일 번호를 설정한다
+        // 이미지 자동 조치 뒤 파일을 정리할 현재 파일 번호를 설정한다
         complaint.setFileNumb(target.getFileNumb());
-        // 프로필 사진 신고는 실제 원본을 관리자 전용 증거에 저장하고 연결 번호를 설정한다
-        if (Constant.COMPLAINT_TARGET_PROFILE.equals(tagtType)) {
+        // 이미지 신고는 실제 원본을 관리자 전용 증거에 저장하고 연결 번호를 설정한다
+        if (isImageTarget(tagtType)) {
             complaint.setEvdcNumb(setEvidence(complaint, target, evidenceBytes));
         }
         // 활성 공통코드로 검증한 신고 사유를 설정한다
@@ -218,7 +218,6 @@ public class ComplaintServiceImpl implements ComplaintService {
             return null;
         }
 
-        // 실제 관리자가 확인할 신고 상세 내용의 앞뒤 공백을 제거한다
         // 실제 관리자가 확인할 신고 상세 내용만 반환한다
         return content.trim();
     }
@@ -248,6 +247,9 @@ public class ComplaintServiceImpl implements ComplaintService {
             // 프로필 사진 신고는 현재 파일 참조와 원본 파일명을 잠금 조회한다
             case Constant.COMPLAINT_TARGET_PROFILE ->
                     complaintMapper.getProfileTargetDtl(tagtNumb, userNumb);
+            // 배경사진 신고는 현재 파일 참조와 원본 파일명을 잠금 조회한다
+            case Constant.COMPLAINT_TARGET_BACKGROUND ->
+                    complaintMapper.getBackgroundTargetDtl(tagtNumb, userNumb);
             // 한줄소개 신고는 현재 표시 중인 소개 원문을 잠금 조회한다
             case Constant.COMPLAINT_TARGET_INTRO ->
                     complaintMapper.getIntroTargetDtl(tagtNumb, userNumb);
@@ -257,30 +259,30 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 프로필 사진 신고일 때만 검증된 내부 저장소에서 실제 원본 바이트를 조회한다.
+     * 이미지 신고일 때만 검증된 내부 저장소에서 실제 원본 바이트를 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param target 신고 대상 파일 메타정보
-     * @return 실제 프로필 이미지 원본, 이미지 신고가 아니면 null
+     * @return 실제 이미지 원본, 이미지 신고가 아니면 null
      */
     private byte[] getEvidenceBytes(String tagtType, ComplaintDto target) {
 
         // 텍스트 신고 대상은 기존 내용 스냅샷만 저장하므로 바이너리 증거를 만들지 않는다
-        if (!Constant.COMPLAINT_TARGET_PROFILE.equals(tagtType)) {
+        if (!isImageTarget(tagtType)) {
             // 이미지 증거가 필요하지 않음을 반환한다
             return null;
         }
 
         // DB 파일 경로를 상위 경로 이동이 불가능한 내부 저장소 객체 키로 변환한다
-        String objectKey = getStoredObjectKey(target);
+        String objectKey = getStoredObjectKey(tagtType, target);
         if (StringUtil.isEmpty(objectKey)) {
             // 외부 URL이나 허용 범위 밖의 경로는 관리자 증거로 복제하지 않는다
             return null;
         }
 
         try {
-            // 비공개 저장소에서 현재 프로필 이미지의 실제 원본을 조회한다
+            // 비공개 저장소에서 현재 이미지의 실제 원본을 조회한다
             Optional<StoredFile> storedFile = fileStorage.getFile(objectKey);
             if (storedFile.isEmpty() || storedFile.get().bytes().length == 0) {
                 // 저장소에 실제 원본이 없으면 파일명만으로 신고를 접수하지 않는다
@@ -300,13 +302,14 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 프로필 이미지 접근 경로를 안전한 내부 저장소 객체 키로 변환한다.
+     * 이미지 접근 경로를 대상 유형에 맞는 안전한 내부 저장소 객체 키로 변환한다.
      *
      * @author SeungHyeon.Kang
-     * @param target 프로필 이미지 파일 메타정보
-     * @return 검증된 profile 하위 객체 키 또는 허용되지 않으면 null
+     * @param tagtType 신고 대상 유형
+     * @param target 이미지 파일 메타정보
+     * @return 검증된 이미지 하위 객체 키 또는 허용되지 않으면 null
      */
-    private String getStoredObjectKey(ComplaintDto target) {
+    private String getStoredObjectKey(String tagtType, ComplaintDto target) {
 
         // 파일 경로와 저장 파일명이 모두 있어야 저장소 객체를 검증할 수 있다
         if (StringUtil.isEmpty(target)
@@ -318,9 +321,12 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 브라우저 접근 접두사를 제외한 저장소 상대 경로를 정규화한다
         Path storedPath = Paths.get(target.getFilePath().substring("/uploads/".length())).normalize();
-        // 프로필 루트 아래 날짜와 파일명으로 구성된 경로인지 확인한다
+        // 신고 유형에 대응하는 이미지 저장소 루트를 확정한다
+        Path expectedRoot = Constant.COMPLAINT_TARGET_PROFILE.equals(tagtType)
+                ? Paths.get("profile") : Paths.get("background");
+        // 이미지 루트 아래 날짜와 파일명으로 구성된 경로인지 확인한다
         if (storedPath.isAbsolute() || storedPath.getNameCount() != 3
-                || !storedPath.startsWith(Paths.get("profile"))
+                || !storedPath.startsWith(expectedRoot)
                 || !target.getStorName().equals(storedPath.getFileName().toString())) {
             // 상위 경로 이동 또는 다른 이미지 유형은 신고 증거 원본으로 읽지 않는다
             return null;
@@ -328,6 +334,19 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 운영체제 경로 구분자를 저장소 공통 객체 키 구분자로 변환해 반환한다
         return storedPath.toString().replace('\\', '/');
+    }
+
+    /**
+     * 신고 대상이 원본 바이트 증거를 보존하는 이미지 유형인지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @return 프로필 사진 또는 배경사진이면 true
+     */
+    private boolean isImageTarget(String tagtType) {
+        // 프로필과 배경사진만 실제 원본 바이트 증거를 저장한다
+        return Constant.COMPLAINT_TARGET_PROFILE.equals(tagtType)
+                || Constant.COMPLAINT_TARGET_BACKGROUND.equals(tagtType);
     }
 
     /**
@@ -366,11 +385,11 @@ public class ComplaintServiceImpl implements ComplaintService {
     }
 
     /**
-     * 동일 프로필 이미지 버전의 관리자 전용 증거를 한 번만 저장하고 연결 번호를 반환한다.
+     * 동일 이미지 버전의 관리자 전용 증거를 한 번만 저장하고 연결 번호를 반환한다.
      *
      * @author SeungHyeon.Kang
      * @param complaint 신고 대상 버전 식별정보
-     * @param target 프로필 이미지 파일 메타정보
+     * @param target 이미지 파일 메타정보
      * @param evidenceBytes 실제 이미지 원본 바이트
      * @return 신고와 연결할 비공개 증거 번호
      */
@@ -502,6 +521,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             case Constant.COMPLAINT_TARGET_REPLY -> delAutoReply(complaint, threshold);
             // 프로필 사진은 파일 참조를 해제하고 기본 이미지 상태로 변경한다
             case Constant.COMPLAINT_TARGET_PROFILE -> uptAutoProfile(complaint, threshold);
+            // 배경사진은 파일 참조를 해제하고 기본 이미지 상태로 변경한다
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> uptAutoBackground(complaint, threshold);
             // 한줄소개는 현재 원문을 보존하지 않고 Null로 초기화한다
             case Constant.COMPLAINT_TARGET_INTRO -> uptAutoIntro(complaint, threshold);
             // 설정 임계치가 없는 대상이 이 경로에 진입하면 정합성 오류로 전체 접수를 롤백한다
@@ -525,6 +546,8 @@ public class ComplaintServiceImpl implements ComplaintService {
             case Constant.COMPLAINT_TARGET_REPLY -> Constant.COMPLAINT_ACTION_DELETE_REPLY;
             // 프로필 사진 신고는 기본 이미지 초기화 유형으로 기록한다
             case Constant.COMPLAINT_TARGET_PROFILE -> Constant.COMPLAINT_ACTION_RESET_PROFILE;
+            // 배경사진 신고는 기본 배경 초기화 유형으로 기록한다
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> Constant.COMPLAINT_ACTION_RESET_BACKGROUND;
             // 한줄소개 신고는 Null 초기화 유형으로 기록한다
             case Constant.COMPLAINT_TARGET_INTRO -> Constant.COMPLAINT_ACTION_CLEAR_INTRO;
             // 자동 조치 대상이 아닌 유형은 이력 코드로 변환하지 않는다
@@ -587,6 +610,25 @@ public class ComplaintServiceImpl implements ComplaintService {
         fileService.delFile(complaint.getFileNumb());
         // 자동 조치 이력과 신고 처리 내용에 저장할 결과를 반환한다
         return "누적 신고 " + threshold + "건에 따른 프로필 사진 기본 이미지 초기화";
+    }
+
+    /**
+     * 배경사진 참조를 제거하고 더 이상 사용하지 않는 파일을 정리한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param complaint 자동 초기화할 배경사진 정보
+     * @param threshold 자동 조치를 발생시킨 신고 임계치
+     * @return 배경사진 자동 초기화 결과 설명
+     */
+    private String uptAutoBackground(ComplaintDto complaint, int threshold) {
+        // 활성·비활성화·삭제 대기 회원의 현재 배경사진 참조를 제거한다
+        int updateCount = complaintMapper.uptAutoBackground(complaint.getTagtUser());
+        // 잠금 조회한 배경사진이 변경되지 않으면 신고와 조치 결과를 함께 롤백한다
+        validateActionCount(updateCount);
+        // 프로필과 배경에서 더 이상 참조하지 않는 파일은 커밋 뒤 물리 저장소까지 정리한다
+        fileService.delFile(complaint.getFileNumb());
+        // 자동 조치 이력과 신고 처리 내용에 저장할 결과를 반환한다
+        return "누적 신고 " + threshold + "건에 따른 배경사진 기본 이미지 초기화";
     }
 
     /**

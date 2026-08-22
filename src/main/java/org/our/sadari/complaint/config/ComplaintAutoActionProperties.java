@@ -28,6 +28,8 @@ public class ComplaintAutoActionProperties {
     private int replyThreshold = 5;
     // 프로필 사진 자동 초기화 신고 임계치
     private int profileImageThreshold = 5;
+    // 배경사진 자동 초기화 신고 임계치
+    private int backgroundImageThreshold = 5;
     // 한줄소개 자동 초기화 신고 임계치
     private int introductionThreshold = 5;
 
@@ -47,6 +49,8 @@ public class ComplaintAutoActionProperties {
             case Constant.COMPLAINT_TARGET_REPLY -> replyThreshold;
             // 프로필 사진은 기본 이미지 초기화 기준을 반환한다
             case Constant.COMPLAINT_TARGET_PROFILE -> profileImageThreshold;
+            // 배경사진은 기본 이미지 초기화 기준을 반환한다
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> backgroundImageThreshold;
             // 한줄소개는 Null 초기화 기준을 반환한다
             case Constant.COMPLAINT_TARGET_INTRO -> introductionThreshold;
             // 사용자 전체 신고와 예약 대상은 관리자가 직접 검토한다
