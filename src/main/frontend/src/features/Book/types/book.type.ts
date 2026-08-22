@@ -185,7 +185,7 @@ export interface PublicReportType {
   reptStatName?: string;
   reptGrde: string;
   reptCntn: string;
-  pubcYsno: "Y";
+  pubcYsno: "Y" | "N";
   likeCnt?: number;
   replCnt?: number;
   likeYsno?: "Y" | "N";

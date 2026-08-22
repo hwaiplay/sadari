@@ -207,6 +207,10 @@ const Router = () => {
           <Route path="/reading-clubs/:clubNumb/:rondNumb/edit" element={<SetClubReadingPage />} />
           <Route path="/reading-clubs/:clubNumb/edit" element={<EditClubPage />} />
           <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
+          <Route
+            path="/reading-clubs/:clubNumb/readings/:rondNumb/reports"
+            element={<PublicReportPage />}
+          />
           <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}

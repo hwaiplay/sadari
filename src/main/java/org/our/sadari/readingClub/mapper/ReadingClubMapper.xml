@@ -802,7 +802,7 @@
              , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
                                 AND MEMBER.USER_NUMB IS NOT NULL
                                 AND USERX.USER_NUMB IS NOT NULL
-                                AND TRIM(COALESCE(REPORT.REPT_CNTN, '')) != '' THEN 1 END) AS REPORT_CNT
+                                AND REPORT.REPT_STAT = #{reportDone} THEN 1 END) AS REPORT_CNT
              , CASE WHEN COUNT(CASE WHEN PART.USER_NUMB = #{userNumb}
                                           AND PART.ANON_YSNO = #{commNo}
                                           AND PART.GOAL_YSNO = #{commYes} THEN 1 END) > 0
@@ -842,6 +842,156 @@
              , BOOK.BOOK_TITL
              , BOOK.BOOK_ATHR
              , BOOK.BOOK_CVIM
+    </select>
+
+    <!-- 활성 계정과 활성 모임원 관계를 모두 유지하는 조회자인지 확인한다. -->
+    <select id="getActiveMemberAccessCnt" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT /* getActiveMemberAccessCnt */
+               COUNT(*)
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
+           AND CLUB.CLUB_STAT = #{clubActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </select>
+
+    <!-- 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회한다. -->
+    <select id="getReadingRoundReportSummary" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingRoundReportPageDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getReadingRoundReportSummary */
+               ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.ROND_NUMB AS READING_ORDR
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+             , ROUND(AVG(CASE WHEN REPORT.REPT_STAT = #{reportDone}
+                                   AND MEMBER.USER_NUMB IS NOT NULL
+                                   AND USERX.USER_NUMB IS NOT NULL
+                                  THEN CAST(REPORT.REPT_GRDE AS DECIMAL(3, 1)) END), 1) AS RATING_AVERAGE
+          FROM TM_CLRNDX ROUNDX
+          JOIN TM_BKINFO BOOK
+            ON BOOK.BOOK_NUMB = ROUNDX.BOOK_NUMB
+     LEFT JOIN TB_CLPART PART
+            ON PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+           AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+           AND PART.ANON_YSNO = #{commNo}
+     LEFT JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+     LEFT JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+           AND REPORT.USER_NUMB = PART.USER_NUMB
+         WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
+           AND ROUNDX.ROND_NUMB = #{rondNumb}
+           AND ROUNDX.ROND_STAT = #{roundCompleted}
+      GROUP BY ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.BOOK_NUMB
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+    </select>
+
+    <!-- 완료 회차에서 현재 활성 모임원이 작성한 완료 독후감을 공개 여부와 무관하게 조회한다. -->
+    <select id="getReadingRoundReportList" resultType="org.our.sadari.report.dto.ReportDto">
+        <include refid="clubCodeBinds" />
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        SELECT /* getReadingRoundReportList */
+               REPORT.REPT_NUMB
+             , REPORT.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , REPORT.BOOK_NUMB
+             , REPORT.REPT_STAT
+             , FN_GET_CODE_NAME(#{codeReadStat}, REPORT.REPT_STAT, NULL) AS REPT_STAT_NAME
+             , REPORT.REPT_GRDE
+             , REPORT.REPT_CNTN
+             , REPORT.PUBC_YSNO
+             , COALESCE(LIKECOUNT.LIKE_CNT, 0) AS LIKE_CNT
+             , COALESCE(USERLIKE.LIKE_YSNO, #{commNo}) AS LIKE_YSNO
+             , COALESCE(REPLYCOUNT.REPL_CNT, 0) AS REPL_CNT
+             , CASE WHEN FOLLOWX.USER_NUMB IS NOT NULL THEN #{commYes} ELSE #{commNo} END AS FOLLOW_YSNO
+          FROM TB_CLPART PART
+          JOIN TM_CLRNDX ROUNDX
+            ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+           AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+           AND ROUNDX.ROND_STAT = #{roundCompleted}
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+          JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+           AND REPORT.USER_NUMB = PART.USER_NUMB
+           AND REPORT.REPT_STAT = #{reportDone}
+     LEFT JOIN TM_FILEXM FILEX
+            ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+     LEFT JOIN TB_FOLLOW FOLLOWX
+            ON FOLLOWX.USER_NUMB = #{userNumb}
+           AND FOLLOWX.FLOW_NUMB = REPORT.USER_NUMB
+     LEFT JOIN TB_FOLLOW REVERSEX
+            ON REVERSEX.USER_NUMB = REPORT.USER_NUMB
+           AND REVERSEX.FLOW_NUMB = #{userNumb}
+     LEFT JOIN (  SELECT LIKEX.TAGT_NUMB AS REPT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_LIKEXX LIKEX
+                   WHERE LIKEX.TAGT_TYPE = #{likeTargetReport}
+                GROUP BY LIKEX.TAGT_NUMB
+                ) LIKECOUNT
+            ON LIKECOUNT.REPT_NUMB = REPORT.REPT_NUMB
+     LEFT JOIN (  SELECT LIKEX.TAGT_NUMB AS REPT_NUMB
+                       , #{commYes} AS LIKE_YSNO
+                    FROM TB_LIKEXX LIKEX
+                   WHERE LIKEX.USER_NUMB = #{userNumb}
+                     AND LIKEX.TAGT_TYPE = #{likeTargetReport}
+                ) USERLIKE
+            ON USERLIKE.REPT_NUMB = REPORT.REPT_NUMB
+     LEFT JOIN (  SELECT REPLY.REPT_NUMB
+                       , COUNT(*) AS REPL_CNT
+                    FROM TB_REPLXX REPLY
+                GROUP BY REPLY.REPT_NUMB
+                ) REPLYCOUNT
+            ON REPLYCOUNT.REPT_NUMB = REPORT.REPT_NUMB
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+           AND PART.ANON_YSNO = #{commNo}
+        <choose>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_RELATION_DESC">
+                ORDER BY CASE WHEN FOLLOWX.USER_NUMB IS NOT NULL
+                                    AND REVERSEX.USER_NUMB IS NOT NULL THEN 0
+                                  WHEN FOLLOWX.USER_NUMB IS NOT NULL THEN 1
+                                  ELSE 2
+                             END
+                       , REPORT.REPT_NUMB DESC
+            </when>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_GRADE_DESC">
+                ORDER BY CAST(REPORT.REPT_GRDE AS DECIMAL(3, 1)) DESC
+                       , REPORT.REPT_NUMB DESC
+            </when>
+            <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_LIKE_DESC">
+                ORDER BY COALESCE(LIKECOUNT.LIKE_CNT, 0) DESC
+                       , REPORT.REPT_NUMB DESC
+            </when>
+            <otherwise>
+                ORDER BY REPORT.REPT_NUMB DESC
+            </otherwise>
+        </choose>
+         LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
     <!-- 완료 회차의 고정 달성자 중 현재 공개 가능한 활성 프로필만 조회한다. -->

@@ -1,5 +1,11 @@
 import api from "@/app/api/axios";
-import { assertResultDataSuccess } from "@/app/api/resultData";
+import {
+  assertResultDataSuccess,
+  type PageData,
+  type ResultData,
+} from "@/app/api/resultData";
+import type { PublicReportSortType } from "@/features/Book/api/bookApi";
+import type { PublicReportType } from "@/features/Book/types/book.type";
 
 export type ClubCategory = {
   intrCode: string;
@@ -114,6 +120,17 @@ export type ClubReadingGoalResult = {
   reportCnt: number;
   myGoalAchieved: boolean;
   achievementMemberList: ClubMemberProfile[];
+};
+
+export type ClubReadingRoundReportPage = {
+  clubNumb: number;
+  rondNumb: number;
+  readingOrdr: number;
+  bookTitl: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  ratingAverage?: number | string | null;
+  reportPage: PageData<PublicReportType>;
 };
 
 export type ClubReadingCreateParams = {
@@ -234,6 +251,32 @@ export const getClubReadingGoalResultApi = async (
   const response = await api.get(`/reading-clubs/${clubNumb}/reading-result`);
   // 공통 성공 검증을 통과한 종료 결과가 없으면 팝업을 표시하지 않도록 Null을 반환한다
   return (assertResultDataSuccess(response.data).data as ClubReadingGoalResult | undefined) ?? null;
+};
+
+/**
+ * 완료된 모임 독서 회차의 DONE 독후감을 공개 여부와 무관하게 조회한다.
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @param rondNumb 모임 독서 회차 번호
+ * @param sortType 독후감 정렬 코드
+ * @param page 조회할 페이지 번호
+ * @return 회차 도서 정보와 완료 독후감 페이지 응답
+ * @throws 현재 활성 모임원이 아니거나 조회 요청이 실패하면 발생
+ */
+export const getClubReadingRoundReportsApi = async (
+  clubNumb: number,
+  rondNumb: number,
+  sortType: PublicReportSortType,
+  page: number,
+): Promise<ResultData<ClubReadingRoundReportPage>> => {
+  // 현재 활성 모임원 권한으로 대상 완료 회차의 DONE 독후감 페이지를 요청한다
+  const response = await api.get<ResultData<ClubReadingRoundReportPage>>(
+    `/reading-clubs/${clubNumb}/readings/${rondNumb}/reports`,
+    { params: { sortType, page } },
+  );
+  // 공개 여부와 무관하게 조회된 완료 독후감 페이지 응답을 반환한다
+  return assertResultDataSuccess(response.data);
 };
 
 /** 새 모임을 생성한다. @author Hanwon.Jang @param params 모임 생성 입력값 @return 생성된 모임 상세 */

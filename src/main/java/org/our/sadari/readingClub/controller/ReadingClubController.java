@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임원·수정·독서 API 추가
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 API 추가
- * 2026-08-22        HanWon.Jang        종료 독서 결과 API 추가
+ * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 API
  */
 @RestController
 @RequiredArgsConstructor
@@ -154,6 +154,30 @@ public class ReadingClubController {
                                           , @PathVariable Long clubNumb) {
         // 현재 활성 모임원에게 공개할 수 있는 종료 회차 결과를 반환한다
         return readingClubService.getReadingGoalResult(userNumb, clubNumb);
+    }
+
+    /**
+     * 활성 모임원에게 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호
+     * @param sortType 독후감 정렬 코드
+     * @param page 조회할 페이지 번호
+     * @return 회차 도서 정보와 완료 독후감 페이지
+     */
+    @GetMapping("/{clubNumb}/readings/{rondNumb}/reports")
+    @Operation(summary = "모임 독서 회차 완료 독후감 목록 조회")
+    public ResultData getReadingRoundReportList(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+          , @PathVariable Long clubNumb
+          , @PathVariable Long rondNumb
+          , @RequestParam(defaultValue = "LATEST_DESC") String sortType
+          , @RequestParam(defaultValue = "1") int page) {
+        // 현재 활성 모임원에게만 대상 회차의 완료 독후감 목록을 반환한다
+        return readingClubService.getReadingRoundReportList(
+                userNumb, clubNumb, rondNumb, sortType, page);
     }
 
     /**
