@@ -1,17 +1,17 @@
 # MySQL 8.4 초기 구축 절차
 
-## 결과물
+## 실행 자료와 공개 범위
 
-자동 실행용 PowerShell 파일이나 DB 변환 스크립트는 사용하지 않습니다. 다음 정적 SQL만 사용합니다.
+저장소에는 스키마, 저장 루틴, 개발 데이터 초기화 절차처럼 운영 데이터를 포함하지 않는 재현 가능한 자료만 관리합니다.
 
-| 실행 순서 | 파일 | 역할 |
+| 실행 순서 | 공개 자료 | 역할 |
 | --- | --- | --- |
-| 1 | `scripts/db/mysql/01-create.sql` | 26개 테이블, PK, FK, 인덱스, 코멘트 생성 |
-| 2 | `scripts/db/mysql/output/02-admin-insert.sql` | 관리자 기준정보 9개 테이블의 현재 데이터 입력 |
-| 3 | `scripts/db/mysql/routines.sql` | MySQL 함수 4개와 프로시저 1개 생성 |
-| 선택 | `scripts/db/mysql/03-reset-user-data.sql` | 사용자 데이터 17개 테이블 삭제 및 자동증가 값 초기화 |
+| 1 | `scripts/db/mysql/01-create.sql` | 업무 테이블, 키, 관계 제약, 조회 인덱스와 설명 생성 |
+| 2 | 승인된 비공개 기준정보 패키지 | 관리자 계정과 운영 기준정보 입력 |
+| 3 | `scripts/db/mysql/routines.sql` | 애플리케이션 공통 조회·변환 루틴 생성 |
+| 선택 | `scripts/db/mysql/03-reset-user-data.sql` | 로컬 개발 데이터 초기화 |
 
-`02-admin-insert.sql`에는 관리자 계정 정보가 들어 있으므로 `output` 디렉터리는 Git에 커밋하지 않고 안전한 경로로 직접 전달합니다.
+`scripts/db/mysql/output`은 로컬 검증 과정에서 생성되는 임시 산출물만 보관합니다. 이 디렉터리는 전체가 Git 추적에서 제외되며 배포 원본이나 팀 전달 수단으로 사용하지 않습니다. 관리자 계정과 운영 기준정보는 접근권한이 통제되는 별도 경로로 전달하고, 적용 담당자가 대상 환경과 행 수를 확인한 뒤 실행합니다.
 
 ## 이관하는 관리자 기준정보
 
@@ -19,59 +19,50 @@
 
 | 테이블 | 용도 |
 | --- | --- |
-| `TM_ADMINX` | 관리자 계정 |
-| `TM_AUTHXM` | 관리자 권한 그룹 |
-| `TM_ADMENU` | 관리자 메뉴 |
-| `TM_URMENU` | 사용자 메뉴 |
-| `TM_CODEXM` | 공통코드 그룹 |
-| `TB_CODEXD` | 공통코드 상세 |
-| `TB_ALTEMP` | 알림 템플릿 |
-| `CT_POPUPX` | 사용자 안내 팝업 |
-| `TB_AUTHMN` | 권한별 관리자 메뉴 권한 |
+| 관리자 계정 | 관리자 계정 |
+| 관리자 권한그룹 | 관리자 권한 그룹 |
+| 관리자 화면 메뉴 | 관리자 메뉴 |
+| 사용자 화면 메뉴 | 사용자 메뉴 |
+| 공통코드 그룹 | 공통코드 그룹 |
+| 공통코드 세부 항목 | 공통코드 상세 |
+| 알림 템플릿 | 알림 템플릿 |
+| 사용자 안내 팝업 콘텐츠 | 사용자 안내 팝업 |
+| 권한그룹별 관리자 메뉴 권한 | 권한별 관리자 메뉴 권한 |
 
 다음 17개 테이블은 구조만 만들고 데이터는 이관하지 않습니다.
 
-`TB_ALIMXX`, `TB_EVTBOX`, `TB_FOLLOW`, `TB_LIKEXX`, `TB_LOGHIS`, `TB_NKSEQX`, `TB_PSHSUB`, `TB_REPLXX`, `TH_USSPND`, `TH_USWTHD`, `TL_SCFAIL`, `TL_SCLOGX`, `TM_BKINFO`, `TM_FILEXM`, `TM_GOALXM`, `TM_REPORT`, `TM_USERXM`
+사용자 알림 발송 내역, 사용자 상태 변경 Outbox 이벤트, 사용자 팔로우 관계, 사용자 좋아요 관계, 사용자 로그인 이력, 닉네임 조합별 연월 순번, 사용자 웹 푸시 구독, 독후감 댓글과 답글, 회원 이용 정지 이력, 회원 계정 처리 이력, 스케줄러 실행 실패 상세, 스케줄러 실행 로그, 도서 마스터, 업로드 파일 정보, 사용자 기간별 독서 목표, 독후감, 사용자 계정과 프로필
 
 ## PK 발급 방식
 
 - MySQL 8.4에는 Oracle식 `CREATE SEQUENCE`를 사용하지 않습니다.
 - 사용자 서버가 새 행을 생성하는 숫자 PK 9개는 `AUTO_INCREMENT`로 만들며 시작값은 1입니다.
-- 관리자 서버가 생성하는 `TH_USSPND.SPND_NUMB`는 INSERT 직전에 `MAX(SPND_NUMB) + 1`로 계산합니다.
-- 공유 테이블 `TB_EVTBOX.EVNT_NUMB`는 사용자 서버에서는 `AUTO_INCREMENT`, 관리자 서버에서는 명시적인 `MAX(EVNT_NUMB) + 1` 값을 사용합니다.
-- 관리자 계정 초기 데이터의 `TM_ADMINX.ADMN_NUMB`는 `02-admin-insert.sql`에 1부터 명시합니다.
+- 관리자 서버가 생성하는 회원 이용 정지 이력의 회원 정지 이력 번호는 INSERT 직전에 `MAX(회원 정지 이력 번호) + 1`로 계산합니다.
+- 공유 테이블 사용자 상태 변경 Outbox 이벤트의 이벤트 번호는 사용자 서버에서는 `AUTO_INCREMENT`, 관리자 서버에서는 명시적인 `MAX(이벤트 번호) + 1` 값을 사용합니다.
+- 관리자 계정 초기 식별번호는 승인된 비공개 기준정보 패키지에서 충돌하지 않는 시작값을 명시합니다.
 - 관리자·사용자 메뉴의 문자열 번호는 각 Mapper에서 `MAX(...) + 1`로 계산합니다.
 
 ## 빈 데이터베이스 준비
 
-MySQL 관리자 계정에서 다음 SQL을 한 문장씩 실행합니다. 비밀번호는 저장소나 문서에 기록하지 않습니다.
+MySQL 관리자 권한으로 다음 조건을 충족하는 빈 데이터베이스와 전용 애플리케이션 계정을 준비합니다.
 
-```sql
-CREATE DATABASE sadari
-    CHARACTER SET utf8mb4
-    COLLATE utf8mb4_0900_ai_ci;
-
-CREATE USER 'sadari'@'localhost'
-    IDENTIFIED BY '<password>';
-
-GRANT ALL PRIVILEGES ON sadari.*
-    TO 'sadari'@'localhost';
-```
-
-계정이나 데이터베이스가 이미 존재하면 해당 `CREATE` 문은 생략합니다.
+- 문자 집합은 `utf8mb4`, 정렬 규칙은 MySQL 8.4 기본 유니코드 정렬 기준을 사용합니다.
+- 애플리케이션 계정에는 대상 데이터베이스에 필요한 최소 권한만 부여합니다.
+- 데이터베이스명, 계정명과 비밀번호는 환경별 비밀 설정으로 관리하고 저장소나 공개 문서에 기록하지 않습니다.
+- 기존 데이터베이스를 재사용할 때는 스키마 버전과 잔존 데이터 여부를 먼저 확인합니다.
 
 ## DBeaver 실행 순서
 
-1. 대상 MySQL 연결에서 `sadari` 데이터베이스를 선택합니다.
+1. 대상 MySQL 연결에서 준비한 애플리케이션 데이터베이스를 선택합니다.
 2. SQL 편집기로 `01-create.sql`을 열어 전체 실행합니다.
-3. `02-admin-insert.sql`을 열어 전체 실행합니다.
+3. 승인된 비공개 기준정보 패키지의 출처와 적용 환경을 확인한 뒤 전체 실행합니다.
 4. 바이너리 로그가 활성화된 MySQL에서는 관리자 권한 연결로 다음 SQL을 먼저 실행합니다.
 
 ```sql
 SET GLOBAL log_bin_trust_function_creators = 1;
 ```
 
-5. `sadari` 연결로 돌아와 애플리케이션이 사용하는 `routines.sql`을 열고 `Alt+X` 또는 `SQL Editor > Execute SQL Script`로 전체 실행합니다.
+5. 애플리케이션 연결로 돌아와 `routines.sql`을 열고 `Alt+X` 또는 `SQL Editor > Execute SQL Script`로 전체 실행합니다.
 6. 관리자 권한 연결에서 `SET GLOBAL log_bin_trust_function_creators = 0;`을 실행해 임시 허용값을 복원합니다.
 7. 기존 개발 DB의 사용자 데이터를 지워야 할 때만 `03-reset-user-data.sql`을 실행합니다. 이 파일은 되돌릴 수 없는 `TRUNCATE`를 수행합니다.
 
@@ -81,33 +72,18 @@ SET GLOBAL log_bin_trust_function_creators = 1;
 
 ## 검증
 
-```sql
-SELECT COUNT(*) AS TABLE_COUNT
-  FROM INFORMATION_SCHEMA.TABLES
- WHERE TABLE_SCHEMA = 'sadari'
-   AND TABLE_TYPE = 'BASE TABLE';
+데이터베이스 메타데이터 화면이나 관리 도구를 사용하여 다음 항목을 확인합니다. 공개 문서에는 물리 테이블명과 컬럼명을 기록하지 않고 검증 결과만 보존합니다.
 
-SELECT TABLE_NAME, COLUMN_NAME
-  FROM INFORMATION_SCHEMA.COLUMNS
- WHERE TABLE_SCHEMA = 'sadari'
-   AND EXTRA LIKE '%auto_increment%'
- ORDER BY TABLE_NAME;
-
-SELECT ROUTINE_TYPE, ROUTINE_NAME
-  FROM INFORMATION_SCHEMA.ROUTINES
- WHERE ROUTINE_SCHEMA = 'sadari'
- ORDER BY ROUTINE_TYPE, ROUTINE_NAME;
-
-SELECT FN_GET_LOCAL_DATE_STR('2017-08-30 00:00:00', 'KO') AS KOREAN_DATE
-     , FN_GET_LOCAL_DATE_STR('20170830', 'EN') AS ENGLISH_DATE;
-```
-
-성공 기준은 테이블 26개, `AUTO_INCREMENT` 컬럼 9개, 함수 4개, 프로시저 1개입니다. 날짜 함수 검증값은 각각 `2017년 8월 30일`, `2017-08-30`이어야 합니다. 신규 DB에서는 제외 대상 17개 테이블의 행 수가 모두 0이어야 합니다.
+1. 스키마 원본에 정의된 모든 업무 데이터 구조가 생성됐는지 확인합니다.
+2. 사용자 서비스가 발급하는 숫자 식별번호에 자동 증가 전략이 적용됐는지 확인합니다.
+3. 공통 조회·변환 함수와 프로시저가 모두 생성됐는지 확인합니다.
+4. 국문과 영문 날짜 변환을 대표 입력값으로 실행하여 기대한 표시 형식이 반환되는지 확인합니다.
+5. 신규 환경에서 사용자 활동 데이터가 비어 있고 승인된 관리자 기준정보만 존재하는지 확인합니다.
+6. 한글 설명과 기준정보에 문자 깨짐이 없는지 원문과 다시 대조합니다.
 
 ## 구현 근거
 
 - `scripts/db/mysql/01-create.sql`
-- `scripts/db/mysql/output/02-admin-insert.sql`
 - `scripts/db/mysql/03-reset-user-data.sql`
 - `scripts/db/mysql/routines.sql`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`

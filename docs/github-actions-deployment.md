@@ -52,12 +52,12 @@
 | `EC2_SSH_PORT` | `22` | EC2 SSH 포트 |
 | `APP_PORT` | `8080` | EC2에서 외부에 연결할 애플리케이션 포트 |
 | `DB_CONNECTION_TIMEOUT` | `60000` | DB 커넥션 획득 제한시간(ms) |
-| `DB_MAXIMUM_POOL_SIZE` | `10` | Hikari 최대 커넥션 수 |
+| `DB_MAXIMUM_데이터베이스 연결 풀 크기` | `10` | Hikari 최대 커넥션 수 |
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
-| `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
+| `영구 탈퇴 데이터 삭제_처리 대기 일수` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `TIMER_ATTENDANCE_MIN_SECONDS` | `600` | 하루 독서 출석 인정에 필요한 최소 누적 시간(초) |
 | `TIMER_MAX_SESSION_SECONDS` | `28800` | 단일 독서 타이머 세션과 목표시간 알림에 적용하는 최대 시간(초) |
 | `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
@@ -72,7 +72,7 @@
 | `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
 | `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |
-| `COOKIE_SAME_SITE` | `None` | 인증 쿠키 SameSite 정책 |
+| `COOKIE_쿠키의 교차 사이트 전송 정책` | `None` | 인증 쿠키 SameSite 정책 |
 | `LOGGING_LEVEL_ROOT` | `info` | 루트 로그 레벨 |
 | `LOGGING_LEVEL_APP` | `info` | 프로젝트 패키지 로그 레벨 |
 
@@ -114,7 +114,7 @@
 - `application-prod.yml`은 `withdrawal.hard-delete-test-enabled`를 `false`로 고정합니다.
   이 값은 GitHub Actions 환경변수로 노출하지 않으므로 운영 배포에서 로컬 테스트 스케줄러를
   활성화할 수 없습니다.
-- 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` Actions Variable로 조정할 수 있으며,
+- 운영 유예기간은 `영구 탈퇴 데이터 삭제_처리 대기 일수` Actions Variable로 조정할 수 있으며,
   등록하지 않으면 30일을 사용합니다.
 - 로컬 `application-loc.yml`과 관리자 앱 기본 설정의 `complaint.auto-action` 임계치는 기능 검증을 위해 독후감, 댓글, 프로필 사진, 배경사진 및 한줄소개 모두 `1`건으로 고정합니다.
 - 운영 `application-prod.yml`과 관리자 앱 `prod` 프로필은 같은 다섯 대상의 임계치를 모두 `5`건으로 고정합니다. 관리자 운영 배포에는 `SPRING_PROFILES_ACTIVE=prod`를 지정해 사용자 서버와 표시 기준을 일치시킵니다.
@@ -124,8 +124,8 @@
   연결된 신고가 모두 종결된 뒤 최근 처리일로부터 180일이 지난 증거만 물리 삭제합니다.
   이 값들은 신고 감사 정책의 일부이므로 Actions Variable이나 Secret으로 노출하지 않습니다.
 - 자동 조치 및 증거 보관 기능을 배포하기 전에 `scripts/db/mysql/01-create.sql`의
-  `TH_CMPLNT`, `TH_CMACTN`, `TH_CMEVDC` 테이블과
-  `scripts/db/mysql/output/02-admin-insert.sql`의 `CMPL_ACTN`, `CMPL_RSLT`, `CMPL_TAGT` 공통코드를 먼저 반영합니다.
+  신고 이력, 자동 조치 이력, 관리자 전용 이미지 증거 테이블과
+  `승인된 비공개 기준정보 패키지`의 신고 조치 결과, 신고 처리 결과, 신고 대상 유형 공통코드를 먼저 반영합니다.
 
 ## EC2 사전 조건
 
@@ -140,11 +140,11 @@
 
 ## 독서 타이머 8시간 및 목표 알림 배포
 
-- 애플리케이션 배포 전에 `scripts/db/mysql/01-create.sql`의 중요도 순서대로 `TM_RDTMRX`를 재구성해야 합니다. 기존 테이블 끝에 컬럼을 단순 추가하지 않습니다.
-- 유지보수 창에서 애플리케이션을 중지하고 DB 스냅샷을 만든 뒤, 교체 테이블을 기준 DDL로 생성해 기존 10개 컬럼을 명시적으로 복사합니다. 신규 `TARG_SECS`, `ALRM_DATE`, `SEND_DATE`는 기존 세션에 `NULL`로 둡니다.
-- 원본과 교체 테이블의 전체 행 수, 사용자별 활성 세션 수, `READ_SECS` 합계, FK 및 인덱스를 대조한 뒤 원자적 이름 교환으로 전환합니다. 검증 전 원본 테이블을 삭제하지 않습니다.
-- 재구성된 테이블에는 `IX_TM_RDTMRX_ALRM (TMRX_STAT, SEND_DATE, ALRM_DATE, TMRX_NUMB)`가 있어야 합니다.
-- `scripts/db/mysql/output/02-admin-insert.sql`을 적용해 `BOOK_TIMER_OVER` 스케줄러 상세코드와 알림 템플릿을 등록합니다. 기존 동일 코드의 관리자 문구와 사용 여부는 덮어쓰지 않습니다.
+- 애플리케이션 배포 전에 `scripts/db/mysql/01-create.sql`의 중요도 순서대로 독서 타이머 세션을 재구성해야 합니다. 기존 테이블 끝에 컬럼을 단순 추가하지 않습니다.
+- 유지보수 창에서 애플리케이션을 중지하고 DB 스냅샷을 만든 뒤, 교체 테이블을 기준 DDL로 생성해 기존 10개 컬럼을 명시적으로 복사합니다. 신규 알림 목표 독서 시간 초, 목표시간 알림 예정 일시, 알림 발송 일시는 기존 세션에 `NULL`로 둡니다.
+- 원본과 교체 테이블의 전체 행 수, 사용자별 활성 세션 수, 확정 독서 시간 초 합계, FK 및 인덱스를 대조한 뒤 원자적 이름 교환으로 전환합니다. 검증 전 원본 테이블을 삭제하지 않습니다.
+- 재구성된 테이블에는 업무 조회 최적화 인덱스 (독서 타이머 상태 코드, 알림 발송 일시, 목표시간 알림 예정 일시, 독서 타이머 세션 번호)`가 있어야 합니다.
+- `승인된 비공개 기준정보 패키지`를 적용해 독서 타이머 기간 초과 스케줄러 분류값과 알림 템플릿을 등록합니다. 기존 동일 코드의 관리자 문구와 사용 여부는 덮어쓰지 않습니다.
 - GitHub Actions Variable `TIMER_MAX_SESSION_SECONDS`를 별도로 등록했다면 `28800`으로 변경합니다. 기존 `14400` 값이 남아 있으면 화면과 서버가 8시간 설정을 거부합니다.
 
 ## 기기별 인증 세션 전환

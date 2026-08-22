@@ -29,6 +29,7 @@ type UserActionMenuProps = {
 type ReportMenuOptionsProps = {
   options: readonly SafetyReportOption[];
   onSelect: (target: SafetyReportTarget) => void;
+  isMenuOpen: boolean;
   index?: number;
 };
 
@@ -42,6 +43,7 @@ type ReportMenuOptionsProps = {
 const ReportMenuOptions = ({
   options,
   onSelect,
+  isMenuOpen,
   index = 0,
 }: ReportMenuOptionsProps): ReactNode => {
   const option = options[index];
@@ -70,11 +72,17 @@ const ReportMenuOptions = ({
         className={styles.menuOption}
         type="button"
         role="menuitem"
+        tabIndex={isMenuOpen ? 0 : -1}
         onClick={handleOptionClick}
       >
         {option.label}
       </button>
-      <ReportMenuOptions options={options} onSelect={onSelect} index={index + 1} />
+      <ReportMenuOptions
+        options={options}
+        onSelect={onSelect}
+        isMenuOpen={isMenuOpen}
+        index={index + 1}
+      />
     </>
   );
 };
@@ -196,20 +204,27 @@ const UserActionMenu = ({
         />
       </button>
 
-      {isMenuOpen ? (
-        <div className={clsx(styles.menu, menuClassName)} role="menu">
-          <ReportMenuOptions options={resolvedReportOptions} onSelect={handleReportClick} />
-          <button
-            className={styles.menuOption}
-            type="button"
-            role="menuitem"
-            onClick={handleBlockClick}
-          >
-            {/* "차단하기" */}
-            {message("frontend.userAction.block.action")}
-          </button>
-        </div>
-      ) : null}
+      <div
+        className={clsx(styles.menu, isMenuOpen && styles.menuOpen, menuClassName)}
+        role="menu"
+        aria-hidden={!isMenuOpen}
+      >
+        <ReportMenuOptions
+          options={resolvedReportOptions}
+          onSelect={handleReportClick}
+          isMenuOpen={isMenuOpen}
+        />
+        <button
+          className={styles.menuOption}
+          type="button"
+          role="menuitem"
+          tabIndex={isMenuOpen ? 0 : -1}
+          onClick={handleBlockClick}
+        >
+          {/* "차단하기" */}
+          {message("frontend.userAction.block.action")}
+        </button>
+      </div>
     </div>
   );
 };
