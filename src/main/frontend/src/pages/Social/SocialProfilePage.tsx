@@ -41,12 +41,17 @@ import {
   getReadingGradeText,
 } from "@/features/User/utils/profileReadingFormat";
 import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
 type ReadingPeriod = "week" | "month" | "year";
+
+type LoadedProfileImage = {
+  userNumb: number;
+  source: string;
+};
 
 /**
  * 목표 달성률에 따라 파스텔톤 진행 막대 색상을 반환합니다.
@@ -121,6 +126,7 @@ function SocialProfilePage() {
     year: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedProfileImage, setLoadedProfileImage] = useState<LoadedProfileImage | null>(null);
   const followListScrollTimeoutRef = useRef<number | null>(null);
   useBodyScrollLock(Boolean(followListType));
 
@@ -205,6 +211,31 @@ function SocialProfilePage() {
       }
     };
   }, []);
+
+  /**
+   * 화면에 표시할 원본 프로필 사진이 실제로 로드됐는지 기록한다.
+   *
+   * @author HanWon.Jang
+   * @param event 프로필 이미지 로드 완료 이벤트
+   * @return 반환값이 없다
+   */
+  const handleProfileImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+
+    // 현재 프로필 응답에서 기대한 이미지 경로를 브라우저 절대 경로로 변환한다
+    const expectedSource = normalizeProfileImageSource(profile?.porfPath);
+    const expectedUrl = new URL(expectedSource, window.location.origin).href;
+    // 기본 이미지이거나 로드 실패 뒤 대체된 이미지이면 신고 가능한 원본으로 기록하지 않는다
+    if (expectedSource === DEFAULT_PROFILE_IMAGE || event.currentTarget.currentSrc !== expectedUrl) {
+      setLoadedProfileImage(null);
+      return;
+    }
+
+    // 다른 사용자 또는 이전 경로의 로드 결과와 섞이지 않도록 대상과 원본 경로를 함께 기록한다
+    setLoadedProfileImage({
+      userNumb: targetUserNumb,
+      source: expectedSource,
+    });
+  };
 
   /**
    * 프로필 팔로우 버튼의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출한다
@@ -871,6 +902,12 @@ function SocialProfilePage() {
   const profileIntroduction = profile.intrCntn?.trim();
   // 사용자 계정 신고는 세부 신고 대상과 겹치지 않도록 현재 닉네임만 표시한다
   const userProfileContent = targetUserNick;
+  // 공통 기본 이미지와 실제 원본 프로필 사진의 경로를 같은 기준으로 비교한다
+  const profileImageSource = normalizeProfileImageSource(profile.porfPath);
+  // 현재 대상의 비기본 원본 이미지가 정상 로드된 경우에만 프로필 사진 신고를 허용한다
+  const hasReportableProfileImage = profileImageSource !== DEFAULT_PROFILE_IMAGE
+    && loadedProfileImage?.userNumb === targetUserNumb
+    && loadedProfileImage.source === profileImageSource;
   // 다른 활성 사용자의 프로필에서 신고할 수 있는 현재 사용자 계정 대상을 구성한다
   const userProfileTarget = {
     targetType: "USER" as const,
@@ -889,7 +926,7 @@ function SocialProfilePage() {
   ];
 
   // 실제 프로필 사진이 있는 사용자만 접수 시점 이미지 증거를 신고할 수 있게 한다
-  if (profile.porfPath) {
+  if (hasReportableProfileImage) {
     // "프로필 사진 신고"
     const profileImageReportLabel = message("frontend.social.report.profileImage");
     // "프로필 사진"
@@ -992,6 +1029,7 @@ function SocialProfilePage() {
                   className={styles.profileImage}
                   src={profile.porfPath}
                   alt={profile.userNick ?? message("frontend.profile.nick")}
+                  onLoad={handleProfileImageLoad}
                 />
               </FullscreenImageButton>
               {followStatName && (
