@@ -119,8 +119,8 @@ public final class Constant {
     public static final String COMPLAINT_STATUS_ACTIONED = "CMPL_ACTIONED";
     // 신고 처리 반려 상태
     public static final String COMPLAINT_STATUS_REJECTED = "CMPL_REJECTED";
-    // 독후감 완전 삭제 자동 조치 유형
-    public static final String COMPLAINT_ACTION_DELETE_REPORT = "CMPL_DEL_REPORT";
+    // 독후감 비공개 전환 자동 조치 유형
+    public static final String COMPLAINT_ACTION_HIDE_REPORT = "CMPL_HIDE_REPORT";
     // 댓글 논리 삭제 자동 조치 유형
     public static final String COMPLAINT_ACTION_DELETE_REPLY = "CMPL_DEL_REPLY";
     // 프로필 사진 기본 이미지 초기화 자동 조치 유형

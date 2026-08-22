@@ -1,7 +1,12 @@
 import api from "@/app/api/axios";
 import { assertResultDataSuccess, type ResultData } from "@/app/api/resultData";
 
-export type ComplaintTargetType = "CMPL_USER" | "CMPL_BOOK_REPORT" | "CMPL_REPLY";
+export type ComplaintTargetType =
+  | "CMPL_USER"
+  | "CMPL_BOOK_REPORT"
+  | "CMPL_REPLY"
+  | "CMPL_PROF_IMAGE"
+  | "CMPL_INTRO";
 
 export type ComplaintReason =
   | "CMPL_SPAM"

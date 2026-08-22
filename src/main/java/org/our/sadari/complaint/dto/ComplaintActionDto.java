@@ -24,6 +24,9 @@ public class ComplaintActionDto {
     // 신고 대상 번호
     private Long tagtNumb;
 
+    // 신고 대상 버전 SHA-256 해시
+    private String tagtHash;
+
     // 신고 대상 소유 사용자 번호
     private Long tagtUser;
 
