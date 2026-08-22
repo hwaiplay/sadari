@@ -8,6 +8,7 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useState } from "react";
 import type { CSSProperties } from "react";
 import { ActionButton } from "@/components/Button/ActionButton";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import { Container } from "@/components/Layout/Container/Container";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { useBookRatingAvg } from "@/features/Book/Detail/hook/useBookRatingAverage";
@@ -19,6 +20,7 @@ import {
   type SearchBookPageState,
 } from "@/features/Book/Search/lib/bookSearchNavigation";
 import {
+  BOOK_COVER_FALLBACK_IMAGE,
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
@@ -170,7 +172,12 @@ function SearchBookInfoPage() {
       <Container className={detailStyles.detail}>
         {/* 도서 표지와 평균 평점 및 공개 독후감 이동 영역 */}
         <section className={detailStyles.header}>
-          <div className={detailStyles.coverFrame}>
+          <FullscreenImageButton
+            className={detailStyles.coverFrame}
+            source={getBookCoverImageSource(book.image)}
+            fallbackSource={book.thumbnailImage || BOOK_COVER_FALLBACK_IMAGE}
+            alt={title}
+          >
             <img
               className={detailStyles.coverImage}
               src={getBookCoverImageSource(book.image)}
@@ -178,7 +185,7 @@ function SearchBookInfoPage() {
               onError={handleBookCoverImageError}
               alt={title}
             />
-          </div>
+          </FullscreenImageButton>
           <h1 className={detailStyles.title}>{title}</h1>
 
           {/* 도서 평균 평점 영역 */}
@@ -223,7 +230,7 @@ function SearchBookInfoPage() {
               type="button"
               onClick={goPublicReportsPage}
             >
-              {/* "다른 사람이 쓴 독후감 보기" */}
+              {/* "다른 독후감 둘러보기" */}
               {message("frontend.book.publicReports.button")}
             </button>
           </div>

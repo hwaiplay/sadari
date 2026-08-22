@@ -17,6 +17,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * 2026-07-29        HanWon.Jang        댓글 알림 수신자 조회 메서드 정의
  * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 정의
  * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 조회 메서드 정의
+ * 2026-08-21        SeungHyeon.Kang    독후감 댓글 알림 설정 조회 추가
  */
 @Mapper
 public interface ReplyMapper {
@@ -94,11 +95,11 @@ public interface ReplyMapper {
     ReplyDto getReplyLikeDtl(ReplyDto replyDto);
 
     /**
-     * 댓글이 등록된 독후감의 작성자 사용자 번호를 조회한다.
+     * 댓글이 등록된 독후감의 작성자와 댓글 알림 설정을 조회한다.
      *
      * @author HanWon.Jang
      * @param reptNumb 댓글이 등록된 독후감 번호
-     * @return 독후감 작성자 사용자 번호
+     * @return 독후감 작성자와 댓글 알림 설정
      */
-    Long getReplyReportUserNumb(@Param("reptNumb") Long reptNumb);
+    ReplyDto getReplyReportAlimDtl(@Param("reptNumb") Long reptNumb);
 }

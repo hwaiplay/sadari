@@ -84,4 +84,4 @@
 - `src/main/frontend/src/features/reply/hooks/useDelReply.ts`
 - `src/main/frontend/src/features/reply/hooks/useReplyLike.ts`
 - `TB_LIKEXX`
-- `TB_ALTEMP`의 `LIKE`·`REPLY_LIKE` 템플릿
+- `TB_ALTEMP`의 `LIKE` 상황 `REPLY_LIKE` 템플릿

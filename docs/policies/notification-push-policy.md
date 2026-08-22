@@ -1,10 +1,5 @@
 # 알림 및 푸시 정책
 
-## 개요
-
-- 기준일은 2026년 8월 21일입니다.
-- 사용자 알림 생성·조회·삭제, 브라우저 푸시 발송과 계정 상태별 처리 기준에 적용합니다.
-
 ## 알림 생성
 
 - 공통 발송 메서드는 수신자, 상황 코드, 템플릿 코드, 대상 번호, 치환 Map을 받습니다.
@@ -17,9 +12,18 @@
 - 댓글 또는 대댓글 좋아요가 신규 등록되면 해당 댓글 작성자에게만 `LIKE`·`REPLY_LIKE` 알림과 푸시를 생성합니다.
 - 댓글 좋아요 발신자 닉네임은 좋아요 대상 검증 시 활성 회원 원본에서 함께 조회하며 Redis 로그인 캐시 유무로 알림 생성을 생략하지 않습니다.
 - 본인 댓글 좋아요, 중복 좋아요 등록 및 좋아요 취소에는 댓글 좋아요 알림을 생성하지 않습니다.
-- 모임장이 활성 맞팔 회원을 초대하면 초대 대상자에게 `CLUB`·`INVITE_CLUB` 알림을 저장하고, 활성 푸시 구독이 있으면 커밋 후 푸시를 발송합니다.
+- 모임장이 활성 맞팔 회원을 초대하면 초대 대상자에게 `FOLLOW` 상황의 `INVITE_CLUB` 템플릿 알림을 저장하고, 활성 푸시 구독이 있으면 커밋 후 푸시를 발송합니다.
 - `INVITE_CLUB` 템플릿에는 `#{userName}`으로 모임장 닉네임을, `#{clubName}`으로 모임명을 전달하며 링크 대상 번호에는 모임 번호를 사용합니다.
 - 독서 타이머 목표시간이 지나면 `REPORT` 상황의 `BOOK_TIMER_OVER` 템플릿에 `#{timerTime}`을 전달하고 `/timer`로 이동하는 알림을 저장합니다.
+
+## 독후감별 알림 설정
+
+- 새 독후감은 좋아요 알림 `TM_REPORT.LKAL_YSNO`와 댓글 알림 `TM_REPORT.RPAL_YSNO`를 모두 `Y`로 시작합니다.
+- 독후감 작성자는 상세 화면의 기록 영역 더보기 메뉴에서 공개 또는 비공개 여부와 관계없이 두 설정을 각각 켜거나 끌 수 있습니다.
+- 좋아요 알림을 `N`으로 설정해도 좋아요 등록과 취소 및 좋아요 수 집계는 유지하고, 이후 독후감 좋아요에 대한 `TB_ALIMXX` 저장과 FCM 푸시만 생성하지 않습니다.
+- 댓글 알림을 `N`으로 설정해도 댓글과 답글 등록은 유지하고, 이후 해당 독후감에 등록되는 댓글과 답글의 `TB_ALIMXX` 저장과 FCM 푸시만 생성하지 않습니다.
+- 댓글 또는 답글 자체에 등록하는 좋아요 알림은 댓글 작성자의 활동 알림이므로 독후감의 좋아요·댓글 알림 설정에 포함하지 않습니다.
+- 알림을 끄기 전에 이미 생성된 알림은 유지하며, 다시 켜도 꺼져 있던 기간의 활동을 소급해 알림으로 만들지 않습니다.
 
 ## 중복 방지
 
@@ -31,9 +35,9 @@
 
 ## 알림센터
 
-- 삭제되지 않은 알림을 한 번에 10개씩 조회합니다.
+- 삭제되지 않은 알림을 한 번에 20개씩 조회합니다.
 - 다음 페이지 존재 여부를 판단하기 위해 서버는 내부적으로 한 건을 추가 조회할 수 있습니다.
-- 스크롤 시 다음 10개를 추가 조회합니다.
+- 스크롤 시 다음 20개를 추가 조회합니다.
 - 읽은 알림도 목록에 표시하지만 읽지 않은 알림보다 어둡게 표현합니다.
 - 알림 항목을 눌러 링크로 이동하면 해당 알림을 읽음 처리하고 `READ_DATE`를 기록합니다.
 - 푸시 알림을 눌러 링크로 이동한 경우에도 같은 알림을 읽음 처리합니다.
@@ -64,6 +68,10 @@
 
 - 관리자는 `알림 아이콘 관리` 화면에서 SVG 또는 PNG 아이콘을 코드별 한 행으로 등록합니다. 아이콘 코드는 사용 중인 `ALIM_SITU` 세부코드 중에서만 선택할 수 있으며 서버에서도 같은 조건을 검증합니다.
 - `ALIM_SITU.DEFAULT`는 알림 상황별 아이콘을 특정할 수 없을 때 사용하는 기본 아이콘 코드입니다.
+- `ALIM_SITU.FOLLOW`는 팔로우 요청과 독서 모임 알림이 공유하며 관리자 화면에는 `팔로우 요청/모임`으로 표시합니다.
+- `ALIM_SITU.LIKE`는 독후감 좋아요와 댓글·대댓글 좋아요 알림이 공유하며 관리자 화면에는 `좋아요`로 표시합니다.
+- 통합 전 알림 상황 세부코드 `CLUB`과 `REPLY_LIKE`는 템플릿, 알림 이력 및 아이콘을 각각 `FOLLOW`와 `LIKE`로 이전한 뒤 `TB_CODEXD`에서 삭제합니다.
+- 같은 아이콘 상황 안에서도 문구와 링크가 다른 업무는 `FOLLOW_USER`와 `INVITE_CLUB`, `LIKE_REPORT`와 `REPLY_LIKE`처럼 별도 템플릿 코드로 구분합니다.
 - 업로드 파일은 200KB 이하의 정사각형 이미지이며 한 변은 16px 이상 256px 이하여야 합니다.
 - PNG는 서버에서 다시 인코딩해 메타데이터를 제거하고, SVG는 UTF-8 XML·루트 네임스페이스·크기·외부 참조 및 실행 요소를 검증한 뒤 원본을 저장합니다.
 - 검증한 원본은 전용 `TM_ALICON.ICON_DATA`에 저장하며 일반 파일 테이블이나 배포 서버 파일 경로를 사용하지 않습니다.
@@ -87,6 +95,8 @@
 - 유지된 알림은 수신자의 모두 지우기와 알림 삭제 스케줄러 및 영구 탈퇴 정책에 따라 정리합니다.
 - `TM_ALICON`은 회원 소유 데이터가 아닌 서비스 전역 운영 자산이므로 회원 비활성화, 영구 탈퇴 요청·취소 및 물리 삭제와 무관하게 영구 보존합니다.
 - 아이콘 이미지에는 개인정보나 민감정보를 포함하지 않으며 인증된 사용자 알림 목록 조회에서만 알림 행과 조인해 제공합니다.
+- 독후감별 좋아요·댓글 알림 설정은 독후감 행과 함께 보존합니다. `WITHDRAWN` 또는 `DELETE_PENDING` 상태에서는 계정 제한과 독후감 비공개 처리로 새 활동 알림이 중지되며, 복귀 후 사용자가 독후감을 다시 공개하면 보존된 설정을 그대로 적용합니다.
+- 유예기간 후 독후감이 물리 삭제되면 해당 독후감의 좋아요·댓글 알림 설정도 함께 삭제하며 복구하지 않습니다.
 
 ## 구현 근거
 
@@ -98,11 +108,15 @@
 - `src/main/frontend/src/app/pwa/firebaseMessaging.ts`
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
 - `src/main/java/org/our/sadari/reply/mapper/ReplyMapper.xml`
+- `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
+- `src/main/java/org/our/sadari/report/mapper/ReportMapper.xml`
+- `src/main/frontend/src/features/Book/Detail/components/ReportAlimMenu.tsx`
 - `src/main/java/org/our/sadari/readingClub/service/ReadingClubServiceImpl.java`
 - `src/main/java/org/our/sadari/readingClub/mapper/ReadingClubMapper.xml`
 - `src/main/java/org/our/sadari/global/common/constant/Constant.java`
 - `src/main/java/org/our/sadari/timer/service/ReadingTimerServiceImpl.java`
-- `TB_ALTEMP`의 `LIKE`·`REPLY_LIKE`, `CLUB`·`INVITE_CLUB` 템플릿
+- `TB_ALTEMP`의 `LIKE` 상황 `LIKE_REPORT`·`REPLY_LIKE` 템플릿
+- `TB_ALTEMP`의 `FOLLOW` 상황 `FOLLOW_USER`·`INVITE_CLUB` 템플릿
 - `TB_ALTEMP`의 `REPORT`·`BOOK_TIMER_OVER` 템플릿
 - `TM_ALICON.ALIM_SITU`, `TB_ALTEMP.ALIM_SITU`, `TB_ALIMXX.ALIM_SITU`
 - `sadari-admin` 저장소 `alimicon` 패키지와 `pages/alim/AlimIconDetailPage.tsx`

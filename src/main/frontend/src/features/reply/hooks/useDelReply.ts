@@ -12,9 +12,9 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import {
   sweetConfirm,
   sweetError,
-  sweetSuccess,
 } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { delReplyApi } from "@/features/reply/api/replyApi";
 import { REPLY_LIST_QUERY_KEY } from "@/features/reply/hooks/useReplyList";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -65,22 +65,36 @@ export const useDelReply = ({ reptNumb, onDeleted }: UseDelReplyProps) => {
 
     // API 실패도 사용자 안내 후 현재 화면에서 복구할 수 있도록 예외 경로를 분리한다
     try {
-      // 로그인 사용자의 작성자 및 계정 상태를 검증하는 댓글 삭제 API를 호출한다
-      await delReplyMutation.mutateAsync({ reptNumb, replNumb });
-      // 삭제된 댓글을 참조하는 화면 입력 상태가 있으면 호출부에서 정리하도록 알린다
-      onDeleted?.(replNumb);
-      // 삭제 상태와 공개 독후감 댓글 수를 최신 서버 값으로 갱신한다
-      await Promise.all([
-        queryClient.invalidateQueries({
-          queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
-        }),
-        queryClient.invalidateQueries({
-          queryKey: ["publicReports"],
-        }),
-      ]);
-      // 삭제가 반영되었음을 사용자에게 안내한다
-      // "삭제되었습니다."
-      await sweetSuccess(message("frontend.alert.deleteSuccessTitle"));
+      /**
+       * 댓글 삭제와 관련 화면 캐시 갱신을 하나의 차단 작업으로 실행한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 댓글 삭제 및 캐시 갱신 완료 Promise
+       * @throws 댓글 삭제 또는 관련 캐시 갱신에 실패하면 발생한다
+       */
+      const deleteReplyAndRefresh = async (): Promise<void> => {
+        // 로그인 사용자의 작성자 및 계정 상태를 검증하는 댓글 삭제 API를 호출한다
+        await delReplyMutation.mutateAsync({ reptNumb, replNumb });
+        // 삭제된 댓글을 참조하는 화면 입력 상태가 있으면 호출부에서 정리하도록 알린다
+        onDeleted?.(replNumb);
+        // 삭제 상태와 공개 독후감 댓글 수를 최신 서버 값으로 갱신한다
+        await Promise.all([
+          queryClient.invalidateQueries({
+            queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
+          }),
+          queryClient.invalidateQueries({
+            queryKey: ["publicReports"],
+          }),
+        ]);
+      };
+
+      // 삭제와 캐시 갱신 완료 후 처리 중 알림을 같은 삭제 성공 알림으로 전환한다
+      await runBlockingOperation(deleteReplyAndRefresh, {
+        success: {
+          // "삭제되었습니다."
+          title: message("frontend.alert.deleteSuccessTitle"),
+        },
+      });
     } catch (error: unknown) {
       // 삭제 실패 원인과 재시도 안내를 공통 오류 형식으로 표시한다
       // "댓글 삭제에 실패했습니다."

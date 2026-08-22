@@ -5,10 +5,10 @@ import {
 } from "@/app/api/resultData";
 import {
   sweetError,
-  sweetSuccess,
   sweetWarning,
 } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { queryClient } from "@/app/query/queryClient";
 import { setReportApi } from "@/features/Book/api/bookApi";
 import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
@@ -379,6 +379,23 @@ export function useSearchBookPage() {
     await executeBookSearch(keyword);
   }
 
+  /**
+   * 클릭하거나 키보드로 선택한 작가명을 입력창에 반영하고 즉시 조회한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param author 사용자가 선택한 도서의 작가명
+   * @return 작가명 조회 처리가 끝나면 완료되는 Promise
+   */
+  async function handleAuthorSelect(author: string): Promise<void> {
+
+    const keyword = author.trim();
+
+    // 선택한 작가명을 검색 입력창에 동일하게 표시한다.
+    setSearchKeyword(keyword);
+    // 별도 검색 버튼 조작 없이 선택한 작가명으로 도서 첫 페이지를 즉시 조회한다.
+    await executeBookSearch(keyword);
+  }
+
   useEffect(() => {
 
     const state = (location.state ?? {}) as SearchBookPageState;
@@ -716,34 +733,49 @@ export function useSearchBookPage() {
     try {
       // 모달 안에 공통 소형 회전 링을 표시하도록 저장 상태를 시작한다.
       setIsTimerReportSaving(true);
-      // 기존 독후감 등록 API로 읽는 중 독후감과 도서 정보를 함께 저장한다.
-      const reportResponse = await setReportApi(reportData);
-      // 타이머 복귀 화면에서 방금 등록한 도서를 선택하도록 신규 독후감 번호를 보관한다.
-      savedReportNumber = reportResponse.data;
-      const timerSummaryOptions = getTimerSummaryOptions();
-      // 등록 전 캐시가 타이머 복귀 화면에 남지 않도록 공용 요약을 만료 처리한다.
-      await queryClient.invalidateQueries({
-        queryKey: timerSummaryOptions.queryKey,
-        refetchType: "none",
-      });
-      try {
-        // 타이머 복귀 전에 최신 현재 읽는 도서 목록을 강제로 조회해 공용 캐시에 저장한다.
-        await queryClient.fetchQuery({
-          ...timerSummaryOptions,
-          staleTime: 0,
-        });
-      } catch {
-        // 사전 조회 실패는 등록 성공을 취소하지 않고 타이머 화면의 진입 조회에서 다시 시도하도록 만료 상태를 유지한다.
+
+      /**
+       * 읽는 중 독후감을 등록하고 타이머 공용 요약 캐시를 최신 상태로 준비한다.
+       *
+       * @author SeungHyeon.Kang
+       * @return 새로 등록한 독후감 번호 Promise
+       * @throws 독후감 등록 또는 타이머 요약 캐시 갱신에 실패하면 발생한다
+       */
+      const persistTimerReport = async (): Promise<number> => {
+        // 기존 독후감 등록 API로 읽는 중 독후감과 도서 정보를 함께 저장한다.
+        const reportResponse = await setReportApi(reportData);
+        const timerSummaryOptions = getTimerSummaryOptions();
+        // 등록 전 캐시가 타이머 복귀 화면에 남지 않도록 공용 요약을 만료 처리한다.
         await queryClient.invalidateQueries({
           queryKey: timerSummaryOptions.queryKey,
           refetchType: "none",
         });
-      }
-      // 기존 독후감 등록 완료 메시지로 저장 성공을 안내한다.
-      await sweetSuccess(
-        message("frontend.alert.saveSuccessTitle"),
-        message("frontend.report.saved"),
-      );
+        try {
+          // 타이머 복귀 전에 최신 현재 읽는 도서 목록을 강제로 조회해 공용 캐시에 저장한다.
+          await queryClient.fetchQuery({
+            ...timerSummaryOptions,
+            staleTime: 0,
+          });
+        } catch {
+          // 사전 조회 실패는 등록 성공을 취소하지 않고 타이머 화면의 진입 조회에서 다시 시도하도록 만료 상태를 유지한다.
+          await queryClient.invalidateQueries({
+            queryKey: timerSummaryOptions.queryKey,
+            refetchType: "none",
+          });
+        }
+        // 타이머 복귀 화면에서 선택 상태로 사용할 신규 독후감 번호를 반환한다.
+        return reportResponse.data;
+      };
+
+      // 등록과 캐시 준비가 끝나면 처리 중 알림을 같은 저장 성공 알림으로 전환한다.
+      savedReportNumber = await runBlockingOperation(persistTimerReport, {
+        success: {
+          // "저장되었습니다."
+          title: message("frontend.alert.saveSuccessTitle"),
+          // "독후감이 저장되었어요."
+          text: message("frontend.report.saved"),
+        },
+      });
     } catch (error) {
       // 기존 독후감 등록 실패 메시지와 서버 오류 원인을 사용자에게 표시한다.
       await sweetError(
@@ -765,6 +797,7 @@ export function useSearchBookPage() {
   // 책 검색 화면이 렌더링과 이벤트 연결에 사용할 값을 반환한다.
   return {
     bookResult: visibleBookResult,
+    handleAuthorSelect,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,

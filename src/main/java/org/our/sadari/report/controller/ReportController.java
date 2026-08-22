@@ -10,6 +10,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
+import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -36,12 +37,13 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-11        SeungHyeon.Kang    다중 탭 독후감 수정 충돌 409 응답 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 API 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 API
+ * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 API 추가
  */
 @Slf4j
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/book")
-@Tag(name = "독후감", description = "독후감 목록, 상세, 등록, 수정, 삭제, 공개 독후감, 좋아요 API")
+@Tag(name = "독후감", description = "독후감 목록, 상세, 등록, 수정, 삭제, 공개 독후감, 좋아요, 알림 설정 API")
 public class ReportController {
 
     // Report 업무 처리 서비스
@@ -170,6 +172,27 @@ public class ReportController {
         }
         // 기존 독후감 정보를 수정 결과를 반환한다
         return result;
+    }
+
+    /**
+     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경한다.
+     * 공개 여부와 관계없이 상세 화면에서 설정할 수 있도록 소유자 조건만 적용한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param reptNumb 수정할 독후감 번호
+     * @param alimType 변경할 알림 유형
+     * @param request 변경할 알림 사용 여부
+     * @return 변경된 알림 사용 여부
+     */
+    @PutMapping("/{reptNumb}/notification-settings/{alimType}")
+    @Operation(summary = "독후감별 알림 설정 변경", description = "독후감 공개 여부와 관계없이 작성자가 좋아요 또는 댓글 알림 사용 여부를 변경한다.")
+    public ResultData uptReportAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                  , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable Long reptNumb
+                                  , @Parameter(description = "변경할 알림 유형", example = "like") @PathVariable String alimType
+                                  , @Valid @RequestBody ReportAlimDto request) {
+        // 로그인 사용자가 작성한 독후감의 유형별 알림 설정 변경 결과를 반환한다
+        return reportService.uptReportAlim(userNumb, reptNumb, alimType, request);
     }
 
     /**

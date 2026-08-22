@@ -2,6 +2,7 @@ package org.our.sadari.report.service;
 
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
+import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 
 /**
@@ -17,6 +18,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 계약 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 계약 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 계약
+ * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 계약 추가
  */
 public interface ReportService {
     /**
@@ -128,6 +130,18 @@ public interface ReportService {
      * @return 수정된 독후감 번호를 담은 처리 결과
      */
     ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto);
+
+    /**
+     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param reptNumb 수정할 독후감 번호
+     * @param alimType 변경할 알림 유형
+     * @param reportAlimDto 변경할 알림 사용 여부
+     * @return 변경된 알림 사용 여부
+     */
+    ResultData uptReportAlim(Long userNumb, Long reptNumb, String alimType, ReportAlimDto reportAlimDto);
 
     /**
      * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다.

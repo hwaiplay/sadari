@@ -69,6 +69,9 @@ public class SocialDto {
 
         @Schema(description = "좋아요 대상 독후감 작성자 사용자 번호", example = "32")
         private Long targetUserNumb;
+
+        @Schema(description = "좋아요 대상 독후감의 좋아요 알림 여부", example = "Y", allowableValues = {"Y", "N"}, hidden = true)
+        private String likeAlimYsno;
     }
 
     /**

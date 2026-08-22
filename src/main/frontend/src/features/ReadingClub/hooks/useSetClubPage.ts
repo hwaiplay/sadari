@@ -86,7 +86,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
         // 서버 상세를 수정 폼 입력값으로 변환한다
         setForm({
           clubName: detail.clubName,
-          clubCntn: detail.clubCntn,
+          clubCntn: detail.clubCntn ?? "",
           clubVisb: detail.clubVisb,
           joinType: detail.joinType,
           maxxMemb: detail.maxxMemb,

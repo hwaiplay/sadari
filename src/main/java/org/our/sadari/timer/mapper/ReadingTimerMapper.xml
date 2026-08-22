@@ -176,7 +176,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 목표시간이 지나 알림 발송을 기다리는 정상 회원의 실행 세션 번호를 조회한다. -->
+    <!-- 목표시간 자동 완료 또는 알림 재시도를 기다리는 정상 회원의 세션 번호를 조회한다. -->
     <select id="getDueTimerAlimList" resultType="java.lang.Long">
         SELECT /* getDueTimerAlimList */
                TIMER.TMRX_NUMB
@@ -184,7 +184,7 @@
           JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = TIMER.USER_NUMB
            AND USERX.USER_STAT = #{activeUserStat}
-         WHERE TIMER.TMRX_STAT = #{runningStat}
+         WHERE TIMER.TMRX_STAT IN (#{runningStat}, #{completedStat})
            AND TIMER.TARG_SECS IS NOT NULL
            AND TIMER.ALRM_DATE &lt;= #{alarmDate}
            AND TIMER.SEND_DATE IS NULL
@@ -203,12 +203,34 @@
              , TIMER.READ_SECS
              , TIMER.ALRM_DATE
              , TIMER.SEND_DATE
+             , TIMER.LAST_STRT
           FROM TM_RDTMRX TIMER
           JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = TIMER.USER_NUMB
            AND USERX.USER_STAT = #{activeUserStat}
          WHERE TIMER.TMRX_NUMB = #{tmrxNumb}
            AND TIMER.TMRX_STAT = #{runningStat}
+           AND TIMER.TARG_SECS IS NOT NULL
+           AND TIMER.ALRM_DATE &lt;= #{alarmDate}
+           AND TIMER.SEND_DATE IS NULL
+           FOR UPDATE
+    </select>
+
+    <!-- 자동 완료 뒤 알림 발송 조건을 다시 확인하고 완료 세션 행을 잠근다. -->
+    <select id="getTimerAlimDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
+        SELECT /* getTimerAlimDtl */
+               TIMER.TMRX_NUMB
+             , TIMER.USER_NUMB
+             , TIMER.TMRX_STAT
+             , TIMER.TARG_SECS
+             , TIMER.ALRM_DATE
+             , TIMER.SEND_DATE
+          FROM TM_RDTMRX TIMER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = TIMER.USER_NUMB
+           AND USERX.USER_STAT = #{activeUserStat}
+         WHERE TIMER.TMRX_NUMB = #{tmrxNumb}
+           AND TIMER.TMRX_STAT = #{completedStat}
            AND TIMER.TARG_SECS IS NOT NULL
            AND TIMER.ALRM_DATE &lt;= #{alarmDate}
            AND TIMER.SEND_DATE IS NULL
@@ -223,6 +245,17 @@
              , SEND_DATE = #{sendDate}
              , UPDT_DATE = #{updtDate}
          WHERE TMRX_NUMB = #{tmrxNumb}
+           AND SEND_DATE IS NULL
+    </update>
+
+    <!-- 계정 상태 변경 전에 아직 발송되지 않은 목표시간 예약을 모두 취소한다. -->
+    <update id="uptTimerAlimCancel">
+        UPDATE /* uptTimerAlimCancel */
+               TM_RDTMRX
+           SET ALRM_DATE = NULL
+             , UPDT_DATE = #{updtDate}
+         WHERE USER_NUMB = #{userNumb}
+           AND ALRM_DATE IS NOT NULL
            AND SEND_DATE IS NULL
     </update>
 

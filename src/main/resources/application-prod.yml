@@ -130,6 +130,14 @@ withdrawal:
   hard-delete-wait-days: ${WITHDRAWAL_HARD_DELETE_WAIT_DAYS:30}
   hard-delete-test-enabled: false
 
+# 신고 자동 조치 임계치는 운영 정책상 대상별 5건으로 고정하며 환경변수로 변경하지 않는다.
+complaint:
+  auto-action:
+    book-report-threshold: 5
+    reply-threshold: 5
+    profile-image-threshold: 5
+    introduction-threshold: 5
+
 server:
   port: ${SERVER_PORT:8080}
   forward-headers-strategy: framework

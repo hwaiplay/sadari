@@ -113,6 +113,10 @@ export interface ReportDtoType {
   pubcYsnoName?: string;
   likeCnt?: number;
   likeYsno?: "Y" | "N";
+  // 독후감 작성자의 좋아요 알림 사용 여부
+  likeAlimYsno?: "Y" | "N";
+  // 독후감 작성자의 댓글 및 답글 알림 사용 여부
+  replyAlimYsno?: "Y" | "N";
 
   // 댓글 수
   replCnt?: number
@@ -191,7 +195,7 @@ export interface PublicReportType {
 
 // 독후감 상세보기 타입
 export interface ReportDetailType extends ReportDtoType {
-  // 상세 조회에서는 좋아요 알림 수신자를 요청에 포함해야 하므로 작성자 번호가 항상 필요합니다.
+  // 상세 조회에서는 작성자 본인 독후감만 반환하므로 사용자 번호가 항상 필요합니다.
   userNumb: number;
   // 상세 수정 요청에 반드시 포함할 원본 내용 해시
   editVersion: string;

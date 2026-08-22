@@ -116,6 +116,10 @@
   활성화할 수 없습니다.
 - 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` Actions Variable로 조정할 수 있으며,
   등록하지 않으면 30일을 사용합니다.
+- 로컬과 운영의 `complaint.auto-action` 임계치는 독후감, 댓글, 프로필 사진 및 한줄소개 모두 `5`건으로 고정합니다.
+  이 값은 운영 중 임의 변경으로 조치 기준이 달라지지 않도록 Actions Variable이나 Secret으로 노출하지 않습니다.
+- 자동 조치 기능을 배포하기 전에 `scripts/db/mysql/01-create.sql`의 `TH_CMACTN` 테이블과
+  `scripts/db/mysql/output/02-admin-insert.sql`의 `CMPL_ACTN`, `CMPL_RSLT`, `CMPL_TAGT` 공통코드를 먼저 반영합니다.
 
 ## EC2 사전 조건
 

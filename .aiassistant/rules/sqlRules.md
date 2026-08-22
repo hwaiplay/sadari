@@ -483,6 +483,8 @@ SELECT B.BOOK_NUMB
 ### 14.1 운영 필수 초기 데이터
 
 - 공통코드를 추가하거나 변경할 때는 `scripts/db/mysql/output/02-admin-insert.sql`만 수정합니다.
+- `scripts/db/mysql/output/02-admin-insert.sql`에는 이관 대상 테이블의 현재 데이터를 재현하는 `INSERT` 문만 작성합니다. 이 파일의 `INSERT`는 일반 INSERT 정렬 규칙의 예외로 두며, SQL 식별 주석은 직전 줄에 분리하고 `INSERT INTO ... VALUES` 헤더는 한 줄에 작성합니다. 각 값 목록은 한 행씩 줄을 나누고 첫 행은 네 칸 들여쓰며, 두 번째 행부터 선행 콤마를 사용해 같은 위치에 정렬합니다. 하나의 `INSERT` 문에는 값 목록을 최대 10행까지 작성하고, 10행을 초과하면 다음 `INSERT` 문으로 나눕니다. 중복키 갱신 절이 없으면 마지막 값 목록 끝에 세미콜론을 작성하고, 데이터 무결성을 위해 `ON DUPLICATE KEY UPDATE`가 필요하면 값 목록 다음 줄부터 후속 절을 정렬하여 마지막 갱신 항목 끝에 세미콜론을 작성합니다.
+- `scripts/db/mysql/output/02-admin-insert.sql`에 한 건이라도 `INSERT`가 존재하는 테이블에 데이터를 추가할 때는 같은 작업에서 해당 테이블의 현재 전체 행을 다시 조회하여 파일의 모든 `INSERT`를 최신화합니다. 기존 행을 수정하거나 삭제하여 현재 데이터가 달라질 때도 같은 전체 데이터 기준으로 최신화합니다.
 - 공통코드 추가를 위한 별도 SQL 파일을 생성하거나 `scripts/db/mysql/01-create.sql` 및 다른 SQL 파일에 중복 DML을 작성하지 않습니다.
 - 관리자 메뉴, 사용자 메뉴 등 신규 기능을 운영 환경에서 사용하는 데 필요한 다른 기준 데이터나 초기 데이터를 추가 또는 변경하면 같은 작업에서 실행 가능한 DML을 `scripts/db/mysql/output/02-admin-insert.sql`에 추가하거나 수정합니다.
 - 개발 DB에만 데이터를 등록하고 `scripts/db/mysql/output/02-admin-insert.sql` 반영을 생략한 상태로 작업을 완료하지 않습니다.

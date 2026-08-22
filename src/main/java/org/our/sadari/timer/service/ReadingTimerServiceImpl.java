@@ -38,12 +38,13 @@ import java.util.concurrent.TimeUnit;
  * fileName       : ReadingTimerServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 세션과 주간 출석 및 목표시간 알림 업무를 처리한다
+ * description    : 독서 세션과 주간 출석 및 목표시간 자동 완료 업무를 처리한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 처리
  * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 조회 통합
+ * 2026-08-21        SeungHyeon.Kang    목표시간 종료 자동 완료 및 알림 재시도
  */
 @Service
 @Slf4j
@@ -269,6 +270,15 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             // 허용되지 않은 상태 전환 안내를 반환한다
             return ResultData.fail(ResultEnum.TIMER_STATE_INVALID);
         }
+        // 상태 전환 시점의 서버 시간을 고정한다
+        LocalDateTime now = getNow();
+        // 목표시간이 지난 실행 세션은 요청 상태와 관계없이 목표시각에 완료한다
+        if (isTimerTargetOver(timerDto, now)) {
+            // 목표시간 이후의 지연 구간을 제외하고 세션을 완료 상태로 저장한다
+            uptTimerTargetOver(timerDto, now);
+            // 자동 완료 결과가 반영된 최신 타이머 화면을 반환한다
+            return ResultData.success(getSummary(userNumb, now));
+        }
         // 같은 상태로 재요청한 경우 중복 누적 없이 최신 요약을 반환한다
         if (targetStat.equals(timerDto.getTmrxStat())) {
             // 멱등 처리된 최신 타이머 화면을 반환한다
@@ -280,8 +290,6 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             return ResultData.fail(ResultEnum.TIMER_STATE_INVALID);
         }
 
-        // 상태 전환 시점의 서버 시간을 고정한다
-        LocalDateTime now = getNow();
         // 실행 중 세션을 닫을 때 현재 구간을 일별 집계에 확정한다
         if (Constant.TIMER_STAT_RUNNING.equals(timerDto.getTmrxStat())) {
             // 최근 시작부터 현재까지의 유효 구간을 확정한다
@@ -314,7 +322,7 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
     }
 
     /**
-     * 목표시간 알림 대상별 신규 트랜잭션을 실행하고 결과 로그를 저장한다
+     * 목표시간 자동 완료와 알림 대상별 신규 트랜잭션을 실행하고 결과 로그를 저장한다
      *
      * @author SeungHyeon.Kang
      */
@@ -341,8 +349,9 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
 
         // 한 주기의 대상 조회와 건별 발송 실패를 스케줄러 실행 결과로 집계한다
         try {
-            // 목표시간이 지난 실행 세션을 최대 처리 건수 안에서 조회한다
+            // 목표시간이 지난 실행 세션과 알림 재시도 세션을 최대 처리 건수 안에서 조회한다
             List<Long> targetList = readingTimerMapper.getDueTimerAlimList(Constant.TIMER_STAT_RUNNING
+                                                                         , Constant.TIMER_STAT_COMPLETED
                                                                          , Constant.USER_STAT_ACTIVE, alarmDate, maxSize);
             // 발송 대상이 없으면 실행 로그 없이 종료한다
             if (StringUtil.isEmpty(targetList) || targetList.isEmpty()) {
@@ -357,7 +366,9 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             for (Long tmrxNumb : targetList) {
                 // 한 대상 실패가 다음 세션 발송을 막지 않도록 예외를 건별로 격리한다
                 try {
-                    // 세션 잠금과 알림 저장 및 발송 일시 수정을 신규 트랜잭션에서 처리한다
+                    // 목표시각까지의 독서시간과 완료 상태를 알림과 독립된 신규 트랜잭션으로 저장한다
+                    timerTransactionTemplate.executeWithoutResult(transactionStatus -> uptTimerOverTarget(tmrxNumb, alarmDate));
+                    // 알림 저장 실패가 자동 완료를 되돌리지 않도록 후속 신규 트랜잭션에서 처리한다
                     timerTransactionTemplate.executeWithoutResult(transactionStatus -> sendTimerAlimTarget(tmrxNumb, alarmDate));
                     successCnt++;
                 }
@@ -379,7 +390,7 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
                     schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
                                                               , null, null, e);
                     // 다음 대상 처리를 계속할 수 있도록 실패 세션을 로그로 남긴다
-                    log.error("독서 타이머 목표시간 알림 발송 중 오류가 발생했습니다. 세션 번호={}", tmrxNumb, e);
+                    log.error("독서 타이머 목표시간 자동 완료 또는 알림 발송 중 오류가 발생했습니다. 세션 번호={}", tmrxNumb, e);
                 }
             }
 
@@ -403,7 +414,7 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
                                                       , null, null, e);
             // 스케줄러 실행 실패를 운영 로그에 남긴다
-            log.error("독서 타이머 목표시간 알림 스케줄러 실행 중 오류가 발생했습니다.", e);
+            log.error("독서 타이머 목표시간 자동 완료 스케줄러 실행 중 오류가 발생했습니다.", e);
             throw e;
         }
 
@@ -449,30 +460,31 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
 
         // 계정 상태 변경과 타이머 종료가 충돌하지 않도록 사용자 행을 잠근다
         readingTimerMapper.getUserLock(userNumb);
-        ReadingTimerDto timerDto = getActiveTimer(userNumb);
-        // 진행 중인 세션이 없다면 별도 변경 없이 종료한다
-        if (StringUtil.isEmpty(timerDto)) {
-            // 완료할 세션이 없는 정상 흐름을 반환한다
-            return;
-        }
-        // 계정 처리 시점까지 실행 중인 독서 시간을 확정한다
+        // 계정 처리와 예약 취소에 동일한 서버 시각을 적용한다
         LocalDateTime now = getNow();
-        if (Constant.TIMER_STAT_RUNNING.equals(timerDto.getTmrxStat())) {
-            // 현재 실행 구간을 날짜별 집계에 반영한다
-            closeRunningSegment(timerDto, now);
+        ReadingTimerDto timerDto = getActiveTimer(userNumb);
+        // 진행 또는 일시정지 세션이 있을 때만 계정 처리 시점에 완료한다
+        if (!StringUtil.isEmpty(timerDto)) {
+            // 계정 처리 시점까지 실행 중인 독서 시간을 확정한다
+            if (Constant.TIMER_STAT_RUNNING.equals(timerDto.getTmrxStat())) {
+                // 현재 실행 구간을 날짜별 집계에 반영한다
+                closeRunningSegment(timerDto, now);
+            }
+            // 계정 상태 변경 이후 다시 실행되지 않도록 세션을 완료한다
+            timerDto.setTmrxStat(Constant.TIMER_STAT_COMPLETED);
+            // 최근 시작 시각을 비운다
+            timerDto.setLastStrt(null);
+            // 계정 처리 시점을 완료 일시로 설정한다
+            timerDto.setEndxDate(now);
+            // 계정 제한 이후 발송되지 않도록 예약 알림을 해제한다
+            timerDto.setAlrmDate(null);
+            // 수정 일시를 설정한다
+            timerDto.setUpdtDate(now);
+            // 완료된 세션 값을 저장한다
+            readingTimerMapper.uptTimer(timerDto);
         }
-        // 계정 상태 변경 이후 다시 실행되지 않도록 세션을 완료한다
-        timerDto.setTmrxStat(Constant.TIMER_STAT_COMPLETED);
-        // 최근 시작 시각을 비운다
-        timerDto.setLastStrt(null);
-        // 계정 처리 시점을 완료 일시로 설정한다
-        timerDto.setEndxDate(now);
-        // 계정 제한 이후 발송되지 않도록 예약 알림을 해제한다
-        timerDto.setAlrmDate(null);
-        // 수정 일시를 설정한다
-        timerDto.setUpdtDate(now);
-        // 완료된 세션 값을 저장한다
-        readingTimerMapper.uptTimer(timerDto);
+        // 직전에 자동 완료된 세션을 포함해 아직 발송되지 않은 목표시간 예약을 모두 취소한다
+        readingTimerMapper.uptTimerAlimCancel(userNumb, now);
     }
 
     /**
@@ -490,7 +502,29 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
     }
 
     /**
-     * 세션 행 잠금 안에서 알림과 발송 완료 일시를 함께 저장한다
+     * 목표시간이 지난 실행 세션을 목표 종료시각 기준으로 완료한다
+     *
+     * @author SeungHyeon.Kang
+     * @param tmrxNumb 독서 타이머 세션 번호
+     * @param alarmDate 자동 완료 대상 조회 기준 일시
+     */
+    private void uptTimerOverTarget(Long tmrxNumb, LocalDateTime alarmDate) {
+
+        // 신규 트랜잭션에서 자동 완료 조건을 다시 검증하며 실행 세션 행을 잠근다
+        ReadingTimerDto timerDto = readingTimerMapper.getDueTimerAlimDtl(tmrxNumb, Constant.TIMER_STAT_RUNNING
+                                                                       , Constant.USER_STAT_ACTIVE, alarmDate);
+        // 다른 실행에서 먼저 완료했거나 상태가 바뀐 세션은 정상적으로 건너뛴다
+        if (StringUtil.isEmpty(timerDto)) {
+            // 자동 완료할 대상이 없는 정상 흐름을 종료한다
+            return;
+        }
+
+        // 스케줄러 실행 지연 시간을 독서시간에 포함하지 않고 목표시각에 세션을 완료한다
+        uptTimerTargetOver(timerDto, alarmDate);
+    }
+
+    /**
+     * 완료 세션 행 잠금 안에서 알림과 발송 완료 일시를 함께 저장한다
      *
      * @author SeungHyeon.Kang
      * @param tmrxNumb 독서 타이머 세션 번호
@@ -498,9 +532,9 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
      */
     private void sendTimerAlimTarget(Long tmrxNumb, LocalDateTime alarmDate) {
 
-        // 신규 트랜잭션에서 발송 조건을 다시 검증하며 대상 세션 행을 잠근다
-        ReadingTimerDto timerDto = readingTimerMapper.getDueTimerAlimDtl(tmrxNumb, Constant.TIMER_STAT_RUNNING
-                                                                       , Constant.USER_STAT_ACTIVE, alarmDate);
+        // 자동 완료 커밋 뒤 별도 트랜잭션에서 발송 조건을 다시 검증하며 세션 행을 잠근다
+        ReadingTimerDto timerDto = readingTimerMapper.getTimerAlimDtl(tmrxNumb, Constant.TIMER_STAT_COMPLETED
+                                                                    , Constant.USER_STAT_ACTIVE, alarmDate);
         // 다른 실행에서 먼저 발송했거나 상태가 바뀐 세션은 정상적으로 건너뛴다
         if (StringUtil.isEmpty(timerDto)) {
             // 처리할 대상이 없는 정상 흐름을 종료한다
@@ -658,6 +692,33 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
     }
 
     /**
+     * 실행 세션을 예약된 목표시각까지 확정하고 완료 상태로 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param timerDto 목표시간이 지난 실행 세션
+     * @param updtDate 완료 처리를 실행한 서버 일시
+     */
+    private void uptTimerTargetOver(ReadingTimerDto timerDto, LocalDateTime updtDate) {
+
+        // 목표시간 예약 일시를 실제 독서 종료시각으로 사용한다
+        LocalDateTime targetEndDate = timerDto.getAlrmDate();
+        // 목표 종료시각까지의 실행 구간만 날짜별 독서시간에 확정한다
+        closeRunningSegment(timerDto, targetEndDate);
+        // 목표시간이 끝난 세션을 완료 상태로 변경한다
+        timerDto.setTmrxStat(Constant.TIMER_STAT_COMPLETED);
+        // 완료 세션의 최근 실행 시작 시각을 비운다
+        timerDto.setLastStrt(null);
+        // 목표시간 예약 일시를 세션 완료 일시로 설정한다
+        timerDto.setEndxDate(targetEndDate);
+        // 알림 실패 시 완료 상태를 유지한 채 재시도할 수 있도록 예약 일시는 보존한다
+        timerDto.setAlrmDate(targetEndDate);
+        // 실제 자동 완료 처리 시각을 수정 일시로 설정한다
+        timerDto.setUpdtDate(updtDate);
+        // 확정 독서시간과 완료 상태를 알림 처리보다 먼저 저장한다
+        readingTimerMapper.uptTimer(timerDto);
+    }
+
+    /**
      * 자정을 넘긴 측정 구간을 날짜별로 나누어 저장한다
      *
      * @author SeungHyeon.Kang
@@ -770,6 +831,22 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         return Constant.TIMER_STAT_RUNNING.equals(timerStat)
                 || Constant.TIMER_STAT_PAUSED.equals(timerStat)
                 || Constant.TIMER_STAT_COMPLETED.equals(timerStat);
+    }
+
+    /**
+     * 실행 세션이 설정한 목표시간에 도달했는지 확인한다
+     *
+     * @author SeungHyeon.Kang
+     * @param timerDto 확인할 독서 타이머 세션
+     * @param now 상태 변경 요청 서버 일시
+     * @return 실행 중이며 목표 종료시각에 도달했으면 true
+     */
+    private boolean isTimerTargetOver(ReadingTimerDto timerDto, LocalDateTime now) {
+
+        // 실행 상태와 아직 발송되지 않은 목표 예약이 모두 있는 세션만 자동 완료한다
+        return Constant.TIMER_STAT_RUNNING.equals(timerDto.getTmrxStat())
+                && !StringUtil.isEmpty(timerDto.getAlrmDate())
+                && !now.isBefore(timerDto.getAlrmDate());
     }
 
     /**

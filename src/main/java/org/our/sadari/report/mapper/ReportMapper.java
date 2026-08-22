@@ -5,6 +5,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
+import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.social.dto.SocialDto;
 
@@ -20,6 +21,7 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 조회 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조회 조건 문서화
  * 2026-08-14        SeungHyeon.Kang    독후감 관계 정리·정렬 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 조회·변경 추가
  */
 @Mapper
 public interface ReportMapper {
@@ -87,14 +89,14 @@ public interface ReportMapper {
     ReportDto getReportByIsbnDtl(ReportDto req);
 
     /**
-     * 좋아요를 허용할 수 있는 공개 독후감 대상인지 조회한다.
+     * 좋아요를 허용할 수 있는 독후감의 작성자와 좋아요 알림 설정을 조회한다.
      * TB_LIKEXX 변경은 SocialMapper에서 처리하지만, 대상 검증 기준은 TM_REPORT이므로 ReportMapper에서 관리한다.
      *
      * @author SeungHyeon.Kang
-     * @param req 독후감 번호, 요청 사용자 번호와 화면에서 전달한 작성자 번호
-     * @return 좋아요 허용 대상 수
+     * @param req 독후감 번호와 요청 사용자 번호
+     * @return 좋아요 대상 작성자와 알림 설정
      */
-    int getPublicReportLikeCnt(SocialDto.LikeDto req);
+    SocialDto.LikeDto getReportLikeDtl(SocialDto.LikeDto req);
 
     /**
      * ISBN 기준 활성 사용자의 공개 독후감을 팔로우 작성자 우선으로 조회한다.
@@ -131,6 +133,24 @@ public interface ReportMapper {
      * @return 반영 건수
      */
     int uptReport(ReportDto reportDto);
+
+    /**
+     * 로그인 사용자가 작성한 독후감의 좋아요 알림 여부를 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportAlimDto 사용자 번호, 독후감 번호와 알림 사용 여부
+     * @return 반영 건수
+     */
+    int uptLikeAlim(ReportAlimDto reportAlimDto);
+
+    /**
+     * 로그인 사용자가 작성한 독후감의 댓글 알림 여부를 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param reportAlimDto 사용자 번호, 독후감 번호와 알림 사용 여부
+     * @return 반영 건수
+     */
+    int uptReplyAlim(ReportAlimDto reportAlimDto);
 
     /**
      * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다.
