@@ -76,6 +76,7 @@ export const usePublicReportLike = () => {
     onSuccess: () => {
 
       void queryClient.invalidateQueries({ queryKey: ["publicReports"] });
+      void queryClient.invalidateQueries({ queryKey: ["readingClub"] });
       void queryClient.invalidateQueries({ queryKey: ["detail"] });
     },
     onError: (error: unknown) => {

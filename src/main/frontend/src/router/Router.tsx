@@ -36,6 +36,7 @@ const EditClubPage = lazy(() => import("@/pages/ReadingClub/EditClubPage"));
 const ClubDetailPage = lazy(() => import("@/pages/ReadingClub/ClubDetailPage"));
 const ClubMemberManagementPage = lazy(() => import("@/pages/ReadingClub/ClubMemberManagementPage"));
 const SetClubReadingPage = lazy(() => import("@/pages/ReadingClub/SetClubReadingPage"));
+const ClubRoundReportPage = lazy(() => import("@/pages/ReadingClub/ClubRoundReportPage"));
 const NoticeListPage = lazy(() => import("@/pages/Notice/NoticeListPage"));
 const NoticeDetailPage = lazy(() => import("@/pages/Notice/NoticeDetailPage"));
 const InquiryListPage = lazy(() => import("@/pages/Inquiry/InquiryListPage"));
@@ -209,7 +210,7 @@ const Router = () => {
           <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
           <Route
             path="/reading-clubs/:clubNumb/readings/:rondNumb/reports"
-            element={<PublicReportPage />}
+            element={<ClubRoundReportPage />}
           />
           <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
 

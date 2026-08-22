@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-28        HanWon.Jang        최초 생성
+ * 2026-08-22        HanWon.Jang        공통 독후감 목록 UI 연계
  */
 import { useMemo, useState } from "react";
 import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -18,91 +19,19 @@ import {
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import type { PublicReportSortType } from "@/features/Book/api/bookApi";
+import type {
+  ReportListBookSummary,
+  ReportListItem,
+} from "@/features/Book/types/reportList.type";
+import {
+  createReportListItems,
+  getReportStatus,
+} from "@/features/Book/utils/reportListView";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
 import { message } from "@/app/messages/message";
 
-const CONTENT_PREVIEW_LENGTH = 180;
-
 export type ReportSort = PublicReportSortType;
 export type ReportStatus = string;
-export type ReportStatusTone = "done" | "reading" | "stopped";
-
-export type PublicReportPageState = {
-  title?: string;
-  author?: string;
-  cover?: string;
-  ratingAverage?: number | string | null;
-};
-
-export type PublicReportViewType = PublicReportType & {
-  rating: number;
-  reportStatus: string;
-  reportStatusName: string;
-  statusTone: ReportStatusTone;
-  isExpanded: boolean;
-  reportContent: string;
-  isLongContent: boolean;
-  likeCountLabel: string;
-  commentCountLabel: string;
-};
-
-/**
- * 공개 독후감의 독서 상태 코드를 비교 가능한 대문자로 정규화한다
- *
- * @author HanWon.Jang
- * @param report 독서 상태를 확인할 공개 독후감
- * @return 공백을 제거하고 대문자로 변환한 독서 상태 코드
- */
-function getReportStatus(report: PublicReportType): string {
-  // 공개 독후감 필터와 상태 이름 조회에 사용할 정규화된 코드를 반환한다
-  return String(report.reptStat ?? "")
-    .trim()
-    .toUpperCase();
-}
-
-/**
- * 공개 독후감의 좋아요와 댓글 개수를 화면 표시 문자열로 변환한다
- *
- * @author HanWon.Jang
- * @param countValue 화면에 표시할 개수
- * @return 최대 표시 한도를 적용한 개수 문자열
- */
-function getCountLabel(countValue?: number): string {
-  const count = Number(countValue) || 0;
-
-  // 네 자리 이상의 개수는 카드 너비를 넘지 않도록 최대 표시 문구를 사용한다
-  if (count > 999) {
-    // 카드 지표 영역의 최대 개수 문구를 반환한다
-    return "999+";
-  }
-
-  // 세 자리 이하의 개수를 숫자 문자열로 반환한다
-  return String(count);
-}
-
-/**
- * 독서 상태 코드에 대응하는 화면 색상 구분값을 결정한다
- *
- * @author HanWon.Jang
- * @param reportStatus 정규화된 독서 상태 코드
- * @return 완료와 중단 및 독서 중 상태를 구분하는 값
- */
-function getStatusTone(reportStatus: string): ReportStatusTone {
-  // 완독 상태는 완료 전용 색상 구분값을 사용한다
-  if (reportStatus === "DONE") {
-    // 완독 상태 색상 구분값을 반환한다
-    return "done";
-  }
-
-  // 독서 중단 상태는 중단 전용 색상 구분값을 사용한다
-  if (reportStatus === "STOP") {
-    // 독서 중단 상태 색상 구분값을 반환한다
-    return "stopped";
-  }
-
-  // 나머지 상태는 독서 중 색상 구분값을 반환한다
-  return "reading";
-}
 
 /**
  * 공개 독후감 목록 페이지의 서버 상태와 필터 및 사용자 동작을 제공한다
@@ -134,7 +63,7 @@ export function usePublicReportPage() {
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   // 공개 독후감 좋아요 변경 요청 상태를 조회한다
   const likeMutation = usePublicReportLike();
-  const pageState = (location.state ?? {}) as PublicReportPageState;
+  const pageState = (location.state ?? {}) as ReportListBookSummary;
 
   // 공개 독후감 API 응답이 없을 때도 화면에서 안전하게 빈 목록을 사용한다
   const reports = useMemo(() => {
@@ -149,10 +78,12 @@ export function usePublicReportPage() {
     // 화면 전용 전체 옵션 뒤에 서버가 관리하는 독서 상태 옵션을 반환한다
     return [
       { value: "ALL", label: /* "전체" */ message("frontend.common.all") },
-      ...(reportStatusCodeQuery.data ?? []).map((code) => ({
-        value: code.comdCode,
-        label: code.comdName,
-      })),
+      ...(reportStatusCodeQuery.data ?? [])
+        .filter((code) => code.comdCode.toUpperCase() !== "READ")
+        .map((code) => ({
+          value: code.comdCode,
+          label: code.comdName,
+        })),
     ];
   }, [reportStatusCodeQuery.data]);
 
@@ -168,38 +99,14 @@ export function usePublicReportPage() {
   }, [reportStatusCodeQuery.data]);
 
   // 현재 필터와 정렬 및 펼침 상태를 반영한 공개 독후감 화면 모델을 생성한다
-  const visibleReports = useMemo<PublicReportViewType[]>(() => {
+  const visibleReports = useMemo<ReportListItem[]>(() => {
     const filteredReports =
       status === "ALL"
         ? reports
         : reports.filter((report) => getReportStatus(report) === status);
-    // 화면 렌더링에 필요한 파생값을 공개 독후감 데이터와 함께 반환한다
-    return filteredReports.map((report) => {
-      const rating = Math.max(
-        0,
-        Math.min(5, Number(report.reptGrde) || 0),
-      );
-      const reportStatus = getReportStatus(report);
-      const reportContent = report.reptCntn ?? "";
-
-      // 공개 독후감 카드가 계산 없이 렌더링할 수 있는 화면 모델을 반환한다
-      return {
-        ...report,
-        rating,
-        reportStatus,
-        reportStatusName:
-          report.reptStatName
-          || statusNameByCode.get(reportStatus)
-          || reportStatus,
-        statusTone: getStatusTone(reportStatus),
-        isExpanded: Boolean(expandedReports[report.reptNumb]),
-        reportContent,
-        isLongContent: reportContent.length > CONTENT_PREVIEW_LENGTH,
-        likeCountLabel: getCountLabel(report.likeCnt),
-        commentCountLabel: getCountLabel(report.replCnt),
-      };
-    });
-  }, [expandedReports, reports, sort, status, statusNameByCode]);
+    // 공통 카드 컴포넌트가 사용할 공개 독후감 표시 모델을 반환한다
+    return createReportListItems(filteredReports, expandedReports, statusNameByCode);
+  }, [expandedReports, reports, status, statusNameByCode]);
 
   /**
    * 공개 독후감 목록의 정렬 기준을 변경한다
@@ -293,6 +200,17 @@ export function usePublicReportPage() {
     setCommentReport(null);
   };
 
+  /**
+   * 공개 독후감 목록의 다음 서버 페이지를 조회한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleLoadMore = (): void => {
+    // 목록 하단에 도달하면 현재 공개 조회 조건의 다음 페이지를 요청한다
+    void publicReportsQuery.fetchNextPage();
+  };
+
   // 공개 독후감 페이지 UI가 계산 없이 사용할 상태와 이벤트를 반환한다
   return {
     pageState,
@@ -302,6 +220,8 @@ export function usePublicReportPage() {
     error: publicReportsQuery.error,
     reportsCount: reports.length,
     visibleReports,
+    hasNext: Boolean(publicReportsQuery.hasNextPage),
+    isFetchingNext: publicReportsQuery.isFetchingNextPage,
     sort,
     status,
     statusOptions,
@@ -314,5 +234,6 @@ export function usePublicReportPage() {
     handleLike,
     handleOpenReplySheet,
     handleCloseReplySheet,
+    handleLoadMore,
   };
 }
