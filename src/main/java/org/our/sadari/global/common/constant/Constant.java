@@ -2,7 +2,7 @@ package org.our.sadari.global.common.constant;
 
 /**
  * fileName       : Constant
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-07
  * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
  * ===========================================================
@@ -18,7 +18,6 @@ package org.our.sadari.global.common.constant;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
- * 2026-08-21        SeungHyeon.Kang    사용자 콘텐츠 신고 코드 추가
  */
 public final class Constant {
 
@@ -57,8 +56,6 @@ public final class Constant {
     public static final String CODE_INQUIRY_CATEGORY = "INQR_CATG";
     // 고객문의 상태 공통코드
     public static final String CODE_INQUIRY_STATUS = "INQR_STAT";
-    // 신고 사유 공통코드
-    public static final String CODE_COMPLAINT_REASON = "CMPL_RSON";
     // 스케줄러별 사용 여부를 관리하는 공통코드
     public static final String CODE_SCHD_CODE = "SCHD_CODE";
     // 독서 타이머 상태 공통코드
@@ -127,15 +124,6 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
     // 독서 모임 회원 초대 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_INVITE_CLUB = "INVITE_CLUB";
-
-    // 독후감 신고 대상 유형
-    public static final String COMPLAINT_TARGET_REPORT = "CMPL_BOOK_REPORT";
-    // 댓글 신고 대상 유형
-    public static final String COMPLAINT_TARGET_REPLY = "CMPL_REPLY";
-    // 기타 신고 사유 코드
-    public static final String COMPLAINT_REASON_OTHER = "CMPL_OTHER";
-    // 관리자 검토 대기 신고 상태
-    public static final String COMPLAINT_STATUS_RECEIVED = "CMPL_RECEIVED";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";
