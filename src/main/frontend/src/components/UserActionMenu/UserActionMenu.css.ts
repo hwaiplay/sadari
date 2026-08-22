@@ -36,6 +36,26 @@ export const menu = style({
   display: "flex",
   flexDirection: "column",
   gap: "2px",
+  visibility: "hidden",
+  opacity: 0,
+  pointerEvents: "none",
+  transform: "translateY(-8px) scale(0.985)",
+  transformOrigin: "top center",
+  transition: "opacity 150ms ease, transform 180ms ease, visibility 0s linear 180ms",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {
+      transform: "none",
+      transition: "none",
+    },
+  },
+});
+
+export const menuOpen = style({
+  visibility: "visible",
+  opacity: 1,
+  pointerEvents: "auto",
+  transform: "translateY(0) scale(1)",
+  transition: "opacity 170ms ease, transform 200ms cubic-bezier(0.22, 1, 0.36, 1), visibility 0s",
 });
 
 export const menuOption = style({
