@@ -37,7 +37,7 @@
            AND USEE_YSNO = #{commYes}
     </select>
 
-    <!-- 처리 상태와 관계없이 동일 사용자가 같은 대상을 이미 신고했는지 확인한다 -->
+    <!-- 처리 상태와 관계없이 동일 사용자가 같은 대상 버전을 이미 신고했는지 확인한다 -->
     <select id="dupComplaint" resultType="int">
         SELECT /* dupComplaint */
                COUNT(1)
@@ -45,18 +45,36 @@
          WHERE USER_NUMB = #{userNumb}
            AND TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
+           AND TAGT_HASH = #{tagtHash}
     </select>
 
-    <!-- 다른 활성 사용자의 프로필 소유자와 닉네임 및 한줄소개를 신고 시점 정보로 조회한다 -->
+    <!-- 다른 활성 사용자의 계정 소유자와 닉네임을 신고 시점 정보로 조회한다 -->
     <select id="getUserTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
         <include refid="bindComplaint" />
         SELECT /* getUserTargetDtl */
                U.USER_NUMB AS TAGT_USER
-             , CONCAT('닉네임: ', U.USER_NICK
-                    , CASE WHEN NULLIF(TRIM(U.INTR_CNTN), '') IS NULL THEN ''
-                           ELSE CONCAT('\n한줄소개: ', U.INTR_CNTN)
-                       END) AS TAGT_CNTN
+             , CONCAT('닉네임: ', U.USER_NICK) AS TAGT_CNTN
           FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{tagtNumb}
+           AND U.USER_NUMB != #{userNumb}
+           AND U.USER_STAT = #{userStatActive}
+           FOR UPDATE
+    </select>
+
+    <!-- 다른 활성 사용자의 현재 배경사진과 비공개 증거 생성용 메타정보를 잠금 조회한다 -->
+    <select id="getBackgroundTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
+        <include refid="bindComplaint" />
+        SELECT /* getBackgroundTargetDtl */
+               U.USER_NUMB AS TAGT_USER
+             , F.FILE_NUMB
+             , CONCAT('배경사진: ', COALESCE(F.ORIG_NAME, F.STOR_NAME, '파일명 없음')) AS TAGT_CNTN
+             , F.ORIG_NAME
+             , F.STOR_NAME
+             , F.FILE_PATH
+             , F.MIME_TYPE
+          FROM TM_USERXM U
+          JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.BGIM_NUMB
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
@@ -72,7 +90,7 @@
           FROM TM_REPORT R
           JOIN TM_USERXM U
             ON U.USER_NUMB = R.USER_NUMB
-           AND U.USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+           AND U.USER_STAT = #{userStatActive}
          WHERE R.REPT_NUMB = #{tagtNumb}
            AND R.USER_NUMB != #{userNumb}
            AND R.PUBC_YSNO = #{commYes}
@@ -91,30 +109,34 @@
            AND R.PUBC_YSNO = #{commYes}
           JOIN TM_USERXM U
             ON U.USER_NUMB = C.USER_NUMB
-           AND U.USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+           AND U.USER_STAT = #{userStatActive}
          WHERE C.REPL_NUMB = #{tagtNumb}
            AND C.USER_NUMB != #{userNumb}
            AND COALESCE(C.DELT_YSNO, #{commNo}) = #{commNo}
            FOR UPDATE
     </select>
 
-    <!-- 계정 상태와 관계없이 복귀 시에도 복원하지 않을 현재 프로필 사진을 잠금 조회한다 -->
+    <!-- 다른 활성 사용자의 현재 프로필 사진과 비공개 증거 생성용 메타정보를 잠금 조회한다 -->
     <select id="getProfileTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
         <include refid="bindComplaint" />
         SELECT /* getProfileTargetDtl */
                U.USER_NUMB AS TAGT_USER
              , F.FILE_NUMB
-             , F.ORIG_NAME AS TAGT_CNTN
+             , CONCAT('프로필 사진: ', COALESCE(F.ORIG_NAME, F.STOR_NAME, '파일명 없음')) AS TAGT_CNTN
+             , F.ORIG_NAME
+             , F.STOR_NAME
+             , F.FILE_PATH
+             , F.MIME_TYPE
           FROM TM_USERXM U
           JOIN TM_FILEXM F
             ON F.FILE_NUMB = U.PROF_NUMB
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
-           AND U.USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+           AND U.USER_STAT = #{userStatActive}
            FOR UPDATE
     </select>
 
-    <!-- 계정 상태와 관계없이 복귀 시에도 복원하지 않을 현재 한줄소개를 잠금 조회한다 -->
+    <!-- 다른 활성 사용자의 현재 한줄소개를 잠금 조회한다 -->
     <select id="getIntroTargetDtl" resultType="org.our.sadari.complaint.dto.ComplaintDto">
         <include refid="bindComplaint" />
         SELECT /* getIntroTargetDtl */
@@ -123,10 +145,44 @@
           FROM TM_USERXM U
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
-           AND U.USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+           AND U.USER_STAT = #{userStatActive}
            AND NULLIF(TRIM(U.INTR_CNTN), '') IS NOT NULL
            FOR UPDATE
     </select>
+
+    <!-- 같은 대상 버전에서 이미 저장한 관리자 전용 이미지 증거 번호를 재사용한다 -->
+    <select id="getEvidenceNumb" resultType="long">
+        SELECT /* getEvidenceNumb */
+               EVDC_NUMB
+          FROM TH_CMEVDC
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+           AND TAGT_HASH = #{tagtHash}
+    </select>
+
+    <!-- 이미지 신고 시점의 실제 원본을 관리자 전용 증거로 저장한다 -->
+    <insert id="setEvidence" parameterType="org.our.sadari.complaint.dto.ComplaintEvidenceDto"
+            useGeneratedKeys="true" keyProperty="evdcNumb" keyColumn="EVDC_NUMB">
+        /* setEvidence */
+        INSERT INTO TH_CMEVDC (
+                    TAGT_TYPE
+                  , TAGT_NUMB
+                  , TAGT_HASH
+                  , TAGT_USER
+                  , ORIG_NAME
+                  , MIME_TYPE
+                  , FILE_SIZE
+                  , EVDC_DATA
+        ) VALUES (  #{tagtType}
+                  , #{tagtNumb}
+                  , #{tagtHash}
+                  , #{tagtUser,jdbcType=NUMERIC}
+                  , #{origName,jdbcType=VARCHAR}
+                  , #{mimeType}
+                  , #{fileSize}
+                  , #{evdcData,jdbcType=LONGVARBINARY}
+        )
+    </insert>
 
     <!-- 검증한 대상 원문 스냅샷과 신고 사유를 접수 상태로 저장한다 -->
     <insert id="setComplaint" useGeneratedKeys="true"
@@ -137,23 +193,27 @@
                     USER_NUMB
                   , TAGT_TYPE
                   , TAGT_NUMB
+                  , TAGT_HASH
                   , TAGT_USER
                   , TAGT_CNTN
+                  , EVDC_NUMB
                   , CMPL_RSON
                   , CMPL_CNTN
                   , CMPL_STAT
         ) VALUES (  #{userNumb}
                   , #{complaint.tagtType}
                   , #{complaint.tagtNumb}
+                  , #{complaint.tagtHash}
                   , #{complaint.tagtUser}
                   , #{complaint.tagtCntn,jdbcType=LONGVARCHAR}
+                  , #{complaint.evdcNumb,jdbcType=NUMERIC}
                   , #{complaint.cmplRson}
                   , #{complaint.cmplCntn,jdbcType=VARCHAR}
                   , #{complaintStatusReceived}
         )
     </insert>
 
-    <!-- 반려를 제외한 동일 대상의 유효 누적 신고 건수를 조회한다 -->
+    <!-- 반려를 제외한 동일 대상 버전의 유효 누적 신고 건수를 조회한다 -->
     <select id="getAutoActionCmplCnt" resultType="int">
         <include refid="bindComplaint" />
         SELECT /* getAutoActionCmplCnt */
@@ -161,52 +221,22 @@
           FROM TH_CMPLNT
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
+           AND TAGT_HASH = #{tagtHash}
            AND CMPL_STAT != #{complaintStatusRejected}
            FOR UPDATE
     </select>
 
-    <!-- 자동 삭제할 독후감에 연결된 댓글과 답글의 좋아요를 먼저 삭제한다 -->
-    <delete id="delAutoReplLike">
+    <!-- 누적 신고 임계치에 도달한 독후감을 소유자까지 확인해 비공개로 전환한다 -->
+    <update id="uptAutoReportPrivate">
         <include refid="bindComplaint" />
-        DELETE /* delAutoReplLike */ L
-          FROM TB_LIKEXX L
-          JOIN TB_REPLXX R
-            ON R.REPL_NUMB = L.TAGT_NUMB
-           AND R.REPT_NUMB = #{tagtNumb}
-         WHERE L.TAGT_TYPE = #{likeTargetReply}
-    </delete>
-
-    <!-- 자동 삭제할 독후감의 대댓글을 부모 댓글보다 먼저 삭제한다 -->
-    <delete id="delAutoChildReply">
-        DELETE /* delAutoChildReply */
-          FROM TB_REPLXX
-         WHERE REPT_NUMB = #{tagtNumb}
-           AND UPER_NUMB IS NOT NULL
-    </delete>
-
-    <!-- 자동 삭제할 독후감의 최상위 댓글을 삭제한다 -->
-    <delete id="delAutoReplyList">
-        DELETE /* delAutoReplyList */
-          FROM TB_REPLXX
-         WHERE REPT_NUMB = #{tagtNumb}
-    </delete>
-
-    <!-- 자동 삭제할 독후감의 좋아요를 삭제한다 -->
-    <delete id="delAutoReportLike">
-        <include refid="bindComplaint" />
-        DELETE /* delAutoReportLike */
-          FROM TB_LIKEXX
-         WHERE TAGT_TYPE = #{likeTargetReport}
-           AND TAGT_NUMB = #{tagtNumb}
-    </delete>
-
-    <!-- 누적 신고 임계치에 도달한 독후감을 소유자까지 확인해 완전 삭제한다 -->
-    <delete id="delAutoReport">
-        DELETE /* delAutoReport */
-          FROM TM_REPORT
+        UPDATE /* uptAutoReportPrivate */
+               TM_REPORT
+           SET PUBC_YSNO = #{commNo}
+             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE REPT_NUMB = #{tagtNumb}
            AND USER_NUMB = #{tagtUser}
-    </delete>
+           AND PUBC_YSNO = #{commYes}
+    </update>
 
     <!-- 누적 신고 임계치에 도달한 댓글을 원본 행을 보존하는 삭제 상태로 변경한다 -->
     <update id="delAutoReply">
@@ -232,6 +262,18 @@
            AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
     </update>
 
+    <!-- 누적 신고 임계치에 도달한 배경사진 참조를 제거해 기본 이미지 상태로 변경한다 -->
+    <update id="uptAutoBackground">
+        <include refid="bindComplaint" />
+        UPDATE /* uptAutoBackground */
+               TM_USERXM
+           SET BGIM_NUMB = NULL
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE USER_NUMB = #{tagtUser}
+           AND BGIM_NUMB IS NOT NULL
+           AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
+    </update>
+
     <!-- 누적 신고 임계치에 도달한 한줄소개를 Null로 초기화한다 -->
     <update id="uptAutoIntro">
         <include refid="bindComplaint" />
@@ -251,6 +293,7 @@
         INSERT INTO TH_CMACTN (
                     TAGT_TYPE
                   , TAGT_NUMB
+                  , TAGT_HASH
                   , TAGT_USER
                   , ACTN_TYPE
                   , RSLT_CODE
@@ -261,6 +304,7 @@
                   , RSLT_CNTN
         ) VALUES (  #{tagtType}
                   , #{tagtNumb}
+                  , #{tagtHash}
                   , #{tagtUser,jdbcType=NUMERIC}
                   , #{actnType}
                   , #{rsltCode}
@@ -284,6 +328,37 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
+           AND TAGT_HASH = #{tagtHash}
            AND CMPL_STAT IN (#{complaintStatusReceived}, #{complaintStatusReviewing})
     </update>
+
+    <!-- 최종 처리된 신고에만 연결되고 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제한다 -->
+    <delete id="delExpiredEvidence">
+        <include refid="bindComplaint" />
+        DELETE /* delExpiredEvidence */
+          FROM TH_CMEVDC
+         WHERE EVDC_NUMB IN (
+               SELECT X.EVDC_NUMB
+                 FROM (
+                       SELECT E.EVDC_NUMB
+                         FROM TH_CMEVDC E
+                        WHERE NOT EXISTS (
+                              SELECT 1
+                                FROM TH_CMPLNT C
+                               WHERE C.EVDC_NUMB = E.EVDC_NUMB
+                                 AND C.CMPL_STAT IN (#{complaintStatusReceived}, #{complaintStatusReviewing})
+                              )
+                          AND EXISTS (
+                              SELECT 1
+                                FROM TH_CMPLNT C
+                               WHERE C.EVDC_NUMB = E.EVDC_NUMB
+                                 AND C.PROC_DATE IS NOT NULL
+                               GROUP BY C.EVDC_NUMB
+                              HAVING MAX(C.PROC_DATE) <![CDATA[<]]> DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL #{retentionDays} DAY)
+                              )
+                     ORDER BY E.EVDC_NUMB
+                        LIMIT #{batchSize}
+                      ) X
+               )
+    </delete>
 </mapper>

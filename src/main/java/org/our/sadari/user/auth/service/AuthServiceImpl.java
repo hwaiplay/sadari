@@ -43,6 +43,7 @@ import org.springframework.web.client.RestClientException;
  * 2026-07-29        SeungHyeon.Kang    최초 로그인 자동 닉네임 발급 적용
  * 2026-07-30        SeungHyeon.Kang    온보딩·계정 복귀·정지 처리
  * 2026-08-13        SeungHyeon.Kang    재가입 차단·OAuth 예외 처리
+ * 2026-08-22        SeungHyeon.Kang    Kakao 기본 프로필 제외
  */
 @Service
 @RequiredArgsConstructor
@@ -131,7 +132,10 @@ public class AuthServiceImpl implements AuthService {
         String providerId = String.valueOf(kakaoAccountDto.id);
         // encryptForStorage 업무 로직을 userIdEncryptionService에 위임한다
         String encryptedProviderId = userIdEncryptionService.encryptForStorage(providerId);
-        String profileImg = kakaoAccountDto.kakao_account.profile.profile_image_url;
+        // Kakao 기본 실루엣은 서비스의 실제 사용자 프로필 사진으로 저장하지 않는다
+        String profileImg = kakaoAccountDto.kakao_account.profile.is_default_image
+                ? null
+                : kakaoAccountDto.kakao_account.profile.profile_image_url;
 
         // 카카오 로그인 사용자 정보를 담을 객체를 생성한다
         UserDto userDto = new UserDto();
@@ -176,7 +180,9 @@ public class AuthServiceImpl implements AuthService {
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
-                userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
+                userDto.setProfNumb(StringUtil.isEmpty(profileImg)
+                        ? null
+                        : fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                 // UserProfile 데이터를 DB에서 수정한다
                 userMapper.uptUserProfile(userDto);
                 // 처리 상태를 정보 로그로 남긴다
@@ -217,7 +223,9 @@ public class AuthServiceImpl implements AuthService {
                 if (!Constant.USER_STAT_SUSPENDED.equals(savedUser.getUserStat())
                         && StringUtil.isEmpty(savedUser.getProfNumb())) {
                     // ProfNumb 업무 값을 userDto DTO에 설정한다
-                    userDto.setProfNumb(fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
+                    userDto.setProfNumb(StringUtil.isEmpty(profileImg)
+                            ? null
+                            : fileService.setKakaoProfileImage(profileImg, providerId, userDto.getUserNumb()));
                     // UserProfile 데이터를 DB에서 수정한다
                     userMapper.uptUserProfile(userDto);
                 }

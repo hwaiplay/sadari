@@ -233,6 +233,35 @@ export const profileImage = style({
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
 });
 
+// 소셜 프로필의 세로 점 더보기 버튼을 마이페이지 프로필 수정 버튼과 같은 위치와 명암으로 표시한다
+export const socialProfileMoreButton = style([
+  coverProfileEditButton,
+  {
+    width: "34px",
+    minWidth: "34px",
+    height: "34px",
+    minHeight: "34px",
+    padding: 0,
+    justifyContent: "center",
+  },
+]);
+
+// 공통 가로 점 아이콘을 세로 점으로 회전하고 어두운 배경에서 흰색으로 표시한다
+export const socialProfileMoreIcon = style({
+  width: "20px",
+  height: "20px",
+  transform: "rotate(90deg)",
+  filter: "brightness(0) invert(1)",
+});
+
+// 배경사진 overflow 영역 안에서도 신고 메뉴가 잘리지 않도록 버튼 위쪽으로 펼친다
+export const socialProfileMoreMenu = style({
+  top: "auto",
+  right: 0,
+  bottom: "calc(100% + 6px)",
+  minWidth: "154px",
+});
+
 export const profileImageViewerButton = style({
   display: "block",
   width: "100px",

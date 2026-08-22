@@ -39,10 +39,24 @@ ALTER TABLE `TH_USSPND`
 ALTER TABLE `TH_USWTHD`
     ADD INDEX `IX_TH_USWTHD_IDHS` (`USER_IDHS`, `USER_NUMB`);
 
--- 동일 사용자의 동일 대상 재신고와 동시 요청 중복 접수를 차단한다.
+-- 동일 사용자의 동일 대상 버전 재신고와 동시 요청 중복 접수를 차단한다.
+-- 동일 번호의 콘텐츠가 수정되면 새로운 버전으로 집계하도록 대상 해시를 포함한다.
 ALTER TABLE `TH_CMPLNT`
-    ADD UNIQUE INDEX `UK_TH_CMPLNT_USER_TAGT` (`USER_NUMB`, `TAGT_TYPE`, `TAGT_NUMB`);
+    DROP INDEX `UK_TH_CMPLNT_USER_TAGT`,
+    DROP INDEX `IX_TH_CMPLNT_TAGT`,
+    ADD UNIQUE INDEX `UK_TH_CMPLNT_USER_TAGT` (`USER_NUMB`, `TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`),
+    ADD INDEX `IX_TH_CMPLNT_TAGT` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`, `CMPL_STAT`, `REGI_DATE`);
 
 -- 현재 사용자 상세의 받은 신고 이력을 최신순으로 조회한다.
 ALTER TABLE `TH_CMPLNT`
     ADD INDEX `IX_TH_CMPLNT_TAGT_USER` (`TAGT_USER`, `REGI_DATE`, `CMPL_NUMB`);
+
+-- 동일 대상 버전의 자동 조치 이력이 한 번만 생성되도록 보장한다.
+ALTER TABLE `TH_CMACTN`
+    DROP INDEX `UK_TH_CMACTN_TAGT_ORDR`,
+    ADD UNIQUE INDEX `UK_TH_CMACTN_TAGT_ORDR` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`, `ACTN_ORDR`);
+
+-- 관리자 전용 프로필 이미지 증거의 동일 버전 중복 저장과 사용자별 만료 조회를 지원한다.
+ALTER TABLE `TH_CMEVDC`
+    ADD UNIQUE INDEX `UK_TH_CMEVDC_TAGT_HASH` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`),
+    ADD INDEX `IX_TH_CMEVDC_TAGT_USER` (`TAGT_USER`, `REGI_DATE`, `EVDC_NUMB`);

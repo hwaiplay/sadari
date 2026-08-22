@@ -22,12 +22,14 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "complaint.auto-action")
 public class ComplaintAutoActionProperties {
 
-    // 독후감 자동 삭제 신고 임계치
+    // 독후감 자동 비공개 전환 신고 임계치
     private int bookReportThreshold = 5;
     // 댓글 자동 삭제 신고 임계치
     private int replyThreshold = 5;
     // 프로필 사진 자동 초기화 신고 임계치
     private int profileImageThreshold = 5;
+    // 배경사진 자동 초기화 신고 임계치
+    private int backgroundImageThreshold = 5;
     // 한줄소개 자동 초기화 신고 임계치
     private int introductionThreshold = 5;
 
@@ -41,12 +43,14 @@ public class ComplaintAutoActionProperties {
     public int getThreshold(String tagtType) {
         // 자동 조치 대상 유형은 설정 파일의 개별 임계치와 고정 매핑한다
         return switch (tagtType) {
-            // 독후감은 완전 삭제 기준을 반환한다
+            // 독후감은 비공개 전환 기준을 반환한다
             case Constant.COMPLAINT_TARGET_REPORT -> bookReportThreshold;
             // 댓글은 논리 삭제 기준을 반환한다
             case Constant.COMPLAINT_TARGET_REPLY -> replyThreshold;
             // 프로필 사진은 기본 이미지 초기화 기준을 반환한다
             case Constant.COMPLAINT_TARGET_PROFILE -> profileImageThreshold;
+            // 배경사진은 기본 이미지 초기화 기준을 반환한다
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> backgroundImageThreshold;
             // 한줄소개는 Null 초기화 기준을 반환한다
             case Constant.COMPLAINT_TARGET_INTRO -> introductionThreshold;
             // 사용자 전체 신고와 예약 대상은 관리자가 직접 검토한다
