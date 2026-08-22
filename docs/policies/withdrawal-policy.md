@@ -125,8 +125,11 @@
 - 관리자는 `신고 관리 > 신고 상세`와 `현 사용자 관리 > 현 사용자 상세`에서 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 사용자의 프로필·배경 이미지를 기본 이미지 상태로 변경하고 자기소개를 `NULL` 처리할 수 있습니다.
 - 관리자는 신고 대상 독후감을 연결 댓글·답글·좋아요와 함께 완전 삭제하고, 댓글 또는 답글은 원본 행을 보존한 채 `DELT_YSNO='Y'`로 변경하며, 모임 소개는 `NULL` 처리할 수 있습니다.
 - 관리자 신고 조치로 삭제하거나 비공개 상태로 변경된 프로필 정보와 콘텐츠는 계정 비활성화 복귀 또는 영구 탈퇴 취소 시 자동 복원하지 않습니다.
+- 반려를 제외한 같은 대상 신고가 5건씩 누적되면 독후감은 완전 삭제하고 댓글은 `DELT_YSNO='Y'`, 프로필 사진은 기본 이미지 상태, 한줄소개는 `NULL`로 자동 변경합니다. 자동 조치는 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 대상에 동일하게 적용하고 계정 복귀 또는 영구 탈퇴 취소 시 복원하지 않습니다.
+- 자동 조치 결과는 `TH_CMACTN`에 유지하며 대상 회원이 물리 삭제되면 `TAGT_USER`를 `NULL`로 익명화합니다. 물리 삭제된 대상에는 신규 자동 조치를 실행하지 않습니다.
 - 신고 조치 알림과 푸시는 알림 템플릿 확정 뒤 별도 연동하며 현재 계정 상태와 관계없이 생성하지 않습니다.
 - 신고 데이터 처리는 알림, 푸시 구독, 팔로우, 좋아요 및 기타 소셜 관계의 삭제·보존·복원 범위를 변경하지 않습니다.
+- 관리자 신고 상세의 자동 조치 진행 정보와 결과 이력은 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 상태에서 유지하며, 물리 삭제 뒤에는 피신고자 회원번호를 익명화한 기존 결과만 대상 유형과 번호 기준으로 제공합니다.
 - 세부 신고 대상과 처리 상태는 [신고 접수 및 처리 정책](abuse-report-policy.md)을 따릅니다.
 
 ## 고객문의 데이터 처리
@@ -375,6 +378,7 @@
 - `src/main/java/org/our/sadari/global/common/service/BadWordDetectionService.java`
 - `CT_POPUPX`
 - `TH_CMPLNT`
+- `TH_CMACTN`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/complaint/mapper/ComplaintMapper.xml`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/file/controller/FileResourceController.java`

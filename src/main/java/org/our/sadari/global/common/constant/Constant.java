@@ -19,7 +19,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
- * 2026-08-22        SeungHyeon.Kang    신고 대상·사유 코드 추가
+ * 2026-08-22        SeungHyeon.Kang    신고 대상·자동 조치 코드 추가
  */
 public final class Constant {
 
@@ -105,8 +105,30 @@ public final class Constant {
     public static final String COMPLAINT_TARGET_REPORT = "CMPL_BOOK_REPORT";
     // 댓글 신고 대상 설정값
     public static final String COMPLAINT_TARGET_REPLY = "CMPL_REPLY";
+    // 프로필 사진 신고 대상 설정값
+    public static final String COMPLAINT_TARGET_PROFILE = "CMPL_PROF_IMAGE";
+    // 한줄소개 신고 대상 설정값
+    public static final String COMPLAINT_TARGET_INTRO = "CMPL_INTRO";
     // 기타 신고 사유 설정값
     public static final String COMPLAINT_REASON_OTHER = "CMPL_OTHER";
+    // 신고 처리 접수 상태
+    public static final String COMPLAINT_STATUS_RECEIVED = "CMPL_RECEIVED";
+    // 신고 처리 검토 중 상태
+    public static final String COMPLAINT_STATUS_REVIEWING = "CMPL_REVIEWING";
+    // 신고 처리 조치 완료 상태
+    public static final String COMPLAINT_STATUS_ACTIONED = "CMPL_ACTIONED";
+    // 신고 처리 반려 상태
+    public static final String COMPLAINT_STATUS_REJECTED = "CMPL_REJECTED";
+    // 독후감 완전 삭제 자동 조치 유형
+    public static final String COMPLAINT_ACTION_DELETE_REPORT = "CMPL_DEL_REPORT";
+    // 댓글 논리 삭제 자동 조치 유형
+    public static final String COMPLAINT_ACTION_DELETE_REPLY = "CMPL_DEL_REPLY";
+    // 프로필 사진 기본 이미지 초기화 자동 조치 유형
+    public static final String COMPLAINT_ACTION_RESET_PROFILE = "CMPL_RESET_PROF";
+    // 한줄소개 Null 초기화 자동 조치 유형
+    public static final String COMPLAINT_ACTION_CLEAR_INTRO = "CMPL_CLEAR_INTRO";
+    // 신고 누적 자동 조치 적용 결과
+    public static final String COMPLAINT_RESULT_APPLIED = "CMPL_APPLIED";
     // 상대를 팔로우하지 않는 기본 버튼 상태
     public static final String FOLLOW_STAT_FOLLOW = "FOLLOW";
     // 로그인 사용자가 상대를 팔로우하는 버튼 상태

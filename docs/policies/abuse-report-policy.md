@@ -6,7 +6,8 @@
 - 사용자, 독후감, 댓글 및 향후 독서 모임에 대한 공통 신고 데이터 구조에 적용합니다.
 - 현재 구현 범위는 공통코드, `TH_CMPLNT` 테이블, 사용자 신고 접수 화면과 API 및 관리자 신고 조회·처리 화면입니다.
 - 모든 신고 유형은 `TAGT_USER`로 연결된 피신고자에게 관리자 신고 상세에서 기존 회원 이용정지 기능을 동일하게 사용할 수 있습니다.
-- 콘텐츠와 프로필 제재는 신고 접수만으로 자동 실행하지 않으며 관리자가 신고 상세에서 명시적으로 실행합니다.
+- 독후감, 댓글, 프로필 사진 및 한줄소개는 반려를 제외한 동일 대상 신고가 5건씩 누적될 때 서버가 자동 조치하며 결과를 `TH_CMACTN`에 기록합니다.
+- 사용자 전체 신고, 모임 신고, 회원 이용정지 및 자동 조치 범위 밖의 운영 제재는 관리자가 신고 상세에서 명시적으로 실행합니다.
 
 ## 신고 대상
 
@@ -18,6 +19,8 @@
 | `CMPL_BOOK_REPORT` | 공개 독후감 | `TM_REPORT.REPT_NUMB` |
 | `CMPL_REPLY` | 독후감 댓글과 답글 | `TB_REPLXX.REPL_NUMB` |
 | `CMPL_CLUB` | 향후 독서 모임 | `TM_CLUBXM.CLUB_NUMB` |
+| `CMPL_PROF_IMAGE` | 사용자의 현재 프로필 사진 | `TM_USERXM.USER_NUMB` |
+| `CMPL_INTRO` | 사용자의 현재 한줄소개 | `TM_USERXM.USER_NUMB` |
 
 - `TH_CMPLNT`에는 `TAGT_TYPE`과 `TAGT_NUMB`를 함께 저장합니다.
 - 여러 대상 테이블을 하나의 외래키로 참조할 수 없으므로 `TAGT_NUMB`에는 물리 외래키를 생성하지 않습니다.
@@ -25,6 +28,7 @@
 - 서버는 클라이언트가 화면 이동 상태로 보유한 본문을 저장하지 않고 대상 번호로 원본을 다시 조회하여 `TAGT_CNTN`에 접수 시점 스냅샷을 저장합니다.
 - 서버는 같은 원본 조회 결과에서 대상 소유 사용자 번호를 확정해 `TAGT_USER`에 함께 저장하며, 클라이언트가 전달한 소유자 번호는 사용하지 않습니다.
 - `CMPL_USER`는 신고 시점의 닉네임과 한줄소개, `CMPL_BOOK_REPORT`는 독후감 본문, `CMPL_REPLY`는 댓글 또는 답글 본문을 스냅샷으로 저장합니다.
+- `CMPL_PROF_IMAGE`는 현재 프로필 사진의 원본 파일명을 관리자 판단용 문자열로 저장하고 이미지 사본은 만들지 않으며, `CMPL_INTRO`는 현재 한줄소개 원문을 저장합니다.
 - 새로운 신고 대상은 `CMPL_TAGT` 상세코드와 서버의 대상 검증 매핑을 추가하며 테이블 구조는 변경하지 않습니다.
 - `CMPL_CLUB`은 향후 독서 모임 신고에 사용할 예약 코드이며 관련 화면과 API가 출시되기 전에는 신고 요청값으로 허용하지 않습니다.
 
@@ -61,6 +65,7 @@
 - 다른 일반 관리자는 검토 담당자의 신고를 최종 처리할 수 없으며 `SUPER` 관리자는 담당 신고를 인계받아 처리할 수 있습니다.
 - `UPDT_DATE`는 여러 관리자가 같은 신고를 동시에 덮어쓰지 않도록 화면 조회 버전 검증에 사용합니다.
 - 회원 이용정지와 신고 상태는 각각 명시적으로 처리합니다. 이용정지 적용 또는 해제가 신고를 자동으로 최종 처리하지 않으며 관리자가 처리 내용을 확인한 뒤 `CMPL_ACTIONED`로 변경합니다.
+- 누적 자동 조치가 적용되면 같은 대상의 `CMPL_RECEIVED`와 `CMPL_REVIEWING` 신고를 `CMPL_ACTIONED`로 일괄 변경하고 자동 조치 결과 내용을 `PROC_CNTN`과 `PROC_DATE`에 기록합니다. 자동 조치에는 처리 관리자가 없으므로 `PROC_ADMN`은 `NULL`로 저장합니다.
 
 ## 관리자 신고 관리
 
@@ -79,6 +84,28 @@
 - `TH_CMPLNT` 신고 이력 자체는 관리자 조치로 삭제하지 않습니다. 메뉴 삭제 권한은 피신고자 정보와 신고 대상 원본 조치 API에만 사용합니다.
 - 관리자 조치 알림은 알림 템플릿이 확정된 뒤 별도 연동하며 현재는 알림과 푸시를 생성하지 않습니다.
 
+## 신고 누적 자동 조치
+
+자동 조치는 `application-loc.yml`과 `application-prod.yml`의 `complaint.auto-action` 설정을 사용하며 네 대상 모두 5건으로 고정합니다. 운영 환경변수로 임계치를 변경하지 않습니다.
+
+| 신고 대상 유형 | 임계치 | 자동 조치 유형 | 원본 처리 |
+| --- | ---: | --- | --- |
+| `CMPL_BOOK_REPORT` | 5건 | `CMPL_DEL_REPORT` | 독후감과 연결 댓글·답글·좋아요를 완전 삭제 |
+| `CMPL_REPLY` | 5건 | `CMPL_DEL_REPLY` | 댓글 또는 답글의 `DELT_YSNO`를 `Y`로 변경 |
+| `CMPL_PROF_IMAGE` | 5건 | `CMPL_RESET_PROF` | `PROF_NUMB`를 `NULL`로 변경하고 미참조 파일을 커밋 후 정리 |
+| `CMPL_INTRO` | 5건 | `CMPL_CLEAR_INTRO` | `INTR_CNTN`을 `NULL`로 변경 |
+
+- 자동 조치 누적 건수에서는 현재 처리 상태가 `CMPL_REJECTED`인 신고만 제외합니다. `CMPL_RECEIVED`, `CMPL_REVIEWING`, `CMPL_ACTIONED` 신고는 누적 기준에 포함합니다.
+- 누적 건수가 5, 10, 15건처럼 임계치의 배수에 도달할 때마다 `ACTN_ORDR`를 증가시켜 다시 조치할 수 있습니다. 독후감과 댓글은 첫 조치 뒤 신규 신고가 불가능하지만 사용자가 새 프로필 사진이나 한줄소개를 등록한 경우 기존 누적 이력에 이어 다음 5건 단위로 다시 조치할 수 있습니다.
+- `CMPL_USER`는 사용자 전체와 계정 상태를 함께 다루므로 프로필 사진 또는 한줄소개 자동 조치 건수에 합산하지 않습니다.
+- 신고 대상 원본은 신고 저장 전에 잠금 조회하고 누적 건수도 현재 커밋 결과를 읽는 잠금 조회로 계산합니다. 서로 다른 사용자의 신고가 동시에 도착해도 대상별 저장과 누적 건수 계산을 직렬화하여 5번째 신고를 누락하거나 같은 조치 순번을 중복 실행하지 않습니다.
+- 원본 조치, `TH_CMACTN` 결과 저장 및 관련 신고 상태 변경은 신고 저장 트랜잭션에 포함합니다. 어느 단계든 실패하면 신규 신고를 포함한 전체 변경을 롤백하여 원본만 삭제되거나 결과 이력만 남는 부분 성공을 허용하지 않습니다.
+- 자동 조치 성공 결과는 `CMPL_RSLT`의 `CMPL_APPLIED`로 기록합니다. 롤백된 실패는 결과 이력으로 확정하지 않으며 서버 오류 처리와 운영 로그로 확인합니다.
+- 자동 조치 알림과 푸시는 템플릿 확정 뒤 별도 연동하며 현재는 생성하지 않습니다.
+- `관리자 > 신고 관리 > 신고 상세`는 해당 대상 유형의 자동 조치 적용 여부, 예정 조치, 반려 제외 유효 신고 누적 건수, 5건 임계치, 다음 실행 누적 건수와 남은 건수를 함께 표시합니다.
+- 자동 조치가 실제 실행되면 같은 영역에 조치 순번, 조치·결과 공통코드명, 실행 당시 누적·임계 건수, 자동 조치를 발생시킨 신고번호, 결과 상세와 실행일시를 `TH_CMACTN` 기준 최신 순으로 표시합니다.
+- `CMPL_USER`와 `CMPL_CLUB`은 자동 조치 미적용 대상으로 명시하고 관리자 검토와 수동 조치 대상임을 안내합니다.
+
 ## 중복과 접근 범위
 
 - 동일 사용자는 처리 상태와 관계없이 같은 `TAGT_TYPE`과 `TAGT_NUMB`의 대상을 한 번만 신고할 수 있습니다.
@@ -96,7 +123,10 @@
 - 신고 대상 사용자 또는 콘텐츠가 삭제되어도 `TAGT_TYPE`과 `TAGT_NUMB`는 유지합니다.
 - 신고 대상자의 `WITHDRAWN` 또는 `DELETE_PENDING` 상태에서도 `TAGT_USER` 연결을 유지하여 현 사용자 상세의 누적 횟수와 전체 이력을 계속 제공합니다. 계정이 복귀하거나 영구 탈퇴를 취소해도 같은 이력을 별도 복원 없이 그대로 제공합니다.
 - `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 피신고자에게 동일한 관리자 프로필·콘텐츠 조치를 허용합니다. 비활성화 복귀 또는 영구 탈퇴 취소 뒤에도 삭제한 이미지, 자기소개, 독후감, 댓글 표시 상태와 모임 소개를 자동 복원하지 않습니다.
+- 누적 자동 조치도 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 대상의 현재 원본에 같은 삭제·초기화 기준을 적용하며, 계정 비활성화 복귀 또는 영구 탈퇴 취소 시 자동 복원하지 않습니다.
 - 신고 대상자 계정이 물리 삭제되면 `TAGT_USER`를 `NULL`로 변경합니다. 이때 현재 사용자 상세는 존재하지 않으며, 대상 내용 스냅샷과 신고 이력은 신고 관리에서만 익명 운영 이력으로 유지합니다.
+- 신고 대상자 계정이 물리 삭제되면 `TH_CMACTN.TAGT_USER`도 `NULL`로 익명화합니다. 물리 삭제된 대상은 신규 신고와 자동 조치를 실행하지 않으며 기존 `TAGT_TYPE`, `TAGT_NUMB`, 조치 결과와 신고 시점 스냅샷만 운영 이력으로 유지합니다.
+- 관리자 신고 상세의 자동 조치 영역은 `ACTIVE`, `WITHDRAWN`, `DELETE_PENDING` 상태에서 같은 진행 정보와 이력을 제공하며, 대상자 물리 삭제 뒤에도 익명화된 기존 조치 이력을 대상 유형과 번호 기준으로 표시합니다.
 - 신고 대상자 계정이 물리 삭제되면 피신고자의 현재 정보와 프로필·배경 이미지를 신고 상세에 표시하지 않으며, `TAGT_CNTN` 스냅샷만 운영 판단 근거로 유지합니다.
 - 신고 접수 시 `TAGT_CNTN`에 저장한 대상 원문 또는 프로필 스냅샷은 관리자 신고 판단 근거로만 제공하며 일반 사용자에게 공개하지 않습니다.
 - `TAGT_CNTN`은 신고 대상 원본의 수정·삭제, 신고자 또는 대상자의 `WITHDRAWN`, `DELETE_PENDING` 및 물리 삭제 뒤에도 신고 이력과 함께 유지합니다.
@@ -146,15 +176,48 @@
 
 `TAGT_NUMB`는 `TAGT_TYPE`에 따라 사용자, 독후감, 댓글 또는 모임 번호를 가리키므로 단일 물리 외래키를 만들지 않습니다. 신고 등록 API는 대상 유형별 원본 테이블을 고정 매핑하여 대상 존재 여부를 검증하고 조회한 원문을 `TAGT_CNTN`에 변경 불가능한 접수 시점 스냅샷으로 저장하며, 같은 조회에서 확정한 소유 사용자 번호를 `TAGT_USER`에 저장합니다.
 
+### 자동 조치 결과 테이블
+
+`TH_CMACTN`은 동일 대상의 신고 누적 자동 조치 결과를 조치 순번별로 보존하는 수정 불가능한 이력 테이블입니다.
+
+| 순서 | 컬럼 | 데이터 타입 | NULL | 기본값 | 속성 및 참조 | 설명 |
+| ---: | --- | --- | :---: | --- | --- | --- |
+| 1 | `ACTN_NUMB` | `bigint` | N | 없음 | PK, `AUTO_INCREMENT` | 자동 조치 결과 번호 |
+| 2 | `TAGT_TYPE` | `varchar(20)` | N | 없음 | `CMPL_TAGT` 세부코드 | 신고 대상 유형 |
+| 3 | `TAGT_NUMB` | `bigint` | N | 없음 | 대상 유형별 업무 번호, 물리 FK 없음 | 신고 대상 번호 |
+| 4 | `TAGT_USER` | `bigint` | Y | `NULL` | `TM_USERXM.USER_NUMB` FK, 대상자 삭제 시 `NULL` | 신고 대상 소유 사용자 번호 |
+| 5 | `ACTN_TYPE` | `varchar(20)` | N | 없음 | `CMPL_ACTN` 세부코드 | 자동 조치 유형 |
+| 6 | `RSLT_CODE` | `varchar(20)` | N | 없음 | `CMPL_RSLT` 세부코드 | 자동 조치 결과 |
+| 7 | `THRS_CNTT` | `int` | N | 없음 | 조치 시점 설정값 | 자동 조치 임계 신고 건수 |
+| 8 | `CMPL_CNTT` | `int` | N | 없음 | 반려 제외 누적값 | 조치 시점 유효 누적 신고 건수 |
+| 9 | `ACTN_ORDR` | `int` | N | 없음 | 같은 대상의 5건 단위 순번 | 동일 대상 자동 조치 순번 |
+| 10 | `TRIG_CMPL` | `bigint` | Y | `NULL` | `TH_CMPLNT.CMPL_NUMB` FK, 신고 삭제 시 `NULL` | 자동 조치 발생 신고 번호 |
+| 11 | `RSLT_CNTN` | `varchar(1000)` | Y | `NULL` | 내부 처리 설명 | 자동 조치 결과 내용 |
+| 12 | `REGI_DATE` | `datetime(6)` | N | `CURRENT_TIMESTAMP(6)` | 등록 후 변경하지 않음 | 등록 일시 |
+
+| 구분 | 이름 | 컬럼 또는 참조 | 목적 및 삭제 정책 |
+| --- | --- | --- | --- |
+| PK | `PRIMARY` | `ACTN_NUMB` | 자동 조치 결과 단건 식별 |
+| 고유키 | `UK_TH_CMACTN_TAGT_ORDR` | `TAGT_TYPE`, `TAGT_NUMB`, `ACTN_ORDR` | 같은 대상의 동일 5건 단위 조치 중복 차단 |
+| 인덱스 | `IX_TH_CMACTN_TAGT_USER` | `TAGT_USER`, `REGI_DATE`, `ACTN_NUMB` | 사용자별 자동 조치 이력 조회 |
+| 인덱스 | `IX_TH_CMACTN_TRIG` | `TRIG_CMPL` | 조치를 발생시킨 신고 연결 |
+| FK | `FK_TH_CMACTN_TAGT_USER` | `TAGT_USER` → `TM_USERXM.USER_NUMB` | 대상자 물리 삭제 시 `ON DELETE SET NULL`로 익명화 |
+| FK | `FK_TH_CMACTN_TRIG` | `TRIG_CMPL` → `TH_CMPLNT.CMPL_NUMB` | 신고 이력 삭제 시 `ON DELETE SET NULL`로 조치 결과 보존 |
+
 ## 구현 근거
 
 - `scripts/db/mysql/01-create.sql`
 - `scripts/db/mysql/output/02-admin-insert.sql`
 - `src/main/java/org/our/sadari/complaint`
+- `src/main/resources/application-loc.yml`
+- `src/main/resources/application-prod.yml`
 - `src/main/frontend/src/pages/UserReport`
 - `sadari-admin/src/main/java/org/sadari/admin/sadariadmin/currentuser`
 - `sadari-admin/src/main/frontend/src/pages/currentUser/CurrentUserDetailPage.tsx`
 - `TH_CMPLNT`
+- `TH_CMACTN`
 - `CMPL_TAGT`
 - `CMPL_RSON`
 - `CMPL_STAT`
+- `CMPL_ACTN`
+- `CMPL_RSLT`

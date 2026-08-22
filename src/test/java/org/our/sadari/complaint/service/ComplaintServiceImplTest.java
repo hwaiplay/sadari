@@ -14,6 +14,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.complaint.config.ComplaintAutoActionProperties;
+import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintCreateDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
 import org.our.sadari.complaint.mapper.ComplaintMapper;
@@ -21,6 +23,7 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.MessageUtils;
+import org.our.sadari.global.file.service.FileService;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.dao.DuplicateKeyException;
 
@@ -28,11 +31,11 @@ import org.springframework.dao.DuplicateKeyException;
  * fileName       : ComplaintServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 대상 원문 스냅샷 저장과 대상 검증을 확인한다
+ * description    : 신고 대상 원문 저장과 누적 자동 조치를 확인한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    최초 생성·누적 자동 조치 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceImplTest {
@@ -40,6 +43,9 @@ class ComplaintServiceImplTest {
     // 신고 데이터 접근 Mock
     @Mock
     private ComplaintMapper complaintMapper;
+    // 프로필 사진 파일 정리 서비스 Mock
+    @Mock
+    private FileService fileService;
     // 신고 접수 서비스 단위 테스트 대상
     private ComplaintServiceImpl complaintService;
 
@@ -54,8 +60,10 @@ class ComplaintServiceImplTest {
         messageSource.setDefaultEncoding("UTF-8");
         // 실패 응답이 실제 메시지 소스를 조회하도록 정적 객체를 초기화한다
         new MessageUtils().setMessageSource(messageSource);
+        // 대상별 기본 임계치가 5건인 자동 조치 설정을 생성한다
+        ComplaintAutoActionProperties properties = new ComplaintAutoActionProperties();
         // 신고 접수 서비스 단위 테스트 대상을 생성한다
-        complaintService = new ComplaintServiceImpl(complaintMapper);
+        complaintService = new ComplaintServiceImpl(complaintMapper, properties, fileService);
     }
 
     /** 화면 본문이 아니라 서버가 조회한 독후감 원문을 신고 스냅샷으로 저장한다. */
@@ -94,6 +102,118 @@ class ComplaintServiceImplTest {
         assertEquals(22L, complaintCaptor.getValue().getTagtUser());
         assertEquals("서버 원본 독후감", complaintCaptor.getValue().getTagtCntn());
         assertEquals("상세 사유", complaintCaptor.getValue().getCmplCntn());
+    }
+
+    /** 독후감의 유효 신고가 5건 누적되면 연결 데이터와 원본을 삭제하고 조치 이력을 저장한다. */
+    @Test
+    void setComplaintDeletesReportAtThreshold() {
+        // 다섯 번째 독후감 신고 요청을 생성한다
+        ComplaintCreateDto request = createRequest(
+                Constant.COMPLAINT_TARGET_REPORT, "CMPL_ABUSE", null
+        );
+        // 활성 신고자와 유효한 대상 및 사유 코드를 설정한다
+        when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET,
+                Constant.COMPLAINT_TARGET_REPORT)).thenReturn(1);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_REASON,
+                "CMPL_ABUSE")).thenReturn(1);
+        // 잠금 조회한 독후감 원본과 소유자를 설정한다
+        when(complaintMapper.getReportTargetDtl(31L, 7L)).thenReturn(createTarget(22L, "신고 대상 독후감"));
+        // 신규 신고 번호가 자동 조치 발생 신고로 연결되도록 설정한다
+        doAnswer(invocation -> {
+            ComplaintDto complaint = invocation.getArgument(0);
+            complaint.setCmplNumb(95L);
+            return 1;
+        }).when(complaintMapper).setComplaint(any(ComplaintDto.class), eq(7L));
+        // 신규 신고를 포함한 반려 제외 누적 건수가 임계치에 도달하도록 설정한다
+        when(complaintMapper.getAutoActionCmplCnt(Constant.COMPLAINT_TARGET_REPORT, 31L)).thenReturn(5);
+        // 잠금 조회한 독후감 한 건이 완전 삭제되도록 설정한다
+        when(complaintMapper.delAutoReport(31L, 22L)).thenReturn(1);
+        // 자동 조치 결과 이력 한 건이 저장되도록 설정한다
+        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        // 자동 조치와 연결된 미처리 신고가 종결되도록 설정한다
+        when(complaintMapper.uptAutoComplaints(
+                Constant.COMPLAINT_TARGET_REPORT,
+                31L,
+                "누적 신고 5건에 따른 독후감 완전 삭제"
+        )).thenReturn(5);
+
+        // 다섯 번째 독후감 신고를 접수한다
+        ResultData result = complaintService.setComplaint(7L, request);
+
+        // 자동 조치 결과를 확인할 캡처 객체를 생성한다
+        ArgumentCaptor<ComplaintActionDto> actionCaptor = ArgumentCaptor.forClass(ComplaintActionDto.class);
+        // 독후감 삭제 전 연결 댓글과 좋아요가 순서에 맞는 Mapper로 정리되는지 확인한다
+        verify(complaintMapper).delAutoReplLike(31L);
+        verify(complaintMapper).delAutoChildReply(31L);
+        verify(complaintMapper).delAutoReplyList(31L);
+        verify(complaintMapper).delAutoReportLike(31L);
+        verify(complaintMapper).delAutoReport(31L, 22L);
+        // 자동 조치 결과 이력의 저장값을 캡처한다
+        verify(complaintMapper).setAutoAction(actionCaptor.capture());
+        // 관련 미처리 신고가 조치 완료 상태로 변경되는지 확인한다
+        verify(complaintMapper).uptAutoComplaints(
+                Constant.COMPLAINT_TARGET_REPORT,
+                31L,
+                "누적 신고 5건에 따른 독후감 완전 삭제"
+        );
+        // 신고 접수 성공과 첫 번째 5건 단위 조치 이력을 확인한다
+        assertEquals(200, result.getCode());
+        assertEquals(Constant.COMPLAINT_ACTION_DELETE_REPORT, actionCaptor.getValue().getActnType());
+        assertEquals(Constant.COMPLAINT_RESULT_APPLIED, actionCaptor.getValue().getRsltCode());
+        assertEquals(5, actionCaptor.getValue().getThrsCntt());
+        assertEquals(5, actionCaptor.getValue().getCmplCntt());
+        assertEquals(1, actionCaptor.getValue().getActnOrdr());
+        assertEquals(95L, actionCaptor.getValue().getTrigCmpl());
+    }
+
+    /** 프로필 사진의 유효 신고가 5건 누적되면 기본 이미지로 변경하고 파일을 커밋 후 정리한다. */
+    @Test
+    void setComplaintResetsProfileAtThreshold() {
+        // 다섯 번째 프로필 사진 신고 요청을 생성한다
+        ComplaintCreateDto request = createRequest(
+                Constant.COMPLAINT_TARGET_PROFILE, "CMPL_PRIVACY", null
+        );
+        // 활성 신고자와 유효한 대상 및 사유 코드를 설정한다
+        when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET,
+                Constant.COMPLAINT_TARGET_PROFILE)).thenReturn(1);
+        when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_REASON,
+                "CMPL_PRIVACY")).thenReturn(1);
+        // 현재 프로필 사진 파일과 대상 사용자를 잠금 조회한 결과를 생성한다
+        ComplaintDto target = createTarget(31L, "프로필 사진: unsafe.jpg");
+        // 자동 조치 뒤 정리할 현재 프로필 사진 파일 번호를 설정한다
+        target.setFileNumb(501L);
+        // 현재 프로필 사진 신고 대상을 설정한다
+        when(complaintMapper.getProfileTargetDtl(31L, 7L)).thenReturn(target);
+        // 신규 신고 번호가 자동 조치 결과와 연결되도록 설정한다
+        doAnswer(invocation -> {
+            ComplaintDto complaint = invocation.getArgument(0);
+            complaint.setCmplNumb(96L);
+            return 1;
+        }).when(complaintMapper).setComplaint(any(ComplaintDto.class), eq(7L));
+        // 반려 제외 누적 신고가 임계치에 도달하도록 설정한다
+        when(complaintMapper.getAutoActionCmplCnt(Constant.COMPLAINT_TARGET_PROFILE, 31L)).thenReturn(5);
+        // 프로필 사진 참조 한 건이 제거되도록 설정한다
+        when(complaintMapper.uptAutoProfile(31L)).thenReturn(1);
+        // 자동 조치 결과 이력 한 건이 저장되도록 설정한다
+        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        // 자동 조치와 연결된 미처리 신고가 종결되도록 설정한다
+        when(complaintMapper.uptAutoComplaints(
+                Constant.COMPLAINT_TARGET_PROFILE,
+                31L,
+                "누적 신고 5건에 따른 프로필 사진 기본 이미지 초기화"
+        )).thenReturn(5);
+
+        // 다섯 번째 프로필 사진 신고를 접수한다
+        ResultData result = complaintService.setComplaint(7L, request);
+
+        // 프로필 사진 참조 제거와 커밋 후 파일 정리가 연결되는지 확인한다
+        verify(complaintMapper).uptAutoProfile(31L);
+        verify(fileService).delFile(501L);
+        // 프로필 사진 자동 조치가 성공해 신고 번호를 반환하는지 확인한다
+        assertEquals(200, result.getCode());
+        assertEquals(96L, result.getData());
     }
 
     /** 삭제되었거나 본인 소유여서 서버가 조회하지 못한 대상은 신고를 저장하지 않는다. */
