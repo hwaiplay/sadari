@@ -564,8 +564,7 @@ export function useSearchBookPage() {
    * @param book 선택한 책 정보
    * @return 책 선택 이동이 끝나면 완료되는 Promise
    */
-  async function handleSelectBook(book: BookSearchResultType): Promise<void> {
-
+  const handleSelectBook = async (book: BookSearchResultType): Promise<void> => {
     // 독서 타이머에서 진입한 검색은 독후감 등록 화면 대신 목표기간 달력을 바로 연다.
     if (isTimerBookSearch) {
       // 선택한 도서를 타이머 전용 목표 독서기간 모달에 전달한다.
@@ -593,8 +592,8 @@ export function useSearchBookPage() {
       // 독서 수정에서 진입했다면 같은 회차의 수정 화면으로 선택 도서를 돌려보낸다.
       const editRondNumb = Number(pageState.clubReadingEditRondNumb);
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
-        ? `/reading-clubs/${clubNumb}/readings/${editRondNumb}/edit`
-        : `/reading-clubs/${clubNumb}/readings/set`;
+        ? `/reading-clubs/${clubNumb}/${editRondNumb}/edit`
+        : `/reading-clubs/${clubNumb}/set`;
       // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달한다.
       navigate(
         `${readingEntryPath}?isbn=${encodeURIComponent(book.isbn)}`,
@@ -614,7 +613,7 @@ export function useSearchBookPage() {
       // 선택 흐름이 끝나면 다른 책을 선택할 수 있도록 진행 상태를 해제한다.
       setSelectingBookIsbn(null);
     }
-  }
+  };
 
   /**
    * 선택한 책 상세 화면을 현재 개인 또는 모임 검색 흐름에 맞게 연다.
