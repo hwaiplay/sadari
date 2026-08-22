@@ -2,17 +2,18 @@ package org.our.sadari.complaint.mapper;
 
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
 
 /**
  * fileName       : ComplaintMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 대상 원문을 조회하고 신고 접수 이력을 저장한다
+ * description    : 신고 대상 원문과 누적 건수를 조회하고 신고 및 자동 조치 이력을 저장한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성·중복 및 대상 소유자 조회
+ * 2026-08-22        SeungHyeon.Kang    최초 생성·누적 자동 조치 추가
  */
 @Mapper
 public interface ComplaintMapper {
@@ -79,6 +80,26 @@ public interface ComplaintMapper {
     ComplaintDto getReplyTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
+     * 신고 시점에 저장할 다른 사용자의 현재 프로필 사진 정보와 소유자를 잠금 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 사용자 번호
+     * @param userNumb 신고자 사용자 번호
+     * @return 신고 대상 프로필 사진 정보와 소유자
+     */
+    ComplaintDto getProfileTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
+
+    /**
+     * 신고 시점에 저장할 다른 사용자의 현재 한줄소개와 소유자를 잠금 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 사용자 번호
+     * @param userNumb 신고자 사용자 번호
+     * @return 신고 대상 한줄소개와 소유자
+     */
+    ComplaintDto getIntroTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
+
+    /**
      * 서버에서 확정한 대상 내용과 신고 사유를 접수 이력으로 저장한다.
      *
      * @author SeungHyeon.Kang
@@ -87,4 +108,109 @@ public interface ComplaintMapper {
      * @return 저장된 신고 행 수
      */
     int setComplaint(@Param("complaint") ComplaintDto complaint, @Param("userNumb") Long userNumb);
+
+    /**
+     * 반려를 제외한 동일 대상의 유효 누적 신고 건수를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @return 자동 조치 판단에 사용하는 누적 신고 건수
+     */
+    int getAutoActionCmplCnt(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 자동 조치 대상 독후감에 연결된 댓글과 답글의 좋아요를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 독후감 번호
+     * @return 삭제된 좋아요 수
+     */
+    int delAutoReplLike(@Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 자동 조치 대상 독후감의 대댓글을 먼저 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 독후감 번호
+     * @return 삭제된 대댓글 수
+     */
+    int delAutoChildReply(@Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 자동 조치 대상 독후감의 최상위 댓글을 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 독후감 번호
+     * @return 삭제된 댓글 수
+     */
+    int delAutoReplyList(@Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 자동 조치 대상 독후감의 좋아요를 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 독후감 번호
+     * @return 삭제된 좋아요 수
+     */
+    int delAutoReportLike(@Param("tagtNumb") Long tagtNumb);
+
+    /**
+     * 신고 누적 임계치에 도달한 독후감을 완전 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 독후감 번호
+     * @param tagtUser 독후감 소유 사용자 번호
+     * @return 삭제된 독후감 수
+     */
+    int delAutoReport(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
+
+    /**
+     * 신고 누적 임계치에 도달한 댓글을 삭제 상태로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 댓글 번호
+     * @param tagtUser 댓글 소유 사용자 번호
+     * @return 변경된 댓글 수
+     */
+    int delAutoReply(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
+
+    /**
+     * 신고 누적 임계치에 도달한 프로필 사진을 기본 이미지 상태로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtUser 신고 대상 사용자 번호
+     * @return 변경된 사용자 수
+     */
+    int uptAutoProfile(@Param("tagtUser") Long tagtUser);
+
+    /**
+     * 신고 누적 임계치에 도달한 한줄소개를 Null로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtUser 신고 대상 사용자 번호
+     * @return 변경된 사용자 수
+     */
+    int uptAutoIntro(@Param("tagtUser") Long tagtUser);
+
+    /**
+     * 신고 누적 자동 조치 결과를 변경 불가능한 이력으로 저장한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param action 자동 조치 대상과 결과
+     * @return 저장된 자동 조치 결과 수
+     */
+    int setAutoAction(ComplaintActionDto action);
+
+    /**
+     * 동일 대상의 접수 또는 검토 중 신고를 자동 조치 완료 상태로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @param procCntn 자동 조치 처리 설명
+     * @return 조치 완료로 변경된 신고 수
+     */
+    int uptAutoComplaints(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                        , @Param("procCntn") String procCntn);
 }

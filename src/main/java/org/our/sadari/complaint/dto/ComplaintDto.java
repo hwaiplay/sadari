@@ -10,7 +10,7 @@ import lombok.Data;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성·대상 소유자 스냅샷 추가
+ * 2026-08-22        SeungHyeon.Kang    최초 생성·자동 조치 대상 정보 추가
  */
 @Data
 public class ComplaintDto {
@@ -29,6 +29,9 @@ public class ComplaintDto {
 
     // 신고 대상 내용 스냅샷
     private String tagtCntn;
+
+    // 프로필 사진 신고 대상의 파일 번호
+    private Long fileNumb;
 
     // 신고 사유 세부코드
     private String cmplRson;

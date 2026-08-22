@@ -13,16 +13,17 @@ import org.apache.ibatis.mapping.MappedStatement;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.api.Test;
 import org.our.sadari.complaint.dto.ComplaintDto;
+import org.our.sadari.global.common.constant.Constant;
 
 /**
  * fileName       : ComplaintMapperTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 대상 원문 조회와 스냅샷 저장 Mapper SQL을 검증한다
+ * description    : 신고 원문 저장과 누적 자동 조치 Mapper SQL을 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    최초 생성·누적 자동 조치 검증
  */
 class ComplaintMapperTest {
 
@@ -51,10 +52,10 @@ class ComplaintMapperTest {
         // 신고 대상 소유자와 내용 스냅샷 및 접수 상태가 저장 SQL에 포함되는지 확인한다
         assertTrue(sql.contains("TAGT_USER"));
         assertTrue(sql.contains("TAGT_CNTN"));
-        assertTrue(sql.contains("'CMPL_RECEIVED'"));
+        assertTrue(sql.contains("CMPL_STAT"));
     }
 
-    /** 독후감 원문 조회 SQL이 공개된 다른 활성 사용자의 대상만 허용하는지 확인한다. */
+    /** 독후감 원문 조회 SQL이 지원 계정 상태의 공개된 타인 대상만 허용하는지 확인한다. */
     @Test
     void getReportTargetDtlChecksReportableTarget() throws IOException {
         // 운영과 동일한 Mapper XML을 해석할 MyBatis 설정을 생성한다
@@ -68,11 +69,12 @@ class ComplaintMapperTest {
         BoundSql boundSql = statement.getBoundSql(parameters);
         String sql = boundSql.getSql().replaceAll("\\s+", " ").trim();
 
-        // 공개 여부와 본인 소유 차단 및 활성 작성자 조건이 유지되는지 확인한다
-        assertTrue(sql.contains("R.PUBC_YSNO = 'Y'"));
+        // 공개 여부와 본인 소유 차단 및 정책상 허용된 계정 상태가 유지되는지 확인한다
+        assertTrue(sql.contains("R.PUBC_YSNO = ?"));
         assertTrue(sql.contains("R.USER_NUMB != ?"));
-        assertTrue(sql.contains("U.USER_STAT = 'ACTIVE'"));
+        assertTrue(sql.contains("U.USER_STAT IN (?, ?, ?)"));
         assertTrue(sql.contains("R.USER_NUMB AS TAGT_USER"));
+        assertTrue(sql.contains("FOR UPDATE"));
     }
 
     /** 중복 신고 조회 SQL이 사용자와 대상 유형 및 대상 번호를 모두 비교하는지 확인한다. */
@@ -97,6 +99,31 @@ class ComplaintMapperTest {
         assertTrue(sql.contains("USER_NUMB = ?"));
         assertTrue(sql.contains("TAGT_TYPE = ?"));
         assertTrue(sql.contains("TAGT_NUMB = ?"));
+    }
+
+    /** 자동 조치 누적 건수에서 반려 상태를 제외하는지 확인한다. */
+    @Test
+    void getAutoActionCmplCntExcludesRejected() throws IOException {
+        // 운영과 동일한 Mapper XML을 해석할 MyBatis 설정을 생성한다
+        Configuration configuration = loadConfiguration();
+        // 자동 조치 누적 건수 조회 구문의 파라미터를 생성한다
+        Map<String, Object> parameters = Map.of(
+                "tagtType", Constant.COMPLAINT_TARGET_REPORT,
+                "tagtNumb", 31L
+        );
+        // 운영 자동 조치 누적 건수 구문으로 실제 실행 SQL을 생성한다
+        MappedStatement statement = configuration.getMappedStatement(
+                "org.our.sadari.complaint.mapper.ComplaintMapper.getAutoActionCmplCnt"
+        );
+        // 반려 제외 조건을 확인할 SQL을 생성한다
+        BoundSql boundSql = statement.getBoundSql(parameters);
+        String sql = boundSql.getSql().replaceAll("\\s+", " ").trim();
+
+        // 동일 대상 복합키와 반려 제외 조건이 모두 포함되는지 확인한다
+        assertTrue(sql.contains("TAGT_TYPE = ?"));
+        assertTrue(sql.contains("TAGT_NUMB = ?"));
+        assertTrue(sql.contains("CMPL_STAT != ?"));
+        assertTrue(sql.contains("FOR UPDATE"));
     }
 
     /** 운영 신고 Mapper XML을 해석한 MyBatis 설정을 생성한다. */
