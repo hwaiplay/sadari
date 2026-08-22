@@ -54,6 +54,7 @@ import org.springframework.web.client.HttpClientErrorException;
  * 2026-07-30        SeungHyeon.Kang    최초 생성 및 로그인 제공자 검증
  * 2026-08-13        SeungHyeon.Kang    재가입 차단·OAuth 예외 검증
  * 2026-08-16        SeungHyeon.Kang    테스트 간 Locale 변경에도 공통 인증 메시지 검증 안정화
+ * 2026-08-22        SeungHyeon.Kang    Kakao 기본 프로필 제외 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthServiceImplTest {
@@ -310,6 +311,55 @@ class AuthServiceImplTest {
     }
 
     /**
+     * Kakao 기본 프로필 이미지는 서비스 프로필 파일로 저장하지 않는지 검증한다
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception Kakao 인증 응답 대역 구성 중 발생
+     */
+    @Test
+    void kakaoLoginSkipsDefaultImage() throws Exception {
+        // Kakao 토큰 교환 결과를 로그인 서비스에 제공할 객체를 생성한다
+        KakaoTokenDto kakaoToken = new KakaoTokenDto();
+        // 기본 프로필 이미지 사용 상태가 포함된 Kakao 응답을 생성한다
+        KakaoAccountDto kakaoAccount = getKakaoAccount();
+        // Kakao 기본 실루엣을 사용 중인 계정으로 표시한다
+        kakaoAccount.kakao_account.profile.is_default_image = true;
+
+        // Kakao 인가 코드로 토큰을 교환하도록 결과를 구성한다
+        when(kakaoAuthProvider.getKakaoToken("default-profile-code")).thenReturn(kakaoToken);
+        // 토큰으로 기본 프로필 이미지 상태를 조회하도록 결과를 구성한다
+        when(kakaoAuthProvider.getKakaoAccount(kakaoToken)).thenReturn(kakaoAccount);
+        // 현재 회원 테이블 조회용 결정적 암호문을 생성하도록 결과를 구성한다
+        when(userIdEncryptionService.encryptForStorage("12345")).thenReturn("encrypted-provider-id");
+        // 신규 가입 대상이라 현재 회원 행은 조회되지 않도록 구성한다
+        when(userMapper.getUserByIdxx("encrypted-provider-id")).thenReturn(null);
+        // 탈퇴 이력 비교용 식별값 해시를 생성하도록 결과를 구성한다
+        when(userIdEncryptionService.hashForAudit("12345")).thenReturn("hashed-provider-id");
+        // 같은 식별값의 유효 제재가 없도록 구성한다
+        when(userWithdrawalMapper.getActiveSuspensionCountByUserIdHash("hashed-provider-id")).thenReturn(0);
+        // 신규 회원에게 최초 닉네임을 발급하도록 구성한다
+        when(nicknameGenerationService.setGeneratedNickname()).thenReturn("기본 사진 독서가");
+        // 신규 회원 저장 시 회원 번호가 발급되도록 구성한다
+        doAnswer(this::setNewUserNumber).when(userMapper).setUser(any(UserDto.class));
+        // 새 회원에게 Access Token을 발급하도록 결과를 구성한다
+        when(jwtProvider.createAccessToken(eq(99L), eq(AuthConstant.ROLE_USER), anyString())).thenReturn("access-token");
+        // 새 회원에게 Refresh Token을 발급하도록 결과를 구성한다
+        when(jwtProvider.createRefreshToken(eq(99L), anyString())).thenReturn("refresh-token");
+        // Redis 로그인 세션의 유지 시간을 설정하도록 결과를 구성한다
+        when(jwtProvider.getRefreshTokenValidSec()).thenReturn(3600L);
+
+        // Kakao 기본 프로필 이미지를 사용하는 계정으로 로그인한다
+        ResultData result = authService.kakaoLogin("default-profile-code", "127.0.0.1", "test-agent");
+
+        // 기본 프로필 이미지 상태에서도 회원 가입과 로그인이 정상 완료되는지 검증한다
+        assertEquals(200, result.getCode());
+        // Kakao 기본 실루엣을 내부 프로필 파일로 저장하지 않는지 검증한다
+        verify(fileService, never()).setKakaoProfileImage(any(), anyString(), any());
+        // 파일 번호가 없는 기본 프로필 상태를 회원 정보에 반영하는지 검증한다
+        verify(userMapper).uptUserProfile(any(UserDto.class));
+    }
+
+    /**
      * 비활성화 회원 복귀 테스트에 사용할 Kakao 계정 응답을 생성한다
      *
      * @author SeungHyeon.Kang
@@ -327,6 +377,8 @@ class AuthServiceImplTest {
         KakaoAccountDto.KakaoAccount.KakaoProfile profile = new KakaoAccountDto.KakaoAccount.KakaoProfile();
         // 기존 프로필이 없을 때 사용할 Kakao 이미지 주소를 설정한다
         profile.profile_image_url = "https://example.com/profile.png";
+        // 테스트 기본값은 사용자가 직접 설정한 Kakao 프로필 사진으로 지정한다
+        profile.is_default_image = false;
         // Kakao 계정 응답에 프로필을 설정한다
         accountDetail.profile = profile;
         // 최상위 Kakao 응답에 계정 상세를 설정한다
