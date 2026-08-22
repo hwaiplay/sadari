@@ -22,6 +22,7 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -45,6 +46,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 검증
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
+ * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -883,6 +885,62 @@ class ReadingClubServiceImplTest {
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getLatestReadingGoalResult(10L, 20L);
         verify(readingClubMapper, never()).getReadingGoalAchievementMemberList(any(), any());
+    }
+
+    /**
+     * 활성 모임원이 완료 회차 목록을 조회하면 DONE 독후감 페이지를 반환하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getReadingRoundReportListReturnsDoneReportsForActiveMember() {
+        // 완료 회차의 도서 요약과 공개 여부가 다른 DONE 독후감을 구성한다
+        ReadingClubDto.ReadingRoundReportPageDto summary =
+                new ReadingClubDto.ReadingRoundReportPageDto();
+        summary.setClubNumb(10L);
+        summary.setRondNumb(1L);
+        ReportDto privateReport = new ReportDto();
+        privateReport.setReptNumb(101L);
+        privateReport.setReptStat(Constant.REPORT_STAT_DONE);
+        privateReport.setPubcYsno(Constant.COMM_NO);
+
+        // 조회자 접근과 완료 회차 및 독후감 조회 결과가 모두 유효하도록 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingRoundReportSummary(10L, 1L)).thenReturn(summary);
+        when(readingClubMapper.getReadingRoundReportList(
+                20L, 10L, 1L, Constant.SORT_LATEST_DESC, 0, 13))
+                .thenReturn(List.of(privateReport));
+
+        // 활성 모임원으로 완료 회차 독후감 목록을 조회한다
+        ResultData result = readingClubService.getReadingRoundReportList(
+                20L, 10L, 1L, Constant.SORT_LATEST_DESC, 1);
+
+        // 비공개 DONE 독후감도 회차 페이지에 포함되는지 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(summary, result.getData());
+        PageDto<ReportDto> reportPage = summary.getReportPage();
+        assertEquals(List.of(privateReport), reportPage.list());
+        assertEquals(1, reportPage.page());
+        assertEquals(false, reportPage.hasNext());
+    }
+
+    /**
+     * 비활성 계정 또는 비활성 모임원은 비공개 글이 포함된 회차 독후감 목록에 접근할 수 없는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getReadingRoundReportListRejectsInactiveMember() {
+        // 계정과 모임원 관계를 모두 충족한 접근 행이 없도록 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
+
+        // 비활성 접근 관계로 완료 회차 독후감 목록을 조회한다
+        ResultData result = readingClubService.getReadingRoundReportList(
+                20L, 10L, 1L, Constant.SORT_LATEST_DESC, 1);
+
+        // 접근 거절과 회차 및 독후감 조회 미실행을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getReadingRoundReportSummary(any(), any());
     }
 
     /**

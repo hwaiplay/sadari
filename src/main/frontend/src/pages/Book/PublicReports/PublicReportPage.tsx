@@ -19,6 +19,7 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import { useCodeList } from "@/features/Common/utils/codeUtil";
+import { useReadingRoundReports } from "@/features/ReadingClub/hooks/useReadingRoundReports";
 import ReplySheet from "@/features/reply/ReplySheet";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { clsx } from "clsx";
@@ -26,6 +27,7 @@ import { useMemo, useState } from "react";
 import {
   useLocation,
   useNavigate,
+  useParams,
   useSearchParams,
 } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
@@ -75,11 +77,18 @@ const PublicReportPage = () => {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const { clubNumb: clubNumbParam, rondNumb: rondNumbParam } = useParams();
   const [searchParams] = useSearchParams();
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
     {},
   );
-  const [sort, setSort] = useState<PublicReportSortType>("RELATION_DESC");
+  const clubNumb = Number(clubNumbParam);
+  const rondNumb = Number(rondNumbParam);
+  const isClubRoundRoute = Number.isFinite(clubNumb) && clubNumb > 0
+    && Number.isFinite(rondNumb) && rondNumb > 0;
+  const [sort, setSort] = useState<PublicReportSortType>(
+    isClubRoundRoute ? "LATEST_DESC" : "RELATION_DESC",
+  );
   const [status, setStatus] = useState<ReportStatus>("ALL");
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(
     null,
@@ -87,14 +96,41 @@ const PublicReportPage = () => {
 
   const isbn = searchParams.get("isbn") ?? "";
   const isValidIsbn = isbn.trim().length > 0;
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(
+    isbn,
+    sort,
+    status,
+    !isClubRoundRoute && isValidIsbn,
+  );
+  const clubReportsQuery = useReadingRoundReports(
+    clubNumb,
+    rondNumb,
+    sort,
+    isClubRoundRoute,
+  );
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLike();
-  const pageState = (location.state ?? {}) as PublicReportPageState;
+  const routePageState = (location.state ?? {}) as PublicReportPageState;
+  const clubReportSummary = clubReportsQuery.data?.pages[0]?.data;
+  const pageState: PublicReportPageState = isClubRoundRoute
+    ? {
+      title: clubReportSummary?.bookTitl ?? routePageState.title,
+      author: clubReportSummary?.bookAthr ?? routePageState.author,
+      cover: clubReportSummary?.bookCvim ?? routePageState.cover,
+      ratingAverage: clubReportSummary?.ratingAverage ?? routePageState.ratingAverage,
+    }
+    : routePageState;
   const reports = useMemo(() => {
-    // 조회된 공개 독후감 서버 페이지를 화면 순서대로 연결해 반환한다
+    // 현재 경로에 맞는 공개 목록 또는 모임 회차 DONE 독후감 페이지를 화면 순서대로 연결한다
+    if (isClubRoundRoute) {
+      return clubReportsQuery.data?.pages.flatMap(
+        (page) => page.data?.reportPage.list ?? [],
+      ) ?? [];
+    }
+
+    // 도서별 공개 독후감 서버 페이지를 화면 순서대로 연결해 반환한다
     return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
-  }, [publicReportsQuery.data]);
+  }, [clubReportsQuery.data, isClubRoundRoute, publicReportsQuery.data]);
 
   const statusOptions = useMemo<readonly CustomSelectOption<ReportStatus>[]>(() => {
     // 전체 옵션은 화면 전용 값으로 두고 읽는 중 상태를 제외한 READ_STAT 상세코드의 사용 순서를 따릅니다.
@@ -120,7 +156,8 @@ const PublicReportPage = () => {
   }, [reportStatusCodeQuery.data]);
 
   const displayedReports = reports;
-  const hasNextReport = Boolean(publicReportsQuery.hasNextPage);
+  const activeReportsQuery = isClubRoundRoute ? clubReportsQuery : publicReportsQuery;
+  const hasNextReport = Boolean(activeReportsQuery.hasNextPage);
 
   /**
    * handle Toggle Report 사용자 동작을 처리한다
@@ -184,22 +221,22 @@ const PublicReportPage = () => {
     return styles.statusReading;
   };
 
-  if (!isValidIsbn) {
+  if (!isClubRoundRoute && !isValidIsbn) {
     return <div>{message("frontend.common.invalidAccess")}</div>;
   }
 
-  if (publicReportsQuery.isPending) {
+  if (activeReportsQuery.isPending) {
     return <Loading />;
   }
 
-  if (publicReportsQuery.isError) {
+  if (activeReportsQuery.isError) {
     return (
       /* 공개 독후감 조회 실패 안내 영역 */
       <main className={styles.page}>
         <Container className={styles.content}>
           <p className={styles.empty}>
             {getApiErrorMessage(
-              publicReportsQuery.error,
+              activeReportsQuery.error,
               message("frontend.common.tryAgain"),
             )}
           </p>
@@ -254,12 +291,14 @@ const PublicReportPage = () => {
               ariaLabel={message("frontend.home.sort.label")}
               onChange={setSort}
             />
-            <CustomSelect
-              value={status}
-              options={statusOptions}
-              ariaLabel={message("frontend.report.field.status")}
-              onChange={setStatus}
-            />
+            {!isClubRoundRoute ? (
+              <CustomSelect
+                value={status}
+                options={statusOptions}
+                ariaLabel={message("frontend.report.field.status")}
+                onChange={setStatus}
+              />
+            ) : null}
           </section>
 
           {displayedReports.length > 0 ? (
@@ -428,10 +467,10 @@ const PublicReportPage = () => {
               })}
               <InfiniteScrollTrigger
                 hasNext={hasNextReport}
-                isLoading={publicReportsQuery.isFetchingNextPage}
+                isLoading={activeReportsQuery.isFetchingNextPage}
                 onLoadMore={() => {
-                  // 목록 하단에 도달하면 다음 공개 독후감 서버 페이지를 조회한다
-                  void publicReportsQuery.fetchNextPage();
+                  // 목록 하단에 도달하면 현재 경로의 다음 독후감 서버 페이지를 조회한다
+                  void activeReportsQuery.fetchNextPage();
                 }}
               />
             </section>
@@ -439,7 +478,11 @@ const PublicReportPage = () => {
             <p className={styles.empty}>
               {reports.length > 0
                 ? /* "선택한 조건에 맞는 독후감이 없어요." */ message("frontend.book.publicReports.filteredEmpty")
-                : message("frontend.book.publicReports.empty")}
+                : message(
+                  isClubRoundRoute
+                    ? "frontend.readingClub.result.noDoneReports"
+                    : "frontend.book.publicReports.empty",
+                )}
             </p>
           )}
         </div>

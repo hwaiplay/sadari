@@ -13,6 +13,8 @@ import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import org.our.sadari.book.dto.BookDto;
+import org.our.sadari.global.common.dto.PageDto;
+import org.our.sadari.report.dto.ReportDto;
 
 /**
  * fileName       : ReadingClubDto
@@ -26,6 +28,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·독서 등록 DTO 추가
  * 2026-08-15        Hanwon.Jang    현재 독서 목표 현황 응답 필드 추가
  * 2026-08-20        Hanwon.Jang        현재 독후감 편집·독서 관리 추가
+ * 2026-08-22        HanWon.Jang        종료 결과·독후감 페이지 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -458,6 +461,45 @@ public final class ReadingClubDto {
 
         @Schema(description = "공개 가능한 목표 달성자 프로필 목록")
         private List<MemberProfileDto> achievementMemberList;
+    }
+
+    /**
+     * fileName       : ReadingRoundReportPageDto
+     * author         : HanWon.Jang
+     * date           : 2026-08-22
+     * description    : 모임 독서 회차의 도서 정보와 완료 독후감 페이지를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-22        HanWon.Jang        최초 생성
+     */
+    @Data
+    @Schema(description = "모임 독서 회차 완료 독후감 페이지")
+    public static class ReadingRoundReportPageDto {
+
+        @Schema(description = "모임 번호")
+        private Long clubNumb;
+
+        @Schema(description = "모임별 회차 번호")
+        private Long rondNumb;
+
+        @Schema(description = "모임 내 독서 순번")
+        private Long readingOrdr;
+
+        @Schema(description = "도서 제목")
+        private String bookTitl;
+
+        @Schema(description = "도서 저자")
+        private String bookAthr;
+
+        @Schema(description = "도서 표지 이미지 URL")
+        private String bookCvim;
+
+        @Schema(description = "회차 완료 독후감 평균 별점")
+        private String ratingAverage;
+
+        @Schema(description = "회차 완료 독후감 페이지")
+        private PageDto<ReportDto> reportPage;
     }
 
     /**

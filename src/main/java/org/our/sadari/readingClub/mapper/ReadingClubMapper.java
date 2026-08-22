@@ -4,6 +4,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
+import org.our.sadari.report.dto.ReportDto;
 
 /**
  * fileName       : ReadingClubMapper
@@ -16,6 +17,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-05        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 메서드 추가
  * 2026-08-20        SeungHyeon.Kang    현재 독서 수정 메서드 추가
+ * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -346,6 +348,47 @@ public interface ReadingClubMapper {
      */
     List<ReadingClubDto.MemberProfileDto> getReadingGoalAchievementMemberList(
             @Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 활성 계정과 활성 모임원 관계를 모두 유지하는 조회자인지 확인한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @return 활성 모임원 접근 관계 수
+     */
+    int getActiveMemberAccessCnt(@Param("clubNumb") Long clubNumb
+                               , @Param("userNumb") Long userNumb);
+
+    /**
+     * 완료된 모임 독서 회차의 도서와 완료 독후감 평균 별점을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호
+     * @return 완료 회차 독후감 페이지 요약
+     */
+    ReadingClubDto.ReadingRoundReportPageDto getReadingRoundReportSummary(
+            @Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 완료된 모임 독서 회차에서 현재 활성 모임원이 작성한 완료 독후감을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호
+     * @param sortType 정렬 코드
+     * @param pageOffset 목록 조회 시작 위치
+     * @param pageLimit 다음 페이지 판정용 조회 건수
+     * @return 공개 여부와 무관한 완료 독후감 목록
+     */
+    List<ReportDto> getReadingRoundReportList(@Param("userNumb") Long userNumb
+                                             , @Param("clubNumb") Long clubNumb
+                                             , @Param("rondNumb") Long rondNumb
+                                             , @Param("sortType") String sortType
+                                             , @Param("pageOffset") int pageOffset
+                                             , @Param("pageLimit") int pageLimit);
 
     /**
      * 목표 종료일이 지난 회차 참여자의 달성 여부를 독후감 상태로 확정한다.

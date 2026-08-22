@@ -12,6 +12,7 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.dto.PageDto;
 import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -37,7 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
- * 2026-08-22        HanWon.Jang        종료 독서 결과 처리
+ * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -60,6 +61,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final String CLUB_ACTIVE = "ACTIVE";
     // 현재 모임에 참여 중인 활성 모임원 상태 코드
     private static final String MEMBER_ACTIVE = "ACTIVE";
+    // 모임 회차 독후감 목록이 한 번에 조회할 화면 항목 수
+    private static final int REPORT_PAGE_SIZE = 12;
     // 승인된 가입 신청 상태 코드
     private static final String APPLICATION_APPROVED = "APPROVED";
     // 거절된 가입 신청 상태 코드
@@ -418,6 +421,71 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         result.setAchievementMemberList(
                 readingClubMapper.getReadingGoalAchievementMemberList(clubNumb, result.getRondNumb()));
         // 종료 회차 요약과 공개 가능한 달성자 목록을 반환한다
+        return ResultData.success(result);
+    }
+
+    /**
+     * 활성 모임원에게 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
+     * 비활성 계정과 비활성 모임 관계의 작성자는 목록에서 제외한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호
+     * @param sortType 독후감 정렬 코드
+     * @param page 조회할 페이지 번호
+     * @return 회차 도서 정보와 완료 독후감 페이지
+     */
+    @Override
+    public ResultData getReadingRoundReportList(Long userNumb, Long clubNumb, Long rondNumb
+                                               , String sortType, int page) {
+        // 접근 관계와 대상 회차를 특정할 식별값이 없으면 조회하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 활성 계정이면서 현재 활성 모임원인 사용자만 비공개 독후감이 포함된 목록에 접근할 수 있다
+        if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) < 1) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 요청한 완료 회차의 도서와 평균 별점 정보를 조회한다
+        ReadingClubDto.ReadingRoundReportPageDto result =
+                readingClubMapper.getReadingRoundReportSummary(clubNumb, rondNumb);
+        // 완료된 대상 회차가 없으면 임의 회차의 독후감을 노출하지 않는다
+        if (StringUtil.isEmpty(result)) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        // 화면에서 지원하는 정렬 코드만 허용하고 나머지는 최신순으로 보정한다
+        String normalizedSortType = StringUtil.normalizePlainText(sortType);
+        if (!Constant.SORT_RELATION_DESC.equals(normalizedSortType)
+                && !Constant.SORT_LATEST_DESC.equals(normalizedSortType)
+                && !Constant.SORT_GRADE_DESC.equals(normalizedSortType)
+                && !Constant.SORT_LIKE_DESC.equals(normalizedSortType)) {
+            normalizedSortType = Constant.SORT_LATEST_DESC;
+        }
+
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 완료 독후감을 조회한다
+        List<ReportDto> searchedList = readingClubMapper.getReadingRoundReportList(
+                userNumb, clubNumb, rondNumb, normalizedSortType
+              , (normalizedPage - 1) * REPORT_PAGE_SIZE, REPORT_PAGE_SIZE + 1);
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReportDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 제한 건수보다 한 건 더 조회되었는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > REPORT_PAGE_SIZE;
+        // 화면에는 현재 페이지 크기만 전달한다
+        List<ReportDto> visibleList = hasNext
+                ? safeList.subList(0, REPORT_PAGE_SIZE)
+                : safeList;
+        // 회차 도서 요약에 완료 독후감 페이지를 결합한다
+        result.setReportPage(new PageDto<>(visibleList, normalizedPage, hasNext));
+        // 공개 여부와 무관한 완료 독후감 페이지를 현재 활성 모임원에게 반환한다
         return ResultData.success(result);
     }
 
