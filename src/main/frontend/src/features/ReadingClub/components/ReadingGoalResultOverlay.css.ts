@@ -71,6 +71,7 @@ globalStyle(`${surface}::-webkit-scrollbar`, {
 globalStyle(`${surface} > *`, {
   position: "relative",
   zIndex: 1,
+  flexShrink: 0,
 });
 
 const articleSurface = {
@@ -106,7 +107,7 @@ export const closeButton = style({
   padding: 0,
   border: 0,
   borderRadius: "50%",
-  background: vars.color.gray200,
+  background: vars.color.gray100,
   display: "flex",
   alignItems: "center",
   justifyContent: "center",
@@ -114,7 +115,7 @@ export const closeButton = style({
   transition: "background 160ms ease",
   selectors: {
     "&:hover": {
-      background: vars.color.gray300,
+      background: vars.color.gray200,
     },
     "&:focus-visible": {
       outline: `2px solid ${vars.color.brand}`,
@@ -380,6 +381,17 @@ export const navigationRow = style({
   letterSpacing: "-0.16px",
 });
 
+export const navigationButton = style([
+  navigationRow,
+  {
+    width: "100%",
+    border: 0,
+    background: "transparent",
+    cursor: "pointer",
+    textAlign: "left",
+  },
+]);
+
 export const navigationRowMuted = style([
   navigationRow,
   {
@@ -388,7 +400,7 @@ export const navigationRowMuted = style([
   },
 ]);
 
-globalStyle(`${navigationRow} img, ${navigationRowMuted} img`, {
+globalStyle(`${navigationRow} img, ${navigationButton} img, ${navigationRowMuted} img`, {
   width: 18,
   height: 18,
   flexShrink: 0,
