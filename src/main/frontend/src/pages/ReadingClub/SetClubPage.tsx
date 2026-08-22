@@ -2,28 +2,31 @@ import { message } from "@/app/messages/message";
 import { ActionButton } from "@/components/Button/ActionButton";
 import Skeleton from "@/components/Skeleton/Skeleton";
 import InterestSelectModal from "@/features/ReadingClub/components/InterestSelectModal";
-import { createPortal } from "react-dom";
 import {
   type SetClubPageMode,
   useSetClubPage,
 } from "@/features/ReadingClub/hooks/useSetClubPage.ts";
 import * as styles from "./SetClubPage.css";
 
+/**
+ * fileName       : SetClubPage
+ * author         : HanWon.Jang
+ * date           : 2026-08-22
+ * description    : 모임 개설 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-22        HanWon.Jang    진행 회차 공개 범위 잠금 안내 추가
+ */
+
 const SET_CLUB_FORM_ID = "set-club-form";
+const VISIBILITY_RESTRICTION_ID = "club-visibility-restriction";
 
 type SetClubPageProps = {
   mode?: SetClubPageMode;
 };
 
-/**
- * 모임 공개 범위, 가입 방식, 카테고리와 정원을 입력하는 저장 화면을 구성한다
- *
- * @author Hanwon.Jang
- * @param props 모임 폼 동작 모드
- * @return 모임 만들기 또는 수정 화면
- */
 export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
-  // 모임 저장 화면 로직 훅에서 입력 상태와 사용자 이벤트 처리 함수를 가져온다
   const {
     addQuestion,
     catalog,
@@ -35,6 +38,7 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
     isEditMode,
     isLoading,
     isSaving,
+    isVisibilityLocked,
     openCategoryModal,
     removeCategory,
     removeQuestion,
@@ -48,7 +52,7 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
     updateQuestion,
   } = useSetClubPage(mode);
 
-  // 수정할 모임 정보를 조회하는 동안 폼 크기의 스켈레톤을 표시한다
+  // 수정할 모임 정보를 조회하는 동안 폼 크기의 스켈레톤을 표시
   if (isLoading) {
     return (
       <main
@@ -61,7 +65,7 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
     );
   }
 
-  // 선택 카드와 삭제 버튼의 공통 상태 스타일을 적용한 모임 생성 폼을 반환한다
+  // 선택 카드와 삭제 버튼의 공통 상태 스타일을 적용한 모임 생성 폼을 반환
   return (
     <>
       <div className={styles.page}>
@@ -130,10 +134,14 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
           {/* 모임 공개 범위 선택 영역 */}
           <section className={styles.field}>
             <h2 className={styles.label}>{message("frontend.readingClub.set.visibilityLabel")}</h2>
-            <div className={styles.optionGrid}>
+            <div
+              className={styles.optionGrid}
+              aria-describedby={isVisibilityLocked ? VISIBILITY_RESTRICTION_ID : undefined}
+            >
               <button
                 className={styles.option}
                 data-selected={form.clubVisb === "PUBLIC"}
+                disabled={isVisibilityLocked}
                 type="button"
                 onClick={() => selectVisibility("PUBLIC")}
               >
@@ -143,6 +151,7 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
               <button
                 className={styles.option}
                 data-selected={form.clubVisb === "PRIVATE"}
+                disabled={isVisibilityLocked}
                 type="button"
                 onClick={() => selectVisibility("PRIVATE")}
               >
@@ -150,6 +159,11 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
                 <span className={styles.optionDescription}>{message("frontend.readingClub.set.privateDescription")}</span>
               </button>
             </div>
+            {isVisibilityLocked ? (
+              <p id={VISIBILITY_RESTRICTION_ID} className={styles.description}>
+                {message("frontend.readingClub.set.visibilityLockedDescription")}
+              </p>
+            ) : null}
           </section>
 
           {/* 모임 가입 방식 선택 영역 */}

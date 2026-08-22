@@ -159,6 +159,20 @@ export const option = style([
     padding: 16,
     borderRadius: 8,
     cursor: "pointer",
+    selectors: {
+      "&:disabled": {
+        opacity: 0.6,
+        cursor: "not-allowed",
+      },
+      "&:disabled:hover": {
+        backgroundColor: vars.color.gray100,
+        color: vars.color.gray600,
+      },
+      "&:disabled[data-selected='true']:hover": {
+        backgroundColor: vars.color.brandBg,
+        color: vars.color.brandText,
+      },
+    },
   },
 ]);
 

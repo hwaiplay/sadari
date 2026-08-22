@@ -1,6 +1,17 @@
 import SetClubPage from "./SetClubPage";
 
 /**
+ * fileName       : EditClubPage
+ * author         : Hanwon.Jang
+ * date           : 2026-08-22
+ * description    : 모임 수정 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-22        Hanwon.Jang    주석 추가
+ */
+
+/**
  * 기존 모임 정보를 불러와 수정 폼을 표시한다.
  *
  * @author SeungHyeon.Kang

@@ -12,6 +12,17 @@ import { getUserInterestCatalogApi, type UserInterest } from "@/features/User/ap
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
+/**
+ * fileName       : useSetClubPage
+ * author         : HanWon.Jang
+ * date           : 2026-08-22
+ * description    : 모임 생성 및 수정 화면의 입력 상태와 카테고리 조회 및 제출 처리를 관리하는 훅
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-22        HanWon.Jang    진행 회차 공개 범위 잠금 추가
+ */
+
 export type SetClubPageMode = "create" | "edit";
 
 const INITIAL_CLUB_FORM: ClubCreateParams = {
@@ -25,9 +36,6 @@ const INITIAL_CLUB_FORM: ClubCreateParams = {
 };
 
 /**
- * 모임 생성 및 수정 화면의 입력 상태와 카테고리 조회 및 제출 처리를 관리한다
- *
- * @author Hanwon.Jang
  * @param mode 모임 폼 동작 모드
  * @return 모임 생성 및 수정 화면 상태와 이벤트 처리 함수
  */
@@ -39,6 +47,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(mode === "edit");
   const [isSaving, setIsSaving] = useState(false);
+  const [isVisibilityLocked, setIsVisibilityLocked] = useState(false);
   const [form, setForm] = useState<ClubCreateParams>(INITIAL_CLUB_FORM);
 
   useEffect(() => {
@@ -93,6 +102,8 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
           categoryList: detail.categoryList?.map((category) => category.intrCode) ?? [],
           questionList: detail.questionList ?? [],
         });
+        // 예정 또는 진행 중인 독서 회차가 있으면 기존 공개 범위를 유지한다
+        setIsVisibilityLocked(typeof detail.currentRondNumb === "number");
       })
       .catch((error) => {
         // "모임 정보를 불러오지 못했어요"
@@ -115,7 +126,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
   /**
    * 모임 이름 입력값을 생성 상태에 반영한다
    *
-   * @author Hanwon.Jang
+   * @author HanWon.Jang
    * @param event 모임 이름 입력 이벤트
    * @return 반환값이 없다
    */
@@ -144,6 +155,12 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
    * @return 반환값이 없다
    */
   const selectVisibility = (clubVisb: "PUBLIC" | "PRIVATE"): void => {
+    // 진행 회차가 있는 수정 화면에서는 공개 범위 상태를 변경하지 않는다
+    if (isVisibilityLocked) {
+      // 서버 정책과 동일하게 기존 공개 범위를 유지한다
+      return;
+    }
+
     // 비공개 모임은 초대 가입으로 자동 고정한다
     setForm((current) => ({
       ...current,
@@ -361,6 +378,7 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
     isCategoryOpen,
     isLoading,
     isSaving,
+    isVisibilityLocked,
     isEditMode: mode === "edit",
     openCategoryModal,
     removeCategory,
