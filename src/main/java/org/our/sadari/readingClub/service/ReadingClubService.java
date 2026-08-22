@@ -81,6 +81,24 @@ public interface ReadingClubService {
     ResultData getClubMemberList(Long userNumb, Long clubNumb);
 
     /**
+     * 활성 모임원에게 종료된 최신 독서 회차의 목표 결과를 제공한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @return 종료된 최신 독서 목표 결과
+     */
+    ResultData getReadingGoalResult(Long userNumb, Long clubNumb);
+
+    /**
+     * 목표 종료일이 지난 독서 회차의 참여자 달성 여부와 회차 상태를 확정한다.
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    void completeExpiredReadingRound();
+
+    /**
      * 모임 정보와 카테고리 및 가입 질문을 저장하고 개설자를 모임장으로 등록한다.
      *
      * @author SeungHyeon.Kang

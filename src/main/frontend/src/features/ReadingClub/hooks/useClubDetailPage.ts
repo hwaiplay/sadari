@@ -8,9 +8,11 @@ import {
   getClubApplicationListApi,
   getClubDtlApi,
   getClubMemberListApi,
+  getClubReadingGoalResultApi,
   joinClubApi,
   type ClubApplication,
   type ClubMemberProfile,
+  type ClubReadingGoalResult,
   type ReadingClub,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useCallback, useEffect, useState } from "react";
@@ -32,6 +34,7 @@ export const useClubDetailPage = () => {
   const [answers, setAnswers] = useState<string[]>([]);
   const [applications, setApplications] = useState<ClubApplication[]>([]);
   const [members, setMembers] = useState<ClubMemberProfile[]>([]);
+  const [readingGoalResult, setReadingGoalResult] = useState<ClubReadingGoalResult | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
   /**
@@ -42,9 +45,10 @@ export const useClubDetailPage = () => {
    */
   const loadPage = useCallback(async (): Promise<void> => {
     const detail = await getClubDtlApi(clubNumb);
-    const [nextMembers, nextApplications] = await Promise.all([
+    const [nextMembers, nextApplications, nextReadingGoalResult] = await Promise.all([
       detail.membStat === "ACTIVE" ? getClubMemberListApi(clubNumb) : Promise.resolve([]),
       detail.membRole === "OWNER" ? getClubApplicationListApi(clubNumb) : Promise.resolve([]),
+      detail.membStat === "ACTIVE" ? getClubReadingGoalResultApi(clubNumb) : Promise.resolve(null),
     ]);
 
     // 기존 답변을 유지하면서 서버 질문 수에 맞춘다.
@@ -52,6 +56,7 @@ export const useClubDetailPage = () => {
     setClub(detail);
     setMembers(nextMembers);
     setApplications(nextApplications);
+    setReadingGoalResult(nextReadingGoalResult);
   }, [clubNumb]);
 
   /**
@@ -256,6 +261,7 @@ export const useClubDetailPage = () => {
     club,
     isDeleting,
     members,
+    readingGoalResult,
     handleAnswerChange,
     handleApplicationDecision,
     handleClubAction,

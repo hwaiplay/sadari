@@ -326,6 +326,44 @@ public interface ReadingClubMapper {
     List<ReadingClubDto.MemberProfileDto> getClubMemberList(Long clubNumb);
 
     /**
+     * 종료된 최신 독서 회차의 도서와 목표 집계 결과를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @param userNumb 로그인 사용자 번호
+     * @return 종료된 최신 독서 목표 결과
+     */
+    ReadingClubDto.ReadingGoalResultDto getLatestReadingGoalResult(@Param("clubNumb") Long clubNumb
+                                                                  , @Param("userNumb") Long userNumb);
+
+    /**
+     * 종료된 회차에서 공개 가능한 목표 달성자 프로필을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호
+     * @return 목표 달성자 프로필 목록
+     */
+    List<ReadingClubDto.MemberProfileDto> getReadingGoalAchievementMemberList(
+            @Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 목표 종료일이 지난 회차 참여자의 달성 여부를 독후감 상태로 확정한다.
+     *
+     * @author HanWon.Jang
+     * @return 달성 여부가 확정된 참여자 수
+     */
+    int uptExpiredReadingParticipantGoal();
+
+    /**
+     * 참여자 목표 확정이 끝난 만료 회차를 완료 상태로 변경한다.
+     *
+     * @author HanWon.Jang
+     * @return 완료 상태로 변경된 회차 수
+     */
+    int uptExpiredReadingRound();
+
+    /**
      * 모임의 만료된 초대 예약석을 물리 삭제한다.
      *
      * @author SeungHyeon.Kang

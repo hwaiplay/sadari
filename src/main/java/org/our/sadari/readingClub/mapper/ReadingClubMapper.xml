@@ -13,6 +13,7 @@
         <bind name="applicationPending" value="'PENDING'" />
         <bind name="roundScheduled" value="'SCHEDULED'" />
         <bind name="roundReading" value="'READING'" />
+        <bind name="roundCompleted" value="'COMPLETED'" />
         <bind name="userActive" value="'ACTIVE'" />
         <bind name="reportRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="reportDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
@@ -216,6 +217,50 @@
              , REPORT.UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE PART.CLUB_NUMB = #{clubNumb}
            AND PART.ROND_NUMB = #{rondNumb}
+    </update>
+
+    <!-- 목표 종료일이 지난 회차의 참여자별 달성 여부를 연결 독후감 상태로 고정한다. -->
+    <update id="uptExpiredReadingParticipantGoal">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptExpiredReadingParticipantGoal */
+               TB_CLPART PART
+          JOIN TM_CLRNDX ROUNDX
+            ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+           AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+     LEFT JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+           AND REPORT.USER_NUMB = PART.USER_NUMB
+           SET PART.GOAL_YSNO = CASE WHEN REPORT.REPT_STAT = #{reportDone} THEN #{commYes}
+                                     ELSE #{commNo}
+                                END
+             , PART.ACHV_DATE = CASE WHEN REPORT.REPT_STAT = #{reportDone}
+                                     THEN COALESCE(PART.ACHV_DATE, CURRENT_TIMESTAMP(6))
+                                     ELSE NULL
+                                END
+             , PART.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE ROUNDX.ROND_STAT IN (#{roundScheduled}, #{roundReading})
+           AND DATE(ROUNDX.GOAL_ENDT) <![CDATA[<]]> CURRENT_DATE
+           AND PART.GOAL_YSNO IS NULL
+    </update>
+
+    <!-- 참여자 결과가 고정된 목표 종료 회차를 완료 상태로 변경한다. -->
+    <update id="uptExpiredReadingRound">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptExpiredReadingRound */
+               TM_CLRNDX ROUNDX
+           SET ROUNDX.ROND_STAT = #{roundCompleted}
+             , ROUNDX.OPEN_DATE = COALESCE(ROUNDX.OPEN_DATE, CURRENT_TIMESTAMP(6))
+             , ROUNDX.COMP_DATE = COALESCE(ROUNDX.COMP_DATE, CURRENT_TIMESTAMP(6))
+             , ROUNDX.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE ROUNDX.ROND_STAT IN (#{roundScheduled}, #{roundReading})
+           AND DATE(ROUNDX.GOAL_ENDT) <![CDATA[<]]> CURRENT_DATE
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_CLPART PART
+                WHERE PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+                  AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+                  AND PART.GOAL_YSNO IS NULL
+           )
     </update>
 
     <!-- 사용자가 저장한 독서 관심분야 수를 조회한다. -->
@@ -733,6 +778,97 @@
       ORDER BY CASE WHEN MEMBER.MEMB_ROLE = #{ownerRole} THEN 0 ELSE 1 END
              , MEMBER.JOIN_DATE
              , MEMBER.USER_NUMB
+    </select>
+
+    <!-- 활성 모임원에게 공개할 최신 완료 회차의 도서와 고정 목표 결과를 조회한다. -->
+    <select id="getLatestReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getLatestReadingGoalResult */
+               ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.ROND_NUMB AS READING_ORDR
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+             , DATE_FORMAT(ROUNDX.GOAL_STDT, '%Y-%m-%d') AS GOAL_STDT
+             , DATE_FORMAT(ROUNDX.GOAL_ENDT, '%Y-%m-%d') AS GOAL_ENDT
+             , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
+                                AND MEMBER.USER_NUMB IS NOT NULL
+                                AND USERX.USER_NUMB IS NOT NULL THEN 1 END) AS PART_CNT
+             , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
+                                AND MEMBER.USER_NUMB IS NOT NULL
+                                AND USERX.USER_NUMB IS NOT NULL
+                                AND PART.GOAL_YSNO = #{commYes} THEN 1 END) AS GOAL_ACHV_CNT
+             , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
+                                AND MEMBER.USER_NUMB IS NOT NULL
+                                AND USERX.USER_NUMB IS NOT NULL
+                                AND TRIM(COALESCE(REPORT.REPT_CNTN, '')) != '' THEN 1 END) AS REPORT_CNT
+             , CASE WHEN COUNT(CASE WHEN PART.USER_NUMB = #{userNumb}
+                                          AND PART.ANON_YSNO = #{commNo}
+                                          AND PART.GOAL_YSNO = #{commYes} THEN 1 END) > 0
+                    THEN TRUE ELSE FALSE
+                END AS MY_GOAL_ACHIEVED
+          FROM (  SELECT TARGET.CLUB_NUMB
+                       , TARGET.ROND_NUMB
+                       , TARGET.BOOK_NUMB
+                       , TARGET.GOAL_STDT
+                       , TARGET.GOAL_ENDT
+                    FROM TM_CLRNDX TARGET
+                   WHERE TARGET.CLUB_NUMB = #{clubNumb}
+                     AND TARGET.ROND_STAT = #{roundCompleted}
+                ORDER BY TARGET.ROND_NUMB DESC
+                   LIMIT 1
+               ) ROUNDX
+          JOIN TM_BKINFO BOOK
+            ON BOOK.BOOK_NUMB = ROUNDX.BOOK_NUMB
+     LEFT JOIN TB_CLPART PART
+            ON PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+           AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+     LEFT JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+     LEFT JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+           AND REPORT.USER_NUMB = PART.USER_NUMB
+      GROUP BY ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.BOOK_NUMB
+             , ROUNDX.GOAL_STDT
+             , ROUNDX.GOAL_ENDT
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+    </select>
+
+    <!-- 완료 회차의 고정 달성자 중 현재 공개 가능한 활성 프로필만 조회한다. -->
+    <select id="getReadingGoalAchievementMemberList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberProfileDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getReadingGoalAchievementMemberList */
+               USERX.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , MEMBER.MEMB_ROLE
+          FROM TB_CLPART PART
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TM_FILEXM FILEX
+            ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+           AND PART.GOAL_YSNO = #{commYes}
+           AND PART.ANON_YSNO = #{commNo}
+      ORDER BY CASE WHEN MEMBER.MEMB_ROLE = #{ownerRole} THEN 0 ELSE 1 END
+             , MEMBER.JOIN_DATE
+             , USERX.USER_NUMB
     </select>
 
     <!-- 모임 정원에서 제외할 만료된 초대 예약석을 물리 삭제한다. -->

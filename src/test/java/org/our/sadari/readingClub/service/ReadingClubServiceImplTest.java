@@ -16,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.book.mapper.BookMapper;
@@ -826,5 +827,77 @@ class ReadingClubServiceImplTest {
         assertEquals(200, result.getCode());
         verify(readingClubMapper).delOwnerInvitation(10L, 30L, 20L);
         verify(readingClubMapper, never()).delInvitation(10L, 30L);
+    }
+
+    /**
+     * 종료된 최신 회차의 목표 결과와 공개 가능한 달성자 목록을 활성 모임원에게 반환하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getReadingGoalResultReturnsLatestResultForActiveMember() {
+        // 조회 사용자를 활성 모임원으로 구성한다.
+        ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
+        requester.setMembStat("ACTIVE");
+
+        // 종료된 최신 회차의 집계 결과를 구성한다.
+        ReadingClubDto.ReadingGoalResultDto readingResult = new ReadingClubDto.ReadingGoalResultDto();
+        readingResult.setClubNumb(10L);
+        readingResult.setRondNumb(3L);
+        readingResult.setPartCnt(2);
+        readingResult.setGoalAchvCnt(1);
+
+        // 계정 정책상 공개 가능한 목표 달성자를 구성한다.
+        ReadingClubDto.MemberProfileDto achievementMember = new ReadingClubDto.MemberProfileDto();
+        achievementMember.setUserNumb(20L);
+        achievementMember.setUserNick("모임원");
+
+        when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(requester);
+        when(readingClubMapper.getLatestReadingGoalResult(10L, 20L)).thenReturn(readingResult);
+        when(readingClubMapper.getReadingGoalAchievementMemberList(10L, 3L))
+                .thenReturn(List.of(achievementMember));
+
+        // 종료된 독서 목표 결과를 조회한다.
+        ResultData result = readingClubService.getReadingGoalResult(20L, 10L);
+
+        // 집계 결과와 달성자 목록을 함께 반환하는지 검증한다.
+        assertEquals(200, result.getCode());
+        assertEquals(readingResult, result.getData());
+        assertEquals(List.of(achievementMember), readingResult.getAchievementMemberList());
+    }
+
+    /**
+     * 활성 모임원이 아닌 사용자의 종료 독서 목표 결과 조회를 거절하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getReadingGoalResultRejectsNonMember() {
+        // 조회 사용자가 모임원이 아니도록 구성한다.
+        when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(null);
+
+        // 모임 외부 사용자로 종료 결과를 조회한다.
+        ResultData result = readingClubService.getReadingGoalResult(20L, 10L);
+
+        // 접근 거절과 결과 집계 SQL 미호출을 검증한다.
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getLatestReadingGoalResult(10L, 20L);
+        verify(readingClubMapper, never()).getReadingGoalAchievementMemberList(any(), any());
+    }
+
+    /**
+     * 종료 스케줄러 처리가 참여자 결과를 먼저 확정한 뒤 회차를 종료하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void completeExpiredReadingRoundFinalizesParticipantsBeforeRound() {
+        // 종료된 회차 확정 작업을 실행한다.
+        readingClubService.completeExpiredReadingRound();
+
+        // 참여자 목표 결과 확정 후 회차 종료 순서가 유지되는지 검증한다.
+        InOrder completionOrder = org.mockito.Mockito.inOrder(readingClubMapper);
+        completionOrder.verify(readingClubMapper).uptExpiredReadingParticipantGoal();
+        completionOrder.verify(readingClubMapper).uptExpiredReadingRound();
     }
 }

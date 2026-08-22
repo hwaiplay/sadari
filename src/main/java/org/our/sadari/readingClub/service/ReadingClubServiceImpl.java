@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·초대·독서 처리 추가
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
+ * 2026-08-22        HanWon.Jang        종료 독서 결과 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -378,6 +379,61 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         List<ReadingClubDto.MemberProfileDto> members = readingClubMapper.getClubMemberList(clubNumb);
         // 접근 가능한 모임원 프로필 목록을 반환한다
         return ResultData.success(members);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @return 종료된 최신 독서 목표 결과
+     */
+    @Override
+    public ResultData getReadingGoalResult(Long userNumb, Long clubNumb) {
+        // 종료 결과 조회에 필요한 두 식별값이 없으면 권한과 결과를 조회하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 요청 사용자의 현재 모임원 관계를 조회한다
+        ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, userNumb);
+        // 현재 활성 모임원만 종료 회차 결과를 볼 수 있다
+        if (StringUtil.isEmpty(member) || !MEMBER_ACTIVE.equals(member.getMembStat())) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 공개 가능한 활성 참여자 기준으로 최신 종료 회차 요약을 조회한다
+        ReadingClubDto.ReadingGoalResultDto result =
+                readingClubMapper.getLatestReadingGoalResult(clubNumb, userNumb);
+        // 종료 회차가 없으면 화면에서 결과 팝업을 생략할 수 있도록 빈 성공 응답을 반환한다
+        if (StringUtil.isEmpty(result)) {
+            // 종료 결과가 없는 성공 응답을 반환한다
+            return ResultData.success();
+        }
+
+        // 비활성화와 탈퇴 정책을 적용한 목표 달성자 프로필만 결과에 결합한다
+        result.setAchievementMemberList(
+                readingClubMapper.getReadingGoalAchievementMemberList(clubNumb, result.getRondNumb()));
+        // 종료 회차 요약과 공개 가능한 달성자 목록을 반환한다
+        return ResultData.success(result);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    @Override
+    @Transactional
+    public void completeExpiredReadingRound() {
+        // 회차 상태를 변경하기 전에 마감 시점의 참여자별 목표 달성 여부를 먼저 고정한다
+        readingClubMapper.uptExpiredReadingParticipantGoal();
+        // 참여자 결과가 모두 고정된 만료 회차를 완료 상태로 변경한다
+        readingClubMapper.uptExpiredReadingRound();
     }
 
     /**
