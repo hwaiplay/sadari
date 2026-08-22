@@ -32,6 +32,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * -----------------------------------------------------------
  * 2026-08-06        SeungHyeon.Kang    최초 생성
  * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 키 삭제 검증
+ * 2026-08-22        SeungHyeon.Kang    피신고자 신고 선종결 순서 검증
  */
 @ExtendWith(MockitoExtension.class)
 class UserHardDeleteServiceImplTest {
@@ -102,6 +103,9 @@ class UserHardDeleteServiceImplTest {
         InOrder deleteOrder = inOrder(fileService, userHardDeleteMapper);
         // DB 메타정보 삭제 전에 물리 파일 경로를 확보하는지 확인한다
         deleteOrder.verify(fileService).getFileListByRegiUser(31L);
+        // 피신고자 회원번호가 익명화되기 전에 미처리 신고를 시스템 종결하는지 확인한다
+        deleteOrder.verify(userHardDeleteMapper).uptHardDeleteComplaints(
+                31L, "피신고자 영구 탈퇴 및 원본 물리 삭제로 관련 미처리 신고를 시스템 종결함.");
         // 파일 경로 확보 뒤 회원과 파일 메타정보를 삭제하는지 확인한다
         deleteOrder.verify(userHardDeleteMapper).delHardDeleteUser(31L);
         // 회원 원본 삭제와 함께 모든 Redis 세션 및 인증 캐시를 제거하는지 확인한다

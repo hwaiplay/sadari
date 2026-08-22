@@ -9,6 +9,8 @@ import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
+import type { SafetyReportOption } from "@/components/UserActionMenu/userActionMenu.types";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
   getBookCoverImageSource,
@@ -862,6 +864,68 @@ function SocialProfilePage() {
     );
   }
 
+  // "-"
+  const emptyValue = message("frontend.common.emptyValue");
+  const targetUserNick = profile.userNick || emptyValue;
+  // 한줄소개 앞뒤 공백을 제거하여 실제 신고 선택지 표시 여부를 판단한다
+  const profileIntroduction = profile.intrCntn?.trim();
+  // 프로필 전체 신고에는 현재 닉네임과 한줄소개 스냅샷을 함께 구성한다
+  const userProfileContent = profileIntroduction
+    ? `${targetUserNick}\n${profileIntroduction}`
+    : targetUserNick;
+  // 다른 활성 사용자의 프로필에서 신고할 수 있는 현재 사용자 프로필 대상을 구성한다
+  const userProfileTarget = {
+    targetType: "USER" as const,
+    targetNumb: targetUserNumb,
+    userNumb: targetUserNumb,
+    userNick: targetUserNick,
+    content: userProfileContent,
+  };
+  // 현재 화면에 실제로 표시된 프로필 사진과 한줄소개만 세부 신고 선택지에 포함한다
+  const profileReportOptions: SafetyReportOption[] = [
+    {
+      // "사용자 프로필 신고"
+      label: message("frontend.social.report.user"),
+      target: userProfileTarget,
+    },
+  ];
+
+  // 실제 프로필 사진이 있는 사용자만 접수 시점 이미지 증거를 신고할 수 있게 한다
+  if (profile.porfPath) {
+    // "프로필 사진 신고"
+    const profileImageReportLabel = message("frontend.social.report.profileImage");
+    // "프로필 사진"
+    const profileImageTargetContent = message("frontend.userReport.target.profileImage");
+    // 프로필 이미지 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: profileImageReportLabel,
+      target: {
+        targetType: "PROFILE" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: profileImageTargetContent,
+      },
+    });
+  }
+
+  // 공백이 아닌 한줄소개가 있는 사용자만 한줄소개를 별도 신고할 수 있게 한다
+  if (profileIntroduction) {
+    // "한줄소개 신고"
+    const introductionReportLabel = message("frontend.social.report.introduction");
+    // 한줄소개 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: introductionReportLabel,
+      target: {
+        targetType: "INTRO" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: profileIntroduction,
+      },
+    });
+  }
+
   return (
     /* 상대 사용자의 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>
@@ -884,6 +948,17 @@ function SocialProfilePage() {
               <span aria-hidden="true" />
             </FullscreenImageButton>
           )}
+          {/* 마이페이지 프로필 수정 버튼과 같은 우하단 위치의 상대 사용자 신고·차단 메뉴 */}
+          <div className={styles.coverActionGroup}>
+            <UserActionMenu
+              userNick={targetUserNick}
+              reportTarget={userProfileTarget}
+              reportOptions={profileReportOptions}
+              triggerClassName={styles.socialProfileMoreButton}
+              triggerIconClassName={styles.socialProfileMoreIcon}
+              menuClassName={styles.socialProfileMoreMenu}
+            />
+          </div>
         </div>
 
         {/* 상대 사용자 정보와 팔로우 상태 영역 */}

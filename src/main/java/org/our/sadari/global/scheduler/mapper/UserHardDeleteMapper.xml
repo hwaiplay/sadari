@@ -23,6 +23,25 @@
          LIMIT #{maxSize}
     </select>
 
+    <!-- 피신고자 연결 익명화 전에 해당 회원의 접수 또는 검토 중 신고를 시스템 종결한다. -->
+    <update id="uptHardDeleteComplaints">
+        <bind name="cmplReceived"
+              value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_RECEIVED"/>
+        <bind name="cmplReviewing"
+              value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_REVIEWING"/>
+        <bind name="cmplActioned"
+              value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_ACTIONED"/>
+        UPDATE /* uptHardDeleteComplaints */
+               TH_CMPLNT
+           SET CMPL_STAT = #{cmplActioned}
+             , PROC_CNTN = #{procCntn}
+             , PROC_ADMN = NULL
+             , PROC_DATE = CURRENT_TIMESTAMP(6)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE TAGT_USER = #{userNumb}
+           AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
+    </update>
+
     <!-- 탈퇴 이력의 회원 번호는 보존하고 회원 연관 데이터를 참조 순서에 맞게 제거한다. -->
     <delete id="delHardDeleteUser" parameterType="long" statementType="CALLABLE">
         /* delHardDeleteUser */

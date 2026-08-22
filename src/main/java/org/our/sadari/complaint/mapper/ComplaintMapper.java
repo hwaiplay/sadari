@@ -4,6 +4,7 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
+import org.our.sadari.complaint.dto.ComplaintEvidenceDto;
 
 /**
  * fileName       : ComplaintMapper
@@ -13,7 +14,7 @@ import org.our.sadari.complaint.dto.ComplaintDto;
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-22        SeungHyeon.Kang    최초 생성·누적 자동 조치 추가
+ * 2026-08-22        SeungHyeon.Kang    최초 생성·버전별 자동 조치와 증거 보관 추가
  */
 @Mapper
 public interface ComplaintMapper {
@@ -38,16 +39,17 @@ public interface ComplaintMapper {
     int getActiveCodeCnt(@Param("commCode") String commCode, @Param("comdCode") String comdCode);
 
     /**
-     * 동일 사용자가 같은 대상을 신고한 이력이 있는지 확인한다.
+     * 동일 사용자가 같은 대상 버전을 신고한 이력이 있는지 확인한다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 신고자 사용자 번호
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
-     * @return 동일 대상 신고 건수
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
+     * @return 동일 대상 버전 신고 건수
      */
     int dupComplaint(@Param("userNumb") Long userNumb, @Param("tagtType") String tagtType
-                   , @Param("tagtNumb") Long tagtNumb);
+                   , @Param("tagtNumb") Long tagtNumb, @Param("tagtHash") String tagtHash);
 
     /**
      * 신고 시점에 저장할 다른 사용자의 프로필 내용과 소유자를 조회한다.
@@ -100,6 +102,27 @@ public interface ComplaintMapper {
     ComplaintDto getIntroTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
+     * 동일 대상 버전의 비공개 이미지 증거 번호를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
+     * @return 기존 신고 증거 번호 또는 없으면 null
+     */
+    Long getEvidenceNumb(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                       , @Param("tagtHash") String tagtHash);
+
+    /**
+     * 관리자 전용 프로필 사진 신고 증거 원본을 저장한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param evidence 신고 대상 버전과 이미지 원본
+     * @return 저장된 신고 증거 수
+     */
+    int setEvidence(ComplaintEvidenceDto evidence);
+
+    /**
      * 서버에서 확정한 대상 내용과 신고 사유를 접수 이력으로 저장한다.
      *
      * @author SeungHyeon.Kang
@@ -110,60 +133,26 @@ public interface ComplaintMapper {
     int setComplaint(@Param("complaint") ComplaintDto complaint, @Param("userNumb") Long userNumb);
 
     /**
-     * 반려를 제외한 동일 대상의 유효 누적 신고 건수를 조회한다.
+     * 반려를 제외한 동일 대상 버전의 유효 누적 신고 건수를 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @return 자동 조치 판단에 사용하는 누적 신고 건수
      */
-    int getAutoActionCmplCnt(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb);
+    int getAutoActionCmplCnt(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
+                           , @Param("tagtHash") String tagtHash);
 
     /**
-     * 자동 조치 대상 독후감에 연결된 댓글과 답글의 좋아요를 삭제한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param tagtNumb 신고 대상 독후감 번호
-     * @return 삭제된 좋아요 수
-     */
-    int delAutoReplLike(@Param("tagtNumb") Long tagtNumb);
-
-    /**
-     * 자동 조치 대상 독후감의 대댓글을 먼저 삭제한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param tagtNumb 신고 대상 독후감 번호
-     * @return 삭제된 대댓글 수
-     */
-    int delAutoChildReply(@Param("tagtNumb") Long tagtNumb);
-
-    /**
-     * 자동 조치 대상 독후감의 최상위 댓글을 삭제한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param tagtNumb 신고 대상 독후감 번호
-     * @return 삭제된 댓글 수
-     */
-    int delAutoReplyList(@Param("tagtNumb") Long tagtNumb);
-
-    /**
-     * 자동 조치 대상 독후감의 좋아요를 삭제한다.
-     *
-     * @author SeungHyeon.Kang
-     * @param tagtNumb 신고 대상 독후감 번호
-     * @return 삭제된 좋아요 수
-     */
-    int delAutoReportLike(@Param("tagtNumb") Long tagtNumb);
-
-    /**
-     * 신고 누적 임계치에 도달한 독후감을 완전 삭제한다.
+     * 신고 누적 임계치에 도달한 독후감을 비공개로 변경한다.
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 독후감 번호
      * @param tagtUser 독후감 소유 사용자 번호
-     * @return 삭제된 독후감 수
+     * @return 비공개로 변경된 독후감 수
      */
-    int delAutoReport(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
+    int uptAutoReportPrivate(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
 
     /**
      * 신고 누적 임계치에 도달한 댓글을 삭제 상태로 변경한다.
@@ -208,9 +197,20 @@ public interface ComplaintMapper {
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
      * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
      * @param procCntn 자동 조치 처리 설명
      * @return 조치 완료로 변경된 신고 수
      */
     int uptAutoComplaints(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
-                        , @Param("procCntn") String procCntn);
+                        , @Param("tagtHash") String tagtHash, @Param("procCntn") String procCntn);
+
+    /**
+     * 최종 처리 뒤 정책 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param retentionDays 최종 처리 후 증거 보존 일수
+     * @param batchSize 한 번에 삭제할 최대 증거 수
+     * @return 삭제된 신고 증거 수
+     */
+    int delExpiredEvidence(@Param("retentionDays") int retentionDays, @Param("batchSize") int batchSize);
 }

@@ -17,9 +17,21 @@ import * as styles from "./UserReportPage.css";
 
 const OTHER_REASON: ComplaintReason = "CMPL_OTHER";
 const TARGET_TYPE_CODES = {
+  USER: "CMPL_USER",
   REPORT: "CMPL_BOOK_REPORT",
   REPLY: "CMPL_REPLY",
+  PROFILE: "CMPL_PROF_IMAGE",
+  INTRO: "CMPL_INTRO",
 } as const satisfies Record<string, ComplaintTargetType>;
+
+// 신고 화면에서 내부 대상 유형을 사용자에게 표시할 다국어 메시지 키와 연결한다
+const TARGET_TYPE_LABEL_KEYS = {
+  USER: "frontend.userReport.target.user",
+  REPORT: "frontend.userReport.target.report",
+  REPLY: "frontend.common.comment",
+  PROFILE: "frontend.userReport.target.profileImage",
+  INTRO: "frontend.userReport.target.introduction",
+} as const;
 /**
  * 전달된 글 또는 댓글 정보를 확인하고 신고 사유를 선택하는 화면을 렌더링한다.
  *
@@ -42,12 +54,8 @@ const UserReportPage = () => {
   }
 
   const { target } = reportState;
-  // "독후감"
-  const reportTargetLabel = message("frontend.userReport.target.report");
-  // "댓글"
-  const replyTargetLabel = message("frontend.common.comment");
-  const targetTypeLabel =
-    target.targetType === "REPORT" ? reportTargetLabel : replyTargetLabel;
+  // "사용자", "독후감", "댓글", "프로필 사진", "한줄소개"
+  const targetTypeLabel = message(TARGET_TYPE_LABEL_KEYS[target.targetType]);
   // "폭력, 혐오 또는 학대"
   const abuseReason = message("frontend.userReport.reason.abuse");
   // "스캠, 사기 또는 스팸"
@@ -147,7 +155,7 @@ const UserReportPage = () => {
             {message("frontend.userReport.title")}
           </h1>
           <p className={styles.description}>
-            {/* "회원님의 신고는 익명으로 처리돼요." */}
+            {/* "피신고자에게 신고자 정보가 공개되지 않습니다." */}
             {message("frontend.userReport.anonymousDescription")}
           </p>
         </div>

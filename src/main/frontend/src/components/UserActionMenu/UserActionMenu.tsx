@@ -1,10 +1,10 @@
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { clsx } from "clsx";
-import { useRef, useState, type FocusEvent, type KeyboardEvent } from "react";
+import { useRef, useState, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./UserActionMenu.css";
-import type { SafetyReportTarget } from "./userActionMenu.types";
+import type { SafetyReportOption, SafetyReportTarget } from "./userActionMenu.types";
 
 const BLOCK_DESCRIPTIONS = [
   // "· 차단된 사람은 사다리에서 회원님의 프로필 또는 독후감 콘텐츠를 찾을 수 없게 됩니다."
@@ -18,8 +18,65 @@ const BLOCK_DESCRIPTIONS = [
 type UserActionMenuProps = {
   userNick: string;
   reportTarget: SafetyReportTarget;
+  reportOptions?: readonly SafetyReportOption[];
+  rootClassName?: string;
+  triggerClassName?: string;
   triggerIconClassName?: string;
+  menuClassName?: string;
   onBlockConfirm?: () => void;
+};
+
+type ReportMenuOptionsProps = {
+  options: readonly SafetyReportOption[];
+  onSelect: (target: SafetyReportTarget) => void;
+  index?: number;
+};
+
+/**
+ * 신고 대상 선택지를 순서대로 메뉴 항목으로 표시한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param props 신고 대상 선택지 렌더링 속성
+ * @return 현재 신고 선택지와 다음 선택지 영역
+ */
+const ReportMenuOptions = ({
+  options,
+  onSelect,
+  index = 0,
+}: ReportMenuOptionsProps): ReactNode => {
+  const option = options[index];
+
+  // 표시할 신고 선택지가 없으면 재귀 렌더링을 종료한다.
+  if (!option) {
+    // 남은 신고 선택지가 없는 빈 영역을 반환한다.
+    return null;
+  }
+
+  /**
+   * 현재 메뉴 항목의 신고 대상을 상위 메뉴에 전달한다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleOptionClick = (): void => {
+    // 사용자가 선택한 신고 대상을 신고 화면 이동 처리에 전달한다.
+    onSelect(option.target);
+  };
+
+  // 현재 신고 항목 뒤에 남은 신고 항목을 이어서 표시한다.
+  return (
+    <>
+      <button
+        className={styles.menuOption}
+        type="button"
+        role="menuitem"
+        onClick={handleOptionClick}
+      >
+        {option.label}
+      </button>
+      <ReportMenuOptions options={options} onSelect={onSelect} index={index + 1} />
+    </>
+  );
 };
 
 /**
@@ -64,20 +121,30 @@ export const confirmUserBlock = async (
 const UserActionMenu = ({
   userNick,
   reportTarget,
+  reportOptions,
+  rootClassName,
+  triggerClassName,
   triggerIconClassName,
+  menuClassName,
   onBlockConfirm,
 }: UserActionMenuProps) => {
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const triggerRef = useRef<HTMLButtonElement>(null);
+  // "신고하기"
+  const defaultReportOption: SafetyReportOption = {
+    label: message("frontend.userAction.report"),
+    target: reportTarget,
+  };
+  const resolvedReportOptions = reportOptions ?? [defaultReportOption];
 
   /** 더보기 메뉴의 열림 상태를 변경한다. */
   const handleToggleMenu = (): void => setIsMenuOpen((isOpen) => !isOpen);
 
-  /** 신고 대상 정보를 화면 이동 상태에 담아 신고 사유 선택 페이지로 이동한다. */
-  const handleReportClick = (): void => {
+  /** 선택한 신고 대상 정보를 화면 이동 상태에 담아 신고 사유 선택 페이지로 이동한다. */
+  const handleReportClick = (target: SafetyReportTarget): void => {
     setIsMenuOpen(false);
-    navigate("/user-report", { state: { target: reportTarget } });
+    navigate("/user-report", { state: { target } });
   };
 
   /** 메뉴를 닫고 공통 SweetAlert로 차단 여부를 확인한다. */
@@ -109,13 +176,13 @@ const UserActionMenu = ({
   return (
     /* 신고 및 차단 더보기 메뉴 영역 */
     <div
-      className={styles.root}
+      className={clsx(styles.root, rootClassName)}
       onBlur={handleMenuBlur}
       onKeyDown={handleKeyDown}
     >
       <button
         ref={triggerRef}
-        className={styles.trigger}
+        className={clsx(styles.trigger, triggerClassName)}
         type="button"
         aria-label={message("frontend.userAction.more")}
         aria-haspopup="menu"
@@ -130,16 +197,8 @@ const UserActionMenu = ({
       </button>
 
       {isMenuOpen ? (
-        <div className={styles.menu} role="menu">
-          <button
-            className={styles.menuOption}
-            type="button"
-            role="menuitem"
-            onClick={handleReportClick}
-          >
-            {/* "신고하기" */}
-            {message("frontend.userAction.report")}
-          </button>
+        <div className={clsx(styles.menu, menuClassName)} role="menu">
+          <ReportMenuOptions options={resolvedReportOptions} onSelect={handleReportClick} />
           <button
             className={styles.menuOption}
             type="button"

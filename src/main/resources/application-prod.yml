@@ -137,6 +137,10 @@ complaint:
     reply-threshold: 5
     profile-image-threshold: 5
     introduction-threshold: 5
+  evidence:
+    retention-days: 180
+    cleanup-batch-size: 100
+    cleanup-cron: "0 20 4 * * *"
 
 server:
   port: ${SERVER_PORT:8080}

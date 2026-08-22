@@ -22,7 +22,7 @@ import org.springframework.stereotype.Component;
 @ConfigurationProperties(prefix = "complaint.auto-action")
 public class ComplaintAutoActionProperties {
 
-    // 독후감 자동 삭제 신고 임계치
+    // 독후감 자동 비공개 전환 신고 임계치
     private int bookReportThreshold = 5;
     // 댓글 자동 삭제 신고 임계치
     private int replyThreshold = 5;
@@ -41,7 +41,7 @@ public class ComplaintAutoActionProperties {
     public int getThreshold(String tagtType) {
         // 자동 조치 대상 유형은 설정 파일의 개별 임계치와 고정 매핑한다
         return switch (tagtType) {
-            // 독후감은 완전 삭제 기준을 반환한다
+            // 독후감은 비공개 전환 기준을 반환한다
             case Constant.COMPLAINT_TARGET_REPORT -> bookReportThreshold;
             // 댓글은 논리 삭제 기준을 반환한다
             case Constant.COMPLAINT_TARGET_REPLY -> replyThreshold;
