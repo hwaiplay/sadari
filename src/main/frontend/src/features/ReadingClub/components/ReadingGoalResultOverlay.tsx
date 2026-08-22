@@ -91,6 +91,17 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
     });
   }
 
+  /**
+   * 현재 모임의 가입 이전을 포함한 이전 독서 기록 목록으로 이동한다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  function openReadingHistory(): void {
+    // 현재 활성 모임원에게 허용된 전체 종료 회차 목록으로 이동한다
+    navigate(`/reading-clubs/${result.clubNumb}/readings`);
+  }
+
   // 사용자가 팝업을 닫았으면 배경의 모임 상세 화면만 유지한다
   if (!isOpen) {
     return null;
@@ -268,13 +279,17 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
                 <img src="/img/icons/icon-chevron-right.svg" alt="arrow"/>
               </button>
             ) : null }
-            <div className={styles.navigationRowMuted}>
+            <button
+              className={styles.navigationRowMuted}
+              type="button"
+              onClick={openReadingHistory}
+            >
               <strong>
                 {/* "이전 독서 기록" */}
                 {message("frontend.readingClub.detail.previousReading")}
               </strong>
               <img src="/img/icons/icon-chevron-right-gray.svg" alt="arrow" />
-            </div>
+            </button>
           </nav>
 
           {/* 닫기 */}

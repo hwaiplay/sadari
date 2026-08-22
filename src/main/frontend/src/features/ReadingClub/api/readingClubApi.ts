@@ -122,6 +122,18 @@ export type ClubReadingGoalResult = {
   achievementMemberList: ClubMemberProfile[];
 };
 
+export type ClubReadingHistory = {
+  clubNumb: number;
+  rondNumb: number;
+  bookTitl: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  goalStdt: string;
+  goalEndt: string;
+  partCnt: number;
+  goalAchvCnt: number;
+};
+
 export type ClubReadingRoundReportPage = {
   clubNumb: number;
   rondNumb: number;
@@ -251,6 +263,32 @@ export const getClubReadingGoalResultApi = async (
   const response = await api.get(`/reading-clubs/${clubNumb}/reading-result`);
   // 공통 성공 검증을 통과한 종료 결과가 없으면 팝업을 표시하지 않도록 Null을 반환한다
   return (assertResultDataSuccess(response.data).data as ClubReadingGoalResult | undefined) ?? null;
+};
+
+/**
+ * 현재 활성 모임원에게 가입 시점과 관계없이 이전 독서 기록을 조회한다.
+ *
+ * @author SeungHyeon.Kang
+ * @param clubNumb 모임 번호
+ * @param page 조회할 페이지 번호
+ * @return 종료 회차 도서와 목표 달성 집계 페이지
+ * @throws 현재 활성 모임원이 아니거나 조회 요청이 실패하면 발생
+ */
+export const getClubReadingHistoryApi = async (
+  clubNumb: number,
+  page: number,
+): Promise<PageData<ClubReadingHistory>> => {
+  // 가입일 조건 없이 현재 모임의 종료 회차 페이지를 요청한다
+  const response = await api.get<ResultData<PageData<ClubReadingHistory>>>(
+    `/reading-clubs/${clubNumb}/readings`,
+    { params: { page } },
+  );
+  // 서버가 확인한 이전 독서 기록 페이지를 반환한다
+  return assertResultDataSuccess(response.data).data ?? {
+    list: [],
+    page,
+    hasNext: false,
+  };
 };
 
 /**

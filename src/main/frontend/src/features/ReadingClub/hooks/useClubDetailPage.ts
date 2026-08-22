@@ -155,6 +155,17 @@ export const useClubDetailPage = () => {
   };
 
   /**
+   * 현재 모임의 가입 이전을 포함한 이전 독서 기록 화면으로 이동한다.
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const handleReadingHistory = (): void => {
+    // 현재 활성 모임원 권한으로 전체 종료 회차 목록 경로로 이동한다
+    navigate(`/reading-clubs/${clubNumb}/readings`);
+  };
+
+  /**
    * 현재 모임의 수정 화면으로 이동한다.
    *
    * @author Hanwon.Jang
@@ -266,6 +277,7 @@ export const useClubDetailPage = () => {
     handleApplicationDecision,
     handleClubAction,
     handleJoinClub,
+    handleReadingHistory,
     handleReportWrite,
   };
 };

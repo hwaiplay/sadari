@@ -395,8 +395,13 @@ export const navigationButton = style([
 export const navigationRowMuted = style([
   navigationRow,
   {
+    width: "100%",
+    border: 0,
+    background: "transparent",
     color: vars.color.gray600,
     fontFamily: vars.font.semibold,
+    cursor: "pointer",
+    textAlign: "left",
   },
 ]);
 

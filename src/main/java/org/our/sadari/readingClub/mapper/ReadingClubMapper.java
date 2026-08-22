@@ -18,6 +18,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 메서드 추가
  * 2026-08-20        SeungHyeon.Kang    현재 독서 수정 메서드 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 추가
+ * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -359,6 +360,19 @@ public interface ReadingClubMapper {
      */
     int getActiveMemberAccessCnt(@Param("clubNumb") Long clubNumb
                                , @Param("userNumb") Long userNumb);
+
+    /**
+     * 모임의 모든 완료 회차를 최신 순서로 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 조회할 모임 번호
+     * @param pageOffset 목록 조회 시작 위치
+     * @param pageLimit 다음 페이지 판정용 조회 건수
+     * @return 가입 시점과 관계없이 조회된 이전 독서 기록
+     */
+    List<ReadingClubDto.ReadingHistoryDto> getReadingHistoryList(
+            @Param("clubNumb") Long clubNumb, @Param("pageOffset") int pageOffset
+          , @Param("pageLimit") int pageLimit);
 
     /**
      * 완료된 모임 독서 회차의 도서와 완료 독후감 평균 별점을 조회한다.

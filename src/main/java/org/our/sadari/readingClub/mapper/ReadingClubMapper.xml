@@ -861,6 +861,51 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </select>
 
+    <!-- 현재 활성 모임원에게 가입 시점과 관계없이 모든 완료 회차의 목표 결과를 제공한다. -->
+    <select id="getReadingHistoryList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingHistoryDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getReadingHistoryList */
+               ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+             , DATE_FORMAT(ROUNDX.GOAL_STDT, '%Y-%m-%d') AS GOAL_STDT
+             , DATE_FORMAT(ROUNDX.GOAL_ENDT, '%Y-%m-%d') AS GOAL_ENDT
+             , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
+                                AND MEMBER.USER_NUMB IS NOT NULL
+                                AND USERX.USER_NUMB IS NOT NULL THEN 1 END) AS PART_CNT
+             , COUNT(CASE WHEN PART.ANON_YSNO = #{commNo}
+                                AND MEMBER.USER_NUMB IS NOT NULL
+                                AND USERX.USER_NUMB IS NOT NULL
+                                AND PART.GOAL_YSNO = #{commYes} THEN 1 END) AS GOAL_ACHV_CNT
+          FROM TM_CLRNDX ROUNDX
+          JOIN TM_BKINFO BOOK
+            ON BOOK.BOOK_NUMB = ROUNDX.BOOK_NUMB
+     LEFT JOIN TB_CLPART PART
+            ON PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+           AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+     LEFT JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+     LEFT JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
+           AND ROUNDX.ROND_STAT = #{roundCompleted}
+      GROUP BY ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , ROUNDX.BOOK_NUMB
+             , ROUNDX.GOAL_STDT
+             , ROUNDX.GOAL_ENDT
+             , BOOK.BOOK_TITL
+             , BOOK.BOOK_ATHR
+             , BOOK.BOOK_CVIM
+      ORDER BY ROUNDX.ROND_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
+    </select>
+
     <!-- 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회한다. -->
     <select id="getReadingRoundReportSummary" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingRoundReportPageDto">
         <include refid="clubCodeBinds" />

@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.any;
+import static org.mockito.Mockito.anyInt;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -47,6 +48,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 검증
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
+ * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -885,6 +887,55 @@ class ReadingClubServiceImplTest {
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getLatestReadingGoalResult(10L, 20L);
         verify(readingClubMapper, never()).getReadingGoalAchievementMemberList(any(), any());
+    }
+
+    /**
+     * 현재 활성 모임원에게 가입 시점 조건 없이 이전 독서 기록을 반환하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getReadingHistoryListReturnsAllCompletedRoundsForActiveMember() {
+        // 가입 시점과 관계없이 반환할 종료 회차 기록을 구성한다
+        ReadingClubDto.ReadingHistoryDto history = new ReadingClubDto.ReadingHistoryDto();
+        history.setClubNumb(10L);
+        history.setRondNumb(1L);
+        history.setPartCnt(8);
+        history.setGoalAchvCnt(5);
+
+        // 현재 활성 모임원 권한과 첫 페이지 조회 결과를 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingHistoryList(10L, 0, 13)).thenReturn(List.of(history));
+
+        // 현재 활성 모임원으로 이전 독서 기록을 조회한다
+        ResultData result = readingClubService.getReadingHistoryList(20L, 10L, 1);
+
+        // 가입일 검증 없이 조회한 종료 회차 페이지를 반환하는지 검증한다
+        assertEquals(200, result.getCode());
+        @SuppressWarnings("unchecked")
+        PageDto<ReadingClubDto.ReadingHistoryDto> historyPage =
+                (PageDto<ReadingClubDto.ReadingHistoryDto>) result.getData();
+        assertEquals(List.of(history), historyPage.list());
+        assertEquals(1, historyPage.page());
+        assertEquals(false, historyPage.hasNext());
+    }
+
+    /**
+     * 비활성 계정 또는 비활성 모임원은 이전 독서 기록에 접근할 수 없는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getReadingHistoryListRejectsInactiveMember() {
+        // 계정과 모임 관계를 모두 충족하는 접근 행이 없도록 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
+
+        // 비활성 접근 관계로 이전 독서 기록을 조회한다
+        ResultData result = readingClubService.getReadingHistoryList(20L, 10L, 1);
+
+        // 접근 거절과 회차 목록 조회 미실행을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getReadingHistoryList(any(), anyInt(), anyInt());
     }
 
     /**

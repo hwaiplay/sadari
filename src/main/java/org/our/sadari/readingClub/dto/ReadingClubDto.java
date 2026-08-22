@@ -29,6 +29,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-15        Hanwon.Jang    현재 독서 목표 현황 응답 필드 추가
  * 2026-08-20        Hanwon.Jang        현재 독후감 편집·독서 관리 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 페이지 추가
+ * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 페이지 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -461,6 +462,48 @@ public final class ReadingClubDto {
 
         @Schema(description = "공개 가능한 목표 달성자 프로필 목록")
         private List<MemberProfileDto> achievementMemberList;
+    }
+
+    /**
+     * fileName       : ReadingHistoryDto
+     * author         : SeungHyeon.Kang
+     * date           : 2026-08-23
+     * description    : 종료된 모임 독서 회차의 도서와 목표 달성 집계를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-23        SeungHyeon.Kang    최초 생성
+     */
+    @Data
+    @Schema(description = "이전 모임 독서 기록")
+    public static class ReadingHistoryDto {
+
+        @Schema(description = "모임 번호")
+        private Long clubNumb;
+
+        @Schema(description = "모임별 회차 번호")
+        private Long rondNumb;
+
+        @Schema(description = "도서 제목")
+        private String bookTitl;
+
+        @Schema(description = "도서 저자")
+        private String bookAthr;
+
+        @Schema(description = "도서 표지 이미지 URL")
+        private String bookCvim;
+
+        @Schema(description = "목표 독서 시작일")
+        private String goalStdt;
+
+        @Schema(description = "목표 독서 종료일")
+        private String goalEndt;
+
+        @Schema(description = "공개 가능한 회차 참여 인원 수")
+        private Integer partCnt;
+
+        @Schema(description = "공개 가능한 목표 달성 인원 수")
+        private Integer goalAchvCnt;
     }
 
     /**

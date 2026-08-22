@@ -64,6 +64,7 @@ export default function ClubDetailPage() {
     handleApplicationDecision,
     handleClubAction,
     handleJoinClub,
+    handleReadingHistory,
     handleReportWrite,
   } = useClubDetailPage();
 
@@ -327,7 +328,11 @@ export default function ClubDetailPage() {
             </section>
 
             <nav className={styles.clubNavigation} aria-label={message("frontend.readingClub.detail.clubMenu")}>
-              <button className={styles.navigationRow} type="button">
+              <button
+                className={styles.navigationRow}
+                type="button"
+                onClick={handleReadingHistory}
+              >
                 <span>
                   <strong>{message("frontend.readingClub.detail.nextVote")}</strong>
                   <small className={styles.navigationDescription}>

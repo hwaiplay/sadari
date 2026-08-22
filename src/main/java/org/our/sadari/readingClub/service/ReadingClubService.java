@@ -15,6 +15,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 계약 추가
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 계약 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 계약
+ * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 계약
  */
 public interface ReadingClubService {
 
@@ -90,6 +91,17 @@ public interface ReadingClubService {
      * @return 종료된 최신 독서 목표 결과
      */
     ResultData getReadingGoalResult(Long userNumb, Long clubNumb);
+
+    /**
+     * 현재 활성 모임원에게 가입 시점과 관계없이 모든 이전 독서 기록을 제공한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param page 조회할 페이지 번호
+     * @return 종료 회차 도서와 목표 달성 집계 페이지
+     */
+    ResultData getReadingHistoryList(Long userNumb, Long clubNumb, int page);
 
     /**
      * 활성 모임원에게 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.

@@ -45,6 +45,8 @@ type HeaderProps = {
   onOffsetChange?: (headerOffset: number) => void;
 };
 
+const READING_HISTORY_ROUTE_PATTERN = /^\/reading-clubs\/[1-9]\d*\/readings$/;
+
 /**
  * Header 화면 또는 컴포넌트를 구성한다
  *
@@ -81,6 +83,10 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
+  const routeTitleOverride = READING_HISTORY_ROUTE_PATTERN.test(location.pathname)
+    ? message("frontend.readingClub.history.title")
+    : null;
+  const currentRouteTitle = routeTitleOverride ?? currentMenu?.menuName;
   const headerContentSlide =
     resolvedMenu?.transitionDirection === "back"
       ? headerContentSlideBack
@@ -167,13 +173,16 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
         <div
           className={clsx(
             headerCenter,
-            (isHomeRoute || currentMenu?.menuName) && headerRouteTitle,
-            currentMenu?.menuName && hasBackButton && headerRouteTitleWithBack,
+            (isHomeRoute || (currentMenu?.menuName && !routeTitleOverride)) && headerRouteTitle,
+            currentMenu?.menuName
+              && !routeTitleOverride
+              && hasBackButton
+              && headerRouteTitleWithBack,
           )}
         >
           {/* 홈 화면은 메뉴 조회 결과와 관계없이 왼쪽에 서비스 로고를 표시하는 영역 */}
           {isMenuResolved &&
-            (isHomeRoute || !currentMenu?.menuName ? (
+            (isHomeRoute || !currentRouteTitle ? (
               <HomeLink className={clsx(logo, headerContentSlide)}>
                 <img
                   src={"/img/common/logo-upper.svg"}
@@ -183,7 +192,7 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
               </HomeLink>
             ) : (
               <h1 className={clsx(routeTitle, headerContentSlide)}>
-                {currentMenu.menuName}
+                {currentRouteTitle}
               </h1>
             ))}
         </div>

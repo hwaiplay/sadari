@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
+ * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -63,6 +64,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final String MEMBER_ACTIVE = "ACTIVE";
     // 모임 회차 독후감 목록이 한 번에 조회할 화면 항목 수
     private static final int REPORT_PAGE_SIZE = 12;
+    // 이전 독서 기록 목록이 한 번에 조회할 화면 항목 수
+    private static final int READING_HISTORY_PAGE_SIZE = 12;
     // 승인된 가입 신청 상태 코드
     private static final String APPLICATION_APPROVED = "APPROVED";
     // 거절된 가입 신청 상태 코드
@@ -422,6 +425,49 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 readingClubMapper.getReadingGoalAchievementMemberList(clubNumb, result.getRondNumb()));
         // 종료 회차 요약과 공개 가능한 달성자 목록을 반환한다
         return ResultData.success(result);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param page 조회할 페이지 번호
+     * @return 가입 시점과 관계없이 조회된 이전 독서 기록 페이지
+     */
+    @Override
+    public ResultData getReadingHistoryList(Long userNumb, Long clubNumb, int page) {
+        // 현재 계정과 모임 관계가 모두 활성인 사용자만 과거 회차 집계에 접근할 수 있다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 가입일은 조회 조건에 사용하지 않고 현재 활성 모임원 관계만 검증한다
+        if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) < 1) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 종료 회차를 조회한다
+        List<ReadingClubDto.ReadingHistoryDto> searchedList =
+                readingClubMapper.getReadingHistoryList(
+                        clubNumb, (normalizedPage - 1) * READING_HISTORY_PAGE_SIZE
+                      , READING_HISTORY_PAGE_SIZE + 1);
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정한다
+        List<ReadingClubDto.ReadingHistoryDto> safeList =
+                StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
+        // 제한 건수보다 한 건 더 조회되었는지 다음 페이지 여부로 판정한다
+        boolean hasNext = safeList.size() > READING_HISTORY_PAGE_SIZE;
+        // 화면에는 현재 페이지 크기만 전달한다
+        List<ReadingClubDto.ReadingHistoryDto> visibleList = hasNext
+                ? safeList.subList(0, READING_HISTORY_PAGE_SIZE)
+                : safeList;
+        // 가입 시점과 관계없이 조회한 종료 회차 페이지를 반환한다
+        return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
     /**
