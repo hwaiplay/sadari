@@ -92,6 +92,17 @@ public interface ComplaintMapper {
     ComplaintDto getProfileTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
+     * 신고 시점에 저장할 다른 사용자의 현재 배경사진 정보와 소유자를 잠금 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtNumb 신고 대상 사용자 번호
+     * @param userNumb 신고자 사용자 번호
+     * @return 신고 대상 배경사진 정보와 소유자
+     */
+    ComplaintDto getBackgroundTargetDtl(@Param("tagtNumb") Long tagtNumb
+                                       , @Param("userNumb") Long userNumb);
+
+    /**
      * 신고 시점에 저장할 다른 사용자의 현재 한줄소개와 소유자를 잠금 조회한다.
      *
      * @author SeungHyeon.Kang
@@ -114,7 +125,7 @@ public interface ComplaintMapper {
                        , @Param("tagtHash") String tagtHash);
 
     /**
-     * 관리자 전용 프로필 사진 신고 증거 원본을 저장한다.
+     * 관리자 전용 이미지 신고 증거 원본을 저장한다.
      *
      * @author SeungHyeon.Kang
      * @param evidence 신고 대상 버전과 이미지 원본
@@ -172,6 +183,15 @@ public interface ComplaintMapper {
      * @return 변경된 사용자 수
      */
     int uptAutoProfile(@Param("tagtUser") Long tagtUser);
+
+    /**
+     * 신고 누적 임계치에 도달한 배경사진을 기본 이미지 상태로 변경한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtUser 신고 대상 사용자 번호
+     * @return 변경된 사용자 수
+     */
+    int uptAutoBackground(@Param("tagtUser") Long tagtUser);
 
     /**
      * 신고 누적 임계치에 도달한 한줄소개를 Null로 변경한다.

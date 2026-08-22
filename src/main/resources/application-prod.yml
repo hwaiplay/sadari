@@ -136,6 +136,7 @@ complaint:
     book-report-threshold: 5
     reply-threshold: 5
     profile-image-threshold: 5
+    background-image-threshold: 5
     introduction-threshold: 5
   evidence:
     retention-days: 180

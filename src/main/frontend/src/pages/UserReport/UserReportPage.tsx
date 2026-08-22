@@ -21,6 +21,7 @@ const TARGET_TYPE_CODES = {
   REPORT: "CMPL_BOOK_REPORT",
   REPLY: "CMPL_REPLY",
   PROFILE: "CMPL_PROF_IMAGE",
+  BACKGROUND: "CMPL_BG_IMAGE",
   INTRO: "CMPL_INTRO",
 } as const satisfies Record<string, ComplaintTargetType>;
 
@@ -30,6 +31,7 @@ const TARGET_TYPE_LABEL_KEYS = {
   REPORT: "frontend.userReport.target.report",
   REPLY: "frontend.common.comment",
   PROFILE: "frontend.userReport.target.profileImage",
+  BACKGROUND: "frontend.userReport.target.backgroundImage",
   INTRO: "frontend.userReport.target.introduction",
 } as const;
 /**
@@ -54,7 +56,7 @@ const UserReportPage = () => {
   }
 
   const { target } = reportState;
-  // "사용자", "독후감", "댓글", "프로필 사진", "한줄소개"
+  // "사용자 계정", "독후감", "댓글", "프로필 사진", "배경사진", "한줄소개"
   const targetTypeLabel = message(TARGET_TYPE_LABEL_KEYS[target.targetType]);
   // "폭력, 혐오 또는 학대"
   const abuseReason = message("frontend.userReport.reason.abuse");

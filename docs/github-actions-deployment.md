@@ -116,8 +116,8 @@
   활성화할 수 없습니다.
 - 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` Actions Variable로 조정할 수 있으며,
   등록하지 않으면 30일을 사용합니다.
-- 로컬 `application-loc.yml`과 관리자 앱 기본 설정의 `complaint.auto-action` 임계치는 기능 검증을 위해 독후감, 댓글, 프로필 사진 및 한줄소개 모두 `2`건으로 고정합니다.
-- 운영 `application-prod.yml`과 관리자 앱 `prod` 프로필은 같은 네 대상의 임계치를 모두 `5`건으로 고정합니다. 관리자 운영 배포에는 `SPRING_PROFILES_ACTIVE=prod`를 지정해 사용자 서버와 표시 기준을 일치시킵니다.
+- 로컬 `application-loc.yml`과 관리자 앱 기본 설정의 `complaint.auto-action` 임계치는 기능 검증을 위해 독후감, 댓글, 프로필 사진, 배경사진 및 한줄소개 모두 `1`건으로 고정합니다.
+- 운영 `application-prod.yml`과 관리자 앱 `prod` 프로필은 같은 다섯 대상의 임계치를 모두 `5`건으로 고정합니다. 관리자 운영 배포에는 `SPRING_PROFILES_ACTIVE=prod`를 지정해 사용자 서버와 표시 기준을 일치시킵니다.
   이 값은 운영 중 임의 변경으로 조치 기준이 달라지지 않도록 Actions Variable이나 Secret으로 노출하지 않습니다.
 - 로컬과 운영의 `complaint.evidence.retention-days`는 `180`, `cleanup-batch-size`는 `100`,
   증거 정리 스케줄은 매일 `04:20`으로 고정합니다. 미처리 신고와 연결된 증거는 보존하고,

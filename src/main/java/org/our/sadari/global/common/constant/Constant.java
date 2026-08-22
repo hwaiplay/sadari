@@ -107,6 +107,8 @@ public final class Constant {
     public static final String COMPLAINT_TARGET_REPLY = "CMPL_REPLY";
     // 프로필 사진 신고 대상 설정값
     public static final String COMPLAINT_TARGET_PROFILE = "CMPL_PROF_IMAGE";
+    // 배경사진 신고 대상 설정값
+    public static final String COMPLAINT_TARGET_BACKGROUND = "CMPL_BG_IMAGE";
     // 한줄소개 신고 대상 설정값
     public static final String COMPLAINT_TARGET_INTRO = "CMPL_INTRO";
     // 기타 신고 사유 설정값
@@ -125,6 +127,8 @@ public final class Constant {
     public static final String COMPLAINT_ACTION_DELETE_REPLY = "CMPL_DEL_REPLY";
     // 프로필 사진 기본 이미지 초기화 자동 조치 유형
     public static final String COMPLAINT_ACTION_RESET_PROFILE = "CMPL_RESET_PROF";
+    // 배경사진 기본 이미지 초기화 자동 조치 유형
+    public static final String COMPLAINT_ACTION_RESET_BACKGROUND = "CMPL_RESET_BG";
     // 한줄소개 Null 초기화 자동 조치 유형
     public static final String COMPLAINT_ACTION_CLEAR_INTRO = "CMPL_CLEAR_INTRO";
     // 신고 누적 자동 조치 적용 결과
