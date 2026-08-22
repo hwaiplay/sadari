@@ -10,6 +10,7 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubApi";
+import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
@@ -58,6 +59,7 @@ export default function ClubDetailPage() {
     club,
     isDeleting,
     members,
+    readingGoalResult,
     handleAnswerChange,
     handleApplicationDecision,
     handleClubAction,
@@ -420,6 +422,12 @@ export default function ClubDetailPage() {
           </section>
         ) : null}
       </main>
+
+      {/* 목표 결과 오버레이 팝업 */}
+      {isActiveMember && readingGoalResult && !hasCurrentReading ? createPortal(
+        <ReadingGoalResultOverlay key={readingGoalResult.rondNumb} result={readingGoalResult} />,
+        document.body,
+      ) : null}
 
       {isActiveMember ? createPortal(
         <div className={styles.fixedActionArea}>

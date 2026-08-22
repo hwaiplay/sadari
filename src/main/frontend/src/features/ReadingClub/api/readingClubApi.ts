@@ -100,6 +100,22 @@ export type ClubMemberProfile = {
   membRole: "OWNER" | "MEMBER";
 };
 
+export type ClubReadingGoalResult = {
+  clubNumb: number;
+  rondNumb: number;
+  readingOrdr: number;
+  bookTitl: string;
+  bookAthr?: string;
+  bookCvim?: string;
+  goalStdt: string;
+  goalEndt: string;
+  partCnt: number;
+  goalAchvCnt: number;
+  reportCnt: number;
+  myGoalAchieved: boolean;
+  achievementMemberList: ClubMemberProfile[];
+};
+
 export type ClubReadingCreateParams = {
   bookTitl: string;
   bookAthr: string;
@@ -200,6 +216,24 @@ export const getClubMemberListApi = async (clubNumb: number): Promise<ClubMember
   const response = await api.get(`/reading-clubs/${clubNumb}/members`);
   // 공통 성공 검증을 통과한 목록을 반환한다
   return (assertResultDataSuccess(response.data).data as ClubMemberProfile[] | undefined) ?? [];
+};
+
+/**
+ * 종료된 최신 모임 독서의 고정 목표 결과를 조회한다.
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @return 종료된 최신 독서 목표 결과 또는 종료 결과가 없을 때 Null
+ * @throws 모임 결과 조회 실패 또는 접근 권한이 없을 때 발생
+ */
+export const getClubReadingGoalResultApi = async (
+  clubNumb: number,
+): Promise<ClubReadingGoalResult | null> => {
+
+  // 현재 활성 모임원에게 공개되는 종료 회차 목표 결과를 요청한다
+  const response = await api.get(`/reading-clubs/${clubNumb}/reading-result`);
+  // 공통 성공 검증을 통과한 종료 결과가 없으면 팝업을 표시하지 않도록 Null을 반환한다
+  return (assertResultDataSuccess(response.data).data as ClubReadingGoalResult | undefined) ?? null;
 };
 
 /** 새 모임을 생성한다. @author Hanwon.Jang @param params 모임 생성 입력값 @return 생성된 모임 상세 */

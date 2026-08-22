@@ -407,6 +407,60 @@ public final class ReadingClubDto {
     }
 
     /**
+     * fileName       : ReadingGoalResultDto
+     * author         : HanWon.Jang
+     * date           : 2026-08-22
+     * description    : 종료된 모임 독서 회차의 목표 결과와 달성자 정보를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-22        HanWon.Jang        최초 생성
+     */
+    @Data
+    @Schema(description = "종료된 모임 독서 목표 결과")
+    public static class ReadingGoalResultDto {
+
+        @Schema(description = "모임 번호")
+        private Long clubNumb;
+
+        @Schema(description = "모임별 회차 번호")
+        private Long rondNumb;
+
+        @Schema(description = "모임 내 독서 순번")
+        private Long readingOrdr;
+
+        @Schema(description = "도서 제목")
+        private String bookTitl;
+
+        @Schema(description = "도서 저자")
+        private String bookAthr;
+
+        @Schema(description = "도서 표지 이미지 URL")
+        private String bookCvim;
+
+        @Schema(description = "목표 독서 시작일")
+        private String goalStdt;
+
+        @Schema(description = "목표 독서 종료일")
+        private String goalEndt;
+
+        @Schema(description = "공개 가능한 회차 참여 인원 수")
+        private Integer partCnt;
+
+        @Schema(description = "공개 가능한 목표 달성 인원 수")
+        private Integer goalAchvCnt;
+
+        @Schema(description = "본문을 작성한 공개 가능한 독후감 수")
+        private Integer reportCnt;
+
+        @Schema(description = "로그인 사용자의 목표 달성 여부")
+        private Boolean myGoalAchieved;
+
+        @Schema(description = "공개 가능한 목표 달성자 프로필 목록")
+        private List<MemberProfileDto> achievementMemberList;
+    }
+
+    /**
      * fileName       : JoinReqDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
