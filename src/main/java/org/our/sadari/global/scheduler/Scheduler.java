@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 5분 동기화 추가
  * 2026-08-14        SeungHyeon.Kang    독서 타이머 상세 보존기간 정리 추가
  * 2026-08-20        SeungHyeon.Kang    독서 타이머 목표시간 알림 추가
+ * 2026-08-21        SeungHyeon.Kang    독서 타이머 목표시간 자동 완료 추가
  */
 @Component
 @RequiredArgsConstructor
@@ -46,7 +47,7 @@ public class Scheduler {
     private final UserStatusEventService userStatusEventService;
     // 보존기간이 지난 독서 타이머 상세를 정리하는 서비스
     private final TimerDetailDeleteService timerDetailDeleteService;
-    // 설정한 독서 타이머 목표시간 알림 업무 서비스
+    // 설정한 독서 타이머 목표시간 자동 완료와 알림 업무 서비스
     private final ReadingTimerService readingTimerService;
 
     // TB_CODEXD에서 스케줄러 상세코드의 활성 여부를 조회하는 공통 코드 유틸리티
@@ -141,23 +142,23 @@ public class Scheduler {
     }
 
     /**
-     * 10초 간격으로 목표 독서시간이 지난 실행 세션의 알림을 발송한다
+     * 10초 간격으로 목표 독서시간이 지난 실행 세션을 완료하고 알림을 발송한다
      *
      * @author SeungHyeon.Kang
      */
     @Scheduled(cron = "*/10 * * * * *")
     public void sendTimerAlim() {
 
-        // 공통코드에서 중지된 독서 타이머 알림 스케줄러는 실행하지 않는다
+        // 공통코드에서 중지된 독서 타이머 자동 완료 스케줄러는 실행하지 않는다
         if (!codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER)) {
             // 사용 중지 상태를 운영 로그에 남긴다
-            log.info("독서 타이머 목표시간 알림 스케줄러가 사용 중지 상태여서 실행하지 않습니다. 공통코드={}, 상세코드={}"
+            log.info("독서 타이머 목표시간 자동 완료 스케줄러가 사용 중지 상태여서 실행하지 않습니다. 공통코드={}, 상세코드={}"
                     , Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER);
             // 사용 중지된 스케줄러 처리를 종료한다
             return;
         }
 
-        // 목표시간이 지난 독서 타이머 알림 발송을 실행한다
+        // 목표시간이 지난 독서 타이머 자동 완료와 알림 발송을 실행한다
         readingTimerService.sendTimerAlim();
     }
 

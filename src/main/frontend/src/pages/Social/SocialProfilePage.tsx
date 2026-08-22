@@ -7,6 +7,7 @@ import {
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
@@ -29,7 +30,10 @@ import type {
   ReadingSummaryReport,
   UserProfile,
 } from "@/features/User/api/userApi";
-import ProfileImage from "@/features/User/components/ProfileImage";
+import ProfileImage, {
+  DEFAULT_PROFILE_IMAGE,
+  normalizeProfileImageSource,
+} from "@/features/User/components/ProfileImage";
 import {
   getReadingEndDateText,
   getReadingGradeText,
@@ -871,17 +875,33 @@ function SocialProfilePage() {
               : undefined
           }
         >
+          {profile.bgimPath && (
+            <FullscreenImageButton
+              className={styles.coverImageViewerButton}
+              source={normalizeProfileImageSource(profile.bgimPath)}
+              alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+            >
+              <span aria-hidden="true" />
+            </FullscreenImageButton>
+          )}
         </div>
 
         {/* 상대 사용자 정보와 팔로우 상태 영역 */}
         <section className={styles.socialProfileBody}>
           <div className={styles.socialProfileHeaderRow}>
             <div className={styles.avatarWrap}>
-              <ProfileImage
-                className={styles.profileImage}
-                src={profile.porfPath}
-                alt={profile.userNick ?? message("frontend.profile.nick")}
-              />
+              <FullscreenImageButton
+                className={styles.profileImageViewerButton}
+                source={normalizeProfileImageSource(profile.porfPath)}
+                fallbackSource={DEFAULT_PROFILE_IMAGE}
+                alt={/* "프로필 사진" */ message("frontend.imageViewer.profileAlt")}
+              >
+                <ProfileImage
+                  className={styles.profileImage}
+                  src={profile.porfPath}
+                  alt={profile.userNick ?? message("frontend.profile.nick")}
+                />
+              </FullscreenImageButton>
               {followStatName && (
                 <button
                   className={styles.socialFollowButton}

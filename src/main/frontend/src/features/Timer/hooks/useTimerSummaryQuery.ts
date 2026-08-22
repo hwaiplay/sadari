@@ -3,6 +3,7 @@ import {
   getReadingTimerSummaryApi,
   type ReadingTimerSummary,
 } from "@/features/Timer/api/readingTimerApi";
+import { syncTimerSummary } from "@/features/Timer/lib/readingTimerClock";
 import { queryOptions, useQuery } from "@tanstack/react-query";
 
 /**
@@ -23,8 +24,10 @@ export function getTimerSummaryOptions() {
      * @throws 타이머 API 요청 또는 공통 응답 검증 실패 시 발생
      */
     queryFn: async (): Promise<ReadingTimerSummary> => {
-      // 공통 응답에서 검증된 타이머 요약만 반환한다
-      return (await getReadingTimerSummaryApi()).data;
+      // 서버가 계산한 타이머 요약을 공통 응답에서 조회한다
+      const summary = (await getReadingTimerSummaryApi()).data;
+      // 화면 전환 뒤에도 같은 경과시간 기준을 사용하도록 수신 시각을 기록해 반환한다
+      return syncTimerSummary(summary);
     },
     staleTime: 10_000,
   });

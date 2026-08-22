@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
-import { sweetConfirm, sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
   getWithdrawalStatusApi,
   uptWithdrawalCancelApi,
@@ -77,9 +78,12 @@ function WithdrawalPendingPage() {
     // API 실패를 사용자 안내로 전환하기 위한 처리 블록입니다
     try {
       // 영구 삭제 대기 취소를 서버에 요청합니다
-      const result = await uptWithdrawalCancelApi();
-      // "영구 탈퇴가 취소됐어요."
-      await sweetSuccess(message("frontend.withdrawal.pending.cancelSuccess"));
+      const result = await runBlockingOperation(uptWithdrawalCancelApi, {
+        success: {
+          // "영구 탈퇴가 취소됐어요."
+          title: message("frontend.withdrawal.pending.cancelSuccess"),
+        },
+      });
       // 관리자 이용 정지가 남아 있으면 정지 안내로, 아니면 정상 서비스 홈으로 이동합니다
       navigate(result.data === "SUSPENDED" ? "/suspension" : "/home", { replace: true });
     }

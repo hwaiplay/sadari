@@ -1,5 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetConfirm, sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
@@ -185,15 +185,28 @@ export const useClubDetailPage = () => {
     setIsDeleting(true);
 
     try {
+      /**
+       * 현재 모임을 서버에서 삭제한다
+       *
+       * @author SeungHyeon.Kang
+       * @return 모임 삭제 완료 Promise
+       * @throws 모임 삭제 또는 응답 검증에 실패하면 발생한다
+       */
+      const deleteClub = (): ReturnType<typeof delClubApi> => {
+        // 사용자에게 삭제 확인을 받은 현재 모임 번호를 서버에 전달한다
+        return delClubApi(clubNumb);
+      };
+
       // 삭제가 끝날 때까지 화면 이동을 차단하고 처리 중 알림을 표시한다
-      await runBlockingOperation(() => delClubApi(clubNumb), {
+      await runBlockingOperation(deleteClub, {
         title: message("frontend.readingClub.detail.deleting"),
+        success: {
+          // "모임을 삭제했어요"
+          title: message("frontend.readingClub.detail.deleteSuccessTitle"),
+          // "개인 독후감은 그대로 보관돼요."
+          text: message("frontend.readingClub.detail.deleteSuccessDescription"),
+        },
       });
-      // "모임을 삭제했어요"
-      await sweetSuccess(
-        message("frontend.readingClub.detail.deleteSuccessTitle"),
-        message("frontend.readingClub.detail.deleteSuccessDescription"),
-      );
       // 삭제된 상세 화면을 남기지 않고 내 모임 목록으로 이동한다
       navigate("/reading-clubs/mine", { replace: true });
     } catch (error) {

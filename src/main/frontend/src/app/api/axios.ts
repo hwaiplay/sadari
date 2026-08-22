@@ -437,8 +437,10 @@ api.interceptors.response.use(
     return response;
   },
   async (error: AxiosError) => {
+    const failedConfig = error.config as RetryableRequestConfig | undefined;
+
     // 호출 화면의 오류 처리 전에 실패한 요청의 처리 중 모달과 이동 가드를 해제한다
-    await finishBlockingRequest(error.config as RetryableRequestConfig | undefined);
+    await finishBlockingRequest(failedConfig);
     // 기존 API 실패 경로가 사용자 메시지를 표시할 수 있도록 Axios 오류를 반환한다
     return Promise.reject(error);
   },

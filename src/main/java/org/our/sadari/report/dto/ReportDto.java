@@ -22,6 +22,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 작성자 팔로우 여부 응답 추가
  * 2026-08-15        SeungHyeon.Kang    공개 목록 조회 조건 추가
  * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 순서 정비
+ * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 응답 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -65,6 +66,12 @@ public class ReportDto extends BookDto {
 
     @Schema(description = "공개 여부명", example = "공개")
     private String pubcYsnoName;
+
+    @Schema(description = "독후감 좋아요 알림 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String likeAlimYsno;
+
+    @Schema(description = "독후감 댓글과 답글 알림 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String replyAlimYsno;
 
     @Schema(description = "독후감 본문", example = "인물의 선택이 끝까지 긴장감을 유지했다.")
     @Size(max = 4000)

@@ -24,7 +24,7 @@ const rotateProfileSaveSpinner = keyframes({
 export const page = style({
   width: "100%",
   minHeight: "calc(100svh - 52px - 60px)",
-  padding: "0 0 110px",
+  padding: 0,
   backgroundColor: "#ffffff",
 });
 
@@ -49,6 +49,21 @@ export const cover = style({
   backgroundColor: "#d9e0e7",
   backgroundSize: "cover",
   backgroundPosition: "center",
+});
+
+export const coverImageViewerButton = style({
+  position: "absolute",
+  inset: 0,
+  zIndex: 1,
+  display: "block",
+  width: "100%",
+  height: "100%",
+  borderRadius: "inherit",
+  selectors: {
+    "&:hover": {
+      backgroundColor: "rgba(21, 21, 21, 0.08)",
+    },
+  },
 });
 
 export const coverActionGroup = style({
@@ -216,6 +231,13 @@ export const profileImage = style({
   border: "4px solid #ffffff",
   backgroundColor: "#ffffff",
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
+});
+
+export const profileImageViewerButton = style({
+  display: "block",
+  width: "100px",
+  height: "100px",
+  borderRadius: "50%",
 });
 
 export const avatarCameraButton = style({
@@ -394,6 +416,13 @@ export const goalAchievementSummary = style({
 export const profileStatsSummary = style({
   padding: "9px 8px 14px",
 });
+
+export const myProfileStatsSummary = style([
+  profileStatsSummary,
+  {
+    padding: "4px 8px 8px",
+  },
+]);
 
 export const profileStatsTitle = style({
   margin: "0 0 16px",

@@ -1,7 +1,6 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { Container } from "@/components/Layout/Container/Container";
-import type { LayoutOutletContext } from "@/components/Layout/Layout";
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
@@ -27,7 +26,6 @@ import { useMemo, useState } from "react";
 import {
   useLocation,
   useNavigate,
-  useOutletContext,
   useSearchParams,
 } from "react-router-dom";
 import * as styles from "./PublicReportPage.css";
@@ -75,8 +73,6 @@ const getReportStatus = (
  */
 const PublicReportPage = () => {
 
-  // 공통 헤더의 표시 상태를 도서 정보 고정 위치와 동기화한다
-  const { isHeaderHidden } = useOutletContext<LayoutOutletContext>();
   const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -95,12 +91,6 @@ const PublicReportPage = () => {
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   const likeMutation = usePublicReportLike();
   const pageState = (location.state ?? {}) as PublicReportPageState;
-  // 공통 헤더가 숨겨진 동안 도서 정보 영역을 화면 최상단에 배치한다
-  const bookHeaderClassName = clsx(
-    styles.header,
-    isHeaderHidden && styles.headerGlobalHidden,
-  );
-
   const reports = useMemo(() => {
     // 조회된 공개 독후감 서버 페이지를 화면 순서대로 연결해 반환한다
     return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
@@ -224,7 +214,7 @@ const PublicReportPage = () => {
       <main className={styles.page}>
         <div className={styles.content}>
           {/* 도서 표지와 공개 독후감 요약 영역 */}
-          <section className={bookHeaderClassName}>
+          <section className={styles.header}>
             <div className={styles.headerWrap}>
               <div className={styles.coverFrame}>
                 <img
@@ -410,7 +400,6 @@ const PublicReportPage = () => {
                           likeMutation.mutate({
                             tagtType: "REPORT",
                             tagtNumb: report.reptNumb,
-                            targetUserNumb: report.userNumb,
                           })
                         }
                       >

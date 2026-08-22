@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 처리 추가
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 구현
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 적용
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  */
 @Service
@@ -392,11 +393,18 @@ public class ReplyServiceImpl implements ReplyService {
      * @param replyDto 등록된 댓글과 독후감 번호
      */
     private void sendReplyReportAlim(Long sendUserNumb, ReplyDto replyDto) {
-        // 댓글이 등록된 독후감의 작성자를 알림 수신자로 조회한다
-        Long reportUserNumb = replyMapper.getReplyReportUserNumb(replyDto.getReptNumb());
+        // 댓글이 등록된 독후감의 작성자와 댓글 알림 설정을 조회한다
+        ReplyDto reportAlim = replyMapper.getReplyReportAlimDtl(replyDto.getReptNumb());
 
         // 독후감 작성자를 확인할 수 없거나 작성자가 직접 댓글을 등록했으면 알림을 만들지 않는다
-        if (StringUtil.isEmpty(reportUserNumb) || reportUserNumb.equals(sendUserNumb)) {
+        if (StringUtil.isEmpty(reportAlim) || StringUtil.isEmpty(reportAlim.getTargetUserNumb())
+                || reportAlim.getTargetUserNumb().equals(sendUserNumb)) {
+            // 독후감 댓글 등록 알림 처리 없이 호출부로 반환한다
+            return;
+        }
+
+        // 독후감 작성자가 댓글 알림을 껐으면 알림 저장과 푸시 예약을 모두 생략한다
+        if (!Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())) {
             // 독후감 댓글 등록 알림 처리 없이 호출부로 반환한다
             return;
         }
@@ -417,7 +425,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 독후감 작성자에게 댓글 알림을 저장하고 독후감 상세 화면 링크를 포함한 푸시를 예약한다
         alimService.sendAlim(
-                reportUserNumb
+                reportAlim.getTargetUserNumb()
               , Constant.ALIM_SITU_REPLY
               , Constant.ALIM_TEMP_CODE_REPLY_REPORT
               , replyDto.getReptNumb()

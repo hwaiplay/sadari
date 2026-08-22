@@ -11,12 +11,13 @@ export const content = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  padding: "18px 0",
+  // 레이아웃의 헤더 높이 여백 직후 검색 영역을 배치해 고정 해제 시 위치 차이를 없앤다
+  padding: "0 0 12px",
 });
 
 export const searchBar = style({
   position: "sticky",
-  top: vars.headerHeight,
+  top: `calc(${vars.headerHeight} - var(--header-scroll-offset, 0px))`,
   zIndex: 996,
   boxSizing: "border-box",
   display: "flex",
@@ -26,35 +27,13 @@ export const searchBar = style({
   height: vars.headerHeight,
   padding: "5px 0",
   marginBottom: 0,
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
-  isolation: "isolate",
-  transition: "top 180ms ease",
   willChange: "top",
-
-  selectors: {
-    "&::before": {
-      position: "absolute",
-      top: 0,
-      bottom: 0,
-      left: "50%",
-      zIndex: -1,
-      width: "100vw",
-      backgroundColor: "rgba(255, 255, 255, 0.96)",
-      content: '""',
-      pointerEvents: "none",
-      transform: "translateX(-50%)",
-    },
-  },
 
   "@media": {
     [media.tablet]: {
       padding: `5px ${vars.space.lg}`,
     },
   },
-});
-
-export const searchBarHeaderHidden = style({
-  top: 0,
 });
 
 export const searchLabel = style({
@@ -83,7 +62,7 @@ export const searchInput = style({
   padding: "0 38px 0 16px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
-  backgroundColor: "rgba(255, 255, 255, 0.96)",
+  backgroundColor: "transparent",
   color: vars.color.black,
   fontFamily: vars.font.body,
   fontSize: "16px",
@@ -224,10 +203,28 @@ export const coverArea = style({
 export const coverFrame = style({
   width: "126px",
   aspectRatio: "2 / 3",
+  padding: 0,
+  border: 0,
   borderRadius: "6px",
   overflow: "hidden",
   backgroundColor: "#ffffff",
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
+  cursor: "pointer",
+  transition: "transform 160ms ease, box-shadow 160ms ease",
+
+  selectors: {
+    "&:hover": {
+      transform: "translateY(-3px)",
+      boxShadow: "0 14px 28px rgba(0, 0, 0, 0.2)",
+    },
+    "&:active": {
+      transform: "translateY(-1px)",
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "4px",
+    },
+  },
 });
 
 export const coverImage = style({
@@ -256,6 +253,33 @@ export const bookTitle = style({
   wordBreak: "keep-all",
 });
 
+export const bookTitleButton = style({
+  maxWidth: "100%",
+  padding: "2px 6px",
+  border: 0,
+  borderRadius: "6px",
+  backgroundColor: "transparent",
+  color: "inherit",
+  fontFamily: "inherit",
+  fontSize: "inherit",
+  lineHeight: "inherit",
+  textAlign: "center",
+  wordBreak: "inherit",
+  cursor: "pointer",
+  transition: "background-color 140ms ease, color 140ms ease",
+
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray100,
+      color: vars.color.brandText,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
+});
+
 export const meta = style({
   margin: 0,
   fontFamily: vars.font.body,
@@ -263,6 +287,30 @@ export const meta = style({
   lineHeight: 1.5,
   color: vars.color.gray600,
   textAlign: "center",
+});
+
+export const authorButton = style({
+  padding: "2px 4px",
+  border: 0,
+  borderRadius: "4px",
+  backgroundColor: "transparent",
+  color: "inherit",
+  fontFamily: "inherit",
+  fontSize: "inherit",
+  lineHeight: "inherit",
+  cursor: "pointer",
+  transition: "background-color 140ms ease, color 140ms ease",
+
+  selectors: {
+    "&:hover": {
+      backgroundColor: vars.color.gray100,
+      color: vars.color.brandText,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
 });
 
 export const description = style({

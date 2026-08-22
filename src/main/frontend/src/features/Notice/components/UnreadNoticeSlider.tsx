@@ -290,7 +290,9 @@ export function UnreadNoticeSlider() {
           aria-label={noticeActionLabel}
         >
           {/* 현재 공지에 해당하는 고정 카테고리 영역 */}
-          <NoticeCategoryBadge categoryName={activeNotice.cateName} />
+          <span className={styles.categoryLayer}>
+            <NoticeCategoryBadge categoryName={activeNotice.cateName} />
+          </span>
 
           {/* 현재 공지 제목만 가로로 이동하는 영역 */}
           <span className={styles.marqueeViewport}>

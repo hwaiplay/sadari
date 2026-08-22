@@ -26,8 +26,10 @@ import org.our.sadari.book.mapper.BookMapper;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
+import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.mapper.SocialMapper;
@@ -44,6 +46,7 @@ import org.our.sadari.social.mapper.SocialMapper;
  * 2026-08-14        SeungHyeon.Kang    독후감 참조 데이터 삭제 순서 검증 추가
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 정렬 코드 검증 추가
  * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 추가
+ * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 변경 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -86,6 +89,54 @@ class ReportServiceImplTest {
         // 독서 요약 목록 SQL이 빈 목록을 반환하도록 설정한다
         lenient().when(reportMapper.getReadingSummaryList(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(List.of());
+    }
+
+    /**
+     * 비공개 여부와 무관한 좋아요 알림 설정 요청이 소유자 조건으로 변경되는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptReportAlimUpdatesLikeSetting() {
+        // 좋아요 알림을 끄는 요청을 생성한다
+        ReportAlimDto request = new ReportAlimDto();
+        // 변경할 알림 사용 여부를 끔으로 설정한다
+        request.setUseYsno(Constant.COMM_NO);
+        // 소유자 독후감의 좋아요 알림 한 건이 변경되는 조건을 구성한다
+        when(reportMapper.uptLikeAlim(request)).thenReturn(1);
+
+        // 로그인 사용자의 독후감 좋아요 알림 끄기를 요청한다
+        ResultData result = reportService.uptReportAlim(31L, 157L, "like", request);
+
+        // 설정 변경 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 인증 사용자 번호가 소유자 조건으로 설정되는지 확인한다
+        assertEquals(31L, request.getUserNumb());
+        // URL 독후감 번호가 변경 조건으로 설정되는지 확인한다
+        assertEquals(157L, request.getReptNumb());
+        // 좋아요 알림 전용 Mapper만 호출되는지 확인한다
+        verify(reportMapper).uptLikeAlim(request);
+    }
+
+    /**
+     * 다른 사용자의 독후감 알림 설정 변경 요청을 접근 거부하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptReportAlimRejectsNonOwner() {
+        // 댓글 알림을 켜는 요청을 생성한다
+        ReportAlimDto request = new ReportAlimDto();
+        // 변경할 알림 사용 여부를 켬으로 설정한다
+        request.setUseYsno(Constant.COMM_YES);
+        // 소유자 조건에 맞는 독후감이 없어 변경되지 않는 조건을 구성한다
+        when(reportMapper.uptReplyAlim(request)).thenReturn(0);
+
+        // 로그인 사용자의 소유가 아닌 독후감 댓글 알림 변경을 요청한다
+        ResultData result = reportService.uptReportAlim(31L, 157L, "reply", request);
+
+        // 접근 거부 결과 코드를 확인한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
     }
 
     /**

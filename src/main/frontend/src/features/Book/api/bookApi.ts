@@ -153,8 +153,20 @@ export const getMyReportByIsbnApi = async (isbn: string) => {
 export type LikeTargetParams = {
   tagtType: string;
   tagtNumb: number;
-  // 알림 대상 DB 재조회를 없애기 위해 화면이 이미 조회한 독후감 작성자 번호를 함께 전송한다
-  targetUserNumb: number;
+};
+
+export type ReportAlimType = "like" | "reply";
+
+export type UptReportAlimParams = {
+  reptNumb: number;
+  alimType: ReportAlimType;
+  useYsno: "Y" | "N";
+};
+
+export type ReportAlimResponse = {
+  reptNumb: number;
+  alimType: ReportAlimType;
+  useYsno: "Y" | "N";
 };
 
 /**
@@ -177,6 +189,26 @@ export type BookListParams = {
   bookKeyword?: string;
   sortType?: string;
   page?: number;
+};
+
+/**
+ * 로그인 사용자가 작성한 독후감의 유형별 알림 사용 여부를 변경한다
+ *
+ * @author SeungHyeon.Kang
+ * @param params 독후감 번호, 알림 유형과 변경할 사용 여부
+ * @return 변경된 독후감 알림 설정
+ * @throws API 요청 또는 응답 검증 실패 시 발생
+ */
+export const uptReportAlimApi = async (
+  params: UptReportAlimParams,
+): Promise<ResultData<ReportAlimResponse>> => {
+  // URL에는 독후감과 알림 유형을, 본문에는 변경할 사용 여부만 전달한다
+  const res = await api.put<ResultData<ReportAlimResponse>>(
+    `/book/${params.reptNumb}/notification-settings/${params.alimType}`,
+    { useYsno: params.useYsno },
+  );
+  // 공통 응답 검증을 통과한 변경 결과를 반환한다
+  return assertResultDataSuccess(res.data);
 };
 
 /**

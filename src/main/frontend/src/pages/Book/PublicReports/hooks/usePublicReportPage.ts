@@ -263,11 +263,10 @@ export function usePublicReportPage() {
    * @return 반환값이 없다
    */
   const handleLike = (report: PublicReportType): void => {
-    // 독후감과 작성자 번호를 좋아요 API 요청 대상으로 전달한다
+    // 독후감 번호를 좋아요 API 요청 대상으로 전달하고 작성자는 서버에서 확정한다
     likeMutation.mutate({
       tagtType: "REPORT",
       tagtNumb: report.reptNumb,
-      targetUserNumb: report.userNumb,
     });
   };
 

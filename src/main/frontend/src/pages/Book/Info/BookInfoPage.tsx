@@ -8,10 +8,12 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import type { CSSProperties } from "react";
 import { Container } from "@/components/Layout/Container/Container";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import Loading from "@/components/Loading/Loading";
 import BookRatingSummary from "@/features/Book/components/BookRatingSummary/BookRatingSummary";
 import { useBookDetail } from "@/features/Book/Detail/hook/useBookDetail";
 import {
+  BOOK_COVER_FALLBACK_IMAGE,
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
@@ -63,14 +65,19 @@ function BookInfoPage() {
       <Container className={styles.content}>
         {/* 도서 표지와 평점 요약 영역 */}
         <section className={styles.header}>
-          <div className={styles.coverFrame}>
+          <FullscreenImageButton
+            className={styles.coverFrame}
+            source={getBookCoverImageSource(bookInfo.bookCvim)}
+            fallbackSource={BOOK_COVER_FALLBACK_IMAGE}
+            alt={bookInfo.bookTitl}
+          >
             <img
               className={styles.coverImage}
               src={getBookCoverImageSource(bookInfo.bookCvim)}
               onError={handleBookCoverImageError}
               alt={bookInfo.bookTitl}
             />
-          </div>
+          </FullscreenImageButton>
           <h1 className={styles.title}>{bookInfo.bookTitl}</h1>
           <div className={styles.authorRatingLine}>
             <p className={styles.meta}>{bookInfo.bookAthr}</p>
@@ -100,7 +107,7 @@ function BookInfoPage() {
               )
             }
           >
-            {/* "다른 사람이 쓴 독후감 보기" */}
+            {/* "다른 독후감 둘러보기" */}
             {message("frontend.book.publicReports.button")}
           </button>
         </section>

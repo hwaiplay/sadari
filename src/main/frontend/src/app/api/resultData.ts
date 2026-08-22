@@ -4,6 +4,7 @@ import { message } from "@/app/messages/message";
 export const RESULT_SUCCESS_CODE = 200;
 export const DB_CONNECTION_FAILED_CODE = 2014;
 export const BAD_WORD_INCLUDED_CODE = 2015;
+export const COMPLAINT_DUPLICATED_CODE = 2027;
 
 export type ResultData<T = unknown> = {
   code?: number;

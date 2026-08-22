@@ -31,6 +31,7 @@ import {
 } from "@/features/Timer/api/readingTimerApi";
 import { getTimerSummaryOptions } from "@/features/Timer/hooks/useTimerSummaryQuery";
 import { useBookTimeQuery } from "@/features/Timer/hooks/useBookTimeQuery";
+import { getLiveTimerSecs, syncTimerSummary } from "@/features/Timer/lib/readingTimerClock";
 import { notifyReadingTimerRunningChange } from "@/features/Timer/lib/readingTimerEvents";
 import { getReadingHeatmapApi, type ReadingHeatmap } from "@/features/User/api/userApi";
 import { ReadingHeatmapChart } from "@/pages/My/ReadingStatisticsSection";
@@ -1111,6 +1112,7 @@ export default function ReadingTimerPage() {
   const [isTimerSettingModalOpen, setIsTimerSettingModalOpen] = useState(false);
   const [targetSeconds, setTargetSeconds] = useState<number>();
   const [heatmapRefreshKey, setHeatmapRefreshKey] = useState(0);
+  const autoCompletedTimerRef = useRef<number | undefined>(undefined);
   const bookTimeList = useMemo(() => {
     // 조회된 도서별 누적시간 서버 페이지를 최근 기록순으로 연결해 반환한다
     return bookTimeQuery.data?.pages.flatMap((page) => page.data.list) ?? [];
@@ -1164,14 +1166,16 @@ export default function ReadingTimerPage() {
    */
   const applySummary = useCallback((nextSummary: ReadingTimerSummary) => {
 
+    // 상태 변경 응답에 최초 브라우저 수신 시각을 기록하고 캐시 재사용 시에는 기존 기준을 유지한다
+    const syncedSummary = syncTimerSummary(nextSummary);
     // 서버 요약을 화면 상태에 설정한다
-    setSummary(nextSummary);
+    setSummary(syncedSummary);
     // 내비게이션과 같은 서버 요약을 사용하도록 공통 Query 캐시를 갱신한다
-    queryClient.setQueryData(getTimerSummaryOptions().queryKey, nextSummary);
-    // 서버 기준 현재 세션 누적 시간을 카운터에 설정한다
-    setDisplaySeconds(nextSummary.activeTimer?.readSecs ?? 0);
+    queryClient.setQueryData(getTimerSummaryOptions().queryKey, syncedSummary);
+    // 캐시가 오래되어도 수신 후 실제로 흐른 시간을 포함해 화면 카운터에 설정한다
+    setDisplaySeconds(getLiveTimerSecs(syncedSummary));
     // 네비게이션 표시가 상태 변경 응답과 즉시 일치하도록 실행 여부를 알린다
-    notifyReadingTimerRunningChange(nextSummary.activeTimer?.tmrxStat === "RUNNING");
+    notifyReadingTimerRunningChange(syncedSummary.activeTimer?.tmrxStat === "RUNNING");
   }, []);
 
   useEffect(() => {
@@ -1217,13 +1221,14 @@ export default function ReadingTimerPage() {
       return undefined;
     }
     /**
-     * 서버가 준 누적 시간에서 화면 표시 초를 1초 증가시킨다
+     * 서버 응답 수신 후 실제 경과시간을 기준으로 화면 표시 초를 다시 계산한다
      *
      * @author SeungHyeon.Kang
+     * @return 반환값이 없다
      */
-    const tickTimer = () => {
-      // 단일 세션 최대 시간을 넘지 않도록 화면 초를 증가시킨다
-      setDisplaySeconds((currentSeconds) => Math.min(summary.maxSessionSecs, currentSeconds + 1));
+    const tickTimer = (): void => {
+      // interval 지연이나 백그라운드 정지와 관계없이 공통 기준 시각의 현재 초를 반영한다
+      setDisplaySeconds(getLiveTimerSecs(summary));
     };
     // 실행 중 화면 카운터를 1초 간격으로 갱신한다
     const intervalId = window.setInterval(tickTimer, 1000);
@@ -1231,7 +1236,7 @@ export default function ReadingTimerPage() {
     return () => {
       window.clearInterval(intervalId);
     };
-  }, [summary?.activeTimer?.tmrxStat, summary?.maxSessionSecs]);
+  }, [summary]);
 
   /**
    * 도서 선택값으로 새 독서 타이머를 시작한다
@@ -1264,8 +1269,13 @@ export default function ReadingTimerPage() {
    *
    * @author SeungHyeon.Kang
    * @param targetStatus 변경할 타이머 상태
+   * @param skipBlockingOperation 자동 완료 시 공통 처리 중 화면 제외 여부
+   * @return 상태 변경 요청이 끝나면 완료되는 Promise
    */
-  const changeTimer = async (targetStatus: TimerStatus) => {
+  const changeTimer = useCallback(async (
+    targetStatus: TimerStatus,
+    skipBlockingOperation = false,
+  ): Promise<void> => {
 
     const timerNumber = summary?.activeTimer?.tmrxNumb;
     // 현재 세션이 없으면 상태 변경 요청을 보내지 않는다
@@ -1277,7 +1287,7 @@ export default function ReadingTimerPage() {
     setIsChanging(true);
     try {
       // 사용자 소유 세션의 상태 변경을 요청한다
-      const response = await uptReadingTimerApi(timerNumber, targetStatus);
+      const response = await uptReadingTimerApi(timerNumber, targetStatus, skipBlockingOperation);
       // 변경 결과가 있으면 화면에 반영한다
       if (response.data) {
         // 서버가 반환한 최신 요약을 화면에 설정한다
@@ -1300,7 +1310,29 @@ export default function ReadingTimerPage() {
       // 상태 변경 처리 상태를 종료한다
       setIsChanging(false);
     }
-  };
+  }, [applySummary, summary?.activeTimer?.tmrxNumb]);
+
+  useEffect(() => {
+
+    const runningTimer = summary?.activeTimer;
+    // 목표시간이 없는 세션과 아직 목표에 도달하지 않은 세션은 자동 완료하지 않는다
+    if (runningTimer?.tmrxStat !== "RUNNING"
+        || typeof runningTimer.targSecs !== "number"
+        || displaySeconds < runningTimer.targSecs) {
+      // 자동 완료 조건이 아닌 정상 흐름을 종료한다
+      return;
+    }
+    // 같은 세션의 자동 완료 요청을 화면 렌더링마다 반복하지 않는다
+    if (autoCompletedTimerRef.current === runningTimer.tmrxNumb) {
+      // 이미 자동 완료를 요청한 세션의 후속 처리를 종료한다
+      return;
+    }
+
+    // 네트워크 응답을 기다리는 동안 같은 세션이 다시 요청되지 않도록 번호를 보관한다
+    autoCompletedTimerRef.current = runningTimer.tmrxNumb;
+    // 목표시간 종료를 사용자 입력 없이 완료하므로 별도 처리 중 화면 없이 서버에 저장한다
+    void changeTimer("COMPLETED", true);
+  }, [changeTimer, displaySeconds, summary?.activeTimer]);
 
   /**
    * 현재 읽는 도서를 선택할 수 있도록 도서 선택 모달을 연다

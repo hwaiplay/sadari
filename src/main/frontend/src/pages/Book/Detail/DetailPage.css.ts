@@ -203,13 +203,6 @@ export const bookInfoActionRow = style({
   width: "100%",
 });
 
-export const bookInfoButtonIcon = style({
-  width: "15px",
-  height: "15px",
-  display: "block",
-  flexShrink: 0,
-});
-
 export const contentPanel = style({
   display: "flex",
   flexDirection: "column",
@@ -266,13 +259,39 @@ export const bookInfoLabel = style({
 export const bookInfoValue = style({
   minWidth: 0,
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "16px",
   lineHeight: 1.45,
   color: vars.color.black,
   letterSpacing: 0,
   textAlign: "right",
   wordBreak: "break-word",
 });
+
+export const bookInfoSearchLink = style([
+  bookInfoValue,
+  {
+    justifySelf: "end",
+    maxWidth: "100%",
+    padding: "4px 6px",
+    border: 0,
+    borderRadius: "6px",
+    backgroundColor: "transparent",
+    cursor: "pointer",
+    textDecoration: "none",
+    transition: "background-color 140ms ease, color 140ms ease",
+
+    selectors: {
+      "&:hover": {
+        backgroundColor: vars.color.gray100,
+        color: vars.color.brandText,
+      },
+      "&:focus-visible": {
+        outline: "2px solid #78b991",
+        outlineOffset: "2px",
+      },
+    },
+  },
+]);
 
 export const reportStatsItem = style({
   position: "relative",

@@ -7,7 +7,8 @@
 import { message } from "@/app/messages/message";
 import { useHomeNavigation } from "@/app/navigation/HomeNavigationProvider";
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { queryClient } from "@/app/query/queryClient";
 import { queryKeys } from "@/app/query/queryKeys";
 import type { ReadingTimer, ReadingTimerSummary } from "@/features/Timer/api/readingTimerApi";
@@ -69,7 +70,7 @@ export const useDeleteMutation = () => {
   const moveHome = useHomeNavigation();
 
   /**
-   * 독후감 삭제 성공 즉시 홈 루트로 이동한 뒤 완료 결과를 안내한다
+   * 독후감 삭제 성공 즉시 캐시를 정리하고 홈 루트로 이동한다
    *
    * @author SeungHyeon.Kang
    * @param _response 검증이 끝난 독후감 삭제 응답
@@ -95,10 +96,42 @@ export const useDeleteMutation = () => {
     queryClient.removeQueries({ queryKey: queryKeys.readingTimerBookTimes });
     // 삭제한 독후감 상세 화면이 남지 않도록 성공 응답 즉시 홈 루트로 이동한다
     moveHome();
-    // "삭제되었습니다."
-    const deleteSuccessTitle = message("frontend.alert.deleteSuccessTitle");
-    // "삭제되었습니다."
-    void sweetSuccess(deleteSuccessTitle);
+  };
+
+  /**
+   * 독후감 삭제와 성공 후처리를 실행하고 같은 알림에서 완료를 안내한다
+   *
+   * @author SeungHyeon.Kang
+   * @param reptNumb 삭제할 독후감 번호
+   * @return 독후감 삭제 응답 Promise
+   * @throws 독후감 삭제 또는 성공 후처리에 실패하면 발생한다
+   */
+  const deleteReport = async (
+    reptNumb: Parameters<typeof delReportApi>[0],
+  ): ReturnType<typeof delReportApi> => {
+    /**
+     * 서버 삭제 요청과 캐시 및 화면 후처리를 하나의 차단 작업으로 실행한다
+     *
+     * @author SeungHyeon.Kang
+     * @return 독후감 삭제 응답 Promise
+     * @throws 독후감 삭제 또는 성공 후처리에 실패하면 발생한다
+     */
+    const deleteReportAndRefresh = async (): ReturnType<typeof delReportApi> => {
+      // 서버에 독후감 삭제를 요청한다
+      const response = await delReportApi(reptNumb);
+      // 성공 응답 직후 캐시를 정리하고 삭제된 상세 화면을 제거한다
+      handleDeleteSuccess(response, reptNumb);
+      // Mutation 결과로 사용할 삭제 응답을 반환한다
+      return response;
+    };
+
+    // 삭제 후처리가 끝나면 처리 중 알림을 삭제 성공 알림으로 전환한다
+    return runBlockingOperation(deleteReportAndRefresh, {
+      success: {
+        // "삭제되었습니다."
+        title: message("frontend.alert.deleteSuccessTitle"),
+      },
+    });
   };
 
   /**
@@ -123,8 +156,7 @@ export const useDeleteMutation = () => {
 
   // 독후감 삭제 요청과 성공 및 실패 화면 처리를 결합한 Mutation을 반환한다
   return useMutation({
-    mutationFn: delReportApi,
-    onSuccess: handleDeleteSuccess,
+    mutationFn: deleteReport,
     onError: handleDeleteError,
   });
 };

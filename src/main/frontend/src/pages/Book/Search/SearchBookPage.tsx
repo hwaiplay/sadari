@@ -15,10 +15,10 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { PopularBookPeriodType } from "@/features/Book/types/book.type";
-import type { LayoutOutletContext } from "@/components/Layout/Layout";
-import { useOutletContext } from "react-router-dom";
-import { clsx } from "clsx";
 import * as styles from "./SearchBookPage.css";
+import { clsx } from "clsx";
+import * as stickyStyles from "@/components/Search/StickySearchBar/StickySearchBar.css";
+import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySearch";
 
 const DESCRIPTION_PREVIEW_LENGTH = 90;
 const POPULAR_PERIOD_OPTIONS: readonly CustomSelectOption<PopularBookPeriodType>[] = [
@@ -44,15 +44,16 @@ const POPULAR_PERIOD_LABELS: Readonly<Record<PopularBookPeriodType, string>> = {
 /**
  * 책 검색 입력과 결과 목록을 표시하고 사용자 동작을 검색 훅에 전달한다.
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 책 검색 페이지 컴포넌트
  */
 const SearchBookPage = () => {
 
-  // 공통 헤더의 표시 상태를 검색 입력 고정 위치와 동기화한다
-  const { isHeaderHidden } = useOutletContext<LayoutOutletContext>();
+  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회한다
+  const { isSticky, sentinelRef } = useStickySearch();
   const {
     bookResult,
+    handleAuthorSelect,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
@@ -75,18 +76,25 @@ const SearchBookPage = () => {
     saveTimerReport,
     setSearchKeyword,
   } = useSearchBookPage();
-  // 헤더가 숨겨진 동안 검색 입력 영역이 화면 최상단을 채우도록 스타일을 구성한다
-  const searchBarClassName = clsx(
-    styles.searchBar,
-    isHeaderHidden && styles.searchBarHeaderHidden,
-  );
-
   // 책 검색 입력과 조회 결과 목록 화면을 반환한다.
   return (
     <main className={styles.page}>
       <Container className={styles.content}>
+        {/* 도서 검색 영역이 실제 고정되는 시점을 감지하는 화면 경계 */}
+        <span
+          ref={sentinelRef}
+          className={stickyStyles.sentinel}
+          aria-hidden="true"
+        />
         {/* 스크롤 중에도 헤더 위치에 맞춰 유지되는 책 검색어 입력과 검색 실행 영역 */}
-        <form className={searchBarClassName} onSubmit={handleSearchClick}>
+        <form
+          className={clsx(
+            styles.searchBar,
+            stickyStyles.surface,
+            isSticky && stickyStyles.stuck,
+          )}
+          onSubmit={handleSearchClick}
+        >
           <label className={styles.searchLabel}>
             <span className={styles.hiddenLabel}>
               {/* "책 제목, 저자를 입력하세요" */}
@@ -181,6 +189,30 @@ const SearchBookPage = () => {
                     ? `${description.slice(0, DESCRIPTION_PREVIEW_LENGTH)}...`
                     : description;
 
+                /**
+                 * 표지와 제목 및 더보기 버튼에서 선택한 도서의 상세 화면을 연다.
+                 *
+                 * @author SeungHyeon.Kang
+                 * @return 반환값이 없다
+                 */
+                function handleBookDetailClick(): void {
+
+                  // 검색 유형에 맞는 선택 도서 상세 화면으로 이동한다.
+                  handleMoreInfo(book);
+                }
+
+                /**
+                 * 선택한 도서의 작가명을 검색어로 사용해 즉시 조회한다.
+                 *
+                 * @author SeungHyeon.Kang
+                 * @return 반환값이 없다
+                 */
+                function handleAuthorClick(): void {
+
+                  // 선택한 작가명을 입력창과 검색 결과에 함께 반영한다.
+                  void handleAuthorSelect(author);
+                }
+
                 // 검색된 책의 요약 정보와 동작 버튼을 반환한다.
                 return (
                   <article
@@ -189,7 +221,11 @@ const SearchBookPage = () => {
                   >
                     {/* 검색된 책의 표지 영역 */}
                     <div className={styles.coverArea}>
-                      <div className={styles.coverFrame}>
+                      <button
+                        className={styles.coverFrame}
+                        type="button"
+                        onClick={handleBookDetailClick}
+                      >
                         <img
                           className={styles.coverImage}
                           src={getBookCoverImageSource(book.image)}
@@ -199,7 +235,7 @@ const SearchBookPage = () => {
                             title,
                           ])}
                         />
-                      </div>
+                      </button>
                     </div>
 
                     {/* 인기 도서는 표지 아래와 제목 위에 순위 및 작성자 수를 표시한다. */}
@@ -217,11 +253,29 @@ const SearchBookPage = () => {
 
                     {/* 검색된 책의 제목과 저자 및 출판사 또는 평균 평점 영역 */}
                     <div className={styles.bookMeta}>
-                      <h2 className={styles.bookTitle}>{title}</h2>
+                      <h2 className={styles.bookTitle}>
+                        <button
+                          className={styles.bookTitleButton}
+                          type="button"
+                          onClick={handleBookDetailClick}
+                        >
+                          {title}
+                        </button>
+                      </h2>
                       {isPopularMode ? (
                         /* 인기 도서는 출판사 대신 도서 정보와 같은 평균 별점을 표시한다. */
                         <div className={styles.authorRatingLine}>
-                          <p className={styles.meta}>{author}</p>
+                          <p className={styles.meta}>
+                            {author ? (
+                              <button
+                                className={styles.authorButton}
+                                type="button"
+                                onClick={handleAuthorClick}
+                              >
+                                {author}
+                              </button>
+                            ) : null}
+                          </p>
                           {/* 평균 평점이 있으면 저자 옆에 구분선과 도서 평균 별점을 표시한다. */}
                           {book.ratingAverage !== null &&
                             book.ratingAverage !== undefined &&
@@ -235,7 +289,17 @@ const SearchBookPage = () => {
                       ) : (
                         /* 직접 검색 결과는 기존 저자와 출판사 정보를 유지한다. */
                         <p className={styles.meta}>
-                          {author} / {publisher}
+                          {author ? (
+                            <button
+                              className={styles.authorButton}
+                              type="button"
+                              onClick={handleAuthorClick}
+                            >
+                              {author}
+                            </button>
+                          ) : null}
+                          {author && publisher ? " / " : null}
+                          {publisher}
                         </p>
                       )}
                     </div>
@@ -252,7 +316,7 @@ const SearchBookPage = () => {
                       <button
                         className={styles.actionButton}
                         type="button"
-                        onClick={() => handleMoreInfo(book)}
+                        onClick={handleBookDetailClick}
                       >
                         {/* "더보기" */}
                         {message("frontend.book.search.more")}

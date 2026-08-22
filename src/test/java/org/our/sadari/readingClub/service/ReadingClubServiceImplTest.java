@@ -43,6 +43,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-14        Hanwon.Jang        모임 접근·초대·독서 검증 추가
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 검증
+ * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -413,7 +414,7 @@ class ReadingClubServiceImplTest {
         // INVITE_CLUB 템플릿 기반 알림 저장이 성공하도록 결과를 구성한다
         when(alimService.sendAlim(
                 30L
-              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
               , 10L
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
@@ -424,10 +425,12 @@ class ReadingClubServiceImplTest {
 
         // 초대 성공과 예약석 저장 및 템플릿 기반 알림 발송을 검증한다
         assertEquals(200, result.getCode());
+        // 팔로우 요청과 모임 초대가 FOLLOW 상황 코드로 통합됐는지 확인한다
+        assertEquals("FOLLOW", Constant.ALIM_SITU_FOLLOW_CLUB);
         verify(readingClubMapper).setInvitation(10L, 30L, 20L);
         verify(alimService).sendAlim(
                 30L
-              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
               , 10L
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
@@ -467,7 +470,7 @@ class ReadingClubServiceImplTest {
         // 사용할 수 있는 초대 알림 템플릿이 없는 실패 결과를 구성한다
         when(alimService.sendAlim(
                 30L
-              , Constant.ALIM_SITU_CLUB
+              , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
               , 10L
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")

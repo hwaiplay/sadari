@@ -312,6 +312,8 @@
              , FN_GET_CODE_NAME(#{codeBookColr}, A.REPT_COLR, NULL) AS REPT_COLR_NAME
              , A.PUBC_YSNO
              , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}) AS PUBC_YSNO_NAME
+             , A.LKAL_YSNO AS LIKE_ALIM_YSNO
+             , A.RPAL_YSNO AS REPLY_ALIM_YSNO
              , A.REPT_CNTN
              , SHA2(CONCAT_WS('|'
                     , COALESCE(A.REPT_STAT, '')
@@ -381,15 +383,15 @@
          LIMIT 1
     </select>
 
-    <!-- 좋아요 요청이 가능한 공개 독후감 대상인지 조회한다. -->
-    <select id="getPublicReportLikeCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
+    <!-- 좋아요 요청이 가능한 독후감의 작성자와 좋아요 알림 설정을 조회한다. -->
+    <select id="getReportLikeDtl" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
-        SELECT /* getPublicReportLikeCnt */
-               COUNT(*)
-         FROM TM_REPORT R
+        SELECT /* getReportLikeDtl */
+               R.USER_NUMB AS TARGET_USER_NUMB
+             , R.LKAL_YSNO AS LIKE_ALIM_YSNO
+          FROM TM_REPORT R
          WHERE R.REPT_NUMB = #{tagtNumb}
-           AND R.USER_NUMB = #{targetUserNumb}
            AND (
                R.USER_NUMB = #{userNumb}
             OR (    R.PUBC_YSNO = #{commYes}
@@ -563,6 +565,26 @@
                     , COALESCE(PUBC_YSNO, '')
                     , COALESCE(REPT_CNTN, '')
                ), 256) = #{editVersion}
+    </update>
+
+    <!-- 로그인 사용자가 작성한 독후감의 좋아요 알림 여부를 변경한다. -->
+    <update id="uptLikeAlim" parameterType="org.our.sadari.report.dto.ReportAlimDto">
+        UPDATE /* uptLikeAlim */
+               TM_REPORT
+           SET LKAL_YSNO = #{useYsno}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE REPT_NUMB = #{reptNumb}
+           AND USER_NUMB = #{userNumb}
+    </update>
+
+    <!-- 로그인 사용자가 작성한 독후감의 댓글 알림 여부를 변경한다. -->
+    <update id="uptReplyAlim" parameterType="org.our.sadari.report.dto.ReportAlimDto">
+        UPDATE /* uptReplyAlim */
+               TM_REPORT
+           SET RPAL_YSNO = #{useYsno}
+             , UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE REPT_NUMB = #{reptNumb}
+           AND USER_NUMB = #{userNumb}
     </update>
 
     <!-- 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다. -->
