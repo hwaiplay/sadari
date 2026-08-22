@@ -95,6 +95,7 @@
 - DB 트랜잭션이 롤백되면 먼저 저장된 실제 파일도 제거합니다.
 - 프로필 또는 배경 이미지가 교체되면 사용자 참조와 기존 `TM_FILEXM` 메타정보 삭제를 같은 트랜잭션에서 처리하고, 커밋이 완료된 뒤 기존 물리 파일을 삭제합니다.
 - 외부 URL만 메타정보로 저장된 이미지는 로컬 물리 파일 삭제 대상에서 제외하고 `TM_FILEXM` 메타정보만 삭제합니다.
+- 카카오 사용자 정보가 기본 프로필 이미지 사용 상태를 반환하면 해당 이미지를 서비스 프로필 파일로 저장하거나 사용자 프로필에 연결하지 않습니다.
 - 외부 Kakao 프로필 이미지는 외부 다운로드 실패가 로그인 전체 실패로 이어지지 않도록 대체 경로 저장을 허용합니다.
 
 ### 공지사항 이미지
@@ -126,8 +127,10 @@
 - `src/main/java/org/our/sadari/global/file/controller/FileResourceController.java`
 - `src/main/java/org/our/sadari/global/file/dto/ProfileImageDraftDto.java`
 - `src/main/java/org/our/sadari/global/scheduler/ProfileImageDraftCleanupScheduler.java`
+- `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/user/service/UserServiceImpl.java`
 - `src/main/frontend/src/pages/My/ProfileEditPage.tsx`
+- `src/main/frontend/src/pages/Social/SocialProfilePage.tsx`
 - `src/main/java/org/our/sadari/report/service/ReportServiceImpl.java`
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
 - `src/main/java/org/our/sadari/inquiry/service/InquiryServiceImpl.java`

@@ -32,12 +32,17 @@ import java.util.concurrent.TimeUnit;
  * 2026-08-06        SeungHyeon.Kang    영구 탈퇴 회원의 프로필과 배경 물리 파일 삭제 추가
  * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
  * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 데이터 삭제 추가
+ * 2026-08-22        SeungHyeon.Kang    피신고자 물리 삭제 전 미처리 신고 종결
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class UserHardDeleteServiceImpl implements UserHardDeleteService {
+
+    // 피신고자 물리 삭제로 원본 검토가 끝난 신고에 남길 시스템 처리 내용
+    private static final String HARD_DELETE_COMPLAINT_PROCESS =
+            "피신고자 영구 탈퇴 및 원본 물리 삭제로 관련 미처리 신고를 시스템 종결함.";
 
     // 영구 삭제 대상 조회 최대 건수
     @Value("${scheduler.max-size:100}")
@@ -96,6 +101,9 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
             for (UserWithdrawalDto target : targets) {
                 // 프로시저가 파일 메타정보를 삭제하기 전에 커밋 후 사용할 물리 파일 경로를 조회한다
                 List<FileDto> fileList = fileService.getFileListByRegiUser(target.getUserNumb());
+                // 피신고자 연결이 익명화되기 전에 해당 사용자의 미처리 신고를 운영 이력으로 종결한다
+                userHardDeleteMapper.uptHardDeleteComplaints(
+                        target.getUserNumb(), HARD_DELETE_COMPLAINT_PROCESS);
                 // 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 삭제한다
                 userHardDeleteMapper.delHardDeleteUser(target.getUserNumb());
                 // 회원 원본과 함께 모든 기기 세션 및 Redis 인증 캐시를 물리 삭제한다

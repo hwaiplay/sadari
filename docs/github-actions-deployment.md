@@ -116,9 +116,15 @@
   활성화할 수 없습니다.
 - 운영 유예기간은 `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` Actions Variable로 조정할 수 있으며,
   등록하지 않으면 30일을 사용합니다.
-- 로컬과 운영의 `complaint.auto-action` 임계치는 독후감, 댓글, 프로필 사진 및 한줄소개 모두 `5`건으로 고정합니다.
+- 로컬 `application-loc.yml`과 관리자 앱 기본 설정의 `complaint.auto-action` 임계치는 기능 검증을 위해 독후감, 댓글, 프로필 사진, 배경사진 및 한줄소개 모두 `1`건으로 고정합니다.
+- 운영 `application-prod.yml`과 관리자 앱 `prod` 프로필은 같은 다섯 대상의 임계치를 모두 `5`건으로 고정합니다. 관리자 운영 배포에는 `SPRING_PROFILES_ACTIVE=prod`를 지정해 사용자 서버와 표시 기준을 일치시킵니다.
   이 값은 운영 중 임의 변경으로 조치 기준이 달라지지 않도록 Actions Variable이나 Secret으로 노출하지 않습니다.
-- 자동 조치 기능을 배포하기 전에 `scripts/db/mysql/01-create.sql`의 `TH_CMACTN` 테이블과
+- 로컬과 운영의 `complaint.evidence.retention-days`는 `180`, `cleanup-batch-size`는 `100`,
+  증거 정리 스케줄은 매일 `04:20`으로 고정합니다. 미처리 신고와 연결된 증거는 보존하고,
+  연결된 신고가 모두 종결된 뒤 최근 처리일로부터 180일이 지난 증거만 물리 삭제합니다.
+  이 값들은 신고 감사 정책의 일부이므로 Actions Variable이나 Secret으로 노출하지 않습니다.
+- 자동 조치 및 증거 보관 기능을 배포하기 전에 `scripts/db/mysql/01-create.sql`의
+  `TH_CMPLNT`, `TH_CMACTN`, `TH_CMEVDC` 테이블과
   `scripts/db/mysql/output/02-admin-insert.sql`의 `CMPL_ACTN`, `CMPL_RSLT`, `CMPL_TAGT` 공통코드를 먼저 반영합니다.
 
 ## EC2 사전 조건

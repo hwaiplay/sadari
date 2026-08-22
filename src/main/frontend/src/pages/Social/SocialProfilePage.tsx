@@ -9,6 +9,8 @@ import { useBodyScrollLock } from "@/app/utils/modalUtil";
 import Loading from "@/components/Loading/Loading";
 import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
+import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
+import type { SafetyReportOption } from "@/components/UserActionMenu/userActionMenu.types";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
 import {
   getBookCoverImageSource,
@@ -39,12 +41,17 @@ import {
   getReadingGradeText,
 } from "@/features/User/utils/profileReadingFormat";
 import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "@/pages/My/ProfileEditPage.css";
 
 type ReadingPeriod = "week" | "month" | "year";
+
+type LoadedProfileImage = {
+  userNumb: number;
+  source: string;
+};
 
 /**
  * 목표 달성률에 따라 파스텔톤 진행 막대 색상을 반환합니다.
@@ -119,6 +126,7 @@ function SocialProfilePage() {
     year: false,
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [loadedProfileImage, setLoadedProfileImage] = useState<LoadedProfileImage | null>(null);
   const followListScrollTimeoutRef = useRef<number | null>(null);
   useBodyScrollLock(Boolean(followListType));
 
@@ -203,6 +211,31 @@ function SocialProfilePage() {
       }
     };
   }, []);
+
+  /**
+   * 화면에 표시할 원본 프로필 사진이 실제로 로드됐는지 기록한다.
+   *
+   * @author HanWon.Jang
+   * @param event 프로필 이미지 로드 완료 이벤트
+   * @return 반환값이 없다
+   */
+  const handleProfileImageLoad = (event: SyntheticEvent<HTMLImageElement>) => {
+
+    // 현재 프로필 응답에서 기대한 이미지 경로를 브라우저 절대 경로로 변환한다
+    const expectedSource = normalizeProfileImageSource(profile?.porfPath);
+    const expectedUrl = new URL(expectedSource, window.location.origin).href;
+    // 기본 이미지이거나 로드 실패 뒤 대체된 이미지이면 신고 가능한 원본으로 기록하지 않는다
+    if (expectedSource === DEFAULT_PROFILE_IMAGE || event.currentTarget.currentSrc !== expectedUrl) {
+      setLoadedProfileImage(null);
+      return;
+    }
+
+    // 다른 사용자 또는 이전 경로의 로드 결과와 섞이지 않도록 대상과 원본 경로를 함께 기록한다
+    setLoadedProfileImage({
+      userNumb: targetUserNumb,
+      source: expectedSource,
+    });
+  };
 
   /**
    * 프로필 팔로우 버튼의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출한다
@@ -862,6 +895,91 @@ function SocialProfilePage() {
     );
   }
 
+  // "-"
+  const emptyValue = message("frontend.common.emptyValue");
+  const targetUserNick = profile.userNick || emptyValue;
+  // 한줄소개 앞뒤 공백을 제거하여 실제 신고 선택지 표시 여부를 판단한다
+  const profileIntroduction = profile.intrCntn?.trim();
+  // 사용자 계정 신고는 세부 신고 대상과 겹치지 않도록 현재 닉네임만 표시한다
+  const userProfileContent = targetUserNick;
+  // 공통 기본 이미지와 실제 원본 프로필 사진의 경로를 같은 기준으로 비교한다
+  const profileImageSource = normalizeProfileImageSource(profile.porfPath);
+  // 현재 대상의 비기본 원본 이미지가 정상 로드된 경우에만 프로필 사진 신고를 허용한다
+  const hasReportableProfileImage = profileImageSource !== DEFAULT_PROFILE_IMAGE
+    && loadedProfileImage?.userNumb === targetUserNumb
+    && loadedProfileImage.source === profileImageSource;
+  // 다른 활성 사용자의 프로필에서 신고할 수 있는 현재 사용자 계정 대상을 구성한다
+  const userProfileTarget = {
+    targetType: "USER" as const,
+    targetNumb: targetUserNumb,
+    userNumb: targetUserNumb,
+    userNick: targetUserNick,
+    content: userProfileContent,
+  };
+  // 현재 화면에 실제로 표시된 이미지와 한줄소개만 세부 신고 선택지에 포함한다
+  const profileReportOptions: SafetyReportOption[] = [
+    {
+      // "사용자 계정 신고"
+      label: message("frontend.social.report.user"),
+      target: userProfileTarget,
+    },
+  ];
+
+  // 실제 프로필 사진이 있는 사용자만 접수 시점 이미지 증거를 신고할 수 있게 한다
+  if (hasReportableProfileImage) {
+    // "프로필 사진 신고"
+    const profileImageReportLabel = message("frontend.social.report.profileImage");
+    // "프로필 사진"
+    const profileImageTargetContent = message("frontend.userReport.target.profileImage");
+    // 프로필 이미지 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: profileImageReportLabel,
+      target: {
+        targetType: "PROFILE" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: profileImageTargetContent,
+      },
+    });
+  }
+
+  // 실제 배경사진이 있는 사용자만 접수 시점 이미지 증거를 신고할 수 있게 한다
+  if (profile.bgimPath) {
+    // "배경사진 신고"
+    const backgroundImageReportLabel = message("frontend.social.report.backgroundImage");
+    // "배경사진"
+    const backgroundImageTargetContent = message("frontend.userReport.target.backgroundImage");
+    // 배경 이미지 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: backgroundImageReportLabel,
+      target: {
+        targetType: "BACKGROUND" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: backgroundImageTargetContent,
+      },
+    });
+  }
+
+  // 공백이 아닌 한줄소개가 있는 사용자만 한줄소개를 별도 신고할 수 있게 한다
+  if (profileIntroduction) {
+    // "한줄소개 신고"
+    const introductionReportLabel = message("frontend.social.report.introduction");
+    // 한줄소개 신고 대상을 선택 메뉴에 추가한다
+    profileReportOptions.push({
+      label: introductionReportLabel,
+      target: {
+        targetType: "INTRO" as const,
+        targetNumb: targetUserNumb,
+        userNumb: targetUserNumb,
+        userNick: targetUserNick,
+        content: profileIntroduction,
+      },
+    });
+  }
+
   return (
     /* 상대 사용자의 프로필과 독서 활동 전체 영역 */
     <main className={styles.page}>
@@ -884,6 +1002,17 @@ function SocialProfilePage() {
               <span aria-hidden="true" />
             </FullscreenImageButton>
           )}
+          {/* 마이페이지 프로필 수정 버튼과 같은 우하단 위치의 상대 사용자 신고·차단 메뉴 */}
+          <div className={styles.coverActionGroup}>
+            <UserActionMenu
+              userNick={targetUserNick}
+              reportTarget={userProfileTarget}
+              reportOptions={profileReportOptions}
+              triggerClassName={styles.socialProfileMoreButton}
+              triggerIconClassName={styles.socialProfileMoreIcon}
+              menuClassName={styles.socialProfileMoreMenu}
+            />
+          </div>
         </div>
 
         {/* 상대 사용자 정보와 팔로우 상태 영역 */}
@@ -900,6 +1029,7 @@ function SocialProfilePage() {
                   className={styles.profileImage}
                   src={profile.porfPath}
                   alt={profile.userNick ?? message("frontend.profile.nick")}
+                  onLoad={handleProfileImageLoad}
                 />
               </FullscreenImageButton>
               {followStatName && (

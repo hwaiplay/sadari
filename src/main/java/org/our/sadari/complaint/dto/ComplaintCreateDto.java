@@ -16,8 +16,10 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-22        SeungHyeon.Kang    상세 내용 500자 제한 반영
  */
 @Data
+@Schema(description = "신고 접수 요청 DTO")
 public class ComplaintCreateDto {
 
     @Schema(description = "신고 대상 유형 세부코드", example = "CMPL_BOOK_REPORT")
@@ -33,7 +35,7 @@ public class ComplaintCreateDto {
     @NotBlank
     private String cmplRson;
 
-    @Schema(description = "신고 상세 내용", example = "신고 내용을 확인해 주세요.")
-    @Size(max = 1000)
+    @Schema(description = "신고 상세 내용(최대 500자)", example = "신고 내용을 확인해 주세요.")
+    @Size(max = 500)
     private String cmplCntn;
 }
