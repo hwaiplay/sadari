@@ -4,7 +4,7 @@ import lombok.Getter;
 
 /**
  * fileName       : ResultEnum
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-03-25
  * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
  * ===========================================================
@@ -15,7 +15,6 @@ import lombok.Getter;
  * 2026-08-16        SeungHyeon.Kang    도서 검색 요청 제한 코드 추가
  * 2026-08-20        SeungHyeon.Kang    타이머 목표시간 검증 코드 추가
  * 2026-08-20        Hanwon.Jang        모임 독서 변경 검증 코드 추가
- * 2026-08-21        SeungHyeon.Kang    사용자 콘텐츠 신고 검증 코드 추가
  */
 @Getter
 public enum ResultEnum {
@@ -144,16 +143,6 @@ public enum ResultEnum {
      * 작성 또는 상태 변경된 모임원 독후감이 있어 현재 회차의 도서를 변경할 수 없는 경우이다.
      */
     READING_CLUB_BOOK_CHANGE_REJECTED(2026, "readingClub.alert.0001"),
-
-    /**
-     * 동일 사용자가 같은 콘텐츠를 이미 신고한 경우이다.
-     */
-    COMPLAINT_DUPLICATED(2027, "complaint.alert.0001"),
-
-    /**
-     * 사용자가 본인이 작성한 콘텐츠를 신고한 경우이다.
-     */
-    COMPLAINT_SELF_REJECTED(2028, "complaint.alert.0002"),
 
     /**
      * 처리 결과와 메시지 키를 연결하는 enum 항목이다.

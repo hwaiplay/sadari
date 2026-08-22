@@ -1,8 +1,5 @@
 import { message } from "@/app/messages/message";
-import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import type { UserReportLocationState } from "@/components/UserActionMenu/userActionMenu.types";
-import { setUserReportApi } from "@/features/UserReport/api/userReportApi";
 import { useState, type ChangeEvent, type FormEvent, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router-dom";
 import * as styles from "./UserReportPage.css";
@@ -21,8 +18,7 @@ const UserReportPage = () => {
   const reportState = location.state as UserReportLocationState | null;
   const [selectedReason, setSelectedReason] = useState("");
   const [detailReason, setDetailReason] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const isSubmitDisabled = isSubmitting || !selectedReason
+  const isSubmitDisabled = !selectedReason
     || (selectedReason === OTHER_REASON && !detailReason.trim());
 
   // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동한다.
@@ -115,56 +111,30 @@ const UserReportPage = () => {
   };
 
   /**
-   * 신고 정보를 서버에 접수하고 성공한 경우 완료 페이지로 이동한다.
+   * 화면에서 선택한 신고 정보를 완료 페이지로 전달한다.
    *
    * @author Hanwon.Jang
    * @param event 신고 양식 제출 이벤트
-   * @return 신고 접수 처리가 끝나면 완료되는 Promise
+   * @return 반환값이 없다
    */
-  const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     // 브라우저 기본 양식 전송으로 페이지가 새로고침되지 않게 한다
     event.preventDefault();
 
     if (isSubmitDisabled) {
-      // 필수 사유가 없거나 이미 처리 중이면 추가 접수를 중단한다
+      // 필수 신고 사유가 없으면 완료 화면 이동을 중단한다
       return;
     }
 
-    // 요청이 끝날 때까지 추가 제출을 차단한다
-    setIsSubmitting(true);
-    // 서버 접수 성공과 실패를 분리하여 완료 화면 이동 여부를 결정한다
-    try {
-      // 서버가 대상과 신고 사유를 다시 검증하도록 신고 접수를 요청한다
-      await setUserReportApi({
-        targetType: target.targetType,
-        targetNumb: target.targetNumb,
-        reason: selectedReason,
+    // 서버에 저장하지 않고 화면 전용 신고 정보를 완료 화면으로 전달한다
+    navigate("/user-report/complete", {
+      replace: true,
+      state: {
+        target,
+        selectedReason,
         detailReason,
-      });
-      // 저장 성공이 확인된 신고만 완료 화면으로 전달한다
-      navigate("/user-report/complete", {
-        replace: true,
-        state: {
-          target,
-          selectedReason,
-          detailReason,
-        },
-      });
-    }
-
-    catch (error) {
-      // "등록에 실패했습니다."
-      const createFailedTitle = message("frontend.alert.createFailedTitle");
-      // "다시 시도해주세요."
-      const retryMessage = message("frontend.common.tryAgain");
-      // 서버 업무 실패 메시지 또는 공통 재시도 문구를 오류 모달에 표시한다
-      void sweetError(createFailedTitle, getApiErrorMessage(error, retryMessage));
-    }
-
-    finally {
-      // 성공과 실패 여부에 관계없이 다시 제출할 수 있도록 진행 상태를 해제한다
-      setIsSubmitting(false);
-    }
+      },
+    });
   };
 
   // 신고 대상과 사유 입력 및 제출 버튼으로 구성된 페이지를 반환한다
@@ -202,7 +172,7 @@ const UserReportPage = () => {
         <textarea
             className={styles.detailTextarea}
             value={detailReason}
-            maxLength={1000}
+            maxLength={500}
             placeholder={detailPlaceholder}
             aria-label={detailAria}
             onChange={handleDetailChange}
