@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 처리
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
- * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 처리
+ * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -397,6 +397,41 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      */
     @Override
     public ResultData getReadingGoalResult(Long userNumb, Long clubNumb) {
+        // 모임 상세에서는 가장 최근에 종료된 독서 회차의 결과를 조회한다
+        return getReadingGoalResultInternal(userNumb, clubNumb, null);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 완료 회차 번호
+     * @return 지정한 완료 독서 회차의 목표 결과
+     */
+    @Override
+    public ResultData getReadingGoalResult(Long userNumb, Long clubNumb, Long rondNumb) {
+        // 회차 결과 조회에 필요한 모든 식별값이 있는지 확인한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 목록에서 선택한 완료 회차의 결과를 조회한다
+        return getReadingGoalResultInternal(userNumb, clubNumb, rondNumb);
+    }
+
+    /**
+     * 활성 모임원에게 최신 또는 지정 완료 회차의 목표 결과를 제공한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param rondNumb 조회할 회차 번호이며 최신 회차 조회이면 Null
+     * @return 완료 독서 회차의 목표 결과
+     */
+    private ResultData getReadingGoalResultInternal(Long userNumb, Long clubNumb, Long rondNumb) {
         // 종료 결과 조회에 필요한 두 식별값이 없으면 권한과 결과를 조회하지 않는다
         if (StringUtil.hasEmpty(userNumb, clubNumb)) {
             // "요청값이 올바르지 않아요."
@@ -411,9 +446,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 공개 가능한 활성 참여자 기준으로 최신 종료 회차 요약을 조회한다
+        // 공개 가능한 활성 참여자 기준으로 최신 또는 지정 종료 회차 요약을 조회한다
         ReadingClubDto.ReadingGoalResultDto result =
-                readingClubMapper.getLatestReadingGoalResult(clubNumb, userNumb);
+                readingClubMapper.getReadingGoalResult(clubNumb, userNumb, rondNumb);
         // 종료 회차가 없으면 화면에서 결과 팝업을 생략할 수 있도록 빈 성공 응답을 반환한다
         if (StringUtil.isEmpty(result)) {
             // 종료 결과가 없는 성공 응답을 반환한다
@@ -430,7 +465,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /**
      * {@inheritDoc}
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
      * @param clubNumb 조회할 모임 번호
      * @param page 조회할 페이지 번호

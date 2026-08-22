@@ -228,6 +228,13 @@ apply: always
 const today = new Date();
 ```
 
+### 8.3 화살표 함수
+
+- TypeScript와 JavaScript의 모든 함수는 화살표 함수로 작성합니다.
+- React 컴포넌트, 커스텀 Hook, 이벤트 처리 함수, 비동기 함수 및 콜백 함수에도 동일하게 적용합니다.
+- `function` 키워드를 사용하는 함수 선언식과 함수 표현식은 작성하지 않습니다.
+- 기존 함수를 수정하거나 별도 파일로 분리할 때도 화살표 함수 형태로 변경합니다.
+
 ## 9. 로직 주석 및 코드 형식
 
 ### 9.1 함수 시작 공백
@@ -294,7 +301,7 @@ if (userNumb !== undefined && resultData.code === 200
 
 - JSDoc은 `/**`로 시작하고 `*/`로 끝내며 각 내부 줄은 `*`로 시작합니다.
 - 첫 문장에는 함수의 실제 업무 대상과 처리 목적을 구체적으로 작성합니다.
-- 모든 함수에 `@author SeungHyeon.Kang`을 작성합니다.
+- 모든 함수에 `@author HanWon.Jang`을 작성합니다.
 - 파라미터가 있으면 모든 파라미터에 `@param`과 설명을 작성합니다.
 - 반환 여부와 관계없이 모든 함수에 `@return`과 반환값의 의미를 작성합니다.
 - 예외가 발생하거나 Promise가 reject될 수 있으면 `@throws`와 발생 조건을 작성합니다.
@@ -304,7 +311,7 @@ if (userNumb !== undefined && resultData.code === 200
 /**
  * 독후감 번호를 사용하여 독후감 상세 화면으로 이동한다
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @param reptNumb 이동할 독후감 번호
  * @return 반환값이 없다
  */

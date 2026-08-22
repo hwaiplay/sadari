@@ -88,13 +88,13 @@ export default function ClubDetailPage() {
     ? /* "공개" */ message("frontend.common.public")
     : /* "비공개" */ message("frontend.common.private");
   const isActiveMember = club.membStat === "ACTIVE";
-  // 프로필 이미지는 최대 10명까지만 표시한다
+  // 프로필 이미지는 최대 10명까지만 표시
   const memberProfiles = members.slice(0, MEMBER_PROFILE_VISIBLE_LIMIT);
-  // 10명을 초과한 모임원 수만 추가 인원 문구로 표시한다
+  // 10명을 초과한 모임원 수만 추가 인원 문구로 표시
   const additionalMemberCount = Math.max(members.length - MEMBER_PROFILE_VISIBLE_LIMIT, 0);
-  // 추가 인원이 있는 경우 표시 프로필을 겹쳐 배치한다
+  // 추가 인원이 있는 경우 표시 프로필을 겹쳐 배치
   const hasAdditionalMembers = additionalMemberCount > 0;
-  // 예정 또는 진행 중인 회차 번호가 있으면 현재 독서 정보를 표시한다
+  // 예정 또는 진행 중인 회차 번호가 있으면 현재 독서 정보를 표시
   const hasCurrentReading = Number.isFinite(club.currentRondNumb);
   // 첫 회차가 아직 없으면 다음 독서 순번을 1로 표시한다
   const readingOrder = club.readingOrdr ?? 1;
@@ -331,8 +331,8 @@ export default function ClubDetailPage() {
               <button
                 className={styles.navigationRow}
                 type="button"
-                onClick={handleReadingHistory}
               >
+                {/* 다음 도서 투표 */}
                 <span>
                   <strong>{message("frontend.readingClub.detail.nextVote")}</strong>
                   <small className={styles.navigationDescription}>
@@ -345,7 +345,13 @@ export default function ClubDetailPage() {
                   aria-hidden="true"
                 />
               </button>
-              <button className={styles.navigationRow} type="button">
+
+              {/* 이전 독서 기록 */}
+              <button
+                className={styles.navigationRow}
+                type="button"
+                onClick={handleReadingHistory}
+              >
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
                 <img
                   src="/img/icons/icon-chevron-right.svg"

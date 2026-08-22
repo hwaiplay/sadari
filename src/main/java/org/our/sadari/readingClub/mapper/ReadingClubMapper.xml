@@ -780,10 +780,10 @@
              , MEMBER.USER_NUMB
     </select>
 
-    <!-- 활성 모임원에게 공개할 최신 완료 회차의 도서와 고정 목표 결과를 조회한다. -->
-    <select id="getLatestReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
+    <!-- 자동 팝업은 종료 다음 날에만, 직접 선택한 완료 회차는 날짜 제한 없이 고정 목표 결과를 조회한다. -->
+    <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
         <include refid="clubCodeBinds" />
-        SELECT /* getLatestReadingGoalResult */
+        SELECT /* getReadingGoalResult */
                ROUNDX.CLUB_NUMB
              , ROUNDX.ROND_NUMB
              , ROUNDX.ROND_NUMB AS READING_ORDR
@@ -816,8 +816,16 @@
                     FROM TM_CLRNDX TARGET
                    WHERE TARGET.CLUB_NUMB = #{clubNumb}
                      AND TARGET.ROND_STAT = #{roundCompleted}
+                <choose>
+                    <when test="rondNumb != null">
+                     AND TARGET.ROND_NUMB = #{rondNumb}
+                    </when>
+                    <otherwise>
+                     AND DATE(TARGET.GOAL_ENDT) = DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)
                 ORDER BY TARGET.ROND_NUMB DESC
                    LIMIT 1
+                    </otherwise>
+                </choose>
                ) ROUNDX
           JOIN TM_BKINFO BOOK
             ON BOOK.BOOK_NUMB = ROUNDX.BOOK_NUMB

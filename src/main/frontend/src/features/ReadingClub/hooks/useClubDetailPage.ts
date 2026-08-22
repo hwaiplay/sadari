@@ -155,9 +155,9 @@ export const useClubDetailPage = () => {
   };
 
   /**
-   * 현재 모임의 가입 이전을 포함한 이전 독서 기록 화면으로 이동한다.
-   *
-   * @author SeungHyeon.Kang
+  * 현재 모임의 가입 이전을 포함한 이전 독서 기록 화면으로 이동한다.
+  *
+  * @author HanWon.Jang
    * @return 반환값이 없다
    */
   const handleReadingHistory = (): void => {

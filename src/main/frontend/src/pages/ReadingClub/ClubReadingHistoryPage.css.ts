@@ -18,7 +18,12 @@ export const historyList = style({
   listStyle: "none",
 });
 
+export const historyItem = style({
+  display: "block",
+});
+
 export const historyCard = style({
+  appearance: "none",
   display: "flex",
   width: "100%",
   minHeight: 174,
@@ -27,6 +32,15 @@ export const historyCard = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: 22,
   backgroundColor: vars.color.background,
+  color: "inherit",
+  cursor: "pointer",
+  fontFamily: "inherit",
+  textAlign: "left",
+  selectors: {
+    "&:disabled": {
+      cursor: "wait",
+    },
+  },
 });
 
 export const bookCover = style({
@@ -147,6 +161,15 @@ export const loadingMore = style({
   color: vars.color.gray600,
   fontFamily: vars.font.body,
   fontSize: 12,
+  textAlign: "center",
+});
+
+export const resultError = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: 1.5,
   textAlign: "center",
 });
 

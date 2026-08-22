@@ -48,7 +48,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-20        SeungHyeon.Kang,Hanwon.Jang    독서 수정·초대 알림 검증
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
- * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 검증
+ * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -857,7 +857,7 @@ class ReadingClubServiceImplTest {
         achievementMember.setUserNick("모임원");
 
         when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(requester);
-        when(readingClubMapper.getLatestReadingGoalResult(10L, 20L)).thenReturn(readingResult);
+        when(readingClubMapper.getReadingGoalResult(10L, 20L, null)).thenReturn(readingResult);
         when(readingClubMapper.getReadingGoalAchievementMemberList(10L, 3L))
                 .thenReturn(List.of(achievementMember));
 
@@ -868,6 +868,34 @@ class ReadingClubServiceImplTest {
         assertEquals(200, result.getCode());
         assertEquals(readingResult, result.getData());
         assertEquals(List.of(achievementMember), readingResult.getAchievementMemberList());
+    }
+
+    /**
+     * 활성 모임원이 선택한 완료 회차의 목표 결과를 조회하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getReadingGoalResultReturnsSelectedRoundForActiveMember() {
+        // 조회 사용자를 활성 모임원으로 구성한다
+        ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
+        requester.setMembStat("ACTIVE");
+        ReadingClubDto.ReadingGoalResultDto readingResult = new ReadingClubDto.ReadingGoalResultDto();
+        readingResult.setClubNumb(10L);
+        readingResult.setRondNumb(1L);
+
+        // 가입 이전에 종료된 첫 번째 회차의 결과를 반환하도록 설정한다
+        when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(requester);
+        when(readingClubMapper.getReadingGoalResult(10L, 20L, 1L)).thenReturn(readingResult);
+        when(readingClubMapper.getReadingGoalAchievementMemberList(10L, 1L)).thenReturn(List.of());
+
+        // 이전 독서 기록에서 선택한 회차의 결과를 조회한다
+        ResultData result = readingClubService.getReadingGoalResult(20L, 10L, 1L);
+
+        // 선택 회차 번호가 유지된 목표 결과를 반환하는지 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(readingResult, result.getData());
+        verify(readingClubMapper).getReadingGoalResult(10L, 20L, 1L);
     }
 
     /**
@@ -885,14 +913,14 @@ class ReadingClubServiceImplTest {
 
         // 접근 거절과 결과 집계 SQL 미호출을 검증한다.
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
-        verify(readingClubMapper, never()).getLatestReadingGoalResult(10L, 20L);
+        verify(readingClubMapper, never()).getReadingGoalResult(10L, 20L, null);
         verify(readingClubMapper, never()).getReadingGoalAchievementMemberList(any(), any());
     }
 
     /**
      * 현재 활성 모임원에게 가입 시점 조건 없이 이전 독서 기록을 반환하는지 검증한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      */
     @Test
     void getReadingHistoryListReturnsAllCompletedRoundsForActiveMember() {
@@ -923,7 +951,7 @@ class ReadingClubServiceImplTest {
     /**
      * 비활성 계정 또는 비활성 모임원은 이전 독서 기록에 접근할 수 없는지 검증한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      */
     @Test
     void getReadingHistoryListRejectsInactiveMember() {

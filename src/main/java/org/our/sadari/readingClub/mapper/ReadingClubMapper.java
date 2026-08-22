@@ -18,7 +18,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    모임원·수정·독서 메서드 추가
  * 2026-08-20        SeungHyeon.Kang    현재 독서 수정 메서드 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 추가
- * 2026-08-23        SeungHyeon.Kang    이전 독서 기록 조회 추가
+ * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -329,15 +329,17 @@ public interface ReadingClubMapper {
     List<ReadingClubDto.MemberProfileDto> getClubMemberList(Long clubNumb);
 
     /**
-     * 종료된 최신 독서 회차의 도서와 목표 집계 결과를 조회한다.
+     * 최신 또는 지정한 완료 독서 회차의 도서와 목표 집계 결과를 조회한다.
      *
      * @author HanWon.Jang
      * @param clubNumb 조회할 모임 번호
      * @param userNumb 로그인 사용자 번호
-     * @return 종료된 최신 독서 목표 결과
+     * @param rondNumb 조회할 회차 번호이며 최신 회차 조회이면 Null
+     * @return 최신 또는 지정한 완료 독서 목표 결과
      */
-    ReadingClubDto.ReadingGoalResultDto getLatestReadingGoalResult(@Param("clubNumb") Long clubNumb
-                                                                  , @Param("userNumb") Long userNumb);
+    ReadingClubDto.ReadingGoalResultDto getReadingGoalResult(@Param("clubNumb") Long clubNumb
+                                                           , @Param("userNumb") Long userNumb
+                                                           , @Param("rondNumb") Long rondNumb);
 
     /**
      * 종료된 회차에서 공개 가능한 목표 달성자 프로필을 조회한다.
@@ -364,7 +366,7 @@ public interface ReadingClubMapper {
     /**
      * 모임의 모든 완료 회차를 최신 순서로 조회한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param clubNumb 조회할 모임 번호
      * @param pageOffset 목록 조회 시작 위치
      * @param pageLimit 다음 페이지 판정용 조회 건수

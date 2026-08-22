@@ -8,22 +8,28 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubReadingHistory } from "@/features/ReadingClub/api/readingClubApi";
-import { useReadingHistory } from "@/features/ReadingClub/hooks/useReadingHistory";
+import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
+import { useReadingHistoryPage } from "@/features/ReadingClub/hooks/useReadingHistoryPage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { clsx } from "clsx";
-import { useMemo } from "react";
-import { useParams } from "react-router-dom";
+import { createPortal } from "react-dom";
 import * as styles from "./ClubReadingHistoryPage.css";
+
+type ReadingHistoryCardProps = {
+  history: ClubReadingHistory;
+  isLoading: boolean;
+  onSelect: (rondNumb: number) => void;
+};
 
 /**
  * 종료 회차의 공동 독서 기간을 목록 표시 형식으로 변환한다.
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @param goalStdt 목표 독서 시작일
  * @param goalEndt 목표 독서 종료일
  * @return 같은 연도에서 종료 연도를 생략한 독서 기간
  */
-function formatReadingPeriod(goalStdt: string, goalEndt: string): string {
+const formatReadingPeriod = (goalStdt: string, goalEndt: string): string => {
   const startDate = formatDashedDateToDot(goalStdt);
   const endDate = formatDashedDateToDot(goalEndt);
 
@@ -31,83 +37,126 @@ function formatReadingPeriod(goalStdt: string, goalEndt: string): string {
   return goalStdt.slice(0, 4) === goalEndt.slice(0, 4)
     ? `${startDate} ~ ${endDate.slice(5)}`
     : `${startDate} ~ ${endDate}`;
-}
+};
 
 /**
  * 종료 회차 한 건의 도서와 목표 달성 진행률을 표시한다.
  *
- * @author SeungHyeon.Kang
- * @param history 표시할 이전 독서 기록
+ * @author HanWon.Jang
+ * @param props 이전 독서 기록 카드 표시와 선택 처리값
  * @return 피그마 카드 구조의 종료 회차 항목
  */
-function renderReadingHistory(history: ClubReadingHistory) {
+const ReadingHistoryCard = ({
+  history,
+  isLoading,
+  onSelect,
+}: ReadingHistoryCardProps) => {
   // 비정상 집계에서도 진행 막대에 사용할 유효한 달성률을 유지한다
   const achievementRate = history.partCnt > 0
     ? Math.min(100, Math.max(0, (history.goalAchvCnt / history.partCnt) * 100))
     : 0;
   const goalProgressColor = getGoalProgressColor(achievementRate);
 
+  /**
+   * 현재 카드의 완료 회차를 목표 결과 조회 대상으로 선택한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleSelect = (): void => {
+    // 카드가 표현하는 회차 번호를 페이지 선택 상태에 전달한다
+    onSelect(history.rondNumb);
+  };
+
   // 도서 정보와 공통 달성률 색상 정책을 적용한 회차 카드를 반환한다
   return (
-    <li className={clsx(styles.historyCard, styles.compactCard)} key={history.rondNumb}>
-      <img
-        className={styles.bookCover}
-        src={getBookCoverImageSource(history.bookCvim)}
-        alt={history.bookTitl}
-        onError={handleBookCoverImageError}
-      />
-      <div className={styles.historyContent}>
-        <div className={styles.bookSummary}>
-          <div className={styles.bookIdentity}>
-            <strong className={styles.bookTitle}>{history.bookTitl}</strong>
-            {history.bookAthr ? (
-              <span className={styles.bookAuthor}>{history.bookAthr}</span>
-            ) : null}
+    <li className={styles.historyItem}>
+      <button
+        className={clsx(styles.historyCard, styles.compactCard)}
+        type="button"
+        aria-busy={isLoading}
+        disabled={isLoading}
+        onClick={handleSelect}
+      >
+        <img
+          className={styles.bookCover}
+          src={getBookCoverImageSource(history.bookCvim)}
+          alt={history.bookTitl}
+          onError={handleBookCoverImageError}
+        />
+        <div className={styles.historyContent}>
+          <div className={styles.bookSummary}>
+            <div className={styles.bookIdentity}>
+              <strong className={styles.bookTitle}>{history.bookTitl}</strong>
+              {history.bookAthr ? (
+                <span className={styles.bookAuthor}>{history.bookAthr}</span>
+              ) : null}
+            </div>
+            <span className={styles.readingPeriod}>
+              {formatReadingPeriod(history.goalStdt, history.goalEndt)}
+            </span>
           </div>
-          <span className={styles.readingPeriod}>
-            {formatReadingPeriod(history.goalStdt, history.goalEndt)}
-          </span>
-        </div>
-        <div className={styles.progressArea}>
-          <div className={styles.progressTrack}>
-            <span
-              className={styles.progressFill}
-              style={{
-                width: `${achievementRate}%`,
-                backgroundColor: goalProgressColor,
-              }}
-            />
+          <div className={styles.progressArea}>
+            <div className={styles.progressTrack}>
+              <span
+                className={styles.progressFill}
+                style={{
+                  width: `${achievementRate}%`,
+                  backgroundColor: goalProgressColor,
+                }}
+              />
+            </div>
+            <span className={styles.progressDescription}>
+              {message("frontend.readingClub.detail.goalAchievement", [
+                history.goalAchvCnt,
+                history.partCnt,
+              ])}
+            </span>
           </div>
-          <span className={styles.progressDescription}>
-            {message("frontend.readingClub.detail.goalAchievement", [
-              history.goalAchvCnt,
-              history.partCnt,
-            ])}
-          </span>
         </div>
-      </div>
+      </button>
     </li>
   );
-}
+};
 
 /**
  * 현재 활성 모임원에게 가입 이전을 포함한 모든 종료 회차를 표시한다.
  *
- * @author SeungHyeon.Kang
+ * @author HanWon.Jang
  * @return 이전 독서 기록 목록 페이지
  */
-export default function ClubReadingHistoryPage() {
-  // 서버 접근 검증에 사용할 모임 번호를 경로에서 조회한다
-  const { clubNumb: clubNumbParam } = useParams();
-  const clubNumb = Number(clubNumbParam);
-  const isValidRoute = Number.isFinite(clubNumb) && clubNumb > 0;
-  // 현재 활성 모임원에게 허용된 모든 종료 회차를 페이지 단위로 조회한다
-  const historyQuery = useReadingHistory(clubNumb, isValidRoute);
-  // 조회된 서버 페이지를 최신 회차 순서의 단일 목록으로 연결한다
-  const historyList = useMemo(() => {
-    // 아직 응답하지 않은 페이지는 빈 목록으로 처리해 반환한다
-    return historyQuery.data?.pages.flatMap((page) => page.list) ?? [];
-  }, [historyQuery.data]);
+const ClubReadingHistoryPage = () => {
+  // 페이지의 경로 검증, 종료 회차 조회와 결과 오버레이 상태를 전용 훅에서 조회한다
+  const {
+    historyList,
+    historyQuery,
+    isValidRoute,
+    readingGoalResultQuery,
+    selectedRondNumb,
+    handleCloseResult,
+    handleLoadMore,
+    handleSelectReading,
+  } = useReadingHistoryPage();
+
+  /**
+   * 이전 독서 기록 한 건을 선택 가능한 회차 카드로 표시한다.
+   *
+   * @author HanWon.Jang
+   * @param history 표시할 이전 독서 기록
+   * @return 선택한 회차 결과 조회 상태를 반영한 카드
+   */
+  const renderReadingHistory = (history: ClubReadingHistory) => {
+    // 현재 조회 중인 회차만 중복 선택을 막은 카드로 반환한다
+    return (
+      <ReadingHistoryCard
+        key={history.rondNumb}
+        history={history}
+        isLoading={readingGoalResultQuery.isFetching
+          && selectedRondNumb === history.rondNumb}
+        onSelect={handleSelectReading}
+      />
+    );
+  };
 
   // 모임 번호가 유효하지 않으면 서버 요청 없이 잘못된 접근을 안내한다
   if (!isValidRoute) {
@@ -115,9 +164,9 @@ export default function ClubReadingHistoryPage() {
     return <p className={styles.invalidAccess}>{message("frontend.common.invalidAccess")}</p>;
   }
 
-  // 첫 페이지를 조회하는 동안 피그마 카드 크기의 로딩 화면을 표시한다
+  // 첫 페이지를 조회하는 동안 로딩 화면을 표시한다
   if (historyQuery.isPending) {
-    // 카드 목록과 같은 간격의 로딩 영역을 반환한다
+    // 이전 독서 기록 카드 크기의 로딩 화면을 반환한다
     return (
       <div className={styles.page} aria-busy="true">
         <div className={styles.loadingList}>
@@ -149,24 +198,36 @@ export default function ClubReadingHistoryPage() {
     );
   }
 
-  // 피그마 카드 목록과 다음 페이지 자동 조회 영역을 반환한다
+  // 카드 목록과 뷰포트 기준 결과 오버레이를 포함한 이전 독서 기록 화면을 반환한다
   return (
     <section className={styles.page} aria-label={message("frontend.readingClub.history.title")}>
       <ul className={styles.historyList}>
         {historyList.map(renderReadingHistory)}
       </ul>
+      {readingGoalResultQuery.isError ? (
+        <p className={styles.resultError} role="alert">
+          {getApiErrorMessage(readingGoalResultQuery.error, message("frontend.common.tryAgain"))}
+        </p>
+      ) : null}
       <InfiniteScrollTrigger
         hasNext={Boolean(historyQuery.hasNextPage)}
         isLoading={historyQuery.isFetchingNextPage}
-        onLoadMore={() => {
-          // 하단 감지 시 다음 종료 회차 페이지를 조회한다
-          void historyQuery.fetchNextPage();
-        }}
+        onLoadMore={handleLoadMore}
       >
         <p className={styles.loadingMore}>
           {message("frontend.readingClub.history.loading")}
         </p>
       </InfiniteScrollTrigger>
+      {readingGoalResultQuery.data ? createPortal(
+        <ReadingGoalResultOverlay
+          key={readingGoalResultQuery.data.rondNumb}
+          result={readingGoalResultQuery.data}
+          onClose={handleCloseResult}
+        />,
+        document.body,
+      ) : null}
     </section>
   );
-}
+};
+
+export default ClubReadingHistoryPage;

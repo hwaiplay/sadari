@@ -16,6 +16,7 @@ const ACHIEVEMENT_PROFILE_VISIBLE_LIMIT = 7;
 
 type ReadingGoalResultOverlayProps = {
   result: ClubReadingGoalResult;
+  onClose?: () => void;
 };
 
 /**
@@ -23,9 +24,13 @@ type ReadingGoalResultOverlayProps = {
  *
  * @author HanWon.Jang
  * @param result 종료된 회차의 도서와 목표 달성 결과
+ * @param onClose 결과 레이어가 닫힌 뒤 실행할 함수
  * @return 독서 목표 결과 전체 화면 레이어
  */
-export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOverlayProps) {
+export default function ReadingGoalResultOverlay({
+  result,
+  onClose,
+}: ReadingGoalResultOverlayProps) {
   // 대상 회차의 모임원 독후감 목록으로 이동할 라우터 함수를 조회한다
   const navigate = useNavigate();
   // 사용자가 닫기 버튼을 누른 뒤 상세 화면을 볼 수 있도록 팝업 표시 상태를 관리한다
@@ -72,6 +77,8 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
   function closeReadingGoalResult(): void {
     // 전체 화면 결과 레이어를 제거한다
     setIsOpen(false);
+    // 상위 화면이 선택 회차 상태를 정리할 수 있도록 닫힘을 전달한다
+    onClose?.();
   }
 
   /**
@@ -94,11 +101,12 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
   /**
    * 현재 모임의 가입 이전을 포함한 이전 독서 기록 목록으로 이동한다.
    *
-   * @author SeungHyeon.Kang
+   * @author HanWon.Jang
    * @return 반환값이 없다
    */
   function openReadingHistory(): void {
-    // 현재 활성 모임원에게 허용된 전체 종료 회차 목록으로 이동한다
+    // 현재 결과 레이어를 닫고 허용된 전체 종료 회차 목록으로 이동한다
+    closeReadingGoalResult();
     navigate(`/reading-clubs/${result.clubNumb}/readings`);
   }
 
