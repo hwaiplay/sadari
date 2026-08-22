@@ -6,6 +6,7 @@ import {
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubReadingGoalResult } from "@/features/ReadingClub/api/readingClubApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { useState, type CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ReadingGoalResultOverlay.css";
@@ -34,6 +35,7 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
     ? Math.min(100, Math.max(0, (result.goalAchvCnt / result.partCnt) * 100))
     : 0;
   const roundedAchievementRate = Math.round(achievementRate);
+  const goalProgressColor = getGoalProgressColor(roundedAchievementRate);
   const goalStartDate = formatDashedDateToDot(result.goalStdt);
   const goalEndDate = formatDashedDateToDot(result.goalEndt);
   // 같은 연도의 종료일은 피그마 표기처럼 연도를 생략한다
@@ -151,7 +153,12 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
                     style={{ width: `${achievementRate}%` }}
                   />
                 </div>
-                <strong className={styles.progressRate}>{roundedAchievementRate}%</strong>
+                <strong
+                  className={styles.progressRate}
+                  style={{ color: goalProgressColor }}
+                >
+                  {roundedAchievementRate}%
+                </strong>
               </div>
               <span className={styles.progressDescription}>
                 {/* "{0}/{1}명 목표 달성" */}
@@ -248,17 +255,19 @@ export default function ReadingGoalResultOverlay({ result }: ReadingGoalResultOv
 
           {/* 모임원 독후감과 이전 독서 기록 이동 안내 영역 */}
           <nav className={styles.resultNavigation}>
-            <button
-              className={styles.navigationButton}
-              type="button"
-              onClick={openReadingRoundReports}
-            >
-              <strong>
-                {/* "모임원 독후감 {0}편 보기" */}
-                {message("frontend.readingClub.result.viewReports", [result.reportCnt])}
-              </strong>
-              <img src="/img/icons/icon-chevron-right.svg" alt="arrow"/>
-            </button>
+            {result.reportCnt !== 0 ? (
+              <button
+                className={styles.navigationButton}
+                type="button"
+                onClick={openReadingRoundReports}
+              >
+                <strong>
+                  {/* "모임원 독후감 {0}편 보기" */}
+                  {message("frontend.readingClub.result.viewReports", [result.reportCnt])}
+                </strong>
+                <img src="/img/icons/icon-chevron-right.svg" alt="arrow"/>
+              </button>
+            ) : null }
             <div className={styles.navigationRowMuted}>
               <strong>
                 {/* "이전 독서 기록" */}
