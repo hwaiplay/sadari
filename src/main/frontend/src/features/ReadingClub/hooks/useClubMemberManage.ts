@@ -10,7 +10,7 @@
  * 2026-08-24        HanWon.Jang        모임원 퇴장 처리 추가
  */
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetInfo, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import {
   cancelSentClubInvitationApi,
@@ -376,17 +376,6 @@ export const useClubMemberManage = () => {
       });
   };
 
-  /**
-   * 후속 출시 예정인 멤버 퇴장과 제한 기능을 안내한다
-   *
-   * @author Hanwon.Jang
-   * @return 반환값이 없다
-   */
-  const handleRestrictionInfo = (): void => {
-    // "퇴장 내역 및 제한 기능을 준비하고 있어요."
-    void sweetInfo(message("frontend.readingClub.memberManage.preparingTitle"));
-  };
-
   // 화면 렌더링에 필요한 관리 상태와 이벤트 처리 함수를 반환한다
   return {
     applications,
@@ -411,6 +400,5 @@ export const useClubMemberManage = () => {
     handleExitOpen,
     handleExitReasonChange,
     handleMemberExit,
-    handleRestrictionInfo,
   };
 };

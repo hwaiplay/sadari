@@ -329,6 +329,13 @@ public interface ReadingClubMapper {
      */
     List<ReadingClubDto.MemberProfileDto> getClubMemberList(Long clubNumb);
 
+    /** 모임장이 관리할 퇴장 모임원 목록을 조회한다. @author HanWon.Jang @param clubNumb 모임 번호 @return 퇴장 내역 목록 */
+    List<ReadingClubDto.MemberExitHistoryDto> getMemberExitList(Long clubNumb);
+
+    /** 퇴장 모임원의 재가입 제한을 해제한다. @author HanWon.Jang @param ownerNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 변경 건수 */
+    int uptMemberRestriction(@Param("ownerNumb") Long ownerNumb, @Param("clubNumb") Long clubNumb
+                            , @Param("targetUserNumb") Long targetUserNumb);
+
     /**
      * 활성 계정인 모임장이 지정한 활성 일반 멤버를 퇴장 상태로 변경하고 재가입을 차단한다.
      *

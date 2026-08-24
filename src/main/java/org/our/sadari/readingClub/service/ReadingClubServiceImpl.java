@@ -816,6 +816,45 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         return ResultData.success();
     }
 
+    /** {@inheritDoc} @author HanWon.Jang */
+    @Override
+    public ResultData getMemberExitList(Long userNumb, Long clubNumb) {
+        // 조회 식별값이 없으면 권한 조회를 수행하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 현재 활성 모임장만 퇴장 내역을 관리할 수 있다
+        if (readingClubMapper.getActiveOwnerCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 권한이 확인된 모임의 퇴장 내역을 반환한다
+        return ResultData.success(readingClubMapper.getMemberExitList(clubNumb));
+    }
+
+    /** {@inheritDoc} @author HanWon.Jang */
+    @Override
+    @Transactional
+    public ResultData uptMemberRestriction(Long userNumb, Long clubNumb, Long targetUserNumb) {
+        // 제한 해제에 필요한 식별값을 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 모임장 소유권과 퇴장 및 제한 상태가 모두 일치할 때만 제한을 해제한다
+        if (readingClubMapper.uptMemberRestriction(userNumb, clubNumb, targetUserNumb) == 0) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 재가입 제한 해제 성공 결과를 반환한다
+        return ResultData.success();
+    }
+
     /**
      * {@inheritDoc}
      *

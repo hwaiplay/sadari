@@ -807,6 +807,41 @@
              , MEMBER.USER_NUMB
     </select>
 
+    <!-- 모임장이 확인할 퇴장 모임원과 재가입 제한 상태를 최신순으로 조회한다. -->
+    <select id="getMemberExitList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberExitHistoryDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getMemberExitList */
+               MEMBER.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , MEMBER.EXIT_DATE
+             , MEMBER.BLOC_YSNO
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+     LEFT JOIN TM_FILEXM FILEX
+            ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = #{memberExited}
+      ORDER BY MEMBER.EXIT_DATE DESC
+             , MEMBER.USER_NUMB DESC
+    </select>
+
+    <!-- 모임장 소유권과 퇴장 상태를 확인하여 재가입 제한만 해제한다. -->
+    <update id="uptMemberRestriction">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptMemberRestriction */ TB_CLMEMX MEMBER
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
+           AND CLUB.OWNR_NUMB = #{ownerNumb}
+           SET MEMBER.BLOC_YSNO = #{commNo}
+             , MEMBER.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{targetUserNumb}
+           AND MEMBER.MEMB_STAT = #{memberExited}
+           AND MEMBER.BLOC_YSNO = #{commYes}
+    </update>
+
     <!-- 자동 팝업은 종료 다음 날에만, 직접 선택한 완료 회차는 날짜 제한 없이 고정 목표 결과를 조회한다. -->
     <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
         <include refid="clubCodeBinds" />

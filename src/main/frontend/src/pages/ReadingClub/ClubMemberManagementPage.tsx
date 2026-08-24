@@ -22,6 +22,7 @@ import type {
 import { useClubMemberManage } from "@/features/ReadingClub/hooks/useClubMemberManage";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { createPortal } from "react-dom";
+import { Link, useParams } from "react-router-dom";
 import * as styles from "./ClubMemberManagementPage.css";
 
 type CandidateRowProps = {
@@ -109,8 +110,8 @@ export default function ClubMemberManagementPage() {
     handleExitOpen,
     handleExitReasonChange,
     handleMemberExit,
-    handleRestrictionInfo,
   } = useClubMemberManage();
+  const { clubNumb } = useParams<{ clubNumb: string }>();
 
   // 답변 또는 초대 모달이 열려 있는 동안 배경 화면의 스크롤을 잠근다
   useBodyScrollLock(Boolean(selectedApplication) || Boolean(selectedMember) || isInviteOpen);
@@ -408,13 +409,13 @@ export default function ClubMemberManagementPage() {
             </span>
             <img className={styles.menuChevron} src="/img/icons/icon-chevron-right.svg" alt="" />
           </button>
-          <button className={styles.restrictionButton} type="button" onClick={handleRestrictionInfo}>
+          <Link className={styles.restrictionButton} to={`/reading-clubs/${clubNumb}/manage/member-restrictions`}>
             <strong className={styles.restrictionTitle}>
               {/* "퇴장 내역 및 제한" */}
               {message("frontend.readingClub.memberManage.restrictions")}
             </strong>
             <img className={styles.menuChevron} src="/img/icons/icon-chevron-right.svg" alt="" />
-          </button>
+          </Link>
         </nav>
       </main>
 

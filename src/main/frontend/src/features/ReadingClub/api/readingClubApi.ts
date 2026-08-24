@@ -106,6 +106,14 @@ export type ClubMemberProfile = {
   membRole: "OWNER" | "MEMBER";
 };
 
+export type ClubMemberExit = {
+  userNumb: number;
+  userNick: string | null;
+  porfPath: string | null;
+  exitDate: string;
+  blocYsno: "Y" | "N";
+};
+
 export type ClubReadingGoalResult = {
   clubNumb: number;
   rondNumb: number;
@@ -444,6 +452,22 @@ export const exitClubMemberApi = async (
     data: { exitReason },
   });
   // 공통 성공 검증을 통과한 퇴장 응답을 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+/** 모임장이 관리할 퇴장 내역을 조회한다. @author HanWon.Jang @param clubNumb 모임 번호 @return 퇴장 내역 목록 */
+export const getMemberExitListApi = async (clubNumb: number): Promise<ClubMemberExit[]> => {
+  // 모임장 전용 퇴장 내역을 요청한다
+  const response = await api.get(`/reading-clubs/${clubNumb}/members/exits`);
+  // 검증된 퇴장 내역 목록을 반환한다
+  return (assertResultDataSuccess(response.data).data as ClubMemberExit[] | undefined) ?? [];
+};
+
+/** 퇴장 회원의 재가입 제한을 해제한다. @author HanWon.Jang @param clubNumb 모임 번호 @param userNumb 대상 사용자 번호 @return 처리 응답 */
+export const delMemberRestrictionApi = async (clubNumb: number, userNumb: number) => {
+  // 대상 회원의 재가입 제한 해제를 요청한다
+  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}/restriction`);
+  // 공통 성공 검증을 통과한 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
 

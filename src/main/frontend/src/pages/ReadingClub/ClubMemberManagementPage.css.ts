@@ -159,6 +159,7 @@ export const menuButton = style({
   background: vars.color.background,
   textAlign: "left",
   cursor: "pointer",
+  textDecoration: "none",
   selectors: {
     "&:focus-visible": {
       outline: "2px solid #78b991",

@@ -412,6 +412,36 @@ public final class ReadingClubDto {
     }
 
     /**
+     * fileName       : MemberExitHistoryDto
+     * author         : HanWon.Jang
+     * date           : 2026-08-24
+     * description    : 퇴장한 모임원의 프로필과 재가입 제한 상태를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-24        HanWon.Jang        최초 생성
+     */
+    @Data
+    @Schema(description = "모임원 퇴장 내역")
+    public static class MemberExitHistoryDto {
+
+        @Schema(description = "퇴장한 사용자 번호")
+        private Long userNumb;
+
+        @Schema(description = "퇴장한 사용자 닉네임")
+        private String userNick;
+
+        @Schema(description = "퇴장한 사용자 프로필 이미지 경로")
+        private String porfPath;
+
+        @Schema(description = "퇴장 일시")
+        private LocalDateTime exitDate;
+
+        @Schema(description = "재가입 제한 여부", allowableValues = {"Y", "N"})
+        private String blocYsno;
+    }
+
+    /**
      * fileName       : ReadingGoalResultDto
      * author         : HanWon.Jang
      * date           : 2026-08-22

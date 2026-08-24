@@ -202,6 +202,12 @@ public interface ReadingClubService {
     ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
                         , ReadingClubDto.MemberExitReqDto request);
 
+    /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
+    ResultData getMemberExitList(Long userNumb, Long clubNumb);
+
+    /** 모임장이 퇴장 회원의 재가입 제한을 해제한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 제한 해제 결과 */
+    ResultData uptMemberRestriction(Long userNumb, Long clubNumb, Long targetUserNumb);
+
     /**
      * 모임 관계가 없는 모임장의 맞팔로우 사용자를 초대 후보로 조회한다.
      *

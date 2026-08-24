@@ -161,6 +161,24 @@ public class ReadingClubController {
         return readingClubService.delMember(userNumb, clubNumb, targetUserNumb, request);
     }
 
+    /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
+    @GetMapping("/{clubNumb}/members/exits")
+    @Operation(summary = "모임원 퇴장 내역 조회")
+    public ResultData getMemberExitList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                       , @PathVariable Long clubNumb) {
+        // 모임장 권한을 검증한 퇴장 내역을 반환한다
+        return readingClubService.getMemberExitList(userNumb, clubNumb);
+    }
+
+    /** 퇴장 회원의 재가입 제한을 해제한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 제한 해제 결과 */
+    @DeleteMapping("/{clubNumb}/members/{targetUserNumb}/restriction")
+    @Operation(summary = "퇴장 모임원 재가입 제한 해제")
+    public ResultData uptMemberRestriction(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                          , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
+        // 모임장 권한과 퇴장 상태를 검증한 제한 해제 결과를 반환한다
+        return readingClubService.uptMemberRestriction(userNumb, clubNumb, targetUserNumb);
+    }
+
     /**
      * 활성 모임원에게 종료된 최신 독서 회차의 목표 결과를 제공한다.
      *
