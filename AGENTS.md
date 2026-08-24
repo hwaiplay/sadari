@@ -3,48 +3,53 @@
 
 ## Mandatory Rule Loading
 
-모든 요청은 분석, 계획 수립, 파일 조회, 명령 실행, 코드 수정에 앞서 아래 규칙 문서를 모두 읽고 시작한다.
+모든 요청은 분석, 계획 수립, 상세 파일 조회, 명령 실행 및 코드 수정에 앞서 `.aiassistant/rules/coreRules.md`를 먼저 읽는다.
 
-1. `.aiassistant/rules/javaRules.md`
-2. `.aiassistant/rules/sqlRules.md`
-3. `.aiassistant/rules/scriptRules.md`
-4. `.aiassistant/rules/viewRules.md`
-5. `.aiassistant/rules/reportRules.md`
-6. `.aiassistant/rules/deploymentRules.md`
+Core 규칙을 읽은 뒤에는 파일명, 확장자, 디렉터리 구조 및 Git 변경 목록만 확인하여 작업 영역을 식별할 수 있다. 상세 소스 내용은 아래 표에서 해당하는 영역 규칙을 모두 읽은 뒤 확인한다.
 
-요청이 특정 기술 영역에만 해당하더라도 여섯 문서를 모두 읽는다. 작업 도중 변경된 규칙이 있으면 해당 문서를 다시 읽고 이후 작업에 즉시 반영한다.
+| 작업 대상 | 추가로 읽을 규칙 |
+| --- | --- |
+| Java, Spring, Controller, Service, DTO, Java Mapper 선언체 | `.aiassistant/rules/javaRules.md` |
+| SQL, MyBatis XML, DDL, DML, DB 스크립트 | `.aiassistant/rules/sqlRules.md` |
+| TypeScript, JavaScript 및 화면 로직 | `.aiassistant/rules/scriptRules.md` |
+| React, TSX, JSX | `.aiassistant/rules/viewRules.md`와 `.aiassistant/rules/scriptRules.md` |
+| CSS, SCSS 및 화면 스타일 | `.aiassistant/rules/viewRules.md` |
+| PowerShell, Bash 및 배포 스크립트 | `.aiassistant/rules/scriptRules.md` |
+| `docs` 아래 정책, 분석, 설계, 성능, 배포 및 운영 Markdown | `.aiassistant/rules/reportRules.md` |
+| YML, 환경변수, GitHub Actions, Docker 및 배포 설정 | `.aiassistant/rules/deploymentRules.md` |
+| `AGENTS.md`, `.aiassistant/rules` 아래 규칙 문서 | 수정 대상 규칙 문서 |
+
+하나의 파일이나 변경에 여러 영역이 포함되면 관련 규칙을 모두 읽고 함께 적용한다. 작업 도중 Core 또는 활성 규칙이 변경되면 변경된 문서를 다시 읽고 이후 작업에 즉시 반영한다.
+
+## Active Rule Declaration
+
+파일을 수정하기 전에 이번 작업에 적용할 규칙 문서와 규칙 ID를 사용자에게 간단히 알린다. 단순 조회 요청은 최종 답변에서 근거가 된 규칙 ID를 필요할 때만 보고한다.
 
 ## Rule Application
 
-- Java, Spring, Controller, Service, DTO, Mapper 선언체 작업에는 `javaRules.md`를 적용한다.
-- SQL, MyBatis XML, DDL, DML 작업에는 `sqlRules.md`를 적용한다.
-- TypeScript와 JavaScript의 로직 작업에는 `scriptRules.md`를 적용한다.
-- React, TSX, JSX와 화면 표현 작업에는 `viewRules.md`를 적용한다.
-- 정책, 성능 개선, 기술 분석, 설계, 배포 및 운영 보고성 Markdown 문서 작업에는 `reportRules.md`를 적용한다.
-- YML, 환경변수, GitHub Actions, Docker 및 배포 설정 작업에는 `deploymentRules.md`를 적용한다.
-- 하나의 파일이나 변경에 여러 영역이 포함되면 관련 규칙을 함께 적용한다.
-- 규칙이 충돌하면 보안, 데이터 무결성, 실행 안정성에 더 직접적인 규칙을 우선한다.
-- 상위 시스템 지침이나 사용자의 현재 요청과 충돌하는 프로젝트 규칙은 적용하지 않는다.
+- 규칙 강제 수준은 `MUST`, `SHOULD`, `MAY`로 구분한다.
+- `MUST`는 명시된 예외가 없으면 반드시 적용한다.
+- `SHOULD`를 적용하지 않으면 최종 결과에 이유를 보고한다.
+- 규칙이 충돌하면 `CORE-PRIORITY-001`에 따라 상위 지침, 보안, 데이터 무결성, 실행 안정성 순으로 판단한다.
+- 규칙 ID는 완료 보고와 재발 방지 기록에서 안정적인 참조값으로 사용한다.
 
 ## Account Lifecycle Policy Gate
 
-- 새로운 기능을 추가하거나 기존 기능의 데이터 처리 범위를 확장할 때마다 구현 전에 계정 비활성화와 영구 탈퇴 시 해당 기능의 데이터 및 화면을 어떻게 처리할지 사용자에게 반드시 질문한다.
-- 사용자와 함께 접근 제한, 공개 범위, 데이터 보존 또는 삭제, 복귀 시 복원 범위, 알림 및 소셜 관계 영향을 결정한 뒤 구현한다.
-- 결정된 내용은 같은 작업에서 `docs/policies/withdrawal-policy.md`와 해당 기능의 정책 Markdown 문서에 추가하고 코드 및 테스트에 반영한다.
-- 사용자가 정책을 확정하지 않은 항목은 기존 정책으로 임의 추정하거나 구현하지 않는다.
-- 현재 계정 비활성화는 `WITHDRAWN` 상태이며 재로그인하면 `ACTIVE`로 전환하지만 비활성화 과정에서 비공개·삭제·중지된 독후감 공개 설정, 댓글, 알림 및 푸시 구독은 자동 복원하지 않는다.
-- 현재 영구 탈퇴는 `DELETE_PENDING` 상태로 기본 30일 유예하며 유예기간 안에는 취소할 수 있고, 유예기간이 지나 물리 삭제된 계정과 데이터는 복구하지 않는다.
-- 계정 수명주기의 상세 기준은 `docs/policies/withdrawal-policy.md`를 단일 기준 문서로 사용한다.
+새로운 기능 또는 데이터 처리 범위 확장은 `CORE-ACCOUNT-001`을 적용한다. 사용자와 정책을 확정하기 전에는 관련 구현을 시작하지 않는다.
 
 ## Rule Maintenance
 
-- 작업 중 기존 규칙으로 다룰 수 없는 새로운 기준이나 재발 방지 규칙이 필요하면 코드만 수정하고 끝내지 않는다.
-- 새 규칙은 적용 대상에 따라 `javaRules.md`, `sqlRules.md`, `scriptRules.md`, `viewRules.md`, `reportRules.md`, `deploymentRules.md` 중 해당하는 규칙 파일에 같은 작업에서 추가한다.
-- 여러 기술 영역에 공통으로 적용되는 규칙이면 관련된 모든 규칙 파일에 반영하거나 공통 적용 위치를 명확히 정한다.
-- 규칙을 추가하기 전에 기존 규칙과 중복되거나 충돌하는지 확인하고, 기존 항목을 확장할 수 있으면 새로운 항목을 중복 생성하지 않는다.
-- 새 규칙은 빠른 탐색 목차와 기존 중요도 순서를 유지하며 가장 관련 있는 절에 배치한다.
-- 규칙 추가 후에는 변경된 규칙 파일을 다시 읽고 현재 작업 결과에도 즉시 적용한다.
+- 기존 규칙으로 다룰 수 없는 기준이나 재발 방지 규칙이 필요하면 `CORE-MAINT-001`에 따라 같은 작업에서 규칙을 갱신한다.
+- 여러 영역의 공통 기준은 `coreRules.md`에 한 번만 정의하고 영역 규칙에서는 Core 규칙 ID를 참조한다.
+- 영역에만 적용되는 기준은 해당 영역 규칙에 추가한다.
+- 규칙을 추가하거나 변경할 때는 적용 대상, 강제 수준, 예외 및 검증 방법을 함께 기록한다.
 
 ## Completion Check
 
-작업을 마치기 전에 변경된 파일별로 관련 규칙을 다시 대조하고, 규칙 위반 여부를 검증한 뒤 결과를 보고한다.
+작업을 마치기 전에 변경 파일별 활성 규칙을 다시 대조하고 `scripts/verify-project-rules.ps1`을 실행한다. Java 또는 프론트엔드 실행 결과에 영향을 주는 변경은 가능한 경우 `scripts/verify-project-rules.ps1 -Full`도 실행한다.
+
+최종 결과에는 다음 항목을 간단히 보고한다.
+
+1. 적용한 주요 규칙 ID
+2. 실행한 검증과 결과
+3. 실행하지 못한 검증 또는 남은 위험

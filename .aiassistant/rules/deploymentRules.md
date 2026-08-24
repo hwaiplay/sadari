@@ -1,11 +1,20 @@
 ---
-apply: always
+apply: scoped
 ---
 
 # Deployment Rules
 
 이 문서는 Sadari 프로젝트의 환경설정, GitHub Actions, Docker 및 운영 배포 문서 동기화 규칙을 정의합니다.
 배포 설정을 생성하거나 수정할 때 아래 규칙을 예외 없이 적용합니다.
+
+## Rule ID Index
+
+| 규칙 ID | 수준 | 적용 절 | 주요 검증 |
+| --- | --- | --- | --- |
+| `DEPLOY-SYNC-001` | MUST | 1 | YML, 예시 파일, 워크플로 및 문서 동기화 검사 |
+| `DEPLOY-CLASSIFY-001` | MUST | 2 | Secret과 Variable 분류 검토 |
+| `DEPLOY-SECURITY-001` | MUST | 3 | 실제 비밀값과 공개 범위 검사 |
+| `DEPLOY-QUALITY-001` | MUST | 4 | 설정명, 기본값, 단위 및 프로필 검사 |
 
 ## 빠른 탐색
 
@@ -20,6 +29,7 @@ apply: always
 - 운영 배포에 필요한 환경변수는 이름, 기본값, 용도, 등록 위치를 `docs/github-actions-deployment.md`에 기록합니다.
 - 로컬 전용 설정이나 운영에서 고정하는 설정은 환경변수로 등록하지 않더라도 적용 프로필과 고정 사유를 `docs/github-actions-deployment.md`에 기록합니다.
 - YML 환경변수는 `.env.example`, GitHub Actions 워크플로, Docker Compose에서 전달이 필요한지 확인하고 필요한 파일을 같은 작업에서 동기화합니다.
+- 스케줄러 cron과 시간대는 Java 코드에 직접 작성하지 않고 YML 또는 환경변수로 관리하며 코드의 Placeholder, 프로필별 기본값 및 운영 문서를 함께 동기화합니다.
 
 ## 2. 환경변수 분류
 

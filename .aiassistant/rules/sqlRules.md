@@ -1,5 +1,5 @@
 ---
-apply: always
+apply: scoped
 ---
 
 # SQL Rules
@@ -7,6 +7,19 @@ apply: always
 이 문서는 Sadari 프로젝트의 Oracle 데이터베이스, SQL 및 MyBatis XML 규칙을 정의합니다.
 DDL, DML, Mapper XML을 생성하거나 수정할 때 아래 규칙을 예외 없이 적용합니다.
 규칙은 주석 공통 정책, SQL 보안, 스키마 무결성, 쿼리 정확성, 성능과 정렬, 품질 검증, 형상 관리 순으로 중요도가 높은 항목부터 나열합니다.
+
+## Rule ID Index
+
+| 규칙 ID | 수준 | 적용 절 | 주요 검증 |
+| --- | --- | --- | --- |
+| `SQL-COMMENT-001` | MUST | 1, 7, 13 | 주석 문체, Mapper ID 및 DDL COMMENT 검토 |
+| `SQL-SECURITY-001` | MUST | 2, 6 | 명시 컬럼, 바인딩 및 허용 목록 검사 |
+| `SQL-SCHEMA-001` | MUST | 3, 4, 14 | 명명, 삭제 정책 및 원본 DDL 동기화 검토 |
+| `SQL-FORMAT-001` | MUST | 5, 8~11 | 절, DML, CASE 및 인라인 뷰 정렬 검토 |
+| `SQL-PERF-001` | MUST | 11, 12 | 스칼라 서브쿼리와 반복 I/O 검사 |
+| `SQL-MYBATIS-001` | MUST | 7, 15 | XML 안전성과 Java Mapper 계약 검토 |
+| `SQL-DEPLOY-001` | MUST | 14 | 운영 SQL 및 테이블 명세 동기화 검토 |
+| `SQL-QUALITY-001` | MUST | 15, 16 | 파싱, 인코딩, 데이터 및 Git 검사 |
 
 ## 빠른 탐색
 
@@ -29,13 +42,8 @@ DDL, DML, Mapper XML을 생성하거나 수정할 때 아래 규칙을 예외 �
 
 ## 1. 공통 주석 작성 규칙
 
-### 1.1 문체
-
-- SQL 주석과 XML 주석은 `한다`, `이다`, `된다` 형태의 반말 서술체로 작성합니다.
+- SQL 및 XML 주석의 공통 문체와 내용은 `CORE-COMMENT-001`을 적용합니다.
 - DDL의 테이블 및 컬럼 `COMMENT`는 `이다`, `다` 등의 종결어미와 마침표를 사용하지 않고 의미가 명확한 명사형으로 작성합니다.
-- 주석에 `합니다`, `입니다`, `됩니다` 형태의 존댓말을 사용하지 않습니다.
-- 주석에 이모티콘과 이모지를 사용하지 않습니다.
-- 주석에 느낌표와 물음표를 사용하지 않습니다.
 
 DDL `COMMENT` 예시:
 
@@ -46,10 +54,7 @@ COMMENT ON COLUMN TM_FILEXM.FILE_NUMB IS '파일 번호';
 COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 ```
 
-### 1.2 내용
-
-- 사용자에게 노출되는 실제 문구를 인용한 주석은 접두사 없이 원문만 작성하며 문구 안의 문체와 문장부호는 예외로 둡니다.
-- SQL 문장을 그대로 읽는 주석은 작성하지 않고 조건의 이유와 데이터 정책을 설명합니다.
+- SQL 문장을 그대로 읽지 않고 조건의 이유와 데이터 정책을 설명합니다.
 
 ## 2. SQL 보안 및 안전 규칙
 

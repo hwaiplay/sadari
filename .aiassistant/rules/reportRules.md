@@ -1,5 +1,5 @@
 ---
-apply: always
+apply: scoped
 ---
 
 # Report Rules
@@ -7,6 +7,20 @@ apply: always
 이 문서는 Sadari 프로젝트의 정책, 성능 개선, 기술 분석, 설계, 배포 및 운영 보고성 Markdown 문서 작성 규칙을 정의합니다.
 `docs` 아래의 보고성 Markdown 문서를 생성하거나 수정할 때 아래 규칙을 예외 없이 적용합니다.
 규칙은 보안, 사실 정확성, 구현 동기화, 문서 유형별 필수 내용, 형식, 검증과 형상 관리 순으로 중요도가 높은 항목부터 나열합니다.
+
+## Rule ID Index
+
+| 규칙 ID | 수준 | 적용 절 | 주요 검증 |
+| --- | --- | --- | --- |
+| `REPORT-STYLE-001` | MUST | 1, 11 | 문체, 구조 및 Markdown 형식 검토 |
+| `REPORT-SCOPE-001` | MUST | 2 | 문서 위치와 파일명 검사 |
+| `REPORT-SECURITY-001` | MUST | 3 | 비밀값, 개인정보 및 물리 식별자 검사 |
+| `REPORT-EVIDENCE-001` | MUST | 4, 9 | 구현 근거와 측정·추정 구분 검토 |
+| `REPORT-POLICY-001` | MUST | 5, 10 | 정책 흐름과 계정 수명주기 동기화 검토 |
+| `REPORT-PERF-001` | MUST | 6 | 병목, 수치 및 trade-off 검토 |
+| `REPORT-DESIGN-001` | MUST | 7 | 현행, 개선안, 실패 및 보안 영향 검토 |
+| `REPORT-OPS-001` | MUST | 8 | 배포, 검증 및 롤백 절차 검토 |
+| `REPORT-QUALITY-001` | MUST | 12, 13 | 링크, 인코딩, 사실 및 Git 검사 |
 
 ## 빠른 탐색
 
