@@ -170,13 +170,13 @@ public class ReadingClubController {
         return readingClubService.getMemberExitList(userNumb, clubNumb);
     }
 
-    /** 퇴장 회원의 재가입 제한을 해제한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 제한 해제 결과 */
+    /** 퇴장 회원의 제한 내역을 삭제한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 내역 삭제 결과 */
     @DeleteMapping("/{clubNumb}/members/{targetUserNumb}/restriction")
     @Operation(summary = "퇴장 모임원 재가입 제한 해제")
-    public ResultData uptMemberRestriction(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+    public ResultData delMemberRestriction(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                           , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
-        // 모임장 권한과 퇴장 상태를 검증한 제한 해제 결과를 반환한다
-        return readingClubService.uptMemberRestriction(userNumb, clubNumb, targetUserNumb);
+        // 모임장 권한과 퇴장 및 제한 상태를 검증한 내역 삭제 결과를 반환한다
+        return readingClubService.delMemberRestriction(userNumb, clubNumb, targetUserNumb);
     }
 
     /**

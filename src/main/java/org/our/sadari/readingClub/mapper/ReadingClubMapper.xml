@@ -827,20 +827,19 @@
              , MEMBER.USER_NUMB DESC
     </select>
 
-    <!-- 모임장 소유권과 퇴장 상태를 확인하여 재가입 제한만 해제한다. -->
-    <update id="uptMemberRestriction">
+    <!-- 모임장 소유권과 퇴장 및 제한 상태를 확인하여 회원 관계를 삭제한다. -->
+    <delete id="delMemberRestriction">
         <include refid="clubCodeBinds" />
-        UPDATE /* uptMemberRestriction */ TB_CLMEMX MEMBER
+        DELETE /* delMemberRestriction */ MEMBER
+          FROM TB_CLMEMX MEMBER
           JOIN TM_CLUBXM CLUB
             ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
            AND CLUB.OWNR_NUMB = #{ownerNumb}
-           SET MEMBER.BLOC_YSNO = #{commNo}
-             , MEMBER.UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE MEMBER.CLUB_NUMB = #{clubNumb}
            AND MEMBER.USER_NUMB = #{targetUserNumb}
            AND MEMBER.MEMB_STAT = #{memberExited}
            AND MEMBER.BLOC_YSNO = #{commYes}
-    </update>
+    </delete>
 
     <!-- 자동 팝업은 종료 다음 날에만, 직접 선택한 완료 회차는 날짜 제한 없이 고정 목표 결과를 조회한다. -->
     <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">

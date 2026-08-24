@@ -14,7 +14,17 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import * as styles from "./ClubMemberRestrictionPage.css";
 
-/** 모임장이 퇴장 내역과 재가입 제한 상태를 관리한다. @author HanWon.Jang @return 퇴장 내역 및 제한 페이지 */
+/**
+ * fileName       : ClubMemberRestrictionPage
+ * author         : Hanwon.Jang
+ * date           : 2026-08-24
+ * description    : 퇴장 내역과 재가입 제한 상태를 확인하는 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-24        Hanwon.Jang    최초 생성
+ */
+
 const ClubMemberRestrictionPage = () => {
   const { clubNumb: clubNumbParam } = useParams<{ clubNumb: string }>();
   const clubNumb = Number(clubNumbParam);
@@ -73,8 +83,8 @@ const ClubMemberRestrictionPage = () => {
         title: message("frontend.readingClub.restriction.releasing"),
         success: { title: message("frontend.readingClub.restriction.releaseSuccess") },
       });
-      // 변경된 제한 상태를 최신 목록으로 다시 조회한다
-      await loadExitList();
+      // 삭제가 확정된 회원을 현재 목록에서도 즉시 제거한다
+      setExitList((currentList) => currentList.filter((item) => item.userNumb !== userNumb));
     } catch (error) {
       // "제한을 해제하지 못했어요."
       void sweetError(

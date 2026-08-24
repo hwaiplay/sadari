@@ -838,20 +838,20 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /** {@inheritDoc} @author HanWon.Jang */
     @Override
     @Transactional
-    public ResultData uptMemberRestriction(Long userNumb, Long clubNumb, Long targetUserNumb) {
-        // 제한 해제에 필요한 식별값을 검증한다
+    public ResultData delMemberRestriction(Long userNumb, Long clubNumb, Long targetUserNumb) {
+        // 제한 내역 삭제에 필요한 식별값을 검증한다
         if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 모임장 소유권과 퇴장 및 제한 상태가 모두 일치할 때만 제한을 해제한다
-        if (readingClubMapper.uptMemberRestriction(userNumb, clubNumb, targetUserNumb) == 0) {
-            // "수정에 실패했어요. 다시 시도해주세요."
-            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        // 모임장 소유권과 퇴장 및 제한 상태가 모두 일치할 때만 관계를 삭제한다
+        if (readingClubMapper.delMemberRestriction(userNumb, clubNumb, targetUserNumb) == 0) {
+            // "삭제에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
 
-        // 재가입 제한 해제 성공 결과를 반환한다
+        // 퇴장 관계와 재가입 제한을 함께 제거한 성공 결과를 반환한다
         return ResultData.success();
     }
 
