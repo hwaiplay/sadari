@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거 및 입력 검증 추가
+ * 2026-08-24        HanWon.Jang        로컬 이미지 MIME 보존
  */
 @Service
 @RequiredArgsConstructor
@@ -78,8 +79,7 @@ public class ComplaintServiceImpl implements ComplaintService {
     public ResultData setComplaint(Long userNumb, ComplaintCreateDto complaintCreateDto) {
 
         // 인증 사용자가 아니거나 활성 회원이 아니면 신고 접수를 허용하지 않는다
-        if (StringUtil.isEmpty(userNumb)
-                || !Constant.USER_STAT_ACTIVE.equals(complaintMapper.getUserStat(userNumb))) {
+        if (StringUtil.isEmpty(userNumb) || !Constant.USER_STAT_ACTIVE.equals(complaintMapper.getUserStat(userNumb))) {
             // "접근 권한이 없습니다."
             return ResultData.fail(ResultEnum.FORBIDDEN);
         }
@@ -97,8 +97,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         // 선택 입력인 신고 상세 내용을 저장 형식으로 정규화한다
         String cmplCntn = normalizeContent(complaintCreateDto.getCmplCntn());
         // 예약된 모임 유형 등 아직 사용자 화면에서 지원하지 않는 대상을 차단한다
-        if (!ALLOWED_TARGET_TYPES.contains(tagtType)
-                || complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET, tagtType) != 1
+        if (!ALLOWED_TARGET_TYPES.contains(tagtType) || complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET, tagtType) != 1
                 || complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_REASON, cmplRson) != 1) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
@@ -288,8 +287,12 @@ public class ComplaintServiceImpl implements ComplaintService {
                 // 저장소에 실제 원본이 없으면 파일명만으로 신고를 접수하지 않는다
                 return null;
             }
-            // 저장소가 확정한 MIME 유형을 증거 메타정보에 우선 적용한다
-            target.setMimeType(storedFile.get().contentType());
+            // 저장소가 MIME 유형을 확정한 경우에만 DB의 검증된 파일 메타정보보다 우선 적용한다
+            if (!StringUtil.isEmpty(storedFile.get().contentType())) {
+                // 저장소가 반환한 MIME 유형을 관리자 증거 메타정보에 설정한다
+                target.setMimeType(storedFile.get().contentType());
+            }
+
             // 실제 신고 시점의 이미지 원본 바이트를 반환한다
             return storedFile.get().bytes();
         }

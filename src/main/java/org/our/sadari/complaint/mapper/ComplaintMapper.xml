@@ -256,7 +256,6 @@
         UPDATE /* uptAutoProfile */
                TM_USERXM
            SET PROF_NUMB = NULL
-             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{tagtUser}
            AND PROF_NUMB IS NOT NULL
            AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
@@ -268,7 +267,6 @@
         UPDATE /* uptAutoBackground */
                TM_USERXM
            SET BGIM_NUMB = NULL
-             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{tagtUser}
            AND BGIM_NUMB IS NOT NULL
            AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})
@@ -280,7 +278,6 @@
         UPDATE /* uptAutoIntro */
                TM_USERXM
            SET INTR_CNTN = NULL
-             , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE USER_NUMB = #{tagtUser}
            AND NULLIF(TRIM(INTR_CNTN), '') IS NOT NULL
            AND USER_STAT IN (#{userStatActive}, #{userStatWithdrawn}, #{userStatDeletePending})

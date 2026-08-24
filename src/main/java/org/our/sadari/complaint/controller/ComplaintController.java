@@ -43,9 +43,8 @@ public class ComplaintController {
      */
     @PostMapping
     @Operation(summary = "사용자 신고 접수", description = "대상 원문을 서버에서 조회해 변경되지 않는 신고 시점 스냅샷으로 저장한다.")
-    public ResultData setComplaint(
-            @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
-          , @Valid @RequestBody ComplaintCreateDto request) {
+    public ResultData setComplaint(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @Valid @RequestBody ComplaintCreateDto request) {
 
         // 인증 사용자의 대상 원문 스냅샷이 포함된 신고 접수 결과를 반환한다
         return complaintService.setComplaint(userNumb, request);
