@@ -54,7 +54,6 @@ function renderMemberProfile(member: ClubMemberProfile) {
 export default function ClubDetailPage() {
   const {
     answers,
-    applications,
     canJoin,
     club,
     isCancellingApplication,
@@ -63,7 +62,6 @@ export default function ClubDetailPage() {
     readingGoalResult,
     handleAnswerChange,
     handleApplicationCancel,
-    handleApplicationDecision,
     handleClubAction,
     handleJoinClub,
     handleReadingHistory,
