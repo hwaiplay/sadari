@@ -5,6 +5,11 @@ import org.apache.ibatis.annotations.Param;
 import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
 import org.our.sadari.complaint.dto.ComplaintEvidenceDto;
+import org.our.sadari.complaint.dto.ComplaintResultDto;
+import org.our.sadari.complaint.dto.ComplaintResultEventDto;
+import org.our.sadari.complaint.dto.ComplaintResultItemDto;
+
+import java.util.List;
 
 /**
  * fileName       : ComplaintMapper
@@ -15,6 +20,7 @@ import org.our.sadari.complaint.dto.ComplaintEvidenceDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    최초 생성·버전별 자동 조치와 증거 보관 추가
+ * 2026-08-24        HanWon.Jang        신고 결과 확인 연동
  */
 @Mapper
 public interface ComplaintMapper {
@@ -223,6 +229,52 @@ public interface ComplaintMapper {
      */
     int uptAutoComplaints(@Param("tagtType") String tagtType, @Param("tagtNumb") Long tagtNumb
                         , @Param("tagtHash") String tagtHash, @Param("procCntn") String procCntn);
+
+    /**
+     * 자동 조치로 종결된 동일 대상 버전 신고의 신고자별 미확인 결과를 생성한다.
+     *
+     * @author HanWon.Jang
+     * @param tagtType 신고 대상 유형
+     * @param tagtNumb 신고 대상 번호
+     * @param tagtHash 신고 대상 버전 SHA-256 해시
+     * @return 생성된 신고 조치 결과 수
+     */
+    ComplaintResultEventDto getAutoResultEventDtl(@Param("tagtType") String tagtType
+                                                 , @Param("tagtNumb") Long tagtNumb
+                                                 , @Param("tagtHash") String tagtHash);
+
+    /** 신고 조치 사용자 안내 이벤트를 저장한다. */
+    int setResultEvent(ComplaintResultEventDto event);
+
+    /** 자동 조치로 종결된 신고의 유효한 신고자 수신 결과를 생성한다. */
+    int setAutoReporterResults(@Param("eventNumb") Long eventNumb
+                              , @Param("tagtType") String tagtType
+                              , @Param("tagtNumb") Long tagtNumb
+                              , @Param("tagtHash") String tagtHash);
+
+    /** 조치 시점에 보존 대상인 피신고자의 수신 결과를 생성한다. */
+    int setTargetResult(@Param("eventNumb") Long eventNumb, @Param("cmplNumb") Long cmplNumb
+                       , @Param("userNumb") Long userNumb);
+
+    /**
+     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과를 요약 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 인증 사용자 번호
+     * @return 미확인 결과 건수와 조회 시점의 마지막 결과 번호
+     */
+    List<ComplaintResultItemDto> getPendingResultList(@Param("userNumb") Long userNumb
+                                                     , @Param("maxSize") int maxSize);
+
+    /**
+     * 활성 사용자의 조회 시점 마지막 번호까지 미확인 결과를 확인 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 인증 사용자 번호
+     * @param resultNumb 조회 시점의 마지막 결과 번호
+     * @return 확인 처리된 신고 조치 결과 수
+     */
+    int uptResultConfirm(@Param("userNumb") Long userNumb, @Param("resultNumb") Long resultNumb);
 
     /**
      * 최종 처리 뒤 정책 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제한다.

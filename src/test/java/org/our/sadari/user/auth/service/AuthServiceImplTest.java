@@ -235,7 +235,7 @@ class AuthServiceImplTest {
      * @throws Exception Kakao 인증 응답 대역 구성 중 발생
      */
     @Test
-    void kakaoLoginBlocksSuspendedWithdrawal() throws Exception {
+    void blocksSuspendedWithdrawal() throws Exception {
         // Kakao 토큰 교환 결과를 로그인 서비스에 제공할 객체를 생성한다
         KakaoTokenDto kakaoToken = new KakaoTokenDto();
         // 물리 삭제된 계정과 같은 식별값의 Kakao 응답을 생성한다
@@ -252,7 +252,7 @@ class AuthServiceImplTest {
         // 탈퇴 이력 비교용 식별값 해시를 생성하도록 결과를 구성한다
         when(userIdEncryptionService.hashForAudit("12345")).thenReturn("hashed-provider-id");
         // 같은 해시에 연결된 과거 회원 번호의 유효 제재가 조회되도록 구성한다
-        when(userWithdrawalMapper.getActiveSuspensionCountByUserIdHash("hashed-provider-id")).thenReturn(1);
+        when(userWithdrawalMapper.getActiveSuspCntByIdHash("hashed-provider-id")).thenReturn(1);
 
         // 제재가 남은 물리 삭제 계정으로 Kakao 로그인을 요청한다
         ResultData result = authService.kakaoLogin("authorization-code", "127.0.0.1", "test-agent");
@@ -270,7 +270,7 @@ class AuthServiceImplTest {
      * @throws Exception Kakao 인증 응답 대역 구성 중 발생
      */
     @Test
-    void kakaoLoginCreatesUserAfterRelease() throws Exception {
+    void createsUserAfterRelease() throws Exception {
         // Kakao 토큰 교환 결과를 로그인 서비스에 제공할 객체를 생성한다
         KakaoTokenDto kakaoToken = new KakaoTokenDto();
         // 제재가 해제된 탈퇴 계정과 같은 식별값의 Kakao 응답을 생성한다
@@ -287,7 +287,7 @@ class AuthServiceImplTest {
         // 탈퇴 이력 비교용 식별값 해시를 생성하도록 결과를 구성한다
         when(userIdEncryptionService.hashForAudit("12345")).thenReturn("hashed-provider-id");
         // 모든 과거 회원 번호의 유효 제재가 해제된 상태로 구성한다
-        when(userWithdrawalMapper.getActiveSuspensionCountByUserIdHash("hashed-provider-id")).thenReturn(0);
+        when(userWithdrawalMapper.getActiveSuspCntByIdHash("hashed-provider-id")).thenReturn(0);
         // 탈퇴 전 닉네임과 관계없이 새 계정의 최초 닉네임을 발급하도록 구성한다
         when(nicknameGenerationService.setGeneratedNickname()).thenReturn("새로운 독서가");
         // 신규 회원 저장 시 과거와 다른 새 회원 번호가 발급되도록 구성한다
@@ -317,7 +317,7 @@ class AuthServiceImplTest {
      * @throws Exception Kakao 인증 응답 대역 구성 중 발생
      */
     @Test
-    void kakaoLoginSkipsDefaultImage() throws Exception {
+    void skipsDefaultImage() throws Exception {
         // Kakao 토큰 교환 결과를 로그인 서비스에 제공할 객체를 생성한다
         KakaoTokenDto kakaoToken = new KakaoTokenDto();
         // 기본 프로필 이미지 사용 상태가 포함된 Kakao 응답을 생성한다
@@ -336,7 +336,7 @@ class AuthServiceImplTest {
         // 탈퇴 이력 비교용 식별값 해시를 생성하도록 결과를 구성한다
         when(userIdEncryptionService.hashForAudit("12345")).thenReturn("hashed-provider-id");
         // 같은 식별값의 유효 제재가 없도록 구성한다
-        when(userWithdrawalMapper.getActiveSuspensionCountByUserIdHash("hashed-provider-id")).thenReturn(0);
+        when(userWithdrawalMapper.getActiveSuspCntByIdHash("hashed-provider-id")).thenReturn(0);
         // 신규 회원에게 최초 닉네임을 발급하도록 구성한다
         when(nicknameGenerationService.setGeneratedNickname()).thenReturn("기본 사진 독서가");
         // 신규 회원 저장 시 회원 번호가 발급되도록 구성한다

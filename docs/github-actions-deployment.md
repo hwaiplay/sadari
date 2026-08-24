@@ -54,10 +54,14 @@
 | `DB_CONNECTION_TIMEOUT` | `60000` | DB 커넥션 획득 제한시간(ms) |
 | `DB_MAXIMUM_데이터베이스 연결 풀 크기` | `10` | Hikari 최대 커넥션 수 |
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
+| `DB_MAXIMUM_POOL_SIZE` | `10` | Hikari 최대 커넥션 수 |
+| `REDIS_HOST` | 필수 | Redis 서버 호스트 |
+| `REDIS_PORT` | `6379` | Redis 서버 포트 |
+| `REDIS_PASSWORD` | 빈 값 | Redis 인증 비밀번호 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
-| `영구 탈퇴 데이터 삭제_처리 대기 일수` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
+| `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `TIMER_ATTENDANCE_MIN_SECONDS` | `600` | 하루 독서 출석 인정에 필요한 최소 누적 시간(초) |
 | `TIMER_MAX_SESSION_SECONDS` | `28800` | 단일 독서 타이머 세션과 목표시간 알림에 적용하는 최대 시간(초) |
 | `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
@@ -69,12 +73,20 @@
 | `BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS` | `7` | 인기 검색어 점수 합산과 회원별 동일 검색어 중복 제한 기간(일) |
 | `BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT` | `3` | 인기 검색어 공용 화면 노출에 필요한 최소 고유 회원 수 |
 | `BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE` | `10` | 검색 화면에 전달할 인기 검색어 최대 건수 |
-| `MULTIPART_MAX_FILE_SIZE` | `20MB` | 단일 업로드 파일 제한 |
-| `MULTIPART_MAX_REQUEST_SIZE` | `40MB` | 전체 multipart 요청 제한 |
+| `MULTIPART_MAX_FILE_SIZE` | `10MB` | 단일 업로드 파일 제한 |
+| `MULTIPART_MAX_REQUEST_SIZE` | `21MB` | 전체 multipart 요청 제한 |
+| `UPLOAD_MAX_IMAGE_BYTES` | `10485760` | 디코딩 전 이미지 최대 바이트 수 |
+| `UPLOAD_MAX_IMAGE_PIXELS` | `20000000` | 이미지 최대 전체 픽셀 수 |
+| `UPLOAD_MAX_IMAGE_DIMENSION` | `8192` | 이미지 한 변의 최대 픽셀 수 |
 | `COOKIE_SECURE` | `true` | HTTPS 쿠키 전용 여부 |
-| `COOKIE_쿠키의 교차 사이트 전송 정책` | `None` | 인증 쿠키 SameSite 정책 |
+| `COOKIE_SAME_SITE` | `None` | 인증 쿠키 SameSite 정책 |
+| `FIREBASE_CREDENTIALS_PATH` | 필수 | Firebase 서비스 계정 자격증명 파일 경로 |
+| `SCHEDULER_ENABLED` | `true` | 운영 스케줄러 실행 여부 |
+| `SCHEDULER_MAX_SIZE` | `100` | 한 번의 스케줄 실행 최대 처리 건수 |
+| `SERVER_PORT` | `8080` | Spring 서버 포트 |
 | `LOGGING_LEVEL_ROOT` | `info` | 루트 로그 레벨 |
 | `LOGGING_LEVEL_APP` | `info` | 프로젝트 패키지 로그 레벨 |
+| `COMPLAINT_RESULT_MAX_SIZE` | `5` | 한 번의 팝업에 표시할 미확인 신고 조치 결과 최대 건수 |
 
 ## 프로필 고정 설정
 

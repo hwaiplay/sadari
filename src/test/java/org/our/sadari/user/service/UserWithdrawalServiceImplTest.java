@@ -126,7 +126,7 @@ class UserWithdrawalServiceImplTest {
      * @throws Exception 재인증 요청 직렬화 대역 구성 중 발생
      */
     @Test
-    void setWithdrawalRequestAllowsHardType() throws Exception {
+    void allowsHardWithdrawal() throws Exception {
         // 정지 회원에게 허용할 영구 탈퇴 요청을 생성한다
         UserWithdrawalDto request = createRequest(Constant.WITHDRAWAL_TYPE_HARD);
         // 일회성 OAuth 상태를 Redis에 저장할 연산 객체를 반환하도록 구성한다
@@ -151,7 +151,7 @@ class UserWithdrawalServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setWithdrawalRequestBlocksSoftType() {
+    void blocksSoftWithdrawal() {
         // 정지 회원에게 허용하지 않을 계정 비활성화 요청을 생성한다
         UserWithdrawalDto request = createRequest(Constant.WITHDRAWAL_TYPE_SOFT);
 
@@ -171,7 +171,7 @@ class UserWithdrawalServiceImplTest {
      * @throws Exception 탈퇴 요청 역직렬화 대역 구성 중 발생
      */
     @Test
-    void setWithdrawalCallbackAnonymizesClubParticipant() throws Exception {
+    void anonymizesClubParticipant() throws Exception {
         // 영구 삭제 대기 전환에 사용할 탈퇴 요청을 구성한다
         UserWithdrawalDto request = createRequest(Constant.WITHDRAWAL_TYPE_HARD);
         // 탈퇴 대상 회원 번호를 설정한다
@@ -214,7 +214,7 @@ class UserWithdrawalServiceImplTest {
         // 영구 삭제 대기 전환 성공 응답을 검증한다
         assertEquals(200, result.getCode());
         // 복귀 후 목표 집계에 자동 복원되지 않도록 모임 회차 참여를 비식별화하는지 검증한다
-        verify(userWithdrawalMapper).uptClubParticipantAnonymous(31L, Constant.COMM_YES);
+        verify(userWithdrawalMapper).uptClubParticipantAnon(31L, Constant.COMM_YES);
     }
 
     /**

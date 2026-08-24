@@ -8,6 +8,7 @@
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <bind name="userStatSuspended" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_SUSPENDED" />
         <bind name="userStatWithdrawn" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_WITHDRAWN" />
         <bind name="userStatDeletePending" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_DELETE_PENDING" />
         <bind name="complaintStatusReceived" value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_RECEIVED" />
@@ -16,6 +17,10 @@
         <bind name="complaintStatusRejected" value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_REJECTED" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        <bind name="complaintTargetCode" value="@org.our.sadari.global.common.constant.Constant@CODE_COMPLAINT_TARGET" />
+        <bind name="complaintReasonCode" value="@org.our.sadari.global.common.constant.Constant@CODE_COMPLAINT_REASON" />
+        <bind name="receiverReporter" value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_RECEIVER_REPORTER" />
+        <bind name="receiverTarget" value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_RECEIVER_TARGET" />
     </sql>
 
     <!-- 신고 접수 가능 여부를 판단할 현재 회원 상태를 조회한다 -->
@@ -327,6 +332,123 @@
            AND TAGT_NUMB = #{tagtNumb}
            AND TAGT_HASH = #{tagtHash}
            AND CMPL_STAT IN (#{complaintStatusReceived}, #{complaintStatusReviewing})
+    </update>
+
+    <!-- 자동 조치로 종결된 대상의 표시명과 누적 신고 사유 구성을 안내 이벤트 원본으로 조회한다 -->
+    <select id="getAutoResultEventDtl"
+            resultType="org.our.sadari.complaint.dto.ComplaintResultEventDto">
+        <include refid="bindComplaint" />
+        SELECT /* getAutoResultEventDtl */
+               C.TAGT_TYPE
+             , C.TAGT_NUMB
+             , C.TAGT_HASH
+             , MAX(C.TAGT_USER) AS TAGT_USER
+             , FN_GET_CODE_NAME(#{complaintTargetCode}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT
+             , MIN(C.CMPL_RSON) AS RSON_CODE
+             , FN_GET_CODE_NAME(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
+             , MAX(C.PROC_DATE) AS PROC_DATE
+          FROM TH_CMPLNT C
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.TAGT_HASH = #{tagtHash}
+           AND C.CMPL_STAT = #{complaintStatusActioned}
+         GROUP BY C.TAGT_TYPE, C.TAGT_NUMB, C.TAGT_HASH
+    </select>
+
+    <!-- 하나의 자동 또는 수동 조치에 대한 사용자 안내 문구와 사유 요약을 변경 불가능한 이벤트로 저장한다 -->
+    <insert id="setResultEvent" parameterType="org.our.sadari.complaint.dto.ComplaintResultEventDto"
+            useGeneratedKeys="true" keyProperty="evntNumb" keyColumn="EVNT_NUMB">
+        /* setResultEvent */
+        INSERT INTO TH_CMREVT (
+                    ACTN_NUMB, TRIG_CMPL, TAGT_TYPE, TAGT_NUMB, TAGT_HASH, TAGT_USER
+                  , TAGT_NAME, RSON_SUMM, RSON_CODE, RSON_NAME, ACTN_TYPE
+                  , RPTR_CNTN, TGTR_CNTN, PROC_DATE
+        ) VALUES (  #{actnNumb,jdbcType=NUMERIC}, #{trigCmpl,jdbcType=NUMERIC}, #{tagtType}
+                  , #{tagtNumb}, #{tagtHash,jdbcType=CHAR}, #{tagtUser,jdbcType=NUMERIC}
+                  , #{tagtName}, #{rsonSumm}, #{rsonCode,jdbcType=VARCHAR}, #{rsonName}
+                  , #{actnType}, #{rptrCntn}, #{tgtrCntn}, #{procDate}
+        )
+    </insert>
+
+    <!-- 자동 조치로 종결된 동일 대상 버전 신고의 보존 대상 신고자별 미확인 결과를 생성한다 -->
+    <insert id="setAutoReporterResults">
+        <include refid="bindComplaint" />
+        INSERT /* setAutoReporterResults */
+          INTO TH_CMRSLT (
+               EVNT_NUMB, CMPL_NUMB, USER_NUMB, RCVR_TYPE, REGI_DATE
+        )
+        SELECT #{eventNumb}, C.CMPL_NUMB, C.USER_NUMB, #{receiverReporter}, CURRENT_TIMESTAMP(6)
+          FROM TH_CMPLNT C
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = C.USER_NUMB
+           AND U.USER_STAT IN (#{userStatActive}, #{userStatSuspended})
+         WHERE C.TAGT_TYPE = #{tagtType}
+           AND C.TAGT_NUMB = #{tagtNumb}
+           AND C.TAGT_HASH = #{tagtHash}
+           AND C.CMPL_STAT = #{complaintStatusActioned}
+           AND C.USER_NUMB IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TH_CMRSLT R
+                WHERE R.EVNT_NUMB = #{eventNumb}
+                  AND R.CMPL_NUMB = C.CMPL_NUMB
+                  AND R.RCVR_TYPE = #{receiverReporter}
+               )
+    </insert>
+
+    <!-- 조치 시점에 탈퇴하지 않은 피신고자에게 이벤트당 하나의 미확인 결과를 생성한다 -->
+    <insert id="setTargetResult">
+        <include refid="bindComplaint" />
+        INSERT /* setTargetResult */
+          INTO TH_CMRSLT (EVNT_NUMB, CMPL_NUMB, USER_NUMB, RCVR_TYPE, REGI_DATE)
+        SELECT #{eventNumb}, #{cmplNumb}, U.USER_NUMB, #{receiverTarget}, CURRENT_TIMESTAMP(6)
+          FROM TM_USERXM U
+         WHERE U.USER_NUMB = #{userNumb}
+           AND U.USER_STAT IN (#{userStatActive}, #{userStatSuspended})
+    </insert>
+
+    <!-- 활성 사용자가 아직 확인하지 않은 신고 조치 결과 상세를 오래된 순서로 제한 조회한다 -->
+    <select id="getPendingResultList" resultType="org.our.sadari.complaint.dto.ComplaintResultItemDto">
+        <include refid="bindComplaint" />
+        SELECT /* getPendingResultList */
+               R.RSLT_NUMB
+             , R.RCVR_TYPE
+             , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN C.CMPL_NUMB END AS CMPL_NUMB
+             , E.TAGT_NAME
+             , CASE WHEN R.RCVR_TYPE = #{receiverReporter}
+                         THEN FN_GET_CODE_NAME(#{complaintReasonCode}, C.CMPL_RSON, NULL)
+                    ELSE E.RSON_NAME
+                END AS RSON_NAME
+             , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN E.RPTR_CNTN ELSE E.TGTR_CNTN END AS RSLT_CNTN
+             , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN C.REGI_DATE END AS CMPL_DATE
+             , E.PROC_DATE
+          FROM TH_CMRSLT R
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = R.USER_NUMB
+          JOIN TH_CMREVT E
+            ON E.EVNT_NUMB = R.EVNT_NUMB
+          JOIN TH_CMPLNT C
+            ON C.CMPL_NUMB = R.CMPL_NUMB
+         WHERE R.USER_NUMB = #{userNumb}
+           AND R.CONF_DATE IS NULL
+           AND U.USER_STAT = #{userStatActive}
+         ORDER BY R.RSLT_NUMB
+         LIMIT #{maxSize}
+    </select>
+
+    <!-- 활성 사용자의 조회 시점 마지막 번호까지 미확인 신고 조치 결과를 확인 처리한다 -->
+    <update id="uptResultConfirm">
+        <include refid="bindComplaint" />
+        UPDATE /* uptResultConfirm */
+               TH_CMRSLT R
+          JOIN TM_USERXM U
+            ON U.USER_NUMB = R.USER_NUMB
+           SET R.CONF_DATE = CURRENT_TIMESTAMP(6)
+         WHERE R.USER_NUMB = #{userNumb}
+           AND R.RSLT_NUMB <![CDATA[<=]]> #{resultNumb}
+           AND R.CONF_DATE IS NULL
+           AND U.USER_STAT = #{userStatActive}
     </update>
 
     <!-- 최종 처리된 신고에만 연결되고 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제한다 -->
