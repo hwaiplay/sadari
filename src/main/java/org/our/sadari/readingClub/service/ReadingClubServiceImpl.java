@@ -40,7 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 처리
- * 2026-08-24        HanWon.Jang        가입 알림·신청 취소 처리
+ * 2026-08-24        HanWon.Jang        가입 알림·신청 취소·모임원 퇴장 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -335,6 +335,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         if (StringUtil.hasEmpty(userNumb, clubNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 강제 퇴장 후 재가입이 차단된 관계인지 먼저 확인한다
+        ReadingClubDto.MemberDto relation = readingClubMapper.getClubMember(clubNumb, userNumb);
+        // 모임장이 차단을 해제하기 전까지 공개 범위와 관계없이 모임 상세 접근을 거절한다
+        if (!StringUtil.isEmpty(relation) && Constant.COMM_YES.equals(relation.getBlocYsno())) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
         // 로그인 사용자 관점의 모임 상세를 조회한다
@@ -738,6 +746,73 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         }
 
         // 신청 행을 물리 삭제하여 저장된 가입 답변도 즉시 제거한다
+        return ResultData.success();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param targetUserNumb 퇴장 대상 사용자 번호
+     * @param request 퇴장 사유
+     * @return 모임원 퇴장 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
+                               , ReadingClubDto.MemberExitReqDto request) {
+        // 퇴장 처리에 필요한 식별값과 요청 본문을 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb, request)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 필수 퇴장 사유의 앞뒤 공백을 제거하고 최대 길이를 서버에서도 제한한다
+        String exitReason = request.getExitReason() == null ? "" : request.getExitReason().trim();
+        // 비어 있거나 허용 길이를 초과한 사유는 저장 처리에 사용하지 않는다
+        if (exitReason.isEmpty() || exitReason.length() > 500) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 퇴장 사유에 비속어가 포함되면 관계 상태를 변경하지 않는다
+        if (badWordDetectionService.findBadWord(exitReason).isPresent()) {
+            // "욕설이나 비속어는 사용할 수 없어요. 감지된 단어: 퇴장 사유"
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, "퇴장 사유");
+        }
+
+        // 권한과 대상 상태 검증 및 동시 퇴장 요청을 직렬화하도록 모임 마스터 행을 잠근다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        // 운영 중인 모임의 모임장만 자신이 아닌 일반 멤버를 퇴장시킬 수 있다
+        if (!isOwner(club, userNumb) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || userNumb.equals(targetUserNumb)) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // SQL의 활성 계정·소유권·일반 멤버 조건을 모두 통과한 대상만 퇴장 처리한다
+        if (readingClubMapper.uptMemberExit(userNumb, clubNumb, targetUserNumb) == 0) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 퇴장 대상에게 모임명과 필수 사유가 포함된 알림을 저장하고 푸시를 예약한다
+        ResultData alimResult = alimService.sendAlim(
+                targetUserNumb
+              , Constant.ALIM_SITU_DEFAULT
+              , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , clubNumb
+              , Map.of("clubName", club.getClubName(), "exitReason", exitReason)
+        );
+        // 알림 저장에 실패하면 퇴장 관계만 확정되지 않도록 전체 트랜잭션을 롤백한다
+        if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 접근과 재가입 차단 및 알림 처리가 모두 완료된 성공 응답을 반환한다
         return ResultData.success();
     }
 

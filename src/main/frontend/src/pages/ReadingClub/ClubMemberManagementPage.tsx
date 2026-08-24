@@ -1,12 +1,13 @@
 /**
  * fileName       : ClubMemberManagementPage
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-08-14
  * description    : 모임장의 가입 신청 확인과 멤버 및 초대 관리 화면을 구성한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
+ * 2026-08-24        HanWon.Jang        모임원 퇴장 버튼과 사유 모달 추가
  */
 import { message } from "@/app/messages/message";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
@@ -89,12 +90,14 @@ export default function ClubMemberManagementPage() {
     applications,
     candidates,
     club,
+    exitReason,
     isInviteOpen,
     isLoading,
     isSubmitting,
     members,
     sentInvitations,
     selectedApplication,
+    selectedMember,
     handleAnswerClose,
     handleAnswerOpen,
     handleApplicationDecision,
@@ -102,11 +105,15 @@ export default function ClubMemberManagementPage() {
     handleInviteClose,
     handleInviteOpen,
     handleInviteSubmit,
+    handleExitClose,
+    handleExitOpen,
+    handleExitReasonChange,
+    handleMemberExit,
     handleRestrictionInfo,
   } = useClubMemberManage();
 
   // 답변 또는 초대 모달이 열려 있는 동안 배경 화면의 스크롤을 잠근다
-  useBodyScrollLock(Boolean(selectedApplication) || isInviteOpen);
+  useBodyScrollLock(Boolean(selectedApplication) || Boolean(selectedMember) || isInviteOpen);
 
   /**
    * 선택한 가입 신청을 승인한다
@@ -180,6 +187,17 @@ export default function ClubMemberManagementPage() {
    * @return 모임원 카드
    */
   const renderMember = (member: ClubMemberProfile) => {
+    /**
+     * 현재 카드의 일반 멤버를 퇴장 대상으로 선택한다.
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const handleOpenExit = (): void => {
+      // 현재 카드의 사용자 번호와 닉네임을 퇴장 모달에 전달한다
+      handleExitOpen(member);
+    };
+
     // 모임장과 일반 멤버를 구분한 프로필 카드를 반환한다
     return (
       <article className={styles.profileCard} key={member.userNumb}>
@@ -195,14 +213,15 @@ export default function ClubMemberManagementPage() {
 
         {/* 일반 멤버 퇴장 관리 진입 영역 */}
         {member.membRole !== "OWNER" ? (
-          <button
-            className={styles.moreButton}
-            type="button"
-            aria-label={message("frontend.readingClub.memberManage.memberMenu", [member.userNick ?? "-"])}
-            onClick={handleRestrictionInfo}
+          <ActionButton
+            className={styles.exitButton}
+            variant="danger"
+            size="sm"
+            disabled={isSubmitting}
+            onClick={handleOpenExit}
           >
-            <img className={styles.moreIcon} src="/img/icons/icon-more.svg" alt="" />
-          </button>
+            {message("frontend.readingClub.memberManage.exitAction")}
+          </ActionButton>
         ) : null}
       </article>
     );
@@ -429,6 +448,59 @@ export default function ClubMemberManagementPage() {
               <ActionButton variant="danger" width="half" disabled={isSubmitting} onClick={handleReject}>
                 {/* "거절" */}
                 {message("frontend.readingClub.detail.reject")}
+              </ActionButton>
+            </div>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+
+      {/* 활성 일반 멤버 퇴장 사유 입력 모달 영역 */}
+      {selectedMember ? createPortal(
+        <div className={styles.overlay} role="presentation">
+          <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="member-exit-title">
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle} id="member-exit-title">
+                {message("frontend.readingClub.memberManage.exitTitle", [selectedMember.userNick ?? "-"])}
+              </h2>
+              <button
+                className={styles.closeButton}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                disabled={isSubmitting}
+                onClick={handleExitClose}
+              >
+                <img className={styles.closeIcon} src="/img/icons/icon-close.svg" alt="" />
+              </button>
+            </div>
+            <p className={styles.exitDescription}>
+              {message("frontend.readingClub.memberManage.exitDescription")}
+            </p>
+            <label className={styles.exitField}>
+              <span className={styles.exitLabel}>
+                {message("frontend.readingClub.memberManage.exitReasonLabel")}
+              </span>
+              <textarea
+                className={styles.exitTextarea}
+                value={exitReason}
+                maxLength={500}
+                placeholder={message("frontend.readingClub.memberManage.exitReasonPlaceholder")}
+                disabled={isSubmitting}
+                onChange={(event) => handleExitReasonChange(event.target.value)}
+              />
+              <small className={styles.exitCount}>{exitReason.length}/500</small>
+            </label>
+            <div className={styles.modalActions}>
+              <ActionButton variant="secondary" width="half" disabled={isSubmitting} onClick={handleExitClose}>
+                {message("frontend.common.cancel")}
+              </ActionButton>
+              <ActionButton
+                variant="danger"
+                width="half"
+                disabled={isSubmitting || !exitReason.trim()}
+                onClick={handleMemberExit}
+              >
+                {message("frontend.readingClub.memberManage.exitConfirm")}
               </ActionButton>
             </div>
           </section>

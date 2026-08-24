@@ -1,12 +1,13 @@
 /**
  * fileName       : ClubMemberManagementPage.css
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-08-14
  * description    : 멤버와 가입 신청 관리 화면 및 모달 스타일을 정의한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
+ * 2026-08-24        HanWon.Jang        퇴장 버튼과 사유 모달 스타일 추가
  */
 import { vars } from "@/app/styles/tokens.css";
 import { style } from "@vanilla-extract/css";
@@ -16,6 +17,8 @@ export const page = style({
   flexDirection: "column",
   gap: 38,
   width: "100%",
+  maxWidth: 600,
+  margin: "0 auto",
   minHeight: `calc(100vh - ${vars.headerHeight} - ${vars.navHeight})`,
   paddingTop: 20,
   paddingBottom: 28,
@@ -121,32 +124,12 @@ export const answerChevron = style({
   objectFit: "contain",
 });
 
-export const moreButton = style({
-  display: "inline-flex",
-  width: 38,
-  height: 38,
+export const exitButton = style({
   flexShrink: 0,
-  alignItems: "center",
-  justifyContent: "center",
-  border: 0,
-  borderRadius: "50%",
-  background: "transparent",
-  cursor: "pointer",
-  selectors: {
-    "&:hover": {
-      background: vars.color.gray100,
-    },
-    "&:focus-visible": {
-      outline: "2px solid #78b991",
-      outlineOffset: 2,
-    },
-  },
-});
-
-export const moreIcon = style({
-  width: 22,
-  height: 22,
-  objectFit: "contain",
+  marginLeft: 10,
+  borderRadius: "999px",
+  border:"none",
+  padding: "0 14px",
 });
 
 export const emptyText = style({
@@ -281,7 +264,7 @@ export const modalHeader = style({
 export const modalTitle = style({
   margin: 0,
   color: vars.color.black,
-  fontFamily: vars.font.semibold,
+  fontFamily: vars.font.heading,
   fontSize: 18,
   lineHeight: "24px",
 });
@@ -361,6 +344,60 @@ export const answerText = style({
 export const modalActions = style({
   display: "flex",
   gap: 8,
+});
+
+export const exitDescription = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+  whiteSpace: "pre-line",
+});
+
+export const exitField = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 8,
+});
+
+export const exitLabel = style({
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 16,
+  lineHeight: "20px",
+});
+
+export const exitTextarea = style({
+  width: "100%",
+  minHeight: 116,
+  resize: "none",
+  padding: 14,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 14,
+  boxSizing: "border-box",
+  background: vars.color.background,
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+  selectors: {
+    "&:focus-visible": {
+      boxShadow: "0 0px 10px rgba(0, 0, 0, 0.10)",
+      outline: "none"
+    },
+    "&::placeholder": {
+      color: vars.color.gray500,
+    },
+  },
+});
+
+export const exitCount = style({
+  alignSelf: "flex-end",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "16px",
 });
 
 export const candidateList = style({

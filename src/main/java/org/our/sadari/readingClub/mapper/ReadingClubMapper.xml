@@ -10,6 +10,7 @@
         <bind name="ownerRole" value="'OWNER'" />
         <bind name="memberActive" value="'ACTIVE'" />
         <bind name="memberInvited" value="'INVITED'" />
+        <bind name="memberExited" value="'EXITED'" />
         <bind name="applicationPending" value="'PENDING'" />
         <bind name="roundScheduled" value="'SCHEDULED'" />
         <bind name="roundReading" value="'READING'" />
@@ -29,6 +30,30 @@
          WHERE CLUB_NUMB = #{clubNumb}
            AND IDEM_KEYX = #{idemKeyx}
     </select>
+
+    <!-- 활성 계정인 모임장이 지정한 활성 일반 멤버를 퇴장시키고 재가입을 차단한다. -->
+    <update id="uptMemberExit">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptMemberExit */ TB_CLMEMX MEMBER
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
+           AND CLUB.OWNR_NUMB = #{ownerNumb}
+           AND CLUB.CLUB_STAT = #{clubActive}
+          JOIN TM_USERXM OWNER
+            ON OWNER.USER_NUMB = #{ownerNumb}
+           AND OWNER.USER_STAT = #{userActive}
+          JOIN TM_USERXM TARGET
+            ON TARGET.USER_NUMB = MEMBER.USER_NUMB
+           AND TARGET.USER_STAT = #{userActive}
+           SET MEMBER.MEMB_STAT = #{memberExited}
+             , MEMBER.EXIT_DATE = CURRENT_TIMESTAMP(6)
+             , MEMBER.BLOC_YSNO = #{commYes}
+             , MEMBER.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{targetUserNumb}
+           AND MEMBER.MEMB_ROLE = #{memberRole}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </update>
 
     <!-- 활성 계정인 모임장이 활성 멤버 관계를 유지하는지 확인한다. -->
     <select id="getActiveOwnerCnt" resultType="int">
@@ -580,6 +605,7 @@
          WHERE CLUB.CLUB_VISB = #{clubPublic}
            AND CLUB.CLUB_STAT = #{clubActive}
            AND CLUB.OWNR_NUMB <![CDATA[<>]]> #{userNumb}
+           AND (MINE.USER_NUMB IS NULL OR MINE.BLOC_YSNO = #{commNo})
         <if test="keyword != null and keyword != ''">
             <bind name="keywordLike" value="'%' + keyword + '%'" />
            AND (

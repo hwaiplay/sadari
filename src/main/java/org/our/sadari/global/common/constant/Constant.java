@@ -171,6 +171,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_CLUB_JOIN_APPROVED = "CLUB_JOIN_APPROVED";
     // 독서 모임 가입 신청 거절 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_CLUB_JOIN_REJECTED = "CLUB_JOIN_REJECTED";
+    // 독서 모임 강제 퇴장 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_MEMBER_EXITED = "CLUB_MEMBER_EXITED";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";

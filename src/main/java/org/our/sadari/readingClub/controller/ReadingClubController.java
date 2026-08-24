@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 API 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 API
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 API
- * 2026-08-24        HanWon.Jang        가입 신청 취소 API 추가
+ * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -140,6 +140,25 @@ public class ReadingClubController {
                                        , @PathVariable Long clubNumb) {
         // 같은 모임의 활성 모임원 프로필 목록을 반환한다
         return readingClubService.getClubMemberList(userNumb, clubNumb);
+    }
+
+    /**
+     * 현재 모임장이 다른 활성 일반 멤버를 퇴장시키고 재가입을 차단한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param targetUserNumb 퇴장 대상 사용자 번호
+     * @param request 필수 퇴장 사유
+     * @return 모임원 퇴장 결과
+     */
+    @DeleteMapping("/{clubNumb}/members/{targetUserNumb}")
+    @Operation(summary = "모임원 강제 퇴장")
+    public ResultData delMember(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                               , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb
+                               , @Valid @RequestBody ReadingClubDto.MemberExitReqDto request) {
+        // 모임장 권한과 활성 멤버 상태를 검증한 퇴장 결과를 반환한다
+        return readingClubService.delMember(userNumb, clubNumb, targetUserNumb, request);
     }
 
     /**

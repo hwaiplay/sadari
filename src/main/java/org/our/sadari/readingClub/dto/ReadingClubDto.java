@@ -30,6 +30,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-20        Hanwon.Jang        현재 독후감 편집·독서 관리 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 페이지 추가
  * 2026-08-23        HanWon.Jang        이전 독서 기록 페이지 추가
+ * 2026-08-24        HanWon.Jang        모임원 퇴장 요청 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -562,6 +563,26 @@ public final class ReadingClubDto {
         @Size(max = 5)
         @Schema(description = "가입 질문 순서와 같은 장문 답변 목록")
         private List<@NotBlank @Size(max = 2000) String> answerList;
+    }
+
+    /**
+     * fileName       : MemberExitReqDto
+     * author         : HanWon.Jang
+     * date           : 2026-08-24
+     * description    : 모임장이 활성 모임원을 퇴장시키는 사유를 전달한다
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-08-24        HanWon.Jang        최초 생성
+     */
+    @Data
+    @Schema(description = "모임원 퇴장 요청")
+    public static class MemberExitReqDto {
+
+        @NotBlank
+        @Size(max = 500)
+        @Schema(description = "모임원 퇴장 사유")
+        private String exitReason;
     }
 
     /**

@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -49,7 +50,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 검증
- * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소 검증
+ * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소·모임원 퇴장 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -813,6 +814,97 @@ class ReadingClubServiceImplTest {
 
         // 삭제 거절 응답을 검증한다
         assertEquals(ResultEnum.COMMON_DELETE_REJECTED.getCode(), result.getCode());
+    }
+
+    /**
+     * 모임장이 활성 일반 멤버를 퇴장시키고 사유 알림을 발송하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delMemberExitsTarget() {
+        // 운영 중인 모임의 현재 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setOwnrNumb(20L);
+        club.setClubStat("ACTIVE");
+        club.setClubName("함께 읽는 모임");
+        // 필수 퇴장 사유를 포함한 요청을 구성한다
+        ReadingClubDto.MemberExitReqDto request = new ReadingClubDto.MemberExitReqDto();
+        request.setExitReason("운영 규칙을 반복해서 위반했어요.");
+
+        // 권한과 활성 멤버 변경 및 알림 저장이 모두 성공하도록 구성한다
+        when(badWordDetectionService.findBadWord(request.getExitReason())).thenReturn(Optional.empty());
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.uptMemberExit(20L, 10L, 30L)).thenReturn(1);
+        when(alimService.sendAlim(
+                30L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , 10L
+              , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
+        )).thenReturn(ResultData.success());
+
+        // 모임장이 선택한 일반 멤버의 퇴장을 요청한다
+        ResultData result = readingClubService.delMember(20L, 10L, 30L, request);
+
+        // 퇴장 상태 변경과 사유 알림이 함께 처리됐는지 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).uptMemberExit(20L, 10L, 30L);
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , 10L
+              , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
+        );
+    }
+
+    /**
+     * 모임장이 자신을 퇴장시키려는 요청을 거절하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delMemberRejectsOwner() {
+        // 운영 중인 모임의 현재 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setOwnrNumb(20L);
+        club.setClubStat("ACTIVE");
+        // 필수 퇴장 사유를 포함한 요청을 구성한다
+        ReadingClubDto.MemberExitReqDto request = new ReadingClubDto.MemberExitReqDto();
+        request.setExitReason("테스트 사유");
+
+        // 사유 검증은 통과하지만 퇴장 대상이 모임장 본인이 되도록 구성한다
+        when(badWordDetectionService.findBadWord(request.getExitReason())).thenReturn(Optional.empty());
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+
+        // 모임장이 자신을 퇴장시키는 요청을 처리한다
+        ResultData result = readingClubService.delMember(20L, 10L, 20L, request);
+
+        // 접근 거절과 관계 상태 미변경을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).uptMemberExit(20L, 10L, 20L);
+    }
+
+    /**
+     * 재가입 차단된 퇴장 멤버의 공개 모임 상세 접근도 거절하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getClubDtlRejectsBlocked() {
+        // 강제 퇴장으로 재가입이 차단된 기존 모임 관계를 구성한다
+        ReadingClubDto.MemberDto relation = new ReadingClubDto.MemberDto();
+        relation.setMembStat("EXITED");
+        relation.setBlocYsno("Y");
+        when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(relation);
+
+        // 퇴장 대상이 공개 모임 상세 조회를 요청한다
+        ResultData result = readingClubService.getClubDtl(30L, 10L);
+
+        // 접근 거절과 상세 SQL 미호출을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getClubDtl(10L, 30L);
     }
 
     /**

@@ -400,7 +400,6 @@ export const memberProfileItem = style({
 });
 
 export const memberProfilesOverlapped = style({
-  gap: 0,
 });
 
 globalStyle(`${memberProfilesOverlapped} > ${memberProfileItem}:not(:first-child)`, {
@@ -413,6 +412,7 @@ export const memberProfileImage = style({
   height: "100%",
   boxSizing: "border-box",
   border: `1px solid ${vars.color.gray300}`,
+  outline: '2px solid #fff',
   borderRadius: "50%",
   background: vars.color.gray200,
   objectFit: "cover",

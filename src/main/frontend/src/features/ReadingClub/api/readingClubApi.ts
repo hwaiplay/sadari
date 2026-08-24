@@ -26,7 +26,7 @@ export type ReadingClub = {
   maxxMemb: number;
   memberCnt: number;
   invitedCnt: number;
-  membStat?: "INVITED" | "ACTIVE";
+  membStat?: "INVITED" | "ACTIVE" | "EXITED";
   membRole?: "OWNER" | "MEMBER";
   joinStat?: "PENDING";
   matchCnt?: number;
@@ -423,6 +423,28 @@ export const getClubApplicationListApi = async (clubNumb: number): Promise<ClubA
   const response = await api.get(`/reading-clubs/${clubNumb}/applications`);
   // 신청 목록을 반환한다
   return (assertResultDataSuccess(response.data).data as ClubApplication[] | undefined) ?? [];
+};
+
+/**
+ * 모임장이 활성 일반 멤버를 퇴장시키고 재가입을 차단한다.
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @param userNumb 퇴장 대상 사용자 번호
+ * @param exitReason 필수 퇴장 사유
+ * @return 처리 응답
+ */
+export const exitClubMemberApi = async (
+  clubNumb: number,
+  userNumb: number,
+  exitReason: string,
+) => {
+  // DELETE 요청 본문에 퇴장 사유를 포함해 모임원 관계 변경을 요청한다
+  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}`, {
+    data: { exitReason },
+  });
+  // 공통 성공 검증을 통과한 퇴장 응답을 반환한다
+  return assertResultDataSuccess(response.data);
 };
 
 /** 가입 신청을 승인 또는 거절한다. @author Hanwon.Jang @param clubNumb 모임 번호 @param applNumb 신청 번호 @param joinStat 처리 상태 @return 처리 응답 */

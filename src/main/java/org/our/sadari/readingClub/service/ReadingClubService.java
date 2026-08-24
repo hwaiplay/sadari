@@ -16,7 +16,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 계약 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 계약
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 계약
- * 2026-08-24        HanWon.Jang        가입 신청 취소 계약 추가
+ * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 계약 추가
  */
 public interface ReadingClubService {
 
@@ -188,6 +188,19 @@ public interface ReadingClubService {
      * @return 가입 신청 취소 결과
      */
     ResultData delApplication(Long userNumb, Long clubNumb);
+
+    /**
+     * 현재 모임장이 다른 활성 일반 멤버를 퇴장시키고 재가입을 차단한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param targetUserNumb 퇴장 대상 사용자 번호
+     * @param request 퇴장 사유
+     * @return 모임원 퇴장 결과
+     */
+    ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
+                        , ReadingClubDto.MemberExitReqDto request);
 
     /**
      * 모임 관계가 없는 모임장의 맞팔로우 사용자를 초대 후보로 조회한다.

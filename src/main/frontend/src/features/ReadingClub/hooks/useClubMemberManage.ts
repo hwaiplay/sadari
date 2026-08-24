@@ -1,19 +1,21 @@
 /**
  * fileName       : useClubMemberManage
- * author         : Hanwon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-08-14
  * description    : 멤버와 가입 신청 관리 화면의 조회 및 처리 상태를 관리한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
+ * 2026-08-24        HanWon.Jang        모임원 퇴장 처리 추가
  */
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError, sweetInfo } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetError, sweetInfo, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import {
   cancelSentClubInvitationApi,
   decideClubApplicationApi,
+  exitClubMemberApi,
   getClubApplicationListApi,
   getClubDtlApi,
   getClubMemberListApi,
@@ -47,6 +49,8 @@ export const useClubMemberManage = () => {
   const [candidates, setCandidates] = useState<InviteCandidate[]>([]);
   const [sentInvitations, setSentInvitations] = useState<SentClubInvitation[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<ClubApplication | null>(null);
+  const [selectedMember, setSelectedMember] = useState<ClubMemberProfile | null>(null);
+  const [exitReason, setExitReason] = useState("");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -290,6 +294,89 @@ export const useClubMemberManage = () => {
   };
 
   /**
+   * 선택한 활성 일반 멤버의 퇴장 사유 입력 모달을 연다.
+   *
+   * @author HanWon.Jang
+   * @param member 퇴장할 모임원
+   * @return 반환값이 없다
+   */
+  const handleExitOpen = (member: ClubMemberProfile): void => {
+    // 모임장이 아닌 일반 멤버만 퇴장 대상으로 선택한다
+    if (member.membRole === "OWNER") {
+      return;
+    }
+    // 이전 입력값을 지우고 선택한 멤버를 모달에 표시한다
+    setExitReason("");
+    setSelectedMember(member);
+  };
+
+  /**
+   * 모임원 퇴장 모달을 닫고 입력한 사유를 초기화한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleExitClose = (): void => {
+    // 제출 중에는 중복 동작으로 모달 상태가 사라지지 않게 한다
+    if (isSubmitting) {
+      return;
+    }
+    // 선택 대상과 사유를 함께 초기화한다
+    setSelectedMember(null);
+    setExitReason("");
+  };
+
+  /**
+   * 모임원 퇴장 사유 입력값을 최대 허용 길이 안에서 반영한다.
+   *
+   * @author HanWon.Jang
+   * @param value 사용자가 입력한 퇴장 사유
+   * @return 반환값이 없다
+   */
+  const handleExitReasonChange = (value: string): void => {
+    // 서버 DTO 제한과 같은 500자까지 입력 상태에 반영한다
+    setExitReason(value.slice(0, 500));
+  };
+
+  /**
+   * 선택한 활성 일반 멤버를 퇴장시키고 최신 관리 목록을 조회한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleMemberExit = (): void => {
+    // 선택 대상과 공백을 제외한 필수 사유가 없거나 처리 중이면 요청하지 않는다
+    const normalizedReason = exitReason.trim();
+    if (!selectedMember || !normalizedReason || isSubmitting) {
+      return;
+    }
+
+    // 중복 퇴장 요청을 막기 위해 제출 상태를 시작한다
+    setIsSubmitting(true);
+    // 선택한 모임원과 정규화한 퇴장 사유를 서버에 전달한다
+    void exitClubMemberApi(clubNumb, selectedMember.userNumb, normalizedReason)
+      .then(async () => {
+        // 성공한 대상과 입력값을 지우고 최신 멤버 목록을 반영한다
+        setSelectedMember(null);
+        setExitReason("");
+        await getPageData();
+        // 최신 목록 반영 뒤 퇴장 완료를 사용자에게 안내한다
+        await sweetSuccess(message("frontend.readingClub.memberManage.exitSuccessTitle"));
+      })
+      .catch((error: unknown) => {
+        // 서버 정책 검증 실패 사유 또는 공통 재시도 안내를 표시한다
+        void sweetError(
+          message("frontend.readingClub.memberManage.exitErrorTitle"),
+          getApiErrorMessage(error, message("frontend.common.tryAgain")),
+        );
+      })
+      .finally(() => {
+        // 다음 관리 작업이 가능하도록 제출 상태를 종료한다
+        setIsSubmitting(false);
+      });
+  };
+
+  /**
    * 후속 출시 예정인 멤버 퇴장과 제한 기능을 안내한다
    *
    * @author Hanwon.Jang
@@ -309,8 +396,10 @@ export const useClubMemberManage = () => {
     isLoading,
     isSubmitting,
     members,
+    exitReason,
     sentInvitations,
     selectedApplication,
+    selectedMember,
     handleAnswerClose,
     handleAnswerOpen,
     handleApplicationDecision,
@@ -318,6 +407,10 @@ export const useClubMemberManage = () => {
     handleInviteClose,
     handleInviteOpen,
     handleInviteSubmit,
+    handleExitClose,
+    handleExitOpen,
+    handleExitReasonChange,
+    handleMemberExit,
     handleRestrictionInfo,
   };
 };
