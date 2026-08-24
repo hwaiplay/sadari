@@ -4,11 +4,11 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.file.mapper.FileMapper;
 import org.our.sadari.global.file.storage.FileStorage;
 import org.our.sadari.global.file.storage.StoredFile;
 import org.springframework.http.CacheControl;
@@ -43,17 +43,22 @@ public class FileResourceController {
 
     // 실행 환경에 따라 로컬 또는 S3로 연결되는 이미지 저장소
     private final FileStorage fileStorage;
+    // 활성 회원의 현재 프로필 또는 배경 파일인지 확인할 데이터 접근 객체
+    private final FileMapper fileMapper;
 
     /**
      * 공개 이미지 조회에 사용할 파일 저장소를 구성한다.
      *
      * @author SeungHyeon.Kang
      * @param fileStorage 실행 환경에 맞는 이미지 저장소
+     * @param fileMapper 공개 이미지 참조 상태를 조회할 데이터 접근 객체
      */
-    public FileResourceController(FileStorage fileStorage) {
+    public FileResourceController(FileStorage fileStorage, FileMapper fileMapper) {
 
         // 검증된 공개 이미지 조회에 사용할 저장소를 보관한다
         this.fileStorage = fileStorage;
+        // 활성 회원의 현재 이미지인지 검증할 데이터 접근 객체를 보관한다
+        this.fileMapper = fileMapper;
     }
 
     /**
@@ -84,6 +89,15 @@ public class FileResourceController {
 
         // 검증된 세 경로 구간만 사용하여 저장소 객체 키를 구성한다
         String objectKey = directory + "/" + uploadDate + "/" + storedName;
+        // DB 메타정보에 저장된 기존 공개 URL 형식으로 참조 경로를 구성한다
+        String filePath = "/uploads/" + objectKey;
+
+        // 활성 회원의 현재 프로필 또는 배경으로 참조되지 않는 파일은 저장소 조회 전에 차단한다
+        if (fileMapper.getActivePublicFileCount(storedName, filePath) < 1) {
+            // 탈퇴 또는 삭제 대기 회원의 이전 이미지와 미참조 파일을 공개하지 않는다
+            return ResponseEntity.notFound().build();
+        }
+
         // 실행 환경에 연결된 저장소에서 공개 이미지 객체를 조회한다
         Optional<StoredFile> storedFile = fileStorage.getFile(objectKey);
 
@@ -97,11 +111,11 @@ public class FileResourceController {
         MediaType mediaType = StringUtil.isEmpty(storedFile.get().contentType())
                 ? MediaType.APPLICATION_OCTET_STREAM
                 : MediaType.parseMediaType(storedFile.get().contentType());
-        // UUID 파일은 내용이 변경되지 않으므로 장기 브라우저 캐시와 함께 이미지 바이트를 반환한다
+        // 계정 상태 변경 직후에도 이전 공개 응답이 재사용되지 않도록 브라우저 저장을 금지한다
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .contentLength(storedFile.get().bytes().length)
-                .cacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic().immutable())
+                .cacheControl(CacheControl.noStore())
                 .body(storedFile.get().bytes());
     }
 }

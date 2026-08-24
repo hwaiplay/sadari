@@ -7,21 +7,25 @@ import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.util.Map;
+import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.dto.TokenDto;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
-import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.push.dto.PushDto;
 import org.our.sadari.push.service.PushService;
 import org.our.sadari.user.auth.dto.AuthLogoutDto;
-import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
+import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.service.UserWithdrawalService;
 import org.springframework.beans.factory.annotation.Value;
@@ -37,8 +41,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Map;
 
 /**
  * fileName       : AuthLoginController
@@ -65,6 +67,14 @@ public class AuthLoginController {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN COOKIE 명칭 설정값
     private static final String REFRESH_TOKEN_COOKIE_NAME = "refreshToken";
+    // 일반 OAuth 로그인 요청과 콜백을 연결할 상태 쿠키명
+    private static final String OAUTH_LOGIN_STATE_COOKIE_NAME = "oauthLoginState";
+    // 일반 로그인 상태값과 탈퇴 재인증 상태값을 구분할 접두사
+    private static final String OAUTH_LOGIN_STATE_PREFIX = "login_";
+    // 일반 OAuth 로그인 상태 쿠키 유효 시간
+    private static final long OAUTH_LOGIN_STATE_MAX_AGE_SECONDS = 300L;
+    // OAuth 상태 쿠키를 콜백에만 전송할 경로
+    private static final String OAUTH_CALLBACK_COOKIE_PATH = "/api/oauth/callback/kakao";
 
     // Auth 업무 처리 서비스
     private final AuthService authService;
@@ -127,8 +137,12 @@ public class AuthLoginController {
     @GetMapping("/kakao")
     @Operation(summary = "카카오 로그인 시작", description = "서버 설정으로 카카오 OAuth 인가 URL을 생성해 로그인 화면으로 이동한다.")
     public void getKakaoAuthorization(HttpServletResponse response) throws java.io.IOException {
-        // sendRedirect 호출로 검증된 알림 또는 응답을 전송한다
-        response.sendRedirect(kakaoAuthProvider.getKakaoAuthorizationUrl());
+        // 추측하기 어려운 일회성 상태값으로 로그인 시작 브라우저와 콜백을 연결한다
+        String loginState = OAUTH_LOGIN_STATE_PREFIX + UUID.randomUUID();
+        // 콜백에서 비교할 상태값을 스크립트가 읽을 수 없는 제한 쿠키로 저장한다
+        response.addHeader(HttpHeaders.SET_COOKIE, createOauthStateCookie(loginState, OAUTH_LOGIN_STATE_MAX_AGE_SECONDS).toString());
+        // 동일한 상태값이 포함된 Kakao 인가 화면으로 브라우저를 이동시킨다
+        response.sendRedirect(kakaoAuthProvider.getKakaoLoginUrl(loginState));
     }
 
     /**
@@ -151,7 +165,7 @@ public class AuthLoginController {
         }
 
         // Access Token의 위변조 여부 및 만료 시간을 검증하여 유효하지 않으면 실패 처리한다.
-        if (!jwtProvider.validateToken(accessToken)) {
+        if (!jwtProvider.validateAccessToken(accessToken)) {
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
@@ -205,15 +219,14 @@ public class AuthLoginController {
     public void kakaoAuthLogin(@Parameter(description = "카카오 OAuth 인가 코드") @RequestParam("code") String code
                              , @Parameter(description = "탈퇴 재인증 상태값") @RequestParam(value = "state", required = false) String state
                              , @Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) throws Exception {
-        // OAuth state가 있으면 일반 로그인이 아니라 회원 탈퇴 재인증 콜백으로 처리한다
-        if (!StringUtil.isEmpty(state)) {
+        // 일반 로그인 접두사가 없는 상태값은 회원 탈퇴 재인증 콜백으로 처리한다
+        if (!StringUtil.isEmpty(state) && !state.startsWith(OAUTH_LOGIN_STATE_PREFIX)) {
             // 재인증한 Kakao 계정으로 회원 탈퇴 상태 변경을 요청한다
             ResultData withdrawalResult = userWithdrawalService.setWithdrawalCallback(code, state);
-            // 탈퇴 처리 이후 기존 Access Token과 Refresh Token 쿠키를 제거한다
-            expireTokenCookies(response);
-
             // 탈퇴 처리 성공 여부를 완료 화면이 구분할 수 있도록 쿼리값으로 전달한다
             if (withdrawalResult.getCode() == 200) {
+                // 실제 탈퇴 처리에 성공한 경우에만 기존 인증 쿠키를 제거한다
+                expireTokenCookies(response);
                 // 탈퇴 유형과 성공 상태를 포함한 완료 화면으로 이동한다
                 response.sendRedirect(frontDomain + "/withdrawal/result?success=Y&type=" + withdrawalResult.getData());
                 // 회원 탈퇴 재인증 콜백 처리를 종료한다
@@ -226,13 +239,22 @@ public class AuthLoginController {
             return;
         }
 
+        // 일반 로그인 콜백은 시작 시 저장한 브라우저 상태 쿠키와 일치해야 한다
+        if (!isValidLoginState(request, state)) {
+            // 잘못되거나 재사용된 콜백이 기존 로그인 세션을 변경하지 않도록 그대로 복귀시킨다
+            response.sendRedirect(frontDomain + "/oauth");
+            // 검증되지 않은 인가 코드를 로그인 처리에 전달하지 않는다
+            return;
+        }
+
+        // 검증을 마친 일반 로그인 상태 쿠키를 즉시 만료시켜 같은 브라우저에서도 재사용하지 못하게 한다
+        expireOauthStateCookie(response);
+
         // kakaoLogin 업무 로직을 authService에 위임한다
         ResultData loginResult = authService.kakaoLogin(code, getLoginIp(request), getUserAgent(request));
 
-        // 카카오 로그인 서비스 처리 실패 시 기존 토큰 쿠키를 만료시키고 로그인 페이지로 리다이렉트한다.
+        // 카카오 로그인 서비스 처리 실패 시 기존 로그인 세션을 유지하고 로그인 페이지로 리다이렉트한다.
         if (loginResult.getCode() != 200) {
-            // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
-            expireTokenCookies(response);
             // sendRedirect 호출로 검증된 알림 또는 응답을 전송한다
             String failureRedirectUrl = frontDomain + "/oauth";
 
@@ -296,7 +318,7 @@ public class AuthLoginController {
         // extractRefreshToken 호출로 요청에서 인증 토큰을 추출한다
         String refreshToken = extractRefreshToken(request);
         // Refresh Token의 존재 여부 및 위변조/만료 상태를 검증한다.
-        if (StringUtil.isEmpty(refreshToken) || !jwtProvider.validateToken(refreshToken)) {
+        if (StringUtil.isEmpty(refreshToken) || !jwtProvider.validateRefreshToken(refreshToken)) {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킨다
             expireTokenCookies(response);
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
@@ -381,7 +403,7 @@ public class AuthLoginController {
         String logoutSessionId = null;
 
         // 유효한 Access Token인 경우 남은 유효시간 동안 재사용하지 못하도록 jti를 Redis 블랙리스트에 등록한다.
-        if (!StringUtil.isEmpty(accessToken) && jwtProvider.validateToken(accessToken)) {
+        if (!StringUtil.isEmpty(accessToken) && jwtProvider.validateAccessToken(accessToken)) {
             // Refresh Token이 없더라도 로그아웃 사용자의 임시 이미지를 정리할 번호를 보관한다
             logoutUserNumb = jwtProvider.getUserNumb(accessToken);
             // Access Token에 연결된 현재 기기 세션 식별자를 보관한다
@@ -396,7 +418,7 @@ public class AuthLoginController {
         }
 
         // 유효한 Refresh Token인 경우 재발급에 사용되지 못하도록 Redis에서 제거한다.
-        if (!StringUtil.isEmpty(refreshToken) && jwtProvider.validateToken(refreshToken)) {
+        if (!StringUtil.isEmpty(refreshToken) && jwtProvider.validateRefreshToken(refreshToken)) {
             // 로그아웃하는 사용자 번호를 토큰 제거와 임시 파일 정리에 함께 사용한다
             Long userNumb = jwtProvider.getUserNumb(refreshToken);
             // Refresh Token의 로그인 사용자 번호를 최종 로그아웃 대상으로 설정한다
@@ -567,6 +589,61 @@ public class AuthLoginController {
         response.addHeader(HttpHeaders.SET_COOKIE, createExpiredCookie(ACCESS_TOKEN_COOKIE_NAME).toString());
         // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가한다
         response.addHeader(HttpHeaders.SET_COOKIE, createExpiredCookie(REFRESH_TOKEN_COOKIE_NAME).toString());
+    }
+
+    /**
+     * 일반 OAuth 로그인 콜백의 상태값이 시작 브라우저의 쿠키와 일치하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param request OAuth 콜백 요청
+     * @param state Kakao가 반환한 상태값
+     * @return 상태값 일치 여부
+     */
+    private boolean isValidLoginState(HttpServletRequest request, String state) {
+        // 일반 로그인 상태값과 브라우저 상태 쿠키가 모두 있어야 검증할 수 있다
+        String savedState = extractCookieValue(request, OAUTH_LOGIN_STATE_COOKIE_NAME);
+
+        // 누락된 상태값은 일반 OAuth 로그인 콜백으로 허용하지 않는다
+        if (StringUtil.isEmpty(state) || StringUtil.isEmpty(savedState)) {
+            // 검증할 상태값이 없음을 반환한다
+            return false;
+        }
+
+        // 상태값 비교 시간 차이로 일치 여부가 드러나지 않도록 고정 시간 비교를 수행한다
+        return MessageDigest.isEqual(
+                state.getBytes(StandardCharsets.UTF_8)
+              , savedState.getBytes(StandardCharsets.UTF_8)
+        );
+    }
+
+    /**
+     * OAuth 로그인 상태값을 콜백 경로에서만 사용할 보안 쿠키로 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param state 저장할 OAuth 상태값
+     * @param maxAgeSeconds 쿠키 유효 시간
+     * @return OAuth 상태 쿠키
+     */
+    private ResponseCookie createOauthStateCookie(String state, long maxAgeSeconds) {
+        // OAuth 상태 쿠키를 콜백 GET 요청에 필요한 Lax 정책과 제한 경로로 생성한다
+        return ResponseCookie.from(OAUTH_LOGIN_STATE_COOKIE_NAME, state)
+                .httpOnly(true)
+                .sameSite("Lax")
+                .secure(cookieSecure)
+                .path(OAUTH_CALLBACK_COOKIE_PATH)
+                .maxAge(maxAgeSeconds)
+                .build();
+    }
+
+    /**
+     * 사용을 마친 일반 OAuth 로그인 상태 쿠키를 만료한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param response OAuth 콜백 응답
+     */
+    private void expireOauthStateCookie(HttpServletResponse response) {
+        // 발급 때와 같은 경로의 빈 쿠키를 내려 브라우저에 남은 상태값을 제거한다
+        response.addHeader(HttpHeaders.SET_COOKIE, createOauthStateCookie("", 0).toString());
     }
 
     /**

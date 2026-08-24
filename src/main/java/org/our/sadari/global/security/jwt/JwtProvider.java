@@ -32,6 +32,11 @@ import java.util.concurrent.TimeUnit;
 @Component
 public class JwtProvider {
 
+    // Access Token 용도 클레임 값
+    private static final String TOKEN_USE_ACCESS = "access";
+    // Refresh Token 용도 클레임 값
+    private static final String TOKEN_USE_REFRESH = "refresh";
+
     // JWT 서명 검증용 비밀키
     private SecretKey secretKey;
 
@@ -87,6 +92,7 @@ public class JwtProvider {
                 .id(UUID.randomUUID().toString())
                 .claim("role", role)
                 .claim("sid", sessionId)
+                .claim("token_use", TOKEN_USE_ACCESS)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
                 // 0.13 API의 알고리즘 레지스트리를 명시해 서명 알고리즘을 HS256으로 고정한다.
@@ -110,6 +116,7 @@ public class JwtProvider {
                 .subject(String.valueOf(userNumb))
                 .id(UUID.randomUUID().toString())
                 .claim("sid", sessionId)
+                .claim("token_use", TOKEN_USE_REFRESH)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + refreshTokenValidityMilliSeconds))
                 .signWith(secretKey, Jwts.SIG.HS256)
@@ -123,24 +130,47 @@ public class JwtProvider {
      * @param token 검증할 JWT 토큰
      * @return 유효성 여부 (true: 유효한 토큰, false: 유효하지 않거나 만료된 토큰)
      */
-    public boolean validateToken(String token) {
+    public boolean validateAccessToken(String token) {
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
-            /*
-             * JJWT 0.13에서는 parserBuilder가 parser로 변경되었다.
-             * verifyWith로 검증 키를 고정하고 서명된 Claims만 허용해 unsigned JWT가 통과하지 못하게 한다.
-             */
-            Jwts.parser()
-                    .verifyWith(secretKey)
-                    .build()
-                    .parseSignedClaims(token);
-            // 전달받은 JWT 토큰의 서명 위변조 및 만료 여부를 검증 판정값을 반환한다
-            return true;
+            // 서명과 만료가 유효하고 Access 용도 및 권한을 가진 토큰만 API 인증에 허용한다
+            Claims claims = getClaims(token);
+            String role = claims.get("role", String.class);
+            // Refresh Token이 Access Token 위치에서 인증 수단으로 사용되지 않도록 용도를 고정한다
+            return TOKEN_USE_ACCESS.equals(claims.get("token_use", String.class))
+                    && role != null && !role.isBlank();
         }
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
         catch (Exception e) {
-            // 전달받은 JWT 토큰의 서명 위변조 및 만료 여부를 검증 판정값을 반환한다
+            // Access Token의 서명, 만료 또는 용도 검증 실패를 반환한다
+            return false;
+        }
+    }
+
+    /**
+     * 전달받은 JWT가 Access Token 재발급에 사용할 Refresh Token인지 검증한다.
+     * 이전 버전 Refresh Token은 role 클레임이 없는 경우에만 한 차례 회전을 허용한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param token 검증할 Refresh Token
+     * @return 유효한 Refresh Token 여부
+     */
+    public boolean validateRefreshToken(String token) {
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        try {
+            // 서명과 만료가 유효한 토큰의 용도 클레임을 조회한다
+            Claims claims = getClaims(token);
+            String tokenUse = claims.get("token_use", String.class);
+
+            // 새 토큰은 Refresh 용도를 요구하고 이전 토큰은 Access 권한이 없을 때만 호환한다
+            return TOKEN_USE_REFRESH.equals(tokenUse)
+                    || (tokenUse == null && claims.get("role", String.class) == null);
+        }
+
+        // 예외 발생 시 Refresh Token 검증 실패로 전환한다
+        catch (Exception e) {
+            // Refresh Token의 서명, 만료 또는 용도 검증 실패를 반환한다
             return false;
         }
     }

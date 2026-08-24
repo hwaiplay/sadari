@@ -9,6 +9,7 @@ import org.our.sadari.notice.service.NoticeService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -65,7 +66,7 @@ public class NoticeController {
     }
 
     /**
-     * 공지사항 주키에 해당하는 현재 배포 버전 상세를 조회하고 읽음 이력을 저장한다
+     * 공지사항 주키에 해당하는 현재 배포 버전 상세를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -73,11 +74,28 @@ public class NoticeController {
      * @return 현재 배포 중인 공지사항 상세
      */
     @GetMapping("/{notiNumb}")
-    @Operation(summary = "공지사항 상세 조회", description = "활성 사용자가 현재 배포 공지 상세를 조회하면 해당 공지를 읽음 처리한다.")
+    @Operation(summary = "공지사항 상세 조회", description = "활성 사용자가 현재 배포 공지 상세와 기존 읽음 여부를 조회한다.")
     public ResultData getNoticeDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Parameter(description = "조회할 공지사항 주키", example = "1")
                                    @PathVariable Long notiNumb) {
-        // 로그인 사용자가 선택한 현재 배포 공지 상세를 조회하고 읽음 이력을 저장한다
+        // 로그인 사용자가 선택한 현재 배포 공지 상세와 기존 읽음 여부를 조회한다
         return noticeService.getNoticeDtl(userNumb, notiNumb);
+    }
+
+    /**
+     * 공지사항 주키에 해당하는 현재 배포 버전의 읽음 이력을 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param notiNumb 읽은 공지사항 주키
+     * @return 읽음 이력 저장 결과
+     */
+    @PostMapping("/{notiNumb}/views")
+    @Operation(summary = "공지사항 읽음 처리", description = "활성 사용자가 현재 배포 공지를 읽은 이력을 CSRF 보호 요청으로 저장한다.")
+    public ResultData setNoticeView(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                  , @Parameter(description = "읽은 공지사항 주키", example = "1")
+                                    @PathVariable Long notiNumb) {
+        // 상태 변경 요청으로 분리한 현재 배포 공지 읽음 이력을 저장한다
+        return noticeService.setNoticeView(userNumb, notiNumb);
     }
 }

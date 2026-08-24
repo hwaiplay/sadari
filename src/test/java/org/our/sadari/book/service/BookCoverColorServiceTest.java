@@ -6,8 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.Mockito.when;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
 import java.net.URI;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.zip.CRC32;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -171,6 +176,19 @@ class BookCoverColorServiceTest {
         assertNull(coverUri);
     }
 
+    /** 압축 바이트가 작아도 허용 크기를 넘는 이미지 헤더는 픽셀 디코딩 전에 차단한다. */
+    @Test
+    void decodeRejectsLargeHeader() throws IOException {
+        // 전체 픽셀 데이터를 만들지 않고 가로 크기만 제한을 넘긴 유효한 PNG 헤더를 생성한다
+        byte[] oversizedPngHeader = createPngHeader(4097, 1);
+
+        // 이미지 헤더 크기 검증을 실행한다
+        BufferedImage coverImage = bookCoverColorService.decodeCoverImage(oversizedPngHeader);
+
+        // 과도한 픽셀 버퍼를 할당하지 않고 사용할 수 없는 이미지로 처리되는지 확인한다
+        assertNull(coverImage);
+    }
+
     /**
      * 테스트에 사용할 책장 색상 공통코드를 생성한다.
      *
@@ -213,5 +231,46 @@ class BookCoverColorServiceTest {
 
         // 단일 색상으로 채운 테스트용 표지 이미지를 반환한다
         return coverImage;
+    }
+
+    /**
+     * 이미지 크기 검증 테스트에 사용할 PNG 서명과 IHDR 청크를 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param width PNG 헤더 가로 크기
+     * @param height PNG 헤더 세로 크기
+     * @return PNG 헤더 바이트
+     * @throws IOException 테스트 바이트 생성 실패
+     */
+    private byte[] createPngHeader(int width, int height) throws IOException {
+        // IHDR 데이터에 PNG 기본 RGB 형식과 테스트 크기를 기록한다
+        ByteArrayOutputStream headerDataBuffer = new ByteArrayOutputStream();
+        try (DataOutputStream headerData = new DataOutputStream(headerDataBuffer)) {
+            headerData.writeInt(width);
+            headerData.writeInt(height);
+            headerData.writeByte(8);
+            headerData.writeByte(2);
+            headerData.writeByte(0);
+            headerData.writeByte(0);
+            headerData.writeByte(0);
+        }
+
+        // PNG Reader가 헤더 크기를 읽을 수 있도록 서명, IHDR와 CRC를 직렬화한다
+        byte[] chunkType = "IHDR".getBytes(StandardCharsets.US_ASCII);
+        byte[] headerBytes = headerDataBuffer.toByteArray();
+        CRC32 crc32 = new CRC32();
+        crc32.update(chunkType);
+        crc32.update(headerBytes);
+        ByteArrayOutputStream pngBuffer = new ByteArrayOutputStream();
+        try (DataOutputStream png = new DataOutputStream(pngBuffer)) {
+            png.write(new byte[] {(byte) 0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a});
+            png.writeInt(headerBytes.length);
+            png.write(chunkType);
+            png.write(headerBytes);
+            png.writeInt((int) crc32.getValue());
+        }
+
+        // 크기 헤더만 포함한 테스트 PNG 바이트를 반환한다
+        return pngBuffer.toByteArray();
     }
 }

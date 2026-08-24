@@ -9,11 +9,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
 import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
+import javax.imageio.ImageReader;
+import javax.imageio.stream.ImageInputStream;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookCoverColorRequestDto;
@@ -50,6 +54,8 @@ public class BookCoverColorService {
     private static final int MAX_IMAGE_BYTES = 5 * 1024 * 1024;
     // 표지 이미지 최대 가로 또는 세로 크기
     private static final int MAX_IMAGE_DIMENSION = 4096;
+    // 표지 이미지 최대 전체 픽셀 수
+    private static final long MAX_IMAGE_PIXEL_COUNT = 16_777_216L;
     // 대표색 분석 최대 샘플 픽셀 수
     private static final int MAX_SAMPLE_PIXEL_COUNT = 4096;
     // RGB 색상 버킷 단위
@@ -225,18 +231,59 @@ public class BookCoverColorService {
             return null;
         }
 
-        // 제한 크기 안의 이미지 바이트를 대표색 분석이 가능한 BufferedImage로 변환한다
-        BufferedImage coverImage = ImageIO.read(new ByteArrayInputStream(imageBytes));
+        // 이미지 헤더의 크기를 먼저 검증한 뒤에만 전체 픽셀을 디코딩한다
+        return decodeCoverImage(imageBytes);
+    }
 
-        // 디코딩 실패 또는 과도한 이미지 크기는 픽셀 분석 전에 차단한다
-        if (StringUtil.isEmpty(coverImage) || coverImage.getWidth() > MAX_IMAGE_DIMENSION
-                || coverImage.getHeight() > MAX_IMAGE_DIMENSION) {
-            // 사용할 수 없는 이미지 응답임을 반환한다
-            return null;
+    /**
+     * 이미지 헤더에서 크기를 확인한 뒤 허용 범위의 표지만 전체 디코딩한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param imageBytes 최대 응답 크기 검증을 마친 이미지 바이트
+     * @return 디코딩된 표지 이미지 또는 허용하지 않는 이미지의 null
+     * @throws IOException 이미지 헤더 또는 픽셀 디코딩 실패
+     */
+    BufferedImage decodeCoverImage(byte[] imageBytes) throws IOException {
+        // ImageIO Reader가 헤더만 읽고 크기를 확인할 수 있도록 전용 입력 스트림을 생성한다
+        try (ImageInputStream imageInputStream = ImageIO.createImageInputStream(
+                new ByteArrayInputStream(imageBytes))) {
+            // 지원하지 않는 이미지 입력은 디코딩하지 않는다
+            if (imageInputStream == null) {
+                // 사용할 수 없는 이미지 응답임을 반환한다
+                return null;
+            }
+
+            // 입력 형식을 처리할 수 있는 첫 ImageIO Reader를 조회한다
+            Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(imageInputStream);
+
+            // 등록된 Reader가 없는 형식은 이미지로 처리하지 않는다
+            if (!imageReaders.hasNext()) {
+                // 사용할 수 없는 이미지 응답임을 반환한다
+                return null;
+            }
+
+            // Reader 자원을 사용한 뒤 반드시 해제하기 위한 블록이다
+            ImageReader imageReader = imageReaders.next();
+            try {
+                // 메타데이터 전체 파싱 없이 첫 이미지의 헤더 크기를 조회한다
+                imageReader.setInput(imageInputStream, true, true);
+                int width = imageReader.getWidth(0);
+                int height = imageReader.getHeight(0);
+
+                // 비정상 또는 과도한 크기는 픽셀 버퍼 할당 전에 차단한다
+                if (width <= 0 || height <= 0 || width > MAX_IMAGE_DIMENSION
+                        || height > MAX_IMAGE_DIMENSION || (long) width * height > MAX_IMAGE_PIXEL_COUNT) {
+                    // 사용할 수 없는 이미지 응답임을 반환한다
+                    return null;
+                }
+
+                // 헤더 크기 검증을 통과한 첫 이미지만 전체 디코딩한다
+                return imageReader.read(0);
+            } finally {
+                // ImageIO Reader가 보유한 내부 자원을 해제한다
+                imageReader.dispose();
+            }
         }
-
-        // 크기 검증이 끝난 도서 표지 이미지를 반환한다
-        return coverImage;
     }
 
     /**

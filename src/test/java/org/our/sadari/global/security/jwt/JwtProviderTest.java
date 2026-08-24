@@ -5,8 +5,12 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.io.Decoders;
+import io.jsonwebtoken.security.Keys;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
+import java.util.Date;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -58,8 +62,10 @@ class JwtProviderTest {
         // createAccessToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createAccessToken(31L, "USER", "session-1");
 
-        // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
-        assertTrue(jwtProvider.validateToken(token));
+        // 발급된 Access Token이 Access 인증 용도로 검증되는지 확인한다
+        assertTrue(jwtProvider.validateAccessToken(token));
+        // Access Token이 재발급용 Refresh Token으로 사용되지 않는지 확인한다
+        assertFalse(jwtProvider.validateRefreshToken(token));
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
         assertEquals(31L, jwtProvider.getUserNumb(token));
         // getRole 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -80,8 +86,10 @@ class JwtProviderTest {
         // createRefreshToken 호출로 후속 처리에 필요한 객체를 생성한다
         String token = jwtProvider.createRefreshToken(31L, "session-1");
 
-        // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
-        assertTrue(jwtProvider.validateToken(token));
+        // 발급된 Refresh Token이 재발급 용도로 검증되는지 확인한다
+        assertTrue(jwtProvider.validateRefreshToken(token));
+        // Refresh Token이 API Access 인증 수단으로 사용되지 않는지 확인한다
+        assertFalse(jwtProvider.validateAccessToken(token));
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
         assertEquals(31L, jwtProvider.getUserNumb(token));
         // Access Token과 같은 기기 세션 식별자가 Refresh Token에도 포함되는지 검증한다
@@ -108,7 +116,26 @@ class JwtProviderTest {
                 + replacement
                 + token.substring(signatureStart + 1);
 
-        // validateToken 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
-        assertFalse(jwtProvider.validateToken(tamperedToken));
+        // Access Token 용도 검증에서도 서명 조작이 차단되는지 확인한다
+        assertFalse(jwtProvider.validateAccessToken(tamperedToken));
+    }
+
+    /** 이전 버전 Refresh Token은 Access 인증 없이 한 차례 재발급 회전에 사용할 수 있다. */
+    @Test
+    void legacyRefreshCanRotate() {
+        Date now = new Date();
+        // token_use와 role이 없던 이전 Refresh Token 형식으로 서명된 토큰을 생성한다
+        String legacyRefreshToken = Jwts.builder()
+                .subject("31")
+                .id("legacy-refresh")
+                .claim("sid", "session-1")
+                .issuedAt(now)
+                .expiration(new Date(now.getTime() + REFRESH_TOKEN_SECONDS * 1000))
+                .signWith(Keys.hmacShaKeyFor(Decoders.BASE64.decode(TEST_SECRET)), Jwts.SIG.HS256)
+                .compact();
+
+        // 기존 Refresh Token은 재발급으로 교체할 수 있지만 API 인증에는 사용할 수 없는지 확인한다
+        assertTrue(jwtProvider.validateRefreshToken(legacyRefreshToken));
+        assertFalse(jwtProvider.validateAccessToken(legacyRefreshToken));
     }
 }

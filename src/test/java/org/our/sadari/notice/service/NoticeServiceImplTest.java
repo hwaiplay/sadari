@@ -16,10 +16,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.notice.dto.NoticeDto;
 import org.our.sadari.notice.dto.NoticePageDto;
 import org.our.sadari.notice.dto.UnreadNoticeDto;
 import org.our.sadari.notice.mapper.NoticeMapper;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : NoticeServiceImplTest
@@ -45,6 +47,16 @@ class NoticeServiceImplTest {
     /** 각 테스트에 독립된 공지사항 서비스를 생성한다. */
     @BeforeEach
     void setUp() {
+        // 실패 응답에서 사용할 서버 공통 메시지 소스를 생성한다
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        // 서버 공통 메시지 프로퍼티를 테스트 조회 기준으로 설정한다
+        messageSource.setBasename("messages");
+        // 한글 메시지 원문이 손상되지 않도록 인코딩을 설정한다
+        messageSource.setDefaultEncoding("UTF-8");
+        // ResultData 실패 응답이 공통 메시지 소스를 사용하도록 초기화한다
+        new MessageUtils().setMessageSource(messageSource);
+
+        // 공지사항 서비스 단위 테스트 대상을 생성한다
         noticeService = new NoticeServiceImpl(noticeMapper);
     }
 
@@ -106,18 +118,45 @@ class NoticeServiceImplTest {
         verify(noticeMapper).getUnreadNoticeList(7L, "NOTICE", "Y");
     }
 
-    /** 활성 사용자가 배포 공지 상세를 열면 읽음 이력을 저장한다. */
+    /** 배포 공지 상세 GET은 기존 읽음 여부만 조회하고 이력을 저장하지 않는다. */
     @Test
-    void getNoticeDtlStoresRead() {
+    void getNoticeDtlNoSideEffect() {
         when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
         NoticeDto notice = new NoticeDto();
         notice.setNotiNumb(11L);
-        when(noticeMapper.getNoticeDtl(11L, "Y")).thenReturn(notice);
+        notice.setReadYsno("N");
+        when(noticeMapper.getNoticeDtl(11L, 7L, "NOTICE", "Y", "N")).thenReturn(notice);
 
         ResultData result = noticeService.getNoticeDtl(7L, 11L);
 
         assertEquals(200, result.getCode());
-        assertEquals("Y", notice.getReadYsno());
+        assertEquals("N", notice.getReadYsno());
+        verify(noticeMapper, never()).setNoticeView("NOTICE", 11L, 7L);
+    }
+
+    /** CSRF 보호 POST 서비스는 현재 배포 공지의 읽음 이력을 저장한다. */
+    @Test
+    void setNoticeViewStoresRead() {
+        when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
+        NoticeDto notice = new NoticeDto();
+        notice.setNotiNumb(11L);
+        when(noticeMapper.getNoticeDtl(11L, 7L, "NOTICE", "Y", "N")).thenReturn(notice);
+
+        ResultData result = noticeService.setNoticeView(7L, 11L);
+
+        assertEquals(200, result.getCode());
         verify(noticeMapper).setNoticeView("NOTICE", 11L, 7L);
+    }
+
+    /** 현재 배포되지 않은 공지에는 읽음 이력을 만들지 않는다. */
+    @Test
+    void noticeViewRejectsMissing() {
+        when(noticeMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(1);
+        when(noticeMapper.getNoticeDtl(11L, 7L, "NOTICE", "Y", "N")).thenReturn(null);
+
+        ResultData result = noticeService.setNoticeView(7L, 11L);
+
+        assertEquals(2004, result.getCode());
+        verify(noticeMapper, never()).setNoticeView("NOTICE", 11L, 7L);
     }
 }

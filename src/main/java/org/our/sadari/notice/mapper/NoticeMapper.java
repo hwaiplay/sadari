@@ -64,10 +64,15 @@ public interface NoticeMapper {
      *
      * @author SeungHyeon.Kang
      * @param notiNumb 조회할 공지사항 주키
-     * @param yes 배포 여부의 예 값
+     * @param userNumb 로그인 사용자 번호
+     * @param viewType 공지사항 조회 이력 유형
+     * @param yes 배포 및 읽음 여부의 예 값
+     * @param no 읽음 여부의 아니요 값
      * @return 현재 배포 중인 공지사항 상세
      */
-    NoticeDto getNoticeDtl(@Param("notiNumb") Long notiNumb, @Param("yes") String yes);
+    NoticeDto getNoticeDtl(@Param("notiNumb") Long notiNumb, @Param("userNumb") Long userNumb
+                         , @Param("viewType") String viewType, @Param("yes") String yes
+                         , @Param("no") String no);
 
     /**
      * 로그인 사용자의 공지사항 최초 읽음 이력을 멱등하게 저장한다

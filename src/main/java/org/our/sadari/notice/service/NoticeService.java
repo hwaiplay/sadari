@@ -35,7 +35,7 @@ public interface NoticeService {
     ResultData getUnreadNoticeList(Long userNumb);
 
     /**
-     * 현재 배포 공지 상세를 조회하고 로그인 사용자의 읽음 이력을 저장한다
+     * 현재 배포 공지 상세와 로그인 사용자의 기존 읽음 여부를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -43,6 +43,16 @@ public interface NoticeService {
      * @return 현재 배포 중인 공지사항 상세
      */
     ResultData getNoticeDtl(Long userNumb, Long notiNumb);
+
+    /**
+     * 현재 배포 공지에 로그인 사용자의 읽음 이력을 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param notiNumb 읽은 공지사항 주키
+     * @return 읽음 이력 저장 결과
+     */
+    ResultData setNoticeView(Long userNumb, Long notiNumb);
 
     /**
      * 공지사항 접근자가 현재 활성 사용자인지 확인한다

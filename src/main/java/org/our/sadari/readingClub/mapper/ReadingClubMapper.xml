@@ -678,6 +678,7 @@
      LEFT JOIN TB_CLMEMX MINE
             ON MINE.CLUB_NUMB = CLUB.CLUB_NUMB
            AND MINE.USER_NUMB = #{userNumb}
+           AND MINE.MEMB_STAT = #{memberActive}
      LEFT JOIN TB_CLJOIN PENDING
             ON PENDING.CLUB_NUMB = CLUB.CLUB_NUMB
            AND PENDING.USER_NUMB = #{userNumb}

@@ -105,7 +105,7 @@ public class NoticeServiceImpl implements NoticeService {
     }
 
     /**
-     * 현재 배포 공지 상세를 조회하고 로그인 사용자의 읽음 이력을 저장한다
+     * 현재 배포 공지 상세와 로그인 사용자의 기존 읽음 여부를 조회한다
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -113,9 +113,8 @@ public class NoticeServiceImpl implements NoticeService {
      * @return 현재 배포 중인 공지사항 상세
      */
     @Override
-    @Transactional
     public ResultData getNoticeDtl(Long userNumb, Long notiNumb) {
-        // 비활성 계정은 공지 상세 조회와 신규 읽음 이력 생성을 차단한다
+        // 비활성 계정은 공지 상세와 사용자별 읽음 여부 조회를 차단한다
         if (!isActiveUser(userNumb)) {
             // "접근 권한이 없습니다."
             return ResultData.fail(ResultEnum.FORBIDDEN);
@@ -128,20 +127,55 @@ public class NoticeServiceImpl implements NoticeService {
         }
 
         // 공지사항 주키에 해당하는 현재 배포 버전 상세를 조회한다
-        NoticeDto notice = noticeMapper.getNoticeDtl(notiNumb, COMM_YES);
+        NoticeDto notice = noticeMapper.getNoticeDtl(
+                notiNumb, userNumb, VIEW_TYPE_NOTICE, COMM_YES, COMM_NO);
 
+        // 현재 배포 버전이 없으면 데이터 없음으로 반환한다
+        if (StringUtil.isEmpty(notice)) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+
+        // 저장 부작용 없이 기존 읽음 여부가 포함된 현재 배포 공지 상세를 반환한다
+        return ResultData.success(notice);
+    }
+
+    /**
+     * 현재 배포 공지에 로그인 사용자의 읽음 이력을 저장한다
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param notiNumb 읽은 공지사항 주키
+     * @return 읽음 이력 저장 결과
+     */
+    @Override
+    @Transactional
+    public ResultData setNoticeView(Long userNumb, Long notiNumb) {
+        // 비활성 계정은 신규 읽음 이력 생성을 차단한다
+        if (!isActiveUser(userNumb)) {
+            // "접근 권한이 없습니다."
+            return ResultData.fail(ResultEnum.FORBIDDEN);
+        }
+
+        // 유효한 양수 공지사항 주키만 읽음 이력에 사용한다
+        if (StringUtil.isEmpty(notiNumb) || notiNumb < 1) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 현재 배포 중인 공지에 대해서만 읽음 이력을 허용한다
+        NoticeDto notice = noticeMapper.getNoticeDtl(
+                notiNumb, userNumb, VIEW_TYPE_NOTICE, COMM_YES, COMM_NO);
         // 현재 배포 버전이 없으면 읽음 이력을 만들지 않는다
         if (StringUtil.isEmpty(notice)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 상세 조회에 성공한 공지는 로그인 사용자의 최초 읽음 이력을 멱등하게 저장한다
+        // 로그인 사용자의 최초 읽음 이력을 멱등하게 저장한다
         noticeMapper.setNoticeView(VIEW_TYPE_NOTICE, notiNumb, userNumb);
-        // 상세 응답은 저장 직후의 읽음 상태와 일치하도록 설정한다
-        notice.setReadYsno(COMM_YES);
-        // 읽음 처리된 현재 배포 공지 상세를 반환한다
-        return ResultData.success(notice);
+        // 읽음 이력 저장 성공 응답을 반환한다
+        return ResultData.success();
     }
 
     /**

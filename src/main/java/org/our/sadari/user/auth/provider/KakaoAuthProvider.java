@@ -48,16 +48,18 @@ public class KakaoAuthProvider {
      * yml의 백엔드 도메인, 콜백 경로와 카카오 REST API 키로 로그인 인가 URL을 생성한다.
      *
      * @author SeungHyeon.Kang
+     * @param state 로그인 시작 브라우저와 콜백을 연결할 일회성 상태값
      * @return 카카오 로그인 동의 화면 URL
      */
-    public String getKakaoAuthorizationUrl() {
-        // yml의 백엔드 도메인, 콜백 경로와 카카오 REST API 키로 로그인 인가 URL을 생성 결과를 반환한다
+    public String getKakaoLoginUrl(String state) {
+        // 일반 로그인 콜백을 시작한 브라우저와 연결할 일회성 상태값을 인가 요청에 포함한다
         return UriComponentsBuilder
                 .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
                 .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
                 .queryParam("scope", "profile_image")
+                .queryParam("state", state)
                 .build()
                 .encode()
                 .toUriString();

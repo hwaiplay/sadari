@@ -72,7 +72,7 @@ public class JwtFilter extends OncePerRequestFilter {
         String token = extractAccessToken(request);
 
         // Access Token이 존재하고, 서명/만료시간이 유효하며, Redis 블랙리스트(로그아웃된 토큰)에 등록되지 않은 경우 인증 객체를 생성한다.
-        if (!StringUtil.isEmpty(token) && jwtProvider.validateToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
+        if (!StringUtil.isEmpty(token) && jwtProvider.validateAccessToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
             // 토큰에 기록된 회원 번호를 조회한다
             Long userNumb = jwtProvider.getUserNumb(token);
             // 토큰에 기록된 기기별 로그인 세션 식별자를 조회한다

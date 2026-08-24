@@ -2,6 +2,7 @@ package org.our.sadari.global.file.mapper;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
 import org.our.sadari.global.file.dto.FileDto;
 
 /**
@@ -35,6 +36,16 @@ public interface FileMapper {
      * @return 조회된 파일 메타정보
      */
     FileDto getFileByNumb(Long fileNumb);
+
+    /**
+     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param storName 서버가 생성한 저장 파일명
+     * @param filePath 공개 업로드 경로
+     * @return 공개 조회 가능한 파일 수
+     */
+    int getActivePublicFileCount(@Param("storName") String storName, @Param("filePath") String filePath);
 
     /**
      * 파일 등록 사용자 번호로 영구 삭제할 파일 메타정보를 조회한다.

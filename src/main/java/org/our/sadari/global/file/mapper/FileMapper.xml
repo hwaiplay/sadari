@@ -38,6 +38,19 @@
          WHERE FILE_NUMB = #{fileNumb}
     </select>
 
+    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회한다. -->
+    <select id="getActivePublicFileCount" resultType="int">
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getActivePublicFileCount */
+               COUNT(*)
+          FROM TM_FILEXM F
+          JOIN TM_USERXM U
+            ON (U.PROF_NUMB = F.FILE_NUMB OR U.BGIM_NUMB = F.FILE_NUMB)
+           AND U.USER_STAT = #{userStatActive}
+         WHERE F.STOR_NAME = #{storName}
+           AND F.FILE_PATH = #{filePath}
+    </select>
+
     <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회한다. -->
     <select id="getFileListByRegiUser" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
         SELECT /* getFileListByRegiUser */

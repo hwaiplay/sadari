@@ -2,7 +2,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import Loading from "@/components/Loading/Loading";
-import { getNoticeDetailApi, type Notice } from "@/features/Notice/api/noticeApi";
+import { getNoticeDetailApi, setNoticeViewApi, type Notice } from "@/features/Notice/api/noticeApi";
 import { NoticeCategoryBadge } from "@/features/Notice/components/NoticeCategoryBadge";
 import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -14,7 +14,7 @@ import * as styles from "./NoticePage.css";
  * @author SeungHyeon.Kang
  * @return 사용자 공지사항 상세 화면
  */
-function NoticeDetailPage() {
+const NoticeDetailPage = () => {
 
   const { noticeNumb } = useParams();
   const [notice, setNotice] = useState<Notice | null>(null);
@@ -49,8 +49,10 @@ function NoticeDetailPage() {
       try {
         // 주소의 공지사항 주키에 해당하는 현재 배포 버전을 조회한다.
         const detail = await getNoticeDetailApi(parsedNoticeNumb);
-        // 조회한 현재 배포 버전을 상세 화면 상태에 반영한다.
-        setNotice(detail);
+        // 안전한 상세 GET과 분리된 CSRF 보호 요청으로 읽음 이력을 저장한다.
+        await setNoticeViewApi(parsedNoticeNumb);
+        // 저장 결과와 일치하는 읽음 상태로 현재 배포 버전을 화면에 반영한다.
+        setNotice({ ...detail, readYsno: "Y" });
       }
 
       catch (loadError) {
@@ -122,6 +124,6 @@ function NoticeDetailPage() {
       <article className={styles.content} dangerouslySetInnerHTML={{ __html: notice.notiCntn ?? "" }} />
     </main>
   );
-}
+};
 
 export default NoticeDetailPage;

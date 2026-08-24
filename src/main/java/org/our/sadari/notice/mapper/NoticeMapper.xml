@@ -63,8 +63,13 @@
              , N.NOTI_TITL
              , N.NOTI_CNTN
              , N.TOPX_YSNO
+             , CASE WHEN V.USER_NUMB IS NULL THEN #{no} ELSE #{yes} END AS READ_YSNO
              , N.DPLY_DATE
           FROM CT_NOTICE N
+     LEFT JOIN TB_USVIEW V
+            ON V.VIEW_TYPE = #{viewType}
+           AND V.TAGT_NUMB = N.NOTI_NUMB
+           AND V.USER_NUMB = #{userNumb}
          WHERE N.NOTI_NUMB = #{notiNumb}
            AND N.DPLY_YSNO = #{yes}
     </select>
