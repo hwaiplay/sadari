@@ -7,14 +7,19 @@ import java.nio.file.Paths;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.complaint.config.ComplaintAutoActionProperties;
+import org.our.sadari.complaint.config.ComplaintResultProperties;
 import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintCreateDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
 import org.our.sadari.complaint.dto.ComplaintEvidenceDto;
+import org.our.sadari.complaint.dto.ComplaintResultDto;
+import org.our.sadari.complaint.dto.ComplaintResultEventDto;
+import org.our.sadari.complaint.dto.ComplaintResultItemDto;
 import org.our.sadari.complaint.mapper.ComplaintMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
@@ -37,7 +42,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거 및 입력 검증 추가
- * 2026-08-24        HanWon.Jang        로컬 이미지 MIME 보존
+ * 2026-08-24        HanWon.Jang        로컬 MIME·신고 결과 확인
  */
 @Service
 @RequiredArgsConstructor
@@ -59,6 +64,8 @@ public class ComplaintServiceImpl implements ComplaintService {
     private final ComplaintMapper complaintMapper;
     // 신고 대상별 자동 조치 임계치 설정
     private final ComplaintAutoActionProperties autoActionProperties;
+    // 한 번의 팝업에 표시할 신고 조치 결과 범위 설정
+    private final ComplaintResultProperties resultProperties;
     // 프로필 사진 참조 해제 뒤 파일 메타정보와 물리 파일을 정리하는 서비스
     private final FileService fileService;
     // 신고 시점 프로필 사진의 실제 원본을 읽는 비공개 파일 저장소
@@ -179,6 +186,73 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 새로 접수된 신고 번호를 반환한다
         return ResultData.success(complaint.getCmplNumb());
+    }
+
+    /**
+     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과 건수와 마지막 번호를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 인증 사용자 번호
+     * @return 미확인 신고 조치 결과 요약 또는 접근 실패 응답
+     */
+    @Override
+    public ResultData getPendingResultDtl(Long userNumb) {
+
+        // 활성 사용자가 아닌 상태에서는 신고 조치 결과를 노출하지 않는다
+        if (StringUtil.isEmpty(userNumb)
+                || !Constant.USER_STAT_ACTIVE.equals(complaintMapper.getUserStat(userNumb))) {
+            // "접근 권한이 없습니다."
+            return ResultData.fail(ResultEnum.FORBIDDEN);
+        }
+
+        // 현재 활성 사용자가 한 번의 팝업에서 확인할 상세 결과를 오래된 순서로 조회한다
+        List<ComplaintResultItemDto> resultList = complaintMapper.getPendingResultList(
+                userNumb, resultProperties.getMaxSize()
+        );
+        // 조회된 목록과 확인 처리 경계를 함께 전달할 응답 객체를 생성한다
+        ComplaintResultDto result = new ComplaintResultDto();
+        // 현재 팝업에 실제 표시할 결과 건수를 설정한다
+        result.setRsltCntt(resultList.size());
+        // 현재 팝업에 표시할 수신자별 상세 결과를 설정한다
+        result.setResultList(resultList);
+        // 결과가 있을 때만 마지막 항목 번호를 확인 처리 경계로 설정한다
+        if (!resultList.isEmpty()) {
+            // 조회 이후 생성된 새 결과를 보존할 마지막 결과 번호를 설정한다
+            result.setLastRsltNumb(resultList.get(resultList.size() - 1).getRsltNumb());
+        }
+        // 조회된 미확인 결과 요약을 반환한다
+        return ResultData.success(result);
+    }
+
+    /**
+     * 활성 사용자가 팝업에서 확인한 시점까지의 신고 조치 결과를 확인 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 인증 사용자 번호
+     * @param resultNumb 조회 시점의 마지막 신고 조치 결과 번호
+     * @return 확인 처리 성공 또는 요청 실패 응답
+     */
+    @Override
+    @Transactional
+    public ResultData uptResultConfirm(Long userNumb, Long resultNumb) {
+
+        // 활성 사용자가 아닌 상태에서는 신고 조치 결과 확인을 허용하지 않는다
+        if (StringUtil.isEmpty(userNumb)
+                || !Constant.USER_STAT_ACTIVE.equals(complaintMapper.getUserStat(userNumb))) {
+            // "접근 권한이 없습니다."
+            return ResultData.fail(ResultEnum.FORBIDDEN);
+        }
+
+        // 조회 범위를 특정할 수 없는 결과 번호는 변경하지 않는다
+        if (StringUtil.isEmpty(resultNumb) || resultNumb < 1) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 조회 이후 새로 생성된 결과는 남겨두고 요청 번호까지의 결과만 확인 처리한다
+        complaintMapper.uptResultConfirm(userNumb, resultNumb);
+        // 이미 확인한 요청도 같은 결과를 반환할 수 있도록 성공 처리한다
+        return ResultData.success();
     }
 
     /**
@@ -505,6 +579,100 @@ public class ComplaintServiceImpl implements ComplaintService {
         if (complaintUpdateCount < 1) {
             throw new IllegalStateException("Complaint auto action reports were not updated.");
         }
+
+        // 종결된 신고들의 사유 구성과 대상 표시명을 조치 시점 안내 이벤트로 조회한다
+        ComplaintResultEventDto event = complaintMapper.getAutoResultEventDtl(
+                complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtHash()
+        );
+        // 자동 조치 이력과 현재 신고를 사용자 안내 이벤트에 연결한다
+        event.setActnNumb(action.getActnNumb());
+        event.setTrigCmpl(complaint.getCmplNumb());
+        // 대상 유형에 대응하는 공개 가능한 조치 유형을 설정한다
+        event.setActnType(action.getActnType());
+        // 누적 신고 사유를 건수 없이 공개할 안전한 요약으로 변환한다
+        setReasonSummary(event);
+        // 신고자에게는 정지 기간이나 다른 신고 건수를 제외한 실제 콘텐츠 조치만 안내한다
+        event.setRptrCntn(getReporterResult(complaint.getTagtType()));
+        // 피신고자에게는 누적 사실과 유형 요약 및 실제 조치만 안내한다
+        event.setTgtrCntn(getTargetResult(event, complaint.getTagtType()));
+        // 하나의 조치에 대응하는 사용자 안내 이벤트를 저장한다
+        int eventCount = complaintMapper.setResultEvent(event);
+        // 이벤트 저장 실패 시 수신자 없는 조치가 남지 않도록 전체 트랜잭션을 롤백한다
+        if (eventCount != 1 || StringUtil.isEmpty(event.getEvntNumb())) {
+            throw new IllegalStateException("Complaint result event was not saved.");
+        }
+        // 종결된 동일 대상 버전 신고마다 보존 대상 신고자 전용 미확인 결과를 생성한다
+        int resultTargetCount = complaintMapper.setAutoReporterResults(
+                event.getEvntNumb(), complaint.getTagtType(), complaint.getTagtNumb(), complaint.getTagtHash()
+        );
+
+        // 자동 조치를 발생시킨 현재 신고자의 결과가 없으면 전체 신고 트랜잭션을 롤백한다
+        if (resultTargetCount < 1) {
+            throw new IllegalStateException("Complaint auto action result targets were not saved.");
+        }
+        // 탈퇴·삭제대기가 아닌 피신고자에게 같은 이벤트의 전용 미확인 결과를 한 번 생성한다
+        complaintMapper.setTargetResult(event.getEvntNumb(), complaint.getCmplNumb(), complaint.getTagtUser());
+    }
+
+    /**
+     * 누적 신고 사유를 피신고자에게 공개할 정책 요약으로 변환한다.
+     *
+     * @author HanWon.Jang
+     * @param event 누적 신고 사유 집계가 포함된 안내 이벤트
+     */
+    private void setReasonSummary(ComplaintResultEventDto event) {
+        // 사유 집계를 확정할 수 없으면 운영정책 관련 신고로 안전하게 안내한다
+        if (StringUtil.isEmpty(event) || StringUtil.isEmpty(event.getRsonCntt()) || event.getRsonCntt() < 1) {
+            // 과거 또는 불완전 데이터의 요약 코드를 설정한다
+            event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_UNKNOWN);
+            // 세부 사유를 추정하지 않는 표시명을 설정한다
+            event.setRsonName("운영정책 관련 신고");
+            // 단일 사유 코드가 잘못 사용되지 않도록 제거한다
+            event.setRsonCode(null);
+            return;
+        }
+        // 서로 다른 신고 사유가 둘 이상이면 대표 사유를 선택하지 않는다
+        if (event.getRsonCntt() > 1) {
+            // 복수 유형 요약 코드를 설정한다
+            event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_MULTIPLE);
+            // 피신고자에게 표시할 복수 유형 문구를 설정한다
+            event.setRsonName("복수 유형의 신고");
+            // 대표 사유처럼 보이지 않도록 단일 사유 코드를 제거한다
+            event.setRsonCode(null);
+            return;
+        }
+        // 기타 사유만 누적된 경우 세부 내용 대신 기타 유형만 표시한다
+        if (Constant.COMPLAINT_REASON_OTHER.equals(event.getRsonCode())) {
+            // 기타 사유 전용 요약 코드를 설정한다
+            event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_OTHER);
+            // 신고 상세가 노출되지 않는 표시명을 설정한다
+            event.setRsonName("기타 사유 신고");
+            return;
+        }
+        // 같은 단일 사유만 누적된 경우 실제 공통코드 표시명을 사용한다
+        event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_SINGLE);
+    }
+
+    /** 신고자에게 공개할 대상별 실제 조치 내용을 조회한다. */
+    private String getReporterResult(String tagtType) {
+        // 신고자가 신고한 대상에 실제 반영된 조치만 반환한다
+        return switch (tagtType) {
+            case Constant.COMPLAINT_TARGET_REPORT -> "신고된 독후감을 비공개 처리했습니다.";
+            case Constant.COMPLAINT_TARGET_REPLY -> "신고된 댓글을 삭제 처리했습니다.";
+            case Constant.COMPLAINT_TARGET_PROFILE -> "신고된 프로필 사진을 기본 이미지로 초기화했습니다.";
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> "신고된 배경사진을 기본 이미지로 초기화했습니다.";
+            case Constant.COMPLAINT_TARGET_INTRO -> "신고된 한줄소개를 초기화했습니다.";
+            default -> "신고 내용을 검토하여 운영정책에 따른 조치를 완료했습니다.";
+        };
+    }
+
+    /** 피신고자에게 공개할 누적 신고와 대상별 조치 내용을 조회한다. */
+    private String getTargetResult(ComplaintResultEventDto event, String tagtType) {
+        // 단일 실제 사유는 자연스러운 문장이 되도록 관련 신고라는 표현을 덧붙인다
+        String reasonContent = Constant.COMPLAINT_REASON_SUMMARY_SINGLE.equals(event.getRsonSumm())
+                ? event.getRsonName() + " 관련 신고" : event.getRsonName();
+        // 건수 없이 누적 사실과 안전하게 요약한 신고 유형을 안내한다
+        return reasonContent + "가 누적되어 " + getReporterResult(tagtType);
     }
 
     /**

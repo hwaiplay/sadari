@@ -16,9 +16,15 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.complaint.config.ComplaintAutoActionProperties;
+import org.our.sadari.complaint.config.ComplaintResultProperties;
 import org.our.sadari.complaint.dto.ComplaintActionDto;
 import org.our.sadari.complaint.dto.ComplaintCreateDto;
 import org.our.sadari.complaint.dto.ComplaintDto;
+import org.our.sadari.complaint.dto.ComplaintResultDto;
+import org.our.sadari.complaint.dto.ComplaintResultEventDto;
+import org.our.sadari.complaint.dto.ComplaintResultItemDto;
+
+import java.util.List;
 import org.our.sadari.complaint.mapper.ComplaintMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
@@ -40,7 +46,7 @@ import org.springframework.dao.DuplicateKeyException;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거와 입력 검증 추가
- * 2026-08-24        HanWon.Jang        로컬 MIME·테스트 명명 검증
+ * 2026-08-24        HanWon.Jang        로컬 MIME·신고 결과 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceImplTest {
@@ -74,7 +80,10 @@ class ComplaintServiceImplTest {
         // 대상별 기본 임계치가 5건인 자동 조치 설정을 생성한다
         ComplaintAutoActionProperties properties = new ComplaintAutoActionProperties();
         // 신고 접수 서비스 단위 테스트 대상을 생성한다
-        complaintService = new ComplaintServiceImpl(complaintMapper, properties, fileService, fileStorage, badWordDetectionService);
+        ComplaintResultProperties resultProperties = new ComplaintResultProperties();
+        // 신고 접수 서비스 단위 테스트 대상을 생성한다
+        complaintService = new ComplaintServiceImpl(complaintMapper, properties, resultProperties
+                , fileService, fileStorage, badWordDetectionService);
     }
 
     /**
@@ -200,7 +209,11 @@ class ComplaintServiceImplTest {
         // 잠금 조회한 독후감 한 건이 비공개로 전환되도록 설정한다
         when(complaintMapper.uptAutoReportPrivate(31L, 22L)).thenReturn(1);
         // 자동 조치 결과 이력 한 건이 저장되도록 설정한다
-        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        doAnswer(invocation -> {
+            ComplaintActionDto action = invocation.getArgument(0);
+            action.setActnNumb(901L);
+            return 1;
+        }).when(complaintMapper).setAutoAction(any(ComplaintActionDto.class));
         // 자동 조치와 연결된 미처리 신고가 종결되도록 설정한다
         when(complaintMapper.uptAutoComplaints(
                 eq(Constant.COMPLAINT_TARGET_REPORT),
@@ -208,6 +221,13 @@ class ComplaintServiceImplTest {
                 anyString(),
                 eq("동일 버전 누적 신고 5건에 따른 독후감 비공개 전환")
         )).thenReturn(5);
+        // 조치 완료된 모든 신고의 신고자별 결과가 생성되도록 설정한다
+        when(complaintMapper.getAutoResultEventDtl(
+                eq(Constant.COMPLAINT_TARGET_REPORT), eq(31L), anyString()))
+                .thenReturn(createResultEvent(Constant.COMPLAINT_TARGET_REPORT, 31L, 22L));
+        setResultEventMock();
+        when(complaintMapper.setAutoReporterResults(eq(801L),
+                eq(Constant.COMPLAINT_TARGET_REPORT), eq(31L), anyString())).thenReturn(5);
 
         // 다섯 번째 독후감 신고를 접수한다
         ResultData result = complaintService.setComplaint(7L, request);
@@ -224,6 +244,10 @@ class ComplaintServiceImplTest {
                 31L,
                 actionCaptor.getValue().getTagtHash(),
                 "동일 버전 누적 신고 5건에 따른 독후감 비공개 전환"
+        );
+        // 동일 대상 버전을 신고한 모든 신고자의 미확인 결과가 생성되는지 확인한다
+        verify(complaintMapper).setAutoReporterResults(
+                801L, Constant.COMPLAINT_TARGET_REPORT, 31L, actionCaptor.getValue().getTagtHash()
         );
         // 신고 접수 성공과 첫 번째 5건 단위 조치 이력을 확인한다
         assertEquals(200, result.getCode());
@@ -284,7 +308,11 @@ class ComplaintServiceImplTest {
         // 프로필 사진 참조 한 건이 제거되도록 설정한다
         when(complaintMapper.uptAutoProfile(31L)).thenReturn(1);
         // 자동 조치 결과 이력 한 건이 저장되도록 설정한다
-        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        doAnswer(invocation -> {
+            ComplaintActionDto action = invocation.getArgument(0);
+            action.setActnNumb(902L);
+            return 1;
+        }).when(complaintMapper).setAutoAction(any(ComplaintActionDto.class));
         // 자동 조치와 연결된 미처리 신고가 종결되도록 설정한다
         when(complaintMapper.uptAutoComplaints(
                 eq(Constant.COMPLAINT_TARGET_PROFILE),
@@ -292,6 +320,13 @@ class ComplaintServiceImplTest {
                 anyString(),
                 eq("누적 신고 5건에 따른 프로필 사진 기본 이미지 초기화")
         )).thenReturn(5);
+        // 조치 완료된 모든 신고의 신고자별 결과가 생성되도록 설정한다
+        when(complaintMapper.getAutoResultEventDtl(
+                eq(Constant.COMPLAINT_TARGET_PROFILE), eq(31L), anyString()))
+                .thenReturn(createResultEvent(Constant.COMPLAINT_TARGET_PROFILE, 31L, 31L));
+        setResultEventMock();
+        when(complaintMapper.setAutoReporterResults(eq(801L),
+                eq(Constant.COMPLAINT_TARGET_PROFILE), eq(31L), anyString())).thenReturn(5);
 
         // 다섯 번째 프로필 사진 신고를 접수한다
         ResultData result = complaintService.setComplaint(7L, request);
@@ -349,11 +384,22 @@ class ComplaintServiceImplTest {
         when(complaintMapper.getAutoActionCmplCnt(
                 eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString())).thenReturn(5);
         when(complaintMapper.uptAutoBackground(31L)).thenReturn(1);
-        when(complaintMapper.setAutoAction(any(ComplaintActionDto.class))).thenReturn(1);
+        doAnswer(invocation -> {
+            ComplaintActionDto action = invocation.getArgument(0);
+            action.setActnNumb(903L);
+            return 1;
+        }).when(complaintMapper).setAutoAction(any(ComplaintActionDto.class));
         when(complaintMapper.uptAutoComplaints(
                 eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString(),
                 eq("누적 신고 5건에 따른 배경사진 기본 이미지 초기화")
         )).thenReturn(5);
+        // 조치 완료된 모든 신고의 신고자별 결과가 생성되도록 설정한다
+        when(complaintMapper.getAutoResultEventDtl(
+                eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString()))
+                .thenReturn(createResultEvent(Constant.COMPLAINT_TARGET_BACKGROUND, 31L, 31L));
+        setResultEventMock();
+        when(complaintMapper.setAutoReporterResults(eq(801L),
+                eq(Constant.COMPLAINT_TARGET_BACKGROUND), eq(31L), anyString())).thenReturn(5);
 
         // 다섯 번째 배경사진 신고를 접수한다
         ResultData result = complaintService.setComplaint(7L, request);
@@ -388,6 +434,41 @@ class ComplaintServiceImplTest {
         // 저장 거절 응답과 신고 미저장을 확인한다
         assertEquals(ResultEnum.COMMON_SAVE_REJECTED.getCode(), result.getCode());
         verify(complaintMapper, never()).setComplaint(any(ComplaintDto.class), eq(7L));
+    }
+
+    /** 활성 사용자의 미확인 신고 조치 결과 건수와 마지막 번호를 반환한다. */
+    @Test
+    void getPendingResultDtl() {
+        // 활성 사용자가 확인할 미확인 신고 조치 결과 상세를 생성한다
+        ComplaintResultItemDto pendingItem = new ComplaintResultItemDto();
+        pendingItem.setRsltNumb(19L);
+        // 현재 사용자가 활성 상태이고 미확인 결과가 존재하도록 설정한다
+        when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
+        when(complaintMapper.getPendingResultList(7L, 5)).thenReturn(List.of(pendingItem));
+
+        // 현재 사용자의 미확인 신고 조치 결과를 조회한다
+        ResultData result = complaintService.getPendingResultDtl(7L);
+
+        // 팝업에 사용할 건수와 조회 경계 번호를 그대로 반환하는지 확인한다
+        assertEquals(200, result.getCode());
+        ComplaintResultDto pendingResult = (ComplaintResultDto) result.getData();
+        assertEquals(1, pendingResult.getRsltCntt());
+        assertEquals(19L, pendingResult.getLastRsltNumb());
+    }
+
+    /** 조회 이후 생성된 결과를 제외하고 사용자가 본 마지막 번호까지만 확인 처리한다. */
+    @Test
+    void uptResultConfirm() {
+        // 현재 사용자가 결과를 확인할 수 있는 활성 상태로 설정한다
+        when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
+        when(complaintMapper.uptResultConfirm(7L, 19L)).thenReturn(3);
+
+        // 팝업 조회 시점의 마지막 결과 번호까지 확인을 요청한다
+        ResultData result = complaintService.uptResultConfirm(7L, 19L);
+
+        // 요청한 경계 번호가 사용자 소유 조건과 함께 Mapper로 전달되는지 확인한다
+        assertEquals(200, result.getCode());
+        verify(complaintMapper).uptResultConfirm(7L, 19L);
     }
 
     /** 기타 신고 사유에 상세 내용이 없으면 대상 원문을 조회하거나 저장하지 않는다. */
@@ -499,5 +580,39 @@ class ComplaintServiceImplTest {
         target.setTagtCntn(tagtCntn);
         // 신고 대상 조회 결과를 반환한다
         return target;
+    }
+
+    /** 자동 조치 안내 이벤트 저장 시 생성 번호가 반영되도록 Mock을 설정한다. */
+    private void setResultEventMock() {
+        // 이벤트 저장 성공과 생성 번호를 함께 반환한다
+        doAnswer(invocation -> {
+            ComplaintResultEventDto event = invocation.getArgument(0);
+            event.setEvntNumb(801L);
+            return 1;
+        }).when(complaintMapper).setResultEvent(any(ComplaintResultEventDto.class));
+    }
+
+    /** 자동 조치 결과 이벤트 집계 조회값을 생성한다. */
+    private ComplaintResultEventDto createResultEvent(String tagtType, Long tagtNumb, Long tagtUser) {
+        // 단일 신고 사유가 누적된 이벤트 원본을 생성한다
+        ComplaintResultEventDto event = new ComplaintResultEventDto();
+        // 신고 대상 유형을 설정한다
+        event.setTagtType(tagtType);
+        // 신고 대상 번호를 설정한다
+        event.setTagtNumb(tagtNumb);
+        // 신고 대상 사용자를 설정한다
+        event.setTagtUser(tagtUser);
+        // 팝업에 표시할 신고 대상 이름을 설정한다
+        event.setTagtName("신고 대상");
+        // 단일 사유 누적 상태를 설정한다
+        event.setRsonCntt(1);
+        // 단일 신고 사유 코드를 설정한다
+        event.setRsonCode("CMPL_ABUSE");
+        // 단일 신고 사유 표시명을 설정한다
+        event.setRsonName("욕설 및 비방");
+        // 조치 완료 시각을 설정한다
+        event.setProcDate(java.time.LocalDateTime.now());
+        // 생성한 이벤트 원본을 반환한다
+        return event;
     }
 }

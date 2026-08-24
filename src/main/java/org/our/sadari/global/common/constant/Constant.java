@@ -134,6 +134,18 @@ public final class Constant {
     public static final String COMPLAINT_ACTION_CLEAR_INTRO = "CMPL_CLEAR_INTRO";
     // 신고 누적 자동 조치 적용 결과
     public static final String COMPLAINT_RESULT_APPLIED = "CMPL_APPLIED";
+    // 신고 조치 결과의 신고자 수신 유형
+    public static final String COMPLAINT_RECEIVER_REPORTER = "REPORTER";
+    // 신고 조치 결과의 피신고자 수신 유형
+    public static final String COMPLAINT_RECEIVER_TARGET = "TARGET";
+    // 모든 누적 신고 사유가 같은 유형인 요약 코드
+    public static final String COMPLAINT_REASON_SUMMARY_SINGLE = "SINGLE";
+    // 누적 신고 사유가 둘 이상인 요약 코드
+    public static final String COMPLAINT_REASON_SUMMARY_MULTIPLE = "MULTIPLE";
+    // 기타 사유만 누적된 요약 코드
+    public static final String COMPLAINT_REASON_SUMMARY_OTHER = "OTHER";
+    // 사유를 안전하게 확정할 수 없는 요약 코드
+    public static final String COMPLAINT_REASON_SUMMARY_UNKNOWN = "UNKNOWN";
     // 상대를 팔로우하지 않는 기본 버튼 상태
     public static final String FOLLOW_STAT_FOLLOW = "FOLLOW";
     // 로그인 사용자가 상대를 팔로우하는 버튼 상태

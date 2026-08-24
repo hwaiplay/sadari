@@ -414,13 +414,15 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 탈퇴 회원의 독서 통계 공개를 해제하며 복귀 후 자동 공개하지 않는다
         userWithdrawalMapper.uptReadingStatsPrivate(request.getUserNumb(), Constant.COMM_NO);
         // 탈퇴 회원의 모임 회차 참여 연결을 비식별화해 복귀 후 목표 달성 집계에 자동 복원하지 않는다
-        userWithdrawalMapper.uptClubParticipantAnonymous(request.getUserNumb(), Constant.COMM_YES);
+        userWithdrawalMapper.uptClubParticipantAnon(request.getUserNumb(), Constant.COMM_YES);
         // 탈퇴 회원이 수신한 알림을 모두 삭제 상태로 변경한다
         userWithdrawalMapper.uptUserAlimDeleted(request.getUserNumb());
         // 탈퇴 회원의 브라우저 푸시 구독을 모두 비활성화한다
         userWithdrawalMapper.uptUserPushDisabled(request.getUserNumb());
         // 탈퇴 회원이 댓글에 등록한 좋아요를 삭제하며 복귀 시 자동 복원하지 않는다
         userWithdrawalMapper.delUserReplyLike(request.getUserNumb());
+        // 탈퇴·삭제대기 결과 비보존 정책에 따라 기존 신고 결과 수신 이력을 삭제한다
+        userWithdrawalMapper.delComplaintResults(request.getUserNumb());
     }
 
     /**

@@ -9,6 +9,9 @@ import org.our.sadari.complaint.dto.ComplaintCreateDto;
 import org.our.sadari.complaint.service.ComplaintService;
 import org.our.sadari.global.common.result.ResultData;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -18,16 +21,17 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ComplaintController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 인증 사용자의 콘텐츠 신고 접수 API를 제공한다
+ * description    : 인증 사용자의 콘텐츠 신고 접수와 결과 확인 API를 제공한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-24        HanWon.Jang        신고 결과 확인 API 추가
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/complaints")
-@Tag(name = "신고", description = "사용자와 독후감 및 댓글 신고 접수 API")
+@Tag(name = "신고", description = "콘텐츠 신고 접수와 신고 조치 결과 확인 API")
 public class ComplaintController {
 
     // 사용자 신고 접수 서비스
@@ -48,5 +52,38 @@ public class ComplaintController {
 
         // 인증 사용자의 대상 원문 스냅샷이 포함된 신고 접수 결과를 반환한다
         return complaintService.setComplaint(userNumb, request);
+    }
+
+    /**
+     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과를 요약 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @return 미확인 결과 건수와 마지막 결과 번호
+     */
+    @GetMapping("/results/pending")
+    @Operation(summary = "미확인 신고 조치 결과 조회", description = "활성 사용자가 팝업으로 확인할 신고 조치 결과를 요약 조회한다.")
+    public ResultData getPendingResultDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
+
+        // 현재 활성 사용자가 아직 확인하지 않은 신고 조치 결과를 반환한다
+        return complaintService.getPendingResultDtl(userNumb);
+    }
+
+    /**
+     * 사용자가 팝업으로 확인한 신고 조치 결과를 일괄 확인 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
+     * @param resultNumb 조회 시점의 마지막 신고 조치 결과 번호
+     * @return 확인 처리 결과
+     */
+    @PatchMapping("/results/{resultNumb}")
+    @Operation(summary = "신고 조치 결과 확인", description = "팝업 조회 시점까지의 미확인 신고 조치 결과를 확인 처리한다.")
+    public ResultData uptResultConfirm(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @Parameter(description = "마지막 신고 조치 결과 번호", required = true)
+                                       @PathVariable Long resultNumb) {
+
+        // 현재 활성 사용자가 확인한 마지막 결과 번호까지 확인 처리한다
+        return complaintService.uptResultConfirm(userNumb, resultNumb);
     }
 }

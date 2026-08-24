@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import Loading from "../components/Loading/Loading.tsx";
 import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
+import ComplaintResultPopup from "../features/Complaint/components/ComplaintResultPopup.tsx";
 
 /**
  * 로그인 인증이 필요한 화면의 접근 권한을 확인합니다.
@@ -12,7 +13,7 @@ import { useCheckAuth } from "../features/Auth/hooks/useCheckAuth.tsx";
  * @param children 인증이 완료된 뒤 렌더링할 보호 대상 화면
  * @return 인증 상태에 맞는 라우트 화면
  */
-export default function ProtectedRoute({ children }: { children: ReactNode }) {
+const ProtectedRoute = ({ children }: { children: ReactNode }) => {
 
   const location = useLocation();
   const {
@@ -69,6 +70,13 @@ export default function ProtectedRoute({ children }: { children: ReactNode }) {
     return <Navigate to="/home" replace />;
   }
 
-  // 인증과 사용자 상태에 맞는 보호 화면을 반환한다
-  return children;
-}
+  // 활성 사용자의 신고 결과 전용 팝업과 보호 화면을 함께 반환한다
+  return (
+    <>
+      <ComplaintResultPopup />
+      {children}
+    </>
+  );
+};
+
+export default ProtectedRoute;

@@ -166,7 +166,7 @@ public class AuthServiceImpl implements AuthService {
             if (StringUtil.isEmpty(savedUser)) {
                 // 과거 탈퇴 계정의 회원 번호 중 하나라도 유효한 정지가 남아 있으면 새 회원 번호를 발급하지 않는다
                 String userIdHash = userIdEncryptionService.hashForAudit(providerId);
-                if (userWithdrawalMapper.getActiveSuspensionCountByUserIdHash(userIdHash) > 0) {
+                if (userWithdrawalMapper.getActiveSuspCntByIdHash(userIdHash) > 0) {
                     // 관리자 해제 전에는 같은 Kakao 계정의 재가입과 로그인을 차단한다
                     return ResultData.fail(ResultEnum.AUTH_WITHDRAWN_SUSPENDED);
                 }

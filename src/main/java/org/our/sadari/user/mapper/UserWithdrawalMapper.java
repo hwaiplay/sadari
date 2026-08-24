@@ -17,6 +17,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * 2026-08-13        SeungHyeon.Kang    탈퇴한 Kakao 계정의 유효 제재 조회 추가
  * 2026-08-14        Hanwon.Jang,SeungHyeon.Kang    탈퇴 회원 공개 정보 해제 추가
  * 2026-08-20        SeungHyeon.Kang    탈퇴 회원의 모임 회차 참여 비식별 처리 추가
+ * 2026-08-24        HanWon.Jang        탈퇴 회원 신고 결과 삭제 추가
  */
 @Mapper
 public interface UserWithdrawalMapper {
@@ -57,7 +58,7 @@ public interface UserWithdrawalMapper {
      * @param anonymousYsno 비식별 참여 여부 코드
      * @return 변경된 모임 회차 참여 수
      */
-    int uptClubParticipantAnonymous(@Param("userNumb") Long userNumb, @Param("anonymousYsno") String anonymousYsno);
+    int uptClubParticipantAnon(@Param("userNumb") Long userNumb, @Param("anonymousYsno") String anonymousYsno);
 
     /**
      * 회원의 알림을 모두 삭제 상태로 변경한다.
@@ -87,6 +88,15 @@ public interface UserWithdrawalMapper {
     int delUserReplyLike(Long userNumb);
 
     /**
+     * 계정 비활성화 또는 삭제 대기 전환 사용자의 신고 결과 수신 이력을 삭제한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 탈퇴 회원 번호
+     * @return 삭제된 신고 결과 수
+     */
+    int delComplaintResults(Long userNumb);
+
+    /**
      * 영구 삭제 대기 중인 최신 탈퇴 이력을 조회한다.
      *
      * @author SeungHyeon.Kang
@@ -111,5 +121,5 @@ public interface UserWithdrawalMapper {
      * @param userIdhs OAuth 사용자 식별값의 SHA-256 해시
      * @return 유효한 이용 정지가 있으면 1, 없으면 0
      */
-    int getActiveSuspensionCountByUserIdHash(String userIdhs);
+    int getActiveSuspCntByIdHash(String userIdhs);
 }
