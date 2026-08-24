@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거 및 입력 검증 추가
+ * 2026-08-24        HanWon.Jang        로컬 이미지 MIME 보존
  */
 @Service
 @RequiredArgsConstructor
@@ -286,8 +287,12 @@ public class ComplaintServiceImpl implements ComplaintService {
                 // 저장소에 실제 원본이 없으면 파일명만으로 신고를 접수하지 않는다
                 return null;
             }
-            // 저장소가 확정한 MIME 유형을 증거 메타정보에 우선 적용한다
-            target.setMimeType(storedFile.get().contentType());
+            // 저장소가 MIME 유형을 확정한 경우에만 DB의 검증된 파일 메타정보보다 우선 적용한다
+            if (!StringUtil.isEmpty(storedFile.get().contentType())) {
+                // 저장소가 반환한 MIME 유형을 관리자 증거 메타정보에 설정한다
+                target.setMimeType(storedFile.get().contentType());
+            }
+
             // 실제 신고 시점의 이미지 원본 바이트를 반환한다
             return storedFile.get().bytes();
         }

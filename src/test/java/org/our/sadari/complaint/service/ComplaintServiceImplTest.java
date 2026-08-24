@@ -40,6 +40,7 @@ import org.springframework.dao.DuplicateKeyException;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거와 입력 검증 추가
+ * 2026-08-24        HanWon.Jang        로컬 MIME·테스트 명명 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ComplaintServiceImplTest {
@@ -135,7 +136,7 @@ class ComplaintServiceImplTest {
 
     /** 화면 본문이 아니라 서버가 조회한 독후감 원문을 신고 스냅샷으로 저장한다. */
     @Test
-    void setComplaintStoresServerReportSnapshot() {
+    void setReportSnapshot() {
         // 독후감 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_REPORT, "CMPL_ABUSE", "상세 사유"
@@ -174,7 +175,7 @@ class ComplaintServiceImplTest {
 
     /** 같은 독후감 버전의 유효 신고가 5건 누적되면 비공개로 전환하고 조치 이력을 저장한다. */
     @Test
-    void setComplaintDeletesReportAtThreshold() {
+    void setAutoReport() {
         // 다섯 번째 독후감 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_REPORT, "CMPL_ABUSE", null
@@ -236,7 +237,7 @@ class ComplaintServiceImplTest {
 
     /** 프로필 사진의 유효 신고가 5건 누적되면 기본 이미지로 변경하고 파일을 커밋 후 정리한다. */
     @Test
-    void setComplaintResetsProfileAtThreshold() throws java.io.IOException {
+    void setAutoProfile() throws java.io.IOException {
         // 다섯 번째 프로필 사진 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_PROFILE, "CMPL_PRIVACY", null
@@ -255,11 +256,13 @@ class ComplaintServiceImplTest {
         target.setFilePath("/uploads/profile/260822/unsafe.jpg");
         target.setStorName("unsafe.jpg");
         target.setOrigName("unsafe.jpg");
+        // 로컬 운영체제가 MIME 유형을 판정하지 못할 때 유지할 DB 파일 MIME 유형을 설정한다
+        target.setMimeType("image/jpeg");
         // 현재 프로필 사진 신고 대상을 설정한다
         when(complaintMapper.getProfileTargetDtl(31L, 7L)).thenReturn(target);
-        // 신고 시점의 실제 프로필 이미지 원본을 저장소에서 조회하도록 설정한다
+        // 로컬 저장소가 MIME 유형 없이 실제 프로필 이미지 원본만 반환하도록 설정한다
         when(fileStorage.getFile("profile/260822/unsafe.jpg"))
-                .thenReturn(java.util.Optional.of(new StoredFile(new byte[]{1, 2, 3}, "image/jpeg")));
+                .thenReturn(java.util.Optional.of(new StoredFile(new byte[]{1, 2, 3}, null)));
         // 동일 이미지 버전의 기존 증거가 없어 신규 원본을 저장하도록 설정한다
         when(complaintMapper.getEvidenceNumb(eq(Constant.COMPLAINT_TARGET_PROFILE)
                 , eq(31L), anyString())).thenReturn(null);
@@ -296,6 +299,11 @@ class ComplaintServiceImplTest {
         // 프로필 사진 참조 제거와 커밋 후 파일 정리가 연결되는지 확인한다
         verify(complaintMapper).uptAutoProfile(31L);
         verify(fileService).delFile(501L);
+        // 저장소 MIME 판정 실패 시 DB의 검증 MIME 유형이 증거에 유지되는지 확인한다
+        ArgumentCaptor<org.our.sadari.complaint.dto.ComplaintEvidenceDto> evidenceCaptor =
+                ArgumentCaptor.forClass(org.our.sadari.complaint.dto.ComplaintEvidenceDto.class);
+        verify(complaintMapper).setEvidence(evidenceCaptor.capture());
+        assertEquals("image/jpeg", evidenceCaptor.getValue().getMimeType());
         // 프로필 사진 자동 조치가 성공해 신고 번호를 반환하는지 확인한다
         assertEquals(200, result.getCode());
         assertEquals(96L, result.getData());
@@ -303,7 +311,7 @@ class ComplaintServiceImplTest {
 
     /** 배경사진의 유효 신고가 5건 누적되면 프로필과 독립적으로 기본 배경 상태로 변경한다. */
     @Test
-    void setComplaintResetsBackgroundAtThreshold() throws java.io.IOException {
+    void setAutoBackground() throws java.io.IOException {
         // 다섯 번째 배경사진 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_BACKGROUND, "CMPL_PRIVACY", null
@@ -360,7 +368,7 @@ class ComplaintServiceImplTest {
 
     /** 삭제되었거나 본인 소유여서 서버가 조회하지 못한 대상은 신고를 저장하지 않는다. */
     @Test
-    void setComplaintRejectsUnavailableTarget() {
+    void setRejectsMissingTarget() {
         // 댓글 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_REPLY, "CMPL_SPAM", null
@@ -384,7 +392,7 @@ class ComplaintServiceImplTest {
 
     /** 기타 신고 사유에 상세 내용이 없으면 대상 원문을 조회하거나 저장하지 않는다. */
     @Test
-    void setComplaintRequiresOtherReasonContent() {
+    void setRequiresOtherContent() {
         // 상세 내용이 없는 기타 신고 요청을 생성한다
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_REPORT, Constant.COMPLAINT_REASON_OTHER, "  "
