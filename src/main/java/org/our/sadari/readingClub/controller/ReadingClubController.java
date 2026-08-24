@@ -32,6 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 API 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 API
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 API
+ * 2026-08-24        HanWon.Jang        가입 신청 취소 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -282,6 +283,22 @@ public class ReadingClubController {
                              , @Valid @RequestBody ReadingClubDto.JoinReqDto request) {
         // 모임 정책에 맞춰 즉시 가입 또는 승인 신청 결과를 반환한다
         return readingClubService.setJoin(userNumb, clubNumb, request);
+    }
+
+    /**
+     * 가입 신청자가 승인 전 자신의 처리 대기 신청을 취소한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 가입 신청 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 가입 신청 취소 결과
+     */
+    @DeleteMapping("/{clubNumb}/applications")
+    @Operation(summary = "내 가입 신청 취소")
+    public ResultData delApplication(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                    , @PathVariable Long clubNumb) {
+        // 로그인 사용자의 처리 대기 신청만 취소한 결과를 반환한다
+        return readingClubService.delApplication(userNumb, clubNumb);
     }
 
     /**

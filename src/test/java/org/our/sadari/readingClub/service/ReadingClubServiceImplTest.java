@@ -49,6 +49,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합 검증
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 검증
+ * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -777,6 +778,41 @@ class ReadingClubServiceImplTest {
         // 수정 거절 코드와 신청 상태 미변경을 검증한다
         assertEquals(ResultEnum.COMMON_UPDATE_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).uptJoinApplication(10L, 30L, 20L, "APPROVED");
+    }
+
+    /**
+     * 가입 신청자가 자신의 처리 대기 신청과 답변을 삭제하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delAppCancelsPending() {
+        // 활성 신청자의 처리 대기 신청 삭제가 성공하도록 구성한다
+        when(readingClubMapper.delOwnApplication(10L, 20L)).thenReturn(1);
+
+        // 가입 승인 전 본인의 신청을 취소한다
+        ResultData result = readingClubService.delApplication(20L, 10L);
+
+        // 신청 행 삭제 성공 응답을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).delOwnApplication(10L, 20L);
+    }
+
+    /**
+     * 이미 처리됐거나 본인 소유가 아닌 신청은 취소하지 않는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delAppRejectsMissing() {
+        // 처리 대기 중인 본인 신청이 조회되지 않도록 삭제 결과를 구성한다
+        when(readingClubMapper.delOwnApplication(10L, 20L)).thenReturn(0);
+
+        // 존재하지 않는 처리 대기 신청의 취소를 요청한다
+        ResultData result = readingClubService.delApplication(20L, 10L);
+
+        // 삭제 거절 응답을 검증한다
+        assertEquals(ResultEnum.COMMON_DELETE_REJECTED.getCode(), result.getCode());
     }
 
     /**

@@ -57,10 +57,12 @@ export default function ClubDetailPage() {
     applications,
     canJoin,
     club,
+    isCancellingApplication,
     isDeleting,
     members,
     readingGoalResult,
     handleAnswerChange,
+    handleApplicationCancel,
     handleApplicationDecision,
     handleClubAction,
     handleJoinClub,
@@ -367,6 +369,15 @@ export default function ClubDetailPage() {
           <section className={styles.panel}>
             <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.pendingTitle")}</h2>
             <p className={styles.panelDescription}>{message("frontend.readingClub.detail.pendingDescription")}</p>
+            <ActionButton
+              type="button"
+              variant="secondary"
+              width="full"
+              disabled={isCancellingApplication}
+              onClick={() => void handleApplicationCancel()}
+            >
+              {message("frontend.readingClub.detail.cancelApplicationButton")}
+            </ActionButton>
           </section>
         ) : null}
 
@@ -397,39 +408,6 @@ export default function ClubDetailPage() {
                 ? message("frontend.readingClub.common.join.open")
                 : message("frontend.readingClub.detail.applyButton")}
             </ActionButton>
-          </section>
-        ) : null}
-
-        {club.membRole === "OWNER" && club.joinType === "APPROVAL" ? (
-          <section className={styles.management}>
-            <section className={styles.panel}>
-              <h2 className={styles.sectionTitle}>
-                {message("frontend.readingClub.detail.pendingApplications", [applications.length])}
-              </h2>
-              {applications.length ? applications.map((application) => (
-                <article className={styles.application} key={application.applNumb}>
-                  <div className={styles.profileRow}>
-                    <ProfileImage className={styles.avatar} src={application.porfPath} alt="" />
-                    <strong className={styles.profileName}>{application.userNick}</strong>
-                    <span />
-                  </div>
-                  {application.questionList.map((question, index) => (
-                    <div className={styles.qa} key={question}>
-                      <strong>{message("frontend.readingClub.detail.question", [question])}</strong>
-                      <span>{message("frontend.readingClub.detail.answer", [application.answerList[index]])}</span>
-                    </div>
-                  ))}
-                  <div className={styles.actions}>
-                    <ActionButton onClick={() => handleApplicationDecision(application.applNumb, "APPROVED")}>
-                      {message("frontend.readingClub.detail.approve")}
-                    </ActionButton>
-                    <ActionButton variant="danger" onClick={() => handleApplicationDecision(application.applNumb, "REJECTED")}>
-                      {message("frontend.readingClub.detail.reject")}
-                    </ActionButton>
-                  </div>
-                </article>
-              )) : <p className={styles.empty}>{message("frontend.readingClub.detail.noApplications")}</p>}
-            </section>
           </section>
         ) : null}
       </main>

@@ -2,7 +2,7 @@ package org.our.sadari.global.common.constant;
 
 /**
  * fileName       : Constant
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-07
  * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
  * ===========================================================
@@ -20,6 +20,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-22        SeungHyeon.Kang    신고 대상·자동 조치 코드 추가
+ * 2026-08-24        HanWon.Jang        모임 가입 처리 알림 코드 추가
  */
 public final class Constant {
 
@@ -166,6 +167,10 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
     // 독서 모임 회원 초대 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_INVITE_CLUB = "INVITE_CLUB";
+    // 독서 모임 가입 신청 승인 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_JOIN_APPROVED = "CLUB_JOIN_APPROVED";
+    // 독서 모임 가입 신청 거절 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_JOIN_REJECTED = "CLUB_JOIN_REJECTED";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";

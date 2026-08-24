@@ -16,6 +16,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-20        Hanwon.Jang        현재 독서 수정 계약 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 계약
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 계약
+ * 2026-08-24        HanWon.Jang        가입 신청 취소 계약 추가
  */
 public interface ReadingClubService {
 
@@ -177,6 +178,16 @@ public interface ReadingClubService {
      * @return 가입 또는 신청 처리 결과
      */
     ResultData setJoin(Long userNumb, Long clubNumb, ReadingClubDto.JoinReqDto request);
+
+    /**
+     * 가입 신청자가 승인 전 자신의 처리 대기 신청과 답변을 삭제한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 가입 신청 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 가입 신청 취소 결과
+     */
+    ResultData delApplication(Long userNumb, Long clubNumb);
 
     /**
      * 모임 관계가 없는 모임장의 맞팔로우 사용자를 초대 후보로 조회한다.

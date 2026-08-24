@@ -1406,6 +1406,22 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </insert>
 
+    <!-- 활성 가입 신청자가 승인 전 자신의 처리 대기 신청과 답변을 삭제한다. -->
+    <delete id="delOwnApplication">
+        <include refid="clubCodeBinds" />
+        DELETE /* delOwnApplication */
+          FROM TB_CLJOIN
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+           AND JOIN_STAT = #{applicationPending}
+           AND EXISTS (
+               SELECT 1
+                 FROM TM_USERXM USERX
+                WHERE USERX.USER_NUMB = #{userNumb}
+                  AND USERX.USER_STAT = #{userActive}
+           )
+    </delete>
+
     <!-- 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 조회한다. -->
     <select id="getApplicationList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />

@@ -3,6 +3,7 @@ import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
+  cancelClubApplicationApi,
   delClubApi,
   decideClubApplicationApi,
   getClubApplicationListApi,
@@ -35,6 +36,7 @@ export const useClubDetailPage = () => {
   const [applications, setApplications] = useState<ClubApplication[]>([]);
   const [members, setMembers] = useState<ClubMemberProfile[]>([]);
   const [readingGoalResult, setReadingGoalResult] = useState<ClubReadingGoalResult | null>(null);
+  const [isCancellingApplication, setIsCancellingApplication] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   /**
@@ -155,6 +157,61 @@ export const useClubDetailPage = () => {
   };
 
   /**
+   * 가입 승인 전 자신의 처리 대기 신청을 확인 후 취소한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleApplicationCancel = async (): Promise<void> => {
+    // "가입 신청을 취소할까요?"
+    const confirmResult = await sweetConfirm({
+      icon: "warning",
+      title: message("frontend.readingClub.detail.cancelApplicationConfirmTitle"),
+      text: message("frontend.readingClub.detail.cancelApplicationConfirmDescription"),
+      confirmButtonText: message("frontend.readingClub.detail.cancelApplicationButton"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 사용자가 확인하지 않았거나 이미 처리 중이면 현재 신청을 유지한다
+    if (!confirmResult.isConfirmed || isCancellingApplication) {
+      return;
+    }
+
+    setIsCancellingApplication(true);
+
+    try {
+      /**
+       * 현재 사용자의 처리 대기 가입 신청을 서버에서 삭제한다.
+       *
+       * @author HanWon.Jang
+       * @return 가입 신청 취소 완료 Promise
+       * @throws 가입 신청 취소 또는 응답 검증에 실패하면 발생한다
+       */
+      const cancelApplication = (): ReturnType<typeof cancelClubApplicationApi> => (
+        cancelClubApplicationApi(clubNumb)
+      );
+
+      // 취소가 끝날 때까지 화면 이동을 막고 완료 안내를 표시한다
+      await runBlockingOperation(cancelApplication, {
+        title: message("frontend.readingClub.detail.cancellingApplication"),
+        success: {
+          title: message("frontend.readingClub.detail.cancelApplicationSuccessTitle"),
+          text: message("frontend.readingClub.detail.cancelApplicationSuccessDescription"),
+        },
+      });
+      // 최신 상세를 다시 조회해 가입 신청 화면으로 전환한다
+      await loadPage();
+    } catch (error) {
+      void sweetError(
+        message("frontend.readingClub.detail.cancelApplicationErrorTitle"),
+        getApiErrorMessage(error, message("frontend.readingClub.detail.cancelApplicationErrorDescription")),
+      );
+    } finally {
+      setIsCancellingApplication(false);
+    }
+  };
+
+  /**
   * 현재 모임의 가입 이전을 포함한 이전 독서 기록 화면으로 이동한다.
   *
   * @author HanWon.Jang
@@ -270,10 +327,12 @@ export const useClubDetailPage = () => {
     applications,
     canJoin,
     club,
+    isCancellingApplication,
     isDeleting,
     members,
     readingGoalResult,
     handleAnswerChange,
+    handleApplicationCancel,
     handleApplicationDecision,
     handleClubAction,
     handleJoinClub,

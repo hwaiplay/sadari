@@ -19,6 +19,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-20        SeungHyeon.Kang    현재 독서 수정 메서드 추가
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 추가
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 추가
+ * 2026-08-24        HanWon.Jang        가입 신청 취소 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -583,6 +584,17 @@ public interface ReadingClubMapper {
      * @return 생성된 신청 수
      */
     int setJoinApplication(ReadingClubDto.ApplicationDto application);
+
+    /**
+     * 활성 가입 신청자가 자신의 처리 대기 신청과 답변을 삭제한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @param userNumb 가입 신청 사용자 번호
+     * @return 삭제된 신청 수
+     */
+    int delOwnApplication(@Param("clubNumb") Long clubNumb
+                        , @Param("userNumb") Long userNumb);
 
     /**
      * 모임장이 심사할 처리 중 가입 신청을 조회한다.

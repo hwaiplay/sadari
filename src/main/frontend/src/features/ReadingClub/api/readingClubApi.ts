@@ -337,6 +337,14 @@ export const joinClubApi = async (clubNumb: number, answerList: string[]): Promi
   return assertResultDataSuccess(response.data).data as ReadingClub;
 };
 
+/** 가입 승인 전 자신의 처리 대기 신청을 취소한다. @author HanWon.Jang @param clubNumb 모임 번호 @return 처리 응답 */
+export const cancelClubApplicationApi = async (clubNumb: number) => {
+  // 로그인 사용자의 처리 대기 가입 신청 삭제를 요청한다
+  const response = await api.delete(`/reading-clubs/${clubNumb}/applications`);
+  // 공통 성공 응답을 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
 /** 모임장의 맞팔 초대 후보를 조회한다. @author Hanwon.Jang @param clubNumb 모임 번호 @return 초대 후보 목록 */
 export const getInviteCandidateListApi = async (clubNumb: number): Promise<InviteCandidate[]> => {
   // 모임별 맞팔 초대 후보를 요청한다

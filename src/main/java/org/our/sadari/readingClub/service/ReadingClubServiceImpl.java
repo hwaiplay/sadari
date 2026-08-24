@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : ReadingClubServiceImpl
- * author         : eungHyeon.Kang, HanWon.Jang
+ * author         : HanWon.Jang
  * date           : 2026-08-05
  * description    : 독서 모임 생성, 탐색, 가입, 초대와 승인 업무를 처리한다
  * ===========================================================
@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    초대 알림 상황 통합
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 처리
+ * 2026-08-24        HanWon.Jang        가입 알림·신청 취소 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -721,6 +722,28 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /**
      * {@inheritDoc}
      *
+     * @author HanWon.Jang
+     * @param userNumb 가입 신청 사용자 번호
+     * @param clubNumb 모임 번호
+     * @return 가입 신청 취소 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delApplication(Long userNumb, Long clubNumb) {
+        // 필수 식별값이 없거나 본인의 처리 대기 신청이 아니면 삭제하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)
+                || readingClubMapper.delOwnApplication(clubNumb, userNumb) == 0) {
+            // "삭제에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
+        }
+
+        // 신청 행을 물리 삭제하여 저장된 가입 답변도 즉시 제거한다
+        return ResultData.success();
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @author Hanwon.Jang
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 삭제할 모임 번호
@@ -842,7 +865,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /**
      * {@inheritDoc}
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 모임 번호
      * @return 맞팔로우 초대 후보 목록 조회 결과
@@ -1154,6 +1177,24 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 clubNumb, applNumb, userNumb, request.getJoinStat()) == 0) {
             // "수정에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 처리 결과에 맞는 가입 신청 알림 템플릿을 선택한다
+        String tempCode = APPLICATION_APPROVED.equals(request.getJoinStat())
+                ? Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED
+                : Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED;
+        // 신청자에게 모임명과 상세 화면 링크가 포함된 처리 결과 알림을 저장하고 푸시를 예약한다
+        ResultData alimResult = alimService.sendAlim(
+                application.getUserNumb()
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , tempCode
+              , clubNumb
+              , Map.of("clubName", club.getClubName())
+        );
+        // 템플릿 누락 등으로 알림 저장에 실패하면 신청 처리만 확정되지 않도록 전체 트랜잭션을 롤백한다
+        if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // 승인 또는 거절 성공 응답을 반환한다
