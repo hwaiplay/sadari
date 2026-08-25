@@ -9,7 +9,8 @@ import type {
   ReportStatusTone,
 } from "@/features/Book/types/reportList.type";
 
-const CONTENT_PREVIEW_LENGTH = 180;
+/** 독후감 목록 카드가 접힌 상태로 표시할 본문 길이 기준이다. */
+export const REPORT_CONTENT_PREVIEW_LENGTH = 180;
 
 /**
  * 독후감의 독서 상태 코드를 비교 가능한 대문자로 정규화한다.
@@ -101,7 +102,7 @@ export function createReportListItems(
       statusTone: getStatusTone(reportStatus),
       isExpanded: Boolean(expandedReports[report.reptNumb]),
       reportContent,
-      isLongContent: reportContent.length > CONTENT_PREVIEW_LENGTH,
+      isLongContent: reportContent.length > REPORT_CONTENT_PREVIEW_LENGTH,
       likeCountLabel: getCountLabel(report.likeCnt),
       commentCountLabel: getCountLabel(report.replCnt),
     };

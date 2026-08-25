@@ -1,9 +1,15 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { message } from "@/app/messages/message";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { message } from "@/app/messages/message";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
+import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
+import {
+  REPORT_STATUS_DONE,
+  REPORT_STATUS_STOP,
+} from "@/features/Book/constants/reportForm";
+import { REPORT_CONTENT_PREVIEW_LENGTH } from "@/features/Book/utils/reportListView";
 import { getFeedPageApi, type FeedItem } from "@/features/Feed/api/feedApi";
 import ReplySheet from "@/features/reply/ReplySheet";
 import ProfileImage from "@/features/User/components/ProfileImage";
@@ -11,16 +17,28 @@ import { type SyntheticEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./FeedPage.css";
 
-const MEDIA_BUTTON_CLASSES: Record<FeedItem["tagtType"], string> = {
-  REPORT: styles.reportMediaButton,
-  PROFILE_IMAGE: styles.profileMediaButton,
-  BACKGROUND_IMAGE: styles.backgroundMediaButton,
-};
+/**
+ * 독서 상태 코드에 대응하는 공통 독후감 카드의 배지 스타일을 반환한다.
+ *
+ * @author HanWon.Jang
+ * @param reptStat 피드 독후감의 독서 상태 코드
+ * @return 독서 상태별 배지 클래스명
+ */
+const getStatusClassName = (reptStat?: FeedItem["reptStat"]): string => {
+  // 완독한 독후감은 브랜드 색상의 완료 배지를 사용한다
+  if (reptStat === REPORT_STATUS_DONE) {
+    // 다른 사람 독후감 카드와 같은 완독 배지 클래스를 반환한다
+    return reportListStyles.statusDone;
+  }
 
-const MEDIA_CLASSES: Record<FeedItem["tagtType"], string> = {
-  REPORT: styles.reportMedia,
-  PROFILE_IMAGE: styles.profileMedia,
-  BACKGROUND_IMAGE: styles.backgroundMedia,
+  // 독서를 중단한 독후감은 회색의 중단 배지를 사용한다
+  if (reptStat === REPORT_STATUS_STOP) {
+    // 다른 사람 독후감 카드와 같은 중단 배지 클래스를 반환한다
+    return reportListStyles.statusStopped;
+  }
+
+  // 나머지 상태에는 다른 사람 독후감 카드와 같은 독서 중 배지를 반환한다
+  return reportListStyles.statusReading;
 };
 
 /** 팔로잉 사용자의 공개 독후감과 사진 변경 활동을 카드 목록으로 표시한다. */
@@ -32,6 +50,7 @@ const FeedPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
   const [replyItem, setReplyItem] = useState<FeedItem | null>(null);
+  const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
 
   /** 요청한 피드 페이지를 첫 목록 또는 다음 목록으로 반영한다. */
   const loadPage = useCallback(async (targetPage: number): Promise<void> => {
@@ -91,13 +110,26 @@ const FeedPage = () => {
 
   /** 피드 유형에 맞는 활동 문구를 반환한다. */
   const getActivityText = (item: FeedItem): string => {
+    // 프로필 사진 변경 활동에는 전용 문구를 표시한다
     if (item.tagtType === "PROFILE_IMAGE") return message("frontend.feed.profileChanged");
+    // 배경사진 변경 활동에는 전용 문구를 표시한다
     if (item.tagtType === "BACKGROUND_IMAGE") return message("frontend.feed.backgroundChanged");
+    // 독후감 피드에는 공개 완료 문구를 표시한다
     return message("frontend.feed.reportPublished");
   };
 
+  /** 독후감 본문의 펼침 상태를 반대로 전환한다. */
+  const toggleReportContent = (tagtNumb: number): void => {
+    setExpandedReports((current) => ({
+      ...current,
+      [tagtNumb]: !current[tagtNumb],
+    }));
+  };
+
+  // 첫 피드 데이터를 불러오는 동안 전체 로딩 화면을 반환한다
   if (isLoading && items.length === 0) return <Loading />;
 
+  // 유형별 카드와 공통 교류 동작을 포함한 피드 화면을 반환한다
   return (
     <main className={styles.page}>
       {error && items.length === 0 ? (
@@ -105,38 +137,90 @@ const FeedPage = () => {
       ) : null}
       {!error && items.length === 0 ? <p className={styles.empty}>{message("frontend.feed.empty")}</p> : null}
       <div className={styles.list}>
-        {items.map((item) => (
-          <article className={styles.card} key={`${item.tagtType}-${item.tagtNumb}`}>
-            <header className={styles.cardHeader}>
-              <button className={styles.authorButton} type="button" onClick={() => navigate(`/social/profile/${item.userNumb}`)}>
-                <ProfileImage className={styles.avatar} src={item.porfPath} alt="" />
-                <span><p className={styles.authorName}>{item.userNick}</p><p className={styles.activity}>{getActivityText(item)} · {new Date(item.activityDate).toLocaleDateString()}</p></span>
-              </button>
-            </header>
-            <button className={MEDIA_BUTTON_CLASSES[item.tagtType]} type="button" onClick={() => openItem(item)}>
-              {item.tagtType === "PROFILE_IMAGE" ? (
-                <ProfileImage className={MEDIA_CLASSES[item.tagtType]} src={item.contentImagePath} alt="" />
-              ) : (
-                <img
-                  className={MEDIA_CLASSES[item.tagtType]}
-                  src={(item.tagtType === "REPORT" ? item.bookCvim : item.contentImagePath) || "/img/common/no-image.png"}
-                  alt=""
-                  onError={handleImageError}
-                />
-              )}
-              <span className={styles.mediaInfo}>
-                <p className={styles.title}>{item.tagtType === "REPORT" ? item.bookTitl : getActivityText(item)}</p>
-                <p className={styles.metadata}>{item.tagtType === "REPORT" ? `${item.bookAthr ?? ""} · ${item.reptStatName ?? ""}` : item.userNick}</p>
-                {item.tagtType === "REPORT" && item.reptGrde ? <p className={styles.rating}>★ {item.reptGrde}</p> : null}
-              </span>
-            </button>
-            {item.reptCntn ? <p className={styles.content}>{item.reptCntn}</p> : null}
-            <footer className={styles.actions}>
-              <button className={styles.actionButton} type="button" aria-label={message("frontend.feed.likeAction")} onClick={() => void handleLike(item)}><img className={styles.icon} src={item.likeYsno === "Y" ? "/img/icons/icon-heart-fill.svg" : "/img/icons/icon-heart.svg"} alt="" />{item.likeCnt}</button>
-              <button className={styles.commentButton} type="button" aria-label={message("frontend.book.publicReports.viewComments")} onClick={() => setReplyItem(item)}><img className={styles.icon} src="/img/icons/icon-comment.svg" alt="" />{item.replCnt}</button>
-            </footer>
-          </article>
-        ))}
+        {items.map((item) => {
+          const reportContent = item.reptCntn?.trim() ?? "";
+          const isLongContent = reportContent.length > REPORT_CONTENT_PREVIEW_LENGTH;
+          const isExpanded = Boolean(expandedReports[item.tagtNumb]);
+
+          // 피드 유형에 맞는 미디어와 교류 기능을 포함한 카드 한 건을 반환한다
+          return (
+            <article className={styles.card} key={`${item.tagtType}-${item.tagtNumb}`}>
+              <header className={styles.cardHeader}>
+                <button className={styles.authorButton} type="button" onClick={() => navigate(`/social/profile/${item.userNumb}`)}>
+                  <ProfileImage className={styles.avatar} src={item.porfPath} alt="" />
+                  <span><span className={styles.authorName}>{item.userNick}</span><span className={styles.activity}>{getActivityText(item)} · {new Date(item.activityDate).toLocaleDateString()}</span></span>
+                </button>
+              </header>
+
+              {item.tagtType === "REPORT" ? (
+                <button className={styles.reportMediaButton} type="button" onClick={() => openItem(item)}>
+                  <img
+                    className={styles.reportMedia}
+                    src={item.bookCvim || "/img/common/no-image.png"}
+                    alt=""
+                    onError={handleImageError}
+                  />
+                  <span className={styles.mediaInfo}>
+                    <span className={styles.title}>{item.bookTitl}</span>
+                    <span className={styles.reportMetadata}>
+                      <span className={styles.metadata}>{item.bookAthr ?? ""}</span>
+                      {item.reptStatName ? (
+                        <span className={getStatusClassName(item.reptStat)}>{item.reptStatName}</span>
+                      ) : null}
+                    </span>
+                    {item.reptGrde ? <span className={styles.rating}>★ {item.reptGrde}</span> : null}
+                  </span>
+                </button>
+              ) : null}
+
+              {item.tagtType === "BACKGROUND_IMAGE" ? (
+                <button className={styles.backgroundMediaButton} type="button" onClick={() => openItem(item)}>
+                  <img
+                    className={styles.backgroundMedia}
+                    src={item.contentImagePath || "/img/common/no-image.png"}
+                    alt=""
+                    onError={handleImageError}
+                  />
+                </button>
+              ) : null}
+
+              {reportContent ? (
+                <div className={styles.contentSection}>
+                  <div className={isExpanded || !isLongContent
+                    ? reportListStyles.reportContentWrapOpen
+                    : reportListStyles.reportContentWrap}
+                  >
+                    <p className={reportListStyles.reportContent}>{reportContent}</p>
+                  </div>
+                  {isLongContent ? (
+                    <button
+                      className={styles.expandButton}
+                      type="button"
+                      aria-label={message(isExpanded
+                        ? "frontend.common.collapse"
+                        : "frontend.book.publicReports.expand")}
+                      onClick={() => toggleReportContent(item.tagtNumb)}
+                    >
+                      <img
+                        className={isExpanded
+                          ? reportListStyles.expandArrowOpen
+                          : reportListStyles.expandArrow}
+                        src="/img/icons/arrow-bottom.svg"
+                        alt=""
+                        aria-hidden="true"
+                      />
+                    </button>
+                  ) : null}
+                </div>
+              ) : null}
+
+              <footer className={styles.actions}>
+                <button className={styles.actionButton} type="button" aria-label={message("frontend.feed.likeAction")} onClick={() => void handleLike(item)}><img className={styles.icon} src={item.likeYsno === "Y" ? "/img/icons/icon-heart-fill.svg" : "/img/icons/icon-heart.svg"} alt="" />{item.likeCnt}</button>
+                <button className={styles.commentButton} type="button" aria-label={message("frontend.book.publicReports.viewComments")} onClick={() => setReplyItem(item)}><img className={styles.icon} src="/img/icons/icon-comment.svg" alt="" />{item.replCnt}</button>
+              </footer>
+            </article>
+          );
+        })}
       </div>
       <InfiniteScrollTrigger hasNext={hasNext} isLoading={isLoading} onLoadMore={() => void loadPage(page + 1)}>{<Loading isFullScreen={false} />}</InfiniteScrollTrigger>
       {replyItem ? <ReplySheet report={{ reptNumb: replyItem.tagtNumb, userNick: replyItem.userNick }} tagtType={replyItem.tagtType} onClose={() => setReplyItem(null)} /> : null}

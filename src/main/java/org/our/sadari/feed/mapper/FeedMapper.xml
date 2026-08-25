@@ -24,6 +24,7 @@
                  , PF.FILE_PATH AS PORF_PATH
                  , R.PUBC_DATE AS ACTIVITY_DATE
                  , R.REPT_NUMB
+                 , R.REPT_STAT
                  , FN_GET_CODE_NAME('READ_STAT', R.REPT_STAT, NULL) AS REPT_STAT_NAME
                  , R.REPT_GRDE
                  , R.REPT_CNTN
@@ -61,6 +62,7 @@
                  , NULL
                  , NULL
                  , NULL
+                 , NULL
                  , PF.FILE_PATH
               FROM TB_FOLLOW F
               JOIN TM_USERXM U
@@ -78,6 +80,7 @@
                  , U.USER_NICK
                  , PF.FILE_PATH
                  , U.BGIM_DATE
+                 , NULL
                  , NULL
                  , NULL
                  , NULL
