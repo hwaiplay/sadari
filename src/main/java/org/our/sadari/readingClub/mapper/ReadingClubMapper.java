@@ -24,6 +24,25 @@ import org.our.sadari.report.dto.ReportDto;
 @Mapper
 public interface ReadingClubMapper {
 
+    /** 활성 모임원 여부를 조회한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 활성 모임원 수 */
+    int getActiveMemberCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);
+
+    /** 다음 도서 추천 목록을 조회한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 추천 목록 */
+    List<ReadingClubDto.BookRecommendationDto> getBookRecommendationList(@Param("clubNumb") Long clubNumb
+                                                                        , @Param("userNumb") Long userNumb);
+
+    /** 다음 도서 추천을 등록한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param request 추천 도서 @return 등록 수 */
+    int setBookRecommendation(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                             , @Param("request") ReadingClubDto.BookRecommendationDto request);
+
+    /** 본인의 다음 도서 추천을 삭제한다. @param clubNumb 모임 번호 @param recmNumb 추천 번호 @param userNumb 사용자 번호 @return 삭제 수 */
+    int delBookRecommendation(@Param("clubNumb") Long clubNumb, @Param("recmNumb") Long recmNumb
+                             , @Param("userNumb") Long userNumb);
+
+    /** 다음 도서 투표를 등록하거나 변경한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param recmNumb 추천 번호 @return 반영 수 */
+    int uptBookVote(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                   , @Param("recmNumb") Long recmNumb);
+
     /**
      * 같은 중복 방지 키로 이미 생성된 모임 독서 회차를 조회한다.
      *

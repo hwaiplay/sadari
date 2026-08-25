@@ -22,6 +22,48 @@
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
     </sql>
 
+    <select id="getActiveMemberCnt" resultType="int">
+        <include refid="clubCodeBinds" />
+        SELECT COUNT(*)
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX ON USERX.USER_NUMB = MEMBER.USER_NUMB AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb} AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </select>
+
+    <select id="getBookRecommendationList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$BookRecommendationDto">
+        <include refid="clubCodeBinds" />
+        SELECT RECOMMEND.RECM_NUMB, BOOK.BOOK_NUMB, BOOK.BOOK_TITL, BOOK.BOOK_ATHR, BOOK.BOOK_PUBL
+             , BOOK.BOOK_ISBN, BOOK.BOOK_CVIM, BOOK.BOOK_DESC, DATE_FORMAT(BOOK.PUBL_DATE, '%Y-%m-%d') AS PUBL_DATE
+             , USERX.USER_NICK
+             , CASE WHEN RECOMMEND.USER_NUMB = #{userNumb} THEN #{commYes} ELSE #{commNo} END AS MINE_YSNO
+             , CASE WHEN VOTE.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS VOTE_YSNO
+          FROM TB_CLBREC RECOMMEND
+          JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = RECOMMEND.BOOK_NUMB
+          JOIN TM_USERXM USERX ON USERX.USER_NUMB = RECOMMEND.USER_NUMB AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TB_CLBVOT VOTE ON VOTE.CLUB_NUMB = RECOMMEND.CLUB_NUMB
+                             AND VOTE.RECM_NUMB = RECOMMEND.RECM_NUMB AND VOTE.USER_NUMB = #{userNumb}
+         WHERE RECOMMEND.CLUB_NUMB = #{clubNumb}
+      ORDER BY RECOMMEND.REGI_DATE, RECOMMEND.RECM_NUMB
+    </select>
+
+    <insert id="setBookRecommendation" useGeneratedKeys="true" keyProperty="request.recmNumb">
+        INSERT INTO TB_CLBREC (CLUB_NUMB, BOOK_NUMB, USER_NUMB, REGI_DATE)
+        VALUES (#{clubNumb}, #{request.bookNumb}, #{userNumb}, CURRENT_TIMESTAMP(6))
+    </insert>
+
+    <delete id="delBookRecommendation">
+        DELETE FROM TB_CLBREC
+         WHERE CLUB_NUMB = #{clubNumb} AND RECM_NUMB = #{recmNumb} AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <insert id="uptBookVote">
+        INSERT INTO TB_CLBVOT (CLUB_NUMB, USER_NUMB, RECM_NUMB, REGI_DATE, UPDT_DATE)
+        SELECT #{clubNumb}, #{userNumb}, RECM_NUMB, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)
+          FROM TB_CLBREC WHERE CLUB_NUMB = #{clubNumb} AND RECM_NUMB = #{recmNumb}
+        ON DUPLICATE KEY UPDATE RECM_NUMB = VALUES(RECM_NUMB), UPDT_DATE = CURRENT_TIMESTAMP(6)
+    </insert>
+
     <!-- 같은 요청 키로 이미 생성된 모임 독서 회차를 조회한다. -->
     <select id="getReadingRoundByIdempotency" resultType="long">
         SELECT /* getReadingRoundByIdempotency */

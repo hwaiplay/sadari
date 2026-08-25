@@ -31,9 +31,39 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 페이지 추가
  * 2026-08-23        HanWon.Jang        이전 독서 기록 페이지 추가
  * 2026-08-24        HanWon.Jang        모임원 퇴장 요청 DTO 추가
+ * 2026-08-25        HanWon.Jang        다음 도서 추천·투표 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
+
+    /** 다음 도서 추천 요청과 목록 항목을 전달한다. */
+    @Data
+    @EqualsAndHashCode(callSuper = true)
+    @Schema(description = "다음 도서 추천 정보")
+    public static class BookRecommendationDto extends BookDto {
+
+        @Schema(description = "추천 번호")
+        private Long recmNumb;
+
+        @Schema(description = "추천 사용자 닉네임")
+        private String userNick;
+
+        @Schema(description = "로그인 사용자의 추천 여부")
+        private String mineYsno;
+
+        @Schema(description = "로그인 사용자의 투표 여부")
+        private String voteYsno;
+    }
+
+    /** 다음 도서 투표 대상을 전달한다. */
+    @Data
+    @Schema(description = "다음 도서 투표 요청")
+    public static class BookVoteReqDto {
+
+        @NotNull
+        @Schema(description = "추천 번호")
+        private Long recmNumb;
+    }
 
     /**
      * fileName       : ReadingCreateReqDto

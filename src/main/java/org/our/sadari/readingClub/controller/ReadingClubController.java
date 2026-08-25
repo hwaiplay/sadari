@@ -43,6 +43,44 @@ public class ReadingClubController {
     // 독서 모임 생성과 참여 업무 서비스
     private final ReadingClubService readingClubService;
 
+    /** 다음 도서 추천 목록을 조회한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @return 추천 목록 */
+    @GetMapping("/{clubNumb}/book-recommendations")
+    @Operation(summary = "다음 도서 추천 조회")
+    public ResultData getBookRecommendationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                                , @PathVariable Long clubNumb) {
+        // 활성 모임원에게 공개할 다음 도서 추천 목록을 반환한다
+        return readingClubService.getBookRecommendationList(userNumb, clubNumb);
+    }
+
+    /** 다음 도서를 추천한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 추천 도서 @return 등록 결과 */
+    @PostMapping("/{clubNumb}/book-recommendations")
+    @Operation(summary = "다음 도서 추천 등록")
+    public ResultData setBookRecommendation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                            , @PathVariable Long clubNumb
+                                            , @Valid @RequestBody ReadingClubDto.BookRecommendationDto request) {
+        // 활성 모임원의 중복되지 않은 도서 추천 결과를 반환한다
+        return readingClubService.setBookRecommendation(userNumb, clubNumb, request);
+    }
+
+    /** 본인의 다음 도서 추천을 삭제한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param recmNumb 추천 번호 @return 삭제 결과 */
+    @DeleteMapping("/{clubNumb}/book-recommendations/{recmNumb}")
+    @Operation(summary = "다음 도서 추천 삭제")
+    public ResultData delBookRecommendation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                            , @PathVariable Long clubNumb, @PathVariable Long recmNumb) {
+        // 서버에서 소유권을 검증한 추천 삭제 결과를 반환한다
+        return readingClubService.delBookRecommendation(userNumb, clubNumb, recmNumb);
+    }
+
+    /** 다음 도서에 투표한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 투표 대상 @return 투표 결과 */
+    @PutMapping("/{clubNumb}/book-vote")
+    @Operation(summary = "다음 도서 투표")
+    public ResultData uptBookVote(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @PathVariable Long clubNumb
+                                 , @Valid @RequestBody ReadingClubDto.BookVoteReqDto request) {
+        // 한 사용자당 하나로 갱신되는 투표 결과를 반환한다
+        return readingClubService.uptBookVote(userNumb, clubNumb, request);
+    }
+
     /**
      * 모임 독서 회차와 활성 멤버별 읽는 중 독후감을 하나의 요청으로 등록한다.
      *

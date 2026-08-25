@@ -432,7 +432,7 @@ export const invitationInterest = style({
   overflow: "hidden",
   color: vars.color.gray600,
   fontFamily: vars.font.body,
-  fontSize: 10,
+  fontSize: 12,
   lineHeight: "12px",
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",

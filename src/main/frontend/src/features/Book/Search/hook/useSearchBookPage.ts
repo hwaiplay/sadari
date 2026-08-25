@@ -372,7 +372,7 @@ export function useSearchBookPage() {
    * @param keyword 사용자가 선택한 현재 인기 검색어
    * @return 인기 검색어 조회 처리가 끝나면 완료되는 Promise
    */
-  async function handlePopularKeywordSelect(keyword: string): Promise<void> {
+  async function selectPopularKeyword(keyword: string): Promise<void> {
     // 사용자가 선택한 검색어를 입력창에도 동일하게 표시한다
     setSearchKeyword(keyword);
     // 별도 제출 동작 없이 선택한 검색어로 도서 첫 페이지를 즉시 조회한다
@@ -589,6 +589,18 @@ export function useSearchBookPage() {
         return;
       }
 
+      // 다음 도서 추천에서 진입한 검색은 선택 도서를 투표 화면으로 바로 전달한다.
+      if (pageState.clubBookVoteReturnPath) {
+        navigate(pageState.clubBookVoteReturnPath, {
+          state: {
+            recommendedBook: book,
+            candidates: pageState.clubBookVoteCandidates,
+          },
+        });
+        // 추천 도서 전달 뒤 현재 독서 등록 흐름을 실행하지 않는다.
+        return;
+      }
+
       // 독서 수정에서 진입했다면 같은 회차의 수정 화면으로 선택 도서를 돌려보낸다.
       const editRondNumb = Number(pageState.clubReadingEditRondNumb);
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
@@ -639,6 +651,8 @@ export function useSearchBookPage() {
         state: {
           book,
           clubReadingEditRondNumb: pageState.clubReadingEditRondNumb,
+          clubBookVoteReturnPath: pageState.clubBookVoteReturnPath,
+          clubBookVoteCandidates: pageState.clubBookVoteCandidates,
         },
       });
       // 모임 책 상세 이동 뒤 개인 상세 흐름을 실행하지 않는다.
@@ -800,7 +814,7 @@ export function useSearchBookPage() {
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
-    handlePopularKeywordSelect,
+    selectPopularKeyword,
     handleSearchClick,
     handleSelectBook,
     hasMore,

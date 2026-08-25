@@ -85,6 +85,78 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     // 독후감 기본 책갈피 색상 공통코드 조회 도구
     private final CodeUtil codeUtil;
 
+    /** {@inheritDoc} */
+    @Override
+    public ResultData getBookRecommendationList(Long userNumb, Long clubNumb) {
+        // 필수 식별값과 활성 모임원 권한을 함께 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+        // 활성 계정 추천자만 포함한 추천 목록을 반환한다
+        return ResultData.success(readingClubMapper.getBookRecommendationList(clubNumb, userNumb));
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional
+    public ResultData setBookRecommendation(Long userNumb, Long clubNumb
+                                            , ReadingClubDto.BookRecommendationDto request) {
+        // 도서 식별 정보와 활성 모임원 권한이 있어야 추천을 등록한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getBookIsbn(), request.getBookTitl())
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 도서 마스터는 ISBN 기준으로 재사용하고 없을 때만 생성한다
+        Long bookNumb = bookMapper.getBookNumbByIsbn(request.getBookIsbn());
+        if (StringUtil.isEmpty(bookNumb)) {
+            bookMapper.setBook(request);
+            bookNumb = request.getBookNumb();
+        }
+        request.setBookNumb(bookNumb);
+        // DB 고유 제약으로 같은 모임의 동일 도서 중복 추천을 차단한다
+        readingClubMapper.setBookRecommendation(clubNumb, userNumb, request);
+        // 생성된 추천 번호를 반환한다
+        return ResultData.success(request.getRecmNumb());
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional
+    public ResultData delBookRecommendation(Long userNumb, Long clubNumb, Long recmNumb) {
+        // 활성 모임원만 본인 추천 삭제를 요청할 수 있다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, recmNumb)
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+        // 추천자 소유권 조건으로 삭제하고 다른 사용자의 추천 삭제를 차단한다
+        if (readingClubMapper.delBookRecommendation(clubNumb, recmNumb, userNumb) == 0) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+        // 본인 추천과 연결 투표 삭제 완료 응답을 반환한다
+        return ResultData.success();
+    }
+
+    /** {@inheritDoc} */
+    @Override
+    @Transactional
+    public ResultData uptBookVote(Long userNumb, Long clubNumb, ReadingClubDto.BookVoteReqDto request) {
+        // 활성 모임원과 유효한 추천 번호만 투표 처리에 사용한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getRecmNumb())
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0
+                || readingClubMapper.uptBookVote(clubNumb, userNumb, request.getRecmNumb()) == 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        // 같은 사용자의 기존 투표를 선택 추천으로 갱신한 결과를 반환한다
+        return ResultData.success();
+    }
+
     /**
      * {@inheritDoc}
      *

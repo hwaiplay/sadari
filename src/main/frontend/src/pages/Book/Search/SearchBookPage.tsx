@@ -57,7 +57,7 @@ const SearchBookPage = () => {
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
-    handlePopularKeywordSelect,
+    selectPopularKeyword,
     handleSearchClick,
     handleSelectBook,
     hasMore,
@@ -146,7 +146,7 @@ const SearchBookPage = () => {
             <PopularKeywordSlider
               keywordList={popularKeywordList}
               isDisabled={isSearching}
-              onSelect={handlePopularKeywordSelect}
+              onSelect={selectPopularKeyword}
             />
 
             {/* 같은 행 오른쪽의 기간별 인기 도서 선택 영역 */}

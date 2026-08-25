@@ -17,6 +17,7 @@ import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPag
 import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDeadline";
 import clsx from "clsx";
 import { createPortal } from "react-dom";
+import { useNavigate } from "react-router-dom";
 import * as styles from "./ClubDetailPage.css";
 
 // 모임 상세에 한 번에 표시할 프로필 이미지 수를 제한한다
@@ -52,6 +53,7 @@ function renderMemberProfile(member: ClubMemberProfile) {
  * @return 모임 상세 화면
  */
 export default function ClubDetailPage() {
+  const navigate = useNavigate();
   const {
     answers,
     canJoin,
@@ -139,6 +141,11 @@ export default function ClubDetailPage() {
       disabled: isDeleting,
     },
   ];
+
+  const handleNextBookVote = () => {
+
+    navigate(`/reading-clubs/${club.clubNumb}/book-vote`);
+  };
 
   return (
     <>
@@ -331,6 +338,7 @@ export default function ClubDetailPage() {
               <button
                 className={styles.navigationRow}
                 type="button"
+                onClick={handleNextBookVote}
               >
                 {/* 다음 도서 투표 */}
                 <span>

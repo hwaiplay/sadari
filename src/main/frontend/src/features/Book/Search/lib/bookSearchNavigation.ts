@@ -21,6 +21,8 @@ export type SearchBookPageState = {
   entrySource?: typeof READING_TIMER_SEARCH_SOURCE;
   timerBook?: BookSearchResultType;
   clubReadingEditRondNumb?: number;
+  clubBookVoteReturnPath?: string;
+  clubBookVoteCandidates?: BookSearchResultType[];
 };
 
 /**

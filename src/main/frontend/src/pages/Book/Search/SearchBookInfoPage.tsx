@@ -138,6 +138,18 @@ function SearchBookInfoPage() {
         return;
       }
 
+      // 다음 도서 추천에서 상세를 열었다면 선택 도서를 투표 화면으로 바로 전달한다.
+      if (pageState.clubBookVoteReturnPath) {
+        navigate(pageState.clubBookVoteReturnPath, {
+          state: {
+            recommendedBook: selectedBook,
+            candidates: pageState.clubBookVoteCandidates,
+          },
+        });
+        // 추천 도서 전달 뒤 현재 독서 등록 흐름을 실행하지 않는다.
+        return;
+      }
+
       // 독서 수정에서 진입했다면 같은 회차의 수정 화면으로 선택 도서를 돌려보낸다.
       const editRondNumb = Number(pageState.clubReadingEditRondNumb);
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0

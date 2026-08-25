@@ -6,6 +6,61 @@ import {
 } from "@/app/api/resultData";
 import type { PublicReportSortType } from "@/features/Book/api/bookApi";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import type { BookSearchResultType } from "@/features/Book/types/book.type";
+
+export type ClubBookRecommendation = {
+  recmNumb: number;
+  bookNumb: number;
+  bookTitl: string;
+  bookAthr: string;
+  bookPubl: string;
+  bookIsbn: string;
+  bookCvim?: string;
+  bookDesc?: string;
+  publDate?: string;
+  userNick?: string;
+  mineYsno: "Y" | "N";
+  voteYsno: "Y" | "N";
+};
+
+export const getClubBookRecommApi = async (clubNumb: number): Promise<ClubBookRecommendation[]> => {
+  // 활성 모임원에게 공개되는 다음 도서 추천 목록을 요청한다
+  const response = await api.get(`/reading-clubs/${clubNumb}/book-recommendations`);
+  // 공통 성공 검증을 통과한 추천 목록을 반환한다
+  return (assertResultDataSuccess(response.data).data as ClubBookRecommendation[] | undefined) ?? [];
+};
+
+export const createClubBookRecommApi = async (
+  clubNumb: number,
+  book: BookSearchResultType,
+): Promise<number> => {
+  // 검색 도서 계약을 서버 도서 DTO 계약으로 변환해 추천을 등록한다
+  const response = await api.post(`/reading-clubs/${clubNumb}/book-recommendations`, {
+    bookTitl: book.title,
+    bookAthr: book.author,
+    bookPubl: book.publisher,
+    bookIsbn: book.isbn,
+    bookCvim: book.image,
+    bookDesc: book.description,
+    publDate: book.pubdate,
+  });
+  // 생성된 추천 번호를 반환한다
+  return assertResultDataSuccess(response.data).data as number;
+};
+
+export const deleteClubBookRecommApi = async (clubNumb: number, recmNumb: number) => {
+  // 서버에서 본인 소유권을 검증하는 추천 삭제를 요청한다
+  const response = await api.delete(`/reading-clubs/${clubNumb}/book-recommendations/${recmNumb}`);
+  // 공통 성공 응답을 반환한다
+  return assertResultDataSuccess(response.data);
+};
+
+export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) => {
+  // 한 사용자당 하나로 갱신되는 다음 도서 투표를 요청한다
+  const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, { recmNumb });
+  // 공통 성공 응답을 반환한다
+  return assertResultDataSuccess(response.data);
+};
 
 export type ClubCategory = {
   intrCode: string;

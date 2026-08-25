@@ -20,6 +20,19 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  */
 public interface ReadingClubService {
 
+    /** 활성 모임원의 다음 도서 추천 목록을 조회한다. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @return 추천 목록 */
+    ResultData getBookRecommendationList(Long userNumb, Long clubNumb);
+
+    /** 활성 모임원이 다음 도서를 추천한다. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 추천 도서 @return 등록 결과 */
+    ResultData setBookRecommendation(Long userNumb, Long clubNumb
+                                    , ReadingClubDto.BookRecommendationDto request);
+
+    /** 활성 모임원이 본인 추천을 삭제한다. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param recmNumb 추천 번호 @return 삭제 결과 */
+    ResultData delBookRecommendation(Long userNumb, Long clubNumb, Long recmNumb);
+
+    /** 활성 모임원이 다음 도서에 투표한다. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 투표 대상 @return 투표 결과 */
+    ResultData uptBookVote(Long userNumb, Long clubNumb, ReadingClubDto.BookVoteReqDto request);
+
     /**
      * 모임 독서 회차와 모든 활성 멤버의 읽는 중 독후감을 함께 생성한다.
      *
