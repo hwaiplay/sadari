@@ -47,6 +47,7 @@ const InquiryWritePage = lazy(() => import("@/pages/Inquiry/InquiryWritePage"));
 const InquiryDetailPage = lazy(() => import("@/pages/Inquiry/InquiryDetailPage"));
 const InquiryLayout = lazy(() => import("@/pages/Inquiry/InquiryLayout"));
 const ReadingTimerPage = lazy(() => import("@/pages/Timer/ReadingTimerPage"));
+const FeedPage = lazy(() => import("@/pages/Feed/FeedPage"));
 
 /**
  * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
@@ -189,6 +190,9 @@ const Router = () => {
 
           {/* 독서 타이머와 주간 출석 */}
           <Route path="/timer" element={<ReadingTimerPage />} />
+
+          {/* 팔로잉 사용자의 공개 활동 피드 */}
+          <Route path="/feed" element={<FeedPage />} />
 
           {/* 환경설정 */}
           <Route path="/settings" element={<SettingsPage />} />

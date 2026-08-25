@@ -16,10 +16,21 @@
 
 import type { PageData, ResultData } from "@/app/api/resultData";
 
+export type ReplyTargetType = "REPORT" | "PROFILE_IMAGE" | "BACKGROUND_IMAGE";
+
+export type ReplyTarget = {
+    tagtType: ReplyTargetType;
+    tagtNumb: number;
+};
+
 /**
  * 댓글 정보 타입
  */
 export interface ReplyDtoType {
+    // 댓글 대상 유형
+    tagtType: ReplyTargetType;
+    // 댓글 대상 번호
+    tagtNumb: number;
     // 댓글이 작성된 독후감 번호
     reptNumb: number;
     // 독후감별 댓글 번호
@@ -83,11 +94,11 @@ export type DelReplyResponse = ResultData<number> & {
  * 댓글 좋아요 등록 또는 취소 후 리턴 타입
  */
 export type ReplyLikeResponse = ResultData<
-    Pick<ReplyDtoType, "reptNumb" | "replNumb" | "likeCnt" | "likeYsno">
+    Pick<ReplyDtoType, "tagtType" | "tagtNumb" | "replNumb" | "likeCnt" | "likeYsno">
 > & {
     data: Pick<
         ReplyDtoType,
-        "reptNumb" | "replNumb" | "likeCnt" | "likeYsno"
+        "tagtType" | "tagtNumb" | "replNumb" | "likeCnt" | "likeYsno"
     >;
 };
 

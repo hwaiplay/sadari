@@ -419,6 +419,7 @@ function AlimPage() {
             : item
         ))
       ));
+      // 읽음 처리가 완료된 알림에 저장된 경로로 이동한다
       navigate(alim.linkUrlx);
     } catch (error) {
       void sweetError(

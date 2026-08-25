@@ -161,4 +161,60 @@ public class ReplyController {
         // 로그인 사용자 번호를 포함한 댓글과 답글 목록 조회 결과를 반환한다
         return replyService.getReplyList(userNumb, reptNumb, page);
     }
+
+    /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
+    @GetMapping("/{tagtType}/{tagtNumb}")
+    @Operation(summary = "범용 댓글 목록 조회")
+    public ResultData getTargetReplyList(@AuthenticationPrincipal Long userNumb,
+                                         @PathVariable String tagtType,
+                                         @PathVariable Long tagtNumb,
+                                         @RequestParam(value = "page", defaultValue = "1") int page) {
+        return replyService.getReplyList(userNumb, tagtType, tagtNumb, page);
+    }
+
+    /** 범용 대상에 등록된 댓글을 수정한다. */
+    @PutMapping("/{tagtType}/{tagtNumb}/{replNumb}")
+    @Operation(summary = "범용 댓글 수정")
+    public ResultData uptTargetReply(@AuthenticationPrincipal Long userNumb,
+                                     @PathVariable String tagtType,
+                                     @PathVariable Long tagtNumb,
+                                     @PathVariable Long replNumb,
+                                     @Valid @RequestBody ReplyDto request,
+                                     HttpServletResponse response) {
+        ResultData result = replyService.uptReply(userNumb, tagtType, tagtNumb, replNumb, request);
+        if (result.getCode() == ResultEnum.COMMON_EDIT_CONFLICT.getCode()) {
+            response.setStatus(HttpServletResponse.SC_CONFLICT);
+        }
+        return result;
+    }
+
+    /** 범용 대상에 등록된 댓글을 삭제한다. */
+    @DeleteMapping("/{tagtType}/{tagtNumb}/{replNumb}")
+    @Operation(summary = "범용 댓글 삭제")
+    public ResultData delTargetReply(@AuthenticationPrincipal Long userNumb,
+                                     @PathVariable String tagtType,
+                                     @PathVariable Long tagtNumb,
+                                     @PathVariable Long replNumb) {
+        return replyService.delReply(userNumb, tagtType, tagtNumb, replNumb);
+    }
+
+    /** 범용 대상 댓글에 좋아요를 등록한다. */
+    @PutMapping("/{tagtType}/{tagtNumb}/{replNumb}/likes")
+    @Operation(summary = "범용 댓글 좋아요 등록")
+    public ResultData setTargetReplyLike(@AuthenticationPrincipal Long userNumb,
+                                         @PathVariable String tagtType,
+                                         @PathVariable Long tagtNumb,
+                                         @PathVariable Long replNumb) {
+        return replyService.setReplyLike(userNumb, tagtType, tagtNumb, replNumb);
+    }
+
+    /** 범용 대상 댓글의 좋아요를 취소한다. */
+    @DeleteMapping("/{tagtType}/{tagtNumb}/{replNumb}/likes")
+    @Operation(summary = "범용 댓글 좋아요 취소")
+    public ResultData delTargetReplyLike(@AuthenticationPrincipal Long userNumb,
+                                         @PathVariable String tagtType,
+                                         @PathVariable Long tagtNumb,
+                                         @PathVariable Long replNumb) {
+        return replyService.delReplyLike(userNumb, tagtType, tagtNumb, replNumb);
+    }
 }

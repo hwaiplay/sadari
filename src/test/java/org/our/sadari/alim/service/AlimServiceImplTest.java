@@ -29,6 +29,7 @@ import org.our.sadari.push.service.PushService;
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
+ * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -193,6 +194,52 @@ class AlimServiceImplTest {
               , "테스트님이 좋아요를 눌렀습니다."
               , "/report/detail/10"
               , 7L
+        );
+    }
+
+    /**
+     * 상세 번호가 없는 알림은 템플릿에 저장된 완성 링크를 변경 없이 사용하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void sendAlimUsesTemplateLink() {
+        // 완성된 화면 링크를 가진 알림 템플릿 정보를 생성한다
+        AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
+        // 알림 제목을 사진 반응 템플릿에 설정한다
+        template.setAlimTitl("사진 반응 알림");
+        // 알림 내용을 사진 반응 템플릿에 설정한다
+        template.setTempCont("사진에 새로운 반응이 있습니다.");
+        // 상세 번호를 덧붙이지 않을 완성된 마이페이지 링크를 설정한다
+        template.setLinkUrlx("/mypage/profile");
+
+        // 알림 수신자가 정상 이용 회원인 조건을 설정한다
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
+        // 사진 반응 템플릿 조회 결과를 설정한다
+        when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
+        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정한다
+        doAnswer(invocation -> {
+            // 저장할 사진 반응 알림을 조회한다
+            AlimDto.AlimItemDto alim = invocation.getArgument(0);
+            // 푸시 payload에 사용할 알림 번호를 설정한다
+            alim.setAlimNumb(8L);
+            // 알림 한 건 저장 결과를 반환한다
+            return 1;
+        // 테스트 대상 의존 호출의 동작을 정의한다
+        }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
+
+        // 별도 상세 번호 없이 템플릿 링크를 그대로 사용하는 알림을 발송한다
+        ResultData result = alimService.sendAlim(31L, "LIKE", "PHOTO_REACTION", null, Map.of());
+
+        // 사진 반응 알림 발송이 성공했는지 확인한다
+        assertEquals(200, result.getCode());
+        // 푸시 알림의 이동 링크가 템플릿에 저장된 값과 일치하는지 확인한다
+        verify(pushService).sendPush(
+                31L
+              , "사진 반응 알림"
+              , "사진에 새로운 반응이 있습니다."
+              , "/mypage/profile"
+              , 8L
         );
     }
 }

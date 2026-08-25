@@ -98,6 +98,10 @@ public final class Constant {
     public static final String TIMER_STAT_COMPLETED = "COMPLETED";
     // 좋아요 대상 독후감 설정값
     public static final String LIKE_TARGET_REPORT = "REPORT";
+    // 좋아요와 댓글 대상 프로필 이미지 설정값
+    public static final String LIKE_TARGET_PROFILE_IMAGE = "PROFILE_IMAGE";
+    // 좋아요와 댓글 대상 배경 이미지 설정값
+    public static final String LIKE_TARGET_BACKGROUND_IMAGE = "BACKGROUND_IMAGE";
     // 좋아요 대상 댓글 설정값
     public static final String LIKE_TARGET_REPLY = "REPLY";
     // 사용자 신고 대상 설정값
@@ -167,6 +171,10 @@ public final class Constant {
 
     // 알림 템플릿 코드 좋아요 독후감 설정값
     public static final String ALIM_TEMP_CODE_LIKE_REPORT = "LIKE_REPORT";
+    // 프로필 이미지 좋아요 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE = "LIKE_PROFILE_IMAGE";
+    // 배경 이미지 좋아요 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_LIKE_BACKGROUND_IMAGE = "LIKE_BACKGROUND_IMAGE";
     // 알림 템플릿 코드 팔로우 USER 설정값
     public static final String ALIM_TEMP_CODE_FOLLOW_USER = "FOLLOW_USER";
     // 목표 독서 종료일이 지난 진행 중 독후감에 사용하는 알림 템플릿 코드
@@ -175,6 +183,10 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_BOOK_TIMER_OVER = "BOOK_TIMER_OVER";
     // 알림 템플릿 코드 댓글 설정값
     public static final String ALIM_TEMP_CODE_REPLY_REPORT = "REPLY_REPORT";
+    // 프로필 이미지 댓글 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE = "REPLY_PROFILE_IMAGE";
+    // 배경 이미지 댓글 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE = "REPLY_BACKGROUND_IMAGE";
     // 알림 템플릿 코드 댓글 좋아요 설정값
     public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
     // 독서 모임 회원 초대 알림 템플릿 코드

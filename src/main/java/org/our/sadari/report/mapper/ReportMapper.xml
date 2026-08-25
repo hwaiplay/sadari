@@ -359,10 +359,11 @@
                 GROUP BY P.BOOK_NUMB
                 ) G
             ON G.BOOK_NUMB = B.BOOK_NUMB
-     LEFT JOIN ( SELECT R.REPT_NUMB
+     LEFT JOIN ( SELECT R.TAGT_NUMB AS REPT_NUMB
                         , COUNT(*) AS REPL_CNT
                    FROM TB_REPLXX R
-               GROUP BY R.REPT_NUMB
+                  WHERE R.TAGT_TYPE = 'REPORT'
+               GROUP BY R.TAGT_NUMB
                 ) RC
             ON RC.REPT_NUMB = A.REPT_NUMB
          WHERE A.USER_NUMB = #{userNumb}
@@ -455,15 +456,16 @@
                      AND L.TAGT_TYPE = #{likeTargetReport}
                 ) UL
             ON UL.REPT_NUMB = P.REPT_NUMB
-     LEFT JOIN (   SELECT R.REPT_NUMB
+     LEFT JOIN (   SELECT R.TAGT_NUMB AS REPT_NUMB
                         , COUNT(*) AS REPL_CNT
                      FROM TB_REPLXX R
                INNER JOIN TM_REPORT RR
-                       ON RR.REPT_NUMB = R.REPT_NUMB
+                       ON RR.REPT_NUMB = R.TAGT_NUMB
                INNER JOIN TM_BKINFO RB
                        ON RB.BOOK_NUMB = RR.BOOK_NUMB
                     WHERE RB.BOOK_ISBN = #{bookIsbn}
-                    GROUP BY R.REPT_NUMB
+                      AND R.TAGT_TYPE = #{likeTargetReport}
+                    GROUP BY R.TAGT_NUMB
                 ) RPL
             ON RPL.REPT_NUMB = P.REPT_NUMB
          WHERE P.USER_NUMB != #{userNumb}
@@ -525,6 +527,7 @@
                   , REPT_GRDE
                   , REPT_COLR
                   , PUBC_YSNO
+                  , PUBC_DATE
                   , REPT_CNTN
                   , REGI_DATE
                   , UPDT_DATE
@@ -536,6 +539,10 @@
                   , #{reptGrde}
                   , #{reptColr}
                   , #{pubcYsno}
+                  , CASE WHEN #{pubcYsno} = 'Y' AND #{reptStat} != 'READ'
+                              THEN CURRENT_TIMESTAMP(6)
+                         ELSE NULL
+                    END
                   , #{reptCntn}
                   , CURRENT_TIMESTAMP
                   , CURRENT_TIMESTAMP
@@ -552,6 +559,12 @@
              , REPT_GRDE = #{reptGrde}
              , REPT_COLR = #{reptColr}
              , PUBC_YSNO = #{pubcYsno}
+             , PUBC_DATE = CASE WHEN PUBC_DATE IS NULL
+                                      AND #{pubcYsno} = 'Y'
+                                      AND #{reptStat} != 'READ'
+                                     THEN CURRENT_TIMESTAMP(6)
+                                ELSE PUBC_DATE
+                           END
              , REPT_CNTN = #{reptCntn}
              , UPDT_DATE = CURRENT_TIMESTAMP
          WHERE REPT_NUMB = #{reptNumb}
@@ -595,6 +608,12 @@
                REPT_STAT = #{reptStat}
              , REPT_GRDE = #{reptGrde}
              , PUBC_YSNO = #{pubcYsno}
+             , PUBC_DATE = CASE WHEN PUBC_DATE IS NULL
+                                      AND #{pubcYsno} = 'Y'
+                                      AND #{reptStat} != 'READ'
+                                     THEN CURRENT_TIMESTAMP(6)
+                                ELSE PUBC_DATE
+                           END
             <if test="reptEndt != null and reptEndt != ''">
              , REPT_ENDT = #{reptEndt}
             </if>
@@ -611,9 +630,10 @@
           FROM TB_LIKEXX L
     INNER JOIN TB_REPLXX R
             ON R.REPL_NUMB = L.TAGT_NUMB
-           AND R.REPT_NUMB = #{reptNumb}
+           AND R.TAGT_TYPE = 'REPORT'
+           AND R.TAGT_NUMB = #{reptNumb}
     INNER JOIN TM_REPORT P
-            ON P.REPT_NUMB = R.REPT_NUMB
+            ON P.REPT_NUMB = R.TAGT_NUMB
            AND P.USER_NUMB = #{userNumb}
          WHERE L.TAGT_TYPE = #{likeTargetReply}
     </delete>
@@ -623,9 +643,10 @@
         DELETE /* delReportChildReplies */ C
           FROM TB_REPLXX C
     INNER JOIN TM_REPORT P
-            ON P.REPT_NUMB = C.REPT_NUMB
+            ON P.REPT_NUMB = C.TAGT_NUMB
            AND P.USER_NUMB = #{userNumb}
-         WHERE C.REPT_NUMB = #{reptNumb}
+         WHERE C.TAGT_TYPE = 'REPORT'
+           AND C.TAGT_NUMB = #{reptNumb}
            AND C.UPER_NUMB IS NOT NULL
     </delete>
 
@@ -634,9 +655,10 @@
         DELETE /* delReportReplies */ R
           FROM TB_REPLXX R
     INNER JOIN TM_REPORT P
-            ON P.REPT_NUMB = R.REPT_NUMB
+            ON P.REPT_NUMB = R.TAGT_NUMB
            AND P.USER_NUMB = #{userNumb}
-         WHERE R.REPT_NUMB = #{reptNumb}
+         WHERE R.TAGT_TYPE = 'REPORT'
+           AND R.TAGT_NUMB = #{reptNumb}
     </delete>
 
     <!-- 로그인 사용자의 독후감에 연결된 좋아요를 삭제한다. -->

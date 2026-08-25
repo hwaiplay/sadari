@@ -2,10 +2,12 @@ import type { PublicReportType } from "@/features/Book/types/book.type";
 import ReplySheetView from "@/features/reply/ReplySheetView";
 import { useReplySheetController } from "@/features/reply/hooks/useReplySheetController";
 import { createPortal } from "react-dom";
+import type { ReplyTargetType } from "@/features/reply/types/reply.types";
 
 type ReplySheetProps = {
   report: Pick<PublicReportType, "reptNumb"> &
     Partial<Pick<PublicReportType, "userNick">>;
+  tagtType?: ReplyTargetType;
   onClose: () => void;
 };
 
@@ -16,10 +18,12 @@ type ReplySheetProps = {
  * @param props 댓글 바텀시트에 표시할 독후감과 닫기 처리 정보
  * @return 댓글 목록과 등록 폼을 포함한 바텀시트 Portal
  */
-const ReplySheet = ({ report, onClose }: ReplySheetProps) => {
+const ReplySheet = ({ report, tagtType = "REPORT", onClose }: ReplySheetProps) => {
+
+  const target = { tagtType, tagtNumb: report.reptNumb };
 
   // 댓글 조회와 등록 및 바텀시트 상호작용 상태를 화면 전용 데이터로 구성한다
-  const controller = useReplySheetController({ report, onClose });
+  const controller = useReplySheetController({ target, onClose });
 
   // 기능 상태와 이벤트를 전달하여 댓글 바텀시트 화면을 구성한다
   const sheet = (

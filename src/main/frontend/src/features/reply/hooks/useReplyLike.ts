@@ -18,12 +18,13 @@ import {
 import { REPLY_LIST_QUERY_KEY } from "@/features/reply/hooks/useReplyList";
 import type {
   ReplyDtoType,
+  ReplyTarget,
 } from "@/features/reply/types/reply.types";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 type ReplyLikeRequest = Pick<
   ReplyDtoType,
-  "reptNumb" | "replNumb" | "likeYsno"
+  "replNumb" | "likeYsno"
 >;
 
 /**
@@ -33,7 +34,7 @@ type ReplyLikeRequest = Pick<
  * @param reptNumb 댓글 목록을 조회하는 독후감 번호
  * @return 댓글 좋아요 변경 이벤트와 진행 중인 댓글 번호
  */
-export const useReplyLike = (reptNumb: number) => {
+export const useReplyLike = (target: ReplyTarget) => {
   // 댓글 목록 캐시를 서버의 좋아요 변경 결과와 동기화할 Query Client를 조회한다
   const queryClient = useQueryClient();
 
@@ -45,7 +46,7 @@ export const useReplyLike = (reptNumb: number) => {
    */
   const updateReplyLikeCache = (): void => {
     // 서버가 변경 결과를 확정한 댓글 목록 페이지만 다시 조회한다
-    void queryClient.invalidateQueries({ queryKey: [REPLY_LIST_QUERY_KEY, reptNumb] });
+    void queryClient.invalidateQueries({ queryKey: [REPLY_LIST_QUERY_KEY, target.tagtType, target.tagtNumb] });
   };
 
   /**
@@ -94,7 +95,7 @@ export const useReplyLike = (reptNumb: number) => {
     }
 
     const request = {
-      reptNumb: reply.reptNumb,
+      ...target,
       replNumb: reply.replNumb,
     };
 

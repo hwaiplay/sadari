@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -47,6 +48,9 @@ class UserServiceImplTest {
     // 사용자 데이터 접근 객체 대역
     @Mock
     private UserMapper userMapper;
+    // 피드 데이터 접근 객체 대역
+    @Mock
+    private FeedMapper feedMapper;
     // 파일 업무 서비스 대역
     @Mock
     private FileService fileService;
@@ -148,7 +152,7 @@ class UserServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptOnboardRejectsDuplicate() {
+    void uptOnboardRejectsDup() {
         // 닉네임 중복 검증에 사용할 온보딩 요청을 생성한다
         UserDto request = new UserDto();
         // 다른 회원이 사용 중인 닉네임을 요청 DTO에 설정한다

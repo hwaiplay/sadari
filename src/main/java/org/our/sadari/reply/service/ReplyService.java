@@ -42,6 +42,9 @@ public interface ReplyService {
      */
     ResultData uptReply(Long userNumb, Long reptNumb, Long replNumb, ReplyDto replyDto);
 
+    /** 범용 대상에 등록된 댓글 내용을 수정한다. */
+    ResultData uptReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb, ReplyDto replyDto);
+
 
     /**
      * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다.
@@ -53,6 +56,9 @@ public interface ReplyService {
      * @return 삭제된 댓글 번호를 포함한 처리 결과
      */
     ResultData delReply(Long userNumb, Long reptNumb, Long replNumb);
+
+    /** 범용 대상에 등록된 댓글을 삭제 상태로 전환한다. */
+    ResultData delReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
 
 
     /**
@@ -66,6 +72,9 @@ public interface ReplyService {
      */
     ResultData setReplyLike(Long userNumb, Long reptNumb, Long replNumb);
 
+    /** 범용 대상 댓글에 좋아요를 등록한다. */
+    ResultData setReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
+
 
     /**
      * 정상 이용 중인 로그인 사용자의 댓글 좋아요를 취소한다.
@@ -78,6 +87,9 @@ public interface ReplyService {
      */
     ResultData delReplyLike(Long userNumb, Long reptNumb, Long replNumb);
 
+    /** 범용 대상 댓글의 좋아요를 취소한다. */
+    ResultData delReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
+
 
     /**
      * 독후감에 대한 댓글 목록을 조회한다.
@@ -89,4 +101,7 @@ public interface ReplyService {
      * @return 독후감에 대한 댓글 조회 결과
      */
     ResultData getReplyList(Long userNumb, Long reptNumb, int page);
+
+    /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
+    ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, int page);
 }

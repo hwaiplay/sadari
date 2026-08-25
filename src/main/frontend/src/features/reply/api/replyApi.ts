@@ -18,6 +18,7 @@ import type {
   GetReplyListResponse,
   ReplyDtoType,
   ReplyLikeResponse,
+  ReplyTarget,
   SetReplyResponse,
   UptReplyResponse,
 } from "@/features/reply/types/reply.types";
@@ -31,7 +32,7 @@ import type {
  * @throws 댓글 등록 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const setReplyApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replCntn"> & {
+  data: ReplyTarget & Pick<ReplyDtoType, "replCntn"> & {
     uperNumb?: number;
   },
 ): Promise<SetReplyResponse> => {
@@ -51,11 +52,11 @@ export const setReplyApi = async (
  * @throws 댓글 수정 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const uptReplyApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replNumb" | "replCntn" | "editVersion">,
+  data: ReplyTarget & Pick<ReplyDtoType, "replNumb" | "replCntn" | "editVersion">,
 ): Promise<UptReplyResponse> => {
   // 복합 식별값을 경로에 포함하고 검증할 댓글 내용만 서버에 전달한다
   const response = await api.put<UptReplyResponse>(
-    `/reply/${data.reptNumb}/${data.replNumb}`,
+    `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}`,
     { replCntn: data.replCntn, editVersion: data.editVersion },
   );
 
@@ -72,11 +73,11 @@ export const uptReplyApi = async (
  * @throws 댓글 삭제 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const delReplyApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+  data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<DelReplyResponse> => {
   // 복합 식별값을 경로에 포함하여 작성자와 계정 상태를 서버에서 검증한다
   const response = await api.delete<DelReplyResponse>(
-    `/reply/${data.reptNumb}/${data.replNumb}`,
+    `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}`,
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 삭제 결과를 반환한다
@@ -92,11 +93,11 @@ export const delReplyApi = async (
  * @throws 댓글 좋아요 등록 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const setReplyLikeApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+  data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<ReplyLikeResponse> => {
   // 댓글 복합 식별값을 경로에 포함하여 좋아요 등록 API를 호출한다
   const response = await api.put<ReplyLikeResponse>(
-    `/reply/${data.reptNumb}/${data.replNumb}/likes`,
+    `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
@@ -112,11 +113,11 @@ export const setReplyLikeApi = async (
  * @throws 댓글 좋아요 취소 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const delReplyLikeApi = async (
-  data: Pick<ReplyDtoType, "reptNumb" | "replNumb">,
+  data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<ReplyLikeResponse> => {
   // 댓글 복합 식별값을 경로에 포함하여 좋아요 취소 API를 호출한다
   const response = await api.delete<ReplyLikeResponse>(
-    `/reply/${data.reptNumb}/${data.replNumb}/likes`,
+    `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
@@ -134,11 +135,11 @@ export const delReplyLikeApi = async (
  * @throws 댓글 목록 조회 API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const getReplyListApi = async (
-  reptNumb: number,
+  target: ReplyTarget,
   page: number,
 ): Promise<GetReplyListResponse> => {
   // 독후감 번호를 경로에 포함하여 해당 독후감의 댓글만 조회한다
-  const response = await api.get<GetReplyListResponse>(`/reply/${reptNumb}`, {
+  const response = await api.get<GetReplyListResponse>(`/reply/${target.tagtType}/${target.tagtNumb}`, {
     params: { page },
   });
 

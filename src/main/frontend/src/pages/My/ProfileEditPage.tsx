@@ -13,6 +13,8 @@ import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageV
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
+import * as reportListStyles from "@/components/ReportList/ReportListView.css";
+import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -20,6 +22,7 @@ import {
 import { POPUP_CONTENT_KEYS } from "@/features/Popup/api/popupContentApi";
 import { usePopupContent } from "@/features/Popup/hooks/usePopupContent";
 import { parsePopupContentList } from "@/features/Popup/utils/popupContentUtil";
+import ReplySheet from "@/features/reply/ReplySheet";
 import {
   delSocialFollowApi,
   setSocialFollowApi,
@@ -32,11 +35,13 @@ import {
   copyPrevReadingGoalApi,
   delProfileImageDraftApi,
   getMonthlyReadingApi,
+  getMyProfileApi,
   getProfileDraftListApi,
   setProfileImageDraftApi,
   updateReadingGoalApi,
   updateMyProfileApi,
   type MonthlyReadingSummary,
+  type ImageReaction,
   type ReadingSummaryReport,
   type UserProfile,
   type ProfileImageDraft,
@@ -294,6 +299,8 @@ function ProfileEditPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [isGoalSaving, setIsGoalSaving] = useState(false);
+  const [imageLikeUpdatingType, setImageLikeUpdatingType] = useState<ImageReaction["tagtType"] | null>(null);
+  const [replyTarget, setReplyTarget] = useState<ImageReaction | null>(null);
   const {
     followListType,
     followUsers,
@@ -341,6 +348,151 @@ function ProfileEditPage() {
     setProfileImageDraftToken(null);
     setBackgroundImageDraftToken(null);
   };
+
+  /**
+   * 현재 사용자 사진의 좋아요 상태를 서버 결과로 갱신한다.
+   * 같은 사진에 대한 중복 요청을 막고 프로필 공유 캐시에도 변경 결과를 함께 반영한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param reaction 좋아요를 변경할 현재 사진 반응 정보
+   */
+  const handleImageLike = async (reaction: ImageReaction): Promise<void> => {
+    // 같은 사진의 좋아요 요청이 진행 중이면 중복 토글을 실행하지 않는다
+    if (imageLikeUpdatingType === reaction.tagtType) {
+      // 진행 중인 첫 요청 결과를 유지한다
+      return;
+    }
+
+    // 현재 대상 버튼을 비활성화하기 위해 처리 중 유형을 기록한다
+    setImageLikeUpdatingType(reaction.tagtType);
+
+    try {
+      // 범용 좋아요 API에 현재 사진 유형과 파일 번호를 전달한다
+      const result = await setPublicReportLikeApi({
+        tagtType: reaction.tagtType,
+        tagtNumb: reaction.tagtNumb,
+      });
+      const detail = result.data as Partial<Pick<ImageReaction, "likeCnt" | "likeYsno">> | undefined;
+      const reactionKey = reaction.tagtType === "PROFILE_IMAGE"
+        ? "profileImageReaction"
+        : "backgroundImageReaction";
+
+      /**
+       * 서버 응답을 같은 사진 반응에만 병합한다.
+       *
+       * @author SeungHyeon.Kang
+       * @param current 현재 화면 또는 공유 캐시의 프로필 정보
+       * @return 좋아요 결과가 반영된 프로필 정보
+       */
+      const mergeReaction = (current: UserProfile | undefined): UserProfile | undefined => {
+        const currentReaction = current?.[reactionKey];
+
+        // 화면 사이에 사진이 교체되었으면 이전 사진의 응답을 새 사진에 반영하지 않는다
+        if (!current || !currentReaction || currentReaction.tagtNumb !== reaction.tagtNumb) {
+          // 변경할 수 없는 현재 프로필 상태를 그대로 반환한다
+          return current;
+        }
+
+        // 서버가 확정한 좋아요 수와 여부만 현재 사진 반응에 병합한다
+        return {
+          ...current,
+          [reactionKey]: {
+            ...currentReaction,
+            likeCnt: detail?.likeCnt ?? currentReaction.likeCnt,
+            likeYsno: detail?.likeYsno ?? currentReaction.likeYsno,
+          },
+        };
+      };
+
+      // 현재 마이페이지의 사진 반응 상태를 갱신한다
+      setProfile((current) => mergeReaction(current ?? undefined) ?? null);
+      // 헤더와 이후 마이페이지 진입이 공유하는 프로필 캐시도 같은 결과로 갱신한다
+      queryClient.setQueryData<UserProfile>(getMyProfileOptions().queryKey, (current) => mergeReaction(current));
+    }
+
+    // 좋아요 요청 실패를 공통 안내 문구로 표시한다
+    catch (error) {
+      await sweetError(
+        /* "좋아요 처리에 실패했어요." */ message("frontend.feed.likeFailed"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+      );
+    }
+
+    finally {
+      // 성공과 실패 모두에서 사진 좋아요 버튼을 다시 활성화한다
+      setImageLikeUpdatingType(null);
+    }
+  };
+
+  /**
+   * 사진 댓글 바텀시트를 닫고 최신 댓글 집계를 다시 조회한다.
+   *
+   * @author SeungHyeon.Kang
+   */
+  const handleImageReplyClose = async (): Promise<void> => {
+    // 댓글 바텀시트를 먼저 닫아 본문 조작을 복구한다
+    setReplyTarget(null);
+
+    try {
+      // 댓글 등록과 삭제 결과가 반영된 최신 프로필 사진 집계를 조회한다
+      const nextProfile = (await getMyProfileApi()).data;
+      // 마이페이지의 표시 상태에 최신 프로필과 사진 반응을 반영한다
+      syncProfileState(nextProfile);
+      // 공유 프로필 캐시도 최신 서버 응답으로 교체한다
+      queryClient.setQueryData(getMyProfileOptions().queryKey, nextProfile);
+    }
+
+    // 댓글 창은 닫힌 상태로 유지하고 집계 재조회 실패만 안내한다
+    catch (error) {
+      await sweetError(
+        /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
+        getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+      );
+    }
+  };
+
+  /**
+   * 다른 사용자의 독후감에서 사용하는 좋아요와 댓글 버튼을 사진 반응용으로 구성한다.
+   *
+   * @author SeungHyeon.Kang
+   * @param reaction 현재 사진의 좋아요와 댓글 집계
+   * @param className 사진 위치에 맞는 반응 버튼 묶음 스타일
+   * @return 좋아요와 댓글 버튼 묶음
+   */
+  const renderImageReactions = (reaction: ImageReaction, className: string): ReactNode => (
+    <div className={className}>
+      <button
+        className={reportListStyles.metricButton}
+        type="button"
+        aria-label={/* "좋아요" */ message("frontend.feed.likeAction")}
+        aria-pressed={reaction.likeYsno === "Y"}
+        disabled={imageLikeUpdatingType === reaction.tagtType}
+        onClick={() => void handleImageLike(reaction)}
+      >
+        <img
+          className={reportListStyles.metricIcon}
+          src={reaction.likeYsno === "Y"
+            ? "/img/icons/icon-heart-fill.svg"
+            : "/img/icons/icon-heart.svg"}
+          alt=""
+        />
+        {reaction.likeCnt}
+      </button>
+      <button
+        className={reportListStyles.commentButton}
+        type="button"
+        aria-label={/* "댓글 보기" */ message("frontend.book.publicReports.viewComments")}
+        onClick={() => setReplyTarget(reaction)}
+      >
+        <img
+          className={reportListStyles.metricIcon}
+          src="/img/icons/icon-comment.svg"
+          alt=""
+        />
+        {reaction.replCnt}
+      </button>
+    </div>
+  );
 
   /**
    * 서버에 남아 있는 임시 이미지 선택본을 화면 미리보기와 저장 식별값에 반영한다.
@@ -1872,86 +2024,94 @@ function ProfileEditPage() {
             </p>
           )}
 
-          {/* 배경 이미지 변경과 프로필 저장 및 수정 버튼 영역 */}
-          <div className={styles.coverActionGroup}>
-            {isEditMode ? (
-                <>
-                  {/* 1. 취소 버튼 (배경 변경 왼쪽으로 이동) */}
-                  <button
-                      className={styles.coverProfileEditButton}
-                      type="button"
-                      onClick={(event) => void handleEditCancel(event)}
-                      disabled={isSaving}
-                  >
-                    {/* "취소" */ message("frontend.common.cancel")}
-                  </button>
-
-                  {/* 2. 배경 변경 버튼 */}
-                  <label className={styles.coverImageButton}>
-                    <svg
-                        className={styles.actionIcon}
-                        viewBox="0 0 24 24"
-                        aria-hidden="true"
-                        focusable="false"
-                    >
-                      <path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
-                    </svg>
-                    {/* "배경 변경" */ message("frontend.profile.backgroundChange")}
-                    <input
-                        className={styles.hiddenInput}
-                        type="file"
-                        accept="image/jpeg,image/png"
-                        onChange={handleBgImageChange}
-                    />
-                  </label>
-
-                  {/* 3. 저장 버튼 */}
-                  <button
-                      className={isSaving ? styles.coverSaveButtonSaving : styles.coverSaveButton}
-                      type="submit"
-                      aria-busy={isSaving}
-                      aria-live="polite"
-                      disabled={isSaving}
-                  >
-                    {isSaving ? (
-                        <>
-                          <span className={styles.profileSaveSpinner} aria-hidden="true" />
-                          {/* "프로필 저장 중..." */}
-                          {message("frontend.profile.saving")}
-                        </>
-                    ) : (
-                        <>
-                          <svg
-                              className={styles.actionIcon}
-                              viewBox="0 0 24 24"
-                              aria-hidden="true"
-                              focusable="false"
-                          >
-                            <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
-                          </svg>
-                          {/* "저장" */ message("frontend.profile.save")}
-                        </>
-                    )}
-                  </button>
-                </>
-            ) : (
-                <button
-                    className={styles.coverProfileEditButton}
-                    type="button"
-                    onClick={handleEditModeClick}
+          {/* 조회 상태의 프로필 수정 버튼을 배경사진 우측 상단에 고정한다 */}
+          {!isEditMode ? (
+            <div className={styles.coverEditAction}>
+              <button
+                className={styles.coverProfileEditButton}
+                type="button"
+                onClick={handleEditModeClick}
+              >
+                <svg
+                  className={styles.actionIcon}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
                 >
-                  <svg
+                  <path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3L17.7 4.6a2.1 2.1 0 0 0-3 0L4 15.3V20Zm2-2v-1.9L16.1 6l1.9 1.9L7.9 18H6Z" />
+                </svg>
+                {/* "프로필 수정" */ message("frontend.profile.edit")}
+              </button>
+            </div>
+          ) : null}
+
+          {/* 편집 상태의 배경 변경·저장 또는 조회 상태의 배경사진 반응 영역 */}
+          {isEditMode ? (
+            <div className={styles.coverActionGroup}>
+              {/* 1. 취소 버튼 (배경 변경 왼쪽으로 이동) */}
+              <button
+                className={styles.coverProfileEditButton}
+                type="button"
+                onClick={(event) => void handleEditCancel(event)}
+                disabled={isSaving}
+              >
+                {/* "취소" */ message("frontend.common.cancel")}
+              </button>
+
+              {/* 2. 배경 변경 버튼 */}
+              <label className={styles.coverImageButton}>
+                <svg
+                  className={styles.actionIcon}
+                  viewBox="0 0 24 24"
+                  aria-hidden="true"
+                  focusable="false"
+                >
+                  <path d="M9 4 7.2 6H4a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.2L15 4H9Zm3 14a5 5 0 1 1 0-10 5 5 0 0 1 0 10Zm0-2a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z" />
+                </svg>
+                {/* "배경 변경" */ message("frontend.profile.backgroundChange")}
+                <input
+                  className={styles.hiddenInput}
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  onChange={handleBgImageChange}
+                />
+              </label>
+
+              {/* 3. 저장 버튼 */}
+              <button
+                className={isSaving ? styles.coverSaveButtonSaving : styles.coverSaveButton}
+                type="submit"
+                aria-busy={isSaving}
+                aria-live="polite"
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <>
+                    <span className={styles.profileSaveSpinner} aria-hidden="true" />
+                    {/* "프로필 저장 중..." */}
+                    {message("frontend.profile.saving")}
+                  </>
+                ) : (
+                  <>
+                    <svg
                       className={styles.actionIcon}
                       viewBox="0 0 24 24"
                       aria-hidden="true"
                       focusable="false"
-                  >
-                    <path d="M4 20h4.7L19.4 9.3a2.1 2.1 0 0 0 0-3L17.7 4.6a2.1 2.1 0 0 0-3 0L4 15.3V20Zm2-2v-1.9L16.1 6l1.9 1.9L7.9 18H6Z" />
-                  </svg>
-                  {/* "프로필 수정" */ message("frontend.profile.edit")}
-                </button>
-            )}
-          </div>
+                    >
+                      <path d="M5 3h12.6L21 6.4V19a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm2 2v5h9V5H7Zm0 14h10v-6H7v6Z" />
+                    </svg>
+                    {/* "저장" */ message("frontend.profile.save")}
+                  </>
+                )}
+              </button>
+            </div>
+          ) : profile?.backgroundImageReaction ? (
+            renderImageReactions(
+              profile.backgroundImageReaction,
+              styles.backgroundImageReactionBar,
+            )
+          ) : null}
         </section>
 
         {/* 프로필 기본 정보 영역 */}
@@ -1990,6 +2150,12 @@ function ProfileEditPage() {
                   />
                 </label>
               )}
+              {!isEditMode && profile?.profileImageReaction
+                ? renderImageReactions(
+                  profile.profileImageReaction,
+                  styles.profileImageReactionBar,
+                )
+                : null}
             </div>
 
             {/* 닉네임과 한줄소개 영역 */}
@@ -2140,6 +2306,15 @@ function ProfileEditPage() {
             </div>
           ) : null}
       </form>
+
+      {/* 현재 프로필 또는 배경 사진의 범용 댓글 바텀시트 영역 */}
+      {replyTarget ? (
+        <ReplySheet
+          report={{ reptNumb: replyTarget.tagtNumb, userNick: profile?.userNick }}
+          tagtType={replyTarget.tagtType}
+          onClose={() => void handleImageReplyClose()}
+        />
+      ) : null}
 
       {/* 현재 읽는 책의 수정 화면으로 연결하는 모달 영역 */}
       {currentReadingReport && createPortal((

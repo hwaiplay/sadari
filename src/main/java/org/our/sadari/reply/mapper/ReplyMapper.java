@@ -2,7 +2,6 @@ package org.our.sadari.reply.mapper;
 
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
 import org.our.sadari.reply.dto.ReplyDto;
 
 /**
@@ -18,6 +17,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * 2026-08-03        Hanwon.Jang        댓글 수정·삭제·좋아요 정의
  * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 조회 메서드 정의
  * 2026-08-21        SeungHyeon.Kang    독후감 댓글 알림 설정 조회 추가
+ * 2026-08-25        HanWon.Jang        범용 댓글 알림 조회 반영
  */
 @Mapper
 public interface ReplyMapper {
@@ -95,11 +95,11 @@ public interface ReplyMapper {
     ReplyDto getReplyLikeDtl(ReplyDto replyDto);
 
     /**
-     * 댓글이 등록된 독후감의 작성자와 댓글 알림 설정을 조회한다.
+     * 댓글이 등록된 대상의 소유자와 대상별 댓글 알림 정보를 조회한다.
      *
      * @author HanWon.Jang
-     * @param reptNumb 댓글이 등록된 독후감 번호
-     * @return 독후감 작성자와 댓글 알림 설정
+     * @param replyDto 댓글 대상 유형과 대상 번호
+     * @return 대상 소유자와 댓글 알림 정보
      */
-    ReplyDto getReplyReportAlimDtl(@Param("reptNumb") Long reptNumb);
+    ReplyDto getReplyReportAlimDtl(ReplyDto replyDto);
 }

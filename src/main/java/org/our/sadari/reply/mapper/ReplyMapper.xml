@@ -1,274 +1,120 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.reply.mapper.ReplyMapper">
-
-    <!-- 공통 사용 설정값을 SQL 파라미터로 정의한다. -->
     <sql id="bindList">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="alimReplyReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_REPORT" />
+        <bind name="alimReplyProfile" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE" />
+        <bind name="alimReplyBackground" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE" />
     </sql>
-
-    <!-- 로그인 사용자가 독후감 소유자이거나 공개 완료 독후감에 접근할 수 있는지 검증한다. -->
-    <sql id="reportAccessExists">
+    <sql id="targetAccessExists">
         AND EXISTS (
-                SELECT 1
-                  FROM TM_REPORT AR
-                  JOIN TM_USERXM AU
-                    ON AU.USER_NUMB = #{userNumb}
-                   AND AU.USER_STAT = #{userStatActive}
-                 WHERE AR.REPT_NUMB = #{reptNumb}
-                   AND (   AR.USER_NUMB = #{userNumb}
-                        OR (    AR.PUBC_YSNO = #{commYes}
-                            AND AR.REPT_STAT != #{reptStatRead}
-                           )
-                       )
-            )
+            SELECT 1 FROM TM_USERXM OWNER
+         LEFT JOIN TM_REPORT REPORT ON #{tagtType} = #{targetReport} AND REPORT.REPT_NUMB = #{tagtNumb}
+             WHERE OWNER.USER_STAT = #{userStatActive}
+               AND EXISTS (SELECT 1 FROM TM_USERXM ACTOR WHERE ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive})
+               AND (   (#{tagtType} = #{targetReport} AND REPORT.USER_NUMB = OWNER.USER_NUMB
+                         AND (REPORT.USER_NUMB = #{userNumb} OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reptStatRead})))
+                    OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
+                    OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb}))
+        )
     </sql>
-
-    <!-- 독후감 번호에 연결된 댓글과 답글 목록을 조회한다. -->
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
         WITH PARENTPAGE AS (
-             SELECT P.REPL_NUMB
-               FROM TB_REPLXX P
-              WHERE P.REPT_NUMB = #{reptNumb}
-                AND P.UPER_NUMB IS NULL
-                <include refid="reportAccessExists" />
-           ORDER BY P.REGI_DATE DESC
-                  , P.REPL_NUMB DESC
-              LIMIT #{pageOffset}, #{pageLimit}
+             SELECT P.REPL_NUMB FROM TB_REPLXX P
+              WHERE P.TAGT_TYPE = #{tagtType} AND P.TAGT_NUMB = #{tagtNumb} AND P.UPER_NUMB IS NULL
+                <include refid="targetAccessExists" />
+           ORDER BY P.REGI_DATE DESC, P.REPL_NUMB DESC LIMIT #{pageOffset}, #{pageLimit}
+        ), LIKE_COUNT AS (
+             SELECT L.TAGT_NUMB, COUNT(*) AS LIKE_CNT FROM TB_LIKEXX L
+               JOIN TM_USERXM U ON U.USER_NUMB = L.USER_NUMB AND U.USER_STAT = #{userStatActive}
+              WHERE L.TAGT_TYPE = #{likeTargetReply} GROUP BY L.TAGT_NUMB
         )
-        SELECT /* getReplyList */
-               R.REPT_NUMB
-             , R.REPL_NUMB
-             , R.UPER_NUMB
-             , IF(R.UPER_NUMB IS NULL, 'Y', 'N') AS PARENT_YN
-             , R.USER_NUMB
-             , CASE WHEN R.USER_NUMB = #{userNumb}
-                         THEN #{commYes}
-                    ELSE #{commNo}
-                END AS MY_REPLY_YN
-             , R.REPL_CNTN
-             , R.DELT_YSNO
-             , R.REGI_DATE
-             , R.UPDT_DATE
-             , SHA2(CONCAT_WS('|'
-                    , COALESCE(R.REPL_CNTN, '')
-                    , COALESCE(R.DELT_YSNO, '')
-               ), 256) AS EDIT_VERSION
+        SELECT R.TAGT_TYPE, R.TAGT_NUMB, R.REPL_NUMB, R.UPER_NUMB
+             , IF(R.UPER_NUMB IS NULL, 'Y', 'N') AS PARENT_YN, R.USER_NUMB
+             , IF(R.USER_NUMB = #{userNumb}, #{commYes}, #{commNo}) AS MY_REPLY_YN
+             , R.REPL_CNTN, R.DELT_YSNO, R.REGI_DATE, R.UPDT_DATE
+             , SHA2(CONCAT_WS('|', COALESCE(R.REPL_CNTN, ''), COALESCE(R.DELT_YSNO, '')), 256) AS EDIT_VERSION
              , IF(R.UPDT_DATE IS NULL, 'N', 'Y') AS UPDT_YSNO
              , FN_GET_CODE_NAME('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL) AS UPDT_YSNO_NM
-             , U.USER_NICK
-             , F.FILE_PATH AS PORF_PATH
-             , CASE WHEN R.DELT_YSNO = #{commYes}
-                         THEN 0
-                    ELSE COALESCE(LC.LIKE_CNT, 0)
-                END AS LIKE_CNT
-             , CASE WHEN R.DELT_YSNO = #{commYes}
-                         THEN #{commNo}
-                    WHEN UL.USER_NUMB IS NULL
-                         THEN #{commNo}
-                    ELSE #{commYes}
-                END AS LIKE_YSNO
-          FROM TB_REPLXX R
-    INNER JOIN PARENTPAGE PAGE
-            ON PAGE.REPL_NUMB = COALESCE(R.UPER_NUMB, R.REPL_NUMB)
-     LEFT JOIN TM_USERXM U
-            ON R.USER_NUMB = U.USER_NUMB
-     LEFT JOIN TM_FILEXM F
-            ON U.PROF_NUMB = F.FILE_NUMB
-     LEFT JOIN TB_REPLXX P
-            ON P.REPT_NUMB = R.REPT_NUMB
-           AND P.REPL_NUMB = R.UPER_NUMB
-     LEFT JOIN (  SELECT L.TAGT_NUMB
-                       , COUNT(*) AS LIKE_CNT
-                    FROM TB_LIKEXX L
-                    JOIN TB_REPLXX LR
-                      ON LR.REPL_NUMB = L.TAGT_NUMB
-                     AND LR.REPT_NUMB = #{reptNumb}
-                    JOIN TM_USERXM LU
-                      ON LU.USER_NUMB = L.USER_NUMB
-                     AND LU.USER_STAT = #{userStatActive}
-                   WHERE L.TAGT_TYPE = #{likeTargetReply}
-                GROUP BY L.TAGT_NUMB
-               ) LC
-            ON LC.TAGT_NUMB = R.REPL_NUMB
-     LEFT JOIN TB_LIKEXX UL
-            ON UL.USER_NUMB = #{userNumb}
-           AND UL.TAGT_TYPE = #{likeTargetReply}
-           AND UL.TAGT_NUMB = R.REPL_NUMB
-         WHERE R.REPT_NUMB = #{reptNumb}
-      ORDER BY COALESCE(P.REGI_DATE, R.REGI_DATE) DESC
-             , COALESCE(P.REPL_NUMB, R.REPL_NUMB) DESC
-             , CASE WHEN R.UPER_NUMB IS NULL
-                         THEN 0
-                    ELSE 1
-                END ASC
-             , R.REGI_DATE DESC
-             , R.REPL_NUMB DESC
+             , U.USER_NICK, F.FILE_PATH AS PORF_PATH
+             , IF(R.DELT_YSNO = #{commYes}, 0, COALESCE(LC.LIKE_CNT, 0)) AS LIKE_CNT
+             , IF(R.DELT_YSNO = #{commYes} OR UL.USER_NUMB IS NULL, #{commNo}, #{commYes}) AS LIKE_YSNO
+          FROM TB_REPLXX R JOIN PARENTPAGE PAGE ON PAGE.REPL_NUMB = COALESCE(R.UPER_NUMB, R.REPL_NUMB)
+     LEFT JOIN TM_USERXM U ON U.USER_NUMB = R.USER_NUMB LEFT JOIN TM_FILEXM F ON F.FILE_NUMB = U.PROF_NUMB
+     LEFT JOIN TB_REPLXX P ON P.TAGT_TYPE = R.TAGT_TYPE AND P.TAGT_NUMB = R.TAGT_NUMB AND P.REPL_NUMB = R.UPER_NUMB
+     LEFT JOIN LIKE_COUNT LC ON LC.TAGT_NUMB = R.REPL_NUMB
+     LEFT JOIN TB_LIKEXX UL ON UL.USER_NUMB = #{userNumb} AND UL.TAGT_TYPE = #{likeTargetReply} AND UL.TAGT_NUMB = R.REPL_NUMB
+         WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb}
+      ORDER BY COALESCE(P.REGI_DATE, R.REGI_DATE) DESC, COALESCE(P.REPL_NUMB, R.REPL_NUMB) DESC
+             , IF(R.UPER_NUMB IS NULL, 0, 1), R.REGI_DATE DESC, R.REPL_NUMB DESC
     </select>
-
-    <!-- 댓글 또는 답글을 신규 등록한다. -->
     <insert id="setReply" parameterType="org.our.sadari.reply.dto.ReplyDto" useGeneratedKeys="true" keyProperty="replNumb">
         <include refid="bindList" />
-        /* setReply */
-        INSERT INTO TB_REPLXX (
-                    REPT_NUMB
-                  , UPER_NUMB
-                  , USER_NUMB
-                  , REPL_CNTN
-                  , DELT_YSNO
-                  , REGI_DATE
-                  , UPDT_DATE
-        ) SELECT #{reptNumb}
-               , #{uperNumb,jdbcType=NUMERIC}
-               , #{userNumb}
-               , #{replCntn}
-               , #{deltYsno}
-               , CURRENT_TIMESTAMP
-               , NULL
-            FROM DUAL
-           WHERE 1 = 1
-             <include refid="reportAccessExists" />
+        INSERT INTO TB_REPLXX (TAGT_TYPE, TAGT_NUMB, UPER_NUMB, USER_NUMB, REPL_CNTN, DELT_YSNO, REGI_DATE, UPDT_DATE)
+        SELECT #{tagtType}, #{tagtNumb}, #{uperNumb,jdbcType=NUMERIC}, #{userNumb}, #{replCntn}, #{deltYsno}, CURRENT_TIMESTAMP, NULL FROM DUAL
+         WHERE (#{uperNumb,jdbcType=NUMERIC} IS NULL OR EXISTS (SELECT 1 FROM TB_REPLXX P WHERE P.TAGT_TYPE = #{tagtType}
+                AND P.TAGT_NUMB = #{tagtNumb} AND P.REPL_NUMB = #{uperNumb} AND P.UPER_NUMB IS NULL))
+           <include refid="targetAccessExists" />
     </insert>
-
-    <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다. -->
     <update id="uptReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
-        UPDATE /* uptReply */
-               TB_REPLXX R
-           SET REPL_CNTN = #{replCntn}
-             , UPDT_DATE = CURRENT_TIMESTAMP
-         WHERE R.REPT_NUMB = #{reptNumb}
-           AND R.REPL_NUMB = #{replNumb}
-           AND R.USER_NUMB = #{userNumb}
-           AND R.DELT_YSNO = #{commNo}
-           AND SHA2(CONCAT_WS('|'
-                    , COALESCE(R.REPL_CNTN, '')
-                    , COALESCE(R.DELT_YSNO, '')
-               ), 256) = #{editVersion}
-           AND EXISTS (
-                   SELECT 1
-                     FROM TM_USERXM U
-                    WHERE U.USER_NUMB = #{userNumb}
-                      AND U.USER_STAT = #{userStatActive}
-               )
+        UPDATE TB_REPLXX R SET R.REPL_CNTN = #{replCntn}, R.UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb}
+           AND R.USER_NUMB = #{userNumb} AND R.DELT_YSNO = #{commNo}
+           AND SHA2(CONCAT_WS('|', COALESCE(R.REPL_CNTN, ''), COALESCE(R.DELT_YSNO, '')), 256) = #{editVersion}
+           AND EXISTS (SELECT 1 FROM TM_USERXM U WHERE U.USER_NUMB = #{userNumb} AND U.USER_STAT = #{userStatActive})
     </update>
-
-    <!-- 정상 이용 중인 로그인 사용자가 접근할 수 있는 미삭제 댓글과 알림 수신자를 조회한다. -->
-    <select id="getReplyLikeTarget" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindList" />
-        SELECT /* getReplyLikeTarget */
-               R.REPT_NUMB
-             , R.REPL_NUMB
-             , R.USER_NUMB AS TARGET_USER_NUMB
-             , U.USER_NICK
-          FROM TB_REPLXX R
-          JOIN TM_USERXM U
-            ON U.USER_NUMB = #{userNumb}
-           AND U.USER_STAT = #{userStatActive}
-         WHERE R.REPT_NUMB = #{reptNumb}
-           AND R.REPL_NUMB = #{replNumb}
-           AND R.DELT_YSNO = #{commNo}
-           <include refid="reportAccessExists" />
-    </select>
-
-    <!-- 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록한다. -->
-    <insert id="setReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindList" />
-        /* setReplyLike */
-        INSERT IGNORE INTO TB_LIKEXX (
-               USER_NUMB
-             , TAGT_TYPE
-             , TAGT_NUMB
-             , REGI_DATE
-        ) SELECT #{userNumb}
-               , #{likeTargetReply}
-               , #{replNumb}
-               , CURRENT_TIMESTAMP
-            FROM DUAL
-           WHERE EXISTS (
-                   SELECT 1
-                     FROM TB_REPLXX R
-                     JOIN TM_USERXM U
-                       ON U.USER_NUMB = #{userNumb}
-                      AND U.USER_STAT = #{userStatActive}
-                    WHERE R.REPT_NUMB = #{reptNumb}
-                      AND R.REPL_NUMB = #{replNumb}
-                      AND R.DELT_YSNO = #{commNo}
-                      <include refid="reportAccessExists" />
-               )
-    </insert>
-
-    <!-- 정상 이용 중인 로그인 사용자가 등록한 미삭제 댓글 좋아요를 취소한다. -->
-    <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindList" />
-        DELETE /* delReplyLike */ L
-          FROM TB_LIKEXX L
-         WHERE L.USER_NUMB = #{userNumb}
-           AND L.TAGT_TYPE = #{likeTargetReply}
-           AND L.TAGT_NUMB = #{replNumb}
-           AND EXISTS (
-                   SELECT 1
-                     FROM TB_REPLXX R
-                     JOIN TM_USERXM U
-                       ON U.USER_NUMB = #{userNumb}
-                      AND U.USER_STAT = #{userStatActive}
-                    WHERE R.REPT_NUMB = #{reptNumb}
-                      AND R.REPL_NUMB = #{replNumb}
-                      AND R.DELT_YSNO = #{commNo}
-                      <include refid="reportAccessExists" />
-               )
-    </delete>
-
-    <!-- 댓글 좋아요 수와 로그인 사용자의 좋아요 여부를 서버 기준으로 조회한다. -->
-    <select id="getReplyLikeDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
-        <include refid="bindList" />
-        SELECT /* getReplyLikeDtl */
-               #{reptNumb} AS REPT_NUMB
-             , #{replNumb} AS REPL_NUMB
-             , COUNT(L.USER_NUMB) AS LIKE_CNT
-             , CASE WHEN MAX(CASE WHEN L.USER_NUMB = #{userNumb} THEN 1 ELSE 0 END) = 1
-                         THEN #{commYes}
-                    ELSE #{commNo}
-                END AS LIKE_YSNO
-          FROM TB_LIKEXX L
-          JOIN TM_USERXM U
-            ON U.USER_NUMB = L.USER_NUMB
-           AND U.USER_STAT = #{userStatActive}
-         WHERE L.TAGT_TYPE = #{likeTargetReply}
-           AND L.TAGT_NUMB = #{replNumb}
-           <include refid="reportAccessExists" />
-    </select>
-
-    <!-- 정상 이용 중인 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다. -->
     <update id="delReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
-        UPDATE /* delReply */
-               TB_REPLXX R
-           SET DELT_YSNO = #{commYes}
-             , UPDT_DATE = CURRENT_TIMESTAMP
-         WHERE R.REPT_NUMB = #{reptNumb}
-           AND R.REPL_NUMB = #{replNumb}
-           AND R.USER_NUMB = #{userNumb}
-           AND R.DELT_YSNO = #{commNo}
-           AND EXISTS (
-                   SELECT 1
-                     FROM TM_USERXM U
-                    WHERE U.USER_NUMB = #{userNumb}
-                      AND U.USER_STAT = #{userStatActive}
-               )
+        UPDATE TB_REPLXX R SET R.DELT_YSNO = #{commYes}, R.UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb}
+           AND R.USER_NUMB = #{userNumb} AND R.DELT_YSNO = #{commNo}
+           AND EXISTS (SELECT 1 FROM TM_USERXM U WHERE U.USER_NUMB = #{userNumb} AND U.USER_STAT = #{userStatActive})
     </update>
-
-    <!-- 댓글 등록 알림을 받을 독후감 작성자와 댓글 알림 설정을 조회한다. -->
-    <select id="getReplyReportAlimDtl" parameterType="long" resultType="org.our.sadari.reply.dto.ReplyDto">
-        SELECT /* getReplyReportAlimDtl */
-               USER_NUMB AS TARGET_USER_NUMB
-             , RPAL_YSNO AS REPLY_ALIM_YSNO
-          FROM TM_REPORT
-         WHERE REPT_NUMB = #{reptNumb}
+    <select id="getReplyLikeTarget" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindList" />
+        SELECT R.TAGT_TYPE, R.TAGT_NUMB, R.REPL_NUMB, R.USER_NUMB AS TARGET_USER_NUMB, ACTOR.USER_NICK
+          FROM TB_REPLXX R JOIN TM_USERXM ACTOR ON ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive}
+         WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}
+           <include refid="targetAccessExists" />
+    </select>
+    <insert id="setReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindList" />
+        INSERT IGNORE INTO TB_LIKEXX (USER_NUMB, TAGT_TYPE, TAGT_NUMB, REGI_DATE)
+        SELECT #{userNumb}, #{likeTargetReply}, #{replNumb}, CURRENT_TIMESTAMP FROM DUAL
+         WHERE EXISTS (SELECT 1 FROM TB_REPLXX R WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb}
+                AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}) <include refid="targetAccessExists" />
+    </insert>
+    <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        DELETE FROM TB_LIKEXX WHERE USER_NUMB = #{userNumb} AND TAGT_TYPE = 'REPLY' AND TAGT_NUMB = #{replNumb}
+    </delete>
+    <select id="getReplyLikeDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindList" />
+        SELECT #{tagtType} AS TAGT_TYPE, #{tagtNumb} AS TAGT_NUMB, #{replNumb} AS REPL_NUMB
+             , COUNT(U.USER_NUMB) AS LIKE_CNT, IF(MAX(IF(L.USER_NUMB = #{userNumb}, 1, 0)) = 1, #{commYes}, #{commNo}) AS LIKE_YSNO
+          FROM TB_LIKEXX L JOIN TM_USERXM U ON U.USER_NUMB = L.USER_NUMB AND U.USER_STAT = #{userStatActive}
+         WHERE L.TAGT_TYPE = #{likeTargetReply} AND L.TAGT_NUMB = #{replNumb}
+    </select>
+    <!-- 댓글 대상 소유자와 대상별 알림 템플릿 및 상세 번호를 조회한다. -->
+    <select id="getReplyReportAlimDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindList" />
+        SELECT CASE WHEN #{tagtType} = #{targetReport} THEN R.USER_NUMB ELSE U.USER_NUMB END AS TARGET_USER_NUMB
+             , CASE WHEN #{tagtType} = #{targetReport} THEN R.RPAL_YSNO ELSE #{commYes} END AS REPLY_ALIM_YSNO
+             , CASE WHEN #{tagtType} = #{targetProfile} THEN #{alimReplyProfile}
+                    WHEN #{tagtType} = #{targetBackground} THEN #{alimReplyBackground} ELSE #{alimReplyReport} END AS ALIM_TEMP_CODE
+             , R.REPT_NUMB AS ALIM_TAGT_NUMB
+          FROM (SELECT 1 AS DUMMY) D
+     LEFT JOIN TM_REPORT R ON #{tagtType} = #{targetReport} AND R.REPT_NUMB = #{tagtNumb}
+     LEFT JOIN TM_USERXM U ON (#{tagtType} = #{targetProfile} AND U.PROF_NUMB = #{tagtNumb})
+                          OR (#{tagtType} = #{targetBackground} AND U.BGIM_NUMB = #{tagtNumb})
     </select>
 </mapper>

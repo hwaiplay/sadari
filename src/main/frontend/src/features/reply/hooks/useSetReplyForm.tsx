@@ -18,10 +18,9 @@ import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { setReplyApi, uptReplyApi } from "@/features/reply/api/replyApi";
 import { REPLY_LIST_QUERY_KEY } from "@/features/reply/hooks/useReplyList";
+import type { ReplyTarget } from "@/features/reply/types/reply.types";
 
-type UseSetReplyFormProps = {
-  reptNumb: number;
-};
+type UseSetReplyFormProps = ReplyTarget;
 
 /**
  * 댓글 입력 상태를 관리하고 검증된 댓글을 등록하거나 수정한다
@@ -31,7 +30,8 @@ type UseSetReplyFormProps = {
  * @return 댓글 입력값과 등록 폼 처리 상태
  */
 export const useSetReplyForm = ({
-  reptNumb,
+  tagtType,
+  tagtNumb,
 }: UseSetReplyFormProps) => {
   const queryClient = useQueryClient();
   const [commentInput, setCommentInput] = useState("");
@@ -67,7 +67,7 @@ export const useSetReplyForm = ({
       resetReplyForm();
       // 등록한 댓글이 현재 바텀시트 목록에 표시되도록 댓글 Query를 갱신한다
       void queryClient.invalidateQueries({
-        queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
+        queryKey: [REPLY_LIST_QUERY_KEY, tagtType, tagtNumb],
       });
       // 공개 독후감 카드의 댓글 수가 서버 값으로 갱신되도록 목록 Query를 갱신한다
       void queryClient.invalidateQueries({
@@ -104,7 +104,7 @@ export const useSetReplyForm = ({
       resetReplyForm();
       // 수정한 댓글 내용과 수정 일시가 현재 바텀시트에 표시되도록 댓글 Query를 갱신한다
       void queryClient.invalidateQueries({
-        queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
+        queryKey: [REPLY_LIST_QUERY_KEY, tagtType, tagtNumb],
       });
     },
     /**
@@ -222,7 +222,8 @@ export const useSetReplyForm = ({
     if (editingReplyNumb !== null && editingReplyVersion !== null) {
       // 작성 중인 댓글의 식별값과 변경할 내용을 수정 요청으로 전송한다
       uptReplyMutation.mutate({
-        reptNumb,
+        tagtType,
+        tagtNumb,
         replNumb: editingReplyNumb,
         replCntn: comment,
         editVersion: editingReplyVersion,
@@ -233,7 +234,8 @@ export const useSetReplyForm = ({
 
     // 인증 쿠키를 사용하는 댓글 등록 API에 독후감 번호와 정규화된 내용을 전달한다
     setReplyMutation.mutate({
-      reptNumb,
+      tagtType,
+      tagtNumb,
       replCntn: comment,
       uperNumb: uperNumb ?? undefined,
     });

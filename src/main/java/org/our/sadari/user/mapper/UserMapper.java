@@ -33,6 +33,15 @@ public interface UserMapper {
     UserDto getUserByNumb(Long userNumb);
 
     /**
+     * 마이페이지에 표시할 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param request 사진 소유자와 대상 유형 및 파일 번호
+     * @return 현재 사진의 좋아요와 댓글 집계
+     */
+    UserDto.ImageReactionDto getMyImageReactionDtl(UserDto.ImageReactionDto request);
+
+    /**
      * 프로필 이미지 교체 중 동시 수정이 발생하지 않도록 사용자 파일 번호를 잠금 조회한다.
      *
      * @author SeungHyeon.Kang
