@@ -51,10 +51,11 @@ export const candidateCard = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: 22,
   background: vars.color.background,
+  transition: "background 160ms ease",
   selectors: {
     "&:hover": {background: vars.color.gray100},
-    '&[data-selected="true"]': {background: "#eef8f2", boxShadow: "0 0 0 1px #34704d"},
-    "&:focus-visible": {outline: "2px solid #78b991", outlineOffset: 2},
+    '&[data-selected="true"]': {background: vars.color.brandBg, boxShadow: "0 0 0 1px #34704d"},
+    "&:focus-visible": {outline: `1px solid ${vars.color.brandText}`, outlineOffset: 2},
   },
 });
 
@@ -73,8 +74,11 @@ export const candidateSelect = style({
 });
 
 export const cover = style({width: 76, height: 112, borderRadius: 6, objectFit: "cover"});
+
 export const bookInformation = style({display: "flex", minWidth: 0, flexDirection: "column", gap: 4});
+
 export const recommender = style({color: vars.color.gray600, fontSize: 12});
+
 export const bookTitle = style({
   overflow: "hidden",
   fontFamily: vars.font.semibold,
@@ -82,7 +86,9 @@ export const bookTitle = style({
   textOverflow: "ellipsis",
   whiteSpace: "nowrap"
 });
+
 export const author = style({color: vars.color.gray600, fontSize: 14});
+
 export const radioIndicator = style({
   width: 22,
   height: 22,
@@ -91,18 +97,12 @@ export const radioIndicator = style({
   borderRadius: "50%",
   selectors: {'[data-selected="true"] &': {border: "7px solid #8edcba"}}
 });
-export const deleteButton = style({
+
+export const cancelRecommendationButton = style({
   position: "absolute",
-  top: 8,
-  right: 12,
-  padding: "4px 8px",
-  border: 0,
-  borderRadius: 6,
-  background: "transparent",
-  color: vars.color.gray600,
-  fontSize: 12,
-  cursor: "pointer",
-  selectors: {"&:hover": {background: vars.color.gray100, color: vars.color.gray900}}
+  right: 14,
+  bottom: 12,
+  zIndex: 1,
 });
 
 export const emptyState = style({
