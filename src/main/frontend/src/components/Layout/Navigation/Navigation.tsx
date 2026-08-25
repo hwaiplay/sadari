@@ -52,7 +52,7 @@ function Navigation({ isMain }: NavigationProps) {
     || pathname.startsWith(`${BOTTOM_NAV_PATH.timer}/`);
   const isMyPageActive = pathname === "/mypage" || pathname.startsWith("/mypage/");
   const isClubPageActive = pathname === BOTTOM_NAV_PATH.club
-    || pathname.startsWith(`${BOTTOM_NAV_PATH.club}/`);
+    || pathname.startsWith(`/reading-clubs`);
 
   /**
    * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신한다
@@ -139,7 +139,7 @@ function Navigation({ isMain }: NavigationProps) {
           {/* 모임 */}
           <Link
             className={clsx(styles.navLink, isClubPageActive && styles.navLinkActive)}
-            to={BOTTOM_NAV_PATH.myPage}
+            to={BOTTOM_NAV_PATH.club}
             aria-label={message("frontend.common.club")}
             aria-current={isClubPageActive ? "page" : undefined}
           >
