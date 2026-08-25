@@ -126,6 +126,11 @@ const ClubBookVotePage = () => {
       await runBlockingOperation(async () => {
         await updateClubBookVoteApi(clubNumb, selectedCandidate.recmNumb);
         await loadCandidates();
+      }, {
+        success: {
+          // "투표가 완료되었습니다."
+          title: message("frontend.readingClub.vote.success"),
+        },
       });
     } catch (error) {
       await sweetError(message("frontend.alert.errorTitle"), getApiErrorMessage(error, message("frontend.common.error")));
