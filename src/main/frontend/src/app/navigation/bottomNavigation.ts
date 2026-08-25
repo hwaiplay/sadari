@@ -4,4 +4,5 @@ export const BOTTOM_NAV_PATH = {
   feed: "/feed",
   timer: "/timer",
   myPage: "/mypage/profile",
+  club: "/reading-clubs/mine",
 } as const;

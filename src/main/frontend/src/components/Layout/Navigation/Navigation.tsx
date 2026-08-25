@@ -18,17 +18,22 @@ type NavigationProps = {
 };
 
 /**
- * Navigation 화면 또는 컴포넌트를 구성한다
- *
- * @author HanWon.Jang
- * @param props props 입력값
- * @return 구성된 화면 요소
+ * fileName       : Navigation
+ * author         : Hanwon.Jang
+ * date           : 2026-08-26
+ * description    : 하단 네비게이션 메뉴
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-26        Hanwon.Jang    주석 추가
+ * 2026-08-26        Hanwon.Jang    모임 추가
  */
+
 function Navigation({ isMain }: NavigationProps) {
 
-  // 공통 Query Key로 헤더와 프로필 화면의 사용자 조회를 재사용한다
+  // 헤더와 프로필 화면의 사용자 조회
   const myProfileQuery = useMyProfileQuery();
-  // 타이머 페이지와 같은 요약 요청 및 캐시를 재사용한다
+  // 타이머 페이지와 같은 요약 요청 및 캐시
   const timerSummaryQuery = useTimerSummaryQuery();
   const refetchTimerSummary = timerSummaryQuery.refetch;
   const profile = myProfileQuery.data ?? null;
@@ -36,6 +41,8 @@ function Navigation({ isMain }: NavigationProps) {
   const isTimerRunning = timerRunningOverride
     ?? (timerSummaryQuery.data?.activeTimer?.tmrxStat === "RUNNING");
   const { pathname } = useLocation();
+
+  // 현재 페이지에 대한 active 표시
   const isHomeActive = pathname === BOTTOM_NAV_PATH.home;
   const isFeedActive =
     pathname === BOTTOM_NAV_PATH.feed
@@ -44,6 +51,8 @@ function Navigation({ isMain }: NavigationProps) {
     pathname === BOTTOM_NAV_PATH.timer
     || pathname.startsWith(`${BOTTOM_NAV_PATH.timer}/`);
   const isMyPageActive = pathname === "/mypage" || pathname.startsWith("/mypage/");
+  const isClubPageActive = pathname === BOTTOM_NAV_PATH.club
+    || pathname.startsWith(`${BOTTOM_NAV_PATH.club}/`);
 
   /**
    * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신한다
@@ -125,6 +134,24 @@ function Navigation({ isMain }: NavigationProps) {
               <path d="M12.25 23.065V18.3517C12.25 16.4967 11.5033 15.75 9.64835 15.75H4.93501C3.08001 15.75 2.33334 16.4967 2.33334 18.3517V23.065C2.33334 24.92 3.08001 25.6667 4.93501 25.6667H9.64835C11.5033 25.6667 12.25 24.92 12.25 23.065Z" fill="#C1C1C1"/>
             </svg>
             <p className={styles.navLinkText}>{message("frontend.common.feed")}</p>
+          </Link>
+
+          {/* 모임 */}
+          <Link
+            className={clsx(styles.navLink, isClubPageActive && styles.navLinkActive)}
+            to={BOTTOM_NAV_PATH.myPage}
+            aria-label={message("frontend.common.club")}
+            aria-current={isClubPageActive ? "page" : undefined}
+          >
+            <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <path d="M20.4517 9.06492C20.37 9.05325 20.2884 9.05325 20.2067 9.06492C18.3984 9.00659 16.9634 7.52492 16.9634 5.70492C16.9634 3.84992 18.4684 2.33325 20.335 2.33325C22.19 2.33325 23.7067 3.83825 23.7067 5.70492C23.695 7.52492 22.26 9.00659 20.4517 9.06492Z" fill="#C1C1C1"/>
+              <path d="M24.255 17.15C22.9484 18.025 21.1167 18.3516 19.425 18.13C19.8684 17.1733 20.1017 16.1117 20.1134 14.9916C20.1134 13.825 19.8567 12.7166 19.3667 11.7483C21.0934 11.515 22.925 11.8416 24.2434 12.7166C26.0867 13.93 26.0867 15.925 24.255 17.15Z" fill="#C1C1C1"/>
+              <path d="M7.51335 9.06492C7.59502 9.05325 7.67669 9.05325 7.75835 9.06492C9.56669 9.00659 11.0017 7.52492 11.0017 5.70492C11.0017 3.83825 9.49669 2.33325 7.63002 2.33325C5.77502 2.33325 4.27002 3.83825 4.27002 5.70492C4.27002 7.52492 5.70502 9.00659 7.51335 9.06492Z" fill="#C1C1C1"/>
+              <path d="M7.64156 14.9916C7.64156 16.1233 7.88656 17.1966 8.32989 18.165C6.68489 18.34 4.96989 17.99 3.70989 17.1616C1.86656 15.9366 1.86656 13.9416 3.70989 12.7166C4.95823 11.8766 6.71989 11.5383 8.37656 11.725C7.89823 12.705 7.64156 13.8133 7.64156 14.9916Z" fill="#C1C1C1"/>
+              <path d="M14.1401 18.515C14.0468 18.5033 13.9418 18.5033 13.8368 18.515C11.6901 18.445 9.9751 16.6833 9.9751 14.5133C9.98676 12.2967 11.7718 10.5 14.0001 10.5C16.2168 10.5 18.0134 12.2967 18.0134 14.5133C18.0018 16.6833 16.2984 18.445 14.1401 18.515Z" fill="#C1C1C1"/>
+              <path d="M10.3483 20.9301C8.58668 22.1084 8.58668 24.0451 10.3483 25.2117C12.355 26.5534 15.645 26.5534 17.6517 25.2117C19.4133 24.0334 19.4133 22.0967 17.6517 20.9301C15.6567 19.5884 12.3667 19.5884 10.3483 20.9301Z" fill="#C1C1C1"/>
+            </svg>
+            <p className={styles.navLinkText}>{message("frontend.common.club")}</p>
           </Link>
 
            {/* 타이머 */}
