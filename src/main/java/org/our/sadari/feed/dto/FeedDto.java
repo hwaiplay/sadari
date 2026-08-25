@@ -42,6 +42,9 @@ public class FeedDto {
     @Schema(description = "독후감 번호")
     private Long reptNumb;
 
+    @Schema(description = "독서 상태 코드", allowableValues = {"READ", "DONE", "STOP"})
+    private String reptStat;
+
     @Schema(description = "독서 상태명")
     private String reptStatName;
 

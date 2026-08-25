@@ -41,8 +41,8 @@ export const authorButton = style({
     "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 3, borderRadius: 8 },
   },
 });
-export const authorName = style({ margin: 0, fontFamily: vars.font.semibold, fontSize: "16px", color: vars.color.black });
-export const activity = style({ margin: "3px 0 0", fontFamily: vars.font.body, fontSize: "12px", color: vars.color.gray600 });
+export const authorName = style({ display: "block", margin: 0, fontFamily: vars.font.semibold, fontSize: "16px", color: vars.color.black });
+export const activity = style({ display: "block", margin: "3px 0 0", fontFamily: vars.font.body, fontSize: "12px", color: vars.color.gray600 });
 
 export const mediaButton = style({
   display: "grid",
@@ -63,15 +63,7 @@ export const mediaButton = style({
 export const reportMediaButton = style([
   mediaButton,
   {
-    gridTemplateColumns: "clamp(104px, 28vw, 144px) minmax(0, 1fr)",
-    alignItems: "center",
-  },
-]);
-
-export const profileMediaButton = style([
-  mediaButton,
-  {
-    gridTemplateColumns: "clamp(132px, 36vw, 180px) minmax(0, 1fr)",
+    gridTemplateColumns: "50px minmax(0, 1fr)",
     alignItems: "center",
   },
 ]);
@@ -86,18 +78,37 @@ export const backgroundMediaButton = style([
 
 export const media = style({
   display: "block",
-  width: "100%",
   background: vars.color.gray100,
   objectFit: "cover",
 });
-export const reportMedia = style([media, { aspectRatio: "2 / 3", borderRadius: "12px" }]);
-export const profileMedia = style([media, { aspectRatio: "1", maxWidth: "180px", borderRadius: "50%" }]);
-export const backgroundMedia = style([media, { aspectRatio: "16 / 9", borderRadius: "12px" }]);
-export const mediaInfo = style({ minWidth: 0, alignSelf: "center" });
-export const title = style({ margin: 0, fontFamily: vars.font.heading, fontSize: "18px", lineHeight: 1.4, color: vars.color.black, overflowWrap: "anywhere" });
-export const metadata = style({ margin: "8px 0 0", fontFamily: vars.font.body, fontSize: "14px", lineHeight: 1.4, color: vars.color.gray600 });
-export const rating = style({ margin: "12px 0 0", color: "#e0a600", fontFamily: vars.font.semibold, fontSize: "14px" });
-export const content = style({ margin: "0 16px 16px", fontFamily: vars.font.body, fontSize: "16px", lineHeight: 1.55, color: vars.color.gray700, whiteSpace: "pre-wrap", overflowWrap: "anywhere" });
+export const reportMedia = style([media, { width: "50px", height: "74px", borderRadius: "4px" }]);
+export const backgroundMedia = style([media, { width: "100%", aspectRatio: "16 / 9", borderRadius: "12px" }]);
+export const mediaInfo = style({ display: "block", minWidth: 0, alignSelf: "center" });
+export const title = style({ display: "block", margin: 0, fontFamily: vars.font.heading, fontSize: "18px", lineHeight: 1.4, color: vars.color.black, overflowWrap: "anywhere" });
+export const reportMetadata = style({ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px", marginTop: "8px" });
+export const metadata = style({ display: "block", minWidth: 0, fontFamily: vars.font.body, fontSize: "14px", lineHeight: 1.4, color: vars.color.gray600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
+export const rating = style({ display: "block", margin: "10px 0 0", color: "#e0a600", fontFamily: vars.font.semibold, fontSize: "14px" });
+
+export const contentSection = style({
+  padding: "0 16px 12px",
+});
+
+export const expandButton = style({
+  width: "28px",
+  height: "24px",
+  margin: "5px auto 0",
+  padding: 0,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  border: 0,
+  background: "transparent",
+  cursor: "pointer",
+  selectors: {
+    "&:hover": { background: vars.color.gray100 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 1, borderRadius: "6px" },
+  },
+});
 
 export const actions = style({
   width: "100%",

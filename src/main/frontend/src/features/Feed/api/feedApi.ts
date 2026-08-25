@@ -11,6 +11,7 @@ export type FeedItem = {
   porfPath?: string;
   activityDate: string;
   reptNumb?: number;
+  reptStat?: "READ" | "DONE" | "STOP";
   reptStatName?: string;
   reptGrde?: string;
   reptCntn?: string;
