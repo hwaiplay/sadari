@@ -339,28 +339,12 @@ export const metricButton = style({
   },
 });
 
-export const metricIcon = style({
-  width: "16px",
-  height: "16px",
-  flexShrink: 0,
-});
-
 export const commentButton = style([
   metricButton,
   {
     color: "#777777",
   },
 ]);
-
-export const commentIcon = style({
-  width: "16px",
-  height: "16px",
-  flexShrink: 0,
-  fill: "none",
-  stroke: "currentColor",
-  strokeWidth: 1.5,
-  strokeLinejoin: "round",
-});
 
 export const empty = style({
   margin: "48px 0",

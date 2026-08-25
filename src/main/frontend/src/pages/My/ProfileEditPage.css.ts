@@ -225,8 +225,8 @@ export const socialProfileHeaderRow = style([
 
 export const avatarWrap = style({
   position: "relative",
-  width: "112px",
-  height: "112px",
+  width: "100px",
+  height: "100px",
   margin: 0,
 });
 
@@ -239,6 +239,41 @@ export const profileImage = style({
   backgroundColor: "#ffffff",
   boxShadow: "0 10px 24px rgba(0, 0, 0, 0.16)",
 });
+
+export const metricButton = style({
+  minWidth: "28px",
+  height: "24px",
+  padding: 0,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "2px",
+  backgroundColor: "transparent",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": {
+      cursor: "default",
+      opacity: 0.5,
+    },
+  },
+});
+
+export const metricIcon = style({
+  width: "14px",
+  height: "14px",
+  flexShrink: 0,
+});
+
+export const commentButton = style([
+  metricButton,
+  {
+    color: "#777777",
+  },
+]);
+
 
 // 소셜 프로필의 세로 점 더보기 버튼을 마이페이지 프로필 수정 버튼과 같은 위치와 명암으로 표시한다
 export const socialProfileMoreButton = style([
@@ -263,7 +298,6 @@ const imageReactionBar = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "rgba(255, 255, 255, 0.94)",
-  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
 });
 
 export const backgroundImageReactionBar = style([
@@ -281,8 +315,9 @@ export const profileImageReactionBar = style([
   imageReactionBar,
   {
     position: "absolute",
-    right: "-9px",
-    bottom: "18px",
+    left: "50%",
+    transform: "translateX(-50%)",
+    bottom: "-10px",
     minHeight: "26px",
     padding: "0 6px",
   },
@@ -378,28 +413,29 @@ export const profileIntro = style({
 
 export const socialFollowButton = style({
   position: "absolute",
-  right: "-9px",
-  bottom: "18px",
-  minWidth: "54px",
+  left: "50%",
+  transform: "translateX(-50%)",
+  bottom: "-10px",
   height: "26px",
-  padding: "0 8px",
+  minWidth: "54px",
+  padding: "0 12px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "12px",
-  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
+  whiteSpace: "nowrap",
   cursor: "pointer",
   selectors: {
     "&:hover:not(:disabled)": {
       backgroundColor: vars.color.gray100,
     },
     "&[data-follow-status='팔로잉']": {
-      color: "#2f9e44",
+      color: vars.color.brandText,
     },
     "&[data-follow-status='맞팔로우']": {
-      color: "#2f9e44",
+      color: vars.color.brandText,
     },
     "&[data-follow-status='친구']": {
       color: "#2563eb",
@@ -464,7 +500,7 @@ export const profileIntroInput = style({
 export const monthlySummary = style({
   position: "relative",
   width: "100%",
-  marginTop: "24px",
+  marginTop: "32px",
   padding: "20px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",

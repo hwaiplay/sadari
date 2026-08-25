@@ -13,7 +13,6 @@ import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageV
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
-import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
   getBookCoverImageSource,
@@ -462,7 +461,7 @@ function ProfileEditPage() {
   const renderImageReactions = (reaction: ImageReaction, className: string): ReactNode => (
     <div className={className}>
       <button
-        className={reportListStyles.metricButton}
+        className={styles.metricButton}
         type="button"
         aria-label={/* "좋아요" */ message("frontend.feed.likeAction")}
         aria-pressed={reaction.likeYsno === "Y"}
@@ -470,7 +469,7 @@ function ProfileEditPage() {
         onClick={() => void handleImageLike(reaction)}
       >
         <img
-          className={reportListStyles.metricIcon}
+          className={styles.metricIcon}
           src={reaction.likeYsno === "Y"
             ? "/img/icons/icon-heart-fill.svg"
             : "/img/icons/icon-heart.svg"}
@@ -479,13 +478,13 @@ function ProfileEditPage() {
         {reaction.likeCnt}
       </button>
       <button
-        className={reportListStyles.commentButton}
+        className={styles.commentButton}
         type="button"
         aria-label={/* "댓글 보기" */ message("frontend.book.publicReports.viewComments")}
         onClick={() => setReplyTarget(reaction)}
       >
         <img
-          className={reportListStyles.metricIcon}
+          className={styles.metricIcon}
           src="/img/icons/icon-comment.svg"
           alt=""
         />
