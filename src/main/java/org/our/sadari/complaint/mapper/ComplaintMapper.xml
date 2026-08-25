@@ -109,15 +109,19 @@
                C.USER_NUMB AS TAGT_USER
              , COALESCE(C.REPL_CNTN, '') AS TAGT_CNTN
           FROM TB_REPLXX C
-          JOIN TM_REPORT R
-            ON R.REPT_NUMB = C.REPT_NUMB
-           AND R.PUBC_YSNO = #{commYes}
+     LEFT JOIN TM_REPORT R
+            ON C.TAGT_TYPE = 'REPORT'
+           AND R.REPT_NUMB = C.TAGT_NUMB
+     LEFT JOIN TM_USERXM O
+            ON (C.TAGT_TYPE = 'PROFILE_IMAGE' AND O.PROF_NUMB = C.TAGT_NUMB)
+            OR (C.TAGT_TYPE = 'BACKGROUND_IMAGE' AND O.BGIM_NUMB = C.TAGT_NUMB)
           JOIN TM_USERXM U
             ON U.USER_NUMB = C.USER_NUMB
            AND U.USER_STAT = #{userStatActive}
          WHERE C.REPL_NUMB = #{tagtNumb}
            AND C.USER_NUMB != #{userNumb}
            AND COALESCE(C.DELT_YSNO, #{commNo}) = #{commNo}
+           AND ((C.TAGT_TYPE = 'REPORT' AND R.PUBC_YSNO = #{commYes}) OR O.USER_NUMB IS NOT NULL)
            FOR UPDATE
     </select>
 

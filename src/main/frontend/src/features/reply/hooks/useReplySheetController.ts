@@ -1,15 +1,15 @@
-import type { PublicReportType } from "@/features/Book/types/book.type";
 import { useDelReply } from "@/features/reply/hooks/useDelReply";
 import { useReplyList } from "@/features/reply/hooks/useReplyList";
 import { useReplyLike } from "@/features/reply/hooks/useReplyLike";
 import { useReplySheet } from "@/features/reply/hooks/useReplySheet";
 import { useSetReplyForm } from "@/features/reply/hooks/useSetReplyForm";
 import type { ReplyDtoType } from "@/features/reply/types/reply.types";
+import type { ReplyTarget } from "@/features/reply/types/reply.types";
 import type { FocusEvent, KeyboardEvent } from "react";
 import { useMemo, useRef, useState } from "react";
 
 type UseReplySheetControllerProps = {
-  report: Pick<PublicReportType, "reptNumb">;
+  target: ReplyTarget;
   onClose: () => void;
 };
 
@@ -166,14 +166,14 @@ const createReplyCollection = (
  * @return 댓글 바텀시트 화면이 사용할 상태와 이벤트 처리 함수
  */
 export const useReplySheetController = ({
-  report,
+  target,
   onClose,
 }: UseReplySheetControllerProps) => {
   // 댓글 바텀시트의 닫기와 드래그 상호작용 속성을 조회한다
   const sheetInteraction = useReplySheet({ onClose });
   // 댓글 등록 API와 연결된 입력 상태와 제출 이벤트를 조회한다
   const replyForm = useSetReplyForm({
-    reptNumb: report.reptNumb,
+    ...target,
   });
 
   /**
@@ -193,11 +193,11 @@ export const useReplySheetController = ({
 
   // 본인 댓글 삭제 확인과 API 요청 상태를 조회한다
   const deleteReply = useDelReply({
-    reptNumb: report.reptNumb,
+    ...target,
     onDeleted: handleReplyDeleted,
   });
   // 댓글 좋아요 등록과 취소 API 및 목록 캐시 갱신 상태를 조회한다
-  const replyLike = useReplyLike(report.reptNumb);
+  const replyLike = useReplyLike(target);
   const commentInputRef = useRef<HTMLInputElement>(null);
   const [expandedReplyMap, setExpandedReplyMap] = useState<
     Record<number, boolean>
@@ -206,7 +206,7 @@ export const useReplySheetController = ({
     number | null
   >(null);
   // 선택한 독후감의 댓글과 답글 목록을 서버 캐시에서 조회한다
-  const replyListQuery = useReplyList(report.reptNumb);
+  const replyListQuery = useReplyList(target);
   // 서버 페이지가 바뀔 때만 부모 댓글과 연결 답글을 정렬 순서대로 연결한다
   const replies = useMemo(
     () => replyListQuery.data?.pages.flatMap((page) => page.data.list) ?? [],

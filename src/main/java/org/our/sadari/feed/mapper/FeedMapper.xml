@@ -1,0 +1,187 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.feed.mapper.FeedMapper">
+
+    <sql id="bindList">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="targetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+    </sql>
+
+    <!-- 현재 팔로우 중인 활성 사용자의 공개 독후감과 현재 사진 변경 활동을 최신순으로 조회한다. -->
+    <select id="getFeedList" parameterType="org.our.sadari.feed.dto.FeedDto" resultType="org.our.sadari.feed.dto.FeedDto">
+        <include refid="bindList" />
+        WITH FEED_BASE AS (
+            SELECT #{targetReport} AS TAGT_TYPE
+                 , R.REPT_NUMB AS TAGT_NUMB
+                 , U.USER_NUMB
+                 , U.USER_NICK
+                 , PF.FILE_PATH AS PORF_PATH
+                 , R.PUBC_DATE AS ACTIVITY_DATE
+                 , R.REPT_NUMB
+                 , FN_GET_CODE_NAME('READ_STAT', R.REPT_STAT, NULL) AS REPT_STAT_NAME
+                 , R.REPT_GRDE
+                 , R.REPT_CNTN
+                 , B.BOOK_NUMB
+                 , B.BOOK_TITL
+                 , B.BOOK_ATHR
+                 , B.BOOK_CVIM
+                 , CAST(NULL AS CHAR(2000)) AS CONTENT_IMAGE_PATH
+              FROM TB_FOLLOW F
+              JOIN TM_USERXM U
+                ON U.USER_NUMB = F.FLOW_NUMB
+               AND U.USER_STAT = #{userStatActive}
+              JOIN TM_REPORT R
+                ON R.USER_NUMB = U.USER_NUMB
+               AND R.PUBC_YSNO = #{commYes}
+               AND R.PUBC_DATE IS NOT NULL
+               AND R.REPT_STAT != #{reportStatRead}
+              JOIN TM_BKINFO B
+                ON B.BOOK_NUMB = R.BOOK_NUMB
+         LEFT JOIN TM_FILEXM PF
+                ON PF.FILE_NUMB = U.PROF_NUMB
+             WHERE F.USER_NUMB = #{loginUserNumb}
+            UNION ALL
+            SELECT #{targetProfile}
+                 , U.PROF_NUMB
+                 , U.USER_NUMB
+                 , U.USER_NICK
+                 , PF.FILE_PATH
+                 , U.PROF_DATE
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , PF.FILE_PATH
+              FROM TB_FOLLOW F
+              JOIN TM_USERXM U
+                ON U.USER_NUMB = F.FLOW_NUMB
+               AND U.USER_STAT = #{userStatActive}
+               AND U.PROF_NUMB IS NOT NULL
+               AND U.PROF_DATE IS NOT NULL
+              JOIN TM_FILEXM PF
+                ON PF.FILE_NUMB = U.PROF_NUMB
+             WHERE F.USER_NUMB = #{loginUserNumb}
+            UNION ALL
+            SELECT #{targetBackground}
+                 , U.BGIM_NUMB
+                 , U.USER_NUMB
+                 , U.USER_NICK
+                 , PF.FILE_PATH
+                 , U.BGIM_DATE
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , NULL
+                 , BF.FILE_PATH
+              FROM TB_FOLLOW F
+              JOIN TM_USERXM U
+                ON U.USER_NUMB = F.FLOW_NUMB
+               AND U.USER_STAT = #{userStatActive}
+               AND U.BGIM_NUMB IS NOT NULL
+               AND U.BGIM_DATE IS NOT NULL
+              JOIN TM_FILEXM BF
+                ON BF.FILE_NUMB = U.BGIM_NUMB
+         LEFT JOIN TM_FILEXM PF
+                ON PF.FILE_NUMB = U.PROF_NUMB
+             WHERE F.USER_NUMB = #{loginUserNumb}
+        ), LIKE_COUNT AS (
+            SELECT L.TAGT_TYPE
+                 , L.TAGT_NUMB
+                 , COUNT(*) AS LIKE_CNT
+              FROM TB_LIKEXX L
+              JOIN TM_USERXM U
+                ON U.USER_NUMB = L.USER_NUMB
+               AND U.USER_STAT = #{userStatActive}
+             WHERE L.TAGT_TYPE IN (#{targetReport}, #{targetProfile}, #{targetBackground})
+          GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
+        ), REPLY_COUNT AS (
+            SELECT R.TAGT_TYPE
+                 , R.TAGT_NUMB
+                 , COUNT(*) AS REPL_CNT
+              FROM TB_REPLXX R
+             WHERE R.DELT_YSNO = #{commNo}
+          GROUP BY R.TAGT_TYPE, R.TAGT_NUMB
+        )
+        SELECT /* getFeedList */
+               FB.*
+             , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , CASE WHEN UL.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS LIKE_YSNO
+             , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT
+          FROM FEED_BASE FB
+     LEFT JOIN LIKE_COUNT LC
+            ON LC.TAGT_TYPE = FB.TAGT_TYPE
+           AND LC.TAGT_NUMB = FB.TAGT_NUMB
+     LEFT JOIN REPLY_COUNT RC
+            ON RC.TAGT_TYPE = FB.TAGT_TYPE
+           AND RC.TAGT_NUMB = FB.TAGT_NUMB
+     LEFT JOIN TB_LIKEXX UL
+            ON UL.USER_NUMB = #{loginUserNumb}
+           AND UL.TAGT_TYPE = FB.TAGT_TYPE
+           AND UL.TAGT_NUMB = FB.TAGT_NUMB
+      ORDER BY FB.ACTIVITY_DATE DESC
+             , FB.TAGT_TYPE ASC
+             , FB.TAGT_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
+    </select>
+
+    <!-- 현재 사용자 사진 번호와 일치하는 활성 사용자 소유 좋아요 대상만 반환한다. -->
+    <select id="getImageLikeTarget" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
+        <include refid="bindList" />
+        SELECT /* getImageLikeTarget */
+               U.USER_NUMB AS TARGET_USER_NUMB
+             , #{commYes} AS LIKE_ALIM_YSNO
+          FROM TM_USERXM U
+          JOIN TM_USERXM ACTOR
+            ON ACTOR.USER_NUMB = #{userNumb}
+           AND ACTOR.USER_STAT = #{userStatActive}
+         WHERE U.USER_STAT = #{userStatActive}
+           AND (   (#{tagtType} = #{targetProfile} AND U.PROF_NUMB = #{tagtNumb})
+                OR (#{tagtType} = #{targetBackground} AND U.BGIM_NUMB = #{tagtNumb})
+               )
+    </select>
+
+    <delete id="delImageReplyLikes" parameterType="org.our.sadari.feed.dto.FeedDto">
+        <include refid="bindList" />
+        DELETE L
+          FROM TB_LIKEXX L
+          JOIN TB_REPLXX R
+            ON R.REPL_NUMB = L.TAGT_NUMB
+           AND R.TAGT_TYPE = #{tagtType}
+           AND R.TAGT_NUMB = #{tagtNumb}
+         WHERE L.TAGT_TYPE = #{targetReply}
+    </delete>
+
+    <delete id="delImageChildReplies" parameterType="org.our.sadari.feed.dto.FeedDto">
+        DELETE FROM TB_REPLXX
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+           AND UPER_NUMB IS NOT NULL
+    </delete>
+
+    <delete id="delImageParentReplies" parameterType="org.our.sadari.feed.dto.FeedDto">
+        DELETE FROM TB_REPLXX
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+           AND UPER_NUMB IS NULL
+    </delete>
+
+    <delete id="delImageLikes" parameterType="org.our.sadari.feed.dto.FeedDto">
+        DELETE FROM TB_LIKEXX
+         WHERE TAGT_TYPE = #{tagtType}
+           AND TAGT_NUMB = #{tagtNumb}
+    </delete>
+</mapper>

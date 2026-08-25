@@ -55,7 +55,8 @@ public class SocialDto {
         @Schema(description = "로그인 사용자 번호", example = "31", hidden = true)
         private Long userNumb;
 
-        @Schema(description = "좋아요 대상 유형", example = "REPORT", allowableValues = {"REPORT"})
+        @Schema(description = "좋아요 대상 유형", example = "REPORT",
+                allowableValues = {"REPORT", "PROFILE_IMAGE", "BACKGROUND_IMAGE"})
         private String tagtType;
 
         @Schema(description = "좋아요 대상 번호", example = "1")
@@ -72,6 +73,12 @@ public class SocialDto {
 
         @Schema(description = "좋아요 대상 독후감의 좋아요 알림 여부", example = "Y", allowableValues = {"Y", "N"}, hidden = true)
         private String likeAlimYsno;
+
+        @Schema(description = "좋아요 알림 템플릿 코드", hidden = true)
+        private String alimTempCode;
+
+        @Schema(description = "알림 이동 대상 번호", hidden = true)
+        private Long alimTagtNumb;
     }
 
     /**

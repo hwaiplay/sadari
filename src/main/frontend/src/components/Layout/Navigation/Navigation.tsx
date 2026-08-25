@@ -37,7 +37,7 @@ function Navigation({ isMain }: NavigationProps) {
     ?? (timerSummaryQuery.data?.activeTimer?.tmrxStat === "RUNNING");
   const { pathname } = useLocation();
   const isHomeActive = pathname === BOTTOM_NAV_PATH.home;
-  const isPeedActive =
+  const isFeedActive =
     pathname === BOTTOM_NAV_PATH.feed
     || pathname.startsWith(`${BOTTOM_NAV_PATH.feed}/`);
   const isTimerActive =
@@ -113,10 +113,10 @@ function Navigation({ isMain }: NavigationProps) {
 
           {/* 피드 */}
           <Link
-            className={clsx(styles.navLink, isPeedActive && styles.navLinkActive)}
+            className={clsx(styles.navLink, isFeedActive && styles.navLinkActive)}
             to={BOTTOM_NAV_PATH.feed}
-            aria-label={message("frontend.common.peed")}
-            aria-current={isPeedActive ? "page" : undefined}
+            aria-label={message("frontend.common.feed")}
+            aria-current={isFeedActive ? "page" : undefined}
           >
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M25.6667 9.94016V4.6435C25.6667 2.9985 24.92 2.3335 23.065 2.3335H18.3517C16.4967 2.3335 15.75 2.9985 15.75 4.6435V9.92849C15.75 11.5852 16.4967 12.2385 18.3517 12.2385H23.065C24.92 12.2502 25.6667 11.5852 25.6667 9.94016Z" fill="#C1C1C1"/>
@@ -124,7 +124,7 @@ function Navigation({ isMain }: NavigationProps) {
               <path d="M12.25 9.94016V4.6435C12.25 2.9985 11.5033 2.3335 9.64835 2.3335H4.93501C3.08001 2.3335 2.33334 2.9985 2.33334 4.6435V9.92849C2.33334 11.5852 3.08001 12.2385 4.93501 12.2385H9.64835C11.5033 12.2502 12.25 11.5852 12.25 9.94016Z" fill="#C1C1C1"/>
               <path d="M12.25 23.065V18.3517C12.25 16.4967 11.5033 15.75 9.64835 15.75H4.93501C3.08001 15.75 2.33334 16.4967 2.33334 18.3517V23.065C2.33334 24.92 3.08001 25.6667 4.93501 25.6667H9.64835C11.5033 25.6667 12.25 24.92 12.25 23.065Z" fill="#C1C1C1"/>
             </svg>
-            <p className={styles.navLinkText}>{message("frontend.common.peed")}</p>
+            <p className={styles.navLinkText}>{message("frontend.common.feed")}</p>
           </Link>
 
            {/* 타이머 */}

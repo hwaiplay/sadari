@@ -18,9 +18,9 @@ import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { delReplyApi } from "@/features/reply/api/replyApi";
 import { REPLY_LIST_QUERY_KEY } from "@/features/reply/hooks/useReplyList";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import type { ReplyTarget } from "@/features/reply/types/reply.types";
 
-type UseDelReplyProps = {
-  reptNumb: number;
+type UseDelReplyProps = ReplyTarget & {
   onDeleted?: (replNumb: number) => void;
 };
 
@@ -31,7 +31,7 @@ type UseDelReplyProps = {
  * @param props 삭제할 댓글이 속한 독후감 번호와 삭제 완료 처리 정보
  * @return 댓글 삭제 이벤트와 진행 중인 댓글 번호
  */
-export const useDelReply = ({ reptNumb, onDeleted }: UseDelReplyProps) => {
+export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps) => {
   const queryClient = useQueryClient();
   // 댓글 삭제 요청의 진행 상태와 요청 변수를 관리한다
   const delReplyMutation = useMutation({
@@ -74,13 +74,13 @@ export const useDelReply = ({ reptNumb, onDeleted }: UseDelReplyProps) => {
        */
       const deleteReplyAndRefresh = async (): Promise<void> => {
         // 로그인 사용자의 작성자 및 계정 상태를 검증하는 댓글 삭제 API를 호출한다
-        await delReplyMutation.mutateAsync({ reptNumb, replNumb });
+        await delReplyMutation.mutateAsync({ tagtType, tagtNumb, replNumb });
         // 삭제된 댓글을 참조하는 화면 입력 상태가 있으면 호출부에서 정리하도록 알린다
         onDeleted?.(replNumb);
         // 삭제 상태와 공개 독후감 댓글 수를 최신 서버 값으로 갱신한다
         await Promise.all([
           queryClient.invalidateQueries({
-            queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
+            queryKey: [REPLY_LIST_QUERY_KEY, tagtType, tagtNumb],
           }),
           queryClient.invalidateQueries({
             queryKey: ["publicReports"],

@@ -56,7 +56,7 @@ public interface AlimService {
 
     /**
      * 알림 수신자, 상황 코드, 템플릿 코드, 이동 대상 번호, 치환 Map을 받아 사용자 알림을 발송.
-     * 실제 링크는 TB_ALTEMP.LINK_URLX를 기준으로 조합하므로 호출부에서는 도메인 대상 번호만 넘긴다.
+     * 실제 링크는 알림 템플릿 링크를 기준으로 조합하므로 호출부에서는 상세 번호가 필요할 때만 대상 번호를 넘긴다.
      *
      * @author SeungHyeon.Kang
      * @param userNumb 알림을 받을 사용자 번호

@@ -10,6 +10,8 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.feed.dto.FeedDto;
+import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
@@ -56,6 +58,8 @@ public class UserServiceImpl implements UserService {
 
     // User 데이터 접근 객체
     private final UserMapper userMapper;
+    // Feed 데이터 접근 객체
+    private final FeedMapper feedMapper;
     // File 업무 처리 서비스
     private final FileService fileService;
     // BadWordDetection 업무 처리 서비스
@@ -88,7 +92,7 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        Map<String, String> profile = new HashMap<>();
+        Map<String, Object> profile = new HashMap<>();
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("userNick", user.getUserNick());
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
@@ -97,10 +101,45 @@ public class UserServiceImpl implements UserService {
         profile.put("bgimPath", user.getBgimPath());
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("intrCntn", user.getIntrCntn());
+        // 현재 프로필 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장한다
+        profile.put("profileImageReaction", getMyImageReaction(
+                userNumb, Constant.LIKE_TARGET_PROFILE_IMAGE, user.getProfNumb()));
+        // 현재 배경 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장한다
+        profile.put("backgroundImageReaction", getMyImageReaction(
+                userNumb, Constant.LIKE_TARGET_BACKGROUND_IMAGE, user.getBgimNumb()));
         // 첫 로그인 전용 화면의 재노출 여부를 판단할 완료 상태를 저장한다
         profile.put("onbdYsno", user.getOnbdYsno());
         // 로그인 사용자의 최신 프로필 정보를 조회한 결과를 성공 응답으로 반환한다
         return ResultData.success(profile);
+    }
+
+    /**
+     * 현재 사용자 사진이 존재할 때만 좋아요와 댓글 집계를 조회한다.
+     * 사용자 행이 현재 파일을 계속 참조하는지도 Mapper에서 다시 검증하여 교체된 사진 반응이 노출되지 않게 한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param tagtType 프로필 또는 배경 사진 대상 유형
+     * @param tagtNumb 현재 사진 파일 번호
+     * @return 현재 사진 반응 집계 또는 사진이 없을 때 null
+     */
+    private UserDto.ImageReactionDto getMyImageReaction(Long userNumb, String tagtType, Long tagtNumb) {
+        // 현재 사진이 없으면 반응 대상도 없으므로 조회하지 않는다
+        if (StringUtil.isEmpty(tagtNumb)) {
+            // 사진이 없는 상태를 화면에서 구분할 수 있도록 null을 반환한다
+            return null;
+        }
+
+        // 현재 사진 소유자와 대상 식별값을 Mapper 요청으로 구성한다
+        UserDto.ImageReactionDto request = new UserDto.ImageReactionDto();
+        // UserNumb 업무 값을 request DTO에 설정한다
+        request.setUserNumb(userNumb);
+        // TagtType 업무 값을 request DTO에 설정한다
+        request.setTagtType(tagtType);
+        // TagtNumb 업무 값을 request DTO에 설정한다
+        request.setTagtNumb(tagtNumb);
+        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환한다
+        return userMapper.getMyImageReactionDtl(request);
     }
 
     /**
@@ -256,6 +295,8 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
+        // 회원이 직접 업로드한 사진만 변경 활동 시각을 기록한다
+        userDto.setImageFeedYsno(Constant.COMM_YES);
         // UserProfile 데이터를 DB에서 수정한다
         int updateCnt = userMapper.uptUserProfile(userDto);
 
@@ -270,6 +311,8 @@ public class UserServiceImpl implements UserService {
         // 새 프로필 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리한다
         if (!StringUtil.isEmpty(userDto.getProfNumb()) && !StringUtil.isEmpty(currentUser.getProfNumb())
                 && !userDto.getProfNumb().equals(currentUser.getProfNumb())) {
+            // 교체로 사라지는 이전 프로필 사진의 좋아요와 댓글을 함께 정리한다
+            deleteImageReactions(Constant.LIKE_TARGET_PROFILE_IMAGE, currentUser.getProfNumb());
             // DB 커밋 이후에만 이전 프로필 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록한다
             fileService.delFile(currentUser.getProfNumb());
         }
@@ -277,6 +320,8 @@ public class UserServiceImpl implements UserService {
         // 새 배경 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리한다
         if (!StringUtil.isEmpty(userDto.getBgimNumb()) && !StringUtil.isEmpty(currentUser.getBgimNumb())
                 && !userDto.getBgimNumb().equals(currentUser.getBgimNumb())) {
+            // 교체로 사라지는 이전 배경 사진의 좋아요와 댓글을 함께 정리한다
+            deleteImageReactions(Constant.LIKE_TARGET_BACKGROUND_IMAGE, currentUser.getBgimNumb());
             // DB 커밋 이후에만 이전 배경 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록한다
             fileService.delFile(currentUser.getBgimNumb());
         }
@@ -288,6 +333,17 @@ public class UserServiceImpl implements UserService {
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
         // 로그인 사용자의 프로필 정보를 수정한 결과를 반환한다
         return getMe(userNumb);
+    }
+
+    /** 교체되는 사진에 연결된 좋아요와 댓글 및 댓글 좋아요를 참조 순서에 맞춰 삭제한다. */
+    private void deleteImageReactions(String targetType, Long targetNumb) {
+        FeedDto request = new FeedDto();
+        request.setTagtType(targetType);
+        request.setTagtNumb(targetNumb);
+        feedMapper.delImageReplyLikes(request);
+        feedMapper.delImageChildReplies(request);
+        feedMapper.delImageParentReplies(request);
+        feedMapper.delImageLikes(request);
     }
 
     /**

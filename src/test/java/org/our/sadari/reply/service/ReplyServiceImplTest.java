@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
@@ -41,6 +42,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-04        HanWon.Jang        댓글 및 대댓글 좋아요 알림 검증 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·좋아요 상황 통합 검증
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 닉네임 DB 조회 검증
+ * 2026-08-25        HanWon.Jang        사진 댓글 링크 기준 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -119,7 +121,7 @@ class ReplyServiceImplTest {
         // 독후감 댓글 알림을 켠 상태로 설정한다
         reportAlim.setReplyAlimYsno(Constant.COMM_YES);
         // 댓글 알림 수신자와 설정 조회 결과를 구성한다
-        when(replyMapper.getReplyReportAlimDtl(157L)).thenReturn(reportAlim);
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
         // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
         when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
         // 알림 저장이 정상 처리되는 조건을 구성한다
@@ -157,12 +159,66 @@ class ReplyServiceImplTest {
     }
 
     /**
+     * 프로필 사진 댓글 알림이 템플릿의 완성 링크를 사용하도록 상세 번호 없이 발송되는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setImageReplyUsesLink() {
+
+        // 등록할 프로필 사진 댓글 요청을 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 댓글 대상 유형을 프로필 사진으로 설정한다
+        replyDto.setTagtType(Constant.LIKE_TARGET_PROFILE_IMAGE);
+        // 댓글 대상 프로필 파일 번호를 설정한다
+        replyDto.setTagtNumb(157L);
+        // 생성될 댓글 번호를 요청에 설정한다
+        replyDto.setReplNumb(8L);
+        // 댓글 내용을 요청에 설정한다
+        replyDto.setReplCntn("새 프로필 사진이 멋져요.");
+
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        when(badWordDetectionService.findBadWord("새 프로필 사진이 멋져요."))
+                .thenReturn(Optional.empty());
+        // 사진 댓글 한 건이 저장되는 조건을 구성한다
+        when(replyMapper.setReply(replyDto)).thenReturn(1);
+        // 프로필 사진 소유자와 알림 템플릿 정보를 생성한다
+        ReplyDto imageAlim = new ReplyDto();
+        // 알림 수신자인 사진 소유자 번호를 설정한다
+        imageAlim.setTargetUserNumb(31L);
+        // 사진 댓글 알림을 발송할 수 있도록 알림 상태를 설정한다
+        imageAlim.setReplyAlimYsno(Constant.COMM_YES);
+        // 프로필 사진 댓글 템플릿 코드를 설정한다
+        imageAlim.setAlimTempCode(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE);
+        // Mapper가 반환한 대상 번호도 사진 알림 링크에는 사용하지 않는지 확인하도록 값을 설정한다
+        imageAlim.setAlimTagtNumb(31L);
+        // 사진 댓글 알림 수신자 조회 결과를 구성한다
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(imageAlim);
+        // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
+        when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
+
+        // 현재 프로필 사진에 댓글을 등록한다
+        ResultData result = replyService.setReply(44L, replyDto);
+
+        // 프로필 사진 댓글 등록 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 사진 알림은 대상 번호를 덧붙이지 않고 템플릿의 완성 링크만 사용하도록 발송하는지 확인한다
+        verify(alimService).sendAlim(
+                eq(31L)
+              , eq(Constant.ALIM_SITU_REPLY)
+              , eq(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE)
+              , isNull()
+              , any()
+        );
+    }
+
+    /**
      * 독후감 작성자가 댓글 알림을 끈 경우 댓글은 저장하고 알림은 생성하지 않는지 검증한다.
      *
      * @author SeungHyeon.Kang
      */
     @Test
-    void setReplySkipsAlimWhenDisabled() {
+    void setReplySkipsDisabledAlim() {
         // 등록할 댓글 요청을 생성한다
         ReplyDto replyDto = new ReplyDto();
         // 독후감 번호를 댓글 요청에 설정한다
@@ -184,7 +240,7 @@ class ReplyServiceImplTest {
         // 독후감 댓글 알림을 끈 상태로 설정한다
         reportAlim.setReplyAlimYsno(Constant.COMM_NO);
         // 댓글 알림 수신자와 설정 조회 결과를 구성한다
-        when(replyMapper.getReplyReportAlimDtl(157L)).thenReturn(reportAlim);
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
 
         // 댓글 알림을 끈 독후감에 댓글을 등록한다
         ResultData result = replyService.setReply(44L, replyDto);

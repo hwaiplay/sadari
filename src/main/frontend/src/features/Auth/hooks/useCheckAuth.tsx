@@ -3,19 +3,7 @@
  *
  * @author HanWon.Jang
  */
-import { useEffect, useState } from "react";
 import { useAuthQuery } from "./useAuthQuery";
-import { refreshTokenApi } from "../api/authApi";
-import { ResultDataError } from "@/app/api/resultData";
-
-const AUTH_FAIL_CODE = 1001;
-const TOKEN_INVALID_CODE = 1002;
-const TOKEN_EXPIRED_CODE = 1003;
-const REFRESHABLE_AUTH_CODES = new Set([
-  AUTH_FAIL_CODE,
-  TOKEN_INVALID_CODE,
-  TOKEN_EXPIRED_CODE,
-]);
 const DELETE_PENDING_STATUS = "DELETE_PENDING";
 const SUSPENDED_STATUS = "SUSPENDED";
 const ONBOARDING_COMPLETED = "Y";
@@ -28,47 +16,12 @@ const ONBOARDING_COMPLETED = "Y";
  */
 export const useCheckAuth = () => {
 
-  const { data, error, isLoading, isError, refetch } = useAuthQuery();
-  const [refreshing, setRefreshing] = useState(false);
-  const [refreshAttempted, setRefreshAttempted] = useState(false);
-  const errorCode = error instanceof ResultDataError
-    ? Number(error.result.code)
-    : undefined;
+  // 인증 조회와 한 번의 Token 복구 상태를 공통 Query에서 가져온다
+  const { data, isLoading, isError } = useAuthQuery();
 
-  useEffect(() => {
-
-    if (data?.code === 200 && refreshAttempted) {
-      setRefreshAttempted(false);
-    }
-  }, [data?.code, refreshAttempted]);
-
-  useEffect(() => {
-
-    if (
-      errorCode &&
-      REFRESHABLE_AUTH_CODES.has(errorCode) &&
-      !refreshing &&
-      !refreshAttempted
-    ) {
-      setRefreshing(true);
-      setRefreshAttempted(true);
-
-      (async () => {
-
-        try {
-          // accessToken 만료/누락/검증 실패는 refreshToken으로 복구 가능한 상태일 수 있어 먼저 재발급을 시도한다.
-          await refreshTokenApi();
-          await refetch();
-        } catch {
-          console.log("token refresh failed");
-        } finally {
-          setRefreshing(false);
-        }
-      })();
-    }
-  }, [errorCode, refreshing, refreshAttempted, refetch]);
-
-  if (isLoading || refreshing) {
+  // 최초 인증 조회가 끝날 때까지 로그인 판단을 보류한다
+  if (isLoading) {
+    // 라우트에서 공통 로그인 조회 화면을 표시할 상태를 반환한다
     return {
       isLoading: true,
       isAuthenticated: false,
@@ -78,21 +31,9 @@ export const useCheckAuth = () => {
     };
   }
 
+  // 인증 조회 또는 한 번의 Token 복구가 실패하면 비로그인 상태로 확정한다
   if (isError) {
-    if (
-      errorCode === TOKEN_INVALID_CODE ||
-      errorCode === TOKEN_EXPIRED_CODE ||
-      refreshAttempted
-    ) {
-      return {
-        isLoading: false,
-        isAuthenticated: false,
-        isDeletePending: false,
-        isSuspended: false,
-        isOnboardingRequired: false,
-      };
-    }
-
+    // 추가 자동 재시도 없이 로그인 화면에서 사용할 상태를 반환한다
     return {
       isLoading: false,
       isAuthenticated: false,
@@ -102,9 +43,11 @@ export const useCheckAuth = () => {
     };
   }
 
+  // 검증된 인증 응답이 있으면 사용자 상태별 라우팅 정보를 구성한다
   if (data) {
     const code = data.code;
 
+    // 공통 성공 응답일 때만 로그인 사용자 상태를 제공한다
     if (code === 200) {
       // 인증 응답의 회원 상태로 영구 삭제 대기 전용 화면 여부를 판단합니다
       const authData = data.data as { userStat?: string; onbdYsno?: string } | undefined;
@@ -118,6 +61,7 @@ export const useCheckAuth = () => {
       };
     }
 
+    // 성공 코드가 아닌 응답은 보호 화면에 진입하지 못하도록 반환한다
     return {
       isLoading: false,
       isAuthenticated: false,
@@ -127,6 +71,7 @@ export const useCheckAuth = () => {
     };
   }
 
+  // 조회 결과가 없는 초기 예외 상태도 비로그인 상태로 안전하게 처리한다
   return {
     isLoading: false,
     isAuthenticated: false,

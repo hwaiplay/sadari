@@ -1075,10 +1075,11 @@
                      AND LIKEX.TAGT_TYPE = #{likeTargetReport}
                 ) USERLIKE
             ON USERLIKE.REPT_NUMB = REPORT.REPT_NUMB
-     LEFT JOIN (  SELECT REPLY.REPT_NUMB
+     LEFT JOIN (  SELECT REPLY.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS REPL_CNT
                     FROM TB_REPLXX REPLY
-                GROUP BY REPLY.REPT_NUMB
+                   WHERE REPLY.TAGT_TYPE = #{likeTargetReport}
+                GROUP BY REPLY.TAGT_NUMB
                 ) REPLYCOUNT
             ON REPLYCOUNT.REPT_NUMB = REPORT.REPT_NUMB
          WHERE PART.CLUB_NUMB = #{clubNumb}

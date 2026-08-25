@@ -31,6 +31,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 정리
  * 2026-08-14        SeungHyeon.Kang    사용자 알림 10개 단위 조회 반영
  * 2026-08-20        SeungHyeon.Kang    타이머 알림 중복 제외
+ * 2026-08-25        HanWon.Jang        사진 댓글 알림 중복 제외
  */
 @Service
 @RequiredArgsConstructor
@@ -39,7 +40,6 @@ public class AlimServiceImpl implements AlimService {
 
     // 알림 페이지 크기 설정값
     private static final int ALIM_PAGE_SIZE = 10;
-
     // Alim 데이터 접근 객체
     private final AlimMapper alimMapper;
     // Push 업무 처리 서비스
@@ -263,7 +263,9 @@ public class AlimServiceImpl implements AlimService {
         alim.setDeltYsno(Constant.COMM_NO);
 
         // 댓글은 등록 건마다 별도 이벤트이므로 같은 작성자와 독후감이어도 알림을 모두 저장한다
-        boolean isReplyReportAlim = Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode);
+        boolean isReplyReportAlim = Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE.equals(tempCode);
         // 타이머 알림은 세션마다 별도 이벤트이므로 한 시간 안에도 각각 저장한다
         boolean isBookTimerOverAlim = Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER.equals(tempCode);
 

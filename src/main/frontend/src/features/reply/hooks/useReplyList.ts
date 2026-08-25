@@ -11,6 +11,7 @@
  */
 import { useInfiniteQuery } from "@tanstack/react-query";
 import { getReplyListApi } from "@/features/reply/api/replyApi";
+import type { ReplyTarget } from "@/features/reply/types/reply.types";
 
 export const REPLY_LIST_QUERY_KEY = "replyList";
 
@@ -21,10 +22,10 @@ export const REPLY_LIST_QUERY_KEY = "replyList";
  * @param reptNumb 댓글 목록을 조회할 독후감 번호
  * @return 댓글 목록의 조회 데이터와 요청 상태
  */
-export const useReplyList = (reptNumb: number) => {
+export const useReplyList = (target: ReplyTarget) => {
   // 동일한 독후감의 댓글 목록 요청과 캐시를 재사용한다
   return useInfiniteQuery({
-    queryKey: [REPLY_LIST_QUERY_KEY, reptNumb],
+    queryKey: [REPLY_LIST_QUERY_KEY, target.tagtType, target.tagtNumb],
     /**
      * 현재 독후감에 등록된 댓글 목록을 서버에서 조회한다
      *
@@ -34,7 +35,7 @@ export const useReplyList = (reptNumb: number) => {
      */
     queryFn: async ({ pageParam }) => {
       // 검증된 독후감 번호로 댓글 목록 API를 호출한다
-      return await getReplyListApi(reptNumb, pageParam);
+      return await getReplyListApi(target, pageParam);
     },
     initialPageParam: 1,
     /**
@@ -48,6 +49,6 @@ export const useReplyList = (reptNumb: number) => {
       // 서버가 다음 부모 댓글 페이지 존재를 확인한 경우에만 다음 번호를 반환한다
       return lastPage.data.hasNext ? lastPage.data.page + 1 : undefined;
     },
-    enabled: reptNumb > 0,
+    enabled: target.tagtNumb > 0,
   });
 };

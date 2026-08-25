@@ -66,6 +66,9 @@ public class UserDto {
     @Schema(description = "배경 이미지 파일 번호")
     private Long bgimNumb;
 
+    @Schema(description = "사용자 직접 사진 변경 피드 기록 여부", hidden = true)
+    private String imageFeedYsno;
+
     @Schema(description = "최종 저장할 프로필 이미지 임시 식별값")
     private String profileImageDraftToken;
 
@@ -80,6 +83,34 @@ public class UserDto {
 
     @Schema(description = "배경 이미지 경로")
     private String bgimPath;
+
+    /**
+     * 마이페이지의 현재 프로필 또는 배경 사진에 표시할 좋아요와 댓글 집계를 전달한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Data
+    @Schema(description = "사용자 사진 좋아요와 댓글 집계")
+    public static class ImageReactionDto {
+
+        @Schema(description = "사진 소유자 사용자 번호", hidden = true)
+        private Long userNumb;
+
+        @Schema(description = "사진 대상 유형", allowableValues = {"PROFILE_IMAGE", "BACKGROUND_IMAGE"})
+        private String tagtType;
+
+        @Schema(description = "사진 파일 번호")
+        private Long tagtNumb;
+
+        @Schema(description = "좋아요 수", example = "12")
+        private Long likeCnt;
+
+        @Schema(description = "로그인 사용자 좋아요 여부", example = "Y", allowableValues = {"Y", "N"})
+        private String likeYsno;
+
+        @Schema(description = "댓글 수", example = "3")
+        private Long replCnt;
+    }
 
     /**
      * 회원이 선택하거나 화면에 노출할 독서 관심분야 항목을 전달한다

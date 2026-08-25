@@ -54,6 +54,56 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
+    <!-- 마이페이지에서 현재 사용자 사진에 연결된 활성 회원 좋아요와 삭제되지 않은 댓글을 조회한다. -->
+    <select id="getMyImageReactionDtl" parameterType="org.our.sadari.user.dto.UserDto$ImageReactionDto"
+            resultType="org.our.sadari.user.dto.UserDto$ImageReactionDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getMyImageReactionDtl */
+               #{tagtType} AS TAGT_TYPE
+             , #{tagtNumb} AS TAGT_NUMB
+             , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
+             , CASE WHEN UL.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS LIKE_YSNO
+             , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT
+          FROM TM_USERXM OWNER
+     LEFT JOIN (  SELECT L.TAGT_TYPE
+                       , L.TAGT_NUMB
+                       , COUNT(*) AS LIKE_CNT
+                    FROM TB_LIKEXX L
+                    JOIN TM_USERXM U
+                      ON U.USER_NUMB = L.USER_NUMB
+                     AND U.USER_STAT = #{userStatActive}
+                   WHERE L.TAGT_TYPE = #{tagtType}
+                     AND L.TAGT_NUMB = #{tagtNumb}
+                GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
+               ) LC
+            ON LC.TAGT_TYPE = #{tagtType}
+           AND LC.TAGT_NUMB = #{tagtNumb}
+     LEFT JOIN TB_LIKEXX UL
+            ON UL.USER_NUMB = #{userNumb}
+           AND UL.TAGT_TYPE = #{tagtType}
+           AND UL.TAGT_NUMB = #{tagtNumb}
+     LEFT JOIN (  SELECT R.TAGT_TYPE
+                       , R.TAGT_NUMB
+                       , COUNT(*) AS REPL_CNT
+                    FROM TB_REPLXX R
+                   WHERE R.TAGT_TYPE = #{tagtType}
+                     AND R.TAGT_NUMB = #{tagtNumb}
+                     AND R.DELT_YSNO = #{commNo}
+                GROUP BY R.TAGT_TYPE, R.TAGT_NUMB
+               ) RC
+            ON RC.TAGT_TYPE = #{tagtType}
+           AND RC.TAGT_NUMB = #{tagtNumb}
+         WHERE OWNER.USER_NUMB = #{userNumb}
+           AND OWNER.USER_STAT = #{userStatActive}
+           AND (   (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
+                OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb})
+               )
+    </select>
+
     <!-- 프로필 이미지 교체가 완료될 때까지 현재 사용자 파일 번호를 잠금 조회한다. -->
     <select id="getUserFileForUpdate" parameterType="long" resultType="org.our.sadari.user.dto.UserDto">
         SELECT /* getUserFileForUpdate */
@@ -102,15 +152,22 @@
 
     <!-- 회원 프로필 정보를 수정한다. -->
     <update id="uptUserProfile" parameterType="org.our.sadari.user.dto.UserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         UPDATE /* uptUserProfile */
                TM_USERXM
            SET USER_NICK = #{userNick}
              , INTR_CNTN = #{intrCntn,jdbcType=VARCHAR}
         <if test="profNumb != null">
              , PROF_NUMB = #{profNumb}
+            <if test="imageFeedYsno == commYes">
+             , PROF_DATE = CURRENT_TIMESTAMP(6)
+            </if>
         </if>
         <if test="bgimNumb != null">
              , BGIM_NUMB = #{bgimNumb}
+            <if test="imageFeedYsno == commYes">
+             , BGIM_DATE = CURRENT_TIMESTAMP(6)
+            </if>
         </if>
          WHERE USER_NUMB = #{userNumb}
     </update>

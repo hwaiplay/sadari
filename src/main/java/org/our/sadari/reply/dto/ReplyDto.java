@@ -23,6 +23,13 @@ import lombok.Data;
 @Schema(description = "댓글 정보를 전달하는 DTO")
 public class ReplyDto {
 
+    @Schema(description = "댓글 대상 유형", example = "REPORT",
+            allowableValues = {"REPORT", "PROFILE_IMAGE", "BACKGROUND_IMAGE"})
+    private String tagtType;
+
+    @Schema(description = "댓글 대상 번호", example = "1")
+    private Long tagtNumb;
+
     @Schema(description = "댓글이 작성된 독후감 번호", example = "1")
     private Long reptNumb;
 
@@ -76,6 +83,12 @@ public class ReplyDto {
 
     @Schema(description = "독후감 작성자의 댓글과 답글 알림 여부", example = "Y", allowableValues = {"Y", "N"}, hidden = true)
     private String replyAlimYsno;
+
+    @Schema(description = "댓글 알림 템플릿 코드", hidden = true)
+    private String alimTempCode;
+
+    @Schema(description = "알림 이동 대상 번호", hidden = true)
+    private Long alimTagtNumb;
 
     @Schema(description = "댓글 조회 시 계산된 동시 수정 충돌 검사용 원본 해시")
     private String editVersion;

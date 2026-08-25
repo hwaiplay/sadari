@@ -1,6 +1,14 @@
 import api from "@/app/api/axios";
 import { assertResultDataSuccess, type ResultData } from "@/app/api/resultData";
 
+export type ImageReaction = {
+  tagtType: "PROFILE_IMAGE" | "BACKGROUND_IMAGE";
+  tagtNumb: number;
+  likeCnt: number;
+  likeYsno: "Y" | "N";
+  replCnt: number;
+};
+
 export type UserProfile = {
   userStat?: "ACTIVE" | "WITHDRAWN" | "SUSPENDED" | "DELETE_PENDING";
   userStatName?: string;
@@ -9,6 +17,8 @@ export type UserProfile = {
   porfPath?: string;
   bgimPath?: string;
   intrCntn?: string;
+  profileImageReaction?: ImageReaction | null;
+  backgroundImageReaction?: ImageReaction | null;
 };
 
 export type ReadingSummaryReport = {

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -16,6 +17,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.alim.service.AlimService;
+import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.security.jwt.TokenRedisService;
@@ -35,6 +37,7 @@ import org.our.sadari.user.mapper.UserMapper;
  * -----------------------------------------------------------
  * 2026-08-04        SeungHyeon.Kang       최초 생성
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 검증 추가
+ * 2026-08-25        HanWon.Jang        사진 좋아요 링크 기준 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -46,6 +49,10 @@ class SocialServiceImplTest {
     // Report 데이터 접근 객체
     @Mock
     private ReportMapper reportMapper;
+
+    // Feed 데이터 접근 객체
+    @Mock
+    private FeedMapper feedMapper;
 
     // User 데이터 접근 객체
     @Mock
@@ -70,7 +77,8 @@ class SocialServiceImplTest {
     @BeforeEach
     void setUp() {
         // 소셜 서비스 단위 테스트 대상을 생성한다
-        socialService = new SocialServiceImpl(socialMapper, reportMapper, userMapper, alimService, tokenRedisService);
+        socialService = new SocialServiceImpl(
+                socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService);
         // 프로필 통계 조회 대상 사용자가 존재하도록 설정한다
         lenient().when(userMapper.getUserByNumb(31L)).thenReturn(new UserDto());
         // 프로필 통계 SQL이 빈 기본 통계를 반환하도록 설정한다
@@ -84,7 +92,7 @@ class SocialServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setLikeSkipsAlimWhenDisabled() {
+    void setLikeSkipsDisabledAlim() {
         // 독후감 좋아요 요청을 생성한다
         SocialDto.LikeDto request = new SocialDto.LikeDto();
         // 좋아요를 등록할 로그인 사용자 번호를 설정한다
@@ -118,6 +126,52 @@ class SocialServiceImplTest {
         verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
         // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
         verify(tokenRedisService, never()).getUserNick(eq(44L));
+    }
+
+    /**
+     * 프로필 사진 좋아요 알림이 템플릿의 완성 링크를 사용하도록 상세 번호 없이 발송되는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setImageLikeUsesLink() {
+        // 프로필 사진 좋아요 요청을 생성한다
+        SocialDto.LikeDto request = new SocialDto.LikeDto();
+        // 좋아요를 등록할 로그인 사용자 번호를 설정한다
+        request.setUserNumb(44L);
+        // 좋아요 대상 유형을 프로필 사진으로 설정한다
+        request.setTagtType(Constant.LIKE_TARGET_PROFILE_IMAGE);
+        // 좋아요 대상 프로필 파일 번호를 설정한다
+        request.setTagtNumb(157L);
+
+        // 서버에서 확인한 프로필 사진 소유자 정보를 생성한다
+        SocialDto.LikeDto likeTarget = new SocialDto.LikeDto();
+        // 알림 수신자인 사진 소유자 번호를 설정한다
+        likeTarget.setTargetUserNumb(31L);
+        // 사진 반응 알림을 발송할 수 있도록 알림 상태를 설정한다
+        likeTarget.setLikeAlimYsno(Constant.COMM_YES);
+        // 현재 프로필 사진과 소유자 조회 결과를 구성한다
+        when(feedMapper.getImageLikeTarget(request)).thenReturn(likeTarget);
+        // 기존 좋아요가 없는 신규 등록 조건을 구성한다
+        when(socialMapper.dupLike(request)).thenReturn(0);
+        // 변경 후 좋아요 상세 조회 결과를 구성한다
+        when(socialMapper.getLikeDtl(request)).thenReturn(request);
+        // 좋아요 등록자의 닉네임이 조회되는 조건을 구성한다
+        when(tokenRedisService.getUserNick(44L)).thenReturn("좋아요사용자");
+
+        // 현재 프로필 사진에 좋아요를 등록한다
+        ResultData result = socialService.setLike(request);
+
+        // 프로필 사진 좋아요 등록 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 사진 알림은 대상 번호를 덧붙이지 않고 템플릿의 완성 링크만 사용하도록 발송하는지 확인한다
+        verify(alimService).sendAlim(
+                eq(31L)
+              , eq(Constant.ALIM_SITU_LIKE)
+              , eq(Constant.ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE)
+              , isNull()
+              , any()
+        );
     }
 
     /**

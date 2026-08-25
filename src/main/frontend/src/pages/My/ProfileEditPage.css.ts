@@ -76,6 +76,13 @@ export const coverActionGroup = style({
   gap: "8px",
 });
 
+export const coverEditAction = style({
+  position: "absolute",
+  top: "14px",
+  right: "14px",
+  zIndex: 2,
+});
+
 export const coverProfileEditButton = style({
   minHeight: "30px",
   padding: "0 10px",
@@ -243,6 +250,41 @@ export const socialProfileMoreButton = style([
     minHeight: "34px",
     padding: 0,
     justifyContent: "center",
+  },
+]);
+
+// 배경과 프로필 사진 위에서도 독후감과 같은 좋아요 및 댓글 버튼을 선명하게 표시하는 공통 캡슐 영역이다
+const imageReactionBar = style({
+  zIndex: 2,
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "999px",
+  backgroundColor: "rgba(255, 255, 255, 0.94)",
+  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
+});
+
+export const backgroundImageReactionBar = style([
+  imageReactionBar,
+  {
+    position: "absolute",
+    right: "14px",
+    bottom: "14px",
+    minHeight: "30px",
+    padding: "2px 8px",
+  },
+]);
+
+export const profileImageReactionBar = style([
+  imageReactionBar,
+  {
+    position: "absolute",
+    right: "-9px",
+    bottom: "18px",
+    minHeight: "26px",
+    padding: "0 6px",
   },
 ]);
 
