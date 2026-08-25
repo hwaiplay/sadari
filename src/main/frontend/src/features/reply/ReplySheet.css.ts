@@ -367,7 +367,7 @@ export const replyLikeButton = style([
   replyMetricButton,
   {
     color: "#ff747c",
-    flexDirection: "column",
+    minWidth: "20px",
     selectors: {
       "&:disabled": {
         cursor: "wait",
@@ -376,6 +376,23 @@ export const replyLikeButton = style([
     },
   }
 ])
+
+export const replyLikeGroup = style({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1,
+});
+
+export const replyLikeCount = style({
+  height: "18px",
+  minWidth: "20px",
+  color: "#ff747c",
+  fontSize: "12px",
+});
 
 export const replyItemActions = style({
   flexShrink: 0,

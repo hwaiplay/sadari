@@ -260,7 +260,8 @@ export const reportRatingIcon = style({
 export const reportContentWrap = style({
   maxHeight: "70px",
   overflow: "clip",
-  transition: "max-height 220ms ease",
+  transition: "max-height 280ms ease",
+  willChange: "max-height",
 });
 
 export const reportContentWrapOpen = style([
@@ -339,12 +340,60 @@ export const metricButton = style({
   },
 });
 
+export const metricGroup = style({
+  minWidth: "32px",
+  height: "24px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+});
+
+export const metricIconButton = style({
+  width: "16px",
+  height: "24px",
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": { cursor: "default", opacity: 0.5 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 2 },
+  },
+});
+
+export const metricCountButton = style({
+  color: "#ff747c",
+});
+
+export const metricIcon = style({
+  width: "16px",
+  height: "16px",
+  flexShrink: 0,
+});
+
 export const commentButton = style([
   metricButton,
   {
     color: "#777777",
   },
 ]);
+
+export const commentIcon = style({
+  width: "16px",
+  height: "16px",
+  flexShrink: 0,
+  fill: "none",
+  stroke: "currentColor",
+  strokeWidth: 1.5,
+  strokeLinejoin: "round",
+});
 
 export const empty = style({
   margin: "48px 0",

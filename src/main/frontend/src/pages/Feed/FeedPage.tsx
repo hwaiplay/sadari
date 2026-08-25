@@ -3,6 +3,7 @@ import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
+import AnimatedReportContent from "@/components/ReportList/AnimatedReportContent";
 import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
@@ -12,6 +13,7 @@ import {
 import { REPORT_CONTENT_PREVIEW_LENGTH } from "@/features/Book/utils/reportListView";
 import { getFeedPageApi, type FeedItem } from "@/features/Feed/api/feedApi";
 import ReplySheet from "@/features/reply/ReplySheet";
+import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { type SyntheticEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -162,13 +164,27 @@ const FeedPage = () => {
                   />
                   <span className={styles.mediaInfo}>
                     <span className={styles.title}>{item.bookTitl}</span>
-                    <span className={styles.reportMetadata}>
-                      <span className={styles.metadata}>{item.bookAthr ?? ""}</span>
+                    <span className={styles.metadata}>{item.bookAthr ?? ""}</span>
+                    <span className={styles.ratingStatusRow}>
+                      {item.reptGrde ? (
+                        <span className={styles.rating}>
+                          <svg className={styles.ratingIcon} viewBox="0 0 24 24" aria-hidden="true">
+                            <path
+                              d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
+                              fill="currentColor"
+                              stroke="currentColor"
+                              strokeWidth="1.4"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                          </svg>
+                          {item.reptGrde}
+                        </span>
+                      ) : <span />}
                       {item.reptStatName ? (
                         <span className={getStatusClassName(item.reptStat)}>{item.reptStatName}</span>
                       ) : null}
                     </span>
-                    {item.reptGrde ? <span className={styles.rating}>★ {item.reptGrde}</span> : null}
                   </span>
                 </button>
               ) : null}
@@ -186,15 +202,13 @@ const FeedPage = () => {
 
               {reportContent ? (
                 <div className={styles.contentSection}>
-                  <div className={isExpanded || !isLongContent
-                    ? reportListStyles.reportContentWrapOpen
-                    : reportListStyles.reportContentWrap}
-                  >
-                    <p className={reportListStyles.reportContent}>{reportContent}</p>
-                  </div>
+                  <AnimatedReportContent
+                    content={reportContent}
+                    expanded={isExpanded || !isLongContent}
+                  />
                   {isLongContent ? (
                     <button
-                      className={styles.expandButton}
+                      className={reportListStyles.expandButton}
                       type="button"
                       aria-label={message(isExpanded
                         ? "frontend.common.collapse"
@@ -215,7 +229,17 @@ const FeedPage = () => {
               ) : null}
 
               <footer className={styles.actions}>
-                <button className={styles.actionButton} type="button" aria-label={message("frontend.feed.likeAction")} onClick={() => void handleLike(item)}><img className={styles.icon} src={item.likeYsno === "Y" ? "/img/icons/icon-heart-fill.svg" : "/img/icons/icon-heart.svg"} alt="" />{item.likeCnt}</button>
+                <div className={styles.likeActionGroup}>
+                  <button className={styles.likeIconButton} type="button" aria-label={message("frontend.feed.likeAction")} onClick={() => void handleLike(item)}>
+                    <img className={styles.icon} src={item.likeYsno === "Y" ? "/img/icons/icon-heart-fill.svg" : "/img/icons/icon-heart.svg"} alt="" />
+                  </button>
+                  <LikeUserListButton
+                    className={styles.likeCountButton}
+                    tagtType={item.tagtType}
+                    tagtNumb={item.tagtNumb}
+                    countLabel={item.likeCnt}
+                  />
+                </div>
                 <button className={styles.commentButton} type="button" aria-label={message("frontend.book.publicReports.viewComments")} onClick={() => setReplyItem(item)}><img className={styles.icon} src="/img/icons/icon-comment.svg" alt="" />{item.replCnt}</button>
               </footer>
             </article>

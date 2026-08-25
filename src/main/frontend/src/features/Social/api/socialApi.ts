@@ -52,6 +52,8 @@ export const getSocialReadingApi = async (userNumb: number) => {
   return assertResultDataSuccess(res.data);
 };
 
+export type LikeTargetType = "REPORT" | "PROFILE_IMAGE" | "BACKGROUND_IMAGE" | "REPLY";
+
 /**
  * 다른 사용자가 공개한 독서 통계를 선택 연도 기준으로 조회한다
  *
@@ -165,5 +167,28 @@ export const getSocialFollowPageApi = async (
     { params: { page } },
   );
   // 검증된 다른 사용자 팔로우 목록 페이지를 반환한다
+  return assertResultDataSuccess(res.data);
+};
+
+/**
+ * 특정 대상에 좋아요를 등록한 활성 사용자 한 페이지를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param tagtType 좋아요 대상 유형
+ * @param tagtNumb 좋아요 대상 번호
+ * @param page 조회할 페이지 번호
+ * @return 활성 좋아요 사용자 페이지 응답
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const getLikeUserPageApi = async (
+  tagtType: LikeTargetType,
+  tagtNumb: number,
+  page: number,
+): Promise<ResultData<PageData<FollowUser>>> => {
+  // 서버가 접근 범위와 활성 상태를 검증한 좋아요 사용자 페이지를 조회한다
+  const res = await api.get<ResultData<PageData<FollowUser>>>("/social/like-users", {
+    params: { tagtType, tagtNumb, page },
+  });
+  // 검증된 좋아요 사용자 페이지를 반환한다
   return assertResultDataSuccess(res.data);
 };

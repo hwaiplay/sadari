@@ -126,6 +126,7 @@
     <select id="getLikeDtl" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getLikeDtl */
                R.TAGT_TYPE
              , R.TAGT_NUMB
@@ -138,6 +139,9 @@
                        , L.TAGT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX L
+              INNER JOIN TM_USERXM U
+                      ON U.USER_NUMB = L.USER_NUMB
+                     AND U.USER_STAT = #{userStatActive}
                    WHERE L.TAGT_TYPE = #{tagtType}
                      AND L.TAGT_NUMB = #{tagtNumb}
                 GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
@@ -161,6 +165,7 @@
     <select id="getProfileStats" parameterType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto" resultType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto">
         <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getProfileStats */
                TARGET.USER_NUMB
              , COALESCE(READSTATS.TOTAL_READ_BOOK_CNT, 0) AS TOTAL_READ_BOOK_CNT
@@ -197,6 +202,9 @@
      LEFT JOIN (  SELECT REPORT.USER_NUMB
                        , COUNT(*) AS RECEIVED_LIKE_CNT
                     FROM TB_LIKEXX LIKES
+              INNER JOIN TM_USERXM LIKEUSER
+                      ON LIKEUSER.USER_NUMB = LIKES.USER_NUMB
+                     AND LIKEUSER.USER_STAT = #{userStatActive}
               INNER JOIN TM_REPORT REPORT
                       ON REPORT.REPT_NUMB = LIKES.TAGT_NUMB
                    WHERE LIKES.TAGT_TYPE = #{likeTargetReport}
@@ -265,6 +273,121 @@
                END
              , CASE WHEN U.USER_NUMB = #{loginUserNumb} THEN 0 ELSE 1 END
              , FL.REGI_DATE DESC
+             , U.USER_NUMB DESC
+         LIMIT #{pageOffset}, #{pageLimit}
+    </select>
+    <!-- 로그인 사용자가 현재 화면에서 확인할 수 있는 좋아요 대상인지 서버 원본으로 검증한다. -->
+    <select id="getLikeTargetAccessCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeUserReqDto" resultType="int">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="targetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <bind name="memberActive" value="'ACTIVE'" />
+        <bind name="roundCompleted" value="'COMPLETED'" />
+        SELECT /* getLikeTargetAccessCnt */ COUNT(*)
+          FROM (
+                SELECT REPORT.REPT_NUMB AS TAGT_NUMB
+                  FROM TM_REPORT REPORT
+                 WHERE #{tagtType} = #{targetReport}
+                   AND REPORT.REPT_NUMB = #{tagtNumb}
+                   AND EXISTS (
+                        SELECT 1
+                          FROM TM_USERXM OWNERX
+                         WHERE OWNERX.USER_NUMB = REPORT.USER_NUMB
+                           AND OWNERX.USER_STAT = #{userStatActive}
+                   )
+                   AND (REPORT.USER_NUMB = #{loginUserNumb}
+                        OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reportStatRead})
+                        OR EXISTS (
+                            SELECT 1
+                              FROM TB_CLPART PART
+                              JOIN TM_CLRNDX ROUNDX
+                                ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+                               AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+                               AND ROUNDX.ROND_STAT = #{roundCompleted}
+                              JOIN TB_CLMEMX VIEWER
+                                ON VIEWER.CLUB_NUMB = PART.CLUB_NUMB
+                               AND VIEWER.USER_NUMB = #{loginUserNumb}
+                               AND VIEWER.MEMB_STAT = #{memberActive}
+                             WHERE PART.REPT_NUMB = REPORT.REPT_NUMB
+                        ))
+                 UNION ALL
+                SELECT USERX.USER_NUMB AS TAGT_NUMB
+                  FROM TM_USERXM USERX
+                 WHERE USERX.USER_STAT = #{userStatActive}
+                   AND ((#{tagtType} = #{targetProfile} AND USERX.PROF_NUMB = #{tagtNumb})
+                        OR (#{tagtType} = #{targetBackground} AND USERX.BGIM_NUMB = #{tagtNumb}))
+                 UNION ALL
+                SELECT REPLY.REPL_NUMB AS TAGT_NUMB
+                  FROM TB_REPLXX REPLY
+                 WHERE #{tagtType} = #{targetReply}
+                   AND REPLY.REPL_NUMB = #{tagtNumb}
+                   AND REPLY.DELT_YSNO = #{commNo}
+                   AND (
+                        (REPLY.TAGT_TYPE = #{targetReport} AND EXISTS (
+                            SELECT 1
+                             FROM TM_REPORT REPORT
+                             WHERE REPORT.REPT_NUMB = REPLY.TAGT_NUMB
+                               AND EXISTS (
+                                    SELECT 1
+                                      FROM TM_USERXM OWNERX
+                                     WHERE OWNERX.USER_NUMB = REPORT.USER_NUMB
+                                       AND OWNERX.USER_STAT = #{userStatActive}
+                               )
+                               AND (REPORT.USER_NUMB = #{loginUserNumb}
+                                    OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reportStatRead})
+                                    OR EXISTS (
+                                        SELECT 1
+                                          FROM TB_CLPART PART
+                                          JOIN TM_CLRNDX ROUNDX
+                                            ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+                                           AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+                                           AND ROUNDX.ROND_STAT = #{roundCompleted}
+                                          JOIN TB_CLMEMX VIEWER
+                                            ON VIEWER.CLUB_NUMB = PART.CLUB_NUMB
+                                           AND VIEWER.USER_NUMB = #{loginUserNumb}
+                                           AND VIEWER.MEMB_STAT = #{memberActive}
+                                         WHERE PART.REPT_NUMB = REPORT.REPT_NUMB
+                                    ))
+                        ))
+                        OR EXISTS (
+                            SELECT 1
+                              FROM TM_USERXM USERX
+                             WHERE USERX.USER_STAT = #{userStatActive}
+                               AND ((REPLY.TAGT_TYPE = #{targetProfile} AND USERX.PROF_NUMB = REPLY.TAGT_NUMB)
+                                    OR (REPLY.TAGT_TYPE = #{targetBackground} AND USERX.BGIM_NUMB = REPLY.TAGT_NUMB))
+                        )
+                   )
+               ) TARGETX
+    </select>
+
+    <!-- 좋아요를 등록한 활성 사용자와 로그인 사용자 기준 팔로우 상태를 최신 좋아요 순으로 조회한다. -->
+    <select id="getLikeUserList" parameterType="org.our.sadari.social.dto.SocialDto$LikeUserReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <include refid="followStatusBindList" />
+        SELECT /* getLikeUserList */
+        <include refid="followListColumnList" />
+          FROM TB_LIKEXX LIKES
+    INNER JOIN TM_USERXM U
+            ON U.USER_NUMB = LIKES.USER_NUMB
+           AND U.USER_STAT = #{userStatActive}
+     LEFT JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.PROF_NUMB
+     LEFT JOIN TB_FOLLOW USERFOLLOW
+            ON USERFOLLOW.USER_NUMB = #{loginUserNumb}
+           AND USERFOLLOW.FLOW_NUMB = U.USER_NUMB
+     LEFT JOIN TB_FOLLOW REVERSEFOLLOW
+            ON REVERSEFOLLOW.USER_NUMB = U.USER_NUMB
+           AND REVERSEFOLLOW.FLOW_NUMB = #{loginUserNumb}
+         WHERE LIKES.TAGT_TYPE = #{tagtType}
+           AND LIKES.TAGT_NUMB = #{tagtNumb}
+      ORDER BY LIKES.REGI_DATE DESC
              , U.USER_NUMB DESC
          LIMIT #{pageOffset}, #{pageLimit}
     </select>

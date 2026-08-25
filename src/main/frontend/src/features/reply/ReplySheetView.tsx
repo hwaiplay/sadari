@@ -9,6 +9,7 @@ import CustomSelect, {
 } from "@/components/Select/CustomSelect";
 import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
 import type { PublicReportType } from "@/features/Book/types/book.type";
+import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import type {
   ReplySheetController,
@@ -401,29 +402,32 @@ const ReplyItem = ({
 
         {!isDeleted ? (
           /* "좋아요" */
-          <button
-            className={styles.replyLikeButton}
-            type="button"
-            aria-label={
-              reply.likeYsno === "Y"
-                ? /* "좋아요 취소" */ message("frontend.reply.unlikeAria")
-                : /* "좋아요" */ message("frontend.common.like")
-            }
-            aria-pressed={reply.likeYsno === "Y"}
-            disabled={controller.isReplyLikePending}
-            onClick={handleLikeClick}
-          >
-            {reply.likeYsno === "Y" ? (
-              <img
-                src="/img/icons/icon-heart-fill.svg"
-                alt=""
-                width="20"
-              />
-            ) : (
-              <img src="/img/icons/icon-heart.svg" alt="" width="20" />
-            )}
-            <span>{Number(reply.likeCnt) || 0}</span>
-          </button>
+          <div className={styles.replyLikeGroup}>
+            <button
+              className={styles.replyLikeButton}
+              type="button"
+              aria-label={
+                reply.likeYsno === "Y"
+                  ? /* "좋아요 취소" */ message("frontend.reply.unlikeAria")
+                  : /* "좋아요" */ message("frontend.common.like")
+              }
+              aria-pressed={reply.likeYsno === "Y"}
+              disabled={controller.isReplyLikePending}
+              onClick={handleLikeClick}
+            >
+              {reply.likeYsno === "Y" ? (
+                <img src="/img/icons/icon-heart-fill.svg" alt="" width="20" />
+              ) : (
+                <img src="/img/icons/icon-heart.svg" alt="" width="20" />
+              )}
+            </button>
+            <LikeUserListButton
+              className={styles.replyLikeCount}
+              tagtType="REPLY"
+              tagtNumb={reply.replNumb}
+              countLabel={Number(reply.likeCnt) || 0}
+            />
+          </div>
         ) : null}
       </div>
     </article>

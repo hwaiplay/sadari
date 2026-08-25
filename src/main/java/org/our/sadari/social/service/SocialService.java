@@ -13,6 +13,7 @@ import org.our.sadari.social.dto.SocialDto;
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
+ * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 추가
  */
 public interface SocialService {
     /**
@@ -94,4 +95,16 @@ public interface SocialService {
      * @return 팔로워 목록 조회 결과
      */
     ResultData getFollowerList(Long loginUserNumb, Long userNumb, int page);
+
+    /**
+     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param tagtType 좋아요 대상 유형
+     * @param tagtNumb 좋아요 대상 번호
+     * @param page 조회할 페이지 번호
+     * @return 활성 좋아요 사용자 목록
+     */
+    ResultData getLikeUserList(Long loginUserNumb, String tagtType, Long tagtNumb, int page);
 }

@@ -50,6 +50,7 @@ import {
 import type { ReadingStatusType } from "@/features/Book/types/book.type";
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
 import ReplySheet from "@/features/reply/ReplySheet";
+import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import * as styles from "./DetailPage.css";
 
 const CONTENT_FADE_OUT_MILLISECONDS = 90;
@@ -1006,10 +1007,13 @@ function DetailPage() {
                               strokeLinejoin="round"
                           />
                         </svg>
-                        <span className={styles.likeCount}>
-                    {getLikeCountLabel(bookData.likeCnt)}
-                  </span>
                       </button>
+                      <LikeUserListButton
+                        className={styles.likeCount}
+                        tagtType="REPORT"
+                        tagtNumb={idNum}
+                        countLabel={getLikeCountLabel(bookData.likeCnt)}
+                      />
                       <button
                           className={styles.commentIndicator}
                           type="button"

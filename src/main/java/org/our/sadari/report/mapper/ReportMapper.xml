@@ -299,6 +299,7 @@
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getReportDtl */
                A.REPT_NUMB
              , A.USER_NUMB
@@ -341,6 +342,9 @@
      LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX L
+              INNER JOIN TM_USERXM LU
+                      ON LU.USER_NUMB = L.USER_NUMB
+                     AND LU.USER_STAT = #{userStatActive}
                    WHERE L.TAGT_TYPE = #{likeTargetReport}
                 GROUP BY L.TAGT_NUMB
                 ) LC
@@ -440,6 +444,9 @@
      LEFT JOIN (  SELECT L.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX L
+              INNER JOIN TM_USERXM LU
+                      ON LU.USER_NUMB = L.USER_NUMB
+                     AND LU.USER_STAT = #{userStatActive}
               INNER JOIN TM_REPORT LR
                       ON LR.REPT_NUMB = L.TAGT_NUMB
               INNER JOIN TM_BKINFO LB

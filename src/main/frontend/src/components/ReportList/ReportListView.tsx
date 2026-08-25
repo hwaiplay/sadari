@@ -21,7 +21,9 @@ import {
 } from "@/features/Book/utils/bookCoverImage";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import ReplySheet from "@/features/reply/ReplySheet";
+import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import * as styles from "./ReportListView.css";
+import AnimatedReportContent from "./AnimatedReportContent";
 
 const SORT_OPTIONS: readonly CustomSelectOption<PublicReportSortType>[] = [
   {
@@ -258,15 +260,10 @@ export default function ReportListView({
                   {report.reportContent.length > 0 ? (
                     /* 독후감 본문과 긴 내용 펼치기 영역 */
                     <>
-                      <div
-                        className={
-                          report.isExpanded || !report.isLongContent
-                            ? styles.reportContentWrapOpen
-                            : styles.reportContentWrap
-                        }
-                      >
-                        <p className={styles.reportContent}>{report.reportContent}</p>
-                      </div>
+                      <AnimatedReportContent
+                        content={report.reportContent}
+                        expanded={report.isExpanded || !report.isLongContent}
+                      />
 
                       {report.isLongContent ? (
                         <button
@@ -295,21 +292,28 @@ export default function ReportListView({
                   ) : null}
 
                   <div className={styles.itemMetrics}>
-                    <button
-                      className={styles.metricButton}
-                      type="button"
-                      aria-label={message("frontend.common.like")}
-                      aria-pressed={report.likeYsno === "Y"}
-                      disabled={isLikePending}
-                      onClick={() => onLike(report)}
-                    >
-                      {report.likeYsno === "Y" ? (
-                        <img src="/img/icons/icon-heart-fill.svg" alt="" aria-hidden="true" />
-                      ) : (
-                        <img src="/img/icons/icon-heart.svg" alt="" aria-hidden="true" />
-                      )}
-                      <span>{report.likeCountLabel}</span>
-                    </button>
+                    <div className={styles.metricGroup}>
+                      <button
+                        className={styles.metricIconButton}
+                        type="button"
+                        aria-label={message("frontend.common.like")}
+                        aria-pressed={report.likeYsno === "Y"}
+                        disabled={isLikePending}
+                        onClick={() => onLike(report)}
+                      >
+                        {report.likeYsno === "Y" ? (
+                          <img src="/img/icons/icon-heart-fill.svg" alt="" aria-hidden="true" />
+                        ) : (
+                          <img src="/img/icons/icon-heart.svg" alt="" aria-hidden="true" />
+                        )}
+                      </button>
+                      <LikeUserListButton
+                        className={styles.metricCountButton}
+                        tagtType="REPORT"
+                        tagtNumb={report.reptNumb}
+                        countLabel={report.likeCountLabel}
+                      />
+                    </div>
                     <button
                       className={styles.commentButton}
                       type="button"
