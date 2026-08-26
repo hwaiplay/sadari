@@ -89,14 +89,12 @@ export const profileName = style({
 
 export const answerButton = style({
   display: "inline-flex",
-  minWidth: 96,
-  height: 34,
   flexShrink: 0,
   alignItems: "center",
   justifyContent: "center",
   gap: 4,
   marginLeft: 10,
-  padding: "0 14px",
+  padding: "6px 14px",
   border: 0,
   borderRadius: 200,
   background: vars.color.brandBg,
@@ -129,7 +127,8 @@ export const exitButton = style({
   marginLeft: 10,
   borderRadius: "999px",
   border:"none",
-  padding: "0 14px",
+  padding: "6px 14px",
+  height: "fit-content"
 });
 
 export const emptyText = style({
