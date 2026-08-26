@@ -13,7 +13,8 @@ export const navContainer = style({
     display: "flex",
     alignItems: "center",
     background: '#fff',
-    padding: `6px clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
+    padding: `6px clamp(16px, 16px, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
+    // padding: `6px clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
     boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
 });
@@ -43,10 +44,10 @@ export const navLink = style({
     gap: "2px",
     padding: 0,
     border: 0,
-    // borderRadius: vars.radius.xl,
     textDecoration: "none",
     background: "transparent",
     cursor: "pointer",
+    minWidth: 52
 });
 
 export const navIconWrap = style({
