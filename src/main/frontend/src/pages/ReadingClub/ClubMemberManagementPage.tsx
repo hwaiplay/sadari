@@ -240,7 +240,7 @@ export default function ClubMemberManagementPage() {
     // 같은 순서의 질문과 신청 답변을 한 항목으로 반환한다
     return (
       <div className={styles.answerItem} key={`${question}-${index}`}>
-        <strong className={styles.questionText}>{message("frontend.readingClub.detail.question", [question])}</strong>
+        <strong className={styles.questionText}>{message("frontend.readingClub.detail.question", [index+1, question])}</strong>
         <p className={styles.answerText}>
           {message("frontend.readingClub.detail.answer", [selectedApplication?.answerList[index] ?? "-"])}
         </p>

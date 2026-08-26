@@ -231,14 +231,15 @@ export const inviteOverlay = style([
   },
 ]);
 
+// 답변보기 모달
 export const modal = style({
   display: "flex",
   width: "calc(100% - 32px)",
   maxHeight: "calc(100dvh - 48px)",
   flexDirection: "column",
-  gap: 18,
+  gap: 28,
   overflowY: "auto",
-  padding: 24,
+  padding: 20,
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: 22,
   boxSizing: "border-box",
@@ -317,34 +318,41 @@ export const closeIcon = style({
 export const answerList = style({
   display: "flex",
   flexDirection: "column",
-  gap: 14,
+  gap: 16,
 });
 
 export const answerItem = style({
   display: "flex",
   flexDirection: "column",
-  gap: 6,
+  gap: 12,
+  padding: 16,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 14,
+  background: "#ffffff",
 });
 
 export const questionText = style({
-  color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: 14,
-  lineHeight: "20px",
+  fontSize: 16,
+  lineHeight: "24px",
 });
 
 export const answerText = style({
   margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: 14,
-  lineHeight: "20px",
+  padding: "14px 16px",
+  color: vars.color.black,
+  fontFamily: vars.font.medium,
+  fontSize: 16,
+  lineHeight: "24px",
+  borderRadius: 10,
+  background: vars.color.gray100,
   whiteSpace: "pre-wrap",
 });
 
 export const modalActions = style({
   display: "flex",
   gap: 8,
+  marginTop: 10
 });
 
 export const exitDescription = style({
