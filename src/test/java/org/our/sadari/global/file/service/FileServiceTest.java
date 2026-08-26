@@ -37,10 +37,11 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * fileName       : FileServiceTest
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-26
  * description    : 이미지 파일 로직의 동작을 검증한다
  * ===========================================================
@@ -48,6 +49,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 검증 추가
+ * 2026-08-26        HanWon.Jang         공용 HTTP 의존성 반영
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceTest {
@@ -55,6 +57,10 @@ class FileServiceTest {
     // File 데이터 접근 객체
     @Mock
     private FileMapper fileMapper;
+
+    // 외부 프로필 이미지 조회용 HTTP 클라이언트
+    @Mock
+    private RestTemplate restTemplate;
 
     // File 업무 처리 서비스
     private FileService fileService;
@@ -71,7 +77,7 @@ class FileServiceTest {
     @BeforeEach
     void setUp() {
         // 파일 검증 서비스 단위 테스트 대상을 담을 객체를 생성한다
-        fileService = new FileService(fileMapper, new LocalFileStorage(uploadRootPath.toString()));
+        fileService = new FileService(fileMapper, new LocalFileStorage(uploadRootPath.toString()), restTemplate);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageBytes", 10_485_760L);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다

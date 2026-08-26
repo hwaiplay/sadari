@@ -55,6 +55,8 @@
 | `DB_MAXIMUM_데이터베이스 연결 풀 크기` | `10` | Hikari 최대 커넥션 수 |
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
 | `DB_MAXIMUM_POOL_SIZE` | `10` | Hikari 최대 커넥션 수 |
+| `HTTP_CONNECT_TIMEOUT_MILLIS` | `3000` | 외부 HTTP 서버 연결 제한시간(ms) |
+| `HTTP_READ_TIMEOUT_MILLIS` | `5000` | 외부 HTTP 서버 응답 제한시간(ms) |
 | `REDIS_HOST` | 필수 | Redis 서버 호스트 |
 | `REDIS_PORT` | `6379` | Redis 서버 포트 |
 | `REDIS_PASSWORD` | 빈 값 | Redis 인증 비밀번호 |

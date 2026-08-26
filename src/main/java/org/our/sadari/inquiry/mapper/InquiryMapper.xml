@@ -7,6 +7,7 @@
     <sql id="inquiryCodeBinds">
         <bind name="inquiryCategoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_CATEGORY" />
         <bind name="inquiryStatusCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_STATUS" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
     </sql>
 
     <!-- 고객문의 접근 판단에 사용할 현재 회원 상태를 조회한다 -->
@@ -100,12 +101,19 @@
              , I.SPND_NUMB
              , I.REGI_DATE
              , I.ANSW_DATE
-             , (SELECT COUNT(1)
-                  FROM CT_INQANS A
-                 WHERE A.INQR_NUMB = I.INQR_NUMB
-                   AND A.READ_YSNO = 'N') AS UNREAD_COUNT
+             , COUNT(A.ANSW_NUMB) AS UNREAD_COUNT
           FROM CT_INQURY I
+          LEFT JOIN CT_INQANS A
+            ON A.INQR_NUMB = I.INQR_NUMB
+           AND A.READ_YSNO = #{commNo}
          WHERE I.USER_NUMB = #{userNumb}
+      GROUP BY I.INQR_NUMB
+             , I.INQR_CATG
+             , I.INQR_TITL
+             , I.INQR_STAT
+             , I.SPND_NUMB
+             , I.REGI_DATE
+             , I.ANSW_DATE
       ORDER BY I.REGI_DATE DESC
              , I.INQR_NUMB DESC
          LIMIT #{startRow}, #{pageSize}

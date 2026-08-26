@@ -2,6 +2,7 @@ package org.our.sadari.user.auth.provider;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.AuthConstant;
 import org.our.sadari.user.auth.dto.KakaoAccountDto;
@@ -19,7 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * fileName       : KakaoAuthProvider
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-03-15
  * description    : 사용자 외부 연동 기능을 제공한다
  * ===========================================================
@@ -27,35 +28,59 @@ import org.springframework.web.util.UriComponentsBuilder;
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책에 맞춰 Kakao 닉네임 동의 범위 제거
+ * 2026-08-26        HanWon.Jang         공용 HTTP 클라이언트 적용
  */
 @Component
+@RequiredArgsConstructor
 @Slf4j
 public class KakaoAuthProvider {
 
-    // BACK DOMAIN 설정값
+    // 외부 API 호출에 공통 타임아웃을 적용하는 HTTP 클라이언트
+    private final RestTemplate restTemplate;
+
+    // 외부 API JSON 응답을 변환하는 공용 매퍼
+    private final ObjectMapper objectMapper;
+
+    // 백엔드 도메인 설정값
     @Value("${domain.back}")
-    private String BACK_DOMAIN;
+    private String backDomain;
 
-    // KAKAO REDIRECT URI 설정값
+    // Kakao OAuth 콜백 경로 설정값
     @Value("${kakao.redirect.uri}")
-    private String KAKAO_REDIRECT_URI;
+    private String kakaoRedirectUri;
 
-    // KAKAO CLIENT ID 설정값
+    // Kakao REST API 클라이언트 식별값
     @Value("${kakao.key.restApi}")
-    private String KAKAO_CLIENT_ID;
+    private String kakaoClientId;
+
+    // Kakao 로그인 동의 화면 Endpoint 설정값
+    @Value("${kakao.url.authorize}")
+    private String kakaoAuthorizeUrl;
+
+    // Kakao OAuth 토큰 Endpoint 설정값
+    @Value("${kakao.url.token}")
+    private String kakaoTokenUrl;
+
+    // Kakao 사용자 정보 Endpoint 설정값
+    @Value("${kakao.url.user-info}")
+    private String kakaoUserInfoUrl;
+
+    // Kakao 계정 연결 해제 Endpoint 설정값
+    @Value("${kakao.url.unlink}")
+    private String kakaoUnlinkUrl;
 
     /**
      * yml의 백엔드 도메인, 콜백 경로와 카카오 REST API 키로 로그인 인가 URL을 생성한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param state 로그인 시작 브라우저와 콜백을 연결할 일회성 상태값
      * @return 카카오 로그인 동의 화면 URL
      */
     public String getKakaoLoginUrl(String state) {
         // 일반 로그인 콜백을 시작한 브라우저와 연결할 일회성 상태값을 인가 요청에 포함한다
         return UriComponentsBuilder
-                .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
-                .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
+                .fromUriString(kakaoAuthorizeUrl)
+                .queryParam(AuthConstant.KAKAO_CLIENT_ID, kakaoClientId)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
                 .queryParam("scope", "profile_image")
@@ -68,7 +93,7 @@ public class KakaoAuthProvider {
     /**
      * 회원 탈퇴 전 Kakao 계정을 다시 확인할 OAuth 인가 URL을 생성한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param state Redis의 탈퇴 요청과 콜백을 연결할 일회성 상태값
      * @return Kakao 재인증 화면 URL
      */
@@ -76,8 +101,8 @@ public class KakaoAuthProvider {
 
         // 기존 로그인 콜백을 재사용하되 state와 강제 로그인 옵션으로 탈퇴 재인증 요청을 구분한다
         return UriComponentsBuilder
-                .fromUriString(AuthConstant.KAKAO_AUTHORIZE_URL)
-                .queryParam(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID)
+                .fromUriString(kakaoAuthorizeUrl)
+                .queryParam(AuthConstant.KAKAO_CLIENT_ID, kakaoClientId)
                 .queryParam(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri())
                 .queryParam("response_type", "code")
                 .queryParam("scope", "profile_image")
@@ -91,13 +116,11 @@ public class KakaoAuthProvider {
     /**
      * Kakao 인가 코드의 Access Token 교환한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param code Kakao 로그인 인가 코드
      * @return 처리 결과
      */
     public KakaoTokenDto getKakaoToken(String code) throws JsonProcessingException {
-        // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
-        RestTemplate restTemplate = new RestTemplate();
 
         // 아래 처리 단계의 업무 목적을 설명한다.
         HttpHeaders headers = new HttpHeaders();
@@ -108,7 +131,7 @@ public class KakaoAuthProvider {
         // 처리한 값을 결과 컬렉션에 추가한다
         params.add(AuthConstant.KAKAO_GRANT_TYPE, AuthConstant.KAKAO_AUTHORIZATION_CODE);
         // 처리한 값을 결과 컬렉션에 추가한다
-        params.add(AuthConstant.KAKAO_CLIENT_ID, KAKAO_CLIENT_ID);
+        params.add(AuthConstant.KAKAO_CLIENT_ID, kakaoClientId);
         // 처리한 값을 결과 컬렉션에 추가한다
         params.add(AuthConstant.KAKAO_REDIRECT_URI, getKakaoRedirectUri());
         // 처리한 값을 결과 컬렉션에 추가한다
@@ -117,14 +140,12 @@ public class KakaoAuthProvider {
         HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(params, headers);
         // 카카오 인증 서버에 토큰 또는 사용자 정보 요청을 전송한다
         ResponseEntity<String> response = restTemplate.exchange(
-                AuthConstant.KAKAO_AUTHORIZATION_URL,
+                kakaoTokenUrl,
                 HttpMethod.POST,
                 request,
                 String.class
         );
 
-        // 외부 API JSON 응답을 변환할 매퍼를 담을 객체를 생성한다
-        ObjectMapper objectMapper = new ObjectMapper();
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // 외부 API의 JSON 응답을 업무 DTO로 변환한다
@@ -146,13 +167,11 @@ public class KakaoAuthProvider {
     /**
      * Kakao Access Token 기준 사용자 계정 조회한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param vo 추가 또는 조회할 Kakao 사용자 정보
      * @return 처리 결과
      */
     public KakaoAccountDto getKakaoAccount(KakaoTokenDto vo) throws JsonProcessingException {
-        // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
-        RestTemplate restTemplate = new RestTemplate();
 
         // 아래 처리 단계의 업무 목적을 설명한다.
         HttpHeaders headers = new HttpHeaders();
@@ -164,14 +183,12 @@ public class KakaoAuthProvider {
         HttpEntity<?> request = new HttpEntity<>(headers);
         // 카카오 인증 서버에 토큰 또는 사용자 정보 요청을 전송한다
         ResponseEntity<String> accountInfoResponse = restTemplate.exchange(
-                "https://kapi.kakao.com/v2/user/me",
+                kakaoUserInfoUrl,
                 HttpMethod.POST,
                 request,
                 String.class
         );
 
-        // 외부 API JSON 응답을 변환할 매퍼를 담을 객체를 생성한다
-        ObjectMapper objectMapper = new ObjectMapper();
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
             // 외부 API의 JSON 응답을 업무 DTO로 변환한다
@@ -193,7 +210,7 @@ public class KakaoAuthProvider {
     /**
      * 재인증한 Kakao Access Token으로 서비스와 Kakao 계정의 연결을 해제한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param tokenDto Kakao 재인증 토큰
      */
     public void unlinkKakaoAccount(KakaoTokenDto tokenDto) {
@@ -208,8 +225,8 @@ public class KakaoAuthProvider {
         // 인증 헤더를 포함한 Kakao 연결 해제 요청 객체를 생성한다
         HttpEntity<Void> request = new HttpEntity<>(headers);
         // Kakao 사용자 연결 해제 API가 성공해야 로컬 탈퇴 상태를 적용한다
-        new RestTemplate().exchange(
-                "https://kapi.kakao.com/v1/user/unlink",
+        restTemplate.exchange(
+                kakaoUnlinkUrl,
                 HttpMethod.POST,
                 request,
                 String.class
@@ -219,14 +236,14 @@ public class KakaoAuthProvider {
     /**
      * yml의 백엔드 도메인과 콜백 경로 사이의 슬래시를 하나로 정규화한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @return 카카오 콘솔에 등록할 전체 OAuth 콜백 URI
      */
     private String getKakaoRedirectUri() {
         // 정규식과 일치하는 문자열을 일괄 치환한다
-        String normalizedDomain = BACK_DOMAIN.replaceAll("/+$", "");
+        String normalizedDomain = backDomain.replaceAll("/+$", "");
         // 정규식과 일치하는 문자열을 일괄 치환한다
-        String normalizedPath = KAKAO_REDIRECT_URI.replaceAll("^/+", "");
+        String normalizedPath = kakaoRedirectUri.replaceAll("^/+", "");
         // yml의 백엔드 도메인과 콜백 경로 사이의 슬래시를 하나로 정규화 결과를 반환한다
         return normalizedDomain + "/" + normalizedPath;
     }

@@ -44,7 +44,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * fileName       : FileService
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-14
  * description    : 이미지 파일 업무 계약을 정의한다
  * ===========================================================
@@ -53,6 +53,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-14        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 처리 추가
  * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
+ * 2026-08-26        HanWon.Jang         공용 HTTP 클라이언트 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -99,6 +100,9 @@ public class FileService {
 
     // 실행 환경에 따라 로컬 또는 S3로 연결되는 영구 이미지 저장소
     private final FileStorage fileStorage;
+
+    // 외부 프로필 이미지 조회에 공통 타임아웃을 적용하는 HTTP 클라이언트
+    private final RestTemplate restTemplate;
 
     // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
     // 공개 업로드 경로와 분리된 프로필 이미지 임시 저장 루트 경로
@@ -222,7 +226,7 @@ public class FileService {
     /**
      * Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한다.
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param profileImageUrl Kakao 프로필 이미지 URL
      * @param userIdxx Kakao 사용자 식별값
      * @param regiUser 파일을 등록한 회원 번호
@@ -237,8 +241,6 @@ public class FileService {
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
-            // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
-            RestTemplate restTemplate = new RestTemplate();
             // getForEntity 조회로 후속 처리에 필요한 데이터를 가져온다
             ResponseEntity<byte[]> response = restTemplate.getForEntity(URI.create(profileImageUrl), byte[].class);
             // getBody 조회로 후속 처리에 필요한 데이터를 가져온다

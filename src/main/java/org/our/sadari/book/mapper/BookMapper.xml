@@ -30,11 +30,7 @@
              , COALESCE(B.BOOK_DESC, '') AS DESCRIPTION
              , COALESCE(DATE_FORMAT(B.PUBL_DATE, '%Y%m%d'), '') AS PUBDATE
              , P.REPORT_COUNT
-             , ( SELECT ROUND(AVG(CAST(G.REPT_GRDE AS UNSIGNED)), 1)
-                   FROM TM_REPORT G
-                  WHERE G.BOOK_NUMB = B.BOOK_NUMB
-                    AND G.REPT_STAT != #{reptStatRead}
-               ) AS RATING_AVERAGE
+             , ROUND(AVG(CAST(G.REPT_GRDE AS UNSIGNED)), 1) AS RATING_AVERAGE
           FROM (
                 SELECT R.BOOK_NUMB AS BOOK_NUMB
                      , COUNT(DISTINCT R.USER_NUMB) AS REPORT_COUNT
@@ -50,6 +46,19 @@
                ) P
           JOIN TM_BKINFO B
             ON B.BOOK_NUMB = P.BOOK_NUMB
+          LEFT JOIN TM_REPORT G
+            ON G.BOOK_NUMB = P.BOOK_NUMB
+           AND G.REPT_STAT != #{reptStatRead}
+      GROUP BY B.BOOK_NUMB
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_PUBL
+             , B.BOOK_ISBN
+             , B.BOOK_CVIM
+             , B.BOOK_DESC
+             , B.PUBL_DATE
+             , P.REPORT_COUNT
+             , P.LATEST_REPORT_DATE
       ORDER BY P.REPORT_COUNT DESC
              , P.LATEST_REPORT_DATE DESC
              , P.BOOK_NUMB
