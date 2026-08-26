@@ -17,7 +17,6 @@ import {useLocation, useNavigate, useParams} from "react-router-dom";
 import * as styles from "./ClubBookVotePage.css";
 import {buttonDanger} from "./SetClubPage.css.ts"
 import {clsx} from "clsx";
-import {cancelRecommendationButton} from "./ClubBookVotePage.css";
 
 type VotePageState = { recommendedBook?: BookSearchResultType };
 
