@@ -10,6 +10,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -20,12 +21,14 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.mapper.SocialMapper;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
+import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : SocialServiceImplTest
@@ -38,6 +41,7 @@ import org.our.sadari.user.mapper.UserMapper;
  * 2026-08-04        SeungHyeon.Kang       최초 생성
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 검증 추가
  * 2026-08-25        HanWon.Jang        사진 좋아요 링크 기준 검증
+ * 2026-08-26        HanWon.Jang        좋아요 사용자 목록 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -76,6 +80,14 @@ class SocialServiceImplTest {
      */
     @BeforeEach
     void setUp() {
+        // 실패 응답도 실제 공통 메시지를 사용할 수 있도록 테스트 메시지 소스를 생성한다
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        // 서버 공통 메시지 프로퍼티를 조회 기준으로 설정한다
+        messageSource.setBasename("messages");
+        // 한글 메시지 원문이 손상되지 않도록 프로퍼티 파일 인코딩을 설정한다
+        messageSource.setDefaultEncoding("UTF-8");
+        // ResultData 실패 응답이 초기화된 메시지 소스를 사용하도록 연결한다
+        new MessageUtils().setMessageSource(messageSource);
         // 소셜 서비스 단위 테스트 대상을 생성한다
         socialService = new SocialServiceImpl(
                 socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService);
@@ -210,5 +222,54 @@ class SocialServiceImplTest {
 
         // 본인 화면의 공개 여부 조건이 비어 있어 전체 독후감을 유지하는지 확인한다
         assertNull(statsCaptor.getValue().getPubcYsno());
+    }
+
+    /**
+     * 좋아요 사용자 목록이 정규화된 대상과 페이지 조건으로 조회되는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getLikeUsersPage() {
+        // 접근 가능한 독후감 대상 조건을 구성한다
+        when(socialMapper.getLikeTargetAccessCnt(any(SocialDto.LikeUserReqDto.class))).thenReturn(1);
+        // 활성 좋아요 사용자 한 명이 조회되는 조건을 구성한다
+        when(socialMapper.getLikeUserList(any(SocialDto.LikeUserReqDto.class)))
+                .thenReturn(List.of(new SocialDto.FollowUserDto()));
+
+        // 소문자로 전달된 독후감 대상의 첫 좋아요 사용자 페이지를 조회한다
+        ResultData result = socialService.getLikeUserList(44L, "report", 157L, 1);
+
+        // 접근 가능한 좋아요 사용자 목록 조회가 성공하는지 확인한다
+        assertEquals(200, result.getCode());
+        // Mapper에 전달된 대상과 페이지 조건을 확인할 인자 Capture를 생성한다
+        ArgumentCaptor<SocialDto.LikeUserReqDto> reqCaptor = ArgumentCaptor.forClass(SocialDto.LikeUserReqDto.class);
+        // 활성 좋아요 사용자 목록 조회 조건을 Capture한다
+        verify(socialMapper).getLikeUserList(reqCaptor.capture());
+        // 대상 유형이 서버 허용 목록의 대문자 값으로 정규화되는지 확인한다
+        assertEquals(Constant.LIKE_TARGET_REPORT, reqCaptor.getValue().getTagtType());
+        // 첫 페이지의 시작 위치가 0인지 확인한다
+        assertEquals(0, reqCaptor.getValue().getPageOffset());
+        // 다음 페이지 판정용 한 건을 더한 조회 크기인지 확인한다
+        assertEquals(11, reqCaptor.getValue().getPageLimit());
+    }
+
+    /**
+     * 접근할 수 없는 대상의 좋아요 사용자 정보가 조회되지 않는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getLikeUsersReject() {
+        // 대상 접근 검증 결과가 없는 조건을 구성한다
+        when(socialMapper.getLikeTargetAccessCnt(any(SocialDto.LikeUserReqDto.class))).thenReturn(0);
+
+        // 접근할 수 없는 독후감의 좋아요 사용자 목록을 요청한다
+        ResultData result = socialService.getLikeUserList(44L, Constant.LIKE_TARGET_REPORT, 157L, 1);
+
+        // 접근 제한 실패 응답인지 확인한다
+        assertEquals(2020, result.getCode());
+        // 접근 검증 실패 뒤에는 사용자 목록을 조회하지 않는지 확인한다
+        verify(socialMapper, never()).getLikeUserList(any(SocialDto.LikeUserReqDto.class));
     }
 }

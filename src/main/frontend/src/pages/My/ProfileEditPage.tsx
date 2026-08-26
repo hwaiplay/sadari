@@ -13,6 +13,7 @@ import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageV
 import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import * as modalControlStyles from "@/components/Modal/ModalControls.css";
+import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
   getBookCoverImageSource,
@@ -28,6 +29,7 @@ import {
   type FollowListType,
   type FollowUser,
 } from "@/features/Social/api/socialApi";
+import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import { useFollowListModal } from "@/features/Social/hooks/useFollowListModal";
 import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import {
@@ -460,23 +462,31 @@ function ProfileEditPage() {
    */
   const renderImageReactions = (reaction: ImageReaction, className: string): ReactNode => (
     <div className={className}>
-      <button
-        className={styles.metricButton}
-        type="button"
-        aria-label={/* "좋아요" */ message("frontend.feed.likeAction")}
-        aria-pressed={reaction.likeYsno === "Y"}
-        disabled={imageLikeUpdatingType === reaction.tagtType}
-        onClick={() => void handleImageLike(reaction)}
-      >
-        <img
-          className={styles.metricIcon}
-          src={reaction.likeYsno === "Y"
-            ? "/img/icons/icon-heart-fill.svg"
-            : "/img/icons/icon-heart.svg"}
-          alt=""
+      {/* 현재 사진 좋아요 변경과 좋아요 사용자 목록 영역 */}
+      <div className={styles.likeMetricGroup}>
+        <button
+          className={styles.likeIconButton}
+          type="button"
+          aria-label={/* "좋아요" */ message("frontend.feed.likeAction")}
+          aria-pressed={reaction.likeYsno === "Y"}
+          disabled={imageLikeUpdatingType === reaction.tagtType}
+          onClick={() => void handleImageLike(reaction)}
+        >
+          <img
+            className={styles.metricIcon}
+            src={reaction.likeYsno === "Y"
+              ? "/img/icons/icon-heart-fill.svg"
+              : "/img/icons/icon-heart.svg"}
+            alt=""
+          />
+        </button>
+        <LikeUserListButton
+          className={styles.likeCountButton}
+          tagtType={reaction.tagtType}
+          tagtNumb={reaction.tagtNumb}
+          countLabel={reaction.likeCnt}
         />
-        {reaction.likeCnt}
-      </button>
+      </div>
       <button
         className={styles.commentButton}
         type="button"

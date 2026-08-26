@@ -1106,6 +1106,9 @@
      LEFT JOIN (  SELECT LIKEX.TAGT_NUMB AS REPT_NUMB
                        , COUNT(*) AS LIKE_CNT
                     FROM TB_LIKEXX LIKEX
+              INNER JOIN TM_USERXM LIKEUSER
+                      ON LIKEUSER.USER_NUMB = LIKEX.USER_NUMB
+                     AND LIKEUSER.USER_STAT = #{userActive}
                    WHERE LIKEX.TAGT_TYPE = #{likeTargetReport}
                 GROUP BY LIKEX.TAGT_NUMB
                 ) LIKECOUNT

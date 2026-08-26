@@ -39,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-04        SeungHyeon.Kang       공개 독후감만 소셜 요약과 통계에 포함
  * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 조회 추가
  * 2026-08-15        SeungHyeon.Kang    접근 제한 회원 소셜 프로필 상태명 응답 추가
+ * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -344,6 +345,29 @@ public class SocialController {
         request.setUserNumb(loginUserNumb);
         // 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소 결과를 반환한다
         return socialService.setLike(request);
+    }
+
+    /**
+     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param tagtType 좋아요 대상 유형
+     * @param tagtNumb 좋아요 대상 번호
+     * @param page 조회할 페이지 번호
+     * @return 활성 좋아요 사용자 목록 조회 결과
+     */
+    @GetMapping("/like-users")
+    @Operation(summary = "좋아요 사용자 목록 조회", description = "접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.")
+    public ResultData getLikeUserList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                    , @Parameter(description = "좋아요 대상 유형", example = "REPORT")
+                                      @RequestParam(value = "tagtType") String tagtType
+                                    , @Parameter(description = "좋아요 대상 번호", example = "1")
+                                      @RequestParam(value = "tagtNumb") Long tagtNumb
+                                    , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                      @RequestParam(value = "page", defaultValue = "1") int page) {
+        // 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 반환한다
+        return socialService.getLikeUserList(loginUserNumb, tagtType, tagtNumb, page);
     }
 
     /**

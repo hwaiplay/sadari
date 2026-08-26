@@ -261,6 +261,38 @@ export const metricButton = style({
   },
 });
 
+export const likeMetricGroup = style({
+  minWidth: "28px",
+  height: "24px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "2px",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+});
+
+export const likeIconButton = style({
+  width: "14px",
+  height: "24px",
+  padding: 0,
+  border: 0,
+  backgroundColor: "transparent",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  selectors: {
+    "&:disabled": { cursor: "default", opacity: 0.5 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 1 },
+  },
+});
+
+export const likeCountButton = style({
+  color: "#ff747c",
+});
+
 export const metricIcon = style({
   width: "14px",
   height: "14px",

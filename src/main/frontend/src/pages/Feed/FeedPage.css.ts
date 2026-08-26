@@ -12,6 +12,7 @@ export const page = style({
 export const list = style({ display: "grid", gap: "14px" });
 
 export const card = style({
+  position: "relative",
   overflow: "hidden",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "22px",
@@ -83,31 +84,15 @@ export const media = style({
 });
 export const reportMedia = style([media, { width: "50px", height: "74px", borderRadius: "4px" }]);
 export const backgroundMedia = style([media, { width: "100%", aspectRatio: "16 / 9", borderRadius: "12px" }]);
-export const mediaInfo = style({ display: "block", minWidth: 0, alignSelf: "center" });
-export const title = style({ display: "block", margin: 0, fontFamily: vars.font.heading, fontSize: "18px", lineHeight: 1.4, color: vars.color.black, overflowWrap: "anywhere" });
-export const reportMetadata = style({ display: "flex", alignItems: "center", flexWrap: "wrap", gap: "8px", marginTop: "8px" });
-export const metadata = style({ display: "block", minWidth: 0, fontFamily: vars.font.body, fontSize: "14px", lineHeight: 1.4, color: vars.color.gray600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
-export const rating = style({ display: "block", margin: "10px 0 0", color: "#e0a600", fontFamily: vars.font.semibold, fontSize: "14px" });
+export const mediaInfo = style({ minWidth: 0, alignSelf: "center", display: "flex", flexDirection: "column", gap: "3px" });
+export const title = style({ display: "block", margin: 0, fontFamily: vars.font.semibold, fontSize: "14px", lineHeight: 1.25, color: vars.color.black, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
+export const metadata = style({ display: "block", minWidth: 0, fontFamily: vars.font.body, fontSize: "12px", lineHeight: 1.25, color: vars.color.gray600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
+export const ratingStatusRow = style({ minWidth: 0, minHeight: "24px", marginTop: "4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" });
+export const rating = style({ display: "inline-flex", alignItems: "center", gap: "3px", color: vars.color.black, fontFamily: vars.font.semibold, fontSize: "14px", lineHeight: 1.45 });
+export const ratingIcon = style({ width: "18px", height: "18px", display: "block", flexShrink: 0, color: "#ffd45c" });
 
 export const contentSection = style({
   padding: "0 16px 12px",
-});
-
-export const expandButton = style({
-  width: "28px",
-  height: "24px",
-  margin: "5px auto 0",
-  padding: 0,
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  border: 0,
-  background: "transparent",
-  cursor: "pointer",
-  selectors: {
-    "&:hover": { background: vars.color.gray100 },
-    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 1, borderRadius: "6px" },
-  },
 });
 
 export const actions = style({
@@ -140,6 +125,19 @@ export const actionButton = style({
     "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 1 },
   },
 });
+export const likeActionGroup = style({
+  minWidth: "32px",
+  height: "24px",
+  display: "inline-flex",
+  alignItems: "center",
+  justifyContent: "center",
+  gap: "4px",
+  color: "#ff747c",
+  fontFamily: vars.font.body,
+  fontSize: "14px",
+});
+export const likeIconButton = style([actionButton, { minWidth: "16px", width: "16px" }]);
+export const likeCountButton = style({ color: "#ff747c" });
 export const commentButton = style([actionButton, { color: "#777777" }]);
 export const icon = style({ width: "16px", height: "16px", flexShrink: 0 });
 export const empty = style({ margin: "72px 20px", fontFamily: vars.font.body, fontSize: "14px", textAlign: "center", lineHeight: 1.7, color: vars.color.gray600, whiteSpace: "pre-line" });

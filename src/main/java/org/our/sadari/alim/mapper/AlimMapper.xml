@@ -73,7 +73,7 @@
            AND COALESCE(ALIM_CONT, ' ') = COALESCE(#{alimCont}, ' ')
            AND COALESCE(LINK_URLX, ' ') = COALESCE(#{linkUrlx}, ' ')
            AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
-           AND SEND_DATE >= CURRENT_TIMESTAMP - (1 / 24)
+           AND SEND_DATE >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)
     </select>
 
     <!-- 삭제되지 않은 알림을 읽음 여부와 관계없이 10개씩 조회하고, 다음 페이지 확인용으로 1개를 더 반환한다. -->

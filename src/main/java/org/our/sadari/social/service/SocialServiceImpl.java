@@ -33,6 +33,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
+ * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -289,6 +290,80 @@ public class SocialServiceImpl implements SocialService {
         List<SocialDto.FollowUserDto> searchedList = socialMapper.getFollowerList(req);
         // 팔로워 목록의 현재 페이지와 다음 페이지 여부를 반환한다
         return getFollowPage(searchedList, Math.max(page, 1));
+    }
+
+    /**
+     * 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
+     * 비활성 또는 삭제 대기 사용자의 좋아요 행은 보존하더라도 목록과 집계에서 제외한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param tagtType 좋아요 대상 유형
+     * @param tagtNumb 좋아요 대상 번호
+     * @param page 조회할 페이지 번호
+     * @return 활성 좋아요 사용자 페이지
+     */
+    @Override
+    public ResultData getLikeUserList(Long loginUserNumb, String tagtType, Long tagtNumb, int page) {
+        // 인증 사용자 번호가 없으면 대상 정보 조회 전에 인증 실패로 응답한다
+        if (StringUtil.isEmpty(loginUserNumb)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 대상 식별값이 없으면 사용자 목록 조회를 시작하지 않는다
+        if (StringUtil.hasEmpty(tagtType, tagtNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 허용 목록 비교를 위해 대상 유형의 공백과 대소문자를 정규화한다
+        String normalizedType = tagtType.trim().toUpperCase();
+        // 현재 서비스가 좋아요를 제공하는 네 가지 대상 유형만 목록 조회를 허용한다
+        if (!isAllowedLikeListType(normalizedType) || tagtNumb <= 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 좋아요 목록 접근 검증과 페이지 조건을 같은 요청 객체에 설정한다
+        SocialDto.LikeUserReqDto req = createLikeUserReq(loginUserNumb, normalizedType, tagtNumb, page);
+        // 비공개 독후감 등 현재 로그인 사용자가 조회할 수 없는 대상의 사용자 목록은 공개하지 않는다
+        if (socialMapper.getLikeTargetAccessCnt(req) <= 0) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 활성 사용자만 포함한 좋아요 목록을 페이지 조건으로 조회한다
+        List<SocialDto.FollowUserDto> searchedList = socialMapper.getLikeUserList(req);
+        // 팔로우 목록과 동일한 페이지 응답 구조를 반환한다
+        return getFollowPage(searchedList, Math.max(page, 1));
+    }
+
+    /** 좋아요 사용자 목록에서 허용하는 대상 유형인지 확인한다. */
+    private boolean isAllowedLikeListType(String tagtType) {
+        // 현재 화면에서 좋아요 수를 표시하는 대상 유형만 허용한다
+        return Constant.LIKE_TARGET_REPORT.equals(tagtType)
+                || Constant.LIKE_TARGET_PROFILE_IMAGE.equals(tagtType)
+                || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(tagtType)
+                || Constant.LIKE_TARGET_REPLY.equals(tagtType);
+    }
+
+    /** 좋아요 사용자 목록의 접근 검증과 페이지 조회 조건을 생성한다. */
+    private SocialDto.LikeUserReqDto createLikeUserReq(Long loginUserNumb, String tagtType
+                                                     , Long tagtNumb, int page) {
+        // 좋아요 사용자 목록 조회 조건을 담을 객체를 생성한다
+        SocialDto.LikeUserReqDto req = new SocialDto.LikeUserReqDto();
+        // 인증 사용자와 대상 식별값을 접근 검증 조건으로 설정한다
+        req.setLoginUserNumb(loginUserNumb);
+        req.setTagtType(tagtType);
+        req.setTagtNumb(tagtNumb);
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 현재 페이지 시작 위치와 다음 페이지 판정용 조회 수를 설정한다
+        req.setPageOffset((normalizedPage - 1) * FOLLOW_PAGE_SIZE);
+        req.setPageLimit(FOLLOW_PAGE_SIZE + 1);
+        // 완성된 좋아요 사용자 목록 조회 조건을 반환한다
+        return req;
     }
 
     /**

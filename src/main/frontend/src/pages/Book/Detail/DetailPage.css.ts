@@ -475,8 +475,7 @@ export const likeButton = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  gap: "4px",
-  minWidth: "38px",
+  minWidth: "17px",
   height: "24px",
   padding: 0,
   border: 0,
@@ -504,6 +503,10 @@ export const likeIcon = style({
 
 export const likeCount = style({
   minWidth: "14px",
+  height: "24px",
+  color: "#d84a5f",
+  fontFamily: vars.font.semibold,
+  fontSize: "12px",
   textAlign: "left",
 });
 
