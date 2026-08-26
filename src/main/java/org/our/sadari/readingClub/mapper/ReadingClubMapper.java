@@ -1,5 +1,6 @@
 package org.our.sadari.readingClub.mapper;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -29,7 +30,22 @@ public interface ReadingClubMapper {
 
     /** 다음 도서 추천 목록을 조회한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 추천 목록 */
     List<ReadingClubDto.BookRecommendationDto> getBookRecommendationList(@Param("clubNumb") Long clubNumb
-                                                                        , @Param("userNumb") Long userNumb);
+                                                                        , @Param("userNumb") Long userNumb
+                                                                        , @Param("cycleStdt") LocalDateTime cycleStdt);
+
+    /** 최신 독서 회차의 투표 주기 기준일을 조회한다. @param clubNumb 모임 번호 @return 투표 정책 기준 회차 */
+    ReadingClubDto.BookVoteRuleDto getBookVoteRuleDtl(@Param("clubNumb") Long clubNumb);
+
+    /** 사용자별 추천 등록을 직렬화하기 위해 활성 모임원 행을 잠근다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 사용자 번호 */
+    Long getMemberForUpdate(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);
+
+    /** 현재 투표 주기에 등록한 내 후보 수를 조회한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param cycleStdt 주기 시작 일시 @return 후보 수 */
+    int getMyBookRecommCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                          , @Param("cycleStdt") LocalDateTime cycleStdt);
+
+    /** 현재 투표 주기에 등록한 내 투표 수를 조회한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param cycleStdt 주기 시작 일시 @return 투표 수 */
+    int getMyBookVoteCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                        , @Param("cycleStdt") LocalDateTime cycleStdt);
 
     /** 다음 도서 추천을 등록한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param request 추천 도서 @return 등록 수 */
     int setBookRecommendation(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
@@ -37,11 +53,11 @@ public interface ReadingClubMapper {
 
     /** 본인의 다음 도서 추천을 삭제한다. @param clubNumb 모임 번호 @param recmNumb 추천 번호 @param userNumb 사용자 번호 @return 삭제 수 */
     int delBookRecommendation(@Param("clubNumb") Long clubNumb, @Param("recmNumb") Long recmNumb
-                             , @Param("userNumb") Long userNumb);
+                             , @Param("userNumb") Long userNumb, @Param("cycleStdt") LocalDateTime cycleStdt);
 
     /** 다음 도서 투표를 등록하거나 변경한다. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param recmNumb 추천 번호 @return 반영 수 */
     int uptBookVote(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
-                   , @Param("recmNumb") Long recmNumb);
+                   , @Param("recmNumb") Long recmNumb, @Param("cycleStdt") LocalDateTime cycleStdt);
 
     /**
      * 같은 중복 방지 키로 이미 생성된 모임 독서 회차를 조회한다.
@@ -604,14 +620,14 @@ public interface ReadingClubMapper {
                          , @Param("ownerNumb") Long ownerNumb);
 
     /**
-     * 승인형 모임의 처리 중 신청을 조회한다.
+     * 승인형 모임의 처리 중이거나 재신청 제한 중인 신청을 조회한다.
      *
      * @author SeungHyeon.Kang
      * @param clubNumb 모임 번호
      * @param userNumb 신청 사용자 번호
-     * @return 처리 중 신청
+     * @return 가입 신청 제한 기준이 되는 신청
      */
-    ReadingClubDto.ApplicationDto getPendingApplication(@Param("clubNumb") Long clubNumb
+    ReadingClubDto.ApplicationDto getBlockedApplication(@Param("clubNumb") Long clubNumb
                                                        , @Param("userNumb") Long userNumb);
 
     /**

@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -16,6 +17,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.alim.dto.AlimDto;
 import org.our.sadari.alim.mapper.AlimMapper;
+import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.push.service.PushService;
 
@@ -195,6 +197,51 @@ class AlimServiceImplTest {
               , "/report/detail/10"
               , 7L
         );
+    }
+
+    /**
+     * 링크 템플릿 중간의 대상 번호 자리표시자를 치환하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void sendAlimLinksTarget() {
+        // 모임 멤버 관리 화면으로 이동할 알림 템플릿을 구성한다
+        AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
+        template.setAlimTitl("새로운 가입 신청");
+        template.setTempCont("#{clubName}에 새로운 가입 신청이 있어요.");
+        template.setLinkUrlx("/reading-clubs/#{tagtNumb}/manage/members");
+
+        // 활성 모임장과 사용 가능한 알림 템플릿 및 신규 알림 저장 결과를 구성한다
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
+        when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
+        doAnswer(invocation -> {
+            // 저장된 알림 번호를 푸시 payload에 전달하도록 구성한다
+            AlimDto.AlimItemDto alim = invocation.getArgument(0);
+            alim.setAlimNumb(9L);
+            return 1;
+        }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
+
+        // 신규 가입 신청 알림을 모임장에게 발송한다
+        ResultData result = alimService.sendAlim(
+                31L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED
+              , 10L
+              , Map.of("clubName", "책벌레 모임")
+        );
+
+        // 문구와 멤버 관리 화면 링크가 완성된 푸시 발송을 검증한다
+        assertEquals(200, result.getCode());
+        verify(pushService).sendPush(
+                31L
+              , "새로운 가입 신청"
+              , "책벌레 모임에 새로운 가입 신청이 있어요."
+              , "/reading-clubs/10/manage/members"
+              , 9L
+        );
+        // 같은 모임에서 연속 신청이 들어와도 가입 신청 알림은 중복 차단 조회를 하지 않는지 검증한다
+        verify(alimMapper, never()).dupSameAlimInHour(any(AlimDto.AlimItemDto.class));
     }
 
     /**

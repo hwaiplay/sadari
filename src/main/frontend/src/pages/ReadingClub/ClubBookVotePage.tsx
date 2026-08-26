@@ -11,6 +11,7 @@ import {
   getClubBookRecommApi,
   updateClubBookVoteApi,
   type ClubBookRecommendation,
+  type ClubBookVotePage,
 } from "@/features/ReadingClub/api/readingClubApi";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
@@ -30,6 +31,7 @@ const ClubBookVotePage = () => {
   const pageState = (location.state ?? {}) as VotePageState;
   const [candidates, setCandidates] = useState<ClubBookRecommendation[]>([]);
   const [selectedRecommendation, setSelectedRecommendation] = useState<number | null>(null);
+  const [votePage, setVotePage] = useState<ClubBookVotePage | null>(null);
 
   const loadCandidates = useCallback(async () => {
 
@@ -40,9 +42,11 @@ const ClubBookVotePage = () => {
     }
 
     try {
-      const recommendationList = await getClubBookRecommApi(clubNumb);
+      const votePageData = await getClubBookRecommApi(clubNumb);
+      const recommendationList = votePageData.candidateList ?? [];
       setCandidates(recommendationList);
       setSelectedRecommendation(recommendationList.find((candidate) => candidate.voteYsno === "Y")?.recmNumb ?? null);
+      setVotePage(votePageData);
     } catch (error) {
       await sweetError(message("frontend.alert.errorTitle"), getApiErrorMessage(error, message("frontend.common.error")));
     }
@@ -84,6 +88,12 @@ const ClubBookVotePage = () => {
   );
 
   const handleRecommendation = () => {
+    // 후보 등록 가능 시점이며 아직 내 후보가 없을 때만 검색 화면으로 이동한다.
+    if (!votePage?.canRecommend || votePage.hasRecommended) {
+      // 후보 등록이 제한된 상태에서는 화면 이동을 종료한다.
+      return;
+    }
+
     navigate(`/reading-clubs/${clubNumb}/books/search`, {
       state: {clubBookVoteReturnPath: `/reading-clubs/${clubNumb}/book-vote`},
     });
@@ -141,9 +151,21 @@ const ClubBookVotePage = () => {
   return (
     <main className={styles.page}>
       <section className={styles.voteSummary}>
-        <div><h1 className={styles.summaryTitle}>{message("frontend.readingClub.vote.title")}</h1><p
-          className={styles.deadline}>{message("frontend.readingClub.vote.deadline")}</p></div>
-        <span className={styles.dDay}>D-2</span>
+        <div>
+          <h1 className={styles.summaryTitle}>{message("frontend.readingClub.vote.title")}</h1>
+          <p className={styles.deadline}>
+            {votePage?.voteDeadline
+              ? message("frontend.readingClub.vote.deadline", [votePage.voteDeadline.replaceAll("-", ".")])
+              : message("frontend.readingClub.vote.alwaysOpen")
+            }
+          </p>
+        </div>
+        <span className={styles.dDay}>
+          {votePage?.voteDeadline
+            ? message("frontend.readingClub.vote.dDay", [votePage.dday ?? 0])
+            : null
+          }
+        </span>
       </section>
       <section className={styles.candidateSection}>
         <h2
@@ -158,6 +180,7 @@ const ClubBookVotePage = () => {
               // 추천 도서 선택 카드와 본인 추천 삭제 명령을 반환한다.
               return <article className={styles.candidateCard} data-selected={selected} key={candidate.recmNumb}>
                 <button className={styles.candidateSelect} role="radio" aria-checked={selected} type="button"
+                        disabled={votePage?.hasVoted}
                         onClick={() => setSelectedRecommendation(candidate.recmNumb)}>
                   <img className={styles.cover} src={getBookCoverImageSource(candidate.bookCvim)} alt=""
                        onError={handleBookCoverImageError}/>
@@ -168,7 +191,7 @@ const ClubBookVotePage = () => {
                                                                                       aria-hidden="true"/>
                 </button>
                 {/* 추천 취소 버튼 */}
-                {candidate.mineYsno === "Y" ? (
+                {candidate.mineYsno === "Y" && votePage?.canRecommend ? (
                   <button className={clsx(buttonDanger, styles.cancelRecommendationButton)}
                           onClick={() => void handleDelete(candidate.recmNumb)}>
                     <svg width="8" height="2" viewBox="0 0 8 2" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -187,16 +210,26 @@ const ClubBookVotePage = () => {
         className={styles.guideTitle}>{message("frontend.readingClub.vote.guideTitle")}</p>
         <ul className={styles.guideList}>
           <li>{message("frontend.readingClub.vote.guideOnce")}</li>
+          <li>{message("frontend.readingClub.vote.guideCandidate")}</li>
           <li>{message("frontend.readingClub.vote.guideTie")}</li>
         </ul>
       </aside>
-      <div className={styles.actions} data-button-count={candidates.length === 0 ? "one" : "two"}>
-        {/* 도서 추천하기 */}
-        <ActionButton variant={candidates.length === 0 ? "primary" : "secondary"} size="lg" width="full"
-                      onClick={handleRecommendation}>{message("frontend.readingClub.vote.recommend")}</ActionButton>
+      <div className={styles.actions}
+           data-button-count={candidates.length === 0 || votePage?.hasRecommended ? "one" : "two"}>
+        {/* 추천하지 않은 사용자에게 제공하는 도서 추천 명령 영역 */}
+        {!votePage?.hasRecommended ? (
+          <ActionButton variant={candidates.length === 0 ? "primary" : "secondary"} size="lg" width="full"
+                        disabled={!votePage?.canRecommend} onClick={handleRecommendation}>
+            {/* "도서 추천하기" */}
+            {message("frontend.readingClub.vote.recommend")}
+          </ActionButton>
+        ) : null}
         {/* 투표하기 */}
-        {candidates.length > 0 ? <ActionButton size="lg" width="full" disabled={!selectedCandidate}
-                                               onClick={() => void handleVote()}>{message("frontend.readingClub.vote.submit")}</ActionButton> : null}
+        {candidates.length > 0 ? <ActionButton size="lg" width="full"
+                                               disabled={!selectedCandidate || votePage?.hasVoted}
+                                               onClick={() => void handleVote()}>{votePage?.hasVoted
+          ? message("frontend.readingClub.vote.voted")
+          : message("frontend.readingClub.vote.submit")}</ActionButton> : null}
       </div>
     </main>
   );

@@ -543,9 +543,9 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
 
         // 세션별 목표시간을 템플릿 치환값으로 전달하여 공통 알림을 저장한다
         ResultData result = alimService.sendAlim(
-                // 알림 수신 사용자 번호를 전달한다
+              // 알림 수신 사용자 번호를 전달한다
                 timerDto.getUserNumb()
-              , Constant.ALIM_SITU_REPORT
+              , Constant.ALIM_SITU_TIMER
               , Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER
               , null
               , Map.of("timerTime", formatTimerTime(timerDto.getTargSecs()))

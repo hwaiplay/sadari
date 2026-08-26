@@ -268,9 +268,13 @@ public class AlimServiceImpl implements AlimService {
                 || Constant.ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE.equals(tempCode);
         // 타이머 알림은 세션마다 별도 이벤트이므로 한 시간 안에도 각각 저장한다
         boolean isBookTimerOverAlim = Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER.equals(tempCode);
+        // 가입 신청과 즉시 가입 알림은 같은 모임에서 연속 발생해도 가입 이벤트마다 각각 저장한다
+        boolean isClubJoinEventAlim = Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED.equals(tempCode);
 
         // 좋아요와 팔로우처럼 반복 조작으로 발생할 수 있는 동일 알림만 1시간 동안 중복 차단한다
-        if (!isReplyReportAlim && !isBookTimerOverAlim && alimMapper.dupSameAlimInHour(alim) > 0) {
+        if (!isReplyReportAlim && !isBookTimerOverAlim && !isClubJoinEventAlim
+                && alimMapper.dupSameAlimInHour(alim) > 0) {
             // 알림 수신자와 템플릿 식별값으로 TB_ALTEMP의 사용 가능한 템플릿을 찾고, #{key} 형식의 상용구를 Map 값으로 치환해 TB_ALIMXX에 저장 결과를 성공 응답으로 반환한다
             return ResultData.success(alim);
         }
@@ -382,7 +386,8 @@ public class AlimServiceImpl implements AlimService {
 
     /**
      * 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다.
-     * 예를 들어 TB_ALTEMP.LINK_URLX가 /report/detail/이고 tagtNumb가 10이면 /report/detail/10으로 저장된다.
+     * 예를 들어 TB_ALTEMP.LINK_URLX가 /report/detail/이면 대상 번호를 뒤에 붙이고,
+     * /reading-clubs/#{tagtNumb}/manage/members이면 자리표시자를 대상 번호로 치환한다.
      *
      * @author SeungHyeon.Kang
      * @param linkUrlx 템플릿에 저장된 기본 링크
@@ -403,7 +408,13 @@ public class AlimServiceImpl implements AlimService {
             return linkUrlx;
         }
 
-        // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
+        // 대상 번호 뒤에 하위 경로가 필요한 템플릿은 URL 안의 자리표시자를 치환한다
+        if (linkUrlx.contains("#{tagtNumb}")) {
+            // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
+            return linkUrlx.replace("#{tagtNumb}", String.valueOf(tagtNumb));
+        }
+
+        // 기존 기본 링크 템플릿은 호환성을 유지하도록 대상 번호를 URL 뒤에 붙인다
         return linkUrlx + tagtNumb;
     }
 }

@@ -166,6 +166,12 @@ public final class Constant {
     public static final String ALIM_SITU_REPORT = "REPORT";
     // 독후감 댓글에 의해 발생하는 알림 상황 코드
     public static final String ALIM_SITU_REPLY = "REPLY";
+    // 독서 모임 가입 신청 처리 결과 알림 상황 코드
+    public static final String ALIM_SITU_REJECTED = "REJECTED";
+    // 승인형 모임 가입 거절 후 다시 신청할 수 있을 때까지의 대기 일수
+    public static final int CLUB_REAPPLY_WAIT_DAYS = 7;
+    // 독서 타이머 목표시간 도달 알림 상황 코드
+    public static final String ALIM_SITU_TIMER = "TIMER";
     // 상황별 아이콘이 등록되지 않았을 때 사용하는 기본 알림 상황 코드
     public static final String ALIM_SITU_DEFAULT = "DEFAULT";
 
@@ -195,6 +201,10 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_CLUB_JOIN_APPROVED = "CLUB_JOIN_APPROVED";
     // 독서 모임 가입 신청 거절 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_CLUB_JOIN_REJECTED = "CLUB_JOIN_REJECTED";
+    // 독서 모임 신규 가입 신청 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED = "CLUB_JOIN_REQUESTED";
+    // 공개형 독서 모임 신규 멤버 가입 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_MEMBER_JOINED = "CLUB_MEMBER_JOINED";
     // 독서 모임 강제 퇴장 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_CLUB_MEMBER_EXITED = "CLUB_MEMBER_EXITED";
 

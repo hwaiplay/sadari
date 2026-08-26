@@ -704,6 +704,176 @@ class ReadingClubServiceImplTest {
     }
 
     /**
+     * 공개형 모임의 즉시 가입이 완료되면 모임장에게 신규 멤버 알림을 발송하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setOpenJoinAlertsOwner() {
+        // 즉시 가입이 가능한 공개형 모임과 알림 수신 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("OPEN");
+        club.setOwnrNumb(30L);
+        club.setClubName("책벌레 모임");
+        club.setMaxxMemb(10);
+
+        // 좌석이 남은 모임의 멤버 등록과 모임장 알림이 모두 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.setActiveMember(10L, 20L)).thenReturn(1);
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, 10L
+                , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
+
+        // 공개형 모임에 즉시 가입한다
+        readingClubService.setJoin(20L, 10L, new ReadingClubDto.JoinReqDto());
+
+        // 모임장에게 모임명만 포함한 신규 멤버 가입 알림이 발송되는지 검증한다
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED
+              , 10L
+              , Map.of("clubName", "책벌레 모임")
+        );
+    }
+
+    /**
+     * 공개형 모임의 신규 멤버 알림 저장 실패가 즉시 가입을 롤백하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setOpenJoinAlimRollsBack() {
+        // 즉시 가입이 가능한 공개형 모임과 알림 수신 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("OPEN");
+        club.setOwnrNumb(30L);
+        club.setClubName("책벌레 모임");
+        club.setMaxxMemb(10);
+
+        // 멤버 등록 후 알림 템플릿 조회가 실패하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.setActiveMember(10L, 20L)).thenReturn(1);
+        when(alimService.sendAlim(any(), any(), any(), any(), any()))
+                .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
+
+        // 알림 없이 멤버 관계만 저장되는 상태를 허용하지 않는지 검증한다
+        assertThrows(CustomException.class
+                , () -> readingClubService.setJoin(20L, 10L, new ReadingClubDto.JoinReqDto()));
+    }
+
+    /**
+     * 승인형 모임 가입 신청이 저장되면 모임장에게 신청 알림을 발송하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setJoinAlertsOwner() {
+        // 승인형 공개 모임과 모임장 및 알림 문구에 사용할 모임명을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("APPROVAL");
+        club.setOwnrNumb(30L);
+        club.setClubName("책벌레 모임");
+
+        // 현재 가입 질문과 신청자의 답변을 같은 순서로 구성한다
+        ReadingClubDto.QuestionDto question = new ReadingClubDto.QuestionDto();
+        question.setQuesFirs("가입 이유를 알려주세요.");
+        ReadingClubDto.JoinReqDto request = new ReadingClubDto.JoinReqDto();
+        request.setAnswerList(List.of("함께 읽고 싶어요."));
+
+        // 가입 신청 저장과 모임장 알림 발송이 모두 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getClubQuestion(10L)).thenReturn(question);
+        when(badWordDetectionService.findBadWord("함께 읽고 싶어요.")).thenReturn(Optional.empty());
+        when(readingClubMapper.setJoinApplication(any())).thenReturn(1);
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED, 10L
+                , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
+
+        // 승인형 모임 가입을 신청한다
+        readingClubService.setJoin(20L, 10L, request);
+
+        // 모임장에게 신청자 식별정보 없이 모임명만 치환하는 알림이 발송되는지 검증한다
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED
+              , 10L
+              , Map.of("clubName", "책벌레 모임")
+        );
+    }
+
+    /**
+     * 가입 거절 후 재신청 제한 기간에는 새 승인 가입 신청을 저장하지 않는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setJoinBlocksRejected() {
+        // 승인형 공개 모임을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("APPROVAL");
+
+        // 최근 거절된 가입 신청을 재신청 제한 기준으로 구성한다
+        ReadingClubDto.ApplicationDto application = new ReadingClubDto.ApplicationDto();
+        application.setJoinStat("REJECTED");
+
+        // 모임 조회와 재신청 제한 조회가 최근 거절 신청을 반환하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getBlockedApplication(10L, 20L)).thenReturn(application);
+
+        // 재신청 제한 기간에 승인형 모임 가입을 다시 요청한다
+        ResultData result = readingClubService.setJoin(20L, 10L, new ReadingClubDto.JoinReqDto());
+
+        // 저장 거절 응답과 가입 신청 미등록을 검증한다
+        assertEquals(ResultEnum.COMMON_SAVE_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).setJoinApplication(any());
+    }
+
+    /**
+     * 신규 가입 신청 알림 저장이 실패하면 신청 저장도 롤백 예외로 종료하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setJoinAlimFailRollsBack() {
+        // 승인형 공개 모임과 모임장 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("APPROVAL");
+        club.setOwnrNumb(30L);
+        club.setClubName("책벌레 모임");
+
+        // 현재 가입 질문과 신청자의 답변을 같은 순서로 구성한다
+        ReadingClubDto.QuestionDto question = new ReadingClubDto.QuestionDto();
+        question.setQuesFirs("가입 이유를 알려주세요.");
+        ReadingClubDto.JoinReqDto request = new ReadingClubDto.JoinReqDto();
+        request.setAnswerList(List.of("함께 읽고 싶어요."));
+
+        // 신청 저장 후 알림 템플릿 조회 실패가 반환되도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getClubQuestion(10L)).thenReturn(question);
+        when(badWordDetectionService.findBadWord("함께 읽고 싶어요.")).thenReturn(Optional.empty());
+        when(readingClubMapper.setJoinApplication(any())).thenReturn(1);
+        when(alimService.sendAlim(any(), any(), any(), any(), any()))
+                .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
+
+        // 알림 없이 가입 신청만 저장되는 상태를 허용하지 않는지 검증한다
+        assertThrows(CustomException.class, () -> readingClubService.setJoin(20L, 10L, request));
+    }
+
+    /**
      * 활성 모임원이 활성 모임원 목록을 조회하는지 검증한다.
      *
      * @author Hanwon.Jang
@@ -779,6 +949,49 @@ class ReadingClubServiceImplTest {
         // 수정 거절 코드와 신청 상태 미변경을 검증한다
         assertEquals(ResultEnum.COMMON_UPDATE_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).uptJoinApplication(10L, 30L, 20L, "APPROVED");
+    }
+
+    /**
+     * 가입 신청 승인과 거절 결과 알림이 가입 처리 상황 코드를 사용하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void uptAppUsesRejectedSitu() {
+        // 가입 신청 처리 권한과 알림 문구에 사용할 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setOwnrNumb(20L);
+        club.setClubName("책벌레 모임");
+
+        // 처리 대기 중인 활성 신청자 정보를 구성한다
+        ReadingClubDto.ApplicationDto application = new ReadingClubDto.ApplicationDto();
+        application.setUserNumb(30L);
+
+        // 거절 처리 요청을 구성해 좌석 변경 없이 공통 처리 결과 알림 경로를 검증한다
+        ReadingClubDto.ApplicationDecisionReqDto request = new ReadingClubDto.ApplicationDecisionReqDto();
+        request.setJoinStat("REJECTED");
+
+        // 신청 거절 저장과 신청자 알림 발송이 모두 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getApplicationForUpdate(10L, 40L)).thenReturn(application);
+        when(readingClubMapper.uptJoinApplication(10L, 40L, 20L, "REJECTED")).thenReturn(1);
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_REJECTED
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED, 10L
+                , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
+
+        // 모임장이 가입 신청을 거절한다
+        ResultData result = readingClubService.uptApplication(20L, 10L, 40L, request);
+
+        // 가입 처리 상황 코드와 거절 템플릿 조합으로 알림이 발송되는지 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals("REJECTED", Constant.ALIM_SITU_REJECTED);
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_REJECTED
+              , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED
+              , 10L
+              , Map.of("clubName", "책벌레 모임")
+        );
     }
 
     /**

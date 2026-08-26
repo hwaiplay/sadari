@@ -1,5 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
@@ -16,7 +16,7 @@ import {
   type ClubReadingGoalResult,
   type ReadingClub,
 } from "@/features/ReadingClub/api/readingClubApi";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 
 type ApplicationDecision = "APPROVED" | "REJECTED";
@@ -38,6 +38,7 @@ export const useClubDetailPage = () => {
   const [readingGoalResult, setReadingGoalResult] = useState<ClubReadingGoalResult | null>(null);
   const [isCancellingApplication, setIsCancellingApplication] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const rejectedAlertClubRef = useRef<number | null>(null);
 
   /**
    * 모임 상세와 모임장 전용 관리 데이터를 조회한다.
@@ -59,6 +60,14 @@ export const useClubDetailPage = () => {
     setMembers(nextMembers);
     setApplications(nextApplications);
     setReadingGoalResult(nextReadingGoalResult);
+
+    // 같은 상세 화면을 다시 조회하더라도 가입 거절 안내는 한 번만 표시한다
+    if (detail.joinStat === "REJECTED" && rejectedAlertClubRef.current !== clubNumb) {
+      // 현재 모임에서 안내한 상태를 기록해 중복 알림을 막는다
+      rejectedAlertClubRef.current = clubNumb;
+      // "모임 가입에 거절되었어요. 7일 후 가입 신청을 다시 할 수 있어요."
+      void sweetWarning(message("frontend.readingClub.detail.rejectedApplication"));
+    }
   }, [clubNumb]);
 
   /**

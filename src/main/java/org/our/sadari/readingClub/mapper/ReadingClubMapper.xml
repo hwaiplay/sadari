@@ -12,6 +12,8 @@
         <bind name="memberInvited" value="'INVITED'" />
         <bind name="memberExited" value="'EXITED'" />
         <bind name="applicationPending" value="'PENDING'" />
+        <bind name="applicationRejected" value="'REJECTED'" />
+        <bind name="reapplyWaitDays" value="@org.our.sadari.global.common.constant.Constant@CLUB_REAPPLY_WAIT_DAYS" />
         <bind name="roundScheduled" value="'SCHEDULED'" />
         <bind name="roundReading" value="'READING'" />
         <bind name="roundCompleted" value="'COMPLETED'" />
@@ -44,7 +46,61 @@
      LEFT JOIN TB_CLBVOT VOTE ON VOTE.CLUB_NUMB = RECOMMEND.CLUB_NUMB
                              AND VOTE.RECM_NUMB = RECOMMEND.RECM_NUMB AND VOTE.USER_NUMB = #{userNumb}
          WHERE RECOMMEND.CLUB_NUMB = #{clubNumb}
+        <if test="cycleStdt != null">
+           AND RECOMMEND.REGI_DATE <![CDATA[>=]]> #{cycleStdt}
+        </if>
       ORDER BY RECOMMEND.REGI_DATE, RECOMMEND.RECM_NUMB
+    </select>
+
+    <!-- 최신 독서 회차에서 다음 도서 투표 주기 기준일을 조회한다. -->
+    <select id="getBookVoteRuleDtl" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$BookVoteRuleDto">
+        SELECT /* getBookVoteRuleDtl */
+               ROUNDX.REGI_DATE AS ROUND_REGI_DATE
+             , ROUNDX.GOAL_ENDT
+         FROM TM_CLRNDX ROUNDX
+         WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
+           AND ROUNDX.GOAL_STDT <![CDATA[<=]]> CURRENT_TIMESTAMP(6)
+      ORDER BY ROUNDX.ROND_NUMB DESC
+         LIMIT 1
+    </select>
+
+    <!-- 후보 등록과 투표 중복 검사를 직렬화하기 위해 활성 모임원 행을 잠근다. -->
+    <select id="getMemberForUpdate" resultType="long">
+        <include refid="clubCodeBinds" />
+        SELECT /* getMemberForUpdate */
+               MEMBER.USER_NUMB
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX ON USERX.USER_NUMB = MEMBER.USER_NUMB
+                              AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+           FOR UPDATE
+    </select>
+
+    <!-- 현재 투표 주기에 로그인 사용자가 등록한 후보 수를 조회한다. -->
+    <select id="getMyBookRecommCnt" resultType="int">
+        SELECT /* getMyBookRecommCnt */
+               COUNT(*)
+          FROM TB_CLBREC RECOMMEND
+         WHERE RECOMMEND.CLUB_NUMB = #{clubNumb}
+           AND RECOMMEND.USER_NUMB = #{userNumb}
+        <if test="cycleStdt != null">
+           AND RECOMMEND.REGI_DATE <![CDATA[>=]]> #{cycleStdt}
+        </if>
+    </select>
+
+    <!-- 현재 투표 주기에 로그인 사용자가 등록한 투표 수를 조회한다. -->
+    <select id="getMyBookVoteCnt" resultType="int">
+        SELECT /* getMyBookVoteCnt */
+               COUNT(*)
+          FROM TB_CLBVOT VOTE
+          JOIN TB_CLBREC RECOMMEND ON RECOMMEND.RECM_NUMB = VOTE.RECM_NUMB
+         WHERE VOTE.CLUB_NUMB = #{clubNumb}
+           AND VOTE.USER_NUMB = #{userNumb}
+        <if test="cycleStdt != null">
+           AND RECOMMEND.REGI_DATE <![CDATA[>=]]> #{cycleStdt}
+        </if>
     </select>
 
     <insert id="setBookRecommendation" useGeneratedKeys="true" keyProperty="request.recmNumb">
@@ -55,13 +111,20 @@
     <delete id="delBookRecommendation">
         DELETE FROM TB_CLBREC
          WHERE CLUB_NUMB = #{clubNumb} AND RECM_NUMB = #{recmNumb} AND USER_NUMB = #{userNumb}
+        <if test="cycleStdt != null">
+           AND REGI_DATE <![CDATA[>=]]> #{cycleStdt}
+        </if>
     </delete>
 
     <insert id="uptBookVote">
         INSERT INTO TB_CLBVOT (CLUB_NUMB, USER_NUMB, RECM_NUMB, REGI_DATE, UPDT_DATE)
         SELECT #{clubNumb}, #{userNumb}, RECM_NUMB, CURRENT_TIMESTAMP(6), CURRENT_TIMESTAMP(6)
-          FROM TB_CLBREC WHERE CLUB_NUMB = #{clubNumb} AND RECM_NUMB = #{recmNumb}
-        ON DUPLICATE KEY UPDATE RECM_NUMB = VALUES(RECM_NUMB), UPDT_DATE = CURRENT_TIMESTAMP(6)
+          FROM TB_CLBREC
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND RECM_NUMB = #{recmNumb}
+        <if test="cycleStdt != null">
+           AND REGI_DATE <![CDATA[>=]]> #{cycleStdt}
+        </if>
     </insert>
 
     <!-- 같은 요청 키로 이미 생성된 모임 독서 회차를 조회한다. -->
@@ -615,7 +678,7 @@
                <include refid="clubViewColumns" />
              , MINE.MEMB_STAT
              , MINE.MEMB_ROLE
-             , PENDING.JOIN_STAT
+             , APPLICATION.JOIN_STAT
              , COALESCE(MATCHED.MATCH_CNT, 0) AS MATCH_CNT
           FROM TM_CLUBXM CLUB
      LEFT JOIN TM_USERXM OWNER
@@ -624,17 +687,28 @@
      LEFT JOIN TB_CLMEMX MINE
             ON MINE.CLUB_NUMB = CLUB.CLUB_NUMB
            AND MINE.USER_NUMB = #{userNumb}
-     LEFT JOIN (  SELECT APPLICATION.CLUB_NUMB
-                       , APPLICATION.USER_NUMB
-                       , MAX(APPLICATION.JOIN_STAT) AS JOIN_STAT
-                    FROM TB_CLJOIN APPLICATION
-                   WHERE APPLICATION.USER_NUMB = #{userNumb}
-                     AND APPLICATION.JOIN_STAT = #{applicationPending}
-                GROUP BY APPLICATION.CLUB_NUMB
-                       , APPLICATION.USER_NUMB
-               ) PENDING
-            ON PENDING.CLUB_NUMB = CLUB.CLUB_NUMB
-           AND PENDING.USER_NUMB = #{userNumb}
+     LEFT JOIN (  SELECT RECENT.CLUB_NUMB
+                       , RECENT.USER_NUMB
+                       , RECENT.JOIN_STAT
+                    FROM (  SELECT APPLICATION.CLUB_NUMB
+                                  , APPLICATION.USER_NUMB
+                                  , APPLICATION.JOIN_STAT
+                                  , ROW_NUMBER() OVER (
+                                        PARTITION BY APPLICATION.CLUB_NUMB, APPLICATION.USER_NUMB
+                                            ORDER BY APPLICATION.APPL_NUMB DESC
+                                    ) AS ROW_NUMB
+                               FROM TB_CLJOIN APPLICATION
+                              WHERE APPLICATION.USER_NUMB = #{userNumb}
+                                AND (   APPLICATION.JOIN_STAT = #{applicationPending}
+                                     OR (APPLICATION.JOIN_STAT = #{applicationRejected}
+                                         AND APPLICATION.PROC_DATE > DATE_SUB(
+                                             CURRENT_TIMESTAMP(6), INTERVAL #{reapplyWaitDays} DAY
+                                         )))
+                           ) RECENT
+                   WHERE RECENT.ROW_NUMB = 1
+               ) APPLICATION
+            ON APPLICATION.CLUB_NUMB = CLUB.CLUB_NUMB
+           AND APPLICATION.USER_NUMB = #{userNumb}
      LEFT JOIN (  SELECT CATEGORY.CLUB_NUMB
                        , COUNT(*) AS MATCH_CNT
                     FROM TB_CLCATE CATEGORY
@@ -668,7 +742,7 @@
                <include refid="clubViewColumns" />
              , MINE.MEMB_STAT
              , MINE.MEMB_ROLE
-             , PENDING.JOIN_STAT
+             , APPLICATION.JOIN_STAT
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_NUMB
                END AS CURRENT_ROND_NUMB
@@ -747,10 +821,28 @@
             ON MINE.CLUB_NUMB = CLUB.CLUB_NUMB
            AND MINE.USER_NUMB = #{userNumb}
            AND MINE.MEMB_STAT = #{memberActive}
-     LEFT JOIN TB_CLJOIN PENDING
-            ON PENDING.CLUB_NUMB = CLUB.CLUB_NUMB
-           AND PENDING.USER_NUMB = #{userNumb}
-           AND PENDING.JOIN_STAT = #{applicationPending}
+     LEFT JOIN (  SELECT RECENT.CLUB_NUMB
+                       , RECENT.USER_NUMB
+                       , RECENT.JOIN_STAT
+                    FROM (  SELECT APPLICATION.CLUB_NUMB
+                                  , APPLICATION.USER_NUMB
+                                  , APPLICATION.JOIN_STAT
+                                  , ROW_NUMBER() OVER (
+                                        PARTITION BY APPLICATION.CLUB_NUMB, APPLICATION.USER_NUMB
+                                            ORDER BY APPLICATION.APPL_NUMB DESC
+                                    ) AS ROW_NUMB
+                               FROM TB_CLJOIN APPLICATION
+                              WHERE APPLICATION.USER_NUMB = #{userNumb}
+                                AND (   APPLICATION.JOIN_STAT = #{applicationPending}
+                                     OR (APPLICATION.JOIN_STAT = #{applicationRejected}
+                                         AND APPLICATION.PROC_DATE > DATE_SUB(
+                                             CURRENT_TIMESTAMP(6), INTERVAL #{reapplyWaitDays} DAY
+                                         )))
+                           ) RECENT
+                   WHERE RECENT.ROW_NUMB = 1
+               ) APPLICATION
+            ON APPLICATION.CLUB_NUMB = CLUB.CLUB_NUMB
+           AND APPLICATION.USER_NUMB = #{userNumb}
              <include refid="currentRoundJoin" />
       LEFT JOIN TM_BKINFO CURRENT_BOOK
              ON CURRENT_BOOK.BOOK_NUMB = CURRENT_ROUND.BOOK_NUMB
@@ -1446,10 +1538,10 @@
            AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)
     </delete>
 
-    <!-- 동일 모임과 사용자의 처리 중 가입 신청을 조회한다. -->
-    <select id="getPendingApplication" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
+    <!-- 동일 모임과 사용자의 처리 중이거나 재신청 제한 중인 가입 신청을 조회한다. -->
+    <select id="getBlockedApplication" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />
-        SELECT /* getPendingApplication */
+        SELECT /* getBlockedApplication */
                CLUB_NUMB
              , APPL_NUMB
              , USER_NUMB
@@ -1468,7 +1560,11 @@
           FROM TB_CLJOIN
          WHERE CLUB_NUMB = #{clubNumb}
            AND USER_NUMB = #{userNumb}
-           AND JOIN_STAT = #{applicationPending}
+           AND (   JOIN_STAT = #{applicationPending}
+                OR (JOIN_STAT = #{applicationRejected}
+                    AND PROC_DATE > DATE_SUB(CURRENT_TIMESTAMP(6), INTERVAL #{reapplyWaitDays} DAY)))
+      ORDER BY APPL_NUMB DESC
+         LIMIT 1
     </select>
 
     <!-- 승인형 모임의 가입 질문 사본과 신청 답변을 등록한다. -->

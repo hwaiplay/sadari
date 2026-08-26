@@ -23,11 +23,20 @@ export type ClubBookRecommendation = {
   voteYsno: "Y" | "N";
 };
 
-export const getClubBookRecommApi = async (clubNumb: number): Promise<ClubBookRecommendation[]> => {
-  // 활성 모임원에게 공개되는 다음 도서 추천 목록을 요청한다
+export type ClubBookVotePage = {
+  candidateList: ClubBookRecommendation[];
+  voteDeadline?: string;
+  dday?: number;
+  canRecommend: boolean;
+  hasRecommended: boolean;
+  hasVoted: boolean;
+};
+
+export const getClubBookRecommApi = async (clubNumb: number): Promise<ClubBookVotePage> => {
+  // 활성 모임원에게 현재 투표 주기의 후보와 정책 상태를 요청한다
   const response = await api.get(`/reading-clubs/${clubNumb}/book-recommendations`);
-  // 공통 성공 검증을 통과한 추천 목록을 반환한다
-  return (assertResultDataSuccess(response.data).data as ClubBookRecommendation[] | undefined) ?? [];
+  // 공통 성공 검증을 통과한 투표 화면 정보를 반환한다
+  return assertResultDataSuccess(response.data).data as ClubBookVotePage;
 };
 
 export const createClubBookRecommApi = async (
@@ -56,7 +65,7 @@ export const deleteClubBookRecommApi = async (clubNumb: number, recmNumb: number
 };
 
 export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) => {
-  // 한 사용자당 하나로 갱신되는 다음 도서 투표를 요청한다
+  // 현재 주기에 한 번만 등록되는 다음 도서 투표를 요청한다
   const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, { recmNumb });
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
@@ -83,7 +92,7 @@ export type ReadingClub = {
   invitedCnt: number;
   membStat?: "INVITED" | "ACTIVE" | "EXITED";
   membRole?: "OWNER" | "MEMBER";
-  joinStat?: "PENDING";
+  joinStat?: "PENDING" | "REJECTED";
   matchCnt?: number;
   currentRondNumb?: number;
   readingOrdr?: number;

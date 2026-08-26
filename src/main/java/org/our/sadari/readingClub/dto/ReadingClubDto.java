@@ -32,6 +32,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-23        HanWon.Jang        이전 독서 기록 페이지 추가
  * 2026-08-24        HanWon.Jang        모임원 퇴장 요청 DTO 추가
  * 2026-08-25        HanWon.Jang        다음 도서 추천·투표 DTO 추가
+ * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -63,6 +64,54 @@ public final class ReadingClubDto {
         @NotNull
         @Schema(description = "추천 번호")
         private Long recmNumb;
+    }
+
+    /** 다음 도서 투표 화면의 후보와 정책 상태를 전달한다. */
+    @Data
+    @Schema(description = "다음 도서 투표 화면 정보")
+    public static class BookVotePageDto {
+
+        @Schema(description = "현재 투표 후보 목록")
+        private List<BookRecommendationDto> candidateList;
+
+        @Schema(description = "yyyy-MM-dd 형식의 투표 마감일")
+        private String voteDeadline;
+
+        @Schema(description = "투표 마감일까지 남은 일수")
+        private Integer dDay;
+
+        @Schema(description = "도서 후보 등록 가능 여부")
+        private boolean canRecommend;
+
+        @Schema(description = "로그인 사용자의 후보 등록 여부")
+        private boolean hasRecommended;
+
+        @Schema(description = "로그인 사용자의 투표 완료 여부")
+        private boolean hasVoted;
+    }
+
+    /** 다음 도서 투표 주기의 기준 회차를 전달한다. */
+    @Data
+    @Schema(hidden = true)
+    public static class BookVoteRuleDto {
+
+        // 최신 독서 회차 등록 일시
+        private LocalDateTime roundRegiDate;
+
+        // 최신 독서 회차 목표 종료 일시
+        private LocalDateTime goalEndt;
+
+        // 현재 투표 주기 시작 일시
+        private LocalDateTime cycleStdt;
+
+        // yyyy-MM-dd 형식의 현재 투표 마감일
+        private String voteDeadline;
+
+        // 투표 마감일까지 남은 일수
+        private Integer dDay;
+
+        // 후보 등록과 삭제 가능 여부
+        private boolean canRecommend;
     }
 
     /**

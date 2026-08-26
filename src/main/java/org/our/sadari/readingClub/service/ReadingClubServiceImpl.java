@@ -1,6 +1,8 @@
 package org.our.sadari.readingClub.service;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -41,6 +43,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 처리
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 처리
  * 2026-08-24        HanWon.Jang        가입 알림·신청 취소·모임원 퇴장 처리
+ * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -94,8 +97,26 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
-        // 활성 계정 추천자만 포함한 추천 목록을 반환한다
-        return ResultData.success(readingClubMapper.getBookRecommendationList(clubNumb, userNumb));
+        // 최신 회차 종료일을 기준으로 현재 투표 주기와 마감일을 계산한다
+        ReadingClubDto.BookVoteRuleDto voteRule = getBookVoteRule(clubNumb);
+        // 화면에 후보 목록과 사용자별 등록 상태를 함께 전달할 응답을 생성한다
+        ReadingClubDto.BookVotePageDto pageDto = new ReadingClubDto.BookVotePageDto();
+        // 현재 투표 주기에 등록된 후보만 화면 목록에 설정한다
+        pageDto.setCandidateList(readingClubMapper.getBookRecommendationList(clubNumb, userNumb
+                                                                            , voteRule.getCycleStdt()));
+        // 진행 중인 마감 주기가 있을 때만 마감일을 화면에 설정한다
+        pageDto.setVoteDeadline(voteRule.getVoteDeadline());
+        // 진행 중인 마감 주기의 남은 일수를 화면에 설정한다
+        pageDto.setDDay(voteRule.getDDay());
+        // 마감일 전 또는 새 상시 주기일 때만 후보 등록을 허용한다
+        pageDto.setCanRecommend(voteRule.isCanRecommend());
+        // 현재 주기의 내 후보 등록 여부를 설정한다
+        pageDto.setHasRecommended(readingClubMapper.getMyBookRecommCnt(clubNumb, userNumb
+                                                                      , voteRule.getCycleStdt()) > 0);
+        // 현재 주기의 변경 불가능한 투표 완료 여부를 설정한다
+        pageDto.setHasVoted(readingClubMapper.getMyBookVoteCnt(clubNumb, userNumb, voteRule.getCycleStdt()) > 0);
+        // 서버가 계산한 투표 화면 정책 정보를 반환한다
+        return ResultData.success(pageDto);
     }
 
     /** {@inheritDoc} */
@@ -106,6 +127,21 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 도서 식별 정보와 활성 모임원 권한이 있어야 추천을 등록한다
         if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getBookIsbn(), request.getBookTitl())
                 || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 같은 사용자의 동시 후보 등록을 직렬화하고 활성 모임원 자격을 다시 검증한다
+        if (StringUtil.isEmpty(readingClubMapper.getMemberForUpdate(clubNumb, userNumb))) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 최신 회차에 따른 후보 등록 가능 시점과 현재 주기를 계산한다
+        ReadingClubDto.BookVoteRuleDto voteRule = getBookVoteRule(clubNumb);
+        // 마감일이거나 현재 주기에 이미 후보를 등록했다면 추가 등록을 차단한다
+        if (!voteRule.isCanRecommend()
+                || readingClubMapper.getMyBookRecommCnt(clubNumb, userNumb, voteRule.getCycleStdt()) > 0) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -133,8 +169,19 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
-        // 추천자 소유권 조건으로 삭제하고 다른 사용자의 추천 삭제를 차단한다
-        if (readingClubMapper.delBookRecommendation(clubNumb, recmNumb, userNumb) == 0) {
+        // 같은 사용자의 후보 변경 요청을 직렬화한다
+        readingClubMapper.getMemberForUpdate(clubNumb, userNumb);
+        // 최신 회차에 따른 후보 수정 가능 시점과 현재 주기를 계산한다
+        ReadingClubDto.BookVoteRuleDto voteRule = getBookVoteRule(clubNumb);
+        // 마감일에는 후보 삭제를 허용하지 않는다
+        if (!voteRule.isCanRecommend()) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 현재 주기의 추천자 소유권 조건으로 삭제하고 다른 후보 삭제를 차단한다
+        if (readingClubMapper.delBookRecommendation(clubNumb, recmNumb, userNumb
+                                                    , voteRule.getCycleStdt()) == 0) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
@@ -148,13 +195,71 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     public ResultData uptBookVote(Long userNumb, Long clubNumb, ReadingClubDto.BookVoteReqDto request) {
         // 활성 모임원과 유효한 추천 번호만 투표 처리에 사용한다
         if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getRecmNumb())
-                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0
-                || readingClubMapper.uptBookVote(clubNumb, userNumb, request.getRecmNumb()) == 0) {
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
-        // 같은 사용자의 기존 투표를 선택 추천으로 갱신한 결과를 반환한다
+
+        // 같은 사용자의 동시 투표 요청을 직렬화한다
+        readingClubMapper.getMemberForUpdate(clubNumb, userNumb);
+        // 현재 투표 주기에 이미 투표했다면 값 변경을 차단한다
+        ReadingClubDto.BookVoteRuleDto voteRule = getBookVoteRule(clubNumb);
+        if (readingClubMapper.getMyBookVoteCnt(clubNumb, userNumb, voteRule.getCycleStdt()) > 0
+                || readingClubMapper.uptBookVote(clubNumb, userNumb, request.getRecmNumb()
+                                                , voteRule.getCycleStdt()) == 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 현재 주기에 최초 등록된 변경 불가능한 투표 결과를 반환한다
         return ResultData.success();
+    }
+
+    /**
+     * 최신 독서 회차 종료일에서 다음 도서 투표 주기와 마감 상태를 계산한다
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @return 현재 투표 주기와 화면 정책 정보
+     */
+    private ReadingClubDto.BookVoteRuleDto getBookVoteRule(Long clubNumb) {
+        // 최신 독서 회차가 없으면 마감 없는 최초 투표 주기를 사용한다
+        ReadingClubDto.BookVoteRuleDto voteRule = readingClubMapper.getBookVoteRuleDtl(clubNumb);
+        if (StringUtil.isEmpty(voteRule) || StringUtil.isEmpty(voteRule.getGoalEndt())) {
+            // 마감 없는 최초 주기의 정책 정보를 생성한다
+            voteRule = new ReadingClubDto.BookVoteRuleDto();
+            // 독서 회차가 없으면 후보를 상시 등록할 수 있다
+            voteRule.setCanRecommend(true);
+            // 마감 없는 최초 투표 주기를 반환한다
+            return voteRule;
+        }
+
+        // 회차 목표 종료일 이틀 뒤를 해당 회차의 다음 도서 투표 마감일로 계산한다
+        LocalDate deadline = voteRule.getGoalEndt().toLocalDate().plusDays(2);
+        // 서버 현지 날짜를 투표 일자 경계의 기준으로 사용한다
+        LocalDate today = LocalDate.now();
+        // 마감일 다음날부터는 이전 후보를 제외한 새 상시 투표 주기를 시작한다
+        if (today.isAfter(deadline)) {
+            // 새 주기 시작 시각을 마감일 다음날 자정으로 설정한다
+            voteRule.setCycleStdt(deadline.plusDays(1).atStartOfDay());
+            // 새 주기에는 후보를 다시 등록할 수 있다
+            voteRule.setCanRecommend(true);
+            // 새 회차가 시작되기 전에는 이전 마감일을 화면에 표시하지 않는다
+            voteRule.setVoteDeadline(null);
+            // 새 상시 투표 주기 정보를 반환한다
+            return voteRule;
+        }
+
+        // 진행 중인 회차가 시작된 시각부터 현재 후보와 투표를 구분한다
+        voteRule.setCycleStdt(voteRule.getRoundRegiDate());
+        // 마감일 하루 전까지만 후보 등록과 삭제를 허용한다
+        voteRule.setCanRecommend(today.isBefore(deadline));
+        // 화면에 표시할 마감일을 ISO 날짜 형식으로 설정한다
+        voteRule.setVoteDeadline(deadline.toString());
+        // 오늘을 포함한 마감일까지의 날짜 차이를 디데이로 설정한다
+        voteRule.setDDay((int) ChronoUnit.DAYS.between(today, deadline));
+        // 진행 중인 마감 투표 주기 정보를 반환한다
+        return voteRule;
     }
 
     /**
@@ -1005,8 +1110,26 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
             }
 
-            // 활성 일반 회원을 등록한다
-            readingClubMapper.setActiveMember(clubNumb, userNumb);
+            // 활성 일반 회원이 정확히 한 건 등록되지 않으면 가입 완료 상태를 만들지 않는다
+            if (readingClubMapper.setActiveMember(clubNumb, userNumb) != 1) {
+                // "저장에 실패했어요. 다시 시도해주세요."
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
+            // 모임장에게 모임명과 멤버 관리 화면 링크가 포함된 신규 멤버 가입 알림을 저장하고 푸시를 예약한다
+            ResultData alimResult = alimService.sendAlim(
+                    club.getOwnrNumb()
+                  , Constant.ALIM_SITU_FOLLOW_CLUB
+                  , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED
+                  , clubNumb
+                  , Map.of("clubName", club.getClubName())
+            );
+            // 알림 저장에 실패하면 멤버 관계만 확정되지 않도록 즉시 가입 전체를 롤백한다
+            if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+                // "저장에 실패했어요. 다시 시도해주세요."
+                throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+            }
+
             // 가입 완료 후 상세를 반환한다
             return getClubDtl(userNumb, clubNumb);
         }
@@ -1017,8 +1140,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 동일 모임의 처리 중 신청은 한 건만 허용한다
-        if (!StringUtil.isEmpty(readingClubMapper.getPendingApplication(clubNumb, userNumb))) {
+        // 처리 중 신청 또는 거절 후 7일의 재신청 제한 기간에는 새 신청을 허용하지 않는다
+        if (!StringUtil.isEmpty(readingClubMapper.getBlockedApplication(clubNumb, userNumb))) {
             // "저장에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
@@ -1043,7 +1166,25 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         }
 
         // 신청 당시 질문과 답변을 한 행에 복사한다
-        readingClubMapper.setJoinApplication(toApplication(clubNumb, userNumb, questions, answers));
+        if (readingClubMapper.setJoinApplication(toApplication(clubNumb, userNumb, questions, answers)) != 1) {
+            // "저장에 실패했어요. 다시 시도해주세요."
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 모임장에게 모임명과 멤버 관리 화면 링크가 포함된 신규 가입 신청 알림을 저장하고 푸시를 예약한다
+        ResultData alimResult = alimService.sendAlim(
+                club.getOwnrNumb()
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED
+              , clubNumb
+              , Map.of("clubName", club.getClubName())
+        );
+        // 템플릿 누락 등으로 알림 저장에 실패하면 가입 신청만 확정되지 않도록 전체 트랜잭션을 롤백한다
+        if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+            // "저장에 실패했어요. 다시 시도해주세요."
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         // 신청 완료 상세를 반환한다
         return getClubDtl(userNumb, clubNumb);
     }
@@ -1372,7 +1513,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 신청자에게 모임명과 상세 화면 링크가 포함된 처리 결과 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 application.getUserNumb()
-              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_SITU_REJECTED
               , tempCode
               , clubNumb
               , Map.of("clubName", club.getClubName())

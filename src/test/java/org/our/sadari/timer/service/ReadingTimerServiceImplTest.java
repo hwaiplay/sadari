@@ -371,14 +371,14 @@ class ReadingTimerServiceImplTest {
         when(readingTimerMapper.getTimerAlimDtl(10L, Constant.TIMER_STAT_COMPLETED
                                               , Constant.USER_STAT_ACTIVE, schedulerDate)).thenReturn(timerDto);
         // 공통 알림 저장 성공 결과를 설정한다
-        when(alimService.sendAlim(eq(31L), eq(Constant.ALIM_SITU_REPORT)
+        when(alimService.sendAlim(eq(31L), eq(Constant.ALIM_SITU_TIMER)
                                 , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any())).thenReturn(ResultData.success());
 
         // 목표시간이 지난 세션의 알림을 독서 타이머 서비스에서 발송한다
         readingTimerService.sendTimerAlim();
 
         // BOOK_TIMER_OVER 템플릿에 1시간 30분 치환값을 전달했는지 검증한다
-        verify(alimService).sendAlim(eq(31L), eq(Constant.ALIM_SITU_REPORT)
+        verify(alimService).sendAlim(eq(31L), eq(Constant.ALIM_SITU_TIMER)
                                   , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null)
                                   , argThat(replaceMap -> "1시간 30분".equals(replaceMap.get("timerTime"))));
         // 목표 종료시각까지의 1시간 30분만 세션에 확정됐는지 확인한다
@@ -457,7 +457,7 @@ class ReadingTimerServiceImplTest {
         when(readingTimerMapper.getTimerAlimDtl(10L, Constant.TIMER_STAT_COMPLETED
                                               , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(timerDto);
         // 알림 저장 거절 결과를 설정한다
-        when(alimService.sendAlim(eq(1L), eq(Constant.ALIM_SITU_REPORT)
+        when(alimService.sendAlim(eq(1L), eq(Constant.ALIM_SITU_TIMER)
                                 , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any()))
                 .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
 
