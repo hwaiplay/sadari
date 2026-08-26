@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
 import AnimatedReportContent from "@/components/ReportList/AnimatedReportContent";
@@ -43,7 +44,12 @@ const getStatusClassName = (reptStat?: FeedItem["reptStat"]): string => {
   return reportListStyles.statusReading;
 };
 
-/** 팔로잉 사용자의 공개 독후감과 사진 변경 활동을 카드 목록으로 표시한다. */
+/**
+ * 팔로잉 사용자의 공개 독후감과 사진 변경 활동을 카드 목록으로 표시한다
+ *
+ * @author HanWon.Jang
+ * @return 팔로잉 사용자의 활동 피드 화면
+ */
 const FeedPage = () => {
   const navigate = useNavigate();
   const [items, setItems] = useState<FeedItem[]>([]);
@@ -221,12 +227,15 @@ const FeedPage = () => {
 
               {item.tagtType === "BACKGROUND_IMAGE" ? (
                 <button className={styles.backgroundMediaButton} type="button" onClick={() => openItem(item)}>
-                  <img
-                    className={styles.backgroundMedia}
-                    src={item.contentImagePath || "/img/common/no-image.png"}
-                    alt=""
-                    onError={handleImageError}
-                  />
+                  {/* 배경사진과 중앙 로드 상태 표시 영역 */}
+                  <span className={styles.backgroundMediaWrap}>
+                    <BackgroundImage
+                      source={item.contentImageDisplayPath || item.contentImagePath || "/img/common/no-image.png"}
+                      imageClassName={styles.backgroundMedia}
+                      alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+                      fallbackSource="/img/common/no-image.png"
+                    />
+                  </span>
                 </button>
               ) : null}
 

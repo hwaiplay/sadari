@@ -77,13 +77,23 @@ export const backgroundMediaButton = style([
   },
 ]);
 
+export const backgroundMediaWrap = style({
+  position: "relative",
+  display: "block",
+  width: "100%",
+  aspectRatio: "16 / 9",
+  overflow: "hidden",
+  borderRadius: "12px",
+  background: vars.color.gray100,
+});
+
 export const media = style({
   display: "block",
   background: vars.color.gray100,
   objectFit: "cover",
 });
 export const reportMedia = style([media, { width: "50px", height: "74px", borderRadius: "4px" }]);
-export const backgroundMedia = style([media, { width: "100%", aspectRatio: "16 / 9", borderRadius: "12px" }]);
+export const backgroundMedia = style([media, { width: "100%", height: "100%", borderRadius: "12px" }]);
 export const mediaInfo = style({ minWidth: 0, alignSelf: "center", display: "flex", flexDirection: "column", gap: "3px" });
 export const title = style({ display: "block", margin: 0, fontFamily: vars.font.semibold, fontSize: "14px", lineHeight: 1.25, color: vars.color.black, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
 export const metadata = style({ display: "block", minWidth: 0, fontFamily: vars.font.body, fontSize: "12px", lineHeight: 1.25, color: vars.color.gray600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });

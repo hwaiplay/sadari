@@ -9,13 +9,18 @@ import java.util.Set;
 import java.util.regex.Pattern;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.mapper.FileMapper;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.file.storage.FileStorage;
 import org.our.sadari.global.file.storage.StoredFile;
 import org.springframework.http.CacheControl;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -27,6 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성
+ * 2026-08-26        HanWon.Jang         이미지 재검증 캐시 적용
+ * 2026-08-26        HanWon.Jang         배경사진 화면용 파생본 제공
  */
 @RestController
 @Tag(name = "파일", description = "비공개 저장소의 공개 이미지 조회 API")
@@ -40,11 +47,16 @@ public class FileResourceController {
     private static final Pattern STORED_NAME_PATTERN = Pattern.compile(
             "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}\\.(jpg|png)"
     );
+    // 활성 계정 검증 뒤 브라우저 저장본을 조건부 재사용하는 캐시 정책
+    private static final CacheControl REVALIDATED_CACHE_CONTROL =
+            CacheControl.noCache().cachePrivate().mustRevalidate();
 
     // 실행 환경에 따라 로컬 또는 S3로 연결되는 이미지 저장소
     private final FileStorage fileStorage;
     // 활성 회원의 현재 프로필 또는 배경 파일인지 확인할 데이터 접근 객체
     private final FileMapper fileMapper;
+    // 배경사진 화면용 파생본을 생성하고 조회할 파일 업무 서비스
+    private final FileService fileService;
 
     /**
      * 공개 이미지 조회에 사용할 파일 저장소를 구성한다.
@@ -52,13 +64,16 @@ public class FileResourceController {
      * @author SeungHyeon.Kang
      * @param fileStorage 실행 환경에 맞는 이미지 저장소
      * @param fileMapper 공개 이미지 참조 상태를 조회할 데이터 접근 객체
+     * @param fileService 화면용 배경사진 파생본을 처리할 파일 업무 서비스
      */
-    public FileResourceController(FileStorage fileStorage, FileMapper fileMapper) {
+    public FileResourceController(FileStorage fileStorage, FileMapper fileMapper, FileService fileService) {
 
         // 검증된 공개 이미지 조회에 사용할 저장소를 보관한다
         this.fileStorage = fileStorage;
         // 활성 회원의 현재 이미지인지 검증할 데이터 접근 객체를 보관한다
         this.fileMapper = fileMapper;
+        // 일반 화면 요청에서 화면용 배경사진을 생성하거나 재사용할 서비스를 보관한다
+        this.fileService = fileService;
     }
 
     /**
@@ -68,6 +83,8 @@ public class FileResourceController {
      * @param directory 프로필 또는 배경 이미지 디렉터리
      * @param uploadDate yyMMdd 형식의 업로드 날짜
      * @param storedName UUID 형식의 저장 파일명
+     * @param variant 원본 또는 일반 화면용 파생본을 구분하는 값
+     * @param ifNoneMatch 브라우저가 보관한 이미지의 조건부 요청 ETag
      * @return 이미지 바이트 응답, 경로 또는 객체가 없으면 404 응답
      * @throws IOException 저장소 조회 실패 시 발생
      */
@@ -77,6 +94,8 @@ public class FileResourceController {
             @Parameter(description = "이미지 유형 디렉터리", example = "profile") @PathVariable String directory
           , @Parameter(description = "yyMMdd 형식의 업로드 날짜", example = "260807") @PathVariable String uploadDate
           , @Parameter(description = "UUID와 확장자로 구성된 저장 파일명", example = "123e4567-e89b-12d3-a456-426614174000.png") @PathVariable String storedName
+          , @Parameter(description = "배경사진 화면용 파생본", example = "display") @RequestParam(required = false) String variant
+          , @Parameter(hidden = true) @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch
     ) throws IOException {
 
         // 허용된 이미지 유형과 서버 생성 경로가 아니면 저장소 조회 전에 차단한다
@@ -84,6 +103,14 @@ public class FileResourceController {
                 || !UPLOAD_DATE_PATTERN.matcher(uploadDate).matches()
                 || !STORED_NAME_PATTERN.matcher(storedName).matches()) {
             // 허용되지 않은 공개 경로에 404 응답을 반환한다
+            return ResponseEntity.notFound().build();
+        }
+
+        // display 파생본은 배경사진 경로에만 허용하고 알 수 없는 변형 요청은 차단한다
+        boolean isDisplayVariant = "display".equals(variant);
+
+        if (!StringUtil.isEmpty(variant) && (!isDisplayVariant || !"background".equals(directory))) {
+            // 지원하지 않는 파생본 요청을 파일 부재와 같은 응답으로 처리한다
             return ResponseEntity.notFound().build();
         }
 
@@ -98,8 +125,23 @@ public class FileResourceController {
             return ResponseEntity.notFound().build();
         }
 
+        // UUID 파일명은 같은 URL의 내용이 변경되지 않으므로 저장소 조회 전 조건부 요청 식별자로 사용한다
+        String entityTagSource = isDisplayVariant ? fileService.getBgDisplayTag(storedName) : storedName;
+        String entityTag = "\"" + entityTagSource + "\"";
+
+        // 활성 공개 상태를 확인한 동일 이미지이면 S3 원본 전송 없이 브라우저 저장본을 재사용한다
+        if (entityTag.equals(ifNoneMatch) || ("W/" + entityTag).equals(ifNoneMatch)) {
+            // 활성 계정 검증이 끝난 이미지의 브라우저 저장본 사용을 허용한다
+            return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
+                    .eTag(entityTag)
+                    .cacheControl(REVALIDATED_CACHE_CONTROL)
+                    .build();
+        }
+
         // 실행 환경에 연결된 저장소에서 공개 이미지 객체를 조회한다
-        Optional<StoredFile> storedFile = fileStorage.getFile(objectKey);
+        Optional<StoredFile> storedFile = isDisplayVariant
+                ? fileService.getBgDisplayFile(objectKey)
+                : fileStorage.getFile(objectKey);
 
         // 저장소에 객체가 없으면 파일 경로 노출 없이 404 응답을 반환한다
         if (storedFile.isEmpty()) {
@@ -111,11 +153,12 @@ public class FileResourceController {
         MediaType mediaType = StringUtil.isEmpty(storedFile.get().contentType())
                 ? MediaType.APPLICATION_OCTET_STREAM
                 : MediaType.parseMediaType(storedFile.get().contentType());
-        // 계정 상태 변경 직후에도 이전 공개 응답이 재사용되지 않도록 브라우저 저장을 금지한다
+        // 브라우저가 이미지를 저장하되 다음 사용 전 활성 계정 상태를 서버에 재검증하도록 반환한다
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .contentLength(storedFile.get().bytes().length)
-                .cacheControl(CacheControl.noStore())
+                .eTag(entityTag)
+                .cacheControl(REVALIDATED_CACHE_CONTROL)
                 .body(storedFile.get().bytes());
     }
 }

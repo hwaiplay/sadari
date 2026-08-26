@@ -51,6 +51,15 @@ export const cover = style({
   backgroundPosition: "center",
 });
 
+export const coverImage = style({
+  position: "absolute",
+  inset: 0,
+  display: "block",
+  width: "100%",
+  height: "100%",
+  objectFit: "cover",
+});
+
 export const coverImageViewerButton = style({
   position: "absolute",
   inset: 0,

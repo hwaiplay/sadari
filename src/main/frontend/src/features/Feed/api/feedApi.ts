@@ -20,6 +20,7 @@ export type FeedItem = {
   bookAthr?: string;
   bookCvim?: string;
   contentImagePath?: string;
+  contentImageDisplayPath?: string;
   likeCnt: number;
   likeYsno: "Y" | "N";
   replCnt: number;

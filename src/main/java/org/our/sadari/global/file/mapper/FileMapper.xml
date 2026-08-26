@@ -44,11 +44,21 @@
         SELECT /* getActivePublicFileCount */
                COUNT(*)
           FROM TM_FILEXM F
-          JOIN TM_USERXM U
-            ON (U.PROF_NUMB = F.FILE_NUMB OR U.BGIM_NUMB = F.FILE_NUMB)
-           AND U.USER_STAT = #{userStatActive}
          WHERE F.STOR_NAME = #{storName}
            AND F.FILE_PATH = #{filePath}
+           AND (   EXISTS (
+                           SELECT 1
+                             FROM TM_USERXM P
+                            WHERE P.PROF_NUMB = F.FILE_NUMB
+                              AND P.USER_STAT = #{userStatActive}
+                       )
+                OR EXISTS (
+                           SELECT 1
+                             FROM TM_USERXM B
+                            WHERE B.BGIM_NUMB = F.FILE_NUMB
+                              AND B.USER_STAT = #{userStatActive}
+                       )
+               )
     </select>
 
     <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회한다. -->

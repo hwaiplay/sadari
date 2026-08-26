@@ -8,6 +8,7 @@ import {
   getRemainDaysUntil,
 } from "@/app/utils/dateUtil";
 import { useBodyScrollLock } from "@/app/utils/modalUtil";
+import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
 import { ActionButton } from "@/components/Button/ActionButton";
 import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import Loading from "@/components/Loading/Loading";
@@ -270,7 +271,7 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
  * @author HanWon.Jang
  * @return 프로필 상세 및 수정 페이지 컴포넌트
  */
-function ProfileEditPage() {
+const ProfileEditPage = () => {
 
   const navigate = useNavigate();
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -281,6 +282,10 @@ function ProfileEditPage() {
   const [backgroundImageDraftToken, setBackgroundImageDraftToken] = useState<string | null>(null);
   const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
   const [previewBackground, setPreviewBackground] = useState("");
+  // 저장된 배경사진은 일반 화면에서 파생본을 사용하고 편집 중 임시 선택본은 서버 미리보기를 사용한다
+  const coverDisplaySource = backgroundImageDraftToken
+    ? previewBackground
+    : profile?.bgimDisplayPath || previewBackground;
   const [monthlySummary, setMonthlySummary] = useState<MonthlyReadingSummary | null>(null);
   const [currentReadingReport, setCurrentReadingReport] = useState<ReadingSummaryReport | null>(null);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
@@ -2046,14 +2051,14 @@ function ProfileEditPage() {
       {/* 마이페이지 프로필과 독서 활동 전체 영역 */}
       <form className={styles.profileShell} onSubmit={handleSubmit}>
         {/* 프로필 배경 이미지 영역 */}
-        <section
-          className={styles.cover}
-          style={
-            previewBackground
-              ? { backgroundImage: `url("${previewBackground}")` }
-              : undefined
-          }
-        >
+        <section className={styles.cover}>
+          {coverDisplaySource && (
+            <BackgroundImage
+              source={coverDisplaySource}
+              imageClassName={styles.coverImage}
+              alt=""
+            />
+          )}
           {previewBackground && (
             <FullscreenImageButton
               className={styles.coverImageViewerButton}
@@ -2797,6 +2802,6 @@ function ProfileEditPage() {
       ), document.body)}
     </main>
   );
-}
+};
 
 export default ProfileEditPage;
