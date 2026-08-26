@@ -61,13 +61,24 @@ export const mediaButton = style({
   },
 });
 
-export const reportMediaButton = style([
-  mediaButton,
-  {
-    gridTemplateColumns: "50px minmax(0, 1fr)",
-    alignItems: "center",
+export const reportMediaRow = style({
+  display: "grid",
+  gridTemplateColumns: "50px minmax(0, 1fr)",
+  alignItems: "center",
+  gap: "14px",
+  width: "100%",
+  padding: "0 16px 16px",
+  boxSizing: "border-box",
+});
+
+export const reportCoverLink = style({
+  display: "block",
+  borderRadius: "4px",
+  selectors: {
+    "&:hover": { opacity: 0.78 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 3 },
   },
-]);
+});
 
 export const backgroundMediaButton = style([
   mediaButton,
@@ -95,14 +106,54 @@ export const media = style({
 export const reportMedia = style([media, { width: "50px", height: "74px", borderRadius: "4px" }]);
 export const backgroundMedia = style([media, { width: "100%", height: "100%", borderRadius: "12px" }]);
 export const mediaInfo = style({ minWidth: 0, alignSelf: "center", display: "flex", flexDirection: "column", gap: "3px" });
+export const bookInfoLink = style({
+  display: "block",
+  minWidth: 0,
+  color: "inherit",
+  textDecoration: "none",
+  borderRadius: "4px",
+  selectors: {
+    "&:hover": { background: vars.color.gray100 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 2 },
+  },
+});
 export const title = style({ display: "block", margin: 0, fontFamily: vars.font.semibold, fontSize: "14px", lineHeight: 1.25, color: vars.color.black, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
-export const metadata = style({ display: "block", minWidth: 0, fontFamily: vars.font.body, fontSize: "12px", lineHeight: 1.25, color: vars.color.gray600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" });
-export const ratingStatusRow = style({ minWidth: 0, minHeight: "24px", marginTop: "4px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: "8px" });
+export const authorSearchLink = style({
+  display: "block",
+  minWidth: 0,
+  width: "fit-content",
+  maxWidth: "100%",
+  borderRadius: "4px",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: "12px",
+  lineHeight: 1.25,
+  overflow: "hidden",
+  textDecoration: "none",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+  selectors: {
+    "&:hover": { background: vars.color.gray100, color: vars.color.black },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 2 },
+  },
+});
+export const ratingStatusRow = style({ minWidth: 0, minHeight: "24px", marginTop: "4px", display: "flex", alignItems: "center", justifyContent: "flex-start", gap: "8px" });
 export const rating = style({ display: "inline-flex", alignItems: "center", gap: "3px", color: vars.color.black, fontFamily: vars.font.semibold, fontSize: "14px", lineHeight: 1.45 });
 export const ratingIcon = style({ width: "18px", height: "18px", display: "block", flexShrink: 0, color: "#ffd45c" });
 
 export const contentSection = style({
   padding: "0 16px 12px",
+});
+
+export const reportContentLink = style({
+  display: "block",
+  borderRadius: "4px",
+  color: "inherit",
+  textDecoration: "none",
+  selectors: {
+    "&:hover": { background: vars.color.gray100 },
+    "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 2 },
+  },
 });
 
 export const actions = style({

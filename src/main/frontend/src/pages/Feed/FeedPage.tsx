@@ -2,6 +2,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
+import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
 import AnimatedReportContent from "@/components/ReportList/AnimatedReportContent";
@@ -17,7 +18,7 @@ import ReplySheet from "@/features/reply/ReplySheet";
 import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { type SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import * as styles from "./FeedPage.css";
 
 /**
@@ -139,13 +140,6 @@ const FeedPage = () => {
     }
   };
 
-  /** 카드 종류에 맞는 상세 화면으로 이동한다. */
-  const openItem = (item: FeedItem): void => {
-    navigate(item.tagtType === "REPORT" && item.reptNumb
-      ? `/report/detail/${item.reptNumb}`
-      : `/social/profile/${item.userNumb}`);
-  };
-
   /** 피드 유형에 맞는 활동 문구를 반환한다. */
   const getActivityText = (item: FeedItem): string => {
     // 프로필 사진 변경 활동에는 전용 문구를 표시한다
@@ -179,6 +173,10 @@ const FeedPage = () => {
           const reportContent = item.reptCntn?.trim() ?? "";
           const isLongContent = reportContent.length > REPORT_CONTENT_PREVIEW_LENGTH;
           const isExpanded = Boolean(expandedReports[item.tagtNumb]);
+          // 독후감 번호가 있는 정상 피드는 도서 정보 상세로 이동하고 누락된 예외 데이터는 도서 검색으로 이동한다
+          const bookInfoPath = item.reptNumb
+            ? `/book/info/${item.reptNumb}`
+            : "/book/search";
 
           // 피드 유형에 맞는 미디어와 교류 기능을 포함한 카드 한 건을 반환한다
           return (
@@ -191,42 +189,68 @@ const FeedPage = () => {
               </header>
 
               {item.tagtType === "REPORT" ? (
-                <button className={styles.reportMediaButton} type="button" onClick={() => openItem(item)}>
-                  <img
-                    className={styles.reportMedia}
-                    src={item.bookCvim || "/img/common/no-image.png"}
-                    alt=""
-                    onError={handleImageError}
-                  />
-                  <span className={styles.mediaInfo}>
-                    <span className={styles.title}>{item.bookTitl}</span>
-                    <span className={styles.metadata}>{item.bookAthr ?? ""}</span>
-                    <span className={styles.ratingStatusRow}>
-                      {item.reptGrde ? (
-                        <span className={styles.rating}>
-                          <svg className={styles.ratingIcon} viewBox="0 0 24 24" aria-hidden="true">
-                            <path
-                              d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
-                              fill="currentColor"
-                              stroke="currentColor"
-                              strokeWidth="1.4"
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                            />
-                          </svg>
-                          {item.reptGrde}
+                /* 도서 표지와 도서 정보 및 저자 검색 이동 영역 */
+                <div className={styles.reportMediaRow}>
+                  <Link className={styles.reportCoverLink} to={bookInfoPath}>
+                    <img
+                      className={styles.reportMedia}
+                      src={item.bookCvim || "/img/common/no-image.png"}
+                      alt={item.bookTitl ?? ""}
+                      onError={handleImageError}
+                    />
+                  </Link>
+                  <div className={styles.mediaInfo}>
+                    <Link className={styles.bookInfoLink} to={bookInfoPath}>
+                      <span className={styles.title}>{item.bookTitl}</span>
+                    </Link>
+                    {/* 저자명이 있으면 해당 이름으로 도서를 검색하는 링크를 표시한다 */}
+                    {item.bookAthr?.trim() ? (
+                      <Link
+                        className={styles.authorSearchLink}
+                        to="/book/search"
+                        state={{ initialSearchKeyword: item.bookAthr.trim() }}
+                      >
+                        {item.bookAthr}
+                      </Link>
+                    ) : null}
+                    {/* 평점 또는 독서 상태가 있으면 도서 정보 상세 이동 영역에 함께 표시한다 */}
+                    {item.reptGrde || item.reptStatName ? (
+                      <Link className={styles.bookInfoLink} to={bookInfoPath}>
+                        <span className={styles.ratingStatusRow}>
+                          {/* 독후감 평점이 있으면 별점 아이콘과 값을 표시한다 */}
+                          {item.reptGrde ? (
+                            <span className={styles.rating}>
+                              <svg className={styles.ratingIcon} viewBox="0 0 24 24" aria-hidden="true">
+                                <path
+                                  d="m12 3.5 2.55 5.17 5.7.83-4.12 4.02.97 5.68L12 16.52 6.9 19.2l.97-5.68L3.75 9.5l5.7-.83L12 3.5Z"
+                                  fill="currentColor"
+                                  stroke="currentColor"
+                                  strokeWidth="1.4"
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                />
+                              </svg>
+                              {item.reptGrde}
+                            </span>
+                          ) : null}
+                          {/* 독서 상태명이 있으면 평점 바로 오른쪽에 상태 배지를 표시한다 */}
+                          {item.reptStatName ? (
+                            <span className={getStatusClassName(item.reptStat)}>{item.reptStatName}</span>
+                          ) : null}
                         </span>
-                      ) : <span />}
-                      {item.reptStatName ? (
-                        <span className={getStatusClassName(item.reptStat)}>{item.reptStatName}</span>
-                      ) : null}
-                    </span>
-                  </span>
-                </button>
+                      </Link>
+                    ) : null}
+                  </div>
+                </div>
               ) : null}
 
               {item.tagtType === "BACKGROUND_IMAGE" ? (
-                <button className={styles.backgroundMediaButton} type="button" onClick={() => openItem(item)}>
+                <FullscreenImageButton
+                  className={styles.backgroundMediaButton}
+                  source={item.contentImagePath || item.contentImageDisplayPath || "/img/common/no-image.png"}
+                  fallbackSource="/img/common/no-image.png"
+                  alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+                >
                   {/* 배경사진과 중앙 로드 상태 표시 영역 */}
                   <span className={styles.backgroundMediaWrap}>
                     <BackgroundImage
@@ -236,15 +260,25 @@ const FeedPage = () => {
                       fallbackSource="/img/common/no-image.png"
                     />
                   </span>
-                </button>
+                </FullscreenImageButton>
               ) : null}
 
               {reportContent ? (
                 <div className={styles.contentSection}>
-                  <AnimatedReportContent
-                    content={reportContent}
-                    expanded={isExpanded || !isLongContent}
-                  />
+                  {/* 독후감 본문은 도서 정보 상세로 이동하고 다른 활동 본문은 정적으로 표시한다 */}
+                  {item.tagtType === "REPORT" ? (
+                    <Link className={styles.reportContentLink} to={bookInfoPath}>
+                      <AnimatedReportContent
+                        content={reportContent}
+                        expanded={isExpanded || !isLongContent}
+                      />
+                    </Link>
+                  ) : (
+                    <AnimatedReportContent
+                      content={reportContent}
+                      expanded={isExpanded || !isLongContent}
+                    />
+                  )}
                   {isLongContent ? (
                     <button
                       className={reportListStyles.expandButton}
