@@ -14,6 +14,7 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
+import { useCompletedFormGuard } from "@/app/navigation/useCompletedFormGuard";
 import { normalizeBookAuthor, stripHtmlTags } from "@/app/utils/htmlUtil";
 import type { BookSearchResultType } from "@/features/Book/types/book.type";
 import { getBookCoverImageSource } from "@/features/Book/utils/bookCoverImage";
@@ -96,6 +97,7 @@ export function useSetClubReadingPage() {
 
   const location = useLocation();
   const navigate = useNavigate();
+  const finishForm = useCompletedFormGuard();
   const {
     clubNumb: clubNumbParam,
     rondNumb: rondNumbParam,
@@ -300,7 +302,8 @@ export function useSetClubReadingPage() {
           ),
         },
       });
-      navigate(`/reading-clubs/${clubNumb}`, { replace: true });
+      // 완료된 독서 등록 또는 수정 폼이 뒤로가기로 다시 열리지 않도록 상세 화면으로 교체한다
+      finishForm(`/reading-clubs/${clubNumb}`);
     } catch (error) {
       // 수정은 "모임 독서를 수정하지 못했어요.", 등록은 "모임 독서를 등록하지 못했어요."
       await sweetError(

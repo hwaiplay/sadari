@@ -2,6 +2,7 @@ import { getApiErrorMessage } from "@/app/api/resultData.ts";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert.ts";
 import { message } from "@/app/messages/message.ts";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation.ts";
+import { useCompletedFormGuard } from "@/app/navigation/useCompletedFormGuard.ts";
 import {
   createClubApi,
   getClubDtlApi,
@@ -41,6 +42,7 @@ const INITIAL_CLUB_FORM: ClubCreateParams = {
  */
 export function useSetClubPage(mode: SetClubPageMode = "create") {
   const navigate = useNavigate();
+  const finishForm = useCompletedFormGuard();
   const { clubNumb: clubNumbParam } = useParams();
   const clubNumb = Number(clubNumbParam);
   const [catalog, setCatalog] = useState<UserInterest[]>([]);
@@ -344,8 +346,8 @@ export function useSetClubPage(mode: SetClubPageMode = "create") {
             : message("frontend.readingClub.set.saving"),
         },
       );
-      // 저장된 모임 상세 화면으로 이동한다
-      navigate(`/reading-clubs/${club.clubNumb}`, { replace: true });
+      // 완료된 생성 또는 수정 폼이 뒤로가기로 다시 열리지 않도록 상세 화면으로 교체한다
+      finishForm(`/reading-clubs/${club.clubNumb}`);
     } catch (error) {
       // "모임을 저장하지 못했어요"
       void sweetError(
