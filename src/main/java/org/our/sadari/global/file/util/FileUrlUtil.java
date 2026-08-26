@@ -4,13 +4,13 @@ import org.our.sadari.global.common.util.StringUtil;
 
 /**
  * fileName       : FileUrlUtil
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-26
  * description    : 저장된 원본 이미지 경로를 화면 용도별 공개 URL로 변환한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-26        HanWon.Jang         배경사진 화면용 파생 URL 생성
+ * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생 URL 생성
  */
 public final class FileUrlUtil {
 
@@ -27,7 +27,7 @@ public final class FileUrlUtil {
     /**
      * 원본 배경사진 경로를 일반 화면용 파생본 경로로 변환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param filePath DB에서 조회한 원본 배경사진 경로
      * @return 화면용 파생본 경로, 내부 배경사진 경로가 아니면 원본 경로
      */

@@ -46,7 +46,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 /**
  * fileName       : FileService
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-14
  * description    : 이미지 파일 업무 계약을 정의한다
  * ===========================================================
@@ -55,8 +55,8 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-14        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 처리 추가
  * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
- * 2026-08-26        HanWon.Jang         공용 HTTP 클라이언트 적용
- * 2026-08-26        HanWon.Jang         배경사진 화면용 파생본 생성·수명주기 관리
+ * 2026-08-26        SeungHyeon.Kang         공용 HTTP 클라이언트 적용
+ * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생본 생성·수명주기 관리
  */
 @Service
 @RequiredArgsConstructor
@@ -241,7 +241,7 @@ public class FileService {
     /**
      * Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param profileImageUrl Kakao 프로필 이미지 URL
      * @param userIdxx Kakao 사용자 식별값
      * @param regiUser 파일을 등록한 회원 번호
@@ -642,7 +642,7 @@ public class FileService {
     /**
      * 배경사진의 일반 화면용 파생본을 조회하고, 기존 이미지이면 최초 요청에서 생성한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param objectKey 검증된 원본 배경사진 저장소 키
      * @return 긴 변이 최대 1600px인 화면용 이미지, 원본이 없거나 경로가 잘못되면 빈 값
      * @throws IOException 저장소 조회에 실패한 경우
@@ -702,7 +702,7 @@ public class FileService {
     /**
      * 원본과 화면용 배경사진의 ETag를 구분할 파생본 식별값을 반환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param storedName UUID 형식의 원본 저장 파일명
      * @return 파생 규격이 포함된 ETag 원문
      */
@@ -758,7 +758,7 @@ public class FileService {
     /**
      * 원본 배경사진 객체 키를 일반 화면용 파생본 객체 키로 변환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param objectKey 배경사진 원본 객체 키
      * @return display 하위 디렉터리의 파생 객체 키, 배경사진 경로가 아니면 null
      */
@@ -792,7 +792,7 @@ public class FileService {
     /**
      * 원본 이미지와 함께 생성하거나 삭제해야 하는 저장소 객체 키를 반환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param objectKey 원본 이미지 객체 키
      * @return 원본과 선택적 배경사진 파생본 객체 키
      */
@@ -812,7 +812,7 @@ public class FileService {
     /**
      * 화면용 배경사진을 재생성 가능한 저장 캐시로 기록한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param displayObjectKey 화면용 파생 객체 키
      * @param displayImage 긴 변 제한을 적용한 배경사진
      */
@@ -1820,7 +1820,7 @@ public class FileService {
     /**
      * 검증된 저장소 객체 키들을 개별 오류로 격리하여 삭제한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param objectKeyList 삭제할 원본 및 파생 객체 키 목록
      * @param fileNumb 오류 추적에 사용할 파일 번호, 메타정보 등록 전이면 null
      */

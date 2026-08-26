@@ -9,14 +9,14 @@ import org.springframework.web.client.RestTemplate;
 
 /**
  * fileName       : RestTemplateConfig
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-06
  * description    : 공통 실행 설정을 구성한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-06        SeungHyeon.Kang    최초 생성
- * 2026-08-26        HanWon.Jang         외부 HTTP 타임아웃 설정
+ * 2026-08-26        SeungHyeon.Kang         외부 HTTP 타임아웃 설정
  */
 @Configuration
 public class RestTemplateConfig {
@@ -24,7 +24,7 @@ public class RestTemplateConfig {
     /**
      * 외부 HTTP API 호출에 사용할 RestTemplate Bean을 생성한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param connectTimeoutMillis 외부 서버 연결 제한시간(ms)
      * @param readTimeoutMillis 외부 서버 응답 제한시간(ms)
      * @return 구성하거나 조회한 결과 객체
@@ -45,7 +45,7 @@ public class RestTemplateConfig {
     /**
      * JSON 직렬화와 역직렬화에 사용할 ObjectMapper Bean을 생성한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 구성하거나 조회한 결과 객체
      */
     @Bean

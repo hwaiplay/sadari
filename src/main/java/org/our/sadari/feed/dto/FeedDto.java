@@ -9,14 +9,14 @@ import org.our.sadari.global.file.util.FileUrlUtil;
 
 /**
  * fileName       : FeedDto
- * author         : Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-25
  * description    : 팔로잉 피드 항목과 조회 조건을 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-25        Codex              최초 생성
- * 2026-08-26        HanWon.Jang         화면용 배경사진 경로 추가
+ * 2026-08-25        SeungHyeon.Kang         최초 생성
+ * 2026-08-26        SeungHyeon.Kang         화면용 이미지 경로·주석 정비
  */
 @Data
 @Schema(description = "팔로잉 피드 항목 DTO")
@@ -76,7 +76,7 @@ public class FeedDto {
     /**
      * 피드 배경사진 카드에서 사용할 축소 이미지 경로를 반환한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 배경사진이면 화면용 파생본 경로, 다른 유형이면 원본 경로
      */
     @JsonProperty(value = "contentImageDisplayPath", access = JsonProperty.Access.READ_ONLY)

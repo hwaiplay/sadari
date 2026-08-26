@@ -14,7 +14,7 @@ import lombok.Getter;
  * 2026-08-13        SeungHyeon.Kang    탈퇴 후 유효 제재가 남은 계정 인증 코드 추가
  * 2026-08-16        SeungHyeon.Kang    도서 검색 요청 제한 코드 추가
  * 2026-08-20        SeungHyeon.Kang    타이머 목표시간 검증 코드 추가
- * 2026-08-20        Hanwon.Jang        모임 독서 변경 검증 코드 추가
+ * 2026-08-20        SeungHyeon.Kang        모임 독서 변경 검증 코드 추가
  * 2026-08-22        SeungHyeon.Kang    중복 신고 검증 코드 추가
  */
 @Getter

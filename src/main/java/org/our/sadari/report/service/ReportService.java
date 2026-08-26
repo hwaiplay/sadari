@@ -14,7 +14,7 @@ import org.our.sadari.report.dto.ReportDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 계약 추가
+ * 2026-08-01        SeungHyeon.Kang,SeungHyeon.Kang    최근 독후감·공개 계약 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 계약 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 계약 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 계약

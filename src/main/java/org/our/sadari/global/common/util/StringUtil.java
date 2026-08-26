@@ -5,14 +5,14 @@ import java.util.Map;
 
 /**
  * fileName       : StringUtil
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-03-21
  * description    : 공통 문자열 정규화와 빈 값 판정 기능을 제공한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-21        SeungHyeon.Kang    최초 생성
- * 2026-08-26        HanWon.Jang        사용 문자열 기능 정리
+ * 2026-08-26        SeungHyeon.Kang        사용 문자열 기능 정리
  */
 public final class StringUtil {
 
@@ -22,7 +22,7 @@ public final class StringUtil {
     /**
      * 정적 유틸리티 클래스의 외부 생성을 차단한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     private StringUtil() {
 
@@ -31,7 +31,7 @@ public final class StringUtil {
     /**
      * 문자열을 지정한 최대 문자 길이에 맞춰 자르고 접미사를 덧붙인다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param source 변환할 원본 문자열
      * @param output 문자열을 자른 뒤 덧붙일 문자열
      * @param maxLength 허용할 최대 문자 길이
@@ -57,7 +57,7 @@ public final class StringUtil {
     /**
      * 문자열을 지정한 최대 문자 길이에 맞춰 자른다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param source 변환할 원본 문자열
      * @param maxLength 허용할 최대 문자 길이
      * @return 길이가 제한된 문자열, 원본이 비어 있으면 null
@@ -70,7 +70,7 @@ public final class StringUtil {
     /**
      * 사용자 평문 입력의 앞뒤 공백을 제거한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param value 정규화할 사용자 평문 입력
      * @return 공백이 제거된 문자열, 입력이 비어 있으면 null
      */
@@ -88,7 +88,7 @@ public final class StringUtil {
     /**
      * 사용자 평문 입력의 앞뒤 공백을 제거하고 최대 문자 길이를 적용한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param value 정규화할 사용자 평문 입력
      * @param maxLength 허용할 최대 문자 길이
      * @return 공백과 길이가 정규화된 문자열, 입력이 비어 있으면 null
@@ -110,7 +110,7 @@ public final class StringUtil {
     /**
      * 문자열, 목록, 맵 및 객체 배열의 null 또는 빈 상태를 판정한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param value 빈 상태를 검사할 값
      * @return null이거나 지원 타입의 내용이 비어 있으면 true
      */
@@ -152,7 +152,7 @@ public final class StringUtil {
     /**
      * 전달된 값 중 하나라도 null 또는 빈 상태인지 판정한다
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param values 빈 상태 포함 여부를 검사할 값 목록
      * @return 하나 이상의 값이 비어 있으면 true
      */

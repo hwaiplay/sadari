@@ -157,9 +157,10 @@
                )
     </select>
 
+    <!-- 교체되는 사진의 댓글에 연결된 좋아요를 먼저 삭제해 댓글 삭제 순서를 보장한다. -->
     <delete id="delImageReplyLikes" parameterType="org.our.sadari.feed.dto.FeedDto">
         <include refid="bindList" />
-        DELETE L
+        DELETE /* delImageReplyLikes */ L
           FROM TB_LIKEXX L
           JOIN TB_REPLXX R
             ON R.REPL_NUMB = L.TAGT_NUMB
@@ -168,22 +169,28 @@
          WHERE L.TAGT_TYPE = #{targetReply}
     </delete>
 
+    <!-- 교체되는 사진의 부모 댓글을 삭제하기 전에 연결된 답글을 삭제한다. -->
     <delete id="delImageChildReplies" parameterType="org.our.sadari.feed.dto.FeedDto">
-        DELETE FROM TB_REPLXX
+        DELETE /* delImageChildReplies */
+          FROM TB_REPLXX
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
            AND UPER_NUMB IS NOT NULL
     </delete>
 
+    <!-- 답글이 정리된 교체 사진의 부모 댓글을 삭제한다. -->
     <delete id="delImageParentReplies" parameterType="org.our.sadari.feed.dto.FeedDto">
-        DELETE FROM TB_REPLXX
+        DELETE /* delImageParentReplies */
+          FROM TB_REPLXX
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
            AND UPER_NUMB IS NULL
     </delete>
 
+    <!-- 교체되는 사진 자체에 연결된 좋아요를 삭제한다. -->
     <delete id="delImageLikes" parameterType="org.our.sadari.feed.dto.FeedDto">
-        DELETE FROM TB_LIKEXX
+        DELETE /* delImageLikes */
+          FROM TB_LIKEXX
          WHERE TAGT_TYPE = #{tagtType}
            AND TAGT_NUMB = #{tagtNumb}
     </delete>

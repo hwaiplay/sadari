@@ -2,7 +2,7 @@ package org.our.sadari.global.common.constant;
 
 /**
  * fileName       : AuthConstant
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-03-21
  * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
  * ===========================================================
@@ -11,7 +11,7 @@ package org.our.sadari.global.common.constant;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 코드를 풀네임으로 변경
  * 2026-08-13        SeungHyeon.Kang    로컬 임시 회원 제공자 코드 추가
- * 2026-08-26        HanWon.Jang         Kakao URL 설정 분리
+ * 2026-08-26        SeungHyeon.Kang         Kakao URL 설정 분리
  */
 public class AuthConstant {
 

@@ -33,7 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 API 추가
+ * 2026-08-01        SeungHyeon.Kang,SeungHyeon.Kang    최근 독후감·공개 API 추가
  * 2026-08-11        SeungHyeon.Kang    다중 탭 독후감 수정 충돌 409 응답 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 API 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 API

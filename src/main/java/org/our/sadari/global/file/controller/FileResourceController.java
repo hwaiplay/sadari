@@ -32,8 +32,8 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성
- * 2026-08-26        HanWon.Jang         이미지 재검증 캐시 적용
- * 2026-08-26        HanWon.Jang         배경사진 화면용 파생본 제공
+ * 2026-08-26        SeungHyeon.Kang         이미지 재검증 캐시 적용
+ * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생본 제공
  */
 @RestController
 @Tag(name = "파일", description = "비공개 저장소의 공개 이미지 조회 API")

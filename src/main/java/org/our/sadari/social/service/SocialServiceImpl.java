@@ -35,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
- * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 처리
+ * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -300,7 +300,7 @@ public class SocialServiceImpl implements SocialService {
      * 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
      * 비활성 또는 삭제 대기 사용자의 좋아요 행은 보존하더라도 목록과 집계에서 제외한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param tagtType 좋아요 대상 유형
      * @param tagtNumb 좋아요 대상 번호

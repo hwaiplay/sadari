@@ -15,7 +15,7 @@ import lombok.Data;
  * 2026-07-28        SeungHyeon.Kang    DTO 문서화 규칙 정비
  * 2026-08-04        SeungHyeon.Kang    프로필 독후감 공개 범위 조회 조건 추가
  * 2026-08-15        SeungHyeon.Kang    친구 상태·목록 조회 조건 추가
- * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 추가
+ * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
  */
 @Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
@@ -172,7 +172,7 @@ public class SocialDto {
      * 좋아요 사용자 목록 조회 조건 DTO이다.
      * 로그인 사용자와 대상 식별값 및 페이지 조건을 함께 전달해 접근 검증과 목록 조회가 같은 기준을 사용하게 한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     // 좋아요 사용자 목록의 대상과 페이지 조회 조건
     @Data

@@ -2,7 +2,7 @@ package org.our.sadari.global.common.constant;
 
 /**
  * fileName       : Constant
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-07
  * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
  * ===========================================================
@@ -11,16 +11,16 @@ package org.our.sadari.global.common.constant;
  * 2026-07-07        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책 추가
  * 2026-07-30        SeungHyeon.Kang    계정·팝업·회원 상태 코드 정리
- * 2026-07-31        Hanwon.Jang        댓글 알림 코드 수정
+ * 2026-07-31        SeungHyeon.Kang        댓글 알림 코드 수정
  * 2026-08-05        SeungHyeon.Kang    독서 관심분야 코드 통합
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 코드 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 상태 코드 추가
- * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    독서 타이머·통계·모임 코드 정리
+ * 2026-08-14        SeungHyeon.Kang,SeungHyeon.Kang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-22        SeungHyeon.Kang    신고 대상·자동 조치 코드 추가
- * 2026-08-24        HanWon.Jang        모임 가입 처리 알림 코드 추가
+ * 2026-08-24        SeungHyeon.Kang        모임 가입 처리 알림 코드 추가
  */
 public final class Constant {
 
