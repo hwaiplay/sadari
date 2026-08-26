@@ -53,6 +53,7 @@ const ClubBookVotePage = () => {
     void loadCandidates();
   }, [loadCandidates]);
 
+
   useEffect(() => {
 
     const recommendedBook = pageState.recommendedBook;
