@@ -364,8 +364,56 @@ function ProfileEditPage() {
       return;
     }
 
-    // 현재 대상 버튼을 비활성화하기 위해 처리 중 유형을 기록한다
+    const reactionKey = reaction.tagtType === "PROFILE_IMAGE"
+      ? "profileImageReaction"
+      : "backgroundImageReaction";
+
+    /**
+     * 지정한 좋아요 상태를 같은 사진 반응에만 병합한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param current 현재 화면 또는 공유 캐시의 프로필 정보
+     * @param detail 적용할 좋아요 수와 여부
+     * @return 좋아요 상태가 반영된 프로필 정보
+     */
+    const mergeReaction = (
+      current: UserProfile | undefined,
+      detail: Pick<ImageReaction, "likeCnt" | "likeYsno">,
+    ): UserProfile | undefined => {
+      const currentReaction = current?.[reactionKey];
+
+      // 화면 사이에 사진이 교체되었으면 이전 사진의 상태를 새 사진에 반영하지 않는다
+      if (!current || !currentReaction || currentReaction.tagtNumb !== reaction.tagtNumb) {
+        return current;
+      }
+
+      // 지정한 좋아요 수와 여부만 현재 사진 반응에 병합한다
+      return {
+        ...current,
+        [reactionKey]: {
+          ...currentReaction,
+          ...detail,
+        },
+      };
+    };
+
+    const optimisticDetail: Pick<ImageReaction, "likeCnt" | "likeYsno"> = {
+      likeCnt: Math.max(
+        0,
+        reaction.likeCnt + (reaction.likeYsno === "Y" ? -1 : 1),
+      ),
+      likeYsno: reaction.likeYsno === "Y" ? "N" : "Y",
+    };
+
+    // 현재 대상 버튼의 중복 요청을 막고 서버 응답 전에 화면과 공유 캐시를 즉시 변경한다
     setImageLikeUpdatingType(reaction.tagtType);
+    setProfile((current) =>
+      mergeReaction(current ?? undefined, optimisticDetail) ?? null,
+    );
+    queryClient.setQueryData<UserProfile>(
+      getMyProfileOptions().queryKey,
+      (current) => mergeReaction(current, optimisticDetail),
+    );
 
     try {
       // 범용 좋아요 API에 현재 사진 유형과 파일 번호를 전달한다
@@ -373,46 +421,34 @@ function ProfileEditPage() {
         tagtType: reaction.tagtType,
         tagtNumb: reaction.tagtNumb,
       });
-      const detail = result.data as Partial<Pick<ImageReaction, "likeCnt" | "likeYsno">> | undefined;
-      const reactionKey = reaction.tagtType === "PROFILE_IMAGE"
-        ? "profileImageReaction"
-        : "backgroundImageReaction";
+      // 서버가 확정한 값이 있으면 현재 화면과 공유 캐시의 낙관적 상태를 보정한다
+      const detail = result.data;
 
-      /**
-       * 서버 응답을 같은 사진 반응에만 병합한다.
-       *
-       * @author SeungHyeon.Kang
-       * @param current 현재 화면 또는 공유 캐시의 프로필 정보
-       * @return 좋아요 결과가 반영된 프로필 정보
-       */
-      const mergeReaction = (current: UserProfile | undefined): UserProfile | undefined => {
-        const currentReaction = current?.[reactionKey];
-
-        // 화면 사이에 사진이 교체되었으면 이전 사진의 응답을 새 사진에 반영하지 않는다
-        if (!current || !currentReaction || currentReaction.tagtNumb !== reaction.tagtNumb) {
-          // 변경할 수 없는 현재 프로필 상태를 그대로 반환한다
-          return current;
-        }
-
-        // 서버가 확정한 좋아요 수와 여부만 현재 사진 반응에 병합한다
-        return {
-          ...current,
-          [reactionKey]: {
-            ...currentReaction,
-            likeCnt: detail?.likeCnt ?? currentReaction.likeCnt,
-            likeYsno: detail?.likeYsno ?? currentReaction.likeYsno,
-          },
-        };
-      };
-
-      // 현재 마이페이지의 사진 반응 상태를 갱신한다
-      setProfile((current) => mergeReaction(current ?? undefined) ?? null);
-      // 헤더와 이후 마이페이지 진입이 공유하는 프로필 캐시도 같은 결과로 갱신한다
-      queryClient.setQueryData<UserProfile>(getMyProfileOptions().queryKey, (current) => mergeReaction(current));
+      if (detail) {
+        setProfile((current) =>
+          mergeReaction(current ?? undefined, detail) ?? null,
+        );
+        queryClient.setQueryData<UserProfile>(
+          getMyProfileOptions().queryKey,
+          (current) => mergeReaction(current, detail),
+        );
+      }
     }
 
     // 좋아요 요청 실패를 공통 안내 문구로 표시한다
     catch (error) {
+      const originalDetail: Pick<ImageReaction, "likeCnt" | "likeYsno"> = {
+        likeCnt: reaction.likeCnt,
+        likeYsno: reaction.likeYsno,
+      };
+      // 핵심 좋아요 요청 실패 시에만 화면과 공유 캐시를 클릭 전 상태로 원복한다
+      setProfile((current) =>
+        mergeReaction(current ?? undefined, originalDetail) ?? null,
+      );
+      queryClient.setQueryData<UserProfile>(
+        getMyProfileOptions().queryKey,
+        (current) => mergeReaction(current, originalDetail),
+      );
       await sweetError(
         /* "좋아요 처리에 실패했어요." */ message("frontend.feed.likeFailed"),
         getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),

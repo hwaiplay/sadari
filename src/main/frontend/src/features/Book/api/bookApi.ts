@@ -3,7 +3,7 @@
  *
  * @author HanWon.Jang
  */
-import api from "@/app/api/axios";
+import api, { type SadariRequestConfig } from "@/app/api/axios";
 import {
   assertResultDataSuccess,
   type PageData,
@@ -155,6 +155,11 @@ export type LikeTargetParams = {
   tagtNumb: number;
 };
 
+export type LikeDetail = {
+  likeCnt: number;
+  likeYsno: "Y" | "N";
+};
+
 export type ReportAlimType = "like" | "reply";
 
 export type UptReportAlimParams = {
@@ -177,9 +182,15 @@ export type ReportAlimResponse = {
  * @return 반환값이 없다
  * @throws API 요청 또는 비동기 처리 실패 시 발생
  */
-export const setPublicReportLikeApi = (data: LikeTargetParams) => {
+export const setPublicReportLikeApi = (
+  data: LikeTargetParams,
+): Promise<ResultData<LikeDetail>> => {
+  const requestConfig: SadariRequestConfig = {
+    skipBlockingOperation: true,
+  };
 
-  return api.post("/social/like", data).then((res) => {
+  // 즉시 반응형 좋아요는 전역 차단 로딩 없이 CSRF가 적용된 기존 API 인스턴스로 요청한다
+  return api.post<ResultData<LikeDetail>>("/social/like", data, requestConfig).then((res) => {
 
     return assertResultDataSuccess(res.data);
   });

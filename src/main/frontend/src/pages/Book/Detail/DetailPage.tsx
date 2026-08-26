@@ -711,6 +711,8 @@ function DetailPage() {
     likeMutation.mutate({
       tagtType: "REPORT",
       tagtNumb: idNum,
+      likeCnt: bookData.likeCnt,
+      likeYsno: bookData.likeYsno,
     });
   };
 

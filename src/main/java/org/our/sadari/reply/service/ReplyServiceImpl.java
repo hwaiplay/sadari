@@ -7,6 +7,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.alim.event.LikeAlimEvent;
+import org.our.sadari.alim.event.LikeAlimPublisher;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.dto.PageDto;
@@ -36,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 적용
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
+ * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
  */
 @Service
 @RequiredArgsConstructor
@@ -56,6 +59,8 @@ public class ReplyServiceImpl implements ReplyService {
     private final AlimService alimService;
     // 댓글 작성자의 최신 닉네임 조회 서비스
     private final TokenRedisService tokenRedisService;
+    // 댓글 좋아요 커밋 이후 알림 후처리 이벤트 발행기
+    private final LikeAlimPublisher likeAlimPublisher;
 
     /**
      * 로그인 사용자가 작성한 댓글 또는 답글을 등록한다.
@@ -301,7 +306,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 신규 좋아요가 등록된 경우에만 댓글 작성자에게 좋아요 알림을 발송한다
         if (insertCnt > 0) {
-            // 댓글 또는 대댓글 작성자에게 전용 템플릿 알림과 푸시를 발송한다
+            // 댓글 좋아요 커밋 이후 전용 템플릿 알림을 처리하도록 이벤트를 등록한다
             sendReplyLikeAlim(userNumb, likeTarget);
         }
 
@@ -412,8 +417,8 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 신규 댓글 또는 대댓글 좋아요를 해당 댓글 작성자에게 알림으로 발송한다.
-     * 본인 댓글 좋아요와 작성자를 확인할 수 없는 댓글은 알림을 만들지 않는다.
+     * 신규 댓글 또는 대댓글 좋아요의 커밋 이후 알림 이벤트를 등록한다.
+     * 본인 댓글 좋아요와 작성자를 확인할 수 없는 댓글은 이벤트를 만들지 않는다.
      *
      * @author HanWon.Jang
      * @param sendUserNumb 댓글 좋아요를 등록한 사용자 번호
@@ -442,22 +447,14 @@ public class ReplyServiceImpl implements ReplyService {
             return;
         }
 
-        // REPLY_LIKE 템플릿의 사용자명 치환값을 담을 객체를 생성한다
-        Map<String, Object> replaceMap = new HashMap<>();
-        // 좋아요 등록자의 닉네임을 템플릿 사용자명 치환값으로 설정한다
-        replaceMap.put("userName", sendUserNick);
         Long replyTargetNumb = StringUtil.isEmpty(likeTarget.getTagtNumb())
                 ? likeTarget.getReptNumb()
                 : likeTarget.getTagtNumb();
 
-        // 댓글 작성자에게 좋아요 알림을 저장하고 해당 댓글이 속한 독후감 상세 링크로 푸시를 예약한다
-        alimService.sendAlim(
-                likeTarget.getTargetUserNumb()
-              , Constant.ALIM_SITU_LIKE
-              , Constant.ALIM_TEMP_CODE_REPLY_LIKE
-              , replyTargetNumb
-              , replaceMap
-        );
+        // 댓글 좋아요 응답 경로에서 알림 DB와 FCM 접근을 제거할 커밋 이후 이벤트를 생성한다
+        LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb(), Constant.ALIM_TEMP_CODE_REPLY_LIKE, replyTargetNumb, sendUserNick);
+        // 댓글 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록한다
+        likeAlimPublisher.setLikeAlim(event);
     }
 
     /**

@@ -18,6 +18,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.alim.event.LikeAlimEvent;
+import org.our.sadari.alim.event.LikeAlimPublisher;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
@@ -43,6 +45,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·좋아요 상황 통합 검증
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 닉네임 DB 조회 검증
  * 2026-08-25        HanWon.Jang        사진 댓글 링크 기준 검증
+ * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -62,6 +65,10 @@ class ReplyServiceImplTest {
     // 로그인 사용자 닉네임 조회 서비스
     @Mock
     private TokenRedisService tokenRedisService;
+
+    // 댓글 좋아요 커밋 이후 알림 이벤트 발행기
+    @Mock
+    private LikeAlimPublisher likeAlimPublisher;
 
     // 댓글 등록과 수정 및 삭제 단위 테스트 대상
     private ReplyServiceImpl replyService;
@@ -89,6 +96,7 @@ class ReplyServiceImplTest {
               , badWordDetectionService
               , alimService
               , tokenRedisService
+              , likeAlimPublisher
         );
     }
 
@@ -462,19 +470,20 @@ class ReplyServiceImplTest {
         assertEquals(157L, replyDtoCaptor.getValue().getReptNumb());
         // 좋아요 대상 댓글 번호를 확인한다
         assertEquals(8L, replyDtoCaptor.getValue().getReplNumb());
-        @SuppressWarnings("unchecked")
-        // 댓글 좋아요 알림의 템플릿 치환값을 확인할 캡처 객체를 생성한다
-        ArgumentCaptor<Map<String, Object>> replaceMapCaptor = ArgumentCaptor.forClass(Map.class);
-        // 해당 댓글 작성자에게 REPLY_LIKE 템플릿으로 알림이 전송되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L)
-              , eq(Constant.ALIM_SITU_LIKE)
-              , eq(Constant.ALIM_TEMP_CODE_REPLY_LIKE)
-              , eq(157L)
-              , replaceMapCaptor.capture()
-        );
-        // 알림 문구에 좋아요 등록자 닉네임이 전달되는지 확인한다
-        assertEquals("좋아요사용자", replaceMapCaptor.getValue().get("userName"));
+        // 댓글 좋아요 커밋 이후 처리할 알림 정보를 확인할 캡처 객체를 생성한다
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        // 댓글 좋아요 저장 경로에서는 알림을 직접 보내지 않고 이벤트만 등록하는지 확인한다
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        // 댓글 좋아요 알림 수신자를 확인한다
+        assertEquals(31L, eventCaptor.getValue().getTargetUserNumb());
+        // 댓글 좋아요 전용 템플릿 코드를 확인한다
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
+        // 댓글이 속한 독후감 번호를 알림 이동 대상으로 사용하는지 확인한다
+        assertEquals(157L, eventCaptor.getValue().getTagtNumb());
+        // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인한다
+        assertEquals("좋아요사용자", eventCaptor.getValue().getSendUserNick());
+        // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
         // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
@@ -512,7 +521,7 @@ class ReplyServiceImplTest {
         // 현재 사용자의 댓글 좋아요가 삭제 Mapper에 전달됐는지 확인한다
         verify(replyMapper).delReplyLike(any(ReplyDto.class));
         // 좋아요 취소는 기존 알림 삭제나 신규 푸시를 만들지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
         assertEquals(likeDetail, result.getData());
     }
@@ -566,7 +575,7 @@ class ReplyServiceImplTest {
         // 멱등 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 신규 좋아요가 아니면 닉네임 조회와 알림 발송을 하지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 
     /**
@@ -602,6 +611,6 @@ class ReplyServiceImplTest {
         // 본인 대댓글 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 본인 댓글 좋아요에는 닉네임 조회와 알림 발송을 하지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 }

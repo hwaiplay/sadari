@@ -15,7 +15,7 @@ import { getFeedPageApi, type FeedItem } from "@/features/Feed/api/feedApi";
 import ReplySheet from "@/features/reply/ReplySheet";
 import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import ProfileImage from "@/features/User/components/ProfileImage";
-import { type SyntheticEvent, useCallback, useEffect, useState } from "react";
+import { type SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./FeedPage.css";
 
@@ -53,6 +53,7 @@ const FeedPage = () => {
   const [error, setError] = useState("");
   const [replyItem, setReplyItem] = useState<FeedItem | null>(null);
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
+  const pendingLikeKeysRef = useRef(new Set<string>());
 
   /** 요청한 피드 페이지를 첫 목록 또는 다음 목록으로 반영한다. */
   const loadPage = useCallback(async (targetPage: number): Promise<void> => {
@@ -87,19 +88,48 @@ const FeedPage = () => {
     failedImage.src = fallbackImage;
   };
 
-  /** 피드 카드의 좋아요 상태를 서버 결과로 갱신한다. */
+  /** 피드 카드의 좋아요 상태를 즉시 반영하고 서버 결과로 확정한다. */
   const handleLike = async (item: FeedItem): Promise<void> => {
+    const pendingKey = `${item.tagtType}:${item.tagtNumb}`;
+
+    // 같은 피드 대상의 좋아요 요청이 진행 중이면 중복 토글을 차단한다
+    if (pendingLikeKeysRef.current.has(pendingKey)) {
+      return;
+    }
+
+    // 서버 응답 전에 반전된 좋아요 상태를 화면에 즉시 표시한다
+    const optimisticDetail = {
+      likeCnt: Math.max(0, item.likeCnt + (item.likeYsno === "Y" ? -1 : 1)),
+      likeYsno: item.likeYsno === "Y" ? "N" as const : "Y" as const,
+    };
+    pendingLikeKeysRef.current.add(pendingKey);
+    setItems((current) => current.map((candidate) =>
+      candidate.tagtType === item.tagtType && candidate.tagtNumb === item.tagtNumb
+        ? { ...candidate, ...optimisticDetail }
+        : candidate,
+    ));
+
     try {
       const result = await setPublicReportLikeApi({ tagtType: item.tagtType, tagtNumb: item.tagtNumb });
-      const detail = result.data as { likeCnt?: number; likeYsno?: "Y" | "N" } | undefined;
+      const detail = result.data;
+      // 서버가 확정한 값으로 화면의 낙관적 상태를 보정한다
       setItems((current) => current.map((candidate) => candidate.tagtType === item.tagtType && candidate.tagtNumb === item.tagtNumb
         ? { ...candidate, likeCnt: detail?.likeCnt ?? candidate.likeCnt, likeYsno: detail?.likeYsno ?? candidate.likeYsno }
         : candidate));
     } catch (likeError) {
+      // 핵심 좋아요 요청이 실패한 경우에만 클릭 전 상태로 되돌린다
+      setItems((current) => current.map((candidate) =>
+        candidate.tagtType === item.tagtType && candidate.tagtNumb === item.tagtNumb
+          ? { ...candidate, likeCnt: item.likeCnt, likeYsno: item.likeYsno }
+          : candidate,
+      ));
       await sweetError(
         message("frontend.feed.likeFailed"),
         getApiErrorMessage(likeError, message("frontend.common.tryAgain")),
       );
+    } finally {
+      // 성공과 실패 모두에서 같은 대상의 다음 좋아요 입력을 허용한다
+      pendingLikeKeysRef.current.delete(pendingKey);
     }
   };
 

@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -17,6 +16,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.alim.event.LikeAlimEvent;
+import org.our.sadari.alim.event.LikeAlimPublisher;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
@@ -41,7 +42,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-04        SeungHyeon.Kang       최초 생성
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 검증 추가
  * 2026-08-25        HanWon.Jang        사진 좋아요 링크 기준 검증
- * 2026-08-26        HanWon.Jang        좋아요 사용자 목록 검증
+ * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -70,6 +71,10 @@ class SocialServiceImplTest {
     @Mock
     private TokenRedisService tokenRedisService;
 
+    // 좋아요 커밋 이후 알림 이벤트 발행기
+    @Mock
+    private LikeAlimPublisher likeAlimPublisher;
+
     // 프로필 통계 서비스 단위 테스트 대상
     private SocialServiceImpl socialService;
 
@@ -90,7 +95,7 @@ class SocialServiceImplTest {
         new MessageUtils().setMessageSource(messageSource);
         // 소셜 서비스 단위 테스트 대상을 생성한다
         socialService = new SocialServiceImpl(
-                socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService);
+                socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService, likeAlimPublisher);
         // 프로필 통계 조회 대상 사용자가 존재하도록 설정한다
         lenient().when(userMapper.getUserByNumb(31L)).thenReturn(new UserDto());
         // 프로필 통계 SQL이 빈 기본 통계를 반환하도록 설정한다
@@ -138,6 +143,8 @@ class SocialServiceImplTest {
         verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
         // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
         verify(tokenRedisService, never()).getUserNick(eq(44L));
+        // 알림이 꺼진 경우 커밋 이후 알림 이벤트도 등록하지 않는지 확인한다
+        verify(likeAlimPublisher, never()).setLikeAlim(any(LikeAlimEvent.class));
     }
 
     /**
@@ -168,22 +175,25 @@ class SocialServiceImplTest {
         when(socialMapper.dupLike(request)).thenReturn(0);
         // 변경 후 좋아요 상세 조회 결과를 구성한다
         when(socialMapper.getLikeDtl(request)).thenReturn(request);
-        // 좋아요 등록자의 닉네임이 조회되는 조건을 구성한다
-        when(tokenRedisService.getUserNick(44L)).thenReturn("좋아요사용자");
-
         // 현재 프로필 사진에 좋아요를 등록한다
         ResultData result = socialService.setLike(request);
 
         // 프로필 사진 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
-        // 사진 알림은 대상 번호를 덧붙이지 않고 템플릿의 완성 링크만 사용하도록 발송하는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L)
-              , eq(Constant.ALIM_SITU_LIKE)
-              , eq(Constant.ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE)
-              , isNull()
-              , any()
-        );
+        // 커밋 이후 처리할 사진 좋아요 알림 정보를 확인할 캡처 객체를 생성한다
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        // 사진 좋아요 저장 경로에서는 알림을 직접 보내지 않고 이벤트만 등록하는지 확인한다
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        // 사진 좋아요 알림 수신자를 확인한다
+        assertEquals(31L, eventCaptor.getValue().getTargetUserNumb());
+        // 사진 좋아요 템플릿 코드를 확인한다
+        assertEquals(Constant.ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE, eventCaptor.getValue().getTempCode());
+        // 사진 알림은 템플릿의 완성 링크를 사용하도록 대상 번호를 추가하지 않는지 확인한다
+        assertNull(eventCaptor.getValue().getTagtNumb());
+        // 동기 좋아요 경로에서 Redis 닉네임을 조회하지 않는지 확인한다
+        verify(tokenRedisService, never()).getUserNick(eq(44L));
+        // 동기 좋아요 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
     }
 
     /**
