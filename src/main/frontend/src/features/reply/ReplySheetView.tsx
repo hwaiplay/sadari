@@ -292,15 +292,23 @@ const ReplyItem = ({
         {/* 댓글 작성자 정보와 댓글 내용 영역 */}
         <div className={styles.replyBody}>
           <div className={styles.replyTextArea}>
-            {/* 댓글 작성자 닉네임과 작성일 영역 */}
+            {/* 댓글 작성자 닉네임과 작성일 및 수정 여부 영역 */}
             <div className={styles.replyWriterRow}>
               <Link className={styles.replyWriter} to={profilePath}>
                 {reply.userNick || "-"}
               </Link>
               {formattedRegiDate ? (
-                <time className={styles.replyDate} dateTime={reply.regiDate}>
-                  {formattedRegiDate}
-                </time>
+                <>
+                  <time className={styles.replyDate} dateTime={reply.regiDate}>
+                    {formattedRegiDate}
+                  </time>
+                  {reply.updtYsno === "Y" ? (
+                    <span className={styles.replyDate}>
+                      {/* "(수정됨)" */}
+                      {message("frontend.reply.edited")}
+                    </span>
+                  ) : null}
+                </>
               ) : null}
             </div>
 
