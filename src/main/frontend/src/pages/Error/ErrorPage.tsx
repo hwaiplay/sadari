@@ -30,9 +30,11 @@ const ErrorPage = () => {
    * 등록되지 않은 URL을 공통 SweetAlert 경고와 홈 이동 버튼으로 안내한다
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 화면 이탈 시 현재 알림을 닫는 정리 함수
    */
-  const showNotFoundAlert = useCallback((): void => {
+  const showNotFoundAlert = useCallback((): (() => void) => {
+    // 잘못된 주소 화면의 생명주기와 현재 알림의 종료 시점을 연결한다
+    const closeController = new AbortController();
     // 등록되지 않은 URL 안내를 공통 경고 알럿 디자인으로 표시한다
     const alertPromise = sweetAlert({
       icon: "warning",
@@ -42,10 +44,24 @@ const ErrorPage = () => {
         "frontend.error.notFound.description",
       ),
       confirmButtonText: /* "홈으로 가기" */ message("frontend.error.notFound.home"),
+      closeSignal: closeController.signal,
     });
 
-    // 확인 버튼이나 알럿 바깥 클릭으로 안내가 닫히면 홈 화면으로 이동한다
-    void alertPromise.then(handleAlertClosed);
+    // 사용자가 알림을 닫은 경우에만 홈으로 이동하고 뒤로가기 정리에서는 현재 이력을 유지한다
+    void alertPromise.then(() => {
+      // 화면 이탈 신호로 닫힌 알림은 이미 이동한 이전 페이지를 덮어쓰지 않는다
+      if (closeController.signal.aborted) {
+        // 뒤로가기 이후 홈 이동 후속 처리를 중단한다
+        return;
+      }
+
+      handleAlertClosed();
+    });
+
+    // 뒤로가기를 포함한 화면 이탈 시 남아 있는 알림과 스크롤 잠금을 함께 해제한다
+    return () => {
+      closeController.abort();
+    };
   }, [handleAlertClosed]);
 
   // 등록되지 않은 URL 화면이 열리면 공통 경고 알럿을 한 번 표시한다
