@@ -20,7 +20,17 @@ import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDead
 import * as styles from "./MyClubPage.css";
 
 /**
- * 모임별 승인 대기 가입 신청 건수를 전체 건수에 더한다
+ * fileName       : MyClubPage
+ * author         : SeungHyeon.Kang, Hanwon.Jang
+ * date           : 2026-08-27
+ * description    : 내 모임 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ */
+
+/**
+ * 모임별 승인 대기 가입 신청 건수를 전체 건수에 합산
  *
  * @author HanWon.Jang
  * @param total 현재까지 합산한 가입 신청 건수
@@ -31,18 +41,11 @@ const sumApplicationCnt = (
   total: number,
   club: PendingClubApplications,
 ): number => {
-  // 현재 모임의 신청 건수를 더한 누적값을 반환한다
+  // 현재 모임의 신청 건수를 더한 누적값을 반환
   return total + club.applicationCnt;
 };
 
-/**
- * 참여 중인 모임의 카테고리와 현재 독서 현황을 목록으로 표시한다
- *
- * @author SeungHyeon.Kang, Hanwon.Jang
- * @return 내 모임 목록 화면
- */
 export default function MyClubPage() {
-  // 화면 로직 훅에서 조회 상태와 사용자 이벤트 처리 함수를 가져온다
   const {
     clubs,
     invitations,
@@ -55,12 +58,13 @@ export default function MyClubPage() {
     handleAcceptInvitation,
     handleDeclineInvitation,
   } = useMyClubPage();
-  // 모임장인 모든 모임의 승인 대기 신청 건수를 합산한다
+
+  // 모임장인 모든 모임의 승인 대기 신청 건수를 합산
   const pendingApplicationCnt = pendingApplications.reduce(sumApplicationCnt, 0);
   const hasClubNotice = invitations.length > 0 || pendingApplicationCnt > 0;
 
   /**
-   * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
+   * 받은 초대 한 건의 수락과 거절 제어 영역을 구성
    *
    * @author Hanwon.Jang
    * @param invitation 표시할 받은 초대
