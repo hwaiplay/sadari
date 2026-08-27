@@ -228,7 +228,7 @@ export const useClubDetailPage = () => {
    */
   const handleReadingHistory = (): void => {
     // 현재 활성 모임원 권한으로 전체 종료 회차 목록 경로로 이동한다
-    navigate(`/reading-clubs/${clubNumb}/readings`);
+    navigate(`/reading-clubs/history/${clubNumb}`);
   };
 
   /**

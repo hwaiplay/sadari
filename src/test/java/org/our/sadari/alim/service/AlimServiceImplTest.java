@@ -504,7 +504,7 @@ class AlimServiceImplTest {
 
         // 현재 모임장에게 멤버 관리 화면 경로가 반환되는지 확인한다
         assertEquals(200, result.getCode());
-        assertEquals("/reading-clubs/10/manage/members", data.getLinkUrlx());
+        assertEquals("/reading-clubs/manage/members/10", data.getLinkUrlx());
     }
 
     /** 모임장이 변경된 뒤에는 과거 가입 신청 알림으로 멤버 관리 화면을 열 수 없는지 검증한다. */

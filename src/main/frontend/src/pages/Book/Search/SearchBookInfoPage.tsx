@@ -154,7 +154,7 @@ function SearchBookInfoPage() {
       const editRondNumb = Number(pageState.clubReadingEditRondNumb);
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
         ? `/reading-clubs/update/book/${clubNumb}/${editRondNumb}`
-        : `/reading-clubs/set/${clubNumb}`;
+        : `/reading-clubs/set/book/${clubNumb}`;
       // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달한다.
       navigate(
         `${readingEntryPath}?isbn=${encodeURIComponent(selectedBook.isbn)}`,

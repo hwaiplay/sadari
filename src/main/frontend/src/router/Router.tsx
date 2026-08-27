@@ -236,27 +236,25 @@ const Router = () => {
           {/* 책 정보 */}
           <Route path="/reading-clubs/books/search/info/:clubNumb" element={<SearchBookInfoPage />} />
           {/* 모임 독서 등록 */}
-          <Route path="/reading-clubs/set/:clubNumb" element={<SetClubReadingPage />} />
+          <Route path="/reading-clubs/set/book/:clubNumb" element={<SetClubReadingPage />} />
           {/* 모임 독서 수정 */}
           <Route path="/reading-clubs/update/book/:clubNumb/:rondNumb" element={<SetClubReadingPage />} />
           {/* 다음 도서 투표 */}
           <Route path="/reading-clubs/:clubNumb/book-vote" element={<ClubBookVotePage />} />
           {/* 멤버 관리 */}
-          <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
+          <Route path="/reading-clubs/manage/members/:clubNumb" element={<ClubMemberManagementPage />} />
           {/* 멤버 퇴장 및 제한 내역 */}
-          <Route path="/reading-clubs/:clubNumb/manage/member-restrictions" element={<ClubMemberRestrictionPage />} />
-          {/* 독서 회차 결과 */}
-          <Route
-            path="/reading-clubs/:clubNumb/readings/:rondNumb/reports"
-            element={<ClubRoundReportPage />}
-          />
+          <Route path="/reading-clubs/manage/member-restrictions/:clubNumb" element={<ClubMemberRestrictionPage />} />
           {/* 이전 독서 기록 */}
           <Route
-            path="/reading-clubs/:clubNumb/readings"
+            path="/reading-clubs/history/:clubNumb"
             element={<ClubReadingHistoryPage />}
           />
-
-
+          {/* 독서 회차 결과 */}
+          <Route
+            path="/reading-clubs/history/:clubNumb/:rondNumb/reports"
+            element={<ClubRoundReportPage />}
+          />
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}
           <Route path="/user-report" element={<UserReportPage />} />

@@ -324,7 +324,7 @@ export default function ClubDetailPage() {
               {/* 멤버 관리는 활성 모임장에게만 제공한다 */}
               {club.membRole === "OWNER" ? (
                 <LinkButton
-                  link={`/reading-clubs/${club.clubNumb}/manage/members`}
+                  link={`/reading-clubs/manage/members/${club.clubNumb}`}
                   className={styles.managementMembersBtn}
                 >
                   {message("frontend.readingClub.management.members")}

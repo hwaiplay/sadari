@@ -50,7 +50,6 @@ export const useClubMemberManage = () => {
   const [sentInvitations, setSentInvitations] = useState<SentClubInvitation[]>([]);
   const [selectedApplication, setSelectedApplication] = useState<ClubApplication | null>(null);
   const [selectedMember, setSelectedMember] = useState<ClubMemberProfile | null>(null);
-  const [exitReason, setExitReason] = useState("");
   const [isInviteOpen, setIsInviteOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -294,7 +293,7 @@ export const useClubMemberManage = () => {
   };
 
   /**
-   * 선택한 활성 일반 멤버의 퇴장 사유 입력 모달을 연다.
+   * 선택한 활성 일반 멤버의 퇴장 확인 상태를 연다.
    *
    * @author HanWon.Jang
    * @param member 퇴장할 모임원
@@ -305,13 +304,12 @@ export const useClubMemberManage = () => {
     if (member.membRole === "OWNER") {
       return;
     }
-    // 이전 입력값을 지우고 선택한 멤버를 모달에 표시한다
-    setExitReason("");
+    // 선택한 멤버를 퇴장 확인 대상으로 설정한다
     setSelectedMember(member);
   };
 
   /**
-   * 모임원 퇴장 모달을 닫고 입력한 사유를 초기화한다.
+   * 모임원 퇴장 확인 상태를 닫는다.
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
@@ -321,44 +319,29 @@ export const useClubMemberManage = () => {
     if (isSubmitting) {
       return;
     }
-    // 선택 대상과 사유를 함께 초기화한다
+    // 선택 대상 초기화
     setSelectedMember(null);
-    setExitReason("");
   };
 
   /**
-   * 모임원 퇴장 사유 입력값을 최대 허용 길이 안에서 반영한다.
+   * 선택한 활성 일반 멤버를 퇴장시키고 최신 관리 목록을 조회
    *
    * @author HanWon.Jang
-   * @param value 사용자가 입력한 퇴장 사유
-   * @return 반환값이 없다
-   */
-  const handleExitReasonChange = (value: string): void => {
-    // 서버 DTO 제한과 같은 500자까지 입력 상태에 반영한다
-    setExitReason(value.slice(0, 500));
-  };
-
-  /**
-   * 선택한 활성 일반 멤버를 퇴장시키고 최신 관리 목록을 조회한다.
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return
    */
   const handleMemberExit = (): void => {
-    // 선택 대상과 공백을 제외한 필수 사유가 없거나 처리 중이면 요청하지 않는다
-    const normalizedReason = exitReason.trim();
-    if (!selectedMember || !normalizedReason || isSubmitting) {
+    // 선택 대상이 없거나 처리 중이면 요청하지 않는다
+    if (!selectedMember || isSubmitting) {
       return;
     }
 
     // 중복 퇴장 요청을 막기 위해 제출 상태를 시작한다
     setIsSubmitting(true);
-    // 선택한 모임원과 정규화한 퇴장 사유를 서버에 전달한다
-    void exitClubMemberApi(clubNumb, selectedMember.userNumb, normalizedReason)
+
+    void exitClubMemberApi(clubNumb, selectedMember.userNumb)
       .then(async () => {
-        // 성공한 대상과 입력값을 지우고 최신 멤버 목록을 반영한다
+        // 성공한 대상을 지우고 최신 멤버 목록을 반영한다
         setSelectedMember(null);
-        setExitReason("");
         await getPageData();
         // 최신 목록 반영 뒤 퇴장 완료를 사용자에게 안내한다
         await sweetSuccess(message("frontend.readingClub.memberManage.exitSuccessTitle"));
@@ -385,7 +368,6 @@ export const useClubMemberManage = () => {
     isLoading,
     isSubmitting,
     members,
-    exitReason,
     sentInvitations,
     selectedApplication,
     selectedMember,
@@ -398,7 +380,6 @@ export const useClubMemberManage = () => {
     handleInviteSubmit,
     handleExitClose,
     handleExitOpen,
-    handleExitReasonChange,
     handleMemberExit,
   };
 };

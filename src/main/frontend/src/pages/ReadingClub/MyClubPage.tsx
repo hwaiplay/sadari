@@ -119,7 +119,7 @@ export default function MyClubPage() {
     <Link
       className={styles.applicationItem}
       key={club.clubNumb}
-      to={`/reading-clubs/${club.clubNumb}/manage/members`}
+      to={`/reading-clubs/manage/members/${club.clubNumb}`}
     >
       <span className={styles.applicationClubName}>{club.clubName}</span>
       <span className={styles.applicationCount}>

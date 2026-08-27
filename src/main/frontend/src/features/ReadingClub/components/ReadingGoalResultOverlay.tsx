@@ -12,6 +12,19 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./ReadingGoalResultOverlay.css";
 import {ActionButton} from "@/components/Button/ActionButton.tsx";
 
+
+/**
+ * fileName       : ReadingGoalResultOverlay
+ * author         : Hanwon.Jang
+ * date           : 2026-08-27
+ * description    : 모임 독서 목표 결과 오버레이
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-08-27        Hanwon.Jang    주석 추가
+ */
+
+
 const ACHIEVEMENT_PROFILE_VISIBLE_LIMIT = 7;
 
 type ReadingGoalResultOverlayProps = {
@@ -19,52 +32,56 @@ type ReadingGoalResultOverlayProps = {
   onClose?: () => void;
 };
 
-/**
- * 종료된 모임 독서의 목표 결과를 전체 화면 레이어로 표시한다.
- *
- * @author HanWon.Jang
- * @param result 종료된 회차의 도서와 목표 달성 결과
- * @param onClose 결과 레이어가 닫힌 뒤 실행할 함수
- * @return 독서 목표 결과 전체 화면 레이어
- */
 export default function ReadingGoalResultOverlay({
   result,
   onClose,
 }: ReadingGoalResultOverlayProps) {
-  // 대상 회차의 모임원 독후감 목록으로 이동할 라우터 함수를 조회한다
+
+  // 대상 회차의 모임원 독후감 목록으로 이동할 라우터 함수를 조회
   const navigate = useNavigate();
-  // 사용자가 닫기 버튼을 누른 뒤 상세 화면을 볼 수 있도록 팝업 표시 상태를 관리한다
+
+  // 사용자가 닫기 버튼을 누른 뒤 상세 화면을 볼 수 있도록 팝업 표시 상태를 관리
   const [isOpen, setIsOpen] = useState(true);
-  // 참여자가 없는 비정상 집계에서도 진행률 계산이 유효한 숫자를 유지한다
+
+  // 참여자가 없는 비정상 집계에서도 진행률 계산이 유효한 숫자를 유지
   const achievementRate = result.partCnt > 0
     ? Math.min(100, Math.max(0, (result.goalAchvCnt / result.partCnt) * 100))
     : 0;
+
   const roundedAchievementRate = Math.round(achievementRate);
+
   const goalProgressColor = getGoalProgressColor(roundedAchievementRate);
   const goalStartDate = formatDashedDateToDot(result.goalStdt);
   const goalEndDate = formatDashedDateToDot(result.goalEndt);
+
   // 같은 연도의 종료일은 피그마 표기처럼 연도를 생략한다
   const readingPeriod = result.goalStdt.slice(0, 4) === result.goalEndt.slice(0, 4)
     ? `${goalStartDate} ~ ${goalEndDate.slice(5)}`
     : `${goalStartDate} ~ ${goalEndDate}`;
+
   // 상세 페이지와 같은 배경 및 결과 표지에 사용할 안전한 도서 이미지 경로를 조회한다
   const bookCoverSource = getBookCoverImageSource(result.bookCvim);
+
   // 도서 표지를 팝업 surface의 불투명 블러 배경 이미지로 전달한다
   const surfaceStyle = {
     "--book-bg-image": `url("${bookCoverSource}")`,
   } as CSSProperties;
+
   const hasAdditionalAchievementMembers = result.achievementMemberList.length
     > ACHIEVEMENT_PROFILE_VISIBLE_LIMIT;
+
   const visibleAchievementMembers = result.achievementMemberList.slice(
     0,
     hasAdditionalAchievementMembers
       ? ACHIEVEMENT_PROFILE_VISIBLE_LIMIT - 1
       : ACHIEVEMENT_PROFILE_VISIBLE_LIMIT,
   );
+
   const additionalAchievementMemberCount = Math.max(
     result.achievementMemberList.length - visibleAchievementMembers.length,
     0,
   );
+
   // "{0}번째 독서 목표 결과"
   const resultTitle = message("frontend.readingClub.result.roundTitle", [result.readingOrdr]);
 
@@ -74,7 +91,7 @@ export default function ReadingGoalResultOverlay({
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  function closeReadingGoalResult(): void {
+  const closeReadingGoalResult = ()=> {
     // 전체 화면 결과 레이어를 제거한다
     setIsOpen(false);
     // 상위 화면이 선택 회차 상태를 정리할 수 있도록 닫힘을 전달한다
@@ -87,7 +104,7 @@ export default function ReadingGoalResultOverlay({
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  function openReadingRoundReports(): void {
+  const openReadingRoundReports = ()=> {
     // 목록의 첫 렌더링부터 도서 요약을 표시할 수 있도록 팝업의 도서 정보를 함께 전달한다
     navigate(`/reading-clubs/${result.clubNumb}/readings/${result.rondNumb}/reports`, {
       state: {
@@ -96,18 +113,6 @@ export default function ReadingGoalResultOverlay({
         cover: result.bookCvim,
       },
     });
-  }
-
-  /**
-   * 현재 모임의 가입 이전을 포함한 이전 독서 기록 목록으로 이동한다.
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없다
-   */
-  function openReadingHistory(): void {
-    // 현재 결과 레이어를 닫고 허용된 전체 종료 회차 목록으로 이동한다
-    closeReadingGoalResult();
-    navigate(`/reading-clubs/${result.clubNumb}/readings`);
   }
 
   // 사용자가 팝업을 닫았으면 배경의 모임 상세 화면만 유지한다
@@ -272,7 +277,7 @@ export default function ReadingGoalResultOverlay({
             </dl>
           </article>
 
-          {/* 모임원 독후감과 이전 독서 기록 이동 안내 영역 */}
+          {/* 모임원 독후감 이동 안내 영역 */}
           <nav className={styles.resultNavigation}>
             {result.reportCnt !== 0 ? (
               <button
@@ -287,17 +292,6 @@ export default function ReadingGoalResultOverlay({
                 <img src="/img/icons/icon-chevron-right.svg" alt="arrow"/>
               </button>
             ) : null }
-            <button
-              className={styles.navigationRowMuted}
-              type="button"
-              onClick={openReadingHistory}
-            >
-              <strong>
-                {/* "이전 독서 기록" */}
-                {message("frontend.readingClub.detail.previousReading")}
-              </strong>
-              <img src="/img/icons/icon-chevron-right-gray.svg" alt="arrow" />
-            </button>
           </nav>
 
           {/* 닫기 */}

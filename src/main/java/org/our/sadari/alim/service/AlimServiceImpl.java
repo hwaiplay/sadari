@@ -537,7 +537,7 @@ public class AlimServiceImpl implements AlimService {
         if (isMemberManageAlim && userNumb.equals(target.getTargetUserNumb())
                 && Constant.USER_STAT_ACTIVE.equals(target.getTargetUserStat())) {
             // 현재 모임장의 멤버 관리 경로를 반환한다
-            return "/reading-clubs/" + target.getTagtNumb() + "/manage/members";
+            return "/reading-clubs/manage/members" + target.getTagtNumb();
         }
 
         // 지원하지 않는 모임 템플릿 또는 변경된 권한에는 이동 주소를 제공하지 않는다

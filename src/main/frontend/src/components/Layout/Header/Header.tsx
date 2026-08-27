@@ -50,8 +50,6 @@ type HeaderProps = {
   onOffsetChange?: (headerOffset: number) => void;
 };
 
-const READING_HISTORY_ROUTE_PATTERN = /^\/reading-clubs\/[1-9]\d*\/readings$/;
-
 function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
 
   const location = useLocation();
@@ -91,10 +89,7 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
-  const routeTitleOverride = READING_HISTORY_ROUTE_PATTERN.test(location.pathname)
-    ? message("frontend.readingClub.history.title")
-    : null;
-  const currentRouteTitle = routeTitleOverride ?? currentMenu?.menuName;
+  const currentRouteTitle = currentMenu?.menuName;
   const headerContentSlide =
     resolvedMenu?.transitionDirection === "back"
       ? headerContentSlideBack
@@ -181,9 +176,8 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
         <div
           className={clsx(
             headerCenter,
-            (isHomeRoute || (currentMenu?.menuName && !routeTitleOverride)) && headerRouteTitle,
-            currentMenu?.menuName
-              && !routeTitleOverride
+            (isHomeRoute || currentRouteTitle) && headerRouteTitle,
+            currentRouteTitle
               && hasBackButton
               && headerRouteTitleWithBack,
           )}
