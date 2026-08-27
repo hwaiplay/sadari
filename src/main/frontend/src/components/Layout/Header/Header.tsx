@@ -50,7 +50,14 @@ type HeaderProps = {
   onOffsetChange?: (headerOffset: number) => void;
 };
 
-function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
+/**
+ * 현재 경로의 메뉴 등록 여부와 관계없이 공통 헤더를 렌더링한다
+ *
+ * @author HanWon.Jang
+ * @param props 헤더 메뉴와 스크롤 위치 연동 옵션
+ * @return 현재 경로에 맞는 공통 헤더 컴포넌트
+ */
+const Header = ({ menuEnabled = true, onOffsetChange }: HeaderProps) => {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -172,14 +179,13 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
             />
           </button>
         )}
-        {/* 홈 로고와 메뉴명은 왼쪽에 표시하고 다른 경로의 대체 로고는 중앙에 표시하는 영역 */}
+        {/* 홈 로고와 메뉴명 및 서브 경로의 대체 로고를 왼쪽에 표시하는 영역 */}
         <div
           className={clsx(
             headerCenter,
-            (isHomeRoute || currentRouteTitle) && headerRouteTitle,
-            currentRouteTitle
-              && hasBackButton
-              && headerRouteTitleWithBack,
+            (isHomeRoute || currentRouteTitle || hasBackButton)
+              && headerRouteTitle,
+            hasBackButton && headerRouteTitleWithBack,
           )}
         >
           {/* 홈 화면은 메뉴 조회 결과와 관계없이 왼쪽에 서비스 로고를 표시하는 영역 */}
@@ -202,6 +208,6 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
       </Container>
     </header>
   );
-}
+};
 
 export default Header;
