@@ -8,7 +8,9 @@ import {
   useCallback,
   useContext,
   useEffect,
+  useId,
   useLayoutEffect,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -19,13 +21,19 @@ export type FullscreenImageRequest = {
   source: string;
   fallbackSource?: string;
   alt: string;
+  actions?: ReactNode;
+};
+
+type ActiveImageRequest = FullscreenImageRequest & {
+  triggerId: string;
 };
 
 type FullscreenImageViewerContextValue = {
-  openImageViewer: (request: FullscreenImageRequest) => void;
+  openImageViewer: (request: FullscreenImageRequest, triggerId: string) => void;
+  updateImageViewer: (request: FullscreenImageRequest, triggerId: string) => void;
 };
 
-type FullscreenImageViewerProviderProps = {
+type ImageViewerProviderProps = {
   children: ReactNode;
 };
 
@@ -48,11 +56,11 @@ const FullscreenImageViewerContext = createContext<
  * @param props 하위 화면 구성 요소
  * @return 이미지 뷰어 컨텍스트와 하위 화면
  */
-export function FullscreenImageViewerProvider({
+export function ImageViewerProvider({
   children,
-}: FullscreenImageViewerProviderProps) {
+}: ImageViewerProviderProps) {
 
-  const [imageRequest, setImageRequest] = useState<FullscreenImageRequest | null>(null);
+  const [imageRequest, setImageRequest] = useState<ActiveImageRequest | null>(null);
   const [activeSource, setActiveSource] = useState("");
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const returnFocusRef = useRef<HTMLElement | null>(null);
@@ -68,7 +76,7 @@ export function FullscreenImageViewerProvider({
      * @author SeungHyeon.Kang
      * @return 배경 화면 상태를 복원하는 정리 함수 또는 반환값 없음
      */
-    function manageBackgroundInteraction() {
+    function manageBackgroundLock() {
 
       // 뷰어가 닫혀 있으면 기존 앱 화면의 접근성과 조작 상태를 변경하지 않는다.
       if (!isOpen) {
@@ -99,7 +107,7 @@ export function FullscreenImageViewerProvider({
        * @author SeungHyeon.Kang
        * @return 반환값이 없다
        */
-      function restoreBackgroundInteraction(): void {
+      function restoreBackgroundLock(): void {
 
         // 앱 루트에 원래 inert 속성이 없었다면 뷰어가 추가한 조작 잠금을 제거한다.
         if (!hadInertAttribute) {
@@ -120,7 +128,7 @@ export function FullscreenImageViewerProvider({
       }
 
       // Effect 해제 시 기존 앱 화면 상태를 되돌릴 정리 함수를 반환한다.
-      return restoreBackgroundInteraction;
+      return restoreBackgroundLock;
     },
     [isOpen],
   );
@@ -130,9 +138,10 @@ export function FullscreenImageViewerProvider({
    *
    * @author SeungHyeon.Kang
    * @param request 원본 및 대체 이미지 정보
+   * @param triggerId 전체 화면 뷰어를 연 이미지 버튼 식별값
    * @return 반환값이 없다
    */
-  const openImageViewer = useCallback((request: FullscreenImageRequest): void => {
+  const openImageViewer = useCallback((request: FullscreenImageRequest, triggerId: string): void => {
 
     // 뷰어를 닫은 뒤 사용자가 이미지를 열었던 요소로 초점을 되돌릴 수 있게 보관한다.
     returnFocusRef.current = document.activeElement instanceof HTMLElement
@@ -141,7 +150,38 @@ export function FullscreenImageViewerProvider({
     // 새 이미지의 원본 경로를 즉시 표시 경로로 사용한다.
     setActiveSource(request.source);
     // 헤더와 내비게이션 위에 전체 화면 이미지 뷰어를 표시한다.
-    setImageRequest(request);
+    setImageRequest({ ...request, triggerId });
+  }, []);
+
+  /**
+   * 열려 있는 이미지 버튼의 최신 반응 버튼 상태를 전체 화면 뷰어에 동기화한다.
+   *
+   * @author HanWon.Jang
+   * @param request 최신 이미지와 반응 버튼 정보
+   * @param triggerId 전체 화면 뷰어를 연 이미지 버튼 식별값
+   * @return 반환값이 없다
+   */
+  const updateImageViewer = useCallback((request: FullscreenImageRequest, triggerId: string): void => {
+    // 현재 뷰어를 연 버튼만 좋아요와 댓글 집계 변경을 반영한다
+    setImageRequest(
+      /**
+       * 현재 열린 이미지와 같은 버튼의 최신 요청만 반영한다
+       *
+       * @author HanWon.Jang
+       * @param currentRequest 현재 전체 화면 이미지 요청
+       * @return 최신 반응 버튼을 반영한 전체 화면 이미지 요청
+       */
+      (currentRequest) => {
+        // 닫힌 뷰어이거나 다른 이미지 버튼의 변경이면 현재 뷰어 상태를 유지한다
+        if (!currentRequest || currentRequest.triggerId !== triggerId) {
+          // 다른 이미지의 전체 화면 표시 내용을 그대로 반환한다
+          return currentRequest;
+        }
+
+        // 현재 사진의 최신 반응 버튼을 포함한 요청으로 뷰어 내용을 갱신한다
+        return { ...request, triggerId };
+      },
+    );
   }, []);
 
   /**
@@ -183,7 +223,7 @@ export function FullscreenImageViewerProvider({
      * @author SeungHyeon.Kang
      * @return 반환값이 없다
      */
-    function focusImageViewerCloseButton(): void {
+    function focusViewerCloseButton(): void {
 
       // 뷰어가 닫혀 있으면 닫기 버튼으로 초점을 이동하지 않는다.
       if (!isOpen) {
@@ -224,6 +264,12 @@ export function FullscreenImageViewerProvider({
         // Escape 이외의 키 입력은 현재 화면 동작에 맡긴다.
         if (event.key !== "Escape") {
           // 이미지 뷰어 닫기 없이 종료한다.
+          return;
+        }
+
+        // 좋아요 사용자 목록이나 댓글 바텀시트가 위에 열려 있으면 해당 모달이 Escape 입력을 처리한다
+        if (document.querySelector("[data-image-viewer-overlay='true']")) {
+          // 이미지 뷰어는 하위 모달이 닫힐 때까지 현재 상태를 유지한다
           return;
         }
 
@@ -277,9 +323,20 @@ export function FullscreenImageViewerProvider({
     [isOpen],
   );
 
-  const contextValue: FullscreenImageViewerContextValue = {
-    openImageViewer,
-  };
+  // 뷰어 상태 변경이 이미지 버튼 전체의 불필요한 재렌더링으로 이어지지 않도록 컨텍스트 값을 고정한다
+  const contextValue = useMemo<FullscreenImageViewerContextValue>(
+    /**
+     * 전체 화면 이미지 버튼이 공유할 안정적인 뷰어 명령을 구성한다
+     *
+     * @author HanWon.Jang
+     * @return 전체 화면 이미지 열기와 갱신 명령
+     */
+    () => ({
+      openImageViewer,
+      updateImageViewer,
+    }),
+    [openImageViewer, updateImageViewer],
+  );
 
   return (
     <FullscreenImageViewerContext.Provider value={contextValue}>
@@ -292,14 +349,32 @@ export function FullscreenImageViewerProvider({
           aria-modal="true"
           aria-label={/* "원본 이미지 전체 화면 보기" */ message("frontend.imageViewer.dialogLabel")}
         >
-          {/* 어둡게 블러 처리된 기존 화면 위에 비율을 유지하며 표시하는 원본 이미지 */}
-          <img
-            className={styles.originalImage}
-            src={activeSource}
-            onError={handleImageError}
-            alt={imageRequest.alt}
-            draggable="false"
-          />
+          {imageRequest.actions ? (
+            /* 사진과 겹치지 않는 우하단 반응 버튼을 포함한 원본 이미지 영역 */
+            <div className={styles.imageViewport}>
+              <figure className={styles.imageFrame}>
+                {/* 반응 버튼 높이를 제외한 영역에 비율을 유지하며 표시하는 원본 이미지 */}
+                <img
+                  className={styles.originalImageWithActions}
+                  src={activeSource}
+                  onError={handleImageError}
+                  alt={imageRequest.alt}
+                  draggable="false"
+                />
+                {/* 현재 프로필 또는 배경사진의 좋아요와 댓글 영역 */}
+                <div className={styles.viewerActions}>{imageRequest.actions}</div>
+              </figure>
+            </div>
+          ) : (
+            /* 반응 버튼이 없는 원본 이미지를 기존 전체 화면 크기로 표시하는 영역 */
+            <img
+              className={styles.originalImage}
+              src={activeSource}
+              onError={handleImageError}
+              alt={imageRequest.alt}
+              draggable="false"
+            />
+          )}
 
           {/* 전체 화면 원본 이미지 닫기 버튼 */}
           <button
@@ -337,7 +412,7 @@ export function useFullscreenImageViewer(): FullscreenImageViewerContextValue {
   // 최상위 공급자 밖에서 호출된 잘못된 구성은 개발 단계에서 즉시 알린다.
   if (!context) {
     // 필수 공급자가 누락된 상태로 화면을 계속 렌더링하지 않는다.
-    throw new Error("FullscreenImageViewerProvider is required.");
+    throw new Error("ImageViewerProvider is required.");
   }
 
   // 공통 뷰어 열기 함수를 사용하는 화면에 반환한다.
@@ -357,11 +432,28 @@ export function FullscreenImageButton({
   alt,
   children,
   ariaLabel,
+  actions,
   className,
   ...buttonProps
 }: FullscreenImageButtonProps) {
 
-  const { openImageViewer } = useFullscreenImageViewer();
+  const { openImageViewer, updateImageViewer } = useFullscreenImageViewer();
+  // 같은 화면의 여러 이미지 버튼 중 현재 뷰어를 연 버튼을 구분한다
+  const triggerId = useId();
+
+  useEffect(
+    /**
+     * 현재 이미지 버튼이 연 뷰어에 최신 사진 반응 상태를 전달한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    () => {
+      // 열린 전체 화면 이미지에 최신 좋아요와 댓글 집계를 반영한다
+      updateImageViewer({ source, fallbackSource, alt, actions }, triggerId);
+    },
+    [actions, alt, fallbackSource, source, triggerId, updateImageViewer],
+  );
 
   /**
    * 현재 버튼에 표시된 이미지를 전체 화면 원본 보기로 연다.
@@ -372,11 +464,7 @@ export function FullscreenImageButton({
   function handleImageButtonClick(): void {
 
     // 이미지 경로와 설명 및 실패 대체 경로를 공통 뷰어에 전달한다.
-    openImageViewer({
-      source,
-      fallbackSource,
-      alt,
-    });
+    openImageViewer({ source, fallbackSource, alt, actions }, triggerId);
   }
 
   return (

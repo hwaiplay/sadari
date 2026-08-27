@@ -23,7 +23,7 @@ export const overlay = style({
   inset: 0,
   width: "100vw",
   height: "100dvh",
-  zIndex: 1200,
+  zIndex: 3100,
   padding: "0 16px",
   display: "flex",
   alignItems: "center",

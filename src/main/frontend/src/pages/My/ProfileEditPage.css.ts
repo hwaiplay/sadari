@@ -87,8 +87,8 @@ export const coverActionGroup = style({
 
 export const coverEditAction = style({
   position: "absolute",
-  top: "14px",
   right: "14px",
+  bottom: "14px",
   zIndex: 2,
 });
 
@@ -341,26 +341,11 @@ const imageReactionBar = style({
   backgroundColor: "rgba(255, 255, 255, 0.94)",
 });
 
-export const backgroundImageReactionBar = style([
+export const viewerImageReactionBar = style([
   imageReactionBar,
   {
-    position: "absolute",
-    right: "14px",
-    bottom: "14px",
     minHeight: "30px",
     padding: "2px 8px",
-  },
-]);
-
-export const profileImageReactionBar = style([
-  imageReactionBar,
-  {
-    position: "absolute",
-    left: "50%",
-    transform: "translateX(-50%)",
-    bottom: "-10px",
-    minHeight: "26px",
-    padding: "0 6px",
   },
 ]);
 
@@ -454,12 +439,11 @@ export const profileIntro = style({
 
 export const socialFollowButton = style({
   position: "absolute",
-  left: "50%",
-  transform: "translateX(-50%)",
-  bottom: "-10px",
+  right: "-9px",
+  bottom: "5px",
   height: "26px",
   minWidth: "54px",
-  padding: "0 12px",
+  padding: "0 8px",
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
@@ -467,6 +451,7 @@ export const socialFollowButton = style({
   fontFamily: vars.font.semibold,
   fontSize: "12px",
   whiteSpace: "nowrap",
+  boxShadow: "0 6px 16px rgba(0, 0, 0, 0.16)",
   cursor: "pointer",
   selectors: {
     "&:hover:not(:disabled)": {

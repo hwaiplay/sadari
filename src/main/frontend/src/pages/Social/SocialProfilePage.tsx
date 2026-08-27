@@ -512,7 +512,7 @@ const SocialProfilePage = () => {
     return (
       /* 상대 사용자의 독서와 소셜 활동 통계 영역 */
       <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
-        <div className={styles.profileStatsSummary}>
+        <div className={styles.myProfileStatsSummary}>
           <div className={styles.goalAchievementGrid}>
             {stats.map((stat) => (
               <div className={styles.goalAchievementItem} key={stat.label}>

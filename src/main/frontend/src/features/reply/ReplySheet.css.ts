@@ -15,7 +15,7 @@ export const sheetLayer = style({
   inset: 0,
   width: "100%",
   maxWidth: "100vw",
-  zIndex: 1200,
+  zIndex: 3100,
   display: "flex",
   justifyContent: "center",
   alignItems: "flex-end",

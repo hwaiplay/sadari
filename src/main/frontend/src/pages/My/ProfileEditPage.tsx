@@ -2064,6 +2064,14 @@ const ProfileEditPage = () => {
               className={styles.coverImageViewerButton}
               source={previewBackground}
               alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+              actions={
+                !isEditMode && profile?.backgroundImageReaction
+                  ? renderImageReactions(
+                    profile.backgroundImageReaction,
+                    styles.viewerImageReactionBar,
+                  )
+                  : undefined
+              }
             >
               <span aria-hidden="true" />
             </FullscreenImageButton>
@@ -2074,7 +2082,7 @@ const ProfileEditPage = () => {
             </p>
           )}
 
-          {/* 조회 상태의 프로필 수정 버튼을 배경사진 우측 상단에 고정한다 */}
+          {/* 조회 상태의 프로필 수정 버튼을 배경사진 위 우측 하단에 고정한다 */}
           {!isEditMode ? (
             <div className={styles.coverEditAction}>
               <button
@@ -2095,7 +2103,7 @@ const ProfileEditPage = () => {
             </div>
           ) : null}
 
-          {/* 편집 상태의 배경 변경·저장 또는 조회 상태의 배경사진 반응 영역 */}
+          {/* 편집 상태의 배경 변경과 저장 영역 */}
           {isEditMode ? (
             <div className={styles.coverActionGroup}>
               {/* 1. 취소 버튼 (배경 변경 왼쪽으로 이동) */}
@@ -2156,11 +2164,6 @@ const ProfileEditPage = () => {
                 )}
               </button>
             </div>
-          ) : profile?.backgroundImageReaction ? (
-            renderImageReactions(
-              profile.backgroundImageReaction,
-              styles.backgroundImageReactionBar,
-            )
           ) : null}
         </section>
 
@@ -2175,6 +2178,14 @@ const ProfileEditPage = () => {
                 source={normalizeProfileImageSource(previewImage)}
                 fallbackSource={DEFAULT_PROFILE_IMAGE}
                 alt={/* "프로필 사진" */ message("frontend.imageViewer.profileAlt")}
+                actions={
+                  !isEditMode && profile?.profileImageReaction
+                    ? renderImageReactions(
+                      profile.profileImageReaction,
+                      styles.viewerImageReactionBar,
+                    )
+                    : undefined
+                }
               >
                 <ProfileImage
                   className={styles.profileImage}
@@ -2200,12 +2211,6 @@ const ProfileEditPage = () => {
                   />
                 </label>
               )}
-              {!isEditMode && profile?.profileImageReaction
-                ? renderImageReactions(
-                  profile.profileImageReaction,
-                  styles.profileImageReactionBar,
-                )
-                : null}
             </div>
 
             {/* 닉네임과 한줄소개 영역 */}

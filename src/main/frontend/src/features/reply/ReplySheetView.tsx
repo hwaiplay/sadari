@@ -551,7 +551,7 @@ const ReplySheetView = ({
   // 조회 상태에 맞는 댓글 목록과 등록 폼을 포함한 바텀시트 화면을 반환한다
   return (
     /* 댓글 바텀시트 전체 영역 */
-    <div className={styles.sheetLayer}>
+    <div className={styles.sheetLayer} data-image-viewer-overlay="true">
       {/* 댓글 바텀시트 배경과 닫기 영역 */}
       {/* "닫기" */}
       <button
