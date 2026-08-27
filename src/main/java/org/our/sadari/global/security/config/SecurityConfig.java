@@ -1,5 +1,6 @@
 package org.our.sadari.global.security.config;
 
+import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
@@ -30,6 +31,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang    Cookie 인증 API CSRF 보호 적용
+ * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
  */
 @Configuration
 @EnableWebSecurity
@@ -82,6 +84,9 @@ public class SecurityConfig {
                 // 요청 URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
 
+                        // 서버 예외를 전용 오류 문서로 표시할 때 인증 필터가 오류 디스패치를 차단하지 않도록 허용한다
+                        .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
+
                         // 인증 없이 접근을 허용할 공개 API Endpoint 목록
                         .requestMatchers(
                                 "/api/oauth/kakao",
@@ -90,6 +95,7 @@ public class SecurityConfig {
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
+                                "/error/500.html",
                                 "/uploads/profile/**",
                                 "/uploads/background/**"
                         // 인증 없이 접근 가능한 공개 API 경로를 설정한다

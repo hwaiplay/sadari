@@ -12,8 +12,16 @@ import {
   beginBlockingOperation,
   endBlockingOperation,
 } from "@/app/navigation/blockingOperation";
-import { assertResultDataSuccess, type ResultData } from "./resultData";
+import {
+  assertResultDataSuccess,
+  DB_CONNECTION_FAILED_CODE,
+  type ResultData,
+} from "./resultData";
 import { publishAuthLogout } from "@/features/Auth/lib/authEvents";
+import {
+  isConnectionError,
+  publishConnectionError,
+} from "@/app/connection/connectionStatus";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -348,6 +356,12 @@ api.interceptors.response.use(
     const originalRequest = response.config as RetryableRequestConfig;
     const resultCode = getResultCode(response.data);
 
+    // HTTP 성공 본문에 JDBC 연결 실패 코드가 있으면 전역 연결 장애 화면을 표시한다
+    if (resultCode === DB_CONNECTION_FAILED_CODE) {
+      // 서버가 판정한 JDBC 연결 장애를 앱 전체 화면에 전달한다
+      publishConnectionError();
+    }
+
     if (
       originalRequest.url === "/user/me" &&
       isRefreshableAuthCode(resultCode) &&
@@ -377,6 +391,12 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
 
     const originalRequest = error.config as RetryableRequestConfig | undefined;
+
+    // HTTP 5xx와 JDBC 실패 응답 및 인터넷 단절을 전역 서비스 장애 화면으로 안내한다
+    if (isConnectionError(error)) {
+      // 현재 페이지의 개별 오류 처리보다 먼저 앱 전체 서비스 장애 화면을 표시한다
+      publishConnectionError();
+    }
 
     // Cookie와 Header의 CSRF Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구한다
     if (error.response?.status === 403 && originalRequest
