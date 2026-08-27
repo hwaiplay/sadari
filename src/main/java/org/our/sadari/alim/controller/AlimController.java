@@ -10,6 +10,7 @@ import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.result.ResultData;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.PutMapping;
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 API 제거
+ * 2026-08-27        SeungHyeon.Kang    알림번호 기반 이동 주소 조회 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -64,6 +66,22 @@ public class AlimController {
     public ResultData getUnreadAlimCnt(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
         // 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회 결과를 반환한다
         return alimService.getUnreadAlimCnt(loginUserNumb);
+    }
+
+    /**
+     * 알림번호와 클릭 시점의 콘텐츠 및 관계 상태로 최종 이동 주소를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param alimNumb 이동할 사용자별 알림 번호
+     * @return 현재 접근 권한이 반영된 내부 이동 주소
+     */
+    @GetMapping("/notification-target/{alimNumb}")
+    @Operation(summary = "알림 이동 주소 조회", description = "알림 소유권과 현재 콘텐츠 공개 및 팔로우 상태를 검증해 내부 이동 주소를 계산한다.")
+    public ResultData getAlimTarget(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                  , @Parameter(description = "이동할 사용자별 알림 번호", example = "1") @PathVariable Long alimNumb) {
+        // 인증 사용자와 사용자별 알림 번호로 현재 접근 가능한 이동 주소를 조회한다
+        return alimService.getAlimTarget(loginUserNumb, alimNumb);
     }
 
     /**

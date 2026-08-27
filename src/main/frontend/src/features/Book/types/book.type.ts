@@ -193,6 +193,15 @@ export interface PublicReportType {
   commentCnt?: number;
 }
 
+// 알림 직접 진입에서 공개 독후감 카드와 도서 머리말을 함께 구성하는 타입
+export interface PublicReportTargetType extends PublicReportType {
+  bookTitl: string;
+  bookAthr: string;
+  bookIsbn: string;
+  bookCvim?: string;
+  bookAvgGrde?: number | string | null;
+}
+
 // 독후감 상세보기 타입
 export interface ReportDetailType extends ReportDtoType {
   // 상세 조회에서는 작성자 본인 독후감만 반환하므로 사용자 번호가 항상 필요합니다.

@@ -1,5 +1,6 @@
 package org.our.sadari.alim.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotNull;
 import java.util.List;
@@ -18,6 +19,7 @@ import lombok.Data;
  * 2026-08-04        SeungHyeon.Kang       외부 알림 발송 요청 DTO 제거
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 조인 응답 필드 추가
  * 2026-08-14        SeungHyeon.Kang    알림 목록 10개 단위 조회 설명 반영
+ * 2026-08-27        SeungHyeon.Kang    동적 알림 이동 대상 필드와 응답 DTO 추가
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
@@ -47,10 +49,6 @@ public class AlimDto {
 
         @Schema(description = "알림 내용")
         private String tempCont;
-
-        @Schema(description = "이동 URL")
-        private String linkUrlx;
-
 
         @Schema(description = "사용 여부", example = "Y", allowableValues = {"Y", "N"})
         private String useeYsno;
@@ -88,6 +86,18 @@ public class AlimDto {
         @Schema(description = "이동 URL")
         private String linkUrlx;
 
+        @Schema(description = "알림 이동 대상 유형", example = "REPORT", hidden = true)
+        @JsonIgnore
+        private String tagtType;
+
+        @Schema(description = "알림 이동 대상 번호", example = "157", hidden = true)
+        @JsonIgnore
+        private Long tagtNumb;
+
+        @Schema(description = "알림에서 강조할 댓글 번호", example = "8", hidden = true)
+        @JsonIgnore
+        private Long replNumb;
+
         @Schema(description = "읽음 여부", example = "N", allowableValues = {"Y", "N"})
         private String readYsno;
 
@@ -106,6 +116,65 @@ public class AlimDto {
 
         @Schema(description = "Base64로 인코딩되는 알림 아이콘 바이너리")
         private byte[] alimIconData;
+    }
+
+    /**
+     * 알림 클릭 시점의 소유자와 공개 및 팔로우 상태를 조회해 최종 이동 주소를 계산할 때 사용한다.
+     * 외부 응답에는 계산이 끝난 내부 상대 경로만 노출한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    // 알림번호로 조회한 현재 콘텐츠 접근 상태와 최종 이동 주소
+    @Data
+    @Schema(description = "알림 이동 대상 DTO")
+    public static class AlimTargetDto {
+
+        @Schema(description = "알림 수신 사용자 번호", example = "31", hidden = true)
+        @JsonIgnore
+        private Long userNumb;
+
+        @Schema(description = "사용자별 알림 번호", example = "1", hidden = true)
+        @JsonIgnore
+        private Long alimNumb;
+
+        @Schema(description = "알림 템플릿 코드", example = "LIKE_REPORT", hidden = true)
+        @JsonIgnore
+        private String tempCode;
+
+        @Schema(description = "알림 이동 대상 유형", example = "REPORT", hidden = true)
+        @JsonIgnore
+        private String tagtType;
+
+        @Schema(description = "알림 이동 대상 번호", example = "157", hidden = true)
+        @JsonIgnore
+        private Long tagtNumb;
+
+        @Schema(description = "알림에서 강조할 댓글 번호", example = "8", hidden = true)
+        @JsonIgnore
+        private Long replNumb;
+
+        @Schema(description = "이동 대상 소유 사용자 번호", example = "32", hidden = true)
+        @JsonIgnore
+        private Long targetUserNumb;
+
+        @Schema(description = "이동 대상 소유 사용자 상태", example = "ACTIVE", hidden = true)
+        @JsonIgnore
+        private String targetUserStat;
+
+        @Schema(description = "독후감 공개 여부", example = "Y", hidden = true)
+        @JsonIgnore
+        private String pubcYsno;
+
+        @Schema(description = "독후감 독서 상태", example = "DONE", hidden = true)
+        @JsonIgnore
+        private String reptStat;
+
+        @Schema(description = "알림 수신자의 현재 팔로우 여부", example = "Y", hidden = true)
+        @JsonIgnore
+        private String followYsno;
+
+        @Schema(description = "클릭 시점의 권한으로 계산한 이동 URL", example = "/feed?tagtType=REPORT&tagtNumb=157")
+        private String linkUrlx;
     }
 
     /**

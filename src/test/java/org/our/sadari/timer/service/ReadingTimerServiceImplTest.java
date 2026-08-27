@@ -187,7 +187,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setTimerKeepsExistingActiveSession() {
+    void keepExistingTimerSession() {
 
         ReadingTimerDto activeTimer = createTimer(Constant.TIMER_STAT_PAUSED, LocalDateTime.of(2026, 8, 14, 23, 50));
         // 시작 전과 요약 조회에서 동일한 기존 세션을 반환한다
@@ -208,7 +208,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setTimerSchedulesTargetAlarm() {
+    void scheduleTimerAlarm() {
 
         ReadingTimerDto.Request request = new ReadingTimerDto.Request();
         // 30분 목표 독서시간을 설정한다
@@ -235,7 +235,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setTimerRejectsTargetOverEightHours() {
+    void rejectTimerOverEightHours() {
 
         ReadingTimerDto.Request request = new ReadingTimerDto.Request();
         // 8시간을 1초 넘는 목표시간을 설정한다
@@ -254,7 +254,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptTimerSplitsRunningSegmentAtMidnight() {
+    void splitTimerAtMidnight() {
 
         ReadingTimerDto activeTimer = createTimer(Constant.TIMER_STAT_RUNNING, LocalDateTime.of(2026, 8, 14, 23, 59));
         ReadingTimerDto.Request request = new ReadingTimerDto.Request();
@@ -286,7 +286,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptTimerCompletesTargetOver() {
+    void completeTimerTarget() {
 
         LocalDateTime targetEndDate = LocalDateTime.of(2026, 8, 15, 0, 1);
         ReadingTimerDto activeTimer = createTimer(Constant.TIMER_STAT_RUNNING, LocalDateTime.of(2026, 8, 15, 0, 0));
@@ -323,7 +323,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptTimerWithdrawalCancelsAlim() {
+    void cancelAlimOnWithdrawal() {
 
         LocalDateTime withdrawalDate = LocalDateTime.of(2026, 8, 15, 0, 1);
         // 활성 타이머가 없는 계정 상태를 설정한다
@@ -342,7 +342,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendTimerAlimStoresSendDate() {
+    void storeTimerAlimDate() {
 
         LocalDateTime schedulerDate = LocalDateTime.of(2026, 8, 15, 0, 1);
         LocalDateTime targetEndDate = LocalDateTime.of(2026, 8, 15, 0, 0, 55);
@@ -372,14 +372,16 @@ class ReadingTimerServiceImplTest {
                                               , Constant.USER_STAT_ACTIVE, schedulerDate)).thenReturn(timerDto);
         // 공통 알림 저장 성공 결과를 설정한다
         when(alimService.sendAlim(eq(31L), eq(Constant.ALIM_SITU_TIMER)
-                                , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any())).thenReturn(ResultData.success());
+                                , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(Constant.ALIM_TARGET_TIMER)
+                                , eq((Long) null), eq((Long) null), any())).thenReturn(ResultData.success());
 
         // 목표시간이 지난 세션의 알림을 독서 타이머 서비스에서 발송한다
         readingTimerService.sendTimerAlim();
 
         // BOOK_TIMER_OVER 템플릿에 1시간 30분 치환값을 전달했는지 검증한다
         verify(alimService).sendAlim(eq(31L), eq(Constant.ALIM_SITU_TIMER)
-                                  , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null)
+                                  , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(Constant.ALIM_TARGET_TIMER)
+                                  , eq((Long) null), eq((Long) null)
                                   , argThat(replaceMap -> "1시간 30분".equals(replaceMap.get("timerTime"))));
         // 목표 종료시각까지의 1시간 30분만 세션에 확정됐는지 확인한다
         assertEquals(5400L, timerDto.getReadSecs());
@@ -428,7 +430,7 @@ class ReadingTimerServiceImplTest {
         readingTimerService.sendTimerAlim();
 
         // 공통 알림 서비스가 호출되지 않았는지 검증한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
         // 세션 발송 일시가 수정되지 않았는지 검증한다
         verify(readingTimerMapper, never()).uptTimerAlimSent(any());
     }
@@ -439,7 +441,7 @@ class ReadingTimerServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void sendTimerAlimKeepsCompletion() {
+    void keepTimerCompletion() {
 
         LocalDateTime alarmDate = LocalDateTime.of(2026, 8, 15, 0, 1);
         ReadingTimerDto timerDto = createTimer(Constant.TIMER_STAT_RUNNING, LocalDateTime.of(2026, 8, 15, 0, 0));
@@ -458,7 +460,8 @@ class ReadingTimerServiceImplTest {
                                               , Constant.USER_STAT_ACTIVE, alarmDate)).thenReturn(timerDto);
         // 알림 저장 거절 결과를 설정한다
         when(alimService.sendAlim(eq(1L), eq(Constant.ALIM_SITU_TIMER)
-                                , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(null), any()))
+                                , eq(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER), eq(Constant.ALIM_TARGET_TIMER)
+                                , eq((Long) null), eq((Long) null), any()))
                 .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
 
         // 목표시간 자동 완료와 알림 발송 주기를 실행한다

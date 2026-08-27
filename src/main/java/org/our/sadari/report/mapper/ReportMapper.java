@@ -107,6 +107,9 @@ public interface ReportMapper {
      */
     List<ReportDto> getPublicReportList(ReportDto req);
 
+    /** 알림이 지정한 공개 독후감 한 건과 도서 정보를 조회한다. */
+    ReportDto getPublicReportTarget(ReportDto req);
+
     /**
      * ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다.
      *

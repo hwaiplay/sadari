@@ -13,6 +13,7 @@ import org.our.sadari.global.common.result.ResultData;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-08-27        SeungHyeon.Kang    동적 알림 대상 조회와 저장 계약 추가
  */
 public interface AlimService {
     /**
@@ -35,6 +36,16 @@ public interface AlimService {
     ResultData getUnreadAlimCnt(Long userNumb);
 
     /**
+     * 알림번호와 클릭 시점의 콘텐츠 및 관계 상태로 이동 주소를 계산한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @param alimNumb 이동할 사용자별 알림 번호
+     * @return 현재 접근 권한이 반영된 내부 이동 주소
+     */
+    ResultData getAlimTarget(Long userNumb, Long alimNumb);
+
+    /**
      * 알림센터 항목 또는 푸시 알림을 클릭한 사용자의 알림 한 건을 읽음 처리한다.
      *
      * @author SeungHyeon.Kang
@@ -55,16 +66,18 @@ public interface AlimService {
     ResultData delAllAlim(Long userNumb);
 
     /**
-     * 알림 수신자, 상황 코드, 템플릿 코드, 이동 대상 번호, 치환 Map을 받아 사용자 알림을 발송.
-     * 실제 링크는 알림 템플릿 링크를 기준으로 조합하므로 호출부에서는 상세 번호가 필요할 때만 대상 번호를 넘긴다.
+     * 알림 대상 메타데이터를 저장하고 알림번호 기반 이동 경로로 사용자 알림과 푸시를 발송한다.
      *
      * @author SeungHyeon.Kang
-     * @param userNumb 알림을 받을 사용자 번호
-     * @param alimSitu 알림 상황
+     * @param userNumb 알림 수신자 번호
+     * @param alimSitu 알림 상황 코드
      * @param tempCode 알림 템플릿 코드
-     * @param tagtNumb 알림 클릭 시 이동할 대상 번호
-     * @param replaceMap 템플릿 치환 값
-     * @return 발송 결과
+     * @param tagtType 이동 대상 유형
+     * @param tagtNumb 이동 대상 번호
+     * @param replyNumb 강조할 댓글 번호
+     * @param replaceMap 템플릿 문구 치환값
+     * @return 알림 저장 결과
      */
-    ResultData sendAlim(Long userNumb, String alimSitu, String tempCode, Long tagtNumb, Map<String, Object> replaceMap);
+    ResultData sendAlim(Long userNumb, String alimSitu, String tempCode, String tagtType
+                       , Long tagtNumb, Long replyNumb, Map<String, Object> replaceMap);
 }

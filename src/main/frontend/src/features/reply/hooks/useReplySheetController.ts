@@ -6,10 +6,11 @@ import { useSetReplyForm } from "@/features/reply/hooks/useSetReplyForm";
 import type { ReplyDtoType } from "@/features/reply/types/reply.types";
 import type { ReplyTarget } from "@/features/reply/types/reply.types";
 import type { FocusEvent, KeyboardEvent } from "react";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type UseReplySheetControllerProps = {
   target: ReplyTarget;
+  focusReplNumb?: number;
   onClose: () => void;
 };
 
@@ -167,6 +168,7 @@ const createReplyCollection = (
  */
 export const useReplySheetController = ({
   target,
+  focusReplNumb,
   onClose,
 }: UseReplySheetControllerProps) => {
   // 댓글 바텀시트의 닫기와 드래그 상호작용 속성을 조회한다
@@ -206,7 +208,7 @@ export const useReplySheetController = ({
     number | null
   >(null);
   // 선택한 독후감의 댓글과 답글 목록을 서버 캐시에서 조회한다
-  const replyListQuery = useReplyList(target);
+  const replyListQuery = useReplyList(target, focusReplNumb);
   // 서버 페이지가 바뀔 때만 부모 댓글과 연결 답글을 정렬 순서대로 연결한다
   const replies = useMemo(
     () => replyListQuery.data?.pages.flatMap((page) => page.data.list) ?? [],
@@ -229,6 +231,33 @@ export const useReplySheetController = ({
     getReplyCollection,
     [replies],
   );
+
+  // 알림이 지정한 답글 묶음을 펼치고 렌더링 완료 후 정확한 댓글로 이동한다
+  useEffect(() => {
+    if (!focusReplNumb || focusReplNumb <= 0) {
+      return;
+    }
+
+    const focusedThread = replyThreads.find((thread) =>
+      thread.parentReply.replNumb === focusReplNumb
+      || thread.childReplies.some((reply) => reply.replNumb === focusReplNumb));
+
+    if (!focusedThread) {
+      return;
+    }
+
+    setExpandedReplyMap((current) => ({
+      ...current,
+      [focusedThread.parentReply.replNumb]: true,
+    }));
+
+    window.requestAnimationFrame(() => {
+      const focusedElement = document.querySelector<HTMLElement>(
+        `[data-reply-numb="${focusReplNumb}"]`,
+      );
+      focusedElement?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }, [focusReplNumb, replyThreads]);
 
   /**
    * 댓글 입력값 렌더링이 끝난 뒤 입력창의 포커스와 커서를 문자열 끝으로 이동한다
@@ -412,6 +441,7 @@ export const useReplySheetController = ({
     replyListQuery,
     replyThreads,
     profilePathByNick,
+    focusReplNumb,
     handleToggleChildReplies,
     handleReplyClick,
     handleEditReply,

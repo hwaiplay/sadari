@@ -110,7 +110,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void setReadingCreatesReadReportsForAllActiveMembers() {
+    void setReadingCreatesReports() {
 
         // 활성 모임장과 선택 도서 및 목표 기간 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
@@ -159,7 +159,7 @@ class ReadingClubServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getMyClubListCombinesCategoryList() {
+    void getMyClubListCategories() {
         // 현재 도서 표지가 포함된 내 모임 조회 결과를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 관계 데이터 조회에 사용할 모임 번호를 설정한다
@@ -195,7 +195,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void setReadingRejectsInactiveOwnerAccount() {
+    void setReadingRejectsInactive() {
 
         // 운영 중인 모임과 형식이 유효한 등록 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
@@ -219,7 +219,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptReadingUpdatesPeriodWithSameBook() {
+    void uptReadingSameBook() {
 
         // 활성 모임장과 현재 회차 및 같은 ISBN의 수정 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
@@ -227,7 +227,7 @@ class ReadingClubServiceImplTest {
         ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
         reading.setBookNumb(99L);
         reading.setBookIsbn("9781234567890");
-        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9781234567890");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdate("9781234567890");
 
         // 모임장 접근과 현재 회차 잠금 및 수정 성공 결과를 설정한다
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
@@ -254,7 +254,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptReadingRejectsBookChangeAfterReportWritten() {
+    void rejectBookChangeReport() {
 
         // 활성 모임장과 현재 도서 및 다른 ISBN의 수정 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
@@ -262,7 +262,7 @@ class ReadingClubServiceImplTest {
         ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
         reading.setBookNumb(99L);
         reading.setBookIsbn("9781234567890");
-        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9780987654321");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdate("9780987654321");
 
         // 연결 독후감 잠금 뒤 작성된 독후감 한 건이 조회되도록 설정한다
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
@@ -287,7 +287,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptReadingChangesBookBeforeReportWritten() {
+    void changeBookBeforeReport() {
 
         // 활성 모임장과 현재 도서 및 다른 ISBN의 수정 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
@@ -295,7 +295,7 @@ class ReadingClubServiceImplTest {
         ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
         reading.setBookNumb(99L);
         reading.setBookIsbn("9781234567890");
-        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9780987654321");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdate("9780987654321");
 
         // 작성된 독후감이 없고 변경 도서가 도서 마스터에 존재하도록 설정한다
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
@@ -323,12 +323,12 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptReadingRejectsInactiveOwnerAccount() {
+    void uptReadingRejectsInactive() {
 
         // 운영 중인 모임과 유효한 수정 요청을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         club.setClubStat("ACTIVE");
-        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdateRequest("9781234567890");
+        ReadingClubDto.ReadingUpdateReqDto request = createReadingUpdate("9781234567890");
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(0);
 
@@ -372,7 +372,7 @@ class ReadingClubServiceImplTest {
      * @param bookIsbn 수정 요청에 사용할 ISBN
      * @return 유효한 현재 독서 수정 요청
      */
-    private ReadingClubDto.ReadingUpdateReqDto createReadingUpdateRequest(String bookIsbn) {
+    private ReadingClubDto.ReadingUpdateReqDto createReadingUpdate(String bookIsbn) {
 
         // 외부 도서 검색 결과와 변경할 목표 기간을 설정한다
         ReadingClubDto.ReadingUpdateReqDto request = new ReadingClubDto.ReadingUpdateReqDto();
@@ -395,7 +395,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void setInvitationSendsClubInvitationAlim() {
+    void setInviteSendsAlim() {
         // 초대 권한과 알림 문구를 제공할 운영 중인 모임 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -424,7 +424,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
         )).thenReturn(ResultData.success());
 
@@ -440,7 +442,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
         );
     }
@@ -451,7 +455,7 @@ class ReadingClubServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void setInvitationThrowsWhenInvitationAlimFails() {
+    void setInviteFailsWithAlim() {
         // 초대 권한과 알림 문구를 제공할 운영 중인 모임 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -480,7 +484,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("userName", "모임장", "clubName", "함께 읽는 모임")
         )).thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
 
@@ -502,7 +508,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptClubUpdatesOwnedActiveClub() {
+    void uptOwnedActiveClub() {
         // 수정 권한과 기존 운영 설정을 가진 모임 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -561,7 +567,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptClubRejectsCapacityBelowOccupiedSeats() {
+    void rejectCapacityBelowSeats() {
         // 수정 권한을 가진 운영 중 모임 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -609,7 +615,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptClubRejectsRestrictedOwnerAtGuardedUpdate() {
+    void rejectRestrictedOwnerUpt() {
         // 소유 관계는 남아 있지만 계정 상태 SQL 가드가 필요한 모임을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 요청 사용자를 기존 모임장으로 설정한다
@@ -659,7 +665,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void delClubDeletesOwnedActiveClub() {
+    void delOwnedActiveClub() {
         // 삭제 권한을 가진 운영 중 모임 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -685,7 +691,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void delClubRejectsRestrictedOwnerAtGuardedDelete() {
+    void rejectRestrictedOwnerDel() {
         // 소유 관계는 남아 있지만 계정 상태 SQL 가드가 필요한 모임을 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 요청 사용자를 기존 모임장으로 설정한다
@@ -725,7 +731,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
         when(readingClubMapper.setActiveMember(10L, 20L)).thenReturn(1);
         when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
-                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, 10L
+                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
                 , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
 
         // 공개형 모임에 즉시 가입한다
@@ -736,7 +742,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "책벌레 모임")
         );
     }
@@ -761,7 +769,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
         when(readingClubMapper.setActiveMember(10L, 20L)).thenReturn(1);
-        when(alimService.sendAlim(any(), any(), any(), any(), any()))
+        when(alimService.sendAlim(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
 
         // 알림 없이 멤버 관계만 저장되는 상태를 허용하지 않는지 검증한다
@@ -796,7 +804,7 @@ class ReadingClubServiceImplTest {
         when(badWordDetectionService.findBadWord("함께 읽고 싶어요.")).thenReturn(Optional.empty());
         when(readingClubMapper.setJoinApplication(any())).thenReturn(1);
         when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
-                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED, 10L
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
                 , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
 
         // 승인형 모임 가입을 신청한다
@@ -807,7 +815,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "책벌레 모임")
         );
     }
@@ -867,7 +877,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getClubQuestion(10L)).thenReturn(question);
         when(badWordDetectionService.findBadWord("함께 읽고 싶어요.")).thenReturn(Optional.empty());
         when(readingClubMapper.setJoinApplication(any())).thenReturn(1);
-        when(alimService.sendAlim(any(), any(), any(), any(), any()))
+        when(alimService.sendAlim(any(), any(), any(), any(), any(), any(), any()))
                 .thenReturn(ResultData.fail(ResultEnum.COMMON_NO_DATA));
 
         // 알림 없이 가입 신청만 저장되는 상태를 허용하지 않는지 검증한다
@@ -880,7 +890,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void getClubMemberListReturnsActiveMembersForActiveMember() {
+    void getActiveClubMembers() {
         // 조회 요청 사용자의 활성 모임원 관계를 구성한다
         ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
         requester.setMembStat("ACTIVE");
@@ -910,7 +920,7 @@ class ReadingClubServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getClubMemberListRejectsNonMember() {
+    void rejectClubMemberList() {
         // 조회 요청 사용자의 모임원 관계가 없도록 구성한다
         when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(null);
 
@@ -928,7 +938,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void uptApplicationRejectsHiddenApplicant() {
+    void rejectHiddenApplicant() {
         // 가입 신청 처리 권한을 가진 모임장 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -977,7 +987,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getApplicationForUpdate(10L, 40L)).thenReturn(application);
         when(readingClubMapper.uptJoinApplication(10L, 40L, 20L, "REJECTED")).thenReturn(1);
         when(alimService.sendAlim(30L, Constant.ALIM_SITU_REJECTED
-                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED, 10L
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
                 , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
 
         // 모임장이 가입 신청을 거절한다
@@ -990,7 +1000,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_REJECTED
               , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "책벌레 모임")
         );
     }
@@ -1027,7 +1039,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
         when(readingClubMapper.uptJoinApplication(10L, 40L, 20L, "APPROVED")).thenReturn(1);
         when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
-                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED, 10L
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
                 , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
 
         // 모임장이 가입 신청을 승인한다
@@ -1040,7 +1052,9 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "책벌레 모임")
         );
     }
@@ -1102,9 +1116,11 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.uptMemberExit(20L, 10L, 30L)).thenReturn(1);
         when(alimService.sendAlim(
                 30L
-              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_SITU_REJECTED
               , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
         )).thenReturn(ResultData.success());
 
@@ -1116,9 +1132,11 @@ class ReadingClubServiceImplTest {
         verify(readingClubMapper).uptMemberExit(20L, 10L, 30L);
         verify(alimService).sendAlim(
                 30L
-              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_SITU_REJECTED
               , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , Constant.ALIM_TARGET_READING_CLUB
               , 10L
+              , null
               , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
         );
     }
@@ -1177,7 +1195,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void getSentInvitationListReturnsVisibleInvitationsForOwner() {
+    void getVisibleSentInvites() {
         // 보낸 초대 조회 권한을 가진 모임장 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -1206,7 +1224,7 @@ class ReadingClubServiceImplTest {
      * @author Hanwon.Jang
      */
     @Test
-    void delOwnerInvitationCancelsVisibleInvitation() {
+    void cancelVisibleInvitation() {
         // 초대 취소 권한을 가진 모임장 정보를 구성한다
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         // 현재 사용자를 모임장으로 설정한다
@@ -1231,7 +1249,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingGoalResultReturnsLatestResultForActiveMember() {
+    void getLatestGoalResult() {
         // 조회 사용자를 활성 모임원으로 구성한다.
         ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
         requester.setMembStat("ACTIVE");
@@ -1268,7 +1286,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingGoalResultReturnsSelectedRoundForActiveMember() {
+    void getSelectedGoalResult() {
         // 조회 사용자를 활성 모임원으로 구성한다
         ReadingClubDto.MemberDto requester = new ReadingClubDto.MemberDto();
         requester.setMembStat("ACTIVE");
@@ -1296,7 +1314,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingGoalResultRejectsNonMember() {
+    void rejectGoalResultNonMember() {
         // 조회 사용자가 모임원이 아니도록 구성한다.
         when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(null);
 
@@ -1315,7 +1333,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingHistoryListReturnsAllCompletedRoundsForActiveMember() {
+    void getCompletedRoundHistory() {
         // 가입 시점과 관계없이 반환할 종료 회차 기록을 구성한다
         ReadingClubDto.ReadingHistoryDto history = new ReadingClubDto.ReadingHistoryDto();
         history.setClubNumb(10L);
@@ -1346,7 +1364,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingHistoryListRejectsInactiveMember() {
+    void rejectHistoryInactive() {
         // 계정과 모임 관계를 모두 충족하는 접근 행이 없도록 설정한다
         when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
 
@@ -1364,7 +1382,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingRoundReportListReturnsDoneReportsForActiveMember() {
+    void getDoneRoundReports() {
         // 완료 회차의 도서 요약과 공개 여부가 다른 DONE 독후감을 구성한다
         ReadingClubDto.ReadingRoundReportPageDto summary =
                 new ReadingClubDto.ReadingRoundReportPageDto();
@@ -1401,7 +1419,7 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void getReadingRoundReportListRejectsInactiveMember() {
+    void rejectRoundReportInactive() {
         // 계정과 모임원 관계를 모두 충족한 접근 행이 없도록 설정한다
         when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
 
@@ -1420,9 +1438,9 @@ class ReadingClubServiceImplTest {
      * @author HanWon.Jang
      */
     @Test
-    void completeExpiredReadingRoundFinalizesParticipantsBeforeRound() {
+    void completeExpiredRoundOrder() {
         // 종료된 회차 확정 작업을 실행한다.
-        readingClubService.completeExpiredReadingRound();
+        readingClubService.completeExpiredRound();
 
         // 참여자 목표 결과 확정 후 회차 종료 순서가 유지되는지 검증한다.
         InOrder completionOrder = org.mockito.Mockito.inOrder(readingClubMapper);

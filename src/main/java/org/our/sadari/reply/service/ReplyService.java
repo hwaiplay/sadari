@@ -104,4 +104,7 @@ public interface ReplyService {
 
     /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
     ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, int page);
+
+    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회한다. */
+    ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, Long focusReplNumb, int page);
 }

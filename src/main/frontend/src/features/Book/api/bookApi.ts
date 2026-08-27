@@ -17,6 +17,7 @@ import {
 } from "../types/book.type";
 import type { HomeBookType } from "../types/book.type";
 import type { PublicReportType } from "../types/book.type";
+import type { PublicReportTargetType } from "../types/book.type";
 
 export type PublicReportSortType =
   | "RELATION_DESC"
@@ -114,6 +115,16 @@ export const getPublicReportsByIsbnApi = async (
     },
   );
   // 검증된 공개 독후감 페이지 응답을 반환한다
+  return assertResultDataSuccess(res.data);
+};
+
+/** 알림이 지정한 공개 독후감 한 건과 연결 도서 정보를 조회한다. */
+export const getPublicReportTargetApi = async (
+  reptNumb: number,
+): Promise<ResultData<PublicReportTargetType>> => {
+  const res = await api.get<ResultData<PublicReportTargetType>>(
+    `/book/publicReports/${reptNumb}`,
+  );
   return assertResultDataSuccess(res.data);
 };
 

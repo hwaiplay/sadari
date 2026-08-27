@@ -19,6 +19,7 @@ const PublicReportPage = lazy(() => import("@/pages/Book/PublicReports/PublicRep
 const ProfileEditPage = lazy(() => import("@/pages/My/ProfileEditPage"));
 const SocialProfilePage = lazy(() => import("@/pages/Social/SocialProfilePage"));
 const AlimPage = lazy(() => import("@/pages/Alim/AlimPage"));
+const NotificationTargetPage = lazy(() => import("@/pages/Alim/NotificationTargetPage"));
 const SettingsPage = lazy(() => import("@/pages/Settings/SettingsPage"));
 const ServiceInfoPage = lazy(() => import("@/pages/Settings/ServiceInfoPage"));
 const WithdrawalPage = lazy(() => import("@/pages/Settings/WithdrawalPage"));
@@ -137,6 +138,16 @@ const Router = () => {
           }
         />
 
+        {/* 알림번호 기반 현재 접근 화면 해석 */}
+        <Route
+          path="/notification-target/:alimNumb"
+          element={
+            <ProtectedRoute>
+              <NotificationTargetPage />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           element={
             <ProtectedRoute>
@@ -165,6 +176,10 @@ const Router = () => {
           {/* 공개 독후감 목록 */}
           <Route
             path="/report/public-reports/isbn"
+            element={<PublicReportPage />}
+          />
+          <Route
+            path="/report/public-reports/target/:reptNumb"
             element={<PublicReportPage />}
           />
 

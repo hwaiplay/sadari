@@ -19,6 +19,7 @@ import lombok.Data;
  * 2026-08-15        SeungHyeon.Kang    부모 댓글 페이지 조회 조건 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 댓글 알림 설정 추가
  * 2026-08-27        SeungHyeon.Kang    답글 수신자와 대상별 알림 정보 확장
+ * 2026-08-27        SeungHyeon.Kang    템플릿 선택 전용 관계 필드 제거
  */
 @Data
 @Schema(description = "댓글 정보를 전달하는 DTO")
@@ -84,6 +85,9 @@ public class ReplyDto {
 
     @Schema(description = "답글 알림을 받을 부모 댓글 작성자 사용자 번호", example = "32", hidden = true)
     private Long parentUserNumb;
+
+    @Schema(description = "알림에서 강조할 댓글 번호", hidden = true)
+    private Long focusReplNumb;
 
     @Schema(description = "독후감 작성자의 댓글과 답글 알림 여부", example = "Y", allowableValues = {"Y", "N"}, hidden = true)
     private String replyAlimYsno;

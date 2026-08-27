@@ -22,17 +22,42 @@
                AND EXISTS (SELECT 1 FROM TM_USERXM ACTOR WHERE ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive})
                AND (   (#{tagtType} = #{targetReport} AND REPORT.USER_NUMB = OWNER.USER_NUMB
                          AND (REPORT.USER_NUMB = #{userNumb} OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reptStatRead})))
-                    OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
-                    OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb}))
+                    OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb}
+                        AND (OWNER.USER_NUMB = #{userNumb} OR EXISTS (
+                            SELECT 1 FROM TB_FOLLOW F
+                             WHERE F.USER_NUMB = #{userNumb}
+                               AND F.FLOW_NUMB = OWNER.USER_NUMB
+                        )))
+                    OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb}
+                        AND (OWNER.USER_NUMB = #{userNumb} OR EXISTS (
+                            SELECT 1 FROM TB_FOLLOW F
+                             WHERE F.USER_NUMB = #{userNumb}
+                               AND F.FLOW_NUMB = OWNER.USER_NUMB
+                        ))))
         )
     </sql>
+    <select id="getReplyTargetAccessCount" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="int">
+        <include refid="bindList" />
+        SELECT COUNT(*)
+          FROM DUAL
+         WHERE 1 = 1
+        <include refid="targetAccessExists" />
+    </select>
     <select id="getReplyList" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
-        WITH PARENTPAGE AS (
+        WITH FOCUS_PARENT AS (
+             SELECT COALESCE(F.UPER_NUMB, F.REPL_NUMB) AS REPL_NUMB
+               FROM TB_REPLXX F
+              WHERE F.TAGT_TYPE = #{tagtType}
+                AND F.TAGT_NUMB = #{tagtNumb}
+                AND F.REPL_NUMB = #{focusReplNumb,jdbcType=NUMERIC}
+              LIMIT 1
+        ), PARENTPAGE AS (
              SELECT P.REPL_NUMB FROM TB_REPLXX P
               WHERE P.TAGT_TYPE = #{tagtType} AND P.TAGT_NUMB = #{tagtNumb} AND P.UPER_NUMB IS NULL
                 <include refid="targetAccessExists" />
-           ORDER BY P.REGI_DATE DESC, P.REPL_NUMB DESC LIMIT #{pageOffset}, #{pageLimit}
+           ORDER BY CASE WHEN P.REPL_NUMB = (SELECT REPL_NUMB FROM FOCUS_PARENT) THEN 0 ELSE 1 END
+                  , P.REGI_DATE DESC, P.REPL_NUMB DESC LIMIT #{pageOffset}, #{pageLimit}
         ), LIKE_COUNT AS (
              SELECT L.TAGT_NUMB, COUNT(*) AS LIKE_CNT FROM TB_LIKEXX L
                JOIN TM_USERXM U ON U.USER_NUMB = L.USER_NUMB AND U.USER_STAT = #{userStatActive}
@@ -72,6 +97,7 @@
            AND R.USER_NUMB = #{userNumb} AND R.DELT_YSNO = #{commNo}
            AND SHA2(CONCAT_WS('|', COALESCE(R.REPL_CNTN, ''), COALESCE(R.DELT_YSNO, '')), 256) = #{editVersion}
            AND EXISTS (SELECT 1 FROM TM_USERXM U WHERE U.USER_NUMB = #{userNumb} AND U.USER_STAT = #{userStatActive})
+           <include refid="targetAccessExists" />
     </update>
     <update id="delReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
@@ -79,10 +105,15 @@
          WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb}
            AND R.USER_NUMB = #{userNumb} AND R.DELT_YSNO = #{commNo}
            AND EXISTS (SELECT 1 FROM TM_USERXM U WHERE U.USER_NUMB = #{userNumb} AND U.USER_STAT = #{userStatActive})
+           <include refid="targetAccessExists" />
     </update>
     <select id="getReplyLikeTarget" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
-        SELECT R.TAGT_TYPE, R.TAGT_NUMB, R.REPL_NUMB, R.USER_NUMB AS TARGET_USER_NUMB, ACTOR.USER_NICK
+        SELECT R.TAGT_TYPE
+             , R.TAGT_NUMB
+             , R.REPL_NUMB
+             , R.USER_NUMB AS TARGET_USER_NUMB
+             , ACTOR.USER_NICK
           FROM TB_REPLXX R JOIN TM_USERXM ACTOR ON ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive}
          WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}
            <include refid="targetAccessExists" />
@@ -95,7 +126,9 @@
                 AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}) <include refid="targetAccessExists" />
     </insert>
     <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
+        <include refid="bindList" />
         DELETE FROM TB_LIKEXX WHERE USER_NUMB = #{userNumb} AND TAGT_TYPE = 'REPLY' AND TAGT_NUMB = #{replNumb}
+           <include refid="targetAccessExists" />
     </delete>
     <select id="getReplyLikeDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />

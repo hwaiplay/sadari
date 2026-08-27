@@ -22,10 +22,10 @@ export const REPLY_LIST_QUERY_KEY = "replyList";
  * @param reptNumb 댓글 목록을 조회할 독후감 번호
  * @return 댓글 목록의 조회 데이터와 요청 상태
  */
-export const useReplyList = (target: ReplyTarget) => {
+export const useReplyList = (target: ReplyTarget, focusReplNumb?: number) => {
   // 동일한 독후감의 댓글 목록 요청과 캐시를 재사용한다
   return useInfiniteQuery({
-    queryKey: [REPLY_LIST_QUERY_KEY, target.tagtType, target.tagtNumb],
+    queryKey: [REPLY_LIST_QUERY_KEY, target.tagtType, target.tagtNumb, focusReplNumb],
     /**
      * 현재 독후감에 등록된 댓글 목록을 서버에서 조회한다
      *
@@ -35,7 +35,7 @@ export const useReplyList = (target: ReplyTarget) => {
      */
     queryFn: async ({ pageParam }) => {
       // 검증된 독후감 번호로 댓글 목록 API를 호출한다
-      return await getReplyListApi(target, pageParam);
+      return await getReplyListApi(target, pageParam, focusReplNumb);
     },
     initialPageParam: 1,
     /**

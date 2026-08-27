@@ -590,3 +590,9 @@ export const commentSubmitButton = style({
     },
   },
 });
+
+export const focusedReplyItem = style({
+  borderRadius: "12px",
+  backgroundColor: vars.color.gray100,
+  transition: "background-color 0.2s ease",
+});

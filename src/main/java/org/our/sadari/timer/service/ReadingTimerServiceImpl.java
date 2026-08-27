@@ -547,6 +547,8 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
                 timerDto.getUserNumb()
               , Constant.ALIM_SITU_TIMER
               , Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER
+              , Constant.ALIM_TARGET_TIMER
+              , null
               , null
               , Map.of("timerTime", formatTimerTime(timerDto.getTargSecs()))
         );

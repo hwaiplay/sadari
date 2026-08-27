@@ -194,6 +194,11 @@ const FeedPage = () => {
   const targetTypeParam = searchParams.get("tagtType");
   // 알림 링크가 전달한 피드 대상 번호를 숫자로 변환한다
   const targetNumbParam = Number(searchParams.get("tagtNumb"));
+  // 알림이 지정한 댓글 번호를 안전한 양수 정수로 변환한다
+  const requestedReplyNumb = Number(searchParams.get("replNumb"));
+  const focusReplNumb = Number.isSafeInteger(requestedReplyNumb) && requestedReplyNumb > 0
+    ? requestedReplyNumb
+    : undefined;
   // 허용된 유형과 양의 번호가 모두 있으면 단건 피드 조회 대상으로 판정한다
   const hasFeedTarget = FEED_TARGET_TYPES.includes(targetTypeParam as ReplyTargetType)
     && Number.isSafeInteger(targetNumbParam)
@@ -876,6 +881,7 @@ const FeedPage = () => {
         <ReplySheet
           report={{ reptNumb: replyItem.tagtNumb, userNick: replyItem.userNick }}
           tagtType={replyItem.tagtType}
+          focusReplNumb={focusReplNumb}
           onClose={closeReplySheet}
         />
       ) : null}

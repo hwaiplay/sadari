@@ -126,7 +126,9 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                             target.getUserNumb()
                           , Constant.ALIM_SITU_REPORT
                           , Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER
+                          , Constant.LIKE_TARGET_REPORT
                           , target.getReptNumb()
+                          , null
                           , Map.of("bookTitl", target.getBookTitl())
                     );
 

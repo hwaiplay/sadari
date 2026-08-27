@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        HanWon.Jang        최초 생성
+ * 2026-08-27        SeungHyeon.Kang    실행 주기 설정 분리
  */
 @Component
 @RequiredArgsConstructor
@@ -25,12 +26,12 @@ public class ReadingClubRoundCompletionScheduler {
     /**
      * 날짜가 바뀐 종료 회차의 목표 결과를 확정한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 반환값이 없다
      */
-    @Scheduled(cron = "0 * * * * *")
-    public void completeExpiredReadingRound() {
+    @Scheduled(cron = "${scheduler.round-completion-cron}")
+    public void completeExpiredRound() {
         // 종료된 회차가 상세 화면에 고정 결과로 노출되도록 확정 처리를 위임한다
-        readingClubService.completeExpiredReadingRound();
+        readingClubService.completeExpiredRound();
     }
 }

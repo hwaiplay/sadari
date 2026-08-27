@@ -1,6 +1,7 @@
 package org.our.sadari.reply.service;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -40,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
  * 2026-08-27        SeungHyeon.Kang    대상별 댓글 좋아요와 답글 다중 수신자 알림 적용
+ * 2026-08-27        SeungHyeon.Kang    댓글 상호작용 알림 템플릿 통합과 동적 대상 저장
  */
 @Service
 @RequiredArgsConstructor
@@ -89,6 +91,11 @@ public class ReplyServiceImpl implements ReplyService {
                 || StringUtil.isEmpty(replyDto.getReplCntn())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 사진 댓글은 사진 소유자 또는 현재 팔로워만 등록할 수 있도록 API 경계에서 접근을 거부한다
+        if (!hasImageReplyAccess(userNumb, replyDto.getTagtType(), replyDto.getTagtNumb())) {
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
         // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화한다
@@ -207,8 +214,11 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData uptReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb, ReplyDto replyDto) {
-        if (!isAllowedTargetType(tagtType)) {
+        if (StringUtil.isEmpty(replyDto) || !isAllowedTargetType(tagtType)) {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        if (!hasImageReplyAccess(userNumb, tagtType, tagtNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
         replyDto.setTagtType(tagtType.trim().toUpperCase());
         replyDto.setTagtNumb(tagtNumb);
@@ -263,6 +273,9 @@ public class ReplyServiceImpl implements ReplyService {
     public ResultData delReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb) {
         if (StringUtil.hasEmpty(userNumb, tagtNumb, replNumb) || !isAllowedTargetType(tagtType)) {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        if (!hasImageReplyAccess(userNumb, tagtType, tagtNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
         ReplyDto replyDto = createTargetRequest(userNumb, tagtType, tagtNumb, replNumb);
         int deleteCnt = replyMapper.delReply(replyDto);
@@ -433,11 +446,8 @@ public class ReplyServiceImpl implements ReplyService {
             return;
         }
 
-        // 댓글이 연결된 원본 콘텐츠 유형에 대응하는 알림 템플릿 코드를 선택한다
-        String templateCode = resolveReplyLikeTemplate(likeTarget.getTagtType());
-
-        // 지원하지 않는 댓글 대상 유형이면 잘못된 링크를 가진 알림을 만들지 않는다
-        if (StringUtil.isEmpty(templateCode)) {
+        // 지원하지 않는 댓글 대상 유형이면 목적지를 계산할 수 없는 알림을 만들지 않는다
+        if (!isReplyTargetType(likeTarget.getTagtType())) {
             // 대상별 댓글 좋아요 알림 처리 없이 호출부로 반환한다
             return;
         }
@@ -456,13 +466,15 @@ public class ReplyServiceImpl implements ReplyService {
                 : likeTarget.getTagtNumb();
 
         // 댓글 좋아요 응답 경로에서 알림 DB와 FCM 접근을 제거할 커밋 이후 이벤트를 생성한다
-        LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb(), templateCode, replyTargetNumb, sendUserNick);
+        LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb()
+                                              , Constant.ALIM_TEMP_CODE_REPLY_LIKE, likeTarget.getTagtType()
+                                              , replyTargetNumb, likeTarget.getReplNumb(), sendUserNick);
         // 댓글 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록한다
         likeAlimPublisher.setLikeAlim(event);
     }
 
     /**
-     * 콘텐츠 소유자와 부모 댓글 작성자에게 댓글 작성자의 닉네임 및 대상별 이동 링크가 포함된 알림을 발송한다.
+     * 콘텐츠 소유자와 부모 댓글 작성자에게 댓글 작성자의 닉네임 및 이동 대상 정보가 포함된 알림을 발송한다.
      * 자기 알림과 동일한 수신자는 제외하고 콘텐츠 소유자의 알림 설정을 적용한다.
      *
      * @author HanWon.Jang
@@ -479,27 +491,40 @@ public class ReplyServiceImpl implements ReplyService {
             return;
         }
 
-        // 동일 사용자의 중복 알림을 제거하면서 콘텐츠 소유자와 부모 댓글 작성자 순서를 유지한다
-        Set<Long> recipientSet = new LinkedHashSet<>();
+        // 동일 수신자의 알림 사유가 겹쳐도 더 구체적인 답글 템플릿을 유지하도록 수신자별 계획을 구성한다
+        Map<Long, String> recipientTemplateMap = new LinkedHashMap<>();
+        Long contentOwnerNumb = reportAlim.getTargetUserNumb();
+        Long parentUserNumb = reportAlim.getParentUserNumb();
+        boolean ownerIsParent = !StringUtil.isEmpty(contentOwnerNumb) && contentOwnerNumb.equals(parentUserNumb);
 
-        // 콘텐츠 소유자가 댓글 알림을 허용했고 발신자와 다르면 첫 번째 수신자로 추가한다
-        if (Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())
-                && !StringUtil.isEmpty(reportAlim.getTargetUserNumb())
-                && !reportAlim.getTargetUserNumb().equals(sendUserNumb)) {
-            // 대상 소유자에게 직접 댓글 또는 답글 알림을 발송하도록 수신자에 추가한다
-            recipientSet.add(reportAlim.getTargetUserNumb());
+        // 콘텐츠 소유자가 부모 댓글 작성자이면 일반 콘텐츠 댓글보다 직접 답글 알림을 우선한다
+        if (ownerIsParent && !contentOwnerNumb.equals(sendUserNumb)) {
+            String ownerReplyTemplate = resolveReplyTemplate(replyDto.getTagtType());
+            if (!StringUtil.isEmpty(ownerReplyTemplate)) {
+                recipientTemplateMap.put(contentOwnerNumb, ownerReplyTemplate);
+            }
         }
 
-        // 답글인 경우 부모 댓글 작성자가 발신자와 콘텐츠 소유자와 다를 때 별도 수신자로 추가한다
-        if (!StringUtil.isEmpty(reportAlim.getParentUserNumb())
-                && !reportAlim.getParentUserNumb().equals(sendUserNumb)
-                && !reportAlim.getParentUserNumb().equals(reportAlim.getTargetUserNumb())) {
-            // 부모 댓글 작성자에게 자신이 받은 답글 알림을 발송하도록 수신자에 추가한다
-            recipientSet.add(reportAlim.getParentUserNumb());
+        // 부모 댓글 작성자가 아닌 콘텐츠 소유자에게는 콘텐츠별 댓글 알림 설정을 적용한다
+        if (!ownerIsParent && Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())
+                && !StringUtil.isEmpty(contentOwnerNumb) && !contentOwnerNumb.equals(sendUserNumb)) {
+            String contentTemplate = StringUtil.isEmpty(reportAlim.getAlimTempCode())
+                    ? Constant.ALIM_TEMP_CODE_REPLY_REPORT
+                    : reportAlim.getAlimTempCode();
+            recipientTemplateMap.put(contentOwnerNumb, contentTemplate);
+        }
+
+        // 콘텐츠 소유자와 다른 부모 댓글 작성자에게는 관계별 직접 답글 템플릿을 적용한다
+        if (!StringUtil.isEmpty(parentUserNumb) && !parentUserNumb.equals(sendUserNumb)
+                && !parentUserNumb.equals(contentOwnerNumb)) {
+            String parentTemplate = resolveReplyTemplate(replyDto.getTagtType());
+            if (!StringUtil.isEmpty(parentTemplate)) {
+                recipientTemplateMap.put(parentUserNumb, parentTemplate);
+            }
         }
 
         // 자기 알림과 중복 제거 뒤 수신자가 없으면 알림 저장과 푸시 예약을 생략한다
-        if (recipientSet.isEmpty()) {
+        if (recipientTemplateMap.isEmpty()) {
             // 댓글 등록 알림 처리 없이 호출부로 반환한다
             return;
         }
@@ -518,56 +543,50 @@ public class ReplyServiceImpl implements ReplyService {
         // 댓글 작성자의 닉네임을 템플릿 사용자명 치환값으로 설정한다
         replaceMap.put("userName", sendUserNick);
 
-        // Mapper가 대상별 템플릿을 반환하지 않은 기존 독후감 호출은 독후감 댓글 템플릿을 사용한다
-        String templateCode = StringUtil.isEmpty(reportAlim.getAlimTempCode())
-                ? Constant.ALIM_TEMP_CODE_REPLY_REPORT
-                : reportAlim.getAlimTempCode();
-        // 모든 대상별 템플릿이 원본 콘텐츠 번호를 직접 링크에 배치하도록 이동 대상 번호를 결정한다
+        // 클릭 시점의 공통 라우터가 최종 경로를 계산할 수 있도록 이동 대상 번호를 결정한다
         Long notificationTarget = StringUtil.isEmpty(reportAlim.getAlimTagtNumb())
                 ? replyDto.getTagtNumb()
                 : reportAlim.getAlimTagtNumb();
 
         // 중복 제거된 각 수신자에게 같은 원본 콘텐츠로 이동하는 댓글 알림을 저장하고 푸시를 예약한다
-        for (Long recipientNumb : recipientSet) {
+        for (Map.Entry<Long, String> recipientPlan : recipientTemplateMap.entrySet()) {
             // 현재 수신자에게 대상 유형별 댓글 알림을 발송한다
             alimService.sendAlim(
-                    recipientNumb
+                    recipientPlan.getKey()
                   , Constant.ALIM_SITU_REPLY
-                  , templateCode
+                  , recipientPlan.getValue()
+                  , replyDto.getTagtType()
                   , notificationTarget
+                  , replyDto.getReplNumb()
                   , replaceMap
             );
         }
     }
 
+    /** 원본 콘텐츠 유형이 동적 이동을 지원하면 공통 대댓글 템플릿을 반환한다. */
+    private String resolveReplyTemplate(String tagtType) {
+        // 알림 클릭 시점의 관계는 목적지 조회에서 판단하므로 문구가 같은 대댓글은 하나의 템플릿을 사용한다
+        if (isReplyTargetType(tagtType)) {
+            // 지원 대상에 공통 대댓글 템플릿 코드를 반환한다
+            return Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT;
+        }
+
+        // 지원하지 않는 원본 콘텐츠에는 대댓글 알림을 만들지 않도록 빈 템플릿을 반환한다
+        return null;
+    }
+
     /**
-     * 댓글이 연결된 원본 콘텐츠 유형에 대응하는 댓글 좋아요 알림 템플릿 코드를 반환한다.
+     * 댓글 알림의 동적 이동을 지원하는 원본 콘텐츠 유형인지 확인한다.
      *
      * @author SeungHyeon.Kang
-     * @param tagtType 댓글의 원본 콘텐츠 유형
-     * @return 대상별 댓글 좋아요 템플릿 코드이며 지원하지 않는 유형이면 null
+     * @param tagtType 댓글이 연결된 원본 콘텐츠 유형
+     * @return 독후감 또는 프로필 및 배경사진 여부
      */
-    private String resolveReplyLikeTemplate(String tagtType) {
-        // 독후감 댓글 좋아요는 독후감 상세 댓글 목록으로 이동하는 템플릿을 사용한다
-        if (Constant.LIKE_TARGET_REPORT.equals(tagtType)) {
-            // 독후감 댓글 좋아요 템플릿 코드를 반환한다
-            return Constant.ALIM_TEMP_CODE_REPLY_LIKE;
-        }
-
-        // 프로필 사진 댓글 좋아요는 해당 사진 피드로 이동하는 템플릿을 사용한다
-        if (Constant.LIKE_TARGET_PROFILE_IMAGE.equals(tagtType)) {
-            // 프로필 사진 댓글 좋아요 템플릿 코드를 반환한다
-            return Constant.ALIM_TEMP_CODE_REPLY_LIKE_PROFILE;
-        }
-
-        // 배경사진 댓글 좋아요는 해당 사진 피드로 이동하는 템플릿을 사용한다
-        if (Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(tagtType)) {
-            // 배경사진 댓글 좋아요 템플릿 코드를 반환한다
-            return Constant.ALIM_TEMP_CODE_REPLY_LIKE_BACKGROUND;
-        }
-
-        // 지원하지 않는 댓글 대상 유형에는 알림 템플릿을 제공하지 않는다
-        return null;
+    private boolean isReplyTargetType(String tagtType) {
+        // 알림 대상과 댓글 API가 함께 지원하는 세 가지 원본 콘텐츠 유형만 허용한다
+        return Constant.LIKE_TARGET_REPORT.equals(tagtType)
+                || Constant.LIKE_TARGET_PROFILE_IMAGE.equals(tagtType)
+                || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(tagtType);
     }
 
     /**
@@ -651,13 +670,25 @@ public class ReplyServiceImpl implements ReplyService {
     /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
     @Override
     public ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, int page) {
+        return getReplyList(userNumb, tagtType, tagtNumb, null, page);
+    }
+
+    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회한다. */
+    @Override
+    public ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, Long focusReplNumb, int page) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
         if (StringUtil.isEmpty(tagtNumb) || !isAllowedTargetType(tagtType)) {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
+        if (!hasImageReplyAccess(userNumb, tagtType, tagtNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
         ReplyDto replyDto = createTargetRequest(userNumb, tagtType, tagtNumb, null);
+        if (!StringUtil.isEmpty(focusReplNumb) && focusReplNumb > 0) {
+            replyDto.setFocusReplNumb(focusReplNumb);
+        }
         int normalizedPage = Math.max(page, 1);
         replyDto.setPageOffset((normalizedPage - 1) * REPLY_PAGE_SIZE);
         replyDto.setPageLimit(REPLY_PAGE_SIZE + 1);
@@ -704,6 +735,18 @@ public class ReplyServiceImpl implements ReplyService {
         return Constant.LIKE_TARGET_REPORT.equals(normalizedType)
                 || Constant.LIKE_TARGET_PROFILE_IMAGE.equals(normalizedType)
                 || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(normalizedType);
+    }
+
+    /** 사진 댓글 대상에 대해 소유자 또는 현재 팔로워 접근 여부를 확인한다. */
+    private boolean hasImageReplyAccess(Long userNumb, String tagtType, Long tagtNumb) {
+        String normalizedTargetType = StringUtil.isEmpty(tagtType) ? null : tagtType.trim().toUpperCase();
+        boolean imageTarget = Constant.LIKE_TARGET_PROFILE_IMAGE.equals(normalizedTargetType)
+                || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(normalizedTargetType);
+        if (!imageTarget) {
+            return true;
+        }
+        ReplyDto accessRequest = createTargetRequest(userNumb, normalizedTargetType, tagtNumb, null);
+        return !StringUtil.isEmpty(accessRequest) && replyMapper.getReplyTargetAccessCount(accessRequest) > 0;
     }
 
     /** 범용 댓글 Mapper 요청 객체를 생성한다. */

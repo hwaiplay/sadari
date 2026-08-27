@@ -23,6 +23,15 @@ import org.our.sadari.reply.dto.ReplyDto;
 public interface ReplyMapper {
 
     /**
+     * 로그인 사용자가 댓글 대상 콘텐츠에 접근할 수 있는지 확인한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param replyDto 로그인 사용자와 댓글 대상 식별값
+     * @return 접근 가능하면 1, 아니면 0
+     */
+    int getReplyTargetAccessCount(ReplyDto replyDto);
+
+    /**
      * 독후감 번호에 연결된 댓글과 답글 목록을 조회한다.
      *
      * @author Hanwon.Jang
