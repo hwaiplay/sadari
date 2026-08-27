@@ -54,6 +54,9 @@ public final class ReadingClubDto {
 
         @Schema(description = "로그인 사용자의 투표 여부")
         private String voteYsno;
+
+        @Schema(description = "현재 투표 주기의 후보별 득표 수")
+        private Integer voteCnt;
     }
 
     /** 다음 도서 투표 대상을 전달한다. */

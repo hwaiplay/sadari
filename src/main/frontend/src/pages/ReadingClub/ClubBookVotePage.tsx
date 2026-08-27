@@ -87,6 +87,13 @@ const ClubBookVotePage = () => {
     [candidates, selectedRecommendation],
   );
 
+  const totalVoteCount = useMemo(
+    () => candidates.reduce((total, candidate) => total + candidate.voteCnt, 0),
+    [candidates],
+  );
+  const canShowRecommend = !votePage?.hasRecommended;
+  const canShowVote = candidates.length > 0 && !votePage?.hasVoted;
+
   const handleRecommendation = () => {
     // 후보 등록 가능 시점이며 아직 내 후보가 없을 때만 검색 화면으로 이동한다.
     if (!votePage?.canRecommend || votePage.hasRecommended) {
@@ -173,25 +180,51 @@ const ClubBookVotePage = () => {
         {candidates.length === 0 ? <div className={styles.emptyState}><strong
           className={styles.emptyTitle}>{message("frontend.readingClub.vote.emptyTitle")}</strong><p
           className={styles.emptyDescription}>{message("frontend.readingClub.vote.emptyDescription")}</p></div> : (
-          <div className={styles.candidateList} role="radiogroup"
+          <div className={styles.candidateList} role={votePage?.hasVoted ? undefined : "radiogroup"}
                aria-label={message("frontend.readingClub.vote.candidates")}>
             {candidates.map((candidate) => {
               const selected = candidate.recmNumb === selectedRecommendation;
-              // 추천 도서 선택 카드와 본인 추천 삭제 명령을 반환한다.
+              const voteRate = totalVoteCount > 0 ? Math.round((candidate.voteCnt / totalVoteCount) * 100) : 0;
+              // 투표 완료 여부에 따라 후보 선택 또는 득표율 카드를 반환한다.
               return <article className={styles.candidateCard} data-selected={selected} key={candidate.recmNumb}>
-                <button className={styles.candidateSelect} role="radio" aria-checked={selected} type="button"
-                        disabled={votePage?.hasVoted}
-                        onClick={() => setSelectedRecommendation(candidate.recmNumb)}>
-                  <img className={styles.cover} src={getBookCoverImageSource(candidate.bookCvim)} alt=""
-                       onError={handleBookCoverImageError}/>
-                  <span className={styles.bookInformation}><small
-                    className={styles.recommender}>{candidate.mineYsno === "Y" ? message("frontend.readingClub.vote.myRecommendation") : candidate.userNick}</small><strong
-                    className={styles.bookTitle}>{candidate.bookTitl}</strong><span
-                    className={styles.author}>{candidate.bookAthr}</span></span><span className={styles.radioIndicator}
-                                                                                      aria-hidden="true"/>
-                </button>
+                {votePage?.hasVoted ? (
+                  <div className={styles.candidateResult}>
+                    <img className={styles.cover} src={getBookCoverImageSource(candidate.bookCvim)} alt=""
+                         onError={handleBookCoverImageError}/>
+                    <span className={styles.bookInformation}><small
+                      className={styles.recommender}>{candidate.mineYsno === "Y" ? message("frontend.readingClub.vote.myRecommendation") : candidate.userNick}</small><strong
+                      className={styles.bookTitle}>{candidate.bookTitl}</strong><span
+                      className={styles.author}>{candidate.bookAthr}</span>
+                      {/* 후보별 득표율 영역 */}
+                      <span className={styles.voteRateRow}>
+                        <span className={styles.voteRateTrack} role="progressbar"
+                              aria-label={message("frontend.readingClub.vote.rateLabel")}
+                              aria-valuemin={0} aria-valuemax={100} aria-valuenow={voteRate}>
+                          <span className={styles.voteRateFill} style={{width: `${voteRate}%`}}/>
+                        </span>
+                        {/* "{0}%" */}
+                        <strong className={styles.voteRate}>{message("frontend.readingClub.vote.rate", [voteRate])}</strong>
+                      </span>
+                    </span>
+                    {candidate.voteYsno === "Y" ? <span className={styles.myVoteBadge}>
+                      {/* "내 투표" */}
+                      {message("frontend.readingClub.vote.myVote")}
+                    </span> : null}
+                  </div>
+                ) : (
+                  <button className={styles.candidateSelect} role="radio" aria-checked={selected} type="button"
+                          onClick={() => setSelectedRecommendation(candidate.recmNumb)}>
+                    <img className={styles.cover} src={getBookCoverImageSource(candidate.bookCvim)} alt=""
+                         onError={handleBookCoverImageError}/>
+                    <span className={styles.bookInformation}><small
+                      className={styles.recommender}>{candidate.mineYsno === "Y" ? message("frontend.readingClub.vote.myRecommendation") : candidate.userNick}</small><strong
+                      className={styles.bookTitle}>{candidate.bookTitl}</strong><span
+                      className={styles.author}>{candidate.bookAthr}</span></span><span className={styles.radioIndicator}
+                                                                                        aria-hidden="true"/>
+                  </button>
+                )}
                 {/* 추천 취소 버튼 */}
-                {candidate.mineYsno === "Y" && votePage?.canRecommend ? (
+                {candidate.mineYsno === "Y" && votePage?.canRecommend && !votePage.hasVoted ? (
                   <button className={clsx(buttonDanger, styles.cancelRecommendationButton)}
                           onClick={() => void handleDelete(candidate.recmNumb)}>
                     <svg width="8" height="2" viewBox="0 0 8 2" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -214,23 +247,26 @@ const ClubBookVotePage = () => {
           <li>{message("frontend.readingClub.vote.guideTie")}</li>
         </ul>
       </aside>
-      <div className={styles.actions}
-           data-button-count={candidates.length === 0 || votePage?.hasRecommended ? "one" : "two"}>
-        {/* 추천하지 않은 사용자에게 제공하는 도서 추천 명령 영역 */}
-        {!votePage?.hasRecommended ? (
-          <ActionButton variant={candidates.length === 0 ? "primary" : "secondary"} size="lg" width="full"
-                        disabled={!votePage?.canRecommend} onClick={handleRecommendation}>
-            {/* "도서 추천하기" */}
-            {message("frontend.readingClub.vote.recommend")}
-          </ActionButton>
-        ) : null}
-        {/* 투표하기 */}
-        {candidates.length > 0 ? <ActionButton size="lg" width="full"
-                                               disabled={!selectedCandidate || votePage?.hasVoted}
-                                               onClick={() => void handleVote()}>{votePage?.hasVoted
-          ? message("frontend.readingClub.vote.voted")
-          : message("frontend.readingClub.vote.submit")}</ActionButton> : null}
-      </div>
+      {canShowRecommend || canShowVote ? (
+        <div className={styles.actions}
+             data-button-count={canShowRecommend && canShowVote ? "two" : "one"}>
+          {/* 추천하지 않은 사용자에게 제공하는 도서 추천 명령 영역 */}
+          {canShowRecommend ? (
+            <ActionButton variant={canShowVote ? "secondary" : "primary"} size="lg" width="full"
+                          disabled={!votePage?.canRecommend} onClick={handleRecommendation}>
+              {/* "도서 추천하기" */}
+              {message("frontend.readingClub.vote.recommend")}
+            </ActionButton>
+          ) : null}
+          {/* 투표하기 */}
+          {canShowVote ? <ActionButton size="lg" width="full"
+                                       disabled={!selectedCandidate}
+                                       onClick={() => void handleVote()}>
+            {/* "투표하기" */}
+            {message("frontend.readingClub.vote.submit")}
+          </ActionButton> : null}
+        </div>
+      ) : null}
     </main>
   );
 };

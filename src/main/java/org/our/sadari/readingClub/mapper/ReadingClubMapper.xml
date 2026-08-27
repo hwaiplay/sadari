@@ -40,11 +40,22 @@
              , USERX.USER_NICK
              , CASE WHEN RECOMMEND.USER_NUMB = #{userNumb} THEN #{commYes} ELSE #{commNo} END AS MINE_YSNO
              , CASE WHEN VOTE.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS VOTE_YSNO
+             , COALESCE(VOTES.VOTE_CNT, 0) AS VOTE_CNT
           FROM TB_CLBREC RECOMMEND
           JOIN TM_BKINFO BOOK ON BOOK.BOOK_NUMB = RECOMMEND.BOOK_NUMB
           JOIN TM_USERXM USERX ON USERX.USER_NUMB = RECOMMEND.USER_NUMB AND USERX.USER_STAT = #{userActive}
      LEFT JOIN TB_CLBVOT VOTE ON VOTE.CLUB_NUMB = RECOMMEND.CLUB_NUMB
                              AND VOTE.RECM_NUMB = RECOMMEND.RECM_NUMB AND VOTE.USER_NUMB = #{userNumb}
+     LEFT JOIN (  SELECT BALLOT.CLUB_NUMB
+                       , BALLOT.RECM_NUMB
+                       , COUNT(*) AS VOTE_CNT
+                    FROM TB_CLBVOT BALLOT
+                   WHERE BALLOT.CLUB_NUMB = #{clubNumb}
+                GROUP BY BALLOT.CLUB_NUMB
+                       , BALLOT.RECM_NUMB
+               ) VOTES
+            ON VOTES.CLUB_NUMB = RECOMMEND.CLUB_NUMB
+           AND VOTES.RECM_NUMB = RECOMMEND.RECM_NUMB
          WHERE RECOMMEND.CLUB_NUMB = #{clubNumb}
         <if test="cycleStdt != null">
            AND RECOMMEND.REGI_DATE <![CDATA[>=]]> #{cycleStdt}

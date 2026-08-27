@@ -54,7 +54,6 @@ export const candidateCard = style({
   transition: "background 160ms ease",
   selectors: {
     "&:hover": {background: vars.color.gray100},
-    '&[data-selected="true"]': {background: vars.color.brandBg, boxShadow: "0 0 0 1px #34704d"},
     "&:focus-visible": {outline: `1px solid ${vars.color.brandText}`, outlineOffset: 2},
   },
 });
@@ -71,6 +70,17 @@ export const candidateSelect = style({
   background: "transparent",
   textAlign: "left",
   cursor: "pointer"
+});
+
+export const candidateResult = style({
+  display: "grid",
+  width: "100%",
+  minHeight: 154,
+  gridTemplateColumns: "76px minmax(0, 1fr) auto",
+  alignItems: "center",
+  gap: 16,
+  padding: 20,
+  boxSizing: "border-box",
 });
 
 export const cover = style({width: 76, height: 112, borderRadius: 6, objectFit: "cover"});
@@ -96,6 +106,48 @@ export const radioIndicator = style({
   border: `1px solid ${vars.color.gray300}`,
   borderRadius: "50%",
   selectors: {'[data-selected="true"] &': {border: "7px solid #8edcba"}}
+});
+
+export const voteRateRow = style({
+  display: "flex",
+  alignItems: "center",
+  gap: 10,
+  marginTop: 8,
+});
+
+export const voteRateTrack = style({
+  position: "relative",
+  height: 8,
+  flex: 1,
+  overflow: "hidden",
+  borderRadius: 999,
+  background: vars.color.gray200,
+});
+
+export const voteRateFill = style({
+  display: "block",
+  height: "100%",
+  borderRadius: 999,
+  background: vars.color.brandText,
+  transition: "width 240ms ease",
+});
+
+export const voteRate = style({
+  minWidth: 42,
+  color: vars.color.gray900,
+  fontFamily: vars.font.semibold,
+  fontSize: 14,
+  textAlign: "right",
+});
+
+export const myVoteBadge = style({
+  padding: "4px 8px",
+  borderRadius: 999,
+  background: vars.color.brandBg,
+  color: vars.color.brandText,
+  fontFamily: vars.font.semibold,
+  fontSize: 12,
+  whiteSpace: "nowrap",
 });
 
 export const cancelRecommendationButton = style({

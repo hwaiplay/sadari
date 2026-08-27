@@ -21,6 +21,7 @@ export type ClubBookRecommendation = {
   userNick?: string;
   mineYsno: "Y" | "N";
   voteYsno: "Y" | "N";
+  voteCnt: number;
 };
 
 export type ClubBookVotePage = {
