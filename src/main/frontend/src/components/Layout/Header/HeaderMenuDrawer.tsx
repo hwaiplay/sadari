@@ -131,7 +131,7 @@ function DrawerMenuTreeItem({
 }
 
 /**
- * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시합니다.
+ * 사용자 프로필과 DB에서 조회한 노출 메뉴를 햄버거 드로어에 표시
  *
  * @author HanWon.Jang
  * @param menuList SHOW_YSNO와 USEE_YSNO가 모두 Y인 사용자 메뉴 목록

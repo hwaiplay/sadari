@@ -1,8 +1,3 @@
-/**
- * src/main/frontend/src/components/Layout/Header/Header.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
- *
- * @author SeungHyeon.Kang
- */
 import { message } from "@/app/messages/message";
 import {
   useLocation,
@@ -31,6 +26,16 @@ import { useUserMenuQuery } from "@/features/Menu/hooks/useUserMenuQuery";
 import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
 import { useScrollHeader } from "./useScrollHeader";
 
+/**
+ * fileName       : Header
+ * author         : SeungHyeon.Kang
+ * date           : 2026-08-27
+ * description    : 공용 헤더
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ */
+
 type HeaderMenuTransitionDirection = "forward" | "back";
 
 type ResolvedHeaderMenu = {
@@ -47,39 +52,42 @@ type HeaderProps = {
 
 const READING_HISTORY_ROUTE_PATTERN = /^\/reading-clubs\/[1-9]\d*\/readings$/;
 
-/**
- * Header 화면 또는 컴포넌트를 구성한다
- *
- * @author SeungHyeon.Kang
- * @param props 메뉴 사용 여부와 헤더 이동 거리 전달 함수
- * @return 구성된 화면 요소
- */
 function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
 
   const location = useLocation();
   const navigate = useNavigate();
   const navigationType = useNavigationType();
   const isHomeRoute = location.pathname === BOTTOM_NAV_PATH.home;
+
+  // 현재 페이지가 바텀 네비게이션 메뉴인지 확인
   const isBottomNavRoot =
     isHomeRoute
     || location.pathname === BOTTOM_NAV_PATH.feed
     || location.pathname === BOTTOM_NAV_PATH.timer
-    || location.pathname === BOTTOM_NAV_PATH.myPage;
+    || location.pathname === BOTTOM_NAV_PATH.myPage
+    || location.pathname === BOTTOM_NAV_PATH.club;
+
+  // 뒤로가기 버튼 표시 상태
   const hasBackButton = !isBottomNavRoot;
+
   const hasResolvedMenuRef = useRef(false);
+
   const [resolvedMenu, setResolvedMenu] = useState<ResolvedHeaderMenu | null>(
     null,
   );
-  // 스크롤 이동량과 같은 거리로 움직일 헤더 상태를 구성한다
+
+  // 스크롤 이동량과 같은 거리로 움직일 헤더 상태를 구성
   const { headerRef } = useScrollHeader(
     onOffsetChange,
     location.pathname,
   );
-  // 로딩 화면과 같은 Query Key를 사용하여 경로별 메뉴 조회 요청을 공유한다
+
+  // 로딩 화면과 같은 Query Key를 사용하여 경로별 메뉴 조회 요청을 공유
   const {
     data: userMenuData,
     isError: isUserMenuError,
   } = useUserMenuQuery(location.pathname, menuEnabled);
+
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
@@ -93,10 +101,10 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
       : headerContentSlideForward;
 
   /**
-   * back Prev 사용자 동작을 처리한다
+   * back Prev 사용자 동작을 처리
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return
    */
   const backPrev = () => {
 
@@ -110,30 +118,30 @@ function Header({ menuEnabled = true, onOffsetChange }: HeaderProps) {
         ? "back"
         : "forward";
 
-    // 메뉴가 비활성화된 레이아웃은 조회 결과 없이 헤더 표시 상태만 확정한다
+    // 메뉴가 비활성화된 레이아웃은 조회 결과 없이 헤더 표시 상태만 확정
     if (!menuEnabled) {
-      // 메뉴를 사용하지 않는 경로도 헤더 콘텐츠 표시를 시작할 수 있게 확정한다
+      // 메뉴를 사용하지 않는 경로도 헤더 콘텐츠 표시를 시작할 수 있게 확정
       hasResolvedMenuRef.current = true;
-      // 현재 경로에 메뉴가 없는 헤더 상태를 저장한다
+      // 현재 경로에 메뉴가 없는 헤더 상태를 저장
       setResolvedMenu({
         pathname: location.pathname,
         currentMenu: null,
         menuList: [],
         transitionDirection,
       });
-      // 비활성화된 메뉴의 추가 처리를 중단한다
+      // 비활성화된 메뉴의 추가 처리를 중단
       return;
     }
 
-    // 메뉴 API가 아직 진행 중이면 이전 경로의 메뉴를 현재 경로에 표시하지 않는다
+    // 메뉴 API가 아직 진행 중이면 이전 경로의 메뉴를 현재 경로에 표시하지 않음
     if (!userMenuData && !isUserMenuError) {
-      // 현재 경로의 메뉴 조회가 확정될 때까지 상태 반영을 보류한다
+      // 현재 경로의 메뉴 조회가 확정될 때까지 상태 반영을 보류
       return;
     }
 
-    // 현재 경로의 메뉴명 유무가 확정된 뒤 헤더 중앙 콘텐츠를 한 번에 표시한다
+    // 현재 경로의 메뉴명 유무가 확정된 뒤 헤더 중앙 콘텐츠를 한 번에 표시
     hasResolvedMenuRef.current = true;
-    // 메뉴 조회 실패도 빈 메뉴 상태로 확정하여 화면 진입을 막지 않는다
+    // 메뉴 조회 실패도 빈 메뉴 상태로 확정하여 화면 진입을 막지 않음
     setResolvedMenu({
       pathname: location.pathname,
       currentMenu: userMenuData?.currentMenu ?? null,
