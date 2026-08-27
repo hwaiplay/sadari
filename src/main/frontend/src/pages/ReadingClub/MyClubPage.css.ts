@@ -46,7 +46,6 @@ export const invitationSummary = style({
   background: "#f9f9f9",
   display: "flex",
   flexDirection: "column",
-  justifyContent: "space-between",
   boxSizing: "border-box",
 });
 
@@ -69,7 +68,8 @@ export const invitationSummaryText = style({
   lineHeight: 1.35,
   letterSpacing: "-0.14px"
 });
-export const invitationSummaryAction = style({display: "flex", justifyContent: "flex-end"});
+
+export const invitationSummaryAction = style({marginTop: 18, display: "flex", justifyContent: "flex-end"});
 
 export const quickButton = style({
   minWidth: 0,
@@ -85,13 +85,54 @@ export const quickButton = style({
   },
 });
 
+export const noticeArrow = style({
+  color: "#2F8F64",
+  transition: "transform 0.2s ease",
+  marginLeft: 4,
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {transition: "none"},
+  },
+});
+
+export const noticeArrowOpen = style([
+  noticeArrow,
+  {
+    transform: "rotate(180deg)",
+  },
+]);
+
+export const noticeDetails = style({
+  display: "grid",
+  gridTemplateRows: "0fr",
+  opacity: 0,
+  transition: "grid-template-rows 280ms ease, opacity 180ms ease",
+  "@media": {
+    "(prefers-reduced-motion: reduce)": {transition: "none"},
+  },
+});
+
+export const noticeDetailsOpen = style([
+  noticeDetails,
+  {
+    gridTemplateRows: "1fr",
+    opacity: 1,
+  },
+]);
+
+export const noticeDetailsInner = style({
+  minHeight: 0,
+  overflow: "hidden",
+});
+
 export const invitationDetail = style({marginTop: 26, display: "flex", flexDirection: "column", gap: 14});
+
 export const invitationList = style({display: "flex", flexDirection: "column", gap: 10});
+
 export const applicationList = style({display: "flex", flexDirection: "column", gap: 10});
+
 export const applicationItem = style({
   minHeight: 54,
   padding: "0 18px",
-  border: `1px solid ${vars.color.gray300}`,
   borderRadius: 18,
   background: vars.color.background,
   display: "flex",

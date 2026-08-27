@@ -104,6 +104,10 @@ export const drawerOverlay = style({
     inset: 0,
     zIndex: 1000,
     pointerEvents: "none",
+
+    maxWidth: 600,
+    margin: "0 auto",
+    overflow: "hidden"
 });
 
 export const drawerOverlayVisible = style({

@@ -223,39 +223,74 @@ export default function MyClubPage() {
               variant="secondary"
               size="sm"
               aria-expanded={isNoticeOpen}
+              aria-controls="club-notice-details"
               onClick={handleNoticeToggle}
             >
-              {/* "바로 확인" 또는 "접기" */}
-              {isNoticeOpen
-                ? /* "접기" */ message("frontend.common.collapse")
-                : message("frontend.readingClub.my.checkNow")
-              }
+              <>
+                {/* "바로 확인" 또는 "접기" */}
+                {isNoticeOpen
+                  ?
+                  /* "접기" */
+                  message("frontend.common.collapse")
+                  :
+                  message("frontend.readingClub.my.checkNow")
+                }
+
+                {/* 화살표 */}
+                <svg
+                  className={isNoticeOpen ? styles.noticeArrowOpen : styles.noticeArrow}
+                  width="12"
+                  height="12"
+                  viewBox="0 0 12 12"
+                  fill="none"
+                  aria-hidden="true"
+                >
+                  <path
+                    d="M2.04 4.455 5.3 7.715a.99.99 0 0 0 1.4 0l3.26-3.26"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeMiterlimit="10"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              </>
             </ActionButton>
           </div>
-        </section>
-      )}
 
-      {/* 받은 초대 상세 목록 영역 */}
-      {isNoticeOpen && invitations.length > 0 && (
-        <section className={styles.invitationDetail}>
-          <h2 className={styles.sectionTitle}>
-            {/* "받은 초대" */}
-            {message("frontend.readingClub.my.receivedInvitation")}
-          </h2>
-          <div className={styles.invitationList}>{invitations.map(renderInvitation)}</div>
-        </section>
-      )}
+          {/* 접힌 상태에서도 상세 DOM을 유지하여 높이 전환이 자연스럽게 이어지게 한다 */}
+          <div
+            id="club-notice-details"
+            className={isNoticeOpen ? styles.noticeDetailsOpen : styles.noticeDetails}
+            aria-hidden={!isNoticeOpen}
+            inert={!isNoticeOpen}
+          >
+            <div className={styles.noticeDetailsInner}>
+              {/* 받은 초대 상세 목록 영역 */}
+              {invitations.length > 0 && (
+                <div className={styles.invitationDetail}>
+                  <h2 className={styles.sectionTitle}>
+                    {/* "받은 초대" */}
+                    {message("frontend.readingClub.my.receivedInvitation")}
+                  </h2>
+                  <div className={styles.invitationList}>{invitations.map(renderInvitation)}</div>
+                </div>
+              )}
 
-      {/* 모임장 승인 대기 가입 신청 상세 목록 영역 */}
-      {isNoticeOpen && pendingApplications.length > 0 && (
-        <section className={styles.invitationDetail}>
-          <h2 className={styles.sectionTitle}>
-            {/* "승인 대기" */}
-            {message("frontend.readingClub.my.pendingApplications")}
-          </h2>
-          {/* 승인 대기 신청이 있는 모임 목록 영역 */}
-          <div className={styles.applicationList}>
-            {pendingApplications.map(renderApplicationNotice)}
+              {/* 모임장 승인 대기 가입 신청 상세 목록 영역 */}
+              {pendingApplications.length > 0 && (
+                <div className={styles.invitationDetail}>
+                  <h2 className={styles.sectionTitle}>
+                    {/* "승인 대기" */}
+                    {message("frontend.readingClub.my.pendingApplications")}
+                  </h2>
+                  {/* 승인 대기 신청이 있는 모임 목록 영역 */}
+                  <div className={styles.applicationList}>
+                    {pendingApplications.map(renderApplicationNotice)}
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </section>
       )}
