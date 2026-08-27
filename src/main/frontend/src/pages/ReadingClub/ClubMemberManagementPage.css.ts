@@ -234,6 +234,7 @@ export const inviteOverlay = style([
 export const modal = style({
   display: "flex",
   width: "calc(100% - 32px)",
+  maxWidth: 600,
   maxHeight: "calc(100dvh - 48px)",
   flexDirection: "column",
   gap: 28,
