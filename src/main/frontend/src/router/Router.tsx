@@ -32,7 +32,7 @@ const ErrorPage = lazy(() => import("@/pages/Error/ErrorPage"));
 const MyClubPage = lazy(() => import("@/pages/ReadingClub/MyClubPage"));
 const FindClubPage = lazy(() => import("@/pages/ReadingClub/FindClubPage"));
 const SetClubPage = lazy(() => import("@/pages/ReadingClub/SetClubPage"));
-const EditClubPage = lazy(() => import("@/pages/ReadingClub/EditClubPage"));
+const UpdateClubPage = lazy(() => import("@/pages/ReadingClub/UpdateClubPage.tsx"));
 const ClubDetailPage = lazy(() => import("@/pages/ReadingClub/ClubDetailPage"));
 const ClubBookVotePage = lazy(() => import("@/pages/ReadingClub/ClubBookVotePage"));
 const ClubMemberManagementPage = lazy(() => import("@/pages/ReadingClub/ClubMemberManagementPage"));
@@ -206,26 +206,42 @@ const Router = () => {
           <Route path="/notice/list/:noticeNumb" element={<NoticeDetailPage />} />
 
           {/* 독서 모임 1차 기능 */}
+          {/* 내 모임 */}
           <Route path="/reading-clubs/mine" element={<MyClubPage />} />
+          {/* 모임 찾기 */}
           <Route path="/reading-clubs/find" element={<FindClubPage />} />
+          {/* 모임 개설 */}
           <Route path="/reading-clubs/set" element={<SetClubPage />} />
-          <Route path="/reading-clubs/:clubNumb/books/search" element={<BookSearchType />} />
-          <Route path="/reading-clubs/:clubNumb/books/search/info" element={<SearchBookInfoPage />} />
-          <Route path="/reading-clubs/:clubNumb/set" element={<SetClubReadingPage />} />
-          <Route path="/reading-clubs/:clubNumb/:rondNumb/edit" element={<SetClubReadingPage />} />
-          <Route path="/reading-clubs/:clubNumb/edit" element={<EditClubPage />} />
+          {/* 모임 수정 */}
+          <Route path="/reading-clubs/update/:clubNumb" element={<UpdateClubPage />} />
+          {/* 모임 상세보기  */}
+          <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
+          {/* 책 검색 */}
+          <Route path="/reading-clubs/books/search/:clubNumb" element={<BookSearchType />} />
+          {/* 책 정보 */}
+          <Route path="/reading-clubs/books/search/info/:clubNumb" element={<SearchBookInfoPage />} />
+          {/* 모임 독서 등록 */}
+          <Route path="/reading-clubs/set/:clubNumb" element={<SetClubReadingPage />} />
+          {/* 모임 독서 수정 */}
+          <Route path="/reading-clubs/update/book/:clubNumb/:rondNumb" element={<SetClubReadingPage />} />
+          {/* 다음 도서 투표 */}
           <Route path="/reading-clubs/:clubNumb/book-vote" element={<ClubBookVotePage />} />
+          {/* 멤버 관리 */}
           <Route path="/reading-clubs/:clubNumb/manage/members" element={<ClubMemberManagementPage />} />
+          {/* 멤버 퇴장 및 제한 내역 */}
           <Route path="/reading-clubs/:clubNumb/manage/member-restrictions" element={<ClubMemberRestrictionPage />} />
+          {/* 독서 회차 결과 */}
           <Route
             path="/reading-clubs/:clubNumb/readings/:rondNumb/reports"
             element={<ClubRoundReportPage />}
           />
+          {/* 이전 독서 기록 */}
           <Route
             path="/reading-clubs/:clubNumb/readings"
             element={<ClubReadingHistoryPage />}
           />
-          <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
+
+
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}
           <Route path="/user-report" element={<UserReportPage />} />

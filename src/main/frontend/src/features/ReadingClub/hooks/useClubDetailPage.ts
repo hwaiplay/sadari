@@ -239,7 +239,7 @@ export const useClubDetailPage = () => {
    */
   const handleClubEdit = (): void => {
     // 현재 모임 번호를 유지하여 모임 수정 화면으로 이동한다
-    navigate(`/reading-clubs/${clubNumb}/edit`);
+    navigate(`/reading-clubs/update/${clubNumb}`);
   };
 
   /**
@@ -310,9 +310,9 @@ export const useClubDetailPage = () => {
    * @param action 선택한 관리 동작
    * @return 반환값이 없다
    */
-  const handleClubAction = (action: "" | "EDIT" | "DELETE"): void => {
+  const handleClubAction = (action: "" | "UPDATE" | "DELETE"): void => {
     // 수정하기를 선택하면 수정 화면으로 이동한다
-    if (action === "EDIT") {
+    if (action === "UPDATE") {
       handleClubEdit();
       return;
     }

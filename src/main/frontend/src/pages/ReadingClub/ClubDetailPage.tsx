@@ -264,7 +264,7 @@ export default function ClubDetailPage() {
                   <div className={styles.readingEmpty}>
                     {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공한다 */}
                     {club.membRole === "OWNER" ? (
-                      <SearchBookButton to={`/reading-clubs/${club.clubNumb}/books/search`} />
+                      <SearchBookButton to={`/reading-clubs/books/search/${club.clubNumb}`} />
                     ) : null}
                     <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
                   </div>

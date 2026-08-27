@@ -101,7 +101,7 @@ const ClubBookVotePage = () => {
       return;
     }
 
-    navigate(`/reading-clubs/${clubNumb}/books/search`, {
+    navigate(`/reading-clubs/books/search/${clubNumb}`, {
       state: {clubBookVoteReturnPath: `/reading-clubs/${clubNumb}/book-vote`},
     });
   };

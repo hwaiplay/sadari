@@ -2,7 +2,7 @@
  * fileName       : SetClubReadingPage
  * author         : Hanwon.Jang
  * date           : 2026-08-14
- * description    : 선택한 도서와 목표 기간으로 모임 독서를 등록하는 화면을 제공한다
+ * description    : 모임 독서를 등록하는 페이지
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,12 +20,6 @@ import * as reportStyles from "@/pages/Book/Set/SetReportPage.css";
 import { clsx } from "clsx";
 import * as styles from "./SetClubReadingPage.css";
 
-/**
- * 선택 도서 요약과 목표 독서 기간만 포함한 모임 독서 등록 화면을 구성한다.
- *
- * @author Hanwon.Jang
- * @return 모임 독서 등록 화면 요소
- */
 function SetClubReadingPage() {
 
   const {

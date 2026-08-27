@@ -1,7 +1,7 @@
 import SetClubPage from "./SetClubPage";
 
 /**
- * fileName       : EditClubPage
+ * fileName       : UpdateClubPage
  * author         : Hanwon.Jang
  * date           : 2026-08-22
  * description    : 모임 수정 페이지
@@ -9,6 +9,7 @@ import SetClubPage from "./SetClubPage";
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        Hanwon.Jang    주석 추가
+ * 2026-08-27        Hanwon.Jang    파일명 변경
  */
 
 /**
@@ -17,7 +18,7 @@ import SetClubPage from "./SetClubPage";
  * @author SeungHyeon.Kang
  * @return 모임 수정 화면
  */
-export default function EditClubPage() {
+export default function UpdateClubPage() {
   // 공통 모임 폼을 수정 모드로 구성한다
   return <SetClubPage mode="edit" />;
 }

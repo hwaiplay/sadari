@@ -604,8 +604,8 @@ export function useSearchBookPage() {
       // 독서 수정에서 진입했다면 같은 회차의 수정 화면으로 선택 도서를 돌려보낸다.
       const editRondNumb = Number(pageState.clubReadingEditRondNumb);
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
-        ? `/reading-clubs/${clubNumb}/${editRondNumb}/edit`
-        : `/reading-clubs/${clubNumb}/set`;
+        ? `/reading-clubs/update/book/${clubNumb}/${editRondNumb}`
+        : `/reading-clubs/set/${clubNumb}`;
       // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달한다.
       navigate(
         `${readingEntryPath}?isbn=${encodeURIComponent(book.isbn)}`,
@@ -647,7 +647,7 @@ export function useSearchBookPage() {
       }
 
       // 선택한 책 정보를 모임 책 상세 화면으로 전달한다.
-      navigate(`/reading-clubs/${clubNumb}/books/search/info`, {
+      navigate(`/reading-clubs/books/search/info/${clubNumb}`, {
         state: {
           book,
           clubReadingEditRondNumb: pageState.clubReadingEditRondNumb,
