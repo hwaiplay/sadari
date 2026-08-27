@@ -22,18 +22,8 @@
                AND EXISTS (SELECT 1 FROM TM_USERXM ACTOR WHERE ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive})
                AND (   (#{tagtType} = #{targetReport} AND REPORT.USER_NUMB = OWNER.USER_NUMB
                          AND (REPORT.USER_NUMB = #{userNumb} OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reptStatRead})))
-                    OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb}
-                        AND (OWNER.USER_NUMB = #{userNumb} OR EXISTS (
-                            SELECT 1 FROM TB_FOLLOW F
-                             WHERE F.USER_NUMB = #{userNumb}
-                               AND F.FLOW_NUMB = OWNER.USER_NUMB
-                        )))
-                    OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb}
-                        AND (OWNER.USER_NUMB = #{userNumb} OR EXISTS (
-                            SELECT 1 FROM TB_FOLLOW F
-                             WHERE F.USER_NUMB = #{userNumb}
-                               AND F.FLOW_NUMB = OWNER.USER_NUMB
-                        ))))
+                    OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
+                    OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb}))
         )
     </sql>
     <select id="getReplyTargetAccessCount" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="int">

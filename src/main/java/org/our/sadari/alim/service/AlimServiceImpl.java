@@ -32,7 +32,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-08-14        SeungHyeon.Kang    사용자 알림 10개 단위 조회 반영
  * 2026-08-20        SeungHyeon.Kang    타이머 알림 중복 제외
  * 2026-08-25        SeungHyeon.Kang    사진 댓글 알림 중복 제외
- * 2026-08-27        SeungHyeon.Kang    알림 클릭 시점 권한 기반 이동 주소 계산
+ * 2026-08-27        SeungHyeon.Kang    권한 기반 알림과 사진 프로필 이동 계산
  */
 @Service
 @RequiredArgsConstructor
@@ -500,11 +500,16 @@ public class AlimServiceImpl implements AlimService {
         boolean isImageTarget = Constant.LIKE_TARGET_PROFILE_IMAGE.equals(target.getTagtType())
                 || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(target.getTagtType());
 
-        // 현재 프로필 또는 배경사진은 소유자 본인과 현재 팔로워만 피드에서 접근할 수 있다
-        if (isImageTarget && Constant.USER_STAT_ACTIVE.equals(target.getTargetUserStat())
-                && (isOwner || Constant.COMM_YES.equals(target.getFollowYsno()))) {
-            // 현재 접근 가능한 사진 피드 경로에 필요하면 댓글 위치를 포함해 반환한다
-            return appendFeedTarget(target);
+        // 현재 프로필 또는 배경사진은 활성 소유자의 공개 프로필 영역에서 팔로우 여부와 관계없이 접근할 수 있다
+        if (isImageTarget && Constant.USER_STAT_ACTIVE.equals(target.getTargetUserStat())) {
+            // 사진 소유자는 마이페이지에서 현재 사진 반응을 확인한다
+            if (isOwner) {
+                // 본인 사진과 필요하면 강조 댓글을 포함한 마이페이지 경로를 반환한다
+                return appendImageTarget("/mypage/profile", target);
+            }
+
+            // 타인 사진과 필요하면 강조 댓글을 포함한 소셜 프로필 경로를 반환한다
+            return appendImageTarget("/social/profile/" + target.getTargetUserNumb(), target);
         }
 
         // 지원하지 않는 유형 또는 현재 관계로 볼 수 없는 사진에는 이동 주소를 제공하지 않는다
@@ -659,6 +664,27 @@ public class AlimServiceImpl implements AlimService {
         }
 
         // 검증된 대상 유형과 숫자 식별값으로 만든 피드 내부 경로를 반환한다
+        return linkUrlx;
+    }
+
+    /**
+     * 프로필 화면이 현재 사진과 강조 댓글을 바로 열 수 있도록 대상 식별값을 경로에 추가한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param baseLinkUrlx 본인 또는 다른 사용자 프로필 내부 경로
+     * @param target 현재 사진 유형과 파일 번호 및 강조 댓글 번호
+     * @return 현재 사진 반응을 가리키는 프로필 내부 경로
+     */
+    private String appendImageTarget(String baseLinkUrlx, AlimDto.AlimTargetDto target) {
+        String linkUrlx = baseLinkUrlx + "?tagtType=" + target.getTagtType()
+                + "&tagtNumb=" + target.getTagtNumb();
+
+        // 댓글 번호가 있으면 프로필 사진 댓글 목록에서 해당 댓글을 강조하도록 포함한다
+        if (!StringUtil.isEmpty(target.getReplNumb()) && target.getReplNumb() > 0) {
+            linkUrlx += "&replNumb=" + target.getReplNumb();
+        }
+
+        // 현재 사진과 댓글 위치가 포함된 프로필 내부 경로를 반환한다
         return linkUrlx;
     }
 

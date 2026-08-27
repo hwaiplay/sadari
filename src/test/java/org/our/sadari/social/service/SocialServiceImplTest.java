@@ -43,6 +43,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요 알림 설정 검증 추가
  * 2026-08-25        HanWon.Jang        사진 좋아요 링크 기준 검증
  * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 검증
+ * 2026-08-27        SeungHyeon.Kang    사진 좋아요 알림 대상 설명 정리
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -148,9 +149,9 @@ class SocialServiceImplTest {
     }
 
     /**
-     * 프로필 사진 좋아요 알림이 대상별 피드 링크에 해당 사진 번호를 전달하는지 검증한다.
+     * 프로필 사진 좋아요 알림이 대상 유형과 현재 사진 번호를 전달하는지 검증한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void setImageLikeUsesLink() {

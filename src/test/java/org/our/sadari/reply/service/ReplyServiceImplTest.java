@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.when;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -45,7 +46,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 닉네임 DB 조회 검증
  * 2026-08-25        HanWon.Jang        사진 댓글 링크 기준 검증
  * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화 검증
- * 2026-08-27        SeungHyeon.Kang    대상별 댓글 알림 링크와 답글 수신자 검증
+ * 2026-08-27        SeungHyeon.Kang    대상별 댓글 알림, 공개 사진 접근과 답글 수신자 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -171,9 +172,9 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 프로필 사진 댓글 알림이 해당 사진 번호를 대상별 피드 링크에 전달하는지 검증한다.
+     * 비팔로워도 현재 프로필 사진에 댓글을 등록하고 해당 사진 번호를 알림 대상으로 전달하는지 검증한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void setImageReplyUsesLink() {
@@ -192,7 +193,7 @@ class ReplyServiceImplTest {
         // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
         when(badWordDetectionService.findBadWord("새 프로필 사진이 멋져요."))
                 .thenReturn(Optional.empty());
-        // 사진 소유자를 팔로우해 댓글 API에 접근할 수 있는 조건을 구성한다
+        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성한다
         when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(1);
         // 사진 댓글 한 건이 저장되는 조건을 구성한다
         when(replyMapper.setReply(replyDto)).thenReturn(1);
@@ -228,28 +229,31 @@ class ReplyServiceImplTest {
         );
     }
 
-    /** 비팔로워는 사진 댓글 목록을 조회할 수 없는지 검증한다. */
+    /** 비팔로워도 정상 이용 사용자의 현재 사진 댓글 목록을 조회할 수 있는지 검증한다. */
     @Test
-    void getImageRepliesDenied() {
-        // 사진 소유자도 팔로워도 아닌 사용자의 접근 조건을 구성한다
-        when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(0);
+    void getImageRepliesAllowed() {
+        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성한다
+        when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(1);
+        // 조회할 댓글이 없는 현재 사진 조건을 구성한다
+        when(replyMapper.getReplyList(any(ReplyDto.class))).thenReturn(List.of());
 
         // 비팔로워가 프로필 사진 댓글 목록을 조회한다
         ResultData result = replyService.getReplyList(
                 44L, Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, null, 1);
 
-        // 댓글 데이터 자체를 조회하기 전에 접근 거부하는지 확인한다
-        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
-        verify(replyMapper, never()).getReplyList(any(ReplyDto.class));
+        // 현재 사진이면 팔로우 관계 없이 댓글 목록 조회가 성공하는지 확인한다
+        assertEquals(200, result.getCode());
+        verify(replyMapper).getReplyList(any(ReplyDto.class));
     }
 
-    /** 비팔로워는 사진 댓글을 등록할 수 없는지 검증한다. */
+    /** 교체됐거나 비활성 소유자의 사진에는 댓글을 등록할 수 없는지 검증한다. */
     @Test
-    void setImageReplyDenied() {
+    void setOldImageReplyDenied() {
         ReplyDto replyDto = new ReplyDto();
         replyDto.setTagtType(Constant.LIKE_TARGET_BACKGROUND_IMAGE);
         replyDto.setTagtNumb(157L);
         replyDto.setReplCntn("접근할 수 없는 댓글");
+        // 현재 사진과 활성 소유자 조건을 만족하지 않는 대상 조회 결과를 구성한다
         when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(0);
 
         ResultData result = replyService.setReply(44L, replyDto);

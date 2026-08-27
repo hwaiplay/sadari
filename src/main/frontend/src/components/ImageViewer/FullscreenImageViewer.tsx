@@ -43,6 +43,7 @@ type FullscreenImageButtonProps = Omit<
 > & FullscreenImageRequest & {
   children: ReactNode;
   ariaLabel?: string;
+  initiallyOpen?: boolean;
 };
 
 const FullscreenImageViewerContext = createContext<
@@ -432,6 +433,7 @@ export function FullscreenImageButton({
   alt,
   children,
   ariaLabel,
+  initiallyOpen = false,
   actions,
   className,
   ...buttonProps
@@ -440,6 +442,30 @@ export function FullscreenImageButton({
   const { openImageViewer, updateImageViewer } = useFullscreenImageViewer();
   // 같은 화면의 여러 이미지 버튼 중 현재 뷰어를 연 버튼을 구분한다
   const triggerId = useId();
+  // 알림 경로로 진입한 이미지가 다시 렌더링되어도 자동 열기를 한 번만 수행한다
+  const hasInitiallyOpenedRef = useRef(false);
+
+  useEffect(
+    /**
+     * 알림 경로가 지정한 현재 사진을 최초 렌더링에서 전체 화면으로 연다.
+     *
+     * @author SeungHyeon.Kang
+     * @return 반환값이 없다
+     */
+    () => {
+      // 일반 프로필 진입이거나 이미 자동으로 연 버튼이면 사용자 클릭을 기다린다
+      if (!initiallyOpen || hasInitiallyOpenedRef.current) {
+        // 자동 열기 상태를 변경하지 않고 종료한다
+        return;
+      }
+
+      // 후속 반응 상태 갱신이 전체 화면을 반복해서 열지 않도록 처리 완료를 기록한다
+      hasInitiallyOpenedRef.current = true;
+      // 알림이 가리킨 현재 사진과 반응 버튼을 공통 전체 화면 뷰어에 전달한다
+      openImageViewer({ source, fallbackSource, alt, actions }, triggerId);
+    },
+    [actions, alt, fallbackSource, initiallyOpen, openImageViewer, source, triggerId],
+  );
 
   useEffect(
     /**

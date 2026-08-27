@@ -34,8 +34,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
  * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
- * 2026-08-27        SeungHyeon.Kang    클릭 시점 알림 이동 경로와 접근 거부 검증
- * 2026-08-27        SeungHyeon.Kang    모든 알림 유형의 알림번호 기반 라우팅 검증
+ * 2026-08-27        SeungHyeon.Kang    알림번호 기반 라우팅과 사진 프로필 이동 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -414,7 +413,7 @@ class AlimServiceImplTest {
         assertEquals("/report/public-reports/target/157?replNumb=8", data.getLinkUrlx());
     }
 
-    /** 사진 알림 생성 후 팔로우를 끊으면 현재 접근 권한에 따라 이동이 거부되는지 검증한다. */
+    /** 사진 알림 생성 후 팔로우를 끊어도 현재 사진이면 소유자의 공개 프로필로 이동하는지 검증한다. */
     @Test
     void getUnfollowedImageTarget() {
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
@@ -423,11 +422,37 @@ class AlimServiceImplTest {
         target.setTargetUserNumb(32L);
         target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
         target.setFollowYsno(Constant.COMM_NO);
+        target.setReplNumb(8L);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
         ResultData result = alimService.getAlimTarget(31L, 7L);
+        AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
 
-        assertEquals(2020, result.getCode());
+        assertEquals(200, result.getCode());
+        assertEquals(
+                "/social/profile/32?tagtType=PROFILE_IMAGE&tagtNumb=157&replNumb=8",
+                data.getLinkUrlx()
+        );
+    }
+
+    /** 본인 현재 배경사진 알림은 마이페이지의 해당 사진으로 이동하는지 검증한다. */
+    @Test
+    void getOwnerImageTarget() {
+        AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
+        target.setTagtType(Constant.LIKE_TARGET_BACKGROUND_IMAGE);
+        target.setTagtNumb(159L);
+        target.setTargetUserNumb(31L);
+        target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
+        when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
+
+        ResultData result = alimService.getAlimTarget(31L, 7L);
+        AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
+
+        assertEquals(200, result.getCode());
+        assertEquals(
+                "/mypage/profile?tagtType=BACKGROUND_IMAGE&tagtNumb=159",
+                data.getLinkUrlx()
+        );
     }
 
     /** 팔로우 알림은 현재 활성 상태인 대상 사용자의 프로필로 이동하는지 검증한다. */

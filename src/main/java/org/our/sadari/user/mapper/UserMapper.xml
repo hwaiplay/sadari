@@ -54,21 +54,24 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 마이페이지에서 현재 사용자 사진에 연결된 활성 회원 좋아요와 삭제되지 않은 댓글을 조회한다. -->
-    <select id="getMyImageReactionDtl" parameterType="org.our.sadari.user.dto.UserDto$ImageReactionDto"
+    <!-- 현재 사용자 사진에 연결된 활성 회원 좋아요와 삭제되지 않은 댓글을 로그인 사용자 기준으로 조회한다. -->
+    <select id="getImageReactionDtl" parameterType="org.our.sadari.user.dto.UserDto$ImageReactionDto"
             resultType="org.our.sadari.user.dto.UserDto$ImageReactionDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
         <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
-        SELECT /* getMyImageReactionDtl */
+        SELECT /* getImageReactionDtl */
                #{tagtType} AS TAGT_TYPE
              , #{tagtNumb} AS TAGT_NUMB
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , CASE WHEN UL.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS LIKE_YSNO
              , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT
           FROM TM_USERXM OWNER
+         JOIN TM_USERXM ACTOR
+           ON ACTOR.USER_NUMB = #{userNumb}
+          AND ACTOR.USER_STAT = #{userStatActive}
      LEFT JOIN (  SELECT L.TAGT_TYPE
                        , L.TAGT_NUMB
                        , COUNT(*) AS LIKE_CNT
@@ -97,7 +100,7 @@
                ) RC
             ON RC.TAGT_TYPE = #{tagtType}
            AND RC.TAGT_NUMB = #{tagtNumb}
-         WHERE OWNER.USER_NUMB = #{userNumb}
+         WHERE OWNER.USER_NUMB = #{ownerUserNumb}
            AND OWNER.USER_STAT = #{userStatActive}
            AND (   (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
                 OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb})

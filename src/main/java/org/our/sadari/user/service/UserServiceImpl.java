@@ -45,6 +45,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 후 기존 파일 삭제 추가
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 입력 금지
  * 2026-08-19        SeungHyeon.Kang    프로필과 온보딩 닉네임 검증 공통화
+ * 2026-08-27        SeungHyeon.Kang    사진 반응 조회 사용자 분리
  */
 @Service
 @RequiredArgsConstructor
@@ -132,14 +133,16 @@ public class UserServiceImpl implements UserService {
 
         // 현재 사진 소유자와 대상 식별값을 Mapper 요청으로 구성한다
         UserDto.ImageReactionDto request = new UserDto.ImageReactionDto();
-        // UserNumb 업무 값을 request DTO에 설정한다
+        // 로그인 사용자의 사진 좋아요 여부를 계산할 사용자 번호를 설정한다
         request.setUserNumb(userNumb);
+        // 마이페이지 사진의 현재 소유자 번호를 설정한다
+        request.setOwnerUserNumb(userNumb);
         // TagtType 업무 값을 request DTO에 설정한다
         request.setTagtType(tagtType);
         // TagtNumb 업무 값을 request DTO에 설정한다
         request.setTagtNumb(tagtNumb);
         // 현재 사진에 연결된 좋아요와 댓글 집계를 반환한다
-        return userMapper.getMyImageReactionDtl(request);
+        return userMapper.getImageReactionDtl(request);
     }
 
     /**
