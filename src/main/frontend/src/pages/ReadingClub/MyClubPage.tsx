@@ -1,6 +1,7 @@
 import type { ClubInvitation, ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import { message } from "@/app/messages/message";
 import Skeleton from "@/components/Skeleton/Skeleton";
+import { ActionButton } from "@/components/Button/ActionButton";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -12,10 +13,27 @@ import {
   getClubMeta,
   getGoalProgress,
   getGoalProgressText,
+  type PendingClubApplications,
   useMyClubPage,
 } from "@/features/ReadingClub/hooks/useMyClubPage";
 import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDeadline";
 import * as styles from "./MyClubPage.css";
+
+/**
+ * 모임별 승인 대기 가입 신청 건수를 전체 건수에 더한다
+ *
+ * @author HanWon.Jang
+ * @param total 현재까지 합산한 가입 신청 건수
+ * @param club 합산할 모임별 가입 신청 요약
+ * @return 누적 승인 대기 가입 신청 건수
+ */
+const sumApplicationCnt = (
+  total: number,
+  club: PendingClubApplications,
+): number => {
+  // 현재 모임의 신청 건수를 더한 누적값을 반환한다
+  return total + club.applicationCnt;
+};
 
 /**
  * 참여 중인 모임의 카테고리와 현재 독서 현황을 목록으로 표시한다
@@ -28,14 +46,18 @@ export default function MyClubPage() {
   const {
     clubs,
     invitations,
-    isInvitationOpen,
+    pendingApplications,
+    isNoticeOpen,
     isLoading,
-    handleInvitationToggle,
+    handleNoticeToggle,
     handleClubKeyDown,
     handleClubClick,
     handleAcceptInvitation,
     handleDeclineInvitation,
   } = useMyClubPage();
+  // 모임장인 모든 모임의 승인 대기 신청 건수를 합산한다
+  const pendingApplicationCnt = pendingApplications.reduce(sumApplicationCnt, 0);
+  const hasClubNotice = invitations.length > 0 || pendingApplicationCnt > 0;
 
   /**
    * 받은 초대 한 건의 수락과 거절 제어 영역을 구성한다
@@ -79,6 +101,28 @@ export default function MyClubPage() {
         </button>
       </div>
     </article>
+  );
+
+  /**
+   * 승인 대기 가입 신청이 있는 모임의 관리 화면 이동 항목을 구성한다
+   *
+   * @author HanWon.Jang
+   * @param club 표시할 모임별 가입 신청 요약
+   * @return 가입 신청 관리 화면 이동 항목
+   */
+  const renderApplicationNotice = (club: PendingClubApplications) => (
+    /* 승인 대기 신청이 있는 개별 모임 영역 */
+    <Link
+      className={styles.applicationItem}
+      key={club.clubNumb}
+      to={`/reading-clubs/${club.clubNumb}/manage/members`}
+    >
+      <span className={styles.applicationClubName}>{club.clubName}</span>
+      <span className={styles.applicationCount}>
+        {/* "가입 신청 N건" */}
+        {message("frontend.readingClub.my.applicationCount", [club.applicationCnt])}
+      </span>
+    </Link>
   );
 
   /**
@@ -152,43 +196,67 @@ export default function MyClubPage() {
         <img className={styles.searchIcon} src="/img/icons/icon-search.svg" alt="" />
       </Link>
 
-      {/* 받은 초대 요약 영역 */}
-      {invitations.length > 0 && (
+      {/* 받은 초대와 모임장 가입 신청 요약 영역 */}
+      {hasClubNotice && (
         <section className={styles.invitationSummary}>
-          {/* 받은 초대 안내 영역 */}
+          {/* 확인할 모임 알림 안내 영역 */}
           <div className={styles.invitationSummaryTop}>
             <img className={styles.invitationIcon} src="/img/icons/icon-notification.svg" alt="" />
             <div className={styles.invitationSummaryCopy}>
               <h2 className={styles.invitationSummaryTitle}>
-                {/* "확인할 초대가 있어요" */}
-                {message("frontend.readingClub.my.invitationNotice")}
+                {/* "확인할 초대와 신청이 있어요" */}
+                {message("frontend.readingClub.my.clubNotice")}
               </h2>
               <p className={styles.invitationSummaryText}>
-                {/* "받은 초대 N · 진행 중 N" */}
-                {message("frontend.readingClub.my.invitationSummary", [invitations.length, clubs.length])}
+                {/* "받은 초대 N · 승인 대기 N" */}
+                {message("frontend.readingClub.my.clubNoticeSummary", [
+                  invitations.length,
+                  pendingApplicationCnt,
+                ])}
               </p>
             </div>
           </div>
-          {/* 받은 초대 상세 확인 버튼 영역 */}
+          {/* 모임 알림 상세 확인 버튼 영역 */}
           <div className={styles.invitationSummaryAction}>
-            <button className={styles.quickButton} type="button" onClick={handleInvitationToggle}>
+            <ActionButton
+              className={styles.quickButton}
+              variant="secondary"
+              size="sm"
+              aria-expanded={isNoticeOpen}
+              onClick={handleNoticeToggle}
+            >
               {/* "바로 확인" 또는 "접기" */}
-              {isInvitationOpen
+              {isNoticeOpen
                 ? /* "접기" */ message("frontend.common.collapse")
-                : message("frontend.readingClub.my.checkNow")}
-            </button>
+                : message("frontend.readingClub.my.checkNow")
+              }
+            </ActionButton>
           </div>
         </section>
       )}
 
       {/* 받은 초대 상세 목록 영역 */}
-      {isInvitationOpen && invitations.length > 0 && (
+      {isNoticeOpen && invitations.length > 0 && (
         <section className={styles.invitationDetail}>
           <h2 className={styles.sectionTitle}>
             {/* "받은 초대" */}
             {message("frontend.readingClub.my.receivedInvitation")}
           </h2>
           <div className={styles.invitationList}>{invitations.map(renderInvitation)}</div>
+        </section>
+      )}
+
+      {/* 모임장 승인 대기 가입 신청 상세 목록 영역 */}
+      {isNoticeOpen && pendingApplications.length > 0 && (
+        <section className={styles.invitationDetail}>
+          <h2 className={styles.sectionTitle}>
+            {/* "승인 대기" */}
+            {message("frontend.readingClub.my.pendingApplications")}
+          </h2>
+          {/* 승인 대기 신청이 있는 모임 목록 영역 */}
+          <div className={styles.applicationList}>
+            {pendingApplications.map(renderApplicationNotice)}
+          </div>
         </section>
       )}
 

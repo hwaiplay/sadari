@@ -4,6 +4,7 @@ import { message } from "@/app/messages/message.ts";
 import {
   acceptClubInvitationApi,
   declineClubInvitationApi,
+  getClubApplicationListApi,
   getClubInvitationListApi,
   getMyClubListApi,
   type ClubInvitation,
@@ -11,6 +12,65 @@ import {
 } from "@/features/ReadingClub/api/readingClubApi.ts";
 import { type KeyboardEvent, type MouseEvent, useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+
+export type PendingClubApplications = {
+  clubNumb: number;
+  clubName: string;
+  applicationCnt: number;
+};
+
+/**
+ * 모임장 권한을 가진 모임인지 판정한다
+ *
+ * @author HanWon.Jang
+ * @param club 판정할 모임
+ * @return 모임장 권한 여부
+ */
+const isOwnerClub = (club: ReadingClub): boolean => {
+  // 가입 신청 조회 권한이 있는 모임장 여부를 반환한다
+  return club.membRole === "OWNER";
+};
+
+/**
+ * 승인 대기 신청이 있는 모임 요약인지 판정한다
+ *
+ * @author HanWon.Jang
+ * @param item 판정할 모임 요약
+ * @return 승인 대기 모임 요약 여부
+ */
+const hasPendingSummary = (
+  item: PendingClubApplications | null,
+): item is PendingClubApplications => {
+  // 빈 조회 결과를 제외할 수 있도록 판정 결과를 반환한다
+  return item !== null;
+};
+
+/**
+ * 모임장인 모임 한 곳의 승인 대기 가입 신청 건수를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param club 가입 신청을 확인할 모임
+ * @return 승인 대기 신청이 있는 모임 요약 또는 빈 값
+ * @throws 가입 신청 조회에 실패하면 발생한다
+ */
+const getPendingApplications = async (
+  club: ReadingClub,
+): Promise<PendingClubApplications | null> => {
+  // 모임장 권한이 확인된 모임의 기존 가입 신청 목록을 조회한다
+  const applications = await getClubApplicationListApi(club.clubNumb);
+  // 승인 대기 신청이 없으면 상단 알림 대상에서 제외한다
+  if (applications.length === 0) {
+    // 알림 대상이 아님을 나타내는 빈 값을 반환한다
+    return null;
+  }
+
+  // 모임별 승인 대기 건수와 관리 화면 이동에 필요한 식별값을 반환한다
+  return {
+    clubNumb: club.clubNumb,
+    clubName: club.clubName,
+    applicationCnt: applications.length,
+  };
+};
 
 /**
  * 모임의 모든 관심분야명을 카드 상단에 표시할 문구로 변환한다
@@ -106,7 +166,8 @@ export const useMyClubPage = () => {
   const navigate = useNavigate();
   const [clubs, setClubs] = useState<ReadingClub[]>([]);
   const [invitations, setInvitations] = useState<ClubInvitation[]>([]);
-  const [isInvitationOpen, setIsInvitationOpen] = useState(false);
+  const [pendingApplications, setPendingApplications] = useState<PendingClubApplications[]>([]);
+  const [isNoticeOpen, setIsNoticeOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
 
   /**
@@ -117,12 +178,18 @@ export const useMyClubPage = () => {
    * @throws 모임 또는 초대 목록 조회에 실패하면 발생한다
    */
   const loadPage = useCallback(async (): Promise<void> => {
-    // 두 목록을 동시에 조회해 화면 대기 시간을 줄인다
+    // 내 모임과 받은 초대를 동시에 조회해 화면 대기 시간을 줄인다
     const [clubList, invitationList] = await Promise.all([getMyClubListApi(), getClubInvitationListApi()]);
+    // 모임장 권한이 있는 모임만 가입 신청 조회 대상으로 선별한다
+    const ownerClubs = clubList.filter(isOwnerClub);
+    // 모임장인 모임의 가입 신청을 동시에 조회한다
+    const applicationResults = await Promise.all(ownerClubs.map(getPendingApplications));
     // 내 모임 목록을 화면 상태에 반영한다
     setClubs(clubList);
     // 받은 초대 목록을 화면 상태에 반영한다
     setInvitations(invitationList);
+    // 승인 대기 신청이 있는 모임만 상단 알림 상태에 반영한다
+    setPendingApplications(applicationResults.filter(hasPendingSummary));
   }, []);
 
   /**
@@ -205,9 +272,9 @@ export const useMyClubPage = () => {
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handleInvitationToggle = (): void => {
-    // 현재 상태의 반대로 초대 상세 목록을 전환한다
-    setIsInvitationOpen(!isInvitationOpen);
+  const handleNoticeToggle = (): void => {
+    // 현재 상태의 반대로 모임 알림 상세 목록을 전환한다
+    setIsNoticeOpen(!isNoticeOpen);
   };
 
   /**
@@ -320,9 +387,10 @@ export const useMyClubPage = () => {
   return {
     clubs,
     invitations,
-    isInvitationOpen,
+    pendingApplications,
+    isNoticeOpen,
     isLoading,
-    handleInvitationToggle,
+    handleNoticeToggle,
     handleClubKeyDown,
     handleClubClick,
     handleAcceptInvitation,

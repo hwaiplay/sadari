@@ -72,25 +72,55 @@ export const invitationSummaryText = style({
 export const invitationSummaryAction = style({display: "flex", justifyContent: "flex-end"});
 
 export const quickButton = style({
-  minHeight: 26,
-  padding: "5px 14px",
+  minWidth: 0,
+  height: 26,
+  padding: "0 14px",
   border: 0,
   borderRadius: 200,
   background: vars.color.brandBg,
   color: vars.color.brandText,
-  fontFamily: vars.font.medium,
-  fontSize: 14,
   lineHeight: 1,
-  letterSpacing: "-0.14px",
-  cursor: "pointer",
   selectors: {
-    "&:hover": {filter: "brightness(0.98)"},
-    "&:focus-visible": {outline: `2px solid ${vars.color.brand}`, outlineOffset: 2},
+    "&:hover:not(:disabled)": {background: "#d9f2e1"},
   },
 });
 
 export const invitationDetail = style({marginTop: 26, display: "flex", flexDirection: "column", gap: 14});
 export const invitationList = style({display: "flex", flexDirection: "column", gap: 10});
+export const applicationList = style({display: "flex", flexDirection: "column", gap: 10});
+export const applicationItem = style({
+  minHeight: 54,
+  padding: "0 18px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 18,
+  background: vars.color.background,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "space-between",
+  gap: 12,
+  color: vars.color.black,
+  textDecoration: "none",
+  selectors: {
+    "&:hover": {background: vars.color.gray100},
+    "&:focus-visible": {outline: `2px solid ${vars.color.brand}`, outlineOffset: 2},
+  },
+});
+export const applicationClubName = style({
+  minWidth: 0,
+  overflow: "hidden",
+  fontFamily: vars.font.semibold,
+  fontSize: 14,
+  lineHeight: 1.35,
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
+export const applicationCount = style({
+  flexShrink: 0,
+  color: vars.color.brandText,
+  fontFamily: vars.font.medium,
+  fontSize: 14,
+  lineHeight: 1.35,
+});
 export const invitationItem = style({
   padding: "16px 18px",
   border: `1px solid ${vars.color.gray300}`,
