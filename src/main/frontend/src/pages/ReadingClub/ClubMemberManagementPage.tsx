@@ -91,7 +91,6 @@ export default function ClubMemberManagementPage() {
     applications,
     candidates,
     club,
-    exitReason,
     isInviteOpen,
     isLoading,
     isSubmitting,
@@ -106,10 +105,7 @@ export default function ClubMemberManagementPage() {
     handleInviteClose,
     handleInviteOpen,
     handleInviteSubmit,
-    handleExitClose,
     handleExitOpen,
-    handleExitReasonChange,
-    handleMemberExit,
   } = useClubMemberManage();
   const { clubNumb } = useParams<{ clubNumb: string }>();
 
@@ -411,7 +407,7 @@ export default function ClubMemberManagementPage() {
             </span>
             <img className={styles.menuChevron} src="/img/icons/icon-chevron-right.svg" alt="" />
           </button>
-          <Link className={styles.restrictionButton} to={`/reading-clubs/${clubNumb}/manage/member-restrictions`}>
+          <Link className={styles.restrictionButton} to={`/reading-clubs/manage/member-restrictions/${clubNumb}`}>
             <strong className={styles.restrictionTitle}>
               {/* "퇴장 내역 및 제한" */}
               {message("frontend.readingClub.memberManage.restrictions")}
@@ -451,59 +447,6 @@ export default function ClubMemberManagementPage() {
               <ActionButton variant="danger" width="half" disabled={isSubmitting} onClick={handleReject}>
                 {/* "거절" */}
                 {message("frontend.readingClub.detail.reject")}
-              </ActionButton>
-            </div>
-          </section>
-        </div>,
-        document.body,
-      ) : null}
-
-      {/* 활성 일반 멤버 퇴장 사유 입력 모달 영역 */}
-      {selectedMember ? createPortal(
-        <div className={styles.overlay} role="presentation">
-          <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="member-exit-title">
-            <div className={styles.modalHeader}>
-              <h2 className={styles.modalTitle} id="member-exit-title">
-                {message("frontend.readingClub.memberManage.exitTitle", [selectedMember.userNick ?? "-"])}
-              </h2>
-              <button
-                className={styles.closeButton}
-                type="button"
-                aria-label={message("frontend.common.close")}
-                disabled={isSubmitting}
-                onClick={handleExitClose}
-              >
-                <img className={styles.closeIcon} src="/img/icons/icon-close.svg" alt="" />
-              </button>
-            </div>
-            <p className={styles.exitDescription}>
-              {message("frontend.readingClub.memberManage.exitDescription")}
-            </p>
-            <label className={styles.exitField}>
-              <span className={styles.exitLabel}>
-                {message("frontend.readingClub.memberManage.exitReasonLabel")}
-              </span>
-              <textarea
-                className={styles.exitTextarea}
-                value={exitReason}
-                maxLength={500}
-                placeholder={message("frontend.readingClub.memberManage.exitReasonPlaceholder")}
-                disabled={isSubmitting}
-                onChange={(event) => handleExitReasonChange(event.target.value)}
-              />
-              <small className={styles.exitCount}>{exitReason.length}/500</small>
-            </label>
-            <div className={styles.modalActions}>
-              <ActionButton variant="secondary" width="half" disabled={isSubmitting} onClick={handleExitClose}>
-                {message("frontend.common.cancel")}
-              </ActionButton>
-              <ActionButton
-                variant="danger"
-                width="half"
-                disabled={isSubmitting || !exitReason.trim()}
-                onClick={handleMemberExit}
-              >
-                {message("frontend.readingClub.memberManage.exitConfirm")}
               </ActionButton>
             </div>
           </section>

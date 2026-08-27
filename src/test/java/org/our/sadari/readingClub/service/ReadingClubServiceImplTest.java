@@ -1095,7 +1095,7 @@ class ReadingClubServiceImplTest {
     }
 
     /**
-     * 모임장이 활성 일반 멤버를 퇴장시키고 사유 알림을 발송하는지 검증한다.
+     * 모임장이 활성 일반 멤버를 퇴장시키고 알림을 발송하는지 검증한다.
      *
      * @author HanWon.Jang
      */
@@ -1106,12 +1106,8 @@ class ReadingClubServiceImplTest {
         club.setOwnrNumb(20L);
         club.setClubStat("ACTIVE");
         club.setClubName("함께 읽는 모임");
-        // 필수 퇴장 사유를 포함한 요청을 구성한다
-        ReadingClubDto.MemberExitReqDto request = new ReadingClubDto.MemberExitReqDto();
-        request.setExitReason("운영 규칙을 반복해서 위반했어요.");
 
         // 권한과 활성 멤버 변경 및 알림 저장이 모두 성공하도록 구성한다
-        when(badWordDetectionService.findBadWord(request.getExitReason())).thenReturn(Optional.empty());
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.uptMemberExit(20L, 10L, 30L)).thenReturn(1);
         when(alimService.sendAlim(
@@ -1121,13 +1117,13 @@ class ReadingClubServiceImplTest {
               , Constant.ALIM_TARGET_READING_CLUB
               , 10L
               , null
-              , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
+              , Map.of("clubName", "함께 읽는 모임")
         )).thenReturn(ResultData.success());
 
         // 모임장이 선택한 일반 멤버의 퇴장을 요청한다
-        ResultData result = readingClubService.delMember(20L, 10L, 30L, request);
+        ResultData result = readingClubService.delMember(20L, 10L, 30L);
 
-        // 퇴장 상태 변경과 사유 알림이 함께 처리됐는지 검증한다
+        // 퇴장 상태 변경과 알림이 함께 처리됐는지 검증한다
         assertEquals(200, result.getCode());
         verify(readingClubMapper).uptMemberExit(20L, 10L, 30L);
         verify(alimService).sendAlim(
@@ -1137,7 +1133,7 @@ class ReadingClubServiceImplTest {
               , Constant.ALIM_TARGET_READING_CLUB
               , 10L
               , null
-              , Map.of("clubName", "함께 읽는 모임", "exitReason", request.getExitReason())
+              , Map.of("clubName", "함께 읽는 모임")
         );
     }
 
@@ -1152,16 +1148,12 @@ class ReadingClubServiceImplTest {
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         club.setOwnrNumb(20L);
         club.setClubStat("ACTIVE");
-        // 필수 퇴장 사유를 포함한 요청을 구성한다
-        ReadingClubDto.MemberExitReqDto request = new ReadingClubDto.MemberExitReqDto();
-        request.setExitReason("테스트 사유");
 
-        // 사유 검증은 통과하지만 퇴장 대상이 모임장 본인이 되도록 구성한다
-        when(badWordDetectionService.findBadWord(request.getExitReason())).thenReturn(Optional.empty());
+        // 퇴장 대상이 모임장 본인이 되도록 구성한다
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
 
         // 모임장이 자신을 퇴장시키는 요청을 처리한다
-        ResultData result = readingClubService.delMember(20L, 10L, 20L, request);
+        ResultData result = readingClubService.delMember(20L, 10L, 20L);
 
         // 접근 거절과 관계 상태 미변경을 검증한다
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());

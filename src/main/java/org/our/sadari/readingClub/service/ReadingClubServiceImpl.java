@@ -934,31 +934,15 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 모임 번호
      * @param targetUserNumb 퇴장 대상 사용자 번호
-     * @param request 퇴장 사유
      * @return 모임원 퇴장 결과
      */
     @Override
     @Transactional
-    public ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
-                               , ReadingClubDto.MemberExitReqDto request) {
-        // 퇴장 처리에 필요한 식별값과 요청 본문을 검증한다
-        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb, request)) {
+    public ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb) {
+        // 퇴장 처리에 필요한 식별값을 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
-
-        // 필수 퇴장 사유의 앞뒤 공백을 제거하고 최대 길이를 서버에서도 제한한다
-        String exitReason = request.getExitReason() == null ? "" : request.getExitReason().trim();
-        // 비어 있거나 허용 길이를 초과한 사유는 저장 처리에 사용하지 않는다
-        if (exitReason.isEmpty() || exitReason.length() > 500) {
-            // "요청값이 올바르지 않아요."
-            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-        }
-
-        // 퇴장 사유에 비속어가 포함되면 관계 상태를 변경하지 않는다
-        if (badWordDetectionService.findBadWord(exitReason).isPresent()) {
-            // "욕설이나 비속어는 사용할 수 없어요. 감지된 단어: 퇴장 사유"
-            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, "퇴장 사유");
         }
 
         // 권한과 대상 상태 검증 및 동시 퇴장 요청을 직렬화하도록 모임 마스터 행을 잠근다
@@ -976,7 +960,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 퇴장 대상에게 모임명과 필수 사유가 포함된 알림을 저장하고 푸시를 예약한다
+        // 퇴장 대상에게 모임명이 포함된 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 targetUserNumb
               , Constant.ALIM_SITU_REJECTED
@@ -984,8 +968,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
               , Constant.ALIM_TARGET_READING_CLUB
               , clubNumb
               , null
-              , Map.of("clubName", club.getClubName(), "exitReason", exitReason)
+              , Map.of("clubName", club.getClubName())
         );
+
         // 알림 저장에 실패하면 퇴장 관계만 확정되지 않도록 전체 트랜잭션을 롤백한다
         if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
             // "수정에 실패했어요. 다시 시도해주세요."

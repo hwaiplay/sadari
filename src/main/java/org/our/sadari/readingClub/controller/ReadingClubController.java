@@ -187,16 +187,14 @@ public class ReadingClubController {
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 모임 번호
      * @param targetUserNumb 퇴장 대상 사용자 번호
-     * @param request 필수 퇴장 사유
      * @return 모임원 퇴장 결과
      */
     @DeleteMapping("/{clubNumb}/members/{targetUserNumb}")
     @Operation(summary = "모임원 강제 퇴장")
     public ResultData delMember(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
-                               , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb
-                               , @Valid @RequestBody ReadingClubDto.MemberExitReqDto request) {
+                               , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
         // 모임장 권한과 활성 멤버 상태를 검증한 퇴장 결과를 반환한다
-        return readingClubService.delMember(userNumb, clubNumb, targetUserNumb, request);
+        return readingClubService.delMember(userNumb, clubNumb, targetUserNumb);
     }
 
     /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */

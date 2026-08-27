@@ -209,11 +209,9 @@ public interface ReadingClubService {
      * @param userNumb 모임장 사용자 번호
      * @param clubNumb 모임 번호
      * @param targetUserNumb 퇴장 대상 사용자 번호
-     * @param request 퇴장 사유
      * @return 모임원 퇴장 결과
      */
-    ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
-                        , ReadingClubDto.MemberExitReqDto request);
+    ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb);
 
     /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
     ResultData getMemberExitList(Long userNumb, Long clubNumb);

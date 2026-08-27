@@ -233,7 +233,7 @@ export const inviteOverlay = style([
 // 답변보기 모달
 export const modal = style({
   display: "flex",
-  width: "calc(100% - 32px)",
+  width: "100%",
   maxWidth: 600,
   maxHeight: "calc(100dvh - 48px)",
   flexDirection: "column",
@@ -362,51 +362,6 @@ export const exitDescription = style({
   fontSize: 14,
   lineHeight: "20px",
   whiteSpace: "pre-line",
-});
-
-export const exitField = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: 8,
-});
-
-export const exitLabel = style({
-  color: vars.color.black,
-  fontFamily: vars.font.semibold,
-  fontSize: 16,
-  lineHeight: "20px",
-});
-
-export const exitTextarea = style({
-  width: "100%",
-  minHeight: 116,
-  resize: "none",
-  padding: 14,
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: 14,
-  boxSizing: "border-box",
-  background: vars.color.background,
-  color: vars.color.black,
-  fontFamily: vars.font.body,
-  fontSize: 14,
-  lineHeight: "20px",
-  selectors: {
-    "&:focus-visible": {
-      boxShadow: "0 0px 10px rgba(0, 0, 0, 0.10)",
-      outline: "none"
-    },
-    "&::placeholder": {
-      color: vars.color.gray500,
-    },
-  },
-});
-
-export const exitCount = style({
-  alignSelf: "flex-end",
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: 12,
-  lineHeight: "16px",
 });
 
 export const candidateList = style({

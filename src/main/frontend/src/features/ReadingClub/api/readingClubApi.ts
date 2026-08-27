@@ -504,18 +504,14 @@ export const getClubApplicationListApi = async (clubNumb: number): Promise<ClubA
  * @author HanWon.Jang
  * @param clubNumb 모임 번호
  * @param userNumb 퇴장 대상 사용자 번호
- * @param exitReason 필수 퇴장 사유
  * @return 처리 응답
  */
 export const exitClubMemberApi = async (
   clubNumb: number,
   userNumb: number,
-  exitReason: string,
 ) => {
-  // DELETE 요청 본문에 퇴장 사유를 포함해 모임원 관계 변경을 요청한다
-  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}`, {
-    data: { exitReason },
-  });
+  // 선택한 모임원의 관계 상태 변경을 요청한다
+  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}`);
   // 공통 성공 검증을 통과한 퇴장 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
