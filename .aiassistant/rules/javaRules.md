@@ -93,6 +93,8 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 
 - 외부 API 통신과 비동기 처리 전후에는 예외 경로를 포함한 처리 흐름을 명확히 작성합니다.
 - 사용자에게 반환하는 실패 응답은 원시 예외를 노출하지 않고 프로젝트 공통 응답과 메시지를 사용합니다.
+- 전역 데이터베이스 연결 장애는 `CannotGetJdbcConnectionException`, JDBC 연결 예외 또는 SQLState `08`처럼 데이터베이스 계층임을 확인할 수 있는 근거가 있을 때만 판정합니다.
+- `ConnectException`, `SocketTimeoutException` 및 외부 HTTP 클라이언트의 연결 실패는 단독으로 데이터베이스 장애로 분류하지 않습니다.
 
 ### 3.5 본인용과 타인용 공용 조회
 
@@ -327,8 +329,7 @@ public UserDto getUserDtl(String userId) {
 // 예외 체인에 데이터베이스 연결 장애를 나타내는 예외가 포함되어 있는지 확인한다
 if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
         || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
-        || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
-        || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
+        || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)) {
     // 데이터베이스 연결 실패로 판정한다
     return true;
 }

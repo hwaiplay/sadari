@@ -1,9 +1,7 @@
 const CACHE_PREFIX = "sadari-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}v5`;
-const SERVER_ERROR_PAGE = "/error/500.html";
+const CACHE_NAME = `${CACHE_PREFIX}v6`;
 const APP_SHELL = [
   "/",
-  SERVER_ERROR_PAGE,
   "/favicon/site.webmanifest",
   "/favicon/favicon.ico?v=20260802",
   "/favicon/android-chrome-192x192.png?v=20260802",
@@ -323,19 +321,6 @@ const getNavigationResponse = async (request) => {
   // 네트워크가 연결된 동안 최신 배포 화면을 조회한다
   try {
     const response = await fetch(request);
-
-    // 서버가 문서 요청을 처리하지 못하면 Chrome 기본 오류 대신 캐시된 서비스 장애 화면을 제공한다
-    if (response.status >= 500 && response.status < 600) {
-      // 서비스 워커 설치 시 저장한 독립 오류 문서를 조회한다
-      const cachedErrorResponse = await caches.match(SERVER_ERROR_PAGE);
-
-      // 오류 문서가 준비되어 있으면 React 실행 여부와 관계없이 동일한 안내 화면을 반환한다
-      if (cachedErrorResponse) {
-        // 현재 서버 5xx 응답을 사용자 안내가 포함된 독립 오류 문서로 교체한다
-        return cachedErrorResponse;
-      }
-
-    }
 
     // 정상 응답만 오프라인 앱 셸로 교체해 오류 화면이 장기간 남지 않게 한다
     if (response.ok) {

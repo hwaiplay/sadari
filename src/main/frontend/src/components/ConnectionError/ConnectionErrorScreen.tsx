@@ -2,7 +2,7 @@ import { useCallback, useEffect, useSyncExternalStore } from "react";
 import { message } from "@/app/messages/message";
 import {
   getConnectionStatus,
-  publishConnectionError,
+  publishConnectionRestore,
   subscribeConnection,
 } from "@/app/connection/connectionStatus";
 import { ActionButton } from "@/components/Button/ActionButton";
@@ -23,14 +23,14 @@ export const ConnectionErrorScreen = () => {
   );
 
   /**
-   * 브라우저 인터넷 연결이 끊기면 전역 연결 장애 상태를 설정한다
+   * 브라우저 인터넷 연결이 복구되면 오프라인으로 열린 전역 안내 화면을 해제한다
    *
    * @author HanWon.Jang
    * @return 반환값이 없다
    */
-  const handleOffline = useCallback((): void => {
-    // API 요청이 없는 화면에서도 인터넷 단절을 즉시 안내한다
-    publishConnectionError();
+  const handleOnline = useCallback((): void => {
+    // JDBC 장애 화면은 유지하면서 브라우저 오프라인 상태만 정상 화면으로 복구한다
+    publishConnectionRestore("offline");
   }, []);
 
   /**
@@ -45,14 +45,14 @@ export const ConnectionErrorScreen = () => {
   }, []);
 
   /**
-   * 앱이 열린 동안 브라우저 오프라인 이벤트를 연결하고 화면 해제 시 정리한다
+   * 앱이 열린 동안 브라우저 온라인 이벤트를 연결하고 화면 해제 시 정리한다
    *
    * @author HanWon.Jang
-   * @return 브라우저 오프라인 이벤트 정리 함수
+   * @return 브라우저 온라인 이벤트 정리 함수
    */
   const syncBrowserEvents = useCallback((): (() => void) => {
-    // API 호출이 없더라도 인터넷 단절을 감지하도록 브라우저 이벤트를 등록한다
-    window.addEventListener("offline", handleOffline);
+    // 인터넷이 복구되면 새로고침 없이 오프라인 안내 화면을 해제하도록 이벤트를 등록한다
+    window.addEventListener("online", handleOnline);
 
     /**
      * 연결 장애 화면 감지에 사용한 브라우저 이벤트를 제거한다
@@ -61,15 +61,15 @@ export const ConnectionErrorScreen = () => {
      * @return 반환값이 없다
      */
     const clearBrowserEvents = (): void => {
-      // 컴포넌트 해제 이후 오프라인 이벤트가 남지 않도록 정리한다
-      window.removeEventListener("offline", handleOffline);
+      // 컴포넌트 해제 이후 온라인 이벤트가 남지 않도록 정리한다
+      window.removeEventListener("online", handleOnline);
     };
 
     // 현재 컴포넌트에 등록한 브라우저 이벤트 정리 함수를 반환한다
     return clearBrowserEvents;
-  }, [handleOffline]);
+  }, [handleOnline]);
 
-  // 앱 생명주기와 브라우저 인터넷 단절 감지를 연결한다
+  // 앱 생명주기와 브라우저 인터넷 복구 감지를 연결한다
   useEffect(syncBrowserEvents, [syncBrowserEvents]);
 
   // 연결 장애가 없으면 기존 앱 화면과 조작을 그대로 유지한다

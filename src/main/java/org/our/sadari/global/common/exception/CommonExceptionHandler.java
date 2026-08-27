@@ -1,7 +1,5 @@
 package org.our.sadari.global.common.exception;
 
-import java.net.ConnectException;
-import java.net.SocketTimeoutException;
 import java.sql.SQLException;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLRecoverableException;
@@ -36,6 +34,7 @@ import org.springframework.web.multipart.MultipartException;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
+ * 2026-08-27        HanWon.Jang         JDBC 장애 판정 범위 제한
  */
 @RestControllerAdvice
 @RequiredArgsConstructor
@@ -245,11 +244,10 @@ public class CommonExceptionHandler {
         // 예외 체인에서 데이터베이스 예외를 찾는다
         SQLException sqlException = findSqlException(throwable);
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+        // Spring과 JDBC가 명시한 데이터베이스 연결 예외만 전역 DB 장애로 처리한다
         if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
                 || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
-                || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)
-                || hasCause(throwable, ConnectException.class) || hasCause(throwable, SocketTimeoutException.class)) {
+                || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)) {
             // 예외 원인 체인에서 확인한 DB 연결 실패 판정값을 반환한다
             return true;
         }

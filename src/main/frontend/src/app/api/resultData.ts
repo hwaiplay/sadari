@@ -60,26 +60,27 @@ export function assertResultDataSuccess<T extends ResultData>(result: T): T {
  * @param fallbackMessage fallback Message 입력값
  * @return 처리 결과
  */
-export function getApiErrorMessage(error: unknown, fallbackMessage: string) {
-
+export const getApiErrorMessage = (error: unknown, fallbackMessage: string): string => {
+  // 공통 응답 검증에서 확인한 업무 실패는 서버가 제공한 메시지를 우선 사용한다
   if (error instanceof ResultDataError) {
+    // 비어 있는 서버 메시지는 화면별 공통 오류 문구로 보정한다
     return error.message || fallbackMessage;
   }
 
+  // Axios 응답은 서버가 명시한 공통 실패 코드와 메시지를 기준으로 안내한다
   if (isAxiosError<ResultData>(error)) {
     const resultCode = Number(error.response?.data?.code);
 
-    /*
-     * 서버가 DB 연결 실패를 ResultData로 내려준 경우와 브라우저가 1분 timeout으로 요청을 끊은 경우 모두
-     * 사용자에게 같은 원인 메시지를 보여준다. timeout은 서버가 응답하지 못하는 대표 케이스라 DB 장애 화면과 같은 문구로 안내한다.
-     */
-    if (resultCode === DB_CONNECTION_FAILED_CODE || error.code === "ECONNABORTED") {
+    // 서버가 JDBC 연결 실패로 확정한 경우에만 데이터베이스 전용 문구를 사용한다
+    if (resultCode === DB_CONNECTION_FAILED_CODE) {
       // "데이터베이스에 연결할 수 없어요. 잠시 후 다시 시도해주세요."
       return message("frontend.common.databaseConnectionFailed");
     }
 
+    // 일반 5xx와 타임아웃 및 네트워크 오류에는 서버 메시지나 화면별 대체 문구를 사용한다
     return error.response?.data?.message ?? fallbackMessage;
   }
 
+  // API 응답으로 분류할 수 없는 오류에는 화면별 공통 오류 문구를 사용한다
   return fallbackMessage;
-}
+};
