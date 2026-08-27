@@ -115,7 +115,7 @@ export function useSetClubReadingPage() {
   );
   const [startDate, setStartDate] = useState("");
   const [endDate, setEndDate] = useState("");
-  const [isLoading, setIsLoading] = useState(isEditMode);
+  const [isLoading, setIsLoading] = useState(true);
   const [isPending, setIsPending] = useState(false);
   const [bookChangeAllowed, setBookChangeAllowed] = useState(!isEditMode);
   const idempotencyKeyRef = useRef(
@@ -130,17 +130,10 @@ export function useSetClubReadingPage() {
 
   useEffect(() => {
 
-    // 등록 화면은 검색에서 전달된 도서를 그대로 사용하므로 상세 조회가 필요하지 않다
-    if (!isEditMode) {
-      setSelectedBook(locationBook);
-      // 등록 화면 초기화를 마치고 수정 상세 조회를 실행하지 않는다
-      return;
-    }
-
-    // 잘못된 수정 URL은 API를 호출하지 않고 내 모임 목록으로 이동한다
-    if (!hasValidClubNumb || !hasValidRondNumb) {
+    // 잘못된 등록 또는 수정 URL은 API를 호출하지 않고 내 모임 목록으로 이동한다
+    if (!hasValidClubNumb || (isEditMode && !hasValidRondNumb)) {
       navigate("/reading-clubs/mine", { replace: true });
-      // 잘못된 경로의 수정 초기화를 종료한다
+      // 잘못된 경로의 화면 초기화를 종료한다
       return;
     }
 
@@ -148,13 +141,25 @@ export function useSetClubReadingPage() {
     // 서버의 최신 모임장 권한과 현재 회차 및 도서 변경 가능 여부를 기준으로 화면을 초기화한다
     void getClubDtlApi(clubNumb)
       .then((club) => {
-        const currentBook = toBookSearchResult(club);
-        if (club.membRole !== "OWNER" || club.currentRondNumb !== rondNumb || !currentBook) {
+        // 등록과 수정 화면 모두 서버가 반환한 최신 모임장 권한으로 접근을 제한한다
+        if (club.membRole !== "OWNER") {
           throw new Error(message("frontend.readingClub.reading.invalidManagement"));
         }
         if (!isMounted) {
           // 화면을 벗어난 뒤 도착한 상세 응답은 상태에 반영하지 않는다
           return;
+        }
+
+        // 등록 화면은 권한 확인을 마친 뒤 검색에서 선택한 도서를 표시한다
+        if (!isEditMode) {
+          setSelectedBook(locationBook);
+          // 수정 화면 전용 현재 회차 초기화를 실행하지 않는다
+          return;
+        }
+
+        const currentBook = toBookSearchResult(club);
+        if (club.currentRondNumb !== rondNumb || !currentBook) {
+          throw new Error(message("frontend.readingClub.reading.invalidManagement"));
         }
 
         const canChangeBook = club.currentBookChangeAllowed === true;
@@ -219,7 +224,7 @@ export function useSetClubReadingPage() {
       // 잠긴 회차의 도서 검색 이동을 종료한다
       return;
     }
-    navigate(`/reading-clubs/${clubNumb}/books/search`, {
+    navigate(`/reading-clubs/books/search/${clubNumb}`, {
       state: {
         keepSearchResult: true,
         clubReadingEditRondNumb: isEditMode ? rondNumb : undefined,

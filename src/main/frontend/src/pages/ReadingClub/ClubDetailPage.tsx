@@ -22,7 +22,7 @@ import * as styles from "./ClubDetailPage.css";
 
 // 모임 상세에 한 번에 표시할 프로필 이미지 수를 제한한다
 const MEMBER_PROFILE_VISIBLE_LIMIT = 10;
-type ClubDetailAction = "" | "EDIT" | "DELETE";
+type ClubDetailAction = "" | "UPDATE" | "DELETE";
 
 /**
  * 모임원 한 명의 프로필 이미지 항목을 표시한다
@@ -130,7 +130,7 @@ export default function ClubDetailPage() {
         : message("frontend.readingClub.detail.readingParticipationUnavailable");
   const clubActionOptions: readonly CustomSelectOption<ClubDetailAction>[] = [
     {
-      value: "EDIT",
+      value: "UPDATE",
       label: /* "수정하기" */ message("frontend.common.update"),
       disabled: isDeleting,
     },
@@ -262,8 +262,10 @@ export default function ClubDetailPage() {
                   </div>
                 ) : (
                   <div className={styles.readingEmpty}>
-                    {/* 현재 독서가 없으면 공통 책 검색 버튼으로 검색 화면에 이동한다 */}
-                    <SearchBookButton to={`/reading-clubs/${club.clubNumb}/books/search`} />
+                    {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공한다 */}
+                    {club.membRole === "OWNER" ? (
+                      <SearchBookButton to={`/reading-clubs/${club.clubNumb}/books/search`} />
+                    ) : null}
                     <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
                   </div>
                 )}
