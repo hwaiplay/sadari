@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 적용
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
+ * 2026-08-27        SeungHyeon.Kang    대상별 댓글 좋아요와 답글 다중 수신자 알림 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -417,7 +418,7 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 신규 댓글 또는 대댓글 좋아요의 커밋 이후 알림 이벤트를 등록한다.
+     * 신규 댓글 또는 답글 좋아요의 대상 유형별 커밋 이후 알림 이벤트를 등록한다.
      * 본인 댓글 좋아요와 작성자를 확인할 수 없는 댓글은 이벤트를 만들지 않는다.
      *
      * @author HanWon.Jang
@@ -432,9 +433,12 @@ public class ReplyServiceImpl implements ReplyService {
             return;
         }
 
-        // 사진 댓글 좋아요는 사진 전용 이동 템플릿이 없는 1차 범위에서 알림을 생성하지 않는다
-        if (!StringUtil.isEmpty(likeTarget.getTagtType())
-                && !Constant.LIKE_TARGET_REPORT.equals(likeTarget.getTagtType())) {
+        // 댓글이 연결된 원본 콘텐츠 유형에 대응하는 알림 템플릿 코드를 선택한다
+        String templateCode = resolveReplyLikeTemplate(likeTarget.getTagtType());
+
+        // 지원하지 않는 댓글 대상 유형이면 잘못된 링크를 가진 알림을 만들지 않는다
+        if (StringUtil.isEmpty(templateCode)) {
+            // 대상별 댓글 좋아요 알림 처리 없이 호출부로 반환한다
             return;
         }
 
@@ -452,33 +456,51 @@ public class ReplyServiceImpl implements ReplyService {
                 : likeTarget.getTagtNumb();
 
         // 댓글 좋아요 응답 경로에서 알림 DB와 FCM 접근을 제거할 커밋 이후 이벤트를 생성한다
-        LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb(), Constant.ALIM_TEMP_CODE_REPLY_LIKE, replyTargetNumb, sendUserNick);
+        LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb(), templateCode, replyTargetNumb, sendUserNick);
         // 댓글 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록한다
         likeAlimPublisher.setLikeAlim(event);
     }
 
     /**
-     * 독후감 작성자에게 댓글 작성자의 닉네임과 독후감 이동 링크가 포함된 알림을 발송한다.
-     * 작성자가 자기 독후감에 직접 등록한 댓글은 자기 자신에게 알림을 만들지 않는다.
+     * 콘텐츠 소유자와 부모 댓글 작성자에게 댓글 작성자의 닉네임 및 대상별 이동 링크가 포함된 알림을 발송한다.
+     * 자기 알림과 동일한 수신자는 제외하고 콘텐츠 소유자의 알림 설정을 적용한다.
      *
      * @author HanWon.Jang
      * @param sendUserNumb 댓글을 등록한 사용자 번호
      * @param replyDto 등록된 댓글과 독후감 번호
      */
     private void sendReplyTargetAlim(Long sendUserNumb, ReplyDto replyDto) {
-        // 댓글이 등록된 독후감의 작성자와 댓글 알림 설정을 조회한다
+        // 댓글 대상 소유자와 부모 댓글 작성자 및 대상별 알림 정보를 조회한다
         ReplyDto reportAlim = replyMapper.getReplyReportAlimDtl(replyDto);
 
-        // 독후감 작성자를 확인할 수 없거나 작성자가 직접 댓글을 등록했으면 알림을 만들지 않는다
-        if (StringUtil.isEmpty(reportAlim) || StringUtil.isEmpty(reportAlim.getTargetUserNumb())
-                || reportAlim.getTargetUserNumb().equals(sendUserNumb)) {
-            // 독후감 댓글 등록 알림 처리 없이 호출부로 반환한다
+        // 알림 대상 정보를 확인할 수 없으면 불완전한 알림을 만들지 않는다
+        if (StringUtil.isEmpty(reportAlim)) {
+            // 댓글 등록 알림 처리 없이 호출부로 반환한다
             return;
         }
 
-        // 독후감 작성자가 댓글 알림을 껐으면 알림 저장과 푸시 예약을 모두 생략한다
-        if (!Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())) {
-            // 독후감 댓글 등록 알림 처리 없이 호출부로 반환한다
+        // 동일 사용자의 중복 알림을 제거하면서 콘텐츠 소유자와 부모 댓글 작성자 순서를 유지한다
+        Set<Long> recipientSet = new LinkedHashSet<>();
+
+        // 콘텐츠 소유자가 댓글 알림을 허용했고 발신자와 다르면 첫 번째 수신자로 추가한다
+        if (Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())
+                && !StringUtil.isEmpty(reportAlim.getTargetUserNumb())
+                && !reportAlim.getTargetUserNumb().equals(sendUserNumb)) {
+            // 대상 소유자에게 직접 댓글 또는 답글 알림을 발송하도록 수신자에 추가한다
+            recipientSet.add(reportAlim.getTargetUserNumb());
+        }
+
+        // 답글인 경우 부모 댓글 작성자가 발신자와 콘텐츠 소유자와 다를 때 별도 수신자로 추가한다
+        if (!StringUtil.isEmpty(reportAlim.getParentUserNumb())
+                && !reportAlim.getParentUserNumb().equals(sendUserNumb)
+                && !reportAlim.getParentUserNumb().equals(reportAlim.getTargetUserNumb())) {
+            // 부모 댓글 작성자에게 자신이 받은 답글 알림을 발송하도록 수신자에 추가한다
+            recipientSet.add(reportAlim.getParentUserNumb());
+        }
+
+        // 자기 알림과 중복 제거 뒤 수신자가 없으면 알림 저장과 푸시 예약을 생략한다
+        if (recipientSet.isEmpty()) {
+            // 댓글 등록 알림 처리 없이 호출부로 반환한다
             return;
         }
 
@@ -500,24 +522,52 @@ public class ReplyServiceImpl implements ReplyService {
         String templateCode = StringUtil.isEmpty(reportAlim.getAlimTempCode())
                 ? Constant.ALIM_TEMP_CODE_REPLY_REPORT
                 : reportAlim.getAlimTempCode();
-        // 사진 댓글 템플릿은 완성된 마이페이지 링크이므로 상세 번호를 덧붙이지 않는다
-        boolean isImageTarget = Constant.LIKE_TARGET_PROFILE_IMAGE.equals(replyDto.getTagtType())
-                || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(replyDto.getTagtType());
-        // 독후감 댓글에만 기존 상세 번호를 유지하고 사진 댓글은 템플릿 링크만 사용한다
-        Long notificationTarget = isImageTarget
-                ? null
-                : (StringUtil.isEmpty(reportAlim.getAlimTagtNumb())
-                        ? replyDto.getTagtNumb()
-                        : reportAlim.getAlimTagtNumb());
+        // 모든 대상별 템플릿이 원본 콘텐츠 번호를 직접 링크에 배치하도록 이동 대상 번호를 결정한다
+        Long notificationTarget = StringUtil.isEmpty(reportAlim.getAlimTagtNumb())
+                ? replyDto.getTagtNumb()
+                : reportAlim.getAlimTagtNumb();
 
-        // 대상 소유자에게 댓글 알림을 저장하고 템플릿에 정의된 화면 링크로 푸시를 예약한다
-        alimService.sendAlim(
-                reportAlim.getTargetUserNumb()
-              , Constant.ALIM_SITU_REPLY
-              , templateCode
-              , notificationTarget
-              , replaceMap
-        );
+        // 중복 제거된 각 수신자에게 같은 원본 콘텐츠로 이동하는 댓글 알림을 저장하고 푸시를 예약한다
+        for (Long recipientNumb : recipientSet) {
+            // 현재 수신자에게 대상 유형별 댓글 알림을 발송한다
+            alimService.sendAlim(
+                    recipientNumb
+                  , Constant.ALIM_SITU_REPLY
+                  , templateCode
+                  , notificationTarget
+                  , replaceMap
+            );
+        }
+    }
+
+    /**
+     * 댓글이 연결된 원본 콘텐츠 유형에 대응하는 댓글 좋아요 알림 템플릿 코드를 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param tagtType 댓글의 원본 콘텐츠 유형
+     * @return 대상별 댓글 좋아요 템플릿 코드이며 지원하지 않는 유형이면 null
+     */
+    private String resolveReplyLikeTemplate(String tagtType) {
+        // 독후감 댓글 좋아요는 독후감 상세 댓글 목록으로 이동하는 템플릿을 사용한다
+        if (Constant.LIKE_TARGET_REPORT.equals(tagtType)) {
+            // 독후감 댓글 좋아요 템플릿 코드를 반환한다
+            return Constant.ALIM_TEMP_CODE_REPLY_LIKE;
+        }
+
+        // 프로필 사진 댓글 좋아요는 해당 사진 피드로 이동하는 템플릿을 사용한다
+        if (Constant.LIKE_TARGET_PROFILE_IMAGE.equals(tagtType)) {
+            // 프로필 사진 댓글 좋아요 템플릿 코드를 반환한다
+            return Constant.ALIM_TEMP_CODE_REPLY_LIKE_PROFILE;
+        }
+
+        // 배경사진 댓글 좋아요는 해당 사진 피드로 이동하는 템플릿을 사용한다
+        if (Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(tagtType)) {
+            // 배경사진 댓글 좋아요 템플릿 코드를 반환한다
+            return Constant.ALIM_TEMP_CODE_REPLY_LIKE_BACKGROUND;
+        }
+
+        // 지원하지 않는 댓글 대상 유형에는 알림 템플릿을 제공하지 않는다
+        return null;
     }
 
     /**

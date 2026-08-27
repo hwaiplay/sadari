@@ -148,7 +148,7 @@ class SocialServiceImplTest {
     }
 
     /**
-     * 프로필 사진 좋아요 알림이 템플릿의 완성 링크를 사용하도록 상세 번호 없이 발송되는지 검증한다.
+     * 프로필 사진 좋아요 알림이 대상별 피드 링크에 해당 사진 번호를 전달하는지 검증한다.
      *
      * @author HanWon.Jang
      */
@@ -188,8 +188,8 @@ class SocialServiceImplTest {
         assertEquals(31L, eventCaptor.getValue().getTargetUserNumb());
         // 사진 좋아요 템플릿 코드를 확인한다
         assertEquals(Constant.ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE, eventCaptor.getValue().getTempCode());
-        // 사진 알림은 템플릿의 완성 링크를 사용하도록 대상 번호를 추가하지 않는지 확인한다
-        assertNull(eventCaptor.getValue().getTagtNumb());
+        // 사진 알림이 해당 프로필 사진 번호를 이동 대상으로 전달하는지 확인한다
+        assertEquals(157L, eventCaptor.getValue().getTagtNumb());
         // 동기 좋아요 경로에서 Redis 닉네임을 조회하지 않는지 확인한다
         verify(tokenRedisService, never()).getUserNick(eq(44L));
         // 동기 좋아요 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다

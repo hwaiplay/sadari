@@ -108,6 +108,7 @@
     <select id="getReplyReportAlimDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
         SELECT CASE WHEN #{tagtType} = #{targetReport} THEN R.USER_NUMB ELSE U.USER_NUMB END AS TARGET_USER_NUMB
+             , PU.USER_NUMB AS PARENT_USER_NUMB
              , CASE WHEN #{tagtType} = #{targetReport} THEN R.RPAL_YSNO ELSE #{commYes} END AS REPLY_ALIM_YSNO
              , CASE WHEN #{tagtType} = #{targetProfile} THEN #{alimReplyProfile}
                     WHEN #{tagtType} = #{targetBackground} THEN #{alimReplyBackground} ELSE #{alimReplyReport} END AS ALIM_TEMP_CODE
@@ -116,5 +117,11 @@
      LEFT JOIN TM_REPORT R ON #{tagtType} = #{targetReport} AND R.REPT_NUMB = #{tagtNumb}
      LEFT JOIN TM_USERXM U ON (#{tagtType} = #{targetProfile} AND U.PROF_NUMB = #{tagtNumb})
                           OR (#{tagtType} = #{targetBackground} AND U.BGIM_NUMB = #{tagtNumb})
+     LEFT JOIN TB_REPLXX P ON P.REPL_NUMB = #{uperNumb,jdbcType=NUMERIC}
+                          AND P.TAGT_TYPE = #{tagtType}
+                          AND P.TAGT_NUMB = #{tagtNumb}
+                          AND P.DELT_YSNO = #{commNo}
+     LEFT JOIN TM_USERXM PU ON PU.USER_NUMB = P.USER_NUMB
+                           AND PU.USER_STAT = #{userStatActive}
     </select>
 </mapper>

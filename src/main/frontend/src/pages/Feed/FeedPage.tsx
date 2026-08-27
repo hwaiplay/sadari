@@ -13,12 +13,13 @@ import {
   REPORT_STATUS_STOP,
 } from "@/features/Book/constants/reportForm";
 import { REPORT_CONTENT_PREVIEW_LENGTH } from "@/features/Book/utils/reportListView";
-import { getFeedPageApi, type FeedItem } from "@/features/Feed/api/feedApi";
+import { getFeedPageApi, getFeedTargetApi, type FeedItem } from "@/features/Feed/api/feedApi";
+import type { ReplyTargetType } from "@/features/reply/types/reply.types";
 import ReplySheet from "@/features/reply/ReplySheet";
 import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import ProfileImage, { DEFAULT_PROFILE_IMAGE } from "@/features/User/components/ProfileImage";
 import { type ReactNode, type SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./FeedPage.css";
 
 /**
@@ -46,6 +47,9 @@ const getStatusClassName = (reptStat?: FeedItem["reptStat"]): string => {
 };
 
 type FeedLikeDetail = Pick<FeedItem, "likeCnt" | "likeYsno">;
+
+// 알림 링크로 직접 조회할 수 있는 피드 대상 유형
+const FEED_TARGET_TYPES: ReplyTargetType[] = ["REPORT", "PROFILE_IMAGE", "BACKGROUND_IMAGE"];
 
 /**
  * 피드 대상 식별값이 현재 갱신 대상과 일치하는지 판정한다
@@ -158,16 +162,20 @@ const getExpandActionLabel = (isExpanded: boolean): string => {
 };
 
 /**
- * 팔로잉 사용자의 공개 독후감과 사진 변경 활동을 카드 목록으로 표시한다
+ * 로그인 사용자 본인과 팔로잉 사용자의 공개 독후감 및 사진 변경 활동을 카드 목록으로 표시한다
  *
  * @author HanWon.Jang
- * @return 팔로잉 사용자의 활동 피드 화면
+ * @return 본인과 팔로잉 사용자의 활동 피드 화면
  */
 const FeedPage = () => {
   // 피드 카드의 프로필 및 도서 화면 이동에 공통 라우터 함수를 사용한다
   const navigate = useNavigate();
+  // 알림 링크에 포함된 원본 콘텐츠 유형과 번호를 조회한다
+  const [searchParams] = useSearchParams();
   // 서버에서 페이지 단위로 받은 피드 항목을 화면 목록 상태로 관리한다
   const [items, setItems] = useState<FeedItem[]>([]);
+  // 알림 링크로 직접 연 피드 항목을 일반 페이지 목록과 독립적으로 관리한다
+  const [focusedItem, setFocusedItem] = useState<FeedItem | null>(null);
   // 마지막으로 조회에 성공한 피드 페이지 번호를 관리한다
   const [page, setPage] = useState(1);
   // 목록 하단에서 다음 피드 페이지를 조회할 수 있는지 관리한다
@@ -182,6 +190,14 @@ const FeedPage = () => {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
   // 같은 피드 대상의 좋아요 요청이 동시에 실행되지 않도록 진행 키를 보관한다
   const pendingLikeKeysRef = useRef(new Set<string>());
+  // 알림 링크가 전달한 피드 대상 유형 문자열을 조회한다
+  const targetTypeParam = searchParams.get("tagtType");
+  // 알림 링크가 전달한 피드 대상 번호를 숫자로 변환한다
+  const targetNumbParam = Number(searchParams.get("tagtNumb"));
+  // 허용된 유형과 양의 번호가 모두 있으면 단건 피드 조회 대상으로 판정한다
+  const hasFeedTarget = FEED_TARGET_TYPES.includes(targetTypeParam as ReplyTargetType)
+    && Number.isSafeInteger(targetNumbParam)
+    && targetNumbParam > 0;
 
   /**
    * 요청한 피드 페이지를 조회해 최초 목록 또는 추가 목록으로 화면에 반영한다
@@ -253,6 +269,64 @@ const FeedPage = () => {
   useEffect(loadInitialPage, [loadInitialPage]);
 
   /**
+   * 알림 링크가 지정한 피드 한 건을 조회하고 해당 댓글 목록을 자동으로 연다
+   *
+   * @author SeungHyeon.Kang
+   * @return 알림 대상 피드 조회 완료 Promise
+   */
+  const loadTargetFeed = useCallback(async (): Promise<void> => {
+    // 유효한 대상 식별값이 없는 일반 피드 진입은 단건 조회를 실행하지 않는다
+    if (!hasFeedTarget) {
+      // 이전 알림 대상 강조 상태를 제거하고 일반 피드 목록만 유지한다
+      setFocusedItem(null);
+      // 알림 대상 쿼리가 제거되면 자동으로 열었던 댓글 목록도 닫는다
+      setReplyItem(null);
+      return;
+    }
+
+    // 허용 유형 검사로 검증된 문자열을 댓글 대상 유형으로 사용한다
+    const targetType = targetTypeParam as ReplyTargetType;
+
+    // 대상 조회 성공과 만료 또는 접근 제한 실패를 분리해 처리한다
+    try {
+      // 팔로우 여부와 무관하게 현재 공개 상태를 검증한 알림 이동 대상 피드 한 건을 조회한다
+      const targetItem = await getFeedTargetApi(targetType, targetNumbParam);
+      // 페이지 위치와 무관하게 알림 대상 카드를 목록 맨 앞에서 확인할 수 있도록 저장한다
+      setFocusedItem(targetItem);
+      // 알림을 누른 사용자가 즉시 댓글을 확인할 수 있도록 대상 댓글 목록을 연다
+      setReplyItem(targetItem);
+    }
+
+    // 교체되거나 공개 범위에서 제외된 대상이면 일반 피드는 유지하고 안전한 안내만 표시한다
+    catch (targetError) {
+      // 만료된 대상 카드가 화면에 남지 않도록 직접 조회 상태를 초기화한다
+      setFocusedItem(null);
+      // "이 알림의 피드를 열 수 없어요."
+      const targetUnavailableTitle = message("frontend.feed.targetUnavailable");
+      // "삭제되었거나 더 이상 볼 수 없는 소식이에요."
+      const targetUnavailableMessage = message("frontend.feed.targetUnavailableDetail");
+      // 원시 오류 대신 서버 또는 대상 만료 안내 문구를 선택한다
+      const targetErrorMessage = getApiErrorMessage(targetError, targetUnavailableMessage);
+      // 사용자가 일반 피드 화면에 머문 상태에서 대상 조회 실패 원인을 안내한다
+      await sweetError(targetUnavailableTitle, targetErrorMessage);
+    }
+  }, [hasFeedTarget, targetNumbParam, targetTypeParam]);
+
+  /**
+   * 알림 대상 식별값이 변경될 때 단건 피드 조회를 시작한다
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값이 없다
+   */
+  const startTargetFeedLoad = useCallback((): void => {
+    // 유효한 알림 대상이면 비동기 단건 조회를 시작한다
+    void loadTargetFeed();
+  }, [loadTargetFeed]);
+
+  // 일반 진입 또는 알림 대상 변경에 맞춰 직접 조회 상태와 댓글 목록을 갱신한다
+  useEffect(startTargetFeedLoad, [startTargetFeedLoad]);
+
+  /**
    * 도서 표지 이미지 요청이 실패하면 공통 대체 이미지를 한 번만 적용한다
    *
    * @author HanWon.Jang
@@ -314,6 +388,10 @@ const FeedPage = () => {
 
     // 서버 응답을 기다리는 동안 사용자가 누른 좋아요 상태를 즉시 표시한다
     setItems(applyOptimisticLike);
+    // 알림으로 직접 연 카드가 같은 대상이면 낙관적 좋아요 상태를 함께 반영한다
+    setFocusedItem((current) => current && isSameFeedTarget(current, item)
+      ? { ...current, ...optimisticDetail }
+      : current);
 
     // 좋아요 저장 성공과 실패를 낙관적 화면 상태에 맞춰 분리해 처리한다
     try {
@@ -341,6 +419,11 @@ const FeedPage = () => {
 
       // 서버가 확정한 값으로 화면의 낙관적 상태를 보정한다
       setItems(applyServerLike);
+      // 알림으로 직접 연 카드가 같은 대상이면 서버가 확정한 좋아요 상태를 함께 반영한다
+      setFocusedItem((current) => current && isSameFeedTarget(current, item)
+        ? { ...current, likeCnt: detail?.likeCnt ?? optimisticDetail.likeCnt,
+            likeYsno: detail?.likeYsno ?? optimisticDetail.likeYsno }
+        : current);
     }
 
     // 핵심 좋아요 요청 실패 시 클릭 전 상태를 복원하고 안전한 오류를 안내한다
@@ -359,6 +442,10 @@ const FeedPage = () => {
 
       // 핵심 좋아요 요청이 실패한 경우에만 클릭 전 상태로 되돌린다
       setItems(restorePreviousLike);
+      // 알림으로 직접 연 카드가 같은 대상이면 클릭 전 좋아요 상태로 복원한다
+      setFocusedItem((current) => current && isSameFeedTarget(current, item)
+        ? { ...current, likeCnt: item.likeCnt, likeYsno: item.likeYsno }
+        : current);
       // "좋아요 처리에 실패했어요."
       const likeFailedTitle = message("frontend.feed.likeFailed");
       // "다시 시도해주세요."
@@ -742,15 +829,20 @@ const FeedPage = () => {
     );
   };
 
+  // 알림 대상과 페이지 목록에서 같은 카드는 한 번만 표시하도록 화면 목록을 구성한다
+  const visibleItems = focusedItem
+    ? [focusedItem, ...items.filter((item) => !isSameFeedTarget(item, focusedItem))]
+    : items;
+
   // 첫 피드 데이터를 불러오는 동안 전체 로딩 화면을 반환한다
-  if (isLoading && items.length === 0) return <Loading />;
+  if (isLoading && visibleItems.length === 0) return <Loading />;
 
   // 유형별 카드와 공통 교류 동작을 포함한 피드 화면을 반환한다
   return (
     <main className={styles.page}>
-      {/* 팔로잉 사용자의 공개 활동 피드 전체 영역 */}
+      {/* 본인과 팔로잉 사용자의 공개 활동 피드 전체 영역 */}
       {/* 피드 최초 조회 실패와 재시도 영역 */}
-      {error && items.length === 0 ? (
+      {error && visibleItems.length === 0 ? (
         <div className={styles.error}>
           {error}
           <br />
@@ -761,17 +853,17 @@ const FeedPage = () => {
         </div>
       ) : null}
 
-      {/* 팔로잉 공개 활동이 없는 피드 빈 상태 영역 */}
-      {!error && items.length === 0 ? (
+      {/* 본인과 팔로잉 공개 활동이 없는 피드 빈 상태 영역 */}
+      {!error && visibleItems.length === 0 ? (
         <p className={styles.empty}>
-          {/* "팔로우 중인 사용자의 공개 소식이 아직 없어요.\n새로운 독후감과 사진 변경 소식이 여기에 표시됩니다." */}
+          {/* "아직 표시할 공개 소식이 없어요.\n내 독후감과 사진 변경, 팔로잉 소식이 여기에 표시됩니다." */}
           {message("frontend.feed.empty")}
         </p>
       ) : null}
 
       {/* 페이지 단위로 누적되는 피드 카드 목록 영역 */}
       <div className={styles.list}>
-        {items.map(renderFeedItem)}
+        {visibleItems.map(renderFeedItem)}
       </div>
 
       {/* 다음 피드 페이지 자동 조회와 추가 로딩 영역 */}

@@ -551,8 +551,8 @@ public class SocialServiceImpl implements SocialService {
         req.setLikeAlimYsno(likeTarget.getLikeAlimYsno());
         // 좋아요 대상 유형에 대응하는 알림 템플릿 코드를 설정한다
         req.setAlimTempCode(resolveLikeAlimTemplate(req.getTagtType()));
-        // 사진 반응 템플릿은 완성된 마이페이지 링크이므로 독후감에만 상세 번호를 설정한다
-        req.setAlimTagtNumb(isReport ? req.getTagtNumb() : null);
+        // 독후감과 사진 알림 모두 원본 콘텐츠를 직접 찾을 수 있도록 대상 번호를 설정한다
+        req.setAlimTagtNumb(req.getTagtNumb());
 
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;

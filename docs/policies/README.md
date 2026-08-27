@@ -25,6 +25,7 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 | [공지사항 운영 정책](notice-policy.md) | 공지 버전, 배포, Summernote 본문과 전용 이미지 보존 |
 | [콘텐츠 및 파일 정책](content-file-policy.md) | 비속어, 닉네임, 텍스트 정규화, 이미지 업로드 |
 | [스케줄러 운영 정책](scheduler-policy.md) | 스케줄러 실행 조건, 배치 크기, 실행 로그 |
+| [설치형 웹앱 설치 권장 알럿 정책](pwa-installation-policy.md) | 기능 미구현, 계정 단위 1회 권장 알럿과 확인 일시 보존 |
 | [설치형 웹앱 자동 업데이트 정책](pwa-update-policy.md) | 서비스워커 갱신, 정적 자원 캐시, 홈 화면 아이콘 업데이트 |
 
 ## 구현 전 정책 결정 문서
@@ -71,6 +72,6 @@ Sadari 서비스에 구현된 주요 사용자 정책과 운영 정책의 기준
 
 ## 관리 정보
 
-- 기준일: 2026-08-26
+- 기준일: 2026-08-27
 - 저장 위치: `docs/policies`
 - 구현 근거: `src/main/java`, `src/main/frontend/src`, `src/main/resources`

@@ -11,15 +11,16 @@ import org.our.sadari.global.file.util.FileUrlUtil;
  * fileName       : FeedDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 팔로잉 피드 항목과 조회 조건을 전달한다
+ * description    : 본인과 팔로잉 피드 항목 및 조회 조건을 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-25        SeungHyeon.Kang         최초 생성
  * 2026-08-26        SeungHyeon.Kang         화면용 이미지 경로·주석 정비
+ * 2026-08-27        SeungHyeon.Kang         알림 대상 단건 조회 조건 확장
  */
 @Data
-@Schema(description = "팔로잉 피드 항목 DTO")
+@Schema(description = "본인과 팔로잉 피드 항목 DTO")
 public class FeedDto {
 
     @Schema(description = "로그인 사용자 번호", hidden = true)

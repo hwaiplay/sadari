@@ -9,21 +9,22 @@ import org.our.sadari.social.dto.SocialDto;
  * fileName       : FeedMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 팔로잉 피드와 사진 반응 데이터 접근 메서드를 정의한다
+ * description    : 본인과 팔로잉 피드 및 사진 반응 데이터 접근 메서드를 정의한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-25        SeungHyeon.Kang         최초 생성
  * 2026-08-26        SeungHyeon.Kang         주석 규칙 정비
+ * 2026-08-27        SeungHyeon.Kang         본인 피드와 알림 대상 조건 조회 확장
  */
 @Mapper
 public interface FeedMapper {
 
     /**
-     * 로그인 사용자가 팔로우하는 활성 사용자의 공개 활동 피드를 최신순으로 조회한다.
+     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 최신순으로 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param request 로그인 사용자와 피드 페이지 조건
+     * @param request 로그인 사용자와 피드 페이지 또는 대상 조건
      * @return 다음 페이지 판정용 추가 한 건을 포함한 피드 목록
      */
     List<FeedDto> getFeedList(FeedDto request);

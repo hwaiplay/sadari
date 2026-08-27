@@ -31,12 +31,15 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 정리
  * 2026-08-14        SeungHyeon.Kang    사용자 알림 10개 단위 조회 반영
  * 2026-08-20        SeungHyeon.Kang    타이머 알림 중복 제외
- * 2026-08-25        HanWon.Jang        사진 댓글 알림 중복 제외
+ * 2026-08-25        SeungHyeon.Kang    사진 댓글 알림 중복 제외
  */
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AlimServiceImpl implements AlimService {
+
+    // 알림 템플릿 링크에서 이동 대상 번호가 들어갈 위치
+    private static final String LINK_TARGET_PLACEHOLDER = "#{targetNumb}";
 
     // 알림 페이지 크기 설정값
     private static final int ALIM_PAGE_SIZE = 10;
@@ -382,7 +385,7 @@ public class AlimServiceImpl implements AlimService {
 
     /**
      * 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다.
-     * 예를 들어 TB_ALTEMP.LINK_URLX가 /report/detail/이고 tagtNumb가 10이면 /report/detail/10으로 저장된다.
+     * 대상 번호 자리표시자가 있으면 경로 중간이나 쿼리 파라미터에도 번호를 배치하고 없으면 기존 방식으로 뒤에 연결한다.
      *
      * @author SeungHyeon.Kang
      * @param linkUrlx 템플릿에 저장된 기본 링크
@@ -401,6 +404,12 @@ public class AlimServiceImpl implements AlimService {
         if (StringUtil.isEmpty(tagtNumb)) {
             // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다
             return linkUrlx;
+        }
+
+        // 템플릿이 대상 번호 위치를 지정하면 검증된 숫자 식별값으로 해당 위치만 치환한다
+        if (linkUrlx.contains(LINK_TARGET_PLACEHOLDER)) {
+            // 대상 번호가 필요한 상세 경로와 쿼리 파라미터를 완성해 반환한다
+            return linkUrlx.replace(LINK_TARGET_PLACEHOLDER, String.valueOf(tagtNumb));
         }
 
         // 템플릿에 저장된 기본 링크와 대상 번호를 조합해 실제 이동 URL을 만든다 결과를 반환한다

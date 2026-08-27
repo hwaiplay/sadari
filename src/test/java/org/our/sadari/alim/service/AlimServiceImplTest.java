@@ -30,6 +30,7 @@ import org.our.sadari.push.service.PushService;
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
  * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
+ * 2026-08-27        SeungHyeon.Kang    링크 대상 번호 자리표시자 치환 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -240,6 +241,55 @@ class AlimServiceImplTest {
               , "사진에 새로운 반응이 있습니다."
               , "/mypage/profile"
               , 8L
+        );
+    }
+
+    /**
+     * 템플릿 링크의 대상 번호 자리표시자가 경로와 쿼리 위치에서 정확히 치환되는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void sendAlimReplacesTarget() {
+        // 피드 대상 쿼리 링크를 가진 알림 템플릿 정보를 생성한다
+        AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
+        // 알림 제목을 설정한다
+        template.setAlimTitl("댓글 알림");
+        // 알림 내용을 설정한다
+        template.setTempCont("사진 댓글에 새로운 반응이 있습니다.");
+        // 사진 번호가 들어갈 자리표시자를 포함한 피드 링크를 설정한다
+        template.setLinkUrlx("/feed?tagtType=PROFILE_IMAGE&tagtNumb=#{targetNumb}");
+
+        // 알림 수신자가 정상 이용 회원인 조건을 설정한다
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
+        // 대상별 댓글 좋아요 템플릿 조회 결과를 설정한다
+        when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
+        // 동일 알림 중복 검사에서 신규 알림으로 판정하는 조건을 설정한다
+        when(alimMapper.dupSameAlimInHour(any(AlimDto.AlimItemDto.class))).thenReturn(0);
+        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정한다
+        doAnswer(invocation -> {
+            // 저장할 댓글 좋아요 알림을 조회한다
+            AlimDto.AlimItemDto alim = invocation.getArgument(0);
+            // 푸시 payload에 사용할 알림 번호를 설정한다
+            alim.setAlimNumb(9L);
+            // 알림 한 건 저장 결과를 반환한다
+            return 1;
+        // 테스트 대상 의존 호출의 동작을 정의한다
+        }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
+
+        // 프로필 사진 번호를 대상 자리표시자에 배치하는 알림을 발송한다
+        ResultData result = alimService.sendAlim(
+                31L, "LIKE", "REPLY_LIKE_PROFILE_IMAGE", 157L, Map.of());
+
+        // 대상별 댓글 좋아요 알림 발송이 성공했는지 확인한다
+        assertEquals(200, result.getCode());
+        // 푸시 링크의 대상 번호 자리표시자가 정확한 사진 번호로 치환됐는지 확인한다
+        verify(pushService).sendPush(
+                31L,
+                "댓글 알림",
+                "사진 댓글에 새로운 반응이 있습니다.",
+                "/feed?tagtType=PROFILE_IMAGE&tagtNumb=157",
+                9L
         );
     }
 }

@@ -13,10 +13,31 @@
         <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
     </sql>
 
-    <!-- 현재 팔로우 중인 활성 사용자의 공개 독후감과 현재 사진 변경 활동을 최신순으로 조회한다. -->
+    <!-- 로그인 사용자 본인과 현재 팔로우 중인 활성 사용자의 공개 독후감 및 현재 사진 변경 활동을 조회한다. -->
     <select id="getFeedList" parameterType="org.our.sadari.feed.dto.FeedDto" resultType="org.our.sadari.feed.dto.FeedDto">
         <include refid="bindList" />
-        WITH FEED_BASE AS (
+        WITH VISIBLE_USER AS (
+            <choose>
+                <when test="tagtType != null and tagtType != '' and tagtNumb != null">
+                    SELECT U.USER_NUMB
+                      FROM TM_USERXM U
+                     WHERE U.USER_STAT = #{userStatActive}
+                </when>
+                <otherwise>
+                    SELECT U.USER_NUMB
+                      FROM TM_USERXM U
+                     WHERE U.USER_NUMB = #{loginUserNumb}
+                       AND U.USER_STAT = #{userStatActive}
+                    UNION
+                    SELECT U.USER_NUMB
+                      FROM TB_FOLLOW F
+                      JOIN TM_USERXM U
+                        ON U.USER_NUMB = F.FLOW_NUMB
+                       AND U.USER_STAT = #{userStatActive}
+                     WHERE F.USER_NUMB = #{loginUserNumb}
+                </otherwise>
+            </choose>
+        ), FEED_BASE AS (
             SELECT #{targetReport} AS TAGT_TYPE
                  , R.REPT_NUMB AS TAGT_NUMB
                  , U.USER_NUMB
@@ -33,10 +54,9 @@
                  , B.BOOK_ATHR
                  , B.BOOK_CVIM
                  , CAST(NULL AS CHAR(2000)) AS CONTENT_IMAGE_PATH
-              FROM TB_FOLLOW F
+              FROM VISIBLE_USER V
               JOIN TM_USERXM U
-                ON U.USER_NUMB = F.FLOW_NUMB
-               AND U.USER_STAT = #{userStatActive}
+                ON U.USER_NUMB = V.USER_NUMB
               JOIN TM_REPORT R
                 ON R.USER_NUMB = U.USER_NUMB
                AND R.PUBC_YSNO = #{commYes}
@@ -46,7 +66,6 @@
                 ON B.BOOK_NUMB = R.BOOK_NUMB
          LEFT JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
-             WHERE F.USER_NUMB = #{loginUserNumb}
             UNION ALL
             SELECT #{targetProfile}
                  , U.PROF_NUMB
@@ -64,15 +83,13 @@
                  , NULL
                  , NULL
                  , PF.FILE_PATH
-              FROM TB_FOLLOW F
+              FROM VISIBLE_USER V
               JOIN TM_USERXM U
-                ON U.USER_NUMB = F.FLOW_NUMB
-               AND U.USER_STAT = #{userStatActive}
+                ON U.USER_NUMB = V.USER_NUMB
                AND U.PROF_NUMB IS NOT NULL
                AND U.PROF_DATE IS NOT NULL
               JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
-             WHERE F.USER_NUMB = #{loginUserNumb}
             UNION ALL
             SELECT #{targetBackground}
                  , U.BGIM_NUMB
@@ -90,17 +107,15 @@
                  , NULL
                  , NULL
                  , BF.FILE_PATH
-              FROM TB_FOLLOW F
+              FROM VISIBLE_USER V
               JOIN TM_USERXM U
-                ON U.USER_NUMB = F.FLOW_NUMB
-               AND U.USER_STAT = #{userStatActive}
+                ON U.USER_NUMB = V.USER_NUMB
                AND U.BGIM_NUMB IS NOT NULL
                AND U.BGIM_DATE IS NOT NULL
               JOIN TM_FILEXM BF
                 ON BF.FILE_NUMB = U.BGIM_NUMB
          LEFT JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
-             WHERE F.USER_NUMB = #{loginUserNumb}
         ), LIKE_COUNT AS (
             SELECT L.TAGT_TYPE
                  , L.TAGT_NUMB
@@ -135,6 +150,14 @@
             ON UL.USER_NUMB = #{loginUserNumb}
            AND UL.TAGT_TYPE = FB.TAGT_TYPE
            AND UL.TAGT_NUMB = FB.TAGT_NUMB
+        <where>
+            <if test="tagtType != null and tagtType != ''">
+                FB.TAGT_TYPE = #{tagtType}
+            </if>
+            <if test="tagtNumb != null">
+                AND FB.TAGT_NUMB = #{tagtNumb}
+            </if>
+        </where>
       ORDER BY FB.ACTIVITY_DATE DESC
              , FB.TAGT_TYPE ASC
              , FB.TAGT_NUMB DESC

@@ -11,7 +11,7 @@ import {
   sweetEditGuide,
   sweetWarning,
 } from "@/app/lib/sweetAlert/sweetAlert";
-import { Link, useLocation, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import type { ChangeEvent, CSSProperties, MouseEvent } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { clsx } from "clsx";
@@ -140,6 +140,10 @@ function DetailPage() {
   const idNum = Number(id);
   const location = useLocation();
   const navigate = useNavigate();
+  // 댓글 알림 링크가 요청한 댓글 목록 자동 열기 여부를 조회한다
+  const [searchParams] = useSearchParams();
+  // 명시적으로 댓글 목록을 요청한 알림 링크인지 판정한다
+  const shouldOpenReplies = searchParams.get("showReplies") === "Y";
   const { data, error, isError, isPending } = useBookDetail(idNum);
   const bookData = data?.data;
   const likeMutation = usePublicReportLike();
@@ -163,6 +167,17 @@ function DetailPage() {
   const [endDate, setEndDate] = useState("");
   const [content, setContent] = useState("");
   const [contentByteLength, setContentByteLength] = useState(0);
+
+  // 알림 링크로 진입하거나 같은 상세 화면의 쿼리가 변경되면 댓글 목록을 자동으로 연다
+  useEffect(() => {
+    // 일반 상세 진입에서는 사용자가 선택한 현재 댓글 목록 상태를 유지한다
+    if (!shouldOpenReplies) {
+      return;
+    }
+
+    // 댓글 또는 댓글 좋아요 알림이 지정한 독후감의 댓글 목록을 표시한다
+    setIsReplySheetOpen(true);
+  }, [shouldOpenReplies]);
 
   // 상세 직접 편집과 등록 화면이 같은 공통코드 캐시를 사용하도록 상태와 색상 코드를 함께 조회한다
   const { data: codeGroupList = {} } = useCodeGroupList(

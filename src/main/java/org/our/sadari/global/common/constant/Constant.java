@@ -15,12 +15,13 @@ package org.our.sadari.global.common.constant;
  * 2026-08-05        SeungHyeon.Kang    독서 관심분야 코드 통합
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 코드 추가
  * 2026-08-13        SeungHyeon.Kang    팔로우 상태 코드 추가
- * 2026-08-14        SeungHyeon.Kang,SeungHyeon.Kang    독서 타이머·통계·모임 코드 정리
+ * 2026-08-14        SeungHyeon.Kang    독서 타이머·통계·모임 코드 정리
  * 2026-08-15        SeungHyeon.Kang    친구·독후감 정렬 코드 추가
  * 2026-08-20        SeungHyeon.Kang    고객문의·타이머 알림 코드 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-22        SeungHyeon.Kang    신고 대상·자동 조치 코드 추가
- * 2026-08-24        SeungHyeon.Kang        모임 가입 처리 알림 코드 추가
+ * 2026-08-24        SeungHyeon.Kang    모임 가입 처리 알림 코드 추가
+ * 2026-08-27        SeungHyeon.Kang    댓글 좋아요 대상별 알림 코드 추가
  */
 public final class Constant {
 
@@ -187,8 +188,12 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE = "REPLY_PROFILE_IMAGE";
     // 배경 이미지 댓글 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE = "REPLY_BACKGROUND_IMAGE";
-    // 알림 템플릿 코드 댓글 좋아요 설정값
+    // 독후감 댓글 좋아요 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
+    // 프로필 이미지 댓글 좋아요 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_REPLY_LIKE_PROFILE = "REPLY_LIKE_PROFILE_IMAGE";
+    // 배경 이미지 댓글 좋아요 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_REPLY_LIKE_BACKGROUND = "REPLY_LIKE_BACKGROUND_IMAGE";
     // 독서 모임 회원 초대 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_INVITE_CLUB = "INVITE_CLUB";
     // 독서 모임 가입 신청 승인 알림 템플릿 코드
