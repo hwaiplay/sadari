@@ -359,6 +359,8 @@ api.interceptors.response.use(
 
     // 실제 API 응답은 서버 접근 가능성을 증명하므로 잘못 남은 오프라인 상태를 해제한다
     publishConnectionRestore("offline");
+    // 백엔드가 공통 응답을 반환했으므로 이전 업스트림 서버 단절 상태를 해제한다
+    publishConnectionRestore("server");
 
     // 공통 성공 응답은 JDBC 장애도 복구되었음을 나타내므로 이전 데이터베이스 상태를 해제한다
     if (resultCode === 200) {
@@ -401,16 +403,23 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
 
     const originalRequest = error.config as RetryableRequestConfig | undefined;
+    // 서버가 확인한 JDBC 장애와 브라우저 및 프록시가 확인한 연결 장애를 구분한다
+    const connectionFailure = getConnectionFailure(error);
 
     // 오류 상태라도 HTTP 응답이 도착했으면 인터넷 단절이 아니므로 오프라인 상태를 해제한다
     if (error.response !== undefined) {
       // 서버가 반환한 상태 코드와 본문을 개별 API 오류 경로에서 처리할 수 있도록 연결 화면을 닫는다
       publishConnectionRestore("offline");
+
+      // 업스트림 단절 응답이 아니면 백엔드가 오류 응답을 생성할 수 있는 상태이므로 서버 장애를 해제한다
+      if (connectionFailure !== "server") {
+        // 이전 요청에서 남은 백엔드 서버 단절 상태를 해제한다
+        publishConnectionRestore("server");
+      }
+
     }
 
-    // 서버가 확인한 JDBC 장애와 브라우저가 확인한 오프라인 상태만 전역 화면 대상으로 구분한다
-    const connectionFailure = getConnectionFailure(error);
-    // 판정 근거가 명확한 연결 장애만 현재 페이지의 개별 오류 처리보다 먼저 표시한다
+    // 판정 근거가 명확한 JDBC와 인터넷 및 백엔드 연결 장애만 개별 오류 처리보다 먼저 표시한다
     if (connectionFailure !== null) {
       // 확인된 연결 장애 원인을 앱 전체 서비스 장애 화면에 전달한다
       publishConnectionError(connectionFailure);

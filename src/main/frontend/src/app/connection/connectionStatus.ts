@@ -5,7 +5,7 @@ import {
 } from "@/app/api/resultData";
 
 type ConnectionListener = () => void;
-type ConnectionFailure = "database" | "offline";
+type ConnectionFailure = "database" | "offline" | "server";
 
 let connectionFailure: ConnectionFailure | null = null;
 const connectionListeners = new Set<ConnectionListener>();
@@ -118,6 +118,17 @@ export const getConnectionFailure = (error: unknown): ConnectionFailure | null =
   if (resultCode === DB_CONNECTION_FAILED_CODE) {
     // 서버가 확인한 데이터베이스 연결 장애 원인을 반환한다
     return "database";
+  }
+
+  const responseStatus = error.response?.status;
+  const responseData: unknown = error.response?.data;
+  const isGatewayFailure = (responseStatus === 502 || responseStatus === 503 || responseStatus === 504)
+    && !Number.isFinite(resultCode);
+
+  // 개발 프록시의 빈 500 응답과 게이트웨이 연결 실패는 백엔드가 응답할 수 없는 상태로 판정한다
+  if ((responseStatus === 500 && responseData === "") || isGatewayFailure) {
+    // 백엔드 프로세스 또는 업스트림 연결 장애 원인을 반환한다
+    return "server";
   }
 
   // 서버 응답이 없고 브라우저도 오프라인일 때만 실제 인터넷 단절로 판정한다
