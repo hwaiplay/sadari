@@ -40,8 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    독후감별 댓글 알림 설정 적용
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
- * 2026-08-27        SeungHyeon.Kang    대상별 댓글 좋아요와 답글 다중 수신자 알림 적용
- * 2026-08-27        SeungHyeon.Kang    댓글 상호작용 알림 템플릿 통합과 동적 대상 저장
+ * 2026-08-27        SeungHyeon.Kang    댓글 알림 통합과 공개 사진 반응 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -93,7 +92,7 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 사진 댓글은 사진 소유자 또는 현재 팔로워만 등록할 수 있도록 API 경계에서 접근을 거부한다
+        // 사진 댓글은 활성 사용자의 현재 사진인지 API 경계에서 검증해 교체된 사진 접근을 거부한다
         if (!hasImageReplyAccess(userNumb, replyDto.getTagtType(), replyDto.getTagtNumb())) {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
@@ -737,7 +736,7 @@ public class ReplyServiceImpl implements ReplyService {
                 || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(normalizedType);
     }
 
-    /** 사진 댓글 대상에 대해 소유자 또는 현재 팔로워 접근 여부를 확인한다. */
+    /** 사진 댓글 대상이 활성 사용자의 현재 사진인지 확인한다. */
     private boolean hasImageReplyAccess(Long userNumb, String tagtType, Long tagtNumb) {
         String normalizedTargetType = StringUtil.isEmpty(tagtType) ? null : tagtType.trim().toUpperCase();
         boolean imageTarget = Constant.LIKE_TARGET_PROFILE_IMAGE.equals(normalizedTargetType)

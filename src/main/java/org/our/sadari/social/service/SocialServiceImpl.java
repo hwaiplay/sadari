@@ -36,7 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
- * 2026-08-27        SeungHyeon.Kang    좋아요 알림에 원본 콘텐츠 유형 저장
+ * 2026-08-27        SeungHyeon.Kang    좋아요 알림 원본 유형과 공개 사진 반응 적용
  */
 @Service
 @RequiredArgsConstructor
@@ -146,7 +146,8 @@ public class SocialServiceImpl implements SocialService {
 
     /**
      * 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소한다.
-     * 현재 화면에서 지원하는 대상은 REPORT뿐이므로, 다른 TAGT_TYPE은 저장하지 않고 잘못된 요청으로 응답한다.
+     * 현재 화면에서 지원하는 공개 독후감과 현재 프로필·배경사진만 허용하고,
+     * 다른 TAGT_TYPE은 저장하지 않고 잘못된 요청으로 응답한다.
      *
      * @author SeungHyeon.Kang
      * @param req 사용자 번호, 대상 유형, 대상 번호
@@ -503,7 +504,8 @@ public class SocialServiceImpl implements SocialService {
 
     /**
      * 좋아요 요청 대상을 검증한다.
-     * TB_LIKEXX는 공용 테이블이지만 현재 도메인에서 허용한 대상은 공개 독후감(REPORT)이므로 먼저 타입을 제한한다.
+     * TB_LIKEXX는 공용 테이블이므로 현재 도메인에서 허용한 공개 독후감과
+     * 현재 프로필·배경사진으로 대상 유형을 제한한다.
      *
      * @author SeungHyeon.Kang
      * @param req 사용자 번호, 대상 유형, 대상 번호

@@ -18,6 +18,7 @@ import org.our.sadari.user.dto.UserDto;
  * 2026-08-04        SeungHyeon.Kang    최초 로그인 관심분야 조회와 저장 추가
  * 2026-08-05        SeungHyeon.Kang    회원 관심분야 단일 코드 저장과 현재 선택 조회 반영
  * 2026-08-06        SeungHyeon.Kang    프로필 이미지 교체용 사용자 행 잠금 조회 추가
+ * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 확장
  */
 @Mapper
 public interface UserMapper {
@@ -33,13 +34,13 @@ public interface UserMapper {
     UserDto getUserByNumb(Long userNumb);
 
     /**
-     * 마이페이지에 표시할 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회한다.
+     * 로그인 사용자가 확인하는 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회한다.
      *
      * @author SeungHyeon.Kang
-     * @param request 사진 소유자와 대상 유형 및 파일 번호
+     * @param request 로그인 사용자와 사진 소유자 및 대상 유형과 파일 번호
      * @return 현재 사진의 좋아요와 댓글 집계
      */
-    UserDto.ImageReactionDto getMyImageReactionDtl(UserDto.ImageReactionDto request);
+    UserDto.ImageReactionDto getImageReactionDtl(UserDto.ImageReactionDto request);
 
     /**
      * 프로필 이미지 교체 중 동시 수정이 발생하지 않도록 사용자 파일 번호를 잠금 조회한다.

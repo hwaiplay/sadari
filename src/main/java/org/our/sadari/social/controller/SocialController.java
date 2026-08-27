@@ -40,6 +40,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 조회 추가
  * 2026-08-15        SeungHyeon.Kang    접근 제한 회원 소셜 프로필 상태명 응답 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 조회 추가
+ * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -60,12 +61,20 @@ public class SocialController {
      * 사용자 번호로 공개 프로필 정보를 조회한다.
      *
      * @author SeungHyeon.Kang
+     * @param loginUserNumb 사진 반응 상태를 계산할 로그인 사용자 번호
      * @param userNumb 조회할 사용자 번호
      * @return 공개 프로필 조회 결과
      */
     @GetMapping("/profile/{userNumb}")
     @Operation(summary = "공개 프로필 조회", description = "사용자 번호로 공개 프로필 정보를 조회한다.")
-    public ResultData getSocialProfile(@Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
+    public ResultData getSocialProfile(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                     , @Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 로그인 사용자와 조회 대상이 없으면 사진 반응의 현재 사용자 상태를 계산할 수 없어 요청을 거부한다
+        if (StringUtil.hasEmpty(loginUserNumb, userNumb)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
         // UserByNumb 데이터를 DB에서 조회한다
         UserDto user = userMapper.getUserByNumb(userNumb);
 
@@ -75,7 +84,8 @@ public class SocialController {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        Map<String, String> profile = new HashMap<>();
+        // 공개 프로필과 사진 반응을 함께 담을 응답 객체를 생성한다
+        Map<String, Object> profile = new HashMap<>();
         // 공개 프로필 화면이 접근 제한 회원 안내를 선택할 수 있도록 회원 상태를 설정한다
         profile.put("userStat", user.getUserStat());
         // 프론트엔드가 공통코드명을 임의로 하드코딩하지 않도록 회원 상태명을 설정한다
@@ -95,10 +105,52 @@ public class SocialController {
         profile.put("porfPath", user.getPorfPath());
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("bgimPath", user.getBgimPath());
+        // 일반 프로필 화면에 사용할 축소 배경사진 경로를 저장한다
+        profile.put("bgimDisplayPath", user.getBgimDisplayPath());
         // 후속 처리에 사용할 키와 값을 맵에 저장한다
         profile.put("intrCntn", user.getIntrCntn());
+        // 현재 프로필 사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장한다
+        profile.put("profileImageReaction", getImageReaction(
+                loginUserNumb, userNumb, Constant.LIKE_TARGET_PROFILE_IMAGE, user.getProfNumb()
+        ));
+        // 현재 배경사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장한다
+        profile.put("backgroundImageReaction", getImageReaction(
+                loginUserNumb, userNumb, Constant.LIKE_TARGET_BACKGROUND_IMAGE, user.getBgimNumb()
+        ));
         // 사용자 번호로 공개 프로필 정보를 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(profile);
+    }
+
+    /**
+     * 다른 사용자 프로필에 표시할 현재 사진의 좋아요와 댓글 집계를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param loginUserNumb 사진 반응을 확인하는 로그인 사용자 번호
+     * @param ownerUserNumb 사진 소유자 사용자 번호
+     * @param tagtType 프로필 또는 배경사진 대상 유형
+     * @param tagtNumb 현재 사진 파일 번호
+     * @return 현재 사진 반응 집계 또는 사진이 없을 때 null
+     */
+    private UserDto.ImageReactionDto getImageReaction(Long loginUserNumb, Long ownerUserNumb
+                                                     , String tagtType, Long tagtNumb) {
+        // 현재 사진이 없으면 소셜 프로필에 반응 버튼을 표시하지 않는다
+        if (StringUtil.isEmpty(tagtNumb)) {
+            // 사진 반응 대상이 없음을 반환한다
+            return null;
+        }
+
+        // 로그인 사용자와 사진 소유자를 분리한 반응 조회 객체를 생성한다
+        UserDto.ImageReactionDto request = new UserDto.ImageReactionDto();
+        // 로그인 사용자의 현재 좋아요 여부를 계산할 사용자 번호를 설정한다
+        request.setUserNumb(loginUserNumb);
+        // 현재 사진을 소유한 공개 프로필 사용자 번호를 설정한다
+        request.setOwnerUserNumb(ownerUserNumb);
+        // 조회할 사진 유형을 설정한다
+        request.setTagtType(tagtType);
+        // 교체되지 않은 현재 사진인지 검증할 파일 번호를 설정한다
+        request.setTagtNumb(tagtNumb);
+        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환한다
+        return userMapper.getImageReactionDtl(request);
     }
 
     /**

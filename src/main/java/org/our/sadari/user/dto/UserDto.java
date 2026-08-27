@@ -1,5 +1,6 @@
 package org.our.sadari.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
@@ -25,6 +26,7 @@ import org.our.sadari.global.file.util.FileUrlUtil;
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 계약 반영
  * 2026-08-15        SeungHyeon.Kang    소셜 프로필 접근 안내용 회원 상태명 추가
  * 2026-08-26        HanWon.Jang         화면용 배경사진 경로 추가
+ * 2026-08-27        SeungHyeon.Kang    사진 반응 조회 사용자 분리
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -109,8 +111,13 @@ public class UserDto {
     @Schema(description = "사용자 사진 좋아요와 댓글 집계")
     public static class ImageReactionDto {
 
-        @Schema(description = "사진 소유자 사용자 번호", hidden = true)
+        @Schema(description = "로그인 사용자 번호", hidden = true)
+        @JsonIgnore
         private Long userNumb;
+
+        @Schema(description = "사진 소유자 사용자 번호", hidden = true)
+        @JsonIgnore
+        private Long ownerUserNumb;
 
         @Schema(description = "사진 대상 유형", allowableValues = {"PROFILE_IMAGE", "BACKGROUND_IMAGE"})
         private String tagtType;

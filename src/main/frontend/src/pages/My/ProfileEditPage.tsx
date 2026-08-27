@@ -63,7 +63,7 @@ import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import type { ChangeEvent, FormEvent, MouseEvent, ReactNode } from "react";
 import { useEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import * as styles from "./ProfileEditPage.css";
 import ReadingStatisticsSection from "./ReadingStatisticsSection";
 
@@ -268,12 +268,20 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
  * 로그인 사용자의 프로필 사진, 배경 사진, 닉네임, 한줄 소개를 조회하고 수정합니다.
  * 수정 모드에서는 화면을 전환하지 않고 기존 요소 위치에서 텍스트와 이미지만 편집할 수 있게 제공합니다.
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 프로필 상세 및 수정 페이지 컴포넌트
  */
 const ProfileEditPage = () => {
 
   const navigate = useNavigate();
+  // 알림이 지정한 본인 사진과 댓글 위치를 마이페이지에서 해석한다
+  const [searchParams] = useSearchParams();
+  const requestedTagtType = searchParams.get("tagtType");
+  const requestedTagtNumb = Number(searchParams.get("tagtNumb"));
+  const requestedReplNumb = Number(searchParams.get("replNumb"));
+  const focusReplNumb = Number.isSafeInteger(requestedReplNumb) && requestedReplNumb > 0
+    ? requestedReplNumb
+    : undefined;
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [isEditMode, setIsEditMode] = useState(false);
   const [userNick, setUserNick] = useState("");
@@ -307,6 +315,7 @@ const ProfileEditPage = () => {
   const [isGoalSaving, setIsGoalSaving] = useState(false);
   const [imageLikeUpdatingType, setImageLikeUpdatingType] = useState<ImageReaction["tagtType"] | null>(null);
   const [replyTarget, setReplyTarget] = useState<ImageReaction | null>(null);
+  const processedReplyRouteRef = useRef("");
   const {
     followListType,
     followUsers,
@@ -337,6 +346,41 @@ const ProfileEditPage = () => {
   useBodyScrollLock(
     Boolean(currentReadingReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType),
   );
+
+  // 알림이 요청한 사진 유형에 대응하는 현재 마이페이지 반응을 선택한다
+  const requestedReaction = requestedTagtType === "PROFILE_IMAGE"
+    ? profile?.profileImageReaction
+    : requestedTagtType === "BACKGROUND_IMAGE"
+      ? profile?.backgroundImageReaction
+      : null;
+  // 알림의 파일 번호가 현재 본인 사진과 일치할 때만 자동 열기 대상으로 인정한다
+  const hasRequestedImage = Boolean(
+    requestedReaction
+      && Number.isSafeInteger(requestedTagtNumb)
+      && requestedTagtNumb > 0
+      && requestedReaction.tagtNumb === requestedTagtNumb,
+  );
+  const requestedRouteKey = `${requestedTagtType ?? ""}:${requestedTagtNumb}:${focusReplNumb ?? 0}`;
+
+  // 사진 댓글 알림이면 현재 사진 검증이 끝난 뒤 댓글 바텀시트와 강조 위치를 한 번만 연다
+  useEffect(() => {
+    // 일반 마이페이지 진입 또는 사진 좋아요 알림은 전체 화면 사진만 열고 댓글 시트는 열지 않는다
+    if (!hasRequestedImage || !requestedReaction || !focusReplNumb) {
+      // 댓글 자동 열기 상태를 변경하지 않고 종료한다
+      return;
+    }
+
+    // 같은 알림 경로를 이미 처리했으면 댓글 집계 갱신으로 시트를 다시 열지 않는다
+    if (processedReplyRouteRef.current === requestedRouteKey) {
+      // 사용자가 닫은 댓글 시트 상태를 유지한다
+      return;
+    }
+
+    // 현재 알림 경로의 댓글 자동 열기를 처리했음을 기록한다
+    processedReplyRouteRef.current = requestedRouteKey;
+    // 현재 본인 사진 댓글 시트를 열고 알림이 지정한 댓글을 강조하도록 대상을 설정한다
+    setReplyTarget(requestedReaction);
+  }, [focusReplNumb, hasRequestedImage, requestedReaction, requestedRouteKey]);
 
   /**
    * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영합니다.
@@ -2061,9 +2105,13 @@ const ProfileEditPage = () => {
           )}
           {previewBackground && (
             <FullscreenImageButton
+              key={hasRequestedImage && requestedTagtType === "BACKGROUND_IMAGE"
+                ? `notification-${requestedRouteKey}`
+                : "my-background-image"}
               className={styles.coverImageViewerButton}
               source={previewBackground}
               alt={/* "배경사진" */ message("frontend.imageViewer.backgroundAlt")}
+              initiallyOpen={hasRequestedImage && requestedTagtType === "BACKGROUND_IMAGE"}
               actions={
                 !isEditMode && profile?.backgroundImageReaction
                   ? renderImageReactions(
@@ -2174,10 +2222,14 @@ const ProfileEditPage = () => {
             {/* 프로필 이미지와 이미지 변경 영역 */}
             <div className={styles.avatarWrap}>
               <FullscreenImageButton
+                key={hasRequestedImage && requestedTagtType === "PROFILE_IMAGE"
+                  ? `notification-${requestedRouteKey}`
+                  : "my-profile-image"}
                 className={styles.profileImageViewerButton}
                 source={normalizeProfileImageSource(previewImage)}
                 fallbackSource={DEFAULT_PROFILE_IMAGE}
                 alt={/* "프로필 사진" */ message("frontend.imageViewer.profileAlt")}
+                initiallyOpen={hasRequestedImage && requestedTagtType === "PROFILE_IMAGE"}
                 actions={
                   !isEditMode && profile?.profileImageReaction
                     ? renderImageReactions(
@@ -2367,6 +2419,7 @@ const ProfileEditPage = () => {
         <ReplySheet
           report={{ reptNumb: replyTarget.tagtNumb, userNick: profile?.userNick }}
           tagtType={replyTarget.tagtType}
+          focusReplNumb={focusReplNumb}
           onClose={() => void handleImageReplyClose()}
         />
       ) : null}
