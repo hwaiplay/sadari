@@ -16,9 +16,7 @@ import { useNavigate } from "react-router-dom";
 import {
   headerAlimBadge,
   headerAlimButton,
-  headerAlimIcon,
   hamburgerButton,
-  hamburgerIcon,
 } from "./Header.css";
 import * as drawerStyles from "../Navigation/Navigation.css";
 import type { UserMenuItem } from "@/features/Menu/api/userMenuApi";
