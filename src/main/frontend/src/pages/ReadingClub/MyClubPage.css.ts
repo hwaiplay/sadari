@@ -142,7 +142,6 @@ export const applicationItem = style({
   color: vars.color.black,
   textDecoration: "none",
   selectors: {
-    "&:hover": {background: vars.color.gray100},
     "&:focus-visible": {outline: `2px solid ${vars.color.brand}`, outlineOffset: 2},
   },
 });
@@ -150,7 +149,7 @@ export const applicationClubName = style({
   minWidth: 0,
   overflow: "hidden",
   fontFamily: vars.font.semibold,
-  fontSize: 14,
+  fontSize: 16,
   lineHeight: 1.35,
   textOverflow: "ellipsis",
   whiteSpace: "nowrap",

@@ -44,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 처리
  * 2026-08-24        HanWon.Jang        가입 알림·신청 취소·모임원 퇴장 처리
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 처리
+ * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 수정
  */
 @Service
 @RequiredArgsConstructor
@@ -1510,10 +1511,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         String tempCode = APPLICATION_APPROVED.equals(request.getJoinStat())
                 ? Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED
                 : Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED;
+        // 승인 템플릿은 모임 알림 상황을 사용하고 거절 템플릿은 거절 상황을 사용한다
+        String alimSitu = APPLICATION_APPROVED.equals(request.getJoinStat())
+                ? Constant.ALIM_SITU_FOLLOW_CLUB
+                : Constant.ALIM_SITU_REJECTED;
         // 신청자에게 모임명과 상세 화면 링크가 포함된 처리 결과 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 application.getUserNumb()
-              , Constant.ALIM_SITU_REJECTED
+              , alimSitu
               , tempCode
               , clubNumb
               , Map.of("clubName", club.getClubName())

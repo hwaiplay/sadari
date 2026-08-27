@@ -51,6 +51,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 검증
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 검증
  * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소·모임원 퇴장 검증
+ * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -989,6 +990,56 @@ class ReadingClubServiceImplTest {
                 30L
               , Constant.ALIM_SITU_REJECTED
               , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED
+              , 10L
+              , Map.of("clubName", "책벌레 모임")
+        );
+    }
+
+    /**
+     * 가입 신청 승인 알림이 모임 알림 상황과 승인 템플릿을 함께 사용하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void uptAppUsesApprovedSitu() {
+        // 가입 승인 권한과 알림 문구에 사용할 모임 정보를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 현재 사용자를 모임장으로 설정한다
+        club.setOwnrNumb(20L);
+        // 승인할 좌석이 남도록 모임 정원을 설정한다
+        club.setMaxxMemb(10);
+        // 승인 알림에 사용할 모임명을 설정한다
+        club.setClubName("책벌레 모임");
+
+        // 처리 대기 중인 활성 신청자 정보를 구성한다
+        ReadingClubDto.ApplicationDto application = new ReadingClubDto.ApplicationDto();
+        // 승인 후 멤버와 알림 수신자로 사용할 신청자 번호를 설정한다
+        application.setUserNumb(30L);
+
+        // 승인 처리 요청을 구성한다
+        ReadingClubDto.ApplicationDecisionReqDto request = new ReadingClubDto.ApplicationDecisionReqDto();
+        // 처리 상태를 승인으로 설정한다
+        request.setJoinStat("APPROVED");
+
+        // 신청 승인과 신청자 알림 발송이 모두 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getApplicationForUpdate(10L, 40L)).thenReturn(application);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.uptJoinApplication(10L, 40L, 20L, "APPROVED")).thenReturn(1);
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED, 10L
+                , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
+
+        // 모임장이 가입 신청을 승인한다
+        ResultData result = readingClubService.uptApplication(20L, 10L, 40L, request);
+
+        // 모임 알림 상황과 승인 템플릿 조합으로 승인과 알림이 완료되는지 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).setActiveMember(10L, 30L);
+        verify(alimService).sendAlim(
+                30L
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED
               , 10L
               , Map.of("clubName", "책벌레 모임")
         );
