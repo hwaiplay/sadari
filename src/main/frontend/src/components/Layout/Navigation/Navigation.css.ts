@@ -17,6 +17,11 @@ export const navContainer = style({
     // padding: `6px clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
     boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
+    // iOS의 동적 뷰포트 갱신 중에도 네비게이션을 독립 합성 레이어로 유지한다
+    transform: "translate3d(0, 0, 0)",
+    WebkitBackfaceVisibility: "hidden",
+    backfaceVisibility: "hidden",
+    willChange: "transform",
 });
 
 export const whiteBg = style({

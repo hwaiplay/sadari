@@ -40,11 +40,17 @@ globalFontFace("PretendardRegular", {
 globalStyle("html, body", {
   margin: 0,
   padding: 0,
+  minHeight: "100%",
   fontFamily: "PretendardRegular",
 });
 
 globalStyle("body", {
-  msOverflowStyle: "none"
+  minHeight: "100dvh",
+  msOverflowStyle: "none",
+});
+
+globalStyle("#root", {
+  minHeight: "100dvh",
 });
 
 globalStyle("::-webkit-scrollbar", {
