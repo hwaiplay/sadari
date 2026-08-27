@@ -53,6 +53,7 @@ type ReportListViewProps = {
   statusOptions?: readonly CustomSelectOption<string>[];
   emptyMessage: string;
   commentReport: PublicReportType | null;
+  focusReplNumb?: number;
   isLikePending: boolean;
   hasNext: boolean;
   isFetchingNext: boolean;
@@ -108,6 +109,7 @@ export default function ReportListView({
   statusOptions,
   emptyMessage,
   commentReport,
+  focusReplNumb,
   isLikePending,
   hasNext,
   isFetchingNext,
@@ -343,7 +345,11 @@ export default function ReportListView({
       </main>
 
       {commentReport ? (
-        <ReplySheet report={commentReport} onClose={onCloseReply} />
+        <ReplySheet
+          report={commentReport}
+          focusReplNumb={focusReplNumb}
+          onClose={onCloseReply}
+        />
       ) : null}
     </>
   );

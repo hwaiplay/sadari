@@ -9,8 +9,9 @@
  * 2026-07-28        HanWon.Jang        최초 생성
  * 2026-08-22        HanWon.Jang        공통 독후감 목록 UI 연계
  */
-import { useMemo, useState } from "react";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect, useMemo, useState } from "react";
+import { useLocation, useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import type { CustomSelectOption } from "@/components/Select/CustomSelect";
 import {
   usePublicReportLike,
@@ -19,6 +20,7 @@ import {
 import { REPORT_STATUS_CODE_GROUP } from "@/features/Book/constants/reportForm";
 import type { PublicReportType } from "@/features/Book/types/book.type";
 import type { PublicReportSortType } from "@/features/Book/api/bookApi";
+import { getPublicReportTargetApi } from "@/features/Book/api/bookApi";
 import type {
   ReportListBookSummary,
   ReportListItem,
@@ -44,6 +46,8 @@ export function usePublicReportPage() {
   const location = useLocation();
   // 사용자 프로필 화면 이동에 사용할 라우터 함수를 조회한다
   const navigate = useNavigate();
+  // 알림 직접 진입 경로에서 공개 독후감 번호를 조회한다
+  const { reptNumb: targetReptNumbParam } = useParams();
   // 공개 독후감 조회 대상 ISBN을 URL 검색 조건에서 조회한다
   const [searchParams] = useSearchParams();
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>(
@@ -55,21 +59,59 @@ export function usePublicReportPage() {
     null,
   );
 
-  const isbn = searchParams.get("isbn") ?? "";
-  const isValidIsbn = isbn.trim().length > 0;
+  const targetReptNumb = Number(targetReptNumbParam);
+  const hasTargetReport = Number.isSafeInteger(targetReptNumb) && targetReptNumb > 0;
+  const requestedReplyNumb = Number(searchParams.get("replNumb"));
+  const focusReplNumb = Number.isSafeInteger(requestedReplyNumb) && requestedReplyNumb > 0
+    ? requestedReplyNumb
+    : undefined;
+  const targetReportQuery = useQuery({
+    queryKey: ["publicReportTarget", targetReptNumb],
+    queryFn: async () => await getPublicReportTargetApi(targetReptNumb),
+    enabled: hasTargetReport,
+  });
+  const targetReport = targetReportQuery.data?.data;
+  const isbn = targetReport?.bookIsbn ?? searchParams.get("isbn") ?? "";
+  const isValidIsbn = hasTargetReport || isbn.trim().length > 0;
   // ISBN별 공개 독후감 목록의 서버 상태를 조회한다
-  const publicReportsQuery = usePublicReportsByIsbn(isbn, sort, status, isValidIsbn);
+  const publicReportsQuery = usePublicReportsByIsbn(
+    isbn,
+    sort,
+    status,
+    isbn.trim().length > 0,
+  );
   // 공개 독후감 필터와 상태명 표시에 사용할 독서 상태 공통코드를 조회한다
   const reportStatusCodeQuery = useCodeList(REPORT_STATUS_CODE_GROUP);
   // 공개 독후감 좋아요 변경 요청 상태를 조회한다
   const likeMutation = usePublicReportLike();
-  const pageState = (location.state ?? {}) as ReportListBookSummary;
+  const locationPageState = (location.state ?? {}) as ReportListBookSummary;
+  const pageState: ReportListBookSummary = targetReport
+    ? {
+        title: targetReport.bookTitl,
+        author: targetReport.bookAthr,
+        cover: targetReport.bookCvim,
+        ratingAverage: targetReport.bookAvgGrde,
+      }
+    : locationPageState;
 
   // 공개 독후감 API 응답이 없을 때도 화면에서 안전하게 빈 목록을 사용한다
   const reports = useMemo(() => {
     // 조회된 공개 독후감 서버 페이지를 화면 정렬 순서대로 연결해 반환한다
-    return publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
-  }, [publicReportsQuery.data]);
+    const pageReports = publicReportsQuery.data?.pages.flatMap((page) => page.data?.list ?? []) ?? [];
+
+    if (!targetReport) {
+      return pageReports;
+    }
+
+    return [targetReport, ...pageReports.filter((report) => report.reptNumb !== targetReport.reptNumb)];
+  }, [publicReportsQuery.data, targetReport]);
+
+  // 공개 독후감 알림 직접 진입이면 대상 카드를 표시하고 댓글 목록을 자동으로 연다
+  useEffect(() => {
+    if (targetReport?.reptNumb) {
+      setCommentReport(targetReport);
+    }
+  }, [targetReport?.reptNumb]);
 
   // 전체 필터와 서버 공통코드 순서를 결합한 독서 상태 옵션을 생성한다
   const statusOptions = useMemo<
@@ -217,9 +259,9 @@ export function usePublicReportPage() {
   return {
     pageState,
     isValidIsbn,
-    isPending: publicReportsQuery.isPending,
-    isError: publicReportsQuery.isError,
-    error: publicReportsQuery.error,
+    isPending: hasTargetReport ? targetReportQuery.isPending : publicReportsQuery.isPending,
+    isError: hasTargetReport ? targetReportQuery.isError : publicReportsQuery.isError,
+    error: hasTargetReport ? targetReportQuery.error : publicReportsQuery.error,
     reportsCount: reports.length,
     visibleReports,
     hasNext: Boolean(publicReportsQuery.hasNextPage),
@@ -228,6 +270,7 @@ export function usePublicReportPage() {
     status,
     statusOptions,
     commentReport,
+    focusReplNumb,
     isLikePending: likeMutation.isPending,
     handleSortChange,
     handleStatusChange,

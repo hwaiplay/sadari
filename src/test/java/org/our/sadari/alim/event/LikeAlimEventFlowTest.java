@@ -144,7 +144,9 @@ class LikeAlimEventFlowTest {
                 2L,
                 Constant.ALIM_SITU_LIKE,
                 "REPORT_LIKE",
+                Constant.LIKE_TARGET_REPORT,
                 3L,
+                null,
                 java.util.Map.of("userName", "sender")
         );
         // 이벤트 닉네임이 있으면 Redis를 추가 조회하지 않는지 확인한다
@@ -170,7 +172,9 @@ class LikeAlimEventFlowTest {
                 2L,
                 Constant.ALIM_SITU_LIKE,
                 "REPORT_LIKE",
+                Constant.LIKE_TARGET_REPORT,
                 3L,
+                null,
                 java.util.Map.of("userName", "redis-sender")
         );
     }
@@ -188,7 +192,9 @@ class LikeAlimEventFlowTest {
                 eq(2L),
                 eq(Constant.ALIM_SITU_LIKE),
                 eq("REPORT_LIKE"),
+                eq(Constant.LIKE_TARGET_REPORT),
                 eq(3L),
+                eq(null),
                 anyMap()
         )).thenThrow(new IllegalStateException("notification failed"));
 
@@ -205,6 +211,7 @@ class LikeAlimEventFlowTest {
      */
     private LikeAlimEvent createEvent(String sendUserNick) {
         // 고정된 발신자와 수신자 및 독후감 대상으로 테스트 이벤트를 반환한다
-        return new LikeAlimEvent(1L, 2L, "REPORT_LIKE", 3L, sendUserNick);
+        return new LikeAlimEvent(1L, 2L, "REPORT_LIKE", Constant.LIKE_TARGET_REPORT
+                               , 3L, null, sendUserNick);
     }
 }

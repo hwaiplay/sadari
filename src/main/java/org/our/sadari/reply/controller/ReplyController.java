@@ -168,8 +168,9 @@ public class ReplyController {
     public ResultData getTargetReplyList(@AuthenticationPrincipal Long userNumb,
                                          @PathVariable String tagtType,
                                          @PathVariable Long tagtNumb,
+                                         @RequestParam(value = "focusReplNumb", required = false) Long focusReplNumb,
                                          @RequestParam(value = "page", defaultValue = "1") int page) {
-        return replyService.getReplyList(userNumb, tagtType, tagtNumb, page);
+        return replyService.getReplyList(userNumb, tagtType, tagtNumb, focusReplNumb, page);
     }
 
     /** 범용 대상에 등록된 댓글을 수정한다. */

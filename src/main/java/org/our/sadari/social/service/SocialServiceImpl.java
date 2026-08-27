@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
+ * 2026-08-27        SeungHyeon.Kang    좋아요 알림에 원본 콘텐츠 유형 저장
  */
 @Service
 @RequiredArgsConstructor
@@ -579,7 +580,8 @@ public class SocialServiceImpl implements SocialService {
         }
 
         // 좋아요 응답 경로에서 Redis와 알림 DB 및 FCM 접근을 제거할 커밋 이후 이벤트를 생성한다
-        LikeAlimEvent event = new LikeAlimEvent(req.getUserNumb(), req.getTargetUserNumb(), req.getAlimTempCode(), req.getAlimTagtNumb(), null);
+        LikeAlimEvent event = new LikeAlimEvent(req.getUserNumb(), req.getTargetUserNumb(), req.getAlimTempCode()
+                                              , req.getTagtType(), req.getAlimTagtNumb(), null, null);
         // 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록한다
         likeAlimPublisher.setLikeAlim(event);
     }
@@ -645,7 +647,9 @@ public class SocialServiceImpl implements SocialService {
                 req.getFlowNumb()
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_FOLLOW_USER
+              , Constant.ALIM_TARGET_USER
               , req.getUserNumb()
+              , null
               , replaceMap
         );
     }

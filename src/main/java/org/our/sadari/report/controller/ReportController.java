@@ -130,6 +130,14 @@ public class ReportController {
         return reportService.getPublicReportsByIsbn(userNumb, isbn, sortType, reptStat, page);
     }
 
+    /** 알림이 지정한 공개 독후감 한 건을 직접 조회한다. */
+    @GetMapping("/publicReports/{reptNumb}")
+    @Operation(summary = "공개 독후감 직접 조회", description = "알림에서 지정한 공개 독후감과 연결 도서 정보를 조회한다.")
+    public ResultData getPublicReportTarget(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                          , @PathVariable Long reptNumb) {
+        return reportService.getPublicReportTarget(userNumb, reptNumb);
+    }
+
     /**
      * 새 독후감과 필요 시 신규 도서 정보를 함께 등록한다.
      * DTO 검증은 Controller에서 1차 수행하고, 업무 규칙 검증은 Service에서 한 번 더 수행한다.

@@ -148,7 +148,7 @@ public interface ReadingClubService {
      * @author HanWon.Jang
      * @return 반환값이 없다
      */
-    void completeExpiredReadingRound();
+    void completeExpiredRound();
 
     /**
      * 모임 정보와 카테고리 및 가입 질문을 저장하고 개설자를 모임장으로 등록한다.

@@ -128,6 +128,9 @@
 - `application-prod.yml`은 `withdrawal.hard-delete-test-enabled`를 `false`로 고정합니다.
   이 값은 GitHub Actions 환경변수로 노출하지 않으므로 운영 배포에서 로컬 테스트 스케줄러를
   활성화할 수 없습니다.
+- 독서 모임의 종료 회차 확정 스케줄은 로컬과 운영에서 매분 실행하도록 고정합니다.
+  `scheduler.round-completion-cron`은 서비스 내부 일자 경계 처리를 빠르게 확정하기 위한 값이며
+  운영 중 임의 변경 대상이 아니므로 Actions Variable이나 Secret으로 노출하지 않습니다.
 - 운영 유예기간은 `영구 탈퇴 데이터 삭제_처리 대기 일수` Actions Variable로 조정할 수 있으며,
   등록하지 않으면 30일을 사용합니다.
 - 사용자 앱과 로컬 전용 관리자 앱의 `application-loc.yml`에 있는 `complaint.auto-action` 임계치는 기능 검증을 위해 독후감, 댓글, 프로필 사진, 배경사진 및 한줄소개 모두 `1`건으로 고정합니다.

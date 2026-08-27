@@ -20,6 +20,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-26        HanWon.Jang        최초 생성
+ * 2026-08-27        SeungHyeon.Kang    동적 이동 대상 정보 저장 적용
  */
 @Component
 @RequiredArgsConstructor
@@ -72,7 +73,9 @@ public class LikeAlimWorker {
                     event.getTargetUserNumb()
                   , Constant.ALIM_SITU_LIKE
                   , event.getTempCode()
+                  , event.getTagtType()
                   , event.getTagtNumb()
+                  , event.getReplyNumb()
                   , replaceMap
             );
         }

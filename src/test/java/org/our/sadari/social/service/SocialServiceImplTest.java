@@ -140,7 +140,7 @@ class SocialServiceImplTest {
         // 좋아요 행 등록은 수행되는지 확인한다
         verify(socialMapper).setLike(request);
         // 알림 저장 서비스는 호출되지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
         // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
         verify(tokenRedisService, never()).getUserNick(eq(44L));
         // 알림이 꺼진 경우 커밋 이후 알림 이벤트도 등록하지 않는지 확인한다
@@ -193,7 +193,7 @@ class SocialServiceImplTest {
         // 동기 좋아요 경로에서 Redis 닉네임을 조회하지 않는지 확인한다
         verify(tokenRedisService, never()).getUserNick(eq(44L));
         // 동기 좋아요 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
     }
 
     /**

@@ -11,7 +11,6 @@
              , TEMP_TITL
              , ALIM_TITL
              , TEMP_CONT
-             , LINK_URLX
              , USEE_YSNO
           FROM TB_ALTEMP
          WHERE ALIM_SITU = #{alimSitu}
@@ -41,7 +40,9 @@
                   , TEMP_CODE
                   , ALIM_TITL
                   , ALIM_CONT
-                  , LINK_URLX
+                  , TAGT_TYPE
+                  , TAGT_NUMB
+                  , REPL_NUMB
                   , READ_YSNO
                   , SEND_DATE
                   , DELT_YSNO
@@ -52,7 +53,9 @@
              , #{tempCode}
              , #{alimTitl}
              , #{alimCont}
-             , #{linkUrlx}
+             , #{tagtType,jdbcType=VARCHAR}
+             , #{tagtNumb,jdbcType=BIGINT}
+             , #{replNumb,jdbcType=BIGINT}
              , #{readYsno}
              , CURRENT_TIMESTAMP
              , #{deltYsno}
@@ -71,7 +74,9 @@
            AND TEMP_CODE = #{tempCode}
            AND COALESCE(ALIM_TITL, ' ') = COALESCE(#{alimTitl}, ' ')
            AND COALESCE(ALIM_CONT, ' ') = COALESCE(#{alimCont}, ' ')
-           AND COALESCE(LINK_URLX, ' ') = COALESCE(#{linkUrlx}, ' ')
+           AND COALESCE(TAGT_TYPE, ' ') = COALESCE(#{tagtType}, ' ')
+           AND COALESCE(TAGT_NUMB, -1) = COALESCE(#{tagtNumb}, -1)
+           AND COALESCE(REPL_NUMB, -1) = COALESCE(#{replNumb}, -1)
            AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
            AND SEND_DATE >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)
     </select>
@@ -87,7 +92,6 @@
              , ALIMPAGE.TEMP_CODE
              , ALIMPAGE.ALIM_TITL
              , ALIMPAGE.ALIM_CONT
-             , ALIMPAGE.LINK_URLX
              , ALIMPAGE.READ_YSNO
              , ALIMPAGE.READ_DATE
              , ALIMPAGE.SEND_DATE
@@ -100,7 +104,6 @@
                        , ALIMDETAIL.TEMP_CODE
                        , ALIMDETAIL.ALIM_TITL
                        , ALIMDETAIL.ALIM_CONT
-                       , ALIMDETAIL.LINK_URLX
                        , ALIMDETAIL.READ_YSNO
                        , DATE_FORMAT(ALIMDETAIL.READ_DATE, '%Y-%m-%d %H:%i:%s') AS READ_DATE
                        , DATE_FORMAT(ALIMDETAIL.SEND_DATE, '%Y-%m-%d %H:%i:%s') AS SEND_DATE
@@ -115,7 +118,6 @@
                                  , ALIM.TEMP_CODE
                                  , ALIM.ALIM_TITL
                                  , ALIM.ALIM_CONT
-                                 , ALIM.LINK_URLX
                                  , ALIM.READ_YSNO
                                  , ALIM.READ_DATE
                                  , ALIM.SEND_DATE
@@ -131,6 +133,66 @@
             ON DEFAULT_ICON.ALIM_SITU = #{alimSituDefault}
          WHERE ALIMPAGE.ROW_NUMB BETWEEN #{startRow} AND #{endRow}
       ORDER BY ALIMPAGE.ROW_NUMB
+    </select>
+
+    <!-- 알림 소유권을 사용자와 알림번호로 제한하고 현재 콘텐츠 소유자와 팔로우 관계를 함께 조회한다. -->
+    <select id="getAlimTargetDtl" parameterType="org.our.sadari.alim.dto.AlimDto$AlimTargetDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimTargetDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="targetUser" value="@org.our.sadari.global.common.constant.Constant@ALIM_TARGET_USER" />
+        <bind name="targetClub" value="@org.our.sadari.global.common.constant.Constant@ALIM_TARGET_READING_CLUB" />
+        SELECT /* getAlimTargetDtl */
+               A.USER_NUMB
+             , A.ALIM_NUMB
+             , A.TEMP_CODE
+             , A.TAGT_TYPE
+             , A.TAGT_NUMB
+             , A.REPL_NUMB
+             , CASE
+                   WHEN A.TAGT_TYPE = #{targetReport} THEN R.USER_NUMB
+                   WHEN A.TAGT_TYPE = #{targetUser} THEN U.USER_NUMB
+                   WHEN A.TAGT_TYPE = #{targetClub} THEN C.OWNR_NUMB
+                   ELSE I.USER_NUMB
+               END AS TARGET_USER_NUMB
+             , CASE
+                   WHEN A.TAGT_TYPE = #{targetReport} THEN RU.USER_STAT
+                   WHEN A.TAGT_TYPE = #{targetUser} THEN U.USER_STAT
+                   WHEN A.TAGT_TYPE = #{targetClub} THEN CU.USER_STAT
+                   ELSE I.USER_STAT
+               END AS TARGET_USER_STAT
+             , R.PUBC_YSNO
+             , R.REPT_STAT
+             , CASE WHEN F.USER_NUMB IS NOT NULL THEN #{commYes} ELSE #{commNo} END AS FOLLOW_YSNO
+          FROM TB_ALIMXX A
+     LEFT JOIN TM_REPORT R
+            ON A.TAGT_TYPE = #{targetReport}
+           AND R.REPT_NUMB = A.TAGT_NUMB
+     LEFT JOIN TM_USERXM RU
+            ON RU.USER_NUMB = R.USER_NUMB
+     LEFT JOIN TM_USERXM I
+            ON (A.TAGT_TYPE = #{targetProfile} AND I.PROF_NUMB = A.TAGT_NUMB)
+            OR (A.TAGT_TYPE = #{targetBackground} AND I.BGIM_NUMB = A.TAGT_NUMB)
+     LEFT JOIN TM_USERXM U
+            ON A.TAGT_TYPE = #{targetUser}
+           AND U.USER_NUMB = A.TAGT_NUMB
+     LEFT JOIN TM_CLUBXM C
+            ON A.TAGT_TYPE = #{targetClub}
+           AND C.CLUB_NUMB = A.TAGT_NUMB
+     LEFT JOIN TM_USERXM CU
+            ON CU.USER_NUMB = C.OWNR_NUMB
+     LEFT JOIN TB_FOLLOW F
+            ON F.USER_NUMB = A.USER_NUMB
+           AND F.FLOW_NUMB = CASE
+                                 WHEN A.TAGT_TYPE = #{targetReport} THEN R.USER_NUMB
+                                 WHEN A.TAGT_TYPE = #{targetUser} THEN U.USER_NUMB
+                                 ELSE I.USER_NUMB
+                             END
+         WHERE A.USER_NUMB = #{userNumb}
+           AND A.ALIM_NUMB = #{alimNumb}
+           AND COALESCE(A.DELT_YSNO, #{commNo}) = #{commNo}
     </select>
 
     <!-- 사용자가 알림센터 항목 또는 푸시 알림을 클릭한 경우 해당 알림 한 건만 읽음 처리한다. -->

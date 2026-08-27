@@ -151,6 +151,7 @@ const ReplyItem = ({
   const profilePath = getReplyProfilePath(reply.userNumb, reply.myReplyYn);
   // 삭제된 댓글의 원문과 상호작용 제어를 화면에 노출하지 않도록 상태를 구분한다
   const isDeleted = reply.deltYsno === "Y";
+  const isFocused = controller.focusReplNumb === reply.replNumb;
 
   // 삭제된 댓글은 기본 프로필 이미지와 삭제 안내 문구만 반환한다
   if (isDeleted) {
@@ -159,8 +160,9 @@ const ReplyItem = ({
       <article
         className={`${
           isChild ? styles.childReplyItem : styles.replyItem
-        } ${styles.deletedReplyItem}`}
+        } ${styles.deletedReplyItem} ${isFocused ? styles.focusedReplyItem : ""}`}
         key={`${reportNumb}-${reply.replNumb}`}
+        data-reply-numb={reply.replNumb}
       >
         <div className={styles.deletedReplyItemWrap}>
           <ProfileImage
@@ -268,8 +270,11 @@ const ReplyItem = ({
   return (
     /* 등록된 댓글 개별 항목 영역 */
     <article
-      className={isChild ? styles.childReplyItem : styles.replyItem}
+      className={`${isChild ? styles.childReplyItem : styles.replyItem} ${
+        isFocused ? styles.focusedReplyItem : ""
+      }`}
       key={`${reportNumb}-${reply.replNumb}`}
+      data-reply-numb={reply.replNumb}
     >
       <div className={styles.replyItemWrap}>
         {/* 댓글 작성자 프로필 이미지 영역 */}
@@ -465,6 +470,12 @@ const ReplyThread = ({
   const isExpanded =
     thread.parentReply.deltYsno === "Y" ||
     Boolean(controller.expandedReplyMap[thread.parentReply.replNumb]);
+  const hasFocusedChild = thread.childReplies.some(
+    (reply) => reply.replNumb === controller.focusReplNumb,
+  );
+  const renderedChildReplies = hasFocusedChild
+    ? thread.childReplies
+    : visibleChildReplies;
 
   /**
    * 자식 댓글 한 건을 부모 댓글 아래의 들여쓰기 항목으로 표시한다
@@ -506,7 +517,7 @@ const ReplyThread = ({
       {isExpanded ? (
         /* 선택한 부모 댓글의 자식 댓글 목록 영역 */
         <div className={styles.childReplyList}>
-          {visibleChildReplies.map(renderChildReply)}
+          {renderedChildReplies.map(renderChildReply)}
           <InfiniteScrollTrigger
             hasNext={hasNextChildReply}
             onLoadMore={loadMoreChildReply}

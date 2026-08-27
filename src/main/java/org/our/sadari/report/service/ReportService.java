@@ -63,6 +63,9 @@ public interface ReportService {
     ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn, String sortType
                                     , String reptStat, int page);
 
+    /** 알림이 지정한 공개 독후감 한 건과 도서 정보를 조회한다. */
+    ResultData getPublicReportTarget(Long userNumb, Long reptNumb);
+
     /**
      * ISBN 기준으로 도서의 평균 별점을 조회한다.
      * 평균 별점은 공개 여부와 관계없이 읽는 중 상태를 제외하고 계산한다.

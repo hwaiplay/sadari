@@ -6,12 +6,13 @@
         목표 종료일이 오늘, 어제, 이틀 전인 READ 상태 독후감을 오래된 순서대로 조회한다.
         REPT_ENDT에는 시간이 없는 yyyy-MM-dd 값만 저장되므로 오늘을 포함한 최근 3개 날짜를 48시간 알림 범위로 사용한다.
         LIMIT 조건을 최외곽에 적용해 정렬된 전체 후보 중 최대 maxSize건만 JVM 메모리로 반환한다.
-        이미 같은 독후감 링크로 REPORT_DATE_OVER 알림을 저장한 경우에는 다음 실행에서 다시 선택하지 않는다.
+        이미 같은 독후감 대상의 REPORT_DATE_OVER 알림을 저장한 경우에는 다음 실행에서 다시 선택하지 않는다.
     -->
     <select id="getOverdueReportList" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="alimSituReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_SITU_REPORT" />
         <bind name="tempCodeReportDateOver" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPORT_DATE_OVER" />
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="lookbackDays" value="@org.our.sadari.global.common.constant.Constant@REPORT_DATE_OVER_LOOKBACK_DAYS" />
         SELECT /* getOverdueReportList */
@@ -41,7 +42,8 @@
                          WHERE A.USER_NUMB = R.USER_NUMB
                            AND A.ALIM_SITU = T.ALIM_SITU
                            AND A.TEMP_CODE = T.TEMP_CODE
-                           AND A.LINK_URLX = CONCAT(T.LINK_URLX, CAST(R.REPT_NUMB AS CHAR))
+                           AND A.TAGT_TYPE = #{targetReport}
+                           AND A.TAGT_NUMB = R.REPT_NUMB
                    )
               ORDER BY R.REPT_ENDT ASC
                      , R.REPT_NUMB ASC

@@ -146,10 +146,11 @@ export const delReplyLikeApi = async (
 export const getReplyListApi = async (
   target: ReplyTarget,
   page: number,
+  focusReplNumb?: number,
 ): Promise<GetReplyListResponse> => {
   // 독후감 번호를 경로에 포함하여 해당 독후감의 댓글만 조회한다
   const response = await api.get<GetReplyListResponse>(`/reply/${target.tagtType}/${target.tagtNumb}`, {
-    params: { page },
+    params: { page, focusReplNumb },
   });
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 댓글 목록을 반환한다

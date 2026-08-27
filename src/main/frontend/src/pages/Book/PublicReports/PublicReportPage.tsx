@@ -58,6 +58,7 @@ export default function PublicReportPage() {
       statusOptions={page.statusOptions}
       emptyMessage={message("frontend.book.publicReports.empty")}
       commentReport={page.commentReport}
+      focusReplNumb={page.focusReplNumb}
       isLikePending={page.isLikePending}
       hasNext={page.hasNext}
       isFetchingNext={page.isFetchingNext}

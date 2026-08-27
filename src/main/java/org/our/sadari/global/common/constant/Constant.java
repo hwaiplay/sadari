@@ -22,6 +22,7 @@ package org.our.sadari.global.common.constant;
  * 2026-08-22        SeungHyeon.Kang    신고 대상·자동 조치 코드 추가
  * 2026-08-24        SeungHyeon.Kang    모임 가입 처리 알림 코드 추가
  * 2026-08-27        SeungHyeon.Kang    댓글 좋아요 대상별 알림 코드 추가
+ * 2026-08-27        SeungHyeon.Kang    댓글 좋아요와 대댓글 알림 코드를 공통 템플릿으로 통합
  */
 public final class Constant {
 
@@ -105,6 +106,12 @@ public final class Constant {
     public static final String LIKE_TARGET_BACKGROUND_IMAGE = "BACKGROUND_IMAGE";
     // 좋아요 대상 댓글 설정값
     public static final String LIKE_TARGET_REPLY = "REPLY";
+    // 팔로우 알림에서 이동할 사용자 프로필 대상 유형
+    public static final String ALIM_TARGET_USER = "USER";
+    // 초대와 가입 처리 알림에서 이동할 독서 모임 대상 유형
+    public static final String ALIM_TARGET_READING_CLUB = "READING_CLUB";
+    // 상세 번호 없이 독서 타이머 화면으로 이동하는 대상 유형
+    public static final String ALIM_TARGET_TIMER = "TIMER";
     // 사용자 신고 대상 설정값
     public static final String COMPLAINT_TARGET_USER = "CMPL_USER";
     // 독후감 신고 대상 설정값
@@ -196,10 +203,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE = "REPLY_BACKGROUND_IMAGE";
     // 독후감 댓글 좋아요 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_REPLY_LIKE = "REPLY_LIKE";
-    // 프로필 이미지 댓글 좋아요 알림 템플릿 코드
-    public static final String ALIM_TEMP_CODE_REPLY_LIKE_PROFILE = "REPLY_LIKE_PROFILE_IMAGE";
-    // 배경 이미지 댓글 좋아요 알림 템플릿 코드
-    public static final String ALIM_TEMP_CODE_REPLY_LIKE_BACKGROUND = "REPLY_LIKE_BACKGROUND_IMAGE";
+    // 원본 콘텐츠 유형과 현재 관계에 관계없이 사용하는 대댓글 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_REPLY_TO_COMMENT = "REPLY_TO_COMMENT";
     // 독서 모임 회원 초대 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_INVITE_CLUB = "INVITE_CLUB";
     // 독서 모임 가입 신청 승인 알림 템플릿 코드

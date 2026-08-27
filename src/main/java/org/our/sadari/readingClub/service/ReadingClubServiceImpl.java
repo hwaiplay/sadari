@@ -388,7 +388,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 모임과 회차 및 수정 요청의 필수 참조값이 없으면 변경을 시작하지 않는다
         if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb, request)
-                || !isValidReadingUpdateRequest(request)) {
+                || !isValidReadingUpdate(request)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
@@ -585,7 +585,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     @Override
     public ResultData getReadingGoalResult(Long userNumb, Long clubNumb) {
         // 모임 상세에서는 가장 최근에 종료된 독서 회차의 결과를 조회한다
-        return getReadingGoalResultInternal(userNumb, clubNumb, null);
+        return getGoalResultInternal(userNumb, clubNumb, null);
     }
 
     /**
@@ -606,7 +606,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         }
 
         // 목록에서 선택한 완료 회차의 결과를 조회한다
-        return getReadingGoalResultInternal(userNumb, clubNumb, rondNumb);
+        return getGoalResultInternal(userNumb, clubNumb, rondNumb);
     }
 
     /**
@@ -618,7 +618,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      * @param rondNumb 조회할 회차 번호이며 최신 회차 조회이면 Null
      * @return 완료 독서 회차의 목표 결과
      */
-    private ResultData getReadingGoalResultInternal(Long userNumb, Long clubNumb, Long rondNumb) {
+    private ResultData getGoalResultInternal(Long userNumb, Long clubNumb, Long rondNumb) {
         // 종료 결과 조회에 필요한 두 식별값이 없으면 권한과 결과를 조회하지 않는다
         if (StringUtil.hasEmpty(userNumb, clubNumb)) {
             // "요청값이 올바르지 않아요."
@@ -765,7 +765,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      */
     @Override
     @Transactional
-    public void completeExpiredReadingRound() {
+    public void completeExpiredRound() {
         // 회차 상태를 변경하기 전에 마감 시점의 참여자별 목표 달성 여부를 먼저 고정한다
         readingClubMapper.uptExpiredReadingParticipantGoal();
         // 참여자 결과가 모두 고정된 만료 회차를 완료 상태로 변경한다
@@ -979,9 +979,11 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 퇴장 대상에게 모임명과 필수 사유가 포함된 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 targetUserNumb
-              , Constant.ALIM_SITU_DEFAULT
+              , Constant.ALIM_SITU_REJECTED
               , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED
+              , Constant.ALIM_TARGET_READING_CLUB
               , clubNumb
+              , null
               , Map.of("clubName", club.getClubName(), "exitReason", exitReason)
         );
         // 알림 저장에 실패하면 퇴장 관계만 확정되지 않도록 전체 트랜잭션을 롤백한다
@@ -1117,12 +1119,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
             }
 
-            // 모임장에게 모임명과 멤버 관리 화면 링크가 포함된 신규 멤버 가입 알림을 저장하고 푸시를 예약한다
+            // 모임장에게 모임명과 모임 대상 정보가 포함된 신규 멤버 가입 알림을 저장하고 푸시를 예약한다
             ResultData alimResult = alimService.sendAlim(
                     club.getOwnrNumb()
                   , Constant.ALIM_SITU_FOLLOW_CLUB
                   , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED
+                  , Constant.ALIM_TARGET_READING_CLUB
                   , clubNumb
+                  , null
                   , Map.of("clubName", club.getClubName())
             );
             // 알림 저장에 실패하면 멤버 관계만 확정되지 않도록 즉시 가입 전체를 롤백한다
@@ -1172,12 +1176,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
-        // 모임장에게 모임명과 멤버 관리 화면 링크가 포함된 신규 가입 신청 알림을 저장하고 푸시를 예약한다
+        // 모임장에게 모임명과 모임 대상 정보가 포함된 신규 가입 신청 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 club.getOwnrNumb()
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED
+              , Constant.ALIM_TARGET_READING_CLUB
               , clubNumb
+              , null
               , Map.of("clubName", club.getClubName())
         );
         // 템플릿 누락 등으로 알림 저장에 실패하면 가입 신청만 확정되지 않도록 전체 트랜잭션을 롤백한다
@@ -1305,7 +1311,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                     targetUserNumb
                   , Constant.ALIM_SITU_FOLLOW_CLUB
                   , Constant.ALIM_TEMP_CODE_INVITE_CLUB
+                  , Constant.ALIM_TARGET_READING_CLUB
                   , clubNumb
+                  , null
                   , Map.of("userName", club.getOwnrNick(), "clubName", club.getClubName())
             );
             // 템플릿 누락 등으로 알림 저장에 실패하면 초대만 남지 않도록 전체 트랜잭션을 롤백한다
@@ -1515,12 +1523,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         String alimSitu = APPLICATION_APPROVED.equals(request.getJoinStat())
                 ? Constant.ALIM_SITU_FOLLOW_CLUB
                 : Constant.ALIM_SITU_REJECTED;
-        // 신청자에게 모임명과 상세 화면 링크가 포함된 처리 결과 알림을 저장하고 푸시를 예약한다
+        // 신청자에게 모임명과 모임 대상 정보가 포함된 처리 결과 알림을 저장하고 푸시를 예약한다
         ResultData alimResult = alimService.sendAlim(
                 application.getUserNumb()
               , alimSitu
               , tempCode
+              , Constant.ALIM_TARGET_READING_CLUB
               , clubNumb
+              , null
               , Map.of("clubName", club.getClubName())
         );
         // 템플릿 누락 등으로 알림 저장에 실패하면 신청 처리만 확정되지 않도록 전체 트랜잭션을 롤백한다
@@ -1777,7 +1787,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      * @param request 검증할 모임 독서 수정 요청
      * @return 수정 가능한 요청이면 true
      */
-    private boolean isValidReadingUpdateRequest(ReadingClubDto.ReadingUpdateReqDto request) {
+    private boolean isValidReadingUpdate(ReadingClubDto.ReadingUpdateReqDto request) {
 
         // 외부 도서 검색 결과와 기간을 서버 저장 규격에 맞춰 정규화한다
         request.setBookTitl(StringUtil.normalizePlainText(request.getBookTitl(), 500));

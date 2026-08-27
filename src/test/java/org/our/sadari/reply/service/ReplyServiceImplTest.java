@@ -137,7 +137,9 @@ class ReplyServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq("REPLY_REPORT")
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(157L)
+              , eq(8L)
               , any()
         )).thenReturn(ResultData.success());
 
@@ -159,7 +161,9 @@ class ReplyServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(157L)
+              , eq(8L)
               , replaceMapCaptor.capture()
         );
         // 알림 문구에 댓글 작성자 닉네임이 전달되는지 확인한다
@@ -188,6 +192,8 @@ class ReplyServiceImplTest {
         // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
         when(badWordDetectionService.findBadWord("새 프로필 사진이 멋져요."))
                 .thenReturn(Optional.empty());
+        // 사진 소유자를 팔로우해 댓글 API에 접근할 수 있는 조건을 구성한다
+        when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(1);
         // 사진 댓글 한 건이 저장되는 조건을 구성한다
         when(replyMapper.setReply(replyDto)).thenReturn(1);
         // 프로필 사진 소유자와 알림 템플릿 정보를 생성한다
@@ -215,9 +221,42 @@ class ReplyServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE)
+              , eq(Constant.LIKE_TARGET_PROFILE_IMAGE)
               , eq(157L)
+              , eq(8L)
               , any()
         );
+    }
+
+    /** 비팔로워는 사진 댓글 목록을 조회할 수 없는지 검증한다. */
+    @Test
+    void getImageRepliesDenied() {
+        // 사진 소유자도 팔로워도 아닌 사용자의 접근 조건을 구성한다
+        when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(0);
+
+        // 비팔로워가 프로필 사진 댓글 목록을 조회한다
+        ResultData result = replyService.getReplyList(
+                44L, Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, null, 1);
+
+        // 댓글 데이터 자체를 조회하기 전에 접근 거부하는지 확인한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(replyMapper, never()).getReplyList(any(ReplyDto.class));
+    }
+
+    /** 비팔로워는 사진 댓글을 등록할 수 없는지 검증한다. */
+    @Test
+    void setImageReplyDenied() {
+        ReplyDto replyDto = new ReplyDto();
+        replyDto.setTagtType(Constant.LIKE_TARGET_BACKGROUND_IMAGE);
+        replyDto.setTagtNumb(157L);
+        replyDto.setReplCntn("접근할 수 없는 댓글");
+        when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(0);
+
+        ResultData result = replyService.setReply(44L, replyDto);
+
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(replyMapper, never()).setReply(any(ReplyDto.class));
+        verifyNoInteractions(badWordDetectionService);
     }
 
     /**
@@ -263,10 +302,62 @@ class ReplyServiceImplTest {
         assertEquals(200, result.getCode());
         // 콘텐츠 소유자에게 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
         verify(alimService).sendAlim(
-                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT), eq(157L), any());
-        // 부모 댓글 작성자에게 같은 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
+                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
+              , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
+        // 부모 댓글 작성자에게 관계와 무관한 공통 대댓글 알림이 발송되는지 확인한다
         verify(alimService).sendAlim(
-                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT), eq(157L), any());
+                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+              , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
+    }
+
+    /** 비팔로워가 작성한 독후감 댓글의 답글은 공개 독후감으로 연결되는지 검증한다. */
+    @Test
+    void replyToNonFollowerPublic() {
+        ReplyDto replyDto = new ReplyDto();
+        replyDto.setReptNumb(157L);
+        replyDto.setUperNumb(7L);
+        replyDto.setReplNumb(8L);
+        replyDto.setReplCntn("작성자가 남긴 답글입니다.");
+        when(badWordDetectionService.findBadWord(replyDto.getReplCntn())).thenReturn(Optional.empty());
+        when(replyMapper.setReply(replyDto)).thenReturn(1);
+        ReplyDto reportAlim = new ReplyDto();
+        reportAlim.setTargetUserNumb(31L);
+        reportAlim.setParentUserNumb(32L);
+        reportAlim.setReplyAlimYsno(Constant.COMM_YES);
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
+        when(tokenRedisService.getUserNick(31L)).thenReturn("독후감작성자");
+
+        ResultData result = replyService.setReply(31L, replyDto);
+
+        assertEquals(200, result.getCode());
+        verify(alimService).sendAlim(
+                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+              , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
+    }
+
+    /** 독후감 소유자의 댓글에 답글이 달리면 소유자 상세 경로의 직접 답글 템플릿을 쓰는지 검증한다. */
+    @Test
+    void replyToOwnerDetail() {
+        ReplyDto replyDto = new ReplyDto();
+        replyDto.setReptNumb(157L);
+        replyDto.setUperNumb(7L);
+        replyDto.setReplNumb(8L);
+        replyDto.setReplCntn("소유자 댓글에 답글입니다.");
+        when(badWordDetectionService.findBadWord(replyDto.getReplCntn())).thenReturn(Optional.empty());
+        when(replyMapper.setReply(replyDto)).thenReturn(1);
+        ReplyDto reportAlim = new ReplyDto();
+        reportAlim.setTargetUserNumb(31L);
+        reportAlim.setParentUserNumb(31L);
+        reportAlim.setReplyAlimYsno(Constant.COMM_NO);
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
+        when(tokenRedisService.getUserNick(44L)).thenReturn("답글작성자");
+
+        ResultData result = replyService.setReply(44L, replyDto);
+
+        assertEquals(200, result.getCode());
+        verify(alimService).sendAlim(
+                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+              , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
     /**
@@ -305,7 +396,7 @@ class ReplyServiceImplTest {
         // 댓글 등록 자체는 성공하는지 확인한다
         assertEquals(200, result.getCode());
         // 알림 저장 서비스가 호출되지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
         // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
     }
@@ -536,11 +627,57 @@ class ReplyServiceImplTest {
         // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인한다
         assertEquals("좋아요사용자", eventCaptor.getValue().getSendUserNick());
         // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
         // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
         assertEquals(likeDetail, result.getData());
+    }
+
+    /** 팔로워가 작성한 독후감 댓글 좋아요는 피드 댓글로 연결되는지 검증한다. */
+    @Test
+    void replyLikeFollowerFeed() {
+        ReplyDto likeTarget = new ReplyDto();
+        likeTarget.setTagtType(Constant.LIKE_TARGET_REPORT);
+        likeTarget.setTagtNumb(157L);
+        likeTarget.setReplNumb(8L);
+        likeTarget.setTargetUserNumb(32L);
+        likeTarget.setUserNick("좋아요사용자");
+        when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
+        when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
+        when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(new ReplyDto());
+
+        ResultData result = replyService.setReplyLike(44L, Constant.LIKE_TARGET_REPORT, 157L, 8L);
+
+        assertEquals(200, result.getCode());
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
+        assertEquals(Constant.LIKE_TARGET_REPORT, eventCaptor.getValue().getTagtType());
+        assertEquals(8L, eventCaptor.getValue().getReplyNumb());
+    }
+
+    /** 비팔로워가 작성한 공개 독후감 댓글 좋아요는 공개 독후감으로 연결되는지 검증한다. */
+    @Test
+    void replyLikePublic() {
+        ReplyDto likeTarget = new ReplyDto();
+        likeTarget.setTagtType(Constant.LIKE_TARGET_REPORT);
+        likeTarget.setTagtNumb(157L);
+        likeTarget.setReplNumb(8L);
+        likeTarget.setTargetUserNumb(32L);
+        likeTarget.setUserNick("좋아요사용자");
+        when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
+        when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
+        when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(new ReplyDto());
+
+        ResultData result = replyService.setReplyLike(44L, Constant.LIKE_TARGET_REPORT, 157L, 8L);
+
+        assertEquals(200, result.getCode());
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
+        assertEquals(Constant.LIKE_TARGET_REPORT, eventCaptor.getValue().getTagtType());
+        assertEquals(8L, eventCaptor.getValue().getReplyNumb());
     }
 
     /**
@@ -579,10 +716,14 @@ class ReplyServiceImplTest {
         ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
         // 댓글 좋아요 알림 이벤트가 등록됐는지 확인한다
         verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
-        // 프로필 사진 댓글 좋아요 전용 템플릿을 사용하는지 확인한다
-        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE_PROFILE, eventCaptor.getValue().getTempCode());
+        // 프로필 사진 댓글 좋아요도 공통 댓글 좋아요 템플릿을 사용하는지 확인한다
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
+        // 클릭 시점에 사진 접근 관계를 계산할 수 있도록 원본 유형을 전달하는지 확인한다
+        assertEquals(Constant.LIKE_TARGET_PROFILE_IMAGE, eventCaptor.getValue().getTagtType());
         // 원본 프로필 사진 번호를 알림 이동 대상으로 사용하는지 확인한다
         assertEquals(157L, eventCaptor.getValue().getTagtNumb());
+        // 알림에서 강조할 댓글 번호를 확인한다
+        assertEquals(8L, eventCaptor.getValue().getReplyNumb());
     }
 
     /**

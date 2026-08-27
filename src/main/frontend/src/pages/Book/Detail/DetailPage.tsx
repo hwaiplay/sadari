@@ -144,6 +144,11 @@ function DetailPage() {
   const [searchParams] = useSearchParams();
   // 명시적으로 댓글 목록을 요청한 알림 링크인지 판정한다
   const shouldOpenReplies = searchParams.get("showReplies") === "Y";
+  // 알림이 지정한 댓글 번호를 양수 정수인 경우에만 댓글 포커스로 사용한다
+  const requestedReplyNumb = Number(searchParams.get("replNumb"));
+  const focusReplNumb = Number.isSafeInteger(requestedReplyNumb) && requestedReplyNumb > 0
+    ? requestedReplyNumb
+    : undefined;
   const { data, error, isError, isPending } = useBookDetail(idNum);
   const bookData = data?.data;
   const likeMutation = usePublicReportLike();
@@ -1137,6 +1142,7 @@ function DetailPage() {
       {isReplySheetOpen ? (
         <ReplySheet
           report={{ reptNumb: idNum }}
+          focusReplNumb={focusReplNumb}
           onClose={() => setIsReplySheetOpen(false)}
         />
       ) : null}

@@ -1049,6 +1049,23 @@ public class ReportServiceImpl implements ReportService {
         return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
+    /** 알림이 지정한 공개 독후감 한 건과 도서 정보를 조회한다. */
+    @Override
+    public ResultData getPublicReportTarget(Long userNumb, Long reptNumb) {
+        if (StringUtil.hasEmpty(userNumb, reptNumb) || reptNumb <= 0) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        ReportDto request = new ReportDto();
+        request.setUserNumb(userNumb);
+        request.setReptNumb(reptNumb);
+        ReportDto target = reportMapper.getPublicReportTarget(request);
+
+        return StringUtil.isEmpty(target)
+                ? ResultData.fail(ResultEnum.COMMON_NO_DATA)
+                : ResultData.success(target);
+    }
+
     /**
      * ISBN 기준 도서 평균 별점을 조회한다.
      * 평균 별점은 공개 여부와 무관하게 읽는 중 상태를 제외한 독후감을 기준으로 계산한다.

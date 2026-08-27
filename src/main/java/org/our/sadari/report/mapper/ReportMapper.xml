@@ -510,6 +510,66 @@
         </if>
     </select>
 
+    <!-- 알림에서 지정한 활성 사용자의 공개 독후감 한 건과 연결 도서 정보를 조회한다. -->
+    <select id="getPublicReportTarget" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
+        <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getPublicReportTarget */
+               P.REPT_NUMB
+             , P.USER_NUMB
+             , U.USER_NICK
+             , PF.FILE_PATH AS PORF_PATH
+             , P.BOOK_NUMB
+             , P.REPT_STAT
+             , FN_GET_CODE_NAME(#{codeReadStat}, P.REPT_STAT, NULL) AS REPT_STAT_NAME
+             , P.REPT_GRDE
+             , P.REPT_CNTN
+             , P.PUBC_YSNO
+             , B.BOOK_TITL
+             , B.BOOK_ATHR
+             , B.BOOK_PUBL
+             , B.BOOK_ISBN
+             , B.BOOK_CVIM
+             , B.BOOK_DESC
+             , B.PUBL_DATE
+             , (SELECT ROUND(AVG(CAST(AVG_REPORT.REPT_GRDE AS UNSIGNED)), 1)
+                  FROM TM_REPORT AVG_REPORT
+                 WHERE AVG_REPORT.BOOK_NUMB = P.BOOK_NUMB
+                   AND AVG_REPORT.REPT_STAT != #{reptStatRead}) AS BOOK_AVG_GRDE
+             , (SELECT COUNT(*)
+                  FROM TB_LIKEXX L
+                  JOIN TM_USERXM LU ON LU.USER_NUMB = L.USER_NUMB AND LU.USER_STAT = #{userStatActive}
+                 WHERE L.TAGT_TYPE = #{likeTargetReport}
+                   AND L.TAGT_NUMB = P.REPT_NUMB) AS LIKE_CNT
+             , CASE WHEN EXISTS (
+                    SELECT 1 FROM TB_LIKEXX L
+                     WHERE L.USER_NUMB = #{userNumb}
+                       AND L.TAGT_TYPE = #{likeTargetReport}
+                       AND L.TAGT_NUMB = P.REPT_NUMB
+               ) THEN #{commYes} ELSE #{commNo} END AS LIKE_YSNO
+             , (SELECT COUNT(*) FROM TB_REPLXX R
+                 WHERE R.TAGT_TYPE = #{likeTargetReport}
+                   AND R.TAGT_NUMB = P.REPT_NUMB
+                   AND R.DELT_YSNO = #{commNo}) AS REPL_CNT
+             , CASE WHEN EXISTS (
+                    SELECT 1 FROM TB_FOLLOW F
+                     WHERE F.USER_NUMB = #{userNumb}
+                       AND F.FLOW_NUMB = P.USER_NUMB
+               ) THEN #{commYes} ELSE #{commNo} END AS FOLLOW_YSNO
+          FROM TM_REPORT P
+          JOIN TM_BKINFO B ON B.BOOK_NUMB = P.BOOK_NUMB
+          JOIN TM_USERXM U ON U.USER_NUMB = P.USER_NUMB AND U.USER_STAT = #{userStatActive}
+          JOIN TM_USERXM ACTOR ON ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive}
+     LEFT JOIN TM_FILEXM PF ON PF.FILE_NUMB = U.PROF_NUMB
+         WHERE P.REPT_NUMB = #{reptNumb}
+           AND P.PUBC_YSNO = #{commYes}
+           AND P.REPT_STAT != #{reptStatRead}
+    </select>
+
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->
     <select id="getPublicRatingAvgByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />

@@ -87,7 +87,9 @@ class ReportDateOverServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPORT)
               , eq(Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(10L)
+              , eq((Long) null)
               , any()
         // 정상 처리 결과를 공통 성공 응답으로 생성한다
         )).thenReturn(ResultData.success());
@@ -104,7 +106,9 @@ class ReportDateOverServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPORT)
               , eq(Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(10L)
+              , eq((Long) null)
               , replaceMapCaptor.capture()
         );
         // 현재 항목의 값을 조회한다
@@ -145,7 +149,9 @@ class ReportDateOverServiceImplTest {
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPORT)
               , eq(Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(10L)
+              , eq((Long) null)
               , any()
         // 스케줄러 비정상 상태를 재현할 예외를 담을 객체를 생성한다
         )).thenThrow(new IllegalStateException("temporary failure"));
@@ -155,7 +161,9 @@ class ReportDateOverServiceImplTest {
                 eq(32L)
               , eq(Constant.ALIM_SITU_REPORT)
               , eq(Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(11L)
+              , eq((Long) null)
               , any()
         // 정상 처리 결과를 공통 성공 응답으로 생성한다
         )).thenReturn(ResultData.success());
@@ -168,7 +176,9 @@ class ReportDateOverServiceImplTest {
                 eq(32L)
               , eq(Constant.ALIM_SITU_REPORT)
               , eq(Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER)
+              , eq(Constant.LIKE_TARGET_REPORT)
               , eq(11L)
+              , eq((Long) null)
               , any()
         );
 

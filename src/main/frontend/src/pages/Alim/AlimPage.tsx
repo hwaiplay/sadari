@@ -11,6 +11,7 @@ import Loading from "@/components/Loading/Loading";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import {
   getMyAlimListApi,
+  getAlimTargetApi,
   delAllAlimApi,
   uptAlimReadApi,
   type AlimItem,
@@ -409,8 +410,8 @@ function AlimPage() {
     setReadingAlimNumb(alim.alimNumb);
 
     try {
-      const response = await uptAlimReadApi(alim.alimNumb);
-      notifyUnreadAlimChange(response.data?.unreadCnt ?? 0);
+      const readResponse = await uptAlimReadApi(alim.alimNumb);
+      notifyUnreadAlimChange(readResponse.data?.unreadCnt ?? 0);
       // 읽은 알림도 알림센터에 유지하므로 제거하지 않고 상태만 바꾸어 어두운 스타일을 즉시 적용한다.
       setAlimList((prevList) => (
         prevList.map((item) => (
@@ -419,8 +420,10 @@ function AlimPage() {
             : item
         ))
       ));
-      // 읽음 처리가 완료된 알림에 저장된 경로로 이동한다
-      navigate(alim.linkUrlx);
+      // 클릭 시점의 콘텐츠 공개 여부와 팔로우 관계를 반영한 최종 이동 주소를 조회한다
+      const targetResponse = await getAlimTargetApi(alim.alimNumb);
+      // 서버가 소유권과 현재 접근 권한을 검증한 내부 경로로 이동한다
+      navigate(targetResponse.data.linkUrlx);
     } catch (error) {
       void sweetError(
         message("frontend.alim.readAll.failedTitle"),

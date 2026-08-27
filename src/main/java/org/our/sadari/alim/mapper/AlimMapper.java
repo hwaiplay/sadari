@@ -14,6 +14,7 @@ import org.our.sadari.alim.dto.AlimDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-24        SeungHyeon.Kang    최초 생성
+ * 2026-08-27        SeungHyeon.Kang    알림번호 기반 현재 접근 상태 조회 추가
  */
 @Mapper
 public interface AlimMapper {
@@ -36,7 +37,7 @@ public interface AlimMapper {
     int setAlim(AlimDto.AlimItemDto req);
 
     /**
-     * 같은 수신자, 상황, 템플릿, 제목, 내용, 링크를 가진 알림이 최근 1시간 안에 있는지 확인한다.
+     * 같은 수신자, 상황, 템플릿, 제목, 내용과 이동 대상 정보를 가진 알림이 최근 1시간 안에 있는지 확인한다.
      * 알림 폭주를 막기 위한 발송 직전 중복 방지 조건이다.
      *
      * @author SeungHyeon.Kang
@@ -53,6 +54,15 @@ public interface AlimMapper {
      * @return 사용자 알림 목록
      */
     List<AlimDto.AlimItemDto> getMyAlimList(AlimDto.AlimListReqDto req);
+
+    /**
+     * 인증 사용자의 알림번호로 원본 콘텐츠와 현재 접근 관계를 조회한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param req 로그인 사용자와 사용자별 알림 번호
+     * @return 알림 원본 콘텐츠와 현재 접근 상태
+     */
+    AlimDto.AlimTargetDto getAlimTargetDtl(AlimDto.AlimTargetDto req);
 
     /**
      * 사용자가 클릭한 알림 한 건을 읽음 처리한다.
