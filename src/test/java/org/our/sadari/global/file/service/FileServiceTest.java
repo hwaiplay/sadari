@@ -13,11 +13,13 @@ import static org.mockito.Mockito.when;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Optional;
 import java.util.stream.Stream;
 import javax.imageio.ImageIO;
 import org.junit.jupiter.api.BeforeEach;
@@ -33,14 +35,16 @@ import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
 import org.our.sadari.global.file.storage.LocalFileStorage;
+import org.our.sadari.global.file.storage.StoredFile;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * fileName       : FileServiceTest
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-26
  * description    : 이미지 파일 로직의 동작을 검증한다
  * ===========================================================
@@ -48,6 +52,8 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 검증 추가
+ * 2026-08-26        HanWon.Jang         공용 HTTP 의존성 반영
+ * 2026-08-26        HanWon.Jang         배경사진 화면용 파생본 생성·삭제 검증
  */
 @ExtendWith(MockitoExtension.class)
 class FileServiceTest {
@@ -55,6 +61,10 @@ class FileServiceTest {
     // File 데이터 접근 객체
     @Mock
     private FileMapper fileMapper;
+
+    // 외부 프로필 이미지 조회용 HTTP 클라이언트
+    @Mock
+    private RestTemplate restTemplate;
 
     // File 업무 처리 서비스
     private FileService fileService;
@@ -71,7 +81,7 @@ class FileServiceTest {
     @BeforeEach
     void setUp() {
         // 파일 검증 서비스 단위 테스트 대상을 담을 객체를 생성한다
-        fileService = new FileService(fileMapper, new LocalFileStorage(uploadRootPath.toString()));
+        fileService = new FileService(fileMapper, new LocalFileStorage(uploadRootPath.toString()), restTemplate);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
         ReflectionTestUtils.setField(fileService, "maxImageBytes", 10_485_760L);
         // Field 업무 값을 ReflectionTestUtils DTO에 설정한다
@@ -249,6 +259,66 @@ class FileServiceTest {
         assertTrue(Files.exists(storedPath));
     }
 
+    /** 신규 배경사진 저장 시 긴 변 1600px의 화면용 파생본이 함께 생성되는지 검증한다. */
+    @Test
+    void setBgImageCreatesDisplay() throws IOException {
+        // 파일 메타정보 등록 성공과 생성 파일 번호를 모의 응답으로 설정한다
+        doAnswer(invocation -> {
+            FileDto fileDto = invocation.getArgument(0);
+            fileDto.setFileNumb(103L);
+            return 1;
+        }).when(fileMapper).setFile(any(FileDto.class));
+        MockMultipartFile backgroundImage = new MockMultipartFile(
+                "backgroundImage",
+                "background.png",
+                "image/png",
+                createPngBytes(2_000, 1_000)
+        );
+
+        // 고해상도 배경사진을 영구 저장한다
+        fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, 31L);
+
+        // DB에 기록된 원본 경로를 기준으로 원본과 화면용 파생 파일 위치를 계산한다
+        ArgumentCaptor<FileDto> fileCaptor = ArgumentCaptor.forClass(FileDto.class);
+        verify(fileMapper).setFile(fileCaptor.capture());
+        Path originalPath = uploadRootPath.resolve(
+                fileCaptor.getValue().getFilePath().substring("/uploads/".length())
+        );
+        Path displayPath = originalPath.getParent().resolve("display").resolve(originalPath.getFileName());
+        BufferedImage originalImage = ImageIO.read(originalPath.toFile());
+        BufferedImage displayImage = ImageIO.read(displayPath.toFile());
+
+        // 전체 화면 보기에 사용할 원본 해상도는 유지되는지 확인한다
+        assertEquals(2_000, originalImage.getWidth());
+        assertEquals(1_000, originalImage.getHeight());
+        // 일반 화면용 파생본은 비율을 유지한 채 긴 변이 1600px로 제한되는지 확인한다
+        assertEquals(1_600, displayImage.getWidth());
+        assertEquals(800, displayImage.getHeight());
+    }
+
+    /** 기존 배경사진의 첫 화면용 요청에서 파생본을 생성하고 이후 저장소에 유지하는지 검증한다. */
+    @Test
+    void getBgDisplayCreatesLazy() throws IOException {
+        String storedName = "123e4567-e89b-12d3-a456-426614174000.png";
+        String objectKey = "background/260807/" + storedName;
+        Path originalPath = uploadRootPath.resolve(objectKey);
+        Files.createDirectories(originalPath.getParent());
+        Files.write(originalPath, createPngBytes(2_000, 1_000));
+
+        // 배포 전에 저장된 원본의 화면용 파생본을 처음 조회한다
+        Optional<StoredFile> displayFile = fileService.getBgDisplayFile(objectKey);
+
+        // 응답 이미지와 저장된 파생 이미지가 모두 화면 제한 크기를 따르는지 확인한다
+        assertTrue(displayFile.isPresent());
+        BufferedImage responseImage = ImageIO.read(new ByteArrayInputStream(displayFile.get().bytes()));
+        Path displayPath = originalPath.getParent().resolve("display").resolve(storedName);
+        BufferedImage storedImage = ImageIO.read(displayPath.toFile());
+        assertEquals(1_600, responseImage.getWidth());
+        assertEquals(800, responseImage.getHeight());
+        assertEquals(1_600, storedImage.getWidth());
+        assertEquals(800, storedImage.getHeight());
+    }
+
     /**
      * 시계 방향 90도 EXIF 방향이 있는 JPEG를 표시 방향과 같은 픽셀로 저장하는지 검증한다.
      *
@@ -388,6 +458,29 @@ class FileServiceTest {
         assertTrue(Files.isDirectory(profileRoot));
     }
 
+    /** 배경사진 메타정보가 삭제되면 원본과 화면용 파생본이 함께 정리되는지 검증한다. */
+    @Test
+    void delFileRemovesBgDisplay() throws IOException {
+        String storedName = "123e4567-e89b-12d3-a456-426614174000.png";
+        Path backgroundDirectory = Files.createDirectories(uploadRootPath.resolve("background").resolve("260807"));
+        Path originalPath = Files.write(backgroundDirectory.resolve(storedName), new byte[] {1, 2, 3});
+        Path displayDirectory = Files.createDirectories(backgroundDirectory.resolve("display"));
+        Path displayPath = Files.write(displayDirectory.resolve(storedName), new byte[] {4, 5, 6});
+        FileDto oldFile = new FileDto();
+        oldFile.setFileNumb(12L);
+        oldFile.setStorName(storedName);
+        oldFile.setFilePath("/uploads/background/260807/" + storedName);
+        when(fileMapper.getFileByNumb(12L)).thenReturn(oldFile);
+        when(fileMapper.delFileIfUnreferenced(12L)).thenReturn(1);
+
+        // 트랜잭션 밖의 즉시 정리 경로로 배경사진 삭제를 요청한다
+        fileService.delFile(12L);
+
+        // 원본과 파생본이 같은 수명주기로 제거되는지 확인한다
+        assertFalse(Files.exists(originalPath));
+        assertFalse(Files.exists(displayPath));
+    }
+
     /**
      * 이미지 검증과 재인코딩을 통과할 최소 PNG 바이트를 생성한다.
      *
@@ -396,8 +489,22 @@ class FileServiceTest {
      * @throws IOException PNG 인코딩 중 오류가 발생한 경우
      */
     private byte[] createPngBytes() throws IOException {
+        // 기존 최소 이미지 테스트는 2x2 크기를 사용한다
+        return createPngBytes(2, 2);
+    }
+
+    /**
+     * 지정한 크기의 PNG 테스트 이미지를 생성한다.
+     *
+     * @author HanWon.Jang
+     * @param width 이미지 가로 길이
+     * @param height 이미지 세로 길이
+     * @return 실제 PNG 형식의 이미지 바이트
+     * @throws IOException PNG 인코딩 중 오류가 발생한 경우
+     */
+    private byte[] createPngBytes(int width, int height) throws IOException {
         // 테스트 픽셀을 담을 RGB 이미지 객체를 생성한다
-        BufferedImage image = new BufferedImage(2, 2, BufferedImage.TYPE_INT_RGB);
+        BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         // PNG 인코딩 결과를 담을 출력 스트림을 생성한다
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         // 이미지 검증기가 읽을 수 있는 PNG 바이트를 생성한다

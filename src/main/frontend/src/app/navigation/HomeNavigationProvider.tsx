@@ -9,11 +9,13 @@ import {
 import { useLocation, useNavigate } from "react-router-dom";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import type { BottomNavTransition } from "@/app/navigation/bottomNavigation";
 
 const HOME_PATH = "/home";
 
 type HomeNavigationOptions = {
   resetHomeSearch?: boolean;
+  bottomNavTransition?: BottomNavTransition;
 };
 
 type HomeNavigation = (options?: HomeNavigationOptions) => void;
@@ -132,10 +134,13 @@ const getCurrentHistoryIndex = (): number | null => {
  */
 const getHomeLocationState = (options?: HomeNavigationOptions): HomeNavigationOptions | null => {
 
-  // 검색 초기화 요청이 있을 때만 홈 화면에 일회성 상태를 전달한다
-  if (options?.resetHomeSearch) {
-    // 홈 검색어와 적용 조건을 초기화할 위치 상태를 반환한다
-    return { resetHomeSearch: true };
+  // 검색 초기화 또는 하단 탭 방향 정보가 있을 때 홈 화면에 일회성 상태를 전달한다
+  if (options?.resetHomeSearch || options?.bottomNavTransition !== undefined) {
+    // 홈 검색 정책과 하단 탭 진입 방향을 함께 보존한 위치 상태를 반환한다
+    return {
+      resetHomeSearch: options.resetHomeSearch,
+      bottomNavTransition: options.bottomNavTransition,
+    };
   }
 
   // 별도 화면 상태 없이 홈으로 이동하도록 null을 반환한다

@@ -45,7 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    독후감 별점 0.5점 단위 검증 추가
- * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 정책 추가
+ * 2026-08-01        SeungHyeon.Kang,SeungHyeon.Kang    최근 독후감·공개 정책 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조건 추가
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 추가
@@ -1560,7 +1560,7 @@ public class ReportServiceImpl implements ReportService {
      * 읽고 있는 독후감의 평점과 공개 여부를 집계 및 공개 대상이 아닌 값으로 강제한다.
      * 화면에서 숨긴 입력값을 조작하더라도 서버 저장 정책이 동일하게 유지되도록 한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param reportDto 상태별 저장 정책을 적용할 독후감 DTO
      */
     private void applyReadingStatusPolicy(ReportDto reportDto) {

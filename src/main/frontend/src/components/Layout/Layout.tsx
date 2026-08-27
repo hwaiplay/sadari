@@ -11,6 +11,10 @@ import { Container } from "./Container/Container";
 import { clsx } from "clsx";
 import { useCallback, useEffect, useRef } from "react";
 import {
+  getBottomNavDirection,
+  type BottomNavDirection,
+} from "@/app/navigation/bottomNavigation";
+import {
   pageTransitionBack,
   pageTransitionBase,
   pageTransitionForward,
@@ -22,21 +26,62 @@ type LayoutProps = {
 };
 
 /**
+ * 하단 탭 전용 방향이 없을 때 기존 라우터 이력 기반 화면 전환을 유지한다
+ *
+ * @author HanWon.Jang
+ * @param bottomNavDirection 검증된 하단 탭 진입 방향
+ * @param isHistoryPop 브라우저 이력 탐색으로 이동했는지 여부
+ * @return 현재 화면에 적용할 기존 페이지 전환 클래스
+ */
+const getTransitionClass = (bottomNavDirection: BottomNavDirection | null, isHistoryPop: boolean): string => {
+
+  // 왼쪽 탭으로 이동하면 기존 역방향 진입 클래스를 사용한다
+  if (bottomNavDirection === "back") {
+    // 화면이 왼쪽에서 진입하는 기존 클래스를 반환한다
+    return pageTransitionBack;
+  }
+
+  // 오른쪽 탭으로 이동하면 기존 정방향 진입 클래스를 사용한다
+  if (bottomNavDirection === "forward") {
+    // 화면이 오른쪽에서 진입하는 기존 클래스를 반환한다
+    return pageTransitionForward;
+  }
+
+  // 하단 탭 외의 브라우저 이력 이동은 기존 역방향 정책을 유지한다
+  if (isHistoryPop) {
+    // 기존 POP 화면 전환 클래스를 반환한다
+    return pageTransitionBack;
+  }
+
+  // 일반 링크와 프로그램 이동은 기존 정방향 정책을 유지한다
+  return pageTransitionForward;
+};
+
+/**
  * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용합니다.
  *
  * @author HanWon.Jang
  * @param props 레이아웃 표시 옵션
  * @return 공통 레이아웃 컴포넌트
  */
-function Layout({ isMainLayout = true }: LayoutProps) {
+const Layout = ({ isMainLayout = true }: LayoutProps) => {
 
   const location = useLocation();
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
   const layoutRef = useRef<HTMLDivElement | null>(null);
-  const shouldAnimate = hasMountedRef.current;
-  const transitionClassName =
-    navigationType === "POP" ? pageTransitionBack : pageTransitionForward;
+  // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회한다
+  const bottomNavDirection = getBottomNavDirection(
+    location.state,
+    location.pathname,
+    navigationType === "POP",
+  );
+  const shouldAnimate = hasMountedRef.current || bottomNavDirection !== null;
+  // 하단 탭 전용 방향이 없으면 기존 PUSH 및 POP 전환 클래스를 선택한다
+  const transitionClassName = getTransitionClass(
+    bottomNavDirection,
+    navigationType === "POP",
+  );
 
   useEffect(() => {
 
@@ -96,6 +141,6 @@ function Layout({ isMainLayout = true }: LayoutProps) {
       <Navigation isMain={isMainLayout} />
     </div>
   );
-}
+};
 
 export default Layout;

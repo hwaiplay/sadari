@@ -4,6 +4,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.alim.event.LikeAlimEvent;
+import org.our.sadari.alim.event.LikeAlimPublisher;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.feed.mapper.FeedMapper;
 import org.our.sadari.global.common.constant.Constant;
@@ -33,7 +35,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-13        SeungHyeon.Kang    팔로우 버튼 상태 공통코드 조회 일원화
  * 2026-08-15        SeungHyeon.Kang    팔로우 목록 페이지 조회 추가
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
- * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 추가
+ * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -55,6 +57,8 @@ public class SocialServiceImpl implements SocialService {
     private final AlimService alimService;
     // TokenRedis 업무 처리 서비스
     private final TokenRedisService tokenRedisService;
+    // 좋아요 커밋 이후 알림 후처리 이벤트 발행기
+    private final LikeAlimPublisher likeAlimPublisher;
 
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
@@ -169,7 +173,7 @@ public class SocialServiceImpl implements SocialService {
         else {
             // Like 업무 값을 socialMapper DTO에 설정한다
             socialMapper.setLike(req);
-            // 검증된 대상 유형에 맞는 좋아요 알림을 전송한다
+            // 좋아요 커밋 이후에만 알림을 처리하도록 후처리 이벤트를 등록한다
             sendLikeAlim(req);
         }
 
@@ -296,7 +300,7 @@ public class SocialServiceImpl implements SocialService {
      * 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
      * 비활성 또는 삭제 대기 사용자의 좋아요 행은 보존하더라도 목록과 집계에서 제외한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param tagtType 좋아요 대상 유형
      * @param tagtNumb 좋아요 대상 번호
@@ -547,16 +551,16 @@ public class SocialServiceImpl implements SocialService {
         req.setLikeAlimYsno(likeTarget.getLikeAlimYsno());
         // 좋아요 대상 유형에 대응하는 알림 템플릿 코드를 설정한다
         req.setAlimTempCode(resolveLikeAlimTemplate(req.getTagtType()));
-        // 사진 반응 템플릿은 완성된 마이페이지 링크이므로 독후감에만 상세 번호를 설정한다
-        req.setAlimTagtNumb(isReport ? req.getTagtNumb() : null);
+        // 독후감과 사진 알림 모두 원본 콘텐츠를 직접 찾을 수 있도록 대상 번호를 설정한다
+        req.setAlimTagtNumb(req.getTagtNumb());
 
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
 
     /**
-     * 독후감 또는 현재 사진 좋아요가 새로 등록된 경우 대상 소유자에게 좋아요 알림을 발송한다.
-     * 좋아요 취소 분기에서는 호출하지 않으며, 대상 소유자가 누른 좋아요도 자기 자신에게 알림을 만들지 않는다.
+     * 독후감 또는 현재 사진 좋아요가 새로 등록된 경우 커밋 이후 알림 이벤트를 등록한다.
+     * 좋아요 취소와 본인 소유 대상 및 수신 거부 상태에는 이벤트를 만들지 않는다.
      *
      * @author SeungHyeon.Kang
      * @param req 좋아요 요청 DTO
@@ -574,30 +578,10 @@ public class SocialServiceImpl implements SocialService {
             return;
         }
 
-        // getUserNick 업무 로직을 tokenRedisService에 위임한다
-        String sendUserNick = tokenRedisService.getUserNick(req.getUserNumb());
-
-        // 로그인 Redis 정보가 없으면 DB를 다시 조회하지 않고 알림만 생략해 요청당 추가 사용자 조회가 생기지 않게 한다.
-        if (StringUtil.isEmpty(sendUserNick)) {
-            // 독후감 좋아요가 새로 등록된 경우 독후감 작성자에게 좋아요 알림을 발송 결과를 반환한다
-            return;
-        }
-
-        // TB_ALTEMP.TEMP_CONT의 #{userName} 상용구만 치환하기 위해 화면 표시 문구에 필요한 값만 Map에 담는다.
-        // 수신자와 이동 대상 번호는 sendAlim의 명시 파라미터로 넘겨 Map의 역할을 문구 치환으로 제한한다.
-        Map<String, Object> replaceMap = new HashMap<>();
-        // 후속 처리에 사용할 키와 값을 맵에 저장한다
-        replaceMap.put("userName", sendUserNick);
-
-        // 링크 기본값은 TB_ALTEMP.LINK_URLX(/report/detail/)를 사용하고, tagtNumb만 넘겨 서비스에서 최종 링크를 조합한다.
-        alimService.sendAlim(
-                // getTargetUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
-                req.getTargetUserNumb()
-              , Constant.ALIM_SITU_LIKE
-              , req.getAlimTempCode()
-              , req.getAlimTagtNumb()
-              , replaceMap
-        );
+        // 좋아요 응답 경로에서 Redis와 알림 DB 및 FCM 접근을 제거할 커밋 이후 이벤트를 생성한다
+        LikeAlimEvent event = new LikeAlimEvent(req.getUserNumb(), req.getTargetUserNumb(), req.getAlimTempCode(), req.getAlimTagtNumb(), null);
+        // 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록한다
+        likeAlimPublisher.setLikeAlim(event);
     }
 
     /** 좋아요 대상 유형에 대응하는 알림 템플릿 코드를 반환한다. */

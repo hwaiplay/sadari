@@ -11,6 +11,7 @@ package org.our.sadari.global.common.constant;
  * 2026-03-21        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    로그인 제공자 코드를 풀네임으로 변경
  * 2026-08-13        SeungHyeon.Kang    로컬 임시 회원 제공자 코드 추가
+ * 2026-08-26        SeungHyeon.Kang         Kakao URL 설정 분리
  */
 public class AuthConstant {
 
@@ -36,8 +37,4 @@ public class AuthConstant {
     public static final String KAKAO_CODE = "code";
     // 아래 처리 단계의 업무 목적을 설명한다.
     public static final String KAKAO_AUTHORIZATION_CODE = "authorization_code";
-    // 아래 처리 단계의 업무 목적을 설명한다.
-    public static final String KAKAO_AUTHORIZATION_URL = "https://kauth.kakao.com/oauth/token";
-    // 카카오 로그인 동의 화면으로 이동할 OAuth 인가 Endpoint이다.
-    public static final String KAKAO_AUTHORIZE_URL = "https://kauth.kakao.com/oauth/authorize";
 }

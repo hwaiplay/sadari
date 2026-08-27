@@ -16,6 +16,7 @@ export type UserProfile = {
   userNick?: string;
   porfPath?: string;
   bgimPath?: string;
+  bgimDisplayPath?: string;
   intrCntn?: string;
   profileImageReaction?: ImageReaction | null;
   backgroundImageReaction?: ImageReaction | null;

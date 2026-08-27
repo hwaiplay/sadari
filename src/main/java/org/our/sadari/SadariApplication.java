@@ -2,6 +2,7 @@ package org.our.sadari;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
@@ -14,8 +15,10 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-03-01        SeungHyeon.Kang    최초 생성
+ * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
  */
 @EnableRedisHttpSession
+@EnableAsync
 @EnableScheduling
 @SpringBootApplication
 public class SadariApplication {

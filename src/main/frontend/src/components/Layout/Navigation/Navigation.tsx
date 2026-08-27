@@ -11,7 +11,10 @@ import { clsx } from "clsx";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import * as styles from "./Navigation.css";
-import { BOTTOM_NAV_PATH } from "@/app/navigation/bottomNavigation";
+import {
+  BOTTOM_NAV_PATH,
+  getBottomNavState,
+} from "@/app/navigation/bottomNavigation";
 
 type NavigationProps = {
   isMain: boolean;
@@ -29,7 +32,7 @@ type NavigationProps = {
  * 2026-08-26        Hanwon.Jang    모임 추가
  */
 
-function Navigation({ isMain }: NavigationProps) {
+const Navigation = ({ isMain }: NavigationProps) => {
 
   // 헤더와 프로필 화면의 사용자 조회
   const myProfileQuery = useMyProfileQuery();
@@ -113,6 +116,7 @@ function Navigation({ isMain }: NavigationProps) {
           <HomeLink
             className={clsx(styles.navLink, isHomeActive && styles.navLinkActive)}
             resetHomeSearch
+            navigationState={getBottomNavState(pathname, BOTTOM_NAV_PATH.home)}
           >
             <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M4 23.3714V11.5429C4 11.1267 4.09319 10.7324 4.27956 10.36C4.46594 9.98762 4.72275 9.68095 5.05 9.44L12.925 3.52571C13.3844 3.17524 13.9094 3 14.5 3C15.0906 3 15.6156 3.17524 16.075 3.52571L23.95 9.44C24.2781 9.68095 24.5354 9.98762 24.7217 10.36C24.9081 10.7324 25.0009 11.1267 25 11.5429V23.3714C25 24.0943 24.7427 24.7133 24.2282 25.2285C23.7137 25.7437 23.096 26.0009 22.375 26H18.4375C18.0656 26 17.7541 25.8738 17.503 25.6215C17.2519 25.3691 17.1259 25.0572 17.125 24.6857V18.1143C17.125 17.7419 16.999 17.43 16.747 17.1785C16.495 16.927 16.1835 16.8009 15.8125 16.8H13.1875C12.8156 16.8 12.5041 16.9262 12.253 17.1785C12.0019 17.4309 11.8759 17.7428 11.875 18.1143V24.6857C11.875 25.0581 11.749 25.3705 11.497 25.6228C11.245 25.8751 10.9335 26.0009 10.5625 26H6.625C5.90312 26 5.28537 25.7428 4.77175 25.2285C4.25812 24.7142 4.00087 24.0952 4 23.3714Z" fill="#C1C1C1"/>
@@ -124,6 +128,7 @@ function Navigation({ isMain }: NavigationProps) {
           <Link
             className={clsx(styles.navLink, isFeedActive && styles.navLinkActive)}
             to={BOTTOM_NAV_PATH.feed}
+            state={getBottomNavState(pathname, BOTTOM_NAV_PATH.feed)}
             aria-label={message("frontend.common.feed")}
             aria-current={isFeedActive ? "page" : undefined}
           >
@@ -140,6 +145,7 @@ function Navigation({ isMain }: NavigationProps) {
           <Link
             className={clsx(styles.navLink, isClubPageActive && styles.navLinkActive)}
             to={BOTTOM_NAV_PATH.club}
+            state={getBottomNavState(pathname, BOTTOM_NAV_PATH.club)}
             aria-label={message("frontend.common.club")}
             aria-current={isClubPageActive ? "page" : undefined}
           >
@@ -158,6 +164,7 @@ function Navigation({ isMain }: NavigationProps) {
           <Link
             className={clsx(styles.navLink, isTimerActive && styles.navLinkActive)}
             to={BOTTOM_NAV_PATH.timer}
+            state={getBottomNavState(pathname, BOTTOM_NAV_PATH.timer)}
             aria-label={isTimerRunning
               ? `${message("frontend.common.timer")} (${message("frontend.timer.status.running")})`
               : message("frontend.common.timer")}
@@ -176,6 +183,7 @@ function Navigation({ isMain }: NavigationProps) {
           <Link
             className={clsx(styles.navLink, isMyPageActive && styles.navLinkActive)}
             to={BOTTOM_NAV_PATH.myPage}
+            state={getBottomNavState(pathname, BOTTOM_NAV_PATH.myPage)}
             aria-label={message("frontend.common.myPageIconAlt")}
             aria-current={isMyPageActive ? "page" : undefined}
           >
@@ -190,6 +198,6 @@ function Navigation({ isMain }: NavigationProps) {
       </div>
     </>
   );
-}
+};
 
 export default Navigation;

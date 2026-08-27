@@ -11,7 +11,7 @@
  * 2026-08-03        HanWon.Jang        본인 댓글 수정 및 삭제 API 계약 연결
  * 2026-08-03        HanWon.Jang        댓글 좋아요 등록 및 취소 API 계약 연결
  */
-import api from "@/app/api/axios";
+import api, { type SadariRequestConfig } from "@/app/api/axios";
 import { assertResultDataSuccess } from "@/app/api/resultData";
 import type {
   DelReplyResponse,
@@ -95,9 +95,14 @@ export const delReplyApi = async (
 export const setReplyLikeApi = async (
   data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<ReplyLikeResponse> => {
+  const requestConfig: SadariRequestConfig = {
+    skipBlockingOperation: true,
+  };
   // 댓글 복합 식별값을 경로에 포함하여 좋아요 등록 API를 호출한다
   const response = await api.put<ReplyLikeResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
+    undefined,
+    requestConfig,
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
@@ -115,9 +120,13 @@ export const setReplyLikeApi = async (
 export const delReplyLikeApi = async (
   data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<ReplyLikeResponse> => {
+  const requestConfig: SadariRequestConfig = {
+    skipBlockingOperation: true,
+  };
   // 댓글 복합 식별값을 경로에 포함하여 좋아요 취소 API를 호출한다
   const response = await api.delete<ReplyLikeResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
+    requestConfig,
   );
 
   // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다

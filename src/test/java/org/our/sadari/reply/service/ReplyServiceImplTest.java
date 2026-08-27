@@ -4,7 +4,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.never;
@@ -18,6 +17,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.alim.event.LikeAlimEvent;
+import org.our.sadari.alim.event.LikeAlimPublisher;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
@@ -43,6 +44,8 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·좋아요 상황 통합 검증
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 닉네임 DB 조회 검증
  * 2026-08-25        HanWon.Jang        사진 댓글 링크 기준 검증
+ * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화 검증
+ * 2026-08-27        SeungHyeon.Kang    대상별 댓글 알림 링크와 답글 수신자 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReplyServiceImplTest {
@@ -62,6 +65,10 @@ class ReplyServiceImplTest {
     // 로그인 사용자 닉네임 조회 서비스
     @Mock
     private TokenRedisService tokenRedisService;
+
+    // 댓글 좋아요 커밋 이후 알림 이벤트 발행기
+    @Mock
+    private LikeAlimPublisher likeAlimPublisher;
 
     // 댓글 등록과 수정 및 삭제 단위 테스트 대상
     private ReplyServiceImpl replyService;
@@ -89,6 +96,7 @@ class ReplyServiceImplTest {
               , badWordDetectionService
               , alimService
               , tokenRedisService
+              , likeAlimPublisher
         );
     }
 
@@ -159,7 +167,7 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 프로필 사진 댓글 알림이 템플릿의 완성 링크를 사용하도록 상세 번호 없이 발송되는지 검증한다.
+     * 프로필 사진 댓글 알림이 해당 사진 번호를 대상별 피드 링크에 전달하는지 검증한다.
      *
      * @author HanWon.Jang
      */
@@ -190,8 +198,8 @@ class ReplyServiceImplTest {
         imageAlim.setReplyAlimYsno(Constant.COMM_YES);
         // 프로필 사진 댓글 템플릿 코드를 설정한다
         imageAlim.setAlimTempCode(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE);
-        // Mapper가 반환한 대상 번호도 사진 알림 링크에는 사용하지 않는지 확인하도록 값을 설정한다
-        imageAlim.setAlimTagtNumb(31L);
+        // Mapper가 반환한 현재 프로필 사진 번호를 알림 이동 대상으로 설정한다
+        imageAlim.setAlimTagtNumb(157L);
         // 사진 댓글 알림 수신자 조회 결과를 구성한다
         when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(imageAlim);
         // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
@@ -202,14 +210,63 @@ class ReplyServiceImplTest {
 
         // 프로필 사진 댓글 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
-        // 사진 알림은 대상 번호를 덧붙이지 않고 템플릿의 완성 링크만 사용하도록 발송하는지 확인한다
+        // 사진 알림에 해당 프로필 사진 번호가 이동 대상으로 전달되는지 확인한다
         verify(alimService).sendAlim(
                 eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE)
-              , isNull()
+              , eq(157L)
               , any()
         );
+    }
+
+    /**
+     * 답글 등록 시 콘텐츠 소유자와 부모 댓글 작성자에게 중복 없이 각각 알림을 전송하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void setChildReplySendsAlims() {
+        // 부모 댓글에 등록할 답글 요청을 생성한다
+        ReplyDto replyDto = new ReplyDto();
+        // 답글 대상 독후감 번호를 설정한다
+        replyDto.setReptNumb(157L);
+        // 부모 댓글 번호를 설정한다
+        replyDto.setUperNumb(7L);
+        // 생성될 답글 번호를 설정한다
+        replyDto.setReplNumb(8L);
+        // 답글 내용을 설정한다
+        replyDto.setReplCntn("저도 같은 생각이에요.");
+
+        // 답글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        when(badWordDetectionService.findBadWord("저도 같은 생각이에요."))
+                .thenReturn(Optional.empty());
+        // 답글 한 건이 저장되는 조건을 구성한다
+        when(replyMapper.setReply(replyDto)).thenReturn(1);
+        // 콘텐츠 소유자와 부모 댓글 작성자가 서로 다른 알림 대상을 생성한다
+        ReplyDto reportAlim = new ReplyDto();
+        // 독후감 소유자 번호를 설정한다
+        reportAlim.setTargetUserNumb(31L);
+        // 부모 댓글 작성자 번호를 설정한다
+        reportAlim.setParentUserNumb(32L);
+        // 독후감 소유자의 댓글 알림을 켠 상태로 설정한다
+        reportAlim.setReplyAlimYsno(Constant.COMM_YES);
+        // 댓글 알림 수신자 조회 결과를 구성한다
+        when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
+        // 답글 작성자의 닉네임이 조회되는 조건을 구성한다
+        when(tokenRedisService.getUserNick(44L)).thenReturn("답글작성자");
+
+        // 부모 댓글에 답글을 등록한다
+        ResultData result = replyService.setReply(44L, replyDto);
+
+        // 답글 등록 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 콘텐츠 소유자에게 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
+        verify(alimService).sendAlim(
+                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT), eq(157L), any());
+        // 부모 댓글 작성자에게 같은 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
+        verify(alimService).sendAlim(
+                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT), eq(157L), any());
     }
 
     /**
@@ -426,6 +483,10 @@ class ReplyServiceImplTest {
         ReplyDto likeTarget = new ReplyDto();
         // 알림 링크에 사용할 독후감 번호를 설정한다
         likeTarget.setReptNumb(157L);
+        // 댓글의 원본 콘텐츠 유형을 독후감으로 설정한다
+        likeTarget.setTagtType(Constant.LIKE_TARGET_REPORT);
+        // 댓글의 원본 콘텐츠 번호를 설정한다
+        likeTarget.setTagtNumb(157L);
         // 좋아요 대상 댓글 번호를 설정한다
         likeTarget.setReplNumb(8L);
         // 좋아요 알림을 받을 댓글 작성자 번호를 설정한다
@@ -452,7 +513,7 @@ class ReplyServiceImplTest {
         assertEquals(200, result.getCode());
         // 독후감과 댓글 좋아요가 LIKE 상황 코드로 통합됐는지 확인한다
         assertEquals("LIKE", Constant.ALIM_SITU_LIKE);
-        // 댓글 좋아요 전용 템플릿 코드가 확정된 REPLY_LIKE 값인지 확인한다
+        // 독후감 댓글 좋아요 전용 템플릿 코드가 대상별 값인지 확인한다
         assertEquals("REPLY_LIKE", Constant.ALIM_TEMP_CODE_REPLY_LIKE);
         // 댓글 좋아요가 등록 Mapper에 전달됐는지 확인한다
         verify(replyMapper).setReplyLike(replyDtoCaptor.capture());
@@ -462,23 +523,66 @@ class ReplyServiceImplTest {
         assertEquals(157L, replyDtoCaptor.getValue().getReptNumb());
         // 좋아요 대상 댓글 번호를 확인한다
         assertEquals(8L, replyDtoCaptor.getValue().getReplNumb());
-        @SuppressWarnings("unchecked")
-        // 댓글 좋아요 알림의 템플릿 치환값을 확인할 캡처 객체를 생성한다
-        ArgumentCaptor<Map<String, Object>> replaceMapCaptor = ArgumentCaptor.forClass(Map.class);
-        // 해당 댓글 작성자에게 REPLY_LIKE 템플릿으로 알림이 전송되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L)
-              , eq(Constant.ALIM_SITU_LIKE)
-              , eq(Constant.ALIM_TEMP_CODE_REPLY_LIKE)
-              , eq(157L)
-              , replaceMapCaptor.capture()
-        );
-        // 알림 문구에 좋아요 등록자 닉네임이 전달되는지 확인한다
-        assertEquals("좋아요사용자", replaceMapCaptor.getValue().get("userName"));
+        // 댓글 좋아요 커밋 이후 처리할 알림 정보를 확인할 캡처 객체를 생성한다
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        // 댓글 좋아요 저장 경로에서는 알림을 직접 보내지 않고 이벤트만 등록하는지 확인한다
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        // 댓글 좋아요 알림 수신자를 확인한다
+        assertEquals(31L, eventCaptor.getValue().getTargetUserNumb());
+        // 댓글 좋아요 전용 템플릿 코드를 확인한다
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
+        // 댓글이 속한 독후감 번호를 알림 이동 대상으로 사용하는지 확인한다
+        assertEquals(157L, eventCaptor.getValue().getTagtNumb());
+        // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인한다
+        assertEquals("좋아요사용자", eventCaptor.getValue().getSendUserNick());
+        // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
+        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any());
         // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
         assertEquals(likeDetail, result.getData());
+    }
+
+    /**
+     * 프로필 사진 댓글 좋아요가 사진 전용 템플릿과 원본 사진 번호를 알림 이벤트에 전달하는지 검증한다.
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void imageReplyLikeSends() {
+        // 프로필 사진 댓글 좋아요 알림 대상 정보를 생성한다
+        ReplyDto likeTarget = new ReplyDto();
+        // 댓글의 원본 콘텐츠 유형을 프로필 사진으로 설정한다
+        likeTarget.setTagtType(Constant.LIKE_TARGET_PROFILE_IMAGE);
+        // 댓글의 원본 프로필 사진 번호를 설정한다
+        likeTarget.setTagtNumb(157L);
+        // 좋아요 대상 댓글 번호를 설정한다
+        likeTarget.setReplNumb(8L);
+        // 좋아요 알림을 받을 댓글 작성자 번호를 설정한다
+        likeTarget.setTargetUserNumb(31L);
+        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정한다
+        likeTarget.setUserNick("좋아요사용자");
+        // 정상 이용 사용자가 접근할 수 있는 현재 사진 댓글 조건을 구성한다
+        when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
+        // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성한다
+        when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
+        // 등록 후 반환할 최신 좋아요 상태를 구성한다
+        when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(new ReplyDto());
+
+        // 현재 프로필 사진 댓글에 좋아요를 등록한다
+        ResultData result = replyService.setReplyLike(
+                44L, Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, 8L);
+
+        // 프로필 사진 댓글 좋아요 등록 성공 응답을 확인한다
+        assertEquals(200, result.getCode());
+        // 커밋 이후 알림 이벤트를 확인할 캡처 객체를 생성한다
+        ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
+        // 댓글 좋아요 알림 이벤트가 등록됐는지 확인한다
+        verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
+        // 프로필 사진 댓글 좋아요 전용 템플릿을 사용하는지 확인한다
+        assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE_PROFILE, eventCaptor.getValue().getTempCode());
+        // 원본 프로필 사진 번호를 알림 이동 대상으로 사용하는지 확인한다
+        assertEquals(157L, eventCaptor.getValue().getTagtNumb());
     }
 
     /**
@@ -512,7 +616,7 @@ class ReplyServiceImplTest {
         // 현재 사용자의 댓글 좋아요가 삭제 Mapper에 전달됐는지 확인한다
         verify(replyMapper).delReplyLike(any(ReplyDto.class));
         // 좋아요 취소는 기존 알림 삭제나 신규 푸시를 만들지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
         assertEquals(likeDetail, result.getData());
     }
@@ -566,7 +670,7 @@ class ReplyServiceImplTest {
         // 멱등 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 신규 좋아요가 아니면 닉네임 조회와 알림 발송을 하지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 
     /**
@@ -602,6 +706,6 @@ class ReplyServiceImplTest {
         // 본인 대댓글 좋아요 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 본인 댓글 좋아요에는 닉네임 조회와 알림 발송을 하지 않는지 확인한다
-        verifyNoInteractions(alimService, tokenRedisService);
+        verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 }

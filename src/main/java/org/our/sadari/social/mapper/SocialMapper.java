@@ -13,7 +13,7 @@ import org.our.sadari.social.dto.SocialDto;
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 문서화
- * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 추가
+ * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
  */
 @Mapper
 public interface SocialMapper {
@@ -122,7 +122,7 @@ public interface SocialMapper {
     /**
      * 로그인 사용자가 좋아요 대상의 사용자 목록을 조회할 수 있는지 확인한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param req 로그인 사용자와 좋아요 대상 식별값
      * @return 접근 가능한 대상 수
      */
@@ -131,7 +131,7 @@ public interface SocialMapper {
     /**
      * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param req 로그인 사용자와 좋아요 대상 및 페이지 조건
      * @return 활성 좋아요 사용자 목록
      */

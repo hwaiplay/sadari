@@ -18,7 +18,7 @@ import org.our.sadari.social.dto.SocialDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-17        SeungHyeon.Kang    최초 생성
- * 2026-08-01        SeungHyeon.Kang,Hanwon.Jang    최근 독후감·공개 조회 추가
+ * 2026-08-01        SeungHyeon.Kang,SeungHyeon.Kang    최근 독후감·공개 조회 추가
  * 2026-08-04        SeungHyeon.Kang       독서 요약 공개 범위 조회 조건 문서화
  * 2026-08-14        SeungHyeon.Kang    독후감 관계 정리·정렬 추가
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 조회·변경 추가

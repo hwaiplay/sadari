@@ -1,10 +1,12 @@
 package org.our.sadari.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import java.util.List;
 
 import lombok.Data;
+import org.our.sadari.global.file.util.FileUrlUtil;
 
 /**
  * fileName       : UserDto
@@ -22,6 +24,7 @@ import lombok.Data;
  * 2026-08-05        SeungHyeon.Kang       관심분야 요청에서 공통코드 그룹 제거
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 계약 반영
  * 2026-08-15        SeungHyeon.Kang    소셜 프로필 접근 안내용 회원 상태명 추가
+ * 2026-08-26        HanWon.Jang         화면용 배경사진 경로 추가
  */
 @Data
 @Schema(description = "사용자 프로필 DTO")
@@ -83,6 +86,19 @@ public class UserDto {
 
     @Schema(description = "배경 이미지 경로")
     private String bgimPath;
+
+    /**
+     * 일반 프로필 화면에서 사용할 축소 배경사진 경로를 반환한다.
+     *
+     * @author HanWon.Jang
+     * @return 화면용 배경사진 경로
+     */
+    @JsonProperty(access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "일반 화면용 배경 이미지 경로", accessMode = Schema.AccessMode.READ_ONLY)
+    public String getBgimDisplayPath() {
+        // DB 원본 경로는 유지하고 API 직렬화 시 화면용 파생본 URL을 추가한다
+        return FileUrlUtil.getBgDisplayPath(bgimPath);
+    }
 
     /**
      * 마이페이지의 현재 프로필 또는 배경 사진에 표시할 좋아요와 댓글 집계를 전달한다.

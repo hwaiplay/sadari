@@ -20,6 +20,7 @@ import java.util.Iterator;
 import java.util.Base64;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.UUID;
 import javax.imageio.ImageIO;
@@ -34,6 +35,7 @@ import org.our.sadari.global.file.dto.ProfileImageDraftDto;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.mapper.FileMapper;
 import org.our.sadari.global.file.storage.FileStorage;
+import org.our.sadari.global.file.storage.StoredFile;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
@@ -53,6 +55,8 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-07-14        SeungHyeon.Kang    최초 생성
  * 2026-08-06        SeungHyeon.Kang    이미지 저장·정규화 처리 추가
  * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
+ * 2026-08-26        SeungHyeon.Kang         공용 HTTP 클라이언트 적용
+ * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생본 생성·수명주기 관리
  */
 @Service
 @RequiredArgsConstructor
@@ -87,8 +91,10 @@ public class FileService {
     private static final Duration PROFILE_IMAGE_DRAFT_TTL = Duration.ofMinutes(30);
     // 프로필 미리보기 한 변의 최대 길이
     private static final int PROFILE_PREVIEW_MAX_EDGE = 512;
-    // 배경 미리보기 한 변의 최대 길이
-    private static final int BACKGROUND_PREVIEW_MAX_EDGE = 1600;
+    // 배경사진 일반 화면과 편집 미리보기 한 변의 최대 길이
+    private static final int BACKGROUND_DISPLAY_MAX_EDGE = 1600;
+    // 원본 배경사진과 같은 날짜 경로 아래에 화면용 파생본을 구분하는 디렉터리명
+    private static final String DISPLAY_VARIANT_DIR = "display";
     // 임시 원본 파일명 구분값
     private static final String DRAFT_ORIGINAL_MARKER = ".original";
     // 임시 미리보기 파일명 구분값
@@ -99,6 +105,9 @@ public class FileService {
 
     // 실행 환경에 따라 로컬 또는 S3로 연결되는 영구 이미지 저장소
     private final FileStorage fileStorage;
+
+    // 외부 프로필 이미지 조회에 공통 타임아웃을 적용하는 HTTP 클라이언트
+    private final RestTemplate restTemplate;
 
     // 파일 저장과 안전한 삭제의 기준이 되는 업로드 루트 경로
     // 공개 업로드 경로와 분리된 프로필 이미지 임시 저장 루트 경로
@@ -167,6 +176,8 @@ public class FileService {
         // 파일 저장에 필요한 디렉터리를 생성한다
         // 기준 경로와 하위 경로를 결합한다
         boolean fileMetadataSaved = false;
+        // 배경사진이면 원본과 함께 정리할 화면용 파생 객체 키를 계산한다
+        String displayObjectKey = getBgDisplayKey(objectKey);
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
@@ -175,6 +186,14 @@ public class FileService {
              * 디코딩한 픽셀을 새 JPG/PNG로 재인코딩한 결과만 신규 파일로 생성해 검증되지 않은 데이터를 제거한다.
              */
             fileStorage.setFile(objectKey, validatedImage.bytes(), validatedImage.mimeType());
+
+            // 신규 배경사진은 최초 화면 요청부터 작은 파생본을 사용할 수 있도록 업로드 시점에 미리 생성한다
+            if (!StringUtil.isEmpty(displayObjectKey)) {
+                // 원본 비율을 유지하며 일반 화면의 최대 표시 규격으로 축소한다
+                ValidatedImage displayImage = createPreviewImage(validatedImage, BACKGROUND_DISPLAY_MAX_EDGE);
+                // 파생본 저장 실패가 원본 이미지 등록을 막지 않도록 교체 가능한 캐시로 저장한다
+                setBgDisplayFile(displayObjectKey, displayImage);
+            }
 
             // 업로드 파일의 저장 정보를 담을 객체를 생성한다
             FileDto fileDto = new FileDto();
@@ -203,7 +222,7 @@ public class FileService {
              * 뒤에서 사용자 프로필 UPDATE가 실패하면 DB 메타정보는 트랜잭션으로 롤백되지만 실제 파일은 자동 복구되지 않는다.
              * 현재 트랜잭션의 최종 상태를 확인해 롤백 시 물리 파일까지 함께 제거하도록 정리 작업을 예약한다.
              */
-            registerRollbackCleanup(objectKey);
+            registerRollbackCleanup(getRelatedKeys(objectKey));
             fileMetadataSaved = true;
             // 사용자가 업로드한 이미지 파일을 프로젝트 내부 저장소에 저장하고 파일 번호를 반환한 결과를 반환한다
             return fileDto.getFileNumb();
@@ -213,8 +232,8 @@ public class FileService {
         finally {
             // DB 메타정보 저장 전에 실패한 파일을 남기면 접근되지 않는 파일이 누적되므로 즉시 정리한다.
             if (!fileMetadataSaved) {
-                // 검증 중 생성된 임시 파일이 있으면 삭제한다
-                fileStorage.delFile(objectKey);
+                // 메타정보 등록에 실패한 원본과 화면용 파생 객체를 함께 삭제한다
+                delStoredFiles(getRelatedKeys(objectKey), null);
             }
         }
     }
@@ -237,8 +256,6 @@ public class FileService {
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
         try {
-            // 외부 HTTP API 요청을 수행할 클라이언트를 담을 객체를 생성한다
-            RestTemplate restTemplate = new RestTemplate();
             // getForEntity 조회로 후속 처리에 필요한 데이터를 가져온다
             ResponseEntity<byte[]> response = restTemplate.getForEntity(URI.create(profileImageUrl), byte[].class);
             // getBody 조회로 후속 처리에 필요한 데이터를 가져온다
@@ -291,7 +308,7 @@ public class FileService {
                 }
 
                 // DB 저장이 롤백되면 업로드 파일도 제거되도록 정리 작업을 등록한다
-                registerRollbackCleanup(objectKey);
+                registerRollbackCleanup(List.of(objectKey));
                 fileMetadataSaved = true;
                 // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환한다
                 return fileDto.getFileNumb();
@@ -342,7 +359,7 @@ public class FileService {
                 validatedImage,
                 Constant.FILE_TYPE_PROFILE.equals(imageType)
                         ? PROFILE_PREVIEW_MAX_EDGE
-                        : BACKGROUND_PREVIEW_MAX_EDGE
+                        : BACKGROUND_DISPLAY_MAX_EDGE
         );
         // 임시 파일명을 추측하기 어렵게 UUID 식별값을 생성한다
         String draftToken = UUID.randomUUID().toString();
@@ -623,6 +640,78 @@ public class FileService {
     }
 
     /**
+     * 배경사진의 일반 화면용 파생본을 조회하고, 기존 이미지이면 최초 요청에서 생성한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param objectKey 검증된 원본 배경사진 저장소 키
+     * @return 긴 변이 최대 1600px인 화면용 이미지, 원본이 없거나 경로가 잘못되면 빈 값
+     * @throws IOException 저장소 조회에 실패한 경우
+     */
+    public Optional<StoredFile> getBgDisplayFile(String objectKey) throws IOException {
+        // 배경사진 원본 경로에서만 화면용 파생 객체 키를 생성한다
+        String displayObjectKey = getBgDisplayKey(objectKey);
+
+        if (StringUtil.isEmpty(displayObjectKey)) {
+            // 지원하지 않는 저장소 경로는 조회하지 않는다
+            return Optional.empty();
+        }
+
+        // 이미 생성된 파생본이 있으면 이미지 디코딩과 원본 저장소 조회 없이 즉시 반환한다
+        Optional<StoredFile> displayFile = fileStorage.getFile(displayObjectKey);
+
+        if (displayFile.isPresent()) {
+            // 재사용 가능한 화면용 파생 이미지를 반환한다
+            return displayFile;
+        }
+
+        // 배포 이전에 저장된 배경사진의 원본 객체를 조회한다
+        Optional<StoredFile> originalFile = fileStorage.getFile(objectKey);
+
+        if (originalFile.isEmpty()) {
+            // 원본이 없는 경로에는 파생본을 생성하지 않는다
+            return Optional.empty();
+        }
+
+        // 저장 파일 확장자로 서버가 허용한 이미지 형식을 복원한다
+        ImageFormat imageFormat = objectKey.endsWith(ImageFormat.PNG.extension)
+                ? ImageFormat.PNG
+                : ImageFormat.JPEG;
+        ValidatedImage sourceImage = new ValidatedImage(
+                originalFile.get().bytes(),
+                imageFormat.mimeType,
+                imageFormat.extension
+        );
+
+        try {
+            // 기존 원본을 일반 화면 제한 크기로 축소한다
+            ValidatedImage displayImage = createPreviewImage(sourceImage, BACKGROUND_DISPLAY_MAX_EDGE);
+            // 다음 요청부터 파생본을 바로 조회할 수 있도록 교체 가능한 저장 캐시로 기록한다
+            setBgDisplayFile(displayObjectKey, displayImage);
+            // 이번 요청에도 생성한 파생 이미지 바이트를 즉시 반환한다
+            return Optional.of(new StoredFile(displayImage.bytes(), displayImage.mimeType()));
+        }
+
+        catch (InvalidImageFileException e) {
+            // 이전 배경사진의 파생본 생성 실패가 화면의 원본 표시까지 막지 않도록 원본으로 대체한다
+            log.warn("Background display image creation failed. objectKey={}, message={}", objectKey, e.getMessage());
+            // 기존 원본을 기능 유지용 대체 응답으로 반환한다
+            return originalFile;
+        }
+    }
+
+    /**
+     * 원본과 화면용 배경사진의 ETag를 구분할 파생본 식별값을 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param storedName UUID 형식의 원본 저장 파일명
+     * @return 파생 규격이 포함된 ETag 원문
+     */
+    public String getBgDisplayTag(String storedName) {
+        // 파생본 규격이 바뀌면 기존 브라우저 캐시와 구분되도록 최대 길이를 포함한다
+        return storedName + "-display-" + BACKGROUND_DISPLAY_MAX_EDGE;
+    }
+
+    /**
      * 외부 이미지 URL 자체를 파일 경로로 저장한다.
      *
      * @author SeungHyeon.Kang
@@ -664,6 +753,80 @@ public class FileService {
     private String getObjectKey(String imageType, String uploadDate, String storedName) {
         // 이미지 유형 아래에 업로드 날짜와 파일명을 포함한 객체 키를 반환한다
         return getUploadDirectoryName(imageType) + "/" + uploadDate + "/" + storedName;
+    }
+
+    /**
+     * 원본 배경사진 객체 키를 일반 화면용 파생본 객체 키로 변환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param objectKey 배경사진 원본 객체 키
+     * @return display 하위 디렉터리의 파생 객체 키, 배경사진 경로가 아니면 null
+     */
+    private String getBgDisplayKey(String objectKey) {
+        // 비어 있는 객체 키는 저장 경로로 변환하지 않는다
+        if (StringUtil.isEmpty(objectKey)) {
+            // 배경사진이 아닌 객체에는 파생 경로가 없음을 반환한다
+            return null;
+        }
+
+        // 운영체제 경로 규칙으로 정규화하여 상위 디렉터리 이동 문자를 제거한다
+        Path storedPath = Paths.get(objectKey).normalize();
+
+        if (storedPath.isAbsolute() || storedPath.getNameCount() != 3
+                || !"background".equals(storedPath.getName(0).toString())) {
+            // 서버가 생성한 background/yyMMdd/file 형식이 아닌 객체 키를 차단한다
+            return null;
+        }
+
+        // 검증된 상대 객체 키의 구분자를 S3 형식으로 통일한다
+        String normalizedObjectKey = storedPath.toString().replace('\\', '/');
+        // 마지막 파일명 앞에 화면용 파생본 전용 디렉터리를 삽입한다
+        int fileNameIndex = normalizedObjectKey.lastIndexOf('/');
+        // 원본과 같은 날짜 경로 아래의 display 디렉터리에 파생 객체를 보관한다
+        return normalizedObjectKey.substring(0, fileNameIndex + 1)
+                + DISPLAY_VARIANT_DIR
+                + "/"
+                + normalizedObjectKey.substring(fileNameIndex + 1);
+    }
+
+    /**
+     * 원본 이미지와 함께 생성하거나 삭제해야 하는 저장소 객체 키를 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param objectKey 원본 이미지 객체 키
+     * @return 원본과 선택적 배경사진 파생본 객체 키
+     */
+    private List<String> getRelatedKeys(String objectKey) {
+        // 배경사진 화면용 파생 객체 키를 계산한다
+        String displayObjectKey = getBgDisplayKey(objectKey);
+
+        if (StringUtil.isEmpty(displayObjectKey)) {
+            // 프로필 사진은 원본 객체만 관리한다
+            return List.of(objectKey);
+        }
+
+        // 배경사진은 원본과 화면용 파생 객체를 같은 수명주기로 관리한다
+        return List.of(objectKey, displayObjectKey);
+    }
+
+    /**
+     * 화면용 배경사진을 재생성 가능한 저장 캐시로 기록한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param displayObjectKey 화면용 파생 객체 키
+     * @param displayImage 긴 변 제한을 적용한 배경사진
+     */
+    private void setBgDisplayFile(String displayObjectKey, ValidatedImage displayImage) {
+        try {
+            // 로컬 또는 S3 저장소에 화면용 파생 이미지를 기록한다
+            fileStorage.setFile(displayObjectKey, displayImage.bytes(), displayImage.mimeType());
+        }
+
+        catch (IOException e) {
+            // 파생본은 원본으로 재생성 가능하므로 저장 실패가 사용자 이미지 기능을 중단하지 않게 한다
+            log.warn("Background display image cache write failed. objectKey={}, message={}"
+                    , displayObjectKey, e.getMessage());
+        }
     }
 
     /**
@@ -1649,16 +1812,29 @@ public class FileService {
                 continue;
             }
 
-            // 저장소 오류를 파일별로 격리해 나머지 삭제 대상을 계속 처리한다
+            // DB에서 참조가 제거된 원본과 재생성 가능한 화면용 파생 객체를 함께 삭제한다
+            delStoredFiles(getRelatedKeys(objectKey), fileDto.getFileNumb());
+        }
+    }
+
+    /**
+     * 검증된 저장소 객체 키들을 개별 오류로 격리하여 삭제한다.
+     *
+     * @author SeungHyeon.Kang
+     * @param objectKeyList 삭제할 원본 및 파생 객체 키 목록
+     * @param fileNumb 오류 추적에 사용할 파일 번호, 메타정보 등록 전이면 null
+     */
+    private void delStoredFiles(List<String> objectKeyList, Long fileNumb) {
+        // 하나의 저장소 삭제 실패가 같은 이미지의 나머지 객체 정리를 막지 않도록 개별 처리한다
+        for (String objectKey : objectKeyList) {
             try {
-                // DB에서 참조가 제거된 영구 이미지 객체를 삭제한다
+                // 검증된 원본 또는 화면용 파생 이미지 객체를 삭제한다
                 fileStorage.delFile(objectKey);
             }
 
-            // 커밋 이후 물리 삭제 실패는 롤백할 수 없으므로 운영 로그에 재정리 대상을 남긴다
             catch (IOException e) {
-                // 파일 번호와 안전하게 검증된 저장 경로를 오류 로그로 남긴다
-                log.error("Committed image file cleanup failed. fileNumb={}, objectKey={}", fileDto.getFileNumb(), objectKey, e);
+                // 재시도 가능한 정리 대상 식별값을 운영 로그에 남긴다
+                log.error("Image file cleanup failed. fileNumb={}, objectKey={}", fileNumb, objectKey, e);
             }
         }
     }
@@ -1708,9 +1884,9 @@ public class FileService {
      * DB 트랜잭션이 롤백될 때 이미 생성한 실제 이미지 파일도 함께 제거하도록 정리 작업을 등록한다.
      *
      * @author SeungHyeon.Kang
-     * @param objectKey 트랜잭션 롤백 시 삭제할 저장소 객체 키
+     * @param objectKeyList 트랜잭션 롤백 시 삭제할 원본 및 파생 객체 키
      */
-    private void registerRollbackCleanup(String objectKey) {
+    private void registerRollbackCleanup(List<String> objectKeyList) {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (!TransactionSynchronizationManager.isSynchronizationActive()) {
             // DB 트랜잭션이 롤백될 때 이미 생성한 실제 이미지 파일도 함께 제거하도록 정리 작업을 등록한 결과를 반환한다
@@ -1733,17 +1909,8 @@ public class FileService {
                     return;
                 }
 
-                // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
-                try {
-                    // 검증 중 생성된 임시 파일이 있으면 삭제한다
-                    fileStorage.delFile(objectKey);
-                }
-
-                // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
-                catch (IOException e) {
-                    // 실패 원인과 처리 대상을 오류 로그로 남긴다
-                    log.error("Rolled-back image file cleanup failed. objectKey={}", objectKey, e);
-                }
+                // 롤백된 메타정보가 참조하지 않는 원본과 화면용 파생 객체를 함께 삭제한다
+                delStoredFiles(objectKeyList, null);
             }
         });
     }

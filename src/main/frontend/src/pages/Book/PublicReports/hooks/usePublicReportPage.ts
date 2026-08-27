@@ -174,6 +174,8 @@ export function usePublicReportPage() {
     likeMutation.mutate({
       tagtType: "REPORT",
       tagtNumb: report.reptNumb,
+      likeCnt: report.likeCnt,
+      likeYsno: report.likeYsno,
     });
   };
 

@@ -39,7 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-04        SeungHyeon.Kang       공개 독후감만 소셜 요약과 통계에 포함
  * 2026-08-14        SeungHyeon.Kang    공개 독서 통계 조회 추가
  * 2026-08-15        SeungHyeon.Kang    접근 제한 회원 소셜 프로필 상태명 응답 추가
- * 2026-08-26        HanWon.Jang        활성 좋아요 사용자 목록 조회 추가
+ * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -350,7 +350,7 @@ public class SocialController {
     /**
      * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회한다.
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param tagtType 좋아요 대상 유형
      * @param tagtNumb 좋아요 대상 번호

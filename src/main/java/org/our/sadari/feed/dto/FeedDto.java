@@ -1,21 +1,26 @@
 package org.our.sadari.feed.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.LocalDateTime;
 import lombok.Data;
+import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.file.util.FileUrlUtil;
 
 /**
  * fileName       : FeedDto
- * author         : Codex
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 팔로잉 피드 항목과 조회 조건을 전달한다
+ * description    : 본인과 팔로잉 피드 항목 및 조회 조건을 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-08-25        Codex              최초 생성
+ * 2026-08-25        SeungHyeon.Kang         최초 생성
+ * 2026-08-26        SeungHyeon.Kang         화면용 이미지 경로·주석 정비
+ * 2026-08-27        SeungHyeon.Kang         알림 대상 단건 조회 조건 확장
  */
 @Data
-@Schema(description = "팔로잉 피드 항목 DTO")
+@Schema(description = "본인과 팔로잉 피드 항목 DTO")
 public class FeedDto {
 
     @Schema(description = "로그인 사용자 번호", hidden = true)
@@ -68,6 +73,25 @@ public class FeedDto {
 
     @Schema(description = "프로필 또는 배경 이미지 경로")
     private String contentImagePath;
+
+    /**
+     * 피드 배경사진 카드에서 사용할 축소 이미지 경로를 반환한다.
+     *
+     * @author SeungHyeon.Kang
+     * @return 배경사진이면 화면용 파생본 경로, 다른 유형이면 원본 경로
+     */
+    @JsonProperty(value = "contentImageDisplayPath", access = JsonProperty.Access.READ_ONLY)
+    @Schema(description = "일반 화면용 피드 이미지 경로", accessMode = Schema.AccessMode.READ_ONLY)
+    public String getContentDisplayPath() {
+        // 프로필 사진 피드에는 배경사진 전용 파생 URL을 적용하지 않는다
+        if (!Constant.FILE_TYPE_BACKGROUND.equals(tagtType)) {
+            // 기존 프로필 사진 표시 경로를 유지한다
+            return contentImagePath;
+        }
+
+        // 배경사진 피드에는 긴 변 1600px 파생본 URL을 제공한다
+        return FileUrlUtil.getBgDisplayPath(contentImagePath);
+    }
 
     @Schema(description = "좋아요 수")
     private Long likeCnt;

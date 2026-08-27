@@ -245,6 +245,7 @@ const LikeUserListButton = ({
         /* 좋아요 사용자 목록 팝업 전체 영역 */
         <div
           className={styles.overlay}
+          data-image-viewer-overlay="true"
           role="presentation"
           onMouseDown={(event) => {
             // 배경을 직접 누른 경우에만 목록 팝업을 닫는다

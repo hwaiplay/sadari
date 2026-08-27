@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#ffffff" />
+    <title>연결이 불안정합니다.</title>
+    <style>
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        width: 100%;
+        min-height: 100%;
+        margin: 0;
+      }
+
+      body {
+        color: #151515;
+        background: #ffffff;
+        font-family: Pretendard, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      }
+
+      .screen {
+        min-height: 100vh;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 24px 16px;
+      }
+
+      .content {
+        width: 100%;
+        max-width: 360px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+      }
+
+      .icon-wrap {
+        width: 88px;
+        height: 88px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 24px;
+        border-radius: 50%;
+        background: #f6f8f9;
+      }
+
+      .icon {
+        width: 52px;
+        height: 52px;
+        fill: none;
+        stroke: #535555;
+        stroke-width: 4;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+
+      .text-group {
+        margin-bottom: 32px;
+      }
+
+      .title {
+        margin: 0 0 12px;
+        font-size: 24px;
+        font-weight: 700;
+        line-height: 1.4;
+      }
+
+      .description {
+        margin: 0;
+        color: #7e8587;
+        font-size: 16px;
+        line-height: 1.6;
+      }
+
+      .retry {
+        width: 100%;
+        max-width: 240px;
+        height: 46px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid #293038;
+        border-radius: 8px;
+        color: #ffffff;
+        background: #293038;
+        font-size: 14px;
+        font-weight: 500;
+        line-height: 1;
+        text-decoration: none;
+        transition: background-color 160ms ease;
+      }
+
+      .retry:hover {
+        background: #171a1f;
+      }
+
+      .retry:focus-visible {
+        outline: 2px solid #78b991;
+        outline-offset: 2px;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- React가 시작되지 못하는 HTTP 500에서도 독립적으로 표시하는 서비스 장애 화면 -->
+    <main class="screen" role="alert" aria-live="assertive">
+      <!-- 연결 장애 상태와 복구 동작 안내 영역 -->
+      <section class="content">
+        <!-- 연결 장애를 나타내는 장식 아이콘 영역 -->
+        <div class="icon-wrap" aria-hidden="true">
+          <svg class="icon" viewBox="0 0 64 64">
+            <path d="M13 27.5C22.8 17.8 41.2 17.8 51 27.5"></path>
+            <path d="M21 36C27.1 30 36.9 30 43 36"></path>
+            <path d="M29 44.5C30.7 42.8 33.3 42.8 35 44.5"></path>
+            <path d="M14 50L50 14"></path>
+          </svg>
+        </div>
+
+        <!-- 연결 장애 제목과 확인 방법 안내 영역 -->
+        <div class="text-group">
+          <h1 class="title">연결이 불안정합니다.</h1>
+          <p class="description">인터넷 또는 서버 연결 상태를 확인한 후 다시 시도해 주세요.</p>
+        </div>
+
+        <!-- 현재 주소의 서버 상태를 다시 확인하는 이동 영역 -->
+        <a class="retry" href="">다시 시도</a>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,6 +1,7 @@
 import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetAlert, sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
+import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -98,7 +99,7 @@ const getReadingRemainRate = (remainDays: number) => {
  * @author HanWon.Jang
  * @return 소셜 프로필 페이지 컴포넌트
  */
-function SocialProfilePage() {
+const SocialProfilePage = () => {
 
   const navigate = useNavigate();
   const { userNumb } = useParams();
@@ -511,7 +512,7 @@ function SocialProfilePage() {
     return (
       /* 상대 사용자의 독서와 소셜 활동 통계 영역 */
       <section className={styles.monthlySummary} aria-label={message("frontend.profile.stats.title")}>
-        <div className={styles.profileStatsSummary}>
+        <div className={styles.myProfileStatsSummary}>
           <div className={styles.goalAchievementGrid}>
             {stats.map((stat) => (
               <div className={styles.goalAchievementItem} key={stat.label}>
@@ -985,14 +986,14 @@ function SocialProfilePage() {
     <main className={styles.page}>
       {/* 상대 사용자의 프로필 배경과 기본 정보 영역 */}
       <section className={styles.profileShell}>
-        <div
-          className={styles.cover}
-          style={
-            profile.bgimPath
-              ? { backgroundImage: `url("${profile.bgimPath}")` }
-              : undefined
-          }
-        >
+        <div className={styles.cover}>
+          {profile.bgimPath && (
+            <BackgroundImage
+              source={profile.bgimDisplayPath || profile.bgimPath}
+              imageClassName={styles.coverImage}
+              alt=""
+            />
+          )}
           {profile.bgimPath && (
             <FullscreenImageButton
               className={styles.coverImageViewerButton}
@@ -1238,6 +1239,6 @@ function SocialProfilePage() {
       ), document.body)}
     </main>
   );
-}
+};
 
 export default SocialProfilePage;
