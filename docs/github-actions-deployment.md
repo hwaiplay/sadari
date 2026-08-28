@@ -68,7 +68,8 @@
 | `TIMER_MAX_SESSION_SECONDS` | `28800` | 단일 독서 타이머 세션과 목표시간 알림에 적용하는 최대 시간(초) |
 | `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
 | `TIMER_DETAIL_RETENTION_DAYS` | `365` | 완료된 독서 타이머 세션 상세 보존기간(일) |
-| `BOOK_SEARCH_RATE_LIMIT_PER_MINUTE` | `20` | 회원별 60초 도서 검색 요청 한도 |
+| `BOOK_SEARCH_CACHE_HIT_RATE_LIMIT_PER_MINUTE` | `300` | 회원별 60초 캐시 적중 도서 검색 요청 한도 |
+| `BOOK_SEARCH_CACHE_MISS_RATE_LIMIT_PER_MINUTE` | `60` | 회원별 60초 캐시 미적중 도서 검색 요청 한도 |
 | `BOOK_SEARCH_RATE_LIMIT_PER_DAY` | `200` | 캐시 미적중 시 차감하는 회원별 24시간 카카오 도서 검색 실제 호출 한도 |
 | `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` | `27000` | 비상 쿼터를 제외한 앱 전체 24시간 카카오 도서 검색 실제 호출 한도 |
 | `BOOK_SEARCH_CACHE_TTL_SECONDS` | `600` | 사용자와 연결하지 않은 도서 검색 결과 Redis 캐시 유효시간(초) |
@@ -112,7 +113,7 @@
   GitHub Actions Secret으로 전달합니다.
 - 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
   `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 기존 `KAKAO_REST_API_KEY` Secret을 사용합니다.
-- 운영 도서 검색은 요청당 최대 50권을 조회하며 회원별 분간·일간 제한, 앱 전체 실제 호출 제한과 10분 공용 캐시를 Redis에서 관리합니다.
+- 운영 도서 검색은 요청당 최대 50권을 조회하며 캐시 적중 300회·미적중 60회의 회원별 60초 제한, 회원별 일간 제한, 앱 전체 실제 호출 제한과 10분 공용 캐시를 Redis에서 관리합니다.
 - 도서 인기 검색어는 최근 7일의 일별 Redis 점수를 합산하고 동일 회원의 같은 검색어를 기간 내 한 번만 반영하며 최소 3명 이상인 상위 10건을 제공합니다.
 - 운영의 `book.search.popular-keyword-user-dedup-enabled`는 순위 조작 방지를 위해 `true`로 고정하며 환경변수로 노출하지 않습니다.
 - 로컬의 `book.search.popular-keyword-user-dedup-enabled`는 한 계정의 반복 검색으로 화면을 검증할 수 있도록 `false`를 사용하고 최소 노출 인원은 `1`로 설정합니다.

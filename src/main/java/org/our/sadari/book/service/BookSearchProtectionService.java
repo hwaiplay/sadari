@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 처리
- * 2026-08-28        HanWon.Jang        캐시 적중 한도 분리
+ * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 분리
  */
 @Service
 @RequiredArgsConstructor
@@ -89,8 +89,10 @@ public class BookSearchProtectionService {
             redis.call('EXPIRE', KEYS[1], tonumber(ARGV[6]))
             return 1
             """;
-    // 회원별 분간 도서 검색 요청 횟수 Redis 키 접두사
-    private static final String MINUTE_LIMIT_KEY_PREFIX = "book:search:rate:minute:";
+    // 회원별 캐시 적중 도서 검색 요청 횟수 Redis 키 접두사
+    private static final String CACHE_HIT_MINUTE_LIMIT_KEY_PREFIX = "book:search:rate:minute:cache-hit:";
+    // 회원별 캐시 미적중 도서 검색 요청 횟수 Redis 키 접두사
+    private static final String CACHE_MISS_MINUTE_LIMIT_KEY_PREFIX = "book:search:rate:minute:cache-miss:";
     // 회원별 일간 도서 검색 요청 횟수 Redis 키 접두사
     private static final String DAILY_LIMIT_KEY_PREFIX = "book:search:rate:day:";
     // 앱 전체 카카오 도서 검색 실제 호출 횟수 Redis 키
@@ -135,9 +137,12 @@ public class BookSearchProtectionService {
     // 외부 주소가 인기 검색어를 광고 수단으로 사용하지 못하도록 URL 형태를 판정하는 패턴
     private static final Pattern URL_PATTERN = Pattern.compile("(?:https?://|www\\.)\\S+");
 
-    // 회원 한 명의 60초간 최대 도서 검색 요청 수
-    @Value("${book.search.rate-limit-per-minute:20}")
-    private int rateLimitPerMinute;
+    // 회원 한 명의 60초간 최대 캐시 적중 도서 검색 요청 수
+    @Value("${book.search.cache-hit-rate-limit-per-minute:300}")
+    private int cacheHitRateLimitPerMinute;
+    // 회원 한 명의 60초간 최대 캐시 미적중 도서 검색 요청 수
+    @Value("${book.search.cache-miss-rate-limit-per-minute:60}")
+    private int cacheMissRateLimitPerMinute;
     // 회원 한 명의 24시간 최대 카카오 도서 검색 실제 호출 수
     @Value("${book.search.rate-limit-per-day:200}")
     private int rateLimitPerDay;
@@ -168,13 +173,14 @@ public class BookSearchProtectionService {
     private final BadWordDetectionService badWordDetectionService;
 
     /**
-     * 캐시 적중을 포함한 회원별 분간 검색 제한을 검사하고 요청 횟수를 반영한다
+     * 캐시 유형별 회원 검색 제한을 검사하고 요청 횟수를 반영한다
      *
      * @author HanWon.Jang
      * @param userNumb 도서 검색을 요청한 로그인 회원 번호
+     * @param cacheHit 공용 검색 결과 캐시 적중 여부
      * @return 분간 제한을 통과한 요청 여부
      */
-    public boolean isRequestAllowed(Long userNumb) {
+    public boolean isRequestAllowed(Long userNumb, boolean cacheHit) {
         // 인증되지 않은 요청은 외부 API 쿼터를 사용할 수 없도록 차단한다
         if (StringUtil.isEmpty(userNumb)) {
             // 회원 식별값이 없는 요청을 거절한다
@@ -183,13 +189,15 @@ public class BookSearchProtectionService {
 
         // Redis 장애 시 카카오 쿼터가 무방비로 소모되지 않도록 검색 요청을 차단한다
         try {
-            // 캐시 적중 여부와 관계없이 한 회원의 분간 요청 제한을 검사한다
+            // 캐시 유형에 맞는 한 회원의 분간 요청 제한값을 선택한다
+            int rateLimit = cacheHit ? cacheHitRateLimitPerMinute : cacheMissRateLimitPerMinute;
+            // 캐시 유형별 독립 카운터로 회원의 분간 요청 제한을 검사한다
             Long result = redisTemplate.execute(
                     REQUEST_LIMIT_SCRIPT
-                  , List.of(getMinuteLimitKey(userNumb))
-                  , String.valueOf(rateLimitPerMinute), String.valueOf(MINUTE_LIMIT_TTL_SECONDS)
+                  , List.of(getMinuteLimitKey(userNumb, cacheHit))
+                  , String.valueOf(rateLimit), String.valueOf(MINUTE_LIMIT_TTL_SECONDS)
             );
-            // Redis가 명시적으로 허용한 요청만 캐시 조회 후보로 반환한다
+            // Redis가 명시적으로 허용한 요청만 검색 진행 대상으로 반환한다
             return !StringUtil.isEmpty(result) && result == REQUEST_ALLOWED;
         }
 
@@ -458,20 +466,29 @@ public class BookSearchProtectionService {
             return;
         }
 
-        // 회원과 연결된 고정 이름의 분간 및 일간 제한 키를 함께 삭제한다
-        redisTemplate.delete(List.of(getMinuteLimitKey(userNumb), getDailyLimitKey(userNumb)));
+        // 회원과 연결된 캐시 유형별 분간 및 일간 제한 키를 함께 삭제한다
+        redisTemplate.delete(List.of(
+                getMinuteLimitKey(userNumb, true)
+              , getMinuteLimitKey(userNumb, false)
+              , getDailyLimitKey(userNumb)
+        ));
     }
 
     /**
-     * 회원별 분간 도서 검색 제한 Redis 키를 생성한다
+     * 회원별 캐시 유형에 맞는 분간 도서 검색 제한 Redis 키를 생성한다
      *
      * @author SeungHyeon.Kang
      * @param userNumb 도서 검색을 요청한 회원 번호
+     * @param cacheHit 공용 검색 결과 캐시 적중 여부
      * @return 회원별 분간 제한 Redis 키
      */
-    private String getMinuteLimitKey(Long userNumb) {
-        // 회원 번호와 분간 제한 접두사를 결합한 Redis 키를 반환한다
-        return MINUTE_LIMIT_KEY_PREFIX + userNumb;
+    private String getMinuteLimitKey(Long userNumb, boolean cacheHit) {
+        // 캐시 유형에 맞는 분간 제한 접두사를 선택한다
+        String keyPrefix = cacheHit
+                ? CACHE_HIT_MINUTE_LIMIT_KEY_PREFIX
+                : CACHE_MISS_MINUTE_LIMIT_KEY_PREFIX;
+        // 회원 번호와 캐시 유형별 분간 제한 접두사를 결합한 Redis 키를 반환한다
+        return keyPrefix + userNumb;
     }
 
     /**

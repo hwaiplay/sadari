@@ -31,7 +31,7 @@ import {
   sanitizeText,
   stripHtmlTags,
 } from "@/features/Book/utils/reportValidation";
-import type { FormEvent } from "react";
+import type { ChangeEvent, FormEvent } from "react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   useLocation,
@@ -42,6 +42,8 @@ import {
 
 const SEARCH_STORAGE_KEY = "sadari:book-search:v2";
 const SEARCH_PAGE_SIZE = 10;
+const AUTO_SEARCH_MIN_LENGTH = 2;
+const AUTO_SEARCH_DELAY_MS = 100;
 
 type SearchBookCache = {
   searchKeyword?: string;
@@ -151,6 +153,9 @@ export function useSearchBookPage() {
   const [selectingBookIsbn, setSelectingBookIsbn] = useState<string | null>(null);
   const popularLoadingPeriodRef = useRef<PopularBookPeriodType | null>(null);
   const resultRequestIdRef = useRef(0);
+  const autoSearchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const lastSearchedKeywordRef = useRef("");
+  const previousKeywordRef = useRef("");
   const navigate = useNavigate();
   const location = useLocation();
   const navigationType = useNavigationType();
@@ -300,21 +305,29 @@ export function useSearchBookPage() {
    */
   const executeBookSearch = useCallback(async (keyword: string): Promise<void> => {
 
+    // 같은 검색어의 자동 검색과 수동 제출이 겹치면 기존 결과를 유지한다.
+    if (lastSearchedKeywordRef.current === keyword) {
+      // 이미 조회했거나 조회 중인 검색어의 중복 API 호출을 종료한다.
+      return;
+    }
+
+    // 검색어가 없으면 필수 입력 안내를 표시한다.
+    if (keyword === "") {
+      // 검색어 입력이 필요하다는 공통 경고를 표시한다.
+      await sweetWarning(
+        message("frontend.alert.inputRequired"),
+        message("frontend.book.search.keywordRequired"),
+      );
+      // 빈 검색어 조회를 종료한다.
+      return;
+    }
+
+    // 직접 검색이 진행되면 이전 목록 응답이 결과를 덮어쓰지 못하도록 요청 순번을 갱신한다.
+    const requestId = ++resultRequestIdRef.current;
+    // 응답 대기 중인 검색어도 중복 요청 대상에서 제외한다.
+    lastSearchedKeywordRef.current = keyword;
+
     try {
-      // 검색어가 없으면 필수 입력 안내를 표시한다.
-      if (keyword === "") {
-        // 검색어 입력이 필요하다는 공통 경고를 표시한다.
-        await sweetWarning(
-          message("frontend.alert.inputRequired"),
-          message("frontend.book.search.keywordRequired"),
-        );
-        // 빈 검색어 조회를 종료한다.
-        return;
-      }
-
-      // 직접 검색이 진행되면 이전 인기 도서 응답이 목록을 덮어쓰지 못하도록 요청 순번을 갱신한다.
-      const requestId = ++resultRequestIdRef.current;
-
       // 첫 페이지 조회 중임을 화면에 반영한다.
       setIsSearching(true);
       // 사용자가 직접 검색하면 인기 도서 최초 로딩 화면을 종료한다.
@@ -350,9 +363,15 @@ export function useSearchBookPage() {
         nextStart: responseData.nextStart ?? null,
         end: responseData.end,
       });
-      // 방금 반영된 검색어를 새로고침 없이 세로 슬라이더에서 확인할 수 있도록 목록을 갱신한다
-      await loadPopularKeywords();
     } catch (error) {
+      // 더 늦게 시작한 검색이 있으면 이전 요청의 오류를 사용자에게 표시하지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 검색 흐름을 유지하고 오래된 요청의 오류 처리를 종료한다.
+        return;
+      }
+
+      // 실패한 검색어는 검색 버튼이나 다음 입력에서 다시 시도할 수 있도록 해제한다.
+      lastSearchedKeywordRef.current = "";
       console.error("도서 검색 중 오류 발생: ", error);
       // 검색 실패 원인을 공통 오류 알림으로 표시한다.
       await sweetError(
@@ -360,10 +379,124 @@ export function useSearchBookPage() {
         getApiErrorMessage(error, message("frontend.book.search.failed")),
       );
     } finally {
-      // 성공과 실패에 관계없이 첫 페이지 조회 상태를 해제한다.
-      setIsSearching(false);
+      // 최신 요청인 경우에만 첫 페이지 조회 상태를 해제한다.
+      if (requestId === resultRequestIdRef.current) {
+        // 성공과 실패에 관계없이 최신 검색의 진행 상태를 해제한다.
+        setIsSearching(false);
+      }
     }
-  }, [loadPopularKeywords]);
+  }, []);
+
+  /**
+   * 예약된 자동 검색 타이머를 해제한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const clearAutoSearch = useCallback((): void => {
+
+    // 예약된 자동 검색이 없으면 해제 작업을 생략한다.
+    if (autoSearchTimerRef.current === null) {
+      // 해제할 타이머가 없는 처리를 종료한다.
+      return;
+    }
+
+    // 이전 입력에서 예약한 자동 검색 실행을 취소한다.
+    clearTimeout(autoSearchTimerRef.current);
+    // 다음 자동 검색을 예약할 수 있도록 타이머 참조를 비운다.
+    autoSearchTimerRef.current = null;
+  }, []);
+
+  /**
+   * 검색 입력값을 화면 상태에 반영한다.
+   *
+   * @author HanWon.Jang
+   * @param event 검색 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleKeywordChange = (event: ChangeEvent<HTMLInputElement>): void => {
+    // 입력 중인 검색어를 검색창과 자동 검색 조건에 반영한다.
+    setSearchKeyword(event.target.value);
+  };
+
+  /**
+   * 두 글자 이상 입력이 멈추면 자동 검색을 예약한다.
+   *
+   * @author HanWon.Jang
+   * @return 예약된 자동 검색을 해제하는 함수
+   */
+  const startAutoSearch = useCallback((): (() => void) => {
+
+    const keyword = searchKeyword.trim();
+    const previousKeyword = previousKeywordRef.current;
+    // 현재 입력을 다음 변경 시 빈 검색어 전환 여부 판단에 사용한다.
+    previousKeywordRef.current = keyword;
+    // 입력이 바뀔 때 이전 검색 예약부터 취소한다.
+    clearAutoSearch();
+
+    // 검색어를 모두 지우면 기본 인기 도서 화면으로 돌아간다.
+    if (keyword === "") {
+      // 빈 초기 화면에서는 이미 실행 중인 인기 도서 조회를 유지한다.
+      if (previousKeyword === "") {
+        // 검색어 변화가 없는 초기 처리를 종료한다.
+        return clearAutoSearch;
+      }
+
+      // 진행 중인 직접 검색 응답이 인기 도서 화면을 덮어쓰지 못하게 무효화한다.
+      resultRequestIdRef.current += 1;
+      // 같은 검색어를 다시 입력하면 새로 조회할 수 있도록 중복 기준을 초기화한다.
+      lastSearchedKeywordRef.current = "";
+      // 무효화한 직접 검색의 진행 표시를 즉시 해제한다.
+      setIsSearching(false);
+      // 비운 검색어에 이전 직접 검색 결과가 복원되지 않도록 캐시를 제거한다.
+      sessionStorage.removeItem(SEARCH_STORAGE_KEY);
+      // 현재 선택된 기간의 인기 도서와 인기 검색어 화면을 복원한다.
+      void loadPopularBooks(popularPeriod);
+      void loadPopularKeywords();
+      // 다음 입력 변경 시 예약된 타이머를 정리할 함수를 반환한다.
+      return clearAutoSearch;
+    }
+
+    // 두 글자 미만이면 자동 검색 없이 검색 버튼과 Enter만 허용한다.
+    if (
+      keyword.length < AUTO_SEARCH_MIN_LENGTH
+      || lastSearchedKeywordRef.current === keyword
+    ) {
+      // 자동 검색 조건을 충족하지 않은 처리를 종료한다.
+      return clearAutoSearch;
+    }
+
+    /**
+     * 입력 대기 시간이 지난 검색어로 첫 페이지 자동 검색을 실행한다.
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const executeAutoSearch = (): void => {
+      // 실행된 타이머 참조를 비우고 현재 검색어 조회를 시작한다.
+      autoSearchTimerRef.current = null;
+      void executeBookSearch(keyword);
+    };
+
+    // 연속 입력마다 대기 시간을 다시 시작해 마지막 문자열만 조회한다.
+    autoSearchTimerRef.current = setTimeout(
+      executeAutoSearch,
+      AUTO_SEARCH_DELAY_MS,
+    );
+
+    // 입력 변경이나 화면 해제 시 남은 자동 검색을 취소한다.
+    return clearAutoSearch;
+  }, [
+    clearAutoSearch,
+    executeBookSearch,
+    loadPopularBooks,
+    loadPopularKeywords,
+    popularPeriod,
+    searchKeyword,
+  ]);
+
+  // 검색어와 입력기 조합 상태가 바뀔 때 자동 검색 예약을 갱신한다.
+  useEffect(startAutoSearch, [startAutoSearch]);
 
   /**
    * 클릭하거나 터치한 인기 검색어를 입력창에 반영하고 즉시 첫 페이지를 조회한다
@@ -436,9 +569,12 @@ export function useSearchBookPage() {
 
     try {
       const parsed = JSON.parse(cached) as SearchBookCache;
+      const cachedKeyword = parsed.searchKeyword ?? "";
 
       // 저장된 검색어와 결과 페이지 상태를 화면에 복원한다.
-      setSearchKeyword(parsed.searchKeyword ?? "");
+      lastSearchedKeywordRef.current = cachedKeyword;
+      previousKeywordRef.current = cachedKeyword.trim();
+      setSearchKeyword(cachedKeyword);
       setBookResult(parsed.bookResult ?? null);
       setVisibleCount(parsed.visibleCount ?? SEARCH_PAGE_SIZE);
       setNextStart(parsed.nextStart ?? null);
@@ -462,15 +598,17 @@ export function useSearchBookPage() {
    * @param event 검색 폼 제출 이벤트
    * @return 검색 처리가 끝나면 완료되는 Promise
    */
-  async function handleSearchClick(
+  const handleSearchClick = async (
     event?: FormEvent<HTMLFormElement>,
-  ): Promise<void> {
+  ): Promise<void> => {
 
     // 브라우저의 기본 폼 제출 동작을 중지한다.
     event?.preventDefault();
+    // 검색 버튼과 Enter가 실행되면 대기 중인 같은 입력의 자동 검색을 취소한다.
+    clearAutoSearch();
     // 앞뒤 공백을 제거한 검색어로 첫 페이지를 조회한다.
     await executeBookSearch(searchKeyword.trim());
-  }
+  };
 
   /**
    * 현재 검색 결과 다음 페이지를 조회해 기존 목록 뒤에 추가한다.
@@ -478,15 +616,19 @@ export function useSearchBookPage() {
    * @author HanWon.Jang
    * @return 추가 조회 처리가 끝나면 완료되는 Promise
    */
-  async function handleLoadMore(): Promise<void> {
+  const handleLoadMore = async (): Promise<void> => {
 
-    const keyword = searchKeyword.trim();
+    // 입력 중인 다음 검색어가 아니라 현재 결과를 만든 검색어로 다음 페이지를 조회한다.
+    const keyword = lastSearchedKeywordRef.current;
 
-    // 검색어가 없거나 이미 추가 노출 중이면 중복 요청을 차단한다.
-    if (!keyword || isLoadingMore) {
+    // 검색어가 없거나 첫 페이지 및 추가 노출 중이면 중복 요청을 차단한다.
+    if (!keyword || isSearching || isLoadingMore) {
       // 실행할 수 없는 추가 조회를 종료한다.
       return;
     }
+
+    // 추가 조회 뒤 새 첫 페이지 검색이 시작되면 오래된 응답을 버릴 요청 순번을 보관한다.
+    const requestId = resultRequestIdRef.current;
 
     try {
       // 추가 조회 중임을 화면에 반영한다.
@@ -520,6 +662,13 @@ export function useSearchBookPage() {
 
       // 받아둔 50권을 모두 소진한 경우에만 다음 카카오 검색 페이지를 호출한다.
       const responseData = await fetchBooks(keyword, nextStart);
+
+      // 추가 조회 중 새 첫 페이지 검색이 시작됐으면 이전 결과를 합치지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 첫 페이지 검색이 목록을 갱신하도록 오래된 추가 응답 처리를 종료한다.
+        return;
+      }
+
       const mergedResult = [...(bookResult ?? []), ...responseData.bookList];
       const nextVisibleCount = Math.min(
         visibleCount + SEARCH_PAGE_SIZE,
@@ -540,6 +689,12 @@ export function useSearchBookPage() {
         end: responseData.end,
       });
     } catch (error) {
+      // 새 첫 페이지 검색 뒤 도착한 이전 추가 조회 오류는 사용자에게 표시하지 않는다.
+      if (requestId !== resultRequestIdRef.current) {
+        // 최신 검색 흐름을 유지하고 오래된 오류 처리를 종료한다.
+        return;
+      }
+
       console.error("도서 검색 결과 추가 조회 중 오류 발생: ", error);
       // 추가 조회 실패 원인을 공통 오류 알림으로 표시한다.
       await sweetError(
@@ -550,7 +705,7 @@ export function useSearchBookPage() {
       // 성공과 실패에 관계없이 추가 조회 상태를 해제한다.
       setIsLoadingMore(false);
     }
-  }
+  };
 
   // 서버에서 미리 받은 결과 중 현재 화면에 노출할 범위만 잘라낸다.
   const visibleBookResult = bookResult?.slice(0, visibleCount) ?? null;
@@ -811,6 +966,7 @@ export function useSearchBookPage() {
   return {
     bookResult: visibleBookResult,
     handleAuthorSelect,
+    handleKeywordChange,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
@@ -831,6 +987,5 @@ export function useSearchBookPage() {
     timerPeriodBook,
     closeTimerPeriod,
     saveTimerReport,
-    setSearchKeyword,
   };
 }

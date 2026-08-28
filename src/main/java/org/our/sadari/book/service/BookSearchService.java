@@ -84,18 +84,20 @@ public class BookSearchService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 캐시 적중 요청도 서버를 반복 사용하지 못하도록 회원별 분간 제한을 먼저 검사한다
-        if (!bookSearchProtectionService.isRequestAllowed(userNumb)) {
-            // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
-            return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
-        }
-
         // 카카오 API 통신과 응답 변환 실패를 공통 검색 실패 응답으로 격리한다
         try {
             // 기존 시작 위치를 카카오 API의 1부터 시작하는 50권 페이지 번호로 변환한다
             int page = ((start - MIN_START) / DISPLAY_COUNT) + 1;
             // 동일 검색어와 페이지의 짧은 공용 캐시를 먼저 조회한다
             KakaoBookJsonDto kakaoBookJsonDto = bookSearchProtectionService.getCachedSearch(query, page);
+            // 조회 결과로 캐시 적중과 미적중 요청의 독립된 단기 제한을 선택한다
+            boolean cacheHit = !StringUtil.isEmpty(kakaoBookJsonDto);
+
+            // 캐시 유형별 회원 단기 요청 한도를 넘은 검색을 차단한다
+            if (!bookSearchProtectionService.isRequestAllowed(userNumb, cacheHit)) {
+                // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
+                return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
+            }
 
             // 공용 캐시에 검색 결과가 없을 때만 카카오 일일 쿼터를 예약하고 외부 API를 호출한다
             if (StringUtil.isEmpty(kakaoBookJsonDto)) {

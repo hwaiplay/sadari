@@ -55,6 +55,7 @@ const SearchBookPage = () => {
   const {
     bookResult,
     handleAuthorSelect,
+    handleKeywordChange,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
@@ -75,7 +76,6 @@ const SearchBookPage = () => {
     timerPeriodBook,
     closeTimerPeriod,
     saveTimerReport,
-    setSearchKeyword,
   } = useSearchBookPage();
   // 책 검색 입력과 조회 결과 목록 화면을 반환한다.
   return (
@@ -108,7 +108,7 @@ const SearchBookPage = () => {
               id="searchKeyword"
               placeholder={message("frontend.book.search.placeholder")}
               value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
+              onChange={handleKeywordChange}
             />
             {/* "검색" */}
             <button

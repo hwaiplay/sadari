@@ -47,7 +47,7 @@ import org.springframework.web.client.RestTemplate;
  * -----------------------------------------------------------
  * 2026-07-31        SeungHyeon.Kang    최초 생성
  * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 검증 추가
- * 2026-08-28        HanWon.Jang        캐시 적중 한도 분리 검증
+ * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchServiceTest {
@@ -128,8 +128,8 @@ class BookSearchServiceTest {
         // 카카오 도서 검색 성공 응답을 설정한다
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(responseBody));
-        // 로그인 회원의 분간 검색 요청을 허용한다
-        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(true);
+        // 로그인 회원의 캐시 미적중 단기 검색 요청을 허용한다
+        when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(true);
         // 공용 캐시가 없는 카카오 실제 호출을 회원별 및 앱 전체 보호 한도 안에서 허용한다
         when(bookSearchProtectionService.reserveProviderCall(7L)).thenReturn(true);
 
@@ -208,8 +208,8 @@ class BookSearchServiceTest {
                 """;
         // 외부 호출 없이 사용할 검색 결과가 있는 첫 페이지 공용 캐시를 생성한다
         KakaoBookJsonDto cachedResult = objectMapper.readValue(cachedJson, KakaoBookJsonDto.class);
-        // 로그인 회원의 분간 검색 요청을 허용한다
-        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(true);
+        // 로그인 회원의 캐시 적중 단기 검색 요청을 허용한다
+        when(bookSearchProtectionService.isRequestAllowed(7L, true)).thenReturn(true);
         // 같은 검색어의 첫 페이지가 공용 캐시에 존재하도록 설정한다
         when(bookSearchProtectionService.getCachedSearch("데미안", 1)).thenReturn(cachedResult);
 
@@ -231,8 +231,8 @@ class BookSearchServiceTest {
      */
     @Test
     void getBooksKakaoFailure() {
-        // 로그인 회원의 분간 검색 요청을 허용한다
-        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(true);
+        // 로그인 회원의 캐시 미적중 단기 검색 요청을 허용한다
+        when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(true);
         // 카카오 오류 응답도 공급자 쿼터를 사용할 수 있어 회원별 및 앱 전체 실제 호출을 먼저 예약한다
         when(bookSearchProtectionService.reserveProviderCall(7L)).thenReturn(true);
         // 카카오 API가 인증 오류를 반환하는 외부 통신 흐름을 설정한다
@@ -253,8 +253,8 @@ class BookSearchServiceTest {
      */
     @Test
     void blocksKakaoOnRateLimit() {
-        // 로그인 회원이 분간 검색 제한에 도달하도록 설정한다
-        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(false);
+        // 로그인 회원이 캐시 미적중 단기 검색 제한에 도달하도록 설정한다
+        when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(false);
 
         // 제한에 도달한 회원의 도서 검색을 실행한다
         ResultData resultData = bookSearchService.searchBooks(7L, "도서", 1);
@@ -272,8 +272,8 @@ class BookSearchServiceTest {
      */
     @Test
     void skipsKakaoOnCacheHit() {
-        // 로그인 회원의 분간 검색 요청을 허용한다
-        when(bookSearchProtectionService.isRequestAllowed(7L)).thenReturn(true);
+        // 로그인 회원의 캐시 적중 단기 검색 요청을 허용한다
+        when(bookSearchProtectionService.isRequestAllowed(7L, true)).thenReturn(true);
         // 마지막 페이지인 빈 카카오 검색 결과를 생성한다
         KakaoBookJsonDto cachedResult = new KakaoBookJsonDto();
         // 공용 캐시 결과에 빈 도서 목록을 설정한다

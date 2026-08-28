@@ -45,7 +45,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 검증
- * 2026-08-28        HanWon.Jang        캐시 적중 한도 분리 검증
+ * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchProtectionServiceTest {
@@ -80,8 +80,10 @@ class BookSearchProtectionServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Redis 대역과 JSON 객체로 도서 검색 보호 검증 대상을 생성한다
         bookSearchProtectionService = new BookSearchProtectionService(redisTemplate, objectMapper, badWordDetectionService);
-        // 회원별 60초 요청 제한 기본값을 설정한다
-        ReflectionTestUtils.setField(bookSearchProtectionService, "rateLimitPerMinute", 20);
+        // 회원별 60초 캐시 적중 요청 제한 기본값을 설정한다
+        ReflectionTestUtils.setField(bookSearchProtectionService, "cacheHitRateLimitPerMinute", 300);
+        // 회원별 60초 캐시 미적중 요청 제한 기본값을 설정한다
+        ReflectionTestUtils.setField(bookSearchProtectionService, "cacheMissRateLimitPerMinute", 60);
         // 회원별 24시간 요청 제한 기본값을 설정한다
         ReflectionTestUtils.setField(bookSearchProtectionService, "rateLimitPerDay", 200);
         // 앱 전체 카카오 실제 호출 보호 기본값을 설정한다
@@ -99,23 +101,44 @@ class BookSearchProtectionServiceTest {
     }
 
     /**
-     * 캐시 적중을 포함한 회원별 분간 제한을 Redis Lua 실행으로 확인하는지 검증한다
+     * 캐시 적중 회원별 단기 제한을 독립된 Redis Lua 실행으로 확인하는지 검증한다
      *
      * @author HanWon.Jang
      */
     @Test
-    void allowsMinuteRequest() {
+    void allowsCacheHitRequest() {
         // Redis Lua Script가 회원의 요청을 허용하도록 설정한다
         when(redisTemplate.execute(
                 org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
-              , eq(List.of("book:search:rate:minute:7"))
-              , eq("20"), eq("60")
+              , eq(List.of("book:search:rate:minute:cache-hit:7"))
+              , eq("300"), eq("60")
         )).thenReturn(1L);
 
         // 로그인 회원의 현재 도서 검색 요청 허용 여부를 확인한다
-        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L);
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, true);
 
-        // 캐시 여부와 관계없이 분간 제한 안의 요청이 허용되는지 확인한다
+        // 캐시 적중 단기 제한 안의 요청이 허용되는지 확인한다
+        assertTrue(allowed);
+    }
+
+    /**
+     * 캐시 미적중 회원별 단기 제한을 독립된 Redis Lua 실행으로 확인하는지 검증한다
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void allowsCacheMissRequest() {
+        // Redis Lua Script가 회원의 캐시 미적중 요청을 허용하도록 설정한다
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
+              , eq(List.of("book:search:rate:minute:cache-miss:7"))
+              , eq("60"), eq("60")
+        )).thenReturn(1L);
+
+        // 로그인 회원의 현재 캐시 미적중 도서 검색 요청 허용 여부를 확인한다
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, false);
+
+        // 캐시 미적중 단기 제한 안의 요청이 허용되는지 확인한다
         assertTrue(allowed);
     }
 
@@ -129,12 +152,12 @@ class BookSearchProtectionServiceTest {
         // 회원 제한 Lua 실행 단계에서 Redis 장애가 발생하도록 설정한다
         when(redisTemplate.execute(
                 org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
-              , eq(List.of("book:search:rate:minute:7"))
-              , eq("20"), eq("60")
+              , eq(List.of("book:search:rate:minute:cache-miss:7"))
+              , eq("60"), eq("60")
         )).thenThrow(new IllegalStateException("Redis unavailable"));
 
         // Redis 장애 중 로그인 회원의 검색 허용 여부를 확인한다
-        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L);
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, false);
 
         // 제한을 확인할 수 없는 요청이 차단되는지 확인한다
         assertFalse(allowed);
@@ -196,8 +219,12 @@ class BookSearchProtectionServiceTest {
         // 물리 삭제된 회원의 도서 검색 제한 데이터를 정리한다
         bookSearchProtectionService.delUserLimits(7L);
 
-        // 분간 및 일간 제한 키가 한 번의 Redis 삭제로 제거되는지 확인한다
-        verify(redisTemplate).delete(List.of("book:search:rate:minute:7", "book:search:rate:day:7"));
+        // 캐시 유형별 분간 및 일간 제한 키가 한 번의 Redis 삭제로 제거되는지 확인한다
+        verify(redisTemplate).delete(List.of(
+                "book:search:rate:minute:cache-hit:7"
+              , "book:search:rate:minute:cache-miss:7"
+              , "book:search:rate:day:7"
+        ));
     }
 
     /**
