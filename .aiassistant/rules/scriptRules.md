@@ -19,6 +19,7 @@ apply: scoped
 | `SCRIPT-REACT-001` | MUST | 6 | 상태 불변성과 Hook 의존성 검사 |
 | `SCRIPT-TYPE-001` | MUST | 7, 8, 14 | 타입, 파라미터 및 명명 검사 |
 | `SCRIPT-A11Y-001` | MUST | 12 | 접근성과 DOM 구조 검토 |
+| `SCRIPT-STRUCTURE-001` | MUST | 14 | 페이지와 기능 파일의 디렉터리 및 확장자 검사 |
 | `SCRIPT-QUALITY-001` | MUST | 16, 17 | lint, TypeScript, build 및 Git 검사 |
 
 ## 빠른 탐색
@@ -408,7 +409,15 @@ await sweetWarning(message("frontend.login.required"));
 - 예: `authHelper.ts`, `dateFormatter.ts`
 - 스타일 파일은 해당 컴포넌트명과 연결되는 기존 프로젝트 명명 방식을 따릅니다.
 
-### 14.2 함수명
+### 14.2 페이지와 기능 파일 배치
+
+- 새 프론트엔드 페이지는 `src/main/frontend/src/pages` 아래에 라우트의 페이지 경로와 대응하는 하위 폴더를 만들고 그 안에 작성합니다.
+- `pages` 하위 폴더에는 페이지 진입점인 `.tsx` 파일과 해당 페이지의 `.css.ts` 파일만 작성합니다.
+- 페이지별 컴포넌트, Custom Hook, API 모듈, 타입 및 유틸리티는 `src/main/frontend/src/features` 아래에 같은 페이지 경로와 대응하는 하위 폴더를 만들고 역할별 폴더에 작성합니다.
+- 여러 페이지에서 공통으로 사용하는 앱 또는 도메인 기능은 기존 공통 계층에 둘 수 있으며 페이지 전용 파일만 페이지 경로 기반 기능 폴더에 둡니다.
+- 새 파일 검증 시 `pages` 아래의 허용 확장자와 페이지 전용 로직의 `features` 배치를 확인합니다.
+
+### 14.3 함수명
 
 - 함수명은 영문 식별자 문자 수를 기준으로 25자 이하로 작성합니다.
 - 길이를 줄일 때는 파일과 도메인 문맥에서 이미 드러나는 반복어를 제거하고 의미가 분명한 프로젝트 표준 축약어를 사용합니다.
