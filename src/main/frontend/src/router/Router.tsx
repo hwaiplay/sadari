@@ -240,7 +240,7 @@ const Router = () => {
           {/* 모임 독서 수정 */}
           <Route path="/reading-clubs/update/book/:clubNumb/:rondNumb" element={<SetClubReadingPage />} />
           {/* 다음 도서 투표 */}
-          <Route path="/reading-clubs/:clubNumb/book-vote" element={<ClubBookVotePage />} />
+          <Route path="/reading-clubs/vote/book/:clubNumb" element={<ClubBookVotePage />} />
           {/* 멤버 관리 */}
           <Route path="/reading-clubs/manage/members/:clubNumb" element={<ClubMemberManagementPage />} />
           {/* 멤버 퇴장 및 제한 내역 */}
