@@ -34,13 +34,6 @@ export const userSearchList = style({
   flexDirection: "column",
 });
 
-// 사용자 닉네임에서 현재 검색어와 일치하는 글자에 브랜드 연두색을 적용한다
-export const searchHighlight = style({
-  color: vars.color.brand,
-  backgroundColor: "transparent",
-  font: "inherit",
-});
-
 // 피드 카드가 일정한 간격으로 누적되는 목록 배치를 정의한다
 export const list = style({ display: "grid", gap: "14px" });
 
@@ -60,6 +53,17 @@ export const cardHeader = style({
   alignItems: "center",
   gap: "10px",
   padding: "16px 16px 12px",
+});
+
+// 다른 사용자 피드의 신고 및 차단 메뉴가 카드 우측 상단에 고정되도록 정의한다
+export const actionMenuWrap = style({
+  display: "flex",
+  flexShrink: 0,
+});
+
+// 다른 사람 독후감 카드와 같은 가로 점 세 개 아이콘 방향을 적용한다
+export const actionMenuTriggerIcon = style({
+  transform: "rotate(90deg)",
 });
 
 // 피드 작성자 프로필로 이동하는 전체 너비 버튼 상태를 정의한다

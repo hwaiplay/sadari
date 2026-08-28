@@ -10,6 +10,7 @@ import TimerReadingPeriodModal from "@/features/Book/Search/components/TimerRead
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
+import SearchMatchText from "@/components/Search/SearchMatchText/SearchMatchText";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -54,6 +55,7 @@ const SearchBookPage = () => {
   const {
     bookResult,
     handleAuthorSelect,
+    handleKeywordChange,
     handleLoadMore,
     handleMoreInfo,
     handlePopularPeriodChange,
@@ -74,7 +76,6 @@ const SearchBookPage = () => {
     timerPeriodBook,
     closeTimerPeriod,
     saveTimerReport,
-    setSearchKeyword,
   } = useSearchBookPage();
   // 책 검색 입력과 조회 결과 목록 화면을 반환한다.
   return (
@@ -102,12 +103,12 @@ const SearchBookPage = () => {
             </span>
             <input
               className={styles.searchInput}
-              type="text"
+              type="search"
               name="searchKeyword"
               id="searchKeyword"
               placeholder={message("frontend.book.search.placeholder")}
               value={searchKeyword}
-              onChange={(event) => setSearchKeyword(event.target.value)}
+              onChange={handleKeywordChange}
             />
             {/* "검색" */}
             <button
@@ -259,7 +260,7 @@ const SearchBookPage = () => {
                           type="button"
                           onClick={handleBookDetailClick}
                         >
-                          {title}
+                          <SearchMatchText text={title} keyword={searchKeyword} />
                         </button>
                       </h2>
                       {isPopularMode ? (
@@ -272,7 +273,7 @@ const SearchBookPage = () => {
                                 type="button"
                                 onClick={handleAuthorClick}
                               >
-                                {author}
+                                <SearchMatchText text={author} keyword={searchKeyword} />
                               </button>
                             ) : null}
                           </p>
@@ -295,7 +296,7 @@ const SearchBookPage = () => {
                               type="button"
                               onClick={handleAuthorClick}
                             >
-                              {author}
+                              <SearchMatchText text={author} keyword={searchKeyword} />
                             </button>
                           ) : null}
                           {author && publisher ? " / " : null}

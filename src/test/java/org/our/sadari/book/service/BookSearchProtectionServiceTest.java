@@ -38,13 +38,14 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * fileName       : BookSearchProtectionServiceTest
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-08-16
  * description    : Redis 도서 검색 제한과 검색어 비노출 공용 캐시를 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 검증
+ * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookSearchProtectionServiceTest {
@@ -79,8 +80,10 @@ class BookSearchProtectionServiceTest {
         ObjectMapper objectMapper = new ObjectMapper();
         // Redis 대역과 JSON 객체로 도서 검색 보호 검증 대상을 생성한다
         bookSearchProtectionService = new BookSearchProtectionService(redisTemplate, objectMapper, badWordDetectionService);
-        // 회원별 60초 요청 제한 기본값을 설정한다
-        ReflectionTestUtils.setField(bookSearchProtectionService, "rateLimitPerMinute", 20);
+        // 회원별 60초 캐시 적중 요청 제한 기본값을 설정한다
+        ReflectionTestUtils.setField(bookSearchProtectionService, "cacheHitRateLimitPerMinute", 300);
+        // 회원별 60초 캐시 미적중 요청 제한 기본값을 설정한다
+        ReflectionTestUtils.setField(bookSearchProtectionService, "cacheMissRateLimitPerMinute", 60);
         // 회원별 24시간 요청 제한 기본값을 설정한다
         ReflectionTestUtils.setField(bookSearchProtectionService, "rateLimitPerDay", 200);
         // 앱 전체 카카오 실제 호출 보호 기본값을 설정한다
@@ -98,45 +101,87 @@ class BookSearchProtectionServiceTest {
     }
 
     /**
-     * 회원별 두 제한을 하나의 Redis Lua 실행으로 확인하고 허용 결과를 반환하는지 검증한다
+     * 캐시 적중 회원별 단기 제한을 독립된 Redis Lua 실행으로 확인하는지 검증한다
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      */
     @Test
-    void allowsRequestWithinMemberLimits() {
+    void allowsCacheHitRequest() {
         // Redis Lua Script가 회원의 요청을 허용하도록 설정한다
         when(redisTemplate.execute(
                 org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
-              , eq(List.of("book:search:rate:minute:7", "book:search:rate:day:7"))
-              , eq("20"), eq("200"), eq("60"), eq("86400")
+              , eq(List.of("book:search:rate:minute:cache-hit:7"))
+              , eq("300"), eq("60")
         )).thenReturn(1L);
 
         // 로그인 회원의 현재 도서 검색 요청 허용 여부를 확인한다
-        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L);
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, true);
 
-        // 분간 및 일간 제한 안의 요청이 허용되는지 확인한다
+        // 캐시 적중 단기 제한 안의 요청이 허용되는지 확인한다
+        assertTrue(allowed);
+    }
+
+    /**
+     * 캐시 미적중 회원별 단기 제한을 독립된 Redis Lua 실행으로 확인하는지 검증한다
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void allowsCacheMissRequest() {
+        // Redis Lua Script가 회원의 캐시 미적중 요청을 허용하도록 설정한다
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
+              , eq(List.of("book:search:rate:minute:cache-miss:7"))
+              , eq("60"), eq("60")
+        )).thenReturn(1L);
+
+        // 로그인 회원의 현재 캐시 미적중 도서 검색 요청 허용 여부를 확인한다
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, false);
+
+        // 캐시 미적중 단기 제한 안의 요청이 허용되는지 확인한다
         assertTrue(allowed);
     }
 
     /**
      * Redis 장애 시 카카오 쿼터 보호를 우선해 회원 검색을 차단하는지 검증한다
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      */
     @Test
-    void blocksRequestWhenRedisFails() {
+    void blocksOnRedisFailure() {
         // 회원 제한 Lua 실행 단계에서 Redis 장애가 발생하도록 설정한다
         when(redisTemplate.execute(
                 org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
-              , eq(List.of("book:search:rate:minute:7", "book:search:rate:day:7"))
-              , eq("20"), eq("200"), eq("60"), eq("86400")
+              , eq(List.of("book:search:rate:minute:cache-miss:7"))
+              , eq("60"), eq("60")
         )).thenThrow(new IllegalStateException("Redis unavailable"));
 
         // Redis 장애 중 로그인 회원의 검색 허용 여부를 확인한다
-        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L);
+        boolean allowed = bookSearchProtectionService.isRequestAllowed(7L, false);
 
         // 제한을 확인할 수 없는 요청이 차단되는지 확인한다
         assertFalse(allowed);
+    }
+
+    /**
+     * 캐시 미적중 회원과 앱 전체의 일간 카카오 호출 한도를 함께 예약하는지 검증한다
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void reservesDailyProviderCall() {
+        // Redis Lua Script가 회원별 및 앱 전체 실제 호출을 함께 허용하도록 설정한다
+        when(redisTemplate.execute(
+                org.mockito.ArgumentMatchers.<RedisScript<Long>>any()
+              , eq(List.of("book:search:rate:day:7", "book:search:provider:day"))
+              , eq("200"), eq("27000"), eq("86400")
+        )).thenReturn(1L);
+
+        // 캐시 미적중 회원의 카카오 실제 호출 한도를 예약한다
+        boolean allowed = bookSearchProtectionService.reserveProviderCall(7L);
+
+        // 회원별 및 앱 전체 일간 한도가 함께 예약되는지 확인한다
+        assertTrue(allowed);
     }
 
     /**
@@ -145,7 +190,7 @@ class BookSearchProtectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void cachesSearchWithoutPlainQuery() {
+    void cachesWithoutPlainQuery() {
         // Redis 값 저장 연산을 공용 검색 캐시에 사용할 수 있도록 설정한다
         when(redisTemplate.opsForValue()).thenReturn(valueOperations);
         // 마지막 페이지인 빈 카카오 검색 응답을 생성한다
@@ -174,8 +219,12 @@ class BookSearchProtectionServiceTest {
         // 물리 삭제된 회원의 도서 검색 제한 데이터를 정리한다
         bookSearchProtectionService.delUserLimits(7L);
 
-        // 분간 및 일간 제한 키가 한 번의 Redis 삭제로 제거되는지 확인한다
-        verify(redisTemplate).delete(List.of("book:search:rate:minute:7", "book:search:rate:day:7"));
+        // 캐시 유형별 분간 및 일간 제한 키가 한 번의 Redis 삭제로 제거되는지 확인한다
+        verify(redisTemplate).delete(List.of(
+                "book:search:rate:minute:cache-hit:7"
+              , "book:search:rate:minute:cache-miss:7"
+              , "book:search:rate:day:7"
+        ));
     }
 
     /**

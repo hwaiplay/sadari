@@ -8,6 +8,7 @@ export type FeedItem = {
   tagtNumb: number;
   userNumb: number;
   userNick: string;
+  meYsno: "Y" | "N";
   porfPath?: string;
   activityDate: string;
   reptNumb?: number;

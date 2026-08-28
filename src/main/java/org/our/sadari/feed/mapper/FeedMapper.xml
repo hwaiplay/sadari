@@ -136,6 +136,7 @@
         )
         SELECT /* getFeedList */
                FB.*
+             , CASE WHEN FB.USER_NUMB = #{loginUserNumb} THEN #{commYes} ELSE #{commNo} END AS ME_YSNO
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , CASE WHEN UL.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS LIKE_YSNO
              , COALESCE(RC.REPL_CNT, 0) AS REPL_CNT

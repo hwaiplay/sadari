@@ -49,7 +49,7 @@ export const timerPageLink = style({
   display: "flex",
   alignItems: "center",
   gap: "10px",
-  padding: "0 10px 0 25px",
+  padding: "0 10px 0 31px",
   borderRadius: "25px",
   color: "inherit",
   textDecoration: "none",
@@ -67,7 +67,7 @@ export const timerPageLink = style({
   "@media": {
     "screen and (max-width: 360px)": {
       gap: "7px",
-      padding: "0 7px 0 14px",
+      padding: "0 7px 0 18px",
     },
   },
 });
@@ -119,33 +119,51 @@ export const bookTitle = style({
 export const playerActions = style({
   display: "flex",
   alignItems: "center",
-  gap: "3px",
+  gap: "4px",
   flexShrink: 0,
+  marginRight: "6px",
 });
 
 export const iconButton = style({
-  width: "30px",
-  height: "30px",
+  width: "38px",
+  height: "38px",
   minWidth: 0,
   padding: 0,
+  border: 0,
   borderRadius: "50%",
   color: vars.color.gray700,
   boxSizing: "border-box",
   selectors: {
+    "&:first-child": {
+      width: "44px",
+      height: "44px",
+    },
     "&:disabled": {
       color: vars.color.gray500,
     },
   },
   "@media": {
     "screen and (max-width: 360px)": {
-      width: "28px",
-      height: "28px",
+      width: "36px",
+      height: "36px",
+      selectors: {
+        "&:first-child": {
+          width: "40px",
+          height: "40px",
+        },
+      },
     },
   },
 });
 
 export const controlIcon = style({
-  width: "16px",
-  height: "16px",
+  width: "18px",
+  height: "18px",
   display: "block",
+  selectors: {
+    [`${playerActions} > :first-child &`]: {
+      width: "20px",
+      height: "20px",
+    },
+  },
 });
