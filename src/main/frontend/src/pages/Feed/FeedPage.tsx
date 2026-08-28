@@ -7,6 +7,7 @@ import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTri
 import Loading from "@/components/Loading/Loading";
 import AnimatedReportContent from "@/components/ReportList/AnimatedReportContent";
 import * as reportListStyles from "@/components/ReportList/ReportListView.css";
+import SearchMatchText from "@/components/Search/SearchMatchText/SearchMatchText";
 import * as stickyStyles from "@/components/Search/StickySearchBar/StickySearchBar.css";
 import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySearch";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
@@ -73,57 +74,6 @@ type FeedLikeDetail = Pick<FeedItem, "likeCnt" | "likeYsno">;
 const FEED_TARGET_TYPES: ReplyTargetType[] = ["REPORT", "PROFILE_IMAGE", "BACKGROUND_IMAGE"];
 // 연속 입력마다 서버 조회가 중복되지 않도록 적용할 사용자 검색 대기 시간
 const USER_SEARCH_DELAY_MS = 250;
-
-/**
- * 사용자 닉네임에서 현재 검색어와 일치하는 모든 부분을 브랜드 색상으로 강조한다
- *
- * @author HanWon.Jang
- * @param text 검색 결과에 표시할 사용자 닉네임
- * @param keyword 현재 입력된 닉네임 검색어
- * @return 검색어 일치 부분이 강조된 닉네임 요소
- */
-const getHighlightedText = (text: string | undefined, keyword: string): ReactNode => {
-  // 입력 직후 표시 중인 검색어의 양끝 공백을 제거한다
-  const normalizedKeyword = keyword.trim();
-
-  // 닉네임이나 검색어가 없으면 강조 요소를 만들지 않는다
-  if (!text || !normalizedKeyword) {
-    // 서버 닉네임 원문을 변경하지 않고 반환한다
-    return text;
-  }
-
-  // 영문 닉네임도 검색 결과와 같은 기준으로 강조할 수 있게 비교값을 소문자로 변환한다
-  const normalizedText = text.toLocaleLowerCase();
-  // 표시할 원문은 유지하고 검색 위치 판정에만 소문자 검색어를 사용한다
-  const comparableKeyword = normalizedKeyword.toLocaleLowerCase();
-  // 닉네임 원문과 강조 요소를 순서대로 담을 목록을 생성한다
-  const highlightedParts: ReactNode[] = [];
-  // 첫 번째 일치 부분 전까지의 원문 시작 위치를 관리한다
-  let currentIndex = 0;
-  // 현재 검색어가 처음 등장하는 닉네임 위치를 조회한다
-  let matchIndex = normalizedText.indexOf(comparableKeyword);
-
-  // 닉네임에 반복되는 검색어도 빠짐없이 같은 색상으로 강조한다
-  while (matchIndex >= 0) {
-    // 일치 부분 앞의 닉네임 원문을 기존 색상으로 유지한다
-    highlightedParts.push(text.slice(currentIndex, matchIndex));
-    // 일치 부분만 브랜드 연두색을 적용한 의미 요소로 추가한다
-    highlightedParts.push(
-      <mark className={styles.searchHighlight} key={matchIndex}>
-        {text.slice(matchIndex, matchIndex + normalizedKeyword.length)}
-      </mark>,
-    );
-    // 다음 검색은 현재 일치 부분 뒤에서 시작하도록 위치를 이동한다
-    currentIndex = matchIndex + normalizedKeyword.length;
-    // 같은 닉네임에 남아 있는 다음 일치 위치를 조회한다
-    matchIndex = normalizedText.indexOf(comparableKeyword, currentIndex);
-  }
-
-  // 마지막 일치 부분 뒤의 닉네임 원문을 기존 색상으로 유지한다
-  highlightedParts.push(text.slice(currentIndex));
-  // 원문 순서와 접근 가능한 텍스트를 유지한 강조 닉네임을 반환한다
-  return highlightedParts;
-};
 
 /**
  * 피드 대상 식별값이 현재 갱신 대상과 일치하는지 판정한다
@@ -933,9 +883,6 @@ const FeedPage = () => {
    * @return 마이페이지 관계 목록과 같은 사용자 정보 행
    */
   const renderSearchUser = (user: FollowUser): ReactNode => {
-    // 현재 입력어와 일치하는 닉네임 부분에 브랜드 연두색을 적용한다
-    const highlightedNickname = getHighlightedText(user.userNick, appliedUserKeyword);
-
     /**
      * 검색 사용자의 공개 프로필 화면으로 이동한다
      *
@@ -974,7 +921,9 @@ const FeedPage = () => {
             alt={user.userNick ?? /* "닉네임" */ message("frontend.profile.nick")}
           />
           <span className={userListStyles.text}>
-            <strong className={userListStyles.name}>{highlightedNickname}</strong>
+            <strong className={userListStyles.name}>
+              <SearchMatchText text={user.userNick} keyword={appliedUserKeyword} />
+            </strong>
             <span className={userListStyles.intro}>
               {user.intrCntn
                 || /* "한줄 소개를 등록해보세요." */ message("frontend.profile.intro.empty")}

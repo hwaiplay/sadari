@@ -34,13 +34,6 @@ export const userSearchList = style({
   flexDirection: "column",
 });
 
-// 사용자 닉네임에서 현재 검색어와 일치하는 글자에 브랜드 연두색을 적용한다
-export const searchHighlight = style({
-  color: vars.color.brand,
-  backgroundColor: "transparent",
-  font: "inherit",
-});
-
 // 피드 카드가 일정한 간격으로 누적되는 목록 배치를 정의한다
 export const list = style({ display: "grid", gap: "14px" });
 

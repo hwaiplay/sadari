@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 import { media } from "@/app/styles/responsive.css";
 
@@ -76,6 +76,13 @@ export const searchInput = style({
       borderColor: vars.color.black,
     },
   },
+});
+
+// 도서 검색어 지우기 버튼을 검색 아이콘과 분리하고 피드와 같은 크기로 표시한다
+globalStyle(`${searchInput}::-webkit-search-cancel-button`, {
+  marginRight: "6px",
+  transform: "scale(1.2)",
+  cursor: "pointer",
 });
 
 export const searchButton = style({

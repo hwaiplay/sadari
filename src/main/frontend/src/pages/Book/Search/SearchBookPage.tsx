@@ -10,6 +10,7 @@ import TimerReadingPeriodModal from "@/features/Book/Search/components/TimerRead
 import { useSearchBookPage } from "@/features/Book/Search/hook/useSearchBookPage";
 import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTrigger";
 import Loading from "@/components/Loading/Loading";
+import SearchMatchText from "@/components/Search/SearchMatchText/SearchMatchText";
 import {
   getBookCoverImageSource,
   handleBookCoverImageError,
@@ -102,7 +103,7 @@ const SearchBookPage = () => {
             </span>
             <input
               className={styles.searchInput}
-              type="text"
+              type="search"
               name="searchKeyword"
               id="searchKeyword"
               placeholder={message("frontend.book.search.placeholder")}
@@ -259,7 +260,7 @@ const SearchBookPage = () => {
                           type="button"
                           onClick={handleBookDetailClick}
                         >
-                          {title}
+                          <SearchMatchText text={title} keyword={searchKeyword} />
                         </button>
                       </h2>
                       {isPopularMode ? (
@@ -272,7 +273,7 @@ const SearchBookPage = () => {
                                 type="button"
                                 onClick={handleAuthorClick}
                               >
-                                {author}
+                                <SearchMatchText text={author} keyword={searchKeyword} />
                               </button>
                             ) : null}
                           </p>
@@ -295,7 +296,7 @@ const SearchBookPage = () => {
                               type="button"
                               onClick={handleAuthorClick}
                             >
-                              {author}
+                              <SearchMatchText text={author} keyword={searchKeyword} />
                             </button>
                           ) : null}
                           {author && publisher ? " / " : null}
