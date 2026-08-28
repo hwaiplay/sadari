@@ -8,25 +8,29 @@ import {
   updateOnboardingApi,
   type UserInterest,
 } from "@/features/User/api/userApi";
+import {
+  getWelcomePageListApi,
+  type WelcomeManagedPage,
+} from "@/features/Welcome/api/welcomePageApi";
 import { getMyProfileOptions } from "@/features/User/hooks/useMyProfileQuery";
 import { useQueryClient } from "@tanstack/react-query";
 import type {
   ChangeEvent,
   FormEvent,
   MouseEvent,
+  SyntheticEvent,
   TouchEvent,
+  UIEvent,
 } from "react";
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./WelcomePage.css";
 
-const NICKNAME_SLIDE_INDEX = 3;
-const INTEREST_SLIDE_INDEX = 4;
-const LAST_SLIDE_INDEX = INTEREST_SLIDE_INDEX;
-const SLIDE_COUNT = 5;
 const USER_NICK_MAX_LENGTH = 25;
 const MIN_INTEREST_SELECTION_COUNT = 2;
 const SWIPE_THRESHOLD_PX = 48;
+const INTRO_SLIDE_INDEX = 0;
+const MANAGED_SLIDE_OFFSET = 1;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[_-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
 const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11FF\uA960-\uA97F\uD7B0-\uD7FF_-]/g;
 
@@ -36,18 +40,27 @@ const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11F
  * @author HanWon.Jang
  * @return 최초 로그인 웰컴 페이지
  */
-function WelcomePage() {
+const WelcomePage = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const touchStartXRef = useRef<number | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
+  const [managedPages, setManagedPages] = useState<WelcomeManagedPage[]>([]);
+  const [managedImageLoadCount, setManagedImageLoadCount] = useState(0);
   const [userNick, setUserNick] = useState("");
   const [interestCatalog, setInterestCatalog] = useState<UserInterest[]>([]);
   const [selectedInterestKeys, setSelectedInterestKeys] = useState<Set<string>>(new Set());
   const [isLoading, setIsLoading] = useState(true);
+  const [isWelcomePageLoading, setIsWelcomePageLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isInterestScrolled, setIsInterestScrolled] = useState(false);
+  const [isInterestAtBottom, setIsInterestAtBottom] = useState(false);
   const interestGroups = groupUserInterests(interestCatalog);
+  const NICKNAME_SLIDE_INDEX = managedPages.length + MANAGED_SLIDE_OFFSET;
+  const INTEREST_SLIDE_INDEX = NICKNAME_SLIDE_INDEX + 1;
+  const LAST_SLIDE_INDEX = INTEREST_SLIDE_INDEX;
+  const SLIDE_COUNT = managedPages.length + 3;
 
   useEffect(() => {
 
@@ -96,6 +109,34 @@ function WelcomePage() {
         if (!ignore) {
           // 선택할 수 없는 빈 관심분야 목록을 명시적으로 설정한다
           setInterestCatalog([]);
+        }
+      });
+
+    // 관리자가 배포한 소개 페이지를 닉네임과 관심분야 고정 단계 앞에 조회한다
+    getWelcomePageListApi()
+      .then((pages) => {
+        // 화면을 떠난 뒤 도착한 응답은 슬라이드 상태에 반영하지 않는다
+        if (!ignore) {
+          // 서버에서 정렬된 현재 배포 페이지를 관리자 관리 영역으로 설정한다
+          setManagedPages(pages);
+          // 이미지가 없는 환영 인사 화면에서 첫 관리 이미지를 미리 불러온다
+          setManagedImageLoadCount(pages.length > 0 ? 1 : 0);
+        }
+      })
+      .catch((error) => {
+        // 웰컴페이지 조회 실패를 사용자에게 안내하고 고정 설정 단계는 계속 제공한다
+        if (!ignore) {
+          void sweetError(
+            /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
+            getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+          );
+        }
+      })
+      .finally(() => {
+        // 화면이 유지되는 동안에만 관리자 페이지 로딩 상태를 종료한다
+        if (!ignore) {
+          // 고정 설정 단계를 포함한 전체 슬라이드를 표시할 수 있게 한다
+          setIsWelcomePageLoading(false);
         }
       });
 
@@ -284,6 +325,46 @@ function WelcomePage() {
   };
 
   /**
+   * 취향 목록의 스크롤 위치에 따라 상단 잘림 안내를 표시한다
+   *
+   * @author HanWon.Jang
+   * @param event 취향 목록 스크롤 이벤트
+   * @return 반환값이 없다
+   */
+  const handleInterestScroll = (event: UIEvent<HTMLElement>): void => {
+
+    const scrollElement = event.currentTarget;
+    // 목록을 아래로 내린 동안에만 상단 경계도 페이드 처리한다
+    setIsInterestScrolled(scrollElement.scrollTop > 0);
+    // 마지막 항목이 모두 보이면 아래쪽 페이드가 목록 끝을 가리지 않도록 해제한다
+    setIsInterestAtBottom(
+      scrollElement.scrollTop > 0
+        && scrollElement.scrollHeight - scrollElement.scrollTop <= scrollElement.clientHeight + 1,
+    );
+  };
+
+  /**
+   * 관리 이미지 로딩이 끝나면 다음 관리 이미지를 순차적으로 미리 불러온다
+   *
+   * @author SeungHyeon.Kang
+   * @param event 로딩 또는 오류 처리가 끝난 관리 이미지 이벤트
+   * @return 반환값이 없다
+   */
+  const handleManagedImageSettled = (event: SyntheticEvent<HTMLImageElement>): void => {
+
+    const pageIndex = Number(event.currentTarget.dataset.pageIndex);
+
+    // 이미지에 연결된 관리 페이지 번호가 아니면 다음 선로딩 대상을 계산하지 않는다
+    if (!Number.isInteger(pageIndex) || pageIndex < 0) {
+      // 유효하지 않은 이미지 이벤트 처리를 종료한다
+      return;
+    }
+
+    // 현재 이미지 다음 한 장까지 로딩 대상으로 열어 대용량 이미지의 동시 요청을 막는다
+    setManagedImageLoadCount((currentCount) => Math.max(currentCount, pageIndex + 2));
+  };
+
+  /**
    * 최초 로그인 사용자가 누른 독서 관심분야의 선택 상태를 전환한다
    *
    * @author SeungHyeon.Kang
@@ -443,7 +524,7 @@ function WelcomePage() {
   };
 
   // 가입 시 발급된 닉네임을 조회하는 동안 공통 로딩 화면을 반환한다
-  if (isLoading) {
+  if (isLoading || isWelcomePageLoading) {
     return <Loading title={/* "로그인 중" */ message("frontend.common.loginLoading")} />;
   }
 
@@ -463,16 +544,69 @@ function WelcomePage() {
         </p>
       </header>
 
-      {/* 좌우 터치와 버튼으로 전환하는 서비스 소개 슬라이드 영역 */}
+      {/* 좌우 터치와 버튼으로 전환하는 서비스 소개 화면 영역 */}
       <div
         className={styles.viewport}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div
-          className={styles.track}
-          style={{ transform: `translate3d(-${activeSlide * 20}%, 0, 0)` }}
-        >
+        <div className={styles.track}>
+          {/* 관리 이미지가 없는 고정 환영 인사 영역 */}
+          <section
+            className={`${styles.introSlide} ${activeSlide === INTRO_SLIDE_INDEX ? styles.slideActive : ""}`}
+            aria-hidden={activeSlide !== INTRO_SLIDE_INDEX}
+          >
+            <div className={`${styles.copy} ${styles.introCopy}`}>
+              <p className={styles.eyebrow}>
+                {/* "책과 사람을 잇는 독서 생활" */}
+                {message("frontend.welcome.intro.eyebrow")}
+              </p>
+              <h1 className={`${styles.title} ${styles.introTitle}`}>
+                {/* "사다리에 오신 것을 환영해요" */}
+                {message("frontend.welcome.intro.title")}
+              </h1>
+              <p className={`${styles.description} ${styles.introDescription}`}>
+                {/* "읽고, 기록하고, 나누는 모든 순간을 사다리와 함께 시작해요." */}
+                {message("frontend.welcome.intro.description")}
+              </p>
+            </div>
+          </section>
+
+          {/* 관리자가 배포한 문구와 이미지 페이지 영역 */}
+          {managedPages.map((managedPage, pageIndex) => {
+            const slideIndex = pageIndex + MANAGED_SLIDE_OFFSET;
+            const shouldLoadImage = pageIndex < managedImageLoadCount || activeSlide === slideIndex;
+
+            // 관리 순서에 고정 환영 인사 위치를 더한 소개 화면을 반환한다
+            return (
+              <section
+                className={`${styles.managedSlide} ${activeSlide === slideIndex ? styles.slideActive : ""}`}
+                key={`${managedPage.wlcmNumb}-${managedPage.versNumb}`}
+                aria-hidden={activeSlide !== slideIndex}
+              >
+                <div className={styles.copy}>
+                  <p className={styles.eyebrow}>{managedPage.subxTitl}</p>
+                  <h1 className={styles.title}>{managedPage.mainTitl}</h1>
+                  <p className={styles.description}>{managedPage.pageDesc}</p>
+                </div>
+                <div className={styles.managedImageWrap}>
+                  {managedPage.imgeUrlx ? (
+                    <img
+                      className={styles.managedImage}
+                      src={shouldLoadImage ? managedPage.imgeUrlx : undefined}
+                      data-page-index={pageIndex}
+                      alt=""
+                      onLoad={handleManagedImageSettled}
+                      onError={handleManagedImageSettled}
+                    />
+                  ) : (
+                    <span className={styles.managedImageEmpty} aria-hidden="true" />
+                  )}
+                </div>
+              </section>
+            );
+          })}
+          {false && <>
           {/* 도서 표지 대표색과 자동 책장 색상 소개 영역 */}
           <section className={styles.slide} aria-hidden={activeSlide !== 0}>
             <div className={styles.copy}>
@@ -603,9 +737,13 @@ function WelcomePage() {
               </div>
             </div>
           </section>
+          </>}
 
           {/* 랜덤 추천 닉네임 확인과 수정 영역 */}
-          <section className={styles.slide} aria-hidden={activeSlide !== NICKNAME_SLIDE_INDEX}>
+          <section
+            className={`${styles.slide} ${activeSlide === NICKNAME_SLIDE_INDEX ? styles.slideActive : ""}`}
+            aria-hidden={activeSlide !== NICKNAME_SLIDE_INDEX}
+          >
             <div className={styles.copy}>
               <p className={styles.eyebrow}>
                 {/* "이제, 당신의 이름" */}
@@ -650,7 +788,10 @@ function WelcomePage() {
           </section>
 
           {/* 대분류별 독서 관심분야 선택 영역 */}
-          <section className={styles.slide} aria-hidden={activeSlide !== INTEREST_SLIDE_INDEX}>
+          <section
+            className={`${styles.interestSlide} ${activeSlide === INTEREST_SLIDE_INDEX ? styles.slideActive : ""}`}
+            aria-hidden={activeSlide !== INTEREST_SLIDE_INDEX}
+          >
             <div className={styles.copy}>
               <p className={styles.eyebrow}>
                 {/* "마지막으로, 당신의 취향" */}
@@ -666,7 +807,10 @@ function WelcomePage() {
               </p>
             </div>
             {/* 대분류 제목 아래 소분류 선택 항목을 묶어 표시하는 영역 */}
-            <section className={styles.interestCard}>
+            <section
+              className={`${styles.interestCard} ${isInterestScrolled ? styles.interestCardScrolled : ""} ${isInterestAtBottom ? styles.interestCardBottom : ""}`}
+              onScroll={handleInterestScroll}
+            >
               <div className={styles.interestGroups}>
                 {interestGroups.map((group) => {
                   const isGroupSelected = group.interests.length > 0
@@ -675,17 +819,21 @@ function WelcomePage() {
                   return (
                     /* 관심분야 대분류와 소분류 개별 묶음 영역 */
                     <section className={styles.interestGroup} key={group.categoryName}>
-                      <h2 className={styles.interestGroupTitle}>{group.categoryName}</h2>
-                      <div className={styles.interestList}>
+                      {/* 대분류 제목과 전체 선택 텍스트 버튼 영역 */}
+                      <div className={styles.interestGroupHeader}>
+                        <h2 className={styles.interestGroupTitle}>{group.categoryName}</h2>
                         <button
-                          className={isGroupSelected ? styles.interestButtonSelected : styles.interestButton}
+                          className={styles.interestAllButton}
                           type="button"
                           data-category-name={group.categoryName}
                           aria-pressed={isGroupSelected}
                           onClick={handleCategoryToggle}
                         >
+                          {/* "{0} 전체" */}
                           {message("frontend.welcome.interest.all", [group.categoryName])}
                         </button>
+                      </div>
+                      <div className={styles.interestList}>
                         {group.interests.map((interest) => {
                           const interestKey = interest.intrCode;
                           const isSelected = selectedInterestKeys.has(interestKey);
@@ -720,46 +868,17 @@ function WelcomePage() {
           role="group"
           aria-label={/* "웰컴 화면 이동" */ message("frontend.welcome.navigation")}
         >
-          <button
-            className={activeSlide === 0 ? styles.dotActive : styles.dot}
-            type="button"
-            data-slide="0"
-            aria-label={message("frontend.welcome.slideButton", [1])}
-            aria-current={activeSlide === 0 ? "step" : undefined}
-            onClick={handleSlideSelect}
-          />
-          <button
-            className={activeSlide === 1 ? styles.dotActive : styles.dot}
-            type="button"
-            data-slide="1"
-            aria-label={message("frontend.welcome.slideButton", [2])}
-            aria-current={activeSlide === 1 ? "step" : undefined}
-            onClick={handleSlideSelect}
-          />
-          <button
-            className={activeSlide === 2 ? styles.dotActive : styles.dot}
-            type="button"
-            data-slide="2"
-            aria-label={message("frontend.welcome.slideButton", [3])}
-            aria-current={activeSlide === 2 ? "step" : undefined}
-            onClick={handleSlideSelect}
-          />
-          <button
-            className={activeSlide === NICKNAME_SLIDE_INDEX ? styles.dotActive : styles.dot}
-            type="button"
-            data-slide="3"
-            aria-label={message("frontend.welcome.slideButton", [4])}
-            aria-current={activeSlide === NICKNAME_SLIDE_INDEX ? "step" : undefined}
-            onClick={handleSlideSelect}
-          />
-          <button
-            className={activeSlide === INTEREST_SLIDE_INDEX ? styles.dotActive : styles.dot}
-            type="button"
-            data-slide="4"
-            aria-label={message("frontend.welcome.slideButton", [5])}
-            aria-current={activeSlide === INTEREST_SLIDE_INDEX ? "step" : undefined}
-            onClick={handleSlideSelect}
-          />
+          {Array.from({ length: SLIDE_COUNT }, (_, slideIndex) => (
+            <button
+              className={activeSlide === slideIndex ? styles.dotActive : styles.dot}
+              type="button"
+              data-slide={slideIndex}
+              aria-label={message("frontend.welcome.slideButton", [slideIndex + 1])}
+              aria-current={activeSlide === slideIndex ? "step" : undefined}
+              onClick={handleSlideSelect}
+              key={slideIndex}
+            />
+          ))}
         </div>
         <div className={styles.navigationButtons}>
           <button
@@ -800,7 +919,7 @@ function WelcomePage() {
       </footer>
     </main>
   );
-}
+};
 
 type UserInterestGroup = {
   categoryName: string;
