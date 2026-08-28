@@ -2,6 +2,7 @@ import {message} from "@/app/messages/message";
 import {ActionButton} from "@/components/Button/ActionButton";
 import {getBookCoverImageSource, handleBookCoverImageError} from "@/features/Book/utils/bookCoverImage";
 import {useClubBookVotePage} from "@/features/ReadingClub/hooks/useClubBookVotePage";
+import {getGoalProgressColor} from "@/features/User/utils/goalProgress";
 import * as styles from "./ClubBookVotePage.css";
 import {buttonDanger} from "./SetClubPage.css.ts"
 import {clsx} from "clsx";
@@ -75,7 +76,10 @@ const ClubBookVotePage = () => {
                         <span className={styles.voteRateTrack} role="progressbar"
                               aria-label={message("frontend.readingClub.vote.rateLabel")}
                               aria-valuemin={0} aria-valuemax={100} aria-valuenow={voteRate}>
-                          <span className={styles.voteRateFill} style={{width: `${voteRate}%`}}/>
+                          <span className={styles.voteRateFill} style={{
+                            width: `${voteRate}%`,
+                            backgroundColor: getGoalProgressColor(voteRate),
+                          }}/>
                         </span>
                         {/* "{0}%" */}
                         <strong

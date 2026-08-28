@@ -7,18 +7,18 @@ import { vars } from "@/app/styles/tokens.css";
  * @param rate 현재 목표 달성률
  * @return 목표 달성률 구간의 디자인 토큰
  */
-export function getGoalProgressColor(rate: number) {
+export const getGoalProgressColor = (rate: number) => {
 
   if (rate >= 100) {
     // 목표를 모두 달성한 상태는 브랜드 색상을 반환한다
     return vars.color.brand;
   }
 
-  if (rate >= 70) {
-    // 목표에 가까운 상태는 노란색을 반환한다
+  if (rate >= 25) {
+    // 백분율이 중간 구간 이상인 상태는 노란색을 반환한다
     return vars.color.yellow;
   }
 
-  // 목표 달성률이 낮은 상태는 분홍색을 반환한다
+  // 백분율이 25퍼센트 미만인 상태는 분홍색을 반환한다
   return vars.color.negative;
-}
+};

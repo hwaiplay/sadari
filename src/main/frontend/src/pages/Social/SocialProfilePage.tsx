@@ -45,6 +45,7 @@ import {
   getReadingEndDateText,
   getReadingGradeText,
 } from "@/features/User/utils/profileReadingFormat";
+import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
@@ -93,31 +94,6 @@ const mergeImageReaction = (
       ...detail,
     },
   };
-};
-
-/**
- * 목표 달성률에 따라 파스텔톤 진행 막대 색상을 반환합니다.
- * 달성률이 높아질수록 차분한 초록 계열로 이동해 목표 달성 상태를 직관적으로 보여줍니다.
- *
- * @author HanWon.Jang
- * @param rate 목표 달성률
- * @return 진행 막대 색상
- */
-const getGoalProgressColor = (rate: number) => {
-
-  if (rate >= 100) {
-    return "#95d5b2";
-  }
-
-  if (rate >= 70) {
-    return "#a8dadc";
-  }
-
-  if (rate >= 40) {
-    return "#ffd6a5";
-  }
-
-  return "#ffb4a2";
 };
 
 /**
