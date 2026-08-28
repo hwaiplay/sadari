@@ -217,6 +217,38 @@
             ON LIKESTATS.USER_NUMB = TARGET.USER_NUMB
     </select>
 
+    <!-- 닉네임이 검색어를 포함하는 활성 사용자를 친구, 한쪽 팔로우 관계, 무관계 순으로 조회한다. -->
+    <select id="getUserSearchList" parameterType="org.our.sadari.social.dto.SocialDto$UserSearchReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <include refid="followStatusBindList" />
+        SELECT /* getUserSearchList */
+        <include refid="followListColumnList" />
+          FROM TM_USERXM U
+     LEFT JOIN TM_FILEXM F
+            ON F.FILE_NUMB = U.PROF_NUMB
+     LEFT JOIN TB_FOLLOW USERFOLLOW
+            ON USERFOLLOW.USER_NUMB = #{loginUserNumb}
+           AND USERFOLLOW.FLOW_NUMB = U.USER_NUMB
+     LEFT JOIN TB_FOLLOW REVERSEFOLLOW
+            ON REVERSEFOLLOW.USER_NUMB = U.USER_NUMB
+           AND REVERSEFOLLOW.FLOW_NUMB = #{loginUserNumb}
+         WHERE U.USER_STAT = #{userStatActive}
+           AND U.USER_NUMB != #{loginUserNumb}
+           AND INSTR(U.USER_NICK, #{keyword}) <![CDATA[>]]> 0
+      ORDER BY CASE
+                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
+                       THEN 0
+                   WHEN USERFOLLOW.USER_NUMB IS NOT NULL OR REVERSEFOLLOW.USER_NUMB IS NOT NULL
+                       THEN 1
+                   ELSE 2
+               END
+             , U.USER_NICK
+             , U.USER_NUMB
+         LIMIT #{pageOffset}, #{pageLimit}
+    </select>
+
     <!-- 특정 사용자가 팔로우하고 있는 사용자 목록을 조회한다.
          로그인 사용자 기준 버튼명을 함께 계산해 모달에서 사용자별 상태 API를 반복 호출하지 않게 한다. -->
     <select id="getFollowingList" parameterType="org.our.sadari.social.dto.SocialDto$FollowListReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">

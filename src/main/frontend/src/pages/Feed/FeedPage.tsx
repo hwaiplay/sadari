@@ -1,5 +1,5 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
-import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
+import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
 import { FullscreenImageButton } from "@/components/ImageViewer/FullscreenImageViewer";
@@ -7,6 +7,8 @@ import InfiniteScrollTrigger from "@/components/InfiniteScroll/InfiniteScrollTri
 import Loading from "@/components/Loading/Loading";
 import AnimatedReportContent from "@/components/ReportList/AnimatedReportContent";
 import * as reportListStyles from "@/components/ReportList/ReportListView.css";
+import * as stickyStyles from "@/components/Search/StickySearchBar/StickySearchBar.css";
+import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySearch";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
   REPORT_STATUS_DONE,
@@ -17,9 +19,28 @@ import { getFeedPageApi, getFeedTargetApi, type FeedItem } from "@/features/Feed
 import type { ReplyTargetType } from "@/features/reply/types/reply.types";
 import ReplySheet from "@/features/reply/ReplySheet";
 import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
+import * as userListStyles from "@/features/Social/components/LikeUserListButton.css";
+import {
+  delSocialFollowApi,
+  getUserSearchPageApi,
+  setSocialFollowApi,
+  type FollowUser,
+} from "@/features/Social/api/socialApi";
+import { isFollowedByMe } from "@/features/Social/utils/followStatus";
 import ProfileImage, { DEFAULT_PROFILE_IMAGE } from "@/features/User/components/ProfileImage";
-import { type ReactNode, type SyntheticEvent, useCallback, useEffect, useRef, useState } from "react";
+import { clsx } from "clsx";
+import {
+  type ChangeEvent,
+  type FormEvent,
+  type ReactNode,
+  type SyntheticEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import * as homeStyles from "../Home/Home.css";
 import * as styles from "./FeedPage.css";
 
 /**
@@ -50,6 +71,59 @@ type FeedLikeDetail = Pick<FeedItem, "likeCnt" | "likeYsno">;
 
 // 알림 링크로 직접 조회할 수 있는 피드 대상 유형
 const FEED_TARGET_TYPES: ReplyTargetType[] = ["REPORT", "PROFILE_IMAGE", "BACKGROUND_IMAGE"];
+// 연속 입력마다 서버 조회가 중복되지 않도록 적용할 사용자 검색 대기 시간
+const USER_SEARCH_DELAY_MS = 250;
+
+/**
+ * 사용자 닉네임에서 현재 검색어와 일치하는 모든 부분을 브랜드 색상으로 강조한다
+ *
+ * @author HanWon.Jang
+ * @param text 검색 결과에 표시할 사용자 닉네임
+ * @param keyword 현재 입력된 닉네임 검색어
+ * @return 검색어 일치 부분이 강조된 닉네임 요소
+ */
+const getHighlightedText = (text: string | undefined, keyword: string): ReactNode => {
+  // 입력 직후 표시 중인 검색어의 양끝 공백을 제거한다
+  const normalizedKeyword = keyword.trim();
+
+  // 닉네임이나 검색어가 없으면 강조 요소를 만들지 않는다
+  if (!text || !normalizedKeyword) {
+    // 서버 닉네임 원문을 변경하지 않고 반환한다
+    return text;
+  }
+
+  // 영문 닉네임도 검색 결과와 같은 기준으로 강조할 수 있게 비교값을 소문자로 변환한다
+  const normalizedText = text.toLocaleLowerCase();
+  // 표시할 원문은 유지하고 검색 위치 판정에만 소문자 검색어를 사용한다
+  const comparableKeyword = normalizedKeyword.toLocaleLowerCase();
+  // 닉네임 원문과 강조 요소를 순서대로 담을 목록을 생성한다
+  const highlightedParts: ReactNode[] = [];
+  // 첫 번째 일치 부분 전까지의 원문 시작 위치를 관리한다
+  let currentIndex = 0;
+  // 현재 검색어가 처음 등장하는 닉네임 위치를 조회한다
+  let matchIndex = normalizedText.indexOf(comparableKeyword);
+
+  // 닉네임에 반복되는 검색어도 빠짐없이 같은 색상으로 강조한다
+  while (matchIndex >= 0) {
+    // 일치 부분 앞의 닉네임 원문을 기존 색상으로 유지한다
+    highlightedParts.push(text.slice(currentIndex, matchIndex));
+    // 일치 부분만 브랜드 연두색을 적용한 의미 요소로 추가한다
+    highlightedParts.push(
+      <mark className={styles.searchHighlight} key={matchIndex}>
+        {text.slice(matchIndex, matchIndex + normalizedKeyword.length)}
+      </mark>,
+    );
+    // 다음 검색은 현재 일치 부분 뒤에서 시작하도록 위치를 이동한다
+    currentIndex = matchIndex + normalizedKeyword.length;
+    // 같은 닉네임에 남아 있는 다음 일치 위치를 조회한다
+    matchIndex = normalizedText.indexOf(comparableKeyword, currentIndex);
+  }
+
+  // 마지막 일치 부분 뒤의 닉네임 원문을 기존 색상으로 유지한다
+  highlightedParts.push(text.slice(currentIndex));
+  // 원문 순서와 접근 가능한 텍스트를 유지한 강조 닉네임을 반환한다
+  return highlightedParts;
+};
 
 /**
  * 피드 대상 식별값이 현재 갱신 대상과 일치하는지 판정한다
@@ -101,19 +175,19 @@ const getUpdatedLikeItems = (
 };
 
 /**
- * 최초 피드 페이지는 목록을 교체하고 추가 페이지는 기존 목록 뒤에 연결한다
+ * 최초 페이지는 목록을 교체하고 추가 페이지는 기존 목록 뒤에 연결한다
  *
  * @author HanWon.Jang
- * @param current 현재 화면에 누적된 피드 목록
- * @param incoming 서버가 반환한 피드 페이지 목록
+ * @param current 현재 화면에 누적된 목록
+ * @param incoming 서버가 반환한 페이지 목록
  * @param targetPage 조회한 페이지 번호
- * @return 페이지 위치에 맞게 구성한 새 피드 목록
+ * @return 페이지 위치에 맞게 구성한 새 목록
  */
-const getMergedFeedItems = (
-  current: FeedItem[],
-  incoming: FeedItem[],
+const getMergedPageItems = <T,>(
+  current: T[],
+  incoming: T[],
   targetPage: number,
-): FeedItem[] => {
+): T[] => {
   // 최초 페이지는 이전 조회 결과를 남기지 않고 서버 목록으로 교체한다
   if (targetPage === 1) {
     // 첫 페이지에서 받은 피드 목록을 반환한다
@@ -170,6 +244,8 @@ const getExpandActionLabel = (isExpanded: boolean): string => {
 const FeedPage = () => {
   // 피드 카드의 프로필 및 도서 화면 이동에 공통 라우터 함수를 사용한다
   const navigate = useNavigate();
+  // 홈과 같은 검색 영역의 실제 고정 상태를 공통 감지 로직으로 조회한다
+  const { isSticky, sentinelRef } = useStickySearch();
   // 알림 링크에 포함된 원본 콘텐츠 유형과 번호를 조회한다
   const [searchParams] = useSearchParams();
   // 서버에서 페이지 단위로 받은 피드 항목을 화면 목록 상태로 관리한다
@@ -188,8 +264,28 @@ const FeedPage = () => {
   const [replyItem, setReplyItem] = useState<FeedItem | null>(null);
   // 독후감 피드별 본문 펼침 여부를 대상 번호 기준으로 관리한다
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
+  // 피드 상단 검색 입력에 표시할 닉네임 검색어를 관리한다
+  const [userKeyword, setUserKeyword] = useState("");
+  // 현재 자동 검색 결과에 적용한 닉네임 검색어를 관리한다
+  const [appliedUserKeyword, setAppliedUserKeyword] = useState("");
+  // 관계 우선순위가 적용된 활성 사용자 검색 결과를 관리한다
+  const [searchUsers, setSearchUsers] = useState<FollowUser[]>([]);
+  // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 관리한다
+  const [userPage, setUserPage] = useState(1);
+  // 사용자 검색 결과의 다음 페이지 존재 여부를 관리한다
+  const [hasNextUser, setHasNextUser] = useState(false);
+  // 사용자 검색 첫 페이지의 조회 진행 상태를 관리한다
+  const [isUserLoading, setIsUserLoading] = useState(false);
+  // 사용자 검색 추가 페이지의 조회 진행 상태를 관리한다
+  const [isNextUserLoading, setIsNextUserLoading] = useState(false);
+  // 관계 변경이 진행 중인 검색 사용자 번호를 관리한다
+  const [updatingUserNumb, setUpdatingUserNumb] = useState<number | null>(null);
   // 같은 피드 대상의 좋아요 요청이 동시에 실행되지 않도록 진행 키를 보관한다
   const pendingLikeKeysRef = useRef(new Set<string>());
+  // 이전 검색 응답이 최신 검색 결과를 덮지 않도록 요청 순번을 보관한다
+  const userSearchRequestRef = useRef(0);
+  // 비동기 관계 변경 뒤 같은 검색어가 유지되는지 확인할 최신 검색어를 보관한다
+  const appliedUserKeywordRef = useRef("");
   // 알림 링크가 전달한 피드 대상 유형 문자열을 조회한다
   const targetTypeParam = searchParams.get("tagtType");
   // 알림 링크가 전달한 피드 대상 번호를 숫자로 변환한다
@@ -231,7 +327,7 @@ const FeedPage = () => {
        */
       const mergeCurrentItems = (current: FeedItem[]): FeedItem[] => {
         // 페이지 위치에 맞게 기존 목록과 서버 목록을 결합해 반환한다
-        return getMergedFeedItems(current, data.list, targetPage);
+        return getMergedPageItems(current, data.list, targetPage);
       };
 
       // 첫 페이지는 교체하고 추가 페이지는 기존 목록 뒤에 연결한다
@@ -330,6 +426,286 @@ const FeedPage = () => {
 
   // 일반 진입 또는 알림 대상 변경에 맞춰 직접 조회 상태와 댓글 목록을 갱신한다
   useEffect(startTargetFeedLoad, [startTargetFeedLoad]);
+
+  /**
+   * 닉네임 검색어에 해당하는 활성 사용자 페이지를 관계 우선순위와 함께 조회한다
+   *
+   * @author HanWon.Jang
+   * @param keyword 적용할 닉네임 검색어
+   * @param targetPage 조회할 사용자 검색 페이지 번호
+   * @return 사용자 검색 페이지 반영 완료 Promise
+   */
+  const loadUserPage = useCallback(async (keyword: string, targetPage: number): Promise<void> => {
+    // 현재 요청보다 늦게 끝나는 이전 응답을 구분할 검색 순번을 발급한다
+    const requestId = ++userSearchRequestRef.current;
+
+    // 첫 페이지와 추가 페이지의 로딩 상태를 분리해 기존 결과 표시 여부를 결정한다
+    if (targetPage === 1) {
+      // 새 검색의 첫 페이지 로딩 상태를 표시한다
+      setIsUserLoading(true);
+    }
+
+    // 추가 페이지는 기존 사용자 목록을 유지한 채 하단 로딩 상태만 표시한다
+    else {
+      // 사용자 검색 결과 하단에 추가 조회 상태를 표시한다
+      setIsNextUserLoading(true);
+    }
+
+    // 사용자 검색 성공과 실패 및 오래된 응답을 분리해 처리한다
+    try {
+      // 활성 상태와 로그인 사용자 관계가 적용된 닉네임 검색 페이지를 조회한다
+      const data = await getUserSearchPageApi(keyword, targetPage);
+
+      // 더 최신 검색이 시작됐으면 현재 응답으로 화면을 덮지 않는다
+      if (requestId !== userSearchRequestRef.current) {
+        // 오래된 검색 응답의 화면 반영을 종료한다
+        return;
+      }
+
+      /**
+       * 첫 검색 페이지는 교체하고 추가 페이지는 기존 활성 사용자 목록 뒤에 연결한다
+       *
+       * @author HanWon.Jang
+       * @param current 현재 화면에 누적된 활성 사용자 목록
+       * @return 조회한 페이지가 반영된 새 활성 사용자 목록
+       */
+      const mergeCurrentUsers = (current: FollowUser[]): FollowUser[] => {
+        // 페이지 위치에 맞게 기존 사용자와 새 검색 결과를 결합해 반환한다
+        return getMergedPageItems(current, data.list, targetPage);
+      };
+
+      // 관계 우선순위가 적용된 현재 사용자 페이지를 목록에 반영한다
+      setSearchUsers(mergeCurrentUsers);
+      // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 저장한다
+      setUserPage(data.page);
+      // 서버가 판정한 사용자 검색 다음 페이지 여부를 저장한다
+      setHasNextUser(data.hasNext);
+    }
+
+    // 최신 사용자 검색 요청만 안전한 공통 오류 문구로 안내한다
+    catch (searchError) {
+      // 더 최신 검색이 진행 중이면 이전 요청의 오류를 사용자에게 표시하지 않는다
+      if (requestId !== userSearchRequestRef.current) {
+        // 오래된 검색 오류의 안내를 종료한다
+        return;
+      }
+
+      // "사용자 검색에 실패했어요."
+      const fallbackMessage = message("frontend.feed.userSearch.failed");
+      // 원시 오류 대신 서버 또는 공통 사용자 검색 실패 문구를 선택한다
+      const errorMessage = getApiErrorMessage(searchError, fallbackMessage);
+      // "조회에 실패했습니다."
+      await sweetError(message("frontend.alert.loadFailedTitle"), errorMessage);
+    }
+
+    // 최신 검색 요청만 해당 페이지의 로딩 상태를 종료한다
+    finally {
+      // 오래된 요청은 현재 검색의 로딩 상태를 변경하지 않는다
+      if (requestId !== userSearchRequestRef.current) {
+        // 최신 요청이 로딩 상태를 정리하도록 종료한다
+        return;
+      }
+
+      // 첫 페이지 조회가 끝나면 검색 결과 영역의 로딩 상태를 해제한다
+      if (targetPage === 1) {
+        // 사용자 검색 첫 페이지 로딩 상태를 해제한다
+        setIsUserLoading(false);
+      }
+
+      // 추가 페이지 조회가 끝나면 하단 로딩 상태를 해제한다
+      else {
+        // 사용자 검색 추가 페이지 로딩 상태를 해제한다
+        setIsNextUserLoading(false);
+      }
+    }
+  }, []);
+
+  /**
+   * 닉네임 입력이 한 글자 이상이면 짧게 대기한 뒤 사용자 검색 결과를 자동으로 조회한다
+   *
+   * @author HanWon.Jang
+   * @return 다음 입력 또는 화면 해제 시 예약 검색을 취소할 정리 함수
+   */
+  const startLiveUserSearch = useCallback((): (() => void) | undefined => {
+    // 검색어 양끝 공백을 제거해 화면과 서버에 같은 검색 조건을 적용한다
+    const normalizedKeyword = userKeyword.trim();
+    // 현재 입력어를 검색 결과 표시 조건으로 즉시 저장한다
+    setAppliedUserKeyword(normalizedKeyword);
+    // 비동기 관계 변경도 최신 입력어와 일치할 때만 결과를 다시 조회하도록 저장한다
+    appliedUserKeywordRef.current = normalizedKeyword;
+    // 이전 검색 응답이 새 입력 결과를 덮지 못하도록 즉시 무효화한다
+    userSearchRequestRef.current += 1;
+    // 새 입력은 이전 사용자 결과와 페이지 상태를 초기화한다
+    setSearchUsers([]);
+    // 새 검색의 성공 페이지를 첫 페이지 기준으로 초기화한다
+    setUserPage(1);
+    // 새 검색 전에는 다음 페이지가 없는 상태로 초기화한다
+    setHasNextUser(false);
+    // 새 첫 페이지 검색에서는 추가 페이지 로딩 상태를 제거한다
+    setIsNextUserLoading(false);
+
+    // 입력값이 비어 있으면 서버 요청 없이 일반 피드를 바로 표시한다
+    if (!normalizedKeyword) {
+      // 일반 피드에서는 사용자 검색 로딩 상태를 표시하지 않는다
+      setIsUserLoading(false);
+      // 예약할 검색이 없으므로 Effect 정리 함수를 반환하지 않는다
+      return undefined;
+    }
+
+    // 입력 직후 검색 결과 영역에 첫 페이지 조회 상태를 표시한다
+    setIsUserLoading(true);
+
+    /**
+     * 입력 대기가 끝난 현재 닉네임으로 활성 사용자 첫 페이지 조회를 시작한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const loadCurrentKeyword = (): void => {
+      // 한 글자 이상의 최신 닉네임으로 관계순 사용자 검색을 실행한다
+      void loadUserPage(normalizedKeyword, 1);
+    };
+
+    // 빠른 연속 입력을 한 번의 사용자 검색 요청으로 합친다
+    const timerId = window.setTimeout(loadCurrentKeyword, USER_SEARCH_DELAY_MS);
+
+    /**
+     * 다음 입력 또는 화면 해제 시 아직 실행되지 않은 사용자 검색을 취소한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const cancelPendingSearch = (): void => {
+      // 최신 입력만 조회되도록 이전 입력의 예약 타이머를 해제한다
+      window.clearTimeout(timerId);
+    };
+
+    // React Effect가 다음 입력 전에 예약된 이전 검색을 취소하도록 정리 함수를 반환한다
+    return cancelPendingSearch;
+  }, [loadUserPage, userKeyword]);
+
+  // 한 글자 이상의 닉네임 입력 변경에 맞춰 사용자 결과를 자동 갱신한다
+  useEffect(startLiveUserSearch, [startLiveUserSearch]);
+
+  /**
+   * 피드 사용자 검색 입력값을 현재 입력 상태에 반영한다
+   *
+   * @author HanWon.Jang
+   * @param event 닉네임 검색 입력 변경 이벤트
+   * @return 반환값이 없다
+   */
+  const handleUserKeyword = (event: ChangeEvent<HTMLInputElement>): void => {
+    // 사용자가 입력한 닉네임 검색어를 검색 입력에 표시한다
+    setUserKeyword(event.target.value);
+  };
+
+  /**
+   * 자동 사용자 검색 폼 제출 시 브라우저 페이지 이동을 막는다
+   *
+   * @author HanWon.Jang
+   * @param event 사용자 검색 폼 제출 이벤트
+   * @return 반환값이 없다
+   */
+  const handleUserSearch = (event: FormEvent<HTMLFormElement>): void => {
+    // 브라우저의 폼 이동 없이 현재 피드 화면에서 검색 결과를 전환한다
+    event.preventDefault();
+  };
+
+  /**
+   * 현재 사용자 검색의 다음 페이지를 조회한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const loadMoreUser = (): void => {
+    // 검색어가 없거나 마지막 페이지 또는 추가 조회 중이면 중복 요청하지 않는다
+    if (!appliedUserKeyword || !hasNextUser || isNextUserLoading) {
+      // 현재 사용자 검색 목록과 페이지 상태를 유지한다
+      return;
+    }
+
+    // 마지막 성공 페이지 다음의 활성 사용자 검색 결과를 이어서 조회한다
+    void loadUserPage(appliedUserKeyword, userPage + 1);
+  };
+
+  /**
+   * 검색 사용자의 현재 관계에 맞춰 팔로우하거나 언팔로우한 뒤 관계순 목록을 다시 조회한다
+   *
+   * @author HanWon.Jang
+   * @param user 관계를 변경할 검색 사용자
+   * @return 팔로우 관계와 검색 정렬 갱신 완료 Promise
+   */
+  const handleUserFollow = async (user: FollowUser): Promise<void> => {
+    // 다른 관계 변경이 진행 중이거나 본인 행이면 추가 조작을 허용하지 않는다
+    if (updatingUserNumb !== null || user.meYsno === "Y") {
+      // 현재 사용자 검색 결과와 관계 상태를 유지한다
+      return;
+    }
+
+    // 팔로잉과 친구 상태는 로그인 사용자가 만든 관계의 삭제 대상으로 판정한다
+    const isFollowing = isFollowedByMe(user.followStatName);
+    // 관계 변경을 시작한 검색어를 저장해 다른 검색 결과를 이전 응답으로 덮지 않게 한다
+    const relationKeyword = appliedUserKeyword;
+
+    // 기존 팔로우 관계를 삭제하기 전에 마이페이지 관계 목록과 같은 확인을 받는다
+    if (isFollowing) {
+      // "언팔로우하시겠어요?"
+      const result = await sweetConfirm({
+        title: message("frontend.social.unfollow.title"),
+        // "팔로잉 목록에서 삭제돼요."
+        text: message("frontend.social.unfollow.text"),
+        // "언팔로우"
+        confirmButtonText: message("frontend.social.unfollow.confirm"),
+        // "취소"
+        cancelButtonText: message("frontend.common.cancel"),
+      });
+
+      // 사용자가 취소한 경우 기존 관계와 검색 순서를 유지한다
+      if (!result.isConfirmed) {
+        // 팔로우 관계 변경 없이 종료한다
+        return;
+      }
+    }
+
+    // 같은 사용자에 대한 중복 관계 변경을 막도록 처리 중 번호를 저장한다
+    setUpdatingUserNumb(user.userNumb);
+
+    // 관계 변경 성공 시 서버 정렬을 다시 적용하고 실패 시 기존 목록을 유지한다
+    try {
+      // 현재 관계에 맞춰 팔로우 등록 또는 삭제 API를 호출한다
+      if (isFollowing) {
+        // 로그인 사용자가 만든 현재 팔로우 관계를 삭제한다
+        await delSocialFollowApi(user.userNumb);
+      }
+
+      // 팔로우하지 않은 검색 사용자는 새 관계를 등록한다
+      else {
+        // 로그인 사용자가 검색 사용자를 팔로우하도록 관계를 등록한다
+        await setSocialFollowApi(user.userNumb);
+      }
+
+      // 관계 변경 중에도 같은 검색어가 유지된 경우에만 서버 정렬을 다시 적용한다
+      if (appliedUserKeywordRef.current === relationKeyword) {
+        // 변경된 관계 우선순위와 버튼명을 서버 조회로 다시 확정한다
+        await loadUserPage(relationKeyword, 1);
+      }
+    }
+
+    // 관계 변경 실패 시 기존 검색 목록을 유지하고 공통 오류 문구로 안내한다
+    catch (followError) {
+      // "수정에 실패했습니다."
+      await sweetError(
+        message("frontend.alert.updateFailedTitle"),
+        getApiErrorMessage(followError, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+      );
+    }
+
+    // 성공과 실패 모두 관계 변경 진행 상태를 해제한다
+    finally {
+      // 검색 목록의 관계 버튼을 다시 조작할 수 있도록 처리 중 번호를 초기화한다
+      setUpdatingUserNumb(null);
+    }
+  };
 
   /**
    * 도서 표지 이미지 요청이 실패하면 공통 대체 이미지를 한 번만 적용한다
@@ -547,6 +923,78 @@ const FeedPage = () => {
   const closeReplySheet = (): void => {
     // 댓글 목록을 닫고 선택된 피드 대상 상태를 초기화한다
     setReplyItem(null);
+  };
+
+  /**
+   * 활성 사용자 검색 결과 한 건을 닉네임과 한줄소개 및 관계 버튼 행으로 렌더링한다
+   *
+   * @author HanWon.Jang
+   * @param user 렌더링할 활성 사용자 검색 결과
+   * @return 마이페이지 관계 목록과 같은 사용자 정보 행
+   */
+  const renderSearchUser = (user: FollowUser): ReactNode => {
+    // 현재 입력어와 일치하는 닉네임 부분에 브랜드 연두색을 적용한다
+    const highlightedNickname = getHighlightedText(user.userNick, appliedUserKeyword);
+
+    /**
+     * 검색 사용자의 공개 프로필 화면으로 이동한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const moveUserProfile = (): void => {
+      // 검색 사용자의 번호를 공개 프로필 경로에 포함해 이동한다
+      navigate(`/social/profile/${user.userNumb}`);
+    };
+
+    /**
+     * 현재 검색 사용자의 관계 버튼 처리를 비동기로 시작한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    const changeUserFollow = (): void => {
+      // 선택한 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우를 시작한다
+      void handleUserFollow(user);
+    };
+
+    // 활성 사용자 검색 결과의 프로필 정보와 관계 버튼 행을 반환한다
+    return (
+      /* 활성 사용자 검색 개별 항목 영역 */
+      <div className={userListStyles.item} key={user.userNumb}>
+        {/* 검색 사용자 프로필 정보 영역 */}
+        <button
+          className={userListStyles.profileButton}
+          type="button"
+          onClick={moveUserProfile}
+        >
+          <ProfileImage
+            className={userListStyles.avatar}
+            src={user.porfPath}
+            alt={user.userNick ?? /* "닉네임" */ message("frontend.profile.nick")}
+          />
+          <span className={userListStyles.text}>
+            <strong className={userListStyles.name}>{highlightedNickname}</strong>
+            <span className={userListStyles.intro}>
+              {user.intrCntn
+                || /* "한줄 소개를 등록해보세요." */ message("frontend.profile.intro.empty")}
+            </span>
+          </span>
+        </button>
+        {/* 검색 사용자 관계 확인과 변경 영역 */}
+        {user.meYsno !== "Y" ? (
+          <button
+            className={userListStyles.statusButton}
+            data-follow-status={user.followStatName}
+            type="button"
+            disabled={updatingUserNumb === user.userNumb}
+            onClick={changeUserFollow}
+          >
+            {user.followStatName}
+          </button>
+        ) : null}
+      </div>
+    );
   };
 
   /**
@@ -838,43 +1286,134 @@ const FeedPage = () => {
   const visibleItems = focusedItem
     ? [focusedItem, ...items.filter((item) => !isSameFeedTarget(item, focusedItem))]
     : items;
-
-  // 첫 피드 데이터를 불러오는 동안 전체 로딩 화면을 반환한다
-  if (isLoading && visibleItems.length === 0) return <Loading />;
+  // 한 글자 이상의 닉네임이 입력되면 피드 카드 대신 활성 사용자 검색 결과를 표시한다
+  const hasUserSearch = Boolean(appliedUserKeyword);
+  // 피드 첫 페이지가 아직 없을 때만 검색 입력 아래에 최초 로딩 상태를 표시한다
+  const isFeedInitialLoading = isLoading && visibleItems.length === 0;
 
   // 유형별 카드와 공통 교류 동작을 포함한 피드 화면을 반환한다
   return (
     <main className={styles.page}>
       {/* 본인과 팔로잉 사용자의 공개 활동 피드 전체 영역 */}
-      {/* 피드 최초 조회 실패와 재시도 영역 */}
-      {error && visibleItems.length === 0 ? (
-        <div className={styles.error}>
-          {error}
-          <br />
-          <button className={styles.retry} type="button" onClick={retryFeed}>
-            {/* "다시 시도" */}
-            {message("frontend.common.retry")}
+      {/* 피드 사용자 검색 영역이 실제 고정되는 시점을 감지하는 화면 경계 */}
+      <span ref={sentinelRef} className={stickyStyles.sentinel} aria-hidden="true" />
+      {/* 홈과 같은 위치와 스타일로 고정되는 닉네임 검색 입력 영역 */}
+      <form
+        className={clsx(
+          homeStyles.searchBar,
+          styles.userSearchBar,
+          stickyStyles.surface,
+          isSticky && stickyStyles.stuck,
+        )}
+        onSubmit={handleUserSearch}
+      >
+        <label className={homeStyles.searchLabel}>
+          <span className={homeStyles.hiddenLabel}>
+            {/* "닉네임 검색" */}
+            {message("frontend.feed.userSearch.label")}
+          </span>
+          <input
+            className={homeStyles.searchInput}
+            type="search"
+            maxLength={25}
+            value={userKeyword}
+            placeholder={/* "닉네임 검색" */ message("frontend.feed.userSearch.label")}
+            onChange={handleUserKeyword}
+          />
+          <button
+            className={homeStyles.searchButton}
+            type="submit"
+            aria-label={/* "검색" */ message("frontend.common.search")}
+          >
+            <svg className={homeStyles.searchIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path
+                d="M10.8 5.2a5.6 5.6 0 1 1 0 11.2 5.6 5.6 0 0 1 0-11.2Z"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+              />
+              <path
+                d="m15 15 4 4"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.8"
+                strokeLinecap="round"
+              />
+            </svg>
           </button>
-        </div>
-      ) : null}
+        </label>
+      </form>
 
-      {/* 본인과 팔로잉 공개 활동이 없는 피드 빈 상태 영역 */}
-      {!error && visibleItems.length === 0 ? (
-        <p className={styles.empty}>
-          {/* "아직 표시할 공개 소식이 없어요.\n내 독후감과 사진 변경, 팔로잉 소식이 여기에 표시됩니다." */}
-          {message("frontend.feed.empty")}
-        </p>
-      ) : null}
+      {/* 한 글자 이상의 닉네임 검색어가 있으면 활성 사용자와 관계 버튼 목록을 표시한다 */}
+      {hasUserSearch ? (
+        <section className={styles.userSearchResults}>
+          {/* 활성 사용자 검색 첫 페이지 로딩 영역 */}
+          {isUserLoading ? (
+            <Loading
+              title={/* "목록 조회 중" */ message("frontend.common.loadingList")}
+              isFullScreen={false}
+              isCompact
+            />
+          ) : null}
 
-      {/* 페이지 단위로 누적되는 피드 카드 목록 영역 */}
-      <div className={styles.list}>
-        {visibleItems.map(renderFeedItem)}
-      </div>
+          {/* 활성 사용자 검색 결과가 없는 상태 안내 영역 */}
+          {!isUserLoading && searchUsers.length === 0 ? (
+            <p className={userListStyles.empty}>
+              {/* "검색된 사용자가 없어요." */}
+              {message("frontend.feed.userSearch.empty")}
+            </p>
+          ) : null}
 
-      {/* 다음 피드 페이지 자동 조회와 추가 로딩 영역 */}
-      <InfiniteScrollTrigger hasNext={hasNext} isLoading={isLoading} onLoadMore={loadMoreFeed}>
-        <Loading isFullScreen={false} />
-      </InfiniteScrollTrigger>
+          {/* 닉네임과 한줄소개 및 관계 버튼이 포함된 활성 사용자 목록 영역 */}
+          {!isUserLoading ? (
+            <div className={styles.userSearchList}>
+              {searchUsers.map(renderSearchUser)}
+            </div>
+          ) : null}
+
+          {/* 활성 사용자 검색 다음 페이지 자동 조회와 추가 로딩 영역 */}
+          <InfiniteScrollTrigger
+            hasNext={!isUserLoading && hasNextUser}
+            isLoading={isNextUserLoading}
+            onLoadMore={loadMoreUser}
+          />
+        </section>
+      ) : (
+        <>
+          {/* 피드 최초 조회 로딩 영역 */}
+          {isFeedInitialLoading ? <Loading isFullScreen={false} /> : null}
+
+          {/* 피드 최초 조회 실패와 재시도 영역 */}
+          {error && visibleItems.length === 0 ? (
+            <div className={styles.error}>
+              {error}
+              <br />
+              <button className={styles.retry} type="button" onClick={retryFeed}>
+                {/* "다시 시도" */}
+                {message("frontend.common.retry")}
+              </button>
+            </div>
+          ) : null}
+
+          {/* 본인과 팔로잉 공개 활동이 없는 피드 빈 상태 영역 */}
+          {!isLoading && !error && visibleItems.length === 0 ? (
+            <p className={styles.empty}>
+              {/* "아직 표시할 공개 소식이 없어요.\n내 독후감과 사진 변경, 팔로잉 소식이 여기에 표시됩니다." */}
+              {message("frontend.feed.empty")}
+            </p>
+          ) : null}
+
+          {/* 페이지 단위로 누적되는 피드 카드 목록 영역 */}
+          <div className={styles.list}>
+            {visibleItems.map(renderFeedItem)}
+          </div>
+
+          {/* 다음 피드 페이지 자동 조회와 추가 로딩 영역 */}
+          <InfiniteScrollTrigger hasNext={hasNext} isLoading={isLoading} onLoadMore={loadMoreFeed}>
+            <Loading isFullScreen={false} />
+          </InfiniteScrollTrigger>
+        </>
+      )}
 
       {/* 선택한 피드 대상의 댓글 목록 영역 */}
       {replyItem ? (

@@ -6,8 +6,32 @@ export const page = style({
   width: "100%",
   maxWidth: "600px",
   margin: "0 auto",
-  padding: "20px 0 36px",
+  padding: "0 0 36px",
   boxSizing: "border-box",
+});
+
+// 공통 Container 여백을 상쇄해 홈과 같은 화면 위치에 검색 입력을 배치한다
+export const userSearchBar = style({
+  width: "calc(100% + 32px)",
+  marginLeft: "-16px",
+});
+
+// 활성 사용자 검색의 로딩과 목록 및 추가 조회 영역을 세로로 배치한다
+export const userSearchResults = style({
+  minHeight: "120px",
+});
+
+// 마이페이지 관계 목록과 같은 사용자 행을 페이지 흐름에 누적한다
+export const userSearchList = style({
+  display: "flex",
+  flexDirection: "column",
+});
+
+// 사용자 닉네임에서 현재 검색어와 일치하는 글자에 브랜드 연두색을 적용한다
+export const searchHighlight = style({
+  color: vars.color.brand,
+  backgroundColor: "transparent",
+  font: "inherit",
 });
 
 // 피드 카드가 일정한 간격으로 누적되는 목록 배치를 정의한다

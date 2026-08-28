@@ -26,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : SocialServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-22
- * description    : 팔로우와 좋아요 업무 로직을 구현한다
+ * description    : 사용자 검색과 팔로우 및 좋아요 업무 로직을 구현한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -37,6 +37,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    독후감 설정·알림 상황 통합
  * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
  * 2026-08-27        SeungHyeon.Kang    좋아요 알림 원본 유형과 공개 사진 반응 적용
+ * 2026-08-28        HanWon.Jang        활성 사용자 관계순 검색 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -238,6 +239,41 @@ public class SocialServiceImpl implements SocialService {
         req.setPubcYsno(pubcYsno);
         // 사용자 프로필 통계 값을 조회 결과를 성공 응답으로 반환한다
         return ResultData.success(socialMapper.getProfileStats(req));
+    }
+
+    /**
+     * 닉네임 검색어를 포함하는 활성 사용자를 현재 로그인 사용자와의 관계순으로 조회한다.
+     * 비활성화, 영구 탈퇴 대기와 이용정지 사용자는 관계가 남아 있어도 검색 결과에서 제외한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 닉네임 검색어
+     * @param page 조회할 페이지 번호
+     * @return 친구와 한쪽 팔로우 관계 및 무관계 순으로 정렬한 활성 사용자 페이지
+     */
+    @Override
+    public ResultData getUserSearchList(Long loginUserNumb, String keyword, int page) {
+        // 인증 사용자 번호가 없으면 관계 정렬 기준을 만들 수 없어 검색을 거부한다
+        if (StringUtil.isEmpty(loginUserNumb)) {
+            // "인증에 실패했어요.\n다시 로그인 해주세요."
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 닉네임 저장 최대 길이에 맞춰 검색어 양끝 공백과 길이를 정규화한다
+        String normalizedKeyword = StringUtil.normalizePlainText(keyword, Constant.USER_NICK_MAX_LENGTH);
+
+        // 정규화 뒤 검색어가 없으면 전체 활성 사용자가 노출되지 않도록 요청을 거부한다
+        if (StringUtil.isEmpty(normalizedKeyword)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 활성 사용자 검색과 관계 정렬에 사용할 페이지 조건 객체를 생성한다
+        SocialDto.UserSearchReqDto req = createUserSearchReq(loginUserNumb, normalizedKeyword, page);
+        // 활성 상태와 닉네임 및 로그인 사용자 관계를 한 조회에서 적용한다
+        List<SocialDto.FollowUserDto> searchedList = socialMapper.getUserSearchList(req);
+        // 팔로우 목록과 같은 사용자 행 및 페이지 응답 구조를 반환한다
+        return getFollowPage(searchedList, Math.max(page, 1));
     }
 
     /**
@@ -478,6 +514,32 @@ public class SocialServiceImpl implements SocialService {
         // 다음 페이지 판정용 한 건을 추가한 조회 수를 설정한다
         req.setPageLimit(FOLLOW_PAGE_SIZE + 1);
         // 팔로우/팔로워 목록 조회 DTO를 생성 결과를 반환한다
+        return req;
+    }
+
+    /**
+     * 활성 사용자 닉네임 검색과 관계 정렬에 사용할 페이지 조건을 생성한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 정규화된 닉네임 검색어
+     * @param page 조회할 페이지 번호
+     * @return 활성 사용자 검색 조건 DTO
+     */
+    private SocialDto.UserSearchReqDto createUserSearchReq(Long loginUserNumb, String keyword, int page) {
+        // 활성 사용자 검색 조건을 담을 객체를 생성한다
+        SocialDto.UserSearchReqDto req = new SocialDto.UserSearchReqDto();
+        // 관계 정렬 기준이 되는 로그인 사용자 번호를 설정한다
+        req.setLoginUserNumb(loginUserNumb);
+        // 닉네임 포함 검색에 사용할 정규화된 검색어를 설정한다
+        req.setKeyword(keyword);
+        // 요청 페이지를 첫 페이지 이상으로 보정한다
+        int normalizedPage = Math.max(page, 1);
+        // 현재 검색 페이지의 시작 위치를 설정한다
+        req.setPageOffset((normalizedPage - 1) * FOLLOW_PAGE_SIZE);
+        // 다음 페이지 판정용 한 건을 추가한 조회 수를 설정한다
+        req.setPageLimit(FOLLOW_PAGE_SIZE + 1);
+        // 완성된 활성 사용자 검색 조건을 반환한다
         return req;
     }
 

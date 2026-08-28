@@ -23,6 +23,27 @@ export type FollowUser = {
 };
 
 /**
+ * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 한 페이지를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param keyword 닉네임 검색어
+ * @param page 조회할 페이지 번호
+ * @return 관계 우선순위가 적용된 활성 사용자 페이지
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const getUserSearchPageApi = async (
+  keyword: string,
+  page: number,
+): Promise<PageData<FollowUser>> => {
+  // 서버가 활성 상태와 관계 우선순위를 적용한 닉네임 검색 페이지를 조회한다
+  const res = await api.get<ResultData<PageData<FollowUser>>>("/social/users", {
+    params: { keyword, page },
+  });
+  // 공통 성공 코드가 검증된 활성 사용자 페이지를 반환한다
+  return assertResultDataSuccess(res.data).data as PageData<FollowUser>;
+};
+
+/**
  * 다른 사용자의 공개 프로필 정보를 조회합니다.
  * 공개 독후감 작성자 프로필 화면에서 마이페이지와 같은 프로필 영역을 구성할 때 사용합니다.
  *

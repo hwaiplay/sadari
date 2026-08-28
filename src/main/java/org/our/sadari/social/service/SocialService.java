@@ -7,15 +7,17 @@ import org.our.sadari.social.dto.SocialDto;
  * fileName       : SocialService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-22
- * description    : 팔로우와 좋아요 업무 계약을 정의한다
+ * description    : 사용자 검색과 팔로우 및 좋아요 업무 계약을 정의한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
+ * 2026-08-28        HanWon.Jang        활성 사용자 검색 계약 추가
  */
 public interface SocialService {
+
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
      *
@@ -71,6 +73,17 @@ public interface SocialService {
      * @return 프로필 통계 조회 결과
      */
     ResultData getMyPageProfileStats(Long userNumb);
+
+    /**
+     * 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 목록을 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 닉네임 검색어
+     * @param page 조회할 페이지 번호
+     * @return 관계 우선순위가 적용된 활성 사용자 페이지
+     */
+    ResultData getUserSearchList(Long loginUserNumb, String keyword, int page);
 
     /**
      * 특정 사용자가 팔로우하는 사용자 목록을 조회한다.

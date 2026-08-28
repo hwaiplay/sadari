@@ -44,6 +44,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-25        HanWon.Jang        사진 좋아요 링크 기준 검증
  * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 검증
  * 2026-08-27        SeungHyeon.Kang    사진 좋아요 알림 대상 설명 정리
+ * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -233,6 +234,37 @@ class SocialServiceImplTest {
 
         // 본인 화면의 공개 여부 조건이 비어 있어 전체 독후감을 유지하는지 확인한다
         assertNull(statsCaptor.getValue().getPubcYsno());
+    }
+
+    /**
+     * 활성 사용자 검색이 정규화된 닉네임과 관계 정렬용 로그인 사용자 및 페이지 조건을 전달하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getUserSearchList() {
+        // 활성 사용자 검색 결과 한 건이 조회되는 조건을 구성한다
+        when(socialMapper.getUserSearchList(any(SocialDto.UserSearchReqDto.class)))
+                .thenReturn(List.of(new SocialDto.FollowUserDto()));
+
+        // 양끝 공백이 있는 닉네임 검색어로 두 번째 페이지를 조회한다
+        ResultData result = socialService.getUserSearchList(44L, "  reader  ", 2);
+
+        // 활성 사용자 검색이 페이지 응답으로 성공하는지 확인한다
+        assertEquals(200, result.getCode());
+        // Mapper에 전달된 검색어와 관계 및 페이지 조건을 확인할 인자 Capture를 생성한다
+        ArgumentCaptor<SocialDto.UserSearchReqDto> reqCaptor =
+                ArgumentCaptor.forClass(SocialDto.UserSearchReqDto.class);
+        // 활성 사용자 검색 조건을 Capture한다
+        verify(socialMapper).getUserSearchList(reqCaptor.capture());
+        // 검색어 양끝 공백이 제거되는지 확인한다
+        assertEquals("reader", reqCaptor.getValue().getKeyword());
+        // 관계 정렬 기준이 되는 로그인 사용자 번호를 확인한다
+        assertEquals(44L, reqCaptor.getValue().getLoginUserNumb());
+        // 두 번째 페이지의 시작 위치를 확인한다
+        assertEquals(10, reqCaptor.getValue().getPageOffset());
+        // 다음 페이지 판정용 한 건을 포함한 조회 크기를 확인한다
+        assertEquals(11, reqCaptor.getValue().getPageLimit());
     }
 
     /**
