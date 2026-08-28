@@ -18,6 +18,7 @@ import org.our.sadari.global.file.util.FileUrlUtil;
  * 2026-08-25        SeungHyeon.Kang         최초 생성
  * 2026-08-26        SeungHyeon.Kang         화면용 이미지 경로·주석 정비
  * 2026-08-27        SeungHyeon.Kang         알림 대상 단건 조회 조건 확장
+ * 2026-08-28        HanWon.Jang             본인 피드 식별값 추가
  */
 @Data
 @Schema(description = "본인과 팔로잉 피드 항목 DTO")
@@ -37,6 +38,9 @@ public class FeedDto {
 
     @Schema(description = "피드 작성자 닉네임")
     private String userNick;
+
+    @Schema(description = "로그인 사용자 본인 작성 여부", allowableValues = {"Y", "N"})
+    private String meYsno;
 
     @Schema(description = "피드 작성자 프로필 이미지 경로")
     private String porfPath;

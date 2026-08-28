@@ -55,6 +55,17 @@ export const cardHeader = style({
   padding: "16px 16px 12px",
 });
 
+// 다른 사용자 피드의 신고 및 차단 메뉴가 카드 우측 상단에 고정되도록 정의한다
+export const actionMenuWrap = style({
+  display: "flex",
+  flexShrink: 0,
+});
+
+// 다른 사람 독후감 카드와 같은 가로 점 세 개 아이콘 방향을 적용한다
+export const actionMenuTriggerIcon = style({
+  transform: "rotate(90deg)",
+});
+
 // 피드 작성자 프로필로 이동하는 전체 너비 버튼 상태를 정의한다
 export const authorButton = style({
   display: "flex",

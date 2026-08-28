@@ -10,6 +10,8 @@ import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 import SearchMatchText from "@/components/Search/SearchMatchText/SearchMatchText";
 import * as stickyStyles from "@/components/Search/StickySearchBar/StickySearchBar.css";
 import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySearch";
+import UserActionMenu from "@/components/UserActionMenu/UserActionMenu";
+import type { SafetyReportTarget } from "@/components/UserActionMenu/userActionMenu.types";
 import { setPublicReportLikeApi } from "@/features/Book/api/bookApi";
 import {
   REPORT_STATUS_DONE,
@@ -965,6 +967,33 @@ const FeedPage = () => {
     const isProfileImageFeed = item.tagtType === "PROFILE_IMAGE";
     const isBackgroundImageFeed = item.tagtType === "BACKGROUND_IMAGE";
     const isImageFeed = isProfileImageFeed || isBackgroundImageFeed;
+    // "프로필 사진"
+    const profileTargetContent = message("frontend.userReport.target.profileImage");
+    // "배경사진"
+    const backgroundTargetContent = message("frontend.userReport.target.backgroundImage");
+    // 피드 유형에 맞는 신고 화면이 열리도록 신고 대상 유형을 변환한다
+    const complaintTargetType = isReportFeed
+      ? "REPORT"
+      : isProfileImageFeed
+        ? "PROFILE"
+        : "BACKGROUND";
+    // 이미지 신고는 현재 사진을 소유한 사용자 번호를 사용하고 독후감은 독후감 번호를 사용한다
+    const complaintTargetNumb = isReportFeed ? item.tagtNumb : item.userNumb;
+    // 신고 화면에 현재 카드 유형에 맞는 독후감 본문 또는 이미지 유형을 표시한다
+    const complaintTargetContent = isReportFeed
+      ? reportContent
+      : isProfileImageFeed
+        ? profileTargetContent
+        : backgroundTargetContent;
+    // 공통 신고 메뉴가 대상별 신고 화면 이동 상태로 사용할 정보를 구성한다
+    const complaintTarget: SafetyReportTarget = {
+      targetType: complaintTargetType,
+      targetNumb: complaintTargetNumb,
+      reportNumb: isReportFeed ? item.tagtNumb : undefined,
+      userNumb: item.userNumb,
+      userNick: item.userNick,
+      content: complaintTargetContent,
+    };
     // 피드 작성자와 사진 활동에 동일하게 표시할 발생 날짜를 계산한다
     const activityDateLabel = new Date(item.activityDate).toLocaleDateString();
     // 독후감 번호가 있는 정상 피드는 도서 정보 상세로 이동하고 누락된 예외 데이터는 도서 검색으로 이동한다
@@ -1049,6 +1078,16 @@ const FeedPage = () => {
               <span className={styles.authorName}>{item.userNick}</span>
             </span>
           </button>
+          {/* 다른 사용자의 피드 신고 및 차단 더보기 메뉴 영역 */}
+          {item.meYsno === "N" ? (
+            <div className={styles.actionMenuWrap}>
+              <UserActionMenu
+                userNick={item.userNick}
+                reportTarget={complaintTarget}
+                triggerIconClassName={styles.actionMenuTriggerIcon}
+              />
+            </div>
+          ) : null}
         </header>
 
         {/* 독후감 도서 표지와 제목 및 저자 정보 영역 */}
