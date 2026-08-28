@@ -8,6 +8,16 @@
 - 모든 피드 카드에서 좋아요와 댓글·답글을 사용할 수 있습니다.
 - 독후감 알림 링크는 대상 유형과 번호로 공개 콘텐츠 한 건을 다시 검증해 해당 카드 또는 독후감 화면과 댓글 목록을 엽니다.
 
+## 피드 사용자 검색
+
+- 피드 헤더 하단의 고정 검색 입력에서 활성 회원의 닉네임을 부분 검색하며 로그인 사용자는 결과에서 제외합니다.
+- 검색 결과에는 프로필 사진, 닉네임, 한줄소개와 로그인 사용자 기준 관계 버튼을 표시합니다.
+- 양쪽이 서로 팔로우하는 친구, 한쪽 방향의 팔로우 관계가 있는 사용자, 관계가 없는 사용자 순으로 배치하며 같은 관계 그룹은 닉네임순으로 정렬합니다.
+- 관계 버튼으로 팔로우 또는 언팔로우하면 서버가 확정한 최신 관계를 기준으로 첫 페이지부터 다시 정렬합니다.
+- `비활성화(계정 비활성화)`, `영구 탈퇴 대기(영구 탈퇴 유예)` 및 `이용정지(이용 정지)` 회원은 보존된 팔로우 관계가 있어도 검색 결과에서 제외합니다.
+- 비활성화 회원이 복귀하거나 영구 탈퇴를 취소해 정상 이용 상태가 되면 보존된 닉네임과 관계를 기준으로 다시 검색할 수 있습니다. 이용정지가 유지되면 검색 결과에 노출하지 않습니다.
+- 유예기간 종료 후 물리 삭제된 회원은 사용자 원본과 관계가 삭제되므로 검색 결과와 관계 버튼의 대상에서 영구 제외합니다.
+
 ## 개요
 
 - 목적: 다른 사용자 프로필과 소셜 상호작용에서 공개 데이터 범위, 집계 및 사용자 차단 기준을 일관되게 유지합니다.
@@ -121,6 +131,7 @@
 
 ## 구현 근거
 
+- `src/main/java/org/our/sadari/social/controller/SocialController.java`
 - `src/main/java/org/our/sadari/social/service/SocialServiceImpl.java`
 - `src/main/java/org/our/sadari/social/mapper/SocialMapper.xml`
 - `src/main/java/org/our/sadari/social/dto/SocialDto.java`
@@ -129,4 +140,6 @@
 - `src/main/java/org/our/sadari/myPage/dto/ReadingSummaryQueryDto.java`
 - `src/main/frontend/src/pages/Social/SocialProfilePage.tsx`
 - `src/main/frontend/src/pages/My/ProfileEditPage.tsx`
+- `src/main/frontend/src/pages/Feed/FeedPage.tsx`
+- `src/main/frontend/src/features/Social/api/socialApi.ts`
 - `src/main/frontend/src/features/Social/components/LikeUserListButton.tsx`

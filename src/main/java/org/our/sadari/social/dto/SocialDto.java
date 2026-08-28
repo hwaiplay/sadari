@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : SocialDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-24
- * description    : 팔로우와 좋아요 요청과 응답 데이터를 전달한다
+ * description    : 사용자 검색과 팔로우 및 좋아요 요청과 응답 데이터를 전달한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,8 +16,9 @@ import lombok.Data;
  * 2026-08-04        SeungHyeon.Kang    프로필 독후감 공개 범위 조회 조건 추가
  * 2026-08-15        SeungHyeon.Kang    친구 상태·목록 조회 조건 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
+ * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 추가
  */
-@Schema(description = "팔로우와 좋아요 API DTO 컨테이너", hidden = true)
+@Schema(description = "사용자 검색과 팔로우 및 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
 
     /**
@@ -131,6 +132,30 @@ public class SocialDto {
         private Long loginUserNumb;
 
         @Schema(description = "팔로우 목록 조회 시작 위치", example = "0", hidden = true)
+        private Integer pageOffset;
+
+        @Schema(description = "다음 페이지 판정을 포함한 조회 건수", example = "11", hidden = true)
+        private Integer pageLimit;
+    }
+
+    /**
+     * 피드에서 활성 사용자를 닉네임으로 검색할 때 사용하는 조회 조건 DTO이다.
+     * 로그인 사용자 기준 관계 정렬과 페이지 범위를 한 객체로 Mapper에 전달한다.
+     *
+     * @author HanWon.Jang
+     */
+    // 활성 사용자 닉네임 검색과 관계 정렬 조건
+    @Data
+    @Schema(description = "활성 사용자 검색 조건 DTO")
+    public static class UserSearchReqDto {
+
+        @Schema(description = "로그인 사용자 번호", example = "31", hidden = true)
+        private Long loginUserNumb;
+
+        @Schema(description = "닉네임 검색어", example = "reader", hidden = true)
+        private String keyword;
+
+        @Schema(description = "사용자 검색 시작 위치", example = "0", hidden = true)
         private Integer pageOffset;
 
         @Schema(description = "다음 페이지 판정을 포함한 조회 건수", example = "11", hidden = true)

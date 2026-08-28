@@ -31,7 +31,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : SocialController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 팔로우와 좋아요 API를 제공한다
+ * description    : 사용자 검색과 공개 프로필 및 팔로우와 좋아요 API를 제공한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -41,11 +41,12 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-15        SeungHyeon.Kang    접근 제한 회원 소셜 프로필 상태명 응답 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 조회 추가
  * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 추가
+ * 2026-08-28        HanWon.Jang        피드 활성 사용자 검색 추가
  */
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/social")
-@Tag(name = "소셜", description = "공개 프로필, 팔로우, 좋아요 API")
+@Tag(name = "소셜", description = "사용자 검색, 공개 프로필, 팔로우와 좋아요 API")
 public class SocialController {
 
     // User 데이터 접근 객체
@@ -233,6 +234,26 @@ public class SocialController {
           , @Parameter(description = "조회할 연도", example = "2026") @RequestParam(required = false) Integer readYear) {
         // 서버가 계정 상태와 공개 설정을 검증한 다른 사용자용 독서 통계를 조회한다
         return readingStatisticsService.getPublicReadingStats(userNumb, readYear);
+    }
+
+    /**
+     * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자를 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 닉네임 검색어
+     * @param page 조회할 페이지 번호
+     * @return 관계 우선순위가 적용된 활성 사용자 페이지
+     */
+    @GetMapping("/users")
+    @Operation(summary = "활성 사용자 검색", description = "닉네임이 검색어를 포함하는 활성 사용자를 로그인 사용자와의 관계순으로 조회한다.")
+    public ResultData getUserSearchList(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+          , @Parameter(description = "닉네임 검색어", example = "reader") @RequestParam String keyword
+          , @Parameter(description = "조회할 페이지 번호", example = "1")
+            @RequestParam(value = "page", defaultValue = "1") int page) {
+        // 인증 사용자와 닉네임 검색어 및 페이지 조건을 소셜 검색 서비스에 전달한다
+        return socialService.getUserSearchList(loginUserNumb, keyword, page);
     }
 
     /**

@@ -7,16 +7,18 @@ import org.our.sadari.social.dto.SocialDto;
  * fileName       : SocialMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-22
- * description    : 팔로우와 좋아요 데이터베이스 접근 메서드를 정의한다
+ * description    : 사용자 검색과 팔로우 및 좋아요 데이터베이스 접근 메서드를 정의한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 문서화
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
+ * 2026-08-28        HanWon.Jang        활성 사용자 검색 추가
  */
 @Mapper
 public interface SocialMapper {
+
     /**
      * 로그인 사용자와 상대 사용자 번호를 기준으로 화면에 표시할 팔로우 버튼명을 조회한다.
      *
@@ -98,6 +100,15 @@ public interface SocialMapper {
      * @return 프로필 통계
      */
     SocialDto.ProfileStatsDto getProfileStats(SocialDto.ProfileStatsDto req);
+
+    /**
+     * 닉네임이 검색어를 포함하는 활성 사용자를 로그인 사용자와의 관계순으로 조회한다.
+     *
+     * @author HanWon.Jang
+     * @param req 로그인 사용자와 닉네임 검색어 및 페이지 조건
+     * @return 관계 우선순위가 적용된 활성 사용자 목록
+     */
+    java.util.List<SocialDto.FollowUserDto> getUserSearchList(SocialDto.UserSearchReqDto req);
 
     /**
      * 특정 사용자가 팔로우하는 사용자 목록을 조회한다.

@@ -29,6 +29,7 @@
 - 동일 Kakao 계정의 암호화 식별값을 보존하므로 같은 계정으로 재로그인하거나 가입을 다시도해도 기존 정지 회원으로 처리합니다.
 - `이용정지` 회원은 정지 안내 조회, 로그아웃과 최소 인증 API만 이용할 수 있습니다.
 - `이용정지(이용 정지)` 동안도 `사용자 팔로우 관계(팔로우 관계)`를 유지하고 팔로우·팔로워 목록에 노출합니다.
+- 피드의 사용자 검색은 활성 회원만 제공하므로 이용정지 기간에는 보존된 닉네임과 팔로우 관계가 있어도 검색 결과에서 제외합니다. 정지가 해제되어 정상 이용 상태로 복귀하면 다시 검색할 수 있습니다.
 - 목록에서 `이용정지(이용 정지)` 회원을 눌러 소셜 프로필에 진입하면 `사용자 계정 상태(회원 상태)`를 알림으로 표시하고, 확인하면 이전 화면으로 이동합니다.
 - 정지 회원은 정지 해제 또는 기간 만료 전까지 계정 비활성화를 신청할 수 없습니다.
 - 정지 회원도 [2차 회원 탈퇴정책](withdrawal-policy.md#2차-회원-탈퇴정책)에 따라 30일 유예 영구탈퇴를 신청할 수 있으며, 탈퇴 후에도 유효 제재는 유지됩니다.
@@ -77,7 +78,9 @@
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/user/service/UserSuspensionServiceImpl.java`
 - `src/main/java/org/our/sadari/user/service/UserWithdrawalServiceImpl.java`
+- `src/main/java/org/our/sadari/social/mapper/SocialMapper.xml`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserStatusEventServiceImpl.java`
+- `src/main/frontend/src/pages/Feed/FeedPage.tsx`
 - `src/main/frontend/src/pages/Settings/SuspensionPage.tsx`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/service/impl/CurrentUserServiceImpl.java`
 - `sadari-admin` 저장소 `src/main/java/org/sadari/admin/sadariadmin/currentuser/mapper/CurrentUserMapper.xml`

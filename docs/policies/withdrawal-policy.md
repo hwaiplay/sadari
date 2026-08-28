@@ -48,6 +48,7 @@
 - 브라우저 푸시 구독은 비활성화합니다.
 - `비활성화` 전환 즉시 모든 기기의 로그인 세션을 폐기하고 Access Token의 `sid`도 더 이상 인증에 사용할 수 없게 합니다.
 - `비활성화(계정 비활성화)` 전환 후에도 `사용자 팔로우 관계(팔로우 관계)`는 유지하고 팔로우·팔로워 목록에 노출합니다.
+- 피드의 사용자 검색은 활성 회원만 제공하므로 비활성화 기간에는 보존된 닉네임과 팔로우 관계가 있어도 검색 결과에서 제외합니다. 같은 계정이 정상 이용 상태로 복귀하면 보존된 닉네임과 관계를 기준으로 다시 검색할 수 있습니다.
 - `비활성화(계정 비활성화)` 전환 후에도 사용자가 설정한 개인 차단 관계와 다른 사용자가 해당 사용자를 차단한 관계를 모두 유지합니다. 같은 계정이 복귀하면 별도 복원 없이 기존 차단 관계를 그대로 적용합니다.
 - 공개 독후감의 팔로우 작성자 우선 정렬에는 `활성` 작성자의 공개 독후감만 사용하므로 `비활성화` 상태에서는 유지된 팔로우 관계가 있더라도 정렬 대상에서 제외합니다.
 - 다른 사용자가 목록의 `비활성화(계정 비활성화)` 회원을 눌러 소셜 프로필에 진입하면 `사용자 계정 상태(회원 상태)`를 알림으로 표시하고, 확인하면 이전 화면으로 이동합니다.
@@ -78,6 +79,7 @@
 - 영구 탈퇴 대기 유예기간에는 독후감별 좋아요·댓글 알림 설정을 보존하지만 신규 독후감 활동 알림은 중지합니다. 탈퇴를 취소하고 사용자가 독후감을 직접 다시 공개하면 보존된 설정을 적용합니다.
 - 영구 탈퇴 대기 유예기간에는 유지된 팔로우 관계가 있더라도 비공개 처리된 독후감을 공개 목록과 팔로우 작성자 우선 정렬에 사용하지 않습니다.
 - `영구 탈퇴 대기(영구 탈퇴 유예)` 동안 `사용자 팔로우 관계(팔로우 관계)`를 유지하고 팔로우·팔로워 목록에 노출합니다. 목록에서 해당 회원을 눌러 소셜 프로필에 진입하면 `사용자 계정 상태(회원 상태)`를 알림으로 표시하고, 확인하면 이전 화면으로 이동합니다.
+- 피드의 사용자 검색은 활성 회원만 제공하므로 영구 탈퇴 대기 기간에는 보존된 닉네임과 팔로우 관계가 있어도 검색 결과에서 제외합니다. 탈퇴 취소 뒤 정상 이용 상태로 복귀한 경우에만 보존된 닉네임과 관계를 기준으로 다시 검색할 수 있습니다.
 - 영구 탈퇴 대기 유예기간에는 사용자가 설정한 개인 차단 관계와 다른 사용자가 해당 사용자를 차단한 관계를 모두 유지합니다. 탈퇴를 취소하면 별도 복원 없이 기존 차단 관계를 그대로 적용합니다.
 - 영구 탈퇴를 취소해도 푸시 구독은 자동 복원하지 않으며 사용자가 다시 명시적으로 켜야 합니다.
 - 영구 삭제 대기 전환 시 댓글에 등록한 좋아요를 삭제하고, 탈퇴를 취소해도 자동 복원하지 않습니다.
@@ -417,8 +419,11 @@
 - `src/main/java/org/our/sadari/popup/mapper/PopupContentMapper.xml`
 - `src/main/java/org/our/sadari/reply/service/ReplyServiceImpl.java`
 - `src/main/java/org/our/sadari/reply/mapper/ReplyMapper.xml`
+- `src/main/java/org/our/sadari/social/service/SocialServiceImpl.java`
+- `src/main/java/org/our/sadari/social/mapper/SocialMapper.xml`
 - `src/main/frontend/src/features/reply/ReplySheetView.tsx`
 - `src/main/frontend/src/features/reply/hooks/useReplyLike.ts`
+- `src/main/frontend/src/pages/Feed/FeedPage.tsx`
 - `src/main/frontend/src/features/Popup/hooks/usePopupContent.ts`
 - `scripts/db/mysql/01-create.sql`
 - `scripts/db/mysql/04-user-statistics-indexes.sql`
