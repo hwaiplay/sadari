@@ -280,6 +280,7 @@ export default function ClubDetailPage() {
                   <LinkButton
                     link={`/reading-clubs/update/book/${club.clubNumb}/${club.currentRondNumb}`}
                     className={styles.managementReadingBtn}
+                    replace
                   >
                     {message("frontend.readingClub.management.reading")}
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
