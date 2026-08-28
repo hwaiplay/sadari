@@ -21,7 +21,8 @@ import type { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import * as styles from "./ReplySheet.css";
 
-const REPLY_MENTION_PATTERN = /(@[A-Za-z0-9_\uAC00-\uD7A3]+)/g;
+// 닉네임 언급의 허용 문자를 기준으로 색상 표시 범위를 구분한다
+const REPLY_MENTION_PATTERN = /(@[A-Za-z0-9_\uAC00-\uD7A3-]+)/g;
 
 type ReplyAction = "" | "UPDATE" | "DELETE";
 
@@ -80,7 +81,7 @@ const renderReplyContent = (
   content: string,
   profilePathByNick: ReadonlyMap<string, string>,
 ): ReactNode[] => {
-  // 한글, 영문, 숫자로 구성된 닉네임 언급을 일반 문구와 분리한다
+  // 한글, 영문, 숫자, 밑줄, 하이픈으로 구성된 닉네임 언급을 일반 문구와 분리한다
   const contentParts = content.split(REPLY_MENTION_PATTERN);
   const contentNodes: ReactNode[] = [];
 
