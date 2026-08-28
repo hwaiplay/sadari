@@ -10,6 +10,7 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubApi";
+import OwnerElectionOverlay from "@/features/ReadingClub/components/OwnerElectionOverlay";
 import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
@@ -60,12 +61,15 @@ export default function ClubDetailPage() {
     club,
     isCancellingApplication,
     isDeleting,
+    isVotingOwner,
     members,
+    ownerElection,
     readingGoalResult,
     handleAnswerChange,
     handleApplicationCancel,
     handleClubAction,
     handleJoinClub,
+    handleOwnerVote,
     handleReadingHistory,
     handleReportWrite,
   } = useClubDetailPage();
@@ -274,7 +278,7 @@ export default function ClubDetailPage() {
                 {/* 현재 독서 관리는 활성 모임장에게만 제공한다 */}
                 {club.membRole === "OWNER" && hasCurrentReading ? (
                   <LinkButton
-                    link={`/reading-clubs/${club.clubNumb}/${club.currentRondNumb}/edit`}
+                    link={`/reading-clubs/update/book/${club.clubNumb}/${club.currentRondNumb}`}
                     className={styles.managementReadingBtn}
                   >
                     {message("frontend.readingClub.management.reading")}
@@ -421,8 +425,19 @@ export default function ClubDetailPage() {
       </main>
 
       {/* 목표 결과 오버레이 팝업 */}
-      {isActiveMember && readingGoalResult && !hasCurrentReading ? createPortal(
+      {isActiveMember && club.clubStat !== "OWNER_ELECTION"
+        && readingGoalResult && !hasCurrentReading ? createPortal(
         <ReadingGoalResultOverlay key={readingGoalResult.rondNumb} result={readingGoalResult} />,
+        document.body,
+      ) : null}
+
+      {/* 모임장 승계 투표 오버레이 팝업 */}
+      {isActiveMember && club.clubStat === "OWNER_ELECTION" && ownerElection ? createPortal(
+        <OwnerElectionOverlay
+          election={ownerElection}
+          submitting={isVotingOwner}
+          onVote={handleOwnerVote}
+        />,
         document.body,
       ) : null}
 

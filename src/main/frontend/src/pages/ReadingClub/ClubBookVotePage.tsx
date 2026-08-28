@@ -82,10 +82,15 @@ const ClubBookVotePage = () => {
                           className={styles.voteRate}>{message("frontend.readingClub.vote.rate", [voteRate])}</strong>
                       </span>
                     </span>
-                    {candidate.voteYsno === "Y" ? <span className={styles.myVoteBadge}>
-                      {/* "내 투표" */}
-                      {message("frontend.readingClub.vote.myVote")}
-                    </span> : null}
+                    {candidate.voteYsno === "Y" ?
+                      <span className={styles.myVoteBadge}>
+                        {/* "내 투표" */}
+                        <svg width="9" height="6" viewBox="0 0 9 6" fill="none" xmlns="http://www.w3.org/2000/svg">
+                          <path d="M1 2.97491L2.99511 4.97L7.28761 1" stroke="#2F8F64" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                        </svg>
+                        {message("frontend.readingClub.vote.myVote")}
+                      </span>
+                      : null}
                   </div>
                 ) : (
                   <button className={styles.candidateSelect} role="radio" aria-checked={selected} type="button"
@@ -105,8 +110,8 @@ const ClubBookVotePage = () => {
                   <button className={clsx(buttonDanger, styles.cancelRecommendationButton)}
                           onClick={() => void handleDelete(candidate.recmNumb)}>
                     <svg width="8" height="2" viewBox="0 0 8 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M0.75 0.75H6.75" stroke="#FF3747" stroke-width="1.5" stroke-linecap="round"
-                            stroke-linejoin="round"/>
+                      <path d="M0.75 0.75H6.75" stroke="#FF3747" strokeWidth="1.5" strokeLinecap="round"
+                            strokeLinejoin="round"/>
                     </svg>
                     {message("frontend.readingClub.vote.cancelRecommendation")}
                   </button>

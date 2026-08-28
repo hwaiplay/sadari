@@ -64,6 +64,13 @@ export const surface = style({
   },
 });
 
+export const successionSurface = style([
+  surface,
+  {
+    minHeight: "min(720px, calc(100dvh - 32px))",
+  },
+]);
+
 globalStyle(`${surface}::-webkit-scrollbar`, {
   display: "none",
 });

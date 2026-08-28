@@ -10,11 +10,14 @@ import {
   getClubDtlApi,
   getClubMemberListApi,
   getClubReadingGoalResultApi,
+  getOwnerElectionApi,
   joinClubApi,
   type ClubApplication,
   type ClubMemberProfile,
   type ClubReadingGoalResult,
+  type OwnerElection,
   type ReadingClub,
+  updateOwnerVoteApi,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -36,6 +39,8 @@ export const useClubDetailPage = () => {
   const [applications, setApplications] = useState<ClubApplication[]>([]);
   const [members, setMembers] = useState<ClubMemberProfile[]>([]);
   const [readingGoalResult, setReadingGoalResult] = useState<ClubReadingGoalResult | null>(null);
+  const [ownerElection, setOwnerElection] = useState<OwnerElection | null>(null);
+  const [isVotingOwner, setIsVotingOwner] = useState(false);
   const [isCancellingApplication, setIsCancellingApplication] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const rejectedAlertClubRef = useRef<number | null>(null);
@@ -48,10 +53,13 @@ export const useClubDetailPage = () => {
    */
   const loadPage = useCallback(async (): Promise<void> => {
     const detail = await getClubDtlApi(clubNumb);
-    const [nextMembers, nextApplications, nextReadingGoalResult] = await Promise.all([
+    const [nextMembers, nextApplications, nextReadingGoalResult, nextOwnerElection] = await Promise.all([
       detail.membStat === "ACTIVE" ? getClubMemberListApi(clubNumb) : Promise.resolve([]),
       detail.membRole === "OWNER" ? getClubApplicationListApi(clubNumb) : Promise.resolve([]),
       detail.membStat === "ACTIVE" ? getClubReadingGoalResultApi(clubNumb) : Promise.resolve(null),
+      detail.membStat === "ACTIVE" && detail.clubStat === "OWNER_ELECTION"
+        ? getOwnerElectionApi(clubNumb)
+        : Promise.resolve(null),
     ]);
 
     // 기존 답변을 유지하면서 서버 질문 수에 맞춘다.
@@ -60,6 +68,7 @@ export const useClubDetailPage = () => {
     setMembers(nextMembers);
     setApplications(nextApplications);
     setReadingGoalResult(nextReadingGoalResult);
+    setOwnerElection(nextOwnerElection);
 
     // 같은 상세 화면을 다시 조회하더라도 가입 거절 안내는 한 번만 표시한다
     if (detail.joinStat === "REJECTED" && rejectedAlertClubRef.current !== clubNumb) {
@@ -128,6 +137,39 @@ export const useClubDetailPage = () => {
         message("frontend.readingClub.error.joinTitle"),
         getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       ));
+  };
+
+  /**
+   * 선택한 후보에게 투표한 뒤 최신 선거 정보를 다시 조회한다.
+   *
+   * @author HanWon.Jang
+   * @param userNumb 선택한 후보 사용자 번호
+   * @return 투표 성공 여부 Promise
+   */
+  const handleOwnerVote = async (userNumb: number): Promise<boolean> => {
+    // 중복 클릭으로 같은 투표 요청이 동시에 실행되지 않게 한다
+    if (isVotingOwner) {
+      return false;
+    }
+
+    setIsVotingOwner(true);
+    try {
+      // 서버에서 유권자와 후보 자격을 재검증한 투표를 등록한다
+      await updateOwnerVoteApi(clubNumb, userNumb);
+      // 변경된 내 선택 상태를 포함한 선거 정보를 다시 조회한다
+      setOwnerElection(await getOwnerElectionApi(clubNumb));
+      // 모달을 닫을 수 있도록 투표 성공 여부를 반환한다
+      return true;
+    } catch (error) {
+      void sweetError(
+        message("frontend.readingClub.ownerElection.errorTitle"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+      // 오류 안내 뒤 현재 모달을 유지하도록 실패 여부를 반환한다
+      return false;
+    } finally {
+      setIsVotingOwner(false);
+    }
   };
 
   /**
@@ -338,13 +380,16 @@ export const useClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isVotingOwner,
     members,
+    ownerElection,
     readingGoalResult,
     handleAnswerChange,
     handleApplicationCancel,
     handleApplicationDecision,
     handleClubAction,
     handleJoinClub,
+    handleOwnerVote,
     handleReadingHistory,
     handleReportWrite,
   };

@@ -53,7 +53,6 @@ export const candidateCard = style({
   background: vars.color.background,
   transition: "background 160ms ease",
   selectors: {
-    "&:hover": {background: vars.color.gray100},
     "&:focus-visible": {outline: `1px solid ${vars.color.brandText}`, outlineOffset: 2},
   },
 });
@@ -76,9 +75,9 @@ export const candidateResult = style({
   display: "grid",
   width: "100%",
   minHeight: 154,
-  gridTemplateColumns: "76px minmax(0, 1fr) auto",
+  gridTemplateColumns: "90px minmax(0, 1fr) auto",
   alignItems: "center",
-  gap: 16,
+  justifyContent: "space-between",
   padding: 20,
   boxSizing: "border-box",
 });
@@ -128,7 +127,7 @@ export const voteRateFill = style({
   display: "block",
   height: "100%",
   borderRadius: 999,
-  background: vars.color.brandText,
+  background: vars.color.brand,
   transition: "width 240ms ease",
 });
 
@@ -148,6 +147,13 @@ export const myVoteBadge = style({
   fontFamily: vars.font.semibold,
   fontSize: 12,
   whiteSpace: "nowrap",
+  display: "flex",
+  justifyContent:"center",
+  alignItems:"center",
+  gap: 4,
+  position: "absolute",
+  top: 20,
+  right: 20
 });
 
 export const cancelRecommendationButton = style({

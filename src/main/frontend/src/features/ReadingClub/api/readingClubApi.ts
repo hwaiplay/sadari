@@ -67,7 +67,7 @@ export const deleteClubBookRecommApi = async (clubNumb: number, recmNumb: number
 
 export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) => {
   // 현재 주기에 한 번만 등록되는 다음 도서 투표를 요청한다
-  const response = await api.put(`/reading-clubs/vote/book/${clubNumb}`, { recmNumb });
+  const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, { recmNumb });
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
@@ -235,6 +235,38 @@ export type ClubReadingUpdateParams = Omit<ClubReadingCreateParams, "idemKeyx">;
 
 export type ClubReadingCreateResult = {
   rondNumb: number;
+};
+
+export type OwnerElectionCandidate = {
+  userNumb: number;
+  userNick?: string;
+  porfPath?: string;
+  selected: boolean;
+};
+
+export type OwnerElection = {
+  clubNumb: number;
+  elctNumb: number;
+  voteNumb: number;
+  voteRoun: number;
+  endxDate: string;
+  canVote: boolean;
+  voted: boolean;
+  candidateList: OwnerElectionCandidate[];
+};
+
+export const getOwnerElectionApi = async (clubNumb: number): Promise<OwnerElection> => {
+  // 시작 시점 유권자에게 공개되는 진행 중 모임장 선거를 요청한다
+  const response = await api.get(`/reading-clubs/${clubNumb}/owner-election`);
+  // 공통 성공 응답에서 선거와 후보 목록을 반환한다
+  return assertResultDataSuccess(response.data).data as OwnerElection;
+};
+
+export const updateOwnerVoteApi = async (clubNumb: number, userNumb: number) => {
+  // 서버가 현재 투표와 후보 자격을 다시 결정하도록 후보 번호만 전달한다
+  const response = await api.put(`/reading-clubs/${clubNumb}/owner-election/vote`, { userNumb });
+  // 공통 성공 응답을 반환한다
+  return assertResultDataSuccess(response.data);
 };
 
 /**

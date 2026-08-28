@@ -6,6 +6,7 @@
     <sql id="clubCodeBinds">
         <bind name="clubPublic" value="'PUBLIC'" />
         <bind name="clubActive" value="'ACTIVE'" />
+        <bind name="clubOwnerElection" value="'OWNER_ELECTION'" />
         <bind name="memberRole" value="'MEMBER'" />
         <bind name="ownerRole" value="'OWNER'" />
         <bind name="memberActive" value="'ACTIVE'" />
@@ -668,7 +669,7 @@
           FROM TB_CLMEMX MINE
           JOIN TM_CLUBXM CLUB
             ON CLUB.CLUB_NUMB = MINE.CLUB_NUMB
-           AND CLUB.CLUB_STAT = #{clubActive}
+           AND CLUB.CLUB_STAT IN (#{clubActive}, #{clubOwnerElection})
      LEFT JOIN TM_USERXM OWNER
             ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
              <include refid="clubSeatJoin" />
