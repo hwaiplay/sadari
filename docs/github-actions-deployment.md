@@ -69,7 +69,7 @@
 | `TIMER_ZONE_ID` | `Asia/Seoul` | 일별 독서 시간과 주간 출석 경계를 계산하는 시간대 |
 | `TIMER_DETAIL_RETENTION_DAYS` | `365` | 완료된 독서 타이머 세션 상세 보존기간(일) |
 | `BOOK_SEARCH_RATE_LIMIT_PER_MINUTE` | `20` | 회원별 60초 도서 검색 요청 한도 |
-| `BOOK_SEARCH_RATE_LIMIT_PER_DAY` | `200` | 회원별 24시간 도서 검색 요청 한도 |
+| `BOOK_SEARCH_RATE_LIMIT_PER_DAY` | `200` | 캐시 미적중 시 차감하는 회원별 24시간 카카오 도서 검색 실제 호출 한도 |
 | `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` | `27000` | 비상 쿼터를 제외한 앱 전체 24시간 카카오 도서 검색 실제 호출 한도 |
 | `BOOK_SEARCH_CACHE_TTL_SECONDS` | `600` | 사용자와 연결하지 않은 도서 검색 결과 Redis 캐시 유효시간(초) |
 | `BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS` | `7` | 인기 검색어 점수 합산과 회원별 동일 검색어 중복 제한 기간(일) |

@@ -27,7 +27,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * fileName       : BookSearchService
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-06
  * description    : 외부 도서 검색 API를 호출하고 사용자 화면 응답으로 변환한다
  * ===========================================================
@@ -36,6 +36,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    종료된 네이버 API를 카카오 도서 검색 API로 교체
  * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 처리 추가
+ * 2026-08-28        HanWon.Jang        캐시 적중 한도 분리
  */
 @Slf4j
 @Service
@@ -69,7 +70,7 @@ public class BookSearchService {
     /**
      * 검색어 기준 카카오 도서 목록을 검색한다
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param userNumb 도서 검색을 요청한 로그인 회원 번호
      * @param query 카카오 도서 API에 전달할 검색어
      * @param start 기존 화면 계약에서 사용하는 검색 결과 시작 위치
@@ -83,7 +84,7 @@ public class BookSearchService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 악성 반복 요청과 Redis 장애가 카카오 일일 쿼터를 소모하지 않도록 회원 제한을 먼저 검사한다
+        // 캐시 적중 요청도 서버를 반복 사용하지 못하도록 회원별 분간 제한을 먼저 검사한다
         if (!bookSearchProtectionService.isRequestAllowed(userNumb)) {
             // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
             return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
@@ -98,8 +99,8 @@ public class BookSearchService {
 
             // 공용 캐시에 검색 결과가 없을 때만 카카오 일일 쿼터를 예약하고 외부 API를 호출한다
             if (StringUtil.isEmpty(kakaoBookJsonDto)) {
-                // 앱 전체 실제 호출이 비상 여유를 침범하면 카카오 요청 전에 차단한다
-                if (!bookSearchProtectionService.reserveProviderCall()) {
+                // 회원별 일간 또는 앱 전체 실제 호출이 보호 한도를 넘으면 카카오 요청 전에 차단한다
+                if (!bookSearchProtectionService.reserveProviderCall(userNumb)) {
                     // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
                     return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
                 }

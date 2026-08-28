@@ -60,7 +60,7 @@ book:
     url: https://dapi.kakao.com/v3/search/book
     # 한 회원의 짧은 시간 반복 검색을 Redis에서 차단하는 60초 기준 요청 한도이다.
     rate-limit-per-minute: ${BOOK_SEARCH_RATE_LIMIT_PER_MINUTE:20}
-    # 비활성화와 재로그인으로 초기화되지 않는 회원별 24시간 요청 한도이다.
+    # 캐시 미적중 시에만 차감하며 비활성화와 재로그인으로 초기화되지 않는 회원별 24시간 실제 호출 한도이다.
     rate-limit-per-day: ${BOOK_SEARCH_RATE_LIMIT_PER_DAY:200}
     # 카카오의 3만 건 쿼터 중 3천 건을 비상 여유로 남기는 앱 전체 실제 호출 한도이다.
     provider-call-limit-per-day: ${BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY:27000}
