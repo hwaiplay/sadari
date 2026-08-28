@@ -636,10 +636,32 @@ export const interestGroup = style({
   },
 });
 
+export const interestGroupHeader = style({
+  display: "flex",
+  alignItems: "center",
+  gap: "8px",
+});
+
 export const interestGroupTitle = style({
   color: "#4f4942",
   fontFamily: vars.font.semibold,
   fontSize: "14px",
+});
+
+export const interestAllButton = style({
+  flexShrink: 0,
+  padding: 0,
+  border: 0,
+  background: "transparent",
+  color: "#7b8187",
+  cursor: "pointer",
+  fontSize: "11px",
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "3px",
+    },
+  },
 });
 
 export const interestList = style({
@@ -807,17 +829,17 @@ export const previousButton = style([navigationButton]);
 export const nextButton = style([
   navigationButton,
   {
-    borderColor: vars.color.gray900,
+    borderColor: "#293038",
     color: "#ffffff",
-    background: vars.color.gray900,
+    background: "#293038",
     selectors: {
       "&:hover:not(:disabled)": {
-        background: vars.color.darkGray,
+        background: "#293038",
       },
       "&:disabled": {
-        borderColor: vars.color.gray900,
+        borderColor: "#293038",
         color: "#ffffff",
-        background: vars.color.gray900,
+        background: "#293038",
         opacity: 1,
       },
     },

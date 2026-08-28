@@ -819,17 +819,21 @@ const WelcomePage = () => {
                   return (
                     /* 관심분야 대분류와 소분류 개별 묶음 영역 */
                     <section className={styles.interestGroup} key={group.categoryName}>
-                      <h2 className={styles.interestGroupTitle}>{group.categoryName}</h2>
-                      <div className={styles.interestList}>
+                      {/* 대분류 제목과 전체 선택 텍스트 버튼 영역 */}
+                      <div className={styles.interestGroupHeader}>
+                        <h2 className={styles.interestGroupTitle}>{group.categoryName}</h2>
                         <button
-                          className={isGroupSelected ? styles.interestButtonSelected : styles.interestButton}
+                          className={styles.interestAllButton}
                           type="button"
                           data-category-name={group.categoryName}
                           aria-pressed={isGroupSelected}
                           onClick={handleCategoryToggle}
                         >
+                          {/* "{0} 전체" */}
                           {message("frontend.welcome.interest.all", [group.categoryName])}
                         </button>
+                      </div>
+                      <div className={styles.interestList}>
                         {group.interests.map((interest) => {
                           const interestKey = interest.intrCode;
                           const isSelected = selectedInterestKeys.has(interestKey);
