@@ -41,6 +41,7 @@ const ClubMemberRestrictionPage = lazy(() => import("@/pages/ReadingClub/ClubMem
 const SetClubReadingPage = lazy(() => import("@/pages/ReadingClub/SetClubReadingPage"));
 const ClubRoundReportPage = lazy(() => import("@/pages/ReadingClub/ClubRoundReportPage"));
 const ClubReadingHistoryPage = lazy(() => import("@/pages/ReadingClub/ClubReadingHistoryPage"));
+const ReadingGoalResultPage = lazy(() => import("@/pages/ReadingClub/ReadingGoalResultPage"));
 const NoticeListPage = lazy(() => import("@/pages/Notice/NoticeListPage"));
 const NoticeDetailPage = lazy(() => import("@/pages/Notice/NoticeDetailPage"));
 const InquiryListPage = lazy(() => import("@/pages/Inquiry/InquiryListPage"));
@@ -247,6 +248,8 @@ const Router = () => {
           <Route path="/reading-clubs/manage/member-restrictions/:clubNumb" element={<ClubMemberRestrictionPage />} />
           {/* 이전 독서 기록 */}
           <Route path="/reading-clubs/history/:clubNumb" element={<ClubReadingHistoryPage />} />
+          {/* 독서 목표 결과 */}
+          <Route path="/reading-clubs/history/detail/:clubNumb/:rondNumb" element={<ReadingGoalResultPage />} />
           {/* 모임원 독후감 목록 */}
           <Route path="/reading-clubs/history/:clubNumb/:rondNumb/reports" element={<ClubRoundReportPage />} />
 

@@ -1,12 +1,6 @@
-import {
-  getClubReadingGoalResultApi,
-  type ClubReadingGoalResult,
-  type ClubReadingHistory,
-} from "@/features/ReadingClub/api/readingClubApi";
+import type { ClubReadingHistory } from "@/features/ReadingClub/api/readingClubApi";
 import { useReadingHistory } from "@/features/ReadingClub/hooks/useReadingHistory";
-import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 type ReadingHistoryPage = {
   list: ClubReadingHistory[];
@@ -35,35 +29,11 @@ export const useReadingHistoryPage = () => {
   const { clubNumb: clubNumbParam } = useParams();
   const clubNumb = Number(clubNumbParam);
   const isValidRoute = Number.isFinite(clubNumb) && clubNumb > 0;
-  // 사용자가 결과를 확인할 이전 독서 회차를 관리한다
-  const [selectedRondNumb, setSelectedRondNumb] = useState<number | null>(null);
+  // 선택한 독서 목표 결과 페이지로 이동할 라우터 함수를 조회한다
+  const navigate = useNavigate();
   // 현재 활성 모임원에게 허용된 모든 종료 회차를 페이지 단위로 조회한다
   const historyQuery = useReadingHistory(clubNumb, isValidRoute);
 
-  /**
-   * 사용자가 선택한 완료 회차의 목표 결과를 조회한다.
-   *
-   * @author HanWon.Jang
-   * @return 선택한 완료 회차의 목표 결과 또는 선택 전 Null
-   * @throws 회차 결과 API 조회가 실패하면 발생한다
-   */
-  const getReadingGoalResult = async (): Promise<ClubReadingGoalResult | null> => {
-    // 회차를 선택하기 전에는 비활성 Query가 실행되어도 결과를 만들지 않는다
-    if (selectedRondNumb === null) {
-      // 선택 전 목표 결과가 없음을 반환한다
-      return null;
-    }
-
-    // 선택한 모임과 회차에 고정된 목표 결과를 반환한다
-    return await getClubReadingGoalResultApi(clubNumb, selectedRondNumb);
-  };
-
-  // 선택한 완료 회차의 전체 목표 결과를 기존 결과 레이어 형식으로 조회한다
-  const readingGoalResultQuery = useQuery({
-    queryKey: ["readingClub", clubNumb, "readingGoalResult", selectedRondNumb],
-    queryFn: getReadingGoalResult,
-    enabled: isValidRoute && selectedRondNumb !== null,
-  });
   // 조회된 서버 페이지를 최신 회차 순서의 단일 목록으로 연결한다
   const historyList = historyQuery.data?.pages.flatMap(getHistoryPageList) ?? [];
 
@@ -75,19 +45,8 @@ export const useReadingHistoryPage = () => {
    * @return 반환값이 없다
    */
   const handleSelectReading = (rondNumb: number): void => {
-    // 선택한 회차 결과 Query가 활성화되도록 회차 번호를 저장한다
-    setSelectedRondNumb(rondNumb);
-  };
-
-  /**
-   * 목표 결과 오버레이를 닫고 선택한 회차 상태를 초기화한다.
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없다
-   */
-  const handleCloseResult = (): void => {
-    // 같은 회차를 다시 선택해도 오버레이가 새로 열리도록 선택 상태를 비운다
-    setSelectedRondNumb(null);
+    // 모임과 회차 번호를 포함한 독서 목표 결과 페이지로 이동한다
+    navigate(`/reading-clubs/history/detail/${clubNumb}/${rondNumb}`);
   };
 
   /**
@@ -106,9 +65,6 @@ export const useReadingHistoryPage = () => {
     historyList,
     historyQuery,
     isValidRoute,
-    readingGoalResultQuery,
-    selectedRondNumb,
-    handleCloseResult,
     handleLoadMore,
     handleSelectReading,
   };

@@ -4,9 +4,9 @@ import {
   type PageData,
   type ResultData,
 } from "@/app/api/resultData";
-import type { PublicReportSortType } from "@/features/Book/api/bookApi";
-import type { PublicReportType } from "@/features/Book/types/book.type";
-import type { BookSearchResultType } from "@/features/Book/types/book.type";
+import type {PublicReportSortType} from "@/features/Book/api/bookApi";
+import type {PublicReportType} from "@/features/Book/types/book.type";
+import type {BookSearchResultType} from "@/features/Book/types/book.type";
 
 export type ClubBookRecommendation = {
   recmNumb: number;
@@ -67,7 +67,7 @@ export const deleteClubBookRecommApi = async (clubNumb: number, recmNumb: number
 
 export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) => {
   // 현재 주기에 한 번만 등록되는 다음 도서 투표를 요청한다
-  const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, { recmNumb });
+  const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, {recmNumb});
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
@@ -264,7 +264,7 @@ export const getOwnerElectionApi = async (clubNumb: number): Promise<OwnerElecti
 
 export const updateOwnerVoteApi = async (clubNumb: number, userNumb: number) => {
   // 서버가 현재 투표와 후보 자격을 다시 결정하도록 후보 번호만 전달한다
-  const response = await api.put(`/reading-clubs/${clubNumb}/owner-election/vote`, { userNumb });
+  const response = await api.put(`/reading-clubs/${clubNumb}/owner-election/vote`, {userNumb});
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
@@ -324,7 +324,7 @@ export const getMyClubListApi = async (): Promise<ReadingClub[]> => {
 /** 공개 모임을 검색한다. @author Hanwon.Jang @param keyword 모임 검색어 @return 공개 모임 목록 */
 export const getFindClubListApi = async (keyword: string): Promise<ReadingClub[]> => {
   // 검색어를 Query Parameter로 전달한다
-  const response = await api.get("/reading-clubs", { params: { keyword } });
+  const response = await api.get("/reading-clubs", {params: {keyword}});
   // 공통 성공 검증을 통과한 목록을 반환한다
   return (assertResultDataSuccess(response.data).data as ReadingClub[] | undefined) ?? [];
 };
@@ -390,7 +390,7 @@ export const getClubReadingHistoryApi = async (
   // 가입일 조건 없이 현재 모임의 종료 회차 페이지를 요청한다
   const response = await api.get<ResultData<PageData<ClubReadingHistory>>>(
     `/reading-clubs/${clubNumb}/readings`,
-    { params: { page } },
+    {params: {page}},
   );
   // 서버가 확인한 이전 독서 기록 페이지를 반환한다
   return assertResultDataSuccess(response.data).data ?? {
@@ -420,7 +420,7 @@ export const getClubReadingRoundReportsApi = async (
   // 현재 활성 모임원 권한으로 대상 완료 회차의 DONE 독후감 페이지를 요청한다
   const response = await api.get<ResultData<ClubReadingRoundReportPage>>(
     `/reading-clubs/${clubNumb}/readings/${rondNumb}/reports`,
-    { params: { sortType, page } },
+    {params: {sortType, page}},
   );
   // 공개 여부와 무관하게 조회된 완료 독후감 페이지 응답을 반환한다
   return assertResultDataSuccess(response.data);
@@ -437,7 +437,7 @@ export const createClubApi = async (params: ClubCreateParams): Promise<ReadingCl
 /** 공개 모임에 가입하거나 승인 신청한다. @author Hanwon.Jang @param clubNumb 모임 번호 @param answerList 승인 질문 답변 @return 처리 후 모임 상세 */
 export const joinClubApi = async (clubNumb: number, answerList: string[]): Promise<ReadingClub> => {
   // 모임 가입 정책에 맞춘 요청을 전달한다
-  const response = await api.post(`/reading-clubs/${clubNumb}/memberships`, { answerList });
+  const response = await api.post(`/reading-clubs/${clubNumb}/memberships`, {answerList});
   // 처리 후 모임 상세를 반환한다
   return assertResultDataSuccess(response.data).data as ReadingClub;
 };
@@ -485,7 +485,7 @@ export const getSentClubInvitationListApi = async (clubNumb: number): Promise<Se
 /** 선택한 맞팔 사용자에게 모임 초대를 발송한다. @author Hanwon.Jang @param clubNumb 모임 번호 @param userNumbList 초대 대상 사용자 번호 @return 처리 응답 */
 export const inviteClubUsersApi = async (clubNumb: number, userNumbList: number[]) => {
   // 좌석 예약을 포함한 초대 요청을 전달한다
-  const response = await api.post(`/reading-clubs/${clubNumb}/invitations`, { userNumbList });
+  const response = await api.post(`/reading-clubs/${clubNumb}/invitations`, {userNumbList});
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
@@ -571,7 +571,7 @@ export const decideClubApplicationApi = async (
   joinStat: "APPROVED" | "REJECTED",
 ) => {
   // 처리 상태를 모임장 승인 API에 전달한다
-  const response = await api.put(`/reading-clubs/${clubNumb}/applications/${applNumb}`, { joinStat });
+  const response = await api.put(`/reading-clubs/${clubNumb}/applications/${applNumb}`, {joinStat});
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };

@@ -442,7 +442,7 @@ export default function ClubDetailPage() {
       ) : null}
 
       {isActiveMember && hasCurrentReading ? createPortal(
-        <div className={styles.fixedActionArea}>
+        <div className={styles.ActionButtonArea}>
           {/* "내 독후감 쓰기" */}
           <ActionButton size="lg" width="full" onClick={handleReportWrite}>
             {club.currentReportStat === 'DONE'

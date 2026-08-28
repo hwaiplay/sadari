@@ -531,12 +531,7 @@ export const empty = style({
   textAlign: "center",
 });
 
-export const fixedActionArea = style({
-  position: "fixed",
-  zIndex: 900,
-  right: 16,
-  bottom: 80,
-  left: 16,
+export const ActionButtonArea = style({
   width: "calc(100% - 32px)",
   maxWidth: 568,
   margin: "0 auto",

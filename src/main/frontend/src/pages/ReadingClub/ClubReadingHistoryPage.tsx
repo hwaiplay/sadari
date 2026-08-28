@@ -8,16 +8,13 @@ import {
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
 import type { ClubReadingHistory } from "@/features/ReadingClub/api/readingClubApi";
-import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
 import { useReadingHistoryPage } from "@/features/ReadingClub/hooks/useReadingHistoryPage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { clsx } from "clsx";
-import { createPortal } from "react-dom";
 import * as styles from "./ClubReadingHistoryPage.css";
 
 type ReadingHistoryCardProps = {
   history: ClubReadingHistory;
-  isLoading: boolean;
   onSelect: (rondNumb: number) => void;
 };
 
@@ -48,7 +45,6 @@ const formatReadingPeriod = (goalStdt: string, goalEndt: string): string => {
  */
 const ReadingHistoryCard = ({
   history,
-  isLoading,
   onSelect,
 }: ReadingHistoryCardProps) => {
   // 비정상 집계에서도 진행 막대에 사용할 유효한 달성률을 유지한다
@@ -74,8 +70,6 @@ const ReadingHistoryCard = ({
       <button
         className={clsx(styles.historyCard, styles.compactCard)}
         type="button"
-        aria-busy={isLoading}
-        disabled={isLoading}
         onClick={handleSelect}
       >
         <img
@@ -131,9 +125,6 @@ const ClubReadingHistoryPage = () => {
     historyList,
     historyQuery,
     isValidRoute,
-    readingGoalResultQuery,
-    selectedRondNumb,
-    handleCloseResult,
     handleLoadMore,
     handleSelectReading,
   } = useReadingHistoryPage();
@@ -151,8 +142,6 @@ const ClubReadingHistoryPage = () => {
       <ReadingHistoryCard
         key={history.rondNumb}
         history={history}
-        isLoading={readingGoalResultQuery.isFetching
-          && selectedRondNumb === history.rondNumb}
         onSelect={handleSelectReading}
       />
     );
@@ -204,11 +193,6 @@ const ClubReadingHistoryPage = () => {
       <ul className={styles.historyList}>
         {historyList.map(renderReadingHistory)}
       </ul>
-      {readingGoalResultQuery.isError ? (
-        <p className={styles.resultError} role="alert">
-          {getApiErrorMessage(readingGoalResultQuery.error, message("frontend.common.tryAgain"))}
-        </p>
-      ) : null}
       <InfiniteScrollTrigger
         hasNext={Boolean(historyQuery.hasNextPage)}
         isLoading={historyQuery.isFetchingNextPage}
@@ -218,14 +202,6 @@ const ClubReadingHistoryPage = () => {
           {message("frontend.readingClub.history.loading")}
         </p>
       </InfiniteScrollTrigger>
-      {readingGoalResultQuery.data ? createPortal(
-        <ReadingGoalResultOverlay
-          key={readingGoalResultQuery.data.rondNumb}
-          result={readingGoalResultQuery.data}
-          onClose={handleCloseResult}
-        />,
-        document.body,
-      ) : null}
     </section>
   );
 };

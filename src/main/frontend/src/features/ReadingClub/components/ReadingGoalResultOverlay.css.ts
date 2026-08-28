@@ -14,6 +14,12 @@ export const overlay = style({
   pointerEvents: "none",
 });
 
+export const page = style({
+  width: "100%",
+  display: "flex",
+  justifyContent: "center",
+});
+
 export const backgroundOverlay = style({
   position: "fixed",
   zIndex: 1200,
@@ -28,13 +34,13 @@ export const surface = style({
   width: "100%",
   maxWidth: 600,
   maxHeight: "calc(100dvh - 32px)",
-  padding: "30px 20px",
+  padding: "20px 0px",
   borderRadius: 22,
   backgroundColor: vars.color.background,
   boxSizing: "border-box",
   display: "flex",
   flexDirection: "column",
-  gap: 34,
+  gap: 30,
   overflowX: "hidden",
   overflowY: "auto",
   scrollbarWidth: "none",
@@ -68,6 +74,16 @@ export const successionSurface = style([
   surface,
   {
     minHeight: "min(720px, calc(100dvh - 32px))",
+  },
+]);
+
+export const pageSurface = style([
+  surface,
+  {
+    maxHeight: "none",
+    borderRadius: 0,
+    overflow: "visible",
+    pointerEvents: "auto",
   },
 ]);
 
@@ -372,6 +388,7 @@ export const resultNavigation = style({
   display: "flex",
   flexDirection: "column",
   gap: 7,
+  padding: "0 16px"
 });
 
 export const navigationRow = style({

@@ -164,15 +164,6 @@ export const loadingMore = style({
   textAlign: "center",
 });
 
-export const resultError = style({
-  margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: 12,
-  lineHeight: 1.5,
-  textAlign: "center",
-});
-
 export const invalidAccess = style({
   padding: "72px 0",
   color: vars.color.gray600,
