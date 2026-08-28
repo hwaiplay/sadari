@@ -246,15 +246,9 @@ const Router = () => {
           {/* 멤버 퇴장 및 제한 내역 */}
           <Route path="/reading-clubs/manage/member-restrictions/:clubNumb" element={<ClubMemberRestrictionPage />} />
           {/* 이전 독서 기록 */}
-          <Route
-            path="/reading-clubs/history/:clubNumb"
-            element={<ClubReadingHistoryPage />}
-          />
-          {/* 독서 회차 결과 */}
-          <Route
-            path="/reading-clubs/history/:clubNumb/:rondNumb/reports"
-            element={<ClubRoundReportPage />}
-          />
+          <Route path="/reading-clubs/history/:clubNumb" element={<ClubReadingHistoryPage />} />
+          {/* 모임원 독후감 목록 */}
+          <Route path="/reading-clubs/history/:clubNumb/:rondNumb/reports" element={<ClubRoundReportPage />} />
 
           {/* 사용자 콘텐츠 신고 사유 선택 */}
           <Route path="/user-report" element={<UserReportPage />} />

@@ -12,7 +12,6 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./ReadingGoalResultOverlay.css";
 import {ActionButton} from "@/components/Button/ActionButton.tsx";
 
-
 /**
  * fileName       : ReadingGoalResultOverlay
  * author         : Hanwon.Jang
@@ -23,7 +22,6 @@ import {ActionButton} from "@/components/Button/ActionButton.tsx";
  * -----------------------------------------------------------
  * 2026-08-27        Hanwon.Jang    주석 추가
  */
-
 
 const ACHIEVEMENT_PROFILE_VISIBLE_LIMIT = 7;
 
@@ -106,7 +104,7 @@ export default function ReadingGoalResultOverlay({
    */
   const openReadingRoundReports = ()=> {
     // 목록의 첫 렌더링부터 도서 요약을 표시할 수 있도록 팝업의 도서 정보를 함께 전달한다
-    navigate(`/reading-clubs/${result.clubNumb}/readings/${result.rondNumb}/reports`, {
+    navigate(`/reading-clubs/history/${result.clubNumb}/${result.rondNumb}/reports`, {
       state: {
         title: result.bookTitl,
         author: result.bookAthr,
