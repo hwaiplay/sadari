@@ -40,8 +40,9 @@ export const header = style({
   display: "flex",
   alignItems: "center",
   justifyContent: "space-between",
-  minHeight: "70px",
-  padding: "max(18px, env(safe-area-inset-top)) 24px 8px",
+  height: vars.headerHeight,
+  padding: "0 24px",
+  transform: "translateY(15px)",
 });
 
 export const logo = style({
@@ -63,45 +64,91 @@ export const viewport = style({
 });
 
 export const track = style({
-  display: "flex",
-  width: "500%",
+  position: "relative",
+  width: "100%",
   height: "100%",
-  transition: "transform 460ms cubic-bezier(0.22, 1, 0.36, 1)",
-  willChange: "transform",
+});
+
+export const slide = style({
+  position: "absolute",
+  inset: 0,
+  display: "grid",
+  gridTemplateRows: "auto minmax(240px, 1fr)",
+  alignItems: "center",
+  width: "100%",
+  minWidth: 0,
+  height: "100%",
+  padding: "22px 30px 14px",
+  overflowY: "auto",
+  opacity: 0,
+  visibility: "hidden",
+  pointerEvents: "none",
+  transition: "opacity 220ms ease, visibility 0s linear 220ms",
+  willChange: "opacity",
   "@media": {
+    "(max-height: 720px)": {
+      gridTemplateRows: "auto minmax(205px, 1fr)",
+      paddingTop: "8px",
+    },
     "(prefers-reduced-motion: reduce)": {
       transitionDuration: "1ms",
     },
   },
 });
 
-export const slide = style({
-  display: "grid",
-  gridTemplateRows: "auto minmax(240px, 1fr)",
-  alignItems: "center",
-  width: "20%",
-  minWidth: 0,
-  height: "100%",
-  padding: "22px 30px 14px",
-  overflowY: "auto",
-  selectors: {
-    '&[aria-hidden="true"]': {
-      visibility: "hidden",
-      transition: "visibility 0s linear 460ms",
-    },
-  },
-  "@media": {
-    "(max-height: 720px)": {
-      gridTemplateRows: "auto minmax(205px, 1fr)",
-      paddingTop: "8px",
-    },
-  },
+export const slideActive = style({
+  opacity: 1,
+  visibility: "visible",
+  pointerEvents: "auto",
+  transition: "opacity 220ms ease, visibility 0s linear 0s",
 });
+
+export const introSlide = style([
+  slide,
+  {
+    gridTemplateRows: "1fr",
+    placeItems: "center",
+  },
+]);
+
+export const introCopy = style({
+  width: "100%",
+  textAlign: "center",
+});
+
+export const managedSlide = style([
+  slide,
+  {
+    gridTemplateRows: "auto minmax(0, 1fr)",
+    overflowY: "hidden",
+    "@media": {
+      "(max-height: 720px)": {
+        gridTemplateRows: "auto minmax(0, 1fr)",
+      },
+    },
+  },
+]);
+
+export const interestSlide = style([
+  slide,
+  {
+    gridTemplateRows: "auto minmax(0, 1fr)",
+    alignItems: "start",
+    paddingBottom: 0,
+    overflowY: "hidden",
+    "@media": {
+      "(max-height: 720px)": {
+        gridTemplateRows: "auto minmax(0, 1fr)",
+      },
+    },
+  },
+]);
 
 export const copy = style({
   position: "relative",
   zIndex: 2,
   maxWidth: "430px",
+  transform: "translateY(5px)",
 });
 
 export const eyebrow = style({
@@ -122,6 +169,25 @@ export const title = style({
   wordBreak: "keep-all",
 });
 
+export const introTitle = style({
+  fontSize: "42px",
+  whiteSpace: "nowrap",
+  "@media": {
+    "screen and (max-width: 520px)": {
+      fontSize: "32px",
+    },
+    "screen and (max-width: 380px)": {
+      fontSize: "28px",
+    },
+    "screen and (max-width: 340px)": {
+      fontSize: "24px",
+    },
+    "screen and (max-width: 300px)": {
+      fontSize: "20px",
+    },
+  },
+});
+
 export const description = style({
   maxWidth: "420px",
   marginTop: "18px",
@@ -129,6 +195,51 @@ export const description = style({
   fontSize: "15px",
   lineHeight: 1.7,
   wordBreak: "keep-all",
+});
+
+export const introDescription = style({
+  maxWidth: "none",
+  fontSize: "16px",
+  letterSpacing: "-0.04em",
+  whiteSpace: "nowrap",
+  "@media": {
+    "screen and (max-width: 520px)": {
+      fontSize: "14px",
+    },
+    "screen and (max-width: 380px)": {
+      fontSize: "12px",
+    },
+    "screen and (max-width: 340px)": {
+      fontSize: "10px",
+    },
+  },
+});
+
+export const managedImageWrap = style({
+  display: "grid",
+  placeItems: "center",
+  alignSelf: "stretch",
+  width: "100%",
+  height: "100%",
+  minHeight: 0,
+  margin: "16px auto 0",
+  overflow: "hidden",
+});
+
+export const managedImage = style({
+  display: "block",
+  width: "100%",
+  height: "100%",
+  maxWidth: "430px",
+  maxHeight: "100%",
+  borderRadius: vars.radius.md,
+  objectFit: "contain",
+});
+
+export const managedImageEmpty = style({
+  display: "block",
+  width: "100%",
+  height: "100%",
 });
 
 export const coverVisual = style({
@@ -470,33 +581,43 @@ export const notificationDot = style({
 });
 
 export const nicknameCard = style({
-  alignSelf: "center",
-  width: "min(100%, 420px)",
-  margin: "26px auto 18px",
-  padding: "24px",
-  border: "1px solid rgba(70, 63, 56, 0.12)",
-  borderRadius: "24px",
-  background: "rgba(255, 255, 255, 0.82)",
-  boxShadow: "0 24px 60px rgba(86, 72, 61, 0.12)",
-  backdropFilter: "blur(14px)",
+  alignSelf: "start",
+  width: "calc(100% + 28px)",
+  margin: "26px -14px 18px",
 });
 
 export const interestCard = style({
-  alignSelf: "start",
-  width: "100%",
-  margin: "18px 0 12px",
-  padding: "24px",
+  alignSelf: "stretch",
+  width: "calc(100% + 28px)",
+  minHeight: 0,
+  margin: "18px -14px 0",
+  padding: "24px 24px 72px",
+  overflowY: "auto",
+  overscrollBehavior: "contain",
+  scrollPaddingBottom: "72px",
   border: "1px solid rgba(70, 63, 56, 0.12)",
   borderRadius: "24px",
   background: "rgba(255, 255, 255, 0.82)",
   boxShadow: "0 24px 60px rgba(86, 72, 61, 0.12)",
   backdropFilter: "blur(14px)",
+  WebkitMaskImage: "linear-gradient(to bottom, #000 0, #000 calc(100% - 64px), transparent 100%)",
+  maskImage: "linear-gradient(to bottom, #000 0, #000 calc(100% - 64px), transparent 100%)",
   boxSizing: "border-box",
   "@media": {
     "screen and (max-width: 420px)": {
-      padding: "20px 16px",
+      padding: "20px 16px 72px",
     },
   },
+});
+
+export const interestCardScrolled = style({
+  WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 48px, #000 calc(100% - 64px), transparent 100%)",
+  maskImage: "linear-gradient(to bottom, transparent 0, #000 48px, #000 calc(100% - 64px), transparent 100%)",
+});
+
+export const interestCardBottom = style({
+  WebkitMaskImage: "linear-gradient(to bottom, transparent 0, #000 48px, #000 100%)",
+  maskImage: "linear-gradient(to bottom, transparent 0, #000 48px, #000 100%)",
 });
 
 export const interestGroups = style({
@@ -569,6 +690,7 @@ export const interestButtonSelected = style([
 export const nicknameLabel = style({
   display: "block",
   marginBottom: "10px",
+  paddingLeft: "8px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: "14px",
@@ -613,6 +735,7 @@ export const nickLength = style({
 
 export const nicknameHint = style({
   marginTop: "10px",
+  paddingLeft: "8px",
   color: "#7a736b",
   fontSize: "11px",
   lineHeight: 1.5,
@@ -684,8 +807,19 @@ export const previousButton = style([navigationButton]);
 export const nextButton = style([
   navigationButton,
   {
-    borderColor: "#5e6876",
-    color: "#343c47",
-    background: "#ffffff",
+    borderColor: vars.color.gray900,
+    color: "#ffffff",
+    background: vars.color.gray900,
+    selectors: {
+      "&:hover:not(:disabled)": {
+        background: vars.color.darkGray,
+      },
+      "&:disabled": {
+        borderColor: vars.color.gray900,
+        color: "#ffffff",
+        background: vars.color.gray900,
+        opacity: 1,
+      },
+    },
   },
 ]);
