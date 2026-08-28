@@ -1,4 +1,4 @@
-import { style } from "@vanilla-extract/css";
+import { globalStyle, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
 // 피드 페이지의 공통 너비와 상하 여백을 정의한다
@@ -14,6 +14,13 @@ export const page = style({
 export const userSearchBar = style({
   width: "calc(100% + 32px)",
   marginLeft: "-16px",
+});
+
+// 피드 검색어 지우기 버튼을 검색 아이콘과 분리하고 기본 크기보다 조금 크게 표시한다
+globalStyle(`${userSearchBar} input[type="search"]::-webkit-search-cancel-button`, {
+  marginRight: "6px",
+  transform: "scale(1.2)",
+  cursor: "pointer",
 });
 
 // 활성 사용자 검색의 로딩과 목록 및 추가 조회 영역을 세로로 배치한다
