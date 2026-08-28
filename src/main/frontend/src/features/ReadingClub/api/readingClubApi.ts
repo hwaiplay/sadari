@@ -27,7 +27,7 @@ export type ClubBookRecommendation = {
 export type ClubBookVotePage = {
   candidateList: ClubBookRecommendation[];
   voteDeadline?: string;
-  dday?: number;
+  dDay?: number;
   canRecommend: boolean;
   hasRecommended: boolean;
   hasVoted: boolean;
@@ -67,7 +67,7 @@ export const deleteClubBookRecommApi = async (clubNumb: number, recmNumb: number
 
 export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) => {
   // 현재 주기에 한 번만 등록되는 다음 도서 투표를 요청한다
-  const response = await api.put(`/reading-clubs/${clubNumb}/book-vote`, { recmNumb });
+  const response = await api.put(`/reading-clubs/vote/book/${clubNumb}`, { recmNumb });
   // 공통 성공 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
