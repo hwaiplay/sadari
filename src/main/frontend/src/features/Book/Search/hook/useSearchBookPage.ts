@@ -761,6 +761,13 @@ export function useSearchBookPage() {
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
         ? `/reading-clubs/update/book/${clubNumb}/${editRondNumb}`
         : `/reading-clubs/set/book/${clubNumb}`;
+
+      // 모임 독서 수정용 도서 선택은 검색 목록 이력을 내 모임 이력으로 교체한다.
+      if (Number.isSafeInteger(editRondNumb) && editRondNumb > 0) {
+        // 수정 완료 후 뒤로가기에서 내 모임 화면을 표시한다.
+        navigate("/reading-clubs/mine", { replace: true });
+      }
+
       // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달한다.
       navigate(
         `${readingEntryPath}?isbn=${encodeURIComponent(book.isbn)}`,
