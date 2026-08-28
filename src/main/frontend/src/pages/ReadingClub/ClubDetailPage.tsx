@@ -144,7 +144,7 @@ export default function ClubDetailPage() {
 
   const handleNextBookVote = () => {
 
-    navigate(`/reading-clubs/${club.clubNumb}/book-vote`);
+    navigate(`/reading-clubs/vote/book/${club.clubNumb}`);
   };
 
   return (
@@ -426,7 +426,7 @@ export default function ClubDetailPage() {
         document.body,
       ) : null}
 
-      {isActiveMember ? createPortal(
+      {isActiveMember && hasCurrentReading ? createPortal(
         <div className={styles.fixedActionArea}>
           {/* "내 독후감 쓰기" */}
           <ActionButton size="lg" width="full" onClick={handleReportWrite}>
