@@ -986,6 +986,7 @@ function DetailPage() {
             grade={grade}
             pubcYsno={pubcYsno}
             startDate={startDate}
+            startDateLocked={bookData.reptStdtLocked === true}
             endDate={endDate}
             periodTitle={periodTitle}
             onStatusChange={handleStatusChange}
