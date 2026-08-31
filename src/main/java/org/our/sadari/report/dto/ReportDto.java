@@ -23,6 +23,7 @@ import org.our.sadari.book.dto.BookDto;
  * 2026-08-15        SeungHyeon.Kang    공개 목록 조회 조건 추가
  * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 순서 정비
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 응답 추가
+ * 2026-08-31        HanWon.Jang        모임 독서 기간 중 시작일 수정 잠금 응답 추가
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -46,6 +47,9 @@ public class ReportDto extends BookDto {
     @NotBlank
     @Pattern(regexp = "\\d{4}-\\d{2}-\\d{2}")
     private String reptStdt;
+
+    @Schema(description = "모임 독서 기간 중 독서 시작일 수정 잠금 여부", example = "true")
+    private Boolean reptStdtLocked;
 
     @Schema(description = "독서 종료일", example = "2026-07-23")
     @NotBlank

@@ -102,6 +102,8 @@ export interface ReportDtoType {
   reptStatName?: string;
   // 독서 시작일
   reptStdt: string;
+  // 진행 중인 모임 독서에 연결되어 독서 시작일을 수정할 수 없는지 여부
+  reptStdtLocked?: boolean;
   // 독서 종료일
   reptEndt: string;
   // 별점

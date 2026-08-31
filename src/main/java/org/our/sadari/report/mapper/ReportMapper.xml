@@ -300,6 +300,7 @@
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        <bind name="roundReading" value="'READING'" />
         SELECT /* getReportDtl */
                A.REPT_NUMB
              , A.USER_NUMB
@@ -307,6 +308,18 @@
              , A.REPT_STAT
              , FN_GET_CODE_NAME(#{codeReadStat}, A.REPT_STAT, NULL) AS REPT_STAT_NAME
              , A.REPT_STDT
+             , CASE WHEN EXISTS ( SELECT 1
+                                    FROM TB_CLPART PART
+                              INNER JOIN TM_CLRNDX ROUNDX
+                                      ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+                                     AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+                                   WHERE PART.REPT_NUMB = A.REPT_NUMB
+                                     AND ROUNDX.ROND_STAT = #{roundReading}
+                                     AND CURRENT_DATE BETWEEN DATE(ROUNDX.GOAL_STDT) AND DATE(ROUNDX.GOAL_ENDT)
+                                )
+                    THEN TRUE
+                    ELSE FALSE
+                END AS REPT_STDT_LOCKED
              , A.REPT_ENDT
              , A.REPT_GRDE
              , A.REPT_COLR
@@ -618,10 +631,22 @@
 
     <!-- 기존 독후감을 수정한다. -->
     <update id="uptReport" parameterType="org.our.sadari.report.dto.ReportDto">
+        <bind name="roundReading" value="'READING'" />
         UPDATE /* uptReport */
                TM_REPORT
            SET REPT_STAT = #{reptStat}
-             , REPT_STDT = #{reptStdt}
+             , REPT_STDT = CASE WHEN EXISTS ( SELECT 1
+                                                   FROM TB_CLPART PART
+                                             INNER JOIN TM_CLRNDX ROUNDX
+                                                     ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+                                                    AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+                                                  WHERE PART.REPT_NUMB = TM_REPORT.REPT_NUMB
+                                                    AND ROUNDX.ROND_STAT = #{roundReading}
+                                                    AND CURRENT_DATE BETWEEN DATE(ROUNDX.GOAL_STDT) AND DATE(ROUNDX.GOAL_ENDT)
+                                               )
+                                    THEN REPT_STDT
+                                    ELSE #{reptStdt}
+                                END
              , REPT_ENDT = #{reptEndt}
              , REPT_GRDE = #{reptGrde}
              , REPT_COLR = #{reptColr}

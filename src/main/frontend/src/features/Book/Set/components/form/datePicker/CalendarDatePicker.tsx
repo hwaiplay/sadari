@@ -2,6 +2,7 @@ import { message } from "@/app/messages/message";
 import { formatDateValue, parseDateValue } from "@/app/utils/dateUtil";
 import { useEffect, useMemo, useRef, useState } from "react";
 import * as styles from "./CalendarDatePicker.css";
+import { getLockedDateRange } from "./lockedDateRange";
 
 type MonthMoveDirection = "prev" | "next";
 
@@ -18,6 +19,7 @@ type CalendarDatePickerProps = {
   onBeforeChange?: (value: string) => boolean;
   endName?: string;
   endValue?: string;
+  startDateLocked?: boolean;
   endPlaceholder?: string;
   onRangeChange?: (startValue: string, endValue: string) => void;
   allowFuture?: boolean;
@@ -46,7 +48,7 @@ const WEEK_DAY_KEYS = [
  * @param inline 달력을 입력 영역 안에 바로 표시할지 여부
  * @return 달력 날짜 선택 컴포넌트
  */
-function CalendarDatePicker({
+const CalendarDatePicker = ({
   name,
   label,
   value,
@@ -56,11 +58,12 @@ function CalendarDatePicker({
   onBeforeChange,
   endName,
   endValue = "",
+  startDateLocked = false,
   endPlaceholder = message("frontend.report.placeholder.endDate"),
   onRangeChange,
   allowFuture = true,
   inline = false,
-}: CalendarDatePickerProps) {
+}: CalendarDatePickerProps) => {
 
   const wrapperRef = useRef<HTMLDivElement | null>(null);
   const [isOpen, setIsOpen] = useState(false);
@@ -173,6 +176,18 @@ function CalendarDatePicker({
     const nextDate = formatDateValue(new Date(viewYear, viewMonth, day));
 
     if (isRangePicker) {
+      // 진행 중인 모임 독서의 시작일은 유지하고 종료일만 변경한다
+      if (startDateLocked && currentDateValue) {
+        const lockedDateRange = getLockedDateRange(currentDateValue, nextDate);
+
+        if (!lockedDateRange) {
+          return;
+        }
+
+        onRangeChange?.(...lockedDateRange);
+        return;
+      }
+
       if (!currentDateValue || currentEndDateValue) {
         setSelectedDate(nextDate);
         onChange?.(nextDate);
@@ -312,7 +327,12 @@ function CalendarDatePicker({
 
               const dateValue = formatDateValue(new Date(viewYear, viewMonth, day));
               // 미래 선택이 허용되지 않은 화면에서는 오늘 이후 날짜를 비활성화한다
-              const isDateDisabled = !allowFuture && dateValue > todayValue;
+              const isDateDisabled =
+                (!allowFuture && dateValue > todayValue) ||
+                (isRangePicker &&
+                  startDateLocked &&
+                  Boolean(currentDateValue) &&
+                  dateValue < currentDateValue);
               const isRangeStart = isRangePicker && dateValue === currentDateValue;
               const isRangeEnd = isRangePicker && dateValue === currentEndDateValue;
               const isRangeSameDay = isRangeStart && isRangeEnd;
@@ -380,6 +400,6 @@ function CalendarDatePicker({
       ) : null}
     </div>
   );
-}
+};
 
 export default CalendarDatePicker;

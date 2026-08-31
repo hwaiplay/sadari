@@ -31,6 +31,7 @@ type ReportStatsEditorProps = {
   grade: number;
   pubcYsno: "Y" | "N";
   startDate: string;
+  startDateLocked?: boolean;
   endDate: string;
   periodTitle: string;
   onStatusChange: (status: ReadingStatusType) => void | Promise<void>;
@@ -136,13 +137,14 @@ function getStatusValueClassName(status: ReadingStatusType) {
  * @param props 독후감 행별 입력값과 변경 콜백
  * @return 독후감 세로 행 요약과 단계형 편집 모달
  */
-function ReportStatsEditor({
+const ReportStatsEditor = ({
   statusCodes,
   status,
   statusFallbackLabel,
   grade,
   pubcYsno,
   startDate,
+  startDateLocked = false,
   endDate,
   periodTitle,
   onStatusChange,
@@ -151,7 +153,7 @@ function ReportStatsEditor({
   onRangeChange,
   onEditStart,
   periodOnly = false,
-}: ReportStatsEditorProps) {
+}: ReportStatsEditorProps) => {
 
   const [activeStep, setActiveStep] = useState<number | null>(null);
   const [stepTransitionDirection, setStepTransitionDirection] =
@@ -617,6 +619,7 @@ function ReportStatsEditor({
                         name="modalStartDate"
                         endName="modalEndDate"
                         value={startDate}
+                        startDateLocked={startDateLocked}
                         endValue={endDate}
                         placeholder={
                           /* "목표 시작일" */
@@ -683,6 +686,6 @@ function ReportStatsEditor({
         : null}
     </>
   );
-}
+};
 
 export default ReportStatsEditor;
