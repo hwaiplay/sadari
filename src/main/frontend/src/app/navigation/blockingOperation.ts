@@ -20,7 +20,11 @@ type NavigationGuardEntry = "base" | "sentinel";
 type NavigationGuardMarker = {
   id: string;
   entry: NavigationGuardEntry;
-  isHistoryIndexAdjusted: boolean;
+};
+
+type NavigationGuardCleanup = {
+  id: string;
+  resolve: () => void;
 };
 
 const NAVIGATION_GUARD_STATE_KEY = "sadariBlockingOperation";
@@ -34,6 +38,8 @@ let activeNavigationGuardId: string | null = null;
 let isNavigationGuardActive = false;
 let isPopStateListenerRegistered = false;
 let lastObservedNavigationGuardMarker: NavigationGuardMarker | null = null;
+let pendingNavigationGuardCleanup: NavigationGuardCleanup | null = null;
+let isHomeHistoryResetPending = false;
 
 /**
  * 현재 History State를 보존하면서 이동 차단 표식을 추가할 객체로 변환한다
@@ -77,7 +83,6 @@ function getNavigationGuardMarker(state: unknown): NavigationGuardMarker | null 
   const markerRecord = marker as Record<string, unknown>;
   const markerId = markerRecord.id;
   const markerEntry = markerRecord.entry;
-  const isHistoryIndexAdjusted = markerRecord.isHistoryIndexAdjusted === true;
 
   // 식별자와 History 항목 구분값이 모두 유효할 때만 이동 차단 표식으로 인정한다
   if (typeof markerId !== "string"
@@ -90,7 +95,6 @@ function getNavigationGuardMarker(state: unknown): NavigationGuardMarker | null 
   return {
     id: markerId,
     entry: markerEntry,
-    isHistoryIndexAdjusted,
   };
 }
 
@@ -120,7 +124,6 @@ function replaceNavGuardBase(guardId: string): void {
     [NAVIGATION_GUARD_STATE_KEY]: {
       id: guardId,
       entry: "base" satisfies NavigationGuardEntry,
-      isHistoryIndexAdjusted: false,
     },
   };
 
@@ -143,7 +146,6 @@ function pushNavGuardSentinel(guardId: string): void {
     [NAVIGATION_GUARD_STATE_KEY]: {
       id: guardId,
       entry: "sentinel" satisfies NavigationGuardEntry,
-      isHistoryIndexAdjusted: false,
     },
   };
 
@@ -154,42 +156,33 @@ function pushNavGuardSentinel(guardId: string): void {
 }
 
 /**
- * 완료된 이동 차단 항목을 React Router의 정상 이력 인덱스로 승격한다
+ * 현재 History State에서 이동 차단 표식만 제거한다
+ *
+ * @author SeungHyeon.Kang
+ * @param state 정리할 History State
+ * @return React Router와 다른 가드 상태를 유지한 History State
+ */
+const removeNavGuardMarker = (state: Record<string, unknown>): Record<string, unknown> => {
+
+  const cleanedState = { ...state };
+  // 저장 가드만 제거해 홈 종료 가드와 React Router 인덱스는 원래 값으로 유지한다
+  delete cleanedState[NAVIGATION_GUARD_STATE_KEY];
+  // 임시 저장 가드가 제거된 History State를 반환한다
+  return cleanedState;
+};
+
+/**
+ * 홈 루트 정리가 저장 가드의 기준 항목에 도착해도 앱 외부로 추가 이동하지 않게 표시한다
  *
  * @author SeungHyeon.Kang
  * @return 반환값이 없다
  */
-function adjustReleasedGuardIndex(): void {
+export const beginHomeHistoryReset = (): void => {
 
-  // 현재 History 깊이와 React Router 인덱스를 비교할 상태를 조회한다
-  const historyState = getHistoryState();
-  // 현재 항목이 이동 차단 과정에서 만든 내부 항목인지 확인한다
-  const currentMarker = getNavigationGuardMarker(historyState);
-  const currentHistoryIndex = historyState.idx;
-
-  // 현재 항목이 미보정 차단 항목이 아니면 React Router 인덱스를 변경하지 않는다
-  if (currentMarker?.entry !== "sentinel"
-          || currentMarker.isHistoryIndexAdjusted
-          || typeof currentHistoryIndex !== "number") {
-    // 일반 화면과 이미 보정된 PWA 세션의 History 상태를 유지한다
-    return;
-  }
-
-  const adjustedState = {
-    ...historyState,
-    idx: currentHistoryIndex + 1,
-    [NAVIGATION_GUARD_STATE_KEY]: {
-      id: currentMarker.id,
-      entry: currentMarker.entry,
-      isHistoryIndexAdjusted: true,
-    },
-  };
-
-  // 동일 URL 차단 항목을 실제 History 깊이와 일치하는 Router 인덱스로 교체한다
-  window.history.replaceState(adjustedState, "", window.location.href);
-  // 이후 뒤로가기에서 차단 기준 항목을 한 번에 건너뛸 수 있도록 관찰값을 갱신한다
-  lastObservedNavigationGuardMarker = getNavigationGuardMarker(adjustedState);
-}
+  // 이전 버전이 남긴 최상단 가드에서 홈 루트로 이동할 때만 자동 건너뛰기를 일회 중단한다
+  isHomeHistoryResetPending = !isNavigationGuardActive
+    && lastObservedNavigationGuardMarker?.entry === "sentinel";
+};
 
 /**
  * 처리 중 새로고침과 창 닫기를 브라우저가 지원하는 기본 확인 절차로 차단한다
@@ -218,6 +211,34 @@ function handlePopState(event: PopStateEvent): void {
 
   // 이후 History 이동 방향을 비교할 수 있도록 이동 대상의 표식을 관찰값으로 기록한다
   lastObservedNavigationGuardMarker = currentMarker;
+
+  // 저장 완료 정리로 기준 항목에 도착하면 현재 항목의 임시 표식만 제거하고 작업을 완료한다
+  if (pendingNavigationGuardCleanup !== null) {
+    const pendingCleanup = pendingNavigationGuardCleanup;
+    pendingNavigationGuardCleanup = null;
+
+    // 예상한 기준 항목이면 Router 인덱스와 PWA 종료 가드를 유지한 채 저장 표식만 제거한다
+    if (currentMarker?.id === pendingCleanup.id && currentMarker.entry === "base") {
+      const cleanedState = removeNavGuardMarker(getHistoryState());
+      window.history.replaceState(cleanedState, "", window.location.href);
+    }
+
+    // 정리 POP이 일반 사용자 뒤로가기로 이어지지 않도록 관찰 상태를 초기화한다
+    lastObservedNavigationGuardMarker = null;
+    pendingCleanup.resolve();
+    // 같은 POP을 완료된 가드의 추가 뒤로가기로 처리하지 않고 종료한다
+    return;
+  }
+
+  // 홈 루트 정리가 이전 버전의 가드 기준 항목에 도착하면 외부 이력으로 추가 이동하지 않는다
+  if (isHomeHistoryResetPending && !isNavigationGuardActive) {
+    isHomeHistoryResetPending = false;
+    // 홈 Provider가 도착한 앱 루트 항목을 홈으로 교체하도록 현재 POP 처리를 종료한다
+    return;
+  }
+
+  // 저장이 다시 시작된 경우에는 홈 정리 표시를 폐기하고 활성 저장 가드를 우선한다
+  isHomeHistoryResetPending = false;
 
   // 상태 변경 작업 중 차단 쌍의 기준 항목으로 돌아오면 같은 URL의 차단 항목을 즉시 복원한다
   if (isNavigationGuardActive && activeNavigationGuardId !== null
@@ -303,25 +324,45 @@ function activateNavigationGuard(): void {
 }
 
 /**
- * 상태 변경 완료 후 History 위치를 이동하지 않고 현재 화면의 이동 차단 상태만 해제한다
+ * 상태 변경 완료 후 동일 URL의 임시 History 항목을 제거하고 이동 차단 상태를 해제한다
  *
  * @author SeungHyeon.Kang
  * @return 반환값이 없다
  */
-function deactivateNavigationGuard(): void {
+async function deactivateNavigationGuard(): Promise<void> {
   // 활성화된 이동 가드가 없으면 브라우저 상태를 변경하지 않는다
   if (!isNavigationGuardActive) {
-    // 저장 완료 후 중복 해제 요청을 종료한다
+    // 저장 완료 후 중복 해제 요청을 완료한다
     return;
   }
 
-  // 완료된 동일 URL 항목을 정상 이력으로 계산해 홈 이동 거리가 실제 History 깊이와 일치하게 한다
-  adjustReleasedGuardIndex();
-  // 저장 완료 직후 popstate가 발생하지 않도록 History 이동 없이 논리 가드만 비활성화한다
+  const completedGuardId = activeNavigationGuardId;
+  const currentMarker = getNavigationGuardMarker(window.history.state);
+  // 저장 결과가 확정되었으므로 정리 POP이 활성 차단으로 다시 복원되지 않게 먼저 비활성화한다
   isNavigationGuardActive = false;
   activeNavigationGuardId = null;
   // 저장 결과가 확정되었으므로 새로고침과 창 닫기 보호 이벤트를 해제한다
   window.removeEventListener("beforeunload", handleBeforeUnload);
+
+  // 예상한 최상단 가드가 아니면 현재 History를 이동하지 않고 안전하게 해제를 마친다
+  if (completedGuardId === null || currentMarker?.id !== completedGuardId
+      || currentMarker.entry !== "sentinel") {
+    // 정리할 동일 URL 쌍이 없으므로 현재 화면을 유지한다
+    return;
+  }
+
+  // 앞으로가기에 남을 임시 항목이 이후 가드로 오인되지 않도록 현재 표식을 먼저 제거한다
+  const cleanedSentinelState = removeNavGuardMarker(getHistoryState());
+  window.history.replaceState(cleanedSentinelState, "", window.location.href);
+  // 같은 URL의 기준 항목으로 돌아오는 POP을 완료 신호로 기다린다
+  await new Promise<void>((resolve) => {
+    pendingNavigationGuardCleanup = {
+      id: completedGuardId,
+      resolve,
+    };
+    // 저장 가드가 만든 한 항목만 제거해 React Router의 원래 인덱스로 복귀한다
+    window.history.back();
+  });
 }
 
 /**
@@ -383,8 +424,8 @@ export async function endBlockingOperation(
   }
 
   const completedModalPromise = modalResultPromise;
-  // 성공 또는 실패 알림이 열리기 전에 History 이동 없이 논리 가드만 해제한다
-  deactivateNavigationGuard();
+  // 성공 또는 실패 알림이 열리기 전에 동일 URL의 임시 이력과 논리 가드를 함께 해제한다
+  await deactivateNavigationGuard();
   // 성공 정보를 지정한 작업은 현재 DOM을 유지한 채 로딩 상태를 성공 상태로 전환한다
   if (modalAbortController && completion) {
     completeSweetBlockingOperation(modalAbortController, completion);
@@ -437,7 +478,7 @@ export async function runBlockingOperation<T>(
   }
 }
 
-// 이전 PWA 실행에서 미보정 상태로 남은 동일 URL 항목도 현재 세션의 정상 이력으로 승격한다
-adjustReleasedGuardIndex();
+// 이전 실행에서 남은 이동 차단 항목이 있으면 최초 홈 정리와 뒤로가기에서 방향을 판별하도록 보관한다
+lastObservedNavigationGuardMarker = getNavigationGuardMarker(window.history.state);
 // 페이지를 다시 연 뒤에도 기존 이동 차단 History 쌍을 처리하도록 애플리케이션 수명 이벤트를 준비한다
 ensurePopStateListener();

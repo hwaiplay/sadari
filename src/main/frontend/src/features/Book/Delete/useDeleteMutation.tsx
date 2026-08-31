@@ -70,7 +70,7 @@ export const useDeleteMutation = () => {
   const moveHome = useHomeNavigation();
 
   /**
-   * 독후감 삭제 성공 즉시 캐시를 정리하고 홈 루트로 이동한다
+   * 독후감 삭제 성공 즉시 관련 캐시를 정리한다
    *
    * @author SeungHyeon.Kang
    * @param _response 검증이 끝난 독후감 삭제 응답
@@ -94,8 +94,6 @@ export const useDeleteMutation = () => {
     void queryClient.invalidateQueries({ queryKey: queryKeys.readingTimerSummary });
     // 삭제한 독후감으로 집계된 도서별 누적 독서시간 페이지가 다시 표시되지 않도록 캐시를 제거한다
     queryClient.removeQueries({ queryKey: queryKeys.readingTimerBookTimes });
-    // 삭제한 독후감 상세 화면이 남지 않도록 성공 응답 즉시 홈 루트로 이동한다
-    moveHome();
   };
 
   /**
@@ -157,6 +155,10 @@ export const useDeleteMutation = () => {
   // 독후감 삭제 요청과 성공 및 실패 화면 처리를 결합한 Mutation을 반환한다
   return useMutation({
     mutationFn: deleteReport,
+    onSuccess: () => {
+      // 처리 중 이동 가드가 해제된 뒤 삭제한 독후감 상세 화면을 홈 루트로 교체한다
+      moveHome();
+    },
     onError: handleDeleteError,
   });
 };

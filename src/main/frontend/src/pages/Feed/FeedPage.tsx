@@ -892,8 +892,8 @@ const FeedPage = () => {
      * @return 반환값이 없다
      */
     const moveUserProfile = (): void => {
-      // 검색 사용자의 번호를 공개 프로필 경로에 포함해 이동한다
-      navigate(`/social/profile/${user.userNumb}`);
+      // 본인 여부에 맞는 프로필 경로로 이동한다
+      navigate(user.meYsno === "Y" ? "/mypage/profile" : `/social/profile/${user.userNumb}`);
     };
 
     /**
@@ -1028,8 +1028,8 @@ const FeedPage = () => {
      * @return 반환값이 없다
      */
     const moveAuthorProfile = (): void => {
-      // 피드 작성자 번호를 공개 프로필 경로에 포함해 이동한다
-      navigate(`/social/profile/${item.userNumb}`);
+      // 본인 여부에 맞는 프로필 경로로 이동한다
+      navigate(item.meYsno === "Y" ? "/mypage/profile" : `/social/profile/${item.userNumb}`);
     };
 
     /**
