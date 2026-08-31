@@ -202,6 +202,46 @@ export const managementReadingBtn = style([
   {marginTop: "8px"}
 ]);
 
+export const earlyCloseButton = style({
+  marginTop: 8,
+  display: "flex",
+  flexDirection:"column",
+  background: vars.color.brandBg,
+  color: vars.color.brandText,
+  // background: "#fff",
+  width: "100%",
+  minWidth: "76px",
+  padding: "10px 16px",
+  // border: `1px solid ${vars.color.gray300}`,
+  borderRadius: "10px",
+  fontFamily: vars.font.medium,
+  fontSize: "16px",
+  alignItems: "center",
+  justifyContent: "center",
+  cursor: "pointer",
+  transition: "border-color 160ms ease, background-color 160ms ease",
+
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+    "&:disabled": {
+      borderColor: vars.color.gray300,
+      background: "#ffffff",
+      color: vars.color.gray500,
+      cursor: "default",
+    },
+    "&:hover:not(:disabled)": {
+      backgroundColor: "#D1EED9",
+    },
+  },
+});
+
+export const earlyCloseButtonTitle = style({
+  fontFamily: vars.font.heading
+})
+
 export const managementMembersBtn = style([
   managementBtn,
   {marginTop: "16px"}
@@ -434,16 +474,22 @@ export const clubNavigation = style({
 export const navigationRow = style({
   display: "flex",
   width: "100%",
+  minHeight: 57,
   padding: "10px 0",
   alignItems: "center",
   justifyContent: "space-between",
   background: "transparent",
-  color: vars.color.gray900,
+  color: vars.color.black,
   fontFamily: vars.font.semibold,
   fontSize: 16,
   textAlign: "left",
   cursor: "pointer",
 });
+
+export const showReviewsButton = style({
+  fontFamily: vars.font.semibold,
+  minHeight: 57,
+})
 
 export const navigationDescription = style({
   display: "block",

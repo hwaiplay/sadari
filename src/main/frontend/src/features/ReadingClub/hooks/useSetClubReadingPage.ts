@@ -271,6 +271,7 @@ export function useSetClubReadingPage() {
     }
 
     setIsPending(true);
+
     try {
       const params = toReadingParams(selectedBook, startDate, endDate);
 

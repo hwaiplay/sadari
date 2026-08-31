@@ -12,6 +12,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,6 +35,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 API
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 API 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 API 확장
+ * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -117,6 +119,24 @@ public class ReadingClubController {
                                 , @Valid @RequestBody ReadingClubDto.ReadingUpdateReqDto request) {
         // 모임장 권한과 연결 독후감 작성 여부를 적용한 수정 결과를 반환한다
         return readingClubService.uptReading(userNumb, clubNumb, rondNumb, request);
+    }
+
+    /**
+     * 활성 모임장이 전원 완독한 진행 회차를 목표 기간 안에 조기 마감한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 마감을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 마감할 회차 번호
+     * @return 완료된 회차 번호
+     */
+    @PutMapping("/{clubNumb}/readings/{rondNumb}/completion")
+    @Operation(summary = "모임 독서 회차 조기 마감")
+    public ResultData uptReadingCompletion(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+          , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
+        // 서버에서 모임장 권한과 전원 완독 상태를 다시 검증한 조기 마감 결과를 반환한다
+        return readingClubService.uptReadingCompletion(userNumb, clubNumb, rondNumb);
     }
 
     /**
@@ -247,6 +267,24 @@ public class ReadingClubController {
                                          , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
         // 현재 활성 모임원에게 선택한 완료 회차의 목표 결과를 반환한다
         return readingClubService.getReadingGoalResult(userNumb, clubNumb, rondNumb);
+    }
+
+    /**
+     * 활성 모임원이 팝업에서 직접 닫은 독서 회차 결과를 확인 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 확인한 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 확인한 완료 회차 번호
+     * @return 결과 확인 처리 결과
+     */
+    @PatchMapping("/{clubNumb}/readings/{rondNumb}/result-confirmation")
+    @Operation(summary = "모임 독서 목표 결과 확인", description = "활성 모임원이 팝업의 닫기 명령으로 확인한 회차 결과를 저장한다.")
+    public ResultData uptReadingResultConfirm(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+          , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
+        // 활성 계정과 모임원 관계를 검증한 회차 결과 확인 처리 결과를 반환한다
+        return readingClubService.uptReadingResultConfirm(userNumb, clubNumb, rondNumb);
     }
 
     /**

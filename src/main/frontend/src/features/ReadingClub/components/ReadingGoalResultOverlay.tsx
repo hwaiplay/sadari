@@ -7,7 +7,7 @@ import {
 import type { ClubReadingGoalResult } from "@/features/ReadingClub/api/readingClubApi";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
-import { useState, type CSSProperties } from "react";
+import type { CSSProperties } from "react";
 import { useNavigate } from "react-router-dom";
 import * as styles from "./ReadingGoalResultOverlay.css";
 import { ActionButton } from "@/components/Button/ActionButton.tsx";
@@ -26,12 +26,14 @@ import { ActionButton } from "@/components/Button/ActionButton.tsx";
 const ACHIEVEMENT_PROFILE_VISIBLE_LIMIT = 7;
 
 type ReadingGoalResultOverlayProps = {
+  closing?: boolean;
   result: ClubReadingGoalResult;
-  onClose?: () => void;
+  onClose?: () => Promise<void>;
   variant?: "overlay" | "page";
 };
 
 const ReadingGoalResultOverlay = ({
+  closing = false,
   result,
   onClose,
   variant = "overlay",
@@ -39,9 +41,6 @@ const ReadingGoalResultOverlay = ({
 
   // 대상 회차의 모임원 독후감 목록으로 이동할 라우터 함수를 조회
   const navigate = useNavigate();
-
-  // 사용자가 닫기 버튼을 누른 뒤 상세 화면을 볼 수 있도록 팝업 표시 상태를 관리
-  const [isOpen, setIsOpen] = useState(true);
 
   // 참여자가 없는 비정상 집계에서도 진행률 계산이 유효한 숫자를 유지
   const achievementRate = result.partCnt > 0
@@ -91,11 +90,15 @@ const ReadingGoalResultOverlay = ({
    * @author HanWon.Jang
    * @return
    */
-  const closeReadingGoalResult = ()=> {
-    // 전체 화면 결과 레이어를 제거
-    setIsOpen(false);
-    onClose?.();
-  }
+  const closeReadingGoalResult = async (): Promise<void> => {
+    // 상세 팝업의 확인 저장 중이거나 닫기 처리기가 없으면 화면 상태를 변경하지 않는다
+    if (closing || !onClose) {
+      return;
+    }
+
+    // 서버 확인이 성공한 뒤 부모 화면이 결과 팝업을 제거하도록 요청한다
+    await onClose();
+  };
 
   /**
    * 다른 모임원이 쓴 독후감 목록 페이지로 이동하는 함수
@@ -112,11 +115,6 @@ const ReadingGoalResultOverlay = ({
         cover: result.bookCvim,
       },
     });
-  }
-
-  // 사용자가 팝업을 닫았으면 배경의 모임 상세 화면만 유지
-  if (variant === "overlay" && !isOpen) {
-    return null;
   }
 
   // 팝업에서는 배경을 차단하고 페이지에서는 같은 결과 본문만 표시한다
@@ -149,6 +147,7 @@ const ReadingGoalResultOverlay = ({
                 type="button"
                 aria-label={/* "닫기" */ message("frontend.common.close")}
                 title={/* "닫기" */ message("frontend.common.close")}
+                disabled={closing}
                 onClick={closeReadingGoalResult}
               >
                 <img
@@ -308,6 +307,7 @@ const ReadingGoalResultOverlay = ({
               <ActionButton
                 onClick={closeReadingGoalResult}
                 aria-label={/* "닫기" */ message("frontend.common.close")}
+                disabled={closing}
               >
                 {/* "닫기" */}
                 {message("frontend.common.close")}

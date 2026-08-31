@@ -361,6 +361,107 @@
            AND PART.ROND_NUMB = #{rondNumb}
     </update>
 
+    <!-- 활성 참여자 전원이 완독한 진행 회차를 목표 기간 안에 완료 상태로 변경한다. -->
+    <update id="uptEarlyReadingRound">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptEarlyReadingRound */
+               TM_CLRNDX ROUNDX
+           SET ROUNDX.ROND_STAT = #{roundCompleted}
+             , ROUNDX.COMP_DATE = CURRENT_TIMESTAMP(6)
+             , ROUNDX.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
+           AND ROUNDX.ROND_NUMB = #{rondNumb}
+           AND ROUNDX.ROND_STAT = #{roundReading}
+           AND DATE(ROUNDX.GOAL_STDT) <![CDATA[<=]]> CURRENT_DATE
+           AND DATE(ROUNDX.GOAL_ENDT) <![CDATA[>=]]> CURRENT_DATE
+           AND EXISTS (
+               SELECT 1
+                 FROM TB_CLPART PART
+                 JOIN TB_CLMEMX MEMBER
+                   ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+                  AND MEMBER.USER_NUMB = PART.USER_NUMB
+                  AND MEMBER.MEMB_STAT = #{memberActive}
+                 JOIN TM_USERXM USERX
+                   ON USERX.USER_NUMB = PART.USER_NUMB
+                  AND USERX.USER_STAT = #{userActive}
+                 JOIN TM_REPORT REPORT
+                   ON REPORT.REPT_NUMB = PART.REPT_NUMB
+                  AND REPORT.USER_NUMB = PART.USER_NUMB
+                WHERE PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+                  AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+                  AND PART.ANON_YSNO = #{commNo}
+           )
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_CLPART PART
+                 JOIN TB_CLMEMX MEMBER
+                   ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+                  AND MEMBER.USER_NUMB = PART.USER_NUMB
+                  AND MEMBER.MEMB_STAT = #{memberActive}
+                 JOIN TM_USERXM USERX
+                   ON USERX.USER_NUMB = PART.USER_NUMB
+                  AND USERX.USER_STAT = #{userActive}
+            LEFT JOIN TM_REPORT REPORT
+                   ON REPORT.REPT_NUMB = PART.REPT_NUMB
+                  AND REPORT.USER_NUMB = PART.USER_NUMB
+                WHERE PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+                  AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+                  AND PART.ANON_YSNO = #{commNo}
+                  AND (REPORT.REPT_NUMB IS NULL OR REPORT.REPT_STAT != #{reportDone})
+           )
+    </update>
+
+    <!-- 조기 마감한 회차의 활성 참여자를 마감 시점 목표 달성자로 고정한다. -->
+    <update id="uptEarlyReadingGoal">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptEarlyReadingGoal */
+               TB_CLPART PART
+          JOIN TM_CLRNDX ROUNDX
+            ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
+           AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
+           AND ROUNDX.ROND_STAT = #{roundCompleted}
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+           AND MEMBER.USER_NUMB = PART.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = PART.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+          JOIN TM_REPORT REPORT
+            ON REPORT.REPT_NUMB = PART.REPT_NUMB
+           AND REPORT.USER_NUMB = PART.USER_NUMB
+           AND REPORT.REPT_STAT = #{reportDone}
+           SET PART.GOAL_YSNO = #{commYes}
+             , PART.ACHV_DATE = COALESCE(PART.ACHV_DATE, CURRENT_TIMESTAMP(6))
+             , PART.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE PART.CLUB_NUMB = #{clubNumb}
+           AND PART.ROND_NUMB = #{rondNumb}
+           AND PART.ANON_YSNO = #{commNo}
+           AND PART.GOAL_YSNO IS NULL
+    </update>
+
+    <!-- 조기 마감 시점의 활성 계정인 활성 모임원을 회차 결과 확인 대상으로 등록한다. -->
+    <insert id="setEarlyResultTarget">
+        <include refid="clubCodeBinds" />
+        /* setEarlyResultTarget */
+        INSERT IGNORE INTO TH_CLRSLT (
+                    CLUB_NUMB
+                  , ROND_NUMB
+                  , USER_NUMB
+                  , REGI_DATE
+        )
+        SELECT MEMBER.CLUB_NUMB
+             , #{rondNumb}
+             , MEMBER.USER_NUMB
+             , CURRENT_TIMESTAMP(6)
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </insert>
+
     <!-- 목표 종료일이 지난 회차의 참여자별 달성 여부를 연결 독후감 상태로 고정한다. -->
     <update id="uptExpiredReadingParticipantGoal">
         <include refid="clubCodeBinds" />
@@ -384,6 +485,38 @@
            AND DATE(ROUNDX.GOAL_ENDT) <![CDATA[<]]> CURRENT_DATE
            AND PART.GOAL_YSNO IS NULL
     </update>
+
+    <!-- 정상 종료 대상 회차별 활성 계정인 활성 모임원을 결과 확인 대상으로 등록한다. -->
+    <insert id="setExpiredResultTarget">
+        <include refid="clubCodeBinds" />
+        /* setExpiredResultTarget */
+        INSERT IGNORE INTO TH_CLRSLT (
+                    CLUB_NUMB
+                  , ROND_NUMB
+                  , USER_NUMB
+                  , REGI_DATE
+        )
+        SELECT ROUNDX.CLUB_NUMB
+             , ROUNDX.ROND_NUMB
+             , MEMBER.USER_NUMB
+             , CURRENT_TIMESTAMP(6)
+          FROM TM_CLRNDX ROUNDX
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = ROUNDX.CLUB_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+         WHERE ROUNDX.ROND_STAT IN (#{roundScheduled}, #{roundReading})
+           AND DATE(ROUNDX.GOAL_ENDT) <![CDATA[<]]> CURRENT_DATE
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_CLPART PART
+                WHERE PART.CLUB_NUMB = ROUNDX.CLUB_NUMB
+                  AND PART.ROND_NUMB = ROUNDX.ROND_NUMB
+                  AND PART.GOAL_YSNO IS NULL
+           )
+    </insert>
 
     <!-- 참여자 결과가 고정된 목표 종료 회차를 완료 상태로 변경한다. -->
     <update id="uptExpiredReadingRound">
@@ -1017,7 +1150,7 @@
            AND MEMBER.BLOC_YSNO = #{commYes}
     </delete>
 
-    <!-- 자동 팝업은 종료 다음 날에만, 직접 선택한 완료 회차는 날짜 제한 없이 고정 목표 결과를 조회한다. -->
+    <!-- 자동 팝업은 사용자가 확인하지 않은 최신 결과를, 직접 선택한 회차는 확인 여부와 무관한 결과를 조회한다. -->
     <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingGoalResult */
@@ -1051,6 +1184,13 @@
                        , TARGET.GOAL_STDT
                        , TARGET.GOAL_ENDT
                     FROM TM_CLRNDX TARGET
+                <if test="rondNumb == null">
+                    JOIN TH_CLRSLT RESULT
+                      ON RESULT.CLUB_NUMB = TARGET.CLUB_NUMB
+                     AND RESULT.ROND_NUMB = TARGET.ROND_NUMB
+                     AND RESULT.USER_NUMB = #{userNumb}
+                     AND RESULT.CONF_DATE IS NULL
+                </if>
                    WHERE TARGET.CLUB_NUMB = #{clubNumb}
                      AND TARGET.ROND_STAT = #{roundCompleted}
                 <choose>
@@ -1058,7 +1198,6 @@
                      AND TARGET.ROND_NUMB = #{rondNumb}
                     </when>
                     <otherwise>
-                     AND DATE(TARGET.GOAL_ENDT) = DATE_SUB(CURRENT_DATE, INTERVAL 1 DAY)
                 ORDER BY TARGET.ROND_NUMB DESC
                    LIMIT 1
                     </otherwise>
@@ -1088,6 +1227,25 @@
              , BOOK.BOOK_ATHR
              , BOOK.BOOK_CVIM
     </select>
+
+    <!-- 활성 계정인 활성 모임원이 직접 닫은 회차 결과의 확인 일시를 저장한다. -->
+    <update id="uptReadingResultConfirm">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptReadingResultConfirm */
+               TH_CLRSLT RESULT
+          JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = RESULT.CLUB_NUMB
+           AND MEMBER.USER_NUMB = RESULT.USER_NUMB
+           AND MEMBER.MEMB_STAT = #{memberActive}
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = RESULT.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+           SET RESULT.CONF_DATE = CURRENT_TIMESTAMP(6)
+         WHERE RESULT.CLUB_NUMB = #{clubNumb}
+           AND RESULT.ROND_NUMB = #{rondNumb}
+           AND RESULT.USER_NUMB = #{userNumb}
+           AND RESULT.CONF_DATE IS NULL
+    </update>
 
     <!-- 활성 계정과 활성 모임원 관계를 모두 유지하는 조회자인지 확인한다. -->
     <select id="getActiveMemberAccessCnt" resultType="int">

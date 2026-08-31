@@ -4,6 +4,7 @@ import { message } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
   cancelClubApplicationApi,
+  completeClubReadingApi,
   delClubApi,
   decideClubApplicationApi,
   getClubApplicationListApi,
@@ -17,6 +18,7 @@ import {
   type ClubReadingGoalResult,
   type OwnerElection,
   type ReadingClub,
+  uptReadingResultApi,
   updateOwnerVoteApi,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -43,6 +45,8 @@ export const useClubDetailPage = () => {
   const [isVotingOwner, setIsVotingOwner] = useState(false);
   const [isCancellingApplication, setIsCancellingApplication] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isCompletingReading, setIsCompletingReading] = useState(false);
+  const [isClosingResult, setIsClosingResult] = useState(false);
   const rejectedAlertClubRef = useRef<number | null>(null);
 
   /**
@@ -209,6 +213,95 @@ export const useClubDetailPage = () => {
   };
 
   /**
+   * 활성 모임장의 현재 회차 조기 마감을 확인하고 완료 결과를 표시한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleReadingComplete = async (): Promise<void> => {
+    const rondNumb = club?.currentRondNumb;
+    // 화면 노출과 별개로 모임장과 회차 및 중복 요청 조건을 다시 확인한다
+    if (isCompletingReading || club?.membRole !== "OWNER"
+        || typeof rondNumb !== "number" || !Number.isFinite(rondNumb)) {
+      return;
+    }
+
+    const confirmResult = await sweetConfirm({
+      icon: "warning",
+      // "독서를 미리 마감할까요?"
+      title: message("frontend.readingClub.detail.earlyCloseConfirmTitle"),
+      // "모든 모임원이 독서를 완료했어요. 마감하면 이번 회차의 목표 결과가 확정돼요."
+      text: message("frontend.readingClub.detail.earlyCloseConfirmDescription"),
+      // "독서 마감하기"
+      confirmButtonText: message("frontend.readingClub.detail.earlyCloseConfirmButton"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 사용자가 취소하면 현재 진행 회차를 그대로 유지한다
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    setIsCompletingReading(true);
+
+    try {
+      // 서버에서 조기 마감 조건을 다시 검증하고 모든 모임원의 미확인 결과를 생성한다
+      await completeClubReadingApi(clubNumb, rondNumb);
+      // 현재 회차와 모든 모임원에게 생성된 미확인 결과를 최신 상세에 반영한다
+      await loadPage();
+    } catch (error) {
+      void sweetError(
+        /* "독서를 마감하지 못했어요" */ message("frontend.readingClub.detail.earlyCloseErrorTitle"),
+        getApiErrorMessage(
+          error,
+          /* "모임원들의 완료 상태를 확인한 뒤 다시 시도해 주세요." */
+          message("frontend.readingClub.detail.earlyCloseErrorDescription"),
+        ),
+      );
+    } finally {
+      // 요청이 끝나면 조기 마감 버튼을 다시 사용할 수 있게 한다
+      setIsCompletingReading(false);
+    }
+  };
+
+  /**
+   * 사용자가 직접 닫은 독서 목표 결과를 서버에 확인 처리한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleResultClose = async (): Promise<void> => {
+    // 미확인 결과가 없거나 확인 저장 중이면 중복 요청을 만들지 않는다
+    if (isClosingResult || !readingGoalResult) {
+      return;
+    }
+
+    // 확인 저장이 끝날 때까지 팝업의 두 닫기 명령을 비활성화한다
+    setIsClosingResult(true);
+
+    try {
+      // 현재 표시 중인 회차만 확인 처리하여 이후 회차의 미확인 결과를 보존한다
+      await uptReadingResultApi(clubNumb, readingGoalResult.rondNumb);
+      // 서버 확인이 성공한 뒤에만 현재 결과 팝업을 닫는다
+      setReadingGoalResult(null);
+    }
+
+    catch (error) {
+      // "처리하지 못했어요"
+      const errorTitle = message("frontend.alert.errorTitle");
+      // "다시 시도해주세요."
+      const fallbackMessage = message("frontend.common.tryAgain");
+      // 확인 저장에 실패하면 팝업을 유지하고 안전한 오류 문구를 표시한다
+      await sweetError(errorTitle, getApiErrorMessage(error, fallbackMessage));
+    }
+
+    finally {
+      // 성공 또는 실패가 확정되면 닫기 명령을 다시 사용할 수 있게 한다
+      setIsClosingResult(false);
+    }
+  };
+
+  /**
    * 가입 승인 전 자신의 처리 대기 신청을 확인 후 취소
    * @author HanWon.Jang
    */
@@ -368,6 +461,8 @@ export const useClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isCompletingReading,
+    isClosingResult,
     isVotingOwner,
     members,
     ownerElection,
@@ -379,6 +474,8 @@ export const useClubDetailPage = () => {
     handleJoinClub,
     handleOwnerVote,
     handleReadingHistory,
+    handleReadingComplete,
+    handleResultClose,
     handleReportWrite,
   };
 };

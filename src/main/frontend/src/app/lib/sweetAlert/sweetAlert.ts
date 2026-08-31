@@ -723,7 +723,7 @@ function reserveSweetBlockingCompletionHeight(
  * @param options 알림 모달 표시 옵션
  * @return 사용자의 확인, 보조 선택 또는 바깥 클릭 취소 결과 Promise
  */
-export function sweetAlert(options: SweetAlertOptions) {
+export const sweetAlert = (options: SweetAlertOptions) => {
 
   ensureSweetAlertStyle();
 
@@ -747,6 +747,7 @@ export function sweetAlert(options: SweetAlertOptions) {
     let iconType = options.icon ?? "info";
     let isClosed = false;
     let closeSignalHandler: (() => void) | null = null;
+    let popStateHandler: (() => void) | null = null;
 
     /**
      * close 사용자 동작을 처리한다
@@ -769,8 +770,36 @@ export function sweetAlert(options: SweetAlertOptions) {
         options.closeSignal.removeEventListener("abort", closeSignalHandler);
       }
 
+      // 닫힌 알림이 이후 뒤로가기까지 구독하지 않도록 현재 알림의 이동 이벤트를 해제한다
+      if (popStateHandler) {
+        // 현재 알림에 연결한 뒤로가기 이벤트만 해제한다
+        window.removeEventListener("popstate", popStateHandler);
+      }
+
       resolve(closeSweetAlert(overlay, result));
     };
+
+    /**
+     * 브라우저 뒤로가기로 현재 화면을 벗어날 때 일반 알림을 닫는다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     */
+    popStateHandler = (): void => {
+      // 뒤로가기 후 이전 화면 위에 알림이 남지 않도록 닫힘 상태로 완료한다
+      close({
+        isConfirmed: false,
+        isDenied: false,
+        isSecondaryAction: false,
+        isDismissed: true,
+      });
+    };
+
+    // 서버 상태 변경 중인 차단 모달은 기존 이동 차단 정책을 유지하고 일반 알림만 뒤로가기에 닫는다
+    if (!options.closeSignal) {
+      // 현재 일반 알림이 열린 동안 브라우저 뒤로가기 이벤트를 구독한다
+      window.addEventListener("popstate", popStateHandler);
+    }
 
     lockBodyScroll();
     overlay.className = "sadari-swal-overlay";
@@ -1066,7 +1095,7 @@ export function sweetAlert(options: SweetAlertOptions) {
       modal.focus();
     }
   });
-}
+};
 
 type SweetBlockingOperationOptions = {
   title: string;

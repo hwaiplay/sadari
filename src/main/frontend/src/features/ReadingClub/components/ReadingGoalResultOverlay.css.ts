@@ -34,7 +34,7 @@ export const surface = style({
   width: "100%",
   maxWidth: 600,
   maxHeight: "calc(100dvh - 32px)",
-  padding: "20px 0px",
+  padding: "20px 16px",
   borderRadius: 22,
   backgroundColor: vars.color.background,
   boxSizing: "border-box",
@@ -123,7 +123,7 @@ export const title = style({
 
 export const closeButton = style({
   position: "absolute",
-  top: -10,
+  top: 0,
   right: 0,
   width: 28,
   height: 28,

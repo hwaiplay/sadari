@@ -62,6 +62,8 @@ const ClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isCompletingReading,
+    isClosingResult,
     isVotingOwner,
     members,
     ownerElection,
@@ -72,6 +74,8 @@ const ClubDetailPage = () => {
     handleJoinClub,
     handleOwnerVote,
     handleReadingHistory,
+    handleReadingComplete,
+    handleResultClose,
     handleReportWrite,
   } = useClubDetailPage();
 
@@ -128,6 +132,11 @@ const ClubDetailPage = () => {
     ? (goalAchievementCount / goalMemberCount) * 100
     : 0;
   const goalProgressColor = getGoalProgressColor(goalAchievementRate);
+  const canEarlyClose = club.membRole === "OWNER"
+    && club.currentRondStat === "READING"
+    && Boolean(readingDeadline)
+    && readingDeadline?.state !== "ENDED"
+    && goalAchievementCount === goalMemberCount;
   const currentReportStatusLabel = club.currentReportStat === "DONE"
     ? message("frontend.report.status.done")
     : club.currentReportStat === "STOP"
@@ -299,7 +308,20 @@ const ClubDetailPage = () => {
                 )}
                 </div>
 
-                {/* 현재 독서 관리는 활성 모임장에게만 제공한다 */}
+                {canEarlyClose ? (
+                  <button
+                    type={"button"}
+                    className={styles.earlyCloseButton}
+                    disabled={isCompletingReading}
+                    onClick={() => void handleReadingComplete()}
+                  >
+                    {/* "독서 조기 마감" */}
+                    <strong className={styles.earlyCloseButtonTitle}>{message("frontend.readingClub.detail.earlyCloseButton")}</strong>
+                    <small className={styles.navigationDescription}>{message("frontend.readingClub.detail.earlyCloseButtonDescription")}</small>
+                  </button>
+                ) : null}
+
+                {/* 독서 관리하기 */}
                 {club.membRole === "OWNER" && hasCurrentReading ? (
                   <LinkButton
                     link={`/reading-clubs/update/book/${club.clubNumb}/${club.currentRondNumb}`}
@@ -366,19 +388,20 @@ const ClubDetailPage = () => {
             </section>
 
             <nav className={styles.clubNavigation} aria-label={message("frontend.readingClub.detail.clubMenu")}>
-              {hasCurrentReports ? (
                 <button
-                  className={resultStyles.navigationButton}
+                  className={clsx(resultStyles.navigationButton, styles.showReviewsButton)}
                   type="button"
                   onClick={handleCurrentReports}
                 >
-                  <strong>
-                    {/* "모임원 독후감 {0}편 보기" */}
-                    {message("frontend.readingClub.result.viewReports", [currentReportCount])}
-                  </strong>
+                    {hasCurrentReports ? (
+                      /* "모임원 독후감 {0}편 보기" */
+                      message("frontend.readingClub.result.viewReports", [currentReportCount])
+                      ) :
+                      /* "모임원 독후감 보기" */
+                      message("frontend.readingClub.result.viewReportsDefault")
+                    }
                   <img src="/img/icons/icon-chevron-right.svg" alt="" aria-hidden="true" />
                 </button>
-              ) : null}
 
               <button
                 className={styles.navigationRow}
@@ -464,14 +487,19 @@ const ClubDetailPage = () => {
       </main>
 
       {/* 목표 결과 오버레이 팝업 */}
-      {isActiveMember && club.clubStat !== "OWNER_ELECTION"
-        && readingGoalResult && !hasCurrentReading ? createPortal(
-        <ReadingGoalResultOverlay key={readingGoalResult.rondNumb} result={readingGoalResult} />,
+      {isActiveMember && readingGoalResult ? createPortal(
+        <ReadingGoalResultOverlay
+          key={readingGoalResult.rondNumb}
+          closing={isClosingResult}
+          result={readingGoalResult}
+          onClose={handleResultClose}
+        />,
         document.body,
       ) : null}
 
       {/* 모임장 승계 투표 오버레이 팝업 */}
-      {isActiveMember && club.clubStat === "OWNER_ELECTION" && ownerElection ? createPortal(
+      {isActiveMember && !readingGoalResult
+        && club.clubStat === "OWNER_ELECTION" && ownerElection ? createPortal(
         <OwnerElectionOverlay
           election={ownerElection}
           submitting={isVotingOwner}

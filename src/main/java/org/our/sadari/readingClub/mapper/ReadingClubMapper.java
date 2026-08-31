@@ -22,6 +22,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 추가
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
+ * 2026-08-31        HanWon.Jang        독서 회차 조기 마감·결과 확인 추가
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -181,6 +182,36 @@ public interface ReadingClubMapper {
      */
     int uptReadingReportList(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
                             , @Param("request") ReadingClubDto.ReadingUpdateReqDto request);
+
+    /**
+     * 목표 기간 안에 활성 참여자 전원이 완독한 진행 회차를 완료 상태로 변경한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 완료된 회차 수
+     */
+    int uptEarlyReadingRound(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 조기 마감 회차의 활성 참여자를 목표 달성으로 고정한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 목표 달성이 확정된 참여자 수
+     */
+    int uptEarlyReadingGoal(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
+
+    /**
+     * 조기 마감 회차 결과를 확인할 현재 활성 모임원을 등록한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @return 등록된 결과 확인 대상 수
+     */
+    int setEarlyResultTarget(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
 
     /**
      * 사용자가 저장한 관심분야 수를 조회한다.
@@ -398,6 +429,18 @@ public interface ReadingClubMapper {
                                                            , @Param("rondNumb") Long rondNumb);
 
     /**
+     * 활성 모임원이 팝업에서 닫은 회차 결과의 확인 일시를 저장한다.
+     *
+     * @author HanWon.Jang
+     * @param clubNumb 모임 번호
+     * @param rondNumb 회차 번호
+     * @param userNumb 확인한 사용자 번호
+     * @return 확인 처리된 결과 수
+     */
+    int uptReadingResultConfirm(@Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb
+                               , @Param("userNumb") Long userNumb);
+
+    /**
      * 종료된 회차에서 공개 가능한 목표 달성자 프로필을 조회한다.
      *
      * @author HanWon.Jang
@@ -469,6 +512,14 @@ public interface ReadingClubMapper {
      * @return 달성 여부가 확정된 참여자 수
      */
     int uptExpiredReadingParticipantGoal();
+
+    /**
+     * 목표 기간이 끝난 회차 결과를 확인할 현재 활성 모임원을 등록한다.
+     *
+     * @author HanWon.Jang
+     * @return 등록된 결과 확인 대상 수
+     */
+    int setExpiredResultTarget();
 
     /**
      * 참여자 목표 확정이 끝난 만료 회차를 완료 상태로 변경한다.

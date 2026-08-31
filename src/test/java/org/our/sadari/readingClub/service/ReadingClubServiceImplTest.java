@@ -53,6 +53,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소·모임원 퇴장 검증
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 검증
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
+ * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -340,6 +341,96 @@ class ReadingClubServiceImplTest {
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getReadingForUpdate(any(), any());
         verify(readingClubMapper, never()).uptReading(any(), any(), any());
+    }
+
+    /**
+     * 활성 모임장이 전원 완독 회차를 조기 마감하면 목표 결과를 확정하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void completeReadingEarly() {
+        // 운영 중인 모임과 잠금 가능한 현재 회차를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingManageDto reading = new ReadingClubDto.ReadingManageDto();
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getReadingForUpdate(10L, 1L)).thenReturn(reading);
+        when(readingClubMapper.getReadingReportNumbListForUpdate(10L, 1L)).thenReturn(List.of(120L, 121L));
+        when(readingClubMapper.uptEarlyReadingRound(10L, 1L)).thenReturn(1);
+        when(readingClubMapper.uptEarlyReadingGoal(10L, 1L)).thenReturn(2);
+        when(readingClubMapper.setEarlyResultTarget(10L, 1L)).thenReturn(2);
+
+        // 활성 모임장이 현재 독서의 조기 마감을 요청한다
+        ResultData result = readingClubService.uptReadingCompletion(20L, 10L, 1L);
+
+        // 완료 회차 번호와 회차 및 참여자 목표 확정 순서를 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(Map.of("rondNumb", 1L), result.getData());
+        InOrder completionOrder = org.mockito.Mockito.inOrder(readingClubMapper);
+        completionOrder.verify(readingClubMapper).uptEarlyReadingRound(10L, 1L);
+        completionOrder.verify(readingClubMapper).uptEarlyReadingGoal(10L, 1L);
+        completionOrder.verify(readingClubMapper).setEarlyResultTarget(10L, 1L);
+    }
+
+    /**
+     * 활성 모임원이 닫은 결과 팝업을 확인 처리하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void confirmReadingResult() {
+        // 요청 사용자가 활성 계정인 현재 활성 모임원이 되도록 구성한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.uptReadingResultConfirm(10L, 1L, 20L)).thenReturn(1);
+
+        // 사용자가 팝업에서 첫 번째 회차 결과를 직접 닫는다
+        ResultData result = readingClubService.uptReadingResultConfirm(20L, 10L, 1L);
+
+        // 확인 일시 저장과 성공 응답을 검증한다
+        assertEquals(200, result.getCode());
+        verify(readingClubMapper).uptReadingResultConfirm(10L, 1L, 20L);
+    }
+
+    /**
+     * 활성 계정인 현재 모임원이 아니면 결과 확인을 거절하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void rejectResultConfirmAccess() {
+        // 요청 사용자가 활성 계정인 현재 모임원이 아니도록 구성한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
+
+        // 접근 권한이 없는 사용자가 첫 번째 회차 결과 확인을 요청한다
+        ResultData result = readingClubService.uptReadingResultConfirm(20L, 10L, 1L);
+
+        // 접근 거부와 확인 상태 미변경을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).uptReadingResultConfirm(any(), any(), any());
+    }
+
+    /**
+     * 활성 모임장이 아닌 사용자의 조기 마감 요청을 거절하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void rejectEarlyCloseNonOwner() {
+        // 운영 중인 모임이지만 요청 사용자가 활성 모임장이 아닌 상태를 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveOwnerCnt(10L, 20L)).thenReturn(0);
+
+        // 활성 모임장이 아닌 사용자가 현재 독서의 조기 마감을 요청한다
+        ResultData result = readingClubService.uptReadingCompletion(20L, 10L, 1L);
+
+        // 접근 거부와 회차 상태 변경 미실행을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getReadingForUpdate(any(), any());
+        verify(readingClubMapper, never()).uptEarlyReadingRound(any(), any());
     }
 
     /**
@@ -1438,6 +1529,7 @@ class ReadingClubServiceImplTest {
         // 참여자 목표 결과 확정 후 회차 종료 순서가 유지되는지 검증한다.
         InOrder completionOrder = org.mockito.Mockito.inOrder(readingClubMapper);
         completionOrder.verify(readingClubMapper).uptExpiredReadingParticipantGoal();
+        completionOrder.verify(readingClubMapper).setExpiredResultTarget();
         completionOrder.verify(readingClubMapper).uptExpiredReadingRound();
     }
 }

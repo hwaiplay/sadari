@@ -315,6 +315,24 @@ export const updateClubReadingApi = async (
   return assertResultDataSuccess(response.data).data as ClubReadingCreateResult;
 };
 
+/**
+ * 활성 모임장이 전원 완독한 현재 회차를 목표 기간 안에 조기 마감한다.
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @param rondNumb 마감할 회차 번호
+ * @return 완료된 모임 독서 회차 번호
+ */
+export const completeClubReadingApi = async (
+  clubNumb: number,
+  rondNumb: number,
+): Promise<ClubReadingCreateResult> => {
+  // 서버가 권한과 전원 완독 조건을 다시 검증하도록 회차 완료를 요청한다
+  const response = await api.put(`/reading-clubs/${clubNumb}/readings/${rondNumb}/completion`);
+  // 결과 팝업 조회에 사용할 완료 회차 번호를 반환한다
+  return assertResultDataSuccess(response.data).data as ClubReadingCreateResult;
+};
+
 /** 로그인 사용자의 활성 모임을 조회한다. @author Hanwon.Jang @return 내 모임 목록 */
 export const getMyClubListApi = async (): Promise<ReadingClub[]> => {
   // 내 모임 목록을 서버에 요청한다
@@ -374,6 +392,22 @@ export const getClubReadingGoalResultApi = async (
   const response = await api.get(requestPath);
   // 공통 성공 검증을 통과한 종료 결과가 없으면 팝업을 표시하지 않도록 Null을 반환한다
   return (assertResultDataSuccess(response.data).data as ClubReadingGoalResult | undefined) ?? null;
+};
+
+/**
+ * 활성 모임원이 팝업에서 직접 닫은 독서 회차 결과를 확인 처리한다.
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @param rondNumb 확인한 완료 회차 번호
+ * @return 반환값이 없다
+ * @throws 결과 확인 저장 실패 또는 접근 권한이 없을 때 발생
+ */
+export const uptReadingResultApi = async (clubNumb: number, rondNumb: number): Promise<void> => {
+  // 사용자가 직접 닫은 회차 결과의 확인 상태를 저장한다
+  const response = await api.patch(`/reading-clubs/${clubNumb}/readings/${rondNumb}/result-confirmation`);
+  // 공통 성공 코드가 확인되지 않으면 팝업을 유지할 수 있도록 예외를 전달한다
+  assertResultDataSuccess(response.data);
 };
 
 /**

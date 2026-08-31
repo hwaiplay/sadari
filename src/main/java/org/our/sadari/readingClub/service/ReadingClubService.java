@@ -18,6 +18,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 계약
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 계약 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 계약 확장
+ * 2026-08-31        HanWon.Jang        독서 회차 조기 마감 계약 추가
  */
 public interface ReadingClubService {
 
@@ -57,6 +58,17 @@ public interface ReadingClubService {
      */
     ResultData uptReading(Long userNumb, Long clubNumb, Long rondNumb
                          , ReadingClubDto.ReadingUpdateReqDto request);
+
+    /**
+     * 활성 모임장이 전원 완독한 진행 회차를 목표 기간 안에 조기 마감한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 마감을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 마감할 회차 번호
+     * @return 완료된 회차 번호
+     */
+    ResultData uptReadingCompletion(Long userNumb, Long clubNumb, Long rondNumb);
 
     /**
      * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회한다.
@@ -117,6 +129,17 @@ public interface ReadingClubService {
      * @return 지정한 완료 독서 회차의 목표 결과
      */
     ResultData getReadingGoalResult(Long userNumb, Long clubNumb, Long rondNumb);
+
+    /**
+     * 활성 모임원이 팝업에서 직접 닫은 독서 회차 결과를 확인 처리한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 확인한 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 확인한 완료 회차 번호
+     * @return 결과 확인 처리 결과
+     */
+    ResultData uptReadingResultConfirm(Long userNumb, Long clubNumb, Long rondNumb);
 
     /**
      * 현재 활성 모임원에게 가입 시점과 관계없이 모든 이전 독서 기록을 제공한다.

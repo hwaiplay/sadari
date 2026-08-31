@@ -46,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 처리
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 수정
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
+ * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -454,6 +455,59 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     /**
      * {@inheritDoc}
      *
+     * @author HanWon.Jang
+     * @param userNumb 마감을 요청한 모임장 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 마감할 회차 번호
+     * @return 완료된 회차 번호
+     */
+    @Override
+    @Transactional
+    public ResultData uptReadingCompletion(Long userNumb, Long clubNumb, Long rondNumb) {
+        // 권한과 회차를 특정할 식별값이 없으면 상태 변경을 시작하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 계정 상태와 현재 모임장 관계를 같은 잠금 범위에서 검증한다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        if (StringUtil.isEmpty(club) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || readingClubMapper.getActiveOwnerCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 완료되지 않은 대상 회차와 연결 독후감을 잠가 완독 상태 변경과 조기 마감을 직렬화한다
+        if (StringUtil.isEmpty(readingClubMapper.getReadingForUpdate(clubNumb, rondNumb))) {
+            // "조회 결과가 없어요."
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+        readingClubMapper.getReadingReportNumbListForUpdate(clubNumb, rondNumb);
+
+        // SQL에서 목표 기간과 활성 참여자 전원 완독을 다시 확인한 회차만 완료 처리한다
+        if (readingClubMapper.uptEarlyReadingRound(clubNumb, rondNumb) != 1) {
+            // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 회차 완료와 참여자 목표 확정 중 하나라도 실패하면 전체 상태를 원복한다
+        if (readingClubMapper.uptEarlyReadingGoal(clubNumb, rondNumb) < 1) {
+            throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 마감 시점의 모든 활성 모임원에게 같은 회차 결과를 미확인 상태로 등록한다
+        if (readingClubMapper.setEarlyResultTarget(clubNumb, rondNumb) < 1) {
+            throw new CustomException(ResultEnum.COMMON_UPDATE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
+        // 화면이 완료 회차 결과를 즉시 조회할 수 있도록 마감한 회차 번호를 반환한다
+        return ResultData.success(Map.of("rondNumb", rondNumb));
+    }
+
+    /**
+     * {@inheritDoc}
+     *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @return 내 모임 목록 조회 결과
@@ -608,6 +662,36 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 목록에서 선택한 완료 회차의 결과를 조회한다
         return getGoalResultInternal(userNumb, clubNumb, rondNumb);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @param userNumb 확인한 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param rondNumb 확인한 완료 회차 번호
+     * @return 결과 확인 처리 결과
+     */
+    @Override
+    @Transactional
+    public ResultData uptReadingResultConfirm(Long userNumb, Long clubNumb, Long rondNumb) {
+        // 확인 대상과 사용자를 특정할 식별값이 없으면 저장을 시작하지 않는다
+        if (StringUtil.hasEmpty(userNumb, clubNumb, rondNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 활성 계정과 현재 활성 모임원 관계가 아니면 결과 확인 상태를 변경하지 않는다
+        if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 이미 확인된 중복 요청도 성공하도록 현재 사용자의 미확인 결과만 갱신한다
+        readingClubMapper.uptReadingResultConfirm(clubNumb, rondNumb, userNumb);
+        // 사용자가 직접 닫은 결과의 확인 처리가 끝난 성공 응답을 반환한다
+        return ResultData.success();
     }
 
     /**
@@ -769,6 +853,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     public void completeExpiredRound() {
         // 회차 상태를 변경하기 전에 마감 시점의 참여자별 목표 달성 여부를 먼저 고정한다
         readingClubMapper.uptExpiredReadingParticipantGoal();
+        // 정상 종료 시점의 모든 활성 모임원에게 회차별 미확인 결과를 등록한다
+        readingClubMapper.setExpiredResultTarget();
         // 참여자 결과가 모두 고정된 만료 회차를 완료 상태로 변경한다
         readingClubMapper.uptExpiredReadingRound();
     }
