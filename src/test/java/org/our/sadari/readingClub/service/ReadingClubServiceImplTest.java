@@ -52,6 +52,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 검증
  * 2026-08-24        HanWon.Jang        가입 처리 알림·신청 취소·모임원 퇴장 검증
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 검증
+ * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -1369,13 +1370,13 @@ class ReadingClubServiceImplTest {
     }
 
     /**
-     * 활성 모임원이 완료 회차 목록을 조회하면 DONE 독후감 페이지를 반환하는지 검증한다.
+     * 활성 모임원이 진행 또는 완료 회차를 조회하면 DONE 독후감 페이지를 반환하는지 검증한다.
      *
      * @author HanWon.Jang
      */
     @Test
-    void getDoneRoundReports() {
-        // 완료 회차의 도서 요약과 공개 여부가 다른 DONE 독후감을 구성한다
+    void getCurrentOrDoneReports() {
+        // 진행 또는 완료 회차의 도서 요약과 공개 여부가 다른 DONE 독후감을 구성한다
         ReadingClubDto.ReadingRoundReportPageDto summary =
                 new ReadingClubDto.ReadingRoundReportPageDto();
         summary.setClubNumb(10L);
@@ -1385,14 +1386,14 @@ class ReadingClubServiceImplTest {
         privateReport.setReptStat(Constant.REPORT_STAT_DONE);
         privateReport.setPubcYsno(Constant.COMM_NO);
 
-        // 조회자 접근과 완료 회차 및 독후감 조회 결과가 모두 유효하도록 설정한다
+        // 조회자 접근과 대상 회차 및 독후감 조회 결과가 모두 유효하도록 설정한다
         when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
         when(readingClubMapper.getReadingRoundReportSummary(10L, 1L)).thenReturn(summary);
         when(readingClubMapper.getReadingRoundReportList(
                 20L, 10L, 1L, Constant.SORT_LATEST_DESC, 0, 13))
                 .thenReturn(List.of(privateReport));
 
-        // 활성 모임원으로 완료 회차 독후감 목록을 조회한다
+        // 활성 모임원으로 진행 또는 완료 회차 독후감 목록을 조회한다
         ResultData result = readingClubService.getReadingRoundReportList(
                 20L, 10L, 1L, Constant.SORT_LATEST_DESC, 1);
 

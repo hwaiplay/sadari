@@ -96,6 +96,7 @@ export type ReadingClub = {
   joinStat?: "PENDING" | "REJECTED";
   matchCnt?: number;
   currentRondNumb?: number;
+  currentRondStat?: "SCHEDULED" | "READING";
   readingOrdr?: number;
   currentBookNumb?: number;
   currentBookTitl?: string;
@@ -110,6 +111,7 @@ export type ReadingClub = {
   currentGoalEndt?: string;
   currentReportStat?: "READ" | "DONE" | "STOP";
   currentReportNumb?: number;
+  currentReportCnt?: number;
   currentGoalAchvCnt?: number;
   currentGoalMembCnt?: number;
   categoryList?: ClubCategory[];
@@ -401,7 +403,7 @@ export const getClubReadingHistoryApi = async (
 };
 
 /**
- * 완료된 모임 독서 회차의 DONE 독후감을 공개 여부와 무관하게 조회한다.
+ * 진행 또는 완료된 모임 독서 회차의 DONE 독후감을 공개 여부와 무관하게 조회한다.
  *
  * @author HanWon.Jang
  * @param clubNumb 모임 번호
@@ -417,12 +419,12 @@ export const getClubReadingRoundReportsApi = async (
   sortType: PublicReportSortType,
   page: number,
 ): Promise<ResultData<ClubReadingRoundReportPage>> => {
-  // 현재 활성 모임원 권한으로 대상 완료 회차의 DONE 독후감 페이지를 요청한다
+  // 현재 활성 모임원 권한으로 대상 회차의 DONE 독후감 페이지를 요청한다
   const response = await api.get<ResultData<ClubReadingRoundReportPage>>(
     `/reading-clubs/${clubNumb}/readings/${rondNumb}/reports`,
     {params: {sortType, page}},
   );
-  // 공개 여부와 무관하게 조회된 완료 독후감 페이지 응답을 반환한다
+  // 공개 여부와 무관하게 조회된 회차 독후감 페이지 응답을 반환한다
   return assertResultDataSuccess(response.data);
 };
 

@@ -33,6 +33,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 API
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 API
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 API 추가
+ * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 API 확장
  */
 @RestController
 @RequiredArgsConstructor
@@ -267,7 +268,7 @@ public class ReadingClubController {
     }
 
     /**
-     * 활성 모임원에게 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
+     * 활성 모임원에게 진행 또는 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -278,7 +279,7 @@ public class ReadingClubController {
      * @return 회차 도서 정보와 완료 독후감 페이지
      */
     @GetMapping("/{clubNumb}/readings/{rondNumb}/reports")
-    @Operation(summary = "모임 독서 회차 완료 독후감 목록 조회")
+    @Operation(summary = "진행 또는 완료 모임 독서 회차의 완료 독후감 목록 조회")
     public ResultData getReadingRoundReportList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb

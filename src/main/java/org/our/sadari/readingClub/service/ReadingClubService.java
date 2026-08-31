@@ -17,6 +17,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 계약
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 계약
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 계약 추가
+ * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 계약 확장
  */
 public interface ReadingClubService {
 
@@ -129,7 +130,7 @@ public interface ReadingClubService {
     ResultData getReadingHistoryList(Long userNumb, Long clubNumb, int page);
 
     /**
-     * 활성 모임원에게 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
+     * 활성 모임원에게 진행 또는 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호

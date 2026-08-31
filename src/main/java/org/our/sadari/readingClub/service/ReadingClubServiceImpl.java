@@ -45,6 +45,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-24        HanWon.Jang        가입 알림·신청 취소·모임원 퇴장 처리
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 처리
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 수정
+ * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  */
 @Service
 @RequiredArgsConstructor
@@ -702,7 +703,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      * @param rondNumb 조회할 회차 번호
      * @param sortType 독후감 정렬 코드
      * @param page 조회할 페이지 번호
-     * @return 회차 도서 정보와 완료 독후감 페이지
+     * @return 진행 또는 완료 회차의 도서 정보와 완료 독후감 페이지
      */
     @Override
     public ResultData getReadingRoundReportList(Long userNumb, Long clubNumb, Long rondNumb
@@ -719,10 +720,10 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 요청한 완료 회차의 도서와 평균 별점 정보를 조회한다
+        // 요청한 진행 또는 완료 회차의 도서와 평균 별점 정보를 조회한다
         ReadingClubDto.ReadingRoundReportPageDto result =
                 readingClubMapper.getReadingRoundReportSummary(clubNumb, rondNumb);
-        // 완료된 대상 회차가 없으면 임의 회차의 독후감을 노출하지 않는다
+        // 조회 가능한 진행 또는 완료 회차가 없으면 임의 회차의 독후감을 노출하지 않는다
         if (StringUtil.isEmpty(result)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
@@ -739,7 +740,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 요청 페이지를 첫 페이지 이상으로 보정한다
         int normalizedPage = Math.max(page, 1);
-        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 완료 독후감을 조회한다
+        // 다음 페이지 존재 여부를 판정할 한 건을 추가해 대상 회차의 완료 독후감을 조회한다
         List<ReportDto> searchedList = readingClubMapper.getReadingRoundReportList(
                 userNumb, clubNumb, rondNumb, normalizedSortType
               , (normalizedPage - 1) * REPORT_PAGE_SIZE, REPORT_PAGE_SIZE + 1);

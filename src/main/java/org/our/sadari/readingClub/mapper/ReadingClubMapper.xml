@@ -609,6 +609,7 @@
         LEFT JOIN (  SELECT ROUNDX.CLUB_NUMB
                           , ROUNDX.ROND_NUMB
                           , ROUNDX.BOOK_NUMB
+                          , ROUNDX.ROND_STAT
                           , ROUNDX.GOAL_STDT
                           , ROUNDX.GOAL_ENDT
                        FROM TM_CLRNDX ROUNDX
@@ -759,6 +760,9 @@
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_NUMB
                END AS CURRENT_ROND_NUMB
              , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_STAT
+               END AS CURRENT_ROND_STAT
+             , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} AND CURRENT_ROUND.ROND_NUMB IS NOT NULL
                        THEN CURRENT_ROUND.ROND_NUMB
                    WHEN MINE.MEMB_STAT = #{memberActive}
@@ -820,6 +824,10 @@
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_REPORT.REPT_NUMB
                END AS CURRENT_REPORT_NUMB
              , CASE
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                       THEN COALESCE(CURRENT_REPORT_COUNT.REPORT_CNT, 0)
+               END AS CURRENT_REPORT_CNT
+             , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN COALESCE(CURRENT_GOAL.GOAL_ACHV_CNT, 0)
                END AS CURRENT_GOAL_ACHV_CNT
              , CASE
@@ -855,7 +863,29 @@
                ) APPLICATION
             ON APPLICATION.CLUB_NUMB = CLUB.CLUB_NUMB
            AND APPLICATION.USER_NUMB = #{userNumb}
-             <include refid="currentRoundJoin" />
+              <include refid="currentRoundJoin" />
+      LEFT JOIN (  SELECT PART.CLUB_NUMB
+                        , PART.ROND_NUMB
+                        , COUNT(*) AS REPORT_CNT
+                     FROM TB_CLPART PART
+                     JOIN TM_REPORT REPORT
+                       ON REPORT.REPT_NUMB = PART.REPT_NUMB
+                      AND REPORT.USER_NUMB = PART.USER_NUMB
+                      AND REPORT.REPT_STAT = #{reportDone}
+                     JOIN TB_CLMEMX MEMBER
+                       ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
+                      AND MEMBER.USER_NUMB = PART.USER_NUMB
+                      AND MEMBER.MEMB_STAT = #{memberActive}
+                     JOIN TM_USERXM USERX
+                       ON USERX.USER_NUMB = PART.USER_NUMB
+                      AND USERX.USER_STAT = #{userActive}
+                    WHERE PART.CLUB_NUMB = #{clubNumb}
+                      AND PART.ANON_YSNO = #{commNo}
+                 GROUP BY PART.CLUB_NUMB
+                        , PART.ROND_NUMB
+                ) CURRENT_REPORT_COUNT
+             ON CURRENT_REPORT_COUNT.CLUB_NUMB = CURRENT_ROUND.CLUB_NUMB
+            AND CURRENT_REPORT_COUNT.ROND_NUMB = CURRENT_ROUND.ROND_NUMB
       LEFT JOIN TM_BKINFO CURRENT_BOOK
              ON CURRENT_BOOK.BOOK_NUMB = CURRENT_ROUND.BOOK_NUMB
       LEFT JOIN TB_CLPART CURRENT_PART
@@ -1121,7 +1151,7 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회한다. -->
+    <!-- 진행 또는 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회한다. -->
     <select id="getReadingRoundReportSummary" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingRoundReportPageDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingRoundReportSummary */
@@ -1154,7 +1184,7 @@
            AND REPORT.USER_NUMB = PART.USER_NUMB
          WHERE ROUNDX.CLUB_NUMB = #{clubNumb}
            AND ROUNDX.ROND_NUMB = #{rondNumb}
-           AND ROUNDX.ROND_STAT = #{roundCompleted}
+           AND ROUNDX.ROND_STAT IN (#{roundReading}, #{roundCompleted})
       GROUP BY ROUNDX.CLUB_NUMB
              , ROUNDX.ROND_NUMB
              , ROUNDX.BOOK_NUMB
@@ -1163,7 +1193,7 @@
              , BOOK.BOOK_CVIM
     </select>
 
-    <!-- 완료 회차에서 현재 활성 모임원이 작성한 완료 독후감을 공개 여부와 무관하게 조회한다. -->
+    <!-- 진행 또는 완료 회차에서 현재 활성 모임원이 작성한 완료 독후감을 공개 여부와 무관하게 조회한다. -->
     <select id="getReadingRoundReportList" resultType="org.our.sadari.report.dto.ReportDto">
         <include refid="clubCodeBinds" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
@@ -1187,7 +1217,7 @@
           JOIN TM_CLRNDX ROUNDX
             ON ROUNDX.CLUB_NUMB = PART.CLUB_NUMB
            AND ROUNDX.ROND_NUMB = PART.ROND_NUMB
-           AND ROUNDX.ROND_STAT = #{roundCompleted}
+           AND ROUNDX.ROND_STAT IN (#{roundReading}, #{roundCompleted})
           JOIN TB_CLMEMX MEMBER
             ON MEMBER.CLUB_NUMB = PART.CLUB_NUMB
            AND MEMBER.USER_NUMB = PART.USER_NUMB

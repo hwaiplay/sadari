@@ -12,6 +12,7 @@ import {
 import type { ClubMemberProfile } from "@/features/ReadingClub/api/readingClubApi";
 import OwnerElectionOverlay from "@/features/ReadingClub/components/OwnerElectionOverlay";
 import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
+import * as resultStyles from "@/features/ReadingClub/components/ReadingGoalResultOverlay.css";
 import ProfileImage from "@/features/User/components/ProfileImage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
@@ -32,7 +33,7 @@ type ClubDetailAction = "" | "UPDATE" | "DELETE";
  * @param member 표시할 모임원 프로필
  * @return 모임원 프로필 이미지 항목
  */
-function renderMemberProfile(member: ClubMemberProfile) {
+const renderMemberProfile = (member: ClubMemberProfile) => {
   // 참여한 모임원의 프로필 이미지 항목을 반환한다
   return (
     <li className={styles.memberProfileItem} key={member.userNumb}>
@@ -45,7 +46,7 @@ function renderMemberProfile(member: ClubMemberProfile) {
       />
     </li>
   );
-}
+};
 
 /**
  * 모임 소개와 현재 독서, 멤버 및 모임장 관리 영역을 표시한다.
@@ -53,7 +54,7 @@ function renderMemberProfile(member: ClubMemberProfile) {
  * @author Hanwon.Jang
  * @return 모임 상세 화면
  */
-export default function ClubDetailPage() {
+const ClubDetailPage = () => {
   const navigate = useNavigate();
   const {
     answers,
@@ -102,6 +103,8 @@ export default function ClubDetailPage() {
   const hasAdditionalMembers = additionalMemberCount > 0;
   // 예정 또는 진행 중인 회차 번호가 있으면 현재 독서 정보를 표시
   const hasCurrentReading = Number.isFinite(club.currentRondNumb);
+  const currentReportCount = Math.max(0, club.currentReportCnt ?? 0);
+  const hasCurrentReports = club.currentRondStat === "READING" && currentReportCount > 0;
   // 첫 회차가 아직 없으면 다음 독서 순번을 1로 표시한다
   const readingOrder = club.readingOrdr ?? 1;
   // API 일시값에서 화면과 날짜 계산에 사용할 로컬 날짜 부분만 분리한다
@@ -149,6 +152,27 @@ export default function ClubDetailPage() {
   const handleNextBookVote = () => {
 
     navigate(`/reading-clubs/vote/book/${club.clubNumb}`);
+  };
+
+  /**
+   * 현재 진행 회차의 모임원 완료 독후감 목록으로 이동한다
+   *
+   * @author HanWon.Jang
+   * @return
+   */
+  const handleCurrentReports = (): void => {
+    // 현재 회차가 유효할 때만 모임원 독후감 목록으로 이동
+    if (!Number.isFinite(club.currentRondNumb)) {
+      return;
+    }
+
+    navigate(`/reading-clubs/history/${club.clubNumb}/${club.currentRondNumb}/reports`, {
+      state: {
+        title: club.currentBookTitl,
+        author: club.currentBookAthr,
+        cover: club.currentBookCvim,
+      },
+    });
   };
 
   return (
@@ -342,6 +366,20 @@ export default function ClubDetailPage() {
             </section>
 
             <nav className={styles.clubNavigation} aria-label={message("frontend.readingClub.detail.clubMenu")}>
+              {hasCurrentReports ? (
+                <button
+                  className={resultStyles.navigationButton}
+                  type="button"
+                  onClick={handleCurrentReports}
+                >
+                  <strong>
+                    {/* "모임원 독후감 {0}편 보기" */}
+                    {message("frontend.readingClub.result.viewReports", [currentReportCount])}
+                  </strong>
+                  <img src="/img/icons/icon-chevron-right.svg" alt="" aria-hidden="true" />
+                </button>
+              ) : null}
+
               <button
                 className={styles.navigationRow}
                 type="button"
@@ -457,4 +495,6 @@ export default function ClubDetailPage() {
       ) : null}
     </>
   );
-}
+};
+
+export default ClubDetailPage;

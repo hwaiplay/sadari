@@ -271,6 +271,7 @@ public final class ReadingClubDto {
      * 2026-08-05        SeungHyeon.Kang    최초 생성
      * 2026-08-14        Hanwon.Jang        현재 독서 관련 추가
      * 2026-08-15        Hanwon.Jang        현재 독서 기간과 목표 달성 현황 추가
+     * 2026-08-29        HanWon.Jang        현재 회차 독후감 현황 추가
      */
     @Data
     @Schema(description = "독서 모임 조회 항목")
@@ -324,6 +325,9 @@ public final class ReadingClubDto {
         @Schema(description = "현재 예정 또는 진행 중인 모임별 회차 번호")
         private Long currentRondNumb;
 
+        @Schema(description = "현재 모임 독서 회차 상태")
+        private String currentRondStat;
+
         @Schema(description = "현재 독서 또는 다음 독서의 모임 내 순번")
         private Long readingOrdr;
 
@@ -365,6 +369,9 @@ public final class ReadingClubDto {
 
         @Schema(description = "로그인 사용자의 현재 독서 독후감 번호")
         private Long currentReportNumb;
+
+        @Schema(description = "현재 진행 회차의 활성 모임원 완료 독후감 수")
+        private Integer currentReportCnt;
 
         @Schema(description = "현재 독서 목표를 달성한 활성 참여 인원 수")
         private Integer currentGoalAchvCnt;

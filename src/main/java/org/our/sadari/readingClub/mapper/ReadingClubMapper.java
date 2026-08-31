@@ -21,6 +21,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-22        HanWon.Jang        종료 결과·독후감 조회 추가
  * 2026-08-23        HanWon.Jang        이전 독서 기록·회차 결과 조회 추가
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 추가
+ * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -432,18 +433,18 @@ public interface ReadingClubMapper {
           , @Param("pageLimit") int pageLimit);
 
     /**
-     * 완료된 모임 독서 회차의 도서와 완료 독후감 평균 별점을 조회한다.
+     * 진행 또는 완료된 모임 독서 회차의 도서와 완료 독후감 평균 별점을 조회한다.
      *
      * @author HanWon.Jang
      * @param clubNumb 조회할 모임 번호
      * @param rondNumb 조회할 회차 번호
-     * @return 완료 회차 독후감 페이지 요약
+     * @return 진행 또는 완료 회차 독후감 페이지 요약
      */
     ReadingClubDto.ReadingRoundReportPageDto getReadingRoundReportSummary(
             @Param("clubNumb") Long clubNumb, @Param("rondNumb") Long rondNumb);
 
     /**
-     * 완료된 모임 독서 회차에서 현재 활성 모임원이 작성한 완료 독후감을 조회한다.
+     * 진행 또는 완료된 모임 독서 회차에서 현재 활성 모임원이 작성한 완료 독후감을 조회한다.
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호

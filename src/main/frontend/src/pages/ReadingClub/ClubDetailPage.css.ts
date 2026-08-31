@@ -4,7 +4,7 @@ import { globalStyle, style } from "@vanilla-extract/css";
 export const page = style({
   display: "flex",
   flexDirection: "column",
-  gap: 34,
+  gap: 30,
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
@@ -247,6 +247,7 @@ export const currentBookInformation = style({
 
 export const currentBookSummary = style({
   display: "flex",
+  width: "100%",
   minWidth: 0,
   flexDirection: "column",
   gap: 6,
