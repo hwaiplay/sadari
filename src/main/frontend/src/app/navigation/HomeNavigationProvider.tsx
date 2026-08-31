@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import type { BottomNavTransition } from "@/app/navigation/bottomNavigation";
+import { beginHomeHistoryReset } from "@/app/navigation/blockingOperation";
 
 const HOME_PATH = "/home";
 
@@ -27,6 +28,7 @@ type HomeNavigationProviderProps = {
 type RouterHistoryState = {
   idx?: unknown;
   sadariHomeExitGuard?: unknown;
+  sadariBlockingOperation?: unknown;
 };
 
 type PendingHomeNavigation = {
@@ -189,6 +191,8 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
     if (currentHistoryIndex !== null && currentHistoryIndex > 0) {
       // POP 이동이 완료된 뒤 적용할 홈 화면 상태를 보관한다
       pendingNavigationRef.current = { options };
+      // 이전 버전의 저장 가드 기준 항목도 앱 루트로 사용하고 외부 이력은 건드리지 않게 표시한다
+      beginHomeHistoryReset();
       // 중간 상세 화면을 뒤로가기 대상에서 제외하도록 앱의 첫 이력으로 이동한다
       navigate(-currentHistoryIndex);
       // 비동기 POP 완료 전 중복 홈 이동을 실행하지 않도록 종료한다
@@ -258,6 +262,8 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
     if (currentHistoryIndex !== null && currentHistoryIndex > 0) {
       // POP 완료 후 현재 홈 상태를 첫 항목에 다시 적용하도록 요청을 보관한다
       pendingNavigationRef.current = { options: location.state as HomeNavigationOptions | undefined };
+      // 저장 가드가 남긴 기준 항목에서 추가 뒤로가기가 발생하지 않도록 홈 정리 시작을 알린다
+      beginHomeHistoryReset();
       // 앱 진입 이후 쌓인 화면을 한 번에 제거하도록 첫 이력으로 이동한다
       navigate(-currentHistoryIndex);
     }
@@ -446,6 +452,12 @@ export const HomeNavigationProvider = ({ children }: HomeNavigationProviderProps
     function handleHomePopState(event: PopStateEvent): void {
 
       const poppedState = event.state as RouterHistoryState | null;
+
+      // 저장 완료가 만든 동일 URL 정리 POP은 PWA 종료 요청으로 처리하지 않는다
+      if (poppedState?.sadariBlockingOperation !== undefined) {
+        // 저장 가드가 원래 홈 종료 항목을 복원하도록 현재 종료 처리를 건너뛴다
+        return;
+      }
 
       // 앞으로가기로 종료 가드에 도착한 경우에는 별도 확인 없이 홈을 유지한다
       if (poppedState?.sadariHomeExitGuard === true) {
