@@ -1002,6 +1002,10 @@ const FeedPage = () => {
       : "/book/search";
     // 책 표지와 제목에서 도서검색을 즉시 실행할 제목 검색어를 정규화한다
     const bookTitleKeyword = item.bookTitl?.trim() ?? "";
+    // 본인 독후감은 상세로 이동하고 타인 독후감은 제목 기반 도서 검색으로 이동한다
+    const bookTargetPath = item.meYsno === "Y" && item.reptNumb
+      ? `/report/detail/${item.reptNumb}`
+      : "/book/search";
     // 저자 검색 링크는 공백을 제거한 실제 저자명이 있을 때만 표시한다
     const bookAuthorKeyword = item.bookAthr?.trim() ?? "";
     // 펼침 버튼의 현재 동작을 보조기기에 전달할 문구를 조회한다
@@ -1093,10 +1097,10 @@ const FeedPage = () => {
         {/* 독후감 도서 표지와 제목 및 저자 정보 영역 */}
         {isReportFeed ? (
           <div className={styles.reportMediaRow}>
-            {/* 도서 제목 검색으로 이동하는 표지 영역 */}
+            {/* 본인 여부에 따라 독후감 상세 또는 도서 검색으로 이동하는 표지 영역 */}
             <Link
               className={styles.reportCoverLink}
-              to="/book/search"
+              to={bookTargetPath}
               state={{ initialSearchKeyword: bookTitleKeyword }}
             >
               <img
@@ -1110,7 +1114,7 @@ const FeedPage = () => {
             <div className={styles.mediaInfo}>
               <Link
                 className={styles.bookInfoLink}
-                to="/book/search"
+                to={bookTargetPath}
                 state={{ initialSearchKeyword: bookTitleKeyword }}
               >
                 <span className={styles.title}>{item.bookTitl}</span>
@@ -1199,8 +1203,8 @@ const FeedPage = () => {
         {/* 독후감 본문과 펼침 제어 영역 */}
         {reportContent ? (
           <div className={styles.contentSection}>
-            {/* 독후감 본문은 도서 정보 상세로 이동하고 다른 활동 본문은 정적으로 표시한다 */}
-            {item.tagtType === "REPORT" ? (
+            {/* 본인 독후감 본문만 도서 정보 상세로 이동하고 타인 독후감과 다른 활동 본문은 정적으로 표시한다 */}
+            {item.tagtType === "REPORT" && item.meYsno === "Y" ? (
               <Link className={styles.reportContentLink} to={bookInfoPath}>
                 <AnimatedReportContent
                   content={reportContent}
