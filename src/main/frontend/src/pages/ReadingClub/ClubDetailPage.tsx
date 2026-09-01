@@ -1,8 +1,8 @@
-import { message } from "@/app/messages/message";
-import { formatDashedDateToDot } from "@/app/utils/dateUtil";
-import { ActionButton } from "@/components/Button/ActionButton";
+import {message} from "@/app/messages/message";
+import {formatDashedDateToDot} from "@/app/utils/dateUtil";
+import {ActionButton} from "@/components/Button/ActionButton";
 import LinkButton from "@/components/Button/LinkButton/LinkButton";
-import CustomSelect, { type CustomSelectOption } from "@/components/Select/CustomSelect";
+import CustomSelect, {type CustomSelectOption} from "@/components/Select/CustomSelect";
 import Skeleton from "@/components/Skeleton/Skeleton";
 import SearchBookButton from "@/features/Book/Set/components/searchBookButton/SearchBookButton";
 import {
@@ -13,12 +13,12 @@ import OwnerElectionOverlay from "@/features/ReadingClub/components/OwnerElectio
 import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
 import * as resultStyles from "@/features/ReadingClub/components/ReadingGoalResultOverlay.css";
 import ProfileImage from "@/features/User/components/ProfileImage";
-import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
-import { useClubDetailPage } from "@/features/ReadingClub/hooks/useClubDetailPage";
-import { getReadingDeadline } from "@/features/ReadingClub/utils/readingClubDeadline";
+import {getGoalProgressColor} from "@/features/User/utils/goalProgress";
+import {useClubDetailPage} from "@/features/ReadingClub/hooks/useClubDetailPage";
+import {getReadingDeadline} from "@/features/ReadingClub/utils/readingClubDeadline";
 import clsx from "clsx";
-import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import {createPortal} from "react-dom";
+import {useNavigate} from "react-router-dom";
 import * as styles from "./ClubDetailPage.css";
 
 /**
@@ -47,6 +47,7 @@ const ClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isLeaving,
     isCompletingReading,
     isClosingResult,
     isVotingOwner,
@@ -55,6 +56,7 @@ const ClubDetailPage = () => {
     readingGoalResult,
     handleApplicationCancel,
     handleClubAction,
+    handleClubLeave,
     handleJoinClub,
     handleOwnerVote,
     handleReadingHistory,
@@ -71,10 +73,10 @@ const ClubDetailPage = () => {
         aria-busy="true"
         aria-label={message("frontend.readingClub.common.loading")}
       >
-        <Skeleton width="100%" height={156} borderRadius={20} />
-        <Skeleton width="100%" height={289} borderRadius={22} />
-        <Skeleton width="100%" height={80} borderRadius={18} />
-        <Skeleton width="100%" height={108} borderRadius={12} />
+        <Skeleton width="100%" height={156} borderRadius={20}/>
+        <Skeleton width="100%" height={289} borderRadius={22}/>
+        <Skeleton width="100%" height={80} borderRadius={18}/>
+        <Skeleton width="100%" height={108} borderRadius={12}/>
       </main>
     );
   }
@@ -84,7 +86,7 @@ const ClubDetailPage = () => {
     ? /* "공개" */ message("frontend.common.public")
     : /* "비공개" */ message("frontend.common.private");
 
-    // 모임원인지에 대한 상태
+  // 모임원인지에 대한 상태
   const isActiveMember = club.membStat === "ACTIVE";
 
   // 모임 정보를 볼 수 있는 상태인지
@@ -208,7 +210,7 @@ const ClubDetailPage = () => {
               value=""
               options={clubActionOptions}
               ariaLabel={message("frontend.readingClub.detail.more")}
-              triggerContent={<img className={styles.moreIcon} src="/img/icons/icon-more.svg" alt="" />}
+              triggerContent={<img className={styles.moreIcon} src="/img/icons/icon-more.svg" alt=""/>}
               showArrow={false}
               onChange={handleClubAction}
             />
@@ -238,61 +240,61 @@ const ClubDetailPage = () => {
 
               <div>
                 <div className={styles.currentReadingCard}>
-                <div className={styles.readingCardHeader}>
-                  <strong className={styles.readingOrder}>
-                    {/* "{0}번째 독서" */}
-                    {message("frontend.readingClub.detail.readingOrder", [readingOrder])}
-                  </strong>
-                  {hasCurrentReading && readingDeadline ? (
-                    <span
-                      className={styles.dDay}
-                      data-ended={readingDeadline.state === "ENDED"}
-                    >
+                  <div className={styles.readingCardHeader}>
+                    <strong className={styles.readingOrder}>
+                      {/* "{0}번째 독서" */}
+                      {message("frontend.readingClub.detail.readingOrder", [readingOrder])}
+                    </strong>
+                    {hasCurrentReading && readingDeadline ? (
+                      <span
+                        className={styles.dDay}
+                        data-ended={readingDeadline.state === "ENDED"}
+                      >
                       {readingDeadline.label}
                     </span>
-                  ) : null}
-                </div>
-                {hasCurrentReading ? (
-                  <div className={styles.currentReadingContent}>
-                    <div className={styles.readingBook}>
-                      <img
-                        className={styles.currentBookImage}
-                        src={getBookCoverImageSource(club.currentBookCvim)}
-                        onError={handleBookCoverImageError}
-                        alt={club.currentBookTitl ?? ""}
-                      />
-                      <div className={styles.currentBookInformation}>
-                        <div className={styles.currentBookSummary}>
-                          <div className={styles.currentBookIdentity}>
-                            <strong className={styles.currentBookTitle}>{club.currentBookTitl}</strong>
-                            {club.currentBookAthr ? (
-                              <span className={styles.currentBookAuthor}>{club.currentBookAthr}</span>
+                    ) : null}
+                  </div>
+                  {hasCurrentReading ? (
+                    <div className={styles.currentReadingContent}>
+                      <div className={styles.readingBook}>
+                        <img
+                          className={styles.currentBookImage}
+                          src={getBookCoverImageSource(club.currentBookCvim)}
+                          onError={handleBookCoverImageError}
+                          alt={club.currentBookTitl ?? ""}
+                        />
+                        <div className={styles.currentBookInformation}>
+                          <div className={styles.currentBookSummary}>
+                            <div className={styles.currentBookIdentity}>
+                              <strong className={styles.currentBookTitle}>{club.currentBookTitl}</strong>
+                              {club.currentBookAthr ? (
+                                <span className={styles.currentBookAuthor}>{club.currentBookAthr}</span>
+                              ) : null}
+                            </div>
+                            {goalStartDate && goalEndDate ? (
+                              <span className={styles.currentReadingPeriod}>{readingPeriod}</span>
                             ) : null}
                           </div>
-                          {goalStartDate && goalEndDate ? (
-                            <span className={styles.currentReadingPeriod}>{readingPeriod}</span>
-                          ) : null}
-                        </div>
-                        {isActiveMember ? (
-                          <div className={styles.myReadingStatus}>
+                          {isActiveMember ? (
+                            <div className={styles.myReadingStatus}>
                             <span className={styles.myReadingStatusLabel}>
                               {message("frontend.readingClub.detail.myReadingStatus")}
                             </span>
-                            <span
-                              className={clsx(
-                                styles.myReadingStatusValue,
-                                !club.currentReportStat && styles.readingStatusUnavailable,
-                              )}
-                            >
-                              <span className={styles.readingStatusDot} aria-hidden="true" />
-                              {currentReportStatusLabel}
+                              <span
+                                className={clsx(
+                                  styles.myReadingStatusValue,
+                                  !club.currentReportStat && styles.readingStatusUnavailable,
+                                )}
+                              >
+                              <span className={styles.readingStatusDot} aria-hidden="true"/>
+                                {currentReportStatusLabel}
                             </span>
-                          </div>
-                        ) : null}
+                            </div>
+                          ) : null}
+                        </div>
                       </div>
-                    </div>
-                    <div className={styles.goalStatus}>
-                      <div className={styles.goalProgressTrack}>
+                      <div className={styles.goalStatus}>
+                        <div className={styles.goalProgressTrack}>
                         <span
                           className={styles.goalProgressFill}
                           style={{
@@ -300,25 +302,25 @@ const ClubDetailPage = () => {
                             backgroundColor: goalProgressColor,
                           }}
                         />
-                      </div>
-                      <span className={styles.goalAchievementText}>
+                        </div>
+                        <span className={styles.goalAchievementText}>
                         {/* "{0}/{1}명 목표 달성" */}
-                        {message("frontend.readingClub.detail.goalAchievement", [
-                          goalAchievementCount,
-                          goalMemberCount,
-                        ])}
+                          {message("frontend.readingClub.detail.goalAchievement", [
+                            goalAchievementCount,
+                            goalMemberCount,
+                          ])}
                       </span>
+                      </div>
                     </div>
-                  </div>
-                ) : (
-                  <div className={styles.readingEmpty}>
-                    {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공한다 */}
-                    {club.membRole === "OWNER" ? (
-                      <SearchBookButton to={`/reading-clubs/books/search/${club.clubNumb}`} />
-                    ) : null}
-                    <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
-                  </div>
-                )}
+                  ) : (
+                    <div className={styles.readingEmpty}>
+                      {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공한다 */}
+                      {club.membRole === "OWNER" ? (
+                        <SearchBookButton to={`/reading-clubs/books/search/${club.clubNumb}`}/>
+                      ) : null}
+                      <p>{message("frontend.readingClub.detail.currentReadingEmpty")}</p>
+                    </div>
+                  )}
                 </div>
 
                 {canEarlyClose ? (
@@ -329,8 +331,10 @@ const ClubDetailPage = () => {
                     onClick={() => void handleReadingComplete()}
                   >
                     {/* "독서 조기 마감" */}
-                    <strong className={styles.earlyCloseButtonTitle}>{message("frontend.readingClub.detail.earlyCloseButton")}</strong>
-                    <small className={styles.navigationDescription}>{message("frontend.readingClub.detail.earlyCloseButtonDescription")}</small>
+                    <strong
+                      className={styles.earlyCloseButtonTitle}>{message("frontend.readingClub.detail.earlyCloseButton")}</strong>
+                    <small
+                      className={styles.navigationDescription}>{message("frontend.readingClub.detail.earlyCloseButtonDescription")}</small>
                   </button>
                 ) : null}
 
@@ -343,7 +347,10 @@ const ClubDetailPage = () => {
                   >
                     {message("frontend.readingClub.management.reading")}
                     <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
+                      <path
+                        d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006"
+                        stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round"
+                        strokeLinejoin="round"/>
                     </svg>
                   </LinkButton>
                 ) : null}
@@ -353,62 +360,70 @@ const ClubDetailPage = () => {
 
             <section className={styles.section}>
               <div>
-              {/* 함께 읽는 멤버 */}
-              <div className={styles.memberHeader}>
-                <h2 className={styles.sectionTitle}>
-                  {message("frontend.readingClub.detail.members", [club.memberCnt])}
-                </h2>
+                {/* 함께 읽는 멤버 */}
+                <div className={styles.memberHeader}>
+                  <h2 className={styles.sectionTitle}>
+                    {message("frontend.readingClub.detail.members", [club.memberCnt])}
+                  </h2>
 
-                {/* 모임 채팅 버튼 */}
-                {isActiveMember ? (
-                  <button className={styles.chatButton} type="button">
-                    <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-                      <path d="M10.3933 8.26667V10.98C10.3933 11.22 10.3666 11.4467 10.3066 11.6533C10.0599 12.6333 9.24659 13.2467 8.12659 13.2467H6.31325L4.29992 14.5867C3.99992 14.7933 3.59992 14.5733 3.59992 14.2133V13.2467C2.91992 13.2467 2.35325 13.02 1.95992 12.6267C1.55992 12.2267 1.33325 11.66 1.33325 10.98V8.26667C1.33325 7 2.11992 6.12667 3.33325 6.01333C3.41992 6.00667 3.50659 6 3.59992 6H8.12659C9.48659 6 10.3933 6.90667 10.3933 8.26667Z" fill="#293038"/>
-                      <path d="M11.8333 10.4002C12.6799 10.4002 13.3933 10.1202 13.8866 9.62016C14.3866 9.12683 14.6666 8.4135 14.6666 7.56683V4.16683C14.6666 2.60016 13.3999 1.3335 11.8333 1.3335H6.16659C4.59992 1.3335 3.33325 2.60016 3.33325 4.16683V4.66683C3.33325 4.8535 3.47992 5.00016 3.66659 5.00016H8.12659C9.93325 5.00016 11.3933 6.46016 11.3933 8.26683V10.0668C11.3933 10.2535 11.5399 10.4002 11.7266 10.4002H11.8333Z" fill="#293038"/>
-                    </svg>
-                    {message("frontend.readingClub.detail.clubChat")}
-                  </button>
-                ) : null}
-              </div>
-              <div className={styles.memberSummary} aria-label={message("frontend.readingClub.detail.members", [club.memberCnt])}>
-                {/* 참여한 모임원 프로필 이미지 목록 영역 */}
-                <ul
-                  className={clsx(
-                    styles.memberProfiles,
-                    hasAdditionalMembers && styles.memberProfilesOverlapped,
-                  )}
-                >
-                  {memberProfiles.map((member)=>(
-                    <li className={styles.memberProfileItem} key={member.userNumb}>
-                      {/* 모임원 프로필 이미지 영역 */}
-                      <ProfileImage
-                        className={styles.memberProfileImage}
-                        src={member.porfPath}
-                        alt={member.userNick ?? ""}
-                        title={member.userNick}
-                      />
-                    </li>
-                  ))}
-                </ul>
-                {hasAdditionalMembers ? (
-                  <span className={styles.memberCountText}>
+                  {/* 모임 채팅 버튼 */}
+                  {isActiveMember ? (
+                    <button className={styles.chatButton} type="button">
+                      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path
+                          d="M10.3933 8.26667V10.98C10.3933 11.22 10.3666 11.4467 10.3066 11.6533C10.0599 12.6333 9.24659 13.2467 8.12659 13.2467H6.31325L4.29992 14.5867C3.99992 14.7933 3.59992 14.5733 3.59992 14.2133V13.2467C2.91992 13.2467 2.35325 13.02 1.95992 12.6267C1.55992 12.2267 1.33325 11.66 1.33325 10.98V8.26667C1.33325 7 2.11992 6.12667 3.33325 6.01333C3.41992 6.00667 3.50659 6 3.59992 6H8.12659C9.48659 6 10.3933 6.90667 10.3933 8.26667Z"
+                          fill="#293038"/>
+                        <path
+                          d="M11.8333 10.4002C12.6799 10.4002 13.3933 10.1202 13.8866 9.62016C14.3866 9.12683 14.6666 8.4135 14.6666 7.56683V4.16683C14.6666 2.60016 13.3999 1.3335 11.8333 1.3335H6.16659C4.59992 1.3335 3.33325 2.60016 3.33325 4.16683V4.66683C3.33325 4.8535 3.47992 5.00016 3.66659 5.00016H8.12659C9.93325 5.00016 11.3933 6.46016 11.3933 8.26683V10.0668C11.3933 10.2535 11.5399 10.4002 11.7266 10.4002H11.8333Z"
+                          fill="#293038"/>
+                      </svg>
+                      {message("frontend.readingClub.detail.clubChat")}
+                    </button>
+                  ) : null}
+                </div>
+                <div className={styles.memberSummary}
+                     aria-label={message("frontend.readingClub.detail.members", [club.memberCnt])}>
+                  {/* 참여한 모임원 프로필 이미지 목록 영역 */}
+                  <ul
+                    className={clsx(
+                      styles.memberProfiles,
+                      hasAdditionalMembers && styles.memberProfilesOverlapped,
+                    )}
+                  >
+                    {memberProfiles.map((member) => (
+                      <li className={styles.memberProfileItem} key={member.userNumb}>
+                        {/* 모임원 프로필 이미지 영역 */}
+                        <ProfileImage
+                          className={styles.memberProfileImage}
+                          src={member.porfPath}
+                          alt={member.userNick ?? ""}
+                          title={member.userNick}
+                        />
+                      </li>
+                    ))}
+                  </ul>
+                  {hasAdditionalMembers ? (
+                    <span className={styles.memberCountText}>
                     +{message("frontend.readingClub.common.memberCount", [additionalMemberCount])}
                   </span>
-                ) : null}
-              </div>
+                  ) : null}
+                </div>
 
-              {/* 멤버 관리는 활성 모임장에게만 제공한다 */}
-              {club.membRole === "OWNER" ? (
-                <LinkButton
-                  link={`/reading-clubs/manage/members/${club.clubNumb}`}
-                  className={styles.managementMembersBtn}
-                >
-                  {message("frontend.readingClub.management.members")}
-                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round" />
-                  </svg>
-                </LinkButton>
-              ) : null}
+                {/* 멤버 관리는 활성 모임장에게만 제공한다 */}
+                {club.membRole === "OWNER" ? (
+                  <LinkButton
+                    link={`/reading-clubs/manage/members/${club.clubNumb}`}
+                    className={styles.managementMembersBtn}
+                  >
+                    {message("frontend.readingClub.management.members")}
+                    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path
+                        d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006"
+                        stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round"
+                        strokeLinejoin="round"/>
+                    </svg>
+                  </LinkButton>
+                ) : null}
               </div>
             </section>
 
@@ -419,14 +434,14 @@ const ClubDetailPage = () => {
                   type="button"
                   onClick={handleCurrentReports}
                 >
-                    {hasCurrentReports ? (
+                  {hasCurrentReports ? (
                       /* "모임원 독후감 {0}편 보기" */
                       message("frontend.readingClub.result.viewReports", [currentReportCount])
-                      ) :
-                      /* "모임원 독후감 보기" */
-                      message("frontend.readingClub.result.viewReportsDefault")
-                    }
-                  <img src="/img/icons/icon-chevron-right.svg" alt="" aria-hidden="true" />
+                    ) :
+                    /* "모임원 독후감 보기" */
+                    message("frontend.readingClub.result.viewReportsDefault")
+                  }
+                  <img src="/img/icons/icon-chevron-right.svg" alt="" aria-hidden="true"/>
                 </button>
               ) : null}
 
@@ -445,7 +460,7 @@ const ClubDetailPage = () => {
                   </span>
                   <img
                     src="/img/icons/icon-chevron-right.svg"
-                    alt=""
+                    alt="chevron"
                     aria-hidden="true"
                   />
                 </button>
@@ -453,17 +468,30 @@ const ClubDetailPage = () => {
 
               {/* 이전 독서 기록 */}
               <button
-                className={styles.navigationRow}
+                className={styles.readingHistoryButton}
                 type="button"
                 onClick={handleReadingHistory}
               >
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
-                <img
-                  src="/img/icons/icon-chevron-right.svg"
-                  alt=""
-                  aria-hidden="true"
-                />
+                <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
+
+              {isActiveMember && club.membRole === "MEMBER" ? (
+                /* 모임 자진 탈퇴 */
+                <button
+                  className={styles.clubLeaveButton}
+                  type="button"
+                  onClick={handleClubLeave}
+                  disabled={isLeaving}
+                >
+                  <strong>{message("frontend.readingClub.detail.leaveButton")}</strong>
+                  <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#D84A5F" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  </svg>
+                </button>
+              ) : null}
             </nav>
           </>
         ) : null}
@@ -500,7 +528,8 @@ const ClubDetailPage = () => {
               ? message("frontend.readingClub.detail.joinNow")
               : message("frontend.readingClub.detail.apply")}
           </ActionButton>
-          <small className={styles.JoinButtonDescription}>{message("frontend.readingClub.detail.joinNowDescription")}</small>
+          <small
+            className={styles.JoinButtonDescription}>{message("frontend.readingClub.detail.joinNowDescription")}</small>
         </div>
       ) : null}
 
@@ -514,7 +543,7 @@ const ClubDetailPage = () => {
             }
           </ActionButton>
         </div>
-       ) : null}
+      ) : null}
 
 
       {/* 목표 결과 오버레이 팝업 */}

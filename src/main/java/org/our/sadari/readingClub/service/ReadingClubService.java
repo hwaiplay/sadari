@@ -19,7 +19,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 계약 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 계약 확장
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감 계약 추가
- * 2026-09-01        HanWon.Jang        공개 모임 비회원 요약 조회 계약 확장
+ * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 계약 확장
  */
 public interface ReadingClubService {
 
@@ -216,6 +216,16 @@ public interface ReadingClubService {
      * @return 가입 또는 신청 처리 결과
      */
     ResultData setJoin(Long userNumb, Long clubNumb, ReadingClubDto.JoinReqDto request);
+
+    /**
+     * 활성 일반 모임원의 활동 연결을 삭제하고 개인 독후감 원본을 보존한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 탈퇴를 요청한 사용자 번호
+     * @param clubNumb 탈퇴할 모임 번호
+     * @return 모임 자진 탈퇴 결과
+     */
+    ResultData delMembership(Long userNumb, Long clubNumb);
 
     /**
      * 가입 신청자가 승인 전 자신의 처리 대기 신청과 답변을 삭제한다.

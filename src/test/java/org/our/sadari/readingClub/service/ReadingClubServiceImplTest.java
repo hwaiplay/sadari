@@ -32,6 +32,7 @@ import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
+import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.report.dto.ReportDto;
 import org.springframework.context.support.ResourceBundleMessageSource;
@@ -54,7 +55,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 검증
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
- * 2026-09-01        HanWon.Jang        공개 모임 비회원 요약 조회 검증
+ * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -62,6 +63,10 @@ class ReadingClubServiceImplTest {
     // 독서 모임 데이터 접근 객체
     @Mock
     private ReadingClubMapper readingClubMapper;
+
+    // 모임 자진 탈퇴 데이터 정리 객체
+    @Mock
+    private ReadingClubMembershipMapper readingClubMembershipMapper;
 
     // 사용자 입력 비속어 검사 서비스
     @Mock
@@ -104,7 +109,9 @@ class ReadingClubServiceImplTest {
 
         // 독서 모임 서비스 단위 테스트 대상을 생성한다
         readingClubService = new ReadingClubServiceImpl(
-                readingClubMapper, badWordDetectionService, alimService, bookMapper, reportMapper, codeUtil);
+                readingClubMapper, readingClubMembershipMapper, badWordDetectionService
+              , alimService, bookMapper, reportMapper
+              , codeUtil);
     }
 
     /**
@@ -843,6 +850,43 @@ class ReadingClubServiceImplTest {
     }
 
     /**
+     * 재가입 차단이 없는 자진 탈퇴 회원이 공개 모임에 다시 가입하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setOpenJoinAllowsLeaver() {
+        // 즉시 재가입이 가능한 공개형 모임을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubVisb("PUBLIC");
+        club.setJoinType("OPEN");
+        club.setOwnrNumb(30L);
+        club.setClubName("책벌레 모임");
+        club.setMaxxMemb(10);
+
+        // 재가입 차단 없이 자진 탈퇴한 기존 회원 관계를 구성한다
+        ReadingClubDto.MemberDto member = new ReadingClubDto.MemberDto();
+        member.setMembStat("EXITED");
+        member.setBlocYsno("N");
+
+        // 기존 회원 행 갱신과 모임장 알림이 성공하도록 구성한다
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(member);
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
+        when(readingClubMapper.setActiveMember(10L, 20L)).thenReturn(2);
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
+                , Map.of("clubName", "책벌레 모임"))).thenReturn(ResultData.success());
+
+        // 자진 탈퇴 회원이 공개형 모임에 즉시 재가입한다
+        readingClubService.setJoin(20L, 10L, new ReadingClubDto.JoinReqDto());
+
+        // 기존 탈퇴 회원 행이 활성 회원 관계로 갱신되는지 검증한다
+        verify(readingClubMapper).setActiveMember(10L, 20L);
+    }
+
+    /**
      * 공개형 모임의 신규 멤버 알림 저장 실패가 즉시 가입을 롤백하는지 검증한다.
      *
      * @author HanWon.Jang
@@ -1279,6 +1323,58 @@ class ReadingClubServiceImplTest {
         // 접근 거절과 관계 상태 미변경을 검증한다
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).uptMemberExit(20L, 10L, 20L);
+    }
+
+    /**
+     * 활성 일반 모임원의 활동 연결을 삭제하고 자진 탈퇴 상태를 남기는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delMembershipClearsLinks() {
+        // 활성 계정의 일반 모임원 관계가 자진 탈퇴 상태로 변경되도록 구성한다
+        when(readingClubMembershipMapper.uptMemberLeave(10L, 20L)).thenReturn(1);
+
+        // 활성 일반 모임원이 현재 모임의 자진 탈퇴를 요청한다
+        ResultData result = readingClubService.delMembership(20L, 10L);
+
+        // 회원 상태와 모든 모임 활동 연결이 정리됐는지 검증한다
+        assertEquals(200, result.getCode());
+        // 탈퇴 사실과 처리 일시를 남기는 회원 상태 변경을 검증한다
+        verify(readingClubMembershipMapper).uptMemberLeave(10L, 20L);
+        // 다음 도서 투표 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberBookVotes(10L, 20L);
+        // 다음 도서 추천 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberBookRecs(10L, 20L);
+        // 모임장 투표와 유권자 자격 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberElectionVotes(10L, 20L);
+        // 개인 독후감이 아닌 모임 회차 연결 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberRoundLinks(10L, 20L);
+        // 목표 결과 확인 기록 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberResultHistory(10L, 20L);
+        // 가입 신청 기록 삭제를 검증한다
+        verify(readingClubMembershipMapper).delMemberApplications(10L, 20L);
+    }
+
+    /**
+     * 모임장 또는 비활성 관계의 자진 탈퇴 요청이 활동 기록을 삭제하지 않는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void delMembershipRejectsOwner() {
+        // 모임장 또는 비활성 관계가 SQL 권한 검증을 통과하지 못하도록 구성한다
+        when(readingClubMembershipMapper.uptMemberLeave(10L, 20L)).thenReturn(0);
+
+        // 자진 탈퇴 권한이 없는 사용자의 요청을 처리한다
+        ResultData result = readingClubService.delMembership(20L, 10L);
+
+        // 접근 거절과 활동 연결 보존을 검증한다
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        // 권한 검증 실패 뒤 도서 투표를 삭제하지 않는지 검증한다
+        verify(readingClubMembershipMapper, never()).delMemberBookVotes(10L, 20L);
+        // 권한 검증 실패 뒤 회차 참여 연결을 삭제하지 않는지 검증한다
+        verify(readingClubMembershipMapper, never()).delMemberRoundLinks(10L, 20L);
     }
 
     /**

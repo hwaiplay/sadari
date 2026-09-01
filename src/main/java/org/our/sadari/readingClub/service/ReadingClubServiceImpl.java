@@ -22,6 +22,7 @@ import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
+import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.springframework.http.HttpStatus;
@@ -47,7 +48,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 수정
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
- * 2026-09-01        HanWon.Jang        공개 모임 비회원 독서 현황 조회 확장
+ * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 처리
  */
 @Service
 @RequiredArgsConstructor
@@ -70,6 +71,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final String CLUB_ACTIVE = "ACTIVE";
     // 현재 모임에 참여 중인 활성 모임원 상태 코드
     private static final String MEMBER_ACTIVE = "ACTIVE";
+    // 모임을 탈퇴하거나 퇴장한 모임원 상태 코드
+    private static final String MEMBER_EXITED = "EXITED";
     // 모임 회차 독후감 목록이 한 번에 조회할 화면 항목 수
     private static final int REPORT_PAGE_SIZE = 12;
     // 이전 독서 기록 목록이 한 번에 조회할 화면 항목 수
@@ -81,6 +84,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
     // 독서 모임 데이터베이스 접근 Mapper
     private final ReadingClubMapper readingClubMapper;
+    // 모임 자진 탈퇴 데이터 정리 Mapper
+    private final ReadingClubMembershipMapper readingClubMembershipMapper;
     // 사용자 입력 비속어 검사 서비스
     private final BadWordDetectionService badWordDetectionService;
     // 사용자 알림과 푸시 발송 서비스
@@ -1202,8 +1207,10 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 이미 회원 또는 초대 관계가 있으면 중복 가입을 막는다
-        if (!StringUtil.isEmpty(readingClubMapper.getClubMember(clubNumb, userNumb))) {
+        // 차단되지 않은 자진 탈퇴 관계만 새 가입 절차에서 다시 사용할 수 있다
+        ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, userNumb);
+        // 현재 회원이나 초대 관계 또는 재가입 차단 관계이면 중복 가입을 막는다
+        if (!canJoinAgain(member)) {
             // "저장에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
@@ -1218,8 +1225,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
             }
 
-            // 활성 일반 회원이 정확히 한 건 등록되지 않으면 가입 완료 상태를 만들지 않는다
-            if (readingClubMapper.setActiveMember(clubNumb, userNumb) != 1) {
+            // 신규 등록 또는 자진 탈퇴 관계 재활성화가 반영되지 않으면 가입 완료 상태를 만들지 않는다
+            if (readingClubMapper.setActiveMember(clubNumb, userNumb) < 1) {
                 // "저장에 실패했어요. 다시 시도해주세요."
                 throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
             }
@@ -1299,6 +1306,46 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 신청 완료 상세를 반환한다
         return getClubDtl(userNumb, clubNumb);
+    }
+
+    /**
+     * {@inheritDoc}
+     *
+     * @author HanWon.Jang
+     * @param userNumb 탈퇴를 요청한 사용자 번호
+     * @param clubNumb 탈퇴할 모임 번호
+     * @return 모임 자진 탈퇴 결과
+     */
+    @Override
+    @Transactional
+    public ResultData delMembership(Long userNumb, Long clubNumb) {
+        // 자진 탈퇴에 필요한 식별값을 검증한다
+        if (StringUtil.hasEmpty(userNumb, clubNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 활성 계정의 활성 일반 모임원만 탈퇴 상태로 변경하고 모임장은 거절한다
+        if (readingClubMembershipMapper.uptMemberLeave(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 탈퇴 회원이 다음 도서에 남긴 투표를 삭제한다
+        readingClubMembershipMapper.delMemberBookVotes(clubNumb, userNumb);
+        // 탈퇴 회원의 다음 도서 추천과 해당 추천에 종속된 투표를 삭제한다
+        readingClubMembershipMapper.delMemberBookRecs(clubNumb, userNumb);
+        // 탈퇴 회원의 모임장 투표와 유권자 자격을 삭제한다
+        readingClubMembershipMapper.delMemberElectionVotes(clubNumb, userNumb);
+        // 개인 독후감 원본은 유지하고 모임 회차 참여 연결만 삭제한다
+        readingClubMembershipMapper.delMemberRoundLinks(clubNumb, userNumb);
+        // 탈퇴 회원에게 생성된 목표 결과 확인 기록을 삭제한다
+        readingClubMembershipMapper.delMemberResultHistory(clubNumb, userNumb);
+        // 이전 가입 질문과 답변을 포함한 신청 기록을 삭제한다
+        readingClubMembershipMapper.delMemberApplications(clubNumb, userNumb);
+
+        // 모임 활동 연결 정리가 완료된 자진 탈퇴 성공 결과를 반환한다
+        return ResultData.success();
     }
 
     /**
@@ -1603,8 +1650,10 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
             }
 
-            // 이미 별도 경로로 가입한 신청자는 중복 등록하지 않는다
-            if (!StringUtil.isEmpty(readingClubMapper.getClubMember(clubNumb, application.getUserNumb()))) {
+            // 현재 회원이나 초대 관계 또는 재가입 차단 관계이면 중복 등록하지 않는다
+            ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, application.getUserNumb());
+            // 차단되지 않은 자진 탈퇴 관계만 승인 가입으로 다시 활성화할 수 있다
+            if (!canJoinAgain(member)) {
                 // "수정에 실패했어요. 다시 시도해주세요."
                 return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
             }
@@ -1736,6 +1785,25 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 모임 정보와 사용자 번호가 모두 있고 현재 모임장 번호가 같은지 반환한다
         return !StringUtil.isEmpty(club) && !StringUtil.isEmpty(userNumb)
                 && userNumb.equals(club.getOwnrNumb());
+    }
+
+    /**
+     * 기존 관계가 없거나 재가입 차단 없이 자진 탈퇴한 관계인지 확인한다.
+     *
+     * @author HanWon.Jang
+     * @param member 현재 모임원 관계
+     * @return 새 가입 절차를 시작할 수 있으면 true
+     */
+    private boolean canJoinAgain(ReadingClubDto.MemberDto member) {
+        // 기존 관계가 없으면 최초 가입을 허용한다
+        if (StringUtil.isEmpty(member)) {
+            // 최초 가입 가능 상태를 반환한다
+            return true;
+        }
+
+        // 자진 탈퇴 상태이면서 재가입 차단이 없을 때만 다시 가입할 수 있다
+        return MEMBER_EXITED.equals(member.getMembStat())
+                && Constant.COMM_NO.equals(member.getBlocYsno());
     }
 
     private ReadingClubDto.QuestionDto toQuestion(Long clubNumb, List<String> questions) {

@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper">
+
+    <!-- 활성 계정의 활성 일반 모임원만 재가입 차단 없는 자진 탈퇴 상태로 변경한다. -->
+    <update id="uptMemberLeave">
+        <bind name="memberRole" value="'MEMBER'" />
+        <bind name="memberActive" value="'ACTIVE'" />
+        <bind name="memberExited" value="'EXITED'" />
+        <bind name="userActive" value="'ACTIVE'" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        UPDATE /* uptMemberLeave */ TB_CLMEMX MEMBER
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = MEMBER.CLUB_NUMB
+           AND (CLUB.OWNR_NUMB IS NULL OR CLUB.OWNR_NUMB != #{userNumb})
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+           SET MEMBER.MEMB_STAT = #{memberExited}
+             , MEMBER.EXIT_DATE = CURRENT_TIMESTAMP(6)
+             , MEMBER.BLOC_YSNO = #{commNo}
+             , MEMBER.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.MEMB_ROLE = #{memberRole}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </update>
+
+    <!-- 탈퇴 회원이 다음 도서 후보에 남긴 투표를 삭제한다. -->
+    <delete id="delMemberBookVotes">
+        DELETE /* delMemberBookVotes */
+          FROM TB_CLBVOT
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 탈퇴 회원의 다음 도서 추천과 추천에 종속된 투표를 삭제한다. -->
+    <delete id="delMemberBookRecs">
+        DELETE /* delMemberBookRecs */
+          FROM TB_CLBREC
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 탈퇴 회원의 모임장 투표와 유권자 자격을 종속 관계로 함께 삭제한다. -->
+    <delete id="delMemberElectionVotes">
+        DELETE /* delMemberElectionVotes */
+          FROM TB_CLVOTR
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 개인 독후감 원본을 남기고 탈퇴 회원의 모임 회차 참여 연결만 삭제한다. -->
+    <delete id="delMemberRoundLinks">
+        DELETE /* delMemberRoundLinks */
+          FROM TB_CLPART
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 탈퇴 회원에게 생성된 모임 회차 결과 확인 기록을 삭제한다. -->
+    <delete id="delMemberResultHistory">
+        DELETE /* delMemberResultHistory */
+          FROM TH_CLRSLT
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+    <!-- 탈퇴 회원의 가입 질문과 답변을 포함한 신청 기록을 삭제한다. -->
+    <delete id="delMemberApplications">
+        DELETE /* delMemberApplications */
+          FROM TB_CLJOIN
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{userNumb}
+    </delete>
+
+</mapper>

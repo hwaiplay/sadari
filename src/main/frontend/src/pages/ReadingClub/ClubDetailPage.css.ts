@@ -474,7 +474,6 @@ export const clubNavigation = style({
 export const navigationRow = style({
   display: "flex",
   width: "100%",
-  minHeight: 57,
   padding: "10px 0",
   alignItems: "center",
   justifyContent: "space-between",
@@ -485,6 +484,20 @@ export const navigationRow = style({
   textAlign: "left",
   cursor: "pointer",
 });
+
+export const readingHistoryButton = style([
+  navigationRow,
+  {
+    color: vars.color.gray600
+  }
+])
+
+export const clubLeaveButton = style([
+  navigationRow,
+  {
+    color: vars.color.negativeText
+  }
+])
 
 export const showReviewsButton = style({
   fontFamily: vars.font.semibold,

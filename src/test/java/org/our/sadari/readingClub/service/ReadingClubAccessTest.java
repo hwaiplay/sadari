@@ -25,6 +25,7 @@ import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
+import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
@@ -37,6 +38,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-24        SeungHyeon.Kang    최초 생성
+ * 2026-09-01        HanWon.Jang        자진 탈퇴 Mapper 의존성 반영
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubAccessTest {
@@ -44,6 +46,9 @@ class ReadingClubAccessTest {
     // 독서 모임 데이터 접근 객체
     @Mock
     private ReadingClubMapper readingClubMapper;
+    // 모임 자진 탈퇴 데이터 정리 객체
+    @Mock
+    private ReadingClubMembershipMapper readingClubMembershipMapper;
     // 사용자 입력 비속어 검사 서비스
     @Mock
     private BadWordDetectionService badWordDetectionService;
@@ -76,7 +81,9 @@ class ReadingClubAccessTest {
 
         // 독서 모임 서비스 단위 테스트 대상을 생성한다
         readingClubService = new ReadingClubServiceImpl(
-                readingClubMapper, badWordDetectionService, alimService, bookMapper, reportMapper, codeUtil);
+                readingClubMapper, readingClubMembershipMapper, badWordDetectionService
+              , alimService, bookMapper, reportMapper
+              , codeUtil);
     }
 
     /** 초대 관계가 활성 회원 조회에서 제외되면 비공개 상세 접근을 거절한다. */
