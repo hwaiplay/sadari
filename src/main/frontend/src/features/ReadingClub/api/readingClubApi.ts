@@ -7,30 +7,20 @@ import {
 import type {PublicReportSortType} from "@/features/Book/api/bookApi";
 import type {PublicReportType} from "@/features/Book/types/book.type";
 import type {BookSearchResultType} from "@/features/Book/types/book.type";
+import {ClubBookVotePage} from "@/features/ReadingClub/types/ClubTypes.ts";
 
-export type ClubBookRecommendation = {
-  recmNumb: number;
-  bookNumb: number;
-  bookTitl: string;
-  bookAthr: string;
-  bookPubl: string;
-  bookIsbn: string;
-  bookCvim?: string;
-  bookDesc?: string;
-  publDate?: string;
-  userNick?: string;
-  mineYsno: "Y" | "N";
-  voteYsno: "Y" | "N";
-  voteCnt: number;
-};
-
-export type ClubBookVotePage = {
-  candidateList: ClubBookRecommendation[];
-  voteDeadline?: string;
-  dDay?: number;
-  canRecommend: boolean;
-  hasRecommended: boolean;
-  hasVoted: boolean;
+/**
+ * 활성 일반 모임원의 자진 탈퇴
+ *
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @return 처리 응답
+ */
+export const delMembershipApi = async (clubNumb: number) => {
+  // 로그인 사용자의 모임 활동 연결 삭제와 회원 상태 변경을 요청
+  const response = await api.delete(`/reading-clubs/${clubNumb}/memberships`);
+  // 공통 성공 검증을 통과한 탈퇴 응답을 반환
+  return assertResultDataSuccess(response.data);
 };
 
 export const getClubBookRecommApi = async (clubNumb: number): Promise<ClubBookVotePage> => {

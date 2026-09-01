@@ -19,7 +19,7 @@ import {
   type OwnerElection,
   type ReadingClub,
   uptReadingResultApi,
-  updateOwnerVoteApi,
+  updateOwnerVoteApi, delMembershipApi,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -45,6 +45,7 @@ export const useClubDetailPage = () => {
   const [isVotingOwner, setIsVotingOwner] = useState(false);
   const [isCancellingApplication, setIsCancellingApplication] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isLeaving, setIsLeaving] = useState(false);
   const [isCompletingReading, setIsCompletingReading] = useState(false);
   const [isClosingResult, setIsClosingResult] = useState(false);
   const rejectedAlertClubRef = useRef<number | null>(null);
@@ -385,6 +386,71 @@ export const useClubDetailPage = () => {
   };
 
   /**
+   * 활성 일반 모임원의 자진 탈퇴
+   *
+   * @author HanWon.Jang
+   * @return
+   */
+  const handleClubLeave = async (): Promise<void> => {
+    // 활성 일반 모임원만 탈퇴 확인 절차를 시작하고 중복 요청을 막음
+    if (isLeaving || club?.membStat !== "ACTIVE" || club.membRole !== "MEMBER") {
+      return;
+    }
+
+    // "모임을 탈퇴할까요?"
+    const confirmResult = await sweetConfirm({
+      icon: "warning",
+      title: message("frontend.readingClub.detail.leaveConfirmTitle"),
+      // "탈퇴하면 도서 투표와 모임원 독후감 등 모든 모임 활동 기록이 삭제돼요. 개인 독후감은 내 독후감 목록에 그대로 남아요."
+      text: message("frontend.readingClub.detail.leaveConfirmDescription"),
+      // "탈퇴하기"
+      confirmButtonText: message("frontend.readingClub.detail.leaveButton"),
+      cancelButtonText: message("frontend.common.cancel"),
+    });
+
+    // 사용자 취소
+    if (!confirmResult.isConfirmed) {
+      return;
+    }
+
+    // 탈퇴 처리 중 같은 요청을 다시 시작하지 못하게 함
+    setIsLeaving(true);
+
+    try {
+      const leaveClub = (): ReturnType<typeof delMembershipApi> => {
+        // 사용자에게 확인받은 현재 모임 번호를 서버에 전달
+        return delMembershipApi(clubNumb);
+      };
+
+      // 탈퇴 처리가 끝날 때까지 화면 이동을 차단하고 같은 모달에서 완료를 안내
+      await runBlockingOperation(leaveClub, {
+        // "모임 탈퇴 중"
+        title: message("frontend.readingClub.detail.leaving"),
+        success: {
+          // "모임을 탈퇴했어요"
+          title: message("frontend.readingClub.detail.leaveSuccessTitle"),
+          // "개인 독후감은 내 독후감 목록에 그대로 남아 있어요."
+          text: message("frontend.readingClub.detail.leaveSuccessDescription"),
+        },
+      });
+
+      // 성공 안내를 확인한 뒤 탈퇴한 모임을 제외한 내 모임 목록으로 이동
+      navigate("/reading-clubs/mine", { replace: true });
+
+    } catch (error) {
+      // "모임을 탈퇴하지 못했어요"
+      void sweetError(
+        message("frontend.readingClub.detail.leaveErrorTitle"),
+        getApiErrorMessage(error, message("frontend.readingClub.detail.leaveErrorDescription")),
+      );
+
+    } finally {
+      // 성공 또는 실패가 확정되면 탈퇴 버튼의 처리 중 상태를 해제
+      setIsLeaving(false);
+    }
+  };
+
+  /**
    * 모임 수정 페이지로 이동
    */
   const handleClubEdit = (): void => {
@@ -467,10 +533,10 @@ export const useClubDetailPage = () => {
     }
   };
 
-  // 모임에 가입할 수 있는 경우 조건 (true)
+  // 가입 이력이 없거나 자진 탈퇴한 공개 모임은 가입 절차를 다시 제공한다.
   const canJoin = Boolean(
     club
-    && !club.membStat
+    && (!club.membStat || club.membStat === "EXITED")
     && !club.joinStat
     && club.clubVisb === "PUBLIC"
     && club.joinType !== "INVITE",
@@ -483,6 +549,7 @@ export const useClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isLeaving,
     isCompletingReading,
     isClosingResult,
     isVotingOwner,
@@ -493,6 +560,7 @@ export const useClubDetailPage = () => {
     handleApplicationCancel,
     handleApplicationDecision,
     handleClubAction,
+    handleClubLeave,
     handleJoinClub,
     handleOwnerVote,
     handleReadingHistory,

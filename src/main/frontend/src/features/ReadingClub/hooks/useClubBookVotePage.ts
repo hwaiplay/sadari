@@ -8,11 +8,10 @@ import {
   deleteClubBookRecommApi,
   getClubBookRecommApi,
   updateClubBookVoteApi,
-  type ClubBookRecommendation,
-  type ClubBookVotePage,
 } from "@/features/ReadingClub/api/readingClubApi";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
+import {ClubBookRecommendation, ClubBookVotePage} from "@/features/ReadingClub/types/ClubTypes.ts";
 
 type VotePageState = {recommendedBook?: BookSearchResultType};
 
