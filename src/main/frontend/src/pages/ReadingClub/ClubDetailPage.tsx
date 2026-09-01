@@ -53,7 +53,6 @@ const ClubDetailPage = () => {
     members,
     ownerElection,
     readingGoalResult,
-    handleAnswerChange,
     handleApplicationCancel,
     handleClubAction,
     handleJoinClub,

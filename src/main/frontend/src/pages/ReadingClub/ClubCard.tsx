@@ -12,7 +12,6 @@
 import { message } from "@/app/messages/message";
 import { ActionButton } from "@/components/Button/ActionButton";
 import type {
-  ClubCategory,
   ReadingClub,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useNavigate } from "react-router-dom";
