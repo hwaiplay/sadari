@@ -169,9 +169,7 @@ public interface ReadingClubService {
 
     /**
      * 목표 종료일이 지난 독서 회차의 참여자 달성 여부와 회차 상태를 확정한다.
-     *
      * @author HanWon.Jang
-     * @return 반환값이 없다
      */
     void completeExpiredRound();
 
