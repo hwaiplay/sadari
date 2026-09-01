@@ -137,13 +137,32 @@ export const useClubDetailPage = () => {
    *
    * @author Hanwon.Jang
    */
-  const handleJoinClub = (): void => {
-    void joinClubApi(clubNumb, answers)
-      .then(loadPage)
-      .catch((error: unknown) => void sweetError(
+  const handleJoinClub = async (): Promise<void> => {
+    // 즉시 가입형만 가입 완료 성공 안내를 표시한다
+    const isOpenJoin = club?.joinType === "OPEN";
+
+    try {
+      // 가입 처리 중 화면 이동을 막고 즉시 가입 성공 시 같은 모달을 완료 상태로 전환한다
+      await runBlockingOperation(() => joinClubApi(clubNumb, answers), {
+        title: message(
+          isOpenJoin
+            ? "frontend.readingClub.detail.joining"
+            : "frontend.readingClub.detail.applying",
+        ),
+        success: isOpenJoin ? {
+          title: message("frontend.readingClub.detail.joinSuccessTitle"),
+          text: message("frontend.readingClub.detail.joinSuccessDescription"),
+        } : undefined,
+      });
+      // 사용자가 성공 안내를 확인한 뒤 활성 모임원 상태로 상세 화면을 갱신한다
+      await loadPage();
+    } catch (error) {
+      // 가입 또는 가입 신청 실패 원인을 공통 오류 알림으로 표시한다
+      void sweetError(
         message("frontend.readingClub.error.joinTitle"),
         getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
-      ));
+      );
+    }
   };
 
   /**
