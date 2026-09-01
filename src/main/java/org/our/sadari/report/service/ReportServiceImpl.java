@@ -32,6 +32,8 @@ import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.mapper.SocialMapper;
+import org.our.sadari.user.dto.UserSettingDto;
+import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -65,6 +67,8 @@ public class ReportServiceImpl implements ReportService {
     private final SocialMapper socialMapper;
     // Book 데이터 접근 객체
     private final BookMapper bookMapper;
+    // User 설정 데이터 접근 객체
+    private final UserMapper userMapper;
     // 공통코드 캐시 조회 객체
     private final CodeUtil codeUtil;
     // BadWordDetection 업무 처리 서비스
@@ -227,6 +231,8 @@ public class ReportServiceImpl implements ReportService {
 
         // 통합 집계 결과를 화면 응답 형식으로 변환한다
         MonthlyReadingSummaryDto summary = getReadingSummaryResponse(queryResult, today);
+        // 다른 사용자 화면에서는 소유자의 독서 목표 공개 설정을 적용한다
+        applyReadingGoalPrivacy(summary, userNumb, pubcYsno);
         // 현재 읽는 책과 올해 완료한 책을 한 번에 조회한다
         List<ReportDto> reportList = reportMapper.getReadingSummaryList(queryReq);
         // 한 번 조회한 목록을 현재 주와 월 및 연도 화면 목록으로 분류한다
@@ -234,6 +240,39 @@ public class ReportServiceImpl implements ReportService {
 
         // 마이페이지의 기간별 독서량과 목표 달성 요약을 반환한다
         return ResultData.success(summary);
+    }
+
+    /** 다른 사용자에게 비공개인 독서 목표와 달성 정보를 응답에서 제거한다. */
+    private void applyReadingGoalPrivacy(MonthlyReadingSummaryDto summary, Long userNumb, String pubcYsno) {
+        if (StringUtil.isEmpty(pubcYsno)) {
+            summary.setGoalPublicYsno(Constant.COMM_YES);
+            return;
+        }
+
+        UserSettingDto setting = userMapper.getUserSettingDtl(userNumb);
+        boolean isPublic = !StringUtil.isEmpty(setting)
+                && Constant.COMM_YES.equals(setting.getReadingGoalYsno());
+        summary.setGoalPublicYsno(isPublic ? Constant.COMM_YES : Constant.COMM_NO);
+        if (isPublic) {
+            return;
+        }
+
+        summary.setWeekGoalCnt(null);
+        summary.setMonthGoalCnt(null);
+        summary.setYearGoalCnt(null);
+        summary.setPreviousWeekGoalCnt(null);
+        summary.setPreviousMonthGoalCnt(null);
+        summary.setPreviousYearGoalCnt(null);
+        summary.setWeekGoalRate(0);
+        summary.setMonthGoalRate(0);
+        summary.setYearGoalRate(0);
+        summary.setWeekGoalSet(false);
+        summary.setMonthGoalSet(false);
+        summary.setYearGoalSet(false);
+        summary.setWeekGoalAchvCnt(0);
+        summary.setMonthGoalAchvCnt(0);
+        summary.setYearGoalAchvCnt(0);
+        summary.setTotalGoalAchvCnt(0);
     }
 
     /**
@@ -1108,8 +1147,8 @@ public class ReportServiceImpl implements ReportService {
         reportDto.setUserNumb(userNumb);
         // setDefaultReportColor 호출로 업무 처리에 필요한 값을 설정한다
         setDefaultReportColor(reportDto);
-        // setDefaultPublicFlag 호출로 업무 처리에 필요한 값을 설정한다
-        setDefaultPublicFlag(reportDto);
+        // 신규 독후감에 사용자 공개 및 알림 기본값을 적용한다
+        applyNewReportDefaults(reportDto);
         // 독후감 입력값에서 허용하지 않는 스크립트 내용을 제거한다
         sanitizeReport(reportDto, true);
         // 읽는 중 독후감은 공개 목록과 평점 집계에 들어가지 않도록 저장값을 제한한다
@@ -1571,6 +1610,24 @@ public class ReportServiceImpl implements ReportService {
             // PubcYsno 업무 값을 reportDto DTO에 설정한다
             reportDto.setPubcYsno(Constant.COMM_NO);
         }
+    }
+
+    /** 신규 독후감의 공개 및 반응 알림 기본값을 사용자 설정에서 적용한다. */
+    private void applyNewReportDefaults(ReportDto reportDto) {
+        UserSettingDto setting = userMapper.getUserSettingDtl(reportDto.getUserNumb());
+
+        if (StringUtil.isEmpty(reportDto.getPubcYsno()) || reportDto.getPubcYsno().isBlank()) {
+            reportDto.setPubcYsno(StringUtil.isEmpty(setting)
+                    ? Constant.COMM_NO
+                    : setting.getReportPublicDefaultYsno());
+        }
+
+        reportDto.setLikeAlimYsno(StringUtil.isEmpty(setting)
+                ? Constant.COMM_YES
+                : setting.getReportLikeDefaultYsno());
+        reportDto.setReplyAlimYsno(StringUtil.isEmpty(setting)
+                ? Constant.COMM_YES
+                : setting.getReportReplyDefaultYsno());
     }
 
     /**

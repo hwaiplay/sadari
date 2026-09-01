@@ -153,6 +153,113 @@
         )
     </insert>
 
+    <!-- 신규 회원은 공개 범위를 비공개로 시작하고 선택형 알림은 기본 사용 상태로 등록한다. -->
+    <insert id="setDefaultUserSetting" parameterType="long">
+        /* setDefaultUserSetting */
+        INSERT IGNORE INTO TM_USSETX (
+                    USER_NUMB
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+    </insert>
+
+    <!-- 설정 행이 없는 기존 회원은 기존 노출과 알림 동작을 유지하는 호환 기본값으로 조회한다. -->
+    <select id="getUserSettingDtl" parameterType="long" resultType="org.our.sadari.user.dto.UserSettingDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getUserSettingDtl */
+               U.USER_NUMB
+             , COALESCE(S.RSTA_YSNO, #{commNo}) AS READING_STATISTICS_YSNO
+             , COALESCE(S.GOAL_YSNO, #{commYes}) AS READING_GOAL_YSNO
+             , COALESCE(S.IMFD_YSNO, #{commYes}) AS IMAGE_FEED_YSNO
+             , COALESCE(S.RPUB_YSNO, #{commNo}) AS REPORT_PUBLIC_DEFAULT_YSNO
+             , COALESCE(S.LKAL_YSNO, #{commYes}) AS LIKE_ALIM_YSNO
+             , COALESCE(S.RPAL_YSNO, #{commYes}) AS REPLY_ALIM_YSNO
+             , COALESCE(S.FOLL_YSNO, #{commYes}) AS FOLLOW_ALIM_YSNO
+             , COALESCE(S.CLUB_YSNO, #{commYes}) AS CLUB_ALIM_YSNO
+             , COALESCE(S.RDUE_YSNO, #{commYes}) AS REPORT_DUE_ALIM_YSNO
+             , COALESCE(S.LKDF_YSNO, #{commYes}) AS REPORT_LIKE_DEFAULT_YSNO
+             , COALESCE(S.RPDF_YSNO, #{commYes}) AS REPORT_REPLY_DEFAULT_YSNO
+          FROM TM_USERXM U
+     LEFT JOIN TM_USSETX S
+            ON S.USER_NUMB = U.USER_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
+    <!-- 알림 화면의 묶음 저장은 공개 범위 컬럼을 변경하지 않는다. -->
+    <insert id="uptUserAlimSetting" parameterType="org.our.sadari.user.dto.UserSettingDto">
+        /* uptUserAlimSetting */
+        INSERT INTO TM_USSETX (
+                    USER_NUMB
+                  , RSTA_YSNO
+                  , GOAL_YSNO
+                  , IMFD_YSNO
+                  , RPUB_YSNO
+                  , LKAL_YSNO
+                  , RPAL_YSNO
+                  , FOLL_YSNO
+                  , CLUB_YSNO
+                  , RDUE_YSNO
+                  , LKDF_YSNO
+                  , RPDF_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , 'N'
+                  , 'Y'
+                  , 'Y'
+                  , 'N'
+                  , #{likeAlimYsno}
+                  , #{replyAlimYsno}
+                  , #{followAlimYsno}
+                  , #{clubAlimYsno}
+                  , #{reportDueAlimYsno}
+                  , #{reportLikeDefaultYsno}
+                  , #{reportReplyDefaultYsno}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+        ON DUPLICATE KEY UPDATE
+               LKAL_YSNO = VALUES(LKAL_YSNO)
+             , RPAL_YSNO = VALUES(RPAL_YSNO)
+             , FOLL_YSNO = VALUES(FOLL_YSNO)
+             , CLUB_YSNO = VALUES(CLUB_YSNO)
+             , RDUE_YSNO = VALUES(RDUE_YSNO)
+             , LKDF_YSNO = VALUES(LKDF_YSNO)
+             , RPDF_YSNO = VALUES(RPDF_YSNO)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+    </insert>
+
+    <!-- 공개 범위 화면의 묶음 저장은 알림 범주 컬럼을 변경하지 않는다. -->
+    <insert id="uptUserPrivacySetting" parameterType="org.our.sadari.user.dto.UserSettingDto">
+        /* uptUserPrivacySetting */
+        INSERT INTO TM_USSETX (
+                    USER_NUMB
+                  , RSTA_YSNO
+                  , GOAL_YSNO
+                  , IMFD_YSNO
+                  , RPUB_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , #{readingStatisticsYsno}
+                  , #{readingGoalYsno}
+                  , #{imageFeedYsno}
+                  , #{reportPublicDefaultYsno}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+        ON DUPLICATE KEY UPDATE
+               RSTA_YSNO = VALUES(RSTA_YSNO)
+             , GOAL_YSNO = VALUES(GOAL_YSNO)
+             , IMFD_YSNO = VALUES(IMFD_YSNO)
+             , RPUB_YSNO = VALUES(RPUB_YSNO)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+    </insert>
+
     <!-- 회원 프로필 정보를 수정한다. -->
     <update id="uptUserProfile" parameterType="org.our.sadari.user.dto.UserDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />

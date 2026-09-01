@@ -4,6 +4,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.alim.dto.AlimDto;
+import org.our.sadari.user.dto.UserSettingDto;
 
 /**
  * fileName       : AlimMapper
@@ -101,4 +102,7 @@ public interface AlimMapper {
      * @return 정상 이용 회원 수
      */
     int getActiveAlimUserCnt(@Param("userNumb") Long userNumb);
+
+    /** 알림 생성 여부를 판단할 수신자 설정을 조회한다. */
+    UserSettingDto getUserAlimSetting(@Param("userNumb") Long userNumb);
 }

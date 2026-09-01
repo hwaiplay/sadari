@@ -4,6 +4,7 @@ import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserSettingDto;
 
 /**
  * fileName       : UserMapper
@@ -64,6 +65,18 @@ public interface UserMapper {
      * 아래 코드의 처리 목적을 설명한다.
      */
     int setUser(UserDto request);
+
+    /** 신규 회원의 서비스 설정 기본 행을 등록한다. */
+    int setDefaultUserSetting(@Param("userNumb") Long userNumb);
+
+    /** 로그인 사용자의 설정을 기존 회원 호환 기본값과 함께 조회한다. */
+    UserSettingDto getUserSettingDtl(@Param("userNumb") Long userNumb);
+
+    /** 알림 범주와 신규 독후감 알림 기본값을 저장한다. */
+    int uptUserAlimSetting(UserSettingDto request);
+
+    /** 공개 범위와 신규 독후감 공개 기본값을 저장한다. */
+    int uptUserPrivacySetting(UserSettingDto request);
 
     /**
      * 아래 코드의 처리 목적을 설명한다.

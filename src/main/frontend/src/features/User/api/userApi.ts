@@ -22,6 +22,39 @@ export type UserProfile = {
   backgroundImageReaction?: ImageReaction | null;
 };
 
+export type UserSetting = {
+  readingStatisticsYsno: "Y" | "N";
+  readingGoalYsno: "Y" | "N";
+  imageFeedYsno: "Y" | "N";
+  reportPublicDefaultYsno: "Y" | "N";
+  likeAlimYsno: "Y" | "N";
+  replyAlimYsno: "Y" | "N";
+  followAlimYsno: "Y" | "N";
+  clubAlimYsno: "Y" | "N";
+  reportDueAlimYsno: "Y" | "N";
+  reportLikeDefaultYsno: "Y" | "N";
+  reportReplyDefaultYsno: "Y" | "N";
+};
+
+export type UserNotificationSettingParams = Pick<
+  UserSetting,
+  | "likeAlimYsno"
+  | "replyAlimYsno"
+  | "followAlimYsno"
+  | "clubAlimYsno"
+  | "reportDueAlimYsno"
+  | "reportLikeDefaultYsno"
+  | "reportReplyDefaultYsno"
+>;
+
+export type UserPrivacySettingParams = Pick<
+  UserSetting,
+  | "readingStatisticsYsno"
+  | "readingGoalYsno"
+  | "imageFeedYsno"
+  | "reportPublicDefaultYsno"
+>;
+
 export type ReadingSummaryReport = {
   reptNumb: number;
   bookTitl?: string;
@@ -35,6 +68,7 @@ export type ReadingSummaryReport = {
 };
 
 export type MonthlyReadingSummary = {
+  goalPublicYsno?: "Y" | "N";
   weekCode?: string;
   currentWeekCount: number;
   previousWeekCount: number;
@@ -195,6 +229,28 @@ export const getMyProfileApi = async (): Promise<ResultData<UserProfile> & { dat
   const res = await api.get<ResultData<UserProfile> & { data: UserProfile }>("/user/me");
   // 검증된 로그인 사용자 프로필 응답을 반환한다
   return assertResultDataSuccess(res.data);
+};
+
+/** 로그인 사용자의 알림과 공개 범위 설정을 조회한다. */
+export const getUserSettingApi = async (): Promise<UserSetting> => {
+  const res = await api.get("/user/settings");
+  return assertResultDataSuccess(res.data).data as UserSetting;
+};
+
+/** 선택형 알림 범주와 신규 독후감 알림 기본값을 저장한다. */
+export const uptUserAlimSettingApi = async (
+  params: UserNotificationSettingParams,
+): Promise<UserSetting> => {
+  const res = await api.put("/user/settings/notifications", params);
+  return assertResultDataSuccess(res.data).data as UserSetting;
+};
+
+/** 공개 범위와 신규 독후감 공개 기본값을 저장한다. */
+export const uptUserPrivacyApi = async (
+  params: UserPrivacySettingParams,
+): Promise<UserSetting> => {
+  const res = await api.put("/user/settings/privacy", params);
+  return assertResultDataSuccess(res.data).data as UserSetting;
 };
 
 /**

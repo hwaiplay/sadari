@@ -2,6 +2,22 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.alim.mapper.AlimMapper">
 
+    <!-- 설정 행이 없는 기존 회원은 기존 알림 수신 동작을 유지한다. -->
+    <select id="getUserAlimSetting" parameterType="long" resultType="org.our.sadari.user.dto.UserSettingDto">
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        SELECT /* getUserAlimSetting */
+               U.USER_NUMB
+             , COALESCE(S.LKAL_YSNO, #{commYes}) AS LIKE_ALIM_YSNO
+             , COALESCE(S.RPAL_YSNO, #{commYes}) AS REPLY_ALIM_YSNO
+             , COALESCE(S.FOLL_YSNO, #{commYes}) AS FOLLOW_ALIM_YSNO
+             , COALESCE(S.CLUB_YSNO, #{commYes}) AS CLUB_ALIM_YSNO
+             , COALESCE(S.RDUE_YSNO, #{commYes}) AS REPORT_DUE_ALIM_YSNO
+          FROM TM_USERXM U
+     LEFT JOIN TM_USSETX S
+            ON S.USER_NUMB = U.USER_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
     <!-- 발송 가능한 알림 템플릿을 조회한다. USEE_YSNO가 Y인 템플릿만 실제 사용자 알림으로 저장할 수 있다. -->
     <select id="getAlimTemp" parameterType="org.our.sadari.alim.dto.AlimDto$AlimTempDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimTempDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />

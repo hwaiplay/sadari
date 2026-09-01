@@ -21,6 +21,7 @@ const SocialProfilePage = lazy(() => import("@/pages/Social/SocialProfilePage"))
 const AlimPage = lazy(() => import("@/pages/Alim/AlimPage"));
 const NotificationTargetPage = lazy(() => import("@/pages/Alim/NotificationTargetPage"));
 const SettingsPage = lazy(() => import("@/pages/Settings/SettingsPage"));
+const UserSettingsPage = lazy(() => import("@/pages/Settings/UserSettingsPage"));
 const ServiceInfoPage = lazy(() => import("@/pages/Settings/ServiceInfoPage"));
 const WithdrawalPage = lazy(() => import("@/pages/Settings/WithdrawalPage"));
 const WithdrawalResultPage = lazy(() => import("@/pages/Settings/WithdrawalResultPage"));
@@ -212,7 +213,9 @@ const Router = () => {
 
           {/* 환경설정 */}
           <Route path="/settings" element={<SettingsPage />} />
-          <Route path="/settings/alim" element={<AlimPage />} />
+          <Route path="/settings/alim" element={<Navigate to="/settings/notifications" replace />} />
+          <Route path="/settings/notifications" element={<UserSettingsPage section="notifications" />} />
+          <Route path="/settings/privacy" element={<UserSettingsPage section="privacy" />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
           <Route path="/settings/service-info" element={<ServiceInfoPage />} />
 

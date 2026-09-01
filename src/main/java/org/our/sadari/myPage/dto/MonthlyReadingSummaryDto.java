@@ -21,6 +21,9 @@ import org.our.sadari.report.dto.ReportDto;
 @Schema(description = "월간 독서 활동과 목표 달성 요약 DTO")
 public class MonthlyReadingSummaryDto {
 
+    @Schema(description = "현재 조회자에게 독서 목표를 공개하는지 여부", example = "Y", allowableValues = {"Y", "N"})
+    private String goalPublicYsno;
+
     @Schema(description = "사용자 번호", example = "31")
     private Long userNumb;
     @Schema(description = "조회 기간 시작일", example = "2026-07-01")

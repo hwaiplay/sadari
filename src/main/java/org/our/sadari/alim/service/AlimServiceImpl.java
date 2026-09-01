@@ -13,6 +13,7 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.push.service.PushService;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -282,6 +283,11 @@ public class AlimServiceImpl implements AlimService {
             return ResultData.success();
         }
 
+        // 선택형 알림이 꺼져 있으면 알림센터 항목과 푸시를 모두 생성하지 않는다
+        if (!isUserAlimEnabled(userNumb, tempCode)) {
+            return ResultData.success();
+        }
+
         // 치환 문구가 없는 알림도 발송할 수 있어 null Map은 빈 Map으로 보정한다.
         // 이렇게 하면 호출부가 치환값 없는 알림을 보낼 때 불필요하게 new HashMap<>()을 만들 필요가 없다.
         Map<String, Object> safeReplaceMap = StringUtil.isEmpty(replaceMap)
@@ -361,6 +367,55 @@ public class AlimServiceImpl implements AlimService {
      *
      * @param alim 저장된 알림 정보
      */
+    /**
+     * 수신자의 전역 알림 설정을 템플릿 단위로 적용한다.
+     * 가입 승인·거절·강제 퇴장과 타이머 종료는 업무상 필수 또는 명시적 신청 알림이라 설정 대상에서 제외한다.
+     */
+    private boolean isUserAlimEnabled(Long userNumb, String tempCode) {
+        if (Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED.equals(tempCode)) {
+            return true;
+        }
+
+        UserSettingDto setting = alimMapper.getUserAlimSetting(userNumb);
+        if (StringUtil.isEmpty(setting)) {
+            return false;
+        }
+
+        if (Constant.ALIM_TEMP_CODE_LIKE_REPORT.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_LIKE_PROFILE_IMAGE.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_LIKE_BACKGROUND_IMAGE.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_LIKE.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getLikeAlimYsno());
+        }
+
+        if (Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getReplyAlimYsno());
+        }
+
+        if (Constant.ALIM_TEMP_CODE_FOLLOW_USER.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getFollowAlimYsno());
+        }
+
+        if (Constant.ALIM_TEMP_CODE_INVITE_CLUB.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getClubAlimYsno());
+        }
+
+        if (Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getReportDueAlimYsno());
+        }
+
+        // 새 템플릿은 별도 정책이 정해지기 전까지 기존 알림 동작을 유지한다
+        return true;
+    }
+
     private void schedulePushAfterCommit(AlimDto.AlimItemDto alim) {
 
         Runnable sendPush = () -> {
@@ -542,7 +597,7 @@ public class AlimServiceImpl implements AlimService {
         if (isMemberManageAlim && userNumb.equals(target.getTargetUserNumb())
                 && Constant.USER_STAT_ACTIVE.equals(target.getTargetUserStat())) {
             // 현재 모임장의 멤버 관리 경로를 반환한다
-            return "/reading-clubs/manage/members" + target.getTagtNumb();
+            return "/reading-clubs/manage/members/" + target.getTagtNumb();
         }
 
         // 지원하지 않는 모임 템플릿 또는 변경된 권한에는 이동 주소를 제공하지 않는다
