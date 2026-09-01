@@ -8,7 +8,7 @@ export const page = style({
   width: "100%",
   maxWidth: 600,
   margin: "0 auto",
-  padding: "20px 0 104px",
+  padding: "20px 0",
 });
 
 export const clubSummary = style({
@@ -540,46 +540,24 @@ export const textarea = style({
   selectors: { "&:focus": { borderColor: vars.color.gray900 } },
 });
 
-export const profileRow = style({
-  display: "grid",
-  gridTemplateColumns: "42px minmax(0, 1fr) auto",
-  alignItems: "center",
-  gap: 10,
-});
-
-export const avatar = style({
-  width: 42,
-  height: 42,
-  borderRadius: "50%",
-  background: vars.color.gray200,
-  objectFit: "cover",
-});
-
-export const profileName = style({ display: "block", fontFamily: vars.font.semibold, fontSize: 14 });
-
-export const application = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: 12,
-  padding: "16px 0",
-  borderBottom: `1px solid ${vars.color.gray300}`,
-  selectors: { "&:last-child": { borderBottom: 0 } },
-});
-
-export const qa = style({ display: "flex", flexDirection: "column", gap: 5, fontFamily: vars.font.body, fontSize: 12, lineHeight: 1.5 });
-export const actions = style({ display: "flex", flexWrap: "wrap", gap: 8 });
-
-export const empty = style({
-  margin: 0,
-  padding: "32px 18px",
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: 14,
-  textAlign: "center",
-});
 
 export const ActionButtonArea = style({
-  width: "calc(100% - 32px)",
-  maxWidth: 568,
-  margin: "0 auto",
+  marginBottom: 12
 });
+
+
+export const JoinButtonArea = style([
+  ActionButtonArea,
+
+  {
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    flexDirection: "column",
+    gap: 8
+  }
+])
+
+export const JoinButtonDescription = style({
+  color: vars.color.gray600
+})
