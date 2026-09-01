@@ -1,64 +1,33 @@
-import { message } from "@/app/messages/message";
-import { ActionButton } from "@/components/Button/ActionButton";
+/**
+ * fileName       : FindClubPage
+ * author         : Hanwon.Jang
+ * date           : 2026-09-01
+ * description    : 관심분야 기반 추천과 공개 모임 검색 화면 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-09-01        Hanwon.Jang    최초 생성
+ */
+
+import {message} from "@/app/messages/message";
+import {ActionButton} from "@/components/Button/ActionButton";
 import Skeleton from "@/components/Skeleton/Skeleton";
-import type { ReadingClub } from "@/features/ReadingClub/api/readingClubApi";
 import InterestSelectModal from "@/features/ReadingClub/components/InterestSelectModal";
-import { useFindClubPage } from "@/features/ReadingClub/hooks/useFindClubPage";
-import type { UserInterest } from "@/features/User/api/userApi";
+import {useFindClubPage} from "@/features/ReadingClub/hooks/useFindClubPage";
 import ClubCard from "./ClubCard";
 import * as styles from "./FindClubPage.css";
+
 
 const LOADING_CARD_KEYS = ["first", "second"];
 
 /**
- * 사용자 관심분야에서 관심분야 코드만 추출한다
- *
- * @author Hanwon.Jang
- * @param interest 코드를 추출할 사용자 관심분야
- * @return 관심분야 코드
- */
-const getInterestCode = (interest: UserInterest): string => {
-  // 관심 카테고리 팝업 초기 선택에 사용할 코드를 반환한다
-  return interest.intrCode;
-};
-
-/**
- * 사용자 관심분야 한 항목을 읽기 전용 칩으로 표시한다
- *
- * @author Hanwon.Jang
- * @param interest 표시할 사용자 관심분야
- * @return 사용자 관심분야 칩
- */
-const renderInterest = (interest: UserInterest) => {
-  // 서버가 제공한 관심분야 이름을 표시하는 칩을 반환한다
-  return (
-    <span className={styles.interestChip} key={interest.intrCode}>
-      {interest.intrName}
-    </span>
-  );
-};
-
-/**
- * 추천 공개 모임 한 건을 Figma 카드로 표시한다
- *
- * @author Hanwon.Jang
- * @param club 표시할 추천 공개 모임
- * @return 추천 모임 카드
- */
-const renderClub = (club: ReadingClub) => {
-  // 모임 번호를 목록 식별값으로 사용하는 추천 카드를 반환한다
-  return <ClubCard club={club} key={club.clubNumb} />;
-};
-
-/**
- * 추천 모임 카드 크기를 유지하는 로딩 스켈레톤을 표시한다
+ * 추천 모임 카드 크기를 유지하는 로딩 스켈레톤을 표시
  *
  * @author Hanwon.Jang
  * @param key 스켈레톤 목록 식별값
  * @return 추천 모임 카드 스켈레톤
  */
 const renderLoadingCard = (key: string) => {
-  // Figma 추천 카드와 같은 너비와 높이를 유지하는 스켈레톤을 반환한다
   return (
     <Skeleton
       width="100%"
@@ -69,12 +38,6 @@ const renderLoadingCard = (key: string) => {
   );
 };
 
-/**
- * 관심분야 기반 추천과 공개 모임 검색 화면을 구성한다
- *
- * @author Hanwon.Jang
- * @return Figma 모임 찾기 화면
- */
 export default function FindClubPage() {
   const {
     catalog,
@@ -98,7 +61,6 @@ export default function FindClubPage() {
   // "모임을 불러오고 있어요."
   const loadingLabel = message("frontend.readingClub.common.loading");
 
-  // 검색, 관심분야, 추천 모임과 카테고리 탐색 영역을 반환한다
   return (
     <main className={styles.page}>
       {/* 모임 이름 검색 영역 */}
@@ -120,7 +82,7 @@ export default function FindClubPage() {
             size="sm"
             type="submit"
             aria-label={searchButtonLabel}
-            icon={<img className={styles.searchIcon} src="/img/icons/icon-search.svg" alt="" />}
+            icon={<img className={styles.searchIcon} src="/img/icons/icon-search.svg" alt=""/>}
           />
         </label>
       </form>
@@ -138,15 +100,21 @@ export default function FindClubPage() {
             size="sm"
             type="button"
             onClick={handleOpenInterests}
-            icon={<img className={styles.editIcon} src="/img/icons/icon-chevron-right-gray.svg" alt="" />}
+            icon={<img className={styles.editIcon} src="/img/icons/icon-chevron-right-gray.svg" alt=""/>}
             iconPosition="right"
           >
             {/* "수정" */}
             {message("frontend.readingClub.find.editInterest")}
           </ActionButton>
         </div>
+
+        {/* 관심 분야 칩 */}
         <div className={styles.interestChips}>
-          {selectedInterests.map(renderInterest)}
+          {selectedInterests.map((interest) => (
+            <span className={styles.interestChip} key={interest.intrCode}>
+                {interest.intrName}
+              </span>
+          ))}
         </div>
       </section>
 
@@ -169,7 +137,11 @@ export default function FindClubPage() {
             {LOADING_CARD_KEYS.map(renderLoadingCard)}
           </div>
         ) : clubs.length > 0 ? (
-          <div className={styles.clubList}>{clubs.map(renderClub)}</div>
+          <div className={styles.clubList}>
+            {clubs.map((club) => (
+              <ClubCard club={club} key={club.clubNumb} />
+            ))}
+          </div>
         ) : selectedInterests.length > 0 ? (
           <p className={styles.empty}>
             {/* "조건에 맞는 공개 모임이 아직 없어요." */}
@@ -194,14 +166,14 @@ export default function FindClubPage() {
             {message("frontend.readingClub.find.categoryDescription")}
           </span>
         </span>
-        <img className={styles.browseIcon} src="/img/icons/icon-chevron-right.svg" alt="" />
+        <img className={styles.browseIcon} src="/img/icons/icon-chevron-right.svg" alt=""/>
       </button>
 
       {/* 관심 카테고리 선택 팝업 영역 */}
       {shouldShowInterestModal && (
         <InterestSelectModal
           catalog={catalog}
-          initialCodes={selectedInterests.map(getInterestCode)}
+          initialCodes={selectedInterests.map((interest) => interest.intrCode)}
           minimum={1}
           onSave={handleSaveInterests}
           onClose={selectedInterests.length > 0 ? handleCloseInterests : undefined}
