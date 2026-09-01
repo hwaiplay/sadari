@@ -54,6 +54,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 검증
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
+ * 2026-09-01        HanWon.Jang        공개 모임 비회원 요약 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -995,6 +996,7 @@ class ReadingClubServiceImplTest {
 
         // 조회 요청 사용자의 모임원 관계와 활성 모임원 목록을 반환한다
         when(readingClubMapper.getClubMember(10L, 20L)).thenReturn(requester);
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
         when(readingClubMapper.getClubMemberList(10L)).thenReturn(List.of(profile));
 
         // 활성 모임원으로 모임원 프로필 목록을 조회한다
@@ -1022,6 +1024,33 @@ class ReadingClubServiceImplTest {
         // 접근 거절 코드와 목록 SQL 미호출을 검증한다
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getClubMemberList(10L);
+    }
+
+    /**
+     * 공개 중인 활성 모임은 비회원에게도 활성 모임원 목록을 제공하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getPublicClubMembers() {
+        // 비회원이 조회할 공개 중인 활성 모임을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubVisb("PUBLIC");
+        club.setClubStat("ACTIVE");
+        // 공개 가능한 활성 모임원 프로필을 구성한다
+        ReadingClubDto.MemberProfileDto profile = new ReadingClubDto.MemberProfileDto();
+        profile.setUserNumb(30L);
+        // 활성 모임원 관계가 없는 비회원과 공개 모임 조회 결과를 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
+        when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
+        when(readingClubMapper.getClubMemberList(10L)).thenReturn(List.of(profile));
+
+        // 비회원으로 공개 모임의 모임원 프로필 목록을 조회한다
+        ResultData result = readingClubService.getClubMemberList(20L, 10L);
+
+        // 공개 가능한 활성 모임원 목록이 반환되는지 검증한다
+        assertEquals(200, result.getCode());
+        assertEquals(List.of(profile), result.getData());
     }
 
     /**
@@ -1438,6 +1467,7 @@ class ReadingClubServiceImplTest {
         PageDto<ReadingClubDto.ReadingHistoryDto> historyPage =
                 (PageDto<ReadingClubDto.ReadingHistoryDto>) result.getData();
         assertEquals(List.of(history), historyPage.list());
+        assertEquals(true, historyPage.list().get(0).getResultAccessible());
         assertEquals(1, historyPage.page());
         assertEquals(false, historyPage.hasNext());
     }
@@ -1458,6 +1488,35 @@ class ReadingClubServiceImplTest {
         // 접근 거절과 회차 목록 조회 미실행을 검증한다
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getReadingHistoryList(any(), anyInt(), anyInt());
+    }
+
+    /**
+     * 공개 중인 활성 모임의 비회원에게 결과 상세 권한 없이 이전 독서 기록을 제공하는지 검증한다.
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getPublicClubHistory() {
+        // 비회원에게 공개할 활성 모임과 종료 회차 기록을 구성한다
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubVisb("PUBLIC");
+        club.setClubStat("ACTIVE");
+        ReadingClubDto.ReadingHistoryDto history = new ReadingClubDto.ReadingHistoryDto();
+        history.setRondNumb(1L);
+        // 활성 모임원 관계가 없는 비회원의 공개 모임과 종료 회차 조회 결과를 설정한다
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(0);
+        when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
+        when(readingClubMapper.getReadingHistoryList(10L, 0, 13)).thenReturn(List.of(history));
+
+        // 비회원으로 공개 모임의 이전 독서 기록을 조회한다
+        ResultData result = readingClubService.getReadingHistoryList(20L, 10L, 1);
+
+        // 목록은 제공하되 회차 목표 결과 상세 접근은 허용하지 않는지 검증한다
+        assertEquals(200, result.getCode());
+        @SuppressWarnings("unchecked")
+        PageDto<ReadingClubDto.ReadingHistoryDto> historyPage =
+                (PageDto<ReadingClubDto.ReadingHistoryDto>) result.getData();
+        assertEquals(false, historyPage.list().get(0).getResultAccessible());
     }
 
     /**

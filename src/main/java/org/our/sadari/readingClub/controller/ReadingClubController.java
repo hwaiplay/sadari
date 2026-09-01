@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 API 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 API 확장
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 API 추가
+ * 2026-09-01        HanWon.Jang        공개 모임 비회원 요약 조회 API 확장
  */
 @RestController
 @RequiredArgsConstructor
@@ -186,7 +187,7 @@ public class ReadingClubController {
     }
 
     /**
-     * 활성 모임원에게 같은 모임의 공개 가능한 활성 모임원 프로필 목록을 제공한다.
+     * 활성 모임원과 공개 중인 활성 모임 조회자에게 활성 모임원 프로필 목록을 제공한다.
      *
      * @author Hanwon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -288,7 +289,7 @@ public class ReadingClubController {
     }
 
     /**
-     * 현재 활성 모임원에게 가입 시점과 관계없이 모든 이전 독서 기록을 제공한다.
+     * 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 이전 독서 기록을 제공한다.
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -301,7 +302,7 @@ public class ReadingClubController {
     public ResultData getReadingHistoryList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb, @RequestParam(defaultValue = "1") int page) {
-        // 현재 활성 모임원에게 가입 이전을 포함한 종료 회차 목록을 반환한다
+        // 접근 권한에 따라 결과 상세 이동 가능 여부를 포함한 종료 회차 목록을 반환한다
         return readingClubService.getReadingHistoryList(userNumb, clubNumb, page);
     }
 

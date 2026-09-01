@@ -38,7 +38,7 @@ export const historyCard = style({
   textAlign: "left",
   selectors: {
     "&:disabled": {
-      cursor: "wait",
+      cursor: "default",
     },
   },
 });

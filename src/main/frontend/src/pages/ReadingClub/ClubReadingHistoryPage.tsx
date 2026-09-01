@@ -7,15 +7,17 @@ import {
   getBookCoverImageSource,
   handleBookCoverImageError,
 } from "@/features/Book/utils/bookCoverImage";
-import type { ClubReadingHistory } from "@/features/ReadingClub/api/readingClubApi";
-import { useReadingHistoryPage } from "@/features/ReadingClub/hooks/useReadingHistoryPage";
+import {
+  type ReadingHistoryOverview,
+  useReadingHistoryPage,
+} from "@/features/ReadingClub/hooks/useReadingHistoryPage";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import { clsx } from "clsx";
 import * as styles from "./ClubReadingHistoryPage.css";
 
 type ReadingHistoryCardProps = {
-  history: ClubReadingHistory;
-  onSelect: (rondNumb: number) => void;
+  history: ReadingHistoryOverview;
+  onSelect: (history: ReadingHistoryOverview) => void;
 };
 
 /**
@@ -60,8 +62,8 @@ const ReadingHistoryCard = ({
    * @return 반환값이 없다
    */
   const handleSelect = (): void => {
-    // 카드가 표현하는 회차 번호를 페이지 선택 상태에 전달한다
-    onSelect(history.rondNumb);
+    // 카드가 표현하는 회차와 결과 상세 접근 권한을 페이지 선택 상태에 전달한다
+    onSelect(history);
   };
 
   // 도서 정보와 공통 달성률 색상 정책을 적용한 회차 카드를 반환한다
@@ -70,6 +72,7 @@ const ReadingHistoryCard = ({
       <button
         className={clsx(styles.historyCard, styles.compactCard)}
         type="button"
+        disabled={!history.resultAccessible}
         onClick={handleSelect}
       >
         <img
@@ -114,7 +117,7 @@ const ReadingHistoryCard = ({
 };
 
 /**
- * 현재 활성 모임원에게 가입 이전을 포함한 모든 종료 회차를 표시한다.
+ * 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 종료 회차를 표시한다.
  *
  * @author HanWon.Jang
  * @return 이전 독서 기록 목록 페이지
@@ -136,7 +139,7 @@ const ClubReadingHistoryPage = () => {
    * @param history 표시할 이전 독서 기록
    * @return 선택한 회차 결과 조회 상태를 반영한 카드
    */
-  const renderReadingHistory = (history: ClubReadingHistory) => {
+  const renderReadingHistory = (history: ReadingHistoryOverview) => {
     // 현재 조회 중인 회차만 중복 선택을 막은 카드로 반환한다
     return (
       <ReadingHistoryCard

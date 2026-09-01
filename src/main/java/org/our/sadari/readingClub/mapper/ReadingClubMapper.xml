@@ -890,43 +890,65 @@
              , MINE.MEMB_ROLE
              , APPLICATION.JOIN_STAT
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_NUMB
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_ROUND.ROND_NUMB
                END AS CURRENT_ROND_NUMB
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.ROND_STAT
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_ROUND.ROND_STAT
                END AS CURRENT_ROND_STAT
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} AND CURRENT_ROUND.ROND_NUMB IS NOT NULL
+                   WHEN (MINE.MEMB_STAT = #{memberActive}
+                         OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive}))
+                        AND CURRENT_ROUND.ROND_NUMB IS NOT NULL
                        THEN CURRENT_ROUND.ROND_NUMB
                    WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
                        THEN COALESCE((  SELECT MAX(ROUNDX.ROND_NUMB)
                                           FROM TM_CLRNDX ROUNDX
                                          WHERE ROUNDX.CLUB_NUMB = CLUB.CLUB_NUMB
                                       ), 0) + 1
                END AS READING_ORDR
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_TITL
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_TITL
                END AS CURRENT_BOOK_TITL
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_NUMB
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_NUMB
                END AS CURRENT_BOOK_NUMB
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_ATHR
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_ATHR
                END AS CURRENT_BOOK_ATHR
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_CVIM
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_CVIM
                END AS CURRENT_BOOK_CVIM
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_PUBL
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_PUBL
                END AS CURRENT_BOOK_PUBL
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_ISBN
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_ISBN
                END AS CURRENT_BOOK_ISBN
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_BOOK.BOOK_DESC
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_BOOK.BOOK_DESC
                END AS CURRENT_BOOK_DESC
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
                        THEN DATE_FORMAT(CURRENT_BOOK.PUBL_DATE, '%Y-%m-%d')
                END AS CURRENT_PUBL_DATE
              , CASE
@@ -945,10 +967,14 @@
                        )
                END AS CURRENT_BOOK_CHANGE_ALLOWED
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.GOAL_STDT
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_ROUND.GOAL_STDT
                END AS CURRENT_GOAL_STDT
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_ROUND.GOAL_ENDT
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN CURRENT_ROUND.GOAL_ENDT
                END AS CURRENT_GOAL_ENDT
              , CASE
                    WHEN MINE.MEMB_STAT = #{memberActive} THEN CURRENT_REPORT.REPT_STAT
@@ -961,10 +987,14 @@
                        THEN COALESCE(CURRENT_REPORT_COUNT.REPORT_CNT, 0)
                END AS CURRENT_REPORT_CNT
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN COALESCE(CURRENT_GOAL.GOAL_ACHV_CNT, 0)
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN COALESCE(CURRENT_GOAL.GOAL_ACHV_CNT, 0)
                END AS CURRENT_GOAL_ACHV_CNT
              , CASE
-                   WHEN MINE.MEMB_STAT = #{memberActive} THEN COALESCE(CURRENT_GOAL.GOAL_MEMB_CNT, 0)
+                   WHEN MINE.MEMB_STAT = #{memberActive}
+                        OR (CLUB.CLUB_VISB = #{clubPublic} AND CLUB.CLUB_STAT = #{clubActive})
+                       THEN COALESCE(CURRENT_GOAL.GOAL_MEMB_CNT, 0)
                END AS CURRENT_GOAL_MEMB_CNT
           FROM TM_CLUBXM CLUB
      LEFT JOIN TM_USERXM OWNER
@@ -1264,7 +1294,7 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </select>
 
-    <!-- 현재 활성 모임원에게 가입 시점과 관계없이 모든 완료 회차의 목표 결과를 제공한다. -->
+    <!-- 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 완료 회차의 요약을 제공한다. -->
     <select id="getReadingHistoryList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingHistoryDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingHistoryList */

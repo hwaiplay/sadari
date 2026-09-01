@@ -58,9 +58,12 @@ export const useClubDetailPage = () => {
   const loadPage = useCallback(async (): Promise<void> => {
     // 모임 상세보기 조회
     const detail = await getClubDtlApi(clubNumb);
+    // 활성 모임원과 공개 중인 활성 모임 조회자에게 요약 정보를 제공한다
+    const canViewOverview = detail.membStat === "ACTIVE"
+      || (detail.clubVisb === "PUBLIC" && detail.clubStat === "ACTIVE");
 
     const [nextMembers, nextApplications, nextReadingGoalResult, nextOwnerElection] = await Promise.all([
-      detail.membStat === "ACTIVE" ? getClubMemberListApi(clubNumb) : Promise.resolve([]),
+      canViewOverview ? getClubMemberListApi(clubNumb) : Promise.resolve([]),
       detail.membRole === "OWNER" ? getClubApplicationListApi(clubNumb) : Promise.resolve([]),
       detail.membStat === "ACTIVE" ? getClubReadingGoalResultApi(clubNumb) : Promise.resolve(null),
       detail.membStat === "ACTIVE" && detail.clubStat === "OWNER_ELECTION"

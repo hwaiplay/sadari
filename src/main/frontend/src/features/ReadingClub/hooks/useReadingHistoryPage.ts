@@ -6,6 +6,10 @@ type ReadingHistoryPage = {
   list: ClubReadingHistory[];
 };
 
+export type ReadingHistoryOverview = ClubReadingHistory & {
+  resultAccessible: boolean;
+};
+
 /**
  * 이전 독서 기록 응답 페이지에서 화면에 표시할 회차 목록을 추출한다.
  *
@@ -31,22 +35,27 @@ export const useReadingHistoryPage = () => {
   const isValidRoute = Number.isFinite(clubNumb) && clubNumb > 0;
   // 선택한 독서 목표 결과 페이지로 이동할 라우터 함수를 조회한다
   const navigate = useNavigate();
-  // 현재 활성 모임원에게 허용된 모든 종료 회차를 페이지 단위로 조회한다
+  // 활성 모임원과 공개 중인 활성 모임 조회자에게 허용된 종료 회차를 조회한다
   const historyQuery = useReadingHistory(clubNumb, isValidRoute);
 
   // 조회된 서버 페이지를 최신 회차 순서의 단일 목록으로 연결한다
-  const historyList = historyQuery.data?.pages.flatMap(getHistoryPageList) ?? [];
+  const historyList = (historyQuery.data?.pages.flatMap(getHistoryPageList) ?? []) as ReadingHistoryOverview[];
 
   /**
    * 이전 독서 기록 카드에서 확인할 회차를 선택한다.
    *
    * @author HanWon.Jang
-   * @param rondNumb 목표 결과를 조회할 완료 회차 번호
+   * @param history 목표 결과 접근 권한을 포함한 완료 회차 기록
    * @return 반환값이 없다
    */
-  const handleSelectReading = (rondNumb: number): void => {
+  const handleSelectReading = (history: ReadingHistoryOverview): void => {
+    // 비회원에게 제공된 요약 카드에서는 목표 결과 상세로 이동하지 않는다
+    if (!history.resultAccessible) {
+      // 선택 이벤트를 종료한다
+      return;
+    }
     // 모임과 회차 번호를 포함한 독서 목표 결과 페이지로 이동한다
-    navigate(`/reading-clubs/history/detail/${clubNumb}/${rondNumb}`);
+    navigate(`/reading-clubs/history/detail/${clubNumb}/${history.rondNumb}`);
   };
 
   /**

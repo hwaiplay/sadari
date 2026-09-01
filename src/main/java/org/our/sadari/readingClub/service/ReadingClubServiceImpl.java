@@ -47,6 +47,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-27        HanWon.Jang        가입 승인 알림 상황 수정
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
+ * 2026-09-01        HanWon.Jang        공개 모임 비회원 독서 현황 조회 확장
  */
 @Service
 @RequiredArgsConstructor
@@ -615,10 +616,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 요청 사용자의 현재 모임원 관계를 조회한다
-        ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, userNumb);
-        // 활성 모임원만 다른 모임원의 프로필을 조회할 수 있다
-        if (StringUtil.isEmpty(member) || !MEMBER_ACTIVE.equals(member.getMembStat())) {
+        // 활성 모임원 또는 공개 중인 활성 모임을 조회하는 사용자만 목록을 볼 수 있다
+        if (!canViewClubOverview(userNumb, clubNumb,
+                readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) > 0)) {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
@@ -751,8 +751,10 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 가입일은 조회 조건에 사용하지 않고 현재 활성 모임원 관계만 검증한다
-        if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) < 1) {
+        // 현재 활성 모임원만 회차별 목표 결과 상세로 이동할 수 있다
+        boolean resultAccessible = readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) > 0;
+        // 활성 모임원 또는 공개 중인 활성 모임을 조회하는 사용자만 목록을 볼 수 있다
+        if (!canViewClubOverview(userNumb, clubNumb, resultAccessible)) {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
@@ -773,8 +775,39 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         List<ReadingClubDto.ReadingHistoryDto> visibleList = hasNext
                 ? safeList.subList(0, READING_HISTORY_PAGE_SIZE)
                 : safeList;
+        // 각 회차에 현재 사용자의 목표 결과 상세 조회 권한을 표시한다
+        visibleList.forEach(history -> history.setResultAccessible(resultAccessible));
         // 가입 시점과 관계없이 조회한 종료 회차 페이지를 반환한다
         return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
+    }
+
+    /**
+     * 활성 모임원 또는 공개 중인 활성 모임 조회자의 요약 정보 접근을 확인한다.
+     *
+     * @author HanWon.Jang
+     * @param userNumb 조회를 요청한 사용자 번호
+     * @param clubNumb 조회할 모임 번호
+     * @param activeMember 활성 계정과 활성 모임원 관계 충족 여부
+     * @return 독서 현황, 모임원과 이전 독서 기록 조회 가능 여부
+     */
+    private boolean canViewClubOverview(Long userNumb, Long clubNumb, boolean activeMember) {
+        // 강제 퇴장 뒤 재가입이 차단된 사용자는 공개 모임 정보도 조회할 수 없다
+        ReadingClubDto.MemberDto relation = readingClubMapper.getClubMember(clubNumb, userNumb);
+        // 차단 관계가 있으면 공개 범위와 관계없이 조회를 거절한다
+        if (!StringUtil.isEmpty(relation) && Constant.COMM_YES.equals(relation.getBlocYsno())) {
+            // 차단된 사용자의 요약 정보 접근 불가를 반환한다
+            return false;
+        }
+        // 현재 활성 모임원은 모임 공개 상태와 관계없이 조회할 수 있다
+        if (activeMember) {
+            // 활성 모임원의 요약 정보 접근 가능을 반환한다
+            return true;
+        }
+        // 비회원에게 공개할 모임의 공개 범위와 운영 상태를 조회한다
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubDtl(clubNumb, userNumb);
+        // 공개 중인 활성 모임에만 비회원 조회를 허용한다
+        return !StringUtil.isEmpty(club) && CLUB_PUBLIC.equals(club.getClubVisb())
+                && CLUB_ACTIVE.equals(club.getClubStat());
     }
 
     /**
