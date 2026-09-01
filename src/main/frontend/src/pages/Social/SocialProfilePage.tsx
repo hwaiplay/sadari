@@ -928,7 +928,7 @@ const SocialProfilePage = () => {
             )}
           </button>
         </div>
-        <div className={styles.goalProgressRow}>
+        {summary?.goalPublicYsno !== "N" && <div className={styles.goalProgressRow}>
           <span className={styles.goalProgressTarget}>
             {goalSet ? message("frontend.profile.goal.target", [goalCnt ?? 0]) : ""}
           </span>
@@ -949,7 +949,7 @@ const SocialProfilePage = () => {
               ? message("frontend.profile.goal.rate", [goalRate])
               : message("frontend.profile.goal.unset")}
           </span>
-        </div>
+        </div>}
         {hasReports && (
           <div
             className={
@@ -1283,7 +1283,7 @@ const SocialProfilePage = () => {
           {renderCurrentReports(summary.currentReadingReports)}
         {/* 상대 사용자의 월간 독서 요약 영역 */}
           <section className={styles.monthlySummary} aria-label={message("frontend.profile.monthlyReading.title")}>
-            <div className={styles.goalAchievementSummary}>
+            {summary.goalPublicYsno !== "N" && <div className={styles.goalAchievementSummary}>
               <p className={`${styles.goalAchievementTitle} ${styles.socialSectionTitle}`}>
                 {/* "목표 달성 횟수" */}
                 {message("frontend.profile.goal.achievementTitle")}
@@ -1330,8 +1330,8 @@ const SocialProfilePage = () => {
                   </strong>
                 </div>
               </div>
-            </div>
-            <div className={styles.readingSummaryDivider} />
+            </div>}
+            {summary.goalPublicYsno !== "N" && <div className={styles.readingSummaryDivider} />}
             {renderReadingSummaryRow(
               "week",
               summary.weekCode,

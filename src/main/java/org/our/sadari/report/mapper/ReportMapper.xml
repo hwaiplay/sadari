@@ -608,6 +608,8 @@
                   , REPT_COLR
                   , PUBC_YSNO
                   , PUBC_DATE
+                  , LKAL_YSNO
+                  , RPAL_YSNO
                   , REPT_CNTN
                   , REGI_DATE
                   , UPDT_DATE
@@ -623,6 +625,8 @@
                               THEN CURRENT_TIMESTAMP(6)
                          ELSE NULL
                     END
+                  , #{likeAlimYsno}
+                  , #{replyAlimYsno}
                   , #{reptCntn}
                   , CURRENT_TIMESTAMP
                   , CURRENT_TIMESTAMP

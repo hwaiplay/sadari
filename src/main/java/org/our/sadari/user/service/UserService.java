@@ -2,6 +2,7 @@ package org.our.sadari.user.service;
 
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -107,4 +108,13 @@ public interface UserService {
      * @return 관심분야 저장 결과
      */
     ResultData uptUserInterests(Long userNumb, UserDto.UserInterestReqDto request);
+
+    /** 로그인 사용자의 알림과 공개 범위 설정을 조회한다. */
+    ResultData getUserSetting(Long userNumb);
+
+    /** 로그인 사용자의 선택형 알림 설정을 저장한다. */
+    ResultData uptUserAlimSetting(Long userNumb, UserSettingDto request);
+
+    /** 로그인 사용자의 공개 범위 설정을 저장한다. */
+    ResultData uptUserPrivacySetting(Long userNumb, UserSettingDto request);
 }

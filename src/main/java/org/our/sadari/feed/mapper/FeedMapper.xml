@@ -88,8 +88,11 @@
                 ON U.USER_NUMB = V.USER_NUMB
                AND U.PROF_NUMB IS NOT NULL
                AND U.PROF_DATE IS NOT NULL
+         LEFT JOIN TM_USSETX S
+                ON S.USER_NUMB = U.USER_NUMB
               JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
+             WHERE COALESCE(S.IMFD_YSNO, #{commYes}) = #{commYes}
             UNION ALL
             SELECT #{targetBackground}
                  , U.BGIM_NUMB
@@ -112,10 +115,13 @@
                 ON U.USER_NUMB = V.USER_NUMB
                AND U.BGIM_NUMB IS NOT NULL
                AND U.BGIM_DATE IS NOT NULL
+         LEFT JOIN TM_USSETX S
+                ON S.USER_NUMB = U.USER_NUMB
               JOIN TM_FILEXM BF
                 ON BF.FILE_NUMB = U.BGIM_NUMB
          LEFT JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
+             WHERE COALESCE(S.IMFD_YSNO, #{commYes}) = #{commYes}
         ), LIKE_COUNT AS (
             SELECT L.TAGT_TYPE
                  , L.TAGT_NUMB

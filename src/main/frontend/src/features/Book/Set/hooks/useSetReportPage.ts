@@ -27,6 +27,7 @@ import {
   truncateUtf8Bytes,
 } from "@/features/Book/utils/reportValidation";
 import { useCodeGroupList } from "@/features/Common/utils/codeUtil";
+import { getUserSettingApi } from "@/features/User/api/userApi";
 import type { ChangeEvent, CSSProperties, FormEvent } from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -59,6 +60,7 @@ export function useSetReportPage() {
   const [showBookInfo, setShowBookInfo] = useState(false);
   const [isContentFadingOut, setIsContentFadingOut] = useState(false);
   const contentSwitchTimerRef = useRef<number | null>(null);
+  const reportPublicDefaultRef = useRef<"Y" | "N">("N");
 
   const { data: codeGroupList } = useCodeGroupList(REPORT_FORM_CODE_GROUPS);
   const statusCodes = useMemo(
@@ -103,6 +105,24 @@ export function useSetReportPage() {
     message("frontend.common.noBookDescription");
   // "독후감을 남겨보세요"
   const contentPlaceholder = message("frontend.report.placeholder.content");
+
+  useEffect(() => {
+
+    let ignore = false;
+    void getUserSettingApi()
+      .then((userSetting) => {
+        if (!ignore) {
+          reportPublicDefaultRef.current = userSetting.reportPublicDefaultYsno;
+        }
+      })
+      .catch(() => {
+        // 설정 조회 실패 시 안전한 비공개 기본값을 유지한다
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   useEffect(() => {
 
@@ -202,6 +222,8 @@ export function useSetReportPage() {
     if (nextStatus === REPORT_STATUS_READ) {
       setGrade(0);
       setPubcYsno("N");
+    } else if (status === REPORT_STATUS_READ) {
+      setPubcYsno(reportPublicDefaultRef.current);
     }
   }
 

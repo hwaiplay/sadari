@@ -21,6 +21,7 @@ import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,6 +68,51 @@ public class UserServiceImpl implements UserService {
     private final BadWordDetectionService badWordDetectionService;
     // TokenRedis 업무 처리 서비스
     private final TokenRedisService tokenRedisService;
+
+    /** 로그인 사용자의 알림과 공개 범위 설정을 조회한다. */
+    @Override
+    public ResultData getUserSetting(Long userNumb) {
+        if (StringUtil.isEmpty(userNumb)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        UserSettingDto setting = userMapper.getUserSettingDtl(userNumb);
+        return StringUtil.isEmpty(setting)
+                ? ResultData.fail(ResultEnum.AUTH_FAIL)
+                : ResultData.success(setting);
+    }
+
+    /** 선택형 알림 범주와 신규 독후감 알림 기본값을 한 번에 저장한다. */
+    @Override
+    @Transactional
+    public ResultData uptUserAlimSetting(Long userNumb, UserSettingDto request) {
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(request)
+                || StringUtil.hasEmpty(request.getLikeAlimYsno(), request.getReplyAlimYsno()
+                        , request.getFollowAlimYsno(), request.getClubAlimYsno()
+                        , request.getReportDueAlimYsno(), request.getReportLikeDefaultYsno()
+                        , request.getReportReplyDefaultYsno())) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        request.setUserNumb(userNumb);
+        userMapper.uptUserAlimSetting(request);
+        return ResultData.success(userMapper.getUserSettingDtl(userNumb));
+    }
+
+    /** 공개 범위와 신규 독후감 공개 기본값을 한 번에 저장한다. */
+    @Override
+    @Transactional
+    public ResultData uptUserPrivacySetting(Long userNumb, UserSettingDto request) {
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(request)
+                || StringUtil.hasEmpty(request.getReadingStatisticsYsno(), request.getReadingGoalYsno()
+                        , request.getImageFeedYsno(), request.getReportPublicDefaultYsno())) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        request.setUserNumb(userNumb);
+        userMapper.uptUserPrivacySetting(request);
+        return ResultData.success(userMapper.getUserSettingDtl(userNumb));
+    }
 
     /**
      * 로그인 사용자의 최신 프로필 정보를 조회한다.
@@ -298,8 +344,12 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 회원이 직접 업로드한 사진만 변경 활동 시각을 기록한다
-        userDto.setImageFeedYsno(Constant.COMM_YES);
+        // 사진 피드 공개를 허용한 회원의 직접 업로드만 변경 활동 시각을 기록한다
+        UserSettingDto userSetting = userMapper.getUserSettingDtl(userNumb);
+        userDto.setImageFeedYsno(!StringUtil.isEmpty(userSetting)
+                && Constant.COMM_YES.equals(userSetting.getImageFeedYsno())
+                ? Constant.COMM_YES
+                : Constant.COMM_NO);
         // UserProfile 데이터를 DB에서 수정한다
         int updateCnt = userMapper.uptUserProfile(userDto);
 

@@ -33,6 +33,7 @@ import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.mapper.SocialMapper;
+import org.our.sadari.user.mapper.UserMapper;
 
 /**
  * fileName       : ReportServiceImplTest
@@ -63,6 +64,10 @@ class ReportServiceImplTest {
     @Mock
     private BookMapper bookMapper;
 
+    // User 설정 데이터 접근 객체
+    @Mock
+    private UserMapper userMapper;
+
     // 공통코드 캐시 조회 객체
     @Mock
     private CodeUtil codeUtil;
@@ -82,7 +87,8 @@ class ReportServiceImplTest {
     @BeforeEach
     void setUp() {
         // 독서 요약 서비스 단위 테스트 대상을 생성한다
-        reportService = new ReportServiceImpl(reportMapper, socialMapper, bookMapper, codeUtil, badWordDetectionService);
+        reportService = new ReportServiceImpl(
+                reportMapper, socialMapper, bookMapper, userMapper, codeUtil, badWordDetectionService);
         // 독서 요약 집계 SQL이 빈 기본 집계 결과를 반환하도록 설정한다
         lenient().when(reportMapper.getReadingSummary(any(ReadingSummaryQueryDto.class)))
                 .thenReturn(new ReadingSummaryQueryDto());
@@ -97,7 +103,7 @@ class ReportServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptReportAlimUpdatesLikeSetting() {
+    void uptReportAlimLike() {
         // 좋아요 알림을 끄는 요청을 생성한다
         ReportAlimDto request = new ReportAlimDto();
         // 변경할 알림 사용 여부를 끔으로 설정한다
@@ -124,7 +130,7 @@ class ReportServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void uptReportAlimRejectsNonOwner() {
+    void uptReportAlimRejectOwner() {
         // 댓글 알림을 켜는 요청을 생성한다
         ReportAlimDto request = new ReportAlimDto();
         // 변경할 알림 사용 여부를 켬으로 설정한다
@@ -271,7 +277,7 @@ class ReportServiceImplTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void delReportDeletesReferencesFirst() {
+    void delReportRefsFirst() {
         // 부모 독후감 삭제가 성공하는 조건을 설정한다
         when(reportMapper.delReport(any(ReportDto.class))).thenReturn(1);
 

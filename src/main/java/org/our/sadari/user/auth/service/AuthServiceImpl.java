@@ -179,6 +179,8 @@ public class AuthServiceImpl implements AuthService {
                 userDto.setOnbdYsno(Constant.COMM_NO);
                 // User 업무 값을 userMapper DTO에 설정한다
                 userMapper.setUser(userDto);
+                // 신규 회원의 공개 범위와 선택형 알림 기본값을 같은 가입 트랜잭션에 등록한다
+                userMapper.setDefaultUserSetting(userDto.getUserNumb());
                 // ProfNumb 업무 값을 userDto DTO에 설정한다
                 userDto.setProfNumb(StringUtil.isEmpty(profileImg)
                         ? null

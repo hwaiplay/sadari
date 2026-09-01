@@ -7,6 +7,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.our.sadari.user.service.UserService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -41,6 +42,29 @@ public class UserController {
 
     // User 업무 처리 서비스
     private final UserService userService;
+
+    /** 로그인 사용자의 알림과 공개 범위 설정을 조회한다. */
+    @GetMapping("/settings")
+    @Operation(summary = "사용자 설정 조회", description = "알림 범주와 공개 범위 및 신규 독후감 기본값을 조회한다.")
+    public ResultData getUserSetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
+        return userService.getUserSetting(userNumb);
+    }
+
+    /** 로그인 사용자의 선택형 알림 설정을 저장한다. */
+    @PutMapping("/settings/notifications")
+    @Operation(summary = "알림 설정 저장", description = "알림센터와 푸시 생성에 함께 적용할 선택형 알림 범주를 저장한다.")
+    public ResultData uptUserAlimSetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                       , @Valid @RequestBody UserSettingDto request) {
+        return userService.uptUserAlimSetting(userNumb, request);
+    }
+
+    /** 로그인 사용자의 공개 범위 설정을 저장한다. */
+    @PutMapping("/settings/privacy")
+    @Operation(summary = "공개 범위 설정 저장", description = "독서 통계와 목표 및 사진 피드와 신규 독후감 공개 기본값을 저장한다.")
+    public ResultData uptUserPrivacySetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                          , @Valid @RequestBody UserSettingDto request) {
+        return userService.uptUserPrivacySetting(userNumb, request);
+    }
     /**
      * 로그인 사용자의 프로필 정보를 조회한다
      *

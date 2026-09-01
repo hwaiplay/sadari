@@ -27,11 +27,14 @@
                     ON B.BOOK_NUMB = R.BOOK_NUMB
             INNER JOIN TM_USERXM U
                     ON U.USER_NUMB = R.USER_NUMB
+             LEFT JOIN TM_USSETX S
+                    ON S.USER_NUMB = R.USER_NUMB
             INNER JOIN TB_ALTEMP T
                     ON T.ALIM_SITU = #{alimSituReport}
                    AND T.TEMP_CODE = #{tempCodeReportDateOver}
                    AND T.USEE_YSNO = #{commYes}
                  WHERE R.REPT_STAT = #{reportStatRead}
+                   AND COALESCE(S.RDUE_YSNO, #{commYes}) = #{commYes}
                    AND R.REPT_ENDT IS NOT NULL
                    AND R.REPT_ENDT <![CDATA[>=]]> DATE_FORMAT(DATE_SUB(CURRENT_DATE, INTERVAL #{lookbackDays} DAY), '%Y-%m-%d')
                    AND R.REPT_ENDT <![CDATA[<=]]> DATE_FORMAT(CURRENT_DATE, '%Y-%m-%d')

@@ -3,7 +3,9 @@ package org.our.sadari.alim.service;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -21,6 +23,7 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.push.service.PushService;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
@@ -67,6 +70,14 @@ class AlimServiceImplTest {
         new MessageUtils().setMessageSource(messageSource);
         // 알림 서비스 단위 테스트 대상을 담을 객체를 생성한다
         alimService = new AlimServiceImpl(alimMapper, pushService);
+        // 기존 알림 테스트는 모든 선택형 알림을 켠 사용자 설정을 기본으로 사용한다
+        UserSettingDto setting = new UserSettingDto();
+        setting.setLikeAlimYsno(Constant.COMM_YES);
+        setting.setReplyAlimYsno(Constant.COMM_YES);
+        setting.setFollowAlimYsno(Constant.COMM_YES);
+        setting.setClubAlimYsno(Constant.COMM_YES);
+        setting.setReportDueAlimYsno(Constant.COMM_YES);
+        lenient().when(alimMapper.getUserAlimSetting(anyLong())).thenReturn(setting);
     }
 
     /**

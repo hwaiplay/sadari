@@ -186,10 +186,16 @@
         INSERT INTO TM_USSETX (
                     USER_NUMB
                   , RSTA_YSNO
+                  , GOAL_YSNO
+                  , IMFD_YSNO
+                  , RPUB_YSNO
                   , REGI_DATE
                   , UPDT_DATE
         ) VALUES (  #{userNumb}
                   , #{publicYsno}
+                  , 'Y'
+                  , 'Y'
+                  , 'N'
                   , CURRENT_TIMESTAMP(6)
                   , CURRENT_TIMESTAMP(6)
         )
