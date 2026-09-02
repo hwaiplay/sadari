@@ -6,12 +6,12 @@ import { useCompletedFormGuard } from "@/app/navigation/useCompletedFormGuard.ts
 import {
   createClubApi,
   getClubDtlApi,
-  type ClubCreateParams,
   uptClubApi,
 } from "@/features/ReadingClub/api/readingClubApi.ts";
 import { getUserInterestCatalogApi, type UserInterest } from "@/features/User/api/userApi.ts";
 import { type ChangeEvent, type FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {ClubCreateParams} from "@/features/ReadingClub/types/club.type.ts";
 
 /**
  * fileName       : useSetClubPage

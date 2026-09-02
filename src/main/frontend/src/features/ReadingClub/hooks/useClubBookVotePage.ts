@@ -11,7 +11,7 @@ import {
 } from "@/features/ReadingClub/api/readingClubApi";
 import {useCallback, useEffect, useMemo, useState} from "react";
 import {useLocation, useNavigate, useParams} from "react-router-dom";
-import {ClubBookRecommendation, ClubBookVotePage} from "@/features/ReadingClub/types/ClubTypes.ts";
+import {ClubBookRecommendation, ClubBookVotePage} from "@/features/ReadingClub/types/club.type.ts";
 
 type VotePageState = {recommendedBook?: BookSearchResultType};
 
@@ -215,18 +215,15 @@ export const useClubBookVotePage = () => {
     }
 
     try {
-      /**
-       * 선택한 후보에 투표하고 최신 후보 목록을 조회한다.
-       *
-       * @author HanWon.Jang
-       * @return 투표와 후보 조회가 끝나면 완료되는 Promise
-       */
+
+      // 투표 후 최신 후보 목록을 조회
       const updateVote = async (): Promise<void> => {
         // 선택한 추천 후보에 현재 사용자의 투표를 등록한다.
         await updateClubBookVoteApi(clubNumb, selectedCandidate.recmNumb);
         // 투표 결과를 반영하도록 추천 후보를 다시 조회한다.
         await loadCandidates();
       };
+
       // 투표가 끝날 때까지 화면 이동을 차단하고 성공 상태로 전환한다.
       await runBlockingOperation(updateVote, {
         success: {
