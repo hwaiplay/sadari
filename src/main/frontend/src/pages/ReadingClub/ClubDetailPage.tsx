@@ -21,7 +21,6 @@ import type {ChangeEvent} from "react";
 import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
 import * as styles from "./ClubDetailPage.css";
-import {JoinButtonDescription} from "./ClubDetailPage.css";
 
 /**
  * fileName       : ClubDetailPage

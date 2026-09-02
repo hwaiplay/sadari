@@ -5,7 +5,6 @@ import {
   type ResultData,
 } from "@/app/api/resultData";
 import type {PublicReportSortType} from "@/features/Book/api/bookApi";
-import type {PublicReportType} from "@/features/Book/types/book.type";
 import type {BookSearchResultType} from "@/features/Book/types/book.type";
 import type {
   ClubApplication,

@@ -8,8 +8,7 @@
  * -----------------------------------------------------------
  * 2026-09-01        Hanwon.Jang    최초 생성
  */
-import api from "@/app/api/axios.ts";
-import {assertResultDataSuccess, PageData} from "@/app/api/resultData.ts";
+import {PageData} from "@/app/api/resultData.ts";
 import {PublicReportType} from "@/features/Book/types/book.type.ts";
 
 // 모임 도서 추천
