@@ -7,7 +7,7 @@ import {
 import type {PublicReportSortType} from "@/features/Book/api/bookApi";
 import type {PublicReportType} from "@/features/Book/types/book.type";
 import type {BookSearchResultType} from "@/features/Book/types/book.type";
-import {
+import type {
   ClubApplication,
   ClubBookVotePage, ClubCreateParams, ClubInvitation, ClubMemberExit, ClubMemberProfile,
   ClubReadingCreateParams,
@@ -15,6 +15,8 @@ import {
   ClubReadingRoundReportPage, ClubReadingUpdateParams, InviteCandidate,
   OwnerElection, ReadingClub, SentClubInvitation
 } from "@/features/ReadingClub/types/club.type.ts";
+
+export type * from "@/features/ReadingClub/types/club.type.ts";
 
 /**
  * 활성 일반 모임원의 자진 탈퇴
@@ -193,7 +195,7 @@ export const getClubMemberListApi = async (clubNumb: number): Promise<ClubMember
  * @param rondNumb 조회할 완료 회차 번호(생략하면 최신 회차)
  * @return 모임 독서 목표 결과(결과 없을 때 Null)
  */
-export const getClubReadingGoalResultApi = async (
+export const getReadingGoalResultApi = async (
   clubNumb: number,
   rondNumb?: number,
 ): Promise<ClubReadingGoalResult | null> => {
@@ -246,7 +248,7 @@ export const getClubReadingHistoryApi = async (
  * @param page 조회할 페이지 번호
  * @return 회차 도서 정보와 완료 독후감 페이지 응답
  */
-export const getClubReadingRoundReportsApi = async (
+export const getRoundReportsApi = async (
   clubNumb: number,
   rondNumb: number,
   sortType: PublicReportSortType,
@@ -319,7 +321,7 @@ export const delClubApi = async (clubNumb: number) => {
  * 보낸 초대 조회
  * @param clubNumb 모임 번호
  */
-export const getSentClubInvitationListApi = async (clubNumb: number): Promise<SentClubInvitation[]> => {
+export const getSentInvitationListApi = async (clubNumb: number): Promise<SentClubInvitation[]> => {
   const response = await api.get(`/reading-clubs/${clubNumb}/invitations/sent`);
   return (assertResultDataSuccess(response.data).data as SentClubInvitation[] | undefined) ?? [];
 };
@@ -339,7 +341,7 @@ export const inviteClubUsersApi = async (clubNumb: number, userNumbList: number[
  * @param clubNumb 모임 번호
  * @param userNumb 초대 대상 사용자 번호
  */
-export const cancelSentClubInvitationApi = async (clubNumb: number, userNumb: number) => {
+export const cancelSentInvitationApi = async (clubNumb: number, userNumb: number) => {
   const response = await api.delete(`/reading-clubs/${clubNumb}/invitations/${userNumb}`);
   return assertResultDataSuccess(response.data);
 };

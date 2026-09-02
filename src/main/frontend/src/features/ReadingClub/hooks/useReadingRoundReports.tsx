@@ -5,7 +5,7 @@
  */
 import { useInfiniteQuery } from "@tanstack/react-query";
 import type { PublicReportSortType } from "@/features/Book/api/bookApi";
-import { getClubReadingRoundReportsApi } from "@/features/ReadingClub/api/readingClubApi";
+import { getRoundReportsApi } from "@/features/ReadingClub/api/readingClubApi";
 
 /**
  * 현재 활성 모임원에게 허용된 완료 회차 독후감 페이지를 조회한다.
@@ -35,7 +35,7 @@ export const useReadingRoundReports = (
      */
     queryFn: async ({ pageParam }) => {
       // 현재 페이지와 서버 검증 대상 회차 및 정렬 조건을 함께 전달한다
-      return await getClubReadingRoundReportsApi(clubNumb, rondNumb, sortType, pageParam);
+      return await getRoundReportsApi(clubNumb, rondNumb, sortType, pageParam);
     },
     initialPageParam: 1,
     /**

@@ -17,9 +17,11 @@ import {getGoalProgressColor} from "@/features/User/utils/goalProgress";
 import {useClubDetailPage} from "@/features/ReadingClub/hooks/useClubDetailPage";
 import {getReadingDeadline} from "@/features/ReadingClub/utils/readingClubDeadline";
 import clsx from "clsx";
+import type {ChangeEvent} from "react";
 import {createPortal} from "react-dom";
 import {useNavigate} from "react-router-dom";
 import * as styles from "./ClubDetailPage.css";
+import {JoinButtonDescription} from "./ClubDetailPage.css";
 
 /**
  * fileName       : ClubDetailPage
@@ -47,6 +49,7 @@ const ClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isJoinModalOpen,
     isLeaving,
     isCompletingReading,
     isClosingResult,
@@ -55,9 +58,12 @@ const ClubDetailPage = () => {
     ownerElection,
     readingGoalResult,
     handleApplicationCancel,
+    handleAnswerChange,
     handleClubAction,
     handleClubLeave,
     handleJoinClub,
+    handleJoinAction,
+    handleJoinModalClose,
     handleOwnerVote,
     handleReadingHistory,
     handleReadingComplete,
@@ -195,6 +201,58 @@ const ClubDetailPage = () => {
         cover: club.currentBookCvim,
       },
     });
+  };
+
+  /**
+   * 승인제 모임의 가입 질문과 답변 입력란을 표시한다.
+   *
+   * @author HanWon.Jang
+   * @param question 표시할 가입 질문
+   * @param index 질문 순서
+   * @return 가입 질문과 답변 입력 영역
+   */
+  const renderJoinQuestion = (question: string, index: number) => {
+    const answer = answers[index] ?? "";
+    const inputId = `club-join-answer-${index}`;
+    // "답변을 작성해주세요"
+    const answerPlaceholder = message("frontend.readingClub.detail.answerPlaceholder");
+    // "{0}/200"
+    const answerCount = message("frontend.readingClub.detail.answerCount", [answer.length]);
+
+    /**
+     * 현재 가입 질문의 답변을 변경한다.
+     *
+     * @author HanWon.Jang
+     * @param event 답변 입력 변경 이벤트
+     * @return 반환값이 없다
+     */
+    const handleChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
+      // 변경한 질문 순서와 답변을 가입 신청 상태에 반영한다.
+      handleAnswerChange(index, event.currentTarget.value);
+    };
+
+    // 가입 질문과 최대 200자의 답변 입력란을 반환한다.
+    return (
+      <div className={styles.joinQuestionItem} key={`${question}-${index}`}>
+        <label className={styles.joinQuestionLabel} htmlFor={inputId}>
+          {/* "{0}. {1}" */}
+          {message("frontend.readingClub.detail.joinQuestion", [index + 1, question])}
+        </label>
+        {/* 가입 질문 답변 입력과 글자 수 영역 */}
+        <div className={styles.joinAnswerField}>
+          <textarea
+            className={styles.joinAnswerInput}
+            id={inputId}
+            value={answer}
+            maxLength={200}
+            placeholder={answerPlaceholder}
+            autoFocus={index === 0}
+            onChange={handleChange}
+          />
+          <span className={styles.joinAnswerCount}>{answerCount}</span>
+        </div>
+      </div>
+    );
   };
 
   return (
@@ -474,7 +532,10 @@ const ClubDetailPage = () => {
               >
                 <strong>{message("frontend.readingClub.detail.previousReading")}</strong>
                 <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                  <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path
+                    d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006"
+                    stroke="#878787" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round"
+                    strokeLinejoin="round"/>
                 </svg>
               </button>
 
@@ -488,7 +549,10 @@ const ClubDetailPage = () => {
                 >
                   <strong>{message("frontend.readingClub.detail.leaveButton")}</strong>
                   <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006" stroke="#D84A5F" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round" strokeLinejoin="round"/>
+                    <path
+                      d="M6.68262 14.9401L11.5726 10.0501C12.1501 9.47257 12.1501 8.52757 11.5726 7.95007L6.68262 3.06006"
+                      stroke="#D84A5F" strokeWidth="1.5" strokeMiterlimit="10" strokeLinecap="round"
+                      strokeLinejoin="round"/>
                   </svg>
                 </button>
               ) : null}
@@ -499,9 +563,7 @@ const ClubDetailPage = () => {
 
       {/* 가입 신청 대기 중인 상태일 때의 버튼 */}
       {club.joinStat === "PENDING" ? (
-        <section className={styles.panel}>
-          <h2 className={styles.sectionTitle}>{message("frontend.readingClub.detail.pendingTitle")}</h2>
-          <p className={styles.panelDescription}>{message("frontend.readingClub.detail.pendingDescription")}</p>
+        <div className={styles.JoinButtonArea}>
           <ActionButton
             type="button"
             size="lg"
@@ -512,7 +574,8 @@ const ClubDetailPage = () => {
           >
             {message("frontend.readingClub.detail.cancelApplicationButton")}
           </ActionButton>
-        </section>
+          <small className={styles.JoinButtonDescription}>{message("frontend.readingClub.detail.pendingDescription")}</small>
+        </div>
       ) : null}
 
       {/* 모임 미가입 회원일 때 보여지는 버튼 */}
@@ -521,16 +584,91 @@ const ClubDetailPage = () => {
           <ActionButton
             size="lg"
             width="full"
-            disabled={club.joinType === "APPROVAL" && answers.some((answer) => !answer.trim())}
-            onClick={handleJoinClub}
+            onClick={handleJoinAction}
           >
             {club.joinType === "OPEN"
               ? message("frontend.readingClub.detail.joinNow")
               : message("frontend.readingClub.detail.apply")}
           </ActionButton>
-          <small
-            className={styles.JoinButtonDescription}>{message("frontend.readingClub.detail.joinNowDescription")}</small>
+
+          {club.joinType === "OPEN" ? (
+            <small className={styles.JoinButtonDescription}>
+              {message("frontend.readingClub.detail.joinNowDescription")}
+            </small>
+          ) : null}
         </div>
+      ) : null}
+
+      {/* 승인제 모임 가입 신청 팝업 영역 */}
+      {canJoin && club.joinType === "APPROVAL" && isJoinModalOpen ? createPortal(
+        <div className={styles.joinModalOverlay} role="presentation">
+          {/* 가입 질문 답변 모달 본문 영역 */}
+          <section
+            className={styles.joinModal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="club-join-modal-title"
+            aria-describedby="club-join-modal-description"
+          >
+            {/* 가입 신청 모달 헤더 영역 */}
+            <header className={styles.joinModalHeader}>
+              <h2 className={styles.joinModalTitle} id="club-join-modal-title">
+                {/* "가입 신청하기" */}
+                {message("frontend.readingClub.detail.apply")}
+              </h2>
+              {/* "닫기" */}
+              <button
+                className={styles.joinModalClose}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                onClick={handleJoinModalClose}
+              >
+                <img src="/img/icons/icon-close.svg" alt="" aria-hidden="true" />
+              </button>
+            </header>
+
+            {/* 가입 안내와 질문 답변 스크롤 영역 */}
+            <div className={styles.joinModalContent}>
+              {/* 가입 신청 안내 영역 */}
+              <div className={styles.joinModalIntro}>
+                <strong className={styles.joinModalHeading}>
+                  {/* "아래 질문에 답변해 주세요" */}
+                  {message("frontend.readingClub.detail.answerHeading")}
+                </strong>
+                <p className={styles.joinModalDescription} id="club-join-modal-description">
+                  {/* "승인제 모임은 모임장이 답변을 확인한 후 가입이 승인돼요." */}
+                  {message("frontend.readingClub.detail.answerDescription")}
+                </p>
+              </div>
+
+              {/* 가입 질문과 답변 입력 목록 영역 */}
+              <div className={styles.joinQuestionList}>
+                {club.questionList?.map(renderJoinQuestion)}
+              </div>
+
+              {/* 가입 답변 보관 안내 영역 */}
+              <aside className={styles.joinRetentionNotice}>
+                <strong className={styles.joinRetentionTitle}>
+                  {/* "답변 보관 안내" */}
+                  {message("frontend.readingClub.detail.answerRetentionTitle")}
+                </strong>
+                <p className={styles.joinRetentionDescription}>
+                  {/* "답변은 모임장의 승인 또는 거절 시 즉시 삭제돼요." */}
+                  {message("frontend.readingClub.detail.answerRetentionDescription")}
+                </p>
+              </aside>
+            </div>
+
+            {/* 가입 신청 제출 버튼 영역 */}
+            <div className={styles.joinModalActions}>
+              <ActionButton size="lg" width="full" onClick={handleJoinClub}>
+                {/* "가입 신청하기" */}
+                {message("frontend.readingClub.detail.apply")}
+              </ActionButton>
+            </div>
+          </section>
+        </div>,
+        document.body,
       ) : null}
 
       {isActiveMember && hasCurrentReading ? (

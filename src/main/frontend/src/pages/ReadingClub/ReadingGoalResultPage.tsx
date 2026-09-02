@@ -1,7 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { message } from "@/app/messages/message";
 import Loading from "@/components/Loading/Loading";
-import { getClubReadingGoalResultApi } from "@/features/ReadingClub/api/readingClubApi";
+import { getReadingGoalResultApi } from "@/features/ReadingClub/api/readingClubApi";
 import ReadingGoalResultOverlay from "@/features/ReadingClub/components/ReadingGoalResultOverlay";
 import { useQuery } from "@tanstack/react-query";
 import { useParams } from "react-router-dom";
@@ -29,7 +29,7 @@ const ReadingGoalResultPage = () => {
   // 유효한 경로에서만 해당 회차의 독서 목표 결과를 조회함
   const resultQuery = useQuery({
     queryKey: ["readingClub", clubNumb, "readingGoalResult", rondNumb],
-    queryFn: () => getClubReadingGoalResultApi(clubNumb, rondNumb),
+    queryFn: () => getReadingGoalResultApi(clubNumb, rondNumb),
     enabled: isValidRoute,
   });
 

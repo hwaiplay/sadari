@@ -513,51 +513,9 @@ export const navigationDescription = style({
   fontWeight: 400,
 });
 
-export const chevron = style({ color: vars.color.gray500, fontSize: 24, fontWeight: 300 });
-
-export const panel = style({
-  display: "flex",
-  flexDirection: "column",
-  gap: 15,
-  padding: 20,
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: 18,
-  background: "#fff",
-});
-
-export const panelDescription = style({
-  margin: 0,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: 14,
-  lineHeight: 1.6,
-});
-
-export const management = style({ display: "flex", flexDirection: "column", gap: 18 });
-export const field = style({ display: "flex", flexDirection: "column", gap: 8 });
-export const label = style({ color: vars.color.gray900, fontFamily: vars.font.semibold, fontSize: 14 });
-
-export const textarea = style({
-  width: "100%",
-  minHeight: 112,
-  padding: 14,
-  boxSizing: "border-box",
-  border: `1px solid ${vars.color.gray300}`,
-  borderRadius: 8,
-  background: "#fff",
-  fontFamily: vars.font.body,
-  fontSize: 14,
-  lineHeight: 1.55,
-  outline: "none",
-  resize: "none",
-  selectors: { "&:focus": { borderColor: vars.color.gray900 } },
-});
-
-
 export const ActionButtonArea = style({
   marginBottom: 12
 });
-
 
 export const JoinButtonArea = style([
   ActionButtonArea,
@@ -574,3 +532,202 @@ export const JoinButtonArea = style([
 export const JoinButtonDescription = style({
   color: vars.color.gray600
 })
+
+export const joinModalOverlay = style({
+  position: "fixed",
+  inset: 0,
+  zIndex: 2000,
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: "35px 16px",
+  boxSizing: "border-box",
+  background: "rgba(0, 0, 0, 0.6)",
+  overscrollBehavior: "contain",
+});
+
+export const joinModal = style({
+  display: "flex",
+  width: "100%",
+  maxWidth: 343,
+  height: "min(915px, calc(100dvh - 70px))",
+  maxHeight: 915,
+  flexDirection: "column",
+  padding: "30px 16px",
+  boxSizing: "border-box",
+  overflow: "hidden",
+  borderRadius: 22,
+  background: vars.color.background,
+});
+
+export const joinModalHeader = style({
+  position: "relative",
+  display: "flex",
+  minHeight: 32,
+  alignItems: "center",
+  justifyContent: "center",
+});
+
+export const joinModalTitle = style({
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 18,
+  lineHeight: "24px",
+});
+
+export const joinModalClose = style({
+  position: "absolute",
+  top: 0,
+  right: 0,
+  display: "flex",
+  width: 32,
+  height: 32,
+  alignItems: "center",
+  justifyContent: "center",
+  padding: 0,
+  border: 0,
+  borderRadius: "50%",
+  background: vars.color.gray100,
+  cursor: "pointer",
+  selectors: {
+    "&:hover": {
+      background: vars.color.gray200,
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
+globalStyle(`${joinModalClose} img`, {
+  width: 14,
+  height: 14,
+});
+
+export const joinModalContent = style({
+  display: "flex",
+  minHeight: 0,
+  flex: 1,
+  flexDirection: "column",
+  padding: "32px 0 24px",
+  overflowY: "auto",
+  scrollbarWidth: "none",
+});
+
+globalStyle(`${joinModalContent}::-webkit-scrollbar`, {
+  display: "none",
+});
+
+export const joinModalIntro = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+  marginBottom: 32,
+});
+
+export const joinModalHeading = style({
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: 20,
+  lineHeight: "34px",
+  letterSpacing: "-0.26px",
+});
+
+export const joinModalDescription = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.medium,
+  fontSize: 14,
+  lineHeight: "21px",
+});
+
+export const joinQuestionList = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 26,
+});
+
+export const joinQuestionItem = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 10,
+});
+
+export const joinQuestionLabel = style({
+  color: vars.color.black,
+  fontFamily: vars.font.heading,
+  fontSize: 16,
+  lineHeight: "24px",
+});
+
+export const joinAnswerField = style({
+  position: "relative",
+});
+
+export const joinAnswerInput = style({
+  display: "block",
+  width: "100%",
+  height: 110,
+  padding: "16px 16px 34px",
+  boxSizing: "border-box",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 12,
+  background: "#f8f9fa",
+  color: vars.color.black,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "21px",
+  resize: "none",
+  transition: "background 160ms ease, border 160ms ease",
+  selectors: {
+    "&::placeholder": {
+      color: vars.color.gray500,
+    },
+    "&:focus-visible": {
+      outline: "none",
+      border: `1px solid ${vars.color.gray400}`,
+      background: "#fff"
+    },
+  },
+});
+
+export const joinAnswerCount = style({
+  position: "absolute",
+  right: 12,
+  bottom: 12,
+  color: vars.color.gray500,
+  fontFamily: vars.font.body,
+  fontSize: 10,
+  lineHeight: "14px",
+});
+
+export const joinRetentionNotice = style({
+  display: "flex",
+  flexDirection: "column",
+  gap: 4,
+  marginTop: 26,
+  padding: "20px 16px",
+  borderRadius: 12,
+  background: vars.color.gray100,
+});
+
+export const joinRetentionTitle = style({
+  color: vars.color.gray600,
+  fontFamily: vars.font.semibold,
+  fontSize: 14,
+  lineHeight: "20px",
+});
+
+export const joinRetentionDescription = style({
+  margin: 0,
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "18px",
+});
+
+export const joinModalActions = style({
+  flexShrink: 0,
+});

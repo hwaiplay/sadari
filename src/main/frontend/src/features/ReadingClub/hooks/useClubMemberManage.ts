@@ -13,14 +13,14 @@ import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
 import {
-  cancelSentClubInvitationApi,
+  cancelSentInvitationApi,
   decideClubApplicationApi,
   exitClubMemberApi,
   getClubApplicationListApi,
   getClubDtlApi,
   getClubMemberListApi,
   getInviteCandidateListApi,
-  getSentClubInvitationListApi,
+  getSentInvitationListApi,
   inviteClubUsersApi,
   type ClubApplication,
   type ClubMemberProfile,
@@ -80,7 +80,7 @@ export const useClubMemberManage = () => {
       getClubApplicationListApi(clubNumb),
       getClubMemberListApi(clubNumb),
       getInviteCandidateListApi(clubNumb),
-      getSentClubInvitationListApi(clubNumb),
+      getSentInvitationListApi(clubNumb),
     ]);
 
     // 조회한 모임 정보를 화면 정원 표시에 반영한다
@@ -274,7 +274,7 @@ export const useClubMemberManage = () => {
     // 초대 취소 요청의 중복 제출을 막는다
     setIsSubmitting(true);
     // 현재 모임에서 선택한 회원에게 보낸 초대를 취소한다
-    void cancelSentClubInvitationApi(clubNumb, userNumb)
+    void cancelSentInvitationApi(clubNumb, userNumb)
       // 취소한 회원을 다시 초대 후보에 반영한다
       .then(getPageData)
       // 취소 실패 원인을 공통 사용자 메시지로 안내한다

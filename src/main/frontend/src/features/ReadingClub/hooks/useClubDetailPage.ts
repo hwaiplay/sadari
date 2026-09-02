@@ -10,21 +10,46 @@ import {
   getClubApplicationListApi,
   getClubDtlApi,
   getClubMemberListApi,
-  getClubReadingGoalResultApi,
+  getReadingGoalResultApi,
   getOwnerElectionApi,
   joinClubApi,
-  type ClubApplication,
-  type ClubMemberProfile,
-  type ClubReadingGoalResult,
-  type OwnerElection,
-  type ReadingClub,
   uptReadingResultApi,
   updateOwnerVoteApi, delMembershipApi,
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  ClubApplication,
+  ClubMemberProfile,
+  ClubReadingGoalResult, OwnerElection,
+  ReadingClub
+} from "@/features/ReadingClub/types/club.type.ts";
 
 type ApplicationDecision = "APPROVED" | "REJECTED";
+
+/**
+ * 가입 답변의 앞뒤 공백을 제거한다.
+ *
+ * @author HanWon.Jang
+ * @param answer 정리할 가입 답변
+ * @return 앞뒤 공백을 제거한 답변
+ */
+const trimAnswer = (answer: string): string => {
+  // 서버에 저장할 답변 원문에서 의미 없는 앞뒤 공백만 제거한다.
+  return answer.trim();
+};
+
+/**
+ * 가입 답변이 비어 있는지 확인한다.
+ *
+ * @author HanWon.Jang
+ * @param answer 확인할 가입 답변
+ * @return 답변이 비어 있으면 true
+ */
+const isEmptyAnswer = (answer: string): boolean => {
+  // 필수 답변 검증 결과를 반환한다.
+  return answer.length === 0;
+};
 
 /**
  * 모임 상세 화면의 조회, 가입과 가입 승인 상태를 관리한다.
@@ -38,6 +63,7 @@ export const useClubDetailPage = () => {
   const clubNumb = Number(clubNumbParam);
   const [club, setClub] = useState<ReadingClub | null>(null);
   const [answers, setAnswers] = useState<string[]>([]);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [applications, setApplications] = useState<ClubApplication[]>([]);
   const [members, setMembers] = useState<ClubMemberProfile[]>([]);
   const [readingGoalResult, setReadingGoalResult] = useState<ClubReadingGoalResult | null>(null);
@@ -66,7 +92,7 @@ export const useClubDetailPage = () => {
     const [nextMembers, nextApplications, nextReadingGoalResult, nextOwnerElection] = await Promise.all([
       canViewOverview ? getClubMemberListApi(clubNumb) : Promise.resolve([]),
       detail.membRole === "OWNER" ? getClubApplicationListApi(clubNumb) : Promise.resolve([]),
-      detail.membStat === "ACTIVE" ? getClubReadingGoalResultApi(clubNumb) : Promise.resolve(null),
+      detail.membStat === "ACTIVE" ? getReadingGoalResultApi(clubNumb) : Promise.resolve(null),
       detail.membStat === "ACTIVE" && detail.clubStat === "OWNER_ELECTION"
         ? getOwnerElectionApi(clubNumb)
         : Promise.resolve(null),
@@ -134,31 +160,81 @@ export const useClubDetailPage = () => {
   };
 
   /**
+   * 모임 가입 방식에 맞는 가입 동작을 시작한다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleJoinAction = (): void => {
+    // 승인제 모임은 질문 답변을 먼저 작성하도록 가입 신청 모달을 연다.
+    if (club?.joinType === "APPROVAL") {
+      // 현재 모임의 가입 질문 모달을 표시한다.
+      setIsJoinModalOpen(true);
+      return;
+    }
+
+    // 즉시 가입 모임은 기존 가입 요청을 바로 실행한다.
+    void handleJoinClub();
+  };
+
+  /**
+   * 승인제 모임 가입 신청 모달을 닫는다.
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
+  const handleJoinModalClose = (): void => {
+    // 작성 중인 답변은 유지하고 가입 신청 모달만 닫는다.
+    setIsJoinModalOpen(false);
+  };
+
+  /**
    * 모임 가입 또는 가입 신청을 처리
    *
    * @author Hanwon.Jang
    */
   const handleJoinClub = async (): Promise<void> => {
-    // 즉시 가입형만 가입 완료 성공 안내를 표시한다
+    // 즉시 가입형만 가입 완료 성공 안내를 표시
     const isOpenJoin = club?.joinType === "OPEN";
+    // 승인제 가입 요청에는 공백을 제거한 답변을 사용한다.
+    const normalizedAnswers = answers.map(trimAnswer);
+    const questionCount = club?.questionList?.length ?? 0;
+
+    // 승인 질문이 없거나 모든 질문에 답하지 않으면 신청을 보내지 않는다.
+    if (!isOpenJoin && (questionCount === 0 || normalizedAnswers.length !== questionCount
+        || normalizedAnswers.some(isEmptyAnswer))) {
+      // "모든 질문에 답변해 주세요."
+      void sweetWarning(message("frontend.readingClub.detail.answerRequired"));
+      return;
+    }
 
     try {
-      // 가입 처리 중 화면 이동을 막고 즉시 가입 성공 시 같은 모달을 완료 상태로 전환한다
-      await runBlockingOperation(() => joinClubApi(clubNumb, answers), {
+      // 가입 처리가 성공하면 가입 방식에 맞는 완료 안내로 같은 모달을 전환한다.
+      await runBlockingOperation(() => joinClubApi(clubNumb, normalizedAnswers), {
         title: message(
           isOpenJoin
             ? "frontend.readingClub.detail.joining"
             : "frontend.readingClub.detail.applying",
         ),
-        success: isOpenJoin ? {
-          title: message("frontend.readingClub.detail.joinSuccessTitle"),
-          text: message("frontend.readingClub.detail.joinSuccessDescription"),
-        } : undefined,
+        success: {
+          title: isOpenJoin
+            ? /* "모임에 가입했어요" */ message("frontend.readingClub.detail.joinSuccessTitle")
+            : /* "가입을 신청했어요" */ message("frontend.readingClub.detail.applicationSuccessTitle"),
+          text: isOpenJoin
+            ? /* "이제 모임원들과 함께 책을 읽어보세요." */
+              message("frontend.readingClub.detail.joinSuccessDescription")
+            : /* "모임장이 답변을 확인하면 승인 결과를 알려드릴게요." */
+              message("frontend.readingClub.detail.applicationSuccessDescription"),
+        },
       });
-      // 사용자가 성공 안내를 확인한 뒤 활성 모임원 상태로 상세 화면을 갱신한다
+
+      // 사용자가 성공 안내를 확인한 뒤 활성 모임원 상태로 상세 화면을 갱신
       await loadPage();
+      // 승인 신청이 완료되면 답변 모달을 닫고 대기 상태를 표시한다.
+      setIsJoinModalOpen(false);
+
     } catch (error) {
-      // 가입 또는 가입 신청 실패 원인을 공통 오류 알림으로 표시한다
+      // 가입 또는 가입 신청 실패 원인 공통 alert 표시
       void sweetError(
         message("frontend.readingClub.error.joinTitle"),
         getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
@@ -549,6 +625,7 @@ export const useClubDetailPage = () => {
     club,
     isCancellingApplication,
     isDeleting,
+    isJoinModalOpen,
     isLeaving,
     isCompletingReading,
     isClosingResult,
@@ -562,6 +639,8 @@ export const useClubDetailPage = () => {
     handleClubAction,
     handleClubLeave,
     handleJoinClub,
+    handleJoinAction,
+    handleJoinModalClose,
     handleOwnerVote,
     handleReadingHistory,
     handleReadingComplete,
