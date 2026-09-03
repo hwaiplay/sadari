@@ -259,6 +259,30 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
 
       {section === "notifications" ? (
         <>
+          {/* 현재 브라우저에만 즉시 반영되는 기기 푸시 설정 영역 */}
+          <section className={styles.section}>
+            <label className={styles.settingRow}>
+              <span className={styles.settingText}>
+                <strong className={styles.settingTitle}>
+                  {/* "현재 기기 푸시" */}
+                  {message("frontend.settings.notifications.device")}
+                </strong>
+                <span className={styles.settingDescription}>
+                  {/* "이 설정은 현재 브라우저에만 적용됩니다. 브라우저 권한이 차단되어 있으면 켤 수 없습니다." */}
+                  {message("frontend.settings.notifications.device.description")}
+                </span>
+              </span>
+              <input
+                className={styles.switchInput}
+                type="checkbox"
+                checked={isPushEnabled}
+                disabled={isPushChanging}
+                onChange={handlePushToggle}
+              />
+              <span className={styles.switchTrack} aria-hidden="true" />
+            </label>
+          </section>
+
           <section className={styles.section}>
             <h2 className={styles.sectionTitle}>{message("frontend.settings.notifications.category")}</h2>
             {renderSwitch("likeAlimYsno", "frontend.settings.notifications.like", "frontend.settings.notifications.like.description")}
@@ -271,20 +295,6 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
             <h2 className={styles.sectionTitle}>{message("frontend.settings.notifications.reportDefault")}</h2>
             {renderSwitch("reportLikeDefaultYsno", "frontend.settings.notifications.reportLike", "frontend.settings.notifications.reportLike.description")}
             {renderSwitch("reportReplyDefaultYsno", "frontend.settings.notifications.reportReply", "frontend.settings.notifications.reportReply.description")}
-          </section>
-          <section className={styles.section}>
-            <h2 className={styles.sectionTitle}>{message("frontend.settings.notifications.device")}</h2>
-            <p className={styles.deviceDescription}>{message("frontend.settings.notifications.device.description")}</p>
-            <ActionButton
-              variant="secondary"
-              size="lg"
-              width="full"
-              aria-pressed={isPushEnabled}
-              disabled={isPushChanging}
-              onClick={() => void handlePushToggle()}
-            >
-              {message(isPushEnabled ? "frontend.push.enable" : "frontend.push.disable")}
-            </ActionButton>
           </section>
         </>
       ) : (
@@ -301,7 +311,8 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
           variant="primary"
           size="lg"
           width="full"
-          disabled={!isDirty || isSaving}
+          aria-disabled={!isDirty || isSaving}
+          disabled={isSaving}
           onClick={() => void handleSave()}
         >
           {message("frontend.common.save")}
