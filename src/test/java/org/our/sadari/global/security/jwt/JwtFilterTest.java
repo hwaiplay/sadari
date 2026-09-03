@@ -21,11 +21,12 @@ import org.springframework.test.util.ReflectionTestUtils;
  * fileName       : JwtFilterTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 제한 계정 상태의 CSRF Token 조회 경로를 검증한다
+ * description    : 제한 계정 상태의 허용 경로와 인증 Token 용도를 검증한다
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
+ * 2026-09-03        HanWon.Jang        로컬 간편 로그인 필터 제외 검증
  */
 @ExtendWith(MockitoExtension.class)
 class JwtFilterTest {
@@ -51,6 +52,19 @@ class JwtFilterTest {
         );
 
         assertTrue(Boolean.TRUE.equals(allowed));
+    }
+
+    /**
+     * 로컬 개발용 계정 전환은 브라우저의 기존 Access Token 상태와 무관하게 실행된다
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void localLoginSkipsJwtFilter() {
+        // 기존 인증 Cookie를 검사하지 않을 로컬 간편 로그인 요청을 생성한다
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/oauth/local-login");
+        // 제한 상태 또는 만료된 기존 Cookie가 계정 전환을 막지 않도록 필터 제외 여부를 확인한다
+        assertTrue(jwtFilter.shouldNotFilter(request));
     }
 
     /** Refresh Token이 accessToken 쿠키에 들어와도 인증 흐름으로 진입하지 않는다. */

@@ -64,6 +64,16 @@
 - 계정 비활성화가 완료되면 저장하지 않은 프로필 및 배경 이미지 임시 선택본은 즉시 물리 삭제하며, 재로그인으로 계정을 복구해도 복원하지 않습니다.
 - 비활성화 회원이 남긴 다음 도서 추천과 투표 기록은 보존하되 후보별 집계와 화면 표시에서 제외합니다. 같은 계정이 활성 상태로 복귀하면 기존 기록을 다시 집계에 포함합니다.
 
+## 로컬 개발용 간편 로그인
+
+- 로컬 개발용 간편 로그인은 `loc` 프로필이 활성화되고 운영 프로필은 비활성화된 경우에만 제공하며 운영 프로필에는 로그인 처리 객체를 등록하지 않습니다.
+- 회원 번호는 URL로 입력받지만 권한과 현재 회원 상태는 서버가 사용자 원본에서 다시 조회합니다.
+- 활성 회원만 로그인할 수 있으며 비활성화, 영구 탈퇴 대기 및 이용정지 회원은 모두 인증 실패로 처리합니다.
+- 로컬 개발용 간편 로그인은 비활성화 계정을 재활성화하거나 영구 탈퇴를 취소하지 않으며 회원 상태와 탈퇴 관련 일시를 변경하지 않습니다.
+- 제한된 계정에는 인증 Cookie와 Redis 로그인 세션을 발급하지 않습니다. 물리 삭제된 회원도 사용자 원본을 조회할 수 없으므로 로그인할 수 없습니다.
+- 활성 회원으로 로그인한 뒤에는 해당 회원의 현재 공개 범위, 보존 데이터, 알림 설정, 푸시 구독 및 소셜 관계를 그대로 사용하며 추가 삭제나 복원을 수행하지 않습니다.
+- localhost와 설정된 Tailnet 주소에서 같은 기능을 사용할 수 있으며 로그인 완료 후 요청을 시작한 개발 프런트엔드로만 이동합니다.
+
 ## 영구 탈퇴
 
 - 처리 유형: `HARD`
@@ -437,6 +447,8 @@
 - `src/main/java/org/our/sadari/user/auth/service/AuthServiceImpl.java`
 - `src/main/java/org/our/sadari/global/common/service/UserIdEncryptionService.java`
 - `src/main/java/org/our/sadari/user/auth/controller/AuthLoginController.java`
+- `src/main/java/org/our/sadari/user/auth/controller/LocalAuthLoginController.java`
+- `src/main/java/org/our/sadari/user/auth/service/LocalAuthService.java`
 - `src/main/java/org/our/sadari/global/scheduler/service/UserHardDeleteServiceImpl.java`
 - `src/main/java/org/our/sadari/global/file/service/FileService.java`
 - `src/main/java/org/our/sadari/global/scheduler/ProfileImageDraftCleanupScheduler.java`

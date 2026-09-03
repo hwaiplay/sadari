@@ -29,6 +29,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
  * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
  * 2026-08-13        SeungHyeon.Kang    제한 상태 CSRF·탈퇴 접근 허용
+ * 2026-09-03        HanWon.Jang        로컬 간편 로그인 필터 제외
  */
 @Component
 @RequiredArgsConstructor
@@ -38,6 +39,8 @@ public class JwtFilter extends OncePerRequestFilter {
     private static final String ACCESS_TOKEN_COOKIE_NAME = "accessToken";
     // REFRESH TOKEN API URI 설정값
     private static final String REFRESH_TOKEN_API_URI = "/api/oauth/refresh";
+    // loc 프로필의 개발용 로그인 API URI
+    private static final String LOCAL_LOGIN_API_URI = "/api/oauth/local-login";
     // 영구 삭제 대기 회원에게 허용할 회원 탈퇴 API 접두사
     private static final String WITHDRAWAL_API_PREFIX = "/api/user/withdrawal";
     // 영구 삭제 대기 회원에게 허용할 로그아웃 API URI
@@ -146,7 +149,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     /**
      * 특정 요청 URI에 대해 해당 JWT 필터 수행을 건너뛸지 여부를 결정한다.
-     * Refresh Token 재발급 API(/api/oauth/refresh)는 만료된 Access Token 상태로 들어오므로 검증 대상에서 제외한다.
+     * Refresh Token 재발급과 로컬 개발용 계정 전환은 기존 Access Token 상태와 무관해야 하므로 검증 대상에서 제외한다.
      *
      * @author SeungHyeon.Kang
      * @param request 서블릿 요청 객체
@@ -154,8 +157,9 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 특정 요청 URI에 대해 해당 JWT 필터 수행을 건너뛸지 여부를 결정 결과를 반환한다
-        return REFRESH_TOKEN_API_URI.equals(request.getRequestURI());
+        // 만료 토큰 재발급과 loc 전용 계정 전환 경로의 JWT 필터 제외 여부를 반환한다
+        return REFRESH_TOKEN_API_URI.equals(request.getRequestURI())
+                || LOCAL_LOGIN_API_URI.equals(request.getRequestURI());
     }
 
     /**

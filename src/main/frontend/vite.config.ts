@@ -62,6 +62,8 @@ function createDevProxyOptions(target: string): ProxyOptions {
   return {
     target,
     changeOrigin: true,
+    // Spring이 localhost와 Tailnet 요청을 구분하도록 브라우저가 사용한 원래 Host를 전달한다
+    xfwd: true,
     configure: configureDevelopmentProxy,
   };
 }

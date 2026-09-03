@@ -32,6 +32,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-03-22        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang    Cookie 인증 API CSRF 보호 적용
  * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
+ * 2026-09-03        HanWon.Jang        로컬 프로필 간편 로그인 허용
  */
 @Configuration
 @EnableWebSecurity
@@ -91,6 +92,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/oauth/kakao",
                                 "/api/oauth/callback/**",
+                                "/api/oauth/local-login",
                                 "/api/oauth/csrf",
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",

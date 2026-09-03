@@ -98,9 +98,19 @@
 - Tailnet 장치에서 로컬 OAuth를 검증할 때는 `application-loc.yml`의 `domain.front`와
   `domain.back` 기본값을 같은 `https://<tailscale-device>.<tailnet>.ts.net` 주소로 설정하고
   `app.cookie.secure=true`, `app.cookie.same-site=Lax`를 사용합니다.
+- `application-loc.yml`의 `domain.local-front`는 localhost 로그인 완료 후 이동할 Vite 주소인
+  `http://localhost:5173`으로 고정합니다.
+- `loc` 프로필은 `/api/oauth/local-login?userNumb=<test-user-number>` 간편 로그인 URL을 제공합니다.
+  활성 회원만 DB 원본 권한으로 로그인시키며 비활성화, 영구 탈퇴 대기 및 이용정지 회원은 상태 변경 없이
+  차단합니다. 해당 Controller와 Service는 `loc` 프로필이 활성화되고 운영 프로필은 비활성화된 경우에만
+  등록되므로 두 프로필이 잘못 함께 활성화되더라도 운영 환경에는 Endpoint가 생성되지 않습니다.
 - Vite 개발 서버는 `application-loc.yml`의 `domain.proxy=http://127.0.0.1:8080`을 읽어 `/api` 요청을
   로컬 Spring 서버로 전달합니다. Vite는 Tailscale Serve 대상과 동일한 `127.0.0.1:5173`에 고정되며,
   포트가 이미 사용 중이면 다른 포트로 이동하지 않고 시작에 실패하여 잘못된 프록시 연결을 차단합니다.
+- Vite 개발 프록시는 원래 브라우저 Host를 `X-Forwarded-Host`로 전달합니다. 로컬 로그인 Controller는
+  이 값을 허용 주소 선택에만 사용하여 localhost 요청은 `domain.local-front`, 그 외 loc 요청은
+  설정된 `domain.front` 호스트와 일치할 때만 Tailnet 주소로 이동시킵니다. 그 외 Host에서는 회원 조회와
+  세션 발급을 시작하지 않으며 요청값으로 임의 리다이렉트 주소를 받지 않습니다.
 - Vite Host 허용 목록에는 `domain.front`의 Tailnet 호스트만 추가하여 휴대폰 요청을 허용하고 임의 Host
   헤더 요청은 차단합니다.
 - Vite의 내부 전달에서는 브라우저의 개발 Origin을 제거하여 POST와 PUT 요청이 외부 CORS 요청으로
