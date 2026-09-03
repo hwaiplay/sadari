@@ -61,6 +61,19 @@
                )
     </select>
 
+    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회한다. -->
+    <select id="getActivePublicFileOwner" resultType="long">
+        <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
+        SELECT /* getActivePublicFileOwner */
+               MIN(U.USER_NUMB)
+          FROM TM_FILEXM F
+    INNER JOIN TM_USERXM U
+            ON (U.PROF_NUMB = F.FILE_NUMB OR U.BGIM_NUMB = F.FILE_NUMB)
+           AND U.USER_STAT = #{userStatActive}
+         WHERE F.STOR_NAME = #{storName}
+           AND F.FILE_PATH = #{filePath}
+    </select>
+
     <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회한다. -->
     <select id="getFileListByRegiUser" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
         SELECT /* getFileListByRegiUser */

@@ -63,6 +63,12 @@
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                   OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 
@@ -83,6 +89,12 @@
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                   OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 
@@ -99,6 +111,12 @@
          WHERE R.REPT_NUMB = #{tagtNumb}
            AND R.USER_NUMB != #{userNumb}
            AND R.PUBC_YSNO = #{commYes}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = R.USER_NUMB)
+                   OR (B.USER_NUMB = R.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 
@@ -122,6 +140,20 @@
            AND C.USER_NUMB != #{userNumb}
            AND COALESCE(C.DELT_YSNO, #{commNo}) = #{commNo}
            AND ((C.TAGT_TYPE = 'REPORT' AND R.PUBC_YSNO = #{commYes}) OR O.USER_NUMB IS NOT NULL)
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = C.USER_NUMB)
+                   OR (B.USER_NUMB = C.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb}
+                       AND B.BLOC_NUMB = COALESCE(R.USER_NUMB, O.USER_NUMB))
+                   OR (B.USER_NUMB = COALESCE(R.USER_NUMB, O.USER_NUMB)
+                       AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 
@@ -142,6 +174,12 @@
          WHERE U.USER_NUMB = #{tagtNumb}
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                   OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 
@@ -156,6 +194,12 @@
            AND U.USER_NUMB != #{userNumb}
            AND U.USER_STAT = #{userStatActive}
            AND NULLIF(TRIM(U.INTR_CNTN), '') IS NOT NULL
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                   OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            FOR UPDATE
     </select>
 

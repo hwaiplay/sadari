@@ -27,6 +27,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
 import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.mapper.ReportMapper;
+import org.our.sadari.social.service.UserBlockService;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
@@ -61,6 +62,9 @@ class ReadingClubAccessTest {
     // 독후감 데이터 접근 객체
     @Mock
     private ReportMapper reportMapper;
+
+    @Mock
+    private UserBlockService userBlockService;
     // 공통코드 조회 도구
     @Mock
     private CodeUtil codeUtil;
@@ -83,7 +87,7 @@ class ReadingClubAccessTest {
         readingClubService = new ReadingClubServiceImpl(
                 readingClubMapper, readingClubMembershipMapper, badWordDetectionService
               , alimService, bookMapper, reportMapper
-              , codeUtil);
+              , userBlockService, codeUtil);
     }
 
     /** 초대 관계가 활성 회원 조회에서 제외되면 비공개 상세 접근을 거절한다. */

@@ -18,7 +18,7 @@ const WITHDRAWAL_MENU_URL = "/settings/withdrawal";
  * @author HanWon.Jang
  * @return 설정 카테고리 및 하위 메뉴 화면
  */
-function SettingsPage() {
+const SettingsPage = () => {
 
   const navigate = useNavigate();
   const [menuList, setMenuList] = useState<UserMenuItem[]>([]);
@@ -121,6 +121,21 @@ function SettingsPage() {
           <button
             className={styles.primaryMenuButton}
             type="button"
+            onClick={() => navigate("/settings/blocked-users")}
+          >
+            <span>
+              {/* "차단한 사용자" */}
+              {message("frontend.settings.blocked.title")}
+            </span>
+            <svg className={styles.chevronIcon} viewBox="0 0 24 24" aria-hidden="true">
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        </div>
+        <div className={styles.menuItem}>
+          <button
+            className={styles.primaryMenuButton}
+            type="button"
             onClick={() => navigate("/settings/privacy")}
           >
             <span>{message("frontend.settings.privacy.title")}</span>
@@ -193,6 +208,6 @@ function SettingsPage() {
       </section>
     </main>
   );
-}
+};
 
 export default SettingsPage;

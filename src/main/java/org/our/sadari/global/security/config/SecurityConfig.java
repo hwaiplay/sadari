@@ -97,9 +97,7 @@ public class SecurityConfig {
                                 "/api/oauth/refresh",
                                 "/api/oauth/logout",
                                 "/api/oauth/tokenCheck",
-                                "/error/500.html",
-                                "/uploads/profile/**",
-                                "/uploads/background/**"
+                                "/error/500.html"
                         // 인증 없이 접근 가능한 공개 API 경로를 설정한다
                         ).permitAll()
 

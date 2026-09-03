@@ -17,6 +17,7 @@ import lombok.Data;
  * 2026-08-15        SeungHyeon.Kang    친구 상태·목록 조회 조건 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 추가
+ * 2026-09-03        HanWon.Jang        차단 관계 조회 조건 추가
  */
 @Schema(description = "사용자 검색과 팔로우 및 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
@@ -94,6 +95,9 @@ public class SocialDto {
     @Data
     @Schema(description = "프로필 통계 DTO")
     public static class ProfileStatsDto {
+
+        @Schema(description = "통계를 조회하는 로그인 사용자 번호", example = "44", hidden = true)
+        private Long loginUserNumb;
 
         @Schema(description = "로그인 사용자 번호", example = "31", hidden = true)
         private Long userNumb;

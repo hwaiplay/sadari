@@ -59,10 +59,11 @@ public interface SocialService {
      * 다른 사용자 프로필은 공개 독후감 조건을 전달하고, 본인 화면은 조건 없이 전체 독후감을 집계한다.
      *
      * @author SeungHyeon.Kang
+     * @param loginUserNumb 통계를 조회하는 로그인 사용자 번호
      * @param userNumb 조회할 사용자 번호
      * @return 프로필 통계 조회 결과
      */
-    ResultData getProfileStats(Long userNumb);
+    ResultData getProfileStats(Long loginUserNumb, Long userNumb);
 
     /**
      * 마이페이지 기존 호출부 호환을 위해 프로필 통계 조회를 위임한다.

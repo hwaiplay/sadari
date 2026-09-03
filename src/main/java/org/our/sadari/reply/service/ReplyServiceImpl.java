@@ -550,8 +550,9 @@ public class ReplyServiceImpl implements ReplyService {
         // 중복 제거된 각 수신자에게 같은 원본 콘텐츠로 이동하는 댓글 알림을 저장하고 푸시를 예약한다
         for (Map.Entry<Long, String> recipientPlan : recipientTemplateMap.entrySet()) {
             // 현재 수신자에게 대상 유형별 댓글 알림을 발송한다
-            alimService.sendAlim(
-                    recipientPlan.getKey()
+            alimService.sendUserAlim(
+                    sendUserNumb
+                  , recipientPlan.getKey()
                   , Constant.ALIM_SITU_REPLY
                   , recipientPlan.getValue()
                   , replyDto.getTagtType()

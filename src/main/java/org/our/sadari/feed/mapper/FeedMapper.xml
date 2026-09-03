@@ -20,8 +20,14 @@
             <choose>
                 <when test="tagtType != null and tagtType != '' and tagtNumb != null">
                     SELECT U.USER_NUMB
-                      FROM TM_USERXM U
+                     FROM TM_USERXM U
                      WHERE U.USER_STAT = #{userStatActive}
+                       AND NOT EXISTS (
+                           SELECT 1
+                             FROM TB_USBLOC B
+                            WHERE (B.USER_NUMB = #{loginUserNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                               OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{loginUserNumb})
+                       )
                 </when>
                 <otherwise>
                     SELECT U.USER_NUMB
@@ -35,6 +41,12 @@
                         ON U.USER_NUMB = F.FLOW_NUMB
                        AND U.USER_STAT = #{userStatActive}
                      WHERE F.USER_NUMB = #{loginUserNumb}
+                       AND NOT EXISTS (
+                           SELECT 1
+                             FROM TB_USBLOC B
+                            WHERE (B.USER_NUMB = #{loginUserNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                               OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{loginUserNumb})
+                       )
                 </otherwise>
             </choose>
         ), FEED_BASE AS (
@@ -131,13 +143,25 @@
                 ON U.USER_NUMB = L.USER_NUMB
                AND U.USER_STAT = #{userStatActive}
              WHERE L.TAGT_TYPE IN (#{targetReport}, #{targetProfile}, #{targetBackground})
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM TB_USBLOC B
+                    WHERE (B.USER_NUMB = #{loginUserNumb} AND B.BLOC_NUMB = L.USER_NUMB)
+                       OR (B.USER_NUMB = L.USER_NUMB AND B.BLOC_NUMB = #{loginUserNumb})
+               )
           GROUP BY L.TAGT_TYPE, L.TAGT_NUMB
         ), REPLY_COUNT AS (
             SELECT R.TAGT_TYPE
                  , R.TAGT_NUMB
                  , COUNT(*) AS REPL_CNT
-              FROM TB_REPLXX R
+             FROM TB_REPLXX R
              WHERE R.DELT_YSNO = #{commNo}
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM TB_USBLOC B
+                    WHERE (B.USER_NUMB = #{loginUserNumb} AND B.BLOC_NUMB = R.USER_NUMB)
+                       OR (B.USER_NUMB = R.USER_NUMB AND B.BLOC_NUMB = #{loginUserNumb})
+               )
           GROUP BY R.TAGT_TYPE, R.TAGT_NUMB
         )
         SELECT /* getFeedList */
@@ -185,6 +209,12 @@
            AND (   (#{tagtType} = #{targetProfile} AND U.PROF_NUMB = #{tagtNumb})
                 OR (#{tagtType} = #{targetBackground} AND U.BGIM_NUMB = #{tagtNumb})
                )
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = U.USER_NUMB)
+                   OR (B.USER_NUMB = U.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
     </select>
 
     <!-- 교체되는 사진의 댓글에 연결된 좋아요를 먼저 삭제해 댓글 삭제 순서를 보장한다. -->

@@ -1,6 +1,11 @@
+import { getApiErrorMessage } from "@/app/api/resultData";
+import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import { confirmUserBlock } from "@/components/UserActionMenu/UserActionMenu";
 import type { UserReportLocationState } from "@/components/UserActionMenu/userActionMenu.types";
+import { setUserBlockApi } from "@/features/Social/api/socialApi";
+import { useState } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import * as styles from "./UserReportPage.css";
 
@@ -13,6 +18,7 @@ import * as styles from "./UserReportPage.css";
 const UserReportCompletePage = () => {
   const location = useLocation();
   const reportState = location.state as UserReportLocationState | null;
+  const [isBlocked, setIsBlocked] = useState(false);
 
   // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동한다.
   if (!reportState?.target) {
@@ -21,9 +27,48 @@ const UserReportCompletePage = () => {
 
   const { target } = reportState;
 
-  /** 완료 화면에서 공통 SweetAlert로 사용자 차단 여부를 확인한다. */
+  /**
+   * 완료 화면에서 차단 여부를 확인하고 선택한 신고 대상의 차단 관계를 등록한다
+   *
+   * @author HanWon.Jang
+   * @return 차단 확인과 등록 완료 Promise
+   */
+  const handleBlock = async (): Promise<void> => {
+    try {
+      // 공통 차단 정책을 안내하고 사용자가 확인한 경우에만 상태 변경을 시작한다
+      await confirmUserBlock(target.userNick, async () => {
+        // 처리 중 화면과 이동 차단을 유지하며 신고 대상 사용자를 차단한다
+        await runBlockingOperation(() => setUserBlockApi(target.userNumb), {
+          // "사용자를 차단하고 있어요."
+          title: message("frontend.userAction.block.processing"),
+          success: {
+            // "차단했어요."
+            title: message("frontend.userAction.block.success"),
+          },
+        });
+        // 완료 화면에서 같은 사용자를 다시 차단하지 않도록 성공 상태를 저장한다
+        setIsBlocked(true);
+      });
+    }
+
+    catch (error) {
+      // "사용자를 차단하지 못했습니다."
+      await sweetError(
+        message("frontend.userAction.block.failed"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+    }
+  };
+
+  /**
+   * 신고 완료 화면의 차단 버튼 클릭을 비동기 차단 처리와 연결한다
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없다
+   */
   const handleBlockClick = (): void => {
-    void confirmUserBlock(target.userNick);
+    // 차단 확인과 API 오류는 비동기 처리 함수 내부에서 안내한다
+    void handleBlock();
   };
 
   return (
@@ -56,6 +101,7 @@ const UserReportCompletePage = () => {
         <button
           className={styles.blockOptionButton}
           type="button"
+          disabled={isBlocked}
           onClick={handleBlockClick}
         >
           <span className={styles.blockOptionButtonBody}>
@@ -66,7 +112,14 @@ const UserReportCompletePage = () => {
 
             <span>
               {/* "{닉네임} 님 차단" */}
-              {message("frontend.userReport.complete.blockUser", [target.userNick])}
+              {isBlocked
+                ? (
+                    <>
+                      {/* "차단했어요" */}
+                      {message("frontend.userReport.complete.blocked")}
+                    </>
+                  )
+                : message("frontend.userReport.complete.blockUser", [target.userNick])}
             </span>
           </span>
 

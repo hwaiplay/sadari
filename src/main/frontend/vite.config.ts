@@ -177,6 +177,17 @@ export default defineConfig(({ command }) => {
   // 개발 서버에서는 고정 포트와 내부 API 프록시를 적용하고 운영 빌드에서는 정적 자원 설정만 반환한다
   return {
     plugins: [react(), vanillaExtractPlugin()],
+    build: {
+      rollupOptions: {
+        output: {
+          // 화면 공통 프레임워크는 업무 코드와 분리하여 변경 시 브라우저 캐시를 재사용한다
+          manualChunks: {
+            "framework-vendor": ["react", "react-dom", "react-router-dom"],
+            "data-vendor": ["@tanstack/react-query", "axios", "zustand"],
+          },
+        },
+      },
+    },
     server: developmentServerConfig
       ? {
           allowedHosts: [developmentServerConfig.allowedHost],

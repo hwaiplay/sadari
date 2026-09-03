@@ -22,6 +22,58 @@ export type FollowUser = {
   meYsno?: "Y" | "N";
 };
 
+export type BlockedUser = {
+  blocNumb: number;
+  userNick?: string;
+  userStatName?: string;
+  regiDate: string;
+};
+
+/**
+ * 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제한다
+ *
+ * @author HanWon.Jang
+ * @param userNumb 차단 대상 사용자 번호
+ * @return 차단 완료 여부
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const setUserBlockApi = async (userNumb: number): Promise<boolean> => {
+  // 인증 사용자가 선택한 대상의 차단 관계를 서버에 등록한다
+  const res = await api.post<ResultData<boolean>>(`/social/blocks/${userNumb}`);
+  // 서버가 확정한 차단 완료 여부를 반환한다
+  return assertResultDataSuccess(res.data).data === true;
+};
+
+/**
+ * 로그인 사용자가 만든 차단 방향을 해제한다
+ *
+ * @author HanWon.Jang
+ * @param userNumb 차단 해제 대상 사용자 번호
+ * @return 차단 해제 완료 여부
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const delUserBlockApi = async (userNumb: number): Promise<boolean> => {
+  // 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제한다
+  const res = await api.delete<ResultData<boolean>>(`/social/blocks/${userNumb}`);
+  // 서버가 확정한 차단 해제 완료 여부를 반환한다
+  return assertResultDataSuccess(res.data).data === true;
+};
+
+/**
+ * 로그인 사용자가 직접 차단한 사용자 한 페이지를 조회한다
+ *
+ * @author HanWon.Jang
+ * @param page 조회할 페이지 번호
+ * @return 차단 사용자 페이지
+ * @throws API 요청 또는 공통 응답 검증 실패 시 발생
+ */
+export const getBlockUserPageApi = async (page: number): Promise<PageData<BlockedUser>> => {
+  // 최신 차단순 사용자 페이지를 서버에서 조회한다
+  const res = await api.get<ResultData<PageData<BlockedUser>>>("/social/blocks", { params: { page } });
+  // 공통 성공 코드가 확인된 차단 사용자 페이지를 반환한다
+  return assertResultDataSuccess(res.data).data as PageData<BlockedUser>;
+};
+
 /**
  * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 한 페이지를 조회한다
  *

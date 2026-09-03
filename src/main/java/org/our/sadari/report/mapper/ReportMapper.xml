@@ -466,6 +466,12 @@
                       ON LB.BOOK_NUMB = LR.BOOK_NUMB
                    WHERE L.TAGT_TYPE = #{likeTargetReport}
                      AND LB.BOOK_ISBN = #{bookIsbn}
+                     AND NOT EXISTS (
+                         SELECT 1
+                           FROM TB_USBLOC BLOCKX
+                          WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = L.USER_NUMB)
+                             OR (BLOCKX.USER_NUMB = L.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+                     )
                 GROUP BY L.TAGT_NUMB
                 ) LC
             ON LC.REPT_NUMB = P.REPT_NUMB
@@ -485,6 +491,12 @@
                        ON RB.BOOK_NUMB = RR.BOOK_NUMB
                     WHERE RB.BOOK_ISBN = #{bookIsbn}
                       AND R.TAGT_TYPE = #{likeTargetReport}
+                      AND NOT EXISTS (
+                          SELECT 1
+                            FROM TB_USBLOC BLOCKX
+                           WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = R.USER_NUMB)
+                              OR (BLOCKX.USER_NUMB = R.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+                      )
                     GROUP BY R.TAGT_NUMB
                 ) RPL
             ON RPL.REPT_NUMB = P.REPT_NUMB
@@ -493,6 +505,12 @@
            AND P.PUBC_YSNO = #{commYes}
            AND P.REPT_STAT != #{reptStatRead}
            AND B.BOOK_ISBN = #{bookIsbn}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC BLOCKX
+                WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = P.USER_NUMB)
+                   OR (BLOCKX.USER_NUMB = P.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+           )
         <if test="reptStat != null and reptStat != ''">
            AND P.REPT_STAT = #{reptStat}
         </if>
@@ -557,7 +575,13 @@
                   FROM TB_LIKEXX L
                   JOIN TM_USERXM LU ON LU.USER_NUMB = L.USER_NUMB AND LU.USER_STAT = #{userStatActive}
                  WHERE L.TAGT_TYPE = #{likeTargetReport}
-                   AND L.TAGT_NUMB = P.REPT_NUMB) AS LIKE_CNT
+                   AND L.TAGT_NUMB = P.REPT_NUMB
+                   AND NOT EXISTS (
+                       SELECT 1
+                         FROM TB_USBLOC BLOCKX
+                        WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = L.USER_NUMB)
+                           OR (BLOCKX.USER_NUMB = L.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+                   )) AS LIKE_CNT
              , CASE WHEN EXISTS (
                     SELECT 1 FROM TB_LIKEXX L
                      WHERE L.USER_NUMB = #{userNumb}
@@ -567,7 +591,13 @@
              , (SELECT COUNT(*) FROM TB_REPLXX R
                  WHERE R.TAGT_TYPE = #{likeTargetReport}
                    AND R.TAGT_NUMB = P.REPT_NUMB
-                   AND R.DELT_YSNO = #{commNo}) AS REPL_CNT
+                   AND R.DELT_YSNO = #{commNo}
+                   AND NOT EXISTS (
+                       SELECT 1
+                         FROM TB_USBLOC BLOCKX
+                        WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = R.USER_NUMB)
+                           OR (BLOCKX.USER_NUMB = R.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+                   )) AS REPL_CNT
              , CASE WHEN EXISTS (
                     SELECT 1 FROM TB_FOLLOW F
                      WHERE F.USER_NUMB = #{userNumb}
@@ -581,6 +611,12 @@
          WHERE P.REPT_NUMB = #{reptNumb}
            AND P.PUBC_YSNO = #{commYes}
            AND P.REPT_STAT != #{reptStatRead}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC BLOCKX
+                WHERE (BLOCKX.USER_NUMB = #{userNumb} AND BLOCKX.BLOC_NUMB = P.USER_NUMB)
+                   OR (BLOCKX.USER_NUMB = P.USER_NUMB AND BLOCKX.BLOC_NUMB = #{userNumb})
+           )
     </select>
 
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회한다. -->

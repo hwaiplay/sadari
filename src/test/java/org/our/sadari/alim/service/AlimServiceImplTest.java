@@ -23,6 +23,7 @@ import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.push.service.PushService;
+import org.our.sadari.social.service.UserBlockService;
 import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
@@ -50,6 +51,10 @@ class AlimServiceImplTest {
     @Mock
     private PushService pushService;
 
+    // 사용자 간 양방향 차단 관계 조회 서비스
+    @Mock
+    private UserBlockService userBlockService;
+
     // 알림 서비스 단위 테스트 대상
     private AlimServiceImpl alimService;
 
@@ -69,7 +74,7 @@ class AlimServiceImplTest {
         // 실패 응답이 실제 메시지 소스를 조회하도록 정적 객체를 초기화한다
         new MessageUtils().setMessageSource(messageSource);
         // 알림 서비스 단위 테스트 대상을 담을 객체를 생성한다
-        alimService = new AlimServiceImpl(alimMapper, pushService);
+        alimService = new AlimServiceImpl(alimMapper, pushService, userBlockService);
         // 기존 알림 테스트는 모든 선택형 알림을 켠 사용자 설정을 기본으로 사용한다
         UserSettingDto setting = new UserSettingDto();
         setting.setLikeAlimYsno(Constant.COMM_YES);
@@ -570,6 +575,21 @@ class AlimServiceImplTest {
         ResultData result = alimService.getAlimTarget(31L, 7L);
 
         assertEquals(2020, result.getCode());
+    }
+
+    /** 차단 관계인 개인 소셜 알림은 이력과 푸시 준비를 모두 생략하는지 검증한다. */
+    @Test
+    void sendUserAlimSkipsBlocked() {
+        // 발신자와 수신자 사이에 한 방향 차단 관계가 존재하도록 설정한다
+        when(userBlockService.isBlocked(3L, 4L)).thenReturn(true);
+        // 차단된 사용자가 만든 팔로우 알림 발송을 요청한다
+        ResultData result = alimService.sendUserAlim(
+                3L, 4L, Constant.ALIM_SITU_FOLLOW_CLUB, Constant.ALIM_TEMP_CODE_FOLLOW_USER
+              , Constant.ALIM_TARGET_USER, 3L, null, Map.of("userName", "sender"));
+        // 차단 사실을 노출하지 않는 정상 생략 응답인지 검증한다
+        assertEquals(200, result.getCode());
+        // 차단된 수신자의 활성 상태 조회 전부터 알림 저장 흐름이 중단되는지 검증한다
+        verify(alimMapper, never()).getActiveAlimUserCnt(4L);
     }
 
     /**

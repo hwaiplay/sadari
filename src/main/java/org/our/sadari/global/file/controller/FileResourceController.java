@@ -12,6 +12,8 @@ import org.our.sadari.global.file.mapper.FileMapper;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.file.storage.FileStorage;
 import org.our.sadari.global.file.storage.StoredFile;
+import org.our.sadari.social.service.UserBlockService;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.http.CacheControl;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -34,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-07        SeungHyeon.Kang    최초 생성
  * 2026-08-26        SeungHyeon.Kang         이미지 재검증 캐시 적용
  * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생본 제공
+ * 2026-09-03        HanWon.Jang              이미지 직접 경로의 사용자 차단 검증 추가
  */
 @RestController
 @Tag(name = "파일", description = "비공개 저장소의 공개 이미지 조회 API")
@@ -57,6 +60,8 @@ public class FileResourceController {
     private final FileMapper fileMapper;
     // 배경사진 화면용 파생본을 생성하고 조회할 파일 업무 서비스
     private final FileService fileService;
+    // 이미지 소유자와 요청자의 양방향 차단 관계 조회 서비스
+    private final UserBlockService userBlockService;
 
     /**
      * 공개 이미지 조회에 사용할 파일 저장소를 구성한다.
@@ -65,8 +70,10 @@ public class FileResourceController {
      * @param fileStorage 실행 환경에 맞는 이미지 저장소
      * @param fileMapper 공개 이미지 참조 상태를 조회할 데이터 접근 객체
      * @param fileService 화면용 배경사진 파생본을 처리할 파일 업무 서비스
+     * @param userBlockService 이미지 직접 경로의 사용자 차단 검증 서비스
      */
-    public FileResourceController(FileStorage fileStorage, FileMapper fileMapper, FileService fileService) {
+    public FileResourceController(FileStorage fileStorage, FileMapper fileMapper, FileService fileService
+                                , UserBlockService userBlockService) {
 
         // 검증된 공개 이미지 조회에 사용할 저장소를 보관한다
         this.fileStorage = fileStorage;
@@ -74,6 +81,8 @@ public class FileResourceController {
         this.fileMapper = fileMapper;
         // 일반 화면 요청에서 화면용 배경사진을 생성하거나 재사용할 서비스를 보관한다
         this.fileService = fileService;
+        // 직접 경로로 접근한 사용자와 이미지 소유자의 차단 관계를 검증할 서비스를 보관한다
+        this.userBlockService = userBlockService;
     }
 
     /**
@@ -85,6 +94,7 @@ public class FileResourceController {
      * @param storedName UUID 형식의 저장 파일명
      * @param variant 원본 또는 일반 화면용 파생본을 구분하는 값
      * @param ifNoneMatch 브라우저가 보관한 이미지의 조건부 요청 ETag
+     * @param userNumb 이미지 조회를 요청한 로그인 사용자 번호
      * @return 이미지 바이트 응답, 경로 또는 객체가 없으면 404 응답
      * @throws IOException 저장소 조회 실패 시 발생
      */
@@ -96,6 +106,7 @@ public class FileResourceController {
           , @Parameter(description = "UUID와 확장자로 구성된 저장 파일명", example = "123e4567-e89b-12d3-a456-426614174000.png") @PathVariable String storedName
           , @Parameter(description = "배경사진 화면용 파생본", example = "display") @RequestParam(required = false) String variant
           , @Parameter(hidden = true) @RequestHeader(value = HttpHeaders.IF_NONE_MATCH, required = false) String ifNoneMatch
+          , @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
     ) throws IOException {
 
         // 허용된 이미지 유형과 서버 생성 경로가 아니면 저장소 조회 전에 차단한다
@@ -119,8 +130,11 @@ public class FileResourceController {
         // DB 메타정보에 저장된 기존 공개 URL 형식으로 참조 경로를 구성한다
         String filePath = "/uploads/" + objectKey;
 
-        // 활성 회원의 현재 프로필 또는 배경으로 참조되지 않는 파일은 저장소 조회 전에 차단한다
-        if (fileMapper.getActivePublicFileCount(storedName, filePath) < 1) {
+        // 활성 회원의 현재 프로필 또는 배경으로 참조되는 이미지 소유자를 조회한다
+        Long fileOwnerNumb = fileMapper.getActivePublicFileOwner(storedName, filePath);
+
+        // 현재 공개 이미지가 아니거나 요청자와 소유자가 격리되었으면 저장소 조회 전에 차단한다
+        if (StringUtil.isEmpty(fileOwnerNumb) || userBlockService.isBlocked(userNumb, fileOwnerNumb)) {
             // 탈퇴 또는 삭제 대기 회원의 이전 이미지와 미참조 파일을 공개하지 않는다
             return ResponseEntity.notFound().build();
         }

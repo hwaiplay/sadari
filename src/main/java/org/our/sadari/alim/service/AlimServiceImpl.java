@@ -13,6 +13,7 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.push.service.PushService;
+import org.our.sadari.social.service.UserBlockService;
 import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,6 +50,8 @@ public class AlimServiceImpl implements AlimService {
     private final AlimMapper alimMapper;
     // Push 업무 처리 서비스
     private final PushService pushService;
+    // 사용자 간 양방향 차단 관계 조회 서비스
+    private final UserBlockService userBlockService;
 
     /**
      * 로그인 사용자의 알림 목록을 조회한다.
@@ -416,6 +419,41 @@ public class AlimServiceImpl implements AlimService {
         return true;
     }
 
+    /**
+     * 발신자와 수신자가 격리된 경우 알림 이력과 푸시를 모두 생성하지 않는다
+     *
+     * @author HanWon.Jang
+     * @param sendUserNumb 알림 발신자 번호
+     * @param userNumb 알림 수신자 번호
+     * @param alimSitu 알림 상황 코드
+     * @param tempCode 알림 템플릿 코드
+     * @param tagtType 이동 대상 유형
+     * @param tagtNumb 이동 대상 번호
+     * @param replyNumb 강조할 댓글 번호
+     * @param replaceMap 템플릿 문구 치환값
+     * @return 알림 저장 또는 차단 관계에 따른 정상 생략 결과
+     */
+    @Override
+    @Transactional
+    public ResultData sendUserAlim(Long sendUserNumb, Long userNumb, String alimSitu
+                                  , String tempCode, String tagtType, Long tagtNumb
+                                  , Long replyNumb, Map<String, Object> replaceMap) {
+        // 발신자 정보가 없는 개인 알림 요청은 차단 판정을 우회하지 못하도록 거부한다
+        if (StringUtil.isEmpty(sendUserNumb)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 어느 한쪽이라도 상대를 차단했으면 알림과 푸시를 사용자에게 알리지 않고 정상 생략한다
+        if (userBlockService.isBlocked(sendUserNumb, userNumb)) {
+            // 차단 방향과 신원을 응답에 드러내지 않는 정상 생략 결과를 반환한다
+            return ResultData.success();
+        }
+
+        // 차단되지 않은 개인 소셜 알림은 기존 저장과 푸시 정책으로 처리한다
+        return sendAlim(userNumb, alimSitu, tempCode, tagtType, tagtNumb, replyNumb, replaceMap);
+    }
+
     private void schedulePushAfterCommit(AlimDto.AlimItemDto alim) {
 
         Runnable sendPush = () -> {
@@ -477,6 +515,20 @@ public class AlimServiceImpl implements AlimService {
      * @return 접근 가능한 내부 이동 경로이며 접근할 수 없으면 null
      */
     private String createTargetLink(Long userNumb, AlimDto.AlimTargetDto target) {
+        // 개인 콘텐츠 알림은 클릭 시점에도 현재 소유자와의 양방향 차단 관계를 다시 검증한다
+        if (isContentTarget(target.getTagtType())
+                && userBlockService.isBlocked(userNumb, target.getTargetUserNumb())) {
+            // 차단 관계인 콘텐츠의 존재와 방향을 드러내지 않도록 이동 주소를 제공하지 않는다
+            return null;
+        }
+
+        // 사용자 알림은 클릭 시점에 대상과 양방향 차단 관계이면 프로필 이동을 허용하지 않는다
+        if (Constant.ALIM_TARGET_USER.equals(target.getTagtType())
+                && userBlockService.isBlocked(userNumb, target.getTagtNumb())) {
+            // 기존 알림은 보존하되 차단된 사용자 프로필 주소는 제공하지 않는다
+            return null;
+        }
+
         // 독후감과 사진은 공통 콘텐츠 권한 계산으로 목적지를 결정한다
         if (isContentTarget(target.getTagtType())) {
             // 현재 콘텐츠 소유자와 관계 상태가 반영된 경로를 반환한다

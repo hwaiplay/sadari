@@ -48,6 +48,16 @@ public interface FileMapper {
     int getActivePublicFileCount(@Param("storName") String storName, @Param("filePath") String filePath);
 
     /**
+     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회한다
+     *
+     * @author HanWon.Jang
+     * @param storName 서버가 생성한 저장 파일명
+     * @param filePath 공개 업로드 경로
+     * @return 현재 공개 이미지 소유자 번호이며 없으면 null
+     */
+    Long getActivePublicFileOwner(@Param("storName") String storName, @Param("filePath") String filePath);
+
+    /**
      * 파일 등록 사용자 번호로 영구 삭제할 파일 메타정보를 조회한다.
      *
      * @author SeungHyeon.Kang

@@ -69,8 +69,9 @@ public class LikeAlimWorker {
             replaceMap.put("userName", sendUserNick);
 
             // 좋아요 트랜잭션과 분리된 새 알림 트랜잭션에서 저장과 푸시 예약을 처리한다
-            alimService.sendAlim(
-                    event.getTargetUserNumb()
+            alimService.sendUserAlim(
+                    event.getSendUserNumb()
+                  , event.getTargetUserNumb()
                   , Constant.ALIM_SITU_LIKE
                   , event.getTempCode()
                   , event.getTagtType()

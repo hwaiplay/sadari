@@ -1,5 +1,8 @@
-import { sweetConfirm } from "@/app/lib/sweetAlert/sweetAlert";
+import { getApiErrorMessage } from "@/app/api/resultData";
+import { sweetConfirm, sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { runBlockingOperation } from "@/app/navigation/blockingOperation";
+import { setUserBlockApi } from "@/features/Social/api/socialApi";
 import { clsx } from "clsx";
 import { useRef, useState, type FocusEvent, type KeyboardEvent, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
@@ -13,6 +16,12 @@ const BLOCK_DESCRIPTIONS = [
   message("frontend.userAction.block.description.private"),
   // "· 설정에서 언제든지 차단을 해제할 수 있습니다."
   message("frontend.userAction.block.description.reversible"),
+  // "· 서로 팔로우 중이라면 양쪽 관계가 모두 삭제되고 자동으로 복원되지 않습니다."
+  message("frontend.userAction.block.description.followRemoved"),
+  // "· 같은 독서 모임의 운영 콘텐츠는 계속 표시될 수 있습니다."
+  message("frontend.userAction.block.description.clubVisible"),
+  // "· 차단을 해제하면 보존된 과거 좋아요와 댓글이 다시 표시될 수 있습니다."
+  message("frontend.userAction.block.description.reactionsRestored"),
 ] as const;
 
 type UserActionMenuProps = {
@@ -23,7 +32,7 @@ type UserActionMenuProps = {
   triggerClassName?: string;
   triggerIconClassName?: string;
   menuClassName?: string;
-  onBlockConfirm?: () => void;
+  onBlockConfirm?: () => Promise<void> | void;
 };
 
 type ReportMenuOptionsProps = {
@@ -97,7 +106,7 @@ const ReportMenuOptions = ({
  */
 export const confirmUserBlock = async (
   userNick: string,
-  onBlockConfirm?: () => void,
+  onBlockConfirm?: () => Promise<void> | void,
 ): Promise<boolean> => {
   // "{닉네임} 님을 차단 하시겠어요?"
   const result = await sweetConfirm({
@@ -110,9 +119,10 @@ export const confirmUserBlock = async (
     customClass: "sadari-swal-user-block",
   });
 
-  // 사용자가 확인한 경우에만 추후 연결할 차단 처리를 호출한다.
+  // 사용자가 확인한 경우에만 실제 차단 처리가 끝날 때까지 기다린다
   if (result.isConfirmed) {
-    onBlockConfirm?.();
+    // 확인 화면을 호출한 기능의 차단 처리 콜백을 실행한다
+    await onBlockConfirm?.();
   }
 
   // 차단 확인 결과를 호출 화면에 전달한다.
@@ -157,10 +167,64 @@ const UserActionMenu = ({
 
   /** 메뉴를 닫고 공통 SweetAlert로 차단 여부를 확인한다. */
   const handleBlockClick = async (): Promise<void> => {
-    setIsMenuOpen(false);
-    await confirmUserBlock(userNick, onBlockConfirm);
+    /**
+     * 차단 API와 화면별 완료 처리를 하나의 상태 변경 작업으로 실행한다
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없다
+     * @throws 차단 API 또는 화면 후처리 실패 시 발생
+     */
+    const blockUser = async (): Promise<void> => {
+      // 공통 메뉴가 가진 신고 대상의 사용자 번호로 실제 차단 관계를 등록한다
+      await setUserBlockApi(reportTarget.userNumb);
+      // 차단 완료 뒤 현재 화면이 제공한 캐시와 이동 후처리를 실행한다
+      await onBlockConfirm?.();
+    };
 
-    window.requestAnimationFrame(() => triggerRef.current?.focus());
+    setIsMenuOpen(false);
+    // "사용자를 차단하고 있어요."
+    const loadingText = message("frontend.userAction.block.processing");
+    // "차단했어요."
+    const successTitle = message("frontend.userAction.block.success");
+    try {
+      // 사용자가 확인하면 처리 중 화면과 이동 가드를 유지한 채 차단한다
+      const isConfirmed = await confirmUserBlock(userNick, async () => {
+        // 차단 처리 완료까지 같은 모달을 유지하고 성공 상태로 전환한다
+        await runBlockingOperation(blockUser, {
+          title: loadingText,
+          success: { title: successTitle },
+        });
+      });
+
+      // 차단 완료 후 화면별 콜백이 없으면 안전한 이전 화면 또는 현재 목록 새로 조회로 이동한다
+      if (isConfirmed && !onBlockConfirm) {
+        // 공개 프로필과 독후감 상세는 차단한 대상 화면을 더 이상 유지하지 않는다
+        if (window.location.pathname.startsWith("/social/profile/")
+            || window.location.pathname.startsWith("/report/public-reports/target/")) {
+          // 차단 성공 확인 후 사용자가 보던 안전한 이전 화면으로 이동한다
+          navigate(-1);
+        }
+
+        // 목록과 댓글 화면은 서버 원본의 첫 페이지를 다시 조회한다
+        else {
+          // 현재 경로를 다시 열어 차단 사용자의 항목과 집계를 서버 기준으로 제거한다
+          navigate(0);
+        }
+      }
+    }
+
+    catch (error) {
+      // "사용자를 차단하지 못했습니다."
+      await sweetError(
+        message("frontend.userAction.block.failed"),
+        getApiErrorMessage(error, message("frontend.common.tryAgain")),
+      );
+    }
+
+    finally {
+      // 화면 이동이 없으면 키보드 사용자가 기존 더보기 버튼에서 조작을 이어가도록 초점을 복원한다
+      window.requestAnimationFrame(() => triggerRef.current?.focus());
+    }
   };
 
   /** 메뉴 바깥으로 초점이 이동하면 메뉴를 닫는다. */

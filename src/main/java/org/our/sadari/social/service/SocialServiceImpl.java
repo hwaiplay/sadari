@@ -38,6 +38,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-26        SeungHyeon.Kang        좋아요 목록·비동기 알림 처리
  * 2026-08-27        SeungHyeon.Kang    좋아요 알림 원본 유형과 공개 사진 반응 적용
  * 2026-08-28        HanWon.Jang        활성 사용자 관계순 검색 추가
+ * 2026-09-03        HanWon.Jang        사용자 차단 검증과 목록 격리 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -61,6 +62,8 @@ public class SocialServiceImpl implements SocialService {
     private final TokenRedisService tokenRedisService;
     // 좋아요 커밋 이후 알림 후처리 이벤트 발행기
     private final LikeAlimPublisher likeAlimPublisher;
+    // 사용자 차단과 양방향 격리 업무 처리 서비스
+    private final UserBlockService userBlockService;
 
     /**
      * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회한다.
@@ -96,6 +99,13 @@ public class SocialServiceImpl implements SocialService {
     @Override
     @Transactional
     public ResultData setFollow(SocialDto.FollowDto req) {
+        // 유효한 사용자 번호가 있으면 차단 등록과 같은 순서로 사용자 쌍을 잠근다
+        if (!StringUtil.isEmpty(req) && !StringUtil.hasEmpty(req.getUserNumb(), req.getFlowNumb())
+                && !req.getUserNumb().equals(req.getFlowNumb())) {
+            // 차단 완료 뒤 팔로우 관계가 남는 경쟁 조건을 막는다
+            userBlockService.lockUsers(req.getUserNumb(), req.getFlowNumb());
+        }
+
         // validateFollowUsers 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateFollowUsers(req);
 
@@ -196,7 +206,7 @@ public class SocialServiceImpl implements SocialService {
     @Override
     public ResultData getMyPageProfileStats(Long userNumb) {
         // 본인 화면은 공개 여부 조건 없이 전체 독후감을 포함한 통계를 반환한다
-        return getProfileStatsResult(userNumb, null);
+        return getProfileStatsResult(userNumb, userNumb, null);
     }
 
     /**
@@ -204,24 +214,32 @@ public class SocialServiceImpl implements SocialService {
      * 마이페이지와 다른 사람 프로필은 같은 SQL을 사용하고 공개 여부 조건으로 독후감 집계 범위만 구분한다.
      *
      * @author SeungHyeon.Kang
+     * @param loginUserNumb 통계를 조회하는 로그인 사용자 번호
      * @param userNumb 조회할 사용자 번호
      * @return 총 읽은 책, 팔로우, 팔로워, 받은 좋아요 수
      */
     @Override
-    public ResultData getProfileStats(Long userNumb) {
+    public ResultData getProfileStats(Long loginUserNumb, Long userNumb) {
+        // 공개 프로필 통계는 조회자와 대상 사이의 차단 관계를 먼저 검증한다
+        if (StringUtil.isEmpty(loginUserNumb) || userBlockService.isBlocked(loginUserNumb, userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 다른 사용자 화면은 공개 독후감만 포함한 통계를 반환한다
-        return getProfileStatsResult(userNumb, Constant.COMM_YES);
+        return getProfileStatsResult(loginUserNumb, userNumb, Constant.COMM_YES);
     }
 
     /**
      * 사용자 프로필 통계를 화면별 독후감 공개 범위로 조회한다.
      *
      * @author SeungHyeon.Kang
+     * @param loginUserNumb 통계를 조회하는 로그인 사용자 번호
      * @param userNumb 조회할 사용자 번호
      * @param pubcYsno 독후감 공개 범위, null이면 전체 범위
      * @return 화면 범위에 맞춘 사용자 프로필 통계
      */
-    private ResultData getProfileStatsResult(Long userNumb, String pubcYsno) {
+    private ResultData getProfileStatsResult(Long loginUserNumb, Long userNumb, String pubcYsno) {
         // validateTargetUser 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단한다
         ResultData invalidResult = validateTargetUser(userNumb);
 
@@ -233,6 +251,8 @@ public class SocialServiceImpl implements SocialService {
 
         // 프로필 활동 통계 결과를 담을 객체를 생성한다
         SocialDto.ProfileStatsDto req = new SocialDto.ProfileStatsDto();
+        // 목록과 집계에서 같은 차단 범위를 적용할 조회자 번호를 설정한다
+        req.setLoginUserNumb(loginUserNumb);
         // UserNumb 업무 값을 req DTO에 설정한다
         req.setUserNumb(userNumb);
         // 다른 사용자 프로필에 적용할 독후감 공개 범위를 설정한다
@@ -438,6 +458,12 @@ public class SocialServiceImpl implements SocialService {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
+        // 어느 한쪽이라도 상대를 차단했으면 팔로우 상태와 변경을 모두 거절한다
+        if (userBlockService.isBlocked(req.getUserNumb(), req.getFlowNumb())) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 조회하거나 생성할 값이 없음을 반환한다
         return null;
     }
@@ -486,8 +512,22 @@ public class SocialServiceImpl implements SocialService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 팔로우/팔로워 목록 조회에 필요한 로그인 사용자와 목록 주인 사용자를 검증 결과를 반환한다
-        return validateTargetUser(userNumb);
+        // 팔로우 목록 주인 사용자가 실제 존재하는지 먼저 검증한다
+        ResultData invalidResult = validateTargetUser(userNumb);
+        // 대상 사용자가 없으면 차단 여부를 확인하지 않고 기존 실패 응답을 유지한다
+        if (!StringUtil.isEmpty(invalidResult)) {
+            // 대상 사용자 검증에서 확정된 실패 응답을 반환한다
+            return invalidResult;
+        }
+
+        // 본인 목록이 아닌 경우 목록 주인과 조회자 사이의 차단 관계를 우선 적용한다
+        if (!loginUserNumb.equals(userNumb) && userBlockService.isBlocked(loginUserNumb, userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 팔로우 목록을 조회할 수 있는 상태임을 반환한다
+        return null;
     }
 
     /**
@@ -612,6 +652,12 @@ public class SocialServiceImpl implements SocialService {
 
         // 서버에서 확인한 대상 소유자 번호를 알림 수신자로 설정한다
         req.setTargetUserNumb(likeTarget.getTargetUserNumb());
+        // 좋아요 대상 소유자와 양방향 차단 관계이면 개인 반응을 거절한다
+        if (userBlockService.isBlocked(req.getUserNumb(), likeTarget.getTargetUserNumb())) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 서버에서 확인한 대상별 좋아요 알림 여부를 후속 알림 처리 조건으로 설정한다
         req.setLikeAlimYsno(likeTarget.getLikeAlimYsno());
         // 좋아요 대상 유형에 대응하는 알림 템플릿 코드를 설정한다
@@ -706,9 +752,10 @@ public class SocialServiceImpl implements SocialService {
         replaceMap.put("userName", sendUserNick);
 
         // sendAlim 업무 로직을 alimService에 위임한다
-        alimService.sendAlim(
+        alimService.sendUserAlim(
+                req.getUserNumb()
                 // getFlowNumb 조회로 후속 처리에 필요한 데이터를 가져온다
-                req.getFlowNumb()
+              , req.getFlowNumb()
               , Constant.ALIM_SITU_FOLLOW_CLUB
               , Constant.ALIM_TEMP_CODE_FOLLOW_USER
               , Constant.ALIM_TARGET_USER

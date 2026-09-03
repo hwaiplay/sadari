@@ -15,6 +15,7 @@ import org.our.sadari.myPage.service.ReadingStatisticsService;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.service.SocialService;
+import org.our.sadari.social.service.UserBlockService;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -42,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 조회 추가
  * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 추가
  * 2026-08-28        HanWon.Jang        피드 활성 사용자 검색 추가
+ * 2026-09-03        HanWon.Jang        사용자 차단 API와 접근 검증 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -55,6 +57,8 @@ public class SocialController {
     private final ReportService reportService;
     // Social 업무 처리 서비스
     private final SocialService socialService;
+    // 사용자 차단과 양방향 격리 업무 처리 서비스
+    private final UserBlockService userBlockService;
     // 다른 사용자 프로필에 공개 독서 통계를 제공할 서비스
     private final ReadingStatisticsService readingStatisticsService;
 
@@ -74,6 +78,12 @@ public class SocialController {
         if (StringUtil.hasEmpty(loginUserNumb, userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 어느 한쪽이라도 상대를 차단했으면 프로필 존재 여부를 구분하지 않는 공통 응답을 반환한다
+        if (userBlockService.isBlocked(loginUserNumb, userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
         // UserByNumb 데이터를 DB에서 조회한다
@@ -163,7 +173,15 @@ public class SocialController {
      */
     @GetMapping("/profile/{userNumb}/reading-summary")
     @Operation(summary = "공개 독서 요약 조회", description = "사용자 번호로 공개 프로필의 독서 활동 요약을 조회한다.")
-    public ResultData getSocialReadingSummary(@Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
+    public ResultData getSocialReadingSummary(
+            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+          , @Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 인증 사용자와 조회 대상 사이에 차단 관계가 있으면 공개 독서 요약도 제공하지 않는다
+        if (StringUtil.hasEmpty(loginUserNumb, userNumb) || userBlockService.isBlocked(loginUserNumb, userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // UserByNumb 데이터를 DB에서 조회한다
         UserDto user = userMapper.getUserByNumb(userNumb);
 
@@ -190,7 +208,7 @@ public class SocialController {
         }
 
         // getProfileStats 업무 로직을 socialService에 위임한다
-        ResultData statsResult = socialService.getProfileStats(userNumb);
+        ResultData statsResult = socialService.getProfileStats(loginUserNumb, userNumb);
 
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
         if (statsResult.getCode() != 200) {
@@ -230,10 +248,66 @@ public class SocialController {
     @GetMapping("/profile/{userNumb}/reading-statistics")
     @Operation(summary = "공개 독서 통계 조회", description = "정상 이용 회원이 공개를 허용한 연도별 독서 통계를 다른 사용자 프로필에 제공한다.")
     public ResultData getPublicReadingStats(
-            @Parameter(description = "공개 통계를 조회할 사용자 번호", example = "31") @PathVariable Long userNumb
+            @Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+          , @Parameter(description = "공개 통계를 조회할 사용자 번호", example = "31") @PathVariable Long userNumb
           , @Parameter(description = "조회할 연도", example = "2026") @RequestParam(required = false) Integer readYear) {
+        // 인증 사용자와 조회 대상 사이에 차단 관계가 있으면 공개 독서 통계도 제공하지 않는다
+        if (StringUtil.hasEmpty(loginUserNumb, userNumb) || userBlockService.isBlocked(loginUserNumb, userNumb)) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 서버가 계정 상태와 공개 설정을 검증한 다른 사용자용 독서 통계를 조회한다
         return readingStatisticsService.getPublicReadingStats(userNumb, readYear);
+    }
+
+    /**
+     * 로그인 사용자가 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제한다
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param userNumb 차단 대상 사용자 번호
+     * @return 차단 처리 결과
+     */
+    @PostMapping("/blocks/{userNumb}")
+    @Operation(summary = "사용자 차단", description = "다른 사용자를 차단하고 두 사용자 사이의 팔로우 관계를 모두 삭제한다.")
+    public ResultData setUserBlock(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                 , @Parameter(description = "차단 대상 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 인증 사용자와 대상 사용자 번호로 차단 관계를 등록한다
+        return userBlockService.setBlock(loginUserNumb, userNumb);
+    }
+
+    /**
+     * 로그인 사용자가 만든 한 방향의 사용자 차단을 해제한다
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param userNumb 차단 해제 대상 사용자 번호
+     * @return 차단 해제 처리 결과
+     */
+    @DeleteMapping("/blocks/{userNumb}")
+    @Operation(summary = "사용자 차단 해제", description = "로그인 사용자가 직접 만든 차단 관계만 해제한다.")
+    public ResultData delUserBlock(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                 , @Parameter(description = "차단 해제 대상 사용자 번호", example = "31") @PathVariable Long userNumb) {
+        // 인증 사용자가 소유한 차단 방향만 삭제한다
+        return userBlockService.delBlock(loginUserNumb, userNumb);
+    }
+
+    /**
+     * 로그인 사용자가 직접 차단한 사용자 목록을 조회한다
+     *
+     * @author HanWon.Jang
+     * @param loginUserNumb 로그인 사용자 번호
+     * @param page 조회할 페이지 번호
+     * @return 차단 사용자 페이지
+     */
+    @GetMapping("/blocks")
+    @Operation(summary = "차단 사용자 목록", description = "로그인 사용자가 직접 차단한 사용자만 최신 차단순으로 조회한다.")
+    public ResultData getUserBlockList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                     , @Parameter(description = "조회할 페이지 번호", example = "1")
+                                       @RequestParam(value = "page", defaultValue = "1") int page) {
+        // 로그인 사용자가 관리할 수 있는 차단 사용자 목록을 조회한다
+        return userBlockService.getBlockList(loginUserNumb, page);
     }
 
     /**

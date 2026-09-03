@@ -24,6 +24,7 @@ import org.our.sadari.readingClub.mapper.ReadingClubMapper;
 import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
+import org.our.sadari.social.service.UserBlockService;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,6 +49,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 처리
+ * 2026-09-03        HanWon.Jang        사용자 차단 관계의 신규 참여 제한 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -93,6 +95,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private final BookMapper bookMapper;
     // 멤버별 독후감 데이터 접근 Mapper
     private final ReportMapper reportMapper;
+    // 모임 참여 당사자 사이의 양방향 사용자 차단 검증 서비스
+    private final UserBlockService userBlockService;
     // 독후감 기본 책갈피 색상 공통코드 조회 도구
     private final CodeUtil codeUtil;
 
@@ -1206,6 +1210,12 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
+        // 가입 사용자와 모임장이 차단 관계이면 즉시 가입과 승인 신청을 모두 허용하지 않는다
+        if (userBlockService.isBlocked(userNumb, club.getOwnrNumb())) {
+            // 차단 방향을 노출하지 않는 공통 접근 거절 응답을 반환한다
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 차단되지 않은 자진 탈퇴 관계만 새 가입 절차에서 다시 사용할 수 있다
         ReadingClubDto.MemberDto member = readingClubMapper.getClubMember(clubNumb, userNumb);
         // 현재 회원이나 초대 관계 또는 재가입 차단 관계이면 중복 가입을 막는다
@@ -1446,6 +1456,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         for (Long targetUserNumb : targetUserNumbList) {
             // 맞팔이 아니거나 이미 모임 관계가 있으면 일괄 초대를 중단한다
             if (StringUtil.isEmpty(targetUserNumb)
+                    || userBlockService.isBlocked(userNumb, targetUserNumb)
                     || readingClubMapper.getMutualFollowCnt(userNumb, targetUserNumb) == 0
                     || !StringUtil.isEmpty(readingClubMapper.getClubMember(clubNumb, targetUserNumb))) {
                 // "저장에 실패했어요. 다시 시도해주세요."
@@ -1515,6 +1526,12 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     public ResultData uptInvitationAccepted(Long userNumb, Long clubNumb) {
         // 대상 모임 행을 잠가 삭제와 경합하지 않게 한다
         ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        // 수락 시점에 모임장과 초대 대상이 차단 관계이면 만료 전 초대도 활성화하지 않는다
+        if (!StringUtil.isEmpty(club) && userBlockService.isBlocked(userNumb, club.getOwnrNumb())) {
+            // 차단 관계의 신규 모임 참여를 공통 수정 거절 응답으로 반환한다
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
         // 유효한 운영 모임의 예약석만 활성 회원으로 전환한다
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(club)
                 || readingClubMapper.uptInvitationAccepted(clubNumb, userNumb) == 0) {
@@ -1636,6 +1653,12 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 이미 처리됐거나 삭제된 신청은 갱신하지 않는다
         if (StringUtil.isEmpty(application)) {
             // "수정에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 처리 시점에 모임장과 신청자가 차단 관계이면 승인과 거절 모두 별도 알림 없이 거부한다
+        if (userBlockService.isBlocked(userNumb, application.getUserNumb())) {
+            // 차단 방향을 노출하지 않는 공통 수정 거절 응답을 반환한다
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 

@@ -77,6 +77,10 @@ class SocialServiceImplTest {
     @Mock
     private LikeAlimPublisher likeAlimPublisher;
 
+    // 사용자 간 양방향 차단 관계 조회 서비스
+    @Mock
+    private UserBlockService userBlockService;
+
     // 프로필 통계 서비스 단위 테스트 대상
     private SocialServiceImpl socialService;
 
@@ -97,7 +101,8 @@ class SocialServiceImplTest {
         new MessageUtils().setMessageSource(messageSource);
         // 소셜 서비스 단위 테스트 대상을 생성한다
         socialService = new SocialServiceImpl(
-                socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService, likeAlimPublisher);
+                socialMapper, reportMapper, feedMapper, userMapper, alimService, tokenRedisService
+              , likeAlimPublisher, userBlockService);
         // 프로필 통계 조회 대상 사용자가 존재하도록 설정한다
         lenient().when(userMapper.getUserByNumb(31L)).thenReturn(new UserDto());
         // 프로필 통계 SQL이 빈 기본 통계를 반환하도록 설정한다
@@ -206,7 +211,7 @@ class SocialServiceImplTest {
     @Test
     void getProfileStatsPublic() {
         // 다른 사용자 프로필과 같은 공개 범위로 통계를 조회한다
-        socialService.getProfileStats(31L);
+        socialService.getProfileStats(44L, 31L);
 
         // 프로필 통계 SQL에 전달된 조회 조건을 확인할 인자 Capture를 생성한다
         ArgumentCaptor<SocialDto.ProfileStatsDto> statsCaptor = ArgumentCaptor.forClass(SocialDto.ProfileStatsDto.class);

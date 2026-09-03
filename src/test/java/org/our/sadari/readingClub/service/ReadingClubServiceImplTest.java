@@ -35,6 +35,7 @@ import org.our.sadari.readingClub.mapper.ReadingClubMapper;
 import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.report.dto.ReportDto;
+import org.our.sadari.social.service.UserBlockService;
 import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
@@ -84,6 +85,10 @@ class ReadingClubServiceImplTest {
     @Mock
     private ReportMapper reportMapper;
 
+    // 사용자 간 양방향 차단 관계 조회 서비스
+    @Mock
+    private UserBlockService userBlockService;
+
     // 공통코드 조회 도구
     @Mock
     private CodeUtil codeUtil;
@@ -111,7 +116,7 @@ class ReadingClubServiceImplTest {
         readingClubService = new ReadingClubServiceImpl(
                 readingClubMapper, readingClubMembershipMapper, badWordDetectionService
               , alimService, bookMapper, reportMapper
-              , codeUtil);
+              , userBlockService, codeUtil);
     }
 
     /**

@@ -80,4 +80,22 @@ public interface AlimService {
      */
     ResultData sendAlim(Long userNumb, String alimSitu, String tempCode, String tagtType
                        , Long tagtNumb, Long replyNumb, Map<String, Object> replaceMap);
+
+    /**
+     * 발신자와 수신자의 현재 차단 관계를 확인한 뒤 개인 소셜 알림을 발송한다
+     *
+     * @author HanWon.Jang
+     * @param sendUserNumb 알림 발신자 번호
+     * @param userNumb 알림 수신자 번호
+     * @param alimSitu 알림 상황 코드
+     * @param tempCode 알림 템플릿 코드
+     * @param tagtType 이동 대상 유형
+     * @param tagtNumb 이동 대상 번호
+     * @param replyNumb 강조할 댓글 번호
+     * @param replaceMap 템플릿 문구 치환값
+     * @return 알림 저장 또는 차단 관계에 따른 정상 생략 결과
+     */
+    ResultData sendUserAlim(Long sendUserNumb, Long userNumb, String alimSitu
+                          , String tempCode, String tagtType, Long tagtNumb
+                          , Long replyNumb, Map<String, Object> replaceMap);
 }

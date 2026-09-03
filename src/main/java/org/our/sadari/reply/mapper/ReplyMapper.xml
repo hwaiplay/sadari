@@ -20,6 +20,12 @@
          LEFT JOIN TM_REPORT REPORT ON #{tagtType} = #{targetReport} AND REPORT.REPT_NUMB = #{tagtNumb}
              WHERE OWNER.USER_STAT = #{userStatActive}
                AND EXISTS (SELECT 1 FROM TM_USERXM ACTOR WHERE ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive})
+               AND NOT EXISTS (
+                   SELECT 1
+                     FROM TB_USBLOC B
+                    WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = OWNER.USER_NUMB)
+                       OR (B.USER_NUMB = OWNER.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+               )
                AND (   (#{tagtType} = #{targetReport} AND REPORT.USER_NUMB = OWNER.USER_NUMB
                          AND (REPORT.USER_NUMB = #{userNumb} OR (REPORT.PUBC_YSNO = #{commYes} AND REPORT.REPT_STAT != #{reptStatRead})))
                     OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
@@ -45,13 +51,26 @@
         ), PARENTPAGE AS (
              SELECT P.REPL_NUMB FROM TB_REPLXX P
               WHERE P.TAGT_TYPE = #{tagtType} AND P.TAGT_NUMB = #{tagtNumb} AND P.UPER_NUMB IS NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM TB_USBLOC B
+                     WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = P.USER_NUMB)
+                        OR (B.USER_NUMB = P.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+                )
                 <include refid="targetAccessExists" />
            ORDER BY CASE WHEN P.REPL_NUMB = (SELECT REPL_NUMB FROM FOCUS_PARENT) THEN 0 ELSE 1 END
                   , P.REGI_DATE DESC, P.REPL_NUMB DESC LIMIT #{pageOffset}, #{pageLimit}
         ), LIKE_COUNT AS (
              SELECT L.TAGT_NUMB, COUNT(*) AS LIKE_CNT FROM TB_LIKEXX L
                JOIN TM_USERXM U ON U.USER_NUMB = L.USER_NUMB AND U.USER_STAT = #{userStatActive}
-              WHERE L.TAGT_TYPE = #{likeTargetReply} GROUP BY L.TAGT_NUMB
+              WHERE L.TAGT_TYPE = #{likeTargetReply}
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM TB_USBLOC B
+                     WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = L.USER_NUMB)
+                        OR (B.USER_NUMB = L.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+                )
+           GROUP BY L.TAGT_NUMB
         )
         SELECT R.TAGT_TYPE, R.TAGT_NUMB, R.REPL_NUMB, R.UPER_NUMB
              , IF(R.UPER_NUMB IS NULL, 'Y', 'N') AS PARENT_YN, R.USER_NUMB
@@ -69,6 +88,12 @@
      LEFT JOIN LIKE_COUNT LC ON LC.TAGT_NUMB = R.REPL_NUMB
      LEFT JOIN TB_LIKEXX UL ON UL.USER_NUMB = #{userNumb} AND UL.TAGT_TYPE = #{likeTargetReply} AND UL.TAGT_NUMB = R.REPL_NUMB
          WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = R.USER_NUMB)
+                   OR (B.USER_NUMB = R.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
       ORDER BY COALESCE(P.REGI_DATE, R.REGI_DATE) DESC, COALESCE(P.REPL_NUMB, R.REPL_NUMB) DESC
              , IF(R.UPER_NUMB IS NULL, 0, 1), R.REGI_DATE DESC, R.REPL_NUMB DESC
     </select>
@@ -77,7 +102,13 @@
         INSERT INTO TB_REPLXX (TAGT_TYPE, TAGT_NUMB, UPER_NUMB, USER_NUMB, REPL_CNTN, DELT_YSNO, REGI_DATE, UPDT_DATE)
         SELECT #{tagtType}, #{tagtNumb}, #{uperNumb,jdbcType=NUMERIC}, #{userNumb}, #{replCntn}, #{deltYsno}, CURRENT_TIMESTAMP, NULL FROM DUAL
          WHERE (#{uperNumb,jdbcType=NUMERIC} IS NULL OR EXISTS (SELECT 1 FROM TB_REPLXX P WHERE P.TAGT_TYPE = #{tagtType}
-                AND P.TAGT_NUMB = #{tagtNumb} AND P.REPL_NUMB = #{uperNumb} AND P.UPER_NUMB IS NULL))
+                AND P.TAGT_NUMB = #{tagtNumb} AND P.REPL_NUMB = #{uperNumb} AND P.UPER_NUMB IS NULL
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM TB_USBLOC B
+                     WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = P.USER_NUMB)
+                        OR (B.USER_NUMB = P.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+                )))
            <include refid="targetAccessExists" />
     </insert>
     <update id="uptReply" parameterType="org.our.sadari.reply.dto.ReplyDto">
@@ -106,6 +137,12 @@
              , ACTOR.USER_NICK
           FROM TB_REPLXX R JOIN TM_USERXM ACTOR ON ACTOR.USER_NUMB = #{userNumb} AND ACTOR.USER_STAT = #{userStatActive}
          WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb} AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = R.USER_NUMB)
+                   OR (B.USER_NUMB = R.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
            <include refid="targetAccessExists" />
     </select>
     <insert id="setReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
@@ -113,7 +150,13 @@
         INSERT IGNORE INTO TB_LIKEXX (USER_NUMB, TAGT_TYPE, TAGT_NUMB, REGI_DATE)
         SELECT #{userNumb}, #{likeTargetReply}, #{replNumb}, CURRENT_TIMESTAMP FROM DUAL
          WHERE EXISTS (SELECT 1 FROM TB_REPLXX R WHERE R.TAGT_TYPE = #{tagtType} AND R.TAGT_NUMB = #{tagtNumb}
-                AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}) <include refid="targetAccessExists" />
+                AND R.REPL_NUMB = #{replNumb} AND R.DELT_YSNO = #{commNo}
+                AND NOT EXISTS (
+                    SELECT 1
+                      FROM TB_USBLOC B
+                     WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = R.USER_NUMB)
+                        OR (B.USER_NUMB = R.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+                )) <include refid="targetAccessExists" />
     </insert>
     <delete id="delReplyLike" parameterType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
@@ -126,6 +169,12 @@
              , COUNT(U.USER_NUMB) AS LIKE_CNT, IF(MAX(IF(L.USER_NUMB = #{userNumb}, 1, 0)) = 1, #{commYes}, #{commNo}) AS LIKE_YSNO
           FROM TB_LIKEXX L JOIN TM_USERXM U ON U.USER_NUMB = L.USER_NUMB AND U.USER_STAT = #{userStatActive}
          WHERE L.TAGT_TYPE = #{likeTargetReply} AND L.TAGT_NUMB = #{replNumb}
+           AND NOT EXISTS (
+               SELECT 1
+                 FROM TB_USBLOC B
+                WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = L.USER_NUMB)
+                   OR (B.USER_NUMB = L.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
+           )
     </select>
     <!-- 댓글 대상 소유자와 대상별 알림 템플릿 및 상세 번호를 조회한다. -->
     <select id="getReplyReportAlimDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">

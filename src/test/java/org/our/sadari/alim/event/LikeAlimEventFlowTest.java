@@ -140,7 +140,8 @@ class LikeAlimEventFlowTest {
         worker.sendLikeAlim(event);
 
         // 수신자와 좋아요 템플릿 및 이동 대상을 알림 서비스에 전달했는지 확인한다
-        verify(alimService).sendAlim(
+        verify(alimService).sendUserAlim(
+                1L,
                 2L,
                 Constant.ALIM_SITU_LIKE,
                 "REPORT_LIKE",
@@ -168,7 +169,8 @@ class LikeAlimEventFlowTest {
         worker.sendLikeAlim(event);
 
         // Redis 닉네임으로 완성한 좋아요 알림이 저장되는지 확인한다
-        verify(alimService).sendAlim(
+        verify(alimService).sendUserAlim(
+                1L,
                 2L,
                 Constant.ALIM_SITU_LIKE,
                 "REPORT_LIKE",
@@ -188,7 +190,8 @@ class LikeAlimEventFlowTest {
     @DisplayName("알림 저장 실패를 비동기 작업 내부에서 격리한다")
     void ignoresAlimFailure() {
         LikeAlimEvent event = createEvent("sender");
-        when(alimService.sendAlim(
+        when(alimService.sendUserAlim(
+                eq(1L),
                 eq(2L),
                 eq(Constant.ALIM_SITU_LIKE),
                 eq("REPORT_LIKE"),

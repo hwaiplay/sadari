@@ -134,8 +134,9 @@ class ReplyServiceImplTest {
         // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
         when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
         // 알림 저장이 정상 처리되는 조건을 구성한다
-        when(alimService.sendAlim(
-                eq(31L)
+        when(alimService.sendUserAlim(
+                eq(44L)
+              , eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq("REPLY_REPORT")
               , eq(Constant.LIKE_TARGET_REPORT)
@@ -158,8 +159,9 @@ class ReplyServiceImplTest {
         // 알림 문구 치환값을 확인할 캡처 객체를 생성한다
         ArgumentCaptor<Map<String, Object>> replaceMapCaptor = ArgumentCaptor.forClass(Map.class);
         // 독후감 작성자에게 댓글 등록 알림이 전송되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L)
+        verify(alimService).sendUserAlim(
+                eq(44L)
+              , eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
               , eq(Constant.LIKE_TARGET_REPORT)
@@ -218,8 +220,9 @@ class ReplyServiceImplTest {
         // 프로필 사진 댓글 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 사진 알림에 해당 프로필 사진 번호가 이동 대상으로 전달되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L)
+        verify(alimService).sendUserAlim(
+                eq(44L)
+              , eq(31L)
               , eq(Constant.ALIM_SITU_REPLY)
               , eq(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE)
               , eq(Constant.LIKE_TARGET_PROFILE_IMAGE)
@@ -305,12 +308,12 @@ class ReplyServiceImplTest {
         // 답글 등록 성공 응답을 확인한다
         assertEquals(200, result.getCode());
         // 콘텐츠 소유자에게 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
+        verify(alimService).sendUserAlim(
+                eq(44L), eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
         // 부모 댓글 작성자에게 관계와 무관한 공통 대댓글 알림이 발송되는지 확인한다
-        verify(alimService).sendAlim(
-                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+        verify(alimService).sendUserAlim(
+                eq(44L), eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
@@ -334,8 +337,8 @@ class ReplyServiceImplTest {
         ResultData result = replyService.setReply(31L, replyDto);
 
         assertEquals(200, result.getCode());
-        verify(alimService).sendAlim(
-                eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+        verify(alimService).sendUserAlim(
+                eq(31L), eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
@@ -359,8 +362,8 @@ class ReplyServiceImplTest {
         ResultData result = replyService.setReply(44L, replyDto);
 
         assertEquals(200, result.getCode());
-        verify(alimService).sendAlim(
-                eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
+        verify(alimService).sendUserAlim(
+                eq(44L), eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
@@ -400,7 +403,8 @@ class ReplyServiceImplTest {
         // 댓글 등록 자체는 성공하는지 확인한다
         assertEquals(200, result.getCode());
         // 알림 저장 서비스가 호출되지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
+        verify(alimService, never()).sendUserAlim(
+                any(), any(), any(), any(), any(), any(), any(), any());
         // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
     }
@@ -631,7 +635,8 @@ class ReplyServiceImplTest {
         // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인한다
         assertEquals("좋아요사용자", eventCaptor.getValue().getSendUserNick());
         // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
-        verify(alimService, never()).sendAlim(any(), any(), any(), any(), any(), any(), any());
+        verify(alimService, never()).sendUserAlim(
+                any(), any(), any(), any(), any(), any(), any(), any());
         // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
         verifyNoInteractions(tokenRedisService);
         // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
