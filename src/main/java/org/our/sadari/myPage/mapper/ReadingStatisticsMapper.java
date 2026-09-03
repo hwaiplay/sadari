@@ -14,7 +14,7 @@ import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
  * fileName       : ReadingStatisticsMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 본인과 공개 프로필의 독서 시간과 습관 및 독후감 통계 SQL 계약을 정의한다
+ * description    : 본인과 공개 프로필의 독서 시간과 습관 및 독후감 통계 SQL 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -25,7 +25,7 @@ import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
 public interface ReadingStatisticsMapper {
 
     /**
-     * 회원의 독서 통계 공개 범위 및 계정 상태를 조회한다
+     * 회원의 독서 통계 공개 범위 및 계정 상태를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 설정을 조회할 회원 번호
@@ -36,7 +36,7 @@ public interface ReadingStatisticsMapper {
                                                        , @Param("privateYsno") String privateYsno);
 
     /**
-     * 조회 가능한 기록 연도와 선택 연도의 일별 독서 시간을 한 번에 조회한다
+     * 조회 가능한 기록 연도와 선택 연도의 일별 독서 시간을 한 번에 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 잔디를 조회할 회원 번호
@@ -49,7 +49,7 @@ public interface ReadingStatisticsMapper {
                                                 , @Param("periodEnd") LocalDate periodEnd);
 
     /**
-     * 현재 연도에 완료한 타이머 시간을 도서별로 합산해 상위 세 권을 조회한다
+     * 현재 연도에 완료한 타이머 시간을 도서별로 합산해 상위 세 권을 조회함
      *
      * @author SeungHyeon.Kang
      * @param query 회원과 현재 연도 타이머 기간 및 완료 상태 조건
@@ -58,7 +58,7 @@ public interface ReadingStatisticsMapper {
     List<ReadingStatisticsDto.BookTime> getTopBookTimeList(ReadingStatisticsQueryDto query);
 
     /**
-     * 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 번에 집계한다
+     * 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 번에 집계함
      *
      * @author SeungHyeon.Kang
      * @param query 회원과 현재 및 이전 연도 비교 기간 및 상태 코드
@@ -67,7 +67,7 @@ public interface ReadingStatisticsMapper {
     ReadingStatisticsAggregateDto getStatsAggregate(ReadingStatisticsQueryDto query);
 
     /**
-     * 정상 이용 회원의 범용 설정 행에 독서 통계 공개 범위를 저장한다
+     * 정상 이용 회원의 범용 설정 행에 독서 통계 공개 범위를 저장함
      *
      * @author SeungHyeon.Kang
      * @param setting 변경할 회원 번호와 독서 통계 공개 설정

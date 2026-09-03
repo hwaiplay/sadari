@@ -3,11 +3,11 @@ export const UNREAD_ALIM_CNT_CHANGED_EVENT = "sadari:unread-alim-count-changed";
 type UnreadAlimCntChangedEvent = CustomEvent<number>;
 
 /**
- * notify Unread Alim Cnt Changed 사용자 동작을 처리한다
+ * notify Unread Alim Cnt Changed 사용자 동작을 처리함
  *
  * @author HanWon.Jang
  * @param unreadAlimCnt unread Alim Cnt 입력값
- * @return 반환값이 없다
+ * @return 반환값이 없음
  */
 export function notifyUnreadAlimChange(unreadAlimCnt: number) {
 
@@ -19,7 +19,7 @@ export function notifyUnreadAlimChange(unreadAlimCnt: number) {
 }
 
 /**
- * is Unread Alim Cnt Changed Event 여부를 판정한다
+ * is Unread Alim Cnt Changed Event 여부를 판정함
  *
  * @author HanWon.Jang
  * @param event event 입력값

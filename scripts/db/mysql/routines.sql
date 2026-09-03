@@ -1,5 +1,5 @@
--- Sadari 애플리케이션이 사용하는 MySQL 저장 함수와 프로시저를 생성한다
--- 바이너리 로그가 활성화된 서버는 관리자 계정으로 log_bin_trust_function_creators를 1로 설정한 뒤 실행한다
+-- Sadari 애플리케이션이 사용하는 MySQL 저장 함수와 프로시저를 생성함
+-- 바이너리 로그가 활성화된 서버는 관리자 계정으로 log_bin_trust_function_creators를 1로 설정한 뒤 실행함
 SET NAMES utf8mb4;
 
 DELIMITER $$
@@ -37,8 +37,8 @@ DELIMITER ;
 
 DROP FUNCTION IF EXISTS FN_GET_LOCAL_DATE_STR;
 
--- 도서 검색 응답의 8자리 날짜와 DATETIME 컬럼의 날짜 문자열을 같은 날짜 단위로 정규화한다
--- 한국어 요청은 년월일 표기로 반환하고 그 외 언어는 시간 정보를 제외한 ISO 날짜로 반환한다
+-- 도서 검색 응답의 8자리 날짜와 DATETIME 컬럼의 날짜 문자열을 같은 날짜 단위로 정규화함
+-- 한국어 요청은 년월일 표기로 반환하고 그 외 언어는 시간 정보를 제외한 ISO 날짜로 반환함
 CREATE FUNCTION FN_GET_LOCAL_DATE_STR(
     P_DATE_STR VARCHAR(255),
     P_LOCALE VARCHAR(50)

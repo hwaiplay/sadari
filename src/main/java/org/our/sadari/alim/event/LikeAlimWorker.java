@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
  * fileName       : LikeAlimWorker
  * author         : HanWon.Jang
  * date           : 2026-08-26
- * description    : 좋아요 응답과 분리된 스레드에서 알림 저장과 푸시를 처리한다
+ * description    : 좋아요 응답과 분리된 스레드에서 알림 저장과 푸시를 처리함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,42 +33,42 @@ public class LikeAlimWorker {
     private final TokenRedisService tokenRedisService;
 
     /**
-     * 커밋된 좋아요의 알림을 별도 스레드에서 저장하고 푸시 발송을 예약한다.
-     * 알림 또는 외부 푸시 실패는 기록만 남기고 좋아요 관계에 영향을 주지 않는다.
+     * 커밋된 좋아요의 알림을 별도 스레드에서 저장하고 푸시 발송을 예약함
+     * 알림 또는 외부 푸시 실패는 기록만 남기고 좋아요 관계에 영향을 주지 않음
      *
      * @author HanWon.Jang
      * @param event 좋아요 등록자와 알림 수신자 및 템플릿 정보
      */
     @Async
     public void sendLikeAlim(LikeAlimEvent event) {
-        // 필수 알림 식별값이 없으면 잘못된 후처리가 DB에 접근하지 않도록 중단한다
+        // 필수 알림 식별값이 없으면 잘못된 후처리가 DB에 접근하지 않도록 중단함
         if (StringUtil.isEmpty(event) || StringUtil.hasEmpty(event.getSendUserNumb(), event.getTargetUserNumb(), event.getTempCode())) {
-            // 유효하지 않은 좋아요 알림 후처리를 종료한다
+            // 유효하지 않은 좋아요 알림 후처리를 종료함
             return;
         }
 
-        // 알림 저장과 푸시 실패가 비동기 실행기의 예외 처리기로 전파되지 않도록 격리한다
+        // 알림 저장과 푸시 실패가 비동기 실행기의 예외 처리기로 전파되지 않도록 격리함
         try {
             String sendUserNick = event.getSendUserNick();
 
-            // 독후감과 사진 좋아요처럼 이벤트에 닉네임이 없으면 로그인 Redis 정보에서 조회한다
+            // 독후감과 사진 좋아요처럼 이벤트에 닉네임이 없으면 로그인 Redis 정보에서 조회함
             if (StringUtil.isEmpty(sendUserNick)) {
-                // 알림 템플릿 치환에 사용할 좋아요 등록자 닉네임을 조회한다
+                // 알림 템플릿 치환에 사용할 좋아요 등록자 닉네임을 조회함
                 sendUserNick = tokenRedisService.getUserNick(event.getSendUserNumb());
             }
 
-            // 발신자 닉네임이 없으면 미완성 알림을 저장하지 않는다
+            // 발신자 닉네임이 없으면 미완성 알림을 저장하지 않음
             if (StringUtil.isEmpty(sendUserNick)) {
-                // 닉네임을 확인할 수 없는 좋아요 알림 후처리를 종료한다
+                // 닉네임을 확인할 수 없는 좋아요 알림 후처리를 종료함
                 return;
             }
 
-            // 좋아요 알림 템플릿에 등록자 닉네임을 전달할 치환값을 생성한다
+            // 좋아요 알림 템플릿에 등록자 닉네임을 전달할 치환값을 생성함
             Map<String, Object> replaceMap = new HashMap<>();
-            // 템플릿 사용자명에 검증된 좋아요 등록자 닉네임을 설정한다
+            // 템플릿 사용자명에 검증된 좋아요 등록자 닉네임을 설정함
             replaceMap.put("userName", sendUserNick);
 
-            // 좋아요 트랜잭션과 분리된 새 알림 트랜잭션에서 저장과 푸시 예약을 처리한다
+            // 좋아요 트랜잭션과 분리된 새 알림 트랜잭션에서 저장과 푸시 예약을 처리함
             alimService.sendUserAlim(
                     event.getSendUserNumb()
                   , event.getTargetUserNumb()
@@ -81,7 +81,7 @@ public class LikeAlimWorker {
             );
         }
 
-        // 알림 DB와 Redis 및 FCM 실패는 좋아요 완료 결과와 분리하여 운영 로그로 남긴다
+        // 알림 DB와 Redis 및 FCM 실패는 좋아요 완료 결과와 분리하여 운영 로그로 남김
         catch (RuntimeException e) {
             log.warn("Like notification processing failed. sender={}, target={}", event.getSendUserNumb(), event.getTargetUserNumb(), e);
         }

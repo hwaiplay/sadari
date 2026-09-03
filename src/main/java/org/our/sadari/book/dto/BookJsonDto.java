@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * fileName       : BookJsonDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 도서 검색 결과를 사용자 화면 계약으로 전달한다
+ * description    : 도서 검색 결과를 사용자 화면 계약으로 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -23,7 +23,7 @@ import lombok.NoArgsConstructor;
 public class BookJsonDto {
 
     /**
-     * 도서 검색 화면에 전달할 개별 도서 정보를 정의한다
+     * 도서 검색 화면에 전달할 개별 도서 정보를 정의함
      *
      * @author SeungHyeon.Kang
      */

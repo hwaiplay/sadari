@@ -10,7 +10,7 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./NoticePage.css";
 
 /**
- * 현재 배포 중인 공지사항을 최근 배포 순서로 표시한다.
+ * 현재 배포 중인 공지사항을 최근 배포 순서로 표시함
  *
  * @author SeungHyeon.Kang
  * @return 사용자 공지사항 목록 화면
@@ -25,130 +25,130 @@ function NoticeListPage() {
   const [error, setError] = useState("");
 
   /**
-   * 요청 페이지를 조회하여 첫 페이지를 교체하거나 다음 페이지를 기존 목록 뒤에 연결한다.
+   * 요청 페이지를 조회하여 첫 페이지를 교체하거나 다음 페이지를 기존 목록 뒤에 연결함
    *
    * @author SeungHyeon.Kang
    * @param targetPage 조회할 페이지 번호
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const loadPage = useCallback(async (targetPage: number): Promise<void> => {
 
-    // 목록 요청 동안 중복 조회를 막고 기존 오류 안내를 제거한다.
+    // 목록 요청 동안 중복 조회를 막고 기존 오류 안내를 제거함
     setIsLoading(true);
     setError("");
 
     try {
-      // 현재 배포 중인 공지사항만 페이지 단위로 조회한다.
+      // 현재 배포 중인 공지사항만 페이지 단위로 조회함
       const data = await getNoticeListApi(targetPage);
 
       /**
-       * 조회한 페이지를 현재 공지사항 목록에 반영한다.
+       * 조회한 페이지를 현재 공지사항 목록에 반영함
        *
        * @author SeungHyeon.Kang
        * @param current 현재 화면의 공지사항 목록
        * @return 첫 페이지 교체 또는 다음 페이지가 연결된 공지사항 목록
        */
       const mergeNoticeList = (current: Notice[]): Notice[] => {
-        // 첫 페이지는 새 목록으로 교체하고 다음 페이지는 현재 목록 뒤에 추가한다.
+        // 첫 페이지는 새 목록으로 교체하고 다음 페이지는 현재 목록 뒤에 추가함
         return targetPage === 1 ? data.list : [...current, ...data.list];
       };
 
-      // 첫 페이지는 새 목록으로 교체하고 다음 페이지는 현재 목록 뒤에 추가한다.
+      // 첫 페이지는 새 목록으로 교체하고 다음 페이지는 현재 목록 뒤에 추가함
       setNotices(mergeNoticeList);
-      // 서버가 반환한 현재 페이지 번호를 다음 조회 기준으로 저장한다.
+      // 서버가 반환한 현재 페이지 번호를 다음 조회 기준으로 저장함
       setPage(data.page);
-      // 다음 공지사항 페이지 존재 여부를 더 보기 버튼 상태에 반영한다.
+      // 다음 공지사항 페이지 존재 여부를 더 보기 버튼 상태에 반영함
       setHasNext(data.hasNext);
     } catch (loadError) {
       // "공지사항을 불러오지 못했습니다."
       setError(getApiErrorMessage(loadError, message("frontend.notice.list.loadFailed")));
     } finally {
-      // 요청 성공 여부와 관계없이 로딩 상태를 종료한다.
+      // 요청 성공 여부와 관계없이 로딩 상태를 종료함
       setIsLoading(false);
     }
   }, []);
 
   /**
-   * 화면 최초 진입 시 공지사항 첫 페이지 조회를 시작한다.
+   * 화면 최초 진입 시 공지사항 첫 페이지 조회를 시작함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const loadInitialPage = useCallback((): void => {
-    // 최신 공지사항부터 표시하기 위해 첫 페이지를 조회한다.
+    // 최신 공지사항부터 표시하기 위해 첫 페이지를 조회함
     void loadPage(1);
   }, [loadPage]);
 
-  // 화면 최초 진입 시 최신 공지사항부터 조회한다.
+  // 화면 최초 진입 시 최신 공지사항부터 조회함
   useEffect(loadInitialPage, [loadInitialPage]);
 
   /**
-   * 선택한 공지사항 상세 화면으로 이동한다.
+   * 선택한 공지사항 상세 화면으로 이동함
    *
    * @author SeungHyeon.Kang
    * @param noticeNumb 이동할 공지사항 주키
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const openNotice = (noticeNumb: number): void => {
 
-    // 선택한 공지사항의 현재 배포 버전 상세 경로로 이동한다.
+    // 선택한 공지사항의 현재 배포 버전 상세 경로로 이동함
     navigate(`/notice/list/${noticeNumb}`);
   };
 
   /**
-   * 선택한 목록 행의 공지사항 번호를 읽어 상세 화면을 연다.
+   * 선택한 목록 행의 공지사항 번호를 읽어 상세 화면을 엶
    *
    * @author SeungHyeon.Kang
    * @param event 공지사항 목록 버튼 클릭 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleNoticeClick = (event: MouseEvent<HTMLButtonElement>): void => {
-    // 목록 버튼에 저장한 공지사항 주키를 숫자로 변환한다.
+    // 목록 버튼에 저장한 공지사항 주키를 숫자로 변환함
     const noticeNumb = Number(event.currentTarget.dataset.noticeNumb);
 
-    // 유효한 공지사항 주키만 상세 경로에 사용한다.
+    // 유효한 공지사항 주키만 상세 경로에 사용함
     if (Number.isInteger(noticeNumb) && noticeNumb > 0) {
-      // 검증된 공지사항의 상세 화면을 연다.
+      // 검증된 공지사항의 상세 화면을 엶
       openNotice(noticeNumb);
     }
   };
 
   /**
-   * 첫 페이지 공지사항 조회를 다시 시도한다.
+   * 첫 페이지 공지사항 조회를 다시 시도함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleRetry = (): void => {
-    // 오류 상태를 새 요청으로 교체하기 위해 첫 페이지를 다시 조회한다.
+    // 오류 상태를 새 요청으로 교체하기 위해 첫 페이지를 다시 조회함
     void loadPage(1);
   };
 
   /**
-   * 현재 목록 다음의 공지사항 페이지를 조회한다.
+   * 현재 목록 다음의 공지사항 페이지를 조회함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleLoadMore = (): void => {
-    // 서버가 마지막으로 반환한 페이지 다음 번호를 조회한다.
+    // 서버가 마지막으로 반환한 페이지 다음 번호를 조회함
     void loadPage(page + 1);
   };
 
   /**
-   * 개별 공지사항을 제목과 배포일 및 상세 이동 버튼으로 구성한다.
+   * 개별 공지사항을 제목과 배포일 및 상세 이동 버튼으로 구성함
    *
    * @author SeungHyeon.Kang
    * @param notice 화면에 표시할 공지사항
    * @return 공지사항 목록의 개별 행
    */
   const renderNoticeItem = (notice: Notice) => {
-    // 배포 일시에서 날짜 부분만 프로젝트 공통 점 표기로 변환한다.
+    // 배포 일시에서 날짜 부분만 프로젝트 공통 점 표기로 변환함
     const displayDate = formatDashedDateToDot(notice.dplyDate?.slice(0, 10));
-    // 읽은 공지는 알림센터와 같은 낮은 명도 스타일을 함께 적용한다.
+    // 읽은 공지는 알림센터와 같은 낮은 명도 스타일을 함께 적용함
     const itemClassName = notice.readYsno === "Y" ? `${styles.item} ${styles.itemRead}` : styles.item;
 
-    // 공지사항 카테고리와 제목 및 배포일을 포함한 카드형 행을 반환한다.
+    // 공지사항 카테고리와 제목 및 배포일을 포함한 카드형 행을 반환함
     return (
       /* 개별 공지사항 제목과 배포일 및 상세 이동 영역 */
       <button
@@ -187,9 +187,9 @@ function NoticeListPage() {
     );
   };
 
-  // 최초 목록을 조회하는 동안 사용자 공통 인라인 로딩 화면을 표시한다.
+  // 최초 목록을 조회하는 동안 사용자 공통 인라인 로딩 화면을 표시함
   if (isLoading && notices.length === 0 && !error) {
-    // 공지사항 최초 조회 상태 화면을 반환한다.
+    // 공지사항 최초 조회 상태 화면을 반환함
     return (
       <main className={styles.listPage}>
         {/* 공지사항 최초 조회 상태 영역 */}
@@ -198,7 +198,7 @@ function NoticeListPage() {
     );
   }
 
-  // 공지사항 목록과 조회 상태 및 다음 페이지 제어 화면을 반환한다.
+  // 공지사항 목록과 조회 상태 및 다음 페이지 제어 화면을 반환함
   return (
     /* 배포된 사용자 공지사항 목록 전체 영역 */
     <main className={styles.listPage}>

@@ -1,5 +1,5 @@
 /**
- * 공통 헤더, 본문, 하단 네비게이션을 배치하고 페이지 전환 애니메이션을 적용합니다.
+ * 공통 헤더, 본문, 하단 네비게이션을 배치하고 페이지 전환 애니메이션을 적용함
  *
  * @author HanWon.Jang
  */
@@ -26,7 +26,7 @@ type LayoutProps = {
 };
 
 /**
- * 하단 탭 전용 방향이 없을 때 기존 라우터 이력 기반 화면 전환을 유지한다
+ * 하단 탭 전용 방향이 없을 때 기존 라우터 이력 기반 화면 전환을 유지함
  *
  * @author HanWon.Jang
  * @param bottomNavDirection 검증된 하단 탭 진입 방향
@@ -35,30 +35,30 @@ type LayoutProps = {
  */
 const getTransitionClass = (bottomNavDirection: BottomNavDirection | null, isHistoryPop: boolean): string => {
 
-  // 왼쪽 탭으로 이동하면 기존 역방향 진입 클래스를 사용한다
+  // 왼쪽 탭으로 이동하면 기존 역방향 진입 클래스를 사용함
   if (bottomNavDirection === "back") {
-    // 화면이 왼쪽에서 진입하는 기존 클래스를 반환한다
+    // 화면이 왼쪽에서 진입하는 기존 클래스를 반환함
     return pageTransitionBack;
   }
 
-  // 오른쪽 탭으로 이동하면 기존 정방향 진입 클래스를 사용한다
+  // 오른쪽 탭으로 이동하면 기존 정방향 진입 클래스를 사용함
   if (bottomNavDirection === "forward") {
-    // 화면이 오른쪽에서 진입하는 기존 클래스를 반환한다
+    // 화면이 오른쪽에서 진입하는 기존 클래스를 반환함
     return pageTransitionForward;
   }
 
-  // 하단 탭 외의 브라우저 이력 이동은 기존 역방향 정책을 유지한다
+  // 하단 탭 외의 브라우저 이력 이동은 기존 역방향 정책을 유지함
   if (isHistoryPop) {
-    // 기존 POP 화면 전환 클래스를 반환한다
+    // 기존 POP 화면 전환 클래스를 반환함
     return pageTransitionBack;
   }
 
-  // 일반 링크와 프로그램 이동은 기존 정방향 정책을 유지한다
+  // 일반 링크와 프로그램 이동은 기존 정방향 정책을 유지함
   return pageTransitionForward;
 };
 
 /**
- * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용합니다.
+ * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용함
  *
  * @author HanWon.Jang
  * @param props 레이아웃 표시 옵션
@@ -70,14 +70,14 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
   const layoutRef = useRef<HTMLDivElement | null>(null);
-  // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회한다
+  // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회함
   const bottomNavDirection = getBottomNavDirection(
     location.state,
     location.pathname,
     navigationType === "POP",
   );
   const shouldAnimate = hasMountedRef.current || bottomNavDirection !== null;
-  // 하단 탭 전용 방향이 없으면 기존 PUSH 및 POP 전환 클래스를 선택한다
+  // 하단 탭 전용 방향이 없으면 기존 PUSH 및 POP 전환 클래스를 선택함
   const transitionClassName = getTransitionClass(
     bottomNavDirection,
     navigationType === "POP",
@@ -89,21 +89,21 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   }, []);
 
   /**
-   * 헤더 아래 고정 영역이 스크롤 중 헤더와 같은 속도로 이동하게 거리를 적용한다.
+   * 헤더 아래 고정 영역이 스크롤 중 헤더와 같은 속도로 이동하게 거리를 적용함
    *
    * @author SeungHyeon.Kang
    * @param headerOffset 헤더가 화면 위로 이동한 거리
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleHeaderOffsetChange = useCallback((headerOffset: number): void => {
 
-    // 레이아웃 요소가 준비되지 않았으면 위치 갱신을 종료한다
+    // 레이아웃 요소가 준비되지 않았으면 위치 갱신을 종료함
     if (!layoutRef.current) {
-      // 헤더 아래 영역의 현재 위치를 유지한다
+      // 헤더 아래 영역의 현재 위치를 유지함
       return;
     }
 
-    // 하위 고정 영역이 공유할 헤더 이동 거리 CSS 변수를 갱신한다
+    // 하위 고정 영역이 공유할 헤더 이동 거리 CSS 변수를 갱신함
     layoutRef.current.style.setProperty(
       "--header-scroll-offset",
       `${headerOffset}px`,

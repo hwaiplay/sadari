@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : CodeDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-09
- * description    : 공통 요청과 응답 데이터를 전달한다
+ * description    : 공통 요청과 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

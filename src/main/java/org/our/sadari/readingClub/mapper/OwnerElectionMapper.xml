@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.readingClub.mapper.OwnerElectionMapper">
 
-    <!-- 로그인 사용자가 참여할 수 있는 진행 중 모임장 선거를 조회한다. -->
+    <!-- 로그인 사용자가 참여할 수 있는 진행 중 모임장 선거를 조회함 -->
     <select id="getElection" resultType="org.our.sadari.readingClub.dto.OwnerElectionDto$ElectionDto">
         SELECT /* getElection */
                VOTE.CLUB_NUMB
@@ -42,7 +42,7 @@
          LIMIT 1
     </select>
 
-    <!-- 활성 계정과 활성 회원 자격을 유지하는 후보 목록을 조회한다. -->
+    <!-- 활성 계정과 활성 회원 자격을 유지하는 후보 목록을 조회함 -->
     <select id="getCandidateList" resultType="org.our.sadari.readingClub.dto.OwnerElectionDto$CandidateDto">
         SELECT /* getCandidateList */
                OPTIONX.TAGT_NUMB AS USER_NUMB
@@ -69,7 +69,7 @@
       ORDER BY OPTIONX.TAGT_NUMB
     </select>
 
-    <!-- 현재 투표에서 활성 자격을 유지하는 유권자인지 조회한다. -->
+    <!-- 현재 투표에서 활성 자격을 유지하는 유권자인지 조회함 -->
     <select id="getEligibleVoterCnt" resultType="int">
         SELECT /* getEligibleVoterCnt */
                COUNT(*)
@@ -91,7 +91,7 @@
            AND VOTER.USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 현재 투표에서 활성 자격을 유지하는 후보인지 조회한다. -->
+    <!-- 현재 투표에서 활성 자격을 유지하는 후보인지 조회함 -->
     <select id="getEligibleOptionCnt" resultType="int">
         SELECT /* getEligibleOptionCnt */
                COUNT(*)
@@ -109,7 +109,7 @@
            AND OPTIONX.OPTI_STAT = 'ACTIVE'
     </select>
 
-    <!-- 유권자의 변경 불가능한 최초 비밀투표만 등록한다. -->
+    <!-- 유권자의 변경 불가능한 최초 비밀투표만 등록함 -->
     <insert id="uptBallot">
         /* uptBallot */
         INSERT IGNORE INTO TB_CLVBAL (
@@ -128,7 +128,7 @@
         )
     </insert>
 
-    <!-- 선거 상태지만 진행 중인 선거가 없는 모임을 잠가 조회한다. -->
+    <!-- 선거 상태지만 진행 중인 선거가 없는 모임을 잠가 조회함 -->
     <select id="getPendingClubList" resultType="long">
         SELECT /* getPendingClubList */
                CLUB.CLUB_NUMB
@@ -145,7 +145,7 @@
            FOR UPDATE SKIP LOCKED
     </select>
 
-    <!-- 모임별 다음 선거 번호를 계산한다. -->
+    <!-- 모임별 다음 선거 번호를 계산함 -->
     <select id="getNextElectionNumb" resultType="long">
         SELECT /* getNextElectionNumb */
                COALESCE(MAX(ELCT_NUMB), 0) + 1
@@ -153,7 +153,7 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </select>
 
-    <!-- 모임별 다음 투표 번호를 계산한다. -->
+    <!-- 모임별 다음 투표 번호를 계산함 -->
     <select id="getNextVoteNumb" resultType="long">
         SELECT /* getNextVoteNumb */
                COALESCE(MAX(VOTE_NUMB), 0) + 1
@@ -161,7 +161,7 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </select>
 
-    <!-- 모임장 부재 상태를 근거로 24시간 선거를 생성한다. -->
+    <!-- 모임장 부재 상태를 근거로 24시간 선거를 생성함 -->
     <insert id="setElection">
         /* setElection */
         INSERT INTO TM_CLOWNX (
@@ -193,7 +193,7 @@
            AND CLUB.CLUB_STAT = 'OWNER_ELECTION'
     </insert>
 
-    <!-- 모임장 본선 또는 결선 투표를 생성한다. -->
+    <!-- 모임장 본선 또는 결선 투표를 생성함 -->
     <insert id="setVote">
         /* setVote */
         INSERT INTO TM_CLVOTX (
@@ -228,7 +228,7 @@
         )
     </insert>
 
-    <!-- 기존 모임장을 제외한 활성 회원을 본선 후보로 고정한다. -->
+    <!-- 기존 모임장을 제외한 활성 회원을 본선 후보로 고정함 -->
     <insert id="setCandidateList">
         /* setCandidateList */
         INSERT INTO TB_CLVOPT (
@@ -256,7 +256,7 @@
            AND MEMBER.MEMB_STAT = 'ACTIVE'
     </insert>
 
-    <!-- 원 투표의 동률 최다 득표자만 결선 후보로 고정한다. -->
+    <!-- 원 투표의 동률 최다 득표자만 결선 후보로 고정함 -->
     <insert id="setRunoffCandidateList">
         /* setRunoffCandidateList */
         INSERT INTO TB_CLVOPT (
@@ -298,7 +298,7 @@
            AND RESULT.VOTE_CNT > 0
     </insert>
 
-    <!-- 투표 시작 시점의 활성 회원을 유권자 명부로 고정한다. -->
+    <!-- 투표 시작 시점의 활성 회원을 유권자 명부로 고정함 -->
     <insert id="setVoterList">
         /* setVoterList */
         INSERT INTO TB_CLVOTR (
@@ -321,7 +321,7 @@
            AND MEMBER.MEMB_STAT = 'ACTIVE'
     </insert>
 
-    <!-- 본선 동률 선거를 결선 상태와 새 마감 시각으로 변경한다. -->
+    <!-- 본선 동률 선거를 결선 상태와 새 마감 시각으로 변경함 -->
     <update id="uptElectionRunoff">
         UPDATE /* uptElectionRunoff */
                TM_CLOWNX
@@ -333,7 +333,7 @@
            AND ELCT_STAT IN ('OPEN', 'EXTENDED')
     </update>
 
-    <!-- 마감 시각이 지난 진행 중 투표를 잠가 조회한다. -->
+    <!-- 마감 시각이 지난 진행 중 투표를 잠가 조회함 -->
     <select id="getDueVoteList" resultType="org.our.sadari.readingClub.dto.OwnerElectionDto$DueVoteDto">
         SELECT /* getDueVoteList */
                VOTE.CLUB_NUMB
@@ -354,7 +354,7 @@
            FOR UPDATE SKIP LOCKED
     </select>
 
-    <!-- 시작 시점 명부의 현재 계정과 회원 상태를 투표 자격에 동기화한다. -->
+    <!-- 시작 시점 명부의 현재 계정과 회원 상태를 투표 자격에 동기화함 -->
     <update id="uptInvalidVoter">
         UPDATE /* uptInvalidVoter */
                TB_CLVOTR VOTER
@@ -372,7 +372,7 @@
            AND VOTER.VOTE_NUMB = #{voteNumb}
     </update>
 
-    <!-- 활성 자격과 유효 투표를 기준으로 최다 득표 후보를 조회한다. -->
+    <!-- 활성 자격과 유효 투표를 기준으로 최다 득표 후보를 조회함 -->
     <select id="getWinnerList" resultType="org.our.sadari.readingClub.dto.OwnerElectionDto$VoteResultDto">
         SELECT /* getWinnerList */
                RESULT.USER_NUMB
@@ -401,7 +401,7 @@
            AND RESULT.VOTE_CNT > 0
     </select>
 
-    <!-- 마감된 투표와 결과 후보를 확정한다. -->
+    <!-- 마감된 투표와 결과 후보를 확정함 -->
     <update id="uptVoteClosed">
         UPDATE /* uptVoteClosed */
                TM_CLVOTX
@@ -414,7 +414,7 @@
            AND VOTE_STAT = 'OPEN'
     </update>
 
-    <!-- 당선자와 선거 완료 상태를 확정한다. -->
+    <!-- 당선자와 선거 완료 상태를 확정함 -->
     <update id="uptElectionCompleted">
         UPDATE /* uptElectionCompleted */
                TM_CLOWNX
@@ -426,7 +426,7 @@
            AND ELCT_STAT IN ('OPEN', 'RUNOFF', 'EXTENDED')
     </update>
 
-    <!-- 기존 모임장 역할을 일반 회원으로 변경한다. -->
+    <!-- 기존 모임장 역할을 일반 회원으로 변경함 -->
     <update id="uptPreviousOwner">
         UPDATE /* uptPreviousOwner */
                TB_CLMEMX MEMBER
@@ -439,7 +439,7 @@
            AND MEMBER.MEMB_STAT = 'ACTIVE'
     </update>
 
-    <!-- 당선자의 회원 역할을 모임장으로 변경한다. -->
+    <!-- 당선자의 회원 역할을 모임장으로 변경함 -->
     <update id="uptNextOwner">
         UPDATE /* uptNextOwner */
                TB_CLMEMX
@@ -450,7 +450,7 @@
            AND MEMB_STAT = 'ACTIVE'
     </update>
 
-    <!-- 모임 마스터의 모임장과 운영 상태를 갱신한다. -->
+    <!-- 모임 마스터의 모임장과 운영 상태를 갱신함 -->
     <update id="uptClubOwner">
         UPDATE /* uptClubOwner */
                TM_CLUBXM
@@ -461,7 +461,7 @@
            AND CLUB_STAT = 'OWNER_ELECTION'
     </update>
 
-    <!-- 성립하지 않은 선거와 현재 투표를 24시간 한 번 연장한다. -->
+    <!-- 성립하지 않은 선거와 현재 투표를 24시간 한 번 연장함 -->
     <update id="uptElectionExtended">
         UPDATE /* uptElectionExtended */
                TM_CLOWNX ELECTION
@@ -481,7 +481,7 @@
            AND VOTE.VOTE_STAT = 'OPEN'
     </update>
 
-    <!-- 재연장할 수 없는 선거와 모임을 일시중지한다. -->
+    <!-- 재연장할 수 없는 선거와 모임을 일시중지함 -->
     <update id="uptElectionPaused">
         UPDATE /* uptElectionPaused */
                TM_CLOWNX ELECTION

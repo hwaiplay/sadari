@@ -9,7 +9,7 @@ import org.springframework.http.HttpStatus;
  * fileName       : CustomException
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : 공통 예외를 표현하고 공통 응답으로 변환한다
+ * description    : 공통 예외를 표현하고 공통 응답으로 변환함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -24,7 +24,7 @@ public class CustomException extends RuntimeException {
     private final HttpStatus status;
 
     /**
-     * 공통 결과 코드와 HTTP 상태를 포함한 업무 예외를 생성한다
+     * 공통 결과 코드와 HTTP 상태를 포함한 업무 예외를 생성함
      *
      * @author SeungHyeon.Kang
      * @param resultEnum 사용자에게 반환할 공통 결과 코드

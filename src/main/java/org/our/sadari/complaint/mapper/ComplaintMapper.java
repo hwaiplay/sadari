@@ -15,7 +15,7 @@ import java.util.List;
  * fileName       : ComplaintMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 대상 원문과 누적 건수를 조회하고 신고 및 자동 조치 이력을 저장한다
+ * description    : 신고 대상 원문과 누적 건수를 조회하고 신고 및 자동 조치 이력을 저장함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -26,7 +26,7 @@ import java.util.List;
 public interface ComplaintMapper {
 
     /**
-     * 신고 접수 가능 여부를 판단할 현재 회원 상태를 조회한다.
+     * 신고 접수 가능 여부를 판단할 현재 회원 상태를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 신고자 사용자 번호
@@ -35,7 +35,7 @@ public interface ComplaintMapper {
     String getUserStat(@Param("userNumb") Long userNumb);
 
     /**
-     * 요청한 신고 대상 유형 또는 사유가 활성 공통코드인지 조회한다.
+     * 요청한 신고 대상 유형 또는 사유가 활성 공통코드인지 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCode 공통코드
@@ -45,7 +45,7 @@ public interface ComplaintMapper {
     int getActiveCodeCnt(@Param("commCode") String commCode, @Param("comdCode") String comdCode);
 
     /**
-     * 동일 사용자가 같은 대상 버전을 신고한 이력이 있는지 확인한다.
+     * 동일 사용자가 같은 대상 버전을 신고한 이력이 있는지 확인함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 신고자 사용자 번호
@@ -58,7 +58,7 @@ public interface ComplaintMapper {
                    , @Param("tagtNumb") Long tagtNumb, @Param("tagtHash") String tagtHash);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 프로필 내용과 소유자를 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 프로필 내용과 소유자를 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 사용자 번호
@@ -68,7 +68,7 @@ public interface ComplaintMapper {
     ComplaintDto getUserTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 공개 독후감 본문과 소유자를 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 공개 독후감 본문과 소유자를 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 독후감 번호
@@ -78,7 +78,7 @@ public interface ComplaintMapper {
     ComplaintDto getReportTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 공개 독후감 댓글 본문과 소유자를 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 공개 독후감 댓글 본문과 소유자를 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 댓글 번호
@@ -88,7 +88,7 @@ public interface ComplaintMapper {
     ComplaintDto getReplyTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 현재 프로필 사진 정보와 소유자를 잠금 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 현재 프로필 사진 정보와 소유자를 잠금 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 사용자 번호
@@ -98,7 +98,7 @@ public interface ComplaintMapper {
     ComplaintDto getProfileTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 현재 배경사진 정보와 소유자를 잠금 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 현재 배경사진 정보와 소유자를 잠금 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 사용자 번호
@@ -109,7 +109,7 @@ public interface ComplaintMapper {
                                        , @Param("userNumb") Long userNumb);
 
     /**
-     * 신고 시점에 저장할 다른 사용자의 현재 한줄소개와 소유자를 잠금 조회한다.
+     * 신고 시점에 저장할 다른 사용자의 현재 한줄소개와 소유자를 잠금 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 사용자 번호
@@ -119,7 +119,7 @@ public interface ComplaintMapper {
     ComplaintDto getIntroTargetDtl(@Param("tagtNumb") Long tagtNumb, @Param("userNumb") Long userNumb);
 
     /**
-     * 동일 대상 버전의 비공개 이미지 증거 번호를 조회한다.
+     * 동일 대상 버전의 비공개 이미지 증거 번호를 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
@@ -131,7 +131,7 @@ public interface ComplaintMapper {
                        , @Param("tagtHash") String tagtHash);
 
     /**
-     * 관리자 전용 이미지 신고 증거 원본을 저장한다.
+     * 관리자 전용 이미지 신고 증거 원본을 저장함
      *
      * @author SeungHyeon.Kang
      * @param evidence 신고 대상 버전과 이미지 원본
@@ -140,7 +140,7 @@ public interface ComplaintMapper {
     int setEvidence(ComplaintEvidenceDto evidence);
 
     /**
-     * 서버에서 확정한 대상 내용과 신고 사유를 접수 이력으로 저장한다.
+     * 서버에서 확정한 대상 내용과 신고 사유를 접수 이력으로 저장함
      *
      * @author SeungHyeon.Kang
      * @param complaint 신고 대상과 사유 및 내용 스냅샷
@@ -150,7 +150,7 @@ public interface ComplaintMapper {
     int setComplaint(@Param("complaint") ComplaintDto complaint, @Param("userNumb") Long userNumb);
 
     /**
-     * 반려를 제외한 동일 대상 버전의 유효 누적 신고 건수를 조회한다.
+     * 반려를 제외한 동일 대상 버전의 유효 누적 신고 건수를 조회함
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
@@ -162,7 +162,7 @@ public interface ComplaintMapper {
                            , @Param("tagtHash") String tagtHash);
 
     /**
-     * 신고 누적 임계치에 도달한 독후감을 비공개로 변경한다.
+     * 신고 누적 임계치에 도달한 독후감을 비공개로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 독후감 번호
@@ -172,7 +172,7 @@ public interface ComplaintMapper {
     int uptAutoReportPrivate(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
 
     /**
-     * 신고 누적 임계치에 도달한 댓글을 삭제 상태로 변경한다.
+     * 신고 누적 임계치에 도달한 댓글을 삭제 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtNumb 신고 대상 댓글 번호
@@ -182,7 +182,7 @@ public interface ComplaintMapper {
     int delAutoReply(@Param("tagtNumb") Long tagtNumb, @Param("tagtUser") Long tagtUser);
 
     /**
-     * 신고 누적 임계치에 도달한 프로필 사진을 기본 이미지 상태로 변경한다.
+     * 신고 누적 임계치에 도달한 프로필 사진을 기본 이미지 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtUser 신고 대상 사용자 번호
@@ -191,7 +191,7 @@ public interface ComplaintMapper {
     int uptAutoProfile(@Param("tagtUser") Long tagtUser);
 
     /**
-     * 신고 누적 임계치에 도달한 배경사진을 기본 이미지 상태로 변경한다.
+     * 신고 누적 임계치에 도달한 배경사진을 기본 이미지 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtUser 신고 대상 사용자 번호
@@ -200,7 +200,7 @@ public interface ComplaintMapper {
     int uptAutoBackground(@Param("tagtUser") Long tagtUser);
 
     /**
-     * 신고 누적 임계치에 도달한 한줄소개를 Null로 변경한다.
+     * 신고 누적 임계치에 도달한 한줄소개를 Null로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtUser 신고 대상 사용자 번호
@@ -209,7 +209,7 @@ public interface ComplaintMapper {
     int uptAutoIntro(@Param("tagtUser") Long tagtUser);
 
     /**
-     * 신고 누적 자동 조치 결과를 변경 불가능한 이력으로 저장한다.
+     * 신고 누적 자동 조치 결과를 변경 불가능한 이력으로 저장함
      *
      * @author SeungHyeon.Kang
      * @param action 자동 조치 대상과 결과
@@ -218,7 +218,7 @@ public interface ComplaintMapper {
     int setAutoAction(ComplaintActionDto action);
 
     /**
-     * 동일 대상의 접수 또는 검토 중 신고를 자동 조치 완료 상태로 변경한다.
+     * 동일 대상의 접수 또는 검토 중 신고를 자동 조치 완료 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param tagtType 신고 대상 유형
@@ -231,7 +231,7 @@ public interface ComplaintMapper {
                         , @Param("tagtHash") String tagtHash, @Param("procCntn") String procCntn);
 
     /**
-     * 자동 조치로 종결된 동일 대상 버전 신고의 신고자별 미확인 결과를 생성한다.
+     * 자동 조치로 종결된 동일 대상 버전 신고의 신고자별 미확인 결과를 생성함
      *
      * @author HanWon.Jang
      * @param tagtType 신고 대상 유형
@@ -243,21 +243,21 @@ public interface ComplaintMapper {
                                                  , @Param("tagtNumb") Long tagtNumb
                                                  , @Param("tagtHash") String tagtHash);
 
-    /** 신고 조치 사용자 안내 이벤트를 저장한다. */
+    /** 신고 조치 사용자 안내 이벤트를 저장함 */
     int setResultEvent(ComplaintResultEventDto event);
 
-    /** 자동 조치로 종결된 신고의 유효한 신고자 수신 결과를 생성한다. */
+    /** 자동 조치로 종결된 신고의 유효한 신고자 수신 결과를 생성함 */
     int setAutoReporterResults(@Param("eventNumb") Long eventNumb
                               , @Param("tagtType") String tagtType
                               , @Param("tagtNumb") Long tagtNumb
                               , @Param("tagtHash") String tagtHash);
 
-    /** 조치 시점에 보존 대상인 피신고자의 수신 결과를 생성한다. */
+    /** 조치 시점에 보존 대상인 피신고자의 수신 결과를 생성함 */
     int setTargetResult(@Param("eventNumb") Long eventNumb, @Param("cmplNumb") Long cmplNumb
                        , @Param("userNumb") Long userNumb);
 
     /**
-     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과를 요약 조회한다.
+     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과를 요약 조회함
      *
      * @author HanWon.Jang
      * @param userNumb 인증 사용자 번호
@@ -267,7 +267,7 @@ public interface ComplaintMapper {
                                                      , @Param("maxSize") int maxSize);
 
     /**
-     * 활성 사용자의 조회 시점 마지막 번호까지 미확인 결과를 확인 처리한다.
+     * 활성 사용자의 조회 시점 마지막 번호까지 미확인 결과를 확인 처리함
      *
      * @author HanWon.Jang
      * @param userNumb 인증 사용자 번호
@@ -277,7 +277,7 @@ public interface ComplaintMapper {
     int uptResultConfirm(@Param("userNumb") Long userNumb, @Param("resultNumb") Long resultNumb);
 
     /**
-     * 최종 처리 뒤 정책 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제한다.
+     * 최종 처리 뒤 정책 보존기간이 지난 비공개 이미지 증거를 제한 건수만큼 삭제함
      *
      * @author SeungHyeon.Kang
      * @param retentionDays 최종 처리 후 증거 보존 일수

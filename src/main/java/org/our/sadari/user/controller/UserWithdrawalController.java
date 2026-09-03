@@ -19,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : UserWithdrawalController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 계정 비활성화 및 영구 탈퇴 재인증과 영구 삭제 대기 취소 API를 제공한다
+ * description    : 계정 비활성화 및 영구 탈퇴 재인증과 영구 삭제 대기 취소 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -36,7 +36,7 @@ public class UserWithdrawalController {
     private final UserWithdrawalService userWithdrawalService;
 
     /**
-     * 계정 처리 정책 입력값을 저장하고 Kakao 재인증 URL을 발급한다.
+     * 계정 처리 정책 입력값을 저장하고 Kakao 재인증 URL을 발급함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 회원 번호
@@ -49,12 +49,12 @@ public class UserWithdrawalController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @Valid @RequestBody UserWithdrawalDto request) {
 
-        // 계정 처리 재인증 시작 결과를 반환한다
+        // 계정 처리 재인증 시작 결과를 반환함
         return userWithdrawalService.setWithdrawalRequest(userNumb, request);
     }
 
     /**
-     * 로그인 회원의 영구 삭제 예정일과 취소 가능 상태를 조회한다.
+     * 로그인 회원의 영구 삭제 예정일과 취소 가능 상태를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 회원 번호
@@ -65,12 +65,12 @@ public class UserWithdrawalController {
     public ResultData getWithdrawalStatus(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
-        // 영구 삭제 대기 상태 조회 결과를 반환한다
+        // 영구 삭제 대기 상태 조회 결과를 반환함
         return userWithdrawalService.getWithdrawalStatus(userNumb);
     }
 
     /**
-     * 영구 삭제 대기를 취소하고 회원 상태를 정상으로 복구한다.
+     * 영구 삭제 대기를 취소하고 회원 상태를 정상으로 복구함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 회원 번호
@@ -81,7 +81,7 @@ public class UserWithdrawalController {
     public ResultData uptWithdrawalCancel(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
-        // 영구 삭제 대기 취소 결과를 반환한다
+        // 영구 삭제 대기 취소 결과를 반환함
         return userWithdrawalService.uptWithdrawalCancel(userNumb);
     }
 }

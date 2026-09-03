@@ -8,7 +8,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * fileName       : UserWithdrawalMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 회원 탈퇴 상태와 연관 데이터 변경 SQL을 정의한다
+ * description    : 회원 탈퇴 상태와 연관 데이터 변경 SQL을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -23,7 +23,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
 public interface UserWithdrawalMapper {
 
     /**
-     * 회원 탈퇴 처리 이력을 등록한다.
+     * 회원 탈퇴 처리 이력을 등록함
      *
      * @author SeungHyeon.Kang
      * @param request 등록할 탈퇴 이력
@@ -32,7 +32,7 @@ public interface UserWithdrawalMapper {
     int setUserWithdrawal(UserWithdrawalDto request);
 
     /**
-     * 회원의 독후감을 모두 비공개로 변경한다.
+     * 회원의 독후감을 모두 비공개로 변경함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -41,7 +41,7 @@ public interface UserWithdrawalMapper {
     int uptUserReportPrivate(Long userNumb);
 
     /**
-     * 계정 비활성화 또는 영구 삭제 대기 회원의 독서 통계를 비공개로 변경한다
+     * 계정 비활성화 또는 영구 삭제 대기 회원의 독서 통계를 비공개로 변경함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -51,7 +51,7 @@ public interface UserWithdrawalMapper {
     int uptReadingStatsPrivate(@Param("userNumb") Long userNumb, @Param("privateYsno") String privateYsno);
 
     /**
-     * 계정 비활성화 또는 영구 삭제 대기 회원의 모임 회차 참여 연결을 비식별화한다
+     * 계정 비활성화 또는 영구 삭제 대기 회원의 모임 회차 참여 연결을 비식별화함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -61,7 +61,7 @@ public interface UserWithdrawalMapper {
     int uptClubParticipantAnon(@Param("userNumb") Long userNumb, @Param("anonymousYsno") String anonymousYsno);
 
     /**
-     * 회원의 알림을 모두 삭제 상태로 변경한다.
+     * 회원의 알림을 모두 삭제 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -70,7 +70,7 @@ public interface UserWithdrawalMapper {
     int uptUserAlimDeleted(Long userNumb);
 
     /**
-     * 회원의 푸시 구독을 모두 비활성화한다.
+     * 회원의 푸시 구독을 모두 비활성화함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -79,7 +79,7 @@ public interface UserWithdrawalMapper {
     int uptUserPushDisabled(Long userNumb);
 
     /**
-     * 탈퇴 회원이 댓글에 등록한 좋아요를 삭제한다.
+     * 탈퇴 회원이 댓글에 등록한 좋아요를 삭제함
      *
      * @author HanWon.Jang
      * @param userNumb 탈퇴 회원 번호
@@ -88,7 +88,7 @@ public interface UserWithdrawalMapper {
     int delUserReplyLike(Long userNumb);
 
     /**
-     * 계정 비활성화 또는 삭제 대기 전환 사용자의 신고 결과 수신 이력을 삭제한다.
+     * 계정 비활성화 또는 삭제 대기 전환 사용자의 신고 결과 수신 이력을 삭제함
      *
      * @author HanWon.Jang
      * @param userNumb 탈퇴 회원 번호
@@ -97,7 +97,7 @@ public interface UserWithdrawalMapper {
     int delComplaintResults(Long userNumb);
 
     /**
-     * 영구 삭제 대기 중인 최신 탈퇴 이력을 조회한다.
+     * 영구 삭제 대기 중인 최신 탈퇴 이력을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 회원 번호
@@ -106,7 +106,7 @@ public interface UserWithdrawalMapper {
     UserWithdrawalDto getPendingWithdrawal(Long userNumb);
 
     /**
-     * 영구 삭제 대기 이력을 취소 상태로 변경한다.
+     * 영구 삭제 대기 이력을 취소 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param request 취소할 탈퇴 이력
@@ -115,7 +115,7 @@ public interface UserWithdrawalMapper {
     int uptWithdrawalRestored(UserWithdrawalDto request);
 
     /**
-     * 같은 OAuth 식별값으로 탈퇴한 모든 과거 회원 번호에 유효한 이용 정지가 있는지 조회한다.
+     * 같은 OAuth 식별값으로 탈퇴한 모든 과거 회원 번호에 유효한 이용 정지가 있는지 조회함
      *
      * @author SeungHyeon.Kang
      * @param userIdhs OAuth 사용자 식별값의 SHA-256 해시

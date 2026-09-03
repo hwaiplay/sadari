@@ -85,7 +85,7 @@ export const pushButtonOff = style([
   },
 ]);
 
-// 푸시 토큰 발급과 서버 등록이 끝날 때까지 버튼을 브랜드 골드 상태로 유지한다
+// 푸시 토큰 발급과 서버 등록이 끝날 때까지 버튼을 브랜드 골드 상태로 유지함
 export const pushButtonChanging = style([
   pushButton,
   {
@@ -104,14 +104,14 @@ export const pushButtonChanging = style([
   },
 ]);
 
-// 푸시 등록 대기 상태가 계속 진행 중임을 전달하는 회전 동작을 생성한다
+// 푸시 등록 대기 상태가 계속 진행 중임을 전달하는 회전 동작을 생성함
 const rotatePushSpinner = keyframes({
   to: {
     transform: "rotate(360deg)",
   },
 });
 
-// 처리 중 버튼의 현재 글자색을 상속하여 테두리와 같은 골드색 회전 표시를 제공한다
+// 처리 중 버튼의 현재 글자색을 상속하여 테두리와 같은 골드색 회전 표시를 제공함
 export const pushSpinner = style({
   width: "12px",
   height: "12px",
@@ -145,7 +145,7 @@ export const itemButton = style({
   boxSizing: "border-box",
 });
 
-// 읽은 알림은 목록에 유지하되 미읽음 알림보다 낮은 명도와 대비로 상태를 구분한다.
+// 읽은 알림은 목록에 유지하되 미읽음 알림보다 낮은 명도와 대비로 상태를 구분함
 export const itemButtonRead = style({
   backgroundColor: "#f3f4f6",
   borderColor: "#e5e7eb",

@@ -1,5 +1,5 @@
 /**
- * 공개 독후감과 모임 회차 독후감 페이지가 공유하는 목록 UI를 제공한다.
+ * 공개 독후감과 모임 회차 독후감 페이지가 공유하는 목록 UI를 제공함
  *
  * @author HanWon.Jang
  */
@@ -68,7 +68,7 @@ type ReportListViewProps = {
 };
 
 /**
- * 독후감 상태에 대응하는 공통 카드 배지 스타일을 반환한다.
+ * 독후감 상태에 대응하는 공통 카드 배지 스타일을 반환함
  *
  * @author HanWon.Jang
  * @param statusTone 완료와 중단 및 독서 중 상태 구분값
@@ -77,24 +77,24 @@ type ReportListViewProps = {
 function getStatusClassName(
   statusTone: ReportListItem["statusTone"],
 ): string {
-  // 완독 상태이면 브랜드 색상의 완료 배지 클래스를 반환한다
+  // 완독 상태이면 브랜드 색상의 완료 배지 클래스를 반환함
   if (statusTone === "done") {
-    // 완료 상태 배지 클래스를 반환한다
+    // 완료 상태 배지 클래스를 반환함
     return styles.statusDone;
   }
 
-  // 중단 상태이면 회색의 중단 배지 클래스를 반환한다
+  // 중단 상태이면 회색의 중단 배지 클래스를 반환함
   if (statusTone === "stopped") {
-    // 중단 상태 배지 클래스를 반환한다
+    // 중단 상태 배지 클래스를 반환함
     return styles.statusStopped;
   }
 
-  // 나머지 상태에는 독서 중 배지 클래스를 반환한다
+  // 나머지 상태에는 독서 중 배지 클래스를 반환함
   return styles.statusReading;
 }
 
 /**
- * 도서 요약과 필터 및 독후감 카드 목록을 동일한 화면 구조로 표시한다.
+ * 도서 요약과 필터 및 독후감 카드 목록을 동일한 화면 구조로 표시함
  *
  * @author HanWon.Jang
  * @param props 독후감 목록 표시 데이터와 사용자 동작 처리 함수
@@ -126,7 +126,7 @@ export default function ReportListView({
     && statusOptions !== undefined
     && onStatusChange !== undefined;
 
-  // 공개 목록과 모임 회차 목록이 공유하는 화면 구조를 반환한다
+  // 공개 목록과 모임 회차 목록이 공유하는 화면 구조를 반환함
   return (
     <>
       <main className={styles.page}>
@@ -245,7 +245,7 @@ export default function ReportListView({
                             ? "icon-star-rate-half"
                             : "icon-star-rate-empty";
 
-                        // 현재 별점 값에 대응하는 별 아이콘을 반환한다
+                        // 현재 별점 값에 대응하는 별 아이콘을 반환함
                         return (
                           <img
                             className={styles.reportRatingIcon}

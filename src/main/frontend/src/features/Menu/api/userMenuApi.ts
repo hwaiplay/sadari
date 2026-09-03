@@ -17,7 +17,7 @@ export type UserMenuData = {
 };
 
 /**
- * 현재 URL의 메뉴명과 햄버거에 노출할 사용자 메뉴 목록을 함께 조회합니다.
+ * 현재 URL의 메뉴명과 햄버거에 노출할 사용자 메뉴 목록을 함께 조회함
  *
  * @author HanWon.Jang
  * @param menuUrlx 브라우저의 현재 pathname
@@ -32,7 +32,7 @@ export const getUserMenuApi = async (menuUrlx: string) => {
 };
 
 /**
- * 기준 화면 아래의 노출 가능한 사용자 메뉴 트리를 조회합니다.
+ * 기준 화면 아래의 노출 가능한 사용자 메뉴 트리를 조회함
  *
  * @author HanWon.Jang
  * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname

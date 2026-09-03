@@ -35,7 +35,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : ReplyServiceImplTest
  * author         : HanWon.Jang
  * date           : 2026-07-31
- * description    : 댓글 등록 알림과 본인 댓글 수정 및 삭제 처리를 검증한다
+ * description    : 댓글 등록 알림과 본인 댓글 수정 및 삭제 처리를 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -75,23 +75,23 @@ class ReplyServiceImplTest {
     private ReplyServiceImpl replyService;
 
     /**
-     * 댓글 등록 서비스의 의존 객체를 연결한다.
+     * 댓글 등록 서비스의 의존 객체를 연결함
      *
      * @author Hanwon.Jang
      */
     @BeforeEach
     void setUp() {
 
-        // 비속어 차단 응답의 다국어 메시지와 치환값을 실제 프로퍼티 기준으로 검증할 메시지 소스를 생성한다
+        // 비속어 차단 응답의 다국어 메시지와 치환값을 실제 프로퍼티 기준으로 검증할 메시지 소스를 생성함
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        // 서버 공통 메시지 프로퍼티를 테스트 메시지 조회 기준으로 설정한다
+        // 서버 공통 메시지 프로퍼티를 테스트 메시지 조회 기준으로 설정함
         messageSource.setBasename("messages");
-        // 한글 메시지 원문이 손상되지 않도록 프로퍼티 파일 인코딩을 설정한다
+        // 한글 메시지 원문이 손상되지 않도록 프로퍼티 파일 인코딩을 설정함
         messageSource.setDefaultEncoding("UTF-8");
-        // ResultData 실패 응답이 실제 공통 메시지 소스를 사용하도록 정적 조회 객체를 초기화한다
+        // ResultData 실패 응답이 실제 공통 메시지 소스를 사용하도록 정적 조회 객체를 초기화함
         new MessageUtils().setMessageSource(messageSource);
 
-        // 댓글 등록 단위 테스트 대상을 생성한다
+        // 댓글 등록 단위 테스트 대상을 생성함
         replyService = new ReplyServiceImpl(
                 replyMapper
               , badWordDetectionService
@@ -102,38 +102,38 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 댓글을 저장한 뒤 독후감 작성자에게 REPLY_REPORT 템플릿 알림을 전송하는지 검증한다.
+     * 댓글을 저장한 뒤 독후감 작성자에게 REPLY_REPORT 템플릿 알림을 전송하는지 검증함
      *
      * @author Hanwon.Jang
      */
     @Test
     void setReplySendsAlim() {
 
-        // 등록할 댓글 요청을 생성한다
+        // 등록할 댓글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 독후감 번호를 댓글 요청에 설정한다
+        // 독후감 번호를 댓글 요청에 설정함
         replyDto.setReptNumb(157L);
-        // 생성될 댓글 번호를 댓글 요청에 설정한다
+        // 생성될 댓글 번호를 댓글 요청에 설정함
         replyDto.setReplNumb(8L);
-        // 댓글 내용을 댓글 요청에 설정한다
+        // 댓글 내용을 댓글 요청에 설정함
         replyDto.setReplCntn("좋은 글 잘 읽었습니다.");
 
-        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("좋은 글 잘 읽었습니다."))
                 .thenReturn(Optional.empty());
-        // 댓글 한 건이 저장되는 조건을 구성한다
+        // 댓글 한 건이 저장되는 조건을 구성함
         when(replyMapper.setReply(replyDto)).thenReturn(1);
-        // 독후감 작성자와 켜진 댓글 알림 설정이 조회되는 조건을 구성한다
+        // 독후감 작성자와 켜진 댓글 알림 설정이 조회되는 조건을 구성함
         ReplyDto reportAlim = new ReplyDto();
-        // 알림 수신자 독후감 작성자 번호를 설정한다
+        // 알림 수신자 독후감 작성자 번호를 설정함
         reportAlim.setTargetUserNumb(31L);
-        // 독후감 댓글 알림을 켠 상태로 설정한다
+        // 독후감 댓글 알림을 켠 상태로 설정함
         reportAlim.setReplyAlimYsno(Constant.COMM_YES);
-        // 댓글 알림 수신자와 설정 조회 결과를 구성한다
+        // 댓글 알림 수신자와 설정 조회 결과를 구성함
         when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
-        // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
+        // 댓글 작성자의 닉네임이 조회되는 조건을 구성함
         when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
-        // 알림 저장이 정상 처리되는 조건을 구성한다
+        // 알림 저장이 정상 처리되는 조건을 구성함
         when(alimService.sendUserAlim(
                 eq(44L)
               , eq(31L)
@@ -145,20 +145,20 @@ class ReplyServiceImplTest {
               , any()
         )).thenReturn(ResultData.success());
 
-        // 댓글을 등록한다
+        // 댓글을 등록함
         ResultData result = replyService.setReply(44L, replyDto);
 
-        // 댓글 등록 성공 응답을 확인한다
+        // 댓글 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 등록된 댓글 번호를 확인한다
+        // 등록된 댓글 번호를 확인함
         assertEquals(8L, result.getData());
-        // 댓글 알림 템플릿 상수가 등록된 템플릿 코드와 일치하는지 확인한다
+        // 댓글 알림 템플릿 상수가 등록된 템플릿 코드와 일치하는지 확인함
         assertEquals("REPLY_REPORT", Constant.ALIM_TEMP_CODE_REPLY_REPORT);
 
         @SuppressWarnings("unchecked")
-        // 알림 문구 치환값을 확인할 캡처 객체를 생성한다
+        // 알림 문구 치환값을 확인할 캡처 객체를 생성함
         ArgumentCaptor<Map<String, Object>> replaceMapCaptor = ArgumentCaptor.forClass(Map.class);
-        // 독후감 작성자에게 댓글 등록 알림이 전송되는지 확인한다
+        // 독후감 작성자에게 댓글 등록 알림이 전송되는지 확인함
         verify(alimService).sendUserAlim(
                 eq(44L)
               , eq(31L)
@@ -169,57 +169,57 @@ class ReplyServiceImplTest {
               , eq(8L)
               , replaceMapCaptor.capture()
         );
-        // 알림 문구에 댓글 작성자 닉네임이 전달되는지 확인한다
+        // 알림 문구에 댓글 작성자 닉네임이 전달되는지 확인함
         assertEquals("댓글작성자", replaceMapCaptor.getValue().get("userName"));
     }
 
     /**
-     * 비팔로워도 현재 프로필 사진에 댓글을 등록하고 해당 사진 번호를 알림 대상으로 전달하는지 검증한다.
+     * 비팔로워도 현재 프로필 사진에 댓글을 등록하고 해당 사진 번호를 알림 대상으로 전달하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setImageReplyUsesLink() {
 
-        // 등록할 프로필 사진 댓글 요청을 생성한다
+        // 등록할 프로필 사진 댓글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 댓글 대상 유형을 프로필 사진으로 설정한다
+        // 댓글 대상 유형을 프로필 사진으로 설정함
         replyDto.setTagtType(Constant.LIKE_TARGET_PROFILE_IMAGE);
-        // 댓글 대상 프로필 파일 번호를 설정한다
+        // 댓글 대상 프로필 파일 번호를 설정함
         replyDto.setTagtNumb(157L);
-        // 생성될 댓글 번호를 요청에 설정한다
+        // 생성될 댓글 번호를 요청에 설정함
         replyDto.setReplNumb(8L);
-        // 댓글 내용을 요청에 설정한다
+        // 댓글 내용을 요청에 설정함
         replyDto.setReplCntn("새 프로필 사진이 멋져요.");
 
-        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("새 프로필 사진이 멋져요."))
                 .thenReturn(Optional.empty());
-        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성한다
+        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성함
         when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(1);
-        // 사진 댓글 한 건이 저장되는 조건을 구성한다
+        // 사진 댓글 한 건이 저장되는 조건을 구성함
         when(replyMapper.setReply(replyDto)).thenReturn(1);
-        // 프로필 사진 소유자와 알림 템플릿 정보를 생성한다
+        // 프로필 사진 소유자와 알림 템플릿 정보를 생성함
         ReplyDto imageAlim = new ReplyDto();
-        // 알림 수신자인 사진 소유자 번호를 설정한다
+        // 알림 수신자인 사진 소유자 번호를 설정함
         imageAlim.setTargetUserNumb(31L);
-        // 사진 댓글 알림을 발송할 수 있도록 알림 상태를 설정한다
+        // 사진 댓글 알림을 발송할 수 있도록 알림 상태를 설정함
         imageAlim.setReplyAlimYsno(Constant.COMM_YES);
-        // 프로필 사진 댓글 템플릿 코드를 설정한다
+        // 프로필 사진 댓글 템플릿 코드를 설정함
         imageAlim.setAlimTempCode(Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE);
-        // Mapper가 반환한 현재 프로필 사진 번호를 알림 이동 대상으로 설정한다
+        // Mapper가 반환한 현재 프로필 사진 번호를 알림 이동 대상으로 설정함
         imageAlim.setAlimTagtNumb(157L);
-        // 사진 댓글 알림 수신자 조회 결과를 구성한다
+        // 사진 댓글 알림 수신자 조회 결과를 구성함
         when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(imageAlim);
-        // 댓글 작성자의 닉네임이 조회되는 조건을 구성한다
+        // 댓글 작성자의 닉네임이 조회되는 조건을 구성함
         when(tokenRedisService.getUserNick(44L)).thenReturn("댓글작성자");
 
-        // 현재 프로필 사진에 댓글을 등록한다
+        // 현재 프로필 사진에 댓글을 등록함
         ResultData result = replyService.setReply(44L, replyDto);
 
-        // 프로필 사진 댓글 등록 성공 응답을 확인한다
+        // 프로필 사진 댓글 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 사진 알림에 해당 프로필 사진 번호가 이동 대상으로 전달되는지 확인한다
+        // 사진 알림에 해당 프로필 사진 번호가 이동 대상으로 전달되는지 확인함
         verify(alimService).sendUserAlim(
                 eq(44L)
               , eq(31L)
@@ -232,31 +232,31 @@ class ReplyServiceImplTest {
         );
     }
 
-    /** 비팔로워도 정상 이용 사용자의 현재 사진 댓글 목록을 조회할 수 있는지 검증한다. */
+    /** 비팔로워도 정상 이용 사용자의 현재 사진 댓글 목록을 조회할 수 있는지 검증함 */
     @Test
     void getImageRepliesAllowed() {
-        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성한다
+        // 팔로우 여부와 관계없이 정상 이용 사용자의 현재 사진으로 확인되는 조건을 구성함
         when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(1);
-        // 조회할 댓글이 없는 현재 사진 조건을 구성한다
+        // 조회할 댓글이 없는 현재 사진 조건을 구성함
         when(replyMapper.getReplyList(any(ReplyDto.class))).thenReturn(List.of());
 
-        // 비팔로워가 프로필 사진 댓글 목록을 조회한다
+        // 비팔로워가 프로필 사진 댓글 목록을 조회함
         ResultData result = replyService.getReplyList(
                 44L, Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, null, 1);
 
-        // 현재 사진이면 팔로우 관계 없이 댓글 목록 조회가 성공하는지 확인한다
+        // 현재 사진이면 팔로우 관계 없이 댓글 목록 조회가 성공하는지 확인함
         assertEquals(200, result.getCode());
         verify(replyMapper).getReplyList(any(ReplyDto.class));
     }
 
-    /** 교체됐거나 비활성 소유자의 사진에는 댓글을 등록할 수 없는지 검증한다. */
+    /** 교체됐거나 비활성 소유자의 사진에는 댓글을 등록할 수 없는지 검증함 */
     @Test
     void setOldImageReplyDenied() {
         ReplyDto replyDto = new ReplyDto();
         replyDto.setTagtType(Constant.LIKE_TARGET_BACKGROUND_IMAGE);
         replyDto.setTagtNumb(157L);
         replyDto.setReplCntn("접근할 수 없는 댓글");
-        // 현재 사진과 활성 소유자 조건을 만족하지 않는 대상 조회 결과를 구성한다
+        // 현재 사진과 활성 소유자 조건을 만족하지 않는 대상 조회 결과를 구성함
         when(replyMapper.getReplyTargetAccessCount(any(ReplyDto.class))).thenReturn(0);
 
         ResultData result = replyService.setReply(44L, replyDto);
@@ -267,57 +267,57 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 답글 등록 시 콘텐츠 소유자와 부모 댓글 작성자에게 중복 없이 각각 알림을 전송하는지 검증한다.
+     * 답글 등록 시 콘텐츠 소유자와 부모 댓글 작성자에게 중복 없이 각각 알림을 전송하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setChildReplySendsAlims() {
-        // 부모 댓글에 등록할 답글 요청을 생성한다
+        // 부모 댓글에 등록할 답글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 답글 대상 독후감 번호를 설정한다
+        // 답글 대상 독후감 번호를 설정함
         replyDto.setReptNumb(157L);
-        // 부모 댓글 번호를 설정한다
+        // 부모 댓글 번호를 설정함
         replyDto.setUperNumb(7L);
-        // 생성될 답글 번호를 설정한다
+        // 생성될 답글 번호를 설정함
         replyDto.setReplNumb(8L);
-        // 답글 내용을 설정한다
+        // 답글 내용을 설정함
         replyDto.setReplCntn("저도 같은 생각이에요.");
 
-        // 답글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 답글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("저도 같은 생각이에요."))
                 .thenReturn(Optional.empty());
-        // 답글 한 건이 저장되는 조건을 구성한다
+        // 답글 한 건이 저장되는 조건을 구성함
         when(replyMapper.setReply(replyDto)).thenReturn(1);
-        // 콘텐츠 소유자와 부모 댓글 작성자가 서로 다른 알림 대상을 생성한다
+        // 콘텐츠 소유자와 부모 댓글 작성자가 서로 다른 알림 대상을 생성함
         ReplyDto reportAlim = new ReplyDto();
-        // 독후감 소유자 번호를 설정한다
+        // 독후감 소유자 번호를 설정함
         reportAlim.setTargetUserNumb(31L);
-        // 부모 댓글 작성자 번호를 설정한다
+        // 부모 댓글 작성자 번호를 설정함
         reportAlim.setParentUserNumb(32L);
-        // 독후감 소유자의 댓글 알림을 켠 상태로 설정한다
+        // 독후감 소유자의 댓글 알림을 켠 상태로 설정함
         reportAlim.setReplyAlimYsno(Constant.COMM_YES);
-        // 댓글 알림 수신자 조회 결과를 구성한다
+        // 댓글 알림 수신자 조회 결과를 구성함
         when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
-        // 답글 작성자의 닉네임이 조회되는 조건을 구성한다
+        // 답글 작성자의 닉네임이 조회되는 조건을 구성함
         when(tokenRedisService.getUserNick(44L)).thenReturn("답글작성자");
 
-        // 부모 댓글에 답글을 등록한다
+        // 부모 댓글에 답글을 등록함
         ResultData result = replyService.setReply(44L, replyDto);
 
-        // 답글 등록 성공 응답을 확인한다
+        // 답글 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 콘텐츠 소유자에게 독후감 댓글 목록 이동 알림이 발송되는지 확인한다
+        // 콘텐츠 소유자에게 독후감 댓글 목록 이동 알림이 발송되는지 확인함
         verify(alimService).sendUserAlim(
                 eq(44L), eq(31L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_REPORT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
-        // 부모 댓글 작성자에게 관계와 무관한 공통 대댓글 알림이 발송되는지 확인한다
+        // 부모 댓글 작성자에게 관계와 무관한 공통 대댓글 알림이 발송되는지 확인함
         verify(alimService).sendUserAlim(
                 eq(44L), eq(32L), eq(Constant.ALIM_SITU_REPLY), eq(Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT)
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
-    /** 비팔로워가 작성한 독후감 댓글의 답글은 공개 독후감으로 연결되는지 검증한다. */
+    /** 비팔로워가 작성한 독후감 댓글의 답글은 공개 독후감으로 연결되는지 검증함 */
     @Test
     void replyToNonFollowerPublic() {
         ReplyDto replyDto = new ReplyDto();
@@ -342,7 +342,7 @@ class ReplyServiceImplTest {
               , eq(Constant.LIKE_TARGET_REPORT), eq(157L), eq(8L), any());
     }
 
-    /** 독후감 소유자의 댓글에 답글이 달리면 소유자 상세 경로의 직접 답글 템플릿을 쓰는지 검증한다. */
+    /** 독후감 소유자의 댓글에 답글이 달리면 소유자 상세 경로의 직접 답글 템플릿을 쓰는지 검증함 */
     @Test
     void replyToOwnerDetail() {
         ReplyDto replyDto = new ReplyDto();
@@ -368,282 +368,282 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 독후감 작성자가 댓글 알림을 끈 경우 댓글은 저장하고 알림은 생성하지 않는지 검증한다.
+     * 독후감 작성자가 댓글 알림을 끈 경우 댓글은 저장하고 알림은 생성하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setReplySkipsDisabledAlim() {
-        // 등록할 댓글 요청을 생성한다
+        // 등록할 댓글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 독후감 번호를 댓글 요청에 설정한다
+        // 독후감 번호를 댓글 요청에 설정함
         replyDto.setReptNumb(157L);
-        // 생성될 댓글 번호를 댓글 요청에 설정한다
+        // 생성될 댓글 번호를 댓글 요청에 설정함
         replyDto.setReplNumb(9L);
-        // 댓글 내용을 댓글 요청에 설정한다
+        // 댓글 내용을 댓글 요청에 설정함
         replyDto.setReplCntn("알림 없이 저장됩니다.");
 
-        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("알림 없이 저장됩니다."))
                 .thenReturn(Optional.empty());
-        // 댓글 한 건이 저장되는 조건을 구성한다
+        // 댓글 한 건이 저장되는 조건을 구성함
         when(replyMapper.setReply(replyDto)).thenReturn(1);
-        // 댓글 알림을 끈 독후감 작성자 조회 결과를 생성한다
+        // 댓글 알림을 끈 독후감 작성자 조회 결과를 생성함
         ReplyDto reportAlim = new ReplyDto();
-        // 알림 수신자 독후감 작성자 번호를 설정한다
+        // 알림 수신자 독후감 작성자 번호를 설정함
         reportAlim.setTargetUserNumb(31L);
-        // 독후감 댓글 알림을 끈 상태로 설정한다
+        // 독후감 댓글 알림을 끈 상태로 설정함
         reportAlim.setReplyAlimYsno(Constant.COMM_NO);
-        // 댓글 알림 수신자와 설정 조회 결과를 구성한다
+        // 댓글 알림 수신자와 설정 조회 결과를 구성함
         when(replyMapper.getReplyReportAlimDtl(any(ReplyDto.class))).thenReturn(reportAlim);
 
-        // 댓글 알림을 끈 독후감에 댓글을 등록한다
+        // 댓글 알림을 끈 독후감에 댓글을 등록함
         ResultData result = replyService.setReply(44L, replyDto);
 
-        // 댓글 등록 자체는 성공하는지 확인한다
+        // 댓글 등록 자체는 성공하는지 확인함
         assertEquals(200, result.getCode());
-        // 알림 저장 서비스가 호출되지 않는지 확인한다
+        // 알림 저장 서비스가 호출되지 않는지 확인함
         verify(alimService, never()).sendUserAlim(
                 any(), any(), any(), any(), any(), any(), any(), any());
-        // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인한다
+        // 알림이 꺼진 경우 발신자 닉네임도 조회하지 않는지 확인함
         verifyNoInteractions(tokenRedisService);
     }
 
     /**
-     * 댓글 등록 내용에서 비속어가 탐지되면 데이터 저장과 알림 발송을 중단하는지 검증한다.
+     * 댓글 등록 내용에서 비속어가 탐지되면 데이터 저장과 알림 발송을 중단하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void setReplyRejectsBadWord() {
 
-        // 비속어 검증 대상 댓글 요청을 생성한다
+        // 비속어 검증 대상 댓글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 독후감 번호를 댓글 요청에 설정한다
+        // 독후감 번호를 댓글 요청에 설정함
         replyDto.setReptNumb(157L);
-        // 비속어 우회 표현이 포함된 내용을 댓글 요청에 설정한다
+        // 비속어 우회 표현이 포함된 내용을 댓글 요청에 설정함
         replyDto.setReplCntn("시이이이발");
 
-        // 공통 비속어 필터가 우회 표현에서 비속어를 탐지하는 조건을 구성한다
+        // 공통 비속어 필터가 우회 표현에서 비속어를 탐지하는 조건을 구성함
         when(badWordDetectionService.findBadWord("시이이이발"))
                 .thenReturn(Optional.of("시발"));
 
-        // 비속어가 포함된 댓글 등록을 요청한다
+        // 비속어가 포함된 댓글 등록을 요청함
         ResultData result = replyService.setReply(44L, replyDto);
 
-        // 비속어 포함 공통 실패 코드를 확인한다
+        // 비속어 포함 공통 실패 코드를 확인함
         assertEquals(ResultEnum.COMMON_BAD_WORD_INCLUDED.getCode(), result.getCode());
-        // 차단 응답에 탐지된 비속어가 사용자 메시지 치환값으로 전달되는지 확인한다
+        // 차단 응답에 탐지된 비속어가 사용자 메시지 치환값으로 전달되는지 확인함
         assertTrue(result.getMessage().contains("시발"));
-        // 비속어가 탐지된 댓글은 DB 저장과 알림 처리까지 진행되지 않는지 확인한다
+        // 비속어가 탐지된 댓글은 DB 저장과 알림 처리까지 진행되지 않는지 확인함
         verifyNoInteractions(replyMapper, alimService, tokenRedisService);
     }
 
     /**
-     * 본인 댓글의 공백을 정규화한 내용을 댓글 식별값과 함께 수정하는지 검증한다.
+     * 본인 댓글의 공백을 정규화한 내용을 댓글 식별값과 함께 수정하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void uptReplyNormalizesContent() {
 
-        // 수정할 댓글 내용을 담은 요청을 생성한다
+        // 수정할 댓글 내용을 담은 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 앞뒤 공백이 포함된 변경 내용을 댓글 요청에 설정한다
+        // 앞뒤 공백이 포함된 변경 내용을 댓글 요청에 설정함
         replyDto.setReplCntn("  수정한 댓글입니다.  ");
-        // 다른 탭의 선행 수정 여부를 비교할 원본 해시를 설정한다
+        // 다른 탭의 선행 수정 여부를 비교할 원본 해시를 설정함
         replyDto.setEditVersion("original-version");
 
-        // 정규화한 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 정규화한 댓글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("수정한 댓글입니다."))
                 .thenReturn(Optional.empty());
-        // 본인 댓글 한 건이 수정되는 조건을 구성한다
+        // 본인 댓글 한 건이 수정되는 조건을 구성함
         when(replyMapper.uptReply(replyDto)).thenReturn(1);
 
-        // 로그인 사용자가 작성한 댓글을 수정한다
+        // 로그인 사용자가 작성한 댓글을 수정함
         ResultData result = replyService.uptReply(44L, 157L, 8L, replyDto);
 
-        // 댓글 수정 성공 응답을 확인한다
+        // 댓글 수정 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 수정된 댓글 번호를 확인한다
+        // 수정된 댓글 번호를 확인함
         assertEquals(8L, result.getData());
-        // URL에서 전달한 독후감 번호가 수정 조건에 설정됐는지 확인한다
+        // URL에서 전달한 독후감 번호가 수정 조건에 설정됐는지 확인함
         assertEquals(157L, replyDto.getReptNumb());
-        // URL에서 전달한 댓글 번호가 수정 조건에 설정됐는지 확인한다
+        // URL에서 전달한 댓글 번호가 수정 조건에 설정됐는지 확인함
         assertEquals(8L, replyDto.getReplNumb());
-        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인한다
+        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인함
         assertEquals(44L, replyDto.getUserNumb());
-        // 정규화한 댓글 내용이 변경값으로 설정됐는지 확인한다
+        // 정규화한 댓글 내용이 변경값으로 설정됐는지 확인함
         assertEquals("수정한 댓글입니다.", replyDto.getReplCntn());
-        // 작성자와 미삭제 및 정상 이용 계정 조건을 포함하는 Mapper가 호출됐는지 확인한다
+        // 작성자와 미삭제 및 정상 이용 계정 조건을 포함하는 Mapper가 호출됐는지 확인함
         verify(replyMapper).uptReply(replyDto);
     }
 
     /**
-     * 댓글 수정 내용에서 비속어가 탐지되면 기존 댓글의 DB 변경을 중단하는지 검증한다.
+     * 댓글 수정 내용에서 비속어가 탐지되면 기존 댓글의 DB 변경을 중단하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void uptReplyRejectsBadWord() {
 
-        // 비속어 검증 대상 댓글 수정 요청을 생성한다
+        // 비속어 검증 대상 댓글 수정 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 특수문자로 우회한 비속어가 포함된 변경 내용을 설정한다
+        // 특수문자로 우회한 비속어가 포함된 변경 내용을 설정함
         replyDto.setReplCntn("시*발");
-        // 비속어 검증까지 도달하도록 유효한 원본 해시를 설정한다
+        // 비속어 검증까지 도달하도록 유효한 원본 해시를 설정함
         replyDto.setEditVersion("original-version");
 
-        // 공통 비속어 필터가 특수문자 우회 표현에서 비속어를 탐지하는 조건을 구성한다
+        // 공통 비속어 필터가 특수문자 우회 표현에서 비속어를 탐지하는 조건을 구성함
         when(badWordDetectionService.findBadWord("시*발"))
                 .thenReturn(Optional.of("시발"));
 
-        // 비속어가 포함된 본인 댓글 수정을 요청한다
+        // 비속어가 포함된 본인 댓글 수정을 요청함
         ResultData result = replyService.uptReply(44L, 157L, 8L, replyDto);
 
-        // 비속어 포함 공통 실패 코드를 확인한다
+        // 비속어 포함 공통 실패 코드를 확인함
         assertEquals(ResultEnum.COMMON_BAD_WORD_INCLUDED.getCode(), result.getCode());
-        // 차단 응답에 탐지된 비속어가 사용자 메시지 치환값으로 전달되는지 확인한다
+        // 차단 응답에 탐지된 비속어가 사용자 메시지 치환값으로 전달되는지 확인함
         assertTrue(result.getMessage().contains("시발"));
-        // 비속어가 탐지된 댓글은 DB 수정까지 진행되지 않는지 확인한다
+        // 비속어가 탐지된 댓글은 DB 수정까지 진행되지 않는지 확인함
         verifyNoInteractions(replyMapper, alimService, tokenRedisService);
     }
 
     /**
-     * 다른 탭에서 먼저 수정한 댓글은 기존 원문을 덮어쓰지 않고 충돌로 반환하는지 검증한다.
+     * 다른 탭에서 먼저 수정한 댓글은 기존 원문을 덮어쓰지 않고 충돌로 반환하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void uptReplyReturnsConflict() {
-        // 선택 시점 원본 해시와 변경 내용을 담은 댓글 요청을 생성한다
+        // 선택 시점 원본 해시와 변경 내용을 담은 댓글 요청을 생성함
         ReplyDto replyDto = new ReplyDto();
-        // 변경할 안전한 댓글 내용을 설정한다
+        // 변경할 안전한 댓글 내용을 설정함
         replyDto.setReplCntn("수정할 댓글입니다.");
-        // 이미 오래된 상태가 된 원본 해시를 설정한다
+        // 이미 오래된 상태가 된 원본 해시를 설정함
         replyDto.setEditVersion("stale-version");
 
-        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성한다
+        // 댓글 내용에서 비속어가 검출되지 않는 조건을 구성함
         when(badWordDetectionService.findBadWord("수정할 댓글입니다."))
                 .thenReturn(Optional.empty());
-        // DB 내용 해시가 달라 수정 행이 없는 조건을 구성한다
+        // DB 내용 해시가 달라 수정 행이 없는 조건을 구성함
         when(replyMapper.uptReply(replyDto)).thenReturn(0);
 
-        // 오래된 원본 해시로 댓글 수정을 요청한다
+        // 오래된 원본 해시로 댓글 수정을 요청함
         ResultData result = replyService.uptReply(44L, 157L, 8L, replyDto);
 
-        // 다중 탭 선행 수정 전용 충돌 코드를 반환하는지 확인한다
+        // 다중 탭 선행 수정 전용 충돌 코드를 반환하는지 확인함
         assertEquals(ResultEnum.COMMON_EDIT_CONFLICT.getCode(), result.getCode());
-        // 원본을 덮어쓰지 않도록 조건부 수정 Mapper를 한 번만 호출했는지 확인한다
+        // 원본을 덮어쓰지 않도록 조건부 수정 Mapper를 한 번만 호출했는지 확인함
         verify(replyMapper).uptReply(replyDto);
     }
 
     /**
-     * 본인 댓글을 자식 답글 구조가 보존되는 논리 삭제 Mapper로 전달하는지 검증한다.
+     * 본인 댓글을 자식 답글 구조가 보존되는 논리 삭제 Mapper로 전달하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void delReplyMarksOwnedDeleted() {
 
-        // 댓글 삭제 조건을 검증할 캡처 객체를 생성한다
+        // 댓글 삭제 조건을 검증할 캡처 객체를 생성함
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
-        // 정상 이용 중인 본인 댓글 한 건이 삭제 상태로 전환되는 조건을 구성한다
+        // 정상 이용 중인 본인 댓글 한 건이 삭제 상태로 전환되는 조건을 구성함
         when(replyMapper.delReply(any(ReplyDto.class))).thenReturn(1);
 
-        // 로그인 사용자가 작성한 댓글을 삭제 상태로 전환한다
+        // 로그인 사용자가 작성한 댓글을 삭제 상태로 전환함
         ResultData result = replyService.delReply(44L, 157L, 8L);
 
-        // 댓글 삭제 성공 응답을 확인한다
+        // 댓글 삭제 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 삭제된 댓글 번호를 확인한다
+        // 삭제된 댓글 번호를 확인함
         assertEquals(8L, result.getData());
-        // Mapper에 전달된 복합 식별값과 작성자 조건을 확인한다
+        // Mapper에 전달된 복합 식별값과 작성자 조건을 확인함
         verify(replyMapper).delReply(replyDtoCaptor.capture());
-        // 삭제할 댓글의 독후감 번호가 조건에 설정됐는지 확인한다
+        // 삭제할 댓글의 독후감 번호가 조건에 설정됐는지 확인함
         assertEquals(157L, replyDtoCaptor.getValue().getReptNumb());
-        // 삭제할 댓글 번호가 조건에 설정됐는지 확인한다
+        // 삭제할 댓글 번호가 조건에 설정됐는지 확인함
         assertEquals(8L, replyDtoCaptor.getValue().getReplNumb());
-        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인한다
+        // 인증 사용자 번호가 소유자 조건에 설정됐는지 확인함
         assertEquals(44L, replyDtoCaptor.getValue().getUserNumb());
     }
 
     /**
-     * 정상 이용 사용자가 미삭제 댓글에 좋아요를 등록하면 작성자 알림과 최신 집계 상태를 반환하는지 검증한다.
+     * 정상 이용 사용자가 미삭제 댓글에 좋아요를 등록하면 작성자 알림과 최신 집계 상태를 반환하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void setReplyLikeReturnsDtl() {
 
-        // 좋아요 등록 요청 조건을 검증할 캡처 객체를 생성한다
+        // 좋아요 등록 요청 조건을 검증할 캡처 객체를 생성함
         ArgumentCaptor<ReplyDto> replyDtoCaptor = ArgumentCaptor.forClass(ReplyDto.class);
-        // 댓글 좋아요 알림을 받을 댓글 작성자 정보를 생성한다
+        // 댓글 좋아요 알림을 받을 댓글 작성자 정보를 생성함
         ReplyDto likeTarget = new ReplyDto();
-        // 알림 링크에 사용할 독후감 번호를 설정한다
+        // 알림 링크에 사용할 독후감 번호를 설정함
         likeTarget.setReptNumb(157L);
-        // 댓글의 원본 콘텐츠 유형을 독후감으로 설정한다
+        // 댓글의 원본 콘텐츠 유형을 독후감으로 설정함
         likeTarget.setTagtType(Constant.LIKE_TARGET_REPORT);
-        // 댓글의 원본 콘텐츠 번호를 설정한다
+        // 댓글의 원본 콘텐츠 번호를 설정함
         likeTarget.setTagtNumb(157L);
-        // 좋아요 대상 댓글 번호를 설정한다
+        // 좋아요 대상 댓글 번호를 설정함
         likeTarget.setReplNumb(8L);
-        // 좋아요 알림을 받을 댓글 작성자 번호를 설정한다
+        // 좋아요 알림을 받을 댓글 작성자 번호를 설정함
         likeTarget.setTargetUserNumb(31L);
-        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정한다
+        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정함
         likeTarget.setUserNick("좋아요사용자");
-        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성한다
+        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
-        // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성한다
+        // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성함
         when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
-        // 댓글 좋아요 등록 후 반환할 최신 상태를 생성한다
+        // 댓글 좋아요 등록 후 반환할 최신 상태를 생성함
         ReplyDto likeDetail = new ReplyDto();
-        // 좋아요 등록 후 집계 수를 설정한다
+        // 좋아요 등록 후 집계 수를 설정함
         likeDetail.setLikeCnt(3L);
-        // 현재 사용자의 좋아요 상태를 설정한다
+        // 현재 사용자의 좋아요 상태를 설정함
         likeDetail.setLikeYsno(Constant.COMM_YES);
-        // 등록 후 최신 댓글 좋아요 상태가 조회되는 조건을 구성한다
+        // 등록 후 최신 댓글 좋아요 상태가 조회되는 조건을 구성함
         when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(likeDetail);
 
-        // 로그인 사용자의 댓글 좋아요를 등록한다
+        // 로그인 사용자의 댓글 좋아요를 등록함
         ResultData result = replyService.setReplyLike(44L, 157L, 8L);
 
-        // 댓글 좋아요 등록 성공 응답을 확인한다
+        // 댓글 좋아요 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 독후감과 댓글 좋아요가 LIKE 상황 코드로 통합됐는지 확인한다
+        // 독후감과 댓글 좋아요가 LIKE 상황 코드로 통합됐는지 확인함
         assertEquals("LIKE", Constant.ALIM_SITU_LIKE);
-        // 독후감 댓글 좋아요 전용 템플릿 코드가 대상별 값인지 확인한다
+        // 독후감 댓글 좋아요 전용 템플릿 코드가 대상별 값인지 확인함
         assertEquals("REPLY_LIKE", Constant.ALIM_TEMP_CODE_REPLY_LIKE);
-        // 댓글 좋아요가 등록 Mapper에 전달됐는지 확인한다
+        // 댓글 좋아요가 등록 Mapper에 전달됐는지 확인함
         verify(replyMapper).setReplyLike(replyDtoCaptor.capture());
-        // 좋아요 주체 사용자 번호를 확인한다
+        // 좋아요 주체 사용자 번호를 확인함
         assertEquals(44L, replyDtoCaptor.getValue().getUserNumb());
-        // 좋아요 대상 독후감 번호를 확인한다
+        // 좋아요 대상 독후감 번호를 확인함
         assertEquals(157L, replyDtoCaptor.getValue().getReptNumb());
-        // 좋아요 대상 댓글 번호를 확인한다
+        // 좋아요 대상 댓글 번호를 확인함
         assertEquals(8L, replyDtoCaptor.getValue().getReplNumb());
-        // 댓글 좋아요 커밋 이후 처리할 알림 정보를 확인할 캡처 객체를 생성한다
+        // 댓글 좋아요 커밋 이후 처리할 알림 정보를 확인할 캡처 객체를 생성함
         ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
-        // 댓글 좋아요 저장 경로에서는 알림을 직접 보내지 않고 이벤트만 등록하는지 확인한다
+        // 댓글 좋아요 저장 경로에서는 알림을 직접 보내지 않고 이벤트만 등록하는지 확인함
         verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
-        // 댓글 좋아요 알림 수신자를 확인한다
+        // 댓글 좋아요 알림 수신자를 확인함
         assertEquals(31L, eventCaptor.getValue().getTargetUserNumb());
-        // 댓글 좋아요 전용 템플릿 코드를 확인한다
+        // 댓글 좋아요 전용 템플릿 코드를 확인함
         assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
-        // 댓글이 속한 독후감 번호를 알림 이동 대상으로 사용하는지 확인한다
+        // 댓글이 속한 독후감 번호를 알림 이동 대상으로 사용하는지 확인함
         assertEquals(157L, eventCaptor.getValue().getTagtNumb());
-        // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인한다
+        // 비동기 후처리에 좋아요 등록자 닉네임을 전달하는지 확인함
         assertEquals("좋아요사용자", eventCaptor.getValue().getSendUserNick());
-        // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인한다
+        // 댓글 좋아요 동기 경로에서 알림 저장 서비스를 호출하지 않는지 확인함
         verify(alimService, never()).sendUserAlim(
                 any(), any(), any(), any(), any(), any(), any(), any());
-        // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인한다
+        // 댓글 좋아요 알림은 로그인 Redis 닉네임 캐시에 의존하지 않는지 확인함
         verifyNoInteractions(tokenRedisService);
-        // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
+        // 서버가 조회한 최신 좋아요 상세 응답을 확인함
         assertEquals(likeDetail, result.getData());
     }
 
-    /** 팔로워가 작성한 독후감 댓글 좋아요는 피드 댓글로 연결되는지 검증한다. */
+    /** 팔로워가 작성한 독후감 댓글 좋아요는 피드 댓글로 연결되는지 검증함 */
     @Test
     void replyLikeFollowerFeed() {
         ReplyDto likeTarget = new ReplyDto();
@@ -666,7 +666,7 @@ class ReplyServiceImplTest {
         assertEquals(8L, eventCaptor.getValue().getReplyNumb());
     }
 
-    /** 비팔로워가 작성한 공개 독후감 댓글 좋아요는 공개 독후감으로 연결되는지 검증한다. */
+    /** 비팔로워가 작성한 공개 독후감 댓글 좋아요는 공개 독후감으로 연결되는지 검증함 */
     @Test
     void replyLikePublic() {
         ReplyDto likeTarget = new ReplyDto();
@@ -690,172 +690,172 @@ class ReplyServiceImplTest {
     }
 
     /**
-     * 프로필 사진 댓글 좋아요가 사진 전용 템플릿과 원본 사진 번호를 알림 이벤트에 전달하는지 검증한다.
+     * 프로필 사진 댓글 좋아요가 사진 전용 템플릿과 원본 사진 번호를 알림 이벤트에 전달하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void imageReplyLikeSends() {
-        // 프로필 사진 댓글 좋아요 알림 대상 정보를 생성한다
+        // 프로필 사진 댓글 좋아요 알림 대상 정보를 생성함
         ReplyDto likeTarget = new ReplyDto();
-        // 댓글의 원본 콘텐츠 유형을 프로필 사진으로 설정한다
+        // 댓글의 원본 콘텐츠 유형을 프로필 사진으로 설정함
         likeTarget.setTagtType(Constant.LIKE_TARGET_PROFILE_IMAGE);
-        // 댓글의 원본 프로필 사진 번호를 설정한다
+        // 댓글의 원본 프로필 사진 번호를 설정함
         likeTarget.setTagtNumb(157L);
-        // 좋아요 대상 댓글 번호를 설정한다
+        // 좋아요 대상 댓글 번호를 설정함
         likeTarget.setReplNumb(8L);
-        // 좋아요 알림을 받을 댓글 작성자 번호를 설정한다
+        // 좋아요 알림을 받을 댓글 작성자 번호를 설정함
         likeTarget.setTargetUserNumb(31L);
-        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정한다
+        // 대상 검증 SQL에서 함께 조회할 좋아요 등록자 닉네임을 설정함
         likeTarget.setUserNick("좋아요사용자");
-        // 정상 이용 사용자가 접근할 수 있는 현재 사진 댓글 조건을 구성한다
+        // 정상 이용 사용자가 접근할 수 있는 현재 사진 댓글 조건을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
-        // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성한다
+        // 신규 댓글 좋아요 한 건이 등록되는 조건을 구성함
         when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
-        // 등록 후 반환할 최신 좋아요 상태를 구성한다
+        // 등록 후 반환할 최신 좋아요 상태를 구성함
         when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(new ReplyDto());
 
-        // 현재 프로필 사진 댓글에 좋아요를 등록한다
+        // 현재 프로필 사진 댓글에 좋아요를 등록함
         ResultData result = replyService.setReplyLike(
                 44L, Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, 8L);
 
-        // 프로필 사진 댓글 좋아요 등록 성공 응답을 확인한다
+        // 프로필 사진 댓글 좋아요 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 커밋 이후 알림 이벤트를 확인할 캡처 객체를 생성한다
+        // 커밋 이후 알림 이벤트를 확인할 캡처 객체를 생성함
         ArgumentCaptor<LikeAlimEvent> eventCaptor = ArgumentCaptor.forClass(LikeAlimEvent.class);
-        // 댓글 좋아요 알림 이벤트가 등록됐는지 확인한다
+        // 댓글 좋아요 알림 이벤트가 등록됐는지 확인함
         verify(likeAlimPublisher).setLikeAlim(eventCaptor.capture());
-        // 프로필 사진 댓글 좋아요도 공통 댓글 좋아요 템플릿을 사용하는지 확인한다
+        // 프로필 사진 댓글 좋아요도 공통 댓글 좋아요 템플릿을 사용하는지 확인함
         assertEquals(Constant.ALIM_TEMP_CODE_REPLY_LIKE, eventCaptor.getValue().getTempCode());
-        // 클릭 시점에 사진 접근 관계를 계산할 수 있도록 원본 유형을 전달하는지 확인한다
+        // 클릭 시점에 사진 접근 관계를 계산할 수 있도록 원본 유형을 전달하는지 확인함
         assertEquals(Constant.LIKE_TARGET_PROFILE_IMAGE, eventCaptor.getValue().getTagtType());
-        // 원본 프로필 사진 번호를 알림 이동 대상으로 사용하는지 확인한다
+        // 원본 프로필 사진 번호를 알림 이동 대상으로 사용하는지 확인함
         assertEquals(157L, eventCaptor.getValue().getTagtNumb());
-        // 알림에서 강조할 댓글 번호를 확인한다
+        // 알림에서 강조할 댓글 번호를 확인함
         assertEquals(8L, eventCaptor.getValue().getReplyNumb());
     }
 
     /**
-     * 정상 이용 사용자가 미삭제 댓글의 좋아요를 취소하면 최신 집계 상태를 반환하는지 검증한다.
+     * 정상 이용 사용자가 미삭제 댓글의 좋아요를 취소하면 최신 집계 상태를 반환하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void delReplyLikeReturnsDtl() {
 
-        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글 조건을 생성한다
+        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글 조건을 생성함
         ReplyDto likeTarget = new ReplyDto();
-        // 좋아요 취소 대상 댓글 작성자 번호를 설정한다
+        // 좋아요 취소 대상 댓글 작성자 번호를 설정함
         likeTarget.setTargetUserNumb(31L);
-        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성한다
+        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
-        // 댓글 좋아요 취소 후 반환할 최신 상태를 생성한다
+        // 댓글 좋아요 취소 후 반환할 최신 상태를 생성함
         ReplyDto likeDetail = new ReplyDto();
-        // 좋아요 취소 후 집계 수를 설정한다
+        // 좋아요 취소 후 집계 수를 설정함
         likeDetail.setLikeCnt(2L);
-        // 현재 사용자의 좋아요 취소 상태를 설정한다
+        // 현재 사용자의 좋아요 취소 상태를 설정함
         likeDetail.setLikeYsno(Constant.COMM_NO);
-        // 취소 후 최신 댓글 좋아요 상태가 조회되는 조건을 구성한다
+        // 취소 후 최신 댓글 좋아요 상태가 조회되는 조건을 구성함
         when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(likeDetail);
 
-        // 로그인 사용자의 댓글 좋아요를 취소한다
+        // 로그인 사용자의 댓글 좋아요를 취소함
         ResultData result = replyService.delReplyLike(44L, 157L, 8L);
 
-        // 댓글 좋아요 취소 성공 응답을 확인한다
+        // 댓글 좋아요 취소 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 현재 사용자의 댓글 좋아요가 삭제 Mapper에 전달됐는지 확인한다
+        // 현재 사용자의 댓글 좋아요가 삭제 Mapper에 전달됐는지 확인함
         verify(replyMapper).delReplyLike(any(ReplyDto.class));
-        // 좋아요 취소는 기존 알림 삭제나 신규 푸시를 만들지 않는지 확인한다
+        // 좋아요 취소는 기존 알림 삭제나 신규 푸시를 만들지 않는지 확인함
         verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
-        // 서버가 조회한 최신 좋아요 상세 응답을 확인한다
+        // 서버가 조회한 최신 좋아요 상세 응답을 확인함
         assertEquals(likeDetail, result.getData());
     }
 
     /**
-     * 비활성 계정 또는 삭제 댓글처럼 접근할 수 없는 대상에는 좋아요 변경을 차단하는지 검증한다.
+     * 비활성 계정 또는 삭제 댓글처럼 접근할 수 없는 대상에는 좋아요 변경을 차단하는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void setReplyLikeRejectsTarget() {
 
-        // 정상 이용 사용자와 미삭제 댓글 조건을 만족하지 않는 요청을 구성한다
+        // 정상 이용 사용자와 미삭제 댓글 조건을 만족하지 않는 요청을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(null);
 
-        // 접근할 수 없는 댓글에 좋아요 등록을 요청한다
+        // 접근할 수 없는 댓글에 좋아요 등록을 요청함
         ResultData result = replyService.setReplyLike(44L, 157L, 8L);
 
-        // 접근 거부 공통 실패 코드를 확인한다
+        // 접근 거부 공통 실패 코드를 확인함
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
-        // 대상 검증 이후 좋아요 등록이나 상세 조회가 호출되지 않는지 확인한다
+        // 대상 검증 이후 좋아요 등록이나 상세 조회가 호출되지 않는지 확인함
         verify(replyMapper).getReplyLikeTarget(any(ReplyDto.class));
     }
 
     /**
-     * 이미 등록된 댓글 좋아요의 멱등 요청에는 알림을 다시 생성하지 않는지 검증한다.
+     * 이미 등록된 댓글 좋아요의 멱등 요청에는 알림을 다시 생성하지 않는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void setReplyLikeNoRenotify() {
 
-        // 이미 좋아요가 등록된 미삭제 댓글과 작성자 정보를 생성한다
+        // 이미 좋아요가 등록된 미삭제 댓글과 작성자 정보를 생성함
         ReplyDto likeTarget = new ReplyDto();
-        // 기존 좋아요 대상 댓글 작성자 번호를 설정한다
+        // 기존 좋아요 대상 댓글 작성자 번호를 설정함
         likeTarget.setTargetUserNumb(31L);
-        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성한다
+        // 정상 이용 사용자가 접근할 수 있는 미삭제 댓글과 작성자 조건을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
-        // 중복 좋아요가 INSERT IGNORE에 의해 추가되지 않는 조건을 구성한다
+        // 중복 좋아요가 INSERT IGNORE에 의해 추가되지 않는 조건을 구성함
         when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(0);
-        // 멱등 요청 후 반환할 기존 좋아요 상태를 생성한다
+        // 멱등 요청 후 반환할 기존 좋아요 상태를 생성함
         ReplyDto likeDetail = new ReplyDto();
-        // 기존 좋아요 상태를 설정한다
+        // 기존 좋아요 상태를 설정함
         likeDetail.setLikeYsno(Constant.COMM_YES);
-        // 기존 좋아요 상세가 조회되는 조건을 구성한다
+        // 기존 좋아요 상세가 조회되는 조건을 구성함
         when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(likeDetail);
 
-        // 이미 좋아요한 댓글에 같은 등록 요청을 다시 전달한다
+        // 이미 좋아요한 댓글에 같은 등록 요청을 다시 전달함
         ResultData result = replyService.setReplyLike(44L, 157L, 8L);
 
-        // 멱등 좋아요 등록 성공 응답을 확인한다
+        // 멱등 좋아요 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 신규 좋아요가 아니면 닉네임 조회와 알림 발송을 하지 않는지 확인한다
+        // 신규 좋아요가 아니면 닉네임 조회와 알림 발송을 하지 않는지 확인함
         verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 
     /**
-     * 본인이 작성한 대댓글에 좋아요를 등록해도 자기 알림을 생성하지 않는지 검증한다.
+     * 본인이 작성한 대댓글에 좋아요를 등록해도 자기 알림을 생성하지 않는지 검증함
      *
      * @author HanWon.Jang
      */
     @Test
     void setReplyLikeNoSelfAlim() {
 
-        // 본인이 작성한 대댓글 좋아요 대상 정보를 생성한다
+        // 본인이 작성한 대댓글 좋아요 대상 정보를 생성함
         ReplyDto likeTarget = new ReplyDto();
-        // 알림 링크에 사용할 독후감 번호를 설정한다
+        // 알림 링크에 사용할 독후감 번호를 설정함
         likeTarget.setReptNumb(157L);
-        // 좋아요 대상 대댓글 번호를 설정한다
+        // 좋아요 대상 대댓글 번호를 설정함
         likeTarget.setReplNumb(9L);
-        // 좋아요 등록자와 같은 대댓글 작성자 번호를 설정한다
+        // 좋아요 등록자와 같은 대댓글 작성자 번호를 설정함
         likeTarget.setTargetUserNumb(44L);
-        // 정상 이용 사용자가 접근할 수 있는 본인 대댓글 조건을 구성한다
+        // 정상 이용 사용자가 접근할 수 있는 본인 대댓글 조건을 구성함
         when(replyMapper.getReplyLikeTarget(any(ReplyDto.class))).thenReturn(likeTarget);
-        // 본인 대댓글 좋아요 한 건이 등록되는 조건을 구성한다
+        // 본인 대댓글 좋아요 한 건이 등록되는 조건을 구성함
         when(replyMapper.setReplyLike(any(ReplyDto.class))).thenReturn(1);
-        // 본인 좋아요 등록 후 반환할 상세 상태를 생성한다
+        // 본인 좋아요 등록 후 반환할 상세 상태를 생성함
         ReplyDto likeDetail = new ReplyDto();
-        // 본인 좋아요 상태를 설정한다
+        // 본인 좋아요 상태를 설정함
         likeDetail.setLikeYsno(Constant.COMM_YES);
-        // 등록 후 좋아요 상세가 조회되는 조건을 구성한다
+        // 등록 후 좋아요 상세가 조회되는 조건을 구성함
         when(replyMapper.getReplyLikeDtl(any(ReplyDto.class))).thenReturn(likeDetail);
 
-        // 본인이 작성한 대댓글에 좋아요를 등록한다
+        // 본인이 작성한 대댓글에 좋아요를 등록함
         ResultData result = replyService.setReplyLike(44L, 157L, 9L);
 
-        // 본인 대댓글 좋아요 등록 성공 응답을 확인한다
+        // 본인 대댓글 좋아요 등록 성공 응답을 확인함
         assertEquals(200, result.getCode());
-        // 본인 댓글 좋아요에는 닉네임 조회와 알림 발송을 하지 않는지 확인한다
+        // 본인 댓글 좋아요에는 닉네임 조회와 알림 발송을 하지 않는지 확인함
         verifyNoInteractions(alimService, tokenRedisService, likeAlimPublisher);
     }
 }

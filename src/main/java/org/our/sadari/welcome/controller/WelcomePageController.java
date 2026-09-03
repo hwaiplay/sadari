@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : WelcomePageController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-28
- * description    : 사용자 웰컴 화면의 현재 배포 페이지 조회 API를 제공한다
+ * description    : 사용자 웰컴 화면의 현재 배포 페이지 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -27,11 +27,11 @@ public class WelcomePageController {
     // 사용자 웰컴페이지 조회 서비스
     private final WelcomePageService welcomePageService;
 
-    /** 현재 배포 중인 관리자 웰컴페이지 목록을 조회한다. */
+    /** 현재 배포 중인 관리자 웰컴페이지 목록을 조회함 */
     @GetMapping
     public ResultData getWelcomePageList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // 인증 사용자의 계정 상태를 검증한 웰컴페이지 목록을 반환한다.
+        // 인증 사용자의 계정 상태를 검증한 웰컴페이지 목록을 반환함
         return welcomePageService.getWelcomePageList(userNumb);
     }
 }

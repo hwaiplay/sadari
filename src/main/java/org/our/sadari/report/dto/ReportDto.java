@@ -12,7 +12,7 @@ import org.our.sadari.book.dto.BookDto;
  * fileName       : ReportDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 독후감과 독서 목표 요청과 응답 데이터를 전달한다
+ * description    : 독후감과 독서 목표 요청과 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

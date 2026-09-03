@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : SchedulerLogDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 실행 요약과 실패 로그 데이터를 전달한다
+ * description    : 스케줄러 실행 요약과 실패 로그 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ import lombok.Data;
 public class SchedulerLogDto {
 
     /**
-     * TL_SCLOGX의 스케줄러 실행 단위 요약 정보를 전달한다
+     * TL_SCLOGX의 스케줄러 실행 단위 요약 정보를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -61,7 +61,7 @@ public class SchedulerLogDto {
     }
 
     /**
-     * TL_SCFAIL에 저장할 스케줄러 실패 한 건의 정보를 전달한다
+     * TL_SCFAIL에 저장할 스케줄러 실패 한 건의 정보를 전달함
      *
      * @author SeungHyeon.Kang
      */

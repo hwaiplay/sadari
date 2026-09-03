@@ -10,7 +10,7 @@ import org.our.sadari.notice.dto.UnreadNoticeDto;
  * fileName       : NoticeMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 사용자 계정 상태와 배포 공지사항 데이터에 접근한다
+ * description    : 사용자 계정 상태와 배포 공지사항 데이터에 접근함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,7 +21,7 @@ import org.our.sadari.notice.dto.UnreadNoticeDto;
 public interface NoticeMapper {
 
     /**
-     * 사용자 번호와 상태가 일치하는 활성 계정 수를 조회한다
+     * 사용자 번호와 상태가 일치하는 활성 계정 수를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 확인할 사용자 번호
@@ -31,7 +31,7 @@ public interface NoticeMapper {
     int getActiveUserCnt(@Param("userNumb") Long userNumb, @Param("userStat") String userStat);
 
     /**
-     * 현재 배포 중인 공지사항을 사용자 읽음 여부와 함께 페이지 단위로 조회한다
+     * 현재 배포 중인 공지사항을 사용자 읽음 여부와 함께 페이지 단위로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -47,7 +47,7 @@ public interface NoticeMapper {
             , @Param("pageSize") int pageSize);
 
     /**
-     * 로그인 사용자의 읽음 이력이 없는 현재 배포 공지 제목을 조회한다
+     * 로그인 사용자의 읽음 이력이 없는 현재 배포 공지 제목을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -60,7 +60,7 @@ public interface NoticeMapper {
                                             , @Param("yes") String yes);
 
     /**
-     * 공지사항 주키에 해당하는 현재 배포 버전 상세를 조회한다
+     * 공지사항 주키에 해당하는 현재 배포 버전 상세를 조회함
      *
      * @author SeungHyeon.Kang
      * @param notiNumb 조회할 공지사항 주키
@@ -75,7 +75,7 @@ public interface NoticeMapper {
                          , @Param("no") String no);
 
     /**
-     * 로그인 사용자의 공지사항 최초 읽음 이력을 멱등하게 저장한다
+     * 로그인 사용자의 공지사항 최초 읽음 이력을 멱등하게 저장함
      *
      * @author SeungHyeon.Kang
      * @param viewType 공지사항 조회 이력 유형

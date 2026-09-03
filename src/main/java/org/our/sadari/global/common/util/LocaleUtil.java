@@ -8,7 +8,7 @@ import java.util.Locale;
  * fileName       : LocaleUtil
  * author         : SeungHyeon.Kang
  * date           : 2026-07-15
- * description    : 공통 처리에 필요한 변환과 판정 기능을 제공한다
+ * description    : 공통 처리에 필요한 변환과 판정 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -17,7 +17,7 @@ import java.util.Locale;
 public class LocaleUtil {
 
     /**
-     * LocaleUtil 객체를 생성한다.
+     * LocaleUtil 객체를 생성함
      *
      * @author SeungHyeon.Kang
      */
@@ -27,31 +27,31 @@ public class LocaleUtil {
     }
 
     /**
-     * 현재 요청 언어 환경 조회한다.
+     * 현재 요청 언어 환경 조회함
      *
      * @author SeungHyeon.Kang
      * @return 처리 결과
      */
     public static String getLocale() {
-        // getLocale 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getLocale 조회로 후속 처리에 필요한 데이터를 가져옴
         Locale currentLocale = LocaleContextHolder.getLocale();
 
-        // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
+        // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기함
         if (StringUtil.isEmpty(currentLocale)) {
-            // 현재 요청 언어 환경 조회 결과를 반환한다
+            // 현재 요청 언어 환경 조회 결과를 반환함
             return "KO";
         }
 
-        // getLanguage 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getLanguage 조회로 후속 처리에 필요한 데이터를 가져옴
         String language = currentLocale.getLanguage();
 
-        // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기한다
+        // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기함
         if (StringUtil.isEmpty(language) || language.trim().isEmpty()) {
-            // 현재 요청 언어 환경 조회 결과를 반환한다
+            // 현재 요청 언어 환경 조회 결과를 반환함
             return "KO";
         }
 
-        // 현재 요청 언어 환경 조회 결과를 반환한다
+        // 현재 요청 언어 환경 조회 결과를 반환함
         return language.toUpperCase();
     }
 }

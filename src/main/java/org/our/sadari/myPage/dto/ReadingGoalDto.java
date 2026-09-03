@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : ReadingGoalDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 주간, 월간, 연간 독서 목표의 저장 데이터를 전달한다
+ * description    : 주간, 월간, 연간 독서 목표의 저장 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

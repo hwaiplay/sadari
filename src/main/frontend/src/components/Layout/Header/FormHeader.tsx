@@ -8,7 +8,7 @@ import HeaderMenuDrawer from "./HeaderMenuDrawer";
 import { useScrollHeader } from "./useScrollHeader";
 
 /**
- * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링한다.
+ * 서브 페이지에서 뒤로가기 버튼과 로고를 표시하는 전용 헤더를 렌더링함
  *
  * @author SeungHyeon.Kang
  * @return 서브 페이지 헤더 컴포넌트
@@ -16,18 +16,18 @@ import { useScrollHeader } from "./useScrollHeader";
 function SubPageHeader() {
 
   const navigate = useNavigate();
-  // 스크롤 이동량과 같은 거리로 움직일 전용 헤더 상태를 구성한다
+  // 스크롤 이동량과 같은 거리로 움직일 전용 헤더 상태를 구성함
   const { headerRef } = useScrollHeader();
 
   /**
-   * 브라우저 히스토리를 기반으로 이전 페이지로 이동한다.
+   * 브라우저 히스토리를 기반으로 이전 페이지로 이동함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const backPrev = (): void => {
 
-    // 브라우저의 직전 화면으로 이동한다
+    // 브라우저의 직전 화면으로 이동함
     navigate(-1);
   };
 

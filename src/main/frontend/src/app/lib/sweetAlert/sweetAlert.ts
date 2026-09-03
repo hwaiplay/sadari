@@ -63,7 +63,7 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
 };
 
 /**
- * 처리 중 모달 종료 사유에서 같은 모달에 표시할 성공 정보를 조회한다
+ * 처리 중 모달 종료 사유에서 같은 모달에 표시할 성공 정보를 조회함
  *
  * @author SeungHyeon.Kang
  * @param reason 작업 종료 신호에 포함된 사유
@@ -72,38 +72,38 @@ const ICON_CLASS: Record<SweetAlertIcon, string> = {
 function getSweetBlockingCompletion(
   reason: unknown,
 ): SweetBlockingCompletionOptions | null {
-  // 종료 사유가 객체가 아니면 기존처럼 처리 중 모달을 닫는다
+  // 종료 사유가 객체가 아니면 기존처럼 처리 중 모달을 닫음
   if (typeof reason !== "object" || reason === null) {
-    // 성공 전환 정보가 없음을 반환한다
+    // 성공 전환 정보가 없음을 반환함
     return null;
   }
 
   const completionReason = reason as SweetBlockingCompletionReason;
 
-  // 이 모듈이 생성한 완료 표식과 제목이 모두 있을 때만 성공 전환으로 처리한다
+  // 이 모듈이 생성한 완료 표식과 제목이 모두 있을 때만 성공 전환으로 처리함
   if (completionReason.marker !== SWEET_BLOCKING_COMPLETION_MARKER
       || typeof completionReason.completion?.title !== "string") {
-    // 다른 Abort 사유를 성공 화면으로 잘못 표시하지 않도록 null을 반환한다
+    // 다른 Abort 사유를 성공 화면으로 잘못 표시하지 않도록 null을 반환함
     return null;
   }
 
-  // 검증된 성공 전환 문구를 반환한다
+  // 검증된 성공 전환 문구를 반환함
   return completionReason.completion;
 }
 
 /**
- * 처리 중 모달의 DOM을 유지한 채 성공 상태로 전환하도록 완료 신호를 전달한다
+ * 처리 중 모달의 DOM을 유지한 채 성공 상태로 전환하도록 완료 신호를 전달함
  *
  * @author SeungHyeon.Kang
  * @param controller 현재 처리 중 모달에 연결된 종료 제어 객체
  * @param completion 성공 제목과 선택 본문
- * @return 반환값이 없다
+ * @return 반환값이 없음
  */
 export function completeSweetBlockingOperation(
   controller: AbortController,
   completion: SweetBlockingCompletionOptions,
 ): void {
-  // 일반 종료와 구분되는 내부 표식을 사유에 담아 같은 모달의 성공 전환을 요청한다
+  // 일반 종료와 구분되는 내부 표식을 사유에 담아 같은 모달의 성공 전환을 요청함
   controller.abort({
     marker: SWEET_BLOCKING_COMPLETION_MARKER,
     completion,
@@ -111,7 +111,7 @@ export function completeSweetBlockingOperation(
 }
 
 /**
- * SweetAlert 모달에 필요한 스타일 태그를 한 번만 주입합니다.
+ * SweetAlert 모달에 필요한 스타일 태그를 한 번만 주입함
  *
  * @author HanWon.Jang
  * @return
@@ -635,7 +635,7 @@ function ensureSweetAlertStyle() {
 }
 
 /**
- * SweetAlert 모달을 닫고 body 스크롤 상태를 복구합니다.
+ * SweetAlert 모달을 닫고 body 스크롤 상태를 복구함
  *
  * @author HanWon.Jang
  * @param overlay 제거할 모달 오버레이 엘리먼트
@@ -650,23 +650,23 @@ function closeSweetAlert(overlay: HTMLDivElement, result: SweetAlertResult) {
 }
 
 /**
- * 처리 중 모달을 열기 전에 예정된 성공 알림의 실제 높이를 측정해 같은 크기를 확보한다
+ * 처리 중 모달을 열기 전에 예정된 성공 알림의 실제 높이를 측정해 같은 크기를 확보함
  *
  * @author SeungHyeon.Kang
  * @param modal 크기를 확보할 처리 중 알림 모달
  * @param completion 처리 완료 후 표시할 성공 제목과 선택 본문
  * @param confirmButtonText 성공 알림에 표시할 확인 버튼 문구
- * @return 반환값이 없다
+ * @return 반환값이 없음
  */
 function reserveSweetBlockingCompletionHeight(
   modal: HTMLDivElement,
   completion: SweetBlockingCompletionOptions,
   confirmButtonText: string,
 ): void {
-  // 실제 모달 구조와 반응형 너비를 그대로 사용하는 화면 밖 측정용 복사본을 생성한다
+  // 실제 모달 구조와 반응형 너비를 그대로 사용하는 화면 밖 측정용 복사본을 생성함
   const measurementModal = modal.cloneNode(true) as HTMLDivElement;
   measurementModal.classList.add("sadari-swal-modal-measuring");
-  // 순간적으로 추가되는 측정 복사본을 보조기기가 별도 알림으로 인식하지 않게 한다
+  // 순간적으로 추가되는 측정 복사본을 보조기기가 별도 알림으로 인식하지 않게 함
   measurementModal.setAttribute("aria-hidden", "true");
   measurementModal.removeAttribute("role");
 
@@ -675,26 +675,26 @@ function reserveSweetBlockingCompletionHeight(
   const measurementTitle = measurementModal.querySelector<HTMLElement>(".sadari-swal-title");
   const measurementProcessingText = measurementModal.querySelector<HTMLElement>(".sadari-swal-text");
 
-  // 성공 상태의 아이콘과 제목으로 바꿔 글자 줄바꿈까지 포함한 높이를 계산한다
+  // 성공 상태의 아이콘과 제목으로 바꿔 글자 줄바꿈까지 포함한 높이를 계산함
   if (measurementIcon && measurementIconLabel && measurementTitle) {
     measurementIcon.className = `sadari-swal-icon ${ICON_CLASS.success}`;
     measurementIconLabel.textContent = ICON_LABEL.success;
     measurementTitle.textContent = completion.title;
   }
 
-  // 성공 본문이 있으면 처리 중 본문 위치에서 실제 성공 문구 높이를 측정한다
+  // 성공 본문이 있으면 처리 중 본문 위치에서 실제 성공 문구 높이를 측정함
   if (completion.text) {
     const measurementCompletionText = measurementProcessingText ?? document.createElement("p");
     measurementCompletionText.className = "sadari-swal-text";
     measurementCompletionText.textContent = completion.text;
 
-    // 처리 중 본문이 없던 모달은 성공 제목 바로 뒤에 측정용 본문을 추가한다
+    // 처리 중 본문이 없던 모달은 성공 제목 바로 뒤에 측정용 본문을 추가함
     if (!measurementProcessingText && measurementTitle) {
       measurementTitle.insertAdjacentElement("afterend", measurementCompletionText);
     }
   }
 
-  // 성공 본문이 없으면 처리 중 안내 문구를 제외한 실제 완료 높이를 계산한다
+  // 성공 본문이 없으면 처리 중 안내 문구를 제외한 실제 완료 높이를 계산함
   else {
     measurementProcessingText?.remove();
   }
@@ -708,16 +708,16 @@ function reserveSweetBlockingCompletionHeight(
   measurementActions.appendChild(measurementConfirmButton);
   measurementModal.appendChild(measurementActions);
 
-  // 첫 화면이 그려지기 전에 성공 알림의 실제 반응형 높이를 브라우저에서 계산한다
+  // 첫 화면이 그려지기 전에 성공 알림의 실제 반응형 높이를 브라우저에서 계산함
   document.body.appendChild(measurementModal);
   const completionHeight = measurementModal.getBoundingClientRect().height;
   measurementModal.remove();
-  // 로딩 내용이 더 길지 않은 일반 흐름에서는 처음부터 성공 알림과 같은 높이를 유지한다
+  // 로딩 내용이 더 길지 않은 일반 흐름에서는 처음부터 성공 알림과 같은 높이를 유지함
   modal.style.minHeight = `${completionHeight}px`;
 }
 
 /**
- * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시합니다.
+ * 제목, 본문, 아이콘, 확인/취소 버튼 옵션으로 커스텀 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param options 알림 모달 표시 옵션
@@ -729,16 +729,16 @@ export const sweetAlert = (options: SweetAlertOptions) => {
 
   return new Promise<SweetAlertResult>((resolve) => {
 
-    // 호출 전에 작업이 끝난 안내 모달은 화면에 추가하지 않고 닫힘 결과로 완료한다
+    // 호출 전에 작업이 끝난 안내 모달은 화면에 추가하지 않고 닫힘 결과로 완료함
     if (options.closeSignal?.aborted) {
-      // 이미 종료된 작업의 모달 Promise를 닫힘 상태로 완료한다
+      // 이미 종료된 작업의 모달 Promise를 닫힘 상태로 완료함
       resolve({
         isConfirmed: false,
         isDenied: false,
         isSecondaryAction: false,
         isDismissed: true,
       });
-      // 종료된 작업의 DOM 생성을 차단하도록 모달 처리를 종료한다
+      // 종료된 작업의 DOM 생성을 차단하도록 모달 처리를 종료함
       return;
     }
 
@@ -750,11 +750,11 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     let popStateHandler: (() => void) | null = null;
 
     /**
-     * close 사용자 동작을 처리한다
+     * close 사용자 동작을 처리함
      *
      * @author HanWon.Jang
      * @param result result 입력값
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const close = (result: SweetAlertResult) => {
 
@@ -764,15 +764,15 @@ export const sweetAlert = (options: SweetAlertOptions) => {
 
       isClosed = true;
 
-      // 외부 작업 종료 신호 구독이 남아 다른 알림까지 닫지 않도록 현재 모달의 구독을 제거한다
+      // 외부 작업 종료 신호 구독이 남아 다른 알림까지 닫지 않도록 현재 모달의 구독을 제거함
       if (closeSignalHandler && options.closeSignal) {
-        // 현재 모달에 연결한 작업 종료 이벤트만 해제한다
+        // 현재 모달에 연결한 작업 종료 이벤트만 해제함
         options.closeSignal.removeEventListener("abort", closeSignalHandler);
       }
 
-      // 닫힌 알림이 이후 뒤로가기까지 구독하지 않도록 현재 알림의 이동 이벤트를 해제한다
+      // 닫힌 알림이 이후 뒤로가기까지 구독하지 않도록 현재 알림의 이동 이벤트를 해제함
       if (popStateHandler) {
-        // 현재 알림에 연결한 뒤로가기 이벤트만 해제한다
+        // 현재 알림에 연결한 뒤로가기 이벤트만 해제함
         window.removeEventListener("popstate", popStateHandler);
       }
 
@@ -780,13 +780,13 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     };
 
     /**
-     * 브라우저 뒤로가기로 현재 화면을 벗어날 때 일반 알림을 닫는다
+     * 브라우저 뒤로가기로 현재 화면을 벗어날 때 일반 알림을 닫음
      *
      * @author HanWon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     popStateHandler = (): void => {
-      // 뒤로가기 후 이전 화면 위에 알림이 남지 않도록 닫힘 상태로 완료한다
+      // 뒤로가기 후 이전 화면 위에 알림이 남지 않도록 닫힘 상태로 완료함
       close({
         isConfirmed: false,
         isDenied: false,
@@ -795,9 +795,9 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       });
     };
 
-    // 서버 상태 변경 중인 차단 모달은 기존 이동 차단 정책을 유지하고 일반 알림만 뒤로가기에 닫는다
+    // 서버 상태 변경 중인 차단 모달은 기존 이동 차단 정책을 유지하고 일반 알림만 뒤로가기에 닫음
     if (!options.closeSignal) {
-      // 현재 일반 알림이 열린 동안 브라우저 뒤로가기 이벤트를 구독한다
+      // 현재 일반 알림이 열린 동안 브라우저 뒤로가기 이벤트를 구독함
       window.addEventListener("popstate", popStateHandler);
     }
 
@@ -812,13 +812,13 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     modal.tabIndex = -1;
 
     /**
-     * 우측 상단 닫기 버튼을 기존 취소 선택과 같은 결과로 처리한다
+     * 우측 상단 닫기 버튼을 기존 취소 선택과 같은 결과로 처리함
      *
      * @author SeungHyeon.Kang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleCloseButtonClick = (): void => {
-      // 사용자의 닫기 선택으로 현재 알림을 취소 완료한다
+      // 사용자의 닫기 선택으로 현재 알림을 취소 완료함
       close({
         isConfirmed: false,
         isDenied: false,
@@ -827,7 +827,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       });
     };
 
-    // 하단 취소 버튼 대신 우측 상단 닫기 버튼을 요청한 모달에만 제공한다
+    // 하단 취소 버튼 대신 우측 상단 닫기 버튼을 요청한 모달에만 제공함
     if (options.showCloseButton) {
       const closeButton = document.createElement("button");
       closeButton.className = "sadari-swal-close";
@@ -867,7 +867,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       content.innerHTML = options.html;
       modal.appendChild(content);
     } else if (options.texts) {
-      // 여러 안내 문구를 각각 독립된 문단으로 제공해 항목별 스타일과 접근성을 유지한다.
+      // 여러 안내 문구를 각각 독립된 문단으로 제공해 항목별 스타일과 접근성을 유지함
       options.texts.forEach((textContent) => {
         const text = document.createElement("p");
         text.className = "sadari-swal-text";
@@ -885,7 +885,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     actions.className = "sadari-swal-actions";
     let cancelButton: HTMLButtonElement | null = null;
 
-    // 취소 또는 보조 동작이 필요한 모달에만 취소 버튼을 제공한다
+    // 취소 또는 보조 동작이 필요한 모달에만 취소 버튼을 제공함
     if (options.showCancelButton) {
       cancelButton = document.createElement("button");
       cancelButton.className = "sadari-swal-button sadari-swal-cancel";
@@ -904,7 +904,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       actions.appendChild(cancelButton);
     }
 
-    // 현재 동작과 구분되는 두 번째 확정 선택이 필요할 때 거부 버튼을 제공한다
+    // 현재 동작과 구분되는 두 번째 확정 선택이 필요할 때 거부 버튼을 제공함
     if (options.showDenyButton) {
       const denyButton = document.createElement("button");
       denyButton.className = "sadari-swal-button sadari-swal-deny";
@@ -913,7 +913,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       denyButton.textContent = options.denyButtonText ?? message("frontend.common.alternativeChoice");
       denyButton.addEventListener("click", () => {
 
-        // 사용자의 두 번째 확정 선택으로 현재 알림을 완료한다
+        // 사용자의 두 번째 확정 선택으로 현재 알림을 완료함
         close({
           isConfirmed: false,
           isDenied: true,
@@ -927,13 +927,13 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     let confirmButton: HTMLButtonElement | null = null;
 
     /**
-     * 하단 확인 버튼 선택으로 현재 알림 모달을 완료한다
+     * 하단 확인 버튼 선택으로 현재 알림 모달을 완료함
      *
      * @author SeungHyeon.Kang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleConfirmButtonClick = (): void => {
-      // 사용자의 확인 선택으로 현재 알림을 완료한다
+      // 사용자의 확인 선택으로 현재 알림을 완료함
       close({
         isConfirmed: true,
         isDenied: false,
@@ -943,7 +943,7 @@ export const sweetAlert = (options: SweetAlertOptions) => {
     };
 
     /**
-     * 현재 알림을 완료할 공통 확인 버튼을 생성한다
+     * 현재 알림을 완료할 공통 확인 버튼을 생성함
      *
      * @author SeungHyeon.Kang
      * @return 확인 선택을 처리하는 버튼
@@ -955,85 +955,85 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       // "확인"
       button.textContent = options.confirmButtonText ?? message("frontend.common.confirm");
       button.addEventListener("click", handleConfirmButtonClick);
-      // 공통 확인 동작이 연결된 버튼을 반환한다
+      // 공통 확인 동작이 연결된 버튼을 반환함
       return button;
     };
 
-    // 뒤로가기 취소 안내처럼 보조 버튼만 필요한 모달에는 확인 버튼을 만들지 않는다
+    // 뒤로가기 취소 안내처럼 보조 버튼만 필요한 모달에는 확인 버튼을 만들지 않음
     if (options.showConfirmButton !== false) {
       confirmButton = createConfirmButton();
       actions.appendChild(confirmButton);
     }
 
     /**
-     * 처리 중 모달의 기존 DOM을 성공 아이콘과 완료 문구 및 확인 버튼으로 교체한다
+     * 처리 중 모달의 기존 DOM을 성공 아이콘과 완료 문구 및 확인 버튼으로 교체함
      *
      * @author SeungHyeon.Kang
      * @param completion 성공 제목과 선택 본문
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const transitionToSuccess = (
       completion: SweetBlockingCompletionOptions,
     ): void => {
       iconType = "success";
-      // 보조기기가 처리 완료 상태와 바뀐 제목을 다시 안내할 수 있도록 상태 속성을 갱신한다
+      // 보조기기가 처리 완료 상태와 바뀐 제목을 다시 안내할 수 있도록 상태 속성을 갱신함
       modal.setAttribute("aria-busy", "false");
       modal.setAttribute("aria-live", "polite");
-      // 같은 아이콘 엘리먼트의 클래스를 변경해 로딩 링을 성공 표시로 전환한다
+      // 같은 아이콘 엘리먼트의 클래스를 변경해 로딩 링을 성공 표시로 전환함
       icon.className = `sadari-swal-icon ${ICON_CLASS[iconType]}`;
       iconLabel.textContent = ICON_LABEL[iconType];
       title.textContent = completion.title;
 
       const processingText = modal.querySelector<HTMLElement>(".sadari-swal-text");
 
-      // 완료 본문이 있으면 기존 처리 중 본문을 같은 위치에서 교체한다
+      // 완료 본문이 있으면 기존 처리 중 본문을 같은 위치에서 교체함
       if (completion.text) {
         const completionText = processingText ?? document.createElement("p");
         completionText.className = "sadari-swal-text";
         completionText.textContent = completion.text;
 
-        // 처리 중 모달에 본문이 없었던 경우 제목 다음 위치에 완료 본문을 추가한다
+        // 처리 중 모달에 본문이 없었던 경우 제목 다음 위치에 완료 본문을 추가함
         if (!processingText) {
           title.insertAdjacentElement("afterend", completionText);
         }
       } else {
-        // 완료 본문을 지정하지 않았으면 처리 중 안내 문구를 제거한다
+        // 완료 본문을 지정하지 않았으면 처리 중 안내 문구를 제거함
         processingText?.remove();
       }
 
-      // 처리 중에는 없던 확인 버튼을 성공 상태에서 하나만 제공한다
+      // 처리 중에는 없던 확인 버튼을 성공 상태에서 하나만 제공함
       actions.replaceChildren();
       confirmButton = createConfirmButton();
       actions.appendChild(confirmButton);
 
-      // 버튼이 없어서 붙이지 않았던 작업 영역을 같은 모달 하단에 추가한다
+      // 버튼이 없어서 붙이지 않았던 작업 영역을 같은 모달 하단에 추가함
       if (!actions.isConnected) {
         modal.appendChild(actions);
       }
 
-      // 크기는 처음부터 확보되어 있으므로 내용 전환 직후 확인 버튼으로 조작 위치를 이동한다
+      // 크기는 처음부터 확보되어 있으므로 내용 전환 직후 확인 버튼으로 조작 위치를 이동함
       if (modal.isConnected) {
         confirmButton.focus();
       }
     };
 
     /**
-     * 비동기 작업 종료 사유에 따라 처리 중 모달을 닫거나 같은 모달에서 성공 상태로 전환한다
+     * 비동기 작업 종료 사유에 따라 처리 중 모달을 닫거나 같은 모달에서 성공 상태로 전환함
      *
      * @author SeungHyeon.Kang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     closeSignalHandler = () => {
       const completion = getSweetBlockingCompletion(options.closeSignal?.reason);
 
-      // 성공 전환 정보가 있으면 기존 모달을 제거하지 않고 완료 상태만 바꾼다
+      // 성공 전환 정보가 있으면 기존 모달을 제거하지 않고 완료 상태만 바꿈
       if (completion) {
         transitionToSuccess(completion);
-        // 성공 모달은 사용자가 확인할 때까지 유지하도록 일반 닫기 처리를 종료한다
+        // 성공 모달은 사용자가 확인할 때까지 유지하도록 일반 닫기 처리를 종료함
         return;
       }
 
-      // 완료 정보가 없는 작업은 기존처럼 처리 중 모달을 자동으로 닫는다
+      // 완료 정보가 없는 작업은 기존처럼 처리 중 모달을 자동으로 닫음
       close({
         isConfirmed: false,
         isDenied: false,
@@ -1042,15 +1042,15 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       });
     };
 
-    // 작업 종료 신호가 제공되면 현재 모달만 닫거나 완료 상태로 전환하도록 구독한다
+    // 작업 종료 신호가 제공되면 현재 모달만 닫거나 완료 상태로 전환하도록 구독함
     if (options.closeSignal) {
-      // 작업이 끝나는 최초 신호만 처리하도록 일회성 이벤트를 등록한다
+      // 작업이 끝나는 최초 신호만 처리하도록 일회성 이벤트를 등록함
       options.closeSignal.addEventListener("abort", closeSignalHandler, { once: true });
     }
 
     overlay.addEventListener("click", (event) => {
 
-      // 작업 중 뒤로가기 차단 모달은 바깥 영역을 눌러도 유지하고 일반 알림만 닫는다
+      // 작업 중 뒤로가기 차단 모달은 바깥 영역을 눌러도 유지하고 일반 알림만 닫음
       if (event.target === overlay && options.allowOutsideClick !== false) {
         close({
           isConfirmed: false,
@@ -1066,16 +1066,16 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       event.stopPropagation();
     });
 
-    // 버튼이 없는 처리 중 모달에는 빈 버튼 영역을 추가하지 않는다
+    // 버튼이 없는 처리 중 모달에는 빈 버튼 영역을 추가하지 않음
     if (actions.childElementCount > 0) {
-      // 사용자가 선택할 수 있는 알림 동작을 모달 하단에 추가한다
+      // 사용자가 선택할 수 있는 알림 동작을 모달 하단에 추가함
       modal.appendChild(actions);
     }
 
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 
-    // 완료 문구를 미리 아는 처리 중 알림은 첫 렌더링부터 성공 알림 높이를 확보한다
+    // 완료 문구를 미리 아는 처리 중 알림은 첫 렌더링부터 성공 알림 높이를 확보함
     if (options.blockingCompletion) {
       // "확인"
       const completionConfirmButtonText = options.confirmButtonText ?? message("frontend.common.confirm");
@@ -1086,12 +1086,12 @@ export const sweetAlert = (options: SweetAlertOptions) => {
       );
     }
 
-    // 사용 가능한 기본 동작이 있으면 해당 버튼에 포커스를 두고 버튼이 없으면 모달 본문을 선택한다
+    // 사용 가능한 기본 동작이 있으면 해당 버튼에 포커스를 두고 버튼이 없으면 모달 본문을 선택함
     if (confirmButton) {
-      // 일반 알림의 기본 확인 동작에 포커스를 설정한다
+      // 일반 알림의 기본 확인 동작에 포커스를 설정함
       confirmButton.focus();
     } else {
-      // 버튼 없는 처리 중 모달은 모달 본문에 포커스를 두어 배경 화면 조작을 차단한다
+      // 버튼 없는 처리 중 모달은 모달 본문에 포커스를 두어 배경 화면 조작을 차단함
       modal.focus();
     }
   });
@@ -1105,7 +1105,7 @@ type SweetBlockingOperationOptions = {
 };
 
 /**
- * 상태 변경 작업이 끝날 때까지 닫을 수 없는 처리 중 모달을 표시한다
+ * 상태 변경 작업이 끝날 때까지 닫을 수 없는 처리 중 모달을 표시함
  *
  * @author SeungHyeon.Kang
  * @param options 처리 중 문구와 작업 종료 신호
@@ -1113,7 +1113,7 @@ type SweetBlockingOperationOptions = {
  */
 export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
 
-  // 사용자가 서버 처리 도중 화면을 이탈하지 않도록 모든 닫기 버튼을 제거한 모달을 반환한다
+  // 사용자가 서버 처리 도중 화면을 이탈하지 않도록 모든 닫기 버튼을 제거한 모달을 반환함
   return sweetAlert({
     title: options.title,
     text: options.text,
@@ -1127,7 +1127,7 @@ export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
 }
 
 /**
- * 취소 버튼을 포함한 확인 모달을 표시합니다.
+ * 취소 버튼을 포함한 확인 모달을 표시함
  *
  * @author HanWon.Jang
  * @param options 확인 모달 표시 옵션
@@ -1135,7 +1135,7 @@ export function sweetBlockingOperation(options: SweetBlockingOperationOptions) {
  */
 export function sweetConfirm(options: SweetAlertOptions) {
 
-  // 호출 화면이 취소 버튼 노출 여부를 지정하면 해당 설정을 유지한다
+  // 호출 화면이 취소 버튼 노출 여부를 지정하면 해당 설정을 유지함
   return sweetAlert({
     icon: "question",
     // "확인"
@@ -1148,7 +1148,7 @@ export function sweetConfirm(options: SweetAlertOptions) {
 }
 
 /**
- * 성공 알림 모달을 표시합니다.
+ * 성공 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 알림 제목
@@ -1161,7 +1161,7 @@ export function sweetSuccess(title: string, text?: string) {
 }
 
 /**
- * 오류 알림 모달을 표시합니다.
+ * 오류 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 알림 제목
@@ -1174,7 +1174,7 @@ export function sweetError(title: string, text?: string) {
 }
 
 /**
- * 경고 알림 모달을 표시합니다.
+ * 경고 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 알림 제목
@@ -1187,7 +1187,7 @@ export function sweetWarning(title: string, text?: string) {
 }
 
 /**
- * 안내 알림 모달을 표시합니다.
+ * 안내 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 알림 제목
@@ -1200,7 +1200,7 @@ export function sweetInfo(title: string, text?: string) {
 }
 
 /**
- * 수정 가능한 예시 요소와 클릭 강조 애니메이션을 포함한 안내 모달을 표시합니다.
+ * 수정 가능한 예시 요소와 클릭 강조 애니메이션을 포함한 안내 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 안내 모달 제목
@@ -1214,7 +1214,7 @@ export function sweetEditGuide(
   fieldValue: string,
 ) {
 
-  // 번역된 문구를 HTML 문자열로 해석하지 않도록 안내 콘텐츠를 DOM 엘리먼트로 구성한다
+  // 번역된 문구를 HTML 문자열로 해석하지 않도록 안내 콘텐츠를 DOM 엘리먼트로 구성함
   const content = document.createElement("div");
   content.className = "sadari-swal-html sadari-swal-edit-guide";
   content.setAttribute("aria-hidden", "true");
@@ -1236,7 +1236,7 @@ export function sweetEditGuide(
   // target.append(label, value, pulse);
   // content.appendChild(target);
 
-  // 클릭 가능한 요소의 시각적 예시를 포함한 안내 모달을 반환한다
+  // 클릭 가능한 요소의 시각적 예시를 포함한 안내 모달을 반환함
   return sweetAlert({
     title,
     icon: "info",
@@ -1244,7 +1244,7 @@ export function sweetEditGuide(
 }
 
 /**
- * 질문 알림 모달을 표시합니다.
+ * 질문 알림 모달을 표시함
  *
  * @author HanWon.Jang
  * @param title 알림 제목

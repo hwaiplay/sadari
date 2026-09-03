@@ -2,7 +2,7 @@
  * fileName       : reply
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글 API 요청 및 응답 계약을 정의한다
+ * description    : 댓글과 답글 API 요청 및 응답 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -24,7 +24,7 @@ import type {
 } from "@/features/reply/types/reply.types";
 
 /**
- * 로그인 사용자가 작성한 댓글 또는 답글을 등록한다
+ * 로그인 사용자가 작성한 댓글 또는 답글을 등록함
  *
  * @author HanWon.Jang
  * @param data 등록할 독후감 번호와 댓글 내용
@@ -36,15 +36,15 @@ export const setReplyApi = async (
     uperNumb?: number;
   },
 ): Promise<SetReplyResponse> => {
-  // 로그인 사용자 정보는 인증 쿠키에서 확인하고 댓글 요청 데이터만 서버에 전달한다
+  // 로그인 사용자 정보는 인증 쿠키에서 확인하고 댓글 요청 데이터만 서버에 전달함
   const response = await api.post<SetReplyResponse>("/reply", data);
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 등록 결과를 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 등록 결과를 반환함
   return assertResultDataSuccess(response.data);
 };
 
 /**
- * 로그인 사용자가 작성한 댓글 또는 답글의 내용을 수정한다
+ * 로그인 사용자가 작성한 댓글 또는 답글의 내용을 수정함
  *
  * @author HanWon.Jang
  * @param data 수정할 독후감 번호와 댓글 번호 및 내용
@@ -54,18 +54,18 @@ export const setReplyApi = async (
 export const uptReplyApi = async (
   data: ReplyTarget & Pick<ReplyDtoType, "replNumb" | "replCntn" | "editVersion">,
 ): Promise<UptReplyResponse> => {
-  // 복합 식별값을 경로에 포함하고 검증할 댓글 내용만 서버에 전달한다
+  // 복합 식별값을 경로에 포함하고 검증할 댓글 내용만 서버에 전달함
   const response = await api.put<UptReplyResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}`,
     { replCntn: data.replCntn, editVersion: data.editVersion },
   );
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 수정 결과를 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 수정 결과를 반환함
   return assertResultDataSuccess(response.data);
 };
 
 /**
- * 로그인 사용자가 작성한 댓글 또는 답글을 삭제 상태로 전환한다
+ * 로그인 사용자가 작성한 댓글 또는 답글을 삭제 상태로 전환함
  *
  * @author HanWon.Jang
  * @param data 삭제할 독후감 번호와 댓글 번호
@@ -75,17 +75,17 @@ export const uptReplyApi = async (
 export const delReplyApi = async (
   data: ReplyTarget & Pick<ReplyDtoType, "replNumb">,
 ): Promise<DelReplyResponse> => {
-  // 복합 식별값을 경로에 포함하여 작성자와 계정 상태를 서버에서 검증한다
+  // 복합 식별값을 경로에 포함하여 작성자와 계정 상태를 서버에서 검증함
   const response = await api.delete<DelReplyResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}`,
   );
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 삭제 결과를 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 삭제 결과를 반환함
   return assertResultDataSuccess(response.data);
 };
 
 /**
- * 로그인 사용자의 미삭제 댓글 좋아요를 등록한다
+ * 로그인 사용자의 미삭제 댓글 좋아요를 등록함
  *
  * @author HanWon.Jang
  * @param data 좋아요 대상 댓글의 독후감 번호와 댓글 번호
@@ -98,19 +98,19 @@ export const setReplyLikeApi = async (
   const requestConfig: SadariRequestConfig = {
     skipBlockingOperation: true,
   };
-  // 댓글 복합 식별값을 경로에 포함하여 좋아요 등록 API를 호출한다
+  // 댓글 복합 식별값을 경로에 포함하여 좋아요 등록 API를 호출함
   const response = await api.put<ReplyLikeResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
     undefined,
     requestConfig,
   );
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환함
   return assertResultDataSuccess(response.data);
 };
 
 /**
- * 로그인 사용자의 미삭제 댓글 좋아요를 취소한다
+ * 로그인 사용자의 미삭제 댓글 좋아요를 취소함
  *
  * @author HanWon.Jang
  * @param data 좋아요 대상 댓글의 독후감 번호와 댓글 번호
@@ -123,19 +123,19 @@ export const delReplyLikeApi = async (
   const requestConfig: SadariRequestConfig = {
     skipBlockingOperation: true,
   };
-  // 댓글 복합 식별값을 경로에 포함하여 좋아요 취소 API를 호출한다
+  // 댓글 복합 식별값을 경로에 포함하여 좋아요 취소 API를 호출함
   const response = await api.delete<ReplyLikeResponse>(
     `/reply/${data.tagtType}/${data.tagtNumb}/${data.replNumb}/likes`,
     requestConfig,
   );
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 변경 상태를 반환함
   return assertResultDataSuccess(response.data);
 };
 
 
 /**
- * 독후감 번호에 연결된 댓글과 답글 목록을 조회한다
+ * 독후감 번호에 연결된 댓글과 답글 목록을 조회함
  *
  * @author HanWon.Jang
  * @param reptNumb 댓글 목록을 조회할 독후감 번호
@@ -148,11 +148,11 @@ export const getReplyListApi = async (
   page: number,
   focusReplNumb?: number,
 ): Promise<GetReplyListResponse> => {
-  // 독후감 번호를 경로에 포함하여 해당 독후감의 댓글만 조회한다
+  // 독후감 번호를 경로에 포함하여 해당 독후감의 댓글만 조회함
   const response = await api.get<GetReplyListResponse>(`/reply/${target.tagtType}/${target.tagtNumb}`, {
     params: { page, focusReplNumb },
   });
 
-  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 댓글 목록을 반환한다
+  // 서버가 반환한 공통 응답 코드가 성공인 경우에만 댓글 목록을 반환함
   return assertResultDataSuccess(response.data);
 };

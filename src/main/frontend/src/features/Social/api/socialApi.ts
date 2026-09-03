@@ -30,7 +30,7 @@ export type BlockedUser = {
 };
 
 /**
- * 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제한다
+ * 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제함
  *
  * @author HanWon.Jang
  * @param userNumb 차단 대상 사용자 번호
@@ -38,14 +38,14 @@ export type BlockedUser = {
  * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const setUserBlockApi = async (userNumb: number): Promise<boolean> => {
-  // 인증 사용자가 선택한 대상의 차단 관계를 서버에 등록한다
+  // 인증 사용자가 선택한 대상의 차단 관계를 서버에 등록함
   const res = await api.post<ResultData<boolean>>(`/social/blocks/${userNumb}`);
-  // 서버가 확정한 차단 완료 여부를 반환한다
+  // 서버가 확정한 차단 완료 여부를 반환함
   return assertResultDataSuccess(res.data).data === true;
 };
 
 /**
- * 로그인 사용자가 만든 차단 방향을 해제한다
+ * 로그인 사용자가 만든 차단 방향을 해제함
  *
  * @author HanWon.Jang
  * @param userNumb 차단 해제 대상 사용자 번호
@@ -53,14 +53,14 @@ export const setUserBlockApi = async (userNumb: number): Promise<boolean> => {
  * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const delUserBlockApi = async (userNumb: number): Promise<boolean> => {
-  // 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제한다
+  // 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제함
   const res = await api.delete<ResultData<boolean>>(`/social/blocks/${userNumb}`);
-  // 서버가 확정한 차단 해제 완료 여부를 반환한다
+  // 서버가 확정한 차단 해제 완료 여부를 반환함
   return assertResultDataSuccess(res.data).data === true;
 };
 
 /**
- * 로그인 사용자가 직접 차단한 사용자 한 페이지를 조회한다
+ * 로그인 사용자가 직접 차단한 사용자 한 페이지를 조회함
  *
  * @author HanWon.Jang
  * @param page 조회할 페이지 번호
@@ -68,14 +68,14 @@ export const delUserBlockApi = async (userNumb: number): Promise<boolean> => {
  * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const getBlockUserPageApi = async (page: number): Promise<PageData<BlockedUser>> => {
-  // 최신 차단순 사용자 페이지를 서버에서 조회한다
+  // 최신 차단순 사용자 페이지를 서버에서 조회함
   const res = await api.get<ResultData<PageData<BlockedUser>>>("/social/blocks", { params: { page } });
-  // 공통 성공 코드가 확인된 차단 사용자 페이지를 반환한다
+  // 공통 성공 코드가 확인된 차단 사용자 페이지를 반환함
   return assertResultDataSuccess(res.data).data as PageData<BlockedUser>;
 };
 
 /**
- * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 한 페이지를 조회한다
+ * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 한 페이지를 조회함
  *
  * @author HanWon.Jang
  * @param keyword 닉네임 검색어
@@ -87,17 +87,17 @@ export const getUserSearchPageApi = async (
   keyword: string,
   page: number,
 ): Promise<PageData<FollowUser>> => {
-  // 서버가 활성 상태와 관계 우선순위를 적용한 닉네임 검색 페이지를 조회한다
+  // 서버가 활성 상태와 관계 우선순위를 적용한 닉네임 검색 페이지를 조회함
   const res = await api.get<ResultData<PageData<FollowUser>>>("/social/users", {
     params: { keyword, page },
   });
-  // 공통 성공 코드가 검증된 활성 사용자 페이지를 반환한다
+  // 공통 성공 코드가 검증된 활성 사용자 페이지를 반환함
   return assertResultDataSuccess(res.data).data as PageData<FollowUser>;
 };
 
 /**
- * 다른 사용자의 공개 프로필 정보를 조회합니다.
- * 공개 독후감 작성자 프로필 화면에서 마이페이지와 같은 프로필 영역을 구성할 때 사용합니다.
+ * 다른 사용자의 공개 프로필 정보를 조회함
+ * 공개 독후감 작성자 프로필 화면에서 마이페이지와 같은 프로필 영역을 구성할 때 사용함
  *
  * @author HanWon.Jang
  * @param userNumb 조회할 사용자 번호
@@ -110,8 +110,8 @@ export const getSocialProfileApi = async (userNumb: number) => {
 };
 
 /**
- * 다른 사용자의 독서 활동 요약 정보를 조회합니다.
- * 주간, 월간, 연간 완료 독후감과 목표 달성 현황을 마이페이지와 동일한 데이터 구조로 받습니다.
+ * 다른 사용자의 독서 활동 요약 정보를 조회함
+ * 주간, 월간, 연간 완료 독후감과 목표 달성 현황을 마이페이지와 동일한 데이터 구조로 받음
  *
  * @author HanWon.Jang
  * @param userNumb 조회할 사용자 번호
@@ -128,7 +128,7 @@ export const getSocialReadingApi = async (userNumb: number) => {
 export type LikeTargetType = "REPORT" | "PROFILE_IMAGE" | "BACKGROUND_IMAGE" | "REPLY";
 
 /**
- * 다른 사용자가 공개한 독서 통계를 선택 연도 기준으로 조회한다
+ * 다른 사용자가 공개한 독서 통계를 선택 연도 기준으로 조회함
  *
  * @author SeungHyeon.Kang
  * @param userNumb 공개 통계를 조회할 사용자 번호
@@ -142,18 +142,18 @@ export const getSocialReadingStatsApi = async (
   readYear?: number,
   signal?: AbortSignal,
 ): Promise<ReadingStatistics | null> => {
-  // 프로필 주인이 공개한 독서 통계를 화면 이탈 시 취소 가능한 요청으로 조회한다
+  // 프로필 주인이 공개한 독서 통계를 화면 이탈 시 취소 가능한 요청으로 조회함
   const res = await api.get(`/social/profile/${userNumb}/reading-statistics`, {
     params: readYear === undefined ? undefined : { readYear },
     signal,
   });
-  // 공개 설정이 켜진 경우에만 통계 객체를 반환한다
+  // 공개 설정이 켜진 경우에만 통계 객체를 반환함
   return (assertResultDataSuccess(res.data).data as ReadingStatistics | null | undefined) ?? null;
 };
 
 /**
- * 로그인 사용자와 다른 사용자 사이의 팔로우 버튼명을 조회합니다.
- * 서버가 팔로우 관계와 공통코드를 기준으로 계산한 결과를 반환하므로 화면은 버튼명만 표시합니다.
+ * 로그인 사용자와 다른 사용자 사이의 팔로우 버튼명을 조회함
+ * 서버가 팔로우 관계와 공통코드를 기준으로 계산한 결과를 반환하므로 화면은 버튼명만 표시함
  *
  * @author HanWon.Jang
  * @param userNumb 조회할 상대 사용자 번호
@@ -168,8 +168,8 @@ export const getSocialFollowStatusApi = async (userNumb: number) => {
 };
 
 /**
- * 로그인 사용자가 다른 사용자를 팔로우하도록 요청합니다.
- * 저장 후 서버에서 갱신된 버튼명을 반환받아 화면 상태를 즉시 맞춥니다.
+ * 로그인 사용자가 다른 사용자를 팔로우하도록 요청함
+ * 저장 후 서버에서 갱신된 버튼명을 반환받아 화면 상태를 즉시 맞춤
  *
  * @author HanWon.Jang
  * @param userNumb 팔로우할 상대 사용자 번호
@@ -184,8 +184,8 @@ export const setSocialFollowApi = async (userNumb: number) => {
 };
 
 /**
- * 로그인 사용자가 다른 사용자를 팔로우 중인 관계를 삭제합니다.
- * 삭제 후 서버에서 갱신된 버튼명을 반환받아 맞팔로우 또는 팔로우 상태로 갱신합니다.
+ * 로그인 사용자가 다른 사용자를 팔로우 중인 관계를 삭제함
+ * 삭제 후 서버에서 갱신된 버튼명을 반환받아 맞팔로우 또는 팔로우 상태로 갱신함
  *
  * @author HanWon.Jang
  * @param userNumb 언팔로우할 상대 사용자 번호
@@ -200,7 +200,7 @@ export const delSocialFollowApi = async (userNumb: number) => {
 };
 
 /**
- * 로그인 사용자의 팔로우 또는 팔로워 한 페이지를 조회한다
+ * 로그인 사용자의 팔로우 또는 팔로워 한 페이지를 조회함
  *
  * @author SeungHyeon.Kang
  * @param type 조회할 팔로우 목록 유형
@@ -220,7 +220,7 @@ export const getMyFollowPageApi = async (
 };
 
 /**
- * 다른 사용자의 팔로우 또는 팔로워 한 페이지를 조회한다
+ * 다른 사용자의 팔로우 또는 팔로워 한 페이지를 조회함
  *
  * @author SeungHyeon.Kang
  * @param userNumb 목록 주인 사용자 번호
@@ -239,12 +239,12 @@ export const getSocialFollowPageApi = async (
     `/social/profile/${userNumb}/${type}`,
     { params: { page } },
   );
-  // 검증된 다른 사용자 팔로우 목록 페이지를 반환한다
+  // 검증된 다른 사용자 팔로우 목록 페이지를 반환함
   return assertResultDataSuccess(res.data);
 };
 
 /**
- * 특정 대상에 좋아요를 등록한 활성 사용자 한 페이지를 조회한다
+ * 특정 대상에 좋아요를 등록한 활성 사용자 한 페이지를 조회함
  *
  * @author HanWon.Jang
  * @param tagtType 좋아요 대상 유형
@@ -258,10 +258,10 @@ export const getLikeUserPageApi = async (
   tagtNumb: number,
   page: number,
 ): Promise<ResultData<PageData<FollowUser>>> => {
-  // 서버가 접근 범위와 활성 상태를 검증한 좋아요 사용자 페이지를 조회한다
+  // 서버가 접근 범위와 활성 상태를 검증한 좋아요 사용자 페이지를 조회함
   const res = await api.get<ResultData<PageData<FollowUser>>>("/social/like-users", {
     params: { tagtType, tagtNumb, page },
   });
-  // 검증된 좋아요 사용자 페이지를 반환한다
+  // 검증된 좋아요 사용자 페이지를 반환함
   return assertResultDataSuccess(res.data);
 };

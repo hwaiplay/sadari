@@ -7,7 +7,7 @@ import org.our.sadari.reply.dto.ReplyDto;
  * fileName       : ReplyService
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 계약을 정의한다
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ public interface ReplyService {
 
 
     /**
-     * 댓글을 등록한다.
+     * 댓글을 등록함
      *
      * @author Hanwon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -31,7 +31,7 @@ public interface ReplyService {
 
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다.
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정함
      *
      * @author HanWon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -42,12 +42,12 @@ public interface ReplyService {
      */
     ResultData uptReply(Long userNumb, Long reptNumb, Long replNumb, ReplyDto replyDto);
 
-    /** 범용 대상에 등록된 댓글 내용을 수정한다. */
+    /** 범용 대상에 등록된 댓글 내용을 수정함 */
     ResultData uptReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb, ReplyDto replyDto);
 
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다.
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환함
      *
      * @author HanWon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -57,12 +57,12 @@ public interface ReplyService {
      */
     ResultData delReply(Long userNumb, Long reptNumb, Long replNumb);
 
-    /** 범용 대상에 등록된 댓글을 삭제 상태로 전환한다. */
+    /** 범용 대상에 등록된 댓글을 삭제 상태로 전환함 */
     ResultData delReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
 
 
     /**
-     * 정상 이용 중인 로그인 사용자의 댓글 좋아요를 등록하고 신규 좋아요일 때 해당 댓글 작성자에게 알림을 생성한다.
+     * 정상 이용 중인 로그인 사용자의 댓글 좋아요를 등록하고 신규 좋아요일 때 해당 댓글 작성자에게 알림을 생성함
      *
      * @author HanWon.Jang
      * @param userNumb 좋아요를 등록할 사용자 번호
@@ -72,12 +72,12 @@ public interface ReplyService {
      */
     ResultData setReplyLike(Long userNumb, Long reptNumb, Long replNumb);
 
-    /** 범용 대상 댓글에 좋아요를 등록한다. */
+    /** 범용 대상 댓글에 좋아요를 등록함 */
     ResultData setReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
 
 
     /**
-     * 정상 이용 중인 로그인 사용자의 댓글 좋아요를 취소한다.
+     * 정상 이용 중인 로그인 사용자의 댓글 좋아요를 취소함
      *
      * @author HanWon.Jang
      * @param userNumb 좋아요를 취소할 사용자 번호
@@ -87,12 +87,12 @@ public interface ReplyService {
      */
     ResultData delReplyLike(Long userNumb, Long reptNumb, Long replNumb);
 
-    /** 범용 대상 댓글의 좋아요를 취소한다. */
+    /** 범용 대상 댓글의 좋아요를 취소함 */
     ResultData delReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb);
 
 
     /**
-     * 독후감에 대한 댓글 목록을 조회한다.
+     * 독후감에 대한 댓글 목록을 조회함
      *
      * @author Hanwon.Jang
      * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
@@ -102,9 +102,9 @@ public interface ReplyService {
      */
     ResultData getReplyList(Long userNumb, Long reptNumb, int page);
 
-    /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
+    /** 범용 대상에 연결된 댓글과 답글 목록을 조회함 */
     ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, int page);
 
-    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회한다. */
+    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회함 */
     ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, Long focusReplNumb, int page);
 }

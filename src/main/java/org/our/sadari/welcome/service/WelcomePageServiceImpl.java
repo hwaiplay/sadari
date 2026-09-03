@@ -15,7 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : WelcomePageServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-08-28
- * description    : 활성 사용자에게 현재 배포 중인 웰컴페이지를 제공한다
+ * description    : 활성 사용자에게 현재 배포 중인 웰컴페이지를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -29,17 +29,17 @@ public class WelcomePageServiceImpl implements WelcomePageService {
     // 웰컴페이지 데이터 접근 객체
     private final WelcomePageMapper welcomePageMapper;
 
-    /** 활성 사용자에게 현재 배포된 웰컴페이지를 제공한다. */
+    /** 활성 사용자에게 현재 배포된 웰컴페이지를 제공함 */
     @Override
     public ResultData getWelcomePageList(Long userNumb) {
-        // 탈퇴 또는 정지 상태 계정에는 웰컴 콘텐츠를 제공하지 않는다.
+        // 탈퇴 또는 정지 상태 계정에는 웰컴 콘텐츠를 제공하지 않음
         if (StringUtil.isEmpty(userNumb)
                 || welcomePageMapper.getActiveUserCnt(userNumb, USER_STAT_ACTIVE) != 1) {
-            // 접근할 수 없는 계정 상태를 공통 권한 오류로 반환한다.
+            // 접근할 수 없는 계정 상태를 공통 권한 오류로 반환함
             return ResultData.fail(ResultEnum.FORBIDDEN);
         }
 
-        // 배포된 관리자 페이지를 설정된 순서대로 반환한다.
+        // 배포된 관리자 페이지를 설정된 순서대로 반환함
         return ResultData.success(welcomePageMapper.getWelcomePageList(COMM_YES));
     }
 }

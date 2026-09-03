@@ -9,7 +9,7 @@ import org.our.sadari.report.dto.ReportDto;
  * fileName       : ReportService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 독후감과 독서 목표 업무 계약을 정의한다
+ * description    : 독후감과 독서 목표 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -22,7 +22,7 @@ import org.our.sadari.report.dto.ReportDto;
  */
 public interface ReportService {
     /**
-     * 독후감과 필요한 도서 정보를 등록한다.
+     * 독후감과 필요한 도서 정보를 등록함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -32,7 +32,7 @@ public interface ReportService {
     ResultData setReport(Long userNumb, ReportDto reportDto);
 
     /**
-     * 로그인 사용자의 독후감 상세 정보와 연결된 도서 정보를 조회한다.
+     * 로그인 사용자의 독후감 상세 정보와 연결된 도서 정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -42,7 +42,7 @@ public interface ReportService {
     ResultData getDetail(Long userNumb, Long reptNumb);
 
     /**
-     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -52,7 +52,7 @@ public interface ReportService {
     ResultData getReportByIsbnDtl(Long userNumb, String bookIsbn);
 
     /**
-     * ISBN 기준 활성 사용자의 공개 독후감을 요청한 정렬 기준으로 조회한다.
+     * ISBN 기준 활성 사용자의 공개 독후감을 요청한 정렬 기준으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -63,12 +63,12 @@ public interface ReportService {
     ResultData getPublicReportsByIsbn(Long userNumb, String bookIsbn, String sortType
                                     , String reptStat, int page);
 
-    /** 알림이 지정한 공개 독후감 한 건과 도서 정보를 조회한다. */
+    /** 알림이 지정한 공개 독후감 한 건과 도서 정보를 조회함 */
     ResultData getPublicReportTarget(Long userNumb, Long reptNumb);
 
     /**
-     * ISBN 기준으로 도서의 평균 별점을 조회한다.
-     * 평균 별점은 공개 여부와 관계없이 읽는 중 상태를 제외하고 계산한다.
+     * ISBN 기준으로 도서의 평균 별점을 조회함
+     * 평균 별점은 공개 여부와 관계없이 읽는 중 상태를 제외하고 계산함
      *
      * @author SeungHyeon.Kang
      * @param bookIsbn 조회할 도서 ISBN
@@ -77,7 +77,7 @@ public interface ReportService {
     ResultData getPublicRatingAvgByIsbn(String bookIsbn);
 
     /**
-     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회한다.
+     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -88,7 +88,7 @@ public interface ReportService {
     ResultData getBookList(Long userNumb, String bookKeyword, String sortType);
 
     /**
-     * 로그인 사용자의 독후감을 검색어와 정렬 조건에 따라 페이지 단위로 조회한다.
+     * 로그인 사용자의 독후감을 검색어와 정렬 조건에 따라 페이지 단위로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -100,7 +100,7 @@ public interface ReportService {
     ResultData getBookPage(Long userNumb, String bookKeyword, String sortType, int page);
 
     /**
-     * 본인 또는 다른 사용자 화면에 표시할 주간, 월간, 연간 독서 요약과 목표 정보를 조회한다.
+     * 본인 또는 다른 사용자 화면에 표시할 주간, 월간, 연간 독서 요약과 목표 정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
@@ -110,8 +110,8 @@ public interface ReportService {
     ResultData getMonthlyReadingSummary(Long userNumb, String pubcYsno);
 
     /**
-     * 주간, 월간, 연간 독서 목표를 저장한다.
-     * 목표를 낮추는 경우에는 기간과 횟수 제한을 적용한다.
+     * 주간, 월간, 연간 독서 목표를 저장함
+     * 목표를 낮추는 경우에는 기간과 횟수 제한을 적용함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -120,11 +120,11 @@ public interface ReportService {
      */
     ResultData setReadingGoal(Long userNumb, ReadingGoalDto readingGoalDto);
 
-    // copyPreviousReadingGoal 호출로 이전 목표값을 새 목표에 반영한다
+    // copyPreviousReadingGoal 호출로 이전 목표값을 새 목표에 반영함
     ResultData copyPreviousReadingGoal(Long userNumb);
 
     /**
-     * 기존 독후감 내용을 수정한다.
+     * 기존 독후감 내용을 수정함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -135,7 +135,7 @@ public interface ReportService {
     ResultData uptReport(Long userNumb, Long reptNumb, ReportDto reportDto);
 
     /**
-     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경한다.
+     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -147,7 +147,7 @@ public interface ReportService {
     ResultData uptReportAlim(Long userNumb, Long reptNumb, String alimType, ReportAlimDto reportAlimDto);
 
     /**
-     * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정한다.
+     * 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -158,7 +158,7 @@ public interface ReportService {
     ResultData uptReptStatusGrade(Long userNumb, Long reptNumb, ReportDto reportDto);
 
     /**
-     * 로그인 사용자의 독후감을 삭제한다.
+     * 로그인 사용자의 독후감을 삭제함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호

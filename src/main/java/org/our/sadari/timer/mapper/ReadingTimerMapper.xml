@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.timer.mapper.ReadingTimerMapper">
 
-    <!-- 동시 시작 요청을 직렬화하기 위해 사용자 행을 잠근다. -->
+    <!-- 동시 시작 요청을 직렬화하기 위해 사용자 행을 잠금 -->
     <select id="getUserLock" resultType="java.lang.Long">
         SELECT /* getUserLock */ USER_NUMB
           FROM TM_USERXM
@@ -10,7 +10,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 로그인 사용자의 읽는 중 독후감인지 확인한다. -->
+    <!-- 로그인 사용자의 읽는 중 독후감인지 확인함 -->
     <select id="getReadingReportCnt" resultType="int">
         SELECT /* getReadingReportCnt */ COUNT(1)
           FROM TM_REPORT
@@ -19,7 +19,7 @@
            AND REPT_STAT = #{readStat}
     </select>
 
-    <!-- 완료되지 않은 사용자 타이머 한 건을 조회한다. -->
+    <!-- 완료되지 않은 사용자 타이머 한 건을 조회함 -->
     <select id="getActiveTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getActiveTimerDtl */
                TIMER.TMRX_NUMB
@@ -46,7 +46,7 @@
          LIMIT 1
     </select>
 
-    <!-- 사용자 소유 타이머 한 건을 조회한다. -->
+    <!-- 사용자 소유 타이머 한 건을 조회함 -->
     <select id="getTimerDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getTimerDtl */
                TMRX_NUMB
@@ -67,7 +67,7 @@
            AND TMRX_NUMB = #{tmrxNumb}
     </select>
 
-    <!-- 타이머에 연결할 수 있는 읽는 중 도서를 조회한다. -->
+    <!-- 타이머에 연결할 수 있는 읽는 중 도서를 조회함 -->
     <select id="getReadingBookList" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getReadingBookList */ REPORT.REPT_NUMB, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
           FROM TM_REPORT REPORT
@@ -77,7 +77,7 @@
       ORDER BY REPORT.REPT_NUMB DESC
     </select>
 
-    <!-- 오늘 완료된 타이머를 조회한다. -->
+    <!-- 오늘 완료된 타이머를 조회함 -->
     <select id="getTodayCompletedTimerList" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getTodayCompletedTimerList */ TIMER.TMRX_NUMB, TIMER.REPT_NUMB, TIMER.TMRX_STAT, TIMER.STRT_DATE,
                TIMER.ENDX_DATE, TIMER.READ_SECS, BOOK.BOOK_TITL, BOOK.BOOK_CVIM
@@ -91,7 +91,7 @@
       ORDER BY TIMER.ENDX_DATE DESC, TIMER.TMRX_NUMB DESC
     </select>
 
-    <!-- 보존 중인 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회한다. -->
+    <!-- 보존 중인 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회함 -->
     <select id="getBookTimeList" resultType="org.our.sadari.timer.dto.ReadingTimerDto$BookTime">
         SELECT /* getBookTimeList */
                CAST(SUBSTRING_INDEX(
@@ -123,7 +123,7 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 월요일부터 일요일까지 저장된 일별 독서 시간을 조회한다. -->
+    <!-- 월요일부터 일요일까지 저장된 일별 독서 시간을 조회함 -->
     <select id="getDailyList" resultType="org.our.sadari.timer.dto.ReadingTimerDto$Daily">
         SELECT /* getDailyList */ READ_DATE, READ_SECS
           FROM TB_RDATDX
@@ -132,7 +132,7 @@
       ORDER BY READ_DATE
     </select>
 
-    <!-- 새 독서 타이머 세션을 등록한다. -->
+    <!-- 새 독서 타이머 세션을 등록함 -->
     <insert id="setTimer" useGeneratedKeys="true" keyProperty="tmrxNumb" keyColumn="TMRX_NUMB">
         /* setTimer */
         INSERT INTO TM_RDTMRX (
@@ -162,7 +162,7 @@
         )
     </insert>
 
-    <!-- 상태 전환으로 확정된 세션 값을 수정한다. -->
+    <!-- 상태 전환으로 확정된 세션 값을 수정함 -->
     <update id="uptTimer">
         UPDATE /* uptTimer */
                TM_RDTMRX
@@ -176,7 +176,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 목표시간 자동 완료 또는 알림 재시도를 기다리는 정상 회원의 세션 번호를 조회한다. -->
+    <!-- 목표시간 자동 완료 또는 알림 재시도를 기다리는 정상 회원의 세션 번호를 조회함 -->
     <select id="getDueTimerAlimList" resultType="java.lang.Long">
         SELECT /* getDueTimerAlimList */
                TIMER.TMRX_NUMB
@@ -193,7 +193,7 @@
          LIMIT #{maxSize}
     </select>
 
-    <!-- 대상 단위 트랜잭션에서 발송 조건을 다시 확인하고 세션 행을 잠근다. -->
+    <!-- 대상 단위 트랜잭션에서 발송 조건을 다시 확인하고 세션 행을 잠금 -->
     <select id="getDueTimerAlimDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getDueTimerAlimDtl */
                TIMER.TMRX_NUMB
@@ -216,7 +216,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 자동 완료 뒤 알림 발송 조건을 다시 확인하고 완료 세션 행을 잠근다. -->
+    <!-- 자동 완료 뒤 알림 발송 조건을 다시 확인하고 완료 세션 행을 잠금 -->
     <select id="getTimerAlimDtl" resultType="org.our.sadari.timer.dto.ReadingTimerDto">
         SELECT /* getTimerAlimDtl */
                TIMER.TMRX_NUMB
@@ -237,7 +237,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 알림 저장 성공 뒤 세션의 발송 일시를 기록하고 예약 일시를 비운다. -->
+    <!-- 알림 저장 성공 뒤 세션의 발송 일시를 기록하고 예약 일시를 비움 -->
     <update id="uptTimerAlimSent">
         UPDATE /* uptTimerAlimSent */
                TM_RDTMRX
@@ -248,7 +248,7 @@
            AND SEND_DATE IS NULL
     </update>
 
-    <!-- 계정 상태 변경 전에 아직 발송되지 않은 목표시간 예약을 모두 취소한다. -->
+    <!-- 계정 상태 변경 전에 아직 발송되지 않은 목표시간 예약을 모두 취소함 -->
     <update id="uptTimerAlimCancel">
         UPDATE /* uptTimerAlimCancel */
                TM_RDTMRX
@@ -259,7 +259,7 @@
            AND SEND_DATE IS NULL
     </update>
 
-    <!-- 확정 독서 시간을 사용자와 날짜별로 누적한다. -->
+    <!-- 확정 독서 시간을 사용자와 날짜별로 누적함 -->
     <insert id="setReadingDaily">
         /* setReadingDaily */
         INSERT INTO TB_RDATDX (USER_NUMB, READ_DATE, READ_SECS, UPDT_DATE)
@@ -268,7 +268,7 @@
                                 UPDT_DATE = VALUES(UPDT_DATE)
     </insert>
 
-    <!-- 보존기간이 지난 완료 세션 상세를 삭제한다. -->
+    <!-- 보존기간이 지난 완료 세션 상세를 삭제함 -->
     <delete id="delExpiredTimer">
         DELETE /* delExpiredTimer */
           FROM TM_RDTMRX

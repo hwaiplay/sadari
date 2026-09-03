@@ -6,7 +6,7 @@ import lombok.Getter;
  * fileName       : ResultEnum
  * author         : SeungHyeon.Kang
  * date           : 2026-03-25
- * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,163 +16,104 @@ import lombok.Getter;
  * 2026-08-20        SeungHyeon.Kang    타이머 목표시간 검증 코드 추가
  * 2026-08-20        SeungHyeon.Kang        모임 독서 변경 검증 코드 추가
  * 2026-08-22        SeungHyeon.Kang    중복 신고 검증 코드 추가
+ * 2026-09-03        HanWon.Jang        응답 메시지 주석 정리
  */
 @Getter
 public enum ResultEnum {
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "저장되었어요."
     COMMON_SAVE_SUCCESS(2001, "common.alert.0001"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "수정되었어요."
     COMMON_UPDATE_SUCCESS(2002, "common.alert.0002"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "삭제되었어요."
     COMMON_DELETE_SUCCESS(2003, "common.alert.0003"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "조회 결과가 없어요."
     COMMON_NO_DATA(2004, "common.alert.0004"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "저장에 실패했어요.\n다시 시도해주세요."
     COMMON_SAVE_REJECTED(2005, "common.alert.0005"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "수정에 실패했어요.\n다시 시도해주세요."
     COMMON_UPDATE_REJECTED(2006, "common.alert.0006"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "삭제에 실패했어요.\n다시 시도해주세요."
     COMMON_DELETE_REJECTED(2007, "common.alert.0007"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "검색에 실패했어요.\n다시 시도해주세요."
     COMMON_SEARCH_REJECTED(2008, "common.alert.0008"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "요청값이 올바르지 않아요."
     COMMON_INVALID_REQUEST(2009, "common.alert.0009"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "독후감 내용은 {0}byte 이하로 입력해주세요."
     COMMON_REPORT_CONTENT_TOO_LONG(2010, "common.alert.0010"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "시작일은 종료일보다 늦을 수 없습니다."
     COMMON_REPORT_DATE_RANGE_INVALID(2011, "common.alert.0011"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "다음 항목을 입력해주세요.\n{0}"
     COMMON_REPORT_REQUIRED_MISSING(2012, "common.alert.0012"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "선택한 책 정보가 올바르지 않습니다. 다른 책을 선택해주세요."
     COMMON_REPORT_BOOK_INVALID(2013, "common.alert.0013"),
 
-    /**
-     * 데이터베이스 연결을 가져오지 못해 요청을 처리할 수 없을 때 사용하는 enum 항목이다.
-     */
+    // "데이터베이스에 연결할 수 없어요.\n잠시 후 다시 시도해주세요."
     COMMON_DB_CONNECTION_FAILED(2014, "common.alert.0014"),
 
-    // 입력 내용에 비속어가 포함된 경우의 실패 코드
+    // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
     COMMON_BAD_WORD_INCLUDED(2015, "common.alert.0015"),
 
-    // 이미 사용 중인 닉네임인 경우의 실패 코드
+    // "이미 사용 중인 닉네임이에요."
     USER_NICK_DUPLICATED(2016, "user.alert.0001"),
 
-    /**
-     * 허용하지 않은 형식, 크기 또는 해상도의 이미지가 업로드되었을 때 사용하는 enum 항목이다.
-     */
+    // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 업로드할 수 있어요."
     COMMON_IMAGE_INVALID(2018, "common.alert.0018"),
 
-    /**
-     * Firebase Web Push 설정이 누락되어 브라우저 FCM token을 발급할 수 없을 때 사용하는 enum 항목이다.
-     */
+    // "Firebase Web Push 설정이 누락되었어요.\n누락된 항목: {0}"
     PUSH_CONFIG_MISSING(2017, "push.alert.0001"),
 
-    /**
-     * 다른 탭이나 기기에서 먼저 수정해 현재 편집 원본이 오래된 경우의 실패 코드이다.
-     */
+    // "다른 탭이나 디바이스에서 먼저 수정했어요.\n최신 내용을 확인한 뒤 다시 수정해주세요."
     COMMON_EDIT_CONFLICT(2019, "common.alert.0019"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "올바르지 않은 접근이에요.\n다시 시도해주세요."
     COMMON_ACCESS_REJECTED(2020, "common.alert.0020"),
 
-    /**
-     * 사용자 소유 독서 타이머 세션을 찾을 수 없는 경우의 실패 코드이다.
-     */
+    // "독서 타이머 세션을 찾을 수 없습니다."
     TIMER_SESSION_NOT_FOUND(2021, "timer.alert.0001"),
 
-    /**
-     * 허용되지 않은 독서 타이머 상태 전환을 요청한 경우의 실패 코드이다.
-     */
+    // "변경할 수 없는 독서 타이머 상태입니다."
     TIMER_STATE_INVALID(2022, "timer.alert.0002"),
 
-    /**
-     * 타이머에 연결할 수 없는 독후감을 요청한 경우의 실패 코드이다.
-     */
+    // "읽는 중인 내 도서만 타이머에 연결할 수 있습니다."
     TIMER_BOOK_INVALID(2023, "timer.alert.0003"),
 
-    /**
-     * 독서 타이머 알림 목표시간이 허용 범위를 벗어난 경우의 실패 코드이다.
-     */
+    // "타이머 알림은 1분 이상 8시간 이하로 설정할 수 있습니다."
     TIMER_TARGET_INVALID(2025, "timer.alert.0004"),
 
-    /**
-     * 회원 또는 앱 전체의 도서 검색 호출 제한을 초과한 경우의 실패 코드이다.
-     */
+    // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
     BOOK_SEARCH_RATE_LIMITED(2024, "book.alert.0001"),
 
-    /**
-     * 작성 또는 상태 변경된 모임원 독후감이 있어 현재 회차의 도서를 변경할 수 없는 경우이다.
-     */
+    // "작성된 독후감이 있어 도서를 변경할 수 없어요."
     READING_CLUB_BOOK_CHANGE_REJECTED(2026, "readingClub.alert.0001"),
 
-    /**
-     * 동일 사용자가 같은 대상을 다시 신고한 경우의 실패 코드이다.
-     */
+    // "동일한 대상은 다시 신고할 수 없어요."
     COMPLAINT_DUPLICATED(2027, "complaint.alert.0001"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "인증에 실패했어요.\n다시 로그인 해주세요."
     AUTH_FAIL(1001, "auth.common.fail"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
     TOKEN_INVALID(1002, "auth.token.invalid"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "토큰이 만료되었어요.\n다시 로그인 해주세요."
     TOKEN_EXPIRED(1003, "auth.token.expired"),
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // "접근 권한이 없습니다."
     FORBIDDEN(1004, "auth.common.forbidden"),
 
-    /**
-     * 탈퇴한 과거 회원 번호에 유효한 이용 정지가 남아 신규 가입할 수 없는 경우이다.
-     */
+    // "이용 정지가 남아 있어 이 카카오 계정으로 가입할 수 없어요."
     AUTH_WITHDRAWN_SUSPENDED(1005, "auth.withdrawn.suspended");
 
     // 공통 응답 결과 코드
@@ -180,9 +121,7 @@ public enum ResultEnum {
     // 다국어 응답 메시지 키
     private final String messageKey;
 
-    /**
-     * 처리 결과와 메시지 키를 연결하는 enum 항목이다.
-     */
+    // 결과 코드와 메시지 키를 Enum 항목에 연결함
     ResultEnum(int code, String messageKey) {
 
         this.code = code;

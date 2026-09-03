@@ -8,7 +8,7 @@ import lombok.Getter;
  * fileName       : BookCoverColorResponseDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 도서 표지와 가장 가까운 책장 색상 코드 응답을 전달한다
+ * description    : 도서 표지와 가장 가까운 책장 색상 코드 응답을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

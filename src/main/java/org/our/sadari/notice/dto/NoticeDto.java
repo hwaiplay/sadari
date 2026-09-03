@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : NoticeDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 사용자에게 배포된 공지사항 제목과 HTML 본문을 전달한다
+ * description    : 사용자에게 배포된 공지사항 제목과 HTML 본문을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

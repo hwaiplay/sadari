@@ -3,7 +3,7 @@ import { assertResultDataSuccess } from "../../../app/api/resultData";
 
 
 /**
- * ?꾩옱 釉뚮씪?곗? 荑좏궎???몄쬆 ?좏겙 ?좏슚?깆쓣 ?뺤씤?쒕떎.
+ * ?꾩옱 釉뚮씪?곗? 荑좏궎???몄쬆 ?좏겙 ?좏슚?깆쓣 ?뺤씤?쒕떎
  * @author HanWon.Jang
  * @return ?몄쬆 ?곹깭 ?뺤씤 API ?묐떟
  */
@@ -15,7 +15,7 @@ export const checkAuthApi = async () => {
 
 // refreshToken 湲곕컲 accessToken ?щ컻湲?API
 /**
- * refreshToken 荑좏궎瑜??댁슜??accessToken ?щ컻湲됱쓣 ?붿껌?쒕떎.
+ * refreshToken 荑좏궎瑜??댁슜??accessToken ?щ컻湲됱쓣 ?붿껌?쒕떎
  * @author HanWon.Jang
  * @return ?좏겙 ?щ컻湲?API ?묐떟
  */
@@ -26,7 +26,7 @@ export const refreshTokenApi = async () => {
 };
 
 /**
- * logout 기능을 처리한다
+ * logout 기능을 처리함
  *
  * @author HanWon.Jang
  * @return 처리 결과
@@ -40,7 +40,7 @@ export type LogoutRequest = {
 };
 
 /**
- * 선택한 범위의 로그인 세션과 푸시 구독을 종료한다.
+ * 선택한 범위의 로그인 세션과 푸시 구독을 종료함
  *
  * @author SeungHyeon.Kang
  * @param data 현재 기기 또는 전체 기기 로그아웃 요청

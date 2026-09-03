@@ -146,7 +146,7 @@ Java 코드를 생성하거나 수정할 때 아래 규칙을 예외 없이 적�
 public ResultData setReport(@AuthenticationPrincipal Long userNumb, Long reptNumb, String sourceType
                           , @Valid @RequestBody ReportDto reportDto, @RequestParam(required = false) String requestType
                           , HttpServletRequest request) {
-    // 독후감 등록에 필요한 사용자 번호와 요청 데이터를 서비스에 전달한다
+    // 독후감 등록에 필요한 사용자 번호와 요청 데이터를 서비스에 전달함
     return reportService.setReport(userNumb, reptNumb, sourceType, reportDto, requestType, request);
 }
 ```
@@ -219,7 +219,7 @@ log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수
  * fileName       : BookController
  * author         : HanWon.Jang
  * date           : 2026-07-28
- * description    : 도서 검색과 도서 평점 조회 API를 제공한다
+ * description    : 도서 검색과 도서 평점 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -244,7 +244,7 @@ public class BookController {
 
 - DTO, VO, Entity와 일반 클래스의 필드 주석에는 해당 필드가 나타내는 실제 업무 데이터나 설정의 목적을 작성합니다.
 - 필드와 중첩 데이터 클래스의 설명은 반드시 `//` 주석으로 작성합니다.
-- 필드와 중첩 데이터 클래스의 `//` 주석은 공통 서술체 규칙의 예외로 두며 `도서 제목`, `yyyyMMdd 형식의 도서 출간일`처럼 종결어미 없이 명사형으로 작성합니다.
+- 필드와 중첩 데이터 클래스의 `//` 주석도 공통 명사형 규칙에 따라 `도서 제목`, `yyyyMMdd 형식의 도서 출간일`처럼 종결어미 없이 작성합니다.
 - 필드에 `@Schema(description = "...")`이 선언되어 있으면 동일한 설명의 `//` 주석을 작성하지 않습니다.
 - 필드에 `@Schema`가 없거나 `@Schema.description`이 없을 때만 해당 필드의 `//` 설명 주석을 작성합니다.
 - 필드 주석에는 `클래스 내부에서 사용하는 상태 또는 설정 값이다`처럼 어느 필드에도 적용할 수 있는 공통 문구만 작성하지 않습니다.
@@ -261,7 +261,7 @@ public class BookController {
 
 ```java
 /**
- * 사용자 식별자로 사용자 상세 정보를 조회한다
+ * 사용자 식별자로 사용자 상세 정보를 조회함
  *
  * @author HanWon.Jang
  * @param userId 조회할 사용자 식별자
@@ -269,13 +269,13 @@ public class BookController {
  * @throws IllegalArgumentException 사용자 식별자가 비어 있을 때 발생
  */
 public UserDto getUserDtl(String userId) {
-    // 사용자 식별자는 Mapper 호출 전에 검증하여 불필요한 DB 접근과 Null 조회를 차단한다
+    // 사용자 식별자는 Mapper 호출 전에 검증하여 불필요한 DB 접근과 Null 조회를 차단함
     if (StringUtil.isEmpty(userId)) {
-        // 비어 있는 사용자 식별자가 Mapper까지 전달되지 않도록 예외를 생성한다
+        // 비어 있는 사용자 식별자가 Mapper까지 전달되지 않도록 예외를 생성함
         throw new IllegalArgumentException("사용자 ID는 필수 값입니다.");
     }
 
-    // 검증이 끝난 사용자 식별자로 사용자 상세 정보를 조회한다
+    // 검증이 끝난 사용자 식별자로 사용자 상세 정보를 조회함
     return userMapper.getUserDtl(userId);
 }
 ```
@@ -328,11 +328,11 @@ public UserDto getUserDtl(String userId) {
 - 블록 종료 뒤 `else`, `catch`, `finally`가 이어져도 닫는 중괄호와 다음 키워드 사이를 한 줄 비웁니다.
 
 ```java
-// 예외 체인에 데이터베이스 연결 장애를 나타내는 예외가 포함되어 있는지 확인한다
+// 예외 체인에 데이터베이스 연결 장애를 나타내는 예외가 포함되어 있는지 확인함
 if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
         || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
         || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)) {
-    // 데이터베이스 연결 실패로 판정한다
+    // 데이터베이스 연결 실패로 판정함
     return true;
 }
 ```
@@ -350,7 +350,7 @@ if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(thro
 - 생성자 파라미터가 많더라도 객체 생성문 자체는 한 줄로 유지합니다.
 
 ```java
-// 스케줄러 실패 상세 정보를 담을 객체를 생성한다
+// 스케줄러 실패 상세 정보를 담을 객체를 생성함
 SchedulerLogDto.SchedulerFailDto schedulerFailDto = new SchedulerLogDto.SchedulerFailDto();
 ```
 
@@ -363,16 +363,16 @@ SchedulerLogDto.SchedulerFailDto schedulerFailDto = new SchedulerLogDto.Schedule
 ### 8.9 로직 주석 예시
 
 ```java
-// 조회 결과가 없으면 이후 로직에서 사용자 정보가 참조되지 않도록 공통 실패 응답을 즉시 반환한다
+// 조회 결과가 없으면 이후 로직에서 사용자 정보가 참조되지 않도록 공통 실패 응답을 즉시 반환함
 if (StringUtil.isEmpty(userDto)) {
     // "사용자 정보를 찾을 수 없습니다."
     return ResultData.fail(ResultEnum.USER_NOT_FOUND);
 }
 
-// 로그인 사용자 번호를 독후감 조회 조건에 설정한다
+// 로그인 사용자 번호를 독후감 조회 조건에 설정함
 reportDto.setUserNumb(userNumb);
 
-// 검증된 조회 조건으로 독후감 목록을 조회한다
+// 검증된 조회 조건으로 독후감 목록을 조회함
 List<ReportDto> reportList = reportMapper.getReportList(reportDto);
 ```
 
@@ -420,7 +420,7 @@ public class ReportController {
     @Operation(summary = "독후감 상세 조회", description = "독후감 번호로 로그인 사용자의 독후감 상세 정보를 조회한다.")
     public ResultData getReportDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Parameter(description = "조회할 독후감 번호", example = "1") @PathVariable Long reptNumb) {
-        // 로그인 사용자 번호와 독후감 번호로 독후감 상세 정보를 조회한다
+        // 로그인 사용자 번호와 독후감 번호로 독후감 상세 정보를 조회함
         return reportService.getReportDtl(userNumb, reptNumb);
     }
 }

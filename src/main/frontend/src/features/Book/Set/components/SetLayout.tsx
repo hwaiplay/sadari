@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/features/Book/Set/components/SetLayout.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/features/Book/Set/components/SetLayout.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */

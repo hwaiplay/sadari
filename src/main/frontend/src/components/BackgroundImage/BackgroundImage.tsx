@@ -11,7 +11,7 @@ type BackgroundImageProps = {
 };
 
 /**
- * 배경사진의 실제 로드 상태를 추적하여 완료 전까지 영역 중앙에 공통 소형 회전 링을 표시한다
+ * 배경사진의 실제 로드 상태를 추적하여 완료 전까지 영역 중앙에 공통 소형 회전 링을 표시함
  *
  * @author HanWon.Jang
  * @param source 화면에 표시할 배경사진 경로
@@ -38,40 +38,40 @@ const BackgroundImage = ({
   const loadingTitle = message("frontend.common.loadingBackgroundImage");
 
   /**
-   * 현재 표시 대상 배경사진의 로드 완료 상태를 반영한다
+   * 현재 표시 대상 배경사진의 로드 완료 상태를 반영함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleImageLoad = (): void => {
-    // 이전 경로의 최종 실패 상태가 현재 표시 이미지에 영향을 주지 않게 초기화한다
+    // 이전 경로의 최종 실패 상태가 현재 표시 이미지에 영향을 주지 않게 초기화함
     setUnavailableSource(null);
-    // 현재 원본 또는 대체 배경사진의 로드 완료 경로를 저장한다
+    // 현재 원본 또는 대체 배경사진의 로드 완료 경로를 저장함
     setLoadedSource(displayedSource);
   };
 
   /**
-   * 원본 배경사진 요청 실패 시 지정된 대체 이미지를 한 번만 요청한다
+   * 원본 배경사진 요청 실패 시 지정된 대체 이미지를 한 번만 요청함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleImageError = (): void => {
-    // 아직 대체 이미지를 요청하지 않았다면 원본 실패 상태를 기록해 경로를 교체한다
+    // 아직 대체 이미지를 요청하지 않았다면 원본 실패 상태를 기록해 경로를 교체함
     if (canUseFallback && !isFallbackActive) {
-      // 실패한 원본 경로를 저장하여 다음 렌더링에서 대체 이미지를 사용한다
+      // 실패한 원본 경로를 저장하여 다음 렌더링에서 대체 이미지를 사용함
       setFailedSource(source);
-      // 대체 이미지 로드 완료 전까지 회전 링을 유지하도록 종료한다
+      // 대체 이미지 로드 완료 전까지 회전 링을 유지하도록 종료함
       return;
     }
 
-    // 대체 이미지가 없거나 대체 요청도 실패하면 회전 링이 계속 남지 않게 종료 상태로 처리한다
+    // 대체 이미지가 없거나 대체 요청도 실패하면 회전 링이 계속 남지 않게 종료 상태로 처리함
     setUnavailableSource(displayedSource);
-    // 실패한 이미지 요소는 숨기되 현재 경로의 로드 상태 추적을 종료한다
+    // 실패한 이미지 요소는 숨기되 현재 경로의 로드 상태 추적을 종료함
     setLoadedSource(displayedSource);
   };
 
-  // 실제 이미지와 로드 중 공통 소형 회전 링을 같은 배경 영역에 반환한다
+  // 실제 이미지와 로드 중 공통 소형 회전 링을 같은 배경 영역에 반환함
   return (
     <>
       <img

@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : ReadingStatisticsQueryDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 통계 집계 SQL에 필요한 회원과 현재 및 비교 기간 조건을 전달한다
+ * description    : 독서 통계 집계 SQL에 필요한 회원과 현재 및 비교 기간 조건을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

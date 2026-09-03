@@ -29,7 +29,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : BookCoverColorServiceTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 도서 표지 대표색과 책장 색상 공통코드의 자동 매칭을 검증한다
+ * description    : 도서 표지 대표색과 책장 색상 공통코드의 자동 매칭을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -47,150 +47,150 @@ class BookCoverColorServiceTest {
     private BookCoverColorService bookCoverColorService;
 
     /**
-     * 각 테스트에서 도서 표지 색상 분석 서비스를 생성한다.
+     * 각 테스트에서 도서 표지 색상 분석 서비스를 생성함
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
 
-        // 도서 표지 대표색 자동 매칭 테스트 대상을 생성한다
+        // 도서 표지 대표색 자동 매칭 테스트 대상을 생성함
         bookCoverColorService = new BookCoverColorService(codeUtil);
     }
 
     /**
-     * 표지 대표색과 같은 색상의 공통코드가 선택되는지 검증한다.
+     * 표지 대표색과 같은 색상의 공통코드가 선택되는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getNearestBookColor() {
 
-        // 비교할 파란색과 코랄색 책장 공통코드를 생성한다
+        // 비교할 파란색과 코랄색 책장 공통코드를 생성함
         CodeDto blueColorCode = createColorCode("BLUE", "#6aa6d8");
         CodeDto coralColorCode = createColorCode("CORAL_RED", "#c96f64");
-        // 코랄색으로 채운 테스트용 도서 표지 이미지를 생성한다
+        // 코랄색으로 채운 테스트용 도서 표지 이미지를 생성함
         BufferedImage coverImage = createSolidColorImage(0xffc96f64);
 
-        // 표지 대표색과 가장 가까운 책장 색상을 계산한다
+        // 표지 대표색과 가장 가까운 책장 색상을 계산함
         CodeDto matchedColorCode = bookCoverColorService.findNearestBookColor(
                 coverImage, List.of(blueColorCode, coralColorCode), blueColorCode
         );
 
-        // 표지와 같은 코랄색 공통코드가 선택되었는지 확인한다
+        // 표지와 같은 코랄색 공통코드가 선택되었는지 확인함
         assertEquals("CORAL_RED", matchedColorCode.getComdCode());
     }
 
     /**
-     * 흰색만 있는 표지는 대표색을 만들지 않고 기본 색상을 사용하는지 검증한다.
+     * 흰색만 있는 표지는 대표색을 만들지 않고 기본 색상을 사용하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getBookColorWhiteFallback() {
 
-        // 분석 실패 시 사용할 기본 책장 공통코드를 생성한다
+        // 분석 실패 시 사용할 기본 책장 공통코드를 생성함
         CodeDto fallbackColorCode = createColorCode("BLUE", "#6aa6d8");
-        // 흰색으로 채운 테스트용 도서 표지 이미지를 생성한다
+        // 흰색으로 채운 테스트용 도서 표지 이미지를 생성함
         BufferedImage coverImage = createSolidColorImage(0xffffffff);
 
-        // 흰색 표지의 책장 색상을 계산한다
+        // 흰색 표지의 책장 색상을 계산함
         CodeDto matchedColorCode = bookCoverColorService.findNearestBookColor(
                 coverImage, List.of(fallbackColorCode), fallbackColorCode
         );
 
-        // 분석 가능한 대표색이 없을 때 기본 색상이 선택되었는지 확인한다
+        // 분석 가능한 대표색이 없을 때 기본 색상이 선택되었는지 확인함
         assertEquals("BLUE", matchedColorCode.getComdCode());
     }
 
     /**
-     * 허용하지 않은 외부 호스트는 요청하지 않고 기본 색상을 사용하는지 검증한다.
+     * 허용하지 않은 외부 호스트는 요청하지 않고 기본 색상을 사용하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getCoverColorHostFallback() {
 
-        // 이미지 분석 실패 시 사용할 기본 책장 공통코드를 생성한다
+        // 이미지 분석 실패 시 사용할 기본 책장 공통코드를 생성함
         CodeDto fallbackColorCode = createColorCode("BLUE", "#6aa6d8");
-        // BOOK_COLR 공통코드 조회 결과를 설정한다
+        // BOOK_COLR 공통코드 조회 결과를 설정함
         when(codeUtil.getCodeList(Constant.CODE_BOOK_COLR)).thenReturn(List.of(fallbackColorCode));
-        // 허용 목록에 없는 외부 이미지 URL을 요청 DTO에 설정한다
+        // 허용 목록에 없는 외부 이미지 URL을 요청 DTO에 설정함
         BookCoverColorRequestDto requestDto = new BookCoverColorRequestDto();
         requestDto.setBookCvim("https://example.com/cover.jpg");
 
-        // 허용하지 않은 외부 이미지 URL의 책장 색상을 조회한다
+        // 허용하지 않은 외부 이미지 URL의 책장 색상을 조회함
         ResultData resultData = bookCoverColorService.getBookCoverColor(requestDto);
         BookCoverColorResponseDto responseDto = (BookCoverColorResponseDto) resultData.getData();
 
-        // 외부 요청 없이 기본 색상의 성공 응답이 반환되었는지 확인한다
+        // 외부 요청 없이 기본 색상의 성공 응답이 반환되었는지 확인함
         assertEquals(200, resultData.getCode());
         assertEquals("BLUE", responseDto.getReptColr());
         assertEquals("#6aa6d8", responseDto.getReptColrName());
     }
 
     /**
-     * 카카오 도서 검색의 HTTPS 표지 호스트만 외부 분석 대상으로 허용하는지 검증한다
+     * 카카오 도서 검색의 HTTPS 표지 호스트만 외부 분석 대상으로 허용하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getTrustedKakaoCover() {
-        // 카카오 공식 도서 검색 응답 형식의 표지 URI를 검증한다
+        // 카카오 공식 도서 검색 응답 형식의 표지 URI를 검증함
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://search1.kakaocdn.net/thumb/R120x174.q85/book-cover"
         );
-        // 허용 목록에 등록된 카카오 표지 호스트인지 확인한다
+        // 허용 목록에 등록된 카카오 표지 호스트인지 확인함
         assertNotNull(coverUri);
         assertEquals("search1.kakaocdn.net", coverUri.getHost());
     }
 
     /**
-     * 카카오 썸네일에서 추출한 Daum 도서 원본 표지 호스트를 허용하는지 검증한다
+     * 카카오 썸네일에서 추출한 Daum 도서 원본 표지 호스트를 허용하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getTrustedDaumCover() {
-        // Daum 도서 원본 이미지 형식의 표지 URI를 검증한다
+        // Daum 도서 원본 이미지 형식의 표지 URI를 검증함
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://t1.daumcdn.net/lbook/image/6253040?timestamp=20260115151223"
         );
-        // 허용 목록에 등록된 Daum 원본 표지 호스트인지 확인한다
+        // 허용 목록에 등록된 Daum 원본 표지 호스트인지 확인함
         assertNotNull(coverUri);
         assertEquals("t1.daumcdn.net", coverUri.getHost());
     }
 
     /**
-     * 카카오 호스트명을 접미사로 위장한 외부 주소를 차단하는지 검증한다
+     * 카카오 호스트명을 접미사로 위장한 외부 주소를 차단하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getCoverRejectsFakeKakao() {
-        // 허용 호스트명을 접미사로 사용한 외부 주소를 검증한다
+        // 허용 호스트명을 접미사로 사용한 외부 주소를 검증함
         URI coverUri = bookCoverColorService.getTrustedCoverUri(
                 "https://search1.kakaocdn.net.example.com/book-cover"
         );
-        // 정확히 일치하지 않는 외부 호스트가 차단되었는지 확인한다
+        // 정확히 일치하지 않는 외부 호스트가 차단되었는지 확인함
         assertNull(coverUri);
     }
 
-    /** 압축 바이트가 작아도 허용 크기를 넘는 이미지 헤더는 픽셀 디코딩 전에 차단한다. */
+    /** 압축 바이트가 작아도 허용 크기를 넘는 이미지 헤더는 픽셀 디코딩 전에 차단함 */
     @Test
     void decodeRejectsLargeHeader() throws IOException {
-        // 전체 픽셀 데이터를 만들지 않고 가로 크기만 제한을 넘긴 유효한 PNG 헤더를 생성한다
+        // 전체 픽셀 데이터를 만들지 않고 가로 크기만 제한을 넘긴 유효한 PNG 헤더를 생성함
         byte[] oversizedPngHeader = createPngHeader(4097, 1);
 
-        // 이미지 헤더 크기 검증을 실행한다
+        // 이미지 헤더 크기 검증을 실행함
         BufferedImage coverImage = bookCoverColorService.decodeCoverImage(oversizedPngHeader);
 
-        // 과도한 픽셀 버퍼를 할당하지 않고 사용할 수 없는 이미지로 처리되는지 확인한다
+        // 과도한 픽셀 버퍼를 할당하지 않고 사용할 수 없는 이미지로 처리되는지 확인함
         assertNull(coverImage);
     }
 
     /**
-     * 테스트에 사용할 책장 색상 공통코드를 생성한다.
+     * 테스트에 사용할 책장 색상 공통코드를 생성함
      *
      * @author SeungHyeon.Kang
      * @param code 책장 색상 세부코드
@@ -199,17 +199,17 @@ class BookCoverColorServiceTest {
      */
     private CodeDto createColorCode(String code, String hexColor) {
 
-        // 테스트할 책장 색상 코드와 HEX 값을 DTO에 설정한다
+        // 테스트할 책장 색상 코드와 HEX 값을 DTO에 설정함
         CodeDto colorCode = new CodeDto();
         colorCode.setComdCode(code);
         colorCode.setComdName(hexColor);
 
-        // 생성한 책장 색상 공통코드를 반환한다
+        // 생성한 책장 색상 공통코드를 반환함
         return colorCode;
     }
 
     /**
-     * 단일 색상으로 채운 테스트용 표지 이미지를 생성한다.
+     * 단일 색상으로 채운 테스트용 표지 이미지를 생성함
      *
      * @author SeungHyeon.Kang
      * @param argb 표지 전체에 적용할 ARGB 색상
@@ -217,24 +217,24 @@ class BookCoverColorServiceTest {
      */
     private BufferedImage createSolidColorImage(int argb) {
 
-        // 지정한 색상으로 채울 테스트용 표지 이미지를 생성한다
+        // 지정한 색상으로 채울 테스트용 표지 이미지를 생성함
         BufferedImage coverImage = new BufferedImage(40, 40, BufferedImage.TYPE_INT_ARGB);
 
-        // 표지 이미지의 모든 픽셀을 지정한 색상으로 채운다
+        // 표지 이미지의 모든 픽셀을 지정한 색상으로 채움
         for (int y = 0; y < coverImage.getHeight(); y++) {
-            // 같은 행의 픽셀을 가로 방향으로 순회한다
+            // 같은 행의 픽셀을 가로 방향으로 순회함
             for (int x = 0; x < coverImage.getWidth(); x++) {
-                // 현재 픽셀에 테스트 색상을 설정한다
+                // 현재 픽셀에 테스트 색상을 설정함
                 coverImage.setRGB(x, y, argb);
             }
         }
 
-        // 단일 색상으로 채운 테스트용 표지 이미지를 반환한다
+        // 단일 색상으로 채운 테스트용 표지 이미지를 반환함
         return coverImage;
     }
 
     /**
-     * 이미지 크기 검증 테스트에 사용할 PNG 서명과 IHDR 청크를 생성한다.
+     * 이미지 크기 검증 테스트에 사용할 PNG 서명과 IHDR 청크를 생성함
      *
      * @author SeungHyeon.Kang
      * @param width PNG 헤더 가로 크기
@@ -243,7 +243,7 @@ class BookCoverColorServiceTest {
      * @throws IOException 테스트 바이트 생성 실패
      */
     private byte[] createPngHeader(int width, int height) throws IOException {
-        // IHDR 데이터에 PNG 기본 RGB 형식과 테스트 크기를 기록한다
+        // IHDR 데이터에 PNG 기본 RGB 형식과 테스트 크기를 기록함
         ByteArrayOutputStream headerDataBuffer = new ByteArrayOutputStream();
         try (DataOutputStream headerData = new DataOutputStream(headerDataBuffer)) {
             headerData.writeInt(width);
@@ -255,7 +255,7 @@ class BookCoverColorServiceTest {
             headerData.writeByte(0);
         }
 
-        // PNG Reader가 헤더 크기를 읽을 수 있도록 서명, IHDR와 CRC를 직렬화한다
+        // PNG Reader가 헤더 크기를 읽을 수 있도록 서명, IHDR와 CRC를 직렬화함
         byte[] chunkType = "IHDR".getBytes(StandardCharsets.US_ASCII);
         byte[] headerBytes = headerDataBuffer.toByteArray();
         CRC32 crc32 = new CRC32();
@@ -270,7 +270,7 @@ class BookCoverColorServiceTest {
             png.writeInt((int) crc32.getValue());
         }
 
-        // 크기 헤더만 포함한 테스트 PNG 바이트를 반환한다
+        // 크기 헤더만 포함한 테스트 PNG 바이트를 반환함
         return pngBuffer.toByteArray();
     }
 }

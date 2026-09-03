@@ -29,7 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : FileResourceController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 비공개 파일 저장소의 공개 이미지 객체를 기존 업로드 URL로 제공한다
+ * description    : 비공개 파일 저장소의 공개 이미지 객체를 기존 업로드 URL로 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -64,7 +64,7 @@ public class FileResourceController {
     private final UserBlockService userBlockService;
 
     /**
-     * 공개 이미지 조회에 사용할 파일 저장소를 구성한다.
+     * 공개 이미지 조회에 사용할 파일 저장소를 구성함
      *
      * @author SeungHyeon.Kang
      * @param fileStorage 실행 환경에 맞는 이미지 저장소
@@ -75,18 +75,18 @@ public class FileResourceController {
     public FileResourceController(FileStorage fileStorage, FileMapper fileMapper, FileService fileService
                                 , UserBlockService userBlockService) {
 
-        // 검증된 공개 이미지 조회에 사용할 저장소를 보관한다
+        // 검증된 공개 이미지 조회에 사용할 저장소를 보관함
         this.fileStorage = fileStorage;
-        // 활성 회원의 현재 이미지인지 검증할 데이터 접근 객체를 보관한다
+        // 활성 회원의 현재 이미지인지 검증할 데이터 접근 객체를 보관함
         this.fileMapper = fileMapper;
-        // 일반 화면 요청에서 화면용 배경사진을 생성하거나 재사용할 서비스를 보관한다
+        // 일반 화면 요청에서 화면용 배경사진을 생성하거나 재사용할 서비스를 보관함
         this.fileService = fileService;
-        // 직접 경로로 접근한 사용자와 이미지 소유자의 차단 관계를 검증할 서비스를 보관한다
+        // 직접 경로로 접근한 사용자와 이미지 소유자의 차단 관계를 검증할 서비스를 보관함
         this.userBlockService = userBlockService;
     }
 
     /**
-     * 기존 업로드 URL 계약을 유지하면서 로컬 또는 S3 이미지를 반환한다.
+     * 기존 업로드 URL 계약을 유지하면서 로컬 또는 S3 이미지를 반환함
      *
      * @author SeungHyeon.Kang
      * @param directory 프로필 또는 배경 이미지 디렉터리
@@ -109,65 +109,65 @@ public class FileResourceController {
           , @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
     ) throws IOException {
 
-        // 허용된 이미지 유형과 서버 생성 경로가 아니면 저장소 조회 전에 차단한다
+        // 허용된 이미지 유형과 서버 생성 경로가 아니면 저장소 조회 전에 차단함
         if (!ALLOWED_DIRECTORIES.contains(directory)
                 || !UPLOAD_DATE_PATTERN.matcher(uploadDate).matches()
                 || !STORED_NAME_PATTERN.matcher(storedName).matches()) {
-            // 허용되지 않은 공개 경로에 404 응답을 반환한다
+            // 허용되지 않은 공개 경로에 404 응답을 반환함
             return ResponseEntity.notFound().build();
         }
 
-        // display 파생본은 배경사진 경로에만 허용하고 알 수 없는 변형 요청은 차단한다
+        // display 파생본은 배경사진 경로에만 허용하고 알 수 없는 변형 요청은 차단함
         boolean isDisplayVariant = "display".equals(variant);
 
         if (!StringUtil.isEmpty(variant) && (!isDisplayVariant || !"background".equals(directory))) {
-            // 지원하지 않는 파생본 요청을 파일 부재와 같은 응답으로 처리한다
+            // 지원하지 않는 파생본 요청을 파일 부재와 같은 응답으로 처리함
             return ResponseEntity.notFound().build();
         }
 
-        // 검증된 세 경로 구간만 사용하여 저장소 객체 키를 구성한다
+        // 검증된 세 경로 구간만 사용하여 저장소 객체 키를 구성함
         String objectKey = directory + "/" + uploadDate + "/" + storedName;
-        // DB 메타정보에 저장된 기존 공개 URL 형식으로 참조 경로를 구성한다
+        // DB 메타정보에 저장된 기존 공개 URL 형식으로 참조 경로를 구성함
         String filePath = "/uploads/" + objectKey;
 
-        // 활성 회원의 현재 프로필 또는 배경으로 참조되는 이미지 소유자를 조회한다
+        // 활성 회원의 현재 프로필 또는 배경으로 참조되는 이미지 소유자를 조회함
         Long fileOwnerNumb = fileMapper.getActivePublicFileOwner(storedName, filePath);
 
-        // 현재 공개 이미지가 아니거나 요청자와 소유자가 격리되었으면 저장소 조회 전에 차단한다
+        // 현재 공개 이미지가 아니거나 요청자와 소유자가 격리되었으면 저장소 조회 전에 차단함
         if (StringUtil.isEmpty(fileOwnerNumb) || userBlockService.isBlocked(userNumb, fileOwnerNumb)) {
-            // 탈퇴 또는 삭제 대기 회원의 이전 이미지와 미참조 파일을 공개하지 않는다
+            // 탈퇴 또는 삭제 대기 회원의 이전 이미지와 미참조 파일을 공개하지 않음
             return ResponseEntity.notFound().build();
         }
 
-        // UUID 파일명은 같은 URL의 내용이 변경되지 않으므로 저장소 조회 전 조건부 요청 식별자로 사용한다
+        // UUID 파일명은 같은 URL의 내용이 변경되지 않으므로 저장소 조회 전 조건부 요청 식별자로 사용함
         String entityTagSource = isDisplayVariant ? fileService.getBgDisplayTag(storedName) : storedName;
         String entityTag = "\"" + entityTagSource + "\"";
 
-        // 활성 공개 상태를 확인한 동일 이미지이면 S3 원본 전송 없이 브라우저 저장본을 재사용한다
+        // 활성 공개 상태를 확인한 동일 이미지이면 S3 원본 전송 없이 브라우저 저장본을 재사용함
         if (entityTag.equals(ifNoneMatch) || ("W/" + entityTag).equals(ifNoneMatch)) {
-            // 활성 계정 검증이 끝난 이미지의 브라우저 저장본 사용을 허용한다
+            // 활성 계정 검증이 끝난 이미지의 브라우저 저장본 사용을 허용함
             return ResponseEntity.status(HttpStatus.NOT_MODIFIED)
                     .eTag(entityTag)
                     .cacheControl(REVALIDATED_CACHE_CONTROL)
                     .build();
         }
 
-        // 실행 환경에 연결된 저장소에서 공개 이미지 객체를 조회한다
+        // 실행 환경에 연결된 저장소에서 공개 이미지 객체를 조회함
         Optional<StoredFile> storedFile = isDisplayVariant
                 ? fileService.getBgDisplayFile(objectKey)
                 : fileStorage.getFile(objectKey);
 
-        // 저장소에 객체가 없으면 파일 경로 노출 없이 404 응답을 반환한다
+        // 저장소에 객체가 없으면 파일 경로 노출 없이 404 응답을 반환함
         if (storedFile.isEmpty()) {
-            // 존재하지 않는 이미지 조회 결과를 반환한다
+            // 존재하지 않는 이미지 조회 결과를 반환함
             return ResponseEntity.notFound().build();
         }
 
-        // 저장된 MIME 유형이 없으면 안전한 바이너리 기본 유형을 사용한다
+        // 저장된 MIME 유형이 없으면 안전한 바이너리 기본 유형을 사용함
         MediaType mediaType = StringUtil.isEmpty(storedFile.get().contentType())
                 ? MediaType.APPLICATION_OCTET_STREAM
                 : MediaType.parseMediaType(storedFile.get().contentType());
-        // 브라우저가 이미지를 저장하되 다음 사용 전 활성 계정 상태를 서버에 재검증하도록 반환한다
+        // 브라우저가 이미지를 저장하되 다음 사용 전 활성 계정 상태를 서버에 재검증하도록 반환함
         return ResponseEntity.ok()
                 .contentType(mediaType)
                 .contentLength(storedFile.get().bytes().length)

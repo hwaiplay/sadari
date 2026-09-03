@@ -32,7 +32,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : ReadingStatisticsServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 습관 및 연도별 통계의 집계와 계정 및 공개 범위를 검증한다
+ * description    : 독서 습관 및 연도별 통계의 집계와 계정 및 공개 범위를 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -48,30 +48,30 @@ class ReadingStatisticsServiceImplTest {
     private ReadingStatisticsServiceImpl readingStatisticsService;
 
     /**
-     * 서울 시간 2026년 8월 14일로 고정한 독서 통계 서비스를 준비한다
+     * 서울 시간 2026년 8월 14일로 고정한 독서 통계 서비스를 준비함
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
 
-        // ResultData 메시지 조회에 사용할 테스트 메시지 소스를 초기화한다
+        // ResultData 메시지 조회에 사용할 테스트 메시지 소스를 초기화함
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        // 공통 결과 코드의 실제 메시지 프로퍼티를 조회 대상으로 설정한다
+        // 공통 결과 코드의 실제 메시지 프로퍼티를 조회 대상으로 설정함
         messageSource.setBasename("messages");
-        // 테스트에서 한글 실패 문구가 손상되지 않도록 인코딩을 설정한다
+        // 테스트에서 한글 실패 문구가 손상되지 않도록 인코딩을 설정함
         messageSource.setDefaultEncoding("UTF-8");
-        // 공통 결과 객체가 테스트 메시지 소스를 사용하도록 설정한다
+        // 공통 결과 객체가 테스트 메시지 소스를 사용하도록 설정함
         new MessageUtils().setMessageSource(messageSource);
 
-        // 연도별 날짜 경계를 항상 동일하게 검증하도록 서울 고정 시각을 생성한다
+        // 연도별 날짜 경계를 항상 동일하게 검증하도록 서울 고정 시각을 생성함
         Clock clock = Clock.fixed(Instant.parse("2026-08-14T03:00:00Z"), ZoneId.of("Asia/Seoul"));
-        // 고정된 날짜 경계로 검증할 독서 통계 서비스를 생성한다
+        // 고정된 날짜 경계로 검증할 독서 통계 서비스를 생성함
         readingStatisticsService = new ReadingStatisticsServiceImpl(readingStatisticsMapper, clock);
     }
 
     /**
-     * 타이머용 잔디 조회가 연도와 일별 시간 Mapper만 사용하는지 검증한다
+     * 타이머용 잔디 조회가 연도와 일별 시간 Mapper만 사용하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
@@ -79,37 +79,37 @@ class ReadingStatisticsServiceImplTest {
     void getReadingHeatmapOnlyUsesDailyData() {
 
         ReadingStatisticsDto.Daily daily = new ReadingStatisticsDto.Daily(LocalDate.of(2026, 8, 14), 2400L);
-        // 정상 회원의 본인 잔디 조회를 허용할 계정 설정을 생성한다
+        // 정상 회원의 본인 잔디 조회를 허용할 계정 설정을 생성함
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE);
-        // 잔디 조회 전에 정상 계정 상태를 반환하도록 설정한다
+        // 잔디 조회 전에 정상 계정 상태를 반환하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
-        // 현재 연도만 잔디에서 선택할 수 있도록 설정한다
+        // 현재 연도만 잔디에서 선택할 수 있도록 설정함
         when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
                                                         , LocalDate.of(2026, 8, 14)))
                 .thenReturn(getHeatmapRows(List.of(2026), daily));
-        // 현재 날짜의 40분 독서 기록 한 건을 반환하도록 설정한다
+        // 현재 날짜의 40분 독서 기록 한 건을 반환하도록 설정함
 
-        // 전체 통계 대신 타이머 화면의 현재 연도 독서 잔디만 조회한다
+        // 전체 통계 대신 타이머 화면의 현재 연도 독서 잔디만 조회함
         ResultData result = readingStatisticsService.getReadingHeatmap(1L, null);
         ReadingHeatmapDto heatmap = (ReadingHeatmapDto) result.getData();
 
-        // 독서 잔디 전용 응답이 정상 반환됐는지 확인한다
+        // 독서 잔디 전용 응답이 정상 반환됐는지 확인함
         assertEquals(200, result.getCode());
-        // 현재 연도 시작일부터 오늘까지 잔디가 채워졌는지 확인한다
+        // 현재 연도 시작일부터 오늘까지 잔디가 채워졌는지 확인함
         assertEquals(226, heatmap.getHeatmapList().size());
-        // 마지막 날짜의 40분 독서 시간이 유지되는지 확인한다
+        // 마지막 날짜의 40분 독서 시간이 유지되는지 확인함
         assertEquals(2400L, heatmap.getHeatmapList().get(225).getReadSecs());
-        // 잔디 전용 조회에서 독서 상태 집계를 호출하지 않았는지 확인한다
+        // 잔디 전용 조회에서 독서 상태 집계를 호출하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getStatsAggregate(any());
-        // 잔디 전용 조회에서 연속 독서 날짜를 호출하지 않았는지 확인한다
-        // 잔디 전용 조회에서 책별 독서 시간 순위를 호출하지 않았는지 확인한다
+        // 잔디 전용 조회에서 연속 독서 날짜를 호출하지 않았는지 확인함
+        // 잔디 전용 조회에서 책별 독서 시간 순위를 호출하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getTopBookTimeList(any(ReadingStatisticsQueryDto.class));
-        // 잔디 전용 조회에서 별점 분포를 호출하지 않았는지 확인한다
-        // 잔디 전용 조회에서 연도 비교 통계를 호출하지 않았는지 확인한다
+        // 잔디 전용 조회에서 별점 분포를 호출하지 않았는지 확인함
+        // 잔디 전용 조회에서 연도 비교 통계를 호출하지 않았는지 확인함
     }
 
     /**
-     * 현재 연도 잔디가 1월 1일부터 오늘까지 빈 날짜를 포함해 채워지는지 검증한다
+     * 현재 연도 잔디가 1월 1일부터 오늘까지 빈 날짜를 포함해 채워지는지 검증함
      *
      * @author SeungHyeon.Kang
      */
@@ -117,257 +117,257 @@ class ReadingStatisticsServiceImplTest {
     void getReadingStatsFillsCurrentYear() {
 
         ReadingStatisticsDto.Daily daily = new ReadingStatisticsDto.Daily(LocalDate.of(2026, 8, 14), 1800L);
-        // 범용 회원 설정 행이 없는 기본값과 같은 정상 회원 설정을 생성한다
+        // 범용 회원 설정 행이 없는 기본값과 같은 정상 회원 설정을 생성함
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE);
-        // 통합 SQL이 반환할 상태, 연속 기록, 별점 및 연도 비교 집계를 생성한다
+        // 통합 SQL이 반환할 상태, 연속 기록, 별점 및 연도 비교 집계를 생성함
         ReadingStatisticsAggregateDto aggregate = getAggregate();
-        // 회원 설정과 계정 상태를 정상 조회하도록 설정한다
+        // 회원 설정과 계정 상태를 정상 조회하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
-        // 현재 연도와 기록이 있는 과거 연도를 조회 가능 목록으로 설정한다
+        // 현재 연도와 기록이 있는 과거 연도를 조회 가능 목록으로 설정함
         when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
                                                         , LocalDate.of(2026, 8, 14)))
                 .thenReturn(getHeatmapRows(List.of(2026, 2025), daily));
-        // 현재 연도 중 오늘 하루의 독서 시간만 조회되도록 설정한다
-        // 완독 상태만 존재하고 읽는 중과 중단 상태는 없는 조회 결과를 설정한다
+        // 현재 연도 중 오늘 하루의 독서 시간만 조회되도록 설정함
+        // 완독 상태만 존재하고 읽는 중과 중단 상태는 없는 조회 결과를 설정함
         when(readingStatisticsMapper.getStatsAggregate(any(ReadingStatisticsQueryDto.class))).thenReturn(aggregate);
-        // 최근 3일이 이어진 타이머 기록으로 현재 및 최장 연속 기록을 설정한다
-        // 올해 책별 독서 시간 순위가 네 권 조회되어도 화면 응답은 세 권으로 제한되도록 설정한다
+        // 최근 3일이 이어진 타이머 기록으로 현재 및 최장 연속 기록을 설정함
+        // 올해 책별 독서 시간 순위가 네 권 조회되어도 화면 응답은 세 권으로 제한되도록 설정함
         when(readingStatisticsMapper.getTopBookTimeList(any(ReadingStatisticsQueryDto.class)))
                 .thenReturn(List.of(new ReadingStatisticsDto.BookTime(31L, 15L, "사다리 독서법", "홍길동", null, 7200L)
                                   , new ReadingStatisticsDto.BookTime(32L, 16L, "두 번째 책", "김사다리", null, 5400L)
                                   , new ReadingStatisticsDto.BookTime(33L, 17L, "세 번째 책", "이독서", null, 3600L)
                                   , new ReadingStatisticsDto.BookTime(34L, 18L, "네 번째 책", "박통계", null, 1800L)));
-        // 정수와 반점 별점이 함께 존재하는 별점 분포 원천을 설정한다
-        // 현재 연도와 이전 연도 같은 기간의 독서 기록 비교값을 설정한다
+        // 정수와 반점 별점이 함께 존재하는 별점 분포 원천을 설정함
+        // 현재 연도와 이전 연도 같은 기간의 독서 기록 비교값을 설정함
 
-        // 고정 날짜를 기준으로 현재 연도 본인 독서 통계를 조회한다
+        // 고정 날짜를 기준으로 현재 연도 본인 독서 통계를 조회함
         ResultData result = readingStatisticsService.getReadingStats(1L, null);
         ReadingStatisticsDto statistics = (ReadingStatisticsDto) result.getData();
 
-        // 정상 통계 응답이 반환됐는지 확인한다
+        // 정상 통계 응답이 반환됐는지 확인함
         assertEquals(200, result.getCode());
-        // 현재 연도 잔디가 1월 1일부터 오늘까지 226칸인지 확인한다
+        // 현재 연도 잔디가 1월 1일부터 오늘까지 226칸인지 확인함
         assertEquals(226, statistics.getHeatmapList().size());
-        // 마지막 날짜의 30분 독서 시간이 유지되는지 확인한다
+        // 마지막 날짜의 30분 독서 시간이 유지되는지 확인함
         assertEquals(1800L, statistics.getHeatmapList().get(225).getReadSecs());
-        // 현재 연도와 기록이 있는 과거 연도가 최근 순으로 제공되는지 확인한다
+        // 현재 연도와 기록이 있는 과거 연도가 최근 순으로 제공되는지 확인함
         assertEquals(List.of(2026, 2025), statistics.getAvailableYears());
-        // 현재 연도가 선택값으로 반환되는지 확인한다
+        // 현재 연도가 선택값으로 반환되는지 확인함
         assertEquals(2026, statistics.getSelectedYear());
-        // 읽는 중 상태가 0건으로 채워졌는지 확인한다
+        // 읽는 중 상태가 0건으로 채워졌는지 확인함
         assertEquals(0L, statistics.getStatusList().get(0).getReptCnt());
-        // 완독 상태의 실제 3건이 유지되는지 확인한다
+        // 완독 상태의 실제 3건이 유지되는지 확인함
         assertEquals(3L, statistics.getStatusList().get(1).getReptCnt());
-        // 오늘까지 이어진 현재 연속 기록이 3일인지 확인한다
+        // 오늘까지 이어진 현재 연속 기록이 3일인지 확인함
         assertEquals(3, statistics.getStreak().getCurrentStreakDays());
-        // 전체 기록 중 최장 연속 기록이 3일인지 확인한다
+        // 전체 기록 중 최장 연속 기록이 3일인지 확인함
         assertEquals(3, statistics.getStreak().getLongestStreakDays());
-        // 올해 가장 오래 읽은 책의 2시간 기록이 유지되는지 확인한다
+        // 올해 가장 오래 읽은 책의 2시간 기록이 유지되는지 확인함
         assertEquals(7200L, statistics.getTopBookList().get(0).getReadSecs());
-        // 올해 가장 오래 읽은 책이 서버 응답에서도 세 권까지만 제공되는지 확인한다
+        // 올해 가장 오래 읽은 책이 서버 응답에서도 세 권까지만 제공되는지 확인함
         assertEquals(3, statistics.getTopBookList().size());
-        // 첫 번째 책에 독후감 상세 이동 번호가 함께 제공되는지 확인한다
+        // 첫 번째 책에 독후감 상세 이동 번호가 함께 제공되는지 확인함
         assertEquals(31L, statistics.getTopBookList().get(0).getReptNumb());
-        // 5점 분포가 실제 한 권으로 유지되는지 확인한다
+        // 5점 분포가 실제 한 권으로 유지되는지 확인함
         assertEquals(1L, statistics.getRatingList().get(0).getReptCnt());
-        // 4.5점이 소수점 버림된 4점 분포에 두 권으로 포함되는지 확인한다
+        // 4.5점이 소수점 버림된 4점 분포에 두 권으로 포함되는지 확인함
         assertEquals(2L, statistics.getRatingList().get(1).getReptCnt());
-        // 실제 0.5점이 소수점 버림된 0점 분포에 세 권으로 포함되는지 확인한다
+        // 실제 0.5점이 소수점 버림된 0점 분포에 세 권으로 포함되는지 확인함
         assertEquals(3L, statistics.getRatingList().get(5).getReptCnt());
-        // 현재 연도 독서 시간이 전년도 비교값과 함께 유지되는지 확인한다
+        // 현재 연도 독서 시간이 전년도 비교값과 함께 유지되는지 확인함
         assertEquals(7200L, statistics.getYearComparison().getCurrentReadSecs());
     }
 
     /**
-     * 기록이 있는 과거 연도는 12월 31일까지 전체 잔디를 조회하는지 검증한다
+     * 기록이 있는 과거 연도는 12월 31일까지 전체 잔디를 조회하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getReadingStatsFillsPastYear() {
 
-        // 공개 설정과 계정 상태를 정상 조회하도록 설정한다
+        // 공개 설정과 계정 상태를 정상 조회하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO))
                 .thenReturn(getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE));
-        // 2025년에 독서 기록이 존재하도록 조회 가능 연도를 설정한다
+        // 2025년에 독서 기록이 존재하도록 조회 가능 연도를 설정함
         when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2025, 1, 1)
                                                         , LocalDate.of(2025, 12, 31)))
                 .thenReturn(getHeatmapRows(List.of(2025)));
-        // 과거 연도 전체 기간의 독서 시간이 없도록 설정한다
-        // 독서 상태 집계가 없는 빈 서재로 설정한다
+        // 과거 연도 전체 기간의 독서 시간이 없도록 설정함
+        // 독서 상태 집계가 없는 빈 서재로 설정함
 
-        // 기록이 있는 과거 연도의 본인 독서 통계를 조회한다
+        // 기록이 있는 과거 연도의 본인 독서 통계를 조회함
         ResultData result = readingStatisticsService.getReadingStats(1L, 2025);
         ReadingStatisticsDto statistics = (ReadingStatisticsDto) result.getData();
 
-        // 과거 연도 조회가 성공했는지 확인한다
+        // 과거 연도 조회가 성공했는지 확인함
         assertEquals(200, result.getCode());
-        // 평년인 2025년의 날짜가 365칸으로 모두 채워지는지 확인한다
+        // 평년인 2025년의 날짜가 365칸으로 모두 채워지는지 확인함
         assertEquals(365, statistics.getHeatmapList().size());
-        // 과거 연도의 마지막 날짜가 12월 31일인지 확인한다
+        // 과거 연도의 마지막 날짜가 12월 31일인지 확인함
         assertEquals(LocalDate.of(2025, 12, 31), statistics.getHeatmapEnd());
     }
 
     /**
-     * 기록이 없는 임의 과거 연도는 원천 통계를 조회하지 않는지 검증한다
+     * 기록이 없는 임의 과거 연도는 원천 통계를 조회하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getReadingStatsRejectsUnavailableYear() {
 
-        // 공개 설정과 계정 상태를 정상 조회하도록 설정한다
+        // 공개 설정과 계정 상태를 정상 조회하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO))
                 .thenReturn(getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE));
-        // 2025년만 독서 기록이 존재하도록 조회 가능 연도를 설정한다
+        // 2025년만 독서 기록이 존재하도록 조회 가능 연도를 설정함
         when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2024, 1, 1)
                                                         , LocalDate.of(2024, 12, 31)))
                 .thenReturn(getHeatmapRows(List.of(2025)));
 
-        // 기록이 없는 2024년의 본인 독서 통계를 조회한다
+        // 기록이 없는 2024년의 본인 독서 통계를 조회함
         ResultData result = readingStatisticsService.getReadingStats(1L, 2024);
 
-        // 잘못된 연도 요청 실패 응답인지 확인한다
+        // 잘못된 연도 요청 실패 응답인지 확인함
         assertEquals(2009, result.getCode());
-        // 조회할 수 없는 연도에는 일별 독서 시간 SQL을 호출하지 않았는지 확인한다
+        // 조회할 수 없는 연도에는 일별 독서 시간 SQL을 호출하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getStatsAggregate(any());
-        // 조회할 수 없는 연도에는 독후감 상태 SQL을 호출하지 않았는지 확인한다
+        // 조회할 수 없는 연도에는 독후감 상태 SQL을 호출하지 않았는지 확인함
     }
 
     /**
-     * 인증 사용자 번호가 없으면 통계 원천을 조회하지 않는지 검증한다
+     * 인증 사용자 번호가 없으면 통계 원천을 조회하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getReadingStatsRejectsEmptyUser() {
 
-        // 인증 사용자 번호 없이 독서 통계를 조회한다
+        // 인증 사용자 번호 없이 독서 통계를 조회함
         ResultData result = readingStatisticsService.getReadingStats(null, null);
 
-        // 잘못된 요청 실패 응답인지 확인한다
+        // 잘못된 요청 실패 응답인지 확인함
         assertEquals(2009, result.getCode());
-        // 사용자 번호가 없을 때 연도 목록 SQL을 호출하지 않았는지 확인한다
+        // 사용자 번호가 없을 때 연도 목록 SQL을 호출하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
-        // 사용자 번호가 없을 때 일별 독서 시간 SQL을 호출하지 않았는지 확인한다
+        // 사용자 번호가 없을 때 일별 독서 시간 SQL을 호출하지 않았는지 확인함
     }
 
     /**
-     * 비공개 설정 회원은 다른 사용자에게 통계 원천을 조회하지 않는지 검증한다
+     * 비공개 설정 회원은 다른 사용자에게 통계 원천을 조회하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getPublicStatsHidesPrivate() {
 
-        // 다른 사용자에게 공개하지 않는 정상 회원 설정을 생성한다
+        // 다른 사용자에게 공개하지 않는 정상 회원 설정을 생성함
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE);
-        // 공개 통계 조회에서 비공개 회원 설정을 반환하도록 설정한다
+        // 공개 통계 조회에서 비공개 회원 설정을 반환하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
 
-        // 비공개 회원의 다른 사용자용 독서 통계를 조회한다
+        // 비공개 회원의 다른 사용자용 독서 통계를 조회함
         ResultData result = readingStatisticsService.getPublicReadingStats(1L, null);
 
-        // 회원 존재 여부를 노출하지 않는 빈 성공 응답인지 확인한다
+        // 회원 존재 여부를 노출하지 않는 빈 성공 응답인지 확인함
         assertEquals(200, result.getCode());
-        // 비공개 설정에서는 공개할 데이터가 없는지 확인한다
+        // 비공개 설정에서는 공개할 데이터가 없는지 확인함
         assertEquals(null, result.getData());
-        // 비공개 설정에서는 연도 목록 SQL을 호출하지 않았는지 확인한다
+        // 비공개 설정에서는 연도 목록 SQL을 호출하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
     }
 
     /**
-     * 공개 프로필 통계에는 본인 전용 독후감 상세 번호가 노출되지 않는지 검증한다
+     * 공개 프로필 통계에는 본인 전용 독후감 상세 번호가 노출되지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getPublicStatsHidesReportLink() {
 
-        // 다른 사용자에게 독서 통계를 공개하는 정상 회원 설정을 생성한다
+        // 다른 사용자에게 독서 통계를 공개하는 정상 회원 설정을 생성함
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_YES, Constant.USER_STAT_ACTIVE);
-        // 공개 통계 조회에서 공개 회원 설정을 반환하도록 설정한다
+        // 공개 통계 조회에서 공개 회원 설정을 반환하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
-        // 현재 연도만 조회할 수 있도록 저장된 과거 연도는 없는 것으로 설정한다
+        // 현재 연도만 조회할 수 있도록 저장된 과거 연도는 없는 것으로 설정함
         when(readingStatisticsMapper.getHeatmapRowList(1L, LocalDate.of(2026, 1, 1)
                                                         , LocalDate.of(2026, 8, 14)))
                 .thenReturn(getHeatmapRows(List.of()));
-        // 공개 응답의 잔디를 빈 기록으로 구성하도록 일별 독서 시간은 없는 것으로 설정한다
-        // 공개 응답의 독서 상태를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정한다
-        // 공개 응답의 연속 독서일을 0일로 구성하도록 독서 날짜는 없는 것으로 설정한다
-        // 공개 화면에 표시할 올해 가장 오래 읽은 책 한 권과 내부 독후감 번호를 설정한다
+        // 공개 응답의 잔디를 빈 기록으로 구성하도록 일별 독서 시간은 없는 것으로 설정함
+        // 공개 응답의 독서 상태를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정함
+        // 공개 응답의 연속 독서일을 0일로 구성하도록 독서 날짜는 없는 것으로 설정함
+        // 공개 화면에 표시할 올해 가장 오래 읽은 책 한 권과 내부 독후감 번호를 설정함
         when(readingStatisticsMapper.getTopBookTimeList(any(ReadingStatisticsQueryDto.class)))
                 .thenReturn(List.of(new ReadingStatisticsDto.BookTime(31L, 15L, "사다리 독서법", "홍길동", null, 7200L)));
-        // 공개 응답의 별점 분포를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정한다
+        // 공개 응답의 별점 분포를 모두 0건으로 구성하도록 집계 결과는 없는 것으로 설정함
 
-        // 공개 회원의 다른 사용자용 독서 통계를 조회한다
+        // 공개 회원의 다른 사용자용 독서 통계를 조회함
         ResultData result = readingStatisticsService.getPublicReadingStats(1L, null);
         ReadingStatisticsDto statistics = (ReadingStatisticsDto) result.getData();
 
-        // 공개 통계가 정상 응답으로 반환됐는지 확인한다
+        // 공개 통계가 정상 응답으로 반환됐는지 확인함
         assertEquals(200, result.getCode());
-        // 올해 가장 오래 읽은 책 정보는 공개 응답에 유지되는지 확인한다
+        // 올해 가장 오래 읽은 책 정보는 공개 응답에 유지되는지 확인함
         assertEquals(1, statistics.getTopBookList().size());
-        // 본인 전용 독후감 상세 번호는 공개 응답에서 제거됐는지 확인한다
+        // 본인 전용 독후감 상세 번호는 공개 응답에서 제거됐는지 확인함
         assertEquals(null, statistics.getTopBookList().get(0).getReptNumb());
     }
 
     /**
-     * 비활성화 회원은 본인 화면에서도 네 가지 추가 통계 원천을 조회하지 않는지 검증한다
+     * 비활성화 회원은 본인 화면에서도 네 가지 추가 통계 원천을 조회하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getReadingStatsHidesWithdrawnAccount() {
 
-        // 비활성화 상태이면서 공개 범위가 비공개인 회원 설정을 생성한다
+        // 비활성화 상태이면서 공개 범위가 비공개인 회원 설정을 생성함
         ReadingStatisticsSettingDto setting = getSetting(Constant.COMM_NO, Constant.USER_STAT_WITHDRAWN);
-        // 본인 통계 조회에서 비활성화 회원 설정을 반환하도록 설정한다
+        // 본인 통계 조회에서 비활성화 회원 설정을 반환하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(setting);
 
-        // 비활성화 회원의 본인 독서 통계를 조회한다
+        // 비활성화 회원의 본인 독서 통계를 조회함
         ResultData result = readingStatisticsService.getReadingStats(1L, null);
 
-        // 제한 계정의 본인 통계 접근 거절 응답인지 확인한다
+        // 제한 계정의 본인 통계 접근 거절 응답인지 확인함
         assertEquals(2020, result.getCode());
-        // 제한 계정에서는 연속 기록 원천을 조회하지 않았는지 확인한다
+        // 제한 계정에서는 연속 기록 원천을 조회하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getStatsAggregate(any());
-        // 제한 계정에서는 올해 책별 독서 시간 원천을 조회하지 않았는지 확인한다
+        // 제한 계정에서는 올해 책별 독서 시간 원천을 조회하지 않았는지 확인함
         verify(readingStatisticsMapper, never()).getTopBookTimeList(any());
-        // 제한 계정에서는 별점 분포 원천을 조회하지 않았는지 확인한다
-        // 제한 계정에서는 연도 비교 원천을 조회하지 않았는지 확인한다
+        // 제한 계정에서는 별점 분포 원천을 조회하지 않았는지 확인함
+        // 제한 계정에서는 연도 비교 원천을 조회하지 않았는지 확인함
     }
 
     /**
-     * 정상 회원의 공개 설정 저장이 범용 회원 설정 행 생성 또는 수정으로 연결되는지 검증한다
+     * 정상 회원의 공개 설정 저장이 범용 회원 설정 행 생성 또는 수정으로 연결되는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void uptReadingStatsUpsertsSetting() {
 
-        // 설정 저장 권한 확인에 사용할 정상 회원 설정을 생성한다
+        // 설정 저장 권한 확인에 사용할 정상 회원 설정을 생성함
         ReadingStatisticsSettingDto currentSetting = getSetting(Constant.COMM_NO, Constant.USER_STAT_ACTIVE);
-        // 저장 전 계정 상태와 현재 설정을 정상 조회하도록 설정한다
+        // 저장 전 계정 상태와 현재 설정을 정상 조회하도록 설정함
         when(readingStatisticsMapper.getReadingStatsSetting(1L, Constant.COMM_NO)).thenReturn(currentSetting);
-        // 공개 설정 요청 객체를 생성한다
+        // 공개 설정 요청 객체를 생성함
         ReadingStatisticsSettingDto request = getSetting(Constant.COMM_YES, null);
 
-        // 로그인 회원의 독서 통계 공개 설정을 저장한다
+        // 로그인 회원의 독서 통계 공개 설정을 저장함
         ResultData result = readingStatisticsService.uptReadingStatsSetting(1L, request);
 
-        // 범용 회원 설정 저장 성공 응답인지 확인한다
+        // 범용 회원 설정 저장 성공 응답인지 확인함
         assertEquals(200, result.getCode());
-        // 저장된 공개 여부가 응답에 반영됐는지 확인한다
+        // 저장된 공개 여부가 응답에 반영됐는지 확인함
         assertEquals(Constant.COMM_YES, result.getData());
-        // 인증 회원 번호가 설정된 요청으로 범용 회원 설정을 저장했는지 확인한다
+        // 인증 회원 번호가 설정된 요청으로 범용 회원 설정을 저장했는지 확인함
         verify(readingStatisticsMapper).uptReadingStatsSetting(request);
-        // 공개 여부 저장은 독서 시간 원천을 다시 조회하지 않는지 확인한다
+        // 공개 여부 저장은 독서 시간 원천을 다시 조회하지 않는지 확인함
         verify(readingStatisticsMapper, never()).getHeatmapRowList(any(), any(), any());
     }
 
     /**
-     * 조회 가능 연도와 일별 독서 시간을 통합 Mapper 결과로 생성한다
+     * 조회 가능 연도와 일별 독서 시간을 통합 Mapper 결과로 생성함
      *
      * @author SeungHyeon.Kang
      * @param yearList 조회 가능 연도 목록
@@ -376,78 +376,78 @@ class ReadingStatisticsServiceImplTest {
      */
     private List<ReadingHeatmapRowDto> getHeatmapRows(List<Integer> yearList
                                                       , ReadingStatisticsDto.Daily... dailyList) {
-        // 연도 행과 일별 행을 순서대로 담을 테스트 목록을 생성한다
+        // 연도 행과 일별 행을 순서대로 담을 테스트 목록을 생성함
         List<ReadingHeatmapRowDto> rowList = new java.util.ArrayList<>();
 
-        // 조회 가능한 각 연도를 통합 결과의 연도 행으로 변환한다
+        // 조회 가능한 각 연도를 통합 결과의 연도 행으로 변환함
         for (Integer year : yearList) {
-            // 연도 식별값을 담을 테스트 행을 생성한다
+            // 연도 식별값을 담을 테스트 행을 생성함
             ReadingHeatmapRowDto row = new ReadingHeatmapRowDto();
-            // 연도 행임을 구분할 유형을 설정한다
+            // 연도 행임을 구분할 유형을 설정함
             row.setRowType(ReadingHeatmapRowDto.ROW_TYPE_YEAR);
-            // 조회 가능한 독서 연도를 설정한다
+            // 조회 가능한 독서 연도를 설정함
             row.setReadYear(year);
-            // 구성한 연도 행을 통합 결과에 추가한다
+            // 구성한 연도 행을 통합 결과에 추가함
             rowList.add(row);
         }
 
-        // 선택 연도의 일별 시간을 통합 결과의 일별 행으로 변환한다
+        // 선택 연도의 일별 시간을 통합 결과의 일별 행으로 변환함
         for (ReadingStatisticsDto.Daily daily : dailyList) {
-            // 일별 독서 시간을 담을 테스트 행을 생성한다
+            // 일별 독서 시간을 담을 테스트 행을 생성함
             ReadingHeatmapRowDto row = new ReadingHeatmapRowDto();
-            // 일별 행임을 구분할 유형을 설정한다
+            // 일별 행임을 구분할 유형을 설정함
             row.setRowType(ReadingHeatmapRowDto.ROW_TYPE_DAILY);
-            // 일별 독서 날짜를 설정한다
+            // 일별 독서 날짜를 설정함
             row.setReadDate(daily.getReadDate());
-            // 일별 확정 독서 시간을 설정한다
+            // 일별 확정 독서 시간을 설정함
             row.setReadSecs(daily.getReadSecs());
-            // 구성한 일별 행을 통합 결과에 추가한다
+            // 구성한 일별 행을 통합 결과에 추가함
             rowList.add(row);
         }
 
-        // Mapper가 반환할 통합 행 목록을 반환한다
+        // Mapper가 반환할 통합 행 목록을 반환함
         return rowList;
     }
 
     /**
-     * 전체 독서 통계 테스트에 사용할 통합 집계 결과를 생성한다
+     * 전체 독서 통계 테스트에 사용할 통합 집계 결과를 생성함
      *
      * @author SeungHyeon.Kang
      * @return 상태, 연속 기록, 별점 및 연도 비교 집계값
      */
     private ReadingStatisticsAggregateDto getAggregate() {
-        // 화면 검증값을 담을 통합 집계 결과를 생성한다
+        // 화면 검증값을 담을 통합 집계 결과를 생성함
         ReadingStatisticsAggregateDto aggregate = new ReadingStatisticsAggregateDto();
-        // 완독 독후감 수를 설정한다
+        // 완독 독후감 수를 설정함
         aggregate.setDoneCount(3L);
-        // 현재 연속 독서일을 설정한다
+        // 현재 연속 독서일을 설정함
         aggregate.setCurrentStreakDays(3);
-        // 최장 연속 독서일을 설정한다
+        // 최장 연속 독서일을 설정함
         aggregate.setLongestStreakDays(3);
-        // 0점대 독후감 수를 설정한다
+        // 0점대 독후감 수를 설정함
         aggregate.setRatingZeroCount(3L);
-        // 4점대 독후감 수를 설정한다
+        // 4점대 독후감 수를 설정함
         aggregate.setRatingFourCount(2L);
-        // 5점 독후감 수를 설정한다
+        // 5점 독후감 수를 설정함
         aggregate.setRatingFiveCount(1L);
-        // 현재 연도 독서 시간을 설정한다
+        // 현재 연도 독서 시간을 설정함
         aggregate.setCurrentReadSecs(7200L);
-        // 이전 연도 독서 시간을 설정한다
+        // 이전 연도 독서 시간을 설정함
         aggregate.setPreviousReadSecs(3600L);
-        // 현재 연도 독서일 수를 설정한다
+        // 현재 연도 독서일 수를 설정함
         aggregate.setCurrentReadDays(3L);
-        // 이전 연도 독서일 수를 설정한다
+        // 이전 연도 독서일 수를 설정함
         aggregate.setPreviousReadDays(2L);
-        // 현재 연도 완독 권수를 설정한다
+        // 현재 연도 완독 권수를 설정함
         aggregate.setCurrentDoneBooks(2L);
-        // 이전 연도 완독 권수를 설정한다
+        // 이전 연도 완독 권수를 설정함
         aggregate.setPreviousDoneBooks(1L);
-        // 구성한 통합 집계 결과를 반환한다
+        // 구성한 통합 집계 결과를 반환함
         return aggregate;
     }
 
     /**
-     * 독서 통계 설정 테스트에 사용할 회원 설정 객체를 생성한다
+     * 독서 통계 설정 테스트에 사용할 회원 설정 객체를 생성함
      *
      * @author SeungHyeon.Kang
      * @param publicYsno 공개 여부 코드
@@ -455,13 +455,13 @@ class ReadingStatisticsServiceImplTest {
      * @return 테스트용 회원 설정
      */
     private ReadingStatisticsSettingDto getSetting(String publicYsno, String userStat) {
-        // 공개 범위를 담을 테스트 설정 객체를 생성한다
+        // 공개 범위를 담을 테스트 설정 객체를 생성함
         ReadingStatisticsSettingDto setting = new ReadingStatisticsSettingDto();
-        // 다른 사용자 공개 여부를 설정한다
+        // 다른 사용자 공개 여부를 설정함
         setting.setPublicYsno(publicYsno);
-        // 계정 접근 제한 판정에 사용할 회원 상태를 설정한다
+        // 계정 접근 제한 판정에 사용할 회원 상태를 설정함
         setting.setUserStat(userStat);
-        // 구성된 테스트용 회원 설정을 반환한다
+        // 구성된 테스트용 회원 설정을 반환함
         return setting;
     }
 }

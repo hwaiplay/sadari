@@ -25,7 +25,7 @@ const TARGET_TYPE_CODES = {
   INTRO: "CMPL_INTRO",
 } as const satisfies Record<string, ComplaintTargetType>;
 
-// 신고 화면에서 내부 대상 유형을 사용자에게 표시할 다국어 메시지 키와 연결한다
+// 신고 화면에서 내부 대상 유형을 사용자에게 표시할 다국어 메시지 키와 연결함
 const TARGET_TYPE_LABEL_KEYS = {
   USER: "frontend.userReport.target.user",
   REPORT: "frontend.userReport.target.report",
@@ -35,7 +35,7 @@ const TARGET_TYPE_LABEL_KEYS = {
   INTRO: "frontend.userReport.target.introduction",
 } as const;
 /**
- * 전달된 글 또는 댓글 정보를 확인하고 신고 사유를 선택하는 화면을 렌더링한다.
+ * 전달된 글 또는 댓글 정보를 확인하고 신고 사유를 선택하는 화면을 렌더링함
  *
  * @author HanWon.Jang
  * @return 신고 사유 선택 페이지
@@ -50,7 +50,7 @@ const UserReportPage = () => {
   const isSubmitDisabled = !selectedReason
     || (selectedReason === OTHER_REASON && !detailReason.trim());
 
-  // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동한다.
+  // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동함
   if (!reportState?.target) {
     return <Navigate to="/home" replace />;
   }
@@ -85,17 +85,17 @@ const UserReportPage = () => {
   // "내용 없음"
   const emptyContent = message("frontend.userReport.target.emptyContent");
 
-  /** 선택한 신고 사유를 상태에 반영한다. */
+  /** 선택한 신고 사유를 상태에 반영함 */
   const handleReasonChange = (event: ChangeEvent<HTMLInputElement>): void => {
     setSelectedReason(event.target.value);
   };
 
-  /** 기타 상세 사유 입력값을 상태에 반영한다. */
+  /** 기타 상세 사유 입력값을 상태에 반영함 */
   const handleDetailChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
     setDetailReason(event.target.value);
   };
 
-  /** 대상 원문 스냅샷을 포함한 신고를 접수한 뒤 완료 페이지로 이동한다. */
+  /** 대상 원문 스냅샷을 포함한 신고를 접수한 뒤 완료 페이지로 이동함 */
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
 
@@ -105,14 +105,14 @@ const UserReportPage = () => {
 
     setIsSaving(true);
     try {
-      // 화면에 전달된 본문 대신 서버가 대상 번호로 조회한 실제 원문을 저장한다
+      // 화면에 전달된 본문 대신 서버가 대상 번호로 조회한 실제 원문을 저장함
       await setComplaintApi({
         tagtType: TARGET_TYPE_CODES[target.targetType],
         tagtNumb: target.targetNumb,
         cmplRson: selectedReason as ComplaintReason,
         cmplCntn: detailReason.trim() || null,
       });
-      // 신고 저장이 완료된 경우에만 감사 안내 화면으로 이동한다
+      // 신고 저장이 완료된 경우에만 감사 안내 화면으로 이동함
       navigate("/user-report/complete", { state: { target }, replace: true });
     } catch (saveError) {
       // "신고를 접수하지 못했습니다."
@@ -120,19 +120,19 @@ const UserReportPage = () => {
         saveError,
         message("frontend.userReport.saveFailed"),
       );
-      // 서버가 동일 사용자와 대상의 기존 신고를 확인하면 재신고 제한을 안내한다
+      // 서버가 동일 사용자와 대상의 기존 신고를 확인하면 재신고 제한을 안내함
       if (saveError instanceof ResultDataError
           && Number(saveError.result.code) === COMPLAINT_DUPLICATED_CODE) {
         // "이미 신고한 대상이에요."
         await sweetWarning(message("frontend.userReport.duplicateTitle"), errorMessage);
-        // 중복 신고 안내 뒤 일반 실패 알림이 이어서 표시되지 않도록 제출 처리를 종료한다
+        // 중복 신고 안내 뒤 일반 실패 알림이 이어서 표시되지 않도록 제출 처리를 종료함
         return;
       }
 
       // "신고 접수 실패"
       await sweetError(message("frontend.userReport.saveFailedTitle"), errorMessage);
     } finally {
-      // 성공과 실패 모두에서 신고 접수 버튼을 다시 사용할 수 있도록 상태를 해제한다
+      // 성공과 실패 모두에서 신고 접수 버튼을 다시 사용할 수 있도록 상태를 해제함
       setIsSaving(false);
     }
   };

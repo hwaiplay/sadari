@@ -39,7 +39,7 @@ type ReplyLikeContext = {
 };
 
 /**
- * 댓글 목록 캐시의 동일 댓글에 좋아요 상태를 병합한다
+ * 댓글 목록 캐시의 동일 댓글에 좋아요 상태를 병합함
  *
  * @author HanWon.Jang
  * @param current 현재 댓글 무한 목록 캐시
@@ -52,12 +52,12 @@ const mergeReplyLike = (
   replNumb: number,
   detail: Pick<ReplyDtoType, "likeCnt" | "likeYsno">,
 ): ReplyListPages | undefined => {
-  // 아직 조회되지 않은 댓글 캐시는 변경하지 않는다
+  // 아직 조회되지 않은 댓글 캐시는 변경하지 않음
   if (!current) {
     return current;
   }
 
-  // 모든 조회 페이지에서 동일 댓글의 좋아요 상태만 변경한다
+  // 모든 조회 페이지에서 동일 댓글의 좋아요 상태만 변경함
   return {
     ...current,
     pages: current.pages.map((page) => ({
@@ -75,14 +75,14 @@ const mergeReplyLike = (
 };
 
 /**
- * 댓글 좋아요 등록과 취소 결과를 현재 댓글 목록 캐시에 반영한다
+ * 댓글 좋아요 등록과 취소 결과를 현재 댓글 목록 캐시에 반영함
  *
  * @author HanWon.Jang
  * @param reptNumb 댓글 목록을 조회하는 독후감 번호
  * @return 댓글 좋아요 변경 이벤트와 진행 중인 댓글 번호
  */
 export const useReplyLike = (target: ReplyTarget) => {
-  // 댓글 목록 캐시를 서버의 좋아요 변경 결과와 동기화할 Query Client를 조회한다
+  // 댓글 목록 캐시를 서버의 좋아요 변경 결과와 동기화할 Query Client를 조회함
   const queryClient = useQueryClient();
   const replyListQueryKey = [
     REPLY_LIST_QUERY_KEY,
@@ -91,7 +91,7 @@ export const useReplyLike = (target: ReplyTarget) => {
   ] as const;
 
   /**
-   * 현재 좋아요 여부에 맞는 등록 또는 취소 API를 호출한다
+   * 현재 좋아요 여부에 맞는 등록 또는 취소 API를 호출함
    *
    * @author HanWon.Jang
    * @param request 변경할 댓글 식별값과 현재 좋아요 상태
@@ -106,47 +106,47 @@ export const useReplyLike = (target: ReplyTarget) => {
       replNumb: request.replNumb,
     };
 
-    // 이미 좋아요한 댓글이면 취소 API를 호출한다
+    // 이미 좋아요한 댓글이면 취소 API를 호출함
     return request.likeYsno === "Y"
       ? await delReplyLikeApi(apiRequest)
       : await setReplyLikeApi(apiRequest);
   };
 
   /**
-   * 댓글 좋아요 변경 실패 원인을 사용자에게 안내한다
+   * 댓글 좋아요 변경 실패 원인을 사용자에게 안내함
    *
    * @author HanWon.Jang
    * @param error 댓글 좋아요 변경 중 발생한 오류
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleReplyLikeError = (error: unknown): void => {
     // "댓글 좋아요 처리에 실패했습니다."
     const failureTitle = message("frontend.reply.likeFailedTitle");
     // "다시 시도해주세요."
     const retryMessage = message("frontend.common.tryAgain");
-    // 서버 응답에 사용자 메시지가 없으면 공통 재시도 문구를 오류 상세로 사용한다
+    // 서버 응답에 사용자 메시지가 없으면 공통 재시도 문구를 오류 상세로 사용함
     const errorMessage = getApiErrorMessage(error, retryMessage);
-    // 서버의 안전한 오류 문구 또는 공통 재시도 안내를 오류 모달에 표시한다
+    // 서버의 안전한 오류 문구 또는 공통 재시도 안내를 오류 모달에 표시함
     void sweetError(failureTitle, errorMessage);
   };
 
-  // 댓글 좋아요의 즉시 화면 반영과 서버 확정 및 실패 원복 상태를 관리한다
+  // 댓글 좋아요의 즉시 화면 반영과 서버 확정 및 실패 원복 상태를 관리함
   const replyLikeMutation = useMutation({
     mutationFn: requestReplyLike,
     /**
-     * 서버 응답 전에 댓글 좋아요 상태를 화면 캐시에 반영한다
+     * 서버 응답 전에 댓글 좋아요 상태를 화면 캐시에 반영함
      *
      * @author HanWon.Jang
      * @param request 변경할 댓글과 현재 좋아요 상태
      * @return 실패 시 원복할 요청 전 댓글 목록 캐시
      */
     onMutate: async (request: ReplyLikeRequest): Promise<ReplyLikeContext> => {
-      // 진행 중인 댓글 조회가 즉시 반영 상태를 덮어쓰지 않도록 취소한다
+      // 진행 중인 댓글 조회가 즉시 반영 상태를 덮어쓰지 않도록 취소함
       await queryClient.cancelQueries({ queryKey: replyListQueryKey });
       const snapshot = queryClient.getQueryData<ReplyListPages>(replyListQueryKey);
       const isLiked = request.likeYsno === "Y";
 
-      // 클릭 즉시 댓글 좋아요 여부와 수를 반전한다
+      // 클릭 즉시 댓글 좋아요 여부와 수를 반전함
       queryClient.setQueryData<ReplyListPages>(
         replyListQueryKey,
         (current) => mergeReplyLike(
@@ -159,66 +159,66 @@ export const useReplyLike = (target: ReplyTarget) => {
         ),
       );
 
-      // 핵심 요청 실패 시 사용할 이전 캐시를 반환한다
+      // 핵심 요청 실패 시 사용할 이전 캐시를 반환함
       return { snapshot };
     },
     /**
-     * 서버가 확정한 댓글 좋아요 상태로 낙관적 값을 보정한다
+     * 서버가 확정한 댓글 좋아요 상태로 낙관적 값을 보정함
      *
      * @author HanWon.Jang
      * @param result 댓글 좋아요 API 응답
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     onSuccess: (result): void => {
-      // 서버 응답의 확정 좋아요 상태를 동일 댓글에 반영한다
+      // 서버 응답의 확정 좋아요 상태를 동일 댓글에 반영함
       queryClient.setQueryData<ReplyListPages>(
         replyListQueryKey,
         (current) => mergeReplyLike(current, result.data.replNumb, result.data),
       );
     },
     /**
-     * 핵심 댓글 좋아요 요청 실패 시 화면을 원복하고 오류를 안내한다
+     * 핵심 댓글 좋아요 요청 실패 시 화면을 원복하고 오류를 안내함
      *
      * @author HanWon.Jang
      * @param error 댓글 좋아요 변경 중 발생한 오류
      * @param request 실패한 댓글 좋아요 요청
      * @param snapshot 요청 전 댓글 목록 캐시
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     onError: (
       error: unknown,
       _request: ReplyLikeRequest,
       context: ReplyLikeContext | undefined,
     ): void => {
-      // 요청 전 캐시가 있으면 핵심 요청 실패 상태를 화면에 원복한다
+      // 요청 전 캐시가 있으면 핵심 요청 실패 상태를 화면에 원복함
       if (context?.snapshot) {
         queryClient.setQueryData(replyListQueryKey, context.snapshot);
       }
       handleReplyLikeError(error);
     },
     /**
-     * 댓글 좋아요 처리 종료 후 서버 최종 상태를 백그라운드에서 재확인한다
+     * 댓글 좋아요 처리 종료 후 서버 최종 상태를 백그라운드에서 재확인함
      *
      * @author HanWon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     onSettled: (): void => {
-      // 화면을 막지 않고 현재 댓글 목록만 서버 상태와 동기화한다
+      // 화면을 막지 않고 현재 댓글 목록만 서버 상태와 동기화함
       void queryClient.invalidateQueries({ queryKey: replyListQueryKey });
     },
   });
 
   /**
-   * 현재 좋아요 여부에 따라 댓글 좋아요 등록 또는 취소 API를 호출한다
+   * 현재 좋아요 여부에 따라 댓글 좋아요 등록 또는 취소 API를 호출함
    *
    * @author HanWon.Jang
    * @param reply 변경할 댓글 식별값과 현재 좋아요 여부
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleToggleReplyLike = (reply: ReplyLikeRequest): void => {
-    // 진행 중인 요청이 있으면 연속 클릭으로 반대 요청이 중복되지 않도록 차단한다
+    // 진행 중인 요청이 있으면 연속 클릭으로 반대 요청이 중복되지 않도록 차단함
     if (replyLikeMutation.isPending) {
-      // 현재 좋아요 요청이 완료될 때까지 추가 처리를 종료한다
+      // 현재 좋아요 요청이 완료될 때까지 추가 처리를 종료함
       return;
     }
 
@@ -227,13 +227,13 @@ export const useReplyLike = (target: ReplyTarget) => {
       likeCnt: reply.likeCnt,
       likeYsno: reply.likeYsno,
     };
-    // 현재 좋아요 여부에 맞는 등록 또는 취소 요청을 시작한다
+    // 현재 좋아요 여부에 맞는 등록 또는 취소 요청을 시작함
     replyLikeMutation.mutate(request);
   };
 
   const isReplyLikePending = replyLikeMutation.isPending;
 
-  // 댓글 화면이 사용할 좋아요 변경 이벤트와 중복 요청 차단 상태를 반환한다
+  // 댓글 화면이 사용할 좋아요 변경 이벤트와 중복 요청 차단 상태를 반환함
   return {
     isReplyLikePending,
     handleToggleReplyLike,

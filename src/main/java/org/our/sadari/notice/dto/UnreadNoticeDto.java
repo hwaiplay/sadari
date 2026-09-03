@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : UnreadNoticeDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-19
- * description    : 홈에 표시할 미읽음 공지 번호와 카테고리명 및 제목을 전달한다
+ * description    : 홈에 표시할 미읽음 공지 번호와 카테고리명 및 제목을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -22,7 +22,7 @@ import org.springframework.web.bind.annotation.PutMapping;
  * fileName       : AlimController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-24
- * description    : 알림 API를 제공한다
+ * description    : 알림 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -40,7 +40,7 @@ public class AlimController {
     private final AlimService alimService;
 
     /**
-     * 로그인 사용자의 알림 목록을 조회한다.
+     * 로그인 사용자의 알림 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -50,12 +50,12 @@ public class AlimController {
     @Operation(summary = "내 알림 목록 조회", description = "로그인 사용자의 삭제되지 않은 알림 목록을 최신순으로 조회한다.")
     public ResultData getMyAlimList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                   , @RequestParam(defaultValue = "1") int page) {
-        // 로그인 사용자의 알림 목록을 조회 결과를 반환한다
+        // 로그인 사용자의 알림 목록을 조회 결과를 반환함
         return alimService.getMyAlimList(loginUserNumb, page);
     }
 
     /**
-     * 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회한다.
+     * 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회함
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -64,12 +64,12 @@ public class AlimController {
     @GetMapping("/unread-count")
     @Operation(summary = "미읽음 알림 수 조회", description = "로그인 사용자의 읽지 않은 알림 수를 조회한다.")
     public ResultData getUnreadAlimCnt(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-        // 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회 결과를 반환한다
+        // 햄버거 메뉴의 알림 아이콘 오른쪽에 표시할 미읽음 알림 수를 조회 결과를 반환함
         return alimService.getUnreadAlimCnt(loginUserNumb);
     }
 
     /**
-     * 알림번호와 클릭 시점의 콘텐츠 및 관계 상태로 최종 이동 주소를 조회한다.
+     * 알림번호와 클릭 시점의 콘텐츠 및 관계 상태로 최종 이동 주소를 조회함
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -80,12 +80,12 @@ public class AlimController {
     @Operation(summary = "알림 이동 주소 조회", description = "알림 소유권과 현재 콘텐츠 공개 및 팔로우 상태를 검증해 내부 이동 주소를 계산한다.")
     public ResultData getAlimTarget(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                   , @Parameter(description = "이동할 사용자별 알림 번호", example = "1") @PathVariable Long alimNumb) {
-        // 인증 사용자와 사용자별 알림 번호로 현재 접근 가능한 이동 주소를 조회한다
+        // 인증 사용자와 사용자별 알림 번호로 현재 접근 가능한 이동 주소를 조회함
         return alimService.getAlimTarget(loginUserNumb, alimNumb);
     }
 
     /**
-     * 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리한다.
+     * 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리함
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -96,12 +96,12 @@ public class AlimController {
     @Operation(summary = "알림 개별 읽음 처리", description = "사용자가 클릭한 알림 한 건의 읽음 여부와 읽은 일시를 갱신한다.")
     public ResultData uptAlimRead(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                 , @Valid @RequestBody AlimDto.AlimReadReqDto request) {
-        // 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리 결과를 반환한다
+        // 사용자가 알림센터 항목 또는 브라우저 푸시 알림을 클릭한 경우 해당 알림 한 건을 읽음 처리 결과를 반환함
         return alimService.uptAlimRead(loginUserNumb, request);
     }
 
     /**
-     * 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경한다.
+     * 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -110,7 +110,7 @@ public class AlimController {
     @PostMapping("/delete-all")
     @Operation(summary = "알림 모두 지우기", description = "로그인 사용자의 삭제되지 않은 모든 알림을 삭제 상태로 변경한다.")
     public ResultData delAllAlim(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb) {
-        // 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경 결과를 반환한다
+        // 사용자가 모두 지우기 버튼을 누르면 아직 목록에 로드되지 않은 알림까지 모두 삭제 상태로 변경 결과를 반환함
         return alimService.delAllAlim(loginUserNumb);
     }
 

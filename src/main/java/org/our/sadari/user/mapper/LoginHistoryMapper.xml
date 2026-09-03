@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.user.mapper.LoginHistoryMapper">
 
-    <!-- 로그인 성공 이력을 TB_LOGHIS 테이블에 저장한다. -->
+    <!-- 로그인 성공 이력을 TB_LOGHIS 테이블에 저장함 -->
     <insert id="setLoginHistory" parameterType="org.our.sadari.user.dto.LoginHistoryDto" useGeneratedKeys="true" keyProperty="lognNumb">
         /* setLoginHistory */
         INSERT INTO TB_LOGHIS (

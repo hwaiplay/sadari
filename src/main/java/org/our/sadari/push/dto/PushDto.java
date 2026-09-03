@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : PushDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-25
- * description    : 푸시 알림 요청과 응답 데이터를 전달한다
+ * description    : 푸시 알림 요청과 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,8 +18,8 @@ import lombok.Data;
 public class PushDto {
 
     /**
-     * 브라우저가 FCM token을 발급받기 위해 필요한 Firebase Web 설정 DTO이다.
-     * VAPID 공개키만 브라우저에 제공하고 Firebase Admin 서비스 계정 정보는 노출하지 않는다.
+     * 브라우저가 FCM token을 발급받기 위해 필요한 Firebase Web 설정 DTO임
+     * VAPID 공개키만 브라우저에 제공하고 Firebase Admin 서비스 계정 정보는 노출하지 않음
      *
      * @author SeungHyeon.Kang
      */
@@ -51,8 +51,8 @@ public class PushDto {
     }
 
     /**
-     * TB_PSHSUB에 저장할 푸시 구독 DTO이다.
-     * FCM 토큰은 ENDP_URLX 컬럼에 저장하고 p256dh와 auth 키는 일반 Web Push 전환을 위해 유지한다.
+     * TB_PSHSUB에 저장할 푸시 구독 DTO임
+     * FCM 토큰은 ENDP_URLX 컬럼에 저장하고 p256dh와 auth 키는 일반 Web Push 전환을 위해 유지함
      *
      * @author SeungHyeon.Kang
      */

@@ -36,7 +36,7 @@ export type InquiryCreate = {
 };
 
 /**
- * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다
+ * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회함
  *
  * @author SeungHyeon.Kang
  * @return 현재 정지에 연결된 최신 문의 번호 또는 문의가 없으면 null
@@ -49,7 +49,7 @@ export async function getSuspInquiryNumbApi(): Promise<number | null> {
 }
 
 /**
- * 인증 사용자의 고객문의 목록을 조회한다
+ * 인증 사용자의 고객문의 목록을 조회함
  *
  * @author SeungHyeon.Kang
  * @param page 조회할 페이지 번호
@@ -66,7 +66,7 @@ export async function getInquiryListApi(page: number): Promise<InquiryPage> {
 }
 
 /**
- * 인증 사용자가 작성한 고객문의 상세를 조회한다
+ * 인증 사용자가 작성한 고객문의 상세를 조회함
  *
  * @author SeungHyeon.Kang
  * @param inqrNumb 조회할 고객문의 번호
@@ -83,7 +83,7 @@ export async function getInquiryDetailApi(inqrNumb: number): Promise<Inquiry> {
 }
 
 /**
- * 인증 사용자의 새 고객문의를 접수한다
+ * 인증 사용자의 새 고객문의를 접수함
  *
  * @author SeungHyeon.Kang
  * @param inquiry 등록할 고객문의 값

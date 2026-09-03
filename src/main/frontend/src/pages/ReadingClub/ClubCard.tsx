@@ -69,7 +69,7 @@ export default function ClubCard({ club }: ClubCardProps) {
     navigate(`/reading-clubs/${club.clubNumb}`);
   };
 
-  // 추천 모임의 요약과 상세 이동 버튼을 포함한 카드를 반환한다
+  // 추천 모임의 요약과 상세 이동 버튼을 포함한 카드를 반환함
   return (
     <article className={styles.card}>
       {/* 모임 카테고리와 기본 정보 영역 */}

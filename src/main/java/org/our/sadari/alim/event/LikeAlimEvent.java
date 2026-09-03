@@ -7,7 +7,7 @@ import lombok.RequiredArgsConstructor;
  * fileName       : LikeAlimEvent
  * author         : HanWon.Jang
  * date           : 2026-08-26
- * description    : 좋아요 저장 완료 후 비동기로 처리할 알림 정보를 전달한다
+ * description    : 좋아요 저장 완료 후 비동기로 처리할 알림 정보를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

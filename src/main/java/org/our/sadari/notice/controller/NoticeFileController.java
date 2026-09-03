@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : NoticeFileController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 활성 사용자에게만 공지사항 본문 이미지를 제공한다
+ * description    : 활성 사용자에게만 공지사항 본문 이미지를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -51,7 +51,7 @@ public class NoticeFileController {
     // 활성 사용자 확인 서비스
     private final NoticeService noticeService;
 
-    /** 공지 이미지 조회에 저장소와 사용자 상태 확인 기능을 주입한다. */
+    /** 공지 이미지 조회에 저장소와 사용자 상태 확인 기능을 주입함 */
     public NoticeFileController(FileStorage fileStorage, NoticeService noticeService) {
         this.fileStorage = fileStorage;
         this.noticeService = noticeService;
@@ -63,12 +63,12 @@ public class NoticeFileController {
           , @PathVariable String uploadDate
           , @PathVariable String storedName) throws IOException {
 
-        // 공지 이미지는 기존 공개 정책대로 브라우저에 저장하지 않고 반환한다
+        // 공지 이미지는 기존 공개 정책대로 브라우저에 저장하지 않고 반환함
         return getStoredFile(userNumb, NOTICE_DIRECTORY, uploadDate, storedName, CacheControl.noStore());
     }
 
     /**
-     * 활성 사용자에게 웰컴페이지 전용 이미지를 장기 캐시 정책과 함께 제공한다.
+     * 활성 사용자에게 웰컴페이지 전용 이미지를 장기 캐시 정책과 함께 제공함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -83,11 +83,11 @@ public class NoticeFileController {
           , @PathVariable String uploadDate
           , @PathVariable String storedName) throws IOException {
 
-        // UUID가 변경될 때만 새 파일을 받도록 사용자별 장기 캐시 응답을 반환한다
+        // UUID가 변경될 때만 새 파일을 받도록 사용자별 장기 캐시 응답을 반환함
         return getStoredFile(userNumb, WELCOME_DIRECTORY, uploadDate, storedName, WELCOME_CACHE);
     }
 
-    /** 활성 사용자와 서버 생성 경로를 검증한 뒤 저장소 이미지를 반환한다. */
+    /** 활성 사용자와 서버 생성 경로를 검증한 뒤 저장소 이미지를 반환함 */
     private ResponseEntity<byte[]> getStoredFile(Long userNumb, String directory, String uploadDate
                                                , String storedName, CacheControl cacheControl) throws IOException {
 

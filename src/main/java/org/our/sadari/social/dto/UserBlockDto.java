@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : UserBlockDto
  * author         : HanWon.Jang
  * date           : 2026-09-03
- * description    : 사용자 차단 요청과 차단 사용자 목록 데이터를 전달한다
+ * description    : 사용자 차단 요청과 차단 사용자 목록 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

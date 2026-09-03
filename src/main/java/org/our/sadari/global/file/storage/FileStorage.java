@@ -7,7 +7,7 @@ import java.util.Optional;
  * fileName       : FileStorage
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 이미지 파일 저장소가 제공해야 하는 공통 작업을 정의한다
+ * description    : 이미지 파일 저장소가 제공해야 하는 공통 작업을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ import java.util.Optional;
 public interface FileStorage {
 
     /**
-     * 검증된 이미지 바이트를 지정한 객체 키에 저장한다.
+     * 검증된 이미지 바이트를 지정한 객체 키에 저장함
      *
      * @author SeungHyeon.Kang
      * @param objectKey 저장할 객체 키
@@ -27,7 +27,7 @@ public interface FileStorage {
     void setFile(String objectKey, byte[] bytes, String contentType) throws IOException;
 
     /**
-     * 객체 키에 해당하는 이미지와 MIME 유형을 조회한다.
+     * 객체 키에 해당하는 이미지와 MIME 유형을 조회함
      *
      * @author SeungHyeon.Kang
      * @param objectKey 조회할 객체 키
@@ -37,7 +37,7 @@ public interface FileStorage {
     Optional<StoredFile> getFile(String objectKey) throws IOException;
 
     /**
-     * 객체 키에 해당하는 파일을 멱등하게 삭제한다.
+     * 객체 키에 해당하는 파일을 멱등하게 삭제함
      *
      * @author SeungHyeon.Kang
      * @param objectKey 삭제할 객체 키

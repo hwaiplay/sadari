@@ -45,7 +45,7 @@ dependencies {
 	// 스프링 MVC를 이용한 웹 개발(REST API, 컨트롤러 등)의 핵심 라이브러리
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
-	// 요청 본문 검증에 필요한 의존성이다.
+	// 요청 본문 검증에 필요한 의존성임
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Swagger UI와 OpenAPI 3 문서를 자동 생성해 API 정의서를 브라우저에서 확인할 수 있게 해주는 라이브러리
@@ -58,7 +58,7 @@ dependencies {
 	compileOnly 'org.projectlombok:lombok'
 
 	// JSON 데이터와 자바 객체 간의 변환(직렬화/역직렬화)을 담당하는 핵심 라이브러리
-	// Spring Boot 4/Spring 7은 최신 Jackson API(DatatypeFeature 등)를 사용하므로 버전은 Boot BOM에 맡긴다.
+	// Spring Boot 4/Spring 7은 최신 Jackson API(DatatypeFeature 등)를 사용하므로 버전은 Boot BOM에 맡김
 	implementation 'com.fasterxml.jackson.core:jackson-databind'
 
 	// 코드 수정 시 서버 자동 재시작 등 개발 편의 기능을 제공하는 도구
@@ -88,7 +88,7 @@ dependencies {
 
 	/*
 	 * JWT API와 런타임 구현체 버전이 다르면 parserBuilder/setSubject 같은 메서드 호출 시
-	 * 컴파일은 성공해도 실행 중 NoSuchMethodError가 발생하므로 세 모듈을 하나의 버전으로 관리한다.
+	 * 컴파일은 성공해도 실행 중 NoSuchMethodError가 발생하므로 세 모듈을 하나의 버전으로 관리함
 	 */
 	implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
@@ -134,11 +134,11 @@ task installReact(type: Exec) {
 	group = BasePlugin.BUILD_GROUP
 	def npmInstallCommand = frontendInstallCommand.get()
 	if (System.getProperty('os.name').toLowerCase(Locale.ROOT).contains('windows')) {
-		// 로컬 Windows 빌드에서는 실행 중인 esbuild.exe를 npm ci가 삭제하려다 실패할 수 있어 기본값은 install로 둔다.
+		// 로컬 Windows 빌드에서는 실행 중인 esbuild.exe를 npm ci가 삭제하려다 실패할 수 있어 기본값은 install로 둠
 		commandLine 'npm.cmd', npmInstallCommand
 	}
 	else {
-		// Docker/CI에서는 -PfrontendInstallCommand=ci를 넘겨 package-lock.json 기준의 재현 가능한 설치를 수행한다.
+		// Docker/CI에서는 -PfrontendInstallCommand=ci를 넘겨 package-lock.json 기준의 재현 가능한 설치를 수행함
 		commandLine 'npm', npmInstallCommand
 	}
 }

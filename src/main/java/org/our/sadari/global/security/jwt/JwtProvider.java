@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * fileName       : JwtProvider
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : 인증과 보안 외부 연동 기능을 제공한다
+ * description    : 인증과 보안 외부 연동 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -48,7 +48,7 @@ public class JwtProvider {
     private final long refreshTokenValidityMilliSeconds;
 
     /**
-     * JwtProvider 생성자로, application.yml 설정 파일에서 시크릿 키와 토큰 유효시간(초 단위)을 주입받아 밀리초 단위로 변환한다.
+     * JwtProvider 생성자로, application.yml 설정 파일에서 시크릿 키와 토큰 유효시간(초 단위)을 주입받아 밀리초 단위로 변환함
      *
      * @param secret Base64 인코딩된 JWT 비밀키
      * @param accessTokenValiditySeconds Access Token 유효시간(초)
@@ -58,24 +58,24 @@ public class JwtProvider {
                      , @Value("${jwt.refresh-token-validity-in-seconds}") long refreshTokenValiditySeconds) {
 
         this.secret = secret;
-        // yml 설정값은 초 단위이고, JWT exp를 만드는 Date 계산은 millisecond 기준이라 1000을 곱해 변환한다.
+        // yml 설정값은 초 단위이고, JWT exp를 만드는 Date 계산은 millisecond 기준이라 1000을 곱해 변환함
         this.accessTokenValidityMilliSeconds = accessTokenValiditySeconds * 1000;
         this.refreshTokenValidityMilliSeconds = refreshTokenValiditySeconds * 1000;
     }
 
     /**
-     * 빈(Bean) 생성 및 의존성 주입 완료 후 실행되는 초기화 메서드로, Base64 시크릿 키를 데코딩하여 SecretKey 객체를 생성한다.
+     * 빈(Bean) 생성 및 의존성 주입 완료 후 실행되는 초기화 메서드로, Base64 시크릿 키를 데코딩하여 SecretKey 객체를 생성함
      */
     @PostConstruct
     public void initKey() {
-        // 인코딩된 값을 원문 형식으로 복원한다
+        // 인코딩된 값을 원문 형식으로 복원함
         byte[] keyBytes = Decoders.BASE64.decode(secret);
-        // 설정된 비밀키로 JWT HMAC 서명 키를 생성한다
+        // 설정된 비밀키로 JWT HMAC 서명 키를 생성함
         this.secretKey = Keys.hmacShaKeyFor(keyBytes);
     }
 
     /**
-     * 회원 번호와 권한 정보를 바탕으로 Access Token을 발급한다.
+     * 회원 번호와 권한 정보를 바탕으로 Access Token을 발급함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호 (PK)
@@ -84,9 +84,9 @@ public class JwtProvider {
      * @return 생성된 Access Token 문자열
      */
     public String createAccessToken(Long userNumb, String role, String sessionId) {
-        // JWT 만료 시각을 담을 객체를 생성한다
+        // JWT 만료 시각을 담을 객체를 생성함
         Date now = new Date();
-        // 회원 번호와 권한 정보를 바탕으로 Access Token을 발급 결과를 반환한다
+        // 회원 번호와 권한 정보를 바탕으로 Access Token을 발급 결과를 반환함
         return Jwts.builder()
                 .subject(String.valueOf(userNumb))
                 .id(UUID.randomUUID().toString())
@@ -95,13 +95,13 @@ public class JwtProvider {
                 .claim("token_use", TOKEN_USE_ACCESS)
                 .issuedAt(now)
                 .expiration(new Date(now.getTime() + accessTokenValidityMilliSeconds))
-                // 0.13 API의 알고리즘 레지스트리를 명시해 서명 알고리즘을 HS256으로 고정한다.
+                // 0.13 API의 알고리즘 레지스트리를 명시해 서명 알고리즘을 HS256으로 고정함
                 .signWith(secretKey, Jwts.SIG.HS256)
                 .compact();
     }
 
     /**
-     * 회원 번호를 바탕으로 Access Token 재발급용 Refresh Token을 발급한다.
+     * 회원 번호를 바탕으로 Access Token 재발급용 Refresh Token을 발급함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호 (PK)
@@ -109,9 +109,9 @@ public class JwtProvider {
      * @return 생성된 Refresh Token 문자열
      */
     public String createRefreshToken(Long userNumb, String sessionId) {
-        // JWT 만료 시각을 담을 객체를 생성한다
+        // JWT 만료 시각을 담을 객체를 생성함
         Date now = new Date();
-        // 회원 번호를 바탕으로 Access Token 재발급용 Refresh Token을 발급 결과를 반환한다
+        // 회원 번호를 바탕으로 Access Token 재발급용 Refresh Token을 발급 결과를 반환함
         return Jwts.builder()
                 .subject(String.valueOf(userNumb))
                 .id(UUID.randomUUID().toString())
@@ -124,138 +124,138 @@ public class JwtProvider {
     }
 
     /**
-     * 전달받은 JWT 토큰의 서명 위변조 및 만료 여부를 검증한다.
+     * 전달받은 JWT 토큰의 서명 위변조 및 만료 여부를 검증함
      *
      * @author SeungHyeon.Kang
      * @param token 검증할 JWT 토큰
      * @return 유효성 여부 (true: 유효한 토큰, false: 유효하지 않거나 만료된 토큰)
      */
     public boolean validateAccessToken(String token) {
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
         try {
-            // 서명과 만료가 유효하고 Access 용도 및 권한을 가진 토큰만 API 인증에 허용한다
+            // 서명과 만료가 유효하고 Access 용도 및 권한을 가진 토큰만 API 인증에 허용함
             Claims claims = getClaims(token);
             String role = claims.get("role", String.class);
-            // Refresh Token이 Access Token 위치에서 인증 수단으로 사용되지 않도록 용도를 고정한다
+            // Refresh Token이 Access Token 위치에서 인증 수단으로 사용되지 않도록 용도를 고정함
             return TOKEN_USE_ACCESS.equals(claims.get("token_use", String.class))
                     && role != null && !role.isBlank();
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
-            // Access Token의 서명, 만료 또는 용도 검증 실패를 반환한다
+            // Access Token의 서명, 만료 또는 용도 검증 실패를 반환함
             return false;
         }
     }
 
     /**
-     * 전달받은 JWT가 Access Token 재발급에 사용할 Refresh Token인지 검증한다.
-     * 이전 버전 Refresh Token은 role 클레임이 없는 경우에만 한 차례 회전을 허용한다.
+     * 전달받은 JWT가 Access Token 재발급에 사용할 Refresh Token인지 검증함
+     * 이전 버전 Refresh Token은 role 클레임이 없는 경우에만 한 차례 회전을 허용함
      *
      * @author SeungHyeon.Kang
      * @param token 검증할 Refresh Token
      * @return 유효한 Refresh Token 여부
      */
     public boolean validateRefreshToken(String token) {
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
         try {
-            // 서명과 만료가 유효한 토큰의 용도 클레임을 조회한다
+            // 서명과 만료가 유효한 토큰의 용도 클레임을 조회함
             Claims claims = getClaims(token);
             String tokenUse = claims.get("token_use", String.class);
 
-            // 새 토큰은 Refresh 용도를 요구하고 이전 토큰은 Access 권한이 없을 때만 호환한다
+            // 새 토큰은 Refresh 용도를 요구하고 이전 토큰은 Access 권한이 없을 때만 호환함
             return TOKEN_USE_REFRESH.equals(tokenUse)
                     || (tokenUse == null && claims.get("role", String.class) == null);
         }
 
-        // 예외 발생 시 Refresh Token 검증 실패로 전환한다
+        // 예외 발생 시 Refresh Token 검증 실패로 전환함
         catch (Exception e) {
-            // Refresh Token의 서명, 만료 또는 용도 검증 실패를 반환한다
+            // Refresh Token의 서명, 만료 또는 용도 검증 실패를 반환함
             return false;
         }
     }
 
     /**
-     * JWT 토큰에서 회원 번호(sub)를 추출한다.
+     * JWT 토큰에서 회원 번호(sub)를 추출함
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return 추출된 회원 번호 (Long)
      */
     public Long getUserNumb(String token) {
-        // JWT 토큰에서 회원 번호(sub)를 추출 결과를 반환한다
+        // JWT 토큰에서 회원 번호(sub)를 추출 결과를 반환함
         return Long.parseLong(getClaims(token).getSubject());
     }
 
     /**
-     * JWT 토큰에서 사용자 권한(role)을 추출한다.
+     * JWT 토큰에서 사용자 권한(role)을 추출함
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return 사용자 권한 문자열
      */
     public String getRole(String token) {
-        // JWT 토큰에서 사용자 권한(role)을 추출 결과를 반환한다
+        // JWT 토큰에서 사용자 권한(role)을 추출 결과를 반환함
         return getClaims(token).get("role", String.class);
     }
 
     /**
-     * JWT 토큰에서 고유 식별자(jti)를 추출한다.
+     * JWT 토큰에서 고유 식별자(jti)를 추출함
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return 토큰 고유 ID (jti)
      */
     public String getTokenId(String token) {
-        // JWT 토큰에서 고유 식별자(jti)를 추출 결과를 반환한다
+        // JWT 토큰에서 고유 식별자(jti)를 추출 결과를 반환함
         return getClaims(token).getId();
     }
 
     /**
-     * JWT 토큰에서 기기별 로그인 세션 식별자(sid)를 추출한다.
+     * JWT 토큰에서 기기별 로그인 세션 식별자(sid)를 추출함
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return 로그인 세션 식별자
      */
     public String getSessionId(String token) {
-        // 동일 브라우저의 Access Token과 Refresh Token을 연결하는 세션 식별자를 반환한다
+        // 동일 브라우저의 Access Token과 Refresh Token을 연결하는 세션 식별자를 반환함
         return getClaims(token).get("sid", String.class);
     }
 
     /**
-     * JWT 토큰의 만료 시간까지 남아있는 시간을 초(second) 단위로 계산하여 반환한다. (블랙리스트 TTL 설정 시 사용)
+     * JWT 토큰의 만료 시간까지 남아있는 시간을 초(second) 단위로 계산하여 반환함. (블랙리스트 TTL 설정 시 사용)
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return 남은 유효 시간(초, 최소 0)
      */
     public long getRemainingSeconds(String token) {
-        // 만료 시각 계산에 사용할 현재 시각을 조회한다
+        // 만료 시각 계산에 사용할 현재 시각을 조회함
         long remainingMillis = getClaims(token).getExpiration().getTime() - System.currentTimeMillis();
-        // JWT 토큰의 만료 시간까지 남아있는 시간을 초(second) 단위로 계산하여 반환한다. (블랙리스트 TTL 설정 시 사용) 결과를 반환한다
+        // JWT 토큰의 만료 시간까지 남아있는 시간을 초(second) 단위로 계산하여 반환함. (블랙리스트 TTL 설정 시 사용) 결과를 반환함
         return Math.max(TimeUnit.MILLISECONDS.toSeconds(remainingMillis), 0);
     }
 
     /**
-     * Refresh Token의 설정된 전체 유효기간(초)을 반환한다.
+     * Refresh Token의 설정된 전체 유효기간(초)을 반환함
      *
      * @author SeungHyeon.Kang
      * @return Refresh Token 유효기간(초)
      */
     public long getRefreshTokenValidSec() {
-        // Refresh Token의 설정된 전체 유효기간(초)을 반환한다
+        // Refresh Token의 설정된 전체 유효기간(초)을 반환함
         return TimeUnit.MILLISECONDS.toSeconds(refreshTokenValidityMilliSeconds);
     }
 
     /**
-     * JWT 토큰의 서명을 검증하고 클레임(Claims) 정보를 추출한다.
+     * JWT 토큰의 서명을 검증하고 클레임(Claims) 정보를 추출함
      *
      * @param token JWT 토큰
      * @return 추출된 Claims 객체
      */
     private Claims getClaims(String token) {
-        // JWT 토큰의 서명을 검증하고 클레임(Claims) 정보를 추출 결과를 반환한다
+        // JWT 토큰의 서명을 검증하고 클레임(Claims) 정보를 추출 결과를 반환함
         return Jwts.parser()
                 .verifyWith(secretKey)
                 .build()
@@ -264,22 +264,22 @@ public class JwtProvider {
     }
 
     /**
-     * Access Token의 클레임 정보를 바탕으로 Spring Security의 Authentication(인증) 객체를 생성한다.
+     * Access Token의 클레임 정보를 바탕으로 Spring Security의 Authentication(인증) 객체를 생성함
      *
      * @author SeungHyeon.Kang
      * @param token JWT 토큰
      * @return Spring Security Authentication 객체
      */
     public Authentication getAuthentication(String token) {
-        // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져옴
         Long userNumb = getUserNumb(token);
-        // getRole 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getRole 조회로 후속 처리에 필요한 데이터를 가져옴
         String role = getRole(token);
 
-        // Spring Security 표준 권한 형식("ROLE_")에 맞춰 GrantedAuthority 리스트를 구성한다.
+        // Spring Security 표준 권한 형식("ROLE_")에 맞춰 GrantedAuthority 리스트를 구성함
         List<GrantedAuthority> authorities = List.of(new SimpleGrantedAuthority("ROLE_" + role));
 
-        // 새로 생성한 UsernamePasswordAuthenticationToken 객체를 반환한다
+        // 새로 생성한 UsernamePasswordAuthenticationToken 객체를 반환함
         return new UsernamePasswordAuthenticationToken(userNumb, null, authorities);
     }
 }

@@ -1,7 +1,7 @@
 -- Sadari MySQL 8.4 schema
--- Run this file against an already-created sadari database.
--- User-side generated numeric keys use AUTO_INCREMENT from 1.
--- Admin-side keys do not use sequences; the application assigns MAX(PK) + 1.
+-- Run this file against an already-created sadari database
+-- User-side generated numeric keys use AUTO_INCREMENT from 1
+-- Admin-side keys do not use sequences; the application assigns MAX(PK) + 1
 
 SET NAMES utf8mb4 COLLATE utf8mb4_0900_ai_ci;
 USE sadari;

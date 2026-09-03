@@ -13,7 +13,7 @@ import org.our.sadari.global.file.util.FileUrlUtil;
  * fileName       : UserDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 사용자 요청과 응답 데이터를 전달한다
+ * description    : 사용자 요청과 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -90,7 +90,7 @@ public class UserDto {
     private String bgimPath;
 
     /**
-     * 일반 프로필 화면에서 사용할 축소 배경사진 경로를 반환한다.
+     * 일반 프로필 화면에서 사용할 축소 배경사진 경로를 반환함
      *
      * @author HanWon.Jang
      * @return 화면용 배경사진 경로
@@ -98,12 +98,12 @@ public class UserDto {
     @JsonProperty(access = JsonProperty.Access.READ_ONLY)
     @Schema(description = "일반 화면용 배경 이미지 경로", accessMode = Schema.AccessMode.READ_ONLY)
     public String getBgimDisplayPath() {
-        // DB 원본 경로는 유지하고 API 직렬화 시 화면용 파생본 URL을 추가한다
+        // DB 원본 경로는 유지하고 API 직렬화 시 화면용 파생본 URL을 추가함
         return FileUrlUtil.getBgDisplayPath(bgimPath);
     }
 
     /**
-     * 마이페이지의 현재 프로필 또는 배경 사진에 표시할 좋아요와 댓글 집계를 전달한다.
+     * 마이페이지의 현재 프로필 또는 배경 사진에 표시할 좋아요와 댓글 집계를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -136,7 +136,7 @@ public class UserDto {
     }
 
     /**
-     * 회원이 선택하거나 화면에 노출할 독서 관심분야 항목을 전달한다
+     * 회원이 선택하거나 화면에 노출할 독서 관심분야 항목을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -161,7 +161,7 @@ public class UserDto {
     }
 
     /**
-     * 최초 로그인에서 저장할 독서 관심분야 목록을 전달한다
+     * 최초 로그인에서 저장할 독서 관심분야 목록을 전달함
      *
      * @author SeungHyeon.Kang
      */

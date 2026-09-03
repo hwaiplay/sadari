@@ -7,7 +7,7 @@ import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
  * fileName       : SchedulerLogMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 데이터베이스 접근 메서드를 정의한다
+ * description    : 스케줄러 데이터베이스 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

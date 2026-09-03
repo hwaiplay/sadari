@@ -29,7 +29,7 @@ import org.springframework.web.multipart.MultipartException;
  * fileName       : CommonExceptionHandler
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : 공통 예외를 표현하고 공통 응답으로 변환한다
+ * description    : 공통 예외를 표현하고 공통 응답으로 변환함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -47,7 +47,7 @@ public class CommonExceptionHandler {
     private final MessageSource messageSource;
 
     /**
-     * 비즈니스 로직 수행 중 직접 발생시킨 커스텀 예외(CustomException)를 포착하여 지정된 결과 코드와 메시지를 반환한다.
+     * 비즈니스 로직 수행 중 직접 발생시킨 커스텀 예외(CustomException)를 포착하여 지정된 결과 코드와 메시지를 반환함
      *
      * @author SeungHyeon.Kang
      * @param e 발생한 CustomException
@@ -56,16 +56,16 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(CustomException.class)
     public ResponseEntity<ResultData> handleCustomException(CustomException e, Locale locale) {
-        // getResultEnum 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getResultEnum 조회로 후속 처리에 필요한 데이터를 가져옴
         ResultEnum result = e.getResultEnum();
-        // 비즈니스 로직 수행 중 직접 발생시킨 커스텀 예외(CustomException)를 포착하여 지정된 결과 코드와 메시지를 반환한다
+        // 비즈니스 로직 수행 중 직접 발생시킨 커스텀 예외(CustomException)를 포착하여 지정된 결과 코드와 메시지를 반환함
         return ResponseEntity
                 .status(e.getStatus())
                 .body(ResultData.fail(result));
     }
 
     /**
-     * @Valid 또는 @Validated 어노테이션 기반의 DTO 요청 파라미터 유효성 검증 실패 예외를 포착하여 공통 잘못된 요청 응답을 반환한다.
+     * @Valid 또는 @Validated 어노테이션 기반의 DTO 요청 파라미터 유효성 검증 실패 예외를 포착하여 공통 잘못된 요청 응답을 반환함
      *
      * @author SeungHyeon.Kang
      * @param e 유효성 검증 예외
@@ -81,7 +81,7 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * multipart 요청 크기 초과 또는 본문 파싱 실패를 허용하지 않은 이미지 요청으로 변환한다.
+     * multipart 요청 크기 초과 또는 본문 파싱 실패를 허용하지 않은 이미지 요청으로 변환함
      *
      * @author SeungHyeon.Kang
      * @param e multipart 파싱 과정에서 발생한 예외
@@ -97,7 +97,7 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인별로 분기 처리한다.
+     * Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인별로 분기 처리함
      *
      * @author SeungHyeon.Kang
      * @param e 데이터 접근 예외
@@ -106,19 +106,19 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(DataAccessException.class)
     public ResponseEntity<ResultData> handleDataAccessException(DataAccessException e, Locale locale) {
-        // 예외 체인에서 데이터베이스 예외를 찾는다
+        // 예외 체인에서 데이터베이스 예외를 찾음
         SQLException sqlException = findSqlException(e);
 
         /*
-         * DataAccessException은 SQL 문법 오류, 제약조건 오류, 커넥션 획득 실패를 모두 감싼다.
-         * 모든 DB 장애를 400으로 내려주면 프론트가 "요청값 오류"로 오해하므로, 커넥션 계열 원인은 먼저 분리한다.
+         * DataAccessException은 SQL 문법 오류, 제약조건 오류, 커넥션 획득 실패를 모두 감쌈
+         * 모든 DB 장애를 400으로 내려주면 프론트가 "요청값 오류"로 오해하므로, 커넥션 계열 원인은 먼저 분리함
          */
         if (isDbConnectionFailure(e)) {
-            // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환한다
+            // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환함
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        // MySQL 데이터 길이 초과 오류이면 입력값 길이 초과 전용 메시지를 응답한다
+        // MySQL 데이터 길이 초과 오류이면 입력값 길이 초과 전용 메시지를 응답함
         if (!StringUtil.isEmpty(sqlException)
                 && (sqlException.getErrorCode() == MYSQL_DATA_TOO_LONG_ERROR_CODE
                 || "22001".equals(sqlException.getSQLState()))) {
@@ -128,13 +128,13 @@ public class CommonExceptionHandler {
                     .body(ResultData.fail(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES));
         }
 
-        // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환한다
+        // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환함
         return createFailResponse(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * MyBatis 실행 중 발생한 시스템 예외를 공통 응답으로 변환한다.
-     * 내부 원인이 DB 커넥션 실패라면 사용자에게 DB 연결 실패 메시지를 명확하게 반환한다.
+     * MyBatis 실행 중 발생한 시스템 예외를 공통 응답으로 변환함
+     * 내부 원인이 DB 커넥션 실패라면 사용자에게 DB 연결 실패 메시지를 명확하게 반환함
      *
      * @author SeungHyeon.Kang
      * @param e MyBatis 실행 중 발생한 예외
@@ -143,21 +143,21 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(MyBatisSystemException.class)
     public ResponseEntity<ResultData> handleMyBatisException(MyBatisSystemException e, Locale locale) {
-        // 예외 체인에서 DB 연결 실패 여부를 판별한다
+        // 예외 체인에서 DB 연결 실패 여부를 판별함
         ResultEnum resultEnum = isDbConnectionFailure(e)
                 ? ResultEnum.COMMON_DB_CONNECTION_FAILED
                 : ResultEnum.COMMON_INVALID_REQUEST;
-        // 두 값이 동일한지 안전하게 비교한다
+        // 두 값이 동일한지 안전하게 비교함
         HttpStatus status = ResultEnum.COMMON_DB_CONNECTION_FAILED.equals(resultEnum)
                 ? HttpStatus.SERVICE_UNAVAILABLE
                 : HttpStatus.BAD_REQUEST;
-        // MyBatis 실행 중 발생한 시스템 예외를 공통 응답으로 변환 결과를 반환한다
+        // MyBatis 실행 중 발생한 시스템 예외를 공통 응답으로 변환 결과를 반환함
         return createFailResponse(resultEnum, status);
     }
 
     /**
-     * MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 실패 응답으로 변환한다.
-     * Mapper 호출 전 트랜잭션 생성 시점에 실패하면 DataAccessException까지 내려오지 않을 수 있어 별도로 포착한다.
+     * MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 실패 응답으로 변환함
+     * Mapper 호출 전 트랜잭션 생성 시점에 실패하면 DataAccessException까지 내려오지 않을 수 있어 별도로 포착함
      *
      * @author SeungHyeon.Kang
      * @param e DB 접근 준비 단계에서 발생한 예외
@@ -173,21 +173,21 @@ public class CommonExceptionHandler {
     })
     public ResponseEntity<ResultData> handleDbConnectException(Exception e, Locale locale) {
         /*
-         * 위 예외들은 DB 연결 실패 외의 SQL 실행 오류도 감쌀 수 있다.
-         * 실제 원인 체인을 확인해 연결 장애이면 503, 그 외 DB 오류이면 기존 공통 요청 오류로 응답한다.
+         * 위 예외들은 DB 연결 실패 외의 SQL 실행 오류도 감쌀 수 있음
+         * 실제 원인 체인을 확인해 연결 장애이면 503, 그 외 DB 오류이면 기존 공통 요청 오류로 응답함
          */
         if (isDbConnectionFailure(e)) {
-            // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
+            // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공함
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
-        // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공한다
+        // MyBatis 또는 트랜잭션 시작 단계에서 DB 커넥션을 얻지 못한 예외를 공통 DB 연결 사용자에게 DB 연결 오류 메시지를 제공함
         return createFailResponse(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
     }
 
     /**
-     * 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착한다.
-     * 연결 실패가 아닌 일반 런타임 예외는 기존처럼 서버 오류로 남겨 원인을 숨기지 않도록 다시 던진다.
+     * 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착함
+     * 연결 실패가 아닌 일반 런타임 예외는 기존처럼 서버 오류로 남겨 원인을 숨기지 않도록 다시 던짐
      *
      * @author SeungHyeon.Kang
      * @param e 처리 중 발생한 런타임 예외
@@ -196,9 +196,9 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<ResultData> handleRuntimeException(RuntimeException e, Locale locale) {
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
         if (isDbConnectionFailure(e)) {
-            // 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착 결과를 반환한다
+            // 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착 결과를 반환함
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
 
@@ -206,7 +206,7 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * 예외 원인 체인(Throwable cause chain)을 순회하여 내부에 래핑된 최하위 SQLException 객체를 탐색하여 반환한다.
+     * 예외 원인 체인(Throwable cause chain)을 순회하여 내부에 래핑된 최하위 SQLException 객체를 탐색하여 반환함
      *
      * @author SeungHyeon.Kang
      * @param throwable 탐색을 시작할 최상위 예외 객체
@@ -216,77 +216,77 @@ public class CommonExceptionHandler {
 
         Throwable current = throwable;
 
-        // current 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
+        // current 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
         while (!StringUtil.isEmpty(current)) {
-            // 원인 체인을 순회하는 도중 SQLException 인스턴스를 발견하면 즉시 해당 예외 객체를 반환한다.
+            // 원인 체인을 순회하는 도중 SQLException 인스턴스를 발견하면 즉시 해당 예외 객체를 반환함
             if (current instanceof SQLException sqlException) {
-                // 예외 원인 체인에서 확인한 최하위 SQLException을 반환한다
+                // 예외 원인 체인에서 확인한 최하위 SQLException을 반환함
                 return sqlException;
             }
 
-            // 상위 예외에 포함된 원인 예외를 조회한다
+            // 상위 예외에 포함된 원인 예외를 조회함
             current = current.getCause();
         }
 
-        // 조회하거나 생성할 값이 없음을 반환한다
+        // 조회하거나 생성할 값이 없음을 반환함
         return null;
     }
 
     /**
-     * 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 JDBC 연결 실패 상태를 찾는다.
-     * 각 API에서 직접 try/catch하지 않아도 커넥션풀, 트랜잭션, MyBatis, JDBC 드라이버가 감싼 연결 장애를 같은 ResultData 실패 응답으로 반환하기 위해 사용한다.
+     * 예외 원인 체인에서 DB 연결 실패에 해당하는 예외 또는 JDBC 연결 실패 상태를 찾음
+     * 각 API에서 직접 try/catch하지 않아도 커넥션풀, 트랜잭션, MyBatis, JDBC 드라이버가 감싼 연결 장애를 같은 ResultData 실패 응답으로 반환하기 위해 사용함
      *
      * @author SeungHyeon.Kang
      * @param throwable 확인할 최상위 예외
      * @return DB 연결 실패 여부
      */
     private boolean isDbConnectionFailure(Throwable throwable) {
-        // 예외 체인에서 데이터베이스 예외를 찾는다
+        // 예외 체인에서 데이터베이스 예외를 찾음
         SQLException sqlException = findSqlException(throwable);
 
-        // Spring과 JDBC가 명시한 데이터베이스 연결 예외만 전역 DB 장애로 처리한다
+        // Spring과 JDBC가 명시한 데이터베이스 연결 예외만 전역 DB 장애로 처리함
         if (hasCause(throwable, CannotGetJdbcConnectionException.class) || hasCause(throwable, CannotCreateTransactionException.class)
                 || hasCause(throwable, SQLRecoverableException.class) || hasCause(throwable, SQLTransientConnectionException.class)
                 || hasCause(throwable, SQLNonTransientConnectionException.class) || hasCause(throwable, SQLTimeoutException.class)) {
-            // 예외 원인 체인에서 확인한 DB 연결 실패 판정값을 반환한다
+            // 예외 원인 체인에서 확인한 DB 연결 실패 판정값을 반환함
             return true;
         }
 
-        // sqlException 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
+        // sqlException 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
         if (StringUtil.isEmpty(sqlException)) {
-            // SQL 예외가 없으므로 연결 실패가 아닌 것으로 반환한다
+            // SQL 예외가 없으므로 연결 실패가 아닌 것으로 반환함
             return false;
         }
 
-        // SQLState 08 계열을 MySQL을 포함한 JDBC 연결 예외로 판정한다
+        // SQLState 08 계열을 MySQL을 포함한 JDBC 연결 예외로 판정함
         return "08".equals(getSqlStateClass(sqlException));
     }
 
     /**
-     * SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미한다.
-     * SQLState가 비어 있으면 null을 반환한다.
+     * SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미함
+     * SQLState가 비어 있으면 null을 반환함
      *
      * @author SeungHyeon.Kang
      * @param sqlException 확인할 SQL 예외
      * @return SQLState 분류 코드
      */
     private String getSqlStateClass(SQLException sqlException) {
-        // getSQLState 조회로 후속 처리에 필요한 데이터를 가져온다
+        // getSQLState 조회로 후속 처리에 필요한 데이터를 가져옴
         String sqlState = sqlException.getSQLState();
 
-        // sqlState 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
+        // sqlState 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
         if (StringUtil.isEmpty(sqlState) || sqlState.length() < 2) {
-            // 조회하거나 생성할 값이 없음을 반환한다
+            // 조회하거나 생성할 값이 없음을 반환함
             return null;
         }
 
-        // SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미 결과를 반환한다
+        // SQLState 앞 두 자리는 오류 분류를 나타내며, 08 계열은 연결 예외(Connection Exception)를 의미 결과를 반환함
         return sqlState.substring(0, 2);
     }
 
     /**
-     * ResultData.fail 응답을 HTTP 상태와 함께 감싸 반환한다.
-     * 전역 예외 처리 응답도 컨트롤러 정상 응답과 같은 code/message/data 구조를 유지하기 위해 사용한다.
+     * ResultData.fail 응답을 HTTP 상태와 함께 감싸 반환함
+     * 전역 예외 처리 응답도 컨트롤러 정상 응답과 같은 code/message/data 구조를 유지하기 위해 사용함
      *
      * @author SeungHyeon.Kang
      * @param resultEnum 반환할 업무 실패 코드
@@ -301,8 +301,8 @@ public class CommonExceptionHandler {
     }
 
     /**
-     * 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인한다.
-     * MyBatisSystemException처럼 감싸진 예외도 실제 원인을 기준으로 분기하기 위해 사용한다.
+     * 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인함
+     * MyBatisSystemException처럼 감싸진 예외도 실제 원인을 기준으로 분기하기 위해 사용함
      *
      * @author SeungHyeon.Kang
      * @param throwable 확인할 최상위 예외
@@ -313,19 +313,19 @@ public class CommonExceptionHandler {
 
         Throwable current = throwable;
 
-        // 원인 체인을 끝까지 순회해 MyBatis나 Spring이 감싼 실제 DB 연결 예외를 찾는다.
+        // 원인 체인을 끝까지 순회해 MyBatis나 Spring이 감싼 실제 DB 연결 예외를 찾음
         while (!StringUtil.isEmpty(current)) {
-            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분한다
+            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
             if (causeType.isInstance(current)) {
-                // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환한다
+                // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환함
                 return true;
             }
 
-            // 상위 예외에 포함된 원인 예외를 조회한다
+            // 상위 예외에 포함된 원인 예외를 조회함
             current = current.getCause();
         }
 
-        // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환한다
+        // 예외 원인 체인 안에 특정 예외 타입이 포함되어 있는지 확인 판정값을 반환함
         return false;
     }
 }

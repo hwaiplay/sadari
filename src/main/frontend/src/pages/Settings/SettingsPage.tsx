@@ -12,8 +12,8 @@ const SETTINGS_MENU_URL = "/settings";
 const WITHDRAWAL_MENU_URL = "/settings/withdrawal";
 
 /**
- * 관리자 사용자 메뉴에 등록된 설정 하위 메뉴를 계층형으로 표시합니다.
- * 2뎁스 메뉴와 그 아래의 3뎁스 메뉴는 서버 정렬 순서를 그대로 사용합니다.
+ * 관리자 사용자 메뉴에 등록된 설정 하위 메뉴를 계층형으로 표시함
+ * 2뎁스 메뉴와 그 아래의 3뎁스 메뉴는 서버 정렬 순서를 그대로 사용함
  *
  * @author HanWon.Jang
  * @return 설정 카테고리 및 하위 메뉴 화면
@@ -62,7 +62,7 @@ const SettingsPage = () => {
   }, []);
 
   /**
-   * 하위 메뉴가 있는 설정 메뉴의 펼침 상태를 전환합니다.
+   * 하위 메뉴가 있는 설정 메뉴의 펼침 상태를 전환함
    *
    * @author HanWon.Jang
    * @param menuNumb 펼치거나 접을 메뉴 번호
@@ -78,7 +78,7 @@ const SettingsPage = () => {
   };
 
   /**
-   * 설정 메뉴의 하위 구조 또는 이동 URL에 따라 클릭 동작을 처리합니다.
+   * 설정 메뉴의 하위 구조 또는 이동 URL에 따라 클릭 동작을 처리함
    *
    * @author HanWon.Jang
    * @param menu 클릭한 설정 메뉴

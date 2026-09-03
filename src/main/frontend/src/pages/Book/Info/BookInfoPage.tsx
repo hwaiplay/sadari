@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/pages/Book/Info/BookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/pages/Book/Info/BookInfoPage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */
@@ -21,7 +21,7 @@ import type { ReportDtoType } from "@/features/Book/types/book.type";
 import * as styles from "./BookInfoPage.css";
 
 /**
- * Book Info Page 화면 또는 컴포넌트를 구성한다
+ * Book Info Page 화면 또는 컴포넌트를 구성함
  *
  * @author HanWon.Jang
  * @return 구성된 화면 요소

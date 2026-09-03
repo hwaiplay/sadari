@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : PopupContentController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 사용자 안내 팝업 콘텐츠 조회 API를 제공한다
+ * description    : 사용자 안내 팝업 콘텐츠 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -31,7 +31,7 @@ public class PopupContentController {
     private final PopupContentService popupContentService;
 
     /**
-     * 사용 화면 구분과 팝업 코드에 해당하는 사용자 안내 콘텐츠를 조회한다
+     * 사용 화면 구분과 팝업 코드에 해당하는 사용자 안내 콘텐츠를 조회함
      *
      * @author SeungHyeon.Kang
      * @param popuSitu 팝업 사용 화면 구분 공통코드
@@ -43,7 +43,7 @@ public class PopupContentController {
     public ResultData getPopupContentDtl(
             @Parameter(description = "팝업 사용 화면 구분 공통코드", example = "ACCOUNT") @RequestParam String popuSitu
           , @Parameter(description = "팝업 식별 코드", example = "WITHDRAWAL_POLICY") @RequestParam String popuCode) {
-        // 팝업 복합 식별값으로 사용자 안내 콘텐츠를 조회한 결과를 반환한다
+        // 팝업 복합 식별값으로 사용자 안내 콘텐츠를 조회한 결과를 반환함
         return popupContentService.getPopupContentDtl(popuSitu, popuCode);
     }
 }

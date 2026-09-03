@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.global.scheduler.mapper.SchedulerLogMapper">
 
-    <!-- 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록한다. -->
+    <!-- 스케줄러 실행 시작 정보를 TL_SCLOGX에 등록함 -->
     <insert id="setSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto"
             useGeneratedKeys="true" keyProperty="runxNumb">
         INSERT /* setSchedulerLog */
@@ -24,7 +24,7 @@
         )
     </insert>
 
-    <!-- 스케줄러 최종 상태와 처리 건수 및 실행 시간을 TL_SCLOGX에 수정한다. -->
+    <!-- 스케줄러 최종 상태와 처리 건수 및 실행 시간을 TL_SCLOGX에 수정함 -->
     <update id="uptSchedulerLog" parameterType="org.our.sadari.global.scheduler.dto.SchedulerLogDto$SchedulerRunDto">
         UPDATE /* uptSchedulerLog */
                TL_SCLOGX

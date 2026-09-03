@@ -1,5 +1,5 @@
 /**
- * 독후감별 좋아요와 댓글 알림 설정 더보기 메뉴를 표시한다
+ * 독후감별 좋아요와 댓글 알림 설정 더보기 메뉴를 표시함
  *
  * @author SeungHyeon.Kang
  */
@@ -16,7 +16,7 @@ type ReportAlimMenuProps = {
 };
 
 /**
- * 독후감 공개 여부와 관계없이 유형별 알림 사용 여부를 변경하는 메뉴를 표시한다
+ * 독후감 공개 여부와 관계없이 유형별 알림 사용 여부를 변경하는 메뉴를 표시함
  *
  * @author SeungHyeon.Kang
  * @param props 현재 설정, 변경 중 여부와 설정 변경 함수
@@ -32,90 +32,90 @@ const ReportAlimMenu = ({
   const triggerRef = useRef<HTMLButtonElement>(null);
 
   /**
-   * 독후감 알림 설정 더보기 메뉴의 열림 상태를 변경한다
+   * 독후감 알림 설정 더보기 메뉴의 열림 상태를 변경함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleToggleMenu = (): void => {
-    // 현재 열림 상태를 반대로 변경해 같은 버튼으로 메뉴를 열고 닫는다
+    // 현재 열림 상태를 반대로 변경해 같은 버튼으로 메뉴를 열고 닫음
     setIsMenuOpen(!isMenuOpen);
   };
 
   /**
-   * 독후감 알림 설정 메뉴 바깥으로 초점이 이동하면 메뉴를 닫는다
+   * 독후감 알림 설정 메뉴 바깥으로 초점이 이동하면 메뉴를 닫음
    *
    * @author SeungHyeon.Kang
    * @param event 메뉴 영역의 초점 이동 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleMenuBlur = (event: FocusEvent<HTMLDivElement>): void => {
-    // 새 초점이 메뉴 내부에 없을 때만 열림 상태를 해제한다
+    // 새 초점이 메뉴 내부에 없을 때만 열림 상태를 해제함
     if (!event.currentTarget.contains(event.relatedTarget)) {
       setIsMenuOpen(false);
     }
   };
 
   /**
-   * Escape 입력으로 독후감 알림 설정 메뉴를 닫고 더보기 버튼에 초점을 복원한다
+   * Escape 입력으로 독후감 알림 설정 메뉴를 닫고 더보기 버튼에 초점을 복원함
    *
    * @author SeungHyeon.Kang
    * @param event 메뉴 영역의 키보드 입력 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
-    // Escape 이외의 키 입력은 메뉴 기본 조작을 유지한다
+    // Escape 이외의 키 입력은 메뉴 기본 조작을 유지함
     if (event.key !== "Escape") {
-      // 별도 키보드 처리가 필요하지 않음을 반환한다
+      // 별도 키보드 처리가 필요하지 않음을 반환함
       return;
     }
 
-    // 브라우저 기본 Escape 동작보다 메뉴 닫기와 초점 복원을 우선한다
+    // 브라우저 기본 Escape 동작보다 메뉴 닫기와 초점 복원을 우선함
     event.preventDefault();
-    // 열려 있는 메뉴를 닫는다
+    // 열려 있는 메뉴를 닫음
     setIsMenuOpen(false);
-    // 키보드 사용자가 계속 조작할 수 있도록 더보기 버튼에 초점을 복원한다
+    // 키보드 사용자가 계속 조작할 수 있도록 더보기 버튼에 초점을 복원함
     triggerRef.current?.focus();
   };
 
   /**
-   * 선택한 독후감 알림 유형의 현재 설정을 반대로 변경하고 메뉴를 닫는다
+   * 선택한 독후감 알림 유형의 현재 설정을 반대로 변경하고 메뉴를 닫음
    *
    * @author SeungHyeon.Kang
    * @param alimType 변경할 좋아요 또는 댓글 알림 유형
    * @param currentYsno 현재 알림 사용 여부
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleChange = (alimType: ReportAlimType, currentYsno: "Y" | "N"): void => {
-    // 설정 변경 요청을 시작하기 전에 더보기 메뉴를 닫는다
+    // 설정 변경 요청을 시작하기 전에 더보기 메뉴를 닫음
     setIsMenuOpen(false);
-    // 현재 설정의 반대값을 부모 상세 화면의 변경 함수에 전달한다
+    // 현재 설정의 반대값을 부모 상세 화면의 변경 함수에 전달함
     onChange(alimType, currentYsno === "Y" ? "N" : "Y");
   };
 
   /**
-   * 독후감 좋아요 알림의 현재 설정을 반대로 변경한다
+   * 독후감 좋아요 알림의 현재 설정을 반대로 변경함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleLikeClick = (): void => {
-    // 현재 좋아요 알림 설정을 기준으로 변경 요청을 위임한다
+    // 현재 좋아요 알림 설정을 기준으로 변경 요청을 위임함
     handleChange("like", likeAlimYsno);
   };
 
   /**
-   * 독후감 댓글 알림의 현재 설정을 반대로 변경한다
+   * 독후감 댓글 알림의 현재 설정을 반대로 변경함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleReplyClick = (): void => {
-    // 현재 댓글 알림 설정을 기준으로 변경 요청을 위임한다
+    // 현재 댓글 알림 설정을 기준으로 변경 요청을 위임함
     handleChange("reply", replyAlimYsno);
   };
 
-  // 독후감별 좋아요와 댓글 알림 설정 더보기 메뉴를 반환한다
+  // 독후감별 좋아요와 댓글 알림 설정 더보기 메뉴를 반환함
   return (
     /* 독후감별 좋아요와 댓글 알림 설정 더보기 메뉴 영역 */
     <div

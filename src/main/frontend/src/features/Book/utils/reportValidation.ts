@@ -9,7 +9,7 @@ import type { BookSearchResultType } from "@/features/Book/types/book.type";
 const textEncoder = new TextEncoder();
 
 /**
- * 문자열의 UTF-8 byte 길이를 계산합니다.
+ * 문자열의 UTF-8 byte 길이를 계산함
  *
  * @author HanWon.Jang
  * @param value byte 길이를 계산할 문자열
@@ -21,7 +21,7 @@ export function getUtf8ByteLength(value: string) {
 }
 
 /**
- * DB 저장 기준 byte 계산을 위해 HTML 특수문자를 entity로 변환합니다.
+ * DB 저장 기준 byte 계산을 위해 HTML 특수문자를 entity로 변환함
  *
  * @author HanWon.Jang
  * @param value escape 처리할 문자열
@@ -38,8 +38,8 @@ function escapeHtmlForStorage(value: string) {
 }
 
 /**
- * 독후감 내용이 DB에 저장될 때의 UTF-8 byte 길이를 계산합니다.
- * 화면 입력값은 저장 전에 sanitize와 HTML escape를 거치므로 같은 기준으로 길이를 계산합니다.
+ * 독후감 내용이 DB에 저장될 때의 UTF-8 byte 길이를 계산함
+ * 화면 입력값은 저장 전에 sanitize와 HTML escape를 거치므로 같은 기준으로 길이를 계산함
  *
  * @author HanWon.Jang
  * @param value 독후감 내용 입력값
@@ -51,7 +51,7 @@ export function getReportContentByteLen(value: string) {
 }
 
 /**
- * 문자열을 UTF-8 byte 제한 안에서 자릅니다.
+ * 문자열을 UTF-8 byte 제한 안에서 자름
  *
  * @author HanWon.Jang
  * @param value 자를 원본 문자열
@@ -81,7 +81,7 @@ export function truncateUtf8Bytes(
 }
 
 /**
- * 사용자 입력값에서 script, HTML tag, inline event, javascript scheme을 제거합니다.
+ * 사용자 입력값에서 script, HTML tag, inline event, javascript scheme을 제거함
  *
  * @author HanWon.Jang
  * @param value 정리할 입력값
@@ -98,7 +98,7 @@ export function sanitizeText(value: FormDataEntryValue | string | null) {
 }
 
 /**
- * 문자열에서 HTML tag를 제거합니다.
+ * 문자열에서 HTML tag를 제거함
  *
  * @author HanWon.Jang
  * @param value HTML tag를 제거할 문자열
@@ -110,7 +110,7 @@ export function stripHtmlTags(value?: string) {
 }
 
 /**
- * 도서 검색 API가 여러 저자를 ^ 구분자로 내려주는 경우 저장 요청에 그대로 들어가지 않도록 정리합니다.
+ * 도서 검색 API가 여러 저자를 ^ 구분자로 내려주는 경우 저장 요청에 그대로 들어가지 않도록 정리함
  *
  * @author HanWon.Jang
  * @param value 도서 검색 API에서 받은 저자 문자열
@@ -133,7 +133,7 @@ type ReportFormValues = {
 };
 
 /**
- * 독후감 등록과 수정 폼의 필수값, 공통코드, 내용 byte 제한을 검증합니다.
+ * 독후감 등록과 수정 폼의 필수값, 공통코드, 내용 byte 제한을 검증함
  *
  * @author HanWon.Jang
  * @param values 화면에서 입력한 독후감 폼 값과 DB 코드 목록
@@ -149,7 +149,7 @@ export function validateReportForm(values: ReportFormValues) {
   const content = String(values.content ?? "").trim();
   const missingFields: string[] = [];
   const isReadingStatus = status === REPORT_STATUS_READ;
-  // 완료 상태에서는 화면 라벨이 목표 날짜로 바뀌므로 필수값 안내 문구도 같은 명칭을 사용합니다.
+  // 완료 상태에서는 화면 라벨이 목표 날짜로 바뀌므로 필수값 안내 문구도 같은 명칭을 사용함
   const startDateFieldName =
     isReadingStatus
       ? message("frontend.report.field.targetStartDate")
@@ -217,7 +217,7 @@ export function validateReportForm(values: ReportFormValues) {
 }
 
 /**
- * 독후감 등록 시 선택된 도서 정보가 저장 가능한 형태인지 검증합니다.
+ * 독후감 등록 시 선택된 도서 정보가 저장 가능한 형태인지 검증함
  *
  * @author HanWon.Jang
  * @param book 검증할 도서 검색 결과 객체

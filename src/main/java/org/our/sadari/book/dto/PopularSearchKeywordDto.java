@@ -8,7 +8,7 @@ import lombok.Getter;
  * fileName       : PopularSearchKeywordDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-16
- * description    : 최근 도서 인기 검색어의 순위와 화면 표시값을 전달한다
+ * description    : 최근 도서 인기 검색어의 순위와 화면 표시값을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

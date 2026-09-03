@@ -24,7 +24,7 @@ import static org.mockito.Mockito.when;
  * fileName       : UserSuspensionServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 기간 정지 만료와 우선 상태 보존을 검증한다
+ * description    : 기간 정지 만료와 우선 상태 보존을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -50,7 +50,7 @@ class UserSuspensionServiceImplTest {
     private UserSuspensionServiceImpl userSuspensionService;
 
     /**
-     * 활성 정지 이력이 없고 DB가 정상 상태이면 남은 Redis 정지 상태를 보정하는지 확인한다
+     * 활성 정지 이력이 없고 DB가 정상 상태이면 남은 Redis 정지 상태를 보정하는지 확인함
      *
      * @author SeungHyeon.Kang
      */
@@ -64,7 +64,7 @@ class UserSuspensionServiceImplTest {
     }
 
     /**
-     * DB가 여전히 정지 상태이면 활성 이력이 없어도 접근 제한을 임의로 해제하지 않는지 확인한다
+     * DB가 여전히 정지 상태이면 활성 이력이 없어도 접근 제한을 임의로 해제하지 않는지 확인함
      *
      * @author SeungHyeon.Kang
      */
@@ -78,7 +78,7 @@ class UserSuspensionServiceImplTest {
     }
 
     /**
-     * 정지 만료 시 DB 회원 상태가 실제 복구된 경우에만 Redis 상태도 복구하는지 확인한다
+     * 정지 만료 시 DB 회원 상태가 실제 복구된 경우에만 Redis 상태도 복구하는지 확인함
      *
      * @author SeungHyeon.Kang
      */
@@ -98,7 +98,7 @@ class UserSuspensionServiceImplTest {
     }
 
     /**
-     * 영구 삭제 대기 같은 우선 상태가 남으면 정지 만료가 Redis 상태를 덮지 않는지 확인한다
+     * 영구 삭제 대기 같은 우선 상태가 남으면 정지 만료가 Redis 상태를 덮지 않는지 확인함
      *
      * @author SeungHyeon.Kang
      */
@@ -116,7 +116,7 @@ class UserSuspensionServiceImplTest {
     }
 
     /**
-     * 종료 시각이 지난 기간 정지 테스트 객체를 생성한다
+     * 종료 시각이 지난 기간 정지 테스트 객체를 생성함
      *
      * @author SeungHyeon.Kang
      * @return 만료 대상 기간 정지

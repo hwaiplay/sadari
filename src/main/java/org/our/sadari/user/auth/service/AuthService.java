@@ -6,7 +6,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : AuthService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 사용자 업무 계약을 정의한다
+ * description    : 사용자 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -14,7 +14,7 @@ import org.our.sadari.global.common.result.ResultData;
  */
 public interface AuthService {
     /**
-     * 아래 코드의 처리 목적을 설명한다.
+     * 아래 코드의 처리 목적을 설명함
      */
     ResultData kakaoLogin(String code, String lognIpxx, String userAgnt);
 }

@@ -9,7 +9,7 @@ import org.springframework.web.multipart.MultipartFile;
  * fileName       : UserService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-20
- * description    : 사용자 업무 계약을 정의한다
+ * description    : 사용자 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,7 +21,7 @@ import org.springframework.web.multipart.MultipartFile;
 public interface UserService {
 
     /**
-     * 로그인 사용자의 프로필 정보를 조회한다.
+     * 로그인 사용자의 프로필 정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -30,8 +30,8 @@ public interface UserService {
     ResultData getMe(Long userNumb);
 
     /**
-     * 로그인 사용자의 프로필 정보와 이미지를 수정한다.
-     * 닉네임 중복 검사와 욕설 필터링 같은 업무 검증은 구현체에서 수행한다.
+     * 로그인 사용자의 프로필 정보와 이미지를 수정함
+     * 닉네임 중복 검사와 욕설 필터링 같은 업무 검증은 구현체에서 수행함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -43,7 +43,7 @@ public interface UserService {
     ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage, MultipartFile backgroundImage);
 
     /**
-     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 임시 저장한다.
+     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 임시 저장함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -54,7 +54,7 @@ public interface UserService {
     ResultData setProfileImageDraft(Long userNumb, MultipartFile imageFile, String imageType);
 
     /**
-     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회한다.
+     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -63,7 +63,7 @@ public interface UserService {
     ResultData getProfileImageDraftList(Long userNumb);
 
     /**
-     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제한다.
+     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -73,7 +73,7 @@ public interface UserService {
     ResultData delProfileImageDraft(Long userNumb, String imageType);
 
     /**
-     * 최초 로그인 사용자의 닉네임을 저장하고 온보딩을 완료한다.
+     * 최초 로그인 사용자의 닉네임을 저장하고 온보딩을 완료함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -83,7 +83,7 @@ public interface UserService {
     ResultData uptOnboarding(Long userNumb, UserDto userDto);
 
     /**
-     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회한다
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회함
      *
      * @author SeungHyeon.Kang
      * @return 대분류와 세부코드가 포함된 관심분야 목록
@@ -91,7 +91,7 @@ public interface UserService {
     ResultData getUserInterestCatalog();
 
     /**
-     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회한다
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -100,7 +100,7 @@ public interface UserService {
     ResultData getUserInterestList(Long userNumb);
 
     /**
-     * 로그인 사용자의 독서 관심분야를 선택 목록으로 전체 교체한다
+     * 로그인 사용자의 독서 관심분야를 선택 목록으로 전체 교체함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -109,12 +109,12 @@ public interface UserService {
      */
     ResultData uptUserInterests(Long userNumb, UserDto.UserInterestReqDto request);
 
-    /** 로그인 사용자의 알림과 공개 범위 설정을 조회한다. */
+    /** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
     ResultData getUserSetting(Long userNumb);
 
-    /** 로그인 사용자의 선택형 알림 설정을 저장한다. */
+    /** 로그인 사용자의 선택형 알림 설정을 저장함 */
     ResultData uptUserAlimSetting(Long userNumb, UserSettingDto request);
 
-    /** 로그인 사용자의 공개 범위 설정을 저장한다. */
+    /** 로그인 사용자의 공개 범위 설정을 저장함 */
     ResultData uptUserPrivacySetting(Long userNumb, UserSettingDto request);
 }

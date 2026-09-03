@@ -10,7 +10,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import * as styles from "./UserReportPage.css";
 
 /**
- * 신고 사유 선택 이후 감사 안내와 추가 차단 선택지를 표시한다.
+ * 신고 사유 선택 이후 감사 안내와 추가 차단 선택지를 표시함
  *
  * @author HanWon.Jang
  * @return 신고 완료 페이지
@@ -20,7 +20,7 @@ const UserReportCompletePage = () => {
   const reportState = location.state as UserReportLocationState | null;
   const [isBlocked, setIsBlocked] = useState(false);
 
-  // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동한다.
+  // 신고 대상 정보 없이 직접 접근한 경우 안전한 기본 화면으로 이동함
   if (!reportState?.target) {
     return <Navigate to="/home" replace />;
   }
@@ -28,16 +28,16 @@ const UserReportCompletePage = () => {
   const { target } = reportState;
 
   /**
-   * 완료 화면에서 차단 여부를 확인하고 선택한 신고 대상의 차단 관계를 등록한다
+   * 완료 화면에서 차단 여부를 확인하고 선택한 신고 대상의 차단 관계를 등록함
    *
    * @author HanWon.Jang
    * @return 차단 확인과 등록 완료 Promise
    */
   const handleBlock = async (): Promise<void> => {
     try {
-      // 공통 차단 정책을 안내하고 사용자가 확인한 경우에만 상태 변경을 시작한다
+      // 공통 차단 정책을 안내하고 사용자가 확인한 경우에만 상태 변경을 시작함
       await confirmUserBlock(target.userNick, async () => {
-        // 처리 중 화면과 이동 차단을 유지하며 신고 대상 사용자를 차단한다
+        // 처리 중 화면과 이동 차단을 유지하며 신고 대상 사용자를 차단함
         await runBlockingOperation(() => setUserBlockApi(target.userNumb), {
           // "사용자를 차단하고 있어요."
           title: message("frontend.userAction.block.processing"),
@@ -46,7 +46,7 @@ const UserReportCompletePage = () => {
             title: message("frontend.userAction.block.success"),
           },
         });
-        // 완료 화면에서 같은 사용자를 다시 차단하지 않도록 성공 상태를 저장한다
+        // 완료 화면에서 같은 사용자를 다시 차단하지 않도록 성공 상태를 저장함
         setIsBlocked(true);
       });
     }
@@ -61,13 +61,13 @@ const UserReportCompletePage = () => {
   };
 
   /**
-   * 신고 완료 화면의 차단 버튼 클릭을 비동기 차단 처리와 연결한다
+   * 신고 완료 화면의 차단 버튼 클릭을 비동기 차단 처리와 연결함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleBlockClick = (): void => {
-    // 차단 확인과 API 오류는 비동기 처리 함수 내부에서 안내한다
+    // 차단 확인과 API 오류는 비동기 처리 함수 내부에서 안내함
     void handleBlock();
   };
 

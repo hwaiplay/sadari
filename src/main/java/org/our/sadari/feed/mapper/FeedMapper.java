@@ -9,7 +9,7 @@ import org.our.sadari.social.dto.SocialDto;
  * fileName       : FeedMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 본인과 팔로잉 피드 및 사진 반응 데이터 접근 메서드를 정의한다
+ * description    : 본인과 팔로잉 피드 및 사진 반응 데이터 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,7 +21,7 @@ import org.our.sadari.social.dto.SocialDto;
 public interface FeedMapper {
 
     /**
-     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 최신순으로 조회한다.
+     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 최신순으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param request 로그인 사용자와 피드 페이지 또는 대상 조건
@@ -30,7 +30,7 @@ public interface FeedMapper {
     List<FeedDto> getFeedList(FeedDto request);
 
     /**
-     * 현재 프로필 또는 배경 이미지와 일치하는 활성 사용자 소유 좋아요 대상을 조회한다.
+     * 현재 프로필 또는 배경 이미지와 일치하는 활성 사용자 소유 좋아요 대상을 조회함
      *
      * @author SeungHyeon.Kang
      * @param request 로그인 사용자와 사진 좋아요 대상 식별값
@@ -39,7 +39,7 @@ public interface FeedMapper {
     SocialDto.LikeDto getImageLikeTarget(SocialDto.LikeDto request);
 
     /**
-     * 교체되는 프로필 또는 배경 이미지의 댓글에 연결된 좋아요를 삭제한다.
+     * 교체되는 프로필 또는 배경 이미지의 댓글에 연결된 좋아요를 삭제함
      *
      * @author SeungHyeon.Kang
      * @param request 교체되는 사진 유형과 파일 번호
@@ -48,7 +48,7 @@ public interface FeedMapper {
     int delImageReplyLikes(FeedDto request);
 
     /**
-     * 교체되는 프로필 또는 배경 이미지의 부모 댓글에 연결된 답글을 삭제한다.
+     * 교체되는 프로필 또는 배경 이미지의 부모 댓글에 연결된 답글을 삭제함
      *
      * @author SeungHyeon.Kang
      * @param request 교체되는 사진 유형과 파일 번호
@@ -57,7 +57,7 @@ public interface FeedMapper {
     int delImageChildReplies(FeedDto request);
 
     /**
-     * 교체되는 프로필 또는 배경 이미지에 직접 연결된 부모 댓글을 삭제한다.
+     * 교체되는 프로필 또는 배경 이미지에 직접 연결된 부모 댓글을 삭제함
      *
      * @author SeungHyeon.Kang
      * @param request 교체되는 사진 유형과 파일 번호
@@ -66,7 +66,7 @@ public interface FeedMapper {
     int delImageParentReplies(FeedDto request);
 
     /**
-     * 교체되는 프로필 또는 배경 이미지에 직접 연결된 좋아요를 삭제한다.
+     * 교체되는 프로필 또는 배경 이미지에 직접 연결된 좋아요를 삭제함
      *
      * @author SeungHyeon.Kang
      * @param request 교체되는 사진 유형과 파일 번호

@@ -34,7 +34,7 @@ export const originalImage = style({
   userSelect: "none",
 });
 
-// 반응 버튼 높이를 확보한 상태로 원본 사진 묶음을 화면 중앙에 배치한다
+// 반응 버튼 높이를 확보한 상태로 원본 사진 묶음을 화면 중앙에 배치함
 export const imageViewport = style({
   position: "absolute",
   inset: 0,
@@ -47,7 +47,7 @@ export const imageViewport = style({
   overflow: "hidden",
 });
 
-// 원본 사진의 실제 표시 너비에 맞춰 우하단 반응 버튼 정렬 기준을 만든다
+// 원본 사진의 실제 표시 너비에 맞춰 우하단 반응 버튼 정렬 기준을 만듦
 export const imageFrame = style({
   width: "fit-content",
   maxWidth: "100%",
@@ -59,7 +59,7 @@ export const imageFrame = style({
   gap: "8px",
 });
 
-// 좋아요와 댓글 영역이 사진을 가리지 않도록 반응 버튼 높이를 제외한 범위에 원본을 맞춘다
+// 좋아요와 댓글 영역이 사진을 가리지 않도록 반응 버튼 높이를 제외한 범위에 원본을 맞춤
 export const originalImageWithActions = style({
   display: "block",
   width: "auto",
@@ -70,7 +70,7 @@ export const originalImageWithActions = style({
   userSelect: "none",
 });
 
-// 원본 사진 바깥의 우하단에 사진 반응 기능을 표시한다
+// 원본 사진 바깥의 우하단에 사진 반응 기능을 표시함
 export const viewerActions = style({
   flexShrink: 0,
   display: "flex",

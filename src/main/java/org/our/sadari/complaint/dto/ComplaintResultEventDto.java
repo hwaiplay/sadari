@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : ComplaintResultEventDto
  * author         : HanWon.Jang
  * date           : 2026-08-24
- * description    : 하나의 신고 조치로 생성되는 사용자 안내 이벤트를 전달한다
+ * description    : 하나의 신고 조치로 생성되는 사용자 안내 이벤트를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -91,12 +91,12 @@ const ReadingGoalResultOverlay = ({
    * @return
    */
   const closeReadingGoalResult = async (): Promise<void> => {
-    // 상세 팝업의 확인 저장 중이거나 닫기 처리기가 없으면 화면 상태를 변경하지 않는다
+    // 상세 팝업의 확인 저장 중이거나 닫기 처리기가 없으면 화면 상태를 변경하지 않음
     if (closing || !onClose) {
       return;
     }
 
-    // 서버 확인이 성공한 뒤 부모 화면이 결과 팝업을 제거하도록 요청한다
+    // 서버 확인이 성공한 뒤 부모 화면이 결과 팝업을 제거하도록 요청함
     await onClose();
   };
 
@@ -117,7 +117,7 @@ const ReadingGoalResultOverlay = ({
     });
   }
 
-  // 팝업에서는 배경을 차단하고 페이지에서는 같은 결과 본문만 표시한다
+  // 팝업에서는 배경을 차단하고 페이지에서는 같은 결과 본문만 표시함
   return (
     <>
       {variant === "overlay" ? (

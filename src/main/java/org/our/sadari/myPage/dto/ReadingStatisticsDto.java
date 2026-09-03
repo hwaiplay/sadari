@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * fileName       : ReadingStatisticsDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 마이페이지의 독서 시간과 습관 및 독후감 통계를 전달한다
+ * description    : 마이페이지의 독서 시간과 습관 및 독후감 통계를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -46,7 +46,7 @@ public class ReadingStatisticsDto {
     private String publicYsno;
 
     /**
-     * 잔디 한 칸에 표시할 날짜별 독서 시간을 전달한다
+     * 잔디 한 칸에 표시할 날짜별 독서 시간을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -63,7 +63,7 @@ public class ReadingStatisticsDto {
     }
 
     /**
-     * 독서 상태 비율에 사용할 상태별 독후감 수를 전달한다
+     * 독서 상태 비율에 사용할 상태별 독후감 수를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -80,7 +80,7 @@ public class ReadingStatisticsDto {
     }
 
     /**
-     * 타이머 기록이 이어진 현재 및 최장 연속 독서일을 전달한다
+     * 타이머 기록이 이어진 현재 및 최장 연속 독서일을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -97,7 +97,7 @@ public class ReadingStatisticsDto {
     }
 
     /**
-     * 현재 연도에 타이머로 오래 읽은 도서와 누적 시간을 전달한다
+     * 현재 연도에 타이머로 오래 읽은 도서와 누적 시간을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -122,7 +122,7 @@ public class ReadingStatisticsDto {
     }
 
     /**
-     * 유효한 별점별 독후감 수를 전달한다
+     * 유효한 별점별 독후감 수를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -139,7 +139,7 @@ public class ReadingStatisticsDto {
     }
 
     /**
-     * 현재 연도와 전년도 같은 기간의 독서 시간과 독서일 및 완독 권수를 전달한다
+     * 현재 연도와 전년도 같은 기간의 독서 시간과 독서일 및 완독 권수를 전달함
      *
      * @author SeungHyeon.Kang
      */

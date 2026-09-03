@@ -2,7 +2,7 @@
  * fileName       : ClubMemberManagementPage
  * author         : HanWon.Jang
  * date           : 2026-08-14
- * description    : 모임장의 가입 신청 확인과 멤버 및 초대 관리 화면을 구성한다
+ * description    : 모임장의 가입 신청 확인과 멤버 및 초대 관리 화면을 구성함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -32,7 +32,7 @@ type CandidateRowProps = {
 };
 
 /**
- * 맞팔 초대 후보의 프로필과 초대 실행 버튼을 표시한다
+ * 맞팔 초대 후보의 프로필과 초대 실행 버튼을 표시함
  *
  * @author Hanwon.Jang
  * @param candidate 표시할 초대 후보
@@ -42,17 +42,17 @@ type CandidateRowProps = {
  */
 function CandidateRow({ candidate, disabled, onInvite }: CandidateRowProps) {
   /**
-   * 현재 후보에게 모임 초대를 발송한다
+   * 현재 후보에게 모임 초대를 발송함
    *
    * @author Hanwon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleInvite = (): void => {
-    // 후보 사용자 번호를 사용하여 초대 발송을 요청한다
+    // 후보 사용자 번호를 사용하여 초대 발송을 요청함
     onInvite(candidate.userNumb);
   };
 
-  // 피그마 카드 구조에 맞춘 프로필 정보와 초대 버튼을 반환한다
+  // 피그마 카드 구조에 맞춘 프로필 정보와 초대 버튼을 반환함
   return (
     <article className={styles.invitationCard}>
       {/* 초대 후보 프로필 영역 */}
@@ -81,7 +81,7 @@ function CandidateRow({ candidate, disabled, onInvite }: CandidateRowProps) {
 }
 
 /**
- * 모임장의 가입 신청 확인과 활성 멤버 관리 화면을 표시한다
+ * 모임장의 가입 신청 확인과 활성 멤버 관리 화면을 표시함
  *
  * @author Hanwon.Jang
  * @return 멤버와 가입 신청 관리 화면
@@ -109,33 +109,33 @@ export default function ClubMemberManagementPage() {
   } = useClubMemberManage();
   const { clubNumb } = useParams<{ clubNumb: string }>();
 
-  // 답변 또는 초대 모달이 열려 있는 동안 배경 화면의 스크롤을 잠근다
+  // 답변 또는 초대 모달이 열려 있는 동안 배경 화면의 스크롤을 잠금
   useBodyScrollLock(Boolean(selectedApplication) || Boolean(selectedMember) || isInviteOpen);
 
   /**
-   * 선택한 가입 신청을 승인한다
+   * 선택한 가입 신청을 승인함
    *
    * @author Hanwon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleApprove = (): void => {
-    // 현재 답변을 확인한 가입 신청을 승인 상태로 처리한다
+    // 현재 답변을 확인한 가입 신청을 승인 상태로 처리함
     handleApplicationDecision("APPROVED");
   };
 
   /**
-   * 선택한 가입 신청을 거절한다
+   * 선택한 가입 신청을 거절함
    *
    * @author Hanwon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleReject = (): void => {
-    // 현재 답변을 확인한 가입 신청을 거절 상태로 처리한다
+    // 현재 답변을 확인한 가입 신청을 거절 상태로 처리함
     handleApplicationDecision("REJECTED");
   };
 
   /**
-   * 가입 신청 한 건의 프로필과 답변 확인 버튼을 표시한다
+   * 가입 신청 한 건의 프로필과 답변 확인 버튼을 표시함
    *
    * @author Hanwon.Jang
    * @param application 표시할 가입 신청
@@ -143,17 +143,17 @@ export default function ClubMemberManagementPage() {
    */
   const renderApplication = (application: ClubApplication) => {
     /**
-     * 현재 가입 신청의 답변 확인 모달을 연다
+     * 현재 가입 신청의 답변 확인 모달을 엶
      *
      * @author Hanwon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleOpen = (): void => {
-      // 현재 카드의 가입 신청을 답변 확인 대상으로 설정한다
+      // 현재 카드의 가입 신청을 답변 확인 대상으로 설정함
       handleAnswerOpen(application);
     };
 
-    // 신청자 프로필과 답변 확인 동작을 포함한 카드를 반환한다
+    // 신청자 프로필과 답변 확인 동작을 포함한 카드를 반환함
     return (
       <article className={styles.profileCard} key={application.applNumb}>
         {/* 가입 신청자 프로필 영역 */}
@@ -179,7 +179,7 @@ export default function ClubMemberManagementPage() {
   };
 
   /**
-   * 활성 모임원 한 명의 프로필과 관리 진입 버튼을 표시한다
+   * 활성 모임원 한 명의 프로필과 관리 진입 버튼을 표시함
    *
    * @author Hanwon.Jang
    * @param member 표시할 모임원
@@ -187,17 +187,17 @@ export default function ClubMemberManagementPage() {
    */
   const renderMember = (member: ClubMemberProfile) => {
     /**
-     * 현재 카드의 일반 멤버를 퇴장 대상으로 선택한다.
+     * 현재 카드의 일반 멤버를 퇴장 대상으로 선택함
      *
      * @author HanWon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleOpenExit = (): void => {
-      // 현재 카드의 사용자 번호와 닉네임을 퇴장 모달에 전달한다
+      // 현재 카드의 사용자 번호와 닉네임을 퇴장 모달에 전달함
       handleExitOpen(member);
     };
 
-    // 모임장과 일반 멤버를 구분한 프로필 카드를 반환한다
+    // 모임장과 일반 멤버를 구분한 프로필 카드를 반환함
     return (
       <article className={styles.profileCard} key={member.userNumb}>
         {/* 활성 모임원 프로필 영역 */}
@@ -227,7 +227,7 @@ export default function ClubMemberManagementPage() {
   };
 
   /**
-   * 신청 답변의 질문과 답변 한 쌍을 표시한다
+   * 신청 답변의 질문과 답변 한 쌍을 표시함
    *
    * @author Hanwon.Jang
    * @param question 표시할 가입 질문
@@ -235,7 +235,7 @@ export default function ClubMemberManagementPage() {
    * @return 질문과 답변 항목
    */
   const renderAnswer = (question: string, index: number) => {
-    // 같은 순서의 질문과 신청 답변을 한 항목으로 반환한다
+    // 같은 순서의 질문과 신청 답변을 한 항목으로 반환함
     return (
       <div className={styles.answerItem} key={`${question}-${index}`}>
         <strong className={styles.questionText}>{message("frontend.readingClub.detail.question", [index+1, question])}</strong>
@@ -247,14 +247,14 @@ export default function ClubMemberManagementPage() {
   };
 
   /**
-   * 맞팔 초대 후보 한 명의 선택 항목을 표시한다
+   * 맞팔 초대 후보 한 명의 선택 항목을 표시함
    *
    * @author Hanwon.Jang
    * @param candidate 표시할 초대 후보
    * @return 초대 후보 선택 항목
    */
   const renderCandidate = (candidate: InviteCandidate) => {
-    // 현재 처리 상태를 전달한 피그마 초대 후보 카드를 반환한다
+    // 현재 처리 상태를 전달한 피그마 초대 후보 카드를 반환함
     return (
       <CandidateRow
         key={candidate.userNumb}
@@ -266,7 +266,7 @@ export default function ClubMemberManagementPage() {
   };
 
   /**
-   * 모임장이 보낸 유효한 초대 한 건과 취소 버튼을 표시한다
+   * 모임장이 보낸 유효한 초대 한 건과 취소 버튼을 표시함
    *
    * @author Hanwon.Jang
    * @param invitation 표시할 보낸 초대
@@ -274,17 +274,17 @@ export default function ClubMemberManagementPage() {
    */
   const renderSentInvitation = (invitation: SentClubInvitation) => {
     /**
-     * 현재 회원에게 보낸 초대를 취소한다
+     * 현재 회원에게 보낸 초대를 취소함
      *
      * @author Hanwon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleCancel = (): void => {
-      // 현재 카드의 초대 대상 사용자 번호로 취소를 요청한다
+      // 현재 카드의 초대 대상 사용자 번호로 취소를 요청함
       handleInviteCancel(invitation.userNumb);
     };
 
-    // 프로필과 관심분야 및 취소 기능을 포함한 보낸 초대 카드를 반환한다
+    // 프로필과 관심분야 및 취소 기능을 포함한 보낸 초대 카드를 반환함
     return (
       <article className={styles.invitationCard} key={invitation.userNumb}>
         <ProfileImage
@@ -311,7 +311,7 @@ export default function ClubMemberManagementPage() {
     );
   };
 
-  // 최초 조회 중에는 실제 카드 크기를 유지하는 스켈레톤 화면을 반환한다
+  // 최초 조회 중에는 실제 카드 크기를 유지하는 스켈레톤 화면을 반환함
   if (isLoading) {
     return (
       <main className={styles.page} aria-label={message("frontend.readingClub.memberManage.loading")}>
@@ -342,7 +342,7 @@ export default function ClubMemberManagementPage() {
     );
   }
 
-  // 가입 신청과 멤버 목록 및 관리 진입 메뉴를 포함한 화면을 반환한다
+  // 가입 신청과 멤버 목록 및 관리 진입 메뉴를 포함한 화면을 반환함
   return (
     <>
       <main className={styles.page}>

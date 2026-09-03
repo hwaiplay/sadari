@@ -6,7 +6,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : FeedService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 본인과 팔로잉 피드 조회 업무 계약을 정의한다
+ * description    : 본인과 팔로잉 피드 조회 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -17,7 +17,7 @@ import org.our.sadari.global.common.result.ResultData;
 public interface FeedService {
 
     /**
-     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 페이지 단위로 조회한다.
+     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 페이지 단위로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -27,7 +27,7 @@ public interface FeedService {
     ResultData getFeedList(Long userNumb, int page);
 
     /**
-     * 알림 링크가 지정한 현재 공개 피드 대상 한 건을 조회한다.
+     * 알림 링크가 지정한 현재 공개 피드 대상 한 건을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호

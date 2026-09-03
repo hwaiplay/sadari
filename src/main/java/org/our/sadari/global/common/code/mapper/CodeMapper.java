@@ -9,7 +9,7 @@ import org.our.sadari.global.common.code.dto.CodeDto;
  * fileName       : CodeMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-09
- * description    : 공통 데이터베이스 접근 메서드를 정의한다
+ * description    : 공통 데이터베이스 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,7 +18,7 @@ import org.our.sadari.global.common.code.dto.CodeDto;
 @Mapper
 public interface CodeMapper {
     /**
-     * 하나의 공통코드에 속한 사용 가능한 세부코드 목록을 조회한다.
+     * 하나의 공통코드에 속한 사용 가능한 세부코드 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCode 조회할 공통코드
@@ -27,7 +27,7 @@ public interface CodeMapper {
     List<CodeDto> getCodeList(@Param("commCode") String commCode);
 
     /**
-     * 여러 공통코드에 속한 사용 가능한 세부코드를 한 번의 SQL로 조회한다.
+     * 여러 공통코드에 속한 사용 가능한 세부코드를 한 번의 SQL로 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCodeList 조회할 공통코드 목록
@@ -36,7 +36,7 @@ public interface CodeMapper {
     List<CodeDto> getCodeGroupList(@Param("commCodeList") List<String> commCodeList);
 
     /**
-     * 공통코드와 세부코드에 해당하는 표시 이름을 조회한다.
+     * 공통코드와 세부코드에 해당하는 표시 이름을 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCode 조회할 공통코드

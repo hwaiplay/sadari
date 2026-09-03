@@ -7,7 +7,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : ComplaintService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 사용자 신고 접수 업무 계약을 정의한다
+ * description    : 사용자 신고 접수 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -17,7 +17,7 @@ import org.our.sadari.global.common.result.ResultData;
 public interface ComplaintService {
 
     /**
-     * 신고 대상 원문을 확인한 뒤 접수 시점 스냅샷과 신고 사유를 저장한다.
+     * 신고 대상 원문을 확인한 뒤 접수 시점 스냅샷과 신고 사유를 저장함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 신고하는 인증 사용자 번호
@@ -27,7 +27,7 @@ public interface ComplaintService {
     ResultData setComplaint(Long userNumb, ComplaintCreateDto complaintCreateDto);
 
     /**
-     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과 건수와 마지막 번호를 조회한다.
+     * 활성 사용자가 아직 확인하지 않은 신고 조치 결과 건수와 마지막 번호를 조회함
      *
      * @author HanWon.Jang
      * @param userNumb 인증 사용자 번호
@@ -36,7 +36,7 @@ public interface ComplaintService {
     ResultData getPendingResultDtl(Long userNumb);
 
     /**
-     * 활성 사용자가 팝업에서 확인한 시점까지의 신고 조치 결과를 확인 처리한다.
+     * 활성 사용자가 팝업에서 확인한 시점까지의 신고 조치 결과를 확인 처리함
      *
      * @author HanWon.Jang
      * @param userNumb 인증 사용자 번호

@@ -2,7 +2,7 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import { getDetailApi } from "../../api/bookApi";
 
 /**
- * 독후감 상세 정보를 React Query로 조회합니다.
+ * 독후감 상세 정보를 React Query로 조회함
  *
  * @author HanWon.Jang
  * @param bookNumb 조회할 독후감 번호

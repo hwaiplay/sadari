@@ -16,7 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : ServiceInfoServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-08-10
- * description    : 활성 사용자에게 서비스 정보 카테고리와 현재 배포 버전만 제공한다
+ * description    : 활성 사용자에게 서비스 정보 카테고리와 현재 배포 버전만 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -31,7 +31,7 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
     private final ServiceInfoMapper serviceInfoMapper;
 
     /**
-     * 활성 사용자에게 서비스 정보 카테고리와 현재 배포본을 제공한다
+     * 활성 사용자에게 서비스 정보 카테고리와 현재 배포본을 제공함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 접근하는 인증 사용자 번호
@@ -39,14 +39,14 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
      */
     @Override
     public ResultData getServiceInfoList(Long userNumb) {
-        // 활성 회원만 설정 화면의 서비스 정보에 접근할 수 있다.
+        // 활성 회원만 설정 화면의 서비스 정보에 접근할 수 있음
         if (StringUtil.isEmpty(userNumb)
                 || serviceInfoMapper.getActiveUserCnt(userNumb, USER_STAT_ACTIVE) != 1) {
             // "접근 권한이 없습니다."
             return ResultData.fail(ResultEnum.FORBIDDEN);
         }
 
-        // 활성 카테고리와 각 카테고리의 현재 배포본을 정렬 순서대로 반환한다.
+        // 활성 카테고리와 각 카테고리의 현재 배포본을 정렬 순서대로 반환함
         return ResultData.success(serviceInfoMapper.getServiceInfoList(CODE_SERVICE_INFO_CATEGORY, COMM_YES));
     }
 }

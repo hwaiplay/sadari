@@ -95,7 +95,7 @@ export type ReadingStatusType = string;
  * "독후감" 타입
  */
 export interface ReportDtoType {
-  // 조회 응답에 포함되는 독후감 작성자 사용자 번호이며 등록 요청에서는 생략합니다.
+  // 조회 응답에 포함되는 독후감 작성자 사용자 번호이며 등록 요청에서는 생략함
   userNumb?: number;
   // 독서 진행 상태
   reptStat: ReadingStatusType;
@@ -206,7 +206,7 @@ export interface PublicReportTargetType extends PublicReportType {
 
 // 독후감 상세보기 타입
 export interface ReportDetailType extends ReportDtoType {
-  // 상세 조회에서는 작성자 본인 독후감만 반환하므로 사용자 번호가 항상 필요합니다.
+  // 상세 조회에서는 작성자 본인 독후감만 반환하므로 사용자 번호가 항상 필요함
   userNumb: number;
   // 상세 수정 요청에 반드시 포함할 원본 내용 해시
   editVersion: string;

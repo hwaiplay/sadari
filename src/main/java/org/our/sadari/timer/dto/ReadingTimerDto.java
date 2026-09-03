@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * fileName       : ReadingTimerDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 타이머 세션과 주간 출석 데이터를 전달한다
+ * description    : 독서 타이머 세션과 주간 출석 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -52,7 +52,7 @@ public class ReadingTimerDto {
     private LocalDateTime updtDate;
 
     /**
-     * 타이머 시작 또는 상태 변경 요청을 전달한다
+     * 타이머 시작 또는 상태 변경 요청을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -67,7 +67,7 @@ public class ReadingTimerDto {
     }
 
     /**
-     * 주간 일자별 독서 시간과 출석 여부를 전달한다
+     * 주간 일자별 독서 시간과 출석 여부를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -84,7 +84,7 @@ public class ReadingTimerDto {
     }
 
     /**
-     * 도서별 타이머 누적시간과 최근 기록 시각을 전달한다
+     * 도서별 타이머 누적시간과 최근 기록 시각을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -108,7 +108,7 @@ public class ReadingTimerDto {
     }
 
     /**
-     * 타이머 화면에 필요한 요약 데이터를 전달한다
+     * 타이머 화면에 필요한 요약 데이터를 전달함
      *
      * @author SeungHyeon.Kang
      */

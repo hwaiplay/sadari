@@ -4,7 +4,7 @@ package org.our.sadari.global.scheduler.service;
  * fileName       : ReportDateOverService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 업무 계약을 정의한다
+ * description    : 스케줄러 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

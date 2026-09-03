@@ -2,7 +2,7 @@
  * fileName       : ClubMemberManagementPage.css
  * author         : HanWon.Jang
  * date           : 2026-08-14
- * description    : 멤버와 가입 신청 관리 화면 및 모달 스타일을 정의한다
+ * description    : 멤버와 가입 신청 관리 화면 및 모달 스타일을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

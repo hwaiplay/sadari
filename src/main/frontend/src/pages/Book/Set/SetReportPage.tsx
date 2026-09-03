@@ -1,5 +1,5 @@
 /**
- * 독후감 등록 화면의 도서 요약과 직접 입력 및 도서 정보 전환을 구성한다
+ * 독후감 등록 화면의 도서 요약과 직접 입력 및 도서 정보 전환을 구성함
  *
  * @author HanWon.Jang
  */
@@ -16,7 +16,7 @@ import ReportStatsEditor from "@/features/Book/Set/components/form/reportStatsEd
 import { useSetReportPage } from "@/features/Book/Set/hooks/useSetReportPage";
 
 /**
- * 선택한 도서를 기준으로 독후감 등록 입력과 도서 정보 전환 화면을 구성한다
+ * 선택한 도서를 기준으로 독후감 등록 입력과 도서 정보 전환 화면을 구성함
  *
  * @author HanWon.Jang
  * @return 구성된 화면 요소

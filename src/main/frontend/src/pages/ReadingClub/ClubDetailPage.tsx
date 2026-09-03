@@ -203,7 +203,7 @@ const ClubDetailPage = () => {
   };
 
   /**
-   * 승인제 모임의 가입 질문과 답변 입력란을 표시한다.
+   * 승인제 모임의 가입 질문과 답변 입력란을 표시함
    *
    * @author HanWon.Jang
    * @param question 표시할 가입 질문
@@ -219,18 +219,18 @@ const ClubDetailPage = () => {
     const answerCount = message("frontend.readingClub.detail.answerCount", [answer.length]);
 
     /**
-     * 현재 가입 질문의 답변을 변경한다.
+     * 현재 가입 질문의 답변을 변경함
      *
      * @author HanWon.Jang
      * @param event 답변 입력 변경 이벤트
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handleChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
-      // 변경한 질문 순서와 답변을 가입 신청 상태에 반영한다.
+      // 변경한 질문 순서와 답변을 가입 신청 상태에 반영함
       handleAnswerChange(index, event.currentTarget.value);
     };
 
-    // 가입 질문과 최대 200자의 답변 입력란을 반환한다.
+    // 가입 질문과 최대 200자의 답변 입력란을 반환함
     return (
       <div className={styles.joinQuestionItem} key={`${question}-${index}`}>
         <label className={styles.joinQuestionLabel} htmlFor={inputId}>
@@ -371,7 +371,7 @@ const ClubDetailPage = () => {
                     </div>
                   ) : (
                     <div className={styles.readingEmpty}>
-                      {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공한다 */}
+                      {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공함 */}
                       {club.membRole === "OWNER" ? (
                         <SearchBookButton to={`/reading-clubs/books/search/${club.clubNumb}`}/>
                       ) : null}
@@ -466,7 +466,7 @@ const ClubDetailPage = () => {
                   ) : null}
                 </div>
 
-                {/* 멤버 관리는 활성 모임장에게만 제공한다 */}
+                {/* 멤버 관리는 활성 모임장에게만 제공함 */}
                 {club.membRole === "OWNER" ? (
                   <LinkButton
                     link={`/reading-clubs/manage/members/${club.clubNumb}`}

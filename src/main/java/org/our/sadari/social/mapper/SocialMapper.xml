@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.social.mapper.SocialMapper">
 
-    <!-- 팔로우 버튼 상태 조회에 사용하는 공통코드를 Java 상수와 일치시킨다. -->
+    <!-- 팔로우 버튼 상태 조회에 사용하는 공통코드를 Java 상수와 일치시킴 -->
     <sql id="followStatusBindList">
         <bind name="codeFollowStat" value="@org.our.sadari.global.common.constant.Constant@CODE_FOLLOW_STAT" />
         <bind name="followStatFollow" value="@org.our.sadari.global.common.constant.Constant@FOLLOW_STAT_FOLLOW" />
@@ -11,7 +11,7 @@
         <bind name="followStatFriend" value="@org.our.sadari.global.common.constant.Constant@FOLLOW_STAT_FRIEND" />
     </sql>
 
-    <!-- 팔로잉과 팔로워 목록이 같은 사용자 정보와 관계 상태 컬럼을 사용한다. -->
+    <!-- 팔로잉과 팔로워 목록이 같은 사용자 정보와 관계 상태 컬럼을 사용함 -->
     <sql id="followListColumnList">
                U.USER_NUMB
              , U.USER_NICK
@@ -33,7 +33,7 @@
                END AS FOLLOW_STAT_NAME
     </sql>
 
-    <!-- 양방향 팔로우 관계를 직접 조회해 현재 관계에서 보여줄 공통코드 버튼명을 반환한다. -->
+    <!-- 양방향 팔로우 관계를 직접 조회해 현재 관계에서 보여줄 공통코드 버튼명을 반환함 -->
     <select id="getFollowStatusName" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto" resultType="string">
         <include refid="followStatusBindList" />
         SELECT /* getFollowStatusName */
@@ -57,7 +57,7 @@
            AND REVERSEFOLLOW.FLOW_NUMB = TARGET.USER_NUMB
     </select>
 
-    <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MySQL 업서트로 한 번만 저장한다. -->
+    <!-- 중복 팔로우 요청에서 PK 오류가 나지 않도록 MySQL 업서트로 한 번만 저장함 -->
     <insert id="setFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
         /* setFollow */
         INSERT INTO TB_FOLLOW (
@@ -72,7 +72,7 @@
                USER_NUMB = NEW.USER_NUMB
     </insert>
 
-    <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제한다. -->
+    <!-- 로그인 사용자가 상대 사용자를 팔로우 중인 관계만 삭제함 -->
     <delete id="delFollow" parameterType="org.our.sadari.social.dto.SocialDto$FollowDto">
         DELETE /* delFollow */
           FROM TB_FOLLOW
@@ -80,7 +80,7 @@
            AND FLOW_NUMB = #{flowNumb}
     </delete>
 
-    <!-- 사용자가 해당 대상에 이미 좋아요를 눌렀는지 확인한다. -->
+    <!-- 사용자가 해당 대상에 이미 좋아요를 눌렀는지 확인함 -->
     <select id="dupLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="int">
         SELECT /* dupLike */
                COUNT(*)
@@ -90,7 +90,7 @@
            AND TAGT_NUMB = #{tagtNumb}
     </select>
 
-    <!-- 좋아요를 등록한다. 대상 유형과 대상 번호는 요청 DTO 값을 그대로 사용한다. -->
+    <!-- 좋아요를 등록함. 대상 유형과 대상 번호는 요청 DTO 값을 그대로 사용함 -->
     <insert id="setLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
         /* setLike */
         INSERT INTO TB_LIKEXX (
@@ -105,7 +105,7 @@
         )
     </insert>
 
-    <!-- 좋아요를 취소한다. -->
+    <!-- 좋아요를 취소함 -->
     <delete id="delLike" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
         DELETE /* delLike */
           FROM TB_LIKEXX
@@ -114,7 +114,7 @@
            AND TAGT_NUMB = #{tagtNumb}
     </delete>
 
-    <!-- 특정 대상에 연결된 좋아요를 모두 정리한다. -->
+    <!-- 특정 대상에 연결된 좋아요를 모두 정리함 -->
     <delete id="delLikeByTarget" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto">
         DELETE /* delLikeByTarget */
           FROM TB_LIKEXX
@@ -122,7 +122,7 @@
            AND TAGT_NUMB = #{tagtNumb}
     </delete>
 
-    <!-- 좋아요 토글 후 화면에 표시할 좋아요 수와 현재 사용자의 좋아요 여부를 조회한다. -->
+    <!-- 좋아요 토글 후 화면에 표시할 좋아요 수와 현재 사용자의 좋아요 여부를 조회함 -->
     <select id="getLikeDtl" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -166,8 +166,8 @@
            AND UL.TAGT_NUMB = R.TAGT_NUMB
     </select>
 
-    <!-- 본인 또는 다른 사용자 프로필에 표시할 통계를 같은 SQL로 집계한다.
-         공개 여부가 전달되면 총 읽은 책과 받은 좋아요를 공개 독후감 범위로 제한한다. -->
+    <!-- 본인 또는 다른 사용자 프로필에 표시할 통계를 같은 SQL로 집계함
+         공개 여부가 전달되면 총 읽은 책과 받은 좋아요를 공개 독후감 범위로 제한함 -->
     <select id="getProfileStats" parameterType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto" resultType="org.our.sadari.social.dto.SocialDto$ProfileStatsDto">
         <bind name="reportStatDone" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_DONE" />
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
@@ -241,7 +241,7 @@
             ON LIKESTATS.USER_NUMB = TARGET.USER_NUMB
     </select>
 
-    <!-- 닉네임이 검색어를 포함하는 활성 사용자를 친구, 한쪽 팔로우 관계, 무관계 순으로 조회한다. -->
+    <!-- 닉네임이 검색어를 포함하는 활성 사용자를 친구, 한쪽 팔로우 관계, 무관계 순으로 조회함 -->
     <select id="getUserSearchList" parameterType="org.our.sadari.social.dto.SocialDto$UserSearchReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -279,8 +279,8 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 특정 사용자가 팔로우하고 있는 사용자 목록을 조회한다.
-         로그인 사용자 기준 버튼명을 함께 계산해 모달에서 사용자별 상태 API를 반복 호출하지 않게 한다. -->
+    <!-- 특정 사용자가 팔로우하고 있는 사용자 목록을 조회함
+         로그인 사용자 기준 버튼명을 함께 계산해 모달에서 사용자별 상태 API를 반복 호출하지 않게 함 -->
     <select id="getFollowingList" parameterType="org.our.sadari.social.dto.SocialDto$FollowListReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -315,8 +315,8 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 특정 사용자를 팔로우하는 사용자 목록을 조회한다.
-         팔로워 목록도 팔로잉 목록과 같은 응답 구조를 사용해 프론트 모달을 공통으로 렌더링한다. -->
+    <!-- 특정 사용자를 팔로우하는 사용자 목록을 조회함
+         팔로워 목록도 팔로잉 목록과 같은 응답 구조를 사용해 프론트 모달을 공통으로 렌더링함 -->
     <select id="getFollowerList" parameterType="org.our.sadari.social.dto.SocialDto$FollowListReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -350,7 +350,7 @@
              , U.USER_NUMB DESC
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
-    <!-- 로그인 사용자가 현재 화면에서 확인할 수 있는 좋아요 대상인지 서버 원본으로 검증한다. -->
+    <!-- 로그인 사용자가 현재 화면에서 확인할 수 있는 좋아요 대상인지 서버 원본으로 검증함 -->
     <select id="getLikeTargetAccessCnt" parameterType="org.our.sadari.social.dto.SocialDto$LikeUserReqDto" resultType="int">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -439,7 +439,7 @@
                ) TARGETX
     </select>
 
-    <!-- 좋아요를 등록한 활성 사용자와 로그인 사용자 기준 팔로우 상태를 최신 좋아요 순으로 조회한다. -->
+    <!-- 좋아요를 등록한 활성 사용자와 로그인 사용자 기준 팔로우 상태를 최신 좋아요 순으로 조회함 -->
     <select id="getLikeUserList" parameterType="org.our.sadari.social.dto.SocialDto$LikeUserReqDto" resultType="org.our.sadari.social.dto.SocialDto$FollowUserDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />

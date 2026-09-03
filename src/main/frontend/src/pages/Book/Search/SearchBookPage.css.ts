@@ -11,7 +11,7 @@ export const content = style({
   maxWidth: "600px",
   width: "100%",
   margin: "0 auto",
-  // 레이아웃의 헤더 높이 여백 직후 검색 영역을 배치해 고정 해제 시 위치 차이를 없앤다
+  // 레이아웃의 헤더 높이 여백 직후 검색 영역을 배치해 고정 해제 시 위치 차이를 없앰
   padding: "0 0 12px",
 });
 
@@ -78,7 +78,7 @@ export const searchInput = style({
   },
 });
 
-// 도서 검색어 지우기 버튼을 검색 아이콘과 분리하고 피드와 같은 크기로 표시한다
+// 도서 검색어 지우기 버튼을 검색 아이콘과 분리하고 피드와 같은 크기로 표시함
 globalStyle(`${searchInput}::-webkit-search-cancel-button`, {
   marginRight: "6px",
   transform: "scale(1.2)",

@@ -13,7 +13,7 @@ interface LinkButtonProps {
 }
 
 /**
- * 지정한 경로로 이동하는 링크 버튼을 표시한다
+ * 지정한 경로로 이동하는 링크 버튼을 표시함
  * @author HanWon.Jang
  * @param link 이동할 화면 경로
  * @param className 외부에서 전달한 추가 스타일 클래스

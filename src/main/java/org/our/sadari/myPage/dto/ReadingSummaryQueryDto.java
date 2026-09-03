@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : ReadingSummaryQueryDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 독서 요약 통합 조회의 기간 조건과 집계 결과를 전달한다
+ * description    : 독서 요약 통합 조회의 기간 조건과 집계 결과를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

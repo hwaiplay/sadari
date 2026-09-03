@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/components/Layout/Container/Container.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/components/Layout/Container/Container.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */
@@ -8,7 +8,7 @@ import { container } from "./container.css";
 import { clsx } from "clsx";
 
 /**
- * Container 화면 또는 컴포넌트를 구성한다
+ * Container 화면 또는 컴포넌트를 구성함
  *
  * @author HanWon.Jang
  * @param props props 입력값

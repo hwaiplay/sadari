@@ -25,7 +25,7 @@ type UseDelReplyProps = ReplyTarget & {
 };
 
 /**
- * 본인 댓글 삭제를 확인한 뒤 논리 삭제 API를 호출하고 관련 조회 캐시를 갱신한다
+ * 본인 댓글 삭제를 확인한 뒤 논리 삭제 API를 호출하고 관련 조회 캐시를 갱신함
  *
  * @author HanWon.Jang
  * @param props 삭제할 댓글이 속한 독후감 번호와 삭제 완료 처리 정보
@@ -33,51 +33,51 @@ type UseDelReplyProps = ReplyTarget & {
  */
 export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps) => {
   const queryClient = useQueryClient();
-  // 댓글 삭제 요청의 진행 상태와 요청 변수를 관리한다
+  // 댓글 삭제 요청의 진행 상태와 요청 변수를 관리함
   const delReplyMutation = useMutation({
     mutationFn: delReplyApi,
   });
 
   /**
-   * 사용자 확인 후 선택한 본인 댓글을 삭제 상태로 전환한다
+   * 사용자 확인 후 선택한 본인 댓글을 삭제 상태로 전환함
    *
    * @author HanWon.Jang
    * @param replNumb 삭제할 댓글 번호
    * @return 삭제 확인과 API 처리 완료 Promise
    */
   const handleDeleteReply = async (replNumb: number): Promise<void> => {
-    // 삭제 후 자동 복구되지 않는 동작임을 사용자에게 확인한다
+    // 삭제 후 자동 복구되지 않는 동작임을 사용자에게 확인함
     // "댓글을 삭제할까요?"
     const confirmTitle = message("frontend.reply.deleteConfirmTitle");
     // "삭제한 댓글은 다시 복구할 수 없어요."
     const confirmText = message("frontend.reply.deleteConfirmText");
-    // 댓글 삭제 여부를 사용자가 선택할 수 있는 확인 모달을 표시한다
+    // 댓글 삭제 여부를 사용자가 선택할 수 있는 확인 모달을 표시함
     const result = await sweetConfirm({
       title: confirmTitle,
       text: confirmText,
     });
 
-    // 사용자가 취소하면 서버 데이터와 화면 캐시를 변경하지 않는다
+    // 사용자가 취소하면 서버 데이터와 화면 캐시를 변경하지 않음
     if (!result.isConfirmed) {
-      // 삭제 취소 상태로 호출부에 반환한다
+      // 삭제 취소 상태로 호출부에 반환함
       return;
     }
 
-    // API 실패도 사용자 안내 후 현재 화면에서 복구할 수 있도록 예외 경로를 분리한다
+    // API 실패도 사용자 안내 후 현재 화면에서 복구할 수 있도록 예외 경로를 분리함
     try {
       /**
-       * 댓글 삭제와 관련 화면 캐시 갱신을 하나의 차단 작업으로 실행한다
+       * 댓글 삭제와 관련 화면 캐시 갱신을 하나의 차단 작업으로 실행함
        *
        * @author SeungHyeon.Kang
        * @return 댓글 삭제 및 캐시 갱신 완료 Promise
-       * @throws 댓글 삭제 또는 관련 캐시 갱신에 실패하면 발생한다
+       * @throws 댓글 삭제 또는 관련 캐시 갱신에 실패하면 발생함
        */
       const deleteReplyAndRefresh = async (): Promise<void> => {
-        // 로그인 사용자의 작성자 및 계정 상태를 검증하는 댓글 삭제 API를 호출한다
+        // 로그인 사용자의 작성자 및 계정 상태를 검증하는 댓글 삭제 API를 호출함
         await delReplyMutation.mutateAsync({ tagtType, tagtNumb, replNumb });
-        // 삭제된 댓글을 참조하는 화면 입력 상태가 있으면 호출부에서 정리하도록 알린다
+        // 삭제된 댓글을 참조하는 화면 입력 상태가 있으면 호출부에서 정리하도록 알림
         onDeleted?.(replNumb);
-        // 삭제 상태와 공개 독후감 댓글 수를 최신 서버 값으로 갱신한다
+        // 삭제 상태와 공개 독후감 댓글 수를 최신 서버 값으로 갱신함
         await Promise.all([
           queryClient.invalidateQueries({
             queryKey: [REPLY_LIST_QUERY_KEY, tagtType, tagtNumb],
@@ -88,7 +88,7 @@ export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps)
         ]);
       };
 
-      // 삭제와 캐시 갱신 완료 후 처리 중 알림을 같은 삭제 성공 알림으로 전환한다
+      // 삭제와 캐시 갱신 완료 후 처리 중 알림을 같은 삭제 성공 알림으로 전환함
       await runBlockingOperation(deleteReplyAndRefresh, {
         success: {
           // "삭제되었습니다."
@@ -96,7 +96,7 @@ export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps)
         },
       });
     } catch (error: unknown) {
-      // 삭제 실패 원인과 재시도 안내를 공통 오류 형식으로 표시한다
+      // 삭제 실패 원인과 재시도 안내를 공통 오류 형식으로 표시함
       // "댓글 삭제에 실패했습니다."
       await sweetError(
         message("frontend.reply.deleteFailedTitle"),
@@ -105,7 +105,7 @@ export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps)
     }
   };
 
-  // 댓글 메뉴가 사용할 삭제 이벤트와 중복 요청 차단 상태를 반환한다
+  // 댓글 메뉴가 사용할 삭제 이벤트와 중복 요청 차단 상태를 반환함
   return {
     deletingReplyNumb: delReplyMutation.isPending
       ? (delReplyMutation.variables?.replNumb ?? null)

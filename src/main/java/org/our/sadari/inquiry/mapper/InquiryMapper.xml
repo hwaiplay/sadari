@@ -3,14 +3,14 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.inquiry.mapper.InquiryMapper">
-    <!-- 고객문의 카테고리와 상태 코드 그룹을 조회 SQL에서 공통으로 사용한다 -->
+    <!-- 고객문의 카테고리와 상태 코드 그룹을 조회 SQL에서 공통으로 사용함 -->
     <sql id="inquiryCodeBinds">
         <bind name="inquiryCategoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_CATEGORY" />
         <bind name="inquiryStatusCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_STATUS" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
     </sql>
 
-    <!-- 고객문의 접근 판단에 사용할 현재 회원 상태를 조회한다 -->
+    <!-- 고객문의 접근 판단에 사용할 현재 회원 상태를 조회함 -->
     <select id="getUserStat" resultType="string">
         SELECT /* getUserStat */
                USER_STAT
@@ -18,7 +18,7 @@
          WHERE USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 활성 고객문의 카테고리 코드인지 확인한다 -->
+    <!-- 활성 고객문의 카테고리 코드인지 확인함 -->
     <select id="getInquiryCategoryCnt" resultType="int">
         <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryCategoryCnt */
@@ -29,7 +29,7 @@
            AND USEE_YSNO = 'Y'
     </select>
 
-    <!-- 이용정지 이의제기에 연결할 가장 최근 정지 이력을 조회한다 -->
+    <!-- 이용정지 이의제기에 연결할 가장 최근 정지 이력을 조회함 -->
     <select id="getLatestSuspensionNumb" resultType="long">
         SELECT /* getLatestSuspensionNumb */
                SPND_NUMB
@@ -40,7 +40,7 @@
          LIMIT 1
     </select>
 
-    <!-- 현재 활성 정지가 시작된 뒤 접수한 최신 이의제기 문의 번호를 조회한다 -->
+    <!-- 현재 활성 정지가 시작된 뒤 접수한 최신 이의제기 문의 번호를 조회함 -->
     <select id="getSuspInquiryNumb" resultType="long">
         SELECT /* getSuspInquiryNumb */
                I.INQR_NUMB
@@ -57,7 +57,7 @@
          LIMIT 1
     </select>
 
-    <!-- 동일 정지 이력에 처리 중인 이의제기가 있는지 확인한다 -->
+    <!-- 동일 정지 이력에 처리 중인 이의제기가 있는지 확인함 -->
     <select id="getOpenSuspensionInquiryCnt" resultType="int">
         SELECT /* getOpenSuspensionInquiryCnt */
                COUNT(1)
@@ -68,7 +68,7 @@
            AND INQR_STAT IN ('INQR_RECEIVED', 'INQR_REVIEWING')
     </select>
 
-    <!-- 사용자의 고객문의를 접수 상태로 등록한다 -->
+    <!-- 사용자의 고객문의를 접수 상태로 등록함 -->
     <insert id="setInquiry" useGeneratedKeys="true" keyProperty="inquiry.inqrNumb" keyColumn="INQR_NUMB">
         INSERT /* setInquiry */
           INTO CT_INQURY (
@@ -88,7 +88,7 @@
         )
     </insert>
 
-    <!-- 본인이 작성한 고객문의를 최근 순서로 조회한다 -->
+    <!-- 본인이 작성한 고객문의를 최근 순서로 조회함 -->
     <select id="getInquiryList" resultType="org.our.sadari.inquiry.dto.InquiryDto">
         <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryList */
@@ -119,7 +119,7 @@
          LIMIT #{startRow}, #{pageSize}
     </select>
 
-    <!-- 본인이 작성한 고객문의 상세를 조회한다 -->
+    <!-- 본인이 작성한 고객문의 상세를 조회함 -->
     <select id="getInquiryDtl" resultType="org.our.sadari.inquiry.dto.InquiryDto">
         <include refid="inquiryCodeBinds" />
         SELECT /* getInquiryDtl */
@@ -138,7 +138,7 @@
            AND I.USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 고객문의에 등록된 관리자 답변을 시간 순서로 조회한다 -->
+    <!-- 고객문의에 등록된 관리자 답변을 시간 순서로 조회함 -->
     <select id="getInquiryAnswerList" resultType="org.our.sadari.inquiry.dto.InquiryAnswerDto">
         SELECT /* getInquiryAnswerList */
                ANSW_NUMB
@@ -151,7 +151,7 @@
              , ANSW_NUMB
     </select>
 
-    <!-- 본인 문의의 읽지 않은 관리자 답변을 모두 읽음 처리한다 -->
+    <!-- 본인 문의의 읽지 않은 관리자 답변을 모두 읽음 처리함 -->
     <update id="uptInquiryAnswerRead">
         UPDATE /* uptInquiryAnswerRead */ CT_INQANS A
           JOIN CT_INQURY I

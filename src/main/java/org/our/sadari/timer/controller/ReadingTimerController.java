@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ReadingTimerController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 타이머 실행과 주간 출석 API를 제공한다
+ * description    : 독서 타이머 실행과 주간 출석 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -38,7 +38,7 @@ public class ReadingTimerController {
     private final ReadingTimerService readingTimerService;
 
     /**
-     * 현재 타이머와 이번 주 출석 현황을 조회한다
+     * 현재 타이머와 이번 주 출석 현황을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -48,12 +48,12 @@ public class ReadingTimerController {
     @Operation(summary = "독서 타이머 요약 조회", description = "현재 세션, 일별 독서 시간과 주간 출석을 조회한다.")
     public ResultData getTimerSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
-        // 로그인 사용자의 타이머 화면 요약 데이터를 반환한다
+        // 로그인 사용자의 타이머 화면 요약 데이터를 반환함
         return readingTimerService.getTimerSummary(userNumb);
     }
 
     /**
-     * 도서별 누적 독서 시간을 최근 완료 기록순으로 조회한다
+     * 도서별 누적 독서 시간을 최근 완료 기록순으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -65,12 +65,12 @@ public class ReadingTimerController {
     public ResultData getBookTimePage(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                     , @RequestParam(defaultValue = "1") int page) {
 
-        // 로그인 사용자의 도서별 누적 독서 시간 페이지를 반환한다
+        // 로그인 사용자의 도서별 누적 독서 시간 페이지를 반환함
         return readingTimerService.getBookTimePage(userNumb, page);
     }
 
     /**
-     * 새 독서 타이머 세션을 시작한다
+     * 새 독서 타이머 세션을 시작함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -82,12 +82,12 @@ public class ReadingTimerController {
     public ResultData setTimer(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @RequestBody(required = false) ReadingTimerDto.Request request) {
 
-        // 중복 시작을 방지하며 새 독서 타이머를 시작한 결과를 반환한다
+        // 중복 시작을 방지하며 새 독서 타이머를 시작한 결과를 반환함
         return readingTimerService.setTimer(userNumb, request);
     }
 
     /**
-     * 독서 타이머 세션을 재개, 일시정지 또는 완료 처리한다
+     * 독서 타이머 세션을 재개, 일시정지 또는 완료 처리함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -101,7 +101,7 @@ public class ReadingTimerController {
                               , @Parameter(description = "독서 타이머 세션 번호", example = "1") @PathVariable Long tmrxNumb
                               , @RequestBody ReadingTimerDto.Request request) {
 
-        // 서버 시간으로 독서 시간을 확정하고 상태 변경 결과를 반환한다
+        // 서버 시간으로 독서 시간을 확정하고 상태 변경 결과를 반환함
         return readingTimerService.uptTimer(userNumb, tmrxNumb, request);
     }
 }

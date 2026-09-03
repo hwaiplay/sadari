@@ -9,7 +9,7 @@ import org.our.sadari.global.file.dto.FileDto;
  * fileName       : FileMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-14
- * description    : 이미지 파일 데이터베이스 접근 메서드를 정의한다
+ * description    : 이미지 파일 데이터베이스 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ import org.our.sadari.global.file.dto.FileDto;
 public interface FileMapper {
 
     /**
-     * 업로드한 이미지 파일의 저장 메타정보를 등록한다.
+     * 업로드한 이미지 파일의 저장 메타정보를 등록함
      *
      * @author SeungHyeon.Kang
      * @param fileDto 등록할 파일 메타정보
@@ -29,7 +29,7 @@ public interface FileMapper {
     int setFile(FileDto fileDto);
 
     /**
-     * 파일 번호로 이미지 파일 메타정보를 조회한다.
+     * 파일 번호로 이미지 파일 메타정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param fileNumb 조회할 파일 번호
@@ -38,7 +38,7 @@ public interface FileMapper {
     FileDto getFileByNumb(Long fileNumb);
 
     /**
-     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회한다.
+     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회함
      *
      * @author SeungHyeon.Kang
      * @param storName 서버가 생성한 저장 파일명
@@ -48,7 +48,7 @@ public interface FileMapper {
     int getActivePublicFileCount(@Param("storName") String storName, @Param("filePath") String filePath);
 
     /**
-     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회한다
+     * 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회함
      *
      * @author HanWon.Jang
      * @param storName 서버가 생성한 저장 파일명
@@ -58,7 +58,7 @@ public interface FileMapper {
     Long getActivePublicFileOwner(@Param("storName") String storName, @Param("filePath") String filePath);
 
     /**
-     * 파일 등록 사용자 번호로 영구 삭제할 파일 메타정보를 조회한다.
+     * 파일 등록 사용자 번호로 영구 삭제할 파일 메타정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param regiUser 파일을 등록한 사용자 번호
@@ -67,7 +67,7 @@ public interface FileMapper {
     List<FileDto> getFileListByRegiUser(Long regiUser);
 
     /**
-     * 사용자 프로필과 배경에서 참조하지 않는 파일 메타정보를 삭제한다.
+     * 사용자 프로필과 배경에서 참조하지 않는 파일 메타정보를 삭제함
      *
      * @author SeungHyeon.Kang
      * @param fileNumb 삭제할 파일 번호

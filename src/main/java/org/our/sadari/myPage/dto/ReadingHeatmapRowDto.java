@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : ReadingHeatmapRowDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-15
- * description    : 조회 가능한 독서 연도와 선택 연도의 일별 독서 시간을 한 SQL 결과로 전달한다
+ * description    : 조회 가능한 독서 연도와 선택 연도의 일별 독서 시간을 한 SQL 결과로 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

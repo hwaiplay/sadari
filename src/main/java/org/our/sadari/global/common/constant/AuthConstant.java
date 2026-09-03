@@ -4,7 +4,7 @@ package org.our.sadari.global.common.constant;
  * fileName       : AuthConstant
  * author         : SeungHyeon.Kang
  * date           : 2026-03-21
- * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -23,18 +23,18 @@ public class AuthConstant {
     public static final String PROV_NAVER = "NAVER";
     // 개발 및 검증용 임시 회원 제공자 코드
     public static final String PROV_TEMP = "TEMP";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String ROLE_USER = "USER";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String ROLE_ADMIN = "ADMIN";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String KAKAO_GRANT_TYPE = "grant_type";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String KAKAO_CLIENT_ID = "client_id";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String KAKAO_REDIRECT_URI = "redirect_uri";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String KAKAO_CODE = "code";
-    // 아래 처리 단계의 업무 목적을 설명한다.
+    // 아래 처리 단계의 업무 목적을 설명함
     public static final String KAKAO_AUTHORIZATION_CODE = "authorization_code";
 }

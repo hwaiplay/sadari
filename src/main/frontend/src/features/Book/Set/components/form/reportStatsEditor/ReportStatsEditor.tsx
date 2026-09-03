@@ -1,5 +1,5 @@
 /**
- * 독후감 상태에 따라 세로 행 요약과 단계형 입력 모달을 구성한다
+ * 독후감 상태에 따라 세로 행 요약과 단계형 입력 모달을 구성함
  *
  * @author HanWon.Jang
  */
@@ -43,7 +43,7 @@ type ReportStatsEditorProps = {
 };
 
 /**
- * YYYY-MM-DD 값을 독서기간 계산에 사용할 UTC 기준 일련번호로 변환한다
+ * YYYY-MM-DD 값을 독서기간 계산에 사용할 UTC 기준 일련번호로 변환함
  *
  * @author HanWon.Jang
  * @param value 변환할 날짜 문자열
@@ -51,27 +51,27 @@ type ReportStatsEditorProps = {
  */
 function getDateSerial(value: string) {
 
-  // 날짜가 모두 입력되기 전에는 독서기간을 계산하지 않는다
+  // 날짜가 모두 입력되기 전에는 독서기간을 계산하지 않음
   if (!value) {
-    // 미입력 날짜의 계산 결과를 반환한다
+    // 미입력 날짜의 계산 결과를 반환함
     return null;
   }
 
-  // 브라우저 시간대에 따른 날짜 차이를 제거하도록 연월일을 분리한다
+  // 브라우저 시간대에 따른 날짜 차이를 제거하도록 연월일을 분리함
   const [year, month, day] = value.split("-").map(Number);
 
-  // 날짜 형식이 올바르지 않으면 요약값 대신 미입력 상태를 유지한다
+  // 날짜 형식이 올바르지 않으면 요약값 대신 미입력 상태를 유지함
   if (!year || !month || !day) {
-    // 잘못된 날짜의 계산 결과를 반환한다
+    // 잘못된 날짜의 계산 결과를 반환함
     return null;
   }
 
-  // 시간대 차이가 없는 UTC 기준 날짜 일련번호를 반환한다
+  // 시간대 차이가 없는 UTC 기준 날짜 일련번호를 반환함
   return Date.UTC(year, month - 1, day);
 }
 
 /**
- * 입력된 독서기간을 시작일과 종료일을 포함한 일수 요약으로 변환한다
+ * 입력된 독서기간을 시작일과 종료일을 포함한 일수 요약으로 변환함
  *
  * @author HanWon.Jang
  * @param startDate 독서 시작일
@@ -80,33 +80,33 @@ function getDateSerial(value: string) {
  */
 function getPeriodSummary(startDate: string, endDate: string) {
 
-  // 시작일과 종료일이 모두 입력된 경우에만 기간 정보 행에 값을 표시한다
+  // 시작일과 종료일이 모두 입력된 경우에만 기간 정보 행에 값을 표시함
   if (!startDate || !endDate) {
-    // 아직 입력되지 않은 기간 표시값을 반환한다
+    // 아직 입력되지 않은 기간 표시값을 반환함
     return "-";
   }
 
-  // 독서 시작일을 날짜 차이 계산 기준으로 변환한다
+  // 독서 시작일을 날짜 차이 계산 기준으로 변환함
   const startSerial = getDateSerial(startDate);
-  // 읽는 중에는 목표 종료일을 사용하고 완료 또는 중단에는 실제 종료일을 사용한다
+  // 읽는 중에는 목표 종료일을 사용하고 완료 또는 중단에는 실제 종료일을 사용함
   const endSerial = getDateSerial(endDate);
 
-  // 유효하지 않거나 역전된 날짜는 저장 전 검증 대상이므로 요약값을 표시하지 않는다
+  // 유효하지 않거나 역전된 날짜는 저장 전 검증 대상이므로 요약값을 표시하지 않음
   if (startSerial === null || endSerial === null || endSerial < startSerial) {
-    // 계산할 수 없는 기간 표시값을 반환한다
+    // 계산할 수 없는 기간 표시값을 반환함
     return "-";
   }
 
-  // 시작일을 포함한 독서일 수를 계산한다
+  // 시작일을 포함한 독서일 수를 계산함
   const durationDays = Math.floor((endSerial - startSerial) / MILLISECONDS_PER_DAY) + 1;
 
-  // 읽는 중과 완료 및 중단 상태 모두 선택한 전체 기간의 일수만 표시한다
+  // 읽는 중과 완료 및 중단 상태 모두 선택한 전체 기간의 일수만 표시함
   // "{0}일"
   return message("frontend.report.period.completedDays", [durationDays]);
 }
 
 /**
- * 독서 상태 코드에 맞는 행 요약 글자색을 결정한다
+ * 독서 상태 코드에 맞는 행 요약 글자색을 결정함
  *
  * @author HanWon.Jang
  * @param status 독서 상태 코드
@@ -114,24 +114,24 @@ function getPeriodSummary(startDate: string, endDate: string) {
  */
 function getStatusValueClassName(status: ReadingStatusType) {
 
-  // 완료 상태는 상세 화면과 같은 연녹색으로 구분한다
+  // 완료 상태는 상세 화면과 같은 연녹색으로 구분함
   if (status === REPORT_STATUS_DONE) {
-    // 완료 상태 글자색 클래스를 반환한다
+    // 완료 상태 글자색 클래스를 반환함
     return styles.statusDone;
   }
 
-  // 중단 상태는 상세 화면과 같은 연한 빨간색으로 구분한다
+  // 중단 상태는 상세 화면과 같은 연한 빨간색으로 구분함
   if (status === REPORT_STATUS_STOP) {
-    // 중단 상태 글자색 클래스를 반환한다
+    // 중단 상태 글자색 클래스를 반환함
     return styles.statusStop;
   }
 
-  // 읽는 중과 미입력 상태는 기본 글자색 클래스를 반환한다
+  // 읽는 중과 미입력 상태는 기본 글자색 클래스를 반환함
   return styles.statusRead;
 }
 
 /**
- * 독후감 입력값을 세로 행으로 요약하고 선택한 항목을 단계형 모달에서 수정한다
+ * 독후감 입력값을 세로 행으로 요약하고 선택한 항목을 단계형 모달에서 수정함
  *
  * @author HanWon.Jang
  * @param props 독후감 행별 입력값과 변경 콜백
@@ -201,50 +201,50 @@ const ReportStatsEditor = ({
       : styles.stepSlideForward;
   let statusLabel = statusFallbackLabel || "-";
 
-  // 현재 상태 코드에 대응하는 서버 공통코드명을 독서 상태 정보 행에 사용한다
+  // 현재 상태 코드에 대응하는 서버 공통코드명을 독서 상태 정보 행에 사용함
   for (const statusCode of statusCodes) {
-    // 현재 선택값과 일치한 코드명을 찾으면 이후 불필요한 순회를 중단한다
+    // 현재 선택값과 일치한 코드명을 찾으면 이후 불필요한 순회를 중단함
     if (statusCode.comdCode === status) {
       statusLabel = statusCode.comdName;
       break;
     }
   }
 
-  // 모달이 열린 동안 배경 스크롤과 네비게이션 위치를 함께 고정한다
+  // 모달이 열린 동안 배경 스크롤과 네비게이션 위치를 함께 고정함
   useBodyScrollLock(activeStep !== null);
 
   useEffect(() => {
 
-    // 닫힌 상태에서는 키보드 이벤트와 포커스를 변경하지 않는다
+    // 닫힌 상태에서는 키보드 이벤트와 포커스를 변경하지 않음
     if (activeStep === null) {
       return undefined;
     }
 
-    // 단계가 바뀔 때 모달의 닫기 버튼으로 포커스를 이동한다
+    // 단계가 바뀔 때 모달의 닫기 버튼으로 포커스를 이동함
     closeButtonRef.current?.focus();
 
     /**
-     * Escape 입력으로 단계형 편집 모달을 닫는다
+     * Escape 입력으로 단계형 편집 모달을 닫음
      *
      * @author HanWon.Jang
      * @param event 브라우저 키보드 입력 이벤트
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     function handleKeyDown(event: KeyboardEvent) {
 
-      // Escape 외의 키 입력은 현재 입력 컴포넌트에 그대로 전달한다
+      // Escape 외의 키 입력은 현재 입력 컴포넌트에 그대로 전달함
       if (event.key !== "Escape") {
         return;
       }
 
-      // 입력된 값은 유지하고 단계형 편집 모달만 닫는다
+      // 입력된 값은 유지하고 단계형 편집 모달만 닫음
       setActiveStep(null);
     }
 
-    // 모달을 키보드로 닫을 수 있도록 문서 이벤트를 등록한다
+    // 모달을 키보드로 닫을 수 있도록 문서 이벤트를 등록함
     document.addEventListener("keydown", handleKeyDown);
 
-    // 모달이 닫히거나 단계가 바뀌면 중복 키보드 이벤트를 제거한다
+    // 모달이 닫히거나 단계가 바뀌면 중복 키보드 이벤트를 제거함
     return () => {
 
       document.removeEventListener("keydown", handleKeyDown);
@@ -252,136 +252,136 @@ const ReportStatsEditor = ({
   }, [activeStep]);
 
   /**
-   * 현재 독서 상태에서 노출된 요약 항목의 입력 단계 모달을 연다
+   * 현재 독서 상태에서 노출된 요약 항목의 입력 단계 모달을 엶
    *
    * @author HanWon.Jang
    * @param event 단계 번호를 가진 요약 버튼 클릭 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleSummaryClick(event: MouseEvent<HTMLButtonElement>) {
 
     const nextStep = Number(event.currentTarget.dataset.step);
 
-    // 읽는 중에는 공개 여부와 평점 단계를 열지 않아 숨겨진 입력을 조작할 수 없게 한다
+    // 읽는 중에는 공개 여부와 평점 단계를 열지 않아 숨겨진 입력을 조작할 수 없게 함
     if (!availableSteps.includes(nextStep)) {
       return;
     }
 
-    // 요약 영역에서 직접 연 단계는 오른쪽에서 진입하는 기본 전환 방향을 사용한다
+    // 요약 영역에서 직접 연 단계는 오른쪽에서 진입하는 기본 전환 방향을 사용함
     onEditStart?.();
     setStepTransitionDirection("forward");
     setActiveStep(nextStep);
   }
 
   /**
-   * 현재까지 입력된 값을 유지하고 단계형 편집 모달을 닫는다
+   * 현재까지 입력된 값을 유지하고 단계형 편집 모달을 닫음
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleClose() {
 
-    // 세로 행 요약이 최신 입력값을 보여주도록 모달 상태만 제거한다
+    // 세로 행 요약이 최신 입력값을 보여주도록 모달 상태만 제거함
     setActiveStep(null);
   }
 
   /**
-   * 모달 바깥 배경을 직접 누른 경우 입력값을 유지하고 모달을 닫는다
+   * 모달 바깥 배경을 직접 누른 경우 입력값을 유지하고 모달을 닫음
    *
    * @author HanWon.Jang
    * @param event 모달 배경 클릭 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleBackdropMouseDown(event: MouseEvent<HTMLDivElement>) {
 
-    // 모달 본문에서 시작된 이벤트는 입력을 계속할 수 있도록 닫기 처리하지 않는다
+    // 모달 본문에서 시작된 이벤트는 입력을 계속할 수 있도록 닫기 처리하지 않음
     if (event.currentTarget !== event.target) {
       return;
     }
 
-    // 배경을 직접 누른 경우 현재 입력 단계만 닫는다
+    // 배경을 직접 누른 경우 현재 입력 단계만 닫음
     handleClose();
   }
 
   /**
-   * 이전 독후감 입력 단계로 이동한다
+   * 이전 독후감 입력 단계로 이동함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handlePrevious() {
 
-    // 이전 단계 콘텐츠가 왼쪽에서 들어오도록 전환 방향을 먼저 설정한다
+    // 이전 단계 콘텐츠가 왼쪽에서 들어오도록 전환 방향을 먼저 설정함
     setStepTransitionDirection("backward");
 
-    // 현재 상태에서 실제로 노출되는 단계 순서를 기준으로 이전 입력으로 이동한다
+    // 현재 상태에서 실제로 노출되는 단계 순서를 기준으로 이전 입력으로 이동함
     setActiveStep((currentStep) => {
 
       const currentStepIndex = availableSteps.indexOf(currentStep ?? firstStep);
-      // 첫 단계보다 앞으로 이동하지 않도록 이전 단계 위치를 보정해 반환한다
+      // 첫 단계보다 앞으로 이동하지 않도록 이전 단계 위치를 보정해 반환함
       return availableSteps[Math.max(0, currentStepIndex - 1)] ?? firstStep;
     });
   }
 
   /**
-   * 다음 독후감 입력 단계로 이동한다
+   * 다음 독후감 입력 단계로 이동함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleNext() {
 
-    // 다음 단계 콘텐츠가 오른쪽에서 들어오도록 전환 방향을 먼저 설정한다
+    // 다음 단계 콘텐츠가 오른쪽에서 들어오도록 전환 방향을 먼저 설정함
     setStepTransitionDirection("forward");
 
-    // 읽는 중에는 상태 다음에 공개 여부와 평점을 건너뛰고 목표 독서 기간으로 이동한다
+    // 읽는 중에는 상태 다음에 공개 여부와 평점을 건너뛰고 목표 독서 기간으로 이동함
     setActiveStep((currentStep) => {
 
       const currentStepIndex = availableSteps.indexOf(currentStep ?? firstStep);
-      // 마지막 단계보다 뒤로 이동하지 않도록 다음 단계 위치를 보정해 반환한다
+      // 마지막 단계보다 뒤로 이동하지 않도록 다음 단계 위치를 보정해 반환함
       return availableSteps[Math.min(availableSteps.length - 1, currentStepIndex + 1)] ?? lastStep;
     });
   }
 
   /**
-   * 모달에서 선택한 독서 상태를 상위 폼 상태에 반영한다
+   * 모달에서 선택한 독서 상태를 상위 폼 상태에 반영함
    *
    * @author HanWon.Jang
    * @param event 독서 상태 라디오 변경 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleStatusInputChange(event: ChangeEvent<HTMLInputElement>) {
 
-    // 수정 화면의 종료일 확인 분기까지 실행되도록 상위 상태 변경 콜백을 호출한다
+    // 수정 화면의 종료일 확인 분기까지 실행되도록 상위 상태 변경 콜백을 호출함
     void onStatusChange(event.currentTarget.value as ReadingStatusType);
   }
 
   /**
-   * 공개 상태를 상위 폼 상태에 반영한다
+   * 공개 상태를 상위 폼 상태에 반영함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handlePublicOn() {
 
-    // 공개 선택값을 상위 폼 상태에 설정한다
+    // 공개 선택값을 상위 폼 상태에 설정함
     onPublicChange("Y");
   }
 
   /**
-   * 비공개 상태를 상위 폼 상태에 반영한다
+   * 비공개 상태를 상위 폼 상태에 반영함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handlePublicOff() {
 
-    // 비공개 선택값을 상위 폼 상태에 설정한다
+    // 비공개 선택값을 상위 폼 상태에 설정함
     onPublicChange("N");
   }
 
   /**
-   * 독서 상태 공통코드를 선택 가능한 모달 항목으로 변환한다
+   * 독서 상태 공통코드를 선택 가능한 모달 항목으로 변환함
    *
    * @author HanWon.Jang
    * @param statusCode 독서 상태 세부코드
@@ -389,7 +389,7 @@ const ReportStatsEditor = ({
    */
   function renderStatusOption(statusCode: CodeDetail) {
 
-    // 독서 상태 공통코드별 선택 항목을 반환한다
+    // 독서 상태 공통코드별 선택 항목을 반환함
     return (
       <label className={styles.optionLabel} key={statusCode.comdCode}>
         <input
@@ -405,7 +405,7 @@ const ReportStatsEditor = ({
   }
 
   /**
-   * 현재 단계와 전체 단계 수를 표시하는 진행 점을 생성한다
+   * 현재 단계와 전체 단계 수를 표시하는 진행 점을 생성함
    *
    * @author HanWon.Jang
    * @param step 현재 상태에서 노출되는 독후감 입력 단계 번호
@@ -413,7 +413,7 @@ const ReportStatsEditor = ({
    */
   function renderProgressDot(step: number) {
 
-    // 현재 단계가 강조된 진행 점을 반환한다
+    // 현재 단계가 강조된 진행 점을 반환함
     return (
       <span
         className={step === activeStep ? styles.progressDotActive : styles.progressDot}
@@ -423,7 +423,7 @@ const ReportStatsEditor = ({
     );
   }
 
-  // 현재 독서 상태에서 허용된 항목을 세로 행으로 구성한 요약과 단계형 모달을 반환한다
+  // 현재 독서 상태에서 허용된 항목을 세로 행으로 구성한 요약과 단계형 모달을 반환함
   return (
     <>
       {/* 모달이 닫혀도 기존 폼 전송 계약을 유지하는 독후감 요약 입력값 영역 */}
@@ -639,7 +639,7 @@ const ReportStatsEditor = ({
 
                 {/* 이전 단계와 현재 위치 및 다음 단계 이동 영역 */}
                 <footer className={styles.modalFooter}>
-                  {/* 첫 단계에서는 이전 이동 대신 현재 입력을 닫는 취소 버튼을 표시한다 */}
+                  {/* 첫 단계에서는 이전 이동 대신 현재 입력을 닫는 취소 버튼을 표시함 */}
                   {activeStep === firstStep ? (
                     <button
                       className={styles.stepButton}
@@ -660,7 +660,7 @@ const ReportStatsEditor = ({
                   <div className={styles.progressDots} aria-hidden="true">
                     {availableSteps.map(renderProgressDot)}
                   </div>
-                  {/* 마지막 독서기간 단계에서는 이동 화살표 대신 입력 완료 버튼을 표시한다 */}
+                  {/* 마지막 독서기간 단계에서는 이동 화살표 대신 입력 완료 버튼을 표시함 */}
                   {activeStep === lastStep ? (
                     <button
                       className={styles.confirmButton}

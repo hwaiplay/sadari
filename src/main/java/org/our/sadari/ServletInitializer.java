@@ -6,7 +6,7 @@ import org.springframework.boot.web.servlet.support.SpringBootServletInitializer
  * fileName       : ServletInitializer
  * author         : SeungHyeon.Kang
  * date           : 2026-03-01
- * description    : 애플리케이션 업무에 필요한 기능을 제공한다
+ * description    : 애플리케이션 업무에 필요한 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ public class ServletInitializer extends SpringBootServletInitializer {
 
 	@Override
 	protected SpringApplicationBuilder configure(SpringApplicationBuilder application) {
-		// configure 처리 결과를 반환한다
+		// configure 처리 결과를 반환함
 		return application.sources(SadariApplication.class);
 	}
 

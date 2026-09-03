@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : UserSuspensionController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 정지 회원에게 제한적으로 공개할 현재 정지 상태 API를 제공한다
+ * description    : 정지 회원에게 제한적으로 공개할 현재 정지 상태 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -31,7 +31,7 @@ public class UserSuspensionController {
     private final UserSuspensionService userSuspensionService;
 
     /**
-     * 로그인 회원의 현재 정지 유형과 사유 및 기간을 조회한다
+     * 로그인 회원의 현재 정지 유형과 사유 및 기간을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 회원 번호
@@ -42,7 +42,7 @@ public class UserSuspensionController {
     public ResultData getUserSuspension(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
-        // 로그인 회원 본인의 현재 정지 상태를 반환한다
+        // 로그인 회원 본인의 현재 정지 상태를 반환함
         return userSuspensionService.getUserSuspension(userNumb);
     }
 }

@@ -7,7 +7,7 @@ import java.util.List;
  * fileName       : PageDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-15
- * description    : 목록 API의 현재 페이지 항목과 다음 페이지 여부를 공통으로 전달한다
+ * description    : 목록 API의 현재 페이지 항목과 다음 페이지 여부를 공통으로 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

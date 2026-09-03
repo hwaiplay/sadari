@@ -10,7 +10,7 @@ import org.our.sadari.report.dto.ReportDto;
  * fileName       : MonthlyReadingSummaryDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 마이페이지의 독서 활동과 목표 달성 요약을 전달한다
+ * description    : 마이페이지의 독서 활동과 목표 달성 요약을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

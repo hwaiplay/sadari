@@ -55,7 +55,7 @@ const DEFAULT_HARD_POLICY_ITEMS = [
 ] as const;
 
 /**
- * 계정 비활성화와 영구 탈퇴 정책을 비교해 선택하고 Kakao 재인증을 시작합니다.
+ * 계정 비활성화와 영구 탈퇴 정책을 비교해 선택하고 Kakao 재인증을 시작함
  *
  * @author HanWon.Jang
  * @param hardOnly 정지 회원에게 영구 탈퇴 선택지만 제공할지 여부
@@ -72,16 +72,16 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
   const policyCloseButtonRef = useRef<HTMLButtonElement>(null);
   const policyCloseTimerRef = useRef<number | null>(null);
   const policyHelpClosingRef = useRef(false);
-  // 계정 처리 정책 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회한다
+  // 계정 처리 정책 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회함
   const { data: withdrawalPolicyContent } = usePopupContent(
     POPUP_CONTENT_KEYS.accountWithdrawalPolicy,
   );
-  // 비활성화 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  // 비활성화 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지함
   const softPolicyItems = parsePopupContentList(
     withdrawalPolicyContent?.contFirs,
     DEFAULT_SOFT_POLICY_ITEMS,
   );
-  // 영구 탈퇴 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지한다
+  // 영구 탈퇴 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지함
   const hardPolicyItems = parsePopupContentList(
     withdrawalPolicyContent?.contSeco,
     DEFAULT_HARD_POLICY_ITEMS,
@@ -91,58 +91,58 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
     || !wthdRson;
 
   /**
-   * 비활성화와 영구 탈퇴 정책을 비교할 수 있는 도움말 팝업을 엽니다.
+   * 비활성화와 영구 탈퇴 정책을 비교할 수 있는 도움말 팝업을 엶
    *
    * @author HanWon.Jang
    * @return 반환값 없음
    */
   const handlePolicyHelpOpen = useCallback((): void => {
 
-    // 이전 닫기 상태를 제거해 도움말 팝업을 열림 애니메이션으로 시작합니다
+    // 이전 닫기 상태를 제거해 도움말 팝업을 열림 애니메이션으로 시작함
     policyHelpClosingRef.current = false;
-    // 화면에 남아 있는 닫기 애니메이션 상태를 제거합니다
+    // 화면에 남아 있는 닫기 애니메이션 상태를 제거함
     setIsPolicyHelpClosing(false);
-    // 계정 처리 정책 도움말을 화면에 표시합니다
+    // 계정 처리 정책 도움말을 화면에 표시함
     setIsPolicyHelpOpen(true);
   }, []);
 
   /**
-   * 닫기 애니메이션이 끝난 계정 처리 정책 도움말을 화면에서 제거합니다.
+   * 닫기 애니메이션이 끝난 계정 처리 정책 도움말을 화면에서 제거함
    *
    * @author HanWon.Jang
    * @return 반환값 없음
    */
   const completePolicyHelpClose = useCallback((): void => {
 
-    // 닫기 애니메이션이 끝난 도움말 팝업을 화면에서 제거합니다
+    // 닫기 애니메이션이 끝난 도움말 팝업을 화면에서 제거함
     setIsPolicyHelpOpen(false);
-    // 다음 열기 동작에 닫기 스타일이 남지 않도록 상태를 초기화합니다
+    // 다음 열기 동작에 닫기 스타일이 남지 않도록 상태를 초기화함
     setIsPolicyHelpClosing(false);
-    // 다음 열기 동작에서 닫기 요청을 다시 받을 수 있도록 진행 상태를 초기화합니다
+    // 다음 열기 동작에서 닫기 요청을 다시 받을 수 있도록 진행 상태를 초기화함
     policyHelpClosingRef.current = false;
-    // 완료된 닫기 타이머 참조를 제거합니다
+    // 완료된 닫기 타이머 참조를 제거함
     policyCloseTimerRef.current = null;
   }, []);
 
   /**
-   * 계정 처리 정책 도움말에 닫기 애니메이션을 적용합니다.
+   * 계정 처리 정책 도움말에 닫기 애니메이션을 적용함
    *
    * @author HanWon.Jang
    * @return 반환값 없음
    */
   const handlePolicyHelpClose = useCallback((): void => {
 
-    // 이미 닫는 중인 도움말에는 중복 타이머를 만들지 않습니다
+    // 이미 닫는 중인 도움말에는 중복 타이머를 만들지 않음
     if (policyHelpClosingRef.current) {
-      // 진행 중인 닫기 애니메이션을 유지하고 처리를 종료합니다
+      // 진행 중인 닫기 애니메이션을 유지하고 처리를 종료함
       return;
     }
 
-    // 상태 갱신 전 연속 입력도 차단할 수 있도록 닫기 진행 여부를 즉시 기록합니다
+    // 상태 갱신 전 연속 입력도 차단할 수 있도록 닫기 진행 여부를 즉시 기록함
     policyHelpClosingRef.current = true;
-    // 도움말 팝업과 배경에 닫기 애니메이션을 적용합니다
+    // 도움말 팝업과 배경에 닫기 애니메이션을 적용함
     setIsPolicyHelpClosing(true);
-    // 닫기 애니메이션이 끝난 뒤 팝업을 화면에서 제거합니다
+    // 닫기 애니메이션이 끝난 뒤 팝업을 화면에서 제거함
     policyCloseTimerRef.current = window.setTimeout(
       completePolicyHelpClose,
       POLICY_MODAL_ANIMATION_MILLISECONDS,
@@ -150,7 +150,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
   }, [completePolicyHelpClose]);
 
   /**
-   * 계정 처리 정책 팝업 바깥의 배경을 누른 경우 도움말을 닫습니다.
+   * 계정 처리 정책 팝업 바깥의 배경을 누른 경우 도움말을 닫음
    *
    * @author HanWon.Jang
    * @param event 도움말 배경 클릭 이벤트
@@ -158,29 +158,29 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
    */
   const handlePolicyBackdropClick = (event: React.MouseEvent<HTMLDivElement>): void => {
 
-    // 팝업 본문 클릭은 유지하고 바깥 배경을 누른 경우에만 닫습니다
+    // 팝업 본문 클릭은 유지하고 바깥 배경을 누른 경우에만 닫음
     if (event.target === event.currentTarget) {
-      // 계정 처리 정책 도움말에 닫기 애니메이션을 적용합니다
+      // 계정 처리 정책 도움말에 닫기 애니메이션을 적용함
       handlePolicyHelpClose();
     }
   };
 
   /**
-   * 계정 처리 정책 도움말이 열린 동안 배경 스크롤과 Escape 키 동작을 관리합니다.
+   * 계정 처리 정책 도움말이 열린 동안 배경 스크롤과 Escape 키 동작을 관리함
    *
    * @author HanWon.Jang
    * @return 팝업 종료 시 브라우저 상태를 복구하는 함수
    */
   const syncPolicyHelpModal = useCallback((): (() => void) | undefined => {
 
-    // 도움말이 닫혀 있으면 팝업 전용 브라우저 동작을 등록하지 않습니다
+    // 도움말이 닫혀 있으면 팝업 전용 브라우저 동작을 등록하지 않음
     if (!isPolicyHelpOpen) {
-      // 등록할 팝업 정리 작업이 없음을 반환합니다
+      // 등록할 팝업 정리 작업이 없음을 반환함
       return undefined;
     }
 
     /**
-     * Escape 키를 누르면 계정 처리 정책 도움말을 닫습니다.
+     * Escape 키를 누르면 계정 처리 정책 도움말을 닫음
      *
      * @author HanWon.Jang
      * @param event 키보드 입력 이벤트
@@ -188,51 +188,51 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
      */
     const handlePolicyHelpKeyDown = (event: KeyboardEvent): void => {
 
-      // Escape 키 입력만 도움말 닫기 동작으로 처리합니다
+      // Escape 키 입력만 도움말 닫기 동작으로 처리함
       if (event.key === "Escape") {
-        // 계정 처리 정책 도움말에 닫기 애니메이션을 적용합니다
+        // 계정 처리 정책 도움말에 닫기 애니메이션을 적용함
         handlePolicyHelpClose();
       }
     };
 
-    // 도움말 뒤 화면이 움직이지 않도록 본문 스크롤을 잠급니다
+    // 도움말 뒤 화면이 움직이지 않도록 본문 스크롤을 잠금
     lockBodyScroll();
-    // 키보드 사용자가 닫기 버튼부터 조작할 수 있도록 포커스를 이동합니다
+    // 키보드 사용자가 닫기 버튼부터 조작할 수 있도록 포커스를 이동함
     policyCloseButtonRef.current?.focus();
-    // 키보드로 도움말을 닫을 수 있도록 Escape 키 이벤트를 등록합니다
+    // 키보드로 도움말을 닫을 수 있도록 Escape 키 이벤트를 등록함
     window.addEventListener("keydown", handlePolicyHelpKeyDown);
 
     /**
-     * 도움말이 닫히거나 페이지가 해제될 때 브라우저 상태를 복구합니다.
+     * 도움말이 닫히거나 페이지가 해제될 때 브라우저 상태를 복구함
      *
      * @author HanWon.Jang
      * @return 반환값 없음
      */
     const cleanupPolicyHelpModal = (): void => {
 
-      // 페이지 이동 중 남아 있는 닫기 타이머가 상태를 변경하지 않도록 해제합니다
+      // 페이지 이동 중 남아 있는 닫기 타이머가 상태를 변경하지 않도록 해제함
       if (policyCloseTimerRef.current !== null) {
-        // 예약된 팝업 닫기 작업을 취소합니다
+        // 예약된 팝업 닫기 작업을 취소함
         window.clearTimeout(policyCloseTimerRef.current);
-        // 해제한 닫기 타이머 참조를 제거합니다
+        // 해제한 닫기 타이머 참조를 제거함
         policyCloseTimerRef.current = null;
       }
 
-      // 도움말이 닫힌 뒤 기존 화면을 다시 스크롤할 수 있게 복구합니다
+      // 도움말이 닫힌 뒤 기존 화면을 다시 스크롤할 수 있게 복구함
       unlockBodyScroll();
-      // 중복 키보드 처리를 막기 위해 Escape 키 이벤트를 해제합니다
+      // 중복 키보드 처리를 막기 위해 Escape 키 이벤트를 해제함
       window.removeEventListener("keydown", handlePolicyHelpKeyDown);
     };
 
-    // 팝업 종료 시 실행할 브라우저 상태 정리 함수를 반환합니다
+    // 팝업 종료 시 실행할 브라우저 상태 정리 함수를 반환함
     return cleanupPolicyHelpModal;
   }, [handlePolicyHelpClose, isPolicyHelpOpen]);
 
-  // 계정 처리 정책 도움말의 열림 상태에 맞춰 스크롤과 키보드 동작을 동기화합니다
+  // 계정 처리 정책 도움말의 열림 상태에 맞춰 스크롤과 키보드 동작을 동기화함
   useEffect(syncPolicyHelpModal, [syncPolicyHelpModal]);
 
   /**
-   * 비활성화 및 탈퇴 사유 입력을 UTF-8 최대 저장 바이트 안에서 화면 상태에 반영합니다.
+   * 비활성화 및 탈퇴 사유 입력을 UTF-8 최대 저장 바이트 안에서 화면 상태에 반영함
    *
    * @author HanWon.Jang
    * @param event 사유 입력 이벤트
@@ -240,40 +240,40 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
    */
   const handleWithdrawalReason = (event: React.ChangeEvent<HTMLTextAreaElement>): void => {
 
-    // 다중 바이트 문자를 포함한 입력을 500바이트 안으로 제한합니다
+    // 다중 바이트 문자를 포함한 입력을 500바이트 안으로 제한함
     const limitedReason = truncateWithdrawalReason(event.target.value);
-    // 검증된 비활성화 및 탈퇴 사유를 입력 영역에 반영합니다
+    // 검증된 비활성화 및 탈퇴 사유를 입력 영역에 반영함
     setRsonCntn(limitedReason);
   };
 
   /**
-   * 선택한 계정 처리 정책을 확인하고 Kakao 재인증 화면으로 이동합니다.
+   * 선택한 계정 처리 정책을 확인하고 Kakao 재인증 화면으로 이동함
    *
    * @author HanWon.Jang
    * @return 반환값 없음
    */
   const handleWithdrawal = async (): Promise<void> => {
 
-    // 필수 사유가 없으면 재인증 요청을 보내지 않습니다
+    // 필수 사유가 없으면 재인증 요청을 보내지 않음
     if (!wthdRson) {
       // "사유를 선택해주세요."
       await sweetWarning(message("frontend.withdrawal.validation.reasonRequired"));
-      // 필수 입력 확인 이후 처리를 종료합니다
+      // 필수 입력 확인 이후 처리를 종료함
       return;
     }
 
-    // 기타 사유는 상세 내용을 반드시 입력받습니다
+    // 기타 사유는 상세 내용을 반드시 입력받음
     if (wthdRson === "OTHER" && !rsonCntn.trim()) {
       // "기타 사유를 입력해주세요."
       await sweetWarning(message("frontend.withdrawal.validation.otherRequired"));
-      // 기타 사유 확인 이후 처리를 종료합니다
+      // 기타 사유 확인 이후 처리를 종료함
       return;
     }
 
     let confirmTitle: string;
     let confirmText: string;
 
-    // 비활성화는 재로그인 복구 범위와 자동 복원되지 않는 데이터를 다시 안내합니다
+    // 비활성화는 재로그인 복구 범위와 자동 복원되지 않는 데이터를 다시 안내함
     if (wthdType === "SOFT") {
       // "계정을 비활성화하시겠어요?"
       confirmTitle = message("frontend.withdrawal.confirm.softTitle");
@@ -281,7 +281,7 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       confirmText = message("frontend.withdrawal.confirm.softText");
     }
 
-    // 영구 탈퇴는 유예기간과 유예기간 안의 취소 가능 여부를 다시 안내합니다
+    // 영구 탈퇴는 유예기간과 유예기간 안의 취소 가능 여부를 다시 안내함
     else {
       // "영구 탈퇴를 신청하시겠어요?"
       confirmTitle = message("frontend.withdrawal.confirm.hardTitle");
@@ -289,40 +289,40 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       confirmText = message("frontend.withdrawal.confirm.hardText");
     }
 
-    // 계정 처리 유형별 영향을 확인한 사용자만 Kakao 재인증을 진행합니다
+    // 계정 처리 유형별 영향을 확인한 사용자만 Kakao 재인증을 진행함
     const confirmResult = await sweetConfirm({
       title: confirmTitle,
       text: confirmText,
     });
 
-    // 사용자가 확인하지 않으면 계정 처리 재인증을 시작하지 않습니다
+    // 사용자가 확인하지 않으면 계정 처리 재인증을 시작하지 않음
     if (!confirmResult.isConfirmed) {
-      // 사용자의 취소 선택을 유지하고 처리를 종료합니다
+      // 사용자의 취소 선택을 유지하고 처리를 종료함
       return;
     }
 
-    // 중복 요청을 막기 위해 재인증 URL을 받는 동안 버튼을 잠급니다
+    // 중복 요청을 막기 위해 재인증 URL을 받는 동안 버튼을 잠금
     setIsSubmitting(true);
 
-    // API 실패를 사용자 안내로 전환하기 위한 비동기 처리 블록입니다
+    // API 실패를 사용자 안내로 전환하기 위한 비동기 처리 블록임
     try {
-      // 입력한 계정 처리 유형과 사유로 Kakao 재인증 URL을 요청합니다
+      // 입력한 계정 처리 유형과 사유로 Kakao 재인증 URL을 요청함
       const result = await setWithdrawalRequestApi({
         wthdType,
         wthdRson,
         rsonCntn: rsonCntn.trim() || undefined,
       });
 
-      // 서버가 재인증 URL을 반환하지 않으면 화면 이동을 중단합니다
+      // 서버가 재인증 URL을 반환하지 않으면 화면 이동을 중단함
       if (!result.data?.authUrl) {
         throw new Error("WITHDRAWAL_REAUTH_URL_MISSING");
       }
 
-      // 브라우저 전체 페이지를 Kakao 재인증 화면으로 이동합니다
+      // 브라우저 전체 페이지를 Kakao 재인증 화면으로 이동함
       window.location.assign(result.data.authUrl);
     }
 
-    // 계정 처리 재인증 시작 실패 원인을 사용자에게 안내합니다
+    // 계정 처리 재인증 시작 실패 원인을 사용자에게 안내함
     catch (error) {
       // "계정 처리 요청을 시작할 수 없어요."
       // "잠시 후 다시 시도해주세요."
@@ -332,46 +332,46 @@ function WithdrawalPage({ hardOnly = false }: { hardOnly?: boolean }) {
       );
     }
 
-    // 재인증 화면으로 이동하지 못한 경우 버튼을 다시 활성화합니다
+    // 재인증 화면으로 이동하지 못한 경우 버튼을 다시 활성화함
     finally {
-      // 계정 처리 요청 진행 상태를 해제합니다
+      // 계정 처리 요청 진행 상태를 해제함
       setIsSubmitting(false);
     }
   };
 
   let submitButtonLabel: string;
 
-  // 재인증 URL을 요청하는 동안 현재 처리 상태를 버튼에 표시합니다
+  // 재인증 URL을 요청하는 동안 현재 처리 상태를 버튼에 표시함
   if (isSubmitting) {
     // "재인증 준비 중"
     submitButtonLabel = message("frontend.withdrawal.submit.preparing");
   }
 
-  // 비활성화 선택 상태에는 실행 결과를 명확히 표시합니다
+  // 비활성화 선택 상태에는 실행 결과를 명확히 표시함
   else if (wthdType === "SOFT") {
     // "Kakao 재인증 후 비활성화"
     submitButtonLabel = message("frontend.withdrawal.submit.soft");
   }
 
-  // 영구 탈퇴 선택 상태에는 되돌리기 어려운 실행 결과를 명확히 표시합니다
+  // 영구 탈퇴 선택 상태에는 되돌리기 어려운 실행 결과를 명확히 표시함
   else {
     // "Kakao 재인증 후 영구 탈퇴"
     submitButtonLabel = message("frontend.withdrawal.submit.hard");
   }
 
   /**
-   * 관리자 설정 또는 기본 계정 처리 정책 문구를 목록 항목으로 표시한다
+   * 관리자 설정 또는 기본 계정 처리 정책 문구를 목록 항목으로 표시함
    *
    * @author HanWon.Jang
    * @param policyItem 화면에 표시할 계정 처리 정책 문구
    * @return 계정 처리 정책 목록 항목
    */
   const renderPolicyItem = (policyItem: string): React.ReactNode => {
-    // 개별 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환한다
+    // 개별 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환함
     return <li key={policyItem}>{policyItem}</li>;
   };
 
-  // 계정 처리 정책과 사유를 한 화면에서 선택하는 설정 화면을 반환합니다
+  // 계정 처리 정책과 사유를 한 화면에서 선택하는 설정 화면을 반환함
   return (
     <main className={hardOnly ? `${styles.page} ${styles.standalonePage}` : styles.page}>
       {/* 계정 처리 방식 선택 영역 */}

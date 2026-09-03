@@ -23,7 +23,7 @@ type CustomSelectProps<T extends string> = {
 };
 
 /**
- * Custom Select 화면 또는 컴포넌트를 구성한다
+ * Custom Select 화면 또는 컴포넌트를 구성함
  *
  * @author HanWon.Jang
  * @param props props 입력값
@@ -65,11 +65,11 @@ function CustomSelect<T extends string>({
 
   useEffect(() => {
     /**
-     * handle Pointer Down 사용자 동작을 처리한다
+     * handle Pointer Down 사용자 동작을 처리함
      *
      * @author HanWon.Jang
      * @param event event 입력값
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const handlePointerDown = (event: PointerEvent) => {
 
@@ -87,11 +87,11 @@ function CustomSelect<T extends string>({
   }, []);
 
   /**
-   * handle Select 사용자 동작을 처리한다
+   * handle Select 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param option option 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleSelect = (option: CustomSelectOption<T>) => {
 
@@ -111,11 +111,11 @@ function CustomSelect<T extends string>({
   };
 
   /**
-   * handle Key Down 사용자 동작을 처리한다
+   * handle Key Down 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param event event 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
 

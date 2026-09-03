@@ -2,7 +2,7 @@
  * fileName       : ActionButton
  * author         : Hanwon.Jang
  * date           : 2026-08-10
- * description    : 모든 화면의 기능 명령 버튼과 선택적 아이콘 위치를 공통 구조로 제공한다
+ * description    : 모든 화면의 기능 명령 버튼과 선택적 아이콘 위치를 공통 구조로 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -22,7 +22,7 @@ type ActionButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 /**
- * 화면 명령의 중요도와 크기 및 선택적 아이콘 위치를 버튼에 적용한다
+ * 화면 명령의 중요도와 크기 및 선택적 아이콘 위치를 버튼에 적용함
  *
  * @author Hanwon.Jang
  * @param props 버튼 변형과 크기 및 기본 버튼 속성
@@ -39,7 +39,7 @@ export function ActionButton({
   type = "button",
   ...buttonProps
 }: ActionButtonProps) {
-  // 선택한 공통 스타일과 왼쪽 아이콘을 적용한 화면 명령 버튼을 반환한다
+  // 선택한 공통 스타일과 왼쪽 아이콘을 적용한 화면 명령 버튼을 반환함
   return (
     <button
       {...buttonProps}

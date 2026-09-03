@@ -8,7 +8,7 @@ import org.our.sadari.user.dto.UserSuspensionDto;
  * fileName       : UserSuspensionMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 사용자 회원 정지 상태 조회와 기간 만료 SQL을 연결한다
+ * description    : 사용자 회원 정지 상태 조회와 기간 만료 SQL을 연결함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,7 +18,7 @@ import org.our.sadari.user.dto.UserSuspensionDto;
 public interface UserSuspensionMapper {
 
     /**
-     * 회원에게 현재 활성 상태로 남아 있는 최신 정지 이력을 조회한다
+     * 회원에게 현재 활성 상태로 남아 있는 최신 정지 이력을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 회원 번호
@@ -27,7 +27,7 @@ public interface UserSuspensionMapper {
     UserSuspensionDto getLatestActiveSuspension(@Param("userNumb") Long userNumb);
 
     /**
-     * 정지 이력이 없는 회원의 현재 DB 상태를 조회한다
+     * 정지 이력이 없는 회원의 현재 DB 상태를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 회원 번호
@@ -36,7 +36,7 @@ public interface UserSuspensionMapper {
     String getUserStatus(@Param("userNumb") Long userNumb);
 
     /**
-     * 기간이 끝난 회원 정지를 만료 상태로 변경한다
+     * 기간이 끝난 회원 정지를 만료 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param spndNumb 만료할 정지 이력 번호
@@ -45,7 +45,7 @@ public interface UserSuspensionMapper {
     int uptSuspensionExpired(@Param("spndNumb") Long spndNumb);
 
     /**
-     * 정지 상태인 회원을 정지 직전 상태로 복구한다
+     * 정지 상태인 회원을 정지 직전 상태로 복구함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 복구할 회원 번호
@@ -55,7 +55,7 @@ public interface UserSuspensionMapper {
     int uptUserStatusAfterSuspend(@Param("userNumb") Long userNumb, @Param("prevStat") String prevStat);
 
     /**
-     * 회원 상태가 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경한다
+     * 회원 상태가 복구된 정지 이력을 사용자 서버 반영 대기 상태로 변경함
      *
      * @author SeungHyeon.Kang
      * @param spndNumb 반영을 기다릴 정지 이력 번호

@@ -43,14 +43,14 @@ const POPULAR_PERIOD_LABELS: Readonly<Record<PopularBookPeriodType, string>> = {
 };
 
 /**
- * 책 검색 입력과 결과 목록을 표시하고 사용자 동작을 검색 훅에 전달한다.
+ * 책 검색 입력과 결과 목록을 표시하고 사용자 동작을 검색 훅에 전달함
  *
  * @author SeungHyeon.Kang
  * @return 책 검색 페이지 컴포넌트
  */
 const SearchBookPage = () => {
 
-  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회한다
+  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회함
   const { isSticky, sentinelRef } = useStickySearch();
   const {
     bookResult,
@@ -77,7 +77,7 @@ const SearchBookPage = () => {
     closeTimerPeriod,
     saveTimerReport,
   } = useSearchBookPage();
-  // 책 검색 입력과 조회 결과 목록 화면을 반환한다.
+  // 책 검색 입력과 조회 결과 목록 화면을 반환함
   return (
     <main className={styles.page}>
       <Container className={styles.content}>
@@ -140,7 +140,7 @@ const SearchBookPage = () => {
           </label>
         </form>
 
-        {/* 인기 도서 모드에서만 인기 검색어와 기간 선택을 같은 높이의 한 행으로 제공한다 */}
+        {/* 인기 도서 모드에서만 인기 검색어와 기간 선택을 같은 높이의 한 행으로 제공함 */}
         {isPopularMode && (
           <div className={styles.popularControlBar}>
             {/* 최근 인기 검색어 한 건씩 왼쪽 영역에서 세로로 교체하고 즉시 검색하는 영역 */}
@@ -191,30 +191,30 @@ const SearchBookPage = () => {
                     : description;
 
                 /**
-                 * 표지와 제목 및 더보기 버튼에서 선택한 도서의 상세 화면을 연다.
+                 * 표지와 제목 및 더보기 버튼에서 선택한 도서의 상세 화면을 엶
                  *
                  * @author SeungHyeon.Kang
-                 * @return 반환값이 없다
+                 * @return 반환값이 없음
                  */
                 function handleBookDetailClick(): void {
 
-                  // 검색 유형에 맞는 선택 도서 상세 화면으로 이동한다.
+                  // 검색 유형에 맞는 선택 도서 상세 화면으로 이동함
                   handleMoreInfo(book);
                 }
 
                 /**
-                 * 선택한 도서의 작가명을 검색어로 사용해 즉시 조회한다.
+                 * 선택한 도서의 작가명을 검색어로 사용해 즉시 조회함
                  *
                  * @author SeungHyeon.Kang
-                 * @return 반환값이 없다
+                 * @return 반환값이 없음
                  */
                 function handleAuthorClick(): void {
 
-                  // 선택한 작가명을 입력창과 검색 결과에 함께 반영한다.
+                  // 선택한 작가명을 입력창과 검색 결과에 함께 반영함
                   void handleAuthorSelect(author);
                 }
 
-                // 검색된 책의 요약 정보와 동작 버튼을 반환한다.
+                // 검색된 책의 요약 정보와 동작 버튼을 반환함
                 return (
                   <article
                     className={styles.resultCard}
@@ -239,7 +239,7 @@ const SearchBookPage = () => {
                       </button>
                     </div>
 
-                    {/* 인기 도서는 표지 아래와 제목 위에 순위 및 작성자 수를 표시한다. */}
+                    {/* 인기 도서는 표지 아래와 제목 위에 순위 및 작성자 수를 표시함 */}
                     {isPopularMode &&
                       book.rank !== undefined &&
                       book.reportCount !== undefined && (
@@ -264,7 +264,7 @@ const SearchBookPage = () => {
                         </button>
                       </h2>
                       {isPopularMode ? (
-                        /* 인기 도서는 출판사 대신 도서 정보와 같은 평균 별점을 표시한다. */
+                        /* 인기 도서는 출판사 대신 도서 정보와 같은 평균 별점을 표시함 */
                         <div className={styles.authorRatingLine}>
                           <p className={styles.meta}>
                             {author ? (
@@ -277,7 +277,7 @@ const SearchBookPage = () => {
                               </button>
                             ) : null}
                           </p>
-                          {/* 평균 평점이 있으면 저자 옆에 구분선과 도서 평균 별점을 표시한다. */}
+                          {/* 평균 평점이 있으면 저자 옆에 구분선과 도서 평균 별점을 표시함 */}
                           {book.ratingAverage !== null &&
                             book.ratingAverage !== undefined &&
                             book.ratingAverage !== "" && (
@@ -288,7 +288,7 @@ const SearchBookPage = () => {
                             )}
                         </div>
                       ) : (
-                        /* 직접 검색 결과는 기존 저자와 출판사 정보를 유지한다. */
+                        /* 직접 검색 결과는 기존 저자와 출판사 정보를 유지함 */
                         <p className={styles.meta}>
                           {author ? (
                             <button
@@ -306,7 +306,7 @@ const SearchBookPage = () => {
                     </div>
 
                     {!isPopularMode && (
-                      /* 직접 검색 결과에서만 도서 소개를 세 줄까지 표시한다. */
+                      /* 직접 검색 결과에서만 도서 소개를 세 줄까지 표시함 */
                       <p className={styles.description}>
                         {preview || message("frontend.common.noBookDescription")}
                       </p>

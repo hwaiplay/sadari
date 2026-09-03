@@ -37,7 +37,7 @@ export const primaryMenuButton = style({
   cursor: "pointer",
 });
 
-// 하위 메뉴가 펼쳐진 동안 상위 메뉴 아래 선을 숨기고 하위 메뉴 마지막으로 이동시킨다.
+// 하위 메뉴가 펼쳐진 동안 상위 메뉴 아래 선을 숨기고 하위 메뉴 마지막으로 이동시킴
 export const primaryMenuButtonOpen = style({
   borderBottomColor: "transparent",
 });

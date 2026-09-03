@@ -4,7 +4,7 @@ package org.our.sadari.global.common.constant;
  * fileName       : Constant
  * author         : SeungHyeon.Kang
  * date           : 2026-07-07
- * description    : 공통 처리에 사용하는 상수와 코드를 정의한다
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -260,7 +260,7 @@ public final class Constant {
 
     /**
      * 날짜만 저장된 목표 종료일을 기준으로 오늘을 포함해 최근 48시간 범위를 조회하기 위한 일수
-     * 오늘, 어제, 이틀 전 종료 대상을 후보로 삼고 이미 알림이 저장된 대상은 Mapper에서 별도로 제외한다.
+     * 오늘, 어제, 이틀 전 종료 대상을 후보로 삼고 이미 알림이 저장된 대상은 Mapper에서 별도로 제외함
      */
     // 독후감 날짜 초과 조회 범위 일수 설정값
     public static final int REPORT_DATE_OVER_LOOKBACK_DAYS = 2;
@@ -317,6 +317,6 @@ public final class Constant {
     public static final String GOAL_TYPE_YEAR = "YEAR";
 
     private Constant() {
-        // 아래 처리 단계의 업무 목적을 설명한다.
+        // 아래 처리 단계의 업무 목적을 설명함
     }
 }

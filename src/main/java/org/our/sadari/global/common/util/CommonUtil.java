@@ -6,7 +6,7 @@ import java.time.LocalDate;
  * fileName       : CommonUtil
  * author         : SeungHyeon.Kang
  * date           : 2026-03-21
- * description    : 공통 처리에 필요한 변환과 판정 기능을 제공한다
+ * description    : 공통 처리에 필요한 변환과 판정 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -15,7 +15,7 @@ import java.time.LocalDate;
 public class CommonUtil {
 
     /**
-     * 두 날짜 기간의 겹침 여부 판정한다.
+     * 두 날짜 기간의 겹침 여부 판정함
      *
      * @author SeungHyeon.Kang
      * @param startDate 기간 계산의 시작일
@@ -26,7 +26,7 @@ public class CommonUtil {
      */
     public static boolean isDateRangeOverlapped(LocalDate startDate, LocalDate endDate, LocalDate targetStartDate
                                               , LocalDate targetEndDate) {
-        // 두 날짜 기간의 겹침 여부 판정 결과를 반환한다
+        // 두 날짜 기간의 겹침 여부 판정 결과를 반환함
         return DateUtil.isDateRangeOverlapped(startDate, endDate, targetStartDate, targetEndDate);
     }
 }

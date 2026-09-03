@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.social.mapper.UserBlockMapper">
 
-    <!-- 차단과 팔로우 등록의 경쟁 조건을 막도록 두 사용자 원본을 번호순으로 잠근다. -->
+    <!-- 차단과 팔로우 등록의 경쟁 조건을 막도록 두 사용자 원본을 번호순으로 잠금 -->
     <select id="lockUsers" resultType="long">
         SELECT /* lockUsers */
                USER_NUMB
@@ -12,7 +12,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 어느 한쪽이라도 상대를 차단했는지 양방향 관계를 조회한다. -->
+    <!-- 어느 한쪽이라도 상대를 차단했는지 양방향 관계를 조회함 -->
     <select id="getBlockCnt" resultType="int">
         SELECT /* getBlockCnt */
                COUNT(*)
@@ -21,7 +21,7 @@
             OR (USER_NUMB = #{targetUserNumb} AND BLOC_NUMB = #{userNumb})
     </select>
 
-    <!-- 중복 요청은 기존 등록 일시를 유지하면서 현재 차단 상태로 멱등 처리한다. -->
+    <!-- 중복 요청은 기존 등록 일시를 유지하면서 현재 차단 상태로 멱등 처리함 -->
     <insert id="setBlock" parameterType="org.our.sadari.social.dto.UserBlockDto">
         /* setBlock */
         INSERT INTO TB_USBLOC (
@@ -36,7 +36,7 @@
                USER_NUMB = NEW.USER_NUMB
     </insert>
 
-    <!-- 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제한다. -->
+    <!-- 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제함 -->
     <delete id="delBlock" parameterType="org.our.sadari.social.dto.UserBlockDto">
         DELETE /* delBlock */
           FROM TB_USBLOC
@@ -44,7 +44,7 @@
            AND BLOC_NUMB = #{blocNumb}
     </delete>
 
-    <!-- 차단 즉시 기존 팔로우 관계가 어느 방향에도 남지 않도록 함께 삭제한다. -->
+    <!-- 차단 즉시 기존 팔로우 관계가 어느 방향에도 남지 않도록 함께 삭제함 -->
     <delete id="delBlockFollows" parameterType="org.our.sadari.social.dto.UserBlockDto">
         DELETE /* delBlockFollows */
           FROM TB_FOLLOW
@@ -52,7 +52,7 @@
             OR (USER_NUMB = #{blocNumb} AND FLOW_NUMB = #{userNumb})
     </delete>
 
-    <!-- 차단 당사자 사이에서 직접 발송된 수락 전 모임 초대를 즉시 만료한다. -->
+    <!-- 차단 당사자 사이에서 직접 발송된 수락 전 모임 초대를 즉시 만료함 -->
     <delete id="delBlockInvitations" parameterType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="memberInvited" value="'INVITED'" />
         DELETE /* delBlockInvitations */
@@ -63,7 +63,7 @@
                )
     </delete>
 
-    <!-- 차단 당사자가 모임장인 모임의 상대방 처리 중 가입 신청과 답변을 삭제한다. -->
+    <!-- 차단 당사자가 모임장인 모임의 상대방 처리 중 가입 신청과 답변을 삭제함 -->
     <delete id="delBlockApplications" parameterType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="applicationPending" value="'PENDING'" />
         DELETE /* delBlockApplications */ APPLICATION
@@ -76,7 +76,7 @@
                )
     </delete>
 
-    <!-- 차단 관리 화면에는 실제 사진을 제외한 최소 사용자 정보만 최신 차단순으로 제공한다. -->
+    <!-- 차단 관리 화면에는 실제 사진을 제외한 최소 사용자 정보만 최신 차단순으로 제공함 -->
     <select id="getBlockList" parameterType="org.our.sadari.social.dto.UserBlockDto" resultType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         <bind name="codeUserStat" value="@org.our.sadari.global.common.constant.Constant@CODE_USER_STAT" />

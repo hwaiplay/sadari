@@ -7,7 +7,7 @@ import { ImageViewerProvider } from "@/components/ImageViewer/FullscreenImageVie
 import { ConnectionErrorScreen } from "@/components/ConnectionError/ConnectionErrorScreen";
 
 /**
- * React Query Provider와 애플리케이션 Router를 연결하는 최상위 컴포넌트입니다.
+ * React Query Provider와 애플리케이션 Router를 연결하는 최상위 컴포넌트임
  *
  * @author HanWon.Jang
  * @return 애플리케이션 루트 컴포넌트

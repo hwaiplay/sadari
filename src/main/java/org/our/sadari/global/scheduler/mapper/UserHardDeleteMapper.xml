@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.global.scheduler.mapper.UserHardDeleteMapper">
 
-    <!-- 삭제 예정일이 지난 영구 탈퇴 회원을 오래된 요청부터 제한 건수만큼 조회한다. -->
+    <!-- 삭제 예정일이 지난 영구 탈퇴 회원을 오래된 요청부터 제한 건수만큼 조회함 -->
     <select id="getHardDeleteTargetList" parameterType="int" resultType="org.our.sadari.user.dto.UserWithdrawalDto">
         SELECT /* getHardDeleteTargetList */
                TARGET.WTHD_NUMB
@@ -23,7 +23,7 @@
          LIMIT #{maxSize}
     </select>
 
-    <!-- 피신고자 연결 익명화 전에 해당 회원의 접수 또는 검토 중 신고를 시스템 종결한다. -->
+    <!-- 피신고자 연결 익명화 전에 해당 회원의 접수 또는 검토 중 신고를 시스템 종결함 -->
     <update id="uptHardDeleteComplaints">
         <bind name="cmplReceived"
               value="@org.our.sadari.global.common.constant.Constant@COMPLAINT_STATUS_RECEIVED"/>
@@ -42,7 +42,7 @@
            AND CMPL_STAT IN (#{cmplReceived}, #{cmplReviewing})
     </update>
 
-    <!-- 탈퇴 이력의 회원 번호는 보존하고 회원 연관 데이터를 참조 순서에 맞게 제거한다. -->
+    <!-- 탈퇴 이력의 회원 번호는 보존하고 회원 연관 데이터를 참조 순서에 맞게 제거함 -->
     <delete id="delHardDeleteUser" parameterType="long" statementType="CALLABLE">
         /* delHardDeleteUser */
         {CALL PR_DEL_HARD_DELETE_USER(#{userNumb})}

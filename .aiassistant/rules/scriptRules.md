@@ -236,7 +236,7 @@ apply: scoped
 - 일반 객체 리터럴과 배열 리터럴은 가독성을 위해 여러 줄로 작성할 수 있으며 이 규칙의 대상에서 제외합니다.
 
 ```typescript
-// 현재 날짜를 기준으로 독서기간을 계산할 날짜 객체를 생성한다
+// 현재 날짜를 기준으로 독서기간을 계산할 날짜 객체를 생성함
 const today = new Date();
 ```
 
@@ -282,10 +282,10 @@ const today = new Date();
 - 이어지는 조건 줄은 이전 줄과 연결되는 `||` 또는 `&&`로 시작하며 같은 세로 위치에 정렬합니다.
 
 ```typescript
-// 사용자와 응답 정보가 모두 있어야 후속 화면 상태를 갱신한다
+// 사용자와 응답 정보가 모두 있어야 후속 화면 상태를 갱신함
 if (userNumb !== undefined && resultData.code === 200
         && resultData.data !== undefined) {
-  // 검증된 사용자 정보를 화면 상태에 반영한다
+  // 검증된 사용자 정보를 화면 상태에 반영함
   setUser(resultData.data);
 }
 ```
@@ -321,14 +321,14 @@ if (userNumb !== undefined && resultData.code === 200
 
 ```typescript
 /**
- * 독후감 번호를 사용하여 독후감 상세 화면으로 이동한다
+ * 독후감 번호를 사용하여 독후감 상세 화면으로 이동함
  *
  * @author HanWon.Jang
  * @param reptNumb 이동할 독후감 번호
- * @return 반환값이 없다
+ * @return 반환값이 없음
  */
 const moveReportDetail = (reptNumb: number): void => {
-  // 독후감 번호를 경로에 포함하여 상세 화면으로 이동한다
+  // 독후감 번호를 경로에 포함하여 상세 화면으로 이동함
   navigate(`/book/detail/${reptNumb}`);
 };
 ```
@@ -380,7 +380,7 @@ await sweetWarning(message("frontend.login.required"));
 
 - 페이지의 헤더, 프로필, 현재 읽는 책, 목표, 목록, 버튼 영역 등 주요 화면 영역 시작 전에 JSX 주석으로 영역명을 작성합니다.
 - 큰 영역 안에서 정보, 목록, 제어 버튼처럼 작은 영역으로 다시 나뉘면 각 하위 영역에도 JSX 주석을 작성합니다.
-- 영역 주석은 화면에 표시되지 않도록 `{/* ... */}` 형식으로 작성합니다.
+- 영역 주석은 화면에 표시되지 않도록 `{/* ... */}` 형식으로 작성함
 
 ### 12.2 접근성
 
@@ -447,7 +447,7 @@ await sweetWarning(message("frontend.login.required"));
 ### 16.1 필수 검사
 
 - 수정 후 `npm run lint`를 실행합니다.
-- 수정 후 `npx tsc --noEmit`을 실행하여 IDE에서 표시되는 TypeScript 오류까지 확인합니다.
+- 수정 후 `npx tsc --noEmit`을 실행하여 IDE에서 표시되는 TypeScript 오류까지 확인함
 - 사용자 화면이나 빌드 결과에 영향을 주는 변경은 `npm run build`로 검증합니다.
 - 프론트엔드 코드나 메시지 프로퍼티를 수정한 뒤에는 `.ts`, `.tsx`, `.js`, `.jsx` 전체를 대상으로 사용자 노출 문자열 하드코딩 여부를 정적 검사하고 발견된 문구를 메시지 프로퍼티로 전환합니다.
 - 하드코딩 검사는 한글 문자열만 검색하지 않고 영문 문구, 단위, 기본값, 대체 문구, 접근성 속성, 배열 및 객체의 표시값, 템플릿 문자열과 문자열 결합까지 포함합니다.

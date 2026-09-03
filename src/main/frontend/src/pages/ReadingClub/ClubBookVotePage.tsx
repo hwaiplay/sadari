@@ -7,7 +7,7 @@ import * as styles from "./ClubBookVotePage.css";
 import {buttonDanger} from "./SetClubPage.css.ts"
 import {clsx} from "clsx";
 
-/** 모임 다음 도서 추천과 투표 API 상태를 표시한다. @author HanWon.Jang @return 다음 도서 투표 화면 */
+/** 모임 다음 도서 추천과 투표 API 상태를 표시함. @author HanWon.Jang @return 다음 도서 투표 화면 */
 const ClubBookVotePage = () => {
 
   const {
@@ -24,7 +24,7 @@ const ClubBookVotePage = () => {
     handleVote,
   } = useClubBookVotePage();
 
-  // 서버 추천 목록과 추천·삭제·투표 명령을 반환한다.
+  // 서버 추천 목록과 추천·삭제·투표 명령을 반환함
   return (
     <main className={styles.page}>
       <section className={styles.voteSummary}>
@@ -57,7 +57,7 @@ const ClubBookVotePage = () => {
             {candidates.map((candidate) => {
               const selected = candidate.recmNumb === selectedRecommendation;
               const voteRate = totalVoteCount > 0 ? Math.round((candidate.voteCnt / totalVoteCount) * 100) : 0;
-              // 투표 완료 여부에 따라 후보 선택 또는 득표율 카드를 반환한다.
+              // 투표 완료 여부에 따라 후보 선택 또는 득표율 카드를 반환함
               return <article className={styles.candidateCard} data-selected={selected} key={candidate.recmNumb}>
                 {votePage?.hasVoted ? (
                   <div className={styles.candidateResult}>

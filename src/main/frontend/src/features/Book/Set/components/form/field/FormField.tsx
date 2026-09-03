@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/features/Book/Set/components/form/field/FormField.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/features/Book/Set/components/form/field/FormField.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */
@@ -13,7 +13,7 @@ interface FormFieldProps {
 }
 
 /**
- * Form Field 화면 또는 컴포넌트를 구성한다
+ * Form Field 화면 또는 컴포넌트를 구성함
  *
  * @author HanWon.Jang
  * @param props props 입력값

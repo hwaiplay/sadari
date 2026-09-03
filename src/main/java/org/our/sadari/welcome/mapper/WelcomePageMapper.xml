@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.welcome.mapper.WelcomePageMapper">
-    <!-- 웰컴페이지 접근자가 현재 활성 회원인지 확인한다 -->
+    <!-- 웰컴페이지 접근자가 현재 활성 회원인지 확인함 -->
     <select id="getActiveUserCnt" resultType="int">
         SELECT /* getActiveUserCnt */ COUNT(1)
           FROM TM_USERXM
@@ -9,7 +9,7 @@
            AND USER_STAT = #{userStat}
     </select>
 
-    <!-- 현재 배포 중인 관리자 관리 페이지를 노출 순서대로 조회한다 -->
+    <!-- 현재 배포 중인 관리자 관리 페이지를 노출 순서대로 조회함 -->
     <select id="getWelcomePageList" resultType="org.our.sadari.welcome.dto.WelcomePageDto">
         SELECT /* getWelcomePageList */
                WLCM_NUMB

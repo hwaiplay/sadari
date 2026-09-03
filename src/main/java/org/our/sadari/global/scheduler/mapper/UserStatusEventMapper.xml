@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.global.scheduler.mapper.UserStatusEventMapper">
 
-    <!-- 등록 순서대로 처리할 회원 상태 변경 이벤트와 처리 시점의 DB 회원 상태를 조회한다. -->
+    <!-- 등록 순서대로 처리할 회원 상태 변경 이벤트와 처리 시점의 DB 회원 상태를 조회함 -->
     <select id="getUserStatusEventList"
             resultType="org.our.sadari.global.scheduler.dto.UserStatusEventDto">
         SELECT /* getUserStatusEventList */
@@ -25,7 +25,7 @@
          LIMIT #{maxSize}
     </select>
 
-    <!-- 사용자 서버 반영이 필요한 회원 상태 변경 Outbox 이벤트를 등록한다. -->
+    <!-- 사용자 서버 반영이 필요한 회원 상태 변경 Outbox 이벤트를 등록함 -->
     <insert id="setUserStatusEvent"
             parameterType="org.our.sadari.global.scheduler.dto.UserStatusEventDto"
             useGeneratedKeys="true" keyProperty="evntNumb">
@@ -42,7 +42,7 @@
         )
     </insert>
 
-    <!-- 더 최신 이벤트가 없을 때 정지 이력을 사용자 서버 반영 완료 상태로 변경한다. -->
+    <!-- 더 최신 이벤트가 없을 때 정지 이력을 사용자 서버 반영 완료 상태로 변경함 -->
     <update id="uptSuspensionSyncDone">
         <bind name="suspensionSyncPending" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_PENDING"/>
         <bind name="suspensionSyncCompleted" value="@org.our.sadari.global.common.constant.Constant@SUSPENSION_SYNC_COMPLETED"/>
@@ -59,7 +59,7 @@
                )
     </update>
 
-    <!-- Redis 상태 동기화를 마친 Outbox 이벤트를 삭제한다. -->
+    <!-- Redis 상태 동기화를 마친 Outbox 이벤트를 삭제함 -->
     <delete id="delUserStatusEvent">
         DELETE /* delUserStatusEvent */
           FROM TB_EVTBOX

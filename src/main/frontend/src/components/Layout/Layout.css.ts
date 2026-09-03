@@ -23,7 +23,7 @@ const enterFromLeft = keyframes({
 });
 
 export const pageTransitionViewport = style({
-  // hidden은 세로축까지 스크롤 컨테이너로 만들어 하위 sticky 요소를 방해한다.
+  // hidden은 세로축까지 스크롤 컨테이너로 만들어 하위 sticky 요소를 방해함
   overflowX: "clip",
 });
 

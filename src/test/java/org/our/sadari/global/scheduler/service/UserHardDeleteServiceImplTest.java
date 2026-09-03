@@ -26,7 +26,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * fileName       : UserHardDeleteServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-06
- * description    : 영구 탈퇴 회원의 DB 데이터와 물리 파일 삭제 연계를 검증한다
+ * description    : 영구 탈퇴 회원의 DB 데이터와 물리 파일 삭제 연계를 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -57,66 +57,66 @@ class UserHardDeleteServiceImplTest {
     private UserHardDeleteServiceImpl userHardDeleteService;
 
     /**
-     * 각 테스트에서 영구 삭제 대상 조회 제한 건수를 설정한다.
+     * 각 테스트에서 영구 삭제 대상 조회 제한 건수를 설정함
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
-        // 영구 삭제 대상 한 건을 조회할 최대 처리 건수를 설정한다
+        // 영구 삭제 대상 한 건을 조회할 최대 처리 건수를 설정함
         ReflectionTestUtils.setField(userHardDeleteService, "maxSize", 100);
     }
 
     /**
-     * 영구 탈퇴 회원의 파일 정보를 DB 삭제 전에 확보하고 삭제 커밋 후 물리 파일 정리를 등록하는지 검증한다.
+     * 영구 탈퇴 회원의 파일 정보를 DB 삭제 전에 확보하고 삭제 커밋 후 물리 파일 정리를 등록하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delUsersSetsFileCleanup() {
-        // 영구 삭제 대상 회원 정보를 생성한다
+        // 영구 삭제 대상 회원 정보를 생성함
         UserWithdrawalDto target = new UserWithdrawalDto();
-        // 영구 삭제할 사용자 번호를 설정한다
+        // 영구 삭제할 사용자 번호를 설정함
         target.setUserNumb(31L);
 
-        // 영구 삭제 전에 확보할 프로필 파일 메타정보를 생성한다
+        // 영구 삭제 전에 확보할 프로필 파일 메타정보를 생성함
         FileDto profileFile = new FileDto();
-        // 영구 삭제할 프로필 파일 번호를 설정한다
+        // 영구 삭제할 프로필 파일 번호를 설정함
         profileFile.setFileNumb(10L);
-        // 영구 삭제할 프로필 파일명을 설정한다
+        // 영구 삭제할 프로필 파일명을 설정함
         profileFile.setStorName("profile.png");
-        // 영구 삭제할 프로필 파일 접근 경로를 설정한다
+        // 영구 삭제할 프로필 파일 접근 경로를 설정함
         profileFile.setFilePath("/uploads/profile/260804/profile.png");
-        // 영구 탈퇴 스케줄러가 사용자 한 건을 조회하도록 설정한다
+        // 영구 탈퇴 스케줄러가 사용자 한 건을 조회하도록 설정함
         when(userHardDeleteMapper.getHardDeleteTargetList(100)).thenReturn(List.of(target));
-        // 프로시저 실행 전에 해당 사용자의 파일 정보를 반환하도록 설정한다
+        // 프로시저 실행 전에 해당 사용자의 파일 정보를 반환하도록 설정함
         when(fileService.getFileListByRegiUser(31L)).thenReturn(List.of(profileFile));
-        // 한 건 성공 상태를 스케줄러 완료 코드로 변환하도록 설정한다
+        // 한 건 성공 상태를 스케줄러 완료 코드로 변환하도록 설정함
         when(schedulerLogSupport.getSchedulerExecStatus(1, 0)).thenReturn("SUCCESS");
-        // 스케줄러 실행 로그 번호를 반환하도록 설정한다
+        // 스케줄러 실행 로그 번호를 반환하도록 설정함
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(100L);
 
-        // 유예기간이 끝난 회원의 영구 삭제를 실행한다
+        // 유예기간이 끝난 회원의 영구 삭제를 실행함
         userHardDeleteService.delPendingUsers();
 
-        // 파일 조회와 DB 삭제 및 물리 파일 후처리 호출 순서를 검증할 객체를 생성한다
+        // 파일 조회와 DB 삭제 및 물리 파일 후처리 호출 순서를 검증할 객체를 생성함
         InOrder deleteOrder = inOrder(fileService, userHardDeleteMapper);
-        // DB 메타정보 삭제 전에 물리 파일 경로를 확보하는지 확인한다
+        // DB 메타정보 삭제 전에 물리 파일 경로를 확보하는지 확인함
         deleteOrder.verify(fileService).getFileListByRegiUser(31L);
-        // 피신고자 회원번호가 익명화되기 전에 미처리 신고를 시스템 종결하는지 확인한다
+        // 피신고자 회원번호가 익명화되기 전에 미처리 신고를 시스템 종결하는지 확인함
         deleteOrder.verify(userHardDeleteMapper).uptHardDeleteComplaints(
                 31L, "피신고자 영구 탈퇴 및 원본 물리 삭제로 관련 미처리 신고를 시스템 종결함.");
-        // 파일 경로 확보 뒤 회원과 파일 메타정보를 삭제하는지 확인한다
+        // 파일 경로 확보 뒤 회원과 파일 메타정보를 삭제하는지 확인함
         deleteOrder.verify(userHardDeleteMapper).delHardDeleteUser(31L);
-        // 회원 원본 삭제와 함께 모든 Redis 세션 및 인증 캐시를 제거하는지 확인한다
+        // 회원 원본 삭제와 함께 모든 Redis 세션 및 인증 캐시를 제거하는지 확인함
         verify(tokenRedisService).delAllUserInfo(31L);
-        // 회원 원본 삭제와 함께 분간 및 일간 도서 검색 제한을 제거하는지 확인한다
+        // 회원 원본 삭제와 함께 분간 및 일간 도서 검색 제한을 제거하는지 확인함
         verify(bookSearchProtectionService).delUserLimits(31L);
-        // 익명 인기 점수는 유지하고 회원별 인기 검색어 중복 방지 정보를 제거하는지 확인한다
+        // 익명 인기 점수는 유지하고 회원별 인기 검색어 중복 방지 정보를 제거하는지 확인함
         verify(bookSearchProtectionService).delUserKeywordData(31L);
-        // DB 삭제 뒤 커밋 후 물리 파일 정리를 등록하는지 확인한다
+        // DB 삭제 뒤 커밋 후 물리 파일 정리를 등록하는지 확인함
         deleteOrder.verify(fileService).delFilesAfterCommit(List.of(profileFile));
-        // 영구 삭제 실행 결과를 스케줄러 로그에 최종 반영하는지 확인한다
+        // 영구 삭제 실행 결과를 스케줄러 로그에 최종 반영하는지 확인함
         verify(schedulerLogSupport).uptSchedulerLogSafely(any());
     }
 }

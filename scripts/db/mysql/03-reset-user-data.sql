@@ -1,5 +1,5 @@
 -- Sadari 사용자 데이터 전체 초기화
--- 주의: 관리자 기준정보 9개 테이블은 보존하고 사용자·콘텐츠·이력 데이터만 삭제한다.
+-- 주의: 관리자 기준정보 9개 테이블은 보존하고 사용자·콘텐츠·이력 데이터만 삭제함
 
 SET NAMES utf8mb4;
 USE sadari;
@@ -26,7 +26,7 @@ TRUNCATE TABLE `TM_BKINFO`;
 TRUNCATE TABLE `TM_USERXM`;
 TRUNCATE TABLE `TM_FILEXM`;
 
--- MySQL에서 Oracle 시퀀스를 대신하는 AUTO_INCREMENT 시작값을 1로 명시한다.
+-- MySQL에서 Oracle 시퀀스를 대신하는 AUTO_INCREMENT 시작값을 1로 명시함
 ALTER TABLE `TB_EVTBOX` AUTO_INCREMENT = 1;
 ALTER TABLE `TB_LOGHIS` AUTO_INCREMENT = 1;
 ALTER TABLE `TB_REPLXX` AUTO_INCREMENT = 1;

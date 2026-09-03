@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : InquiryCreateDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 사용자 고객문의 등록값을 전달한다
+ * description    : 사용자 고객문의 등록값을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

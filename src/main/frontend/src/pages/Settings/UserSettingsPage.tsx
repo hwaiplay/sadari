@@ -48,7 +48,7 @@ const PRIVACY_FIELDS: SettingField[] = [
   "reportPublicDefaultYsno",
 ];
 
-/** 현재 브라우저 권한과 마지막 서버 변경 결과로 기기 푸시 상태를 초기화한다. */
+/** 현재 브라우저 권한과 마지막 서버 변경 결과로 기기 푸시 상태를 초기화함 */
 function getInitialPushEnabled(): boolean {
   if (!("Notification" in window) || Notification.permission !== "granted") {
     return false;
@@ -57,7 +57,7 @@ function getInitialPushEnabled(): boolean {
   return window.localStorage.getItem(PUSH_ENABLED_STORAGE_KEY) !== "N";
 }
 
-/** 사용자 설정 범주를 저장하고 현재 기기 푸시를 별도로 제어하는 화면이다. */
+/** 사용자 설정 범주를 저장하고 현재 기기 푸시를 별도로 제어하는 화면임 */
 function UserSettingsPage({ section }: UserSettingsPageProps) {
   const [setting, setSetting] = useState<UserSetting | null>(null);
   const [savedSetting, setSavedSetting] = useState<UserSetting | null>(null);
@@ -112,14 +112,14 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
 
-  /** 단일 Y/N 설정을 체크박스 상태에 맞춰 변경한다. */
+  /** 단일 Y/N 설정을 체크박스 상태에 맞춰 변경함 */
   const handleToggle = (field: SettingField) => {
     setSetting((current) => current
       ? { ...current, [field]: current[field] === "Y" ? "N" : "Y" }
       : current);
   };
 
-  /** 현재 설정 화면의 필드만 서버에 저장한다. */
+  /** 현재 설정 화면의 필드만 서버에 저장함 */
   const handleSave = async () => {
     if (!setting || !isDirty || isSaving) {
       return;
@@ -161,7 +161,7 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
     }
   };
 
-  /** 현재 브라우저의 FCM 토큰을 한 번만 조회한다. */
+  /** 현재 브라우저의 FCM 토큰을 한 번만 조회함 */
   const getCurrentPushToken = async () => {
     if (pushTokenRef.current) {
       return pushTokenRef.current;
@@ -172,7 +172,7 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
     return pushTokenRef.current;
   };
 
-  /** 계정 알림 설정과 독립적으로 현재 브라우저의 푸시 구독을 즉시 변경한다. */
+  /** 계정 알림 설정과 독립적으로 현재 브라우저의 푸시 구독을 즉시 변경함 */
   const handlePushToggle = async () => {
     if (isPushChanging) {
       return;
@@ -221,7 +221,7 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
     }
   };
 
-  /** 접근 가능한 이름과 설명이 포함된 설정 스위치를 표시한다. */
+  /** 접근 가능한 이름과 설명이 포함된 설정 스위치를 표시함 */
   const renderSwitch = (field: SettingField, titleKey: string, descriptionKey: string) => (
     <label className={styles.settingRow} key={field}>
       <span className={styles.settingText}>

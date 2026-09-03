@@ -29,7 +29,7 @@ const WEEKDAY_KEYS = [
 type MonthMoveDirection = "prev" | "next";
 
 /**
- * 달력 상단에 표시할 연월 제목을 만듭니다.
+ * 달력 상단에 표시할 연월 제목을 만듦
  *
  * @author HanWon.Jang
  * @param date 제목을 만들 기준 날짜
@@ -44,7 +44,7 @@ function formatMonthTitle(date: Date) {
 }
 
 /**
- * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환합니다.
+ * yyyy-MM-dd 형식 날짜를 화면 표시용 점 구분 날짜로 변환함
  *
  * @author HanWon.Jang
  * @param value 변환할 날짜 문자열
@@ -56,7 +56,7 @@ function formatDisplayDate(value: string) {
 }
 
 /**
- * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환합니다.
+ * 선택한 날짜를 상세 목록 제목으로 표시할 문자열로 변환함
  *
  * @author HanWon.Jang
  * @param date 선택한 날짜
@@ -68,7 +68,7 @@ function formatSelectedDate(date: Date) {
 }
 
 /**
- * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인합니다.
+ * 독후감의 독서 기간에 지정 날짜가 포함되는지 확인함
  *
  * @author HanWon.Jang
  * @param report 독서 기간을 가진 독후감 데이터
@@ -85,7 +85,7 @@ function isReadingOnDate(report: CalendarReport, date: Date) {
 }
 
 /**
- * 독서 시작일과 독후감 번호를 기준으로 달력 목록 정렬 순서를 계산합니다.
+ * 독서 시작일과 독후감 번호를 기준으로 달력 목록 정렬 순서를 계산함
  *
  * @author HanWon.Jang
  * @param a 비교할 첫 번째 독후감
@@ -104,7 +104,7 @@ function compareReports(a: CalendarReport, b: CalendarReport) {
 }
 
 /**
- * 월 화면에 표시할 6주치 날짜 배열을 생성합니다.
+ * 월 화면에 표시할 6주치 날짜 배열을 생성함
  *
  * @author HanWon.Jang
  * @param month 달력을 구성할 기준 월
@@ -125,7 +125,7 @@ function getCalendarDays(month: Date) {
 }
 
 /**
- * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬합니다.
+ * 지정 날짜에 읽고 있던 독후감 목록을 조회하고 정렬함
  *
  * @author HanWon.Jang
  * @param reports 월 범위에서 조회한 독후감 목록
@@ -138,7 +138,7 @@ function getReportsOnDate(reports: CalendarReport[], date: Date) {
 }
 
 /**
- * 월별 독서 기간을 달력에 표시하고 선택 날짜의 독후감 목록을 제공합니다.
+ * 월별 독서 기간을 달력에 표시하고 선택 날짜의 독후감 목록을 제공함
  *
  * @author HanWon.Jang
  * @return 독서 달력 페이지 컴포넌트
@@ -184,11 +184,11 @@ function ReadingCalendarPage() {
   }, [yearMonth]);
 
   /**
-   * move Month 사용자 동작을 처리한다
+   * move Month 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param offset offset 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const moveMonth = (offset: number) => {
 

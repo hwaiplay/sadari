@@ -54,7 +54,7 @@ const ReadingTimerPage = lazy(() => import("@/pages/Timer/ReadingTimerPage"));
 const FeedPage = lazy(() => import("@/pages/Feed/FeedPage"));
 
 /**
- * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성한다
+ * 공개 라우트와 인증 라우트를 분리해 애플리케이션 전체 화면 경로를 구성함
  *
  * @author HanWon.Jang
  * @return 애플리케이션 라우터 컴포넌트

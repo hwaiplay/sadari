@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : BookController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 도서 API를 제공한다
+ * description    : 도서 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -54,7 +54,7 @@ public class BookController {
     private final ReportService reportService;
 
     /**
-     * 검색어와 검색 시작 위치를 사용하여 카카오 도서 API의 도서 목록을 검색한다
+     * 검색어와 검색 시작 위치를 사용하여 카카오 도서 API의 도서 목록을 검색함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 도서 검색을 요청한 로그인 회원 번호
@@ -67,12 +67,12 @@ public class BookController {
     public ResultData searchBooks(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @Parameter(description = "도서 검색어", example = "히가시노 게이고") @RequestParam("query") String query
                                 , @Parameter(description = "50권 페이지의 검색 시작 위치", example = "1") @RequestParam(value = "start", defaultValue = "1") int start) {
-        // 로그인 회원과 검색어 및 50권 페이지 시작 위치로 카카오 도서 목록을 조회한다
+        // 로그인 회원과 검색어 및 50권 페이지 시작 위치로 카카오 도서 목록을 조회함
         return bookSearchService.searchBooks(userNumb, query, start);
     }
 
     /**
-     * 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 인기 도서를 조회한다
+     * 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 인기 도서를 조회함
      *
      * @author SeungHyeon.Kang
      * @param period 주간과 월간 및 연간 중 조회할 집계 기간
@@ -82,12 +82,12 @@ public class BookController {
     @Operation(summary = "기간별 인기 도서 조회", description = "현재 주와 달 또는 연도의 TM_REPORT에 남아 있는 모든 독후감의 고유 작성자 수를 도서별로 집계해 상위 10권과 도서 평균 평점을 조회한다.")
     public ResultData getPopularBookList(@Parameter(description = "인기 도서 집계 기간", example = "monthly")
                                          @RequestParam(value = "period", defaultValue = "monthly") String period) {
-        // 선택 기간의 독후감 고유 작성자 수 기준 인기 도서 목록을 조회한다
+        // 선택 기간의 독후감 고유 작성자 수 기준 인기 도서 목록을 조회함
         return bookPopularService.getPopularBookList(period);
     }
 
     /**
-     * 최근 설정 기간의 고유 회원 검색 수를 기준으로 안전한 인기 검색어를 조회한다
+     * 최근 설정 기간의 고유 회원 검색 수를 기준으로 안전한 인기 검색어를 조회함
      *
      * @author SeungHyeon.Kang
      * @return 비속어와 개인정보형 문자열을 제외한 인기 검색어 목록
@@ -99,12 +99,12 @@ public class BookController {
             + "비속어와 개인정보형 검색어를 제외한 상위 검색어를 조회한다."
     )
     public ResultData getPopularKeywordList() {
-        // 현재 비속어 사전과 최소 회원 수 정책을 통과한 최근 인기 검색어를 조회한다
+        // 현재 비속어 사전과 최소 회원 수 정책을 통과한 최근 인기 검색어를 조회함
         return ResultData.success(bookSearchProtectionService.getPopularKeywordList());
     }
 
     /**
-     * ISBN 기준 도서 평균 평점 조회한다.
+     * ISBN 기준 도서 평균 평점 조회함
      *
      * @author SeungHyeon.Kang
      * @return 처리 결과
@@ -112,12 +112,12 @@ public class BookController {
     @GetMapping("/ratingAverage/by-isbn")
     @Operation(summary = "ISBN 공개 평점 평균 조회", description = "공개 여부와 관계없이 해당 ISBN의 완료 또는 중단 독후감 평점 평균을 조회한다.")
     public ResultData getRatingAverageByIsbn(@Parameter(description = "평점 평균을 조회할 도서 ISBN", example = "9788972756194")@RequestParam("isbn") String isbn) {
-        // ISBN 기준 도서 평균 평점 조회 결과를 반환한다
+        // ISBN 기준 도서 평균 평점 조회 결과를 반환함
         return reportService.getPublicRatingAvgByIsbn(isbn);
     }
 
     /**
-     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회한다
+     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회함
      *
      * @author SeungHyeon.Kang
      * @param requestDto 대표색을 분석할 도서 표지 URL
@@ -126,7 +126,7 @@ public class BookController {
     @PostMapping("/cover-color")
     @Operation(summary = "도서 표지 기반 책장 색상 조회", description = "신뢰된 도서 검색 표지의 대표색을 분석해 활성 BOOK_COLR 중 가장 가까운 색상 코드를 조회한다.")
     public ResultData getBookCoverColor(@Valid @RequestBody BookCoverColorRequestDto requestDto) {
-        // 검증된 도서 검색 표지 URL로 자동 책장 색상을 조회한다
+        // 검증된 도서 검색 표지 URL로 자동 책장 색상을 조회함
         return bookCoverColorService.getBookCoverColor(requestDto);
     }
 }

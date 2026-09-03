@@ -9,7 +9,7 @@ import lombok.Getter;
  * fileName       : TokenDto
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : JWT 액세스 토큰과 리프레시 토큰을 전달한다
+ * description    : JWT 액세스 토큰과 리프레시 토큰을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ public class TokenDto {
     private boolean accountReactivated;
 
     /**
-     * Access Token과 Refresh Token을 포함한 토큰 DTO를 생성한다
+     * Access Token과 Refresh Token을 포함한 토큰 DTO를 생성함
      *
      * @author SeungHyeon.Kang
      * @param accessToken API 인증에 사용할 Access Token
@@ -42,7 +42,7 @@ public class TokenDto {
      * @return 발급 토큰과 계정 복귀 여부
      */
     public static TokenDto of(String accessToken, String refreshToken, boolean accountReactivated) {
-        // 발급한 토큰과 이번 로그인에서 발생한 계정 복귀 여부를 담은 인증 응답을 반환한다
+        // 발급한 토큰과 이번 로그인에서 발생한 계정 복귀 여부를 담은 인증 응답을 반환함
         return TokenDto
                 .builder()
                 .accessToken(accessToken)

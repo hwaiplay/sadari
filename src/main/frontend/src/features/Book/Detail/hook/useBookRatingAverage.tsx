@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/features/Book/Detail/hook/useBookRatingAverage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/features/Book/Detail/hook/useBookRatingAverage.tsx 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */
@@ -7,7 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { getBookRatingAvgApi } from "../../api/bookApi";
 
 /**
- * use Book Rating Average By Isbn 상태와 처리 함수를 제공한다
+ * use Book Rating Average By Isbn 상태와 처리 함수를 제공함
  *
  * @author HanWon.Jang
  * @param isbn isbn 입력값

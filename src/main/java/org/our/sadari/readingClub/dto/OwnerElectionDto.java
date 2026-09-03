@@ -10,7 +10,7 @@ import lombok.Data;
  * fileName       : OwnerElectionDto
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 모임장 승계 선거의 화면 정보와 투표 요청을 전달한다
+ * description    : 모임장 승계 선거의 화면 정보와 투표 요청을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,7 +18,7 @@ import lombok.Data;
  */
 public class OwnerElectionDto {
 
-    /** 모임장 후보 정보를 전달한다. */
+    /** 모임장 후보 정보를 전달함 */
     @Data
     @Schema(description = "모임장 선거 후보")
     public static class CandidateDto {
@@ -36,7 +36,7 @@ public class OwnerElectionDto {
         private boolean selected;
     }
 
-    /** 진행 중인 모임장 선거 정보를 전달한다. */
+    /** 진행 중인 모임장 선거 정보를 전달함 */
     @Data
     @Schema(description = "모임장 선거 화면 정보")
     public static class ElectionDto {
@@ -66,7 +66,7 @@ public class OwnerElectionDto {
         private List<CandidateDto> candidateList;
     }
 
-    /** 모임장 후보 선택값을 전달한다. */
+    /** 모임장 후보 선택값을 전달함 */
     @Data
     @Schema(description = "모임장 선거 투표 요청")
     public static class VoteReqDto {
@@ -76,7 +76,7 @@ public class OwnerElectionDto {
         private Long userNumb;
     }
 
-    /** 마감 대상 투표 식별값을 전달한다. */
+    /** 마감 대상 투표 식별값을 전달함 */
     @Data
     public static class DueVoteDto {
 
@@ -88,7 +88,7 @@ public class OwnerElectionDto {
         private String extnYsno;
     }
 
-    /** 최다 득표 후보와 득표 수를 전달한다. */
+    /** 최다 득표 후보와 득표 수를 전달함 */
     @Data
     public static class VoteResultDto {
 

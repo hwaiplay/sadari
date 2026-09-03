@@ -10,7 +10,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  * fileName       : SadariApplication
  * author         : SeungHyeon.Kang
  * date           : 2026-03-01
- * description    : 애플리케이션 업무에 필요한 기능을 제공한다
+ * description    : 애플리케이션 업무에 필요한 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -24,13 +24,13 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 public class SadariApplication {
 
 	/**
-	 * Spring Boot 애플리케이션을 실행한다.
+	 * Spring Boot 애플리케이션을 실행함
 	 *
 	 * @author SeungHyeon.Kang
 	 * @param args 애플리케이션 실행 인자
 	 */
 	public static void main(String[] args) {
-		// 검증 대상 작업을 실행한다
+		// 검증 대상 작업을 실행함
 		SpringApplication.run(SadariApplication.class, args);
 	}
 

@@ -20,8 +20,8 @@ const ALIM_DISMISS_STAGGER_MS = 30;
 const ALIM_DISMISS_MAX_STAGGER_COUNT = 10;
 
 /**
- * 로그인 사용자의 알림 목록을 보여주는 페이지입니다.
- * 삭제되지 않은 알림을 모두 보여주며, 개별 링크 클릭으로 읽음 처리하고 모두 지우기로 목록에서 제거합니다.
+ * 로그인 사용자의 알림 목록을 보여주는 페이지임
+ * 삭제되지 않은 알림을 모두 보여주며, 개별 링크 클릭으로 읽음 처리하고 모두 지우기로 목록에서 제거함
  *
  * @author HanWon.Jang
  * @return 알림 목록 화면
@@ -54,7 +54,7 @@ function AlimPage() {
         const response = await getMyAlimListApi(page);
         const data = response.data;
 
-        // 목록 조회는 상태를 변경하지 않으므로 서버가 반환한 미삭제 알림을 읽음 상태 그대로 페이지 순서대로 병합한다.
+        // 목록 조회는 상태를 변경하지 않으므로 서버가 반환한 미삭제 알림을 읽음 상태 그대로 페이지 순서대로 병합함
         setAlimList((prevList) => (
           isFirstPage ? data.list ?? [] : [...prevList, ...(data.list ?? [])]
         ));
@@ -93,10 +93,10 @@ function AlimPage() {
   }, []);
 
   /**
-   * handle Delete All 사용자 동작을 처리한다
+   * handle Delete All 사용자 동작을 처리함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleDeleteAll = async () => {
@@ -111,11 +111,11 @@ function AlimPage() {
     try {
       const response = await delAllAlimApi();
 
-      // 서버는 아직 불러오지 않은 알림까지 모두 삭제 처리하므로 추가 페이지 요청을 즉시 중단한다.
+      // 서버는 아직 불러오지 않은 알림까지 모두 삭제 처리하므로 추가 페이지 요청을 즉시 중단함
       setHasNext(false);
       notifyUnreadAlimChange(response.data?.unreadCnt ?? 0);
 
-      // 현재 화면에 카드가 있으면 순차적으로 오른쪽 퇴장시킨 뒤 목록을 비워 빈 상태 문구로 전환한다.
+      // 현재 화면에 카드가 있으면 순차적으로 오른쪽 퇴장시킨 뒤 목록을 비워 빈 상태 문구로 전환함
       if (alimList.length > 0) {
         dismissAnimationStarted = true;
         setIsClearingAll(true);
@@ -144,7 +144,7 @@ function AlimPage() {
         getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     } finally {
-      // 퇴장 애니메이션이 시작된 경우에는 타이머 완료 시 버튼 잠금을 해제해 중복 요청을 막는다.
+      // 퇴장 애니메이션이 시작된 경우에는 타이머 완료 시 버튼 잠금을 해제해 중복 요청을 막음
       if (!dismissAnimationStarted) {
         setIsDeletingAll(false);
       }
@@ -152,15 +152,15 @@ function AlimPage() {
   };
 
   /**
-   * handle Alim Click 사용자 동작을 처리한다
+   * handle Alim Click 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param alim alim 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleAlimClick = async (alim: AlimItem) => {
-    // 링크가 없는 알림은 단순 안내 알림으로 취급해 현재 화면을 유지합니다.
+    // 링크가 없는 알림은 단순 안내 알림으로 취급해 현재 화면을 유지함
     if (!alim.linkUrlx || readingAlimNumb !== null || isClearingAll) {
       return;
     }
@@ -170,7 +170,7 @@ function AlimPage() {
     try {
       const readResponse = await uptAlimReadApi(alim.alimNumb);
       notifyUnreadAlimChange(readResponse.data?.unreadCnt ?? 0);
-      // 읽은 알림도 알림센터에 유지하므로 제거하지 않고 상태만 바꾸어 어두운 스타일을 즉시 적용한다.
+      // 읽은 알림도 알림센터에 유지하므로 제거하지 않고 상태만 바꾸어 어두운 스타일을 즉시 적용함
       setAlimList((prevList) => (
         prevList.map((item) => (
           item.alimNumb === alim.alimNumb
@@ -178,9 +178,9 @@ function AlimPage() {
             : item
         ))
       ));
-      // 클릭 시점의 콘텐츠 공개 여부와 팔로우 관계를 반영한 최종 이동 주소를 조회한다
+      // 클릭 시점의 콘텐츠 공개 여부와 팔로우 관계를 반영한 최종 이동 주소를 조회함
       const targetResponse = await getAlimTargetApi(alim.alimNumb);
-      // 서버가 소유권과 현재 접근 권한을 검증한 내부 경로로 이동한다
+      // 서버가 소유권과 현재 접근 권한을 검증한 내부 경로로 이동함
       navigate(targetResponse.data.linkUrlx);
     } catch (error) {
       void sweetError(
@@ -258,7 +258,7 @@ function AlimPage() {
                     : "/img/icons/noti-DEFAULT.svg"}
                   alt=""
                   onError={(event) => {
-                    // 조인된 아이콘 데이터가 손상되었으면 반복 처리를 막고 정적 기본 아이콘으로 대체한다.
+                    // 조인된 아이콘 데이터가 손상되었으면 반복 처리를 막고 정적 기본 아이콘으로 대체함
                     event.currentTarget.onerror = null;
                     event.currentTarget.src = "/img/icons/noti-DEFAULT.svg";
                   }}

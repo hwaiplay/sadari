@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : FeedController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 본인과 팔로잉 피드 조회 API를 제공한다
+ * description    : 본인과 팔로잉 피드 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -35,7 +35,7 @@ public class FeedController {
     private final FeedService feedService;
 
     /**
-     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 페이지 단위로 조회한다.
+     * 로그인 사용자 본인과 팔로우하는 활성 사용자의 공개 활동 피드를 페이지 단위로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -47,12 +47,12 @@ public class FeedController {
     public ResultData getFeedList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb,
             @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 인증 사용자와 요청 페이지를 서비스에 전달해 공개 범위가 적용된 피드를 조회한다
+        // 인증 사용자와 요청 페이지를 서비스에 전달해 공개 범위가 적용된 피드를 조회함
         return feedService.getFeedList(userNumb, page);
     }
 
     /**
-     * 알림 링크가 지정한 현재 공개 피드 대상을 조회한다.
+     * 알림 링크가 지정한 현재 공개 피드 대상을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -66,7 +66,7 @@ public class FeedController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb,
             @PathVariable String tagtType,
             @PathVariable Long tagtNumb) {
-        // 인증 사용자와 알림 링크의 대상 식별값을 서비스에 전달해 현재 공개 상태를 검증한다
+        // 인증 사용자와 알림 링크의 대상 식별값을 서비스에 전달해 현재 공개 상태를 검증함
         return feedService.getFeedDtl(userNumb, tagtType, tagtNumb);
     }
 }

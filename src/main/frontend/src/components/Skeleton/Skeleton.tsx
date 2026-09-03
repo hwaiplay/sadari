@@ -2,7 +2,7 @@
  * fileName       : Skeleton
  * author         : Hanwon.Jang
  * date           : 2026-08-14
- * description    : 전달받은 크기로 콘텐츠 로딩 영역을 표시한다
+ * description    : 전달받은 크기로 콘텐츠 로딩 영역을 표시함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,7 +21,7 @@ type SkeletonProps = {
 };
 
 /**
- * 비동기 콘텐츠가 차지할 크기를 유지하면서 로딩 상태를 표시한다
+ * 비동기 콘텐츠가 차지할 크기를 유지하면서 로딩 상태를 표시함
  *
  * @author Hanwon.Jang
  * @param width 스켈레톤 너비
@@ -38,7 +38,7 @@ function Skeleton({
   className,
   ariaLabel,
 }: SkeletonProps): ReactElement {
-  // 공통 모양과 사용 화면의 추가 레이아웃 스타일을 결합한다
+  // 공통 모양과 사용 화면의 추가 레이아웃 스타일을 결합함
   const skeletonClassName = clsx(styles.skeleton, className);
   const skeletonStyle: CSSProperties = {
     width,
@@ -46,7 +46,7 @@ function Skeleton({
     borderRadius,
   };
 
-  // 로딩 대상의 크기를 유지하는 공통 스켈레톤 요소를 반환한다
+  // 로딩 대상의 크기를 유지하는 공통 스켈레톤 요소를 반환함
   return (
     <span
       className={skeletonClassName}

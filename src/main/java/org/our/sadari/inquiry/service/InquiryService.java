@@ -7,7 +7,7 @@ import org.our.sadari.inquiry.dto.InquiryCreateDto;
  * fileName       : InquiryService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 사용자 고객문의 접수와 조회 업무 계약을 정의한다
+ * description    : 사용자 고객문의 접수와 조회 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ import org.our.sadari.inquiry.dto.InquiryCreateDto;
 public interface InquiryService {
 
     /**
-     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 인증 사용자 번호

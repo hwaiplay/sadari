@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : LoginHistoryDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 로그인 사용자와 접속 환경의 이력 데이터를 전달한다
+ * description    : 로그인 사용자와 접속 환경의 이력 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

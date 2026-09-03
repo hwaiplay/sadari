@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : PopupContentDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 사용자 안내 팝업 콘텐츠 조회 데이터를 전달한다
+ * description    : 사용자 안내 팝업 콘텐츠 조회 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

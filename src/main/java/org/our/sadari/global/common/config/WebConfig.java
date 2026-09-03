@@ -8,7 +8,7 @@ import org.springframework.web.servlet.config.annotation.*;
  * fileName       : WebConfig
  * author         : SeungHyeon.Kang
  * date           : 2026-03-23
- * description    : 공통 실행 설정을 구성한다
+ * description    : 공통 실행 설정을 구성함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -23,14 +23,14 @@ public class WebConfig implements WebMvcConfigurer {
     private String FRONT_DOMAIN;
 
     /**
-     * 프론트 도메인에서 백엔드 API를 호출할 수 있도록 CORS 정책을 등록한다.
+     * 프론트 도메인에서 백엔드 API를 호출할 수 있도록 CORS 정책을 등록함
      *
      * @author SeungHyeon.Kang
      * @param registry CORS 매핑 레지스트리
      */
     @Override
     public void addCorsMappings(CorsRegistry registry) {
-        // 프론트엔드 라우팅을 위한 뷰 컨트롤러 경로를 등록한다
+        // 프론트엔드 라우팅을 위한 뷰 컨트롤러 경로를 등록함
         registry.addMapping("/**")
                 .allowedOrigins(FRONT_DOMAIN)
                 .allowedMethods("*")

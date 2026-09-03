@@ -1,5 +1,5 @@
--- 관리자 사용자 통계의 기간 조건과 그룹 집계를 지원하는 운영 인덱스를 추가한다.
--- 이 스크립트는 기존 운영 스키마에 한 번만 적용한다.
+-- 관리자 사용자 통계의 기간 조건과 그룹 집계를 지원하는 운영 인덱스를 추가함
+-- 이 스크립트는 기존 운영 스키마에 한 번만 적용함
 
 ALTER TABLE `TM_USERXM`
     ADD INDEX `IX_TM_USERXM_JOIN` (`JOIN_DATE`, `USER_NUMB`),
@@ -20,14 +20,14 @@ ALTER TABLE `TB_REPLXX`
 ALTER TABLE `TB_LIKEXX`
     ADD INDEX `IX_TB_LIKEXX_REGI` (`REGI_DATE`, `USER_NUMB`);
 
--- 공개 이미지 요청에서 UUID 저장 파일명을 먼저 찾도록 파일 메타 조회를 지원한다.
+-- 공개 이미지 요청에서 UUID 저장 파일명을 먼저 찾도록 파일 메타 조회를 지원함
 ALTER TABLE `TM_FILEXM`
     ADD INDEX `IX_TM_FILEXM_STOR` (`STOR_NAME`);
 
 ALTER TABLE `TB_FOLLOW`
     ADD INDEX `IX_TB_FOLLOW_REGI` (`REGI_DATE`, `USER_NUMB`);
 
--- 사용자 차단 관계의 역방향 판정과 최신 차단 목록 조회를 지원한다.
+-- 사용자 차단 관계의 역방향 판정과 최신 차단 목록 조회를 지원함
 ALTER TABLE `TB_USBLOC`
     ADD INDEX `IX_TB_USBLOC_BLOC` (`BLOC_NUMB`, `USER_NUMB`),
     ADD INDEX `IX_TB_USBLOC_LIST` (`USER_NUMB`, `REGI_DATE` DESC, `BLOC_NUMB` DESC);
@@ -48,38 +48,38 @@ ALTER TABLE `TH_USWTHD`
 ALTER TABLE `TH_USSPND`
     ADD INDEX `IX_TH_USSPND_STRT` (`STRT_DATE`, `USER_NUMB`);
 
--- 탈퇴한 OAuth 계정의 과거 회원 번호와 유효 제재 연결 조회를 지원한다.
+-- 탈퇴한 OAuth 계정의 과거 회원 번호와 유효 제재 연결 조회를 지원함
 ALTER TABLE `TH_USWTHD`
     ADD INDEX `IX_TH_USWTHD_IDHS` (`USER_IDHS`, `USER_NUMB`);
 
--- 동일 사용자의 동일 대상 버전 재신고와 동시 요청 중복 접수를 차단한다.
--- 동일 번호의 콘텐츠가 수정되면 새로운 버전으로 집계하도록 대상 해시를 포함한다.
+-- 동일 사용자의 동일 대상 버전 재신고와 동시 요청 중복 접수를 차단함
+-- 동일 번호의 콘텐츠가 수정되면 새로운 버전으로 집계하도록 대상 해시를 포함함
 ALTER TABLE `TH_CMPLNT`
     DROP INDEX `UK_TH_CMPLNT_USER_TAGT`,
     DROP INDEX `IX_TH_CMPLNT_TAGT`,
     ADD UNIQUE INDEX `UK_TH_CMPLNT_USER_TAGT` (`USER_NUMB`, `TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`),
     ADD INDEX `IX_TH_CMPLNT_TAGT` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`, `CMPL_STAT`, `REGI_DATE`);
 
--- 현재 사용자 상세의 받은 신고 이력을 최신순으로 조회한다.
+-- 현재 사용자 상세의 받은 신고 이력을 최신순으로 조회함
 ALTER TABLE `TH_CMPLNT`
     ADD INDEX `IX_TH_CMPLNT_TAGT_USER` (`TAGT_USER`, `REGI_DATE`, `CMPL_NUMB`);
 
--- 동일 대상 버전의 자동 조치 이력이 한 번만 생성되도록 보장한다.
+-- 동일 대상 버전의 자동 조치 이력이 한 번만 생성되도록 보장함
 ALTER TABLE `TH_CMACTN`
     DROP INDEX `UK_TH_CMACTN_TAGT_ORDR`,
     ADD UNIQUE INDEX `UK_TH_CMACTN_TAGT_ORDR` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`, `ACTN_ORDR`);
 
--- 관리자 전용 프로필 이미지 증거의 동일 버전 중복 저장과 사용자별 만료 조회를 지원한다.
+-- 관리자 전용 프로필 이미지 증거의 동일 버전 중복 저장과 사용자별 만료 조회를 지원함
 ALTER TABLE `TH_CMEVDC`
     ADD UNIQUE INDEX `UK_TH_CMEVDC_TAGT_HASH` (`TAGT_TYPE`, `TAGT_NUMB`, `TAGT_HASH`),
     ADD INDEX `IX_TH_CMEVDC_TAGT_USER` (`TAGT_USER`, `REGI_DATE`, `EVDC_NUMB`);
 
--- 투표 회차가 바뀌면 같은 사용자가 새 후보에 다시 투표할 수 있도록 추천 번호를 기본키에 포함한다.
+-- 투표 회차가 바뀌면 같은 사용자가 새 후보에 다시 투표할 수 있도록 추천 번호를 기본키에 포함함
 ALTER TABLE `TB_CLBVOT`
     DROP PRIMARY KEY,
     ADD PRIMARY KEY (`CLUB_NUMB`, `USER_NUMB`, `RECM_NUMB`);
 
--- 이전 회차와 새 회차에서 같은 도서를 다시 추천할 수 있도록 도서 인덱스의 유일성만 해제한다.
+-- 이전 회차와 새 회차에서 같은 도서를 다시 추천할 수 있도록 도서 인덱스의 유일성만 해제함
 ALTER TABLE `TB_CLBREC`
     DROP INDEX `UK_TB_CLBREC_BOOK`,
     ADD INDEX `IX_TB_CLBREC_BOOK` (`CLUB_NUMB`, `BOOK_NUMB`);

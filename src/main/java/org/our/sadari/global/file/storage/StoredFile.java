@@ -4,7 +4,7 @@ package org.our.sadari.global.file.storage;
  * fileName       : StoredFile
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 저장소에서 조회한 이미지 바이트와 MIME 유형을 전달한다
+ * description    : 저장소에서 조회한 이미지 바이트와 MIME 유형을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

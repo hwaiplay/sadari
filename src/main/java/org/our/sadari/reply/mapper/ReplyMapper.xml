@@ -176,7 +176,7 @@
                    OR (B.USER_NUMB = L.USER_NUMB AND B.BLOC_NUMB = #{userNumb})
            )
     </select>
-    <!-- 댓글 대상 소유자와 대상별 알림 템플릿 및 상세 번호를 조회한다. -->
+    <!-- 댓글 대상 소유자와 대상별 알림 템플릿 및 상세 번호를 조회함 -->
     <select id="getReplyReportAlimDtl" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="org.our.sadari.reply.dto.ReplyDto">
         <include refid="bindList" />
         SELECT CASE WHEN #{tagtType} = #{targetReport} THEN R.USER_NUMB ELSE U.USER_NUMB END AS TARGET_USER_NUMB

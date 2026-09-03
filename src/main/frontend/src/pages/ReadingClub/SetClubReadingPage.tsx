@@ -38,7 +38,7 @@ function SetClubReadingPage() {
   } = useSetClubReadingPage();
 
   if (isLoading || isPending) {
-    // 최신 수정값 조회 또는 멤버별 독후감 동기화가 끝날 때까지 화면 이동을 차단한다
+    // 최신 수정값 조회 또는 멤버별 독후감 동기화가 끝날 때까지 화면 이동을 차단함
     const loadingMessageKey = isLoading
       ? "frontend.readingClub.reading.loading"
       : isEditMode

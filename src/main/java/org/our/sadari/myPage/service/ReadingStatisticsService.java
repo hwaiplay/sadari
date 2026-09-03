@@ -7,7 +7,7 @@ import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
  * fileName       : ReadingStatisticsService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 본인과 공개 프로필의 독서 시간과 습관 및 독후감 통계 조회와 설정 업무를 정의한다
+ * description    : 본인과 공개 프로필의 독서 시간과 습관 및 독후감 통계 조회와 설정 업무를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
 public interface ReadingStatisticsService {
 
     /**
-     * 선택 연도의 독서 시간 잔디만 타이머 화면용으로 조회한다
+     * 선택 연도의 독서 시간 잔디만 타이머 화면용으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -26,7 +26,7 @@ public interface ReadingStatisticsService {
     ResultData getReadingHeatmap(Long userNumb, Integer readYear);
 
     /**
-     * 선택 연도 잔디와 독서 습관 및 독후감 통계를 마이페이지 그래프용으로 조회한다
+     * 선택 연도 잔디와 독서 습관 및 독후감 통계를 마이페이지 그래프용으로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -36,7 +36,7 @@ public interface ReadingStatisticsService {
     ResultData getReadingStats(Long userNumb, Integer readYear);
 
     /**
-     * 정상 이용 회원이 공개한 독서 통계를 다른 사용자 프로필에 제공한다
+     * 정상 이용 회원이 공개한 독서 통계를 다른 사용자 프로필에 제공함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 공개 통계를 조회할 프로필 회원 번호
@@ -46,7 +46,7 @@ public interface ReadingStatisticsService {
     ResultData getPublicReadingStats(Long userNumb, Integer readYear);
 
     /**
-     * 로그인 회원의 독서 통계 공개 범위를 변경한다
+     * 로그인 회원의 독서 통계 공개 범위를 변경함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 설정을 변경할 로그인 회원 번호

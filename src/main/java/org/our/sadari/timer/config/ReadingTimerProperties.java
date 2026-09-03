@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * fileName       : ReadingTimerProperties
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 타이머 출석과 세션 보존 기준을 관리한다
+ * description    : 독서 타이머 출석과 세션 보존 기준을 관리함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

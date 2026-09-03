@@ -22,7 +22,7 @@ import org.our.sadari.timer.service.ReadingTimerService;
  * fileName       : SchedulerTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 로직의 동작을 검증한다
+ * description    : 스케줄러 로직의 동작을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -64,214 +64,214 @@ class SchedulerTest {
     private Scheduler scheduler;
 
     /**
-     * 스케줄 실행 분기만 독립적으로 검증할 수 있도록 Mock 의존성으로 Scheduler를 구성한다.
+     * 스케줄 실행 분기만 독립적으로 검증할 수 있도록 Mock 의존성으로 Scheduler를 구성함
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
-        // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성한다
+        // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성함
         scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService
                                 , timerDetailDeleteService, readingTimerService, codeUtil);
     }
 
     /**
-     * SCHD_CODE의 REPORT_DATE_OVER 상세코드가 사용 중이면 실제 알림 서비스를 호출하는지 검증한다.
+     * SCHD_CODE의 REPORT_DATE_OVER 상세코드가 사용 중이면 실제 알림 서비스를 호출하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendOverdueWhenEnabled() {
-        // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
+        // existsCode 조회로 대상 데이터의 존재 여부를 확인함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_REPORT_DATE_OVER
-        // 테스트 대상 의존 호출에 반환할 값을 지정한다
+        // 테스트 대상 의존 호출에 반환할 값을 지정함
         )).thenReturn(true);
 
-        // sendReportDateOverAlim 호출로 검증된 알림 또는 응답을 전송한다
+        // sendReportDateOverAlim 호출로 검증된 알림 또는 응답을 전송함
         scheduler.sendReportDateOverAlim();
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증한다
+        // 의존 객체가 예상한 인자로 호출되었는지 검증함
         verify(reportDateOverService).sendReportDateOverAlim();
     }
 
     /**
-     * 상세코드가 사용 중지 상태이거나 존재하지 않으면 실제 알림 서비스를 호출하지 않는지 검증한다.
+     * 상세코드가 사용 중지 상태이거나 존재하지 않으면 실제 알림 서비스를 호출하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendOverdueSkipsDisabled() {
-        // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
+        // existsCode 조회로 대상 데이터의 존재 여부를 확인함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_REPORT_DATE_OVER
-        // 테스트 대상 의존 호출에 반환할 값을 지정한다
+        // 테스트 대상 의존 호출에 반환할 값을 지정함
         )).thenReturn(false);
 
-        // sendReportDateOverAlim 호출로 검증된 알림 또는 응답을 전송한다
+        // sendReportDateOverAlim 호출로 검증된 알림 또는 응답을 전송함
         scheduler.sendReportDateOverAlim();
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증한다
+        // 의존 객체가 예상한 인자로 호출되었는지 검증함
         verify(reportDateOverService, never()).sendReportDateOverAlim();
     }
 
     /**
-     * ALIM_DELETE 상세코드가 사용 중이면 알림 삭제 서비스를 호출하는지 검증한다.
+     * ALIM_DELETE 상세코드가 사용 중이면 알림 삭제 서비스를 호출하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAlimWhenEnabled() {
-        // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
+        // existsCode 조회로 대상 데이터의 존재 여부를 확인함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_ALIM_DELETE
-        // 테스트 대상 의존 호출에 반환할 값을 지정한다
+        // 테스트 대상 의존 호출에 반환할 값을 지정함
         )).thenReturn(true);
 
-        // delAlim 호출로 삭제 대상 데이터를 정리한다
+        // delAlim 호출로 삭제 대상 데이터를 정리함
         scheduler.delAlim();
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증한다
+        // 의존 객체가 예상한 인자로 호출되었는지 검증함
         verify(alimDeleteService).delAlim();
     }
 
     /**
-     * ALIM_DELETE 상세코드가 중지 상태이면 알림 삭제 서비스를 호출하지 않는지 검증한다.
+     * ALIM_DELETE 상세코드가 중지 상태이면 알림 삭제 서비스를 호출하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAlimSkipsDisabled() {
-        // existsCode 조회로 대상 데이터의 존재 여부를 확인한다
+        // existsCode 조회로 대상 데이터의 존재 여부를 확인함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_ALIM_DELETE
-        // 테스트 대상 의존 호출에 반환할 값을 지정한다
+        // 테스트 대상 의존 호출에 반환할 값을 지정함
         )).thenReturn(false);
 
-        // delAlim 호출로 삭제 대상 데이터를 정리한다
+        // delAlim 호출로 삭제 대상 데이터를 정리함
         scheduler.delAlim();
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증한다
+        // 의존 객체가 예상한 인자로 호출되었는지 검증함
         verify(alimDeleteService, never()).delAlim();
     }
 
     /**
-     * USER_HARD_DELETE 상세코드가 사용 중이면 영구 삭제 서비스를 호출하는지 검증한다.
+     * USER_HARD_DELETE 상세코드가 사용 중이면 영구 삭제 서비스를 호출하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delUsersWhenEnabled() {
 
-        // 영구 삭제 스케줄러 상세코드가 활성 상태인 조건을 설정한다
+        // 영구 삭제 스케줄러 상세코드가 활성 상태인 조건을 설정함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_USER_HARD_DELETE
         )).thenReturn(true);
 
-        // 영구 삭제 대기 회원 스케줄러를 실행한다
+        // 영구 삭제 대기 회원 스케줄러를 실행함
         scheduler.delPendingUsers();
 
-        // 활성 상태에서 영구 삭제 서비스가 호출됐는지 검증한다
+        // 활성 상태에서 영구 삭제 서비스가 호출됐는지 검증함
         verify(userHardDeleteService).delPendingUsers();
     }
 
     /**
-     * USER_HARD_DELETE 상세코드가 중지 상태이면 영구 삭제 서비스를 호출하지 않는지 검증한다.
+     * USER_HARD_DELETE 상세코드가 중지 상태이면 영구 삭제 서비스를 호출하지 않는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delUsersSkipsDisabled() {
 
-        // 영구 삭제 스케줄러 상세코드가 비활성 상태인 조건을 설정한다
+        // 영구 삭제 스케줄러 상세코드가 비활성 상태인 조건을 설정함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_USER_HARD_DELETE
         )).thenReturn(false);
 
-        // 영구 삭제 대기 회원 스케줄러를 실행한다
+        // 영구 삭제 대기 회원 스케줄러를 실행함
         scheduler.delPendingUsers();
 
-        // 비활성 상태에서 영구 삭제 서비스가 호출되지 않았는지 검증한다
+        // 비활성 상태에서 영구 삭제 서비스가 호출되지 않았는지 검증함
         verify(userHardDeleteService, never()).delPendingUsers();
     }
 
     /**
-     * USER_STATUS_SYNC 상세코드가 사용 중이면 회원 상태 Outbox 동기화를 실행하는지 확인한다
+     * USER_STATUS_SYNC 상세코드가 사용 중이면 회원 상태 Outbox 동기화를 실행하는지 확인함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void syncStatusWhenEnabled() {
 
-        // 회원 상태 동기화 스케줄러 상세코드를 활성 상태로 설정한다
+        // 회원 상태 동기화 스케줄러 상세코드를 활성 상태로 설정함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_USER_STATUS_SYNC
         )).thenReturn(true);
 
-        // 5분 주기 회원 상태 동기화 스케줄러를 실행한다
+        // 5분 주기 회원 상태 동기화 스케줄러를 실행함
         scheduler.syncUserStatusEvents();
 
-        // 활성 상태에서 Outbox 동기화 서비스가 호출됐는지 확인한다
+        // 활성 상태에서 Outbox 동기화 서비스가 호출됐는지 확인함
         verify(userStatusEventService).syncUserStatusEvents();
     }
 
     /**
-     * USER_STATUS_SYNC 상세코드가 중지 상태이면 회원 상태 Outbox 동기화를 생략하는지 확인한다
+     * USER_STATUS_SYNC 상세코드가 중지 상태이면 회원 상태 Outbox 동기화를 생략하는지 확인함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void syncStatusSkipsDisabled() {
 
-        // 회원 상태 동기화 스케줄러 상세코드를 중지 상태로 설정한다
+        // 회원 상태 동기화 스케줄러 상세코드를 중지 상태로 설정함
         when(codeUtil.existsCode(
                 Constant.CODE_SCHD_CODE
               , Constant.SCHEDULER_CODE_USER_STATUS_SYNC
         )).thenReturn(false);
 
-        // 5분 주기 회원 상태 동기화 스케줄러를 실행한다
+        // 5분 주기 회원 상태 동기화 스케줄러를 실행함
         scheduler.syncUserStatusEvents();
 
-        // 중지 상태에서 Outbox 동기화 서비스가 호출되지 않았는지 확인한다
+        // 중지 상태에서 Outbox 동기화 서비스가 호출되지 않았는지 확인함
         verify(userStatusEventService, never()).syncUserStatusEvents();
     }
 
     /**
-     * BOOK_TIMER_OVER 상세코드가 사용 중이면 독서 타이머 목표시간 알림을 실행하는지 검증한다
+     * BOOK_TIMER_OVER 상세코드가 사용 중이면 독서 타이머 목표시간 알림을 실행하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendTimerAlimWhenEnabled() {
 
-        // 독서 타이머 알림 스케줄러 상세코드를 활성 상태로 설정한다
+        // 독서 타이머 알림 스케줄러 상세코드를 활성 상태로 설정함
         when(codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER)).thenReturn(true);
-        // 독서 타이머 목표시간 알림 스케줄러를 실행한다
+        // 독서 타이머 목표시간 알림 스케줄러를 실행함
         scheduler.sendTimerAlim();
-        // 활성 상태에서 알림 서비스가 호출됐는지 확인한다
+        // 활성 상태에서 알림 서비스가 호출됐는지 확인함
         verify(readingTimerService).sendTimerAlim();
     }
 
     /**
-     * BOOK_TIMER_OVER 상세코드가 중지 상태이면 독서 타이머 목표시간 알림을 생략하는지 검증한다
+     * BOOK_TIMER_OVER 상세코드가 중지 상태이면 독서 타이머 목표시간 알림을 생략하는지 검증함
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendTimerAlimSkipsDisabled() {
 
-        // 독서 타이머 알림 스케줄러 상세코드를 중지 상태로 설정한다
+        // 독서 타이머 알림 스케줄러 상세코드를 중지 상태로 설정함
         when(codeUtil.existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_BOOK_TIMER_OVER)).thenReturn(false);
-        // 독서 타이머 목표시간 알림 스케줄러를 실행한다
+        // 독서 타이머 목표시간 알림 스케줄러를 실행함
         scheduler.sendTimerAlim();
-        // 중지 상태에서 알림 서비스가 호출되지 않았는지 확인한다
+        // 중지 상태에서 알림 서비스가 호출되지 않았는지 확인함
         verify(readingTimerService, never()).sendTimerAlim();
     }
 }

@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
  * fileName       : PopularBookDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-16
- * description    : 선택 기간의 독후감 작성자 수 기준 인기 도서 정보를 전달한다
+ * description    : 선택 기간의 독후감 작성자 수 기준 인기 도서 정보를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

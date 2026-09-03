@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.readingClub.mapper.ReadingClubMapper">
 
-    <!-- 독서 모임 쿼리에서 반복 사용하는 업무 상태 코드를 바인딩한다. -->
+    <!-- 독서 모임 쿼리에서 반복 사용하는 업무 상태 코드를 바인딩함 -->
     <sql id="clubCodeBinds">
         <bind name="clubPublic" value="'PUBLIC'" />
         <bind name="clubActive" value="'ACTIVE'" />
@@ -64,7 +64,7 @@
       ORDER BY RECOMMEND.REGI_DATE, RECOMMEND.RECM_NUMB
     </select>
 
-    <!-- 최신 독서 회차에서 다음 도서 투표 주기 기준일을 조회한다. -->
+    <!-- 최신 독서 회차에서 다음 도서 투표 주기 기준일을 조회함 -->
     <select id="getBookVoteRuleDtl" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$BookVoteRuleDto">
         SELECT /* getBookVoteRuleDtl */
                ROUNDX.REGI_DATE AS ROUND_REGI_DATE
@@ -76,7 +76,7 @@
          LIMIT 1
     </select>
 
-    <!-- 후보 등록과 투표 중복 검사를 직렬화하기 위해 활성 모임원 행을 잠근다. -->
+    <!-- 후보 등록과 투표 중복 검사를 직렬화하기 위해 활성 모임원 행을 잠금 -->
     <select id="getMemberForUpdate" resultType="long">
         <include refid="clubCodeBinds" />
         SELECT /* getMemberForUpdate */
@@ -90,7 +90,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 현재 투표 주기에 로그인 사용자가 등록한 후보 수를 조회한다. -->
+    <!-- 현재 투표 주기에 로그인 사용자가 등록한 후보 수를 조회함 -->
     <select id="getMyBookRecommCnt" resultType="int">
         SELECT /* getMyBookRecommCnt */
                COUNT(*)
@@ -102,7 +102,7 @@
         </if>
     </select>
 
-    <!-- 현재 투표 주기에 로그인 사용자가 등록한 투표 수를 조회한다. -->
+    <!-- 현재 투표 주기에 로그인 사용자가 등록한 투표 수를 조회함 -->
     <select id="getMyBookVoteCnt" resultType="int">
         SELECT /* getMyBookVoteCnt */
                COUNT(*)
@@ -139,7 +139,7 @@
         </if>
     </insert>
 
-    <!-- 같은 요청 키로 이미 생성된 모임 독서 회차를 조회한다. -->
+    <!-- 같은 요청 키로 이미 생성된 모임 독서 회차를 조회함 -->
     <select id="getReadingRoundByIdempotency" resultType="long">
         SELECT /* getReadingRoundByIdempotency */
                ROND_NUMB
@@ -148,7 +148,7 @@
            AND IDEM_KEYX = #{idemKeyx}
     </select>
 
-    <!-- 활성 계정인 모임장이 지정한 활성 일반 멤버를 퇴장시키고 재가입을 차단한다. -->
+    <!-- 활성 계정인 모임장이 지정한 활성 일반 멤버를 퇴장시키고 재가입을 차단함 -->
     <update id="uptMemberExit">
         <include refid="clubCodeBinds" />
         UPDATE /* uptMemberExit */ TB_CLMEMX MEMBER
@@ -172,7 +172,7 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </update>
 
-    <!-- 활성 계정인 모임장이 활성 멤버 관계를 유지하는지 확인한다. -->
+    <!-- 활성 계정인 모임장이 활성 멤버 관계를 유지하는지 확인함 -->
     <select id="getActiveOwnerCnt" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getActiveOwnerCnt */
@@ -191,7 +191,7 @@
            AND CLUB.CLUB_STAT = #{clubActive}
     </select>
 
-    <!-- 회차 등록 시점의 활성 계정과 활성 모임 멤버를 조회한다. -->
+    <!-- 회차 등록 시점의 활성 계정과 활성 모임 멤버를 조회함 -->
     <select id="getActiveMemberUserNumbList" parameterType="long" resultType="long">
         <include refid="clubCodeBinds" />
         SELECT /* getActiveMemberUserNumbList */
@@ -207,7 +207,7 @@
              , MEMBER.USER_NUMB
     </select>
 
-    <!-- 모임 행 잠금 안에서 다음 회차 번호를 계산한다. -->
+    <!-- 모임 행 잠금 안에서 다음 회차 번호를 계산함 -->
     <select id="getNextReadingRoundNumb" parameterType="long" resultType="long">
         SELECT /* getNextReadingRoundNumb */
                COALESCE(MAX(ROND_NUMB), 0) + 1
@@ -215,7 +215,7 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </select>
 
-    <!-- 선택 도서와 목표 기간으로 모임 독서 회차를 생성한다. -->
+    <!-- 선택 도서와 목표 기간으로 모임 독서 회차를 생성함 -->
     <insert id="setReadingRound">
         <include refid="clubCodeBinds" />
         INSERT /* setReadingRound */ INTO TM_CLRNDX (
@@ -248,7 +248,7 @@
         )
     </insert>
 
-    <!-- 자동 생성된 독후감과 모임 독서 참여 정보를 연결한다. -->
+    <!-- 자동 생성된 독후감과 모임 독서 참여 정보를 연결함 -->
     <insert id="setReadingParticipant">
         <include refid="clubCodeBinds" />
         INSERT /* setReadingParticipant */ INTO TB_CLPART (
@@ -271,7 +271,7 @@
         )
     </insert>
 
-    <!-- 동시 수정을 직렬화하기 위해 예정 또는 진행 중인 독서 회차와 도서를 잠가 조회한다. -->
+    <!-- 동시 수정을 직렬화하기 위해 예정 또는 진행 중인 독서 회차와 도서를 잠가 조회함 -->
     <select id="getReadingForUpdate" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingManageDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingForUpdate */
@@ -297,7 +297,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 작성 여부 검사와 도서 및 기간 동기화 사이에 독후감이 변경되지 않도록 연결 행을 잠근다. -->
+    <!-- 작성 여부 검사와 도서 및 기간 동기화 사이에 독후감이 변경되지 않도록 연결 행을 잠금 -->
     <select id="getReadingReportNumbListForUpdate" resultType="long">
         SELECT /* getReadingReportNumbListForUpdate */
                REPORT.REPT_NUMB
@@ -310,7 +310,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 자동 생성 초기 상태에서 본문, 상태 또는 평점이 변경된 연결 독후감을 집계한다. -->
+    <!-- 자동 생성 초기 상태에서 본문, 상태 또는 평점이 변경된 연결 독후감을 집계함 -->
     <select id="getWrittenReadingReportCnt" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getWrittenReadingReportCnt */
@@ -326,7 +326,7 @@
                )
     </select>
 
-    <!-- 현재 회차의 도서, 목표 기간과 날짜 기준 회차 상태를 함께 수정한다. -->
+    <!-- 현재 회차의 도서, 목표 기간과 날짜 기준 회차 상태를 함께 수정함 -->
     <update id="uptReading">
         <include refid="clubCodeBinds" />
         UPDATE /* uptReading */
@@ -347,7 +347,7 @@
            AND ROND_STAT IN (#{roundScheduled}, #{roundReading})
     </update>
 
-    <!-- 회차 참여자에게 자동 생성된 독후감의 도서와 목표 기간을 같은 값으로 동기화한다. -->
+    <!-- 회차 참여자에게 자동 생성된 독후감의 도서와 목표 기간을 같은 값으로 동기화함 -->
     <update id="uptReadingReportList">
         UPDATE /* uptReadingReportList */
                TM_REPORT REPORT
@@ -361,7 +361,7 @@
            AND PART.ROND_NUMB = #{rondNumb}
     </update>
 
-    <!-- 활성 참여자 전원이 완독한 진행 회차를 목표 기간 안에 완료 상태로 변경한다. -->
+    <!-- 활성 참여자 전원이 완독한 진행 회차를 목표 기간 안에 완료 상태로 변경함 -->
     <update id="uptEarlyReadingRound">
         <include refid="clubCodeBinds" />
         UPDATE /* uptEarlyReadingRound */
@@ -411,7 +411,7 @@
            )
     </update>
 
-    <!-- 조기 마감한 회차의 활성 참여자를 마감 시점 목표 달성자로 고정한다. -->
+    <!-- 조기 마감한 회차의 활성 참여자를 마감 시점 목표 달성자로 고정함 -->
     <update id="uptEarlyReadingGoal">
         <include refid="clubCodeBinds" />
         UPDATE /* uptEarlyReadingGoal */
@@ -440,7 +440,7 @@
            AND PART.GOAL_YSNO IS NULL
     </update>
 
-    <!-- 조기 마감 시점의 활성 계정인 활성 모임원을 회차 결과 확인 대상으로 등록한다. -->
+    <!-- 조기 마감 시점의 활성 계정인 활성 모임원을 회차 결과 확인 대상으로 등록함 -->
     <insert id="setEarlyResultTarget">
         <include refid="clubCodeBinds" />
         /* setEarlyResultTarget */
@@ -462,7 +462,7 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </insert>
 
-    <!-- 목표 종료일이 지난 회차의 참여자별 달성 여부를 연결 독후감 상태로 고정한다. -->
+    <!-- 목표 종료일이 지난 회차의 참여자별 달성 여부를 연결 독후감 상태로 고정함 -->
     <update id="uptExpiredReadingParticipantGoal">
         <include refid="clubCodeBinds" />
         UPDATE /* uptExpiredReadingParticipantGoal */
@@ -486,7 +486,7 @@
            AND PART.GOAL_YSNO IS NULL
     </update>
 
-    <!-- 정상 종료 대상 회차별 활성 계정인 활성 모임원을 결과 확인 대상으로 등록한다. -->
+    <!-- 정상 종료 대상 회차별 활성 계정인 활성 모임원을 결과 확인 대상으로 등록함 -->
     <insert id="setExpiredResultTarget">
         <include refid="clubCodeBinds" />
         /* setExpiredResultTarget */
@@ -518,7 +518,7 @@
            )
     </insert>
 
-    <!-- 참여자 결과가 고정된 목표 종료 회차를 완료 상태로 변경한다. -->
+    <!-- 참여자 결과가 고정된 목표 종료 회차를 완료 상태로 변경함 -->
     <update id="uptExpiredReadingRound">
         <include refid="clubCodeBinds" />
         UPDATE /* uptExpiredReadingRound */
@@ -538,7 +538,7 @@
            )
     </update>
 
-    <!-- 사용자가 저장한 독서 관심분야 수를 조회한다. -->
+    <!-- 사용자가 저장한 독서 관심분야 수를 조회함 -->
     <select id="getUserInterestCnt" parameterType="long" resultType="int">
         SELECT /* getUserInterestCnt */
                COUNT(*)
@@ -546,7 +546,7 @@
          WHERE USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 요청된 세부코드 중 현재 활성 상태인 독서 관심분야 수를 조회한다. -->
+    <!-- 요청된 세부코드 중 현재 활성 상태인 독서 관심분야 수를 조회함 -->
     <select id="getValidCategoryCnt" resultType="int">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
@@ -562,7 +562,7 @@
         </foreach>
     </select>
 
-    <!-- 독서 모임 마스터 정보를 등록한다. -->
+    <!-- 독서 모임 마스터 정보를 등록함 -->
     <insert id="setClub" useGeneratedKeys="true" keyProperty="request.clubNumb">
         <include refid="clubCodeBinds" />
         /* setClub */
@@ -588,7 +588,7 @@
         )
     </insert>
 
-    <!-- 현재 모임장이 소유한 운영 중 모임의 기본 정보와 운영 설정을 수정한다. -->
+    <!-- 현재 모임장이 소유한 운영 중 모임의 기본 정보와 운영 설정을 수정함 -->
     <update id="uptClub">
         <include refid="clubCodeBinds" />
         UPDATE /* uptClub */ TM_CLUBXM
@@ -609,7 +609,7 @@
            )
     </update>
 
-    <!-- 현재 모임장이 소유한 운영 중 모임과 외래키 종속 데이터를 물리 삭제한다. -->
+    <!-- 현재 모임장이 소유한 운영 중 모임과 외래키 종속 데이터를 물리 삭제함 -->
     <delete id="delClub">
         <include refid="clubCodeBinds" />
         DELETE /* delClub */
@@ -625,7 +625,7 @@
            )
     </delete>
 
-    <!-- 독서 모임에 선택된 관심분야 세부코드 한 건을 등록한다. -->
+    <!-- 독서 모임에 선택된 관심분야 세부코드 한 건을 등록함 -->
     <insert id="setClubCategory">
         /* setClubCategory */
         INSERT INTO TB_CLCATE (
@@ -640,14 +640,14 @@
         )
     </insert>
 
-    <!-- 모임 수정 전에 기존 카테고리 관계를 삭제한다. -->
+    <!-- 모임 수정 전에 기존 카테고리 관계를 삭제함 -->
     <delete id="delClubCategory" parameterType="long">
         DELETE /* delClubCategory */
           FROM TB_CLCATE
          WHERE CLUB_NUMB = #{clubNumb}
     </delete>
 
-    <!-- 모임 개설자를 활성 모임장 회원으로 등록한다. -->
+    <!-- 모임 개설자를 활성 모임장 회원으로 등록함 -->
     <insert id="setOwnerMember">
         <include refid="clubCodeBinds" />
         /* setOwnerMember */
@@ -671,7 +671,7 @@
         )
     </insert>
 
-    <!-- 승인형 모임의 현재 가입 질문을 수정한다. -->
+    <!-- 승인형 모임의 현재 가입 질문을 수정함 -->
     <update id="uptClubQuestion">
         UPDATE /* uptClubQuestion */ TB_CLQUES
            SET QUES_FIRS = #{question.quesFirs,jdbcType=VARCHAR}
@@ -684,7 +684,7 @@
          WHERE CLUB_NUMB = #{question.clubNumb}
     </update>
 
-    <!-- 승인형 모임의 현재 가입 질문을 모임당 한 행으로 등록한다. -->
+    <!-- 승인형 모임의 현재 가입 질문을 모임당 한 행으로 등록함 -->
     <insert id="setClubQuestion">
         /* setClubQuestion */
         INSERT INTO TB_CLQUES (
@@ -737,7 +737,7 @@
                ON SEAT.CLUB_NUMB = CLUB.CLUB_NUMB
     </sql>
 
-    <!-- 모임별 예정 또는 진행 중인 최신 독서 회차를 연결한다. -->
+    <!-- 모임별 예정 또는 진행 중인 최신 독서 회차를 연결함 -->
     <sql id="currentRoundJoin">
         LEFT JOIN (  SELECT ROUNDX.CLUB_NUMB
                           , ROUNDX.ROND_NUMB
@@ -758,7 +758,7 @@
                ON CURRENT_ROUND.CLUB_NUMB = CLUB.CLUB_NUMB
     </sql>
 
-    <!-- 활성 회차 참여자의 연결 독후감 상태를 기준으로 현재 목표 달성 현황을 집계한다. -->
+    <!-- 활성 회차 참여자의 연결 독후감 상태를 기준으로 현재 목표 달성 현황을 집계함 -->
     <sql id="currentGoalJoin">
         LEFT JOIN (  SELECT PART.CLUB_NUMB
                           , PART.ROND_NUMB
@@ -783,7 +783,7 @@
               AND CURRENT_GOAL.ROND_NUMB = CURRENT_ROUND.ROND_NUMB
     </sql>
 
-    <!-- 로그인 사용자가 활성 회원으로 참여 중인 모임 목록을 조회한다. -->
+    <!-- 로그인 사용자가 활성 회원으로 참여 중인 모임 목록을 조회함 -->
     <select id="getMyClubList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         <include refid="clubCodeBinds" />
         SELECT /* getMyClubList */
@@ -817,7 +817,7 @@
              , CLUB.CLUB_NUMB DESC
     </select>
 
-    <!-- 공개 모임에서 로그인 사용자 소유 모임을 제외하고 관심분야 일치 수와 최신 등록 순으로 조회한다. -->
+    <!-- 공개 모임에서 로그인 사용자 소유 모임을 제외하고 관심분야 일치 수와 최신 등록 순으로 조회함 -->
     <select id="getFindClubList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         <include refid="clubCodeBinds" />
         SELECT /* getFindClubList */
@@ -881,7 +881,7 @@
          LIMIT 100
     </select>
 
-    <!-- 로그인 사용자의 회원과 가입 신청 상태를 포함한 모임 상세를 조회한다. -->
+    <!-- 로그인 사용자의 회원과 가입 신청 상태를 포함한 모임 상세를 조회함 -->
     <select id="getClubDtl" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         <include refid="clubCodeBinds" />
         SELECT /* getClubDtl */
@@ -1062,7 +1062,7 @@
           WHERE CLUB.CLUB_NUMB = #{clubNumb}
     </select>
 
-    <!-- 정원과 권한 변경을 직렬화하기 위해 모임 마스터 행을 잠가 조회한다. -->
+    <!-- 정원과 권한 변경을 직렬화하기 위해 모임 마스터 행을 잠가 조회함 -->
     <select id="getClubForUpdate" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         SELECT /* getClubForUpdate */
                CLUB.CLUB_NUMB
@@ -1082,7 +1082,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 모임에 지정된 관심분야를 모임 내 노출 순서로 조회한다. -->
+    <!-- 모임에 지정된 관심분야를 모임 내 노출 순서로 조회함 -->
     <select id="getClubCategoryList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$CategoryDto">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getClubCategoryList */
@@ -1098,7 +1098,7 @@
       ORDER BY CATEGORY.SORT_ORDR
     </select>
 
-    <!-- 승인형 모임의 현재 가입 질문 한 행을 조회한다. -->
+    <!-- 승인형 모임의 현재 가입 질문 한 행을 조회함 -->
     <select id="getClubQuestion" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$QuestionDto">
         SELECT /* getClubQuestion */
                CLUB_NUMB
@@ -1111,7 +1111,7 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </select>
 
-    <!-- 모임과 사용자 사이의 현재 회원 또는 초대 관계를 조회한다. -->
+    <!-- 모임과 사용자 사이의 현재 회원 또는 초대 관계를 조회함 -->
     <select id="getClubMember" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberDto">
         SELECT /* getClubMember */
                CLUB_NUMB
@@ -1125,7 +1125,7 @@
            AND USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 실제 프로필 연동 전까지 활성 모임원에게 공통 기본 프로필 이미지를 제공한다. -->
+    <!-- 실제 프로필 연동 전까지 활성 모임원에게 공통 기본 프로필 이미지를 제공함 -->
     <select id="getClubMemberList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberProfileDto">
         <include refid="clubCodeBinds" />
         SELECT /* getClubMemberList */
@@ -1146,7 +1146,7 @@
              , MEMBER.USER_NUMB
     </select>
 
-    <!-- 모임장이 확인할 퇴장 모임원과 재가입 제한 상태를 최신순으로 조회한다. -->
+    <!-- 모임장이 확인할 퇴장 모임원과 재가입 제한 상태를 최신순으로 조회함 -->
     <select id="getMemberExitList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberExitHistoryDto">
         <include refid="clubCodeBinds" />
         SELECT /* getMemberExitList */
@@ -1166,7 +1166,7 @@
              , MEMBER.USER_NUMB DESC
     </select>
 
-    <!-- 모임장 소유권과 퇴장 및 제한 상태를 확인하여 회원 관계를 삭제한다. -->
+    <!-- 모임장 소유권과 퇴장 및 제한 상태를 확인하여 회원 관계를 삭제함 -->
     <delete id="delMemberRestriction">
         <include refid="clubCodeBinds" />
         DELETE /* delMemberRestriction */ MEMBER
@@ -1180,7 +1180,7 @@
            AND MEMBER.BLOC_YSNO = #{commYes}
     </delete>
 
-    <!-- 자동 팝업은 사용자가 확인하지 않은 최신 결과를, 직접 선택한 회차는 확인 여부와 무관한 결과를 조회한다. -->
+    <!-- 자동 팝업은 사용자가 확인하지 않은 최신 결과를, 직접 선택한 회차는 확인 여부와 무관한 결과를 조회함 -->
     <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingGoalResult */
@@ -1258,7 +1258,7 @@
              , BOOK.BOOK_CVIM
     </select>
 
-    <!-- 활성 계정인 활성 모임원이 직접 닫은 회차 결과의 확인 일시를 저장한다. -->
+    <!-- 활성 계정인 활성 모임원이 직접 닫은 회차 결과의 확인 일시를 저장함 -->
     <update id="uptReadingResultConfirm">
         <include refid="clubCodeBinds" />
         UPDATE /* uptReadingResultConfirm */
@@ -1277,7 +1277,7 @@
            AND RESULT.CONF_DATE IS NULL
     </update>
 
-    <!-- 활성 계정과 활성 모임원 관계를 모두 유지하는 조회자인지 확인한다. -->
+    <!-- 활성 계정과 활성 모임원 관계를 모두 유지하는 조회자인지 확인함 -->
     <select id="getActiveMemberAccessCnt" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getActiveMemberAccessCnt */
@@ -1294,7 +1294,7 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </select>
 
-    <!-- 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 완료 회차의 요약을 제공한다. -->
+    <!-- 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 완료 회차의 요약을 제공함 -->
     <select id="getReadingHistoryList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingHistoryDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingHistoryList */
@@ -1339,7 +1339,7 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 진행 또는 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회한다. -->
+    <!-- 진행 또는 완료된 모임 독서 회차의 도서와 활성 모임원이 작성한 완료 독후감 평균 별점을 조회함 -->
     <select id="getReadingRoundReportSummary" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingRoundReportPageDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingRoundReportSummary */
@@ -1381,7 +1381,7 @@
              , BOOK.BOOK_CVIM
     </select>
 
-    <!-- 진행 또는 완료 회차에서 현재 활성 모임원이 작성한 완료 독후감을 공개 여부와 무관하게 조회한다. -->
+    <!-- 진행 또는 완료 회차에서 현재 활성 모임원이 작성한 완료 독후감을 공개 여부와 무관하게 조회함 -->
     <select id="getReadingRoundReportList" resultType="org.our.sadari.report.dto.ReportDto">
         <include refid="clubCodeBinds" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
@@ -1476,7 +1476,7 @@
          LIMIT #{pageOffset}, #{pageLimit}
     </select>
 
-    <!-- 완료 회차의 고정 달성자 중 현재 공개 가능한 활성 프로필만 조회한다. -->
+    <!-- 완료 회차의 고정 달성자 중 현재 공개 가능한 활성 프로필만 조회함 -->
     <select id="getReadingGoalAchievementMemberList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberProfileDto">
         <include refid="clubCodeBinds" />
         SELECT /* getReadingGoalAchievementMemberList */
@@ -1503,7 +1503,7 @@
              , USERX.USER_NUMB
     </select>
 
-    <!-- 모임 정원에서 제외할 만료된 초대 예약석을 물리 삭제한다. -->
+    <!-- 모임 정원에서 제외할 만료된 초대 예약석을 물리 삭제함 -->
     <delete id="delExpiredInvitation" parameterType="long">
         <include refid="clubCodeBinds" />
         DELETE /* delExpiredInvitation */
@@ -1513,7 +1513,7 @@
            AND EXPR_DATE <![CDATA[<=]]> CURRENT_TIMESTAMP(6)
     </delete>
 
-    <!-- 사용자의 받은 초대 목록에서 만료된 예약석을 물리 삭제한다. -->
+    <!-- 사용자의 받은 초대 목록에서 만료된 예약석을 물리 삭제함 -->
     <delete id="delUserExpiredInvitation" parameterType="long">
         <include refid="clubCodeBinds" />
         DELETE /* delUserExpiredInvitation */
@@ -1523,7 +1523,7 @@
            AND EXPR_DATE <![CDATA[<=]]> CURRENT_TIMESTAMP(6)
     </delete>
 
-    <!-- 활성 회원과 만료 전 초대 예약석을 합산한 현재 점유 좌석 수를 조회한다. -->
+    <!-- 활성 회원과 만료 전 초대 예약석을 합산한 현재 점유 좌석 수를 조회함 -->
     <select id="getOccupiedSeatCnt" parameterType="long" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getOccupiedSeatCnt */
@@ -1536,7 +1536,7 @@
                )
     </select>
 
-    <!-- 공개 모임의 신규 가입 또는 차단되지 않은 자진 탈퇴 회원의 재가입을 활성 상태로 반영한다. -->
+    <!-- 공개 모임의 신규 가입 또는 차단되지 않은 자진 탈퇴 회원의 재가입을 활성 상태로 반영함 -->
     <insert id="setActiveMember">
         <include refid="clubCodeBinds" />
         /* setActiveMember */
@@ -1570,7 +1570,7 @@
              , UPDT_DATE = CURRENT_TIMESTAMP(6)
     </insert>
 
-    <!-- 맞팔로우 초대 대상의 좌석을 만료 일시가 있는 초대 대기 회원으로 등록한다. -->
+    <!-- 맞팔로우 초대 대상의 좌석을 만료 일시가 있는 초대 대기 회원으로 등록함 -->
     <insert id="setInvitation">
         <include refid="clubCodeBinds" />
         /* setInvitation */
@@ -1598,7 +1598,7 @@
         )
     </insert>
 
-    <!-- 모임장과 초대 대상 사용자의 활성 맞팔로우 관계 수를 조회한다. -->
+    <!-- 모임장과 초대 대상 사용자의 활성 맞팔로우 관계 수를 조회함 -->
     <select id="getMutualFollowCnt" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getMutualFollowCnt */
@@ -1614,7 +1614,7 @@
            AND OWNERFLOW.FLOW_NUMB = #{userNumb}
     </select>
 
-    <!-- 기존 모임 관계와 처리 중 신청이 없는 맞팔로우 초대 후보를 조회한다. -->
+    <!-- 기존 모임 관계와 처리 중 신청이 없는 맞팔로우 초대 후보를 조회함 -->
     <select id="getInviteCandidateList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$InviteCandidateDto">
         <include refid="clubCodeBinds" />
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
@@ -1662,7 +1662,7 @@
              , USERX.USER_NUMB
     </select>
 
-    <!-- 공개 범위 변경을 제한하는 예정 또는 진행 중 회차 수를 조회한다. -->
+    <!-- 공개 범위 변경을 제한하는 예정 또는 진행 중 회차 수를 조회함 -->
     <select id="getOngoingRoundCnt" parameterType="long" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getOngoingRoundCnt */
@@ -1672,7 +1672,7 @@
            AND ROND_STAT IN (#{roundScheduled}, #{roundReading})
     </select>
 
-    <!-- 가입 방식 변경을 제한하는 처리 대기 신청 수를 조회한다. -->
+    <!-- 가입 방식 변경을 제한하는 처리 대기 신청 수를 조회함 -->
     <select id="getPendingApplicationCnt" parameterType="long" resultType="int">
         <include refid="clubCodeBinds" />
         SELECT /* getPendingApplicationCnt */
@@ -1682,7 +1682,7 @@
            AND JOIN_STAT = #{applicationPending}
     </select>
 
-    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 목록을 조회한다. -->
+    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 목록을 조회함 -->
     <select id="getSentInvitationList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$SentInvitationDto">
         <include refid="clubCodeBinds" />
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
@@ -1715,7 +1715,7 @@
              , MEMBER.USER_NUMB
     </select>
 
-    <!-- 로그인 사용자에게 도착한 만료 전 모임 초대 목록을 조회한다. -->
+    <!-- 로그인 사용자에게 도착한 만료 전 모임 초대 목록을 조회함 -->
     <select id="getInvitationList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$InvitationDto">
         <include refid="clubCodeBinds" />
         SELECT /* getInvitationList */
@@ -1736,7 +1736,7 @@
       ORDER BY MEMBER.INVT_DATE DESC
     </select>
 
-    <!-- 만료 전 초대 예약석을 활성 회원 관계로 전환한다. -->
+    <!-- 만료 전 초대 예약석을 활성 회원 관계로 전환함 -->
     <update id="uptInvitationAccepted">
         <include refid="clubCodeBinds" />
         UPDATE /* uptInvitationAccepted */
@@ -1753,7 +1753,7 @@
            AND EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)
     </update>
 
-    <!-- 거절하거나 취소한 초대 예약석을 이력 없이 물리 삭제한다. -->
+    <!-- 거절하거나 취소한 초대 예약석을 이력 없이 물리 삭제함 -->
     <delete id="delInvitation">
         <include refid="clubCodeBinds" />
         DELETE /* delInvitation */
@@ -1763,7 +1763,7 @@
            AND MEMB_STAT = #{memberInvited}
     </delete>
 
-    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 예약석을 취소한다. -->
+    <!-- 모임장이 활성 회원에게 발송한 만료 전 초대 예약석을 취소함 -->
     <delete id="delOwnerInvitation">
         <include refid="clubCodeBinds" />
         DELETE /* delOwnerInvitation */ MEMBER
@@ -1778,7 +1778,7 @@
            AND MEMBER.EXPR_DATE <![CDATA[>]]> CURRENT_TIMESTAMP(6)
     </delete>
 
-    <!-- 동일 모임과 사용자의 처리 중이거나 재신청 제한 중인 가입 신청을 조회한다. -->
+    <!-- 동일 모임과 사용자의 처리 중이거나 재신청 제한 중인 가입 신청을 조회함 -->
     <select id="getBlockedApplication" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />
         SELECT /* getBlockedApplication */
@@ -1807,10 +1807,10 @@
          LIMIT 1
     </select>
 
-    <!-- 승인형 모임의 가입 질문 사본과 신청 답변을 등록한다. -->
+    <!-- 승인형 모임의 가입 질문 사본과 신청 답변을 등록함 -->
     <insert id="setJoinApplication">
         <include refid="clubCodeBinds" />
-        <!-- 모임 마스터 행 잠금 이후 실행하여 모임별 신청 번호의 중복 생성을 막는다. -->
+        <!-- 모임 마스터 행 잠금 이후 실행하여 모임별 신청 번호의 중복 생성을 막음 -->
         /* setJoinApplication */
         INSERT INTO TB_CLJOIN (
                     CLUB_NUMB
@@ -1848,7 +1848,7 @@
          WHERE CLUB_NUMB = #{clubNumb}
     </insert>
 
-    <!-- 활성 가입 신청자가 승인 전 자신의 처리 대기 신청과 답변을 삭제한다. -->
+    <!-- 활성 가입 신청자가 승인 전 자신의 처리 대기 신청과 답변을 삭제함 -->
     <delete id="delOwnApplication">
         <include refid="clubCodeBinds" />
         DELETE /* delOwnApplication */
@@ -1864,7 +1864,7 @@
            )
     </delete>
 
-    <!-- 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 조회한다. -->
+    <!-- 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 조회함 -->
     <select id="getApplicationList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />
         SELECT /* getApplicationList */
@@ -1897,7 +1897,7 @@
              , APPLICATION.APPL_NUMB
     </select>
 
-    <!-- 중복 처리를 막기 위해 처리 중 가입 신청을 잠가 조회한다. -->
+    <!-- 중복 처리를 막기 위해 처리 중 가입 신청을 잠가 조회함 -->
     <select id="getApplicationForUpdate" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ApplicationDto">
         <include refid="clubCodeBinds" />
         SELECT /* getApplicationForUpdate */
@@ -1916,7 +1916,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 가입 신청 처리 상태를 확정하고 답변을 삭제한다. -->
+    <!-- 가입 신청 처리 상태를 확정하고 답변을 삭제함 -->
     <update id="uptJoinApplication">
         <include refid="clubCodeBinds" />
         UPDATE /* uptJoinApplication */

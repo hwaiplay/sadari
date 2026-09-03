@@ -3,7 +3,7 @@
         PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "https://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.notice.mapper.NoticeMapper">
-    <!-- 공지사항 접근자가 현재 활성 회원인지 확인한다 -->
+    <!-- 공지사항 접근자가 현재 활성 회원인지 확인함 -->
     <select id="getActiveUserCnt" resultType="int">
         SELECT /* getActiveUserCnt */
                COUNT(1)
@@ -12,7 +12,7 @@
            AND USER_STAT = #{userStat}
     </select>
 
-    <!-- 현재 배포 중인 공지사항을 최근 배포 순서로 조회한다 -->
+    <!-- 현재 배포 중인 공지사항을 최근 배포 순서로 조회함 -->
     <select id="getNoticeList" resultType="org.our.sadari.notice.dto.NoticeDto">
         SELECT /* getNoticeList */
                N.NOTI_NUMB
@@ -35,7 +35,7 @@
          LIMIT #{startRow}, #{pageSize}
     </select>
 
-    <!-- 홈 화면에 표시할 로그인 사용자의 미읽음 배포 공지 번호와 카테고리명 및 제목을 조회한다 -->
+    <!-- 홈 화면에 표시할 로그인 사용자의 미읽음 배포 공지 번호와 카테고리명 및 제목을 조회함 -->
     <select id="getUnreadNoticeList" resultType="org.our.sadari.notice.dto.UnreadNoticeDto">
         SELECT /* getUnreadNoticeList */
                N.NOTI_NUMB
@@ -53,7 +53,7 @@
              , N.NOTI_NUMB DESC
     </select>
 
-    <!-- 주키에 해당하는 현재 배포 버전 상세만 조회한다 -->
+    <!-- 주키에 해당하는 현재 배포 버전 상세만 조회함 -->
     <select id="getNoticeDtl" resultType="org.our.sadari.notice.dto.NoticeDto">
         SELECT /* getNoticeDtl */
                N.NOTI_NUMB
@@ -74,7 +74,7 @@
            AND N.DPLY_YSNO = #{yes}
     </select>
 
-    <!-- 사용자가 처음 상세를 조회한 공지사항의 읽음 이력을 멱등하게 저장한다 -->
+    <!-- 사용자가 처음 상세를 조회한 공지사항의 읽음 이력을 멱등하게 저장함 -->
     <insert id="setNoticeView">
         INSERT IGNORE /* setNoticeView */
           INTO TB_USVIEW (

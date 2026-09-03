@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/app/utils/htmlUtil.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * src/main/frontend/src/app/utils/htmlUtil.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
  *
  * @author HanWon.Jang
  */
@@ -9,7 +9,7 @@ export function stripHtmlTags(value?: string) {
 }
 
 /**
- * 도서 검색 API가 여러 저자를 ^ 구분자로 내려주는 경우 화면과 저장값에 그대로 노출되지 않도록 정리합니다.
+ * 도서 검색 API가 여러 저자를 ^ 구분자로 내려주는 경우 화면과 저장값에 그대로 노출되지 않도록 정리함
  *
  * @author HanWon.Jang
  * @param value 도서 검색 API 또는 서버에서 받은 저자 문자열

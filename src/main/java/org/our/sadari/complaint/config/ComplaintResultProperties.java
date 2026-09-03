@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * fileName       : ComplaintResultProperties
  * author         : HanWon.Jang
  * date           : 2026-08-24
- * description    : 한 번에 표시할 미확인 신고 조치 결과 범위를 관리한다
+ * description    : 한 번에 표시할 미확인 신고 조치 결과 범위를 관리함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

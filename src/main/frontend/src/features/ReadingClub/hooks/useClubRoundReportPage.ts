@@ -1,5 +1,5 @@
 /**
- * 완료된 모임 독서 회차의 DONE 독후감 목록 페이지 상태를 관리한다.
+ * 완료된 모임 독서 회차의 DONE 독후감 목록 페이지 상태를 관리함
  *
  * @author HanWon.Jang
  */
@@ -15,17 +15,17 @@ import { useReadingRoundReports } from "@/features/ReadingClub/hooks/useReadingR
 const EMPTY_STATUS_NAMES = new Map<string, string>();
 
 /**
- * 모임 회차 독후감 페이지의 전용 조회 상태와 사용자 동작을 제공한다.
+ * 모임 회차 독후감 페이지의 전용 조회 상태와 사용자 동작을 제공함
  *
  * @author HanWon.Jang
  * @return 완료 회차 DONE 독후감 페이지 상태와 처리 함수
  */
 export function useClubRoundReportPage() {
-  // 첫 화면 도서 요약을 전달받을 현재 라우팅 상태를 조회한다
+  // 첫 화면 도서 요약을 전달받을 현재 라우팅 상태를 조회함
   const location = useLocation();
-  // 독후감 작성자 프로필 화면 이동에 사용할 라우터 함수를 조회한다
+  // 독후감 작성자 프로필 화면 이동에 사용할 라우터 함수를 조회함
   const navigate = useNavigate();
-  // 서버 조회와 접근 검증에 사용할 모임 및 회차 번호를 경로에서 조회한다
+  // 서버 조회와 접근 검증에 사용할 모임 및 회차 번호를 경로에서 조회함
   const { clubNumb: clubNumbParam, rondNumb: rondNumbParam } = useParams();
   const clubNumb = Number(clubNumbParam);
   const rondNumb = Number(rondNumbParam);
@@ -37,9 +37,9 @@ export function useClubRoundReportPage() {
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
   const [commentReport, setCommentReport] = useState<PublicReportType | null>(null);
 
-  // 현재 활성 모임원에게 허용된 대상 회차 DONE 독후감 서버 페이지를 조회한다
+  // 현재 활성 모임원에게 허용된 대상 회차 DONE 독후감 서버 페이지를 조회함
   const reportsQuery = useReadingRoundReports(clubNumb, rondNumb, sort, isValidRoute);
-  // 모임 회차 독후감 좋아요 변경 요청 상태를 조회한다
+  // 모임 회차 독후감 좋아요 변경 요청 상태를 조회함
   const likeMutation = usePublicReportLike();
   const routeState = (location.state ?? {}) as ReportListBookSummary;
   const reportSummary = reportsQuery.data?.pages[0]?.data;
@@ -50,41 +50,41 @@ export function useClubRoundReportPage() {
     ratingAverage: reportSummary?.ratingAverage ?? routeState.ratingAverage,
   };
 
-  // 조회된 회차별 서버 페이지를 화면 순서대로 하나의 DONE 독후감 목록으로 연결한다
+  // 조회된 회차별 서버 페이지를 화면 순서대로 하나의 DONE 독후감 목록으로 연결함
   const reports = useMemo(() => {
-    // 각 서버 페이지의 완료 독후감 목록을 연결해 반환한다
+    // 각 서버 페이지의 완료 독후감 목록을 연결해 반환함
     return reportsQuery.data?.pages.flatMap(
       (page) => page.data?.reportPage.list ?? [],
     ) ?? [];
   }, [reportsQuery.data]);
 
-  // 회차 DONE 독후감을 공통 카드 표시 모델로 변환한다
+  // 회차 DONE 독후감을 공통 카드 표시 모델로 변환함
   const visibleReports = useMemo(() => {
-    // 서버 상태 이름과 카드 펼침 상태를 적용한 표시 목록을 반환한다
+    // 서버 상태 이름과 카드 펼침 상태를 적용한 표시 목록을 반환함
     return createReportListItems(reports, expandedReports, EMPTY_STATUS_NAMES);
   }, [expandedReports, reports]);
 
   /**
-   * 회차 독후감 목록의 정렬 기준을 변경한다.
+   * 회차 독후감 목록의 정렬 기준을 변경함
    *
    * @author HanWon.Jang
    * @param nextSort 사용자가 선택한 정렬 기준
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleSortChange = (nextSort: PublicReportSortType): void => {
-    // 변경한 정렬 기준으로 모임 회차 독후감을 다시 조회한다
+    // 변경한 정렬 기준으로 모임 회차 독후감을 다시 조회함
     setSort(nextSort);
   };
 
   /**
-   * 선택한 회차 독후감 본문의 펼침 상태를 반전한다.
+   * 선택한 회차 독후감 본문의 펼침 상태를 반전함
    *
    * @author HanWon.Jang
    * @param reptNumb 펼침 상태를 변경할 독후감 번호
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleToggleReport = (reptNumb: number): void => {
-    // 다른 카드 상태를 유지하면서 선택한 독후감의 펼침 상태만 변경한다
+    // 다른 카드 상태를 유지하면서 선택한 독후감의 펼침 상태만 변경함
     setExpandedReports((previous) => ({
       ...previous,
       [reptNumb]: !previous[reptNumb],
@@ -92,29 +92,29 @@ export function useClubRoundReportPage() {
   };
 
   /**
-   * 회차 독후감 작성자의 소셜 프로필 화면으로 이동한다.
+   * 회차 독후감 작성자의 소셜 프로필 화면으로 이동함
    *
    * @author HanWon.Jang
    * @param userNumb 이동할 작성자 사용자 번호
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleProfileClick = (userNumb: number): void => {
-    // 유효한 작성자 번호만 소셜 프로필 경로에 사용한다
+    // 유효한 작성자 번호만 소셜 프로필 경로에 사용함
     if (userNumb > 0) {
-      // 선택한 작성자의 소셜 프로필 화면으로 이동한다
+      // 선택한 작성자의 소셜 프로필 화면으로 이동함
       navigate(`/social/profile/${userNumb}`);
     }
   };
 
   /**
-   * 선택한 회차 독후감의 좋아요 상태를 변경한다.
+   * 선택한 회차 독후감의 좋아요 상태를 변경함
    *
    * @author HanWon.Jang
    * @param report 좋아요 대상을 식별할 회차 독후감
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleLike = (report: PublicReportType): void => {
-    // 독후감 번호를 좋아요 API 요청 대상으로 전달한다
+    // 독후감 번호를 좋아요 API 요청 대상으로 전달함
     likeMutation.mutate({
       tagtType: "REPORT",
       tagtNumb: report.reptNumb,
@@ -124,40 +124,40 @@ export function useClubRoundReportPage() {
   };
 
   /**
-   * 선택한 회차 독후감의 댓글 바텀시트를 연다.
+   * 선택한 회차 독후감의 댓글 바텀시트를 엶
    *
    * @author HanWon.Jang
    * @param report 댓글을 조회할 회차 독후감
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleOpenReply = (report: PublicReportType): void => {
-    // 선택한 독후감을 댓글 조회 대상으로 저장한다
+    // 선택한 독후감을 댓글 조회 대상으로 저장함
     setCommentReport(report);
   };
 
   /**
-   * 현재 열린 회차 독후감 댓글 바텀시트를 닫는다.
+   * 현재 열린 회차 독후감 댓글 바텀시트를 닫음
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleCloseReply = (): void => {
-    // 댓글 조회 대상을 제거해 바텀시트 렌더링을 종료한다
+    // 댓글 조회 대상을 제거해 바텀시트 렌더링을 종료함
     setCommentReport(null);
   };
 
   /**
-   * 완료 회차 독후감 목록의 다음 서버 페이지를 조회한다.
+   * 완료 회차 독후감 목록의 다음 서버 페이지를 조회함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleLoadMore = (): void => {
-    // 목록 하단에 도달하면 현재 회차와 정렬의 다음 페이지를 요청한다
+    // 목록 하단에 도달하면 현재 회차와 정렬의 다음 페이지를 요청함
     void reportsQuery.fetchNextPage();
   };
 
-  // 모임 회차 독후감 전용 페이지가 사용할 상태와 처리 함수를 반환한다
+  // 모임 회차 독후감 전용 페이지가 사용할 상태와 처리 함수를 반환함
   return {
     pageState,
     isValidRoute,

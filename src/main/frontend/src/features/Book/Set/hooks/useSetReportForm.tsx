@@ -2,7 +2,7 @@
  * fileName       : useSetReportForm
  * author         : Hanwon.Jang
  * date           : 2026-08-14
- * description    : 독후감 등록 화면, API, 훅 또는 유틸 로직을 담당합니다.
+ * description    : 독후감 등록 화면, API, 훅 또는 유틸 로직을 담당함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -26,7 +26,7 @@ import { useSetReport } from "./useSetReport";
 import { REPORT_STATUS_READ } from "@/features/Book/constants/reportForm";
 
 /**
- * useSetReportForm 상태와 처리 함수를 제공한다
+ * useSetReportForm 상태와 처리 함수를 제공함
  *
  * @author HanWon.Jang
  * @param selectedBook selected Book 입력값
@@ -43,11 +43,11 @@ export function useSetReportForm(
   const { mutate, isPending } = useSetReport();
 
   /**
-   * handleSubmit 사용자 동작을 처리한다
+   * handleSubmit 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param form form 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    * @throws API 요청 또는 비동기 처리 실패 시 발생
    */
   const handleSubmit = async (form: HTMLFormElement) => {
@@ -98,11 +98,11 @@ export function useSetReportForm(
     let normalizedPubcYsno: "Y" | "N" = "N";
     let normalizedGrade = "0";
 
-    // 완료와 중단 상태에서만 사용자가 선택한 공개 여부와 평점을 저장 요청에 반영한다
+    // 완료와 중단 상태에서만 사용자가 선택한 공개 여부와 평점을 저장 요청에 반영함
     if (!isReadingStatus) {
-      // 공개를 명시적으로 선택한 경우에만 공개값을 사용한다
+      // 공개를 명시적으로 선택한 경우에만 공개값을 사용함
       normalizedPubcYsno = pubcYsno === "Y" ? "Y" : "N";
-      // 평점이 비어 있으면 미선택 내부값 0을 사용한다
+      // 평점이 비어 있으면 미선택 내부값 0을 사용함
       normalizedGrade = grade ? String(grade) : "0";
     }
     const data = {

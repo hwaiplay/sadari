@@ -9,7 +9,7 @@ import java.util.Properties;
  * fileName       : KakaoAccountDto
  * author         : SeungHyeon.Kang
  * date           : 2026-03-16
- * description    : 카카오 사용자 정보 API의 계정과 프로필 데이터를 전달한다
+ * description    : 카카오 사용자 정보 API의 계정과 프로필 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -29,7 +29,7 @@ public class KakaoAccountDto {
     public KakaoAccount kakao_account;
 
     /**
-     * 카카오 계정의 사용자 동의 상태와 프로필 정보를 전달한다
+     * 카카오 계정의 사용자 동의 상태와 프로필 정보를 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -57,7 +57,7 @@ public class KakaoAccountDto {
         public KakaoProfile profile;
 
         /**
-         * 카카오 프로필의 닉네임과 이미지 정보를 전달한다
+         * 카카오 프로필의 닉네임과 이미지 정보를 전달함
          *
          * @author SeungHyeon.Kang
          */

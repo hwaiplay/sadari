@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : ReadingStatisticsSettingDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 마이페이지 독서 통계의 공개 범위를 전달한다
+ * description    : 마이페이지 독서 통계의 공개 범위를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

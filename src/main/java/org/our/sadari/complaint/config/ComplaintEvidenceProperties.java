@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * fileName       : ComplaintEvidenceProperties
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 관리자 전용 신고 이미지 증거의 보존과 정리 범위를 관리한다
+ * description    : 관리자 전용 신고 이미지 증거의 보존과 정리 범위를 관리함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

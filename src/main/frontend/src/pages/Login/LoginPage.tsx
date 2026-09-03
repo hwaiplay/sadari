@@ -14,7 +14,7 @@ import {
 } from "./Login.css";
 
 /**
- * Kakao OAuth 시작 링크를 제공하는 로그인 화면을 렌더링합니다.
+ * Kakao OAuth 시작 링크를 제공하는 로그인 화면을 렌더링함
  *
  * @author HanWon.Jang
  * @return 로그인 페이지 컴포넌트

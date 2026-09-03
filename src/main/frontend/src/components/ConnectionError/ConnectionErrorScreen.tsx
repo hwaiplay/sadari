@@ -9,13 +9,13 @@ import { ActionButton } from "@/components/Button/ActionButton";
 import * as styles from "./ConnectionErrorScreen.css";
 
 /**
- * JDBC 또는 인터넷 연결 장애가 감지되면 앱 전체를 연결 안내 화면으로 전환한다
+ * JDBC 또는 인터넷 연결 장애가 감지되면 앱 전체를 연결 안내 화면으로 전환함
  *
  * @author HanWon.Jang
  * @return 연결 장애 안내 화면 또는 정상 연결 상태의 빈 화면
  */
 export const ConnectionErrorScreen = () => {
-  // Axios와 브라우저 이벤트가 공유하는 전역 연결 장애 상태를 구독한다
+  // Axios와 브라우저 이벤트가 공유하는 전역 연결 장애 상태를 구독함
   const isUnstable = useSyncExternalStore(
     subscribeConnection,
     getConnectionStatus,
@@ -23,62 +23,62 @@ export const ConnectionErrorScreen = () => {
   );
 
   /**
-   * 브라우저 인터넷 연결이 복구되면 오프라인으로 열린 전역 안내 화면을 해제한다
+   * 브라우저 인터넷 연결이 복구되면 오프라인으로 열린 전역 안내 화면을 해제함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleOnline = useCallback((): void => {
-    // JDBC 장애 화면은 유지하면서 브라우저 오프라인 상태만 정상 화면으로 복구한다
+    // JDBC 장애 화면은 유지하면서 브라우저 오프라인 상태만 정상 화면으로 복구함
     publishConnectionRestore("offline");
   }, []);
 
   /**
-   * 현재 페이지를 다시 불러와 인터넷과 서버 연결 상태를 새로 확인한다
+   * 현재 페이지를 다시 불러와 인터넷과 서버 연결 상태를 새로 확인함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleRetry = useCallback((): void => {
-    // 앱 초기 요청부터 다시 실행해 JDBC와 인터넷 연결 복구 여부를 확인한다
+    // 앱 초기 요청부터 다시 실행해 JDBC와 인터넷 연결 복구 여부를 확인함
     window.location.reload();
   }, []);
 
   /**
-   * 앱이 열린 동안 브라우저 온라인 이벤트를 연결하고 화면 해제 시 정리한다
+   * 앱이 열린 동안 브라우저 온라인 이벤트를 연결하고 화면 해제 시 정리함
    *
    * @author HanWon.Jang
    * @return 브라우저 온라인 이벤트 정리 함수
    */
   const syncBrowserEvents = useCallback((): (() => void) => {
-    // 인터넷이 복구되면 새로고침 없이 오프라인 안내 화면을 해제하도록 이벤트를 등록한다
+    // 인터넷이 복구되면 새로고침 없이 오프라인 안내 화면을 해제하도록 이벤트를 등록함
     window.addEventListener("online", handleOnline);
 
     /**
-     * 연결 장애 화면 감지에 사용한 브라우저 이벤트를 제거한다
+     * 연결 장애 화면 감지에 사용한 브라우저 이벤트를 제거함
      *
      * @author HanWon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     const clearBrowserEvents = (): void => {
-      // 컴포넌트 해제 이후 온라인 이벤트가 남지 않도록 정리한다
+      // 컴포넌트 해제 이후 온라인 이벤트가 남지 않도록 정리함
       window.removeEventListener("online", handleOnline);
     };
 
-    // 현재 컴포넌트에 등록한 브라우저 이벤트 정리 함수를 반환한다
+    // 현재 컴포넌트에 등록한 브라우저 이벤트 정리 함수를 반환함
     return clearBrowserEvents;
   }, [handleOnline]);
 
-  // 앱 생명주기와 브라우저 인터넷 복구 감지를 연결한다
+  // 앱 생명주기와 브라우저 인터넷 복구 감지를 연결함
   useEffect(syncBrowserEvents, [syncBrowserEvents]);
 
-  // 연결 장애가 없으면 기존 앱 화면과 조작을 그대로 유지한다
+  // 연결 장애가 없으면 기존 앱 화면과 조작을 그대로 유지함
   if (!isUnstable) {
-    // 정상 연결 상태에서는 전역 안내 화면을 렌더링하지 않는다
+    // 정상 연결 상태에서는 전역 안내 화면을 렌더링하지 않음
     return null;
   }
 
-  // 앱 전체를 가리는 연결 장애 안내와 재시도 동작을 반환한다
+  // 앱 전체를 가리는 연결 장애 안내와 재시도 동작을 반환함
   return (
     <section className={styles.screen} role="alert" aria-live="assertive">
       {/* 연결 장애 상태와 복구 동작 안내 영역 */}

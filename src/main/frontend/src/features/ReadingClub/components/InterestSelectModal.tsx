@@ -15,7 +15,7 @@ type InterestSelectModalProps = {
   onClose?: () => void;
 };
 
-/** 관심분야를 대분류별로 선택하는 공통 팝업을 구성한다. @author SeungHyeon.Kang @param props 관심분야 선택 속성 @return 관심분야 선택 팝업 */
+/** 관심분야를 대분류별로 선택하는 공통 팝업을 구성함. @author SeungHyeon.Kang @param props 관심분야 선택 속성 @return 관심분야 선택 팝업 */
 export default function InterestSelectModal({
   catalog,
   initialCodes,
@@ -27,37 +27,37 @@ export default function InterestSelectModal({
 
   const [selectedCodes, setSelectedCodes] = useState(() => new Set(initialCodes));
   const groups = useMemo(() => {
-    // 대분류명이 같은 관심분야를 한 묶음으로 구성한다
+    // 대분류명이 같은 관심분야를 한 묶음으로 구성함
     const grouped = new Map<string, UserInterest[]>();
     catalog.forEach((interest) => grouped.set(interest.intrCnam, [...(grouped.get(interest.intrCnam) ?? []), interest]));
-    // 원래 서버 정렬을 유지한 대분류 목록을 반환한다
+    // 원래 서버 정렬을 유지한 대분류 목록을 반환함
     return Array.from(grouped.entries());
   }, [catalog]);
 
-  /** 관심분야 한 항목을 선택하거나 해제한다. @author SeungHyeon.Kang @param intrCode 관심분야 코드 @return 반환값이 없다 */
+  /** 관심분야 한 항목을 선택하거나 해제함. @author SeungHyeon.Kang @param intrCode 관심분야 코드 @return 반환값이 없음 */
   const toggleInterest = (intrCode: string): void => {
-    // 기존 Set을 직접 변경하지 않고 새 선택 상태를 만든다
+    // 기존 Set을 직접 변경하지 않고 새 선택 상태를 만듦
     setSelectedCodes((current) => {
       const next = new Set(current);
-      // 이미 선택한 항목은 해제한다
+      // 이미 선택한 항목은 해제함
       if (next.has(intrCode)) {
         next.delete(intrCode);
-        // 선택 해제 결과를 반환한다
+        // 선택 해제 결과를 반환함
         return next;
       }
-      // 최대 선택 수를 넘는 추가 선택은 무시한다
+      // 최대 선택 수를 넘는 추가 선택은 무시함
       if (maximum && next.size >= maximum) {
-        // 기존 선택 상태를 유지한다
+        // 기존 선택 상태를 유지함
         return current;
       }
-      // 허용 범위 안의 새 항목을 추가한다
+      // 허용 범위 안의 새 항목을 추가함
       next.add(intrCode);
-      // 새 선택 상태를 반환한다
+      // 새 선택 상태를 반환함
       return next;
     });
   };
 
-  // 페이지 전환 stacking context 밖에서 최상위 관심분야 선택 팝업을 반환한다
+  // 페이지 전환 stacking context 밖에서 최상위 관심분야 선택 팝업을 반환함
   return createPortal(
     <div className={styles.overlay} role="presentation">
       <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="interest-modal-title">

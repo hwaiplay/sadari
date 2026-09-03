@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.user.mapper.UserWithdrawalMapper">
 
-    <!-- 회원 탈퇴 처리 이력을 등록한다. -->
+    <!-- 회원 탈퇴 처리 이력을 등록함 -->
     <insert id="setUserWithdrawal" parameterType="org.our.sadari.user.dto.UserWithdrawalDto" useGeneratedKeys="true" keyProperty="wthdNumb">
         INSERT /* setUserWithdrawal */
           INTO TH_USWTHD (
@@ -30,7 +30,7 @@
         )
     </insert>
 
-    <!-- 탈퇴 회원의 독후감을 공개 목록에서 제외한다. -->
+    <!-- 탈퇴 회원의 독후감을 공개 목록에서 제외함 -->
     <update id="uptUserReportPrivate" parameterType="long">
         UPDATE /* uptUserReportPrivate */
                TM_REPORT
@@ -39,7 +39,7 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 계정 제한 전환 시 통계·목표·사진 피드와 신규 독후감 공개 기본값을 해제하며 복귀 후 자동 공개하지 않는다. -->
+    <!-- 계정 제한 전환 시 통계·목표·사진 피드와 신규 독후감 공개 기본값을 해제하며 복귀 후 자동 공개하지 않음 -->
     <insert id="uptReadingStatsPrivate">
         /* uptReadingStatsPrivate */
         INSERT INTO TM_USSETX (
@@ -66,7 +66,7 @@
              , UPDT_DATE = CURRENT_TIMESTAMP(6)
     </insert>
 
-    <!-- 계정 제한 전환 시 모임 회차 참여의 사용자와 독후감 연결을 제거해 복귀 후 목표 집계에 자동 복원되지 않게 한다. -->
+    <!-- 계정 제한 전환 시 모임 회차 참여의 사용자와 독후감 연결을 제거해 복귀 후 목표 집계에 자동 복원되지 않게 함 -->
     <update id="uptClubParticipantAnon">
         UPDATE /* uptClubParticipantAnon */
                TB_CLPART
@@ -77,7 +77,7 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 탈퇴 회원이 수신한 알림을 삭제 상태로 변경한다. -->
+    <!-- 탈퇴 회원이 수신한 알림을 삭제 상태로 변경함 -->
     <update id="uptUserAlimDeleted" parameterType="long">
         UPDATE /* uptUserAlimDeleted */
                TB_ALIMXX
@@ -85,7 +85,7 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 탈퇴 회원의 모든 브라우저 푸시 구독을 비활성화한다. -->
+    <!-- 탈퇴 회원의 모든 브라우저 푸시 구독을 비활성화함 -->
     <update id="uptUserPushDisabled" parameterType="long">
         UPDATE /* uptUserPushDisabled */
                TB_PSHSUB
@@ -93,7 +93,7 @@
          WHERE USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 계정 비활성화 또는 영구 삭제 대기 전환 시 회원이 댓글에 등록한 좋아요를 삭제한다. -->
+    <!-- 계정 비활성화 또는 영구 삭제 대기 전환 시 회원이 댓글에 등록한 좋아요를 삭제함 -->
     <delete id="delUserReplyLike" parameterType="long">
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
         DELETE /* delUserReplyLike */
@@ -102,14 +102,14 @@
            AND TAGT_TYPE = #{likeTargetReply}
     </delete>
 
-    <!-- 계정 비활성화 또는 삭제 대기 전환 시 미확인 여부와 관계없이 사용자 신고 결과를 보존하지 않는다. -->
+    <!-- 계정 비활성화 또는 삭제 대기 전환 시 미확인 여부와 관계없이 사용자 신고 결과를 보존하지 않음 -->
     <delete id="delComplaintResults" parameterType="long">
         DELETE /* delComplaintResults */
           FROM TH_CMRSLT
          WHERE USER_NUMB = #{userNumb}
     </delete>
 
-    <!-- 영구 삭제 대기 중인 최신 탈퇴 이력을 조회한다. -->
+    <!-- 영구 삭제 대기 중인 최신 탈퇴 이력을 조회함 -->
     <select id="getPendingWithdrawal" parameterType="long" resultType="org.our.sadari.user.dto.UserWithdrawalDto">
         SELECT /* getPendingWithdrawal */
                W.WTHD_NUMB
@@ -130,7 +130,7 @@
                )
     </select>
 
-    <!-- 영구 삭제 대기 이력을 복구 완료 상태로 변경한다. -->
+    <!-- 영구 삭제 대기 이력을 복구 완료 상태로 변경함 -->
     <update id="uptWithdrawalRestored" parameterType="org.our.sadari.user.dto.UserWithdrawalDto">
         UPDATE /* uptWithdrawalRestored */
                TH_USWTHD
@@ -141,7 +141,7 @@
            AND WTHD_STAT = 'DELETE_PENDING'
     </update>
 
-    <!-- 같은 OAuth 식별값으로 탈퇴한 과거 회원 번호 중 현재 유효한 이용 정지가 있는지 조회한다. -->
+    <!-- 같은 OAuth 식별값으로 탈퇴한 과거 회원 번호 중 현재 유효한 이용 정지가 있는지 조회함 -->
     <select id="getActiveSuspCntByIdHash" parameterType="string" resultType="int">
         SELECT /* getActiveSuspCntByIdHash */
                COUNT(1)

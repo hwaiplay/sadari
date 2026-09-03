@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : ComplaintDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 접수 시 저장할 대상 스냅샷과 사유를 전달한다
+ * description    : 신고 접수 시 저장할 대상 스냅샷과 사유를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

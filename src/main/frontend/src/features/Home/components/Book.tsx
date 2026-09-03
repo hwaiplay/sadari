@@ -8,7 +8,7 @@ import { Link } from "react-router-dom";
 import * as styles from "./Book.css";
 
 /**
- * 홈 책장에 표시할 책 표지와 독서 중 배지를 렌더링합니다.
+ * 홈 책장에 표시할 책 표지와 독서 중 배지를 렌더링함
  *
  * @author HanWon.Jang
  * @param reptNumb 이동할 독후감 번호

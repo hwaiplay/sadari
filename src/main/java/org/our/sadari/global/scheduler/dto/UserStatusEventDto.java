@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * fileName       : UserStatusEventDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 회원 상태 변경 Outbox 이벤트와 현재 DB 상태를 전달한다
+ * description    : 회원 상태 변경 Outbox 이벤트와 현재 DB 상태를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

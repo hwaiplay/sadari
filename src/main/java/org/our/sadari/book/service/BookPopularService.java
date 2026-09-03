@@ -22,7 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : BookPopularService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-16
- * description    : 주간과 월간 및 연간 독후감 작성자 수를 기준으로 인기 도서 목록을 구성한다
+ * description    : 주간과 월간 및 연간 독후감 작성자 수를 기준으로 인기 도서 목록을 구성함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -46,7 +46,7 @@ public class BookPopularService {
     private final BookMapper bookMapper;
 
     /**
-     * 선택한 현재 주와 달 또는 연도에 독후감을 작성한 고유 회원 수 기준 인기 도서를 최대 10권 조회한다
+     * 선택한 현재 주와 달 또는 연도에 독후감을 작성한 고유 회원 수 기준 인기 도서를 최대 10권 조회함
      *
      * @author SeungHyeon.Kang
      * @param period 주간과 월간 및 연간 중 조회할 집계 기간 코드
@@ -54,7 +54,7 @@ public class BookPopularService {
      */
     public ResultData getPopularBookList(String period) {
 
-        // 비어 있거나 지원하지 않는 기간은 임의의 넓은 집계 범위로 해석하지 않고 요청을 차단한다
+        // 비어 있거나 지원하지 않는 기간은 임의의 넓은 집계 범위로 해석하지 않고 요청을 차단함
         if (StringUtil.isEmpty(period)) {
             // "잘못된 요청입니다."
             throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
@@ -65,27 +65,27 @@ public class BookPopularService {
         LocalDate periodStartDate;
         LocalDate nextPeriodStartDate;
 
-        // 화면에서 선택한 집계 단위에 맞춰 현재 기간의 반개방 날짜 경계를 계산한다
+        // 화면에서 선택한 집계 단위에 맞춰 현재 기간의 반개방 날짜 경계를 계산함
         switch (normalizedPeriod) {
-            // 주간 집계는 현재 날짜가 속한 주의 월요일부터 시작한다
+            // 주간 집계는 현재 날짜가 속한 주의 월요일부터 시작함
             case PERIOD_WEEKLY:
                 periodStartDate = currentDate.with(TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
-                // 다음 월요일 전까지를 현재 주간 집계 범위로 사용한다
+                // 다음 월요일 전까지를 현재 주간 집계 범위로 사용함
                 nextPeriodStartDate = periodStartDate.plusWeeks(1);
                 break;
-            // 월간 집계는 현재 날짜가 속한 달의 1일부터 시작한다
+            // 월간 집계는 현재 날짜가 속한 달의 1일부터 시작함
             case PERIOD_MONTHLY:
                 periodStartDate = currentDate.withDayOfMonth(1);
-                // 다음 달 1일 전까지를 현재 월간 집계 범위로 사용한다
+                // 다음 달 1일 전까지를 현재 월간 집계 범위로 사용함
                 nextPeriodStartDate = periodStartDate.plusMonths(1);
                 break;
-            // 연간 집계는 현재 날짜가 속한 연도의 1월 1일부터 시작한다
+            // 연간 집계는 현재 날짜가 속한 연도의 1월 1일부터 시작함
             case PERIOD_YEARLY:
                 periodStartDate = currentDate.withDayOfYear(1);
-                // 다음 연도 1월 1일 전까지를 현재 연간 집계 범위로 사용한다
+                // 다음 연도 1월 1일 전까지를 현재 연간 집계 범위로 사용함
                 nextPeriodStartDate = periodStartDate.plusYears(1);
                 break;
-            // 지원하지 않는 기간은 공통 잘못된 요청으로 처리한다
+            // 지원하지 않는 기간은 공통 잘못된 요청으로 처리함
             default:
                 // "잘못된 요청입니다."
                 throw new CustomException(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
@@ -93,22 +93,22 @@ public class BookPopularService {
 
         LocalDateTime periodStart = periodStartDate.atStartOfDay();
         LocalDateTime nextPeriodStart = nextPeriodStartDate.atStartOfDay();
-        // 회원 상태와 독서 상태 및 공개 여부를 제한하지 않은 기간별 인기 도서를 조회한다
+        // 회원 상태와 독서 상태 및 공개 여부를 제한하지 않은 기간별 인기 도서를 조회함
         List<PopularBookDto> popularBookList = bookMapper.getPopularBookList(periodStart, nextPeriodStart);
 
-        // 선택 기간에 독후감이 없으면 화면이 빈 인기 목록을 표시하도록 불변 빈 목록을 반환한다
+        // 선택 기간에 독후감이 없으면 화면이 빈 인기 목록을 표시하도록 불변 빈 목록을 반환함
         if (StringUtil.isEmpty(popularBookList)) {
-            // 선택 기간의 인기 도서가 없는 성공 결과를 반환한다
+            // 선택 기간의 인기 도서가 없는 성공 결과를 반환함
             return ResultData.success(List.of());
         }
 
-        // 정렬된 목록의 화면 순위를 1부터 차례로 설정한다
+        // 정렬된 목록의 화면 순위를 1부터 차례로 설정함
         for (int index = 0; index < popularBookList.size(); index++) {
-            // 현재 목록 위치를 사용자가 확인할 1부터 시작하는 순위로 변환한다
+            // 현재 목록 위치를 사용자가 확인할 1부터 시작하는 순위로 변환함
             popularBookList.get(index).setRank(index + 1);
         }
 
-        // 선택 기간의 인기 도서와 순위 및 독후감 작성자 수와 평균 평점을 반환한다
+        // 선택 기간의 인기 도서와 순위 및 독후감 작성자 수와 평균 평점을 반환함
         return ResultData.success(popularBookList);
     }
 }

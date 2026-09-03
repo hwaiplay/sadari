@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : BookSearchResponseDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-16
- * description    : 도서 검색 페이지와 다음 조회 위치를 사용자 화면에 전달한다
+ * description    : 도서 검색 페이지와 다음 조회 위치를 사용자 화면에 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

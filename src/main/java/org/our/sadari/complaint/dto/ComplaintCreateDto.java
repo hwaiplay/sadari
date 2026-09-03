@@ -11,7 +11,7 @@ import lombok.Data;
  * fileName       : ComplaintCreateDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 사용자가 접수할 신고 대상과 사유를 전달한다
+ * description    : 사용자가 접수할 신고 대상과 사유를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

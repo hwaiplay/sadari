@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : UserMenuDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 사용자 메뉴 조회 응답 데이터를 전달한다
+ * description    : 사용자 메뉴 조회 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ import lombok.Data;
 public class UserMenuDto {
 
     /**
-     * 사용자 화면에 표시할 단일 메뉴와 하위 메뉴 목록을 전달한다.
+     * 사용자 화면에 표시할 단일 메뉴와 하위 메뉴 목록을 전달함
      *
      * @author SeungHyeon.Kang
      */
@@ -58,7 +58,7 @@ public class UserMenuDto {
     }
 
     /**
-     * 현재 URL 메뉴와 사용자 메뉴 트리를 하나의 응답으로 전달한다.
+     * 현재 URL 메뉴와 사용자 메뉴 트리를 하나의 응답으로 전달함
      *
      * @author SeungHyeon.Kang
      */

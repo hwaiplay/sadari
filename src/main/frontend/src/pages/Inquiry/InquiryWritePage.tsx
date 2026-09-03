@@ -23,7 +23,7 @@ const categories: readonly CustomSelectOption<InquiryCategory>[] = [
 ];
 
 /**
- * 경로로 전달된 문의 유형을 허용된 카테고리로 변환한다
+ * 경로로 전달된 문의 유형을 허용된 카테고리로 변환함
  *
  * @author SeungHyeon.Kang
  * @param requestedCategory 경로에서 전달된 문의 유형
@@ -31,25 +31,25 @@ const categories: readonly CustomSelectOption<InquiryCategory>[] = [
  */
 function getInitialCategory(requestedCategory: string | null): InquiryCategory {
 
-  // 이용정지 화면에서 전달된 이의제기 유형을 초기 선택값으로 사용한다
+  // 이용정지 화면에서 전달된 이의제기 유형을 초기 선택값으로 사용함
   if (requestedCategory === "SUSPENSION_APPEAL") {
-    // 검증된 이용정지 이의제기 유형을 반환한다
+    // 검증된 이용정지 이의제기 유형을 반환함
     return requestedCategory;
   }
 
-  // 나머지 허용 카테고리가 경로로 전달되면 해당 유형을 초기 선택값으로 사용한다
+  // 나머지 허용 카테고리가 경로로 전달되면 해당 유형을 초기 선택값으로 사용함
   if (requestedCategory === "ACCOUNT" || requestedCategory === "BUG"
       || requestedCategory === "SUGGESTION" || requestedCategory === "GENERAL") {
-    // 검증된 문의 유형을 반환한다
+    // 검증된 문의 유형을 반환함
     return requestedCategory;
   }
 
-  // 허용되지 않은 경로 값은 일반 문의로 대체한다
+  // 허용되지 않은 경로 값은 일반 문의로 대체함
   return "GENERAL";
 }
 
 /**
- * 고객문의 카테고리와 제목 및 내용을 입력받아 접수한다
+ * 고객문의 카테고리와 제목 및 내용을 입력받아 접수함
  *
  * @author SeungHyeon.Kang
  * @return 고객문의 작성 화면
@@ -67,11 +67,11 @@ function InquiryWritePage() {
   const canSubmit = inqrTitl.trim().length > 0 && inqrCntn.trim().length > 0;
 
   /**
-   * 문의 제목을 입력 상태에 반영한다
+   * 문의 제목을 입력 상태에 반영함
    *
    * @author SeungHyeon.Kang
    * @param event 제목 입력 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleTitleChange = (event: ChangeEvent<HTMLInputElement>): void => {
 
@@ -79,11 +79,11 @@ function InquiryWritePage() {
   };
 
   /**
-   * 문의 본문을 입력 상태에 반영한다
+   * 문의 본문을 입력 상태에 반영함
    *
    * @author SeungHyeon.Kang
    * @param event 본문 입력 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
 
@@ -91,18 +91,18 @@ function InquiryWritePage() {
   };
 
   /**
-   * 입력값을 검증한 뒤 고객문의를 접수하고 상세 화면으로 이동한다
+   * 입력값을 검증한 뒤 고객문의를 접수하고 상세 화면으로 이동함
    *
    * @author SeungHyeon.Kang
    * @param event 문의 작성 폼 제출 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleSubmit = async (event: FormEvent<HTMLFormElement>): Promise<void> => {
 
-    // 브라우저 기본 제출로 화면이 새로고침되지 않도록 문의 접수 흐름을 제어한다
+    // 브라우저 기본 제출로 화면이 새로고침되지 않도록 문의 접수 흐름을 제어함
     event.preventDefault();
 
-    // 제목이나 문의 내용이 비어 있으면 서버 요청 전에 입력 보완을 안내한다
+    // 제목이나 문의 내용이 비어 있으면 서버 요청 전에 입력 보완을 안내함
     if (!canSubmit) {
       // "입력 내용을 확인해주세요."
       await sweetWarning(
@@ -110,39 +110,39 @@ function InquiryWritePage() {
         // "제목과 문의 내용을 입력해주세요."
         message("frontend.inquiry.write.required"),
       );
-      // 필수 입력값이 준비될 때까지 문의 접수를 중단한다
+      // 필수 입력값이 준비될 때까지 문의 접수를 중단함
       return;
     }
 
-    // 문의 접수 요청이 진행되는 동안 중복 제출을 차단한다
+    // 문의 접수 요청이 진행되는 동안 중복 제출을 차단함
     setIsSaving(true);
 
-    // 문의 접수 결과에 따라 상세 이동 또는 오류 알림을 처리한다
+    // 문의 접수 결과에 따라 상세 이동 또는 오류 알림을 처리함
     try {
-      // 인증 상태와 입력값을 반영한 고객문의를 서버에 접수한다
+      // 인증 상태와 입력값을 반영한 고객문의를 서버에 접수함
       const inqrNumb = await setInquiryApi({
         inqrCatg: isSuspended ? "SUSPENSION_APPEAL" : inqrCatg,
         inqrTitl: inqrTitl.trim(),
         inqrCntn: inqrCntn.trim(),
       });
 
-      // 접수된 문의 상세 화면을 현재 작성 이력 대신 표시한다
+      // 접수된 문의 상세 화면을 현재 작성 이력 대신 표시함
       navigate(`/inquiry/detail/${inqrNumb}`, { replace: true });
 
     }
 
-    // 서버가 반환한 실패 원인에 맞는 공통 알럿을 표시한다
+    // 서버가 반환한 실패 원인에 맞는 공통 알럿을 표시함
     catch (saveError) {
-      // 문의 접수 실패 응답에서 사용자 안내 문구를 안전하게 조회한다
+      // 문의 접수 실패 응답에서 사용자 안내 문구를 안전하게 조회함
       // "고객문의를 접수하지 못했습니다."
       const saveErrorMessage = getApiErrorMessage(saveError, message("frontend.inquiry.write.saveFailed"));
 
-      // 비속어가 포함된 경우에는 입력란 아래 문구 대신 다른 작성 화면과 같은 경고 알럿을 사용한다
+      // 비속어가 포함된 경우에는 입력란 아래 문구 대신 다른 작성 화면과 같은 경고 알럿을 사용함
       if (saveError instanceof ResultDataError
           && Number(saveError.result.code) === BAD_WORD_INCLUDED_CODE) {
         // "입력 내용을 확인해주세요."
         await sweetWarning(message("frontend.common.checkInput"), saveErrorMessage);
-        // 비속어 안내 후 일반 오류 알럿이 중복 표시되지 않도록 종료한다
+        // 비속어 안내 후 일반 오류 알럿이 중복 표시되지 않도록 종료함
         return;
       }
 
@@ -150,14 +150,14 @@ function InquiryWritePage() {
       await sweetError(message("frontend.inquiry.write.saveFailedTitle"), saveErrorMessage);
     }
 
-    // 성공과 실패 모두에서 문의 접수 버튼을 다시 사용할 수 있도록 상태를 해제한다
+    // 성공과 실패 모두에서 문의 접수 버튼을 다시 사용할 수 있도록 상태를 해제함
     finally {
-      // 문의 접수 요청이 끝났음을 버튼 상태에 반영한다
+      // 문의 접수 요청이 끝났음을 버튼 상태에 반영함
       setIsSaving(false);
     }
   };
 
-  // 문의 내용 입력란이 남는 공간을 채우고 접수 버튼이 화면 하단에 배치되는 작성 화면을 반환한다
+  // 문의 내용 입력란이 남는 공간을 채우고 접수 버튼이 화면 하단에 배치되는 작성 화면을 반환함
   return (
     <div className={styles.writePage}>
       {/* 문의 접수 안내 영역 */}

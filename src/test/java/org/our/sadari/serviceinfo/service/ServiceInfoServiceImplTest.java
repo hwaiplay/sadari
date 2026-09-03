@@ -23,7 +23,7 @@ import org.springframework.context.support.StaticMessageSource;
  * fileName       : ServiceInfoServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-10
- * description    : 활성 사용자에게만 현재 배포 서비스 정보 목록을 제공하는 정책을 검증한다
+ * description    : 활성 사용자에게만 현재 배포 서비스 정보 목록을 제공하는 정책을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -38,7 +38,7 @@ class ServiceInfoServiceImplTest {
     // 사용자 서비스 정보 서비스 단위 테스트 대상
     private ServiceInfoServiceImpl serviceInfoService;
 
-    /** 각 테스트에 독립된 사용자 서비스 정보 서비스를 생성한다. */
+    /** 각 테스트에 독립된 사용자 서비스 정보 서비스를 생성함 */
     @BeforeEach
     void setUp() {
         serviceInfoService = new ServiceInfoServiceImpl(serviceInfoMapper);
@@ -47,7 +47,7 @@ class ServiceInfoServiceImplTest {
         new MessageUtils().setMessageSource(messageSource);
     }
 
-    /** 비활성 사용자는 서비스 정보 카테고리와 배포본을 조회하지 못한다. */
+    /** 비활성 사용자는 서비스 정보 카테고리와 배포본을 조회하지 못함 */
     @Test
     void getServiceInfoInactive() {
         when(serviceInfoMapper.getActiveUserCnt(7L, "ACTIVE")).thenReturn(0);
@@ -58,7 +58,7 @@ class ServiceInfoServiceImplTest {
         verify(serviceInfoMapper, never()).getServiceInfoList("SVIF_CATE", "Y");
     }
 
-    /** 활성 사용자에게 공통코드 카테고리와 현재 배포본 조회 결과를 그대로 제공한다. */
+    /** 활성 사용자에게 공통코드 카테고리와 현재 배포본 조회 결과를 그대로 제공함 */
     @Test
     void getDeployedServiceInfo() {
         List<ServiceInfoDto> rows = List.of(new ServiceInfoDto());

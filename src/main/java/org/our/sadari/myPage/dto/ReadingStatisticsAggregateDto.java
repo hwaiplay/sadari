@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : ReadingStatisticsAggregateDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-15
- * description    : 독서 상태와 연속 기록 및 별점과 연도 비교 집계를 한 SQL 결과로 전달한다
+ * description    : 독서 상태와 연속 기록 및 별점과 연도 비교 집계를 한 SQL 결과로 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

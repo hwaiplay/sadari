@@ -7,7 +7,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * fileName       : UserWithdrawalService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 회원 탈퇴 재인증과 상태 변경 업무를 정의한다
+ * description    : 회원 탈퇴 재인증과 상태 변경 업무를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
 public interface UserWithdrawalService {
 
     /**
-     * 회원 탈퇴 요청을 검증하고 Kakao 재인증 URL을 발급한다.
+     * 회원 탈퇴 요청을 검증하고 Kakao 재인증 URL을 발급함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴를 요청한 회원 번호
@@ -26,7 +26,7 @@ public interface UserWithdrawalService {
     ResultData setWithdrawalRequest(Long userNumb, UserWithdrawalDto request);
 
     /**
-     * Kakao 재인증 결과를 검증하고 회원 탈퇴를 적용한다.
+     * Kakao 재인증 결과를 검증하고 회원 탈퇴를 적용함
      *
      * @author SeungHyeon.Kang
      * @param code Kakao OAuth 인가 코드
@@ -36,7 +36,7 @@ public interface UserWithdrawalService {
     ResultData setWithdrawalCallback(String code, String state);
 
     /**
-     * 로그인 회원의 영구 삭제 대기 상태를 조회한다.
+     * 로그인 회원의 영구 삭제 대기 상태를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 회원 번호
@@ -45,7 +45,7 @@ public interface UserWithdrawalService {
     ResultData getWithdrawalStatus(Long userNumb);
 
     /**
-     * 영구 삭제 대기 상태를 취소하고 회원을 복구한다.
+     * 영구 삭제 대기 상태를 취소하고 회원을 복구함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 복구할 회원 번호

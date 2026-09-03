@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : InquiryController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 사용자 고객문의 접수와 본인 문의 조회 API를 제공한다
+ * description    : 사용자 고객문의 접수와 본인 문의 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ public class InquiryController {
     private final InquiryService inquiryService;
 
     /**
-     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     * 현재 이용정지 이후 접수한 최신 이의제기 문의 번호를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 인증 사용자 번호
@@ -43,7 +43,7 @@ public class InquiryController {
     public ResultData getSuspInquiryNumb(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
 
-        // 정지 안내 화면의 문의 버튼 이동에 사용할 본인 문의 번호를 반환한다
+        // 정지 안내 화면의 문의 버튼 이동에 사용할 본인 문의 번호를 반환함
         return inquiryService.getSuspInquiryNumb(userNumb);
     }
 
@@ -52,7 +52,7 @@ public class InquiryController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @RequestParam(defaultValue = "1") int page) {
 
-        // 인증 사용자의 고객문의 목록을 반환한다
+        // 인증 사용자의 고객문의 목록을 반환함
         return inquiryService.getInquiryList(userNumb, page);
     }
 
@@ -61,7 +61,7 @@ public class InquiryController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long inqrNumb) {
 
-        // 인증 사용자가 작성한 고객문의 상세를 반환한다
+        // 인증 사용자가 작성한 고객문의 상세를 반환함
         return inquiryService.getInquiryDtl(userNumb, inqrNumb);
     }
 
@@ -70,7 +70,7 @@ public class InquiryController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @RequestBody InquiryCreateDto inquiryCreateDto) {
 
-        // 인증 사용자의 새 고객문의를 접수하고 문의 번호를 반환한다
+        // 인증 사용자의 새 고객문의를 접수하고 문의 번호를 반환함
         return inquiryService.setInquiry(userNumb, inquiryCreateDto);
     }
 }

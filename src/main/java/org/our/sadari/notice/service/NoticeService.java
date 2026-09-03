@@ -6,7 +6,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : NoticeService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 활성 사용자의 배포 공지사항 조회 기능을 정의한다
+ * description    : 활성 사용자의 배포 공지사항 조회 기능을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -16,7 +16,7 @@ import org.our.sadari.global.common.result.ResultData;
 public interface NoticeService {
 
     /**
-     * 현재 배포 중인 공지사항을 사용자 읽음 여부와 함께 페이지 단위로 조회한다
+     * 현재 배포 중인 공지사항을 사용자 읽음 여부와 함께 페이지 단위로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -26,7 +26,7 @@ public interface NoticeService {
     ResultData getNoticeList(Long userNumb, int page);
 
     /**
-     * 홈 화면에 표시할 로그인 사용자의 미읽음 공지 제목 목록을 조회한다
+     * 홈 화면에 표시할 로그인 사용자의 미읽음 공지 제목 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -35,7 +35,7 @@ public interface NoticeService {
     ResultData getUnreadNoticeList(Long userNumb);
 
     /**
-     * 현재 배포 공지 상세와 로그인 사용자의 기존 읽음 여부를 조회한다
+     * 현재 배포 공지 상세와 로그인 사용자의 기존 읽음 여부를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -45,7 +45,7 @@ public interface NoticeService {
     ResultData getNoticeDtl(Long userNumb, Long notiNumb);
 
     /**
-     * 현재 배포 공지에 로그인 사용자의 읽음 이력을 저장한다
+     * 현재 배포 공지에 로그인 사용자의 읽음 이력을 저장함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -55,7 +55,7 @@ public interface NoticeService {
     ResultData setNoticeView(Long userNumb, Long notiNumb);
 
     /**
-     * 공지사항 접근자가 현재 활성 사용자인지 확인한다
+     * 공지사항 접근자가 현재 활성 사용자인지 확인함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 확인할 사용자 번호

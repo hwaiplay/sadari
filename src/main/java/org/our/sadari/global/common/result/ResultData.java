@@ -8,7 +8,7 @@ import org.our.sadari.global.common.util.MessageUtils;
  * fileName       : ResultData
  * author         : SeungHyeon.Kang
  * date           : 2026-03-25
- * description    : 공통 업무에 필요한 기능을 제공한다
+ * description    : 공통 업무에 필요한 기능을 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -28,7 +28,7 @@ public class ResultData {
     private Object data;
 
     /**
-     * ResultData 객체를 생성한다.
+     * ResultData 객체를 생성함
      *
      * @author SeungHyeon.Kang
      * @param code Kakao 로그인 인가 코드
@@ -43,44 +43,44 @@ public class ResultData {
     }
 
     /**
-     * 공통 성공 응답 생성한다.
+     * 공통 성공 응답 생성함
      *
      * @author SeungHyeon.Kang
      * @return 처리 결과
      */
     public static ResultData success() {
-        // 새로 생성한 ResultData 객체를 반환한다
+        // 새로 생성한 ResultData 객체를 반환함
         return new ResultData(200, "success", null);
     }
 
     /**
-     * 공통 성공 응답 생성한다.
+     * 공통 성공 응답 생성함
      *
      * @author SeungHyeon.Kang
      * @param data 성공 응답에 포함할 업무 데이터
      * @return 처리 결과
      */
     public static ResultData success(Object data) {
-        // 새로 생성한 ResultData 객체를 반환한다
+        // 새로 생성한 ResultData 객체를 반환함
         return new ResultData(200, "success", data);
     }
 
     /**
-     * 공통 실패 응답 생성한다.
+     * 공통 실패 응답 생성함
      *
      * @author SeungHyeon.Kang
      * @param resultEnum 실패 응답에 사용할 공통 결과 코드
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum) {
-        // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
+        // 사용자 응답 또는 로그에 사용할 메시지를 조회함
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey());
-        // 새로 생성한 ResultData 객체를 반환한다
+        // 새로 생성한 ResultData 객체를 반환함
         return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 
     /**
-     * 공통 실패 응답 생성한다.
+     * 공통 실패 응답 생성함
      *
      * @author SeungHyeon.Kang
      * @param resultEnum 실패 응답에 사용할 공통 결과 코드
@@ -88,9 +88,9 @@ public class ResultData {
      * @return 처리 결과
      */
     public static ResultData fail(ResultEnum resultEnum, Object... args) {
-        // 사용자 응답 또는 로그에 사용할 메시지를 조회한다
+        // 사용자 응답 또는 로그에 사용할 메시지를 조회함
         String translatedMessage = MessageUtils.getMessage(resultEnum.getMessageKey(), args);
-        // 새로 생성한 ResultData 객체를 반환한다
+        // 새로 생성한 ResultData 객체를 반환함
         return new ResultData(resultEnum.getCode(), translatedMessage, null);
     }
 }

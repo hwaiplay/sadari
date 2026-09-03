@@ -24,7 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ReadingClubController
  * author         : SeungHyeon.Kang
  * date           : 2026-08-05
- * description    : 독서 모임 생성, 탐색, 가입, 초대와 승인 API를 제공한다
+ * description    : 독서 모임 생성, 탐색, 가입, 초대와 승인 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -47,46 +47,46 @@ public class ReadingClubController {
     // 독서 모임 생성과 참여 업무 서비스
     private final ReadingClubService readingClubService;
 
-    /** 다음 도서 추천 목록을 조회한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @return 추천 목록 */
+    /** 다음 도서 추천 목록을 조회함. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @return 추천 목록 */
     @GetMapping("/{clubNumb}/book-recommendations")
     @Operation(summary = "다음 도서 추천 조회")
     public ResultData getBookRecommendationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                                 , @PathVariable Long clubNumb) {
-        // 활성 모임원에게 공개할 다음 도서 추천 목록을 반환한다
+        // 활성 모임원에게 공개할 다음 도서 추천 목록을 반환함
         return readingClubService.getBookRecommendationList(userNumb, clubNumb);
     }
 
-    /** 다음 도서를 추천한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 추천 도서 @return 등록 결과 */
+    /** 다음 도서를 추천함. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 추천 도서 @return 등록 결과 */
     @PostMapping("/{clubNumb}/book-recommendations")
     @Operation(summary = "다음 도서 추천 등록")
     public ResultData setBookRecommendation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                             , @PathVariable Long clubNumb
                                             , @Valid @RequestBody ReadingClubDto.BookRecommendationDto request) {
-        // 활성 모임원의 중복되지 않은 도서 추천 결과를 반환한다
+        // 활성 모임원의 중복되지 않은 도서 추천 결과를 반환함
         return readingClubService.setBookRecommendation(userNumb, clubNumb, request);
     }
 
-    /** 본인의 다음 도서 추천을 삭제한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param recmNumb 추천 번호 @return 삭제 결과 */
+    /** 본인의 다음 도서 추천을 삭제함. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param recmNumb 추천 번호 @return 삭제 결과 */
     @DeleteMapping("/{clubNumb}/book-recommendations/{recmNumb}")
     @Operation(summary = "다음 도서 추천 삭제")
     public ResultData delBookRecommendation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                             , @PathVariable Long clubNumb, @PathVariable Long recmNumb) {
-        // 서버에서 소유권을 검증한 추천 삭제 결과를 반환한다
+        // 서버에서 소유권을 검증한 추천 삭제 결과를 반환함
         return readingClubService.delBookRecommendation(userNumb, clubNumb, recmNumb);
     }
 
-    /** 다음 도서에 투표한다. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 투표 대상 @return 투표 결과 */
+    /** 다음 도서에 투표함. @author HanWon.Jang @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 투표 대상 @return 투표 결과 */
     @PutMapping("/{clubNumb}/book-vote")
     @Operation(summary = "다음 도서 투표")
     public ResultData uptBookVote(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @PathVariable Long clubNumb
                                  , @Valid @RequestBody ReadingClubDto.BookVoteReqDto request) {
-        // 한 사용자당 하나로 갱신되는 투표 결과를 반환한다
+        // 한 사용자당 하나로 갱신되는 투표 결과를 반환함
         return readingClubService.uptBookVote(userNumb, clubNumb, request);
     }
 
     /**
-     * 모임 독서 회차와 활성 멤버별 읽는 중 독후감을 하나의 요청으로 등록한다.
+     * 모임 독서 회차와 활성 멤버별 읽는 중 독후감을 하나의 요청으로 등록함
      *
      * @author Hanwon.Jang
      * @param userNumb 등록을 요청한 모임장 사용자 번호
@@ -99,12 +99,12 @@ public class ReadingClubController {
     public ResultData setReading(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @PathVariable Long clubNumb
                                 , @Valid @RequestBody ReadingClubDto.ReadingCreateReqDto request) {
-        // 회차와 활성 멤버별 독후감을 같은 트랜잭션으로 생성한 결과를 반환한다
+        // 회차와 활성 멤버별 독후감을 같은 트랜잭션으로 생성한 결과를 반환함
         return readingClubService.setReading(userNumb, clubNumb, request);
     }
 
     /**
-     * 현재 모임 독서의 도서와 목표 기간을 수정한다.
+     * 현재 모임 독서의 도서와 목표 기간을 수정함
      *
      * @author Hanwon.Jang
      * @param userNumb 수정을 요청한 모임장 사용자 번호
@@ -118,12 +118,12 @@ public class ReadingClubController {
     public ResultData uptReading(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @PathVariable Long clubNumb, @PathVariable Long rondNumb
                                 , @Valid @RequestBody ReadingClubDto.ReadingUpdateReqDto request) {
-        // 모임장 권한과 연결 독후감 작성 여부를 적용한 수정 결과를 반환한다
+        // 모임장 권한과 연결 독후감 작성 여부를 적용한 수정 결과를 반환함
         return readingClubService.uptReading(userNumb, clubNumb, rondNumb, request);
     }
 
     /**
-     * 활성 모임장이 전원 완독한 진행 회차를 목표 기간 안에 조기 마감한다.
+     * 활성 모임장이 전원 완독한 진행 회차를 목표 기간 안에 조기 마감함
      *
      * @author HanWon.Jang
      * @param userNumb 마감을 요청한 모임장 사용자 번호
@@ -136,12 +136,12 @@ public class ReadingClubController {
     public ResultData uptReadingCompletion(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
-        // 서버에서 모임장 권한과 전원 완독 상태를 다시 검증한 조기 마감 결과를 반환한다
+        // 서버에서 모임장 권한과 전원 완독 상태를 다시 검증한 조기 마감 결과를 반환함
         return readingClubService.uptReadingCompletion(userNumb, clubNumb, rondNumb);
     }
 
     /**
-     * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회한다.
+     * 로그인 사용자가 활성 회원으로 참여 중인 독서 모임 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -150,12 +150,12 @@ public class ReadingClubController {
     @GetMapping("/mine")
     @Operation(summary = "내 모임 조회")
     public ResultData getMyClubList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // 로그인 사용자의 활성 모임 목록을 반환한다
+        // 로그인 사용자의 활성 모임 목록을 반환함
         return readingClubService.getMyClubList(userNumb);
     }
 
     /**
-     * 로그인 사용자의 관심분야와 검색어를 반영한 공개 모임 목록을 조회한다.
+     * 로그인 사용자의 관심분야와 검색어를 반영한 공개 모임 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -166,12 +166,12 @@ public class ReadingClubController {
     @Operation(summary = "공개 모임 찾기")
     public ResultData getFindClubList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                     , @RequestParam(required = false) String keyword) {
-        // 관심분야 일치와 검색어를 적용한 공개 모임을 반환한다
+        // 관심분야 일치와 검색어를 적용한 공개 모임을 반환함
         return readingClubService.getFindClubList(userNumb, keyword);
     }
 
     /**
-     * 로그인 사용자의 참여 관계를 포함한 독서 모임 상세 정보를 조회한다.
+     * 로그인 사용자의 참여 관계를 포함한 독서 모임 상세 정보를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -182,12 +182,12 @@ public class ReadingClubController {
     @Operation(summary = "모임 상세 조회")
     public ResultData getClubDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                 , @PathVariable Long clubNumb) {
-        // 로그인 사용자 관점의 모임 상세를 반환한다
+        // 로그인 사용자 관점의 모임 상세를 반환함
         return readingClubService.getClubDtl(userNumb, clubNumb);
     }
 
     /**
-     * 활성 모임원과 공개 중인 활성 모임 조회자에게 활성 모임원 프로필 목록을 제공한다.
+     * 활성 모임원과 공개 중인 활성 모임 조회자에게 활성 모임원 프로필 목록을 제공함
      *
      * @author Hanwon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -198,12 +198,12 @@ public class ReadingClubController {
     @Operation(summary = "모임원 프로필 목록 조회")
     public ResultData getClubMemberList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @PathVariable Long clubNumb) {
-        // 같은 모임의 활성 모임원 프로필 목록을 반환한다
+        // 같은 모임의 활성 모임원 프로필 목록을 반환함
         return readingClubService.getClubMemberList(userNumb, clubNumb);
     }
 
     /**
-     * 현재 모임장이 다른 활성 일반 멤버를 퇴장시키고 재가입을 차단한다.
+     * 현재 모임장이 다른 활성 일반 멤버를 퇴장시키고 재가입을 차단함
      *
      * @author HanWon.Jang
      * @param userNumb 모임장 사용자 번호
@@ -215,30 +215,30 @@ public class ReadingClubController {
     @Operation(summary = "모임원 강제 퇴장")
     public ResultData delMember(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
-        // 모임장 권한과 활성 멤버 상태를 검증한 퇴장 결과를 반환한다
+        // 모임장 권한과 활성 멤버 상태를 검증한 퇴장 결과를 반환함
         return readingClubService.delMember(userNumb, clubNumb, targetUserNumb);
     }
 
-    /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
+    /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공함. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
     @GetMapping("/{clubNumb}/members/exits")
     @Operation(summary = "모임원 퇴장 내역 조회")
     public ResultData getMemberExitList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @PathVariable Long clubNumb) {
-        // 모임장 권한을 검증한 퇴장 내역을 반환한다
+        // 모임장 권한을 검증한 퇴장 내역을 반환함
         return readingClubService.getMemberExitList(userNumb, clubNumb);
     }
 
-    /** 퇴장 회원의 제한 내역을 삭제한다. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 내역 삭제 결과 */
+    /** 퇴장 회원의 제한 내역을 삭제함. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @param targetUserNumb 대상 사용자 번호 @return 내역 삭제 결과 */
     @DeleteMapping("/{clubNumb}/members/{targetUserNumb}/restriction")
     @Operation(summary = "퇴장 모임원 재가입 제한 해제")
     public ResultData delMemberRestriction(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                           , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
-        // 모임장 권한과 퇴장 및 제한 상태를 검증한 내역 삭제 결과를 반환한다
+        // 모임장 권한과 퇴장 및 제한 상태를 검증한 내역 삭제 결과를 반환함
         return readingClubService.delMemberRestriction(userNumb, clubNumb, targetUserNumb);
     }
 
     /**
-     * 활성 모임원에게 종료된 최신 독서 회차의 목표 결과를 제공한다.
+     * 활성 모임원에게 종료된 최신 독서 회차의 목표 결과를 제공함
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -249,12 +249,12 @@ public class ReadingClubController {
     @Operation(summary = "종료된 모임 독서 목표 결과 조회")
     public ResultData getReadingGoalResult(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                           , @PathVariable Long clubNumb) {
-        // 현재 활성 모임원에게 공개할 수 있는 종료 회차 결과를 반환한다
+        // 현재 활성 모임원에게 공개할 수 있는 종료 회차 결과를 반환함
         return readingClubService.getReadingGoalResult(userNumb, clubNumb);
     }
 
     /**
-     * 현재 활성 모임원에게 지정한 완료 독서 회차의 목표 결과를 제공한다.
+     * 현재 활성 모임원에게 지정한 완료 독서 회차의 목표 결과를 제공함
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -266,12 +266,12 @@ public class ReadingClubController {
     @Operation(summary = "지정한 완료 모임 독서 목표 결과 조회")
     public ResultData getReadingGoalResult(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                          , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
-        // 현재 활성 모임원에게 선택한 완료 회차의 목표 결과를 반환한다
+        // 현재 활성 모임원에게 선택한 완료 회차의 목표 결과를 반환함
         return readingClubService.getReadingGoalResult(userNumb, clubNumb, rondNumb);
     }
 
     /**
-     * 활성 모임원이 팝업에서 직접 닫은 독서 회차 결과를 확인 처리한다.
+     * 활성 모임원이 팝업에서 직접 닫은 독서 회차 결과를 확인 처리함
      *
      * @author HanWon.Jang
      * @param userNumb 확인한 사용자 번호
@@ -284,12 +284,12 @@ public class ReadingClubController {
     public ResultData uptReadingResultConfirm(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb, @PathVariable Long rondNumb) {
-        // 활성 계정과 모임원 관계를 검증한 회차 결과 확인 처리 결과를 반환한다
+        // 활성 계정과 모임원 관계를 검증한 회차 결과 확인 처리 결과를 반환함
         return readingClubService.uptReadingResultConfirm(userNumb, clubNumb, rondNumb);
     }
 
     /**
-     * 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 이전 독서 기록을 제공한다.
+     * 활성 모임원과 공개 중인 활성 모임 조회자에게 모든 이전 독서 기록을 제공함
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -302,12 +302,12 @@ public class ReadingClubController {
     public ResultData getReadingHistoryList(
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb, @RequestParam(defaultValue = "1") int page) {
-        // 접근 권한에 따라 결과 상세 이동 가능 여부를 포함한 종료 회차 목록을 반환한다
+        // 접근 권한에 따라 결과 상세 이동 가능 여부를 포함한 종료 회차 목록을 반환함
         return readingClubService.getReadingHistoryList(userNumb, clubNumb, page);
     }
 
     /**
-     * 활성 모임원에게 진행 또는 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공한다.
+     * 활성 모임원에게 진행 또는 완료된 대상 회차의 완료 독후감을 공개 여부와 무관하게 제공함
      *
      * @author HanWon.Jang
      * @param userNumb 조회를 요청한 사용자 번호
@@ -325,13 +325,13 @@ public class ReadingClubController {
           , @PathVariable Long rondNumb
           , @RequestParam(defaultValue = "LATEST_DESC") String sortType
           , @RequestParam(defaultValue = "1") int page) {
-        // 현재 활성 모임원에게만 대상 회차의 완료 독후감 목록을 반환한다
+        // 현재 활성 모임원에게만 대상 회차의 완료 독후감 목록을 반환함
         return readingClubService.getReadingRoundReportList(
                 userNumb, clubNumb, rondNumb, sortType, page);
     }
 
     /**
-     * 모임 정보와 카테고리 및 가입 질문을 저장하고 개설자를 모임장으로 등록한다.
+     * 모임 정보와 카테고리 및 가입 질문을 저장하고 개설자를 모임장으로 등록함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -342,12 +342,12 @@ public class ReadingClubController {
     @Operation(summary = "새 모임 생성")
     public ResultData setClub(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                              , @Valid @RequestBody ReadingClubDto.ClubCreateReqDto request) {
-        // 모임과 개설자 회원 관계를 한 트랜잭션으로 생성한 결과를 반환한다
+        // 모임과 개설자 회원 관계를 한 트랜잭션으로 생성한 결과를 반환함
         return readingClubService.setClub(userNumb, request);
     }
 
     /**
-     * 현재 모임장이 모임 기본 정보와 운영 설정을 수정한다.
+     * 현재 모임장이 모임 기본 정보와 운영 설정을 수정함
      *
      * @author Hanwon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -360,12 +360,12 @@ public class ReadingClubController {
     public ResultData uptClub(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                             , @PathVariable Long clubNumb
                             , @Valid @RequestBody ReadingClubDto.ClubCreateReqDto request) {
-        // 현재 모임장 권한과 운영 제약을 적용한 수정 결과를 반환한다
+        // 현재 모임장 권한과 운영 제약을 적용한 수정 결과를 반환함
         return readingClubService.uptClub(userNumb, clubNumb, request);
     }
 
     /**
-     * 현재 모임장이 모임과 종속 데이터를 복구 불가능하게 삭제한다.
+     * 현재 모임장이 모임과 종속 데이터를 복구 불가능하게 삭제함
      *
      * @author Hanwon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -376,12 +376,12 @@ public class ReadingClubController {
     @Operation(summary = "모임 삭제")
     public ResultData delClub(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                             , @PathVariable Long clubNumb) {
-        // 현재 모임장만 실행할 수 있는 물리 삭제 결과를 반환한다
+        // 현재 모임장만 실행할 수 있는 물리 삭제 결과를 반환함
         return readingClubService.delClub(userNumb, clubNumb);
     }
 
     /**
-     * 공개 모임의 가입 방식에 따라 활성 회원을 등록하거나 승인 신청을 저장한다.
+     * 공개 모임의 가입 방식에 따라 활성 회원을 등록하거나 승인 신청을 저장함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 가입 사용자 번호
@@ -394,12 +394,12 @@ public class ReadingClubController {
     public ResultData setJoin(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                              , @PathVariable Long clubNumb
                              , @Valid @RequestBody ReadingClubDto.JoinReqDto request) {
-        // 모임 정책에 맞춰 즉시 가입 또는 승인 신청 결과를 반환한다
+        // 모임 정책에 맞춰 즉시 가입 또는 승인 신청 결과를 반환함
         return readingClubService.setJoin(userNumb, clubNumb, request);
     }
 
     /**
-     * 활성 일반 모임원이 본인의 모임 활동 연결을 정리하고 자진 탈퇴한다.
+     * 활성 일반 모임원이 본인의 모임 활동 연결을 정리하고 자진 탈퇴함
      *
      * @author HanWon.Jang
      * @param userNumb 탈퇴를 요청한 사용자 번호
@@ -410,12 +410,12 @@ public class ReadingClubController {
     @Operation(summary = "모임 자진 탈퇴", description = "활성 일반 모임원의 모임 활동 연결을 삭제하고 개인 독후감 원본은 보존한다.")
     public ResultData delMembership(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @PathVariable Long clubNumb) {
-        // 서버에서 계정과 일반 모임원 자격을 검증한 자진 탈퇴 결과를 반환한다
+        // 서버에서 계정과 일반 모임원 자격을 검증한 자진 탈퇴 결과를 반환함
         return readingClubService.delMembership(userNumb, clubNumb);
     }
 
     /**
-     * 가입 신청자가 승인 전 자신의 처리 대기 신청을 취소한다.
+     * 가입 신청자가 승인 전 자신의 처리 대기 신청을 취소함
      *
      * @author HanWon.Jang
      * @param userNumb 가입 신청 사용자 번호
@@ -426,12 +426,12 @@ public class ReadingClubController {
     @Operation(summary = "내 가입 신청 취소")
     public ResultData delApplication(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                     , @PathVariable Long clubNumb) {
-        // 로그인 사용자의 처리 대기 신청만 취소한 결과를 반환한다
+        // 로그인 사용자의 처리 대기 신청만 취소한 결과를 반환함
         return readingClubService.delApplication(userNumb, clubNumb);
     }
 
     /**
-     * 모임 관계가 없는 모임장의 맞팔로우 사용자를 초대 후보로 조회한다.
+     * 모임 관계가 없는 모임장의 맞팔로우 사용자를 초대 후보로 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -442,12 +442,12 @@ public class ReadingClubController {
     @Operation(summary = "맞팔 초대 후보 조회")
     public ResultData getInviteCandidateList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                              , @PathVariable Long clubNumb) {
-        // 아직 모임 관계가 없는 활성 맞팔 후보를 반환한다
+        // 아직 모임 관계가 없는 활성 맞팔 후보를 반환함
         return readingClubService.getInviteCandidateList(userNumb, clubNumb);
     }
 
     /**
-     * 모임장이 활성 회원에게 발송한 유효한 초대 목록을 조회한다.
+     * 모임장이 활성 회원에게 발송한 유효한 초대 목록을 조회함
      *
      * @author Hanwon.Jang
      * @param userNumb 모임장 사용자 번호
@@ -458,12 +458,12 @@ public class ReadingClubController {
     @Operation(summary = "보낸 모임 초대 조회")
     public ResultData getSentInvitationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                             , @PathVariable Long clubNumb) {
-        // 활성 회원에게 발송한 만료 전 초대 목록을 반환한다
+        // 활성 회원에게 발송한 만료 전 초대 목록을 반환함
         return readingClubService.getSentInvitationList(userNumb, clubNumb);
     }
 
     /**
-     * 선택한 맞팔로우 사용자에게 모임 초대를 발송하고 정원 내 좌석을 예약한다.
+     * 선택한 맞팔로우 사용자에게 모임 초대를 발송하고 정원 내 좌석을 예약함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -476,12 +476,12 @@ public class ReadingClubController {
     public ResultData setInvitation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @PathVariable Long clubNumb
                                    , @Valid @RequestBody ReadingClubDto.InviteReqDto request) {
-        // 선택한 모든 맞팔 대상의 좌석 예약 결과를 반환한다
+        // 선택한 모든 맞팔 대상의 좌석 예약 결과를 반환함
         return readingClubService.setInvitation(userNumb, clubNumb, request);
     }
 
     /**
-     * 로그인 사용자에게 도착한 만료 전 모임 초대 목록을 조회한다.
+     * 로그인 사용자에게 도착한 만료 전 모임 초대 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -490,12 +490,12 @@ public class ReadingClubController {
     @GetMapping("/invitations/received")
     @Operation(summary = "받은 모임 초대 조회")
     public ResultData getInvitationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // 로그인 사용자의 유효한 받은 초대를 반환한다
+        // 로그인 사용자의 유효한 받은 초대를 반환함
         return readingClubService.getInvitationList(userNumb);
     }
 
     /**
-     * 로그인 사용자의 유효한 초대 예약석을 활성 모임원 관계로 전환한다.
+     * 로그인 사용자의 유효한 초대 예약석을 활성 모임원 관계로 전환함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 초대 대상 사용자 번호
@@ -506,12 +506,12 @@ public class ReadingClubController {
     @Operation(summary = "받은 모임 초대 수락")
     public ResultData uptInvitationAccepted(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                             , @PathVariable Long clubNumb) {
-        // 예약석을 활성 회원으로 전환한 결과를 반환한다
+        // 예약석을 활성 회원으로 전환한 결과를 반환함
         return readingClubService.uptInvitationAccepted(userNumb, clubNumb);
     }
 
     /**
-     * 로그인 사용자의 초대 예약석을 이력 없이 삭제하여 초대를 거절한다.
+     * 로그인 사용자의 초대 예약석을 이력 없이 삭제하여 초대를 거절함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 초대 대상 사용자 번호
@@ -522,12 +522,12 @@ public class ReadingClubController {
     @Operation(summary = "받은 모임 초대 거절")
     public ResultData delInvitation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @PathVariable Long clubNumb) {
-        // 본인의 초대 예약석을 이력 없이 삭제한 결과를 반환한다
+        // 본인의 초대 예약석을 이력 없이 삭제한 결과를 반환함
         return readingClubService.delInvitation(userNumb, clubNumb);
     }
 
     /**
-     * 모임장이 발송한 특정 사용자의 초대 예약석을 이력 없이 삭제한다.
+     * 모임장이 발송한 특정 사용자의 초대 예약석을 이력 없이 삭제함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -539,12 +539,12 @@ public class ReadingClubController {
     @Operation(summary = "발송한 모임 초대 취소")
     public ResultData delOwnerInvitation(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                         , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
-        // 모임장이 지정한 초대 예약석을 삭제한 결과를 반환한다
+        // 모임장이 지정한 초대 예약석을 삭제한 결과를 반환함
         return readingClubService.delOwnerInvitation(userNumb, clubNumb, targetUserNumb);
     }
 
     /**
-     * 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 조회한다.
+     * 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -555,12 +555,12 @@ public class ReadingClubController {
     @Operation(summary = "가입 신청 조회")
     public ResultData getApplicationList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                         , @PathVariable Long clubNumb) {
-        // 모임장이 심사할 질문과 답변 목록을 반환한다
+        // 모임장이 심사할 질문과 답변 목록을 반환함
         return readingClubService.getApplicationList(userNumb, clubNumb);
     }
 
     /**
-     * 모임장이 가입 신청을 승인 또는 거절하고 신청 답변을 즉시 삭제한다.
+     * 모임장이 가입 신청을 승인 또는 거절하고 신청 답변을 즉시 삭제함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -574,7 +574,7 @@ public class ReadingClubController {
     public ResultData uptApplication(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                     , @PathVariable Long clubNumb, @PathVariable Long applNumb
                                     , @Valid @RequestBody ReadingClubDto.ApplicationDecisionReqDto request) {
-        // 승인 시 좌석을 검사하고 처리된 답변을 즉시 삭제한 결과를 반환한다
+        // 승인 시 좌석을 검사하고 처리된 답변을 즉시 삭제한 결과를 반환함
         return readingClubService.uptApplication(userNumb, clubNumb, applNumb, request);
     }
 }

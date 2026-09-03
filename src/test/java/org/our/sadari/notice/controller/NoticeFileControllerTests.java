@@ -17,7 +17,7 @@ import static org.mockito.Mockito.when;
  * fileName       : NoticeFileControllerTests
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 웰컴페이지 이미지의 저장 루트와 브라우저 캐시 응답을 검증한다
+ * description    : 웰컴페이지 이미지의 저장 루트와 브라우저 캐시 응답을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

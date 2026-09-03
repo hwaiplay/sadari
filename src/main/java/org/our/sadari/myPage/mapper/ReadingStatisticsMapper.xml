@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.myPage.mapper.ReadingStatisticsMapper">
 
-    <!-- 회원의 통계 공개 범위를 계정 상태와 함께 조회한다. -->
+    <!-- 회원의 통계 공개 범위를 계정 상태와 함께 조회함 -->
     <select id="getReadingStatsSetting" resultType="org.our.sadari.myPage.dto.ReadingStatisticsSettingDto">
         SELECT /* getReadingStatsSetting */
                U.USER_NUMB
@@ -14,7 +14,7 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
-    <!-- 조회 가능한 기록 연도와 선택 연도의 일별 독서 시간을 한 SQL에서 조회한다. -->
+    <!-- 조회 가능한 기록 연도와 선택 연도의 일별 독서 시간을 한 SQL에서 조회함 -->
     <select id="getHeatmapRowList" resultType="org.our.sadari.myPage.dto.ReadingHeatmapRowDto">
         <bind name="rowTypeYear" value="@org.our.sadari.myPage.dto.ReadingHeatmapRowDto@ROW_TYPE_YEAR" />
         <bind name="rowTypeDaily" value="@org.our.sadari.myPage.dto.ReadingHeatmapRowDto@ROW_TYPE_DAILY" />
@@ -44,7 +44,7 @@
              , H.READ_DATE
     </select>
 
-    <!-- 현재 연도에 완료한 타이머의 확정 시간을 도서별로 합산해 상위 세 권을 조회한다. -->
+    <!-- 현재 연도에 완료한 타이머의 확정 시간을 도서별로 합산해 상위 세 권을 조회함 -->
     <select id="getTopBookTimeList" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
             resultType="org.our.sadari.myPage.dto.ReadingStatisticsDto$BookTime">
         SELECT /* getTopBookTimeList */
@@ -74,7 +74,7 @@
          LIMIT 3
     </select>
 
-    <!-- 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 SQL에서 집계한다. -->
+    <!-- 독서 상태와 연속 기록 및 별점과 연도 비교값을 한 SQL에서 집계함 -->
     <select id="getStatsAggregate" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsQueryDto"
             resultType="org.our.sadari.myPage.dto.ReadingStatisticsAggregateDto">
         <bind name="readStat" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
@@ -180,7 +180,7 @@
     CROSS JOIN TIMERCOMPARE T
     </select>
 
-    <!-- 정상 이용 회원이 선택한 독서 통계 공개 여부를 범용 회원 설정 행에 저장한다. -->
+    <!-- 정상 이용 회원이 선택한 독서 통계 공개 여부를 범용 회원 설정 행에 저장함 -->
     <insert id="uptReadingStatsSetting" parameterType="org.our.sadari.myPage.dto.ReadingStatisticsSettingDto">
         /* uptReadingStatsSetting */
         INSERT INTO TM_USSETX (

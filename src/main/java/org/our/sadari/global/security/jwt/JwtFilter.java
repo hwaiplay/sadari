@@ -20,7 +20,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * fileName       : JwtFilter
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : 인증과 보안 요청의 인증 상태를 검사한다
+ * description    : 인증과 보안 요청의 인증 상태를 검사함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -62,7 +62,7 @@ public class JwtFilter extends OncePerRequestFilter {
     private final UserMapper userMapper;
 
     /**
-     * HTTP 요청 헤더/쿠키에서 Access Token을 추출하여 유효성 및 블랙리스트 등록 여부를 검증한 후 SecurityContext에 인증 객체를 등록한다.
+     * HTTP 요청 헤더/쿠키에서 Access Token을 추출하여 유효성 및 블랙리스트 등록 여부를 검증한 후 SecurityContext에 인증 객체를 등록함
      *
      * @author SeungHyeon.Kang
      * @param request 서블릿 요청 객체
@@ -71,85 +71,85 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        // extractAccessToken 호출로 요청에서 인증 토큰을 추출한다
+        // extractAccessToken 호출로 요청에서 인증 토큰을 추출함
         String token = extractAccessToken(request);
 
-        // Access Token이 존재하고, 서명/만료시간이 유효하며, Redis 블랙리스트(로그아웃된 토큰)에 등록되지 않은 경우 인증 객체를 생성한다.
+        // Access Token이 존재하고, 서명/만료시간이 유효하며, Redis 블랙리스트(로그아웃된 토큰)에 등록되지 않은 경우 인증 객체를 생성함
         if (!StringUtil.isEmpty(token) && jwtProvider.validateAccessToken(token) && !tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(token))) {
-            // 토큰에 기록된 회원 번호를 조회한다
+            // 토큰에 기록된 회원 번호를 조회함
             Long userNumb = jwtProvider.getUserNumb(token);
-            // 토큰에 기록된 기기별 로그인 세션 식별자를 조회한다
+            // 토큰에 기록된 기기별 로그인 세션 식별자를 조회함
             String sessionId = jwtProvider.getSessionId(token);
 
-            // 현재 또는 전체 기기 로그아웃으로 제거된 세션이면 인증 객체를 만들지 않는다
+            // 현재 또는 전체 기기 로그아웃으로 제거된 세션이면 인증 객체를 만들지 않음
             if (!tokenRedisService.isSessionActive(userNumb, sessionId)) {
-                // 인증 없이 남은 필터 체인을 수행한다
+                // 인증 없이 남은 필터 체인을 수행함
                 filterChain.doFilter(request, response);
-                // 제거된 세션의 요청 처리를 종료한다
+                // 제거된 세션의 요청 처리를 종료함
                 return;
             }
 
-            // getAuthentication 조회로 후속 처리에 필요한 데이터를 가져온다
+            // getAuthentication 조회로 후속 처리에 필요한 데이터를 가져옴
             Authentication authentication = jwtProvider.getAuthentication(token);
-            // 한 요청에서 동일 Redis 회원 상태를 한 번만 조회한다
+            // 한 요청에서 동일 Redis 회원 상태를 한 번만 조회함
             String userStat = tokenRedisService.getUserStatus(userNumb);
 
-            // 상태 캐시가 없으면 ACTIVE로 추정하지 않고 DB 계정 원본으로 보정한다
+            // 상태 캐시가 없으면 ACTIVE로 추정하지 않고 DB 계정 원본으로 보정함
             if (StringUtil.isEmpty(userStat)) {
-                // 계정 원본을 회원 번호로 조회한다
+                // 계정 원본을 회원 번호로 조회함
                 UserDto savedUser = userMapper.getUserByNumb(userNumb);
-                // 물리 삭제됐거나 조회할 수 없는 회원은 인증 객체를 만들지 않는다
+                // 물리 삭제됐거나 조회할 수 없는 회원은 인증 객체를 만들지 않음
                 if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())) {
-                    // 인증 없이 남은 필터 체인을 수행한다
+                    // 인증 없이 남은 필터 체인을 수행함
                     filterChain.doFilter(request, response);
-                    // 존재하지 않는 회원의 요청 처리를 종료한다
+                    // 존재하지 않는 회원의 요청 처리를 종료함
                     return;
                 }
 
-                // DB의 현재 계정 상태를 이번 요청 판단값으로 사용한다
+                // DB의 현재 계정 상태를 이번 요청 판단값으로 사용함
                 userStat = savedUser.getUserStat();
-                // 다음 요청부터 같은 상태를 사용하도록 Redis 캐시를 채운다
+                // 다음 요청부터 같은 상태를 사용하도록 Redis 캐시를 채움
                 tokenRedisService.uptUserStatus(userNumb, userStat);
             }
 
-            // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없다
+            // 영구 삭제 대기 회원은 상태 조회, 취소, 로그아웃 이외의 API를 사용할 수 없음
             if (Constant.USER_STAT_DELETE_PENDING.equals(userStat)
                     && !isDeletePendingPath(request.getRequestURI())) {
-                // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답한다
+                // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                // 영구 삭제 대기 회원 요청의 필터 처리를 종료한다
+                // 영구 삭제 대기 회원 요청의 필터 처리를 종료함
                 return;
             }
 
-            // 비활성화 회원은 같은 Kakao 계정 재로그인과 로그아웃 이외의 일반 API를 사용할 수 없다
+            // 비활성화 회원은 같은 Kakao 계정 재로그인과 로그아웃 이외의 일반 API를 사용할 수 없음
             if (Constant.USER_STAT_WITHDRAWN.equals(userStat)
                     && !isWithdrawnAllowedPath(request.getRequestURI())) {
-                // 비활성화 회원의 일반 서비스 API 요청을 권한 없음으로 응답한다
+                // 비활성화 회원의 일반 서비스 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                // 비활성화 회원 요청의 필터 처리를 종료한다
+                // 비활성화 회원 요청의 필터 처리를 종료함
                 return;
             }
 
-            // 관리자 정지 회원은 정지 안내와 로그아웃 이외의 API를 사용할 수 없다
+            // 관리자 정지 회원은 정지 안내와 로그아웃 이외의 API를 사용할 수 없음
             if (Constant.USER_STAT_SUSPENDED.equals(userStat)
                     && !isSuspendedAllowedPath(request.getRequestURI())) {
-                // 정지 회원의 일반 서비스 API 요청을 권한 없음으로 응답한다
+                // 정지 회원의 일반 서비스 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                // 정지 회원 요청의 필터 처리를 종료한다
+                // 정지 회원 요청의 필터 처리를 종료함
                 return;
             }
 
-            // SecurityContext에 Authentication 객체를 세팅하여 이 후 컨트롤러에서 @AuthenticationPrincipal 등으로 유저 정보를 참조할 수 있게 한다.
+            // SecurityContext에 Authentication 객체를 세팅하여 이 후 컨트롤러에서 @AuthenticationPrincipal 등으로 유저 정보를 참조할 수 있게 함
             SecurityContextHolder.getContext().setAuthentication(authentication);
         }
 
-        // JWT 검증 뒤 남은 보안 필터 체인을 계속 실행한다
+        // JWT 검증 뒤 남은 보안 필터 체인을 계속 실행함
         filterChain.doFilter(request, response);
     }
 
     /**
-     * 특정 요청 URI에 대해 해당 JWT 필터 수행을 건너뛸지 여부를 결정한다.
-     * Refresh Token 재발급과 로컬 개발용 계정 전환은 기존 Access Token 상태와 무관해야 하므로 검증 대상에서 제외한다.
+     * 특정 요청 URI에 대해 해당 JWT 필터 수행을 건너뛸지 여부를 결정함
+     * Refresh Token 재발급과 로컬 개발용 계정 전환은 기존 Access Token 상태와 무관해야 하므로 검증 대상에서 제외함
      *
      * @author SeungHyeon.Kang
      * @param request 서블릿 요청 객체
@@ -157,47 +157,47 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 만료 토큰 재발급과 loc 전용 계정 전환 경로의 JWT 필터 제외 여부를 반환한다
+        // 만료 토큰 재발급과 loc 전용 계정 전환 경로의 JWT 필터 제외 여부를 반환함
         return REFRESH_TOKEN_API_URI.equals(request.getRequestURI())
                 || LOCAL_LOGIN_API_URI.equals(request.getRequestURI());
     }
 
     /**
-     * HTTP 요청의 쿠키 목록에서 Access Token 쿠키 값을 추출한다.
+     * HTTP 요청의 쿠키 목록에서 Access Token 쿠키 값을 추출함
      *
      * @author SeungHyeon.Kang
      * @param request 서블릿 요청 객체
      * @return 추출된 Access Token 문자열 (존재하지 않을 경우 null)
      */
     private String extractAccessToken(HttpServletRequest request) {
-        // 요청 헤더에 쿠키가 존재하지 않는 경우 null을 반환한다.
+        // 요청 헤더에 쿠키가 존재하지 않는 경우 null을 반환함
         if (StringUtil.isEmpty(request.getCookies())) {
-            // 조회하거나 생성할 값이 없음을 반환한다
+            // 조회하거나 생성할 값이 없음을 반환함
             return null;
         }
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록이다
+        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록임
         for (Cookie cookie : request.getCookies()) {
-            // Access Token 쿠키명과 일치하는 쿠키가 존재하면 해당 토큰 값을 반환한다.
+            // Access Token 쿠키명과 일치하는 쿠키가 존재하면 해당 토큰 값을 반환함
             if (ACCESS_TOKEN_COOKIE_NAME.equals(cookie.getName())) {
-                // HTTP 요청의 쿠키 목록에서 Access Token 쿠키 값을 추출 결과를 반환한다
+                // HTTP 요청의 쿠키 목록에서 Access Token 쿠키 값을 추출 결과를 반환함
                 return cookie.getValue();
             }
         }
 
-        // 조회하거나 생성할 값이 없음을 반환한다
+        // 조회하거나 생성할 값이 없음을 반환함
         return null;
     }
 
     /**
-     * 영구 삭제 대기 회원에게 허용된 최소 API 경로인지 확인한다.
+     * 영구 삭제 대기 회원에게 허용된 최소 API 경로인지 확인함
      *
      * @author SeungHyeon.Kang
      * @param requestUri 현재 요청 URI
      * @return 허용 경로 여부
      */
     private boolean isDeletePendingPath(String requestUri) {
-        // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용한다
+        // 탈퇴 상태 확인과 취소 또는 인증 종료 경로만 허용함
         return requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || LOGOUT_API_URI.equals(requestUri)
                 || TOKEN_CHECK_API_URI.equals(requestUri)
@@ -205,7 +205,7 @@ public class JwtFilter extends OncePerRequestFilter {
     }
 
     /**
-     * 비활성화 회원에게 허용된 최소 인증 API 경로인지 확인한다
+     * 비활성화 회원에게 허용된 최소 인증 API 경로인지 확인함
      *
      * @author SeungHyeon.Kang
      * @param requestUri 현재 요청 URI
@@ -213,14 +213,14 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private boolean isWithdrawnAllowedPath(String requestUri) {
 
-        // 재로그인 전에는 인증 상태 확인과 로그아웃 경로만 허용한다
+        // 재로그인 전에는 인증 상태 확인과 로그아웃 경로만 허용함
         return LOGOUT_API_URI.equals(requestUri)
                 || TOKEN_CHECK_API_URI.equals(requestUri)
                 || CSRF_TOKEN_API_URI.equals(requestUri);
     }
 
     /**
-     * 정지 회원에게 정지 안내와 로그아웃 관련 API만 허용한다
+     * 정지 회원에게 정지 안내와 로그아웃 관련 API만 허용함
      *
      * @author SeungHyeon.Kang
      * @param requestUri 확인할 요청 URI
@@ -228,7 +228,7 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     private boolean isSuspendedAllowedPath(String requestUri) {
 
-        // 정지 상태 확인과 본인 고객문의 및 인증 종료 경로만 허용한다
+        // 정지 상태 확인과 본인 고객문의 및 인증 종료 경로만 허용함
         return SUSPENSION_STATUS_API_URI.equals(requestUri)
                 || requestUri.startsWith(WITHDRAWAL_API_PREFIX)
                 || requestUri.equals(INQUIRY_API_PREFIX)

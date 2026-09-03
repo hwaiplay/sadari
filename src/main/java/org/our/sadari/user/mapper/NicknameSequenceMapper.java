@@ -7,7 +7,7 @@ import org.our.sadari.user.dto.NicknameSequenceDto;
  * fileName       : NicknameSequenceMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 신규 회원 닉네임 번호 발급 데이터 접근 메서드를 정의한다
+ * description    : 신규 회원 닉네임 번호 발급 데이터 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,7 +18,7 @@ import org.our.sadari.user.dto.NicknameSequenceDto;
 public interface NicknameSequenceMapper {
 
     /**
-     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 마지막 발급 번호를 증가시킨다
+     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 마지막 발급 번호를 증가시킴
      *
      * @author SeungHyeon.Kang
      * @param request 번호를 증가시킬 닉네임 세부코드 조합
@@ -27,7 +27,7 @@ public interface NicknameSequenceMapper {
     int uptNicknameSequence(NicknameSequenceDto request);
 
     /**
-     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 최초 발급 번호를 등록한다
+     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 최초 발급 번호를 등록함
      *
      * @author SeungHyeon.Kang
      * @param request 최초 번호를 등록할 닉네임 세부코드 조합
@@ -36,7 +36,7 @@ public interface NicknameSequenceMapper {
     int setNicknameSequence(NicknameSequenceDto request);
 
     /**
-     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 마지막 발급 번호를 조회한다
+     * 현재 연월의 주어와 서술어 및 동물 코드 조합별 마지막 발급 번호를 조회함
      *
      * @author SeungHyeon.Kang
      * @param request 조회할 닉네임 세부코드 조합

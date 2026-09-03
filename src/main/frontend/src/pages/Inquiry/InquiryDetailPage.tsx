@@ -9,14 +9,14 @@ import { useNavigate, useParams } from "react-router-dom";
 import * as styles from "./InquiryPage.css";
 
 /**
- * 고객문의와 관리자 답변의 등록일시를 분 단위로 표시한다
+ * 고객문의와 관리자 답변의 등록일시를 분 단위로 표시함
  *
  * @author SeungHyeon.Kang
  * @param value 표시할 등록일시
  * @return 초와 날짜 끝 마침표를 제외한 한국어 등록일시
  */
 function formatInquiryDateTime(value: string): string {
-  // 문의 상세에서 초를 숨기고 한국어 오전과 오후 표기를 유지한다
+  // 문의 상세에서 초를 숨기고 한국어 오전과 오후 표기를 유지함
   const displayDate = new Date(value).toLocaleString("ko-KR", {
     year: "numeric",
     month: "numeric",
@@ -26,12 +26,12 @@ function formatInquiryDateTime(value: string): string {
     hour12: true,
   });
 
-  // 날짜와 오전 또는 오후 사이의 마지막 마침표를 제거한 표시값을 반환한다
+  // 날짜와 오전 또는 오후 사이의 마지막 마침표를 제거한 표시값을 반환함
   return displayDate.replace(/\.\s*(?=오전|오후)/, " ");
 }
 
 /**
- * 본인이 접수한 고객문의 본문과 관리자 답변을 표시합니다.
+ * 본인이 접수한 고객문의 본문과 관리자 답변을 표시함
  *
  * @author SeungHyeon.Kang
  * @return 고객문의 상세 화면
@@ -45,17 +45,17 @@ function InquiryDetailPage() {
   const [error, setError] = useState("");
 
   /**
-   * 정지 회원을 문의 상세 진입 전 정지 안내 화면으로 이동시킵니다.
+   * 정지 회원을 문의 상세 진입 전 정지 안내 화면으로 이동시킴
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없습니다
+   * @return 반환값이 없음
    */
   const handleSuspensionBack = (): void => {
 
     navigate("/suspension", { replace: true });
   };
 
-  // 정지 회원이 문의 상세와 오류 화면에서 빠져나갈 수 있는 전용 이동 버튼입니다
+  // 정지 회원이 문의 상세와 오류 화면에서 빠져나갈 수 있는 전용 이동 버튼임
   const suspensionBackButton = isSuspended ? (
     <div className={styles.suspensionBackBar}>
       <div className={styles.suspensionBackInner}>

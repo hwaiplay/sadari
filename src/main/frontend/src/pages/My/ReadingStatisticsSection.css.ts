@@ -1,7 +1,7 @@
 import { keyframes, style } from "@vanilla-extract/css";
 import { vars } from "@/app/styles/tokens.css";
 
-// 지연 조회된 통계가 준비될 때 화면 높이를 유지하며 밝기가 흐르도록 표시한다
+// 지연 조회된 통계가 준비될 때 화면 높이를 유지하며 밝기가 흐르도록 표시함
 const statisticsPulse = keyframes({
   "0%, 100%": {
     opacity: 0.45,

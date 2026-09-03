@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.global.file.mapper.FileMapper">
 
-    <!-- 파일 메타 정보를 등록한다. -->
+    <!-- 파일 메타 정보를 등록함 -->
     <insert id="setFile" parameterType="org.our.sadari.global.file.dto.FileDto" useGeneratedKeys="true" keyProperty="fileNumb">
         /* setFile */
         INSERT INTO TM_FILEXM (
@@ -23,7 +23,7 @@
         )
     </insert>
 
-    <!-- 파일 번호를 기준으로 파일 메타 정보를 조회한다. -->
+    <!-- 파일 번호를 기준으로 파일 메타 정보를 조회함 -->
     <select id="getFileByNumb" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
         SELECT /* getFileByNumb */
                FILE_NUMB
@@ -38,7 +38,7 @@
          WHERE FILE_NUMB = #{fileNumb}
     </select>
 
-    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회한다. -->
+    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 공개 파일 수를 조회함 -->
     <select id="getActivePublicFileCount" resultType="int">
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getActivePublicFileCount */
@@ -61,7 +61,7 @@
                )
     </select>
 
-    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회한다. -->
+    <!-- 현재 활성 회원의 프로필 또는 배경으로 참조되는 파일 소유자 번호를 조회함 -->
     <select id="getActivePublicFileOwner" resultType="long">
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         SELECT /* getActivePublicFileOwner */
@@ -74,7 +74,7 @@
            AND F.FILE_PATH = #{filePath}
     </select>
 
-    <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회한다. -->
+    <!-- 파일 등록 사용자 번호로 영구 삭제할 파일 메타 정보를 조회함 -->
     <select id="getFileListByRegiUser" parameterType="long" resultType="org.our.sadari.global.file.dto.FileDto">
         SELECT /* getFileListByRegiUser */
                FILE_NUMB
@@ -90,7 +90,7 @@
       ORDER BY FILE_NUMB
     </select>
 
-    <!-- 사용자 프로필과 배경에서 더 이상 참조하지 않는 파일 메타 정보를 삭제한다. -->
+    <!-- 사용자 프로필과 배경에서 더 이상 참조하지 않는 파일 메타 정보를 삭제함 -->
     <delete id="delFileIfUnreferenced" parameterType="long">
         DELETE /* delFileIfUnreferenced */
           FROM TM_FILEXM

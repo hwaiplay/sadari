@@ -10,7 +10,7 @@ import java.time.LocalDateTime;
  * fileName       : UserWithdrawalDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 회원 탈퇴 요청과 처리 상태 데이터를 전달한다
+ * description    : 회원 탈퇴 요청과 처리 상태 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

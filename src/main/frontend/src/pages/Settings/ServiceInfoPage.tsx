@@ -8,7 +8,7 @@ import { formatDashedDateToDot } from "@/app/utils/dateUtil";
 import { useEffect, useState } from "react";
 import * as styles from "./ServiceInfoPage.css";
 
-/** 공통코드 카테고리별 현재 배포 서비스 정보를 아코디언으로 표시한다. */
+/** 공통코드 카테고리별 현재 배포 서비스 정보를 아코디언으로 표시함 */
 function ServiceInfoPage() {
 
   const [serviceInfoList, setServiceInfoList] = useState<ServiceInfo[]>([]);
@@ -19,45 +19,45 @@ function ServiceInfoPage() {
   useEffect(() => {
 
     let ignore = false;
-    // 서비스 정보 카테고리와 현재 배포본을 함께 조회한다.
+    // 서비스 정보 카테고리와 현재 배포본을 함께 조회함
     getServiceInfoListApi()
       .then((result) => {
-        // 화면이 유지되는 동안에만 목록 상태를 갱신한다.
+        // 화면이 유지되는 동안에만 목록 상태를 갱신함
         if (!ignore) {
           setServiceInfoList(result);
         }
       })
       .catch(() => {
-        // 조회 실패 상태를 사용자 안내 문구로 전환한다.
+        // 조회 실패 상태를 사용자 안내 문구로 전환함
         if (!ignore) {
           setHasError(true);
         }
       })
       .finally(() => {
-        // 화면이 유지되는 동안 로딩 상태를 해제한다.
+        // 화면이 유지되는 동안 로딩 상태를 해제함
         if (!ignore) {
           setIsLoading(false);
         }
       });
 
-    // 화면 이탈 뒤 비동기 응답이 상태를 변경하지 않게 정리한다.
+    // 화면 이탈 뒤 비동기 응답이 상태를 변경하지 않게 정리함
     return () => {
       ignore = true;
     };
   }, []);
 
-  /** 선택한 서비스 정보 카테고리의 아코디언 상태를 전환한다. */
+  /** 선택한 서비스 정보 카테고리의 아코디언 상태를 전환함 */
   const handleToggle = (cateCode: string): void => {
-    // 열린 카테고리를 다시 누르면 접고 다른 카테고리를 누르면 해당 항목만 펼친다.
+    // 열린 카테고리를 다시 누르면 접고 다른 카테고리를 누르면 해당 항목만 펼침
     setOpenCategoryCode((currentCode) => currentCode === cateCode ? "" : cateCode);
   };
 
-  // 목록 조회 중에는 공통 로딩 화면을 반환한다.
+  // 목록 조회 중에는 공통 로딩 화면을 반환함
   if (isLoading) {
     return <Loading />;
   }
 
-  // 서비스 정보 카테고리 아코디언 화면을 반환한다.
+  // 서비스 정보 카테고리 아코디언 화면을 반환함
   return (
     /* 서비스 정보 카테고리와 배포 정책 전체 영역 */
     <main className={styles.page}>
@@ -68,11 +68,11 @@ function ServiceInfoPage() {
         ) : serviceInfoList.map((serviceInfo) => {
           const isOpen = openCategoryCode === serviceInfo.cateCode;
           const contentId = `service-info-${serviceInfo.cateCode}`;
-          // 수정일이 없는 최초 배포본은 배포일을 기준으로 최근 수정일을 표시한다.
+          // 수정일이 없는 최초 배포본은 배포일을 기준으로 최근 수정일을 표시함
           const modifiedDate = serviceInfo.updtDate ?? serviceInfo.dplyDate;
-          // 최근 수정일의 날짜 부분을 사용자 화면의 공통 점 표기로 변환한다.
+          // 최근 수정일의 날짜 부분을 사용자 화면의 공통 점 표기로 변환함
           const displayModifiedDate = formatDashedDateToDot(modifiedDate?.slice(0, 10));
-          // 서비스 정보 카테고리 한 항목과 현재 배포 본문을 반환한다.
+          // 서비스 정보 카테고리 한 항목과 현재 배포 본문을 반환함
           return (
             <article className={styles.item} key={serviceInfo.cateCode}>
               {/* 서비스 정보 카테고리 펼침 버튼 영역 */}

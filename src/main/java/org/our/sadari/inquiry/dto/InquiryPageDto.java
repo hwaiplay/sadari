@@ -6,7 +6,7 @@ import java.util.List;
  * fileName       : InquiryPageDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 사용자 고객문의 목록과 다음 페이지 여부를 전달한다
+ * description    : 사용자 고객문의 목록과 다음 페이지 여부를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

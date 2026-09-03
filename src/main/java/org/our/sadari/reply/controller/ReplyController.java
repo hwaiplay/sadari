@@ -25,7 +25,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ReplyController
  * author         : Hanwon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 API를 제공한다
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -45,7 +45,7 @@ public class ReplyController {
     private final ReplyService replyService;
 
     /**
-     * 로그인 사용자가 작성한 댓글 또는 답글을 등록한다.
+     * 로그인 사용자가 작성한 댓글 또는 답글을 등록함
      *
      * @author Hanwon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -56,12 +56,12 @@ public class ReplyController {
     @Operation(summary = "댓글 등록", description = "로그인 사용자가 독후감에 댓글 또는 답글을 등록한다.")
     public ResultData setReply(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                              , @Valid @RequestBody ReplyDto request) {
-        // 로그인 사용자 번호와 검증할 댓글 정보를 서비스에 전달한 등록 결과를 반환한다
+        // 로그인 사용자 번호와 검증할 댓글 정보를 서비스에 전달한 등록 결과를 반환함
         return replyService.setReply(userNumb, request);
     }
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정한다.
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정함
      *
      * @author HanWon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -78,18 +78,18 @@ public class ReplyController {
                              , @Parameter(description = "수정할 댓글 번호", example = "10") @PathVariable Long replNumb
                              , @Valid @RequestBody ReplyDto request
                              , @Parameter(hidden = true) HttpServletResponse response) {
-        // 원본 버전을 포함한 댓글 수정 결과를 조회한다
+        // 원본 버전을 포함한 댓글 수정 결과를 조회함
         ResultData result = replyService.uptReply(userNumb, reptNumb, replNumb, request);
-        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답한다
+        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답함
         if (result.getCode() == ResultEnum.COMMON_EDIT_CONFLICT.getCode()) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
         }
-        // 경로에서 확정한 댓글 식별값과 변경 내용을 서비스에 전달한 수정 결과를 반환한다
+        // 경로에서 확정한 댓글 식별값과 변경 내용을 서비스에 전달한 수정 결과를 반환함
         return result;
     }
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환한다.
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환함
      *
      * @author HanWon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -102,12 +102,12 @@ public class ReplyController {
     public ResultData delReply(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                              , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
                              , @Parameter(description = "삭제할 댓글 번호", example = "10") @PathVariable Long replNumb) {
-        // 경로에서 확정한 댓글 식별값을 서비스에 전달한 삭제 결과를 반환한다
+        // 경로에서 확정한 댓글 식별값을 서비스에 전달한 삭제 결과를 반환함
         return replyService.delReply(userNumb, reptNumb, replNumb);
     }
 
     /**
-     * 로그인 사용자의 미삭제 댓글 좋아요를 등록한다.
+     * 로그인 사용자의 미삭제 댓글 좋아요를 등록함
      *
      * @author HanWon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -120,12 +120,12 @@ public class ReplyController {
     public ResultData setReplyLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
                                  , @Parameter(description = "좋아요 대상 댓글 번호", example = "10") @PathVariable Long replNumb) {
-        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 등록 결과를 반환한다
+        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 등록 결과를 반환함
         return replyService.setReplyLike(userNumb, reptNumb, replNumb);
     }
 
     /**
-     * 로그인 사용자의 미삭제 댓글 좋아요를 취소한다.
+     * 로그인 사용자의 미삭제 댓글 좋아요를 취소함
      *
      * @author HanWon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -138,12 +138,12 @@ public class ReplyController {
     public ResultData delReplyLike(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Parameter(description = "독후감 번호", example = "1") @PathVariable Long reptNumb
                                  , @Parameter(description = "좋아요 대상 댓글 번호", example = "10") @PathVariable Long replNumb) {
-        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 취소 결과를 반환한다
+        // 인증 사용자와 댓글 복합 식별값을 서비스에 전달한 좋아요 취소 결과를 반환함
         return replyService.delReplyLike(userNumb, reptNumb, replNumb);
     }
 
     /**
-     * 독후감 번호에 연결된 댓글과 답글 목록을 조회한다.
+     * 독후감 번호에 연결된 댓글과 답글 목록을 조회함
      *
      * @author Hanwon.Jang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -158,11 +158,11 @@ public class ReplyController {
                                    @PathVariable Long reptNumb
                                  , @Parameter(description = "조회할 부모 댓글 페이지 번호", example = "1")
                                    @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 로그인 사용자 번호를 포함한 댓글과 답글 목록 조회 결과를 반환한다
+        // 로그인 사용자 번호를 포함한 댓글과 답글 목록 조회 결과를 반환함
         return replyService.getReplyList(userNumb, reptNumb, page);
     }
 
-    /** 범용 대상에 연결된 댓글과 답글 목록을 조회한다. */
+    /** 범용 대상에 연결된 댓글과 답글 목록을 조회함 */
     @GetMapping("/{tagtType}/{tagtNumb}")
     @Operation(summary = "범용 댓글 목록 조회")
     public ResultData getTargetReplyList(@AuthenticationPrincipal Long userNumb,
@@ -173,7 +173,7 @@ public class ReplyController {
         return replyService.getReplyList(userNumb, tagtType, tagtNumb, focusReplNumb, page);
     }
 
-    /** 범용 대상에 등록된 댓글을 수정한다. */
+    /** 범용 대상에 등록된 댓글을 수정함 */
     @PutMapping("/{tagtType}/{tagtNumb}/{replNumb}")
     @Operation(summary = "범용 댓글 수정")
     public ResultData uptTargetReply(@AuthenticationPrincipal Long userNumb,
@@ -189,7 +189,7 @@ public class ReplyController {
         return result;
     }
 
-    /** 범용 대상에 등록된 댓글을 삭제한다. */
+    /** 범용 대상에 등록된 댓글을 삭제함 */
     @DeleteMapping("/{tagtType}/{tagtNumb}/{replNumb}")
     @Operation(summary = "범용 댓글 삭제")
     public ResultData delTargetReply(@AuthenticationPrincipal Long userNumb,
@@ -199,7 +199,7 @@ public class ReplyController {
         return replyService.delReply(userNumb, tagtType, tagtNumb, replNumb);
     }
 
-    /** 범용 대상 댓글에 좋아요를 등록한다. */
+    /** 범용 대상 댓글에 좋아요를 등록함 */
     @PutMapping("/{tagtType}/{tagtNumb}/{replNumb}/likes")
     @Operation(summary = "범용 댓글 좋아요 등록")
     public ResultData setTargetReplyLike(@AuthenticationPrincipal Long userNumb,
@@ -209,7 +209,7 @@ public class ReplyController {
         return replyService.setReplyLike(userNumb, tagtType, tagtNumb, replNumb);
     }
 
-    /** 범용 대상 댓글의 좋아요를 취소한다. */
+    /** 범용 대상 댓글의 좋아요를 취소함 */
     @DeleteMapping("/{tagtType}/{tagtNumb}/{replNumb}/likes")
     @Operation(summary = "범용 댓글 좋아요 취소")
     public ResultData delTargetReplyLike(@AuthenticationPrincipal Long userNumb,

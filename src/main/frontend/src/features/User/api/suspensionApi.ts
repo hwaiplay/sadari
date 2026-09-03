@@ -15,7 +15,7 @@ export type UserSuspension = {
 };
 
 /**
- * 로그인 회원에게 공개할 현재 이용 정지 정보를 조회합니다.
+ * 로그인 회원에게 공개할 현재 이용 정지 정보를 조회함
  *
  * @author HanWon.Jang
  * @return 내부 관리자 메모를 제외한 이용 정지 정보
@@ -23,6 +23,6 @@ export type UserSuspension = {
 export const getUserSuspensionApi = async () => {
 
   const response = await api.get("/user/suspension");
-  // 공통 성공 코드 검증이 끝난 현재 이용 정지 정보를 반환합니다
+  // 공통 성공 코드 검증이 끝난 현재 이용 정지 정보를 반환함
   return assertResultDataSuccess(response.data) as ResultData<UserSuspension | null>;
 };

@@ -17,7 +17,7 @@ export const navContainer = style({
     // padding: `6px clamp(16px, 8vw, 50px) max(${vars.space.sm}, env(safe-area-inset-bottom, 0px))`,
     boxShadow: "rgb(0 0 0 / 10%) 0px -6px 27px 0px",
     boxSizing: "border-box",
-    // iOS의 동적 뷰포트 갱신 중에도 네비게이션을 독립 합성 레이어로 유지한다
+    // iOS의 동적 뷰포트 갱신 중에도 네비게이션을 독립 합성 레이어로 유지함
     transform: "translate3d(0, 0, 0)",
     WebkitBackfaceVisibility: "hidden",
     backfaceVisibility: "hidden",
@@ -329,7 +329,7 @@ export const drawerMenuButton = style({
     justifyContent: "space-between",
 });
 
-// 2뎁스가 펼쳐진 동안 1뎁스 하단 선을 숨겨 구분선이 하위 메뉴 마지막으로 이동하게 한다
+// 2뎁스가 펼쳐진 동안 1뎁스 하단 선을 숨겨 구분선이 하위 메뉴 마지막으로 이동하게 함
 export const drawerMenuButtonOpen = style({
     borderBottomColor: "transparent",
 });

@@ -17,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : CodeController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-09
- * description    : 공통 API를 제공한다
+ * description    : 공통 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ public class CodeController {
     private final CodeUtil codeUtil;
 
     /**
-     * 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 조회한다.
+     * 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCode 조회할 공통코드
@@ -42,12 +42,12 @@ public class CodeController {
     @GetMapping("/{commCode}")
     @Operation(summary = "세부코드 목록 조회", description = "공통코드 값을 기준으로 사용 가능한 세부코드 목록을 조회한다.")
     public ResultData getCodeList(@Parameter(description = "공통코드", example = "READ_STAT") @PathVariable String commCode) {
-        // 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 조회 결과를 성공 응답으로 반환한다
+        // 하나의 공통코드에 등록된 사용 가능한 세부코드 목록을 조회 결과를 성공 응답으로 반환함
         return ResultData.success(codeUtil.getCodeList(commCode));
     }
 
     /**
-     * 여러 공통코드에 등록된 세부코드 목록을 한 번의 요청으로 일괄 조회한다.
+     * 여러 공통코드에 등록된 세부코드 목록을 한 번의 요청으로 일괄 조회함
      *
      * @author SeungHyeon.Kang
      * @param commCodeList 쉼표로 구분하여 조회할 공통코드 목록
@@ -56,7 +56,7 @@ public class CodeController {
     @GetMapping
     @Operation(summary = "세부코드 목록 일괄 조회", description = "여러 공통코드 값을 기준으로 사용 가능한 세부코드 목록을 한 번에 조회한다.")
     public ResultData getCodeGroupList(@Parameter(description = "조회할 공통코드 목록", example = "READ_STAT,BOOK_COLR") @RequestParam(name = "commCodes") List<String> commCodeList) {
-        // 여러 공통코드에 등록된 세부코드 목록을 한 번의 요청으로 일괄 조회 결과를 성공 응답으로 반환한다
+        // 여러 공통코드에 등록된 세부코드 목록을 한 번의 요청으로 일괄 조회 결과를 성공 응답으로 반환함
         return ResultData.success(codeUtil.getCodeGroupList(commCodeList));
     }
 }

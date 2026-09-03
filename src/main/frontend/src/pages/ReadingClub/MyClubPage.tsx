@@ -108,7 +108,7 @@ export default function MyClubPage() {
   );
 
   /**
-   * 승인 대기 가입 신청이 있는 모임의 관리 화면 이동 항목을 구성한다
+   * 승인 대기 가입 신청이 있는 모임의 관리 화면 이동 항목을 구성함
    *
    * @author HanWon.Jang
    * @param club 표시할 모임별 가입 신청 요약
@@ -130,17 +130,17 @@ export default function MyClubPage() {
   );
 
   /**
-   * 진행 중인 모임 한 건을 카드 형태로 구성한다
+   * 진행 중인 모임 한 건을 카드 형태로 구성함
    *
    * @author Hanwon.Jang
    * @param club 표시할 모임
    * @return 진행 중인 모임 카드
   */
   const renderClub = (club: ReadingClub) => {
-    // 두 모임 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회한다
+    // 두 모임 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회함
     const readingDeadline = getReadingDeadline(club.currentGoalEndt);
 
-    // 현재 독서 종료일까지 남은 기간을 포함한 모임 카드를 반환한다
+    // 현재 독서 종료일까지 남은 기간을 포함한 모임 카드를 반환함
     return (
       /* 진행 중인 모임 개별 항목 영역 */
       <article
@@ -188,7 +188,7 @@ export default function MyClubPage() {
     );
   };
 
-  // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환한다
+  // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환함
   return (
     <div className={styles.page}>
       {/* 모임 검색 진입 영역 */}
@@ -262,7 +262,7 @@ export default function MyClubPage() {
             </ActionButton>
           </div>
 
-          {/* 접힌 상태에서도 상세 DOM을 유지하여 높이 전환이 자연스럽게 이어지게 한다 */}
+          {/* 접힌 상태에서도 상세 DOM을 유지하여 높이 전환이 자연스럽게 이어지게 함 */}
           <div
             id="club-notice-details"
             className={isNoticeOpen ? styles.noticeDetailsOpen : styles.noticeDetails}

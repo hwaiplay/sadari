@@ -9,7 +9,7 @@ import { useNavigate } from "react-router-dom";
 import * as styles from "./InquiryPage.css";
 
 /**
- * 인증 사용자가 접수한 고객문의와 답변 상태를 표시합니다.
+ * 인증 사용자가 접수한 고객문의와 답변 상태를 표시함
  *
  * @author SeungHyeon.Kang
  * @return 고객문의 목록 화면
@@ -24,11 +24,11 @@ function InquiryListPage() {
   const [error, setError] = useState("");
 
   /**
-   * 요청한 페이지의 문의 내역을 조회하여 화면 목록에 반영합니다.
+   * 요청한 페이지의 문의 내역을 조회하여 화면 목록에 반영함
    *
    * @author SeungHyeon.Kang
    * @param targetPage 조회할 페이지 번호
-   * @return 반환값이 없습니다
+   * @return 반환값이 없음
    */
   const loadPage = useCallback(async (targetPage: number): Promise<void> => {
 
@@ -57,10 +57,10 @@ function InquiryListPage() {
   }, [loadPage]);
 
   /**
-   * 문의 작성 화면으로 이동합니다.
+   * 문의 작성 화면으로 이동함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없습니다
+   * @return 반환값이 없음
    */
   const handleWrite = (): void => {
 
@@ -68,11 +68,11 @@ function InquiryListPage() {
   };
 
   /**
-   * 선택한 문의 상세 화면으로 이동합니다.
+   * 선택한 문의 상세 화면으로 이동함
    *
    * @author SeungHyeon.Kang
    * @param event 문의 목록 버튼 클릭 이벤트
-   * @return 반환값이 없습니다
+   * @return 반환값이 없음
    */
   const handleInquiryClick = (event: MouseEvent<HTMLButtonElement>): void => {
 

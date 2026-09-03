@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : WelcomePageDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-28
- * description    : 사용자 웰컴 화면에 노출할 배포 페이지 문구와 이미지 및 순서를 전달한다
+ * description    : 사용자 웰컴 화면에 노출할 배포 페이지 문구와 이미지 및 순서를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

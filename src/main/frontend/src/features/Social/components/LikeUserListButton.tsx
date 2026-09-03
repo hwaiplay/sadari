@@ -27,7 +27,7 @@ type LikeUserListButtonProps = {
 };
 
 /**
- * 좋아요 숫자와 팔로우 관계 변경이 가능한 활성 사용자 목록 팝업을 공통으로 제공한다
+ * 좋아요 숫자와 팔로우 관계 변경이 가능한 활성 사용자 목록 팝업을 공통으로 제공함
  *
  * @author HanWon.Jang
  * @param props 좋아요 대상과 숫자 버튼 표시 정보
@@ -53,35 +53,35 @@ const LikeUserListButton = ({
   const scrollTimeoutRef = useRef<number | null>(null);
   useBodyScrollLock(isOpen);
 
-  /** 지정한 페이지의 활성 좋아요 사용자를 조회한다. */
+  /** 지정한 페이지의 활성 좋아요 사용자를 조회함 */
   const loadPage = async (targetPage: number): Promise<void> => {
-    // 첫 페이지와 추가 페이지의 로딩 상태를 구분해 기존 목록을 유지한다
+    // 첫 페이지와 추가 페이지의 로딩 상태를 구분해 기존 목록을 유지함
     if (targetPage === 1) setIsLoading(true);
     else setIsNextLoading(true);
 
     try {
-      // 서버가 활성 상태와 대상 접근 권한을 검증한 목록을 조회한다
+      // 서버가 활성 상태와 대상 접근 권한을 검증한 목록을 조회함
       const pageData = (await getLikeUserPageApi(tagtType, tagtNumb, targetPage)).data;
-      // 누락된 페이지 응답은 불완전한 성공으로 처리한다
+      // 누락된 페이지 응답은 불완전한 성공으로 처리함
       if (!pageData) throw new Error("LIKE_USER_PAGE_EMPTY");
-      // 첫 페이지는 목록을 교체하고 이후 페이지는 기존 목록 뒤에 연결한다
+      // 첫 페이지는 목록을 교체하고 이후 페이지는 기존 목록 뒤에 연결함
       setUsers((current) => targetPage === 1 ? pageData.list : [...current, ...pageData.list]);
       setPage(pageData.page);
       setHasNext(pageData.hasNext);
     } catch (error) {
-      // 목록 조회 실패를 내부 정보 없이 공통 재시도 문구로 안내한다
+      // 목록 조회 실패를 내부 정보 없이 공통 재시도 문구로 안내함
       await sweetError(
         /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
         getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
       );
     } finally {
-      // 성공과 실패 모두 현재 페이지의 로딩 상태를 종료한다
+      // 성공과 실패 모두 현재 페이지의 로딩 상태를 종료함
       if (targetPage === 1) setIsLoading(false);
       else setIsNextLoading(false);
     }
   };
 
-  /** 좋아요 사용자 목록 팝업을 열고 첫 페이지를 조회한다. */
+  /** 좋아요 사용자 목록 팝업을 열고 첫 페이지를 조회함 */
   const openList = (): void => {
     setUsers([]);
     setPage(0);
@@ -92,73 +92,73 @@ const LikeUserListButton = ({
   };
 
   /**
-   * 좋아요 사용자 목록 팝업과 스크롤 표시 상태를 닫는다
+   * 좋아요 사용자 목록 팝업과 스크롤 표시 상태를 닫음
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const closeList = (): void => {
-    // 팝업을 닫을 때 일시적인 스크롤 표시 상태도 초기화한다
+    // 팝업을 닫을 때 일시적인 스크롤 표시 상태도 초기화함
     setIsListScrolling(false);
     setIsOpen(false);
   };
 
   /**
-   * 좋아요 사용자 목록을 스크롤하는 동안 팔로우 목록과 같은 스크롤 막대를 표시한다
+   * 좋아요 사용자 목록을 스크롤하는 동안 팔로우 목록과 같은 스크롤 막대를 표시함
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleListScroll = (): void => {
-    // 사용자가 목록을 이동 중인 상태를 표시한다
+    // 사용자가 목록을 이동 중인 상태를 표시함
     setIsListScrolling(true);
 
-    // 연속 스크롤 중에는 마지막 입력을 기준으로 숨김 시간을 다시 계산한다
+    // 연속 스크롤 중에는 마지막 입력을 기준으로 숨김 시간을 다시 계산함
     if (scrollTimeoutRef.current !== null) {
       window.clearTimeout(scrollTimeoutRef.current);
     }
 
-    // 팔로우 목록과 같은 시간 동안 스크롤 막대를 유지한다
+    // 팔로우 목록과 같은 시간 동안 스크롤 막대를 유지함
     scrollTimeoutRef.current = window.setTimeout(() => {
-      // 스크롤이 멈춘 뒤 스크롤 막대를 다시 숨긴다
+      // 스크롤이 멈춘 뒤 스크롤 막대를 다시 숨김
       setIsListScrolling(false);
       scrollTimeoutRef.current = null;
     }, 650);
   };
 
   /**
-   * 좋아요 사용자의 본인 또는 공개 프로필 화면으로 이동한다
+   * 좋아요 사용자의 본인 또는 공개 프로필 화면으로 이동함
    *
    * @author HanWon.Jang
    * @param user 이동할 좋아요 사용자
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleProfileClick = (user: FollowUser): void => {
-    // 프로필 이동 전에 현재 좋아요 사용자 목록을 닫는다
+    // 프로필 이동 전에 현재 좋아요 사용자 목록을 닫음
     closeList();
-    // 본인 여부에 맞는 프로필 경로로 이동한다
+    // 본인 여부에 맞는 프로필 경로로 이동함
     navigate(user.meYsno === "Y" ? "/mypage/profile" : `/social/profile/${user.userNumb}`);
   };
 
   /**
-   * 좋아요 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우하고 버튼 상태를 갱신한다
+   * 좋아요 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우하고 버튼 상태를 갱신함
    *
    * @author HanWon.Jang
    * @param user 관계를 변경할 좋아요 사용자
    * @return 팔로우 관계 변경 완료 Promise
-   * @throws 팔로우 또는 언팔로우 요청 실패 시 공통 오류 안내를 표시한다
+   * @throws 팔로우 또는 언팔로우 요청 실패 시 공통 오류 안내를 표시함
    */
   const handleStatusClick = async (user: FollowUser): Promise<void> => {
-    // 다른 관계 변경이 진행 중이거나 본인 행이면 추가 조작을 허용하지 않는다
+    // 다른 관계 변경이 진행 중이거나 본인 행이면 추가 조작을 허용하지 않음
     if (updatingUserNumb !== null || user.meYsno === "Y") {
-      // 현재 목록의 관계 상태를 유지한다
+      // 현재 목록의 관계 상태를 유지함
       return;
     }
 
-    // 팔로잉과 친구 상태는 언팔로우 대상으로 판정한다
+    // 팔로잉과 친구 상태는 언팔로우 대상으로 판정함
     const isFollowing = isFollowedByMe(user.followStatName);
 
-    // 기존 팔로우 관계를 삭제하기 전에 팔로워 및 팔로잉 목록과 같은 확인을 받는다
+    // 기존 팔로우 관계를 삭제하기 전에 팔로워 및 팔로잉 목록과 같은 확인을 받음
     if (isFollowing) {
       // "언팔로우하시겠어요?"
       const result = await sweetConfirm({
@@ -171,24 +171,24 @@ const LikeUserListButton = ({
         cancelButtonText: message("frontend.common.cancel"),
       });
 
-      // 사용자가 취소한 경우 기존 관계를 유지한다
+      // 사용자가 취소한 경우 기존 관계를 유지함
       if (!result.isConfirmed) {
-        // 팔로우 관계 변경 없이 종료한다
+        // 팔로우 관계 변경 없이 종료함
         return;
       }
     }
 
-    // 중복 관계 변경을 막기 위해 현재 사용자를 처리 중으로 설정한다
+    // 중복 관계 변경을 막기 위해 현재 사용자를 처리 중으로 설정함
     setUpdatingUserNumb(user.userNumb);
 
-    // 서버가 반환한 최신 관계 상태만 현재 좋아요 사용자 행에 반영한다
+    // 서버가 반환한 최신 관계 상태만 현재 좋아요 사용자 행에 반영함
     try {
-      // 현재 관계에 맞춰 팔로우 등록 또는 삭제 API를 호출한다
+      // 현재 관계에 맞춰 팔로우 등록 또는 삭제 API를 호출함
       const response = isFollowing
         ? await delSocialFollowApi(user.userNumb)
         : await setSocialFollowApi(user.userNumb);
 
-      // 변경한 사용자의 친구 및 맞팔로우 버튼명을 서버 결과로 갱신한다
+      // 변경한 사용자의 친구 및 맞팔로우 버튼명을 서버 결과로 갱신함
       setUsers((currentUsers) => currentUsers.map((currentUser) => (
         currentUser.userNumb === user.userNumb
           ? { ...currentUser, followStatName: response.data?.followStatName ?? currentUser.followStatName }
@@ -196,7 +196,7 @@ const LikeUserListButton = ({
       )));
     }
 
-    // 관계 변경 실패 시 목록을 유지하고 공통 오류 문구로 안내한다
+    // 관계 변경 실패 시 목록을 유지하고 공통 오류 문구로 안내함
     catch (error) {
       // "수정에 실패했습니다."
       await sweetError(
@@ -205,7 +205,7 @@ const LikeUserListButton = ({
       );
     }
 
-    // 성공과 실패 모두 관계 변경 진행 상태를 해제한다
+    // 성공과 실패 모두 관계 변경 진행 상태를 해제함
     finally {
       setUpdatingUserNumb(null);
     }
@@ -215,21 +215,21 @@ const LikeUserListButton = ({
     if (!isOpen) return undefined;
     const focusFrame = window.requestAnimationFrame(() => closeButtonRef.current?.focus());
     const handleKeyDown = (event: KeyboardEvent): void => {
-      // Escape 입력으로 현재 팝업을 닫는다
+      // Escape 입력으로 현재 팝업을 닫음
       if (event.key === "Escape") closeList();
     };
     window.addEventListener("keydown", handleKeyDown);
-    // 팝업이 닫히면 이벤트를 정리하고 숫자 버튼으로 키보드 초점을 복원한다
+    // 팝업이 닫히면 이벤트를 정리하고 숫자 버튼으로 키보드 초점을 복원함
     return () => {
       window.cancelAnimationFrame(focusFrame);
       window.removeEventListener("keydown", handleKeyDown);
-      // 팝업이 닫히거나 컴포넌트가 해제되면 스크롤 표시 타이머를 정리한다
+      // 팝업이 닫히거나 컴포넌트가 해제되면 스크롤 표시 타이머를 정리함
       if (scrollTimeoutRef.current !== null) window.clearTimeout(scrollTimeoutRef.current);
       triggerButtonRef.current?.focus();
     };
   }, [isOpen]);
 
-  // 숫자 버튼과 열린 경우의 공통 사용자 목록 팝업을 반환한다
+  // 숫자 버튼과 열린 경우의 공통 사용자 목록 팝업을 반환함
   return (
     <>
       <button
@@ -248,7 +248,7 @@ const LikeUserListButton = ({
           data-image-viewer-overlay="true"
           role="presentation"
           onMouseDown={(event) => {
-            // 배경을 직접 누른 경우에만 목록 팝업을 닫는다
+            // 배경을 직접 누른 경우에만 목록 팝업을 닫음
             if (event.currentTarget === event.target) closeList();
           }}
         >
@@ -326,7 +326,7 @@ const LikeUserListButton = ({
                 hasNext={!isLoading && hasNext}
                 isLoading={isNextLoading}
                 onLoadMore={() => {
-                  // 목록 하단에 도달하면 다음 활성 좋아요 사용자 페이지를 조회한다
+                  // 목록 하단에 도달하면 다음 활성 좋아요 사용자 페이지를 조회함
                   if (!isNextLoading) void loadPage(page + 1);
                 }}
               />

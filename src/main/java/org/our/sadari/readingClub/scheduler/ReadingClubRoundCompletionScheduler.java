@@ -9,7 +9,7 @@ import org.springframework.stereotype.Component;
  * fileName       : ReadingClubRoundCompletionScheduler
  * author         : HanWon.Jang
  * date           : 2026-08-22
- * description    : 목표 종료일이 지난 모임 독서 회차의 결과를 주기적으로 확정한다
+ * description    : 목표 종료일이 지난 모임 독서 회차의 결과를 주기적으로 확정함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -24,14 +24,14 @@ public class ReadingClubRoundCompletionScheduler {
     private final ReadingClubService readingClubService;
 
     /**
-     * 날짜가 바뀐 종료 회차의 목표 결과를 확정한다.
+     * 날짜가 바뀐 종료 회차의 목표 결과를 확정함
      *
      * @author SeungHyeon.Kang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      */
     @Scheduled(cron = "${scheduler.round-completion-cron}")
     public void completeExpiredRound() {
-        // 종료된 회차가 상세 화면에 고정 결과로 노출되도록 확정 처리를 위임한다
+        // 종료된 회차가 상세 화면에 고정 결과로 노출되도록 확정 처리를 위임함
         readingClubService.completeExpiredRound();
     }
 }

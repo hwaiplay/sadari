@@ -6,7 +6,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : ServiceInfoService
  * author         : SeungHyeon.Kang
  * date           : 2026-08-10
- * description    : 활성 사용자의 서비스 정보 카테고리와 현재 배포본 조회를 정의한다
+ * description    : 활성 사용자의 서비스 정보 카테고리와 현재 배포본 조회를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -15,7 +15,7 @@ import org.our.sadari.global.common.result.ResultData;
 public interface ServiceInfoService {
 
     /**
-     * 사용자에게 노출할 서비스 정보 카테고리와 현재 배포본을 조회한다
+     * 사용자에게 노출할 서비스 정보 카테고리와 현재 배포본을 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 접근하는 인증 사용자 번호

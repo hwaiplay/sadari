@@ -1,5 +1,5 @@
 /**
- * 독후감 별점을 0.5점 단위의 클릭과 드래그 및 키보드 입력으로 구성한다
+ * 독후감 별점을 0.5점 단위의 클릭과 드래그 및 키보드 입력으로 구성함
  *
  * @author HanWon.Jang
  */
@@ -18,7 +18,7 @@ type RatingFieldProps = {
 };
 
 /**
- * 숫자 점수와 반쪽 채움이 가능한 다섯 개 별점 입력을 구성한다
+ * 숫자 점수와 반쪽 채움이 가능한 다섯 개 별점 입력을 구성함
  *
  * @author HanWon.Jang
  * @param props props 입력값
@@ -32,11 +32,11 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
   const gradeAriaLabel = message("frontend.report.gradeAria");
 
   /**
-   * update Grade By Pointer 정보를 수정한다
+   * update Grade By Pointer 정보를 수정함
    *
    * @author HanWon.Jang
    * @param clientX client X 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const updateGradeByPointer = (clientX: number) => {
 
@@ -46,7 +46,7 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
 
     const starRow = starRowRef.current;
 
-    // 별점 입력 영역이 아직 렌더링되지 않았으면 포인터 위치를 계산하지 않는다
+    // 별점 입력 영역이 아직 렌더링되지 않았으면 포인터 위치를 계산하지 않음
     if (!starRow) {
       return;
     }
@@ -59,16 +59,16 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
       Math.max(0, Math.round(rawGrade * 2) / 2),
     );
 
-    // 포인터 위치를 가장 가까운 0.5점 단위 별점으로 반영한다
+    // 포인터 위치를 가장 가까운 0.5점 단위 별점으로 반영함
     onChange(nextGrade);
   };
 
   /**
-   * handle Pointer Down 사용자 동작을 처리한다
+   * handle Pointer Down 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param event event 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
 
@@ -82,11 +82,11 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
   };
 
   /**
-   * handle Pointer Move 사용자 동작을 처리한다
+   * handle Pointer Move 사용자 동작을 처리함
    *
    * @author HanWon.Jang
    * @param event event 입력값
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
 
@@ -98,7 +98,7 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
   };
 
   /**
-   * end Drag 기능을 처리한다
+   * end Drag 기능을 처리함
    *
    * @author HanWon.Jang
    * @param event event 입력값
@@ -114,37 +114,37 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
   };
 
   /**
-   * 키보드 방향키로 별점을 0.5점씩 조정한다
+   * 키보드 방향키로 별점을 0.5점씩 조정함
    *
    * @author HanWon.Jang
    * @param event 별점 입력 영역의 키보드 이벤트
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
 
-    // 비활성화 상태에서는 키보드 입력으로 별점을 변경하지 않는다
+    // 비활성화 상태에서는 키보드 입력으로 별점을 변경하지 않음
     if (disabled) {
       return;
     }
 
-    // 오른쪽과 위쪽 방향키는 현재 별점을 0.5점 높인다
+    // 오른쪽과 위쪽 방향키는 현재 별점을 0.5점 높임
     if (event.key === "ArrowRight" || event.key === "ArrowUp") {
       event.preventDefault();
-      // 최대 5점을 넘지 않는 다음 별점을 반영한다
+      // 최대 5점을 넘지 않는 다음 별점을 반영함
       onChange(Math.min(5, value + 0.5));
       return;
     }
 
-    // 왼쪽과 아래쪽 방향키는 현재 별점을 0.5점 낮춘다
+    // 왼쪽과 아래쪽 방향키는 현재 별점을 0.5점 낮춤
     if (event.key === "ArrowLeft" || event.key === "ArrowDown") {
       event.preventDefault();
-      // 최소 0점보다 낮아지지 않는 다음 별점을 반영한다
+      // 최소 0점보다 낮아지지 않는 다음 별점을 반영함
       onChange(Math.max(0, value - 0.5));
     }
   }
 
   /**
-   * 별점 값에 따라 비어 있는 별 위에 채워진 별의 너비를 계산한다
+   * 별점 값에 따라 비어 있는 별 위에 채워진 별의 너비를 계산함
    *
    * @author HanWon.Jang
    * @param grade 왼쪽부터 시작하는 별의 순번
@@ -160,7 +160,7 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
       "--rating-fill-width": `${fillPercentage}%`,
     } as CSSProperties;
 
-    // 현재 점수에 맞춰 비어 있는 별과 채워진 별을 겹친 요소를 반환한다
+    // 현재 점수에 맞춰 비어 있는 별과 채워진 별을 겹친 요소를 반환함
     return (
       <span className={styles.star} key={grade} aria-hidden="true">
         <span className={styles.starEmpty}>
@@ -177,7 +177,7 @@ function RatingField({ value, onChange, disabled = false }: RatingFieldProps) {
     );
   }
 
-  // 숫자 점수와 0.5점 단위로 채워지는 별점 입력 영역을 반환한다
+  // 숫자 점수와 0.5점 단위로 채워지는 별점 입력 영역을 반환함
   return (
     <div
       className={`${styles.starGroup} ${disabled ? styles.starGroupDisabled : ""}`}

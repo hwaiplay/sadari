@@ -9,7 +9,7 @@ import org.our.sadari.menu.dto.UserMenuDto;
  * fileName       : UserMenuMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 사용자 메뉴 데이터베이스 접근 메서드를 정의한다
+ * description    : 사용자 메뉴 데이터베이스 접근 메서드를 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ import org.our.sadari.menu.dto.UserMenuDto;
 public interface UserMenuMapper {
 
     /**
-     * 현재 URL과 정확히 일치하거나 동적 상세 URL의 접두 경로와 일치하는 메뉴 한 건을 조회한다.
+     * 현재 URL과 정확히 일치하거나 동적 상세 URL의 접두 경로와 일치하는 메뉴 한 건을 조회함
      *
      * @author SeungHyeon.Kang
      * @param menuUrlx 브라우저의 현재 pathname
@@ -29,7 +29,7 @@ public interface UserMenuMapper {
     UserMenuDto.UserMenuItemDto getCurrentUserMenu(@Param("menuUrlx") String menuUrlx);
 
     /**
-     * 노출 여부와 사용 여부가 모두 Y인 햄버거 메뉴 목록을 조회한다.
+     * 노출 여부와 사용 여부가 모두 Y인 햄버거 메뉴 목록을 조회함
      *
      * @author SeungHyeon.Kang
      * @return 부모가 노출 중인 사용자 메뉴 평면 목록
@@ -37,7 +37,7 @@ public interface UserMenuMapper {
     List<UserMenuDto.UserMenuItemDto> getVisibleUserMenuList();
 
     /**
-     * 기준 화면의 사용 중 메뉴를 부모로 하는 노출 가능한 하위 메뉴를 조회한다.
+     * 기준 화면의 사용 중 메뉴를 부모로 하는 노출 가능한 하위 메뉴를 조회함
      *
      * @author SeungHyeon.Kang
      * @param menuUrlx 하위 메뉴를 구성할 기준 화면 pathname

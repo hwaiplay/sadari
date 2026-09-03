@@ -10,7 +10,7 @@ import org.our.sadari.inquiry.dto.InquiryDto;
  * fileName       : InquiryMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 사용자 고객문의와 답변 데이터에 접근한다
+ * description    : 사용자 고객문의와 답변 데이터에 접근함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -26,7 +26,7 @@ public interface InquiryMapper {
     Long getLatestSuspensionNumb(@Param("userNumb") Long userNumb);
 
     /**
-     * 현재 활성 정지 이후 접수한 최신 이의제기 문의 번호를 조회한다.
+     * 현재 활성 정지 이후 접수한 최신 이의제기 문의 번호를 조회함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호

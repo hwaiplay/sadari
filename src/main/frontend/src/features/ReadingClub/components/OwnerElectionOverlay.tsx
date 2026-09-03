@@ -35,7 +35,7 @@ export default function OwnerElectionOverlay({
   );
 
   useEffect(() => {
-    // 서버에서 다시 조회한 기존 선택 후보를 화면 선택값과 동기화한다
+    // 서버에서 다시 조회한 기존 선택 후보를 화면 선택값과 동기화함
     setSelectedUserNumb(
       election.candidateList.find((candidate) => candidate.selected)?.userNumb ?? null,
     );
@@ -44,24 +44,24 @@ export default function OwnerElectionOverlay({
   const deadline = election.endxDate.replace("T", " ").slice(0, 16);
 
   /**
-   * 선택한 후보의 최초 투표가 완료되면 모달을 닫는다.
+   * 선택한 후보의 최초 투표가 완료되면 모달을 닫음
    *
    * @author HanWon.Jang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleVote = async (): Promise<void> => {
-    // 선택 후보가 없으면 투표 요청을 시작하지 않는다
+    // 선택 후보가 없으면 투표 요청을 시작하지 않음
     if (selectedUserNumb === null) {
       return;
     }
 
-    // 서버가 최초 투표를 저장한 경우에만 현재 모달을 닫는다
+    // 서버가 최초 투표를 저장한 경우에만 현재 모달을 닫음
     if (await onVote(selectedUserNumb)) {
       setIsOpen(false);
     }
   };
 
-  // 사용자가 닫았거나 이미 투표한 선거이면 모달을 표시하지 않는다
+  // 사용자가 닫았거나 이미 투표한 선거이면 모달을 표시하지 않음
   if (!isOpen || election.voted) {
     return null;
   }

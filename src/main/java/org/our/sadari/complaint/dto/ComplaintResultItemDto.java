@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : ComplaintResultItemDto
  * author         : HanWon.Jang
  * date           : 2026-08-24
- * description    : 신고자 또는 피신고자가 팝업에서 확인할 조치 결과 한 건을 전달한다
+ * description    : 신고자 또는 피신고자가 팝업에서 확인할 조치 결과 한 건을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

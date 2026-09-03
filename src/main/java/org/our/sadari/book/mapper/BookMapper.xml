@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.book.mapper.BookMapper">
 
-    <!-- ISBN 기준으로 도서 마스터 중복 등록 여부를 확인한다. -->
+    <!-- ISBN 기준으로 도서 마스터 중복 등록 여부를 확인함 -->
     <select id="dupBook" parameterType="org.our.sadari.book.dto.BookDto" resultType="int">
         SELECT /* dupBook */
                COUNT(*)
@@ -10,7 +10,7 @@
          WHERE BOOK_ISBN = #{bookIsbn}
     </select>
 
-    <!-- ISBN 기준으로 이미 등록된 도서 마스터 번호를 조회한다. -->
+    <!-- ISBN 기준으로 이미 등록된 도서 마스터 번호를 조회함 -->
     <select id="getBookNumbByIsbn" resultType="long">
         SELECT /* getBookNumbByIsbn */
                BOOK_NUMB
@@ -18,7 +18,7 @@
          WHERE BOOK_ISBN = #{bookIsbn}
     </select>
 
-    <!-- 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 고유 독후감 작성자 수 기준 인기 도서를 조회한다. -->
+    <!-- 회원 상태와 독서 상태 및 공개 여부에 관계없이 선택 기간의 고유 독후감 작성자 수 기준 인기 도서를 조회함 -->
     <select id="getPopularBookList" resultType="org.our.sadari.book.dto.PopularBookDto">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPopularBookList */
@@ -64,7 +64,7 @@
              , P.BOOK_NUMB
     </select>
 
-    <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영한다. -->
+    <!-- 신규 도서 마스터 정보를 등록하고 생성된 도서 번호를 DTO에 반영함 -->
     <insert id="setBook" parameterType="org.our.sadari.book.dto.BookDto" useGeneratedKeys="true" keyProperty="bookNumb">
         /* setBook */
         INSERT INTO TM_BKINFO (

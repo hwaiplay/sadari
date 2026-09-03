@@ -43,7 +43,7 @@ type ReportMenuOptionsProps = {
 };
 
 /**
- * 신고 대상 선택지를 순서대로 메뉴 항목으로 표시한다.
+ * 신고 대상 선택지를 순서대로 메뉴 항목으로 표시함
  *
  * @author SeungHyeon.Kang
  * @param props 신고 대상 선택지 렌더링 속성
@@ -57,24 +57,24 @@ const ReportMenuOptions = ({
 }: ReportMenuOptionsProps): ReactNode => {
   const option = options[index];
 
-  // 표시할 신고 선택지가 없으면 재귀 렌더링을 종료한다.
+  // 표시할 신고 선택지가 없으면 재귀 렌더링을 종료함
   if (!option) {
-    // 남은 신고 선택지가 없는 빈 영역을 반환한다.
+    // 남은 신고 선택지가 없는 빈 영역을 반환함
     return null;
   }
 
   /**
-   * 현재 메뉴 항목의 신고 대상을 상위 메뉴에 전달한다.
+   * 현재 메뉴 항목의 신고 대상을 상위 메뉴에 전달함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const handleOptionClick = (): void => {
-    // 사용자가 선택한 신고 대상을 신고 화면 이동 처리에 전달한다.
+    // 사용자가 선택한 신고 대상을 신고 화면 이동 처리에 전달함
     onSelect(option.target);
   };
 
-  // 현재 신고 항목 뒤에 남은 신고 항목을 이어서 표시한다.
+  // 현재 신고 항목 뒤에 남은 신고 항목을 이어서 표시함
   return (
     <>
       <button
@@ -97,7 +97,7 @@ const ReportMenuOptions = ({
 };
 
 /**
- * 공통 SweetAlert로 사용자 차단 여부를 확인한다.
+ * 공통 SweetAlert로 사용자 차단 여부를 확인함
  *
  * @author HanWon.Jang
  * @param userNick 차단 대상 사용자 닉네임
@@ -119,18 +119,18 @@ export const confirmUserBlock = async (
     customClass: "sadari-swal-user-block",
   });
 
-  // 사용자가 확인한 경우에만 실제 차단 처리가 끝날 때까지 기다린다
+  // 사용자가 확인한 경우에만 실제 차단 처리가 끝날 때까지 기다림
   if (result.isConfirmed) {
-    // 확인 화면을 호출한 기능의 차단 처리 콜백을 실행한다
+    // 확인 화면을 호출한 기능의 차단 처리 콜백을 실행함
     await onBlockConfirm?.();
   }
 
-  // 차단 확인 결과를 호출 화면에 전달한다.
+  // 차단 확인 결과를 호출 화면에 전달함
   return result.isConfirmed;
 };
 
 /**
- * 다른 사용자를 신고하거나 차단할 수 있는 공통 더보기 메뉴를 표시한다.
+ * 다른 사용자를 신고하거나 차단할 수 있는 공통 더보기 메뉴를 표시함
  *
  * @author HanWon.Jang
  * @param props 사용자 액션 메뉴 속성
@@ -156,28 +156,28 @@ const UserActionMenu = ({
   };
   const resolvedReportOptions = reportOptions ?? [defaultReportOption];
 
-  /** 더보기 메뉴의 열림 상태를 변경한다. */
+  /** 더보기 메뉴의 열림 상태를 변경함 */
   const handleToggleMenu = (): void => setIsMenuOpen((isOpen) => !isOpen);
 
-  /** 선택한 신고 대상 정보를 화면 이동 상태에 담아 신고 사유 선택 페이지로 이동한다. */
+  /** 선택한 신고 대상 정보를 화면 이동 상태에 담아 신고 사유 선택 페이지로 이동함 */
   const handleReportClick = (target: SafetyReportTarget): void => {
     setIsMenuOpen(false);
     navigate("/user-report", { state: { target } });
   };
 
-  /** 메뉴를 닫고 공통 SweetAlert로 차단 여부를 확인한다. */
+  /** 메뉴를 닫고 공통 SweetAlert로 차단 여부를 확인함 */
   const handleBlockClick = async (): Promise<void> => {
     /**
-     * 차단 API와 화면별 완료 처리를 하나의 상태 변경 작업으로 실행한다
+     * 차단 API와 화면별 완료 처리를 하나의 상태 변경 작업으로 실행함
      *
      * @author HanWon.Jang
-     * @return 반환값이 없다
+     * @return 반환값이 없음
      * @throws 차단 API 또는 화면 후처리 실패 시 발생
      */
     const blockUser = async (): Promise<void> => {
-      // 공통 메뉴가 가진 신고 대상의 사용자 번호로 실제 차단 관계를 등록한다
+      // 공통 메뉴가 가진 신고 대상의 사용자 번호로 실제 차단 관계를 등록함
       await setUserBlockApi(reportTarget.userNumb);
-      // 차단 완료 뒤 현재 화면이 제공한 캐시와 이동 후처리를 실행한다
+      // 차단 완료 뒤 현재 화면이 제공한 캐시와 이동 후처리를 실행함
       await onBlockConfirm?.();
     };
 
@@ -187,27 +187,27 @@ const UserActionMenu = ({
     // "차단했어요."
     const successTitle = message("frontend.userAction.block.success");
     try {
-      // 사용자가 확인하면 처리 중 화면과 이동 가드를 유지한 채 차단한다
+      // 사용자가 확인하면 처리 중 화면과 이동 가드를 유지한 채 차단함
       const isConfirmed = await confirmUserBlock(userNick, async () => {
-        // 차단 처리 완료까지 같은 모달을 유지하고 성공 상태로 전환한다
+        // 차단 처리 완료까지 같은 모달을 유지하고 성공 상태로 전환함
         await runBlockingOperation(blockUser, {
           title: loadingText,
           success: { title: successTitle },
         });
       });
 
-      // 차단 완료 후 화면별 콜백이 없으면 안전한 이전 화면 또는 현재 목록 새로 조회로 이동한다
+      // 차단 완료 후 화면별 콜백이 없으면 안전한 이전 화면 또는 현재 목록 새로 조회로 이동함
       if (isConfirmed && !onBlockConfirm) {
-        // 공개 프로필과 독후감 상세는 차단한 대상 화면을 더 이상 유지하지 않는다
+        // 공개 프로필과 독후감 상세는 차단한 대상 화면을 더 이상 유지하지 않음
         if (window.location.pathname.startsWith("/social/profile/")
             || window.location.pathname.startsWith("/report/public-reports/target/")) {
-          // 차단 성공 확인 후 사용자가 보던 안전한 이전 화면으로 이동한다
+          // 차단 성공 확인 후 사용자가 보던 안전한 이전 화면으로 이동함
           navigate(-1);
         }
 
-        // 목록과 댓글 화면은 서버 원본의 첫 페이지를 다시 조회한다
+        // 목록과 댓글 화면은 서버 원본의 첫 페이지를 다시 조회함
         else {
-          // 현재 경로를 다시 열어 차단 사용자의 항목과 집계를 서버 기준으로 제거한다
+          // 현재 경로를 다시 열어 차단 사용자의 항목과 집계를 서버 기준으로 제거함
           navigate(0);
         }
       }
@@ -222,19 +222,19 @@ const UserActionMenu = ({
     }
 
     finally {
-      // 화면 이동이 없으면 키보드 사용자가 기존 더보기 버튼에서 조작을 이어가도록 초점을 복원한다
+      // 화면 이동이 없으면 키보드 사용자가 기존 더보기 버튼에서 조작을 이어가도록 초점을 복원함
       window.requestAnimationFrame(() => triggerRef.current?.focus());
     }
   };
 
-  /** 메뉴 바깥으로 초점이 이동하면 메뉴를 닫는다. */
+  /** 메뉴 바깥으로 초점이 이동하면 메뉴를 닫음 */
   const handleMenuBlur = (event: FocusEvent<HTMLDivElement>): void => {
     if (!event.currentTarget.contains(event.relatedTarget)) {
       setIsMenuOpen(false);
     }
   };
 
-  /** Escape 입력으로 메뉴를 닫는다. */
+  /** Escape 입력으로 메뉴를 닫음 */
   const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>): void => {
     if (event.key !== "Escape") {
       return;

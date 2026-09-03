@@ -10,7 +10,7 @@ import java.util.List;
  * fileName       : UserHardDeleteMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 영구 삭제 예정 회원 조회와 회원 연관 데이터 삭제 SQL을 정의한다
+ * description    : 영구 삭제 예정 회원 조회와 회원 연관 데이터 삭제 SQL을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,7 +21,7 @@ import java.util.List;
 public interface UserHardDeleteMapper {
 
     /**
-     * 삭제 예정일이 지난 영구 탈퇴 회원을 제한 건수만큼 조회한다.
+     * 삭제 예정일이 지난 영구 탈퇴 회원을 제한 건수만큼 조회함
      *
      * @author SeungHyeon.Kang
      * @param maxSize 한 번에 처리할 최대 회원 수
@@ -30,7 +30,7 @@ public interface UserHardDeleteMapper {
     List<UserWithdrawalDto> getHardDeleteTargetList(@Param("maxSize") int maxSize);
 
     /**
-     * 피신고자 연결 익명화 전에 해당 회원의 미처리 신고를 시스템 종결한다.
+     * 피신고자 연결 익명화 전에 해당 회원의 미처리 신고를 시스템 종결함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 영구 삭제할 피신고자 회원 번호
@@ -40,7 +40,7 @@ public interface UserHardDeleteMapper {
     int uptHardDeleteComplaints(@Param("userNumb") Long userNumb, @Param("procCntn") String procCntn);
 
     /**
-     * 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 물리 삭제한다.
+     * 로그인 이력을 익명화하고 회원 연관 데이터와 회원 원본을 물리 삭제함
      *
      * @author SeungHyeon.Kang
      * @param userNumb 영구 삭제할 회원 번호

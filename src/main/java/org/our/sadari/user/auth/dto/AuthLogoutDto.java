@@ -10,7 +10,7 @@ import lombok.Setter;
  * fileName       : AuthLogoutDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-11
- * description    : 현재 기기 또는 전체 기기 로그아웃 요청을 전달한다
+ * description    : 현재 기기 또는 전체 기기 로그아웃 요청을 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

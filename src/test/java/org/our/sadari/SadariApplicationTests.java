@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
  * fileName       : SadariApplicationTests
  * author         : SeungHyeon.Kang
  * date           : 2026-03-01
- * description    : 애플리케이션 로직의 동작을 검증한다
+ * description    : 애플리케이션 로직의 동작을 검증함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ class SadariApplicationTests {
 
 	@Test
 	void contextLoads() {
-		// 테스트 실행 여부를 콘솔에서 확인한다
+		// 테스트 실행 여부를 콘솔에서 확인함
 		System.out.println("Hello World");
 	}
 

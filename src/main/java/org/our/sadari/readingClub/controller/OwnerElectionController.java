@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : OwnerElectionController
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 모임장 승계 선거 조회와 비밀투표 API를 제공한다
+ * description    : 모임장 승계 선거 조회와 비밀투표 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -36,7 +36,7 @@ public class OwnerElectionController {
     private final OwnerElectionService ownerElectionService;
 
     /**
-     * 로그인 사용자가 참여 중인 모임장 선거를 조회한다
+     * 로그인 사용자가 참여 중인 모임장 선거를 조회함
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -47,12 +47,12 @@ public class OwnerElectionController {
     @Operation(summary = "모임장 선거 조회")
     public ResultData getElection(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @PathVariable Long clubNumb) {
-        // 시작 시점 유권자 명부에 포함된 사용자의 선거 정보를 반환한다
+        // 시작 시점 유권자 명부에 포함된 사용자의 선거 정보를 반환함
         return ownerElectionService.getElection(userNumb, clubNumb);
     }
 
     /**
-     * 로그인 사용자의 모임장 후보 선택을 등록하거나 변경한다
+     * 로그인 사용자의 모임장 후보 선택을 등록하거나 변경함
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -66,7 +66,7 @@ public class OwnerElectionController {
             @Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
           , @PathVariable Long clubNumb
           , @Valid @RequestBody OwnerElectionDto.VoteReqDto request) {
-        // 서버에서 유권자와 후보 자격을 재검증한 투표 결과를 반환한다
+        // 서버에서 유권자와 후보 자격을 재검증한 투표 결과를 반환함
         return ownerElectionService.uptElectionVote(userNumb, clubNumb, request);
     }
 }

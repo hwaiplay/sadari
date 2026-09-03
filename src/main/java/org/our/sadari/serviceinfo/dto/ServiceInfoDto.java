@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : ServiceInfoDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-10
- * description    : 서비스 정보 카테고리와 현재 배포 버전의 HTML 본문 및 최근 수정 일시를 전달한다
+ * description    : 서비스 정보 카테고리와 현재 배포 버전의 HTML 본문 및 최근 수정 일시를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

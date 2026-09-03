@@ -28,7 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : ReportController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 독후감과 독서 목표 API를 제공한다
+ * description    : 독후감과 독서 목표 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -50,8 +50,8 @@ public class ReportController {
     private final ReportService reportService;
 
     /**
-     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회한다.
-     * bookKeyword는 책 제목과 작가명 검색에 사용하고, sortType이 없으면 종료일 내림차순을 기본값으로 사용한다.
+     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회함
+     * bookKeyword는 책 제목과 작가명 검색에 사용하고, sortType이 없으면 종료일 내림차순을 기본값으로 사용함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -66,13 +66,13 @@ public class ReportController {
                                 , @Parameter(description = "책 제목 또는 작가명 검색어", example = "용의자") @RequestParam(value = "bookKeyword", required = false) String bookKeyword
                                 , @Parameter(description = "정렬 유형", example = Constant.SORT_END_DATE_DESC) @RequestParam(value = "sortType", defaultValue = Constant.SORT_END_DATE_DESC) String sortType
                                 , @Parameter(description = "조회할 페이지 번호", example = "1") @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회 결과를 반환한다
+        // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 따라 조회 결과를 반환함
         return reportService.getBookPage(userNumb, bookKeyword, sortType, page);
     }
 
     /**
-     * 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회한다.
-     * 화면에서는 같은 URL 안에서 독후감 영역과 도서 정보 영역을 전환해 사용한다.
+     * 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회함
+     * 화면에서는 같은 URL 안에서 독후감 영역과 도서 정보 영역을 전환해 사용함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -83,13 +83,13 @@ public class ReportController {
     @Operation(summary = "내 독후감 상세 조회", description = "로그인 사용자가 작성한 독후감과 연결된 도서 정보를 함께 조회한다.")
     public ResultData getDetail(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "독후감 번호", example = "1") @PathVariable("bookNumb") Long bookNumb) {
-        // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회 결과를 반환한다
+        // 로그인 사용자가 작성한 독후감 상세 정보와 연결된 도서 정보를 함께 조회 결과를 반환함
         return reportService.getDetail(userNumb, bookNumb);
     }
 
     /**
-     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.
-     * 도서 검색 화면에서 기존 독후감 수정과 추가 작성 중 하나를 선택할 수 있도록 독후감 번호를 제공한다.
+     * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회함
+     * 도서 검색 화면에서 기존 독후감 수정과 추가 작성 중 하나를 선택할 수 있도록 독후감 번호를 제공함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -100,13 +100,13 @@ public class ReportController {
     @Operation(summary = "ISBN 기준 내 최근 독후감 조회", description = "로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회한다.")
     public ResultData getReportByIsbnDtl(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @Parameter(description = "최근 독후감을 조회할 도서 ISBN", example = "9788972756194") @RequestParam("isbn") String isbn) {
-        // 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감 조회 결과를 반환한다
+        // 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감 조회 결과를 반환함
         return reportService.getReportByIsbnDtl(userNumb, isbn);
     }
 
     /**
-     * ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회한다.
-     * 좋아요 여부와 좋아요 수 표시를 위해 로그인 사용자 번호를 함께 전달한다.
+     * ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회함
+     * 좋아요 여부와 좋아요 수 표시를 위해 로그인 사용자 번호를 함께 전달함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -126,11 +126,11 @@ public class ReportController {
                                              @RequestParam(value = "reptStat", defaultValue = "ALL") String reptStat
                                            , @Parameter(description = "조회할 페이지 번호", example = "1")
                                              @RequestParam(value = "page", defaultValue = "1") int page) {
-        // ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회 결과를 반환한다
+        // ISBN을 기준으로 다른 사용자가 공개한 독후감 목록을 조회 결과를 반환함
         return reportService.getPublicReportsByIsbn(userNumb, isbn, sortType, reptStat, page);
     }
 
-    /** 알림이 지정한 공개 독후감 한 건을 직접 조회한다. */
+    /** 알림이 지정한 공개 독후감 한 건을 직접 조회함 */
     @GetMapping("/publicReports/{reptNumb}")
     @Operation(summary = "공개 독후감 직접 조회", description = "알림에서 지정한 공개 독후감과 연결 도서 정보를 조회한다.")
     public ResultData getPublicReportTarget(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
@@ -139,8 +139,8 @@ public class ReportController {
     }
 
     /**
-     * 새 독후감과 필요 시 신규 도서 정보를 함께 등록한다.
-     * DTO 검증은 Controller에서 1차 수행하고, 업무 규칙 검증은 Service에서 한 번 더 수행한다.
+     * 새 독후감과 필요 시 신규 도서 정보를 함께 등록함
+     * DTO 검증은 Controller에서 1차 수행하고, 업무 규칙 검증은 Service에서 한 번 더 수행함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -151,13 +151,13 @@ public class ReportController {
     @Operation(summary = "독후감 등록", description = "도서 정보가 없으면 도서를 먼저 저장한 뒤 로그인 사용자의 독후감을 등록한다.")
     public ResultData createReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                  , @Valid @RequestBody ReportDto requestDto) {
-        // 새 독후감과 필요 시 신규 도서 정보를 함께 등록 결과를 반환한다
+        // 새 독후감과 필요 시 신규 도서 정보를 함께 등록 결과를 반환함
         return reportService.setReport(userNumb, requestDto);
     }
 
     /**
-     * 기존 독후감 정보를 수정한다.
-     * URL의 reptNumb를 기준으로 수정 대상을 확정하고, 본문 DTO에는 변경할 독후감 값을 담는다.
+     * 기존 독후감 정보를 수정함
+     * URL의 reptNumb를 기준으로 수정 대상을 확정하고, 본문 DTO에는 변경할 독후감 값을 담음
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -172,19 +172,19 @@ public class ReportController {
                               , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
                               , @Valid @RequestBody ReportDto request
                               , @Parameter(hidden = true) HttpServletResponse response) {
-        // 원본 버전을 포함한 독후감 수정 결과를 조회한다
+        // 원본 버전을 포함한 독후감 수정 결과를 조회함
         ResultData result = reportService.uptReport(userNumb, reptNumb, request);
-        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답한다
+        // 다른 탭이나 기기의 선행 수정이 확인되면 표준 충돌 상태로 응답함
         if (result.getCode() == ResultEnum.COMMON_EDIT_CONFLICT.getCode()) {
             response.setStatus(HttpServletResponse.SC_CONFLICT);
         }
-        // 기존 독후감 정보를 수정 결과를 반환한다
+        // 기존 독후감 정보를 수정 결과를 반환함
         return result;
     }
 
     /**
-     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경한다.
-     * 공개 여부와 관계없이 상세 화면에서 설정할 수 있도록 소유자 조건만 적용한다.
+     * 로그인 사용자가 작성한 독후감의 좋아요 또는 댓글 알림 사용 여부를 변경함
+     * 공개 여부와 관계없이 상세 화면에서 설정할 수 있도록 소유자 조건만 적용함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -199,13 +199,13 @@ public class ReportController {
                                   , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable Long reptNumb
                                   , @Parameter(description = "변경할 알림 유형", example = "like") @PathVariable String alimType
                                   , @Valid @RequestBody ReportAlimDto request) {
-        // 로그인 사용자가 작성한 독후감의 유형별 알림 설정 변경 결과를 반환한다
+        // 로그인 사용자가 작성한 독후감의 유형별 알림 설정 변경 결과를 반환함
         return reportService.uptReportAlim(userNumb, reptNumb, alimType, request);
     }
 
     /**
-     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정한다.
-     * 본문과 시작일 등 전체 독후감 수정 화면에서 다루는 값은 변경하지 않도록 별도 API로 분리한다.
+     * 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정함
+     * 본문과 시작일 등 전체 독후감 수정 화면에서 다루는 값은 변경하지 않도록 별도 API로 분리함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -218,13 +218,13 @@ public class ReportController {
     public ResultData uptReptStatusGrade(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @Parameter(description = "수정할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb
                                        , @RequestBody ReportDto request) {
-        // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정 결과를 반환한다
+        // 마이페이지의 현재 읽고 있는 책 목록에서 독서 상태와 별점 및 공개 여부를 빠르게 수정 결과를 반환함
         return reportService.uptReptStatusGrade(userNumb, reptNumb, request);
     }
 
     /**
-     * 로그인 사용자가 작성한 독후감을 삭제한다.
-     * Service에서 사용자 번호와 독후감 번호를 함께 조건으로 사용해 본인 데이터만 삭제되도록 한다.
+     * 로그인 사용자가 작성한 독후감을 삭제함
+     * Service에서 사용자 번호와 독후감 번호를 함께 조건으로 사용해 본인 데이터만 삭제되도록 함
      *
      * @author SeungHyeon.Kang
      * @param userNumb Spring Security에서 주입한 로그인 사용자 번호
@@ -235,7 +235,7 @@ public class ReportController {
     @Operation(summary = "독후감 삭제", description = "로그인 사용자가 작성한 독후감을 삭제한다.")
     public ResultData delReport(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                               , @Parameter(description = "삭제할 독후감 번호", example = "1") @PathVariable("reptNumb") Long reptNumb) {
-        // 로그인 사용자가 작성한 독후감을 삭제 결과를 반환한다
+        // 로그인 사용자가 작성한 독후감을 삭제 결과를 반환함
         return reportService.delReport(userNumb, reptNumb);
     }
 }

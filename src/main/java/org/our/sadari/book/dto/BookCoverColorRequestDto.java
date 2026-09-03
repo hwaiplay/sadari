@@ -10,7 +10,7 @@ import lombok.NoArgsConstructor;
  * fileName       : BookCoverColorRequestDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 도서 표지 대표색 분석 요청 데이터를 전달한다
+ * description    : 도서 표지 대표색 분석 요청 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

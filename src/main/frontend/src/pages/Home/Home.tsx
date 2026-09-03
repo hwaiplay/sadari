@@ -29,9 +29,9 @@ import { useStickySearch } from "@/components/Search/StickySearchBar/useStickySe
 
 function Home() {
 
-  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회한다
+  // 검색 입력 영역이 실제로 화면 상단에 고정된 상태를 조회함
   const { isSticky, sentinelRef } = useStickySearch();
-  // 홈 화면 렌더링에 필요한 조회 상태와 사용자 동작을 조회한다
+  // 홈 화면 렌더링에 필요한 조회 상태와 사용자 동작을 조회함
   const {
     data,
     isPending,
@@ -52,9 +52,9 @@ function Home() {
     handleSortChange,
     handleBookSearch,
   } = useHome();
-  // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시한다
+  // 독후감 목록을 조회하는 동안 공통 로딩 화면을 표시함
   if (isPending) {
-    // 홈 독후감 목록 로딩 화면을 반환한다
+    // 홈 독후감 목록 로딩 화면을 반환함
     return (
       <>
         {/* 홈에서 복원한 활성 독서 타이머 플레이어 영역 */}
@@ -64,9 +64,9 @@ function Home() {
     );
   }
 
-  // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시한다
+  // 독후감 목록 조회에 실패하면 정제된 오류 문구를 표시함
   if (isError) {
-    // 홈 독후감 목록 오류 화면을 반환한다
+    // 홈 독후감 목록 오류 화면을 반환함
     return (
       <>
         {/* 홈에서 복원한 활성 독서 타이머 플레이어 영역 */}
@@ -78,7 +78,7 @@ function Home() {
     );
   }
 
-  // 조회 성공 여부와 검색 상태에 맞는 홈 화면을 반환한다
+  // 조회 성공 여부와 검색 상태에 맞는 홈 화면을 반환함
   return data?.code === 200 && (bookList.length > 0 || hasSearchCondition) ? (
       <>
     {/* 홈 활성 독서 타이머 플레이어 영역 */}
@@ -191,7 +191,7 @@ function Home() {
             hasNext={hasNextBook}
             isLoading={isNextBookLoading}
             onLoadMore={() => {
-              // 목록 하단에 도달하면 다음 서버 페이지를 조회한다
+              // 목록 하단에 도달하면 다음 서버 페이지를 조회함
               void loadMoreBook();
             }}
           />

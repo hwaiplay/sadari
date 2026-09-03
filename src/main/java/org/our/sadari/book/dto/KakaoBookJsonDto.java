@@ -10,7 +10,7 @@ import lombok.Data;
  * fileName       : KakaoBookJsonDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-02
- * description    : 카카오 도서 검색 API 원문 응답을 역직렬화한다
+ * description    : 카카오 도서 검색 API 원문 응답을 역직렬화함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -28,7 +28,7 @@ public class KakaoBookJsonDto {
     private List<BookDto> documents;
 
     /**
-     * 카카오 도서 검색 API가 반환하는 페이지 메타정보를 정의한다
+     * 카카오 도서 검색 API가 반환하는 페이지 메타정보를 정의함
      *
      * @author SeungHyeon.Kang
      */
@@ -43,7 +43,7 @@ public class KakaoBookJsonDto {
     }
 
     /**
-     * 카카오 도서 검색 API가 반환하는 개별 도서 원문 필드를 정의한다
+     * 카카오 도서 검색 API가 반환하는 개별 도서 원문 필드를 정의함
      *
      * @author SeungHyeon.Kang
      */

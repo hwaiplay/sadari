@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.serviceinfo.mapper.ServiceInfoMapper">
-    <!-- 서비스 정보 접근자가 현재 활성 회원인지 확인한다 -->
+    <!-- 서비스 정보 접근자가 현재 활성 회원인지 확인함 -->
     <select id="getActiveUserCnt" resultType="int">
         SELECT /* getActiveUserCnt */ COUNT(1)
           FROM TM_USERXM
@@ -9,7 +9,7 @@
            AND USER_STAT = #{userStat}
     </select>
 
-    <!-- 활성 카테고리를 모두 표시하고 각 카테고리의 현재 배포 버전을 연결한다 -->
+    <!-- 활성 카테고리를 모두 표시하고 각 카테고리의 현재 배포 버전을 연결함 -->
     <select id="getServiceInfoList" resultType="org.our.sadari.serviceinfo.dto.ServiceInfoDto">
         SELECT /* getServiceInfoList */
                C.COMD_CODE AS CATE_CODE

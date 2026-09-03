@@ -9,7 +9,7 @@ import { useParams } from "react-router-dom";
 import * as styles from "./NoticePage.css";
 
 /**
- * 현재 배포 중인 공지사항 본문을 표시한다.
+ * 현재 배포 중인 공지사항 본문을 표시함
  *
  * @author SeungHyeon.Kang
  * @return 사용자 공지사항 상세 화면
@@ -21,37 +21,37 @@ const NoticeDetailPage = () => {
   const [error, setError] = useState("");
 
   /**
-   * 주소의 공지사항 주키를 검증하고 현재 배포 버전 상세를 조회한다.
+   * 주소의 공지사항 주키를 검증하고 현재 배포 버전 상세를 조회함
    *
    * @author SeungHyeon.Kang
-   * @return 반환값이 없다
+   * @return 반환값이 없음
    */
   const loadNotice = useCallback((): void => {
 
     const parsedNoticeNumb = Number(noticeNumb);
 
-    // 숫자가 아닌 주소로 접근하면 서버를 호출하지 않고 잘못된 주소를 안내한다.
+    // 숫자가 아닌 주소로 접근하면 서버를 호출하지 않고 잘못된 주소를 안내함
     if (!Number.isInteger(parsedNoticeNumb) || parsedNoticeNumb < 1) {
       // "공지사항 주소가 올바르지 않습니다."
       setError(message("frontend.notice.detail.invalidAddress"));
-      // 잘못된 주소로 상세 API를 호출하지 않고 현재 조회 흐름을 종료한다.
+      // 잘못된 주소로 상세 API를 호출하지 않고 현재 조회 흐름을 종료함
       return;
     }
 
     /**
-     * 검증된 공지사항 주키로 상세를 요청하고 성공 또는 실패 상태를 화면에 반영한다.
+     * 검증된 공지사항 주키로 상세를 요청하고 성공 또는 실패 상태를 화면에 반영함
      *
      * @author SeungHyeon.Kang
      * @return 상세 조회 완료 Promise
      */
     const requestNotice = async (): Promise<void> => {
-      // 상세 API 실패를 사용자 안내 상태로 격리한다.
+      // 상세 API 실패를 사용자 안내 상태로 격리함
       try {
-        // 주소의 공지사항 주키에 해당하는 현재 배포 버전을 조회한다.
+        // 주소의 공지사항 주키에 해당하는 현재 배포 버전을 조회함
         const detail = await getNoticeDetailApi(parsedNoticeNumb);
-        // 안전한 상세 GET과 분리된 CSRF 보호 요청으로 읽음 이력을 저장한다.
+        // 안전한 상세 GET과 분리된 CSRF 보호 요청으로 읽음 이력을 저장함
         await setNoticeViewApi(parsedNoticeNumb);
-        // 저장 결과와 일치하는 읽음 상태로 현재 배포 버전을 화면에 반영한다.
+        // 저장 결과와 일치하는 읽음 상태로 현재 배포 버전을 화면에 반영함
         setNotice({ ...detail, readYsno: "Y" });
       }
 
@@ -61,16 +61,16 @@ const NoticeDetailPage = () => {
       }
     };
 
-    // 검증된 공지사항 상세 비동기 조회를 시작한다.
+    // 검증된 공지사항 상세 비동기 조회를 시작함
     void requestNotice();
   }, [noticeNumb]);
 
-  // 주소가 바뀔 때 해당 공지사항의 현재 배포 버전을 다시 조회한다.
+  // 주소가 바뀔 때 해당 공지사항의 현재 배포 버전을 다시 조회함
   useEffect(loadNotice, [loadNotice]);
 
-  // 상세 조회에 실패하면 공통 여백 안에서 오류 문구를 안내한다.
+  // 상세 조회에 실패하면 공통 여백 안에서 오류 문구를 안내함
   if (error) {
-    // 공지사항 상세 조회 실패 안내 화면을 반환한다.
+    // 공지사항 상세 조회 실패 안내 화면을 반환함
     return (
       <main className={styles.page}>
         {/* 공지사항 상세 조회 실패 안내 영역 */}
@@ -81,9 +81,9 @@ const NoticeDetailPage = () => {
     );
   }
 
-  // 상세 조회 중에는 사용자 공통 인라인 로딩 화면을 표시한다.
+  // 상세 조회 중에는 사용자 공통 인라인 로딩 화면을 표시함
   if (!notice) {
-    // 공지사항 상세 조회 상태 화면을 반환한다.
+    // 공지사항 상세 조회 상태 화면을 반환함
     return (
       <main className={styles.page}>
         {/* 공지사항 상세 조회 상태 영역 */}
@@ -92,10 +92,10 @@ const NoticeDetailPage = () => {
     );
   }
 
-  // 배포 일시에서 날짜 부분만 프로젝트 공통 점 표기로 변환한다.
+  // 배포 일시에서 날짜 부분만 프로젝트 공통 점 표기로 변환함
   const displayDate = formatDashedDateToDot(notice.dplyDate?.slice(0, 10));
 
-  // 공지사항 제목과 배포일 및 정제된 본문 화면을 반환한다.
+  // 공지사항 제목과 배포일 및 정제된 본문 화면을 반환함
   return (
     /* 배포된 공지사항 상세 전체 영역 */
     <main className={styles.page}>
@@ -120,7 +120,7 @@ const NoticeDetailPage = () => {
         </div>
       </header>
 
-      {/* 본문은 관리자 서버에서 허용 태그와 공지 전용 이미지 경로만 남겨 저장한 HTML이다. */}
+      {/* 본문은 관리자 서버에서 허용 태그와 공지 전용 이미지 경로만 남겨 저장한 HTML임 */}
       <article className={styles.content} dangerouslySetInnerHTML={{ __html: notice.notiCntn ?? "" }} />
     </main>
   );

@@ -9,7 +9,7 @@ const MESSAGE_SOURCES = {
 };
 
 /**
- * properties 형식 메시지 파일을 key-value 객체로 변환합니다.
+ * properties 형식 메시지 파일을 key-value 객체로 변환함
  *
  * @author HanWon.Jang
  * @param source raw 문자열로 읽은 properties 파일 내용
@@ -44,7 +44,7 @@ function parseProperties(source: string) {
 }
 
 /**
- * 브라우저 언어를 기준으로 사용할 메시지 locale을 결정합니다.
+ * 브라우저 언어를 기준으로 사용할 메시지 locale을 결정함
  *
  * @author HanWon.Jang
  * @return 지원 locale 코드
@@ -55,7 +55,7 @@ function getLocale() {
 }
 
 /**
- * 현재 locale에 맞는 메시지를 조회하고 파라미터를 치환합니다.
+ * 현재 locale에 맞는 메시지를 조회하고 파라미터를 치환함
  *
  * @author HanWon.Jang
  * @param key 조회할 메시지 key

@@ -60,7 +60,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 ### 2.1 조회 컬럼과 별칭
 
-- `SELECT *`를 사용하지 않고 필요한 컬럼을 모두 명시합니다.
+- `SELECT *`를 사용하지 않고 필요한 컬럼을 모두 명시함
 - 테이블과 인라인 뷰 별칭은 역할을 알아볼 수 있는 영문 대문자 한 단어로 작성합니다.
 - 테이블과 인라인 뷰 별칭에는 언더바를 사용하지 않습니다.
 - Oracle은 테이블 별칭 앞의 `AS`를 지원하지 않으므로 테이블과 인라인 뷰 별칭에는 `AS`를 작성하지 않습니다.
@@ -70,8 +70,8 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 ### 2.2 파라미터 바인딩
 
 - 사용자 입력값은 반드시 `#{param}`으로 바인딩합니다.
-- Oracle 조회 건수 제한에 바인딩 변수를 사용할 때는 `FETCH FIRST #{maxSize} ROWS ONLY`를 사용하지 않습니다.
-- 정렬된 결과의 조회 건수를 동적으로 제한할 때는 정렬 쿼리를 인라인 뷰로 감싸고 외부 WHERE 절에서 `ROWNUM <= #{maxSize}`를 적용합니다.
+- Oracle 조회 건수 제한에 바인딩 변수를 사용할 때는 `FETCH FIRST #{maxSize} ROWS ONLY`를 사용하지 않음
+- 정렬된 결과의 조회 건수를 동적으로 제한할 때는 정렬 쿼리를 인라인 뷰로 감싸고 외부 WHERE 절에서 `ROWNUM <= #{maxSize}`를 적용함
 - `${param}`은 테이블명, 컬럼명, 정렬 방향처럼 바인딩할 수 없는 경우에만 사용합니다.
 - `${param}`을 사용하기 전에 Java 계층에서 허용 목록을 검증합니다.
 
@@ -221,7 +221,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 ### 7.3 MyBatis SELECT 예시
 
 ```xml
-<!-- 사용자 식별자로 사용자 상세 정보를 조회한다. -->
+<!-- 사용자 식별자로 사용자 상세 정보를 조회함 -->
 <select id="getUserDtl" parameterType="org.our.sadari.user.dto.UserDto" resultType="org.our.sadari.user.dto.UserDto">
     SELECT /* getUserDtl */
            U.USER_IDXX
@@ -244,10 +244,10 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 - 컬럼 목록과 VALUES 목록의 각 순서가 일대일로 대응하도록 작성합니다.
 - 마지막 닫는 괄호는 컬럼 목록의 닫는 괄호와 같은 위치에 정렬합니다.
 - 시퀀스를 사용하는 경우 `<selectKey>`를 INSERT 본문 바로 위에 배치합니다.
-- SQL 식별 주석 `/* Mapper ID */`는 `INSERT INTO` 바로 위에 작성합니다.
+- SQL 식별 주석 `/* Mapper ID */`는 `INSERT INTO` 바로 위에 작성함
 
 ```xml
-<!-- 신규 회원 정보를 등록한다. -->
+<!-- 신규 회원 정보를 등록함 -->
 <insert id="setUser" parameterType="org.our.sadari.user.dto.UserDto">
     <selectKey keyProperty="userNumb" resultType="long" order="BEFORE">
         SELECT TM_USERXM_SEQ.NEXTVAL FROM DUAL
@@ -272,8 +272,8 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 ### 8.2 UPDATE 문 정렬
 
-- SQL 식별 주석은 `UPDATE /* Mapper ID */` 형식으로 UPDATE 키워드 바로 뒤에 작성합니다.
-- 수정 대상 테이블은 `UPDATE /* Mapper ID */` 다음 줄에 작성하고 UPDATE 키워드 오른쪽 끝을 기준으로 정렬합니다.
+- SQL 식별 주석은 `UPDATE /* Mapper ID */` 형식으로 UPDATE 키워드 바로 뒤에 작성함
+- 수정 대상 테이블은 `UPDATE /* Mapper ID */` 다음 줄에 작성하고 UPDATE 키워드 오른쪽 끝을 기준으로 정렬함
 - 수정 대상 테이블에 별칭을 사용하면 대문자 한 단어로 작성하고 언더바를 사용하지 않습니다.
 - `SET`과 `WHERE`는 주요 절의 키워드 오른쪽 끝을 기준으로 정렬합니다.
 - 첫 번째 수정 컬럼은 `SET` 뒤에 작성합니다.
@@ -283,7 +283,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 - 수정일시 컬럼이 존재하면 업무 정책상 제외할 이유가 없는 한 같은 UPDATE에서 갱신합니다.
 
 ```xml
-<!-- 회원 프로필 정보를 수정한다. -->
+<!-- 회원 프로필 정보를 수정함 -->
 <update id="uptUserProfile" parameterType="org.our.sadari.user.dto.UserDto">
     UPDATE /* uptUserProfile */
            TM_USERXM
@@ -295,7 +295,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 ### 8.3 DELETE 문 정렬
 
-- SQL 식별 주석은 `DELETE /* Mapper ID */` 형식으로 DELETE 키워드 바로 뒤에 작성합니다.
+- SQL 식별 주석은 `DELETE /* Mapper ID */` 형식으로 DELETE 키워드 바로 뒤에 작성함
 - `FROM`은 `DELETE` 다음 줄에 작성하고 DELETE 키워드 오른쪽 끝을 기준으로 정렬합니다.
 - 삭제 대상 테이블에 별칭을 사용하면 대문자 한 단어로 작성하고 언더바를 사용하지 않습니다.
 - `WHERE`는 FROM 절과 같은 주요 절 정렬 기준을 사용합니다.
@@ -304,7 +304,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 - 논리 삭제 테이블은 물리 DELETE 대신 삭제 여부와 수정일시를 갱신하는 UPDATE를 우선 사용합니다.
 
 ```xml
-<!-- 로그인 사용자의 독후감을 삭제한다. -->
+<!-- 로그인 사용자의 독후감을 삭제함 -->
 <delete id="delReport" parameterType="org.our.sadari.report.dto.ReportDto">
     DELETE /* delReport */
       FROM TM_REPORT
@@ -317,7 +317,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 
 ### 9.1 USING 및 ON 절
 
-- SQL 식별 주석 `/* Mapper ID */`는 `MERGE INTO` 바로 위에 작성합니다.
+- SQL 식별 주석 `/* Mapper ID */`는 `MERGE INTO` 바로 위에 작성함
 - `MERGE INTO`와 `USING`은 같은 시작 위치에 정렬합니다.
 - `USING (` 뒤에는 두 칸을 두고 `SELECT`를 작성합니다.
 - USING 인라인 뷰의 두 번째 컬럼부터 선행 콤마를 사용하고 컬럼 시작 위치를 세로로 맞춥니다.
@@ -338,7 +338,7 @@ COMMENT ON COLUMN TM_FILEXM.ORIG_NAME IS '업로드 당시 원본 파일명';
 ### 9.3 MERGE 정렬 예시
 
 ```xml
-<!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신한다. -->
+<!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신함 -->
 <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
     /* setReadingGoal */
     MERGE INTO TM_GOALXM G

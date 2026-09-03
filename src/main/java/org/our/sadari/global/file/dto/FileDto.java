@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : FileDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-14
- * description    : 이미지 파일 요청과 응답 데이터를 전달한다
+ * description    : 이미지 파일 요청과 응답 데이터를 전달함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
  * fileName       : UserIdEncryptionService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-24
- * description    : 공통 업무 계약을 정의한다
+ * description    : 공통 업무 계약을 정의함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -36,43 +36,43 @@ public class UserIdEncryptionService {
     private final SecretKeySpec secretKeySpec;
 
     /**
-     * 암호화 키는 별도 환경변수 app.crypto.user-id-key가 있으면 그것을 우선 사용하고, 없으면 JWT secret을 재사용한다.
-     * 운영에서 JWT secret을 교체하면 기존 USER_IDXX 조회가 불가능하므로 실제 배포 환경에서는 별도 고정 키를 두는 것이 맞다.
+     * 암호화 키는 별도 환경변수 app.crypto.user-id-key가 있으면 그것을 우선 사용하고, 없으면 JWT secret을 재사용함
+     * 운영에서 JWT secret을 교체하면 기존 USER_IDXX 조회가 불가능하므로 실제 배포 환경에서는 별도 고정 키를 두는 것이 맞음
      *
      * @author SeungHyeon.Kang
      * @param userIdEncryptionKey USER_IDXX 암호화 전용 키
      */
     public UserIdEncryptionService(@Value("${app.crypto.user-id-key:${jwt.secret_key}}") String userIdEncryptionKey) {
-        // 사용자 식별자 암호화에 사용할 비밀키를 담을 객체를 생성한다
+        // 사용자 식별자 암호화에 사용할 비밀키를 담을 객체를 생성함
         this.secretKeySpec = new SecretKeySpec(createAesKey(userIdEncryptionKey), KEY_ALGORITHM);
     }
 
     /**
-     * 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성한다.
-     * 이미 ENC: 접두어가 붙은 값은 마이그레이션이나 재호출 과정에서 중복 암호화되지 않도록 그대로 반환한다.
+     * 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성함
+     * 이미 ENC: 접두어가 붙은 값은 마이그레이션이나 재호출 과정에서 중복 암호화되지 않도록 그대로 반환함
      *
      * @author SeungHyeon.Kang
      * @param plainUserId 외부 OAuth 제공자의 원본 사용자 식별값
      * @return DB 저장 및 조회용 암호문
      */
     public String encryptForStorage(String plainUserId) {
-        // plainUserId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기이다
+        // plainUserId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
         if (StringUtil.isEmpty(plainUserId) || plainUserId.startsWith(ENCRYPTED_PREFIX)) {
-            // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환한다
+            // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환함
             return plainUserId;
         }
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
         try {
-            // 초기화된 Firebase 서비스 인스턴스를 조회한다
+            // 초기화된 Firebase 서비스 인스턴스를 조회함
             Cipher cipher = Cipher.getInstance(CIPHER_TRANSFORMATION);
-            // 암호화 또는 복호화 모드와 키로 Cipher를 초기화한다
+            // 암호화 또는 복호화 모드와 키로 Cipher를 초기화함
             cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-            // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환한다
+            // 로그인 조회와 신규 회원 저장에 사용할 USER_IDXX 암호문을 생성 결과를 반환함
             return ENCRYPTED_PREFIX + Base64.getEncoder().encodeToString(cipher.doFinal(plainUserId.getBytes(StandardCharsets.UTF_8)));
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
 
             throw new IllegalStateException("USER_IDXX encryption failed.", e);
@@ -80,7 +80,7 @@ public class UserIdEncryptionService {
     }
 
     /**
-     * 탈퇴 이력 비교에 사용할 OAuth 사용자 식별값의 SHA-256 해시를 생성한다.
+     * 탈퇴 이력 비교에 사용할 OAuth 사용자 식별값의 SHA-256 해시를 생성함
      *
      * @author SeungHyeon.Kang
      * @param plainUserId 외부 OAuth 제공자의 원본 사용자 식별값
@@ -88,43 +88,43 @@ public class UserIdEncryptionService {
      */
     public String hashForAudit(String plainUserId) {
 
-        // 원본 식별값이 없으면 비교 가능한 감사용 해시를 생성하지 않는다
+        // 원본 식별값이 없으면 비교 가능한 감사용 해시를 생성하지 않음
         if (StringUtil.isEmpty(plainUserId)) {
             return plainUserId;
         }
 
-        // JVM 기본 제공 SHA-256으로 복구할 수 없는 비교값을 생성한다
+        // JVM 기본 제공 SHA-256으로 복구할 수 없는 비교값을 생성함
         try {
-            // 원본 식별값을 고정 길이 해시 바이트로 변환한다
+            // 원본 식별값을 고정 길이 해시 바이트로 변환함
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            // DB의 USER_IDHS 형식과 같은 소문자 16진수 문자열을 반환한다
+            // DB의 USER_IDHS 형식과 같은 소문자 16진수 문자열을 반환함
             return HexFormat.of().formatHex(digest.digest(plainUserId.getBytes(StandardCharsets.UTF_8)));
         }
 
-        // 필수 해시 알고리즘을 사용할 수 없으면 식별 이력 저장과 가입 판별을 중단한다
+        // 필수 해시 알고리즘을 사용할 수 없으면 식별 이력 저장과 가입 판별을 중단함
         catch (Exception e) {
             throw new IllegalStateException("USER_IDHS hash generation failed.", e);
         }
     }
 
     /**
-     * 임의 길이의 설정 키를 AES-128 키 길이에 맞게 축약한다.
-     * 설정 문자열을 그대로 잘라 쓰지 않고 SHA-256 해시 후 앞 16바이트를 사용해 키 길이 오류를 방지한다.
+     * 임의 길이의 설정 키를 AES-128 키 길이에 맞게 축약함
+     * 설정 문자열을 그대로 잘라 쓰지 않고 SHA-256 해시 후 앞 16바이트를 사용해 키 길이 오류를 방지함
      *
      * @author SeungHyeon.Kang
      * @param sourceKey 설정으로 주입된 원본 키 문자열
      * @return AES-128 키 바이트
      */
     private byte[] createAesKey(String sourceKey) {
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록이다
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
         try {
-            // 초기화된 Firebase 서비스 인스턴스를 조회한다
+            // 초기화된 Firebase 서비스 인스턴스를 조회함
             MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            // 임의 길이의 설정 키를 AES-128 키 길이에 맞게 축약 결과를 반환한다
+            // 임의 길이의 설정 키를 AES-128 키 길이에 맞게 축약 결과를 반환함
             return Arrays.copyOf(digest.digest(sourceKey.getBytes(StandardCharsets.UTF_8)), 16);
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환한다
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
 
             throw new IllegalStateException("USER_IDXX encryption key initialization failed.", e);
