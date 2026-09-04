@@ -15,6 +15,7 @@ import {
   createClubChatApi,
   getClubChatListApi,
   getClubDtlApi,
+  uptClubChatReadApi,
   type ClubChatMessage,
   type ReadingClub,
 } from "@/features/ReadingClub/api/readingClubApi";
@@ -32,26 +33,43 @@ export const useClubChatPage = () => {
   const [club, setClub] = useState<ReadingClub | null>(null);
   const [messages, setMessages] = useState<ClubChatMessage[]>([]);
   const [content, setContent] = useState("");
+  const [pendingContent, setPendingContent] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
-  const lastChatNumbRef = useRef<number | undefined>(undefined);
+  const readChatNumbRef = useRef(0);
   const pollingRef = useRef(false);
 
-  /** 새 채팅을 기존 목록에 중복 없이 추가함. @author HanWon.Jang */
-  const appendMessages = useCallback((nextMessages: ClubChatMessage[]): void => {
+  /** 새 채팅과 변경된 안 읽은 수를 기존 목록에 병합함. @author HanWon.Jang */
+  const mergeMessages = useCallback((nextMessages: ClubChatMessage[]): void => {
     if (!nextMessages.length) {
       return;
     }
 
     setMessages((currentMessages) => {
-      const knownChatNumbs = new Set(currentMessages.map((item) => item.chatNumb));
-      return [
-        ...currentMessages,
-        ...nextMessages.filter((item) => !knownChatNumbs.has(item.chatNumb)),
-      ].sort((left, right) => left.chatNumb - right.chatNumb);
+      const messageMap = new Map<number, ClubChatMessage>();
+      for (const chat of currentMessages) {
+        messageMap.set(chat.chatNumb, chat);
+      }
+
+      for (const chat of nextMessages) {
+        messageMap.set(chat.chatNumb, chat);
+      }
+
+      return Array.from(messageMap.values()).sort((left, right) => left.chatNumb - right.chatNumb);
     });
-    lastChatNumbRef.current = Math.max(...nextMessages.map((item) => item.chatNumb));
   }, []);
+
+  /** 화면에 표시한 최신 채팅까지 읽음 위치를 한 번만 갱신함. @author HanWon.Jang */
+  const uptLatestRead = useCallback(async (nextMessages: ClubChatMessage[]): Promise<void> => {
+    const latestMessage = nextMessages[nextMessages.length - 1];
+    if (!latestMessage || document.visibilityState !== "visible"
+        || latestMessage.chatNumb <= readChatNumbRef.current) {
+      return;
+    }
+
+    await uptClubChatReadApi(clubNumb, latestMessage.chatNumb);
+    readChatNumbRef.current = latestMessage.chatNumb;
+  }, [clubNumb]);
 
   /** 마지막 조회 다음 채팅을 불러옴. @author HanWon.Jang */
   const loadNewMessages = useCallback(async (): Promise<void> => {
@@ -61,11 +79,13 @@ export const useClubChatPage = () => {
 
     pollingRef.current = true;
     try {
-      appendMessages(await getClubChatListApi(clubNumb, lastChatNumbRef.current));
+      const nextMessages = await getClubChatListApi(clubNumb);
+      mergeMessages(nextMessages);
+      await uptLatestRead(nextMessages);
     } finally {
       pollingRef.current = false;
     }
-  }, [appendMessages, clubNumb]);
+  }, [clubNumb, mergeMessages, uptLatestRead]);
 
   // 활성 모임원 권한과 최초 채팅 목록을 확인한 뒤 주기 조회를 시작함
   useEffect(() => {
@@ -82,7 +102,8 @@ export const useClubChatPage = () => {
           return;
         }
         setClub(nextClub);
-        appendMessages(nextMessages);
+        mergeMessages(nextMessages);
+        void uptLatestRead(nextMessages).catch(() => undefined);
       })
       .catch((error: unknown) => {
         void sweetError(
@@ -100,11 +121,20 @@ export const useClubChatPage = () => {
       void loadNewMessages().catch(() => undefined);
     }, CHAT_POLL_INTERVAL_MS);
 
+    /** 숨겨졌던 채팅 화면이 다시 보이면 최신 메시지와 읽음 수를 즉시 동기화함 */
+    const handleVisibilityChange = (): void => {
+      if (document.visibilityState === "visible") {
+        void loadNewMessages().catch(() => undefined);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
     return () => {
       active = false;
       window.clearInterval(pollTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
-  }, [appendMessages, clubNumb, loadNewMessages, navigate]);
+  }, [clubNumb, loadNewMessages, mergeMessages, navigate, uptLatestRead]);
 
   /** 입력한 채팅을 한 번만 전송함. @author HanWon.Jang */
   const handleSend = async (): Promise<void> => {
@@ -114,15 +144,19 @@ export const useClubChatPage = () => {
     }
 
     setIsSending(true);
+    setPendingContent(normalizedContent);
+    setContent("");
     try {
       const savedMessage = await createClubChatApi(
         clubNumb,
         normalizedContent,
         crypto.randomUUID(),
       );
-      appendMessages([savedMessage]);
-      setContent("");
+      setPendingContent(null);
+      mergeMessages([savedMessage]);
     } catch (error) {
+      setPendingContent(null);
+      setContent(normalizedContent);
       void sweetError(
         message("frontend.readingClub.chat.sendErrorTitle"),
         getApiErrorMessage(error, message("frontend.common.tryAgain")),
@@ -138,6 +172,7 @@ export const useClubChatPage = () => {
     isLoading,
     isSending,
     messages,
+    pendingContent,
     handleSend,
     setContent,
   };

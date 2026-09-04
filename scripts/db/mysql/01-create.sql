@@ -808,6 +808,7 @@ CREATE TABLE `TB_CLMEMX` (
   `INVT_DATE` datetime(6) DEFAULT NULL COMMENT '초대 발송 일시',
   `EXPR_DATE` datetime(6) DEFAULT NULL COMMENT '초대 만료 일시',
   `JOIN_DATE` datetime(6) DEFAULT NULL COMMENT '가입 확정 일시',
+  `READ_NUMB` bigint DEFAULT NULL COMMENT '마지막으로 읽은 채팅 메시지 번호',
   `EXIT_DATE` datetime(6) DEFAULT NULL COMMENT '모임 탈퇴 또는 퇴장 일시',
   `BLOC_YSNO` varchar(1) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL DEFAULT 'N' COMMENT '재가입 차단 여부',
   `REGI_DATE` datetime(6) NOT NULL COMMENT '등록 일시',

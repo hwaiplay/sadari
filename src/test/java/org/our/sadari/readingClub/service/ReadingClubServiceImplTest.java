@@ -57,8 +57,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
- * 2026-09-04        HanWon.Jang        관리자 모집 중지 가입 차단 검증
- * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 검증
+ * 2026-09-04        HanWon.Jang        가입 차단·채팅 읽음 수·퇴장 이력 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -1420,6 +1419,67 @@ class ReadingClubServiceImplTest {
 
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getClubChatList(10L, 20L, null, 100);
+    }
+
+    /**
+     * 활성 모임원의 마지막 읽은 채팅 번호를 갱신하는지 검증함
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void uptChatReadUpdatesCursor() {
+        // 실제 채팅 번호를 담은 읽음 처리 요청을 구성함
+        ReadingClubDto.ClubChatReadReqDto request = new ReadingClubDto.ClubChatReadReqDto();
+        // 마지막으로 화면에 표시한 채팅 번호를 설정함
+        request.setChatNumb(15L);
+        // 활성 계정의 활성 모임원 관계를 반환하도록 구성함
+        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(1);
+        // 요청한 채팅이 같은 모임에 있어 읽음 위치가 갱신되도록 구성함
+        when(readingClubMapper.uptClubChatRead(10L, 20L, 15L)).thenReturn(1);
+
+        // 활성 모임원의 채팅 읽음 처리를 실행함
+        ResultData result = readingClubService.uptClubChatRead(20L, 10L, request);
+
+        // 성공 응답과 마지막 읽은 채팅 번호 갱신을 검증함
+        assertEquals(200, result.getCode());
+        // 요청한 모임과 사용자 및 채팅 번호로 읽음 위치를 갱신했는지 검증함
+        verify(readingClubMapper).uptClubChatRead(10L, 20L, 15L);
+    }
+
+    /** 같은 모임에 없는 채팅 번호는 읽음 위치로 저장하지 않는지 검증함. */
+    @Test
+    void uptReadRejectsUnknownChat() {
+        ReadingClubDto.ClubChatReadReqDto request = new ReadingClubDto.ClubChatReadReqDto();
+        request.setChatNumb(15L);
+        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.uptClubChatRead(10L, 20L, 15L)).thenReturn(0);
+
+        ResultData result = readingClubService.uptClubChatRead(20L, 10L, request);
+
+        assertEquals(ResultEnum.COMMON_INVALID_REQUEST.getCode(), result.getCode());
+    }
+
+    /**
+     * 비활성 모임원은 채팅 읽음 위치를 변경할 수 없는지 검증함
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void uptReadRejectsInactive() {
+        // 접근이 거절될 채팅 읽음 처리 요청을 구성함
+        ReadingClubDto.ClubChatReadReqDto request = new ReadingClubDto.ClubChatReadReqDto();
+        // 유효한 채팅 번호를 설정해 회원 권한만 검증하도록 구성함
+        request.setChatNumb(15L);
+        // 활성 모임원 관계가 없는 조회 결과를 반환하도록 구성함
+        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(0);
+
+        // 비활성 모임원의 채팅 읽음 처리를 실행함
+        ResultData result = readingClubService.uptClubChatRead(20L, 10L, request);
+
+        // 접근 거절 응답과 읽음 상태 미변경을 검증함
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        // 권한이 없는 회원의 읽음 위치를 갱신하지 않았는지 검증함
+        verify(readingClubMapper, never()).uptClubChatRead(10L, 20L, 15L);
     }
 
     /**

@@ -20,6 +20,7 @@ type LoadingProps = {
   title?: string;
   isFullScreen?: boolean;
   isCompact?: boolean;
+  isInline?: boolean;
 };
 
 /**
@@ -61,12 +62,14 @@ function resolveLoadingTitle(title?: string, menuName?: string) {
  * @param title 메뉴명 대신 사용할 별도 로딩 문구
  * @param isFullScreen 화면 전체 높이 사용 여부
  * @param isCompact 문구 없이 소형 회전 링만 표시할지 여부
+ * @param isInline 메시지처럼 작은 인라인 영역에 회전 링을 표시할지 여부
  * @return 비동기 처리 상태를 안내하는 로딩 화면
  */
 const Loading = ({
   title,
   isFullScreen = true,
   isCompact = false,
+  isInline = false,
 }: LoadingProps) => {
 
   // 현재 브라우저 경로에 대응하는 사용자 메뉴를 조회하기 위해 위치 정보를 가져옴
@@ -84,7 +87,9 @@ const Loading = ({
 
   // 모달과 페이지 및 내부 영역이 각각 필요한 높이 스타일을 사용하도록 구분함
   const containerClassName = isCompact
-    ? styles.compactContainer
+    ? isInline
+      ? styles.inlineCompactContainer
+      : styles.compactContainer
     : isFullScreen
       ? styles.container
       : styles.inlineContainer;
@@ -97,8 +102,8 @@ const Loading = ({
       aria-label={isCompact ? `${loadingTitle}...` : undefined}
     >
       {/* 모달에서는 공통 회전 링을 감싼 영역만 축소하여 같은 애니메이션을 유지함 */}
-      <div className={isCompact ? styles.compactSpinner : undefined}>
-        <div className={styles.spinner} aria-hidden="true" />
+      <div className={isCompact && !isInline ? styles.compactSpinner : undefined}>
+        <div className={isInline ? styles.inlineSpinner : styles.spinner} aria-hidden="true" />
       </div>
       {!isCompact && (
         /* 현재 경로에 등록된 메뉴명으로 조회 상태를 안내하고 메뉴가 없으면 목록 문구를 사용함 */

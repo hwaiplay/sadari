@@ -37,6 +37,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 API 확장
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 API 추가
  * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 API 확장
+ * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 API 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -228,6 +229,16 @@ public class ReadingClubController {
                                      , @RequestParam(required = false) Long afterChatNumb) {
         // 활성 회원 권한을 검증한 채팅 목록을 반환함
         return readingClubService.getClubChatList(userNumb, clubNumb, afterChatNumb);
+    }
+
+    /** 활성 모임원의 마지막 읽은 채팅 번호를 갱신함. @author HanWon.Jang */
+    @PatchMapping("/{clubNumb}/chats/read")
+    @Operation(summary = "모임 채팅 읽음 처리")
+    public ResultData uptClubChatRead(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @PathVariable Long clubNumb
+                                     , @Valid @RequestBody ReadingClubDto.ClubChatReadReqDto request) {
+        // 활성 회원 권한과 채팅 소속을 검증한 읽음 처리 결과를 반환함
+        return readingClubService.uptClubChatRead(userNumb, clubNumb, request);
     }
 
     /** 활성 모임원이 채팅을 전송함. @author HanWon.Jang */

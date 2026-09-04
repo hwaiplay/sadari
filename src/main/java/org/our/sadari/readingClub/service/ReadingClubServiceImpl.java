@@ -50,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 처리
  * 2026-09-03        HanWon.Jang        사용자 차단 관계의 신규 참여 제한 추가
- * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 처리 추가
+ * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 처리 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -663,6 +663,33 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 최초에는 최신 채팅을, 이후에는 마지막 번호 다음 채팅을 시간순으로 반환함
         return ResultData.success(readingClubMapper.getClubChatList(
                 clubNumb, userNumb, afterChatNumb, CHAT_LIST_SIZE));
+    }
+
+    /** {@inheritDoc} @author HanWon.Jang */
+    @Override
+    @Transactional
+    public ResultData uptClubChatRead(Long userNumb, Long clubNumb
+                                    , ReadingClubDto.ClubChatReadReqDto request) {
+        // 읽음 상태를 변경할 모임과 채팅 식별값을 검증함
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getChatNumb())
+                || request.getChatNumb() <= 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 현재 활성 모임원만 본인의 채팅 읽음 위치를 변경할 수 있음
+        if (readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 같은 모임에 실제로 존재하는 채팅 번호까지만 읽음 위치를 앞으로 이동함
+        if (readingClubMapper.uptClubChatRead(clubNumb, userNumb, request.getChatNumb()) == 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        // 채팅 읽음 상태 갱신 완료 응답을 반환함
+        return ResultData.success();
     }
 
     /** {@inheritDoc} @author HanWon.Jang */

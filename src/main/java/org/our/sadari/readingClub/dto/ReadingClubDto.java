@@ -7,6 +7,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
+import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,7 +35,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-25        HanWon.Jang        다음 도서 추천·투표 DTO 추가
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 DTO 추가
  * 2026-09-01        HanWon.Jang        공개 모임 이전 독서 기록 권한 추가
- * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 DTO 추가
+ * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -522,6 +523,17 @@ public final class ReadingClubDto {
         private String clntUuid;
     }
 
+    /** 모임원이 마지막으로 확인한 채팅 번호를 전달함 */
+    @Data
+    @Schema(description = "모임 채팅 읽음 처리 요청")
+    public static class ClubChatReadReqDto {
+
+        @NotNull
+        @Positive
+        @Schema(description = "마지막으로 확인한 채팅 번호")
+        private Long chatNumb;
+    }
+
     /** 모임 채팅 목록 항목을 전달함 */
     @Data
     @Schema(description = "모임 채팅 항목")
@@ -553,6 +565,9 @@ public final class ReadingClubDto {
 
         @Schema(description = "로그인 사용자의 작성 여부", allowableValues = {"Y", "N"})
         private String mineYsno;
+
+        @Schema(description = "현재 활성 모임원 중 메시지를 읽지 않은 인원 수")
+        private Integer unreadCnt;
 
         @Schema(description = "등록 일시")
         private LocalDateTime regiDate;

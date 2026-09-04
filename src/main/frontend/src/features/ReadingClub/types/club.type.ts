@@ -164,6 +164,7 @@ export type ClubChatMessage = {
   chatCntn: string;
   clntUuid: string;
   mineYsno: "Y" | "N";
+  unreadCnt: number;
   regiDate: string;
 };
 

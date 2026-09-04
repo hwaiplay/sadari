@@ -1,4 +1,4 @@
-import api from "@/app/api/axios";
+import api, {type SadariRequestConfig} from "@/app/api/axios";
 import {
   assertResultDataSuccess,
   type PageData,
@@ -414,6 +414,23 @@ export const getClubChatListApi = async (
 };
 
 /**
+ * 모임원의 마지막 읽은 채팅 번호를 갱신
+ * @author HanWon.Jang
+ * @param clubNumb 모임 번호
+ * @param chatNumb 마지막으로 확인한 채팅 번호
+ * @return 반환값 없음
+ */
+export const uptClubChatReadApi = async (clubNumb: number, chatNumb: number): Promise<void> => {
+  const requestConfig: SadariRequestConfig = {skipBlockingOperation: true};
+  const response = await api.patch(
+    `/reading-clubs/${clubNumb}/chats/read`,
+    {chatNumb},
+    requestConfig,
+  );
+  assertResultDataSuccess(response.data);
+};
+
+/**
  * 모임 채팅 전송
  * @param clubNumb 모임 번호
  * @param chatCntn 채팅 본문
@@ -424,7 +441,12 @@ export const createClubChatApi = async (
   chatCntn: string,
   clntUuid: string,
 ): Promise<ClubChatMessage> => {
-  const response = await api.post(`/reading-clubs/${clubNumb}/chats`, {chatCntn, clntUuid});
+  const requestConfig: SadariRequestConfig = {skipBlockingOperation: true};
+  const response = await api.post(
+    `/reading-clubs/${clubNumb}/chats`,
+    {chatCntn, clntUuid},
+    requestConfig,
+  );
   return assertResultDataSuccess(response.data).data as ClubChatMessage;
 };
 

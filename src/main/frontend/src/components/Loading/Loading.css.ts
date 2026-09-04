@@ -35,6 +35,15 @@ export const compactContainer = style({
   alignItems: "center",
 });
 
+export const inlineCompactContainer = style({
+  width: "18px",
+  height: "18px",
+  display: "inline-flex",
+  flexShrink: 0,
+  alignItems: "center",
+  justifyContent: "center",
+});
+
 // 기존 회전 링의 모양과 애니메이션을 유지하면서 모달 안에서만 작게 표시함
 export const compactSpinner = style({
   width: "48px",
@@ -48,6 +57,16 @@ export const spinner = style({
   borderRadius: "50%",
   border: "5px solid rgba(0,0,0,0.1)",
   borderTop: `5px solid ${vars.color.brand}`, // 포인트 컬러
+  animation: `${spin} 0.8s linear infinite`,
+});
+
+export const inlineSpinner = style({
+  width: "14px",
+  height: "14px",
+  boxSizing: "border-box",
+  borderRadius: "50%",
+  border: "2px solid rgba(0,0,0,0.1)",
+  borderTop: `2px solid ${vars.color.brandText}`,
   animation: `${spin} 0.8s linear infinite`,
 });
 

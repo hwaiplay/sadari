@@ -47,17 +47,26 @@
              , CHAT.CHAT_CNTN
              , CHAT.CLNT_UUID
              , CASE WHEN CHAT.USER_NUMB = #{userNumb} THEN #{commYes} ELSE #{commNo} END AS MINE_YSNO
+             , COUNT(READUSER.USER_NUMB) AS UNREAD_CNT
              , CHAT.REGI_DATE
           FROM TM_CLCHAT CHAT
      LEFT JOIN TM_USERXM USERX ON USERX.USER_NUMB = CHAT.USER_NUMB
      LEFT JOIN TM_FILEXM FILEX ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+     LEFT JOIN TB_CLMEMX READER
+            ON READER.CLUB_NUMB = CHAT.CLUB_NUMB
+           AND READER.MEMB_STAT = #{memberActive}
+           AND READER.USER_NUMB != CHAT.USER_NUMB
+           AND READER.USER_NUMB != #{userNumb}
+           AND READER.JOIN_DATE <![CDATA[<=]]> CHAT.REGI_DATE
+           AND COALESCE(READER.READ_NUMB, 0) <![CDATA[<]]> CHAT.CHAT_NUMB
+     LEFT JOIN TM_USERXM READUSER
+            ON READUSER.USER_NUMB = READER.USER_NUMB
+           AND READUSER.USER_STAT = #{userActive}
          WHERE CHAT.CLUB_NUMB = #{clubNumb}
            AND CHAT.DELT_YSNO = #{commNo}
         <choose>
             <when test="afterChatNumb != null">
            AND CHAT.CHAT_NUMB <![CDATA[>]]> #{afterChatNumb}
-      ORDER BY CHAT.CHAT_NUMB
-             LIMIT #{maxSize}
             </when>
             <otherwise>
            AND CHAT.CHAT_NUMB IN (
@@ -71,9 +80,19 @@
                         LIMIT #{maxSize}
                       ) RECENT_PAGE
            )
-      ORDER BY CHAT.CHAT_NUMB
             </otherwise>
         </choose>
+      GROUP BY CHAT.CHAT_NUMB
+             , CHAT.CLUB_NUMB
+             , CHAT.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH
+             , CHAT.CHAT_TYPE
+             , CHAT.CHAT_CNTN
+             , CHAT.CLNT_UUID
+             , CHAT.REGI_DATE
+      ORDER BY CHAT.CHAT_NUMB
+         LIMIT #{maxSize}
     </select>
 
     <!-- 같은 사용자와 클라이언트 중복 방지 키의 채팅을 한 번만 저장함 -->
@@ -99,15 +118,52 @@
              , CHAT.CHAT_CNTN
              , CHAT.CLNT_UUID
              , #{commYes} AS MINE_YSNO
+             , COUNT(READUSER.USER_NUMB) AS UNREAD_CNT
              , CHAT.REGI_DATE
           FROM TM_CLCHAT CHAT
           JOIN TM_USERXM USERX ON USERX.USER_NUMB = CHAT.USER_NUMB
      LEFT JOIN TM_FILEXM FILEX ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+     LEFT JOIN TB_CLMEMX READER
+            ON READER.CLUB_NUMB = CHAT.CLUB_NUMB
+           AND READER.MEMB_STAT = #{memberActive}
+           AND READER.USER_NUMB != CHAT.USER_NUMB
+           AND READER.JOIN_DATE <![CDATA[<=]]> CHAT.REGI_DATE
+           AND COALESCE(READER.READ_NUMB, 0) <![CDATA[<]]> CHAT.CHAT_NUMB
+     LEFT JOIN TM_USERXM READUSER
+            ON READUSER.USER_NUMB = READER.USER_NUMB
+           AND READUSER.USER_STAT = #{userActive}
          WHERE CHAT.CLUB_NUMB = #{clubNumb}
            AND CHAT.USER_NUMB = #{userNumb}
            AND CHAT.CLNT_UUID = #{clntUuid}
            AND CHAT.DELT_YSNO = #{commNo}
+      GROUP BY CHAT.CHAT_NUMB
+             , CHAT.CLUB_NUMB
+             , CHAT.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH
+             , CHAT.CHAT_TYPE
+             , CHAT.CHAT_CNTN
+             , CHAT.CLNT_UUID
+             , CHAT.REGI_DATE
     </select>
+
+    <!-- 활성 모임원이 실제로 조회한 마지막 채팅 번호만 앞으로 이동함 -->
+    <update id="uptClubChatRead">
+        <include refid="clubCodeBinds" />
+        UPDATE /* uptClubChatRead */ TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+           AND USERX.USER_STAT = #{userActive}
+          JOIN TM_CLCHAT CHAT
+            ON CHAT.CHAT_NUMB = #{chatNumb}
+           AND CHAT.CLUB_NUMB = MEMBER.CLUB_NUMB
+           AND CHAT.DELT_YSNO = #{commNo}
+           SET MEMBER.READ_NUMB = GREATEST(COALESCE(MEMBER.READ_NUMB, 0), CHAT.CHAT_NUMB)
+             , MEMBER.UPDT_DATE = CURRENT_TIMESTAMP(6)
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = #{userNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+    </update>
 
     <!-- 발신자를 제외한 활성 계정의 활성 모임원을 채팅 알림 수신 후보로 조회함 -->
     <select id="getClubChatAlimUserList" resultType="long">
