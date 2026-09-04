@@ -28,6 +28,16 @@ export const whiteBg = style({
     backgroundColor: "#ffffff",
 });
 
+export const hideOnChatInput = style({});
+
+globalStyle(`main:focus-within + ${hideOnChatInput}`, {
+    "@media": {
+        "screen and (hover: none) and (pointer: coarse)": {
+            display: "none",
+        },
+    },
+});
+
 export const navigation = style({
     position: "relative",
     zIndex: 1,

@@ -2,6 +2,7 @@ import { message } from "@/app/messages/message";
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetAlert, sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
+import { useHeaderTitle } from "@/components/Layout/Header/useHeaderTitle";
 import {
   formatDashedDateToDot,
   getRemainDaysUntil,
@@ -131,6 +132,8 @@ const SocialProfilePage = () => {
     ? requestedReplNumb
     : undefined;
   const [profile, setProfile] = useState<UserProfile | null>(null);
+  // 조회된 다른 사용자의 닉네임을 공통 헤더 제목으로 표시함
+  useHeaderTitle(profile?.userNick);
   const [summary, setSummary] = useState<MonthlyReadingSummary | null>(null);
   const [followStatName, setFollowStatName] = useState("");
   const [isFollowUpdating, setIsFollowUpdating] = useState(false);

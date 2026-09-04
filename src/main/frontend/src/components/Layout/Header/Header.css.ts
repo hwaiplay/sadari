@@ -78,6 +78,8 @@ export const logo = style({
 });
 
 export const routeTitle = style({
+  width: "100%",
+  minWidth: 0,
   maxWidth: "100%",
   margin: 0,
   color: vars.color.black,

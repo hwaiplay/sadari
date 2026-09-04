@@ -4,12 +4,13 @@
  * @author HanWon.Jang
  */
 import Header from "./Header/Header";
+import type { SetHeaderTitle } from "./Header/useHeaderTitle";
 import { Outlet, useLocation, useNavigationType } from "react-router-dom";
 import Navigation from "./Navigation/Navigation";
 import { vars } from "@/app/styles/tokens.css";
 import { Container } from "./Container/Container";
 import { clsx } from "clsx";
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import {
   getBottomNavDirection,
   type BottomNavDirection,
@@ -23,6 +24,11 @@ import {
 
 type LayoutProps = {
   isMainLayout?: boolean;
+};
+
+type HeaderTitleState = {
+  pathname: string;
+  title: string | null;
 };
 
 /**
@@ -70,6 +76,13 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   const navigationType = useNavigationType();
   const hasMountedRef = useRef(false);
   const layoutRef = useRef<HTMLDivElement | null>(null);
+  const [headerTitleState, setHeaderTitleState] = useState<HeaderTitleState>({
+    pathname: location.pathname,
+    title: null,
+  });
+  const headerTitle = headerTitleState.pathname === location.pathname
+    ? headerTitleState.title
+    : null;
   // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회함
   const bottomNavDirection = getBottomNavDirection(
     location.state,
@@ -110,9 +123,31 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
     );
   }, []);
 
+  /**
+   * 현재 경로의 동적 제목을 공통 헤더 상태에 반영함
+   *
+   * @author HanWon.Jang
+   * @param title 화면에서 전달한 동적 헤더 제목
+   * @return 반환값이 없음
+   */
+  const setHeaderTitle = useCallback<SetHeaderTitle>((title): void => {
+
+    // 다른 경로의 제목 정리와 섞이지 않도록 현재 경로를 제목과 함께 저장함
+    setHeaderTitleState({
+      pathname: location.pathname,
+      title,
+    });
+  }, [location.pathname]);
+
+  // 현재 경로의 모든 하위 화면이 같은 헤더 제목 연결 함수를 공유함
+  const routeOutlet = <Outlet context={setHeaderTitle} />;
+
   return (
     <div ref={layoutRef}>
-      <Header onOffsetChange={handleHeaderOffsetChange} />
+      <Header
+        headerTitle={headerTitle}
+        onOffsetChange={handleHeaderOffsetChange}
+      />
       {/* 현재 경로에 연결된 페이지 표시 영역 */}
       <main
         style={{
@@ -130,10 +165,10 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
           >
             {isMainLayout ? (
               <Container>
-                <Outlet />
+                {routeOutlet}
               </Container>
             ) : (
-              <Outlet />
+              routeOutlet
             )}
           </div>
         </div>

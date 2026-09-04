@@ -12,8 +12,12 @@ const sheetEnter = keyframes({
 
 export const sheetLayer = style({
   position: "fixed",
-  inset: 0,
+  top: 0,
+  right: 0,
+  bottom: "auto",
+  left: 0,
   width: "100%",
+  height: "var(--app-viewport-height, 100dvh)",
   maxWidth: "100vw",
   zIndex: 3100,
   display: "flex",
@@ -90,6 +94,8 @@ export const commentSheetBody = style({
   flexDirection: "column",
   overflowY: "auto",
   overflowX: "hidden",
+  overscrollBehavior: "contain",
+  WebkitOverflowScrolling: "touch",
   "@media": {
     "screen and (max-width: 480px)": {
       padding: "10px 14px 20px",

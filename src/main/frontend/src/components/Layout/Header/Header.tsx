@@ -47,6 +47,7 @@ type ResolvedHeaderMenu = {
 
 type HeaderProps = {
   menuEnabled?: boolean;
+  headerTitle?: string | null;
   onOffsetChange?: (headerOffset: number) => void;
 };
 
@@ -57,7 +58,11 @@ type HeaderProps = {
  * @param props 헤더 메뉴와 스크롤 위치 연동 옵션
  * @return 현재 경로에 맞는 공통 헤더 컴포넌트
  */
-const Header = ({ menuEnabled = true, onOffsetChange }: HeaderProps) => {
+const Header = ({
+  menuEnabled = true,
+  headerTitle,
+  onOffsetChange,
+}: HeaderProps) => {
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -96,7 +101,8 @@ const Header = ({ menuEnabled = true, onOffsetChange }: HeaderProps) => {
   const isMenuResolved = resolvedMenu?.pathname === location.pathname;
   const currentMenu = isMenuResolved ? resolvedMenu.currentMenu : null;
   const menuList = isMenuResolved ? resolvedMenu.menuList : [];
-  const currentRouteTitle = currentMenu?.menuName;
+  const currentRouteTitle = headerTitle || currentMenu?.menuName;
+  const isHeaderResolved = Boolean(headerTitle) || isMenuResolved;
   const headerContentSlide =
     resolvedMenu?.transitionDirection === "back"
       ? headerContentSlideBack
@@ -189,7 +195,7 @@ const Header = ({ menuEnabled = true, onOffsetChange }: HeaderProps) => {
           )}
         >
           {/* 홈 화면은 메뉴 조회 결과와 관계없이 왼쪽에 서비스 로고를 표시하는 영역 */}
-          {isMenuResolved &&
+          {isHeaderResolved &&
             (isHomeRoute || !currentRouteTitle ? (
               <HomeLink className={clsx(logo, headerContentSlide)}>
                 <img

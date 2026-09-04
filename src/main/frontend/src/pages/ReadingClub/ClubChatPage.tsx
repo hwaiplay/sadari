@@ -11,6 +11,7 @@
 import {message} from "@/app/messages/message";
 import {formatDateValue} from "@/app/utils/dateUtil";
 import {ActionButton} from "@/components/Button/ActionButton";
+import {useHeaderTitle} from "@/components/Layout/Header/useHeaderTitle";
 import Loading from "@/components/Loading/Loading";
 import Skeleton from "@/components/Skeleton/Skeleton";
 import {
@@ -20,8 +21,9 @@ import {
 import {useClubChatPage} from "@/features/ReadingClub/hooks/useClubChatPage";
 import {getReadingDeadline} from "@/features/ReadingClub/utils/readingClubDeadline";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import {useBodyScrollLock} from "@/app/utils/modalUtil";
 import type {ChangeEvent, FormEvent} from "react";
-import {Fragment, useEffect, useRef} from "react";
+import {Fragment, useCallback, useEffect, useRef} from "react";
 import {Link} from "react-router-dom";
 import * as styles from "./ClubChatPage.css";
 
@@ -36,12 +38,68 @@ const ClubChatPage = () => {
     handleSend,
     setContent,
   } = useClubChatPage();
-  const messageEndRef = useRef<HTMLDivElement | null>(null);
+  const messagePanelRef = useRef<HTMLElement | null>(null);
+
+  // 조회된 모임명을 공통 헤더 제목으로 표시함
+  useHeaderTitle(club?.clubName);
+
+  // 채팅 화면에서는 메시지 목록만 움직이도록 배경 문서 스크롤을 잠금
+  useBodyScrollLock(true);
+
+  /**
+   * 새 채팅이 표시되면 바깥 문서를 움직이지 않고 메시지 목록만 끝으로 이동함
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없음
+   */
+  const scrollMessageList = useCallback((): void => {
+    const messagePanel = messagePanelRef.current;
+
+    // 채팅 목록이 렌더링된 경우에만 내부 스크롤 위치를 최신 메시지로 이동함
+    if (messagePanel) {
+      // 바깥 페이지의 스크롤 위치를 유지하면서 채팅 목록 끝을 표시함
+      messagePanel.scrollTop = messagePanel.scrollHeight;
+    }
+  }, []);
 
   // 새 채팅이 표시되면 최신 메시지가 보이도록 목록 끝으로 이동함
-  useEffect(() => {
-    messageEndRef.current?.scrollIntoView({block: "end"});
-  }, [messages, pendingContent]);
+  useEffect(scrollMessageList, [messages, pendingContent, scrollMessageList]);
+
+  /**
+   * 모바일 키보드가 채팅 표시 영역을 바꾸는 동안 최신 메시지 위치를 유지함
+   *
+   * @author HanWon.Jang
+   * @return 표시 영역 변경 감지 해제 함수 또는 미지원 환경의 빈 값
+   */
+  const watchViewportResize = (): (() => void) | undefined => {
+    const visualViewport = window.visualViewport;
+
+    // 실제 표시 영역 API가 없는 브라우저는 CSS 대체 높이만 사용함
+    if (!visualViewport) {
+      // 등록할 표시 영역 이벤트가 없음을 반환함
+      return undefined;
+    }
+
+    // 키보드 애니메이션 중에도 메시지 목록 내부의 최신 위치를 유지함
+    visualViewport.addEventListener("resize", scrollMessageList);
+
+    /**
+     * 채팅 화면이 닫히면 실제 표시 영역 변경 감지를 해제함
+     *
+     * @author HanWon.Jang
+     * @return 반환값이 없음
+     */
+    const stopViewportWatch = (): void => {
+      // 다른 화면에서 채팅 스크롤이 실행되지 않도록 이벤트를 해제함
+      visualViewport.removeEventListener("resize", scrollMessageList);
+    };
+
+    // 채팅 화면 해제 시 사용할 표시 영역 이벤트 정리 함수를 반환함
+    return stopViewportWatch;
+  };
+
+  // 모바일 키보드가 열리고 닫힐 때 채팅 목록의 끝 위치를 유지함
+  useEffect(watchViewportResize, [scrollMessageList]);
 
   /** 채팅 입력값을 상태에 반영함. @author HanWon.Jang */
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
@@ -105,7 +163,11 @@ const ClubChatPage = () => {
       )}
 
       {/* 모임 채팅 메시지 목록 영역 */}
-      <section className={styles.messagePanel} aria-label={message("frontend.readingClub.chat.messageList")}>
+      <section
+        ref={messagePanelRef}
+        className={styles.messagePanel}
+        aria-label={message("frontend.readingClub.chat.messageList")}
+      >
         {hasMessages ? (
           <ol className={styles.messageList} aria-live="polite">
             {messages.map((chat, index) => (
@@ -181,7 +243,6 @@ const ClubChatPage = () => {
             {message("frontend.readingClub.chat.empty")}
           </p>
         )}
-        <div ref={messageEndRef}/>
       </section>
 
       {/* 새 채팅 메시지 입력과 전송 영역 */}

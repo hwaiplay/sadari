@@ -1,16 +1,18 @@
 /** 모임 채팅 화면 스타일 */
 import {vars} from "@/app/styles/tokens.css";
-import {style} from "@vanilla-extract/css";
+import {globalStyle, style} from "@vanilla-extract/css";
 
 export const page = style({
   display: "flex",
-  width: "100%",
+  width: "calc(100% + 32px)",
   maxWidth: 600,
-  minHeight: `calc(100dvh - ${vars.headerHeight} - ${vars.navHeight} - max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
-  margin: "0 auto",
-  padding: "20px 0 0",
+  height: `calc(var(--app-viewport-height, 100dvh) - ${vars.headerHeight} - ${vars.navHeight} - max(${vars.space.sm}, env(safe-area-inset-bottom, 0px)))`,
+  minHeight: 0,
+  margin: "0 -16px",
+  padding: "20px 16px 0",
   boxSizing: "border-box",
   flexDirection: "column",
+  overflow: "hidden",
 });
 
 export const header = style({display: "flex", flexDirection: "column", gap: 4, marginBottom: 20});
@@ -50,9 +52,11 @@ export const currentBookTitle = style({overflow: "hidden", color: vars.color.bla
 export const currentBookArrow = style({color: vars.color.black, fontFamily: vars.font.medium, fontSize: 18, textAlign: "right"});
 
 export const messagePanel = style({
-  minHeight: 360,
+  minHeight: 0,
   flex: 1,
   overflowY: "auto",
+  overscrollBehavior: "contain",
+  WebkitOverflowScrolling: "touch",
   padding: "0 0 20px",
   background: vars.color.background,
 });
@@ -75,22 +79,38 @@ export const unreadCount = style({color: vars.color.brandText, fontFamily: vars.
 export const time = style({color: vars.color.gray500, fontFamily: vars.font.body, fontSize: 10, lineHeight: "12px", whiteSpace: "nowrap"});
 export const empty = style({margin: "140px 0", color: vars.color.gray600, fontFamily: vars.font.body, fontSize: 14, textAlign: "center"});
 
-export const composer = style({display: "flex", margin: "auto -16px 0", padding: "14px 16px", alignItems: "center", gap: 8, borderTop: `1px solid ${vars.color.gray300}`, background: vars.color.background});
+export const composer = style({
+  display: "flex",
+  width: "calc(100% + 32px)",
+  minWidth: 0,
+  margin: "auto -16px 0",
+  padding: "10px 16px",
+  boxSizing: "border-box",
+  flexShrink: 0,
+  alignItems: "center",
+  gap: 8,
+  borderTop: `1px solid ${vars.color.gray300}`,
+  background: "#ffffff",
+});
 export const input = style({
-  minHeight: 42,
+  minWidth: 0,
+  minHeight: 40,
   maxHeight: 100,
   flex: 1,
-  padding: "10px 14px",
-  border: 0,
-  borderRadius: 999,
+  padding: "9px 14px",
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 21,
   boxSizing: "border-box",
   color: vars.color.black,
-  background: vars.color.gray100,
+  background: "#ffffff",
   fontFamily: vars.font.body,
-  fontSize: 14,
+  fontSize: 16,
   lineHeight: "20px",
+  outline: "none",
   resize: "none",
-  selectors: {"&:focus-visible": {outline: "2px solid #78b991", outlineOffset: 2}},
+  selectors: {
+    "&::placeholder": {color: vars.color.gray500},
+  },
 });
 export const sendButton = style({
   width: 36,
@@ -108,3 +128,11 @@ export const sendButton = style({
 });
 export const sendIcon = style({fontFamily: vars.font.semibold, fontSize: 16, lineHeight: 1});
 export const srOnly = style({position: "absolute", width: 1, height: 1, padding: 0, margin: -1, overflow: "hidden", clip: "rect(0, 0, 0, 0)", whiteSpace: "nowrap", border: 0});
+
+globalStyle(`${page}:focus-within`, {
+  "@media": {
+    "screen and (hover: none) and (pointer: coarse)": {
+      height: `calc(var(--app-viewport-height, 100dvh) - ${vars.headerHeight})`,
+    },
+  },
+});
