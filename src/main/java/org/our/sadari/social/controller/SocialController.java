@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * fileName       : SocialController
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-17
  * description    : 사용자 검색과 공개 프로필 및 팔로우와 좋아요 API를 제공함
  * ===========================================================
@@ -44,6 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 추가
  * 2026-08-28        HanWon.Jang        피드 활성 사용자 검색 추가
  * 2026-09-03        HanWon.Jang        사용자 차단 API와 접근 검증 추가
+ * 2026-09-04        HanWon.Jang        내 팔로우 목록 닉네임 검색 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -334,36 +335,42 @@ public class SocialController {
      * 로그인 사용자의 팔로잉 목록을 조회함
      * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
      * @return 팔로잉 목록 조회 결과
      */
     @GetMapping("/me/following")
-    @Operation(summary = "내 팔로잉 목록 조회", description = "로그인 사용자가 팔로우하는 사용자 목록을 조회한다.")
+    @Operation(summary = "내 팔로잉 목록 조회", description = "로그인 사용자가 팔로우하는 사용자 목록을 선택적 닉네임 조건으로 조회한다.")
     public ResultData getMyFollowingList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                       , @Parameter(description = "닉네임 검색어", example = "reader")
+                                         @RequestParam(value = "keyword", required = false) String keyword
                                        , @Parameter(description = "조회할 페이지 번호", example = "1")
                                          @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 로그인 사용자의 팔로잉 목록을 조회한 결과를 반환함
-        return socialService.getFollowingList(loginUserNumb, loginUserNumb, page);
+        // 본인 팔로잉 범위 안의 닉네임 검색 결과 반환
+        return socialService.getFollowingList(loginUserNumb, loginUserNumb, keyword, page);
     }
 
     /**
      * 로그인 사용자의 팔로워 목록을 조회함
      * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
+     * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
      * @return 팔로워 목록 조회 결과
      */
     @GetMapping("/me/followers")
-    @Operation(summary = "내 팔로워 목록 조회", description = "로그인 사용자를 팔로우하는 사용자 목록을 조회한다.")
+    @Operation(summary = "내 팔로워 목록 조회", description = "로그인 사용자를 팔로우하는 사용자 목록을 선택적 닉네임 조건으로 조회한다.")
     public ResultData getMyFollowerList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
+                                      , @Parameter(description = "닉네임 검색어", example = "reader")
+                                        @RequestParam(value = "keyword", required = false) String keyword
                                       , @Parameter(description = "조회할 페이지 번호", example = "1")
                                         @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 로그인 사용자의 팔로워 목록을 조회한 결과를 반환함
-        return socialService.getFollowerList(loginUserNumb, loginUserNumb, page);
+        // 본인 팔로워 범위 안의 닉네임 검색 결과 반환
+        return socialService.getFollowerList(loginUserNumb, loginUserNumb, keyword, page);
     }
 
     /**
@@ -383,7 +390,7 @@ public class SocialController {
                                      , @Parameter(description = "조회할 페이지 번호", example = "1")
                                        @RequestParam(value = "page", defaultValue = "1") int page) {
         // 특정 사용자의 팔로잉 목록을 조회한 결과를 반환함
-        return socialService.getFollowingList(loginUserNumb, userNumb, page);
+        return socialService.getFollowingList(loginUserNumb, userNumb, null, page);
     }
 
     /**
@@ -403,7 +410,7 @@ public class SocialController {
                                     , @Parameter(description = "조회할 페이지 번호", example = "1")
                                       @RequestParam(value = "page", defaultValue = "1") int page) {
         // 특정 사용자의 팔로워 목록을 조회한 결과를 반환함
-        return socialService.getFollowerList(loginUserNumb, userNumb, page);
+        return socialService.getFollowerList(loginUserNumb, userNumb, null, page);
     }
 
     /**

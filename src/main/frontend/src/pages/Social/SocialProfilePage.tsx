@@ -47,6 +47,7 @@ import {
 } from "@/features/User/utils/profileReadingFormat";
 import { getGoalProgressColor } from "@/features/User/utils/goalProgress";
 import ReadingStatisticsSection from "@/pages/My/ReadingStatisticsSection";
+import * as userListStyles from "@/features/Social/components/LikeUserListButton.css";
 import { useEffect, useRef, useState, type ReactNode, type SyntheticEvent } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
@@ -1449,7 +1450,7 @@ const SocialProfilePage = () => {
                   </button>
                   {user.meYsno !== "Y" && (
                     <button
-                      className={styles.followModalStatusButton}
+                      className={userListStyles.statusButton}
                       data-follow-status={user.followStatName}
                       type="button"
                       disabled={followUpdatingUserNumb === user.userNumb}

@@ -22,6 +22,7 @@ const AlimPage = lazy(() => import("@/pages/Alim/AlimPage"));
 const NotificationTargetPage = lazy(() => import("@/pages/Alim/NotificationTargetPage"));
 const SettingsPage = lazy(() => import("@/pages/Settings/SettingsPage"));
 const BlockedUsersPage = lazy(() => import("@/pages/Settings/BlockedUsersPage"));
+const FollowManagementPage = lazy(() => import("@/pages/Settings/FollowManagementPage"));
 const UserSettingsPage = lazy(() => import("@/pages/Settings/UserSettingsPage"));
 const ServiceInfoPage = lazy(() => import("@/pages/Settings/ServiceInfoPage"));
 const WithdrawalPage = lazy(() => import("@/pages/Settings/WithdrawalPage"));
@@ -217,6 +218,8 @@ const Router = () => {
           <Route path="/settings/alim" element={<Navigate to="/settings/notifications" replace />} />
           <Route path="/settings/notifications" element={<UserSettingsPage section="notifications" />} />
           <Route path="/settings/privacy" element={<UserSettingsPage section="privacy" />} />
+          <Route path="/settings/following" element={<FollowManagementPage type="following" />} />
+          <Route path="/settings/followers" element={<FollowManagementPage type="followers" />} />
           <Route path="/settings/blocked-users" element={<BlockedUsersPage />} />
           <Route path="/settings/withdrawal" element={<WithdrawalPage />} />
           <Route path="/settings/service-info" element={<ServiceInfoPage />} />

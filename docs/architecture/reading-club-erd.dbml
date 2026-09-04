@@ -323,13 +323,13 @@ Table TB_CLVBAL [headercolor: #A680B8] {
 }
 
 // ─────────────────────────────────────────────────────────────
-// 모임장 승계와 감사
+// 모임장 승계
 // ─────────────────────────────────────────────────────────────
 
 Table TM_CLOWNX [headercolor: #D79B00] {
   CLUB_NUMB bigint [not null]
   ELCT_NUMB bigint [not null, note: '모임별 MAX + 1']
-  PREV_OWNR bigint [note: '기존 모임장 감사값. 사용자 FK 없음']
+  PREV_OWNR bigint [note: '기존 모임장 번호. 사용자 FK 없음']
   ABSN_RSON varchar(20) [not null]
   EVID_CNTN varchar(2000)
   SELT_NUMB bigint [note: 'BOOK_OVERDUE 근거 선정 번호']
@@ -347,23 +347,6 @@ Table TM_CLOWNX [headercolor: #D79B00] {
     (CLUB_NUMB, ELCT_NUMB) [pk]
     (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TM_CLOWNX_IDEM']
     (CLUB_NUMB, ELCT_STAT, ENDX_DATE) [name: 'IX_TM_CLOWNX_STAT']
-  }
-}
-
-Table TH_CLOWNR [headercolor: #D79B00] {
-  CLUB_NUMB bigint [not null]
-  HIST_NUMB bigint [not null, note: '모임별 MAX + 1, 물리 삭제 금지']
-  ELCT_NUMB bigint
-  PREV_OWNR bigint [note: '사용자 FK를 두지 않는 감사값']
-  NEXT_OWNR bigint [note: '사용자 FK를 두지 않는 감사값']
-  ABSN_RSON varchar(20) [not null]
-  EVID_CNTN varchar(2000)
-  CHNG_DATE datetime(6) [not null]
-  REGI_DATE datetime(6) [not null]
-
-  indexes {
-    (CLUB_NUMB, HIST_NUMB) [pk]
-    (CLUB_NUMB, ELCT_NUMB) [name: 'IX_TH_CLOWNR_ELCT']
   }
 }
 
@@ -467,8 +450,6 @@ Ref: TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete
 Ref: TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) - TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) [delete: cascade]
 Ref: TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) > TB_CLVOPT.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [delete: restrict]
 
-Ref: TH_CLOWNR.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
-Ref: TH_CLOWNR.(CLUB_NUMB, ELCT_NUMB) > TM_CLOWNX.(CLUB_NUMB, ELCT_NUMB) [delete: restrict]
 Ref: TH_CLKICK.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
 Ref: TH_CLKICK.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
 Ref: TH_CLKICK.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
@@ -503,7 +484,6 @@ TableGroup ReadingClub {
   TB_CLVOTR
   TB_CLVBAL
   TM_CLOWNX
-  TH_CLOWNR
   TH_CLKICK
   TH_CLADMN
   TM_CLCHAT

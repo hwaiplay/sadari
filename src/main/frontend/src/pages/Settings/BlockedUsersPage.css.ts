@@ -6,30 +6,21 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "calc(100svh - 120px)",
   margin: "0 auto",
-  padding: `${vars.space.lg} ${vars.space.md} 96px`,
+  padding: `10px ${vars.space.md} 96px`,
   boxSizing: "border-box",
   backgroundColor: vars.color.background,
 });
 
 export const header = style({
-  paddingBottom: vars.space.lg,
-  borderBottom: `1px solid ${vars.color.gray200}`,
-});
-
-export const title = style({
-  margin: 0,
-  color: vars.color.black,
-  fontFamily: vars.font.heading,
-  fontSize: vars.fontSize.title,
-  lineHeight: 1.35,
+  marginBottom: "22px",
 });
 
 export const description = style({
-  margin: `${vars.space.sm} 0 0`,
-  color: vars.color.gray600,
-  fontFamily: vars.font.body,
-  fontSize: vars.fontSize.body,
-  lineHeight: 1.6,
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
+  lineHeight: 1.55,
 });
 
 export const list = style({

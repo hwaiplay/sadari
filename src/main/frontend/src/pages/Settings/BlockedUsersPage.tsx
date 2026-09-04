@@ -181,12 +181,8 @@ const BlockedUsersPage = () => {
   return (
     /* 차단 사용자 관리 전체 영역 */
     <main className={styles.page}>
-      {/* 차단 관리 제목과 기능 설명 영역 */}
+      {/* 차단 관계가 적용되는 범위 설명 영역 */}
       <header className={styles.header}>
-        <h1 className={styles.title}>
-          {/* "차단한 사용자" */}
-          {message("frontend.settings.blocked.title")}
-        </h1>
         <p className={styles.description}>
           {/* "차단한 사용자는 서로의 공개 프로필과 콘텐츠를 볼 수 없습니다." */}
           {message("frontend.settings.blocked.description")}

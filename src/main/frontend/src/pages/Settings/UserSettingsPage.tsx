@@ -244,12 +244,8 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
 
   return (
     <main className={styles.page}>
+      {/* 현재 설정 범주의 기능 설명 영역 */}
       <header className={styles.header}>
-        <h1 className={styles.pageTitle}>
-          {message(section === "notifications"
-            ? "frontend.settings.notifications.title"
-            : "frontend.settings.privacy.title")}
-        </h1>
         <p className={styles.pageDescription}>
           {message(section === "notifications"
             ? "frontend.settings.notifications.description"

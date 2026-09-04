@@ -205,17 +205,20 @@ export const delSocialFollowApi = async (userNumb: number) => {
  * @author SeungHyeon.Kang
  * @param type 조회할 팔로우 목록 유형
  * @param page 조회할 페이지 번호
+ * @param keyword 닉네임 검색어
  * @return 팔로우 사용자 페이지 응답
  * @throws API 요청 또는 공통 응답 검증 실패 시 발생
  */
 export const getMyFollowPageApi = async (
   type: FollowListType,
   page: number,
+  keyword?: string,
 ): Promise<ResultData<PageData<FollowUser>>> => {
-
+  // 본인 팔로우 관계 안에서 선택적 닉네임 검색과 페이지 조회
   const res = await api.get<ResultData<PageData<FollowUser>>>(`/social/me/${type}`, {
-    params: { page },
+    params: { keyword, page },
   });
+  // 공통 성공 코드가 검증된 본인 팔로우 목록 페이지 반환
   return assertResultDataSuccess(res.data);
 };
 

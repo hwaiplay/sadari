@@ -5,7 +5,7 @@ import lombok.Data;
 
 /**
  * fileName       : SocialDto
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-24
  * description    : 사용자 검색과 팔로우 및 좋아요 요청과 응답 데이터를 전달함
  * ===========================================================
@@ -18,6 +18,7 @@ import lombok.Data;
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 추가
  * 2026-09-03        HanWon.Jang        차단 관계 조회 조건 추가
+ * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 조건 추가
  */
 @Schema(description = "사용자 검색과 팔로우 및 좋아요 API DTO 컨테이너", hidden = true)
 public class SocialDto {
@@ -122,7 +123,7 @@ public class SocialDto {
      * 팔로우/팔로워 목록 조회 조건 DTO임
      * userNumb는 목록의 주인이고, loginUserNumb는 각 목록 사용자에 대한 현재 로그인 사용자의 팔로우 상태를 계산하는 기준임
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      */
     // 팔로워 또는 팔로잉 목록 조회 조건
     @Data
@@ -134,6 +135,9 @@ public class SocialDto {
 
         @Schema(description = "로그인 사용자 번호", example = "1", hidden = true)
         private Long loginUserNumb;
+
+        @Schema(description = "닉네임 검색어", example = "reader", hidden = true)
+        private String keyword;
 
         @Schema(description = "팔로우 목록 조회 시작 위치", example = "0", hidden = true)
         private Integer pageOffset;

@@ -299,6 +299,9 @@
             ON REVERSEFOLLOW.USER_NUMB = U.USER_NUMB
            AND REVERSEFOLLOW.FLOW_NUMB = #{loginUserNumb}
          WHERE FL.USER_NUMB = #{userNumb}
+        <if test="keyword != null and keyword != ''">
+           AND INSTR(U.USER_NICK, #{keyword}) <![CDATA[>]]> 0
+        </if>
            AND NOT EXISTS (
                SELECT 1
                  FROM TB_USBLOC B
@@ -335,6 +338,9 @@
             ON REVERSEFOLLOW.USER_NUMB = U.USER_NUMB
            AND REVERSEFOLLOW.FLOW_NUMB = #{loginUserNumb}
          WHERE FL.FLOW_NUMB = #{userNumb}
+        <if test="keyword != null and keyword != ''">
+           AND INSTR(U.USER_NICK, #{keyword}) <![CDATA[>]]> 0
+        </if>
            AND NOT EXISTS (
                SELECT 1
                  FROM TB_USBLOC B

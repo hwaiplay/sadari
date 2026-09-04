@@ -33,6 +33,7 @@ import {
 import LikeUserListButton from "@/features/Social/components/LikeUserListButton";
 import { useFollowListModal } from "@/features/Social/hooks/useFollowListModal";
 import { isFollowedByMe } from "@/features/Social/utils/followStatus";
+import * as userListStyles from "@/features/Social/components/LikeUserListButton.css";
 import {
   copyPrevReadingGoalApi,
   delProfileImageDraftApi,
@@ -2601,7 +2602,7 @@ const ProfileEditPage = () => {
                   {/* 팔로우 상태 확인과 변경 영역 */}
                   {user.meYsno !== "Y" && (
                     <button
-                      className={styles.followModalStatusButton}
+                      className={userListStyles.statusButton}
                       data-follow-status={user.followStatName}
                       type="button"
                       disabled={followUpdatingUserNumb === user.userNumb}

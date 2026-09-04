@@ -91,8 +91,9 @@ const SettingsPage = () => {
       return;
     }
 
-    if (menu.menuUrlx?.trim()) {
-      navigate(menu.menuUrlx);
+    const menuUrlx = menu.menuUrlx?.trim();
+    if (menuUrlx) {
+      navigate(menuUrlx);
     }
   };
 
@@ -105,45 +106,6 @@ const SettingsPage = () => {
     <main className={styles.page}>
       {/* 관리자 사용자 메뉴에서 조회한 설정 하위 메뉴 영역 */}
       <section className={styles.menu} aria-label={message("frontend.settings.menuLabel")}>
-        <div className={styles.menuItem}>
-          <button
-            className={styles.primaryMenuButton}
-            type="button"
-            onClick={() => navigate("/settings/notifications")}
-          >
-            <span>{message("frontend.settings.notifications.title")}</span>
-            <svg className={styles.chevronIcon} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-        <div className={styles.menuItem}>
-          <button
-            className={styles.primaryMenuButton}
-            type="button"
-            onClick={() => navigate("/settings/blocked-users")}
-          >
-            <span>
-              {/* "차단한 사용자" */}
-              {message("frontend.settings.blocked.title")}
-            </span>
-            <svg className={styles.chevronIcon} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </button>
-        </div>
-        <div className={styles.menuItem}>
-          <button
-            className={styles.primaryMenuButton}
-            type="button"
-            onClick={() => navigate("/settings/privacy")}
-          >
-            <span>{message("frontend.settings.privacy.title")}</span>
-            <svg className={styles.chevronIcon} viewBox="0 0 24 24" aria-hidden="true">
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </button>
-        </div>
         {hasError && (
           <p className={styles.statusMessage}>{message("frontend.common.tryAgain")}</p>
         )}

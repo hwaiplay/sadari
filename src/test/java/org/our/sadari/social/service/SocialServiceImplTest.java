@@ -33,7 +33,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : SocialServiceImplTest
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-08-04
  * description    : 프로필 통계 조회의 독후감 공개 범위 전달 정책을 검증함
  * ===========================================================
@@ -45,6 +45,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 검증
  * 2026-08-27        SeungHyeon.Kang    사진 좋아요 알림 대상 설명 정리
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 검증
+ * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -269,6 +270,35 @@ class SocialServiceImplTest {
         // 두 번째 페이지의 시작 위치를 확인함
         assertEquals(10, reqCaptor.getValue().getPageOffset());
         // 다음 페이지 판정용 한 건을 포함한 조회 크기를 확인함
+        assertEquals(11, reqCaptor.getValue().getPageLimit());
+    }
+
+    /**
+     * 팔로우 목록 검색어의 양끝 공백과 페이지 조건 정규화 검증
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getFollowingListKeyword() {
+        // 검색 결과 한 건의 페이지 응답 조건 구성
+        when(socialMapper.getFollowingList(any(SocialDto.FollowListReqDto.class)))
+                .thenReturn(List.of(new SocialDto.FollowUserDto()));
+
+        // 양끝 공백이 있는 닉네임으로 본인 팔로잉 목록 첫 페이지 조회
+        ResultData result = socialService.getFollowingList(31L, 31L, "  reader  ", 1);
+
+        // 닉네임 검색이 기존 팔로우 목록 페이지 응답으로 성공하는지 확인
+        assertEquals(200, result.getCode());
+        // Mapper 검색 조건 확인용 인자 Capture 생성
+        ArgumentCaptor<SocialDto.FollowListReqDto> reqCaptor =
+                ArgumentCaptor.forClass(SocialDto.FollowListReqDto.class);
+        // 팔로잉 목록 Mapper에 전달된 검색 조건 Capture
+        verify(socialMapper).getFollowingList(reqCaptor.capture());
+        // 검색어 양끝 공백 제거 확인
+        assertEquals("reader", reqCaptor.getValue().getKeyword());
+        // 첫 페이지 시작 위치 확인
+        assertEquals(0, reqCaptor.getValue().getPageOffset());
+        // 다음 페이지 판정 한 건을 포함한 조회 크기 확인
         assertEquals(11, reqCaptor.getValue().getPageLimit());
     }
 

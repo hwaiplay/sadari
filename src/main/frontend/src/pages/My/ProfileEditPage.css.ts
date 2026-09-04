@@ -1338,40 +1338,6 @@ export const followModalIntro = style({
   color: "#777777",
 });
 
-export const followModalStatusButton = style({
-  minWidth: "58px",
-  minHeight: "30px",
-  padding: "0 10px",
-  borderRadius: "999px",
-  backgroundColor: vars.color.brandBg,
-  color: vars.color.brandText,
-  fontFamily: vars.font.semibold,
-  fontSize: "12px",
-  cursor: "pointer",
-  selectors: {
-    "&:hover:not(:disabled)": {
-      backgroundColor: vars.color.gray100,
-    },
-    "&[data-follow-status='팔로잉']": {
-      color: "#2f9e44",
-    },
-    "&[data-follow-status='맞팔로우']": {
-      color: "#2f9e44",
-    },
-    "&[data-follow-status='친구']": {
-      color: "#2563eb",
-      backgroundColor: "#eaf4ff",
-    },
-    "&[data-follow-status='친구']:hover:not(:disabled)": {
-      backgroundColor: "#dbeafe",
-    },
-    "&:disabled": {
-      cursor: "default",
-      opacity: 0.62,
-    },
-  },
-});
-
 export const followModalEmpty = style({
   margin: "12px 0 4px",
   padding: "24px 0",

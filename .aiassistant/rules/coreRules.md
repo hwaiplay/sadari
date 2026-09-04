@@ -16,7 +16,7 @@ apply: always
 | `CORE-PRIORITY-001` | MUST | 규칙 충돌 | 우선순위와 예외 사유 확인 |
 | `CORE-SECURITY-001` | MUST | 모든 파일과 명령 | 비밀값, 개인정보, 위험 명령 검사 |
 | `CORE-INTEGRITY-001` | MUST | 데이터 및 상태 변경 | 검증, 트랜잭션, 실패 경로 확인 |
-| `CORE-FUNCTIONAL-001` | MUST | 기능 테스트 | loc 간편 로그인, 테스트 회원 및 실제 화면 검증 확인 |
+| `CORE-FUNCTIONAL-001` | MUST | 기능 테스트 | Tailnet 간편 로그인, 테스트 회원 및 실제 화면 검증 확인 |
 | `CORE-COMMENT-001` | MUST | 소스 코드 주석 | 문체와 내용 수동 검토 |
 | `CORE-CONFIG-001` | MUST | 환경별 설정 | 코드 하드코딩과 설정 동기화 검사 |
 | `CORE-ACCOUNT-001` | MUST | 신규 기능과 데이터 범위 확장 | 정책 결정과 문서·코드·테스트 반영 확인 |
@@ -83,7 +83,9 @@ apply: always
 ### CORE-FUNCTIONAL-001 loc 기능 테스트
 
 - 사용자 기능을 구현하거나 실행 결과에 영향을 주는 변경은 가능한 경우 `application-loc.yml` 환경의 실행 서버에서 실제 화면으로 검증한다.
-- 인증이 필요한 기능은 `/api/oauth/local-login?userNumb={userNumb}` 간편 로그인 URL을 사용하고 localhost와 Tailnet 중 현재 접근 가능한 주소에서 검증한다.
+- 인증이 필요한 기능은 Tailnet 주소의 `/api/oauth/local-login?userNumb={userNumb}` 간편 로그인 URL을 사용한다.
+- 실제 화면 테스트에는 Tailnet 주소만 사용하며 localhost로 대체하지 않는다.
+- Tailnet 주소에 접근할 수 없으면 대체 화면 테스트 없이 원인과 미검증 위험을 완료 결과에 기록한다.
 - 간편 로그인 테스트에는 1번과 2번 사용자를 사용하지 않고, 3번 이상의 활성 테스트 사용자 중 기능에 적합한 사용자를 선택한다.
 - 사용자 간 상호작용은 서로 다른 로그인 세션으로 양쪽 화면을 확인하고 API 호출만으로 실제 화면 검증을 대체하지 않는다.
 - 상태를 변경하는 테스트 데이터는 검증 후 원복하며, 팔로우 삭제처럼 정책상 복원되지 않거나 원복할 수 없는 영향은 실행 전에 범위를 제한하고 완료 결과에 기록한다.

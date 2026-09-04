@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : SocialServiceImpl
- * author         : SeungHyeon.Kang
+ * author         : HanWon.Jang
  * date           : 2026-07-22
  * description    : 사용자 검색과 팔로우 및 좋아요 업무 로직을 구현함
  * ===========================================================
@@ -39,6 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-27        SeungHyeon.Kang    좋아요 알림 원본 유형과 공개 사진 반응 적용
  * 2026-08-28        HanWon.Jang        활성 사용자 관계순 검색 추가
  * 2026-09-03        HanWon.Jang        사용자 차단 검증과 목록 격리 추가
+ * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -300,14 +301,15 @@ public class SocialServiceImpl implements SocialService {
      * 특정 사용자가 팔로우하는 사용자 목록을 조회함
      * 목록 행마다 로그인 사용자 기준 팔로우 상태를 같이 내려 모달에서 추가 상태 조회를 반복하지 않게 함
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
      * @return 팔로잉 목록
      */
     @Override
-    public ResultData getFollowingList(Long loginUserNumb, Long userNumb, int page) {
+    public ResultData getFollowingList(Long loginUserNumb, Long userNumb, String keyword, int page) {
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단함
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
@@ -317,8 +319,8 @@ public class SocialServiceImpl implements SocialService {
             return invalidResult;
         }
 
-        // createFollowListReq 호출로 후속 처리에 필요한 객체를 생성함
-        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, page);
+        // 목록 범위를 유지한 닉네임 검색과 페이지 조건 구성
+        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, keyword, page);
         // 페이지 조건으로 특정 사용자가 팔로우하는 사용자 목록을 조회함
         List<SocialDto.FollowUserDto> searchedList = socialMapper.getFollowingList(req);
         // 팔로잉 목록의 현재 페이지와 다음 페이지 여부를 반환함
@@ -329,14 +331,15 @@ public class SocialServiceImpl implements SocialService {
      * 특정 사용자를 팔로우하는 사용자 목록을 조회함
      * 팔로워 목록도 팔로잉 목록과 같은 응답 구조를 사용해 화면 모달을 공통으로 렌더링할 수 있게 함
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
      * @return 팔로워 목록
      */
     @Override
-    public ResultData getFollowerList(Long loginUserNumb, Long userNumb, int page) {
+    public ResultData getFollowerList(Long loginUserNumb, Long userNumb, String keyword, int page) {
         // validateFollowListReq 검증으로 잘못된 요청이 업무 로직에 진입하지 않도록 차단함
         ResultData invalidResult = validateFollowListReq(loginUserNumb, userNumb);
 
@@ -346,8 +349,8 @@ public class SocialServiceImpl implements SocialService {
             return invalidResult;
         }
 
-        // createFollowListReq 호출로 후속 처리에 필요한 객체를 생성함
-        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, page);
+        // 목록 범위를 유지한 닉네임 검색과 페이지 조건 구성
+        SocialDto.FollowListReqDto req = createFollowListReq(loginUserNumb, userNumb, keyword, page);
         // 페이지 조건으로 특정 사용자를 팔로우하는 사용자 목록을 조회함
         List<SocialDto.FollowUserDto> searchedList = socialMapper.getFollowerList(req);
         // 팔로워 목록의 현재 페이지와 다음 페이지 여부를 반환함
@@ -534,19 +537,23 @@ public class SocialServiceImpl implements SocialService {
      * 팔로우/팔로워 목록 조회 DTO를 생성함
      * Controller와 Mapper가 같은 파라미터 구조를 공유하도록 Service에서 DTO 생성 지점을 고정함
      *
-     * @author SeungHyeon.Kang
+     * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
+     * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
      * @return 팔로우 목록 조회 조건 DTO
      */
-    private SocialDto.FollowListReqDto createFollowListReq(Long loginUserNumb, Long userNumb, int page) {
+    private SocialDto.FollowListReqDto createFollowListReq(Long loginUserNumb, Long userNumb
+                                                         , String keyword, int page) {
         // 팔로우 목록 조회 조건을 담을 객체를 생성함
         SocialDto.FollowListReqDto req = new SocialDto.FollowListReqDto();
         // LoginUserNumb 업무 값을 req DTO에 설정함
         req.setLoginUserNumb(loginUserNumb);
         // UserNumb 업무 값을 req DTO에 설정함
         req.setUserNumb(userNumb);
+        // 양끝 공백을 제외한 닉네임 검색 조건 설정
+        req.setKeyword(StringUtil.isEmpty(keyword) ? null : keyword.trim());
         // 요청 페이지를 첫 페이지 이상으로 보정함
         int normalizedPage = Math.max(page, 1);
         // 현재 팔로우 목록 페이지의 시작 위치를 설정함

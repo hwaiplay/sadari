@@ -8,27 +8,19 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "calc(100svh - 112px)",
   margin: "0 auto",
-  padding: "24px 18px 36px",
+  padding: "10px 18px 36px",
   boxSizing: "border-box",
   backgroundColor: "#ffffff",
 });
 
-export const header = style({ marginBottom: "24px" });
-
-export const pageTitle = style({
-  margin: 0,
-  color: vars.color.black,
-  fontFamily: vars.font.heading,
-  fontSize: "24px",
-  lineHeight: 1.4,
-  letterSpacing: "-0.02em",
-});
+export const header = style({ marginBottom: "22px" });
 
 export const pageDescription = style({
-  margin: "8px 0 0",
-  color: vars.color.gray600,
-  fontSize: "14px",
-  lineHeight: 1.6,
+  margin: 0,
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "16px",
+  lineHeight: 1.55,
 });
 
 export const section = style({ marginBottom: "28px" });
