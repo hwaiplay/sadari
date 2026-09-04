@@ -133,6 +133,13 @@ export const title = style({
   textAlign: "center",
 });
 
+export const loginActions = style({
+  display: "flex",
+  flexDirection: "column",
+  alignItems: "center",
+  gap: "8px",
+});
+
 export const kakaoLoginBtn = style({
   backgroundColor: "#FEE500",
   color: "#000000",
@@ -147,4 +154,27 @@ export const kakaoLoginBtn = style({
   borderRadius: vars.radius.sm,
   overflow: "hidden",
   marginTop:"16px"
+});
+
+export const privacyPolicyLink = style({
+  padding: "8px 4px",
+  border: 0,
+  backgroundColor: "transparent",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "14px",
+  lineHeight: 1.5,
+  textDecoration: "none",
+  display: "inline-flex",
+  alignItems: "center",
+  gap: "2px",
+  selectors: {
+    "&:hover": {
+      color: "#555555",
+    },
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: "2px",
+    },
+  },
 });

@@ -28,6 +28,7 @@ import org.springframework.context.support.StaticMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ServiceInfoServiceImplTest {
@@ -69,5 +70,17 @@ class ServiceInfoServiceImplTest {
 
         assertEquals(200, result.getCode());
         assertSame(rows, result.getData());
+    }
+
+    /** 로그인 전 개인정보처리방침 조회는 해당 카테고리의 현재 배포본만 제공함 */
+    @Test
+    void getPrivacyPolicy() {
+        ServiceInfoDto privacyPolicy = new ServiceInfoDto();
+        when(serviceInfoMapper.getServiceInfoDtl("SVIF_CATE", "PRIVACY", "Y")).thenReturn(privacyPolicy);
+
+        ResultData result = serviceInfoService.getPrivacyPolicy();
+
+        assertEquals(200, result.getCode());
+        assertSame(privacyPolicy, result.getData());
     }
 }

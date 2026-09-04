@@ -76,6 +76,9 @@ const Router = () => {
           }
         />
 
+        {/* 로그인 전 개인정보처리방침 */}
+        <Route path="/privacy-policy" element={<ServiceInfoPage privacyOnly />} />
+
         {/* Kakao 로그인 검증 */}
         <Route
           path="/oauth"

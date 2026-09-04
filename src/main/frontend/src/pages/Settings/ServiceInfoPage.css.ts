@@ -11,9 +11,21 @@ export const page = style({
   backgroundColor: "#ffffff",
 });
 
+export const policyPage = style({ paddingBottom: "24px" });
+
 export const list = style({ display: "flex", flexDirection: "column" });
 
-export const item = style({ borderBottom: `1px solid ${vars.color.gray200}` });
+export const item = style({ borderBottom: `1px solid ${vars.color.gray300}` });
+
+export const policyItem = style({ width: "100%" });
+
+export const policyTitle = style({
+  margin: "0 4px 20px",
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: "18px",
+  lineHeight: 1.5,
+});
 
 export const button = style({
   width: "100%",
@@ -27,11 +39,11 @@ export const button = style({
   justifyContent: "space-between",
   gap: "12px",
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "16px",
   textAlign: "left",
   cursor: "pointer",
   selectors: {
-    "&:hover": { backgroundColor: "#f7f8fa" },
+    "&:hover": { backgroundColor: vars.color.gray100 },
     "&:focus-visible": { outline: "2px solid #78b991", outlineOffset: "-2px" },
   },
 });
@@ -71,6 +83,8 @@ export const contentWrapOpen = style({
   transition: "grid-template-rows 260ms ease, opacity 220ms ease, visibility 0s linear 0s",
 });
 
+export const policyContent = style({ width: "100%" });
+
 export const contentClip = style({
   minWidth: 0,
   minHeight: 0,
@@ -107,6 +121,8 @@ export const modifiedDate = style({
 
 export const empty = style({ margin: 0, color: vars.color.gray600 });
 
+export const confirmArea = style({ marginTop: "24px" });
+
 globalStyle(`${content} > :first-child`, { marginTop: 0 });
 globalStyle(`${content} > :last-child`, { marginBottom: 0 });
 globalStyle(`${content} *`, { maxWidth: "100%", boxSizing: "border-box" });
@@ -124,6 +140,6 @@ globalStyle(`${content} li`, {
 });
 globalStyle(`${content} img`, { display: "block", maxWidth: "100%", height: "auto", margin: "16px auto" });
 globalStyle(`${content} table`, { display: "block", width: "100%", overflowX: "auto", borderCollapse: "collapse" });
-globalStyle(`${content} th`, { padding: "7px", border: `1px solid ${vars.color.gray200}` });
-globalStyle(`${content} td`, { padding: "7px", border: `1px solid ${vars.color.gray200}` });
+globalStyle(`${content} th`, { padding: "7px", border: `1px solid ${vars.color.gray300}` });
+globalStyle(`${content} td`, { padding: "7px", border: `1px solid ${vars.color.gray300}` });
 globalStyle(`${content} a`, { color: vars.color.brand, textDecoration: "underline" });

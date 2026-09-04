@@ -21,11 +21,15 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 추가
  */
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ServiceInfoServiceImpl implements ServiceInfoService {
+
+    // 개인정보처리방침 서비스 정보 카테고리 코드
+    private static final String PRIVACY_POLICY_CODE = "PRIVACY";
 
     // 서비스 정보 데이터 접근 객체
     private final ServiceInfoMapper serviceInfoMapper;
@@ -48,5 +52,17 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
 
         // 활성 카테고리와 각 카테고리의 현재 배포본을 정렬 순서대로 반환함
         return ResultData.success(serviceInfoMapper.getServiceInfoList(CODE_SERVICE_INFO_CATEGORY, COMM_YES));
+    }
+
+    /**
+     * 인증 정보 없이 현재 배포 개인정보처리방침만 제공함
+     *
+     * @author HanWon.Jang
+     * @return 현재 배포된 개인정보처리방침 조회 결과
+     */
+    @Override
+    public ResultData getPrivacyPolicy() {
+        // 공개 가능한 개인정보처리방침 카테고리의 현재 배포본만 조회함
+        return ResultData.success(serviceInfoMapper.getServiceInfoDtl(CODE_SERVICE_INFO_CATEGORY, PRIVACY_POLICY_CODE, COMM_YES));
     }
 }

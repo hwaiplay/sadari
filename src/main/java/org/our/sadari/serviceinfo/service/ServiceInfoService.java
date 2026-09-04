@@ -11,6 +11,7 @@ import org.our.sadari.global.common.result.ResultData;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 추가
  */
 public interface ServiceInfoService {
 
@@ -22,4 +23,12 @@ public interface ServiceInfoService {
      * @return 활성 카테고리와 카테고리별 현재 배포본 조회 결과
      */
     ResultData getServiceInfoList(Long userNumb);
+
+    /**
+     * 로그인 전에 확인할 현재 배포 개인정보처리방침을 조회함
+     *
+     * @author HanWon.Jang
+     * @return 현재 배포된 개인정보처리방침 조회 결과
+     */
+    ResultData getPrivacyPolicy();
 }

@@ -29,4 +29,24 @@
       ORDER BY C.SORT_ORDR
              , C.COMD_CODE
     </select>
+
+    <!-- 지정한 활성 서비스 정보 카테고리의 현재 배포본을 조회함 -->
+    <select id="getServiceInfoDtl" resultType="org.our.sadari.serviceinfo.dto.ServiceInfoDto">
+        SELECT /* getServiceInfoDtl */
+               C.COMD_CODE AS CATE_CODE
+             , C.COMD_NAME AS CATE_NAME
+             , S.VERS_NUMB
+             , S.SVCI_TITL
+             , S.SVCI_CNTN
+             , S.UPDT_DATE
+             , S.DPLY_DATE
+          FROM TB_CODEXD C
+          JOIN CT_SVINFO S
+            ON S.CATE_CGRP = C.COMM_CODE
+           AND S.CATE_CODE = C.COMD_CODE
+           AND S.DPLY_YSNO = #{yes}
+         WHERE C.COMM_CODE = #{cateCgrp}
+           AND C.COMD_CODE = #{cateCode}
+           AND C.USEE_YSNO = #{yes}
+    </select>
 </mapper>

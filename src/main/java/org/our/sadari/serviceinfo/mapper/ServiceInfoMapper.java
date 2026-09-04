@@ -14,6 +14,7 @@ import org.our.sadari.serviceinfo.dto.ServiceInfoDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
+ * 2026-09-04        HanWon.Jang        개인정보처리방침 단건 조회 추가
  */
 @Mapper
 public interface ServiceInfoMapper {
@@ -38,4 +39,17 @@ public interface ServiceInfoMapper {
      */
     List<ServiceInfoDto> getServiceInfoList(@Param("cateCgrp") String cateCgrp
                                           , @Param("yes") String yes);
+
+    /**
+     * 지정한 서비스 정보 카테고리의 현재 배포본을 조회함
+     *
+     * @author HanWon.Jang
+     * @param cateCgrp 서비스 정보 카테고리 공통코드
+     * @param cateCode 조회할 서비스 정보 카테고리 상세코드
+     * @param yes 사용 및 배포 상태의 예 값
+     * @return 현재 배포된 서비스 정보 한 건
+     */
+    ServiceInfoDto getServiceInfoDtl(@Param("cateCgrp") String cateCgrp
+                                   , @Param("cateCode") String cateCode
+                                   , @Param("yes") String yes);
 }
