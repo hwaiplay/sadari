@@ -78,6 +78,7 @@ Table TM_CLUBXM [headercolor: #0299E2] {
   CLUB_VISB varchar(20) [not null, note: 'PRIVATE 또는 PUBLIC']
   JOIN_TYPE varchar(20) [not null, note: 'INVITE, OPEN 또는 APPROVAL']
   CLUB_STAT varchar(20) [not null, note: 'ACTIVE, OWNER_ELECTION, PAUSED 또는 CLOSED']
+  RCRT_YSNO char(1) [not null, default: 'Y', note: '신규 가입·신청·초대 가능 여부']
   MAXX_MEMB int [not null]
   REGI_DATE datetime(6) [not null]
   UPDT_DATE datetime(6) [not null]

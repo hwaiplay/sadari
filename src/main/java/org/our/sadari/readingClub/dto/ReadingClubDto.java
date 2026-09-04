@@ -273,6 +273,7 @@ public final class ReadingClubDto {
      * 2026-08-14        Hanwon.Jang        현재 독서 관련 추가
      * 2026-08-15        Hanwon.Jang        현재 독서 기간과 목표 달성 현황 추가
      * 2026-08-29        HanWon.Jang        현재 회차 독후감 현황 추가
+     * 2026-09-04        HanWon.Jang        관리자 모집 중지 상태 추가
      */
     @Data
     @Schema(description = "독서 모임 조회 항목")
@@ -301,6 +302,9 @@ public final class ReadingClubDto {
 
         @Schema(description = "모임 운영 상태")
         private String clubStat;
+
+        @Schema(description = "신규 회원 모집 가능 여부", allowableValues = {"Y", "N"})
+        private String rcrtYsno;
 
         @Schema(description = "모임 정원")
         private Integer maxxMemb;

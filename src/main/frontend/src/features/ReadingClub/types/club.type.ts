@@ -7,6 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-01        Hanwon.Jang    최초 생성
+ * 2026-09-04        HanWon.Jang    모집 가능 여부 추가
  */
 import {PageData} from "@/app/api/resultData.ts";
 import {PublicReportType} from "@/features/Book/types/book.type.ts";
@@ -55,6 +56,7 @@ export type ReadingClub = {
   clubVisb: "PUBLIC" | "PRIVATE";
   joinType: "OPEN" | "APPROVAL" | "INVITE";
   clubStat: string;
+  rcrtYsno: "Y" | "N";
   maxxMemb: number;
   memberCnt: number;
   invitedCnt: number;

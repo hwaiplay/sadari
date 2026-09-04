@@ -609,12 +609,13 @@ export const useClubDetailPage = () => {
     }
   };
 
-  // 가입 이력이 없거나 자진 탈퇴한 공개 모임은 가입 절차를 다시 제공함
+  // 관리자가 모집을 허용한 공개 모임에서만 신규 가입 절차를 제공함
   const canJoin = Boolean(
     club
     && (!club.membStat || club.membStat === "EXITED")
     && !club.joinStat
     && club.clubVisb === "PUBLIC"
+    && club.rcrtYsno === "Y"
     && club.joinType !== "INVITE",
   );
 

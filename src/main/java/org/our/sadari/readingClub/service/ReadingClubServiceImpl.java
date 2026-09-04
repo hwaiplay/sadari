@@ -1203,9 +1203,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 정원과 중복 관계를 같은 트랜잭션에서 판단하도록 모임 행을 잠금
         ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
-        // 공개 운영 중인 모임만 직접 가입할 수 있음
+        // 공개 운영 중이며 관리자가 모집을 허용한 모임만 직접 가입할 수 있음
         if (StringUtil.isEmpty(club) || !CLUB_ACTIVE.equals(club.getClubStat())
-                || !CLUB_PUBLIC.equals(club.getClubVisb())) {
+                || !CLUB_PUBLIC.equals(club.getClubVisb()) || Constant.COMM_NO.equals(club.getRcrtYsno())) {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
@@ -1438,8 +1438,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
         // 좌석 예약을 직렬화하도록 모임 행을 잠금
         ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
-        // 현재 운영 중인 모임의 모임장만 초대할 수 있음
-        if (!isOwner(club, userNumb) || !CLUB_ACTIVE.equals(club.getClubStat())) {
+        // 현재 운영 중이며 관리자가 모집을 허용한 모임의 모임장만 초대할 수 있음
+        if (!isOwner(club, userNumb) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || Constant.COMM_NO.equals(club.getRcrtYsno())) {
             // "올바르지 않은 접근이에요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
@@ -1532,8 +1533,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 유효한 운영 모임의 예약석만 활성 회원으로 전환함
+        // 유효한 운영 모임이고 모집이 허용된 경우에만 예약석을 활성 회원으로 전환함
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(club)
+                || Constant.COMM_NO.equals(club.getRcrtYsno())
                 || readingClubMapper.uptInvitationAccepted(clubNumb, userNumb) == 0) {
             // "수정에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
@@ -1662,8 +1664,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 승인 시점에만 실제 좌석을 경쟁함
+        // 승인 시점에만 모집 가능 여부와 실제 좌석을 경쟁함
         if (APPLICATION_APPROVED.equals(request.getJoinStat())) {
+            // 관리자 모집 중지 이후에는 기존 대기 신청도 새 회원으로 승인하지 않음
+            if (Constant.COMM_NO.equals(club.getRcrtYsno())) {
+                // "수정에 실패했어요. 다시 시도해주세요."
+                return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+            }
+
             // 만료 초대를 제거하고 현재 좌석을 다시 계산함
             readingClubMapper.delExpiredInvitation(clubNumb);
             // 활성 회원과 예약석이 정원에 도달했으면 신청을 대기 상태로 유지함

@@ -720,6 +720,7 @@
       , CLUB.CLUB_VISB
       , CLUB.JOIN_TYPE
       , CLUB.CLUB_STAT
+      , CLUB.RCRT_YSNO
       , CLUB.MAXX_MEMB
       , CLUB.REGI_DATE
       , COALESCE(SEAT.MEMBER_CNT, 0) AS MEMBER_CNT
@@ -1073,6 +1074,7 @@
              , CLUB.CLUB_VISB
              , CLUB.JOIN_TYPE
              , CLUB.CLUB_STAT
+             , CLUB.RCRT_YSNO
              , CLUB.MAXX_MEMB
              , CLUB.REGI_DATE
           FROM TM_CLUBXM CLUB

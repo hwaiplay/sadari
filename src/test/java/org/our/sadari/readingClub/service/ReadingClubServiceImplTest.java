@@ -57,6 +57,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
+ * 2026-09-04        HanWon.Jang        관리자 모집 중지 가입 차단 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -852,6 +853,37 @@ class ReadingClubServiceImplTest {
               , null
               , Map.of("clubName", "책벌레 모임")
         );
+    }
+
+    /**
+     * 관리자가 모집을 중지한 활성 모임에 신규 가입을 허용하지 않는지 검증함
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void setJoinRejectsRecruitStop() {
+        // 운영 상태는 활성이나 관리자 모집 중지가 적용된 공개 모임을 구성함
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 기존 모임원 활동을 유지하는 정상 운영 상태를 설정함
+        club.setClubStat("ACTIVE");
+        // 공개 목록에서 접근 가능한 공개 범위를 설정함
+        club.setClubVisb("PUBLIC");
+        // 즉시 가입 방식에서도 모집 중지 정책이 우선하도록 설정함
+        club.setJoinType("OPEN");
+        // 관리자 모집 중지 여부를 명시적으로 설정함
+        club.setRcrtYsno("N");
+        // 잠금 조회에서 모집 중지 모임을 반환하도록 설정함
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+
+        // 모집 중지 모임에 신규 가입을 요청함
+        ResultData result = readingClubService.setJoin(20L, 10L, new ReadingClubDto.JoinReqDto());
+
+        // 관리자 모집 중지가 신규 가입보다 우선해 접근 거절되는지 검증함
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        // 모집 중지 상태에서는 좌석 계산을 시작하지 않는지 검증함
+        verify(readingClubMapper, never()).getOccupiedSeatCnt(10L);
+        // 모집 중지 상태에서는 활성 회원 관계를 만들지 않는지 검증함
+        verify(readingClubMapper, never()).setActiveMember(10L, 20L);
     }
 
     /**
