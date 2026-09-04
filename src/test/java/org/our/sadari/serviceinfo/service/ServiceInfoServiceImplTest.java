@@ -28,7 +28,7 @@ import org.springframework.context.support.StaticMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
- * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 검증
+ * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ServiceInfoServiceImplTest {

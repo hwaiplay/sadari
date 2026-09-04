@@ -415,7 +415,7 @@ export const getClubChatListApi = async (
 
 /**
  * 모임원의 마지막 읽은 채팅 번호를 갱신
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param clubNumb 모임 번호
  * @param chatNumb 마지막으로 확인한 채팅 번호
  * @return 반환값 없음

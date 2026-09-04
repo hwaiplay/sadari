@@ -33,7 +33,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-08-04        SeungHyeon.Kang    Cookie 인증 API CSRF 보호 적용
  * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
  * 2026-09-03        HanWon.Jang        로컬 프로필 간편 로그인 허용
- * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 허용
+ * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 허용
  */
 @Configuration
 @EnableWebSecurity

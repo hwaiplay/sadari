@@ -120,7 +120,7 @@ export default function ClubMemberManagementPage() {
   /**
    * 강제 퇴장 사유 입력값을 반영함
    *
-   * @author Hanwon.Jang
+   * @author SeungHyeon.Kang
    * @param event 사유 입력 변경 이벤트
    * @return 반환값이 없음
    */

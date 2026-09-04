@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : SocialServiceImpl
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-22
  * description    : 사용자 검색과 팔로우 및 좋아요 업무 로직을 구현함
  * ===========================================================
@@ -39,7 +39,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-27        SeungHyeon.Kang    좋아요 알림 원본 유형과 공개 사진 반응 적용
  * 2026-08-28        HanWon.Jang        활성 사용자 관계순 검색 추가
  * 2026-09-03        HanWon.Jang        사용자 차단 검증과 목록 격리 추가
- * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 추가
+ * 2026-09-04        SeungHyeon.Kang    팔로우 목록 닉네임 검색 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -301,7 +301,7 @@ public class SocialServiceImpl implements SocialService {
      * 특정 사용자가 팔로우하는 사용자 목록을 조회함
      * 목록 행마다 로그인 사용자 기준 팔로우 상태를 같이 내려 모달에서 추가 상태 조회를 반복하지 않게 함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
      * @param keyword 닉네임 검색어
@@ -331,7 +331,7 @@ public class SocialServiceImpl implements SocialService {
      * 특정 사용자를 팔로우하는 사용자 목록을 조회함
      * 팔로워 목록도 팔로잉 목록과 같은 응답 구조를 사용해 화면 모달을 공통으로 렌더링할 수 있게 함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
      * @param keyword 닉네임 검색어
@@ -537,7 +537,7 @@ public class SocialServiceImpl implements SocialService {
      * 팔로우/팔로워 목록 조회 DTO를 생성함
      * Controller와 Mapper가 같은 파라미터 구조를 공유하도록 Service에서 DTO 생성 지점을 고정함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
      * @param keyword 닉네임 검색어

@@ -50,7 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 처리
  * 2026-09-03        HanWon.Jang        사용자 차단 관계의 신규 참여 제한 추가
- * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 처리 추가
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 처리 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -644,7 +644,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         return ResultData.success(members);
     }
 
-    /** {@inheritDoc} @author HanWon.Jang */
+    /** {@inheritDoc} @author SeungHyeon.Kang */
     @Override
     public ResultData getClubChatList(Long userNumb, Long clubNumb, Long afterChatNumb) {
         // 채팅 식별값과 마지막 채팅 번호 범위를 검증함
@@ -665,7 +665,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 clubNumb, userNumb, afterChatNumb, CHAT_LIST_SIZE));
     }
 
-    /** {@inheritDoc} @author HanWon.Jang */
+    /** {@inheritDoc} @author SeungHyeon.Kang */
     @Override
     @Transactional
     public ResultData uptClubChatRead(Long userNumb, Long clubNumb
@@ -692,7 +692,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         return ResultData.success();
     }
 
-    /** {@inheritDoc} @author HanWon.Jang */
+    /** {@inheritDoc} @author SeungHyeon.Kang */
     @Override
     @Transactional
     public ResultData setClubChat(Long userNumb, Long clubNumb, ReadingClubDto.ClubChatReqDto request) {

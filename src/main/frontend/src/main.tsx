@@ -8,7 +8,7 @@ import App from "./App";
 /**
  * 모바일 키보드와 브라우저 도구 모음을 제외한 실제 표시 높이를 CSS에 전달함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 반환값이 없음
  */
 const syncViewportHeight = (): void => {

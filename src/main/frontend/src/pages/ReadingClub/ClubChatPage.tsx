@@ -1,12 +1,12 @@
 /**
  * fileName       : ClubChatPage
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-09-04
  * description    : 활성 모임원이 대화하는 모임 채팅 화면을 구성함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-09-04        HanWon.Jang        최초 생성
+ * 2026-09-04        SeungHyeon.Kang    최초 생성
  */
 import {message} from "@/app/messages/message";
 import {formatDateValue} from "@/app/utils/dateUtil";
@@ -27,6 +27,39 @@ import {Fragment, useCallback, useEffect, useRef} from "react";
 import {Link} from "react-router-dom";
 import * as styles from "./ClubChatPage.css";
 
+const CLUB_CHAT_INPUT_FOCUSED_ATTRIBUTE = "data-club-chat-input-focused";
+const SOFT_KEYBOARD_MIN_HEIGHT = 120;
+
+/**
+ * 모임 채팅 입력 포커스 상태를 문서 루트에 표시함
+ *
+ * @author SeungHyeon.Kang
+ * @param focused 채팅 입력 포커스 여부
+ * @return 반환값이 없음
+ */
+const setChatFocusState = (focused: boolean): void => {
+  document.documentElement.toggleAttribute(CLUB_CHAT_INPUT_FOCUSED_ATTRIBUTE, focused);
+};
+
+/** 채팅 입력 포커스 상태를 해제함. @author SeungHyeon.Kang */
+const clearChatInputFocusState = (): void => {
+  setChatFocusState(false);
+};
+
+/**
+ * 채팅 화면 진입과 해제 시 이전 포커스 상태 정리
+ *
+ * @author SeungHyeon.Kang
+ * @return 화면 해제 시 사용할 포커스 상태 정리 함수
+ */
+const registerChatFocusCleanup = (): (() => void) => {
+  // 새 화면 진입과 개발 갱신 후 남을 수 있는 이전 숨김 상태 제거
+  clearChatInputFocusState();
+
+  // 채팅 화면 해제 시 사용할 동일 정리 함수 반환
+  return clearChatInputFocusState;
+};
+
 const ClubChatPage = () => {
   const {
     club,
@@ -39,6 +72,8 @@ const ClubChatPage = () => {
     setContent,
   } = useClubChatPage();
   const messagePanelRef = useRef<HTMLElement | null>(null);
+  const inputFocusedRef = useRef(false);
+  const inputViewportRef = useRef<{height: number; width: number} | null>(null);
 
   // 조회된 모임명을 공통 헤더 제목으로 표시함
   useHeaderTitle(club?.clubName);
@@ -49,7 +84,7 @@ const ClubChatPage = () => {
   /**
    * 새 채팅이 표시되면 바깥 문서를 움직이지 않고 메시지 목록만 끝으로 이동함
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @return 반환값이 없음
    */
   const scrollMessageList = useCallback((): void => {
@@ -62,13 +97,84 @@ const ClubChatPage = () => {
     }
   }, []);
 
+  /**
+   * 채팅 입력 직전의 표시 영역을 소프트 키보드 판별 기준으로 저장
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값 없음
+   */
+  const handleChatInputFocus = (): void => {
+    const visualViewport = window.visualViewport;
+
+    // 입력 포커스 중 표시 영역 변경만 키보드 후보로 처리하기 위한 상태 기록
+    inputFocusedRef.current = true;
+    // 키보드가 열리기 전 표시 영역과 이후 영역의 차이 계산을 위한 기준 저장
+    inputViewportRef.current = visualViewport
+      ? {height: visualViewport.height, width: visualViewport.width}
+      : null;
+    // PC 입력 포커스만으로 남아 있던 네비게이션 숨김 상태 제거
+    clearChatInputFocusState();
+  };
+
+  /**
+   * 채팅 입력 종료 후 키보드 판별 기준과 네비게이션 상태 정리
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값 없음
+   */
+  const handleChatInputBlur = (): void => {
+    // 포커스 해제 후 표시 영역 변경을 키보드 열림으로 오인하지 않기 위한 상태 해제
+    inputFocusedRef.current = false;
+    // 다음 입력 시점에 새 기준을 사용하기 위한 이전 표시 영역 제거
+    inputViewportRef.current = null;
+    // 키보드 종료와 함께 공통 네비게이션 표시 복원
+    clearChatInputFocusState();
+  };
+
+  /**
+   * 입력 전후 표시 영역 높이 차이로 소프트 키보드 열림 상태 반영
+   *
+   * @author SeungHyeon.Kang
+   * @return 반환값 없음
+   */
+  const handleViewportResize = useCallback((): void => {
+    const visualViewport = window.visualViewport;
+    const inputViewport = inputViewportRef.current;
+
+    // 키보드 애니메이션 중 최신 메시지 위치 유지
+    scrollMessageList();
+
+    // 입력 포커스와 비교 기준이 모두 있어야 소프트 키보드 상태 판별
+    if (!visualViewport || !inputFocusedRef.current || !inputViewport) {
+      // PC 창 조정과 포커스 해제 상태에서 네비게이션 표시 유지
+      clearChatInputFocusState();
+      // 키보드 판별 대상이 아닌 표시 영역 변경 처리 종료
+      return;
+    }
+
+    // 화면 회전과 가로 창 크기 변경을 키보드 열림으로 오인하지 않기 위한 기준 갱신
+    if (Math.abs(visualViewport.width - inputViewport.width) > 1) {
+      // 변경된 화면 방향을 다음 높이 비교의 기준으로 저장
+      inputViewportRef.current = {height: visualViewport.height, width: visualViewport.width};
+      // 화면 방향 변경 중 공통 네비게이션 표시 유지
+      clearChatInputFocusState();
+      // 새 화면 방향 기준 저장 후 현재 변경 처리 종료
+      return;
+    }
+
+    const keyboardHeight = inputViewport.height - visualViewport.height;
+
+    // 브라우저 도구막대 변화를 제외한 소프트 키보드 높이 감소만 숨김 상태에 반영
+    setChatFocusState(keyboardHeight >= SOFT_KEYBOARD_MIN_HEIGHT);
+  }, [scrollMessageList]);
+
   // 새 채팅이 표시되면 최신 메시지가 보이도록 목록 끝으로 이동함
   useEffect(scrollMessageList, [messages, pendingContent, scrollMessageList]);
 
   /**
    * 모바일 키보드가 채팅 표시 영역을 바꾸는 동안 최신 메시지 위치를 유지함
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @return 표시 영역 변경 감지 해제 함수 또는 미지원 환경의 빈 값
    */
   const watchViewportResize = (): (() => void) | undefined => {
@@ -80,18 +186,18 @@ const ClubChatPage = () => {
       return undefined;
     }
 
-    // 키보드 애니메이션 중에도 메시지 목록 내부의 최신 위치를 유지함
-    visualViewport.addEventListener("resize", scrollMessageList);
+    // 키보드 애니메이션 중 표시 영역 높이와 최신 메시지 위치를 함께 갱신함
+    visualViewport.addEventListener("resize", handleViewportResize);
 
     /**
      * 채팅 화면이 닫히면 실제 표시 영역 변경 감지를 해제함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 반환값이 없음
      */
     const stopViewportWatch = (): void => {
       // 다른 화면에서 채팅 스크롤이 실행되지 않도록 이벤트를 해제함
-      visualViewport.removeEventListener("resize", scrollMessageList);
+      visualViewport.removeEventListener("resize", handleViewportResize);
     };
 
     // 채팅 화면 해제 시 사용할 표시 영역 이벤트 정리 함수를 반환함
@@ -99,14 +205,17 @@ const ClubChatPage = () => {
   };
 
   // 모바일 키보드가 열리고 닫힐 때 채팅 목록의 끝 위치를 유지함
-  useEffect(watchViewportResize, [scrollMessageList]);
+  useEffect(watchViewportResize, [handleViewportResize]);
 
-  /** 채팅 입력값을 상태에 반영함. @author HanWon.Jang */
+  // 다른 화면으로 이동한 뒤 네비게이션 숨김 상태가 남지 않도록 정리함
+  useEffect(registerChatFocusCleanup, []);
+
+  /** 채팅 입력값을 상태에 반영함. @author SeungHyeon.Kang */
   const handleContentChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
     setContent(event.currentTarget.value);
   };
 
-  /** 폼 제출 시 현재 채팅을 전송함. @author HanWon.Jang */
+  /** 폼 제출 시 현재 채팅을 전송함. @author SeungHyeon.Kang */
   const handleSubmit = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     void handleSend();
@@ -260,6 +369,8 @@ const ClubChatPage = () => {
           placeholder={message("frontend.readingClub.chat.placeholder")}
           disabled={isSending}
           onChange={handleContentChange}
+          onFocus={handleChatInputFocus}
+          onBlur={handleChatInputBlur}
         />
         {/* "보내기" */}
         <ActionButton

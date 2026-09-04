@@ -14,7 +14,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-01        SeungHyeon.Kang    최초 생성
- * 2026-09-04        HanWon.Jang        모임 채팅 알림 설정 추가
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 알림 설정 추가
  */
 @Data
 @Schema(description = "사용자 알림과 공개 범위 설정")

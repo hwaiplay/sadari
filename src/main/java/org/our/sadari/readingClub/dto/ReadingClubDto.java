@@ -35,7 +35,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-25        HanWon.Jang        다음 도서 추천·투표 DTO 추가
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 DTO 추가
  * 2026-09-01        HanWon.Jang        공개 모임 이전 독서 기록 권한 추가
- * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 DTO 추가
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -275,7 +275,7 @@ public final class ReadingClubDto {
      * 2026-08-14        Hanwon.Jang        현재 독서 관련 추가
      * 2026-08-15        Hanwon.Jang        현재 독서 기간과 목표 달성 현황 추가
      * 2026-08-29        HanWon.Jang        현재 회차 독후감 현황 추가
-     * 2026-09-04        HanWon.Jang        관리자 모집 중지 상태 추가
+     * 2026-09-04        SeungHyeon.Kang    관리자 모집 중지 상태 추가
      */
     @Data
     @Schema(description = "독서 모임 조회 항목")

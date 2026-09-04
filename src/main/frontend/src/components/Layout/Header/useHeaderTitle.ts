@@ -6,7 +6,7 @@ export type SetHeaderTitle = (title: string | null) => void;
 /**
  * 현재 화면의 동적 제목을 공통 헤더에 연결함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param title 공통 헤더에 표시할 화면 제목
  * @return 반환값이 없음
  */
@@ -18,7 +18,7 @@ export const useHeaderTitle = (title?: string | null): void => {
   /**
    * 현재 화면 제목을 등록하고 화면 해제 시 제거함
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @return 화면 제목 등록 해제 함수
    */
   const syncHeaderTitle = (): (() => void) => {
@@ -29,7 +29,7 @@ export const useHeaderTitle = (title?: string | null): void => {
     /**
      * 현재 화면이 닫히면 등록한 헤더 제목을 제거함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 반환값이 없음
      */
     const clearHeaderTitle = (): void => {

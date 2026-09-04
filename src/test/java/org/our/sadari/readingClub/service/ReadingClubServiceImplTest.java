@@ -57,7 +57,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 검증
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
- * 2026-09-04        HanWon.Jang        가입 차단·채팅 읽음 수·퇴장 이력 검증
+ * 2026-09-04        SeungHyeon.Kang    가입 차단·채팅 읽음 수·퇴장 이력 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -858,7 +858,7 @@ class ReadingClubServiceImplTest {
     /**
      * 관리자가 모집을 중지한 활성 모임에 신규 가입을 허용하지 않는지 검증함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void setJoinRejectsRecruitStop() {
@@ -1424,7 +1424,7 @@ class ReadingClubServiceImplTest {
     /**
      * 활성 모임원의 마지막 읽은 채팅 번호를 갱신하는지 검증함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void uptChatReadUpdatesCursor() {
@@ -1462,7 +1462,7 @@ class ReadingClubServiceImplTest {
     /**
      * 비활성 모임원은 채팅 읽음 위치를 변경할 수 없는지 검증함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void uptReadRejectsInactive() {

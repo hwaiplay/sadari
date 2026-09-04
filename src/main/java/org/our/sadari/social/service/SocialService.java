@@ -5,7 +5,7 @@ import org.our.sadari.social.dto.SocialDto;
 
 /**
  * fileName       : SocialService
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-22
  * description    : 사용자 검색과 팔로우 및 좋아요 업무 계약을 정의함
  * ===========================================================
@@ -15,7 +15,7 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-08-04        SeungHyeon.Kang       프로필 통계 공개 범위 조건 추가
  * 2026-08-26        SeungHyeon.Kang        활성 좋아요 사용자 목록 추가
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 계약 추가
- * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 계약 추가
+ * 2026-09-04        SeungHyeon.Kang    팔로우 목록 닉네임 검색 계약 추가
  */
 public interface SocialService {
 
@@ -91,7 +91,7 @@ public interface SocialService {
      * 특정 사용자가 팔로우하는 사용자 목록을 조회함
      * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
      * @param keyword 닉네임 검색어
@@ -104,7 +104,7 @@ public interface SocialService {
      * 특정 사용자를 팔로우하는 사용자 목록을 조회함
      * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param userNumb 목록 주인 사용자 번호
      * @param keyword 닉네임 검색어

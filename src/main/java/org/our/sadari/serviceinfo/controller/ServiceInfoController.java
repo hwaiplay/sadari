@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
- * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 추가
+ * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -49,7 +49,7 @@ public class ServiceInfoController {
     /**
      * 로그인 전에 확인할 현재 배포 개인정보처리방침을 조회함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 현재 배포된 개인정보처리방침
      */
     @GetMapping("/privacy-policy")

@@ -30,7 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * fileName       : SocialController
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-17
  * description    : 사용자 검색과 공개 프로필 및 팔로우와 좋아요 API를 제공함
  * ===========================================================
@@ -44,7 +44,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-27        SeungHyeon.Kang    공개 프로필 사진 반응 조회 추가
  * 2026-08-28        HanWon.Jang        피드 활성 사용자 검색 추가
  * 2026-09-03        HanWon.Jang        사용자 차단 API와 접근 검증 추가
- * 2026-09-04        HanWon.Jang        내 팔로우 목록 닉네임 검색 추가
+ * 2026-09-04        SeungHyeon.Kang    내 팔로우 목록 닉네임 검색 추가
  */
 @RestController
 @RequiredArgsConstructor
@@ -335,7 +335,7 @@ public class SocialController {
      * 로그인 사용자의 팔로잉 목록을 조회함
      * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호
@@ -356,7 +356,7 @@ public class SocialController {
      * 로그인 사용자의 팔로워 목록을 조회함
      * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
      * @param keyword 닉네임 검색어
      * @param page 조회할 페이지 번호

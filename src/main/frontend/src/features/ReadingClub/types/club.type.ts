@@ -7,8 +7,7 @@
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-01        Hanwon.Jang    최초 생성
- * 2026-09-04        HanWon.Jang    모집 가능 여부 추가
- * 2026-09-04        HanWon.Jang    모임 채팅과 강제 퇴장 이력 타입 추가
+ * 2026-09-04        SeungHyeon.Kang    모집·채팅·퇴장 타입 추가
  */
 import {PageData} from "@/app/api/resultData.ts";
 import {PublicReportType} from "@/features/Book/types/book.type.ts";

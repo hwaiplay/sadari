@@ -20,7 +20,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 계약 확장
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감 계약 추가
  * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 계약 확장
- * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 계약 추가
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 계약 추가
  */
 public interface ReadingClubService {
 

@@ -33,7 +33,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
 
 /**
  * fileName       : SocialServiceImplTest
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-08-04
  * description    : 프로필 통계 조회의 독후감 공개 범위 전달 정책을 검증함
  * ===========================================================
@@ -45,7 +45,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-26        HanWon.Jang        좋아요 목록·비동기 알림 검증
  * 2026-08-27        SeungHyeon.Kang    사진 좋아요 알림 대상 설명 정리
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 검증
- * 2026-09-04        HanWon.Jang        팔로우 목록 닉네임 검색 검증
+ * 2026-09-04        SeungHyeon.Kang    팔로우 목록 닉네임 검색 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -276,7 +276,7 @@ class SocialServiceImplTest {
     /**
      * 팔로우 목록 검색어의 양끝 공백과 페이지 조건 정규화 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void getFollowingListKeyword() {

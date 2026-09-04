@@ -28,14 +28,8 @@ export const whiteBg = style({
     backgroundColor: "#ffffff",
 });
 
-export const hideOnChatInput = style({});
-
-globalStyle(`main:focus-within + ${hideOnChatInput}`, {
-    "@media": {
-        "screen and (hover: none) and (pointer: coarse)": {
-            display: "none",
-        },
-    },
+globalStyle(`html[data-club-chat-input-focused] ${navContainer}`, {
+    display: "none",
 });
 
 export const navigation = style({

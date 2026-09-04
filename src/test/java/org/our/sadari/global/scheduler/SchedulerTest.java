@@ -4,18 +4,22 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.our.sadari.complaint.service.ComplaintEvidenceCleanupService;
 import org.our.sadari.global.common.code.util.CodeUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.scheduler.service.AlimDeleteService;
 import org.our.sadari.global.scheduler.service.ReportDateOverService;
 import org.our.sadari.global.scheduler.service.UserHardDeleteService;
 import org.our.sadari.global.scheduler.service.UserStatusEventService;
 import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
+import org.our.sadari.readingClub.service.OwnerElectionService;
+import org.our.sadari.readingClub.service.ReadingClubService;
 import org.our.sadari.timer.service.ReadingTimerService;
 
 /**
@@ -29,6 +33,7 @@ import org.our.sadari.timer.service.ReadingTimerService;
  * 2026-07-26        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 스케줄러 분기 검증 추가
  * 2026-08-20        SeungHyeon.Kang    타이머 알림 실행 분기 검증
+ * 2026-09-05        SeungHyeon.Kang    통합 스케줄 실행 위임 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerTest {
@@ -56,24 +61,29 @@ class SchedulerTest {
     @Mock
     private ReadingTimerService readingTimerService;
 
+    // 모임 독서 회차 확정 업무 처리 서비스
+    @Mock
+    private ReadingClubService readingClubService;
+
+    // 모임장 승계 선거 업무 처리 서비스
+    @Mock
+    private OwnerElectionService ownerElectionService;
+
+    // 프로필 이미지 임시 파일 업무 처리 서비스
+    @Mock
+    private FileService fileService;
+
+    // 신고 증거 정리 업무 처리 서비스
+    @Mock
+    private ComplaintEvidenceCleanupService complaintEvidenceCleanupService;
+
     // 공통코드 캐시 조회 객체
     @Mock
     private CodeUtil codeUtil;
 
     // 스케줄러 활성화 조건 단위 테스트 대상
+    @InjectMocks
     private Scheduler scheduler;
-
-    /**
-     * 스케줄 실행 분기만 독립적으로 검증할 수 있도록 Mock 의존성으로 Scheduler를 구성함
-     *
-     * @author SeungHyeon.Kang
-     */
-    @BeforeEach
-    void setUp() {
-        // 스케줄러 활성화 조건 테스트 대상을 담을 객체를 생성함
-        scheduler = new Scheduler(reportDateOverService, alimDeleteService, userHardDeleteService, userStatusEventService
-                                , timerDetailDeleteService, readingTimerService, codeUtil);
-    }
 
     /**
      * SCHD_CODE의 REPORT_DATE_OVER 상세코드가 사용 중이면 실제 알림 서비스를 호출하는지 검증함
@@ -273,5 +283,59 @@ class SchedulerTest {
         scheduler.sendTimerAlim();
         // 중지 상태에서 알림 서비스가 호출되지 않았는지 확인함
         verify(readingTimerService, never()).sendTimerAlim();
+    }
+
+    /**
+     * 종료된 모임 독서 회차 확정을 모임 서비스에 위임하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void completeRoundDelegates() {
+        // 통합 스케줄러의 모임 독서 회차 확정 진입점을 실행함
+        scheduler.completeExpiredRound();
+        // 종료 회차 확정 업무가 모임 서비스에 위임됐는지 검증함
+        verify(readingClubService).completeExpiredRound();
+    }
+
+    /**
+     * 모임장 승계 선거 생성과 마감을 선거 서비스에 위임하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void uptElectionDelegates() {
+        // 통합 스케줄러의 모임장 승계 선거 진입점을 실행함
+        scheduler.uptOwnerElection();
+        // 누락된 모임장 승계 선거 생성이 위임됐는지 검증함
+        verify(ownerElectionService).startPendingElection();
+        // 마감된 모임장 승계 선거 확정이 위임됐는지 검증함
+        verify(ownerElectionService).completeDueElection();
+    }
+
+    /**
+     * 만료된 프로필 임시 이미지 정리를 파일 서비스에 위임하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delProfileDraftsDelegates() {
+        // 통합 스케줄러의 프로필 임시 이미지 정리 진입점을 실행함
+        scheduler.delExpiredProfileDrafts();
+        // 만료된 프로필 임시 이미지 정리가 파일 서비스에 위임됐는지 검증함
+        verify(fileService).delExpiredProfileDrafts();
+    }
+
+    /**
+     * 만료된 신고 증거 정리를 신고 서비스에 위임하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void delEvidenceDelegates() {
+        // 통합 스케줄러의 신고 증거 정리 진입점을 실행함
+        scheduler.delExpiredEvidence();
+        // 만료된 신고 증거 정리가 신고 서비스에 위임됐는지 검증함
+        verify(complaintEvidenceCleanupService).delExpiredEvidence();
     }
 }

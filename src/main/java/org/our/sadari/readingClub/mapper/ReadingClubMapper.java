@@ -23,7 +23,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감·결과 확인 추가
- * 2026-09-04        HanWon.Jang        모임 채팅 읽음 수·강제 퇴장 이력 추가
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 추가
  */
 @Mapper
 public interface ReadingClubMapper {

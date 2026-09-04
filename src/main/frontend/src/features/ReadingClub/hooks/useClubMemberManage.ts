@@ -8,7 +8,7 @@
  * -----------------------------------------------------------
  * 2026-08-14        Hanwon.Jang        최초 생성
  * 2026-08-24        HanWon.Jang        모임원 퇴장 처리 추가
- * 2026-09-04        HanWon.Jang        강제 퇴장 사유 입력 추가
+ * 2026-09-04        SeungHyeon.Kang    강제 퇴장 사유 입력 추가
  */
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError, sweetSuccess } from "@/app/lib/sweetAlert/sweetAlert";

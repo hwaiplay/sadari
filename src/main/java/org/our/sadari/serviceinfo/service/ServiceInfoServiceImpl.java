@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-10        SeungHyeon.Kang    최초 생성
- * 2026-09-04        HanWon.Jang        개인정보처리방침 공개 조회 추가
+ * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -57,7 +57,7 @@ public class ServiceInfoServiceImpl implements ServiceInfoService {
     /**
      * 인증 정보 없이 현재 배포 개인정보처리방침만 제공함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 현재 배포된 개인정보처리방침 조회 결과
      */
     @Override

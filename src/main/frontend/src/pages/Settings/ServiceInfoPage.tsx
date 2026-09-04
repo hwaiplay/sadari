@@ -18,7 +18,7 @@ type ServiceInfoPageProps = {
 /**
  * 서비스 정보 아코디언 또는 로그인 전 개인정보처리방침 본문을 표시함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param privacyOnly 개인정보처리방침만 공개할지 여부
  * @return 서비스 정보 또는 공개 개인정보처리방침 화면
  */
@@ -74,7 +74,7 @@ const ServiceInfoPage = ({ privacyOnly = false }: ServiceInfoPageProps) => {
   /**
    * 공개 개인정보처리방침 확인 후 이전 화면으로 이동함
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @return 반환값이 없음
    */
   const handleConfirm = (): void => {

@@ -4,8 +4,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.complaint.config.ComplaintEvidenceProperties;
 import org.our.sadari.complaint.mapper.ComplaintMapper;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,11 +16,11 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    최초 생성
+ * 2026-09-05        SeungHyeon.Kang    스케줄 실행 진입점 분리
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-@ConditionalOnProperty(name = "scheduler.enabled", havingValue = "true")
 public class ComplaintEvidenceCleanupService {
 
     // 신고 증거 정리 SQL 접근 객체
@@ -36,7 +34,6 @@ public class ComplaintEvidenceCleanupService {
      *
      * @author SeungHyeon.Kang
      */
-    @Scheduled(cron = "${complaint.evidence.cleanup-cron:0 20 4 * * *}")
     @Transactional
     public void delExpiredEvidence() {
 

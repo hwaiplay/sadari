@@ -1,12 +1,12 @@
 /**
  * fileName       : useClubChatPage
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-09-04
  * description    : 활성 모임원의 채팅 조회와 전송 상태를 관리함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-09-04        HanWon.Jang        최초 생성
+ * 2026-09-04        SeungHyeon.Kang    최초 생성
  */
 import {getApiErrorMessage} from "@/app/api/resultData";
 import {sweetError} from "@/app/lib/sweetAlert/sweetAlert";
@@ -25,7 +25,7 @@ import {useNavigate, useParams} from "react-router-dom";
 // 새 채팅을 확인하는 간격
 const CHAT_POLL_INTERVAL_MS = 3000;
 
-/** 모임 채팅 화면의 조회와 전송 상태를 제공함. @author HanWon.Jang */
+/** 모임 채팅 화면의 조회와 전송 상태를 제공함. @author SeungHyeon.Kang */
 export const useClubChatPage = () => {
   const navigate = useNavigate();
   const {clubNumb: clubNumbParam} = useParams<{clubNumb: string}>();
@@ -39,7 +39,7 @@ export const useClubChatPage = () => {
   const readChatNumbRef = useRef(0);
   const pollingRef = useRef(false);
 
-  /** 새 채팅과 변경된 안 읽은 수를 기존 목록에 병합함. @author HanWon.Jang */
+  /** 새 채팅과 변경된 안 읽은 수를 기존 목록에 병합함. @author SeungHyeon.Kang */
   const mergeMessages = useCallback((nextMessages: ClubChatMessage[]): void => {
     if (!nextMessages.length) {
       return;
@@ -59,7 +59,7 @@ export const useClubChatPage = () => {
     });
   }, []);
 
-  /** 화면에 표시한 최신 채팅까지 읽음 위치를 한 번만 갱신함. @author HanWon.Jang */
+  /** 화면에 표시한 최신 채팅까지 읽음 위치를 한 번만 갱신함. @author SeungHyeon.Kang */
   const uptLatestRead = useCallback(async (nextMessages: ClubChatMessage[]): Promise<void> => {
     const latestMessage = nextMessages[nextMessages.length - 1];
     if (!latestMessage || document.visibilityState !== "visible"
@@ -71,7 +71,7 @@ export const useClubChatPage = () => {
     readChatNumbRef.current = latestMessage.chatNumb;
   }, [clubNumb]);
 
-  /** 마지막 조회 다음 채팅을 불러옴. @author HanWon.Jang */
+  /** 마지막 조회 다음 채팅을 불러옴. @author SeungHyeon.Kang */
   const loadNewMessages = useCallback(async (): Promise<void> => {
     if (pollingRef.current || !Number.isFinite(clubNumb) || clubNumb <= 0) {
       return;
@@ -136,7 +136,7 @@ export const useClubChatPage = () => {
     };
   }, [clubNumb, loadNewMessages, mergeMessages, navigate, uptLatestRead]);
 
-  /** 입력한 채팅을 한 번만 전송함. @author HanWon.Jang */
+  /** 입력한 채팅을 한 번만 전송함. @author SeungHyeon.Kang */
   const handleSend = async (): Promise<void> => {
     const normalizedContent = content.trim();
     if (!normalizedContent || isSending) {

@@ -14,7 +14,7 @@ export type ServiceInfo = {
 /**
  * 활성 서비스 정보 카테고리와 각 카테고리의 현재 배포본을 조회함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 서비스 정보 카테고리와 현재 배포본 목록
  */
 export const getServiceInfoListApi = async (): Promise<ServiceInfo[]> => {
@@ -29,7 +29,7 @@ export const getServiceInfoListApi = async (): Promise<ServiceInfo[]> => {
 /**
  * 로그인 전에 확인할 현재 배포 개인정보처리방침을 조회함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 현재 배포된 개인정보처리방침
  */
 export const getPrivacyPolicyApi = async (): Promise<ServiceInfo | null> => {

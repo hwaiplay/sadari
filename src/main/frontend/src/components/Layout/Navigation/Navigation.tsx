@@ -56,8 +56,6 @@ const Navigation = ({ isMain }: NavigationProps) => {
   const isMyPageActive = pathname === "/mypage" || pathname.startsWith("/mypage/");
   const isClubPageActive = pathname === BOTTOM_NAV_PATH.club
     || pathname.startsWith(`/reading-clubs`);
-  // 모임 채팅 입력 포커스 중 네비게이션을 숨기기 위한 경로 상태
-  const isClubChatPage = pathname.startsWith("/reading-clubs/chat/");
 
   /**
    * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신함
@@ -116,7 +114,6 @@ const Navigation = ({ isMain }: NavigationProps) => {
         className={clsx(
           styles.navContainer,
           isMain && styles.whiteBg,
-          isClubChatPage && styles.hideOnChatInput,
         )}
       >
         <nav className={styles.navigation}>

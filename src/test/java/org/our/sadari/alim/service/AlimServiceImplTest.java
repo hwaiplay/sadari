@@ -39,7 +39,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
  * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
  * 2026-08-27        SeungHyeon.Kang    알림번호 기반 라우팅과 사진 프로필 이동 검증
- * 2026-09-04        HanWon.Jang        모임 채팅 알림 설정과 이동 경로 검증
+ * 2026-09-04        SeungHyeon.Kang    모임 채팅 알림 설정과 이동 경로 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {

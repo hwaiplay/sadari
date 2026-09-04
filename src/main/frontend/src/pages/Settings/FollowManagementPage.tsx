@@ -31,7 +31,7 @@ type FollowManagementPageProps = {
 /**
  * 마이페이지와 동일한 팔로우 관계 목록과 닉네임 검색 및 관계 변경 제공
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param props 팔로잉 또는 팔로워 목록 유형
  * @return 팔로우 관계 관리 화면
  */
@@ -52,7 +52,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 현재 목록 유형과 닉네임 조건에 해당하는 한 페이지 조회
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param nextPage 조회할 페이지 번호
    * @param searchKeyword 닉네임 검색어
    * @param replace 기존 목록 교체 여부
@@ -84,7 +84,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 입력한 닉네임을 확정하고 첫 페이지부터 재조회
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param event 검색 폼 제출 이벤트
    * @return 검색 완료 Promise
    */
@@ -125,7 +125,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 목록 하단 도달 시 현재 검색 조건의 다음 페이지 조회
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @return 반환값 없음
    */
   const handleLoadMore = (): void => {
@@ -156,7 +156,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 선택한 목록 사용자의 프로필 화면 이동
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param user 이동할 팔로우 목록 사용자
    * @return 반환값 없음
    */
@@ -168,7 +168,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 현재 버튼 상태에 따른 팔로우 또는 언팔로우 처리
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param user 관계를 변경할 팔로우 목록 사용자
    * @return 관계 변경 완료 Promise
    */
@@ -262,7 +262,7 @@ const FollowManagementPage = ({ type }: FollowManagementPageProps) => {
   /**
    * 비동기 관계 변경 실패를 공통 오류 처리에 연결
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param user 관계를 변경할 팔로우 목록 사용자
    * @return 반환값 없음
    */

@@ -126,7 +126,7 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   /**
    * 현재 경로의 동적 제목을 공통 헤더 상태에 반영함
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param title 화면에서 전달한 동적 헤더 제목
    * @return 반환값이 없음
    */
