@@ -180,6 +180,7 @@
              , COALESCE(S.RPAL_YSNO, #{commYes}) AS REPLY_ALIM_YSNO
              , COALESCE(S.FOLL_YSNO, #{commYes}) AS FOLLOW_ALIM_YSNO
              , COALESCE(S.CLUB_YSNO, #{commYes}) AS CLUB_ALIM_YSNO
+             , COALESCE(S.CHAT_YSNO, #{commYes}) AS CHAT_ALIM_YSNO
              , COALESCE(S.RDUE_YSNO, #{commYes}) AS REPORT_DUE_ALIM_YSNO
              , COALESCE(S.LKDF_YSNO, #{commYes}) AS REPORT_LIKE_DEFAULT_YSNO
              , COALESCE(S.RPDF_YSNO, #{commYes}) AS REPORT_REPLY_DEFAULT_YSNO
@@ -202,6 +203,7 @@
                   , RPAL_YSNO
                   , FOLL_YSNO
                   , CLUB_YSNO
+                  , CHAT_YSNO
                   , RDUE_YSNO
                   , LKDF_YSNO
                   , RPDF_YSNO
@@ -216,6 +218,7 @@
                   , #{replyAlimYsno}
                   , #{followAlimYsno}
                   , #{clubAlimYsno}
+                  , #{chatAlimYsno}
                   , #{reportDueAlimYsno}
                   , #{reportLikeDefaultYsno}
                   , #{reportReplyDefaultYsno}
@@ -227,6 +230,7 @@
              , RPAL_YSNO = VALUES(RPAL_YSNO)
              , FOLL_YSNO = VALUES(FOLL_YSNO)
              , CLUB_YSNO = VALUES(CLUB_YSNO)
+             , CHAT_YSNO = VALUES(CHAT_YSNO)
              , RDUE_YSNO = VALUES(RDUE_YSNO)
              , LKDF_YSNO = VALUES(LKDF_YSNO)
              , RPDF_YSNO = VALUES(RPDF_YSNO)

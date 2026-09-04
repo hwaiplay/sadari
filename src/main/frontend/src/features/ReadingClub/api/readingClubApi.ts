@@ -7,7 +7,7 @@ import {
 import type {PublicReportSortType} from "@/features/Book/api/bookApi";
 import type {BookSearchResultType} from "@/features/Book/types/book.type";
 import type {
-  ClubApplication,
+  ClubApplication, ClubChatMessage,
   ClubBookVotePage, ClubCreateParams, ClubInvitation, ClubMemberExit, ClubMemberProfile,
   ClubReadingCreateParams,
   ClubReadingCreateResult, ClubReadingGoalResult, ClubReadingHistory,
@@ -390,9 +390,42 @@ export const getClubApplicationListApi = async (clubNumb: number): Promise<ClubA
 export const exitClubMemberApi = async (
   clubNumb: number,
   userNumb: number,
+  kickRson: string,
 ) => {
-  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}`);
+  const response = await api.delete(`/reading-clubs/${clubNumb}/members/${userNumb}`, {
+    data: {kickRson},
+  });
   return assertResultDataSuccess(response.data);
+};
+
+/**
+ * 모임 채팅 조회
+ * @param clubNumb 모임 번호
+ * @param afterChatNumb 마지막으로 받은 채팅 번호
+ */
+export const getClubChatListApi = async (
+  clubNumb: number,
+  afterChatNumb?: number,
+): Promise<ClubChatMessage[]> => {
+  const response = await api.get(`/reading-clubs/${clubNumb}/chats`, {
+    params: {afterChatNumb},
+  });
+  return (assertResultDataSuccess(response.data).data as ClubChatMessage[] | undefined) ?? [];
+};
+
+/**
+ * 모임 채팅 전송
+ * @param clubNumb 모임 번호
+ * @param chatCntn 채팅 본문
+ * @param clntUuid 클라이언트 중복 방지 키
+ */
+export const createClubChatApi = async (
+  clubNumb: number,
+  chatCntn: string,
+  clntUuid: string,
+): Promise<ClubChatMessage> => {
+  const response = await api.post(`/reading-clubs/${clubNumb}/chats`, {chatCntn, clntUuid});
+  return assertResultDataSuccess(response.data).data as ClubChatMessage;
 };
 
 /**

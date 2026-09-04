@@ -20,6 +20,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 계약 확장
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감 계약 추가
  * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 계약 확장
+ * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 계약 추가
  */
 public interface ReadingClubService {
 
@@ -244,7 +245,14 @@ public interface ReadingClubService {
      * @param targetUserNumb 퇴장 대상 사용자 번호
      * @return 모임원 퇴장 결과
      */
-    ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb);
+    ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
+                         , ReadingClubDto.MemberKickReqDto request);
+
+    /** 활성 모임원의 채팅 목록을 조회함. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param afterChatNumb 마지막 채팅 번호 @return 채팅 목록 */
+    ResultData getClubChatList(Long userNumb, Long clubNumb, Long afterChatNumb);
+
+    /** 활성 모임원이 채팅을 전송함. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 채팅 요청 @return 저장된 채팅 */
+    ResultData setClubChat(Long userNumb, Long clubNumb, ReadingClubDto.ClubChatReqDto request);
 
     /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공함. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */
     ResultData getMemberExitList(Long userNumb, Long clubNumb);

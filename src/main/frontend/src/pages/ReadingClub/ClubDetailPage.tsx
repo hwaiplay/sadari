@@ -182,6 +182,11 @@ const ClubDetailPage = () => {
     navigate(`/reading-clubs/vote/book/${club.clubNumb}`);
   };
 
+  // 현재 활성 모임의 채팅 화면으로 이동함
+  const handleClubChat = (): void => {
+    navigate(`/reading-clubs/chat/${club.clubNumb}`);
+  };
+
   /**
    * 현재 진행 회차의 모임원 완료 독후감 목록으로 이동
    *
@@ -425,7 +430,7 @@ const ClubDetailPage = () => {
 
                   {/* 모임 채팅 버튼 */}
                   {isActiveMember ? (
-                    <button className={styles.chatButton} type="button">
+                    <button className={styles.chatButton} type="button" onClick={handleClubChat}>
                       <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path
                           d="M10.3933 8.26667V10.98C10.3933 11.22 10.3666 11.4467 10.3066 11.6533C10.0599 12.6333 9.24659 13.2467 8.12659 13.2467H6.31325L4.29992 14.5867C3.99992 14.7933 3.59992 14.5733 3.59992 14.2133V13.2467C2.91992 13.2467 2.35325 13.02 1.95992 12.6267C1.55992 12.2267 1.33325 11.66 1.33325 10.98V8.26667C1.33325 7 2.11992 6.12667 3.33325 6.01333C3.41992 6.00667 3.50659 6 3.59992 6H8.12659C9.48659 6 10.3933 6.90667 10.3933 8.26667Z"

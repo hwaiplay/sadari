@@ -101,25 +101,34 @@ const ClubMemberRestrictionPage = () => {
   const renderExitItem = (item: ClubMemberExit) => {
     /** 현재 카드 회원의 재가입 제한을 해제함. @author HanWon.Jang @return 반환값이 없음 */
     const handleItemRelease = (): void => {
+      // 영구 삭제되어 식별자가 익명화된 이력은 제한 관계가 없으므로 처리하지 않음
+      if (item.userNumb === null) {
+        return;
+      }
       // 카드의 사용자 번호를 제한 해제 처리에 전달함
       void handleRelease(item.userNumb);
     };
 
     // 퇴장 프로필과 일시 및 현재 제한 상태를 포함한 카드를 반환함
     return (
-      <li className={styles.item} key={item.userNumb}>
+      <li className={styles.item} key={item.kickNumb}>
         {/* 퇴장 회원 프로필 영역 */}
         <ProfileImage className={styles.avatar} src={item.porfPath} alt={item.userNick ?? ""} />
         {/* 퇴장 회원 정보와 제한 상태 영역 */}
         <div className={styles.info}>
-          <strong className={styles.name}>{item.userNick ?? "-"}</strong>
+          <strong className={styles.name}>
+            {item.userNick ?? message("frontend.readingClub.chat.anonymous")}
+          </strong>
           <span className={styles.exitDate}>{item.exitDate.replace("T", " ").slice(0, 16)}</span>
+          <span className={styles.reason}>
+            {message("frontend.readingClub.restriction.reason", [item.kickRson])}
+          </span>
           <span className={item.blocYsno === "Y" ? styles.restricted : styles.released}>
             {item.blocYsno === "Y" ? message("frontend.readingClub.restriction.active") : message("frontend.readingClub.restriction.released")}
           </span>
         </div>
         {/* 재가입 제한 해제 버튼 영역 */}
-        {item.blocYsno === "Y" ? (
+        {item.blocYsno === "Y" && item.userNumb !== null ? (
           <ActionButton size="sm" variant="secondary" disabled={processingUserNumb !== null} onClick={handleItemRelease}>
             {/* "제한 해제" */}
             {message("frontend.readingClub.restriction.release")}

@@ -23,12 +23,33 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-24        HanWon.Jang        가입 신청 취소·모임원 퇴장 추가
  * 2026-08-29        HanWon.Jang        진행 회차 독후감 조회 확장
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감·결과 확인 추가
+ * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 추가
  */
 @Mapper
 public interface ReadingClubMapper {
 
     /** 활성 모임원 여부를 조회함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 활성 모임원 수 */
     int getActiveMemberCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);
+
+    /** 모임 채팅을 조회함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param afterChatNumb 마지막 채팅 번호 @param maxSize 최대 조회 수 @return 채팅 목록 */
+    List<ReadingClubDto.ClubChatDto> getClubChatList(@Param("clubNumb") Long clubNumb
+                                                    , @Param("userNumb") Long userNumb
+                                                    , @Param("afterChatNumb") Long afterChatNumb
+                                                    , @Param("maxSize") int maxSize);
+
+    /** 모임 채팅을 중복 없이 저장함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param chatType 채팅 유형 @param request 채팅 요청 @return 저장 수 */
+    int setClubChat(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb
+                   , @Param("chatType") String chatType
+                   , @Param("request") ReadingClubDto.ClubChatReqDto request);
+
+    /** 저장된 채팅을 중복 방지 키로 조회함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @param clntUuid 중복 방지 키 @return 채팅 */
+    ReadingClubDto.ClubChatDto getClubChatByUuid(@Param("clubNumb") Long clubNumb
+                                                , @Param("userNumb") Long userNumb
+                                                , @Param("clntUuid") String clntUuid);
+
+    /** 채팅 알림을 받을 활성 모임원 번호를 조회함. @param clubNumb 모임 번호 @param senderNumb 발신 사용자 번호 @return 수신 사용자 번호 목록 */
+    List<Long> getClubChatAlimUserList(@Param("clubNumb") Long clubNumb
+                                      , @Param("senderNumb") Long senderNumb);
 
     /** 다음 도서 추천 목록을 조회함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 추천 목록 */
     List<ReadingClubDto.BookRecommendationDto> getBookRecommendationList(@Param("clubNumb") Long clubNumb
@@ -414,6 +435,18 @@ public interface ReadingClubMapper {
      */
     int uptMemberExit(@Param("ownerNumb") Long ownerNumb, @Param("clubNumb") Long clubNumb
                      , @Param("targetUserNumb") Long targetUserNumb);
+
+    /** 잠긴 모임에서 다음 강제 퇴장 이력 번호를 조회함. @param clubNumb 모임 번호 @return 다음 이력 번호 */
+    Long getNextKickNumb(Long clubNumb);
+
+    /** 강제 퇴장 이력을 저장함. @return 저장 수 */
+    int setMemberKick(@Param("clubNumb") Long clubNumb, @Param("kickNumb") Long kickNumb
+                      , @Param("targetUserNumb") Long targetUserNumb
+                      , @Param("procUser") Long procUser, @Param("kickRson") String kickRson);
+
+    /** 최근 미해제 강제 퇴장 이력에 제한 해제 일시를 저장함. @return 변경 수 */
+    int uptMemberKickRelease(@Param("clubNumb") Long clubNumb
+                             , @Param("targetUserNumb") Long targetUserNumb);
 
     /**
      * 최신 또는 지정한 완료 독서 회차의 도서와 목표 집계 결과를 조회함

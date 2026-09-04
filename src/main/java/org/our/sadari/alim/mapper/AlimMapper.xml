@@ -11,6 +11,7 @@
              , COALESCE(S.RPAL_YSNO, #{commYes}) AS REPLY_ALIM_YSNO
              , COALESCE(S.FOLL_YSNO, #{commYes}) AS FOLLOW_ALIM_YSNO
              , COALESCE(S.CLUB_YSNO, #{commYes}) AS CLUB_ALIM_YSNO
+             , COALESCE(S.CHAT_YSNO, #{commYes}) AS CHAT_ALIM_YSNO
              , COALESCE(S.RDUE_YSNO, #{commYes}) AS REPORT_DUE_ALIM_YSNO
           FROM TM_USERXM U
      LEFT JOIN TM_USSETX S
@@ -160,6 +161,7 @@
         <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
         <bind name="targetUser" value="@org.our.sadari.global.common.constant.Constant@ALIM_TARGET_USER" />
         <bind name="targetClub" value="@org.our.sadari.global.common.constant.Constant@ALIM_TARGET_READING_CLUB" />
+        <bind name="clubChatTemplate" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE" />
         SELECT /* getAlimTargetDtl */
                A.USER_NUMB
              , A.ALIM_NUMB
@@ -170,12 +172,14 @@
              , CASE
                    WHEN A.TAGT_TYPE = #{targetReport} THEN R.USER_NUMB
                    WHEN A.TAGT_TYPE = #{targetUser} THEN U.USER_NUMB
+                   WHEN A.TAGT_TYPE = #{targetClub} AND A.TEMP_CODE = #{clubChatTemplate} THEN CM.USER_NUMB
                    WHEN A.TAGT_TYPE = #{targetClub} THEN C.OWNR_NUMB
                    ELSE I.USER_NUMB
                END AS TARGET_USER_NUMB
              , CASE
                    WHEN A.TAGT_TYPE = #{targetReport} THEN RU.USER_STAT
                    WHEN A.TAGT_TYPE = #{targetUser} THEN U.USER_STAT
+                   WHEN A.TAGT_TYPE = #{targetClub} AND A.TEMP_CODE = #{clubChatTemplate} THEN CMU.USER_STAT
                    WHEN A.TAGT_TYPE = #{targetClub} THEN CU.USER_STAT
                    ELSE I.USER_STAT
                END AS TARGET_USER_STAT
@@ -199,6 +203,14 @@
            AND C.CLUB_NUMB = A.TAGT_NUMB
      LEFT JOIN TM_USERXM CU
             ON CU.USER_NUMB = C.OWNR_NUMB
+     LEFT JOIN TB_CLMEMX CM
+            ON A.TAGT_TYPE = #{targetClub}
+           AND A.TEMP_CODE = #{clubChatTemplate}
+           AND CM.CLUB_NUMB = A.TAGT_NUMB
+           AND CM.USER_NUMB = A.USER_NUMB
+           AND CM.MEMB_STAT = 'ACTIVE'
+     LEFT JOIN TM_USERXM CMU
+            ON CMU.USER_NUMB = CM.USER_NUMB
      LEFT JOIN TB_FOLLOW F
             ON F.USER_NUMB = A.USER_NUMB
            AND F.FLOW_NUMB = CASE

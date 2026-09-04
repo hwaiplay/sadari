@@ -36,6 +36,7 @@ const NOTIFICATION_FIELDS: SettingField[] = [
   "replyAlimYsno",
   "followAlimYsno",
   "clubAlimYsno",
+  "chatAlimYsno",
   "reportDueAlimYsno",
   "reportLikeDefaultYsno",
   "reportReplyDefaultYsno",
@@ -134,6 +135,7 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
               replyAlimYsno: setting.replyAlimYsno,
               followAlimYsno: setting.followAlimYsno,
               clubAlimYsno: setting.clubAlimYsno,
+              chatAlimYsno: setting.chatAlimYsno,
               reportDueAlimYsno: setting.reportDueAlimYsno,
               reportLikeDefaultYsno: setting.reportLikeDefaultYsno,
               reportReplyDefaultYsno: setting.reportReplyDefaultYsno,
@@ -285,6 +287,7 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
             {renderSwitch("replyAlimYsno", "frontend.settings.notifications.reply", "frontend.settings.notifications.reply.description")}
             {renderSwitch("followAlimYsno", "frontend.settings.notifications.follow", "frontend.settings.notifications.follow.description")}
             {renderSwitch("clubAlimYsno", "frontend.settings.notifications.club", "frontend.settings.notifications.club.description")}
+            {renderSwitch("chatAlimYsno", "frontend.settings.notifications.chat", "frontend.settings.notifications.chat.description")}
             {renderSwitch("reportDueAlimYsno", "frontend.settings.notifications.due", "frontend.settings.notifications.due.description")}
           </section>
           <section className={styles.section}>

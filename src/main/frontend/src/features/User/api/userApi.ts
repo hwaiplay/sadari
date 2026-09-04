@@ -31,6 +31,7 @@ export type UserSetting = {
   replyAlimYsno: "Y" | "N";
   followAlimYsno: "Y" | "N";
   clubAlimYsno: "Y" | "N";
+  chatAlimYsno: "Y" | "N";
   reportDueAlimYsno: "Y" | "N";
   reportLikeDefaultYsno: "Y" | "N";
   reportReplyDefaultYsno: "Y" | "N";
@@ -42,6 +43,7 @@ export type UserNotificationSettingParams = Pick<
   | "replyAlimYsno"
   | "followAlimYsno"
   | "clubAlimYsno"
+  | "chatAlimYsno"
   | "reportDueAlimYsno"
   | "reportLikeDefaultYsno"
   | "reportReplyDefaultYsno"

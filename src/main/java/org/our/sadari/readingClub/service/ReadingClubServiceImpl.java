@@ -50,6 +50,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 처리
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 처리
  * 2026-09-03        HanWon.Jang        사용자 차단 관계의 신규 참여 제한 추가
+ * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 처리 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -74,6 +75,12 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final String MEMBER_ACTIVE = "ACTIVE";
     // 모임을 탈퇴하거나 퇴장한 모임원 상태 코드
     private static final String MEMBER_EXITED = "EXITED";
+    // 사용자가 작성한 일반 채팅 유형 코드
+    private static final String CHAT_TYPE_TEXT = "TEXT";
+    // 모임 채팅 한 번의 최대 조회 건수
+    private static final int CHAT_LIST_SIZE = 100;
+    // 알림에 포함할 채팅 본문 최대 문자 수
+    private static final int CHAT_ALIM_PREVIEW_SIZE = 80;
     // 모임 회차 독후감 목록이 한 번에 조회할 화면 항목 수
     private static final int REPORT_PAGE_SIZE = 12;
     // 이전 독서 기록 목록이 한 번에 조회할 화면 항목 수
@@ -637,6 +644,96 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         return ResultData.success(members);
     }
 
+    /** {@inheritDoc} @author HanWon.Jang */
+    @Override
+    public ResultData getClubChatList(Long userNumb, Long clubNumb, Long afterChatNumb) {
+        // 채팅 식별값과 마지막 채팅 번호 범위를 검증함
+        if (StringUtil.hasEmpty(userNumb, clubNumb)
+                || (!StringUtil.isEmpty(afterChatNumb) && afterChatNumb <= 0)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 활성 계정의 활성 모임원에게만 채팅 열람을 허용함
+        if (readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 최초에는 최신 채팅을, 이후에는 마지막 번호 다음 채팅을 시간순으로 반환함
+        return ResultData.success(readingClubMapper.getClubChatList(
+                clubNumb, userNumb, afterChatNumb, CHAT_LIST_SIZE));
+    }
+
+    /** {@inheritDoc} @author HanWon.Jang */
+    @Override
+    @Transactional
+    public ResultData setClubChat(Long userNumb, Long clubNumb, ReadingClubDto.ClubChatReqDto request) {
+        // 필수 식별값과 요청 본문을 검증함
+        if (StringUtil.hasEmpty(userNumb, clubNumb, request, request.getChatCntn(), request.getClntUuid())) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 앞뒤 공백을 제거한 채팅 본문을 저장값으로 확정함
+        String normalizedContent = StringUtil.normalizePlainText(request.getChatCntn());
+        if (StringUtil.isEmpty(normalizedContent) || normalizedContent.length() > 2000) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 채팅의 비속어를 확인해 다른 모임원에게 노출되기 전에 차단함
+        var badWord = badWordDetectionService.findBadWord(normalizedContent);
+        if (badWord.isPresent()) {
+            // "욕설이나 비속어는 사용할 수 없어요. 감지된 단어: {0}"
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
+        }
+
+        // 모임 상태와 회원 권한을 같은 트랜잭션에서 확정하도록 모임 행을 잠금
+        ReadingClubDto.ClubViewDto club = readingClubMapper.getClubForUpdate(clubNumb);
+        if (StringUtil.isEmpty(club) || !CLUB_ACTIVE.equals(club.getClubStat())
+                || readingClubMapper.getActiveMemberCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 정규화된 본문을 중복 방지 키와 함께 저장함
+        request.setChatCntn(normalizedContent);
+        int insertCnt = readingClubMapper.setClubChat(clubNumb, userNumb, CHAT_TYPE_TEXT, request);
+        ReadingClubDto.ClubChatDto chat = readingClubMapper.getClubChatByUuid(
+                clubNumb, userNumb, request.getClntUuid());
+        if (StringUtil.isEmpty(chat)) {
+            // "등록에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
+        }
+
+        // 최초 저장 요청만 다른 활성 모임원에게 댓글 아이콘 유형의 채팅 알림을 발송함
+        if (insertCnt > 0) {
+            String preview = StringUtil.cutString(chat.getChatCntn(), "…", CHAT_ALIM_PREVIEW_SIZE);
+            for (Long receiverNumb : readingClubMapper.getClubChatAlimUserList(clubNumb, userNumb)) {
+                ResultData alimResult = alimService.sendAlim(
+                        receiverNumb
+                      , Constant.ALIM_SITU_REPLY
+                      , Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE
+                      , Constant.ALIM_TARGET_READING_CLUB
+                      , clubNumb
+                      , null
+                      , Map.of("clubName", club.getClubName()
+                             , "userName", chat.getUserNick()
+                             , "chatContent", preview)
+                );
+                // 알림 저장 실패 시 채팅만 남지 않도록 전체 트랜잭션을 롤백함
+                if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+                    throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED
+                                              , HttpStatus.INTERNAL_SERVER_ERROR);
+                }
+            }
+        }
+
+        // 저장 또는 같은 중복 방지 키로 조회된 채팅을 반환함
+        return ResultData.success(chat);
+    }
+
     /**
      * {@inheritDoc}
      *
@@ -1066,11 +1163,22 @@ public class ReadingClubServiceImpl implements ReadingClubService {
      */
     @Override
     @Transactional
-    public ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb) {
+    public ResultData delMember(Long userNumb, Long clubNumb, Long targetUserNumb
+                                , ReadingClubDto.MemberKickReqDto request) {
         // 퇴장 처리에 필요한 식별값을 검증함
-        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb)) {
+        if (StringUtil.hasEmpty(userNumb, clubNumb, targetUserNumb, request, request.getKickRson())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 강제 퇴장 사유의 공백과 길이 및 비속어를 검증함
+        String kickReason = StringUtil.normalizePlainText(request.getKickRson());
+        if (StringUtil.isEmpty(kickReason) || kickReason.length() > 1000) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+        var badWord = badWordDetectionService.findBadWord(kickReason);
+        if (badWord.isPresent()) {
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
         // 권한과 대상 상태 검증 및 동시 퇴장 요청을 직렬화하도록 모임 마스터 행을 잠금
@@ -1086,6 +1194,14 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         if (readingClubMapper.uptMemberExit(userNumb, clubNumb, targetUserNumb) == 0) {
             // "수정에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
+        }
+
+        // 잠긴 모임 안에서 순번을 계산하여 강제 퇴장 사유와 처리자를 보존 이력으로 저장함
+        Long kickNumb = readingClubMapper.getNextKickNumb(clubNumb);
+        if (StringUtil.isEmpty(kickNumb)
+                || readingClubMapper.setMemberKick(clubNumb, kickNumb, targetUserNumb
+                                                   , userNumb, kickReason) != 1) {
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
         }
 
         // 퇴장 대상에게 모임명이 포함된 알림을 저장하고 푸시를 예약함
@@ -1143,6 +1259,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             // "삭제에 실패했어요. 다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
+
+        // 삭제한 제한 관계에 대응하는 최근 강제 퇴장 이력에는 해제 일시를 남김
+        readingClubMapper.uptMemberKickRelease(clubNumb, targetUserNumb);
 
         // 퇴장 관계와 재가입 제한을 함께 제거한 성공 결과를 반환함
         return ResultData.success();

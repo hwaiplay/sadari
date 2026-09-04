@@ -364,6 +364,34 @@ export const exitDescription = style({
   whiteSpace: "pre-line",
 });
 
+export const exitReasonLabel = style({
+  color: vars.color.black,
+  fontFamily: vars.font.semibold,
+  fontSize: 14,
+  lineHeight: "20px",
+});
+
+export const exitReasonInput = style({
+  width: "100%",
+  minHeight: 120,
+  padding: 14,
+  border: `1px solid ${vars.color.gray300}`,
+  borderRadius: 12,
+  boxSizing: "border-box",
+  color: vars.color.black,
+  background: vars.color.background,
+  fontFamily: vars.font.body,
+  fontSize: 14,
+  lineHeight: "20px",
+  resize: "vertical",
+  selectors: {
+    "&:focus-visible": {
+      outline: "2px solid #78b991",
+      outlineOffset: 2,
+    },
+  },
+});
+
 export const candidateList = style({
   display: "flex",
   flexDirection: "column",

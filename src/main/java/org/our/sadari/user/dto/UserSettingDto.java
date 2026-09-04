@@ -14,6 +14,7 @@ import lombok.Data;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-01        SeungHyeon.Kang    최초 생성
+ * 2026-09-04        HanWon.Jang        모임 채팅 알림 설정 추가
  */
 @Data
 @Schema(description = "사용자 알림과 공개 범위 설정")
@@ -54,6 +55,10 @@ public class UserSettingDto {
     @Pattern(regexp = "[YN]")
     @Schema(description = "선택형 독서 모임 알림 사용 여부", allowableValues = {"Y", "N"})
     private String clubAlimYsno;
+
+    @Pattern(regexp = "[YN]")
+    @Schema(description = "독서 모임 채팅 알림 사용 여부", allowableValues = {"Y", "N"})
+    private String chatAlimYsno;
 
     @Pattern(regexp = "[YN]")
     @Schema(description = "독후감 목표 종료 알림 사용 여부", allowableValues = {"Y", "N"})

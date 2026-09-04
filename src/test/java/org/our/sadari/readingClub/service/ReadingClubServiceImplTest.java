@@ -58,6 +58,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 검증
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
  * 2026-09-04        HanWon.Jang        관리자 모집 중지 가입 차단 검증
+ * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -1308,10 +1309,15 @@ class ReadingClubServiceImplTest {
         club.setOwnrNumb(20L);
         club.setClubStat("ACTIVE");
         club.setClubName("함께 읽는 모임");
+        ReadingClubDto.MemberKickReqDto request = new ReadingClubDto.MemberKickReqDto();
+        request.setKickRson("반복적인 운영 규칙 위반");
 
         // 권한과 활성 멤버 변경 및 알림 저장이 모두 성공하도록 구성함
+        when(badWordDetectionService.findBadWord("반복적인 운영 규칙 위반")).thenReturn(Optional.empty());
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.uptMemberExit(20L, 10L, 30L)).thenReturn(1);
+        when(readingClubMapper.getNextKickNumb(10L)).thenReturn(1L);
+        when(readingClubMapper.setMemberKick(10L, 1L, 30L, 20L, "반복적인 운영 규칙 위반")).thenReturn(1);
         when(alimService.sendAlim(
                 30L
               , Constant.ALIM_SITU_REJECTED
@@ -1323,11 +1329,12 @@ class ReadingClubServiceImplTest {
         )).thenReturn(ResultData.success());
 
         // 모임장이 선택한 일반 멤버의 퇴장을 요청함
-        ResultData result = readingClubService.delMember(20L, 10L, 30L);
+        ResultData result = readingClubService.delMember(20L, 10L, 30L, request);
 
         // 퇴장 상태 변경과 알림이 함께 처리됐는지 검증함
         assertEquals(200, result.getCode());
         verify(readingClubMapper).uptMemberExit(20L, 10L, 30L);
+        verify(readingClubMapper).setMemberKick(10L, 1L, 30L, 20L, "반복적인 운영 규칙 위반");
         verify(alimService).sendAlim(
                 30L
               , Constant.ALIM_SITU_REJECTED
@@ -1350,16 +1357,69 @@ class ReadingClubServiceImplTest {
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         club.setOwnrNumb(20L);
         club.setClubStat("ACTIVE");
+        ReadingClubDto.MemberKickReqDto request = new ReadingClubDto.MemberKickReqDto();
+        request.setKickRson("운영 규칙 위반");
 
         // 퇴장 대상이 모임장 본인이 되도록 구성함
+        when(badWordDetectionService.findBadWord("운영 규칙 위반")).thenReturn(Optional.empty());
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
 
         // 모임장이 자신을 퇴장시키는 요청을 처리함
-        ResultData result = readingClubService.delMember(20L, 10L, 20L);
+        ResultData result = readingClubService.delMember(20L, 10L, 20L, request);
 
         // 접근 거절과 관계 상태 미변경을 검증함
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).uptMemberExit(20L, 10L, 20L);
+    }
+
+    /** 활성 모임원이 채팅을 저장하면 다른 활성 모임원에게 댓글 아이콘 알림을 보내는지 검증함. */
+    @Test
+    void setChatSendsReplyAlim() {
+        ReadingClubDto.ClubChatReqDto request = new ReadingClubDto.ClubChatReqDto();
+        request.setChatCntn(" 이번 주 책 어땠나요? ");
+        request.setClntUuid("6e6e0ec8-dfd8-4ba2-8278-f26e6fd6a008");
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        club.setClubStat("ACTIVE");
+        club.setClubName("함께 읽는 모임");
+        ReadingClubDto.ClubChatDto savedChat = new ReadingClubDto.ClubChatDto();
+        savedChat.setChatNumb(1L);
+        savedChat.setChatCntn("이번 주 책 어땠나요?");
+        savedChat.setUserNick("독서가");
+
+        when(badWordDetectionService.findBadWord("이번 주 책 어땠나요?")).thenReturn(Optional.empty());
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.setClubChat(10L, 20L, "TEXT", request)).thenReturn(1);
+        when(readingClubMapper.getClubChatByUuid(10L, 20L, request.getClntUuid())).thenReturn(savedChat);
+        when(readingClubMapper.getClubChatAlimUserList(10L, 20L)).thenReturn(List.of(30L));
+        when(alimService.sendAlim(
+                30L, Constant.ALIM_SITU_REPLY, Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE
+              , Constant.ALIM_TARGET_READING_CLUB, 10L, null
+              , Map.of("clubName", "함께 읽는 모임", "userName", "독서가"
+                     , "chatContent", "이번 주 책 어땠나요?")
+        )).thenReturn(ResultData.success());
+
+        ResultData result = readingClubService.setClubChat(20L, 10L, request);
+
+        assertEquals(200, result.getCode());
+        assertEquals(savedChat, result.getData());
+        verify(alimService).sendAlim(
+                30L, Constant.ALIM_SITU_REPLY, Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE
+              , Constant.ALIM_TARGET_READING_CLUB, 10L, null
+              , Map.of("clubName", "함께 읽는 모임", "userName", "독서가"
+                     , "chatContent", "이번 주 책 어땠나요?")
+        );
+    }
+
+    /** 비활성 계정 또는 비회원은 모임 채팅 목록을 볼 수 없는지 검증함. */
+    @Test
+    void getChatRejectsInactive() {
+        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(0);
+
+        ResultData result = readingClubService.getClubChatList(20L, 10L, null);
+
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        verify(readingClubMapper, never()).getClubChatList(10L, 20L, null, 100);
     }
 
     /**

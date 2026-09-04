@@ -34,6 +34,94 @@
            AND MEMBER.MEMB_STAT = #{memberActive}
     </select>
 
+    <!-- 활성 모임원에게 최신 채팅 또는 마지막 조회 이후 채팅을 시간순으로 제공함 -->
+    <select id="getClubChatList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubChatDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getClubChatList */
+               CHAT.CHAT_NUMB
+             , CHAT.CLUB_NUMB
+             , CHAT.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , CHAT.CHAT_TYPE
+             , CHAT.CHAT_CNTN
+             , CHAT.CLNT_UUID
+             , CASE WHEN CHAT.USER_NUMB = #{userNumb} THEN #{commYes} ELSE #{commNo} END AS MINE_YSNO
+             , CHAT.REGI_DATE
+          FROM TM_CLCHAT CHAT
+     LEFT JOIN TM_USERXM USERX ON USERX.USER_NUMB = CHAT.USER_NUMB
+     LEFT JOIN TM_FILEXM FILEX ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+         WHERE CHAT.CLUB_NUMB = #{clubNumb}
+           AND CHAT.DELT_YSNO = #{commNo}
+        <choose>
+            <when test="afterChatNumb != null">
+           AND CHAT.CHAT_NUMB <![CDATA[>]]> #{afterChatNumb}
+      ORDER BY CHAT.CHAT_NUMB
+             LIMIT #{maxSize}
+            </when>
+            <otherwise>
+           AND CHAT.CHAT_NUMB IN (
+               SELECT RECENT_PAGE.CHAT_NUMB
+                 FROM (
+                       SELECT RECENT.CHAT_NUMB
+                         FROM TM_CLCHAT RECENT
+                        WHERE RECENT.CLUB_NUMB = #{clubNumb}
+                          AND RECENT.DELT_YSNO = #{commNo}
+                     ORDER BY RECENT.CHAT_NUMB DESC
+                        LIMIT #{maxSize}
+                      ) RECENT_PAGE
+           )
+      ORDER BY CHAT.CHAT_NUMB
+            </otherwise>
+        </choose>
+    </select>
+
+    <!-- 같은 사용자와 클라이언트 중복 방지 키의 채팅을 한 번만 저장함 -->
+    <insert id="setClubChat">
+        INSERT IGNORE /* setClubChat */
+          INTO TM_CLCHAT (
+               CLUB_NUMB, USER_NUMB, CHAT_TYPE, CHAT_CNTN, CLNT_UUID
+          ) VALUES (
+               #{clubNumb}, #{userNumb}, #{chatType}, #{request.chatCntn}, #{request.clntUuid}
+          )
+    </insert>
+
+    <!-- 발신자의 중복 방지 키로 저장된 채팅을 조회함 -->
+    <select id="getClubChatByUuid" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubChatDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getClubChatByUuid */
+               CHAT.CHAT_NUMB
+             , CHAT.CLUB_NUMB
+             , CHAT.USER_NUMB
+             , USERX.USER_NICK
+             , FILEX.FILE_PATH AS PORF_PATH
+             , CHAT.CHAT_TYPE
+             , CHAT.CHAT_CNTN
+             , CHAT.CLNT_UUID
+             , #{commYes} AS MINE_YSNO
+             , CHAT.REGI_DATE
+          FROM TM_CLCHAT CHAT
+          JOIN TM_USERXM USERX ON USERX.USER_NUMB = CHAT.USER_NUMB
+     LEFT JOIN TM_FILEXM FILEX ON FILEX.FILE_NUMB = USERX.PROF_NUMB
+         WHERE CHAT.CLUB_NUMB = #{clubNumb}
+           AND CHAT.USER_NUMB = #{userNumb}
+           AND CHAT.CLNT_UUID = #{clntUuid}
+           AND CHAT.DELT_YSNO = #{commNo}
+    </select>
+
+    <!-- 발신자를 제외한 활성 계정의 활성 모임원을 채팅 알림 수신 후보로 조회함 -->
+    <select id="getClubChatAlimUserList" resultType="long">
+        <include refid="clubCodeBinds" />
+        SELECT /* getClubChatAlimUserList */
+               MEMBER.USER_NUMB
+          FROM TB_CLMEMX MEMBER
+          JOIN TM_USERXM USERX ON USERX.USER_NUMB = MEMBER.USER_NUMB
+                              AND USERX.USER_STAT = #{userActive}
+         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.MEMB_STAT = #{memberActive}
+           AND MEMBER.USER_NUMB != #{senderNumb}
+    </select>
+
     <select id="getBookRecommendationList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$BookRecommendationDto">
         <include refid="clubCodeBinds" />
         SELECT RECOMMEND.RECM_NUMB, BOOK.BOOK_NUMB, BOOK.BOOK_TITL, BOOK.BOOK_ATHR, BOOK.BOOK_PUBL
@@ -1148,24 +1236,33 @@
              , MEMBER.USER_NUMB
     </select>
 
-    <!-- 모임장이 확인할 퇴장 모임원과 재가입 제한 상태를 최신순으로 조회함 -->
+    <!-- 모임장이 확인할 강제 퇴장 이력과 재가입 제한 상태를 최신순으로 조회함 -->
     <select id="getMemberExitList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$MemberExitHistoryDto">
         <include refid="clubCodeBinds" />
         SELECT /* getMemberExitList */
-               MEMBER.USER_NUMB
+               KICK.KICK_NUMB
+             , KICK.USER_NUMB
              , USERX.USER_NICK
              , FILEX.FILE_PATH AS PORF_PATH
-             , MEMBER.EXIT_DATE
-             , MEMBER.BLOC_YSNO
-          FROM TB_CLMEMX MEMBER
-          JOIN TM_USERXM USERX
-            ON USERX.USER_NUMB = MEMBER.USER_NUMB
+             , KICK.KICK_RSON
+             , KICK.KICK_DATE AS EXIT_DATE
+             , KICK.RLES_DATE
+             , CASE
+                   WHEN KICK.RLES_DATE IS NULL AND MEMBER.BLOC_YSNO = #{commYes} THEN #{commYes}
+                   ELSE #{commNo}
+               END AS BLOC_YSNO
+          FROM TH_CLKICK KICK
+     LEFT JOIN TM_USERXM USERX
+            ON USERX.USER_NUMB = KICK.USER_NUMB
      LEFT JOIN TM_FILEXM FILEX
             ON FILEX.FILE_NUMB = USERX.PROF_NUMB
-         WHERE MEMBER.CLUB_NUMB = #{clubNumb}
+     LEFT JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = KICK.CLUB_NUMB
+           AND MEMBER.USER_NUMB = KICK.USER_NUMB
            AND MEMBER.MEMB_STAT = #{memberExited}
-      ORDER BY MEMBER.EXIT_DATE DESC
-             , MEMBER.USER_NUMB DESC
+         WHERE KICK.CLUB_NUMB = #{clubNumb}
+      ORDER BY KICK.KICK_DATE DESC
+             , KICK.KICK_NUMB DESC
     </select>
 
     <!-- 모임장 소유권과 퇴장 및 제한 상태를 확인하여 회원 관계를 삭제함 -->
@@ -1181,6 +1278,35 @@
            AND MEMBER.MEMB_STAT = #{memberExited}
            AND MEMBER.BLOC_YSNO = #{commYes}
     </delete>
+
+    <!-- 모임 마스터 행 잠금 아래에서 모임별 다음 강제 퇴장 이력 번호를 계산함 -->
+    <select id="getNextKickNumb" parameterType="long" resultType="long">
+        SELECT /* getNextKickNumb */
+               COALESCE(MAX(KICK_NUMB), 0) + 1
+          FROM TH_CLKICK
+         WHERE CLUB_NUMB = #{clubNumb}
+    </select>
+
+    <!-- 강제 퇴장 사유와 처리자를 보존 이력으로 저장함 -->
+    <insert id="setMemberKick">
+        INSERT /* setMemberKick */
+          INTO TH_CLKICK (
+               CLUB_NUMB, KICK_NUMB, USER_NUMB, PROC_USER, KICK_RSON, KICK_DATE
+          ) VALUES (
+               #{clubNumb}, #{kickNumb}, #{targetUserNumb}, #{procUser}, #{kickRson}, CURRENT_TIMESTAMP(6)
+          )
+    </insert>
+
+    <!-- 최근 미해제 강제 퇴장 이력에 재가입 제한 해제 일시를 기록함 -->
+    <update id="uptMemberKickRelease">
+        UPDATE /* uptMemberKickRelease */ TH_CLKICK
+           SET RLES_DATE = CURRENT_TIMESTAMP(6)
+         WHERE CLUB_NUMB = #{clubNumb}
+           AND USER_NUMB = #{targetUserNumb}
+           AND RLES_DATE IS NULL
+      ORDER BY KICK_NUMB DESC
+         LIMIT 1
+    </update>
 
     <!-- 자동 팝업은 사용자가 확인하지 않은 최신 결과를, 직접 선택한 회차는 확인 여부와 무관한 결과를 조회함 -->
     <select id="getReadingGoalResult" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ReadingGoalResultDto">

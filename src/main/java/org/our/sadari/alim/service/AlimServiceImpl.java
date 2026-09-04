@@ -339,7 +339,8 @@ public class AlimServiceImpl implements AlimService {
         boolean isReplyReportAlim = Constant.ALIM_TEMP_CODE_REPLY_REPORT.equals(tempCode)
                 || Constant.ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE.equals(tempCode)
                 || Constant.ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE.equals(tempCode)
-                || Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT.equals(tempCode);
+                || Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE.equals(tempCode);
         // 타이머 알림은 세션마다 별도 이벤트이므로 한 시간 안에도 각각 저장함
         boolean isBookTimerOverAlim = Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER.equals(tempCode);
         // 가입 신청과 즉시 가입 알림은 같은 모임에서 연속 발생해도 가입 이벤트마다 각각 저장함
@@ -409,6 +410,10 @@ public class AlimServiceImpl implements AlimService {
                 || Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED.equals(tempCode)
                 || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED.equals(tempCode)) {
             return Constant.COMM_YES.equals(setting.getClubAlimYsno());
+        }
+
+        if (Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE.equals(tempCode)) {
+            return Constant.COMM_YES.equals(setting.getChatAlimYsno());
         }
 
         if (Constant.ALIM_TEMP_CODE_REPORT_DATE_OVER.equals(tempCode)) {
@@ -633,6 +638,13 @@ public class AlimServiceImpl implements AlimService {
      * @return 현재 권한으로 접근 가능한 모임 경로이며 접근할 수 없으면 null
      */
     private String createClubLink(Long userNumb, AlimDto.AlimTargetDto target) {
+        // 새 채팅 알림은 클릭 시점에도 활성 회원인 수신자만 해당 모임 채팅으로 이동함
+        if (Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE.equals(target.getTempCode())
+                && userNumb.equals(target.getTargetUserNumb())
+                && Constant.USER_STAT_ACTIVE.equals(target.getTargetUserStat())) {
+            return "/reading-clubs/chat/" + target.getTagtNumb();
+        }
+
         // 초대와 가입 처리 및 강제 퇴장 알림은 현재 관계가 바뀌어도 내 모임 상태를 확인하는 화면으로 이동함
         if (Constant.ALIM_TEMP_CODE_INVITE_CLUB.equals(target.getTempCode())
                 || Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED.equals(target.getTempCode())
@@ -752,7 +764,8 @@ public class AlimServiceImpl implements AlimService {
                 || Constant.ALIM_TEMP_CODE_CLUB_JOIN_REJECTED.equals(tempCode)
                 || Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED.equals(tempCode)
                 || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED.equals(tempCode)
-                || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED.equals(tempCode);
+                || Constant.ALIM_TEMP_CODE_CLUB_MEMBER_EXITED.equals(tempCode)
+                || Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE.equals(tempCode);
     }
 
     /**

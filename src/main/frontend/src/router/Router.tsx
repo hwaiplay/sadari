@@ -38,6 +38,7 @@ const FindClubPage = lazy(() => import("@/pages/ReadingClub/FindClubPage"));
 const SetClubPage = lazy(() => import("@/pages/ReadingClub/SetClubPage"));
 const UpdateClubPage = lazy(() => import("@/pages/ReadingClub/UpdateClubPage.tsx"));
 const ClubDetailPage = lazy(() => import("@/pages/ReadingClub/ClubDetailPage"));
+const ClubChatPage = lazy(() => import("@/pages/ReadingClub/ClubChatPage"));
 const ClubBookVotePage = lazy(() => import("@/pages/ReadingClub/ClubBookVotePage"));
 const ClubMemberManagementPage = lazy(() => import("@/pages/ReadingClub/ClubMemberManagementPage"));
 const ClubMemberRestrictionPage = lazy(() => import("@/pages/ReadingClub/ClubMemberRestrictionPage"));
@@ -243,6 +244,8 @@ const Router = () => {
           <Route path="/reading-clubs/update/:clubNumb" element={<UpdateClubPage />} />
           {/* 모임 상세보기  */}
           <Route path="/reading-clubs/:clubNumb" element={<ClubDetailPage />} />
+          {/* 활성 모임원 채팅 */}
+          <Route path="/reading-clubs/chat/:clubNumb" element={<ClubChatPage />} />
           {/* 책 검색 */}
           <Route path="/reading-clubs/books/search/:clubNumb" element={<BookSearchType />} />
           {/* 책 정보 */}

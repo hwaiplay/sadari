@@ -214,9 +214,30 @@ public class ReadingClubController {
     @DeleteMapping("/{clubNumb}/members/{targetUserNumb}")
     @Operation(summary = "모임원 강제 퇴장")
     public ResultData delMember(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
-                               , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb) {
+                               , @PathVariable Long clubNumb, @PathVariable Long targetUserNumb
+                               , @Valid @RequestBody ReadingClubDto.MemberKickReqDto request) {
         // 모임장 권한과 활성 멤버 상태를 검증한 퇴장 결과를 반환함
-        return readingClubService.delMember(userNumb, clubNumb, targetUserNumb);
+        return readingClubService.delMember(userNumb, clubNumb, targetUserNumb, request);
+    }
+
+    /** 활성 모임원의 채팅 목록을 조회함. @author HanWon.Jang */
+    @GetMapping("/{clubNumb}/chats")
+    @Operation(summary = "모임 채팅 조회")
+    public ResultData getClubChatList(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @PathVariable Long clubNumb
+                                     , @RequestParam(required = false) Long afterChatNumb) {
+        // 활성 회원 권한을 검증한 채팅 목록을 반환함
+        return readingClubService.getClubChatList(userNumb, clubNumb, afterChatNumb);
+    }
+
+    /** 활성 모임원이 채팅을 전송함. @author HanWon.Jang */
+    @PostMapping("/{clubNumb}/chats")
+    @Operation(summary = "모임 채팅 전송")
+    public ResultData setClubChat(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                 , @PathVariable Long clubNumb
+                                 , @Valid @RequestBody ReadingClubDto.ClubChatReqDto request) {
+        // 중복 방지 키를 적용하여 저장한 채팅을 반환함
+        return readingClubService.setClubChat(userNumb, clubNumb, request);
     }
 
     /** 모임장에게 퇴장 내역과 재가입 제한 상태를 제공함. @author HanWon.Jang @param userNumb 모임장 번호 @param clubNumb 모임 번호 @return 퇴장 내역 */

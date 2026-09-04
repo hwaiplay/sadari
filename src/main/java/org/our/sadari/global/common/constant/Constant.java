@@ -217,6 +217,8 @@ public final class Constant {
     public static final String ALIM_TEMP_CODE_CLUB_MEMBER_JOINED = "CLUB_MEMBER_JOINED";
     // 독서 모임 강제 퇴장 알림 템플릿 코드
     public static final String ALIM_TEMP_CODE_CLUB_MEMBER_EXITED = "CLUB_MEMBER_EXITED";
+    // 독서 모임 새 채팅 알림 템플릿 코드
+    public static final String ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE = "CLUB_CHAT_MESSAGE";
 
     // 정상 이용 회원 상태
     public static final String USER_STAT_ACTIVE = "ACTIVE";

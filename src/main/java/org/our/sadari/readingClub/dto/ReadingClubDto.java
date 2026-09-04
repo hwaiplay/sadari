@@ -34,6 +34,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-25        HanWon.Jang        다음 도서 추천·투표 DTO 추가
  * 2026-08-26        HanWon.Jang        다음 도서 투표 정책 DTO 추가
  * 2026-09-01        HanWon.Jang        공개 모임 이전 독서 기록 권한 추가
+ * 2026-09-04        HanWon.Jang        모임 채팅과 강제 퇴장 이력 DTO 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -505,6 +506,69 @@ public final class ReadingClubDto {
         private String membRole;
     }
 
+    /** 모임원이 전송할 채팅 본문과 중복 방지 키를 전달함 */
+    @Data
+    @Schema(description = "모임 채팅 전송 요청")
+    public static class ClubChatReqDto {
+
+        @NotBlank
+        @Size(max = 2000)
+        @Schema(description = "채팅 본문")
+        private String chatCntn;
+
+        @NotBlank
+        @Size(max = 64)
+        @Schema(description = "클라이언트 중복 방지 키")
+        private String clntUuid;
+    }
+
+    /** 모임 채팅 목록 항목을 전달함 */
+    @Data
+    @Schema(description = "모임 채팅 항목")
+    public static class ClubChatDto {
+
+        @Schema(description = "채팅 번호")
+        private Long chatNumb;
+
+        @Schema(description = "모임 번호")
+        private Long clubNumb;
+
+        @Schema(description = "작성자 사용자 번호")
+        private Long userNumb;
+
+        @Schema(description = "작성자 닉네임")
+        private String userNick;
+
+        @Schema(description = "작성자 프로필 이미지 경로")
+        private String porfPath;
+
+        @Schema(description = "채팅 유형")
+        private String chatType;
+
+        @Schema(description = "채팅 본문")
+        private String chatCntn;
+
+        @Schema(description = "클라이언트 중복 방지 키")
+        private String clntUuid;
+
+        @Schema(description = "로그인 사용자의 작성 여부", allowableValues = {"Y", "N"})
+        private String mineYsno;
+
+        @Schema(description = "등록 일시")
+        private LocalDateTime regiDate;
+    }
+
+    /** 모임장 강제 퇴장 사유를 전달함 */
+    @Data
+    @Schema(description = "모임원 강제 퇴장 요청")
+    public static class MemberKickReqDto {
+
+        @NotBlank
+        @Size(max = 1000)
+        @Schema(description = "강제 퇴장 사유")
+        private String kickRson;
+    }
+
     /**
      * fileName       : MemberExitHistoryDto
      * author         : HanWon.Jang
@@ -519,6 +583,9 @@ public final class ReadingClubDto {
     @Schema(description = "모임원 퇴장 내역")
     public static class MemberExitHistoryDto {
 
+        @Schema(description = "모임별 강제 퇴장 이력 번호")
+        private Long kickNumb;
+
         @Schema(description = "퇴장한 사용자 번호")
         private Long userNumb;
 
@@ -530,6 +597,12 @@ public final class ReadingClubDto {
 
         @Schema(description = "퇴장 일시")
         private LocalDateTime exitDate;
+
+        @Schema(description = "강제 퇴장 사유")
+        private String kickRson;
+
+        @Schema(description = "재가입 제한 해제 일시")
+        private LocalDateTime rlesDate;
 
         @Schema(description = "재가입 제한 여부", allowableValues = {"Y", "N"})
         private String blocYsno;

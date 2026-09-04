@@ -8,6 +8,7 @@
  * -----------------------------------------------------------
  * 2026-09-01        Hanwon.Jang    최초 생성
  * 2026-09-04        HanWon.Jang    모집 가능 여부 추가
+ * 2026-09-04        HanWon.Jang    모임 채팅과 강제 퇴장 이력 타입 추가
  */
 import {PageData} from "@/app/api/resultData.ts";
 import {PublicReportType} from "@/features/Book/types/book.type.ts";
@@ -143,11 +144,27 @@ export type ClubMemberProfile = {
 };
 
 export type ClubMemberExit = {
-  userNumb: number;
+  kickNumb: number;
+  userNumb: number | null;
   userNick: string | null;
   porfPath: string | null;
   exitDate: string;
+  kickRson: string;
+  rlesDate: string | null;
   blocYsno: "Y" | "N";
+};
+
+export type ClubChatMessage = {
+  chatNumb: number;
+  clubNumb: number;
+  userNumb: number | null;
+  userNick: string | null;
+  porfPath: string | null;
+  chatType: "TEXT";
+  chatCntn: string;
+  clntUuid: string;
+  mineYsno: "Y" | "N";
+  regiDate: string;
 };
 
 export type ClubReadingGoalResult = {

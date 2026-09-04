@@ -45,6 +45,15 @@ export const name = style({
   whiteSpace: "nowrap"
 });
 export const exitDate = style({color: vars.color.gray600, fontFamily: vars.font.body, fontSize: 12});
+export const reason = style({
+  overflow: "hidden",
+  color: vars.color.gray600,
+  fontFamily: vars.font.body,
+  fontSize: 12,
+  lineHeight: "18px",
+  textOverflow: "ellipsis",
+  whiteSpace: "nowrap",
+});
 export const restricted = style({
   width: "fit-content",
   color: vars.color.negativeText,

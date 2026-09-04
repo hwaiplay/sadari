@@ -21,6 +21,7 @@ import type {
 } from "@/features/ReadingClub/api/readingClubApi";
 import { useClubMemberManage } from "@/features/ReadingClub/hooks/useClubMemberManage";
 import ProfileImage from "@/features/User/components/ProfileImage";
+import type { ChangeEvent } from "react";
 import { createPortal } from "react-dom";
 import { Link, useParams } from "react-router-dom";
 import * as styles from "./ClubMemberManagementPage.css";
@@ -98,6 +99,7 @@ export default function ClubMemberManagementPage() {
     sentInvitations,
     selectedApplication,
     selectedMember,
+    exitReason,
     handleAnswerClose,
     handleAnswerOpen,
     handleApplicationDecision,
@@ -106,11 +108,25 @@ export default function ClubMemberManagementPage() {
     handleInviteOpen,
     handleInviteSubmit,
     handleExitOpen,
+    handleExitClose,
+    handleMemberExit,
+    setExitReason,
   } = useClubMemberManage();
   const { clubNumb } = useParams<{ clubNumb: string }>();
 
   // 답변 또는 초대 모달이 열려 있는 동안 배경 화면의 스크롤을 잠금
   useBodyScrollLock(Boolean(selectedApplication) || Boolean(selectedMember) || isInviteOpen);
+
+  /**
+   * 강제 퇴장 사유 입력값을 반영함
+   *
+   * @author Hanwon.Jang
+   * @param event 사유 입력 변경 이벤트
+   * @return 반환값이 없음
+   */
+  const handleExitReasonChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
+    setExitReason(event.currentTarget.value);
+  };
 
   /**
    * 선택한 가입 신청을 승인함
@@ -447,6 +463,58 @@ export default function ClubMemberManagementPage() {
               <ActionButton variant="danger" width="half" disabled={isSubmitting} onClick={handleReject}>
                 {/* "거절" */}
                 {message("frontend.readingClub.detail.reject")}
+              </ActionButton>
+            </div>
+          </section>
+        </div>,
+        document.body,
+      ) : null}
+
+      {/* 일반 모임원 강제 퇴장 사유 입력 모달 */}
+      {selectedMember ? createPortal(
+        <div className={styles.overlay} role="presentation">
+          <section className={styles.modal} role="dialog" aria-modal="true" aria-labelledby="member-exit-title">
+            <div className={styles.modalHeader}>
+              <h2 className={styles.modalTitle} id="member-exit-title">
+                {message("frontend.readingClub.memberManage.exitTitle", [selectedMember.userNick ?? "-"])}
+              </h2>
+              <button
+                className={styles.closeButton}
+                type="button"
+                aria-label={message("frontend.common.close")}
+                disabled={isSubmitting}
+                onClick={handleExitClose}
+              >
+                <img className={styles.closeIcon} src="/img/icons/icon-close.svg" alt="" />
+              </button>
+            </div>
+            <p className={styles.exitDescription}>
+              {message("frontend.readingClub.memberManage.exitDescription")}
+            </p>
+            <label className={styles.exitReasonLabel} htmlFor="member-exit-reason">
+              {message("frontend.readingClub.memberManage.exitReason")}
+            </label>
+            <textarea
+              className={styles.exitReasonInput}
+              id="member-exit-reason"
+              value={exitReason}
+              maxLength={1000}
+              placeholder={message("frontend.readingClub.memberManage.exitReasonPlaceholder")}
+              autoFocus
+              disabled={isSubmitting}
+              onChange={handleExitReasonChange}
+            />
+            <div className={styles.modalActions}>
+              <ActionButton width="half" variant="secondary" disabled={isSubmitting} onClick={handleExitClose}>
+                {message("frontend.common.cancel")}
+              </ActionButton>
+              <ActionButton
+                width="half"
+                variant="danger"
+                disabled={isSubmitting || !exitReason.trim()}
+                onClick={handleMemberExit}
+              >
+                {message("frontend.readingClub.memberManage.exitConfirm")}
               </ActionButton>
             </div>
           </section>

@@ -39,6 +39,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-12        SeungHyeon.Kang    알림 아이콘 처리 검증
  * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
  * 2026-08-27        SeungHyeon.Kang    알림번호 기반 라우팅과 사진 프로필 이동 검증
+ * 2026-09-04        HanWon.Jang        모임 채팅 알림 설정과 이동 경로 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -81,6 +82,7 @@ class AlimServiceImplTest {
         setting.setReplyAlimYsno(Constant.COMM_YES);
         setting.setFollowAlimYsno(Constant.COMM_YES);
         setting.setClubAlimYsno(Constant.COMM_YES);
+        setting.setChatAlimYsno(Constant.COMM_YES);
         setting.setReportDueAlimYsno(Constant.COMM_YES);
         lenient().when(alimMapper.getUserAlimSetting(anyLong())).thenReturn(setting);
     }
@@ -575,6 +577,42 @@ class AlimServiceImplTest {
         ResultData result = alimService.getAlimTarget(31L, 7L);
 
         assertEquals(2020, result.getCode());
+    }
+
+    /** 현재 활성 모임원인 채팅 알림 수신자는 해당 모임 채팅으로 이동하는지 검증함. */
+    @Test
+    void getChatTargetForMember() {
+        AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
+        target.setTempCode(Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE);
+        target.setTagtType(Constant.ALIM_TARGET_READING_CLUB);
+        target.setTagtNumb(10L);
+        target.setTargetUserNumb(31L);
+        target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
+        when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
+
+        ResultData result = alimService.getAlimTarget(31L, 7L);
+        AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
+
+        assertEquals(200, result.getCode());
+        assertEquals("/reading-clubs/chat/10", data.getLinkUrlx());
+    }
+
+    /** 채팅 알림을 끈 사용자는 알림 이력과 푸시를 받지 않는지 검증함. */
+    @Test
+    void sendChatAlimBySetting() {
+        UserSettingDto setting = new UserSettingDto();
+        setting.setChatAlimYsno(Constant.COMM_NO);
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
+        when(alimMapper.getUserAlimSetting(31L)).thenReturn(setting);
+
+        ResultData result = alimService.sendAlim(
+                31L, Constant.ALIM_SITU_REPLY, Constant.ALIM_TEMP_CODE_CLUB_CHAT_MESSAGE
+              , Constant.ALIM_TARGET_READING_CLUB, 10L, null, Map.of()
+        );
+
+        assertEquals(200, result.getCode());
+        verify(alimMapper, never()).setAlim(any(AlimDto.AlimItemDto.class));
+        verify(pushService, never()).sendPush(anyLong(), any(), any(), any(), any());
     }
 
     /** 차단 관계인 개인 소셜 알림은 이력과 푸시 준비를 모두 생략하는지 검증함 */
