@@ -35,6 +35,10 @@ public class AlimDto {
     @Schema(description = "알림 템플릿 조회 DTO")
     public static class AlimTempDto {
 
+        @JsonIgnore
+        @Schema(hidden = true)
+        private Long userNumb;
+
         @Schema(description = "알림 상황", example = "LIKE")
         private String alimSitu;
 

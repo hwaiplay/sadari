@@ -1,6 +1,7 @@
 import { getApiErrorMessage } from "@/app/api/resultData";
 import { sweetError } from "@/app/lib/sweetAlert/sweetAlert";
 import { message } from "@/app/messages/message";
+import { setMessageLocale } from "@/app/messages/message";
 import { runBlockingOperation } from "@/app/navigation/blockingOperation";
 import {
   requestFirebaseToken,
@@ -17,6 +18,7 @@ import {
 import {
   getUserSettingApi,
   uptUserAlimSettingApi,
+  uptUserLanguageApi,
   uptUserPrivacyApi,
   type UserSetting,
 } from "@/features/User/api/userApi";
@@ -26,7 +28,7 @@ import * as styles from "./UserSettingsPage.css";
 const PUSH_ENABLED_STORAGE_KEY = "sadari:push-enabled";
 
 type UserSettingsPageProps = {
-  section: "notifications" | "privacy";
+  section: "notifications" | "privacy" | "language";
 };
 
 type SettingField = keyof UserSetting;
@@ -49,6 +51,8 @@ const PRIVACY_FIELDS: SettingField[] = [
   "reportPublicDefaultYsno",
 ];
 
+const LANGUAGE_FIELDS: SettingField[] = ["englishYsno"];
+
 /** 현재 브라우저 권한과 마지막 서버 변경 결과로 기기 푸시 상태를 초기화함 */
 function getInitialPushEnabled(): boolean {
   if (!("Notification" in window) || Notification.permission !== "granted") {
@@ -67,7 +71,11 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
   const [isPushEnabled, setIsPushEnabled] = useState(getInitialPushEnabled);
   const [isPushChanging, setIsPushChanging] = useState(false);
   const pushTokenRef = useRef<string | null>(null);
-  const fields = section === "notifications" ? NOTIFICATION_FIELDS : PRIVACY_FIELDS;
+  const fields = section === "notifications"
+    ? NOTIFICATION_FIELDS
+    : section === "privacy"
+      ? PRIVACY_FIELDS
+      : LANGUAGE_FIELDS;
   const isDirty = Boolean(setting && savedSetting)
     && fields.some((field) => setting?.[field] !== savedSetting?.[field]);
 
@@ -140,12 +148,14 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
               reportLikeDefaultYsno: setting.reportLikeDefaultYsno,
               reportReplyDefaultYsno: setting.reportReplyDefaultYsno,
             })
-          : uptUserPrivacyApi({
+          : section === "privacy"
+            ? uptUserPrivacyApi({
               readingStatisticsYsno: setting.readingStatisticsYsno,
               readingGoalYsno: setting.readingGoalYsno,
               imageFeedYsno: setting.imageFeedYsno,
               reportPublicDefaultYsno: setting.reportPublicDefaultYsno,
-            }),
+            })
+            : uptUserLanguageApi({ englishYsno: setting.englishYsno }),
         {
           title: message("frontend.settings.saving"),
           success: { title: message("frontend.settings.save.successTitle") },
@@ -153,6 +163,10 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
       );
       setSetting(saved);
       setSavedSetting(saved);
+      if (section === "language") {
+        setMessageLocale(saved.englishYsno);
+        window.location.reload();
+      }
     } catch (error) {
       void sweetError(
         message("frontend.settings.save.failedTitle"),
@@ -251,7 +265,9 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
         <p className={styles.pageDescription}>
           {message(section === "notifications"
             ? "frontend.settings.notifications.description"
-            : "frontend.settings.privacy.description")}
+            : section === "privacy"
+              ? "frontend.settings.privacy.description"
+              : "frontend.settings.language.description")}
         </p>
       </header>
 
@@ -296,12 +312,20 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
             {renderSwitch("reportReplyDefaultYsno", "frontend.settings.notifications.reportReply", "frontend.settings.notifications.reportReply.description")}
           </section>
         </>
-      ) : (
+      ) : section === "privacy" ? (
         <section className={styles.section}>
           {renderSwitch("readingStatisticsYsno", "frontend.settings.privacy.statistics", "frontend.settings.privacy.statistics.description")}
           {renderSwitch("readingGoalYsno", "frontend.settings.privacy.goal", "frontend.settings.privacy.goal.description")}
           {renderSwitch("imageFeedYsno", "frontend.settings.privacy.imageFeed", "frontend.settings.privacy.imageFeed.description")}
           {renderSwitch("reportPublicDefaultYsno", "frontend.settings.privacy.reportDefault", "frontend.settings.privacy.reportDefault.description")}
+        </section>
+      ) : (
+        <section className={styles.section}>
+          {renderSwitch(
+            "englishYsno",
+            "frontend.settings.language.english",
+            "frontend.settings.language.english.description",
+          )}
         </section>
       )}
 

@@ -13,6 +13,7 @@
         <bind name="alimReplyReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_REPORT" />
         <bind name="alimReplyProfile" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE" />
         <bind name="alimReplyBackground" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
     </sql>
     <sql id="targetAccessExists">
         AND EXISTS (
@@ -78,7 +79,7 @@
              , R.REPL_CNTN, R.DELT_YSNO, R.REGI_DATE, R.UPDT_DATE
              , SHA2(CONCAT_WS('|', COALESCE(R.REPL_CNTN, ''), COALESCE(R.DELT_YSNO, '')), 256) AS EDIT_VERSION
              , IF(R.UPDT_DATE IS NULL, 'N', 'Y') AS UPDT_YSNO
-             , FN_GET_CODE_NAME('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL) AS UPDT_YSNO_NM
+             , FN_GET_CODE_NAME_LANG('UPDT_YSNO', IF(R.UPDT_DATE IS NULL, 'N', 'Y'), NULL, #{englishYsno}) AS UPDT_YSNO_NM
              , U.USER_NICK, F.FILE_PATH AS PORF_PATH
              , IF(R.DELT_YSNO = #{commYes}, 0, COALESCE(LC.LIKE_CNT, 0)) AS LIKE_CNT
              , IF(R.DELT_YSNO = #{commYes} OR UL.USER_NUMB IS NULL, #{commNo}, #{commYes}) AS LIKE_YSNO

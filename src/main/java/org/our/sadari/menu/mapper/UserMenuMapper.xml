@@ -5,6 +5,7 @@
     <!-- 끝 슬래시를 제외한 메뉴 URL과 일치하거나 하위 상세 경로이면 가장 긴 메뉴 URL을 우선 선택함 -->
     <select id="getCurrentUserMenu" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getCurrentUserMenu */
                MENUMATCH.MENU_NUMB
              , MENUMATCH.PARN_NUMB
@@ -15,7 +16,7 @@
           FROM (  SELECT MENU.MENU_NUMB
                        , MENU.PARN_NUMB
                        , MENU.MENU_LEVL
-                       , MENU.MENU_NAME
+                       , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(MENU.MENU_ENNM, ''), MENU.MENU_NAME) ELSE MENU.MENU_NAME END AS MENU_NAME
                        , MENU.MENU_URLX
                        , MENU.SORT_ORDR
                     FROM TM_URMENU MENU
@@ -33,11 +34,12 @@
     <!-- 햄버거 메뉴에는 운영자가 노출하고 현재 사용하도록 설정한 메뉴만 정렬 순서대로 제공함 -->
     <select id="getVisibleUserMenuList" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         WITH RECURSIVE VISIBLE_MENU AS (
             SELECT MENU_NUMB
                  , PARN_NUMB
                  , MENU_LEVL
-                 , MENU_NAME
+                 , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(MENU_ENNM, ''), MENU_NAME) ELSE MENU_NAME END AS MENU_NAME
                  , MENU_URLX
                  , SORT_ORDR
               FROM TM_URMENU
@@ -48,7 +50,7 @@
             SELECT CHILD.MENU_NUMB
                  , CHILD.PARN_NUMB
                  , CHILD.MENU_LEVL
-                 , CHILD.MENU_NAME
+                 , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(CHILD.MENU_ENNM, ''), CHILD.MENU_NAME) ELSE CHILD.MENU_NAME END AS MENU_NAME
                  , CHILD.MENU_URLX
                  , CHILD.SORT_ORDR
               FROM TM_URMENU CHILD
@@ -75,6 +77,7 @@
     <!-- 기준 화면을 트리 루트로 포함하고 그 아래의 노출 가능한 하위 메뉴를 최대 3단계까지 조회함 -->
     <select id="getUserMenuChildList" parameterType="string" resultType="org.our.sadari.menu.dto.UserMenuDto$UserMenuItemDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         WITH RECURSIVE PAGE_MENU AS (
             SELECT ROOT.MENU_NUMB
                  , ROOT.PARN_NUMB
@@ -85,7 +88,7 @@
               FROM (  SELECT MENU.MENU_NUMB
                            , MENU.PARN_NUMB
                            , MENU.MENU_LEVL
-                           , MENU.MENU_NAME
+                           , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(MENU.MENU_ENNM, ''), MENU.MENU_NAME) ELSE MENU.MENU_NAME END AS MENU_NAME
                            , MENU.MENU_URLX
                            , MENU.SORT_ORDR
                         FROM TM_URMENU MENU
@@ -98,7 +101,7 @@
             SELECT CHILD.MENU_NUMB
                  , CHILD.PARN_NUMB
                  , CHILD.MENU_LEVL
-                 , CHILD.MENU_NAME
+                 , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(CHILD.MENU_ENNM, ''), CHILD.MENU_NAME) ELSE CHILD.MENU_NAME END AS MENU_NAME
                  , CHILD.MENU_URLX
                  , CHILD.SORT_ORDR
               FROM TM_URMENU CHILD

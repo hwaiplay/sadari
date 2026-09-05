@@ -299,6 +299,8 @@ public class AlimServiceImpl implements AlimService {
 
         // TB_ALTEMP는 알림 상황과 템플릿 코드가 복합 PK이므로 두 값을 함께 조회 조건으로 사용함
         AlimDto.AlimTempDto tempReq = new AlimDto.AlimTempDto();
+        // 알림 수신자의 계정 언어로 템플릿을 선택하도록 사용자 번호를 설정함
+        tempReq.setUserNumb(userNumb);
         // AlimSitu 업무 값을 tempReq DTO에 설정함
         tempReq.setAlimSitu(alimSitu);
         // TempCode 업무 값을 tempReq DTO에 설정함

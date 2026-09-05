@@ -23,16 +23,18 @@
     <select id="getAlimTemp" parameterType="org.our.sadari.alim.dto.AlimDto$AlimTempDto" resultType="org.our.sadari.alim.dto.AlimDto$AlimTempDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getAlimTemp */
-               ALIM_SITU
-             , TEMP_CODE
-             , TEMP_TITL
-             , ALIM_TITL
-             , TEMP_CONT
-             , USEE_YSNO
-          FROM TB_ALTEMP
-         WHERE ALIM_SITU = #{alimSitu}
-           AND TEMP_CODE = #{tempCode}
-           AND USEE_YSNO = #{commYes}
+               T.ALIM_SITU
+             , T.TEMP_CODE
+             , T.TEMP_TITL
+             , CASE WHEN S.ENGL_YSNO = #{commYes} THEN COALESCE(NULLIF(T.ALIM_ENTL, ''), T.ALIM_TITL) ELSE T.ALIM_TITL END AS ALIM_TITL
+             , CASE WHEN S.ENGL_YSNO = #{commYes} THEN COALESCE(NULLIF(T.TEMP_ENCT, ''), T.TEMP_CONT) ELSE T.TEMP_CONT END AS TEMP_CONT
+             , T.USEE_YSNO
+          FROM TB_ALTEMP T
+     LEFT JOIN TM_USSETX S
+            ON S.USER_NUMB = #{userNumb}
+         WHERE T.ALIM_SITU = #{alimSitu}
+           AND T.TEMP_CODE = #{tempCode}
+           AND T.USEE_YSNO = #{commYes}
     </select>
 
     <!-- 정상 이용 회원만 알림 수신 대상으로 인정함 -->

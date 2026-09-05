@@ -29,6 +29,7 @@
 
     <!-- 사용자 번호로 회원과 프로필 이미지 정보를 조회함 -->
     <select id="getUserByNumb" parameterType="long" resultType="org.our.sadari.user.dto.UserDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="codeUserStat" value="@org.our.sadari.global.common.constant.Constant@CODE_USER_STAT" />
         SELECT /* getUserByNumb */
                U.USER_NUMB
@@ -41,7 +42,7 @@
              , U.USER_PROV
              , U.USER_ROLE
              , U.USER_STAT
-             , FN_GET_CODE_NAME(#{codeUserStat}, U.USER_STAT, NULL) AS USER_STAT_NAME
+             , FN_GET_CODE_NAME_LANG(#{codeUserStat}, U.USER_STAT, NULL, #{englishYsno}) AS USER_STAT_NAME
              , U.ONBD_YSNO
              , U.WTHD_DATE
              , U.DELT_DATE
@@ -172,6 +173,7 @@
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         SELECT /* getUserSettingDtl */
                U.USER_NUMB
+             , S.ENGL_YSNO AS ENGLISH_YSNO
              , COALESCE(S.RSTA_YSNO, #{commNo}) AS READING_STATISTICS_YSNO
              , COALESCE(S.GOAL_YSNO, #{commYes}) AS READING_GOAL_YSNO
              , COALESCE(S.IMFD_YSNO, #{commYes}) AS IMAGE_FEED_YSNO
@@ -189,6 +191,24 @@
             ON S.USER_NUMB = U.USER_NUMB
          WHERE U.USER_NUMB = #{userNumb}
     </select>
+
+    <!-- 최초 기기 언어 또는 사용자가 선택한 영문 사용 여부만 저장함 -->
+    <insert id="uptUserLanguageSetting" parameterType="org.our.sadari.user.dto.UserSettingDto">
+        /* uptUserLanguageSetting */
+        INSERT INTO TM_USSETX (
+                    USER_NUMB
+                  , ENGL_YSNO
+                  , REGI_DATE
+                  , UPDT_DATE
+        ) VALUES (  #{userNumb}
+                  , #{englishYsno}
+                  , CURRENT_TIMESTAMP(6)
+                  , CURRENT_TIMESTAMP(6)
+        )
+        ON DUPLICATE KEY UPDATE
+               ENGL_YSNO = VALUES(ENGL_YSNO)
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
+    </insert>
 
     <!-- 알림 화면의 묶음 저장은 공개 범위 컬럼을 변경하지 않음 -->
     <insert id="uptUserAlimSetting" parameterType="org.our.sadari.user.dto.UserSettingDto">
@@ -333,12 +353,13 @@
 
     <!-- 최초 로그인 화면에 노출할 활성 독서 관심분야 대분류와 세부코드를 조회함 -->
     <select id="getUserInterestCatalog" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         SELECT /* getUserInterestCatalog */
-               FN_GET_CODE_NAME(CATEGORY.COMM_CODE, CATEGORY.COMD_CODE, NULL) AS INTR_CNAM
+               FN_GET_CODE_NAME_LANG(CATEGORY.COMM_CODE, CATEGORY.COMD_CODE, NULL, #{englishYsno}) AS INTR_CNAM
              , DETAIL.COMD_CODE AS INTR_CODE
-             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
+             , FN_GET_CODE_NAME_LANG(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{englishYsno}) AS INTR_NAME
              , CATEGORY.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_CODEXD CATEGORY
@@ -357,11 +378,12 @@
 
     <!-- 로그인 사용자가 현재 선택한 관심분야를 공통코드 표시 정보와 함께 조회함 -->
     <select id="getUserInterestList" parameterType="long" resultType="org.our.sadari.user.dto.UserDto$UserInterestDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getUserInterestList */
-               FN_GET_CODE_NAME(PARENT.COMM_CODE, PARENT.COMD_CODE, NULL) AS INTR_CNAM
+               FN_GET_CODE_NAME_LANG(PARENT.COMM_CODE, PARENT.COMD_CODE, NULL, #{englishYsno}) AS INTR_CNAM
              , INTEREST.INTR_CODE
-             , FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL) AS INTR_NAME
+             , FN_GET_CODE_NAME_LANG(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{englishYsno}) AS INTR_NAME
              , PARENT.SORT_ORDR AS CGRP_ORDR
              , DETAIL.SORT_ORDR AS CODE_ORDR
           FROM TB_USINTR INTEREST

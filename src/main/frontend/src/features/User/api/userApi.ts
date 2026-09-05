@@ -23,6 +23,7 @@ export type UserProfile = {
 };
 
 export type UserSetting = {
+  englishYsno: "Y" | "N";
   readingStatisticsYsno: "Y" | "N";
   readingGoalYsno: "Y" | "N";
   imageFeedYsno: "Y" | "N";
@@ -36,6 +37,8 @@ export type UserSetting = {
   reportLikeDefaultYsno: "Y" | "N";
   reportReplyDefaultYsno: "Y" | "N";
 };
+
+export type UserLanguageSettingParams = Pick<UserSetting, "englishYsno">;
 
 export type UserNotificationSettingParams = Pick<
   UserSetting,
@@ -236,6 +239,14 @@ export const getMyProfileApi = async (): Promise<ResultData<UserProfile> & { dat
 /** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
 export const getUserSettingApi = async (): Promise<UserSetting> => {
   const res = await api.get("/user/settings");
+  return assertResultDataSuccess(res.data).data as UserSetting;
+};
+
+/** 한국어 또는 영어 화면 사용 여부를 저장함 */
+export const uptUserLanguageApi = async (
+  params: UserLanguageSettingParams,
+): Promise<UserSetting> => {
+  const res = await api.put("/user/settings/language", params);
   return assertResultDataSuccess(res.data).data as UserSetting;
 };
 

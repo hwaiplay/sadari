@@ -392,9 +392,11 @@
              , C.TAGT_HASH
              , MAX(C.TAGT_USER) AS TAGT_USER
              , FN_GET_CODE_NAME(#{complaintTargetCode}, C.TAGT_TYPE, NULL) AS TAGT_NAME
+             , FN_GET_CODE_NAME_LANG(#{complaintTargetCode}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
              , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT
              , MIN(C.CMPL_RSON) AS RSON_CODE
              , FN_GET_CODE_NAME(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
+             , FN_GET_CODE_NAME_LANG(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL, 'Y') AS RSON_ENNM
              , MAX(C.PROC_DATE) AS PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
@@ -410,12 +412,12 @@
         /* setResultEvent */
         INSERT INTO TH_CMREVT (
                     ACTN_NUMB, TRIG_CMPL, TAGT_TYPE, TAGT_NUMB, TAGT_HASH, TAGT_USER
-                  , TAGT_NAME, RSON_SUMM, RSON_CODE, RSON_NAME, ACTN_TYPE
-                  , RPTR_CNTN, TGTR_CNTN, PROC_DATE
+                  , TAGT_NAME, TAGT_ENNM, RSON_SUMM, RSON_CODE, RSON_NAME, RSON_ENNM, ACTN_TYPE
+                  , RPTR_CNTN, RPTR_ENCT, TGTR_CNTN, TGTR_ENCT, PROC_DATE
         ) VALUES (  #{actnNumb,jdbcType=NUMERIC}, #{trigCmpl,jdbcType=NUMERIC}, #{tagtType}
                   , #{tagtNumb}, #{tagtHash,jdbcType=CHAR}, #{tagtUser,jdbcType=NUMERIC}
-                  , #{tagtName}, #{rsonSumm}, #{rsonCode,jdbcType=VARCHAR}, #{rsonName}
-                  , #{actnType}, #{rptrCntn}, #{tgtrCntn}, #{procDate}
+                  , #{tagtName}, #{tagtEnnm}, #{rsonSumm}, #{rsonCode,jdbcType=VARCHAR}, #{rsonName}, #{rsonEnnm}
+                  , #{actnType}, #{rptrCntn}, #{rptrEnct}, #{tgtrCntn}, #{tgtrEnct}, #{procDate}
         )
     </insert>
 
@@ -459,16 +461,21 @@
     <!-- 활성 사용자가 아직 확인하지 않은 신고 조치 결과 상세를 오래된 순서로 제한 조회함 -->
     <select id="getPendingResultList" resultType="org.our.sadari.complaint.dto.ComplaintResultItemDto">
         <include refid="bindComplaint" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getPendingResultList */
                R.RSLT_NUMB
              , R.RCVR_TYPE
              , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN C.CMPL_NUMB END AS CMPL_NUMB
-             , E.TAGT_NAME
+             , CASE WHEN #{englishYsno} = #{commYes} THEN COALESCE(NULLIF(E.TAGT_ENNM, ''), E.TAGT_NAME) ELSE E.TAGT_NAME END AS TAGT_NAME
              , CASE WHEN R.RCVR_TYPE = #{receiverReporter}
-                         THEN FN_GET_CODE_NAME(#{complaintReasonCode}, C.CMPL_RSON, NULL)
+                         THEN FN_GET_CODE_NAME_LANG(#{complaintReasonCode}, C.CMPL_RSON, NULL, #{englishYsno})
+                    WHEN #{englishYsno} = #{commYes} THEN COALESCE(NULLIF(E.RSON_ENNM, ''), E.RSON_NAME)
                     ELSE E.RSON_NAME
                 END AS RSON_NAME
-             , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN E.RPTR_CNTN ELSE E.TGTR_CNTN END AS RSLT_CNTN
+             , CASE WHEN #{englishYsno} = #{commYes}
+                         THEN CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN COALESCE(NULLIF(E.RPTR_ENCT, ''), E.RPTR_CNTN) ELSE COALESCE(NULLIF(E.TGTR_ENCT, ''), E.TGTR_CNTN) END
+                    ELSE CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN E.RPTR_CNTN ELSE E.TGTR_CNTN END
+                END AS RSLT_CNTN
              , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN C.REGI_DATE END AS CMPL_DATE
              , E.PROC_DATE
           FROM TH_CMRSLT R

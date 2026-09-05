@@ -72,6 +72,9 @@ public interface UserMapper {
     /** 로그인 사용자의 설정을 기존 회원 호환 기본값과 함께 조회함 */
     UserSettingDto getUserSettingDtl(@Param("userNumb") Long userNumb);
 
+    /** 로그인 사용자의 영문 사용 여부를 저장함 */
+    int uptUserLanguageSetting(UserSettingDto request);
+
     /** 알림 범주와 신규 독후감 알림 기본값을 저장함 */
     int uptUserAlimSetting(UserSettingDto request);
 

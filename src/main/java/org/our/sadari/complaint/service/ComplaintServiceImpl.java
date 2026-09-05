@@ -593,8 +593,12 @@ public class ComplaintServiceImpl implements ComplaintService {
         setReasonSummary(event);
         // 신고자에게는 정지 기간이나 다른 신고 건수를 제외한 실제 콘텐츠 조치만 안내함
         event.setRptrCntn(getReporterResult(complaint.getTagtType()));
+        // 영문 사용자는 같은 조치 결과를 영문으로 확인할 수 있도록 스냅샷을 저장함
+        event.setRptrEnct(getReporterEnglishResult(complaint.getTagtType()));
         // 피신고자에게는 누적 사실과 유형 요약 및 실제 조치만 안내함
         event.setTgtrCntn(getTargetResult(event, complaint.getTagtType()));
+        // 피신고자에게 표시할 영문 누적 신고 안내를 함께 저장함
+        event.setTgtrEnct(getTargetEnglishResult(event, complaint.getTagtType()));
         // 하나의 조치에 대응하는 사용자 안내 이벤트를 저장함
         int eventCount = complaintMapper.setResultEvent(event);
         // 이벤트 저장 실패 시 수신자 없는 조치가 남지 않도록 전체 트랜잭션을 롤백함
@@ -627,6 +631,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_UNKNOWN);
             // 세부 사유를 추정하지 않는 표시명을 설정함
             event.setRsonName("운영정책 관련 신고");
+            event.setRsonEnnm("Reports related to the community policy");
             // 단일 사유 코드가 잘못 사용되지 않도록 제거함
             event.setRsonCode(null);
             return;
@@ -637,6 +642,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_MULTIPLE);
             // 피신고자에게 표시할 복수 유형 문구를 설정함
             event.setRsonName("복수 유형의 신고");
+            event.setRsonEnnm("Multiple types of reports");
             // 대표 사유처럼 보이지 않도록 단일 사유 코드를 제거함
             event.setRsonCode(null);
             return;
@@ -647,6 +653,7 @@ public class ComplaintServiceImpl implements ComplaintService {
             event.setRsonSumm(Constant.COMPLAINT_REASON_SUMMARY_OTHER);
             // 신고 상세가 노출되지 않는 표시명을 설정함
             event.setRsonName("기타 사유 신고");
+            event.setRsonEnnm("Reports for other reasons");
             return;
         }
         // 같은 단일 사유만 누적된 경우 실제 공통코드 표시명을 사용함
@@ -666,6 +673,18 @@ public class ComplaintServiceImpl implements ComplaintService {
         };
     }
 
+    /** 신고자에게 공개할 대상별 영문 조치 내용을 조회함 */
+    private String getReporterEnglishResult(String tagtType) {
+        return switch (tagtType) {
+            case Constant.COMPLAINT_TARGET_REPORT -> "The reported reading report was made private.";
+            case Constant.COMPLAINT_TARGET_REPLY -> "The reported comment was removed.";
+            case Constant.COMPLAINT_TARGET_PROFILE -> "The reported profile photo was reset to the default image.";
+            case Constant.COMPLAINT_TARGET_BACKGROUND -> "The reported background photo was reset to the default image.";
+            case Constant.COMPLAINT_TARGET_INTRO -> "The reported profile introduction was cleared.";
+            default -> "We reviewed the report and completed the action required by our community policy.";
+        };
+    }
+
     /** 피신고자에게 공개할 누적 신고와 대상별 조치 내용을 조회함 */
     private String getTargetResult(ComplaintResultEventDto event, String tagtType) {
         // 단일 실제 사유는 자연스러운 문장이 되도록 관련 신고라는 표현을 덧붙임
@@ -673,6 +692,13 @@ public class ComplaintServiceImpl implements ComplaintService {
                 ? event.getRsonName() + " 관련 신고" : event.getRsonName();
         // 건수 없이 누적 사실과 안전하게 요약한 신고 유형을 안내함
         return reasonContent + "가 누적되어 " + getReporterResult(tagtType);
+    }
+
+    /** 피신고자에게 공개할 누적 신고와 대상별 영문 조치 내용을 조회함 */
+    private String getTargetEnglishResult(ComplaintResultEventDto event, String tagtType) {
+        String reasonContent = Constant.COMPLAINT_REASON_SUMMARY_SINGLE.equals(event.getRsonSumm())
+                ? "Reports related to " + event.getRsonEnnm() : event.getRsonEnnm();
+        return reasonContent + " accumulated. " + getReporterEnglishResult(tagtType);
     }
 
     /**

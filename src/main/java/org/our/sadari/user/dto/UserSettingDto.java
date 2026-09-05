@@ -25,6 +25,10 @@ public class UserSettingDto {
     private Long userNumb;
 
     @Pattern(regexp = "[YN]")
+    @Schema(description = "영문 사용 여부", allowableValues = {"Y", "N"})
+    private String englishYsno;
+
+    @Pattern(regexp = "[YN]")
     @Schema(description = "독서 통계 공개 여부", allowableValues = {"Y", "N"})
     private String readingStatisticsYsno;
 

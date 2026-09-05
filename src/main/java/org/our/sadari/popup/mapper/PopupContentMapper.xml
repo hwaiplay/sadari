@@ -6,13 +6,14 @@
     <select id="getPopupContentDtl" resultType="org.our.sadari.popup.dto.PopupContentDto">
         <bind name="codePopuSitu" value="@org.our.sadari.global.common.constant.Constant@CODE_POPU_SITU" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getPopupContentDtl */
                POPUP.POPU_SITU
              , POPUP.POPU_CODE
-             , POPUP.CONT_FIRS
-             , POPUP.CONT_SECO
-             , POPUP.CONT_THIR
-             , POPUP.CONT_FOUR
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(POPUP.ENGL_FIRS, ''), POPUP.CONT_FIRS) ELSE POPUP.CONT_FIRS END AS CONT_FIRS
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(POPUP.ENGL_SECO, ''), POPUP.CONT_SECO) ELSE POPUP.CONT_SECO END AS CONT_SECO
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(POPUP.ENGL_THIR, ''), POPUP.CONT_THIR) ELSE POPUP.CONT_THIR END AS CONT_THIR
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(POPUP.ENGL_FOUR, ''), POPUP.CONT_FOUR) ELSE POPUP.CONT_FOUR END AS CONT_FOUR
           FROM CT_POPUPX POPUP
     INNER JOIN TB_CODEXD SITU
             ON SITU.COMM_CODE = #{codePopuSitu}

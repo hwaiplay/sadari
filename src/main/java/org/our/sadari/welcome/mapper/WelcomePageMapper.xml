@@ -11,13 +11,14 @@
 
     <!-- 현재 배포 중인 관리자 관리 페이지를 노출 순서대로 조회함 -->
     <select id="getWelcomePageList" resultType="org.our.sadari.welcome.dto.WelcomePageDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getWelcomePageList */
                WLCM_NUMB
              , VERS_NUMB
-             , SUBX_TITL
-             , MAIN_TITL
-             , PAGE_DESC
-             , IMGE_URLX
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(SUBX_ENTL, ''), SUBX_TITL) ELSE SUBX_TITL END AS SUBX_TITL
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(MAIN_ENTL, ''), MAIN_TITL) ELSE MAIN_TITL END AS MAIN_TITL
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(PAGE_ENCT, ''), PAGE_DESC) ELSE PAGE_DESC END AS PAGE_DESC
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(IMGE_ENUR, ''), IMGE_URLX) ELSE IMGE_URLX END AS IMGE_URLX
              , SORT_ORDR
           FROM CT_WLCMPG
          WHERE DPLY_YSNO = #{yes}

@@ -3,10 +3,7 @@ import enMessages from "./messages_en.properties?raw";
 
 type MessageParams = Array<string | number>;
 
-const MESSAGE_SOURCES = {
-  ko: parseProperties(koMessages),
-  en: parseProperties(enMessages),
-};
+const MESSAGE_LOCALE_STORAGE_KEY = "sadari:message-locale";
 
 /**
  * properties 형식 메시지 파일을 key-value 객체로 변환함
@@ -15,7 +12,7 @@ const MESSAGE_SOURCES = {
  * @param source raw 문자열로 읽은 properties 파일 내용
  * @return 메시지 key-value 객체
  */
-function parseProperties(source: string) {
+const parseProperties = (source: string) => {
 
   return source
     .split(/\r?\n/)
@@ -41,7 +38,12 @@ function parseProperties(source: string) {
       messages[key] = value;
       return messages;
     }, {});
-}
+};
+
+const MESSAGE_SOURCES = {
+  ko: parseProperties(koMessages),
+  en: parseProperties(enMessages),
+};
 
 /**
  * 브라우저 언어를 기준으로 사용할 메시지 locale을 결정함
@@ -49,10 +51,23 @@ function parseProperties(source: string) {
  * @author HanWon.Jang
  * @return 지원 locale 코드
  */
-function getLocale() {
+export const getDeviceEnglishYsno = (): "Y" | "N" =>
+  navigator.language.toLowerCase().startsWith("en") ? "Y" : "N";
 
-  return navigator.language.toLowerCase().startsWith("en") ? "en" : "ko";
-}
+/** 저장된 계정 언어가 없으면 현재 기기 언어를 메시지 언어로 사용함 */
+export const getMessageLocale = (): "en" | "ko" => {
+  const savedLocale = window.localStorage.getItem(MESSAGE_LOCALE_STORAGE_KEY);
+  if (savedLocale === "en" || savedLocale === "ko") {
+    return savedLocale;
+  }
+
+  return getDeviceEnglishYsno() === "Y" ? "en" : "ko";
+};
+
+/** 서버에서 확정한 계정 언어를 현재 브라우저 메시지 언어로 저장함 */
+export const setMessageLocale = (englishYsno: "Y" | "N"): void => {
+  window.localStorage.setItem(MESSAGE_LOCALE_STORAGE_KEY, englishYsno === "Y" ? "en" : "ko");
+};
 
 /**
  * 현재 locale에 맞는 메시지를 조회하고 파라미터를 치환함
@@ -62,9 +77,9 @@ function getLocale() {
  * @param params 메시지 템플릿의 {0}, {1} 자리에 치환할 값 목록
  * @return 치환이 완료된 메시지 문자열
  */
-export function message(key: string, params: MessageParams = []) {
+export const message = (key: string, params: MessageParams = []) => {
 
-  const localeMessages = MESSAGE_SOURCES[getLocale()];
+  const localeMessages = MESSAGE_SOURCES[getMessageLocale()];
   const fallbackMessages = MESSAGE_SOURCES.ko;
   const template = localeMessages[key] ?? fallbackMessages[key] ?? key;
 
@@ -72,4 +87,4 @@ export function message(key: string, params: MessageParams = []) {
     (result, param, index) => result.split(`{${index}}`).join(String(param)),
     template,
   );
-}
+};

@@ -11,12 +11,13 @@
 
     <!-- 활성 카테고리를 모두 표시하고 각 카테고리의 현재 배포 버전을 연결함 -->
     <select id="getServiceInfoList" resultType="org.our.sadari.serviceinfo.dto.ServiceInfoDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getServiceInfoList */
                C.COMD_CODE AS CATE_CODE
-             , C.COMD_NAME AS CATE_NAME
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(C.COMD_ENNM, ''), C.COMD_NAME) ELSE C.COMD_NAME END AS CATE_NAME
              , S.VERS_NUMB
-             , S.SVCI_TITL
-             , S.SVCI_CNTN
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(S.SVCI_ENTL, ''), S.SVCI_TITL) ELSE S.SVCI_TITL END AS SVCI_TITL
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(S.SVCI_ENCT, ''), S.SVCI_CNTN) ELSE S.SVCI_CNTN END AS SVCI_CNTN
              , S.UPDT_DATE
              , S.DPLY_DATE
           FROM TB_CODEXD C
@@ -32,12 +33,13 @@
 
     <!-- 지정한 활성 서비스 정보 카테고리의 현재 배포본을 조회함 -->
     <select id="getServiceInfoDtl" resultType="org.our.sadari.serviceinfo.dto.ServiceInfoDto">
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getServiceInfoDtl */
                C.COMD_CODE AS CATE_CODE
-             , C.COMD_NAME AS CATE_NAME
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(C.COMD_ENNM, ''), C.COMD_NAME) ELSE C.COMD_NAME END AS CATE_NAME
              , S.VERS_NUMB
-             , S.SVCI_TITL
-             , S.SVCI_CNTN
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(S.SVCI_ENTL, ''), S.SVCI_TITL) ELSE S.SVCI_TITL END AS SVCI_TITL
+             , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(S.SVCI_ENCT, ''), S.SVCI_CNTN) ELSE S.SVCI_CNTN END AS SVCI_CNTN
              , S.UPDT_DATE
              , S.DPLY_DATE
           FROM TB_CODEXD C

@@ -222,6 +222,7 @@ const Router = () => {
           <Route path="/settings/alim" element={<Navigate to="/settings/notifications" replace />} />
           <Route path="/settings/notifications" element={<UserSettingsPage section="notifications" />} />
           <Route path="/settings/privacy" element={<UserSettingsPage section="privacy" />} />
+          <Route path="/settings/language" element={<UserSettingsPage section="language" />} />
           <Route path="/settings/following" element={<FollowManagementPage type="following" />} />
           <Route path="/settings/followers" element={<FollowManagementPage type="followers" />} />
           <Route path="/settings/blocked-users" element={<BlockedUsersPage />} />

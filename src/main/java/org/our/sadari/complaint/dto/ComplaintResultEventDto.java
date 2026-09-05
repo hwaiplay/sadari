@@ -32,6 +32,8 @@ public class ComplaintResultEventDto {
     private Long tagtUser;
     // 신고 대상 유형 표시명
     private String tagtName;
+    // 신고 대상 유형 영문 표시명
+    private String tagtEnnm;
     // 서로 다른 신고 사유 수
     private Integer rsonCntt;
     // 피신고자 신고 유형 요약 코드
@@ -40,12 +42,18 @@ public class ComplaintResultEventDto {
     private String rsonCode;
     // 피신고자 신고 유형 표시명
     private String rsonName;
+    // 피신고자 신고 유형 영문 표시명
+    private String rsonEnnm;
     // 신고 조치 유형 코드
     private String actnType;
     // 신고자용 처리 결과 내용
     private String rptrCntn;
+    // 신고자용 영문 처리 결과 내용
+    private String rptrEnct;
     // 피신고자용 조치 안내 내용
     private String tgtrCntn;
+    // 피신고자용 영문 조치 안내 내용
+    private String tgtrEnct;
     // 신고 조치 완료 일시
     private LocalDateTime procDate;
 }

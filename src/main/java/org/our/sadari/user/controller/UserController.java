@@ -50,6 +50,14 @@ public class UserController {
         return userService.getUserSetting(userNumb);
     }
 
+    /** 로그인 사용자의 화면 언어 설정을 저장함 */
+    @PutMapping("/settings/language")
+    @Operation(summary = "언어 설정 저장", description = "한국어 또는 영어 화면 사용 여부를 계정 설정으로 저장한다.")
+    public ResultData uptUserLanguageSetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                            , @Valid @RequestBody UserSettingDto request) {
+        return userService.uptUserLanguageSetting(userNumb, request);
+    }
+
     /** 로그인 사용자의 선택형 알림 설정을 저장함 */
     @PutMapping("/settings/notifications")
     @Operation(summary = "알림 설정 저장", description = "알림센터와 푸시 생성에 함께 적용할 선택형 알림 범주를 저장한다.")

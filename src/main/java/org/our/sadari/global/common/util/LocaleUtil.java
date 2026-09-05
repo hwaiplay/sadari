@@ -1,5 +1,6 @@
 package org.our.sadari.global.common.util;
 
+import org.our.sadari.global.common.constant.Constant;
 import org.springframework.context.i18n.LocaleContextHolder;
 
 import java.util.Locale;
@@ -53,5 +54,16 @@ public class LocaleUtil {
 
         // 현재 요청 언어 환경 조회 결과를 반환함
         return language.toUpperCase();
+    }
+
+    /**
+     * 현재 요청 언어가 영문인지 여부를 조회함
+     *
+     * @author SeungHyeon.Kang
+     * @return 영문 요청이면 Y, 그 외에는 N
+     */
+    public static String getEnglishYsno() {
+        // 지원 언어가 영어와 한국어뿐이므로 영어 요청만 명시적으로 구분함
+        return getLocale().startsWith("EN") ? Constant.COMM_YES : Constant.COMM_NO;
     }
 }

@@ -112,6 +112,9 @@ public interface UserService {
     /** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
     ResultData getUserSetting(Long userNumb);
 
+    /** 로그인 사용자의 영문 사용 여부를 저장함 */
+    ResultData uptUserLanguageSetting(Long userNumb, UserSettingDto request);
+
     /** 로그인 사용자의 선택형 알림 설정을 저장함 */
     ResultData uptUserAlimSetting(Long userNumb, UserSettingDto request);
 

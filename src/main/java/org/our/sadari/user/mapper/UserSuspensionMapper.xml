@@ -9,16 +9,17 @@
         <bind name="spndTypeCode" value="'SPND_TYPE'"/>
         <bind name="spndRsonCode" value="'SPND_RSON'"/>
         <bind name="spndStatCode" value="'SPND_STAT'"/>
+        <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         SELECT /* getLatestActiveSuspension */
                P.SPND_NUMB
              , P.USER_NUMB
              , P.PREV_STAT
              , P.SPND_TYPE
-             , FN_GET_CODE_NAME(#{spndTypeCode}, P.SPND_TYPE, #{spndTypeCode}) AS SPND_TYPE_NAME
+             , FN_GET_CODE_NAME_LANG(#{spndTypeCode}, P.SPND_TYPE, #{spndTypeCode}, #{englishYsno}) AS SPND_TYPE_NAME
              , P.SPND_RSON
-             , FN_GET_CODE_NAME(#{spndRsonCode}, P.SPND_RSON, #{spndRsonCode}) AS SPND_RSON_NAME
+             , FN_GET_CODE_NAME_LANG(#{spndRsonCode}, P.SPND_RSON, #{spndRsonCode}, #{englishYsno}) AS SPND_RSON_NAME
              , P.SPND_STAT
-             , FN_GET_CODE_NAME(#{spndStatCode}, P.SPND_STAT, #{spndStatCode}) AS SPND_STAT_NAME
+             , FN_GET_CODE_NAME_LANG(#{spndStatCode}, P.SPND_STAT, #{spndStatCode}, #{englishYsno}) AS SPND_STAT_NAME
              , P.STRT_DATE
              , P.ENDX_DATE
              , P.RLES_DATE

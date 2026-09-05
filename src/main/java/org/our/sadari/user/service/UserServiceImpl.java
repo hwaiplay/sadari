@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -17,6 +18,7 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
+import org.our.sadari.global.common.util.LocaleUtil;
 import org.our.sadari.global.file.exception.InvalidImageFileException;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.jwt.TokenRedisService;
@@ -47,6 +49,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 입력 금지
  * 2026-08-19        SeungHyeon.Kang    프로필과 온보딩 닉네임 검증 공통화
  * 2026-08-27        SeungHyeon.Kang    사진 반응 조회 사용자 분리
+ * 2026-09-05        Codex               사용자 언어 설정 추가
  */
 @Service
 @RequiredArgsConstructor
@@ -71,15 +74,44 @@ public class UserServiceImpl implements UserService {
 
     /** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
     @Override
+    @Transactional
     public ResultData getUserSetting(Long userNumb) {
         if (StringUtil.isEmpty(userNumb)) {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         UserSettingDto setting = userMapper.getUserSettingDtl(userNumb);
-        return StringUtil.isEmpty(setting)
-                ? ResultData.fail(ResultEnum.AUTH_FAIL)
-                : ResultData.success(setting);
+        if (StringUtil.isEmpty(setting)) {
+            return ResultData.fail(ResultEnum.AUTH_FAIL);
+        }
+
+        // 아직 선택하지 않은 기존 계정은 최초 요청 기기 언어를 계정 설정으로 확정함
+        if (StringUtil.isEmpty(setting.getEnglishYsno())) {
+            setting.setEnglishYsno(LocaleUtil.getEnglishYsno());
+            userMapper.uptUserLanguageSetting(setting);
+        }
+
+        return ResultData.success(setting);
+    }
+
+    /** 사용자가 선택한 영문 사용 여부를 다른 설정과 독립적으로 저장함 */
+    @Override
+    @Transactional
+    public ResultData uptUserLanguageSetting(Long userNumb, UserSettingDto request) {
+        if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(request)
+                || StringUtil.isEmpty(request.getEnglishYsno())) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        String englishYsno = request.getEnglishYsno().trim().toUpperCase(Locale.ROOT);
+        if (!Constant.COMM_YES.equals(englishYsno) && !Constant.COMM_NO.equals(englishYsno)) {
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        request.setUserNumb(userNumb);
+        request.setEnglishYsno(englishYsno);
+        userMapper.uptUserLanguageSetting(request);
+        return ResultData.success(userMapper.getUserSettingDtl(userNumb));
     }
 
     /** 선택형 알림 범주와 신규 독후감 알림 기본값을 한 번에 저장함 */

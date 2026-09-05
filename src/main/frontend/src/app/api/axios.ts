@@ -23,6 +23,7 @@ import {
   publishConnectionError,
   publishConnectionRestore,
 } from "@/app/connection/connectionStatus";
+import { getMessageLocale } from "@/app/messages/message";
 
 type RetryableRequestConfig = InternalAxiosRequestConfig & {
   _retry?: boolean;
@@ -245,6 +246,9 @@ async function setCsrfHeader(config: InternalAxiosRequestConfig) {
  */
 async function prepareRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
   const blockingConfig = config as RetryableRequestConfig;
+
+  // DB 콘텐츠와 서버 메시지가 현재 화면 언어를 동일하게 사용하도록 요청 언어를 전달함
+  blockingConfig.headers.set("Accept-Language", getMessageLocale());
 
   // 재시도가 아닌 최초 상태 변경 요청이면 공통 처리 중 모달과 이동 가드를 시작함
   if (isBlockingRequest(config) && blockingConfig._blockingOperationId === undefined) {

@@ -6,8 +6,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,7 +25,9 @@ import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserSettingDto;
 import org.our.sadari.user.mapper.UserMapper;
+import org.springframework.context.i18n.LocaleContextHolder;
 import org.springframework.context.support.ResourceBundleMessageSource;
 import org.springframework.mock.web.MockMultipartFile;
 
@@ -41,6 +45,7 @@ import org.springframework.mock.web.MockMultipartFile;
  * 2026-08-06        SeungHyeon.Kang    프로필과 배경 이미지 교체 파일 정리 검증 추가
  * 2026-08-07        SeungHyeon.Kang    닉네임 공백 금지 검증 추가
  * 2026-08-19        SeungHyeon.Kang    공통 닉네임 검증 경로 회귀 검증 추가
+ * 2026-09-05        Codex               기기 기본 언어와 언어 저장 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
@@ -79,6 +84,51 @@ class UserServiceImplTest {
         messageSource.setDefaultEncoding("UTF-8");
         // ResultData 실패 응답이 초기화된 공통 메시지 소스를 사용하도록 등록함
         new MessageUtils().setMessageSource(messageSource);
+    }
+
+    /** 언어 테스트 요청 Locale 초기화 */
+    @AfterEach
+    void resetLocale() {
+        // 테스트 스레드의 Locale 컨텍스트를 기본 상태로 복원함
+        LocaleContextHolder.resetLocaleContext();
+    }
+
+    /** 최초 요청 기기의 영어 설정 저장 검증 */
+    @Test
+    void getSettingUsesDeviceLang() {
+        // 언어가 비어 있는 기존 사용자 설정을 준비함
+        UserSettingDto setting = new UserSettingDto();
+        setting.setUserNumb(31L);
+        // 요청 기기의 언어를 영어로 설정함
+        LocaleContextHolder.setLocale(Locale.ENGLISH);
+        // 로그인 사용자의 설정 조회 결과를 구성함
+        when(userMapper.getUserSettingDtl(31L)).thenReturn(setting);
+
+        // 사용자 설정을 최초 조회함
+        ResultData result = userService.getUserSetting(31L);
+
+        // 최초 기기 언어가 영문 사용 여부로 반영됐는지 확인함
+        assertEquals(Constant.COMM_YES, setting.getEnglishYsno());
+        // 기기 기본값을 계정 설정으로 한 번 저장했는지 확인함
+        verify(userMapper).uptUserLanguageSetting(setting);
+        // 설정 조회가 정상 응답인지 확인함
+        assertEquals(200, result.getCode());
+    }
+
+    /** Y와 N 이외의 언어 설정값 거절 검증 */
+    @Test
+    void uptLangRejectsInvalid() {
+        // 허용하지 않는 언어 설정값을 준비함
+        UserSettingDto request = new UserSettingDto();
+        request.setEnglishYsno("EN");
+
+        // 잘못된 언어 설정 저장을 요청함
+        ResultData result = userService.uptUserLanguageSetting(31L, request);
+
+        // 공통 잘못된 요청 오류인지 확인함
+        assertEquals(ResultEnum.COMMON_INVALID_REQUEST.getCode(), result.getCode());
+        // 검증 실패값이 데이터베이스에 전달되지 않았는지 확인함
+        verify(userMapper, never()).uptUserLanguageSetting(request);
     }
 
     /**
