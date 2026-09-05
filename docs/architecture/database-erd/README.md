@@ -6,10 +6,11 @@
 
 ## 산출물
 
-| 파일 | 용도 |
-| --- | --- |
-| [SVG ERD](sadari-database.svg) | GitHub에서 확대 가능한 전체 관계도 |
-| [DBML 원본](sadari-database.dbml) | dbdiagram.io 등 DBML 호환 도구에서 편집 가능한 구조 정의 |
+| 파일                                 | 용도 |
+|------------------------------------| --- |
+| [PNG ERD](sadari-database.png)     | GitHub에서 확대 가능한 전체 관계도 |
+| [SVG ERD](sadari-database.svg)     | GitHub에서 확대 가능한 전체 관계도 |
+| [DBML 원본](sadari-database.dbml)    | dbdiagram.io 등 DBML 호환 도구에서 편집 가능한 구조 정의 |
 | [Graphviz 원본](sadari-database.dot) | SVG 렌더링에 사용하는 관계도 원본 |
 
 ## 영역 색상
