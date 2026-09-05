@@ -6,6 +6,7 @@
     <sql id="activeCodeBind">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
     </sql>
 
     <!-- 단건 및 일괄 조회가 동일한 세부코드 응답 필드를 반환하도록 컬럼 목록을 공통화함 -->
@@ -60,6 +61,6 @@
     <select id="getCodeName" resultType="string">
         <include refid="activeCodeBind" />
         SELECT /* getCodeName */
-               FN_GET_CODE_NAME_LANG(#{commCode}, #{comdCode}, #{optCode}, #{englishYsno})
+               FN_GET_CODE_NAME(#{commCode}, #{comdCode}, #{optCode}, #{languageCode})
     </select>
 </mapper>

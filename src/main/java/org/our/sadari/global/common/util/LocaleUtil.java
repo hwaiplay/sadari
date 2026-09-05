@@ -66,4 +66,15 @@ public class LocaleUtil {
         // 지원 언어가 영어와 한국어뿐이므로 영어 요청만 명시적으로 구분함
         return getLocale().startsWith("EN") ? Constant.COMM_YES : Constant.COMM_NO;
     }
+
+    /**
+     * 현재 요청 언어 코드를 조회함
+     *
+     * @author SeungHyeon.Kang
+     * @return 소문자 언어 코드
+     */
+    public static String getLanguageCode() {
+        // 저장 함수가 표준 언어 접두사로 분기할 수 있도록 소문자로 정규화함
+        return getLocale().toLowerCase(Locale.ROOT);
+    }
 }

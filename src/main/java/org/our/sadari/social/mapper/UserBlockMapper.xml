@@ -79,6 +79,7 @@
     <!-- 차단 관리 화면에는 실제 사진을 제외한 최소 사용자 정보만 최신 차단순으로 제공함 -->
     <select id="getBlockList" parameterType="org.our.sadari.social.dto.UserBlockDto" resultType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="userStatActive" value="@org.our.sadari.global.common.constant.Constant@USER_STAT_ACTIVE" />
         <bind name="codeUserStat" value="@org.our.sadari.global.common.constant.Constant@CODE_USER_STAT" />
         SELECT /* getBlockList */
@@ -94,7 +95,7 @@
                SELECT U.USER_NUMB
                     , U.USER_NICK
                     , U.USER_STAT
-                    , FN_GET_CODE_NAME_LANG(#{codeUserStat}, U.USER_STAT, NULL, #{englishYsno}) AS USER_STAT_NAME
+                    , FN_GET_CODE_NAME(#{codeUserStat}, U.USER_STAT, NULL, #{languageCode}) AS USER_STAT_NAME
                  FROM TM_USERXM U
                ) U
             ON U.USER_NUMB = B.BLOC_NUMB

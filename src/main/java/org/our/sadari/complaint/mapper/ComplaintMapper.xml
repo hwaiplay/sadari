@@ -391,12 +391,12 @@
              , C.TAGT_NUMB
              , C.TAGT_HASH
              , MAX(C.TAGT_USER) AS TAGT_USER
-             , FN_GET_CODE_NAME(#{complaintTargetCode}, C.TAGT_TYPE, NULL) AS TAGT_NAME
-             , FN_GET_CODE_NAME_LANG(#{complaintTargetCode}, C.TAGT_TYPE, NULL, 'Y') AS TAGT_ENNM
+             , FN_GET_CODE_NAME(#{complaintTargetCode}, C.TAGT_TYPE, NULL, 'ko') AS TAGT_NAME
+             , FN_GET_CODE_NAME(#{complaintTargetCode}, C.TAGT_TYPE, NULL, 'en') AS TAGT_ENNM
              , COUNT(DISTINCT C.CMPL_RSON) AS RSON_CNTT
              , MIN(C.CMPL_RSON) AS RSON_CODE
-             , FN_GET_CODE_NAME(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL) AS RSON_NAME
-             , FN_GET_CODE_NAME_LANG(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL, 'Y') AS RSON_ENNM
+             , FN_GET_CODE_NAME(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL, 'ko') AS RSON_NAME
+             , FN_GET_CODE_NAME(#{complaintReasonCode}, MIN(C.CMPL_RSON), NULL, 'en') AS RSON_ENNM
              , MAX(C.PROC_DATE) AS PROC_DATE
           FROM TH_CMPLNT C
          WHERE C.TAGT_TYPE = #{tagtType}
@@ -462,13 +462,14 @@
     <select id="getPendingResultList" resultType="org.our.sadari.complaint.dto.ComplaintResultItemDto">
         <include refid="bindComplaint" />
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         SELECT /* getPendingResultList */
                R.RSLT_NUMB
              , R.RCVR_TYPE
              , CASE WHEN R.RCVR_TYPE = #{receiverReporter} THEN C.CMPL_NUMB END AS CMPL_NUMB
              , CASE WHEN #{englishYsno} = #{commYes} THEN COALESCE(NULLIF(E.TAGT_ENNM, ''), E.TAGT_NAME) ELSE E.TAGT_NAME END AS TAGT_NAME
              , CASE WHEN R.RCVR_TYPE = #{receiverReporter}
-                         THEN FN_GET_CODE_NAME_LANG(#{complaintReasonCode}, C.CMPL_RSON, NULL, #{englishYsno})
+                         THEN FN_GET_CODE_NAME(#{complaintReasonCode}, C.CMPL_RSON, NULL, #{languageCode})
                     WHEN #{englishYsno} = #{commYes} THEN COALESCE(NULLIF(E.RSON_ENNM, ''), E.RSON_NAME)
                     ELSE E.RSON_NAME
                 END AS RSON_NAME

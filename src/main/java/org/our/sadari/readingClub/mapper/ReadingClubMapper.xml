@@ -5,6 +5,7 @@
     <!-- 독서 모임 쿼리에서 반복 사용하는 업무 상태 코드를 바인딩함 -->
     <sql id="clubCodeBinds">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="clubPublic" value="'PUBLIC'" />
         <bind name="clubActive" value="'ACTIVE'" />
         <bind name="clubOwnerElection" value="'OWNER_ELECTION'" />
@@ -1234,8 +1235,8 @@
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
         SELECT /* getClubCategoryList */
                CATEGORY.INTR_CODE
-             , FN_GET_CODE_NAME_LANG(#{categoryCode}, CATEGORY.INTR_CODE, NULL, #{englishYsno}) AS INTR_NAME
-             , FN_GET_CODE_NAME_LANG(#{categoryCode}, DETAIL.UPPR_CODE, NULL, #{englishYsno}) AS INTR_CNAM
+             , FN_GET_CODE_NAME(#{categoryCode}, CATEGORY.INTR_CODE, NULL, #{languageCode}) AS INTR_NAME
+             , FN_GET_CODE_NAME(#{categoryCode}, DETAIL.UPPR_CODE, NULL, #{languageCode}) AS INTR_CNAM
              , CATEGORY.SORT_ORDR
           FROM TB_CLCATE CATEGORY
      LEFT JOIN TB_CODEXD DETAIL
@@ -1578,7 +1579,7 @@
              , FILEX.FILE_PATH AS PORF_PATH
              , REPORT.BOOK_NUMB
              , REPORT.REPT_STAT
-             , FN_GET_CODE_NAME_LANG(#{codeReadStat}, REPORT.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, REPORT.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
              , REPORT.REPT_GRDE
              , REPORT.REPT_CNTN
              , REPORT.PUBC_YSNO
@@ -1808,7 +1809,7 @@
              , USERX.USER_NICK
              , USERX.INTR_CNTN
              , FILEX.FILE_PATH AS PORF_PATH
-             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME_LANG(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{englishYsno})
+             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{languageCode})
                                       ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
                    FROM TB_USINTR INTEREST
                    JOIN TB_CODEXD DETAIL
@@ -1875,7 +1876,7 @@
                MEMBER.USER_NUMB
              , USERX.USER_NICK
              , FILEX.FILE_PATH AS PORF_PATH
-             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME_LANG(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{englishYsno})
+             , ( SELECT GROUP_CONCAT(FN_GET_CODE_NAME(DETAIL.COMM_CODE, DETAIL.COMD_CODE, NULL, #{languageCode})
                                       ORDER BY DETAIL.SORT_ORDR SEPARATOR ' · ')
                    FROM TB_USINTR INTEREST
                    JOIN TB_CODEXD DETAIL

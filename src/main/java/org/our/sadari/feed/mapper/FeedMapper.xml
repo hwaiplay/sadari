@@ -12,6 +12,7 @@
         <bind name="targetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
         <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
     </sql>
 
     <!-- 로그인 사용자 본인과 현재 팔로우 중인 활성 사용자의 공개 독후감 및 현재 사진 변경 활동을 조회함 -->
@@ -59,7 +60,7 @@
                  , R.PUBC_DATE AS ACTIVITY_DATE
                  , R.REPT_NUMB
                  , R.REPT_STAT
-                 , FN_GET_CODE_NAME_LANG('READ_STAT', R.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+                 , FN_GET_CODE_NAME('READ_STAT', R.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
                  , R.REPT_GRDE
                  , R.REPT_CNTN
                  , B.BOOK_NUMB

@@ -10,6 +10,7 @@
         <bind name="followStatBothFolw" value="@org.our.sadari.global.common.constant.Constant@FOLLOW_STAT_BOTH_FOLW" />
         <bind name="followStatFriend" value="@org.our.sadari.global.common.constant.Constant@FOLLOW_STAT_FRIEND" />
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
     </sql>
 
     <!-- 팔로잉과 팔로워 목록이 같은 사용자 정보와 관계 상태 컬럼을 사용함 -->
@@ -25,12 +26,12 @@
              , CASE
                    WHEN U.USER_NUMB = #{loginUserNumb} THEN NULL
                    WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFriend}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFriend}, NULL, #{languageCode})
                    WHEN USERFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFollowing}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollowing}, NULL, #{languageCode})
                    WHEN REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatBothFolw}, NULL, #{englishYsno})
-                   ELSE FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFollow}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatBothFolw}, NULL, #{languageCode})
+                   ELSE FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollow}, NULL, #{languageCode})
                END AS FOLLOW_STAT_NAME
     </sql>
 
@@ -40,12 +41,12 @@
         SELECT /* getFollowStatusName */
                CASE
                    WHEN USERFOLLOW.USER_NUMB IS NOT NULL AND REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFriend}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFriend}, NULL, #{languageCode})
                    WHEN USERFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFollowing}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollowing}, NULL, #{languageCode})
                    WHEN REVERSEFOLLOW.USER_NUMB IS NOT NULL
-                       THEN FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatBothFolw}, NULL, #{englishYsno})
-                   ELSE FN_GET_CODE_NAME_LANG(#{codeFollowStat}, #{followStatFollow}, NULL, #{englishYsno})
+                       THEN FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatBothFolw}, NULL, #{languageCode})
+                   ELSE FN_GET_CODE_NAME(#{codeFollowStat}, #{followStatFollow}, NULL, #{languageCode})
                END AS FOLLOW_STAT_NAME
           FROM (  SELECT #{userNumb} AS USER_NUMB
                        , #{flowNumb} AS FLOW_NUMB

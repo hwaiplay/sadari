@@ -15,11 +15,12 @@
     <!-- 현재 배포 중인 공지사항을 최근 배포 순서로 조회함 -->
     <select id="getNoticeList" resultType="org.our.sadari.notice.dto.NoticeDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         SELECT /* getNoticeList */
                N.NOTI_NUMB
              , N.VERS_NUMB
              , N.CATE_CODE
-             , FN_GET_CODE_NAME_LANG(N.CATE_CGRP, N.CATE_CODE, NULL, #{englishYsno}) AS CATE_NAME
+             , FN_GET_CODE_NAME(N.CATE_CGRP, N.CATE_CODE, NULL, #{languageCode}) AS CATE_NAME
              , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(N.NOTI_ENTL, ''), N.NOTI_TITL) ELSE N.NOTI_TITL END AS NOTI_TITL
              , N.TOPX_YSNO
              , CASE WHEN V.USER_NUMB IS NULL THEN #{no} ELSE #{yes} END AS READ_YSNO
@@ -39,9 +40,10 @@
     <!-- 홈 화면에 표시할 로그인 사용자의 미읽음 배포 공지 번호와 카테고리명 및 제목을 조회함 -->
     <select id="getUnreadNoticeList" resultType="org.our.sadari.notice.dto.UnreadNoticeDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         SELECT /* getUnreadNoticeList */
                N.NOTI_NUMB
-             , FN_GET_CODE_NAME_LANG(N.CATE_CGRP, N.CATE_CODE, NULL, #{englishYsno}) AS CATE_NAME
+             , FN_GET_CODE_NAME(N.CATE_CGRP, N.CATE_CODE, NULL, #{languageCode}) AS CATE_NAME
              , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(N.NOTI_ENTL, ''), N.NOTI_TITL) ELSE N.NOTI_TITL END AS NOTI_TITL
           FROM CT_NOTICE N
      LEFT JOIN TB_USVIEW V
@@ -58,11 +60,12 @@
     <!-- 주키에 해당하는 현재 배포 버전 상세만 조회함 -->
     <select id="getNoticeDtl" resultType="org.our.sadari.notice.dto.NoticeDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         SELECT /* getNoticeDtl */
                N.NOTI_NUMB
              , N.VERS_NUMB
              , N.CATE_CODE
-             , FN_GET_CODE_NAME_LANG(N.CATE_CGRP, N.CATE_CODE, NULL, #{englishYsno}) AS CATE_NAME
+             , FN_GET_CODE_NAME(N.CATE_CGRP, N.CATE_CODE, NULL, #{languageCode}) AS CATE_NAME
              , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(N.NOTI_ENTL, ''), N.NOTI_TITL) ELSE N.NOTI_TITL END AS NOTI_TITL
              , CASE WHEN #{englishYsno} = 'Y' THEN COALESCE(NULLIF(N.NOTI_ENCT, ''), N.NOTI_CNTN) ELSE N.NOTI_CNTN END AS NOTI_CNTN
              , N.TOPX_YSNO

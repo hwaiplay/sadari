@@ -5,6 +5,7 @@
     <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회함 -->
     <select id="getReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
         <bind name="codeCommYsno" value="@org.our.sadari.global.common.constant.Constant@CODE_COMM_YSNO" />
@@ -17,14 +18,14 @@
              , A.USER_NUMB
              , A.BOOK_NUMB
              , A.REPT_STAT
-             , FN_GET_CODE_NAME_LANG(#{codeReadStat}, A.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, A.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
              , A.REPT_STDT
              , A.REPT_ENDT
              , A.REPT_GRDE
              , A.REPT_COLR
-             , FN_GET_CODE_NAME_LANG(#{codeBookColr}, A.REPT_COLR, NULL, #{englishYsno}) AS REPT_COLR_NAME
+             , FN_GET_CODE_NAME(#{codeBookColr}, A.REPT_COLR, NULL, #{languageCode}) AS REPT_COLR_NAME
              , A.PUBC_YSNO
-             , FN_GET_CODE_NAME_LANG(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}, #{englishYsno}) AS PUBC_YSNO_NAME
+             , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}, #{languageCode}) AS PUBC_YSNO_NAME
              , A.REPT_CNTN
              , B.BOOK_TITL
              , B.BOOK_CVIM
@@ -294,6 +295,7 @@
     <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회함 -->
     <select id="getReportDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
         <bind name="codeCommYsno" value="@org.our.sadari.global.common.constant.Constant@CODE_COMM_YSNO" />
@@ -308,7 +310,7 @@
              , A.USER_NUMB
              , A.BOOK_NUMB
              , A.REPT_STAT
-             , FN_GET_CODE_NAME_LANG(#{codeReadStat}, A.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, A.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
              , A.REPT_STDT
              , CASE WHEN EXISTS ( SELECT 1
                                     FROM TB_CLPART PART
@@ -325,9 +327,9 @@
              , A.REPT_ENDT
              , A.REPT_GRDE
              , A.REPT_COLR
-             , FN_GET_CODE_NAME_LANG(#{codeBookColr}, A.REPT_COLR, NULL, #{englishYsno}) AS REPT_COLR_NAME
+             , FN_GET_CODE_NAME(#{codeBookColr}, A.REPT_COLR, NULL, #{languageCode}) AS REPT_COLR_NAME
              , A.PUBC_YSNO
-             , FN_GET_CODE_NAME_LANG(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}, #{englishYsno}) AS PUBC_YSNO_NAME
+             , FN_GET_CODE_NAME(#{codeCommYsno}, A.PUBC_YSNO, #{optPubcYsno}, #{languageCode}) AS PUBC_YSNO_NAME
              , A.LKAL_YSNO AS LIKE_ALIM_YSNO
              , A.RPAL_YSNO AS REPLY_ALIM_YSNO
              , A.REPT_CNTN
@@ -423,6 +425,7 @@
     <!-- ISBN 기준 활성 사용자의 공개 독후감을 관계 기본순 또는 사용자가 선택한 정렬로 조회함 -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
@@ -436,7 +439,7 @@
              , F.FILE_PATH AS PORF_PATH
              , P.BOOK_NUMB
              , P.REPT_STAT
-             , FN_GET_CODE_NAME_LANG(#{codeReadStat}, P.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, P.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
              , P.REPT_GRDE
              , P.REPT_CNTN
              , P.PUBC_YSNO
@@ -547,6 +550,7 @@
     <!-- 알림에서 지정한 활성 사용자의 공개 독후감 한 건과 연결 도서 정보를 조회함 -->
     <select id="getPublicReportTarget" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
@@ -560,7 +564,7 @@
              , PF.FILE_PATH AS PORF_PATH
              , P.BOOK_NUMB
              , P.REPT_STAT
-             , FN_GET_CODE_NAME_LANG(#{codeReadStat}, P.REPT_STAT, NULL, #{englishYsno}) AS REPT_STAT_NAME
+             , FN_GET_CODE_NAME(#{codeReadStat}, P.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
              , P.REPT_GRDE
              , P.REPT_CNTN
              , P.PUBC_YSNO

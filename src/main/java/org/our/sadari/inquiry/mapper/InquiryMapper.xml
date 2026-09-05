@@ -6,6 +6,7 @@
     <!-- 고객문의 카테고리와 상태 코드 그룹을 조회 SQL에서 공통으로 사용함 -->
     <sql id="inquiryCodeBinds">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         <bind name="inquiryCategoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_CATEGORY" />
         <bind name="inquiryStatusCode" value="@org.our.sadari.global.common.constant.Constant@CODE_INQUIRY_STATUS" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
@@ -95,10 +96,10 @@
         SELECT /* getInquiryList */
                I.INQR_NUMB
              , I.INQR_CATG
-             , FN_GET_CODE_NAME_LANG(#{inquiryCategoryCode}, I.INQR_CATG, NULL, #{englishYsno}) AS INQR_CATG_NAME
+             , FN_GET_CODE_NAME(#{inquiryCategoryCode}, I.INQR_CATG, NULL, #{languageCode}) AS INQR_CATG_NAME
              , I.INQR_TITL
              , I.INQR_STAT
-             , FN_GET_CODE_NAME_LANG(#{inquiryStatusCode}, I.INQR_STAT, NULL, #{englishYsno}) AS INQR_STAT_NAME
+             , FN_GET_CODE_NAME(#{inquiryStatusCode}, I.INQR_STAT, NULL, #{languageCode}) AS INQR_STAT_NAME
              , I.SPND_NUMB
              , I.REGI_DATE
              , I.ANSW_DATE
@@ -126,11 +127,11 @@
         SELECT /* getInquiryDtl */
                I.INQR_NUMB
              , I.INQR_CATG
-             , FN_GET_CODE_NAME_LANG(#{inquiryCategoryCode}, I.INQR_CATG, NULL, #{englishYsno}) AS INQR_CATG_NAME
+             , FN_GET_CODE_NAME(#{inquiryCategoryCode}, I.INQR_CATG, NULL, #{languageCode}) AS INQR_CATG_NAME
              , I.INQR_TITL
              , I.INQR_CNTN
              , I.INQR_STAT
-             , FN_GET_CODE_NAME_LANG(#{inquiryStatusCode}, I.INQR_STAT, NULL, #{englishYsno}) AS INQR_STAT_NAME
+             , FN_GET_CODE_NAME(#{inquiryStatusCode}, I.INQR_STAT, NULL, #{languageCode}) AS INQR_STAT_NAME
              , I.SPND_NUMB
              , I.REGI_DATE
              , I.ANSW_DATE
