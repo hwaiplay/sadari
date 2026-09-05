@@ -1,0 +1,10 @@
+{
+  "name": "sadari-database-erd",
+  "private": true,
+  "scripts": {
+    "generate": "pwsh -NoProfile -File ./generate-erd.ps1"
+  },
+  "dependencies": {
+    "@viz-js/viz": "3.25.0"
+  }
+}

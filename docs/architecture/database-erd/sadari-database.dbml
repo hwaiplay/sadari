@@ -1,0 +1,1553 @@
+// 자동 생성 파일, 직접 수정 금지
+// 생성 명령: scripts/db/mysql/erd/generate-erd.ps1
+
+Project sadari_database {
+  database_type: 'MySQL'
+  Note: 'scripts/db/mysql/01-create.sql 기준, SHA-256 edd4a17175cc1d6ba5f9bac58c01211adbf5cf06beed44470f8379d84f2ac728'
+}
+
+Table CT_NOTICE [headercolor: #2563EB] {
+  NOTI_NUMB bigint [not null, increment, note: '공지사항 주키']
+  VERS_NUMB int [not null, note: '공지사항 버전 부키']
+  CATE_CGRP varchar(10) [not null, note: '공지사항 카테고리 공통코드']
+  CATE_CODE varchar(20) [not null, note: '공지사항 카테고리 상세코드']
+  NOTI_TITL varchar(300) [not null, note: '공지사항 제목']
+  NOTI_ENTL varchar(300) [note: '공지사항 영문 제목']
+  NOTI_CNTN mediumtext [not null, note: '정제된 공지사항 HTML 본문']
+  NOTI_ENCT mediumtext [note: '정제된 공지사항 영문 HTML 본문']
+  TOPX_YSNO char(1) [not null, default: 'N', note: '상단 고정 여부']
+  DPLY_YSNO char(1) [not null, default: 'N', note: '현재 배포 여부']
+  REGI_ADMN bigint [not null, note: '등록 관리자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호']
+  UPDT_DATE datetime [note: '수정 일시']
+  DPLY_ADMN bigint [note: '배포 관리자 번호']
+  DPLY_DATE datetime [note: '배포 일시']
+
+  indexes {
+    (NOTI_NUMB, VERS_NUMB) [pk]
+    (DPLY_YSNO, TOPX_YSNO, DPLY_DATE, NOTI_NUMB, VERS_NUMB) [name: 'IX_CT_NOTICE_DPLY']
+    (NOTI_NUMB, VERS_NUMB) [name: 'IX_CT_NOTICE_LATEST']
+    (CATE_CGRP, CATE_CODE) [name: 'IX_CT_NOTICE_CATE']
+  }
+  Note: '버전형 공지사항'
+}
+
+Table CT_WLCMPG [headercolor: #2563EB] {
+  WLCM_NUMB bigint [not null, increment, note: '웰컴페이지 주키']
+  VERS_NUMB int [not null, note: '웰컴페이지 버전 부키']
+  SUBX_TITL varchar(200) [not null, note: '웰컴페이지 소제목']
+  SUBX_ENTL varchar(200) [note: '웰컴페이지 영문 소제목']
+  MAIN_TITL varchar(300) [not null, note: '웰컴페이지 제목']
+  MAIN_ENTL varchar(300) [note: '웰컴페이지 영문 제목']
+  PAGE_DESC varchar(1000) [not null, note: '웰컴페이지 설명']
+  PAGE_ENCT varchar(1000) [note: '웰컴페이지 영문 설명']
+  IMGE_URLX varchar(500) [note: '웰컴페이지 이미지 공개 경로']
+  IMGE_ENUR varchar(500) [note: '웰컴페이지 영문 이미지 공개 경로']
+  SORT_ORDR int [not null, note: '노출 순서']
+  DPLY_YSNO char(1) [not null, default: 'N', note: '현재 배포 여부']
+  REGI_ADMN bigint [not null, note: '등록 관리자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호']
+  UPDT_DATE datetime [note: '수정 일시']
+  DPLY_ADMN bigint [note: '배포 관리자 번호']
+  DPLY_DATE datetime [note: '배포 일시']
+
+  indexes {
+    (WLCM_NUMB, VERS_NUMB) [pk]
+    (DPLY_YSNO, SORT_ORDR, WLCM_NUMB, VERS_NUMB) [name: 'IX_CT_WLCMPG_DPLY']
+    (WLCM_NUMB, VERS_NUMB) [name: 'IX_CT_WLCMPG_LATEST']
+  }
+  Note: '버전형 웰컴페이지'
+}
+
+Table CT_SVINFO [headercolor: #2563EB] {
+  CATE_CGRP varchar(10) [not null, note: '서비스 정보 카테고리 공통코드']
+  CATE_CODE varchar(20) [not null, note: '서비스 정보 카테고리 상세코드']
+  VERS_NUMB int [not null, note: '서비스 정보 버전 부키']
+  SVCI_TITL varchar(300) [not null, note: '서비스 정보 제목']
+  SVCI_ENTL varchar(300) [note: '서비스 정보 영문 제목']
+  SVCI_CNTN mediumtext [not null, note: '정제된 서비스 정보 HTML 본문']
+  SVCI_ENCT mediumtext [note: '정제된 서비스 정보 영문 HTML 본문']
+  DPLY_YSNO char(1) [not null, default: 'N', note: '현재 배포 여부']
+  REGI_ADMN bigint [not null, note: '등록 관리자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호']
+  UPDT_DATE datetime [note: '수정 일시']
+  DPLY_ADMN bigint [note: '배포 관리자 번호']
+  DPLY_DATE datetime [note: '배포 일시']
+
+  indexes {
+    (CATE_CGRP, CATE_CODE, VERS_NUMB) [pk]
+    (DPLY_YSNO, DPLY_DATE, CATE_CODE, VERS_NUMB) [name: 'IX_CT_SVINFO_DPLY']
+  }
+  Note: '카테고리별 버전형 서비스 정보'
+}
+
+Table CT_POPUPX [headercolor: #2563EB] {
+  POPU_SITU varchar(50) [not null, note: '팝업 사용 화면 코드']
+  POPU_CODE varchar(100) [not null, note: '팝업 식별 코드']
+  MNGM_TITL varchar(200) [not null, note: '관리 화면 제목']
+  CONT_FIRS text [not null, note: '첫 번째 콘텐츠 영역']
+  ENGL_FIRS text [note: '첫 번째 영문 콘텐츠 영역']
+  CONT_SECO text [note: '두 번째 콘텐츠 영역']
+  ENGL_SECO text [note: '두 번째 영문 콘텐츠 영역']
+  CONT_THIR text [note: '세 번째 콘텐츠 영역']
+  ENGL_THIR text [note: '세 번째 영문 콘텐츠 영역']
+  CONT_FOUR text [note: '네 번째 콘텐츠 영역']
+  ENGL_FOUR text [note: '네 번째 영문 콘텐츠 영역']
+  REGI_ADMN varchar(100) [not null, note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN varchar(100) [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (POPU_SITU, POPU_CODE) [pk]
+    (POPU_SITU, POPU_CODE) [name: 'IX_CT_POPUPX_SITU']
+  }
+  Note: '사용자 안내 팝업 콘텐츠'
+}
+
+Table TM_ALICON [headercolor: #DB2777] {
+  ALIM_SITU varchar(50) [pk, not null, note: '알림 상황 코드']
+  MIME_TYPE varchar(50) [not null, note: '아이콘 MIME 유형']
+  ICON_DATA mediumblob [not null, note: '알림 아이콘 바이너리']
+  FILE_SIZE bigint [not null, note: '아이콘 파일 크기(Byte)']
+  PIXL_WDTH int [not null, note: '아이콘 픽셀 너비']
+  PIXL_HGHT int [not null, note: '아이콘 픽셀 높이']
+  REGI_ADMN bigint [not null, note: '등록 관리자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (REGI_ADMN) [name: 'FK_TM_ALICON_REGI']
+    (UPDT_ADMN) [name: 'FK_TM_ALICON_UPDT']
+  }
+  Note: '알림 아이콘 원본'
+}
+
+Table TB_ALTEMP [headercolor: #DB2777] {
+  ALIM_SITU varchar(50) [not null, note: '알림 상황 코드']
+  TEMP_CODE varchar(100) [not null, note: '템플릿 코드']
+  TEMP_TITL varchar(200) [note: '템플릿 관리 제목']
+  ALIM_TITL varchar(200) [note: '알림 제목']
+  ALIM_ENTL varchar(200) [note: '알림 영문 제목']
+  TEMP_CONT text [note: '템플릿 내용']
+  TEMP_ENCT text [note: '템플릿 영문 내용']
+  USEE_YSNO char(1) [note: '사용 여부']
+  REGI_ADMN varchar(100) [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime [note: '등록 일시']
+  UPDT_ADMN varchar(100) [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (ALIM_SITU, TEMP_CODE) [pk]
+    (USEE_YSNO, ALIM_SITU, TEMP_CODE) [name: 'IX_TB_ALTEMP_USE']
+  }
+  Note: '알림 템플릿'
+}
+
+Table TB_EVTBOX [headercolor: #475569] {
+  EVNT_NUMB bigint [pk, not null, increment, note: '이벤트 번호']
+  EVNT_TYPE varchar(50) [not null, note: '이벤트 유형']
+  USER_NUMB decimal(19,0) [not null, note: '사용자 번호']
+  SPND_NUMB decimal(19,0) [not null, note: '회원 정지 이력 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+
+  indexes {
+    (EVNT_TYPE, EVNT_NUMB) [name: 'IX_TB_EVTBOX_TYPE']
+    (USER_NUMB, EVNT_NUMB) [name: 'IX_TB_EVTBOX_USER']
+    (SPND_NUMB, EVNT_NUMB) [name: 'IX_TB_EVTBOX_SPND']
+  }
+  Note: '사용자 상태 변경 Outbox 이벤트'
+}
+
+Table TB_NKSEQX [headercolor: #0F766E] {
+  SUBJ_CODE varchar(20) [not null, note: '주어 코드']
+  PRED_CODE varchar(20) [not null, note: '서술어 코드']
+  ANML_CODE varchar(20) [not null, note: '동물 명사 코드']
+  ISSU_YEAM char(4) [not null, note: '닉네임 발급 연월']
+  LAST_NUMB int [not null, note: '마지막 발급 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (SUBJ_CODE, PRED_CODE, ANML_CODE, ISSU_YEAM) [pk]
+  }
+  Note: '닉네임 조합별 연월 순번'
+}
+
+Table TH_USSPND [headercolor: #0F766E] {
+  SPND_NUMB bigint [pk, not null, note: '회원 정지 이력 번호']
+  USER_NUMB decimal(19,0) [not null, note: '사용자 번호']
+  PREV_STAT varchar(30) [not null, note: '처리 직전 사용자 상태']
+  SPND_TYPE varchar(20) [not null, note: '회원 정지 유형']
+  SPND_RSON varchar(50) [not null, note: '회원 정지 사유 코드']
+  SPND_CNTN varchar(1000) [note: '관리자 내부 정지 사유']
+  SPND_STAT varchar(20) [not null, note: '회원 정지 처리 상태']
+  STRT_DATE datetime [not null, note: '시작 일시']
+  ENDX_DATE datetime [note: '종료 예정 일시']
+  RLES_DATE datetime [note: '해제 또는 만료 일시']
+  RLES_CNTN varchar(1000) [note: '관리자 내부 해제 사유']
+  REGI_ADMN decimal(19,0) [not null, note: '등록 관리자 번호 또는 아이디']
+  RLES_ADMN decimal(19,0) [note: '해제 관리자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_ADMN decimal(19,0) [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime [note: '수정 일시']
+  SYNC_STAT varchar(20) [not null, note: '사용자 상태 동기화 상태']
+  ACTV_USER bigint [note: '활성 정지 사용자 중복 방지 키; 생성 컬럼']
+
+  indexes {
+    (ACTV_USER) [unique, name: 'UK_TH_USSPND_ACTV']
+    (USER_NUMB, REGI_DATE, SPND_NUMB) [name: 'IX_TH_USSPND_USER']
+    (STRT_DATE, USER_NUMB) [name: 'IX_TH_USSPND_STRT']
+  }
+  Note: '회원 이용 정지 이력'
+}
+
+Table TB_ALIMXX [headercolor: #DB2777] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  ALIM_NUMB decimal(38,10) [not null, note: '알림 번호']
+  ALIM_SITU varchar(50) [note: '알림 상황 코드']
+  TEMP_CODE varchar(100) [note: '템플릿 코드']
+  ALIM_TITL varchar(200) [note: '알림 제목']
+  ALIM_CONT text [note: '알림 내용']
+  TAGT_TYPE varchar(30) [note: '알림 이동 대상 유형']
+  TAGT_NUMB bigint [note: '알림 이동 대상 번호']
+  REPL_NUMB bigint [note: '알림 강조 댓글 번호']
+  READ_YSNO char(1) [note: '읽기 권한 또는 읽음 여부']
+  READ_DATE datetime [note: '읽음 처리 일시']
+  SEND_DATE datetime [note: '알림 발송 일시']
+  DELT_YSNO varchar(1) [note: '삭제 여부']
+
+  indexes {
+    (USER_NUMB, ALIM_NUMB) [pk]
+    (ALIM_SITU, TEMP_CODE) [name: 'FK_TB_ALIMXX_ALTEMP']
+    (USER_NUMB, DELT_YSNO, SEND_DATE, ALIM_NUMB) [name: 'IX_TB_ALIMXX_USER']
+  }
+  Note: '사용자 알림 발송 내역'
+}
+
+Table TB_AUTHMN [headercolor: #2563EB] {
+  AUTH_CODE varchar(30) [not null, note: '권한그룹 코드']
+  MENU_NUMB varchar(10) [not null, note: '상위 메뉴 번호']
+  SUBX_NUMB varchar(10) [not null, note: '하위 메뉴 번호']
+  READ_YSNO varchar(1) [note: '읽기 권한 또는 읽음 여부']
+  WRIT_YSNO varchar(1) [note: '쓰기 권한 여부']
+  DELT_YSNO varchar(1) [note: '삭제 여부']
+  REGI_ADMN bigint [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime(6) [note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime(6) [note: '수정 일시']
+
+  indexes {
+    (AUTH_CODE, MENU_NUMB, SUBX_NUMB) [pk]
+    (MENU_NUMB, SUBX_NUMB) [name: 'FK_TB_AUTHMN_MENU']
+    (AUTH_CODE, MENU_NUMB, SUBX_NUMB) [name: 'IX_TB_AUTHMN_AUTH']
+    (REGI_ADMN) [name: 'FK_TB_AUTHMN_REGI']
+    (UPDT_ADMN) [name: 'FK_TB_AUTHMN_UPDT']
+  }
+  Note: '권한그룹별 관리자 메뉴 권한'
+}
+
+Table TB_CODEXD [headercolor: #64748B] {
+  COMM_CODE varchar(10) [not null, note: '공통코드']
+  COMD_CODE varchar(20) [not null, note: '세부코드']
+  COMD_NAME varchar(50) [note: '세부코드 이름']
+  COMD_ENNM varchar(100) [note: '세부코드 영문 이름']
+  CODE_EXPL varchar(500) [note: '코드 설명']
+  UPPR_CODE varchar(20) [note: '상위 세부코드']
+  OPT1_CODE varchar(100) [note: '확장 속성 1 코드']
+  OPT1_NAME varchar(100) [note: '확장 속성 1 이름']
+  OPT1_ENNM varchar(100) [note: '확장 속성 1 영문 이름']
+  OPT2_CODE varchar(100) [note: '확장 속성 2 코드']
+  OPT2_NAME varchar(100) [note: '확장 속성 2 이름']
+  OPT2_ENNM varchar(100) [note: '확장 속성 2 영문 이름']
+  OPT3_CODE varchar(100) [note: '확장 속성 3 코드']
+  OPT3_NAME varchar(100) [note: '확장 속성 3 이름']
+  OPT3_ENNM varchar(100) [note: '확장 속성 3 영문 이름']
+  OPT4_CODE varchar(100) [note: '확장 속성 4 코드']
+  OPT4_NAME varchar(100) [note: '확장 속성 4 이름']
+  OPT4_ENNM varchar(100) [note: '확장 속성 4 영문 이름']
+  USEE_YSNO varchar(1) [note: '사용 여부']
+  REGI_ADMN varchar(100) [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime [note: '등록 일시']
+  SORT_ORDR decimal(38,0) [note: '정렬 순서']
+  UPDT_ADMN varchar(20) [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (COMM_CODE, COMD_CODE) [pk]
+    (COMM_CODE, USEE_YSNO, SORT_ORDR) [name: 'IX_TB_CODEXD_USE']
+    (COMM_CODE, UPPR_CODE, SORT_ORDR, COMD_CODE) [name: 'IX_TB_CODEXD_TREE']
+  }
+  Note: '공통코드 세부 항목'
+}
+
+Table TB_FOLLOW [headercolor: #0F766E] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  FLOW_NUMB bigint [not null, note: '팔로우 대상 사용자 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+
+  indexes {
+    (USER_NUMB, FLOW_NUMB) [pk]
+    (FLOW_NUMB) [name: 'IX_TB_FOLLOW_FLOW']
+    (REGI_DATE, USER_NUMB) [name: 'IX_TB_FOLLOW_REGI']
+  }
+  Note: '사용자 팔로우 관계'
+}
+
+Table TB_USBLOC [headercolor: #0F766E] {
+  USER_NUMB bigint [not null, note: '차단한 사용자 번호']
+  BLOC_NUMB bigint [not null, note: '차단 대상 사용자 번호']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (USER_NUMB, BLOC_NUMB) [pk]
+    (BLOC_NUMB, USER_NUMB) [name: 'IX_TB_USBLOC_BLOC']
+    (USER_NUMB, REGI_DATE, BLOC_NUMB) [name: 'IX_TB_USBLOC_LIST']
+  }
+  Note: '사용자 차단 관계; CHECK CK_TB_USBLOC_SELF: (`USER_NUMB` <> `BLOC_NUMB`)'
+}
+
+Table TB_LIKEXX [headercolor: #DB2777] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  TAGT_TYPE varchar(30) [not null, note: '대상 유형']
+  TAGT_NUMB bigint [not null, note: '대상 번호']
+  REGI_DATE datetime [not null, note: '등록 일시']
+
+  indexes {
+    (USER_NUMB, TAGT_TYPE, TAGT_NUMB) [pk]
+    (TAGT_NUMB) [name: 'FK_TB_LIKEXX_REPORT']
+    (TAGT_TYPE, TAGT_NUMB) [name: 'IX_TB_LIKEXX_TAGT']
+    (REGI_DATE, USER_NUMB) [name: 'IX_TB_LIKEXX_REGI']
+  }
+  Note: '사용자 좋아요 관계'
+}
+
+Table TB_LOGHIS [headercolor: #0F766E] {
+  LOGN_DATE datetime(6) [not null, note: '로그인 일시']
+  LOGN_NUMB bigint [pk, not null, increment, note: '로그인 이력 번호']
+  USER_NUMB bigint [note: '사용자 번호']
+  LOGN_IPXX varchar(45) [note: '로그인 요청 IP 주소']
+  USER_AGNT varchar(500) [note: '로그인 요청 User-Agent']
+  PROV_CODE varchar(20) [note: '로그인 제공자 코드']
+
+  indexes {
+    (USER_NUMB, LOGN_DATE) [name: 'IX_TB_LOGHIS_USER']
+    (LOGN_DATE, USER_NUMB) [name: 'IX_TB_LOGHIS_DATE']
+  }
+  Note: '사용자 로그인 이력'
+}
+
+Table TB_PSHSUB [headercolor: #DB2777] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  ENDP_URLX varchar(750) [not null, note: '푸시 구독 엔드포인트']
+  P256_KEYX varchar(500) [note: '푸시 암호화 공개 키']
+  AUTH_KEYX varchar(500) [note: '푸시 인증 키']
+  USEE_YSNO char(1) [note: '사용 여부']
+  REGI_DATE datetime [note: '등록 일시']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, ENDP_URLX) [pk]
+    (USER_NUMB, USEE_YSNO) [name: 'IX_TB_PSHSUB_USER']
+  }
+  Note: '사용자 웹 푸시 구독'
+}
+
+Table TB_RDATDX [headercolor: #7C3AED] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  READ_DATE date [not null, note: '독서 날짜']
+  READ_SECS bigint [not null, default: 0, note: '확정 독서 시간 초']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, READ_DATE) [pk]
+    (READ_DATE, USER_NUMB) [name: 'IX_TB_RDATDX_DATE']
+  }
+  Note: '사용자 일별 독서 시간 집계'
+}
+
+Table TB_REPLXX [headercolor: #DB2777] {
+  TAGT_TYPE varchar(30) [not null, note: '댓글 대상 유형']
+  TAGT_NUMB bigint [not null, note: '댓글 대상 번호']
+  REPL_NUMB bigint [not null, increment, note: '댓글 번호']
+  UPER_NUMB bigint [note: '상위 댓글 번호']
+  USER_NUMB bigint [note: '사용자 번호']
+  REPL_CNTN text [note: '댓글 내용']
+  DELT_YSNO char(1) [note: '삭제 여부']
+  REGI_DATE datetime [note: '등록 일시']
+  UPDT_DATE datetime [note: '수정 일시']
+
+  indexes {
+    (TAGT_TYPE, TAGT_NUMB, REPL_NUMB) [pk]
+    (REPL_NUMB) [unique, name: 'UK_TB_REPLXX_NUMB']
+    (TAGT_TYPE, TAGT_NUMB, UPER_NUMB, REGI_DATE) [name: 'IX_TB_REPLXX_TAGT']
+    (USER_NUMB) [name: 'FK_TB_REPLXX_USER']
+    (REGI_DATE, USER_NUMB) [name: 'IX_TB_REPLXX_REGI']
+  }
+  Note: '콘텐츠 댓글과 답글'
+}
+
+Table TL_SCLOGX [headercolor: #475569] {
+  RUNX_NUMB bigint [pk, not null, increment, note: '스케줄러 실행 번호']
+  SCHD_CODE varchar(50) [not null, note: '스케줄러 코드']
+  METH_NAME varchar(200) [not null, note: '실행 메서드 이름']
+  EXEC_STAT varchar(30) [not null, note: '실행 상태']
+  STRT_DATE datetime(6) [not null, note: '시작 일시']
+  FNSH_DATE datetime(6) [note: '실행 종료 일시']
+  TRGT_CNTT bigint [not null, note: '처리 대상 건수']
+  SUCC_CNTT bigint [not null, note: '성공 건수']
+  FAIL_CNTT bigint [not null, note: '실패 건수']
+  EXEC_MSEC decimal(19,0) [note: '실행 소요 밀리초']
+
+  indexes {
+    (SCHD_CODE, RUNX_NUMB) [name: 'IX_TL_SCLOGX_CODE']
+  }
+  Note: '스케줄러 실행 로그'
+}
+
+Table TM_BKINFO [headercolor: #7C3AED] {
+  BOOK_NUMB bigint [pk, not null, increment, note: '도서 번호']
+  BOOK_ATHR varchar(255) [note: '도서 저자명']
+  BOOK_CVIM varchar(255) [note: '도서 표지 이미지 URL']
+  BOOK_ISBN varchar(255) [note: '도서 ISBN']
+  BOOK_PUBL varchar(255) [note: '도서 출판사명']
+  BOOK_TITL varchar(255) [note: '도서 제목']
+  BOOK_DESC longtext [note: '도서 설명']
+  PUBL_DATE datetime [note: '도서 출간일']
+
+  indexes {
+    (BOOK_ISBN) [unique, name: 'UK_TM_BKINFO_ISBN']
+  }
+  Note: '도서 마스터'
+}
+
+Table TM_CODEXM [headercolor: #64748B] {
+  COMM_CODE varchar(10) [pk, not null, note: '공통코드']
+  CODE_NAME varchar(50) [note: '공통코드 이름']
+  CODE_EXPL varchar(500) [note: '코드 설명']
+  USEE_YSNO varchar(1) [note: '사용 여부']
+  REGI_ADMN varchar(100) [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime [note: '등록 일시']
+  UPDT_ADMN varchar(20) [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime [note: '수정 일시']
+  Note: '공통코드 그룹'
+}
+
+Table TL_SCFAIL [headercolor: #475569] {
+  RUNX_NUMB bigint [not null, note: '스케줄러 실행 번호']
+  FAIL_NUMB bigint [not null, note: '실패 순번']
+  FAIL_TYPE varchar(30) [not null, note: '실패 유형']
+  RSLT_CODE bigint [note: '처리 결과 코드']
+  RSLT_MESG varchar(1000) [note: '처리 결과 메시지']
+  ERRO_TYPE varchar(500) [note: '오류 유형']
+  ERRO_CNTN text [note: '오류 내용']
+  FAIL_DATE datetime(6) [not null, note: '실패 발생 일시']
+
+  indexes {
+    (RUNX_NUMB, FAIL_NUMB) [pk]
+    (RUNX_NUMB, FAIL_NUMB) [name: 'IX_TL_SCFAIL_RUNX']
+  }
+  Note: '스케줄러 실행 실패 상세'
+}
+
+Table TH_USWTHD [headercolor: #0F766E] {
+  WTHD_NUMB bigint [pk, not null, increment, note: '계정 처리 이력 번호']
+  USER_NUMB decimal(19,0) [note: '사용자 번호']
+  USER_IDHS varchar(64) [not null, note: '탈퇴 시 보존하는 사용자 식별값 해시']
+  TYPE_CGRP varchar(10) [note: 'TYPE_CGRP 업무 데이터']
+  WTHD_TYPE varchar(20) [not null, note: '계정 처리 유형']
+  RSON_CGRP varchar(10) [note: 'RSON_CGRP 업무 데이터']
+  WTHD_RSON varchar(20) [not null, note: '계정 처리 사유 코드']
+  RSON_CNTN varchar(1000) [note: '처리 사유 상세 내용']
+  STAT_CGRP varchar(10) [note: 'STAT_CGRP 업무 데이터']
+  WTHD_STAT varchar(20) [not null, note: '계정 처리 상태']
+  REQU_DATE datetime [not null, note: '처리 요청 일시']
+  DELT_DATE datetime [note: '삭제 예정 또는 처리 일시']
+  PROC_DATE datetime [note: '처리 완료 일시']
+  RCOV_DATE datetime [note: '복구 완료 일시']
+  ERRO_CNTN text [note: '오류 내용']
+
+  indexes {
+    (RSON_CGRP, WTHD_RSON) [name: 'FK_TH_USWTHD_RSON']
+    (STAT_CGRP, WTHD_STAT) [name: 'FK_TH_USWTHD_STAT']
+    (TYPE_CGRP, WTHD_TYPE) [name: 'FK_TH_USWTHD_TYPE']
+    (USER_NUMB, WTHD_STAT, WTHD_NUMB) [name: 'IX_TH_USWTHD_USER']
+    (REQU_DATE, WTHD_TYPE) [name: 'IX_TH_USWTHD_REQU']
+    (RCOV_DATE, USER_NUMB) [name: 'IX_TH_USWTHD_RCOV']
+    (USER_IDHS, USER_NUMB) [name: 'IX_TH_USWTHD_IDHS']
+  }
+  Note: '회원 계정 처리 이력'
+}
+
+Table TM_ADMENU [headercolor: #2563EB] {
+  MENU_NUMB varchar(10) [not null, note: '상위 메뉴 번호']
+  SUBX_NUMB varchar(10) [not null, note: '하위 메뉴 번호']
+  MENU_NAME varchar(100) [note: '메뉴 이름']
+  MENU_URLX varchar(255) [note: '메뉴 URL']
+  SORT_ORDR decimal(38,10) [note: '정렬 순서']
+  USEE_YSNO varchar(1) [note: '사용 여부']
+  REGI_ADMN bigint [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime(6) [note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime(6) [note: '수정 일시']
+
+  indexes {
+    (MENU_NUMB, SUBX_NUMB) [pk]
+    (USEE_YSNO, SORT_ORDR) [name: 'IX_TM_ADMENU_USE']
+    (REGI_ADMN) [name: 'FK_TM_ADMENU_REGI']
+    (UPDT_ADMN) [name: 'FK_TM_ADMENU_UPDT']
+  }
+  Note: '관리자 화면 메뉴'
+}
+
+Table TM_ADMINX [headercolor: #2563EB] {
+  ADMN_NUMB bigint [pk, not null, note: '관리자 번호']
+  ADMN_IDXX varchar(50) [not null, note: '관리자 로그인 아이디']
+  PASS_WORD varchar(255) [not null, note: '관리자 비밀번호 해시']
+  ADMN_NAME varchar(100) [not null, note: '관리자 이름']
+  AUTH_CODE varchar(30) [not null, note: '권한그룹 코드']
+  DEPT_CODE varchar(100) [note: '부서 코드']
+  FAIL_CNTX decimal(38,10) [not null, note: '로그인 실패 횟수']
+  LGIN_DATE datetime [note: '관리자 마지막 로그인 일시']
+  REGI_DATE datetime [not null, note: '등록 일시']
+
+  indexes {
+    (ADMN_IDXX) [unique, name: 'UK_TM_ADMINX_IDXX']
+    (AUTH_CODE, ADMN_NUMB) [name: 'IX_TM_ADMINX_AUTH']
+  }
+  Note: '관리자 계정'
+}
+
+Table TM_AUTHXM [headercolor: #2563EB] {
+  AUTH_CODE varchar(30) [pk, not null, note: '권한그룹 코드']
+  AUTH_NAME varchar(100) [note: '권한그룹 이름']
+  USEE_YSNO varchar(1) [note: '사용 여부']
+  REGI_ADMN bigint [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime(6) [note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime(6) [note: '수정 일시']
+
+  indexes {
+    (REGI_ADMN) [name: 'FK_TM_AUTHXM_REGI']
+    (UPDT_ADMN) [name: 'FK_TM_AUTHXM_UPDT']
+  }
+  Note: '관리자 권한그룹'
+}
+
+Table TM_FILEXM [headercolor: #64748B] {
+  FILE_NUMB bigint [pk, not null, increment, note: '파일 번호']
+  ORIG_NAME varchar(500) [note: '원본 파일명']
+  STOR_NAME varchar(500) [note: '서버 저장 파일명']
+  FILE_PATH text [not null, note: '파일 접근 경로']
+  FILE_SIZE decimal(38,10) [note: '파일 크기 바이트']
+  MIME_TYPE varchar(200) [note: '파일 MIME 유형']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  REGI_USER bigint [note: '등록 사용자 번호']
+
+  indexes {
+    (STOR_NAME) [name: 'IX_TM_FILEXM_STOR']
+    (REGI_USER) [name: 'FK_FILEXM_REGI_USER']
+  }
+  Note: '업로드 파일 메타 정보'
+}
+
+Table TM_GOALXM [headercolor: #7C3AED] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  GOAL_DATE varchar(6) [not null, note: '목표 적용 기간']
+  GOAL_TYPE varchar(4) [not null, note: '목표 유형']
+  GOAL_CNTT decimal(38,10) [note: '목표 독서 권수']
+  REGI_DATE datetime [note: '등록 일시']
+  UPDT_DATE datetime [note: '수정 일시']
+  UPDT_CNTT decimal(38,0) [note: '하향 수정 횟수']
+
+  indexes {
+    (USER_NUMB, GOAL_DATE, GOAL_TYPE) [pk]
+  }
+  Note: '사용자 기간별 독서 목표'
+}
+
+Table TM_REPORT [headercolor: #7C3AED] {
+  REPT_NUMB bigint [pk, not null, increment, note: '독후감 번호']
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  BOOK_NUMB bigint [not null, note: '도서 번호']
+  REPT_STAT text [not null, note: '독서 상태 코드']
+  REPT_STDT text [not null, note: '독서 시작일']
+  REPT_ENDT text [not null, note: '독서 종료일 또는 목표 종료일']
+  REPT_GRDE text [note: '도서 평점']
+  REPT_COLR varchar(20) [not null, note: '책장 표시 색상 코드']
+  REPT_CNTN text [note: '독후감 내용']
+  PUBC_YSNO varchar(1) [not null, note: '공개 여부']
+  LKAL_YSNO char(1) [not null, default: 'Y', note: '독후감 좋아요 알림 여부']
+  RPAL_YSNO char(1) [not null, default: 'Y', note: '독후감 댓글 알림 여부']
+  PUBC_DATE datetime(6) [note: '최초 공개 일시']
+  REGI_DATE datetime [not null, note: '등록 일시']
+  UPDT_DATE datetime [not null, note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, REPT_ENDT, REPT_NUMB) [name: 'IX_TM_REPORT_USER']
+    (BOOK_NUMB) [name: 'IX_TM_REPORT_BOOK']
+    (REGI_DATE, USER_NUMB) [name: 'IX_TM_REPORT_REGI']
+    (USER_NUMB, PUBC_YSNO, PUBC_DATE, REPT_NUMB) [name: 'IX_TM_REPORT_FEED']
+  }
+  Note: '사용자 독후감; CHECK CK_TM_REPORT_LKAL: (`LKAL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_REPORT_RPAL: (`RPAL_YSNO` in (\'Y\',\'N\'))'
+}
+
+Table TM_RDTMRX [headercolor: #7C3AED] {
+  TMRX_NUMB bigint [pk, not null, increment, note: '독서 타이머 세션 번호']
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  REPT_NUMB bigint [note: '연결 독후감 번호']
+  TMRX_STAT varchar(20) [not null, note: '독서 타이머 상태 코드']
+  TARG_SECS bigint [note: '알림 목표 독서 시간 초']
+  READ_SECS bigint [not null, default: 0, note: '확정 독서 시간 초']
+  ALRM_DATE datetime(6) [note: '목표시간 알림 예정 일시']
+  SEND_DATE datetime(6) [note: '목표시간 알림 발송 일시']
+  STRT_DATE datetime(6) [not null, note: '세션 시작 일시']
+  LAST_STRT datetime(6) [note: '최근 측정 시작 일시']
+  ENDX_DATE datetime(6) [note: '세션 완료 일시']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, TMRX_STAT, STRT_DATE) [name: 'IX_TM_RDTMRX_ACTIVE']
+    (TMRX_STAT, SEND_DATE, ALRM_DATE, TMRX_NUMB) [name: 'IX_TM_RDTMRX_ALRM']
+    (ENDX_DATE, USER_NUMB) [name: 'IX_TM_RDTMRX_ENDX']
+    (REPT_NUMB) [name: 'IX_TM_RDTMRX_REPT']
+  }
+  Note: '사용자 독서 타이머 세션'
+}
+
+Table TM_URMENU [headercolor: #2563EB] {
+  MENU_NUMB bigint [pk, not null, increment, note: '메뉴 번호']
+  PARN_NUMB bigint [note: '상위 메뉴 번호']
+  MENU_LEVL tinyint [not null, note: '메뉴 단계']
+  MENU_NAME varchar(100) [note: '메뉴 이름']
+  MENU_ENNM varchar(100) [note: '메뉴 영문 이름']
+  MENU_URLX varchar(255) [note: '메뉴 URL']
+  SORT_ORDR decimal(38,10) [note: '정렬 순서']
+  SHOW_YSNO varchar(1) [note: '화면 노출 여부']
+  USEE_YSNO varchar(1) [note: '사용 여부']
+  REGI_ADMN bigint [note: '등록 관리자 번호 또는 아이디']
+  REGI_DATE datetime(6) [note: '등록 일시']
+  UPDT_ADMN bigint [note: '수정 관리자 번호 또는 아이디']
+  UPDT_DATE datetime(6) [note: '수정 일시']
+
+  indexes {
+    (PARN_NUMB, SORT_ORDR, MENU_NUMB) [name: 'IX_TM_URMENU_TREE']
+    (SHOW_YSNO, USEE_YSNO, PARN_NUMB, SORT_ORDR) [name: 'IX_TM_URMENU_SHOW']
+    (REGI_ADMN) [name: 'FK_TM_URMENU_REGI']
+    (UPDT_ADMN) [name: 'FK_TM_URMENU_UPDT']
+  }
+  Note: '사용자 화면 메뉴; CHECK CK_TM_URMENU_LEVL: (`MENU_LEVL` between 1 and 3)'
+}
+
+Table TM_USERXM [headercolor: #0F766E] {
+  USER_NUMB bigint [pk, not null, increment, note: '사용자 번호']
+  PROF_NUMB bigint [note: '프로필 이미지 파일 번호']
+  BGIM_NUMB bigint [note: '배경 이미지 파일 번호']
+  PROF_DATE datetime(6) [note: '프로필 이미지 변경 일시']
+  BGIM_DATE datetime(6) [note: '배경 이미지 변경 일시']
+  USER_IDXX varchar(200) [not null, note: 'OAuth 사용자 식별값 암호문']
+  USER_NICK varchar(100) [not null, note: '사용자 닉네임']
+  USER_PROV varchar(20) [note: '로그인 제공자 코드']
+  USER_ROLE varchar(30) [not null, note: '사용자 권한 코드']
+  INTR_CNTN varchar(1000) [note: '프로필 한줄소개']
+  JOIN_DATE datetime [not null, note: '회원 가입 일시']
+  USER_CGRP varchar(10) [note: 'USER_CGRP 업무 데이터']
+  USER_STAT varchar(20) [not null, note: '사용자 계정 상태']
+  WTHD_DATE datetime [note: '계정 비활성화 일시']
+  DELT_DATE datetime [note: '삭제 예정 또는 처리 일시']
+  ONBD_YSNO varchar(1) [not null, note: '온보딩 완료 여부']
+
+  indexes {
+    (USER_IDXX) [unique, name: 'UK_TM_USERXM_IDXX']
+    (USER_NICK) [unique, name: 'UK_TM_USERXM_NICK']
+    (USER_CGRP, USER_STAT) [name: 'FK_TM_USERXM_STAT']
+    (USER_NICK) [name: 'IX_TM_USERXM_NICK']
+    (USER_STAT, USER_NUMB) [name: 'IX_TM_USERXM_STAT']
+    (JOIN_DATE, USER_NUMB) [name: 'IX_TM_USERXM_JOIN']
+    (USER_STAT, PROF_DATE, USER_NUMB) [name: 'IX_TM_USERXM_PROF_FEED']
+    (USER_STAT, BGIM_DATE, USER_NUMB) [name: 'IX_TM_USERXM_BGIM_FEED']
+    (BGIM_NUMB) [name: 'FK_TM_USERXM_BGIM']
+    (PROF_NUMB) [name: 'FK_TM_USERXM_PROF']
+  }
+  Note: '사용자 계정과 프로필'
+}
+
+Table TM_USSETX [headercolor: #0F766E] {
+  USER_NUMB bigint [pk, not null, note: '사용자 번호']
+  ENGL_YSNO varchar(1) [note: '영문 사용 여부']
+  RSTA_YSNO varchar(1) [not null, default: 'N', note: '독서 통계 공개 여부']
+  GOAL_YSNO varchar(1) [not null, default: 'N', note: '독서 목표 공개 여부']
+  IMFD_YSNO varchar(1) [not null, default: 'Y', note: '사진 변경 피드 공개 여부']
+  RPUB_YSNO varchar(1) [not null, default: 'N', note: '신규 독후감 공개 기본값']
+  LKAL_YSNO varchar(1) [not null, default: 'Y', note: '좋아요 알림 사용 여부']
+  RPAL_YSNO varchar(1) [not null, default: 'Y', note: '댓글과 답글 알림 사용 여부']
+  FOLL_YSNO varchar(1) [not null, default: 'Y', note: '팔로우 알림 사용 여부']
+  CLUB_YSNO varchar(1) [not null, default: 'Y', note: '선택형 독서 모임 알림 사용 여부']
+  CHAT_YSNO varchar(1) [not null, default: 'Y', note: '독서 모임 채팅 알림 사용 여부']
+  RDUE_YSNO varchar(1) [not null, default: 'Y', note: '독후감 목표 종료 알림 사용 여부']
+  LKDF_YSNO varchar(1) [not null, default: 'Y', note: '신규 독후감 좋아요 알림 기본값']
+  RPDF_YSNO varchar(1) [not null, default: 'Y', note: '신규 독후감 댓글 알림 기본값']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+  Note: '회원별 서비스 설정; CHECK CK_TM_USSETX_ENGL: (`ENGL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_RSTA: (`RSTA_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_GOAL: (`GOAL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_IMFD: (`IMFD_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_RPUB: (`RPUB_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_LKAL: (`LKAL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_RPAL: (`RPAL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_FOLL: (`FOLL_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_CLUB: (`CLUB_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_CHAT: (`CHAT_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_RDUE: (`RDUE_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_LKDF: (`LKDF_YSNO` in (\'Y\',\'N\')); CHECK CK_TM_USSETX_RPDF: (`RPDF_YSNO` in (\'Y\',\'N\'))'
+}
+
+Table TB_USVIEW [headercolor: #0F766E] {
+  VIEW_TYPE varchar(20) [not null, note: '조회 대상 유형']
+  TAGT_NUMB bigint [not null, note: '조회 대상 번호']
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  REGI_DATE datetime(6) [not null, note: '최초 조회 일시']
+
+  indexes {
+    (VIEW_TYPE, TAGT_NUMB, USER_NUMB) [pk]
+    (USER_NUMB, VIEW_TYPE, TAGT_NUMB) [name: 'IX_TB_USVIEW_USER']
+  }
+  Note: '사용자 콘텐츠 조회 이력'
+}
+
+Table TB_USINTR [headercolor: #0F766E] {
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  INTR_CODE varchar(20) [not null, note: 'CATE_CODE 하위 관심분야 세부코드']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+
+  indexes {
+    (USER_NUMB, INTR_CODE) [pk]
+    (INTR_CODE, USER_NUMB) [name: 'IX_TB_USINTR_RECM']
+  }
+  Note: '회원 독서 관심분야'
+}
+
+Table TM_CLUBXM [headercolor: #D97706] {
+  CLUB_NUMB bigint [pk, not null, increment, note: '모임 번호']
+  OWNR_NUMB bigint [note: '현재 모임장 사용자 번호']
+  CLUB_NAME varchar(100) [not null, note: '모임명']
+  CLUB_CNTN varchar(2000) [note: '모임 소개']
+  CLUB_VISB varchar(20) [not null, note: '모임 공개 범위']
+  JOIN_TYPE varchar(20) [not null, note: '가입 방식']
+  CLUB_STAT varchar(20) [not null, note: '모임 운영 상태']
+  RCRT_YSNO char(1) [not null, default: 'Y', note: '신규 회원 모집 가능 여부']
+  MAXX_MEMB int [not null, note: '최대 회원 수']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+  CLOS_DATE datetime(6) [note: '종료 일시']
+
+  indexes {
+    (CLUB_VISB, CLUB_STAT, REGI_DATE, CLUB_NUMB) [name: 'IX_TM_CLUBXM_FIND']
+    (OWNR_NUMB, CLUB_STAT, CLUB_NUMB) [name: 'IX_TM_CLUBXM_OWNR']
+  }
+  Note: '독서 모임 마스터'
+}
+
+Table TH_CLADMN [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  HIST_NUMB bigint [not null, note: '모임별 관리자 조치 이력 번호']
+  ADMN_NUMB bigint [not null, note: '조치 관리자 번호']
+  ACTN_TYPE varchar(20) [not null, note: '관리자 모임 조치 유형']
+  BEFR_STAT varchar(20) [note: '조치 전 모임 상태']
+  AFTR_STAT varchar(20) [not null, note: '조치 후 모임 상태']
+  ACTN_RSON varchar(2000) [not null, note: '관리자 조치 사유']
+  REGI_DATE datetime(6) [not null, note: '조치 일시']
+
+  indexes {
+    (CLUB_NUMB, HIST_NUMB) [pk]
+    (ADMN_NUMB, REGI_DATE, CLUB_NUMB) [name: 'IX_TH_CLADMN_ADMN']
+  }
+  Note: '관리자 독서 모임 조치 이력'
+}
+
+Table TB_CLCATE [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  INTR_CODE varchar(20) [not null, note: 'CATE_CODE 하위 관심분야 세부코드']
+  SORT_ORDR tinyint [not null, note: '모임 카테고리 노출 순서와 대표 카테고리 구분']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+
+  indexes {
+    (CLUB_NUMB, INTR_CODE) [pk]
+    (CLUB_NUMB, SORT_ORDR) [unique, name: 'UK_TB_CLCATE_SORT']
+    (INTR_CODE, CLUB_NUMB) [name: 'IX_TB_CLCATE_RECM']
+  }
+  Note: '독서 모임 카테고리'
+}
+
+Table TB_CLMEMX [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  USER_NUMB bigint [not null, note: '사용자 번호']
+  MEMB_ROLE varchar(20) [not null, note: '모임원 역할']
+  MEMB_STAT varchar(20) [not null, note: '모임원 또는 초대 상태']
+  SEND_NUMB bigint [note: '초대를 발송한 모임장 사용자 번호']
+  INVT_DATE datetime(6) [note: '초대 발송 일시']
+  EXPR_DATE datetime(6) [note: '초대 만료 일시']
+  JOIN_DATE datetime(6) [note: '가입 확정 일시']
+  READ_NUMB bigint [note: '마지막으로 읽은 채팅 메시지 번호']
+  EXIT_DATE datetime(6) [note: '모임 탈퇴 또는 퇴장 일시']
+  BLOC_YSNO varchar(1) [not null, default: 'N', note: '재가입 차단 여부']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, USER_NUMB) [pk]
+    (USER_NUMB, MEMB_STAT, CLUB_NUMB) [name: 'IX_TB_CLMEMX_USER']
+    (CLUB_NUMB, MEMB_STAT, USER_NUMB) [name: 'IX_TB_CLMEMX_CLUB']
+    (CLUB_NUMB, MEMB_STAT, EXPR_DATE) [name: 'IX_TB_CLMEMX_SEAT']
+    (SEND_NUMB) [name: 'FK_TB_CLMEMX_SEND']
+  }
+  Note: '독서 모임 회원과 초대 예약석'
+}
+
+Table TM_CLCHAT [headercolor: #D97706] {
+  CHAT_NUMB bigint [pk, not null, increment, note: '채팅 메시지 번호']
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  USER_NUMB bigint [note: '사용자 번호']
+  CHAT_TYPE varchar(20) [not null, note: '채팅 메시지 유형']
+  CHAT_CNTN text [note: '채팅 메시지 본문']
+  CLNT_UUID varchar(64) [not null, note: '클라이언트 메시지 식별값']
+  DELT_YSNO varchar(1) [not null, default: 'N', note: '삭제 여부']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, CLNT_UUID) [unique, name: 'UK_TM_CLCHAT_UUID']
+    (CLUB_NUMB, CHAT_NUMB) [name: 'IX_TM_CLCHAT_CLUB']
+    (USER_NUMB, CHAT_NUMB) [name: 'IX_TM_CLCHAT_USER']
+  }
+  Note: '모임 채팅; CHECK CK_TM_CLCHAT_DELT: `DELT_YSNO` IN (\'Y\',\'N\')'
+}
+
+Table TH_CLKICK [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  KICK_NUMB bigint [not null, note: '강제 퇴장 이력 번호']
+  USER_NUMB bigint [note: '사용자 번호']
+  PROC_USER bigint [note: '처리 사용자 번호']
+  KICK_RSON varchar(1000) [not null, note: '강제 퇴장 사유']
+  KICK_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '강제 퇴장 일시']
+  RLES_DATE datetime(6) [note: '재가입 차단 해제 일시']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (CLUB_NUMB, KICK_NUMB) [pk]
+    (USER_NUMB, KICK_DATE, CLUB_NUMB) [name: 'IX_TH_CLKICK_USER']
+    (PROC_USER, KICK_DATE, CLUB_NUMB) [name: 'IX_TH_CLKICK_PROC']
+  }
+  Note: '모임원 강제 퇴장 이력'
+}
+
+Table TB_CLQUES [headercolor: #D97706] {
+  CLUB_NUMB bigint [pk, not null, note: '모임 번호']
+  QUES_FIRS varchar(500) [not null, note: '첫 번째 가입 질문']
+  QUES_SECO varchar(500) [note: '두 번째 가입 질문']
+  QUES_THIR varchar(500) [note: '세 번째 가입 질문']
+  QUES_FOUR varchar(500) [note: '네 번째 가입 질문']
+  QUES_FIFT varchar(500) [note: '다섯 번째 가입 질문']
+  REGI_USER bigint [note: '등록 사용자 번호']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_USER bigint [note: '수정 사용자 번호']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (REGI_USER) [name: 'FK_TB_CLQUES_REGI']
+    (UPDT_USER) [name: 'FK_TB_CLQUES_UPDT']
+  }
+  Note: '독서 모임 가입 질문'
+}
+
+Table TB_CLJOIN [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  APPL_NUMB bigint [not null, note: '모임별 가입 신청 번호']
+  USER_NUMB bigint [not null, note: '가입 신청 사용자 번호']
+  QUES_FIRS varchar(500) [not null, note: '첫 번째 가입 질문 사본']
+  QUES_SECO varchar(500) [note: '두 번째 가입 질문 사본']
+  QUES_THIR varchar(500) [note: '세 번째 가입 질문 사본']
+  QUES_FOUR varchar(500) [note: '네 번째 가입 질문 사본']
+  QUES_FIFT varchar(500) [note: '다섯 번째 가입 질문 사본']
+  ANSR_FIRS varchar(2000) [note: '처리 전 첫 번째 가입 답변']
+  ANSR_SECO varchar(2000) [note: '처리 전 두 번째 가입 답변']
+  ANSR_THIR varchar(2000) [note: '처리 전 세 번째 가입 답변']
+  ANSR_FOUR varchar(2000) [note: '처리 전 네 번째 가입 답변']
+  ANSR_FIFT varchar(2000) [note: '처리 전 다섯 번째 가입 답변']
+  JOIN_STAT varchar(20) [not null, note: '가입 신청 상태']
+  APPL_DATE datetime(6) [not null, note: '가입 신청 일시']
+  PROC_USER bigint [note: '가입 신청 처리 사용자 번호']
+  PROC_DATE datetime(6) [note: '가입 신청 처리 일시']
+
+  indexes {
+    (CLUB_NUMB, APPL_NUMB) [pk]
+    (CLUB_NUMB, USER_NUMB, JOIN_STAT) [name: 'IX_TB_CLJOIN_USER']
+    (USER_NUMB, JOIN_STAT, APPL_DATE) [name: 'IX_TB_CLJOIN_MINE']
+    (PROC_USER) [name: 'FK_TB_CLJOIN_PROC']
+  }
+  Note: '독서 모임 승인 가입 신청'
+}
+
+Table TB_CLBREC [headercolor: #D97706] {
+  RECM_NUMB bigint [pk, not null, increment, note: '추천 번호']
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  BOOK_NUMB bigint [not null, note: '도서 번호']
+  USER_NUMB bigint [not null, note: '추천 사용자 번호']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (CLUB_NUMB, BOOK_NUMB) [name: 'IX_TB_CLBREC_BOOK']
+    (USER_NUMB, CLUB_NUMB) [name: 'IX_TB_CLBREC_USER']
+  }
+  Note: '독서 모임 다음 도서 추천'
+}
+
+Table TB_CLBVOT [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  USER_NUMB bigint [not null, note: '투표 사용자 번호']
+  RECM_NUMB bigint [not null, note: '추천 번호']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, USER_NUMB, RECM_NUMB) [pk]
+    (RECM_NUMB, CLUB_NUMB) [name: 'IX_TB_CLBVOT_RECM']
+  }
+  Note: '독서 모임 다음 도서 투표'
+}
+
+Table TM_CLOWNX [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  ELCT_NUMB bigint [not null, note: '모임별 모임장 선거 번호']
+  PREV_OWNR bigint [note: '기존 모임장 사용자 번호 감사값']
+  ABSN_RSON varchar(20) [not null, note: '모임장 확정 부재 사유']
+  EVID_CNTN varchar(2000) [note: '모임장 확정 부재 근거 내용']
+  SELT_NUMB bigint [note: '도서 미확정 사유의 선정 번호']
+  ELCT_STAT varchar(20) [not null, note: '모임장 선거 상태']
+  EXTN_YSNO varchar(1) [not null, default: 'N', note: '선거 기간 연장 여부']
+  STRT_DATE datetime(6) [not null, note: '선거 시작 일시']
+  ENDX_DATE datetime(6) [not null, note: '선거 마감 일시']
+  RSLT_USER bigint [note: '당선 사용자 번호']
+  CNFM_ADMN bigint [note: '부재 사유 확정 관리자 번호']
+  IDEM_KEYX varchar(64) [not null, note: '선거 생성 멱등키']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, ELCT_NUMB) [pk]
+    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TM_CLOWNX_IDEM']
+    (CLUB_NUMB, ELCT_STAT, ENDX_DATE) [name: 'IX_TM_CLOWNX_STAT']
+    (RSLT_USER) [name: 'FK_TM_CLOWNX_RSLT']
+    (CNFM_ADMN) [name: 'FK_TM_CLOWNX_ADMN']
+  }
+  Note: '독서 모임 모임장 선거; CHECK CK_TM_CLOWNX_EXTN: `EXTN_YSNO` IN (\'Y\',\'N\'); CHECK CK_TM_CLOWNX_DATE: `ENDX_DATE` > `STRT_DATE`'
+}
+
+Table TM_CLVOTX [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  VOTE_NUMB bigint [not null, note: '모임별 투표 번호']
+  VOTE_TYPE varchar(20) [not null, note: '도서 또는 모임장 투표 유형']
+  VOTE_ROUN tinyint [not null, default: '1', note: '본선 또는 결선 투표 차수']
+  PRNT_VOTE bigint [note: '결선의 원 투표 번호']
+  SELT_NUMB bigint [note: '도서 선정 번호']
+  ELCT_NUMB bigint [note: '모임장 선거 번호']
+  VOTE_TITL varchar(200) [not null, note: '투표 제목 스냅샷']
+  VOTE_STAT varchar(20) [not null, note: '투표 상태']
+  SECR_YSNO varchar(1) [not null, default: 'Y', note: '비밀투표 여부']
+  CHNG_YSNO varchar(1) [not null, default: 'Y', note: '마감 전 투표 변경 허용 여부']
+  STRT_DATE datetime(6) [not null, note: '투표 시작 일시']
+  ENDX_DATE datetime(6) [not null, note: '투표 마감 일시']
+  RSLT_NUMB bigint [note: '선정 도서 또는 당선 사용자 번호']
+  CLOS_DATE datetime(6) [note: '투표 종료 일시']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB) [pk]
+    (CLUB_NUMB, SELT_NUMB, VOTE_ROUN) [unique, name: 'UK_TM_CLVOTX_SELT']
+    (CLUB_NUMB, ELCT_NUMB, VOTE_ROUN) [unique, name: 'UK_TM_CLVOTX_ELCT']
+    (CLUB_NUMB, PRNT_VOTE) [name: 'IX_TM_CLVOTX_PRNT']
+    (CLUB_NUMB, VOTE_TYPE, VOTE_STAT, ENDX_DATE) [name: 'IX_TM_CLVOTX_STAT']
+  }
+  Note: '독서 모임 공통 투표; CHECK CK_TM_CLVOTX_TYPE: (`VOTE_TYPE` = \'BOOK\' AND `SELT_NUMB` IS NOT NULL AND `ELCT_NUMB` IS NULL) OR (`VOTE_TYPE` = \'OWNER\' AND `SELT_NUMB` IS NULL AND `ELCT_NUMB` IS NOT NULL); CHECK CK_TM_CLVOTX_ROUN: (`VOTE_ROUN` = 1 AND `PRNT_VOTE` IS NULL) OR (`VOTE_ROUN` = 2 AND `PRNT_VOTE` IS NOT NULL); CHECK CK_TM_CLVOTX_SECR: `SECR_YSNO` IN (\'Y\',\'N\'); CHECK CK_TM_CLVOTX_CHNG: `CHNG_YSNO` IN (\'Y\',\'N\'); CHECK CK_TM_CLVOTX_DATE: `ENDX_DATE` > `STRT_DATE`'
+}
+
+Table TB_CLVOPT [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  VOTE_NUMB bigint [not null, note: '모임별 투표 번호']
+  TAGT_NUMB bigint [not null, note: '도서 또는 후보 사용자 대상 번호']
+  TAGT_NAME varchar(255) [not null, note: '선택지 표시명 스냅샷']
+  OPTI_STAT varchar(20) [not null, note: '투표 선택지 상태']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [pk]
+    (CLUB_NUMB, VOTE_NUMB, OPTI_STAT, TAGT_NUMB) [name: 'IX_TB_CLVOPT_STAT']
+  }
+  Note: '독서 모임 투표 선택지'
+}
+
+Table TB_CLVOTR [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  VOTE_NUMB bigint [not null, note: '모임별 투표 번호']
+  USER_NUMB bigint [not null, note: '투표 시작 시점 유권자 사용자 번호 스냅샷']
+  ELIG_YSNO varchar(1) [not null, default: 'Y', note: '현재 투표 자격 여부']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, USER_NUMB) [pk]
+  }
+  Note: '독서 모임 투표 유권자 명부; CHECK CK_TB_CLVOTR_ELIG: `ELIG_YSNO` IN (\'Y\',\'N\')'
+}
+
+Table TB_CLVBAL [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  VOTE_NUMB bigint [not null, note: '모임별 투표 번호']
+  USER_NUMB bigint [not null, note: '유권자 사용자 번호 스냅샷']
+  TAGT_NUMB bigint [not null, note: '선택한 도서 또는 후보 사용자 대상 번호']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, VOTE_NUMB, USER_NUMB) [pk]
+    (CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) [name: 'IX_TB_CLVBAL_RSLT']
+  }
+  Note: '독서 모임 유권자별 투표용지'
+}
+
+Table TM_CLRNDX [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  ROND_NUMB bigint [not null, note: '모임별 회차 번호']
+  BOOK_NUMB bigint [not null, note: '도서 번호']
+  ROND_STAT varchar(20) [not null, note: '회차 상태']
+  GOAL_STDT datetime(6) [not null, note: '공동 목표 시작 일시']
+  GOAL_ENDT datetime(6) [not null, note: '공동 목표 종료 일시']
+  OPEN_DATE datetime(6) [note: '독후감 공개 일시']
+  COMP_DATE datetime(6) [note: '회차 완료 일시']
+  IDEM_KEYX varchar(64) [not null, note: '회차 멱등키']
+  REGI_USER bigint [note: '등록 사용자 번호']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, ROND_NUMB) [pk]
+    (CLUB_NUMB, IDEM_KEYX) [unique, name: 'UK_TM_CLRNDX_IDEM']
+    (CLUB_NUMB, ROND_STAT, GOAL_ENDT) [name: 'IX_TM_CLRNDX_STAT']
+    (BOOK_NUMB, CLUB_NUMB, ROND_NUMB) [name: 'IX_TM_CLRNDX_BOOK']
+    (REGI_USER) [name: 'FK_TM_CLRNDX_REGI']
+  }
+  Note: '독서 모임 회차'
+}
+
+Table TM_CLSELT [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  SELT_NUMB bigint [not null, note: '모임별 도서 선정 번호']
+  ROND_NUMB bigint [note: '선정 기준 회차 번호']
+  BOOK_SELT varchar(20) [not null, note: '도서 선정 상태']
+  BOOK_NUMB bigint [note: '최종 선정 도서 번호']
+  DUTY_STDT datetime(6) [note: '모임장 도서 확정 책임 시작 일시']
+  DUTY_ENDT datetime(6) [note: '모임장 도서 확정 책임 마감 일시']
+  PAUS_STDT datetime(6) [note: '책임 기간 일시중지 시작 일시']
+  REMA_SECO int [note: '일시중지 시 남은 책임 시간 초']
+  SELT_DATE datetime(6) [note: '도서 선정 완료 일시']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, SELT_NUMB) [pk]
+    (CLUB_NUMB, ROND_NUMB) [unique, name: 'UK_TM_CLSELT_ROND']
+    (CLUB_NUMB, BOOK_SELT, DUTY_ENDT) [name: 'IX_TM_CLSELT_DUTY']
+    (BOOK_NUMB) [name: 'FK_TM_CLSELT_BOOK']
+  }
+  Note: '독서 모임 도서 선정 마스터; CHECK CK_TM_CLSELT_REMA: `REMA_SECO` IS NULL OR `REMA_SECO` >= 0'
+}
+
+Table TB_CLPART [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  ROND_NUMB bigint [not null, note: '모임별 회차 번호']
+  PART_NUMB bigint [not null, note: '모임 회차별 참여 번호']
+  USER_NUMB bigint [note: '회차 참여 사용자 번호']
+  REPT_NUMB bigint [note: '연결 독후감 번호']
+  GOAL_YSNO varchar(1) [note: '회차 목표 달성 여부']
+  ACHV_DATE datetime(6) [note: '목표 달성 확정 일시']
+  ANON_YSNO varchar(1) [not null, default: 'N', note: '비식별 참여 여부']
+  REGI_DATE datetime(6) [not null, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, note: '수정 일시']
+
+  indexes {
+    (CLUB_NUMB, ROND_NUMB, PART_NUMB) [pk]
+    (CLUB_NUMB, ROND_NUMB, USER_NUMB) [unique, name: 'UK_TB_CLPART_USER']
+    (REPT_NUMB) [unique, name: 'UK_TB_CLPART_REPT']
+    (CLUB_NUMB, ROND_NUMB, GOAL_YSNO) [name: 'IX_TB_CLPART_GOAL']
+    (USER_NUMB) [name: 'FK_TB_CLPART_USER']
+  }
+  Note: '독서 모임 회차 참여'
+}
+
+Table TH_CLRSLT [headercolor: #D97706] {
+  CLUB_NUMB bigint [not null, note: '모임 번호']
+  ROND_NUMB bigint [not null, note: '모임별 회차 번호']
+  USER_NUMB bigint [not null, note: '결과 확인 대상 사용자 번호']
+  REGI_DATE datetime(6) [not null, note: '결과 안내 등록 일시']
+  CONF_DATE datetime(6) [note: '사용자 확인 일시']
+
+  indexes {
+    (CLUB_NUMB, ROND_NUMB, USER_NUMB) [pk]
+    (USER_NUMB, CONF_DATE, CLUB_NUMB, ROND_NUMB) [name: 'IX_TH_CLRSLT_USER_CONF']
+  }
+  Note: '독서 모임 회차 결과 확인 이력'
+}
+
+Table TH_CMEVDC [headercolor: #DC2626] {
+  EVDC_NUMB bigint [pk, not null, increment, note: '신고 증거 번호']
+  TAGT_TYPE varchar(20) [not null, note: '신고 대상 유형 세부코드']
+  TAGT_NUMB bigint [not null, note: '신고 대상 번호']
+  TAGT_HASH char(64) [not null, note: '신고 대상 버전 SHA-256 해시']
+  TAGT_USER bigint [note: '신고 대상 소유 사용자 번호']
+  ORIG_NAME varchar(500) [note: '증거 원본 파일명']
+  MIME_TYPE varchar(200) [not null, note: '증거 파일 MIME 유형']
+  FILE_SIZE bigint [not null, note: '증거 파일 크기 바이트']
+  EVDC_DATA longblob [not null, note: '비공개 신고 증거 원본 바이트']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (TAGT_TYPE, TAGT_NUMB, TAGT_HASH) [unique, name: 'UK_TH_CMEVDC_TAGT_HASH']
+    (TAGT_USER, REGI_DATE, EVDC_NUMB) [name: 'IX_TH_CMEVDC_TAGT_USER']
+  }
+  Note: '관리자 전용 신고 이미지 증거 원본'
+}
+
+Table TH_CMPLNT [headercolor: #DC2626] {
+  CMPL_NUMB bigint [pk, not null, increment, note: '신고 번호']
+  USER_NUMB bigint [note: '신고자 사용자 번호']
+  TAGT_TYPE varchar(20) [not null, note: '신고 대상 유형 세부코드']
+  TAGT_NUMB bigint [not null, note: '신고 대상 번호']
+  TAGT_HASH char(64) [not null, note: '신고 대상 버전 SHA-256 해시']
+  TAGT_USER bigint [note: '신고 대상 소유 사용자 번호']
+  TAGT_CNTN text [note: '신고 대상 내용 스냅샷']
+  EVDC_NUMB bigint [note: '비공개 신고 이미지 증거 번호']
+  CMPL_RSON varchar(20) [not null, note: '신고 사유 세부코드']
+  CMPL_CNTN varchar(1000) [note: '신고 상세 내용']
+  CMPL_STAT varchar(20) [not null, default: 'CMPL_RECEIVED', note: '신고 처리 상태 세부코드']
+  PROC_CNTN varchar(1000) [note: '관리자 처리 내용']
+  PROC_ADMN bigint [note: '처리 관리자 번호']
+  PROC_DATE datetime(6) [note: '처리 일시']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, TAGT_TYPE, TAGT_NUMB, TAGT_HASH) [unique, name: 'UK_TH_CMPLNT_USER_TAGT']
+    (TAGT_TYPE, TAGT_NUMB, TAGT_HASH, CMPL_STAT, REGI_DATE) [name: 'IX_TH_CMPLNT_TAGT']
+    (TAGT_USER, REGI_DATE, CMPL_NUMB) [name: 'IX_TH_CMPLNT_TAGT_USER']
+    (USER_NUMB, REGI_DATE) [name: 'IX_TH_CMPLNT_USER']
+    (CMPL_STAT, REGI_DATE, CMPL_NUMB) [name: 'IX_TH_CMPLNT_STAT']
+    (PROC_ADMN) [name: 'FK_TH_CMPLNT_PROC']
+    (EVDC_NUMB) [name: 'FK_TH_CMPLNT_EVDC']
+  }
+  Note: '사용자 신고 접수와 처리 이력'
+}
+
+Table TH_CMREVT [headercolor: #DC2626] {
+  EVNT_NUMB bigint [pk, not null, increment, note: '신고 조치 안내 이벤트 번호']
+  ACTN_NUMB bigint [note: '자동 조치 결과 번호']
+  TRIG_CMPL bigint [note: '조치 기준 신고 번호']
+  TAGT_TYPE varchar(20) [not null, note: '신고 대상 유형 세부코드']
+  TAGT_NUMB bigint [not null, note: '신고 대상 번호']
+  TAGT_HASH char(64) [note: '신고 대상 버전 SHA-256 해시']
+  TAGT_USER bigint [note: '피신고 사용자 번호']
+  TAGT_NAME varchar(100) [not null, note: '신고 대상 유형 표시명 스냅샷']
+  TAGT_ENNM varchar(100) [note: '신고 대상 유형 영문 표시명 스냅샷']
+  RSON_SUMM varchar(20) [not null, note: '피신고자 신고 유형 요약 코드']
+  RSON_CODE varchar(20) [note: '단일 신고 사유 세부코드']
+  RSON_NAME varchar(100) [not null, note: '피신고자 신고 유형 표시명 스냅샷']
+  RSON_ENNM varchar(100) [note: '피신고자 신고 유형 영문 표시명 스냅샷']
+  ACTN_TYPE varchar(30) [not null, note: '신고 조치 유형 코드']
+  RPTR_CNTN varchar(1000) [not null, note: '신고자용 처리 결과 내용']
+  RPTR_ENCT varchar(1000) [note: '신고자용 영문 처리 결과 내용']
+  TGTR_CNTN varchar(1000) [not null, note: '피신고자용 조치 안내 내용']
+  TGTR_ENCT varchar(1000) [note: '피신고자용 영문 조치 안내 내용']
+  PROC_DATE datetime(6) [not null, note: '신고 조치 완료 일시']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '안내 이벤트 등록 일시']
+
+  indexes {
+    (ACTN_NUMB) [name: 'IX_TH_CMREVT_ACTN']
+    (TRIG_CMPL) [name: 'IX_TH_CMREVT_TRIG']
+    (TAGT_USER, PROC_DATE, EVNT_NUMB) [name: 'IX_TH_CMREVT_TAGT_USER']
+  }
+  Note: '신고 조치 사용자 안내 이벤트 이력'
+}
+
+Table TH_CMRSLT [headercolor: #DC2626] {
+  RSLT_NUMB bigint [pk, not null, increment, note: '신고 조치 결과 확인 번호']
+  EVNT_NUMB bigint [not null, note: '신고 조치 안내 이벤트 번호']
+  CMPL_NUMB bigint [not null, note: '수신자 연결 기준 신고 번호']
+  USER_NUMB bigint [not null, note: '결과 확인 대상 사용자 번호']
+  RCVR_TYPE varchar(20) [not null, note: '결과 수신자 유형 코드']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '결과 안내 등록 일시']
+  CONF_DATE datetime(6) [note: '사용자 확인 일시']
+
+  indexes {
+    (EVNT_NUMB, CMPL_NUMB, RCVR_TYPE, USER_NUMB) [unique, name: 'UK_TH_CMRSLT_EVNT_RCVR']
+    (USER_NUMB, CONF_DATE, RSLT_NUMB) [name: 'IX_TH_CMRSLT_USER_CONF']
+    (CMPL_NUMB) [name: 'IX_TH_CMRSLT_CMPL']
+  }
+  Note: '신고 조치 이벤트 수신자별 확인 이력'
+}
+
+Table TH_CMACTN [headercolor: #DC2626] {
+  ACTN_NUMB bigint [pk, not null, increment, note: '자동 조치 결과 번호']
+  TAGT_TYPE varchar(20) [not null, note: '신고 대상 유형 세부코드']
+  TAGT_NUMB bigint [not null, note: '신고 대상 번호']
+  TAGT_HASH char(64) [not null, note: '신고 대상 버전 SHA-256 해시']
+  TAGT_USER bigint [note: '신고 대상 소유 사용자 번호']
+  ACTN_TYPE varchar(20) [not null, note: '자동 조치 유형 세부코드']
+  RSLT_CODE varchar(20) [not null, note: '자동 조치 결과 세부코드']
+  THRS_CNTT int [not null, note: '자동 조치 임계 신고 건수']
+  CMPL_CNTT int [not null, note: '조치 시점 유효 누적 신고 건수']
+  ACTN_ORDR int [not null, note: '동일 대상 자동 조치 순번']
+  TRIG_CMPL bigint [note: '자동 조치 발생 신고 번호']
+  RSLT_CNTN varchar(1000) [note: '자동 조치 결과 내용']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (TAGT_TYPE, TAGT_NUMB, TAGT_HASH, ACTN_ORDR) [unique, name: 'UK_TH_CMACTN_TAGT_ORDR']
+    (TAGT_USER, REGI_DATE, ACTN_NUMB) [name: 'IX_TH_CMACTN_TAGT_USER']
+    (TRIG_CMPL) [name: 'IX_TH_CMACTN_TRIG']
+  }
+  Note: '신고 누적 자동 조치 결과 이력'
+}
+
+Table CT_INQURY [headercolor: #DC2626] {
+  INQR_NUMB bigint [pk, not null, increment, note: '고객문의 번호']
+  USER_NUMB bigint [note: '문의 작성 사용자 번호']
+  INQR_CATG varchar(20) [not null, note: '고객문의 카테고리 세부코드']
+  INQR_TITL varchar(200) [not null, note: '고객문의 제목']
+  INQR_CNTN varchar(4000) [not null, note: '고객문의 내용']
+  INQR_STAT varchar(20) [not null, default: 'INQR_RECEIVED', note: '고객문의 처리 상태 세부코드']
+  SPND_NUMB bigint [note: '문의와 연결된 이용정지 이력 번호']
+  ASGN_ADMN bigint [note: '담당 관리자 번호']
+  ANSW_DATE datetime(6) [note: '최종 답변 일시']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+  UPDT_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '수정 일시']
+
+  indexes {
+    (USER_NUMB, REGI_DATE, INQR_NUMB) [name: 'IX_CT_INQURY_USER']
+    (INQR_STAT, REGI_DATE, INQR_NUMB) [name: 'IX_CT_INQURY_STAT']
+    (SPND_NUMB, INQR_STAT) [name: 'IX_CT_INQURY_SPND']
+    (ASGN_ADMN) [name: 'FK_CT_INQURY_ADMN']
+  }
+  Note: '고객문의 접수와 처리 상태'
+}
+
+Table CT_INQANS [headercolor: #DC2626] {
+  ANSW_NUMB bigint [pk, not null, increment, note: '고객문의 답변 번호']
+  INQR_NUMB bigint [not null, note: '고객문의 번호']
+  ANSW_CNTN varchar(4000) [not null, note: '관리자 답변 내용']
+  READ_YSNO varchar(1) [not null, default: 'N', note: '사용자 답변 읽음 여부']
+  READ_DATE datetime(6) [note: '사용자 답변 읽음 일시']
+  REGI_ADMN bigint [not null, note: '답변 등록 관리자 번호']
+  REGI_DATE datetime(6) [not null, default: `CURRENT_TIMESTAMP(6)`, note: '등록 일시']
+
+  indexes {
+    (INQR_NUMB, REGI_DATE, ANSW_NUMB) [name: 'IX_CT_INQANS_INQR']
+    (REGI_ADMN) [name: 'FK_CT_INQANS_ADMN']
+  }
+  Note: '고객문의 관리자 답변'
+}
+
+Ref FK_CT_NOTICE_CATE: CT_NOTICE.(CATE_CGRP, CATE_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_CT_SVINFO_CATE: CT_SVINFO.(CATE_CGRP, CATE_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_TM_ALICON_REGI: TM_ALICON.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_ALICON_UPDT: TM_ALICON.UPDT_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TB_ALIMXX_ALTEMP: TB_ALIMXX.(ALIM_SITU, TEMP_CODE) > TB_ALTEMP.(ALIM_SITU, TEMP_CODE)
+
+Ref FK_TB_ALIMXX_USER: TB_ALIMXX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_AUTHMN_AUTH: TB_AUTHMN.AUTH_CODE > TM_AUTHXM.AUTH_CODE
+
+Ref FK_TB_AUTHMN_MENU: TB_AUTHMN.(MENU_NUMB, SUBX_NUMB) > TM_ADMENU.(MENU_NUMB, SUBX_NUMB)
+
+Ref FK_TB_AUTHMN_REGI: TB_AUTHMN.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TB_AUTHMN_UPDT: TB_AUTHMN.UPDT_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TB_CODEXD_CODEXM: TB_CODEXD.COMM_CODE > TM_CODEXM.COMM_CODE
+
+Ref FK_TB_CODEXD_UPPR: TB_CODEXD.(COMM_CODE, UPPR_CODE) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_FOLLOW_FLOW: TB_FOLLOW.FLOW_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_FOLLOW_USER: TB_FOLLOW.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_USBLOC_USER: TB_USBLOC.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_USBLOC_BLOC: TB_USBLOC.BLOC_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_LIKEXX_USER: TB_LIKEXX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_LOGHIS_USER: TB_LOGHIS.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_PSHSUB_USER: TB_PSHSUB.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_RDATDX_USER: TB_RDATDX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_REPLXX_UPER: TB_REPLXX.(TAGT_TYPE, TAGT_NUMB, UPER_NUMB) > TB_REPLXX.(TAGT_TYPE, TAGT_NUMB, REPL_NUMB)
+
+Ref FK_TB_REPLXX_USER: TB_REPLXX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TL_SCFAIL_LOG: TL_SCFAIL.RUNX_NUMB > TL_SCLOGX.RUNX_NUMB
+
+Ref FK_TH_USWTHD_RSON: TH_USWTHD.(RSON_CGRP, WTHD_RSON) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_TH_USWTHD_STAT: TH_USWTHD.(STAT_CGRP, WTHD_STAT) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_TH_USWTHD_TYPE: TH_USWTHD.(TYPE_CGRP, WTHD_TYPE) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_TM_ADMENU_REGI: TM_ADMENU.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_ADMENU_UPDT: TM_ADMENU.UPDT_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_ADMINX_AUTH: TM_ADMINX.AUTH_CODE > TM_AUTHXM.AUTH_CODE
+
+Ref FK_TM_AUTHXM_REGI: TM_AUTHXM.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_AUTHXM_UPDT: TM_AUTHXM.UPDT_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_FILEXM_REGI_USER: TM_FILEXM.REGI_USER > TM_USERXM.USER_NUMB
+
+Ref FK_TM_GOALXM_USER: TM_GOALXM.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TM_REPORT_BOOK: TM_REPORT.BOOK_NUMB > TM_BKINFO.BOOK_NUMB
+
+Ref FK_TM_REPORT_USER: TM_REPORT.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TM_RDTMRX_USER: TM_RDTMRX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TM_RDTMRX_REPT: TM_RDTMRX.REPT_NUMB > TM_REPORT.REPT_NUMB [delete: set null]
+
+Ref FK_TM_URMENU_PARN: TM_URMENU.PARN_NUMB > TM_URMENU.MENU_NUMB [delete: restrict]
+
+Ref FK_TM_URMENU_REGI: TM_URMENU.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_URMENU_UPDT: TM_URMENU.UPDT_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TM_USERXM_BGIM: TM_USERXM.BGIM_NUMB > TM_FILEXM.FILE_NUMB
+
+Ref FK_TM_USERXM_PROF: TM_USERXM.PROF_NUMB > TM_FILEXM.FILE_NUMB
+
+Ref FK_TM_USERXM_STAT: TM_USERXM.(USER_CGRP, USER_STAT) > TB_CODEXD.(COMM_CODE, COMD_CODE)
+
+Ref FK_TM_USSETX_USER: TM_USSETX.USER_NUMB > TM_USERXM.USER_NUMB
+
+Ref FK_TB_USVIEW_USER: TB_USVIEW.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_USINTR_01: TB_USINTR.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TM_CLUBXM_01: TM_CLUBXM.OWNR_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CLADMN_01: TH_CLADMN.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TH_CLADMN_02: TH_CLADMN.ADMN_NUMB > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TB_CLCATE_01: TB_CLCATE.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLMEMX_01: TB_CLMEMX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLMEMX_02: TB_CLMEMX.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_CLMEMX_03: TB_CLMEMX.SEND_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TM_CLCHAT_01: TM_CLCHAT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TM_CLCHAT_02: TM_CLCHAT.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CLKICK_01: TH_CLKICK.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TH_CLKICK_02: TH_CLKICK.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CLKICK_03: TH_CLKICK.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TB_CLQUES_01: TB_CLQUES.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLQUES_02: TB_CLQUES.REGI_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TB_CLQUES_03: TB_CLQUES.UPDT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TB_CLJOIN_01: TB_CLJOIN.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLJOIN_02: TB_CLJOIN.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_CLJOIN_03: TB_CLJOIN.PROC_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TB_CLBREC_01: TB_CLBREC.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLBREC_02: TB_CLBREC.BOOK_NUMB > TM_BKINFO.BOOK_NUMB
+
+Ref FK_TB_CLBREC_03: TB_CLBREC.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_CLBVOT_01: TB_CLBVOT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TB_CLBVOT_02: TB_CLBVOT.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TB_CLBVOT_03: TB_CLBVOT.RECM_NUMB > TB_CLBREC.RECM_NUMB [delete: cascade]
+
+Ref FK_TM_CLOWNX_01: TM_CLOWNX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TM_CLOWNX_02: TM_CLOWNX.RSLT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TM_CLOWNX_03: TM_CLOWNX.CNFM_ADMN > TM_ADMINX.ADMN_NUMB [delete: set null]
+
+Ref FK_TM_CLVOTX_01: TM_CLVOTX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TM_CLVOTX_02: TM_CLVOTX.(CLUB_NUMB, PRNT_VOTE) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB)
+
+Ref FK_TM_CLVOTX_03: TM_CLVOTX.(CLUB_NUMB, ELCT_NUMB) > TM_CLOWNX.(CLUB_NUMB, ELCT_NUMB) [delete: cascade]
+
+Ref FK_TB_CLVOPT_01: TB_CLVOPT.(CLUB_NUMB, VOTE_NUMB) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete: cascade]
+
+Ref FK_TB_CLVOTR_01: TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB) > TM_CLVOTX.(CLUB_NUMB, VOTE_NUMB) [delete: cascade]
+
+Ref FK_TB_CLVBAL_01: TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) > TB_CLVOTR.(CLUB_NUMB, VOTE_NUMB, USER_NUMB) [delete: cascade]
+
+Ref FK_TB_CLVBAL_02: TB_CLVBAL.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB) > TB_CLVOPT.(CLUB_NUMB, VOTE_NUMB, TAGT_NUMB)
+
+Ref FK_TM_CLRNDX_01: TM_CLRNDX.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TM_CLRNDX_02: TM_CLRNDX.BOOK_NUMB > TM_BKINFO.BOOK_NUMB
+
+Ref FK_TM_CLRNDX_03: TM_CLRNDX.REGI_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TM_CLSELT_01: TM_CLSELT.CLUB_NUMB > TM_CLUBXM.CLUB_NUMB [delete: cascade]
+
+Ref FK_TM_CLSELT_02: TM_CLSELT.(CLUB_NUMB, ROND_NUMB) > TM_CLRNDX.(CLUB_NUMB, ROND_NUMB)
+
+Ref FK_TM_CLSELT_03: TM_CLSELT.BOOK_NUMB > TM_BKINFO.BOOK_NUMB
+
+Ref FK_TB_CLPART_01: TB_CLPART.(CLUB_NUMB, ROND_NUMB) > TM_CLRNDX.(CLUB_NUMB, ROND_NUMB) [delete: cascade]
+
+Ref FK_TB_CLPART_02: TB_CLPART.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TB_CLPART_03: TB_CLPART.REPT_NUMB > TM_REPORT.REPT_NUMB [delete: set null]
+
+Ref FK_TH_CLRSLT_01: TH_CLRSLT.(CLUB_NUMB, ROND_NUMB) > TM_CLRNDX.(CLUB_NUMB, ROND_NUMB) [delete: cascade]
+
+Ref FK_TH_CLRSLT_02: TH_CLRSLT.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TH_CMEVDC_TAGT_USER: TH_CMEVDC.TAGT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CMPLNT_USER: TH_CMPLNT.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CMPLNT_TAGT_USER: TH_CMPLNT.TAGT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CMPLNT_EVDC: TH_CMPLNT.EVDC_NUMB > TH_CMEVDC.EVDC_NUMB [delete: set null]
+
+Ref FK_TH_CMPLNT_PROC: TH_CMPLNT.PROC_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_TH_CMREVT_TRIG: TH_CMREVT.TRIG_CMPL > TH_CMPLNT.CMPL_NUMB [delete: set null]
+
+Ref FK_TH_CMREVT_TAGT_USER: TH_CMREVT.TAGT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CMRSLT_EVNT: TH_CMRSLT.EVNT_NUMB > TH_CMREVT.EVNT_NUMB [delete: cascade]
+
+Ref FK_TH_CMRSLT_CMPL: TH_CMRSLT.CMPL_NUMB > TH_CMPLNT.CMPL_NUMB [delete: cascade]
+
+Ref FK_TH_CMRSLT_USER: TH_CMRSLT.USER_NUMB > TM_USERXM.USER_NUMB [delete: cascade]
+
+Ref FK_TH_CMACTN_TAGT_USER: TH_CMACTN.TAGT_USER > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_TH_CMACTN_TRIG: TH_CMACTN.TRIG_CMPL > TH_CMPLNT.CMPL_NUMB [delete: set null]
+
+Ref FK_CT_INQURY_USER: CT_INQURY.USER_NUMB > TM_USERXM.USER_NUMB [delete: set null]
+
+Ref FK_CT_INQURY_SPND: CT_INQURY.SPND_NUMB > TH_USSPND.SPND_NUMB
+
+Ref FK_CT_INQURY_ADMN: CT_INQURY.ASGN_ADMN > TM_ADMINX.ADMN_NUMB
+
+Ref FK_CT_INQANS_INQR: CT_INQANS.INQR_NUMB > CT_INQURY.INQR_NUMB [delete: cascade]
+
+Ref FK_CT_INQANS_ADMN: CT_INQANS.REGI_ADMN > TM_ADMINX.ADMN_NUMB
+
+TableGroup Common {
+  TB_CODEXD
+  TM_CODEXM
+  TM_FILEXM
+}
+
+TableGroup Administration {
+  CT_NOTICE
+  CT_WLCMPG
+  CT_SVINFO
+  CT_POPUPX
+  TB_AUTHMN
+  TM_ADMENU
+  TM_ADMINX
+  TM_AUTHXM
+  TM_URMENU
+}
+
+TableGroup User {
+  TB_NKSEQX
+  TH_USSPND
+  TB_FOLLOW
+  TB_USBLOC
+  TB_LOGHIS
+  TH_USWTHD
+  TM_USERXM
+  TM_USSETX
+  TB_USVIEW
+  TB_USINTR
+}
+
+TableGroup Reading {
+  TB_RDATDX
+  TM_BKINFO
+  TM_GOALXM
+  TM_REPORT
+  TM_RDTMRX
+}
+
+TableGroup Engagement {
+  TM_ALICON
+  TB_ALTEMP
+  TB_ALIMXX
+  TB_LIKEXX
+  TB_PSHSUB
+  TB_REPLXX
+}
+
+TableGroup ReadingClub {
+  TM_CLUBXM
+  TH_CLADMN
+  TB_CLCATE
+  TB_CLMEMX
+  TM_CLCHAT
+  TH_CLKICK
+  TB_CLQUES
+  TB_CLJOIN
+  TB_CLBREC
+  TB_CLBVOT
+  TM_CLOWNX
+  TM_CLVOTX
+  TB_CLVOPT
+  TB_CLVOTR
+  TB_CLVBAL
+  TM_CLRNDX
+  TM_CLSELT
+  TB_CLPART
+  TH_CLRSLT
+}
+
+TableGroup Support {
+  TH_CMEVDC
+  TH_CMPLNT
+  TH_CMREVT
+  TH_CMRSLT
+  TH_CMACTN
+  CT_INQURY
+  CT_INQANS
+}
+
+TableGroup Operations {
+  TB_EVTBOX
+  TL_SCLOGX
+  TL_SCFAIL
+}
