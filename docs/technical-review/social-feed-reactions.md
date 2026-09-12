@@ -1,4 +1,7 @@
 # 팔로우·좋아요·댓글을 공개 범위
+<p align="center">
+    <img width="682" height="1330" alt="Image" src="https://github.com/user-attachments/assets/b1d9da78-336a-455c-b657-d0b8c4dc50ed" />
+</p>
 
 ## 문제
 
