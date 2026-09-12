@@ -29,7 +29,7 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.file.storage.FileStorage;
 import org.our.sadari.global.file.storage.StoredFile;
-import org.springframework.dao.DuplicateKeyException;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -131,6 +131,11 @@ public class ComplaintServiceImpl implements ComplaintService {
             // "저장에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
+        // 신고 화면을 연 뒤 대상이 수정되었다면 사용자가 확인하지 않은 새 내용은 접수하지 않음
+        if (!StringUtil.isEmpty(complaintCreateDto.getTagtCntn())
+                && !complaintCreateDto.getTagtCntn().equals(target.getTagtCntn())) {
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
+        }
 
         // 텍스트 또는 실제 이미지 원본으로 변경 불가능한 대상 버전 해시를 계산함
         byte[] evidenceBytes = getEvidenceBytes(tagtType, target);
@@ -176,7 +181,7 @@ public class ComplaintServiceImpl implements ComplaintService {
         }
 
         // 같은 사용자와 대상의 선행 신고가 먼저 저장되었으면 중복 신고 안내로 변환함
-        catch (DuplicateKeyException e) {
+        catch (DataIntegrityViolationException e) {
             // "동일한 대상은 다시 신고할 수 없어요."
             return ResultData.fail(ResultEnum.COMPLAINT_DUPLICATED);
         }

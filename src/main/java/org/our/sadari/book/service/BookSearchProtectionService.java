@@ -14,6 +14,7 @@ import java.util.ArrayList;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 import lombok.RequiredArgsConstructor;
@@ -172,6 +173,18 @@ public class BookSearchProtectionService {
     private final ObjectMapper objectMapper;
     // 검색은 허용하면서 인기 검색어 노출만 제한할 비속어 판정 서비스
     private final BadWordDetectionService badWordDetectionService;
+
+    /**
+     * 외부 도서 검색에 전달하기 전에 검색어의 비속어 포함 여부를 확인함
+     *
+     * @author SeungHyeon.Kang
+     * @param keyword 검사할 도서 검색어
+     * @return 탐지된 비속어 단어
+     */
+    public Optional<String> findBlockedSearchKeyword(String keyword) {
+        // 공백과 특수문자 삽입 우회까지 공통 비속어 정책으로 검사해 외부 공급자 호출을 차단함
+        return badWordDetectionService.findBadWord(keyword);
+    }
 
     /**
      * 캐시 유형별 회원 검색 제한을 검사하고 요청 횟수를 반영함

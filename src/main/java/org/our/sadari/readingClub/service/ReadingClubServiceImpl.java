@@ -91,6 +91,8 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     private static final int READING_HISTORY_PAGE_SIZE = 12;
     // 승인된 가입 신청 상태 코드
     private static final String APPLICATION_APPROVED = "APPROVED";
+    // 승인 대기 중인 가입 신청 상태 코드
+    private static final String APPLICATION_PENDING = "PENDING";
     // 거절된 가입 신청 상태 코드
     private static final String APPLICATION_REJECTED = "REJECTED";
 
@@ -584,7 +586,9 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         }
 
         // 로그인 사용자가 활성 회원으로 참여 중인 모임을 조회함
-        List<ReadingClubDto.ClubViewDto> clubs = readingClubMapper.getMyClubList(userNumb);
+        List<ReadingClubDto.ClubViewDto> clubs = new ArrayList<>(readingClubMapper.getMyClubList(userNumb));
+        // 공개 여부와 관계없이 승인 대기 중인 본인 가입 신청도 내 모임에 포함함
+        clubs.addAll(readingClubMapper.getMyPendingClubList(userNumb));
         // 조회한 각 모임에 카테고리 표시 정보를 결합함
         List<ReadingClubDto.ClubViewDto> result = fillClubRelations(clubs, false);
         // 카테고리 표시 정보가 포함된 내 모임 목록을 반환함

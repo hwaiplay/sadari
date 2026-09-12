@@ -69,6 +69,7 @@ export const useClubChatPage = () => {
     let active = true;
     let polling = false;
     let initialized = false;
+    let terminalError = false;
     let queue = Promise.resolve();
     // 다른 탭과 재진입 화면의 종료 요청을 구분할 식별값
     const viewId = crypto.randomUUID();
@@ -96,7 +97,7 @@ export const useClubChatPage = () => {
 
     /** 표시 중인 화면만 채팅 조회 및 열람 유효 시간 갱신 */
     const loadMessages = async (): Promise<void> => {
-      if (!active || polling || document.visibilityState !== "visible") {
+      if (!active || polling || terminalError || document.visibilityState !== "visible") {
         return;
       }
       polling = true;
@@ -123,6 +124,7 @@ export const useClubChatPage = () => {
       } catch (error: unknown) {
         // 최초 조회 실패만 안내하고 주기 조회 실패는 다음 주기에 재시도
         if (active && !initialized) {
+          terminalError = true;
           void sweetError(
             message("frontend.readingClub.chat.loadErrorTitle"),
             getApiErrorMessage(error, message("frontend.common.tryAgain")),

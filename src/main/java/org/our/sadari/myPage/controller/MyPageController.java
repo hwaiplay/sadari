@@ -172,8 +172,15 @@ public class MyPageController {
     @Operation(summary = "독서 목표 저장", description = "로그인 사용자의 주간, 월간, 연간 독서 목표 권수를 저장한다.")
     public ResultData setReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @RequestBody ReadingGoalDto readingGoalDto) {
-        // 로그인 사용자의 독서 목표 저장 결과를 반환함
-        return reportService.setReadingGoal(userNumb, readingGoalDto);
+        // 로그인 사용자의 독서 목표를 저장함
+        ResultData result = reportService.setReadingGoal(userNumb, readingGoalDto);
+        // 저장이 실패하면 원래 실패 사유를 그대로 반환함
+        if (result.getCode() != 200) {
+            // 독서 목표 저장 실패 결과를 반환함
+            return result;
+        }
+        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환함
+        return getMonthlyReadingSummary(userNumb);
     }
 
     /**
@@ -186,8 +193,15 @@ public class MyPageController {
     @PostMapping("/reading-goal/previous")
     @Operation(summary = "이전 독서 목표 복사", description = "현재 기간의 목표가 비어 있을 때 이전 주/월/년 목표 권수를 복사해 저장한다.")
     public ResultData copyPreviousReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // 이전 목표량 복사 결과를 반환함
-        return reportService.copyPreviousReadingGoal(userNumb);
+        // 이전 목표량을 현재 기간으로 복사함
+        ResultData result = reportService.copyPreviousReadingGoal(userNumb);
+        // 복사가 실패하면 원래 실패 사유를 그대로 반환함
+        if (result.getCode() != 200) {
+            // 이전 목표 복사 실패 결과를 반환함
+            return result;
+        }
+        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환함
+        return getMonthlyReadingSummary(userNumb);
     }
 
     /**

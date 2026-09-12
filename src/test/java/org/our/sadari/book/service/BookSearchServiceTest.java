@@ -14,6 +14,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -98,10 +99,27 @@ class BookSearchServiceTest {
         messageSource.addMessage("common.alert.0008", Locale.KOREAN, "검색에 실패했어요.");
         // 검색 요청 제한 코드의 테스트용 사용자 문구를 등록함
         messageSource.addMessage("book.alert.0001", Locale.KOREAN, "검색 요청이 너무 많아요.");
+        // 비속어 검색 차단의 테스트용 사용자 문구를 등록함
+        messageSource.addMessage("common.alert.0015", Locale.KOREAN, "비속어가 포함되어 있어요.");
         // 공통 메시지 조회 로케일을 등록한 한국어 문구와 일치시킴
         LocaleContextHolder.setLocale(Locale.KOREAN);
         // 공통 실패 응답에서 테스트 메시지를 조회할 수 있도록 설정함
         new MessageUtils().setMessageSource(messageSource);
+    }
+
+    /** 공백으로 우회한 비속어를 외부 검색과 Redis 처리 전에 차단하는지 검증함 */
+    @Test
+    void blocksSpacedBadWord() {
+        // 공통 비속어 검사에서 공백 우회 검색어를 탐지하도록 구성함
+        when(bookSearchProtectionService.findBlockedSearchKeyword("시 발")).thenReturn(Optional.of("시발"));
+
+        // 공백 우회 비속어로 도서 검색을 요청함
+        ResultData resultData = bookSearchService.searchBooks(7L, "시 발", 1);
+
+        // 화면에 비속어 오류를 반환하고 계정 설정과 외부 검색 처리에는 진입하지 않는지 확인함
+        assertEquals(2015, resultData.getCode());
+        verifyNoInteractions(userMapper, restTemplate);
+        verify(bookSearchProtectionService, never()).getCachedSearch(any(), any(), any(Integer.class));
     }
 
     /** 한국어 설정에서 카카오 검색 결과와 50권 페이지 계약을 유지하는지 검증함 */

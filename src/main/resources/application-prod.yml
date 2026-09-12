@@ -140,6 +140,7 @@ app:
 scheduler:
   enabled: ${SCHEDULER_ENABLED:true}
   max-size: ${SCHEDULER_MAX_SIZE:100}
+  alim-delete-retention-days: ${ALIM_DELETE_RETENTION_DAYS:30}
   round-completion-cron: "0 * * * * *"
 
 # 독서 타이머는 서울 시간대 기준 하루 10분을 출석으로 인정하고 세션 상세를 1년 보존함

@@ -36,6 +36,12 @@ public class BadWordDetectionService {
     // 공백이 아닌 같은 문자가 두 번 이상 연속된 우회 구간
     private static final Pattern REPEATED_CHARACTER_PATTERN = Pattern.compile("([^\\p{javaWhitespace}\\p{Z}])\\1+");
 
+    // 한 글자 단위로 분리한 비속어 우회 표현의 글자 사이 공백
+    private static final Pattern SPACED_CHARACTER_PATTERN = Pattern.compile(
+            "(?<=[\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}])[\\p{javaWhitespace}\\p{Z}]+"
+          + "(?=[\\p{IsHangul}\\p{IsAlphabetic}\\p{IsDigit}](?:[\\p{javaWhitespace}\\p{Z}]|$))"
+    );
+
     // 공통코드 데이터를 데이터베이스에서 조회해 오는 유틸리티 클래스임
     private final CodeUtil codeUtil;
 
@@ -81,7 +87,16 @@ public class BadWordDetectionService {
         // 공백 경계를 유지한 정규화본과 반복 문자 변환본에서 일반 및 숫자 포함 비속어를 순차 탐지함
         // 입력 문자열에서 처음 탐지된 비속어를 Optional로 반환함
         return getRepeatedBadWordDtl(cache.badWordMatcher(), cache.exceptionWordMatcher(), normalizedWithoutDigits)
-                .or(() -> getRepeatedBadWordDtl(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits));
+                .or(() -> getRepeatedBadWordDtl(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher(), normalizedWithDigits))
+                .or(() -> getRepeatedBadWordDtl(cache.badWordMatcher(), cache.exceptionWordMatcher()
+                                              , normalizeSpacedCharacters(normalizedWithoutDigits)))
+                .or(() -> getRepeatedBadWordDtl(cache.digitBadWordMatcher(), cache.digitExceptionWordMatcher()
+                                              , normalizeSpacedCharacters(normalizedWithDigits)));
+    }
+
+    /** 한 글자 토큰 사이의 공백만 제거하여 문장 단어 경계는 보존한다. */
+    private String normalizeSpacedCharacters(String value) {
+        return SPACED_CHARACTER_PATTERN.matcher(value).replaceAll("");
     }
 
     /**

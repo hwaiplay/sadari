@@ -50,7 +50,7 @@ class AlimDeleteServiceImplTest {
     @BeforeEach
     void setUp() {
         // 알림 삭제 스케줄러 단위 테스트 대상을 담을 객체를 생성함
-        alimDeleteService = new AlimDeleteServiceImpl(alimDeleteMapper, schedulerLogSupport);
+        alimDeleteService = new AlimDeleteServiceImpl(alimDeleteMapper, schedulerLogSupport, 30);
     }
 
     /**
@@ -63,7 +63,7 @@ class AlimDeleteServiceImplTest {
         // 성공 실행 로그에 사용할 실행 번호를 설정함
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
         // Alim 데이터를 DB에서 삭제함
-        when(alimDeleteMapper.delAlim()).thenReturn(12);
+        when(alimDeleteMapper.delAlim(any())).thenReturn(12);
 
         // delAlim 업무 로직을 alimDeleteService에 위임함
         alimDeleteService.delAlim();
@@ -96,7 +96,7 @@ class AlimDeleteServiceImplTest {
     @Test
     void delAlimSkipsEmptyLog() {
         // Alim 데이터를 DB에서 삭제함
-        when(alimDeleteMapper.delAlim()).thenReturn(0);
+        when(alimDeleteMapper.delAlim(any())).thenReturn(0);
 
         // delAlim 업무 로직을 alimDeleteService에 위임함
         alimDeleteService.delAlim();
@@ -117,7 +117,7 @@ class AlimDeleteServiceImplTest {
         // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성함
         RuntimeException exception = new RuntimeException("delete failed");
         // Alim 데이터를 DB에서 삭제함
-        when(alimDeleteMapper.delAlim()).thenThrow(exception);
+        when(alimDeleteMapper.delAlim(any())).thenThrow(exception);
 
         // 검증 대상 코드가 예상 예외를 발생시키는지 확인함
         assertThrows(RuntimeException.class, alimDeleteService::delAlim);

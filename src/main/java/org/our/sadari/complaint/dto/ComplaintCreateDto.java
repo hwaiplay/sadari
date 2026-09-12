@@ -31,6 +31,9 @@ public class ComplaintCreateDto {
     @Positive
     private Long tagtNumb;
 
+    @Schema(description = "신고 화면 진입 시 확인한 대상 내용")
+    private String tagtCntn;
+
     @Schema(description = "신고 사유 세부코드", example = "CMPL_ABUSE")
     @NotBlank
     private String cmplRson;

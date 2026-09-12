@@ -5,6 +5,9 @@ type MessageParams = Array<string | number>;
 
 const MESSAGE_LOCALE_STORAGE_KEY = "sadari:message-locale";
 
+/** 메시지 언어 변경을 애플리케이션 루트에 알리는 이벤트명 */
+export const MESSAGE_LOCALE_CHANGE_EVENT = "sadari:message-locale-change";
+
 /**
  * properties 형식 메시지 파일을 key-value 객체로 변환함
  *
@@ -66,7 +69,13 @@ export const getMessageLocale = (): "en" | "ko" => {
 
 /** 서버에서 확정한 계정 언어를 현재 브라우저 메시지 언어로 저장함 */
 export const setMessageLocale = (englishYsno: "Y" | "N"): void => {
-  window.localStorage.setItem(MESSAGE_LOCALE_STORAGE_KEY, englishYsno === "Y" ? "en" : "ko");
+  const nextLocale = englishYsno === "Y" ? "en" : "ko";
+  const previousLocale = getMessageLocale();
+  window.localStorage.setItem(MESSAGE_LOCALE_STORAGE_KEY, nextLocale);
+
+  if (previousLocale !== nextLocale) {
+    window.dispatchEvent(new Event(MESSAGE_LOCALE_CHANGE_EVENT));
+  }
 };
 
 /**

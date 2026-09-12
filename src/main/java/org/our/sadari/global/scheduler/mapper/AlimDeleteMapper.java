@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.mapper;
 
+import java.time.LocalDateTime;
 import org.apache.ibatis.annotations.Mapper;
 
 /**
@@ -15,10 +16,10 @@ import org.apache.ibatis.annotations.Mapper;
 @Mapper
 public interface AlimDeleteMapper {
     /**
-     * TB_ALIMXX에서 DELT_YSNO가 Y인 알림을 모두 물리 삭제
+     * TB_ALIMXX에서 삭제 상태로 보존기간을 지난 알림을 물리 삭제
      *
      * @author SeungHyeon.Kang
      * @return 물리 삭제된 알림 건수
      */
-    int delAlim();
+    int delAlim(LocalDateTime retentionDate);
 }

@@ -88,6 +88,7 @@
 | `FIREBASE_CREDENTIALS_PATH` | 필수 | Firebase 서비스 계정 자격증명 파일 경로 |
 | `SCHEDULER_ENABLED` | `true` | 운영 스케줄러 실행 여부 |
 | `SCHEDULER_MAX_SIZE` | `100` | 한 번의 스케줄 실행 최대 처리 건수 |
+| `ALIM_DELETE_RETENTION_DAYS` | `30` | 사용자가 삭제한 알림을 물리 삭제하기 전 보존기간(일) |
 | `SERVER_PORT` | `8080` | Spring 서버 포트 |
 | `LOGGING_LEVEL_ROOT` | `info` | 루트 로그 레벨 |
 | `LOGGING_LEVEL_APP` | `info` | 프로젝트 패키지 로그 레벨 |

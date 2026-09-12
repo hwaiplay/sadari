@@ -61,6 +61,10 @@ export default function MyClubPage() {
 
   // 모임장인 모든 모임의 승인 대기 신청 건수를 합산
   const pendingApplicationCnt = pendingApplications.reduce(sumApplicationCnt, 0);
+  // 로그인 사용자가 가입 승인을 기다리는 모임을 별도 목록으로 구분함
+  const pendingJoinedClubs = clubs.filter((club) => club.joinStat === "PENDING");
+  // 실제 활성 회원으로 참여 중인 모임만 진행 중 목록에 표시함
+  const activeClubs = clubs.filter((club) => club.joinStat !== "PENDING");
   const hasClubNotice = invitations.length > 0 || pendingApplicationCnt > 0;
 
   /**
@@ -299,11 +303,21 @@ export default function MyClubPage() {
         </section>
       )}
 
+      {/* 로그인 사용자가 가입 승인을 기다리는 모임 목록 영역 */}
+      {pendingJoinedClubs.length > 0 && (
+        <section className={styles.clubSection}>
+          <h2 className={styles.sectionTitle}>
+            {message("frontend.readingClub.my.pendingClubCount", [pendingJoinedClubs.length])}
+          </h2>
+          <div className={styles.clubList}>{pendingJoinedClubs.map(renderClub)}</div>
+        </section>
+      )}
+
       {/* 진행 중인 모임 목록 영역 */}
       <section className={styles.clubSection}>
         <h2 className={styles.sectionTitle}>
           {/* "진행 중인 모임 N" */}
-          {message("frontend.readingClub.my.activeClubCount", [clubs.length])}
+          {message("frontend.readingClub.my.activeClubCount", [activeClubs.length])}
         </h2>
         {/* 참여 중인 모임 카드 목록 영역 */}
         {isLoading ? (
@@ -317,8 +331,8 @@ export default function MyClubPage() {
               ariaLabel={message("frontend.readingClub.common.loading")}
             />
           </div>
-        ) : clubs.length > 0 ? (
-          <div className={styles.clubList}>{clubs.map(renderClub)}</div>
+        ) : activeClubs.length > 0 ? (
+          <div className={styles.clubList}>{activeClubs.map(renderClub)}</div>
         ) : (
           <p className={styles.empty}>
             {/* "아직 참여 중인 모임이 없어요." */}

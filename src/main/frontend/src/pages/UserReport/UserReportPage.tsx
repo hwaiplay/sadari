@@ -109,6 +109,7 @@ const UserReportPage = () => {
       await setComplaintApi({
         tagtType: TARGET_TYPE_CODES[target.targetType],
         tagtNumb: target.targetNumb,
+        tagtCntn: target.content,
         cmplRson: selectedReason as ComplaintReason,
         cmplCntn: detailReason.trim() || null,
       });
