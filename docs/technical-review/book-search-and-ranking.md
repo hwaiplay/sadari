@@ -1,13 +1,8 @@
-[book-search-and-ranking 8e06108c45888307a4e50113729c0f2e.md](https://github.com/user-attachments/files/32142547/book-search-and-ranking.8e06108c45888307a4e50113729c0f2e.md)
-# book-search-and-ranking
-
 # 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호하기
 
----
-
-![bandicam 2026-09-11 17-03-21-499.jpg](bandicam_2026-09-11_17-03-21-499.jpg)
-
-![bandicam 2026-09-11 17-08-31-079.jpg](bandicam_2026-09-11_17-08-31-079.jpg)
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/55fdbc9b-0b2e-4695-af6d-74aa25f3ebcf" />
+</p>
 
 ## 문제
 
