@@ -1,4 +1,9 @@
+[book-search-and-ranking 8e06108c45888307a4e50113729c0f2e.md](https://github.com/user-attachments/files/32142547/book-search-and-ranking.8e06108c45888307a4e50113729c0f2e.md)
+# book-search-and-ranking
+
 # 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호하기
+
+---
 
 ![bandicam 2026-09-11 17-03-21-499.jpg](bandicam_2026-09-11_17-03-21-499.jpg)
 
