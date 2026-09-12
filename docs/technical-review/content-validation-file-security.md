@@ -1,5 +1,9 @@
 # Aho-Corasick과 이미지 재인코딩으로 콘텐츠 입력을 검증
 
+<p align="center">
+    <img width="326" height="650" alt="Image" src="https://github.com/user-attachments/assets/054ffce7-3c5f-413e-bb60-e9e7e364d027" />
+</p>
+
 ## 문제
 
 사용자 입력 검증은 단순 금칙어 `contains`와 확장자 검사만으로 끝나지 않습니다. 비속어 사이에 특수문자를 넣거나 같은 글자를 반복하면 단순 비교를 우회할 수 있습니다. 이미지 파일명과 `Content-Type`은 요청자가 바꿀 수 있고, 작은 압축 파일이 디코딩 뒤 거대한 픽셀 메모리를 요구할 수도 있습니다.
