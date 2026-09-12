@@ -1,5 +1,9 @@
 # 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호하기
 
+![bandicam 2026-09-11 17-03-21-499.jpg](bandicam_2026-09-11_17-03-21-499.jpg)
+
+![bandicam 2026-09-11 17-08-31-079.jpg](bandicam_2026-09-11_17-08-31-079.jpg)
+
 ## 문제
 
 한국어 화면에서 사용하던 Kakao 도서 검색은 국내 도서 정보에 적합하지만, 영어권 도서를 영어 제목과 영문 줄거리로 찾는 용도에는 한계가 있습니다. 그렇다고 검색 화면을 공급자마다 따로 만들면 화면 계약, 페이지 처리, 캐시와 저장 로직이 모두 두 벌로 늘어납니다.
@@ -254,7 +258,7 @@ Long getBookNumbByIsbn(BookDto bookDto);
 
 검색 결과가 독후감이나 독서 모임 저장 요청으로 이동할 때도 언어 코드를 보존합니다.
 
-```typescript
+```tsx
 const data = {
   bookTitl: stripHtmlTags(selectedBook.title),
   bookAthr: normalizeBookAuthor(selectedBook.author),
