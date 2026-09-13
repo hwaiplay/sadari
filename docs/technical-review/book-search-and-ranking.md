@@ -1,4 +1,8 @@
-# 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호하기
+# 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호
+
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/55fdbc9b-0b2e-4695-af6d-74aa25f3ebcf" />
+</p>
 
 ## 문제
 
@@ -254,7 +258,7 @@ Long getBookNumbByIsbn(BookDto bookDto);
 
 검색 결과가 독후감이나 독서 모임 저장 요청으로 이동할 때도 언어 코드를 보존합니다.
 
-```typescript
+```tsx
 const data = {
   bookTitl: stripHtmlTags(selectedBook.title),
   bookAthr: normalizeBookAuthor(selectedBook.author),

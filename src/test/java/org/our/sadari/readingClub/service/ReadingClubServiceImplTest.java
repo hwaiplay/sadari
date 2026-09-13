@@ -226,6 +226,8 @@ class ReadingClubServiceImplTest {
 
         // 내 모임과 모임별 카테고리 조회 결과를 반환하도록 구성함
         when(readingClubMapper.getMyClubList(20L)).thenReturn(List.of(club));
+        // 승인 대기 중인 본인 가입 신청은 없는 상태를 구성함
+        when(readingClubMapper.getMyPendingClubList(20L)).thenReturn(List.of());
         // 대표 카테고리 관계를 목록 후처리에 제공함
         when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of(category));
 
@@ -238,6 +240,37 @@ class ReadingClubServiceImplTest {
         assertEquals("소설", club.getCategoryList().get(0).getIntrName());
         assertEquals("https://example.com/book.jpg", club.getCurrentBookCvim());
         verify(readingClubMapper).getClubCategoryList(10L);
+    }
+
+    /**
+     * 공개 여부와 관계없이 본인의 승인 대기 가입 신청을 내 모임에 포함하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void includesPendingClub() {
+        // 승인 대기 중인 비공개 모임 조회 결과를 구성함
+        ReadingClubDto.ClubViewDto pendingClub = new ReadingClubDto.ClubViewDto();
+        // 관계 조회와 화면 이동에 사용할 모임 번호를 설정함
+        pendingClub.setClubNumb(11L);
+        // 본인 신청 상태를 승인 대기로 설정함
+        pendingClub.setJoinStat("PENDING");
+
+        // 활성 참여 모임은 없는 상태를 구성함
+        when(readingClubMapper.getMyClubList(20L)).thenReturn(List.of());
+        // 본인의 승인 대기 신청 모임을 반환함
+        when(readingClubMapper.getMyPendingClubList(20L)).thenReturn(List.of(pendingClub));
+        // 승인 대기 카드에 결합할 카테고리는 없는 상태를 구성함
+        when(readingClubMapper.getClubCategoryList(11L)).thenReturn(List.of());
+
+        // 로그인 사용자의 내 모임 목록을 조회함
+        ResultData result = readingClubService.getMyClubList(20L);
+
+        // 승인 대기 신청 모임이 성공 응답에 포함됐는지 검증함
+        assertEquals(200, result.getCode());
+        assertEquals(List.of(pendingClub), result.getData());
+        assertEquals("PENDING", pendingClub.getJoinStat());
+        verify(readingClubMapper).getMyPendingClubList(20L);
     }
 
     /**

@@ -187,7 +187,6 @@ function UserSettingsPage({ section }: UserSettingsPageProps) {
       setSavedSetting(saved);
       if (section === "language") {
         setMessageLocale(saved.englishYsno);
-        window.location.reload();
       }
     } catch (error) {
       void sweetError(

@@ -72,6 +72,7 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
      * @author SeungHyeon.Kang
      */
     @Override
+    @Transactional
     public void sendReportDateOverAlim() {
         // 실행 시간을 측정할 시작 시각을 기록함
         long startNanoTime = System.nanoTime();

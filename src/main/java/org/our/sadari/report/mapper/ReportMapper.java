@@ -82,6 +82,9 @@ public interface ReportMapper {
      */
     ReportDto getReportDtl(ReportDto req);
 
+    /** 독후감 번호로 소유자 사용자 번호를 조회한다. */
+    Long getReportOwnerNumb(Long reptNumb);
+
     /**
      * 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회함
      *

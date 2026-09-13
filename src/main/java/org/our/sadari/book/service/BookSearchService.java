@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookJsonDto;
@@ -110,6 +111,13 @@ public class BookSearchService {
         if (StringUtil.hasEmpty(userNumb, query)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 공백과 특수문자를 삽입한 우회 검색도 외부 공급자와 Redis를 사용하기 전에 차단함
+        Optional<String> badWord = bookSearchProtectionService.findBlockedSearchKeyword(query);
+        if (badWord.isPresent()) {
+            // "비속어가 포함되어 있어요."
+            return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
         // 계정 설정 조회와 외부 API 통신 및 응답 변환 실패를 공통 검색 실패 응답으로 격리함

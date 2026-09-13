@@ -396,6 +396,15 @@ public interface ReadingClubMapper {
     List<ReadingClubDto.ClubViewDto> getMyClubList(Long userNumb);
 
     /**
+     * 로그인 사용자가 가입 승인을 기다리는 모임 목록을 조회함
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 승인 대기 중인 내 가입 신청 모임 목록
+     */
+    List<ReadingClubDto.ClubViewDto> getMyPendingClubList(Long userNumb);
+
+    /**
      * 공개 모임을 관심분야 일치 순서로 조회함
      *
      * @author SeungHyeon.Kang

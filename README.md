@@ -64,182 +64,123 @@ Sadari는 독서 기록, 목표, 소셜 활동과 독서 모임을 연결한 Rea
 
 [![Sadari 전체 아키텍처](docs/architecture/assets/sadari-architecture-overview.svg)](docs/architecture/assets/sadari-architecture-overview.svg)
 
-외부 플랫폼 중 Google Cloud Translation API는 공개 독후감의 요청 시점 번역과 캐시에 사용합니다. 도서 검색은 한국어 설정에서 Kakao, 영어 설정에서 Google Books API를 사용합니다.
-
 [전체 데이터베이스 ERD](docs/architecture/database-erd/README.md)에서 현재 DDL 기준 테이블·컬럼·관계와 영역별 구조를 확인할 수 있습니다.
-
-사용자 서비스와 관리자 서비스는 동기 REST 호출 대신 공통 MySQL 업무 테이블과 파일 저장소를 사용합니다. 이 구조의 스키마 결합은 다음 기준으로 통제합니다.
-
-- 사용자 저장소의 `scripts/db/mysql/01-create.sql`을 스키마 원본으로 관리합니다.
-- 관리자 메뉴·공통 코드 등 기준 데이터는 `scripts/db/mysql/output/02-admin-insert.sql`에서 관리합니다.
-- 테이블별 쓰기 주체를 구분하고, 사용자 세션 변경은 DB Outbox를 거쳐 사용자 백엔드만 Redis에 반영합니다.
-- 서비스 규모가 커져 독립 배포와 스키마 변경이 빈번해지면 운영 도메인별 API 또는 이벤트 계약으로 분리할 수 있습니다.
 
 ## 핵심 기술 사례
 
 ### 1. 반복 SQL을 집계 쿼리로 통합
 
-마이페이지의 기간별 독서량·목표·달성 횟수와 도서 목록에 실행되던 최대 19회의 SQL을 2회로 줄였습니다. 완료 독후감은 조건부 집계하고, 현재 읽는 책과 완료 목록은 한 번 조회한 뒤 애플리케이션에서 기간별로 분류합니다.
+마이페이지의 독서량·목표는 조건부 집계하고, 도서 목록은 한 번 조회한 뒤 기간별로 분류해 SQL 호출을 최대 `19회 → 2회`로 줄였습니다.
 
 | 지표 | 개선 전 | 개선 후 |
 | --- | ---: | ---: |
-| SQL 호출 | 최대 19회 | 2회 |
 | 개발 DB JDBC 중앙값 | 215.241ms | 26.436ms |
 | 개발 DB JDBC P95 | 578.272ms | 80.201ms |
 | 격리 DB 10,000건 중앙값 | 314.315ms | 175.091ms |
 
-개발 DB는 준비 10회 후 100회, 격리 MySQL은 준비 5회 후 30회 반복한 단일 연결 JDBC 측정값입니다. Spring MVC·MyBatis·직렬화와 동시 요청을 포함한 API 응답 시간은 아니므로 운영 성능으로 일반화하지 않았습니다.
+개발 DB는 준비 10회 후 100회, 격리 MySQL은 준비 5회 후 30회 반복한 단일 연결 JDBC 측정값입니다. API 응답 시간과는 구분하며, 데이터 증가에 따른 집계 비용과 결과 동등성도 확인했습니다.
 
-격리 MySQL 8.4.10에서는 더미 독후감 수를 늘리며 기존·통합 쿼리를 번갈아 실행했습니다. 최근 5년 목표 329건과 `DONE 90% / READ 10%` 분포를 사용하고, 모든 결과 행을 소비해 결과 동등성도 검증했습니다.
+격리 MySQL 8.4.10에서 최근 5년 목표 329건과 완료 90%·읽는 중 10% 분포를 사용해 데이터 규모별로 비교했습니다.
 
-| 더미 독후감 | 기존 중앙값 | 개선 중앙값 | 감소율 | 개선 배수 | 기존 / 개선 P95 |
-| ---: | ---: | ---: | ---: | ---: | ---: |
-| 100건 | 14.953ms | 5.664ms | 62.12% | 2.64배 | 21.242ms / 7.233ms |
-| 1,000건 | 34.558ms | 16.296ms | 52.85% | 2.12배 | 39.175ms / 18.138ms |
-| 10,000건 | 314.315ms | 175.091ms | 44.29% | 1.80배 | 435.453ms / 269.750ms |
+| 더미 독후감 | 기존 중앙값 | 개선 중앙값 | 감소율 |
+| ---: | ---: | ---: | ---: |
+| 100건 | 14.953ms | 5.664ms | 62.12% |
+| 1,000건 | 34.558ms | 16.296ms | 52.85% |
+| 10,000건 | 314.315ms | 175.091ms | 44.29% |
 
-개발 DB에서는 네트워크 왕복 감소가 가장 큰 개선 요인이었고, 데이터가 커질수록 CTE와 집계 비용이 상대적으로 커졌습니다. 호출 수 감소와 대량 집계 비용의 변화까지 함께 기록했습니다.
+개발 DB에서는 네트워크 왕복 감소가 주요 개선 요인이었고, 데이터가 늘수록 CTE와 집계 비용이 상대적으로 커졌습니다.
 
-- [성능 개선 과정과 측정 조건](docs/performance/my-page-reading-summary-optimization.md)
-- [집계 SQL](src/main/java/org/our/sadari/report/mapper/ReportMapper.xml)
+[성능 개선 과정과 측정 조건](docs/performance/my-page-reading-summary-optimization.md) · [집계 SQL](src/main/java/org/our/sadari/report/mapper/ReportMapper.xml)
 
 ### 2. JWT를 Redis 세션 수명주기와 결합
 
-Kakao OAuth 로그인 후 기기별 `sid`를 포함한 Access Token과 Refresh Token을 HttpOnly Cookie로 발급합니다. Redis의 `auth:session:{sid}` Hash와 회원별 `sid` Set으로 각 기기의 Refresh Token을 독립 관리합니다.
+Kakao OAuth 로그인 후 기기별 `sid`를 포함한 JWT를 HttpOnly Cookie로 발급하고, Redis 세션과 계정 상태를 함께 검증합니다.
 
-- `JwtFilter`가 JWT 서명·만료뿐 아니라 Redis의 활성 `sid`와 계정 상태를 함께 검증합니다.
-- 한 탭의 중복 Refresh 요청은 Promise를 공유하고, 여러 탭·서비스워커의 동시 재발급은 Redis Lua 회전과 유예시간으로 수렴시킵니다.
-- 상태 변경 요청은 CSRF Token을 `X-XSRF-TOKEN` Header로 검증하고 불일치 시 한 번만 갱신·재시도합니다.
-- 현재 기기 로그아웃은 해당 `sid`만 제거하고 전체 로그아웃은 회원의 모든 세션과 푸시 구독을 비활성화합니다.
-- Access Token을 즉시 폐기해야 하는 상황에는 `jti`를 남은 만료시간 동안 블랙리스트에 저장합니다.
-- 계정 상태 캐시가 없으면 DB에서 복원하되, Redis 장애나 캐시 누락이 정지·탈퇴 계정을 허용하지 않도록 실패 방향을 구분했습니다.
-- `BroadcastChannel`과 storage 이벤트로 탭 간 로그아웃을 전파해 만료된 인증 화면이 남지 않게 합니다.
+- 한 탭의 중복 Refresh 요청은 Promise를 공유하고, 여러 탭·서비스워커의 동시 재발급은 Redis Lua 기반 토큰 회전과 유예시간으로 처리합니다.
+- 현재·전체 기기 로그아웃과 세션 폐기를 지원하고, 로그아웃 상태를 다른 탭에도 전파합니다.
+- 상태 변경 요청은 CSRF Token을 검증하고 불일치 시 한 번만 갱신·재시도합니다.
+- 계정 상태 캐시가 없으면 DB에서 복원하며, Redis 장애와 캐시 누락의 실패 처리를 구분해 정지·탈퇴 계정의 접근을 막습니다.
+- Access Token을 즉시 폐기해야 할 때는 `jti`를 남은 만료시간 동안 블랙리스트에 저장합니다.
 
-- [인증과 보안 설계](docs/portfolio/auth-security.md)
-- [Redis 세션 관리](src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java)
-- [인증 요청 필터](src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java)
+[인증과 보안 설계](docs/portfolio/auth-security.md) · [Redis 세션 관리](src/main/java/org/our/sadari/global/security/jwt/TokenRedisService.java) · [인증 요청 필터](src/main/java/org/our/sadari/global/security/jwt/JwtFilter.java)
 
 ### 3. DB와 외부 시스템의 완료 시점 분리
 
-DB 트랜잭션 안에서 파일 저장과 푸시 발송까지 성공한 것으로 간주하지 않습니다.
+DB 트랜잭션과 외부 작업의 완료 시점을 구분해 부분 저장과 시스템 간 불일치를 줄였습니다.
 
 - 알림 데이터가 커밋된 뒤에만 FCM 푸시를 발송합니다.
-- DB가 새 파일을 참조한 뒤 기존 물리 파일을 삭제합니다.
-- DB가 롤백되면 요청 중 생성한 새 파일을 보상 삭제합니다.
-- 도서 마스터가 없을 때 도서와 독후감 등록을 하나의 트랜잭션으로 처리합니다.
+- DB가 새 파일을 참조한 뒤 기존 물리 파일을 삭제하고, 롤백 시 신규 파일을 보상 삭제합니다.
+- 도서 마스터가 없으면 도서와 독후감 등록을 하나의 트랜잭션으로 처리합니다.
 
-이를 통해 푸시·알림 불일치, 롤백된 DB의 삭제 파일 참조와 도서만 남는 부분 저장을 줄였습니다.
-
-- [알림 서비스](src/main/java/org/our/sadari/alim/service/AlimServiceImpl.java)
-- [파일 서비스](src/main/java/org/our/sadari/global/file/service/FileService.java)
-- [독후감 서비스](src/main/java/org/our/sadari/report/service/ReportServiceImpl.java)
+[알림 서비스](src/main/java/org/our/sadari/alim/service/AlimServiceImpl.java) · [파일 서비스](src/main/java/org/our/sadari/global/file/service/FileService.java) · [독후감 서비스](src/main/java/org/our/sadari/report/service/ReportServiceImpl.java)
 
 ### 4. DB Outbox로 관리자 변경을 사용자 세션에 전달
 
-관리자가 사용자를 정지·해제하면 DB 원본과 이력을 같은 트랜잭션에서 변경하고 `USER_STATUS_CHANGED` 이벤트를 `TB_EVTBOX`에 저장합니다. 사용자 백엔드는 처리 시점의 최신 DB 상태로 Redis를 갱신합니다.
-
-한 이벤트가 실패해도 다음 사용자를 처리하고, Redis 반영에 성공한 이벤트만 삭제합니다. 연속된 정지·해제에서도 오래된 이벤트가 최신 상태를 덮어쓰지 않으며 실패 이벤트는 다음 실행에서 재시도됩니다.
+관리자의 정지·해제 처리와 상태 변경 이벤트를 같은 DB 트랜잭션에 저장합니다. 사용자 백엔드는 최신 DB 상태로 Redis를 갱신하고 성공한 이벤트만 삭제해, 오래된 이벤트의 덮어쓰기를 막고 실패 건은 재시도합니다.
 
 [![DB Outbox 회원 상태 동기화 흐름도](docs/diagrams/user-status-outbox.svg)](docs/diagrams/user-status-outbox.svg)
 
-- [사용자·관리자 연동 설계](docs/portfolio/admin-user-integration.md)
-- [Outbox 소비 서비스](src/main/java/org/our/sadari/global/scheduler/service/UserStatusEventServiceImpl.java)
+[사용자·관리자 연동 설계](docs/portfolio/admin-user-integration.md) · [Outbox 소비 서비스](src/main/java/org/our/sadari/global/scheduler/service/UserStatusEventServiceImpl.java)
 
 ### 5. 독서 모임 좌석 경쟁을 행 잠금으로 직렬화
 
-독서 모임 가입·초대·승인은 화면의 여석을 신뢰하지 않고 모임 행을 잠근 뒤 최신 좌석을 계산합니다. 만료되지 않은 초대는 예약 좌석으로 포함하고, 초대 수락은 같은 멤버 행을 `ACTIVE`로 전환합니다. 서로 다른 가입 경로의 정원 판정을 잠금 이후로 통일하고 중복 가입과 모임장 권한도 서버에서 검증해 오래된 화면·동시 요청의 우회를 막습니다.
+가입·초대·승인 시 모임 행을 잠근 뒤 최신 좌석을 계산하고, 유효한 초대는 예약 좌석으로 포함합니다. 모든 가입 경로에 같은 정원 판정을 적용하며 중복 가입과 모임장 권한도 서버에서 검증합니다.
 
-- [독서 모임 설계](docs/architecture/reading-club-design.md)
-- [독서 모임 서비스](src/main/java/org/our/sadari/readingClub/service/ReadingClubServiceImpl.java)
+[독서 모임 설계](docs/architecture/reading-club-design.md) · [독서 모임 서비스](src/main/java/org/our/sadari/readingClub/service/ReadingClubServiceImpl.java)
 
 ### 6. 이미지 업로드를 신뢰 경계 안에서 재구성
 
-이미지 업로드는 확장자와 브라우저 Content-Type을 신뢰하지 않고 다음 순서로 처리합니다.
+확장자와 브라우저 Content-Type을 신뢰하지 않고 다음 순서로 이미지를 검증·변환합니다.
 
-1. JPEG·PNG 파일 시그니처를 확인합니다.
-2. 실제 디코딩 형식과 요청 형식이 일치하는지 검증합니다.
-3. 파일 크기, 가로·세로 해상도와 전체 픽셀 수를 제한합니다.
-4. EXIF 방향을 반영하되 불필요한 메타데이터는 유지하지 않습니다.
-5. 서버가 새 이미지로 재인코딩하여 원본 바이트를 그대로 배포하지 않습니다.
-6. UUID 기반 객체 키로 Private 저장소에 보관하고 허용된 경로만 조회합니다.
+1. JPEG·PNG 시그니처와 실제 디코딩 형식이 요청 형식과 일치하는지 확인합니다.
+2. 파일 크기, 가로·세로 해상도와 전체 픽셀 수를 제한합니다.
+3. EXIF 방향을 보정하고 불필요한 메타데이터를 제거한 뒤 새 이미지로 재인코딩합니다.
+4. UUID 객체 키로 비공개 저장소에 보관하고 허용된 경로만 조회합니다.
 
-고해상도 프로필 원본은 브라우저 상태나 영구 저장소에 먼저 넣지 않습니다. 서버가 임시 업로드 토큰으로 비공개 공간에 최대 30분 보관하고 브라우저에는 축소 미리보기만 반환하며, 최종 저장·로그아웃·비활성화 시 임시 파일을 정리해 중단된 작성 흐름이 남지 않게 합니다.
+고해상도 프로필 원본은 서버 임시 공간에 최대 30분 보관하고 브라우저에는 축소 미리보기만 전달합니다. 최종 저장·로그아웃·비활성화 시 임시 파일을 정리합니다.
 
-- [콘텐츠·파일 보안 정책](docs/policies/content-file-policy.md)
+[콘텐츠·파일 보안 정책](docs/policies/content-file-policy.md)
 
 ### 7. 외부 API 쿼터를 Redis 방어 계층으로 보호
 
-도서 검색은 계정 언어가 한국어이면 Kakao에서 최대 50권, 영어이면 Google Books에서 최대 40권을 선조회합니다. 프론트엔드는 받아 둔 결과를 10권씩 표시하며, 공급자·검색어·페이지별 Redis 캐시로 반복 외부 호출을 줄입니다.
+계정 언어에 따라 Kakao 50권 또는 Google Books 40권을 선조회하고, 화면에는 10권씩 표시합니다. 검색 전에는 기간별 인기 도서와 평균 평점을 제공합니다.
 
-검색 전에는 `TM_REPORT`의 도서별 고유 작성자 수를 집계한 주간·월간·연간 인기 도서 10권과 평균 평점을 표시합니다. 회원·독서 상태와 공개 여부는 순위 조건에서 제외하며, 직접 검색 결과에는 같은 카드 UI에서 기간·순위·평점 대신 출판사와 도서 소개를 표시합니다.
+- 회원 식별은 클라이언트 입력 대신 인증 Principal을 사용합니다. 회원별 60초·24시간 카운터를 Redis Lua에서 함께 검사·증가시켜 다중 인스턴스에서도 제한을 유지합니다.
+- 공급자·검색어·페이지별 결과를 SHA-256 해시 키로 10분간 캐시합니다.
+- 캐시 미스에서만 앱 전체 호출 예산을 차감하고, 일일 30,000건 중 기본 3,000건을 비상 여유로 남깁니다.
+- Redis 장애 시 검색을 차단하며, 비활성화·탈퇴 신청으로 회원 제한이 초기화되지 않게 합니다.
 
-쿼터 효율화만으로는 악성 반복 요청을 막을 수 없어 Redis에 세 단계의 보호 경계를 구성했습니다.
+선조회에 따른 Kakao `5회 → 1회`, Google Books `4회 → 1회`는 호출 구조로 계산한 값이며 응답 시간 실측은 아닙니다.
 
-- 인증된 회원만 검색 API를 호출하고 클라이언트가 전달한 식별값 대신 인증 Principal을 사용합니다.
-- 회원별 60초·24시간 카운터는 Lua Script에서 함께 검사하고 증가시켜 다중 인스턴스에서도 제한을 우회할 수 없게 했습니다.
-- 동일 검색어와 페이지는 SHA-256 해시 키로 10분간 캐시해 반복 검색을 외부 호출 없이 처리합니다.
-- 캐시 미스에서만 앱 전체 실제 호출 예산을 차감하고, 일일 30,000건 중 기본 3,000건을 비상 여유로 남깁니다.
-- Redis 장애 시 검색을 차단해 외부 쿼터의 무방비 소모를 막습니다.
-- 회원 비활성화와 탈퇴 신청으로 카운터가 초기화되지 않으며 물리 삭제 시에만 회원별 제한 키를 정리합니다.
-
-Kakao의 `5회 → 1회`와 Google Books의 `4회 → 1회`는 화면 표시 10권과 공급자별 선조회 건수의 소스 호출 구조로 계산한 값이며 응답 시간 실측 결과는 아닙니다.
-
-- [도서 검색 쿼터 보호 정책](docs/policies/book-search-policy.md)
-- [도서 검색 보호 서비스](src/main/java/org/our/sadari/book/service/BookSearchProtectionService.java)
+[도서 검색 쿼터 보호 정책](docs/policies/book-search-policy.md) · [도서 검색 보호 서비스](src/main/java/org/our/sadari/book/service/BookSearchProtectionService.java)
 
 ## 추가 설계 사례
 
 ### 서비스 문제에 맞춘 탐색 알고리즘
 
-비속어 필터는 입력마다 전체 사전을 순회하지 않고 Aho-Corasick 자동자로 한 번의 문자열 순회에서 후보를 찾습니다. 활성 사전은 10분간 캐시하고 이중 확인 잠금으로 한 요청만 재구성하며, 공백·기호·반복 문자 정규화와 허용 단어 예외를 함께 판정합니다.
+비속어는 Aho-Corasick으로 한 번의 문자열 순회에서 후보를 찾고, 공백·기호·반복 문자 정규화와 허용 단어 예외를 함께 판정합니다. 활성 사전은 10분간 캐시하며 이중 확인 잠금으로 한 요청만 재구성합니다.
 
-표지 색상 탐색은 RGB 거리 대신 CIELAB 색차를 사용합니다. 외부 도서 이미지의 색을 제한된 공통 색상 집합에 매핑해 일관된 결과를 제공합니다.
+표지 색상은 RGB 거리 대신 CIELAB 색차를 사용해 공통 색상 집합에 매핑하고 일관된 탐색 결과를 제공합니다.
 
-- [성능과 알고리즘 설계](docs/portfolio/performance-algorithms.md)
+[성능과 알고리즘 설계](docs/portfolio/performance-algorithms.md)
 
 ### 프론트엔드 실패를 한 번의 복구 흐름으로 수렴
 
-API 응답은 HTTP 상태와 업무 결과 코드를 함께 사용하고, Axios 계층에서 60초 타임아웃·CSRF 갱신·Refresh Token 재발급을 공통 처리합니다. 재시도는 각각 한 번으로 제한해 무한 요청을 막고, 같은 쓰기 요청에는 operation ID를 유지해 중복 결과를 방지합니다.
+Axios 공통 계층에서 타임아웃·CSRF 갱신·인증 재발급을 처리합니다. 재시도는 각각 한 번으로 제한하고 같은 쓰기 요청의 operation ID를 유지해 중복 결과를 방지합니다.
 
-화면 전환이 중요한 작업은 차단 모달과 history guard를 사용합니다. Service Worker와 FCM 초기화에는 시간 제한을 두어 푸시 실패가 로그인이나 핵심 화면을 막지 않도록 분리했습니다.
+중요 작업 중에는 화면 이탈을 차단하며, 푸시 초기화 실패가 로그인이나 핵심 화면을 막지 않도록 시간 제한을 둡니다.
 
 ### 계정 상태별 접근·보존·복구 범위를 분리
 
-계정 상태는 단순한 로그인 허용 여부가 아니라 데이터 공개와 복구 가능 범위를 결정합니다.
-
 | 상태 | 접근과 데이터 처리 |
 | --- | --- |
-| `WITHDRAWN` | 접근을 제한하고 독후감 공개, 댓글, 알림, 푸시 구독 등 비활성화 과정에서 중지된 항목은 재로그인 후에도 자동 복원하지 않습니다. |
-| `DELETE_PENDING` | 기본 30일 유예기간 동안 접근을 제한하며 본인 재인증으로 삭제 예약을 취소할 수 있습니다. |
-| 물리 삭제 완료 | 계정과 삭제 대상 데이터를 복구하지 않으며, 보존 의무가 있는 운영 이력은 식별자를 제거해 유지합니다. |
+| 비활성화 | 접근을 제한하며, 재로그인해도 중지된 공개 설정·댓글·알림·푸시 구독은 자동 복원하지 않습니다. |
+| 탈퇴 예약 | 기본 30일간 접근을 제한하며, 본인 재인증으로 예약을 취소할 수 있습니다. |
+| 물리 삭제 완료 | 삭제 데이터는 복구하지 않으며, 보존 의무가 있는 운영 이력은 식별자를 제거해 유지합니다. |
 
-Kakao 연결 해제는 Redis의 10분 만료 `state`로 재인증 요청을 검증합니다. 실패 시 내부 상태를 먼저 변경하지 않고 `UNLINK_PENDING`으로 남겨 외부 계정은 연결된 채 사용자만 접근할 수 없는 불일치를 피합니다.
+Kakao 연결 해제는 만료시간이 있는 재인증 요청으로 검증하고, 실패 시 대기 상태로 남겨 외부 연결과 내부 상태의 불일치를 피합니다.
 
-- [계정 비활성화·탈퇴 정책](docs/policies/withdrawal-policy.md)
-
-## 저장소 구조
-
-```text
-sadari
-├─ src/main/java/org/our/sadari
-│  ├─ global                 인증·파일·공통 응답·스케줄러
-│  ├─ user, report, goal     회원·독후감·독서 목표
-│  ├─ readingClub, social    독서 모임·팔로우·반응
-│  └─ alim, book, content    알림·도서 검색·운영 콘텐츠
-├─ src/main/frontend         React PWA
-├─ src/test                  백엔드 테스트
-├─ scripts/db/mysql          스키마와 기준 데이터 원본
-├─ docs                      설계·성능·정책 문서
-└─ .github/workflows         CI/CD 워크플로
-```
-
-## 테스트와 배포
-
-- 인증, 알림, 파일 저장소, 스케줄러, 도서 검색과 서비스 계층 테스트를 `src/test`에서 관리합니다.
-- 멀티 스테이지 Docker 빌드로 React 정적 자산과 Spring Boot WAR를 Java 17 JRE 이미지에 결합합니다.
-- GitHub Actions는 Pull Request 빌드를 검증하고 `main` 반영 시 GHCR 게시, EC2 Docker Compose 갱신과 HTTP 상태 확인을 수행합니다.
-- 현재 CI는 로컬 MySQL·Redis와 Git 제외 프로필에 의존하는 테스트 때문에 `-x test`로 패키징합니다. CI 성공은 전체 테스트가 아닌 빌드·패키징 성공을 의미합니다.
-
+[계정 비활성화·탈퇴 정책](docs/policies/withdrawal-policy.md)
 
 ## 문서
 

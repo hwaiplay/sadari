@@ -73,15 +73,15 @@ class BadWordDetectionServiceTest {
      * @author SeungHyeon.Kang
      */
     @Test
-    void getBadWordKeepsSpaces() {
+    void detectsSpacedBadWord() {
         // 정상 문장의 서로 다른 단어에 걸친 시 발 문자열을 허용하는지 확인함
         assertTrue(badWordDetectionService.findBadWord("한번 시작 시 발행해야함").isEmpty());
-        // 여러 일반 공백으로 분리한 문자열을 하나의 비속어로 합치지 않는지 확인함
-        assertTrue(badWordDetectionService.findBadWord("시   발").isEmpty());
-        // 탭으로 분리한 문자열도 하나의 비속어로 합치지 않는지 확인함
-        assertTrue(badWordDetectionService.findBadWord("시\t발").isEmpty());
-        // 줄바꿈되지 않는 공백으로 분리한 문자열도 하나의 비속어로 합치지 않는지 확인함
-        assertTrue(badWordDetectionService.findBadWord("시\u00A0발").isEmpty());
+        // 여러 일반 공백으로 글자를 분리한 우회 표현을 탐지하는지 확인함
+        assertEquals(Optional.of("시발"), badWordDetectionService.findBadWord("시   발"));
+        // 탭으로 글자를 분리한 우회 표현도 탐지하는지 확인함
+        assertEquals(Optional.of("시발"), badWordDetectionService.findBadWord("시\t발"));
+        // 줄바꿈되지 않는 공백으로 글자를 분리한 우회 표현도 탐지하는지 확인함
+        assertEquals(Optional.of("시발"), badWordDetectionService.findBadWord("시\u00A0발"));
         // 반복 문자 주변에 공백이 있으면 반복 구간 제거 후에도 단어 경계를 유지하는지 확인함
         assertTrue(badWordDetectionService.findBadWord("시 이이이 발").isEmpty());
     }

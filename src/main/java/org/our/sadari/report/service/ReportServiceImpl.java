@@ -1221,6 +1221,14 @@ public class ReportServiceImpl implements ReportService {
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
+        Long ownerNumb = reportMapper.getReportOwnerNumb(reptNumb);
+        if (StringUtil.isEmpty(ownerNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_NO_DATA);
+        }
+        if (!ownerNumb.equals(userNumb)) {
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // UserNumb 업무 값을 reportDto DTO에 설정함
         reportDto.setUserNumb(userNumb);
         // ReptNumb 업무 값을 reportDto DTO에 설정함

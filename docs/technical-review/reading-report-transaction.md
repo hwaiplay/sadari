@@ -1,5 +1,9 @@
 # Spring 트랜잭션으로 도서와 독후감을 함께 저장
 
+<p align="center">
+    <img width="1038" height="1330" alt="Image" src="https://github.com/user-attachments/assets/26ffd120-d115-460d-9b7f-c63f87c1ab90" />
+</p>
+
 ## 문제
 
 독후감 등록은 한 행을 추가하는 작업으로 끝나지 않습니다. 선택한 도서가 없으면 도서 정보를 먼저 만들고, 있으면 기존 식별자를 재사용해야 합니다. 공개 여부·알림 기본값·작성 언어·독서 상태·평점 정책도 저장 직전에 한 번 더 확정해야 합니다.

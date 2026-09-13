@@ -1024,6 +1024,40 @@
              , CLUB.CLUB_NUMB DESC
     </select>
 
+    <!-- 로그인 사용자의 최신 가입 신청이 승인 대기 중인 모임을 공개 여부와 관계없이 조회함 -->
+    <select id="getMyPendingClubList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
+        <include refid="clubCodeBinds" />
+        SELECT /* getMyPendingClubList */
+               <include refid="clubViewColumns" />
+             , NULL AS MEMB_STAT
+             , NULL AS MEMB_ROLE
+             , APPLICATION.JOIN_STAT
+          FROM (
+                SELECT RECENT.CLUB_NUMB
+                     , RECENT.JOIN_STAT
+                  FROM (
+                        SELECT JOINX.CLUB_NUMB
+                             , JOINX.JOIN_STAT
+                             , ROW_NUMBER() OVER (
+                                   PARTITION BY JOINX.CLUB_NUMB, JOINX.USER_NUMB
+                                       ORDER BY JOINX.APPL_NUMB DESC
+                               ) AS ROW_NUMB
+                          FROM TB_CLJOIN JOINX
+                         WHERE JOINX.USER_NUMB = #{userNumb}
+                       ) RECENT
+                 WHERE RECENT.ROW_NUMB = 1
+                   AND RECENT.JOIN_STAT = #{applicationPending}
+               ) APPLICATION
+          JOIN TM_CLUBXM CLUB
+            ON CLUB.CLUB_NUMB = APPLICATION.CLUB_NUMB
+           AND CLUB.CLUB_STAT = #{clubActive}
+     LEFT JOIN TM_USERXM OWNER
+            ON OWNER.USER_NUMB = CLUB.OWNR_NUMB
+             <include refid="clubSeatJoin" />
+      ORDER BY CLUB.REGI_DATE DESC
+             , CLUB.CLUB_NUMB DESC
+    </select>
+
     <!-- 공개 모임에서 로그인 사용자 소유 모임을 제외하고 관심분야 일치 수와 최신 등록 순으로 조회함 -->
     <select id="getFindClubList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$ClubViewDto">
         <include refid="clubCodeBinds" />

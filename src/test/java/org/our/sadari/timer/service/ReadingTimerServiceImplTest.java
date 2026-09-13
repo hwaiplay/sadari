@@ -318,6 +318,37 @@ class ReadingTimerServiceImplTest {
     }
 
     /**
+     * 화면이 목표 도달 세션을 완료 요청하면 지난 목표 알림 예약을 해제하는지 검증함
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void cancelsTargetAlarm() {
+        // 목표 도달 시각과 같은 서버 시각을 사용함
+        LocalDateTime targetEndDate = LocalDateTime.of(2026, 8, 15, 0, 1);
+        ReadingTimerDto activeTimer = createTimer(Constant.TIMER_STAT_RUNNING, targetEndDate.minusSeconds(60L));
+        // 한 분 목표시간을 설정함
+        activeTimer.setTargSecs(60L);
+        // 목표 알림 예약 시각을 설정함
+        activeTimer.setAlrmDate(targetEndDate);
+        ReadingTimerDto.Request request = new ReadingTimerDto.Request();
+        // 화면이 목표 도달 결과를 완료 상태로 확정하도록 요청함
+        request.setTmrxStat(Constant.TIMER_STAT_COMPLETED);
+        // 사용자 소유 세션을 반환함
+        when(readingTimerMapper.getTimerDtl(1L, 10L)).thenReturn(activeTimer);
+
+        // 목표시간 도달 세션의 완료를 요청함
+        ResultData result = readingTimerService.uptTimer(1L, 10L, request);
+
+        // 완료 요청이 정상 처리됐는지 검증함
+        assertEquals(200, result.getCode());
+        // 사용자가 결과를 확인한 세션의 지난 알림 예약이 해제됐는지 검증함
+        assertNull(activeTimer.getAlrmDate());
+        // 목표시각 완료 저장과 예약 해제 저장이 모두 실행됐는지 검증함
+        verify(readingTimerMapper, times(2)).uptTimer(activeTimer);
+    }
+
+    /**
      * 활성 세션이 없어도 계정 상태 변경 시 대기 중인 목표시간 알림을 취소하는지 검증함
      *
      * @author SeungHyeon.Kang

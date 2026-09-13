@@ -46,7 +46,7 @@
       ORDER BY A.REPT_STDT DESC, A.REPT_NUMB DESC
             </when>
             <when test="sortType == @org.our.sadari.global.common.constant.Constant@SORT_GRADE_DESC">
-      ORDER BY CAST(A.REPT_GRDE AS UNSIGNED) DESC, A.REPT_ENDT DESC, A.REPT_NUMB DESC
+      ORDER BY CAST(A.REPT_GRDE AS DECIMAL(3, 1)) DESC, A.REPT_ENDT DESC, A.REPT_NUMB DESC
             </when>
             <otherwise>
       ORDER BY A.REPT_ENDT DESC, A.REPT_NUMB DESC
@@ -398,7 +398,7 @@
                ) UL
             ON A.REPT_NUMB = UL.REPT_NUMB
      LEFT JOIN (  SELECT P.BOOK_NUMB
-                       , ROUND(AVG(CAST(P.REPT_GRDE AS UNSIGNED)), 1) AS BOOK_AVG_GRDE
+                       , ROUND(AVG(CAST(P.REPT_GRDE AS DECIMAL(3, 1))), 1) AS BOOK_AVG_GRDE
                     FROM TM_REPORT P
                    WHERE P.REPT_STAT = #{reptStat}
                 GROUP BY P.BOOK_NUMB
@@ -608,7 +608,7 @@
              , B.BOOK_CVIM
              , B.BOOK_DESC
              , B.PUBL_DATE
-             , (SELECT ROUND(AVG(CAST(AVG_REPORT.REPT_GRDE AS UNSIGNED)), 1)
+             , (SELECT ROUND(AVG(CAST(AVG_REPORT.REPT_GRDE AS DECIMAL(3, 1))), 1)
                   FROM TM_REPORT AVG_REPORT
                  WHERE AVG_REPORT.BOOK_NUMB = P.BOOK_NUMB
                    AND AVG_REPORT.REPT_STAT != #{reptStatRead}) AS BOOK_AVG_GRDE
@@ -730,11 +730,18 @@
              , UPDT_DATE = CURRENT_TIMESTAMP(6)
     </insert>
 
+    <!-- 수정 권한을 동시성 버전 검사보다 먼저 판정할 독후감 소유자를 조회함 -->
+    <select id="getReportOwnerNumb" resultType="long">
+        SELECT /* getReportOwnerNumb */ USER_NUMB
+          FROM TM_REPORT
+         WHERE REPT_NUMB = #{reptNumb}
+    </select>
+
     <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회함 -->
     <select id="getPublicRatingAvgByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicRatingAvgByIsbn */
-               ROUND(AVG(CAST(P.REPT_GRDE AS UNSIGNED)), 1)
+               ROUND(AVG(CAST(P.REPT_GRDE AS DECIMAL(3, 1))), 1)
           FROM TM_BKINFO B
     INNER JOIN TM_REPORT P
             ON B.BOOK_NUMB = P.BOOK_NUMB

@@ -276,6 +276,11 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         if (isTimerTargetOver(timerDto, now)) {
             // 목표시간 이후의 지연 구간을 제외하고 세션을 완료 상태로 저장함
             uptTimerTargetOver(timerDto, now);
+            // 사용자가 완료 요청으로 결과를 확인한 경우 나중에 지난 알림이 발송되지 않도록 예약을 해제함
+            if (Constant.TIMER_STAT_COMPLETED.equals(targetStat)) {
+                timerDto.setAlrmDate(null);
+                readingTimerMapper.uptTimer(timerDto);
+            }
             // 자동 완료 결과가 반영된 최신 타이머 화면을 반환함
             return ResultData.success(getSummary(userNumb, now));
         }
@@ -733,12 +738,15 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
     private long setDailySegments(Long userNumb, LocalDateTime segmentStart, LocalDateTime segmentEnd, LocalDateTime updtDate) {
 
         long addedSeconds = 0L;
+        long elapsedNanos = 0L;
         LocalDateTime cursor = segmentStart;
         // 구간 종료까지 날짜 경계 단위로 시간을 나눔
         while (cursor.isBefore(segmentEnd)) {
             LocalDateTime nextDay = cursor.toLocalDate().plusDays(1L).atStartOfDay();
             LocalDateTime sliceEnd = segmentEnd.isBefore(nextDay) ? segmentEnd : nextDay;
-            long readSeconds = Duration.between(cursor, sliceEnd).getSeconds();
+            elapsedNanos += Duration.between(cursor, sliceEnd).toNanos();
+            long elapsedSeconds = TimeUnit.NANOSECONDS.toSeconds(elapsedNanos);
+            long readSeconds = elapsedSeconds - addedSeconds;
             // 1초 이상인 구간만 일별 집계에 누적함
             if (readSeconds > 0L) {
                 // 해당 날짜에 확정 독서 시간을 누적함
@@ -764,13 +772,18 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
         long remainingSeconds = Math.max(0L, properties.getMaxSessionSeconds() - timerDto.getReadSecs());
         LocalDateTime segmentEnd = getSegmentEnd(timerDto.getLastStrt(), now, remainingSeconds);
         LocalDateTime cursor = timerDto.getLastStrt();
+        long elapsedNanos = 0L;
+        long allocatedSeconds = 0L;
         // 현재 구간을 날짜별로 나누어 응답용 맵에 더함
         while (cursor.isBefore(segmentEnd)) {
             LocalDateTime nextDay = cursor.toLocalDate().plusDays(1L).atTime(LocalTime.MIN);
             LocalDateTime sliceEnd = segmentEnd.isBefore(nextDay) ? segmentEnd : nextDay;
-            long readSeconds = Duration.between(cursor, sliceEnd).getSeconds();
+            elapsedNanos += Duration.between(cursor, sliceEnd).toNanos();
+            long elapsedSeconds = TimeUnit.NANOSECONDS.toSeconds(elapsedNanos);
+            long readSeconds = elapsedSeconds - allocatedSeconds;
             // 현재 날짜의 저장 시간에 실행 중 시간을 더함
             dailySeconds.merge(cursor.toLocalDate(), readSeconds, Long::sum);
+            allocatedSeconds = elapsedSeconds;
             cursor = sliceEnd;
         }
     }

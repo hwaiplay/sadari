@@ -2,13 +2,13 @@ package org.our.sadari.global.scheduler.service;
 
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.scheduler.common.SchedulerLogSupport;
 import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
 import org.our.sadari.global.scheduler.mapper.AlimDeleteMapper;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,7 +24,6 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-07-28        SeungHyeon.Kang    삭제 대상이 없는 실행의 로그 저장 방지
  */
 @Service
-@RequiredArgsConstructor
 @Slf4j
 @Transactional(readOnly = true)
 public class AlimDeleteServiceImpl implements AlimDeleteService {
@@ -33,6 +32,24 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
     private final AlimDeleteMapper alimDeleteMapper;
     // 스케줄러 로그 안전 처리 객체
     private final SchedulerLogSupport schedulerLogSupport;
+    // 사용자가 삭제한 알림을 물리 삭제하기 전 보존할 일수
+    private final int retentionDays;
+
+    /**
+     * 알림 정리 서비스 의존성과 보존기간을 구성함
+     *
+     * @author SeungHyeon.Kang
+     * @param alimDeleteMapper 알림 삭제 데이터 접근 객체
+     * @param schedulerLogSupport 스케줄러 로그 안전 처리 객체
+     * @param retentionDays 삭제 상태 알림 보존 일수
+     */
+    public AlimDeleteServiceImpl(AlimDeleteMapper alimDeleteMapper
+                               , SchedulerLogSupport schedulerLogSupport
+                               , @Value("${scheduler.alim-delete-retention-days:30}") int retentionDays) {
+        this.alimDeleteMapper = alimDeleteMapper;
+        this.schedulerLogSupport = schedulerLogSupport;
+        this.retentionDays = Math.max(0, retentionDays);
+    }
 
     /**
      * 삭제 상태 알림을 물리 삭제하고 실제 삭제 건수가 있는 실행 결과만 기록함
@@ -67,7 +84,7 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
              * 삭제 대상 조회와 삭제를 분리하면 두 SQL 사이에 데이터가 추가될 수 있어 로그 건수와 실제 삭제 건수가 달라짐
              * DELETE 반환 건수를 대상 건수와 성공 건수로 함께 사용하여 실제 반영 결과를 정확하게 기록함
              */
-            int deletedCnt = alimDeleteMapper.delAlim();
+            int deletedCnt = alimDeleteMapper.delAlim(LocalDateTime.now().minusDays(retentionDays));
             targetCnt = deletedCnt;
             successCnt = deletedCnt;
             // 실제 삭제 건수에 따라 대상 없음과 정상 완료 상태를 구분함
