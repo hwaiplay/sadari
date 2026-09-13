@@ -1,5 +1,9 @@
 # 알림 저장과 FCM 발송 시점을 분리
 
+<p align="center">
+        <img width="344" height="650" alt="Image" src="https://github.com/user-attachments/assets/0f9b2674-c65d-4a94-9f46-c9e30954cf71" />
+</p>
+
 ## 문제
 
 좋아요나 댓글이 저장되기 전에 푸시가 먼저 도착하면 사용자가 알림을 눌러도 아직 대상 데이터를 조회할 수 없습니다. 반대로 FCM 장애를 본 업무 트랜잭션의 실패로 취급하면 좋아요는 정상적으로 저장할 수 있는데도 사용자 요청 전체가 실패합니다.
