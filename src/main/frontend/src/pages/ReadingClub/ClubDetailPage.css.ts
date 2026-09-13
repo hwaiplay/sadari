@@ -566,7 +566,7 @@ export const joinModalOverlay = style({
 export const joinModal = style({
   display: "flex",
   width: "100%",
-  maxWidth: 343,
+  maxWidth: 600,
   height: "min(915px, calc(100dvh - 70px))",
   maxHeight: 915,
   flexDirection: "column",
