@@ -1,5 +1,9 @@
 import { message } from "@/app/messages/message";
-import { getApiErrorMessage } from "@/app/api/resultData";
+import {
+  ACCESS_REJECTED_CODE,
+  getApiErrorMessage,
+  ResultDataError,
+} from "@/app/api/resultData";
 import { sweetAlert, sweetConfirm, sweetError, sweetWarning } from "@/app/lib/sweetAlert/sweetAlert";
 import BackgroundImage from "@/components/BackgroundImage/BackgroundImage";
 import { useHeaderTitle } from "@/components/Layout/Header/useHeaderTitle";
@@ -214,7 +218,26 @@ const SocialProfilePage = () => {
           setFollowStatName(followStatusResponse.data?.followStatName ?? "");
         }
       })
-      .catch(() => {
+      .catch(async (error: unknown) => {
+
+        // 양방향 차단 관계로 거부된 프로필은 빈 화면 대신 경고 후 이전 화면으로 복귀시킴
+        if (!ignore && error instanceof ResultDataError
+                && Number(error.result.code) === ACCESS_REJECTED_CODE) {
+          // "접근이 불가능한 사용자입니다."
+          const alertResult = await sweetAlert({
+            // "접근이 불가능한 사용자입니다."
+            title: message("frontend.social.blockedProfile"),
+            icon: "warning",
+            allowOutsideClick: false,
+          });
+
+          // 차단 사용자 접근 안내를 확인하면 진입 전 화면으로 돌아감
+          if (!ignore && alertResult.isConfirmed) {
+            navigate(-1);
+          }
+          // 차단된 사용자의 프로필과 활동 상태를 표시하지 않고 종료함
+          return;
+        }
 
         if (!ignore) {
           setProfile(null);
