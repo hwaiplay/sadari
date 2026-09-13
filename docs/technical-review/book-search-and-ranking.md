@@ -1,4 +1,4 @@
-# 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호하기
+# 언어 설정에 따라 Kakao와 Google Books를 전환하고 Redis로 쿼터 보호
 
 ## 문제
 
