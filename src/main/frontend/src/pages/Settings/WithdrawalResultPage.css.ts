@@ -6,7 +6,7 @@ export const page = style({
   maxWidth: "600px",
   minHeight: "100svh",
   margin: "0 auto",
-  padding: "20px 18px 38px",
+  padding: "20px 16px 38px",
   backgroundColor: "#ffffff",
   boxSizing: "border-box",
   display: "flex",
@@ -101,7 +101,7 @@ export const sectionTitle = style({
   padding: "0 0 0 6px",
   color: vars.color.black,
   fontFamily: vars.font.semibold,
-  fontSize: "15px",
+  fontSize: "16px",
   lineHeight: 1.3,
   letterSpacing: 0,
   textAlign: "left",
@@ -116,7 +116,7 @@ export const guideRow = style({
   gridTemplateColumns: "76px minmax(0, 1fr)",
   gap: "18px",
   padding: "14px 4px",
-  borderBottom: `1px solid ${vars.color.gray200}`,
+  borderBottom: `1px solid ${vars.color.gray300}`,
   fontFamily: vars.font.body,
   fontSize: "14px",
   lineHeight: 1.55,
@@ -154,7 +154,7 @@ export const primaryLink = style({
   display: "inline-flex",
   alignItems: "center",
   justifyContent: "center",
-  border: `1px solid ${vars.color.gray700}`,
+  border: `1px solid ${vars.color.gray300}`,
   borderRadius: "999px",
   backgroundColor: "#ffffff",
   color: vars.color.gray900,
@@ -165,8 +165,8 @@ export const primaryLink = style({
   transition:
     "background-color 160ms ease, border-color 160ms ease, color 160ms ease",
   selectors: {
-    "&:hover": {
-      borderColor: vars.color.gray700,
+    "&:hover:not(:disabled)": {
+      borderColor: vars.color.gray300,
       backgroundColor: vars.color.gray100,
       color: vars.color.gray900,
     },

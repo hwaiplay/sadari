@@ -8,11 +8,13 @@ import * as styles from "./WithdrawalResultPage.css";
  * @author HanWon.Jang
  * @return 회원 탈퇴 완료 또는 실패 안내 화면
  */
-function WithdrawalResultPage() {
+const WithdrawalResultPage = () => {
 
   const [searchParams] = useSearchParams();
   const isSuccess = searchParams.get("success") === "Y";
   const isHardWithdrawal = searchParams.get("type") === "HARD";
+  // 서버가 전달한 삭제 예정일의 연월일 추출
+  const deleteDate = searchParams.get("deleteDate")?.match(/^(\d{4})-(\d{2})-(\d{2})$/);
   let statusSymbol: string;
   let heading: string;
   let description: string;
@@ -45,6 +47,15 @@ function WithdrawalResultPage() {
     statusLabel = message("frontend.withdrawal.result.hardStatus");
     // "삭제 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요."
     guide = message("frontend.withdrawal.result.hardGuide");
+    // 날짜 없는 이전 완료 URL은 기존 안내를 유지하고 서버 예정일이 있으면 날짜 안내 적용
+    if (deleteDate && Number(deleteDate[2]) >= 1
+            && Number(deleteDate[2]) <= 12 && Number(deleteDate[3]) >= 1
+            && Number(deleteDate[3]) <= 31) {
+      // "{0}년 {1}월 {2}일 전까지 다시 로그인하면 영구 탈퇴 신청을 취소할 수 있어요."
+      guide = message("frontend.withdrawal.result.hardDateGuide", [
+        deleteDate[1], Number(deleteDate[2]), Number(deleteDate[3]),
+      ]);
+    }
   }
 
   // 계정 비활성화 성공은 재로그인 시 기존 계정을 다시 활성화할 수 있음을 안내함
@@ -122,6 +133,6 @@ function WithdrawalResultPage() {
       </div>
     </main>
   );
-}
+};
 
 export default WithdrawalResultPage;

@@ -9,6 +9,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import jakarta.servlet.http.Cookie;
+import java.time.LocalDateTime;
 import java.util.Collection;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,6 +25,7 @@ import org.our.sadari.push.service.PushService;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
 import org.our.sadari.user.mapper.UserMapper;
+import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.service.UserWithdrawalService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -39,6 +41,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-24        SeungHyeon.Kang    OAuth 로그인 CSRF 및 세션 보존 검증 추가
+ * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthLoginControllerTest {
@@ -81,6 +84,27 @@ class AuthLoginControllerTest {
         ReflectionTestUtils.setField(authLoginController, "frontDomain", "https://front.example");
         ReflectionTestUtils.setField(authLoginController, "cookieSecure", false);
         ReflectionTestUtils.setField(authLoginController, "cookieSameSite", "Lax");
+    }
+
+    /** 서버 삭제 예정일을 영구 탈퇴 완료 화면에 전달하는지 검증 */
+    @Test
+    void withdrawalPassesDeleteDay() throws Exception {
+        // 서버에 저장된 영구 탈퇴 처리 결과 생성
+        UserWithdrawalDto withdrawal = new UserWithdrawalDto();
+        // 영구 탈퇴 완료 화면 유형 설정
+        withdrawal.setWthdType("HARD");
+        // 신청일로부터 30일 뒤의 삭제 예정일 설정
+        withdrawal.setDeltDate(LocalDateTime.of(2026, 10, 13, 12, 0));
+        // 탈퇴 콜백 성공 시 저장된 예정 정보를 반환하도록 구성
+        when(userWithdrawalService.setWithdrawalCallback("code", "withdrawal-state"))
+                .thenReturn(ResultData.success(withdrawal));
+        // 쿠키 만료와 완료 화면 이동을 수집할 응답 생성
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        // 검증된 탈퇴 재인증 콜백 실행
+        authLoginController.kakaoAuthLogin("code", "withdrawal-state", new MockHttpServletRequest(), response);
+        // 서버 삭제 예정일이 완료 화면 URL에 전달되는지 검증
+        assertEquals("https://front.example/withdrawal/result?success=Y&type=HARD&deleteDate=2026-10-13",
+                response.getRedirectedUrl());
     }
 
     /** 로그인 시작 시 동일한 일회성 state가 HttpOnly 쿠키와 Kakao URL에 포함됨 */

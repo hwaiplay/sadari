@@ -150,13 +150,13 @@
 - 로컬의 `book.search.popular-keyword-user-dedup-enabled`는 한 계정의 반복 검색으로 화면을 검증할 수 있도록 `false`를 사용하고 최소 노출 인원은 `1`로 설정합니다.
 - `BOOK_SEARCH_PROVIDER_CALL_LIMIT_PER_DAY` 기본값은 카카오 도서 검색 일일 30,000건 중 3,000건을 장애 대응과 운영 확인용으로 남기는 `27,000`입니다.
 - 도서 검색 제한값, 캐시 유효시간과 인기 검색어 집계 기준은 공개 가능한 운영 정책이므로 Actions Variables로 관리합니다. Redis가 검색 제한을 확인할 수 없으면 외부 호출을 중단하고 인기 검색어 집계나 조회만 실패하면 일반 도서 검색은 유지합니다.
-- `application-loc.yml`은 탈퇴 기능 검증을 위해 `withdrawal.hard-delete-wait-days`를 `0`으로 설정하고
-  `withdrawal.hard-delete-test-enabled`를 `true`로 설정합니다.
+- `application-loc.yml`은 운영과 동일하게 `withdrawal.hard-delete-wait-days`를 `30`으로 설정하고
+  `withdrawal.hard-delete-test-enabled`를 `false`로 설정합니다.
 - `application-loc.yml`은 Git에서 제외되므로 각 개발 환경의 로컬 파일에 위 두 값을 직접 유지해야 합니다.
 - Tailnet OAuth 검증용 `application-loc.yml`은 공유 DB의 삭제 위험을 차단하도록
   `scheduler.enabled=false`를 사용합니다.
 - 영구 탈퇴 테스트 스케줄러가 필요한 경우에는 격리된 로컬 DB를 연결한 뒤에만 일시적으로
-  `scheduler.enabled=true`를 사용해야 합니다.
+  `scheduler.enabled=true`, `withdrawal.hard-delete-wait-days=0`, `withdrawal.hard-delete-test-enabled=true`를 사용하고 검증 후 기본값으로 복구해야 합니다.
 - `application-prod.yml`은 `withdrawal.hard-delete-test-enabled`를 `false`로 고정합니다.
   이 값은 GitHub Actions 환경변수로 노출하지 않으므로 운영 배포에서 로컬 테스트 스케줄러를
   활성화할 수 없습니다.

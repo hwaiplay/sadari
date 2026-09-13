@@ -26,6 +26,7 @@ import org.our.sadari.user.auth.dto.AuthLogoutDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
 import org.our.sadari.user.dto.UserDto;
+import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.service.UserWithdrawalService;
 import org.springframework.beans.factory.annotation.Value;
@@ -55,6 +56,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
  * 2026-08-11        SeungHyeon.Kang    기기별 재발급과 선택형 로그아웃 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴 뒤 유효 제재가 남은 계정의 로그인 차단 안내 추가
+ * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 전달
  */
 @RestController
 @RequiredArgsConstructor
@@ -227,8 +229,16 @@ public class AuthLoginController {
             if (withdrawalResult.getCode() == 200) {
                 // 실제 탈퇴 처리에 성공한 경우에만 기존 인증 쿠키를 제거함
                 expireTokenCookies(response);
-                // 탈퇴 유형과 성공 상태를 포함한 완료 화면으로 이동함
-                response.sendRedirect(frontDomain + "/withdrawal/result?success=Y&type=" + withdrawalResult.getData());
+                // 서버에 저장된 삭제 예정일을 완료 화면과 공유할 탈퇴 처리 결과 조회
+                UserWithdrawalDto withdrawal = (UserWithdrawalDto) withdrawalResult.getData();
+                String resultUrl = frontDomain + "/withdrawal/result?success=Y&type=" + withdrawal.getWthdType();
+                // 계정 비활성화에는 삭제 예정일이 없으므로 영구 탈퇴 결과에만 날짜 추가
+                if (!StringUtil.isEmpty(withdrawal.getDeltDate())) {
+                    resultUrl += "&deleteDate=" + withdrawal.getDeltDate().toLocalDate();
+                }
+
+                // 탈퇴 유형과 실제 삭제 예정일을 포함한 완료 화면 이동
+                response.sendRedirect(resultUrl);
                 // 회원 탈퇴 재인증 콜백 처리를 종료함
                 return;
             }

@@ -36,6 +36,7 @@ import org.our.sadari.user.mapper.UserWithdrawalMapper;
 import org.springframework.context.support.StaticMessageSource;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.test.util.ReflectionTestUtils;
 
 /**
  * fileName       : UserWithdrawalServiceImplTest
@@ -47,6 +48,7 @@ import org.springframework.data.redis.core.ValueOperations;
  * -----------------------------------------------------------
  * 2026-08-13        SeungHyeon.Kang    최초 생성
  * 2026-08-20        SeungHyeon.Kang    모임 목표 참여 비식별 처리 검증 추가
+ * 2026-09-13        HanWon.Jang    영구 탈퇴 30일 삭제 유예 검증
  */
 @ExtendWith(MockitoExtension.class)
 class UserWithdrawalServiceImplTest {
@@ -172,6 +174,8 @@ class UserWithdrawalServiceImplTest {
      */
     @Test
     void anonymizesClubParticipant() throws Exception {
+        // 운영과 로컬의 기본 30일 영구 삭제 유예 설정
+        ReflectionTestUtils.setField(userWithdrawalService, "hardDeleteWaitDays", 30L);
         // 영구 삭제 대기 전환에 사용할 탈퇴 요청을 구성함
         UserWithdrawalDto request = createRequest(Constant.WITHDRAWAL_TYPE_HARD);
         // 탈퇴 대상 회원 번호를 설정함
@@ -213,6 +217,12 @@ class UserWithdrawalServiceImplTest {
 
         // 영구 삭제 대기 전환 성공 응답을 검증함
         assertEquals(200, result.getCode());
+        // 요청 시각부터 정확히 30일 뒤에 삭제 예정일이 설정되는지 검증
+        assertEquals(request.getRequDate().plusDays(30), request.getDeltDate());
+        // 완료 화면 응답의 삭제 예정일과 저장 이력의 일치 검증
+        assertEquals(request, result.getData());
+        // 삭제 대기 이력을 저장하고 계정을 즉시 물리 삭제하지 않는 경로 검증
+        verify(userWithdrawalMapper).setUserWithdrawal(request);
         // 복귀 후 목표 집계에 자동 복원되지 않도록 모임 회차 참여를 비식별화하는지 검증함
         verify(userWithdrawalMapper).uptClubParticipantAnon(31L, Constant.COMM_YES);
     }

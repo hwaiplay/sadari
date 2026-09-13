@@ -44,6 +44,7 @@ import java.util.UUID;
  * 2026-08-13        SeungHyeon.Kang    정지 회원의 영구 탈퇴 허용과 식별값 해시 공통화
  * 2026-08-14        SeungHyeon.Kang    계정 상태 변경 전 독서 타이머 종료 추가
  * 2026-08-20        SeungHyeon.Kang    탈퇴 회원의 모임 목표 참여 자동 복원 차단 추가
+ * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 전달
  */
 @Service
 @RequiredArgsConstructor
@@ -189,7 +190,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
      * @author SeungHyeon.Kang
      * @param code Kakao OAuth 인가 코드
      * @param state 탈퇴 요청 일회성 상태값
-     * @return 적용된 탈퇴 유형
+     * @return 적용된 탈퇴 유형과 삭제 예정 정보
      */
     @Transactional
     @Override
@@ -295,7 +296,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             // 영구 삭제 대기 이력 상태를 설정함
             request.setWthdStat(WITHDRAWAL_STATUS_DELETE_PENDING);
             // 요청일에 환경별 유예기간을 더해 영구 삭제 예정일을 설정함
-            request.setDeltDate(LocalDateTime.now().plusDays(hardDeleteWaitDays));
+            request.setDeltDate(request.getRequDate().plusDays(hardDeleteWaitDays));
             // 영구 삭제 대기 회원 상태를 적용함
             applyWithdrawalStatus(request, Constant.USER_STAT_DELETE_PENDING, request.getDeltDate());
         }
@@ -304,8 +305,8 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         tokenRedisService.delLoginUserInfo(request.getUserNumb());
         // 비활성화와 영구 삭제 대기 전환 모두 저장하지 않은 임시 프로필 이미지를 즉시 삭제함
         fileService.delProfileDraftsOnCommit(request.getUserNumb());
-        // 프론트엔드가 완료 화면을 구분할 수 있도록 탈퇴 유형을 반환함
-        return ResultData.success(request.getWthdType());
+        // 완료 화면에 저장된 탈퇴 유형과 삭제 예정일을 전달할 처리 정보 반환
+        return ResultData.success(request);
     }
 
     /**

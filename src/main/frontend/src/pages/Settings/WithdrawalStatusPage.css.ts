@@ -1,11 +1,11 @@
 import { style } from "@vanilla-extract/css";
+import {vars} from "@/app/styles/tokens.css.ts";
 
 export const page = style({
   minHeight: "100svh",
   display: "grid",
   placeItems: "center",
   padding: "24px",
-  background: "#f5f7fa",
   boxSizing: "border-box",
 });
 
@@ -13,7 +13,6 @@ export const panel = style({
   width: "100%",
   maxWidth: "410px",
   padding: "34px 26px",
-  border: "1px solid #e2e6eb",
   borderRadius: "8px",
   background: "#ffffff",
   textAlign: "center",
@@ -30,7 +29,7 @@ export const description = style({
   display: "grid",
   gap: "8px",
   margin: 0,
-  color: "#69717d",
+  color: vars.color.gray600,
   fontSize: "14px",
   lineHeight: 1.6,
 });

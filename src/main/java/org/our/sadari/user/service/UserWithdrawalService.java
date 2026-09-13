@@ -12,6 +12,7 @@ import org.our.sadari.user.dto.UserWithdrawalDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-29        SeungHyeon.Kang    최초 생성
+ * 2026-09-13        HanWon.Jang    탈퇴 완료 응답 계약 정리
  */
 public interface UserWithdrawalService {
 
@@ -31,7 +32,7 @@ public interface UserWithdrawalService {
      * @author SeungHyeon.Kang
      * @param code Kakao OAuth 인가 코드
      * @param state 탈퇴 요청 일회성 상태값
-     * @return 적용된 탈퇴 유형
+     * @return 적용된 탈퇴 유형과 삭제 예정 정보
      */
     ResultData setWithdrawalCallback(String code, String state);
 
