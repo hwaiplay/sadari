@@ -20,13 +20,13 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : LocalAuthService
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-09-03
  * description    : 로컬 프로필에서 활성 회원의 개발용 로그인 세션을 생성함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-09-03        HanWon.Jang        최초 생성
+ * 2026-09-03        SeungHyeon.Kang        최초 생성
  */
 @Service
 @Profile("loc & !prod")
@@ -48,7 +48,7 @@ public class LocalAuthService {
     /**
      * 활성 회원 번호로 로컬 개발용 Access Token과 Refresh Token을 발급함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인할 회원 번호
      * @return 발급 토큰 또는 공통 인증 실패 결과
      */

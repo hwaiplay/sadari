@@ -73,7 +73,7 @@ public class LocalAuthLoginController {
     /**
      * URL의 회원 번호로 로컬 개발용 로그인 쿠키를 발급하고 같은 접속 환경의 프런트엔드로 이동함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인할 회원 번호
      * @param request localhost와 Tailnet 접속 환경을 판정할 HTTP 요청
      * @param response 인증 쿠키와 이동 주소를 기록할 HTTP 응답
@@ -115,7 +115,7 @@ public class LocalAuthLoginController {
     /**
      * Vite 개발 프록시의 원래 Host를 기준으로 로그인 완료 프런트엔드 주소를 선택함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param request 브라우저 Host와 전달 Host를 포함한 HTTP 요청
      * @return localhost 또는 Tailnet 프런트엔드 주소
      */
@@ -162,7 +162,7 @@ public class LocalAuthLoginController {
     /**
      * 개발용 Access Token과 Refresh Token을 브라우저 인증 Cookie로 저장함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param response 인증 Cookie를 기록할 HTTP 응답
      * @param accessToken API 인증에 사용할 Access Token
      * @param refreshToken Access Token 재발급에 사용할 Refresh Token
@@ -179,7 +179,7 @@ public class LocalAuthLoginController {
     /**
      * 로컬 프로필의 인증 환경 설정을 적용한 HttpOnly Cookie를 생성함
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param name 생성할 Cookie 이름
      * @param value 생성할 Cookie 값
      * @param maxAgeSeconds Cookie 유지 시간

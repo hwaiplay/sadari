@@ -29,7 +29,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-07-31        SeungHyeon.Kang    정지 회원의 계정 처리 API 접근 차단
  * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
  * 2026-08-13        SeungHyeon.Kang    제한 상태 CSRF·탈퇴 접근 허용
- * 2026-09-03        HanWon.Jang        로컬 간편 로그인 필터 제외
+ * 2026-09-03        SeungHyeon.Kang      로컬 간편 로그인 필터 제외
  */
 @Component
 @RequiredArgsConstructor
