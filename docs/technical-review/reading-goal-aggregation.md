@@ -1,5 +1,16 @@
 # 주간·월간·연간 독서 목표 집계를 SQL 2회로 단축
 
+<p align="center">
+    <img width="1038" height="650" alt="Image" src="https://github.com/user-attachments/assets/e3d5b995-9db6-484e-a210-853c0242de07" />
+</p>
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/b5529a51-40cb-4eeb-a13f-69bdc41681fd" />
+</p>
+        
+<p align="center">
+ <img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/f81d71d8-5d90-412d-a251-b7ce4adb0800" />
+</p>
+
 ## 문제
 
 마이페이지의 독서 요약은 현재 주·월·연의 완료 권수만 보여 주지 않습니다. 이전 기간과의 차이, 각 기간 목표, 달성률, 누적 달성 횟수, 현재 읽는 책, 기간별 완료 목록까지 한 화면에서 필요합니다.
