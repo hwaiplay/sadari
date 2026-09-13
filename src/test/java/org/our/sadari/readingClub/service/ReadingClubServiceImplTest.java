@@ -65,6 +65,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-01        HanWon.Jang        공개 모임 조회·자진 탈퇴 검증
  * 2026-09-04        SeungHyeon.Kang    가입 차단·채팅 읽음 수·퇴장 이력 검증
  * 2026-09-11        HanWon.Jang        도서 언어·알림 기본값 등록 검증
+ * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -927,6 +928,41 @@ class ReadingClubServiceImplTest {
               , null
               , Map.of("clubName", "책벌레 모임")
         );
+    }
+
+    /**
+     * 초대 수락 성공에만 기존 모임장 가입 알림을 발송하는지 검증
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void acceptInviteAlertsOwner() {
+        // 비공개 모임의 현재 모임장과 알림 표시명 구성
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 모임장 알림 수신자
+        club.setOwnrNumb(30L);
+        // 알림 템플릿의 모임명
+        club.setClubName("초대 테스트 모임");
+        // 비공개 초대 모임
+        club.setClubVisb("PRIVATE");
+        // 모임 잠금 조회 결과
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
+        // 최초 수락만 회원 활성화 성공
+        when(readingClubMapper.uptInvitationAccepted(10L, 20L)).thenReturn(1, 0);
+        // 기존 가입 알림 저장 성공
+        when(alimService.sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
+                , Map.of("clubName", "초대 테스트 모임"))).thenReturn(ResultData.success());
+
+        // 최초 초대 수락 처리
+        readingClubService.uptInvitationAccepted(20L, 10L);
+        // 중복 수락 처리
+        readingClubService.uptInvitationAccepted(20L, 10L);
+
+        // 성공한 수락에만 모임장 알림 한 번 발송
+        verify(alimService, times(1)).sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB
+                , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED, Constant.ALIM_TARGET_READING_CLUB, 10L, null
+                , Map.of("clubName", "초대 테스트 모임"));
     }
 
     /**

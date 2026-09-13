@@ -55,6 +55,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 처리 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-11        HanWon.Jang        모임 독서 등록 기본값·모임원 본인 여부 처리
+ * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 연결
  */
 @Service
 @RequiredArgsConstructor
@@ -1610,7 +1611,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
-     * {@inheritDoc}
+     * 모임 초대 가능한 맞팔로우 유저 목록 조회
      *
      * @author HanWon.Jang
      * @param userNumb 모임장 사용자 번호
@@ -1635,7 +1636,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
-     * {@inheritDoc}
+     * 모임 초대 유저 목록 조회
      *
      * @author Hanwon.Jang
      * @param userNumb 모임장 사용자 번호
@@ -1655,7 +1656,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
-     * {@inheritDoc}
+     * 모임 초대 전송
      *
      * @author SeungHyeon.Kang
      * @param userNumb 모임장 사용자 번호
@@ -1743,7 +1744,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
-     * {@inheritDoc}
+     * 받은 모임 초대 목록 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -1767,7 +1768,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
-     * {@inheritDoc}
+     * 모임 초대 수락 처리
      *
      * @author SeungHyeon.Kang
      * @param userNumb 초대 대상 사용자 번호
@@ -1793,12 +1794,28 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
+        // 초대 수락으로 확정된 신규 멤버 가입을 현재 모임장에게 알림
+        ResultData alimResult = alimService.sendAlim(
+                club.getOwnrNumb()
+              , Constant.ALIM_SITU_FOLLOW_CLUB
+              , Constant.ALIM_TEMP_CODE_CLUB_MEMBER_JOINED
+              , Constant.ALIM_TARGET_READING_CLUB
+              , clubNumb
+              , null
+              , Map.of("clubName", club.getClubName())
+        );
+        // 알림 저장 실패 시 회원 활성화까지 같은 트랜잭션으로 롤백
+        if (StringUtil.isEmpty(alimResult) || alimResult.getCode() != RESULT_SUCCESS_CODE) {
+            // "저장에 실패했어요. 다시 시도해주세요."
+            throw new CustomException(ResultEnum.COMMON_SAVE_REJECTED, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
+
         // 초대 수락 후 모임 상세를 반환함
         return getClubDtl(userNumb, clubNumb);
     }
 
     /**
-     * {@inheritDoc}
+     * 모임 초대 거절 처리
      *
      * @author SeungHyeon.Kang
      * @param userNumb 초대 대상 사용자 번호
