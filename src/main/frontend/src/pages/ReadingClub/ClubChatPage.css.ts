@@ -100,7 +100,10 @@ export const input = style({
   color: vars.color.black,
   background: "#ffffff",
   fontFamily: vars.font.body,
+  // iOS 입력 포커스 자동 확대 방지를 위한 여유 글자 크기와 자동 보정 고정
   fontSize: 16,
+  WebkitTextSizeAdjust: "100%",
+  textSizeAdjust: "100%",
   lineHeight: "20px",
   outline: "none",
   resize: "none",
