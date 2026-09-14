@@ -877,14 +877,34 @@ const FeedPage = () => {
   };
 
   /**
-   * 현재 열려 있는 피드 댓글 목록 대상을 해제함
+   * 피드 댓글 목록을 닫고 대상 카드의 최신 댓글 집계 동기화
    *
    * @author HanWon.Jang
-   * @return 반환값이 없음
+   * @return 댓글 집계 갱신 완료 Promise
    */
-  const closeReplySheet = (): void => {
-    // 댓글 목록을 닫고 선택된 피드 대상 상태를 초기화함
+  const closeReplySheet = async (): Promise<void> => {
+
+    const target = replyItem;
     setReplyItem(null);
+
+    if (!target) {
+      return;
+    }
+
+    try {
+      const nextItem = await getFeedTargetApi(target.tagtType, target.tagtNumb);
+      // 누적 페이지와 다른 카드의 반응 상태를 유지한 대상 댓글 집계 교체
+      setItems((current) => current.map((item) =>
+        item.tagtType === target.tagtType && item.tagtNumb === target.tagtNumb
+          ? { ...item, replCnt: nextItem.replCnt }
+          : item));
+    } catch (loadError: unknown) {
+      // "조회에 실패했습니다."
+      await sweetError(
+        message("frontend.alert.loadFailedTitle"),
+        getApiErrorMessage(loadError, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
+      );
+    }
   };
 
   /**
@@ -1510,7 +1530,7 @@ const FeedPage = () => {
           report={{ reptNumb: replyItem.tagtNumb, userNick: replyItem.userNick }}
           tagtType={replyItem.tagtType}
           focusReplNumb={focusReplNumb}
-          onClose={closeReplySheet}
+          onClose={() => void closeReplySheet()}
         />
       ) : null}
     </main>

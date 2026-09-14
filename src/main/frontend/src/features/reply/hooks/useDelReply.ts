@@ -85,6 +85,8 @@ export const useDelReply = ({ tagtType, tagtNumb, onDeleted }: UseDelReplyProps)
           queryClient.invalidateQueries({
             queryKey: ["publicReports"],
           }),
+          // 모임 회차 독후감 카드의 최신 댓글 집계 조회
+          queryClient.invalidateQueries({ queryKey: ["readingClub"] }),
         ]);
       };
 

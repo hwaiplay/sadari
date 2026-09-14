@@ -73,6 +73,8 @@ export const useSetReplyForm = ({
       void queryClient.invalidateQueries({
         queryKey: ["publicReports"],
       });
+      // 모임 회차 독후감 카드의 최신 댓글 집계 조회
+      void queryClient.invalidateQueries({ queryKey: ["readingClub"] });
     },
     /**
      * 댓글 등록 실패 원인을 사용자에게 안전한 문구로 안내함
