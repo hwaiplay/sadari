@@ -1,5 +1,5 @@
 import { keyframes, style } from "@vanilla-extract/css";
-import { vars } from "../../app/styles/tokens.css";
+import { vars } from "@/app/styles/tokens.css";
 
 const rollUp = keyframes({
   from: {
