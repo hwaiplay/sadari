@@ -121,7 +121,7 @@ export const content = style({
   alignItems: "center",
   justifyContent: "center",
   gap: "24px",
-  width: "100%",
+  width: "90%",
   zIndex:"2"
 });
 
