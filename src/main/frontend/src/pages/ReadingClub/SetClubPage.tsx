@@ -217,7 +217,7 @@ export default function SetClubPage({ mode = "create" }: SetClubPageProps) {
                           onClick={() => removeQuestion(index)}
                         >
                           <svg width="8" height="2" viewBox="0 0 8 2" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M0.75 0.75H6.75" stroke="#FF3747" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M0.75 0.75H6.75" stroke="#FF3747" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
                           </svg>
 
                           {message("frontend.readingClub.set.deleteQuestion")}
