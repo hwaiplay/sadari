@@ -377,7 +377,6 @@ export const replyLikeButton = style([
     selectors: {
       "&:disabled": {
         cursor: "wait",
-        opacity: 0.55,
       },
     },
   }

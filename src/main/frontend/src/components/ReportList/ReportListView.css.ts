@@ -387,7 +387,7 @@ export const metricIconButton = style({
   justifyContent: "center",
   cursor: "pointer",
   selectors: {
-    "&:disabled": { cursor: "default", opacity: 0.5 },
+    "&:disabled": { cursor: "default" },
     "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 2 },
   },
 });

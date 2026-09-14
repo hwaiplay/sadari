@@ -108,7 +108,6 @@ export const coverProfileEditButton = style({
   selectors: {
     "&:disabled": {
       cursor: "default",
-      opacity: 0.62,
     },
   },
 });
@@ -132,7 +131,6 @@ export const coverSaveButton = style([
     selectors: {
       "&:disabled": {
         cursor: "default",
-        opacity: 0.62,
       },
     },
   },
@@ -265,7 +263,6 @@ export const metricButton = style({
   selectors: {
     "&:disabled": {
       cursor: "default",
-      opacity: 0.5,
     },
   },
 });
@@ -293,7 +290,7 @@ export const likeIconButton = style({
   justifyContent: "center",
   cursor: "pointer",
   selectors: {
-    "&:disabled": { cursor: "default", opacity: 0.5 },
+    "&:disabled": { cursor: "default" },
     "&:focus-visible": { outline: `2px solid ${vars.color.brand}`, outlineOffset: 1 },
   },
 });
@@ -472,7 +469,6 @@ export const socialFollowButton = style({
     },
     "&:disabled": {
       cursor: "default",
-      opacity: 0.62,
     },
   },
 });

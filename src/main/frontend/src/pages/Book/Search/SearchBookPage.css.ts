@@ -107,7 +107,6 @@ export const searchButton = style({
       backgroundColor: "#f3f3f3",
     },
     "&:disabled": {
-      opacity: 0.6,
       cursor: "not-allowed",
     },
   },
