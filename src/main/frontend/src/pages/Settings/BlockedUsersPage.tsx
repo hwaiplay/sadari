@@ -14,19 +14,26 @@ import ProfileImage from "@/features/User/components/ProfileImage";
 import { useCallback, useEffect, useRef, useState } from "react";
 import * as styles from "./BlockedUsersPage.css";
 
+/**
+ * fileName       : BlockedUsersPage
+ * author         : Hanwon.Jang
+ * date           : 2026-09-14
+ * description    : 차단한 사용자 목록 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-09-14        Hanwon.Jang    주석 추가
+ * 2026-09-14        Hanwon.Jang    데이터 조회 로직 수정 (무한 스크롤)
+ */
+
 const FIRST_PAGE = 1;
 
-/**
- * 로그인 사용자가 직접 차단한 사용자 목록과 해제 기능을 제공함
- *
- * @author HanWon.Jang
- * @return 차단 사용자 관리 화면
- */
 const BlockedUsersPage = () => {
   const [blockedUsers, setBlockedUsers] = useState<BlockedUser[]>([]);
   const [page, setPage] = useState(FIRST_PAGE);
   const [hasNext, setHasNext] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [unblockingUserNumb, setUnblockingUserNumb] = useState<number | null>(null);
   const isLoadingMoreRef = useRef(false);
 
@@ -47,6 +54,8 @@ const BlockedUsersPage = () => {
 
     // 자동 하단 감지가 같은 페이지를 반복 호출하지 않도록 조회 상태를 잠금
     isLoadingMoreRef.current = true;
+    // 추가 조회 시작을 렌더링에 반영하여 하단 감지 중복과 로딩 누락 방지
+    setIsLoadingMore(true);
 
     try {
       // 로그인 사용자가 직접 만든 차단 방향의 한 페이지를 조회함
@@ -72,6 +81,8 @@ const BlockedUsersPage = () => {
     finally {
       // 성공과 실패 모두 이후 조회가 가능하도록 요청 잠금을 해제함
       isLoadingMoreRef.current = false;
+      // 추가 조회 완료 뒤 하단 감지기 재연결을 위한 화면 상태 갱신
+      setIsLoadingMore(false);
       // 최초 조회 화면의 공통 로딩 상태를 종료함
       setIsLoading(false);
     }
@@ -231,12 +242,9 @@ const BlockedUsersPage = () => {
       {/* 차단 사용자 다음 페이지 자동 조회 상태 영역 */}
       <InfiniteScrollTrigger
         hasNext={hasNext}
-        isLoading={isLoadingMoreRef.current}
+        isLoading={isLoadingMore}
         onLoadMore={handleLoadMore}
-      >
-        {/* "차단 목록을 불러오는 중..." */}
-        {message("frontend.settings.blocked.loadingMore")}
-      </InfiniteScrollTrigger>
+      />
     </main>
   );
 };
