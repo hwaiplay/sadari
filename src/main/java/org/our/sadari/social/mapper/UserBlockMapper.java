@@ -14,6 +14,7 @@ import org.our.sadari.social.dto.UserBlockDto;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-03        HanWon.Jang        최초 생성
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @Mapper
 public interface UserBlockMapper {
@@ -82,6 +83,30 @@ public interface UserBlockMapper {
      * @return 삭제된 가입 신청 수
      */
     int delBlockApplications(UserBlockDto blockDto);
+
+    /**
+     * 차단 상대가 본인 개인 콘텐츠와 댓글에 남긴 좋아요 정리
+     * @author HanWon.Jang
+     * @param blockDto 차단 주체와 상대 정보
+     * @return 삭제된 좋아요 수
+     */
+    int delBlockLikes(UserBlockDto blockDto);
+
+    /**
+     * 차단 상대가 남긴 개인 댓글 본문 제거와 삭제 상태 전환
+     * @author HanWon.Jang
+     * @param blockDto 차단 주체와 상대 정보
+     * @return 삭제 상태로 전환된 댓글 수
+     */
+    int delBlockReplies(UserBlockDto blockDto);
+
+    /**
+     * 차단 상대의 개인 반응 수신 알림 삭제 상태 전환
+     * @author HanWon.Jang
+     * @param blockDto 차단 주체와 상대 정보
+     * @return 삭제 상태로 전환된 알림 수
+     */
+    int delBlockReactionAlims(UserBlockDto blockDto);
 
     /**
      * 로그인 사용자가 직접 차단한 사용자 목록을 최신순으로 조회함

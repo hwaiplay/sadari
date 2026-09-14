@@ -1,6 +1,31 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.reply.mapper.ReplyMapper">
+    <!-- 차단과 같은 사용자 번호순 잠금으로 댓글과 좋아요 등록 직전 상태 확인 -->
+    <select id="lockReplyUsers" parameterType="org.our.sadari.reply.dto.ReplyDto" resultType="long">
+        <include refid="bindList" />
+        SELECT /* lockReplyUsers */
+               OWNER.USER_NUMB
+          FROM TM_USERXM OWNER
+         WHERE OWNER.USER_NUMB = #{userNumb}
+            OR EXISTS (
+               SELECT 1
+                 FROM TM_REPORT REPORT
+                WHERE #{tagtType} = #{targetReport}
+                  AND REPORT.REPT_NUMB = #{tagtNumb}
+                  AND REPORT.USER_NUMB = OWNER.USER_NUMB
+            )
+            OR (#{tagtType} = #{targetProfile} AND OWNER.PROF_NUMB = #{tagtNumb})
+            OR (#{tagtType} = #{targetBackground} AND OWNER.BGIM_NUMB = #{tagtNumb})
+            OR EXISTS (
+               SELECT 1
+                 FROM TB_REPLXX REPLY
+                WHERE REPLY.REPL_NUMB IN (#{uperNumb,jdbcType=BIGINT}, #{replNumb,jdbcType=BIGINT})
+                  AND REPLY.USER_NUMB = OWNER.USER_NUMB
+            )
+      ORDER BY OWNER.USER_NUMB
+           FOR UPDATE
+    </select>
     <sql id="bindList">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />

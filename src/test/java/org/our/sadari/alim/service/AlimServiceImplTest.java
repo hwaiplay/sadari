@@ -40,6 +40,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-25        HanWon.Jang        템플릿 링크 우선 검증
  * 2026-08-27        SeungHyeon.Kang    알림번호 기반 라우팅과 사진 프로필 이동 검증
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 알림 설정과 이동 경로 검증
+ * 2026-09-14        HanWon.Jang        개인 알림의 차단 동시 실행 잠금 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -628,6 +629,8 @@ class AlimServiceImplTest {
         assertEquals(200, result.getCode());
         // 차단된 수신자의 활성 상태 조회 전부터 알림 저장 흐름이 중단되는지 검증함
         verify(alimMapper, never()).getActiveAlimUserCnt(4L);
+        // 차단 여부를 확인하는 개인 알림 경로에서도 사용자 원본 잠금 유지
+        verify(userBlockService).lockUsers(3L, 4L);
     }
 
     /**

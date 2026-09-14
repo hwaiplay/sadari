@@ -46,6 +46,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-27        SeungHyeon.Kang    사진 좋아요 알림 대상 설명 정리
  * 2026-08-28        HanWon.Jang        활성 사용자 검색 조건 검증
  * 2026-09-04        SeungHyeon.Kang    팔로우 목록 닉네임 검색 검증
+ * 2026-09-14        HanWon.Jang        차단 반응 등록 경계 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SocialServiceImplTest {
@@ -137,6 +138,8 @@ class SocialServiceImplTest {
         when(reportMapper.getReportLikeDtl(request)).thenReturn(likeTarget);
         // 기존 좋아요가 없는 신규 등록 조건을 구성함
         when(socialMapper.dupLike(request)).thenReturn(0);
+        // 저장 직전 차단 조건을 통과한 실제 신규 행 수
+        when(socialMapper.setLike(request)).thenReturn(1);
         // 변경 후 좋아요 상세 조회 결과를 구성함
         when(socialMapper.getLikeDtl(request)).thenReturn(request);
 
@@ -181,6 +184,8 @@ class SocialServiceImplTest {
         when(feedMapper.getImageLikeTarget(request)).thenReturn(likeTarget);
         // 기존 좋아요가 없는 신규 등록 조건을 구성함
         when(socialMapper.dupLike(request)).thenReturn(0);
+        // 저장 직전 차단 조건을 통과한 실제 신규 행 수
+        when(socialMapper.setLike(request)).thenReturn(1);
         // 변경 후 좋아요 상세 조회 결과를 구성함
         when(socialMapper.getLikeDtl(request)).thenReturn(request);
         // 현재 프로필 사진에 좋아요를 등록함

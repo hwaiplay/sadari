@@ -20,8 +20,8 @@ const BLOCK_DESCRIPTIONS = [
   message("frontend.userAction.block.description.followRemoved"),
   // "· 같은 독서 모임의 운영 콘텐츠는 계속 표시될 수 있습니다."
   message("frontend.userAction.block.description.clubVisible"),
-  // "· 차단을 해제하면 보존된 과거 좋아요와 댓글이 다시 표시될 수 있습니다."
-  message("frontend.userAction.block.description.reactionsRestored"),
+  // "· 상대가 회원님에게 남긴 좋아요·댓글은 삭제되며, 차단 해제나 계정 복귀 후에도 복원되지 않습니다."
+  message("frontend.userAction.block.description.reactionsRemoved"),
 ] as const;
 
 type UserActionMenuProps = {

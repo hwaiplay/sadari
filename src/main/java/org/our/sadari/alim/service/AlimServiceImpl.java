@@ -36,6 +36,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-08-25        SeungHyeon.Kang    사진 댓글 알림 중복 제외
  * 2026-08-27        SeungHyeon.Kang    권한 기반 알림과 사진 프로필 이동 계산
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
+ * 2026-09-14        HanWon.Jang        차단과 개인 알림 저장 동시 실행 방지
  */
 @Service
 @RequiredArgsConstructor
@@ -450,12 +451,14 @@ public class AlimServiceImpl implements AlimService {
     public ResultData sendUserAlim(Long sendUserNumb, Long userNumb, String alimSitu
                                   , String tempCode, String tagtType, Long tagtNumb
                                   , Long replyNumb, Map<String, Object> replaceMap) {
-        // 발신자 정보가 없는 개인 알림 요청은 차단 판정을 우회하지 못하도록 거부함
-        if (StringUtil.isEmpty(sendUserNumb)) {
+        // 발신자나 수신자 정보가 없는 개인 알림 요청은 잠금과 차단 판정 전에 거부함
+        if (StringUtil.hasEmpty(sendUserNumb, userNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
+        // 차단 처리와 알림 저장이 엇갈리지 않도록 같은 사용자 원본을 잠금
+        userBlockService.lockUsers(sendUserNumb, userNumb);
         // 어느 한쪽이라도 상대를 차단했으면 알림과 푸시를 사용자에게 알리지 않고 정상 생략함
         if (userBlockService.isBlocked(sendUserNumb, userNumb)) {
             // 차단 방향과 신원을 응답에 드러내지 않는 정상 생략 결과를 반환함

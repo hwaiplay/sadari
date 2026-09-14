@@ -18,9 +18,18 @@ import org.our.sadari.reply.dto.ReplyDto;
  * 2026-08-04        HanWon.Jang        댓글 좋아요 알림 수신자 조회 메서드 정의
  * 2026-08-21        SeungHyeon.Kang    독후감 댓글 알림 설정 조회 추가
  * 2026-08-25        HanWon.Jang        범용 댓글 알림 조회 반영
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @Mapper
 public interface ReplyMapper {
+
+    /**
+     * 차단과 댓글 반응 등록이 교차하지 않도록 개인 콘텐츠 당사자 잠금
+     * @author HanWon.Jang
+     * @param request 반응 작성자와 콘텐츠 및 댓글 식별값
+     * @return 잠근 사용자 번호 목록
+     */
+    List<Long> lockReplyUsers(ReplyDto request);
 
     /**
      * 로그인 사용자가 댓글 대상 콘텐츠에 접근할 수 있는지 확인함

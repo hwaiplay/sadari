@@ -41,6 +41,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    댓글 좋아요 알림 발신자 조회 보강
  * 2026-08-26        HanWon.Jang        좋아요 알림 비동기화
  * 2026-08-27        SeungHyeon.Kang    댓글 알림 통합과 공개 사진 반응 적용
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -128,6 +129,9 @@ public class ReplyServiceImpl implements ReplyService {
         replyDto.setReplCntn(normalizedContent);
         // 신규 댓글은 화면에 노출될 수 있도록 미삭제 상태로 설정함
         replyDto.setDeltYsno(Constant.COMM_NO);
+
+        // 차단 정리와 댓글 등록의 경쟁 조건 방지를 위한 사용자 번호순 잠금
+        replyMapper.lockReplyUsers(replyDto);
 
         // 검증된 댓글을 DB에 등록하고 시퀀스로 생성된 댓글 번호를 DTO에 반영함
         int insertCnt = replyMapper.setReply(replyDto);
@@ -305,6 +309,8 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
+        // 차단 정리와 댓글 좋아요 등록이 교차하지 않도록 당사자 잠금
+        replyMapper.lockReplyUsers(replyDto);
         // 정상 이용 사용자와 미삭제 댓글 여부를 검증하면서 정확한 댓글 작성자를 알림 수신자로 조회함
         ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
 
@@ -335,6 +341,8 @@ public class ReplyServiceImpl implements ReplyService {
         if (StringUtil.isEmpty(replyDto)) {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
+        // 차단 정리와 사진 댓글 좋아요 등록이 교차하지 않도록 당사자 잠금
+        replyMapper.lockReplyUsers(replyDto);
         ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
         if (StringUtil.isEmpty(likeTarget)) {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);

@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-03        HanWon.Jang        최초 생성
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -93,6 +94,12 @@ public class UserBlockServiceImpl implements UserBlockService {
         UserBlockDto blockDto = createBlockDto(userNumb, targetUserNumb);
         // 검증된 차단 관계를 저장함
         userBlockMapper.setBlock(blockDto);
+        // 원본 댓글 작성자를 확인할 수 있는 상태에서 관련 수신 알림 제거
+        userBlockMapper.delBlockReactionAlims(blockDto);
+        // 상대가 남긴 좋아요와 삭제할 댓글에 종속된 좋아요 정리
+        userBlockMapper.delBlockLikes(blockDto);
+        // 제3자 답글 연결을 유지하면서 상대 댓글 본문을 복구 불가능하게 제거
+        userBlockMapper.delBlockReplies(blockDto);
         // 차단 당사자 사이에서 직접 발송된 수락 전 모임 초대를 삭제함
         userBlockMapper.delBlockInvitations(blockDto);
         // 어느 한쪽이 모임장인 모임의 상대방 처리 중 가입 신청과 답변을 삭제함

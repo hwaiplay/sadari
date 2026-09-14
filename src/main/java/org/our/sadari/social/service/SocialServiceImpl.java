@@ -40,6 +40,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-28        HanWon.Jang        활성 사용자 관계순 검색 추가
  * 2026-09-03        HanWon.Jang        사용자 차단 검증과 목록 격리 추가
  * 2026-09-04        SeungHyeon.Kang    팔로우 목록 닉네임 검색 추가
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @Service
 @RequiredArgsConstructor
@@ -177,6 +178,14 @@ public class SocialServiceImpl implements SocialService {
             return invalidResult;
         }
 
+        // 차단과 좋아요 등록이 교차하지 않도록 반응 당사자 잠금
+        userBlockService.lockUsers(req.getUserNumb(), req.getTargetUserNumb());
+        // 잠금 대기 중 완료된 차단을 최신 상태로 다시 검증
+        if (userBlockService.isBlocked(req.getUserNumb(), req.getTargetUserNumb())) {
+            // "접근할 수 없는 요청이에요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
         if (socialMapper.dupLike(req) > 0) {
             // Like 데이터를 DB에서 삭제함
@@ -186,7 +195,10 @@ public class SocialServiceImpl implements SocialService {
         // 앞선 조건에 해당하지 않는 대체 업무 흐름으로 전환함
         else {
             // Like 업무 값을 socialMapper DTO에 설정함
-            socialMapper.setLike(req);
+            if (socialMapper.setLike(req) == 0) {
+                // "접근할 수 없는 요청이에요."
+                return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+            }
             // 좋아요 커밋 이후에만 알림을 처리하도록 후처리 이벤트를 등록함
             sendLikeAlim(req);
         }

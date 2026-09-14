@@ -32,6 +32,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-03        HanWon.Jang        최초 생성
+ * 2026-09-14        HanWon.Jang        차단 반응 삭제 정책 반영
  */
 @ExtendWith(MockitoExtension.class)
 class UserBlockServiceImplTest {
@@ -86,6 +87,12 @@ class UserBlockServiceImplTest {
         inOrder.verify(userBlockMapper).lockUsers(3L, 4L);
         // 등록 요청의 차단 방향을 캡처함
         inOrder.verify(userBlockMapper).setBlock(blockCaptor.capture());
+        // 댓글 원본을 변경하기 전에 상대 반응 수신 알림 정리 검증
+        inOrder.verify(userBlockMapper).delBlockReactionAlims(any(UserBlockDto.class));
+        // 삭제 댓글에 연결된 좋아요까지 먼저 제거하는 순서 검증
+        inOrder.verify(userBlockMapper).delBlockLikes(any(UserBlockDto.class));
+        // 제3자 답글 구조를 유지하는 댓글 삭제 상태 전환 검증
+        inOrder.verify(userBlockMapper).delBlockReplies(any(UserBlockDto.class));
         // 수락 전 직접 초대가 차단 트랜잭션에서 삭제되는지 검증함
         inOrder.verify(userBlockMapper).delBlockInvitations(any(UserBlockDto.class));
         // 처리 중 가입 신청과 답변이 차단 트랜잭션에서 삭제되는지 검증함

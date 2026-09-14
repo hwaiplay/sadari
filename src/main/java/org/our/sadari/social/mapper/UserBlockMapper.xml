@@ -2,6 +2,111 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.social.mapper.UserBlockMapper">
 
+    <sql id="bindReactionTargets">
+        <bind name="targetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
+        <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
+        <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
+        <bind name="targetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+    </sql>
+
+    <!-- 사진 반응은 교체 시 기존 반응이 정리되므로 현재 사진 번호로 소유권 확인 -->
+    <sql id="ownedReactionTargets">
+        SELECT #{targetReport} AS TAGT_TYPE
+             , REPORT.REPT_NUMB AS TAGT_NUMB
+          FROM TM_REPORT REPORT
+         WHERE REPORT.USER_NUMB = #{userNumb}
+           AND NOT (REPORT.PUBC_YSNO = #{commNo}
+                    AND EXISTS (SELECT 1 FROM TB_CLPART PART WHERE PART.REPT_NUMB = REPORT.REPT_NUMB))
+        UNION ALL
+        SELECT #{targetProfile} AS TAGT_TYPE
+             , OWNER.PROF_NUMB AS TAGT_NUMB
+          FROM TM_USERXM OWNER
+         WHERE OWNER.USER_NUMB = #{userNumb}
+        UNION ALL
+        SELECT #{targetBackground} AS TAGT_TYPE
+             , OWNER.BGIM_NUMB AS TAGT_NUMB
+          FROM TM_USERXM OWNER
+         WHERE OWNER.USER_NUMB = #{userNumb}
+    </sql>
+
+    <!-- 내 개인 콘텐츠에 남긴 반응과 내 댓글에 대한 상대 답글만 삭제 범위에 포함 -->
+    <sql id="blockedReplyScope">
+        R.USER_NUMB = #{blocNumb}
+        AND R.TAGT_TYPE IN (#{targetReport}, #{targetProfile}, #{targetBackground})
+        AND (OWNED.TAGT_NUMB IS NOT NULL OR P.USER_NUMB = #{userNumb})
+        AND NOT EXISTS (
+            SELECT 1 FROM TM_REPORT REPORT JOIN TB_CLPART PART ON PART.REPT_NUMB = REPORT.REPT_NUMB
+             WHERE R.TAGT_TYPE = #{targetReport} AND REPORT.REPT_NUMB = R.TAGT_NUMB
+               AND REPORT.PUBC_YSNO = #{commNo}
+        )
+    </sql>
+
+    <!-- 상대가 내 콘텐츠와 개인 댓글에 남긴 좋아요 및 삭제 댓글에 종속된 좋아요 정리 -->
+    <delete id="delBlockLikes" parameterType="org.our.sadari.social.dto.UserBlockDto">
+        <include refid="bindReactionTargets" />
+        DELETE /* delBlockLikes */ L
+          FROM TB_LIKEXX L
+     LEFT JOIN TB_REPLXX R
+            ON L.TAGT_TYPE = #{targetReply}
+           AND R.REPL_NUMB = L.TAGT_NUMB
+     LEFT JOIN TB_REPLXX P
+            ON P.REPL_NUMB = R.UPER_NUMB
+     LEFT JOIN (<include refid="ownedReactionTargets" />) OWNED
+            ON OWNED.TAGT_TYPE = COALESCE(R.TAGT_TYPE, L.TAGT_TYPE)
+           AND OWNED.TAGT_NUMB = COALESCE(R.TAGT_NUMB, L.TAGT_NUMB)
+         WHERE (L.USER_NUMB = #{blocNumb}
+                AND (OWNED.TAGT_NUMB IS NOT NULL
+                     OR (R.USER_NUMB = #{userNumb}
+                         AND R.TAGT_TYPE IN (#{targetReport}, #{targetProfile}, #{targetBackground})
+                         AND NOT EXISTS (
+                             SELECT 1 FROM TM_REPORT REPORT JOIN TB_CLPART PART ON PART.REPT_NUMB = REPORT.REPT_NUMB
+                              WHERE R.TAGT_TYPE = #{targetReport} AND REPORT.REPT_NUMB = R.TAGT_NUMB
+                                AND REPORT.PUBC_YSNO = #{commNo}
+                         ))))
+            OR (<include refid="blockedReplyScope" />)
+    </delete>
+
+    <!-- 제3자 답글의 외래키를 유지하면서 차단 상대의 댓글 본문 제거 -->
+    <update id="delBlockReplies" parameterType="org.our.sadari.social.dto.UserBlockDto">
+        <include refid="bindReactionTargets" />
+        UPDATE /* delBlockReplies */
+               TB_REPLXX R
+     LEFT JOIN TB_REPLXX P
+            ON P.REPL_NUMB = R.UPER_NUMB
+     LEFT JOIN (<include refid="ownedReactionTargets" />) OWNED
+            ON OWNED.TAGT_TYPE = R.TAGT_TYPE
+           AND OWNED.TAGT_NUMB = R.TAGT_NUMB
+           SET R.REPL_CNTN = NULL
+             , R.DELT_YSNO = #{commYes}
+             , R.UPDT_DATE = CURRENT_TIMESTAMP
+         WHERE <include refid="blockedReplyScope" />
+    </update>
+
+    <!-- 원본 댓글로 차단 상대가 작성했음을 확인할 수 있는 댓글 및 답글 알림 제거 -->
+    <update id="delBlockReactionAlims" parameterType="org.our.sadari.social.dto.UserBlockDto">
+        <include refid="bindReactionTargets" />
+        <bind name="replyReport" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_REPORT" />
+        <bind name="replyProfile" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_PROFILE_IMAGE" />
+        <bind name="replyBackground" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_BACKGROUND_IMAGE" />
+        <bind name="replyToComment" value="@org.our.sadari.global.common.constant.Constant@ALIM_TEMP_CODE_REPLY_TO_COMMENT" />
+        UPDATE /* delBlockReactionAlims */
+               TB_ALIMXX A
+     LEFT JOIN TB_REPLXX R
+            ON R.REPL_NUMB = A.REPL_NUMB
+           SET A.DELT_YSNO = #{commYes}
+         WHERE A.USER_NUMB = #{userNumb}
+           AND R.USER_NUMB = #{blocNumb}
+           AND A.TEMP_CODE IN (#{replyReport}, #{replyProfile}, #{replyBackground}, #{replyToComment})
+           AND A.TAGT_TYPE IN (#{targetReport}, #{targetProfile}, #{targetBackground})
+           AND NOT EXISTS (
+               SELECT 1 FROM TM_REPORT REPORT JOIN TB_CLPART PART ON PART.REPT_NUMB = REPORT.REPT_NUMB
+                WHERE A.TAGT_TYPE = #{targetReport} AND REPORT.REPT_NUMB = A.TAGT_NUMB
+                  AND REPORT.PUBC_YSNO = #{commNo}
+           )
+    </update>
+
     <!-- 차단과 팔로우 등록의 경쟁 조건을 막도록 두 사용자 원본을 번호순으로 잠금 -->
     <select id="lockUsers" resultType="long">
         SELECT /* lockUsers */

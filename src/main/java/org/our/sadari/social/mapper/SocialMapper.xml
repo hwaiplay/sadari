@@ -100,11 +100,14 @@
                   , TAGT_TYPE
                   , TAGT_NUMB
                   , REGI_DATE
-        ) VALUES (  #{userNumb}
-                  , #{tagtType}
-                  , #{tagtNumb}
-                  , CURRENT_TIMESTAMP
         )
+        SELECT #{userNumb}, #{tagtType}, #{tagtNumb}, CURRENT_TIMESTAMP
+          FROM DUAL
+         WHERE NOT EXISTS (
+             SELECT 1 FROM TB_USBLOC B
+              WHERE (B.USER_NUMB = #{userNumb} AND B.BLOC_NUMB = #{targetUserNumb})
+                 OR (B.USER_NUMB = #{targetUserNumb} AND B.BLOC_NUMB = #{userNumb})
+         )
     </insert>
 
     <!-- 좋아요를 취소함 -->
