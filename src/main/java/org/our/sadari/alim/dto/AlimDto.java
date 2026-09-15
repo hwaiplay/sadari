@@ -21,6 +21,7 @@ import lombok.Data;
  * 2026-08-14        SeungHyeon.Kang    알림 목록 10개 단위 조회 설명 반영
  * 2026-08-27        SeungHyeon.Kang    동적 알림 이동 대상 필드와 응답 DTO 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
+ * 2026-09-15        HanWon.Jang        개인 알림 내부 발신자 식별값 추가
  */
 @Schema(description = "알림 API 요청과 응답 DTO 컨테이너", hidden = true)
 public class AlimDto {
@@ -72,6 +73,10 @@ public class AlimDto {
 
         @Schema(description = "수신 사용자 번호", example = "31")
         private Long userNumb;
+
+        @Schema(description = "내부 알림 발신 사용자 번호", hidden = true)
+        @JsonIgnore
+        private Long sendNumb;
 
         @Schema(description = "사용자별 알림 순번", example = "1")
         private Long alimNumb;

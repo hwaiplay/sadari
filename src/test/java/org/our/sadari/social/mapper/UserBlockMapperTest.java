@@ -1,7 +1,6 @@
 package org.our.sadari.social.mapper;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.io.IOException;
@@ -54,14 +53,15 @@ class UserBlockMapperTest {
             assertTrue(sql.contains("REPORT.PUBC_YSNO = ?"));
             assertEquals(Constant.LIKE_TARGET_PROFILE_IMAGE, bound.getAdditionalParameter("targetProfile"));
             assertEquals(Constant.LIKE_TARGET_BACKGROUND_IMAGE, bound.getAdditionalParameter("targetBackground"));
-            // 댓글 본문 제거와 발신자 없는 기존 알림의 원본 댓글 검증 조건 확인
+            // 댓글 본문 제거와 발신자 기반 개인 알림 삭제 조건 확인
             if (method.equals("delBlockReplies")) {
                 assertTrue(sql.contains("R.REPL_CNTN = NULL"));
                 assertTrue(sql.contains("P.USER_NUMB = ?"));
             }
             if (method.equals("delBlockReactionAlims")) {
-                assertFalse(sql.contains("SEND_NUMB"));
-                assertTrue(sql.contains("AND R.USER_NUMB = ?"));
+                assertEquals(2, sql.split("A.USER_NUMB = \\?", -1).length - 1);
+                assertEquals(2, sql.split("A.SEND_NUMB = \\?", -1).length - 1);
+                assertTrue(sql.contains("A.SEND_NUMB IS NULL AND R.USER_NUMB = ?"));
                 assertTrue(sql.contains("A.TEMP_CODE IN (?, ?, ?, ?)"));
             }
         }

@@ -37,6 +37,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-08-27        SeungHyeon.Kang    권한 기반 알림과 사진 프로필 이동 계산
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-14        HanWon.Jang        차단과 개인 알림 저장 동시 실행 방지
+ * 2026-09-15        HanWon.Jang        개인 알림 내부 발신자 저장
  */
 @Service
 @RequiredArgsConstructor
@@ -275,6 +276,26 @@ public class AlimServiceImpl implements AlimService {
     @Transactional
     public ResultData sendAlim(Long userNumb, String alimSitu, String tempCode, String tagtType
                              , Long tagtNumb, Long messageNumb, Map<String, Object> replaceMap) {
+        return setAlimWithSender(null, userNumb, alimSitu, tempCode, tagtType
+                               , tagtNumb, messageNumb, replaceMap);
+    }
+
+    /**
+     * 선택형 내부 발신자를 포함해 알림 이력과 커밋 이후 푸시를 생성
+     *
+     * @param sendUserNumb 개인 알림 발신자 번호
+     * @param userNumb 알림 수신자 번호
+     * @param alimSitu 알림 상황 코드
+     * @param tempCode 알림 템플릿 코드
+     * @param tagtType 이동 대상 유형
+     * @param tagtNumb 이동 대상 번호
+     * @param messageNumb 원본 댓글 또는 채팅 번호
+     * @param replaceMap 화면 문구 치환값
+     * @return 알림 저장 결과
+     */
+    private ResultData setAlimWithSender(Long sendUserNumb, Long userNumb, String alimSitu
+                                       , String tempCode, String tagtType, Long tagtNumb
+                                       , Long messageNumb, Map<String, Object> replaceMap) {
         // 수신자와 템플릿 및 지원 대상 정보가 없으면 이동할 수 없는 알림이 저장되므로 요청을 거부함
         if (StringUtil.hasEmpty(userNumb, alimSitu, tempCode, tagtType)
                 || !isAlimTargetValid(tempCode, tagtType, tagtNumb)) {
@@ -320,6 +341,8 @@ public class AlimServiceImpl implements AlimService {
         AlimDto.AlimItemDto alim = new AlimDto.AlimItemDto();
         // UserNumb 업무 값을 alim DTO에 설정함
         alim.setUserNumb(userNumb);
+        // 개인 알림 삭제 범위를 다른 발신자의 이력과 구분할 내부 식별값 설정
+        alim.setSendNumb(sendUserNumb);
         // AlimSitu 업무 값을 alim DTO에 설정함
         alim.setAlimSitu(alimSitu);
         // TempCode 업무 값을 alim DTO에 설정함
@@ -466,7 +489,8 @@ public class AlimServiceImpl implements AlimService {
         }
 
         // 차단되지 않은 개인 소셜 알림은 기존 저장과 푸시 정책으로 처리함
-        return sendAlim(userNumb, alimSitu, tempCode, tagtType, tagtNumb, replyNumb, replaceMap);
+        return setAlimWithSender(sendUserNumb, userNumb, alimSitu, tempCode, tagtType
+                               , tagtNumb, replyNumb, replaceMap);
     }
 
     private void schedulePushAfterCommit(AlimDto.AlimItemDto alim) {
