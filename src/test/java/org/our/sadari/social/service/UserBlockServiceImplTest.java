@@ -1,9 +1,12 @@
 package org.our.sadari.social.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.inOrder;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -22,6 +25,7 @@ import org.our.sadari.social.mapper.UserBlockMapper;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * fileName       : UserBlockServiceImplTest
@@ -105,6 +109,31 @@ class UserBlockServiceImplTest {
         assertEquals(4L, blockCaptor.getValue().getBlocNumb());
         // 모든 관계 정리가 성공 응답으로 완료되는지 검증함
         assertTrue(Boolean.TRUE.equals(result.getData()));
+    }
+
+    /**
+     * 차단 정리 실패가 호출자에게 전파되고 이후 정리를 실행하지 않는지 검증함
+     *
+     * @author HanWon.Jang
+     * @throws NoSuchMethodException 차단 메서드 조회 실패
+     */
+    @Test
+    void setBlockCleanupFailure() throws NoSuchMethodException {
+        // 차단 대상과 사용자 잠금은 성공하고 알림 정리에서 실패하도록 구성함
+        when(userMapper.getUserByNumb(4L)).thenReturn(new UserDto());
+        when(userBlockMapper.lockUsers(3L, 4L)).thenReturn(List.of(3L, 4L));
+        doThrow(new IllegalStateException("cleanup failed"))
+                .when(userBlockMapper).delBlockReactionAlims(any(UserBlockDto.class));
+
+        // 런타임 예외를 숨기지 않아 Spring 트랜잭션이 롤백할 수 있는지 검증함
+        assertThrows(IllegalStateException.class, () -> userBlockService.setBlock(3L, 4L));
+        // 차단 등록 메서드의 쓰기 트랜잭션 경계가 유지되는지 검증함
+        assertTrue(UserBlockServiceImpl.class.getMethod("setBlock", Long.class, Long.class)
+                .isAnnotationPresent(Transactional.class));
+        // 실패 지점 뒤의 관계 정리가 부분 실행되지 않는지 검증함
+        verify(userBlockMapper, never()).delBlockLikes(any(UserBlockDto.class));
+        verify(userBlockMapper, never()).delBlockReplies(any(UserBlockDto.class));
+        verify(userBlockMapper, never()).delBlockFollows(any(UserBlockDto.class));
     }
 
     /**

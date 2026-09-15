@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
+import java.util.Map;
 import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.BoundSql;
@@ -65,5 +66,15 @@ class UserBlockMapperTest {
                 assertTrue(sql.contains("A.TEMP_CODE IN (?, ?, ?, ?)"));
             }
         }
+        // 차단과 반응 요청이 같은 사용자 번호순 잠금을 공유하는지 확인
+        BoundSql lockSql = configuration.getMappedStatement(
+                "org.our.sadari.social.mapper.UserBlockMapper.lockUsers")
+                .getBoundSql(Map.of("firstUserNumb", 31L, "secondUserNumb", 41L));
+        String normalizedLockSql = lockSql.getSql().replaceAll("\\s+", " ");
+        assertTrue(normalizedLockSql.contains("ORDER BY USER_NUMB FOR UPDATE"));
+        // 동일 차단 재요청이 중복 행 없이 멱등 처리되는지 확인
+        BoundSql setBlockSql = configuration.getMappedStatement(
+                "org.our.sadari.social.mapper.UserBlockMapper.setBlock").getBoundSql(request);
+        assertTrue(setBlockSql.getSql().replaceAll("\\s+", " ").contains("ON DUPLICATE KEY UPDATE"));
     }
 }
