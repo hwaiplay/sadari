@@ -11,6 +11,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import software.amazon.awssdk.auth.credentials.AwsBasicCredentials;
 import software.amazon.awssdk.auth.credentials.StaticCredentialsProvider;
+import software.amazon.awssdk.core.checksums.RequestChecksumCalculation;
+import software.amazon.awssdk.core.checksums.ResponseChecksumValidation;
 import software.amazon.awssdk.regions.Region;
 import software.amazon.awssdk.services.s3.S3Client;
 import software.amazon.awssdk.services.s3.S3ClientBuilder;
@@ -25,6 +27,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-07        SeungHyeon.Kang    최초 생성 및 S3 자격 증명 적용
+ * 2026-09-16        HanWon.Jang         S3 호환 저장소 서명 보정
  */
 @Configuration
 public class FileStorageConfig {
@@ -73,8 +76,10 @@ public class FileStorageConfig {
 
         // AWS가 아닌 S3 호환 저장소를 사용할 때만 사용자 지정 엔드포인트를 적용함
         if (!StringUtil.isEmpty(endpoint)) {
-            // 검증된 엔드포인트 문자열을 S3 클라이언트에 적용함
-            builder.endpointOverride(URI.create(endpoint));
+            // Garage가 지원하지 않는 AWS 전용 자동 CRC Trailer를 제외한 호환 요청 서명
+            builder.endpointOverride(URI.create(endpoint))
+                    .requestChecksumCalculation(RequestChecksumCalculation.WHEN_REQUIRED)
+                    .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
         }
 
         // 환경변수에서 주입한 장기 자격 증명으로 인증하는 S3 클라이언트를 반환함
