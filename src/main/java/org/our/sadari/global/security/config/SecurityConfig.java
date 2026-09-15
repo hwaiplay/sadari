@@ -16,6 +16,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -34,6 +36,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
  * 2026-09-03        SeungHyeon.Kang    로컬 프로필 간편 로그인 허용
  * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 허용
+ * 2026-09-16        HanWon.Jang         Stateless CSRF Token 유지
  */
 @Configuration
 @EnableWebSecurity
@@ -61,20 +64,21 @@ public class SecurityConfig {
      * @author SeungHyeon.Kang
      * @param http API 접근 규칙을 설정할 HttpSecurity
      * @param csrfTokenRepository CSRF Token을 Cookie에 저장할 Repository
+     * @param csrfAuthStrategy JWT 인증 뒤 CSRF Cookie를 유지할 인증 후처리
      * @return 구성하거나 조회한 결과 객체
      */
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CookieCsrfTokenRepository csrfTokenRepository) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, CookieCsrfTokenRepository csrfTokenRepository
+                                         , SessionAuthenticationStrategy csrfAuthStrategy) throws Exception {
 
         http
                 // 브라우저가 자동 전송하는 인증 Cookie와 별도로 요청 Header의 CSRF Token을 검증함
-                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository))
+                .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
+                        // JWT는 요청마다 인증되므로 새 로그인으로 판단해 기존 CSRF Cookie를 만료시키는 후처리를 사용하지 않음
+                        .sessionAuthenticationStrategy(csrfAuthStrategy))
 
                 // JWT 기반 인증을 사용하므로 세션을 생성하지 않고 Stateless 상태로 관리
-                .sessionManagement(session ->
-                        // JWT 인증에 맞게 서버 세션을 생성하지 않도록 설정함
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
                 // 커스텀 CORS 설정 적용
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -151,6 +155,18 @@ public class SecurityConfig {
         repository.setCookieCustomizer(this::uptCsrfCookie);
         // CSRF Token을 HttpOnly Cookie에 저장하는 Repository를 반환함
         return repository;
+    }
+
+    /**
+     * Stateless JWT 요청마다 기존 CSRF Cookie를 만료시키지 않는 인증 후처리를 구성함
+     *
+     * @author HanWon.Jang
+     * @return CSRF Cookie 상태를 변경하지 않는 인증 후처리
+     */
+    @Bean
+    public SessionAuthenticationStrategy getCsrfAuthStrategy() {
+        // JWT 인증은 서버 세션을 사용하지 않으므로 CSRF Cookie를 초기화하지 않는 후처리를 반환함
+        return new NullAuthenticatedSessionStrategy();
     }
 
     /**
