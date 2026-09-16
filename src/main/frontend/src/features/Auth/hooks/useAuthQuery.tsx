@@ -35,7 +35,7 @@ const getAuthenticatedState = async () => {
  * @param error 인증 상태 조회 실패 원인
  * @return Access Token 재발급 대상 여부
  */
-const isRefreshableError = (error: unknown): boolean => {
+const isRefreshableError = (error: unknown): error is ResultDataError => {
 
   // 공통 인증 실패 응답만 Access Token 재발급 대상으로 처리함
   if (!(error instanceof ResultDataError)) {
@@ -71,7 +71,22 @@ const getAuthState = async () => {
     }
 
     // 같은 Query 실행에서 Access Token을 한 번만 재발급함
-    await refreshTokenApi();
+    try {
+      await refreshTokenApi();
+    }
+
+    // 만료되거나 제거된 Refresh Token은 정상적인 로그아웃 상태로 확정함
+    catch (refreshError) {
+      // 인증 실패를 Query 오류로 남기면 새 인증 화면이 붙을 때 같은 복구 요청이 다시 시작될 수 있음
+      if (isRefreshableError(refreshError)) {
+        // 서버가 쿠키를 만료시킨 인증 실패 응답을 그대로 반환해 반복 복구를 종료함
+        return refreshError.result;
+      }
+
+      // 네트워크와 서버 장애는 로그아웃으로 오인하지 않고 기존 오류 화면에서 처리함
+      throw refreshError;
+    }
+
     // 재발급 뒤 인증 상태를 한 번 확인하고 실패 시 추가 반복 없이 종료함
     return await getAuthenticatedState();
   }
@@ -90,5 +105,9 @@ export const useAuthQuery = () => {
     queryKey: ["auth"],
     queryFn: getAuthState,
     retry: false,
+    // 실패한 Query에 새 Route 구독자가 붙어도 인증 복구를 다시 시작하지 않음
+    retryOnMount: false,
+    // PublicRoute와 OAuth 화면이 차례로 붙을 때 같은 인증 상태를 다시 조회하지 않음
+    refetchOnMount: false,
   });
 };
