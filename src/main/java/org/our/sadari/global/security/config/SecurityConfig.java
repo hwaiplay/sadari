@@ -36,7 +36,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
  * 2026-09-03        SeungHyeon.Kang    로컬 프로필 간편 로그인 허용
  * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 허용
- * 2026-09-16        HanWon.Jang         Stateless CSRF Token 유지
+ * 2026-09-16        HanWon.Jang         Stateless CSRF·공개 화면 접근
  */
 @Configuration
 @EnableWebSecurity
@@ -93,8 +93,19 @@ public class SecurityConfig {
                         // 서버 예외를 전용 오류 문서로 표시할 때 인증 필터가 오류 디스패치를 차단하지 않도록 허용함
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
-                        // 인증 없이 접근을 허용할 공개 API Endpoint 목록
+                        // 인증 없이 접근을 허용할 공개 화면과 API Endpoint 목록
                         .requestMatchers(
+                                "/",
+                                "/index.html",
+                                "/login",
+                                "/oauth",
+                                "/privacy-policy",
+                                "/withdrawal/result",
+                                "/assets/**",
+                                "/favicon/**",
+                                "/fonts/**",
+                                "/img/**",
+                                "/service-worker.js",
                                 "/api/oauth/kakao",
                                 "/api/oauth/callback/**",
                                 "/api/oauth/local-login",
