@@ -56,6 +56,7 @@ const UserReportPage = () => {
   }
 
   const { target } = reportState;
+  const isImageTarget = target.targetType === "PROFILE" || target.targetType === "BACKGROUND";
   // "사용자 계정", "독후감", "댓글", "프로필 사진", "배경사진", "한줄소개"
   const targetTypeLabel = message(TARGET_TYPE_LABEL_KEYS[target.targetType]);
   // "폭력, 혐오 또는 학대"
@@ -105,11 +106,11 @@ const UserReportPage = () => {
 
     setIsSaving(true);
     try {
-      // 화면에 전달된 본문 대신 서버가 대상 번호로 조회한 실제 원문을 저장함
+      // 이미지 원본의 서버 조회와 텍스트 대상의 화면 확인 원문 전달
       await setComplaintApi({
         tagtType: TARGET_TYPE_CODES[target.targetType],
         tagtNumb: target.targetNumb,
-        tagtCntn: target.content,
+        tagtCntn: isImageTarget ? undefined : target.content,
         cmplRson: selectedReason as ComplaintReason,
         cmplCntn: detailReason.trim() || null,
       });

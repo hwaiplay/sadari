@@ -266,6 +266,8 @@ class ComplaintServiceImplTest {
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_PROFILE, "CMPL_PRIVACY", null
         );
+        // 기존 화면의 표시용 문구와 실제 파일명을 비교하지 않는 호환성 검증값
+        request.setTagtCntn("프로필 사진");
         // 활성 신고자와 유효한 대상 및 사유 코드를 설정함
         when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
         when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET,
@@ -351,6 +353,8 @@ class ComplaintServiceImplTest {
         ComplaintCreateDto request = createRequest(
                 Constant.COMPLAINT_TARGET_BACKGROUND, "CMPL_PRIVACY", null
         );
+        // 기존 화면의 표시용 문구와 실제 파일명을 비교하지 않는 호환성 검증값
+        request.setTagtCntn("배경사진");
         // 활성 신고자와 유효한 대상 및 사유 코드를 설정함
         when(complaintMapper.getUserStat(7L)).thenReturn(Constant.USER_STAT_ACTIVE);
         when(complaintMapper.getActiveCodeCnt(Constant.CODE_COMPLAINT_TARGET,

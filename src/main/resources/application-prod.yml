@@ -1,7 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
+    # Mac mini Docker 내부망의 MySQL 서비스 기본 연결
+    url: ${DB_URL:jdbc:mysql://sadari-mysql:3306/sadari?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:sadari_app}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
@@ -18,7 +19,8 @@ spring:
     store-type: redis
   data:
     redis:
-      host: ${REDIS_HOST}
+      # Mac mini Docker 내부망의 Redis 서비스 기본 연결
+      host: ${REDIS_HOST:sadari-redis}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
   messages:
@@ -100,7 +102,7 @@ firebase:
     app-id: ${FIREBASE_WEB_APP_ID}
     vapid-public-key: ${FIREBASE_VAPID_PUBLIC_KEY}
   admin:
-    # FCM 서버 발송에 쓰는 service account json 경로임. json 원문은 Git이 아니라 EC2/Docker secret/환경별 파일로 관리함
+    # FCM 서버 발송에 쓰는 service account json 경로임. json 원문은 Git이 아니라 배포 호스트의 Docker secret 파일로 관리함
     credentials-path: ${FIREBASE_CREDENTIALS_PATH}
 
 jwt:
@@ -115,9 +117,9 @@ app:
     connect-timeout-millis: ${HTTP_CONNECT_TIMEOUT_MILLIS:3000}
     read-timeout-millis: ${HTTP_READ_TIMEOUT_MILLIS:5000}
   storage:
-    # S3를 사용하지 않는 Windows 실행 환경은 사용자·관리자 앱이 같은 공유 디렉터리를 사용함
-    provider: ${STORAGE_PROVIDER:s3}
-    local-root: ${STORAGE_LOCAL_ROOT:C:/shared/sadari-uploads}
+    # 배포 서버의 영구 폴더를 컨테이너 공통 경로에 연결하는 로컬 파일 저장소
+    provider: ${STORAGE_PROVIDER:local}
+    local-root: ${STORAGE_LOCAL_ROOT:/app/uploads}
     s3:
       bucket: ${STORAGE_S3_BUCKET}
       region: ${STORAGE_S3_REGION:ap-northeast-2}

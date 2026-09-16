@@ -8,7 +8,7 @@
         DELETE /* delAlim */
          FROM TB_ALIMXX
          WHERE DELT_YSNO = #{commYes}
-           AND COALESCE(UPDT_DATE, REGI_DATE) &lt; #{retentionDate}
+           AND UPDT_DATE &lt; #{retentionDate}
     </delete>
 
 </mapper>

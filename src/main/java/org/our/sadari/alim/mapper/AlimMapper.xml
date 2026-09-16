@@ -238,6 +238,7 @@
                TB_ALIMXX
            SET READ_YSNO = #{commYes}
              , READ_DATE = CURRENT_TIMESTAMP
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE USER_NUMB = #{userNumb}
            AND ALIM_NUMB = #{alimNumb}
            AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
@@ -251,6 +252,7 @@
         UPDATE /* delAllAlim */
                TB_ALIMXX
            SET DELT_YSNO = #{commYes}
+             , UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE USER_NUMB = #{userNumb}
            AND COALESCE(DELT_YSNO, #{commNo}) = #{commNo}
     </update>

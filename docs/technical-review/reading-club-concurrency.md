@@ -1,5 +1,18 @@
 # 독서 모임 가입 경쟁을 행 잠금처리
 
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/aacf0e57-6beb-4ccf-819a-9c6448efb453" />        
+</p>
+
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/7e805b56-e87c-4f28-a725-0572343247e7" />
+</p>
+
+<p align="center">
+<img width="1056" height="650" alt="Image" src="https://github.com/user-attachments/assets/479af9e5-98be-42ee-b4e9-0e72fed18723" />
+</p>
+
+
 ## 문제
 
 정원이 한 자리 남은 모임에 두 사용자가 동시에 가입하면 두 요청 모두 ‘현재 인원 9명, 정원 10명’을 읽을 수 있습니다. 두 요청이 각각 한 명을 추가하면 정원은 11명이 됩니다. 초대도 좌석을 예약하지 않으면 초대받은 사용자가 수락할 때 이미 자리가 없어지는 문제가 생깁니다.

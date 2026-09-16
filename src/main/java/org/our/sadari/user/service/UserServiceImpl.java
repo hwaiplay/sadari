@@ -50,6 +50,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-08-19        SeungHyeon.Kang    프로필과 온보딩 닉네임 검증 공통화
  * 2026-08-27        SeungHyeon.Kang    사진 반응 조회 사용자 분리
  * 2026-09-05        Codex               사용자 언어 설정 추가
+ * 2026-09-16        HanWon.Jang         이미지 저장 실패 로그 보강
  */
 @Service
 @RequiredArgsConstructor
@@ -370,6 +371,8 @@ public class UserServiceImpl implements UserService {
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (IOException e) {
+            // 외부 파일 저장소 장애의 서버 진단 로그
+            log.error("Profile image storage failed. userNumb={}", userNumb, e);
             // Redis 갱신 실패 시 현재 프로필 수정 트랜잭션을 롤백 상태로 전환함
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // "수정에 실패했어요.\n다시 시도해주세요."

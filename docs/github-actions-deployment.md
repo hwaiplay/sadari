@@ -1,49 +1,62 @@
-# GitHub Actions 운영 배포 설정
+# Mac mini GitHub Actions 운영 배포
 
-이 프로젝트는 `main` 브랜치에 push되면 다음 순서로 배포됩니다.
+이 문서는 2026-09-16 기준 Mac mini 단일 서버 배포 절차를 설명합니다. MySQL과 Redis,
+Spring Boot, 영구 파일 저장소는 같은 Mac mini에서 실행하고 외부 접근은 Tailnet으로 제한합니다.
+`master` 브랜치에 애플리케이션 또는 운영 배포 파일을 push하면 다음 순서로 배포됩니다. 문서만 바뀌거나
+개발 데이터베이스 수동 워크플로만 바뀐 push는 운영 CI/CD에서 제외합니다.
 
 1. Java 17과 Node.js 24 환경에서 WAR 빌드를 검증합니다.
-2. Docker 이미지를 빌드해 `ghcr.io/<owner>/<repository>`에 커밋 SHA와 `latest` 태그로 올립니다.
-3. EC2의 `~/sadari`에 운영 `.env`, `docker-compose.yml`, Firebase 서비스 계정 파일을 전송합니다.
-4. EC2가 새 이미지를 pull하고 Docker Compose로 애플리케이션과 Redis를 실행합니다.
-5. `http://127.0.0.1:<APP_PORT>/` 응답을 최대 2분 동안 확인합니다.
+2. AMD64와 ARM64 Docker 이미지를 빌드해 `ghcr.io/<owner>/<repository>`에 커밋 SHA와 `latest` 태그로 올립니다.
+3. Mac mini 자체 실행기가 공개 운영 변수와 `mac-production` 비밀값으로 배포 파일을 설치합니다.
+4. Mac mini가 새 이미지를 pull하고 기존 MySQL·Redis Docker 네트워크에 애플리케이션을 연결합니다.
+5. `http://127.0.0.1:<APP_PORT>/` 응답을 최대 2분 동안 확인하고 실패하면 직전 이미지로 복구합니다.
 
-실제 운영 값은 GitHub 저장소의 `Settings > Secrets and variables > Actions`에 등록합니다.
-가능하면 `production` Environment를 만들고 승인 규칙과 아래 Secrets/Variables를 그 Environment에 등록합니다.
+공개 운영 값과 애플리케이션 비밀값은 GitHub 저장소의 `mac-production` Environment에서 관리합니다.
+MySQL과 Redis 비밀번호는 Mac mini의 권한이 제한된 파일에만 저장합니다.
 
 ## Actions Secrets
 
-| 이름 | 내용 |
-| --- | --- |
-| `EC2_HOST` | EC2 Public IP 또는 배포용 도메인 |
-| `EC2_USER` | SSH 사용자명. Amazon Linux는 보통 `ec2-user`, Ubuntu는 `ubuntu` |
-| `EC2_SSH_PRIVATE_KEY` | EC2 key pair의 PEM 전체 내용 |
-| `GHCR_USERNAME` | GHCR 이미지를 읽을 GitHub 사용자명 |
-| `GHCR_TOKEN` | 해당 패키지에 `read:packages` 권한이 있는 GitHub PAT |
-| `DB_URL` | MySQL 8.4 JDBC URL |
-| `DB_USERNAME` | 운영 DB 계정 |
-| `DB_PASSWORD` | 운영 DB 비밀번호 |
-| `FRONT_DOMAIN` | 외부에서 접속하는 프론트 HTTPS Origin |
-| `BACK_DOMAIN` | 외부에서 접속하는 백엔드 HTTPS Origin |
-| `JWT_SECRET` | JWT 서명용 충분히 긴 무작위 비밀키 |
-| `KAKAO_REST_API_KEY` | Kakao 로그인과 도서 검색 API에 함께 사용하는 REST API 키 |
-| `KAKAO_JAVASCRIPT_KEY` | Kakao JavaScript 키 |
-| `KAKAO_NATIVE_APP_KEY` | Kakao Native App 키. 사용하지 않으면 빈 값 가능 |
-| `GOOGLE_TRANSLATION_API_KEY` | Cloud Translation API 전용 키. Google Cloud 키 이름은 `sadari-translation-server` |
-| `GOOGLE_BOOKS_API_KEY` | Books API 전용 키. Google Cloud 키 이름은 `sadari-books-server` |
-| `FIREBASE_WEB_API_KEY` | Firebase Web App의 `apiKey` |
-| `FIREBASE_WEB_AUTH_DOMAIN` | Firebase Web App의 `authDomain` |
-| `FIREBASE_WEB_PROJECT_ID` | Firebase Web App의 `projectId` |
-| `FIREBASE_WEB_STORAGE_BUCKET` | Firebase Web App의 `storageBucket` |
-| `FIREBASE_WEB_MESSAGING_SENDER_ID` | Firebase Web App의 `messagingSenderId` |
-| `FIREBASE_WEB_APP_ID` | Firebase Web App의 `appId` |
-| `FIREBASE_VAPID_PUBLIC_KEY` | Firebase Cloud Messaging의 Web Push 공개키 |
-| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin SDK 서비스 계정 JSON 전체 원문 |
-| `AWS_ACCESS_KEY_ID` | S3 전용 IAM 사용자의 Access Key ID |
-| `AWS_SECRET_ACCESS_KEY` | S3 전용 IAM 사용자의 Secret Access Key |
-
 `GITHUB_TOKEN`은 Actions 실행 시 GitHub가 자동 발급하므로 직접 등록하지 않습니다. 이 토큰은
-워크플로에서 GHCR 이미지 push에 사용됩니다. EC2의 pull에는 별도 `GHCR_TOKEN`이 필요합니다.
+워크플로의 GHCR 이미지 push와 Mac mini의 동일 저장소 이미지 pull에 사용됩니다.
+
+## mac-production Environment Secrets
+
+다음 값은 `Settings > Environments > mac-production > Environment secrets`에서 관리합니다. 배포할 때
+자체 실행기가 Mac mini의 `secrets/app.env`와 Firebase 서비스 계정 파일을 소유자 전용 권한으로 갱신합니다.
+
+| 이름 | 용도 |
+| --- | --- |
+| `JWT_SECRET` | JWT 서명 비밀키 |
+| `KAKAO_REST_API_KEY` | Kakao 로그인과 도서 검색 서버 키 |
+| `KAKAO_JAVASCRIPT_KEY` | Kakao 브라우저 SDK 키 |
+| `KAKAO_NATIVE_APP_KEY` | Kakao 네이티브 앱 키 |
+| `GOOGLE_TRANSLATION_API_KEY` | Cloud Translation API 서버 키 |
+| `GOOGLE_BOOKS_API_KEY` | Google Books API 서버 키 |
+| `FIREBASE_WEB_API_KEY` | Firebase Web App API 키 |
+| `FIREBASE_WEB_AUTH_DOMAIN` | Firebase Web App 인증 도메인 |
+| `FIREBASE_WEB_PROJECT_ID` | Firebase 프로젝트 식별자 |
+| `FIREBASE_WEB_STORAGE_BUCKET` | Firebase Storage 버킷 식별자 |
+| `FIREBASE_WEB_MESSAGING_SENDER_ID` | Firebase Messaging 발신자 식별자 |
+| `FIREBASE_WEB_APP_ID` | Firebase Web App 식별자 |
+| `FIREBASE_VAPID_PUBLIC_KEY` | Firebase Web Push 공개키 |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin 서비스 계정 JSON 원문 |
+
+`FIREBASE_CREDENTIALS_PATH`는 워크플로가 컨테이너 내부 경로로 고정합니다. 로컬 파일 저장소를 사용하므로
+S3 접근키는 배포 환경에 전달하지 않습니다.
+
+## Mac mini 인프라 환경변수
+
+다음 값은 Actions Secret이 아니라 Mac mini 배포 폴더의 `secrets/infra.env`에 저장합니다. 파일 권한은
+소유자 읽기·쓰기만 허용하고 실제 값은 저장소와 배포 로그에 기록하지 않습니다.
+
+| 이름 | 기본값 | 용도 |
+| --- | --- | --- |
+| `DB_URL` | Docker 내부 MySQL 주소 | 애플리케이션의 MySQL JDBC 연결 주소 |
+| `DB_USERNAME` | `sadari_app` | 운영 스키마 전용 MySQL 계정 |
+| `DB_PASSWORD` | 필수 | 운영 스키마 전용 MySQL 비밀번호 |
+| `REDIS_HOST` | `sadari-redis` | Docker 내부 Redis 서비스 이름 |
+| `REDIS_PORT` | `6379` | Docker 내부 Redis 포트 |
+| `REDIS_PASSWORD` | 필수 | Redis 기본 사용자 인증 비밀번호 |
 
 ## Actions Variables
 
@@ -51,17 +64,16 @@
 
 | 이름 | 기본값 | 용도 |
 | --- | --- | --- |
-| `EC2_SSH_PORT` | `22` | EC2 SSH 포트 |
-| `APP_PORT` | `8080` | EC2에서 외부에 연결할 애플리케이션 포트 |
+| `FRONT_DOMAIN` | 필수 | Tailnet 또는 Cloudflare에서 접속하는 프론트 HTTPS Origin |
+| `BACK_DOMAIN` | 필수 | Tailnet 또는 Cloudflare에서 접속하는 백엔드 HTTPS Origin |
+| `DEPLOY_ROOT` | `/Users/<username>/sadari` | 자체 실행기가 배포 파일과 영구 업로드를 관리하는 폴더 |
+| `INFRA_NETWORK` | `sadari-mac-infra_default` | MySQL과 Redis가 연결된 외부 Docker 네트워크 |
+| `APP_PORT` | `8080` | Tailscale Serve가 전달할 Mac mini 로컬 애플리케이션 포트 |
 | `DB_CONNECTION_TIMEOUT` | `60000` | DB 커넥션 획득 제한시간(ms) |
-| `DB_MAXIMUM_데이터베이스 연결 풀 크기` | `10` | Hikari 최대 커넥션 수 |
 | `DB_MINIMUM_IDLE` | `2` | Hikari 최소 유휴 커넥션 수 |
 | `DB_MAXIMUM_POOL_SIZE` | `10` | Hikari 최대 커넥션 수 |
 | `HTTP_CONNECT_TIMEOUT_MILLIS` | `3000` | 외부 HTTP 서버 연결 제한시간(ms) |
 | `HTTP_READ_TIMEOUT_MILLIS` | `5000` | 외부 HTTP 서버 응답 제한시간(ms) |
-| `REDIS_HOST` | 필수 | Redis 서버 호스트 |
-| `REDIS_PORT` | `6379` | Redis 서버 포트 |
-| `REDIS_PASSWORD` | 빈 값 | Redis 인증 비밀번호 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
@@ -96,23 +108,16 @@
 
 ## 프로필 고정 설정
 
-- 사용자·관리자 앱의 `application-loc.yml`은 RDS MySQL 8.4에 연결합니다. 기존 DB 설정은
-  주석으로 보존하고 `spring.datasource.url`, `username`, `password`에 실제 접속값을 직접 입력합니다.
-  이는 사용자가 요청한 로컬 전용 설정이며 두 YML은 Git에서 제외합니다. 실제 비밀번호는 공개
-  예시와 배포 문서에 기록하지 않습니다. 로컬 앱은 `rds.env`를 자동으로 읽지 않습니다.
-- `rds.env.example`은 환경변수 기반 연결을 선택할 때의 참고 예시입니다. 운영 프로필은 기존
-  `DB_URL`, `DB_USERNAME`, `DB_PASSWORD` 환경변수 방식을 유지합니다.
-- RDS 연결은 `sslMode=VERIFY_IDENTITY`를 사용합니다. AWS 공식
-  [CA 인증서 묶음](https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem)의 해당 리전
-  루트 인증서를 Java PKCS12 신뢰 저장소에 등록하고 JDBC URL의 `trustCertificateKeyStoreUrl`에
-  절대 파일 URL을 지정합니다. 예시의 `changeit`은 공개 CA 인증서만 담은 저장소의 무결성 확인값이며
-  DB 비밀번호와 다릅니다. 신뢰 저장소는 로컬 `.gradle/rds` 아래에 보관할 수 있습니다.
-- 1GiB RDS를 여러 로컬 앱에서 공유할 때 `loc`의 `spring.datasource.hikari`에는
-  `maximum-pool-size: 5`, `minimum-idle: 1`, `connection-timeout: 60000`밀리초를 직접 설정합니다. 운영의 기본값 `10`, `2`,
-  `60000`은 유지하며, 로컬 파일과 인증서 경로는 GitHub Actions나 Docker에 전달하지 않습니다.
-- 전환 후 두 앱을 재시작하고 DB 조회와 Tailnet 화면을 확인합니다. 연결이 실패하면 인증서 경로,
-  비밀번호, RDS 상태와 보안 그룹을 확인하며 인증서 검증을 끄지 않습니다. 기존 DB로 복귀하려면
-  앱을 중지한 뒤 해당 환경의 접속 정보를 별도 비공개 설정으로 지정하고 다시 시작합니다.
+- 운영 애플리케이션은 외부 Docker 네트워크의 `sadari-mysql:3306`과 `sadari-redis:6379`에 직접 연결합니다.
+  비밀번호와 Redis 인증값은 Mac mini의 `secrets/infra.env`에서만 주입합니다.
+- 운영 애플리케이션용 MySQL과 Redis 포트는 Mac mini의 루프백에만 게시합니다. 별도로 격리한 개발
+  데이터베이스는 Tailscale Serve의 비공개 TCP 전달로 Tailnet에만 공개하고, 허용한 개발자 장치별
+  전용 계정에는 개발 데이터베이스 권한만 부여합니다. 공유기 포트포워딩은 사용하지 않습니다.
+- 로컬 `loc` 프로필은 운영 데이터베이스 대신 격리한 개발 데이터베이스를 사용합니다. 개발용 스키마는
+  운영 스키마 구조와 필수 기준정보만 복사하며 사용자 활동 데이터는 복사하지 않습니다. 접속 비밀번호는
+  Git에서 제외한 로컬 설정 또는 환경변수에만 저장합니다.
+- 운영 파일 저장소는 컨테이너의 `/app/uploads`이고 Mac mini 배포 폴더의 `uploads`와 연결됩니다.
+  `application-prod.yml`이나 GitHub Actions에는 Mac 사용자별 절대 경로를 하드코딩하지 않습니다.
 - Tailnet 장치에서 로컬 OAuth를 검증할 때는 `application-loc.yml`의 `domain.front`와
   `domain.back` 기본값을 같은 `https://<tailscale-device>.<tailnet>.ts.net` 주소로 설정하고
   `app.cookie.secure=true`, `app.cookie.same-site=Lax`를 사용합니다.
@@ -137,10 +142,11 @@
   PWA 설치와 오프라인 앱 셸 검증을 허용합니다.
 - 카카오 개발자 콘솔의 Redirect URI에는
   `https://<tailscale-device>.<tailnet>.ts.net/api/oauth/callback/kakao`를 등록해야 합니다.
-- `application-prod.yml`의 `DB_URL`은 MySQL JDBC URL을 사용하고 `DB_PASSWORD`는
-  GitHub Actions Secret으로 전달합니다.
+- `application-prod.yml`의 기본 `DB_URL`은 Docker 내부 MySQL 주소를 사용하며 `secrets/infra.env`로
+  환경별 값을 덮어쓸 수 있습니다.
 - 로컬과 운영의 `book.search.url`은 종료된 네이버 도서 API의 대체 공급자인 카카오 도서 검색
-  `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 기존 `KAKAO_REST_API_KEY` Secret을 사용합니다.
+  `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 `secrets/app.env`의
+  `KAKAO_REST_API_KEY`를 사용합니다.
 - Google 번역은 `GOOGLE_TRANSLATION_API_KEY`가 있을 때 활성화하고, 키가 없으면 기존 번역 캐시만 표시하며 신규 번역 버튼은 숨깁니다. 영어 설정의 도서 검색에는 `GOOGLE_BOOKS_API_KEY`가 필요하며 키가 없으면 외부 요청 없이 검색 실패 응답을 반환합니다.
 - Google Cloud Console의 `API 및 서비스 > 사용자 인증 정보`에서 `sadari-translation-server` 값은 `GOOGLE_TRANSLATION_API_KEY`, `sadari-books-server` 값은 `GOOGLE_BOOKS_API_KEY`에 각각 등록합니다.
 - Google 번역은 Cloud Translation Basic v2 서버 주소를 사용하고 앱 전체 월간 신규 번역을 500,000 유니코드 코드 포인트로 고정합니다. 월간 경계는 Google 쿼터 기준 시간대와 맞추며, Redis에서 사용량을 확인할 수 없으면 신규 Google 호출을 중단합니다.
@@ -176,16 +182,38 @@
   신고 이력, 자동 조치 이력, 관리자 전용 이미지 증거 테이블과
   `승인된 비공개 기준정보 패키지`의 신고 조치 결과, 신고 처리 결과, 신고 대상 유형 공통코드를 먼저 반영합니다.
 
-## EC2 사전 조건
+## Mac mini 사전 조건
 
-- Docker Engine과 Docker Compose v2가 설치되어 있어야 합니다.
-- 배포 사용자가 `sudo` 없이 `docker` 명령을 실행할 수 있어야 합니다.
-- `curl`이 설치되어 있어야 배포 후 상태 검증이 가능합니다.
-- EC2 보안 그룹에서 SSH 포트는 필요한 관리 IP로 제한하고, 서비스 포트는 로드밸런서나
-  리버스 프록시를 통해 공개하는 구성을 권장합니다.
-- EC2에서 MySQL RDS의 `3306` 포트로 접근할 수 있어야 하고, RDS 보안 그룹은 EC2 보안 그룹을
-  소스로 허용해야 합니다.
-- PWA와 Secure Cookie, Firebase Web Push를 사용하려면 최종 서비스 도메인에 HTTPS가 적용되어야 합니다.
+- Docker Desktop과 Docker Compose v2가 실행 중이어야 합니다.
+- MySQL과 Redis 인프라 Compose 프로젝트가 먼저 실행되고 MySQL 상태가 `healthy`여야 합니다.
+- GitHub Actions 자체 실행기를 `self-hosted`, `macOS`, `ARM64`, `sadari-prod` 라벨로 등록해야 합니다.
+- 공개 저장소의 Pull Request는 GitHub 제공 실행기에서만 검증합니다. 자체 실행기 배포 작업은 기본 브랜치
+  push와 `master`를 선택한 저장소 권한 보유자의 수동 실행에만 반응하도록 유지하고 외부 기여자의 워크플로 실행 승인을
+  저장소 설정에서 요구합니다.
+- Mac mini의 시스템 잠자기는 비활성화하고 정전 후 자동 재시작을 활성화합니다.
+- Tailscale은 무인 실행 상태를 유지하고 HTTPS 서비스 주소는 Tailnet 구성원만 접근하도록 설정합니다.
+- PWA와 Secure Cookie, Firebase Web Push는 Tailscale Serve가 제공하는 HTTPS 주소를 사용합니다.
+
+## 격리 개발 데이터베이스 재구축
+
+저장소의 `Actions > Provision development database > Run workflow`에서 수동으로만 실행합니다. `recreate`를
+선택한 경우 확인 문구에 `RECREATE sadari_dev`를 입력하고, Mac mini와 접속을 허용할 두 개발 장치의
+Tailscale IPv4 주소를 각각 입력합니다. 이 작업은 운영 데이터베이스를 읽기 원본으로만 사용하고 기존
+`sadari_dev` 데이터베이스를 삭제한 뒤 다시 만듭니다.
+
+기존 개발 데이터는 유지하고 Tailscale의 Docker 중계 계정만 복구할 때는 `repair-access`를 선택하고
+`REPAIR sadari_dev`를 입력합니다. 이 동작은 개발 스키마나 테이블 데이터를 다시 만들지 않습니다.
+
+워크플로는 운영 스키마 구조 전체, 공통 저장 함수와 프로시저, 승인된 13개 기준정보 영역만 복사합니다.
+사용자 활동 데이터는 복사하지 않습니다. 복사 후에는 각 기준정보의 원본·개발 행 수와 테이블 체크섬,
+전체 스키마 수, 루틴 수, 허용 계정 수를 비교합니다. 하나라도 다르면 실패 처리합니다.
+
+MySQL은 Mac mini의 루프백에만 게시하고 Tailscale Serve가 같은 3306 포트를 Tailnet 안으로 전달합니다.
+개발 계정은 두 개발 장치의 Tailscale 주소별 계정과 내부 전달용 로컬 계정으로 나누어 만들고, 모두 개발
+데이터베이스에 필요한 조회·등록·수정·삭제·루틴 실행 권한만 부여합니다. Tailscale Serve가 Mac의 루프백을
+거쳐 Docker 컨테이너로 전달할 때는 MySQL에 Docker 게이트웨이가 접속 원본으로 보이므로, 현재 인프라
+네트워크에서 이 게이트웨이 주소를 읽어 정확히 한 주소만 내부 전달 계정에 추가합니다. 비밀번호 원문은
+워크플로 입력이나 로그에 전달하지 않고 기존 운영 애플리케이션 계정의 인증값을 복사합니다.
 
 ## 독서 타이머 8시간 및 목표 알림 배포
 
@@ -211,44 +239,51 @@
 
 ## 최초 설정 순서
 
-1. GitHub에서 `production` Environment를 생성합니다.
-2. 위 Secrets와 필요한 Variables를 등록합니다.
-3. GHCR pull용 PAT를 만들고 `read:packages` 권한을 부여합니다.
-4. EC2에 Docker, Compose v2, curl을 설치하고 배포 사용자를 docker 그룹에 추가합니다.
-5. `main` 브랜치에 push하거나 Actions 화면에서 `Sadari CI/CD`를 수동 실행합니다.
+1. Mac mini에 저장소 전용 자체 실행기를 설치하고 `sadari-prod` 라벨을 추가합니다.
+2. `mac-production` Environment에 애플리케이션 비밀값과 Tailnet HTTPS Origin을 등록합니다.
+3. `secrets/infra.env`에 MySQL과 Redis 연결값을 기록합니다.
+4. Firebase 서비스 계정 파일을 `secrets/firebase-service-account.json`에 저장합니다.
+5. 세 비밀 파일의 권한을 소유자 읽기·쓰기만 허용합니다.
+6. 필요한 공개 Actions Variables를 등록합니다.
+7. Tailscale Serve에서 HTTPS 요청을 `127.0.0.1:8080`으로 전달합니다.
+8. 애플리케이션 또는 운영 배포 파일을 `master` 브랜치에 push하거나 Actions 화면에서 `Sadari CI/CD`를 수동 실행합니다.
 
 현재 `SadariApplicationTests`는 Git에서 제외된 로컬 설정과 실제 DB/Redis를 요구하므로 CI에서
 자동 실행하지 않습니다. 추후 Testcontainers나 독립 `application-test.yml`을 추가하면 워크플로의
 `-x test`를 제거해 통합 테스트까지 배포 차단 조건으로 사용할 수 있습니다.
 
-## S3 파일 저장소 설정
+## 로컬 파일 저장소 설정
 
-운영 환경의 영구 이미지는 비공개 S3 버킷에 저장합니다. 브라우저는 S3 객체 URL에 직접 접근하지 않고 기존 `/uploads/{type}/{yyMMdd}/{uuid}.{ext}` 경로를 호출하며, 백엔드가 IAM 권한으로 객체를 조회해 전달합니다. 따라서 버킷의 모든 퍼블릭 액세스 차단을 활성화하고 CORS와 공개 버킷 정책은 설정하지 않습니다.
+운영 환경의 영구 이미지는 배포 서버의 일반 디렉터리에 저장합니다. 애플리케이션은 서버 운영체제와 관계없이 컨테이너 내부의 `/app/uploads`를 사용하고, Docker Compose가 서버의 실제 디렉터리를 이 경로에 연결합니다. 브라우저에서 사용하는 `/uploads/{type}/{yyMMdd}/{uuid}.{ext}` 주소와 데이터베이스의 상대 객체 키는 변경하지 않습니다.
 
-S3 인증은 GitHub Actions Secrets의 `AWS_ACCESS_KEY_ID`와 `AWS_SECRET_ACCESS_KEY`를 운영 `.env`에 주입하고 AWS SDK 정적 자격 증명 공급자로 사용합니다. 해당 Access Key를 발급한 IAM 사용자에는 대상 버킷 객체의 `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`만 허용합니다. 현재 구현은 버킷 목록 조회를 수행하지 않으므로 `s3:ListBucket` 권한은 필요하지 않습니다.
-
-장기 Access Key는 유출 시 만료 전까지 계속 사용할 수 있으므로 저장소나 로그에 기록하지 않고 GitHub Secrets와 운영 서버의 권한이 제한된 `.env`에만 보관합니다. 키를 교체할 때는 IAM에서 새 키를 발급하고 두 Actions Secrets를 함께 변경한 뒤 배포 검증이 끝난 후 이전 키를 비활성화합니다.
+Mac mini의 기본 호스트 경로는 배포 폴더 아래의 `uploads`입니다. 컨테이너에는 `/app/uploads`로
+연결되며 배포 이미지 교체나 컨테이너 재생성 후에도 파일이 유지됩니다.
 
 Actions Variables에는 다음 값을 등록합니다.
 
 | 이름 | 기본값 | 용도 |
 | --- | --- | --- |
-| `STORAGE_PROVIDER` | `s3` | 운영 파일 저장소 구현 |
-| `STORAGE_LOCAL_ROOT` | `C:/shared/sadari-uploads` | Windows에서 `local` 저장소를 선택했을 때의 공용 루트 디렉터리 |
-| `STORAGE_S3_BUCKET` | 없음 | 영구 이미지를 저장할 비공개 S3 버킷 이름 |
+| `STORAGE_PROVIDER` | `local` | 운영 파일 저장소 구현 |
+| `STORAGE_LOCAL_ROOT` | `/app/uploads` | 애플리케이션 컨테이너 내부의 공통 저장 경로 |
+| `STORAGE_HOST_ROOT` | `./uploads` | Docker Compose 파일을 기준으로 한 서버의 실제 저장 경로 |
+| `STORAGE_S3_BUCKET` | 없음 | S3를 선택할 때 사용하는 비공개 버킷 이름 |
 | `STORAGE_S3_REGION` | `ap-northeast-2` | S3 버킷 리전 |
-| `STORAGE_S3_ENDPOINT` | 빈 값 | AWS S3에서는 비워 두며 S3 호환 저장소 전환 시에만 지정 |
-| `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | AWS S3에서는 `false`, 일부 S3 호환 저장소에서는 `true` |
+| `STORAGE_S3_ENDPOINT` | 빈 값 | S3 호환 저장소를 선택할 때 사용하는 API 주소 |
+| `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | S3 호환 저장소의 경로형 접근 사용 여부 |
 
-`vars.STORAGE_PROVIDER`가 없거나 빈 값이면 워크플로의 `STORAGE_PROVIDER`는 `s3`가 됩니다. 이 선택은 Secret 유무와 무관합니다. `STORAGE_PROVIDER=s3`일 때 `STORAGE_S3_BUCKET` Variable과 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` Secrets는 필수이며 배포 묶음 생성 전에 누락 여부를 검증합니다. 따라서 Secret Key가 없으면 `local`로 전환되는 것이 아니라 배포가 실패합니다. `local`일 때는 세 값을 요구하지 않습니다.
+워크플로는 Mac mini 배포에서 `STORAGE_PROVIDER=local`, `STORAGE_LOCAL_ROOT=/app/uploads`를 고정합니다.
+`STORAGE_HOST_ROOT` 기본값 `./uploads`는 배포 폴더 아래의 영구 디렉터리로 해석됩니다.
 
-로컬 `loc` 프로파일도 사용자·관리자 애플리케이션 모두 기본적으로 `STORAGE_PROVIDER=s3`를 사용합니다. 로컬 디스크를 사용할 때는 두 애플리케이션에 `STORAGE_PROVIDER=local`과 동일한 `STORAGE_LOCAL_ROOT`를 명시합니다.
+Windows에서 실행 중인 애플리케이션은 macOS의 `/Users/...` 경로를 직접 사용할 수 없습니다. Windows 로컬 실행은 Windows에서 접근 가능한 경로를 사용하고, Mac mini의 실제 디스크를 사용하려면 애플리케이션 컨테이너도 Mac mini에서 실행합니다.
 
-관리자 애플리케이션도 같은 `STORAGE_PROVIDER`, `STORAGE_LOCAL_ROOT`, `STORAGE_S3_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` 이름을 사용합니다. Windows에서 `local`을 선택할 때 두 앱의 기본값은 `C:/shared/sadari-uploads`입니다. `s3`을 선택하면 실행 장비와 관계없이 같은 버킷을 지정하며, `local`을 선택하면 두 애플리케이션 프로세스가 실제로 접근할 수 있는 동일한 절대 디렉터리 또는 공유 볼륨을 `STORAGE_LOCAL_ROOT`로 지정합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유할 수 없습니다.
+사용자 애플리케이션과 관리자 애플리케이션을 같은 서버에서 실행하면 두 컨테이너가 동일한 `STORAGE_HOST_ROOT`를 연결해야 합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유하지 못합니다.
 
-`C:/shared/sadari-uploads`는 Windows 절대경로이므로 macOS에서는 같은 위치로 사용할 수 없습니다. Mac mini 디스크를 직접 사용할 때는 두 앱 모두 `STORAGE_PROVIDER=local`, `STORAGE_LOCAL_ROOT=/Users/Shared/sadari-uploads`처럼 macOS 절대경로를 지정합니다. Mac mini의 S3 호환 저장소로 전환할 때는 `STORAGE_S3_ENDPOINT`와 `STORAGE_S3_PATH_STYLE_ACCESS`를 해당 제품 설정에 맞게 변경합니다.
+EC2에서 Mac mini로 전환할 때는 먼저 파일 쓰기를 중지하고 `~/sadari/uploads`의 내용을 Mac mini 업로드 디렉터리로 복사합니다. 파일 수와 전체 크기를 대조한 뒤 Mac mini 애플리케이션을 시작하고 기존 이미지 조회와 신규 업로드를 확인합니다. 검증이 끝나기 전에는 EC2 원본 폴더를 삭제하지 않습니다.
 
-기존 로컬 영구 이미지 파일은 자동 이전하지 않습니다. 운영 컨테이너의 `sadari-uploads` Named Volume 연결은 제거했으며, 배포 전환 전에 기존 파일 보존이 필요한 경우 별도 마이그레이션을 수행해야 합니다. 프로필 편집 중 생성되는 30분 임시 이미지는 공개 경로와 분리된 컨테이너 임시 디렉터리에 계속 저장하며 재배포 시 소실될 수 있습니다.
+Garage나 S3 호환 저장소의 내부 데이터 디렉터리는 일반 파일 구조가 아니므로 직접 복사하지 않습니다. 기존 객체는 저장소 API를 통해 상대 객체 키를 보존하며 내보낸 뒤 파일 수와 크기를 검증합니다. 프로필 편집 중 생성되는 30분 임시 이미지는 공개 경로와 분리된 컨테이너 임시 디렉터리에 계속 저장하며 재배포 시 소실될 수 있습니다.
+
+Mac mini 자동 배포는 로컬 저장소만 사용합니다. S3 호환 구현은 소스에 남아 있지만 다시 선택하려면
+워크플로와 비밀값 전달 정책을 별도로 검토한 뒤 배포해야 합니다.
 
 ### 채팅 열람 상태와 알림 읽음 처리
 

@@ -17,6 +17,8 @@ import org.springframework.mock.web.MockHttpServletResponse;
 import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
 import org.springframework.security.web.csrf.CsrfFilter;
 import org.springframework.security.web.csrf.CsrfToken;
+import org.springframework.security.web.authentication.session.NullAuthenticatedSessionStrategy;
+import org.springframework.security.web.authentication.session.SessionAuthenticationStrategy;
 import org.springframework.test.util.ReflectionTestUtils;
 
 /**
@@ -28,6 +30,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-04        SeungHyeon.Kang       최초 생성
+ * 2026-09-16        HanWon.Jang            Stateless CSRF Token 유지 검증
  */
 class SecurityConfigTest {
 
@@ -141,5 +144,26 @@ class SecurityConfigTest {
         assertEquals(403, response.getStatus());
         // 거부된 요청이 다음 보안 Filter로 전달되지 않았는지 확인함
         assertFalse(filterChainCalled.get());
+    }
+
+    /**
+     * Stateless JWT 인증 후처리가 상태 변경 요청마다 CSRF Cookie를 만료시키지 않는지 검증함
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void keepsCsrfCookieAfterAuth() {
+        // Stateless JWT 요청에는 서버 세션과 인증 성공 후처리가 필요하지 않음
+        SessionAuthenticationStrategy strategy = securityConfig.getCsrfAuthStrategy();
+        MockHttpServletRequest request = new MockHttpServletRequest("PUT", "/api/user/uptProfile");
+        MockHttpServletResponse response = new MockHttpServletResponse();
+
+        // 보안 설정이 CSRF Cookie를 유지하는 빈 인증 후처리를 구성했는지 확인함
+        assertTrue(strategy instanceof NullAuthenticatedSessionStrategy);
+        // 매 요청의 JWT 인증이 기존 CSRF Cookie를 삭제하지 않는 빈 후처리를 실행함
+        strategy.onAuthentication(mock(org.springframework.security.core.Authentication.class), request, response);
+
+        // 다음 상태 변경 요청에서 같은 CSRF Cookie를 사용할 수 있도록 만료 헤더가 없어야 함
+        assertFalse(response.containsHeader("Set-Cookie"));
     }
 }

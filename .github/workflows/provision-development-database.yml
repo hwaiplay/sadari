@@ -1,0 +1,531 @@
+name: Provision development database
+
+on:
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: Repair access without changing data, or recreate the isolated development database
+        required: true
+        default: repair-access
+        type: choice
+        options:
+          - repair-access
+          - recreate
+      confirmation:
+        description: Type REPAIR sadari_dev or RECREATE sadari_dev to confirm the selected operation
+        required: true
+        type: string
+      mysql_bind_ip:
+        description: Mac mini Tailscale IPv4 address used to publish MySQL
+        required: true
+        type: string
+      developer_ip:
+        description: First developer Tailscale IPv4 address
+        required: true
+        type: string
+      colleague_ip:
+        description: Second developer Tailscale IPv4 address
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  provision:
+    name: Recreate isolated development database
+    if: github.ref == 'refs/heads/master'
+    environment: mac-production
+    runs-on:
+      - self-hosted
+      - macOS
+      - ARM64
+      - sadari-prod
+    timeout-minutes: 15
+    env:
+      DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/Users/myhomeserver/sadari' }}
+      DOCKER_BIN: /Applications/Docker.app/Contents/Resources/bin/docker
+      PATH: /Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+      INFRA_NETWORK: ${{ vars.INFRA_NETWORK || 'sadari-mac-infra_default' }}
+      TARGET_DATABASE: sadari_dev
+      TARGET_USER: sadari_dev
+      OPERATION: ${{ inputs.operation }}
+      CONFIRMATION: ${{ inputs.confirmation }}
+      MYSQL_BIND_IP: ${{ inputs.mysql_bind_ip }}
+      DEVELOPER_IP: ${{ inputs.developer_ip }}
+      COLLEAGUE_IP: ${{ inputs.colleague_ip }}
+
+    steps:
+      - name: Checkout database definitions
+        uses: actions/checkout@v6
+
+      - name: Validate isolated database request
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          if [[ "$OPERATION" = "repair-access" && "$CONFIRMATION" != "REPAIR $TARGET_DATABASE" ]]; then
+            echo "::error::The confirmation text does not match the access repair operation."
+            exit 1
+          fi
+          if [[ "$OPERATION" = "recreate" && "$CONFIRMATION" != "RECREATE $TARGET_DATABASE" ]]; then
+            echo "::error::The confirmation text does not match the isolated development database."
+            exit 1
+          fi
+
+          validate_tailnet_ip() {
+            local value="$1"
+            local label="$2"
+            local first second third fourth
+
+            IFS=. read -r first second third fourth <<< "$value"
+            if [[ "$first" != "100" ]] \
+              || [[ ! "$second" =~ ^[0-9]+$ ]] \
+              || (( second < 64 || second > 127 )) \
+              || [[ ! "$third" =~ ^[0-9]+$ ]] \
+              || (( third < 0 || third > 255 )) \
+              || [[ ! "$fourth" =~ ^[0-9]+$ ]] \
+              || (( fourth < 1 || fourth > 254 )); then
+              echo "::error::$label must be a valid Tailscale IPv4 address in 100.64.0.0/10."
+              exit 1
+            fi
+          }
+
+          validate_tailnet_ip "$MYSQL_BIND_IP" "mysql_bind_ip"
+          validate_tailnet_ip "$DEVELOPER_IP" "developer_ip"
+          validate_tailnet_ip "$COLLEAGUE_IP" "colleague_ip"
+
+          if [[ "$MYSQL_BIND_IP" = "$DEVELOPER_IP" \
+             || "$MYSQL_BIND_IP" = "$COLLEAGUE_IP" \
+             || "$DEVELOPER_IP" = "$COLLEAGUE_IP" ]]; then
+            echo "::error::The Mac mini and developer Tailscale addresses must be different."
+            exit 1
+          fi
+
+          if [[ "$DEPLOY_ROOT" != /Users/*/sadari ]]; then
+            echo "::error::DEPLOY_ROOT must end with /sadari under /Users."
+            exit 1
+          fi
+
+          test -x "$DOCKER_BIN"
+          test -f "$DEPLOY_ROOT/secrets/infra.env"
+          docker_socket="${DEPLOY_ROOT%/sadari}/.docker/run/docker.sock"
+          test -S "$docker_socket"
+          echo "DOCKER_HOST=unix://$docker_socket" >> "$GITHUB_ENV"
+
+      - name: Recreate schema and migrate required data
+        if: inputs.operation == 'recreate'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          root_password="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
+            | sed -n 's/^MYSQL_ROOT_PASSWORD=//p' \
+            | head -n 1)"
+          root_password_file="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
+            | sed -n 's/^MYSQL_ROOT_PASSWORD_FILE=//p' \
+            | head -n 1)"
+          if [[ -z "$root_password" && "$root_password_file" =~ ^/[a-zA-Z0-9_./-]+$ ]]; then
+            root_password="$($DOCKER_BIN exec sadari-mysql sh -c 'cat "$1"' sh "$root_password_file")"
+          fi
+          if [[ -z "$root_password" ]]; then
+            set +u
+            set -a
+            source "$DEPLOY_ROOT/secrets/infra.env"
+            set +a
+            set -u
+            root_password="${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD:-}}"
+          fi
+          if [[ -z "$root_password" ]]; then
+            echo "::error::The MySQL administrator password is not available from the protected infrastructure settings."
+            exit 1
+          fi
+
+          if ! "$DOCKER_BIN" exec -e MYSQL_PWD="$root_password" sadari-mysql \
+            mysql --user=root --batch --skip-column-names --execute='SELECT 1;' > /dev/null 2>&1; then
+            echo "::error::The protected infrastructure password does not authenticate the MySQL administrator."
+            exit 1
+          fi
+
+          mysql_root() {
+            "$DOCKER_BIN" exec -i -e MYSQL_PWD="$root_password" sadari-mysql \
+              mysql --user=root --default-character-set=utf8mb4 --batch --skip-column-names "$@"
+          }
+
+          dump_root() {
+            "$DOCKER_BIN" exec -e MYSQL_PWD="$root_password" sadari-mysql \
+              mysqldump --user=root --default-character-set=utf8mb4 \
+              --single-transaction --set-gtid-purged=OFF "$@"
+          }
+
+          test "$($DOCKER_BIN inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
+          "$DOCKER_BIN" network inspect "$INFRA_NETWORK" > /dev/null
+          docker_gateway="$($DOCKER_BIN network inspect --format '{{(index .IPAM.Config 0).Gateway}}' "$INFRA_NETWORK")"
+          if [[ ! "$docker_gateway" =~ ^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The infrastructure Docker network does not have a valid private IPv4 gateway."
+            exit 1
+          fi
+
+          source_user="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-app \
+            | sed -n 's/^DB_USERNAME=//p' \
+            | head -n 1)"
+          source_user="${source_user:-sadari_app}"
+          if [[ ! "$source_user" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            echo "::error::The operating application database account name is invalid."
+            exit 1
+          fi
+
+          required_tables=(
+            TM_CODEXM TB_CODEXD TM_AUTHXM TM_ADMINX TM_ADMENU TB_AUTHMN TM_URMENU
+            TB_ALTEMP TM_ALICON CT_NOTICE CT_WLCMPG CT_SVINFO CT_POPUPX
+          )
+          table_list="'$(IFS=,; echo "${required_tables[*]}")'"
+          table_list="${table_list//,/','}"
+          source_table_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM information_schema.tables
+             WHERE table_schema = 'sadari'
+               AND table_type = 'BASE TABLE';")"
+          required_table_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM information_schema.tables
+             WHERE table_schema = 'sadari'
+               AND table_name IN ($table_list)
+               AND table_type = 'BASE TABLE';")"
+
+          if [[ "$source_table_count" -lt 1 || "$required_table_count" -ne "${#required_tables[@]}" ]]; then
+            echo "::error::The operating schema does not contain every required migration table."
+            exit 1
+          fi
+
+          app_account="$(mysql_root --execute="
+            SELECT plugin, HEX(authentication_string)
+              FROM mysql.user
+             WHERE User = '$source_user'
+          ORDER BY (Host = '%') DESC, Host
+             LIMIT 1;")"
+          IFS=$'\t' read -r auth_plugin auth_hash_hex <<< "$app_account"
+          if [[ ! "$auth_plugin" =~ ^(caching_sha2_password|mysql_native_password)$ ]] \
+            || [[ -z "$auth_hash_hex" ]] \
+            || [[ ! "$auth_hash_hex" =~ ^[0-9A-F]+$ ]] \
+            || (( ${#auth_hash_hex} % 2 != 0 )); then
+            echo "::error::The existing application account authentication value cannot be copied safely."
+            exit 1
+          fi
+
+          unexpected_account_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '$docker_gateway', '127.0.0.1', 'localhost');")"
+          if [[ "$unexpected_account_count" -ne 0 ]]; then
+            echo "::error::An existing development account has an unapproved host restriction."
+            exit 1
+          fi
+
+          mysql_root <<SQL
+          DROP DATABASE IF EXISTS \`$TARGET_DATABASE\`;
+          CREATE DATABASE \`$TARGET_DATABASE\`
+            CHARACTER SET utf8mb4
+            COLLATE utf8mb4_0900_ai_ci;
+          SQL
+
+          dump_root --no-data --skip-routines --skip-events --skip-triggers sadari \
+            | mysql_root "$TARGET_DATABASE"
+          dump_root --no-create-info --skip-triggers --hex-blob sadari "${required_tables[@]}" \
+            | mysql_root "$TARGET_DATABASE"
+
+          previous_trust="$(mysql_root --execute='SELECT @@GLOBAL.log_bin_trust_function_creators;')"
+          restore_trust() {
+            mysql_root --execute="SET GLOBAL log_bin_trust_function_creators = $previous_trust;" || true
+          }
+          trap restore_trust EXIT
+          mysql_root --execute='SET GLOBAL log_bin_trust_function_creators = 1;'
+          mysql_root "$TARGET_DATABASE" < scripts/db/mysql/routines.sql
+          restore_trust
+          trap - EXIT
+
+          mysql_root <<SQL
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'$DEVELOPER_IP'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'$DEVELOPER_IP'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'$COLLEAGUE_IP'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'$COLLEAGUE_IP'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'127.0.0.1'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'127.0.0.1'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'localhost'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'localhost'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'$DEVELOPER_IP';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'$COLLEAGUE_IP';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'$docker_gateway';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'127.0.0.1';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'localhost';
+          FLUSH PRIVILEGES;
+          SQL
+
+          target_table_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM information_schema.tables
+             WHERE table_schema = '$TARGET_DATABASE'
+               AND table_type = 'BASE TABLE';")"
+          routine_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM information_schema.routines
+             WHERE routine_schema = '$TARGET_DATABASE'
+               AND routine_name IN (
+                     'FN_GET_CODE_NAME',
+                     'FN_GET_LOCAL_DATE_STR',
+                     'FN_GET_FOLW_STAT',
+                     'FN_GET_ADMIN_NAME',
+                     'PR_DEL_HARD_DELETE_USER'
+                   );")"
+          account_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host IN ('$DEVELOPER_IP', '$COLLEAGUE_IP');")"
+          forwarding_account_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host IN ('$docker_gateway', '127.0.0.1', 'localhost');")"
+          unexpected_account_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '$docker_gateway', '127.0.0.1', 'localhost');")"
+
+          if [[ "$target_table_count" -ne "$source_table_count" \
+             || "$routine_count" -ne 5 \
+             || "$account_count" -ne 2 \
+             || "$forwarding_account_count" -ne 3 \
+             || "$unexpected_account_count" -ne 0 ]]; then
+            echo "::error::The development database structure, routines, or restricted accounts failed validation."
+            exit 1
+          fi
+
+          {
+            echo "## Development database migration"
+            echo
+            echo "| Required data | Source rows | Development rows | Checksum |"
+            echo "| --- | ---: | ---: | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+          for table in "${required_tables[@]}"; do
+            source_rows="$(mysql_root --execute="SELECT COUNT(*) FROM \`sadari\`.\`$table\`;")"
+            target_rows="$(mysql_root --execute="SELECT COUNT(*) FROM \`$TARGET_DATABASE\`.\`$table\`;")"
+            source_checksum="$(mysql_root --execute="CHECKSUM TABLE \`sadari\`.\`$table\`;" | awk '{print $2}')"
+            target_checksum="$(mysql_root --execute="CHECKSUM TABLE \`$TARGET_DATABASE\`.\`$table\`;" | awk '{print $2}')"
+            if [[ "$source_rows" -ne "$target_rows" || "$source_checksum" != "$target_checksum" ]]; then
+              echo "::error::Required data validation failed for $table."
+              exit 1
+            fi
+            echo "| $table | $source_rows | $target_rows | matched |" >> "$GITHUB_STEP_SUMMARY"
+          done
+
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "Schema tables: $target_table_count / routines: $routine_count / developer accounts: $account_count / forwarding accounts: $forwarding_account_count" \
+            >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Repair isolated development database access
+        if: inputs.operation == 'repair-access'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          root_password="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
+            | sed -n 's/^MYSQL_ROOT_PASSWORD=//p' \
+            | head -n 1)"
+          root_password_file="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
+            | sed -n 's/^MYSQL_ROOT_PASSWORD_FILE=//p' \
+            | head -n 1)"
+          if [[ -z "$root_password" && "$root_password_file" =~ ^/[a-zA-Z0-9_./-]+$ ]]; then
+            root_password="$($DOCKER_BIN exec sadari-mysql sh -c 'cat "$1"' sh "$root_password_file")"
+          fi
+          if [[ -z "$root_password" ]]; then
+            set +u
+            set -a
+            source "$DEPLOY_ROOT/secrets/infra.env"
+            set +a
+            set -u
+            root_password="${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD:-}}"
+          fi
+          if [[ -z "$root_password" ]]; then
+            echo "::error::The MySQL administrator password is not available from the protected infrastructure settings."
+            exit 1
+          fi
+
+          mysql_root() {
+            "$DOCKER_BIN" exec -i -e MYSQL_PWD="$root_password" sadari-mysql \
+              mysql --user=root --default-character-set=utf8mb4 --batch --skip-column-names "$@"
+          }
+
+          test "$($DOCKER_BIN inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
+          test "$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM information_schema.schemata
+             WHERE schema_name = '$TARGET_DATABASE';")" = "1"
+
+          docker_gateway="$($DOCKER_BIN network inspect --format '{{(index .IPAM.Config 0).Gateway}}' "$INFRA_NETWORK")"
+          if [[ ! "$docker_gateway" =~ ^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The infrastructure Docker network does not have a valid private IPv4 gateway."
+            exit 1
+          fi
+
+          source_user="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-app \
+            | sed -n 's/^DB_USERNAME=//p' \
+            | head -n 1)"
+          source_user="${source_user:-sadari_app}"
+          if [[ ! "$source_user" =~ ^[a-zA-Z0-9_]+$ ]]; then
+            echo "::error::The operating application database account name is invalid."
+            exit 1
+          fi
+
+          app_account="$(mysql_root --execute="
+            SELECT plugin, HEX(authentication_string)
+              FROM mysql.user
+             WHERE User = '$source_user'
+          ORDER BY (Host = '%') DESC, Host
+             LIMIT 1;")"
+          IFS=$'\t' read -r auth_plugin auth_hash_hex <<< "$app_account"
+          if [[ ! "$auth_plugin" =~ ^(caching_sha2_password|mysql_native_password)$ ]] \
+            || [[ -z "$auth_hash_hex" ]] \
+            || [[ ! "$auth_hash_hex" =~ ^[0-9A-F]+$ ]] \
+            || (( ${#auth_hash_hex} % 2 != 0 )); then
+            echo "::error::The existing application account authentication value cannot be copied safely."
+            exit 1
+          fi
+
+          mysql_root <<SQL
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'$docker_gateway';
+          FLUSH PRIVILEGES;
+          SQL
+
+          test "$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host = '$docker_gateway';")" = "1"
+
+          {
+            echo "## Development database access repair"
+            echo
+            echo "The isolated development database and its data were not recreated."
+            echo "The exact Docker gateway account was granted access to $TARGET_DATABASE."
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Publish MySQL only on the Mac mini Tailnet address
+        if: inputs.operation == 'recreate'
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          mysql_service="$($DOCKER_BIN inspect --format '{{index .Config.Labels "com.docker.compose.service"}}' sadari-mysql)"
+          compose_project="$($DOCKER_BIN inspect --format '{{index .Config.Labels "com.docker.compose.project"}}' sadari-mysql)"
+          compose_workdir="$($DOCKER_BIN inspect --format '{{index .Config.Labels "com.docker.compose.project.working_dir"}}' sadari-mysql)"
+          config_files="$($DOCKER_BIN inspect --format '{{index .Config.Labels "com.docker.compose.project.config_files"}}' sadari-mysql)"
+
+          if [[ ! "$mysql_service" =~ ^[a-zA-Z0-9_-]+$ ]] \
+            || [[ ! "$compose_project" =~ ^[a-zA-Z0-9_-]+$ ]] \
+            || [[ ! -d "$compose_workdir" ]] \
+            || [[ -z "$config_files" ]]; then
+            echo "::error::The existing MySQL Compose project metadata is incomplete."
+            exit 1
+          fi
+
+          override_file="$compose_workdir/sadari-tailnet.override.yml"
+          override_temp="$(mktemp "$RUNNER_TEMP/sadari-tailnet.XXXXXX")"
+          trap 'rm -f "$override_temp"' EXIT
+          cat > "$override_temp" <<YAML
+          services:
+            $mysql_service:
+              ports:
+                - "127.0.0.1:3306:3306"
+          YAML
+          install -m 600 "$override_temp" "$override_file"
+
+          compose_args=(--project-name "$compose_project")
+          IFS=',' read -ra compose_files <<< "$config_files"
+          override_present=false
+          for config_file in "${compose_files[@]}"; do
+            if [[ "$config_file" != /* ]]; then
+              config_file="$compose_workdir/$config_file"
+            fi
+            test -f "$config_file"
+            compose_args+=(-f "$config_file")
+            if [[ "$config_file" = "$override_file" ]]; then
+              override_present=true
+            fi
+          done
+          if [[ "$override_present" = false ]]; then
+            compose_args+=(-f "$override_file")
+          fi
+
+          cd "$compose_workdir"
+          if ! "$DOCKER_BIN" compose "${compose_args[@]}" up -d --no-deps "$mysql_service"; then
+            echo "::error::MySQL could not be republished on the Tailnet address."
+            exit 1
+          fi
+
+          for attempt in {1..30}; do
+            if [[ "$($DOCKER_BIN inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy" ]] \
+              && nc -z 127.0.0.1 3306; then
+              mysql_ready=true
+              break
+            fi
+            sleep 2
+          done
+
+          if [[ "${mysql_ready:-false}" != true ]]; then
+            "$DOCKER_BIN" compose "${compose_args[@]}" ps
+            echo "::error::MySQL did not become healthy on the Mac mini loopback address."
+            exit 1
+          fi
+
+          tailscale_bin="$(command -v tailscale || true)"
+          if [[ -z "$tailscale_bin" && -x /Applications/Tailscale.app/Contents/MacOS/Tailscale ]]; then
+            tailscale_bin=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+          fi
+          if [[ -z "$tailscale_bin" ]]; then
+            echo "::error::The Tailscale command line client is not installed on the Mac mini."
+            exit 1
+          fi
+
+          "$tailscale_bin" serve --bg --yes --tcp=3306 tcp://127.0.0.1:3306
+          if ! "$tailscale_bin" serve status | grep -Fq 'tcp://127.0.0.1:3306'; then
+            echo "::error::Tailscale Serve did not retain the private MySQL TCP forwarder."
+            exit 1
+          fi
+          if ! nc -z "$MYSQL_BIND_IP" 3306; then
+            echo "::error::The MySQL TCP forwarder is not reachable through the Mac mini Tailnet address."
+            exit 1
+          fi
+
+          echo "MySQL is healthy and privately forwarded through Tailscale Serve."
