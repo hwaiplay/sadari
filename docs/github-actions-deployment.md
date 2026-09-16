@@ -2,7 +2,8 @@
 
 이 문서는 2026-09-16 기준 Mac mini 단일 서버 배포 절차를 설명합니다. MySQL과 Redis,
 Spring Boot, 영구 파일 저장소는 같은 Mac mini에서 실행하고 외부 접근은 Tailnet으로 제한합니다.
-`master` 브랜치에 push되면 다음 순서로 배포됩니다.
+`master` 브랜치에 애플리케이션 또는 운영 배포 파일을 push하면 다음 순서로 배포됩니다. 문서만 바뀌거나
+개발 데이터베이스 수동 워크플로만 바뀐 push는 운영 CI/CD에서 제외합니다.
 
 1. Java 17과 Node.js 24 환경에서 WAR 빌드를 검증합니다.
 2. AMD64와 ARM64 Docker 이미지를 빌드해 `ghcr.io/<owner>/<repository>`에 커밋 SHA와 `latest` 태그로 올립니다.
@@ -240,7 +241,7 @@ MySQL은 Mac mini의 루프백에만 게시하고 Tailscale Serve가 같은 3306
 5. 세 비밀 파일의 권한을 소유자 읽기·쓰기만 허용합니다.
 6. 필요한 공개 Actions Variables를 등록합니다.
 7. Tailscale Serve에서 HTTPS 요청을 `127.0.0.1:8080`으로 전달합니다.
-8. `master` 브랜치에 push하거나 Actions 화면에서 `Sadari CI/CD`를 수동 실행합니다.
+8. 애플리케이션 또는 운영 배포 파일을 `master` 브랜치에 push하거나 Actions 화면에서 `Sadari CI/CD`를 수동 실행합니다.
 
 현재 `SadariApplicationTests`는 Git에서 제외된 로컬 설정과 실제 DB/Redis를 요구하므로 CI에서
 자동 실행하지 않습니다. 추후 Testcontainers나 독립 `application-test.yml`을 추가하면 워크플로의

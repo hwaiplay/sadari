@@ -7,6 +7,9 @@ on:
   push:
     branches:
       - master
+    paths-ignore:
+      - "docs/**"
+      - ".github/workflows/provision-development-database.yml"
   workflow_dispatch:
 
 # 같은 브랜치의 이전 실행이 남아 있으면 취소해 오래된 이미지가 나중에 배포되는 경쟁 상태를 막음
