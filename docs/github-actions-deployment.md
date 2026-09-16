@@ -109,8 +109,12 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 
 - 운영 애플리케이션은 외부 Docker 네트워크의 `sadari-mysql:3306`과 `sadari-redis:6379`에 직접 연결합니다.
   비밀번호와 Redis 인증값은 Mac mini의 `secrets/infra.env`에서만 주입합니다.
-- MySQL과 Redis 포트는 Mac mini의 루프백에만 게시합니다. 개발자 DB 접속과 서비스 화면 접근은
-  Tailscale TCP 전달과 Tailscale Serve를 사용하며 공유기 포트포워딩을 사용하지 않습니다.
+- 운영 애플리케이션용 MySQL과 Redis 포트는 Mac mini의 루프백에만 게시합니다. 별도로 격리한 개발
+  데이터베이스는 Mac mini의 Tailscale 인터페이스에만 MySQL 포트를 게시하고, 허용한 개발자 장치별
+  전용 계정에는 개발 데이터베이스 권한만 부여합니다. 공유기 포트포워딩은 사용하지 않습니다.
+- 로컬 `loc` 프로필은 운영 데이터베이스 대신 격리한 개발 데이터베이스를 사용합니다. 개발용 스키마는
+  운영 스키마 구조와 필수 기준정보만 복사하며 사용자 활동 데이터는 복사하지 않습니다. 접속 비밀번호는
+  Git에서 제외한 로컬 설정 또는 환경변수에만 저장합니다.
 - 운영 파일 저장소는 컨테이너의 `/app/uploads`이고 Mac mini 배포 폴더의 `uploads`와 연결됩니다.
   `application-prod.yml`이나 GitHub Actions에는 Mac 사용자별 절대 경로를 하드코딩하지 않습니다.
 - Tailnet 장치에서 로컬 OAuth를 검증할 때는 `application-loc.yml`의 `domain.front`와
@@ -188,6 +192,21 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 - Mac mini의 시스템 잠자기는 비활성화하고 정전 후 자동 재시작을 활성화합니다.
 - Tailscale은 무인 실행 상태를 유지하고 HTTPS 서비스 주소는 Tailnet 구성원만 접근하도록 설정합니다.
 - PWA와 Secure Cookie, Firebase Web Push는 Tailscale Serve가 제공하는 HTTPS 주소를 사용합니다.
+
+## 격리 개발 데이터베이스 재구축
+
+저장소의 `Actions > Provision development database > Run workflow`에서 수동으로만 실행합니다. 확인 문구에는
+`RECREATE sadari_dev`를 입력하고, Mac mini와 접속을 허용할 두 개발 장치의 Tailscale IPv4 주소를 각각
+입력합니다. 이 작업은 운영 데이터베이스를 읽기 원본으로만 사용하고 기존 `sadari_dev` 데이터베이스를
+삭제한 뒤 다시 만듭니다.
+
+워크플로는 운영 스키마 구조 전체, 공통 저장 함수와 프로시저, 승인된 13개 기준정보 영역만 복사합니다.
+사용자 활동 데이터는 복사하지 않습니다. 복사 후에는 각 기준정보의 원본·개발 행 수와 테이블 체크섬,
+전체 스키마 수, 루틴 수, 허용 계정 수를 비교합니다. 하나라도 다르면 실패 처리합니다.
+
+MySQL은 Mac mini의 입력한 Tailscale 주소에만 게시합니다. 개발 계정은 두 개발 장치의 Tailscale 주소별로
+생성하고 개발 데이터베이스에 필요한 조회·등록·수정·삭제·루틴 실행 권한만 부여합니다. 비밀번호 원문은
+워크플로 입력이나 로그에 전달하지 않고 기존 운영 애플리케이션 계정의 인증값을 복사합니다.
 
 ## 독서 타이머 8시간 및 목표 알림 배포
 
