@@ -115,9 +115,9 @@ app:
     connect-timeout-millis: ${HTTP_CONNECT_TIMEOUT_MILLIS:3000}
     read-timeout-millis: ${HTTP_READ_TIMEOUT_MILLIS:5000}
   storage:
-    # S3를 사용하지 않는 Windows 실행 환경은 사용자·관리자 앱이 같은 공유 디렉터리를 사용함
-    provider: ${STORAGE_PROVIDER:s3}
-    local-root: ${STORAGE_LOCAL_ROOT:C:/shared/sadari-uploads}
+    # 배포 서버의 영구 폴더를 컨테이너 공통 경로에 연결하는 로컬 파일 저장소
+    provider: ${STORAGE_PROVIDER:local}
+    local-root: ${STORAGE_LOCAL_ROOT:/app/uploads}
     s3:
       bucket: ${STORAGE_S3_BUCKET}
       region: ${STORAGE_S3_REGION:ap-northeast-2}

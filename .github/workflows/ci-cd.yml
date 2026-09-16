@@ -170,9 +170,10 @@ jobs:
       COOKIE_SAME_SITE: ${{ vars.COOKIE_SAME_SITE || 'None' }}
       LOGGING_LEVEL_ROOT: ${{ vars.LOGGING_LEVEL_ROOT || 'info' }}
       LOGGING_LEVEL_APP: ${{ vars.LOGGING_LEVEL_APP || 'info' }}
-      # 저장소 선택은 자격 증명 유무가 아니라 STORAGE_PROVIDER Variable만으로 결정함
-      STORAGE_PROVIDER: ${{ vars.STORAGE_PROVIDER || 's3' }}
-      STORAGE_LOCAL_ROOT: ${{ vars.STORAGE_LOCAL_ROOT || 'C:/shared/sadari-uploads' }}
+      # 파일 저장소 구현과 컨테이너 내부 경로
+      STORAGE_PROVIDER: ${{ vars.STORAGE_PROVIDER || 'local' }}
+      STORAGE_LOCAL_ROOT: ${{ vars.STORAGE_LOCAL_ROOT || '/app/uploads' }}
+      STORAGE_HOST_ROOT: ${{ vars.STORAGE_HOST_ROOT || './uploads' }}
       STORAGE_S3_BUCKET: ${{ vars.STORAGE_S3_BUCKET }}
       STORAGE_S3_REGION: ${{ vars.STORAGE_S3_REGION || 'ap-northeast-2' }}
       STORAGE_S3_ENDPOINT: ${{ vars.STORAGE_S3_ENDPOINT }}
@@ -281,6 +282,7 @@ jobs:
           write_env LOGGING_LEVEL_APP "$LOGGING_LEVEL_APP"
           write_env STORAGE_PROVIDER "$STORAGE_PROVIDER"
           write_env STORAGE_LOCAL_ROOT "$STORAGE_LOCAL_ROOT"
+          write_env STORAGE_HOST_ROOT "$STORAGE_HOST_ROOT"
           write_env STORAGE_S3_BUCKET "$STORAGE_S3_BUCKET"
           write_env STORAGE_S3_REGION "$STORAGE_S3_REGION"
           write_env STORAGE_S3_ENDPOINT "$STORAGE_S3_ENDPOINT"
@@ -307,7 +309,7 @@ jobs:
           set -euo pipefail
           ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
             "$EC2_USER@$EC2_HOST" \
-            "mkdir -p ~/sadari/secrets"
+            "mkdir -p ~/sadari/secrets ~/sadari/uploads"
 
           scp -i ~/.ssh/sadari_deploy_key -P "$EC2_SSH_PORT" \
             .deploy/.env \

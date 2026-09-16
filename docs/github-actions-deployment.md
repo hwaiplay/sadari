@@ -39,8 +39,8 @@
 | `FIREBASE_WEB_APP_ID` | Firebase Web App의 `appId` |
 | `FIREBASE_VAPID_PUBLIC_KEY` | Firebase Cloud Messaging의 Web Push 공개키 |
 | `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin SDK 서비스 계정 JSON 전체 원문 |
-| `AWS_ACCESS_KEY_ID` | S3 전용 IAM 사용자의 Access Key ID |
-| `AWS_SECRET_ACCESS_KEY` | S3 전용 IAM 사용자의 Secret Access Key |
+| `AWS_ACCESS_KEY_ID` | S3를 선택할 때만 사용하는 IAM Access Key ID |
+| `AWS_SECRET_ACCESS_KEY` | S3를 선택할 때만 사용하는 IAM Secret Access Key |
 
 `GITHUB_TOKEN`은 Actions 실행 시 GitHub가 자동 발급하므로 직접 등록하지 않습니다. 이 토큰은
 워크플로에서 GHCR 이미지 push에 사용됩니다. EC2의 pull에는 별도 `GHCR_TOKEN`이 필요합니다.
@@ -221,34 +221,35 @@
 자동 실행하지 않습니다. 추후 Testcontainers나 독립 `application-test.yml`을 추가하면 워크플로의
 `-x test`를 제거해 통합 테스트까지 배포 차단 조건으로 사용할 수 있습니다.
 
-## S3 파일 저장소 설정
+## 로컬 파일 저장소 설정
 
-운영 환경의 영구 이미지는 비공개 S3 버킷에 저장합니다. 브라우저는 S3 객체 URL에 직접 접근하지 않고 기존 `/uploads/{type}/{yyMMdd}/{uuid}.{ext}` 경로를 호출하며, 백엔드가 IAM 권한으로 객체를 조회해 전달합니다. 따라서 버킷의 모든 퍼블릭 액세스 차단을 활성화하고 CORS와 공개 버킷 정책은 설정하지 않습니다.
+운영 환경의 영구 이미지는 배포 서버의 일반 디렉터리에 저장합니다. 애플리케이션은 서버 운영체제와 관계없이 컨테이너 내부의 `/app/uploads`를 사용하고, Docker Compose가 서버의 실제 디렉터리를 이 경로에 연결합니다. 브라우저에서 사용하는 `/uploads/{type}/{yyMMdd}/{uuid}.{ext}` 주소와 데이터베이스의 상대 객체 키는 변경하지 않습니다.
 
-S3 인증은 GitHub Actions Secrets의 `AWS_ACCESS_KEY_ID`와 `AWS_SECRET_ACCESS_KEY`를 운영 `.env`에 주입하고 AWS SDK 정적 자격 증명 공급자로 사용합니다. 해당 Access Key를 발급한 IAM 사용자에는 대상 버킷 객체의 `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject`만 허용합니다. 현재 구현은 버킷 목록 조회를 수행하지 않으므로 `s3:ListBucket` 권한은 필요하지 않습니다.
-
-장기 Access Key는 유출 시 만료 전까지 계속 사용할 수 있으므로 저장소나 로그에 기록하지 않고 GitHub Secrets와 운영 서버의 권한이 제한된 `.env`에만 보관합니다. 키를 교체할 때는 IAM에서 새 키를 발급하고 두 Actions Secrets를 함께 변경한 뒤 배포 검증이 끝난 후 이전 키를 비활성화합니다.
+EC2 배포의 기본 호스트 경로는 `~/sadari/uploads`입니다. Mac mini로 전환할 때는 `STORAGE_HOST_ROOT=/Users/<username>/sadari/uploads`를 지정합니다. 두 환경 모두 동일한 `application-prod.yml`과 Docker 이미지를 사용하며 호스트 경로만 배포 환경에서 바꿉니다.
 
 Actions Variables에는 다음 값을 등록합니다.
 
 | 이름 | 기본값 | 용도 |
 | --- | --- | --- |
-| `STORAGE_PROVIDER` | `s3` | 운영 파일 저장소 구현 |
-| `STORAGE_LOCAL_ROOT` | `C:/shared/sadari-uploads` | Windows에서 `local` 저장소를 선택했을 때의 공용 루트 디렉터리 |
-| `STORAGE_S3_BUCKET` | 없음 | 영구 이미지를 저장할 비공개 S3 버킷 이름 |
+| `STORAGE_PROVIDER` | `local` | 운영 파일 저장소 구현 |
+| `STORAGE_LOCAL_ROOT` | `/app/uploads` | 애플리케이션 컨테이너 내부의 공통 저장 경로 |
+| `STORAGE_HOST_ROOT` | `./uploads` | Docker Compose 파일을 기준으로 한 서버의 실제 저장 경로 |
+| `STORAGE_S3_BUCKET` | 없음 | S3를 선택할 때 사용하는 비공개 버킷 이름 |
 | `STORAGE_S3_REGION` | `ap-northeast-2` | S3 버킷 리전 |
-| `STORAGE_S3_ENDPOINT` | 빈 값 | AWS S3에서는 비워 두며 S3 호환 저장소 전환 시에만 지정 |
-| `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | AWS S3에서는 `false`, 일부 S3 호환 저장소에서는 `true` |
+| `STORAGE_S3_ENDPOINT` | 빈 값 | S3 호환 저장소를 선택할 때 사용하는 API 주소 |
+| `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | S3 호환 저장소의 경로형 접근 사용 여부 |
 
-`vars.STORAGE_PROVIDER`가 없거나 빈 값이면 워크플로의 `STORAGE_PROVIDER`는 `s3`가 됩니다. 이 선택은 Secret 유무와 무관합니다. `STORAGE_PROVIDER=s3`일 때 `STORAGE_S3_BUCKET` Variable과 `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` Secrets는 필수이며 배포 묶음 생성 전에 누락 여부를 검증합니다. 따라서 Secret Key가 없으면 `local`로 전환되는 것이 아니라 배포가 실패합니다. `local`일 때는 세 값을 요구하지 않습니다.
+`vars.STORAGE_PROVIDER`가 없으면 워크플로는 `local`을 사용합니다. EC2에서는 기본값 `STORAGE_HOST_ROOT=./uploads`가 배포 디렉터리 아래의 `~/sadari/uploads`로 해석됩니다. Mac mini에서는 배포 `.env`의 `STORAGE_HOST_ROOT`를 `/Users/<username>/sadari/uploads`로 설정합니다. 해당 디렉터리는 애플리케이션 컨테이너를 실행하는 사용자가 읽고 쓸 수 있어야 합니다.
 
-로컬 `loc` 프로파일도 사용자·관리자 애플리케이션 모두 기본적으로 `STORAGE_PROVIDER=s3`를 사용합니다. 로컬 디스크를 사용할 때는 두 애플리케이션에 `STORAGE_PROVIDER=local`과 동일한 `STORAGE_LOCAL_ROOT`를 명시합니다.
+Windows에서 실행 중인 애플리케이션은 macOS의 `/Users/...` 경로를 직접 사용할 수 없습니다. Windows 로컬 실행은 Windows에서 접근 가능한 경로를 사용하고, Mac mini의 실제 디스크를 사용하려면 애플리케이션 컨테이너도 Mac mini에서 실행합니다.
 
-관리자 애플리케이션도 같은 `STORAGE_PROVIDER`, `STORAGE_LOCAL_ROOT`, `STORAGE_S3_*`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY` 이름을 사용합니다. Windows에서 `local`을 선택할 때 두 앱의 기본값은 `C:/shared/sadari-uploads`입니다. `s3`을 선택하면 실행 장비와 관계없이 같은 버킷을 지정하며, `local`을 선택하면 두 애플리케이션 프로세스가 실제로 접근할 수 있는 동일한 절대 디렉터리 또는 공유 볼륨을 `STORAGE_LOCAL_ROOT`로 지정합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유할 수 없습니다.
+사용자 애플리케이션과 관리자 애플리케이션을 같은 서버에서 실행하면 두 컨테이너가 동일한 `STORAGE_HOST_ROOT`를 연결해야 합니다. 서로 다른 장비의 로컬 디스크는 같은 경로 문자열만으로 파일을 공유하지 못합니다.
 
-`C:/shared/sadari-uploads`는 Windows 절대경로이므로 macOS에서는 같은 위치로 사용할 수 없습니다. Mac mini 디스크를 직접 사용할 때는 두 앱 모두 `STORAGE_PROVIDER=local`, `STORAGE_LOCAL_ROOT=/Users/Shared/sadari-uploads`처럼 macOS 절대경로를 지정합니다. Mac mini의 S3 호환 저장소로 전환할 때는 `STORAGE_S3_ENDPOINT`와 `STORAGE_S3_PATH_STYLE_ACCESS`를 해당 제품 설정에 맞게 변경합니다.
+EC2에서 Mac mini로 전환할 때는 먼저 파일 쓰기를 중지하고 `~/sadari/uploads`의 내용을 Mac mini 업로드 디렉터리로 복사합니다. 파일 수와 전체 크기를 대조한 뒤 Mac mini 애플리케이션을 시작하고 기존 이미지 조회와 신규 업로드를 확인합니다. 검증이 끝나기 전에는 EC2 원본 폴더를 삭제하지 않습니다.
 
-기존 로컬 영구 이미지 파일은 자동 이전하지 않습니다. 운영 컨테이너의 `sadari-uploads` Named Volume 연결은 제거했으며, 배포 전환 전에 기존 파일 보존이 필요한 경우 별도 마이그레이션을 수행해야 합니다. 프로필 편집 중 생성되는 30분 임시 이미지는 공개 경로와 분리된 컨테이너 임시 디렉터리에 계속 저장하며 재배포 시 소실될 수 있습니다.
+Garage나 S3 호환 저장소의 내부 데이터 디렉터리는 일반 파일 구조가 아니므로 직접 복사하지 않습니다. 기존 객체는 저장소 API를 통해 상대 객체 키를 보존하며 내보낸 뒤 파일 수와 크기를 검증합니다. 프로필 편집 중 생성되는 30분 임시 이미지는 공개 경로와 분리된 컨테이너 임시 디렉터리에 계속 저장하며 재배포 시 소실될 수 있습니다.
+
+S3 저장소는 선택 사항으로 유지합니다. `STORAGE_PROVIDER=s3`일 때만 `STORAGE_S3_BUCKET`, `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`가 필수이며 워크플로가 배포 전에 누락 여부를 검증합니다. 장기 Access Key는 저장소나 로그에 기록하지 않고 GitHub Actions Secrets와 운영 서버의 권한이 제한된 `.env`에서만 관리합니다.
 
 ### 채팅 열람 상태와 알림 읽음 처리
 
