@@ -342,8 +342,10 @@ jobs:
 
           # Spring Boot와 정적 프론트가 모두 올라오는 시간을 고려해 최대 2분 동안 실제 HTTP 응답을 확인함
           for attempt in {1..24}; do
-            if curl --fail --location --silent --show-error \
-              "http://127.0.0.1:${APP_PORT}/" > /dev/null; then
+            http_status="$(curl --connect-timeout 2 --max-time 5 --location --silent --show-error \
+              --output /dev/null --write-out '%{http_code}' \
+              "http://127.0.0.1:${APP_PORT}/" || true)"
+            if [[ "$http_status" = "200" || "$http_status" = "401" ]]; then
               echo "Sadari deployment is healthy."
               exit 0
             fi
