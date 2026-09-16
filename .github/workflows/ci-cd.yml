@@ -128,6 +128,7 @@ jobs:
     env:
       DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/Users/myhomeserver/sadari' }}
       DOCKER_BIN: /Applications/Docker.app/Contents/Resources/bin/docker
+      DOCKER_CLI_PLUGIN_DIR: /Applications/Docker.app/Contents/Resources/cli-plugins
       PATH: /Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
       INFRA_NETWORK: ${{ vars.INFRA_NETWORK || 'sadari-mac-infra_default' }}
       GHCR_USERNAME: ${{ github.actor }}
@@ -194,6 +195,7 @@ jobs:
             exit 1
           fi
 
+          test -x "$DOCKER_CLI_PLUGIN_DIR/docker-compose"
           "$DOCKER_BIN" network inspect "$INFRA_NETWORK" > /dev/null
           test "$("$DOCKER_BIN" inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
           test "$("$DOCKER_BIN" inspect --format '{{.State.Running}}' sadari-redis)" = "true"
@@ -326,7 +328,8 @@ jobs:
           export DOCKER_CONFIG="$docker_config"
           trap 'rm -rf "$docker_config"' EXIT
           registry_auth="$(printf '%s:%s' "$GHCR_USERNAME" "$GHCR_TOKEN" | base64 | tr -d '\n')"
-          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}\n' "$registry_auth" \
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}},"cliPluginsExtraDirs":["%s"]}\n' \
+            "$registry_auth" "$DOCKER_CLI_PLUGIN_DIR" \
             > "$DOCKER_CONFIG/config.json"
           chmod 600 "$DOCKER_CONFIG/config.json"
 
