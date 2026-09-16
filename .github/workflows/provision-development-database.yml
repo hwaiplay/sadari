@@ -108,8 +108,28 @@ jobs:
           root_password="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
             | sed -n 's/^MYSQL_ROOT_PASSWORD=//p' \
             | head -n 1)"
+          root_password_file="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-mysql \
+            | sed -n 's/^MYSQL_ROOT_PASSWORD_FILE=//p' \
+            | head -n 1)"
+          if [[ -z "$root_password" && "$root_password_file" =~ ^/[a-zA-Z0-9_./-]+$ ]]; then
+            root_password="$($DOCKER_BIN exec sadari-mysql sh -c 'cat "$1"' sh "$root_password_file")"
+          fi
           if [[ -z "$root_password" ]]; then
-            echo "::error::The MySQL root password is not available from the existing container."
+            set +u
+            set -a
+            source "$DEPLOY_ROOT/secrets/infra.env"
+            set +a
+            set -u
+            root_password="${MYSQL_ROOT_PASSWORD:-${DB_PASSWORD:-}}"
+          fi
+          if [[ -z "$root_password" ]]; then
+            echo "::error::The MySQL administrator password is not available from the protected infrastructure settings."
+            exit 1
+          fi
+
+          if ! "$DOCKER_BIN" exec -e MYSQL_PWD="$root_password" sadari-mysql \
+            mysql --user=root --batch --skip-column-names --execute='SELECT 1;' > /dev/null 2>&1; then
+            echo "::error::The protected infrastructure password does not authenticate the MySQL administrator."
             exit 1
           fi
 
