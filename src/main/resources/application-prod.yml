@@ -1,7 +1,8 @@
 spring:
   datasource:
-    url: ${DB_URL}
-    username: ${DB_USERNAME}
+    # Mac mini Docker 내부망의 MySQL 서비스 기본 연결
+    url: ${DB_URL:jdbc:mysql://sadari-mysql:3306/sadari?serverTimezone=Asia/Seoul&characterEncoding=UTF-8&useSSL=false&allowPublicKeyRetrieval=true&rewriteBatchedStatements=true}
+    username: ${DB_USERNAME:sadari_app}
     password: ${DB_PASSWORD}
     driver-class-name: com.mysql.cj.jdbc.Driver
     hikari:
@@ -18,7 +19,8 @@ spring:
     store-type: redis
   data:
     redis:
-      host: ${REDIS_HOST}
+      # Mac mini Docker 내부망의 Redis 서비스 기본 연결
+      host: ${REDIS_HOST:sadari-redis}
       port: ${REDIS_PORT:6379}
       password: ${REDIS_PASSWORD:}
   messages:
@@ -100,7 +102,7 @@ firebase:
     app-id: ${FIREBASE_WEB_APP_ID}
     vapid-public-key: ${FIREBASE_VAPID_PUBLIC_KEY}
   admin:
-    # FCM 서버 발송에 쓰는 service account json 경로임. json 원문은 Git이 아니라 EC2/Docker secret/환경별 파일로 관리함
+    # FCM 서버 발송에 쓰는 service account json 경로임. json 원문은 Git이 아니라 배포 호스트의 Docker secret 파일로 관리함
     credentials-path: ${FIREBASE_CREDENTIALS_PATH}
 
 jwt:

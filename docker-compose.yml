@@ -5,30 +5,29 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: sadari-app
-    restart: always
+    restart: unless-stopped
     env_file:
       - .env
+      - ./secrets/app.env
+      - ./secrets/infra.env
     environment:
       SPRING_PROFILES_ACTIVE: prod
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
     ports:
-      - "${APP_PORT:-8080}:8080"
+      - "127.0.0.1:${APP_PORT:-8080}:8080"
     volumes:
-      # Firebase 서비스 계정 원문은 이미지에 포함하지 않고 EC2 배포 디렉터리의 읽기 전용 파일로 주입함
+      # Firebase 서비스 계정 원문은 이미지에 포함하지 않고 배포 디렉터리의 읽기 전용 파일로 주입함
       - ./secrets/firebase-service-account.json:/run/secrets/firebase-service-account.json:ro
-      # EC2와 Mac mini의 실제 업로드 폴더를 컨테이너 공통 경로에 연결
+      # Mac mini의 영구 업로드 폴더를 컨테이너 공통 경로에 연결
       - ${STORAGE_HOST_ROOT:-./uploads}:/app/uploads
-    depends_on:
-      - redis
+    networks:
+      - sadari-infra
+    logging:
+      driver: json-file
+      options:
+        max-size: "20m"
+        max-file: "5"
 
-  redis:
-    image: redis:7-alpine
-    container_name: sadari-redis
-    restart: always
-    command: ["redis-server", "--appendonly", "yes"]
-    volumes:
-      - sadari-redis-data:/data
-
-volumes:
-  sadari-redis-data:
+networks:
+  sadari-infra:
+    external: true
+    name: ${INFRA_NETWORK:-sadari-mac-infra_default}

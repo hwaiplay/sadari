@@ -3,10 +3,10 @@ name: Sadari CI/CD
 on:
   pull_request:
     branches:
-      - main
+      - master
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 
 # 같은 브랜치의 이전 실행이 남아 있으면 취소해 오래된 이미지가 나중에 배포되는 경쟁 상태를 막음
@@ -78,6 +78,9 @@ jobs:
         run: |
           echo "name=${REGISTRY}/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
 
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -94,6 +97,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
+          platforms: linux/amd64,linux/arm64
           tags: |
             ${{ steps.image.outputs.name }}:${{ github.sha }}
             ${{ steps.image.outputs.name }}:latest
@@ -104,44 +108,28 @@ jobs:
           cache-to: type=gha,mode=max
 
   deploy:
-    name: Deploy to EC2
-    if: github.event_name != 'pull_request'
+    name: Deploy to Mac mini
+    if: >-
+      (github.event_name == 'push' && github.ref == 'refs/heads/master')
+      || github.event_name == 'workflow_dispatch'
     needs:
       - publish
-    runs-on: ubuntu-latest
+    runs-on:
+      - self-hosted
+      - macOS
+      - ARM64
+      - sadari-prod
     timeout-minutes: 15
-    environment: production
+    permissions:
+      contents: read
+      packages: read
 
     env:
-      EC2_HOST: ${{ secrets.EC2_HOST }}
-      EC2_USER: ${{ secrets.EC2_USER }}
-      EC2_SSH_PRIVATE_KEY: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
-      EC2_SSH_PORT: ${{ vars.EC2_SSH_PORT || '22' }}
-      GHCR_USERNAME: ${{ secrets.GHCR_USERNAME }}
-      GHCR_TOKEN: ${{ secrets.GHCR_TOKEN }}
-      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-
-      DB_URL: ${{ secrets.DB_URL }}
-      DB_USERNAME: ${{ secrets.DB_USERNAME }}
-      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
-      JWT_SECRET: ${{ secrets.JWT_SECRET }}
-      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
-      KAKAO_JAVASCRIPT_KEY: ${{ secrets.KAKAO_JAVASCRIPT_KEY }}
-      KAKAO_NATIVE_APP_KEY: ${{ secrets.KAKAO_NATIVE_APP_KEY }}
-      GOOGLE_TRANSLATION_API_KEY: ${{ secrets.GOOGLE_TRANSLATION_API_KEY }}
-      GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
-      FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
-      FIREBASE_WEB_AUTH_DOMAIN: ${{ secrets.FIREBASE_WEB_AUTH_DOMAIN }}
-      FIREBASE_WEB_PROJECT_ID: ${{ secrets.FIREBASE_WEB_PROJECT_ID }}
-      FIREBASE_WEB_STORAGE_BUCKET: ${{ secrets.FIREBASE_WEB_STORAGE_BUCKET }}
-      FIREBASE_WEB_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_WEB_MESSAGING_SENDER_ID }}
-      FIREBASE_WEB_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
-      FIREBASE_VAPID_PUBLIC_KEY: ${{ secrets.FIREBASE_VAPID_PUBLIC_KEY }}
-      FRONT_DOMAIN: ${{ secrets.FRONT_DOMAIN }}
-      BACK_DOMAIN: ${{ secrets.BACK_DOMAIN }}
-
+      DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/Users/myhomeserver/sadari' }}
+      DOCKER_BIN: /Applications/Docker.app/Contents/Resources/bin/docker
+      INFRA_NETWORK: ${{ vars.INFRA_NETWORK || 'sadari-mac-infra_default' }}
+      GHCR_USERNAME: ${{ github.actor }}
+      GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       APP_PORT: ${{ vars.APP_PORT || '8080' }}
       DB_CONNECTION_TIMEOUT: ${{ vars.DB_CONNECTION_TIMEOUT || '60000' }}
       DB_MAXIMUM_POOL_SIZE: ${{ vars.DB_MAXIMUM_POOL_SIZE || '10' }}
@@ -167,55 +155,42 @@ jobs:
       MULTIPART_MAX_FILE_SIZE: ${{ vars.MULTIPART_MAX_FILE_SIZE || '20MB' }}
       MULTIPART_MAX_REQUEST_SIZE: ${{ vars.MULTIPART_MAX_REQUEST_SIZE || '40MB' }}
       COOKIE_SECURE: ${{ vars.COOKIE_SECURE || 'true' }}
-      COOKIE_SAME_SITE: ${{ vars.COOKIE_SAME_SITE || 'None' }}
+      COOKIE_SAME_SITE: ${{ vars.COOKIE_SAME_SITE || 'Lax' }}
       LOGGING_LEVEL_ROOT: ${{ vars.LOGGING_LEVEL_ROOT || 'info' }}
       LOGGING_LEVEL_APP: ${{ vars.LOGGING_LEVEL_APP || 'info' }}
-      # 파일 저장소 구현과 컨테이너 내부 경로
-      STORAGE_PROVIDER: ${{ vars.STORAGE_PROVIDER || 'local' }}
-      STORAGE_LOCAL_ROOT: ${{ vars.STORAGE_LOCAL_ROOT || '/app/uploads' }}
+      STORAGE_PROVIDER: local
+      STORAGE_LOCAL_ROOT: /app/uploads
       STORAGE_HOST_ROOT: ${{ vars.STORAGE_HOST_ROOT || './uploads' }}
-      STORAGE_S3_BUCKET: ${{ vars.STORAGE_S3_BUCKET }}
-      STORAGE_S3_REGION: ${{ vars.STORAGE_S3_REGION || 'ap-northeast-2' }}
-      STORAGE_S3_ENDPOINT: ${{ vars.STORAGE_S3_ENDPOINT }}
-      STORAGE_S3_PATH_STYLE_ACCESS: ${{ vars.STORAGE_S3_PATH_STYLE_ACCESS || 'false' }}
 
     steps:
       - name: Checkout deployment files
         uses: actions/checkout@v6
 
-      - name: Validate required secrets
+      - name: Validate deployment inputs
         shell: bash
         run: |
           set -euo pipefail
 
-          required_names=(
-            EC2_HOST EC2_USER EC2_SSH_PRIVATE_KEY GHCR_USERNAME GHCR_TOKEN
-            FIREBASE_SERVICE_ACCOUNT_JSON DB_URL DB_USERNAME DB_PASSWORD JWT_SECRET
-            KAKAO_REST_API_KEY KAKAO_JAVASCRIPT_KEY
-            FIREBASE_WEB_API_KEY FIREBASE_WEB_AUTH_DOMAIN FIREBASE_WEB_PROJECT_ID
-            FIREBASE_WEB_STORAGE_BUCKET FIREBASE_WEB_MESSAGING_SENDER_ID
-            FIREBASE_WEB_APP_ID FIREBASE_VAPID_PUBLIC_KEY FRONT_DOMAIN BACK_DOMAIN
-          )
-
-          # S3 저장소를 선택한 배포에서만 버킷과 장기 자격 증명을 필수로 검증함
-          if [[ "$STORAGE_PROVIDER" == "s3" ]]; then
-            required_names+=(STORAGE_S3_BUCKET AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY)
+          if [[ "$DEPLOY_ROOT" != /Users/*/sadari ]]; then
+            echo "::error::DEPLOY_ROOT must end with /sadari under /Users."
+            exit 1
           fi
 
-          for name in "${required_names[@]}"; do
-            if [[ -z "${!name:-}" ]]; then
-              echo "::error::Required GitHub secret is missing: ${name}"
-              exit 1
-            fi
-          done
+          "$DOCKER_BIN" network inspect "$INFRA_NETWORK" > /dev/null
+          test "$("$DOCKER_BIN" inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
+          test "$("$DOCKER_BIN" inspect --format '{{.State.Running}}' sadari-redis)" = "true"
+          test -f "$DEPLOY_ROOT/secrets/app.env"
+          test -f "$DEPLOY_ROOT/secrets/infra.env"
+          test -f "$DEPLOY_ROOT/secrets/firebase-service-account.json"
 
       - name: Create deployment bundle
+        id: bundle
         shell: bash
         env:
           APP_IMAGE: ${{ needs.publish.outputs.image }}:${{ github.sha }}
         run: |
           set -euo pipefail
-          mkdir -p .deploy/secrets
+          bundle_dir="$(mktemp -d "$RUNNER_TEMP/sadari-deploy.XXXXXX")"
 
           # 값 안의 따옴표, 역슬래시, 개행을 Docker Compose env_file 문법에 맞게 이스케이프함
           write_env() {
@@ -224,26 +199,18 @@ jobs:
             value="${value//\\/\\\\}"
             value="${value//\"/\\\"}"
             value="${value//$'\n'/\\n}"
-            printf '%s="%s"\n' "$key" "$value" >> .deploy/.env
+            printf '%s="%s"\n' "$key" "$value" >> "$bundle_dir/.env"
           }
 
-          : > .deploy/.env
+          : > "$bundle_dir/.env"
           write_env APP_IMAGE "$APP_IMAGE"
           write_env APP_PORT "$APP_PORT"
-          write_env DB_URL "$DB_URL"
-          write_env DB_USERNAME "$DB_USERNAME"
-          write_env DB_PASSWORD "$DB_PASSWORD"
+          write_env INFRA_NETWORK "$INFRA_NETWORK"
           write_env DB_CONNECTION_TIMEOUT "$DB_CONNECTION_TIMEOUT"
           write_env DB_MAXIMUM_POOL_SIZE "$DB_MAXIMUM_POOL_SIZE"
           write_env DB_MINIMUM_IDLE "$DB_MINIMUM_IDLE"
           write_env HTTP_CONNECT_TIMEOUT_MILLIS "$HTTP_CONNECT_TIMEOUT_MILLIS"
           write_env HTTP_READ_TIMEOUT_MILLIS "$HTTP_READ_TIMEOUT_MILLIS"
-          write_env REDIS_HOST "redis"
-          write_env REDIS_PORT "6379"
-          write_env REDIS_PASSWORD ""
-          write_env FRONT_DOMAIN "$FRONT_DOMAIN"
-          write_env BACK_DOMAIN "$BACK_DOMAIN"
-          write_env JWT_SECRET "$JWT_SECRET"
           write_env JWT_ACCESS_TOKEN_SECONDS "$JWT_ACCESS_TOKEN_SECONDS"
           write_env JWT_REFRESH_TOKEN_SECONDS "$JWT_REFRESH_TOKEN_SECONDS"
           write_env JWT_REFRESH_ROTATION_GRACE_SECONDS "$JWT_REFRESH_ROTATION_GRACE_SECONDS"
@@ -260,19 +227,6 @@ jobs:
           write_env BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS "$BOOK_SEARCH_POPULAR_KEYWORD_WINDOW_DAYS"
           write_env BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT "$BOOK_SEARCH_POPULAR_KEYWORD_MIN_USER_COUNT"
           write_env BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE "$BOOK_SEARCH_POPULAR_KEYWORD_MAX_SIZE"
-          write_env KAKAO_REST_API_KEY "$KAKAO_REST_API_KEY"
-          write_env KAKAO_JAVASCRIPT_KEY "$KAKAO_JAVASCRIPT_KEY"
-          write_env KAKAO_NATIVE_APP_KEY "$KAKAO_NATIVE_APP_KEY"
-          write_env GOOGLE_TRANSLATION_API_KEY "$GOOGLE_TRANSLATION_API_KEY"
-          write_env GOOGLE_BOOKS_API_KEY "$GOOGLE_BOOKS_API_KEY"
-          write_env FIREBASE_WEB_API_KEY "$FIREBASE_WEB_API_KEY"
-          write_env FIREBASE_WEB_AUTH_DOMAIN "$FIREBASE_WEB_AUTH_DOMAIN"
-          write_env FIREBASE_WEB_PROJECT_ID "$FIREBASE_WEB_PROJECT_ID"
-          write_env FIREBASE_WEB_STORAGE_BUCKET "$FIREBASE_WEB_STORAGE_BUCKET"
-          write_env FIREBASE_WEB_MESSAGING_SENDER_ID "$FIREBASE_WEB_MESSAGING_SENDER_ID"
-          write_env FIREBASE_WEB_APP_ID "$FIREBASE_WEB_APP_ID"
-          write_env FIREBASE_VAPID_PUBLIC_KEY "$FIREBASE_VAPID_PUBLIC_KEY"
-          write_env FIREBASE_CREDENTIALS_PATH "file:/run/secrets/firebase-service-account.json"
           write_env MULTIPART_MAX_FILE_SIZE "$MULTIPART_MAX_FILE_SIZE"
           write_env MULTIPART_MAX_REQUEST_SIZE "$MULTIPART_MAX_REQUEST_SIZE"
           write_env COOKIE_SECURE "$COOKIE_SECURE"
@@ -283,68 +237,39 @@ jobs:
           write_env STORAGE_PROVIDER "$STORAGE_PROVIDER"
           write_env STORAGE_LOCAL_ROOT "$STORAGE_LOCAL_ROOT"
           write_env STORAGE_HOST_ROOT "$STORAGE_HOST_ROOT"
-          write_env STORAGE_S3_BUCKET "$STORAGE_S3_BUCKET"
-          write_env STORAGE_S3_REGION "$STORAGE_S3_REGION"
-          write_env STORAGE_S3_ENDPOINT "$STORAGE_S3_ENDPOINT"
-          write_env STORAGE_S3_PATH_STYLE_ACCESS "$STORAGE_S3_PATH_STYLE_ACCESS"
-          write_env AWS_ACCESS_KEY_ID "$AWS_ACCESS_KEY_ID"
-          write_env AWS_SECRET_ACCESS_KEY "$AWS_SECRET_ACCESS_KEY"
 
-          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" \
-            > .deploy/secrets/firebase-service-account.json
-          cp docker-compose.yml .deploy/docker-compose.yml
-
-      - name: Configure SSH
-        shell: bash
-        run: |
-          set -euo pipefail
-          install -m 700 -d ~/.ssh
-          printf '%s\n' "$EC2_SSH_PRIVATE_KEY" > ~/.ssh/sadari_deploy_key
-          chmod 600 ~/.ssh/sadari_deploy_key
-          ssh-keyscan -p "$EC2_SSH_PORT" -H "$EC2_HOST" >> ~/.ssh/known_hosts
-
-      - name: Upload deployment bundle
-        shell: bash
-        run: |
-          set -euo pipefail
-          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
-            "$EC2_USER@$EC2_HOST" \
-            "mkdir -p ~/sadari/secrets ~/sadari/uploads"
-
-          scp -i ~/.ssh/sadari_deploy_key -P "$EC2_SSH_PORT" \
-            .deploy/.env \
-            .deploy/docker-compose.yml \
-            "$EC2_USER@$EC2_HOST:~/sadari/"
-
-          scp -i ~/.ssh/sadari_deploy_key -P "$EC2_SSH_PORT" \
-            .deploy/secrets/firebase-service-account.json \
-            "$EC2_USER@$EC2_HOST:~/sadari/secrets/"
+          cp docker-compose.yml "$bundle_dir/docker-compose.yml"
+          echo "path=$bundle_dir" >> "$GITHUB_OUTPUT"
 
       - name: Deploy containers
         shell: bash
+        env:
+          BUNDLE_DIR: ${{ steps.bundle.outputs.path }}
         run: |
           set -euo pipefail
 
-          # 비공개 GHCR 패키지를 EC2에서 pull할 수 있도록 read:packages PAT를 표준입력으로만 전달함
+          install -d -m 700 "$DEPLOY_ROOT" "$DEPLOY_ROOT/secrets" "$DEPLOY_ROOT/uploads"
+          install -m 600 "$BUNDLE_DIR/.env" "$DEPLOY_ROOT/.env"
+          install -m 600 "$BUNDLE_DIR/docker-compose.yml" "$DEPLOY_ROOT/docker-compose.yml"
+
+          if [[ "$BUNDLE_DIR" != "$RUNNER_TEMP"/sadari-deploy.* ]]; then
+            echo "::error::Unexpected deployment bundle path."
+            exit 1
+          fi
+          rm -rf "$BUNDLE_DIR"
+
+          previous_image="$("$DOCKER_BIN" inspect --format '{{.Config.Image}}' sadari-app 2>/dev/null || true)"
           printf '%s' "$GHCR_TOKEN" | \
-            ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
-              "$EC2_USER@$EC2_HOST" \
-              "docker login ghcr.io --username '$GHCR_USERNAME' --password-stdin"
+            "$DOCKER_BIN" login ghcr.io --username "$GHCR_USERNAME" --password-stdin
 
-          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
-            "$EC2_USER@$EC2_HOST" \
-            "cd ~/sadari && chmod 600 .env secrets/firebase-service-account.json && docker compose pull app && docker compose up -d --remove-orphans"
-
-      - name: Verify deployment
-        shell: bash
-        run: |
-          set -euo pipefail
+          cd "$DEPLOY_ROOT"
+          "$DOCKER_BIN" compose pull app
+          "$DOCKER_BIN" compose up -d --remove-orphans
 
           # Spring Boot와 정적 프론트가 모두 올라오는 시간을 고려해 최대 2분 동안 실제 HTTP 응답을 확인함
           for attempt in {1..24}; do
-            if ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
-              "$EC2_USER@$EC2_HOST" \
-              "curl --fail --silent --show-error http://127.0.0.1:${APP_PORT}/ > /dev/null"; then
+            if curl --fail --location --silent --show-error \
+              "http://127.0.0.1:${APP_PORT}/" > /dev/null; then
               echo "Sadari deployment is healthy."
               exit 0
             fi
@@ -352,7 +277,11 @@ jobs:
             sleep 5
           done
 
-          ssh -i ~/.ssh/sadari_deploy_key -p "$EC2_SSH_PORT" \
-            "$EC2_USER@$EC2_HOST" \
-            "cd ~/sadari && docker compose ps && docker compose logs --tail=200 app"
+          "$DOCKER_BIN" compose ps
+          "$DOCKER_BIN" compose logs --tail=200 app
+
+          # 새 이미지가 기동하지 못하면 직전 컨테이너 이미지로 복구함
+          if [[ -n "$previous_image" ]]; then
+            APP_IMAGE="$previous_image" "$DOCKER_BIN" compose up -d --no-deps app
+          fi
           exit 1
