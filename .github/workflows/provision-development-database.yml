@@ -146,6 +146,11 @@ jobs:
 
           test "$($DOCKER_BIN inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
           "$DOCKER_BIN" network inspect "$INFRA_NETWORK" > /dev/null
+          docker_gateway="$($DOCKER_BIN network inspect --format '{{(index .IPAM.Config 0).Gateway}}' "$INFRA_NETWORK")"
+          if [[ ! "$docker_gateway" =~ ^(10\.|172\.(1[6-9]|2[0-9]|3[01])\.|192\.168\.)[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::The infrastructure Docker network does not have a valid private IPv4 gateway."
+            exit 1
+          fi
 
           source_user="$($DOCKER_BIN inspect --format '{{range .Config.Env}}{{println .}}{{end}}' sadari-app \
             | sed -n 's/^DB_USERNAME=//p' \
@@ -198,7 +203,7 @@ jobs:
             SELECT COUNT(*)
               FROM mysql.user
              WHERE User = '$TARGET_USER'
-               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '127.0.0.1', 'localhost');")"
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '$docker_gateway', '127.0.0.1', 'localhost');")"
           if [[ "$unexpected_account_count" -ne 0 ]]; then
             echo "::error::An existing development account has an unapproved host restriction."
             exit 1
@@ -235,6 +240,10 @@ jobs:
             IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           ALTER USER '$TARGET_USER'@'$COLLEAGUE_IP'
             IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'$docker_gateway'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           CREATE USER IF NOT EXISTS '$TARGET_USER'@'127.0.0.1'
             IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           ALTER USER '$TARGET_USER'@'127.0.0.1'
@@ -249,6 +258,9 @@ jobs:
           GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
              ON \`$TARGET_DATABASE\`.*
              TO '$TARGET_USER'@'$COLLEAGUE_IP';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'$docker_gateway';
           GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
              ON \`$TARGET_DATABASE\`.*
              TO '$TARGET_USER'@'127.0.0.1';
@@ -283,17 +295,17 @@ jobs:
             SELECT COUNT(*)
               FROM mysql.user
              WHERE User = '$TARGET_USER'
-               AND Host IN ('127.0.0.1', 'localhost');")"
+               AND Host IN ('$docker_gateway', '127.0.0.1', 'localhost');")"
           unexpected_account_count="$(mysql_root --execute="
             SELECT COUNT(*)
               FROM mysql.user
              WHERE User = '$TARGET_USER'
-               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '127.0.0.1', 'localhost');")"
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '$docker_gateway', '127.0.0.1', 'localhost');")"
 
           if [[ "$target_table_count" -ne "$source_table_count" \
              || "$routine_count" -ne 5 \
              || "$account_count" -ne 2 \
-             || "$forwarding_account_count" -ne 2 \
+             || "$forwarding_account_count" -ne 3 \
              || "$unexpected_account_count" -ne 0 ]]; then
             echo "::error::The development database structure, routines, or restricted accounts failed validation."
             exit 1
