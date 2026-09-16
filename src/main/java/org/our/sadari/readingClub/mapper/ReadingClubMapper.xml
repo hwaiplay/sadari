@@ -182,6 +182,7 @@
            AND USERX.USER_STAT = #{userActive}
            SET ALIM.READ_YSNO = #{commYes}
              , ALIM.READ_DATE = CURRENT_TIMESTAMP
+             , ALIM.UPDT_DATE = CURRENT_TIMESTAMP(6)
          WHERE ALIM.USER_NUMB = #{userNumb}
            AND ALIM.TAGT_TYPE = #{clubTarget}
            AND ALIM.TAGT_NUMB = #{clubNumb}
