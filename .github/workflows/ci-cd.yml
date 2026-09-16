@@ -322,6 +322,11 @@ jobs:
           rm -rf "$BUNDLE_DIR"
 
           previous_image="$("$DOCKER_BIN" inspect --format '{{.Config.Image}}' sadari-app 2>/dev/null || true)"
+          docker_config="$(mktemp -d "$RUNNER_TEMP/sadari-docker.XXXXXX")"
+          export DOCKER_CONFIG="$docker_config"
+          trap 'rm -rf "$docker_config"' EXIT
+          printf '{"auths":{}}\n' > "$DOCKER_CONFIG/config.json"
+          chmod 600 "$DOCKER_CONFIG/config.json"
           printf '%s' "$GHCR_TOKEN" | \
             "$DOCKER_BIN" login ghcr.io --username "$GHCR_USERNAME" --password-stdin
 
