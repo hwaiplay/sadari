@@ -180,16 +180,16 @@ jobs:
           fi
 
           app_account="$(mysql_root --execute="
-            SELECT plugin, authentication_string
+            SELECT plugin, HEX(authentication_string)
               FROM mysql.user
              WHERE User = '$source_user'
           ORDER BY (Host = '%') DESC, Host
              LIMIT 1;")"
-          IFS=$'\t' read -r auth_plugin auth_hash <<< "$app_account"
-          auth_hash_pattern='^[[:alnum:]$*./]+$'
+          IFS=$'\t' read -r auth_plugin auth_hash_hex <<< "$app_account"
           if [[ ! "$auth_plugin" =~ ^(caching_sha2_password|mysql_native_password)$ ]] \
-            || [[ -z "$auth_hash" ]] \
-            || [[ ! "$auth_hash" =~ $auth_hash_pattern ]]; then
+            || [[ -z "$auth_hash_hex" ]] \
+            || [[ ! "$auth_hash_hex" =~ ^[0-9A-F]+$ ]] \
+            || (( ${#auth_hash_hex} % 2 != 0 )); then
             echo "::error::The existing application account authentication value cannot be copied safely."
             exit 1
           fi
@@ -228,13 +228,13 @@ jobs:
 
           mysql_root <<SQL
           CREATE USER IF NOT EXISTS '$TARGET_USER'@'$DEVELOPER_IP'
-            IDENTIFIED WITH $auth_plugin AS '$auth_hash';
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           ALTER USER '$TARGET_USER'@'$DEVELOPER_IP'
-            IDENTIFIED WITH $auth_plugin AS '$auth_hash';
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           CREATE USER IF NOT EXISTS '$TARGET_USER'@'$COLLEAGUE_IP'
-            IDENTIFIED WITH $auth_plugin AS '$auth_hash';
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           ALTER USER '$TARGET_USER'@'$COLLEAGUE_IP'
-            IDENTIFIED WITH $auth_plugin AS '$auth_hash';
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
              ON \`$TARGET_DATABASE\`.*
              TO '$TARGET_USER'@'$DEVELOPER_IP';
