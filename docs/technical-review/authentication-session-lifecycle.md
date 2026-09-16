@@ -1,5 +1,17 @@
 # JWT와 Redis로 기기별 로그인 세션관리
 
+<p align="center">
+<img width="326" height="650" alt="Image" src="https://github.com/user-attachments/assets/1d1a304b-dd0f-48e6-8e08-a29776ba1b31" />
+</p>
+
+<p align="center">
+<img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/d1f752c6-3851-4441-b04a-36890353e790" />
+</p>
+
+<p align="center">
+<img width="700" height="650" alt="Image" src="https://github.com/user-attachments/assets/4402aef8-7bab-4611-a724-00cd708d5be8" />
+</p>
+
 ## 문제
 
 JWT 서명과 만료 시각만 검사하면 서버에서 로그아웃한 토큰도 만료 전까지 사용할 수 있습니다. 한 사용자가 휴대전화와 PC에서 동시에 로그인할 때 한 기기만 로그아웃하는 기능도 구현하기 어렵습니다. 계정이 정지되거나 영구 삭제 대기 상태로 바뀌어도 이미 발급된 토큰의 내용은 바뀌지 않습니다.
