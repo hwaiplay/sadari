@@ -109,9 +109,10 @@ jobs:
 
   deploy:
     name: Deploy to Mac mini
+    environment: mac-production
     if: >-
       (github.event_name == 'push' && github.ref == 'refs/heads/master')
-      || github.event_name == 'workflow_dispatch'
+      || (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/master')
     needs:
       - publish
     runs-on:
@@ -161,6 +162,22 @@ jobs:
       STORAGE_PROVIDER: local
       STORAGE_LOCAL_ROOT: /app/uploads
       STORAGE_HOST_ROOT: ${{ vars.STORAGE_HOST_ROOT || './uploads' }}
+      FRONT_DOMAIN: ${{ vars.FRONT_DOMAIN }}
+      BACK_DOMAIN: ${{ vars.BACK_DOMAIN }}
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      KAKAO_REST_API_KEY: ${{ secrets.KAKAO_REST_API_KEY }}
+      KAKAO_JAVASCRIPT_KEY: ${{ secrets.KAKAO_JAVASCRIPT_KEY }}
+      KAKAO_NATIVE_APP_KEY: ${{ secrets.KAKAO_NATIVE_APP_KEY }}
+      GOOGLE_TRANSLATION_API_KEY: ${{ secrets.GOOGLE_TRANSLATION_API_KEY }}
+      GOOGLE_BOOKS_API_KEY: ${{ secrets.GOOGLE_BOOKS_API_KEY }}
+      FIREBASE_WEB_API_KEY: ${{ secrets.FIREBASE_WEB_API_KEY }}
+      FIREBASE_WEB_AUTH_DOMAIN: ${{ secrets.FIREBASE_WEB_AUTH_DOMAIN }}
+      FIREBASE_WEB_PROJECT_ID: ${{ secrets.FIREBASE_WEB_PROJECT_ID }}
+      FIREBASE_WEB_STORAGE_BUCKET: ${{ secrets.FIREBASE_WEB_STORAGE_BUCKET }}
+      FIREBASE_WEB_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_WEB_MESSAGING_SENDER_ID }}
+      FIREBASE_WEB_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
+      FIREBASE_VAPID_PUBLIC_KEY: ${{ secrets.FIREBASE_VAPID_PUBLIC_KEY }}
+      FIREBASE_SERVICE_ACCOUNT_JSON: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_JSON }}
 
     steps:
       - name: Checkout deployment files
@@ -179,9 +196,21 @@ jobs:
           "$DOCKER_BIN" network inspect "$INFRA_NETWORK" > /dev/null
           test "$("$DOCKER_BIN" inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy"
           test "$("$DOCKER_BIN" inspect --format '{{.State.Running}}' sadari-redis)" = "true"
-          test -f "$DEPLOY_ROOT/secrets/app.env"
           test -f "$DEPLOY_ROOT/secrets/infra.env"
-          test -f "$DEPLOY_ROOT/secrets/firebase-service-account.json"
+
+          required_values=(
+            FRONT_DOMAIN BACK_DOMAIN JWT_SECRET KAKAO_REST_API_KEY KAKAO_JAVASCRIPT_KEY
+            GOOGLE_BOOKS_API_KEY FIREBASE_WEB_API_KEY FIREBASE_WEB_AUTH_DOMAIN
+            FIREBASE_WEB_PROJECT_ID FIREBASE_WEB_STORAGE_BUCKET
+            FIREBASE_WEB_MESSAGING_SENDER_ID FIREBASE_WEB_APP_ID
+            FIREBASE_VAPID_PUBLIC_KEY FIREBASE_SERVICE_ACCOUNT_JSON
+          )
+          for key in "${required_values[@]}"; do
+            if [[ -z "${!key:-}" ]]; then
+              echo "::error::$key is not configured in the mac-production environment."
+              exit 1
+            fi
+          done
 
       - name: Create deployment bundle
         id: bundle
@@ -199,9 +228,10 @@ jobs:
             value="${value//\\/\\\\}"
             value="${value//\"/\\\"}"
             value="${value//$'\n'/\\n}"
-            printf '%s="%s"\n' "$key" "$value" >> "$bundle_dir/.env"
+            printf '%s="%s"\n' "$key" "$value" >> "$target_file"
           }
 
+          target_file="$bundle_dir/.env"
           : > "$bundle_dir/.env"
           write_env APP_IMAGE "$APP_IMAGE"
           write_env APP_PORT "$APP_PORT"
@@ -238,6 +268,35 @@ jobs:
           write_env STORAGE_LOCAL_ROOT "$STORAGE_LOCAL_ROOT"
           write_env STORAGE_HOST_ROOT "$STORAGE_HOST_ROOT"
 
+          target_file="$bundle_dir/app.env"
+          : > "$bundle_dir/app.env"
+          write_env FRONT_DOMAIN "$FRONT_DOMAIN"
+          write_env BACK_DOMAIN "$BACK_DOMAIN"
+          write_env JWT_SECRET "$JWT_SECRET"
+          write_env KAKAO_REST_API_KEY "$KAKAO_REST_API_KEY"
+          write_env KAKAO_JAVASCRIPT_KEY "$KAKAO_JAVASCRIPT_KEY"
+          write_env KAKAO_NATIVE_APP_KEY "$KAKAO_NATIVE_APP_KEY"
+          write_env GOOGLE_TRANSLATION_API_KEY "$GOOGLE_TRANSLATION_API_KEY"
+          write_env GOOGLE_BOOKS_API_KEY "$GOOGLE_BOOKS_API_KEY"
+          write_env FIREBASE_WEB_API_KEY "$FIREBASE_WEB_API_KEY"
+          write_env FIREBASE_WEB_AUTH_DOMAIN "$FIREBASE_WEB_AUTH_DOMAIN"
+          write_env FIREBASE_WEB_PROJECT_ID "$FIREBASE_WEB_PROJECT_ID"
+          write_env FIREBASE_WEB_STORAGE_BUCKET "$FIREBASE_WEB_STORAGE_BUCKET"
+          write_env FIREBASE_WEB_MESSAGING_SENDER_ID "$FIREBASE_WEB_MESSAGING_SENDER_ID"
+          write_env FIREBASE_WEB_APP_ID "$FIREBASE_WEB_APP_ID"
+          write_env FIREBASE_VAPID_PUBLIC_KEY "$FIREBASE_VAPID_PUBLIC_KEY"
+          write_env FIREBASE_CREDENTIALS_PATH "file:/run/secrets/firebase-service-account.json"
+          write_env STORAGE_S3_BUCKET ""
+          write_env STORAGE_S3_REGION "ap-northeast-2"
+          write_env STORAGE_S3_ENDPOINT ""
+          write_env STORAGE_S3_PATH_STYLE_ACCESS "false"
+          write_env AWS_ACCESS_KEY_ID ""
+          write_env AWS_SECRET_ACCESS_KEY ""
+
+          printf '%s' "$FIREBASE_SERVICE_ACCOUNT_JSON" > "$bundle_dir/firebase-service-account.json"
+          test -s "$bundle_dir/app.env"
+          test -s "$bundle_dir/firebase-service-account.json"
+
           cp docker-compose.yml "$bundle_dir/docker-compose.yml"
           echo "path=$bundle_dir" >> "$GITHUB_OUTPUT"
 
@@ -251,6 +310,9 @@ jobs:
           install -d -m 700 "$DEPLOY_ROOT" "$DEPLOY_ROOT/secrets" "$DEPLOY_ROOT/uploads"
           install -m 600 "$BUNDLE_DIR/.env" "$DEPLOY_ROOT/.env"
           install -m 600 "$BUNDLE_DIR/docker-compose.yml" "$DEPLOY_ROOT/docker-compose.yml"
+          install -m 600 "$BUNDLE_DIR/app.env" "$DEPLOY_ROOT/secrets/app.env"
+          install -m 600 "$BUNDLE_DIR/firebase-service-account.json" \
+            "$DEPLOY_ROOT/secrets/firebase-service-account.json"
 
           if [[ "$BUNDLE_DIR" != "$RUNNER_TEMP"/sadari-deploy.* ]]; then
             echo "::error::Unexpected deployment bundle path."

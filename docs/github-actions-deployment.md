@@ -6,28 +6,25 @@ Spring Boot, 영구 파일 저장소는 같은 Mac mini에서 실행하고 외�
 
 1. Java 17과 Node.js 24 환경에서 WAR 빌드를 검증합니다.
 2. AMD64와 ARM64 Docker 이미지를 빌드해 `ghcr.io/<owner>/<repository>`에 커밋 SHA와 `latest` 태그로 올립니다.
-3. Mac mini 자체 실행기가 공개 운영 변수 `.env`와 `docker-compose.yml`을 배포 폴더에 설치합니다.
+3. Mac mini 자체 실행기가 공개 운영 변수와 `mac-production` 비밀값으로 배포 파일을 설치합니다.
 4. Mac mini가 새 이미지를 pull하고 기존 MySQL·Redis Docker 네트워크에 애플리케이션을 연결합니다.
 5. `http://127.0.0.1:<APP_PORT>/` 응답을 최대 2분 동안 확인하고 실패하면 직전 이미지로 복구합니다.
 
-공개 운영 값은 GitHub 저장소의 `Settings > Secrets and variables > Actions > Variables`에서 관리합니다.
-애플리케이션 비밀값과 인프라 비밀번호는 Mac mini의 권한이 제한된 파일에만 저장합니다.
+공개 운영 값과 애플리케이션 비밀값은 GitHub 저장소의 `mac-production` Environment에서 관리합니다.
+MySQL과 Redis 비밀번호는 Mac mini의 권한이 제한된 파일에만 저장합니다.
 
 ## Actions Secrets
 
 `GITHUB_TOKEN`은 Actions 실행 시 GitHub가 자동 발급하므로 직접 등록하지 않습니다. 이 토큰은
-워크플로의 GHCR 이미지 push와 Mac mini의 동일 저장소 이미지 pull에 사용됩니다. 현재 배포는 별도의
-Actions Secret을 요구하지 않습니다.
+워크플로의 GHCR 이미지 push와 Mac mini의 동일 저장소 이미지 pull에 사용됩니다.
 
-## Mac mini 애플리케이션 환경변수
+## mac-production Environment Secrets
 
-다음 값은 Mac mini 배포 폴더의 `secrets/app.env`에 저장합니다. GitHub Actions는 이 파일을 생성하거나
-덮어쓰지 않으며 배포 전에 존재 여부만 확인합니다.
+다음 값은 `Settings > Environments > mac-production > Environment secrets`에서 관리합니다. 배포할 때
+자체 실행기가 Mac mini의 `secrets/app.env`와 Firebase 서비스 계정 파일을 소유자 전용 권한으로 갱신합니다.
 
 | 이름 | 용도 |
 | --- | --- |
-| `FRONT_DOMAIN` | Tailnet에서 접속하는 프론트 HTTPS Origin |
-| `BACK_DOMAIN` | Tailnet에서 접속하는 백엔드 HTTPS Origin |
 | `JWT_SECRET` | JWT 서명 비밀키 |
 | `KAKAO_REST_API_KEY` | Kakao 로그인과 도서 검색 서버 키 |
 | `KAKAO_JAVASCRIPT_KEY` | Kakao 브라우저 SDK 키 |
@@ -41,9 +38,10 @@ Actions Secret을 요구하지 않습니다.
 | `FIREBASE_WEB_MESSAGING_SENDER_ID` | Firebase Messaging 발신자 식별자 |
 | `FIREBASE_WEB_APP_ID` | Firebase Web App 식별자 |
 | `FIREBASE_VAPID_PUBLIC_KEY` | Firebase Web Push 공개키 |
-| `FIREBASE_CREDENTIALS_PATH` | 컨테이너 내부 Firebase 서비스 계정 파일 경로 |
-| `AWS_ACCESS_KEY_ID` | S3 호환 저장소를 다시 선택할 때만 사용하는 접근키 |
-| `AWS_SECRET_ACCESS_KEY` | S3 호환 저장소를 다시 선택할 때만 사용하는 비밀키 |
+| `FIREBASE_SERVICE_ACCOUNT_JSON` | Firebase Admin 서비스 계정 JSON 원문 |
+
+`FIREBASE_CREDENTIALS_PATH`는 워크플로가 컨테이너 내부 경로로 고정합니다. 로컬 파일 저장소를 사용하므로
+S3 접근키는 배포 환경에 전달하지 않습니다.
 
 ## Mac mini 인프라 환경변수
 
@@ -65,6 +63,8 @@ Actions Secret을 요구하지 않습니다.
 
 | 이름 | 기본값 | 용도 |
 | --- | --- | --- |
+| `FRONT_DOMAIN` | 필수 | Tailnet 또는 Cloudflare에서 접속하는 프론트 HTTPS Origin |
+| `BACK_DOMAIN` | 필수 | Tailnet 또는 Cloudflare에서 접속하는 백엔드 HTTPS Origin |
 | `DEPLOY_ROOT` | `/Users/<username>/sadari` | 자체 실행기가 배포 파일과 영구 업로드를 관리하는 폴더 |
 | `INFRA_NETWORK` | `sadari-mac-infra_default` | MySQL과 Redis가 연결된 외부 Docker 네트워크 |
 | `APP_PORT` | `8080` | Tailscale Serve가 전달할 Mac mini 로컬 애플리케이션 포트 |
@@ -183,7 +183,7 @@ Actions Secret을 요구하지 않습니다.
 - MySQL과 Redis 인프라 Compose 프로젝트가 먼저 실행되고 MySQL 상태가 `healthy`여야 합니다.
 - GitHub Actions 자체 실행기를 `self-hosted`, `macOS`, `ARM64`, `sadari-prod` 라벨로 등록해야 합니다.
 - 공개 저장소의 Pull Request는 GitHub 제공 실행기에서만 검증합니다. 자체 실행기 배포 작업은 기본 브랜치
-  push와 저장소 권한 보유자의 수동 실행에만 반응하도록 유지하고 외부 기여자의 워크플로 실행 승인을
+  push와 `master`를 선택한 저장소 권한 보유자의 수동 실행에만 반응하도록 유지하고 외부 기여자의 워크플로 실행 승인을
   저장소 설정에서 요구합니다.
 - Mac mini의 시스템 잠자기는 비활성화하고 정전 후 자동 재시작을 활성화합니다.
 - Tailscale은 무인 실행 상태를 유지하고 HTTPS 서비스 주소는 Tailnet 구성원만 접근하도록 설정합니다.
@@ -214,7 +214,7 @@ Actions Secret을 요구하지 않습니다.
 ## 최초 설정 순서
 
 1. Mac mini에 저장소 전용 자체 실행기를 설치하고 `sadari-prod` 라벨을 추가합니다.
-2. `secrets/app.env`에 애플리케이션 비밀값과 Tailnet HTTPS Origin을 기록합니다.
+2. `mac-production` Environment에 애플리케이션 비밀값과 Tailnet HTTPS Origin을 등록합니다.
 3. `secrets/infra.env`에 MySQL과 Redis 연결값을 기록합니다.
 4. Firebase 서비스 계정 파일을 `secrets/firebase-service-account.json`에 저장합니다.
 5. 세 비밀 파일의 권한을 소유자 읽기·쓰기만 허용합니다.
