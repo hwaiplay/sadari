@@ -196,10 +196,13 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 
 ## 격리 개발 데이터베이스 재구축
 
-저장소의 `Actions > Provision development database > Run workflow`에서 수동으로만 실행합니다. 확인 문구에는
-`RECREATE sadari_dev`를 입력하고, Mac mini와 접속을 허용할 두 개발 장치의 Tailscale IPv4 주소를 각각
-입력합니다. 이 작업은 운영 데이터베이스를 읽기 원본으로만 사용하고 기존 `sadari_dev` 데이터베이스를
-삭제한 뒤 다시 만듭니다.
+저장소의 `Actions > Provision development database > Run workflow`에서 수동으로만 실행합니다. `recreate`를
+선택한 경우 확인 문구에 `RECREATE sadari_dev`를 입력하고, Mac mini와 접속을 허용할 두 개발 장치의
+Tailscale IPv4 주소를 각각 입력합니다. 이 작업은 운영 데이터베이스를 읽기 원본으로만 사용하고 기존
+`sadari_dev` 데이터베이스를 삭제한 뒤 다시 만듭니다.
+
+기존 개발 데이터는 유지하고 Tailscale의 Docker 중계 계정만 복구할 때는 `repair-access`를 선택하고
+`REPAIR sadari_dev`를 입력합니다. 이 동작은 개발 스키마나 테이블 데이터를 다시 만들지 않습니다.
 
 워크플로는 운영 스키마 구조 전체, 공통 저장 함수와 프로시저, 승인된 13개 기준정보 영역만 복사합니다.
 사용자 활동 데이터는 복사하지 않습니다. 복사 후에는 각 기준정보의 원본·개발 행 수와 테이블 체크섬,
