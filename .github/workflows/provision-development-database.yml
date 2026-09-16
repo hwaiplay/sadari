@@ -198,7 +198,7 @@ jobs:
             SELECT COUNT(*)
               FROM mysql.user
              WHERE User = '$TARGET_USER'
-               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP');")"
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '127.0.0.1', 'localhost');")"
           if [[ "$unexpected_account_count" -ne 0 ]]; then
             echo "::error::An existing development account has an unapproved host restriction."
             exit 1
@@ -235,12 +235,26 @@ jobs:
             IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           ALTER USER '$TARGET_USER'@'$COLLEAGUE_IP'
             IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'127.0.0.1'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'127.0.0.1'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          CREATE USER IF NOT EXISTS '$TARGET_USER'@'localhost'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
+          ALTER USER '$TARGET_USER'@'localhost'
+            IDENTIFIED WITH $auth_plugin AS 0x$auth_hash_hex;
           GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
              ON \`$TARGET_DATABASE\`.*
              TO '$TARGET_USER'@'$DEVELOPER_IP';
           GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
              ON \`$TARGET_DATABASE\`.*
              TO '$TARGET_USER'@'$COLLEAGUE_IP';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'127.0.0.1';
+          GRANT SELECT, INSERT, UPDATE, DELETE, EXECUTE, CREATE TEMPORARY TABLES
+             ON \`$TARGET_DATABASE\`.*
+             TO '$TARGET_USER'@'localhost';
           FLUSH PRIVILEGES;
           SQL
 
@@ -265,15 +279,21 @@ jobs:
               FROM mysql.user
              WHERE User = '$TARGET_USER'
                AND Host IN ('$DEVELOPER_IP', '$COLLEAGUE_IP');")"
+          forwarding_account_count="$(mysql_root --execute="
+            SELECT COUNT(*)
+              FROM mysql.user
+             WHERE User = '$TARGET_USER'
+               AND Host IN ('127.0.0.1', 'localhost');")"
           unexpected_account_count="$(mysql_root --execute="
             SELECT COUNT(*)
               FROM mysql.user
              WHERE User = '$TARGET_USER'
-               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP');")"
+               AND Host NOT IN ('$DEVELOPER_IP', '$COLLEAGUE_IP', '127.0.0.1', 'localhost');")"
 
           if [[ "$target_table_count" -ne "$source_table_count" \
              || "$routine_count" -ne 5 \
              || "$account_count" -ne 2 \
+             || "$forwarding_account_count" -ne 2 \
              || "$unexpected_account_count" -ne 0 ]]; then
             echo "::error::The development database structure, routines, or restricted accounts failed validation."
             exit 1
@@ -299,7 +319,7 @@ jobs:
           done
 
           echo >> "$GITHUB_STEP_SUMMARY"
-          echo "Schema tables: $target_table_count / routines: $routine_count / restricted accounts: $account_count" \
+          echo "Schema tables: $target_table_count / routines: $routine_count / developer accounts: $account_count / forwarding accounts: $forwarding_account_count" \
             >> "$GITHUB_STEP_SUMMARY"
 
       - name: Publish MySQL only on the Mac mini Tailnet address
@@ -327,7 +347,7 @@ jobs:
           services:
             $mysql_service:
               ports:
-                - "$MYSQL_BIND_IP:3306:3306"
+                - "127.0.0.1:3306:3306"
           YAML
           install -m 600 "$override_temp" "$override_file"
 
@@ -356,13 +376,36 @@ jobs:
 
           for attempt in {1..30}; do
             if [[ "$($DOCKER_BIN inspect --format '{{.State.Health.Status}}' sadari-mysql)" = "healthy" ]] \
-              && nc -z "$MYSQL_BIND_IP" 3306; then
-              echo "MySQL is healthy and listening on the requested Tailnet address."
-              exit 0
+              && nc -z 127.0.0.1 3306; then
+              mysql_ready=true
+              break
             fi
             sleep 2
           done
 
-          "$DOCKER_BIN" compose "${compose_args[@]}" ps
-          echo "::error::MySQL did not become healthy on the requested Tailnet address."
-          exit 1
+          if [[ "${mysql_ready:-false}" != true ]]; then
+            "$DOCKER_BIN" compose "${compose_args[@]}" ps
+            echo "::error::MySQL did not become healthy on the Mac mini loopback address."
+            exit 1
+          fi
+
+          tailscale_bin="$(command -v tailscale || true)"
+          if [[ -z "$tailscale_bin" && -x /Applications/Tailscale.app/Contents/MacOS/Tailscale ]]; then
+            tailscale_bin=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+          fi
+          if [[ -z "$tailscale_bin" ]]; then
+            echo "::error::The Tailscale command line client is not installed on the Mac mini."
+            exit 1
+          fi
+
+          "$tailscale_bin" serve --bg --yes --tcp=3306 tcp://127.0.0.1:3306
+          if ! "$tailscale_bin" serve status | grep -Fq 'tcp://127.0.0.1:3306'; then
+            echo "::error::Tailscale Serve did not retain the private MySQL TCP forwarder."
+            exit 1
+          fi
+          if ! nc -z "$MYSQL_BIND_IP" 3306; then
+            echo "::error::The MySQL TCP forwarder is not reachable through the Mac mini Tailnet address."
+            exit 1
+          fi
+
+          echo "MySQL is healthy and privately forwarded through Tailscale Serve."
