@@ -325,7 +325,10 @@ jobs:
 
           previous_image="$("$DOCKER_BIN" inspect --format '{{.Config.Image}}' sadari-app 2>/dev/null || true)"
           docker_config="$(mktemp -d "$RUNNER_TEMP/sadari-docker.XXXXXX")"
+          docker_socket="${DEPLOY_ROOT%/sadari}/.docker/run/docker.sock"
+          test -S "$docker_socket"
           export DOCKER_CONFIG="$docker_config"
+          export DOCKER_HOST="unix://$docker_socket"
           trap 'rm -rf "$docker_config"' EXIT
           registry_auth="$(printf '%s:%s' "$GHCR_USERNAME" "$GHCR_TOKEN" | base64 | tr -d '\n')"
           printf '{"auths":{"ghcr.io":{"auth":"%s"}},"cliPluginsExtraDirs":["%s"]}\n' \
