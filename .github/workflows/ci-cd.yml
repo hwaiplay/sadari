@@ -128,6 +128,7 @@ jobs:
     env:
       DEPLOY_ROOT: ${{ vars.DEPLOY_ROOT || '/Users/myhomeserver/sadari' }}
       DOCKER_BIN: /Applications/Docker.app/Contents/Resources/bin/docker
+      PATH: /Applications/Docker.app/Contents/Resources/bin:/opt/homebrew/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
       INFRA_NETWORK: ${{ vars.INFRA_NETWORK || 'sadari-mac-infra_default' }}
       GHCR_USERNAME: ${{ github.actor }}
       GHCR_TOKEN: ${{ secrets.GITHUB_TOKEN }}
