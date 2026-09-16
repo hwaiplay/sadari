@@ -131,8 +131,9 @@ public class ComplaintServiceImpl implements ComplaintService {
             // "저장에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
-        // 신고 화면을 연 뒤 대상이 수정되었다면 사용자가 확인하지 않은 새 내용은 접수하지 않음
-        if (!StringUtil.isEmpty(complaintCreateDto.getTagtCntn())
+        // 텍스트 대상 변경 시 사용자가 확인하지 않은 새 원문의 접수 차단
+        if (!isImageTarget(tagtType)
+                && !StringUtil.isEmpty(complaintCreateDto.getTagtCntn())
                 && !complaintCreateDto.getTagtCntn().equals(target.getTagtCntn())) {
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }

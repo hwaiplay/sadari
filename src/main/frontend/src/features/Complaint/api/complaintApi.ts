@@ -20,7 +20,7 @@ export type ComplaintReason =
 export type ComplaintCreate = {
   tagtType: ComplaintTargetType;
   tagtNumb: number;
-  tagtCntn: string;
+  tagtCntn?: string;
   cmplRson: ComplaintReason;
   cmplCntn: string | null;
 };
