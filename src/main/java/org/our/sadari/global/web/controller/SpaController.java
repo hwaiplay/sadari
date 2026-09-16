@@ -23,6 +23,7 @@ public class SpaController {
      * @return React 애플리케이션 진입 문서 전달 경로
      */
     @GetMapping({
+            "/",
             "/{path:^(?!api|uploads|swagger-ui|v3|error|assets|favicon|fonts|img)[^.]*$}",
             "/{path:^(?!api|uploads|swagger-ui|v3|error|assets|favicon|fonts|img)[^.]*$}/**"
     })

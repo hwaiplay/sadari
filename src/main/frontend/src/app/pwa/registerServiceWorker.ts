@@ -37,6 +37,33 @@ export function registerServiceWorker(): void {
  */
 function setServiceWorker(): void {
 
+  // 이미 서비스워커가 제어 중인 화면인지 기록해 최초 설치와 배포 업데이트를 구분함
+  const hasCurrentController = navigator.serviceWorker.controller !== null;
+  // 한 번의 서비스워커 교체에서 현재 문서를 한 번만 다시 불러오도록 상태를 관리함
+  let reloadStarted = false;
+
+  /**
+   * 새 배포 서비스워커가 현재 화면 제어를 넘겨받으면 새 HTML과 해시 자원을 다시 불러옴
+   *
+   * @author HanWon.Jang
+   * @return 반환값이 없음
+   */
+  const handleControllerChange = (): void => {
+
+    // 최초 설치는 현재 화면을 유지하고 기존 워커 교체일 때만 자동으로 새 배포를 적용함
+    if (!hasCurrentController || reloadStarted) {
+      // 불필요한 최초 설치 Reload와 중복 Reload를 차단함
+      return;
+    }
+
+    // 같은 교체 이벤트에서 Reload가 반복되지 않도록 먼저 상태를 기록함
+    reloadStarted = true;
+    // 이전 JavaScript가 남은 인증 판단을 계속하지 않도록 현재 경로를 새 문서로 다시 불러옴
+    window.location.reload();
+  };
+
+  // 활성 서비스워커가 바뀌는 즉시 열린 화면도 현재 배포로 맞춤
+  navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
   // 서비스워커 원본 캐시를 우회해 앱을 열 때마다 최신 업데이트 스크립트를 확인함
   navigator.serviceWorker.register("/service-worker.js", { updateViaCache: "none" })
     .then(handleSwRegistration)

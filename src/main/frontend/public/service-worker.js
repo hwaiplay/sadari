@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sadari-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}v6`;
+const CACHE_NAME = `${CACHE_PREFIX}v7`;
 const APP_SHELL = [
   "/",
   "/favicon/site.webmanifest",
@@ -209,8 +209,21 @@ async function setAppShellCache() {
 
   // 현재 앱 버전 전용 캐시를 엶
   const cache = await caches.open(CACHE_NAME);
-  // 같은 버전에서 함께 사용해야 하는 기본 화면과 아이콘을 원자적으로 저장함
-  await cache.addAll(APP_SHELL);
+  // 브라우저 HTTP Cache의 이전 배포 파일을 재사용하지 않고 현재 서버의 앱 셸을 조회함
+  const appShellResponseList = await Promise.all(APP_SHELL.map((appShellPath) => (
+    fetch(appShellPath, { cache: "reload" })
+  )));
+
+  // 하나라도 정상 응답이 아니면 서로 다른 배포 파일을 같은 앱 셸로 저장하지 않음
+  if (appShellResponseList.some((response) => !response.ok)) {
+    // 설치를 실패 처리해 기존에 정상 동작하던 서비스워커를 유지함
+    throw new Error("APP_SHELL_UPDATE_FAILED");
+  }
+
+  // 검증한 현재 배포 응답만 새 버전 Cache에 순서대로 저장함
+  await Promise.all(APP_SHELL.map((appShellPath, index) => (
+    cache.put(appShellPath, appShellResponseList[index])
+  )));
   // 새 서비스워커가 기존 대기 버전을 건너뛰고 즉시 활성화될 수 있게 함
   await self.skipWaiting();
 }
@@ -250,8 +263,10 @@ async function activateLatestSw() {
 
   }
 
-  // 열린 화면의 편집 상태는 유지하면서 모든 이전 버전 캐시가 제거될 때까지 기다림
+  // 새 배포와 섞이지 않도록 모든 이전 버전 캐시가 제거될 때까지 기다림
   await Promise.all(deleteCachePromiseList);
+  // 새 서비스워커가 열린 화면을 즉시 제어해 이전 배포 Cache를 더 사용하지 않게 함
+  await self.clients.claim();
 }
 
 /**
@@ -320,7 +335,7 @@ const getNavigationResponse = async (request) => {
 
   // 네트워크가 연결된 동안 최신 배포 화면을 조회함
   try {
-    const response = await fetch(request);
+    const response = await fetch(request, { cache: "no-store" });
 
     // 정상 응답만 오프라인 앱 셸로 교체해 오류 화면이 장기간 남지 않게 함
     if (response.ok) {
