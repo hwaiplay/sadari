@@ -325,10 +325,10 @@ jobs:
           docker_config="$(mktemp -d "$RUNNER_TEMP/sadari-docker.XXXXXX")"
           export DOCKER_CONFIG="$docker_config"
           trap 'rm -rf "$docker_config"' EXIT
-          printf '{"auths":{}}\n' > "$DOCKER_CONFIG/config.json"
+          registry_auth="$(printf '%s:%s' "$GHCR_USERNAME" "$GHCR_TOKEN" | base64 | tr -d '\n')"
+          printf '{"auths":{"ghcr.io":{"auth":"%s"}}}\n' "$registry_auth" \
+            > "$DOCKER_CONFIG/config.json"
           chmod 600 "$DOCKER_CONFIG/config.json"
-          printf '%s' "$GHCR_TOKEN" | \
-            "$DOCKER_BIN" login ghcr.io --username "$GHCR_USERNAME" --password-stdin
 
           cd "$DEPLOY_ROOT"
           "$DOCKER_BIN" compose pull app
