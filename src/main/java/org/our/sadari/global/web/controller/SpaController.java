@@ -23,8 +23,8 @@ public class SpaController {
      * @return React 애플리케이션 진입 문서 전달 경로
      */
     @GetMapping({
-            "/{path:^(?!api|uploads|swagger-ui|v3|error)[^.]*$}",
-            "/{path:^(?!api|uploads|swagger-ui|v3|error)[^.]*$}/**"
+            "/{path:^(?!api|uploads|swagger-ui|v3|error|assets|favicon|fonts|img)[^.]*$}",
+            "/{path:^(?!api|uploads|swagger-ui|v3|error|assets|favicon|fonts|img)[^.]*$}/**"
     })
     public String getSpaPage() {
         // 새로고침과 OAuth 리다이렉트에서도 React Router가 현재 화면 경로를 해석하도록 진입 문서로 전달함
