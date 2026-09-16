@@ -116,11 +116,13 @@ const UserReportPage = () => {
       // 신고 저장이 완료된 경우에만 감사 안내 화면으로 이동함
       navigate("/user-report/complete", { state: { target }, replace: true });
     } catch (saveError) {
+
       // "신고를 접수하지 못했습니다."
       const errorMessage = getApiErrorMessage(
         saveError,
         message("frontend.userReport.saveFailed"),
       );
+
       // 서버가 동일 사용자와 대상의 기존 신고를 확인하면 재신고 제한을 안내함
       if (saveError instanceof ResultDataError
           && Number(saveError.result.code) === COMPLAINT_DUPLICATED_CODE) {
@@ -132,6 +134,7 @@ const UserReportPage = () => {
 
       // "신고 접수 실패"
       await sweetError(message("frontend.userReport.saveFailedTitle"), errorMessage);
+
     } finally {
       // 성공과 실패 모두에서 신고 접수 버튼을 다시 사용할 수 있도록 상태를 해제함
       setIsSaving(false);

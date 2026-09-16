@@ -24,7 +24,6 @@ export type * from "@/features/ReadingClub/types/club.type.ts";
  */
 export const delMembershipApi = async (clubNumb: number) => {
   const response = await api.delete(`/reading-clubs/${clubNumb}/memberships`);
-
   return assertResultDataSuccess(response.data);
 };
 
@@ -34,7 +33,6 @@ export const delMembershipApi = async (clubNumb: number) => {
  */
 export const getClubBookRecommApi = async (clubNumb: number): Promise<ClubBookVotePage> => {
   const response = await api.get(`/reading-clubs/${clubNumb}/book-recommendations`);
-
   return assertResultDataSuccess(response.data).data as ClubBookVotePage;
 };
 
