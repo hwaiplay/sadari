@@ -11,7 +11,6 @@
  <img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/f81d71d8-5d90-412d-a251-b7ce4adb0800" />
 </p>
 
-## 문제
 
 마이페이지의 독서 요약은 현재 주·월·연의 완료 권수만 보여 주지 않습니다. 이전 기간과의 차이, 각 기간 목표, 달성률, 누적 달성 횟수, 현재 읽는 책, 기간별 완료 목록까지 한 화면에서 필요합니다.
 

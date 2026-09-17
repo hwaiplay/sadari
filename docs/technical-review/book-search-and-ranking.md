@@ -4,7 +4,6 @@
 <img width="682" height="650" alt="Image" src="https://github.com/user-attachments/assets/55fdbc9b-0b2e-4695-af6d-74aa25f3ebcf" />
 </p>
 
-## 문제
 
 한국어 화면에서 사용하던 Kakao 도서 검색은 국내 도서 정보에 적합하지만, 영어권 도서를 영어 제목과 영문 줄거리로 찾는 용도에는 한계가 있습니다. 그렇다고 검색 화면을 공급자마다 따로 만들면 화면 계약, 페이지 처리, 캐시와 저장 로직이 모두 두 벌로 늘어납니다.
 
