@@ -74,10 +74,28 @@ export const useFindClubPage = () => {
   }, []);
 
   /**
+   * 관심분야 수정 오류를 공통 알림으로 표시함
+   *
+   * @author Hanwon.Jang
+   * @param error 관심분야 수정 오류
+   * @return
+   */
+  const showUptInterestsFailedError = useCallback((error: unknown): void => {
+    // "수정하지 못했어요"
+    const errorTitle = message("frontend.readingClub.error.errorUptInterestsTitle");
+    // "다시 시도해주세요."
+    const retryMessage = message("frontend.common.tryAgain");
+    // 서버 오류 문구가 없을 때 공통 재시도 안내로 보정함
+    const errorMessage = getApiErrorMessage(error, retryMessage);
+    // 모임 조회 실패 원인을 사용자에게 표시함
+    void sweetError(errorTitle, errorMessage);
+  }, []);
+
+  /**
    * 관심분야와 추천 모임을 조회하여 화면 초기 상태를 구성함
    *
    * @author Hanwon.Jang
-   * @return 반환값이 없음
+   * @return
    * @throws 관심분야 또는 모임 조회 요청이 실패하면 공통 오류 알림을 표시함
    */
   const getInitialData = useCallback(async (): Promise<void> => {
@@ -206,18 +224,15 @@ export const useFindClubPage = () => {
    * @return 반환값이 없음
    */
   const handleSaveInterests = (codes: string[]): void => {
-    /**
-     * 관심분야 저장과 추천 모임 재조회를 순서대로 처리함
-     *
-     * @author Hanwon.Jang
-     * @return 반환값이 없음
-     */
+
+    // 관심분야 저장과 추천 모임 재조회를 순서대로 처리
     const uptInterests = async (): Promise<void> => {
       try {
         // 선택한 코드를 사용자 관심분야 교체 요청 형식으로 전달함
         await updateUserInterestsApi({
           interestList: codes.map(getInterestParam),
         });
+
         /**
          * 저장된 코드에 포함된 관심분야인지 판정함
          *
@@ -244,7 +259,7 @@ export const useFindClubPage = () => {
         setIsInterestModalOpen(false);
       } catch (error: unknown) {
         // 저장 또는 재조회 실패 원인을 공통 오류 알림으로 전달함
-        showLoadError(error);
+        showUptInterestsFailedError(error);
       }
     };
 

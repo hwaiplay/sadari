@@ -54,6 +54,7 @@
         /* setAlim */
         INSERT INTO TB_ALIMXX (
                     USER_NUMB
+                  , SEND_NUMB
                   , ALIM_NUMB
                   , ALIM_SITU
                   , TEMP_CODE
@@ -68,6 +69,7 @@
                   , DELT_YSNO
         )
         SELECT #{userNumb}
+             , #{sendNumb,jdbcType=BIGINT}
              , LAST_INSERT_ID(COALESCE(MAX(ALIM.ALIM_NUMB), 0) + 1)
              , #{alimSitu}
              , #{tempCode}
@@ -91,6 +93,7 @@
                COUNT(*)
           FROM TB_ALIMXX
          WHERE USER_NUMB = #{userNumb}
+           AND (SEND_NUMB &lt;=&gt; #{sendNumb,jdbcType=BIGINT})
            AND ALIM_SITU = #{alimSitu}
            AND TEMP_CODE = #{tempCode}
            AND COALESCE(ALIM_TITL, ' ') = COALESCE(#{alimTitl}, ' ')

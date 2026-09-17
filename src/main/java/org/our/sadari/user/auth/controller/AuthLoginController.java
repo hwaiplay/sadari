@@ -53,10 +53,11 @@ import org.springframework.web.bind.annotation.RestController;
  * -----------------------------------------------------------
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-30        SeungHyeon.Kang    온보딩·계정 복귀 상태 응답
- * 2026-08-04        SeungHyeon.Kang       브라우저 CSRF Token 조회 API 추가
+ * 2026-08-04        SeungHyeon.Kang    브라우저 CSRF Token 조회 API 추가
  * 2026-08-11        SeungHyeon.Kang    기기별 재발급과 선택형 로그아웃 추가
  * 2026-08-13        SeungHyeon.Kang    탈퇴 뒤 유효 제재가 남은 계정의 로그인 차단 안내 추가
- * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 전달
+ * 2026-09-13        HanWon.Jang        탈퇴 완료 화면 삭제 예정일 전달
+ * 2026-09-17        HanWon.Jang        OAuth 로그인 실패 안내 연결
  */
 @RestController
 @RequiredArgsConstructor
@@ -252,7 +253,7 @@ public class AuthLoginController {
         // 일반 로그인 콜백은 시작 시 저장한 브라우저 상태 쿠키와 일치해야 함
         if (!isValidLoginState(request, state)) {
             // 잘못되거나 재사용된 콜백이 기존 로그인 세션을 변경하지 않도록 그대로 복귀시킴
-            response.sendRedirect(frontDomain + "/oauth");
+            response.sendRedirect(frontDomain + "/oauth?failed=Y");
             // 검증되지 않은 인가 코드를 로그인 처리에 전달하지 않음
             return;
         }
@@ -266,11 +267,11 @@ public class AuthLoginController {
         // 카카오 로그인 서비스 처리 실패 시 기존 로그인 세션을 유지하고 로그인 페이지로 리다이렉트함
         if (loginResult.getCode() != 200) {
             // sendRedirect 호출로 검증된 알림 또는 응답을 전송함
-            String failureRedirectUrl = frontDomain + "/oauth";
+            String failureRedirectUrl = frontDomain + "/oauth?failed=Y";
 
             // 탈퇴 계정에 유효한 정지가 남은 경우 일반 인증 실패와 구분해 정확한 안내를 표시함
             if (ResultEnum.AUTH_WITHDRAWN_SUSPENDED.getCode() == loginResult.getCode()) {
-                failureRedirectUrl += "?blocked=suspension";
+                failureRedirectUrl += "&blocked=suspension";
             }
 
             // 실패 사유에 맞는 OAuth 완료 화면으로 이동함

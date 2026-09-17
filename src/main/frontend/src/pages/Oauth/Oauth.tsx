@@ -6,18 +6,25 @@ import Loading from "../../components/Loading/Loading";
 import { useCheckAuth } from "../../features/Auth/hooks/useCheckAuth";
 
 /**
- * Kakao OAuth 인증 결과를 확인하고 인증 상태에 맞는 화면으로 이동함
- *
- * @author HanWon.Jang
- * @return OAuth 인증 처리 중 표시할 로딩 화면
+ * fileName       : Oauth
+ * author         : Hanwon.Jang
+ * date           : 2026-09-17
+ * description    : Kakao OAuth 인증 결과를 확인하고 인증 상태에 맞는 화면으로 이동 시키는 페이지
+ * ===========================================================
+ * DATE              AUTHOR             NOTE
+ * -----------------------------------------------------------
+ * 2026-09-17        Hanwon.Jang    주석 추가
+ * 2026-09-17        Hanwon.Jang    오류 안내 로직 수정
  */
 const Oauth = () => {
 
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const isOauthFailure = searchParams.get("failed") === "Y";
   const isAccountReactivated = searchParams.get("reactivated") === "Y";
   const isSuspendedSignupBlocked = searchParams.get("blocked") === "suspension";
   const reactivationNoticeShownRef = useRef(false);
+  const failureNoticeShownRef = useRef(false);
   const {
     isLoading,
     isAuthenticated,
@@ -28,11 +35,13 @@ const Oauth = () => {
 
   useEffect(() => {
 
-    if (isLoading) {
+    // 서버가 로그인 실패를 확정한 경우에는 인증 재조회가 끝나기 전에도 오류를 안내함
+    if (isLoading && !isOauthFailure) {
       return;
     }
 
-    if (isAuthenticated) {
+    // 실패 콜백은 기존 로그인 세션이 남아 있어도 성공 화면으로 처리하지 않음
+    if (!isOauthFailure && isAuthenticated) {
       // 회원 상태와 최초 로그인 여부에 맞는 첫 화면을 선택함
       const destination = isDeletePending
         ? "/withdrawal/pending"
@@ -74,6 +83,14 @@ const Oauth = () => {
     let errorTitle: string;
     let errorMessage: string;
 
+    // 인증 조회 완료로 Effect가 다시 실행되어도 실패 알림은 한 번만 표시함
+    if (failureNoticeShownRef.current) {
+      return;
+    }
+
+    // 실패 안내를 열기 전에 표시 상태를 기록해 중복 팝업을 방지함
+    failureNoticeShownRef.current = true;
+
     // 탈퇴한 과거 회원 번호에 유효 제재가 남아 있으면 재가입 제한 사유를 안내함
     if (isSuspendedSignupBlocked) {
       // "가입할 수 없는 계정이에요."
@@ -84,9 +101,9 @@ const Oauth = () => {
 
     // 일반 OAuth 실패에는 기존 인증 오류 안내를 유지함
     else {
-      // "인증에 실패했습니다."
+      // "인증에 실패했어요."
       errorTitle = message("frontend.alert.authFailedTitle");
-      // "로그인 페이지로 이동합니다."
+      // "로그인을 다시 시도해주세요."
       errorMessage = message("frontend.auth.failedRedirect");
     }
 
@@ -96,7 +113,7 @@ const Oauth = () => {
       // 실패한 OAuth 화면을 기록에 남기지 않고 로그인 화면으로 교체함
       navigate("/login", { replace: true });
     });
-  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOnboardingRequired, isSuspended, isSuspendedSignupBlocked, navigate]);
+  }, [isAccountReactivated, isAuthenticated, isDeletePending, isLoading, isOauthFailure, isOnboardingRequired, isSuspended, isSuspendedSignupBlocked, navigate]);
 
   return <Loading title={message("frontend.common.loginLoading")} />;
 };

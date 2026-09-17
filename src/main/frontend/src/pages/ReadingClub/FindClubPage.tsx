@@ -113,7 +113,7 @@ export default function FindClubPage() {
           {selectedInterests.map((interest) => (
             <span className={styles.interestChip} key={interest.intrCode}>
                 {interest.intrName}
-              </span>
+            </span>
           ))}
         </div>
       </section>

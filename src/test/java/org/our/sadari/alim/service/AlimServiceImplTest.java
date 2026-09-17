@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
@@ -41,6 +42,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-27        SeungHyeon.Kang    알림번호 기반 라우팅과 사진 프로필 이동 검증
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 알림 설정과 이동 경로 검증
  * 2026-09-14        HanWon.Jang        개인 알림의 차단 동시 실행 잠금 검증
+ * 2026-09-15        HanWon.Jang        개인 알림 내부 발신자 저장 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
@@ -631,6 +633,26 @@ class AlimServiceImplTest {
         verify(alimMapper, never()).getActiveAlimUserCnt(4L);
         // 차단 여부를 확인하는 개인 알림 경로에서도 사용자 원본 잠금 유지
         verify(userBlockService).lockUsers(3L, 4L);
+    }
+
+    /** 차단되지 않은 개인 알림에 내부 발신자 번호를 저장하는지 검증 */
+    @Test
+    void sendUserAlimStoresSender() {
+        AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
+        template.setAlimTitl("팔로우 알림");
+        template.setTempCont("새 팔로우가 있습니다.");
+        UserSettingDto setting = new UserSettingDto();
+        setting.setFollowAlimYsno(Constant.COMM_YES);
+        when(alimMapper.getActiveAlimUserCnt(4L)).thenReturn(1);
+        when(alimMapper.getUserAlimSetting(4L)).thenReturn(setting);
+        when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
+
+        ResultData result = alimService.sendUserAlim(
+                3L, 4L, Constant.ALIM_SITU_FOLLOW_CLUB, Constant.ALIM_TEMP_CODE_FOLLOW_USER
+              , Constant.ALIM_TARGET_USER, 3L, null, Map.of("userName", "sender"));
+
+        assertEquals(200, result.getCode());
+        verify(alimMapper).setAlim(argThat(alim -> Long.valueOf(3L).equals(alim.getSendNumb())));
     }
 
     /**
