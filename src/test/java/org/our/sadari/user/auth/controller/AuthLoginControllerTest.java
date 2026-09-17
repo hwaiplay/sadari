@@ -42,6 +42,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * -----------------------------------------------------------
  * 2026-08-24        SeungHyeon.Kang    OAuth 로그인 CSRF 및 세션 보존 검증 추가
  * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 검증
+ * 2026-09-17        HanWon.Jang    OAuth 로그인 실패 이동 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthLoginControllerTest {
@@ -151,7 +152,42 @@ class AuthLoginControllerTest {
         verifyNoInteractions(authService, userWithdrawalService);
         // 실패 콜백이 기존 Access/Refresh 쿠키를 만료시키지 않는지 확인함
         assertNoAuthCookieChange(response.getHeaders(HttpHeaders.SET_COOKIE));
-        assertEquals("https://front.example/oauth", response.getRedirectedUrl());
+        assertEquals("https://front.example/oauth?failed=Y", response.getRedirectedUrl());
+    }
+
+    /**
+     * 일반 로그인 실패와 재가입 차단 실패를 OAuth 오류 화면으로 전달하는지 검증
+     *
+     * @author HanWon.Jang
+     * @throws Exception OAuth 콜백 리다이렉트 실패
+     */
+    @Test
+    void loginFailureRedirects() throws Exception {
+        // 서버가 정상 로그인 콜백으로 인정할 상태값과 브라우저 정보를 구성
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("oauthLoginState", "login_expected"));
+        request.addHeader(HttpHeaders.USER_AGENT, "Test browser");
+        // 일반 로그인 실패의 리다이렉트 응답 수집
+        MockHttpServletResponse response = new MockHttpServletResponse();
+        ResultData loginResult = org.mockito.Mockito.mock(ResultData.class);
+        // 일반 로그인 실패 응답을 구성함
+        when(loginResult.getCode()).thenReturn(400);
+        when(authService.kakaoLogin(anyString(), anyString(), anyString()))
+                .thenReturn(loginResult);
+
+        // 검증된 상태값으로 로그인 실패 콜백을 실행함
+        authLoginController.kakaoAuthLogin("code", "login_expected", request, response);
+
+        // OAuth 화면이 인증 재조회 없이 실패 안내를 표시할 주소인지 검증함
+        assertEquals("https://front.example/oauth?failed=Y", response.getRedirectedUrl());
+
+        // 정지된 탈퇴 계정에는 기존 전용 안내 사유도 함께 전달함
+        when(loginResult.getCode()).thenReturn(1005);
+        MockHttpServletResponse blockedResponse = new MockHttpServletResponse();
+        // 같은 로그인 콜백에서 재가입 차단 실패의 이동 주소 확인
+        authLoginController.kakaoAuthLogin("code", "login_expected", request, blockedResponse);
+        // 전용 정지 안내가 일반 실패 표시와 함께 전달되는지 검증
+        assertEquals("https://front.example/oauth?failed=Y&blocked=suspension", blockedResponse.getRedirectedUrl());
     }
 
     /** 탈퇴 재인증 처리 실패 시에도 기존 인증 쿠키를 유지함 */

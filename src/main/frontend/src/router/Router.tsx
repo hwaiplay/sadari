@@ -83,11 +83,7 @@ const Router = () => {
         {/* Kakao 로그인 검증 */}
         <Route
           path="/oauth"
-          element={
-            <PublicRoute>
-              <Oauth />
-            </PublicRoute>
-          }
+          element={<Oauth />}
         />
 
         {/* 회원 탈퇴 처리 결과 */}
