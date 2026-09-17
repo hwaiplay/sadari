@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sadari-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}v7`;
+const CACHE_NAME = `${CACHE_PREFIX}v8`;
 const APP_SHELL = [
   "/",
   "/favicon/site.webmanifest",
@@ -267,6 +267,29 @@ async function activateLatestSw() {
   await Promise.all(deleteCachePromiseList);
   // 새 서비스워커가 열린 화면을 즉시 제어해 이전 배포 Cache를 더 사용하지 않게 함
   await self.clients.claim();
+  // 구버전 JavaScript가 실행 중인 열린 화면도 최신 진입 문서를 다시 받아오도록 갱신함
+  await reloadOpenClients();
+}
+
+/**
+ * 서비스워커 교체 전에 열려 있던 동일 출처 화면을 현재 주소에서 다시 불러옴
+ *
+ * @author HanWon.Jang
+ * @return {Promise<void>} 열린 화면 갱신 완료 Promise
+ */
+async function reloadOpenClients() {
+
+  // 서비스워커가 제어할 수 있는 현재 브라우저의 모든 열린 화면을 조회함
+  const clientList = await self.clients.matchAll({
+    type: "window",
+    includeUncontrolled: true,
+  });
+
+  // 이전 번들의 등록 코드가 controllerchange를 처리하지 못해도 새 문서가 적용되도록 직접 이동함
+  await Promise.all(clientList.map(async (client) => {
+    // 동일 출처의 현재 주소를 다시 열어 로그인 경로와 사용자 화면을 최신 번들로 교체함
+    await client.navigate(client.url);
+  }));
 }
 
 /**
