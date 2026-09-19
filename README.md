@@ -1,6 +1,6 @@
 # Sadari
 
-> 독서의 즐거움에 오르다
+> [독서의 즐거움에 오르다](https://sadaribooks.com)
 
 [![Sadari CI/CD](https://github.com/hwaiplay/sadari/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/hwaiplay/sadari/actions/workflows/ci-cd.yml)
 ![Java](https://img.shields.io/badge/Java-17-007396?logo=openjdk&logoColor=white)
