@@ -3,6 +3,11 @@ package org.our.sadari.global.scheduler;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.doAnswer;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -21,6 +26,8 @@ import org.our.sadari.global.scheduler.service.TimerDetailDeleteService;
 import org.our.sadari.readingClub.service.OwnerElectionService;
 import org.our.sadari.readingClub.service.ReadingClubService;
 import org.our.sadari.timer.service.ReadingTimerService;
+import org.slf4j.MDC;
+import org.junit.jupiter.api.AfterEach;
 
 /**
  * fileName       : SchedulerTest
@@ -34,6 +41,7 @@ import org.our.sadari.timer.service.ReadingTimerService;
  * 2026-07-30        SeungHyeon.Kang    회원 상태 Outbox 스케줄러 분기 검증 추가
  * 2026-08-20        SeungHyeon.Kang    타이머 알림 실행 분기 검증
  * 2026-09-05        SeungHyeon.Kang    통합 스케줄 실행 위임 검증
+ * 2026-09-19        SeungHyeon.Kang         스케줄 실패 문맥 복원 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerTest {
@@ -84,6 +92,32 @@ class SchedulerTest {
     // 스케줄러 활성화 조건 단위 테스트 대상
     @InjectMocks
     private Scheduler scheduler;
+
+    /** 테스트에서 지정한 스케줄 진단 문맥 정리 */
+    @AfterEach
+    void clearLogContext() {
+        // 다른 테스트에 실행 식별자가 전파되지 않도록 정리
+        MDC.clear();
+    }
+
+    /** 코드 조회 단계 실패도 실행 식별자로 추적하고 기존 예외 유지 */
+    @Test
+    void restoresJobOnFailure() {
+        // 중첩 실행의 기존 문맥
+        MDC.put("jobId", "outer-job");
+        // 스케줄 활성 여부 조회 장애
+        RuntimeException failure = new IllegalStateException("private-job-data");
+        // 업무 진입 전 실패도 진단 문맥이 있는지 검증
+        doAnswer(invocation -> {
+            // 실제 스케줄 실행 식별자 확인
+            assertNotNull(MDC.get("jobId"));
+            throw failure;
+        }).when(codeUtil).existsCode(Constant.CODE_SCHD_CODE, Constant.SCHEDULER_CODE_ALIM_DELETE);
+        // 실패 예외가 로그 때문에 변경되지 않도록 확인
+        assertSame(failure, assertThrows(RuntimeException.class, scheduler::delAlim));
+        // 상위 스케줄 문맥 복구 확인
+        assertEquals("outer-job", MDC.get("jobId"));
+    }
 
     /**
      * SCHD_CODE의 REPORT_DATE_OVER 상세코드가 사용 중이면 실제 알림 서비스를 호출하는지 검증함

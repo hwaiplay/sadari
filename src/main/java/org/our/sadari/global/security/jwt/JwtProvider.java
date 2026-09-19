@@ -17,6 +17,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * fileName       : JwtProvider
@@ -28,8 +29,10 @@ import java.util.concurrent.TimeUnit;
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
  * 2026-08-11        SeungHyeon.Kang    기기별 로그인 세션 식별자 클레임 추가
+ * 2026-09-19        SeungHyeon.Kang         토큰 검증 거절 원인 기록
  */
 @Component
+@Slf4j
 public class JwtProvider {
 
     // Access Token 용도 클레임 값
@@ -143,6 +146,8 @@ public class JwtProvider {
 
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
+            // 토큰 원문과 클레임 없이 만료·서명·형식 거절 유형 기록
+            log.warn("event=jwt_rejected tokenUse=access reason={}", e.getClass().getSimpleName());
             // Access Token의 서명, 만료 또는 용도 검증 실패를 반환함
             return false;
         }
@@ -170,6 +175,8 @@ public class JwtProvider {
 
         // 예외 발생 시 Refresh Token 검증 실패로 전환함
         catch (Exception e) {
+            // 갱신 토큰의 원문과 클레임 없이 거절 유형 기록
+            log.warn("event=jwt_rejected tokenUse=refresh reason={}", e.getClass().getSimpleName());
             // Refresh Token의 서명, 만료 또는 용도 검증 실패를 반환함
             return false;
         }

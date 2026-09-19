@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.time.LocalDateTime;
 import java.util.concurrent.TimeUnit;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-27        SeungHyeon.Kang    최초 생성
  * 2026-07-28        SeungHyeon.Kang    삭제 대상이 없는 실행의 로그 저장 방지
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @Slf4j
@@ -118,7 +120,7 @@ public class AlimDeleteServiceImpl implements AlimDeleteService {
                   , e
             );
             // 알림 삭제 실패 원인과 예외 스택을 운영 로그에 기록함
-            log.error("삭제 상태 알림 정리 중 오류가 발생했습니다.", e);
+            log.error("삭제 상태 알림 정리 중 오류가 발생했습니다. failure={}", LogSafe.getFailure(e));
             throw e;
         }
 

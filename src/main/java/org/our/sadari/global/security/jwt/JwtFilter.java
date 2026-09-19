@@ -7,6 +7,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.global.common.logging.RequestLogFilter;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.user.dto.UserDto;
@@ -30,6 +31,7 @@ import org.springframework.web.filter.OncePerRequestFilter;
  * 2026-08-11        SeungHyeon.Kang    기기별 세션 유효성 검사와 DB 상태 보정 추가
  * 2026-08-13        SeungHyeon.Kang    제한 상태 CSRF·탈퇴 접근 허용
  * 2026-09-03        SeungHyeon.Kang      로컬 간편 로그인 필터 제외
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Component
 @RequiredArgsConstructor
@@ -83,6 +85,8 @@ public class JwtFilter extends OncePerRequestFilter {
 
             // 현재 또는 전체 기기 로그아웃으로 제거된 세션이면 인증 객체를 만들지 않음
             if (!tokenRedisService.isSessionActive(userNumb, sessionId)) {
+                // 사용자와 세션 식별값 없이 인증 제외 원인 기록
+                request.setAttribute(RequestLogFilter.SECURITY_REASON, "inactive_session");
                 // 인증 없이 남은 필터 체인을 수행함
                 filterChain.doFilter(request, response);
                 // 제거된 세션의 요청 처리를 종료함
@@ -100,6 +104,8 @@ public class JwtFilter extends OncePerRequestFilter {
                 UserDto savedUser = userMapper.getUserByNumb(userNumb);
                 // 물리 삭제됐거나 조회할 수 없는 회원은 인증 객체를 만들지 않음
                 if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())) {
+                    // 조회 실패와 정상 권한 거절을 구분하는 원인 기록
+                    request.setAttribute(RequestLogFilter.SECURITY_REASON, "account_unavailable");
                     // 인증 없이 남은 필터 체인을 수행함
                     filterChain.doFilter(request, response);
                     // 존재하지 않는 회원의 요청 처리를 종료함
@@ -117,6 +123,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     && !isDeletePendingPath(request.getRequestURI())) {
                 // 제한된 회원 상태의 일반 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 사용자 식별값 없이 계정 제한 원인 기록
+                request.setAttribute(RequestLogFilter.SECURITY_REASON, "account_restricted");
                 // 영구 삭제 대기 회원 요청의 필터 처리를 종료함
                 return;
             }
@@ -126,6 +134,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     && !isWithdrawnAllowedPath(request.getRequestURI())) {
                 // 비활성화 회원의 일반 서비스 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 사용자 식별값 없이 계정 제한 원인 기록
+                request.setAttribute(RequestLogFilter.SECURITY_REASON, "account_restricted");
                 // 비활성화 회원 요청의 필터 처리를 종료함
                 return;
             }
@@ -135,6 +145,8 @@ public class JwtFilter extends OncePerRequestFilter {
                     && !isSuspendedAllowedPath(request.getRequestURI())) {
                 // 정지 회원의 일반 서비스 API 요청을 권한 없음으로 응답함
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                // 사용자 식별값 없이 계정 제한 원인 기록
+                request.setAttribute(RequestLogFilter.SECURITY_REASON, "account_restricted");
                 // 정지 회원 요청의 필터 처리를 종료함
                 return;
             }

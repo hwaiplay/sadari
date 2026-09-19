@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.common;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.util.StringUtil;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Component
 @Slf4j
@@ -67,7 +69,7 @@ public class SchedulerLogSupport {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (RuntimeException e) {
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("스케줄러 실행 시작 로그를 등록하지 못했습니다.", e);
+            log.error("스케줄러 실행 시작 로그를 등록하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 조회하거나 생성할 값이 없음을 반환함
             return null;
         }
@@ -85,6 +87,9 @@ public class SchedulerLogSupport {
      */
     public void setSchedulerFailSafely(Long runxNumb, String failType, Integer resultCode
                                      , String resultMessage, RuntimeException exception) {
+        // DB 로그 저장 실패와 무관한 개별 실패 관측
+        log.warn("event=scheduler_item_failed runId={} resultCode={} failure={}"
+               , runxNumb, resultCode, LogSafe.getFailure(exception));
         // 마스터 로그 등록에 실패했다면 연결할 실행 번호가 없으므로 고아 상세 로그의 저장을 생략함
         if (StringUtil.isEmpty(runxNumb)) {
             // 실패 상세를 등록하되 로그 저장 오류가 다음 스케줄러 대상의 처리를 막지 않도록 격리 결과를 반환함
@@ -107,7 +112,7 @@ public class SchedulerLogSupport {
             // ErroType 업무 값을 schedulerFailDto DTO에 설정함
             schedulerFailDto.setErroType(exception.getClass().getName());
             // ErroCntn 업무 값을 schedulerFailDto DTO에 설정함
-            schedulerFailDto.setErroCntn(exception.getMessage());
+            schedulerFailDto.setErroCntn(LogSafe.getFailure(exception));
         }
 
         // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
@@ -119,7 +124,7 @@ public class SchedulerLogSupport {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (RuntimeException e) {
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("스케줄러 실패 상세 로그를 등록하지 못했습니다. 실행 번호={}", runxNumb, e);
+            log.error("스케줄러 실패 상세 로그를 등록하지 못했습니다. 실행 번호={} failure={}", runxNumb, LogSafe.getFailure(e));
         }
     }
 
@@ -130,6 +135,25 @@ public class SchedulerLogSupport {
      * @param schedulerRunDto 실행 종료 정보
      */
     public void uptSchedulerLogSafely(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
+        // DB 로그 저장 여부와 독립적인 실행 결과 요약
+        if (!StringUtil.isEmpty(schedulerRunDto)) {
+            // 성공·부분 실패·전체 실패를 처리 건수로 구분
+            if (schedulerRunDto.getFailCntt() > 0) {
+                // 개별 대상 데이터 없이 실패 건수 기록
+                log.warn("event=scheduler_summary task={} target={} success={} failed={} durationMs={}"
+                       , schedulerRunDto.getMethName(), schedulerRunDto.getTrgtCntt(), schedulerRunDto.getSuccCntt()
+                       , schedulerRunDto.getFailCntt(), schedulerRunDto.getExecMsec());
+            }
+
+            // 실제 처리 대상이 있는 정상 실행만 INFO로 기록
+            else if (schedulerRunDto.getTrgtCntt() > 0) {
+                // 빈 타이머 폴링의 로그 증폭 방지
+                log.info("event=scheduler_summary task={} target={} success={} failed={} durationMs={}"
+                       , schedulerRunDto.getMethName(), schedulerRunDto.getTrgtCntt(), schedulerRunDto.getSuccCntt()
+                       , schedulerRunDto.getFailCntt(), schedulerRunDto.getExecMsec());
+            }
+        }
+
         // 시작 로그가 등록되지 않았다면 수정할 마스터 행이 없으므로 종료 상태 갱신만 생략함
         if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getRunxNumb())) {
             // 실행 종료 로그를 수정하되 로그 수정 오류가 스케줄러의 원래 처리 결과를 덮어쓰지 않도록 격리 결과를 반환함
@@ -145,7 +169,7 @@ public class SchedulerLogSupport {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (RuntimeException e) {
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("스케줄러 실행 종료 로그를 수정하지 못했습니다. 실행 번호={}", schedulerRunDto.getRunxNumb(), e);
+            log.error("스케줄러 실행 종료 로그를 수정하지 못했습니다. 실행 번호={} failure={}", schedulerRunDto.getRunxNumb(), LogSafe.getFailure(e));
         }
     }
 

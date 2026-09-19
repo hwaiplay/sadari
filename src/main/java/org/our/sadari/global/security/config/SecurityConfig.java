@@ -3,6 +3,8 @@ package org.our.sadari.global.security.config;
 import jakarta.servlet.DispatcherType;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import org.our.sadari.global.common.logging.RequestLogFilter;
+import org.our.sadari.global.common.util.StringUtil;
 
 import java.util.List;
 
@@ -37,6 +39,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-09-03        SeungHyeon.Kang    로컬 프로필 간편 로그인 허용
  * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 허용
  * 2026-09-16        HanWon.Jang         Stateless CSRF·공개 화면 접근
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Configuration
 @EnableWebSecurity
@@ -138,11 +141,19 @@ public class SecurityConfig {
                         .authenticationEntryPoint((req, res, e) -> {
                             // Status 업무 값을 res DTO에 설정함
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                            // JWT 필터에서 확인한 구체적인 인증 거절 원인 우선 보존
+                            if (StringUtil.isEmpty(req.getAttribute(RequestLogFilter.SECURITY_REASON))) {
+                                // 원시 인증 예외 없이 거절 유형만 완료 로그에 전달
+                                req.setAttribute(RequestLogFilter.SECURITY_REASON, "unauthenticated");
+                            }
+
                         })
                         // 권한 부족 시 403 Forbidden 반환
                         .accessDeniedHandler((req, res, e) -> {
                             // Status 업무 값을 res DTO에 설정함
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                            // CSRF 검증과 일반 권한 거절의 예외 유형만 기록
+                            req.setAttribute(RequestLogFilter.SECURITY_REASON, e.getClass().getSimpleName());
                         })
                 )
 

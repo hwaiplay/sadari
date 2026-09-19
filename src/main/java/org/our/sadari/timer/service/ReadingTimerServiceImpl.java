@@ -1,5 +1,6 @@
 package org.our.sadari.timer.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.global.common.constant.Constant;
@@ -45,6 +46,7 @@ import java.util.concurrent.TimeUnit;
  * 2026-08-14        SeungHyeon.Kang    최초 생성 및 완료 타이머 처리
  * 2026-08-20        SeungHyeon.Kang    목표시간 알림·도서별 누적 페이지 조회 통합
  * 2026-08-21        SeungHyeon.Kang    목표시간 종료 자동 완료 및 알림 재시도
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @Slf4j
@@ -395,7 +397,7 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
                     schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
                                                               , null, null, e);
                     // 다음 대상 처리를 계속할 수 있도록 실패 세션을 로그로 남김
-                    log.error("독서 타이머 목표시간 자동 완료 또는 알림 발송 중 오류가 발생했습니다. 세션 번호={}", tmrxNumb, e);
+                    log.error("독서 타이머 목표시간 자동 완료 또는 알림 발송 중 오류가 발생했습니다. 세션 번호={} failure={}", tmrxNumb, LogSafe.getFailure(e));
                 }
             }
 
@@ -419,7 +421,7 @@ public class ReadingTimerServiceImpl implements ReadingTimerService {
             schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION
                                                       , null, null, e);
             // 스케줄러 실행 실패를 운영 로그에 남김
-            log.error("독서 타이머 목표시간 자동 완료 스케줄러 실행 중 오류가 발생했습니다.", e);
+            log.error("독서 타이머 목표시간 자동 완료 스케줄러 실행 중 오류가 발생했습니다. failure={}", LogSafe.getFailure(e));
             throw e;
         }
 

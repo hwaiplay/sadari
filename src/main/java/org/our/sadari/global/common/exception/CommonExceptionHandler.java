@@ -1,6 +1,8 @@
 package org.our.sadari.global.common.exception;
 
 import java.sql.SQLException;
+import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.global.common.logging.LogSafe;
 import java.sql.SQLNonTransientConnectionException;
 import java.sql.SQLRecoverableException;
 import java.sql.SQLTimeoutException;
@@ -35,7 +37,9 @@ import org.springframework.web.multipart.MultipartException;
  * -----------------------------------------------------------
  * 2026-03-22        SeungHyeon.Kang    최초 생성
  * 2026-08-27        HanWon.Jang         JDBC 장애 판정 범위 제한
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
+@Slf4j
 @RestControllerAdvice
 @RequiredArgsConstructor
 public class CommonExceptionHandler {
@@ -114,6 +118,8 @@ public class CommonExceptionHandler {
          * 모든 DB 장애를 400으로 내려주면 프론트가 "요청값 오류"로 오해하므로, 커넥션 계열 원인은 먼저 분리함
          */
         if (isDbConnectionFailure(e)) {
+            // 연결 장애는 사용자 입력 거절과 구분되는 서버 오류
+            log.error("event=database_failure failure={}", LogSafe.getFailure(e));
             // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환함
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }
@@ -122,12 +128,16 @@ public class CommonExceptionHandler {
         if (!StringUtil.isEmpty(sqlException)
                 && (sqlException.getErrorCode() == MYSQL_DATA_TOO_LONG_ERROR_CODE
                 || "22001".equals(sqlException.getSQLState()))) {
+            // 입력 길이 초과는 서버 장애가 아닌 요청 거절로 기록
+            log.warn("event=database_rejected reason=data_too_long failure={}", LogSafe.getFailure(e));
             // "독후감 내용은 {0}byte 이하로 입력해주세요."
             return ResponseEntity
                     .status(HttpStatus.BAD_REQUEST)
                     .body(ResultData.fail(ResultEnum.COMMON_REPORT_CONTENT_TOO_LONG, Constant.REPORT_CONTENT_MAX_BYTES));
         }
 
+        // 기타 DB 실행 실패의 원문 SQL과 파라미터 제외
+        log.error("event=database_failure failure={}", LogSafe.getFailure(e));
         // Spring의 DataAccessException 및 하위 데이터베이스 접근 예외를 포착하여 세부 원인(커넥션 오류, 오라클 바이트 초과 등)별로 분기 처리 결과를 반환함
         return createFailResponse(ResultEnum.COMMON_INVALID_REQUEST, HttpStatus.BAD_REQUEST);
     }
@@ -143,6 +153,8 @@ public class CommonExceptionHandler {
      */
     @ExceptionHandler(MyBatisSystemException.class)
     public ResponseEntity<ResultData> handleMyBatisException(MyBatisSystemException e, Locale locale) {
+        // SQL과 입력값을 제외한 데이터 계층 실패 원인 기록
+        log.error("event=database_failure failure={}", LogSafe.getFailure(e));
         // 예외 체인에서 DB 연결 실패 여부를 판별함
         ResultEnum resultEnum = isDbConnectionFailure(e)
                 ? ResultEnum.COMMON_DB_CONNECTION_FAILED
@@ -172,6 +184,8 @@ public class CommonExceptionHandler {
             SQLException.class
     })
     public ResponseEntity<ResultData> handleDbConnectException(Exception e, Locale locale) {
+        // SQL과 입력값을 제외한 데이터 계층 실패 원인 기록
+        log.error("event=database_failure failure={}", LogSafe.getFailure(e));
         /*
          * 위 예외들은 DB 연결 실패 외의 SQL 실행 오류도 감쌀 수 있음
          * 실제 원인 체인을 확인해 연결 장애이면 503, 그 외 DB 오류이면 기존 공통 요청 오류로 응답함
@@ -198,6 +212,8 @@ public class CommonExceptionHandler {
     public ResponseEntity<ResultData> handleRuntimeException(RuntimeException e, Locale locale) {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
         if (isDbConnectionFailure(e)) {
+            // 공통 응답으로 변환되어 필터까지 전파되지 않는 DB 장애 진단
+            log.error("event=database_failure failure={}", LogSafe.getFailure(e));
             // 다른 계층에서 RuntimeException으로 한 번 더 감싸져 올라온 DB 연결 실패를 마지막으로 포착 결과를 반환함
             return createFailResponse(ResultEnum.COMMON_DB_CONNECTION_FAILED, HttpStatus.SERVICE_UNAVAILABLE);
         }

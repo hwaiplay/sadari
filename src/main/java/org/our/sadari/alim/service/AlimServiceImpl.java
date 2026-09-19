@@ -1,5 +1,6 @@
 package org.our.sadari.alim.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,6 +39,7 @@ import org.springframework.transaction.support.TransactionSynchronizationManager
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-14        HanWon.Jang        차단과 개인 알림 저장 동시 실행 방지
  * 2026-09-15        HanWon.Jang        개인 알림 내부 발신자 저장
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -516,7 +518,7 @@ public class AlimServiceImpl implements AlimService {
             // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
             catch (RuntimeException e) {
                 // 푸시는 부가 기능이므로 commit이 끝난 알림 저장 결과에는 영향을 주지 않음
-                log.warn("FCM push send failed after notification commit. userNumb={}", alim.getUserNumb(), e);
+                log.warn("FCM push send failed after notification commit. userNumb={} failure={}", alim.getUserNumb(), LogSafe.getFailure(e));
             }
         };
 

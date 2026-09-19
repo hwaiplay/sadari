@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
@@ -22,6 +23,7 @@ import java.util.concurrent.TimeUnit;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-14        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -74,7 +76,7 @@ public class TimerDetailDeleteServiceImpl implements TimerDetailDeleteService {
             // Java 예외를 스케줄러 실패 상세에 기록함
             schedulerLogSupport.setSchedulerFailSafely(runxNumb, Constant.SCHEDULER_FAIL_EXCEPTION, null, null, exception);
             // 삭제 실패 원인을 운영 로그에 기록함
-            log.error("독서 타이머 상세 정리 중 오류가 발생했습니다.", exception);
+            log.error("독서 타이머 상세 정리 중 오류가 발생했습니다. failure={}", LogSafe.getFailure(exception));
             throw exception;
         } finally {
             // 실행 번호를 최종 로그에 설정함

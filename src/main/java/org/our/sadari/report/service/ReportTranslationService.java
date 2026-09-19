@@ -1,5 +1,6 @@
 package org.our.sadari.report.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
@@ -44,6 +45,7 @@ import org.springframework.web.client.RestTemplate;
  * -----------------------------------------------------------
  * 2026-09-07        HanWon.Jang        최초 생성
  * 2026-09-08        HanWon.Jang        본문 기준 번역 언어 판정
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Slf4j
 @Service
@@ -234,7 +236,7 @@ public class ReportTranslationService {
         // 외부 API 또는 응답 검증 오류는 원문과 비밀값을 기록하지 않고 공통 실패로 전환함
         catch (HttpMessageConversionException | RestClientException | IllegalStateException e) {
             // 독후감 번호만 포함해 번역 실패 원인을 운영 로그에 기록함
-            log.error("독후감 번역 처리에 실패했습니다. 독후감 번호={}", reptNumb, e);
+            log.error("독후감 번역 처리에 실패했습니다. 독후감 번호={} failure={}", reptNumb, LogSafe.getFailure(e));
             // "번역 기능을 사용할 수 없어요.\n잠시 후 다시 시도해주세요."
             return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
         }
@@ -447,7 +449,7 @@ public class ReportTranslationService {
         // 손상된 카운터나 Redis 장애는 새 번역을 허용하지 않고 운영 로그에 기록함
         catch (RuntimeException e) {
             // 사용자 작성 내용과 API 키 없이 월간 사용량 조회 실패 원인을 기록함
-            log.error("독후감 번역 월간 사용량을 조회하지 못했습니다.", e);
+            log.error("독후감 번역 월간 사용량을 조회하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 한도 확인 불가 상태를 나타내는 음수 잔여량을 반환함
             return -1L;
         }
@@ -478,7 +480,7 @@ public class ReportTranslationService {
         // 월간 사용량 저장소 장애는 외부 호출 전에 차단하고 비밀값 없이 기록함
         catch (RuntimeException e) {
             // 사용자 작성 내용 없이 Redis 예약 실패 원인을 기록함
-            log.error("독후감 번역 월간 사용량을 예약하지 못했습니다.", e);
+            log.error("독후감 번역 월간 사용량을 예약하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 한도 보호를 확인하지 못한 요청을 거절함
             return false;
         }

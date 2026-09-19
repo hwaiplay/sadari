@@ -18,6 +18,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.our.sadari.global.common.result.ResultData;
+import org.our.sadari.global.common.logging.RequestLogFilter;
 import org.our.sadari.global.file.service.FileService;
 import org.our.sadari.global.security.jwt.JwtProvider;
 import org.our.sadari.global.security.jwt.TokenRedisService;
@@ -43,6 +44,7 @@ import org.springframework.test.util.ReflectionTestUtils;
  * 2026-08-24        SeungHyeon.Kang    OAuth 로그인 CSRF 및 세션 보존 검증 추가
  * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 검증
  * 2026-09-17        HanWon.Jang    OAuth 로그인 실패 이동 검증
+ * 2026-09-19        SeungHyeon.Kang    콜백 업무 결과 로그 전달 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AuthLoginControllerTest {
@@ -148,6 +150,9 @@ class AuthLoginControllerTest {
         // 브라우저 쿠키와 다른 상태값의 콜백을 전달함
         authLoginController.kakaoAuthLogin("untrusted-code", "login_attacker", request, response);
 
+        // 실패 리다이렉트의 원문 상태값 없이 로그 문맥에 거절 이유 전달
+        assertEquals("invalid_oauth_state", request.getAttribute(RequestLogFilter.SECURITY_REASON));
+
         // 검증되지 않은 인가 코드가 로그인 또는 탈퇴 서비스에 전달되지 않는지 확인함
         verifyNoInteractions(authService, userWithdrawalService);
         // 실패 콜백이 기존 Access/Refresh 쿠키를 만료시키지 않는지 확인함
@@ -178,6 +183,9 @@ class AuthLoginControllerTest {
         // 검증된 상태값으로 로그인 실패 콜백을 실행함
         authLoginController.kakaoAuthLogin("code", "login_expected", request, response);
 
+        // HTTP 302를 로그인 성공으로 오인하지 않도록 실제 업무 코드 전달
+        assertEquals(400, request.getAttribute(RequestLogFilter.RESULT_CODE));
+
         // OAuth 화면이 인증 재조회 없이 실패 안내를 표시할 주소인지 검증함
         assertEquals("https://front.example/oauth?failed=Y", response.getRedirectedUrl());
 
@@ -203,6 +211,9 @@ class AuthLoginControllerTest {
 
         // 실패하는 탈퇴 재인증 콜백을 실행함
         authLoginController.kakaoAuthLogin("code", "withdrawal-state", request, response);
+
+        // 탈퇴 실패 리다이렉트도 공통 완료 로그에서 판별
+        assertEquals(400, request.getAttribute(RequestLogFilter.RESULT_CODE));
 
         // 탈퇴 서비스 호출 뒤에도 인증 쿠키 만료 응답이 없는지 확인함
         verify(userWithdrawalService).setWithdrawalCallback("code", "withdrawal-state");

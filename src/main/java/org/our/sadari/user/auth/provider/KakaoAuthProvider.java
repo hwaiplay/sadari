@@ -1,5 +1,6 @@
 package org.our.sadari.user.auth.provider;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +30,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * 2026-03-15        SeungHyeon.Kang    최초 생성
  * 2026-07-29        SeungHyeon.Kang    자동 닉네임 정책에 맞춰 Kakao 닉네임 동의 범위 제거
  * 2026-08-26        HanWon.Jang         공용 HTTP 클라이언트 적용
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Component
 @RequiredArgsConstructor
@@ -159,7 +161,7 @@ public class KakaoAuthProvider {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (JsonProcessingException e) {
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
+            log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다. failure={}", LogSafe.getFailure(e));
             throw e;
         }
     }
@@ -202,7 +204,7 @@ public class KakaoAuthProvider {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (JsonProcessingException e) {
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다.", e);
+            log.error("Kakao 사용자 정보 응답 파싱에 실패했습니다. failure={}", LogSafe.getFailure(e));
             throw e;
         }
     }

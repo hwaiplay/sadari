@@ -1,5 +1,6 @@
 package org.our.sadari.alim.event;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -15,6 +16,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-26        HanWon.Jang        최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Component
 @RequiredArgsConstructor
@@ -47,7 +49,8 @@ public class LikeAlimListener {
 
         // 비동기 실행기에서 작업을 받지 못하면 좋아요는 유지하고 알림만 생략함
         catch (RuntimeException e) {
-            log.warn("Like notification dispatch failed. sender={}, target={}", event.getSendUserNumb(), event.getTargetUserNumb(), e);
+            log.warn("Like notification dispatch failed. sender={}, target={} failure={}"
+                   , event.getSendUserNumb(), event.getTargetUserNumb(), LogSafe.getFailure(e));
         }
     }
 }

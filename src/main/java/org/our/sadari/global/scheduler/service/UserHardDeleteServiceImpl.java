@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.service.BookSearchProtectionService;
@@ -33,6 +34,7 @@ import java.util.concurrent.TimeUnit;
  * 2026-08-11        SeungHyeon.Kang    영구 탈퇴 회원의 Redis 인증 정보 물리 삭제 추가
  * 2026-08-16        SeungHyeon.Kang    도서 검색 제한 데이터 삭제 추가
  * 2026-08-22        SeungHyeon.Kang    피신고자 물리 삭제 전 미처리 신고 종결
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -130,7 +132,7 @@ public class UserHardDeleteServiceImpl implements UserHardDeleteService {
             // 실패 상세 로그에 전달할 원본 예외를 보관함
             failure = e;
             // 회원 영구 삭제 실패 원인을 운영 로그에 기록함
-            log.error("영구 삭제 예정 회원 처리 중 오류가 발생했습니다.", e);
+            log.error("영구 삭제 예정 회원 처리 중 오류가 발생했습니다. failure={}", LogSafe.getFailure(e));
         }
 
         // 최종 성공 건수를 실행 로그에 설정함

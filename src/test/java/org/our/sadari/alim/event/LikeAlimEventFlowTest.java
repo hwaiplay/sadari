@@ -1,6 +1,8 @@
 package org.our.sadari.alim.event;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.doAnswer;
 import static org.mockito.ArgumentMatchers.anyMap;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -9,6 +11,8 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.slf4j.MDC;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -28,6 +32,7 @@ import org.springframework.context.ApplicationEventPublisher;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-08-26        HanWon.Jang        최초 생성
+ * 2026-09-19        SeungHyeon.Kang         비동기 요청 문맥 복원 검증
  */
 @ExtendWith(MockitoExtension.class)
 class LikeAlimEventFlowTest {
@@ -56,6 +61,34 @@ class LikeAlimEventFlowTest {
         publisher = new LikeAlimPublisher(eventPublisher);
         listener = new LikeAlimListener(likeAlimWorker);
         worker = new LikeAlimWorker(alimService, tokenRedisService);
+    }
+
+    /** 테스트 요청 식별자의 다른 실행 전파 방지 */
+    @AfterEach
+    void clearLogContext() {
+        // 테스트 진단 문맥 정리
+        MDC.clear();
+    }
+
+    /** 비동기 작업의 격리된 실패에서도 원래 요청 연결과 문맥 복원 */
+    @Test
+    void restoresWorkerContext() {
+        // 원래 HTTP 요청의 식별자
+        MDC.put("requestId", "origin-request");
+        // 이벤트 생성 시 요청 식별자 보존
+        LikeAlimEvent event = createEvent(null);
+        // 작업 실행 스레드의 별도 문맥 재현
+        MDC.put("requestId", "worker-context");
+        // 실제 업무 호출에 원래 HTTP 요청 문맥이 적용되는지 검증
+        doAnswer(invocation -> {
+            // 비동기 알림 내부의 요청 연결 확인
+            assertEquals("origin-request", MDC.get("requestId"));
+            throw new IllegalStateException("private-worker-data");
+        }).when(tokenRedisService).getUserNick(1L);
+        // 부가 알림 실패의 기존 격리 정책 유지
+        assertDoesNotThrow(() -> worker.sendLikeAlim(event));
+        // 풀 스레드 재사용 전에 기존 문맥 복원 확인
+        assertEquals("worker-context", MDC.get("requestId"));
     }
 
     /**

@@ -1,5 +1,6 @@
 package org.our.sadari.book.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Service;
  * 2026-08-16        SeungHyeon.Kang    최초 생성 및 검색 보호 처리
  * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 분리
  * 2026-09-08        HanWon.Jang        검색 공급자별 캐시와 실제 호출 한도 분리
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -218,7 +220,7 @@ public class BookSearchProtectionService {
         // 검색 제한 저장소 장애는 비밀값 없이 운영 로그에 기록함
         catch (RuntimeException e) {
             // Redis 제한을 확인하지 못한 원인을 예외 정보와 함께 기록함
-            log.error("도서 검색 회원별 요청 제한을 확인하지 못했습니다.", e);
+            log.error("도서 검색 회원별 요청 제한을 확인하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 제한을 확인하지 못한 요청을 외부 공급자 호출 전에 차단함
             return false;
         }
@@ -255,7 +257,7 @@ public class BookSearchProtectionService {
         // 회원별 또는 앱 전체 보호 카운터 장애는 쿼터 소모 없이 운영 로그로 남김
         catch (RuntimeException e) {
             // Redis 일간 호출 한도를 확인하지 못한 원인을 예외 정보와 함께 기록함
-            log.error("도서 검색 회원별 및 공급자별 일일 호출 한도를 확인하지 못했습니다.", e);
+            log.error("도서 검색 회원별 및 공급자별 일일 호출 한도를 확인하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 보호 한도를 확인하지 못한 외부 공급자 호출을 차단함
             return false;
         }
@@ -289,7 +291,7 @@ public class BookSearchProtectionService {
         // 손상된 캐시나 Redis 장애는 외부 호출 예약 단계가 처리하도록 캐시 누락으로 전환함
         catch (RuntimeException | JsonProcessingException e) {
             // 검색어 원문 없이 공용 캐시 조회 실패 원인을 기록함
-            log.error("외부 도서 검색 공용 캐시를 조회하지 못했습니다.", e);
+            log.error("외부 도서 검색 공용 캐시를 조회하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 복원할 수 없는 공용 검색 캐시를 사용하지 않음
             return null;
         }
@@ -320,7 +322,7 @@ public class BookSearchProtectionService {
         // 공용 캐시 저장 실패는 쿼터 보호 카운터를 되돌리지 않고 운영 로그에만 기록함
         catch (RuntimeException | JsonProcessingException e) {
             // 검색어 원문 없이 공용 캐시 저장 실패 원인을 기록함
-            log.error("외부 도서 검색 공용 캐시를 저장하지 못했습니다.", e);
+            log.error("외부 도서 검색 공용 캐시를 저장하지 못했습니다. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -363,7 +365,7 @@ public class BookSearchProtectionService {
         // 비속어 사전이나 Redis 장애는 검색어 원문 없이 기록하고 도서 검색 성공 응답에는 영향을 주지 않음
         catch (RuntimeException e) {
             // 인기 검색어 부가 집계 실패 원인을 민감한 검색어 원문 없이 기록함
-            log.error("도서 인기 검색어를 집계하지 못했습니다.", e);
+            log.error("도서 인기 검색어를 집계하지 못했습니다. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -447,7 +449,7 @@ public class BookSearchProtectionService {
         // Redis 또는 비속어 사전 장애는 검색어 원문을 남기지 않고 빈 인기 검색어 목록으로 전환함
         catch (RuntimeException e) {
             // 인기 검색어 조회 실패 원인을 민감한 검색어 원문 없이 기록함
-            log.error("도서 인기 검색어를 조회하지 못했습니다.", e);
+            log.error("도서 인기 검색어를 조회하지 못했습니다. failure={}", LogSafe.getFailure(e));
             // 월간 인기 도서 화면을 유지할 수 있도록 빈 인기 검색어 목록을 반환함
             return List.of();
         }

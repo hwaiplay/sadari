@@ -1,5 +1,6 @@
 package org.our.sadari.global.common.config;
 
+import org.our.sadari.global.common.logging.OutboundLogInterceptor;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -17,6 +18,7 @@ import org.springframework.web.client.RestTemplate;
  * -----------------------------------------------------------
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-08-26        SeungHyeon.Kang         외부 HTTP 타임아웃 설정
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Configuration
 public class RestTemplateConfig {
@@ -38,8 +40,12 @@ public class RestTemplateConfig {
         SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
         requestFactory.setConnectTimeout(connectTimeoutMillis);
         requestFactory.setReadTimeout(readTimeoutMillis);
-        // 모든 외부 HTTP 호출이 동일한 제한시간을 사용하도록 공용 클라이언트를 반환함
-        return new RestTemplate(requestFactory);
+        // 외부 호출 공통 관측을 적용할 클라이언트
+        RestTemplate template = new RestTemplate(requestFactory);
+        // 인증정보와 본문을 제외한 공급자 응답 로그 등록
+        template.getInterceptors().add(new OutboundLogInterceptor());
+        // 제한시간과 운영 로그가 적용된 클라이언트
+        return template;
     }
 
     /**

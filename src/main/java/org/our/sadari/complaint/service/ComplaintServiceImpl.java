@@ -11,6 +11,8 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.global.common.logging.LogSafe;
 import org.our.sadari.complaint.config.ComplaintAutoActionProperties;
 import org.our.sadari.complaint.config.ComplaintResultProperties;
 import org.our.sadari.complaint.dto.ComplaintActionDto;
@@ -43,8 +45,10 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-08-22        SeungHyeon.Kang    버전별 자동 조치·이미지 증거 및 입력 검증 추가
  * 2026-08-24        HanWon.Jang        로컬 MIME·신고 결과 확인
+ * 2026-09-19        SeungHyeon.Kang         신고 증거 조회 실패 진단
  */
 @Service
+@Slf4j
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class ComplaintServiceImpl implements ComplaintService {
@@ -379,6 +383,8 @@ public class ComplaintServiceImpl implements ComplaintService {
 
         // 파일 저장소 읽기 오류는 불완전한 증거 접수 대신 저장 실패로 처리함
         catch (IOException e) {
+            // 신고 증거 본문과 저장소 경로 없이 격리된 파일 장애 기록
+            log.error("event=complaint_evidence_read failure={}", LogSafe.getFailure(e));
             // 호출부가 신고 접수를 중단하도록 빈 증거를 반환함
             return null;
         }

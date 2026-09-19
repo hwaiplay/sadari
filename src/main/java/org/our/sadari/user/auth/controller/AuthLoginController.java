@@ -13,6 +13,7 @@ import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.our.sadari.global.common.logging.RequestLogFilter;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -58,6 +59,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-13        SeungHyeon.Kang    탈퇴 뒤 유효 제재가 남은 계정의 로그인 차단 안내 추가
  * 2026-09-13        HanWon.Jang        탈퇴 완료 화면 삭제 예정일 전달
  * 2026-09-17        HanWon.Jang        OAuth 로그인 실패 안내 연결
+ * 2026-09-19        SeungHyeon.Kang         리다이렉트 업무 결과 로그 연결
  */
 @RestController
 @RequiredArgsConstructor
@@ -226,6 +228,8 @@ public class AuthLoginController {
         if (!StringUtil.isEmpty(state) && !state.startsWith(OAUTH_LOGIN_STATE_PREFIX)) {
             // 재인증한 Kakao 계정으로 회원 탈퇴 상태 변경을 요청함
             ResultData withdrawalResult = userWithdrawalService.setWithdrawalCallback(code, state);
+            // JSON 응답이 없는 탈퇴 리다이렉트의 업무 결과를 완료 로그에 전달
+            request.setAttribute(RequestLogFilter.RESULT_CODE, withdrawalResult.getCode());
             // 탈퇴 처리 성공 여부를 완료 화면이 구분할 수 있도록 쿼리값으로 전달함
             if (withdrawalResult.getCode() == 200) {
                 // 실제 탈퇴 처리에 성공한 경우에만 기존 인증 쿠키를 제거함
@@ -252,6 +256,10 @@ public class AuthLoginController {
 
         // 일반 로그인 콜백은 시작 시 저장한 브라우저 상태 쿠키와 일치해야 함
         if (!isValidLoginState(request, state)) {
+            // 일회성 상태값 원문 없이 로그인 거절 결과 기록
+            request.setAttribute(RequestLogFilter.RESULT_CODE, ResultEnum.AUTH_FAIL.getCode());
+            // HTTP 302에서도 상태 검증 실패를 구분할 원인
+            request.setAttribute(RequestLogFilter.SECURITY_REASON, "invalid_oauth_state");
             // 잘못되거나 재사용된 콜백이 기존 로그인 세션을 변경하지 않도록 그대로 복귀시킴
             response.sendRedirect(frontDomain + "/oauth?failed=Y");
             // 검증되지 않은 인가 코드를 로그인 처리에 전달하지 않음
@@ -263,6 +271,8 @@ public class AuthLoginController {
 
         // kakaoLogin 업무 로직을 authService에 위임함
         ResultData loginResult = authService.kakaoLogin(code, getLoginIp(request), getUserAgent(request));
+        // 쿠키·토큰·이동 URL 없이 실제 로그인 결과만 완료 로그에 전달
+        request.setAttribute(RequestLogFilter.RESULT_CODE, loginResult.getCode());
 
         // 카카오 로그인 서비스 처리 실패 시 기존 로그인 세션을 유지하고 로그인 페이지로 리다이렉트함
         if (loginResult.getCode() != 200) {

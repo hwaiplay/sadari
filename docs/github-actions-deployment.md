@@ -104,6 +104,7 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 | `SERVER_PORT` | `8080` | Spring 서버 포트 |
 | `LOGGING_LEVEL_ROOT` | `info` | 루트 로그 레벨 |
 | `LOGGING_LEVEL_APP` | `info` | 프로젝트 패키지 로그 레벨 |
+| `APP_LOG_SLOW_REQUEST_MILLIS` | `1000` | API 지연 경고 기준(ms), GitHub Actions Variable |
 | `COMPLAINT_RESULT_MAX_SIZE` | `5` | 한 번의 팝업에 표시할 미확인 신고 조치 결과 최대 건수 |
 
 ## 프로필 고정 설정
@@ -270,6 +271,10 @@ Actions Variables에는 다음 값을 등록합니다.
 | `STORAGE_S3_REGION` | `ap-northeast-2` | S3 버킷 리전 |
 | `STORAGE_S3_ENDPOINT` | 빈 값 | S3 호환 저장소를 선택할 때 사용하는 API 주소 |
 | `STORAGE_S3_PATH_STYLE_ACCESS` | `false` | S3 호환 저장소의 경로형 접근 사용 여부 |
+| `AWS_ACCESS_KEY_ID` | 없음 | S3 인증 접근 키, 보호된 서버 환경 파일에 Secret으로 주입 |
+| `AWS_SECRET_ACCESS_KEY` | 없음 | S3 인증 비밀 키, 보호된 서버 환경 파일에 Secret으로 주입 |
+
+API 로그의 지연 기준은 loc와 prod에 공통 적용합니다. 두 프로필의 고정 로그 패턴은 `requestId`와 `jobId`를 표시합니다. 로그 조회, 보존 한계 및 복구 절차는 [사용자 서비스 운영 로그](operations/application-logging.md)를 참고합니다.
 
 워크플로는 Mac mini 배포에서 `STORAGE_PROVIDER=local`, `STORAGE_LOCAL_ROOT=/app/uploads`를 고정합니다.
 `STORAGE_HOST_ROOT` 기본값 `./uploads`는 배포 폴더 아래의 영구 디렉터리로 해석됩니다.

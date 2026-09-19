@@ -4,4 +4,5 @@
 
 | 문서 | 대상 |
 | --- | --- |
+| [사용자 서비스 운영 로그](application-logging.md) | 요청·외부 연동·알림·스케줄러 로그 조회와 장애 확인 |
 | [MySQL 초기 구축](mysql-bootstrap.md) | 빈 MySQL 8.4 DB에 전체 구조와 관리자 기준정보를 구축하는 절차 |

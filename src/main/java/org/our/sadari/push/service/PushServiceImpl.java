@@ -1,5 +1,6 @@
 package org.our.sadari.push.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.InputStream;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-25        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @Slf4j
@@ -182,7 +184,7 @@ public class PushServiceImpl implements PushService {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
             // 복구 가능한 예외 상황을 경고 로그로 남김
-            log.warn("Firebase service account json could not be used for web config fallback.", e);
+            log.warn("Firebase service account json could not be used for web config fallback. failure={}", LogSafe.getFailure(e));
         }
     }
 

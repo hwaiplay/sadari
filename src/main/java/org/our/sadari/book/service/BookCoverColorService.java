@@ -1,5 +1,6 @@
 package org.our.sadari.book.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -40,6 +41,7 @@ import org.springframework.stereotype.Service;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 표지 호스트 허용
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Slf4j
 @Service
@@ -131,7 +133,7 @@ public class BookCoverColorService {
             // 상위 실행 흐름이 중단 상태를 확인할 수 있도록 인터럽트 표시를 복원함
             Thread.currentThread().interrupt();
             // 표지 분석 실패 원인과 대상 호스트를 서버 로그에 남김
-            log.warn("도서 표지 대표색 분석 중 요청이 중단되었습니다. host={}", coverUri.getHost(), e);
+            log.warn("도서 표지 대표색 분석 중 요청이 중단되었습니다. host={} failure={}", coverUri.getHost(), LogSafe.getFailure(e));
 
             // 중단된 표지 분석의 기본 책장 색상 응답을 반환함
             return ResultData.success(createColorResponse(fallbackColorCode));
@@ -140,7 +142,7 @@ public class BookCoverColorService {
         // 도서 표지 이미지 통신 또는 디코딩 실패는 등록을 막지 않고 기본 색상으로 복구함
         catch (IOException | RuntimeException e) {
             // 원본 URL 전체를 노출하지 않고 허용 호스트와 예외만 기록함
-            log.warn("도서 표지 대표색 분석에 실패했습니다. host={}", coverUri.getHost(), e);
+            log.warn("도서 표지 대표색 분석에 실패했습니다. host={} failure={}", coverUri.getHost(), LogSafe.getFailure(e));
 
             // 실패한 표지 분석의 기본 책장 색상 응답을 반환함
             return ResultData.success(createColorResponse(fallbackColorCode));

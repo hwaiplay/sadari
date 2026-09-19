@@ -1,5 +1,6 @@
 package org.our.sadari.global.file.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
 import java.awt.geom.AffineTransform;
@@ -57,6 +58,7 @@ import org.springframework.web.multipart.MultipartFile;
  * 2026-08-07        SeungHyeon.Kang    영구 이미지 저장소를 로컬 또는 S3 구현으로 분리
  * 2026-08-26        SeungHyeon.Kang         공용 HTTP 클라이언트 적용
  * 2026-08-26        SeungHyeon.Kang         배경사진 화면용 파생본 생성·수명주기 관리
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -327,7 +329,7 @@ public class FileService {
         // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
         catch (Exception e) {
             // 외부 이미지 다운로드 실패가 로그인 실패로 이어지지 않도록 원본 URL을 대체 경로로 저장함
-            log.warn("Kakao profile image download failed. userIdxx={}, message={}", userIdxx, e.getMessage());
+            log.warn("Kakao profile image download failed. failure={}", LogSafe.getFailure(e));
             // Kakao에서 전달받은 프로필 이미지를 내부 저장소에 복사하고 파일 번호를 반환한 결과를 반환함
             return setExternalImage(profileImageUrl, userIdxx, Constant.FILE_TYPE_PROFILE, regiUser);
         }
@@ -556,7 +558,7 @@ public class FileService {
 
         catch (IOException e) {
             // 정기 정리 실패는 다음 실행에서 재시도할 수 있도록 운영 로그에 남김
-            log.error("Expired profile image draft cleanup failed.", e);
+            log.error("Expired profile image draft cleanup failed. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -693,7 +695,7 @@ public class FileService {
 
         catch (InvalidImageFileException e) {
             // 이전 배경사진의 파생본 생성 실패가 화면의 원본 표시까지 막지 않도록 원본으로 대체함
-            log.warn("Background display image creation failed. objectKey={}, message={}", objectKey, e.getMessage());
+            log.warn("Background display image creation failed. failure={}", LogSafe.getFailure(e));
             // 기존 원본을 기능 유지용 대체 응답으로 반환함
             return originalFile;
         }
@@ -824,8 +826,7 @@ public class FileService {
 
         catch (IOException e) {
             // 파생본은 원본으로 재생성 가능하므로 저장 실패가 사용자 이미지 기능을 중단하지 않게 함
-            log.warn("Background display image cache write failed. objectKey={}, message={}"
-                    , displayObjectKey, e.getMessage());
+            log.warn("Background display image cache write failed. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -1027,7 +1028,8 @@ public class FileService {
 
         catch (IOException e) {
             // 복원 실패는 프로필 본문 조회를 방해하지 않고 운영 로그에 남김
-            log.warn("Profile image draft restore failed. userNumb={}, imageType={}", userNumb, imageType, e);
+            log.warn("Profile image draft restore failed. userNumb={}, imageType={} failure={}"
+                   , userNumb, imageType, LogSafe.getFailure(e));
             return null;
         }
     }
@@ -1145,7 +1147,7 @@ public class FileService {
         }
 
         catch (IOException e) {
-            log.error("Profile image draft cleanup failed. path={}", draftDirectory, e);
+            log.error("Profile image draft cleanup failed. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -1166,7 +1168,7 @@ public class FileService {
         }
 
         catch (IOException e) {
-            log.error("Profile image draft file cleanup failed. path={}", draftPath, e);
+            log.error("Profile image draft file cleanup failed. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -1196,6 +1198,9 @@ public class FileService {
         }
 
         catch (IOException e) {
+            // 정리 대상 판정에서 격리된 파일 속성 조회 실패 기록
+            log.warn("event=file_timestamp_read failure={}", LogSafe.getFailure(e));
+            // 기존 파일 정리 판정의 실패 대체값 유지
             return Long.MIN_VALUE;
         }
     }
@@ -1833,8 +1838,8 @@ public class FileService {
             }
 
             catch (IOException e) {
-                // 재시도 가능한 정리 대상 식별값을 운영 로그에 남김
-                log.error("Image file cleanup failed. fileNumb={}, objectKey={}", fileNumb, objectKey, e);
+                // 저장소 경로 없이 정리 실패 원인 기록
+                log.error("Image file cleanup failed. failure={}", LogSafe.getFailure(e));
             }
         }
     }
@@ -1969,7 +1974,7 @@ public class FileService {
         }
 
         catch (IOException e) {
-            log.error("Committed profile image draft cleanup failed. path={}", draftDirectory, e);
+            log.error("Committed profile image draft cleanup failed. failure={}", LogSafe.getFailure(e));
         }
     }
 

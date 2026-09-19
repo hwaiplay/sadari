@@ -2,6 +2,7 @@ package org.our.sadari.alim.event;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
+import org.slf4j.MDC;
 
 /**
  * fileName       : LikeAlimEvent
@@ -13,11 +14,14 @@ import lombok.RequiredArgsConstructor;
  * -----------------------------------------------------------
  * 2026-08-26        HanWon.Jang        최초 생성
  * 2026-08-27        SeungHyeon.Kang    원본 콘텐츠 유형과 댓글 번호 전달 추가
+ * 2026-09-19        SeungHyeon.Kang         비동기 로그 요청 문맥 연결
  */
 @Getter
 @RequiredArgsConstructor
 public class LikeAlimEvent {
 
+    // 비동기 알림을 원래 HTTP 요청과 연결할 서버 생성 식별자
+    private final String requestId = MDC.get("requestId");
     // 좋아요를 등록한 사용자 번호
     private final Long sendUserNumb;
     // 좋아요 알림을 받을 사용자 번호

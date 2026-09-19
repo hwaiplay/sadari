@@ -1,5 +1,6 @@
 package org.our.sadari.user.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +46,7 @@ import java.util.UUID;
  * 2026-08-14        SeungHyeon.Kang    계정 상태 변경 전 독서 타이머 종료 추가
  * 2026-08-20        SeungHyeon.Kang    탈퇴 회원의 모임 목표 참여 자동 복원 차단 추가
  * 2026-09-13        HanWon.Jang    탈퇴 완료 화면 삭제 예정일 전달
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -173,7 +175,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 직렬화나 Redis 저장 실패 시 탈퇴 절차를 시작하지 않음
         catch (Exception e) {
             // 민감한 요청 내용 없이 저장 실패 원인만 기록함
-            log.error("회원 탈퇴 재인증 상태 저장 실패. userNumb={}, message={}", userNumb, e.getMessage());
+            log.error("회원 탈퇴 재인증 상태 저장 실패. userNumb={}, failure={}", userNumb, LogSafe.getFailure(e));
             // "저장에 실패했어요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
@@ -232,7 +234,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
         // 요청 복원이나 Kakao 통신에 실패하면 회원 데이터는 변경하지 않음
         catch (Exception e) {
             // 개인정보를 제외한 재인증 실패 원인을 기록함
-            log.error("회원 탈퇴 Kakao 재인증 실패. message={}", e.getMessage());
+            log.error("회원 탈퇴 Kakao 재인증 실패. failure={}", LogSafe.getFailure(e));
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -276,7 +278,7 @@ public class UserWithdrawalServiceImpl implements UserWithdrawalService {
             // 연결 해제 실패 이력을 등록함
             userWithdrawalMapper.setUserWithdrawal(request);
             // 연결 해제 재시도가 필요한 회원 번호를 기록함
-            log.warn("회원 탈퇴 Kakao 연결 해제 대기. userNumb={}", request.getUserNumb());
+            log.warn("회원 탈퇴 Kakao 연결 해제 대기. failure={}", LogSafe.getFailure(e));
             // "저장에 실패했어요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }

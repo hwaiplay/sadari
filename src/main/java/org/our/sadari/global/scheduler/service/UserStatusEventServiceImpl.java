@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.global.common.constant.Constant;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성 및 이벤트 완료 처리
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -110,7 +112,8 @@ public class UserStatusEventServiceImpl implements UserStatusEventService {
                     firstFailure = e;
                 }
                 // 사용자 식별값과 이벤트 번호만 남겨 재처리 대상을 추적함
-                log.error("회원 상태 Outbox 처리에 실패했습니다. 이벤트 번호={}, 회원 번호={}", event.getEvntNumb(), event.getUserNumb(), e);
+                log.error("회원 상태 Outbox 처리에 실패했습니다. 이벤트 번호={}, 회원 번호={} failure={}"
+                        , event.getEvntNumb(), event.getUserNumb(), LogSafe.getFailure(e));
             }
         }
 

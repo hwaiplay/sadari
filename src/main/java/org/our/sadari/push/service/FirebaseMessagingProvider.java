@@ -1,5 +1,6 @@
 package org.our.sadari.push.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStream;
 import java.lang.reflect.Method;
@@ -20,6 +21,7 @@ import org.springframework.stereotype.Component;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-25        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Slf4j
 @Component
@@ -100,7 +102,7 @@ public class FirebaseMessagingProvider {
              */
             clearFirebaseMessaging();
             // 복구 가능한 예외 상황을 경고 로그로 남김
-            log.warn("Firebase initialization failed. Push sending is disabled.", e);
+            log.warn("Firebase initialization failed. Push sending is disabled. failure={}", LogSafe.getFailure(e));
         }
     }
 
@@ -121,7 +123,7 @@ public class FirebaseMessagingProvider {
         // token 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
         if (StringUtil.isEmpty(token)) {
             // token 없이 호출된 경우는 특정 브라우저 구독을 식별할 수 없어 발송하지 않음
-            log.debug("FCM push send skipped. token is empty.");
+            log.warn("event=push_send outcome=skipped reason=missing_token");
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환함
             return false;
         }
@@ -129,7 +131,7 @@ public class FirebaseMessagingProvider {
         // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
         if (!isFirebaseMessagingReady()) {
             // Firebase 초기화 실패 상태에서도 알림 저장은 성공해야 하므로 푸시 발송만 조용히 생략함
-            log.debug("FCM push send skipped. Firebase messaging is not initialized.");
+            log.warn("event=push_send outcome=skipped reason=provider_unavailable");
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환함
             return false;
         }
@@ -140,6 +142,8 @@ public class FirebaseMessagingProvider {
             Object message = createMessage(token, title, body, linkUrlx, alimNumb);
             // 호출할 외부 라이브러리 메서드를 조회함
             firebaseMessagingClass.getMethod("send", messageClass).invoke(firebaseMessaging, message);
+            // 푸시 내용과 수신자 및 토큰 없이 전송 성공 기록
+            log.info("event=push_send outcome=success");
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환함
             return true;
         }
@@ -150,7 +154,7 @@ public class FirebaseMessagingProvider {
              * 토큰 만료, Firebase 장애, 런타임 의존성 미반영 같은 문제는 개별 푸시 발송 실패로만 처리함
              * 알림 insert 트랜잭션의 성공 여부와 푸시 전송 성공 여부를 강하게 묶지 않기 위한 분기임
              */
-            log.warn("FCM push send failed.", e);
+            log.warn("FCM push send failed. failure={}", LogSafe.getFailure(e));
             // FCM registration token으로 푸시 메시지를 발송한다 판정값을 반환함
             return false;
         }

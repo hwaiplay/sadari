@@ -28,6 +28,7 @@ import org.our.sadari.global.scheduler.service.SchedulerLogService;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         민감정보 없는 예외 기록 검증
  */
 @ExtendWith(MockitoExtension.class)
 class SchedulerLogSupportTest {
@@ -121,7 +122,7 @@ class SchedulerLogSupportTest {
         // getName 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(IllegalArgumentException.class.getName(), failCaptor.getValue().getErroType());
         // 현재 항목의 값을 조회함
-        assertEquals("invalid target", failCaptor.getValue().getErroCntn());
+        assertEquals(org.our.sadari.global.common.logging.LogSafe.getFailure(exception), failCaptor.getValue().getErroCntn());
     }
 
     /**

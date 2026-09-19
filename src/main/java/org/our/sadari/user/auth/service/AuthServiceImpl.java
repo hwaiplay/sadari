@@ -1,5 +1,6 @@
 package org.our.sadari.user.auth.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -44,6 +45,7 @@ import org.springframework.web.client.RestClientException;
  * 2026-07-30        SeungHyeon.Kang    온보딩·계정 복귀·정지 처리
  * 2026-08-13        SeungHyeon.Kang    재가입 차단·OAuth 예외 처리
  * 2026-08-22        SeungHyeon.Kang    Kakao 기본 프로필 제외
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @RequiredArgsConstructor
@@ -123,7 +125,7 @@ public class AuthServiceImpl implements AuthService {
         // Kakao 성공 응답을 DTO로 변환할 수 없으면 공통 인증 실패로 변환함
         catch (JsonProcessingException e) {
             // 외부 응답 원문을 제외하고 파싱 실패 메시지만 오류 로그에 남김
-            log.error("Kakao OAuth response parse failed. message={}", e.getMessage());
+            log.error("Kakao OAuth response parse failed. failure={}", LogSafe.getFailure(e));
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
@@ -242,7 +244,7 @@ public class AuthServiceImpl implements AuthService {
             // 사용자 등록 일부만 커밋되지 않도록 로그인 쓰기 트랜잭션 전체를 롤백함
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("Kakao user save failed. message={}", e.getMessage());
+            log.error("Kakao user save failed. failure={}", LogSafe.getFailure(e));
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }

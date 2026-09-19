@@ -112,6 +112,9 @@ jwt:
   refresh-rotation-grace-in-seconds: ${JWT_REFRESH_ROTATION_GRACE_SECONDS:10}
 
 app:
+  logging:
+    # API 처리 지연 경고 기준 밀리초
+    slow-request-millis: ${APP_LOG_SLOW_REQUEST_MILLIS:1000}
   http:
     # 외부 API 장애 시 요청 스레드를 보호하고 운영 중에도 재빌드 없이 제한시간을 조정함
     connect-timeout-millis: ${HTTP_CONNECT_TIMEOUT_MILLIS:3000}
@@ -177,6 +180,8 @@ server:
   forward-headers-strategy: framework
 
 logging:
+  pattern:
+    level: "%5p [requestId=%X{requestId:-} jobId=%X{jobId:-}]"
   level:
     root: ${LOGGING_LEVEL_ROOT:info}
     org.our.sadari: ${LOGGING_LEVEL_APP:info}

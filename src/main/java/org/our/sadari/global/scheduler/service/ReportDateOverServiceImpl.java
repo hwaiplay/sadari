@@ -1,5 +1,6 @@
 package org.our.sadari.global.scheduler.service;
 
+import org.our.sadari.global.common.logging.LogSafe;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +27,7 @@ import org.springframework.transaction.annotation.Transactional;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-07-26        SeungHyeon.Kang    최초 생성
+ * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
  */
 @Service
 @Slf4j
@@ -196,7 +198,8 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                           , e
                     );
                     // 실패 원인과 처리 대상을 오류 로그로 남김
-                    log.error("목표 독서기간 초과 알림 발송 중 오류가 발생했습니다. 사용자 번호={}, 독후감 번호={}", target.getUserNumb(), target.getReptNumb(), e);
+                    log.error("목표 독서기간 초과 알림 발송 중 오류가 발생했습니다. 사용자 번호={}, 독후감 번호={} failure={}"
+                            , target.getUserNumb(), target.getReptNumb(), LogSafe.getFailure(e));
                 }
             }
 
@@ -230,7 +233,7 @@ public class ReportDateOverServiceImpl implements ReportDateOverService {
                   , e
             );
             // 실패 원인과 처리 대상을 오류 로그로 남김
-            log.error("목표 독서기간 초과 스케줄러 실행 중 오류가 발생했습니다.", e);
+            log.error("목표 독서기간 초과 스케줄러 실행 중 오류가 발생했습니다. failure={}", LogSafe.getFailure(e));
             throw e;
         }
 
