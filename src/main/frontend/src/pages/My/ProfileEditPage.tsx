@@ -1000,15 +1000,24 @@ const ProfileEditPage = () => {
      * handle Follow List User Click 사용자 동작을 처리함
      *
      * @author HanWon.Jang
-     * @param userNumb user Numb 입력값
-     * @return 반환값이 없음
+     * @param user 이동할 팔로우 목록 사용자
+     * @return 프로필 이동 완료 Promise
      */
-    const handleFollowListUserClick = (userNumb: number) => {
+    const handleFollowListUserClick = async (user: FollowUser): Promise<void> => {
 
-      void closeProfileModal("followList").then(() => {
+      // 프로필 이동 전에 팔로우 목록 모달 닫기 애니메이션을 완료함
+      await closeProfileModal("followList");
 
-        navigate(`/social/profile/${userNumb}`);
-      });
+      // 로그인 사용자 행을 선택하면 타인 프로필 API를 거치지 않고 현재 마이페이지로 이동함
+      if (user.meYsno === "Y") {
+        // 로그인 사용자의 마이페이지로 이동함
+        navigate("/mypage/profile");
+        // 타인 프로필 이동을 중단함
+        return;
+      }
+
+      // 선택한 다른 사용자의 공개 프로필로 이동함
+      navigate(`/social/profile/${user.userNumb}`);
     };
 
     /**
@@ -2591,7 +2600,7 @@ const ProfileEditPage = () => {
                     <button
                       className={styles.followModalProfileButton}
                       type="button"
-                      onClick={() => handleFollowListUserClick(user.userNumb)}
+                      onClick={() => void handleFollowListUserClick(user)}
                     >
                       <ProfileImage
                         className={styles.followModalAvatar}
