@@ -2,7 +2,7 @@
   "name": "SADARI",
   "short_name": "SADARI",
   "id": "/",
-  "description": "독서의 즐거움에 오르다, 사다리",
+  "description": "독서의 즐거움에 오르다 - 사다리",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
