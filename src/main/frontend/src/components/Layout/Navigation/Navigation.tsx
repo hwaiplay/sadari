@@ -58,21 +58,21 @@ const Navigation = ({ isMain }: NavigationProps) => {
     || pathname.startsWith(`/reading-clubs`);
 
   /**
-   * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신함
+   * 서버의 활성 타이머 상태를 조회해 네비게이션 실행 표시를 갱신
    *
    * @author SeungHyeon.Kang
    * @return 상태 조회 완료 Promise
    */
   const refreshTimerRunning = useCallback(async (): Promise<void> => {
-    // 창 포커스 시 공통 Query를 갱신해 타이머 페이지와 최신 서버 상태를 공유함
+    // 창 포커스 시 공통 Query를 갱신해 타이머 페이지와 최신 서버 상태를 공유
     await refetchTimerSummary();
-    // 서버 응답이 다시 계산되도록 일시적 이벤트 덮어쓰기를 해제함
+    // 서버 응답이 다시 계산되도록 일시적 이벤트 덮어쓰기를 해제
     setTimerRunningOverride(null);
   }, [refetchTimerSummary]);
 
   useEffect(() => {
     /**
-     * 창이 다시 활성화되면 다른 탭이나 기기에서 변경된 서버 상태를 확인함
+     * 창이 다시 활성화되면 다른 탭이나 기기에서 변경된 서버 상태를 확인
      *
      * @author SeungHyeon.Kang
      * @return 반환값이 없음
@@ -83,7 +83,7 @@ const Navigation = ({ isMain }: NavigationProps) => {
     };
 
     /**
-     * 현재 앱에서 변경된 독서 타이머 실행 여부를 네비게이션에 즉시 반영함
+     * 현재 앱에서 변경된 독서 타이머 실행 여부를 네비게이션에 즉시 반영
      *
      * @author SeungHyeon.Kang
      * @param event 독서 타이머 실행 상태 변경 이벤트
@@ -91,7 +91,7 @@ const Navigation = ({ isMain }: NavigationProps) => {
      */
     const handleTimerRunningChange = (event: Event): void => {
 
-      // 검증된 공통 이벤트의 실행 여부만 네비게이션 상태에 반영함
+      // 검증된 공통 이벤트의 실행 여부만 네비게이션 상태에 반영
       if (isReadingTimerRunningChangeEvent(event)) {
         setTimerRunningOverride(event.detail);
       }
@@ -100,7 +100,7 @@ const Navigation = ({ isMain }: NavigationProps) => {
     window.addEventListener("focus", handleWindowFocus);
     window.addEventListener(READING_TIMER_RUNNING_CHANGED_EVENT, handleTimerRunningChange);
 
-    // 네비게이션이 해제되면 창과 타이머 상태 이벤트 구독을 함께 정리함
+    // 네비게이션이 해제되면 창과 타이머 상태 이벤트 구독을 함께 정리
     return () => {
 
       window.removeEventListener("focus", handleWindowFocus);

@@ -9,7 +9,7 @@ import org.our.sadari.welcome.dto.WelcomePageDto;
  * fileName       : WelcomePageMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-28
- * description    : 사용자 상태와 현재 배포 중인 웰컴페이지에 접근함
+ * description    : 사용자 상태와 현재 배포 중인 웰컴페이지에 접근
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,9 +18,9 @@ import org.our.sadari.welcome.dto.WelcomePageDto;
 @Mapper
 public interface WelcomePageMapper {
 
-    /** 활성 사용자 여부를 조회함 */
+    /** 활성 사용자 여부를 조회 */
     int getActiveUserCnt(@Param("userNumb") Long userNumb, @Param("userStat") String userStat);
 
-    /** 현재 배포 중인 관리자 웰컴페이지를 노출 순서대로 조회함 */
+    /** 현재 배포 중인 관리자 웰컴페이지를 노출 순서대로 조회 */
     List<WelcomePageDto> getWelcomePageList(@Param("yes") String yes);
 }

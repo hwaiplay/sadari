@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.report.mapper.ReportMapper">
 
-    <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회함 -->
+    <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회 -->
     <select id="getReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
@@ -57,7 +57,7 @@
         </if>
     </select>
 
-    <!-- 기간별 독서량과 현재 및 이전 목표 및 누적 달성 횟수를 한 번에 조회함 -->
+    <!-- 기간별 독서량과 현재 및 이전 목표 및 누적 달성 횟수를 한 번에 조회 -->
     <select id="getReadingSummary" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto">
         WITH REPORTBASE AS (
              SELECT
@@ -210,7 +210,7 @@
     CROSS JOIN GOALSUMMARY G
     </select>
 
-    <!-- 현재 읽는 책과 올해 완료한 책을 기간별 중복 조회 없이 한 번에 조회함 -->
+    <!-- 현재 읽는 책과 올해 완료한 책을 기간별 중복 조회 없이 한 번에 조회 -->
     <select id="getReadingSummaryList" parameterType="org.our.sadari.myPage.dto.ReadingSummaryQueryDto" resultType="org.our.sadari.report.dto.ReportDto">
         SELECT /* getReadingSummaryList */
                A.REPT_NUMB
@@ -252,7 +252,7 @@
              , A.REPT_NUMB DESC
     </select>
 
-    <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회함 -->
+    <!-- 사용자, 목표 기준일, 목표 유형에 해당하는 독서 목표를 조회 -->
     <select id="getReadingGoalDtl" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto" resultType="org.our.sadari.myPage.dto.ReadingGoalDto">
         SELECT /* getReadingGoalDtl */
                G.USER_NUMB
@@ -266,7 +266,7 @@
            AND G.GOAL_TYPE = #{goalType}
     </select>
 
-    <!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신함 -->
+    <!-- 독서 목표를 신규 등록하거나 기존 목표를 갱신 -->
     <insert id="setReadingGoal" parameterType="org.our.sadari.myPage.dto.ReadingGoalDto">
         /* setReadingGoal */
         INSERT INTO TM_GOALXM (
@@ -294,7 +294,7 @@
              , UPDT_DATE = CURRENT_TIMESTAMP
     </insert>
 
-    <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회함 -->
+    <!-- 독후감 상세와 연결된 도서, 좋아요, 평균 별점 정보를 조회 -->
     <select id="getReportDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
@@ -415,7 +415,7 @@
            AND A.REPT_NUMB = #{reptNumb}
     </select>
 
-    <!-- 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회함 -->
+    <!-- 로그인 사용자가 동일 ISBN으로 가장 최근에 작성한 독후감을 조회 -->
     <select id="getReportByIsbnDtl" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         SELECT /* getReportByIsbnDtl */
                R.REPT_NUMB
@@ -429,7 +429,7 @@
          LIMIT 1
     </select>
 
-    <!-- 좋아요 요청이 가능한 독후감의 작성자와 좋아요 알림 설정을 조회함 -->
+    <!-- 좋아요 요청이 가능한 독후감의 작성자와 좋아요 알림 설정을 조회 -->
     <select id="getReportLikeDtl" parameterType="org.our.sadari.social.dto.SocialDto$LikeDto" resultType="org.our.sadari.social.dto.SocialDto$LikeDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
@@ -446,7 +446,7 @@
            )
     </select>
 
-    <!-- ISBN 기준 활성 사용자의 공개 독후감을 관계 기본순 또는 사용자가 선택한 정렬로 조회함 -->
+    <!-- ISBN 기준 활성 사용자의 공개 독후감을 관계 기본순 또는 사용자가 선택한 정렬로 조회 -->
     <select id="getPublicReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
@@ -579,7 +579,7 @@
         </if>
     </select>
 
-    <!-- 알림에서 지정한 활성 사용자의 공개 독후감 한 건과 연결 도서 정보를 조회함 -->
+    <!-- 알림에서 지정한 활성 사용자의 공개 독후감 한 건과 연결 도서 정보를 조회 -->
     <select id="getPublicReportTarget" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
@@ -667,7 +667,7 @@
            )
     </select>
 
-    <!-- 공개 범위와 차단 관계를 검증한 독후감 원문을 중복 번역 방지용으로 잠금 조회함 -->
+    <!-- 공개 범위와 차단 관계를 검증한 독후감 원문을 중복 번역 방지용으로 잠금 조회 -->
     <select id="getReportTrnsSource" parameterType="org.our.sadari.report.dto.ReportTranslationDto" resultType="org.our.sadari.report.dto.ReportTranslationDto">
         <bind name="commYes" value="@org.our.sadari.global.common.constant.Constant@COMM_YES" />
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
@@ -695,7 +695,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 독후감 번호와 번역 대상 언어에 해당하는 기존 번역 캐시를 조회함 -->
+    <!-- 독후감 번호와 번역 대상 언어에 해당하는 기존 번역 캐시를 조회 -->
     <select id="getReportTrnsDtl" parameterType="org.our.sadari.report.dto.ReportTranslationDto" resultType="org.our.sadari.report.dto.ReportTranslationDto">
         SELECT /* getReportTrnsDtl */
                T.REPT_NUMB
@@ -707,7 +707,7 @@
            AND T.LANG_CODE = #{langCode}
     </select>
 
-    <!-- 독후감과 대상 언어별 번역 캐시를 신규 저장하거나 변경된 원문 기준으로 갱신함 -->
+    <!-- 독후감과 대상 언어별 번역 캐시를 신규 저장하거나 변경된 원문 기준으로 갱신 -->
     <insert id="setReportTrns" parameterType="org.our.sadari.report.dto.ReportTranslationDto">
         /* setReportTrns */
         INSERT INTO TB_REPTRN (
@@ -730,14 +730,14 @@
              , UPDT_DATE = CURRENT_TIMESTAMP(6)
     </insert>
 
-    <!-- 수정 권한을 동시성 버전 검사보다 먼저 판정할 독후감 소유자를 조회함 -->
+    <!-- 수정 권한을 동시성 버전 검사보다 먼저 판정할 독후감 소유자를 조회 -->
     <select id="getReportOwnerNumb" resultType="long">
         SELECT /* getReportOwnerNumb */ USER_NUMB
           FROM TM_REPORT
          WHERE REPT_NUMB = #{reptNumb}
     </select>
 
-    <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회함 -->
+    <!-- ISBN 기준으로 연결된 완료 또는 중단 독후감의 평균 별점을 조회 -->
     <select id="getPublicRatingAvgByIsbn" resultType="java.math.BigDecimal">
         <bind name="reptStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         SELECT /* getPublicRatingAvgByIsbn */
@@ -749,7 +749,7 @@
           AND P.REPT_STAT != #{reptStatRead}
     </select>
 
-    <!-- 신규 독후감을 등록함 -->
+    <!-- 신규 독후감을 등록 -->
     <insert id="setReport" parameterType="org.our.sadari.report.dto.ReportDto" useGeneratedKeys="true" keyProperty="reptNumb">
         /* setReport */
         INSERT INTO TM_REPORT (
@@ -789,7 +789,7 @@
         )
     </insert>
 
-    <!-- 기존 독후감을 수정함 -->
+    <!-- 기존 독후감을 수정 -->
     <update id="uptReport" parameterType="org.our.sadari.report.dto.ReportDto">
         <bind name="roundReading" value="'READING'" />
         UPDATE /* uptReport */
@@ -834,7 +834,7 @@
                ), 256) = #{editVersion}
     </update>
 
-    <!-- 로그인 사용자가 작성한 독후감의 좋아요 알림 여부를 변경함 -->
+    <!-- 로그인 사용자가 작성한 독후감의 좋아요 알림 여부를 변경 -->
     <update id="uptLikeAlim" parameterType="org.our.sadari.report.dto.ReportAlimDto">
         UPDATE /* uptLikeAlim */
                TM_REPORT
@@ -844,7 +844,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 로그인 사용자가 작성한 독후감의 댓글 알림 여부를 변경함 -->
+    <!-- 로그인 사용자가 작성한 독후감의 댓글 알림 여부를 변경 -->
     <update id="uptReplyAlim" parameterType="org.our.sadari.report.dto.ReportAlimDto">
         UPDATE /* uptReplyAlim */
                TM_REPORT
@@ -854,7 +854,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정함 -->
+    <!-- 독후감의 읽기 상태와 별점 및 공개 여부를 빠르게 수정 -->
     <update id="uptReptStatusGrade" parameterType="org.our.sadari.report.dto.ReportDto">
         UPDATE /* uptReptStatusGrade */
                TM_REPORT
@@ -877,7 +877,7 @@
            AND USER_NUMB = #{userNumb}
     </update>
 
-    <!-- 진행 중인 모임 회차의 연결 독후감 삭제 전 참여 기록을 중도하차로 확정함 -->
+    <!-- 진행 중인 모임 회차의 연결 독후감 삭제 전 참여 기록을 중도하차로 확정 -->
     <update id="uptClubReadingDropout" parameterType="org.our.sadari.report.dto.ReportDto">
         <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
         <bind name="memberActive" value="'ACTIVE'" />
@@ -907,7 +907,7 @@
            AND USERX.USER_STAT = #{userActive}
     </update>
 
-    <!-- 로그인 사용자의 독후감에 연결된 댓글과 답글의 좋아요를 삭제함 -->
+    <!-- 로그인 사용자의 독후감에 연결된 댓글과 답글의 좋아요를 삭제 -->
     <delete id="delReportReplyLikes" parameterType="org.our.sadari.report.dto.ReportDto">
         <bind name="likeTargetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
         DELETE /* delReportReplyLikes */ L
@@ -922,7 +922,7 @@
          WHERE L.TAGT_TYPE = #{likeTargetReply}
     </delete>
 
-    <!-- 로그인 사용자의 독후감에 연결된 대댓글을 부모 댓글보다 먼저 삭제함 -->
+    <!-- 로그인 사용자의 독후감에 연결된 대댓글을 부모 댓글보다 먼저 삭제 -->
     <delete id="delReportChildReplies" parameterType="org.our.sadari.report.dto.ReportDto">
         DELETE /* delReportChildReplies */ C
           FROM TB_REPLXX C
@@ -934,7 +934,7 @@
            AND C.UPER_NUMB IS NOT NULL
     </delete>
 
-    <!-- 로그인 사용자의 독후감에 연결된 최상위 댓글을 삭제함 -->
+    <!-- 로그인 사용자의 독후감에 연결된 최상위 댓글을 삭제 -->
     <delete id="delReportReplies" parameterType="org.our.sadari.report.dto.ReportDto">
         DELETE /* delReportReplies */ R
           FROM TB_REPLXX R
@@ -945,7 +945,7 @@
            AND R.TAGT_NUMB = #{reptNumb}
     </delete>
 
-    <!-- 로그인 사용자의 독후감에 연결된 좋아요를 삭제함 -->
+    <!-- 로그인 사용자의 독후감에 연결된 좋아요를 삭제 -->
     <delete id="delReportLikes" parameterType="org.our.sadari.report.dto.ReportDto">
         <bind name="likeTargetReport" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPORT" />
         DELETE /* delReportLikes */ L
@@ -957,7 +957,7 @@
            AND L.TAGT_NUMB = #{reptNumb}
     </delete>
 
-    <!-- 로그인 사용자의 독후감을 삭제함 -->
+    <!-- 로그인 사용자의 독후감을 삭제 -->
     <delete id="delReport" parameterType="org.our.sadari.report.dto.ReportDto">
         DELETE /* delReport */
           FROM TM_REPORT

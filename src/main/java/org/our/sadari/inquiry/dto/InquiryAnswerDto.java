@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : InquiryAnswerDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-13
- * description    : 고객문의에 등록된 관리자 답변을 전달함
+ * description    : 고객문의에 등록된 관리자 답변을 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

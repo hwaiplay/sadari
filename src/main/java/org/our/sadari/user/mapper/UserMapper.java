@@ -10,7 +10,7 @@ import org.our.sadari.user.dto.UserSettingDto;
  * fileName       : UserMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 사용자 데이터베이스 접근 메서드를 정의함
+ * description    : 사용자 데이터베이스 접근 메서드를 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -25,17 +25,17 @@ import org.our.sadari.user.dto.UserSettingDto;
 public interface UserMapper {
 
     /**
-     * 아래 코드의 처리 목적을 설명함
+     * 아래 코드의 처리 목적을 설명
      */
     UserDto getUserByIdxx(@Param("userIdxx") String userIdxx);
 
     /**
-     * 아래 코드의 처리 목적을 설명함
+     * 아래 코드의 처리 목적을 설명
      */
     UserDto getUserByNumb(Long userNumb);
 
     /**
-     * 로그인 사용자가 확인하는 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회함
+     * 로그인 사용자가 확인하는 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회
      *
      * @author SeungHyeon.Kang
      * @param request 로그인 사용자와 사진 소유자 및 대상 유형과 파일 번호
@@ -44,7 +44,7 @@ public interface UserMapper {
     UserDto.ImageReactionDto getImageReactionDtl(UserDto.ImageReactionDto request);
 
     /**
-     * 프로필 이미지 교체 중 동시 수정이 발생하지 않도록 사용자 파일 번호를 잠금 조회함
+     * 프로필 이미지 교체 중 동시 수정이 발생하지 않도록 사용자 파일 번호를 잠금 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 잠금 조회할 사용자 번호
@@ -53,7 +53,7 @@ public interface UserMapper {
     UserDto getUserFileForUpdate(Long userNumb);
 
     /**
-     * 로그인 사용자의 최초 로그인 온보딩 완료 여부를 조회함
+     * 로그인 사용자의 최초 로그인 온보딩 완료 여부를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -62,32 +62,32 @@ public interface UserMapper {
     String getUserOnboardingYsno(Long userNumb);
 
     /**
-     * 아래 코드의 처리 목적을 설명함
+     * 아래 코드의 처리 목적을 설명
      */
     int setUser(UserDto request);
 
-    /** 신규 회원의 서비스 설정 기본 행을 등록함 */
+    /** 신규 회원의 서비스 설정 기본 행을 등록 */
     int setDefaultUserSetting(@Param("userNumb") Long userNumb);
 
-    /** 로그인 사용자의 설정을 기존 회원 호환 기본값과 함께 조회함 */
+    /** 로그인 사용자의 설정을 기존 회원 호환 기본값과 함께 조회 */
     UserSettingDto getUserSettingDtl(@Param("userNumb") Long userNumb);
 
-    /** 로그인 사용자의 영문 사용 여부를 저장함 */
+    /** 로그인 사용자의 영문 사용 여부를 저장 */
     int uptUserLanguageSetting(UserSettingDto request);
 
-    /** 알림 범주와 신규 독후감 알림 기본값을 저장함 */
+    /** 알림 범주와 신규 독후감 알림 기본값을 저장 */
     int uptUserAlimSetting(UserSettingDto request);
 
-    /** 공개 범위와 신규 독후감 공개 기본값을 저장함 */
+    /** 공개 범위와 신규 독후감 공개 기본값을 저장 */
     int uptUserPrivacySetting(UserSettingDto request);
 
     /**
-     * 아래 코드의 처리 목적을 설명함
+     * 아래 코드의 처리 목적을 설명
      */
     int uptUserProfile(UserDto request);
 
     /**
-     * 최초 로그인 사용자의 닉네임과 온보딩 완료 여부를 함께 수정함
+     * 최초 로그인 사용자의 닉네임과 온보딩 완료 여부를 함께 수정
      *
      * @author SeungHyeon.Kang
      * @param request 수정할 사용자 번호와 닉네임
@@ -99,7 +99,7 @@ public interface UserMapper {
     int getUserNickDuplicateCnt(UserDto request);
 
     /**
-     * 회원 상태와 탈퇴 관련 일시를 변경함
+     * 회원 상태와 탈퇴 관련 일시를 변경
      *
      * @author SeungHyeon.Kang
      * @param request 변경할 회원 번호와 상태 정보
@@ -108,7 +108,7 @@ public interface UserMapper {
     int uptUserStatus(UserDto request);
 
     /**
-     * 탈퇴 회원이 작성한 댓글을 삭제 상태로 변경함
+     * 탈퇴 회원이 작성한 댓글을 삭제 상태로 변경
      *
      * @author SeungHyeon.Kang
      * @param userNumb 탈퇴 회원 번호
@@ -117,7 +117,7 @@ public interface UserMapper {
     int uptUserReplyDeleted(Long userNumb);
 
     /**
-     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회함
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회
      *
      * @author SeungHyeon.Kang
      * @return 대분류와 세부코드가 포함된 관심분야 목록
@@ -125,7 +125,7 @@ public interface UserMapper {
     List<UserDto.UserInterestDto> getUserInterestCatalog();
 
     /**
-     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회함
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -134,7 +134,7 @@ public interface UserMapper {
     List<UserDto.UserInterestDto> getUserInterestList(Long userNumb);
 
     /**
-     * 로그인 사용자의 기존 독서 관심분야를 전체 삭제함
+     * 로그인 사용자의 기존 독서 관심분야를 전체 삭제
      *
      * @author SeungHyeon.Kang
      * @param userNumb 삭제할 사용자 번호
@@ -143,7 +143,7 @@ public interface UserMapper {
     int delUserInterests(Long userNumb);
 
     /**
-     * 로그인 사용자가 선택한 독서 관심분야 한 건을 저장함
+     * 로그인 사용자가 선택한 독서 관심분야 한 건을 저장
      *
      * @author SeungHyeon.Kang
      * @param userNumb 저장할 사용자 번호

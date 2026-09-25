@@ -1,4 +1,4 @@
--- 기존 댓글 부모 외래키를 영구 탈퇴 정리 시 답글도 함께 삭제하도록 변경함
+-- 기존 댓글 부모 외래키를 영구 탈퇴 정리 시 답글도 함께 삭제하도록 변경
 ALTER TABLE `TB_REPLXX`
     DROP FOREIGN KEY `FK_TB_REPLXX_UPER`;
 

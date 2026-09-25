@@ -35,7 +35,7 @@ import org.springframework.stereotype.Service;
  * fileName       : BookCoverColorService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 도서 표지 대표색과 가장 가까운 책장 색상 공통코드를 판정함
+ * description    : 도서 표지 대표색과 가장 가까운 책장 색상 공통코드를 판정
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -83,114 +83,114 @@ public class BookCoverColorService {
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(IMAGE_CONNECT_TIMEOUT).followRedirects(HttpClient.Redirect.NEVER).build();
 
     /**
-     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회함
+     * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회
      *
      * @author SeungHyeon.Kang
      * @param requestDto 대표색을 분석할 도서 표지 URL
      * @return 표지 대표색과 가장 가까운 책장 색상 코드
      */
     public ResultData getBookCoverColor(BookCoverColorRequestDto requestDto) {
-        // 자동 선택과 실패 기본값에 사용할 활성 책장 색상 목록을 조회함
+        // 자동 선택과 실패 기본값에 사용할 활성 책장 색상 목록을 조회
         List<CodeDto> colorCodeList = codeUtil.getCodeList(Constant.CODE_BOOK_COLR);
 
-        // 활성 책장 색상이 없으면 저장 가능한 색상을 반환할 수 없으므로 조회 실패로 처리함
+        // 활성 책장 색상이 없으면 저장 가능한 색상을 반환할 수 없으므로 조회 실패로 처리
         if (StringUtil.isEmpty(colorCodeList) || colorCodeList.isEmpty()) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 정렬 순서가 가장 빠른 활성 색상을 이미지 분석 실패 시 사용할 기본값으로 지정함
+        // 정렬 순서가 가장 빠른 활성 색상을 이미지 분석 실패 시 사용할 기본값으로 지정
         CodeDto fallbackColorCode = colorCodeList.get(0);
-        // 임의 외부 서버 접근을 차단하기 위해 도서 검색 공급자의 표지 전용 HTTPS URL만 허용함
+        // 임의 외부 서버 접근을 차단하기 위해 도서 검색 공급자의 표지 전용 HTTPS URL만 허용
         URI coverUri = getTrustedCoverUri(requestDto.getBookCvim());
 
-        // 허용되지 않은 URL은 외부 요청을 보내지 않고 공통코드 기본값으로 보정함
+        // 허용되지 않은 URL은 외부 요청을 보내지 않고 공통코드 기본값으로 보정
         if (StringUtil.isEmpty(coverUri)) {
-            // 분석할 수 없는 표지의 기본 책장 색상 응답을 반환함
+            // 분석할 수 없는 표지의 기본 책장 색상 응답을 반환
             return ResultData.success(createColorResponse(fallbackColorCode));
         }
 
-        // 외부 이미지 응답과 디코딩 실패를 기본 색상으로 복구하기 위한 블록임
+        // 외부 이미지 응답과 디코딩 실패를 기본 색상으로 복구하기 위한 블록
         try {
             // 크기 제한 안에서 신뢰된 도서 표지 이미지를 내려받음
             BufferedImage coverImage = downloadCoverImage(coverUri);
 
-            // 이미지가 비어 있거나 디코딩되지 않으면 기본 책장 색상을 사용함
+            // 이미지가 비어 있거나 디코딩되지 않으면 기본 책장 색상을 사용
             if (StringUtil.isEmpty(coverImage)) {
-                // 분석할 수 없는 표지의 기본 책장 색상 응답을 반환함
+                // 분석할 수 없는 표지의 기본 책장 색상 응답을 반환
                 return ResultData.success(createColorResponse(fallbackColorCode));
             }
 
-            // 표지 대표색과 CIELAB 거리가 가장 가까운 활성 공통코드를 계산함
+            // 표지 대표색과 CIELAB 거리가 가장 가까운 활성 공통코드를 계산
             CodeDto matchedColorCode = findNearestBookColor(coverImage, colorCodeList, fallbackColorCode);
 
-            // 자동 선택된 책장 색상 코드를 성공 응답으로 반환함
+            // 자동 선택된 책장 색상 코드를 성공 응답으로 반환
             return ResultData.success(createColorResponse(matchedColorCode));
         }
 
-        // 요청 스레드 중단은 복구 상태를 유지한 뒤 기본 색상으로 전환함
+        // 요청 스레드 중단은 복구 상태를 유지한 뒤 기본 색상으로 전환
         catch (InterruptedException e) {
-            // 상위 실행 흐름이 중단 상태를 확인할 수 있도록 인터럽트 표시를 복원함
+            // 상위 실행 흐름이 중단 상태를 확인할 수 있도록 인터럽트 표시를 복원
             Thread.currentThread().interrupt();
             // 표지 분석 실패 원인과 대상 호스트를 서버 로그에 남김
             log.warn("도서 표지 대표색 분석 중 요청이 중단되었습니다. host={} failure={}", coverUri.getHost(), LogSafe.getFailure(e));
 
-            // 중단된 표지 분석의 기본 책장 색상 응답을 반환함
+            // 중단된 표지 분석의 기본 책장 색상 응답을 반환
             return ResultData.success(createColorResponse(fallbackColorCode));
         }
 
-        // 도서 표지 이미지 통신 또는 디코딩 실패는 등록을 막지 않고 기본 색상으로 복구함
+        // 도서 표지 이미지 통신 또는 디코딩 실패는 등록을 막지 않고 기본 색상으로 복구
         catch (IOException | RuntimeException e) {
-            // 원본 URL 전체를 노출하지 않고 허용 호스트와 예외만 기록함
+            // 원본 URL 전체를 노출하지 않고 허용 호스트와 예외만 기록
             log.warn("도서 표지 대표색 분석에 실패했습니다. host={} failure={}", coverUri.getHost(), LogSafe.getFailure(e));
 
-            // 실패한 표지 분석의 기본 책장 색상 응답을 반환함
+            // 실패한 표지 분석의 기본 책장 색상 응답을 반환
             return ResultData.success(createColorResponse(fallbackColorCode));
         }
     }
 
     /**
-     * 외부 요청에 사용할 수 있는 신뢰된 도서 표지 HTTPS 주소인지 검증함
+     * 외부 요청에 사용할 수 있는 신뢰된 도서 표지 HTTPS 주소인지 검증
      *
      * @author SeungHyeon.Kang
      * @param bookCvim 검증할 도서 표지 URL
      * @return 허용된 도서 표지 URI 또는 검증 실패 시 null
      */
     URI getTrustedCoverUri(String bookCvim) {
-        // 빈 표지 URL은 URI 변환 전에 차단함
+        // 빈 표지 URL은 URI 변환 전에 차단
         if (StringUtil.isEmpty(bookCvim) || bookCvim.isBlank()) {
-            // 허용할 표지 URI가 없음을 반환함
+            // 허용할 표지 URI가 없음을 반환
             return null;
         }
 
-        // 잘못된 URI 문법을 검증 실패로 전환하기 위한 블록임
+        // 잘못된 URI 문법을 검증 실패로 전환하기 위한 블록
         try {
-            // 표지 URL의 프로토콜과 호스트 및 포트를 개별 검증할 URI로 변환함
+            // 표지 URL의 프로토콜과 호스트 및 포트를 개별 검증할 URI로 변환
             URI coverUri = URI.create(bookCvim.trim());
             String host = coverUri.getHost();
             int port = coverUri.getPort();
 
-            // HTTPS와 허용된 이미지 호스트 및 기본 HTTPS 포트만 허용해 SSRF 우회 경로를 차단함
+            // HTTPS와 허용된 이미지 호스트 및 기본 HTTPS 포트만 허용해 SSRF 우회 경로를 차단
             if (!"https".equalsIgnoreCase(coverUri.getScheme()) || StringUtil.isEmpty(host)
                     || !TRUSTED_BOOK_IMAGE_HOSTS.contains(host.toLowerCase(Locale.ROOT))
                     || !StringUtil.isEmpty(coverUri.getUserInfo()) || (port != -1 && port != 443)) {
-                // 허용되지 않은 표지 URI임을 반환함
+                // 허용되지 않은 표지 URI임을 반환
                 return null;
             }
 
-            // 검증이 끝난 도서 표지 URI를 반환함
+            // 검증이 끝난 도서 표지 URI를 반환
             return coverUri;
         }
 
-        // URI 문법이 잘못된 요청은 외부 통신 없이 검증 실패로 처리함
+        // URI 문법이 잘못된 요청은 외부 통신 없이 검증 실패로 처리
         catch (IllegalArgumentException e) {
-            // 허용되지 않은 표지 URI임을 반환함
+            // 허용되지 않은 표지 URI임을 반환
             return null;
         }
     }
 
     /**
-     * 신뢰된 도서 표지를 제한된 크기로 내려받아 이미지로 변환함
+     * 신뢰된 도서 표지를 제한된 크기로 내려받아 이미지로 변환
      *
      * @author SeungHyeon.Kang
      * @param coverUri 검증이 끝난 도서 표지 URI
@@ -199,7 +199,7 @@ public class BookCoverColorService {
      * @throws InterruptedException 외부 이미지 요청 중 스레드가 중단된 경우 발생
      */
     private BufferedImage downloadCoverImage(URI coverUri) throws IOException, InterruptedException {
-        // 도서 표지 이미지 서버에 전달할 제한 시간과 응답 형식 헤더를 구성함
+        // 도서 표지 이미지 서버에 전달할 제한 시간과 응답 형식 헤더를 구성
         HttpRequest request = HttpRequest.newBuilder(coverUri).timeout(IMAGE_REQUEST_TIMEOUT).header("Accept", "image/*").header("User-Agent", "Sadari-Book-Cover-Color/1.0").GET().build();
         // 응답 본문을 스트림으로 받아 설정한 최대 크기를 초과하지 않게 읽음
         HttpResponse<InputStream> response = httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
@@ -209,17 +209,17 @@ public class BookCoverColorService {
         try (InputStream inputStream = response.body()) {
             // 정상 이미지 응답이 아니면 본문을 이미지로 해석하지 않음
             if (response.statusCode() != 200) {
-                // 사용할 수 없는 이미지 응답임을 반환함
+                // 사용할 수 없는 이미지 응답임을 반환
                 return null;
             }
 
-            // 응답 헤더의 이미지 형식과 선언된 크기를 검증함
+            // 응답 헤더의 이미지 형식과 선언된 크기를 검증
             String contentType = response.headers().firstValue("Content-Type").orElse("");
             long contentLength = response.headers().firstValueAsLong("Content-Length").orElse(-1L);
 
             // 이미지가 아니거나 허용 크기를 초과한 응답은 메모리에 적재하지 않음
             if (!contentType.toLowerCase(Locale.ROOT).startsWith("image/") || contentLength > MAX_IMAGE_BYTES) {
-                // 사용할 수 없는 이미지 응답임을 반환함
+                // 사용할 수 없는 이미지 응답임을 반환
                 return null;
             }
 
@@ -229,16 +229,16 @@ public class BookCoverColorService {
 
         // 실제 응답이 비어 있거나 최대 크기를 초과하면 이미지 디코딩을 수행하지 않음
         if (imageBytes.length == 0 || imageBytes.length > MAX_IMAGE_BYTES) {
-            // 사용할 수 없는 이미지 응답임을 반환함
+            // 사용할 수 없는 이미지 응답임을 반환
             return null;
         }
 
-        // 이미지 헤더의 크기를 먼저 검증한 뒤에만 전체 픽셀을 디코딩함
+        // 이미지 헤더의 크기를 먼저 검증한 뒤에만 전체 픽셀을 디코딩
         return decodeCoverImage(imageBytes);
     }
 
     /**
-     * 이미지 헤더에서 크기를 확인한 뒤 허용 범위의 표지만 전체 디코딩함
+     * 이미지 헤더에서 크기를 확인한 뒤 허용 범위의 표지만 전체 디코딩
      *
      * @author SeungHyeon.Kang
      * @param imageBytes 최대 응답 크기 검증을 마친 이미지 바이트
@@ -246,43 +246,43 @@ public class BookCoverColorService {
      * @throws IOException 이미지 헤더 또는 픽셀 디코딩 실패
      */
     BufferedImage decodeCoverImage(byte[] imageBytes) throws IOException {
-        // ImageIO Reader가 헤더만 읽고 크기를 확인할 수 있도록 전용 입력 스트림을 생성함
+        // ImageIO Reader가 헤더만 읽고 크기를 확인할 수 있도록 전용 입력 스트림을 생성
         try (ImageInputStream imageInputStream = ImageIO.createImageInputStream(
                 new ByteArrayInputStream(imageBytes))) {
             // 지원하지 않는 이미지 입력은 디코딩하지 않음
             if (imageInputStream == null) {
-                // 사용할 수 없는 이미지 응답임을 반환함
+                // 사용할 수 없는 이미지 응답임을 반환
                 return null;
             }
 
-            // 입력 형식을 처리할 수 있는 첫 ImageIO Reader를 조회함
+            // 입력 형식을 처리할 수 있는 첫 ImageIO Reader를 조회
             Iterator<ImageReader> imageReaders = ImageIO.getImageReaders(imageInputStream);
 
             // 등록된 Reader가 없는 형식은 이미지로 처리하지 않음
             if (!imageReaders.hasNext()) {
-                // 사용할 수 없는 이미지 응답임을 반환함
+                // 사용할 수 없는 이미지 응답임을 반환
                 return null;
             }
 
-            // Reader 자원을 사용한 뒤 반드시 해제하기 위한 블록임
+            // Reader 자원을 사용한 뒤 반드시 해제하기 위한 블록
             ImageReader imageReader = imageReaders.next();
             try {
-                // 메타데이터 전체 파싱 없이 첫 이미지의 헤더 크기를 조회함
+                // 메타데이터 전체 파싱 없이 첫 이미지의 헤더 크기를 조회
                 imageReader.setInput(imageInputStream, true, true);
                 int width = imageReader.getWidth(0);
                 int height = imageReader.getHeight(0);
 
-                // 비정상 또는 과도한 크기는 픽셀 버퍼 할당 전에 차단함
+                // 비정상 또는 과도한 크기는 픽셀 버퍼 할당 전에 차단
                 if (width <= 0 || height <= 0 || width > MAX_IMAGE_DIMENSION
                         || height > MAX_IMAGE_DIMENSION || (long) width * height > MAX_IMAGE_PIXEL_COUNT) {
-                    // 사용할 수 없는 이미지 응답임을 반환함
+                    // 사용할 수 없는 이미지 응답임을 반환
                     return null;
                 }
 
-                // 헤더 크기 검증을 통과한 첫 이미지만 전체 디코딩함
+                // 헤더 크기 검증을 통과한 첫 이미지만 전체 디코딩
                 return imageReader.read(0);
             } finally {
-                // ImageIO Reader가 보유한 내부 자원을 해제함
+                // ImageIO Reader가 보유한 내부 자원을 해제
                 imageReader.dispose();
             }
         }
@@ -298,54 +298,54 @@ public class BookCoverColorService {
      * @return 표지 대표색과 가장 가까운 활성 책장 색상 코드
      */
     CodeDto findNearestBookColor(BufferedImage coverImage, List<CodeDto> colorCodeList, CodeDto fallbackColorCode) {
-        // 흰 여백과 투명 픽셀을 제외한 표지의 지배적인 색상을 계산함
+        // 흰 여백과 투명 픽셀을 제외한 표지의 지배적인 색상을 계산
         int[] representativeColor = getRepresentativeColor(coverImage);
 
-        // 유효한 대표색이 없으면 정렬 순서가 가장 빠른 공통코드를 사용함
+        // 유효한 대표색이 없으면 정렬 순서가 가장 빠른 공통코드를 사용
         if (StringUtil.isEmpty(representativeColor)) {
-            // 이미지 분석 실패 시 사용할 기본 색상 코드를 반환함
+            // 이미지 분석 실패 시 사용할 기본 색상 코드를 반환
             return fallbackColorCode;
         }
 
-        // 표지 대표색을 사람의 색상 인지 차이에 가까운 CIELAB 값으로 변환함
+        // 표지 대표색을 사람의 색상 인지 차이에 가까운 CIELAB 값으로 변환
         double[] representativeLab = convertRgbToLab(representativeColor[0], representativeColor[1], representativeColor[2]);
         CodeDto nearestColorCode = fallbackColorCode;
         double nearestDistance = Double.MAX_VALUE;
 
-        // 활성 BOOK_COLR의 HEX 색상을 표지 대표색과 하나씩 비교함
+        // 활성 BOOK_COLR의 HEX 색상을 표지 대표색과 하나씩 비교
         for (CodeDto colorCode : colorCodeList) {
-            // 코드 식별값이나 HEX 색상이 없는 행은 최근접 색상 후보에서 제외함
+            // 코드 식별값이나 HEX 색상이 없는 행은 최근접 색상 후보에서 제외
             if (StringUtil.isEmpty(colorCode) || StringUtil.isEmpty(colorCode.getComdCode())
                     || StringUtil.isEmpty(colorCode.getComdName())) {
                 continue;
             }
 
-            // 공통코드명을 RGB 비교값으로 변환함
+            // 공통코드명을 RGB 비교값으로 변환
             int[] paletteColor = parseHexColor(colorCode.getComdName());
 
-            // HEX 형식이 아닌 코드명은 잘못된 색상 후보이므로 제외함
+            // HEX 형식이 아닌 코드명은 잘못된 색상 후보이므로 제외
             if (StringUtil.isEmpty(paletteColor)) {
                 continue;
             }
 
-            // 공통코드 색상을 CIELAB 값으로 변환함
+            // 공통코드 색상을 CIELAB 값으로 변환
             double[] paletteLab = convertRgbToLab(paletteColor[0], paletteColor[1], paletteColor[2]);
-            // 제곱근 없이 CIELAB 축별 거리 제곱을 합산해 후보 간 상대 거리를 비교함
+            // 제곱근 없이 CIELAB 축별 거리 제곱을 합산해 후보 간 상대 거리를 비교
             double distance = getLabDistanceSquared(representativeLab, paletteLab);
 
-            // 현재 후보가 더 가까우면 자동 선택할 책장 색상 코드를 교체함
+            // 현재 후보가 더 가까우면 자동 선택할 책장 색상 코드를 교체
             if (distance < nearestDistance) {
                 nearestDistance = distance;
                 nearestColorCode = colorCode;
             }
         }
 
-        // 모든 활성 공통코드를 비교해 결정한 최근접 책장 색상을 반환함
+        // 모든 활성 공통코드를 비교해 결정한 최근접 책장 색상을 반환
         return nearestColorCode;
     }
 
     /**
-     * 표지 픽셀을 RGB 버킷으로 집계해 가장 넓게 분포한 대표색을 계산함
+     * 표지 픽셀을 RGB 버킷으로 집계해 가장 넓게 분포한 대표색을 계산
      *
      * @author SeungHyeon.Kang
      * @param coverImage 대표색을 계산할 도서 표지 이미지
@@ -360,14 +360,14 @@ public class BookCoverColorService {
         double[] greenTotals = new double[COLOR_BUCKET_COUNT];
         double[] blueTotals = new double[COLOR_BUCKET_COUNT];
 
-        // 전체 표지를 일정 간격으로 샘플링해 특정 해상도에 분석 비용이 치우치지 않게 함
+        // 전체 표지를 일정 간격으로 샘플링해 특정 해상도에 분석 비용이 치우치지 않도록 처리
         for (int y = 0; y < height; y += sampleStep) {
-            // 같은 행의 샘플 픽셀을 가로 방향으로 순회함
+            // 같은 행의 샘플 픽셀을 가로 방향으로 순회
             for (int x = 0; x < width; x += sampleStep) {
                 int argb = coverImage.getRGB(x, y);
                 int alpha = (argb >>> 24) & 0xff;
 
-                // 투명 픽셀은 실제 표지색이 아니므로 대표색 집계에서 제외함
+                // 투명 픽셀은 실제 표지색이 아니므로 대표색 집계에서 제외
                 if (alpha < MIN_ALPHA) {
                     continue;
                 }
@@ -380,7 +380,7 @@ public class BookCoverColorService {
                 double saturation = maximum == 0.0 ? 0.0 : (maximum - minimum) / maximum;
                 double brightness = (red + green + blue) / (3.0 * 255.0);
 
-                // 표지 주변의 흰 여백은 실제 디자인 대표색보다 넓게 잡힐 수 있어 제외함
+                // 표지 주변의 흰 여백은 실제 디자인 대표색보다 넓게 잡힐 수 있어 제외
                 if (brightness >= WHITE_BRIGHTNESS_THRESHOLD && saturation <= WHITE_SATURATION_THRESHOLD) {
                     continue;
                 }
@@ -401,7 +401,7 @@ public class BookCoverColorService {
 
         // 채도 가중치를 반영한 픽셀 분포가 가장 큰 색상 버킷을 찾음
         for (int bucketIndex = 0; bucketIndex < COLOR_BUCKET_COUNT; bucketIndex++) {
-            // 더 넓게 분포한 버킷이면 표지 대표색 후보를 교체함
+            // 더 넓게 분포한 버킷이면 표지 대표색 후보를 교체
             if (bucketWeights[bucketIndex] > dominantBucketWeight) {
                 dominantBucketIndex = bucketIndex;
                 dominantBucketWeight = bucketWeights[bucketIndex];
@@ -410,11 +410,11 @@ public class BookCoverColorService {
 
         // 흰 여백과 투명 픽셀을 제외한 유효 픽셀이 없으면 대표색을 만들지 않음
         if (dominantBucketIndex < 0 || dominantBucketWeight == 0.0) {
-            // 유효한 대표색이 없음을 반환함
+            // 유효한 대표색이 없음을 반환
             return null;
         }
 
-        // 지배적인 버킷에 포함된 실제 RGB 값의 가중 평균을 대표색으로 반환함
+        // 지배적인 버킷에 포함된 실제 RGB 값의 가중 평균을 대표색으로 반환
         return new int[] {
                 (int) Math.round(redTotals[dominantBucketIndex] / dominantBucketWeight),
                 (int) Math.round(greenTotals[dominantBucketIndex] / dominantBucketWeight),
@@ -423,32 +423,32 @@ public class BookCoverColorService {
     }
 
     /**
-     * HEX 색상 문자열을 RGB 정수 배열로 변환함
+     * HEX 색상 문자열을 RGB 정수 배열로 변환
      *
      * @author SeungHyeon.Kang
      * @param hexColor #RRGGBB 형식의 색상 문자열
      * @return RGB 정수 배열 또는 잘못된 HEX 형식의 null
      */
     private int[] parseHexColor(String hexColor) {
-        // 공통코드명이 #RRGGBB 형식이 아니면 색상 비교에서 제외함
+        // 공통코드명이 #RRGGBB 형식이 아니면 색상 비교에서 제외
         if (StringUtil.isEmpty(hexColor) || !HEX_COLOR_PATTERN.matcher(hexColor.trim()).matches()) {
-            // 유효한 RGB 색상이 없음을 반환함
+            // 유효한 RGB 색상이 없음을 반환
             return null;
         }
 
-        // 공통코드 관리 과정에서 들어갈 수 있는 앞뒤 공백을 제거함
+        // 공통코드 관리 과정에서 들어갈 수 있는 앞뒤 공백을 제거
         String normalizedHexColor = hexColor.trim();
-        // HEX 각 채널을 0부터 255 사이의 RGB 정수로 변환함
+        // HEX 각 채널을 0부터 255 사이의 RGB 정수로 변환
         int red = Integer.parseInt(normalizedHexColor.substring(1, 3), 16);
         int green = Integer.parseInt(normalizedHexColor.substring(3, 5), 16);
         int blue = Integer.parseInt(normalizedHexColor.substring(5, 7), 16);
 
-        // 변환된 RGB 채널 배열을 반환함
+        // 변환된 RGB 채널 배열을 반환
         return new int[] {red, green, blue};
     }
 
     /**
-     * RGB 색상을 D65 기준 CIELAB 색상으로 변환함
+     * RGB 색상을 D65 기준 CIELAB 색상으로 변환
      *
      * @author SeungHyeon.Kang
      * @param red 빨간색 채널
@@ -467,7 +467,7 @@ public class BookCoverColorService {
         double convertedY = convertXyzChannel(y);
         double convertedZ = convertXyzChannel(z);
 
-        // 표준 D65 기준으로 계산한 CIELAB 축 값을 반환함
+        // 표준 D65 기준으로 계산한 CIELAB 축 값을 반환
         return new double[] {
                 116.0 * convertedY - 16.0,
                 500.0 * (convertedX - convertedY),
@@ -476,43 +476,43 @@ public class BookCoverColorService {
     }
 
     /**
-     * sRGB 채널을 선형 RGB 채널로 변환함
+     * sRGB 채널을 선형 RGB 채널로 변환
      *
      * @author SeungHyeon.Kang
      * @param channel 0부터 1 사이의 sRGB 채널값
      * @return 선형 RGB 채널값
      */
     private double convertSrgbChannel(double channel) {
-        // 낮은 sRGB 구간은 표준 선형 변환식을 사용함
+        // 낮은 sRGB 구간은 표준 선형 변환식을 사용
         if (channel <= 0.04045) {
-            // 선형 변환된 낮은 sRGB 채널값을 반환함
+            // 선형 변환된 낮은 sRGB 채널값을 반환
             return channel / 12.92;
         }
 
-        // 감마가 적용된 sRGB 채널을 선형 채널값으로 반환함
+        // 감마가 적용된 sRGB 채널을 선형 채널값으로 반환
         return Math.pow((channel + 0.055) / 1.055, 2.4);
     }
 
     /**
-     * XYZ 채널을 CIELAB 계산에 사용할 비선형 채널로 변환함
+     * XYZ 채널을 CIELAB 계산에 사용할 비선형 채널로 변환
      *
      * @author SeungHyeon.Kang
      * @param channel 기준 백색으로 정규화한 XYZ 채널값
      * @return CIELAB 계산용 채널값
      */
     private double convertXyzChannel(double channel) {
-        // CIELAB 표준 임계값을 넘는 XYZ 채널은 세제곱근 변환을 사용함
+        // CIELAB 표준 임계값을 넘는 XYZ 채널은 세제곱근 변환을 사용
         if (channel > 0.008856) {
-            // 세제곱근으로 변환한 XYZ 채널값을 반환함
+            // 세제곱근으로 변환한 XYZ 채널값을 반환
             return Math.cbrt(channel);
         }
 
-        // 낮은 XYZ 채널은 표준 선형 보정값으로 반환함
+        // 낮은 XYZ 채널은 표준 선형 보정값으로 반환
         return 7.787 * channel + 16.0 / 116.0;
     }
 
     /**
-     * 두 CIELAB 색상의 유클리드 거리 제곱을 계산함
+     * 두 CIELAB 색상의 유클리드 거리 제곱을 계산
      *
      * @author SeungHyeon.Kang
      * @param firstLab 첫 번째 CIELAB 색상
@@ -524,21 +524,21 @@ public class BookCoverColorService {
         double greenRedDifference = firstLab[1] - secondLab[1];
         double blueYellowDifference = firstLab[2] - secondLab[2];
 
-        // 제곱근 계산을 생략한 상대 색상 거리를 반환함
+        // 제곱근 계산을 생략한 상대 색상 거리를 반환
         return lightnessDifference * lightnessDifference
                 + greenRedDifference * greenRedDifference
                 + blueYellowDifference * blueYellowDifference;
     }
 
     /**
-     * 선택된 공통코드를 등록 화면에서 사용할 색상 응답으로 변환함
+     * 선택된 공통코드를 등록 화면에서 사용할 색상 응답으로 변환
      *
      * @author SeungHyeon.Kang
      * @param colorCode 선택된 BOOK_COLR 세부코드
      * @return 책장 색상 코드와 HEX 색상을 담은 응답 DTO
      */
     private BookCoverColorResponseDto createColorResponse(CodeDto colorCode) {
-        // 선택된 책장 색상 코드와 HEX 색상을 응답 DTO로 반환함
+        // 선택된 책장 색상 코드와 HEX 색상을 응답 DTO로 반환
         return new BookCoverColorResponseDto(colorCode.getComdCode(), colorCode.getComdName());
     }
 }

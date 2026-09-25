@@ -2,7 +2,7 @@
  * fileName       : useSetClubReadingPage
  * author         : Hanwon.Jang
  * date           : 2026-08-14
- * description    : 모임 독서 등록 및 수정 화면의 도서와 목표 기간 상태를 관리함
+ * description    : 모임 독서 등록 및 수정 화면의 도서와 목표 기간 상태를 관리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -30,7 +30,7 @@ import { useEffect, useRef, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 /**
- * 모임 상세 응답의 현재 도서를 검색 결과 화면 계약으로 변환함
+ * 모임 상세 응답의 현재 도서를 검색 결과 화면 계약으로 변환
  *
  * @author Hanwon.Jang
  * @param club 현재 독서 도서 정보를 포함한 모임 상세
@@ -38,14 +38,14 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
  */
 function toBookSearchResult(club: ReadingClub): BookSearchResultType | null {
 
-  // 수정 화면을 구성할 필수 도서 정보가 없으면 잘못된 상세 응답으로 처리함
+  // 수정 화면을 구성할 필수 도서 정보가 없으면 잘못된 상세 응답으로 처리
   if (!club.currentBookTitl || !club.currentBookAthr || !club.currentBookPubl
       || !club.currentBookIsbn || !club.currentBookCvim) {
     // 필수 정보가 없는 현재 도서는 수정 화면에 전달하지 않음
     return null;
   }
 
-  // 기존 도서를 공용 도서 요약 컴포넌트와 검색 흐름에서 사용할 형태로 반환함
+  // 기존 도서를 공용 도서 요약 컴포넌트와 검색 흐름에서 사용할 형태로 반환
   return {
     title: club.currentBookTitl,
     author: club.currentBookAthr,
@@ -58,7 +58,7 @@ function toBookSearchResult(club: ReadingClub): BookSearchResultType | null {
 }
 
 /**
- * 저장 API에 전달할 도서와 목표 기간을 정규화함
+ * 저장 API에 전달할 도서와 목표 기간을 정규화
  *
  * @author Hanwon.Jang
  * @param selectedBook 선택한 도서 검색 결과
@@ -72,7 +72,7 @@ function toReadingParams(
   endDate: string,
 ): ClubReadingUpdateParams {
 
-  // 외부 검색 결과의 HTML 표기를 제거하여 서버 저장 계약으로 변환함
+  // 외부 검색 결과의 HTML 표기를 제거하여 서버 저장 계약으로 변환
   return {
     bookTitl: stripHtmlTags(selectedBook.title),
     bookAthr: normalizeBookAuthor(selectedBook.author),
@@ -89,7 +89,7 @@ function toReadingParams(
 }
 
 /**
- * 모임 독서 등록 및 수정 화면의 상태와 이벤트 처리 함수를 제공함
+ * 모임 독서 등록 및 수정 화면의 상태와 이벤트 처리 함수를 제공
  *
  * @author Hanwon.Jang
  * @return 모임 독서 등록 및 수정 화면 상태와 이벤트 처리 함수
@@ -131,18 +131,18 @@ export function useSetClubReadingPage() {
 
   useEffect(() => {
 
-    // 잘못된 등록 또는 수정 URL은 API를 호출하지 않고 내 모임 목록으로 이동함
+    // 잘못된 등록 또는 수정 URL은 API를 호출하지 않고 내 모임 목록으로 이동
     if (!hasValidClubNumb || (isEditMode && !hasValidRondNumb)) {
       navigate("/reading-clubs/mine", { replace: true });
-      // 잘못된 경로의 화면 초기화를 종료함
+      // 잘못된 경로의 화면 초기화를 종료
       return;
     }
 
     let isMounted = true;
-    // 서버의 최신 모임장 권한과 현재 회차 및 도서 변경 가능 여부를 기준으로 화면을 초기화함
+    // 서버의 최신 모임장 권한과 현재 회차 및 도서 변경 가능 여부를 기준으로 화면을 초기화
     void getClubDtlApi(clubNumb)
       .then((club) => {
-        // 등록과 수정 화면 모두 서버가 반환한 최신 모임장 권한으로 접근을 제한함
+        // 등록과 수정 화면 모두 서버가 반환한 최신 모임장 권한으로 접근을 제한
         if (club.membRole !== "OWNER") {
           throw new Error(message("frontend.readingClub.reading.invalidManagement"));
         }
@@ -151,7 +151,7 @@ export function useSetClubReadingPage() {
           return;
         }
 
-        // 등록 화면은 권한 확인을 마친 뒤 검색에서 선택한 도서를 표시함
+        // 등록 화면은 권한 확인을 마친 뒤 검색에서 선택한 도서를 표시
         if (!isEditMode) {
           setSelectedBook(locationBook);
           // 수정 화면 전용 현재 회차 초기화를 실행하지 않음
@@ -186,14 +186,14 @@ export function useSetClubReadingPage() {
         }
       });
 
-    // 화면을 벗어난 뒤 비동기 상세 응답이 상태를 변경하지 않도록 정리 함수를 반환함
+    // 화면을 벗어난 뒤 비동기 상세 응답이 상태를 변경하지 않도록 정리 함수를 반환
     return () => {
       isMounted = false;
     };
   }, [clubNumb, hasValidClubNumb, hasValidRondNumb, isEditMode, locationBook, navigate, rondNumb]);
 
   /**
-   * 목표 독서 시작일과 종료일을 화면 상태에 반영함
+   * 목표 독서 시작일과 종료일을 화면 상태에 반영
    *
    * @author Hanwon.Jang
    * @param nextStartDate 선택한 목표 독서 시작일
@@ -207,7 +207,7 @@ export function useSetClubReadingPage() {
   }
 
   /**
-   * 모임 도서 검색 결과에서 읽을 책을 다시 선택하도록 이동함
+   * 모임 도서 검색 결과에서 읽을 책을 다시 선택하도록 이동
    *
    * @author Hanwon.Jang
    * @return 반환값이 없음
@@ -216,13 +216,13 @@ export function useSetClubReadingPage() {
 
     if (!hasValidClubNumb) {
       navigate("/reading-clubs/mine", { replace: true });
-      // 올바르지 않은 모임 번호의 검색 이동을 종료함
+      // 올바르지 않은 모임 번호의 검색 이동을 종료
       return;
     }
     if (isEditMode && !bookChangeAllowed) {
       // "작성된 독후감이 있어 도서는 변경할 수 없어요. 독서 기간은 변경할 수 있어요."
       void sweetWarning(message("frontend.readingClub.reading.bookChangeLocked"));
-      // 잠긴 회차의 도서 검색 이동을 종료함
+      // 잠긴 회차의 도서 검색 이동을 종료
       return;
     }
     navigate(`/reading-clubs/books/search/${clubNumb}`, {
@@ -245,7 +245,7 @@ export function useSetClubReadingPage() {
   }
 
   /**
-   * 선택 도서와 목표 기간을 서버에 전달해 모임 독서를 등록하거나 수정함
+   * 선택 도서와 목표 기간을 서버에 전달해 모임 독서를 등록하거나 수정
    *
    * @author Hanwon.Jang
    * @param event 모임 독서 등록 및 수정 폼 제출 이벤트
@@ -261,13 +261,13 @@ export function useSetClubReadingPage() {
         message("frontend.readingClub.reading.bookMissingDescription"),
       );
       handleBookChange();
-      // 도서 정보가 없는 폼 제출을 종료함
+      // 도서 정보가 없는 폼 제출을 종료
       return;
     }
     if (!startDate || !endDate) {
       // "목표 독서 기간을 선택해주세요."
       await sweetWarning(message("frontend.readingClub.reading.periodRequired"));
-      // 목표 기간이 없는 폼 제출을 종료함
+      // 목표 기간이 없는 폼 제출을 종료
       return;
     }
 
@@ -277,28 +277,28 @@ export function useSetClubReadingPage() {
       const params = toReadingParams(selectedBook, startDate, endDate);
 
       /**
-       * 현재 화면 모드에 맞는 모임 독서 저장 API를 호출함
+       * 현재 화면 모드에 맞는 모임 독서 저장 API를 호출
        *
        * @author SeungHyeon.Kang
        * @return 모임 독서 저장 완료 Promise
-       * @throws 모임 독서 등록 또는 수정에 실패하면 발생함
+       * @throws 모임 독서 등록 또는 수정에 실패하면 발생
        */
       const saveClubReading = async (): Promise<void> => {
-        // 수정 화면이면 현재 회차의 도서 또는 기간을 변경함
+        // 수정 화면이면 현재 회차의 도서 또는 기간을 변경
         if (isEditMode) {
           await updateClubReadingApi(clubNumb, rondNumb, params);
           // 수정 요청이 끝났으므로 등록 API를 호출하지 않음
           return;
         }
 
-        // 등록 화면이면 중복 방지 키와 함께 새 모임 독서를 생성함
+        // 등록 화면이면 중복 방지 키와 함께 새 모임 독서를 생성
         await createClubReadingApi(clubNumb, {
           ...params,
           idemKeyx: idempotencyKeyRef.current,
         });
       };
 
-      // 저장 완료 후 처리 중 알림을 닫지 않고 성공 알림으로 전환함
+      // 저장 완료 후 처리 중 알림을 닫지 않고 성공 알림으로 전환
       await runBlockingOperation(saveClubReading, {
         success: {
           // 수정은 "모임 독서를 수정했어요.", 등록은 "모임 독서가 등록됐어요."
@@ -309,7 +309,7 @@ export function useSetClubReadingPage() {
           ),
         },
       });
-      // 완료된 독서 등록 또는 수정 폼이 뒤로가기로 다시 열리지 않도록 상세 화면으로 교체함
+      // 완료된 독서 등록 또는 수정 폼이 뒤로가기로 다시 열리지 않도록 상세 화면으로 교체
       finishForm(`/reading-clubs/${clubNumb}`);
     } catch (error) {
       // 수정은 "모임 독서를 수정하지 못했어요.", 등록은 "모임 독서를 등록하지 못했어요."
@@ -326,7 +326,7 @@ export function useSetClubReadingPage() {
     }
   }
 
-  // 모임 독서 등록 및 수정 화면에서 사용할 상태와 이벤트 처리 함수를 반환함
+  // 모임 독서 등록 및 수정 화면에서 사용할 상태와 이벤트 처리 함수를 반환
   return {
     selectedBook,
     startDate,

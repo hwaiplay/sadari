@@ -5,7 +5,7 @@ type NoticeCategoryBadgeProps = {
 };
 
 /**
- * 공지사항 카테고리명을 공통 배지 스타일로 표시함
+ * 공지사항 카테고리명을 공통 배지 스타일로 표시
  *
  * @author SeungHyeon.Kang
  * @param props 공지사항 카테고리명 속성
@@ -13,6 +13,6 @@ type NoticeCategoryBadgeProps = {
  */
 export function NoticeCategoryBadge({ categoryName }: NoticeCategoryBadgeProps) {
 
-  // 서버가 제공한 공지사항 카테고리명을 공통 배지로 반환함
+  // 서버가 제공한 공지사항 카테고리명을 공통 배지로 반환
   return <span className={styles.badge}>{categoryName}</span>;
 }

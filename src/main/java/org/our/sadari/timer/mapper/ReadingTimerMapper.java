@@ -12,7 +12,7 @@ import java.util.List;
  * fileName       : ReadingTimerMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 독서 타이머 세션과 일별 집계 SQL 계약을 정의함
+ * description    : 독서 타이머 세션과 일별 집계 SQL 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -32,7 +32,7 @@ public interface ReadingTimerMapper {
      */
     Long getUserLock(@Param("userNumb") Long userNumb);
     /**
-     * 타이머에 연결할 독후감이 사용자의 읽는 중 독후감인지 확인함
+     * 타이머에 연결할 독후감이 사용자의 읽는 중 독후감인지 확인
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -42,7 +42,7 @@ public interface ReadingTimerMapper {
      */
     int getReadingReportCnt(@Param("userNumb") Long userNumb, @Param("reptNumb") Long reptNumb, @Param("readStat") String readStat);
     /**
-     * 사용자의 완료되지 않은 최근 타이머 세션을 조회함
+     * 사용자의 완료되지 않은 최근 타이머 세션을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -52,7 +52,7 @@ public interface ReadingTimerMapper {
      */
     ReadingTimerDto getActiveTimerDtl(@Param("userNumb") Long userNumb, @Param("runningStat") String runningStat, @Param("pausedStat") String pausedStat);
     /**
-     * 사용자 소유 타이머 세션 한 건을 조회함
+     * 사용자 소유 타이머 세션 한 건을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -61,7 +61,7 @@ public interface ReadingTimerMapper {
      */
     ReadingTimerDto getTimerDtl(@Param("userNumb") Long userNumb, @Param("tmrxNumb") Long tmrxNumb);
     /**
-     * 타이머에 연결할 수 있는 사용자의 읽는 중 도서를 조회함
+     * 타이머에 연결할 수 있는 사용자의 읽는 중 도서를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -70,7 +70,7 @@ public interface ReadingTimerMapper {
      */
     List<ReadingTimerDto> getReadingBookList(@Param("userNumb") Long userNumb, @Param("readStat") String readStat);
     /**
-     * 사용자가 오늘 완료한 타이머를 조회함
+     * 사용자가 오늘 완료한 타이머를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -82,7 +82,7 @@ public interface ReadingTimerMapper {
     List<ReadingTimerDto> getTodayCompletedTimerList(@Param("userNumb") Long userNumb, @Param("completedStat") String completedStat
                                                    , @Param("todayStart") LocalDateTime todayStart, @Param("tomorrowStart") LocalDateTime tomorrowStart);
     /**
-     * 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회함
+     * 완료 타이머 시간을 도서별로 합산해 최근 기록순으로 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -96,7 +96,7 @@ public interface ReadingTimerMapper {
                                                  , @Param("pageOffset") int pageOffset
                                                  , @Param("pageLimit") int pageLimit);
     /**
-     * 지정한 주간 범위의 일별 확정 독서 시간을 조회함
+     * 지정한 주간 범위의 일별 확정 독서 시간을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -106,7 +106,7 @@ public interface ReadingTimerMapper {
      */
     List<ReadingTimerDto.Daily> getDailyList(@Param("userNumb") Long userNumb, @Param("weekStart") LocalDate weekStart, @Param("weekEnd") LocalDate weekEnd);
     /**
-     * 새 독서 타이머 세션을 등록함
+     * 새 독서 타이머 세션을 등록
      *
      * @author SeungHyeon.Kang
      * @param timerDto 등록할 타이머 세션
@@ -114,7 +114,7 @@ public interface ReadingTimerMapper {
      */
     int setTimer(ReadingTimerDto timerDto);
     /**
-     * 타이머 상태와 확정 독서 시간을 수정함
+     * 타이머 상태와 확정 독서 시간을 수정
      *
      * @author SeungHyeon.Kang
      * @param timerDto 수정할 타이머 세션
@@ -122,7 +122,7 @@ public interface ReadingTimerMapper {
      */
     int uptTimer(ReadingTimerDto timerDto);
     /**
-     * 목표시간 자동 완료 또는 알림 재시도를 기다리는 세션 번호를 제한 조회함
+     * 목표시간 자동 완료 또는 알림 재시도를 기다리는 세션 번호를 제한 조회
      *
      * @author SeungHyeon.Kang
      * @param runningStat 실행 중 상태
@@ -160,7 +160,7 @@ public interface ReadingTimerMapper {
     ReadingTimerDto getTimerAlimDtl(@Param("tmrxNumb") Long tmrxNumb, @Param("completedStat") String completedStat
                                    , @Param("activeUserStat") String activeUserStat, @Param("alarmDate") LocalDateTime alarmDate);
     /**
-     * 목표시간 알림 발송 완료 일시를 저장하고 예약을 해제함
+     * 목표시간 알림 발송 완료 일시를 저장하고 예약을 해제
      *
      * @author SeungHyeon.Kang
      * @param timerDto 발송 완료 타이머 세션
@@ -168,7 +168,7 @@ public interface ReadingTimerMapper {
      */
     int uptTimerAlimSent(ReadingTimerDto timerDto);
     /**
-     * 계정 상태 변경 시 아직 발송되지 않은 목표시간 예약을 취소함
+     * 계정 상태 변경 시 아직 발송되지 않은 목표시간 예약을 취소
      *
      * @author SeungHyeon.Kang
      * @param userNumb 상태를 변경할 사용자 번호
@@ -177,7 +177,7 @@ public interface ReadingTimerMapper {
      */
     int uptTimerAlimCancel(@Param("userNumb") Long userNumb, @Param("updtDate") LocalDateTime updtDate);
     /**
-     * 사용자와 날짜별 확정 독서 시간을 누적함
+     * 사용자와 날짜별 확정 독서 시간을 누적
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -188,7 +188,7 @@ public interface ReadingTimerMapper {
      */
     int setReadingDaily(@Param("userNumb") Long userNumb, @Param("readDate") LocalDate readDate, @Param("readSecs") long readSecs, @Param("updtDate") LocalDateTime updtDate);
     /**
-     * 보존기간이 지난 완료 타이머 세션 상세를 삭제함
+     * 보존기간이 지난 완료 타이머 세션 상세를 삭제
      *
      * @author SeungHyeon.Kang
      * @param completedStat 완료 상태

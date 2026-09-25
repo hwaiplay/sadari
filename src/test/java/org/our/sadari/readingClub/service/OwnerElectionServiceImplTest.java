@@ -19,7 +19,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : OwnerElectionServiceImplTest
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 모임장 선거의 동률 결선 생성 경로를 검증함
+ * description    : 모임장 선거의 동률 결선 생성 경로를 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -35,19 +35,19 @@ class OwnerElectionServiceImplTest {
     // 모임장 선거 서비스 단위 테스트 대상
     private OwnerElectionServiceImpl ownerElectionService;
 
-    /** 각 테스트가 독립된 Mock Mapper를 사용하는 서비스를 구성함 */
+    /** 각 테스트가 독립된 Mock Mapper를 사용하는 서비스를 구성 */
     @BeforeEach
     void setUp() {
-        // 실패 응답을 검증할 서버 공통 메시지 소스를 초기화함
+        // 실패 응답을 검증할 서버 공통 메시지 소스를 초기화
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
         messageSource.setBasename("messages");
         messageSource.setDefaultEncoding("UTF-8");
         new MessageUtils().setMessageSource(messageSource);
-        // 선거 마감 분기만 검증할 서비스 구현체를 생성함
+        // 선거 마감 분기만 검증할 서비스 구현체를 생성
         ownerElectionService = new OwnerElectionServiceImpl(ownerElectionMapper);
     }
 
-    /** 본선 최다 득표자가 둘이면 동률 후보만 참여하는 결선을 생성함 */
+    /** 본선 최다 득표자가 둘이면 동률 후보만 참여하는 결선을 생성 */
     @Test
     void createsRunoff() {
         OwnerElectionDto.DueVoteDto dueVote = new OwnerElectionDto.DueVoteDto();

@@ -48,7 +48,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : AuthLoginController
  * author         : SeungHyeon.Kang
  * date           : 2026-03-15
- * description    : 사용자 API를 제공함
+ * description    : 사용자 API를 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -102,7 +102,7 @@ public class AuthLoginController {
     @Value("${domain.front}")
     private String frontDomain;
 
-    // Cookie Max-Age는 초 단위를 받으므로 yml의 JWT 유효시간 값을 1000 곱하지 않고 그대로 사용함
+    // Cookie Max-Age는 초 단위를 받으므로 yml의 JWT 유효시간 값을 1000 곱하지 않고 그대로 사용
     @Value("${jwt.access-token-validity-in-seconds}")
     private long accessTokenCookieMaxAgeSeconds;
 
@@ -119,7 +119,7 @@ public class AuthLoginController {
     private String cookieSameSite;
 
     /**
-     * 브라우저가 상태 변경 요청 Header에 포함할 CSRF Token을 조회함
+     * 브라우저가 상태 변경 요청 Header에 포함할 CSRF Token을 조회
      *
      * @author SeungHyeon.Kang
      * @param csrfToken Spring Security가 현재 브라우저에 발급한 CSRF Token
@@ -128,7 +128,7 @@ public class AuthLoginController {
     @GetMapping("/csrf")
     @Operation(summary = "CSRF Token 조회", description = "Cookie 인증 상태 변경 요청에 사용할 CSRF Token을 조회한다.")
     public ResultData getCsrfToken(@Parameter(hidden = true) CsrfToken csrfToken) {
-        // 브라우저가 공통 요청 Header에 설정할 CSRF Token을 반환함
+        // 브라우저가 공통 요청 Header에 설정할 CSRF Token을 반환
         return ResultData.success(csrfToken.getToken());
     }
 
@@ -142,16 +142,16 @@ public class AuthLoginController {
     @GetMapping("/kakao")
     @Operation(summary = "카카오 로그인 시작", description = "서버 설정으로 카카오 OAuth 인가 URL을 생성해 로그인 화면으로 이동한다.")
     public void getKakaoAuthorization(HttpServletResponse response) throws java.io.IOException {
-        // 추측하기 어려운 일회성 상태값으로 로그인 시작 브라우저와 콜백을 연결함
+        // 추측하기 어려운 일회성 상태값으로 로그인 시작 브라우저와 콜백을 연결
         String loginState = OAUTH_LOGIN_STATE_PREFIX + UUID.randomUUID();
-        // 콜백에서 비교할 상태값을 스크립트가 읽을 수 없는 제한 쿠키로 저장함
+        // 콜백에서 비교할 상태값을 스크립트가 읽을 수 없는 제한 쿠키로 저장
         response.addHeader(HttpHeaders.SET_COOKIE, createOauthStateCookie(loginState, OAUTH_LOGIN_STATE_MAX_AGE_SECONDS).toString());
         // 동일한 상태값이 포함된 Kakao 인가 화면으로 브라우저를 이동시킴
         response.sendRedirect(kakaoAuthProvider.getKakaoLoginUrl(loginState));
     }
 
     /**
-     * Access Token 쿠키 유효성 검증함
+     * Access Token 쿠키 유효성 검증
      *
      * @author SeungHyeon.Kang
      * @param request HTTP 요청 정보
@@ -160,30 +160,30 @@ public class AuthLoginController {
     @GetMapping("/tokenCheck")
     @Operation(summary = "Access Token 검증", description = "HttpOnly 쿠키의 Access Token 유효성 및 로그아웃 블랙리스트 여부를 검증한다.")
     public ResultData tokenCheck(@Parameter(hidden = true) HttpServletRequest request) {
-        // extractAccessToken 호출로 요청에서 인증 토큰을 추출함
+        // extractAccessToken 호출로 요청에서 인증 토큰을 추출
         String accessToken = extractAccessToken(request);
 
-        // 요청 쿠키에 Access Token이 없으면 인증 처리를 중단함
+        // 요청 쿠키에 Access Token이 없으면 인증 처리를 중단
         if (StringUtil.isEmpty(accessToken)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // Access Token의 위변조 여부 및 만료 시간을 검증하여 유효하지 않으면 실패 처리함
+        // Access Token의 위변조 여부 및 만료 시간을 검증하여 유효하지 않으면 실패 처리
         if (!jwtProvider.validateAccessToken(accessToken)) {
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 로그아웃되어 Redis 블랙리스트에 등록된 Access Token(jti 기준)인지 확인함
+        // 로그아웃되어 Redis 블랙리스트에 등록된 Access Token(jti 기준)인지 확인
         if (tokenRedisService.hasAccessTokenBlacklist(jwtProvider.getTokenId(accessToken))) {
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 검증된 토큰에서 현재 로그인 사용자 번호를 조회함
+        // 검증된 토큰에서 현재 로그인 사용자 번호를 조회
         Long userNumb = jwtProvider.getUserNumb(accessToken);
-        // 토큰에 연결된 현재 기기 세션이 로그아웃되지 않았는지 확인함
+        // 토큰에 연결된 현재 기기 세션이 로그아웃되지 않았는지 확인
         String sessionId = jwtProvider.getSessionId(accessToken);
 
         // 전체 또는 현재 기기 로그아웃으로 세션이 제거된 토큰은 인증에 사용할 수 없음
@@ -192,7 +192,7 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 계정 상태를 Redis 누락값으로 추정하지 않고 DB 원본에서 조회함
+        // 계정 상태를 Redis 누락값으로 추정하지 않고 DB 원본에서 조회
         UserDto savedUser = userMapper.getUserByNumb(userNumb);
         // 토큰의 사용자가 DB에 없으면 정상 인증 상태로 응답하지 않음
         if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())
@@ -201,10 +201,10 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 필터와 다음 요청이 같은 상태를 사용하도록 DB 원본 상태를 Redis에 보정함
+        // 필터와 다음 요청이 같은 상태를 사용하도록 DB 원본 상태를 Redis에 보정
         tokenRedisService.uptUserStatus(userNumb, savedUser.getUserStat());
 
-        // 프론트엔드가 회원 상태와 최초 로그인 화면을 한 번에 선택할 수 있도록 반환함
+        // 프론트엔드가 회원 상태와 최초 로그인 화면을 한 번에 선택할 수 있도록 반환
         return ResultData.success(Map.of(
                 "userStat", savedUser.getUserStat()
               , "onbdYsno", savedUser.getOnbdYsno()
@@ -212,7 +212,7 @@ public class AuthLoginController {
     }
 
     /**
-     * Kakao 인가 코드 기준 로그인함
+     * Kakao 인가 코드 기준 로그인
      *
      * @author SeungHyeon.Kang
      * @param code 인가 코드
@@ -224,15 +224,15 @@ public class AuthLoginController {
     public void kakaoAuthLogin(@Parameter(description = "카카오 OAuth 인가 코드") @RequestParam("code") String code
                              , @Parameter(description = "탈퇴 재인증 상태값") @RequestParam(value = "state", required = false) String state
                              , @Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) throws Exception {
-        // 일반 로그인 접두사가 없는 상태값은 회원 탈퇴 재인증 콜백으로 처리함
+        // 일반 로그인 접두사가 없는 상태값은 회원 탈퇴 재인증 콜백으로 처리
         if (!StringUtil.isEmpty(state) && !state.startsWith(OAUTH_LOGIN_STATE_PREFIX)) {
-            // 재인증한 Kakao 계정으로 회원 탈퇴 상태 변경을 요청함
+            // 재인증한 Kakao 계정으로 회원 탈퇴 상태 변경을 요청
             ResultData withdrawalResult = userWithdrawalService.setWithdrawalCallback(code, state);
             // JSON 응답이 없는 탈퇴 리다이렉트의 업무 결과를 완료 로그에 전달
             request.setAttribute(RequestLogFilter.RESULT_CODE, withdrawalResult.getCode());
-            // 탈퇴 처리 성공 여부를 완료 화면이 구분할 수 있도록 쿼리값으로 전달함
+            // 탈퇴 처리 성공 여부를 완료 화면이 구분할 수 있도록 쿼리값으로 전달
             if (withdrawalResult.getCode() == 200) {
-                // 실제 탈퇴 처리에 성공한 경우에만 기존 인증 쿠키를 제거함
+                // 실제 탈퇴 처리에 성공한 경우에만 기존 인증 쿠키를 제거
                 expireTokenCookies(response);
                 // 서버에 저장된 삭제 예정일을 완료 화면과 공유할 탈퇴 처리 결과 조회
                 UserWithdrawalDto withdrawal = (UserWithdrawalDto) withdrawalResult.getData();
@@ -244,17 +244,17 @@ public class AuthLoginController {
 
                 // 탈퇴 유형과 실제 삭제 예정일을 포함한 완료 화면 이동
                 response.sendRedirect(resultUrl);
-                // 회원 탈퇴 재인증 콜백 처리를 종료함
+                // 회원 탈퇴 재인증 콜백 처리를 종료
                 return;
             }
 
-            // 실패 상태를 포함한 탈퇴 결과 화면으로 이동함
+            // 실패 상태를 포함한 탈퇴 결과 화면으로 이동
             response.sendRedirect(frontDomain + "/withdrawal/result?success=N");
-            // 회원 탈퇴 재인증 콜백 처리를 종료함
+            // 회원 탈퇴 재인증 콜백 처리를 종료
             return;
         }
 
-        // 일반 로그인 콜백은 시작 시 저장한 브라우저 상태 쿠키와 일치해야 함
+        // 일반 로그인 콜백은 시작 시 저장한 브라우저 상태 쿠키와 일치해야 하는 조건
         if (!isValidLoginState(request, state)) {
             // 일회성 상태값 원문 없이 로그인 거절 결과 기록
             request.setAttribute(RequestLogFilter.RESULT_CODE, ResultEnum.AUTH_FAIL.getCode());
@@ -266,51 +266,51 @@ public class AuthLoginController {
             return;
         }
 
-        // 검증을 마친 일반 로그인 상태 쿠키를 즉시 만료시켜 같은 브라우저에서도 재사용하지 못하게 함
+        // 검증을 마친 일반 로그인 상태 쿠키를 즉시 만료시켜 같은 브라우저에서도 재사용하지 못하도록 처리
         expireOauthStateCookie(response);
 
-        // kakaoLogin 업무 로직을 authService에 위임함
+        // kakaoLogin 업무 로직을 authService에 위임
         ResultData loginResult = authService.kakaoLogin(code, getLoginIp(request), getUserAgent(request));
         // 쿠키·토큰·이동 URL 없이 실제 로그인 결과만 완료 로그에 전달
         request.setAttribute(RequestLogFilter.RESULT_CODE, loginResult.getCode());
 
-        // 카카오 로그인 서비스 처리 실패 시 기존 로그인 세션을 유지하고 로그인 페이지로 리다이렉트함
+        // 카카오 로그인 서비스 처리 실패 시 기존 로그인 세션을 유지하고 로그인 페이지로 리다이렉트
         if (loginResult.getCode() != 200) {
-            // sendRedirect 호출로 검증된 알림 또는 응답을 전송함
+            // sendRedirect 호출로 검증된 알림 또는 응답을 전송
             String failureRedirectUrl = frontDomain + "/oauth?failed=Y";
 
-            // 탈퇴 계정에 유효한 정지가 남은 경우 일반 인증 실패와 구분해 정확한 안내를 표시함
+            // 탈퇴 계정에 유효한 정지가 남은 경우 일반 인증 실패와 구분해 정확한 안내를 표시
             if (ResultEnum.AUTH_WITHDRAWN_SUSPENDED.getCode() == loginResult.getCode()) {
                 failureRedirectUrl += "&blocked=suspension";
             }
 
-            // 실패 사유에 맞는 OAuth 완료 화면으로 이동함
+            // 실패 사유에 맞는 OAuth 완료 화면으로 이동
             response.sendRedirect(failureRedirectUrl);
-            // Kakao 인가 코드 기준 로그인 결과를 반환함
+            // Kakao 인가 코드 기준 로그인 결과를 반환
             return;
         }
 
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         TokenDto token = (TokenDto) loginResult.getData();
 
-        // 발급된 토큰을 HttpOnly 쿠키에 담아 응답 헤더에 추가하고 프론트엔드로 리다이렉트함
+        // 발급된 토큰을 HttpOnly 쿠키에 담아 응답 헤더에 추가하고 프론트엔드로 리다이렉트
         addTokenCookies(response, token.getAccessToken(), token.getRefreshToken());
-        // 일반 로그인은 별도 안내 표시 없이 OAuth 완료 화면으로 이동함
+        // 일반 로그인은 별도 안내 표시 없이 OAuth 완료 화면으로 이동
         String oauthRedirectUrl = frontDomain + "/oauth";
 
-        // 이번 로그인에서 비활성화 계정이 복구된 경우에만 일회성 복귀 안내 표시를 전달함
+        // 이번 로그인에서 비활성화 계정이 복구된 경우에만 일회성 복귀 안내 표시를 전달
         if (token.isAccountReactivated()) {
-            // OAuth 완료 화면이 복귀 정책 팝업을 표시할 수 있도록 정해진 쿼리값을 추가함
+            // OAuth 완료 화면이 복귀 정책 팝업을 표시할 수 있도록 정해진 쿼리값을 추가
             oauthRedirectUrl += "?reactivated=Y";
         }
 
-        // 인증 상태와 복귀 여부를 확인할 프론트엔드 OAuth 완료 화면으로 이동함
+        // 인증 상태와 복귀 여부를 확인할 프론트엔드 OAuth 완료 화면으로 이동
         response.sendRedirect(oauthRedirectUrl);
     }
 
     /**
-     * OAuth 콜백 루트 URL로 직접 접근했을 때 보여줄 HTML 오류 화면을 반환함
-     * 실제 로그인 처리는 /api/oauth/callback/kakao에서만 수행하므로, 잘못된 콜백 URL에서는 ResultData JSON이 브라우저에 그대로 노출되지 않도록 분리함
+     * OAuth 콜백 루트 URL로 직접 접근했을 때 보여줄 HTML 오류 화면을 반환
+     * 실제 로그인 처리는 /api/oauth/callback/kakao에서만 수행하므로, 잘못된 콜백 URL에서는 ResultData JSON이 브라우저에 그대로 노출되지 않도록 분리
      *
      * @author SeungHyeon.Kang
      * @return OAuth 콜백 오류 안내 HTML
@@ -318,7 +318,7 @@ public class AuthLoginController {
     @GetMapping(value = {"/callback", "/callback/"}, produces = MediaType.TEXT_HTML_VALUE)
     @Operation(summary = "OAuth 콜백 오류 화면", description = "지원하지 않는 OAuth 콜백 루트 접근 시 브라우저용 오류 화면을 반환한다.")
     public ResponseEntity<String> oauthCallbackErrorPage() {
-        // HTTP 응답 상태와 본문을 반환함
+        // HTTP 응답 상태와 본문을 반환
         return ResponseEntity
                 .status(HttpStatus.BAD_REQUEST)
                 .contentType(MediaType.TEXT_HTML)
@@ -326,7 +326,7 @@ public class AuthLoginController {
     }
 
     /**
-     * Refresh Token 검증 후 Access Token 재발급함
+     * Refresh Token 검증 후 Access Token 재발급
      *
      * @author SeungHyeon.Kang
      * @param request HTTP 요청 정보
@@ -336,9 +336,9 @@ public class AuthLoginController {
     @PostMapping("/refresh")
     @Operation(summary = "JWT 재발급", description = "Refresh Token 쿠키를 검증하고 Access Token과 Refresh Token을 재발급한다.")
     public ResultData refresh(@Parameter(hidden = true) HttpServletRequest request, @Parameter(hidden = true) HttpServletResponse response) {
-        // extractRefreshToken 호출로 요청에서 인증 토큰을 추출함
+        // extractRefreshToken 호출로 요청에서 인증 토큰을 추출
         String refreshToken = extractRefreshToken(request);
-        // Refresh Token의 존재 여부 및 위변조/만료 상태를 검증함
+        // Refresh Token의 존재 여부 및 위변조/만료 상태를 검증
         if (StringUtil.isEmpty(refreshToken) || !jwtProvider.validateRefreshToken(refreshToken)) {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킴
             expireTokenCookies(response);
@@ -348,10 +348,10 @@ public class AuthLoginController {
 
         // getUserNumb 조회로 후속 처리에 필요한 데이터를 가져옴
         Long userNumb = jwtProvider.getUserNumb(refreshToken);
-        // Refresh Token에 연결된 기기별 세션 식별자를 조회함
+        // Refresh Token에 연결된 기기별 세션 식별자를 조회
         String sessionId = jwtProvider.getSessionId(refreshToken);
 
-        // 세션 식별자가 없거나 이미 로그아웃된 세션이면 재발급을 중단함
+        // 세션 식별자가 없거나 이미 로그아웃된 세션이면 재발급을 중단
         if (StringUtil.isEmpty(sessionId) || !tokenRedisService.isSessionActive(userNumb, sessionId)) {
             // 인증 실패 또는 로그아웃 시 브라우저의 토큰 쿠키를 만료시킴
             expireTokenCookies(response);
@@ -359,7 +359,7 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // UserByNumb 데이터를 DB에서 조회함
+        // UserByNumb 데이터를 DB에서 조회
         UserDto savedUser = userMapper.getUserByNumb(userNumb);
 
         // Access Token 재발급 시에도 DB에 저장된 현재 권한을 사용해야 ADMIN 사용자가 Swagger 접근 권한을 유지할 수 있음
@@ -370,9 +370,9 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 같은 기기 세션 식별자를 유지한 Refresh Token 후보를 생성함
+        // 같은 기기 세션 식별자를 유지한 Refresh Token 후보를 생성
         String proposedRefreshToken = jwtProvider.createRefreshToken(userNumb, sessionId);
-        // 다중 탭 동시 요청을 하나의 회전 결과로 합쳐 Redis에 저장된 최신 토큰을 조회함
+        // 다중 탭 동시 요청을 하나의 회전 결과로 합쳐 Redis에 저장된 최신 토큰을 조회
         String newRefreshToken = tokenRedisService.rotateRefreshToken(
                 userNumb
               , sessionId
@@ -381,27 +381,27 @@ public class AuthLoginController {
               , jwtProvider.getRefreshTokenValidSec()
         );
 
-        // 현재 토큰이나 직전 유예 토큰이 아니면 탈취 또는 만료 세션으로 판단함
+        // 현재 토큰이나 직전 유예 토큰이 아니면 탈취 또는 만료 세션으로 판단
         if (StringUtil.isEmpty(newRefreshToken)) {
-            // 더 이상 사용할 수 없는 인증 쿠키를 제거함
+            // 더 이상 사용할 수 없는 인증 쿠키를 제거
             expireTokenCookies(response);
             // "유효하지 않은 토큰이에요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 회전 결과와 같은 세션을 가리키는 Access Token을 발급함
+        // 회전 결과와 같은 세션을 가리키는 Access Token을 발급
         String newAccessToken = jwtProvider.createAccessToken(userNumb, savedUser.getUserRole(), sessionId);
-        // DB 원본 계정 상태를 별도 Redis 캐시에 반영함
+        // DB 원본 계정 상태를 별도 Redis 캐시에 반영
         tokenRedisService.uptUserStatus(userNumb, savedUser.getUserStat());
 
-        // 발급한 액세스 토큰과 리프레시 토큰을 보안 쿠키에 저장함
+        // 발급한 액세스 토큰과 리프레시 토큰을 보안 쿠키에 저장
         addTokenCookies(response, newAccessToken, newRefreshToken);
-        // Refresh Token 검증 후 Access Token 재발급 결과를 성공 응답으로 반환함
+        // Refresh Token 검증 후 Access Token 재발급 결과를 성공 응답으로 반환
         return ResultData.success();
     }
 
     /**
-     * Access Token 블랙리스트 등록과 Refresh Token 삭제함
+     * Access Token 블랙리스트 등록과 Refresh Token 삭제
      *
      * @author SeungHyeon.Kang
      * @param req 로그아웃 범위와 현재 브라우저 푸시 token
@@ -414,22 +414,22 @@ public class AuthLoginController {
     public ResultData logout(@Valid @RequestBody(required = false) AuthLogoutDto req
                            , @Parameter(hidden = true) HttpServletRequest request
                            , @Parameter(hidden = true) HttpServletResponse response) {
-        // extractAccessToken 호출로 요청에서 인증 토큰을 추출함
+        // extractAccessToken 호출로 요청에서 인증 토큰을 추출
         String accessToken = extractAccessToken(request);
-        // extractRefreshToken 호출로 요청에서 인증 토큰을 추출함
+        // extractRefreshToken 호출로 요청에서 인증 토큰을 추출
         String refreshToken = extractRefreshToken(request);
-        // 유효한 Access 또는 Refresh Token에서 임시 이미지 정리에 사용할 사용자 번호를 복원함
+        // 유효한 Access 또는 Refresh Token에서 임시 이미지 정리에 사용할 사용자 번호를 복원
         Long logoutUserNumb = null;
-        // 현재 기기 세션만 제거할 때 사용할 식별자를 복원함
+        // 현재 기기 세션만 제거할 때 사용할 식별자를 복원
         String logoutSessionId = null;
 
-        // 유효한 Access Token인 경우 남은 유효시간 동안 재사용하지 못하도록 jti를 Redis 블랙리스트에 등록함
+        // 유효한 Access Token인 경우 남은 유효시간 동안 재사용하지 못하도록 jti를 Redis 블랙리스트에 등록
         if (!StringUtil.isEmpty(accessToken) && jwtProvider.validateAccessToken(accessToken)) {
-            // Refresh Token이 없더라도 로그아웃 사용자의 임시 이미지를 정리할 번호를 보관함
+            // Refresh Token이 없더라도 로그아웃 사용자의 임시 이미지를 정리할 번호를 보관
             logoutUserNumb = jwtProvider.getUserNumb(accessToken);
-            // Access Token에 연결된 현재 기기 세션 식별자를 보관함
+            // Access Token에 연결된 현재 기기 세션 식별자를 보관
             logoutSessionId = jwtProvider.getSessionId(accessToken);
-            // AccessTokenBlacklist 업무 값을 tokenRedisService DTO에 설정함
+            // AccessTokenBlacklist 업무 값을 tokenRedisService DTO에 설정
             tokenRedisService.setAccessTokenBlacklist(
                     // getTokenId 조회로 후속 처리에 필요한 데이터를 가져옴
                     jwtProvider.getTokenId(accessToken),
@@ -438,54 +438,54 @@ public class AuthLoginController {
             );
         }
 
-        // 유효한 Refresh Token인 경우 재발급에 사용되지 못하도록 Redis에서 제거함
+        // 유효한 Refresh Token인 경우 재발급에 사용되지 못하도록 Redis에서 제거
         if (!StringUtil.isEmpty(refreshToken) && jwtProvider.validateRefreshToken(refreshToken)) {
-            // 로그아웃하는 사용자 번호를 토큰 제거와 임시 파일 정리에 함께 사용함
+            // 로그아웃하는 사용자 번호를 토큰 제거와 임시 파일 정리에 함께 사용
             Long userNumb = jwtProvider.getUserNumb(refreshToken);
-            // Refresh Token의 로그인 사용자 번호를 최종 로그아웃 대상으로 설정함
+            // Refresh Token의 로그인 사용자 번호를 최종 로그아웃 대상으로 설정
             logoutUserNumb = userNumb;
-            // Refresh Token에 연결된 현재 기기 세션 식별자를 최종 대상으로 설정함
+            // Refresh Token에 연결된 현재 기기 세션 식별자를 최종 대상으로 설정
             logoutSessionId = jwtProvider.getSessionId(refreshToken);
         }
 
-        // 유효한 인증 토큰에서 사용자를 확인한 경우 저장하지 않은 임시 이미지를 모두 삭제함
+        // 유효한 인증 토큰에서 사용자를 확인한 경우 저장하지 않은 임시 이미지를 모두 삭제
         if (!StringUtil.isEmpty(logoutUserNumb)) {
-            // 요청 본문이 없는 이전 클라이언트는 안전한 현재 기기 로그아웃으로 처리함
+            // 요청 본문이 없는 이전 클라이언트는 안전한 현재 기기 로그아웃으로 처리
             String logoutScope = StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getScope())
                     ? "CURRENT" : req.getScope();
 
-            // 전체 기기 로그아웃은 회원의 모든 세션과 푸시 구독을 비활성화함
+            // 전체 기기 로그아웃은 회원의 모든 세션과 푸시 구독을 비활성화
             if ("ALL".equals(logoutScope)) {
-                // 모든 기기 Refresh Token 세션을 제거함
+                // 모든 기기 Refresh Token 세션을 제거
                 tokenRedisService.delLoginUserInfo(logoutUserNumb);
-                // 모든 기기 FCM token을 비활성화함
+                // 모든 기기 FCM token을 비활성화
                 pushService.delAllPushSub(logoutUserNumb);
             } else {
-                // 현재 기기 Refresh Token 세션만 제거함
+                // 현재 기기 Refresh Token 세션만 제거
                 tokenRedisService.delLoginSession(logoutUserNumb, logoutSessionId);
-                // 현재 브라우저 FCM token을 확인할 수 있을 때만 해당 구독을 비활성화함
+                // 현재 브라우저 FCM token을 확인할 수 있을 때만 해당 구독을 비활성화
                 if (!StringUtil.isEmpty(req) && !StringUtil.isEmpty(req.getPushToken())) {
-                    // 푸시 비활성화 요청 DTO를 생성함
+                    // 푸시 비활성화 요청 DTO를 생성
                     PushDto.PushSubDto pushSub = new PushDto.PushSubDto();
-                    // 현재 브라우저에서 조회한 FCM token을 설정함
+                    // 현재 브라우저에서 조회한 FCM token을 설정
                     pushSub.setEndpUrlx(req.getPushToken());
-                    // 현재 브라우저의 푸시 구독만 비활성화함
+                    // 현재 브라우저의 푸시 구독만 비활성화
                     pushService.delPushSub(logoutUserNumb, pushSub);
                 }
             }
 
-            // 저장하지 않은 프로필과 배경 임시 원본 및 미리보기를 즉시 삭제함
+            // 저장하지 않은 프로필과 배경 임시 원본 및 미리보기를 즉시 삭제
             fileService.delAllProfileImageDrafts(logoutUserNumb);
         }
 
-        // 브라우저의 토큰 쿠키를 삭제(만료 처리)함
+        // 브라우저의 토큰 쿠키를 삭제(만료 처리)
         expireTokenCookies(response);
-        // Access Token 블랙리스트 등록과 Refresh Token 삭제 결과를 성공 응답으로 반환함
+        // Access Token 블랙리스트 등록과 Refresh Token 삭제 결과를 성공 응답으로 반환
         return ResultData.success();
     }
 
     /**
-     * Access Token과 Refresh Token 쿠키 추가함
+     * Access Token과 Refresh Token 쿠키 추가
      *
      * @author SeungHyeon.Kang
      * @param response HTTP 응답 작성 객체
@@ -493,21 +493,21 @@ public class AuthLoginController {
      * @param refreshToken Access Token 재발급에 사용할 Refresh Token
      */
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가함
+        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가
         response.addHeader(HttpHeaders.SET_COOKIE, createAccessTokenCookie(accessToken).toString());
-        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가함
+        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가
         response.addHeader(HttpHeaders.SET_COOKIE, createRefreshTokenCookie(refreshToken).toString());
     }
 
     /**
-     * OAuth 콜백 오류 화면의 HTML 문자열을 생성함
-     * API 전용 URL을 사용자가 직접 열었을 때도 빈 화면이나 JSON 원문 대신 로그인 화면으로 돌아갈 수 있는 안내 화면을 제공함
+     * OAuth 콜백 오류 화면의 HTML 문자열을 생성
+     * API 전용 URL을 사용자가 직접 열었을 때도 빈 화면이나 JSON 원문 대신 로그인 화면으로 돌아갈 수 있는 안내 화면을 제공
      *
      * @author SeungHyeon.Kang
      * @return OAuth 콜백 오류 화면 HTML
      */
     private String createOauthErrorHtml() {
-        // OAuth 콜백 오류 화면의 HTML 문자열을 생성 결과를 반환함
+        // OAuth 콜백 오류 화면의 HTML 문자열을 생성 결과를 반환
         return """
                 <!doctype html>
                 <html lang="ko">
@@ -532,14 +532,14 @@ public class AuthLoginController {
                         }
 
                         .page {
-                            // 오류 화면이 지나치게 커지지 않도록 표시 크기를 제한함
+                            // 오류 화면이 지나치게 커지지 않도록 표시 크기를 제한
                             width: min(100%, 420px);
                             padding: 34px 28px 30px;
                             border: 1px solid #e8edf5;
                             border-radius: 18px;
                             background: #ffffff;
                             text-align: center;
-                            // 오류 화면에 사용할 반투명 색상값을 생성함
+                            // 오류 화면에 사용할 반투명 색상값을 생성
                             box-shadow: 0 18px 50px rgba(36, 56, 96, 0.12);
                         }
 
@@ -595,25 +595,25 @@ public class AuthLoginController {
                     </main>
                 </body>
                 </html>
-                // 오류 화면 HTML에 사용자 안내 문구와 이동 경로를 반영함
+                // 오류 화면 HTML에 사용자 안내 문구와 이동 경로를 반영
                 """.formatted(frontDomain);
     }
 
     /**
-     * 로그아웃 토큰 쿠키 만료함
+     * 로그아웃 토큰 쿠키 만료
      *
      * @author SeungHyeon.Kang
      * @param response HTTP 응답 작성 객체
      */
     private void expireTokenCookies(HttpServletResponse response) {
-        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가함
+        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가
         response.addHeader(HttpHeaders.SET_COOKIE, createExpiredCookie(ACCESS_TOKEN_COOKIE_NAME).toString());
-        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가함
+        // 브라우저 응답에 필요한 보안 또는 이동 헤더를 추가
         response.addHeader(HttpHeaders.SET_COOKIE, createExpiredCookie(REFRESH_TOKEN_COOKIE_NAME).toString());
     }
 
     /**
-     * 일반 OAuth 로그인 콜백의 상태값이 시작 브라우저의 쿠키와 일치하는지 검증함
+     * 일반 OAuth 로그인 콜백의 상태값이 시작 브라우저의 쿠키와 일치하는지 검증
      *
      * @author SeungHyeon.Kang
      * @param request OAuth 콜백 요청
@@ -626,11 +626,11 @@ public class AuthLoginController {
 
         // 누락된 상태값은 일반 OAuth 로그인 콜백으로 허용하지 않음
         if (StringUtil.isEmpty(state) || StringUtil.isEmpty(savedState)) {
-            // 검증할 상태값이 없음을 반환함
+            // 검증할 상태값이 없음을 반환
             return false;
         }
 
-        // 상태값 비교 시간 차이로 일치 여부가 드러나지 않도록 고정 시간 비교를 수행함
+        // 상태값 비교 시간 차이로 일치 여부가 드러나지 않도록 고정 시간 비교를 수행
         return MessageDigest.isEqual(
                 state.getBytes(StandardCharsets.UTF_8)
               , savedState.getBytes(StandardCharsets.UTF_8)
@@ -638,7 +638,7 @@ public class AuthLoginController {
     }
 
     /**
-     * OAuth 로그인 상태값을 콜백 경로에서만 사용할 보안 쿠키로 생성함
+     * OAuth 로그인 상태값을 콜백 경로에서만 사용할 보안 쿠키로 생성
      *
      * @author SeungHyeon.Kang
      * @param state 저장할 OAuth 상태값
@@ -646,7 +646,7 @@ public class AuthLoginController {
      * @return OAuth 상태 쿠키
      */
     private ResponseCookie createOauthStateCookie(String state, long maxAgeSeconds) {
-        // OAuth 상태 쿠키를 콜백 GET 요청에 필요한 Lax 정책과 제한 경로로 생성함
+        // OAuth 상태 쿠키를 콜백 GET 요청에 필요한 Lax 정책과 제한 경로로 생성
         return ResponseCookie.from(OAUTH_LOGIN_STATE_COOKIE_NAME, state)
                 .httpOnly(true)
                 .sameSite("Lax")
@@ -657,24 +657,24 @@ public class AuthLoginController {
     }
 
     /**
-     * 사용을 마친 일반 OAuth 로그인 상태 쿠키를 만료함
+     * 사용을 마친 일반 OAuth 로그인 상태 쿠키를 만료
      *
      * @author SeungHyeon.Kang
      * @param response OAuth 콜백 응답
      */
     private void expireOauthStateCookie(HttpServletResponse response) {
-        // 발급 때와 같은 경로의 빈 쿠키를 내려 브라우저에 남은 상태값을 제거함
+        // 발급 때와 같은 경로의 빈 쿠키를 내려 브라우저에 남은 상태값을 제거
         response.addHeader(HttpHeaders.SET_COOKIE, createOauthStateCookie("", 0).toString());
     }
 
     /**
-     * AccessToken 쿠키를 생성함
+     * AccessToken 쿠키를 생성
      *
      * @param accessToken 발급된 AccessToken
      * @return 생성된 ResponseCookie 객체
      */
     private ResponseCookie createAccessTokenCookie(String accessToken) {
-        // AccessToken 쿠키를 생성 결과를 반환함
+        // AccessToken 쿠키를 생성 결과를 반환
         return createTokenCookie(
                 ACCESS_TOKEN_COOKIE_NAME,
                 accessToken,
@@ -683,13 +683,13 @@ public class AuthLoginController {
     }
 
     /**
-     * RefreshToken 쿠키를 생성함
+     * RefreshToken 쿠키를 생성
      *
      * @param refreshToken 발급된 RefreshToken
      * @return 생성된 ResponseCookie 객체
      */
     private ResponseCookie createRefreshTokenCookie(String refreshToken) {
-        // RefreshToken 쿠키를 생성 결과를 반환함
+        // RefreshToken 쿠키를 생성 결과를 반환
         return createTokenCookie(
                 REFRESH_TOKEN_COOKIE_NAME,
                 refreshToken,
@@ -698,7 +698,7 @@ public class AuthLoginController {
     }
 
     /**
-     * 공통 토큰 쿠키 객체를 생성함
+     * 공통 토큰 쿠키 객체를 생성
      *
      * @param name 쿠키명
      * @param value 쿠키값
@@ -706,12 +706,12 @@ public class AuthLoginController {
      * @return 생성된 ResponseCookie 객체
      */
     private ResponseCookie createTokenCookie(String name, String value, long maxAgeSeconds) {
-        // 공통 토큰 쿠키 객체를 생성 결과를 반환함
+        // 공통 토큰 쿠키 객체를 생성 결과를 반환
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
-                // 운영 HTTPS와 프론트/백 도메인 분리 여부에 따라 SameSite 값을 yml 환경변수로 조정함
+                // 운영 HTTPS와 프론트/백 도메인 분리 여부에 따라 SameSite 값을 yml 환경변수로 조정
                 .sameSite(cookieSameSite)
-                // 운영 HTTPS 배포에서는 true로 설정해 브라우저가 보안 연결에서만 토큰 쿠키를 전송하게 함
+                // 운영 HTTPS 배포에서는 true로 설정해 브라우저가 보안 연결에서만 토큰 쿠키를 전송하도록 처리
                 .secure(cookieSecure)
                 .path("/")
                 .maxAge(maxAgeSeconds)
@@ -719,67 +719,67 @@ public class AuthLoginController {
     }
 
     /**
-     * 만료 처리용 빈 쿠키 객체를 생성함
+     * 만료 처리용 빈 쿠키 객체를 생성
      *
      * @param name 쿠키명
      * @return 만료 설정된 ResponseCookie 객체
      */
     private ResponseCookie createExpiredCookie(String name) {
-        // 만료 처리용 빈 쿠키 객체를 생성 결과를 반환함
+        // 만료 처리용 빈 쿠키 객체를 생성 결과를 반환
         return createTokenCookie(name, "", 0);
     }
 
     /**
-     * Request 쿠키에서 RefreshToken을 추출함
+     * Request 쿠키에서 RefreshToken을 추출
      *
      * @param request HTTP 요청 정보
      * @return 추출된 RefreshToken (없을 경우 null)
      */
     private String extractRefreshToken(HttpServletRequest request) {
-        // Request 쿠키에서 RefreshToken을 추출 결과를 반환함
+        // Request 쿠키에서 RefreshToken을 추출 결과를 반환
         return extractCookieValue(request, REFRESH_TOKEN_COOKIE_NAME);
     }
 
     /**
-     * Request 쿠키에서 AccessToken을 추출함
+     * Request 쿠키에서 AccessToken을 추출
      *
      * @param request HTTP 요청 정보
      * @return 추출된 AccessToken (없을 경우 null)
      */
     private String extractAccessToken(HttpServletRequest request) {
-        // Request 쿠키에서 AccessToken을 추출 결과를 반환함
+        // Request 쿠키에서 AccessToken을 추출 결과를 반환
         return extractCookieValue(request, ACCESS_TOKEN_COOKIE_NAME);
     }
 
     /**
-     * Request 쿠키 목록에서 특정 이름의 쿠키 값을 추출함
+     * Request 쿠키 목록에서 특정 이름의 쿠키 값을 추출
      *
      * @param request HTTP 요청 정보
      * @param name 쿠키명
      * @return 쿠키 값 (없을 경우 null)
      */
     private String extractCookieValue(HttpServletRequest request, String name) {
-        // 요청 헤더에 쿠키가 존재하지 않는 경우 null을 반환함
+        // 요청 헤더에 쿠키가 존재하지 않는 경우 null을 반환
         if (StringUtil.isEmpty(request.getCookies())) {
-            // 조회하거나 생성할 값이 없음을 반환함
+            // 조회하거나 생성할 값이 없음을 반환
             return null;
         }
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록임
+        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
         for (Cookie cookie : request.getCookies()) {
-            // 찾고자 하는 쿠키명과 일치하는 쿠키가 존재하면 해당 값을 반환함
+            // 찾고자 하는 쿠키명과 일치하는 쿠키가 존재하면 해당 값을 반환
             if (name.equals(cookie.getName())) {
-                // Request 쿠키 목록에서 특정 이름의 쿠키 값을 추출 결과를 반환함
+                // Request 쿠키 목록에서 특정 이름의 쿠키 값을 추출 결과를 반환
                 return cookie.getValue();
             }
         }
 
-        // 조회하거나 생성할 값이 없음을 반환함
+        // 조회하거나 생성할 값이 없음을 반환
         return null;
     }
 
     /**
-     * 클라이언트의 실제 IP 주소를 추출함
+     * 클라이언트의 실제 IP 주소를 추출
      *
      * @author SeungHyeon.Kang
      * @param request HTTP 요청 정보
@@ -789,34 +789,34 @@ public class AuthLoginController {
         // getHeader 조회로 후속 처리에 필요한 데이터를 가져옴
         String forwardedFor = request.getHeader("X-Forwarded-For");
 
-        // 프록시/로드밸런서를 거쳐 들어온 경우 원본 클라이언트 IP(X-Forwarded-For)를 우선 추출함
+        // 프록시/로드밸런서를 거쳐 들어온 경우 원본 클라이언트 IP(X-Forwarded-For)를 우선 추출
         if (!StringUtil.isEmpty(forwardedFor)) {
-            // 클라이언트의 실제 IP 주소를 추출 결과를 반환함
+            // 클라이언트의 실제 IP 주소를 추출 결과를 반환
             return forwardedFor.split(",")[0].trim();
         }
 
         // getHeader 조회로 후속 처리에 필요한 데이터를 가져옴
         String realIp = request.getHeader("X-Real-IP");
 
-        // Nginx 등에서 설정한 X-Real-IP 헤더가 존재하는 경우 해당 IP를 반환함
+        // Nginx 등에서 설정한 X-Real-IP 헤더가 존재하는 경우 해당 IP를 반환
         if (!StringUtil.isEmpty(realIp)) {
-            // 클라이언트의 실제 IP 주소를 추출 결과를 반환함
+            // 클라이언트의 실제 IP 주소를 추출 결과를 반환
             return realIp;
         }
 
-        // 클라이언트의 실제 IP 주소를 추출 결과를 반환함
+        // 클라이언트의 실제 IP 주소를 추출 결과를 반환
         return request.getRemoteAddr();
     }
 
     /**
-     * Request 헤더에서 User-Agent(브라우저/디바이스 정보)를 추출함
+     * Request 헤더에서 User-Agent(브라우저/디바이스 정보)를 추출
      *
      * @author SeungHyeon.Kang
      * @param request HTTP 요청 정보
      * @return User-Agent 문자열
      */
     private String getUserAgent(HttpServletRequest request) {
-        // Request 헤더에서 User-Agent(브라우저/디바이스 정보)를 추출 결과를 반환함
+        // Request 헤더에서 User-Agent(브라우저/디바이스 정보)를 추출 결과를 반환
         return request.getHeader(HttpHeaders.USER_AGENT);
     }
 }

@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : ReportTranslationDto
  * author         : HanWon.Jang
  * date           : 2026-09-07
- * description    : 독후감 원문과 번역 캐시 및 번역 응답 데이터를 전달함
+ * description    : 독후감 원문과 번역 캐시 및 번역 응답 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -17,7 +17,7 @@ import * as styles from "./SuspensionPage.css";
 const SUSPENDED_STATUS = "SUSPENDED";
 
 /**
- * 서버의 이용 정지 일시를 한국어 화면 표시값으로 변환함
+ * 서버의 이용 정지 일시를 한국어 화면 표시값으로 변환
  *
  * @author HanWon.Jang
  * @param value 변환할 ISO 일시
@@ -25,18 +25,18 @@ const SUSPENDED_STATUS = "SUSPENDED";
  */
 const formatDateTime = (value?: string | null): string => {
 
-  // 종료 일시가 없는 무기한 정지는 기간 대신 유형을 표시함
+  // 종료 일시가 없는 무기한 정지는 기간 대신 유형을 표시
   if (!value) {
     // "무기한"
     return message("frontend.suspension.indefinite");
   }
 
-  // 브라우저의 한국어 날짜 형식으로 변환한 일시를 반환함
+  // 브라우저의 한국어 날짜 형식으로 변환한 일시를 반환
   return new Date(value).toLocaleString("ko-KR");
 };
 
 /**
- * 관리자 이용 정지가 적용된 회원에게 공개 사유와 기간 및 허용 동작을 안내함
+ * 관리자 이용 정지가 적용된 회원에게 공개 사유와 기간 및 허용 동작을 안내
  *
  * @author HanWon.Jang
  * @return 이용 정지 전용 화면
@@ -50,41 +50,41 @@ function SuspensionPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // 정지 안내 화면 진입 시 공개 가능한 정지 정보만 조회함
+    // 정지 안내 화면 진입 시 공개 가능한 정지 정보만 조회
     void (async () => {
-      // 정지 정보 조회 실패를 사용자 안내로 전환함
+      // 정지 정보 조회 실패를 사용자 안내로 전환
       try {
-        // 현재 로그인 회원의 정지 유형과 사유 및 기간을 조회함
+        // 현재 로그인 회원의 정지 유형과 사유 및 기간을 조회
         const result = await getUserSuspensionApi();
 
-        // 활성 정지 이력이 없으면 DB 상태로 보정된 인증 정보를 다시 확인함
+        // 활성 정지 이력이 없으면 DB 상태로 보정된 인증 정보를 다시 확인
         if (!result.data) {
-          // 백엔드가 보정한 회원 상태를 즉시 다시 조회함
+          // 백엔드가 보정한 회원 상태를 즉시 다시 조회
           const authResult = await checkAuthApi();
-          // 보호 라우트도 같은 최신 인증 결과를 사용하도록 인증 캐시를 교체함
+          // 보호 라우트도 같은 최신 인증 결과를 사용하도록 인증 캐시를 교체
           queryClient.setQueryData(["auth"], authResult);
-          // 현재 인증 응답에서 화면 이동 판단에 필요한 회원 상태를 추출함
+          // 현재 인증 응답에서 화면 이동 판단에 필요한 회원 상태를 추출
           const authData = authResult.data as { userStat?: string } | undefined;
 
-          // 정지가 해제 또는 만료된 경우에만 일반 서비스 홈으로 이동함
+          // 정지가 해제 또는 만료된 경우에만 일반 서비스 홈으로 이동
           if (authData?.userStat !== SUSPENDED_STATUS) {
-            // 전체 새로고침 없이 홈으로 이동해 정지 화면 재진입 반복을 차단함
+            // 전체 새로고침 없이 홈으로 이동해 정지 화면 재진입 반복을 차단
             navigate("/home", { replace: true });
           }
 
-          // DB가 여전히 정지 상태이면 상세 정보가 없어도 현재 제한 화면을 유지함
+          // DB가 여전히 정지 상태이면 상세 정보가 없어도 현재 제한 화면을 유지
           return;
         }
 
-        // 활성 정지가 확인된 뒤 해당 정지 이후 접수한 최신 이의제기 번호를 조회함
+        // 활성 정지가 확인된 뒤 해당 정지 이후 접수한 최신 이의제기 번호를 조회
         const inquiryNumb = await getSuspInquiryNumbApi();
-        // 현재 정지 이후 접수한 이의제기 문의 번호를 버튼 이동값으로 보관함
+        // 현재 정지 이후 접수한 이의제기 문의 번호를 버튼 이동값으로 보관
         setSuspInquiryNumb(inquiryNumb);
-        // 사용자에게 공개할 정지 정보를 화면 상태에 반영함
+        // 사용자에게 공개할 정지 정보를 화면 상태에 반영
         setSuspension(result.data);
       }
 
-      // 정지 정보 조회 오류를 사용자에게 안내함
+      // 정지 정보 조회 오류를 사용자에게 안내
       catch (error) {
         // "이용 정지 정보를 확인할 수 없어요."
         // "잠시 후 다시 시도해주세요."
@@ -94,50 +94,50 @@ function SuspensionPage() {
         );
       }
 
-      // 조회 성공 여부와 관계없이 로딩 화면을 종료함
+      // 조회 성공 여부와 관계없이 로딩 화면을 종료
       finally {
-        // 정지 정보 조회 완료 상태를 화면에 반영함
+        // 정지 정보 조회 완료 상태를 화면에 반영
         setIsLoading(false);
       }
     })();
   }, [navigate, queryClient]);
 
   /**
-   * 선택한 범위의 로그인 세션을 종료하고 로그인 화면으로 이동함
+   * 선택한 범위의 로그인 세션을 종료하고 로그인 화면으로 이동
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const handleLogout = async (): Promise<void> => {
 
-    // 제한 화면에서도 같은 Alert로 현재 기기 또는 전체 기기 로그아웃 범위를 선택함
+    // 제한 화면에서도 같은 Alert로 현재 기기 또는 전체 기기 로그아웃 범위를 선택
     const logoutScope = await selectLogoutScope();
 
-    // 사용자가 취소하면 정지 안내 화면을 유지함
+    // 사용자가 취소하면 정지 안내 화면을 유지
     if (!logoutScope) {
       return;
     }
 
-    // 서버 로그아웃 실패가 발생해도 현재 제한 화면에서는 로그인 화면으로 이동함
+    // 서버 로그아웃 실패가 발생해도 현재 제한 화면에서는 로그인 화면으로 이동
     try {
-      // 선택한 범위의 로그인 세션과 푸시 구독을 정리함
+      // 선택한 범위의 로그인 세션과 푸시 구독을 정리
       await runLogout(logoutScope);
     }
 
-    // 로그아웃 요청 결과와 관계없이 로그인 화면으로 이동함
+    // 로그아웃 요청 결과와 관계없이 로그인 화면으로 이동
     finally {
-      // 인증이 필요한 정지 화면에서 공개 로그인 화면으로 이동함
+      // 인증이 필요한 정지 화면에서 공개 로그인 화면으로 이동
       navigate("/login", { replace: true });
     }
   };
 
-  // 정지 정보를 조회하는 동안 안내 화면을 반환함
+  // 정지 정보를 조회하는 동안 안내 화면을 반환
   if (isLoading) {
     // "이용 정지 정보를 확인하고 있어요."
     return <main className={styles.page}>{message("frontend.suspension.loading")}</main>;
   }
 
-  // 공개 정지 정보와 허용된 계정 처리 동작만 포함한 전용 화면을 반환함
+  // 공개 정지 정보와 허용된 계정 처리 동작만 포함한 전용 화면을 반환
   return (
     <main className={styles.page}>
       {/* 이용 정지 상태와 제한 동작 안내 전체 영역 */}
@@ -152,7 +152,7 @@ function SuspensionPage() {
           {message("frontend.suspension.description")}
         </p>
 
-        {/* 활성 정지 이력이 있을 때만 공개 사유와 기간을 표시함 */}
+        {/* 활성 정지 이력이 있을 때만 공개 사유와 기간을 표시 */}
         {suspension ? (
           <dl className={styles.detailList}>
             <div className={styles.detailItem}>

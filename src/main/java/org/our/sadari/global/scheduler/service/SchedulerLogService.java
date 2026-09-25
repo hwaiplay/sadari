@@ -6,7 +6,7 @@ import org.our.sadari.global.scheduler.dto.SchedulerLogDto;
  * fileName       : SchedulerLogService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 업무 계약을 정의함
+ * description    : 스케줄러 업무 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

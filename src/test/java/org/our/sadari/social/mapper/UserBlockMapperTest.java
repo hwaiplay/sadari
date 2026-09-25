@@ -19,7 +19,7 @@ import org.our.sadari.social.dto.UserBlockDto;
  * fileName       : UserBlockMapperTest
  * author         : HanWon.Jang
  * date           : 2026-09-14
- * description    : 차단 반응 삭제 SQL의 개인 영역 경계를 검증함
+ * description    : 차단 반응 삭제 SQL의 개인 영역 경계를 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

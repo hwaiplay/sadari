@@ -182,7 +182,7 @@ const ClubDetailPage = () => {
     navigate(`/reading-clubs/vote/book/${club.clubNumb}`);
   };
 
-  // 현재 활성 모임의 채팅 화면으로 이동함
+  // 현재 활성 모임의 채팅 화면으로 이동
   const handleClubChat = (): void => {
     navigate(`/reading-clubs/chat/${club.clubNumb}`);
   };
@@ -208,7 +208,7 @@ const ClubDetailPage = () => {
   };
 
   /**
-   * 승인제 모임의 가입 질문과 답변 입력란을 표시함
+   * 승인제 모임의 가입 질문과 답변 입력란을 표시
    *
    * @author HanWon.Jang
    * @param question 표시할 가입 질문
@@ -224,18 +224,18 @@ const ClubDetailPage = () => {
     const answerCount = message("frontend.readingClub.detail.answerCount", [answer.length]);
 
     /**
-     * 현재 가입 질문의 답변을 변경함
+     * 현재 가입 질문의 답변을 변경
      *
      * @author HanWon.Jang
      * @param event 답변 입력 변경 이벤트
      * @return 반환값이 없음
      */
     const handleChange = (event: ChangeEvent<HTMLTextAreaElement>): void => {
-      // 변경한 질문 순서와 답변을 가입 신청 상태에 반영함
+      // 변경한 질문 순서와 답변을 가입 신청 상태에 반영
       handleAnswerChange(index, event.currentTarget.value);
     };
 
-    // 가입 질문과 최대 200자의 답변 입력란을 반환함
+    // 가입 질문과 최대 200자의 답변 입력란을 반환
     return (
       <div className={styles.joinQuestionItem} key={`${question}-${index}`}>
         <label className={styles.joinQuestionLabel} htmlFor={inputId}>
@@ -376,7 +376,7 @@ const ClubDetailPage = () => {
                     </div>
                   ) : (
                     <div className={styles.readingEmpty}>
-                      {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공함 */}
+                      {/* 현재 독서 등록을 시작하는 책 검색은 모임장에게만 제공 */}
                       {club.membRole === "OWNER" ? (
                         <SearchBookButton to={`/reading-clubs/books/search/${club.clubNumb}`}/>
                       ) : null}
@@ -477,7 +477,7 @@ const ClubDetailPage = () => {
                   ) : null}
                 </div>
 
-                {/* 멤버 관리는 활성 모임장에게만 제공함 */}
+                {/* 멤버 관리는 활성 모임장에게만 제공 */}
                 {club.membRole === "OWNER" ? (
                   <LinkButton
                     link={`/reading-clubs/manage/members/${club.clubNumb}`}

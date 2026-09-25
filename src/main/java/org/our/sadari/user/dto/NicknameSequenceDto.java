@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : NicknameSequenceDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-29
- * description    : 신규 회원 닉네임 번호 발급 데이터를 전달함
+ * description    : 신규 회원 닉네임 번호 발급 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

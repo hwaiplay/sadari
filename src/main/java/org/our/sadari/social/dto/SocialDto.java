@@ -7,7 +7,7 @@ import lombok.Data;
  * fileName       : SocialDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-24
- * description    : 사용자 검색과 팔로우 및 좋아요 요청과 응답 데이터를 전달함
+ * description    : 사용자 검색과 팔로우 및 좋아요 요청과 응답 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -24,8 +24,8 @@ import lombok.Data;
 public class SocialDto {
 
     /**
-     * 팔로우 관계 조회, 등록, 삭제에 사용하는 DTO임
-     * 로그인 사용자와 대상 사용자를 한 객체로 묶어 Controller, Service, Mapper가 같은 파라미터 구조를 사용하게 함
+     * 팔로우 관계 조회, 등록, 삭제에 사용하는 DTO
+     * 로그인 사용자와 대상 사용자를 한 객체로 묶어 Controller, Service, Mapper가 같은 파라미터 구조를 사용하도록 처리
      *
      * @author SeungHyeon.Kang
      */
@@ -46,8 +46,8 @@ public class SocialDto {
     }
 
     /**
-     * 좋아요 등록, 취소, 상태 조회에 사용하는 DTO임
-     * TB_LIKEXX가 공용 좋아요 테이블이므로 독후감 번호 전용 reptNumb 대신 대상 타입과 대상 번호를 사용함
+     * 좋아요 등록, 취소, 상태 조회에 사용하는 DTO
+     * TB_LIKEXX가 공용 좋아요 테이블이므로 독후감 번호 전용 reptNumb 대신 대상 타입과 대상 번호를 사용
      *
      * @author SeungHyeon.Kang
      */
@@ -86,7 +86,7 @@ public class SocialDto {
     }
 
     /**
-     * 프로필 상단 통계 영역에 표시할 social 집계 DTO임
+     * 프로필 상단 통계 영역에 표시할 social 집계 DTO
      * 총 읽은 책은 독후감 완료 상태를 기준으로 세지만, 화면 요구사항상 팔로우/팔로워/좋아요와 함께 묶여 표시되므로
      * 조회 책임을 social 영역에 둠
      *
@@ -120,8 +120,8 @@ public class SocialDto {
     }
 
     /**
-     * 팔로우/팔로워 목록 조회 조건 DTO임
-     * userNumb는 목록의 주인이고, loginUserNumb는 각 목록 사용자에 대한 현재 로그인 사용자의 팔로우 상태를 계산하는 기준임
+     * 팔로우/팔로워 목록 조회 조건 DTO
+     * userNumb는 목록의 주인이고, loginUserNumb는 각 목록 사용자에 대한 현재 로그인 사용자의 팔로우 상태를 계산하는 기준
      *
      * @author SeungHyeon.Kang
      */
@@ -147,8 +147,8 @@ public class SocialDto {
     }
 
     /**
-     * 피드에서 활성 사용자를 닉네임으로 검색할 때 사용하는 조회 조건 DTO임
-     * 로그인 사용자 기준 관계 정렬과 페이지 범위를 한 객체로 Mapper에 전달함
+     * 피드에서 활성 사용자를 닉네임으로 검색할 때 사용하는 조회 조건 DTO
+     * 로그인 사용자 기준 관계 정렬과 페이지 범위를 한 객체로 Mapper에 전달
      *
      * @author HanWon.Jang
      */
@@ -171,7 +171,7 @@ public class SocialDto {
     }
 
     /**
-     * 팔로우/팔로워 목록에 표시할 사용자 DTO임
+     * 팔로우/팔로워 목록에 표시할 사용자 DTO
      * 목록의 각 사용자는 프로필 기본 정보와 로그인 사용자 기준 팔로우 버튼명을 함께 가짐
      *
      * @author SeungHyeon.Kang
@@ -202,8 +202,8 @@ public class SocialDto {
     }
 
     /**
-     * 좋아요 사용자 목록 조회 조건 DTO임
-     * 로그인 사용자와 대상 식별값 및 페이지 조건을 함께 전달해 접근 검증과 목록 조회가 같은 기준을 사용하게 함
+     * 좋아요 사용자 목록 조회 조건 DTO
+     * 로그인 사용자와 대상 식별값 및 페이지 조건을 함께 전달해 접근 검증과 목록 조회가 같은 기준을 사용하도록 처리
      *
      * @author SeungHyeon.Kang
      */

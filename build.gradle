@@ -45,7 +45,7 @@ dependencies {
 	// 스프링 MVC를 이용한 웹 개발(REST API, 컨트롤러 등)의 핵심 라이브러리
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
 
-	// 요청 본문 검증에 필요한 의존성임
+	// 요청 본문 검증에 필요한 의존성
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 
 	// Swagger UI와 OpenAPI 3 문서를 자동 생성해 API 정의서를 브라우저에서 확인할 수 있게 해주는 라이브러리
@@ -88,7 +88,7 @@ dependencies {
 
 	/*
 	 * JWT API와 런타임 구현체 버전이 다르면 parserBuilder/setSubject 같은 메서드 호출 시
-	 * 컴파일은 성공해도 실행 중 NoSuchMethodError가 발생하므로 세 모듈을 하나의 버전으로 관리함
+	 * 컴파일은 성공해도 실행 중 NoSuchMethodError가 발생하므로 세 모듈을 하나의 버전으로 관리
 	 */
 	implementation "io.jsonwebtoken:jjwt-api:${jjwtVersion}"
 	runtimeOnly "io.jsonwebtoken:jjwt-impl:${jjwtVersion}"
@@ -138,7 +138,7 @@ task installReact(type: Exec) {
 		commandLine 'npm.cmd', npmInstallCommand
 	}
 	else {
-		// Docker/CI에서는 -PfrontendInstallCommand=ci를 넘겨 package-lock.json 기준의 재현 가능한 설치를 수행함
+		// Docker/CI에서는 -PfrontendInstallCommand=ci를 넘겨 package-lock.json 기준의 재현 가능한 설치를 수행
 		commandLine 'npm', npmInstallCommand
 	}
 }

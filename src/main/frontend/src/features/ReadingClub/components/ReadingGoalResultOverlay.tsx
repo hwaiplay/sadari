@@ -96,7 +96,7 @@ const ReadingGoalResultOverlay = ({
       return;
     }
 
-    // 서버 확인이 성공한 뒤 부모 화면이 결과 팝업을 제거하도록 요청함
+    // 서버 확인이 성공한 뒤 부모 화면이 결과 팝업을 제거하도록 요청
     await onClose();
   };
 
@@ -107,7 +107,7 @@ const ReadingGoalResultOverlay = ({
    * @return
    */
   const openReadingRoundReports = ()=> {
-    // 목록의 첫 렌더링부터 도서 요약을 표시할 수 있도록 팝업의 도서 정보를 함께 전달함
+    // 목록의 첫 렌더링부터 도서 요약을 표시할 수 있도록 팝업의 도서 정보를 함께 전달
     navigate(`/reading-clubs/history/${result.clubNumb}/${result.rondNumb}/reports`, {
       state: {
         title: result.bookTitl,
@@ -117,7 +117,7 @@ const ReadingGoalResultOverlay = ({
     });
   }
 
-  // 팝업에서는 배경을 차단하고 페이지에서는 같은 결과 본문만 표시함
+  // 팝업에서는 배경을 차단하고 페이지에서는 같은 결과 본문만 표시
   return (
     <>
       {variant === "overlay" ? (

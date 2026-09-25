@@ -21,7 +21,7 @@ import org.our.sadari.report.dto.ReportDto;
  * fileName       : ReadingClubDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-05
- * description    : 독서 모임 1차 기능의 요청과 응답 데이터를 전달함
+ * description    : 독서 모임 1차 기능의 요청과 응답 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -42,7 +42,7 @@ import org.our.sadari.report.dto.ReportDto;
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
 
-    /** 다음 도서 추천 요청과 목록 항목을 전달함 */
+    /** 다음 도서 추천 요청과 목록 항목을 전달 */
     @Data
     @EqualsAndHashCode(callSuper = true)
     @Schema(description = "다음 도서 추천 정보")
@@ -64,7 +64,7 @@ public final class ReadingClubDto {
         private Integer voteCnt;
     }
 
-    /** 다음 도서 투표 대상을 전달함 */
+    /** 다음 도서 투표 대상을 전달 */
     @Data
     @Schema(description = "다음 도서 투표 요청")
     public static class BookVoteReqDto {
@@ -74,7 +74,7 @@ public final class ReadingClubDto {
         private Long recmNumb;
     }
 
-    /** 다음 도서 투표 화면의 후보와 정책 상태를 전달함 */
+    /** 다음 도서 투표 화면의 후보와 정책 상태를 전달 */
     @Data
     @Schema(description = "다음 도서 투표 화면 정보")
     public static class BookVotePageDto {
@@ -98,7 +98,7 @@ public final class ReadingClubDto {
         private boolean hasVoted;
     }
 
-    /** 다음 도서 투표 주기의 기준 회차를 전달함 */
+    /** 다음 도서 투표 주기의 기준 회차를 전달 */
     @Data
     @Schema(hidden = true)
     public static class BookVoteRuleDto {
@@ -126,7 +126,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingCreateReqDto
      * author         : Hanwon.Jang
      * date           : 2026-08-14
-     * description    : 모임 독서 회차와 멤버별 독후감 생성에 필요한 도서와 목표 기간을 전달함
+     * description    : 모임 독서 회차와 멤버별 독후감 생성에 필요한 도서와 목표 기간을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -160,7 +160,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingUpdateReqDto
      * author         : Hanwon.Jang
      * date           : 2026-08-20
-     * description    : 현재 모임 독서의 도서와 목표 기간 수정값을 전달함
+     * description    : 현재 모임 독서의 도서와 목표 기간 수정값을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -186,7 +186,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingManageDto
      * author         : Hanwon.Jang
      * date           : 2026-08-20
-     * description    : 모임 독서 수정 검증에 필요한 잠긴 회차 정보를 전달함
+     * description    : 모임 독서 수정 검증에 필요한 잠긴 회차 정보를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -217,7 +217,7 @@ public final class ReadingClubDto {
      * fileName       : ClubCreateReqDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 독서 모임 생성 입력값을 전달함
+     * description    : 독서 모임 생성 입력값을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -269,7 +269,7 @@ public final class ReadingClubDto {
      * fileName       : ClubViewDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 독서 모임 목록과 상세 화면에 필요한 현재 상태를 전달함
+     * description    : 독서 모임 목록과 상세 화면에 필요한 현재 상태를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -402,7 +402,7 @@ public final class ReadingClubDto {
      * fileName       : CategoryDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임 카테고리 세부코드와 화면 표시명을 전달함
+     * description    : 모임 카테고리 세부코드와 화면 표시명을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -430,7 +430,7 @@ public final class ReadingClubDto {
      * fileName       : QuestionDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임당 한 행으로 저장한 승인 가입 질문을 전달함
+     * description    : 모임당 한 행으로 저장한 승인 가입 질문을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -458,7 +458,7 @@ public final class ReadingClubDto {
      * fileName       : MemberDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 동일 모임과 사용자의 현재 회원 또는 초대 관계를 전달함
+     * description    : 동일 모임과 사용자의 현재 회원 또는 초대 관계를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -486,7 +486,7 @@ public final class ReadingClubDto {
      * fileName       : MemberProfileDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-13
-     * description    : 모임 상세 화면에 노출할 활성 모임원의 프로필 정보를 전달함
+     * description    : 모임 상세 화면에 노출할 활성 모임원의 프로필 정보를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -512,7 +512,7 @@ public final class ReadingClubDto {
         private String mineYsno;
     }
 
-    /** 모임원이 전송할 채팅 본문과 중복 방지 키를 전달함 */
+    /** 모임원이 전송할 채팅 본문과 중복 방지 키를 전달 */
     @Data
     @Schema(description = "모임 채팅 전송 요청")
     public static class ClubChatReqDto {
@@ -528,7 +528,7 @@ public final class ReadingClubDto {
         private String clntUuid;
     }
 
-    /** 모임원이 마지막으로 확인한 채팅 번호를 전달함 */
+    /** 모임원이 마지막으로 확인한 채팅 번호를 전달 */
     @Data
     @Schema(description = "모임 채팅 읽음 처리 요청")
     public static class ClubChatReadReqDto {
@@ -545,7 +545,7 @@ public final class ReadingClubDto {
         private Boolean viewing;
     }
 
-    /** 모임 채팅 목록 항목을 전달함 */
+    /** 모임 채팅 목록 항목을 전달 */
     @Data
     @Schema(description = "모임 채팅 항목")
     public static class ClubChatDto {
@@ -584,7 +584,7 @@ public final class ReadingClubDto {
         private LocalDateTime regiDate;
     }
 
-    /** 모임장 강제 퇴장 사유를 전달함 */
+    /** 모임장 강제 퇴장 사유를 전달 */
     @Data
     @Schema(description = "모임원 강제 퇴장 요청")
     public static class MemberKickReqDto {
@@ -599,7 +599,7 @@ public final class ReadingClubDto {
      * fileName       : MemberExitHistoryDto
      * author         : HanWon.Jang
      * date           : 2026-08-24
-     * description    : 퇴장한 모임원의 프로필과 재가입 제한 상태를 전달함
+     * description    : 퇴장한 모임원의 프로필과 재가입 제한 상태를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -638,7 +638,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingGoalResultDto
      * author         : HanWon.Jang
      * date           : 2026-08-22
-     * description    : 종료된 모임 독서 회차의 목표 결과와 달성자 정보를 전달함
+     * description    : 종료된 모임 독서 회차의 목표 결과와 달성자 정보를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -692,7 +692,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingHistoryDto
      * author         : HanWon.Jang
      * date           : 2026-08-23
-     * description    : 종료된 모임 독서 회차의 도서와 목표 달성 집계를 전달함
+     * description    : 종료된 모임 독서 회차의 도서와 목표 달성 집계를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -738,7 +738,7 @@ public final class ReadingClubDto {
      * fileName       : ReadingRoundReportPageDto
      * author         : HanWon.Jang
      * date           : 2026-08-22
-     * description    : 모임 독서 회차의 도서 정보와 완료 독후감 페이지를 전달함
+     * description    : 모임 독서 회차의 도서 정보와 완료 독후감 페이지를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -777,7 +777,7 @@ public final class ReadingClubDto {
      * fileName       : JoinReqDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 공개 승인형 모임의 질문별 장문 답변을 전달함
+     * description    : 공개 승인형 모임의 질문별 장문 답변을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -796,7 +796,7 @@ public final class ReadingClubDto {
      * fileName       : InviteReqDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임장이 맞팔로우 사용자에게 발송할 초대 대상을 전달함
+     * description    : 모임장이 맞팔로우 사용자에게 발송할 초대 대상을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -815,7 +815,7 @@ public final class ReadingClubDto {
      * fileName       : ApplicationDecisionReqDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임장이 가입 신청에 내리는 승인 또는 거절 결정을 전달함
+     * description    : 모임장이 가입 신청에 내리는 승인 또는 거절 결정을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -834,7 +834,7 @@ public final class ReadingClubDto {
      * fileName       : InviteCandidateDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임장의 맞팔 초대 후보 정보를 전달함
+     * description    : 모임장의 맞팔 초대 후보 정보를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -864,7 +864,7 @@ public final class ReadingClubDto {
      * fileName       : SentInvitationDto
      * author         : Hanwon.Jang
      * date           : 2026-08-14
-     * description    : 모임장이 발송한 유효한 초대 대상 정보를 전달함
+     * description    : 모임장이 발송한 유효한 초대 대상 정보를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -897,7 +897,7 @@ public final class ReadingClubDto {
      * fileName       : InvitationDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 로그인 사용자에게 도착한 유효한 모임 초대를 전달함
+     * description    : 로그인 사용자에게 도착한 유효한 모임 초대를 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -927,7 +927,7 @@ public final class ReadingClubDto {
      * fileName       : ApplicationDto
      * author         : SeungHyeon.Kang
      * date           : 2026-08-05
-     * description    : 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 전달함
+     * description    : 모임장이 심사할 처리 중 가입 신청의 질문과 답변을 전달
      * ===========================================================
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
@@ -987,6 +987,6 @@ public final class ReadingClubDto {
     }
 
     private ReadingClubDto() {
-        // DTO 컨테이너 인스턴스 생성을 차단함
+        // DTO 컨테이너 인스턴스 생성을 차단
     }
 }

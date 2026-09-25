@@ -61,9 +61,9 @@ export default function MyClubPage() {
 
   // 모임장인 모든 모임의 승인 대기 신청 건수를 합산
   const pendingApplicationCnt = pendingApplications.reduce(sumApplicationCnt, 0);
-  // 로그인 사용자가 가입 승인을 기다리는 모임을 별도 목록으로 구분함
+  // 로그인 사용자가 가입 승인을 기다리는 모임을 별도 목록으로 구분
   const pendingJoinedClubs = clubs.filter((club) => club.joinStat === "PENDING");
-  // 실제 활성 회원으로 참여 중인 모임만 진행 중 목록에 표시함
+  // 실제 활성 회원으로 참여 중인 모임만 진행 중 목록에 표시
   const activeClubs = clubs.filter((club) => club.joinStat !== "PENDING");
   const hasClubNotice = invitations.length > 0 || pendingApplicationCnt > 0;
 
@@ -112,7 +112,7 @@ export default function MyClubPage() {
   );
 
   /**
-   * 승인 대기 가입 신청이 있는 모임의 관리 화면 이동 항목을 구성함
+   * 승인 대기 가입 신청이 있는 모임의 관리 화면 이동 항목을 구성
    *
    * @author HanWon.Jang
    * @param club 표시할 모임별 가입 신청 요약
@@ -134,17 +134,17 @@ export default function MyClubPage() {
   );
 
   /**
-   * 진행 중인 모임 한 건을 카드 형태로 구성함
+   * 진행 중인 모임 한 건을 카드 형태로 구성
    *
    * @author Hanwon.Jang
    * @param club 표시할 모임
    * @return 진행 중인 모임 카드
   */
   const renderClub = (club: ReadingClub) => {
-    // 두 모임 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회함
+    // 두 모임 화면이 같은 날짜 경계와 문구를 사용하도록 공통 표시값을 조회
     const readingDeadline = getReadingDeadline(club.currentGoalEndt);
 
-    // 현재 독서 종료일까지 남은 기간을 포함한 모임 카드를 반환함
+    // 현재 독서 종료일까지 남은 기간을 포함한 모임 카드를 반환
     return (
       /* 진행 중인 모임 개별 항목 영역 */
       <article
@@ -192,7 +192,7 @@ export default function MyClubPage() {
     );
   };
 
-  // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환함
+  // 조회 상태와 관계없이 검색과 모임 찾기를 사용할 수 있는 전체 화면을 반환
   return (
     <div className={styles.page}>
       {/* 모임 검색 진입 영역 */}
@@ -266,7 +266,7 @@ export default function MyClubPage() {
             </ActionButton>
           </div>
 
-          {/* 접힌 상태에서도 상세 DOM을 유지하여 높이 전환이 자연스럽게 이어지게 함 */}
+          {/* 접힌 상태에서도 상세 DOM을 유지하여 높이 전환이 자연스럽게 이어지도록 처리 */}
           <div
             id="club-notice-details"
             className={isNoticeOpen ? styles.noticeDetailsOpen : styles.noticeDetails}

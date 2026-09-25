@@ -9,7 +9,7 @@ type ProgressiveListResult<T> = {
 };
 
 /**
- * 전체 조회 목록을 최초 10개부터 10개 단위로 점진적으로 노출함
+ * 전체 조회 목록을 최초 10개부터 10개 단위로 점진적으로 노출
  *
  * @author SeungHyeon.Kang
  * @param items 화면에 점진적으로 노출할 전체 목록
@@ -25,7 +25,7 @@ export function useProgressiveList<T>(
 
   useEffect(() => {
 
-    // 조회 조건이나 대상 목록이 바뀌면 새 결과의 최초 10개부터 표시함
+    // 조회 조건이나 대상 목록이 바뀌면 새 결과의 최초 10개부터 표시
     setVisibleCount(INFINITE_LIST_PAGE_SIZE);
   }, [resetKey]);
 
@@ -36,19 +36,19 @@ export function useProgressiveList<T>(
   const hasNext = visibleCount < items.length;
 
   /**
-   * 현재 노출 범위 다음의 최대 10개 항목을 추가로 표시함
+   * 현재 노출 범위 다음의 최대 10개 항목을 추가로 표시
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없음
    */
   const loadMore = useCallback((): void => {
 
-    // 전체 목록 길이를 넘지 않는 범위에서 다음 10개까지 노출 범위를 확장함
+    // 전체 목록 길이를 넘지 않는 범위에서 다음 10개까지 노출 범위를 확장
     setVisibleCount((current) => (
       Math.min(current + INFINITE_LIST_PAGE_SIZE, items.length)
     ));
   }, [items.length]);
 
-  // 화면이 사용할 현재 목록과 자동 더보기 상태를 반환함
+  // 화면이 사용할 현재 목록과 자동 더보기 상태를 반환
   return { visibleItems, hasNext, loadMore };
 }

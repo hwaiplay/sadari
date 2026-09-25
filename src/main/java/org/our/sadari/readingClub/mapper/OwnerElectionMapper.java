@@ -9,7 +9,7 @@ import org.our.sadari.readingClub.dto.OwnerElectionDto;
  * fileName       : OwnerElectionMapper
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 모임장 승계 선거의 생성, 투표와 마감 데이터를 처리함
+ * description    : 모임장 승계 선거의 생성, 투표와 마감 데이터를 처리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

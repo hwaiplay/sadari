@@ -43,7 +43,7 @@ import org.springframework.web.client.RestTemplate;
  * fileName       : BookSearchServiceTest
  * author         : HanWon.Jang
  * date           : 2026-07-31
- * description    : 계정 언어별 카카오와 Google Books 검색 및 화면 응답 변환을 검증함
+ * description    : 계정 언어별 카카오와 Google Books 검색 및 화면 응답 변환을 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -76,53 +76,53 @@ class BookSearchServiceTest {
     // 화면 응답 필드명 검증 객체
     private ObjectMapper objectMapper;
 
-    /** 각 테스트에서 언어별 도서 검색 서비스와 설정값을 구성함 */
+    /** 각 테스트에서 언어별 도서 검색 서비스와 설정값을 구성 */
     @BeforeEach
     void setUp() {
-        // 외부 JSON 응답을 변환할 객체를 생성함
+        // 외부 JSON 응답을 변환할 객체를 생성
         objectMapper = new ObjectMapper();
-        // 도서 검색 테스트 대상을 생성함
+        // 도서 검색 테스트 대상을 생성
         bookSearchService = new BookSearchService(
                 restTemplate, objectMapper, bookSearchProtectionService, userMapper
         );
-        // 테스트 요청이 사용할 카카오 도서 검색 주소를 설정함
+        // 테스트 요청이 사용할 카카오 도서 검색 주소를 설정
         ReflectionTestUtils.setField(bookSearchService, "bookSearchUrl", "https://dapi.kakao.com/v3/search/book");
-        // 테스트 요청이 사용할 가상 카카오 REST API 키를 설정함
+        // 테스트 요청이 사용할 가상 카카오 REST API 키를 설정
         ReflectionTestUtils.setField(bookSearchService, "kakaoRestApiKey", "test-rest-key");
-        // 테스트 요청이 사용할 Google Books 주소를 설정함
+        // 테스트 요청이 사용할 Google Books 주소를 설정
         ReflectionTestUtils.setField(bookSearchService, "googleBooksUrl", "https://www.googleapis.com/books/v1/volumes");
-        // 테스트 요청이 사용할 가상 Google Books API 키를 설정함
+        // 테스트 요청이 사용할 가상 Google Books API 키를 설정
         ReflectionTestUtils.setField(bookSearchService, "googleBooksApiKey", "test-google-key");
-        // 공통 실패 응답이 사용할 테스트 메시지 소스를 생성함
+        // 공통 실패 응답이 사용할 테스트 메시지 소스를 생성
         StaticMessageSource messageSource = new StaticMessageSource();
-        // 검색 실패 코드의 테스트용 사용자 문구를 등록함
+        // 검색 실패 코드의 테스트용 사용자 문구를 등록
         messageSource.addMessage("common.alert.0008", Locale.KOREAN, "검색에 실패했어요.");
-        // 검색 요청 제한 코드의 테스트용 사용자 문구를 등록함
+        // 검색 요청 제한 코드의 테스트용 사용자 문구를 등록
         messageSource.addMessage("book.alert.0001", Locale.KOREAN, "검색 요청이 너무 많아요.");
-        // 비속어 검색 차단의 테스트용 사용자 문구를 등록함
+        // 비속어 검색 차단의 테스트용 사용자 문구를 등록
         messageSource.addMessage("common.alert.0015", Locale.KOREAN, "비속어가 포함되어 있어요.");
         // 공통 메시지 조회 로케일을 등록한 한국어 문구와 일치시킴
         LocaleContextHolder.setLocale(Locale.KOREAN);
-        // 공통 실패 응답에서 테스트 메시지를 조회할 수 있도록 설정함
+        // 공통 실패 응답에서 테스트 메시지를 조회할 수 있도록 설정
         new MessageUtils().setMessageSource(messageSource);
     }
 
-    /** 공백으로 우회한 비속어를 외부 검색과 Redis 처리 전에 차단하는지 검증함 */
+    /** 공백으로 우회한 비속어를 외부 검색과 Redis 처리 전에 차단하는지 검증 */
     @Test
     void blocksSpacedBadWord() {
-        // 공통 비속어 검사에서 공백 우회 검색어를 탐지하도록 구성함
+        // 공통 비속어 검사에서 공백 우회 검색어를 탐지하도록 구성
         when(bookSearchProtectionService.findBlockedSearchKeyword("시 발")).thenReturn(Optional.of("시발"));
 
-        // 공백 우회 비속어로 도서 검색을 요청함
+        // 공백 우회 비속어로 도서 검색을 요청
         ResultData resultData = bookSearchService.searchBooks(7L, "시 발", 1);
 
-        // 화면에 비속어 오류를 반환하고 계정 설정과 외부 검색 처리에는 진입하지 않는지 확인함
+        // 화면에 비속어 오류를 반환하고 계정 설정과 외부 검색 처리에는 진입하지 않는지 확인
         assertEquals(2015, resultData.getCode());
         verifyNoInteractions(userMapper, restTemplate);
         verify(bookSearchProtectionService, never()).getCachedSearch(any(), any(), any(Integer.class));
     }
 
-    /** 한국어 설정에서 카카오 검색 결과와 50권 페이지 계약을 유지하는지 검증함 */
+    /** 한국어 설정에서 카카오 검색 결과와 50권 페이지 계약을 유지하는지 검증 */
     @Test
     void searchesKakaoInKorean() {
         String responseBody = """
@@ -139,37 +139,37 @@ class BookSearchServiceTest {
                   }]
                 }
                 """;
-        // 한국어 사용 계정 설정을 구성함
+        // 한국어 사용 계정 설정을 구성
         when(userMapper.getUserSettingDtl(7L)).thenReturn(getSetting("N"));
-        // 카카오 외부 요청과 검색 보호 허용 결과를 구성함
+        // 카카오 외부 요청과 검색 보호 허용 결과를 구성
         when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(true);
         when(bookSearchProtectionService.reserveProviderCall(7L, "kakao")).thenReturn(true);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(responseBody));
 
-        // 카카오 두 번째 페이지에 대응하는 시작 위치로 검색함
+        // 카카오 두 번째 페이지에 대응하는 시작 위치로 검색
         ResultData resultData = bookSearchService.searchBooks(7L, "미움받을 용기", 51);
         BookSearchResponseDto searchResult = assertInstanceOf(BookSearchResponseDto.class, resultData.getData());
         BookJsonDto.BookDto bookDto = assertInstanceOf(BookJsonDto.BookDto.class, searchResult.getBookList().get(0));
 
-        // 기존 카카오 화면 계약과 한국어 도서 코드가 유지되는지 확인함
+        // 기존 카카오 화면 계약과 한국어 도서 코드가 유지되는지 확인
         assertEquals(200, resultData.getCode());
         assertEquals(101, searchResult.getNextStart());
         assertEquals("ko", bookDto.getLangCode());
         assertEquals("9788996991342", bookDto.getIsbn());
         assertEquals("20141117", bookDto.getPubdate());
-        // 카카오 인증과 50권 두 번째 페이지 요청을 확인함
+        // 카카오 인증과 50권 두 번째 페이지 요청을 확인
         verify(restTemplate).exchange(uriCaptor.capture(), eq(HttpMethod.GET), httpEntityCaptor.capture(), eq(String.class));
         assertEquals("KakaoAK test-rest-key", httpEntityCaptor.getValue().getHeaders().getFirst(HttpHeaders.AUTHORIZATION));
         assertTrue(uriCaptor.getValue().getQuery().contains("page=2"));
         assertTrue(uriCaptor.getValue().getQuery().contains("size=50"));
-        // 공급자별 화면 응답 캐시 저장을 확인함
+        // 공급자별 화면 응답 캐시 저장을 확인
         verify(bookSearchProtectionService).setCachedSearch(
                 eq("kakao"), eq("미움받을 용기"), eq(51), any(BookSearchResponseDto.class)
         );
     }
 
-    /** 영어 설정에서 Google Books 검색과 40권 페이지 및 ISBN13 변환을 검증함 */
+    /** 영어 설정에서 Google Books 검색과 40권 페이지 및 ISBN13 변환을 검증 */
     @Test
     void searchesGoogleInEnglish() {
         String responseBody = """
@@ -196,27 +196,27 @@ class BookSearchServiceTest {
                   }]
                 }
                 """;
-        // 영어 사용 계정 설정을 구성함
+        // 영어 사용 계정 설정을 구성
         when(userMapper.getUserSettingDtl(7L)).thenReturn(getSetting("Y"));
-        // Google Books 외부 요청과 검색 보호 허용 결과를 구성함
+        // Google Books 외부 요청과 검색 보호 허용 결과를 구성
         when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(true);
         when(bookSearchProtectionService.reserveProviderCall(7L, "google")).thenReturn(true);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok(responseBody));
 
-        // Google Books 두 번째 페이지에 대응하는 시작 위치로 검색함
+        // Google Books 두 번째 페이지에 대응하는 시작 위치로 검색
         ResultData resultData = bookSearchService.searchBooks(7L, "Clean Architecture", 41);
         BookSearchResponseDto searchResult = assertInstanceOf(BookSearchResponseDto.class, resultData.getData());
         BookJsonDto.BookDto bookDto = searchResult.getBookList().get(0);
 
-        // Google Books 화면 계약과 영어 도서 코드를 확인함
+        // Google Books 화면 계약과 영어 도서 코드를 확인
         assertEquals(200, resultData.getCode());
         assertEquals(81, searchResult.getNextStart());
         assertEquals("en", bookDto.getLangCode());
         assertEquals("9780134494166", bookDto.getIsbn());
         assertEquals("201804", bookDto.getPubdate());
         assertEquals("https://books.google.com/cover.jpg", bookDto.getImage());
-        // Google Books의 0부터 시작하는 인덱스와 영어 제한 및 최대 40건 요청을 확인함
+        // Google Books의 0부터 시작하는 인덱스와 영어 제한 및 최대 40건 요청을 확인
         verify(restTemplate).exchange(uriCaptor.capture(), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
         String requestQuery = uriCaptor.getValue().getQuery();
         assertTrue(requestQuery.contains("startIndex=40"));
@@ -224,53 +224,53 @@ class BookSearchServiceTest {
         assertTrue(requestQuery.contains("langRestrict=en"));
         assertTrue(requestQuery.contains("printType=books"));
         assertTrue(requestQuery.contains("key=test-google-key"));
-        // Google 공급자 전용 캐시 저장을 확인함
+        // Google 공급자 전용 캐시 저장을 확인
         verify(bookSearchProtectionService).setCachedSearch(
                 eq("google"), eq("Clean Architecture"), eq(41), any(BookSearchResponseDto.class)
         );
     }
 
-    /** 공급자별 공용 캐시에 적중하면 실제 외부 호출 예산을 사용하지 않는지 검증함 */
+    /** 공급자별 공용 캐시에 적중하면 실제 외부 호출 예산을 사용하지 않는지 검증 */
     @Test
     void skipsCallOnCacheHit() {
-        // 영어 사용 계정과 Google 공급자 캐시 결과를 구성함
+        // 영어 사용 계정과 Google 공급자 캐시 결과를 구성
         when(userMapper.getUserSettingDtl(7L)).thenReturn(getSetting("Y"));
         BookSearchResponseDto cachedResult = new BookSearchResponseDto(List.of(), true, null);
         when(bookSearchProtectionService.getCachedSearch("google", "book", 1)).thenReturn(cachedResult);
         when(bookSearchProtectionService.isRequestAllowed(7L, true)).thenReturn(true);
 
-        // 공용 캐시가 있는 영어 도서 검색을 실행함
+        // 공용 캐시가 있는 영어 도서 검색을 실행
         ResultData resultData = bookSearchService.searchBooks(7L, "book", 1);
 
-        // 외부 호출 없이 캐시 결과가 성공 응답으로 반환되는지 확인함
+        // 외부 호출 없이 캐시 결과가 성공 응답으로 반환되는지 확인
         assertEquals(200, resultData.getCode());
         verifyNoInteractions(restTemplate);
         verify(bookSearchProtectionService, never()).reserveProviderCall(7L, "google");
     }
 
-    /** Google Books 인증 오류가 사용자 공통 검색 실패 코드로 변환되는지 검증함 */
+    /** Google Books 인증 오류가 사용자 공통 검색 실패 코드로 변환되는지 검증 */
     @Test
     void handlesGoogleBooksFailure() {
-        // 영어 사용 계정과 Google Books 인증 오류 흐름을 구성함
+        // 영어 사용 계정과 Google Books 인증 오류 흐름을 구성
         when(userMapper.getUserSettingDtl(7L)).thenReturn(getSetting("Y"));
         when(bookSearchProtectionService.isRequestAllowed(7L, false)).thenReturn(true);
         when(bookSearchProtectionService.reserveProviderCall(7L, "google")).thenReturn(true);
         when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenThrow(new HttpClientErrorException(HttpStatus.UNAUTHORIZED));
 
-        // 인증 오류가 발생하는 영어 도서 검색을 실행함
+        // 인증 오류가 발생하는 영어 도서 검색을 실행
         ResultData resultData = bookSearchService.searchBooks(7L, "book", 1);
 
-        // 외부 오류 원문 대신 기존 사용자 공통 검색 실패 코드를 확인함
+        // 외부 오류 원문 대신 기존 사용자 공통 검색 실패 코드를 확인
         assertEquals(2008, resultData.getCode());
     }
 
-    /** 테스트에서 사용할 사용자 언어 설정을 생성함 */
+    /** 테스트에서 사용할 사용자 언어 설정을 생성 */
     private UserSettingDto getSetting(String englishYsno) {
-        // 영어 사용 여부를 포함한 설정 DTO를 생성함
+        // 영어 사용 여부를 포함한 설정 DTO를 생성
         UserSettingDto setting = new UserSettingDto();
         setting.setEnglishYsno(englishYsno);
-        // 계정 언어 분기에서 사용할 설정을 반환함
+        // 계정 언어 분기에서 사용할 설정을 반환
         return setting;
     }
 }

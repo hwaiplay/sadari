@@ -2,7 +2,7 @@
  * fileName       : useReplySheet
  * author         : HanWon.Jang
  * date           : 2026-07-28
- * description    : 댓글 바텀시트의 닫기와 드래그 상호작용을 관리함
+ * description    : 댓글 바텀시트의 닫기와 드래그 상호작용을 관리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ type UseReplySheetProps = {
 };
 
 /**
- * 댓글 바텀시트의 닫기와 포인터 드래그 상태를 제공함
+ * 댓글 바텀시트의 닫기와 포인터 드래그 상태를 제공
  *
  * @author HanWon.Jang
  * @param props 댓글 바텀시트 닫기 처리 정보
@@ -62,24 +62,24 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
      * @return 반환값이 없음
      */
     const handleWindowKeyDown = (event: KeyboardEvent): void => {
-      // 사용자가 현재 바텀시트를 빠르게 닫을 수 있도록 Escape 키를 지원함
+      // 사용자가 현재 바텀시트를 빠르게 닫을 수 있도록 Escape 키를 지원
       if (event.key === "Escape") {
-        // 부모 화면에 댓글 바텀시트 닫기를 요청함
+        // 부모 화면에 댓글 바텀시트 닫기를 요청
         onClose();
       }
     };
 
-    // 바텀시트가 열린 동안 전역 Escape 키 입력을 감지함
+    // 바텀시트가 열린 동안 전역 Escape 키 입력을 감지
     window.addEventListener("keydown", handleWindowKeyDown);
 
-    // 전역 이벤트와 지연 닫기 작업을 해제하는 정리 함수를 반환함
+    // 전역 이벤트와 지연 닫기 작업을 해제하는 정리 함수를 반환
     return () => {
-      // 바텀시트가 닫힌 뒤 전역 키 입력이 중복 처리되지 않도록 해제함
+      // 바텀시트가 닫힌 뒤 전역 키 입력이 중복 처리되지 않도록 해제
       window.removeEventListener("keydown", handleWindowKeyDown);
 
-      // 닫기 애니메이션 타이머가 남아 있으면 언마운트 이후 콜백 실행을 차단함
+      // 닫기 애니메이션 타이머가 남아 있으면 언마운트 이후 콜백 실행을 차단
       if (closeTimerRef.current !== null) {
-        // 예약된 바텀시트 닫기 작업을 취소함
+        // 예약된 바텀시트 닫기 작업을 취소
         window.clearTimeout(closeTimerRef.current);
       }
     };
@@ -92,42 +92,42 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
    * @return 반환값이 없음
    */
   const closeWithDragAnimation = (): void => {
-    // 닫기 이동에는 전환 애니메이션이 적용되도록 드래그 상태를 종료함
+    // 닫기 이동에는 전환 애니메이션이 적용되도록 드래그 상태를 종료
     setIsDragging(false);
-    // 바텀시트 높이만큼 이동하여 화면 아래로 자연스럽게 사라지게 함
+    // 바텀시트 높이만큼 이동하여 화면 아래로 자연스럽게 사라지도록 처리
     setDragOffset(sheetRef.current?.offsetHeight ?? window.innerHeight);
-    // 닫기 애니메이션이 끝난 뒤 부모 화면에서 바텀시트를 제거함
+    // 닫기 애니메이션이 끝난 뒤 부모 화면에서 바텀시트를 제거
     closeTimerRef.current = window.setTimeout(onClose, CLOSE_ANIMATION_MS);
   };
 
   /**
-   * 기본 포인터로 댓글 바텀시트 드래그를 시작함
+   * 기본 포인터로 댓글 바텀시트 드래그를 시작
    *
    * @author HanWon.Jang
    * @param event 바텀시트 손잡이 포인터 이벤트
    * @return 반환값이 없음
    */
   const handlePointerDown = (event: PointerEvent<HTMLDivElement>): void => {
-    // 멀티 터치의 보조 포인터는 바텀시트 이동 기준에서 제외함
+    // 멀티 터치의 보조 포인터는 바텀시트 이동 기준에서 제외
     if (!event.isPrimary) {
-      // 보조 포인터 입력을 처리하지 않고 종료함
+      // 보조 포인터 입력을 처리하지 않고 종료
       return;
     }
 
-    // 드래그 거리와 속도를 계산할 시작 위치와 시간을 저장함
+    // 드래그 거리와 속도를 계산할 시작 위치와 시간을 저장
     dragStartRef.current = {
       y: event.clientY,
       time: performance.now(),
       pointerId: event.pointerId,
     };
-    // 손가락을 따라 즉시 이동하도록 전환 애니메이션을 중지함
+    // 손가락을 따라 즉시 이동하도록 전환 애니메이션을 중지
     setIsDragging(true);
-    // 손잡이 밖으로 이동한 포인터도 드래그 종료까지 계속 추적함
+    // 손잡이 밖으로 이동한 포인터도 드래그 종료까지 계속 추적
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
   /**
-   * 포인터의 세로 이동 거리를 댓글 바텀시트 위치에 반영함
+   * 포인터의 세로 이동 거리를 댓글 바텀시트 위치에 반영
    *
    * @author HanWon.Jang
    * @param event 바텀시트 손잡이 포인터 이벤트
@@ -137,16 +137,16 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
     // 활성 드래그와 동일한 포인터만 바텀시트 위치를 변경할 수 있음
     if (!isDragging
         || dragStartRef.current.pointerId !== event.pointerId) {
-      // 현재 드래그와 무관한 포인터 이동을 처리하지 않고 종료함
+      // 현재 드래그와 무관한 포인터 이동을 처리하지 않고 종료
       return;
     }
 
-    // 위쪽 드래그는 무시하고 아래쪽 이동 거리만 바텀시트에 반영함
+    // 위쪽 드래그는 무시하고 아래쪽 이동 거리만 바텀시트에 반영
     setDragOffset(Math.max(0, event.clientY - dragStartRef.current.y));
   };
 
   /**
-   * 드래그 거리와 속도에 따라 댓글 바텀시트를 닫거나 원위치함
+   * 드래그 거리와 속도에 따라 댓글 바텀시트를 닫거나 원위치
    *
    * @author HanWon.Jang
    * @param event 바텀시트 손잡이 포인터 이벤트
@@ -155,28 +155,28 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
   const handlePointerEnd = (event: PointerEvent<HTMLDivElement>): void => {
     // 드래그를 시작한 포인터와 다른 종료 이벤트는 현재 이동에 영향을 주지 않음
     if (dragStartRef.current.pointerId !== event.pointerId) {
-      // 현재 드래그와 무관한 포인터 종료를 처리하지 않고 종료함
+      // 현재 드래그와 무관한 포인터 종료를 처리하지 않고 종료
       return;
     }
 
     const distance = Math.max(0, event.clientY - dragStartRef.current.y);
     const elapsed = Math.max(1, performance.now() - dragStartRef.current.time);
     const velocity = distance / elapsed;
-    // 종료된 포인터가 이후 이동 이벤트에 재사용되지 않도록 초기화함
+    // 종료된 포인터가 이후 이동 이벤트에 재사용되지 않도록 초기화
     dragStartRef.current.pointerId = -1;
 
-    // 충분히 아래로 이동했거나 짧고 빠르게 당긴 경우 사용자의 닫기 의도로 판단함
+    // 충분히 아래로 이동했거나 짧고 빠르게 당긴 경우 사용자의 닫기 의도로 판단
     if (distance >= CLOSE_DISTANCE
         || (distance >= QUICK_DRAG_DISTANCE && velocity >= CLOSE_VELOCITY)) {
-      // 사용자의 드래그 종료 위치에서 닫기 애니메이션을 이어서 실행함
+      // 사용자의 드래그 종료 위치에서 닫기 애니메이션을 이어서 실행
       closeWithDragAnimation();
-      // 원위치 복원 상태가 덮어쓰지 않도록 종료함
+      // 원위치 복원 상태가 덮어쓰지 않도록 종료
       return;
     }
 
-    // 닫기 기준에 미달한 드래그는 전환 애니메이션으로 원위치함
+    // 닫기 기준에 미달한 드래그는 전환 애니메이션으로 원위치
     setIsDragging(false);
-    // 댓글 바텀시트의 기본 위치로 복원함
+    // 댓글 바텀시트의 기본 위치로 복원
     setDragOffset(0);
   };
 
@@ -190,11 +190,11 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
   const handleHandleKeyDown = (
     event: ReactKeyboardEvent<HTMLDivElement>,
   ): void => {
-    // 버튼 역할의 손잡이를 Enter 또는 Space로 조작할 수 있도록 함
+    // 버튼 역할의 손잡이를 Enter 또는 Space로 조작할 수 있도록 처리
     if (event.key === "Enter" || event.key === " ") {
-      // Space 입력으로 페이지가 스크롤되는 기본 동작을 차단함
+      // Space 입력으로 페이지가 스크롤되는 기본 동작을 차단
       event.preventDefault();
-      // 키보드 조작에 따라 부모 화면에 바텀시트 닫기를 요청함
+      // 키보드 조작에 따라 부모 화면에 바텀시트 닫기를 요청
       onClose();
     }
   };
@@ -208,7 +208,7 @@ export const useReplySheet = ({ onClose }: UseReplySheetProps) => {
       : `transform ${CLOSE_ANIMATION_MS}ms ease-out`,
   };
 
-  // 댓글 바텀시트 UI가 사용할 참조와 상호작용 속성을 반환함
+  // 댓글 바텀시트 UI가 사용할 참조와 상호작용 속성을 반환
   return {
     sheetRef,
     sheetStyle,

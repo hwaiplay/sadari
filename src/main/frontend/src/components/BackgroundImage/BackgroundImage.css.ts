@@ -5,12 +5,12 @@ export const imageLoading = style({
   opacity: 0,
 });
 
-// 배경사진 로드가 끝나면 원래 화면 영역에 이미지를 표시함
+// 배경사진 로드가 끝나면 원래 화면 영역에 이미지를 표시
 export const imageLoaded = style({
   opacity: 1,
 });
 
-// 기존 배경사진 영역의 중앙에 공통 소형 회전 링을 겹쳐 표시함
+// 기존 배경사진 영역의 중앙에 공통 소형 회전 링을 겹쳐 표시
 export const loadingOverlay = style({
   position: "absolute",
   inset: 0,

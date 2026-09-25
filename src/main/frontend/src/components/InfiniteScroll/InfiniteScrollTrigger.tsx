@@ -10,7 +10,7 @@ type InfiniteScrollTriggerProps = {
 };
 
 /**
- * 목록 하단 감지 영역이 보이면 다음 10개 항목 조회 또는 노출을 요청함
+ * 목록 하단 감지 영역이 보이면 다음 10개 항목 조회 또는 노출을 요청
  *
  * @author SeungHyeon.Kang
  * @param props 다음 항목 존재 여부와 로딩 상태 및 추가 노출 처리 함수
@@ -28,7 +28,7 @@ function InfiniteScrollTrigger({
 
   useEffect(() => {
 
-    // 감지 콜백이 최신 목록 상태를 사용하도록 현재 처리 함수를 보관함
+    // 감지 콜백이 최신 목록 상태를 사용하도록 현재 처리 함수를 보관
     onLoadMoreRef.current = onLoadMore;
   }, [onLoadMore]);
 
@@ -41,12 +41,12 @@ function InfiniteScrollTrigger({
       return;
     }
 
-    // 목록의 실제 스크롤 컨테이너에 의해 가려지는 영역까지 반영하는 하단 감지기를 생성함
+    // 목록의 실제 스크롤 컨테이너에 의해 가려지는 영역까지 반영하는 하단 감지기를 생성
     const observer = new IntersectionObserver((entries) => {
 
       const [entry] = entries;
 
-      // 사용자가 목록 하단까지 이동했을 때만 다음 항목을 요청함
+      // 사용자가 목록 하단까지 이동했을 때만 다음 항목을 요청
       if (entry?.isIntersecting) {
         onLoadMoreRef.current();
       }
@@ -56,12 +56,12 @@ function InfiniteScrollTrigger({
 
     return () => {
 
-      // 화면 전환이나 목록 상태 변경 시 기존 감지기를 해제함
+      // 화면 전환이나 목록 상태 변경 시 기존 감지기를 해제
       observer.disconnect();
     };
   }, [hasNext, isLoading]);
 
-  // 다음 항목이 있을 때만 감지 영역과 선택적 로딩 문구를 반환함
+  // 다음 항목이 있을 때만 감지 영역과 선택적 로딩 문구를 반환
   return hasNext ? (
     <div className={styles.trigger} ref={targetRef} aria-live="polite">
       {isLoading ? children : null}

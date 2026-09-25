@@ -18,7 +18,7 @@ export type PushSubRequest = {
 };
 
 /**
- * FCM token 발급에 필요한 Firebase Web 공개 설정을 조회함
+ * FCM token 발급에 필요한 Firebase Web 공개 설정을 조회
  * service account 같은 비밀값은 서버가 내려주지 않음
  *
  * @author HanWon.Jang
@@ -31,8 +31,8 @@ export const getPushConfigApi = async () => {
 };
 
 /**
- * 현재 브라우저의 FCM token을 서버 구독 테이블에 저장함
- * 서버는 로그인 사용자 번호를 인증 정보에서 채우므로 프론트는 token만 전달함
+ * 현재 브라우저의 FCM token을 서버 구독 테이블에 저장
+ * 서버는 로그인 사용자 번호를 인증 정보에서 채우므로 프론트는 token만 전달
  *
  * @author HanWon.Jang
  * @param data FCM token 요청
@@ -45,7 +45,7 @@ export const setPushSubApi = async (data: PushSubRequest) => {
 };
 
 /**
- * 현재 브라우저 FCM token을 서버에서 비활성화함
+ * 현재 브라우저 FCM token을 서버에서 비활성화
  *
  * @author HanWon.Jang
  * @param data 비활성화할 FCM token

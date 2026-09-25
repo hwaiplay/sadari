@@ -19,7 +19,7 @@ export function notifyReadingTimerRunningChange(isRunning: boolean): void {
 }
 
 /**
- * 전달된 이벤트가 독서 타이머 실행 상태 변경 이벤트인지 판정함
+ * 전달된 이벤트가 독서 타이머 실행 상태 변경 이벤트인지 판정
  *
  * @author SeungHyeon.Kang
  * @param event 판정할 브라우저 이벤트
@@ -29,7 +29,7 @@ export function isReadingTimerRunningChangeEvent(
   event: Event,
 ): event is ReadingTimerRunningChangedEvent {
 
-  // 이벤트 이름과 상세값 형식을 함께 검증한 판정 결과를 반환함
+  // 이벤트 이름과 상세값 형식을 함께 검증한 판정 결과를 반환
   return event.type === READING_TIMER_RUNNING_CHANGED_EVENT
     && "detail" in event
     && typeof event.detail === "boolean";

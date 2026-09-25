@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : ReadingHeatmapDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-14
- * description    : 선택 연도의 독서 시간 잔디 데이터만 전달함
+ * description    : 선택 연도의 독서 시간 잔디 데이터만 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

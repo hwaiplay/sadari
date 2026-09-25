@@ -26,7 +26,7 @@ const ReadingGoalResultPage = () => {
   const isValidRoute = Number.isFinite(clubNumb) && clubNumb > 0
     && Number.isFinite(rondNumb) && rondNumb > 0;
 
-  // 유효한 경로에서만 해당 회차의 독서 목표 결과를 조회함
+  // 유효한 경로에서만 해당 회차의 독서 목표 결과를 조회
   const resultQuery = useQuery({
     queryKey: ["readingClub", clubNumb, "readingGoalResult", rondNumb],
     queryFn: () => getReadingGoalResultApi(clubNumb, rondNumb),

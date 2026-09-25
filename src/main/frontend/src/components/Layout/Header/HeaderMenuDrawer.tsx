@@ -33,7 +33,7 @@ type DrawerMenuTreeItemProps = {
 };
 
 /**
- * 최대 3단계 사용자 메뉴 항목과 하위 아코디언을 재귀적으로 표시함
+ * 최대 3단계 사용자 메뉴 항목과 하위 아코디언을 재귀적으로 표시
  *
  * @author SeungHyeon.Kang
  * @param menu 표시할 사용자 메뉴
@@ -58,7 +58,7 @@ function DrawerMenuTreeItem({
       ? drawerStyles.drawerSecondaryMenuButton
       : drawerStyles.drawerTertiaryMenuButton;
 
-  // 사용자 메뉴 한 항목과 해당 항목의 하위 메뉴 아코디언을 반환함
+  // 사용자 메뉴 한 항목과 해당 항목의 하위 메뉴 아코디언을 반환
   return (
     <div className={drawerStyles.drawerMenuGroup}>
       {/* 사용자 메뉴 이동 또는 하위 메뉴 펼침 버튼 영역 */}
@@ -73,13 +73,13 @@ function DrawerMenuTreeItem({
         aria-expanded={hasChildMenu ? isExpanded : undefined}
         aria-controls={hasChildMenu ? childMenuId : undefined}
         onClick={() => {
-          // 하위 메뉴가 있으면 현재 메뉴의 아코디언 상태를 변경함
+          // 하위 메뉴가 있으면 현재 메뉴의 아코디언 상태를 변경
           if (hasChildMenu) {
             onToggle(menu.menuNumb);
             return;
           }
 
-          // 이동 경로가 있는 최하위 메뉴만 해당 사용자 화면으로 이동함
+          // 이동 경로가 있는 최하위 메뉴만 해당 사용자 화면으로 이동
           if (menu.menuUrlx) {
             onMove(menu.menuUrlx);
           }
@@ -137,7 +137,7 @@ function DrawerMenuTreeItem({
  */
 function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
-  // 헤더와 내비게이션 및 프로필 화면이 공유하는 로그인 사용자 프로필을 조회함
+  // 헤더와 내비게이션 및 프로필 화면이 공유하는 로그인 사용자 프로필을 조회
   const myProfileQuery = useMyProfileQuery();
   const profile = myProfileQuery.data ?? null;
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
@@ -151,14 +151,14 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const portalTarget = typeof document === "undefined" ? null : document.body;
 
   /**
-   * 사용자 메뉴 아코디언 펼침 상태를 변경함
+   * 사용자 메뉴 아코디언 펼침 상태를 변경
    *
    * @author SeungHyeon.Kang
    * @param menuNumb 펼침 상태를 변경할 메뉴 번호
    * @return 반환값이 없음
    */
   const handleMenuToggle = (menuNumb: number): void => {
-    // 선택한 메뉴 번호의 기존 포함 여부에 따라 펼침 목록에서 추가하거나 제거함
+    // 선택한 메뉴 번호의 기존 포함 여부에 따라 펼침 목록에서 추가하거나 제거
     setExpandedMenuNumbs((currentMenuNumbs) => (
       currentMenuNumbs.includes(menuNumb)
         ? currentMenuNumbs.filter((currentMenuNumb) => currentMenuNumb !== menuNumb)
@@ -167,7 +167,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   };
 
   /**
-   * 햄버거 메뉴를 닫고 선택한 사용자 화면으로 이동함
+   * 햄버거 메뉴를 닫고 선택한 사용자 화면으로 이동
    *
    * @author SeungHyeon.Kang
    * @param menuUrlx 이동할 사용자 화면 경로
@@ -176,7 +176,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
   const handleMenuMove = (menuUrlx: string): void => {
     // 메뉴 선택 뒤 배경 클릭 영역이 남지 않도록 햄버거 메뉴를 닫음
     setIsDrawerOpen(false);
-    // 선택한 사용자 메뉴 경로로 이동함
+    // 선택한 사용자 메뉴 경로로 이동
     navigate(menuUrlx);
   };
 
@@ -187,7 +187,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
    * @return 반환값이 없음
    */
   const handleDrawerClose = (): void => {
-    // 명시적인 닫기 동작과 배경 클릭이 같은 메뉴 상태를 갱신하게 함
+    // 명시적인 닫기 동작과 배경 클릭이 같은 메뉴 상태를 갱신하도록 처리
     setIsDrawerOpen(false);
   };
 
@@ -197,12 +197,12 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
       const response = await getUnreadAlimCntApi();
       setUnreadAlimCnt(response.data?.unreadCnt ?? 0);
     } catch {
-      // 알림 배지는 보조 정보이므로 조회 실패 시 기존 숫자를 유지함
+      // 알림 배지는 보조 정보이므로 조회 실패 시 기존 숫자를 유지
     }
   }, []);
 
   /**
-   * handle Logout 사용자 동작을 처리함
+   * handle Logout 사용자 동작을 처리
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
@@ -210,16 +210,16 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
    */
   const handleLogout = async () => {
 
-    // Alert에서 현재 기기 또는 전체 기기 로그아웃 범위를 선택함
+    // Alert에서 현재 기기 또는 전체 기기 로그아웃 범위를 선택
     const logoutScope = await selectLogoutScope();
 
-    // 취소하면 현재 인증 상태와 메뉴를 유지함
+    // 취소하면 현재 인증 상태와 메뉴를 유지
     if (!logoutScope) {
       return;
     }
 
     try {
-      // 선택한 범위의 서버 세션과 브라우저 푸시 구독을 정리함
+      // 선택한 범위의 서버 세션과 브라우저 푸시 구독을 정리
       await runLogout(logoutScope);
     } finally {
       setIsDrawerOpen(false);
@@ -232,14 +232,14 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
     void refreshUnreadAlimCnt();
 
     /**
-     * handle Service Worker Message 사용자 동작을 처리함
+     * handle Service Worker Message 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param event event 입력값
      * @return 반환값이 없음
      */
     const handleSwMessage = (event: MessageEvent) => {
-      // 푸시 수신뿐 아니라 시스템 알림 클릭으로 읽음 상태가 바뀐 경우에도 배지 수를 다시 조회함
+      // 푸시 수신뿐 아니라 시스템 알림 클릭으로 읽음 상태가 바뀐 경우에도 배지 수를 다시 조회
       if (
         event.data?.type === "SADARI_ALIM_RECEIVED"
         || event.data?.type === "SADARI_ALIM_READ"
@@ -249,7 +249,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
     };
 
     /**
-     * handle Window Focus 사용자 동작을 처리함
+     * handle Window Focus 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
@@ -260,7 +260,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
     };
 
     /**
-     * handle Unread Alim Cnt Changed 사용자 동작을 처리함
+     * handle Unread Alim Cnt Changed 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param event event 입력값
@@ -291,7 +291,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
     let ignore = false;
 
     /**
-     * initialize Foreground Messages 기능을 처리함
+     * initialize Foreground Messages 기능을 처리
      *
      * @author HanWon.Jang
      * @return 처리 결과
@@ -305,9 +305,9 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
 
       try {
         const response = await getPushConfigApi();
-        // 알림 권한이 허용된 사용자에게만 Firebase 메시징 모듈을 지연 로드함
+        // 알림 권한이 허용된 사용자에게만 Firebase 메시징 모듈을 지연 로드
         const { subscribeFirebaseMessages } = await import("@/app/pwa/firebaseMessaging");
-        // 지연 로드된 SDK로 포그라운드 메시지 수신을 시작함
+        // 지연 로드된 SDK로 포그라운드 메시지 수신을 시작
         const unsubscribeForegroundMessages = await subscribeFirebaseMessages(
             response.data,
             () => void refreshUnreadAlimCnt(),
@@ -326,7 +326,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
     };
 
     /**
-     * handle Push Enabled 사용자 동작을 처리함
+     * handle Push Enabled 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
@@ -413,7 +413,7 @@ function HeaderMenuDrawer({ menuList = [] }: HeaderMenuDrawerProps) {
               aria-label={message("frontend.common.settings")}
               title={message("frontend.common.settings")}
               onClick={() => {
-                // 햄버거 메뉴를 먼저 닫은 뒤 설정 전용 화면으로 이동해 배경 클릭 영역이 남지 않게 함
+                // 햄버거 메뉴를 먼저 닫은 뒤 설정 전용 화면으로 이동해 배경 클릭 영역이 남지 않도록 처리
                 setIsDrawerOpen(false);
                 navigate("/settings");
               }}

@@ -1,5 +1,5 @@
 /**
- * 공개 독후감과 모임 회차 독후감 페이지가 공유하는 목록 UI를 제공함
+ * 공개 독후감과 모임 회차 독후감 페이지가 공유하는 목록 UI를 제공
  *
  * @author HanWon.Jang
  */
@@ -75,7 +75,7 @@ type ReportListViewProps = {
 };
 
 /**
- * 독후감 상태에 대응하는 공통 카드 배지 스타일을 반환함
+ * 독후감 상태에 대응하는 공통 카드 배지 스타일을 반환
  *
  * @author HanWon.Jang
  * @param statusTone 완료와 중단 및 독서 중 상태 구분값
@@ -84,24 +84,24 @@ type ReportListViewProps = {
 const getStatusClassName = (
   statusTone: ReportListItem["statusTone"],
 ): string => {
-  // 완독 상태이면 브랜드 색상의 완료 배지 클래스를 반환함
+  // 완독 상태이면 브랜드 색상의 완료 배지 클래스를 반환
   if (statusTone === "done") {
-    // 완료 상태 배지 클래스를 반환함
+    // 완료 상태 배지 클래스를 반환
     return styles.statusDone;
   }
 
-  // 중단 상태이면 회색의 중단 배지 클래스를 반환함
+  // 중단 상태이면 회색의 중단 배지 클래스를 반환
   if (statusTone === "stopped") {
-    // 중단 상태 배지 클래스를 반환함
+    // 중단 상태 배지 클래스를 반환
     return styles.statusStopped;
   }
 
-  // 나머지 상태에는 독서 중 배지 클래스를 반환함
+  // 나머지 상태에는 독서 중 배지 클래스를 반환
   return styles.statusReading;
 };
 
 /**
- * 도서 요약과 필터 및 독후감 카드 목록을 동일한 화면 구조로 표시함
+ * 도서 요약과 필터 및 독후감 카드 목록을 동일한 화면 구조로 표시
  *
  * @author HanWon.Jang
  * @param props 독후감 목록 표시 데이터와 사용자 동작 처리 함수
@@ -129,45 +129,45 @@ const ReportListView = ({
   onCloseReply,
   onLoadMore,
 }: ReportListViewProps) => {
-  // 독후감 번호별로 최초 조회한 번역문을 현재 화면에서 재사용함
+  // 독후감 번호별로 최초 조회한 번역문을 현재 화면에서 재사용
   const [translations, setTranslations] = useState<Record<number, string>>({});
-  // 카드별 원문 또는 번역문 표시 상태를 관리함
+  // 카드별 원문 또는 번역문 표시 상태를 관리
   const [translatedReports, setTranslatedReports] = useState<Record<number, boolean>>({});
-  // 같은 화면에서 중복 번역 요청을 막기 위해 처리 중인 독후감 번호를 관리함
+  // 같은 화면에서 중복 번역 요청을 막기 위해 처리 중인 독후감 번호를 관리
   const [pendingReportNumb, setPendingReportNumb] = useState<number>();
   const showsStatusFilter = status !== undefined
     && statusOptions !== undefined
     && onStatusChange !== undefined;
 
   /**
-   * 카드에 표시할 원문 또는 번역문을 반환함
+   * 카드에 표시할 원문 또는 번역문을 반환
    *
    * @author HanWon.Jang
    * @param report 표시할 독후감 카드
    * @return 현재 전환 상태에 맞는 독후감 본문
    */
   const getVisibleContent = (report: ReportListItem): string => {
-    // 번역 보기 상태이면서 번역문이 있으면 번역문을 표시함
+    // 번역 보기 상태이면서 번역문이 있으면 번역문을 표시
     if (translatedReports[report.reptNumb] && translations[report.reptNumb]) {
-      // 현재 화면에 저장한 번역문을 반환함
+      // 현재 화면에 저장한 번역문을 반환
       return translations[report.reptNumb];
     }
 
-    // 번역 전이거나 원문 보기 상태이면 서버가 조회한 원문을 반환함
+    // 번역 전이거나 원문 보기 상태이면 서버가 조회한 원문을 반환
     return report.reportContent;
   };
 
   /**
-   * 번역 캐시를 조회하거나 생성한 뒤 원문과 번역문 표시 상태를 전환함
+   * 번역 캐시를 조회하거나 생성한 뒤 원문과 번역문 표시 상태를 전환
    *
    * @author HanWon.Jang
    * @param report 번역 표시 상태를 변경할 공개 독후감
    * @return 반환값이 없음
    */
   const handleTranslation = async (report: ReportListItem): Promise<void> => {
-    // 현재 화면에 번역문이 있으면 외부 요청 없이 원문과 번역문만 전환함
+    // 현재 화면에 번역문이 있으면 외부 요청 없이 원문과 번역문만 전환
     if (translations[report.reptNumb]) {
-      // 선택한 카드의 표시 상태만 반전함
+      // 선택한 카드의 표시 상태만 반전
       setTranslatedReports((current) => ({
         ...current,
         [report.reptNumb]: !current[report.reptNumb],
@@ -180,38 +180,38 @@ const ReportListView = ({
       return;
     }
 
-    // 번역 요청이 끝날 때까지 선택한 카드의 버튼을 비활성화함
+    // 번역 요청이 끝날 때까지 선택한 카드의 버튼을 비활성화
     setPendingReportNumb(report.reptNumb);
 
     try {
-      // 서버가 공개 범위와 월간 한도를 재검증한 번역문을 조회함
+      // 서버가 공개 범위와 월간 한도를 재검증한 번역문을 조회
       const translation = await setReportTranslationApi(report.reptNumb);
-      // 번역문을 카드 번호 기준으로 저장해 이후 전환에 재사용함
+      // 번역문을 카드 번호 기준으로 저장해 이후 전환에 재사용
       setTranslations((current) => ({
         ...current,
         [report.reptNumb]: translation.trnsCntn,
       }));
-      // 최초 번역 성공 직후 해당 카드에 번역문을 표시함
+      // 최초 번역 성공 직후 해당 카드에 번역문을 표시
       setTranslatedReports((current) => ({ ...current, [report.reptNumb]: true }));
     }
 
-    // 서버 실패 응답은 원시 예외 없이 공통 메시지로 안내함
+    // 서버 실패 응답은 원시 예외 없이 공통 메시지로 안내
     catch (error) {
-      // 번역 실패 원인을 서버 메시지 또는 공통 재시도 문구로 표시함
+      // 번역 실패 원인을 서버 메시지 또는 공통 재시도 문구로 표시
       await sweetError(
         message("frontend.report.translation.failedTitle"),
         getApiErrorMessage(error, message("frontend.common.tryAgain")),
       );
     }
 
-    // 성공과 실패 모두 다음 번역 요청을 허용함
+    // 성공과 실패 모두 다음 번역 요청을 허용
     finally {
-      // 처리 중인 독후감 번호를 초기화함
+      // 처리 중인 독후감 번호를 초기화
       setPendingReportNumb(undefined);
     }
   };
 
-  // 공개 목록과 모임 회차 목록이 공유하는 화면 구조를 반환함
+  // 공개 목록과 모임 회차 목록이 공유하는 화면 구조를 반환
   return (
     <>
       <main className={styles.page}>
@@ -330,7 +330,7 @@ const ReportListView = ({
                             ? "icon-star-rate-half"
                             : "icon-star-rate-empty";
 
-                        // 현재 별점 값에 대응하는 별 아이콘을 반환함
+                        // 현재 별점 값에 대응하는 별 아이콘을 반환
                         return (
                           <img
                             className={styles.reportRatingIcon}

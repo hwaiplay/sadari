@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : GoogleBooksJsonDto
  * author         : HanWon.Jang
  * date           : 2026-09-08
- * description    : Google Books 도서 검색 원문 응답을 전달함
+ * description    : Google Books 도서 검색 원문 응답을 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -25,7 +25,7 @@ public class GoogleBooksJsonDto {
     private List<VolumeDto> items;
 
     /**
-     * Google Books 개별 도서 항목을 전달함
+     * Google Books 개별 도서 항목을 전달
      *
      * @author HanWon.Jang
      */
@@ -41,7 +41,7 @@ public class GoogleBooksJsonDto {
     }
 
     /**
-     * Google Books 도서 상세 정보를 전달함
+     * Google Books 도서 상세 정보를 전달
      *
      * @author HanWon.Jang
      */
@@ -75,7 +75,7 @@ public class GoogleBooksJsonDto {
     }
 
     /**
-     * Google Books 산업 식별자를 전달함
+     * Google Books 산업 식별자를 전달
      *
      * @author HanWon.Jang
      */
@@ -91,7 +91,7 @@ public class GoogleBooksJsonDto {
     }
 
     /**
-     * Google Books 도서 표지 이미지 주소를 전달함
+     * Google Books 도서 표지 이미지 주소를 전달
      *
      * @author HanWon.Jang
      */

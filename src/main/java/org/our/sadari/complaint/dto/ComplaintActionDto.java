@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : ComplaintActionDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 신고 누적 자동 조치 결과 이력을 전달함
+ * description    : 신고 누적 자동 조치 결과 이력을 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -1,5 +1,5 @@
 /**
- * 검색 결과에서 선택한 도서의 상세 정보와 독후감 등록 진입 기능을 제공함
+ * 검색 결과에서 선택한 도서의 상세 정보와 독후감 등록 진입 기능을 제공
  *
  * @author HanWon.Jang
  */
@@ -27,7 +27,7 @@ import {
 import * as detailStyles from "@/pages/Book/Detail/DetailPage.css";
 
 /**
- * Search Book Info Page 화면 또는 컴포넌트를 구성함
+ * Search Book Info Page 화면 또는 컴포넌트를 구성
  *
  * @author HanWon.Jang
  * @return 구성된 화면 요소
@@ -53,11 +53,11 @@ function SearchBookInfoPage() {
     Boolean(book?.isbn),
   );
 
-  // 검색 결과에서 전달된 도서가 없으면 상세 화면을 구성할 수 없음을 안내함
+  // 검색 결과에서 전달된 도서가 없으면 상세 화면을 구성할 수 없음을 안내
   if (!book) {
     // "도서 정보가 없습니다."
     const noBookInfoMessage = message("frontend.common.noBookInfo");
-    // 검색 도서 정보가 없음을 알리는 안내 화면을 반환함
+    // 검색 도서 정보가 없음을 알리는 안내 화면을 반환
     return <h3>{noBookInfoMessage}</h3>;
   }
 
@@ -80,14 +80,14 @@ function SearchBookInfoPage() {
   } as CSSProperties;
 
   /**
-   * 선택한 도서와 같은 ISBN의 공개 독후감 목록으로 이동함
+   * 선택한 도서와 같은 ISBN의 공개 독후감 목록으로 이동
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   function goPublicReportsPage(): void {
 
-    // 선택한 도서 정보와 평균 평점을 공개 독후감 화면으로 전달함
+    // 선택한 도서 정보와 평균 평점을 공개 독후감 화면으로 전달
     navigate(
       `/report/public-reports/isbn?isbn=${encodeURIComponent(selectedBook.isbn)}`,
       {
@@ -102,19 +102,19 @@ function SearchBookInfoPage() {
   }
 
   /**
-   * 선택한 도서를 사용하여 독후감 등록 화면으로 이동함
+   * 선택한 도서를 사용하여 독후감 등록 화면으로 이동
    *
    * @author HanWon.Jang
    * @return 기존 독후감 확인과 화면 이동이 끝난 Promise
    */
   async function goSelectedBookPage(): Promise<void> {
-    // 기존 독후감 확인이 진행 중이면 중복 화면 이동을 차단함
+    // 기존 독후감 확인이 진행 중이면 중복 화면 이동을 차단
     if (isSelectingBook) {
-      // 진행 중인 독후감 선택 요청을 유지함
+      // 진행 중인 독후감 선택 요청을 유지
       return;
     }
 
-    // 타이머 진입 흐름은 선택 도서를 공용 검색 화면의 목표기간 모달로 전달함
+    // 타이머 진입 흐름은 선택 도서를 공용 검색 화면의 목표기간 모달로 전달
     if (isTimerBookSearch) {
       const searchState: SearchBookPageState = {
         entrySource: READING_TIMER_SEARCH_SOURCE,
@@ -127,18 +127,18 @@ function SearchBookInfoPage() {
       return;
     }
 
-    // 이 책으로 기록하기 버튼의 중복 요청을 막도록 진행 상태를 설정함
+    // 이 책으로 기록하기 버튼의 중복 요청을 막도록 진행 상태를 설정
     // 모임 독서용 검색에서는 개인 독후감 작성 여부를 확인하지 않음
     if (isClubBookSearch) {
       // 올바르지 않은 모임 번호로는 독서 등록 URL을 만들지 않음
       if (!hasValidClubNumb) {
-        // 모임 목록으로 돌아가 다시 진입하도록 함
+        // 모임 목록으로 돌아가 다시 진입하도록 처리
         navigate("/reading-clubs/mine", { replace: true });
-        // 잘못된 모임 번호의 책 선택을 종료함
+        // 잘못된 모임 번호의 책 선택을 종료
         return;
       }
 
-      // 다음 도서 추천에서 상세를 열었다면 선택 도서를 투표 화면으로 바로 전달함
+      // 다음 도서 추천에서 상세를 열었다면 선택 도서를 투표 화면으로 바로 전달
       if (pageState.clubBookVoteReturnPath) {
         navigate(pageState.clubBookVoteReturnPath, {
           state: {
@@ -155,7 +155,7 @@ function SearchBookInfoPage() {
       const readingEntryPath = Number.isSafeInteger(editRondNumb) && editRondNumb > 0
         ? `/reading-clubs/update/book/${clubNumb}/${editRondNumb}`
         : `/reading-clubs/set/book/${clubNumb}`;
-      // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달함
+      // 선택한 책 정보와 ISBN을 등록 또는 수정 화면에 전달
       navigate(
         `${readingEntryPath}?isbn=${encodeURIComponent(selectedBook.isbn)}`,
         { state: { book: selectedBook } },
@@ -165,19 +165,19 @@ function SearchBookInfoPage() {
     }
 
     setIsSelectingBook(true);
-    // 선택 흐름이 예외로 끝나도 버튼 진행 상태를 복원함
+    // 선택 흐름이 예외로 끝나도 버튼 진행 상태를 복원
     try {
-      // 기존 독후감 수정과 추가 작성 선택 흐름으로 이동함
+      // 기존 독후감 수정과 추가 작성 선택 흐름으로 이동
       await moveToReportEntry(selectedBook, navigate);
     }
 
     finally {
-      // 선택 안내가 끝난 뒤 다시 시도할 수 있도록 진행 상태를 해제함
+      // 선택 안내가 끝난 뒤 다시 시도할 수 있도록 진행 상태를 해제
       setIsSelectingBook(false);
     }
   }
 
-  // 독후감 상세의 도서 정보 화면과 같은 구조로 검색 도서 정보를 반환함
+  // 독후감 상세의 도서 정보 화면과 같은 구조로 검색 도서 정보를 반환
   return (
     /* 검색한 도서의 상세 정보 전체 영역 */
     <main className={detailStyles.page} style={pageStyle}>
@@ -204,7 +204,7 @@ function SearchBookInfoPage() {
           <div className={detailStyles.bookAverageSummary}>
             {hasRatingAverage ? (
               <>
-                {/* 평균 평점이 있으면 평균 문구와 별 아이콘 및 점수를 표시함 */}
+                {/* 평균 평점이 있으면 평균 문구와 별 아이콘 및 점수를 표시 */}
                 <span className={detailStyles.bookAverageLabel}>
                   {/* "평균" */}
                   {message("frontend.book.ratingAverageShort")}

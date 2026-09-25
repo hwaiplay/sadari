@@ -1,5 +1,5 @@
 /**
- * 로그인 사용자가 상대를 팔로우 중인 버튼 상태인지 판정함
+ * 로그인 사용자가 상대를 팔로우 중인 버튼 상태인지 판정
  *
  * @author SeungHyeon.Kang
  * @param followStatName 서버에서 내려준 팔로우 버튼명

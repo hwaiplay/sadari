@@ -223,7 +223,7 @@ export type UpdateUserInterestsParams = {
 };
 
 /**
- * get My Profile 정보를 조회함
+ * get My Profile 정보를 조회
  *
  * @author HanWon.Jang
  * @return 처리 결과
@@ -232,17 +232,17 @@ export type UpdateUserInterestsParams = {
 export const getMyProfileApi = async (): Promise<ResultData<UserProfile> & { data: UserProfile }> => {
 
   const res = await api.get<ResultData<UserProfile> & { data: UserProfile }>("/user/me");
-  // 검증된 로그인 사용자 프로필 응답을 반환함
+  // 검증된 로그인 사용자 프로필 응답을 반환
   return assertResultDataSuccess(res.data);
 };
 
-/** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
+/** 로그인 사용자의 알림과 공개 범위 설정을 조회 */
 export const getUserSettingApi = async (): Promise<UserSetting> => {
   const res = await api.get("/user/settings");
   return assertResultDataSuccess(res.data).data as UserSetting;
 };
 
-/** 한국어 또는 영어 화면 사용 여부를 저장함 */
+/** 한국어 또는 영어 화면 사용 여부를 저장 */
 export const uptUserLanguageApi = async (
   params: UserLanguageSettingParams,
 ): Promise<UserSetting> => {
@@ -250,7 +250,7 @@ export const uptUserLanguageApi = async (
   return assertResultDataSuccess(res.data).data as UserSetting;
 };
 
-/** 선택형 알림 범주와 신규 독후감 알림 기본값을 저장함 */
+/** 선택형 알림 범주와 신규 독후감 알림 기본값을 저장 */
 export const uptUserAlimSettingApi = async (
   params: UserNotificationSettingParams,
 ): Promise<UserSetting> => {
@@ -258,7 +258,7 @@ export const uptUserAlimSettingApi = async (
   return assertResultDataSuccess(res.data).data as UserSetting;
 };
 
-/** 공개 범위와 신규 독후감 공개 기본값을 저장함 */
+/** 공개 범위와 신규 독후감 공개 기본값을 저장 */
 export const uptUserPrivacyApi = async (
   params: UserPrivacySettingParams,
 ): Promise<UserSetting> => {
@@ -267,7 +267,7 @@ export const uptUserPrivacyApi = async (
 };
 
 /**
- * 마이페이지에 표시할 이번 달/올해 완료 독서 권수와 목표 달성 정보를 조회함
+ * 마이페이지에 표시할 이번 달/올해 완료 독서 권수와 목표 달성 정보를 조회
  *
  * @author HanWon.Jang
  * @return 월간/연간 완료 독서 요약 API 응답
@@ -279,7 +279,7 @@ export const getMonthlyReadingApi = async () => {
 };
 
 /**
- * 타이머 화면에 표시할 선택 연도의 독서 시간 잔디만 조회함
+ * 타이머 화면에 표시할 선택 연도의 독서 시간 잔디만 조회
  *
  * @author SeungHyeon.Kang
  * @param readYear 조회할 연도, 없으면 현재 연도
@@ -292,17 +292,17 @@ export const getReadingHeatmapApi = async (
   signal?: AbortSignal,
 ): Promise<ReadingHeatmap> => {
 
-  // 전체 독서 통계 없이 선택 연도의 잔디 데이터만 요청함
+  // 전체 독서 통계 없이 선택 연도의 잔디 데이터만 요청
   const res = await api.get("/user/reading-heatmap", {
     params: readYear === undefined ? undefined : { readYear },
     signal,
   });
-  // 공통 응답 코드가 검증된 독서 잔디 데이터만 반환함
+  // 공통 응답 코드가 검증된 독서 잔디 데이터만 반환
   return assertResultDataSuccess(res.data).data as ReadingHeatmap;
 };
 
 /**
- * 스크롤로 마이페이지 통계 영역에 진입한 사용자의 독서 시간과 상태 분포를 조회함
+ * 스크롤로 마이페이지 통계 영역에 진입한 사용자의 독서 시간과 상태 분포를 조회
  *
  * @author SeungHyeon.Kang
  * @param readYear 조회할 연도, 없으면 현재 연도
@@ -315,17 +315,17 @@ export const getReadingStatsApi = async (
   signal?: AbortSignal,
 ): Promise<ReadingStatistics> => {
 
-  // 본인 전용 독서 통계를 화면 이탈 시 취소할 수 있는 조회 요청으로 전달함
+  // 본인 전용 독서 통계를 화면 이탈 시 취소할 수 있는 조회 요청으로 전달
   const res = await api.get("/user/reading-statistics", {
     params: readYear === undefined ? undefined : { readYear },
     signal,
   });
-  // 공통 응답 코드가 검증된 독서 통계 데이터만 반환함
+  // 공통 응답 코드가 검증된 독서 통계 데이터만 반환
   return assertResultDataSuccess(res.data).data as ReadingStatistics;
 };
 
 /**
- * 마이페이지에서 선택한 독서 통계 공개 여부를 저장함
+ * 마이페이지에서 선택한 독서 통계 공개 여부를 저장
  *
  * @author SeungHyeon.Kang
  * @param params 다른 사용자 공개 여부
@@ -335,14 +335,14 @@ export const getReadingStatsApi = async (
 export const uptReadingStatsSettingApi = async (
   params: ReadingStatisticsSettingParams,
 ): Promise<"Y" | "N"> => {
-  // 로그인 회원의 범용 설정에 독서 통계 공개 여부를 저장함
+  // 로그인 회원의 범용 설정에 독서 통계 공개 여부를 저장
   const res = await api.put("/user/reading-statistics/settings", params);
-  // 공통 성공 응답 검증을 통과한 공개 여부 코드를 반환함
+  // 공통 성공 응답 검증을 통과한 공개 여부 코드를 반환
   return assertResultDataSuccess(res.data).data as "Y" | "N";
 };
 
 /**
- * 마이페이지에서 설정한 이번 달/올해 독서 목표 권수를 저장함
+ * 마이페이지에서 설정한 이번 달/올해 독서 목표 권수를 저장
  *
  * @author HanWon.Jang
  * @param params 월간/연간 목표 권수
@@ -357,7 +357,7 @@ export const updateReadingGoalApi = (params: ReadingGoalParams) => {
 };
 
 /**
- * copy Previous Reading Goal 기능을 처리함
+ * copy Previous Reading Goal 기능을 처리
  *
  * @author HanWon.Jang
  * @return 처리 결과
@@ -372,7 +372,7 @@ export const copyPrevReadingGoalApi = () => {
 };
 
 /**
- * update My Profile 정보를 수정함
+ * update My Profile 정보를 수정
  *
  * @author HanWon.Jang
  * @param params params 입력값
@@ -400,7 +400,7 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
 };
 
 /**
- * 최초 로그인 사용자의 닉네임을 저장하고 웰컴 화면을 완료함
+ * 최초 로그인 사용자의 닉네임을 저장하고 웰컴 화면을 완료
  *
  * @author HanWon.Jang
  * @param params 사용자가 확정한 닉네임
@@ -409,30 +409,30 @@ export const updateMyProfileApi = (params: UpdateUserProfileParams) => {
  */
 export const updateOnboardingApi = (params: UpdateOnboardingParams) => {
 
-  // 닉네임 저장과 온보딩 완료를 같은 백엔드 트랜잭션으로 요청함
+  // 닉네임 저장과 온보딩 완료를 같은 백엔드 트랜잭션으로 요청
   return api.put("/user/onboarding", params).then((res) => {
 
-    // 공통 응답 코드가 성공인 경우에만 최신 프로필을 반환함
+    // 공통 응답 코드가 성공인 경우에만 최신 프로필을 반환
     return assertResultDataSuccess(res.data);
   });
 };
 
 /**
- * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회함
+ * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회
  *
  * @author SeungHyeon.Kang
  * @return 대분류와 세부코드가 포함된 관심분야 목록
  * @throws API 요청 또는 업무 검증 실패 시 발생
  */
 export const getUserInterestCatalogApi = async (): Promise<UserInterest[]> => {
-  // 사용자 도메인의 활성 독서 관심분야 목록을 요청함
+  // 사용자 도메인의 활성 독서 관심분야 목록을 요청
   const res = await api.get("/user/interests/catalog");
-  // 공통 응답 검증을 통과한 관심분야 목록을 반환함
+  // 공통 응답 검증을 통과한 관심분야 목록을 반환
   return (assertResultDataSuccess(res.data).data as UserInterest[] | undefined) ?? [];
 };
 
 /**
- * 앨범에서 선택한 프로필 또는 배경 이미지를 사용자 전용 임시 저장소에 보관함
+ * 앨범에서 선택한 프로필 또는 배경 이미지를 사용자 전용 임시 저장소에 보관
  *
  * @author SeungHyeon.Kang
  * @param imageFile 사용자가 선택한 원본 이미지
@@ -445,32 +445,32 @@ export const setProfileImageDraftApi = (
   imageType: ProfileImageType,
 ): Promise<ProfileImageDraft> => {
   const formData = new FormData();
-  // 서버에서 파일 시그니처와 방향을 검증할 원본 이미지를 전달함
+  // 서버에서 파일 시그니처와 방향을 검증할 원본 이미지를 전달
   formData.append("imageFile", imageFile);
-  // 임시 저장 경로와 미리보기 제한 크기를 결정할 이미지 유형을 전달함
+  // 임시 저장 경로와 미리보기 제한 크기를 결정할 이미지 유형을 전달
   formData.append("imageType", imageType);
 
   return api.post("/user/profile-image-drafts", formData).then((res) => {
-    // 공통 성공 응답에서 로그인 사용자의 임시 이미지 정보만 반환함
+    // 공통 성공 응답에서 로그인 사용자의 임시 이미지 정보만 반환
     return assertResultDataSuccess(res.data).data as ProfileImageDraft;
   });
 };
 
 /**
- * 앱 재시작 뒤에도 만료되지 않은 프로필 이미지 임시 선택본을 복원함
+ * 앱 재시작 뒤에도 만료되지 않은 프로필 이미지 임시 선택본을 복원
  *
  * @author SeungHyeon.Kang
  * @return 같은 로그인 사용자의 복원 가능한 임시 이미지 목록
  * @throws API 요청 실패 시 발생
  */
 export const getProfileDraftListApi = async (): Promise<ProfileImageDraft[]> => {
-  // 공개 파일 URL 없이 인증 응답 본문으로 작은 서버 미리보기를 조회함
+  // 공개 파일 URL 없이 인증 응답 본문으로 작은 서버 미리보기를 조회
   const res = await api.get("/user/profile-image-drafts");
   return (assertResultDataSuccess(res.data).data as ProfileImageDraft[] | undefined) ?? [];
 };
 
 /**
- * 프로필 편집을 취소한 이미지 유형의 임시 원본과 미리보기를 삭제함
+ * 프로필 편집을 취소한 이미지 유형의 임시 원본과 미리보기를 삭제
  *
  * @author SeungHyeon.Kang
  * @param imageType 삭제할 프로필 또는 배경 이미지 구분값
@@ -478,28 +478,28 @@ export const getProfileDraftListApi = async (): Promise<ProfileImageDraft[]> => 
  * @throws API 요청 실패 시 발생
  */
 export const delProfileImageDraftApi = (imageType: ProfileImageType) => {
-  // 쿼리 파라미터로 고정 유형만 전달해 사용자 전용 임시 파일을 삭제함
+  // 쿼리 파라미터로 고정 유형만 전달해 사용자 전용 임시 파일을 삭제
   return api.delete("/user/profile-image-drafts", { params: { imageType } }).then((res) => {
     return assertResultDataSuccess(res.data);
   });
 };
 
 /**
- * 로그인 사용자가 현재 선택한 독서 관심분야를 조회함
+ * 로그인 사용자가 현재 선택한 독서 관심분야를 조회
  *
  * @author SeungHyeon.Kang
  * @return 현재 저장된 관심분야 목록
  * @throws API 요청 또는 업무 검증 실패 시 발생
  */
 export const getUserInterestListApi = async (): Promise<UserInterest[]> => {
-  // 로그인 사용자의 관심분야 목록을 요청함
+  // 로그인 사용자의 관심분야 목록을 요청
   const res = await api.get("/user/interests");
-  // 공통 응답 검증을 통과한 목록을 반환함
+  // 공통 응답 검증을 통과한 목록을 반환
   return (assertResultDataSuccess(res.data).data as UserInterest[] | undefined) ?? [];
 };
 
 /**
- * 최초 로그인 사용자가 선택한 독서 관심분야를 전체 교체함
+ * 최초 로그인 사용자가 선택한 독서 관심분야를 전체 교체
  *
  * @author SeungHyeon.Kang
  * @param params 선택한 관심분야 목록
@@ -507,9 +507,9 @@ export const getUserInterestListApi = async (): Promise<UserInterest[]> => {
  * @throws API 요청 또는 업무 검증 실패 시 발생
  */
 export const updateUserInterestsApi = (params: UpdateUserInterestsParams) => {
-  // 선택하지 않은 경우에도 빈 목록으로 기존 관심분야를 정리할 수 있도록 요청함
+  // 선택하지 않은 경우에도 빈 목록으로 기존 관심분야를 정리할 수 있도록 요청
   return api.put("/user/interests", params).then((res) => {
-    // 공통 성공 코드가 확인된 저장 응답을 반환함
+    // 공통 성공 코드가 확인된 저장 응답을 반환
     return assertResultDataSuccess(res.data);
   });
 };

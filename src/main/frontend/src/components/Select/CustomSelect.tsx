@@ -23,7 +23,7 @@ type CustomSelectProps<T extends string> = {
 };
 
 /**
- * Custom Select 화면 또는 컴포넌트를 구성함
+ * Custom Select 화면 또는 컴포넌트를 구성
  *
  * @author HanWon.Jang
  * @param props props 입력값
@@ -65,7 +65,7 @@ function CustomSelect<T extends string>({
 
   useEffect(() => {
     /**
-     * handle Pointer Down 사용자 동작을 처리함
+     * handle Pointer Down 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param event event 입력값
@@ -87,7 +87,7 @@ function CustomSelect<T extends string>({
   }, []);
 
   /**
-   * handle Select 사용자 동작을 처리함
+   * handle Select 사용자 동작을 처리
    *
    * @author HanWon.Jang
    * @param option option 입력값
@@ -111,7 +111,7 @@ function CustomSelect<T extends string>({
   };
 
   /**
-   * handle Key Down 사용자 동작을 처리함
+   * handle Key Down 사용자 동작을 처리
    *
    * @author HanWon.Jang
    * @param event event 입력값

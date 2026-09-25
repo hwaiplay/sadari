@@ -84,16 +84,16 @@ export const updateClubBookVoteApi = async (clubNumb: number, recmNumb: number) 
 };
 
 export const getOwnerElectionApi = async (clubNumb: number): Promise<OwnerElection> => {
-  // 시작 시점 유권자에게 공개되는 진행 중 모임장 선거를 요청함
+  // 시작 시점 유권자에게 공개되는 진행 중 모임장 선거를 요청
   const response = await api.get(`/reading-clubs/${clubNumb}/owner-election`);
-  // 공통 성공 응답에서 선거와 후보 목록을 반환함
+  // 공통 성공 응답에서 선거와 후보 목록을 반환
   return assertResultDataSuccess(response.data).data as OwnerElection;
 };
 
 export const updateOwnerVoteApi = async (clubNumb: number, userNumb: number) => {
-  // 서버가 현재 투표와 후보 자격을 다시 결정하도록 후보 번호만 전달함
+  // 서버가 현재 투표와 후보 자격을 다시 결정하도록 후보 번호만 전달
   const response = await api.put(`/reading-clubs/${clubNumb}/owner-election/vote`, {userNumb});
-  // 공통 성공 응답을 반환함
+  // 공통 성공 응답을 반환
   return assertResultDataSuccess(response.data);
 };
 
@@ -348,9 +348,9 @@ export const cancelSentInvitationApi = async (clubNumb: number, userNumb: number
  * 받은 모임 초대 조회
  */
 export const getClubInvitationListApi = async (): Promise<ClubInvitation[]> => {
-  // 유효한 받은 초대 목록을 요청함
+  // 유효한 받은 초대 목록을 요청
   const response = await api.get("/reading-clubs/invitations/received");
-  // 받은 초대 목록을 반환함
+  // 받은 초대 목록을 반환
   return (assertResultDataSuccess(response.data).data as ClubInvitation[] | undefined) ?? [];
 };
 

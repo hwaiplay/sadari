@@ -3,7 +3,7 @@ import { message } from "@/app/messages/message";
 import * as styles from "./WithdrawalResultPage.css";
 
 /**
- * Kakao 재인증을 거친 회원 탈퇴 처리 결과를 서비스 디자인으로 표시함
+ * Kakao 재인증을 거친 회원 탈퇴 처리 결과를 서비스 디자인으로 표시
  *
  * @author HanWon.Jang
  * @return 회원 탈퇴 완료 또는 실패 안내 화면
@@ -21,7 +21,7 @@ const WithdrawalResultPage = () => {
   let statusLabel: string;
   let guide: string;
 
-  // 실패 결과는 계정 정보가 변경되지 않았음을 명확히 안내함
+  // 실패 결과는 계정 정보가 변경되지 않았음을 명확히 안내
   if (!isSuccess) {
     // "!"
     statusSymbol = "!";
@@ -35,7 +35,7 @@ const WithdrawalResultPage = () => {
     guide = message("frontend.withdrawal.result.failedGuide");
   }
 
-  // 영구 탈퇴 성공은 설정된 유예기간에 따라 삭제가 진행되는 상태로 안내함
+  // 영구 탈퇴 성공은 설정된 유예기간에 따라 삭제가 진행되는 상태로 안내
   else if (isHardWithdrawal) {
     // "✓"
     statusSymbol = "✓";
@@ -58,7 +58,7 @@ const WithdrawalResultPage = () => {
     }
   }
 
-  // 계정 비활성화 성공은 재로그인 시 기존 계정을 다시 활성화할 수 있음을 안내함
+  // 계정 비활성화 성공은 재로그인 시 기존 계정을 다시 활성화할 수 있음을 안내
   else {
     // "✓"
     statusSymbol = "✓";
@@ -72,7 +72,7 @@ const WithdrawalResultPage = () => {
     guide = message("frontend.withdrawal.result.softGuide");
   }
 
-  // 회원 탈퇴 처리 결과와 후속 안내 화면을 반환함
+  // 회원 탈퇴 처리 결과와 후속 안내 화면을 반환
   return (
     /* 회원 탈퇴 처리 결과 전체 영역 */
     <main className={styles.page}>

@@ -22,7 +22,7 @@ import org.our.sadari.global.scheduler.service.AlimDeleteServiceImpl;
  * fileName       : AlimDeleteServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 스케줄러 로직의 동작을 검증함
+ * description    : 스케줄러 로직의 동작을 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -43,86 +43,86 @@ class AlimDeleteServiceImplTest {
     private AlimDeleteServiceImpl alimDeleteService;
 
     /**
-     * 각 테스트에서 독립적인 서비스 구현체를 생성함
+     * 각 테스트에서 독립적인 서비스 구현체를 생성
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
-        // 알림 삭제 스케줄러 단위 테스트 대상을 담을 객체를 생성함
+        // 알림 삭제 스케줄러 단위 테스트 대상을 담을 객체를 생성
         alimDeleteService = new AlimDeleteServiceImpl(alimDeleteMapper, schedulerLogSupport, 30);
     }
 
     /**
-     * 실제 삭제 건수가 대상 및 성공 건수에 동일하게 기록되는지 검증함
+     * 실제 삭제 건수가 대상 및 성공 건수에 동일하게 기록되는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAlimCountsSuccess() {
-        // 성공 실행 로그에 사용할 실행 번호를 설정함
+        // 성공 실행 로그에 사용할 실행 번호를 설정
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
-        // Alim 데이터를 DB에서 삭제함
+        // Alim 데이터를 DB에서 삭제
         when(alimDeleteMapper.delAlim(any())).thenReturn(12);
 
-        // delAlim 업무 로직을 alimDeleteService에 위임함
+        // delAlim 업무 로직을 alimDeleteService에 위임
         alimDeleteService.delAlim();
 
         ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> captor =
-                // 리플렉션 호출 결과의 반환 타입을 지정함
+                // 리플렉션 호출 결과의 반환 타입을 지정
                 ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
-        // 호출 인자를 검증하기 위해 캡처함
+        // 호출 인자를 검증하기 위해 캡처
         verify(schedulerLogSupport).uptSchedulerLogSafely(captor.capture());
 
-        // 현재 항목의 값을 조회함
+        // 현재 항목의 값을 조회
         SchedulerLogDto.SchedulerRunDto log = captor.getValue();
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(Constant.SCHEDULER_CODE_ALIM_DELETE, log.getSchdCode());
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(Constant.SCHEDULER_EXEC_SUCCESS, log.getExecStat());
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(12, log.getTrgtCntt());
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(12, log.getSuccCntt());
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(0, log.getFailCntt());
     }
 
     /**
-     * 삭제 대상이 없을 때 불필요한 스케줄러 로그를 저장하지 않는지 검증함
+     * 삭제 대상이 없을 때 불필요한 스케줄러 로그를 저장하지 않는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAlimSkipsEmptyLog() {
-        // Alim 데이터를 DB에서 삭제함
+        // Alim 데이터를 DB에서 삭제
         when(alimDeleteMapper.delAlim(any())).thenReturn(0);
 
-        // delAlim 업무 로직을 alimDeleteService에 위임함
+        // delAlim 업무 로직을 alimDeleteService에 위임
         alimDeleteService.delAlim();
 
-        // 처리 건수가 없는 실행은 마스터 로그 수정도 요청하지 않았는지 검증함
+        // 처리 건수가 없는 실행은 마스터 로그 수정도 요청하지 않았는지 검증
         verify(schedulerLogSupport, never()).uptSchedulerLogSafely(any(SchedulerLogDto.SchedulerRunDto.class));
     }
 
     /**
-     * DELETE 예외가 실패 상세와 마스터 실패 상태에 모두 반영되는지 검증함
+     * DELETE 예외가 실패 상세와 마스터 실패 상태에 모두 반영되는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAlimRethrowsFailure() {
-        // 실패 상세 로그에 연결할 실행 번호를 설정함
+        // 실패 상세 로그에 연결할 실행 번호를 설정
         when(schedulerLogSupport.setSchedulerLogSafely(any())).thenReturn(1L);
-        // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성함
+        // 스케줄러 실패 상황을 재현할 예외를 담을 객체를 생성
         RuntimeException exception = new RuntimeException("delete failed");
-        // Alim 데이터를 DB에서 삭제함
+        // Alim 데이터를 DB에서 삭제
         when(alimDeleteMapper.delAlim(any())).thenThrow(exception);
 
-        // 검증 대상 코드가 예상 예외를 발생시키는지 확인함
+        // 검증 대상 코드가 예상 예외를 발생시키는지 확인
         assertThrows(RuntimeException.class, alimDeleteService::delAlim);
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증함
+        // 의존 객체가 예상한 인자로 호출되었는지 검증
         verify(schedulerLogSupport).setSchedulerFailSafely(
                 1L
               , Constant.SCHEDULER_FAIL_EXCEPTION
@@ -132,16 +132,16 @@ class AlimDeleteServiceImplTest {
         );
 
         ArgumentCaptor<SchedulerLogDto.SchedulerRunDto> captor =
-                // 리플렉션 호출 결과의 반환 타입을 지정함
+                // 리플렉션 호출 결과의 반환 타입을 지정
                 ArgumentCaptor.forClass(SchedulerLogDto.SchedulerRunDto.class);
-        // 호출 인자를 검증하기 위해 캡처함
+        // 호출 인자를 검증하기 위해 캡처
         verify(schedulerLogSupport).uptSchedulerLogSafely(captor.capture());
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(
                 Constant.SCHEDULER_EXEC_FAILURE
               , captor.getValue().getExecStat()
         );
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         org.junit.jupiter.api.Assertions.assertEquals(1, captor.getValue().getFailCntt());
     }
 }

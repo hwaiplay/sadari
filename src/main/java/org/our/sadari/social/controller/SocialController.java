@@ -32,7 +32,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : SocialController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 사용자 검색과 공개 프로필 및 팔로우와 좋아요 API를 제공함
+ * description    : 사용자 검색과 공개 프로필 및 팔로우와 좋아요 API를 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -64,7 +64,7 @@ public class SocialController {
     private final ReadingStatisticsService readingStatisticsService;
 
     /**
-     * 사용자 번호로 공개 프로필 정보를 조회함
+     * 사용자 번호로 공개 프로필 정보를 조회
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 사진 반응 상태를 계산할 로그인 사용자 번호
@@ -75,66 +75,66 @@ public class SocialController {
     @Operation(summary = "공개 프로필 조회", description = "사용자 번호로 공개 프로필 정보를 조회한다.")
     public ResultData getSocialProfile(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                      , @Parameter(description = "조회할 사용자 번호", example = "31") @PathVariable Long userNumb) {
-        // 로그인 사용자와 조회 대상이 없으면 사진 반응의 현재 사용자 상태를 계산할 수 없어 요청을 거부함
+        // 로그인 사용자와 조회 대상이 없으면 사진 반응의 현재 사용자 상태를 계산할 수 없어 요청을 거부
         if (StringUtil.hasEmpty(loginUserNumb, userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 어느 한쪽이라도 상대를 차단했으면 프로필 존재 여부를 구분하지 않는 공통 응답을 반환함
+        // 어느 한쪽이라도 상대를 차단했으면 프로필 존재 여부를 구분하지 않는 공통 응답을 반환
         if (userBlockService.isBlocked(loginUserNumb, userNumb)) {
             // "접근할 수 없는 요청이에요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // UserByNumb 데이터를 DB에서 조회함
+        // UserByNumb 데이터를 DB에서 조회
         UserDto user = userMapper.getUserByNumb(userNumb);
 
-        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(user)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 공개 프로필과 사진 반응을 함께 담을 응답 객체를 생성함
+        // 공개 프로필과 사진 반응을 함께 담을 응답 객체를 생성
         Map<String, Object> profile = new HashMap<>();
-        // 공개 프로필 화면이 접근 제한 회원 안내를 선택할 수 있도록 회원 상태를 설정함
+        // 공개 프로필 화면이 접근 제한 회원 안내를 선택할 수 있도록 회원 상태를 설정
         profile.put("userStat", user.getUserStat());
-        // 프론트엔드가 공통코드명을 임의로 하드코딩하지 않도록 회원 상태명을 설정함
+        // 프론트엔드가 공통코드명을 임의로 하드코딩하지 않도록 회원 상태명을 설정
         profile.put("userStatName", user.getUserStatName());
 
-        // 접근 제한 회원은 프로필 원본 대신 회원 상태만 공개함
+        // 접근 제한 회원은 프로필 원본 대신 회원 상태만 공개
         if (!Constant.USER_STAT_ACTIVE.equals(user.getUserStat())) {
-            // 탈퇴 회원의 대체 닉네임을 설정함
+            // 탈퇴 회원의 대체 닉네임을 설정
             profile.put("userNick", "탈퇴한 사용자");
-            // 제한된 공개 프로필 정보를 반환함
+            // 제한된 공개 프로필 정보를 반환
             return ResultData.success(profile);
         }
 
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("userNick", user.getUserNick());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("porfPath", user.getPorfPath());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("bgimPath", user.getBgimPath());
-        // 일반 프로필 화면에 사용할 축소 배경사진 경로를 저장함
+        // 일반 프로필 화면에 사용할 축소 배경사진 경로를 저장
         profile.put("bgimDisplayPath", user.getBgimDisplayPath());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("intrCntn", user.getIntrCntn());
-        // 현재 프로필 사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장함
+        // 현재 프로필 사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장
         profile.put("profileImageReaction", getImageReaction(
                 loginUserNumb, userNumb, Constant.LIKE_TARGET_PROFILE_IMAGE, user.getProfNumb()
         ));
-        // 현재 배경사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장함
+        // 현재 배경사진이 있으면 로그인 사용자 기준 좋아요와 댓글 집계를 저장
         profile.put("backgroundImageReaction", getImageReaction(
                 loginUserNumb, userNumb, Constant.LIKE_TARGET_BACKGROUND_IMAGE, user.getBgimNumb()
         ));
-        // 사용자 번호로 공개 프로필 정보를 조회 결과를 성공 응답으로 반환함
+        // 사용자 번호로 공개 프로필 정보를 조회 결과를 성공 응답으로 반환
         return ResultData.success(profile);
     }
 
     /**
-     * 다른 사용자 프로필에 표시할 현재 사진의 좋아요와 댓글 집계를 조회함
+     * 다른 사용자 프로필에 표시할 현재 사진의 좋아요와 댓글 집계를 조회
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 사진 반응을 확인하는 로그인 사용자 번호
@@ -147,26 +147,26 @@ public class SocialController {
                                                      , String tagtType, Long tagtNumb) {
         // 현재 사진이 없으면 소셜 프로필에 반응 버튼을 표시하지 않음
         if (StringUtil.isEmpty(tagtNumb)) {
-            // 사진 반응 대상이 없음을 반환함
+            // 사진 반응 대상이 없음을 반환
             return null;
         }
 
-        // 로그인 사용자와 사진 소유자를 분리한 반응 조회 객체를 생성함
+        // 로그인 사용자와 사진 소유자를 분리한 반응 조회 객체를 생성
         UserDto.ImageReactionDto request = new UserDto.ImageReactionDto();
-        // 로그인 사용자의 현재 좋아요 여부를 계산할 사용자 번호를 설정함
+        // 로그인 사용자의 현재 좋아요 여부를 계산할 사용자 번호를 설정
         request.setUserNumb(loginUserNumb);
-        // 현재 사진을 소유한 공개 프로필 사용자 번호를 설정함
+        // 현재 사진을 소유한 공개 프로필 사용자 번호를 설정
         request.setOwnerUserNumb(ownerUserNumb);
-        // 조회할 사진 유형을 설정함
+        // 조회할 사진 유형을 설정
         request.setTagtType(tagtType);
-        // 교체되지 않은 현재 사진인지 검증할 파일 번호를 설정함
+        // 교체되지 않은 현재 사진인지 검증할 파일 번호를 설정
         request.setTagtNumb(tagtNumb);
-        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환함
+        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환
         return userMapper.getImageReactionDtl(request);
     }
 
     /**
-     * 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회함
+     * 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
@@ -183,63 +183,63 @@ public class SocialController {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // UserByNumb 데이터를 DB에서 조회함
+        // UserByNumb 데이터를 DB에서 조회
         UserDto user = userMapper.getUserByNumb(userNumb);
 
-        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(user)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 탈퇴 회원의 목표와 독서 활동 집계는 공개하지 않고 빈 요약을 반환함
+        // 탈퇴 회원의 목표와 독서 활동 집계는 공개하지 않고 빈 요약을 반환
         if (!Constant.USER_STAT_ACTIVE.equals(user.getUserStat())) {
-            // 개인정보가 제거된 빈 독서 요약을 반환함
+            // 개인정보가 제거된 빈 독서 요약을 반환
             return ResultData.success(new MonthlyReadingSummaryDto());
         }
 
-        // 다른 사용자 화면에는 공개 독후감과 목표만 제공하도록 공개 여부를 서버에서 고정함
+        // 다른 사용자 화면에는 공개 독후감과 목표만 제공하도록 공개 여부를 서버에서 고정
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb, Constant.COMM_YES);
 
         // 다른 사람 프로필도 마이페이지와 같은 통계 영역을 사용하므로 독서 요약 응답에 social 통계를 합쳐 내려줌
-        // 독서 요약이 실패하면 통계를 추가하지 않고 후속 응답 데이터 결합을 중단함
+        // 독서 요약이 실패하면 통계를 추가하지 않고 후속 응답 데이터 결합을 중단
         if (summaryResult.getCode() != 200) {
-            // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환함
+            // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환
             return summaryResult;
         }
 
-        // getProfileStats 업무 로직을 socialService에 위임함
+        // getProfileStats 업무 로직을 socialService에 위임
         ResultData statsResult = socialService.getProfileStats(loginUserNumb, userNumb);
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분
         if (statsResult.getCode() != 200) {
-            // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환함
+            // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 반환
             return statsResult;
         }
 
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         MonthlyReadingSummaryDto summary = (MonthlyReadingSummaryDto) summaryResult.getData();
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         SocialDto.ProfileStatsDto profileStats = (SocialDto.ProfileStatsDto) statsResult.getData();
 
-        // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (!StringUtil.isEmpty(profileStats)) {
-            // TotalReadBookCnt 업무 값을 summary DTO에 설정함
+            // TotalReadBookCnt 업무 값을 summary DTO에 설정
             summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
-            // FollowingCnt 업무 값을 summary DTO에 설정함
+            // FollowingCnt 업무 값을 summary DTO에 설정
             summary.setFollowingCnt(profileStats.getFollowingCnt());
-            // FollowerCnt 업무 값을 summary DTO에 설정함
+            // FollowerCnt 업무 값을 summary DTO에 설정
             summary.setFollowerCnt(profileStats.getFollowerCnt());
-            // ReceivedLikeCnt 업무 값을 summary DTO에 설정함
+            // ReceivedLikeCnt 업무 값을 summary DTO에 설정
             summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
         }
 
-        // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 성공 응답으로 반환함
+        // 사용자 번호로 주간, 월간, 연간 독서 활동 요약을 조회 결과를 성공 응답으로 반환
         return ResultData.success(summary);
     }
 
     /**
-     * 사용자 번호로 공개 허용된 독서 통계를 조회함
+     * 사용자 번호로 공개 허용된 독서 통계를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 공개 통계를 조회할 사용자 번호
@@ -258,12 +258,12 @@ public class SocialController {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 서버가 계정 상태와 공개 설정을 검증한 다른 사용자용 독서 통계를 조회함
+        // 서버가 계정 상태와 공개 설정을 검증한 다른 사용자용 독서 통계를 조회
         return readingStatisticsService.getPublicReadingStats(userNumb, readYear);
     }
 
     /**
-     * 로그인 사용자가 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제함
+     * 로그인 사용자가 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제
      *
      * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
@@ -274,12 +274,12 @@ public class SocialController {
     @Operation(summary = "사용자 차단", description = "다른 사용자를 차단하고 두 사용자 사이의 팔로우 관계를 모두 삭제한다.")
     public ResultData setUserBlock(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                  , @Parameter(description = "차단 대상 사용자 번호", example = "31") @PathVariable Long userNumb) {
-        // 인증 사용자와 대상 사용자 번호로 차단 관계를 등록함
+        // 인증 사용자와 대상 사용자 번호로 차단 관계를 등록
         return userBlockService.setBlock(loginUserNumb, userNumb);
     }
 
     /**
-     * 로그인 사용자가 만든 한 방향의 사용자 차단을 해제함
+     * 로그인 사용자가 만든 한 방향의 사용자 차단을 해제
      *
      * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
@@ -290,12 +290,12 @@ public class SocialController {
     @Operation(summary = "사용자 차단 해제", description = "로그인 사용자가 직접 만든 차단 관계만 해제한다.")
     public ResultData delUserBlock(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                  , @Parameter(description = "차단 해제 대상 사용자 번호", example = "31") @PathVariable Long userNumb) {
-        // 인증 사용자가 소유한 차단 방향만 삭제함
+        // 인증 사용자가 소유한 차단 방향만 삭제
         return userBlockService.delBlock(loginUserNumb, userNumb);
     }
 
     /**
-     * 로그인 사용자가 직접 차단한 사용자 목록을 조회함
+     * 로그인 사용자가 직접 차단한 사용자 목록을 조회
      *
      * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
@@ -307,12 +307,12 @@ public class SocialController {
     public ResultData getUserBlockList(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                      , @Parameter(description = "조회할 페이지 번호", example = "1")
                                        @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 로그인 사용자가 관리할 수 있는 차단 사용자 목록을 조회함
+        // 로그인 사용자가 관리할 수 있는 차단 사용자 목록을 조회
         return userBlockService.getBlockList(loginUserNumb, page);
     }
 
     /**
-     * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자를 조회함
+     * 피드에서 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자를 조회
      *
      * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
@@ -327,13 +327,13 @@ public class SocialController {
           , @Parameter(description = "닉네임 검색어", example = "reader") @RequestParam String keyword
           , @Parameter(description = "조회할 페이지 번호", example = "1")
             @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 인증 사용자와 닉네임 검색어 및 페이지 조건을 소셜 검색 서비스에 전달함
+        // 인증 사용자와 닉네임 검색어 및 페이지 조건을 소셜 검색 서비스에 전달
         return socialService.getUserSearchList(loginUserNumb, keyword, page);
     }
 
     /**
-     * 로그인 사용자의 팔로잉 목록을 조회함
-     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
+     * 로그인 사용자의 팔로잉 목록을 조회
+     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -353,8 +353,8 @@ public class SocialController {
     }
 
     /**
-     * 로그인 사용자의 팔로워 목록을 조회함
-     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용함
+     * 로그인 사용자의 팔로워 목록을 조회
+     * 마이페이지에서는 내 사용자 번호를 별도로 들고 있지 않으므로 인증 사용자 번호를 목록 주인으로 사용
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -374,7 +374,7 @@ public class SocialController {
     }
 
     /**
-     * 특정 사용자의 팔로잉 목록을 조회함
+     * 특정 사용자의 팔로잉 목록을 조회
      * 목록의 각 사용자에는 현재 로그인 사용자 기준 팔로우 상태가 포함됨
      *
      * @author SeungHyeon.Kang
@@ -389,12 +389,12 @@ public class SocialController {
                                      , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb
                                      , @Parameter(description = "조회할 페이지 번호", example = "1")
                                        @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 특정 사용자의 팔로잉 목록을 조회한 결과를 반환함
+        // 특정 사용자의 팔로잉 목록을 조회한 결과를 반환
         return socialService.getFollowingList(loginUserNumb, userNumb, null, page);
     }
 
     /**
-     * 특정 사용자의 팔로워 목록을 조회함
+     * 특정 사용자의 팔로워 목록을 조회
      * 목록의 각 사용자에는 현재 로그인 사용자 기준 팔로우 상태가 포함됨
      *
      * @author SeungHyeon.Kang
@@ -409,12 +409,12 @@ public class SocialController {
                                     , @Parameter(description = "목록 주인 사용자 번호", example = "31") @PathVariable Long userNumb
                                     , @Parameter(description = "조회할 페이지 번호", example = "1")
                                       @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 특정 사용자의 팔로워 목록을 조회한 결과를 반환함
+        // 특정 사용자의 팔로워 목록을 조회한 결과를 반환
         return socialService.getFollowerList(loginUserNumb, userNumb, null, page);
     }
 
     /**
-     * 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회함
+     * 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -425,12 +425,12 @@ public class SocialController {
     @Operation(summary = "팔로우 버튼 상태 조회", description = "로그인 사용자와 상대 사용자 관계를 기준으로 팔로우 버튼명을 조회한다.")
     public ResultData getFollowStatus(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                                     , @Parameter(description = "상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
-        // 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회 결과를 반환함
+        // 로그인 사용자와 프로필 주인 사이의 팔로우 버튼명을 조회 결과를 반환
         return socialService.getFollowStatus(createFollowDto(loginUserNumb, userNumb));
     }
 
     /**
-     * 로그인 사용자가 프로필 주인을 팔로우하도록 저장함
+     * 로그인 사용자가 프로필 주인을 팔로우하도록 저장
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -441,18 +441,18 @@ public class SocialController {
     @Operation(summary = "팔로우 등록", description = "로그인 사용자가 상대 사용자를 팔로우한다.")
     public ResultData setFollow(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                               , @Parameter(description = "팔로우할 상대 사용자 번호", example = "31") @PathVariable Long userNumb) {
-        // 탈퇴 회원은 관계를 유지하되 새로운 팔로우 조작 대상에서 제외함
+        // 탈퇴 회원은 관계를 유지하되 새로운 팔로우 조작 대상에서 제외
         if (!isActiveUser(userNumb)) {
             // "접근할 수 없는 요청이에요."
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 로그인 사용자가 프로필 주인을 팔로우하도록 저장 결과를 반환함
+        // 로그인 사용자가 프로필 주인을 팔로우하도록 저장 결과를 반환
         return socialService.setFollow(createFollowDto(loginUserNumb, userNumb));
     }
 
     /**
-     * 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제함
+     * 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -469,12 +469,12 @@ public class SocialController {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제 결과를 반환함
+        // 로그인 사용자가 프로필 주인을 팔로우 중인 관계를 삭제 결과를 반환
         return socialService.delFollow(createFollowDto(loginUserNumb, userNumb));
     }
 
     /**
-     * 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소함
+     * 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소
      * TB_LIKEXX가 공용 좋아요 테이블이므로 독후감 전용 reptNumb가 아니라 TAGT_TYPE, TAGT_NUMB를 요청값으로 받음
      *
      * @author SeungHyeon.Kang
@@ -489,20 +489,20 @@ public class SocialController {
     )
     public ResultData setLike(@Parameter(hidden = true) @AuthenticationPrincipal Long loginUserNumb
                             , @RequestBody SocialDto.LikeDto request) {
-        // request 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // request 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(request)) {
-            // 좋아요 대상과 알림 정보를 담을 객체를 생성함
+            // 좋아요 대상과 알림 정보를 담을 객체를 생성
             request = new SocialDto.LikeDto();
         }
 
-        // UserNumb 업무 값을 request DTO에 설정함
+        // UserNumb 업무 값을 request DTO에 설정
         request.setUserNumb(loginUserNumb);
-        // 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소 결과를 반환함
+        // 대상 유형과 대상 번호를 기준으로 좋아요를 등록하거나 취소 결과를 반환
         return socialService.setLike(request);
     }
 
     /**
-     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회함
+     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -520,27 +520,27 @@ public class SocialController {
                                       @RequestParam(value = "tagtNumb") Long tagtNumb
                                     , @Parameter(description = "조회할 페이지 번호", example = "1")
                                       @RequestParam(value = "page", defaultValue = "1") int page) {
-        // 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 반환함
+        // 접근 가능한 대상에 좋아요를 등록한 활성 사용자 목록을 반환
         return socialService.getLikeUserList(loginUserNumb, tagtType, tagtNumb, page);
     }
 
     /**
-     * 소셜 관계 조작 대상 회원이 정상 이용 상태인지 확인함
+     * 소셜 관계 조작 대상 회원이 정상 이용 상태인지 확인
      *
      * @author SeungHyeon.Kang
      * @param userNumb 확인할 상대 회원 번호
      * @return 정상 이용 회원 여부
      */
     private boolean isActiveUser(Long userNumb) {
-        // 회원 번호로 현재 사용자 상태를 조회함
+        // 회원 번호로 현재 사용자 상태를 조회
         UserDto user = userMapper.getUserByNumb(userNumb);
-        // 존재하는 정상 이용 회원만 관계 조작 대상으로 인정함
+        // 존재하는 정상 이용 회원만 관계 조작 대상으로 인정
         return !StringUtil.isEmpty(user) && Constant.USER_STAT_ACTIVE.equals(user.getUserStat());
     }
 
     /**
-     * 팔로우 API의 경로 변수와 인증 사용자 번호를 Mapper까지 전달할 DTO로 변환함
-     * 원시 파라미터를 XML에 직접 넘기지 않도록 Controller 진입점에서 요청 구조를 고정함
+     * 팔로우 API의 경로 변수와 인증 사용자 번호를 Mapper까지 전달할 DTO로 변환
+     * 원시 파라미터를 XML에 직접 넘기지 않도록 Controller 진입점에서 요청 구조를 고정
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -548,13 +548,13 @@ public class SocialController {
      * @return 팔로우 요청 DTO
      */
     private SocialDto.FollowDto createFollowDto(Long loginUserNumb, Long userNumb) {
-        // 팔로우 대상과 알림 정보를 담을 객체를 생성함
+        // 팔로우 대상과 알림 정보를 담을 객체를 생성
         SocialDto.FollowDto followDto = new SocialDto.FollowDto();
-        // UserNumb 업무 값을 followDto DTO에 설정함
+        // UserNumb 업무 값을 followDto DTO에 설정
         followDto.setUserNumb(loginUserNumb);
-        // FlowNumb 업무 값을 followDto DTO에 설정함
+        // FlowNumb 업무 값을 followDto DTO에 설정
         followDto.setFlowNumb(userNumb);
-        // 팔로우 API의 경로 변수와 인증 사용자 번호를 Mapper까지 전달할 DTO로 변환 결과를 반환함
+        // 팔로우 API의 경로 변수와 인증 사용자 번호를 Mapper까지 전달할 DTO로 변환 결과를 반환
         return followDto;
     }
 }

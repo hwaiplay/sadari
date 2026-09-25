@@ -51,26 +51,26 @@ import * as homeStyles from "../Home/Home.css";
 import * as styles from "./FeedPage.css";
 
 /**
- * 독서 상태 코드에 대응하는 공통 독후감 카드의 배지 스타일을 반환함
+ * 독서 상태 코드에 대응하는 공통 독후감 카드의 배지 스타일을 반환
  *
  * @author HanWon.Jang
  * @param reptStat 피드 독후감의 독서 상태 코드
  * @return 독서 상태별 배지 클래스명
  */
 const getStatusClassName = (reptStat?: FeedItem["reptStat"]): string => {
-  // 완독한 독후감은 브랜드 색상의 완료 배지를 사용함
+  // 완독한 독후감은 브랜드 색상의 완료 배지를 사용
   if (reptStat === REPORT_STATUS_DONE) {
-    // 다른 사람 독후감 카드와 같은 완독 배지 클래스를 반환함
+    // 다른 사람 독후감 카드와 같은 완독 배지 클래스를 반환
     return reportListStyles.statusDone;
   }
 
-  // 독서를 중단한 독후감은 회색의 중단 배지를 사용함
+  // 독서를 중단한 독후감은 회색의 중단 배지를 사용
   if (reptStat === REPORT_STATUS_STOP) {
-    // 다른 사람 독후감 카드와 같은 중단 배지 클래스를 반환함
+    // 다른 사람 독후감 카드와 같은 중단 배지 클래스를 반환
     return reportListStyles.statusStopped;
   }
 
-  // 나머지 상태에는 다른 사람 독후감 카드와 같은 독서 중 배지를 반환함
+  // 나머지 상태에는 다른 사람 독후감 카드와 같은 독서 중 배지를 반환
   return reportListStyles.statusReading;
 };
 
@@ -82,7 +82,7 @@ const FEED_TARGET_TYPES: ReplyTargetType[] = ["REPORT", "PROFILE_IMAGE", "BACKGR
 const USER_SEARCH_DELAY_MS = 250;
 
 /**
- * 피드 대상 식별값이 현재 갱신 대상과 일치하는지 판정함
+ * 피드 대상 식별값이 현재 갱신 대상과 일치하는지 판정
  *
  * @author HanWon.Jang
  * @param candidate 비교할 피드 항목
@@ -90,12 +90,12 @@ const USER_SEARCH_DELAY_MS = 250;
  * @return 피드 유형과 대상 번호가 모두 같으면 true
  */
 const isSameFeedTarget = (candidate: FeedItem, target: FeedItem): boolean => {
-  // 유형과 번호가 모두 일치해야 같은 좋아요 대상으로 판정함
+  // 유형과 번호가 모두 일치해야 같은 좋아요 대상으로 판정
   return candidate.tagtType === target.tagtType && candidate.tagtNumb === target.tagtNumb;
 };
 
 /**
- * 지정한 피드 대상의 좋아요 수와 로그인 사용자 좋아요 여부를 불변 배열로 갱신함
+ * 지정한 피드 대상의 좋아요 수와 로그인 사용자 좋아요 여부를 불변 배열로 갱신
  *
  * @author HanWon.Jang
  * @param current 현재 화면에 누적된 피드 목록
@@ -109,29 +109,29 @@ const getUpdatedLikeItems = (
   detail: FeedLikeDetail,
 ): FeedItem[] => {
   /**
-   * 현재 순회 항목이 좋아요 대상이면 전달받은 서버 또는 낙관적 상태를 병합함
+   * 현재 순회 항목이 좋아요 대상이면 전달받은 서버 또는 낙관적 상태를 병합
    *
    * @author HanWon.Jang
    * @param candidate 현재 순회 중인 피드 항목
    * @return 대상 항목이면 좋아요 상태가 갱신된 항목이며 아니면 기존 항목
    */
   const updateCandidate = (candidate: FeedItem): FeedItem => {
-    // 다른 피드 대상은 기존 상태를 그대로 유지함
+    // 다른 피드 대상은 기존 상태를 그대로 유지
     if (!isSameFeedTarget(candidate, target)) {
-      // 현재 대상과 일치하지 않는 피드 항목을 반환함
+      // 현재 대상과 일치하지 않는 피드 항목을 반환
       return candidate;
     }
 
-    // 현재 대상에는 검증된 좋아요 상태를 병합해 새 객체로 반환함
+    // 현재 대상에는 검증된 좋아요 상태를 병합해 새 객체로 반환
     return { ...candidate, ...detail };
   };
 
-  // React 상태 불변성을 유지하도록 대상 항목만 새 객체로 치환함
+  // React 상태 불변성을 유지하도록 대상 항목만 새 객체로 치환
   return current.map(updateCandidate);
 };
 
 /**
- * 최초 페이지는 목록을 교체하고 추가 페이지는 기존 목록 뒤에 연결함
+ * 최초 페이지는 목록을 교체하고 추가 페이지는 기존 목록 뒤에 연결
  *
  * @author HanWon.Jang
  * @param current 현재 화면에 누적된 목록
@@ -144,18 +144,18 @@ const getMergedPageItems = <T,>(
   incoming: T[],
   targetPage: number,
 ): T[] => {
-  // 최초 페이지는 이전 조회 결과를 남기지 않고 서버 목록으로 교체함
+  // 최초 페이지는 이전 조회 결과를 남기지 않고 서버 목록으로 교체
   if (targetPage === 1) {
-    // 첫 페이지에서 받은 피드 목록을 반환함
+    // 첫 페이지에서 받은 피드 목록을 반환
     return incoming;
   }
 
-  // 추가 페이지는 기존 목록과 서버 목록을 새 배열로 연결해 반환함
+  // 추가 페이지는 기존 목록과 서버 목록을 새 배열로 연결해 반환
   return [...current, ...incoming];
 };
 
 /**
- * 지정한 독후감 피드의 본문 펼침 상태를 불변 객체로 반전함
+ * 지정한 독후감 피드의 본문 펼침 상태를 불변 객체로 반전
  *
  * @author HanWon.Jang
  * @param current 피드 대상별 현재 펼침 상태
@@ -166,7 +166,7 @@ const getToggledReports = (
   current: Record<number, boolean>,
   tagtNumb: number,
 ): Record<number, boolean> => {
-  // 다른 피드의 펼침 상태는 유지하고 선택한 대상만 반전해 반환함
+  // 다른 피드의 펼침 상태는 유지하고 선택한 대상만 반전해 반환
   return {
     ...current,
     [tagtNumb]: !current[tagtNumb],
@@ -174,14 +174,14 @@ const getToggledReports = (
 };
 
 /**
- * 독후감 본문 펼침 상태에 맞는 접근성 동작 문구를 반환함
+ * 독후감 본문 펼침 상태에 맞는 접근성 동작 문구를 반환
  *
  * @author HanWon.Jang
  * @param isExpanded 독후감 본문 펼침 여부
  * @return 현재 상태에서 실행할 접기 또는 펼치기 문구
  */
 const getExpandActionLabel = (isExpanded: boolean): string => {
-  // 펼쳐진 본문에는 내용을 접는 동작 문구를 제공함
+  // 펼쳐진 본문에는 내용을 접는 동작 문구를 제공
   if (isExpanded) {
     // "접기"
     return message("frontend.common.collapse");
@@ -192,143 +192,143 @@ const getExpandActionLabel = (isExpanded: boolean): string => {
 };
 
 /**
- * 로그인 사용자 본인과 팔로잉 사용자의 공개 독후감 및 사진 변경 활동을 카드 목록으로 표시함
+ * 로그인 사용자 본인과 팔로잉 사용자의 공개 독후감 및 사진 변경 활동을 카드 목록으로 표시
  *
  * @author HanWon.Jang
  * @return 본인과 팔로잉 사용자의 활동 피드 화면
  */
 const FeedPage = () => {
-  // 피드 카드의 프로필 및 도서 화면 이동에 공통 라우터 함수를 사용함
+  // 피드 카드의 프로필 및 도서 화면 이동에 공통 라우터 함수를 사용
   const navigate = useNavigate();
-  // 홈과 같은 검색 영역의 실제 고정 상태를 공통 감지 로직으로 조회함
+  // 홈과 같은 검색 영역의 실제 고정 상태를 공통 감지 로직으로 조회
   const { isSticky, sentinelRef } = useStickySearch();
-  // 알림 링크에 포함된 원본 콘텐츠 유형과 번호를 조회함
+  // 알림 링크에 포함된 원본 콘텐츠 유형과 번호를 조회
   const [searchParams] = useSearchParams();
-  // 서버에서 페이지 단위로 받은 피드 항목을 화면 목록 상태로 관리함
+  // 서버에서 페이지 단위로 받은 피드 항목을 화면 목록 상태로 관리
   const [items, setItems] = useState<FeedItem[]>([]);
-  // 알림 링크로 직접 연 피드 항목을 일반 페이지 목록과 독립적으로 관리함
+  // 알림 링크로 직접 연 피드 항목을 일반 페이지 목록과 독립적으로 관리
   const [focusedItem, setFocusedItem] = useState<FeedItem | null>(null);
-  // 마지막으로 조회에 성공한 피드 페이지 번호를 관리함
+  // 마지막으로 조회에 성공한 피드 페이지 번호를 관리
   const [page, setPage] = useState(1);
-  // 목록 하단에서 다음 피드 페이지를 조회할 수 있는지 관리함
+  // 목록 하단에서 다음 피드 페이지를 조회할 수 있는지 관리
   const [hasNext, setHasNext] = useState(false);
-  // 최초 조회와 추가 조회에서 중복 요청을 차단할 로딩 상태를 관리함
+  // 최초 조회와 추가 조회에서 중복 요청을 차단할 로딩 상태를 관리
   const [isLoading, setIsLoading] = useState(true);
-  // 최초 피드 조회 실패 시 화면에 표시할 안전한 오류 문구를 관리함
+  // 최초 피드 조회 실패 시 화면에 표시할 안전한 오류 문구를 관리
   const [error, setError] = useState("");
-  // 댓글 목록을 열어 확인할 현재 피드 항목을 관리함
+  // 댓글 목록을 열어 확인할 현재 피드 항목을 관리
   const [replyItem, setReplyItem] = useState<FeedItem | null>(null);
-  // 독후감 피드별 본문 펼침 여부를 대상 번호 기준으로 관리함
+  // 독후감 피드별 본문 펼침 여부를 대상 번호 기준으로 관리
   const [expandedReports, setExpandedReports] = useState<Record<number, boolean>>({});
-  // 독후감 번호별로 최초 조회한 번역문을 현재 화면에서 재사용함
+  // 독후감 번호별로 최초 조회한 번역문을 현재 화면에서 재사용
   const [translations, setTranslations] = useState<Record<number, string>>({});
-  // 피드 카드별 원문 또는 번역문 표시 상태를 관리함
+  // 피드 카드별 원문 또는 번역문 표시 상태를 관리
   const [translatedReports, setTranslatedReports] = useState<Record<number, boolean>>({});
-  // 같은 화면에서 중복 번역 요청을 막기 위해 처리 중인 독후감 번호를 관리함
+  // 같은 화면에서 중복 번역 요청을 막기 위해 처리 중인 독후감 번호를 관리
   const [pendingReportNumb, setPendingReportNumb] = useState<number>();
-  // 피드 상단 검색 입력에 표시할 닉네임 검색어를 관리함
+  // 피드 상단 검색 입력에 표시할 닉네임 검색어를 관리
   const [userKeyword, setUserKeyword] = useState("");
-  // 현재 자동 검색 결과에 적용한 닉네임 검색어를 관리함
+  // 현재 자동 검색 결과에 적용한 닉네임 검색어를 관리
   const [appliedUserKeyword, setAppliedUserKeyword] = useState("");
-  // 관계 우선순위가 적용된 활성 사용자 검색 결과를 관리함
+  // 관계 우선순위가 적용된 활성 사용자 검색 결과를 관리
   const [searchUsers, setSearchUsers] = useState<FollowUser[]>([]);
-  // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 관리함
+  // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 관리
   const [userPage, setUserPage] = useState(1);
-  // 사용자 검색 결과의 다음 페이지 존재 여부를 관리함
+  // 사용자 검색 결과의 다음 페이지 존재 여부를 관리
   const [hasNextUser, setHasNextUser] = useState(false);
-  // 사용자 검색 첫 페이지의 조회 진행 상태를 관리함
+  // 사용자 검색 첫 페이지의 조회 진행 상태를 관리
   const [isUserLoading, setIsUserLoading] = useState(false);
-  // 사용자 검색 추가 페이지의 조회 진행 상태를 관리함
+  // 사용자 검색 추가 페이지의 조회 진행 상태를 관리
   const [isNextUserLoading, setIsNextUserLoading] = useState(false);
-  // 관계 변경이 진행 중인 검색 사용자 번호를 관리함
+  // 관계 변경이 진행 중인 검색 사용자 번호를 관리
   const [updatingUserNumb, setUpdatingUserNumb] = useState<number | null>(null);
-  // 같은 피드 대상의 좋아요 요청이 동시에 실행되지 않도록 진행 키를 보관함
+  // 같은 피드 대상의 좋아요 요청이 동시에 실행되지 않도록 진행 키를 보관
   const pendingLikeKeysRef = useRef(new Set<string>());
-  // 이전 검색 응답이 최신 검색 결과를 덮지 않도록 요청 순번을 보관함
+  // 이전 검색 응답이 최신 검색 결과를 덮지 않도록 요청 순번을 보관
   const userSearchRequestRef = useRef(0);
-  // 비동기 관계 변경 뒤 같은 검색어가 유지되는지 확인할 최신 검색어를 보관함
+  // 비동기 관계 변경 뒤 같은 검색어가 유지되는지 확인할 최신 검색어를 보관
   const appliedUserKeywordRef = useRef("");
-  // 알림 링크가 전달한 피드 대상 유형 문자열을 조회함
+  // 알림 링크가 전달한 피드 대상 유형 문자열을 조회
   const targetTypeParam = searchParams.get("tagtType");
-  // 알림 링크가 전달한 피드 대상 번호를 숫자로 변환함
+  // 알림 링크가 전달한 피드 대상 번호를 숫자로 변환
   const targetNumbParam = Number(searchParams.get("tagtNumb"));
-  // 알림이 지정한 댓글 번호를 안전한 양수 정수로 변환함
+  // 알림이 지정한 댓글 번호를 안전한 양수 정수로 변환
   const requestedReplyNumb = Number(searchParams.get("replNumb"));
   const focusReplNumb = Number.isSafeInteger(requestedReplyNumb) && requestedReplyNumb > 0
     ? requestedReplyNumb
     : undefined;
-  // 허용된 유형과 양의 번호가 모두 있으면 단건 피드 조회 대상으로 판정함
+  // 허용된 유형과 양의 번호가 모두 있으면 단건 피드 조회 대상으로 판정
   const hasFeedTarget = FEED_TARGET_TYPES.includes(targetTypeParam as ReplyTargetType)
     && Number.isSafeInteger(targetNumbParam)
     && targetNumbParam > 0;
 
   /**
-   * 요청한 피드 페이지를 조회해 최초 목록 또는 추가 목록으로 화면에 반영함
+   * 요청한 피드 페이지를 조회해 최초 목록 또는 추가 목록으로 화면에 반영
    *
    * @author HanWon.Jang
    * @param targetPage 조회할 피드 페이지 번호
    * @return 피드 페이지 반영 완료 Promise
    */
   const loadPage = useCallback(async (targetPage: number): Promise<void> => {
-    // 피드 조회 중 중복 추가 요청을 차단하고 공통 로딩 상태를 표시함
+    // 피드 조회 중 중복 추가 요청을 차단하고 공통 로딩 상태를 표시
     setIsLoading(true);
-    // 새 조회가 시작되면 이전 오류 문구를 제거함
+    // 새 조회가 시작되면 이전 오류 문구를 제거
     setError("");
 
-    // 피드 조회 성공과 실패를 화면 상태별로 분리해 처리함
+    // 피드 조회 성공과 실패를 화면 상태별로 분리해 처리
     try {
-      // 인증 사용자 기준으로 공개 범위가 적용된 피드 페이지를 조회함
+      // 인증 사용자 기준으로 공개 범위가 적용된 피드 페이지를 조회
       const data = await getFeedPageApi(targetPage);
 
       /**
-       * 서버 페이지를 최초 또는 추가 조회 위치에 맞춰 현재 피드 목록과 병합함
+       * 서버 페이지를 최초 또는 추가 조회 위치에 맞춰 현재 피드 목록과 병합
        *
        * @author HanWon.Jang
        * @param current 현재 화면에 누적된 피드 목록
        * @return 조회한 페이지가 반영된 새 피드 목록
        */
       const mergeCurrentItems = (current: FeedItem[]): FeedItem[] => {
-        // 페이지 위치에 맞게 기존 목록과 서버 목록을 결합해 반환함
+        // 페이지 위치에 맞게 기존 목록과 서버 목록을 결합해 반환
         return getMergedPageItems(current, data.list, targetPage);
       };
 
-      // 첫 페이지는 교체하고 추가 페이지는 기존 목록 뒤에 연결함
+      // 첫 페이지는 교체하고 추가 페이지는 기존 목록 뒤에 연결
       setItems(mergeCurrentItems);
-      // 마지막으로 조회에 성공한 서버 페이지 번호를 저장함
+      // 마지막으로 조회에 성공한 서버 페이지 번호를 저장
       setPage(data.page);
-      // 서버가 판정한 다음 페이지 존재 여부를 저장함
+      // 서버가 판정한 다음 페이지 존재 여부를 저장
       setHasNext(data.hasNext);
     }
 
-    // 피드 조회 실패 시 기존 목록을 유지하고 안전한 화면 문구를 설정함
+    // 피드 조회 실패 시 기존 목록을 유지하고 안전한 화면 문구를 설정
     catch (loadError) {
       // "피드를 불러오지 못했어요."
       const fallbackMessage = message("frontend.feed.loadFailed");
-      // 원시 오류 대신 서버 또는 공통 피드 조회 실패 문구를 선택함
+      // 원시 오류 대신 서버 또는 공통 피드 조회 실패 문구를 선택
       const errorMessage = getApiErrorMessage(loadError, fallbackMessage);
-      // 최초 조회 실패 화면에 검증된 오류 문구를 표시함
+      // 최초 조회 실패 화면에 검증된 오류 문구를 표시
       setError(errorMessage);
     }
 
-    // 성공과 실패 모두 현재 피드 조회의 로딩 상태를 종료함
+    // 성공과 실패 모두 현재 피드 조회의 로딩 상태를 종료
     finally {
-      // 다음 피드 페이지를 조회할 수 있도록 로딩 상태를 해제함
+      // 다음 피드 페이지를 조회할 수 있도록 로딩 상태를 해제
       setIsLoading(false);
     }
   }, []);
 
   /**
-   * 피드 화면 진입 시 중복 초기화 없이 첫 페이지 조회를 시작함
+   * 피드 화면 진입 시 중복 초기화 없이 첫 페이지 조회를 시작
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const loadInitialPage = useCallback((): void => {
-    // 화면 최초 렌더링에서 첫 피드 페이지를 비동기로 조회함
+    // 화면 최초 렌더링에서 첫 피드 페이지를 비동기로 조회
     void loadPage(1);
   }, [loadPage]);
 
-  // 화면 진입과 피드 조회 함수 변경 시 첫 페이지를 다시 조회함
+  // 화면 진입과 피드 조회 함수 변경 시 첫 페이지를 다시 조회
   useEffect(loadInitialPage, [loadInitialPage]);
 
   /**
@@ -340,57 +340,57 @@ const FeedPage = () => {
   const loadTargetFeed = useCallback(async (): Promise<void> => {
     // 유효한 대상 식별값이 없는 일반 피드 진입은 단건 조회를 실행하지 않음
     if (!hasFeedTarget) {
-      // 이전 알림 대상 강조 상태를 제거하고 일반 피드 목록만 유지함
+      // 이전 알림 대상 강조 상태를 제거하고 일반 피드 목록만 유지
       setFocusedItem(null);
       // 알림 대상 쿼리가 제거되면 자동으로 열었던 댓글 목록도 닫음
       setReplyItem(null);
       return;
     }
 
-    // 허용 유형 검사로 검증된 문자열을 댓글 대상 유형으로 사용함
+    // 허용 유형 검사로 검증된 문자열을 댓글 대상 유형으로 사용
     const targetType = targetTypeParam as ReplyTargetType;
 
-    // 대상 조회 성공과 만료 또는 접근 제한 실패를 분리해 처리함
+    // 대상 조회 성공과 만료 또는 접근 제한 실패를 분리해 처리
     try {
-      // 팔로우 여부와 무관하게 현재 공개 상태를 검증한 알림 이동 대상 피드 한 건을 조회함
+      // 팔로우 여부와 무관하게 현재 공개 상태를 검증한 알림 이동 대상 피드 한 건을 조회
       const targetItem = await getFeedTargetApi(targetType, targetNumbParam);
-      // 페이지 위치와 무관하게 알림 대상 카드를 목록 맨 앞에서 확인할 수 있도록 저장함
+      // 페이지 위치와 무관하게 알림 대상 카드를 목록 맨 앞에서 확인할 수 있도록 저장
       setFocusedItem(targetItem);
       // 알림을 누른 사용자가 즉시 댓글을 확인할 수 있도록 대상 댓글 목록을 엶
       setReplyItem(targetItem);
     }
 
-    // 교체되거나 공개 범위에서 제외된 대상이면 일반 피드는 유지하고 안전한 안내만 표시함
+    // 교체되거나 공개 범위에서 제외된 대상이면 일반 피드는 유지하고 안전한 안내만 표시
     catch (targetError) {
-      // 만료된 대상 카드가 화면에 남지 않도록 직접 조회 상태를 초기화함
+      // 만료된 대상 카드가 화면에 남지 않도록 직접 조회 상태를 초기화
       setFocusedItem(null);
       // "이 알림의 피드를 열 수 없어요."
       const targetUnavailableTitle = message("frontend.feed.targetUnavailable");
       // "삭제되었거나 더 이상 볼 수 없는 소식이에요."
       const targetUnavailableMessage = message("frontend.feed.targetUnavailableDetail");
-      // 원시 오류 대신 서버 또는 대상 만료 안내 문구를 선택함
+      // 원시 오류 대신 서버 또는 대상 만료 안내 문구를 선택
       const targetErrorMessage = getApiErrorMessage(targetError, targetUnavailableMessage);
-      // 사용자가 일반 피드 화면에 머문 상태에서 대상 조회 실패 원인을 안내함
+      // 사용자가 일반 피드 화면에 머문 상태에서 대상 조회 실패 원인을 안내
       await sweetError(targetUnavailableTitle, targetErrorMessage);
     }
   }, [hasFeedTarget, targetNumbParam, targetTypeParam]);
 
   /**
-   * 알림 대상 식별값이 변경될 때 단건 피드 조회를 시작함
+   * 알림 대상 식별값이 변경될 때 단건 피드 조회를 시작
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없음
    */
   const startTargetFeedLoad = useCallback((): void => {
-    // 유효한 알림 대상이면 비동기 단건 조회를 시작함
+    // 유효한 알림 대상이면 비동기 단건 조회를 시작
     void loadTargetFeed();
   }, [loadTargetFeed]);
 
-  // 일반 진입 또는 알림 대상 변경에 맞춰 직접 조회 상태와 댓글 목록을 갱신함
+  // 일반 진입 또는 알림 대상 변경에 맞춰 직접 조회 상태와 댓글 목록을 갱신
   useEffect(startTargetFeedLoad, [startTargetFeedLoad]);
 
   /**
-   * 닉네임 검색어에 해당하는 활성 사용자 페이지를 관계 우선순위와 함께 조회함
+   * 닉네임 검색어에 해당하는 활성 사용자 페이지를 관계 우선순위와 함께 조회
    *
    * @author HanWon.Jang
    * @param keyword 적용할 닉네임 검색어
@@ -398,115 +398,115 @@ const FeedPage = () => {
    * @return 사용자 검색 페이지 반영 완료 Promise
    */
   const loadUserPage = useCallback(async (keyword: string, targetPage: number): Promise<void> => {
-    // 현재 요청보다 늦게 끝나는 이전 응답을 구분할 검색 순번을 발급함
+    // 현재 요청보다 늦게 끝나는 이전 응답을 구분할 검색 순번을 발급
     const requestId = ++userSearchRequestRef.current;
 
-    // 첫 페이지와 추가 페이지의 로딩 상태를 분리해 기존 결과 표시 여부를 결정함
+    // 첫 페이지와 추가 페이지의 로딩 상태를 분리해 기존 결과 표시 여부를 결정
     if (targetPage === 1) {
-      // 새 검색의 첫 페이지 로딩 상태를 표시함
+      // 새 검색의 첫 페이지 로딩 상태를 표시
       setIsUserLoading(true);
     }
 
-    // 추가 페이지는 기존 사용자 목록을 유지한 채 하단 로딩 상태만 표시함
+    // 추가 페이지는 기존 사용자 목록을 유지한 채 하단 로딩 상태만 표시
     else {
-      // 사용자 검색 결과 하단에 추가 조회 상태를 표시함
+      // 사용자 검색 결과 하단에 추가 조회 상태를 표시
       setIsNextUserLoading(true);
     }
 
-    // 사용자 검색 성공과 실패 및 오래된 응답을 분리해 처리함
+    // 사용자 검색 성공과 실패 및 오래된 응답을 분리해 처리
     try {
-      // 활성 상태와 로그인 사용자 관계가 적용된 닉네임 검색 페이지를 조회함
+      // 활성 상태와 로그인 사용자 관계가 적용된 닉네임 검색 페이지를 조회
       const data = await getUserSearchPageApi(keyword, targetPage);
 
       // 더 최신 검색이 시작됐으면 현재 응답으로 화면을 덮지 않음
       if (requestId !== userSearchRequestRef.current) {
-        // 오래된 검색 응답의 화면 반영을 종료함
+        // 오래된 검색 응답의 화면 반영을 종료
         return;
       }
 
       /**
-       * 첫 검색 페이지는 교체하고 추가 페이지는 기존 활성 사용자 목록 뒤에 연결함
+       * 첫 검색 페이지는 교체하고 추가 페이지는 기존 활성 사용자 목록 뒤에 연결
        *
        * @author HanWon.Jang
        * @param current 현재 화면에 누적된 활성 사용자 목록
        * @return 조회한 페이지가 반영된 새 활성 사용자 목록
        */
       const mergeCurrentUsers = (current: FollowUser[]): FollowUser[] => {
-        // 페이지 위치에 맞게 기존 사용자와 새 검색 결과를 결합해 반환함
+        // 페이지 위치에 맞게 기존 사용자와 새 검색 결과를 결합해 반환
         return getMergedPageItems(current, data.list, targetPage);
       };
 
-      // 관계 우선순위가 적용된 현재 사용자 페이지를 목록에 반영함
+      // 관계 우선순위가 적용된 현재 사용자 페이지를 목록에 반영
       setSearchUsers(mergeCurrentUsers);
-      // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 저장함
+      // 마지막으로 조회에 성공한 사용자 검색 페이지 번호를 저장
       setUserPage(data.page);
-      // 서버가 판정한 사용자 검색 다음 페이지 여부를 저장함
+      // 서버가 판정한 사용자 검색 다음 페이지 여부를 저장
       setHasNextUser(data.hasNext);
     }
 
-    // 최신 사용자 검색 요청만 안전한 공통 오류 문구로 안내함
+    // 최신 사용자 검색 요청만 안전한 공통 오류 문구로 안내
     catch (searchError) {
       // 더 최신 검색이 진행 중이면 이전 요청의 오류를 사용자에게 표시하지 않음
       if (requestId !== userSearchRequestRef.current) {
-        // 오래된 검색 오류의 안내를 종료함
+        // 오래된 검색 오류의 안내를 종료
         return;
       }
 
       // "사용자 검색에 실패했어요."
       const fallbackMessage = message("frontend.feed.userSearch.failed");
-      // 원시 오류 대신 서버 또는 공통 사용자 검색 실패 문구를 선택함
+      // 원시 오류 대신 서버 또는 공통 사용자 검색 실패 문구를 선택
       const errorMessage = getApiErrorMessage(searchError, fallbackMessage);
       // "조회에 실패했습니다."
       await sweetError(message("frontend.alert.loadFailedTitle"), errorMessage);
     }
 
-    // 최신 검색 요청만 해당 페이지의 로딩 상태를 종료함
+    // 최신 검색 요청만 해당 페이지의 로딩 상태를 종료
     finally {
       // 오래된 요청은 현재 검색의 로딩 상태를 변경하지 않음
       if (requestId !== userSearchRequestRef.current) {
-        // 최신 요청이 로딩 상태를 정리하도록 종료함
+        // 최신 요청이 로딩 상태를 정리하도록 종료
         return;
       }
 
-      // 첫 페이지 조회가 끝나면 검색 결과 영역의 로딩 상태를 해제함
+      // 첫 페이지 조회가 끝나면 검색 결과 영역의 로딩 상태를 해제
       if (targetPage === 1) {
-        // 사용자 검색 첫 페이지 로딩 상태를 해제함
+        // 사용자 검색 첫 페이지 로딩 상태를 해제
         setIsUserLoading(false);
       }
 
-      // 추가 페이지 조회가 끝나면 하단 로딩 상태를 해제함
+      // 추가 페이지 조회가 끝나면 하단 로딩 상태를 해제
       else {
-        // 사용자 검색 추가 페이지 로딩 상태를 해제함
+        // 사용자 검색 추가 페이지 로딩 상태를 해제
         setIsNextUserLoading(false);
       }
     }
   }, []);
 
   /**
-   * 닉네임 입력이 한 글자 이상이면 짧게 대기한 뒤 사용자 검색 결과를 자동으로 조회함
+   * 닉네임 입력이 한 글자 이상이면 짧게 대기한 뒤 사용자 검색 결과를 자동으로 조회
    *
    * @author HanWon.Jang
    * @return 다음 입력 또는 화면 해제 시 예약 검색을 취소할 정리 함수
    */
   const startLiveUserSearch = useCallback((): (() => void) | undefined => {
-    // 검색어 양끝 공백을 제거해 화면과 서버에 같은 검색 조건을 적용함
+    // 검색어 양끝 공백을 제거해 화면과 서버에 같은 검색 조건을 적용
     const normalizedKeyword = userKeyword.trim();
-    // 현재 입력어를 검색 결과 표시 조건으로 즉시 저장함
+    // 현재 입력어를 검색 결과 표시 조건으로 즉시 저장
     setAppliedUserKeyword(normalizedKeyword);
-    // 비동기 관계 변경도 최신 입력어와 일치할 때만 결과를 다시 조회하도록 저장함
+    // 비동기 관계 변경도 최신 입력어와 일치할 때만 결과를 다시 조회하도록 저장
     appliedUserKeywordRef.current = normalizedKeyword;
-    // 이전 검색 응답이 새 입력 결과를 덮지 못하도록 즉시 무효화함
+    // 이전 검색 응답이 새 입력 결과를 덮지 못하도록 즉시 무효화
     userSearchRequestRef.current += 1;
-    // 새 입력은 이전 사용자 결과와 페이지 상태를 초기화함
+    // 새 입력은 이전 사용자 결과와 페이지 상태를 초기화
     setSearchUsers([]);
-    // 새 검색의 성공 페이지를 첫 페이지 기준으로 초기화함
+    // 새 검색의 성공 페이지를 첫 페이지 기준으로 초기화
     setUserPage(1);
-    // 새 검색 전에는 다음 페이지가 없는 상태로 초기화함
+    // 새 검색 전에는 다음 페이지가 없는 상태로 초기화
     setHasNextUser(false);
-    // 새 첫 페이지 검색에서는 추가 페이지 로딩 상태를 제거함
+    // 새 첫 페이지 검색에서는 추가 페이지 로딩 상태를 제거
     setIsNextUserLoading(false);
 
-    // 입력값이 비어 있으면 서버 요청 없이 일반 피드를 바로 표시함
+    // 입력값이 비어 있으면 서버 요청 없이 일반 피드를 바로 표시
     if (!normalizedKeyword) {
       // 일반 피드에서는 사용자 검색 로딩 상태를 표시하지 않음
       setIsUserLoading(false);
@@ -514,17 +514,17 @@ const FeedPage = () => {
       return undefined;
     }
 
-    // 입력 직후 검색 결과 영역에 첫 페이지 조회 상태를 표시함
+    // 입력 직후 검색 결과 영역에 첫 페이지 조회 상태를 표시
     setIsUserLoading(true);
 
     /**
-     * 입력 대기가 끝난 현재 닉네임으로 활성 사용자 첫 페이지 조회를 시작함
+     * 입력 대기가 끝난 현재 닉네임으로 활성 사용자 첫 페이지 조회를 시작
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const loadCurrentKeyword = (): void => {
-      // 한 글자 이상의 최신 닉네임으로 관계순 사용자 검색을 실행함
+      // 한 글자 이상의 최신 닉네임으로 관계순 사용자 검색을 실행
       void loadUserPage(normalizedKeyword, 1);
     };
 
@@ -532,32 +532,32 @@ const FeedPage = () => {
     const timerId = window.setTimeout(loadCurrentKeyword, USER_SEARCH_DELAY_MS);
 
     /**
-     * 다음 입력 또는 화면 해제 시 아직 실행되지 않은 사용자 검색을 취소함
+     * 다음 입력 또는 화면 해제 시 아직 실행되지 않은 사용자 검색을 취소
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const cancelPendingSearch = (): void => {
-      // 최신 입력만 조회되도록 이전 입력의 예약 타이머를 해제함
+      // 최신 입력만 조회되도록 이전 입력의 예약 타이머를 해제
       window.clearTimeout(timerId);
     };
 
-    // React Effect가 다음 입력 전에 예약된 이전 검색을 취소하도록 정리 함수를 반환함
+    // React Effect가 다음 입력 전에 예약된 이전 검색을 취소하도록 정리 함수를 반환
     return cancelPendingSearch;
   }, [loadUserPage, userKeyword]);
 
-  // 한 글자 이상의 닉네임 입력 변경에 맞춰 사용자 결과를 자동 갱신함
+  // 한 글자 이상의 닉네임 입력 변경에 맞춰 사용자 결과를 자동 갱신
   useEffect(startLiveUserSearch, [startLiveUserSearch]);
 
   /**
-   * 피드 사용자 검색 입력값을 현재 입력 상태에 반영함
+   * 피드 사용자 검색 입력값을 현재 입력 상태에 반영
    *
    * @author HanWon.Jang
    * @param event 닉네임 검색 입력 변경 이벤트
    * @return 반환값이 없음
    */
   const handleUserKeyword = (event: ChangeEvent<HTMLInputElement>): void => {
-    // 사용자가 입력한 닉네임 검색어를 검색 입력에 표시함
+    // 사용자가 입력한 닉네임 검색어를 검색 입력에 표시
     setUserKeyword(event.target.value);
   };
 
@@ -569,12 +569,12 @@ const FeedPage = () => {
    * @return 반환값이 없음
    */
   const handleUserSearch = (event: FormEvent<HTMLFormElement>): void => {
-    // 브라우저의 폼 이동 없이 현재 피드 화면에서 검색 결과를 전환함
+    // 브라우저의 폼 이동 없이 현재 피드 화면에서 검색 결과를 전환
     event.preventDefault();
   };
 
   /**
-   * 현재 사용자 검색의 다음 페이지를 조회함
+   * 현재 사용자 검색의 다음 페이지를 조회
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
@@ -582,16 +582,16 @@ const FeedPage = () => {
   const loadMoreUser = (): void => {
     // 검색어가 없거나 마지막 페이지 또는 추가 조회 중이면 중복 요청하지 않음
     if (!appliedUserKeyword || !hasNextUser || isNextUserLoading) {
-      // 현재 사용자 검색 목록과 페이지 상태를 유지함
+      // 현재 사용자 검색 목록과 페이지 상태를 유지
       return;
     }
 
-    // 마지막 성공 페이지 다음의 활성 사용자 검색 결과를 이어서 조회함
+    // 마지막 성공 페이지 다음의 활성 사용자 검색 결과를 이어서 조회
     void loadUserPage(appliedUserKeyword, userPage + 1);
   };
 
   /**
-   * 검색 사용자의 현재 관계에 맞춰 팔로우하거나 언팔로우한 뒤 관계순 목록을 다시 조회함
+   * 검색 사용자의 현재 관계에 맞춰 팔로우하거나 언팔로우한 뒤 관계순 목록을 다시 조회
    *
    * @author HanWon.Jang
    * @param user 관계를 변경할 검색 사용자
@@ -600,13 +600,13 @@ const FeedPage = () => {
   const handleUserFollow = async (user: FollowUser): Promise<void> => {
     // 다른 관계 변경이 진행 중이거나 본인 행이면 추가 조작을 허용하지 않음
     if (updatingUserNumb !== null || user.meYsno === "Y") {
-      // 현재 사용자 검색 결과와 관계 상태를 유지함
+      // 현재 사용자 검색 결과와 관계 상태를 유지
       return;
     }
 
-    // 팔로잉과 친구 상태는 로그인 사용자가 만든 관계의 삭제 대상으로 판정함
+    // 팔로잉과 친구 상태는 로그인 사용자가 만든 관계의 삭제 대상으로 판정
     const isFollowing = isFollowedByMe(user.followStatName);
-    // 관계 변경을 시작한 검색어를 저장해 다른 검색 결과를 이전 응답으로 덮지 않게 함
+    // 관계 변경을 시작한 검색어를 저장해 다른 검색 결과를 이전 응답으로 덮지 않도록 처리
     const relationKeyword = appliedUserKeyword;
 
     // 기존 팔로우 관계를 삭제하기 전에 마이페이지 관계 목록과 같은 확인을 받음
@@ -622,38 +622,38 @@ const FeedPage = () => {
         cancelButtonText: message("frontend.common.cancel"),
       });
 
-      // 사용자가 취소한 경우 기존 관계와 검색 순서를 유지함
+      // 사용자가 취소한 경우 기존 관계와 검색 순서를 유지
       if (!result.isConfirmed) {
-        // 팔로우 관계 변경 없이 종료함
+        // 팔로우 관계 변경 없이 종료
         return;
       }
     }
 
-    // 같은 사용자에 대한 중복 관계 변경을 막도록 처리 중 번호를 저장함
+    // 같은 사용자에 대한 중복 관계 변경을 막도록 처리 중 번호를 저장
     setUpdatingUserNumb(user.userNumb);
 
-    // 관계 변경 성공 시 서버 정렬을 다시 적용하고 실패 시 기존 목록을 유지함
+    // 관계 변경 성공 시 서버 정렬을 다시 적용하고 실패 시 기존 목록을 유지
     try {
-      // 현재 관계에 맞춰 팔로우 등록 또는 삭제 API를 호출함
+      // 현재 관계에 맞춰 팔로우 등록 또는 삭제 API를 호출
       if (isFollowing) {
-        // 로그인 사용자가 만든 현재 팔로우 관계를 삭제함
+        // 로그인 사용자가 만든 현재 팔로우 관계를 삭제
         await delSocialFollowApi(user.userNumb);
       }
 
-      // 팔로우하지 않은 검색 사용자는 새 관계를 등록함
+      // 팔로우하지 않은 검색 사용자는 새 관계를 등록
       else {
-        // 로그인 사용자가 검색 사용자를 팔로우하도록 관계를 등록함
+        // 로그인 사용자가 검색 사용자를 팔로우하도록 관계를 등록
         await setSocialFollowApi(user.userNumb);
       }
 
-      // 관계 변경 중에도 같은 검색어가 유지된 경우에만 서버 정렬을 다시 적용함
+      // 관계 변경 중에도 같은 검색어가 유지된 경우에만 서버 정렬을 다시 적용
       if (appliedUserKeywordRef.current === relationKeyword) {
-        // 변경된 관계 우선순위와 버튼명을 서버 조회로 다시 확정함
+        // 변경된 관계 우선순위와 버튼명을 서버 조회로 다시 확정
         await loadUserPage(relationKeyword, 1);
       }
     }
 
-    // 관계 변경 실패 시 기존 검색 목록을 유지하고 공통 오류 문구로 안내함
+    // 관계 변경 실패 시 기존 검색 목록을 유지하고 공통 오류 문구로 안내
     catch (followError) {
       // "수정에 실패했습니다."
       await sweetError(
@@ -662,89 +662,89 @@ const FeedPage = () => {
       );
     }
 
-    // 성공과 실패 모두 관계 변경 진행 상태를 해제함
+    // 성공과 실패 모두 관계 변경 진행 상태를 해제
     finally {
-      // 검색 목록의 관계 버튼을 다시 조작할 수 있도록 처리 중 번호를 초기화함
+      // 검색 목록의 관계 버튼을 다시 조작할 수 있도록 처리 중 번호를 초기화
       setUpdatingUserNumb(null);
     }
   };
 
   /**
-   * 도서 표지 이미지 요청이 실패하면 공통 대체 이미지를 한 번만 적용함
+   * 도서 표지 이미지 요청이 실패하면 공통 대체 이미지를 한 번만 적용
    *
    * @author HanWon.Jang
    * @param event 로드에 실패한 이미지 이벤트
    * @return 반환값이 없음
    */
   const handleImageError = (event: SyntheticEvent<HTMLImageElement>): void => {
-    // 오류가 발생한 실제 이미지 요소를 대체 경로 적용 대상으로 사용함
+    // 오류가 발생한 실제 이미지 요소를 대체 경로 적용 대상으로 사용
     const failedImage = event.currentTarget;
-    // 도서 표지 오류 시 프로젝트 공통 대체 이미지를 사용함
+    // 도서 표지 오류 시 프로젝트 공통 대체 이미지를 사용
     const fallbackImage = "/img/common/no-image.png";
 
     // 공통 대체 이미지까지 실패한 경우 같은 경로를 반복 요청하지 않음
     if (failedImage.getAttribute("src") === fallbackImage) {
-      // 현재 대체 이미지 상태를 유지함
+      // 현재 대체 이미지 상태를 유지
       return;
     }
 
-    // 도서 표지와 배경사진을 공통 대체 이미지로 한 번만 교체함
+    // 도서 표지와 배경사진을 공통 대체 이미지로 한 번만 교체
     failedImage.src = fallbackImage;
   };
 
   /**
-   * 피드 카드의 좋아요 상태를 즉시 반영하고 서버가 반환한 최종 값으로 확정함
+   * 피드 카드의 좋아요 상태를 즉시 반영하고 서버가 반환한 최종 값으로 확정
    *
    * @author HanWon.Jang
    * @param item 좋아요 상태를 변경할 피드 항목
    * @return 좋아요 상태 확정 완료 Promise
    */
   const handleLike = async (item: FeedItem): Promise<void> => {
-    // 피드 유형과 대상 번호를 결합해 대상별 중복 요청 차단 키를 생성함
+    // 피드 유형과 대상 번호를 결합해 대상별 중복 요청 차단 키를 생성
     const pendingKey = `${item.tagtType}:${item.tagtNumb}`;
 
-    // 같은 피드 대상의 좋아요 요청이 진행 중이면 중복 토글을 차단함
+    // 같은 피드 대상의 좋아요 요청이 진행 중이면 중복 토글을 차단
     if (pendingLikeKeysRef.current.has(pendingKey)) {
-      // 진행 중인 좋아요 요청을 유지하고 추가 입력을 무시함
+      // 진행 중인 좋아요 요청을 유지하고 추가 입력을 무시
       return;
     }
 
-    // 서버 응답 전에 반전된 좋아요 상태를 화면에 즉시 표시함
+    // 서버 응답 전에 반전된 좋아요 상태를 화면에 즉시 표시
     const optimisticDetail = {
       likeCnt: Math.max(0, item.likeCnt + (item.likeYsno === "Y" ? -1 : 1)),
       likeYsno: item.likeYsno === "Y" ? "N" as const : "Y" as const,
     };
-    // 같은 대상의 추가 좋아요 입력을 차단하도록 진행 키를 등록함
+    // 같은 대상의 추가 좋아요 입력을 차단하도록 진행 키를 등록
     pendingLikeKeysRef.current.add(pendingKey);
 
     /**
-     * 서버 응답 전에 현재 피드 목록에 낙관적 좋아요 상태를 반영함
+     * 서버 응답 전에 현재 피드 목록에 낙관적 좋아요 상태를 반영
      *
      * @author HanWon.Jang
      * @param current 현재 화면에 누적된 피드 목록
      * @return 선택한 대상의 좋아요 상태가 반전된 새 피드 목록
      */
     const applyOptimisticLike = (current: FeedItem[]): FeedItem[] => {
-      // 선택한 대상에 계산된 낙관적 좋아요 상태를 반영해 반환함
+      // 선택한 대상에 계산된 낙관적 좋아요 상태를 반영해 반환
       return getUpdatedLikeItems(current, item, optimisticDetail);
     };
 
-    // 서버 응답을 기다리는 동안 사용자가 누른 좋아요 상태를 즉시 표시함
+    // 서버 응답을 기다리는 동안 사용자가 누른 좋아요 상태를 즉시 표시
     setItems(applyOptimisticLike);
-    // 알림으로 직접 연 카드가 같은 대상이면 낙관적 좋아요 상태를 함께 반영함
+    // 알림으로 직접 연 카드가 같은 대상이면 낙관적 좋아요 상태를 함께 반영
     setFocusedItem((current) => current && isSameFeedTarget(current, item)
       ? { ...current, ...optimisticDetail }
       : current);
 
-    // 좋아요 저장 성공과 실패를 낙관적 화면 상태에 맞춰 분리해 처리함
+    // 좋아요 저장 성공과 실패를 낙관적 화면 상태에 맞춰 분리해 처리
     try {
-      // 피드 대상 유형과 번호를 서버에 전달해 좋아요 최종 상태를 확정함
+      // 피드 대상 유형과 번호를 서버에 전달해 좋아요 최종 상태를 확정
       const result = await setPublicReportLikeApi({ tagtType: item.tagtType, tagtNumb: item.tagtNumb });
-      // 서버가 반환한 좋아요 수와 로그인 사용자 좋아요 여부를 사용함
+      // 서버가 반환한 좋아요 수와 로그인 사용자 좋아요 여부를 사용
       const detail = result.data;
 
       /**
-       * 서버가 반환한 값이 있는 항목만 현재 낙관적 좋아요 상태에 병합함
+       * 서버가 반환한 값이 있는 항목만 현재 낙관적 좋아요 상태에 병합
        *
        * @author HanWon.Jang
        * @param current 현재 화면에 누적된 피드 목록
@@ -756,36 +756,36 @@ const FeedPage = () => {
           likeCnt: detail?.likeCnt ?? optimisticDetail.likeCnt,
           likeYsno: detail?.likeYsno ?? optimisticDetail.likeYsno,
         };
-        // 서버가 확정한 좋아요 상태를 선택한 피드 대상에 반영해 반환함
+        // 서버가 확정한 좋아요 상태를 선택한 피드 대상에 반영해 반환
         return getUpdatedLikeItems(current, item, serverDetail);
       };
 
-      // 서버가 확정한 값으로 화면의 낙관적 상태를 보정함
+      // 서버가 확정한 값으로 화면의 낙관적 상태를 보정
       setItems(applyServerLike);
-      // 알림으로 직접 연 카드가 같은 대상이면 서버가 확정한 좋아요 상태를 함께 반영함
+      // 알림으로 직접 연 카드가 같은 대상이면 서버가 확정한 좋아요 상태를 함께 반영
       setFocusedItem((current) => current && isSameFeedTarget(current, item)
         ? { ...current, likeCnt: detail?.likeCnt ?? optimisticDetail.likeCnt,
             likeYsno: detail?.likeYsno ?? optimisticDetail.likeYsno }
         : current);
     }
 
-    // 핵심 좋아요 요청 실패 시 클릭 전 상태를 복원하고 안전한 오류를 안내함
+    // 핵심 좋아요 요청 실패 시 클릭 전 상태를 복원하고 안전한 오류를 안내
     catch (likeError) {
       /**
-       * 좋아요 저장 실패 시 선택한 피드 대상을 클릭 전 상태로 복원함
+       * 좋아요 저장 실패 시 선택한 피드 대상을 클릭 전 상태로 복원
        *
        * @author HanWon.Jang
        * @param current 현재 화면에 누적된 피드 목록
        * @return 선택한 대상의 좋아요 상태가 복원된 새 피드 목록
        */
       const restorePreviousLike = (current: FeedItem[]): FeedItem[] => {
-        // 클릭 전 좋아요 수와 여부를 선택한 피드 대상에 다시 반영해 반환함
+        // 클릭 전 좋아요 수와 여부를 선택한 피드 대상에 다시 반영해 반환
         return getUpdatedLikeItems(current, item, item);
       };
 
       // 핵심 좋아요 요청이 실패한 경우에만 클릭 전 상태로 되돌림
       setItems(restorePreviousLike);
-      // 알림으로 직접 연 카드가 같은 대상이면 클릭 전 좋아요 상태로 복원함
+      // 알림으로 직접 연 카드가 같은 대상이면 클릭 전 좋아요 상태로 복원
       setFocusedItem((current) => current && isSameFeedTarget(current, item)
         ? { ...current, likeCnt: item.likeCnt, likeYsno: item.likeYsno }
         : current);
@@ -793,34 +793,34 @@ const FeedPage = () => {
       const likeFailedTitle = message("frontend.feed.likeFailed");
       // "다시 시도해주세요."
       const retryMessage = message("frontend.common.tryAgain");
-      // 원시 오류 대신 서버 또는 공통 재시도 문구를 선택함
+      // 원시 오류 대신 서버 또는 공통 재시도 문구를 선택
       const likeErrorMessage = getApiErrorMessage(likeError, retryMessage);
-      // 좋아요 상태를 복원한 뒤 사용자에게 안전한 실패 문구를 표시함
+      // 좋아요 상태를 복원한 뒤 사용자에게 안전한 실패 문구를 표시
       await sweetError(likeFailedTitle, likeErrorMessage);
     }
 
-    // 성공과 실패 모두 같은 대상의 다음 좋아요 입력을 허용함
+    // 성공과 실패 모두 같은 대상의 다음 좋아요 입력을 허용
     finally {
-      // 성공과 실패 모두에서 같은 대상의 다음 좋아요 입력을 허용함
+      // 성공과 실패 모두에서 같은 대상의 다음 좋아요 입력을 허용
       pendingLikeKeysRef.current.delete(pendingKey);
     }
   };
 
   /**
-   * 사진 변경 피드 유형에 맞는 활동 문구를 반환함
+   * 사진 변경 피드 유형에 맞는 활동 문구를 반환
    *
    * @author HanWon.Jang
    * @param item 활동 유형을 포함한 피드 항목
    * @return 프로필 또는 배경사진 변경 설명이며 사진 변경 피드가 아니면 빈 문자열
    */
   const getImageActivityText = (item: FeedItem): string => {
-    // 프로필 사진 변경 활동에는 전용 문구를 표시함
+    // 프로필 사진 변경 활동에는 전용 문구를 표시
     if (item.tagtType === "PROFILE_IMAGE") {
       // "프로필 사진을 변경했어요"
       return message("frontend.feed.profileChanged");
     }
 
-    // 배경사진 변경 활동에는 전용 문구를 표시함
+    // 배경사진 변경 활동에는 전용 문구를 표시
     if (item.tagtType === "BACKGROUND_IMAGE") {
       // "배경사진을 변경했어요"
       return message("frontend.feed.backgroundChanged");
@@ -831,7 +831,7 @@ const FeedPage = () => {
   };
 
   /**
-   * 지정한 독후감 피드 본문의 펼침 상태를 반대로 전환함
+   * 지정한 독후감 피드 본문의 펼침 상태를 반대로 전환
    *
    * @author HanWon.Jang
    * @param tagtNumb 펼침 상태를 변경할 피드 대상 번호
@@ -839,40 +839,40 @@ const FeedPage = () => {
    */
   const toggleReportContent = (tagtNumb: number): void => {
     /**
-     * 현재 피드별 펼침 상태에서 지정한 독후감 대상만 반전함
+     * 현재 피드별 펼침 상태에서 지정한 독후감 대상만 반전
      *
      * @author HanWon.Jang
      * @param current 피드 대상별 현재 펼침 상태
      * @return 지정한 피드의 펼침 상태가 반전된 새 객체
      */
     const toggleCurrentReport = (current: Record<number, boolean>): Record<number, boolean> => {
-      // 다른 피드 상태를 유지하며 선택한 대상만 반전해 반환함
+      // 다른 피드 상태를 유지하며 선택한 대상만 반전해 반환
       return getToggledReports(current, tagtNumb);
     };
 
-    // 선택한 독후감 피드 본문의 펼침 상태를 갱신함
+    // 선택한 독후감 피드 본문의 펼침 상태를 갱신
     setExpandedReports(toggleCurrentReport);
   };
 
   /**
-   * 피드 최초 조회 실패 상태에서 첫 페이지를 다시 요청함
+   * 피드 최초 조회 실패 상태에서 첫 페이지를 다시 요청
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const retryFeed = (): void => {
-    // 기존 오류 문구를 초기화하는 첫 페이지 조회를 다시 시작함
+    // 기존 오류 문구를 초기화하는 첫 페이지 조회를 다시 시작
     void loadPage(1);
   };
 
   /**
-   * 현재 마지막 성공 페이지 다음의 피드 목록을 추가로 요청함
+   * 현재 마지막 성공 페이지 다음의 피드 목록을 추가로 요청
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const loadMoreFeed = (): void => {
-    // 무한 스크롤 도달 시 마지막 성공 페이지의 다음 번호를 조회함
+    // 무한 스크롤 도달 시 마지막 성공 페이지의 다음 번호를 조회
     void loadPage(page + 1);
   };
 
@@ -908,23 +908,23 @@ const FeedPage = () => {
   };
 
   /**
-   * 번역 캐시를 조회하거나 생성한 뒤 피드의 원문과 번역문 표시 상태를 전환함
+   * 번역 캐시를 조회하거나 생성한 뒤 피드의 원문과 번역문 표시 상태를 전환
    *
    * @author HanWon.Jang
    * @param item 번역 표시 상태를 변경할 독후감 피드
    * @return 반환값이 없음
    */
   const handleTranslation = async (item: FeedItem): Promise<void> => {
-    // 독후감 번호가 없는 사진 피드와 불완전한 응답은 번역 요청에서 제외함
+    // 독후감 번호가 없는 사진 피드와 불완전한 응답은 번역 요청에서 제외
     if (!item.reptNumb) {
       return;
     }
-    // 유효성 검사를 통과한 독후감 번호를 비동기 상태 갱신에서도 같은 값으로 사용함
+    // 유효성 검사를 통과한 독후감 번호를 비동기 상태 갱신에서도 같은 값으로 사용
     const reptNumb = item.reptNumb;
 
-    // 현재 화면에 번역문이 있으면 외부 요청 없이 원문과 번역문만 전환함
+    // 현재 화면에 번역문이 있으면 외부 요청 없이 원문과 번역문만 전환
     if (translations[reptNumb]) {
-      // 선택한 피드 카드의 표시 상태만 반전함
+      // 선택한 피드 카드의 표시 상태만 반전
       setTranslatedReports((current) => ({
         ...current,
         [reptNumb]: !current[reptNumb],
@@ -937,39 +937,39 @@ const FeedPage = () => {
       return;
     }
 
-    // 번역 요청이 끝날 때까지 선택한 카드의 버튼을 비활성화함
+    // 번역 요청이 끝날 때까지 선택한 카드의 버튼을 비활성화
     setPendingReportNumb(reptNumb);
 
     try {
-      // 서버가 공개 범위와 월간 한도를 재검증한 번역문을 조회함
+      // 서버가 공개 범위와 월간 한도를 재검증한 번역문을 조회
       const translation = await setReportTranslationApi(reptNumb);
-      // 번역문을 독후감 번호 기준으로 저장해 이후 전환에 재사용함
+      // 번역문을 독후감 번호 기준으로 저장해 이후 전환에 재사용
       setTranslations((current) => ({
         ...current,
         [reptNumb]: translation.trnsCntn,
       }));
-      // 최초 번역 성공 직후 해당 피드 카드에 번역문을 표시함
+      // 최초 번역 성공 직후 해당 피드 카드에 번역문을 표시
       setTranslatedReports((current) => ({ ...current, [reptNumb]: true }));
     }
 
-    // 서버 실패 응답은 원시 예외 없이 공통 메시지로 안내함
+    // 서버 실패 응답은 원시 예외 없이 공통 메시지로 안내
     catch (translationError) {
-      // 번역 실패 원인을 서버 메시지 또는 공통 재시도 문구로 표시함
+      // 번역 실패 원인을 서버 메시지 또는 공통 재시도 문구로 표시
       await sweetError(
         message("frontend.report.translation.failedTitle"),
         getApiErrorMessage(translationError, message("frontend.common.tryAgain")),
       );
     }
 
-    // 성공과 실패 모두 다음 번역 요청을 허용함
+    // 성공과 실패 모두 다음 번역 요청을 허용
     finally {
-      // 처리 중인 독후감 번호를 초기화함
+      // 처리 중인 독후감 번호를 초기화
       setPendingReportNumb(undefined);
     }
   };
 
   /**
-   * 활성 사용자 검색 결과 한 건을 닉네임과 한줄소개 및 관계 버튼 행으로 렌더링함
+   * 활성 사용자 검색 결과 한 건을 닉네임과 한줄소개 및 관계 버튼 행으로 렌더링
    *
    * @author HanWon.Jang
    * @param user 렌더링할 활성 사용자 검색 결과
@@ -977,28 +977,28 @@ const FeedPage = () => {
    */
   const renderSearchUser = (user: FollowUser): ReactNode => {
     /**
-     * 검색 사용자의 공개 프로필 화면으로 이동함
+     * 검색 사용자의 공개 프로필 화면으로 이동
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const moveUserProfile = (): void => {
-      // 본인 여부에 맞는 프로필 경로로 이동함
+      // 본인 여부에 맞는 프로필 경로로 이동
       navigate(user.meYsno === "Y" ? "/mypage/profile" : `/social/profile/${user.userNumb}`);
     };
 
     /**
-     * 현재 검색 사용자의 관계 버튼 처리를 비동기로 시작함
+     * 현재 검색 사용자의 관계 버튼 처리를 비동기로 시작
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const changeUserFollow = (): void => {
-      // 선택한 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우를 시작함
+      // 선택한 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우를 시작
       void handleUserFollow(user);
     };
 
-    // 활성 사용자 검색 결과의 프로필 정보와 관계 버튼 행을 반환함
+    // 활성 사용자 검색 결과의 프로필 정보와 관계 버튼 행을 반환
     return (
       /* 활성 사용자 검색 개별 항목 영역 */
       <div className={userListStyles.item} key={user.userNumb}>
@@ -1040,24 +1040,24 @@ const FeedPage = () => {
   };
 
   /**
-   * 피드 유형별 미디어와 독후감 정보 및 교류 기능을 포함한 카드 한 건을 렌더링함
+   * 피드 유형별 미디어와 독후감 정보 및 교류 기능을 포함한 카드 한 건을 렌더링
    *
    * @author HanWon.Jang
    * @param item 렌더링할 피드 항목
    * @return 피드 유형에 맞게 구성된 카드 요소
    */
   const renderFeedItem = (item: FeedItem): ReactNode => {
-    // 독후감 본문 앞뒤 공백을 제거해 빈 내용과 펼침 기준을 정확히 판정함
+    // 독후감 본문 앞뒤 공백을 제거해 빈 내용과 펼침 기준을 정확히 판정
     const originalContent = item.reptCntn?.trim() ?? "";
-    // 번역 보기 상태이면 현재 화면에 저장한 번역문을 사용하고 나머지는 원문을 사용함
+    // 번역 보기 상태이면 현재 화면에 저장한 번역문을 사용하고 나머지는 원문을 사용
     const reportContent = item.reptNumb && translatedReports[item.reptNumb]
       ? translations[item.reptNumb] ?? originalContent
       : originalContent;
-    // 공통 미리보기 길이를 초과한 독후감에만 펼침 기능을 제공함
+    // 공통 미리보기 길이를 초과한 독후감에만 펼침 기능을 제공
     const isLongContent = reportContent.length > REPORT_CONTENT_PREVIEW_LENGTH;
-    // 저장된 대상별 펼침 상태를 boolean 값으로 보정함
+    // 저장된 대상별 펼침 상태를 boolean 값으로 보정
     const isExpanded = Boolean(expandedReports[item.tagtNumb]);
-    // 피드 대상 유형별 카드 영역을 선택할 판정값을 계산함
+    // 피드 대상 유형별 카드 영역을 선택할 판정값을 계산
     const isReportFeed = item.tagtType === "REPORT";
     const isProfileImageFeed = item.tagtType === "PROFILE_IMAGE";
     const isBackgroundImageFeed = item.tagtType === "BACKGROUND_IMAGE";
@@ -1066,21 +1066,21 @@ const FeedPage = () => {
     const profileTargetContent = message("frontend.userReport.target.profileImage");
     // "배경사진"
     const backgroundTargetContent = message("frontend.userReport.target.backgroundImage");
-    // 피드 유형에 맞는 신고 화면이 열리도록 신고 대상 유형을 변환함
+    // 피드 유형에 맞는 신고 화면이 열리도록 신고 대상 유형을 변환
     const complaintTargetType = isReportFeed
       ? "REPORT"
       : isProfileImageFeed
         ? "PROFILE"
         : "BACKGROUND";
-    // 이미지 신고는 현재 사진을 소유한 사용자 번호를 사용하고 독후감은 독후감 번호를 사용함
+    // 이미지 신고는 현재 사진을 소유한 사용자 번호를 사용하고 독후감은 독후감 번호를 사용
     const complaintTargetNumb = isReportFeed ? item.tagtNumb : item.userNumb;
-    // 신고 화면에 현재 카드 유형에 맞는 독후감 본문 또는 이미지 유형을 표시함
+    // 신고 화면에 현재 카드 유형에 맞는 독후감 본문 또는 이미지 유형을 표시
     const complaintTargetContent = isReportFeed
       ? reportContent
       : isProfileImageFeed
         ? profileTargetContent
         : backgroundTargetContent;
-    // 공통 신고 메뉴가 대상별 신고 화면 이동 상태로 사용할 정보를 구성함
+    // 공통 신고 메뉴가 대상별 신고 화면 이동 상태로 사용할 정보를 구성
     const complaintTarget: SafetyReportTarget = {
       targetType: complaintTargetType,
       targetNumb: complaintTargetNumb,
@@ -1089,23 +1089,23 @@ const FeedPage = () => {
       userNick: item.userNick,
       content: complaintTargetContent,
     };
-    // 피드 작성자와 사진 활동에 동일하게 표시할 발생 날짜를 계산함
+    // 피드 작성자와 사진 활동에 동일하게 표시할 발생 날짜를 계산
     const activityDateLabel = new Date(item.activityDate).toLocaleDateString();
-    // 독후감 번호가 있는 정상 피드는 도서 정보 상세로 이동하고 누락된 예외 데이터는 도서 검색으로 이동함
+    // 독후감 번호가 있는 정상 피드는 도서 정보 상세로 이동하고 누락된 예외 데이터는 도서 검색으로 이동
     const bookInfoPath = item.reptNumb
       ? `/book/info/${item.reptNumb}`
       : "/book/search";
-    // 책 표지와 제목에서 도서검색을 즉시 실행할 제목 검색어를 정규화함
+    // 책 표지와 제목에서 도서검색을 즉시 실행할 제목 검색어를 정규화
     const bookTitleKeyword = item.bookTitl?.trim() ?? "";
-    // 본인 독후감은 상세로 이동하고 타인 독후감은 제목 기반 도서 검색으로 이동함
+    // 본인 독후감은 상세로 이동하고 타인 독후감은 제목 기반 도서 검색으로 이동
     const bookTargetPath = item.meYsno === "Y" && item.reptNumb
       ? `/report/detail/${item.reptNumb}`
       : "/book/search";
-    // 저자 검색 링크는 공백을 제거한 실제 저자명이 있을 때만 표시함
+    // 저자 검색 링크는 공백을 제거한 실제 저자명이 있을 때만 표시
     const bookAuthorKeyword = item.bookAthr?.trim() ?? "";
-    // 펼침 버튼의 현재 동작을 보조기기에 전달할 문구를 조회함
+    // 펼침 버튼의 현재 동작을 보조기기에 전달할 문구를 조회
     const expandActionLabel = getExpandActionLabel(isExpanded);
-    // 펼침 상태에 맞는 공통 독후감 화살표 스타일을 선택함
+    // 펼침 상태에 맞는 공통 독후감 화살표 스타일을 선택
     const expandArrowClass = isExpanded
       ? reportListStyles.expandArrowOpen
       : reportListStyles.expandArrow;
@@ -1113,69 +1113,69 @@ const FeedPage = () => {
     const likeActionLabel = message("frontend.feed.likeAction");
     // "댓글 보기"
     const viewCommentsLabel = message("frontend.book.publicReports.viewComments");
-    // 프로필 사진 피드는 사용자 기본 이미지를 사용하고 배경사진 피드는 도서 공통 대체 이미지를 사용함
+    // 프로필 사진 피드는 사용자 기본 이미지를 사용하고 배경사진 피드는 도서 공통 대체 이미지를 사용
     const imageFallback = isProfileImageFeed
       ? DEFAULT_PROFILE_IMAGE
       : "/img/common/no-image.png";
-    // 원본 경로를 우선 사용하고 없으면 화면용 경로와 유형별 대체 이미지 순서로 보정함
+    // 원본 경로를 우선 사용하고 없으면 화면용 경로와 유형별 대체 이미지 순서로 보정
     const imageSource = item.contentImagePath || item.contentImageDisplayPath || imageFallback;
 
     /**
-     * 현재 피드 작성자의 공개 프로필 화면으로 이동함
+     * 현재 피드 작성자의 공개 프로필 화면으로 이동
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const moveAuthorProfile = (): void => {
-      // 본인 여부에 맞는 프로필 경로로 이동함
+      // 본인 여부에 맞는 프로필 경로로 이동
       navigate(item.meYsno === "Y" ? "/mypage/profile" : `/social/profile/${item.userNumb}`);
     };
 
     /**
-     * 현재 독후감 피드 본문의 펼침 상태를 반대로 전환함
+     * 현재 독후감 피드 본문의 펼침 상태를 반대로 전환
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const toggleCurrentContent = (): void => {
-      // 현재 카드의 안정적인 피드 대상 번호로 펼침 상태를 변경함
+      // 현재 카드의 안정적인 피드 대상 번호로 펼침 상태를 변경
       toggleReportContent(item.tagtNumb);
     };
 
     /**
-     * 현재 피드 대상의 좋아요 상태 변경을 비동기로 시작함
+     * 현재 피드 대상의 좋아요 상태 변경을 비동기로 시작
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const toggleCurrentLike = (): void => {
-      // 현재 카드의 좋아요 상태를 낙관적으로 반영하고 서버 결과로 확정함
+      // 현재 카드의 좋아요 상태를 낙관적으로 반영하고 서버 결과로 확정
       void handleLike(item);
     };
 
     /**
-     * 현재 피드 대상의 댓글 목록을 확인할 수 있도록 선택 상태를 설정함
+     * 현재 피드 대상의 댓글 목록을 확인할 수 있도록 선택 상태를 설정
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const openCurrentReplies = (): void => {
-      // 댓글 목록에 현재 피드 유형과 대상 번호를 전달하도록 선택 항목을 저장함
+      // 댓글 목록에 현재 피드 유형과 대상 번호를 전달하도록 선택 항목을 저장
       setReplyItem(item);
     };
 
     /**
-     * 현재 독후감 피드의 원문과 번역문 표시를 비동기로 전환함
+     * 현재 독후감 피드의 원문과 번역문 표시를 비동기로 전환
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     const toggleCurrentTranslation = (): void => {
-      // 현재 피드의 캐시 조회 또는 번역 생성을 시작함
+      // 현재 피드의 캐시 조회 또는 번역 생성을 시작
       void handleTranslation(item);
     };
 
-    // 피드 유형에 맞는 미디어와 교류 기능을 포함한 카드 한 건을 반환함
+    // 피드 유형에 맞는 미디어와 교류 기능을 포함한 카드 한 건을 반환
     return (
       /* 피드 개별 활동 카드 영역 */
       <article className={styles.card} key={`${item.tagtType}-${item.tagtNumb}`}>
@@ -1227,7 +1227,7 @@ const FeedPage = () => {
                 >
                   <span className={styles.title}>{item.bookTitl}</span>
                 </Link>
-                {/* 저자명이 있으면 해당 이름으로 도서를 검색하는 링크를 표시함 */}
+                {/* 저자명이 있으면 해당 이름으로 도서를 검색하는 링크를 표시 */}
                 {bookAuthorKeyword ? (
                   <Link
                     className={styles.authorSearchLink}
@@ -1276,7 +1276,7 @@ const FeedPage = () => {
           >
             {/* 프로필 또는 배경사진 영역 */}
             <span className={styles.backgroundMediaWrap}>
-              {/* 프로필 사진 변경 피드는 배경사진과 같은 크기의 사진으로 표시함 */}
+              {/* 프로필 사진 변경 피드는 배경사진과 같은 크기의 사진으로 표시 */}
               {isProfileImageFeed ? (
                 <ProfileImage
                   className={styles.backgroundMedia}
@@ -1292,7 +1292,7 @@ const FeedPage = () => {
                 />
               )}
             </span>
-            {/* 사진 변경 유형과 발생 날짜를 사진 아래 빈 공간의 오른쪽에 표시함 */}
+            {/* 사진 변경 유형과 발생 날짜를 사진 아래 빈 공간의 오른쪽에 표시 */}
             <span className={styles.imageActivity}>
               {getImageActivityText(item)} · {activityDateLabel}
             </span>
@@ -1302,7 +1302,7 @@ const FeedPage = () => {
         {/* 독후감 본문과 펼침 제어 영역 */}
         {reportContent ? (
           <div className={styles.contentSection}>
-            {/* 본인 독후감 본문만 도서 정보 상세로 이동하고 타인 독후감과 다른 활동 본문은 정적으로 표시함 */}
+            {/* 본인 독후감 본문만 도서 정보 상세로 이동하고 타인 독후감과 다른 활동 본문은 정적으로 표시 */}
             {item.tagtType === "REPORT" && item.meYsno === "Y" ? (
               <Link className={styles.reportContentLink} to={bookInfoPath}>
                 <AnimatedReportContent
@@ -1391,16 +1391,16 @@ const FeedPage = () => {
     );
   };
 
-  // 알림 대상과 페이지 목록에서 같은 카드는 한 번만 표시하도록 화면 목록을 구성함
+  // 알림 대상과 페이지 목록에서 같은 카드는 한 번만 표시하도록 화면 목록을 구성
   const visibleItems = focusedItem
     ? [focusedItem, ...items.filter((item) => !isSameFeedTarget(item, focusedItem))]
     : items;
-  // 한 글자 이상의 닉네임이 입력되면 피드 카드 대신 활성 사용자 검색 결과를 표시함
+  // 한 글자 이상의 닉네임이 입력되면 피드 카드 대신 활성 사용자 검색 결과를 표시
   const hasUserSearch = Boolean(appliedUserKeyword);
-  // 피드 첫 페이지가 아직 없을 때만 검색 입력 아래에 최초 로딩 상태를 표시함
+  // 피드 첫 페이지가 아직 없을 때만 검색 입력 아래에 최초 로딩 상태를 표시
   const isFeedInitialLoading = isLoading && visibleItems.length === 0;
 
-  // 유형별 카드와 공통 교류 동작을 포함한 피드 화면을 반환함
+  // 유형별 카드와 공통 교류 동작을 포함한 피드 화면을 반환
   return (
     <main className={styles.page}>
       {/* 본인과 팔로잉 사용자의 공개 활동 피드 전체 영역 */}
@@ -1453,7 +1453,7 @@ const FeedPage = () => {
         </label>
       </form>
 
-      {/* 한 글자 이상의 닉네임 검색어가 있으면 활성 사용자와 관계 버튼 목록을 표시함 */}
+      {/* 한 글자 이상의 닉네임 검색어가 있으면 활성 사용자와 관계 버튼 목록을 표시 */}
       {hasUserSearch ? (
         <section className={styles.userSearchResults}>
           {/* 활성 사용자 검색 첫 페이지 로딩 영역 */}

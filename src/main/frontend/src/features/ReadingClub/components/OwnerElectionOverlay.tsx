@@ -35,7 +35,7 @@ export default function OwnerElectionOverlay({
   );
 
   useEffect(() => {
-    // 서버에서 다시 조회한 기존 선택 후보를 화면 선택값과 동기화함
+    // 서버에서 다시 조회한 기존 선택 후보를 화면 선택값과 동기화
     setSelectedUserNumb(
       election.candidateList.find((candidate) => candidate.selected)?.userNumb ?? null,
     );

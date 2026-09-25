@@ -9,7 +9,7 @@ import java.util.Locale;
  * fileName       : LocaleUtil
  * author         : SeungHyeon.Kang
  * date           : 2026-07-15
- * description    : 공통 처리에 필요한 변환과 판정 기능을 제공함
+ * description    : 공통 처리에 필요한 변환과 판정 기능을 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -18,7 +18,7 @@ import java.util.Locale;
 public class LocaleUtil {
 
     /**
-     * LocaleUtil 객체를 생성함
+     * LocaleUtil 객체를 생성
      *
      * @author SeungHyeon.Kang
      */
@@ -28,7 +28,7 @@ public class LocaleUtil {
     }
 
     /**
-     * 현재 요청 언어 환경 조회함
+     * 현재 요청 언어 환경 조회
      *
      * @author SeungHyeon.Kang
      * @return 처리 결과
@@ -37,44 +37,44 @@ public class LocaleUtil {
         // getLocale 조회로 후속 처리에 필요한 데이터를 가져옴
         Locale currentLocale = LocaleContextHolder.getLocale();
 
-        // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기함
+        // currentLocale 값이 비어 있으면 후속 참조를 차단하기 위해 분기
         if (StringUtil.isEmpty(currentLocale)) {
-            // 현재 요청 언어 환경 조회 결과를 반환함
+            // 현재 요청 언어 환경 조회 결과를 반환
             return "KO";
         }
 
         // getLanguage 조회로 후속 처리에 필요한 데이터를 가져옴
         String language = currentLocale.getLanguage();
 
-        // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기함
+        // language 값이 비어 있으면 후속 참조를 차단하기 위해 분기
         if (StringUtil.isEmpty(language) || language.trim().isEmpty()) {
-            // 현재 요청 언어 환경 조회 결과를 반환함
+            // 현재 요청 언어 환경 조회 결과를 반환
             return "KO";
         }
 
-        // 현재 요청 언어 환경 조회 결과를 반환함
+        // 현재 요청 언어 환경 조회 결과를 반환
         return language.toUpperCase();
     }
 
     /**
-     * 현재 요청 언어가 영문인지 여부를 조회함
+     * 현재 요청 언어가 영문인지 여부를 조회
      *
      * @author SeungHyeon.Kang
      * @return 영문 요청이면 Y, 그 외에는 N
      */
     public static String getEnglishYsno() {
-        // 지원 언어가 영어와 한국어뿐이므로 영어 요청만 명시적으로 구분함
+        // 지원 언어가 영어와 한국어뿐이므로 영어 요청만 명시적으로 구분
         return getLocale().startsWith("EN") ? Constant.COMM_YES : Constant.COMM_NO;
     }
 
     /**
-     * 현재 요청 언어 코드를 조회함
+     * 현재 요청 언어 코드를 조회
      *
      * @author SeungHyeon.Kang
      * @return 소문자 언어 코드
      */
     public static String getLanguageCode() {
-        // 저장 함수가 표준 언어 접두사로 분기할 수 있도록 소문자로 정규화함
+        // 저장 함수가 표준 언어 접두사로 분기할 수 있도록 소문자로 정규화
         return getLocale().toLowerCase(Locale.ROOT);
     }
 }

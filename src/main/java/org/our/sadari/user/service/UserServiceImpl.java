@@ -37,7 +37,7 @@ import org.springframework.web.multipart.MultipartFile;
  * fileName       : UserServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-20
- * description    : 사용자 업무 로직을 구현함
+ * description    : 사용자 업무 로직을 구현
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
     // TokenRedis 업무 처리 서비스
     private final TokenRedisService tokenRedisService;
 
-    /** 로그인 사용자의 알림과 공개 범위 설정을 조회함 */
+    /** 로그인 사용자의 알림과 공개 범위 설정을 조회 */
     @Override
     @Transactional
     public ResultData getUserSetting(Long userNumb) {
@@ -88,7 +88,7 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 아직 선택하지 않은 기존 계정은 최초 요청 기기 언어를 계정 설정으로 확정함
+        // 아직 선택하지 않은 기존 계정은 최초 요청 기기 언어를 계정 설정으로 확정
         if (StringUtil.isEmpty(setting.getEnglishYsno())) {
             setting.setEnglishYsno(LocaleUtil.getEnglishYsno());
             userMapper.uptUserLanguageSetting(setting);
@@ -97,7 +97,7 @@ public class UserServiceImpl implements UserService {
         return ResultData.success(setting);
     }
 
-    /** 사용자가 선택한 영문 사용 여부를 다른 설정과 독립적으로 저장함 */
+    /** 사용자가 선택한 영문 사용 여부를 다른 설정과 독립적으로 저장 */
     @Override
     @Transactional
     public ResultData uptUserLanguageSetting(Long userNumb, UserSettingDto request) {
@@ -117,7 +117,7 @@ public class UserServiceImpl implements UserService {
         return ResultData.success(userMapper.getUserSettingDtl(userNumb));
     }
 
-    /** 선택형 알림 범주와 신규 독후감 알림 기본값을 한 번에 저장함 */
+    /** 선택형 알림 범주와 신규 독후감 알림 기본값을 한 번에 저장 */
     @Override
     @Transactional
     public ResultData uptUserAlimSetting(Long userNumb, UserSettingDto request) {
@@ -134,7 +134,7 @@ public class UserServiceImpl implements UserService {
         return ResultData.success(userMapper.getUserSettingDtl(userNumb));
     }
 
-    /** 공개 범위와 신규 독후감 공개 기본값을 한 번에 저장함 */
+    /** 공개 범위와 신규 독후감 공개 기본값을 한 번에 저장 */
     @Override
     @Transactional
     public ResultData uptUserPrivacySetting(Long userNumb, UserSettingDto request) {
@@ -150,8 +150,8 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 로그인 사용자의 최신 프로필 정보를 조회함
-     * 인증 사용자 번호가 없거나 사용자 레코드가 없으면 다시 로그인해야 하므로 인증 실패로 응답함
+     * 로그인 사용자의 최신 프로필 정보를 조회
+     * 인증 사용자 번호가 없거나 사용자 레코드가 없으면 다시 로그인해야 하므로 인증 실패로 응답
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -159,45 +159,45 @@ public class UserServiceImpl implements UserService {
      */
     @Override
     public ResultData getMe(Long userNumb) {
-        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // UserByNumb 데이터를 DB에서 조회함
+        // UserByNumb 데이터를 DB에서 조회
         UserDto user = userMapper.getUserByNumb(userNumb);
 
-        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // user 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(user)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         Map<String, Object> profile = new HashMap<>();
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("userNick", user.getUserNick());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("porfPath", user.getPorfPath());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("bgimPath", user.getBgimPath());
-        // 후속 처리에 사용할 키와 값을 맵에 저장함
+        // 후속 처리에 사용할 키와 값을 맵에 저장
         profile.put("intrCntn", user.getIntrCntn());
-        // 현재 프로필 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장함
+        // 현재 프로필 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장
         profile.put("profileImageReaction", getMyImageReaction(
                 userNumb, Constant.LIKE_TARGET_PROFILE_IMAGE, user.getProfNumb()));
-        // 현재 배경 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장함
+        // 현재 배경 사진이 있으면 마이페이지에 표시할 좋아요와 댓글 집계를 저장
         profile.put("backgroundImageReaction", getMyImageReaction(
                 userNumb, Constant.LIKE_TARGET_BACKGROUND_IMAGE, user.getBgimNumb()));
-        // 첫 로그인 전용 화면의 재노출 여부를 판단할 완료 상태를 저장함
+        // 첫 로그인 전용 화면의 재노출 여부를 판단할 완료 상태를 저장
         profile.put("onbdYsno", user.getOnbdYsno());
-        // 로그인 사용자의 최신 프로필 정보를 조회한 결과를 성공 응답으로 반환함
+        // 로그인 사용자의 최신 프로필 정보를 조회한 결과를 성공 응답으로 반환
         return ResultData.success(profile);
     }
 
     /**
-     * 현재 사용자 사진이 존재할 때만 좋아요와 댓글 집계를 조회함
-     * 사용자 행이 현재 파일을 계속 참조하는지도 Mapper에서 다시 검증하여 교체된 사진 반응이 노출되지 않게 함
+     * 현재 사용자 사진이 존재할 때만 좋아요와 댓글 집계를 조회
+     * 사용자 행이 현재 파일을 계속 참조하는지도 Mapper에서 다시 검증하여 교체된 사진 반응이 노출되지 않도록 처리
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -208,26 +208,26 @@ public class UserServiceImpl implements UserService {
     private UserDto.ImageReactionDto getMyImageReaction(Long userNumb, String tagtType, Long tagtNumb) {
         // 현재 사진이 없으면 반응 대상도 없으므로 조회하지 않음
         if (StringUtil.isEmpty(tagtNumb)) {
-            // 사진이 없는 상태를 화면에서 구분할 수 있도록 null을 반환함
+            // 사진이 없는 상태를 화면에서 구분할 수 있도록 null을 반환
             return null;
         }
 
-        // 현재 사진 소유자와 대상 식별값을 Mapper 요청으로 구성함
+        // 현재 사진 소유자와 대상 식별값을 Mapper 요청으로 구성
         UserDto.ImageReactionDto request = new UserDto.ImageReactionDto();
-        // 로그인 사용자의 사진 좋아요 여부를 계산할 사용자 번호를 설정함
+        // 로그인 사용자의 사진 좋아요 여부를 계산할 사용자 번호를 설정
         request.setUserNumb(userNumb);
-        // 마이페이지 사진의 현재 소유자 번호를 설정함
+        // 마이페이지 사진의 현재 소유자 번호를 설정
         request.setOwnerUserNumb(userNumb);
-        // TagtType 업무 값을 request DTO에 설정함
+        // TagtType 업무 값을 request DTO에 설정
         request.setTagtType(tagtType);
-        // TagtNumb 업무 값을 request DTO에 설정함
+        // TagtNumb 업무 값을 request DTO에 설정
         request.setTagtNumb(tagtNumb);
-        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환함
+        // 현재 사진에 연결된 좋아요와 댓글 집계를 반환
         return userMapper.getImageReactionDtl(request);
     }
 
     /**
-     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 비공개 임시 저장소에 보관함
+     * 로그인 사용자가 선택한 프로필 또는 배경 이미지를 비공개 임시 저장소에 보관
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -243,17 +243,17 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            // 서버가 검증과 방향 보정 및 축소를 완료한 임시 이미지 정보를 반환함
+            // 서버가 검증과 방향 보정 및 축소를 완료한 임시 이미지 정보를 반환
             return ResultData.success(fileService.setProfileImageDraft(imageFile, imageType, userNumb));
         }
 
         catch (InvalidImageFileException e) {
-            // 허용 형식과 크기 및 해상도를 벗어난 파일은 공통 이미지 안내로 응답함
+            // 허용 형식과 크기 및 해상도를 벗어난 파일은 공통 이미지 안내로 응답
             return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
         }
 
         catch (IOException e) {
-            // 임시 저장소 쓰기 실패는 일반 저장 실패로 응답하고 원인을 기록함
+            // 임시 저장소 쓰기 실패는 일반 저장 실패로 응답하고 원인을 기록
             log.error("프로필 이미지 임시 저장에 실패했습니다. userNumb={}, imageType={} failure={}"
                     , userNumb, imageType, LogSafe.getFailure(e));
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
@@ -261,7 +261,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회함
+     * 로그인 사용자의 만료되지 않은 프로필 이미지 임시 선택본을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -274,12 +274,12 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 같은 로그인 사용자의 프로필과 배경 임시 선택본만 반환함
+        // 같은 로그인 사용자의 프로필과 배경 임시 선택본만 반환
         return ResultData.success(fileService.getProfileImageDraftList(userNumb));
     }
 
     /**
-     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제함
+     * 로그인 사용자의 특정 유형 프로필 이미지 임시 선택본을 삭제
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -294,20 +294,20 @@ public class UserServiceImpl implements UserService {
         }
 
         try {
-            // 취소한 이미지 유형의 임시 원본과 미리보기를 즉시 제거함
+            // 취소한 이미지 유형의 임시 원본과 미리보기를 즉시 제거
             fileService.delProfileImageDraft(userNumb, imageType);
             return ResultData.success();
         }
 
         catch (InvalidImageFileException e) {
-            // 허용하지 않은 이미지 유형은 잘못된 요청으로 응답함
+            // 허용하지 않은 이미지 유형은 잘못된 요청으로 응답
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
     }
 
     /**
-     * 로그인 사용자의 프로필 정보를 수정함
-     * 화면에서 별도 닉네임 중복 검사 API를 호출하지 않으므로 저장 요청에서 중복과 욕설을 최종 검증함
+     * 로그인 사용자의 프로필 정보를 수정
+     * 화면에서 별도 닉네임 중복 검사 API를 호출하지 않으므로 저장 요청에서 중복과 욕설을 최종 검증
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -320,78 +320,78 @@ public class UserServiceImpl implements UserService {
     @Transactional
     public ResultData uptMe(Long userNumb, UserDto userDto, MultipartFile profileImage
                           , MultipartFile backgroundImage) {
-        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // UserNumb 업무 값을 userDto DTO에 설정함
+        // UserNumb 업무 값을 userDto DTO에 설정
         userDto.setUserNumb(userNumb);
-        // 닉네임 형식 검증 전에 앞뒤 공백만 제거함
+        // 닉네임 형식 검증 전에 앞뒤 공백만 제거
         userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick()));
-        // IntrCntn 업무 값을 userDto DTO에 설정함
+        // IntrCntn 업무 값을 userDto DTO에 설정
         userDto.setIntrCntn(StringUtil.normalizePlainText(userDto.getIntrCntn(), 50));
 
-        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증함
+        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증
         Optional<ResultData> validationResult = validateUserNick(userDto, userDto.getIntrCntn());
 
         // 공통 닉네임 검증에 실패하면 파일과 사용자 정보를 변경하지 않음
         if (validationResult.isPresent()) {
-            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환함
+            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환
             return validationResult.get();
         }
 
-        // 동시에 들어온 프로필 수정이 서로의 신규 파일을 고아 파일로 만들지 않도록 현재 사용자 행을 잠금 조회함
+        // 동시에 들어온 프로필 수정이 서로의 신규 파일을 고아 파일로 만들지 않도록 현재 사용자 행을 잠금 조회
         UserDto currentUser = userMapper.getUserFileForUpdate(userNumb);
 
-        // 인증 사용자 행이 사라진 경우 파일을 새로 만들지 않고 인증 실패로 종료함
+        // 인증 사용자 행이 사라진 경우 파일을 새로 만들지 않고 인증 실패로 종료
         if (StringUtil.isEmpty(currentUser)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록
         try {
-            // ProfNumb 업무 값을 userDto DTO에 설정함
+            // ProfNumb 업무 값을 userDto DTO에 설정
             userDto.setProfNumb(!StringUtil.isEmpty(userDto.getProfileImageDraftToken())
                     ? fileService.setUploadedImageDraft(userDto.getProfileImageDraftToken(), Constant.FILE_TYPE_PROFILE, userNumb)
                     : fileService.setUploadedImage(profileImage, Constant.FILE_TYPE_PROFILE, userNumb));          //새로운 프로필 사진 존재시 파일 저장
-            // BgimNumb 업무 값을 userDto DTO에 설정함
+            // BgimNumb 업무 값을 userDto DTO에 설정
             userDto.setBgimNumb(!StringUtil.isEmpty(userDto.getBackgroundImageDraftToken())
                     ? fileService.setUploadedImageDraft(userDto.getBackgroundImageDraftToken(), Constant.FILE_TYPE_BACKGROUND, userNumb)
                     : fileService.setUploadedImage(backgroundImage, Constant.FILE_TYPE_BACKGROUND, userNumb));    //새로운 배경 사진 존재시 파일 저장
 
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
         catch (InvalidImageFileException e) {
-            // 앞에서 다른 이미지가 저장되었을 수 있으므로 파일 메타정보와 물리 파일 정리가 실행되게 전체 수정을 롤백함
+            // 앞에서 다른 이미지가 저장되었을 수 있으므로 파일 메타정보와 물리 파일 정리가 실행되게 전체 수정을 롤백
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // "JPG 또는 PNG 형식의 10MB 이하 이미지 파일만 업로드할 수 있어요."
             return ResultData.fail(ResultEnum.COMMON_IMAGE_INVALID);
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
         catch (IOException e) {
             // 외부 파일 저장소 장애의 서버 진단 로그
             log.error("Profile image storage failed. userNumb={} failure={}", userNumb, LogSafe.getFailure(e));
-            // Redis 갱신 실패 시 현재 프로필 수정 트랜잭션을 롤백 상태로 전환함
+            // Redis 갱신 실패 시 현재 프로필 수정 트랜잭션을 롤백 상태로 전환
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 사진 피드 공개를 허용한 회원의 직접 업로드만 변경 활동 시각을 기록함
+        // 사진 피드 공개를 허용한 회원의 직접 업로드만 변경 활동 시각을 기록
         UserSettingDto userSetting = userMapper.getUserSettingDtl(userNumb);
         userDto.setImageFeedYsno(!StringUtil.isEmpty(userSetting)
                 && Constant.COMM_YES.equals(userSetting.getImageFeedYsno())
                 ? Constant.COMM_YES
                 : Constant.COMM_NO);
-        // UserProfile 데이터를 DB에서 수정함
+        // UserProfile 데이터를 DB에서 수정
         int updateCnt = userMapper.uptUserProfile(userDto);
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분
         if (updateCnt == 0) {
             // 사용자 UPDATE가 반영되지 않았다면 같은 요청에서 먼저 저장한 이미지도 유지하지 않음
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
@@ -399,34 +399,34 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // 새 프로필 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리함
+        // 새 프로필 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리
         if (!StringUtil.isEmpty(userDto.getProfNumb()) && !StringUtil.isEmpty(currentUser.getProfNumb())
                 && !userDto.getProfNumb().equals(currentUser.getProfNumb())) {
-            // 교체로 사라지는 이전 프로필 사진의 좋아요와 댓글을 함께 정리함
+            // 교체로 사라지는 이전 프로필 사진의 좋아요와 댓글을 함께 정리
             deleteImageReactions(Constant.LIKE_TARGET_PROFILE_IMAGE, currentUser.getProfNumb());
-            // DB 커밋 이후에만 이전 프로필 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록함
+            // DB 커밋 이후에만 이전 프로필 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록
             fileService.delFile(currentUser.getProfNumb());
         }
 
-        // 새 배경 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리함
+        // 새 배경 이미지가 저장되었으면 사용자 참조에서 교체된 이전 파일을 정리
         if (!StringUtil.isEmpty(userDto.getBgimNumb()) && !StringUtil.isEmpty(currentUser.getBgimNumb())
                 && !userDto.getBgimNumb().equals(currentUser.getBgimNumb())) {
-            // 교체로 사라지는 이전 배경 사진의 좋아요와 댓글을 함께 정리함
+            // 교체로 사라지는 이전 배경 사진의 좋아요와 댓글을 함께 정리
             deleteImageReactions(Constant.LIKE_TARGET_BACKGROUND_IMAGE, currentUser.getBgimNumb());
-            // DB 커밋 이후에만 이전 배경 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록함
+            // DB 커밋 이후에만 이전 배경 물리 파일이 삭제되도록 메타정보 정리와 후처리를 등록
             fileService.delFile(currentUser.getBgimNumb());
         }
 
         /*
          * DB commit이 실패했는데 Redis만 먼저 바뀌면 두 저장소의 닉네임이 달라짐
-         * 실제 커밋이 완료된 직후에만 같은 로그인 세션의 Redis 닉네임을 갱신함
+         * 실제 커밋이 완료된 직후에만 같은 로그인 세션의 Redis 닉네임을 갱신
          */
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
-        // 로그인 사용자의 프로필 정보를 수정한 결과를 반환함
+        // 로그인 사용자의 프로필 정보를 수정한 결과를 반환
         return getMe(userNumb);
     }
 
-    /** 교체되는 사진에 연결된 좋아요와 댓글 및 댓글 좋아요를 참조 순서에 맞춰 삭제함 */
+    /** 교체되는 사진에 연결된 좋아요와 댓글 및 댓글 좋아요를 참조 순서에 맞춰 삭제 */
     private void deleteImageReactions(String targetType, Long targetNumb) {
         FeedDto request = new FeedDto();
         request.setTagtType(targetType);
@@ -438,7 +438,7 @@ public class UserServiceImpl implements UserService {
     }
 
     /**
-     * 최초 로그인 사용자의 닉네임을 검증해 저장하고 온보딩 완료 상태로 변경함
+     * 최초 로그인 사용자의 닉네임을 검증해 저장하고 온보딩 완료 상태로 변경
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -454,59 +454,59 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 요청 본문이 없으면 닉네임 검증을 진행할 수 없으므로 요청을 거절함
+        // 요청 본문이 없으면 닉네임 검증을 진행할 수 없으므로 요청을 거절
         if (StringUtil.isEmpty(userDto)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 수정 대상을 로그인 사용자로 제한함
+        // 수정 대상을 로그인 사용자로 제한
         userDto.setUserNumb(userNumb);
-        // 닉네임 형식 검증 전에 앞뒤 공백만 제거함
+        // 닉네임 형식 검증 전에 앞뒤 공백만 제거
         userDto.setUserNick(StringUtil.normalizePlainText(userDto.getUserNick()));
 
-        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증함
+        // 프로필과 온보딩이 같은 닉네임 형식과 비속어 및 중복 정책을 사용하도록 공통 검증
         Optional<ResultData> validationResult = validateUserNick(userDto, null);
 
         // 공통 닉네임 검증에 실패하면 온보딩 완료 상태를 변경하지 않음
         if (validationResult.isPresent()) {
-            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환함
+            // 형식과 비속어 및 중복 검증에 대응하는 공통 실패 응답을 반환
             return validationResult.get();
         }
 
-        // 닉네임 저장과 온보딩 완료 상태를 동일한 사용자 행에 원자적으로 반영함
+        // 닉네임 저장과 온보딩 완료 상태를 동일한 사용자 행에 원자적으로 반영
         int updateCnt = userMapper.uptUserOnboarding(userDto);
 
         // 이미 완료했거나 사용자가 사라져 수정되지 않은 요청은 성공으로 처리하지 않음
         if (updateCnt == 0) {
-            // 온보딩 상태가 바뀌지 않았으므로 현재 쓰기 트랜잭션을 롤백함
+            // 온보딩 상태가 바뀌지 않았으므로 현재 쓰기 트랜잭션을 롤백
             TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // "수정에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_UPDATE_REJECTED);
         }
 
-        // DB 커밋 뒤 현재 로그인 세션의 닉네임도 같은 값으로 갱신함
+        // DB 커밋 뒤 현재 로그인 세션의 닉네임도 같은 값으로 갱신
         uptUserNickAfterCommit(userNumb, userDto.getUserNick());
-        // 온보딩 완료 상태가 포함된 최신 사용자 프로필을 반환함
+        // 온보딩 완료 상태가 포함된 최신 사용자 프로필을 반환
         return getMe(userNumb);
     }
 
     /**
-     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회함
+     * 최초 로그인 화면에 노출할 활성 독서 관심분야를 조회
      *
      * @author SeungHyeon.Kang
      * @return 대분류와 세부코드가 포함된 관심분야 목록
      */
     @Override
     public ResultData getUserInterestCatalog() {
-        // 관리자 공통코드에서 활성 상태인 독서 관심분야를 조회함
+        // 관리자 공통코드에서 활성 상태인 독서 관심분야를 조회
         List<UserDto.UserInterestDto> interestCatalog = userMapper.getUserInterestCatalog();
-        // 최초 로그인 화면이 대분류별 선택 항목을 구성할 수 있도록 전체 목록을 반환함
+        // 최초 로그인 화면이 대분류별 선택 항목을 구성할 수 있도록 전체 목록을 반환
         return ResultData.success(interestCatalog);
     }
 
     /**
-     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회함
+     * 로그인 사용자가 현재 선택한 독서 관심분야를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -520,14 +520,14 @@ public class UserServiceImpl implements UserService {
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 사용자가 현재 저장한 독서 관심분야를 조회함
+        // 사용자가 현재 저장한 독서 관심분야를 조회
         List<UserDto.UserInterestDto> interests = userMapper.getUserInterestList(userNumb);
-        // 현재 선택된 독서 관심분야 목록을 반환함
+        // 현재 선택된 독서 관심분야 목록을 반환
         return ResultData.success(interests);
     }
 
     /**
-     * 로그인 사용자의 독서 관심분야를 검증한 선택 목록으로 전체 교체함
+     * 로그인 사용자의 독서 관심분야를 검증한 선택 목록으로 전체 교체
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -545,22 +545,22 @@ public class UserServiceImpl implements UserService {
 
         // 요청 본문에서 사용자가 선택한 관심분야 목록을 가져옴
         List<UserDto.UserInterestDto> requestedInterests = request.getInterestList();
-        // 빈 목록은 관심분야를 건너뛴 사용자에게 허용하므로 Null만 빈 목록으로 보정함
+        // 빈 목록은 관심분야를 건너뛴 사용자에게 허용하므로 Null만 빈 목록으로 보정
         if (StringUtil.isEmpty(requestedInterests)) {
-            // 검증과 저장에서 같은 빈 목록을 사용하도록 초기화함
+            // 검증과 저장에서 같은 빈 목록을 사용하도록 초기화
             requestedInterests = List.of();
         }
 
-        // 현재 활성 CATE_CODE 하위 세부코드만 저장할 수 있도록 허용 코드를 구성함
+        // 현재 활성 CATE_CODE 하위 세부코드만 저장할 수 있도록 허용 코드를 구성
         Set<String> validInterestCodes = new HashSet<>();
-        // 활성 관심분야 세부코드를 허용 목록에 추가함
+        // 활성 관심분야 세부코드를 허용 목록에 추가
         for (UserDto.UserInterestDto interest : userMapper.getUserInterestCatalog()) {
-            // CATE_CODE 그룹은 고정값이므로 세부코드만 저장 검증에 사용함
+            // CATE_CODE 그룹은 고정값이므로 세부코드만 저장 검증에 사용
             validInterestCodes.add(interest.getIntrCode());
         }
 
         Set<String> requestedInterestCodes = new HashSet<>();
-        // 선택 목록의 유효성과 중복 여부를 저장 전에 모두 확인함
+        // 선택 목록의 유효성과 중복 여부를 저장 전에 모두 확인
         for (UserDto.UserInterestDto interest : requestedInterests) {
             // 비어 있거나 비활성인 관심분야 세부코드는 저장하지 않음
             if (StringUtil.isEmpty(interest) || StringUtil.isEmpty(interest.getIntrCode())) {
@@ -568,7 +568,7 @@ public class UserServiceImpl implements UserService {
                 return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
             }
 
-            // CATE_CODE의 활성 하위 코드가 아니거나 같은 코드가 반복되면 전체 요청을 거절함
+            // CATE_CODE의 활성 하위 코드가 아니거나 같은 코드가 반복되면 전체 요청을 거절
             if (!validInterestCodes.contains(interest.getIntrCode())
                     || !requestedInterestCodes.add(interest.getIntrCode())) {
                 // "요청값이 올바르지 않아요."
@@ -576,20 +576,20 @@ public class UserServiceImpl implements UserService {
             }
         }
 
-        // 전체 교체 정책에 따라 기존 관심분야를 먼저 삭제함
+        // 전체 교체 정책에 따라 기존 관심분야를 먼저 삭제
         userMapper.delUserInterests(userNumb);
-        // 검증된 선택 조합을 사용자 관심분야로 저장함
+        // 검증된 선택 조합을 사용자 관심분야로 저장
         for (UserDto.UserInterestDto interest : requestedInterests) {
-            // 같은 트랜잭션에서 선택 항목 한 건을 저장함
+            // 같은 트랜잭션에서 선택 항목 한 건을 저장
             userMapper.setUserInterest(userNumb, interest);
         }
 
-        // 선택 항목이 없더라도 건너뛰기 상태를 정상 저장 결과로 반환함
+        // 선택 항목이 없더라도 건너뛰기 상태를 정상 저장 결과로 반환
         return ResultData.success();
     }
 
     /**
-     * 프로필 수정과 온보딩에서 사용하는 닉네임 형식과 비속어 및 중복 정책을 검증함
+     * 프로필 수정과 온보딩에서 사용하는 닉네임 형식과 비속어 및 중복 정책을 검증
      *
      * @author SeungHyeon.Kang
      * @param userDto 로그인 사용자와 정규화한 닉네임을 담은 요청
@@ -603,33 +603,33 @@ public class UserServiceImpl implements UserService {
             return Optional.of(ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST));
         }
 
-        // 닉네임에서 저장을 차단할 비속어를 먼저 조회함
+        // 닉네임에서 저장을 차단할 비속어를 먼저 조회
         Optional<String> badWord = badWordDetectionService.findBadWord(userDto.getUserNick());
 
-        // 프로필 수정은 한줄소개도 닉네임과 같은 비속어 정책으로 검사함
+        // 프로필 수정은 한줄소개도 닉네임과 같은 비속어 정책으로 검사
         if (badWord.isEmpty() && !StringUtil.isEmpty(additionalText)) {
-            // 닉네임을 통과한 요청의 한줄소개에서 저장을 차단할 비속어를 조회함
+            // 닉네임을 통과한 요청의 한줄소개에서 저장을 차단할 비속어를 조회
             badWord = badWordDetectionService.findBadWord(additionalText);
         }
 
-        // 닉네임이나 한줄소개에 비속어가 있으면 감지된 단어와 함께 요청을 거절함
+        // 닉네임이나 한줄소개에 비속어가 있으면 감지된 단어와 함께 요청을 거절
         if (badWord.isPresent()) {
             // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"
             return Optional.of(ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get()));
         }
 
-        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단함
+        // 본인을 제외한 다른 사용자가 같은 닉네임을 사용하면 중복 저장을 차단
         if (userMapper.getUserNickDuplicateCnt(userDto) > 0) {
             // "이미 사용 중인 닉네임이에요."
             return Optional.of(ResultData.fail(ResultEnum.USER_NICK_DUPLICATED));
         }
 
-        // 닉네임 저장 정책을 모두 통과한 결과를 반환함
+        // 닉네임 저장 정책을 모두 통과한 결과를 반환
         return Optional.empty();
     }
 
     /**
-     * 닉네임이 한글, 영문, 숫자와 문자 사이의 단일 허용 구분자로 구성됐는지 확인함
+     * 닉네임이 한글, 영문, 숫자와 문자 사이의 단일 허용 구분자로 구성됐는지 확인
      *
      * @author SeungHyeon.Kang
      * @param userNick 정규화한 닉네임
@@ -637,12 +637,12 @@ public class UserServiceImpl implements UserService {
      */
     private boolean isValidUserNick(String userNick) {
 
-        // 닉네임이 최대 길이와 문자 사이의 단일 구분자 형식을 모두 충족하는지 반환함
+        // 닉네임이 최대 길이와 문자 사이의 단일 구분자 형식을 모두 충족하는지 반환
         return userNick.length() <= Constant.USER_NICK_MAX_LENGTH && USER_NICK_PATTERN.matcher(userNick).matches();
     }
 
     /**
-     * 프로필 DB 트랜잭션이 커밋된 직후 Redis 로그인 사용자 닉네임을 갱신함
+     * 프로필 DB 트랜잭션이 커밋된 직후 Redis 로그인 사용자 닉네임을 갱신
      *
      * @author SeungHyeon.Kang
      * @param userNumb 닉네임을 수정한 사용자 번호
@@ -651,24 +651,24 @@ public class UserServiceImpl implements UserService {
     private void uptUserNickAfterCommit(Long userNumb, String userNick) {
 
         Runnable updateUserNick = () -> {
-            // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
+            // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록
             try {
-                // uptUserNick 업무 로직을 tokenRedisService에 위임함
+                // uptUserNick 업무 로직을 tokenRedisService에 위임
                 tokenRedisService.uptUserNick(userNumb, userNick);
             }
 
-            // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+            // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
             catch (RuntimeException e) {
                 /*
-                 * Redis 갱신 실패 시 예전 닉네임을 그대로 쓰는 것이 가장 위험함
-                 * 가능한 경우 닉네임 키를 제거해 다음 로그인 또는 재발급 때 최신 DB 값으로 다시 생성되게 함
+                 * Redis 갱신 실패 시 예전 닉네임을 그대로 쓰는 것이 가장 위험
+                 * 가능한 경우 닉네임 키를 제거해 다음 로그인 또는 재발급 때 최신 DB 값으로 다시 생성되도록 처리
                  */
                 try {
-                    // delUserNick 업무 로직을 tokenRedisService에 위임함
+                    // delUserNick 업무 로직을 tokenRedisService에 위임
                     tokenRedisService.delUserNick(userNumb);
                 }
 
-                // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+                // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
                 catch (RuntimeException deleteException) {
                     // 실패 원인과 처리 대상을 오류 로그로 남김
                     log.error("Redis user nickname cleanup failed. userNumb={} failure={}", userNumb, LogSafe.getFailure(deleteException));
@@ -679,28 +679,28 @@ public class UserServiceImpl implements UserService {
             }
         };
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분
         if (TransactionSynchronizationManager.isSynchronizationActive()) {
 
             TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
                 /**
-                 * 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행함
+                 * 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행
                  *
                  * @author SeungHyeon.Kang
                  * @return 반환값이 없음
                  */
                 @Override
                 public void afterCommit() {
-                    // 검증 대상 작업을 실행함
+                    // 검증 대상 작업을 실행
                     updateUserNick.run();
                 }
             });
 
-            // 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행 결과를 반환함
+            // 현재 트랜잭션이 커밋된 후 예약된 후처리를 실행 결과를 반환
             return;
         }
 
-        // 검증 대상 작업을 실행함
+        // 검증 대상 작업을 실행
         updateUserNick.run();
     }
 }

@@ -32,7 +32,7 @@ import org.springframework.context.support.StaticMessageSource;
  * fileName       : LocalAuthServiceTest
  * author         : HanWon.Jang
  * date           : 2026-09-03
- * description    : 로컬 개발용 로그인의 계정 상태 검증과 세션 발급을 확인함
+ * description    : 로컬 개발용 로그인의 계정 상태 검증과 세션 발급을 확인
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -55,19 +55,19 @@ class LocalAuthServiceTest {
     private LocalAuthService localAuthService;
 
     /**
-     * 공통 인증 실패 응답에 사용할 테스트 메시지 소스를 초기화함
+     * 공통 인증 실패 응답에 사용할 테스트 메시지 소스를 초기화
      *
      * @author HanWon.Jang
      */
     @BeforeEach
     void setUpMessageSource() {
-        // 공통 결과 객체가 인증 실패 문구를 조회할 메시지 소스를 생성함
+        // 공통 결과 객체가 인증 실패 문구를 조회할 메시지 소스를 생성
         StaticMessageSource messageSource = new StaticMessageSource();
-        // 한국어 인증 실패 메시지를 테스트 메시지 소스에 등록함
+        // 한국어 인증 실패 메시지를 테스트 메시지 소스에 등록
         messageSource.addMessage("auth.common.fail", Locale.KOREAN, "인증에 실패했습니다.");
-        // 테스트 JVM 기본 언어에서도 인증 실패 메시지를 조회하도록 등록함
+        // 테스트 JVM 기본 언어에서도 인증 실패 메시지를 조회하도록 등록
         messageSource.addMessage("auth.common.fail", Locale.getDefault(), "인증에 실패했습니다.");
-        // 공통 응답이 테스트 메시지 소스를 사용하도록 연결함
+        // 공통 응답이 테스트 메시지 소스를 사용하도록 연결
         new MessageUtils().setMessageSource(messageSource);
     }
 
@@ -78,32 +78,32 @@ class LocalAuthServiceTest {
      */
     @Test
     void activeUserGetsSession() {
-        // 활성 회원의 DB 원본 정보를 구성함
+        // 활성 회원의 DB 원본 정보를 구성
         UserDto savedUser = getUser(Constant.USER_STAT_ACTIVE);
-        // 요청 회원 번호로 활성 회원이 조회되도록 구성함
+        // 요청 회원 번호로 활성 회원이 조회되도록 구성
         when(userMapper.getUserByNumb(101L)).thenReturn(savedUser);
-        // 활성 회원의 Access Token 발급 결과를 구성함
+        // 활성 회원의 Access Token 발급 결과를 구성
         when(jwtProvider.createAccessToken(eq(101L), eq(AuthConstant.ROLE_USER), anyString()))
                 .thenReturn("access-token");
-        // 활성 회원의 Refresh Token 발급 결과를 구성함
+        // 활성 회원의 Refresh Token 발급 결과를 구성
         when(jwtProvider.createRefreshToken(eq(101L), anyString())).thenReturn("refresh-token");
-        // Redis 로그인 세션 유지 시간을 구성함
+        // Redis 로그인 세션 유지 시간을 구성
         when(jwtProvider.getRefreshTokenValidSec()).thenReturn(3600L);
 
-        // 활성 회원 번호로 로컬 개발용 로그인을 요청함
+        // 활성 회원 번호로 로컬 개발용 로그인을 요청
         ResultData result = localAuthService.setLocalLogin(101L);
-        // 로그인 결과에 발급된 토큰 데이터를 조회함
+        // 로그인 결과에 발급된 토큰 데이터를 조회
         TokenDto token = (TokenDto) result.getData();
 
-        // 활성 회원 로그인이 공통 성공 코드로 처리되는지 확인함
+        // 활성 회원 로그인이 공통 성공 코드로 처리되는지 확인
         assertEquals(200, result.getCode());
-        // 발급한 Access Token이 브라우저 쿠키 전달 데이터에 포함되는지 확인함
+        // 발급한 Access Token이 브라우저 쿠키 전달 데이터에 포함되는지 확인
         assertEquals("access-token", token.getAccessToken());
-        // 발급한 Refresh Token이 브라우저 쿠키 전달 데이터에 포함되는지 확인함
+        // 발급한 Refresh Token이 브라우저 쿠키 전달 데이터에 포함되는지 확인
         assertEquals("refresh-token", token.getRefreshToken());
-        // 로컬 간편 로그인이 계정 재활성화로 표시되지 않는지 확인함
+        // 로컬 간편 로그인이 계정 재활성화로 표시되지 않는지 확인
         assertFalse(token.isAccountReactivated());
-        // DB 권한과 현재 상태를 사용한 Redis 로그인 세션이 생성되는지 확인함
+        // DB 권한과 현재 상태를 사용한 Redis 로그인 세션이 생성되는지 확인
         verify(tokenRedisService).setLoginUserInfo(
                 eq(101L)
               , anyString()
@@ -115,7 +115,7 @@ class LocalAuthServiceTest {
     }
 
     /**
-     * 활성 상태가 아닌 회원은 로컬 개발용 로그인으로 계정 제한을 우회하지 못함
+     * 비활성 회원의 로컬 개발용 로그인을 통한 계정 제한 우회 차단
      *
      * @author HanWon.Jang
      * @param userStat 로그인 차단을 확인할 회원 상태
@@ -123,39 +123,39 @@ class LocalAuthServiceTest {
     @ParameterizedTest
     @ValueSource(strings = {"WITHDRAWN", "DELETE_PENDING", "SUSPENDED"})
     void restrictedUserGetsFailure(String userStat) {
-        // 제한 상태 회원의 DB 원본 정보를 구성함
+        // 제한 상태 회원의 DB 원본 정보를 구성
         UserDto savedUser = getUser(userStat);
-        // 요청 회원 번호로 제한 상태 회원이 조회되도록 구성함
+        // 요청 회원 번호로 제한 상태 회원이 조회되도록 구성
         when(userMapper.getUserByNumb(101L)).thenReturn(savedUser);
 
-        // 제한 상태 회원 번호로 로컬 개발용 로그인을 요청함
+        // 제한 상태 회원 번호로 로컬 개발용 로그인을 요청
         ResultData result = localAuthService.setLocalLogin(101L);
 
-        // 제한 상태를 공통 인증 실패 코드로 처리해 계정 존재 여부를 노출하지 않는지 확인함
+        // 제한 상태를 공통 인증 실패 코드로 처리해 계정 존재 여부를 노출하지 않는지 확인
         assertEquals(1001, result.getCode());
-        // 차단된 로그인에서 JWT나 Redis 세션을 만들지 않는지 확인함
+        // 차단된 로그인에서 JWT나 Redis 세션을 만들지 않는지 확인
         verifyNoInteractions(jwtProvider, tokenRedisService);
     }
 
     /**
-     * 계정 상태별 로컬 로그인 검증에 사용할 회원 정보를 생성함
+     * 계정 상태별 로컬 로그인 검증에 사용할 회원 정보를 생성
      *
      * @author HanWon.Jang
      * @param userStat 구성할 회원 상태
      * @return 지정한 상태와 일반 사용자 권한을 가진 회원 정보
      */
     private UserDto getUser(String userStat) {
-        // 로그인 검증에 사용할 회원 DTO를 생성함
+        // 로그인 검증에 사용할 회원 DTO를 생성
         UserDto savedUser = new UserDto();
-        // 테스트 회원 번호를 설정함
+        // 테스트 회원 번호를 설정
         savedUser.setUserNumb(101L);
-        // DB에서 조회한 일반 사용자 권한을 설정함
+        // DB에서 조회한 일반 사용자 권한을 설정
         savedUser.setUserRole(AuthConstant.ROLE_USER);
-        // Redis 닉네임 캐시에 사용할 테스트 닉네임을 설정함
+        // Redis 닉네임 캐시에 사용할 테스트 닉네임을 설정
         savedUser.setUserNick("테스트 사용자");
-        // 활성 또는 제한 상태 검증에 사용할 회원 상태를 설정함
+        // 활성 또는 제한 상태 검증에 사용할 회원 상태를 설정
         savedUser.setUserStat(userStat);
-        // 상태 검증에 사용할 회원 정보를 반환함
+        // 상태 검증에 사용할 회원 정보를 반환
         return savedUser;
     }
 }

@@ -8,7 +8,7 @@ import lombok.Data;
  * fileName       : ProfileImageDraftDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-06
- * description    : 프로필 또는 배경 이미지 임시 저장 결과를 전달함
+ * description    : 프로필 또는 배경 이미지 임시 저장 결과를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

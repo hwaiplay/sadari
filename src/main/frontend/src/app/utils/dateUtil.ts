@@ -1,13 +1,13 @@
 /**
  * src/main/frontend/src/app/utils/dateUtil.ts
- * 프론트엔드 화면, API, 훅 등 시스템 전반에서 공통으로 사용하는 날짜 변환 및 포맷팅 유틸리티임
+ * 프론트엔드 화면, API, 훅 등 시스템 전반에서 공통으로 사용하는 날짜 변환 및 포맷팅 유틸리티
  *
  * @author HanWon.Jang
  */
 import { getMessageLocale } from "@/app/messages/message";
 
 /**
- * 숫자를 전달받아 두 자리의 문자열로 패딩 처리함
+ * 숫자를 전달받아 두 자리의 문자열로 패딩 처리
  *
  * @author HanWon.Jang
  * @param value 패딩 처리를 수행할 10진수 숫자
@@ -19,7 +19,7 @@ export function padTwoDigits(value: number) {
 }
 
 /**
- * Date 객체를 YYYY-MM-DD 형식의 문자열로 변환함
+ * Date 객체를 YYYY-MM-DD 형식의 문자열로 변환
  *
  * @author HanWon.Jang
  * @param date 포맷팅 대상 Date 객체
@@ -31,7 +31,7 @@ export function formatDateValue(date: Date) {
 }
 
 /**
- * Date 객체를 YYYY-MM 형식의 문자열로 변환함
+ * Date 객체를 YYYY-MM 형식의 문자열로 변환
  *
  * @author HanWon.Jang
  * @param date 포맷팅 대상 Date 객체
@@ -43,8 +43,8 @@ export function formatYearMonthValue(date: Date) {
 }
 
 /**
- * yyyy-MM-dd 형식의 날짜 문자열을 yyyy.MM.dd 형식으로 변환함
- * 마이페이지와 소셜 프로필의 요약 목록처럼 짧은 날짜 표시가 필요한 영역에서 사용함
+ * yyyy-MM-dd 형식의 날짜 문자열을 yyyy.MM.dd 형식으로 변환
+ * 마이페이지와 소셜 프로필의 요약 목록처럼 짧은 날짜 표시가 필요한 영역에서 사용
  *
  * @author HanWon.Jang
  * @param value yyyy-MM-dd 형식의 날짜 문자열
@@ -66,8 +66,8 @@ export function formatDashedDateToDot(value?: string) {
 }
 
 /**
- * 두 날짜 사이의 일수 차이를 계산함
- * 목표 기간 계산에서 시간대나 현재 시각의 영향을 줄이기 위해 로컬 자정 기준 날짜만 비교함
+ * 두 날짜 사이의 일수 차이를 계산
+ * 목표 기간 계산에서 시간대나 현재 시각의 영향을 줄이기 위해 로컬 자정 기준 날짜만 비교
  *
  * @author HanWon.Jang
  * @param startValue 시작일 문자열
@@ -97,7 +97,7 @@ export function getDateDiffDays(startValue?: string, endValue?: string) {
 }
 
 /**
- * 오늘 기준 목표 종료일까지 남은 일수를 계산함
+ * 오늘 기준 목표 종료일까지 남은 일수를 계산
  * 종료일 당일부터는 남은 기간이 0일로 계산되어 목표기간 경과 안내 대상으로 처리됨
  *
  * @author HanWon.Jang
@@ -110,7 +110,7 @@ export function getRemainDaysUntil(endValue?: string) {
 }
 
 /**
- * 전체 목표기간을 100%로 보고 남은 기간 비율을 계산함
+ * 전체 목표기간을 100%로 보고 남은 기간 비율을 계산
  * 남은 기간이 짧아질수록 낮은 비율을 반환하므로 진행 막대와 같은 색상 체계를 그대로 사용할 수 있음
  *
  * @author HanWon.Jang
@@ -127,27 +127,27 @@ export function getRemainPeriodRate(startValue?: string, endValue?: string) {
 }
 
 /**
- * 4자리, 6자리 또는 8자리 숫자 날짜를 원본 정밀도에 맞게 해석함
+ * 4자리, 6자리 또는 8자리 숫자 날짜를 원본 정밀도에 맞게 해석
  *
  * @author HanWon.Jang
  * @param value 파싱할 압축 날짜 문자열 (예: "2026", "202607", "20260715")
  * @return 연, 월, 일 정보와 원본 정밀도 및 Date 객체를 포함하는 값 또는 유효하지 않을 때 null
  */
 function parseCompactDateParts(value?: string) {
-  // 전달된 값이 없는 경우 바로 연산을 중단하여 무의미한 정규식 파싱을 차단함
+  // 전달된 값이 없는 경우 바로 연산을 중단하여 무의미한 정규식 파싱을 차단
   if (!value) {
     return null;
   }
 
   const compactDate = value.replace(/\D/g, "");
 
-  // Google Books 부분 날짜와 기존 연월일 외 길이는 파싱 대상에서 제외함
+  // Google Books 부분 날짜와 기존 연월일 외 길이는 파싱 대상에서 제외
   if (![4, 6, 8].includes(compactDate.length)) {
     return null;
   }
 
   const year = Number(compactDate.slice(0, 4));
-  // 유효한 연도가 아니면 날짜 표시 대상에서 제외함
+  // 유효한 연도가 아니면 날짜 표시 대상에서 제외
   if (!year) {
     return null;
   }
@@ -158,7 +158,7 @@ function parseCompactDateParts(value?: string) {
   }
 
   const month = Number(compactDate.slice(4, 6));
-  // 달력 범위를 벗어난 월은 날짜 표시 대상에서 제외함
+  // 달력 범위를 벗어난 월은 날짜 표시 대상에서 제외
   if (month < 1 || month > 12) {
     return null;
   }
@@ -171,7 +171,7 @@ function parseCompactDateParts(value?: string) {
   const day = Number(compactDate.slice(6, 8));
   const date = new Date(year, month - 1, day);
 
-  // JS Date 객체의 오토롤백(예: 2월 31일 입력 시 3월 3일로 넘어가는 현상)을 필터링하여 실제 유효한 날짜인지 재검증함
+  // JS Date 객체의 오토롤백(예: 2월 31일 입력 시 3월 3일로 넘어가는 현상)을 필터링하여 실제 유효한 날짜인지 재검증
   if (
       date.getFullYear() !== year ||
       date.getMonth() !== month - 1 ||
@@ -184,19 +184,19 @@ function parseCompactDateParts(value?: string) {
 }
 
 /**
- * 영어 서수 날짜 표기를 위한 접미사(st, nd, rd, th)를 구함
+ * 영어 서수 날짜 표기를 위한 접미사(st, nd, rd, th) 계산
  *
  * @author HanWon.Jang
  * @param day 서수를 구할 일자 (1~31)
  * @return 영문 날짜용 서수 접미사
  */
 function getEnglishOrdinalSuffix(day: number) {
-  // 11일, 12일, 13일은 예외적으로 th 접미사를 사용하므로 사전 분기 차단함
+  // 11일, 12일, 13일은 예외적으로 th 접미사를 사용하므로 사전 분기 차단
   if (day >= 11 && day <= 13) {
     return "th";
   }
 
-  // 일 단위 마지막 자릿수에 부합하는 영문 서수 전용 접미사를 반환함
+  // 일 단위 마지막 자릿수에 부합하는 영문 서수 전용 접미사를 반환
   switch (day % 10) {
     case 1:
       return "st";
@@ -210,7 +210,7 @@ function getEnglishOrdinalSuffix(day: number) {
 }
 
 /**
- * 압축 날짜 문자열을 원본 정밀도에 맞는 한국어 날짜로 변환함
+ * 압축 날짜 문자열을 원본 정밀도에 맞는 한국어 날짜로 변환
  *
  * @author HanWon.Jang
  * @param value 4자리, 6자리 또는 8자리 날짜 문자열
@@ -228,7 +228,7 @@ export function formatCompactDateToKorean(value?: string) {
     return value;
   }
 
-  // 연도만 제공된 값은 연도까지만 표시함
+  // 연도만 제공된 값은 연도까지만 표시
   if (parsedDate.month === null) {
     return `${parsedDate.year}\uB144`;
   }
@@ -242,7 +242,7 @@ export function formatCompactDateToKorean(value?: string) {
 }
 
 /**
- * 압축 날짜 문자열을 원본 정밀도에 맞는 영어 날짜로 변환함
+ * 압축 날짜 문자열을 원본 정밀도에 맞는 영어 날짜로 변환
  *
  * @author HanWon.Jang
  * @param value 4자리, 6자리 또는 8자리 날짜 문자열
@@ -260,12 +260,12 @@ export function formatCompactDateEnglish(value?: string) {
     return value;
   }
 
-  // 연도만 제공된 값은 연도까지만 표시함
+  // 연도만 제공된 값은 연도까지만 표시
   if (parsedDate.month === null) {
     return String(parsedDate.year);
   }
 
-  // 다국어 확장을 고려하여 바닐라 JS의 Intl API를 통해 영문 전체 월 명칭을 동적으로 획득함
+  // 다국어 확장을 고려하여 바닐라 JS의 Intl API를 통해 영문 전체 월 명칭을 동적으로 획득
   const monthName = new Intl.DateTimeFormat("en", { month: "long" }).format(
     new Date(parsedDate.year, parsedDate.month - 1, 1),
   );
@@ -279,7 +279,7 @@ export function formatCompactDateEnglish(value?: string) {
 }
 
 /**
- * 계정 표시 언어에 맞춰 부분 날짜를 포함한 압축 날짜를 동적으로 포맷팅함
+ * 계정 표시 언어에 맞춰 부분 날짜를 포함한 압축 날짜를 동적으로 포맷팅
  *
  * @author HanWon.Jang
  * @param value 4자리, 6자리 또는 8자리 날짜 문자열
@@ -301,7 +301,7 @@ export const formatCompactDate = (value?: string) => {
 };
 
 /**
- * 하이픈으로 구분된 날짜 문자열을 Date 객체로 정적 파싱함
+ * 하이픈으로 구분된 날짜 문자열을 Date 객체로 정적 파싱
  *
  * @author HanWon.Jang
  * @param value "YYYY-MM-DD" 포맷의 날짜 문자열
@@ -314,7 +314,7 @@ export function parseLocalDate(value: string) {
 }
 
 /**
- * 날짜 문자열을 파싱하되, 파싱에 실패하거나 빈 값일 경우 지정된 기본(Fallback) 날짜를 대체 반환함
+ * 날짜 문자열을 파싱하되, 파싱에 실패하거나 빈 값일 경우 지정된 기본(Fallback) 날짜를 대체 반환
  *
  * @author HanWon.Jang
  * @param value "YYYY-MM-DD" 포맷의 날짜 문자열 (Null 또는 빈 값 허용)
@@ -329,7 +329,7 @@ export function parseDateValue(value?: string, fallbackDate = new Date()) {
 
   const [year, month, day] = value.split("-").map(Number);
 
-  // 연, 월, 일 요소 중 정상적인 데이터가 파싱되지 않을 경우 예외 복구 로직을 수행함
+  // 연, 월, 일 요소 중 정상적인 데이터가 파싱되지 않을 경우 예외 복구 로직을 수행
   if (!year || !month || !day) {
     return fallbackDate;
   }
@@ -338,7 +338,7 @@ export function parseDateValue(value?: string, fallbackDate = new Date()) {
 }
 
 /**
- * 두 Date 객체가 동일한 연, 월, 일에 속해있는지 논리 비교를 수행함
+ * 두 Date 객체가 동일한 연, 월, 일에 속해있는지 논리 비교를 수행
  *
  * @author HanWon.Jang
  * @param a 비교할 첫 번째 Date 객체

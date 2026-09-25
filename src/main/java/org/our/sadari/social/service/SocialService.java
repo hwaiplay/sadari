@@ -7,7 +7,7 @@ import org.our.sadari.social.dto.SocialDto;
  * fileName       : SocialService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-22
- * description    : 사용자 검색과 팔로우 및 좋아요 업무 계약을 정의함
+ * description    : 사용자 검색과 팔로우 및 좋아요 업무 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -20,7 +20,7 @@ import org.our.sadari.social.dto.SocialDto;
 public interface SocialService {
 
     /**
-     * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회함
+     * 로그인 사용자와 상대 사용자 사이의 팔로우 버튼명을 조회
      *
      * @author SeungHyeon.Kang
      * @param req 로그인 사용자 번호와 상대 사용자 번호
@@ -29,7 +29,7 @@ public interface SocialService {
     ResultData getFollowStatus(SocialDto.FollowDto req);
 
     /**
-     * 로그인 사용자가 상대 사용자를 팔로우하도록 관계를 저장함
+     * 로그인 사용자가 상대 사용자를 팔로우하도록 관계를 저장
      *
      * @author SeungHyeon.Kang
      * @param req 로그인 사용자 번호와 상대 사용자 번호
@@ -38,7 +38,7 @@ public interface SocialService {
     ResultData setFollow(SocialDto.FollowDto req);
 
     /**
-     * 로그인 사용자가 상대 사용자를 팔로우 중인 관계를 삭제함
+     * 로그인 사용자가 상대 사용자를 팔로우 중인 관계를 삭제
      *
      * @author SeungHyeon.Kang
      * @param req 로그인 사용자 번호와 상대 사용자 번호
@@ -47,7 +47,7 @@ public interface SocialService {
     ResultData delFollow(SocialDto.FollowDto req);
 
     /**
-     * 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소함
+     * 대상 유형과 대상 번호 기준으로 좋아요를 등록하거나 취소
      *
      * @author SeungHyeon.Kang
      * @param req 사용자 번호, 대상 유형, 대상 번호와 화면이 조회한 대상 작성자 번호
@@ -56,8 +56,8 @@ public interface SocialService {
     ResultData setLike(SocialDto.LikeDto req);
 
     /**
-     * 프로필 상단에 표시할 social 통계 값을 조회함
-     * 다른 사용자 프로필은 공개 독후감 조건을 전달하고, 본인 화면은 조건 없이 전체 독후감을 집계함
+     * 프로필 상단에 표시할 social 통계 값을 조회
+     * 다른 사용자 프로필은 공개 독후감 조건을 전달하고, 본인 화면은 조건 없이 전체 독후감을 집계
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 통계를 조회하는 로그인 사용자 번호
@@ -67,8 +67,8 @@ public interface SocialService {
     ResultData getProfileStats(Long loginUserNumb, Long userNumb);
 
     /**
-     * 마이페이지 기존 호출부 호환을 위해 프로필 통계 조회를 위임함
-     * 실제 구현 기준은 getProfileStats로 통일하여 다른 사람 프로필에서도 같은 집계를 재사용함
+     * 마이페이지 기존 호출부 호환을 위해 프로필 통계 조회를 위임
+     * 실제 구현 기준은 getProfileStats로 통일하여 다른 사람 프로필에서도 같은 집계를 재사용
      *
      * @author SeungHyeon.Kang
      * @param userNumb 조회할 사용자 번호
@@ -77,7 +77,7 @@ public interface SocialService {
     ResultData getMyPageProfileStats(Long userNumb);
 
     /**
-     * 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 목록을 조회함
+     * 닉네임 검색어와 로그인 사용자 관계를 기준으로 활성 사용자 목록을 조회
      *
      * @author HanWon.Jang
      * @param loginUserNumb 로그인 사용자 번호
@@ -88,8 +88,8 @@ public interface SocialService {
     ResultData getUserSearchList(Long loginUserNumb, String keyword, int page);
 
     /**
-     * 특정 사용자가 팔로우하는 사용자 목록을 조회함
-     * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시함
+     * 특정 사용자가 팔로우하는 사용자 목록을 조회
+     * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -101,8 +101,8 @@ public interface SocialService {
     ResultData getFollowingList(Long loginUserNumb, Long userNumb, String keyword, int page);
 
     /**
-     * 특정 사용자를 팔로우하는 사용자 목록을 조회함
-     * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시함
+     * 특정 사용자를 팔로우하는 사용자 목록을 조회
+     * 로그인 사용자 기준 팔로우 상태를 함께 내려 모달에서 버튼명을 바로 표시
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호
@@ -114,7 +114,7 @@ public interface SocialService {
     ResultData getFollowerList(Long loginUserNumb, Long userNumb, String keyword, int page);
 
     /**
-     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회함
+     * 특정 대상에 좋아요를 등록한 활성 사용자 목록을 조회
      *
      * @author SeungHyeon.Kang
      * @param loginUserNumb 로그인 사용자 번호

@@ -1,5 +1,5 @@
 /**
- * 공통 헤더, 본문, 하단 네비게이션을 배치하고 페이지 전환 애니메이션을 적용함
+ * 공통 헤더, 본문, 하단 네비게이션을 배치하고 페이지 전환 애니메이션을 적용
  *
  * @author HanWon.Jang
  */
@@ -32,7 +32,7 @@ type HeaderTitleState = {
 };
 
 /**
- * 하단 탭 전용 방향이 없을 때 기존 라우터 이력 기반 화면 전환을 유지함
+ * 하단 탭 전용 방향이 없을 때 기존 라우터 이력 기반 화면 전환을 유지
  *
  * @author HanWon.Jang
  * @param bottomNavDirection 검증된 하단 탭 진입 방향
@@ -41,30 +41,30 @@ type HeaderTitleState = {
  */
 const getTransitionClass = (bottomNavDirection: BottomNavDirection | null, isHistoryPop: boolean): string => {
 
-  // 왼쪽 탭으로 이동하면 기존 역방향 진입 클래스를 사용함
+  // 왼쪽 탭으로 이동하면 기존 역방향 진입 클래스를 사용
   if (bottomNavDirection === "back") {
-    // 화면이 왼쪽에서 진입하는 기존 클래스를 반환함
+    // 화면이 왼쪽에서 진입하는 기존 클래스를 반환
     return pageTransitionBack;
   }
 
-  // 오른쪽 탭으로 이동하면 기존 정방향 진입 클래스를 사용함
+  // 오른쪽 탭으로 이동하면 기존 정방향 진입 클래스를 사용
   if (bottomNavDirection === "forward") {
-    // 화면이 오른쪽에서 진입하는 기존 클래스를 반환함
+    // 화면이 오른쪽에서 진입하는 기존 클래스를 반환
     return pageTransitionForward;
   }
 
-  // 하단 탭 외의 브라우저 이력 이동은 기존 역방향 정책을 유지함
+  // 하단 탭 외의 브라우저 이력 이동은 기존 역방향 정책을 유지
   if (isHistoryPop) {
-    // 기존 POP 화면 전환 클래스를 반환함
+    // 기존 POP 화면 전환 클래스를 반환
     return pageTransitionBack;
   }
 
-  // 일반 링크와 프로그램 이동은 기존 정방향 정책을 유지함
+  // 일반 링크와 프로그램 이동은 기존 정방향 정책을 유지
   return pageTransitionForward;
 };
 
 /**
- * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용함
+ * 레이아웃 영역을 렌더링하고 라우터 이동 방향에 맞는 화면 진입 효과를 적용
  *
  * @author HanWon.Jang
  * @param props 레이아웃 표시 옵션
@@ -83,14 +83,14 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   const headerTitle = headerTitleState.pathname === location.pathname
     ? headerTitleState.title
     : null;
-  // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회함
+  // 하단 탭 위치 상태가 현재 목적지와 일치할 때만 전용 방향을 조회
   const bottomNavDirection = getBottomNavDirection(
     location.state,
     location.pathname,
     navigationType === "POP",
   );
   const shouldAnimate = hasMountedRef.current || bottomNavDirection !== null;
-  // 하단 탭 전용 방향이 없으면 기존 PUSH 및 POP 전환 클래스를 선택함
+  // 하단 탭 전용 방향이 없으면 기존 PUSH 및 POP 전환 클래스를 선택
   const transitionClassName = getTransitionClass(
     bottomNavDirection,
     navigationType === "POP",
@@ -102,7 +102,7 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   }, []);
 
   /**
-   * 헤더 아래 고정 영역이 스크롤 중 헤더와 같은 속도로 이동하게 거리를 적용함
+   * 헤더 아래 고정 영역이 스크롤 중 헤더와 같은 속도로 이동하게 거리를 적용
    *
    * @author SeungHyeon.Kang
    * @param headerOffset 헤더가 화면 위로 이동한 거리
@@ -110,13 +110,13 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
    */
   const handleHeaderOffsetChange = useCallback((headerOffset: number): void => {
 
-    // 레이아웃 요소가 준비되지 않았으면 위치 갱신을 종료함
+    // 레이아웃 요소가 준비되지 않았으면 위치 갱신을 종료
     if (!layoutRef.current) {
-      // 헤더 아래 영역의 현재 위치를 유지함
+      // 헤더 아래 영역의 현재 위치를 유지
       return;
     }
 
-    // 하위 고정 영역이 공유할 헤더 이동 거리 CSS 변수를 갱신함
+    // 하위 고정 영역이 공유할 헤더 이동 거리 CSS 변수를 갱신
     layoutRef.current.style.setProperty(
       "--header-scroll-offset",
       `${headerOffset}px`,
@@ -124,7 +124,7 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
   }, []);
 
   /**
-   * 현재 경로의 동적 제목을 공통 헤더 상태에 반영함
+   * 현재 경로의 동적 제목을 공통 헤더 상태에 반영
    *
    * @author SeungHyeon.Kang
    * @param title 화면에서 전달한 동적 헤더 제목
@@ -132,14 +132,14 @@ const Layout = ({ isMainLayout = true }: LayoutProps) => {
    */
   const setHeaderTitle = useCallback<SetHeaderTitle>((title): void => {
 
-    // 다른 경로의 제목 정리와 섞이지 않도록 현재 경로를 제목과 함께 저장함
+    // 다른 경로의 제목 정리와 섞이지 않도록 현재 경로를 제목과 함께 저장
     setHeaderTitleState({
       pathname: location.pathname,
       title,
     });
   }, [location.pathname]);
 
-  // 현재 경로의 모든 하위 화면이 같은 헤더 제목 연결 함수를 공유함
+  // 현재 경로의 모든 하위 화면이 같은 헤더 제목 연결 함수를 공유
   const routeOutlet = <Outlet context={setHeaderTitle} />;
 
   return (

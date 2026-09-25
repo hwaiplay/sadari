@@ -11,38 +11,38 @@ export type ReadingHistoryOverview = ClubReadingHistory & {
 };
 
 /**
- * 이전 독서 기록 응답 페이지에서 화면에 표시할 회차 목록을 추출함
+ * 이전 독서 기록 응답 페이지에서 화면에 표시할 회차 목록을 추출
  *
  * @author HanWon.Jang
  * @param page 이전 독서 기록 응답 페이지
  * @return 응답 페이지에 포함된 종료 회차 목록
  */
 const getHistoryPageList = (page: ReadingHistoryPage): ClubReadingHistory[] => {
-  // 무한 조회 응답을 단일 목록으로 연결할 현재 페이지 목록을 반환함
+  // 무한 조회 응답을 단일 목록으로 연결할 현재 페이지 목록을 반환
   return page.list;
 };
 
 /**
- * 이전 독서 기록 페이지의 경로, 목록 조회와 선택 회차 결과 상태를 관리함
+ * 이전 독서 기록 페이지의 경로, 목록 조회와 선택 회차 결과 상태를 관리
  *
  * @author HanWon.Jang
  * @return 이전 독서 기록 페이지 표시와 이벤트 처리 상태
  */
 export const useReadingHistoryPage = () => {
-  // 서버 접근 검증에 사용할 모임 번호를 경로에서 조회함
+  // 서버 접근 검증에 사용할 모임 번호를 경로에서 조회
   const { clubNumb: clubNumbParam } = useParams();
   const clubNumb = Number(clubNumbParam);
   const isValidRoute = Number.isFinite(clubNumb) && clubNumb > 0;
-  // 선택한 독서 목표 결과 페이지로 이동할 라우터 함수를 조회함
+  // 선택한 독서 목표 결과 페이지로 이동할 라우터 함수를 조회
   const navigate = useNavigate();
-  // 활성 모임원과 공개 중인 활성 모임 조회자에게 허용된 종료 회차를 조회함
+  // 활성 모임원과 공개 중인 활성 모임 조회자에게 허용된 종료 회차를 조회
   const historyQuery = useReadingHistory(clubNumb, isValidRoute);
 
-  // 조회된 서버 페이지를 최신 회차 순서의 단일 목록으로 연결함
+  // 조회된 서버 페이지를 최신 회차 순서의 단일 목록으로 연결
   const historyList = (historyQuery.data?.pages.flatMap(getHistoryPageList) ?? []) as ReadingHistoryOverview[];
 
   /**
-   * 이전 독서 기록 카드에서 확인할 회차를 선택함
+   * 이전 독서 기록 카드에서 확인할 회차를 선택
    *
    * @author HanWon.Jang
    * @param history 목표 결과 접근 권한을 포함한 완료 회차 기록
@@ -51,25 +51,25 @@ export const useReadingHistoryPage = () => {
   const handleSelectReading = (history: ReadingHistoryOverview): void => {
     // 비회원에게 제공된 요약 카드에서는 목표 결과 상세로 이동하지 않음
     if (!history.resultAccessible) {
-      // 선택 이벤트를 종료함
+      // 선택 이벤트를 종료
       return;
     }
-    // 모임과 회차 번호를 포함한 독서 목표 결과 페이지로 이동함
+    // 모임과 회차 번호를 포함한 독서 목표 결과 페이지로 이동
     navigate(`/reading-clubs/history/detail/${clubNumb}/${history.rondNumb}`);
   };
 
   /**
-   * 이전 독서 기록 목록의 다음 페이지를 이어서 조회함
+   * 이전 독서 기록 목록의 다음 페이지를 이어서 조회
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const handleLoadMore = (): void => {
-    // 하단 감지 시 다음 종료 회차 페이지를 비동기로 조회함
+    // 하단 감지 시 다음 종료 회차 페이지를 비동기로 조회
     void historyQuery.fetchNextPage();
   };
 
-  // 페이지가 화면 상태별 표시를 결정할 조회와 이벤트 처리값을 반환함
+  // 페이지가 화면 상태별 표시를 결정할 조회와 이벤트 처리값을 반환
   return {
     historyList,
     historyQuery,

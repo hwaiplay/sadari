@@ -24,7 +24,7 @@ const ClubBookVotePage = () => {
     handleVote,
   } = useClubBookVotePage();
 
-  // 서버 추천 목록과 추천·삭제·투표 명령을 반환함
+  // 서버 추천 목록과 추천·삭제·투표 명령을 반환
   return (
     <main className={styles.page}>
       <section className={styles.voteSummary}>
@@ -57,7 +57,7 @@ const ClubBookVotePage = () => {
             {candidates.map((candidate) => {
               const selected = candidate.recmNumb === selectedRecommendation;
               const voteRate = totalVoteCount > 0 ? Math.round((candidate.voteCnt / totalVoteCount) * 100) : 0;
-              // 투표 완료 여부에 따라 후보 선택 또는 득표율 카드를 반환함
+              // 투표 완료 여부에 따라 후보 선택 또는 득표율 카드를 반환
               return <article className={styles.candidateCard} data-selected={selected} key={candidate.recmNumb}>
                 {votePage?.hasVoted ? (
                   <div className={styles.candidateResult}>

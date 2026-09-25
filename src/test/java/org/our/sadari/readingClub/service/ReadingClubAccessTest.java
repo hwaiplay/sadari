@@ -34,7 +34,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : ReadingClubAccessTest
  * author         : SeungHyeon.Kang
  * date           : 2026-08-24
- * description    : 비공개 독서 모임 상세의 활성 회원 접근 경계를 검증함
+ * description    : 비공개 독서 모임 상세의 활성 회원 접근 경계를 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -75,46 +75,46 @@ class ReadingClubAccessTest {
     // 독서 모임 접근 정책 테스트 대상
     private ReadingClubServiceImpl readingClubService;
 
-    /** 각 테스트에 독립된 독서 모임 서비스를 생성함 */
+    /** 각 테스트에 독립된 독서 모임 서비스를 생성 */
     @BeforeEach
     void setUp() {
-        // 실패 응답에서 사용할 서버 공통 메시지 소스를 생성함
+        // 실패 응답에서 사용할 서버 공통 메시지 소스를 생성
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        // 서버 공통 메시지 프로퍼티를 테스트 조회 기준으로 설정함
+        // 서버 공통 메시지 프로퍼티를 테스트 조회 기준으로 설정
         messageSource.setBasename("messages");
-        // 한글 메시지 원문이 손상되지 않도록 인코딩을 설정함
+        // 한글 메시지 원문이 손상되지 않도록 인코딩을 설정
         messageSource.setDefaultEncoding("UTF-8");
-        // ResultData 실패 응답이 공통 메시지 소스를 사용하도록 초기화함
+        // ResultData 실패 응답이 공통 메시지 소스를 사용하도록 초기화
         new MessageUtils().setMessageSource(messageSource);
 
-        // 독서 모임 서비스 단위 테스트 대상을 생성함
+        // 독서 모임 서비스 단위 테스트 대상을 생성
         readingClubService = new ReadingClubServiceImpl(
                 readingClubMapper, readingClubMembershipMapper, badWordDetectionService
               , alimService, bookMapper, reportMapper
               , userBlockService, codeUtil, clubChatViewService);
     }
 
-    /** 초대 관계가 활성 회원 조회에서 제외되면 비공개 상세 접근을 거절함 */
+    /** 초대 관계가 활성 회원 조회에서 제외되면 비공개 상세 접근을 거절 */
     @Test
     void privateClubRejectsInvite() {
-        // SQL에서 초대 관계가 제외된 비공개 모임 조회 결과를 구성함
+        // SQL에서 초대 관계가 제외된 비공개 모임 조회 결과를 구성
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         club.setClubNumb(10L);
         club.setClubVisb("PRIVATE");
         when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
 
-        // 초대 상태 사용자가 비공개 모임 상세를 조회함
+        // 초대 상태 사용자가 비공개 모임 상세를 조회
         ResultData result = readingClubService.getClubDtl(20L, 10L);
 
-        // 접근 거절과 관계 데이터 미조회를 검증함
+        // 접근 거절과 관계 데이터 미조회를 검증
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
         verify(readingClubMapper, never()).getClubCategoryList(10L);
     }
 
-    /** 활성 회원은 비공개 모임 상세를 정상 조회함 */
+    /** 활성 회원은 비공개 모임 상세를 정상 조회 */
     @Test
     void privateClubAllowsActive() {
-        // 활성 회원 관계를 가진 비공개 모임을 구성함
+        // 활성 회원 관계를 가진 비공개 모임을 구성
         ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
         club.setClubNumb(10L);
         club.setClubVisb("PRIVATE");
@@ -123,16 +123,16 @@ class ReadingClubAccessTest {
         when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
         when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of());
 
-        // 활성 회원이 비공개 모임 상세를 조회함
+        // 활성 회원이 비공개 모임 상세를 조회
         ResultData result = readingClubService.getClubDtl(20L, 10L);
 
-        // 정상 응답과 관계 데이터 조회를 검증함
+        // 정상 응답과 관계 데이터 조회를 검증
         assertEquals(200, result.getCode());
         assertEquals(club, result.getData());
         verify(readingClubMapper).getClubCategoryList(10L);
     }
 
-    /** 상세 SQL이 초대 관계를 활성 회원으로 취급하지 않는지 검증함 */
+    /** 상세 SQL이 초대 관계를 활성 회원으로 취급하지 않는지 검증 */
     @Test
     void mapperFiltersInviteState() throws IOException {
         // 빌드 산출물에 포함된 독서 모임 Mapper XML을 엶
@@ -140,13 +140,13 @@ class ReadingClubAccessTest {
         InputStream resource = getClass().getClassLoader().getResourceAsStream(resourcePath);
         assertNotNull(resource);
 
-        // 줄바꿈과 들여쓰기를 제거해 활성 회원 Join 조건을 안정적으로 비교함
+        // 줄바꿈과 들여쓰기를 제거해 활성 회원 Join 조건을 안정적으로 비교
         String mapperXml;
         try (resource) {
             mapperXml = new String(resource.readAllBytes(), StandardCharsets.UTF_8).replaceAll("\\s+", " ");
         }
 
-        // 로그인 사용자의 관계 Join이 활성 회원 상태로 제한되는지 검증함
+        // 로그인 사용자의 관계 Join이 활성 회원 상태로 제한되는지 검증
         assertTrue(mapperXml.contains("LEFT JOIN TB_CLMEMX MINE "
                 + "ON MINE.CLUB_NUMB = CLUB.CLUB_NUMB "
                 + "AND MINE.USER_NUMB = #{userNumb} "

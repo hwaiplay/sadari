@@ -2,7 +2,7 @@ import {globalStyle, style} from "@vanilla-extract/css";
 import {vars} from "@/app/styles/tokens.css";
 import * as reportListStyles from "@/components/ReportList/ReportListView.css";
 
-// 피드 페이지의 공통 너비와 상하 여백을 정의함
+// 피드 페이지의 공통 너비와 상하 여백을 정의
 export const page = style({
   width: "100%",
   maxWidth: "600px",
@@ -11,7 +11,7 @@ export const page = style({
   boxSizing: "border-box",
 });
 
-// 공통 Container 여백을 상쇄해 홈과 같은 화면 위치에 검색 입력을 배치함
+// 공통 Container 여백을 상쇄해 홈과 같은 화면 위치에 검색 입력을 배치
 export const userSearchBar = style({
   // width: "calc(100% + 32px)",
   // marginLeft: "-16px",
@@ -19,31 +19,31 @@ export const userSearchBar = style({
   padding: 0,
 });
 
-// 피드 검색어 지우기 버튼을 검색 아이콘과 분리하고 기본 크기보다 조금 크게 표시함
+// 피드 검색어 지우기 버튼을 검색 아이콘과 분리하고 기본 크기보다 조금 크게 표시
 globalStyle(`${userSearchBar} input[type="search"]::-webkit-search-cancel-button`, {
   marginRight: "6px",
   transform: "scale(1.2)",
   cursor: "pointer",
 });
 
-// 활성 사용자 검색의 로딩과 목록 및 추가 조회 영역을 세로로 배치함
+// 활성 사용자 검색의 로딩과 목록 및 추가 조회 영역을 세로로 배치
 export const userSearchResults = style({
   minHeight: "120px",
 });
 
-// 마이페이지 관계 목록과 같은 사용자 행을 페이지 흐름에 누적함
+// 마이페이지 관계 목록과 같은 사용자 행을 페이지 흐름에 누적
 export const userSearchList = style({
   display: "flex",
   flexDirection: "column",
 });
 
-// 피드 카드가 일정한 간격으로 누적되는 목록 배치를 정의함
+// 피드 카드가 일정한 간격으로 누적되는 목록 배치를 정의
 export const list = style({
   display: "grid",
   gap: "24px"
 });
 
-// 피드 유형별 콘텐츠를 담는 공통 카드 표면을 정의함
+// 피드 유형별 콘텐츠를 담는 공통 카드 표면을 정의
 export const card = style({
   position: "relative",
   overflow: "hidden",
@@ -53,7 +53,7 @@ export const card = style({
   boxSizing: "border-box",
 });
 
-// 피드 작성자 정보를 카드 상단에 배치하는 영역을 정의함
+// 피드 작성자 정보를 카드 상단에 배치하는 영역을 정의
 export const cardHeader = style({
   display: "flex",
   alignItems: "center",
@@ -64,18 +64,18 @@ export const cardHeader = style({
 // 독후감 카드의 작성자와 도서 정보 사이 피그마 간격
 export const reportHeader = style({paddingBottom: "16px"});
 
-// 다른 사용자 피드의 신고 및 차단 메뉴가 카드 우측 상단에 고정되도록 정의함
+// 다른 사용자 피드의 신고 및 차단 메뉴가 카드 우측 상단에 고정되도록 정의
 export const actionMenuWrap = style({
   display: "flex",
   flexShrink: 0,
 });
 
-// 다른 사람 독후감 카드와 같은 가로 점 세 개 아이콘 방향을 적용함
+// 다른 사람 독후감 카드와 같은 가로 점 세 개 아이콘 방향을 적용
 export const actionMenuTriggerIcon = style({
   transform: "rotate(90deg)",
 });
 
-// 피드 작성자 프로필로 이동하는 전체 너비 버튼 상태를 정의함
+// 피드 작성자 프로필로 이동하는 전체 너비 버튼 상태를 정의
 export const authorButton = style({
   display: "flex",
   flexDirection: "column",

@@ -11,7 +11,7 @@ import org.our.sadari.book.dto.PopularBookDto;
  * fileName       : BookMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 도서 데이터베이스 접근 메서드를 정의함
+ * description    : 도서 데이터베이스 접근 메서드를 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -22,7 +22,7 @@ import org.our.sadari.book.dto.PopularBookDto;
 @Mapper
 public interface BookMapper {
     /**
-     * ISBN과 언어 기준으로 이미 등록된 도서가 있는지 확인함
+     * ISBN과 언어 기준으로 이미 등록된 도서가 있는지 확인
      *
      * @author SeungHyeon.Kang
      * @param bookDto ISBN과 언어 코드를 포함한 도서 정보
@@ -31,7 +31,7 @@ public interface BookMapper {
     int dupBook(BookDto bookDto);
 
     /**
-     * ISBN과 언어 기준으로 기존 도서 번호를 조회함
+     * ISBN과 언어 기준으로 기존 도서 번호를 조회
      *
      * @author SeungHyeon.Kang
      * @param bookDto 조회할 ISBN과 언어 코드를 포함한 도서 정보
@@ -40,7 +40,7 @@ public interface BookMapper {
     Long getBookNumbByIsbn(BookDto bookDto);
 
     /**
-     * 신규 도서 정보를 등록함
+     * 신규 도서 정보를 등록
      *
      * @author SeungHyeon.Kang
      * @param bookDto 등록할 도서 정보
@@ -49,7 +49,7 @@ public interface BookMapper {
     int setBook(BookDto bookDto);
 
     /**
-     * 선택 기간의 독후감 고유 작성자 수 기준 인기 도서를 최대 10권 조회함
+     * 선택 기간의 독후감 고유 작성자 수 기준 인기 도서를 최대 10권 조회
      *
      * @author SeungHyeon.Kang
      * @param periodStart 집계 기간의 시작 일시

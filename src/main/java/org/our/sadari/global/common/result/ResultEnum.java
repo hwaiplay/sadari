@@ -6,7 +6,7 @@ import lombok.Getter;
  * fileName       : ResultEnum
  * author         : SeungHyeon.Kang
  * date           : 2026-03-25
- * description    : 공통 처리에 사용하는 상수와 코드를 정의함
+ * description    : 공통 처리에 사용하는 상수와 코드를 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -131,7 +131,7 @@ public enum ResultEnum {
     // 다국어 응답 메시지 키
     private final String messageKey;
 
-    // 결과 코드와 메시지 키를 Enum 항목에 연결함
+    // 결과 코드와 메시지 키를 Enum 항목에 연결
     ResultEnum(int code, String messageKey) {
 
         this.code = code;

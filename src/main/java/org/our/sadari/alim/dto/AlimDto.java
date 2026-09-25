@@ -10,7 +10,7 @@ import lombok.Data;
  * fileName       : AlimDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-24
- * description    : 알림 요청과 응답 데이터를 전달함
+ * description    : 알림 요청과 응답 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -27,8 +27,8 @@ import lombok.Data;
 public class AlimDto {
 
     /**
-     * TB_ALTEMP에서 알림 템플릿을 조회할 때 사용하는 DTO임
-     * 알림 상황과 템플릿 코드가 복합 PK이므로 두 값을 항상 함께 넘겨 템플릿을 특정함
+     * TB_ALTEMP에서 알림 템플릿을 조회할 때 사용하는 DTO
+     * 알림 상황과 템플릿 코드가 복합 PK이므로 두 값을 항상 함께 넘겨 템플릿을 특정
      *
      * @author SeungHyeon.Kang
      */
@@ -61,8 +61,8 @@ public class AlimDto {
     }
 
     /**
-     * TB_ALIMXX에 실제 사용자 알림을 저장하고 조회할 때 사용하는 DTO임
-     * ALIM_NUMB는 사용자별 순번이므로 발송 시점에 Mapper에서 해당 사용자의 다음 번호를 계산함
+     * TB_ALIMXX에 실제 사용자 알림을 저장하고 조회할 때 사용하는 DTO
+     * ALIM_NUMB는 사용자별 순번이므로 발송 시점에 Mapper에서 해당 사용자의 다음 번호를 계산
      *
      * @author SeungHyeon.Kang
      */
@@ -133,8 +133,8 @@ public class AlimDto {
     }
 
     /**
-     * 알림 클릭 시점의 소유자와 공개 및 팔로우 상태를 조회해 최종 이동 주소를 계산할 때 사용함
-     * 외부 응답에는 계산이 끝난 내부 상대 경로만 노출함
+     * 알림 클릭 시점의 소유자와 공개 및 팔로우 상태를 조회해 최종 이동 주소를 계산할 때 사용
+     * 외부 응답에는 계산이 끝난 내부 상대 경로만 노출
      *
      * @author SeungHyeon.Kang
      */
@@ -192,8 +192,8 @@ public class AlimDto {
     }
 
     /**
-     * 알림 목록을 10개 단위로 끊어 조회하기 위한 요청 DTO임
-     * 화면에서 스크롤로 다음 페이지를 요청할 때도 같은 DTO를 사용하며, 실제 조회 범위는 서비스에서 보정함
+     * 알림 목록을 10개 단위로 끊어 조회하기 위한 요청 DTO
+     * 화면에서 스크롤로 다음 페이지를 요청할 때도 같은 DTO를 사용하며, 실제 조회 범위는 서비스에서 보정
      *
      * @author SeungHyeon.Kang
      */
@@ -219,8 +219,8 @@ public class AlimDto {
     }
 
     /**
-     * 알림 목록 응답 DTO임
-     * 목록 조회 자체는 읽음 상태를 변경하지 않으며 삭제되지 않은 알림을 읽음 여부와 함께 전달함
+     * 알림 목록 응답 DTO
+     * 목록 조회 자체는 읽음 상태를 변경하지 않으며 삭제되지 않은 알림을 읽음 여부와 함께 전달
      *
      * @author SeungHyeon.Kang
      */
@@ -243,8 +243,8 @@ public class AlimDto {
     }
 
     /**
-     * 사용자가 클릭한 알림 한 건을 읽음 처리하기 위한 DTO임
-     * USER_NUMB는 인증 정보로 서비스에서 설정하고 외부 요청은 사용자별 ALIM_NUMB만 전달함
+     * 사용자가 클릭한 알림 한 건을 읽음 처리하기 위한 DTO
+     * USER_NUMB는 인증 정보로 서비스에서 설정하고 외부 요청은 사용자별 ALIM_NUMB만 전달
      *
      * @author SeungHyeon.Kang
      */
@@ -262,8 +262,8 @@ public class AlimDto {
     }
 
     /**
-     * 미읽음 알림 수만 내려줄 때 사용하는 응답 DTO임
-     * 햄버거 메뉴에서는 목록 전체를 조회하지 않고 숫자만 표시해야 하므로 별도 DTO로 분리함
+     * 미읽음 알림 수만 내려줄 때 사용하는 응답 DTO
+     * 햄버거 메뉴에서는 목록 전체를 조회하지 않고 숫자만 표시해야 하므로 별도 DTO로 분리
      *
      * @author SeungHyeon.Kang
      */

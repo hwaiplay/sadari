@@ -26,7 +26,7 @@ export const refreshTokenApi = async () => {
 };
 
 /**
- * logout 기능을 처리함
+ * logout 기능을 처리
  *
  * @author HanWon.Jang
  * @return 처리 결과
@@ -40,7 +40,7 @@ export type LogoutRequest = {
 };
 
 /**
- * 선택한 범위의 로그인 세션과 푸시 구독을 종료함
+ * 선택한 범위의 로그인 세션과 푸시 구독을 종료
  *
  * @author SeungHyeon.Kang
  * @param data 현재 기기 또는 전체 기기 로그아웃 요청

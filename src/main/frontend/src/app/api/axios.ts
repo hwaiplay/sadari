@@ -1,5 +1,5 @@
 /**
- * src/main/frontend/src/app/api/axios.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당함
+ * src/main/frontend/src/app/api/axios.ts 파일의 프론트엔드 화면, API, 훅 또는 유틸 로직을 담당
  *
  * @author HanWon.Jang
  */
@@ -43,7 +43,7 @@ const SAFE_HTTP_METHODS = new Set(["get", "head", "options", "trace"]);
 const api = axios.create({
   baseURL: "/api",
   withCredentials: true,
-  // DB 연결 장애처럼 서버 응답이 멈춘 요청은 사용자가 무기한 로딩에 갇히지 않도록 1분 후 실패 처리함
+  // DB 연결 장애처럼 서버 응답이 멈춘 요청은 사용자가 무기한 로딩에 갇히지 않도록 1분 후 실패 처리
   timeout: API_TIMEOUT_MILLISECONDS,
 });
 
@@ -56,7 +56,7 @@ const AUTH_FAILURE_CODES = new Set([1001, 1002, 1003, 2004, 2009]);
 const REFRESHABLE_AUTH_CODES = new Set([1001, 1002, 1003]);
 
 /**
- * get Result Code 정보를 조회함
+ * get Result Code 정보를 조회
  *
  * @author HanWon.Jang
  * @param data data 입력값
@@ -68,7 +68,7 @@ function getResultCode(data: unknown) {
 }
 
 /**
- * is Refreshable Auth Code 여부를 판정함
+ * is Refreshable Auth Code 여부를 판정
  *
  * @author HanWon.Jang
  * @param code code 입력값
@@ -80,7 +80,7 @@ function isRefreshableAuthCode(code: number) {
 }
 
 /**
- * is Auth Endpoint 여부를 판정함
+ * is Auth Endpoint 여부를 판정
  *
  * @author HanWon.Jang
  * @param url url 입력값
@@ -92,7 +92,7 @@ function isAuthEndpoint(url?: string) {
 }
 
 /**
- * 요청 경로가 저장 없이 계산 결과만 조회하는 POST API인지 판정함
+ * 요청 경로가 저장 없이 계산 결과만 조회하는 POST API인지 판정
  *
  * @author SeungHyeon.Kang
  * @param url Axios 요청 경로
@@ -104,7 +104,7 @@ function isNonSavingPostEndpoint(url?: string): boolean {
 }
 
 /**
- * Axios 요청이 사용자 데이터 또는 외부 설정을 변경하는 작업인지 판정함
+ * Axios 요청이 사용자 데이터 또는 외부 설정을 변경하는 작업인지 판정
  *
  * @author SeungHyeon.Kang
  * @param config 전송할 Axios 요청 설정
@@ -112,7 +112,7 @@ function isNonSavingPostEndpoint(url?: string): boolean {
  */
 function isBlockingRequest(config: InternalAxiosRequestConfig): boolean {
   const requestConfig = config as RetryableRequestConfig;
-  // 조회 요청과 인증 유지 요청 및 조회성 POST는 사용자 저장 작업에서 제외함
+  // 조회 요청과 인증 유지 요청 및 조회성 POST는 사용자 저장 작업에서 제외
   return isCsrfProtectedMethod(config.method)
     && !isAuthEndpoint(config.url)
     && !isNonSavingPostEndpoint(config.url)
@@ -120,59 +120,59 @@ function isBlockingRequest(config: InternalAxiosRequestConfig): boolean {
 }
 
 /**
- * HTTP Method가 CSRF 검증 대상인 상태 변경 요청인지 판정함
+ * HTTP Method가 CSRF 검증 대상인 상태 변경 요청인지 판정
  *
  * @author SeungHyeon.Kang
  * @param method Axios 요청의 HTTP Method
  * @return CSRF Token Header가 필요한 요청 여부
  */
 function isCsrfProtectedMethod(method?: string) {
-  // Method가 생략된 Axios 요청은 기본 GET으로 판단함
+  // Method가 생략된 Axios 요청은 기본 GET으로 판단
   const normalizedMethod = method?.toLowerCase() ?? "get";
-  // 안전한 조회 Method가 아니면 CSRF 검증 대상 요청으로 판정함
+  // 안전한 조회 Method가 아니면 CSRF 검증 대상 요청으로 판정
   return !SAFE_HTTP_METHODS.has(normalizedMethod);
 }
 
 /**
- * 요청 경로가 CSRF Token 자체를 조회하는 API인지 판정함
+ * 요청 경로가 CSRF Token 자체를 조회하는 API인지 판정
  *
  * @author SeungHyeon.Kang
  * @param url Axios 요청 경로
  * @return CSRF Token 조회 API 여부
  */
 function isCsrfEndpoint(url?: string) {
-  // CSRF Token 조회 요청이 다시 Token 조회를 시도하지 않도록 경로를 구분함
+  // CSRF Token 조회 요청이 다시 Token 조회를 시도하지 않도록 경로를 구분
   return url === "/oauth/csrf" || url === "/api/oauth/csrf";
 }
 
 /**
- * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회함
+ * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회
  *
  * @author SeungHyeon.Kang
  * @return 상태 변경 요청 Header에 사용할 CSRF Token
  * @throws CSRF Token API가 실패하거나 Token 데이터가 없을 때 발생
  */
 async function requestCsrfToken() {
-  // 공통 Axios Interceptor의 재귀 호출을 피하려고 기본 Axios로 Token 조회 API를 호출함
+  // 공통 Axios Interceptor의 재귀 호출을 피하려고 기본 Axios로 Token 조회 API를 호출
   const response = await axios.get<ResultData<string>>("/api/oauth/csrf", {
     withCredentials: true,
     timeout: API_TIMEOUT_MILLISECONDS,
   });
-  // HTTP 성공뿐 아니라 공통 응답 코드까지 검증함
+  // HTTP 성공뿐 아니라 공통 응답 코드까지 검증
   const result = assertResultDataSuccess(response.data);
 
-  // 빈 Token은 상태 변경 요청을 보호할 수 없으므로 요청 전에 중단함
+  // 빈 Token은 상태 변경 요청을 보호할 수 없으므로 요청 전에 중단
   if (typeof result.data !== "string" || result.data.length === 0) {
-    // CSRF Token 누락을 호출부의 공통 오류 경로로 전달함
+    // CSRF Token 누락을 호출부의 공통 오류 경로로 전달
     throw new Error("CSRF_TOKEN_MISSING");
   }
 
-  // 검증된 CSRF Token을 반환함
+  // 검증된 CSRF Token을 반환
   return result.data;
 }
 
 /**
- * 동시에 시작된 상태 변경 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비함
+ * 동시에 시작된 상태 변경 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비
  *
  * @author SeungHyeon.Kang
  * @param forceRefresh 기존 Token을 버리고 다시 조회할지 여부
@@ -180,41 +180,41 @@ async function requestCsrfToken() {
  * @throws CSRF Token 조회 요청이 실패할 때 발생
  */
 async function getCsrfToken(forceRefresh = false) {
-  // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회함
+  // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회
   if (forceRefresh) {
-    // 다음 상태 변경 요청이 이전 Token을 재사용하지 않도록 Cache를 초기화함
+    // 다음 상태 변경 요청이 이전 Token을 재사용하지 않도록 Cache를 초기화
     csrfToken = null;
   }
 
-  // 이미 검증한 Token이 있으면 추가 네트워크 요청 없이 재사용함
+  // 이미 검증한 Token이 있으면 추가 네트워크 요청 없이 재사용
   if (csrfToken) {
-    // 현재 브라우저에 연결된 CSRF Token을 반환함
+    // 현재 브라우저에 연결된 CSRF Token을 반환
     return csrfToken;
   }
 
-  // 진행 중인 조회가 없을 때만 CSRF Token API를 한 번 호출함
+  // 진행 중인 조회가 없을 때만 CSRF Token API를 한 번 호출
   if (!csrfRequest) {
-    // 동시에 시작된 요청이 같은 CSRF Token 조회 결과를 기다리게 함
+    // 동시에 시작된 요청이 같은 CSRF Token 조회 결과를 기다리도록 처리
     csrfRequest = requestCsrfToken();
   }
 
-  // 성공과 실패 모두 진행 중 Promise를 정리해 이후 재시도를 허용함
+  // 성공과 실패 모두 진행 중 Promise를 정리해 이후 재시도를 허용
   try {
-    // CSRF Token 조회 결과를 공통 Cache에 저장함
+    // CSRF Token 조회 결과를 공통 Cache에 저장
     csrfToken = await csrfRequest;
-    // 상태 변경 요청 Header에 사용할 CSRF Token을 반환함
+    // 상태 변경 요청 Header에 사용할 CSRF Token을 반환
     return csrfToken;
   }
 
-  // Token 조회의 성공 여부와 관계없이 완료된 Promise를 정리함
+  // Token 조회의 성공 여부와 관계없이 완료된 Promise를 정리
   finally {
-    // 완료된 Promise를 제거해 필요할 때 새 Token을 조회할 수 있게 함
+    // 완료된 Promise를 제거해 필요할 때 새 Token을 조회할 수 있도록 처리
     csrfRequest = null;
   }
 }
 
 /**
- * 상태 변경 Axios 요청에 현재 브라우저의 CSRF Token Header를 설정함
+ * 상태 변경 Axios 요청에 현재 브라우저의 CSRF Token Header를 설정
  *
  * @author SeungHyeon.Kang
  * @param config 전송 직전 Axios 요청 설정
@@ -224,20 +224,20 @@ async function getCsrfToken(forceRefresh = false) {
 async function setCsrfHeader(config: InternalAxiosRequestConfig) {
   // 안전한 조회와 Token 조회 자체에는 CSRF Header를 추가하지 않음
   if (!isCsrfProtectedMethod(config.method) || isCsrfEndpoint(config.url)) {
-    // 원본 조회 요청 설정을 유지함
+    // 원본 조회 요청 설정을 유지
     return config;
   }
 
-  // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회함
+  // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회
   const token = await getCsrfToken();
-  // 브라우저가 자동으로 추가하지 않는 요청 Header에 CSRF Token을 설정함
+  // 브라우저가 자동으로 추가하지 않는 요청 Header에 CSRF Token을 설정
   config.headers.set(CSRF_HEADER_NAME, token);
-  // CSRF Token Header가 반영된 요청 설정을 반환함
+  // CSRF Token Header가 반영된 요청 설정을 반환
   return config;
 }
 
 /**
- * 상태 변경 요청의 이동 차단을 시작한 뒤 CSRF Token Header를 준비함
+ * 상태 변경 요청의 이동 차단을 시작한 뒤 CSRF Token Header를 준비
  *
  * @author SeungHyeon.Kang
  * @param config 전송 직전 Axios 요청 설정
@@ -247,32 +247,32 @@ async function setCsrfHeader(config: InternalAxiosRequestConfig) {
 async function prepareRequest(config: InternalAxiosRequestConfig): Promise<InternalAxiosRequestConfig> {
   const blockingConfig = config as RetryableRequestConfig;
 
-  // DB 콘텐츠와 서버 메시지가 현재 화면 언어를 동일하게 사용하도록 요청 언어를 전달함
+  // DB 콘텐츠와 서버 메시지가 현재 화면 언어를 동일하게 사용하도록 요청 언어를 전달
   blockingConfig.headers.set("Accept-Language", getMessageLocale());
 
-  // 재시도가 아닌 최초 상태 변경 요청이면 공통 처리 중 모달과 이동 가드를 시작함
+  // 재시도가 아닌 최초 상태 변경 요청이면 공통 처리 중 모달과 이동 가드를 시작
   if (isBlockingRequest(config) && blockingConfig._blockingOperationId === undefined) {
-    // 요청 완료 시 같은 작업만 해제할 수 있도록 이동 차단 식별값을 설정함
+    // 요청 완료 시 같은 작업만 해제할 수 있도록 이동 차단 식별값을 설정
     blockingConfig._blockingOperationId = beginBlockingOperation();
   }
 
-  // CSRF Token 준비 실패도 처리 중 화면을 정리하도록 요청 전 단계를 격리함
+  // CSRF Token 준비 실패도 처리 중 화면을 정리하도록 요청 전 단계를 격리
   try {
-    // 상태 변경 요청에 현재 인증 Cookie와 연결된 CSRF Token Header를 설정함
+    // 상태 변경 요청에 현재 인증 Cookie와 연결된 CSRF Token Header를 설정
     return await setCsrfHeader(blockingConfig);
   }
 
-  // CSRF Token을 준비하지 못하면 서버 전송 없이 종료되는 요청의 이동 가드를 해제함
+  // CSRF Token을 준비하지 못하면 서버 전송 없이 종료되는 요청의 이동 가드를 해제
   catch (error) {
-    // 요청 전 단계에서 시작한 처리 중 모달과 이동 가드를 정리함
+    // 요청 전 단계에서 시작한 처리 중 모달과 이동 가드를 정리
     await finishBlockingRequest(blockingConfig);
-    // 호출 화면의 기존 실패 경로가 원인을 처리할 수 있도록 오류를 다시 전달함
+    // 호출 화면의 기존 실패 경로가 원인을 처리할 수 있도록 오류를 다시 전달
     throw error;
   }
 }
 
 /**
- * Axios 상태 변경 요청에 연결된 처리 중 모달과 이동 가드를 해제함
+ * Axios 상태 변경 요청에 연결된 처리 중 모달과 이동 가드를 해제
  *
  * @author SeungHyeon.Kang
  * @param config 완료되거나 실패한 Axios 요청 설정
@@ -281,23 +281,23 @@ async function prepareRequest(config: InternalAxiosRequestConfig): Promise<Inter
 async function finishBlockingRequest(config?: RetryableRequestConfig): Promise<void> {
   const operationId = config?._blockingOperationId;
 
-  // 조회 요청 또는 이미 정리된 상태 변경 요청은 추가 화면 변경 없이 종료함
+  // 조회 요청 또는 이미 정리된 상태 변경 요청은 추가 화면 변경 없이 종료
   if (!config || operationId === undefined) {
-    // 해제할 공통 처리 중 작업이 없는 상태로 완료함
+    // 해제할 공통 처리 중 작업이 없는 상태로 완료
     return;
   }
 
-  // 재시도 응답 체인에서 같은 요청이 다시 해제되지 않도록 식별값을 먼저 제거함
+  // 재시도 응답 체인에서 같은 요청이 다시 해제되지 않도록 식별값을 먼저 제거
   delete config._blockingOperationId;
-  // 후속 화면 처리 전에 버튼 없는 모달과 동일 URL History 가드를 정리함
+  // 후속 화면 처리 전에 버튼 없는 모달과 동일 URL History 가드를 정리
   await endBlockingOperation(operationId);
 }
 
-// 모든 상태 변경 요청이 화면별 구현 없이 동일한 이동 차단과 CSRF 검증을 적용받도록 요청 Interceptor를 등록함
+// 모든 상태 변경 요청이 화면별 구현 없이 동일한 이동 차단과 CSRF 검증을 적용받도록 요청 Interceptor를 등록
 api.interceptors.request.use(prepareRequest);
 
 /**
- * refresh Session 기능을 처리함
+ * refresh Session 기능을 처리
  *
  * @author HanWon.Jang
  * @return 처리 결과
@@ -318,7 +318,7 @@ function refreshSession() {
 }
 
 /**
- * reset Session And Redirect To Login 사용자 동작을 처리함
+ * reset Session And Redirect To Login 사용자 동작을 처리
  *
  * @author HanWon.Jang
  * @return 반환값이 없음
@@ -328,9 +328,9 @@ async function resetSessionToLogin() {
   // /user/me는 로그인 후 화면에서 현재 세션의 사용자 정보를 확정하는 API다
   // 인증성 실패 코드가 오면 토큰과 사용자 데이터가 불일치한 상태이므로 세션을 비우고 로그인부터 다시 시킴
   useAuthStore.getState().clearAuth();
-  // 인증 복구 실패 계정의 인증과 사용자 서버 상태가 다음 로그인에 재사용되지 않도록 제거함
+  // 인증 복구 실패 계정의 인증과 사용자 서버 상태가 다음 로그인에 재사용되지 않도록 제거
   for (const queryKey of sessionQueryKeys) {
-    // 현재 세션에 속한 공통 Query Cache를 제거함
+    // 현재 세션에 속한 공통 Query Cache를 제거
     queryClient.removeQueries({ queryKey });
   }
 
@@ -347,7 +347,7 @@ async function resetSessionToLogin() {
   }
 
   await logoutRequest;
-  // 자동 인증 복구 실패도 같은 브라우저의 다른 탭에 즉시 전파함
+  // 자동 인증 복구 실패도 같은 브라우저의 다른 탭에 즉시 전파
   publishAuthLogout();
 
   if (window.location.pathname !== "/login") {
@@ -361,20 +361,20 @@ api.interceptors.response.use(
     const originalRequest = response.config as RetryableRequestConfig;
     const resultCode = getResultCode(response.data);
 
-    // 실제 API 응답은 서버 접근 가능성을 증명하므로 잘못 남은 오프라인 상태를 해제함
+    // 실제 API 응답은 서버 접근 가능성을 증명하므로 잘못 남은 오프라인 상태를 해제
     publishConnectionRestore("offline");
-    // 백엔드가 공통 응답을 반환했으므로 이전 업스트림 서버 단절 상태를 해제함
+    // 백엔드가 공통 응답을 반환했으므로 이전 업스트림 서버 단절 상태를 해제
     publishConnectionRestore("server");
 
-    // 공통 성공 응답은 JDBC 장애도 복구되었음을 나타내므로 이전 데이터베이스 상태를 해제함
+    // 공통 성공 응답은 JDBC 장애도 복구되었음을 나타내므로 이전 데이터베이스 상태를 해제
     if (resultCode === 200) {
       // 정상 처리된 API를 기준으로 더 이상 유효하지 않은 JDBC 장애 화면을 닫음
       publishConnectionRestore("database");
     }
 
-    // HTTP 성공 본문에 JDBC 연결 실패 코드가 있으면 전역 연결 장애 화면을 표시함
+    // HTTP 성공 본문에 JDBC 연결 실패 코드가 있으면 전역 연결 장애 화면을 표시
     if (resultCode === DB_CONNECTION_FAILED_CODE) {
-      // 서버가 판정한 JDBC 연결 장애를 앱 전체 화면에 전달함
+      // 서버가 판정한 JDBC 연결 장애를 앱 전체 화면에 전달
       publishConnectionError("database");
     }
 
@@ -386,7 +386,7 @@ api.interceptors.response.use(
       originalRequest._retry = true;
 
       try {
-        // accessToken 문제는 refreshToken으로 복구될 수 있으므로 세션 삭제보다 재발급을 먼저 시도함
+        // accessToken 문제는 refreshToken으로 복구될 수 있으므로 세션 삭제보다 재발급을 먼저 시도
         await refreshSession();
         return api(originalRequest);
       } catch {
@@ -407,51 +407,51 @@ api.interceptors.response.use(
   async (error: AxiosError) => {
 
     const originalRequest = error.config as RetryableRequestConfig | undefined;
-    // 서버가 확인한 JDBC 장애와 브라우저 및 프록시가 확인한 연결 장애를 구분함
+    // 서버가 확인한 JDBC 장애와 브라우저 및 프록시가 확인한 연결 장애를 구분
     const connectionFailure = getConnectionFailure(error);
 
-    // 오류 상태라도 HTTP 응답이 도착했으면 인터넷 단절이 아니므로 오프라인 상태를 해제함
+    // 오류 상태라도 HTTP 응답이 도착했으면 인터넷 단절이 아니므로 오프라인 상태를 해제
     if (error.response !== undefined) {
       // 서버가 반환한 상태 코드와 본문을 개별 API 오류 경로에서 처리할 수 있도록 연결 화면을 닫음
       publishConnectionRestore("offline");
 
-      // 업스트림 단절 응답이 아니면 백엔드가 오류 응답을 생성할 수 있는 상태이므로 서버 장애를 해제함
+      // 업스트림 단절 응답이 아니면 백엔드가 오류 응답을 생성할 수 있는 상태이므로 서버 장애를 해제
       if (connectionFailure !== "server") {
-        // 이전 요청에서 남은 백엔드 서버 단절 상태를 해제함
+        // 이전 요청에서 남은 백엔드 서버 단절 상태를 해제
         publishConnectionRestore("server");
       }
 
     }
 
-    // 판정 근거가 명확한 JDBC와 인터넷 및 백엔드 연결 장애만 개별 오류 처리보다 먼저 표시함
+    // 판정 근거가 명확한 JDBC와 인터넷 및 백엔드 연결 장애만 개별 오류 처리보다 먼저 표시
     if (connectionFailure !== null) {
-      // 확인된 연결 장애 원인을 앱 전체 서비스 장애 화면에 전달함
+      // 확인된 연결 장애 원인을 앱 전체 서비스 장애 화면에 전달
       publishConnectionError(connectionFailure);
     }
 
-    // Cookie와 Header의 CSRF Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구함
+    // Cookie와 Header의 CSRF Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구
     if (error.response?.status === 403 && originalRequest
             && isCsrfProtectedMethod(originalRequest.method) && !originalRequest._csrfRetry
             && !isCsrfEndpoint(originalRequest.url)) {
-      // 동일 요청이 CSRF 오류로 무한 반복되지 않도록 재시도 상태를 기록함
+      // 동일 요청이 CSRF 오류로 무한 반복되지 않도록 재시도 상태를 기록
       originalRequest._csrfRetry = true;
 
-      // 새 Token 조회와 원 요청 재전송 실패를 현재 API 오류 경로로 격리함
+      // 새 Token 조회와 원 요청 재전송 실패를 현재 API 오류 경로로 격리
       try {
-        // 서버 Cookie와 일치하는 최신 CSRF Token을 다시 조회함
+        // 서버 Cookie와 일치하는 최신 CSRF Token을 다시 조회
         await getCsrfToken(true);
-        // 기존 요청 데이터와 인증 재시도 상태를 유지한 채 한 번만 다시 전송함
+        // 기존 요청 데이터와 인증 재시도 상태를 유지한 채 한 번만 다시 전송
         return api(originalRequest);
       }
 
-      // Token 재조회 또는 원 요청 재전송이 실패하면 최초 거부 응답을 유지함
+      // Token 재조회 또는 원 요청 재전송이 실패하면 최초 거부 응답을 유지
       catch {
-        // 원래의 CSRF 거부 응답을 호출부에 전달함
+        // 원래의 CSRF 거부 응답을 호출부에 전달
         return Promise.reject(error);
       }
     }
 
-    // /user/me가 400/2009처럼 에러 응답으로 내려와도 세션 불일치로 보고 재로그인 처리함
+    // /user/me가 400/2009처럼 에러 응답으로 내려와도 세션 불일치로 보고 재로그인 처리
     if (
       originalRequest?.url === "/user/me" &&
       AUTH_FAILURE_CODES.has(getResultCode(error.response?.data))
@@ -479,20 +479,20 @@ api.interceptors.response.use(
   },
 );
 
-// 상태 변경 요청의 최종 성공 또는 실패 응답이 확정되면 공통 처리 중 화면을 해제함
+// 상태 변경 요청의 최종 성공 또는 실패 응답이 확정되면 공통 처리 중 화면을 해제
 api.interceptors.response.use(
   async (response) => {
-    // 호출 화면의 성공 처리 전에 현재 요청의 이동 차단 History 항목을 제거함
+    // 호출 화면의 성공 처리 전에 현재 요청의 이동 차단 History 항목을 제거
     await finishBlockingRequest(response.config as RetryableRequestConfig);
-    // 정리가 끝난 Axios 응답을 기존 호출부에 반환함
+    // 정리가 끝난 Axios 응답을 기존 호출부에 반환
     return response;
   },
   async (error: AxiosError) => {
     const failedConfig = error.config as RetryableRequestConfig | undefined;
 
-    // 호출 화면의 오류 처리 전에 실패한 요청의 처리 중 모달과 이동 가드를 해제함
+    // 호출 화면의 오류 처리 전에 실패한 요청의 처리 중 모달과 이동 가드를 해제
     await finishBlockingRequest(failedConfig);
-    // 기존 API 실패 경로가 사용자 메시지를 표시할 수 있도록 Axios 오류를 반환함
+    // 기존 API 실패 경로가 사용자 메시지를 표시할 수 있도록 Axios 오류를 반환
     return Promise.reject(error);
   },
 );

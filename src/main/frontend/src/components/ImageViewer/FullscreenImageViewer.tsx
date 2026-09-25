@@ -51,7 +51,7 @@ const FullscreenImageViewerContext = createContext<
 >(undefined);
 
 /**
- * 앱 전체에서 공통으로 사용할 전체 화면 원본 이미지 뷰어를 제공함
+ * 앱 전체에서 공통으로 사용할 전체 화면 원본 이미지 뷰어를 제공
  *
  * @author SeungHyeon.Kang
  * @param props 하위 화면 구성 요소
@@ -72,7 +72,7 @@ export function ImageViewerProvider({
 
   useEffect(
     /**
-     * 전체 화면이 열린 동안 기존 앱 화면을 조작 및 접근성 대상에서 제외함
+     * 전체 화면이 열린 동안 기존 앱 화면을 조작 및 접근성 대상에서 제외
      *
      * @author SeungHyeon.Kang
      * @return 배경 화면 상태를 복원하는 정리 함수 또는 반환값 없음
@@ -81,15 +81,15 @@ export function ImageViewerProvider({
 
       // 뷰어가 닫혀 있으면 기존 앱 화면의 접근성과 조작 상태를 변경하지 않음
       if (!isOpen) {
-        // 등록할 정리 함수 없이 종료함
+        // 등록할 정리 함수 없이 종료
         return undefined;
       }
 
       const appRoot = document.getElementById("root");
 
-      // 앱 루트가 없으면 전체 화면 표시 외의 배경 잠금 처리를 생략함
+      // 앱 루트가 없으면 전체 화면 표시 외의 배경 잠금 처리를 생략
       if (!appRoot) {
-        // 등록할 정리 함수 없이 종료함
+        // 등록할 정리 함수 없이 종료
         return undefined;
       }
 
@@ -97,30 +97,30 @@ export function ImageViewerProvider({
       const previousAriaHidden = lockedAppRoot.getAttribute("aria-hidden");
       const hadInertAttribute = lockedAppRoot.hasAttribute("inert");
 
-      // Portal 바깥의 헤더와 내비게이션을 보조기기와 키보드 조작 대상에서도 제외함
+      // Portal 바깥의 헤더와 내비게이션을 보조기기와 키보드 조작 대상에서도 제외
       lockedAppRoot.setAttribute("inert", "");
       // 전체 화면 뷰어가 열린 동안 기존 앱 화면을 접근성 트리에서 숨김
       lockedAppRoot.setAttribute("aria-hidden", "true");
 
       /**
-       * 이미지 뷰어가 닫힐 때 앱 루트의 기존 접근성과 조작 상태를 복원함
+       * 이미지 뷰어가 닫힐 때 앱 루트의 기존 접근성과 조작 상태를 복원
        *
        * @author SeungHyeon.Kang
        * @return 반환값이 없음
        */
       function restoreBackgroundLock(): void {
 
-        // 앱 루트에 원래 inert 속성이 없었다면 뷰어가 추가한 조작 잠금을 제거함
+        // 앱 루트에 원래 inert 속성이 없었다면 뷰어가 추가한 조작 잠금을 제거
         if (!hadInertAttribute) {
-          // 기존 화면의 포인터와 키보드 조작을 다시 허용함
+          // 기존 화면의 포인터와 키보드 조작을 다시 허용
           lockedAppRoot.removeAttribute("inert");
         }
 
-        // 기존 aria-hidden 값이 없었다면 임시 접근성 속성을 제거함
+        // 기존 aria-hidden 값이 없었다면 임시 접근성 속성을 제거
         if (previousAriaHidden === null) {
-          // 뷰어가 추가한 접근성 숨김 속성만 제거함
+          // 뷰어가 추가한 접근성 숨김 속성만 제거
           lockedAppRoot.removeAttribute("aria-hidden");
-          // 별도의 기존 값 복원 없이 종료함
+          // 별도의 기존 값 복원 없이 종료
           return;
         }
 
@@ -128,7 +128,7 @@ export function ImageViewerProvider({
         lockedAppRoot.setAttribute("aria-hidden", previousAriaHidden);
       }
 
-      // Effect 해제 시 기존 앱 화면 상태를 되돌릴 정리 함수를 반환함
+      // Effect 해제 시 기존 앱 화면 상태를 되돌릴 정리 함수를 반환
       return restoreBackgroundLock;
     },
     [isOpen],
@@ -144,18 +144,18 @@ export function ImageViewerProvider({
    */
   const openImageViewer = useCallback((request: FullscreenImageRequest, triggerId: string): void => {
 
-    // 뷰어를 닫은 뒤 사용자가 이미지를 열었던 요소로 초점을 되돌릴 수 있게 보관함
+    // 뷰어를 닫은 뒤 사용자가 이미지를 열었던 요소로 초점을 되돌릴 수 있게 보관
     returnFocusRef.current = document.activeElement instanceof HTMLElement
       ? document.activeElement
       : null;
-    // 새 이미지의 원본 경로를 즉시 표시 경로로 사용함
+    // 새 이미지의 원본 경로를 즉시 표시 경로로 사용
     setActiveSource(request.source);
-    // 헤더와 내비게이션 위에 전체 화면 이미지 뷰어를 표시함
+    // 헤더와 내비게이션 위에 전체 화면 이미지 뷰어를 표시
     setImageRequest({ ...request, triggerId });
   }, []);
 
   /**
-   * 열려 있는 이미지 버튼의 최신 반응 버튼 상태를 전체 화면 뷰어에 동기화함
+   * 열려 있는 이미지 버튼의 최신 반응 버튼 상태를 전체 화면 뷰어에 동기화
    *
    * @author HanWon.Jang
    * @param request 최신 이미지와 반응 버튼 정보
@@ -163,23 +163,23 @@ export function ImageViewerProvider({
    * @return 반환값이 없음
    */
   const updateImageViewer = useCallback((request: FullscreenImageRequest, triggerId: string): void => {
-    // 현재 뷰어를 연 버튼만 좋아요와 댓글 집계 변경을 반영함
+    // 현재 뷰어를 연 버튼만 좋아요와 댓글 집계 변경을 반영
     setImageRequest(
       /**
-       * 현재 열린 이미지와 같은 버튼의 최신 요청만 반영함
+       * 현재 열린 이미지와 같은 버튼의 최신 요청만 반영
        *
        * @author HanWon.Jang
        * @param currentRequest 현재 전체 화면 이미지 요청
        * @return 최신 반응 버튼을 반영한 전체 화면 이미지 요청
        */
       (currentRequest) => {
-        // 닫힌 뷰어이거나 다른 이미지 버튼의 변경이면 현재 뷰어 상태를 유지함
+        // 닫힌 뷰어이거나 다른 이미지 버튼의 변경이면 현재 뷰어 상태를 유지
         if (!currentRequest || currentRequest.triggerId !== triggerId) {
-          // 다른 이미지의 전체 화면 표시 내용을 그대로 반환함
+          // 다른 이미지의 전체 화면 표시 내용을 그대로 반환
           return currentRequest;
         }
 
-        // 현재 사진의 최신 반응 버튼을 포함한 요청으로 뷰어 내용을 갱신함
+        // 현재 사진의 최신 반응 버튼을 포함한 요청으로 뷰어 내용을 갱신
         return { ...request, triggerId };
       },
     );
@@ -193,12 +193,12 @@ export function ImageViewerProvider({
    */
   const closeImageViewer = useCallback((): void => {
 
-    // 전체 화면 이미지와 블러 배경을 함께 제거함
+    // 전체 화면 이미지와 블러 배경을 함께 제거
     setImageRequest(null);
   }, []);
 
   /**
-   * 원본 이미지 로드 실패 시 지정된 공통 대체 이미지로 한 번 교체함
+   * 원본 이미지 로드 실패 시 지정된 공통 대체 이미지로 한 번 교체
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없음
@@ -207,19 +207,19 @@ export function ImageViewerProvider({
 
     const fallbackSource = imageRequest?.fallbackSource?.trim();
 
-    // 대체 경로가 없거나 이미 대체 이미지를 표시 중이면 반복 요청 없이 종료함
+    // 대체 경로가 없거나 이미 대체 이미지를 표시 중이면 반복 요청 없이 종료
     if (!fallbackSource || activeSource === fallbackSource) {
-      // 추가 이미지 상태 변경 없이 종료함
+      // 추가 이미지 상태 변경 없이 종료
       return;
     }
 
-    // 원본 대신 화면 유형에 맞는 공통 대체 이미지를 전경에 적용함
+    // 원본 대신 화면 유형에 맞는 공통 대체 이미지를 전경에 적용
     setActiveSource(fallbackSource);
   }
 
   useLayoutEffect(
     /**
-     * 전체 화면이 열린 직후 닫기 버튼으로 키보드 초점을 이동함
+     * 전체 화면이 열린 직후 닫기 버튼으로 키보드 초점을 이동
      *
      * @author SeungHyeon.Kang
      * @return 반환값이 없음
@@ -228,7 +228,7 @@ export function ImageViewerProvider({
 
       // 뷰어가 닫혀 있으면 닫기 버튼으로 초점을 이동하지 않음
       if (!isOpen) {
-        // 불필요한 초점 처리를 생략함
+        // 불필요한 초점 처리를 생략
         return;
       }
 
@@ -240,7 +240,7 @@ export function ImageViewerProvider({
 
   useEffect(
     /**
-     * 전체 화면이 열린 동안 Escape 키 닫기 동작을 등록함
+     * 전체 화면이 열린 동안 Escape 키 닫기 동작을 등록
      *
      * @author SeungHyeon.Kang
      * @return 키보드 감시를 제거하는 정리 함수 또는 반환값 없음
@@ -249,7 +249,7 @@ export function ImageViewerProvider({
 
       // 뷰어가 열려 있지 않으면 Escape 입력 감시를 등록하지 않음
       if (!isOpen) {
-        // 등록할 정리 함수 없이 종료함
+        // 등록할 정리 함수 없이 종료
         return undefined;
       }
 
@@ -264,38 +264,38 @@ export function ImageViewerProvider({
 
         // Escape 이외의 키 입력은 현재 화면 동작에 맡김
         if (event.key !== "Escape") {
-          // 이미지 뷰어 닫기 없이 종료함
+          // 이미지 뷰어 닫기 없이 종료
           return;
         }
 
-        // 좋아요 사용자 목록이나 댓글 바텀시트가 위에 열려 있으면 해당 모달이 Escape 입력을 처리함
+        // 좋아요 사용자 목록이나 댓글 바텀시트가 위에 열려 있으면 해당 모달이 Escape 입력을 처리
         if (document.querySelector("[data-image-viewer-overlay='true']")) {
-          // 이미지 뷰어는 하위 모달이 닫힐 때까지 현재 상태를 유지함
+          // 이미지 뷰어는 하위 모달이 닫힐 때까지 현재 상태를 유지
           return;
         }
 
-        // 브라우저의 다른 Escape 기본 동작보다 이미지 뷰어 닫기를 우선함
+        // 브라우저의 다른 Escape 기본 동작보다 이미지 뷰어 닫기를 우선
         event.preventDefault();
         // 전체 화면 이미지 뷰어를 닫음
         closeImageViewer();
       }
 
-      // 전체 화면이 열린 동안에만 Escape 키 입력을 감시함
+      // 전체 화면이 열린 동안에만 Escape 키 입력을 감시
       document.addEventListener("keydown", handleDocumentKeyDown);
 
       /**
-       * 이미지 뷰어가 닫힐 때 문서의 Escape 키 감시를 제거함
+       * 이미지 뷰어가 닫힐 때 문서의 Escape 키 감시를 제거
        *
        * @author SeungHyeon.Kang
        * @return 반환값이 없음
        */
       function removeEscapeKeyListener(): void {
 
-        // 뷰어가 닫히거나 컴포넌트가 해제되면 키 입력 감시를 제거함
+        // 뷰어가 닫히거나 컴포넌트가 해제되면 키 입력 감시를 제거
         document.removeEventListener("keydown", handleDocumentKeyDown);
       }
 
-      // Effect 해제 시 문서 키보드 감시를 제거할 정리 함수를 반환함
+      // Effect 해제 시 문서 키보드 감시를 제거할 정리 함수를 반환
       return removeEscapeKeyListener;
     },
     [closeImageViewer, isOpen],
@@ -312,11 +312,11 @@ export function ImageViewerProvider({
 
       // 뷰어가 열려 있는 동안에는 원래 요소로 초점을 돌리지 않음
       if (isOpen) {
-        // 닫힐 때까지 초점 복원을 보류함
+        // 닫힐 때까지 초점 복원을 보류
         return;
       }
 
-      // 뷰어를 연 버튼이 아직 화면에 있으면 키보드 탐색 위치를 복원함
+      // 뷰어를 연 버튼이 아직 화면에 있으면 키보드 탐색 위치를 복원
       returnFocusRef.current?.focus();
       // 다음 열기 동작과 섞이지 않도록 복원 대상 참조를 비움
       returnFocusRef.current = null;
@@ -324,10 +324,10 @@ export function ImageViewerProvider({
     [isOpen],
   );
 
-  // 뷰어 상태 변경이 이미지 버튼 전체의 불필요한 재렌더링으로 이어지지 않도록 컨텍스트 값을 고정함
+  // 뷰어 상태 변경이 이미지 버튼 전체의 불필요한 재렌더링으로 이어지지 않도록 컨텍스트 값을 고정
   const contextValue = useMemo<FullscreenImageViewerContextValue>(
     /**
-     * 전체 화면 이미지 버튼이 공유할 안정적인 뷰어 명령을 구성함
+     * 전체 화면 이미지 버튼이 공유할 안정적인 뷰어 명령을 구성
      *
      * @author HanWon.Jang
      * @return 전체 화면 이미지 열기와 갱신 명령
@@ -401,7 +401,7 @@ export function ImageViewerProvider({
 }
 
 /**
- * 전체 화면 원본 이미지 뷰어 열기 함수를 반환함
+ * 전체 화면 원본 이미지 뷰어 열기 함수를 반환
  *
  * @author SeungHyeon.Kang
  * @return 전체 화면 이미지 뷰어 컨텍스트
@@ -416,12 +416,12 @@ export function useFullscreenImageViewer(): FullscreenImageViewerContextValue {
     throw new Error("ImageViewerProvider is required.");
   }
 
-  // 공통 뷰어 열기 함수를 사용하는 화면에 반환함
+  // 공통 뷰어 열기 함수를 사용하는 화면에 반환
   return context;
 }
 
 /**
- * 전달받은 이미지 영역을 전체 화면 원본 보기 버튼으로 제공함
+ * 전달받은 이미지 영역을 전체 화면 원본 보기 버튼으로 제공
  *
  * @author SeungHyeon.Kang
  * @param props 이미지 정보와 버튼 표시 내용
@@ -440,9 +440,9 @@ export function FullscreenImageButton({
 }: FullscreenImageButtonProps) {
 
   const { openImageViewer, updateImageViewer } = useFullscreenImageViewer();
-  // 같은 화면의 여러 이미지 버튼 중 현재 뷰어를 연 버튼을 구분함
+  // 같은 화면의 여러 이미지 버튼 중 현재 뷰어를 연 버튼을 구분
   const triggerId = useId();
-  // 알림 경로로 진입한 이미지가 다시 렌더링되어도 자동 열기를 한 번만 수행함
+  // 알림 경로로 진입한 이미지가 다시 렌더링되어도 자동 열기를 한 번만 수행
   const hasInitiallyOpenedRef = useRef(false);
 
   useEffect(
@@ -455,13 +455,13 @@ export function FullscreenImageButton({
     () => {
       // 일반 프로필 진입이거나 이미 자동으로 연 버튼이면 사용자 클릭을 기다림
       if (!initiallyOpen || hasInitiallyOpenedRef.current) {
-        // 자동 열기 상태를 변경하지 않고 종료함
+        // 자동 열기 상태를 변경하지 않고 종료
         return;
       }
 
-      // 후속 반응 상태 갱신이 전체 화면을 반복해서 열지 않도록 처리 완료를 기록함
+      // 후속 반응 상태 갱신이 전체 화면을 반복해서 열지 않도록 처리 완료를 기록
       hasInitiallyOpenedRef.current = true;
-      // 알림이 가리킨 현재 사진과 반응 버튼을 공통 전체 화면 뷰어에 전달함
+      // 알림이 가리킨 현재 사진과 반응 버튼을 공통 전체 화면 뷰어에 전달
       openImageViewer({ source, fallbackSource, alt, actions }, triggerId);
     },
     [actions, alt, fallbackSource, initiallyOpen, openImageViewer, source, triggerId],
@@ -469,13 +469,13 @@ export function FullscreenImageButton({
 
   useEffect(
     /**
-     * 현재 이미지 버튼이 연 뷰어에 최신 사진 반응 상태를 전달함
+     * 현재 이미지 버튼이 연 뷰어에 최신 사진 반응 상태를 전달
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
      */
     () => {
-      // 열린 전체 화면 이미지에 최신 좋아요와 댓글 집계를 반영함
+      // 열린 전체 화면 이미지에 최신 좋아요와 댓글 집계를 반영
       updateImageViewer({ source, fallbackSource, alt, actions }, triggerId);
     },
     [actions, alt, fallbackSource, source, triggerId, updateImageViewer],
@@ -489,7 +489,7 @@ export function FullscreenImageButton({
    */
   function handleImageButtonClick(): void {
 
-    // 이미지 경로와 설명 및 실패 대체 경로를 공통 뷰어에 전달함
+    // 이미지 경로와 설명 및 실패 대체 경로를 공통 뷰어에 전달
     openImageViewer({ source, fallbackSource, alt, actions }, triggerId);
   }
 

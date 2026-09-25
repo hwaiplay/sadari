@@ -9,7 +9,7 @@ import lombok.Data;
  * fileName       : ReportAlimDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-21
- * description    : 독후감별 좋아요와 댓글 알림 설정 요청 데이터를 전달함
+ * description    : 독후감별 좋아요와 댓글 알림 설정 요청 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

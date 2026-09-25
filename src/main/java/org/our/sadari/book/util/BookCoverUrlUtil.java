@@ -10,7 +10,7 @@ import org.our.sadari.global.common.util.StringUtil;
  * fileName       : BookCoverUrlUtil
  * author         : SeungHyeon.Kang
  * date           : 2026-08-02
- * description    : 카카오 도서 썸네일에서 검증된 Daum 원본 표지 주소를 추출함
+ * description    : 카카오 도서 썸네일에서 검증된 Daum 원본 표지 주소를 추출
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -30,7 +30,7 @@ public final class BookCoverUrlUtil {
     private static final String ORIGINAL_URL_PARAMETER = "fname";
 
     /**
-     * 인스턴스 생성을 차단함
+     * 인스턴스 생성을 차단
      *
      * @author SeungHyeon.Kang
      */
@@ -41,67 +41,67 @@ public final class BookCoverUrlUtil {
     }
 
     /**
-     * 카카오 도서 썸네일에서 검증된 Daum 원본 표지 HTTPS 주소를 추출함
+     * 카카오 도서 썸네일에서 검증된 Daum 원본 표지 HTTPS 주소를 추출
      *
      * @author SeungHyeon.Kang
      * @param thumbnailUrl 카카오 도서 검색 API의 썸네일 URL
      * @return 검증된 원본 표지 URL 또는 변환할 수 없을 때 기존 썸네일 URL
      */
     public static String getOriginalCoverUrl(String thumbnailUrl) {
-        // 표지 URL이 없으면 기존 화면 계약에 맞는 빈 문자열을 반환함
+        // 표지 URL이 없으면 기존 화면 계약에 맞는 빈 문자열을 반환
         if (StringUtil.isEmpty(thumbnailUrl) || thumbnailUrl.isBlank()) {
-            // 빈 표지 URL을 반환함
+            // 빈 표지 URL을 반환
             return StringUtil.EMPTY;
         }
 
         String normalizedThumbnailUrl = thumbnailUrl.trim();
 
-        // 잘못된 외부 URL은 원본 추출 실패로 격리하고 공식 썸네일을 유지함
+        // 잘못된 외부 URL은 원본 추출 실패로 격리하고 공식 썸네일을 유지
         try {
-            // 카카오 썸네일의 프로토콜과 호스트 및 경로를 검증함
+            // 카카오 썸네일의 프로토콜과 호스트 및 경로를 검증
             URI thumbnailUri = URI.create(normalizedThumbnailUrl);
 
-            // 공식 카카오 도서 썸네일 형식이 아니면 입력 URL을 그대로 유지함
+            // 공식 카카오 도서 썸네일 형식이 아니면 입력 URL을 그대로 유지
             if (!isTrustedKakaoThumbnail(thumbnailUri)) {
-                // 변환하지 않은 표지 URL을 반환함
+                // 변환하지 않은 표지 URL을 반환
                 return normalizedThumbnailUrl;
             }
 
-            // 카카오 썸네일 쿼리에서 인코딩된 원본 주소를 조회함
+            // 카카오 썸네일 쿼리에서 인코딩된 원본 주소를 조회
             String encodedOriginalUrl = getRawQueryParameter(thumbnailUri.getRawQuery(), ORIGINAL_URL_PARAMETER);
 
-            // 원본 주소 파라미터가 없으면 공식 썸네일을 유지함
+            // 원본 주소 파라미터가 없으면 공식 썸네일을 유지
             if (StringUtil.isEmpty(encodedOriginalUrl)) {
-                // 변환하지 않은 카카오 썸네일 URL을 반환함
+                // 변환하지 않은 카카오 썸네일 URL을 반환
                 return normalizedThumbnailUrl;
             }
 
-            // percent-encoding된 Daum 원본 주소를 URI 문자열로 복원함
+            // percent-encoding된 Daum 원본 주소를 URI 문자열로 복원
             String decodedOriginalUrl = URLDecoder.decode(encodedOriginalUrl, StandardCharsets.UTF_8);
-            // 복원한 원본 주소의 프로토콜과 호스트 및 경로를 검증함
+            // 복원한 원본 주소의 프로토콜과 호스트 및 경로를 검증
             URI originalUri = URI.create(decodedOriginalUrl);
 
-            // 검증된 Daum 도서 원본 주소가 아니면 공식 썸네일을 유지함
+            // 검증된 Daum 도서 원본 주소가 아니면 공식 썸네일을 유지
             if (!isTrustedDaumOriginal(originalUri)) {
-                // 변환하지 않은 카카오 썸네일 URL을 반환함
+                // 변환하지 않은 카카오 썸네일 URL을 반환
                 return normalizedThumbnailUrl;
             }
 
             String originalQuery = StringUtil.isEmpty(originalUri.getRawQuery())
                     ? StringUtil.EMPTY : "?" + originalUri.getRawQuery();
-            // HTTPS로 보정한 Daum 도서 원본 주소를 반환함
+            // HTTPS로 보정한 Daum 도서 원본 주소를 반환
             return "https://" + DAUM_ORIGINAL_HOST + originalUri.getRawPath() + originalQuery;
         }
 
-        // URI 문법이나 인코딩이 잘못되면 공식 썸네일 URL로 복구함
+        // URI 문법이나 인코딩이 잘못되면 공식 썸네일 URL로 복구
         catch (IllegalArgumentException e) {
-            // 변환하지 않은 카카오 썸네일 URL을 반환함
+            // 변환하지 않은 카카오 썸네일 URL을 반환
             return normalizedThumbnailUrl;
         }
     }
 
     /**
-     * URI가 카카오 도서 썸네일의 신뢰 조건을 충족하는지 판정함
+     * URI가 카카오 도서 썸네일의 신뢰 조건을 충족하는지 판정
      *
      * @author SeungHyeon.Kang
      * @param thumbnailUri 검증할 카카오 썸네일 URI
@@ -112,7 +112,7 @@ public final class BookCoverUrlUtil {
         String path = thumbnailUri.getPath();
         int port = thumbnailUri.getPort();
 
-        // 프로토콜과 호스트 및 경로가 공식 썸네일 형식인지 반환함
+        // 프로토콜과 호스트 및 경로가 공식 썸네일 형식인지 반환
         return "https".equalsIgnoreCase(thumbnailUri.getScheme()) && !StringUtil.isEmpty(host)
                 && KAKAO_THUMBNAIL_HOST.equals(host.toLowerCase(Locale.ROOT)) && !StringUtil.isEmpty(path)
                 && path.startsWith(KAKAO_THUMBNAIL_PATH_PREFIX) && StringUtil.isEmpty(thumbnailUri.getUserInfo())
@@ -120,7 +120,7 @@ public final class BookCoverUrlUtil {
     }
 
     /**
-     * URI가 Daum 도서 원본 이미지의 신뢰 조건을 충족하는지 판정함
+     * URI가 Daum 도서 원본 이미지의 신뢰 조건을 충족하는지 판정
      *
      * @author SeungHyeon.Kang
      * @param originalUri 검증할 Daum 원본 URI
@@ -133,7 +133,7 @@ public final class BookCoverUrlUtil {
         boolean isSupportedScheme = "http".equalsIgnoreCase(originalUri.getScheme())
                 || "https".equalsIgnoreCase(originalUri.getScheme());
 
-        // 프로토콜과 호스트 및 경로가 Daum 도서 원본 형식인지 반환함
+        // 프로토콜과 호스트 및 경로가 Daum 도서 원본 형식인지 반환
         return isSupportedScheme && !StringUtil.isEmpty(host)
                 && DAUM_ORIGINAL_HOST.equals(host.toLowerCase(Locale.ROOT)) && !StringUtil.isEmpty(path)
                 && path.startsWith(DAUM_ORIGINAL_PATH_PREFIX) && StringUtil.isEmpty(originalUri.getUserInfo())
@@ -141,7 +141,7 @@ public final class BookCoverUrlUtil {
     }
 
     /**
-     * 원시 쿼리 문자열에서 지정한 파라미터 값을 조회함
+     * 원시 쿼리 문자열에서 지정한 파라미터 값을 조회
      *
      * @author SeungHyeon.Kang
      * @param rawQuery percent-encoding 상태의 쿼리 문자열
@@ -151,7 +151,7 @@ public final class BookCoverUrlUtil {
     private static String getRawQueryParameter(String rawQuery, String parameterName) {
         // 쿼리가 없으면 원본 주소 파라미터도 존재하지 않음
         if (StringUtil.isEmpty(rawQuery)) {
-            // 조회할 파라미터가 없음을 반환함
+            // 조회할 파라미터가 없음을 반환
             return null;
         }
 
@@ -159,14 +159,14 @@ public final class BookCoverUrlUtil {
         for (String queryParameter : rawQuery.split("&")) {
             int separatorIndex = queryParameter.indexOf('=');
 
-            // 이름과 값이 모두 있는 파라미터만 비교함
+            // 이름과 값이 모두 있는 파라미터만 비교
             if (separatorIndex > 0 && parameterName.equals(queryParameter.substring(0, separatorIndex))) {
-                // 원문 디코딩 전 파라미터 값을 반환함
+                // 원문 디코딩 전 파라미터 값을 반환
                 return queryParameter.substring(separatorIndex + 1);
             }
         }
 
-        // 지정한 쿼리 파라미터가 없음을 반환함
+        // 지정한 쿼리 파라미터가 없음을 반환
         return null;
     }
 }

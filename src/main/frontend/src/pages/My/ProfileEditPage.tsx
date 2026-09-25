@@ -94,14 +94,14 @@ const DEFAULT_GOAL_HELP_ITEMS = [
 ] as const;
 
 /**
- * 관리자 설정 또는 기본 목표 내리기 정책 문구를 목록 항목으로 표시함
+ * 관리자 설정 또는 기본 목표 내리기 정책 문구를 목록 항목으로 표시
  *
  * @author HanWon.Jang
  * @param goalHelpItem 화면에 표시할 목표 내리기 정책 문구
  * @return 목표 내리기 정책 목록 항목
  */
 const renderGoalHelpItem = (goalHelpItem: string): ReactNode => {
-  // 개별 목표 내리기 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환함
+  // 개별 목표 내리기 정책 문구를 안정적인 문자열 key와 함께 목록 항목으로 반환
   return <li key={goalHelpItem}>{goalHelpItem}</li>;
 };
 
@@ -124,8 +124,8 @@ const GOAL_COPY_LABELS: Record<ReadingPeriod, { current: string; previous: strin
 };
 
 /**
- * 닉네임 입력값에서 허용하지 않은 문자를 제거하고 최대 입력 길이를 제한함
- * 한글 조합 문자와 영문 및 숫자 외에는 언더바와 하이픈만 입력 상태에 반영함
+ * 닉네임 입력값에서 허용하지 않은 문자를 제거하고 최대 입력 길이를 제한
+ * 한글 조합 문자와 영문 및 숫자 외에는 언더바와 하이픈만 입력 상태에 반영
  *
  * @author HanWon.Jang
  * @param value 사용자가 입력한 닉네임 원문
@@ -135,8 +135,8 @@ const normalizeUserNick = (value: string) =>
   value.replace(USER_NICK_INPUT_REGEX, "").slice(0, USER_NICK_MAX_LENGTH);
 
 /**
- * 한줄 소개 입력값을 허용 길이 이하로 제한함
- * textarea의 maxLength와 별개로 상태 값도 제한해 브라우저별 입력 차이를 한 번 더 방어함
+ * 한줄 소개 입력값을 허용 길이 이하로 제한
+ * textarea의 maxLength와 별개로 상태 값도 제한해 브라우저별 입력 차이를 한 번 더 방어
  *
  * @author HanWon.Jang
  * @param value 사용자가 입력한 한줄 소개 원문
@@ -146,7 +146,7 @@ const normalizeProfileIntro = (value: string) =>
   value.slice(0, PROFILE_INTRO_MAX_LENGTH);
 
 /**
- * join Korean List 기능을 처리함
+ * join Korean List 기능을 처리
  *
  * @author HanWon.Jang
  * @param items items 입력값
@@ -155,7 +155,7 @@ const normalizeProfileIntro = (value: string) =>
 const joinKoreanList = (items: string[]) => items.join(", ");
 
 /**
- * get Copyable Previous Goal Periods 정보를 조회함
+ * get Copyable Previous Goal Periods 정보를 조회
  *
  * @author HanWon.Jang
  * @param summary summary 입력값
@@ -180,7 +180,7 @@ const getCopyableGoalPeriods = (summary: MonthlyReadingSummary | null) =>
   });
 
 /**
- * get Previous Goal Count 정보를 조회함
+ * get Previous Goal Count 정보를 조회
  *
  * @author HanWon.Jang
  * @param summary summary 입력값
@@ -201,7 +201,7 @@ const getPreviousGoalCount = (summary: MonthlyReadingSummary, period: ReadingPer
 };
 
 /**
- * get Copy Previous Goal Confirm Text 정보를 조회함
+ * get Copy Previous Goal Confirm Text 정보를 조회
  *
  * @author HanWon.Jang
  * @param summary summary 입력값
@@ -228,8 +228,8 @@ const getCopyGoalConfirmText = (summary: MonthlyReadingSummary, periods: Reading
 };
 
 /**
- * 이전 기간 대비 완료 독서 변화량을 화면 표시용 문자열로 변환함
- * 양수에는 + 기호를 붙이고 0은 증감이 없는 상태로 그대로 표시함
+ * 이전 기간 대비 완료 독서 변화량을 화면 표시용 문자열로 변환
+ * 양수에는 + 기호를 붙이고 0은 증감이 없는 상태로 그대로 표시
  *
  * @author HanWon.Jang
  * @param diff 이전 기간 대비 완료 독서 권수 변화량
@@ -245,8 +245,8 @@ const formatReadingDiff = (diff: number) => {
 };
 
 /**
- * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환함
- * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환함
+ * 현재 읽고 있는 책의 목표 독서기간을 팝업 표시용 문장으로 변환
+ * 시작일과 종료일이 모두 비어 있으면 책 정보 영역에 불필요한 빈 라벨이 나오지 않도록 빈 문자열을 반환
  *
  * @author HanWon.Jang
  * @param report 목표 독서기간을 표시할 독후감 요약 정보
@@ -267,8 +267,8 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
 };
 
 /**
- * 로그인 사용자의 프로필 사진, 배경 사진, 닉네임, 한줄 소개를 조회하고 수정함
- * 수정 모드에서는 화면을 전환하지 않고 기존 요소 위치에서 텍스트와 이미지만 편집할 수 있게 제공함
+ * 로그인 사용자의 프로필 사진, 배경 사진, 닉네임, 한줄 소개를 조회하고 수정
+ * 수정 모드에서는 화면을 전환하지 않고 기존 요소 위치에서 텍스트와 이미지만 편집할 수 있게 제공
  *
  * @author SeungHyeon.Kang
  * @return 프로필 상세 및 수정 페이지 컴포넌트
@@ -276,7 +276,7 @@ const getReadingPeriodText = (report: ReadingSummaryReport) => {
 const ProfileEditPage = () => {
 
     const navigate = useNavigate();
-    // 알림이 지정한 본인 사진과 댓글 위치를 마이페이지에서 해석함
+    // 알림이 지정한 본인 사진과 댓글 위치를 마이페이지에서 해석
     const [searchParams] = useSearchParams();
     const requestedTagtType = searchParams.get("tagtType");
     const requestedTagtNumb = Number(searchParams.get("tagtNumb"));
@@ -292,7 +292,7 @@ const ProfileEditPage = () => {
     const [backgroundImageDraftToken, setBackgroundImageDraftToken] = useState<string | null>(null);
     const [previewImage, setPreviewImage] = useState(DEFAULT_PROFILE_IMAGE);
     const [previewBackground, setPreviewBackground] = useState("");
-    // 저장된 배경사진은 일반 화면에서 파생본을 사용하고 편집 중 임시 선택본은 서버 미리보기를 사용함
+    // 저장된 배경사진은 일반 화면에서 파생본을 사용하고 편집 중 임시 선택본은 서버 미리보기를 사용
     const coverDisplaySource = backgroundImageDraftToken
       ? previewBackground
       : profile?.bgimDisplayPath || previewBackground;
@@ -335,27 +335,27 @@ const ProfileEditPage = () => {
       year: null,
     });
     const followListScrollTimeoutRef = useRef<number | null>(null);
-    // 목표 내리기 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회함
+    // 목표 내리기 도움말에 표시할 관리자 설정 콘텐츠를 미리 조회
     const {data: goalHelpContent} = usePopupContent(
       POPUP_CONTENT_KEYS.profileGoalDown,
     );
-    // 목표 내리기 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지함
+    // 목표 내리기 정책 JSON을 검증하고 조회 전이나 실패 시 현재 기본 문구를 유지
     const goalHelpItems = parsePopupContentList(
       goalHelpContent?.contFirs,
       DEFAULT_GOAL_HELP_ITEMS,
     );
-    // 열린 프로필 팝업 상태에 맞춰 배경 스크롤 잠금을 동기화함
+    // 열린 프로필 팝업 상태에 맞춰 배경 스크롤 잠금을 동기화
     useBodyScrollLock(
       Boolean(currentReadingReport) || isGoalModalOpen || isGoalHelpModalOpen || Boolean(followListType),
     );
 
-    // 알림이 요청한 사진 유형에 대응하는 현재 마이페이지 반응을 선택함
+    // 알림이 요청한 사진 유형에 대응하는 현재 마이페이지 반응을 선택
     const requestedReaction = requestedTagtType === "PROFILE_IMAGE"
       ? profile?.profileImageReaction
       : requestedTagtType === "BACKGROUND_IMAGE"
         ? profile?.backgroundImageReaction
         : null;
-    // 알림의 파일 번호가 현재 본인 사진과 일치할 때만 자동 열기 대상으로 인정함
+    // 알림의 파일 번호가 현재 본인 사진과 일치할 때만 자동 열기 대상으로 인정
     const hasRequestedImage = Boolean(
       requestedReaction
       && Number.isSafeInteger(requestedTagtNumb)
@@ -368,24 +368,24 @@ const ProfileEditPage = () => {
     useEffect(() => {
       // 일반 마이페이지 진입 또는 사진 좋아요 알림은 전체 화면 사진만 열고 댓글 시트는 열지 않음
       if (!hasRequestedImage || !requestedReaction || !focusReplNumb) {
-        // 댓글 자동 열기 상태를 변경하지 않고 종료함
+        // 댓글 자동 열기 상태를 변경하지 않고 종료
         return;
       }
 
       // 같은 알림 경로를 이미 처리했으면 댓글 집계 갱신으로 시트를 다시 열지 않음
       if (processedReplyRouteRef.current === requestedRouteKey) {
-        // 사용자가 닫은 댓글 시트 상태를 유지함
+        // 사용자가 닫은 댓글 시트 상태를 유지
         return;
       }
 
-      // 현재 알림 경로의 댓글 자동 열기를 처리했음을 기록함
+      // 현재 알림 경로의 댓글 자동 열기를 처리했음을 기록
       processedReplyRouteRef.current = requestedRouteKey;
-      // 현재 본인 사진 댓글 시트를 열고 알림이 지정한 댓글을 강조하도록 대상을 설정함
+      // 현재 본인 사진 댓글 시트를 열고 알림이 지정한 댓글을 강조하도록 대상을 설정
       setReplyTarget(requestedReaction);
     }, [focusReplNumb, hasRequestedImage, requestedReaction, requestedRouteKey]);
 
     /**
-     * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영함
+     * 서버에서 받은 프로필 값을 화면 상태와 이미지 미리보기 상태에 함께 반영
      * 저장 완료 후 파일 선택 상태를 비워 같은 파일을 다시 선택하더라도 정상적으로 반응하게 만듦
      *
      * @author HanWon.Jang
@@ -402,8 +402,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 현재 사용자 사진의 좋아요 상태를 서버 결과로 갱신함
-     * 같은 사진에 대한 중복 요청을 막고 프로필 공유 캐시에도 변경 결과를 함께 반영함
+     * 현재 사용자 사진의 좋아요 상태를 서버 결과로 갱신
+     * 같은 사진에 대한 중복 요청을 막고 프로필 공유 캐시에도 변경 결과를 함께 반영
      *
      * @author SeungHyeon.Kang
      * @param reaction 좋아요를 변경할 현재 사진 반응 정보
@@ -411,7 +411,7 @@ const ProfileEditPage = () => {
     const handleImageLike = async (reaction: ImageReaction): Promise<void> => {
       // 같은 사진의 좋아요 요청이 진행 중이면 중복 토글을 실행하지 않음
       if (imageLikeUpdatingType === reaction.tagtType) {
-        // 진행 중인 첫 요청 결과를 유지함
+        // 진행 중인 첫 요청 결과를 유지
         return;
       }
 
@@ -420,7 +420,7 @@ const ProfileEditPage = () => {
         : "backgroundImageReaction";
 
       /**
-       * 지정한 좋아요 상태를 같은 사진 반응에만 병합함
+       * 지정한 좋아요 상태를 같은 사진 반응에만 병합
        *
        * @author SeungHyeon.Kang
        * @param current 현재 화면 또는 공유 캐시의 프로필 정보
@@ -438,7 +438,7 @@ const ProfileEditPage = () => {
           return current;
         }
 
-        // 지정한 좋아요 수와 여부만 현재 사진 반응에 병합함
+        // 지정한 좋아요 수와 여부만 현재 사진 반응에 병합
         return {
           ...current,
           [reactionKey]: {
@@ -456,7 +456,7 @@ const ProfileEditPage = () => {
         likeYsno: reaction.likeYsno === "Y" ? "N" : "Y",
       };
 
-      // 현재 대상 버튼의 중복 요청을 막고 서버 응답 전에 화면과 공유 캐시를 즉시 변경함
+      // 현재 대상 버튼의 중복 요청을 막고 서버 응답 전에 화면과 공유 캐시를 즉시 변경
       setImageLikeUpdatingType(reaction.tagtType);
       setProfile((current) =>
         mergeReaction(current ?? undefined, optimisticDetail) ?? null,
@@ -467,12 +467,12 @@ const ProfileEditPage = () => {
       );
 
       try {
-        // 범용 좋아요 API에 현재 사진 유형과 파일 번호를 전달함
+        // 범용 좋아요 API에 현재 사진 유형과 파일 번호를 전달
         const result = await setPublicReportLikeApi({
           tagtType: reaction.tagtType,
           tagtNumb: reaction.tagtNumb,
         });
-        // 서버가 확정한 값이 있으면 현재 화면과 공유 캐시의 낙관적 상태를 보정함
+        // 서버가 확정한 값이 있으면 현재 화면과 공유 캐시의 낙관적 상태를 보정
         const detail = result.data;
 
         if (detail) {
@@ -486,13 +486,13 @@ const ProfileEditPage = () => {
         }
       }
 
-        // 좋아요 요청 실패를 공통 안내 문구로 표시함
+        // 좋아요 요청 실패를 공통 안내 문구로 표시
       catch (error) {
         const originalDetail: Pick<ImageReaction, "likeCnt" | "likeYsno"> = {
           likeCnt: reaction.likeCnt,
           likeYsno: reaction.likeYsno,
         };
-        // 핵심 좋아요 요청 실패 시에만 화면과 공유 캐시를 클릭 전 상태로 원복함
+        // 핵심 좋아요 요청 실패 시에만 화면과 공유 캐시를 클릭 전 상태로 원복
         setProfile((current) =>
           mergeReaction(current ?? undefined, originalDetail) ?? null,
         );
@@ -505,30 +505,30 @@ const ProfileEditPage = () => {
           getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       } finally {
-        // 성공과 실패 모두에서 사진 좋아요 버튼을 다시 활성화함
+        // 성공과 실패 모두에서 사진 좋아요 버튼을 다시 활성화
         setImageLikeUpdatingType(null);
       }
     };
 
     /**
-     * 사진 댓글 바텀시트를 닫고 최신 댓글 집계를 다시 조회함
+     * 사진 댓글 바텀시트를 닫고 최신 댓글 집계를 다시 조회
      *
      * @author SeungHyeon.Kang
      */
     const handleImageReplyClose = async (): Promise<void> => {
-      // 댓글 바텀시트를 먼저 닫아 본문 조작을 복구함
+      // 댓글 바텀시트를 먼저 닫아 본문 조작을 복구
       setReplyTarget(null);
 
       try {
-        // 댓글 등록과 삭제 결과가 반영된 최신 프로필 사진 집계를 조회함
+        // 댓글 등록과 삭제 결과가 반영된 최신 프로필 사진 집계를 조회
         const nextProfile = (await getMyProfileApi()).data;
-        // 마이페이지의 표시 상태에 최신 프로필과 사진 반응을 반영함
+        // 마이페이지의 표시 상태에 최신 프로필과 사진 반응을 반영
         syncProfileState(nextProfile);
-        // 공유 프로필 캐시도 최신 서버 응답으로 교체함
+        // 공유 프로필 캐시도 최신 서버 응답으로 교체
         queryClient.setQueryData(getMyProfileOptions().queryKey, nextProfile);
       }
 
-        // 댓글 창은 닫힌 상태로 유지하고 집계 재조회 실패만 안내함
+        // 댓글 창은 닫힌 상태로 유지하고 집계 재조회 실패만 안내
       catch (error) {
         await sweetError(
           /* "조회에 실패했습니다." */ message("frontend.alert.loadFailedTitle"),
@@ -587,13 +587,13 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 서버에 남아 있는 임시 이미지 선택본을 화면 미리보기와 저장 식별값에 반영함
+     * 서버에 남아 있는 임시 이미지 선택본을 화면 미리보기와 저장 식별값에 반영
      *
      * @author SeungHyeon.Kang
      * @param drafts 같은 로그인 사용자의 복원 가능한 임시 이미지 목록
      */
     const restoreProfileImageDrafts = (drafts: ProfileImageDraft[]) => {
-      // 프로필과 배경 선택본을 각각 기존 사용자 정보 영역에만 반영함
+      // 프로필과 배경 선택본을 각각 기존 사용자 정보 영역에만 반영
       drafts.forEach((draft) => {
         if (draft.imageType === "PROFILE") {
           setProfileImageDraftToken(draft.draftToken);
@@ -607,7 +607,7 @@ const ProfileEditPage = () => {
         }
       });
 
-      // 앱 재시작으로 복원된 선택본이 있으면 사용자 정보 편집 상태를 함께 복원함
+      // 앱 재시작으로 복원된 선택본이 있으면 사용자 정보 편집 상태를 함께 복원
       if (drafts.length > 0) {
         setIsEditMode(true);
       }
@@ -636,26 +636,26 @@ const ProfileEditPage = () => {
         });
 
       /**
-       * 프로필과 독립적으로 독서 활동 요약을 조회함
+       * 프로필과 독립적으로 독서 활동 요약을 조회
        *
        * @author HanWon.Jang
        * @return 독서 활동 요약 조회 완료 Promise
        */
       const loadReadingSummary = async () => {
 
-        // 독서 활동 조회 성공과 실패 및 종료 상태를 각각 처리함
+        // 독서 활동 조회 성공과 실패 및 종료 상태를 각각 처리
         try {
-          // 프로필 하단에 표시할 독서 활동 요약을 조회함
+          // 프로필 하단에 표시할 독서 활동 요약을 조회
           const response = await getMonthlyReadingApi();
 
-          // 컴포넌트가 유지되는 동안에만 독서 활동 요약을 화면 상태에 반영함
+          // 컴포넌트가 유지되는 동안에만 독서 활동 요약을 화면 상태에 반영
           if (!ignore) {
-            // 조회한 독서 활동 요약을 프로필 하단 영역에 설정함
+            // 조회한 독서 활동 요약을 프로필 하단 영역에 설정
             setMonthlySummary(response.data as MonthlyReadingSummary);
           }
         }
 
-          // 독서 활동 조회 실패를 사용자에게 안내함
+          // 독서 활동 조회 실패를 사용자에게 안내
         catch (error) {
           // 화면을 벗어난 뒤 발생한 응답은 사용자 알림을 띄우지 않음
           if (!ignore) {
@@ -668,7 +668,7 @@ const ProfileEditPage = () => {
 
       };
 
-      // 프로필 조회와 병렬로 독서 활동 요약 조회를 시작함
+      // 프로필 조회와 병렬로 독서 활동 요약 조회를 시작
       void loadReadingSummary();
 
       return () => {
@@ -686,7 +686,7 @@ const ProfileEditPage = () => {
      */
     useEffect(() => {
       /**
-       * handle Document Pointer Down 사용자 동작을 처리함
+       * handle Document Pointer Down 사용자 동작을 처리
        *
        * @author HanWon.Jang
        * @param event event 입력값
@@ -729,7 +729,7 @@ const ProfileEditPage = () => {
 
     /**
      * 이전 기간 대비 완료 독서 변화량 상세 문구를 info 알림으로 보여줌
-     * 월간과 연간 비교 모두 같은 UI 패턴을 사용하므로 비교 단위별 메시지 key만 분기함
+     * 월간과 연간 비교 모두 같은 UI 패턴을 사용하므로 비교 단위별 메시지 key만 분기
      *
      * @author HanWon.Jang
      * @param diff 이전 기간 대비 완료 독서 권수 변화량
@@ -765,17 +765,17 @@ const ProfileEditPage = () => {
     ): Promise<void> => {
       // 팔로우와 팔로워 통계는 기존 사용자 목록 모달을 엶
       if (action === "following" || action === "followers") {
-        // 선택한 관계 유형의 사용자 목록을 조회해 표시함
+        // 선택한 관계 유형의 사용자 목록을 조회해 표시
         await handleFollowListOpen(action);
-        // 팔로우 목록을 연 뒤 통계 안내 처리를 종료함
+        // 팔로우 목록을 연 뒤 통계 안내 처리를 종료
         return;
       }
 
-      // 총 읽은 책 통계는 완료한 책 권수를 안내함
+      // 총 읽은 책 통계는 완료한 책 권수를 안내
       if (action === "totalReadBook") {
         // "총 {0}권의 책을 끝까지 읽었어요!"
         await sweetInfo(message("frontend.profile.stats.totalReadBookAlert", [summary.totalReadBookCnt ?? 0]));
-        // 총 읽은 책 안내를 표시한 뒤 처리를 종료함
+        // 총 읽은 책 안내를 표시한 뒤 처리를 종료
         return;
       }
 
@@ -784,7 +784,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * handle Reading Diff Click 사용자 동작을 처리함
+     * handle Reading Diff Click 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param diff diff 입력값
@@ -797,8 +797,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 사용자가 선택한 이미지를 서버 비공개 임시 저장소에 올리고 서버 미리보기만 화면에 반영함
-     * 브라우저가 고해상도 원본을 디코딩하지 않아 모바일 PWA의 메모리 회수를 피함
+     * 사용자가 선택한 이미지를 서버 비공개 임시 저장소에 올리고 서버 미리보기만 화면에 반영
+     * 고해상도 원본 미디코딩을 통한 모바일 PWA 메모리 사용량 증가 방지
      *
      * @author SeungHyeon.Kang
      * @param file 사용자가 선택한 이미지 파일
@@ -808,7 +808,7 @@ const ProfileEditPage = () => {
       file: File | undefined,
       imageType: ProfileImageType,
     ): Promise<void> => {
-      // 앨범 선택이 취소된 경우 기존 임시 선택본과 미리보기를 유지함
+      // 앨범 선택이 취소된 경우 기존 임시 선택본과 미리보기를 유지
       if (!file) {
         return;
       }
@@ -824,7 +824,7 @@ const ProfileEditPage = () => {
       }
 
       try {
-        // 방향 보정과 해상도 검증 및 축소 처리를 서버에 위임함
+        // 방향 보정과 해상도 검증 및 축소 처리를 서버에 위임
         const draft = await setProfileImageDraftApi(file, imageType);
 
         if (imageType === "PROFILE") {
@@ -834,7 +834,7 @@ const ProfileEditPage = () => {
           return;
         }
 
-        // 배경 이미지도 원본 File 객체 없이 서버 미리보기와 임시 식별값만 유지함
+        // 배경 이미지도 원본 File 객체 없이 서버 미리보기와 임시 식별값만 유지
         setBackgroundImageDraftToken(draft.draftToken);
         setPreviewBackground(draft.previewDataUrl);
       } catch (error) {
@@ -846,7 +846,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 앨범에서 선택한 배경 이미지 파일을 안전한 미리보기 처리로 전달함
+     * 앨범에서 선택한 배경 이미지 파일을 안전한 미리보기 처리로 전달
      *
      * @author SeungHyeon.Kang
      * @param event 배경 이미지 파일 입력 변경 이벤트
@@ -856,12 +856,12 @@ const ProfileEditPage = () => {
       const file = event.currentTarget.files?.[0];
       // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비움
       event.currentTarget.value = "";
-      // 검증과 축소가 끝난 배경 이미지만 화면 선택 상태에 반영함
+      // 검증과 축소가 끝난 배경 이미지만 화면 선택 상태에 반영
       void applyImagePreview(file, "BACKGROUND");
     };
 
     /**
-     * 앨범에서 선택한 프로필 이미지 파일을 안전한 미리보기 처리로 전달함
+     * 앨범에서 선택한 프로필 이미지 파일을 안전한 미리보기 처리로 전달
      *
      * @author SeungHyeon.Kang
      * @param event 프로필 이미지 파일 입력 변경 이벤트
@@ -871,13 +871,13 @@ const ProfileEditPage = () => {
       const file = event.currentTarget.files?.[0];
       // 같은 파일을 다시 선택해도 변경 이벤트가 발생하도록 브라우저 입력값을 비움
       event.currentTarget.value = "";
-      // 검증과 축소가 끝난 프로필 이미지만 화면 선택 상태에 반영함
+      // 검증과 축소가 끝난 프로필 이미지만 화면 선택 상태에 반영
       void applyImagePreview(file, "PROFILE");
     };
 
     /**
-     * 독서 요약 행의 펼침 상태를 월간/연간 단위로 전환함
-     * 같은 섹션 안에서 두 목록을 독립적으로 열 수 있어 사용자가 비교 중인 목록을 잃지 않게 함
+     * 독서 요약 행의 펼침 상태를 월간/연간 단위로 전환
+     * 같은 섹션 안에서 두 목록을 독립적으로 열 수 있어 사용자가 비교 중인 목록을 잃지 않도록 처리
      *
      * @author HanWon.Jang
      * @param period 열거나 닫을 독서 요약 기간 구분값
@@ -891,8 +891,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 요약 목록에서 선택한 책의 독후감 상세 화면으로 이동함
-     * 백엔드가 내려준 reptNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결함
+     * 요약 목록에서 선택한 책의 독후감 상세 화면으로 이동
+     * 백엔드가 내려준 reptNumb를 그대로 사용해 책 정보가 아닌 사용자의 독후감 상세로 연결
      *
      * @author HanWon.Jang
      * @param reptNumb 이동할 독후감 번호
@@ -903,8 +903,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 커스텀 모달을 닫을 때 fade-out 애니메이션이 끝난 뒤 실제 상태를 제거함
-     * sweetAlert, 달력, selectBox 성격의 모달은 이 흐름을 사용하지 않고 각 컴포넌트의 기본 동작을 유지함
+     * 커스텀 모달을 닫을 때 fade-out 애니메이션이 끝난 뒤 실제 상태를 제거
+     * sweetAlert, 달력, selectBox 성격의 모달은 이 흐름을 사용하지 않고 각 컴포넌트의 기본 동작을 유지
      *
      * @author HanWon.Jang
      * @param modal 닫을 마이페이지 커스텀 모달 구분값
@@ -918,9 +918,9 @@ const ProfileEditPage = () => {
 
         window.setTimeout(() => {
 
-          // 현재 읽는 책 안내 모달은 선택한 독후감 상태를 비워 화면에서 제거함
+          // 현재 읽는 책 안내 모달은 선택한 독후감 상태를 비워 화면에서 제거
           if (modal === "currentReading") {
-            // 닫기 애니메이션이 끝난 현재 읽는 책 안내 모달 상태를 초기화함
+            // 닫기 애니메이션이 끝난 현재 읽는 책 안내 모달 상태를 초기화
             setCurrentReadingReport(null);
           }
 
@@ -953,14 +953,14 @@ const ProfileEditPage = () => {
      */
     const handleCurrentReadingClick = (report: ReadingSummaryReport) => {
 
-      // 이전 모달의 닫기 애니메이션 상태가 새 안내 모달에 남지 않게 초기화함
+      // 이전 모달의 닫기 애니메이션 상태가 새 안내 모달에 남지 않게 초기화
       setClosingModal(null);
-      // 수정 화면으로 전달할 현재 읽는 책을 안내 모달 상태에 설정함
+      // 수정 화면으로 전달할 현재 읽는 책을 안내 모달 상태에 설정
       setCurrentReadingReport(report);
     };
 
     /**
-     * handle Follow List Open 사용자 동작을 처리함
+     * handle Follow List Open 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param type type 입력값
@@ -968,15 +968,15 @@ const ProfileEditPage = () => {
      * @throws API 요청 또는 비동기 처리 실패 시 발생
      */
     const handleFollowListOpen = async (type: FollowListType) => {
-      // 이전 모달의 닫기 상태를 초기화하고 공통 팔로우 목록 첫 페이지를 조회함
+      // 이전 모달의 닫기 상태를 초기화하고 공통 팔로우 목록 첫 페이지를 조회
       setClosingModal(null);
       setIsFollowListScrolling(false);
-      // 본인 팔로우 목록 모달을 열고 첫 서버 페이지를 조회함
+      // 본인 팔로우 목록 모달을 열고 첫 서버 페이지를 조회
       await openFollowList(type);
     };
 
     /**
-     * handle Follow List Scroll 사용자 동작을 처리함
+     * handle Follow List Scroll 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
@@ -997,7 +997,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * handle Follow List User Click 사용자 동작을 처리함
+     * handle Follow List User Click 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @param user 이동할 팔로우 목록 사용자
@@ -1005,23 +1005,23 @@ const ProfileEditPage = () => {
      */
     const handleFollowListUserClick = async (user: FollowUser): Promise<void> => {
 
-      // 프로필 이동 전에 팔로우 목록 모달 닫기 애니메이션을 완료함
+      // 프로필 이동 전에 팔로우 목록 모달 닫기 애니메이션을 완료
       await closeProfileModal("followList");
 
-      // 로그인 사용자 행을 선택하면 타인 프로필 API를 거치지 않고 현재 마이페이지로 이동함
+      // 로그인 사용자 행을 선택하면 타인 프로필 API를 거치지 않고 현재 마이페이지로 이동
       if (user.meYsno === "Y") {
-        // 로그인 사용자의 마이페이지로 이동함
+        // 로그인 사용자의 마이페이지로 이동
         navigate("/mypage/profile");
-        // 타인 프로필 이동을 중단함
+        // 타인 프로필 이동을 중단
         return;
       }
 
-      // 선택한 다른 사용자의 공개 프로필로 이동함
+      // 선택한 다른 사용자의 공개 프로필로 이동
       navigate(`/social/profile/${user.userNumb}`);
     };
 
     /**
-     * 내 팔로우 목록 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출함
+     * 내 팔로우 목록 사용자의 현재 관계에 맞춰 팔로우 또는 언팔로우 API를 호출
      *
      * @author HanWon.Jang
      * @param user 관계를 변경할 팔로우 목록 사용자
@@ -1032,11 +1032,11 @@ const ProfileEditPage = () => {
 
       // 다른 관계 변경이 진행 중이거나 내 계정 행이면 추가 조작을 허용하지 않음
       if (followUpdatingUserNumb || user.meYsno === "Y") {
-        // 현재 목록 상태를 유지하고 종료함
+        // 현재 목록 상태를 유지하고 종료
         return;
       }
 
-      // 목록 사용자를 내가 팔로우 중인지 버튼명으로 판정함
+      // 목록 사용자를 내가 팔로우 중인지 버튼명으로 판정
       const isFollowing = isFollowedByMe(user.followStatName);
 
       // 팔로잉 또는 친구 상태를 해제하기 전에 사용자 확인을 받음
@@ -1048,9 +1048,9 @@ const ProfileEditPage = () => {
           cancelButtonText: /* "취소" */ message("frontend.common.cancel"),
         });
 
-        // 사용자가 취소하면 기존 관계를 유지함
+        // 사용자가 취소하면 기존 관계를 유지
         if (!result.isConfirmed) {
-          // 팔로우 관계 변경 없이 종료함
+          // 팔로우 관계 변경 없이 종료
           return;
         }
       }
@@ -1084,7 +1084,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 선택한 현재 읽는 책의 상세 화면으로 이동하고 전체 편집을 바로 시작함
+     * 선택한 현재 읽는 책의 상세 화면으로 이동하고 전체 편집을 바로 시작
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
@@ -1093,19 +1093,19 @@ const ProfileEditPage = () => {
 
       // 선택한 현재 읽는 책이 없으면 잘못된 상세 경로로 이동하지 않음
       if (!currentReadingReport) {
-        // 수정 화면 이동 없이 현재 모달을 유지함
+        // 수정 화면 이동 없이 현재 모달을 유지
         return;
       }
 
-      // 선택한 독후감의 상세 화면이 처음부터 전체 편집 상태로 열리게 이동함
+      // 선택한 독후감의 상세 화면이 처음부터 전체 편집 상태로 열리게 이동
       navigate(`/report/detail/${currentReadingReport.reptNumb}`, {
         state: {startEditing: true},
       });
     };
 
     /**
-     * 목표 설정 모달을 열 때 현재 저장된 목표값을 입력값에 반영함
-     * 아직 목표가 없으면 빈 값으로 시작해 사용자가 직접 입력하도록 유도함
+     * 목표 설정 모달을 열 때 현재 저장된 목표값을 입력값에 반영
+     * 아직 목표가 없으면 빈 값으로 시작해 사용자가 직접 입력하도록 유도
      *
      * @author HanWon.Jang
      * @return
@@ -1128,24 +1128,24 @@ const ProfileEditPage = () => {
             setIsGoalSaving(true);
 
             /**
-             * 지난 독서 목표를 복사하고 현재 요약 상태에 반영함
+             * 지난 독서 목표를 복사하고 현재 요약 상태에 반영
              *
              * @author SeungHyeon.Kang
              * @return 복사한 월간 독서 요약 Promise
-             * @throws 지난 목표 복사 또는 응답 검증에 실패하면 발생함
+             * @throws 지난 목표 복사 또는 응답 검증에 실패하면 발생
              */
             const copyPreviousGoal = async (): Promise<MonthlyReadingSummary> => {
-              // 서버에서 복사된 지난 목표와 최신 독서 요약을 조회함
+              // 서버에서 복사된 지난 목표와 최신 독서 요약을 조회
               const response = await copyPrevReadingGoalApi();
-              // 이후 목표 입력에도 사용할 최신 요약을 반환값으로 보관함
+              // 이후 목표 입력에도 사용할 최신 요약을 반환값으로 보관
               const copiedSummary = response.data as MonthlyReadingSummary;
-              // 화면의 목표와 달성 현황을 복사 결과로 갱신함
+              // 화면의 목표와 달성 현황을 복사 결과로 갱신
               setMonthlySummary(copiedSummary);
-              // 호출부에서 최신 목표 요약을 이어서 사용할 수 있도록 반환함
+              // 호출부에서 최신 목표 요약을 이어서 사용할 수 있도록 반환
               return copiedSummary;
             };
 
-            // 목표 복사 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환함
+            // 목표 복사 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환
             nextSummary = await runBlockingOperation(copyPreviousGoal, {
               success: {
                 /* "목표가 저장되었습니다." */ title: message("frontend.profile.goal.savedTitle"),
@@ -1173,7 +1173,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 목표 입력값을 1 이상 숫자만 남긴 문자열로 정리함
+     * 목표 입력값을 1 이상 숫자만 남긴 문자열로 정리
      *
      * @author HanWon.Jang
      * @param value 사용자가 입력한 목표 권수
@@ -1183,21 +1183,21 @@ const ProfileEditPage = () => {
       value.replace(/[^0-9]/g, "").replace(/^0+/, "");
 
     /**
-     * get Reading Remain Rate 정보를 조회함
+     * get Reading Remain Rate 정보를 조회
      *
      * @author HanWon.Jang
      * @param remainDays remain Days 입력값
      * @return 처리 결과
      */
     const getReadingRemainRate = (remainDays: number) => {
-      // 현재 읽고 있는 책의 남은 기간 색상은 전체 목표기간 비율이 아니라 남은 10일을 기준으로 판단함
+      // 현재 읽고 있는 책의 남은 기간 색상은 전체 목표기간 비율이 아니라 남은 10일을 기준으로 판단
       // 10일 이상 남으면 가장 여유 있는 색상, 0일에 가까워질수록 기존 색상 단계가 내려감
       return Math.max(0, Math.min(100, Math.round((Math.max(remainDays, 0) / 10) * 100)));
     };
 
     /**
-     * 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링함
-     * 전체 목표기간 대비 남은 비율을 색상 기준으로 사용해 기간이 가까워질수록 붉은 계열로 표시함
+     * 현재 읽고 있는 책의 목표 종료일까지 남은 기간 정보를 렌더링
+     * 전체 목표기간 대비 남은 비율을 색상 기준으로 사용해 기간이 가까워질수록 붉은 계열로 표시
      *
      * @author HanWon.Jang
      * @param reports 현재 읽고 있는 독후감 목록
@@ -1244,7 +1244,7 @@ const ProfileEditPage = () => {
                       role="link"
                       tabIndex={0}
                       onClick={(event) => {
-                        // 제목은 카드의 수정 안내 동작과 분리하여 도서 정보 화면으로 바로 이동함
+                        // 제목은 카드의 수정 안내 동작과 분리하여 도서 정보 화면으로 바로 이동
                         event.stopPropagation();
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
@@ -1309,7 +1309,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * render Profile Stats 화면 요소를 구성함
+     * render Profile Stats 화면 요소를 구성
      *
      * @author HanWon.Jang
      * @param summary summary 입력값
@@ -1370,8 +1370,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 목표 입력 모달에서 버튼 클릭으로 월별/연도별 목표 권수를 1권 단위로 증감함
-     * 목표 권수는 저장 가능한 최소 단위가 1권이므로 감소 버튼을 반복해서 눌러도 1 미만으로 내려가지 않게 제한함
+     * 목표 입력 모달에서 버튼 클릭으로 월별/연도별 목표 권수를 1권 단위로 증감
+     * 목표 권수는 저장 가능한 최소 단위가 1권이므로 감소 버튼을 반복해서 눌러도 1 미만으로 내려가지 않게 제한
      *
      * @author HanWon.Jang
      * @param period 조정할 목표 기간
@@ -1393,20 +1393,20 @@ const ProfileEditPage = () => {
         const currentCount = Number(prev);
         const nextCount = isEmptyGoalCount ? 1 : currentCount + amount;
 
-        // 빈 입력에서 스테퍼를 처음 조작하면 증감 방향과 관계없이 최소 목표인 1권부터 시작함
+        // 빈 입력에서 스테퍼를 처음 조작하면 증감 방향과 관계없이 최소 목표인 1권부터 시작
         return String(Math.max(1, nextCount));
       });
     };
 
     /**
-     * 월간/연간 목표 권수를 저장하고 저장 후 갱신된 요약 정보를 화면에 반영함
+     * 월간/연간 목표 권수를 저장하고 저장 후 갱신된 요약 정보를 화면에 반영
      *
      * @author HanWon.Jang
      * @return
      */
     /**
-     * 목표 기간에 맞는 화면 라벨 메시지 key를 반환함
-     * 같은 기간 분기값을 입력 카드, 제한 안내, 저장 전 검증에서 함께 사용해 화면 안내와 검증 기준이 어긋나지 않게 함
+     * 목표 기간에 맞는 화면 라벨 메시지 key를 반환
+     * 같은 기간 분기값을 입력 카드, 제한 안내, 저장 전 검증에서 함께 사용해 화면 안내와 검증 기준이 어긋나지 않도록 처리
      *
      * @author HanWon.Jang
      * @param period 목표 기간 구분값
@@ -1426,7 +1426,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 현재 모달 입력값 중 기간에 맞는 목표 권수를 숫자로 반환함
+     * 현재 모달 입력값 중 기간에 맞는 목표 권수를 숫자로 반환
      * 빈 문자열은 Number 변환 시 0이 되므로 필수 입력 검증과 같은 기준으로 처리됨
      *
      * @author HanWon.Jang
@@ -1447,7 +1447,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 서버에 저장되어 있던 기간별 목표 권수를 반환함
+     * 서버에 저장되어 있던 기간별 목표 권수를 반환
      * 저장된 값과 입력값이 다른 기간만 수정 제한 검증을 적용해야 같은 값을 다시 저장할 때 수정 횟수를 소모하지 않음
      *
      * @author HanWon.Jang
@@ -1468,8 +1468,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 기간별 목표가 이미 설정되어 있는지 확인함
-     * 최초 설정은 수정 제한 대상이 아니므로 기존 목표가 있는 기간만 수정 제한 안내와 저장 전 차단에 사용함
+     * 기간별 목표가 이미 설정되어 있는지 확인
+     * 최초 설정은 수정 제한 대상이 아니므로 기존 목표가 있는 기간만 수정 제한 안내와 저장 전 차단에 사용
      *
      * @author HanWon.Jang
      * @param period 목표 기간 구분값
@@ -1489,7 +1489,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 기간별로 앞으로 남은 목표 수정 횟수를 반환함
+     * 기간별로 앞으로 남은 목표 수정 횟수를 반환
      * 값은 백엔드 제한 로직과 같은 기준으로 내려온 응답값을 사용해 화면 선검증과 서버 검증의 기준을 맞춤
      *
      * @author HanWon.Jang
@@ -1510,8 +1510,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 목표 수정 제한 기간이 시작되기 전까지 남은 일수를 반환함
-     * 0이면 이미 수정 가능 기간이 끝난 상태로 보고 저장 전에 사용자에게 안내함
+     * 목표 수정 제한 기간이 시작되기 전까지 남은 일수를 반환
+     * 0이면 이미 수정 가능 기간이 끝난 상태로 보고 저장 전에 사용자에게 안내
      *
      * @author HanWon.Jang
      * @param period 목표 기간 구분값
@@ -1531,8 +1531,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 목표 기간이 마감 규칙 때문에 잠겨 있는지 반환함
-     * 수정 횟수가 남아 있어도 기간이 잠긴 경우에는 프론트에서 먼저 저장을 차단함
+     * 목표 기간이 마감 규칙 때문에 잠겨 있는지 반환
+     * 수정 횟수가 남아 있어도 기간이 잠긴 경우에는 프론트에서 먼저 저장을 차단
      *
      * @author HanWon.Jang
      * @param period 목표 기간 구분값
@@ -1552,7 +1552,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 모달 입력값이 기존 목표보다 낮아졌는지 확인함
+     * 모달 입력값이 기존 목표보다 낮아졌는지 확인
      * 목표를 올리는 것은 언제든 허용되어야 하므로 낮아진 기간만 목표 내리기 제한 검증과 확인 alert 대상이 됨
      *
      * @author HanWon.Jang
@@ -1570,8 +1570,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 저장 전 목표 내리기 제한에 걸리는 기간의 안내 문구를 반환함
-     * 제한이 없는 기간은 빈 문자열을 반환해 저장 검증 루프에서 다음 기간을 계속 확인할 수 있게 함
+     * 저장 전 목표 내리기 제한에 걸리는 기간의 안내 문구를 반환
+     * 제한이 없는 기간은 빈 문자열을 반환해 저장 검증 루프에서 다음 기간을 계속 확인할 수 있도록 처리
      *
      * @author HanWon.Jang
      * @param period 목표 기간 구분값
@@ -1645,7 +1645,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * handle Goal Submit 사용자 동작을 처리함
+     * handle Goal Submit 사용자 동작을 처리
      *
      * @author HanWon.Jang
      * @return 반환값이 없음
@@ -1694,26 +1694,26 @@ const ProfileEditPage = () => {
         setIsGoalSaving(true);
 
         /**
-         * 독서 목표를 저장하고 화면 요약 및 목표 모달 상태를 갱신함
+         * 독서 목표를 저장하고 화면 요약 및 목표 모달 상태를 갱신
          *
          * @author SeungHyeon.Kang
          * @return 독서 목표 저장 완료 Promise
-         * @throws 독서 목표 저장 또는 목표 모달 정리에 실패하면 발생함
+         * @throws 독서 목표 저장 또는 목표 모달 정리에 실패하면 발생
          */
         const saveReadingGoal = async (): Promise<void> => {
-          // 입력한 주간, 월간, 연간 목표를 서버에 저장함
+          // 입력한 주간, 월간, 연간 목표를 서버에 저장
           const response = await updateReadingGoalApi({
             weekGoalCnt: nextWeekGoalCnt,
             monthGoalCnt: nextMonthGoalCnt,
             yearGoalCnt: nextYearGoalCnt,
           });
-          // 화면의 목표와 달성 현황을 최신 응답으로 갱신함
+          // 화면의 목표와 달성 현황을 최신 응답으로 갱신
           setMonthlySummary(response.data as MonthlyReadingSummary);
           // 저장이 끝난 목표 설정 모달을 닫음
           await closeProfileModal("goal");
         };
 
-        // 목표 저장 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환함
+        // 목표 저장 완료 후 처리 중 알림을 같은 저장 성공 알림으로 전환
         await runBlockingOperation(saveReadingGoal, {
           success: {
             /* "목표가 저장되었습니다." */ title: message("frontend.profile.goal.savedTitle"),
@@ -1731,8 +1731,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 월간/연간 독서 요약 행과 펼침 목록을 공통 구조로 렌더링함
-     * 권수 비교 버튼은 별도 버튼으로 유지하고, 제목/권수 영역을 누르면 목록만 부드럽게 열리도록 분리함
+     * 월간/연간 독서 요약 행과 펼침 목록을 공통 구조로 렌더링
+     * 권수 비교 버튼은 별도 버튼으로 유지하고, 제목/권수 영역을 누르면 목록만 부드럽게 열리도록 분리
      *
      * @author HanWon.Jang
      * @param period 월간 또는 연간 구분값
@@ -1911,7 +1911,7 @@ const ProfileEditPage = () => {
                       role="link"
                       tabIndex={0}
                       onClick={(event) => {
-                        // 목록 전체 클릭은 독후감 상세, 제목 클릭은 해당 독후감의 도서 정보로 분리함
+                        // 목록 전체 클릭은 독후감 상세, 제목 클릭은 해당 독후감의 도서 정보로 분리
                         event.stopPropagation();
                         navigate(`/book/info/${report.reptNumb}`);
                       }}
@@ -1962,8 +1962,8 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 프로필 수정 버튼 클릭 시 기본 동작과 상위 영역 이벤트 전파를 막고 수정 모드로 전환함
-     * 배경 영역 안의 버튼이 다른 요소로 포커스되거나 클릭 이벤트가 겹치지 않도록 클릭 흐름을 고정함
+     * 프로필 수정 버튼 클릭 시 기본 동작과 상위 영역 이벤트 전파를 막고 수정 모드로 전환
+     * 배경 영역 안의 버튼이 다른 요소로 포커스되거나 클릭 이벤트가 겹치지 않도록 클릭 흐름을 고정
      *
      * @author HanWon.Jang
      * @param event 프로필 수정 버튼 클릭 이벤트
@@ -1992,18 +1992,18 @@ const ProfileEditPage = () => {
       try {
         const deleteRequests: Promise<unknown>[] = [];
 
-        // 사용자가 선택한 프로필 임시 원본과 미리보기를 즉시 삭제함
+        // 사용자가 선택한 프로필 임시 원본과 미리보기를 즉시 삭제
         if (profileImageDraftToken) {
           deleteRequests.push(delProfileImageDraftApi("PROFILE"));
         }
 
-        // 사용자가 선택한 배경 임시 원본과 미리보기를 즉시 삭제함
+        // 사용자가 선택한 배경 임시 원본과 미리보기를 즉시 삭제
         if (backgroundImageDraftToken) {
           deleteRequests.push(delProfileImageDraftApi("BACKGROUND"));
         }
 
         await Promise.all(deleteRequests);
-        // 기존 사용자 정보와 이미지 위치를 그대로 유지한 조회 상태로 복원함
+        // 기존 사용자 정보와 이미지 위치를 그대로 유지한 조회 상태로 복원
         if (profile) {
           syncProfileState(profile);
         }
@@ -2017,7 +2017,7 @@ const ProfileEditPage = () => {
     };
 
     /**
-     * 닉네임 필수값을 확인한 뒤 프로필 수정 API를 호출해 텍스트와 이미지 파일을 함께 저장함
+     * 닉네임 필수값을 확인한 뒤 프로필 수정 API를 호출해 텍스트와 이미지 파일을 함께 저장
      * 저장에 성공하면 서버가 반환한 최신 프로필 정보로 화면을 갱신하고 조회 모드로 되돌림
      *
      * @author HanWon.Jang
@@ -2027,9 +2027,9 @@ const ProfileEditPage = () => {
 
       event.preventDefault();
 
-      // 이미지 업로드가 끝나기 전에 Enter 또는 저장 버튼으로 같은 요청이 중복 제출되지 않게 차단함
+      // 이미지 업로드가 끝나기 전에 Enter 또는 저장 버튼으로 같은 요청이 중복 제출되지 않게 차단
       if (isSaving) {
-        // 진행 중인 프로필 저장 요청만 유지하도록 제출 처리를 종료함
+        // 진행 중인 프로필 저장 요청만 유지하도록 제출 처리를 종료
         return;
       }
 
@@ -2053,31 +2053,31 @@ const ProfileEditPage = () => {
       }
 
       /**
-       * 현재 프로필 입력값과 선택 이미지를 사용자 수정 API에 전달함
+       * 현재 프로필 입력값과 선택 이미지를 사용자 수정 API에 전달
        *
        * @author SeungHyeon.Kang
        * @return 프로필 저장과 화면 상태 반영 완료 Promise
-       * @throws 프로필 저장 또는 응답 검증에 실패하면 발생함
+       * @throws 프로필 저장 또는 응답 검증에 실패하면 발생
        */
       const submitProfileChanges = async (): Promise<void> => {
-        // 현재 입력값과 업로드 초안 토큰을 서버에 저장함
+        // 현재 입력값과 업로드 초안 토큰을 서버에 저장
         const response = await updateMyProfileApi({
           userNick: userNick.trim(),
           intrCntn: intrCntn.trim(),
           profileImageDraftToken,
           backgroundImageDraftToken,
         });
-        // 저장 응답을 프로필 화면과 전역 사용자 상태에 함께 반영함
+        // 저장 응답을 프로필 화면과 전역 사용자 상태에 함께 반영
         const nextProfile = response.data as UserProfile;
         syncProfileState(nextProfile);
         notifyUserProfileUpdated(nextProfile);
-        // 저장된 프로필을 읽기 화면으로 전환함
+        // 저장된 프로필을 읽기 화면으로 전환
         setIsEditMode(false);
       };
 
       try {
         setIsSaving(true);
-        // 파일 업로드를 포함한 프로필 저장이 끝날 때까지 버튼 없는 모달과 화면 이동 차단을 유지함
+        // 파일 업로드를 포함한 프로필 저장이 끝날 때까지 버튼 없는 모달과 화면 이동 차단을 유지
         await runBlockingOperation(submitProfileChanges, {
           // "프로필 저장 중..."
           title: message("frontend.profile.saving"),
@@ -2141,7 +2141,7 @@ const ProfileEditPage = () => {
               </p>
             )}
 
-            {/* 조회 상태의 프로필 수정 버튼을 배경사진 위 우측 하단에 고정함 */}
+            {/* 조회 상태의 프로필 수정 버튼을 배경사진 위 우측 하단에 고정 */}
             {!isEditMode ? (
               <div className={styles.coverEditAction}>
                 <button
@@ -2576,7 +2576,7 @@ const ProfileEditPage = () => {
                 onScroll={handleFollowListScroll}
               >
                 {isFollowListLoading && (
-                  /* 팔로우 사용자 목록을 불러오는 동안 모달 안에 소형 공통 회전 링을 표시함 */
+                  /* 팔로우 사용자 목록을 불러오는 동안 모달 안에 소형 공통 회전 링을 표시 */
                   <Loading
                     title={/* "목록 조회 중" */ message("frontend.common.loadingList")}
                     isFullScreen={false}
@@ -2634,7 +2634,7 @@ const ProfileEditPage = () => {
                   hasNext={!isFollowListLoading && hasNextFollowUser}
                   isLoading={isNextFollowLoading}
                   onLoadMore={() => {
-                    // 목록 하단에 도달하면 다음 팔로우 사용자 서버 페이지를 조회함
+                    // 목록 하단에 도달하면 다음 팔로우 사용자 서버 페이지를 조회
                     void loadMoreFollow();
                   }}
                 />

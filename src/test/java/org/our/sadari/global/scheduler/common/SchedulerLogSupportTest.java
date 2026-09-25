@@ -23,7 +23,7 @@ import org.our.sadari.global.scheduler.service.SchedulerLogService;
  * fileName       : SchedulerLogSupportTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 로직의 동작을 검증함
+ * description    : 스케줄러 로직의 동작을 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -41,46 +41,46 @@ class SchedulerLogSupportTest {
     private SchedulerLogSupport schedulerLogSupport;
 
     /**
-     * 각 테스트가 독립적인 공통 로그 지원 객체를 사용하도록 구성함
+     * 각 테스트가 독립적인 공통 로그 지원 객체를 사용하도록 구성
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
-        // 스케줄러 로그 예외 처리 테스트 대상을 담을 객체를 생성함
+        // 스케줄러 로그 예외 처리 테스트 대상을 담을 객체를 생성
         schedulerLogSupport = new SchedulerLogSupport(schedulerLogService);
     }
 
     /**
-     * 실행 시작 로그 저장 중 예외가 발생해도 호출 스케줄러에 예외를 전파하지 않고 null을 반환하는지 검증함
+     * 실행 시작 로그 저장 중 예외가 발생해도 호출 스케줄러에 예외를 전파하지 않고 null을 반환하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setSchedLogNullOnFail() {
-        // 스케줄러 실행 로그를 담을 객체를 생성함
+        // 스케줄러 실행 로그를 담을 객체를 생성
         SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
-        // FailCntt 업무 값을 schedulerRunDto DTO에 설정함
+        // FailCntt 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setFailCntt(1);
-        // SchedulerLog 업무 값을 schedulerLogService DTO에 설정함
+        // SchedulerLog 업무 값을 schedulerLogService DTO에 설정
         when(schedulerLogService.setSchedulerLog(schedulerRunDto))
                 .thenThrow(new IllegalStateException("log storage failure"));
 
-        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정함
+        // SchedulerLogSafely 업무 값을 schedulerLogSupport DTO에 설정
         Long runxNumb = schedulerLogSupport.setSchedulerLogSafely(schedulerRunDto);
 
-        // 실패 로그 저장이 실패해도 예외가 전파되지 않는지 확인함
+        // 실패 로그 저장이 실패해도 예외가 전파되지 않는지 확인
         assertNull(runxNumb);
     }
 
     /**
-     * 마스터 실행 번호가 없을 때 연결할 수 없는 실패 상세 로그를 저장하지 않는지 검증함
+     * 마스터 실행 번호가 없을 때 연결할 수 없는 실패 상세 로그를 저장하지 않는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setSchedFailSkipsNoRun() {
-        // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정함
+        // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정
         schedulerLogSupport.setSchedulerFailSafely(
                 null
               , Constant.SCHEDULER_FAIL_EXCEPTION
@@ -89,21 +89,21 @@ class SchedulerLogSupportTest {
               , new IllegalStateException("scheduler failure")
         );
 
-        // 의존 객체가 예상한 인자로 호출되었는지 검증함
+        // 의존 객체가 예상한 인자로 호출되었는지 검증
         verify(schedulerLogService, never()).setSchedulerFail(any());
     }
 
     /**
-     * Java 예외 정보를 TL_SCFAIL DTO의 예외 유형 및 오류 내용으로 변환하는지 검증함
+     * Java 예외 정보를 TL_SCFAIL DTO의 예외 유형 및 오류 내용으로 변환하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void setSchedFailMapsError() {
-        // 잘못된 입력 상황을 재현할 예외를 담을 객체를 생성함
+        // 잘못된 입력 상황을 재현할 예외를 담을 객체를 생성
         RuntimeException exception = new IllegalArgumentException("invalid target");
 
-        // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정함
+        // SchedulerFailSafely 업무 값을 schedulerLogSupport DTO에 설정
         schedulerLogSupport.setSchedulerFailSafely(
                 7L
               , Constant.SCHEDULER_FAIL_EXCEPTION
@@ -113,56 +113,56 @@ class SchedulerLogSupportTest {
         );
 
         ArgumentCaptor<SchedulerLogDto.SchedulerFailDto> failCaptor =
-                // 리플렉션 호출 결과의 반환 타입을 지정함
+                // 리플렉션 호출 결과의 반환 타입을 지정
                 ArgumentCaptor.forClass(SchedulerLogDto.SchedulerFailDto.class);
-        // 호출 인자를 검증하기 위해 캡처함
+        // 호출 인자를 검증하기 위해 캡처
         verify(schedulerLogService).setSchedulerFail(failCaptor.capture());
-        // 현재 항목의 값을 조회함
+        // 현재 항목의 값을 조회
         assertEquals(7L, failCaptor.getValue().getRunxNumb());
         // getName 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(IllegalArgumentException.class.getName(), failCaptor.getValue().getErroType());
-        // 현재 항목의 값을 조회함
+        // 현재 항목의 값을 조회
         assertEquals(org.our.sadari.global.common.logging.LogSafe.getFailure(exception), failCaptor.getValue().getErroCntn());
     }
 
     /**
-     * 실행 종료 로그 수정 실패가 실제 스케줄러 업무 흐름으로 전파되지 않는지 검증함
+     * 실행 종료 로그 수정 실패가 실제 스케줄러 업무 흐름으로 전파되지 않는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void uptSchedLogIgnoresFailure() {
-        // 스케줄러 실행 로그를 담을 객체를 생성함
+        // 스케줄러 실행 로그를 담을 객체를 생성
         SchedulerLogDto.SchedulerRunDto schedulerRunDto = new SchedulerLogDto.SchedulerRunDto();
-        // RunxNumb 업무 값을 schedulerRunDto DTO에 설정함
+        // RunxNumb 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setRunxNumb(9L);
-        // 스케줄러 비정상 상태를 재현할 예외를 담을 객체를 생성함
+        // 스케줄러 비정상 상태를 재현할 예외를 담을 객체를 생성
         doThrow(new IllegalStateException("log update failure"))
                 .when(schedulerLogService)
                 .uptSchedulerLog(schedulerRunDto);
 
-        // uptSchedulerLogSafely 호출로 변경된 업무 상태를 반영함
+        // uptSchedulerLogSafely 호출로 변경된 업무 상태를 반영
         assertDoesNotThrow(() -> schedulerLogSupport.uptSchedulerLogSafely(schedulerRunDto));
     }
 
     /**
-     * 성공 및 실패 건수 조합에 따라 성공, 일부 실패, 실패 상태가 결정되는지 검증함
+     * 성공 및 실패 건수 조합에 따라 성공, 일부 실패, 실패 상태가 결정되는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getSchedulerStatusByCnt() {
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         assertEquals(
                 Constant.SCHEDULER_EXEC_SUCCESS
               , schedulerLogSupport.getSchedulerExecStatus(3, 0)
         );
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         assertEquals(
                 Constant.SCHEDULER_EXEC_PARTIAL
               , schedulerLogSupport.getSchedulerExecStatus(2, 1)
         );
-        // 실제 처리 결과가 예상값과 일치하는지 검증함
+        // 실제 처리 결과가 예상값과 일치하는지 검증
         assertEquals(
                 Constant.SCHEDULER_EXEC_FAILURE
               , schedulerLogSupport.getSchedulerExecStatus(0, 2)

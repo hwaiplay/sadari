@@ -2,7 +2,7 @@
  * fileName       : ActionButton
  * author         : Hanwon.Jang
  * date           : 2026-08-10
- * description    : 모든 화면의 기능 명령 버튼과 선택적 아이콘 위치를 공통 구조로 제공함
+ * description    : 모든 화면의 기능 명령 버튼과 선택적 아이콘 위치를 공통 구조로 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -32,7 +32,7 @@ export function ActionButton({
   type = "button",
   ...buttonProps
 }: ActionButtonProps) {
-  // 선택한 공통 스타일과 왼쪽 아이콘을 적용한 화면 명령 버튼을 반환함
+  // 선택한 공통 스타일과 왼쪽 아이콘을 적용한 화면 명령 버튼을 반환
   return (
     <button
       {...buttonProps}

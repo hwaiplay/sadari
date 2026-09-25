@@ -12,7 +12,7 @@ import org.our.sadari.global.file.util.FileUrlUtil;
  * fileName       : FeedDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-25
- * description    : 본인과 팔로잉 피드 항목 및 조회 조건을 전달함
+ * description    : 본인과 팔로잉 피드 항목 및 조회 조건을 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -91,7 +91,7 @@ public class FeedDto {
     private String contentImagePath;
 
     /**
-     * 피드 배경사진 카드에서 사용할 축소 이미지 경로를 반환함
+     * 피드 배경사진 카드에서 사용할 축소 이미지 경로를 반환
      *
      * @author SeungHyeon.Kang
      * @return 배경사진이면 화면용 파생본 경로, 다른 유형이면 원본 경로
@@ -101,11 +101,11 @@ public class FeedDto {
     public String getContentDisplayPath() {
         // 프로필 사진 피드에는 배경사진 전용 파생 URL을 적용하지 않음
         if (!Constant.FILE_TYPE_BACKGROUND.equals(tagtType)) {
-            // 기존 프로필 사진 표시 경로를 유지함
+            // 기존 프로필 사진 표시 경로를 유지
             return contentImagePath;
         }
 
-        // 배경사진 피드에는 긴 변 1600px 파생본 URL을 제공함
+        // 배경사진 피드에는 긴 변 1600px 파생본 URL을 제공
         return FileUrlUtil.getBgDisplayPath(contentImagePath);
     }
 

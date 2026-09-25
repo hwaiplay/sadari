@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Param;
  * fileName       : ReadingClubMembershipMapper
  * author         : HanWon.Jang
  * date           : 2026-09-01
- * description    : 독서 모임 자진 탈퇴의 회원 상태와 활동 연결 정리를 처리함
+ * description    : 독서 모임 자진 탈퇴의 회원 상태와 활동 연결 정리를 처리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

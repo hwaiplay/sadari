@@ -136,7 +136,7 @@ export const coverSaveButton = style([
   },
 ]);
 
-// 프로필 저장 요청이 끝날 때까지 버튼을 푸시 설정과 같은 골드색 진행 상태로 유지함
+// 프로필 저장 요청이 끝날 때까지 버튼을 푸시 설정과 같은 골드색 진행 상태로 유지
 export const coverSaveButtonSaving = style([
   coverSaveButton,
   {
@@ -156,7 +156,7 @@ export const coverSaveButtonSaving = style([
   },
 ]);
 
-// 저장 중 버튼의 현재 글자색을 상속하여 골드색 회전 표시를 제공함
+// 저장 중 버튼의 현재 글자색을 상속하여 골드색 회전 표시를 제공
 export const profileSaveSpinner = style({
   width: "12px",
   height: "12px",
@@ -313,7 +313,7 @@ export const commentButton = style([
 ]);
 
 
-// 소셜 프로필의 세로 점 더보기 버튼을 마이페이지 프로필 수정 버튼과 같은 위치와 명암으로 표시함
+// 소셜 프로필의 세로 점 더보기 버튼을 마이페이지 프로필 수정 버튼과 같은 위치와 명암으로 표시
 export const socialProfileMoreButton = style([
   coverProfileEditButton,
   {
@@ -326,7 +326,7 @@ export const socialProfileMoreButton = style([
   },
 ]);
 
-// 배경과 프로필 사진 위에서도 독후감과 같은 좋아요 및 댓글 버튼을 선명하게 표시하는 공통 캡슐 영역임
+// 배경과 프로필 사진 위에서도 독후감과 같은 좋아요 및 댓글 버튼을 선명하게 표시하는 공통 캡슐 영역
 const imageReactionBar = style({
   zIndex: 2,
   display: "inline-flex",
@@ -346,7 +346,7 @@ export const viewerImageReactionBar = style([
   },
 ]);
 
-// 공통 가로 점 아이콘을 세로 점으로 회전하고 어두운 배경에서 흰색으로 표시함
+// 공통 가로 점 아이콘을 세로 점으로 회전하고 어두운 배경에서 흰색으로 표시
 export const socialProfileMoreIcon = style({
   width: "20px",
   height: "20px",

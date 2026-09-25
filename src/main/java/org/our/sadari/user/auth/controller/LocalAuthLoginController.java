@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : LocalAuthLoginController
  * author         : HanWon.Jang
  * date           : 2026-09-03
- * description    : 로컬 프로필의 localhost와 Tailnet 개발용 간편 로그인 URL을 제공함
+ * description    : 로컬 프로필의 localhost와 Tailnet 개발용 간편 로그인 URL을 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -71,7 +71,7 @@ public class LocalAuthLoginController {
     private String cookieSameSite;
 
     /**
-     * URL의 회원 번호로 로컬 개발용 로그인 쿠키를 발급하고 같은 접속 환경의 프런트엔드로 이동함
+     * URL의 회원 번호로 로컬 개발용 로그인 쿠키를 발급하고 같은 접속 환경의 프런트엔드로 이동
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인할 회원 번호
@@ -84,83 +84,83 @@ public class LocalAuthLoginController {
     public void getLocalLogin(@Parameter(description = "로그인할 회원 번호", example = "31") @RequestParam Long userNumb
                             , @Parameter(hidden = true) HttpServletRequest request
                             , @Parameter(hidden = true) HttpServletResponse response) throws IOException {
-        // Vite 프록시가 전달한 원래 Host를 기준으로 localhost와 Tailnet 이동 주소를 선택함
+        // Vite 프록시가 전달한 원래 Host를 기준으로 localhost와 Tailnet 이동 주소를 선택
         String redirectDomain = getRedirectDomain(request);
 
-        // localhost와 설정된 Tailnet 호스트가 아니면 회원 조회 전에 간편 로그인 요청을 차단함
+        // localhost와 설정된 Tailnet 호스트가 아니면 회원 조회 전에 간편 로그인 요청을 차단
         if (StringUtil.isEmpty(redirectDomain)) {
             // 허용하지 않은 Host 요청은 설정된 로그인 화면으로만 이동시킴
             response.sendRedirect(frontDomain + "/login");
-            // 검증되지 않은 Host에서 인증 세션을 생성하지 않도록 처리를 종료함
+            // 검증되지 않은 Host에서 인증 세션을 생성하지 않도록 처리를 종료
             return;
         }
 
-        // DB 원본 상태와 권한을 검증한 회원의 개발용 로그인 세션을 발급함
+        // DB 원본 상태와 권한을 검증한 회원의 개발용 로그인 세션을 발급
         ResultData loginResult = localAuthService.setLocalLogin(userNumb);
 
         // 조회 실패 또는 활성 상태가 아닌 계정은 기존 인증 쿠키를 변경하지 않고 로그인 화면으로 이동시킴
         if (loginResult.getCode() != 200 || !(loginResult.getData() instanceof TokenDto token)) {
-            // 인증 실패 결과를 같은 접속 환경의 로그인 화면으로 전달함
+            // 인증 실패 결과를 같은 접속 환경의 로그인 화면으로 전달
             response.sendRedirect(redirectDomain + "/login");
-            // 실패한 회원 번호로 인증 쿠키가 생성되지 않도록 처리를 종료함
+            // 실패한 회원 번호로 인증 쿠키가 생성되지 않도록 처리를 종료
             return;
         }
 
-        // 검증된 회원에게 발급한 Access Token과 Refresh Token을 HttpOnly Cookie로 저장함
+        // 검증된 회원에게 발급한 Access Token과 Refresh Token을 HttpOnly Cookie로 저장
         addTokenCookies(response, token.getAccessToken(), token.getRefreshToken());
         // localhost 또는 Tailnet 중 요청을 시작한 환경의 OAuth 완료 화면으로 이동시킴
         response.sendRedirect(redirectDomain + "/oauth");
     }
 
     /**
-     * Vite 개발 프록시의 원래 Host를 기준으로 로그인 완료 프런트엔드 주소를 선택함
+     * Vite 개발 프록시의 원래 Host를 기준으로 로그인 완료 프런트엔드 주소를 선택
      *
      * @author SeungHyeon.Kang
      * @param request 브라우저 Host와 전달 Host를 포함한 HTTP 요청
      * @return localhost 또는 Tailnet 프런트엔드 주소
      */
     private String getRedirectDomain(HttpServletRequest request) {
-        // Vite가 백엔드에 전달한 브라우저의 원래 Host를 조회함
+        // Vite가 백엔드에 전달한 브라우저의 원래 Host를 조회
         String forwardedHost = request.getHeader(FORWARDED_HOST_HEADER_NAME);
         String requestHost;
 
-        // 프록시를 거치지 않은 직접 요청은 Servlet이 해석한 Host를 사용함
+        // 프록시를 거치지 않은 직접 요청은 Servlet이 해석한 Host를 사용
         if (StringUtil.isEmpty(forwardedHost)) {
-            // 직접 localhost 또는 Tailnet 요청의 호스트명을 조회함
+            // 직접 localhost 또는 Tailnet 요청의 호스트명을 조회
             requestHost = request.getServerName();
         }
 
-        // Vite 프록시 요청은 changeOrigin으로 바뀌기 전의 브라우저 Host를 사용함
+        // Vite 프록시 요청은 changeOrigin으로 바뀌기 전의 브라우저 Host를 사용
         else {
             requestHost = forwardedHost;
         }
 
-        // 대소문자와 포트 유무에 관계없이 localhost 요청을 판정할 값을 정규화함
+        // 대소문자와 포트 유무에 관계없이 localhost 요청을 판정할 값을 정규화
         String normalizedHost = requestHost.toLowerCase(Locale.ROOT);
 
         // localhost 또는 localhost 포트 요청은 로컬 Vite 주소로 복귀시킴
         if (LOCALHOST_NAME.equals(normalizedHost) || normalizedHost.startsWith(LOCALHOST_NAME + ":")) {
-            // localhost에서 발급된 Host 전용 Cookie를 같은 localhost 화면에서 사용하도록 반환함
+            // localhost에서 발급된 Host 전용 Cookie를 같은 localhost 화면에서 사용하도록 반환
             return localFrontDomain;
         }
 
-        // 환경 설정 URL에서 간편 로그인을 허용할 Tailnet 호스트명을 추출함
+        // 환경 설정 URL에서 간편 로그인을 허용할 Tailnet 호스트명을 추출
         String configuredFrontHost = URI.create(frontDomain).getHost();
 
-        // 설정된 Tailnet 호스트와 해당 호스트의 명시적 포트 요청만 허용함
+        // 설정된 Tailnet 호스트와 해당 호스트의 명시적 포트 요청만 허용
         if (!StringUtil.isEmpty(configuredFrontHost)
                 && (configuredFrontHost.equalsIgnoreCase(normalizedHost)
                 || normalizedHost.startsWith(configuredFrontHost.toLowerCase(Locale.ROOT) + ":"))) {
-            // Tailnet Host 전용 Cookie를 설정된 Tailnet 화면에서 사용하도록 반환함
+            // Tailnet Host 전용 Cookie를 설정된 Tailnet 화면에서 사용하도록 반환
             return frontDomain;
         }
 
-        // localhost와 설정된 Tailnet 호스트가 아닌 요청은 로그인 처리 전에 차단하도록 빈 주소를 반환함
+        // localhost와 설정된 Tailnet 호스트가 아닌 요청은 로그인 처리 전에 차단하도록 빈 주소를 반환
         return null;
     }
 
     /**
-     * 개발용 Access Token과 Refresh Token을 브라우저 인증 Cookie로 저장함
+     * 개발용 Access Token과 Refresh Token을 브라우저 인증 Cookie로 저장
      *
      * @author SeungHyeon.Kang
      * @param response 인증 Cookie를 기록할 HTTP 응답
@@ -168,16 +168,16 @@ public class LocalAuthLoginController {
      * @param refreshToken Access Token 재발급에 사용할 Refresh Token
      */
     private void addTokenCookies(HttpServletResponse response, String accessToken, String refreshToken) {
-        // Access Token을 JavaScript에서 읽을 수 없는 인증 Cookie로 저장함
+        // Access Token을 JavaScript에서 읽을 수 없는 인증 Cookie로 저장
         response.addHeader(HttpHeaders.SET_COOKIE, createTokenCookie(
                 ACCESS_TOKEN_COOKIE_NAME, accessToken, accessTokenCookieMaxAgeSeconds).toString());
-        // Refresh Token을 JavaScript에서 읽을 수 없는 인증 Cookie로 저장함
+        // Refresh Token을 JavaScript에서 읽을 수 없는 인증 Cookie로 저장
         response.addHeader(HttpHeaders.SET_COOKIE, createTokenCookie(
                 REFRESH_TOKEN_COOKIE_NAME, refreshToken, refreshTokenCookieMaxAgeSeconds).toString());
     }
 
     /**
-     * 로컬 프로필의 인증 환경 설정을 적용한 HttpOnly Cookie를 생성함
+     * 로컬 프로필의 인증 환경 설정을 적용한 HttpOnly Cookie를 생성
      *
      * @author SeungHyeon.Kang
      * @param name 생성할 Cookie 이름
@@ -186,7 +186,7 @@ public class LocalAuthLoginController {
      * @return 인증 환경 설정이 적용된 Cookie
      */
     private ResponseCookie createTokenCookie(String name, String value, long maxAgeSeconds) {
-        // 기존 OAuth 로그인과 같은 속성을 적용한 인증 Cookie를 반환함
+        // 기존 OAuth 로그인과 같은 속성을 적용한 인증 Cookie를 반환
         return ResponseCookie.from(name, value)
                 .httpOnly(true)
                 .sameSite(cookieSameSite)

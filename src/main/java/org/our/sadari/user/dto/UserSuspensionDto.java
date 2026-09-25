@@ -9,7 +9,7 @@ import java.time.LocalDateTime;
  * fileName       : UserSuspensionDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 사용자에게 공개할 회원 정지 상태와 기간 정보를 전달함
+ * description    : 사용자에게 공개할 회원 정지 상태와 기간 정보를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

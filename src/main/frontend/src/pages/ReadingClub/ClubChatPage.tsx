@@ -2,7 +2,7 @@
  * fileName       : ClubChatPage
  * author         : SeungHyeon.Kang
  * date           : 2026-09-04
- * description    : 활성 모임원이 대화하는 모임 채팅 화면을 구성함
+ * description    : 활성 모임원이 대화하는 모임 채팅 화면을 구성
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -31,7 +31,7 @@ const CLUB_CHAT_INPUT_FOCUSED_ATTRIBUTE = "data-club-chat-input-focused";
 const SOFT_KEYBOARD_MIN_HEIGHT = 120;
 
 /**
- * 모임 채팅 입력 포커스 상태를 문서 루트에 표시함
+ * 모임 채팅 입력 포커스 상태를 문서 루트에 표시
  *
  * @author SeungHyeon.Kang
  * @param focused 채팅 입력 포커스 여부
@@ -75,14 +75,14 @@ const ClubChatPage = () => {
   const inputFocusedRef = useRef(false);
   const inputViewportRef = useRef<{height: number; width: number} | null>(null);
 
-  // 조회된 모임명을 공통 헤더 제목으로 표시함
+  // 조회된 모임명을 공통 헤더 제목으로 표시
   useHeaderTitle(club?.clubName);
 
   // 채팅 화면에서는 메시지 목록만 움직이도록 배경 문서 스크롤을 잠금
   useBodyScrollLock(true);
 
   /**
-   * 새 채팅이 표시되면 바깥 문서를 움직이지 않고 메시지 목록만 끝으로 이동함
+   * 새 채팅이 표시되면 바깥 문서를 움직이지 않고 메시지 목록만 끝으로 이동
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없음
@@ -90,9 +90,9 @@ const ClubChatPage = () => {
   const scrollMessageList = useCallback((): void => {
     const messagePanel = messagePanelRef.current;
 
-    // 채팅 목록이 렌더링된 경우에만 내부 스크롤 위치를 최신 메시지로 이동함
+    // 채팅 목록이 렌더링된 경우에만 내부 스크롤 위치를 최신 메시지로 이동
     if (messagePanel) {
-      // 바깥 페이지의 스크롤 위치를 유지하면서 채팅 목록 끝을 표시함
+      // 바깥 페이지의 스크롤 위치를 유지하면서 채팅 목록 끝을 표시
       messagePanel.scrollTop = messagePanel.scrollHeight;
     }
   }, []);
@@ -168,11 +168,11 @@ const ClubChatPage = () => {
     setChatFocusState(keyboardHeight >= SOFT_KEYBOARD_MIN_HEIGHT);
   }, [scrollMessageList]);
 
-  // 새 채팅이 표시되면 최신 메시지가 보이도록 목록 끝으로 이동함
+  // 새 채팅이 표시되면 최신 메시지가 보이도록 목록 끝으로 이동
   useEffect(scrollMessageList, [messages, pendingContent, scrollMessageList]);
 
   /**
-   * 모바일 키보드가 채팅 표시 영역을 바꾸는 동안 최신 메시지 위치를 유지함
+   * 모바일 키보드가 채팅 표시 영역을 바꾸는 동안 최신 메시지 위치를 유지
    *
    * @author SeungHyeon.Kang
    * @return 표시 영역 변경 감지 해제 함수 또는 미지원 환경의 빈 값
@@ -180,34 +180,34 @@ const ClubChatPage = () => {
   const watchViewportResize = (): (() => void) | undefined => {
     const visualViewport = window.visualViewport;
 
-    // 실제 표시 영역 API가 없는 브라우저는 CSS 대체 높이만 사용함
+    // 실제 표시 영역 API가 없는 브라우저는 CSS 대체 높이만 사용
     if (!visualViewport) {
-      // 등록할 표시 영역 이벤트가 없음을 반환함
+      // 등록할 표시 영역 이벤트가 없음을 반환
       return undefined;
     }
 
-    // 키보드 애니메이션 중 표시 영역 높이와 최신 메시지 위치를 함께 갱신함
+    // 키보드 애니메이션 중 표시 영역 높이와 최신 메시지 위치를 함께 갱신
     visualViewport.addEventListener("resize", handleViewportResize);
 
     /**
-     * 채팅 화면이 닫히면 실제 표시 영역 변경 감지를 해제함
+     * 채팅 화면이 닫히면 실제 표시 영역 변경 감지를 해제
      *
      * @author SeungHyeon.Kang
      * @return 반환값이 없음
      */
     const stopViewportWatch = (): void => {
-      // 다른 화면에서 채팅 스크롤이 실행되지 않도록 이벤트를 해제함
+      // 다른 화면에서 채팅 스크롤이 실행되지 않도록 이벤트를 해제
       visualViewport.removeEventListener("resize", handleViewportResize);
     };
 
-    // 채팅 화면 해제 시 사용할 표시 영역 이벤트 정리 함수를 반환함
+    // 채팅 화면 해제 시 사용할 표시 영역 이벤트 정리 함수를 반환
     return stopViewportWatch;
   };
 
-  // 모바일 키보드가 열리고 닫힐 때 채팅 목록의 끝 위치를 유지함
+  // 모바일 키보드가 열리고 닫힐 때 채팅 목록의 끝 위치를 유지
   useEffect(watchViewportResize, [handleViewportResize]);
 
-  // 다른 화면으로 이동한 뒤 네비게이션 숨김 상태가 남지 않도록 정리함
+  // 다른 화면으로 이동한 뒤 네비게이션 숨김 상태가 남지 않도록 정리
   useEffect(registerChatFocusCleanup, []);
 
   /** 채팅 입력값을 상태에 반영함. @author SeungHyeon.Kang */

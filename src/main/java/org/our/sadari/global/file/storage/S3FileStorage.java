@@ -16,7 +16,7 @@ import software.amazon.awssdk.services.s3.model.S3Exception;
  * fileName       : S3FileStorage
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : AWS S3 또는 S3 호환 저장소에 이미지 객체를 저장함
+ * description    : AWS S3 또는 S3 호환 저장소에 이미지 객체를 저장
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ public class S3FileStorage implements FileStorage {
     private final String bucket;
 
     /**
-     * S3 클라이언트와 대상 버킷으로 이미지 저장소를 구성함
+     * S3 클라이언트와 대상 버킷으로 이미지 저장소를 구성
      *
      * @author SeungHyeon.Kang
      * @param s3Client S3 API 호출 클라이언트
@@ -41,14 +41,14 @@ public class S3FileStorage implements FileStorage {
      */
     public S3FileStorage(S3Client s3Client, String bucket) {
 
-        // S3 API 호출에 사용할 클라이언트를 보관함
+        // S3 API 호출에 사용할 클라이언트를 보관
         this.s3Client = s3Client;
-        // 모든 이미지 객체가 저장될 단일 버킷 이름을 보관함
+        // 모든 이미지 객체가 저장될 단일 버킷 이름을 보관
         this.bucket = bucket;
     }
 
     /**
-     * 검증된 이미지 바이트를 비공개 S3 버킷에 저장함
+     * 검증된 이미지 바이트를 비공개 S3 버킷에 저장
      *
      * @author SeungHyeon.Kang
      * @param objectKey 저장할 객체 키
@@ -59,7 +59,7 @@ public class S3FileStorage implements FileStorage {
     @Override
     public void setFile(String objectKey, byte[] bytes, String contentType) throws IOException {
 
-        // 콘텐츠 유형과 캐시 정책을 포함하는 S3 객체 쓰기 요청을 생성함
+        // 콘텐츠 유형과 캐시 정책을 포함하는 S3 객체 쓰기 요청을 생성
         PutObjectRequest request = PutObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
@@ -67,9 +67,9 @@ public class S3FileStorage implements FileStorage {
                 .cacheControl(CACHE_CONTROL)
                 .build();
 
-        // AWS SDK 예외를 기존 파일 서비스의 IOException 계약으로 변환함
+        // AWS SDK 예외를 기존 파일 서비스의 IOException 계약으로 변환
         try {
-            // 공개 ACL 없이 버킷 정책과 IAM 역할로만 접근하는 객체를 저장함
+            // 공개 ACL 없이 버킷 정책과 IAM 역할로만 접근하는 객체를 저장
             s3Client.putObject(request, RequestBody.fromBytes(bytes));
         }
 
@@ -79,7 +79,7 @@ public class S3FileStorage implements FileStorage {
     }
 
     /**
-     * 비공개 S3 버킷에서 객체 키에 해당하는 이미지를 조회함
+     * 비공개 S3 버킷에서 객체 키에 해당하는 이미지를 조회
      *
      * @author SeungHyeon.Kang
      * @param objectKey 조회할 객체 키
@@ -89,24 +89,24 @@ public class S3FileStorage implements FileStorage {
     @Override
     public Optional<StoredFile> getFile(String objectKey) throws IOException {
 
-        // 대상 버킷과 객체 키를 지정한 S3 객체 조회 요청을 생성함
+        // 대상 버킷과 객체 키를 지정한 S3 객체 조회 요청을 생성
         GetObjectRequest request = GetObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
                 .build();
 
-        // 객체 부재와 일시적인 S3 오류를 서로 다른 응답으로 처리함
+        // 객체 부재와 일시적인 S3 오류를 서로 다른 응답으로 처리
         try {
-            // 응답 본문과 S3 메타정보를 함께 조회함
+            // 응답 본문과 S3 메타정보를 함께 조회
             ResponseBytes<GetObjectResponse> response = s3Client.getObjectAsBytes(request);
-            // 조회한 이미지 바이트와 저장 시 기록한 MIME 유형을 반환함
+            // 조회한 이미지 바이트와 저장 시 기록한 MIME 유형을 반환
             return Optional.of(new StoredFile(response.asByteArray(), response.response().contentType()));
         }
 
         catch (S3Exception e) {
-            // S3가 객체 부재를 반환하면 공개 요청에서 404로 처리할 빈 값을 반환함
+            // S3가 객체 부재를 반환하면 공개 요청에서 404로 처리할 빈 값을 반환
             if (e.statusCode() == 404) {
-                // 존재하지 않는 객체 조회 결과를 반환함
+                // 존재하지 않는 객체 조회 결과를 반환
                 return Optional.empty();
             }
 
@@ -119,7 +119,7 @@ public class S3FileStorage implements FileStorage {
     }
 
     /**
-     * 비공개 S3 버킷에서 객체 키에 해당하는 이미지를 멱등하게 삭제함
+     * 비공개 S3 버킷에서 객체 키에 해당하는 이미지를 멱등하게 삭제
      *
      * @author SeungHyeon.Kang
      * @param objectKey 삭제할 객체 키
@@ -128,15 +128,15 @@ public class S3FileStorage implements FileStorage {
     @Override
     public void delFile(String objectKey) throws IOException {
 
-        // 대상 버킷과 객체 키를 지정한 S3 객체 삭제 요청을 생성함
+        // 대상 버킷과 객체 키를 지정한 S3 객체 삭제 요청을 생성
         DeleteObjectRequest request = DeleteObjectRequest.builder()
                 .bucket(bucket)
                 .key(objectKey)
                 .build();
 
-        // AWS SDK 예외를 기존 파일 서비스의 IOException 계약으로 변환함
+        // AWS SDK 예외를 기존 파일 서비스의 IOException 계약으로 변환
         try {
-            // 존재하지 않는 객체에도 성공하는 S3 삭제 요청을 실행함
+            // 존재하지 않는 객체에도 성공하는 S3 삭제 요청을 실행
             s3Client.deleteObject(request);
         }
 

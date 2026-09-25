@@ -2,7 +2,7 @@
  * fileName       : useClubMemberManage
  * author         : HanWon.Jang
  * date           : 2026-08-14
- * description    : 멤버와 가입 신청 관리 화면의 조회 및 처리 상태를 관리함
+ * description    : 멤버와 가입 신청 관리 화면의 조회 및 처리 상태를 관리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -35,7 +35,7 @@ import { useNavigate, useParams } from "react-router-dom";
 type ApplicationDecision = "APPROVED" | "REJECTED";
 
 /**
- * 멤버와 가입 신청 관리 화면의 서버 상태와 사용자 동작을 제공함
+ * 멤버와 가입 신청 관리 화면의 서버 상태와 사용자 동작을 제공
  *
  * @author Hanwon.Jang
  * @return 멤버와 가입 신청 관리 화면 상태 및 이벤트 처리 함수
@@ -57,7 +57,7 @@ export const useClubMemberManage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * 모임장 권한과 멤버 및 가입 관리 데이터를 함께 조회함
+   * 모임장 권한과 멤버 및 가입 관리 데이터를 함께 조회
    *
    * @author Hanwon.Jang
    * @return 반환값이 없음
@@ -71,13 +71,13 @@ export const useClubMemberManage = () => {
     if (nextClub.membRole !== "OWNER") {
       // "모임장만 멤버 관리 화면을 이용할 수 있어요."
       await sweetError(message("frontend.readingClub.memberManage.accessTitle"));
-      // 권한이 있는 범위인 현재 모임 상세 화면으로 이동함
+      // 권한이 있는 범위인 현재 모임 상세 화면으로 이동
       navigate(`/reading-clubs/${clubNumb}`, { replace: true });
-      // 관리 데이터 요청을 중단함
+      // 관리 데이터 요청을 중단
       return;
     }
 
-    // 모임장에게 필요한 멤버와 신청 및 초대 후보를 중복 대기 없이 조회함
+    // 모임장에게 필요한 멤버와 신청 및 초대 후보를 중복 대기 없이 조회
     const [nextApplications, nextMembers, nextCandidates, nextSentInvitations] = await Promise.all([
       getClubApplicationListApi(clubNumb),
       getClubMemberListApi(clubNumb),
@@ -85,20 +85,20 @@ export const useClubMemberManage = () => {
       getSentInvitationListApi(clubNumb),
     ]);
 
-    // 조회한 모임 정보를 화면 정원 표시에 반영함
+    // 조회한 모임 정보를 화면 정원 표시에 반영
     setClub(nextClub);
-    // 활성 계정의 처리 대기 신청만 가입 신청 목록에 반영함
+    // 활성 계정의 처리 대기 신청만 가입 신청 목록에 반영
     setApplications(nextApplications);
-    // 활성 계정인 활성 모임원을 멤버 목록에 반영함
+    // 활성 계정인 활성 모임원을 멤버 목록에 반영
     setMembers(nextMembers);
-    // 현재 초대할 수 있는 맞팔 회원을 초대 목록에 반영함
+    // 현재 초대할 수 있는 맞팔 회원을 초대 목록에 반영
     setCandidates(nextCandidates);
-    // 활성 회원에게 발송한 만료 전 초대를 보낸 초대 목록에 반영함
+    // 활성 회원에게 발송한 만료 전 초대를 보낸 초대 목록에 반영
     setSentInvitations(nextSentInvitations);
   }, [clubNumb, navigate]);
 
   /**
-   * 멤버 관리 화면의 최초 조회와 오류 및 로딩 상태를 처리함
+   * 멤버 관리 화면의 최초 조회와 오류 및 로딩 상태를 처리
    *
    * @author Hanwon.Jang
    * @return Effect 정리 함수가 없음
@@ -108,17 +108,17 @@ export const useClubMemberManage = () => {
     if (!Number.isFinite(clubNumb)) {
       // "요청한 모임을 확인할 수 없어요."
       void sweetError(message("frontend.readingClub.memberManage.invalidClub"));
-      // 유효한 독서 모임 목록 화면으로 이동함
+      // 유효한 독서 모임 목록 화면으로 이동
       navigate("/reading-clubs/mine", { replace: true });
-      // 잘못된 경로 처리를 마치고 조회를 종료함
+      // 잘못된 경로 처리를 마치고 조회를 종료
       return;
     }
 
-    // 최초 화면 조회 중에는 목록 대신 고정 크기 스켈레톤을 표시함
+    // 최초 화면 조회 중에는 목록 대신 고정 크기 스켈레톤을 표시
     setIsLoading(true);
-    // 모임장 전용 관리 데이터를 조회함
+    // 모임장 전용 관리 데이터를 조회
     void getPageData()
-      // 조회 실패는 내부 오류 대신 공통 사용자 메시지로 안내함
+      // 조회 실패는 내부 오류 대신 공통 사용자 메시지로 안내
       .catch((error: unknown) => {
         // "멤버 정보를 불러오지 못했어요"
         void sweetError(
@@ -126,14 +126,14 @@ export const useClubMemberManage = () => {
           getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
-      // 성공 여부와 관계없이 로딩 화면을 종료함
+      // 성공 여부와 관계없이 로딩 화면을 종료
       .finally(() => {
-        // 조회가 끝난 실제 목록 또는 빈 상태를 표시함
+        // 조회가 끝난 실제 목록 또는 빈 상태를 표시
         setIsLoading(false);
       });
   }, [clubNumb, getPageData, navigate]);
 
-  // 경로의 모임 번호가 바뀌면 해당 모임의 관리 데이터를 새로 조회함
+  // 경로의 모임 번호가 바뀌면 해당 모임의 관리 데이터를 새로 조회
   useEffect(initializePage, [initializePage]);
 
   /**
@@ -144,7 +144,7 @@ export const useClubMemberManage = () => {
    * @return 반환값이 없음
    */
   const handleAnswerOpen = (application: ClubApplication): void => {
-    // 선택한 신청의 질문과 답변을 모달에 표시함
+    // 선택한 신청의 질문과 답변을 모달에 표시
     setSelectedApplication(application);
   };
 
@@ -160,7 +160,7 @@ export const useClubMemberManage = () => {
   };
 
   /**
-   * 가입 신청을 승인하거나 거절한 뒤 최신 목록을 조회함
+   * 가입 신청을 승인하거나 거절한 뒤 최신 목록을 조회
    *
    * @author Hanwon.Jang
    * @param joinStat 확정할 가입 신청 상태
@@ -169,22 +169,22 @@ export const useClubMemberManage = () => {
   const handleApplicationDecision = (joinStat: ApplicationDecision): void => {
     // 선택된 신청이 없거나 다른 저장 작업 중이면 중복 처리를 시작하지 않음
     if (!selectedApplication || isSubmitting) {
-      // 처리할 가입 신청이 없으므로 종료함
+      // 처리할 가입 신청이 없으므로 종료
       return;
     }
 
-    // 가입 신청 상태 변경이 중복 제출되지 않도록 처리 상태를 시작함
+    // 가입 신청 상태 변경이 중복 제출되지 않도록 처리 상태를 시작
     setIsSubmitting(true);
-    // 현재 모임의 선택한 가입 신청 상태를 서버에서 변경함
+    // 현재 모임의 선택한 가입 신청 상태를 서버에서 변경
     void decideClubApplicationApi(clubNumb, selectedApplication.applNumb, joinStat)
-      // 처리가 끝난 신청을 닫고 최신 멤버 및 신청 목록을 다시 조회함
+      // 처리가 끝난 신청을 닫고 최신 멤버 및 신청 목록을 다시 조회
       .then(async () => {
         // 처리된 가입 신청의 답변 모달을 닫음
         setSelectedApplication(null);
-        // 승인 결과가 반영된 최신 관리 데이터를 조회함
+        // 승인 결과가 반영된 최신 관리 데이터를 조회
         await getPageData();
       })
-      // 처리 실패는 서버 원문 대신 공통 사용자 메시지로 안내함
+      // 처리 실패는 서버 원문 대신 공통 사용자 메시지로 안내
       .catch((error: unknown) => {
         // "가입 신청을 처리하지 못했어요"
         void sweetError(
@@ -192,9 +192,9 @@ export const useClubMemberManage = () => {
           getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
-      // 성공 여부와 관계없이 다음 관리 작업을 허용함
+      // 성공 여부와 관계없이 다음 관리 작업을 허용
       .finally(() => {
-        // 가입 신청 처리 중 상태를 종료함
+        // 가입 신청 처리 중 상태를 종료
         setIsSubmitting(false);
       });
   };
@@ -222,7 +222,7 @@ export const useClubMemberManage = () => {
   };
 
   /**
-   * 선택한 맞팔 회원에게 모임 초대를 전송함
+   * 선택한 맞팔 회원에게 모임 초대를 전송
    *
    * @author Hanwon.Jang
    * @param userNumb 초대할 사용자 번호
@@ -231,20 +231,20 @@ export const useClubMemberManage = () => {
   const handleInviteSubmit = (userNumb: number): void => {
     // 다른 저장 작업 중이면 중복 초대 요청을 시작하지 않음
     if (isSubmitting) {
-      // 진행 중인 요청이 끝날 때까지 현재 동작을 종료함
+      // 진행 중인 요청이 끝날 때까지 현재 동작을 종료
       return;
     }
 
-    // 초대 요청의 중복 제출을 막기 위해 처리 상태를 시작함
+    // 초대 요청의 중복 제출을 막기 위해 처리 상태를 시작
     setIsSubmitting(true);
-    // 선택한 맞팔 회원 한 명에게 현재 모임 초대를 전송함
+    // 선택한 맞팔 회원 한 명에게 현재 모임 초대를 전송
     void inviteClubUsersApi(clubNumb, [userNumb])
-      // 초대 결과를 모달과 보낸 초대 목록에 즉시 반영함
+      // 초대 결과를 모달과 보낸 초대 목록에 즉시 반영
       .then(async () => {
-        // 초대된 회원이 보낸 초대로 이동한 최신 관리 데이터를 조회함
+        // 초대된 회원이 보낸 초대로 이동한 최신 관리 데이터를 조회
         await getPageData();
       })
-      // 초대 실패는 정원 안내를 포함한 공통 사용자 메시지로 표시함
+      // 초대 실패는 정원 안내를 포함한 공통 사용자 메시지로 표시
       .catch((error: unknown) => {
         // "회원을 초대하지 못했어요"
         void sweetError(
@@ -252,15 +252,15 @@ export const useClubMemberManage = () => {
           getApiErrorMessage(error, message("frontend.readingClub.error.inviteCapacity")),
         );
       })
-      // 성공 여부와 관계없이 다음 관리 작업을 허용함
+      // 성공 여부와 관계없이 다음 관리 작업을 허용
       .finally(() => {
-        // 회원 초대 처리 중 상태를 종료함
+        // 회원 초대 처리 중 상태를 종료
         setIsSubmitting(false);
       });
   };
 
   /**
-   * 활성 회원에게 보낸 유효한 모임 초대를 취소함
+   * 활성 회원에게 보낸 유효한 모임 초대를 취소
    *
    * @author Hanwon.Jang
    * @param userNumb 초대 대상 사용자 번호
@@ -269,17 +269,17 @@ export const useClubMemberManage = () => {
   const handleInviteCancel = (userNumb: number): void => {
     // 다른 저장 작업 중이면 중복 취소 요청을 시작하지 않음
     if (isSubmitting) {
-      // 진행 중인 요청이 끝날 때까지 현재 동작을 종료함
+      // 진행 중인 요청이 끝날 때까지 현재 동작을 종료
       return;
     }
 
     // 초대 취소 요청의 중복 제출을 막음
     setIsSubmitting(true);
-    // 현재 모임에서 선택한 회원에게 보낸 초대를 취소함
+    // 현재 모임에서 선택한 회원에게 보낸 초대를 취소
     void cancelSentInvitationApi(clubNumb, userNumb)
-      // 취소한 회원을 다시 초대 후보에 반영함
+      // 취소한 회원을 다시 초대 후보에 반영
       .then(getPageData)
-      // 취소 실패 원인을 공통 사용자 메시지로 안내함
+      // 취소 실패 원인을 공통 사용자 메시지로 안내
       .catch((error: unknown) => {
         // "보낸 초대를 취소하지 못했어요"
         void sweetError(
@@ -287,9 +287,9 @@ export const useClubMemberManage = () => {
           getApiErrorMessage(error, /* "다시 시도해주세요." */ message("frontend.common.tryAgain")),
         );
       })
-      // 성공 여부와 관계없이 다음 관리 작업을 허용함
+      // 성공 여부와 관계없이 다음 관리 작업을 허용
       .finally(() => {
-        // 초대 취소 처리 중 상태를 종료함
+        // 초대 취소 처리 중 상태를 종료
         setIsSubmitting(false);
       });
   };
@@ -302,11 +302,11 @@ export const useClubMemberManage = () => {
    * @return 반환값이 없음
    */
   const handleExitOpen = (member: ClubMemberProfile): void => {
-    // 모임장이 아닌 일반 멤버만 퇴장 대상으로 선택함
+    // 모임장이 아닌 일반 멤버만 퇴장 대상으로 선택
     if (member.membRole === "OWNER") {
       return;
     }
-    // 선택한 멤버를 퇴장 확인 대상으로 설정함
+    // 선택한 멤버를 퇴장 확인 대상으로 설정
     setSelectedMember(member);
     setExitReason("");
   };
@@ -318,7 +318,7 @@ export const useClubMemberManage = () => {
    * @return 반환값이 없음
    */
   const handleExitClose = (): void => {
-    // 제출 중에는 중복 동작으로 모달 상태가 사라지지 않게 함
+    // 제출 중에는 중복 동작으로 모달 상태가 사라지지 않도록 처리
     if (isSubmitting) {
       return;
     }
@@ -340,31 +340,31 @@ export const useClubMemberManage = () => {
       return;
     }
 
-    // 중복 퇴장 요청을 막기 위해 제출 상태를 시작함
+    // 중복 퇴장 요청을 막기 위해 제출 상태를 시작
     setIsSubmitting(true);
 
     void exitClubMemberApi(clubNumb, selectedMember.userNumb, normalizedReason)
       .then(async () => {
-        // 성공한 대상을 지우고 최신 멤버 목록을 반영함
+        // 성공한 대상을 지우고 최신 멤버 목록을 반영
         setSelectedMember(null);
         await getPageData();
-        // 최신 목록 반영 뒤 퇴장 완료를 사용자에게 안내함
+        // 최신 목록 반영 뒤 퇴장 완료를 사용자에게 안내
         await sweetSuccess(message("frontend.readingClub.memberManage.exitSuccessTitle"));
       })
       .catch((error: unknown) => {
-        // 서버 정책 검증 실패 사유 또는 공통 재시도 안내를 표시함
+        // 서버 정책 검증 실패 사유 또는 공통 재시도 안내를 표시
         void sweetError(
           message("frontend.readingClub.memberManage.exitErrorTitle"),
           getApiErrorMessage(error, message("frontend.common.tryAgain")),
         );
       })
       .finally(() => {
-        // 다음 관리 작업이 가능하도록 제출 상태를 종료함
+        // 다음 관리 작업이 가능하도록 제출 상태를 종료
         setIsSubmitting(false);
       });
   };
 
-  // 화면 렌더링에 필요한 관리 상태와 이벤트 처리 함수를 반환함
+  // 화면 렌더링에 필요한 관리 상태와 이벤트 처리 함수를 반환
   return {
     applications,
     candidates,

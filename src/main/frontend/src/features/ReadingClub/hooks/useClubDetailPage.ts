@@ -28,31 +28,31 @@ import {
 type ApplicationDecision = "APPROVED" | "REJECTED";
 
 /**
- * 가입 답변의 앞뒤 공백을 제거함
+ * 가입 답변의 앞뒤 공백을 제거
  *
  * @author HanWon.Jang
  * @param answer 정리할 가입 답변
  * @return 앞뒤 공백을 제거한 답변
  */
 const trimAnswer = (answer: string): string => {
-  // 서버에 저장할 답변 원문에서 의미 없는 앞뒤 공백만 제거함
+  // 서버에 저장할 답변 원문에서 의미 없는 앞뒤 공백만 제거
   return answer.trim();
 };
 
 /**
- * 가입 답변이 비어 있는지 확인함
+ * 가입 답변이 비어 있는지 확인
  *
  * @author HanWon.Jang
  * @param answer 확인할 가입 답변
  * @return 답변이 비어 있으면 true
  */
 const isEmptyAnswer = (answer: string): boolean => {
-  // 필수 답변 검증 결과를 반환함
+  // 필수 답변 검증 결과를 반환
   return answer.length === 0;
 };
 
 /**
- * 모임 상세 화면의 조회, 가입과 가입 승인 상태를 관리함
+ * 모임 상세 화면의 조회, 가입과 가입 승인 상태를 관리
  *
  * @author Hanwon.Jang
  * @return 모임 상세 화면 상태와 이벤트 처리 함수
@@ -85,7 +85,7 @@ export const useClubDetailPage = () => {
   const loadPage = useCallback(async (): Promise<void> => {
     // 모임 상세보기 조회
     const detail = await getClubDtlApi(clubNumb);
-    // 활성 모임원과 공개 중인 활성 모임 조회자에게 요약 정보를 제공함
+    // 활성 모임원과 공개 중인 활성 모임 조회자에게 요약 정보를 제공
     const canViewOverview = detail.membStat === "ACTIVE"
       || (detail.clubVisb === "PUBLIC" && detail.clubStat === "ACTIVE");
 
@@ -136,7 +136,7 @@ export const useClubDetailPage = () => {
    * @return
    */
   const initializePage = useCallback((): void => {
-    // 잘못된 경로 매개변수로 API를 호출하지 않게 함
+    // 잘못된 경로 매개변수로 API를 호출하지 않도록 처리
     if (!Number.isFinite(clubNumb)) {
       return;
     }
@@ -160,7 +160,7 @@ export const useClubDetailPage = () => {
   };
 
   /**
-   * 모임 가입 방식에 맞는 가입 동작을 시작함
+   * 모임 가입 방식에 맞는 가입 동작을 시작
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
@@ -168,12 +168,12 @@ export const useClubDetailPage = () => {
   const handleJoinAction = (): void => {
     // 승인제 모임은 질문 답변을 먼저 작성하도록 가입 신청 모달을 엶
     if (club?.joinType === "APPROVAL") {
-      // 현재 모임의 가입 질문 모달을 표시함
+      // 현재 모임의 가입 질문 모달을 표시
       setIsJoinModalOpen(true);
       return;
     }
 
-    // 즉시 가입 모임은 기존 가입 요청을 바로 실행함
+    // 즉시 가입 모임은 기존 가입 요청을 바로 실행
     void handleJoinClub();
   };
 
@@ -196,7 +196,7 @@ export const useClubDetailPage = () => {
   const handleJoinClub = async (): Promise<void> => {
     // 즉시 가입형만 가입 완료 성공 안내를 표시
     const isOpenJoin = club?.joinType === "OPEN";
-    // 승인제 가입 요청에는 공백을 제거한 답변을 사용함
+    // 승인제 가입 요청에는 공백을 제거한 답변을 사용
     const normalizedAnswers = answers.map(trimAnswer);
     const questionCount = club?.questionList?.length ?? 0;
 
@@ -209,7 +209,7 @@ export const useClubDetailPage = () => {
     }
 
     try {
-      // 가입 처리가 성공하면 가입 방식에 맞는 완료 안내로 같은 모달을 전환함
+      // 가입 처리가 성공하면 가입 방식에 맞는 완료 안내로 같은 모달을 전환
       await runBlockingOperation(() => joinClubApi(clubNumb, normalizedAnswers), {
         title: message(
           isOpenJoin
@@ -230,7 +230,7 @@ export const useClubDetailPage = () => {
 
       // 사용자가 성공 안내를 확인한 뒤 활성 모임원 상태로 상세 화면을 갱신
       await loadPage();
-      // 승인 신청이 완료되면 답변 모달을 닫고 대기 상태를 표시함
+      // 승인 신청이 완료되면 답변 모달을 닫고 대기 상태를 표시
       setIsJoinModalOpen(false);
 
     } catch (error) {
@@ -250,7 +250,7 @@ export const useClubDetailPage = () => {
    * @return 투표 성공 여부 Promise
    */
   const handleOwnerVote = async (userNumb: number): Promise<boolean> => {
-    // 중복 클릭으로 같은 투표 요청이 동시에 실행되지 않게 함
+    // 중복 클릭으로 같은 투표 요청이 동시에 실행되지 않도록 처리
     if (isVotingOwner) {
       return false;
     }
@@ -312,14 +312,14 @@ export const useClubDetailPage = () => {
   };
 
   /**
-   * 활성 모임장의 현재 회차 조기 마감을 확인하고 완료 결과를 표시함
+   * 활성 모임장의 현재 회차 조기 마감을 확인하고 완료 결과를 표시
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
    */
   const handleReadingComplete = async (): Promise<void> => {
     const rondNumb = club?.currentRondNumb;
-    // 화면 노출과 별개로 모임장과 회차 및 중복 요청 조건을 다시 확인함
+    // 화면 노출과 별개로 모임장과 회차 및 중복 요청 조건을 다시 확인
     if (isCompletingReading || club?.membRole !== "OWNER"
         || typeof rondNumb !== "number" || !Number.isFinite(rondNumb)) {
       return;
@@ -336,7 +336,7 @@ export const useClubDetailPage = () => {
       cancelButtonText: message("frontend.common.cancel"),
     });
 
-    // 사용자가 취소하면 현재 진행 회차를 그대로 유지함
+    // 사용자가 취소하면 현재 진행 회차를 그대로 유지
     if (!confirmResult.isConfirmed) {
       return;
     }
@@ -344,9 +344,9 @@ export const useClubDetailPage = () => {
     setIsCompletingReading(true);
 
     try {
-      // 서버에서 조기 마감 조건을 다시 검증하고 모든 모임원의 미확인 결과를 생성함
+      // 서버에서 조기 마감 조건을 다시 검증하고 모든 모임원의 미확인 결과를 생성
       await completeClubReadingApi(clubNumb, rondNumb);
-      // 현재 회차와 모든 모임원에게 생성된 미확인 결과를 최신 상세에 반영함
+      // 현재 회차와 모든 모임원에게 생성된 미확인 결과를 최신 상세에 반영
       await loadPage();
     } catch (error) {
       void sweetError(
@@ -358,13 +358,13 @@ export const useClubDetailPage = () => {
         ),
       );
     } finally {
-      // 요청이 끝나면 조기 마감 버튼을 다시 사용할 수 있게 함
+      // 요청이 끝나면 조기 마감 버튼을 다시 사용할 수 있도록 처리
       setIsCompletingReading(false);
     }
   };
 
   /**
-   * 사용자가 직접 닫은 독서 목표 결과를 서버에 확인 처리함
+   * 사용자가 직접 닫은 독서 목표 결과를 서버에 확인 처리
    *
    * @author HanWon.Jang
    * @return 반환값이 없음
@@ -375,11 +375,11 @@ export const useClubDetailPage = () => {
       return;
     }
 
-    // 확인 저장이 끝날 때까지 팝업의 두 닫기 명령을 비활성화함
+    // 확인 저장이 끝날 때까지 팝업의 두 닫기 명령을 비활성화
     setIsClosingResult(true);
 
     try {
-      // 현재 표시 중인 회차만 확인 처리하여 이후 회차의 미확인 결과를 보존함
+      // 현재 표시 중인 회차만 확인 처리하여 이후 회차의 미확인 결과를 보존
       await uptReadingResultApi(clubNumb, readingGoalResult.rondNumb);
       // 서버 확인이 성공한 뒤에만 현재 결과 팝업을 닫음
       setReadingGoalResult(null);
@@ -390,12 +390,12 @@ export const useClubDetailPage = () => {
       const errorTitle = message("frontend.alert.errorTitle");
       // "다시 시도해주세요."
       const fallbackMessage = message("frontend.common.tryAgain");
-      // 확인 저장에 실패하면 팝업을 유지하고 안전한 오류 문구를 표시함
+      // 확인 저장에 실패하면 팝업을 유지하고 안전한 오류 문구를 표시
       await sweetError(errorTitle, getApiErrorMessage(error, fallbackMessage));
     }
 
     finally {
-      // 성공 또는 실패가 확정되면 닫기 명령을 다시 사용할 수 있게 함
+      // 성공 또는 실패가 확정되면 닫기 명령을 다시 사용할 수 있도록 처리
       setIsClosingResult(false);
     }
   };
@@ -418,7 +418,7 @@ export const useClubDetailPage = () => {
       cancelButtonText: message("frontend.common.cancel"),
     });
 
-    // 사용자가 확인하지 않았거나 이미 처리 중이면 현재 신청을 유지함
+    // 사용자가 확인하지 않았거나 이미 처리 중이면 현재 신청을 유지
     if (!confirmResult.isConfirmed || isCancellingApplication) {
       return;
     }
@@ -489,7 +489,7 @@ export const useClubDetailPage = () => {
       return;
     }
 
-    // 탈퇴 처리 중 같은 요청을 다시 시작하지 못하게 함
+    // 탈퇴 처리 중 같은 요청을 다시 시작하지 못하도록 처리
     setIsLeaving(true);
 
     try {
@@ -556,7 +556,7 @@ export const useClubDetailPage = () => {
 
     try {
 
-      // 현재 모임을 서버에서 삭제함
+      // 현재 모임을 서버에서 삭제
       const deleteClub = (): ReturnType<typeof delClubApi> => {
         // 사용자에게 삭제 확인을 받은 현재 모임 번호를 서버에 전달
         return delClubApi(clubNumb);
@@ -609,7 +609,7 @@ export const useClubDetailPage = () => {
     }
   };
 
-  // 관리자가 모집을 허용한 공개 모임에서만 신규 가입 절차를 제공함
+  // 관리자가 모집을 허용한 공개 모임에서만 신규 가입 절차를 제공
   const canJoin = Boolean(
     club
     && (!club.membStat || club.membStat === "EXITED")

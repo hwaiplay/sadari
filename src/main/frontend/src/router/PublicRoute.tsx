@@ -39,10 +39,10 @@ export default function PublicRoute({ children }: { children: ReactNode }) {
       return <Navigate to="/suspension" replace />;
     }
 
-    // 최초 로그인 상태면 공개 화면보다 웰컴 화면을 먼저 제공함
+    // 최초 로그인 상태면 공개 화면보다 웰컴 화면을 먼저 제공
     return <Navigate to={isOnboardingRequired ? "/welcome" : "/home"} replace />;
   }
 
-  // 로그인하지 않은 사용자가 요청한 공개 화면을 반환함
+  // 로그인하지 않은 사용자가 요청한 공개 화면을 반환
   return children;
 }

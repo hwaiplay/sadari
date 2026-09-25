@@ -32,7 +32,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * fileName       : AlimServiceImplTest
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 알림 로직의 동작을 검증함
+ * description    : 알림 로직의 동작을 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -63,23 +63,23 @@ class AlimServiceImplTest {
     private AlimServiceImpl alimService;
 
     /**
-     * 각 테스트가 독립된 Mock 의존성을 사용하는 알림 서비스 구현체를 구성함
+     * 각 테스트가 독립된 Mock 의존성을 사용하는 알림 서비스 구현체를 구성
      *
      * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
-        // 실제 공통 실패 메시지를 사용할 메시지 소스를 생성함
+        // 실제 공통 실패 메시지를 사용할 메시지 소스를 생성
         ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
-        // 테스트 메시지 프로퍼티 기준을 설정함
+        // 테스트 메시지 프로퍼티 기준을 설정
         messageSource.setBasename("messages");
-        // 한글 메시지 원문이 손상되지 않도록 인코딩을 설정함
+        // 한글 메시지 원문이 손상되지 않도록 인코딩을 설정
         messageSource.setDefaultEncoding("UTF-8");
-        // 실패 응답이 실제 메시지 소스를 조회하도록 정적 객체를 초기화함
+        // 실패 응답이 실제 메시지 소스를 조회하도록 정적 객체를 초기화
         new MessageUtils().setMessageSource(messageSource);
-        // 알림 서비스 단위 테스트 대상을 담을 객체를 생성함
+        // 알림 서비스 단위 테스트 대상을 담을 객체를 생성
         alimService = new AlimServiceImpl(alimMapper, pushService, userBlockService);
-        // 기존 알림 테스트는 모든 선택형 알림을 켠 사용자 설정을 기본으로 사용함
+        // 기존 알림 테스트는 모든 선택형 알림을 켠 사용자 설정을 기본으로 사용
         UserSettingDto setting = new UserSettingDto();
         setting.setLikeAlimYsno(Constant.COMM_YES);
         setting.setReplyAlimYsno(Constant.COMM_YES);
@@ -91,60 +91,60 @@ class AlimServiceImplTest {
     }
 
     /**
-     * 목록 조회가 미읽음 알림을 반환하되 읽음 UPDATE 없이 조회 결과만 구성하는지 검증함
+     * 목록 조회가 미읽음 알림을 반환하되 읽음 UPDATE 없이 조회 결과만 구성하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void getAlimListKeepsUnread() {
-        // 알림 목록 항목을 담을 객체를 생성함
+        // 알림 목록 항목을 담을 객체를 생성
         AlimDto.AlimItemDto alimItem = new AlimDto.AlimItemDto();
-        // AlimNumb 업무 값을 alimItem DTO에 설정함
+        // AlimNumb 업무 값을 alimItem DTO에 설정
         alimItem.setAlimNumb(1L);
-        // ReadYsno 업무 값을 alimItem DTO에 설정함
+        // ReadYsno 업무 값을 alimItem DTO에 설정
         alimItem.setReadYsno("N");
 
-        // MyAlimList 데이터를 DB에서 조회함
+        // MyAlimList 데이터를 DB에서 조회
         when(alimMapper.getMyAlimList(any(AlimDto.AlimListReqDto.class)))
                 .thenReturn(List.of(alimItem));
-        // UnreadAlimCnt 데이터를 DB에서 조회함
+        // UnreadAlimCnt 데이터를 DB에서 조회
         when(alimMapper.getUnreadAlimCnt(31L)).thenReturn(1);
 
-        // getMyAlimList 업무 로직을 alimService에 위임함
+        // getMyAlimList 업무 로직을 alimService에 위임
         ResultData result = alimService.getMyAlimList(31L, 1);
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         AlimDto.AlimListResDto data = (AlimDto.AlimListResDto) result.getData();
 
         // getCode 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(200, result.getCode());
-        // 필요한 값으로 불변 객체를 생성함
+        // 필요한 값으로 불변 객체를 생성
         assertEquals(List.of(alimItem), data.getList());
         // getUnreadCnt 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(1, data.getUnreadCnt());
-        // 다음 알림 페이지 존재 여부를 확인함
+        // 다음 알림 페이지 존재 여부를 확인
         assertFalse(data.isHasNext());
     }
 
     /**
-     * 개별 알림 클릭 시 인증 사용자 번호를 요청 DTO에 설정하고 남은 미읽음 수를 반환하는지 검증함
+     * 개별 알림 클릭 시 인증 사용자 번호를 요청 DTO에 설정하고 남은 미읽음 수를 반환하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void uptAlimReadReturnsCnt() {
-        // 알림 읽음 처리 조건을 담을 객체를 생성함
+        // 알림 읽음 처리 조건을 담을 객체를 생성
         AlimDto.AlimReadReqDto req = new AlimDto.AlimReadReqDto();
-        // AlimNumb 업무 값을 req DTO에 설정함
+        // AlimNumb 업무 값을 req DTO에 설정
         req.setAlimNumb(3L);
 
-        // AlimRead 데이터를 DB에서 수정함
+        // AlimRead 데이터를 DB에서 수정
         when(alimMapper.uptAlimRead(req)).thenReturn(1);
-        // UnreadAlimCnt 데이터를 DB에서 조회함
+        // UnreadAlimCnt 데이터를 DB에서 조회
         when(alimMapper.getUnreadAlimCnt(31L)).thenReturn(2);
 
-        // uptAlimRead 업무 로직을 alimService에 위임함
+        // uptAlimRead 업무 로직을 alimService에 위임
         ResultData result = alimService.uptAlimRead(31L, req);
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         AlimDto.AlimUnreadCntDto data = (AlimDto.AlimUnreadCntDto) result.getData();
 
         // getCode 조회로 후속 처리에 필요한 데이터를 가져옴
@@ -153,61 +153,61 @@ class AlimServiceImplTest {
         assertEquals(31L, req.getUserNumb());
         // getUnreadCnt 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(2, data.getUnreadCnt());
-        // 의존 객체가 예상한 인자로 호출되었는지 검증함
+        // 의존 객체가 예상한 인자로 호출되었는지 검증
         verify(alimMapper).uptAlimRead(req);
     }
 
     /**
-     * 모두 지우기 요청이 읽음 상태가 아닌 삭제 상태 일괄 갱신 매퍼를 호출하는지 검증함
-     * 화면에 아직 조회되지 않은 알림도 같은 사용자 번호로 함께 삭제 처리되어야 함
+     * 모두 지우기 요청이 읽음 상태가 아닌 삭제 상태 일괄 갱신 매퍼를 호출하는지 검증
+     * 화면에 아직 조회되지 않은 알림도 같은 사용자 번호로 함께 삭제 처리되어야 하는 조건
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void delAllAlimReturnsZero() {
-        // delAllAlim 업무 로직을 alimService에 위임함
+        // delAllAlim 업무 로직을 alimService에 위임
         ResultData result = alimService.delAllAlim(31L);
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         AlimDto.AlimUnreadCntDto data = (AlimDto.AlimUnreadCntDto) result.getData();
 
         // getCode 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(200, result.getCode());
         // getUnreadCnt 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(0, data.getUnreadCnt());
-        // 의존 객체가 예상한 인자로 호출되었는지 검증함
+        // 의존 객체가 예상한 인자로 호출되었는지 검증
         verify(alimMapper).delAllAlim(31L);
     }
 
     /**
-     * 알림 INSERT에서 반환된 사용자별 알림 번호가 FCM payload 발송 단계까지 전달되는지 검증함
+     * 알림 INSERT에서 반환된 사용자별 알림 번호가 FCM payload 발송 단계까지 전달되는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendAlimUsesInsertedNumb() {
-        // 알림 발송에 사용할 템플릿 정보를 담을 객체를 생성함
+        // 알림 발송에 사용할 템플릿 정보를 담을 객체를 생성
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
-        // AlimTitl 업무 값을 template DTO에 설정함
+        // AlimTitl 업무 값을 template DTO에 설정
         template.setAlimTitl("좋아요 알림");
-        // TempCont 업무 값을 template DTO에 설정함
+        // TempCont 업무 값을 template DTO에 설정
         template.setTempCont("#{sender}님이 좋아요를 눌렀습니다.");
-        // 알림 수신자가 정상 이용 회원인 조건을 설정함
+        // 알림 수신자가 정상 이용 회원인 조건을 설정
         when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
-        // AlimTemp 데이터를 DB에서 조회함
+        // AlimTemp 데이터를 DB에서 조회
         when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
-        // 한 시간 안에 동일한 알림이 중복 등록되지 않았는지 검증함
+        // 한 시간 안에 동일한 알림이 중복 등록되지 않았는지 검증
         when(alimMapper.dupSameAlimInHour(any(AlimDto.AlimItemDto.class))).thenReturn(0);
         doAnswer(invocation -> {
             // getArgument 조회로 후속 처리에 필요한 데이터를 가져옴
             AlimDto.AlimItemDto alim = invocation.getArgument(0);
-            // AlimNumb 업무 값을 alim DTO에 설정함
+            // AlimNumb 업무 값을 alim DTO에 설정
             alim.setAlimNumb(7L);
-            // 테스트 콜백에서 준비한 처리 결과를 반환함
+            // 테스트 콜백에서 준비한 처리 결과를 반환
             return 1;
-        // 테스트 대상 의존 호출의 동작을 정의함
+        // 테스트 대상 의존 호출의 동작을 정의
         }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
 
-        // sendAlim 업무 로직을 alimService에 위임함
+        // sendAlim 업무 로직을 alimService에 위임
         ResultData result = alimService.sendAlim(
                 31L
               , "LIKE"
@@ -220,7 +220,7 @@ class AlimServiceImplTest {
 
         // getCode 조회로 후속 처리에 필요한 데이터를 가져옴
         assertEquals(200, result.getCode());
-        // 의존 객체가 예상한 인자로 호출되었는지 검증함
+        // 의존 객체가 예상한 인자로 호출되었는지 검증
         verify(pushService).sendPush(
                 31L
               , "좋아요 알림"
@@ -231,27 +231,27 @@ class AlimServiceImplTest {
     }
 
     /**
-     * 모임 알림도 저장된 알림번호를 공통 이동 경로로 전달하는지 검증함
+     * 모임 알림도 저장된 알림번호를 공통 이동 경로로 전달하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendAlimLinksTarget() {
-        // 모임 멤버 관리 화면으로 이동할 알림 템플릿을 구성함
+        // 모임 멤버 관리 화면으로 이동할 알림 템플릿을 구성
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
         template.setAlimTitl("새로운 가입 신청");
         template.setTempCont("#{clubName}에 새로운 가입 신청이 있어요.");
-        // 활성 모임장과 사용 가능한 알림 템플릿 및 신규 알림 저장 결과를 구성함
+        // 활성 모임장과 사용 가능한 알림 템플릿 및 신규 알림 저장 결과를 구성
         when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
         when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
         doAnswer(invocation -> {
-            // 저장된 알림 번호를 푸시 payload에 전달하도록 구성함
+            // 저장된 알림 번호를 푸시 payload에 전달하도록 구성
             AlimDto.AlimItemDto alim = invocation.getArgument(0);
             alim.setAlimNumb(9L);
             return 1;
         }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
 
-        // 신규 가입 신청 알림을 모임장에게 발송함
+        // 신규 가입 신청 알림을 모임장에게 발송
         ResultData result = alimService.sendAlim(
                 31L
               , Constant.ALIM_SITU_FOLLOW_CLUB
@@ -262,7 +262,7 @@ class AlimServiceImplTest {
               , Map.of("clubName", "책벌레 모임")
         );
 
-        // 문구와 알림번호 기반 공통 이동 경로가 포함된 푸시 발송을 검증함
+        // 문구와 알림번호 기반 공통 이동 경로가 포함된 푸시 발송을 검증
         assertEquals(200, result.getCode());
         verify(pushService).sendPush(
                 31L
@@ -271,46 +271,46 @@ class AlimServiceImplTest {
               , "/notification-target/9"
               , 9L
         );
-        // 같은 모임에서 연속 신청이 들어와도 가입 신청 알림은 중복 차단 조회를 하지 않는지 검증함
+        // 같은 모임에서 연속 신청이 들어와도 가입 신청 알림은 중복 차단 조회를 하지 않는지 검증
         verify(alimMapper, never()).dupSameAlimInHour(any(AlimDto.AlimItemDto.class));
     }
 
     /**
-     * 상세 번호가 없는 타이머 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증함
+     * 상세 번호가 없는 타이머 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendTimerAlimUsesTarget() {
-        // 타이머 종료 알림 템플릿 정보를 생성함
+        // 타이머 종료 알림 템플릿 정보를 생성
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
-        // 타이머 종료 알림 제목을 설정함
+        // 타이머 종료 알림 제목을 설정
         template.setAlimTitl("독서 타이머 알림");
-        // 타이머 종료 알림 내용을 설정함
+        // 타이머 종료 알림 내용을 설정
         template.setTempCont("독서 타이머가 종료되었습니다.");
-        // 알림 수신자가 정상 이용 회원인 조건을 설정함
+        // 알림 수신자가 정상 이용 회원인 조건을 설정
         when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
-        // 타이머 종료 템플릿 조회 결과를 설정함
+        // 타이머 종료 템플릿 조회 결과를 설정
         when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
-        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정함
+        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정
         doAnswer(invocation -> {
-            // 저장할 타이머 종료 알림을 조회함
+            // 저장할 타이머 종료 알림을 조회
             AlimDto.AlimItemDto alim = invocation.getArgument(0);
-            // 푸시 payload에 사용할 알림 번호를 설정함
+            // 푸시 payload에 사용할 알림 번호를 설정
             alim.setAlimNumb(8L);
-            // 알림 한 건 저장 결과를 반환함
+            // 알림 한 건 저장 결과를 반환
             return 1;
-        // 테스트 대상 의존 호출의 동작을 정의함
+        // 테스트 대상 의존 호출의 동작을 정의
         }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
 
-        // 별도 대상 번호가 없는 타이머 종료 알림을 발송함
+        // 별도 대상 번호가 없는 타이머 종료 알림을 발송
         ResultData result = alimService.sendAlim(
                 31L, Constant.ALIM_SITU_TIMER, Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER
               , Constant.ALIM_TARGET_TIMER, null, null, Map.of());
 
-        // 타이머 종료 알림 발송이 성공했는지 확인함
+        // 타이머 종료 알림 발송이 성공했는지 확인
         assertEquals(200, result.getCode());
-        // 푸시 알림이 저장된 알림번호 기반 공통 이동 경로를 사용하는지 확인함
+        // 푸시 알림이 저장된 알림번호 기반 공통 이동 경로를 사용하는지 확인
         verify(pushService).sendPush(
                 31L
               , "독서 타이머 알림"
@@ -321,43 +321,43 @@ class AlimServiceImplTest {
     }
 
     /**
-     * 사진 댓글 좋아요 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증함
+     * 사진 댓글 좋아요 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증
      *
      * @author SeungHyeon.Kang
      */
     @Test
     void sendImageReplyLikeTarget() {
-        // 사진 댓글 좋아요 알림 템플릿 정보를 생성함
+        // 사진 댓글 좋아요 알림 템플릿 정보를 생성
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
-        // 알림 제목을 설정함
+        // 알림 제목을 설정
         template.setAlimTitl("댓글 알림");
-        // 알림 내용을 설정함
+        // 알림 내용을 설정
         template.setTempCont("사진 댓글에 새로운 반응이 있습니다.");
-        // 알림 수신자가 정상 이용 회원인 조건을 설정함
+        // 알림 수신자가 정상 이용 회원인 조건을 설정
         when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
-        // 대상별 댓글 좋아요 템플릿 조회 결과를 설정함
+        // 대상별 댓글 좋아요 템플릿 조회 결과를 설정
         when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
-        // 동일 알림 중복 검사에서 신규 알림으로 판정하는 조건을 설정함
+        // 동일 알림 중복 검사에서 신규 알림으로 판정하는 조건을 설정
         when(alimMapper.dupSameAlimInHour(any(AlimDto.AlimItemDto.class))).thenReturn(0);
-        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정함
+        // 알림 저장 뒤 푸시 payload에 사용할 알림 번호를 설정
         doAnswer(invocation -> {
-            // 저장할 댓글 좋아요 알림을 조회함
+            // 저장할 댓글 좋아요 알림을 조회
             AlimDto.AlimItemDto alim = invocation.getArgument(0);
-            // 푸시 payload에 사용할 알림 번호를 설정함
+            // 푸시 payload에 사용할 알림 번호를 설정
             alim.setAlimNumb(9L);
-            // 알림 한 건 저장 결과를 반환함
+            // 알림 한 건 저장 결과를 반환
             return 1;
-        // 테스트 대상 의존 호출의 동작을 정의함
+        // 테스트 대상 의존 호출의 동작을 정의
         }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
 
-        // 프로필 사진을 대상으로 하는 댓글 좋아요 알림을 발송함
+        // 프로필 사진을 대상으로 하는 댓글 좋아요 알림을 발송
         ResultData result = alimService.sendAlim(
                 31L, "LIKE", Constant.ALIM_TEMP_CODE_REPLY_LIKE
               , Constant.LIKE_TARGET_PROFILE_IMAGE, 157L, null, Map.of());
 
-        // 대상별 댓글 좋아요 알림 발송이 성공했는지 확인함
+        // 대상별 댓글 좋아요 알림 발송이 성공했는지 확인
         assertEquals(200, result.getCode());
-        // 푸시 링크가 저장된 알림번호 기반 공통 이동 경로인지 확인함
+        // 푸시 링크가 저장된 알림번호 기반 공통 이동 경로인지 확인
         verify(pushService).sendPush(
                 31L,
                 "댓글 알림",
@@ -367,7 +367,7 @@ class AlimServiceImplTest {
         );
     }
 
-    /** 대댓글 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증함 */
+    /** 대댓글 알림도 알림번호 기반 공통 이동 경로를 사용하는지 검증 */
     @Test
     void sendReplyUsesTargetRoute() {
         AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
@@ -395,7 +395,7 @@ class AlimServiceImplTest {
         );
     }
 
-    /** 본인 독후감 댓글 알림은 현재 공개 여부와 관계없이 본인 상세 화면으로 이동하는지 검증함 */
+    /** 본인 독후감 댓글 알림은 현재 공개 여부와 관계없이 본인 상세 화면으로 이동하는지 검증 */
     @Test
     void getOwnerReportTarget() {
         AlimDto.AlimTargetDto target = createReportTarget(31L, Constant.COMM_NO, Constant.COMM_NO);
@@ -408,7 +408,7 @@ class AlimServiceImplTest {
         assertEquals("/report/detail/157?showReplies=Y&replNumb=8", data.getLinkUrlx());
     }
 
-    /** 현재 팔로우 중인 사용자의 공개 독후감 알림은 피드 항목으로 이동하는지 검증함 */
+    /** 현재 팔로우 중인 사용자의 공개 독후감 알림은 피드 항목으로 이동하는지 검증 */
     @Test
     void getFollowerReportTarget() {
         AlimDto.AlimTargetDto target = createReportTarget(32L, Constant.COMM_YES, Constant.COMM_YES);
@@ -421,7 +421,7 @@ class AlimServiceImplTest {
         assertEquals("/feed?tagtType=REPORT&tagtNumb=157&replNumb=8", data.getLinkUrlx());
     }
 
-    /** 현재 비팔로워인 사용자의 공개 독후감 알림은 공개 독후감 대상 화면으로 이동하는지 검증함 */
+    /** 현재 비팔로워인 사용자의 공개 독후감 알림은 공개 독후감 대상 화면으로 이동하는지 검증 */
     @Test
     void getPublicReportTarget() {
         AlimDto.AlimTargetDto target = createReportTarget(32L, Constant.COMM_YES, Constant.COMM_NO);
@@ -434,7 +434,7 @@ class AlimServiceImplTest {
         assertEquals("/report/public-reports/target/157?replNumb=8", data.getLinkUrlx());
     }
 
-    /** 사진 알림 생성 후 팔로우를 끊어도 현재 사진이면 소유자의 공개 프로필로 이동하는지 검증함 */
+    /** 사진 알림 생성 후 팔로우를 끊어도 현재 사진이면 소유자의 공개 프로필로 이동하는지 검증 */
     @Test
     void getUnfollowedImageTarget() {
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
@@ -456,7 +456,7 @@ class AlimServiceImplTest {
         );
     }
 
-    /** 본인 현재 배경사진 알림은 마이페이지의 해당 사진으로 이동하는지 검증함 */
+    /** 본인 현재 배경사진 알림은 마이페이지의 해당 사진으로 이동하는지 검증 */
     @Test
     void getOwnerImageTarget() {
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
@@ -476,66 +476,66 @@ class AlimServiceImplTest {
         );
     }
 
-    /** 팔로우 알림은 현재 활성 상태인 대상 사용자의 프로필로 이동하는지 검증함 */
+    /** 팔로우 알림은 현재 활성 상태인 대상 사용자의 프로필로 이동하는지 검증 */
     @Test
     void getActiveUserTarget() {
-        // 활성 사용자 프로필을 가리키는 알림 대상 정보를 생성함
+        // 활성 사용자 프로필을 가리키는 알림 대상 정보를 생성
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
         target.setTagtType(Constant.ALIM_TARGET_USER);
         target.setTagtNumb(32L);
         target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
-        // 팔로우 알림의 현재 이동 대상을 조회함
+        // 팔로우 알림의 현재 이동 대상을 조회
         ResultData result = alimService.getAlimTarget(31L, 7L);
         AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
 
-        // 활성 사용자 프로필 경로가 반환되는지 확인함
+        // 활성 사용자 프로필 경로가 반환되는지 확인
         assertEquals(200, result.getCode());
         assertEquals("/social/profile/32", data.getLinkUrlx());
     }
 
-    /** 타이머 종료 알림은 별도 대상 번호 없이 타이머 화면으로 이동하는지 검증함 */
+    /** 타이머 종료 알림은 별도 대상 번호 없이 타이머 화면으로 이동하는지 검증 */
     @Test
     void getTimerTarget() {
-        // 타이머 종료 알림 대상 정보를 생성함
+        // 타이머 종료 알림 대상 정보를 생성
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
         target.setTempCode(Constant.ALIM_TEMP_CODE_BOOK_TIMER_OVER);
         target.setTagtType(Constant.ALIM_TARGET_TIMER);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
-        // 타이머 종료 알림의 현재 이동 대상을 조회함
+        // 타이머 종료 알림의 현재 이동 대상을 조회
         ResultData result = alimService.getAlimTarget(31L, 7L);
         AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
 
-        // 타이머 화면 경로가 반환되는지 확인함
+        // 타이머 화면 경로가 반환되는지 확인
         assertEquals(200, result.getCode());
         assertEquals("/timer", data.getLinkUrlx());
     }
 
-    /** 모임 가입 승인 알림은 현재 모임 관계를 확인할 수 있는 내 모임 화면으로 이동하는지 검증함 */
+    /** 모임 가입 승인 알림은 현재 모임 관계를 확인할 수 있는 내 모임 화면으로 이동하는지 검증 */
     @Test
     void getClubMembershipTarget() {
-        // 모임 가입 승인 알림 대상 정보를 생성함
+        // 모임 가입 승인 알림 대상 정보를 생성
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
         target.setTempCode(Constant.ALIM_TEMP_CODE_CLUB_JOIN_APPROVED);
         target.setTagtType(Constant.ALIM_TARGET_READING_CLUB);
         target.setTagtNumb(10L);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
-        // 모임 가입 승인 알림의 현재 이동 대상을 조회함
+        // 모임 가입 승인 알림의 현재 이동 대상을 조회
         ResultData result = alimService.getAlimTarget(31L, 7L);
         AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
 
-        // 내 모임 화면 경로가 반환되는지 확인함
+        // 내 모임 화면 경로가 반환되는지 확인
         assertEquals(200, result.getCode());
         assertEquals("/reading-clubs/mine", data.getLinkUrlx());
     }
 
-    /** 모임 가입 신청 알림은 현재 활성 모임장에게만 멤버 관리 화면을 제공하는지 검증함 */
+    /** 모임 가입 신청 알림은 현재 활성 모임장에게만 멤버 관리 화면을 제공하는지 검증 */
     @Test
     void getClubManageForOwner() {
-        // 현재 모임장이 수신자인 가입 신청 알림 대상 정보를 생성함
+        // 현재 모임장이 수신자인 가입 신청 알림 대상 정보를 생성
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
         target.setTempCode(Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED);
         target.setTagtType(Constant.ALIM_TARGET_READING_CLUB);
@@ -544,19 +544,19 @@ class AlimServiceImplTest {
         target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
-        // 모임 가입 신청 알림의 현재 이동 대상을 조회함
+        // 모임 가입 신청 알림의 현재 이동 대상을 조회
         ResultData result = alimService.getAlimTarget(31L, 7L);
         AlimDto.AlimTargetDto data = (AlimDto.AlimTargetDto) result.getData();
 
-        // 현재 모임장에게 멤버 관리 화면 경로가 반환되는지 확인함
+        // 현재 모임장에게 멤버 관리 화면 경로가 반환되는지 확인
         assertEquals(200, result.getCode());
         assertEquals("/reading-clubs/manage/members/10", data.getLinkUrlx());
     }
 
-    /** 모임장이 변경된 뒤에는 과거 가입 신청 알림으로 멤버 관리 화면을 열 수 없는지 검증함 */
+    /** 모임장이 변경된 뒤에는 과거 가입 신청 알림으로 멤버 관리 화면을 열 수 없는지 검증 */
     @Test
     void rejectFormerClubOwner() {
-        // 알림 수신자와 현재 모임장이 다른 가입 신청 알림 대상 정보를 생성함
+        // 알림 수신자와 현재 모임장이 다른 가입 신청 알림 대상 정보를 생성
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
         target.setTempCode(Constant.ALIM_TEMP_CODE_CLUB_JOIN_REQUESTED);
         target.setTagtType(Constant.ALIM_TARGET_READING_CLUB);
@@ -565,14 +565,14 @@ class AlimServiceImplTest {
         target.setTargetUserStat(Constant.USER_STAT_ACTIVE);
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(target);
 
-        // 과거 모임장이 가입 신청 알림의 이동 대상을 조회함
+        // 과거 모임장이 가입 신청 알림의 이동 대상을 조회
         ResultData result = alimService.getAlimTarget(31L, 7L);
 
-        // 현재 권한이 없는 멤버 관리 화면 접근이 거부되는지 확인함
+        // 현재 권한이 없는 멤버 관리 화면 접근이 거부되는지 확인
         assertEquals(2020, result.getCode());
     }
 
-    /** 인증 사용자가 소유하지 않은 알림번호는 대상 정보 없이 접근 거부되는지 검증함 */
+    /** 인증 사용자가 소유하지 않은 알림번호는 대상 정보 없이 접근 거부되는지 검증 */
     @Test
     void getForeignAlimTarget() {
         when(alimMapper.getAlimTargetDtl(any(AlimDto.AlimTargetDto.class))).thenReturn(null);
@@ -582,7 +582,7 @@ class AlimServiceImplTest {
         assertEquals(2020, result.getCode());
     }
 
-    /** 현재 활성 모임원인 채팅 알림 수신자는 해당 모임 채팅으로 이동하는지 검증함. */
+    /** 현재 활성 모임원인 채팅 알림 수신자는 해당 모임 채팅으로 이동하는지 검증 */
     @Test
     void getChatTargetForMember() {
         AlimDto.AlimTargetDto target = new AlimDto.AlimTargetDto();
@@ -600,7 +600,7 @@ class AlimServiceImplTest {
         assertEquals("/reading-clubs/chat/10", data.getLinkUrlx());
     }
 
-    /** 채팅 알림을 끈 사용자는 알림 이력과 푸시를 받지 않는지 검증함. */
+    /** 채팅 알림을 끈 사용자는 알림 이력과 푸시를 받지 않는지 검증 */
     @Test
     void sendChatAlimBySetting() {
         UserSettingDto setting = new UserSettingDto();
@@ -618,18 +618,18 @@ class AlimServiceImplTest {
         verify(pushService, never()).sendPush(anyLong(), any(), any(), any(), any());
     }
 
-    /** 차단 관계인 개인 소셜 알림은 이력과 푸시 준비를 모두 생략하는지 검증함 */
+    /** 차단 관계인 개인 소셜 알림은 이력과 푸시 준비를 모두 생략하는지 검증 */
     @Test
     void sendUserAlimSkipsBlocked() {
-        // 발신자와 수신자 사이에 한 방향 차단 관계가 존재하도록 설정함
+        // 발신자와 수신자 사이에 한 방향 차단 관계가 존재하도록 설정
         when(userBlockService.isBlocked(3L, 4L)).thenReturn(true);
-        // 차단된 사용자가 만든 팔로우 알림 발송을 요청함
+        // 차단된 사용자가 만든 팔로우 알림 발송을 요청
         ResultData result = alimService.sendUserAlim(
                 3L, 4L, Constant.ALIM_SITU_FOLLOW_CLUB, Constant.ALIM_TEMP_CODE_FOLLOW_USER
               , Constant.ALIM_TARGET_USER, 3L, null, Map.of("userName", "sender"));
-        // 차단 사실을 노출하지 않는 정상 생략 응답인지 검증함
+        // 차단 사실을 노출하지 않는 정상 생략 응답인지 검증
         assertEquals(200, result.getCode());
-        // 차단된 수신자의 활성 상태 조회 전부터 알림 저장 흐름이 중단되는지 검증함
+        // 차단된 수신자의 활성 상태 조회 전부터 알림 저장 흐름이 중단되는지 검증
         verify(alimMapper, never()).getActiveAlimUserCnt(4L);
         // 차단 여부를 확인하는 개인 알림 경로에서도 사용자 원본 잠금 유지
         verify(userBlockService).lockUsers(3L, 4L);
@@ -656,7 +656,7 @@ class AlimServiceImplTest {
     }
 
     /**
-     * 독후감 알림 이동 테스트에서 공통으로 사용할 현재 콘텐츠 상태를 생성함
+     * 독후감 알림 이동 테스트에서 공통으로 사용할 현재 콘텐츠 상태를 생성
      *
      * @author SeungHyeon.Kang
      * @param targetUserNumb 독후감 작성자 번호
@@ -674,7 +674,7 @@ class AlimServiceImplTest {
         target.setPubcYsno(pubcYsno);
         target.setReptStat("DONE");
         target.setFollowYsno(followYsno);
-        // 현재 독후감과 관계 상태가 설정된 알림 대상 객체를 반환함
+        // 현재 독후감과 관계 상태가 설정된 알림 대상 객체를 반환
         return target;
     }
 }

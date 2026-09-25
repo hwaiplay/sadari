@@ -38,7 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
  * fileName       : MyPageController
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 마이페이지 API를 제공함
+ * description    : 마이페이지 API를 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -60,7 +60,7 @@ public class MyPageController {
     private final ReadingStatisticsService readingStatisticsService;
 
     /**
-     * 로그인 사용자의 선택 연도 독서 시간 잔디만 조회함
+     * 로그인 사용자의 선택 연도 독서 시간 잔디만 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 처리 대상 사용자 번호
@@ -72,12 +72,12 @@ public class MyPageController {
     public ResultData getReadingHeatmap(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                        , @Parameter(description = "조회할 연도", example = "2026")
                                          @RequestParam(required = false) Integer readYear) {
-        // 타이머 화면에 필요한 선택 연도 독서 잔디만 조회함
+        // 타이머 화면에 필요한 선택 연도 독서 잔디만 조회
         return readingStatisticsService.getReadingHeatmap(userNumb, readYear);
     }
 
     /**
-     * 로그인 사용자의 선택 연도 독서 시간과 독서 상태 분포를 조회함
+     * 로그인 사용자의 선택 연도 독서 시간과 독서 상태 분포를 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 처리 대상 사용자 번호
@@ -89,12 +89,12 @@ public class MyPageController {
     public ResultData getReadingStats(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                      , @Parameter(description = "조회할 연도", example = "2026")
                                        @RequestParam(required = false) Integer readYear) {
-        // 스크롤로 통계 영역에 진입한 로그인 사용자의 선택 연도 통계를 조회함
+        // 스크롤로 통계 영역에 진입한 로그인 사용자의 선택 연도 통계를 조회
         return readingStatisticsService.getReadingStats(userNumb, readYear);
     }
 
     /**
-     * 로그인 사용자의 독서 통계 공개 범위를 변경함
+     * 로그인 사용자의 독서 통계 공개 범위를 변경
      *
      * @author SeungHyeon.Kang
      * @param userNumb 설정을 변경할 로그인 사용자 번호
@@ -105,12 +105,12 @@ public class MyPageController {
     @Operation(summary = "독서 통계 공개 설정 수정", description = "로그인 사용자 본인의 독서 통계를 다른 사용자에게 공개할지 변경한다.")
     public ResultData uptReadingStatsSetting(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                             , @Valid @RequestBody ReadingStatisticsSettingDto setting) {
-        // 인증 사용자 번호를 기준으로 독서 통계 공개 범위를 변경함
+        // 인증 사용자 번호를 기준으로 독서 통계 공개 범위를 변경
         return readingStatisticsService.uptReadingStatsSetting(userNumb, setting);
     }
 
     /**
-     * 로그인 사용자의 월간 독서 활동 요약 조회함
+     * 로그인 사용자의 월간 독서 활동 요약 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 처리 대상 사용자 번호
@@ -119,49 +119,49 @@ public class MyPageController {
     @GetMapping("/monthly-reading-summary")
     @Operation(summary = "독서 요약 조회", description = "로그인 사용자의 주간, 월간, 연간 독서 목표와 완료 독후감 요약을 조회한다.")
     public ResultData getMonthlyReadingSummary(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // getMonthlyReadingSummary 업무 로직을 reportService에 위임함
+        // getMonthlyReadingSummary 업무 로직을 reportService에 위임
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb, null);
 
-        // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단함
+        // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단
         // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않음
         if (summaryResult.getCode() != 200) {
-            // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환함
+            // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환
             return summaryResult;
         }
 
-        // getMyPageProfileStats 업무 로직을 socialService에 위임함
+        // getMyPageProfileStats 업무 로직을 socialService에 위임
         ResultData statsResult = socialService.getMyPageProfileStats(userNumb);
 
         // 마이페이지 API Controller는 응답 조합만 담당하고, 통계 집계 SQL과 기준은 social service/mapper에 둠
         // social 통계 조회가 실패하면 화면 통계만 비우지 않고 실패 사유를 그대로 반환해 공통 API 검증 흐름과 맞춤
         if (statsResult.getCode() != 200) {
-            // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환함
+            // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 반환
             return statsResult;
         }
 
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         MonthlyReadingSummaryDto summary = (MonthlyReadingSummaryDto) summaryResult.getData();
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         SocialDto.ProfileStatsDto profileStats = (SocialDto.ProfileStatsDto) statsResult.getData();
 
-        // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // profileStats 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (!StringUtil.isEmpty(profileStats)) {
-            // TotalReadBookCnt 업무 값을 summary DTO에 설정함
+            // TotalReadBookCnt 업무 값을 summary DTO에 설정
             summary.setTotalReadBookCnt(profileStats.getTotalReadBookCnt());
-            // FollowingCnt 업무 값을 summary DTO에 설정함
+            // FollowingCnt 업무 값을 summary DTO에 설정
             summary.setFollowingCnt(profileStats.getFollowingCnt());
-            // FollowerCnt 업무 값을 summary DTO에 설정함
+            // FollowerCnt 업무 값을 summary DTO에 설정
             summary.setFollowerCnt(profileStats.getFollowerCnt());
-            // ReceivedLikeCnt 업무 값을 summary DTO에 설정함
+            // ReceivedLikeCnt 업무 값을 summary DTO에 설정
             summary.setReceivedLikeCnt(profileStats.getReceivedLikeCnt());
         }
 
-        // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 성공 응답으로 반환함
+        // 로그인 사용자의 월간 독서 활동 요약 조회 결과를 성공 응답으로 반환
         return ResultData.success(summary);
     }
 
     /**
-     * 로그인 사용자의 독서 목표 저장함
+     * 로그인 사용자의 독서 목표 저장
      *
      * @author SeungHyeon.Kang
      * @param userNumb 처리 대상 사용자 번호
@@ -172,14 +172,14 @@ public class MyPageController {
     @Operation(summary = "독서 목표 저장", description = "로그인 사용자의 주간, 월간, 연간 독서 목표 권수를 저장한다.")
     public ResultData setReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
                                    , @RequestBody ReadingGoalDto readingGoalDto) {
-        // 로그인 사용자의 독서 목표를 저장함
+        // 로그인 사용자의 독서 목표를 저장
         ResultData result = reportService.setReadingGoal(userNumb, readingGoalDto);
-        // 저장이 실패하면 원래 실패 사유를 그대로 반환함
+        // 저장이 실패하면 원래 실패 사유를 그대로 반환
         if (result.getCode() != 200) {
-            // 독서 목표 저장 실패 결과를 반환함
+            // 독서 목표 저장 실패 결과를 반환
             return result;
         }
-        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환함
+        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환
         return getMonthlyReadingSummary(userNumb);
     }
 
@@ -193,19 +193,19 @@ public class MyPageController {
     @PostMapping("/reading-goal/previous")
     @Operation(summary = "이전 독서 목표 복사", description = "현재 기간의 목표가 비어 있을 때 이전 주/월/년 목표 권수를 복사해 저장한다.")
     public ResultData copyPreviousReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
-        // 이전 목표량을 현재 기간으로 복사함
+        // 이전 목표량을 현재 기간으로 복사
         ResultData result = reportService.copyPreviousReadingGoal(userNumb);
-        // 복사가 실패하면 원래 실패 사유를 그대로 반환함
+        // 복사가 실패하면 원래 실패 사유를 그대로 반환
         if (result.getCode() != 200) {
-            // 이전 목표 복사 실패 결과를 반환함
+            // 이전 목표 복사 실패 결과를 반환
             return result;
         }
-        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환함
+        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환
         return getMonthlyReadingSummary(userNumb);
     }
 
     /**
-     * 로그인 사용자의 독서 달력 데이터 조회함
+     * 로그인 사용자의 독서 달력 데이터 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 처리 대상 사용자 번호
@@ -218,76 +218,76 @@ public class MyPageController {
 
         YearMonth targetMonth;
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록
         try {
-            // parse 호출로 입력값을 필요한 데이터 형식으로 변환함
+            // parse 호출로 입력값을 필요한 데이터 형식으로 변환
             targetMonth = YearMonth.parse(yearMonth);
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
         catch (DateTimeParseException e) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 아래 처리 단계의 업무 목적을 설명함
+        // 아래 처리 단계의 업무 목적을 설명
         LocalDate monthStart = targetMonth.atDay(1);
         // getDayOfWeek 조회로 후속 처리에 필요한 데이터를 가져옴
         int daysFromSunday = monthStart.getDayOfWeek().getValue() % 7;
-        // 마이페이지 조회에 사용할 기준 날짜를 계산함
+        // 마이페이지 조회에 사용할 기준 날짜를 계산
         LocalDate calendarStart = monthStart.minusDays(daysFromSunday);
 
-        // 아래 처리 단계의 업무 목적을 설명함
+        // 아래 처리 단계의 업무 목적을 설명
         LocalDate calendarEnd = calendarStart.plusDays(41);
         List<Map<String, Object>> calendarReports = new ArrayList<>();
-        // getBookList 업무 로직을 reportService에 위임함
+        // getBookList 업무 로직을 reportService에 위임
         ResultData bookListResult = reportService.getBookList(userNumb, null, Constant.SORT_END_DATE_DESC);
 
-        // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기함
+        // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
         if (bookListResult.getCode() != 200) {
-            // 로그인 사용자의 독서 달력 데이터 조회 결과를 반환함
+            // 로그인 사용자의 독서 달력 데이터 조회 결과를 반환
             return bookListResult;
         }
 
         @SuppressWarnings("unchecked")
-        // 공통 응답에 포함된 업무 데이터를 조회함
+        // 공통 응답에 포함된 업무 데이터를 조회
         List<ReportDto> bookList = (List<ReportDto>) bookListResult.getData();
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록임
+        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
         for (ReportDto report : bookList) {
-            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기함
+            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
             if (StringUtil.hasEmpty(report.getReptStdt(), report.getReptEndt())) {
 
                 continue;
             }
 
-            // 기본 날짜 형식의 문자열을 날짜 객체로 변환함
+            // 기본 날짜 형식의 문자열을 날짜 객체로 변환
             LocalDate reportStart = DateUtil.parseDefaultDate(report.getReptStdt());
-            // 기본 날짜 형식의 문자열을 날짜 객체로 변환함
+            // 기본 날짜 형식의 문자열을 날짜 객체로 변환
             LocalDate reportEnd = DateUtil.parseDefaultDate(report.getReptEndt());
 
-            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기함
+            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
             if (!DateUtil.isDateRangeOverlapped(reportStart, reportEnd, calendarStart, calendarEnd)) {
 
                 continue;
             }
 
             Map<String, Object> item = new HashMap<>();
-            // 후속 처리에 사용할 키와 값을 맵에 저장함
+            // 후속 처리에 사용할 키와 값을 맵에 저장
             item.put("reptNumb", report.getReptNumb());
-            // 후속 처리에 사용할 키와 값을 맵에 저장함
+            // 후속 처리에 사용할 키와 값을 맵에 저장
             item.put("bookTitl", report.getBookTitl());
-            // 후속 처리에 사용할 키와 값을 맵에 저장함
+            // 후속 처리에 사용할 키와 값을 맵에 저장
             item.put("reptStdt", report.getReptStdt());
-            // 후속 처리에 사용할 키와 값을 맵에 저장함
+            // 후속 처리에 사용할 키와 값을 맵에 저장
             item.put("reptEndt", report.getReptEndt());
-            // 후속 처리에 사용할 키와 값을 맵에 저장함
+            // 후속 처리에 사용할 키와 값을 맵에 저장
             item.put("reptColr", report.getReptColrName());
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             calendarReports.add(item);
         }
 
-        // 로그인 사용자의 독서 달력 데이터 조회 결과를 성공 응답으로 반환함
+        // 로그인 사용자의 독서 달력 데이터 조회 결과를 성공 응답으로 반환
         return ResultData.success(calendarReports);
     }
 }

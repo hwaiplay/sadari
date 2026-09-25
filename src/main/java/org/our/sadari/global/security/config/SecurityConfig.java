@@ -29,7 +29,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * fileName       : SecurityConfig
  * author         : SeungHyeon.Kang
  * date           : 2026-03-22
- * description    : 인증과 보안 실행 설정을 구성함
+ * description    : 인증과 보안 실행 설정을 구성
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -62,7 +62,7 @@ public class SecurityConfig {
     private final JwtFilter jwtFilter;
 
     /**
-     * JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성함
+     * JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성
      *
      * @author SeungHyeon.Kang
      * @param http API 접근 규칙을 설정할 HttpSecurity
@@ -75,7 +75,7 @@ public class SecurityConfig {
                                          , SessionAuthenticationStrategy csrfAuthStrategy) throws Exception {
 
         http
-                // 브라우저가 자동 전송하는 인증 Cookie와 별도로 요청 Header의 CSRF Token을 검증함
+                // 브라우저가 자동 전송하는 인증 Cookie와 별도로 요청 Header의 CSRF Token을 검증
                 .csrf(csrf -> csrf.csrfTokenRepository(csrfTokenRepository)
                         // JWT는 요청마다 인증되므로 새 로그인으로 판단해 기존 CSRF Cookie를 만료시키는 후처리를 사용하지 않음
                         .sessionAuthenticationStrategy(csrfAuthStrategy))
@@ -93,7 +93,7 @@ public class SecurityConfig {
                 // 요청 URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
 
-                        // 서버 예외를 전용 오류 문서로 표시할 때 인증 필터가 오류 디스패치를 차단하지 않도록 허용함
+                        // 서버 예외를 전용 오류 문서로 표시할 때 인증 필터가 오류 디스패치를 차단하지 않도록 허용
                         .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
 
                         // 인증 없이 접근을 허용할 공개 화면과 API Endpoint 목록
@@ -118,17 +118,17 @@ public class SecurityConfig {
                                 "/api/oauth/tokenCheck",
                                 "/api/service-info/privacy-policy",
                                 "/error/500.html"
-                        // 인증 없이 접근 가능한 공개 API 경로를 설정함
+                        // 인증 없이 접근 가능한 공개 API 경로를 설정
                         ).permitAll()
 
                         // 관리자 권한(ADMIN)을 가진 사용자만 접근 가능
                         .requestMatchers(
                                 "/api/admin/**",
-                                // Swagger UI 및 OpenAPI 문서는 내부 API 정의서이므로 관리자만 접근을 허용함
+                                // Swagger UI 및 OpenAPI 문서는 내부 API 정의서이므로 관리자만 접근을 허용
                                 "/swagger-ui.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**"
-                        // Swagger 문서 접근을 관리자 권한으로 제한함
+                        // Swagger 문서 접근을 관리자 권한으로 제한
                         ).hasRole("ADMIN")
 
                         // 그 외 모든 요청은 인증된 사용자만 접근 가능
@@ -139,7 +139,7 @@ public class SecurityConfig {
                 .exceptionHandling(ex -> ex
                         // 미인증 사용자 접근 시 401 Unauthorized 반환
                         .authenticationEntryPoint((req, res, e) -> {
-                            // Status 업무 값을 res DTO에 설정함
+                            // Status 업무 값을 res DTO에 설정
                             res.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
                             // JWT 필터에서 확인한 구체적인 인증 거절 원인 우선 보존
                             if (StringUtil.isEmpty(req.getAttribute(RequestLogFilter.SECURITY_REASON))) {
@@ -150,7 +150,7 @@ public class SecurityConfig {
                         })
                         // 권한 부족 시 403 Forbidden 반환
                         .accessDeniedHandler((req, res, e) -> {
-                            // Status 업무 값을 res DTO에 설정함
+                            // Status 업무 값을 res DTO에 설정
                             res.setStatus(HttpServletResponse.SC_FORBIDDEN);
                             // CSRF 검증과 일반 권한 거절의 예외 유형만 기록
                             req.setAttribute(RequestLogFilter.SECURITY_REASON, e.getClass().getSimpleName());
@@ -159,40 +159,40 @@ public class SecurityConfig {
 
                 // UsernamePasswordAuthenticationFilter 이전에 커스텀 JwtFilter 실행
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-        // JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성 결과를 반환함
+        // JWT 인증과 API 접근 권한을 적용한 SecurityFilterChain을 구성 결과를 반환
         return http.build();
     }
 
     /**
-     * 인증 Cookie와 같은 환경 속성을 사용하는 CSRF Cookie Repository를 구성함
+     * 인증 Cookie와 같은 환경 속성을 사용하는 CSRF Cookie Repository를 구성
      *
      * @author SeungHyeon.Kang
      * @return CSRF Token을 HttpOnly Cookie로 저장하는 Repository
      */
     @Bean
     public CookieCsrfTokenRepository getCsrfTokenRepository() {
-        // CSRF Token을 브라우저 Cookie에 저장할 Repository를 생성함
+        // CSRF Token을 브라우저 Cookie에 저장할 Repository를 생성
         CookieCsrfTokenRepository repository = new CookieCsrfTokenRepository();
-        // 인증 Cookie와 같은 전송 범위를 적용해 환경별 교차 출처 구성을 유지함
+        // 인증 Cookie와 같은 전송 범위를 적용해 환경별 교차 출처 구성을 유지
         repository.setCookieCustomizer(this::uptCsrfCookie);
-        // CSRF Token을 HttpOnly Cookie에 저장하는 Repository를 반환함
+        // CSRF Token을 HttpOnly Cookie에 저장하는 Repository를 반환
         return repository;
     }
 
     /**
-     * Stateless JWT 요청마다 기존 CSRF Cookie를 만료시키지 않는 인증 후처리를 구성함
+     * Stateless JWT 요청마다 기존 CSRF Cookie를 만료시키지 않는 인증 후처리를 구성
      *
      * @author HanWon.Jang
      * @return CSRF Cookie 상태를 변경하지 않는 인증 후처리
      */
     @Bean
     public SessionAuthenticationStrategy getCsrfAuthStrategy() {
-        // JWT 인증은 서버 세션을 사용하지 않으므로 CSRF Cookie를 초기화하지 않는 후처리를 반환함
+        // JWT 인증은 서버 세션을 사용하지 않으므로 CSRF Cookie를 초기화하지 않는 후처리를 반환
         return new NullAuthenticatedSessionStrategy();
     }
 
     /**
-     * 인증 Cookie 설정과 일치하도록 CSRF Cookie 속성을 구성함
+     * 인증 Cookie 설정과 일치하도록 CSRF Cookie 속성을 구성
      *
      * @author SeungHyeon.Kang
      * @param cookie CSRF Cookie 응답 속성 Builder
@@ -207,23 +207,23 @@ public class SecurityConfig {
      */
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
-        // 프런트엔드 출처에 허용할 CORS 정책을 담을 객체를 생성함
+        // 프런트엔드 출처에 허용할 CORS 정책을 담을 객체를 생성
         CorsConfiguration config = new CorsConfiguration();
 
-        // AllowedOrigins 업무 값을 config DTO에 설정함
+        // AllowedOrigins 업무 값을 config DTO에 설정
         config.setAllowedOrigins(List.of(FRONT_DOMAIN)); // 지정된 프론트엔드 도메인만 접근 허용
-        // AllowedMethods 업무 값을 config DTO에 설정함
+        // AllowedMethods 업무 값을 config DTO에 설정
         config.setAllowedMethods(List.of("*"));           // 모든 HTTP Method 허용
-        // AllowedHeaders 업무 값을 config DTO에 설정함
+        // AllowedHeaders 업무 값을 config DTO에 설정
         config.setAllowedHeaders(List.of("*"));           // 모든 헤더 허용
-        // AllowCredentials 업무 값을 config DTO에 설정함
+        // AllowCredentials 업무 값을 config DTO에 설정
         config.setAllowCredentials(true);                 // 자격 증명(쿠키, Authorization 헤더 등) 허용
 
-        // 요청 경로별 CORS 정책을 담을 객체를 생성함
+        // 요청 경로별 CORS 정책을 담을 객체를 생성
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        // API 전체 경로에 CORS 정책을 등록함
+        // API 전체 경로에 CORS 정책을 등록
         source.registerCorsConfiguration("/**", config);   // 전체 경로에 CORS 정책 적용
-        // CORS(Cross-Origin Resource Sharing) 세부 정책 설정 결과를 반환함
+        // CORS(Cross-Origin Resource Sharing) 세부 정책 설정 결과를 반환
         return source;
     }
 }

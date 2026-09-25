@@ -23,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : PushServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-25
- * description    : 푸시 알림 업무 로직을 구현함
+ * description    : 푸시 알림 업무 로직을 구현
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -78,22 +78,22 @@ public class PushServiceImpl implements PushService {
     private String credentialsPath;
 
     /**
-     * 브라우저에서 FCM token을 발급받는 데 필요한 공개 설정만 반환함
-     * 하나라도 비어 있으면 프론트가 token을 만들 수 없으므로 잘못된 설정으로 응답함
+     * 브라우저에서 FCM token을 발급받는 데 필요한 공개 설정만 반환
+     * 하나라도 비어 있으면 프론트가 token을 만들 수 없으므로 잘못된 설정으로 응답
      *
      * @author SeungHyeon.Kang
      * @return Firebase Web 공개 설정
      */
     @Override
     public ResultData getFirebaseWebConfig() {
-        // 웹 설정 누락값을 Firebase 서비스 계정 정보로 보완함
+        // 웹 설정 누락값을 Firebase 서비스 계정 정보로 보완
         applyFirebaseWebFallback();
         // getMissingFirebaseConfig 조회로 후속 처리에 필요한 데이터를 가져옴
         List<String> missingConfigList = getMissingFirebaseConfig();
 
-        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
+        // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분
         if (!missingConfigList.isEmpty()) {
-            // 누락된 Firebase 설정 항목을 오류 메시지로 결합함
+            // 누락된 Firebase 설정 항목을 오류 메시지로 결합
             String missingConfigText = String.join(", ", missingConfigList);
             // 복구 가능한 예외 상황을 경고 로그로 남김
             log.warn("Firebase Web Push config is missing. fields={}", missingConfigText);
@@ -101,79 +101,79 @@ public class PushServiceImpl implements PushService {
             return ResultData.fail(ResultEnum.PUSH_CONFIG_MISSING, missingConfigText);
         }
 
-        // 프런트에 제공할 Firebase 웹 설정을 담을 객체를 생성함
+        // 프런트에 제공할 Firebase 웹 설정을 담을 객체를 생성
         PushDto.FirebaseWebConfigDto res = new PushDto.FirebaseWebConfigDto();
-        // ApiKey 업무 값을 res DTO에 설정함
+        // ApiKey 업무 값을 res DTO에 설정
         res.setApiKey(apiKey);
-        // AuthDomain 업무 값을 res DTO에 설정함
+        // AuthDomain 업무 값을 res DTO에 설정
         res.setAuthDomain(authDomain);
-        // ProjectId 업무 값을 res DTO에 설정함
+        // ProjectId 업무 값을 res DTO에 설정
         res.setProjectId(projectId);
-        // StorageBucket 업무 값을 res DTO에 설정함
+        // StorageBucket 업무 값을 res DTO에 설정
         res.setStorageBucket(storageBucket);
-        // MessagingSenderId 업무 값을 res DTO에 설정함
+        // MessagingSenderId 업무 값을 res DTO에 설정
         res.setMessagingSenderId(messagingSenderId);
-        // AppId 업무 값을 res DTO에 설정함
+        // AppId 업무 값을 res DTO에 설정
         res.setAppId(appId);
-        // VapidPublicKey 업무 값을 res DTO에 설정함
+        // VapidPublicKey 업무 값을 res DTO에 설정
         res.setVapidPublicKey(vapidPublicKey);
-        // 브라우저에서 FCM token을 발급받는 데 필요한 공개 설정만 반환한 결과를 성공 응답으로 반환함
+        // 브라우저에서 FCM token을 발급받는 데 필요한 공개 설정만 반환한 결과를 성공 응답으로 반환
         return ResultData.success(res);
     }
 
     /**
      * Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채움
      * service account는 서버 인증용 파일이라 apiKey, appId, messagingSenderId는 들어 있지 않음
-     * 따라서 여기서는 projectId, authDomain, storageBucket처럼 project_id로 유추 가능한 공개 설정만 fallback 처리함
+     * 따라서 여기서는 projectId, authDomain, storageBucket처럼 project_id로 유추 가능한 공개 설정만 fallback 처리
      *
      * @author SeungHyeon.Kang
      */
     private void applyFirebaseWebFallback() {
-        // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (!StringUtil.isEmpty(projectId) || StringUtil.isEmpty(credentialsPath)) {
-            // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환함
+            // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환
             return;
         }
 
-        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
+        // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록
         try {
-            // 설정된 Firebase 인증 리소스를 조회함
+            // 설정된 Firebase 인증 리소스를 조회
             Resource resource = resourceLoader.getResource(normalizeCredentialsPath(credentialsPath));
 
-            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분함
+            // 요청값이 업무에서 허용한 범위와 상태를 만족하는지 구분
             if (!resource.exists()) {
                 // 복구 가능한 예외 상황을 경고 로그로 남김
                 log.warn("Firebase service account json is not found for web config fallback. path={}", credentialsPath);
-                // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환함
+                // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환
                 return;
             }
 
-            // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록임
+            // 외부 연동이나 데이터 변환 실패를 예외 흐름으로 분리하기 위한 블록
             try (InputStream inputStream = resource.getInputStream()) {
-                // Firebase 서비스 계정 JSON을 설정 조회용 트리로 변환함
+                // Firebase 서비스 계정 JSON을 설정 조회용 트리로 변환
                 JsonNode serviceAccount = objectMapper.readTree(inputStream);
-                // 서비스 계정 JSON에서 필요한 Firebase 설정 항목을 조회함
+                // 서비스 계정 JSON에서 필요한 Firebase 설정 항목을 조회
                 String serviceAccountProjectId = serviceAccount.path("project_id").asText("");
 
-                // serviceAccountProjectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+                // serviceAccountProjectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
                 if (StringUtil.isEmpty(serviceAccountProjectId)) {
-                    // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환함
+                    // Firebase service account json에서 Web Push 설정 중 보완 가능한 값을 채웁니다 결과를 반환
                     return;
                 }
 
                 /*
                  * project_id는 service account와 Firebase Web app이 같은 Firebase project를 바라보는 경우 동일하게 사용할 수 있음
-                 * 단, apiKey/appId/messagingSenderId는 service account에 없으므로 Firebase Console의 Web app config를 yml에 넣어야 함
+                 * service account에 없는 apiKey/appId/messagingSenderId의 Firebase Console Web app config 기반 yml 입력 필수
                  */
                 projectId = serviceAccountProjectId;
 
-                // authDomain 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+                // authDomain 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
                 if (StringUtil.isEmpty(authDomain)) {
 
                     authDomain = serviceAccountProjectId + ".firebaseapp.com";
                 }
 
-                // storageBucket 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+                // storageBucket 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
                 if (StringUtil.isEmpty(storageBucket)) {
 
                     storageBucket = serviceAccountProjectId + ".firebasestorage.app";
@@ -181,7 +181,7 @@ public class PushServiceImpl implements PushService {
             }
         }
 
-        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환함
+        // 예외 발생 시 기본값 보정 또는 공통 실패 흐름으로 전환
         catch (Exception e) {
             // 복구 가능한 예외 상황을 경고 로그로 남김
             log.warn("Firebase service account json could not be used for web config fallback. failure={}", LogSafe.getFailure(e));
@@ -189,7 +189,7 @@ public class PushServiceImpl implements PushService {
     }
 
     /**
-     * Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정함
+     * Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정
      * classpath:가 중복으로 들어온 경우 파일을 못 찾으므로 한 번만 남김
      *
      * @author SeungHyeon.Kang
@@ -200,20 +200,20 @@ public class PushServiceImpl implements PushService {
 
         String normalizedPath = path;
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록임
+        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
         while (normalizedPath.startsWith("classpath:classpath:")) {
-            // 정규식과 처음 일치하는 문자열을 치환함
+            // 정규식과 처음 일치하는 문자열을 치환
             normalizedPath = normalizedPath.replaceFirst("classpath:classpath:", "classpath:");
         }
 
-        // Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정한 결과를 반환함
+        // Firebase service account json 경로를 Spring ResourceLoader가 읽을 수 있게 보정한 결과를 반환
         return normalizedPath;
     }
 
     /**
-     * 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산함
-     * VAPID public key만으로는 token을 만들 수 없고, Firebase Console의 Web app config 값들이 함께 필요함
-     * service account json에는 apiKey/appId/messagingSenderId가 없으므로 이 값들은 yml 또는 환경변수에서 반드시 받아야 함
+     * 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산
+     * VAPID public key만으로는 token을 만들 수 없고, Firebase Console의 Web app config 값들이 함께 필요
+     * service account json에 없는 apiKey/appId/messagingSenderId의 yml 또는 환경변수 입력 필수
      *
      * @author SeungHyeon.Kang
      * @return 누락된 설정 property 이름 목록
@@ -222,43 +222,43 @@ public class PushServiceImpl implements PushService {
 
         List<String> missingConfigList = new ArrayList<>();
 
-        // apiKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // apiKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(apiKey)) {
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             missingConfigList.add("firebase.web.api-key");
         }
 
-        // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // projectId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(projectId)) {
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             missingConfigList.add("firebase.web.project-id");
         }
 
-        // messagingSenderId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // messagingSenderId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(messagingSenderId)) {
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             missingConfigList.add("firebase.web.messaging-sender-id");
         }
 
-        // appId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // appId 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(appId)) {
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             missingConfigList.add("firebase.web.app-id");
         }
 
-        // vapidPublicKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // vapidPublicKey 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(vapidPublicKey)) {
-            // 처리한 값을 결과 컬렉션에 추가함
+            // 처리한 값을 결과 컬렉션에 추가
             missingConfigList.add("firebase.web.vapid-public-key");
         }
 
-        // 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산한 결과를 반환함
+        // 브라우저 FCM token 발급에 반드시 필요한 Firebase Web 설정 누락 항목을 계산한 결과를 반환
         return missingConfigList;
     }
 
     /**
-     * 로그인 사용자의 현재 브라우저 FCM token을 저장함
-     * TB_PSHSUB는 기존 Web Push 컬럼 구조를 사용하므로 token은 ENDP_URLX에 보관함
+     * 로그인 사용자의 현재 브라우저 FCM token을 저장
+     * TB_PSHSUB는 기존 Web Push 컬럼 구조를 사용하므로 token은 ENDP_URLX에 보관
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -268,25 +268,25 @@ public class PushServiceImpl implements PushService {
     @Override
     @Transactional
     public ResultData setPushSub(Long userNumb, PushDto.PushSubDto req) {
-        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // UserNumb 업무 값을 req DTO에 설정함
+        // UserNumb 업무 값을 req DTO에 설정
         req.setUserNumb(userNumb);
-        // 동일 브라우저 token이 과거 계정으로 푸시를 받지 않도록 다른 계정 구독을 먼저 비활성화함
+        // 동일 브라우저 token이 과거 계정으로 푸시를 받지 않도록 다른 계정 구독을 먼저 비활성화
         pushMapper.uptOtherPushDisabled(req);
-        // PushSub 업무 값을 pushMapper DTO에 설정함
+        // PushSub 업무 값을 pushMapper DTO에 설정
         pushMapper.setPushSub(req);
-        // 로그인 사용자의 현재 브라우저 FCM token을 저장한 결과를 성공 응답으로 반환함
+        // 로그인 사용자의 현재 브라우저 FCM token을 저장한 결과를 성공 응답으로 반환
         return ResultData.success();
     }
 
     /**
-     * 로그인 사용자의 현재 브라우저 FCM token을 비활성화함
-     * token을 모르면 어떤 브라우저 구독을 끌지 특정할 수 없으므로 잘못된 요청으로 처리함
+     * 로그인 사용자의 현재 브라우저 FCM token을 비활성화
+     * token을 모르면 어떤 브라우저 구독을 끌지 특정할 수 없으므로 잘못된 요청으로 처리
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -296,22 +296,22 @@ public class PushServiceImpl implements PushService {
     @Override
     @Transactional
     public ResultData delPushSub(Long userNumb, PushDto.PushSubDto req) {
-        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(req) || StringUtil.isEmpty(req.getEndpUrlx())) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // UserNumb 업무 값을 req DTO에 설정함
+        // UserNumb 업무 값을 req DTO에 설정
         req.setUserNumb(userNumb);
-        // PushSub 데이터를 DB에서 삭제함
+        // PushSub 데이터를 DB에서 삭제
         pushMapper.delPushSub(req);
-        // 로그인 사용자의 현재 브라우저 FCM token을 비활성화한 결과를 성공 응답으로 반환함
+        // 로그인 사용자의 현재 브라우저 FCM token을 비활성화한 결과를 성공 응답으로 반환
         return ResultData.success();
     }
 
     /**
-     * 전체 기기 로그아웃 시 로그인 회원의 모든 브라우저 푸시 구독을 비활성화함
+     * 전체 기기 로그아웃 시 로그인 회원의 모든 브라우저 푸시 구독을 비활성화
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -320,21 +320,21 @@ public class PushServiceImpl implements PushService {
     @Override
     @Transactional
     public ResultData delAllPushSub(Long userNumb) {
-        // 회원 번호가 없으면 다른 사용자의 구독에 영향을 주지 않도록 요청을 거절함
+        // 회원 번호가 없으면 다른 사용자의 구독에 영향을 주지 않도록 요청을 거절
         if (StringUtil.isEmpty(userNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 회원의 모든 기기 FCM token을 비활성화함
+        // 회원의 모든 기기 FCM token을 비활성화
         pushMapper.delAllPushSub(userNumb);
-        // 전체 기기 푸시 구독 정리 성공을 반환함
+        // 전체 기기 푸시 구독 정리 성공을 반환
         return ResultData.success();
     }
 
     /**
-     * 알림 수신자의 활성 token 전체로 FCM 푸시를 발송함
-     * 구독이 없거나 Firebase 설정이 누락된 경우에는 알림 저장 기능을 방해하지 않고 발송만 생략함
+     * 알림 수신자의 활성 token 전체로 FCM 푸시를 발송
+     * 구독이 없거나 Firebase 설정이 누락된 경우에는 알림 저장 기능을 방해하지 않고 발송만 생략
      *
      * @author SeungHyeon.Kang
      * @param userNumb 알림 수신 사용자 번호
@@ -346,18 +346,18 @@ public class PushServiceImpl implements PushService {
     @Override
     public void sendPush(Long userNumb, String title, String body
                        , String linkUrlx, Long alimNumb) {
-        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기임
+        // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
         if (StringUtil.isEmpty(userNumb)) {
-            // 알림 수신자의 활성 token 전체로 FCM 푸시를 발송한 결과를 반환함
+            // 알림 수신자의 활성 token 전체로 FCM 푸시를 발송한 결과를 반환
             return;
         }
 
-        // ActivePushSubList 데이터를 DB에서 조회함
+        // ActivePushSubList 데이터를 DB에서 조회
         List<PushDto.PushSubDto> pushSubList = pushMapper.getActivePushSubList(userNumb);
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록임
+        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
         for (PushDto.PushSubDto pushSub : pushSubList) {
-            // send 호출로 검증된 알림 또는 응답을 전송함
+            // send 호출로 검증된 알림 또는 응답을 전송
             firebaseMessagingProvider.send(
                     // getEndpUrlx 조회로 후속 처리에 필요한 데이터를 가져옴
                     pushSub.getEndpUrlx()

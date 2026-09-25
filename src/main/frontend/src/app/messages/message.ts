@@ -9,7 +9,7 @@ const MESSAGE_LOCALE_STORAGE_KEY = "sadari:message-locale";
 export const MESSAGE_LOCALE_CHANGE_EVENT = "sadari:message-locale-change";
 
 /**
- * properties 형식 메시지 파일을 key-value 객체로 변환함
+ * properties 형식 메시지 파일을 key-value 객체로 변환
  *
  * @author HanWon.Jang
  * @param source raw 문자열로 읽은 properties 파일 내용
@@ -49,7 +49,7 @@ const MESSAGE_SOURCES = {
 };
 
 /**
- * 브라우저 언어를 기준으로 사용할 메시지 locale을 결정함
+ * 브라우저 언어를 기준으로 사용할 메시지 locale을 결정
  *
  * @author HanWon.Jang
  * @return 지원 locale 코드
@@ -57,7 +57,7 @@ const MESSAGE_SOURCES = {
 export const getDeviceEnglishYsno = (): "Y" | "N" =>
   navigator.language.toLowerCase().startsWith("en") ? "Y" : "N";
 
-/** 저장된 계정 언어가 없으면 현재 기기 언어를 메시지 언어로 사용함 */
+/** 저장된 계정 언어가 없으면 현재 기기 언어를 메시지 언어로 사용 */
 export const getMessageLocale = (): "en" | "ko" => {
   const savedLocale = window.localStorage.getItem(MESSAGE_LOCALE_STORAGE_KEY);
   if (savedLocale === "en" || savedLocale === "ko") {
@@ -67,7 +67,7 @@ export const getMessageLocale = (): "en" | "ko" => {
   return getDeviceEnglishYsno() === "Y" ? "en" : "ko";
 };
 
-/** 서버에서 확정한 계정 언어를 현재 브라우저 메시지 언어로 저장함 */
+/** 서버에서 확정한 계정 언어를 현재 브라우저 메시지 언어로 저장 */
 export const setMessageLocale = (englishYsno: "Y" | "N"): void => {
   const nextLocale = englishYsno === "Y" ? "en" : "ko";
   const previousLocale = getMessageLocale();
@@ -79,7 +79,7 @@ export const setMessageLocale = (englishYsno: "Y" | "N"): void => {
 };
 
 /**
- * 현재 locale에 맞는 메시지를 조회하고 파라미터를 치환함
+ * 현재 locale에 맞는 메시지를 조회하고 파라미터를 치환
  *
  * @author HanWon.Jang
  * @param key 조회할 메시지 key

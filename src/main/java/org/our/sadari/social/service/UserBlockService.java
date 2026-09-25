@@ -6,7 +6,7 @@ import org.our.sadari.global.common.result.ResultData;
  * fileName       : UserBlockService
  * author         : HanWon.Jang
  * date           : 2026-09-03
- * description    : 사용자 차단 등록과 해제 및 양방향 격리 판정 계약을 정의함
+ * description    : 사용자 차단 등록과 해제 및 양방향 격리 판정 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -15,7 +15,7 @@ import org.our.sadari.global.common.result.ResultData;
 public interface UserBlockService {
 
     /**
-     * 두 사용자 사이의 양방향 차단 여부를 조회함
+     * 두 사용자 사이의 양방향 차단 여부를 조회
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -25,7 +25,7 @@ public interface UserBlockService {
     boolean isBlocked(Long userNumb, Long targetUserNumb);
 
     /**
-     * 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제함
+     * 다른 사용자를 차단하고 양방향 팔로우 관계를 삭제
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -35,7 +35,7 @@ public interface UserBlockService {
     ResultData setBlock(Long userNumb, Long targetUserNumb);
 
     /**
-     * 로그인 사용자가 만든 차단 방향을 해제함
+     * 로그인 사용자가 만든 차단 방향을 해제
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호
@@ -45,7 +45,7 @@ public interface UserBlockService {
     ResultData delBlock(Long userNumb, Long targetUserNumb);
 
     /**
-     * 로그인 사용자가 차단한 사용자 목록을 페이지로 조회함
+     * 로그인 사용자가 차단한 사용자 목록을 페이지로 조회
      *
      * @author HanWon.Jang
      * @param userNumb 로그인 사용자 번호

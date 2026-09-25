@@ -12,7 +12,7 @@ import lombok.NoArgsConstructor;
  * fileName       : BookDto
  * author         : SeungHyeon.Kang
  * date           : 2026-07-17
- * description    : 도서 요청과 응답 데이터를 전달함
+ * description    : 도서 요청과 응답 데이터를 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

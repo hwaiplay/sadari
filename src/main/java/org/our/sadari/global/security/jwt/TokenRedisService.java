@@ -14,7 +14,7 @@ import org.springframework.stereotype.Service;
  * fileName       : TokenRedisService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-13
- * description    : 기기별 로그인 세션과 사용자 인증 캐시를 Redis에서 관리함
+ * description    : 기기별 로그인 세션과 사용자 인증 캐시를 Redis에서 관리
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -112,7 +112,7 @@ public class TokenRedisService {
     private long refreshRotationGraceSeconds;
 
     /**
-     * 기기별 Refresh Token 세션과 회원 공용 표시 정보를 Redis에 생성함
+     * 기기별 Refresh Token 세션과 회원 공용 표시 정보를 Redis에 생성
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호
@@ -124,14 +124,14 @@ public class TokenRedisService {
      */
     public void setLoginUserInfo(Long userNumb, String sessionId, String refreshToken
                                , String userNick, String userStat, Long ttlSeconds) {
-        // 필수 인증 값이나 만료 시간이 올바르지 않으면 불완전한 세션 생성을 차단함
+        // 필수 인증 값이나 만료 시간이 올바르지 않으면 불완전한 세션 생성을 차단
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(sessionId)
                 || StringUtil.isEmpty(refreshToken) || StringUtil.isEmpty(userStat)
                 || StringUtil.isEmpty(ttlSeconds) || ttlSeconds <= 0) {
             throw new IllegalArgumentException("Login user Redis values are invalid.");
         }
 
-        // 세션 Hash와 사용자 세션 색인 및 공용 캐시를 한 번의 Redis 명령으로 반영함
+        // 세션 Hash와 사용자 세션 색인 및 공용 캐시를 한 번의 Redis 명령으로 반영
         redisTemplate.execute(
                 SET_LOGIN_USER_SCRIPT
               , List.of(getSessionKey(sessionId), getUserSessionKey(userNumb)
@@ -146,7 +146,7 @@ public class TokenRedisService {
     }
 
     /**
-     * 제출된 Refresh Token을 원자적으로 회전하고 동시 요청에는 같은 최신 토큰을 반환함
+     * 제출된 Refresh Token을 원자적으로 회전하고 동시 요청에는 같은 최신 토큰을 반환
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호
@@ -158,15 +158,15 @@ public class TokenRedisService {
      */
     public String rotateRefreshToken(Long userNumb, String sessionId, String presentedToken
                                    , String proposedToken, long ttlSeconds) {
-        // 세션 회전에 필요한 값이 없으면 검증 실패로 반환함
+        // 세션 회전에 필요한 값이 없으면 검증 실패로 반환
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(sessionId)
                 || StringUtil.isEmpty(presentedToken) || StringUtil.isEmpty(proposedToken)
                 || ttlSeconds <= 0 || refreshRotationGraceSeconds < 0) {
-            // 회전할 세션이 없음을 반환함
+            // 회전할 세션이 없음을 반환
             return null;
         }
 
-        // Redis 서버 시각 기준의 유예 구간 안에서는 여러 탭과 서비스 워커에 같은 최신 토큰을 반환함
+        // Redis 서버 시각 기준의 유예 구간 안에서는 여러 탭과 서비스 워커에 같은 최신 토큰을 반환
         return redisTemplate.execute(
                 ROTATE_REFRESH_SCRIPT
               , List.of(getSessionKey(sessionId), getUserSessionKey(userNumb))
@@ -179,7 +179,7 @@ public class TokenRedisService {
     }
 
     /**
-     * Access Token의 회원과 세션 식별자가 현재 활성 세션을 가리키는지 확인함
+     * Access Token의 회원과 세션 식별자가 현재 활성 세션을 가리키는지 확인
      *
      * @author SeungHyeon.Kang
      * @param userNumb 토큰의 회원 번호
@@ -189,18 +189,18 @@ public class TokenRedisService {
     public boolean isSessionActive(Long userNumb, String sessionId) {
         // 식별값이 없으면 세션을 활성 상태로 인정하지 않음
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(sessionId)) {
-            // 활성 세션이 아님을 반환함
+            // 활성 세션이 아님을 반환
             return false;
         }
 
-        // 세션 Hash에 기록한 소유 회원 번호와 토큰의 회원 번호가 같은지 확인함
+        // 세션 Hash에 기록한 소유 회원 번호와 토큰의 회원 번호가 같은지 확인
         Object savedUserNumb = redisTemplate.opsForHash().get(getSessionKey(sessionId), "userNumb");
-        // 동일 회원의 만료되지 않은 세션일 때만 인증을 허용함
+        // 동일 회원의 만료되지 않은 세션일 때만 인증을 허용
         return String.valueOf(userNumb).equals(savedUserNumb);
     }
 
     /**
-     * 로그인 회원의 현재 이용 상태를 Redis에서 조회함
+     * 로그인 회원의 현재 이용 상태를 Redis에서 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 회원 번호
@@ -209,16 +209,16 @@ public class TokenRedisService {
     public String getUserStatus(Long userNumb) {
         // 회원 번호가 없으면 상태 캐시를 조회하지 않음
         if (StringUtil.isEmpty(userNumb)) {
-            // 조회할 회원 상태가 없음을 반환함
+            // 조회할 회원 상태가 없음을 반환
             return null;
         }
 
-        // 로그인 세션 삭제와 분리된 회원 상태 캐시를 반환함
+        // 로그인 세션 삭제와 분리된 회원 상태 캐시를 반환
         return redisTemplate.opsForValue().get(getUserStatusKey(userNumb));
     }
 
     /**
-     * 로그인 세션 유무와 관계없이 회원 상태 캐시를 최신 값으로 변경함
+     * 로그인 세션 유무와 관계없이 회원 상태 캐시를 최신 값으로 변경
      *
      * @author SeungHyeon.Kang
      * @param userNumb 상태를 변경할 회원 번호
@@ -227,16 +227,16 @@ public class TokenRedisService {
     public void uptUserStatus(Long userNumb, String userStat) {
         // 회원 번호나 상태가 없으면 Redis 상태를 변경하지 않음
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(userStat)) {
-            // 변경할 상태가 없어 처리를 종료함
+            // 변경할 상태가 없어 처리를 종료
             return;
         }
 
-        // 로그아웃이 계정 제한 상태를 삭제하지 못하도록 만료 없는 별도 키로 저장함
+        // 로그아웃이 계정 제한 상태를 삭제하지 못하도록 만료 없는 별도 키로 저장
         redisTemplate.opsForValue().set(getUserStatusKey(userNumb), userStat);
     }
 
     /**
-     * 로그인 사용자 번호로 Redis에 저장된 닉네임을 조회함
+     * 로그인 사용자 번호로 Redis에 저장된 닉네임을 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
@@ -245,16 +245,16 @@ public class TokenRedisService {
     public String getUserNick(Long userNumb) {
         // 회원 번호가 없으면 닉네임 캐시를 조회하지 않음
         if (StringUtil.isEmpty(userNumb)) {
-            // 조회할 닉네임이 없음을 반환함
+            // 조회할 닉네임이 없음을 반환
             return null;
         }
 
-        // 로그인 사용자 번호에 대응하는 닉네임 캐시를 반환함
+        // 로그인 사용자 번호에 대응하는 닉네임 캐시를 반환
         return redisTemplate.opsForValue().get(getUserNickKey(userNumb));
     }
 
     /**
-     * 활성 로그인 세션의 남은 최대 TTL 동안 닉네임 캐시를 갱신함
+     * 활성 로그인 세션의 남은 최대 TTL 동안 닉네임 캐시를 갱신
      *
      * @author SeungHyeon.Kang
      * @param userNumb 닉네임을 수정한 사용자 번호
@@ -264,26 +264,26 @@ public class TokenRedisService {
     public boolean uptUserNick(Long userNumb, String userNick) {
         // 필수 값이 없으면 닉네임 캐시를 만들지 않음
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(userNick)) {
-            // 닉네임을 갱신하지 못했음을 반환함
+            // 닉네임을 갱신하지 못했음을 반환
             return false;
         }
 
-        // 회원별 세션 색인의 남은 시간을 조회함
+        // 회원별 세션 색인의 남은 시간을 조회
         Long ttlSeconds = redisTemplate.getExpire(getUserSessionKey(userNumb));
         // 활성 세션이 없으면 닉네임 캐시만 새로 만들지 않음
         if (StringUtil.isEmpty(ttlSeconds) || ttlSeconds <= 0) {
-            // 닉네임을 갱신하지 못했음을 반환함
+            // 닉네임을 갱신하지 못했음을 반환
             return false;
         }
 
-        // 최신 닉네임을 현재 로그인 유지시간 동안 저장함
+        // 최신 닉네임을 현재 로그인 유지시간 동안 저장
         redisTemplate.opsForValue().set(getUserNickKey(userNumb), userNick, Duration.ofSeconds(ttlSeconds));
-        // 닉네임을 갱신했음을 반환함
+        // 닉네임을 갱신했음을 반환
         return true;
     }
 
     /**
-     * DB와 다른 오래된 닉네임 캐시만 제거함
+     * DB와 다른 오래된 닉네임 캐시만 제거
      *
      * @author SeungHyeon.Kang
      * @param userNumb 닉네임 캐시를 제거할 사용자 번호
@@ -291,16 +291,16 @@ public class TokenRedisService {
     public void delUserNick(Long userNumb) {
         // 회원 번호가 없으면 삭제하지 않음
         if (StringUtil.isEmpty(userNumb)) {
-            // 삭제 대상을 찾을 수 없어 종료함
+            // 삭제 대상을 찾을 수 없어 종료
             return;
         }
 
-        // 공용 닉네임 캐시를 제거함
+        // 공용 닉네임 캐시를 제거
         redisTemplate.delete(getUserNickKey(userNumb));
     }
 
     /**
-     * 현재 기기의 로그인 세션만 제거함
+     * 현재 기기의 로그인 세션만 제거
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그아웃 회원 번호
@@ -309,11 +309,11 @@ public class TokenRedisService {
     public void delLoginSession(Long userNumb, String sessionId) {
         // 세션 소유권을 특정할 수 없으면 삭제하지 않음
         if (StringUtil.isEmpty(userNumb) || StringUtil.isEmpty(sessionId)) {
-            // 삭제 대상을 찾을 수 없어 종료함
+            // 삭제 대상을 찾을 수 없어 종료
             return;
         }
 
-        // 해당 세션과 회원별 색인 항목을 원자적으로 제거함
+        // 해당 세션과 회원별 색인 항목을 원자적으로 제거
         redisTemplate.execute(
                 DEL_LOGIN_SESSION_SCRIPT
               , List.of(getSessionKey(sessionId), getUserSessionKey(userNumb), getUserNickKey(userNumb))
@@ -322,8 +322,8 @@ public class TokenRedisService {
     }
 
     /**
-     * 회원의 모든 기기 로그인 세션과 닉네임 캐시를 제거함
-     * 계정 제한 상태는 별도 키에 남겨 로그아웃으로 우회할 수 없게 함
+     * 회원의 모든 기기 로그인 세션과 닉네임 캐시를 제거
+     * 계정 제한 상태는 별도 키에 남겨 로그아웃으로 우회할 수 없도록 처리
      *
      * @author SeungHyeon.Kang
      * @param userNumb 전체 로그아웃 회원 번호
@@ -331,39 +331,39 @@ public class TokenRedisService {
     public void delLoginUserInfo(Long userNumb) {
         // 회원 번호가 없으면 세션을 삭제하지 않음
         if (StringUtil.isEmpty(userNumb)) {
-            // 삭제 대상을 찾을 수 없어 종료함
+            // 삭제 대상을 찾을 수 없어 종료
             return;
         }
 
-        // 회원별 세션 식별자 목록을 조회함
+        // 회원별 세션 식별자 목록을 조회
         Set<String> sessionIdSet = redisTemplate.opsForSet().members(getUserSessionKey(userNumb));
-        // 조회된 모든 기기 세션 Hash를 제거함
+        // 조회된 모든 기기 세션 Hash를 제거
         if (sessionIdSet != null && !sessionIdSet.isEmpty()) {
-            // 각 세션 식별자를 실제 Redis 키로 변환해 일괄 삭제함
+            // 각 세션 식별자를 실제 Redis 키로 변환해 일괄 삭제
             redisTemplate.delete(sessionIdSet.stream().map(this::getSessionKey).toList());
         }
 
-        // 세션 색인과 세션 종속 닉네임 캐시를 제거함
+        // 세션 색인과 세션 종속 닉네임 캐시를 제거
         redisTemplate.delete(List.of(getUserSessionKey(userNumb), getUserNickKey(userNumb)));
     }
 
     /**
-     * 물리 삭제 회원의 세션과 모든 인증 캐시를 제거함
+     * 물리 삭제 회원의 세션과 모든 인증 캐시를 제거
      *
      * @author SeungHyeon.Kang
      * @param userNumb 물리 삭제 회원 번호
      */
     public void delAllUserInfo(Long userNumb) {
-        // 회원의 모든 기기 세션을 먼저 제거함
+        // 회원의 모든 기기 세션을 먼저 제거
         delLoginUserInfo(userNumb);
-        // 회원 원본이 사라진 뒤 남을 수 없는 상태 캐시도 물리 제거함
+        // 회원 원본이 사라진 뒤 남을 수 없는 상태 캐시도 물리 제거
         if (!StringUtil.isEmpty(userNumb)) {
             redisTemplate.delete(getUserStatusKey(userNumb));
         }
     }
 
     /**
-     * 로그아웃 처리된 Access Token의 식별자를 남은 유효시간 동안 차단함
+     * 로그아웃 처리된 Access Token의 식별자를 남은 유효시간 동안 차단
      *
      * @author SeungHyeon.Kang
      * @param tokenId Access Token 식별자
@@ -372,16 +372,16 @@ public class TokenRedisService {
     public void setAccessTokenBlacklist(String tokenId, long ttlSeconds) {
         // 토큰 식별자나 유효 시간이 없으면 블랙리스트에 등록하지 않음
         if (StringUtil.isEmpty(tokenId) || ttlSeconds <= 0) {
-            // 등록할 토큰이 없어 종료함
+            // 등록할 토큰이 없어 종료
             return;
         }
 
-        // Access Token이 만료될 때까지만 로그아웃 표식을 저장함
+        // Access Token이 만료될 때까지만 로그아웃 표식을 저장
         redisTemplate.opsForValue().set(getTokenBlacklistKey(tokenId), "logout", Duration.ofSeconds(ttlSeconds));
     }
 
     /**
-     * Access Token 식별자가 로그아웃 블랙리스트에 존재하는지 확인함
+     * Access Token 식별자가 로그아웃 블랙리스트에 존재하는지 확인
      *
      * @author SeungHyeon.Kang
      * @param tokenId Access Token 식별자
@@ -390,71 +390,71 @@ public class TokenRedisService {
     public boolean hasAccessTokenBlacklist(String tokenId) {
         // 식별자가 없으면 블랙리스트 조회를 수행하지 않음
         if (StringUtil.isEmpty(tokenId)) {
-            // 블랙리스트 대상이 아님을 반환함
+            // 블랙리스트 대상이 아님을 반환
             return false;
         }
 
-        // 로그아웃 표식 키가 존재하는지 반환함
+        // 로그아웃 표식 키가 존재하는지 반환
         return Boolean.TRUE.equals(redisTemplate.hasKey(getTokenBlacklistKey(tokenId)));
     }
 
     /**
-     * 기기별 로그인 세션 Redis 키를 생성함
+     * 기기별 로그인 세션 Redis 키를 생성
      *
      * @author SeungHyeon.Kang
      * @param sessionId 기기별 로그인 세션 식별자
      * @return 세션 Hash Redis 키
      */
     private String getSessionKey(String sessionId) {
-        // 세션 식별자를 포함한 Redis 키를 반환함
+        // 세션 식별자를 포함한 Redis 키를 반환
         return SESSION_PREFIX + sessionId;
     }
 
     /**
-     * 회원별 로그인 세션 색인 Redis 키를 생성함
+     * 회원별 로그인 세션 색인 Redis 키를 생성
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호
      * @return 회원별 세션 Set Redis 키
      */
     private String getUserSessionKey(Long userNumb) {
-        // 회원 번호를 포함한 세션 색인 Redis 키를 반환함
+        // 회원 번호를 포함한 세션 색인 Redis 키를 반환
         return USER_SESSION_PREFIX + userNumb;
     }
 
     /**
-     * 회원 닉네임 Redis 키를 생성함
+     * 회원 닉네임 Redis 키를 생성
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호
      * @return 회원 닉네임 Redis 키
      */
     private String getUserNickKey(Long userNumb) {
-        // 회원 번호를 포함한 닉네임 Redis 키를 반환함
+        // 회원 번호를 포함한 닉네임 Redis 키를 반환
         return USER_NICK_PREFIX + userNumb;
     }
 
     /**
-     * 회원 상태 Redis 키를 생성함
+     * 회원 상태 Redis 키를 생성
      *
      * @author SeungHyeon.Kang
      * @param userNumb 회원 번호
      * @return 회원 상태 Redis 키
      */
     private String getUserStatusKey(Long userNumb) {
-        // 회원 번호를 포함한 상태 Redis 키를 반환함
+        // 회원 번호를 포함한 상태 Redis 키를 반환
         return USER_STATUS_PREFIX + userNumb;
     }
 
     /**
-     * Access Token 블랙리스트 Redis 키를 생성함
+     * Access Token 블랙리스트 Redis 키를 생성
      *
      * @author SeungHyeon.Kang
      * @param tokenId Access Token 식별자
      * @return Access Token 블랙리스트 Redis 키
      */
     private String getTokenBlacklistKey(String tokenId) {
-        // Access Token 식별자를 포함한 블랙리스트 Redis 키를 반환함
+        // Access Token 식별자를 포함한 블랙리스트 Redis 키를 반환
         return ACCESS_TOKEN_BLACKLIST_PREFIX + tokenId;
     }
 }

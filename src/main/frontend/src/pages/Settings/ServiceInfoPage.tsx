@@ -16,7 +16,7 @@ type ServiceInfoPageProps = {
 };
 
 /**
- * 서비스 정보 아코디언 또는 로그인 전 개인정보처리방침 본문을 표시함
+ * 서비스 정보 아코디언 또는 로그인 전 개인정보처리방침 본문을 표시
  *
  * @author SeungHyeon.Kang
  * @param privacyOnly 개인정보처리방침만 공개할지 여부
@@ -33,61 +33,61 @@ const ServiceInfoPage = ({ privacyOnly = false }: ServiceInfoPageProps) => {
   useEffect(() => {
 
     let ignore = false;
-    // 로그인 전에는 개인정보처리방침만 조회하고 인증 화면에서는 전체 서비스 정보를 조회함
+    // 로그인 전에는 개인정보처리방침만 조회하고 인증 화면에서는 전체 서비스 정보를 조회
     const request = privacyOnly
       ? getPrivacyPolicyApi().then((privacyPolicy) => privacyPolicy ? [privacyPolicy] : [])
       : getServiceInfoListApi();
 
-    // 선택한 공개 범위의 서비스 정보 배포본을 조회함
+    // 선택한 공개 범위의 서비스 정보 배포본을 조회
     request
       .then((result) => {
-        // 화면이 유지되는 동안에만 목록 상태를 갱신함
+        // 화면이 유지되는 동안에만 목록 상태를 갱신
         if (!ignore) {
           setServiceInfoList(result);
         }
       })
       .catch(() => {
-        // 조회 실패 상태를 사용자 안내 문구로 전환함
+        // 조회 실패 상태를 사용자 안내 문구로 전환
         if (!ignore) {
           setHasError(true);
         }
       })
       .finally(() => {
-        // 화면이 유지되는 동안 로딩 상태를 해제함
+        // 화면이 유지되는 동안 로딩 상태를 해제
         if (!ignore) {
           setIsLoading(false);
         }
       });
 
-    // 화면 이탈 뒤 비동기 응답이 상태를 변경하지 않게 정리함
+    // 화면 이탈 뒤 비동기 응답이 상태를 변경하지 않게 정리
     return () => {
       ignore = true;
     };
   }, [privacyOnly]);
 
-  /** 선택한 서비스 정보 카테고리의 아코디언 상태를 전환함 */
+  /** 선택한 서비스 정보 카테고리의 아코디언 상태를 전환 */
   const handleToggle = (cateCode: string): void => {
     // 열린 카테고리를 다시 누르면 접고 다른 카테고리를 누르면 해당 항목만 펼침
     setOpenCategoryCode((currentCode) => currentCode === cateCode ? "" : cateCode);
   };
 
   /**
-   * 공개 개인정보처리방침 확인 후 이전 화면으로 이동함
+   * 공개 개인정보처리방침 확인 후 이전 화면으로 이동
    *
    * @author SeungHyeon.Kang
    * @return 반환값이 없음
    */
   const handleConfirm = (): void => {
-    // 개인정보처리방침을 열기 전 화면으로 이동함
+    // 개인정보처리방침을 열기 전 화면으로 이동
     navigate(-1);
   };
 
-  // 목록 조회 중에는 공통 로딩 화면을 반환함
+  // 목록 조회 중에는 공통 로딩 화면을 반환
   if (isLoading) {
     return <Loading />;
   }
 
-  // 서비스 정보 카테고리 또는 공개 개인정보처리방침 화면을 반환함
+  // 서비스 정보 카테고리 또는 공개 개인정보처리방침 화면을 반환
   return (
     /* 서비스 정보 카테고리와 배포 정책 전체 영역 */
     <main className={privacyOnly ? `${styles.page} ${styles.policyPage}` : styles.page}>
@@ -106,11 +106,11 @@ const ServiceInfoPage = ({ privacyOnly = false }: ServiceInfoPageProps) => {
         ) : serviceInfoList.map((serviceInfo) => {
           const isOpen = openCategoryCode === serviceInfo.cateCode;
           const contentId = `service-info-${serviceInfo.cateCode}`;
-          // 수정일이 없는 최초 배포본은 배포일을 기준으로 최근 수정일을 표시함
+          // 수정일이 없는 최초 배포본은 배포일을 기준으로 최근 수정일을 표시
           const modifiedDate = serviceInfo.updtDate ?? serviceInfo.dplyDate;
-          // 최근 수정일의 날짜 부분을 사용자 화면의 공통 점 표기로 변환함
+          // 최근 수정일의 날짜 부분을 사용자 화면의 공통 점 표기로 변환
           const displayModifiedDate = formatDashedDateToDot(modifiedDate?.slice(0, 10));
-          // 서비스 정보 카테고리 한 항목과 현재 배포 본문을 반환함
+          // 서비스 정보 카테고리 한 항목과 현재 배포 본문을 반환
           return (
             <article className={privacyOnly ? styles.policyItem : styles.item} key={serviceInfo.cateCode}>
               {/* 공개 개인정보처리방침 제목 또는 서비스 정보 카테고리 펼침 버튼 영역 */}

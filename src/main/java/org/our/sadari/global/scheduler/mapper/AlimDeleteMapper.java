@@ -7,7 +7,7 @@ import org.apache.ibatis.annotations.Mapper;
  * fileName       : AlimDeleteMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-27
- * description    : 스케줄러 데이터베이스 접근 메서드를 정의함
+ * description    : 스케줄러 데이터베이스 접근 메서드를 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

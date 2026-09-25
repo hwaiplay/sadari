@@ -29,7 +29,7 @@ const getAuthenticatedState = async () => {
 };
 
 /**
- * 인증 실패가 Refresh Token으로 한 번 복구할 수 있는 상태인지 판정함
+ * 인증 실패가 Refresh Token으로 한 번 복구할 수 있는 상태인지 판정
  *
  * @author HanWon.Jang
  * @param error 인증 상태 조회 실패 원인
@@ -37,18 +37,18 @@ const getAuthenticatedState = async () => {
  */
 const isRefreshableError = (error: unknown): error is ResultDataError => {
 
-  // 공통 인증 실패 응답만 Access Token 재발급 대상으로 처리함
+  // 공통 인증 실패 응답만 Access Token 재발급 대상으로 처리
   if (!(error instanceof ResultDataError)) {
-    // 네트워크와 일반 업무 오류는 인증 재발급 없이 호출부로 전달함
+    // 네트워크와 일반 업무 오류는 인증 재발급 없이 호출부로 전달
     return false;
   }
 
-  // 서버가 정의한 Access Token 복구 가능 코드인지 반환함
+  // 서버가 정의한 Access Token 복구 가능 코드인지 반환
   return REFRESHABLE_AUTH_CODES.has(Number(error.result.code));
 };
 
 /**
- * 현재 인증 상태를 조회하고 Access Token 문제일 때 한 번만 재발급 후 다시 확인함
+ * 현재 인증 상태를 조회하고 Access Token 문제일 때 한 번만 재발급 후 다시 확인
  *
  * @author HanWon.Jang
  * @return 현재 브라우저의 인증 상태 응답
@@ -58,49 +58,49 @@ const getAuthState = async () => {
 
   // 최초 인증 조회와 한 번의 복구 시도를 하나의 Query 실행 경계로 묶음
   try {
-    // 현재 Access Token과 사용자 상태를 조회함
+    // 현재 Access Token과 사용자 상태를 조회
     return await getAuthenticatedState();
   }
 
-  // 인증 실패 종류에 따라 한 번의 Access Token 복구 여부를 결정함
+  // 인증 실패 종류에 따라 한 번의 Access Token 복구 여부를 결정
   catch (error) {
-    // 복구 대상이 아니면 자동 재시도 없이 원래 오류를 전달함
+    // 복구 대상이 아니면 자동 재시도 없이 원래 오류를 전달
     if (!isRefreshableError(error)) {
-      // 네트워크 또는 일반 업무 오류를 기존 Query 오류 경로로 전달함
+      // 네트워크 또는 일반 업무 오류를 기존 Query 오류 경로로 전달
       throw error;
     }
 
-    // 같은 Query 실행에서 Access Token을 한 번만 재발급함
+    // 같은 Query 실행에서 Access Token을 한 번만 재발급
     try {
       await refreshTokenApi();
     }
 
-    // 만료되거나 제거된 Refresh Token은 정상적인 로그아웃 상태로 확정함
+    // 만료되거나 제거된 Refresh Token은 정상적인 로그아웃 상태로 확정
     catch (refreshError) {
       // 인증 실패를 Query 오류로 남기면 새 인증 화면이 붙을 때 같은 복구 요청이 다시 시작될 수 있음
       if (isRefreshableError(refreshError)) {
-        // 서버가 쿠키를 만료시킨 인증 실패 응답을 그대로 반환해 반복 복구를 종료함
+        // 서버가 쿠키를 만료시킨 인증 실패 응답을 그대로 반환해 반복 복구를 종료
         return refreshError.result;
       }
 
-      // 네트워크와 서버 장애는 로그아웃으로 오인하지 않고 기존 오류 화면에서 처리함
+      // 네트워크와 서버 장애는 로그아웃으로 오인하지 않고 기존 오류 화면에서 처리
       throw refreshError;
     }
 
-    // 재발급 뒤 인증 상태를 한 번 확인하고 실패 시 추가 반복 없이 종료함
+    // 재발급 뒤 인증 상태를 한 번 확인하고 실패 시 추가 반복 없이 종료
     return await getAuthenticatedState();
   }
 };
 
 /**
- * 현재 브라우저의 로그인 상태를 React Query로 조회함
+ * 현재 브라우저의 로그인 상태를 React Query로 조회
  *
  * @author HanWon.Jang
  * @return 로그인 상태 조회 Query 객체
  */
 export const useAuthQuery = () => {
 
-  // 여러 인증 화면이 같은 Query와 단일 복구 요청을 공유하도록 반환함
+  // 여러 인증 화면이 같은 Query와 단일 복구 요청을 공유하도록 반환
   return useQuery({
     queryKey: ["auth"],
     queryFn: getAuthState,

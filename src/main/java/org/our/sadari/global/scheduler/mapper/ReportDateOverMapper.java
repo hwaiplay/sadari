@@ -9,7 +9,7 @@ import org.our.sadari.report.dto.ReportDto;
  * fileName       : ReportDateOverMapper
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 데이터베이스 접근 메서드를 정의함
+ * description    : 스케줄러 데이터베이스 접근 메서드를 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

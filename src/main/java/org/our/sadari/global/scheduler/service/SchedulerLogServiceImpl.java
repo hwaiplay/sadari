@@ -11,7 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : SchedulerLogServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-26
- * description    : 스케줄러 업무 로직을 구현함
+ * description    : 스케줄러 업무 로직을 구현
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -62,7 +62,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Long setSchedulerLog(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-        // 로그 코드, 메서드명, 실행 상태가 없으면 관리자 화면에서 어떤 실행인지 식별할 수 없어 등록을 중단함
+        // 로그 코드, 메서드명, 실행 상태가 없으면 관리자 화면에서 어떤 실행인지 식별할 수 없어 등록을 중단
         if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getSchdCode())
                 || StringUtil.isEmpty(schedulerRunDto.getMethName()) || StringUtil.isEmpty(schedulerRunDto.getExecStat())
                 || StringUtil.isEmpty(schedulerRunDto.getStrtDate())) {
@@ -70,23 +70,23 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
             throw new IllegalArgumentException("스케줄러 실행 로그의 필수 정보가 없습니다.");
         }
 
-        // SchdCode 업무 값을 schedulerRunDto DTO에 설정함
+        // SchdCode 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setSchdCode(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerRunDto.getSchdCode(), SCHEDULER_CODE_MAX_LENGTH)
         );
-        // MethName 업무 값을 schedulerRunDto DTO에 설정함
+        // MethName 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setMethName(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerRunDto.getMethName(), METHOD_NAME_MAX_LENGTH)
         );
-        // ExecStat 업무 값을 schedulerRunDto DTO에 설정함
+        // ExecStat 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setExecStat(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerRunDto.getExecStat(), EXECUTION_STATUS_MAX_LENGTH)
         );
 
-        // SchedulerLog 업무 값을 schedulerLogMapper DTO에 설정함
+        // SchedulerLog 업무 값을 schedulerLogMapper DTO에 설정
         int resultCnt = schedulerLogMapper.setSchedulerLog(schedulerRunDto);
 
         // selectKey가 실행 번호를 채우고 INSERT가 정확히 한 건 반영돼야 이후 실패 로그와 종료 상태를 연결할 수 있음
@@ -95,7 +95,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
             throw new IllegalStateException("스케줄러 실행 로그 등록 결과가 올바르지 않습니다.");
         }
 
-        // 스케줄러 실행 시작 로그를 별도 트랜잭션으로 등록 결과를 반환함
+        // 스케줄러 실행 시작 로그를 별도 트랜잭션으로 등록 결과를 반환
         return schedulerRunDto.getRunxNumb();
     }
 
@@ -110,7 +110,7 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
     @Override
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void uptSchedulerLog(SchedulerLogDto.SchedulerRunDto schedulerRunDto) {
-        // 음수 건수나 실행 시간은 실제 처리 결과가 아니므로 TL_SCLOGX를 수정하기 전에 차단함
+        // 음수 건수나 실행 시간은 실제 처리 결과가 아니므로 TL_SCLOGX를 수정하기 전에 차단
         if (StringUtil.isEmpty(schedulerRunDto) || StringUtil.isEmpty(schedulerRunDto.getRunxNumb())
                 || StringUtil.isEmpty(schedulerRunDto.getExecStat()) || schedulerRunDto.getTrgtCntt() < 0
                 || schedulerRunDto.getSuccCntt() < 0 || schedulerRunDto.getFailCntt() < 0
@@ -119,13 +119,13 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
             throw new IllegalArgumentException("스케줄러 실행 로그의 종료 정보가 올바르지 않습니다.");
         }
 
-        // ExecStat 업무 값을 schedulerRunDto DTO에 설정함
+        // ExecStat 업무 값을 schedulerRunDto DTO에 설정
         schedulerRunDto.setExecStat(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerRunDto.getExecStat(), EXECUTION_STATUS_MAX_LENGTH)
         );
 
-        // SchedulerLog 데이터를 DB에서 수정함
+        // SchedulerLog 데이터를 DB에서 수정
         int resultCnt = schedulerLogMapper.uptSchedulerLog(schedulerRunDto);
 
         // 시작 로그가 없거나 이미 삭제된 실행 번호라면 종료 상태가 유실되므로 호출부에 실패를 알림
@@ -153,31 +153,31 @@ public class SchedulerLogServiceImpl implements SchedulerLogService {
             throw new IllegalArgumentException("스케줄러 실패 로그의 필수 정보가 없습니다.");
         }
 
-        // FailType 업무 값을 schedulerFailDto DTO에 설정함
+        // FailType 업무 값을 schedulerFailDto DTO에 설정
         schedulerFailDto.setFailType(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerFailDto.getFailType(), FAILURE_TYPE_MAX_LENGTH)
         );
-        // RsltMesg 업무 값을 schedulerFailDto DTO에 설정함
+        // RsltMesg 업무 값을 schedulerFailDto DTO에 설정
         schedulerFailDto.setRsltMesg(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerFailDto.getRsltMesg(), RESULT_MESSAGE_MAX_LENGTH)
         );
-        // ErroType 업무 값을 schedulerFailDto DTO에 설정함
+        // ErroType 업무 값을 schedulerFailDto DTO에 설정
         schedulerFailDto.setErroType(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerFailDto.getErroType(), ERROR_TYPE_MAX_LENGTH)
         );
-        // ErroCntn 업무 값을 schedulerFailDto DTO에 설정함
+        // ErroCntn 업무 값을 schedulerFailDto DTO에 설정
         schedulerFailDto.setErroCntn(
-                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화함
+                // 로그 저장 길이와 개행 정책에 맞춰 문자열을 정규화
                 StringUtil.normalizePlainText(schedulerFailDto.getErroCntn(), ERROR_CONTENT_MAX_LENGTH)
         );
 
-        // SchedulerFail 업무 값을 schedulerLogMapper DTO에 설정함
+        // SchedulerFail 업무 값을 schedulerLogMapper DTO에 설정
         int resultCnt = schedulerLogMapper.setSchedulerFail(schedulerFailDto);
 
-        // MAX+1로 계산한 복합키를 사용해 정확히 한 건이 저장돼야 실패 건수와 상세 로그가 일치함
+        // MAX+1로 계산한 복합키를 사용해 정확히 한 건이 저장돼야 실패 건수와 상세 로그가 일치
         if (resultCnt != 1) {
 
             throw new IllegalStateException("스케줄러 실패 로그 등록 결과가 올바르지 않습니다.");

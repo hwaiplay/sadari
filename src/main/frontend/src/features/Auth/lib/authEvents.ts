@@ -8,7 +8,7 @@ export type AuthEvent = {
 };
 
 /**
- * 같은 브라우저의 다른 탭에 로그아웃 완료를 전달함
+ * 같은 브라우저의 다른 탭에 로그아웃 완료를 전달
  *
  * @author SeungHyeon.Kang
  * @return 반환값이 없음
@@ -22,29 +22,29 @@ export function publishAuthLogout(): void {
       : `${Date.now()}-${Math.random()}`,
   };
 
-  // BroadcastChannel을 지원하는 브라우저의 열린 탭에 즉시 전달함
+  // BroadcastChannel을 지원하는 브라우저의 열린 탭에 즉시 전달
   if ("BroadcastChannel" in window) {
     try {
       const channel = new BroadcastChannel(AUTH_CHANNEL_NAME);
       channel.postMessage(authEvent);
       channel.close();
     } catch {
-      // 브라우저가 채널 생성을 제한하면 storage 대체 경로를 계속 시도함
+      // 브라우저가 채널 생성을 제한하면 storage 대체 경로를 계속 시도
     }
   }
 
-  // BroadcastChannel 미지원 브라우저도 storage 이벤트로 다른 탭에 전달함
+  // BroadcastChannel 미지원 브라우저도 storage 이벤트로 다른 탭에 전달
   try {
     localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(authEvent));
   } catch {
-    // 저장소가 차단돼도 현재 탭 로그아웃과 BroadcastChannel 전달은 유지함
+    // 저장소가 차단돼도 현재 탭 로그아웃과 BroadcastChannel 전달은 유지
   }
-  // 로그아웃을 실행한 현재 탭에도 같은 정리 이벤트를 전달함
+  // 로그아웃을 실행한 현재 탭에도 같은 정리 이벤트를 전달
   window.dispatchEvent(new CustomEvent<AuthEvent>(AUTH_WINDOW_EVENT, { detail: authEvent }));
 }
 
 /**
- * 동일 브라우저 탭에서 발생한 인증 이벤트를 구독함
+ * 동일 브라우저 탭에서 발생한 인증 이벤트를 구독
  *
  * @author SeungHyeon.Kang
  * @param listener 인증 이벤트 처리 함수
@@ -54,7 +54,7 @@ export function subscribeAuthEvents(listener: (event: AuthEvent) => void): () =>
 
   let channel: BroadcastChannel | null = null;
 
-  // 브라우저 정책이 채널 생성을 차단하면 storage 이벤트만 구독함
+  // 브라우저 정책이 채널 생성을 차단하면 storage 이벤트만 구독
   if ("BroadcastChannel" in window) {
     try {
       channel = new BroadcastChannel(AUTH_CHANNEL_NAME);

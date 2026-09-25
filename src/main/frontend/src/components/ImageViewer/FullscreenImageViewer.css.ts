@@ -34,7 +34,7 @@ export const originalImage = style({
   userSelect: "none",
 });
 
-// 반응 버튼 높이를 확보한 상태로 원본 사진 묶음을 화면 중앙에 배치함
+// 반응 버튼 높이를 확보한 상태로 원본 사진 묶음을 화면 중앙에 배치
 export const imageViewport = style({
   position: "absolute",
   inset: 0,
@@ -70,7 +70,7 @@ export const originalImageWithActions = style({
   userSelect: "none",
 });
 
-// 원본 사진 바깥의 우하단에 사진 반응 기능을 표시함
+// 원본 사진 바깥의 우하단에 사진 반응 기능을 표시
 export const viewerActions = style({
   flexShrink: 0,
   display: "flex",

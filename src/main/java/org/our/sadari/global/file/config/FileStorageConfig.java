@@ -22,7 +22,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
  * fileName       : FileStorageConfig
  * author         : SeungHyeon.Kang
  * date           : 2026-08-07
- * description    : 실행 환경에 맞는 로컬 또는 S3 이미지 저장소를 구성함
+ * description    : 실행 환경에 맞는 로컬 또는 S3 이미지 저장소를 구성
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -33,7 +33,7 @@ import software.amazon.awssdk.services.s3.S3Configuration;
 public class FileStorageConfig {
 
     /**
-     * 로컬 개발 환경에서 사용할 디스크 이미지 저장소를 생성함
+     * 로컬 개발 환경에서 사용할 디스크 이미지 저장소를 생성
      *
      * @author SeungHyeon.Kang
      * @param rootDirectory 로컬 이미지 저장 루트 디렉터리
@@ -43,12 +43,12 @@ public class FileStorageConfig {
     @ConditionalOnProperty(name = "app.storage.provider", havingValue = "local", matchIfMissing = true)
     public FileStorage localFileStorage(@Value("${app.storage.local-root}") String rootDirectory) {
 
-        // 설정된 로컬 저장 루트를 사용하는 이미지 저장소를 반환함
+        // 설정된 로컬 저장 루트를 사용하는 이미지 저장소를 반환
         return new LocalFileStorage(rootDirectory);
     }
 
     /**
-     * 운영 환경에서 사용할 AWS S3 또는 S3 호환 클라이언트를 생성함
+     * 운영 환경에서 사용할 AWS S3 또는 S3 호환 클라이언트를 생성
      *
      * @author SeungHyeon.Kang
      * @param region S3 리전 식별값
@@ -66,7 +66,7 @@ public class FileStorageConfig {
                            , @Value("${app.storage.s3.access-key}") String accessKey
                            , @Value("${app.storage.s3.secret-key}") String secretKey) {
 
-        // 리전과 S3 주소 방식을 지정한 클라이언트 빌더를 생성함
+        // 리전과 S3 주소 방식을 지정한 클라이언트 빌더를 생성
         S3ClientBuilder builder = S3Client.builder()
                 .region(Region.of(region))
                 .credentialsProvider(StaticCredentialsProvider.create(AwsBasicCredentials.create(accessKey, secretKey)))
@@ -74,7 +74,7 @@ public class FileStorageConfig {
                         .pathStyleAccessEnabled(pathStyleAccess)
                         .build());
 
-        // AWS가 아닌 S3 호환 저장소를 사용할 때만 사용자 지정 엔드포인트를 적용함
+        // AWS가 아닌 S3 호환 저장소를 사용할 때만 사용자 지정 엔드포인트를 적용
         if (!StringUtil.isEmpty(endpoint)) {
             // Garage가 지원하지 않는 AWS 전용 자동 CRC Trailer를 제외한 호환 요청 서명
             builder.endpointOverride(URI.create(endpoint))
@@ -82,12 +82,12 @@ public class FileStorageConfig {
                     .responseChecksumValidation(ResponseChecksumValidation.WHEN_REQUIRED);
         }
 
-        // 환경변수에서 주입한 장기 자격 증명으로 인증하는 S3 클라이언트를 반환함
+        // 환경변수에서 주입한 장기 자격 증명으로 인증하는 S3 클라이언트를 반환
         return builder.build();
     }
 
     /**
-     * 운영 S3 클라이언트와 대상 버킷을 사용하는 이미지 저장소를 생성함
+     * 운영 S3 클라이언트와 대상 버킷을 사용하는 이미지 저장소를 생성
      *
      * @author SeungHyeon.Kang
      * @param s3Client S3 API 호출 클라이언트
@@ -98,7 +98,7 @@ public class FileStorageConfig {
     @ConditionalOnProperty(name = "app.storage.provider", havingValue = "s3")
     public FileStorage s3FileStorage(S3Client s3Client, @Value("${app.storage.s3.bucket}") String bucket) {
 
-        // 비공개 S3 버킷을 사용하는 이미지 저장소를 반환함
+        // 비공개 S3 버킷을 사용하는 이미지 저장소를 반환
         return new S3FileStorage(s3Client, bucket);
     }
 }

@@ -28,7 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : ReplyServiceImpl
  * author         : HanWon.Jang
  * date           : 2026-07-28
- * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 로직을 구현함
+ * description    : 댓글과 답글의 조회, 등록, 수정, 삭제 및 좋아요 업무 로직을 구현
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -66,8 +66,8 @@ public class ReplyServiceImpl implements ReplyService {
     private final LikeAlimPublisher likeAlimPublisher;
 
     /**
-     * 로그인 사용자가 작성한 댓글 또는 답글을 등록함
-     * 댓글 내용과 부모 댓글 번호를 검증하고 신규 댓글은 삭제되지 않은 상태로 저장함
+     * 로그인 사용자가 작성한 댓글 또는 답글을 등록
+     * 댓글 내용과 부모 댓글 번호를 검증하고 신규 댓글은 삭제되지 않은 상태로 저장
      *
      * @author Hanwon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -77,7 +77,7 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData setReply(Long userNumb, ReplyDto replyDto) {
-        // 인증 사용자 번호가 없으면 작성자를 특정할 수 없으므로 등록을 중단함
+        // 인증 사용자 번호가 없으면 작성자를 특정할 수 없으므로 등록을 중단
         if (StringUtil.isEmpty(userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
@@ -85,7 +85,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         normalizeReplyTarget(replyDto);
 
-        // 대상 번호와 댓글 내용이 없으면 등록 대상과 저장 내용을 확정할 수 없으므로 요청을 거부함
+        // 대상 번호와 댓글 내용이 없으면 등록 대상과 저장 내용을 확정할 수 없으므로 요청을 거부
         if (StringUtil.isEmpty(replyDto) || StringUtil.isEmpty(replyDto.getTagtType())
                 || StringUtil.isEmpty(replyDto.getTagtNumb())
                 || StringUtil.isEmpty(replyDto.getReplCntn())) {
@@ -93,15 +93,15 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 사진 댓글은 활성 사용자의 현재 사진인지 API 경계에서 검증해 교체된 사진 접근을 거부함
+        // 사진 댓글은 활성 사용자의 현재 사진인지 API 경계에서 검증해 교체된 사진 접근을 거부
         if (!hasImageReplyAccess(userNumb, replyDto.getTagtType(), replyDto.getTagtNumb())) {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화함
+        // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화
         String normalizedContent = StringUtil.normalizePlainText(replyDto.getReplCntn());
 
-        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부함
+        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부
         if (StringUtil.isEmpty(normalizedContent)
                 || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
             // "요청값이 올바르지 않아요."
@@ -114,44 +114,44 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 댓글에 포함된 비속어를 찾아 공개 화면에 부적절한 내용이 저장되지 않도록 함
+        // 댓글에 포함된 비속어를 찾아 공개 화면에 부적절한 내용이 저장되지 않도록 처리
         Optional<String> badWord = badWordDetectionService.findBadWord(normalizedContent);
 
-        // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 등록을 중단함
+        // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 등록을 중단
         if (badWord.isPresent()) {
             // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"에서 {0}은 탐지된 비속어이다
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
-        // 인증 정보에서 확인한 사용자 번호를 댓글 작성자로 설정함
+        // 인증 정보에서 확인한 사용자 번호를 댓글 작성자로 설정
         replyDto.setUserNumb(userNumb);
-        // 검증이 끝난 평문 댓글 내용을 저장값으로 설정함
+        // 검증이 끝난 평문 댓글 내용을 저장값으로 설정
         replyDto.setReplCntn(normalizedContent);
-        // 신규 댓글은 화면에 노출될 수 있도록 미삭제 상태로 설정함
+        // 신규 댓글은 화면에 노출될 수 있도록 미삭제 상태로 설정
         replyDto.setDeltYsno(Constant.COMM_NO);
 
         // 차단 정리와 댓글 등록의 경쟁 조건 방지를 위한 사용자 번호순 잠금
         replyMapper.lockReplyUsers(replyDto);
 
-        // 검증된 댓글을 DB에 등록하고 시퀀스로 생성된 댓글 번호를 DTO에 반영함
+        // 검증된 댓글을 DB에 등록하고 시퀀스로 생성된 댓글 번호를 DTO에 반영
         int insertCnt = replyMapper.setReply(replyDto);
 
-        // 등록된 행이 없으면 댓글 저장이 반영되지 않은 것으로 판단해 실패 응답을 반환함
+        // 등록된 행이 없으면 댓글 저장이 반영되지 않은 것으로 판단해 실패 응답을 반환
         if (insertCnt == 0) {
             // "저장에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        // 댓글이 등록된 독후감 작성자에게 신규 댓글 알림을 발송함
+        // 댓글이 등록된 독후감 작성자에게 신규 댓글 알림을 발송
         sendReplyTargetAlim(userNumb, replyDto);
 
-        // 등록된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환함
+        // 등록된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환
         return ResultData.success(replyDto.getReplNumb());
     }
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정함
-     * 내용과 작성자 및 계정 상태를 검증하고 수정 일시를 갱신함
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글의 내용을 수정
+     * 내용과 작성자 및 계정 상태를 검증하고 수정 일시를 갱신
      *
      * @author HanWon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -163,7 +163,7 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData uptReply(Long userNumb, Long reptNumb, Long replNumb, ReplyDto replyDto) {
-        // 인증 사용자와 수정 대상 및 댓글 내용이 없으면 변경 대상을 확정할 수 없으므로 요청을 거부함
+        // 인증 사용자와 수정 대상 및 댓글 내용이 없으면 변경 대상을 확정할 수 없으므로 요청을 거부
         if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb, replyDto)
                 || StringUtil.isEmpty(replyDto.getReplCntn())
                 || StringUtil.isEmpty(replyDto.getEditVersion())) {
@@ -171,49 +171,49 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화함
+        // 사용자 입력의 앞뒤 공백을 제거해 공백만 있는 댓글이 저장되지 않도록 정규화
         String normalizedContent = StringUtil.normalizePlainText(replyDto.getReplCntn());
 
-        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부함
+        // 정규화 후 내용이 없거나 저장 한도를 넘으면 DB 오류가 발생하기 전에 요청을 거부
         if (StringUtil.isEmpty(normalizedContent)
                 || XssUtil.utf8ByteLength(normalizedContent) > REPLY_CONTENT_MAX_BYTES) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 댓글에 포함된 비속어를 찾아 공개 화면에 부적절한 내용으로 변경되지 않도록 함
+        // 댓글에 포함된 비속어를 찾아 공개 화면에 부적절한 내용으로 변경되지 않도록 처리
         Optional<String> badWord = badWordDetectionService.findBadWord(normalizedContent);
 
-        // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 수정을 중단함
+        // 비속어가 발견되면 해당 단어를 사용자 메시지에 포함해 수정을 중단
         if (badWord.isPresent()) {
             // "욕설이나 비속어는 사용할 수 없어요.\n감지된 단어: {0}"에서 {0}은 탐지된 비속어이다
             return ResultData.fail(ResultEnum.COMMON_BAD_WORD_INCLUDED, badWord.get());
         }
 
-        // URL에서 확정한 독후감 번호를 수정 조건으로 설정함
+        // URL에서 확정한 독후감 번호를 수정 조건으로 설정
         replyDto.setReptNumb(reptNumb);
         normalizeReplyTarget(replyDto);
-        // URL에서 확정한 댓글 번호를 수정 조건으로 설정함
+        // URL에서 확정한 댓글 번호를 수정 조건으로 설정
         replyDto.setReplNumb(replNumb);
-        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정함
+        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정
         replyDto.setUserNumb(userNumb);
-        // 검증이 끝난 평문 댓글 내용을 변경값으로 설정함
+        // 검증이 끝난 평문 댓글 내용을 변경값으로 설정
         replyDto.setReplCntn(normalizedContent);
 
-        // 정상 이용 중인 작성자의 미삭제 댓글만 변경하도록 조건을 포함해 수정함
+        // 정상 이용 중인 작성자의 미삭제 댓글만 변경하도록 조건을 포함해 수정
         int updateCnt = replyMapper.uptReply(replyDto);
 
-        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단함
+        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단
         if (updateCnt == 0) {
-            // 다른 탭이나 기기의 선행 수정 내용을 덮어쓰지 않도록 충돌 결과를 반환함
+            // 다른 탭이나 기기의 선행 수정 내용을 덮어쓰지 않도록 충돌 결과를 반환
             return ResultData.fail(ResultEnum.COMMON_EDIT_CONFLICT);
         }
 
-        // 수정된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환함
+        // 수정된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환
         return ResultData.success(replNumb);
     }
 
-    /** 범용 대상에 등록된 댓글 내용을 수정함 */
+    /** 범용 대상에 등록된 댓글 내용을 수정 */
     @Override
     @Transactional
     public ResultData uptReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb, ReplyDto replyDto) {
@@ -229,8 +229,8 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환함
-     * 자식 답글 구조를 유지하도록 원문 행은 보존하고 삭제 여부만 변경함
+     * 로그인 사용자가 작성한 미삭제 댓글 또는 답글을 삭제 상태로 전환
+     * 자식 답글 구조를 유지하도록 원문 행은 보존하고 삭제 여부만 변경
      *
      * @author HanWon.Jang
      * @param userNumb 댓글 작성자 사용자 번호
@@ -241,36 +241,36 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData delReply(Long userNumb, Long reptNumb, Long replNumb) {
-        // 인증 사용자와 삭제 대상 번호가 없으면 변경 대상을 확정할 수 없으므로 요청을 거부함
+        // 인증 사용자와 삭제 대상 번호가 없으면 변경 대상을 확정할 수 없으므로 요청을 거부
         if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 댓글 삭제 조건을 담을 객체를 생성함
+        // 댓글 삭제 조건을 담을 객체를 생성
         ReplyDto replyDto = new ReplyDto();
-        // 요청받은 독후감 번호를 삭제 조건으로 설정함
+        // 요청받은 독후감 번호를 삭제 조건으로 설정
         replyDto.setReptNumb(reptNumb);
         normalizeReplyTarget(replyDto);
-        // 요청받은 댓글 번호를 삭제 조건으로 설정함
+        // 요청받은 댓글 번호를 삭제 조건으로 설정
         replyDto.setReplNumb(replNumb);
-        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정함
+        // 인증 정보에서 확인한 사용자 번호를 소유자 조건으로 설정
         replyDto.setUserNumb(userNumb);
 
-        // 정상 이용 중인 작성자의 미삭제 댓글만 삭제 상태로 전환함
+        // 정상 이용 중인 작성자의 미삭제 댓글만 삭제 상태로 전환
         int deleteCnt = replyMapper.delReply(replyDto);
 
-        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단함
+        // 반영된 행이 없으면 다른 사용자의 댓글, 삭제된 댓글 또는 제한 계정 요청으로 판단
         if (deleteCnt == 0) {
             // "삭제에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_DELETE_REJECTED);
         }
 
-        // 삭제 상태로 전환된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환함
+        // 삭제 상태로 전환된 댓글 번호를 화면에서 후속 조회에 사용할 수 있도록 성공 응답으로 반환
         return ResultData.success(replNumb);
     }
 
-    /** 범용 대상에 등록된 댓글을 삭제 상태로 전환함 */
+    /** 범용 대상에 등록된 댓글을 삭제 상태로 전환 */
     @Override
     @Transactional
     public ResultData delReply(Long userNumb, String tagtType, Long tagtNumb, Long replNumb) {
@@ -288,8 +288,8 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록함
-     * 본인 댓글도 동일한 검증 기준으로 허용하고 신규 좋아요일 때 대상 댓글 작성자에게만 알림을 생성함
+     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 중복 없이 등록
+     * 본인 댓글도 동일한 검증 기준으로 허용하고 신규 좋아요일 때 대상 댓글 작성자에게만 알림을 생성
      *
      * @author HanWon.Jang
      * @param userNumb 좋아요를 등록할 사용자 번호
@@ -300,10 +300,10 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData setReplyLike(Long userNumb, Long reptNumb, Long replNumb) {
-        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성함
+        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성
         ReplyDto replyDto = createReplyLikeRequest(userNumb, reptNumb, replNumb);
 
-        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부함
+        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부
         if (StringUtil.isEmpty(replyDto)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
@@ -311,7 +311,7 @@ public class ReplyServiceImpl implements ReplyService {
 
         // 차단 정리와 댓글 좋아요 등록이 교차하지 않도록 당사자 잠금
         replyMapper.lockReplyUsers(replyDto);
-        // 정상 이용 사용자와 미삭제 댓글 여부를 검증하면서 정확한 댓글 작성자를 알림 수신자로 조회함
+        // 정상 이용 사용자와 미삭제 댓글 여부를 검증하면서 정확한 댓글 작성자를 알림 수신자로 조회
         ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
 
         // 정상 이용 중인 사용자와 미삭제 댓글 조합이 아니면 좋아요 등록을 허용하지 않음
@@ -320,20 +320,20 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 복합 기본키 충돌 없이 현재 사용자의 댓글 좋아요를 등록함
+        // 복합 기본키 충돌 없이 현재 사용자의 댓글 좋아요를 등록
         int insertCnt = replyMapper.setReplyLike(replyDto);
 
-        // 신규 좋아요가 등록된 경우에만 댓글 작성자에게 좋아요 알림을 발송함
+        // 신규 좋아요가 등록된 경우에만 댓글 작성자에게 좋아요 알림을 발송
         if (insertCnt > 0) {
-            // 댓글 좋아요 커밋 이후 전용 템플릿 알림을 처리하도록 이벤트를 등록함
+            // 댓글 좋아요 커밋 이후 전용 템플릿 알림을 처리하도록 이벤트를 등록
             sendReplyLikeAlim(userNumb, likeTarget);
         }
 
-        // 등록 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환함
+        // 등록 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환
         return ResultData.success(replyMapper.getReplyLikeDtl(replyDto));
     }
 
-    /** 범용 대상 댓글에 좋아요를 등록함 */
+    /** 범용 대상 댓글에 좋아요를 등록 */
     @Override
     @Transactional
     public ResultData setReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb) {
@@ -355,8 +355,8 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 취소함
-     * 존재하지 않는 좋아요 취소도 최종 상태가 동일하므로 멱등 성공으로 처리함
+     * 정상 이용 중인 로그인 사용자의 미삭제 댓글 좋아요를 취소
+     * 존재하지 않는 좋아요 취소도 최종 상태가 동일하므로 멱등 성공으로 처리
      *
      * @author HanWon.Jang
      * @param userNumb 좋아요를 취소할 사용자 번호
@@ -367,16 +367,16 @@ public class ReplyServiceImpl implements ReplyService {
     @Override
     @Transactional
     public ResultData delReplyLike(Long userNumb, Long reptNumb, Long replNumb) {
-        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성함
+        // 인증 사용자와 댓글 복합 식별값을 검증한 좋아요 요청 객체를 생성
         ReplyDto replyDto = createReplyLikeRequest(userNumb, reptNumb, replNumb);
 
-        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부함
+        // 인증 정보나 양수 식별값이 없으면 좋아요 대상을 확정할 수 없어 요청을 거부
         if (StringUtil.isEmpty(replyDto)) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 정상 이용 사용자와 미삭제 댓글 여부를 확인해 취소 가능한 좋아요 대상인지 조회함
+        // 정상 이용 사용자와 미삭제 댓글 여부를 확인해 취소 가능한 좋아요 대상인지 조회
         ReplyDto likeTarget = replyMapper.getReplyLikeTarget(replyDto);
 
         // 정상 이용 중인 사용자와 미삭제 댓글 조합이 아니면 좋아요 취소도 허용하지 않음
@@ -385,13 +385,13 @@ public class ReplyServiceImpl implements ReplyService {
             return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
         }
 
-        // 현재 사용자가 등록한 댓글 좋아요만 삭제함
+        // 현재 사용자가 등록한 댓글 좋아요만 삭제
         replyMapper.delReplyLike(replyDto);
-        // 취소 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환함
+        // 취소 직후 서버 기준 좋아요 수와 현재 사용자 상태를 조회해 반환
         return ResultData.success(replyMapper.getReplyLikeDtl(replyDto));
     }
 
-    /** 범용 대상 댓글의 좋아요를 취소함 */
+    /** 범용 대상 댓글의 좋아요를 취소 */
     @Override
     @Transactional
     public ResultData delReplyLike(Long userNumb, String tagtType, Long tagtNumb, Long replNumb) {
@@ -407,7 +407,7 @@ public class ReplyServiceImpl implements ReplyService {
     }
 
     /**
-     * 댓글 좋아요 API의 인증 사용자와 복합 식별값을 Mapper 요청 객체로 변환함
+     * 댓글 좋아요 API의 인증 사용자와 복합 식별값을 Mapper 요청 객체로 변환
      *
      * @author HanWon.Jang
      * @param userNumb 좋아요를 변경할 사용자 번호
@@ -416,29 +416,29 @@ public class ReplyServiceImpl implements ReplyService {
      * @return 유효한 댓글 좋아요 요청 객체 또는 null
      */
     private ReplyDto createReplyLikeRequest(Long userNumb, Long reptNumb, Long replNumb) {
-        // 누락되거나 양수가 아닌 식별값은 DB 조회 전에 차단함
+        // 누락되거나 양수가 아닌 식별값은 DB 조회 전에 차단
         if (StringUtil.hasEmpty(userNumb, reptNumb, replNumb)
                 || userNumb <= 0 || reptNumb <= 0 || replNumb <= 0) {
-            // 유효한 댓글 좋아요 요청을 만들 수 없음을 반환함
+            // 유효한 댓글 좋아요 요청을 만들 수 없음을 반환
             return null;
         }
 
-        // 댓글 좋아요 조회와 변경 조건을 담을 객체를 생성함
+        // 댓글 좋아요 조회와 변경 조건을 담을 객체를 생성
         ReplyDto replyDto = new ReplyDto();
-        // 인증 사용자 번호를 좋아요 주체로 설정함
+        // 인증 사용자 번호를 좋아요 주체로 설정
         replyDto.setUserNumb(userNumb);
-        // 독후감 번호를 댓글 소속 검증 조건으로 설정함
+        // 독후감 번호를 댓글 소속 검증 조건으로 설정
         replyDto.setReptNumb(reptNumb);
         replyDto.setTagtType(Constant.LIKE_TARGET_REPORT);
         replyDto.setTagtNumb(reptNumb);
-        // 댓글 번호를 범용 좋아요 대상 번호로 설정함
+        // 댓글 번호를 범용 좋아요 대상 번호로 설정
         replyDto.setReplNumb(replNumb);
-        // 검증된 댓글 좋아요 요청 객체를 반환함
+        // 검증된 댓글 좋아요 요청 객체를 반환
         return replyDto;
     }
 
     /**
-     * 신규 댓글 또는 답글 좋아요의 대상 유형별 커밋 이후 알림 이벤트를 등록함
+     * 신규 댓글 또는 답글 좋아요의 대상 유형별 커밋 이후 알림 이벤트를 등록
      * 본인 댓글 좋아요와 작성자를 확인할 수 없는 댓글은 이벤트를 만들지 않음
      *
      * @author HanWon.Jang
@@ -449,22 +449,22 @@ public class ReplyServiceImpl implements ReplyService {
         // 댓글 작성자가 없거나 본인 댓글에 좋아요를 등록했으면 자기 자신에게 알림을 만들지 않음
         if (StringUtil.isEmpty(likeTarget.getTargetUserNumb())
                 || likeTarget.getTargetUserNumb().equals(sendUserNumb)) {
-            // 댓글 좋아요 알림 처리 없이 호출부로 반환함
+            // 댓글 좋아요 알림 처리 없이 호출부로 반환
             return;
         }
 
         // 지원하지 않는 댓글 대상 유형이면 목적지를 계산할 수 없는 알림을 만들지 않음
         if (!isReplyTargetType(likeTarget.getTagtType())) {
-            // 대상별 댓글 좋아요 알림 처리 없이 호출부로 반환함
+            // 대상별 댓글 좋아요 알림 처리 없이 호출부로 반환
             return;
         }
 
-        // 대상 검증 SQL에서 함께 조회한 활성 좋아요 등록자의 최신 닉네임을 사용함
+        // 대상 검증 SQL에서 함께 조회한 활성 좋아요 등록자의 최신 닉네임을 사용
         String sendUserNick = likeTarget.getUserNick();
 
         // 회원 원본에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않음
         if (StringUtil.isEmpty(sendUserNick)) {
-            // 발신자 닉네임이 없는 댓글 좋아요 알림 처리 없이 호출부로 반환함
+            // 발신자 닉네임이 없는 댓글 좋아요 알림 처리 없이 호출부로 반환
             return;
         }
 
@@ -472,39 +472,39 @@ public class ReplyServiceImpl implements ReplyService {
                 ? likeTarget.getReptNumb()
                 : likeTarget.getTagtNumb();
 
-        // 댓글 좋아요 응답 경로에서 알림 DB와 FCM 접근을 제거할 커밋 이후 이벤트를 생성함
+        // 댓글 좋아요 응답 경로에서 알림 DB와 FCM 접근을 제거할 커밋 이후 이벤트를 생성
         LikeAlimEvent event = new LikeAlimEvent(sendUserNumb, likeTarget.getTargetUserNumb()
                                               , Constant.ALIM_TEMP_CODE_REPLY_LIKE, likeTarget.getTagtType()
                                               , replyTargetNumb, likeTarget.getReplNumb(), sendUserNick);
-        // 댓글 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록함
+        // 댓글 좋아요 트랜잭션이 커밋된 경우에만 비동기 알림 작업이 시작되도록 이벤트를 등록
         likeAlimPublisher.setLikeAlim(event);
     }
 
     /**
-     * 콘텐츠 소유자와 부모 댓글 작성자에게 댓글 작성자의 닉네임 및 이동 대상 정보가 포함된 알림을 발송함
-     * 자기 알림과 동일한 수신자는 제외하고 콘텐츠 소유자의 알림 설정을 적용함
+     * 콘텐츠 소유자와 부모 댓글 작성자에게 댓글 작성자의 닉네임 및 이동 대상 정보가 포함된 알림을 발송
+     * 자기 알림과 동일한 수신자는 제외하고 콘텐츠 소유자의 알림 설정을 적용
      *
      * @author HanWon.Jang
      * @param sendUserNumb 댓글을 등록한 사용자 번호
      * @param replyDto 등록된 댓글과 독후감 번호
      */
     private void sendReplyTargetAlim(Long sendUserNumb, ReplyDto replyDto) {
-        // 댓글 대상 소유자와 부모 댓글 작성자 및 대상별 알림 정보를 조회함
+        // 댓글 대상 소유자와 부모 댓글 작성자 및 대상별 알림 정보를 조회
         ReplyDto reportAlim = replyMapper.getReplyReportAlimDtl(replyDto);
 
         // 알림 대상 정보를 확인할 수 없으면 불완전한 알림을 만들지 않음
         if (StringUtil.isEmpty(reportAlim)) {
-            // 댓글 등록 알림 처리 없이 호출부로 반환함
+            // 댓글 등록 알림 처리 없이 호출부로 반환
             return;
         }
 
-        // 동일 수신자의 알림 사유가 겹쳐도 더 구체적인 답글 템플릿을 유지하도록 수신자별 계획을 구성함
+        // 동일 수신자의 알림 사유가 겹쳐도 더 구체적인 답글 템플릿을 유지하도록 수신자별 계획을 구성
         Map<Long, String> recipientTemplateMap = new LinkedHashMap<>();
         Long contentOwnerNumb = reportAlim.getTargetUserNumb();
         Long parentUserNumb = reportAlim.getParentUserNumb();
         boolean ownerIsParent = !StringUtil.isEmpty(contentOwnerNumb) && contentOwnerNumb.equals(parentUserNumb);
 
-        // 콘텐츠 소유자가 부모 댓글 작성자이면 일반 콘텐츠 댓글보다 직접 답글 알림을 우선함
+        // 콘텐츠 소유자가 부모 댓글 작성자이면 일반 콘텐츠 댓글보다 직접 답글 알림을 우선
         if (ownerIsParent && !contentOwnerNumb.equals(sendUserNumb)) {
             String ownerReplyTemplate = resolveReplyTemplate(replyDto.getTagtType());
             if (!StringUtil.isEmpty(ownerReplyTemplate)) {
@@ -512,7 +512,7 @@ public class ReplyServiceImpl implements ReplyService {
             }
         }
 
-        // 부모 댓글 작성자가 아닌 콘텐츠 소유자에게는 콘텐츠별 댓글 알림 설정을 적용함
+        // 부모 댓글 작성자가 아닌 콘텐츠 소유자에게는 콘텐츠별 댓글 알림 설정을 적용
         if (!ownerIsParent && Constant.COMM_YES.equals(reportAlim.getReplyAlimYsno())
                 && !StringUtil.isEmpty(contentOwnerNumb) && !contentOwnerNumb.equals(sendUserNumb)) {
             String contentTemplate = StringUtil.isEmpty(reportAlim.getAlimTempCode())
@@ -521,7 +521,7 @@ public class ReplyServiceImpl implements ReplyService {
             recipientTemplateMap.put(contentOwnerNumb, contentTemplate);
         }
 
-        // 콘텐츠 소유자와 다른 부모 댓글 작성자에게는 관계별 직접 답글 템플릿을 적용함
+        // 콘텐츠 소유자와 다른 부모 댓글 작성자에게는 관계별 직접 답글 템플릿을 적용
         if (!StringUtil.isEmpty(parentUserNumb) && !parentUserNumb.equals(sendUserNumb)
                 && !parentUserNumb.equals(contentOwnerNumb)) {
             String parentTemplate = resolveReplyTemplate(replyDto.getTagtType());
@@ -530,34 +530,34 @@ public class ReplyServiceImpl implements ReplyService {
             }
         }
 
-        // 자기 알림과 중복 제거 뒤 수신자가 없으면 알림 저장과 푸시 예약을 생략함
+        // 자기 알림과 중복 제거 뒤 수신자가 없으면 알림 저장과 푸시 예약을 생략
         if (recipientTemplateMap.isEmpty()) {
-            // 댓글 등록 알림 처리 없이 호출부로 반환함
+            // 댓글 등록 알림 처리 없이 호출부로 반환
             return;
         }
 
-        // 알림 템플릿의 작성자 문구에 사용할 로그인 사용자의 최신 닉네임을 조회함
+        // 알림 템플릿의 작성자 문구에 사용할 로그인 사용자의 최신 닉네임을 조회
         String sendUserNick = tokenRedisService.getUserNick(sendUserNumb);
 
         // 로그인 세션에서 닉네임을 확인할 수 없으면 미완성 문구의 알림을 저장하지 않음
         if (StringUtil.isEmpty(sendUserNick)) {
-            // 닉네임 치환이 불가능한 알림 처리 없이 호출부로 반환함
+            // 닉네임 치환이 불가능한 알림 처리 없이 호출부로 반환
             return;
         }
 
-        // REPLY_REPORT 템플릿의 사용자명 치환값을 담을 객체를 생성함
+        // REPLY_REPORT 템플릿의 사용자명 치환값을 담을 객체를 생성
         Map<String, Object> replaceMap = new HashMap<>();
-        // 댓글 작성자의 닉네임을 템플릿 사용자명 치환값으로 설정함
+        // 댓글 작성자의 닉네임을 템플릿 사용자명 치환값으로 설정
         replaceMap.put("userName", sendUserNick);
 
-        // 클릭 시점의 공통 라우터가 최종 경로를 계산할 수 있도록 이동 대상 번호를 결정함
+        // 클릭 시점의 공통 라우터가 최종 경로를 계산할 수 있도록 이동 대상 번호를 결정
         Long notificationTarget = StringUtil.isEmpty(reportAlim.getAlimTagtNumb())
                 ? replyDto.getTagtNumb()
                 : reportAlim.getAlimTagtNumb();
 
-        // 중복 제거된 각 수신자에게 같은 원본 콘텐츠로 이동하는 댓글 알림을 저장하고 푸시를 예약함
+        // 중복 제거된 각 수신자에게 같은 원본 콘텐츠로 이동하는 댓글 알림을 저장하고 푸시를 예약
         for (Map.Entry<Long, String> recipientPlan : recipientTemplateMap.entrySet()) {
-            // 현재 수신자에게 대상 유형별 댓글 알림을 발송함
+            // 현재 수신자에게 대상 유형별 댓글 알림을 발송
             alimService.sendUserAlim(
                     sendUserNumb
                   , recipientPlan.getKey()
@@ -571,34 +571,34 @@ public class ReplyServiceImpl implements ReplyService {
         }
     }
 
-    /** 원본 콘텐츠 유형이 동적 이동을 지원하면 공통 대댓글 템플릿을 반환함 */
+    /** 원본 콘텐츠 유형이 동적 이동을 지원하면 공통 대댓글 템플릿을 반환 */
     private String resolveReplyTemplate(String tagtType) {
-        // 알림 클릭 시점의 관계는 목적지 조회에서 판단하므로 문구가 같은 대댓글은 하나의 템플릿을 사용함
+        // 알림 클릭 시점의 관계는 목적지 조회에서 판단하므로 문구가 같은 대댓글은 하나의 템플릿을 사용
         if (isReplyTargetType(tagtType)) {
-            // 지원 대상에 공통 대댓글 템플릿 코드를 반환함
+            // 지원 대상에 공통 대댓글 템플릿 코드를 반환
             return Constant.ALIM_TEMP_CODE_REPLY_TO_COMMENT;
         }
 
-        // 지원하지 않는 원본 콘텐츠에는 대댓글 알림을 만들지 않도록 빈 템플릿을 반환함
+        // 지원하지 않는 원본 콘텐츠에는 대댓글 알림을 만들지 않도록 빈 템플릿을 반환
         return null;
     }
 
     /**
-     * 댓글 알림의 동적 이동을 지원하는 원본 콘텐츠 유형인지 확인함
+     * 댓글 알림의 동적 이동을 지원하는 원본 콘텐츠 유형인지 확인
      *
      * @author SeungHyeon.Kang
      * @param tagtType 댓글이 연결된 원본 콘텐츠 유형
      * @return 독후감 또는 프로필 및 배경사진 여부
      */
     private boolean isReplyTargetType(String tagtType) {
-        // 알림 대상과 댓글 API가 함께 지원하는 세 가지 원본 콘텐츠 유형만 허용함
+        // 알림 대상과 댓글 API가 함께 지원하는 세 가지 원본 콘텐츠 유형만 허용
         return Constant.LIKE_TARGET_REPORT.equals(tagtType)
                 || Constant.LIKE_TARGET_PROFILE_IMAGE.equals(tagtType)
                 || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(tagtType);
     }
 
     /**
-     * 독후감 번호에 연결된 댓글과 답글 목록을 조회함
+     * 독후감 번호에 연결된 댓글과 답글 목록을 조회
      *
      * @author Hanwon.Jang
      * @param userNumb 댓글 목록을 조회하는 로그인 사용자 번호
@@ -608,80 +608,80 @@ public class ReplyServiceImpl implements ReplyService {
      */
     @Override
     public ResultData getReplyList(Long userNumb, Long reptNumb, int page) {
-        // 로그인 사용자 번호가 없으면 본인 댓글 여부를 판별할 수 없으므로 조회를 중단함
+        // 로그인 사용자 번호가 없으면 본인 댓글 여부를 판별할 수 없으므로 조회를 중단
         if (StringUtil.isEmpty(userNumb)) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
-        // 독후감 번호가 없으면 댓글 조회 대상을 특정할 수 없으므로 조회를 중단함
+        // 독후감 번호가 없으면 댓글 조회 대상을 특정할 수 없으므로 조회를 중단
         if (StringUtil.isEmpty(reptNumb)) {
             // "조회 결과가 없어요."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 댓글 목록 조회 조건을 담을 객체를 생성함
+        // 댓글 목록 조회 조건을 담을 객체를 생성
         ReplyDto replyDto = new ReplyDto();
-        // 요청받은 독후감 번호를 댓글 목록 조회 조건으로 설정함
+        // 요청받은 독후감 번호를 댓글 목록 조회 조건으로 설정
         replyDto.setReptNumb(reptNumb);
         replyDto.setTagtType(Constant.LIKE_TARGET_REPORT);
         replyDto.setTagtNumb(reptNumb);
-        // 각 댓글의 로그인 사용자 작성 여부를 조회할 사용자 번호를 설정함
+        // 각 댓글의 로그인 사용자 작성 여부를 조회할 사용자 번호를 설정
         replyDto.setUserNumb(userNumb);
-        // 요청 페이지를 첫 페이지 이상으로 보정함
+        // 요청 페이지를 첫 페이지 이상으로 보정
         int normalizedPage = Math.max(page, 1);
-        // 부모 댓글 페이지 시작 위치를 조회 조건으로 설정함
+        // 부모 댓글 페이지 시작 위치를 조회 조건으로 설정
         replyDto.setPageOffset((normalizedPage - 1) * REPLY_PAGE_SIZE);
-        // 다음 부모 댓글 페이지 판정용 한 건을 추가해 조회함
+        // 다음 부모 댓글 페이지 판정용 한 건을 추가해 조회
         replyDto.setPageLimit(REPLY_PAGE_SIZE + 1);
-        // 현재 부모 댓글 페이지와 연결된 답글을 함께 조회함
+        // 현재 부모 댓글 페이지와 연결된 답글을 함께 조회
         List<ReplyDto> searchedList = replyMapper.getReplyList(replyDto);
-        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정함
+        // Mapper가 빈 값을 반환해도 페이지 응답을 유지하도록 빈 목록으로 보정
         List<ReplyDto> safeList = StringUtil.isEmpty(searchedList) ? List.of() : searchedList;
-        // 조회 순서를 유지하며 부모 댓글 식별값을 중복 없이 수집함
+        // 조회 순서를 유지하며 부모 댓글 식별값을 중복 없이 수집
         Set<Long> parentNumbSet = new LinkedHashSet<>();
 
-        // 각 행의 부모 댓글 번호를 현재 페이지 순서대로 확인함
+        // 각 행의 부모 댓글 번호를 현재 페이지 순서대로 확인
         for (ReplyDto reply : safeList) {
-            // 부모 댓글은 자기 번호를, 답글은 참조 부모 번호를 페이지 식별값으로 사용함
+            // 부모 댓글은 자기 번호를, 답글은 참조 부모 번호를 페이지 식별값으로 사용
             Long parentNumb = StringUtil.isEmpty(reply.getUperNumb()) ? reply.getReplNumb() : reply.getUperNumb();
-            // 현재 행이 속한 부모 댓글 번호를 페이지 집합에 추가함
+            // 현재 행이 속한 부모 댓글 번호를 페이지 집합에 추가
             parentNumbSet.add(parentNumb);
         }
 
-        // 제한 수보다 부모 댓글이 한 건 더 있으면 다음 페이지가 존재함
+        // 제한 수보다 부모 댓글이 한 건 더 있으면 다음 페이지가 존재
         boolean hasNext = parentNumbSet.size() > REPLY_PAGE_SIZE;
-        // 화면에 전달할 부모 댓글 번호만 현재 페이지 크기로 제한함
+        // 화면에 전달할 부모 댓글 번호만 현재 페이지 크기로 제한
         Set<Long> visibleParentNumbSet = new LinkedHashSet<>();
-        // 부모 댓글 순서를 유지하며 현재 페이지 크기만 선택함
+        // 부모 댓글 순서를 유지하며 현재 페이지 크기만 선택
         for (Long parentNumb : parentNumbSet) {
-            // 화면 페이지 크기에 도달하면 다음 페이지 판정용 부모 댓글을 제외함
+            // 화면 페이지 크기에 도달하면 다음 페이지 판정용 부모 댓글을 제외
             if (visibleParentNumbSet.size() >= REPLY_PAGE_SIZE) {
 
                 break;
             }
 
-            // 현재 페이지에 포함할 부모 댓글 번호를 추가함
+            // 현재 페이지에 포함할 부모 댓글 번호를 추가
             visibleParentNumbSet.add(parentNumb);
         }
 
-        // 다음 페이지 판정용 부모 댓글과 연결 답글을 응답에서 제외함
+        // 다음 페이지 판정용 부모 댓글과 연결 답글을 응답에서 제외
         List<ReplyDto> visibleList = safeList.stream()
                 .filter(reply -> visibleParentNumbSet.contains(
                         StringUtil.isEmpty(reply.getUperNumb()) ? reply.getReplNumb() : reply.getUperNumb()
                 ))
                 .toList();
-        // 부모 댓글 페이지와 각 부모의 답글 및 다음 페이지 여부를 반환함
+        // 부모 댓글 페이지와 각 부모의 답글 및 다음 페이지 여부를 반환
         return ResultData.success(new PageDto<>(visibleList, normalizedPage, hasNext));
     }
 
-    /** 범용 대상에 연결된 댓글과 답글 목록을 조회함 */
+    /** 범용 대상에 연결된 댓글과 답글 목록을 조회 */
     @Override
     public ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, int page) {
         return getReplyList(userNumb, tagtType, tagtNumb, null, page);
     }
 
-    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회함 */
+    /** 범용 대상에서 알림이 지정한 댓글 묶음을 우선한 댓글 목록을 조회 */
     @Override
     public ResultData getReplyList(Long userNumb, String tagtType, Long tagtNumb, Long focusReplNumb, int page) {
         if (StringUtil.isEmpty(userNumb)) {
@@ -718,7 +718,7 @@ public class ReplyServiceImpl implements ReplyService {
         return ResultData.success(new PageDto<>(safeList, normalizedPage, hasNext));
     }
 
-    /** 기존 독후감 요청을 포함한 댓글 대상 식별값을 범용 구조로 정규화함 */
+    /** 기존 독후감 요청을 포함한 댓글 대상 식별값을 범용 구조로 정규화 */
     private void normalizeReplyTarget(ReplyDto replyDto) {
         if (StringUtil.isEmpty(replyDto)) {
             return;
@@ -734,7 +734,7 @@ public class ReplyServiceImpl implements ReplyService {
         }
     }
 
-    /** 범용 댓글 대상 유형이 서비스에서 허용한 값인지 확인함 */
+    /** 범용 댓글 대상 유형이 서비스에서 허용한 값인지 확인 */
     private boolean isAllowedTargetType(String tagtType) {
         if (StringUtil.isEmpty(tagtType)) {
             return false;
@@ -745,7 +745,7 @@ public class ReplyServiceImpl implements ReplyService {
                 || Constant.LIKE_TARGET_BACKGROUND_IMAGE.equals(normalizedType);
     }
 
-    /** 사진 댓글 대상이 활성 사용자의 현재 사진인지 확인함 */
+    /** 사진 댓글 대상이 활성 사용자의 현재 사진인지 확인 */
     private boolean hasImageReplyAccess(Long userNumb, String tagtType, Long tagtNumb) {
         String normalizedTargetType = StringUtil.isEmpty(tagtType) ? null : tagtType.trim().toUpperCase();
         boolean imageTarget = Constant.LIKE_TARGET_PROFILE_IMAGE.equals(normalizedTargetType)
@@ -757,7 +757,7 @@ public class ReplyServiceImpl implements ReplyService {
         return !StringUtil.isEmpty(accessRequest) && replyMapper.getReplyTargetAccessCount(accessRequest) > 0;
     }
 
-    /** 범용 댓글 Mapper 요청 객체를 생성함 */
+    /** 범용 댓글 Mapper 요청 객체를 생성 */
     private ReplyDto createTargetRequest(Long userNumb, String tagtType, Long tagtNumb, Long replNumb) {
         if (StringUtil.hasEmpty(userNumb, tagtNumb) || !isAllowedTargetType(tagtType)
                 || userNumb <= 0 || tagtNumb <= 0 || (!StringUtil.isEmpty(replNumb) && replNumb <= 0)) {

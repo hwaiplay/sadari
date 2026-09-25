@@ -125,7 +125,7 @@
            FOR UPDATE
     </select>
 
-    <!-- 어느 한쪽이라도 상대를 차단했는지 양방향 관계를 조회함 -->
+    <!-- 어느 한쪽이라도 상대를 차단했는지 양방향 관계를 조회 -->
     <select id="getBlockCnt" resultType="int">
         SELECT /* getBlockCnt */
                COUNT(*)
@@ -134,7 +134,7 @@
             OR (USER_NUMB = #{targetUserNumb} AND BLOC_NUMB = #{userNumb})
     </select>
 
-    <!-- 중복 요청은 기존 등록 일시를 유지하면서 현재 차단 상태로 멱등 처리함 -->
+    <!-- 중복 요청은 기존 등록 일시를 유지하면서 현재 차단 상태로 멱등 처리 -->
     <insert id="setBlock" parameterType="org.our.sadari.social.dto.UserBlockDto">
         /* setBlock */
         INSERT INTO TB_USBLOC (
@@ -149,7 +149,7 @@
                USER_NUMB = NEW.USER_NUMB
     </insert>
 
-    <!-- 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제함 -->
+    <!-- 로그인 사용자가 소유한 한 방향의 차단 관계만 삭제 -->
     <delete id="delBlock" parameterType="org.our.sadari.social.dto.UserBlockDto">
         DELETE /* delBlock */
           FROM TB_USBLOC
@@ -157,7 +157,7 @@
            AND BLOC_NUMB = #{blocNumb}
     </delete>
 
-    <!-- 차단 즉시 기존 팔로우 관계가 어느 방향에도 남지 않도록 함께 삭제함 -->
+    <!-- 차단 즉시 기존 팔로우 관계가 어느 방향에도 남지 않도록 함께 삭제 -->
     <delete id="delBlockFollows" parameterType="org.our.sadari.social.dto.UserBlockDto">
         DELETE /* delBlockFollows */
           FROM TB_FOLLOW
@@ -165,7 +165,7 @@
             OR (USER_NUMB = #{blocNumb} AND FLOW_NUMB = #{userNumb})
     </delete>
 
-    <!-- 차단 당사자 사이에서 직접 발송된 수락 전 모임 초대를 즉시 만료함 -->
+    <!-- 차단 당사자 사이에서 직접 발송된 수락 전 모임 초대를 즉시 만료 -->
     <delete id="delBlockInvitations" parameterType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="memberInvited" value="'INVITED'" />
         DELETE /* delBlockInvitations */
@@ -176,7 +176,7 @@
                )
     </delete>
 
-    <!-- 차단 당사자가 모임장인 모임의 상대방 처리 중 가입 신청과 답변을 삭제함 -->
+    <!-- 차단 당사자가 모임장인 모임의 상대방 처리 중 가입 신청과 답변을 삭제 -->
     <delete id="delBlockApplications" parameterType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="applicationPending" value="'PENDING'" />
         DELETE /* delBlockApplications */ APPLICATION
@@ -189,7 +189,7 @@
                )
     </delete>
 
-    <!-- 차단 관리 화면에는 실제 사진을 제외한 최소 사용자 정보만 최신 차단순으로 제공함 -->
+    <!-- 차단 관리 화면에는 실제 사진을 제외한 최소 사용자 정보만 최신 차단순으로 제공 -->
     <select id="getBlockList" parameterType="org.our.sadari.social.dto.UserBlockDto" resultType="org.our.sadari.social.dto.UserBlockDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />

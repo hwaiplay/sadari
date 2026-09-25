@@ -8,7 +8,7 @@ class MockResultDataError extends Error {
   result: { code: number; message?: string };
 
   /**
-   * 인증 API 실패 응답을 실제 공통 오류와 같은 형태로 구성함
+   * 인증 API 실패 응답을 실제 공통 오류와 같은 형태로 구성
    *
    * @author SeungHyeon.Kang
    * @param result 인증 실패 코드와 메시지
@@ -96,7 +96,7 @@ test("제한 계정 인증은 설정 API 없이 성공하고 활성 계정만 �
  * @return 인증 복구 종료와 Query 설정 검증 완료 Promise
  */
 const checkExpiredSession = async () => {
-  // Hook 소스를 실제 운영 코드와 같은 형태로 실행할 CommonJS로 변환함
+  // Hook 소스를 실제 운영 코드와 같은 형태로 실행할 CommonJS로 변환
   const source = readFileSync(new URL("./useAuthQuery.tsx", import.meta.url), "utf8");
   const compiled = transpileModule(source, { compilerOptions: { module: ModuleKind.CommonJS } });
   const expiredResult = { code: 1003, message: "expired" };
@@ -125,16 +125,16 @@ const checkExpiredSession = async () => {
   };
   const requireDependency = (id: keyof typeof dependencies) => dependencies[id];
 
-  // 실제 Hook을 실행해 만료 세션을 추가 인증 조회 없이 종료하는지 확인함
+  // 실제 Hook을 실행해 만료 세션을 추가 인증 조회 없이 종료하는지 확인
   runInNewContext(compiled.outputText, { exports: hookExports, require: requireDependency });
   const query = hookExports.useAuthQuery!();
   const result = await query.queryFn();
 
-  // Refresh 실패 결과가 오류 상태 대신 확정된 비로그인 응답으로 반환되어야 함
+  // Refresh 실패 결과가 오류 상태 대신 확정된 비로그인 응답으로 반환되어야 하는 조건
   assert.deepEqual(result, expiredResult);
   assert.equal(tokenCheckCalls, 1);
   assert.equal(refreshCalls, 1);
-  // Route 구독자가 다시 붙어도 실패 Query와 오래된 인증 상태를 자동 조회하지 않아야 함
+  // Route 구독자가 다시 붙어도 실패 Query와 오래된 인증 상태를 자동 조회하지 않아야 하는 조건
   assert.equal(query.retry, false);
   assert.equal(query.retryOnMount, false);
   assert.equal(query.refetchOnMount, false);

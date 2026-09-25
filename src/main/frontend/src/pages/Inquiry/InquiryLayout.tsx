@@ -6,7 +6,7 @@ import { Outlet } from "react-router-dom";
 import * as styles from "./InquiryLayout.css";
 
 /**
- * 일반 회원에게는 서비스 공통 레이아웃을, 정지 회원에게는 제한 레이아웃을 제공함
+ * 일반 회원에게는 서비스 공통 레이아웃을, 정지 회원에게는 제한 레이아웃을 제공
  *
  * @author SeungHyeon.Kang
  * @return 회원 상태에 맞는 고객문의 레이아웃

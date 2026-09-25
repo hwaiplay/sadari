@@ -52,7 +52,7 @@ type HeaderProps = {
 };
 
 /**
- * 현재 경로의 메뉴 등록 여부와 관계없이 공통 헤더를 렌더링함
+ * 현재 경로의 메뉴 등록 여부와 관계없이 공통 헤더를 렌더링
  *
  * @author HanWon.Jang
  * @param props 헤더 메뉴와 스크롤 위치 연동 옵션

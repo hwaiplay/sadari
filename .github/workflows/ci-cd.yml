@@ -55,8 +55,8 @@ jobs:
             --no-daemon \
             -x test
 
-      # 현재 contextLoads 테스트는 Git에서 제외된 application-loc.yml과 로컬 DB/Redis를 요구함
-      # CI용 독립 테스트 프로필이 생기기 전까지 패키징 검증을 수행하고, Docker 빌드에서도 동일 소스를 다시 검증함
+      # 현재 contextLoads 테스트는 Git에서 제외된 application-loc.yml과 로컬 DB/Redis를 요구
+      # CI용 독립 테스트 프로필이 생기기 전까지 패키징 검증을 수행하고, Docker 빌드에서도 동일 소스를 다시 검증
 
   publish:
     name: Build and publish image
@@ -228,7 +228,7 @@ jobs:
           set -euo pipefail
           bundle_dir="$(mktemp -d "$RUNNER_TEMP/sadari-deploy.XXXXXX")"
 
-          # 값 안의 따옴표, 역슬래시, 개행을 Docker Compose env_file 문법에 맞게 이스케이프함
+          # 값 안의 따옴표, 역슬래시, 개행을 Docker Compose env_file 문법에 맞게 이스케이프
           write_env() {
             local key="$1"
             local value="$2"
@@ -345,7 +345,7 @@ jobs:
           "$DOCKER_BIN" compose pull app
           "$DOCKER_BIN" compose up -d --remove-orphans
 
-          # Spring Boot와 정적 프론트가 모두 올라오는 시간을 고려해 최대 2분 동안 실제 HTTP 응답을 확인함
+          # Spring Boot와 정적 프론트가 모두 올라오는 시간을 고려해 최대 2분 동안 실제 HTTP 응답을 확인
           for attempt in {1..24}; do
             http_status="$(curl --connect-timeout 2 --max-time 5 --location --silent --show-error \
               --output /dev/null --write-out '%{http_code}' \
@@ -361,7 +361,7 @@ jobs:
           "$DOCKER_BIN" compose ps
           "$DOCKER_BIN" compose logs --tail=200 app
 
-          # 새 이미지가 기동하지 못하면 직전 컨테이너 이미지로 복구함
+          # 새 이미지가 기동하지 못하면 직전 컨테이너 이미지로 복구
           if [[ -n "$previous_image" ]]; then
             APP_IMAGE="$previous_image" "$DOCKER_BIN" compose up -d --no-deps app
           fi

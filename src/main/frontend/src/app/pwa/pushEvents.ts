@@ -7,6 +7,6 @@ export const FIREBASE_PUSH_ENABLED_EVENT = "sadari:firebase-push-enabled";
  * @return 반환값이 없음
  */
 export function notifyFirebasePushEnabled(): void {
-  // Firebase SDK와 무관한 가벼운 브라우저 이벤트만 전파함
+  // Firebase SDK와 무관한 가벼운 브라우저 이벤트만 전파
   window.dispatchEvent(new Event(FIREBASE_PUSH_ENABLED_EVENT));
 }

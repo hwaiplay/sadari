@@ -11,7 +11,7 @@ import software.amazon.awssdk.services.s3.S3Client;
  * fileName       : FileStorageConfigTest
  * author         : HanWon.Jang
  * date           : 2026-09-16
- * description    : AWS S3와 S3 호환 저장소의 Checksum 설정을 검증함
+ * description    : AWS S3와 S3 호환 저장소의 Checksum 설정을 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

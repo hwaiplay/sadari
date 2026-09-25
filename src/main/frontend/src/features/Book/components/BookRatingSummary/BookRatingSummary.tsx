@@ -6,7 +6,7 @@ type BookRatingSummaryProps = {
 };
 
 /**
- * 도서 정보 화면과 목록에서 재사용하는 평균 별점 요약을 표시함
+ * 도서 정보 화면과 목록에서 재사용하는 평균 별점 요약을 표시
  *
  * @author SeungHyeon.Kang
  * @param props 표시할 도서 평균 별점
@@ -14,7 +14,7 @@ type BookRatingSummaryProps = {
  */
 function BookRatingSummary({ rating }: BookRatingSummaryProps) {
 
-  // 도서 정보 화면과 같은 별 아이콘 및 점수 스타일을 반환함
+  // 도서 정보 화면과 같은 별 아이콘 및 점수 스타일을 반환
   return (
     <span
       className={styles.ratingSummary}

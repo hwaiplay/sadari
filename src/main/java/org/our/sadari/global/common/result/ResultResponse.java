@@ -7,7 +7,7 @@ import lombok.Getter;
  * fileName       : ResultResponse
  * author         : SeungHyeon.Kang
  * date           : 2026-03-25
- * description    : 공통 업무에 필요한 기능을 제공함
+ * description    : 공통 업무에 필요한 기능을 제공
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

@@ -7,7 +7,7 @@ import org.our.sadari.readingClub.dto.OwnerElectionDto;
  * fileName       : OwnerElectionService
  * author         : HanWon.Jang
  * date           : 2026-08-28
- * description    : 모임장 승계 선거의 조회, 투표와 자동 마감 계약을 정의함
+ * description    : 모임장 승계 선거의 조회, 투표와 자동 마감 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -21,9 +21,9 @@ public interface OwnerElectionService {
     /** 진행 중인 모임장 선거에 투표함. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 후보 선택값 @return 투표 결과 */
     ResultData uptElectionVote(Long userNumb, Long clubNumb, OwnerElectionDto.VoteReqDto request);
 
-    /** 상태 전환 후 생성되지 않은 모임장 선거를 생성함 */
+    /** 상태 전환 후 생성되지 않은 모임장 선거를 생성 */
     void startPendingElection();
 
-    /** 마감 시각이 지난 모임장 선거를 확정함 */
+    /** 마감 시각이 지난 모임장 선거를 확정 */
     void completeDueElection();
 }

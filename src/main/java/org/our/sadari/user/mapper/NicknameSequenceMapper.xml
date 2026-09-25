@@ -16,7 +16,7 @@
            AND LAST_NUMB <![CDATA[<]]> #{maxSequence}
     </update>
 
-    <!-- 현재 연월에 처음 선택된 세부코드 조합의 최초 번호를 등록함 -->
+    <!-- 현재 연월에 처음 선택된 세부코드 조합의 최초 번호를 등록 -->
     <insert id="setNicknameSequence" parameterType="org.our.sadari.user.dto.NicknameSequenceDto">
         <bind name="firstSequence" value="@org.our.sadari.global.common.constant.Constant@NUMBER_ONE" />
         /* setNicknameSequence */
@@ -38,7 +38,7 @@
         )
     </insert>
 
-    <!-- 현재 연월에 발급된 세부코드 조합의 마지막 번호를 조회함 -->
+    <!-- 현재 연월에 발급된 세부코드 조합의 마지막 번호를 조회 -->
     <select id="getNicknameSequenceDtl" parameterType="org.our.sadari.user.dto.NicknameSequenceDto"
             resultType="org.our.sadari.user.dto.NicknameSequenceDto">
         SELECT /* getNicknameSequenceDtl */

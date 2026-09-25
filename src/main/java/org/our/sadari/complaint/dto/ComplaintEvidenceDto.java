@@ -6,7 +6,7 @@ import lombok.Data;
  * fileName       : ComplaintEvidenceDto
  * author         : SeungHyeon.Kang
  * date           : 2026-08-22
- * description    : 관리자 전용 프로필 사진 신고 증거 원본을 전달함
+ * description    : 관리자 전용 프로필 사진 신고 증거 원본을 전달
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------

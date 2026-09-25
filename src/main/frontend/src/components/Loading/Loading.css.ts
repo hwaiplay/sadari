@@ -44,7 +44,7 @@ export const inlineCompactContainer = style({
   justifyContent: "center",
 });
 
-// 기존 회전 링의 모양과 애니메이션을 유지하면서 모달 안에서만 작게 표시함
+// 기존 회전 링의 모양과 애니메이션을 유지하면서 모달 안에서만 작게 표시
 export const compactSpinner = style({
   width: "48px",
   height: "48px",

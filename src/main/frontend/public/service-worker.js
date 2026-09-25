@@ -17,34 +17,34 @@ let csrfRequest = null;
 let csrfToken = null;
 
 /**
- * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회함
+ * Spring Security가 현재 브라우저에 발급한 CSRF Token을 조회
  *
  * @return {Promise<string>} 상태 변경 요청 Header에 사용할 CSRF Token
  * @throws CSRF Token API가 실패하거나 Token 데이터가 없을 때 발생
  * @author SeungHyeon.Kang
  */
 async function requestCsrfToken() {
-  // Service Worker도 화면과 같은 인증 Cookie를 사용해 CSRF Token을 조회함
+  // Service Worker도 화면과 같은 인증 Cookie를 사용해 CSRF Token을 조회
   const response = await fetch("/api/oauth/csrf", {
     method: "GET",
     credentials: "include",
   });
-  // 공통 응답의 상태 코드와 Token 값을 함께 검증하기 위해 JSON 데이터를 조회함
+  // 공통 응답의 상태 코드와 Token 값을 함께 검증하기 위해 JSON 데이터를 조회
   const result = await response.json();
 
   // 상태 코드 또는 Token 값이 유효하지 않으면 보호되지 않은 요청을 전송하지 않음
   if (!response.ok || Number(result?.code) !== 200
           || typeof result?.data !== "string" || result.data.length === 0) {
-    // CSRF Token 누락을 알림 읽음 처리의 실패 경로로 전달함
+    // CSRF Token 누락을 알림 읽음 처리의 실패 경로로 전달
     throw new Error("CSRF_TOKEN_MISSING");
   }
 
-  // 검증된 CSRF Token을 반환함
+  // 검증된 CSRF Token을 반환
   return result.data;
 }
 
 /**
- * 동시에 시작된 Service Worker 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비함
+ * 동시에 시작된 Service Worker 요청이 하나의 CSRF Token 조회 Promise를 공유하도록 Token을 준비
  *
  * @param {boolean} forceRefresh 기존 Token을 버리고 다시 조회할지 여부
  * @return {Promise<string>} 현재 브라우저 Cookie와 연결된 CSRF Token
@@ -52,41 +52,41 @@ async function requestCsrfToken() {
  * @author SeungHyeon.Kang
  */
 async function getCsrfToken(forceRefresh = false) {
-  // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회함
+  // 서버가 기존 Token을 거부한 경우 Cache를 비우고 새 Token을 조회
   if (forceRefresh) {
-    // 이후 요청이 거부된 Token을 재사용하지 않도록 Cache를 초기화함
+    // 이후 요청이 거부된 Token을 재사용하지 않도록 Cache를 초기화
     csrfToken = null;
   }
 
-  // 이미 검증한 Token이 있으면 추가 네트워크 요청 없이 재사용함
+  // 이미 검증한 Token이 있으면 추가 네트워크 요청 없이 재사용
   if (csrfToken) {
-    // Service Worker 상태 변경 요청에 사용할 CSRF Token을 반환함
+    // Service Worker 상태 변경 요청에 사용할 CSRF Token을 반환
     return csrfToken;
   }
 
-  // 진행 중인 조회가 없을 때만 CSRF Token API를 한 번 호출함
+  // 진행 중인 조회가 없을 때만 CSRF Token API를 한 번 호출
   if (!csrfRequest) {
-    // 동시에 발생한 푸시 클릭이 같은 Token 조회 결과를 기다리게 함
+    // 동시에 발생한 푸시 클릭이 같은 Token 조회 결과를 기다리도록 처리
     csrfRequest = requestCsrfToken();
   }
 
-  // 성공과 실패 모두 진행 중 Promise를 정리해 이후 재시도를 허용함
+  // 성공과 실패 모두 진행 중 Promise를 정리해 이후 재시도를 허용
   try {
-    // CSRF Token 조회 결과를 Service Worker Cache에 저장함
+    // CSRF Token 조회 결과를 Service Worker Cache에 저장
     csrfToken = await csrfRequest;
-    // 상태 변경 요청 Header에 사용할 CSRF Token을 반환함
+    // 상태 변경 요청 Header에 사용할 CSRF Token을 반환
     return csrfToken;
   }
 
-  // Token 조회의 성공 여부와 관계없이 완료된 Promise를 정리함
+  // Token 조회의 성공 여부와 관계없이 완료된 Promise를 정리
   finally {
-    // 완료된 Promise를 제거해 필요할 때 새 Token을 조회할 수 있게 함
+    // 완료된 Promise를 제거해 필요할 때 새 Token을 조회할 수 있도록 처리
     csrfRequest = null;
   }
 }
 
 /**
- * Service Worker의 상태 변경 요청에 CSRF Token Header를 설정해 전송함
+ * Service Worker의 상태 변경 요청에 CSRF Token Header를 설정해 전송
  *
  * @param {string} url 호출할 API 경로
  * @param {RequestInit} options 상태 변경 요청 설정
@@ -96,34 +96,34 @@ async function getCsrfToken(forceRefresh = false) {
  * @author SeungHyeon.Kang
  */
 async function requestWithCsrf(url, options, retry = true) {
-  // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회함
+  // 현재 브라우저 Cookie와 연결된 CSRF Token을 조회
   const token = await getCsrfToken();
-  // 기존 요청 Header를 유지하면서 CSRF Token을 추가할 Header 객체를 생성함
+  // 기존 요청 Header를 유지하면서 CSRF Token을 추가할 Header 객체를 생성
   const headers = new Headers(options.headers);
-  // 브라우저가 자동으로 추가하지 않는 요청 Header에 CSRF Token을 설정함
+  // 브라우저가 자동으로 추가하지 않는 요청 Header에 CSRF Token을 설정
   headers.set(CSRF_HEADER_NAME, token);
-  // 인증 Cookie와 CSRF Header를 함께 포함해 상태 변경 API를 호출함
+  // 인증 Cookie와 CSRF Header를 함께 포함해 상태 변경 API를 호출
   const response = await fetch(url, {
     ...options,
     credentials: "include",
     headers,
   });
 
-  // Cookie와 Header Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구함
+  // Cookie와 Header Token이 달라졌으면 새 Token으로 원 요청을 한 번만 복구
   if (response.status === 403 && retry) {
-    // 서버 Cookie와 일치하는 최신 CSRF Token을 다시 조회함
+    // 서버 Cookie와 일치하는 최신 CSRF Token을 다시 조회
     await getCsrfToken(true);
-    // 같은 상태 변경 요청을 최신 Token으로 한 번만 다시 전송함
+    // 같은 상태 변경 요청을 최신 Token으로 한 번만 다시 전송
     return requestWithCsrf(url, options, false);
   }
 
-  // CSRF 검증을 거친 API 응답을 호출부에 반환함
+  // CSRF 검증을 거친 API 응답을 호출부에 반환
   return response;
 }
 
 /**
- * 시스템 푸시 알림 클릭 시 인증 사용자의 해당 알림 한 건을 읽음 처리함
- * access token이 만료된 경우 refresh API를 한 번 호출한 뒤 읽음 요청을 재시도함
+ * 시스템 푸시 알림 클릭 시 인증 사용자의 해당 알림 한 건을 읽음 처리
+ * access token이 만료된 경우 refresh API를 한 번 호출한 뒤 읽음 요청을 재시도
  *
  * @param {number} alimNumb 사용자별 알림 번호
  * @return {Promise<void>} 읽음 처리 완료 Promise
@@ -132,7 +132,7 @@ async function requestWithCsrf(url, options, retry = true) {
 async function uptAlimRead(alimNumb) {
 
   /**
-   * 알림 읽음 처리 API를 호출함
+   * 알림 읽음 처리 API를 호출
    *
    * @author HanWon.Jang
    * @return {Promise<{response: Response, result: object | null}>} API 응답과 공통 응답 데이터
@@ -154,7 +154,7 @@ async function uptAlimRead(alimNumb) {
   let readResult = await requestRead();
   const resultCode = Number(readResult.result?.code);
 
-  // 푸시 클릭은 Axios 인증 인터셉터를 거치지 않으므로 access token 만료 시 서비스워커가 refresh를 직접 한 번 수행함
+  // 푸시 클릭은 Axios 인증 인터셉터를 거치지 않으므로 access token 만료 시 서비스워커가 refresh를 직접 한 번 수행
   if (
     readResult.response.status === 401
     || AUTH_RETRY_RESULT_CODES.has(resultCode)
@@ -169,7 +169,7 @@ async function uptAlimRead(alimNumb) {
     throw new Error("ALIM_READ_FAILED");
   }
 
-  // 이미 열려 있는 화면에는 읽음 변경 사실을 알려 헤더의 미읽음 배지를 즉시 동기화함
+  // 이미 열려 있는 화면에는 읽음 변경 사실을 알려 헤더의 미읽음 배지를 즉시 동기화
   const clientList = await self.clients.matchAll({
     type: "window",
     includeUncontrolled: true,
@@ -179,15 +179,15 @@ async function uptAlimRead(alimNumb) {
   });
 }
 
-// 서비스워커 설치 시 오프라인 실행에 필요한 최소 앱 셸을 준비함
+// 서비스워커 설치 시 오프라인 실행에 필요한 최소 앱 셸을 준비
 self.addEventListener("install", handleSwInstall);
-// 새 서비스워커 활성화 시 이전 앱 셸 캐시를 정리함
+// 새 서비스워커 활성화 시 이전 앱 셸 캐시를 정리
 self.addEventListener("activate", handleSwActivate);
-// 화면 요청별 변경 가능성에 맞는 캐시 정책을 적용함
+// 화면 요청별 변경 가능성에 맞는 캐시 정책을 적용
 self.addEventListener("fetch", handleServiceWorkerFetch);
 
 /**
- * 서비스워커 설치가 끝나기 전에 최신 앱 셸을 캐시에 저장함
+ * 서비스워커 설치가 끝나기 전에 최신 앱 셸을 캐시에 저장
  *
  * @author HanWon.Jang
  * @param {ExtendableEvent} event 서비스워커 설치 이벤트
@@ -195,12 +195,12 @@ self.addEventListener("fetch", handleServiceWorkerFetch);
  */
 function handleSwInstall(event) {
 
-  // 최신 앱 셸 저장과 대기 상태 해제가 끝날 때까지 설치 완료를 보류함
+  // 최신 앱 셸 저장과 대기 상태 해제가 끝날 때까지 설치 완료를 보류
   event.waitUntil(setAppShellCache());
 }
 
 /**
- * 오프라인 실행에 필요한 현재 버전의 기본 화면과 아이콘을 저장함
+ * 오프라인 실행에 필요한 현재 버전의 기본 화면과 아이콘을 저장
  *
  * @author HanWon.Jang
  * @return {Promise<void>} 앱 셸 저장 완료 Promise
@@ -209,27 +209,27 @@ async function setAppShellCache() {
 
   // 현재 앱 버전 전용 캐시를 엶
   const cache = await caches.open(CACHE_NAME);
-  // 브라우저 HTTP Cache의 이전 배포 파일을 재사용하지 않고 현재 서버의 앱 셸을 조회함
+  // 브라우저 HTTP Cache의 이전 배포 파일을 재사용하지 않고 현재 서버의 앱 셸을 조회
   const appShellResponseList = await Promise.all(APP_SHELL.map((appShellPath) => (
     fetch(appShellPath, { cache: "reload" })
   )));
 
   // 하나라도 정상 응답이 아니면 서로 다른 배포 파일을 같은 앱 셸로 저장하지 않음
   if (appShellResponseList.some((response) => !response.ok)) {
-    // 설치를 실패 처리해 기존에 정상 동작하던 서비스워커를 유지함
+    // 설치를 실패 처리해 기존에 정상 동작하던 서비스워커를 유지
     throw new Error("APP_SHELL_UPDATE_FAILED");
   }
 
-  // 검증한 현재 배포 응답만 새 버전 Cache에 순서대로 저장함
+  // 검증한 현재 배포 응답만 새 버전 Cache에 순서대로 저장
   await Promise.all(APP_SHELL.map((appShellPath, index) => (
     cache.put(appShellPath, appShellResponseList[index])
   )));
-  // 새 서비스워커가 기존 대기 버전을 건너뛰고 즉시 활성화될 수 있게 함
+  // 새 서비스워커가 기존 대기 버전을 건너뛰고 즉시 활성화될 수 있도록 처리
   await self.skipWaiting();
 }
 
 /**
- * 서비스워커 활성화가 끝나기 전에 이전 사다리 앱 셸 캐시를 제거함
+ * 서비스워커 활성화가 끝나기 전에 이전 사다리 앱 셸 캐시를 제거
  *
  * @author HanWon.Jang
  * @param {ExtendableEvent} event 서비스워커 활성화 이벤트
@@ -237,27 +237,27 @@ async function setAppShellCache() {
  */
 function handleSwActivate(event) {
 
-  // 이전 캐시 제거와 현재 화면 제어가 끝날 때까지 활성화 완료를 보류함
+  // 이전 캐시 제거와 현재 화면 제어가 끝날 때까지 활성화 완료를 보류
   event.waitUntil(activateLatestSw());
 }
 
 /**
- * 이전 앱 셸 캐시를 제거하고 다음 앱 실행에 최신 서비스워커를 적용함
+ * 이전 앱 셸 캐시를 제거하고 다음 앱 실행에 최신 서비스워커를 적용
  *
  * @author HanWon.Jang
  * @return {Promise<void>} 최신 서비스워커 활성화 완료 Promise
  */
 async function activateLatestSw() {
 
-  // 현재 출처에 저장된 캐시 이름을 조회함
+  // 현재 출처에 저장된 캐시 이름을 조회
   const cacheNameList = await caches.keys();
   const deleteCachePromiseList = [];
 
-  // 사다리 앱이 만든 이전 버전 캐시만 골라 제거함
+  // 사다리 앱이 만든 이전 버전 캐시만 골라 제거
   for (const cacheName of cacheNameList) {
-    // 현재 버전이 아니면서 사다리 앱 접두사를 가진 캐시만 제거함
+    // 현재 버전이 아니면서 사다리 앱 접두사를 가진 캐시만 제거
     if (cacheName.startsWith(CACHE_PREFIX) && cacheName !== CACHE_NAME) {
-      // 이전 앱 셸 캐시 제거 작업을 활성화 완료 조건에 추가함
+      // 이전 앱 셸 캐시 제거 작업을 활성화 완료 조건에 추가
       deleteCachePromiseList.push(caches.delete(cacheName));
     }
 
@@ -265,9 +265,9 @@ async function activateLatestSw() {
 
   // 새 배포와 섞이지 않도록 모든 이전 버전 캐시가 제거될 때까지 기다림
   await Promise.all(deleteCachePromiseList);
-  // 새 서비스워커가 열린 화면을 즉시 제어해 이전 배포 Cache를 더 사용하지 않게 함
+  // 새 서비스워커가 열린 화면을 즉시 제어해 이전 배포 Cache를 더 사용하지 않도록 처리
   await self.clients.claim();
-  // 구버전 JavaScript가 실행 중인 열린 화면도 최신 진입 문서를 다시 받아오도록 갱신함
+  // 구버전 JavaScript가 실행 중인 열린 화면도 최신 진입 문서를 다시 받아오도록 갱신
   await reloadOpenClients();
 }
 
@@ -279,21 +279,21 @@ async function activateLatestSw() {
  */
 async function reloadOpenClients() {
 
-  // 서비스워커가 제어할 수 있는 현재 브라우저의 모든 열린 화면을 조회함
+  // 서비스워커가 제어할 수 있는 현재 브라우저의 모든 열린 화면을 조회
   const clientList = await self.clients.matchAll({
     type: "window",
     includeUncontrolled: true,
   });
 
-  // 이전 번들의 등록 코드가 controllerchange를 처리하지 못해도 새 문서가 적용되도록 직접 이동함
+  // 이전 번들의 등록 코드가 controllerchange를 처리하지 못해도 새 문서가 적용되도록 직접 이동
   await Promise.all(clientList.map(async (client) => {
-    // 동일 출처의 현재 주소를 다시 열어 로그인 경로와 사용자 화면을 최신 번들로 교체함
+    // 동일 출처의 현재 주소를 다시 열어 로그인 경로와 사용자 화면을 최신 번들로 교체
     await client.navigate(client.url);
   }));
 }
 
 /**
- * 요청 대상의 변경 가능성과 인증 범위에 따라 적합한 캐시 응답을 선택함
+ * 요청 대상의 변경 가능성과 인증 범위에 따라 적합한 캐시 응답을 선택
  *
  * @author HanWon.Jang
  * @param {FetchEvent} event 서비스워커 네트워크 요청 이벤트
@@ -303,52 +303,52 @@ function handleServiceWorkerFetch(event) {
 
   const request = event.request;
 
-  // 읽기 요청이 아니면 브라우저가 인증과 본문을 그대로 처리하도록 서비스워커에서 제외함
+  // 읽기 요청이 아니면 브라우저가 인증과 본문을 그대로 처리하도록 서비스워커에서 제외
   if (request.method !== "GET") {
-    // 변경 요청을 가로채지 않도록 종료함
+    // 변경 요청을 가로채지 않도록 종료
     return;
   }
 
-  // 동일 출처와 캐시 대상 경로를 판정할 요청 주소를 생성함
+  // 동일 출처와 캐시 대상 경로를 판정할 요청 주소를 생성
   const requestUrl = new URL(request.url);
 
-  // 외부 출처 자원은 외부 서버의 캐시 정책을 존중하도록 서비스워커에서 제외함
+  // 외부 출처 자원은 외부 서버의 캐시 정책을 존중하도록 서비스워커에서 제외
   if (requestUrl.origin !== self.location.origin) {
-    // 외부 자원 요청을 가로채지 않도록 종료함
+    // 외부 자원 요청을 가로채지 않도록 종료
     return;
   }
 
-  // API와 업로드 파일은 사용자별 최신 데이터와 인증 상태가 중요하므로 서비스워커 캐시에서 제외함
+  // API와 업로드 파일은 사용자별 최신 데이터와 인증 상태가 중요하므로 서비스워커 캐시에서 제외
   if (requestUrl.pathname.startsWith("/api") || requestUrl.pathname.startsWith("/uploads")) {
-    // 사용자 데이터 요청을 브라우저와 서버가 직접 처리하도록 종료함
+    // 사용자 데이터 요청을 브라우저와 서버가 직접 처리하도록 종료
     return;
   }
 
-  // 화면 이동은 새 배포 화면을 우선하고 네트워크 장애 때만 저장된 앱 셸을 사용함
+  // 화면 이동은 새 배포 화면을 우선하고 네트워크 장애 때만 저장된 앱 셸을 사용
   if (request.mode === "navigate") {
-    // 최신 화면 우선 응답을 브라우저에 전달함
+    // 최신 화면 우선 응답을 브라우저에 전달
     event.respondWith(getNavigationResponse(request));
-    // 하나의 화면 요청에 캐시 전략이 중복 적용되지 않도록 종료함
+    // 하나의 화면 요청에 캐시 전략이 중복 적용되지 않도록 종료
     return;
   }
 
-  // Vite 해시 파일은 내용이 바뀌면 주소도 바뀌므로 저장된 응답을 우선 사용함
+  // Vite 해시 파일은 내용이 바뀌면 주소도 바뀌므로 저장된 응답을 우선 사용
   if (hasCachePathPrefix(requestUrl.pathname, IMMUTABLE_CACHE_PATH_PREFIX_LIST)) {
-    // 변경 불가능한 빌드 자원에 캐시 우선 응답을 적용함
+    // 변경 불가능한 빌드 자원에 캐시 우선 응답을 적용
     event.respondWith(getCacheFirstResponse(request));
-    // 하나의 정적 자원 요청에 캐시 전략이 중복 적용되지 않도록 종료함
+    // 하나의 정적 자원 요청에 캐시 전략이 중복 적용되지 않도록 종료
     return;
   }
 
-  // 같은 주소로 교체될 수 있는 아이콘과 화면 이미지는 서버의 최신 파일을 우선 사용함
+  // 같은 주소로 교체될 수 있는 아이콘과 화면 이미지는 서버의 최신 파일을 우선 사용
   if (hasCachePathPrefix(requestUrl.pathname, REFRESHABLE_CACHE_PATH_PREFIX_LIST)) {
-    // 변경 가능한 정적 자원에 네트워크 우선 응답을 적용함
+    // 변경 가능한 정적 자원에 네트워크 우선 응답을 적용
     event.respondWith(getNetworkFirstResponse(request));
   }
 }
 
 /**
- * 화면 이동 시 서버의 최신 HTML을 사용하고 연결 장애 때 저장된 앱 셸을 반환함
+ * 화면 이동 시 서버의 최신 HTML을 사용하고 연결 장애 때 저장된 앱 셸을 반환
  *
  * @author HanWon.Jang
  * @param {Request} request 화면 이동 요청
@@ -356,31 +356,31 @@ function handleServiceWorkerFetch(event) {
  */
 const getNavigationResponse = async (request) => {
 
-  // 네트워크가 연결된 동안 최신 배포 화면을 조회함
+  // 네트워크가 연결된 동안 최신 배포 화면을 조회
   try {
     const response = await fetch(request, { cache: "no-store" });
 
-    // 정상 응답만 오프라인 앱 셸로 교체해 오류 화면이 장기간 남지 않게 함
+    // 정상 응답만 오프라인 앱 셸로 교체해 오류 화면이 장기간 남지 않도록 처리
     if (response.ok) {
-      // 다음 오프라인 실행에 사용할 최신 기본 화면을 저장함
+      // 다음 오프라인 실행에 사용할 최신 기본 화면을 저장
       await setRuntimeCacheResponse("/", response);
     }
 
-    // 서버에서 받은 최신 화면 응답을 반환함
+    // 서버에서 받은 최신 화면 응답을 반환
     return response;
   }
 
   catch {
-    // 네트워크 장애를 대신할 기본 화면을 캐시에서 조회함
+    // 네트워크 장애를 대신할 기본 화면을 캐시에서 조회
     const cachedResponse = await caches.match("/");
 
-    // 저장된 앱 셸이 있으면 오프라인 화면을 제공함
+    // 저장된 앱 셸이 있으면 오프라인 화면을 제공
     if (cachedResponse) {
-      // 마지막으로 저장된 기본 화면을 반환함
+      // 마지막으로 저장된 기본 화면을 반환
       return cachedResponse;
     }
 
-    // 앱 셸도 없으면 브라우저가 연결 실패로 처리할 오류 응답을 반환함
+    // 앱 셸도 없으면 브라우저가 연결 실패로 처리할 오류 응답을 반환
     return Response.error();
   }
 };
@@ -394,30 +394,30 @@ const getNavigationResponse = async (request) => {
  */
 async function getCacheFirstResponse(request) {
 
-  // 동일한 빌드 자원이 이미 저장되어 있는지 확인함
+  // 동일한 빌드 자원이 이미 저장되어 있는지 확인
   const cachedResponse = await caches.match(request);
 
-  // 내용 해시가 같은 파일은 변경되지 않으므로 저장된 응답을 재사용함
+  // 내용 해시가 같은 파일은 변경되지 않으므로 저장된 응답을 재사용
   if (cachedResponse) {
-    // 저장된 빌드 자원 응답을 반환함
+    // 저장된 빌드 자원 응답을 반환
     return cachedResponse;
   }
 
   // 처음 요청된 빌드 자원을 서버에서 내려받음
   const response = await fetch(request);
 
-  // 정상 응답만 저장해 일시적인 오류가 캐시에 남지 않게 함
+  // 정상 응답만 저장해 일시적인 오류가 캐시에 남지 않도록 처리
   if (response.ok) {
-    // 이후 요청에서 재사용할 빌드 자원을 저장함
+    // 이후 요청에서 재사용할 빌드 자원을 저장
     await setRuntimeCacheResponse(request, response);
   }
 
-  // 서버에서 받은 빌드 자원 응답을 반환함
+  // 서버에서 받은 빌드 자원 응답을 반환
   return response;
 }
 
 /**
- * 같은 주소로 교체될 수 있는 정적 자원은 서버를 우선하고 연결 장애 때 캐시를 사용함
+ * 같은 주소로 교체될 수 있는 정적 자원은 서버를 우선하고 연결 장애 때 캐시를 사용
  *
  * @author HanWon.Jang
  * @param {Request} 변경 가능한 정적 자원 요청
@@ -425,37 +425,37 @@ async function getCacheFirstResponse(request) {
  */
 async function getNetworkFirstResponse(request) {
 
-  // 연결 가능한 동안 최신 아이콘과 화면 이미지를 조회함
+  // 연결 가능한 동안 최신 아이콘과 화면 이미지를 조회
   try {
     const response = await fetch(request);
 
-    // 정상 응답만 교체해 깨진 파일 응답이 캐시에 남지 않게 함
+    // 정상 응답만 교체해 깨진 파일 응답이 캐시에 남지 않도록 처리
     if (response.ok) {
-      // 같은 주소의 이전 정적 자원을 최신 응답으로 교체함
+      // 같은 주소의 이전 정적 자원을 최신 응답으로 교체
       await setRuntimeCacheResponse(request, response);
     }
 
-    // 서버에서 받은 최신 정적 자원 응답을 반환함
+    // 서버에서 받은 최신 정적 자원 응답을 반환
     return response;
   }
 
   catch {
-    // 네트워크 장애를 대신할 정적 자원을 캐시에서 조회함
+    // 네트워크 장애를 대신할 정적 자원을 캐시에서 조회
     const cachedResponse = await caches.match(request);
 
-    // 이전에 저장된 자원이 있으면 연결 장애 중에도 화면을 유지함
+    // 이전에 저장된 자원이 있으면 연결 장애 중에도 화면을 유지
     if (cachedResponse) {
-      // 마지막으로 저장된 정적 자원 응답을 반환함
+      // 마지막으로 저장된 정적 자원 응답을 반환
       return cachedResponse;
     }
 
-    // 캐시된 자원도 없으면 브라우저가 로드 실패로 처리할 오류 응답을 반환함
+    // 캐시된 자원도 없으면 브라우저가 로드 실패로 처리할 오류 응답을 반환
     return Response.error();
   }
 }
 
 /**
- * 최신 네트워크 응답을 현재 앱 버전 캐시에 복제해 저장함
+ * 최신 네트워크 응답을 현재 앱 버전 캐시에 복제해 저장
  *
  * @author HanWon.Jang
  * @param {Request|string} request 저장할 요청 또는 앱 셸 경로
@@ -466,12 +466,12 @@ async function setRuntimeCacheResponse(request, response) {
 
   // 현재 앱 버전 전용 캐시를 엶
   const cache = await caches.open(CACHE_NAME);
-  // 브라우저에 반환할 원본 응답과 분리된 복제본을 저장함
+  // 브라우저에 반환할 원본 응답과 분리된 복제본을 저장
   await cache.put(request, response.clone());
 }
 
 /**
- * 요청 경로가 지정된 캐시 정책 접두사 중 하나에 포함되는지 판정함
+ * 요청 경로가 지정된 캐시 정책 접두사 중 하나에 포함되는지 판정
  *
  * @author HanWon.Jang
  * @param {string} pathname 판정할 동일 출처 요청 경로
@@ -480,17 +480,17 @@ async function setRuntimeCacheResponse(request, response) {
  */
 function hasCachePathPrefix(pathname, pathPrefixList) {
 
-  // 요청 경로와 일치하는 캐시 정책 접두사를 순서대로 확인함
+  // 요청 경로와 일치하는 캐시 정책 접두사를 순서대로 확인
   for (const pathPrefix of pathPrefixList) {
-    // 현재 접두사로 시작하면 해당 캐시 정책 적용 대상으로 판정함
+    // 현재 접두사로 시작하면 해당 캐시 정책 적용 대상으로 판정
     if (pathname.startsWith(pathPrefix)) {
-      // 일치하는 캐시 경로가 있음을 반환함
+      // 일치하는 캐시 경로가 있음을 반환
       return true;
     }
 
   }
 
-  // 일치하는 캐시 경로가 없음을 반환함
+  // 일치하는 캐시 경로가 없음을 반환
   return false;
 }
 
@@ -512,8 +512,8 @@ self.addEventListener("push", (event) => {
   const linkUrlx = data.linkUrlx || "/alim";
   const alimNumb = Number(data.alimNumb);
 
-  // FCM에서 받은 payload를 브라우저 알림으로 표시함
-  // 링크와 알림 번호는 notificationclick에서 이동 및 개별 읽음 처리에 사용하므로 notification data에 함께 저장함
+  // FCM에서 받은 payload를 브라우저 알림으로 표시
+  // 링크와 알림 번호는 notificationclick에서 이동 및 개별 읽음 처리에 사용하므로 notification data에 함께 저장
   const showNotification = self.registration.showNotification(title, {
       body,
       icon: "/favicon/android-chrome-192x192.png?v=20260802",

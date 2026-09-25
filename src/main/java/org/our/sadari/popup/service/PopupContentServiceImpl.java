@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
  * fileName       : PopupContentServiceImpl
  * author         : SeungHyeon.Kang
  * date           : 2026-07-30
- * description    : 사용자 안내 팝업 콘텐츠 조회 업무 로직을 구현함
+ * description    : 사용자 안내 팝업 콘텐츠 조회 업무 로직을 구현
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -28,7 +28,7 @@ public class PopupContentServiceImpl implements PopupContentService {
     private final PopupContentMapper popupContentMapper;
 
     /**
-     * 사용 화면 구분과 팝업 코드에 해당하는 사용자 안내 콘텐츠를 조회함
+     * 사용 화면 구분과 팝업 코드에 해당하는 사용자 안내 콘텐츠를 조회
      *
      * @author SeungHyeon.Kang
      * @param popuSitu 팝업 사용 화면 구분 공통코드
@@ -43,16 +43,16 @@ public class PopupContentServiceImpl implements PopupContentService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 팝업 사용 화면 구분과 팝업 코드로 사용자 안내 콘텐츠를 조회함
+        // 팝업 사용 화면 구분과 팝업 코드로 사용자 안내 콘텐츠를 조회
         PopupContentDto popupContentDto = popupContentMapper.getPopupContentDtl(popuSitu, popuCode);
 
-        // 등록된 팝업 콘텐츠가 없으면 화면이 기본 문구로 대체할 수 있도록 조회 실패를 구분함
+        // 등록된 팝업 콘텐츠가 없으면 화면이 기본 문구로 대체할 수 있도록 조회 실패를 구분
         if (StringUtil.isEmpty(popupContentDto)) {
             // "조회된 데이터가 없습니다."
             return ResultData.fail(ResultEnum.COMMON_NO_DATA);
         }
 
-        // 사용자 안내 팝업 콘텐츠 한 건을 성공 응답으로 반환함
+        // 사용자 안내 팝업 콘텐츠 한 건을 성공 응답으로 반환
         return ResultData.success(popupContentDto);
     }
 }

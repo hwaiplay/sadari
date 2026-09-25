@@ -7,7 +7,7 @@ import org.our.sadari.push.dto.PushDto;
  * fileName       : PushService
  * author         : SeungHyeon.Kang
  * date           : 2026-07-25
- * description    : 푸시 알림 업무 계약을 정의함
+ * description    : 푸시 알림 업무 계약을 정의
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
@@ -17,14 +17,14 @@ public interface PushService {
     // getFirebaseWebConfig 조회로 후속 처리에 필요한 데이터를 가져옴
     ResultData getFirebaseWebConfig();
 
-    // setPushSub 호출로 업무 처리에 필요한 값을 설정함
+    // setPushSub 호출로 업무 처리에 필요한 값을 설정
     ResultData setPushSub(Long userNumb, PushDto.PushSubDto req);
 
-    // delPushSub 호출로 삭제 대상 데이터를 정리함
+    // delPushSub 호출로 삭제 대상 데이터를 정리
     ResultData delPushSub(Long userNumb, PushDto.PushSubDto req);
 
     /**
-     * 전체 기기 로그아웃 시 회원의 모든 푸시 구독을 비활성화함
+     * 전체 기기 로그아웃 시 회원의 모든 푸시 구독을 비활성화
      *
      * @author SeungHyeon.Kang
      * @param userNumb 전체 로그아웃 회원 번호
@@ -33,7 +33,7 @@ public interface PushService {
     ResultData delAllPushSub(Long userNumb);
 
     /**
-     * 알림 수신자의 활성 FCM 토큰으로 알림 내용과 클릭 이동 정보를 발송함
+     * 알림 수신자의 활성 FCM 토큰으로 알림 내용과 클릭 이동 정보를 발송
      *
      * @author SeungHyeon.Kang
      * @param userNumb 알림 수신 사용자 번호
