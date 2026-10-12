@@ -8,6 +8,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import org.our.sadari.alim.service.AlimService;
 import org.our.sadari.book.dto.BookDto;
@@ -56,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-11        HanWon.Jang        모임 독서 등록 기본값·모임원 본인 여부 처리
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 연결
+ * 2026-10-12        HanWon.Jang        모임 목록 카테고리 일괄 조회
  */
 @Service
 @RequiredArgsConstructor
@@ -591,7 +593,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 공개 여부와 관계없이 승인 대기 중인 본인 가입 신청도 내 모임에 포함
         clubs.addAll(readingClubMapper.getMyPendingClubList(userNumb));
         // 조회한 각 모임에 카테고리 표시 정보를 결합
-        List<ReadingClubDto.ClubViewDto> result = fillClubRelations(clubs, false);
+        List<ReadingClubDto.ClubViewDto> result = fillClubRelations(clubs);
         // 카테고리 표시 정보가 포함된 내 모임 목록을 반환
         return ResultData.success(result);
     }
@@ -617,7 +619,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         // 관심분야 우선순위와 검색어를 적용한 공개 모임을 조회
         List<ReadingClubDto.ClubViewDto> clubs = readingClubMapper.getFindClubList(userNumb, normalizedKeyword);
         // 조회한 각 공개 모임에 카테고리 표시 정보를 결합
-        List<ReadingClubDto.ClubViewDto> result = fillClubRelations(clubs, false);
+        List<ReadingClubDto.ClubViewDto> result = fillClubRelations(clubs);
         // 카테고리 표시 정보가 포함된 공개 모임 목록을 반환
         return ResultData.success(result);
     }
@@ -2058,12 +2060,22 @@ public class ReadingClubServiceImpl implements ReadingClubService {
         return false;
     }
 
-    private List<ReadingClubDto.ClubViewDto> fillClubRelations(List<ReadingClubDto.ClubViewDto> clubs
-                                                              , boolean includeQuestions) {
-        // 각 모임에 별도 관계 데이터를 결합
+    private List<ReadingClubDto.ClubViewDto> fillClubRelations(List<ReadingClubDto.ClubViewDto> clubs) {
+        // 빈 목록은 카테고리 조회 없이 유지하여 빈 IN 조건 생성 방지
+        if (StringUtil.isEmpty(clubs)) {
+            // 조회할 모임이 없는 원래 목록 반환
+            return clubs;
+        }
+
+        // 목록의 모임 번호만 추출하여 동일 모임의 중복 카테고리 조회 방지
+        List<Long> clubNumbList = clubs.stream().map(ReadingClubDto.ClubViewDto::getClubNumb).distinct().toList();
+        // 목록 전체의 카테고리를 한 번 조회하여 모임 번호로 분류
+        Map<Long, List<ReadingClubDto.CategoryDto>> categoryByClub = readingClubMapper.getClubCategoryList(clubNumbList)
+                .stream().collect(Collectors.groupingBy(ReadingClubDto.CategoryDto::getClubNumb));
+        // 목록 순서와 모임별 카테고리 노출 순서를 유지하며 조회 결과 결합
         for (ReadingClubDto.ClubViewDto club : clubs) {
-            // 카테고리와 선택적 질문을 결합
-            fillClubRelation(club, includeQuestions);
+            // 카테고리가 없는 모임은 기존과 같은 빈 목록 설정
+            club.setCategoryList(categoryByClub.getOrDefault(club.getClubNumb(), List.of()));
         }
 
         // 관계 데이터가 채워진 원래 목록을 반환
@@ -2072,7 +2084,7 @@ public class ReadingClubServiceImpl implements ReadingClubService {
 
     private void fillClubRelation(ReadingClubDto.ClubViewDto club, boolean includeQuestions) {
         // 모임 카테고리 목록을 노출 순서대로 설정
-        club.setCategoryList(readingClubMapper.getClubCategoryList(club.getClubNumb()));
+        club.setCategoryList(readingClubMapper.getClubCategoryList(List.of(club.getClubNumb())));
         // 상세 화면이고 승인형인 경우에만 현재 질문을 설정
         if (includeQuestions && JOIN_APPROVAL.equals(club.getJoinType())) {
             // 현재 질문 컬럼을 화면용 목록으로 변환

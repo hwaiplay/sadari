@@ -45,6 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
  * 2026-08-14        SeungHyeon.Kang    독서 통계·잔디 조회 API 추가
+ * 2026-10-12        HanWon.Jang        목표 저장·복사 요약 중복 조회 제거
  */
 @RestController
 @RequiredArgsConstructor
@@ -122,6 +123,20 @@ public class MyPageController {
         // getMonthlyReadingSummary 업무 로직을 reportService에 위임
         ResultData summaryResult = reportService.getMonthlyReadingSummary(userNumb, null);
 
+        // 조회한 독서 요약에 소셜 통계를 결합한 응답 반환
+        return getSummaryWithStats(userNumb, summaryResult);
+    }
+
+    /**
+     * 조회 또는 목표 저장 결과의 독서 요약에 소셜 통계를 결합
+     *
+     * @author HanWon.Jang
+     * @param userNumb 로그인 사용자 번호
+     * @param summaryResult 이미 조회한 독서 요약 응답
+     * @return 독서 요약과 소셜 통계 또는 원래 실패 응답
+     */
+    private ResultData getSummaryWithStats(Long userNumb, ResultData summaryResult) {
+
         // 독서 요약 조회가 실패하면 뒤의 통계 값을 붙이지 않고 후속 응답 데이터 결합을 중단
         // 이렇게 해야 DB 오류나 인증 오류가 발생했을 때 화면이 일부 성공 데이터처럼 오해하지 않음
         if (summaryResult.getCode() != 200) {
@@ -174,13 +189,8 @@ public class MyPageController {
                                    , @RequestBody ReadingGoalDto readingGoalDto) {
         // 로그인 사용자의 독서 목표를 저장
         ResultData result = reportService.setReadingGoal(userNumb, readingGoalDto);
-        // 저장이 실패하면 원래 실패 사유를 그대로 반환
-        if (result.getCode() != 200) {
-            // 독서 목표 저장 실패 결과를 반환
-            return result;
-        }
-        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환
-        return getMonthlyReadingSummary(userNumb);
+        // 저장 실패는 유지하고 이미 조회한 요약에 소셜 통계를 결합한 응답 반환
+        return getSummaryWithStats(userNumb, result);
     }
 
     /**
@@ -195,13 +205,8 @@ public class MyPageController {
     public ResultData copyPreviousReadingGoal(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb) {
         // 이전 목표량을 현재 기간으로 복사
         ResultData result = reportService.copyPreviousReadingGoal(userNumb);
-        // 복사가 실패하면 원래 실패 사유를 그대로 반환
-        if (result.getCode() != 200) {
-            // 이전 목표 복사 실패 결과를 반환
-            return result;
-        }
-        // 조회 API와 같은 조합 경로를 사용해 독서 활동과 소셜 통계를 모두 반환
-        return getMonthlyReadingSummary(userNumb);
+        // 복사 실패는 유지하고 이미 조회한 요약에 소셜 통계를 결합한 응답 반환
+        return getSummaryWithStats(userNumb, result);
     }
 
     /**

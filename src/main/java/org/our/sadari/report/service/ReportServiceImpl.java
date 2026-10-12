@@ -38,6 +38,7 @@ import org.our.sadari.user.mapper.UserMapper;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.interceptor.TransactionAspectSupport;
 
 /**
  * fileName       : ReportServiceImpl
@@ -56,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요·댓글 알림 설정 추가
  * 2026-09-07        SeungHyeon.Kang    독후감 작성 언어와 공개 번역 가능 여부 반영
  * 2026-09-11        HanWon.Jang        진행 중인 모임 독후감 삭제 시 중도하차 처리 추가
+ * 2026-10-12        HanWon.Jang        독서 목표 일괄 저장 실패 롤백
  */
 @Service
 @RequiredArgsConstructor
@@ -661,6 +663,8 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum weekResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_WEEK, readingGoalDto.getWeekGoalCnt());
         // 주간 목표 저장 중 제한 규칙에 걸리면 이후 월간, 연간 저장을 진행하지 않음
         if (!StringUtil.isEmpty(weekResult)) {
+            // 기간별 목표 저장을 하나의 요청으로 처리하기 위한 전체 롤백
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 주간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(weekResult);
         }
@@ -669,6 +673,8 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum monthResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_MONTH, readingGoalDto.getMonthGoalCnt());
         // 월간 목표 저장 중 제한 규칙에 걸리면 이후 연간 저장을 진행하지 않음
         if (!StringUtil.isEmpty(monthResult)) {
+            // 앞서 저장한 주간 목표의 부분 반영 방지를 위한 전체 롤백
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 월간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(monthResult);
         }
@@ -677,6 +683,8 @@ public class ReportServiceImpl implements ReportService {
         ResultEnum yearResult = setReadingGoalByType(userNumb, today, Constant.GOAL_TYPE_YEAR, readingGoalDto.getYearGoalCnt());
         // 연간 목표 저장 중 제한 규칙에 걸리면 실패 결과를 그대로 반환
         if (!StringUtil.isEmpty(yearResult)) {
+            // 앞서 저장한 주간·월간 목표의 부분 반영 방지를 위한 전체 롤백
+            TransactionAspectSupport.currentTransactionStatus().setRollbackOnly();
             // 연간 독서 목표 저장 결과 코드에 연결된 사용자 메시지
             return ResultData.fail(yearResult);
         }

@@ -25,6 +25,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감·결과 확인 추가
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
+ * 2026-10-12        HanWon.Jang        모임 카테고리 일괄 조회 계약 변경
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -436,13 +437,13 @@ public interface ReadingClubMapper {
     ReadingClubDto.ClubViewDto getClubForUpdate(Long clubNumb);
 
     /**
-     * 모임의 카테고리 목록을 노출 순서대로 조회
+     * 조회 대상 모임들의 카테고리 목록을 모임별 노출 순서대로 일괄 조회
      *
      * @author SeungHyeon.Kang
-     * @param clubNumb 모임 번호
+     * @param clubNumbList 비어 있지 않은 조회 대상 모임 번호 목록
      * @return 모임 카테고리 목록
      */
-    List<ReadingClubDto.CategoryDto> getClubCategoryList(Long clubNumb);
+    List<ReadingClubDto.CategoryDto> getClubCategoryList(@Param("clubNumbList") List<Long> clubNumbList);
 
     /**
      * 모임당 한 행인 현재 가입 질문을 조회

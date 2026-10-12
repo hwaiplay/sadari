@@ -41,6 +41,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-24        SeungHyeon.Kang    최초 생성
  * 2026-09-01        HanWon.Jang        자진 탈퇴 Mapper 의존성 반영
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
+ * 2026-10-12        HanWon.Jang        카테고리 목록 조회 계약 반영
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubAccessTest {
@@ -108,7 +109,7 @@ class ReadingClubAccessTest {
 
         // 접근 거절과 관계 데이터 미조회를 검증
         assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
-        verify(readingClubMapper, never()).getClubCategoryList(10L);
+        verify(readingClubMapper, never()).getClubCategoryList(List.of(10L));
     }
 
     /** 활성 회원은 비공개 모임 상세를 정상 조회 */
@@ -121,7 +122,7 @@ class ReadingClubAccessTest {
         club.setMembStat("ACTIVE");
         club.setJoinType("OPEN");
         when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(club);
-        when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of());
+        when(readingClubMapper.getClubCategoryList(List.of(10L))).thenReturn(List.of());
 
         // 활성 회원이 비공개 모임 상세를 조회
         ResultData result = readingClubService.getClubDtl(20L, 10L);
@@ -129,7 +130,7 @@ class ReadingClubAccessTest {
         // 정상 응답과 관계 데이터 조회를 검증
         assertEquals(200, result.getCode());
         assertEquals(club, result.getData());
-        verify(readingClubMapper).getClubCategoryList(10L);
+        verify(readingClubMapper).getClubCategoryList(List.of(10L));
     }
 
     /** 상세 SQL이 초대 관계를 활성 회원으로 취급하지 않는지 검증 */

@@ -1325,11 +1325,13 @@
            FOR UPDATE
     </select>
 
-    <!-- 모임에 지정된 관심분야를 모임 내 노출 순서로 조회 -->
-    <select id="getClubCategoryList" parameterType="long" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$CategoryDto">
+    <!-- 조회 대상 모임들의 관심분야를 모임별 노출 순서로 일괄 조회 -->
+    <select id="getClubCategoryList" resultType="org.our.sadari.readingClub.dto.ReadingClubDto$CategoryDto">
         <bind name="categoryCode" value="@org.our.sadari.global.common.constant.Constant@CODE_READING_CATEGORY" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
         SELECT /* getClubCategoryList */
-               CATEGORY.INTR_CODE
+               CATEGORY.CLUB_NUMB
+             , CATEGORY.INTR_CODE
              , FN_GET_CODE_NAME(#{categoryCode}, CATEGORY.INTR_CODE, NULL, #{languageCode}) AS INTR_NAME
              , FN_GET_CODE_NAME(#{categoryCode}, DETAIL.UPPR_CODE, NULL, #{languageCode}) AS INTR_CNAM
              , CATEGORY.SORT_ORDR
@@ -1337,8 +1339,12 @@
      LEFT JOIN TB_CODEXD DETAIL
             ON DETAIL.COMM_CODE = #{categoryCode}
            AND DETAIL.COMD_CODE = CATEGORY.INTR_CODE
-         WHERE CATEGORY.CLUB_NUMB = #{clubNumb}
-      ORDER BY CATEGORY.SORT_ORDR
+         WHERE CATEGORY.CLUB_NUMB IN
+        <foreach collection="clubNumbList" item="clubNumb" open="(" separator="," close=")">
+               #{clubNumb}
+        </foreach>
+      ORDER BY CATEGORY.CLUB_NUMB
+             , CATEGORY.SORT_ORDR
     </select>
 
     <!-- 승인형 모임의 현재 가입 질문 한 행을 조회 -->

@@ -6,6 +6,9 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -15,9 +18,14 @@ import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.List;
 import java.util.Set;
+import java.sql.Connection;
+import java.sql.SQLException;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.Mock;
@@ -29,11 +37,18 @@ import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
+import org.our.sadari.myPage.dto.ReadingGoalDto;
+import org.our.sadari.global.common.util.MessageUtils;
 import org.our.sadari.report.dto.ReportAlimDto;
 import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.mapper.ReportMapper;
 import org.our.sadari.social.mapper.SocialMapper;
 import org.our.sadari.user.mapper.UserMapper;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
 
 /**
  * fileName       : ReportServiceImplTest
@@ -49,6 +64,7 @@ import org.our.sadari.user.mapper.UserMapper;
  * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 추가
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 변경 검증 추가
  * 2026-09-11        HanWon.Jang        모임 독후감 삭제 중도하차 처리 순서 검증 추가
+ * 2026-10-12        HanWon.Jang        독서 목표 커밋·롤백 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -83,6 +99,131 @@ class ReportServiceImplTest {
 
     // 독서 요약 서비스 단위 테스트 대상
     private ReportServiceImpl reportService;
+
+    /**
+     * 목표 저장 중 후속 기간 검증 실패가 앞선 저장까지 롤백하는지 검증
+     *
+     * @author HanWon.Jang
+     * @param goalType 저장을 거절할 목표 기간
+     * @throws SQLException JDBC 트랜잭션 대역 구성 실패
+     */
+    @ParameterizedTest
+    @ValueSource(strings = {"WEEK", "MONT", "YEAR"})
+    void goalFailureRollsBack(String goalType) throws SQLException {
+
+        // 감소 가능 횟수를 소진한 기존 목표 조회 결과 생성
+        ReadingGoalDto currentGoal = new ReadingGoalDto();
+        // 요청보다 높은 기존 목표 권수 설정
+        currentGoal.setGoalCnt(100);
+        // 모든 기간의 감소 횟수 한도를 초과한 상태 설정
+        currentGoal.setUpdtCntt(5);
+        // 지정 기간에서만 목표 감소 검증이 실패하도록 조회 결과 설정
+        when(reportMapper.getReadingGoalDtl(any(ReadingGoalDto.class))).thenAnswer(invocation -> {
+            // 지정 실패 기간 이외에는 신규 목표 저장을 허용하는 조회 조건
+            ReadingGoalDto request = invocation.getArgument(0);
+            // 지정 기간만 감소 제한에 걸리는 기존 목표 반환
+            return goalType.equals(request.getGoalType()) ? currentGoal : null;
+        });
+        // 실제 Spring JDBC 트랜잭션의 종료 동작을 확인할 연결 대역 생성
+        Connection connection = mock(Connection.class);
+        // 트랜잭션 프록시를 통해 목표 일괄 저장 실행
+        ResultData result = getGoalServiceProxy(connection).setReadingGoal(31L, getGoalRequest());
+
+        // 목표 감소 제한에 따른 기존 업무 실패 코드 확인
+        assertEquals(ResultEnum.COMMON_INVALID_REQUEST.getCode(), result.getCode());
+        // 실패 기간 이전에 저장된 목표 수 계산
+        int savedCount = Constant.GOAL_TYPE_WEEK.equals(goalType) ? 0
+                : Constant.GOAL_TYPE_MONTH.equals(goalType) ? 1 : 2;
+        // 이전 기간 저장이 수행된 뒤 실패한 경로인지 확인
+        verify(reportMapper, times(savedCount)).setReadingGoal(any(ReadingGoalDto.class));
+        // 실패 응답에도 전체 JDBC 트랜잭션이 롤백되는지 확인
+        verify(connection).rollback();
+        // 실패한 요청의 부분 저장 커밋 방지 확인
+        verify(connection, never()).commit();
+        // 실패한 저장의 성공 요약 조회 생략 확인
+        verify(reportMapper, never()).getReadingSummary(any(ReadingSummaryQueryDto.class));
+    }
+
+    /**
+     * 유효한 주간·월간·연간 목표가 함께 커밋되는지 검증
+     *
+     * @author HanWon.Jang
+     * @throws SQLException JDBC 트랜잭션 대역 구성 실패
+     */
+    @Test
+    void goalSuccessCommits() throws SQLException {
+
+        // 실제 Spring JDBC 트랜잭션의 커밋 동작을 확인할 연결 대역 생성
+        Connection connection = mock(Connection.class);
+        // 신규 기간별 목표를 트랜잭션 프록시로 저장
+        ResultData result = getGoalServiceProxy(connection).setReadingGoal(31L, getGoalRequest());
+        // 모든 목표의 저장 성공 확인
+        assertEquals(200, result.getCode());
+        // 주간·월간·연간 목표가 모두 저장되는지 확인
+        verify(reportMapper, times(3)).setReadingGoal(any(ReadingGoalDto.class));
+        // 성공한 일괄 저장의 JDBC 커밋 확인
+        verify(connection).commit();
+        // 성공 요청의 불필요한 롤백 방지 확인
+        verify(connection, never()).rollback();
+    }
+
+    /**
+     * Spring 트랜잭션 어노테이션을 적용한 목표 저장 서비스 생성
+     *
+     * @author HanWon.Jang
+     * @param connection 커밋·롤백을 관찰할 JDBC 연결
+     * @return 트랜잭션이 적용된 독후감 서비스
+     * @throws SQLException JDBC 연결 대역 구성 실패
+     */
+    private ReportService getGoalServiceProxy(Connection connection) throws SQLException {
+
+        // 실패 응답의 다국어 메시지 조회에 사용할 메시지 소스 생성
+        ResourceBundleMessageSource messageSource = new ResourceBundleMessageSource();
+        // 실제 프로젝트 메시지 번들 설정
+        messageSource.setBasename("messages");
+        // 테스트의 업무 실패 응답에 메시지 소스 연결
+        new MessageUtils().setMessageSource(messageSource);
+        // 트랜잭션 관리자에 JDBC 연결을 제공할 데이터 소스 대역 생성
+        DataSource dataSource = mock(DataSource.class);
+        // 트랜잭션 시작에 사용할 연결 설정
+        when(dataSource.getConnection()).thenReturn(connection);
+        // 자동 커밋 해제를 통해 실제 트랜잭션 종료 경로 사용
+        when(connection.getAutoCommit()).thenReturn(true);
+        // 실제 JDBC 커밋·롤백 판단을 수행할 트랜잭션 관리자 생성
+        DataSourceTransactionManager transactionManager = new DataSourceTransactionManager(dataSource);
+        // 서비스의 트랜잭션 선언을 적용할 인터셉터 생성
+        TransactionInterceptor interceptor = new TransactionInterceptor();
+        // 인터셉터에 실제 JDBC 트랜잭션 관리자 연결
+        interceptor.setTransactionManager(transactionManager);
+        // 운영 서비스의 트랜잭션 어노테이션을 그대로 해석
+        interceptor.setTransactionAttributeSource(new AnnotationTransactionAttributeSource());
+        // 기존 서비스 구현체를 트랜잭션 프록시 대상으로 설정
+        ProxyFactory proxyFactory = new ProxyFactory(reportService);
+        // 실패 반환 시 롤백 여부를 판단할 트랜잭션 인터셉터 등록
+        proxyFactory.addAdvice(interceptor);
+        // 실제 운영과 같은 트랜잭션 경계의 서비스 반환
+        return (ReportService) proxyFactory.getProxy();
+    }
+
+    /**
+     * 기간별 목표가 모두 유효한 일괄 저장 요청 생성
+     *
+     * @author HanWon.Jang
+     * @return 주간·월간·연간 목표 저장 요청
+     */
+    private ReadingGoalDto getGoalRequest() {
+
+        // 기간별 목표 권수를 전달할 요청 생성
+        ReadingGoalDto request = new ReadingGoalDto();
+        // 주간 목표 권수 설정
+        request.setWeekGoalCnt(2);
+        // 월간 목표 권수 설정
+        request.setMonthGoalCnt(10);
+        // 연간 목표 권수 설정
+        request.setYearGoalCnt(60);
+        // 모든 기간의 필수값이 포함된 저장 요청 반환
+        return request;
+    }
 
     /**
      * 각 테스트가 독립된 Mock 의존성을 사용하는 독후감 서비스 구현체를 구성

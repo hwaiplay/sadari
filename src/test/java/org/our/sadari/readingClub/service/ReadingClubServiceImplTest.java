@@ -7,6 +7,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.any;
 import static org.mockito.Mockito.anyInt;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -16,6 +17,7 @@ import jakarta.validation.Validation;
 import jakarta.validation.Validator;
 import jakarta.validation.ValidatorFactory;
 import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -66,6 +68,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-04        SeungHyeon.Kang    가입 차단·채팅 읽음 수·퇴장 이력 검증
  * 2026-09-11        HanWon.Jang        도서 언어·알림 기본값 등록 검증
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 검증
+ * 2026-10-12        HanWon.Jang        모임 카테고리 일괄 조회 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -220,6 +223,8 @@ class ReadingClubServiceImplTest {
         club.setCurrentBookCvim("https://example.com/book.jpg");
         // 대표 카테고리 조회 결과를 구성
         ReadingClubDto.CategoryDto category = new ReadingClubDto.CategoryDto();
+        // 일괄 조회 결과가 귀속될 원래 모임 번호 설정
+        category.setClubNumb(10L);
         // 화면에 표시할 카테고리 코드를 설정
         category.setIntrCode("NOVEL");
         // 화면에 표시할 카테고리명을 설정
@@ -230,7 +235,7 @@ class ReadingClubServiceImplTest {
         // 승인 대기 중인 본인 가입 신청은 없는 상태를 구성
         when(readingClubMapper.getMyPendingClubList(20L)).thenReturn(List.of());
         // 대표 카테고리 관계를 목록 후처리에 제공
-        when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of(category));
+        when(readingClubMapper.getClubCategoryList(List.of(10L))).thenReturn(List.of(category));
 
         // 로그인 사용자의 내 모임 목록을 조회
         ResultData result = readingClubService.getMyClubList(20L);
@@ -240,7 +245,94 @@ class ReadingClubServiceImplTest {
         assertEquals(List.of(club), result.getData());
         assertEquals("소설", club.getCategoryList().get(0).getIntrName());
         assertEquals("https://example.com/book.jpg", club.getCurrentBookCvim());
-        verify(readingClubMapper).getClubCategoryList(10L);
+        verify(readingClubMapper).getClubCategoryList(List.of(10L));
+    }
+
+    /**
+     * 모임 찾기 최대 목록에서도 카테고리를 한 번 조회하고 모임별 순서를 유지하는지 검증
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void getFindBatchCategories() {
+
+        // 모임 찾기의 최대 조회 수에 해당하는 목록 생성
+        List<ReadingClubDto.ClubViewDto> clubs = new ArrayList<>();
+        // 일괄 조회 대상 모임 번호 목록 생성
+        List<Long> clubNumbList = new ArrayList<>();
+        // 100개 모임에서도 모임별 개별 SQL이 발생하지 않는 조건 구성
+        for (long clubNumb = 1; clubNumb <= 100; clubNumb++) {
+            // 목록 순서를 확인할 모임 생성
+            ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+            // 카테고리를 연결할 모임 번호 설정
+            club.setClubNumb(clubNumb);
+            // 조회 순서대로 모임 목록 구성
+            clubs.add(club);
+            // 같은 순서로 일괄 조회 대상 번호 구성
+            clubNumbList.add(clubNumb);
+        }
+
+        // 첫 모임의 첫 번째 카테고리 생성
+        ReadingClubDto.CategoryDto firstCategory = new ReadingClubDto.CategoryDto();
+        // 첫 모임에 연결할 내부 번호 설정
+        firstCategory.setClubNumb(1L);
+        // 첫 모임의 두 번째 카테고리 생성
+        ReadingClubDto.CategoryDto secondCategory = new ReadingClubDto.CategoryDto();
+        // 같은 모임에 두 카테고리가 유지되는 조건 설정
+        secondCategory.setClubNumb(1L);
+        // 다른 모임의 카테고리 생성
+        ReadingClubDto.CategoryDto otherCategory = new ReadingClubDto.CategoryDto();
+        // 첫 모임 카테고리와 섞이지 않을 중간 모임 번호 설정
+        otherCategory.setClubNumb(50L);
+        // 모임 찾기 이용 조건을 충족한 관심분야 수 설정
+        when(readingClubMapper.getUserInterestCnt(31L)).thenReturn(1);
+        // 기존 모임 찾기 순서와 검색 결과 설정
+        when(readingClubMapper.getFindClubList(31L, "소설")).thenReturn(clubs);
+        // 일괄 조회한 모임별 카테고리와 노출 순서 설정
+        when(readingClubMapper.getClubCategoryList(clubNumbList))
+                .thenReturn(List.of(firstCategory, secondCategory, otherCategory));
+
+        // 검색어 정규화와 모임 목록 후처리 실행
+        ResultData result = readingClubService.getFindClubList(31L, "  소설  ");
+
+        // 모임 찾기 성공 응답 유지 확인
+        assertEquals(200, result.getCode());
+        // 원래 모임 목록 순서 유지 확인
+        assertEquals(clubs, result.getData());
+        // 같은 모임의 카테고리 노출 순서 유지 확인
+        assertEquals(List.of(firstCategory, secondCategory), clubs.get(0).getCategoryList());
+        // 다른 모임 카테고리의 올바른 연결 확인
+        assertEquals(List.of(otherCategory), clubs.get(49).getCategoryList());
+        // 카테고리가 없는 모임의 빈 목록 유지 확인
+        assertEquals(List.of(), clubs.get(99).getCategoryList());
+        // 100개 모임의 카테고리가 하나의 SQL 요청에 포함되는지 확인
+        verify(readingClubMapper).getClubCategoryList(clubNumbList);
+        // 모임별 추가 조회 없이 카테고리 조회가 한 번만 실행되는지 확인
+        verify(readingClubMapper, times(1)).getClubCategoryList(anyList());
+    }
+
+    /**
+     * 빈 내 모임 목록에서 카테고리 SQL을 실행하지 않는지 검증
+     *
+     * @author HanWon.Jang
+     */
+    @Test
+    void emptyClubSkipsCategory() {
+
+        // 참여 중인 모임이 없는 목록 설정
+        when(readingClubMapper.getMyClubList(31L)).thenReturn(List.of());
+        // 승인 대기 모임도 없는 목록 설정
+        when(readingClubMapper.getMyPendingClubList(31L)).thenReturn(List.of());
+
+        // 빈 내 모임 목록 조회 실행
+        ResultData result = readingClubService.getMyClubList(31L);
+
+        // 기존 성공 응답 유지 확인
+        assertEquals(200, result.getCode());
+        // 빈 목록 응답 유지 확인
+        assertEquals(List.of(), result.getData());
+        // 빈 IN 조건의 SQL 실행 방지 확인
+        verify(readingClubMapper, never()).getClubCategoryList(anyList());
     }
 
     /**
@@ -262,7 +354,7 @@ class ReadingClubServiceImplTest {
         // 본인의 승인 대기 신청 모임을 반환
         when(readingClubMapper.getMyPendingClubList(20L)).thenReturn(List.of(pendingClub));
         // 승인 대기 카드에 결합할 카테고리는 없는 상태를 구성
-        when(readingClubMapper.getClubCategoryList(11L)).thenReturn(List.of());
+        when(readingClubMapper.getClubCategoryList(List.of(11L))).thenReturn(List.of());
 
         // 로그인 사용자의 내 모임 목록을 조회
         ResultData result = readingClubService.getMyClubList(20L);
@@ -725,7 +817,7 @@ class ReadingClubServiceImplTest {
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(2);
         when(readingClubMapper.uptClub(20L, 10L, request)).thenReturn(1);
         when(readingClubMapper.getClubDtl(10L, 20L)).thenReturn(updatedClub);
-        when(readingClubMapper.getClubCategoryList(10L)).thenReturn(List.of());
+        when(readingClubMapper.getClubCategoryList(List.of(10L))).thenReturn(List.of());
 
         // 모임장으로 모임 정보를 수정
         ResultData result = readingClubService.uptClub(20L, 10L, request);
