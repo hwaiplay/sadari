@@ -28,7 +28,8 @@ import * as styles from "./WelcomePage.css";
 
 const USER_NICK_MAX_LENGTH = 25;
 const MIN_INTEREST_SELECTION_COUNT = 2;
-const SWIPE_THRESHOLD_PX = 48;
+const SWIPE_THRESHOLD_PX = 96;
+const SWIPE_HORIZONTAL_RATIO = 1.5;
 const INTRO_SLIDE_INDEX = 0;
 const MANAGED_SLIDE_OFFSET = 1;
 const USER_NICK_REGEX = /^[A-Za-z0-9\uAC00-\uD7A3]+(?:[_-][A-Za-z0-9\uAC00-\uD7A3]+)*$/;
@@ -37,14 +38,14 @@ const USER_NICK_INPUT_REGEX = /[^A-Za-z0-9\uAC00-\uD7A3\u3131-\u318E\u1100-\u11F
 /**
  * 최초 로그인 사용자에게 서비스 특징과 닉네임 및 관심분야 설정 흐름을 슬라이드로 제공
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 최초 로그인 웰컴 페이지
  */
 const WelcomePage = () => {
 
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const touchStartXRef = useRef<number | null>(null);
+  const touchStartRef = useRef<{ x: number; y: number } | null>(null);
   const [activeSlide, setActiveSlide] = useState(0);
   const [managedPages, setManagedPages] = useState<WelcomeManagedPage[]>([]);
   const [managedImageLoadCount, setManagedImageLoadCount] = useState(0);
@@ -275,42 +276,51 @@ const WelcomePage = () => {
   };
 
   /**
-   * 모바일 좌우 넘김 방향을 계산할 수 있도록 터치 시작 위치를 저장
+   * 세로 스크롤과 좌우 넘김을 구분하기 위한 터치 시작 좌표 저장
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param event 슬라이드 터치 시작 이벤트
    * @return 반환값이 없음
    */
   const handleTouchStart = (event: TouchEvent<HTMLDivElement>): void => {
 
-    // 첫 번째 터치 지점을 좌우 넘김 시작 좌표로 저장
-    touchStartXRef.current = event.touches[0]?.clientX ?? null;
+    const touch = event.touches[0];
+    // 가로·세로 이동량을 함께 비교하기 위한 시작 좌표 저장
+    touchStartRef.current = touch ? { x: touch.clientX, y: touch.clientY } : null;
   };
 
   /**
-   * 터치 이동 거리가 기준을 넘으면 좌우 방향에 맞는 슬라이드로 이동
+   * 거리와 가로 방향 기준을 충족한 터치만 웰컴 슬라이드 전환
    *
-   * @author HanWon.Jang
+   * @author SeungHyeon.Kang
    * @param event 슬라이드 터치 종료 이벤트
    * @return 반환값이 없음
    */
   const handleTouchEnd = (event: TouchEvent<HTMLDivElement>): void => {
 
-    const touchStartX = touchStartXRef.current;
-    const touchEndX = event.changedTouches[0]?.clientX;
+    const touchStart = touchStartRef.current;
+    const touchEnd = event.changedTouches[0];
     // 다음 터치가 이전 좌표를 재사용하지 않도록 시작 지점을 비움
-    touchStartXRef.current = null;
+    touchStartRef.current = null;
 
     // 시작점이나 종료점이 없으면 넘김 방향을 계산하지 않음
-    if (touchStartX === null || touchEndX === undefined) {
+    if (touchStart === null || touchEnd === undefined) {
       // 좌표가 불완전한 터치 이벤트 처리를 종료
       return;
     }
 
-    const distance = touchStartX - touchEndX;
+    const distanceX = touchStart.x - touchEnd.clientX;
+    // 세로 스크롤에 섞인 가로 흔들림을 제외하기 위한 이동량 비교
+    const distanceY = Math.abs(touchStart.y - touchEnd.clientY);
+    // 짧은 터치와 세로 이동 위주의 제스처는 현재 슬라이드 유지
+    if (Math.abs(distanceX) < SWIPE_THRESHOLD_PX
+            || Math.abs(distanceX) < distanceY * SWIPE_HORIZONTAL_RATIO) {
+      // 카테고리 스크롤을 슬라이드 전환으로 처리하지 않도록 종료
+      return;
+    }
 
     // 왼쪽으로 충분히 밀었으면 다음 소개 화면을 엶
-    if (distance > SWIPE_THRESHOLD_PX) {
+    if (distanceX > 0) {
       // 오른쪽에 있는 다음 슬라이드로 이동
       handleNext();
       // 한 번의 터치가 두 방향으로 처리되지 않도록 종료
@@ -318,7 +328,7 @@ const WelcomePage = () => {
     }
 
     // 오른쪽으로 충분히 밀었으면 이전 소개 화면을 엶
-    if (distance < -SWIPE_THRESHOLD_PX) {
+    if (distanceX < 0) {
       // 왼쪽에 있는 이전 슬라이드로 이동
       handlePrevious();
     }
