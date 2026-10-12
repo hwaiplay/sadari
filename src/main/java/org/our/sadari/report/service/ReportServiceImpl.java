@@ -57,7 +57,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-08-21        SeungHyeon.Kang    독후감별 좋아요·댓글 알림 설정 추가
  * 2026-09-07        SeungHyeon.Kang    독후감 작성 언어와 공개 번역 가능 여부 반영
  * 2026-09-11        HanWon.Jang        진행 중인 모임 독후감 삭제 시 중도하차 처리 추가
- * 2026-10-12        HanWon.Jang        독서 목표 일괄 저장 실패 롤백
+ * 2026-10-12        SeungHyeon.Kang        독서 목표 일괄 저장 실패 롤백
  */
 @Service
 @RequiredArgsConstructor

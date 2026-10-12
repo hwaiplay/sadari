@@ -24,20 +24,20 @@ import org.springframework.context.i18n.LocaleContextHolder;
 
 /**
  * fileName       : ReadingClubMapperTest
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-10-12
  * description    : 모임 카테고리 SQL 바인딩과 응답 계약 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-10-12        HanWon.Jang        최초 생성
+ * 2026-10-12        SeungHyeon.Kang        최초 생성
  */
 class ReadingClubMapperTest {
 
     /**
      * 단일·복수 모임 번호가 SQL에 안전하게 바인딩되고 언어와 노출 순서가 유지되는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param english 영어 조회 여부
      * @throws IOException 운영 Mapper XML 읽기 실패
      */
@@ -106,7 +106,7 @@ class ReadingClubMapperTest {
     /**
      * 일괄 조회 내부 모임 번호가 기존 카테고리 응답에 추가되지 않는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @throws IOException 카테고리 JSON 직렬화 실패
      */
     @Test

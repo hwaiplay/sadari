@@ -41,7 +41,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-08-24        SeungHyeon.Kang    최초 생성
  * 2026-09-01        HanWon.Jang        자진 탈퇴 Mapper 의존성 반영
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
- * 2026-10-12        HanWon.Jang        카테고리 목록 조회 계약 반영
+ * 2026-10-12        SeungHyeon.Kang        카테고리 목록 조회 계약 반영
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubAccessTest {

@@ -39,7 +39,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 DTO 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-11        HanWon.Jang        모임원 본인 여부 추가
- * 2026-10-12        HanWon.Jang        모임 카테고리 일괄 조회 식별자 추가
+ * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 식별자 추가
  */
 @Schema(description = "독서 모임 API DTO 컨테이너", hidden = true)
 public final class ReadingClubDto {
@@ -409,7 +409,7 @@ public final class ReadingClubDto {
      * DATE              AUTHOR             NOTE
      * -----------------------------------------------------------
      * 2026-08-05        SeungHyeon.Kang    최초 생성
-     * 2026-10-12        HanWon.Jang        일괄 조회 모임 식별자 추가
+     * 2026-10-12        SeungHyeon.Kang        일괄 조회 모임 식별자 추가
      */
     @Data
     @Schema(description = "모임 카테고리 항목")

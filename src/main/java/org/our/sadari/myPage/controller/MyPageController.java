@@ -45,7 +45,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-07-17        SeungHyeon.Kang    최초 생성
  * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
  * 2026-08-14        SeungHyeon.Kang    독서 통계·잔디 조회 API 추가
- * 2026-10-12        HanWon.Jang        목표 저장·복사 요약 중복 조회 제거
+ * 2026-10-12        SeungHyeon.Kang        목표 저장·복사 요약 중복 조회 제거
  */
 @RestController
 @RequiredArgsConstructor
@@ -130,7 +130,7 @@ public class MyPageController {
     /**
      * 조회 또는 목표 저장 결과의 독서 요약에 소셜 통계를 결합
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
      * @param summaryResult 이미 조회한 독서 요약 응답
      * @return 독서 요약과 소셜 통계 또는 원래 실패 응답

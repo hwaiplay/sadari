@@ -68,7 +68,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-04        SeungHyeon.Kang    가입 차단·채팅 읽음 수·퇴장 이력 검증
  * 2026-09-11        HanWon.Jang        도서 언어·알림 기본값 등록 검증
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 검증
- * 2026-10-12        HanWon.Jang        모임 카테고리 일괄 조회 검증 추가
+ * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -251,7 +251,7 @@ class ReadingClubServiceImplTest {
     /**
      * 모임 찾기 최대 목록에서도 카테고리를 한 번 조회하고 모임별 순서를 유지하는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void getFindBatchCategories() {
@@ -314,7 +314,7 @@ class ReadingClubServiceImplTest {
     /**
      * 빈 내 모임 목록에서 카테고리 SQL을 실행하지 않는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @Test
     void emptyClubSkipsCategory() {

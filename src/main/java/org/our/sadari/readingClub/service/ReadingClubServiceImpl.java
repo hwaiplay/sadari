@@ -57,7 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-09-11        HanWon.Jang        모임 독서 등록 기본값·모임원 본인 여부 처리
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 연결
- * 2026-10-12        HanWon.Jang        모임 목록 카테고리 일괄 조회
+ * 2026-10-12        SeungHyeon.Kang        모임 목록 카테고리 일괄 조회
  */
 @Service
 @RequiredArgsConstructor

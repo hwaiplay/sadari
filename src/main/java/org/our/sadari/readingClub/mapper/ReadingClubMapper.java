@@ -25,7 +25,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감·결과 확인 추가
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
- * 2026-10-12        HanWon.Jang        모임 카테고리 일괄 조회 계약 변경
+ * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 계약 변경
  */
 @Mapper
 public interface ReadingClubMapper {

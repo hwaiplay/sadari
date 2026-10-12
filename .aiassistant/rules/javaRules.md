@@ -214,7 +214,7 @@ log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수
 - 모든 클래스 선언 바로 위에는 파일 정보와 변경 이력을 확인할 수 있는 클래스 Javadoc을 작성합니다.
 - 클래스 Javadoc은 `fileName`, `author`, `date`, `description` 순서로 파일 정보를 작성합니다.
 - `fileName`에는 확장자를 제외한 실제 클래스명을 작성합니다.
-- `author`에는 항상 `HanWon.Jang`을 작성합니다.
+- `author`와 변경 이력의 작성자 표기는 `CORE-AUTHOR-001`을 적용합니다.
 - `date`에는 클래스 최초 생성일을 `yyyy-MM-dd` 형식으로 작성합니다.
 - `description`에는 해당 클래스의 역할을 한 문장으로 작성합니다.
 - 파일 정보 아래에는 구분선과 `DATE`, `AUTHOR`, `NOTE` 열을 사용하여 변경 이력을 작성합니다.
@@ -229,13 +229,13 @@ log.info("스케줄러가 종료되었습니다. 조회 건수={}, 성공 건수
 ```java
 /**
  * fileName       : BookController
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-07-28
  * description    : 도서 검색과 도서 평점 조회 API를 제공함
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-07-28        HanWon.Jang    최초 생성
+ * 2026-07-28        SeungHyeon.Kang    최초 생성
  * 2026-08-14        SeungHyeon.Kang,Hanwon.Jang    인증·조회 정책 정리
  */
 public class BookController {
@@ -267,7 +267,7 @@ public class BookController {
 
 - `@author`, `@param`, `@return`, `@throws`를 해당 항목이 존재할 때 순서대로 작성합니다.
 - `@param`과 `@return`에는 대상의 의미를 반드시 작성합니다.
-- `@author`에는 항상 `HanWon.Jang`을 작성합니다.
+- `@author` 표기는 `CORE-AUTHOR-001`을 적용합니다.
 
 ### 7.5 메서드 Javadoc 예시
 
@@ -275,7 +275,7 @@ public class BookController {
 /**
  * 사용자 식별자로 사용자 상세 정보를 조회함
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @param userId 조회할 사용자 식별자
  * @return 조회된 사용자 상세 정보
  * @throws IllegalArgumentException 사용자 식별자가 비어 있을 때 발생

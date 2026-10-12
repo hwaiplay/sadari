@@ -25,13 +25,13 @@ import org.our.sadari.social.service.SocialService;
 
 /**
  * fileName       : MyPageControllerTest
- * author         : HanWon.Jang
+ * author         : SeungHyeon.Kang
  * date           : 2026-10-12
  * description    : 목표 저장·복사 응답의 요약 재사용과 실패 전달 검증
  * ===========================================================
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
- * 2026-10-12        HanWon.Jang        최초 생성
+ * 2026-10-12        SeungHyeon.Kang        최초 생성
  */
 @ExtendWith(MockitoExtension.class)
 class MyPageControllerTest {
@@ -52,7 +52,7 @@ class MyPageControllerTest {
     /**
      * 목표 저장·복사가 조회한 요약을 재사용하면서 소셜 통계를 유지하는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param copy 이전 목표 복사 여부
      */
     @ParameterizedTest
@@ -106,7 +106,7 @@ class MyPageControllerTest {
     /**
      * 목표 저장·복사 실패 응답을 후속 조회 없이 전달하는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param copy 이전 목표 복사 여부
      */
     @ParameterizedTest
@@ -131,7 +131,7 @@ class MyPageControllerTest {
     /**
      * 성공한 목표 저장 뒤 소셜 통계 조회 실패를 기존처럼 전달하는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param copy 이전 목표 복사 여부
      */
     @ParameterizedTest
@@ -158,7 +158,7 @@ class MyPageControllerTest {
     /**
      * 저장 또는 복사 서비스가 반환할 응답 설정
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param copy 이전 목표 복사 여부
      * @param result 서비스 응답
      */
@@ -180,7 +180,7 @@ class MyPageControllerTest {
     /**
      * 목표 저장 또는 복사 컨트롤러 실행
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param copy 이전 목표 복사 여부
      * @return 컨트롤러 응답
      */

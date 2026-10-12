@@ -64,7 +64,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
  * 2026-08-20        SeungHyeon.Kang    책장 색상 기본값 검증 추가
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 변경 검증 추가
  * 2026-09-11        HanWon.Jang        모임 독후감 삭제 중도하차 처리 순서 검증 추가
- * 2026-10-12        HanWon.Jang        독서 목표 커밋·롤백 검증 추가
+ * 2026-10-12        SeungHyeon.Kang        독서 목표 커밋·롤백 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -103,7 +103,7 @@ class ReportServiceImplTest {
     /**
      * 목표 저장 중 후속 기간 검증 실패가 앞선 저장까지 롤백하는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param goalType 저장을 거절할 목표 기간
      * @throws SQLException JDBC 트랜잭션 대역 구성 실패
      */
@@ -147,7 +147,7 @@ class ReportServiceImplTest {
     /**
      * 유효한 주간·월간·연간 목표가 함께 커밋되는지 검증
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @throws SQLException JDBC 트랜잭션 대역 구성 실패
      */
     @Test
@@ -170,7 +170,7 @@ class ReportServiceImplTest {
     /**
      * Spring 트랜잭션 어노테이션을 적용한 목표 저장 서비스 생성
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @param connection 커밋·롤백을 관찰할 JDBC 연결
      * @return 트랜잭션이 적용된 독후감 서비스
      * @throws SQLException JDBC 연결 대역 구성 실패
@@ -208,7 +208,7 @@ class ReportServiceImplTest {
     /**
      * 기간별 목표가 모두 유효한 일괄 저장 요청 생성
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      * @return 주간·월간·연간 목표 저장 요청
      */
     private ReadingGoalDto getGoalRequest() {
