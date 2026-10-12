@@ -56,6 +56,19 @@
          WHERE U.USER_NUMB = #{userNumb}
     </select>
 
+    <!-- 로그인 초기 화면에 필요한 회원 상태와 언어 설정을 한 번의 SQL로 조회 -->
+    <select id="getAuthState" parameterType="long" resultType="org.our.sadari.user.dto.AuthStateDto">
+        <bind name="commNo" value="@org.our.sadari.global.common.constant.Constant@COMM_NO" />
+        SELECT /* getAuthState */
+               U.USER_STAT
+             , U.ONBD_YSNO
+             , COALESCE(S.ENGL_YSNO, #{commNo}) AS ENGLISH_YSNO
+          FROM TM_USERXM U
+     LEFT JOIN TM_USSETX S
+            ON U.USER_NUMB = S.USER_NUMB
+         WHERE U.USER_NUMB = #{userNumb}
+    </select>
+
     <!-- 현재 사용자 사진에 연결된 활성 회원 좋아요와 삭제되지 않은 댓글을 로그인 사용자 기준으로 조회 -->
     <select id="getImageReactionDtl" parameterType="org.our.sadari.user.dto.UserDto$ImageReactionDto"
             resultType="org.our.sadari.user.dto.UserDto$ImageReactionDto">

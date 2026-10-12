@@ -161,7 +161,7 @@ public class JwtFilter extends OncePerRequestFilter {
 
     /**
      * 특정 요청 URI에 대해 해당 JWT 필터 수행을 건너뛸지 여부를 결정
-     * Refresh Token 재발급과 로컬 개발용 계정 전환은 기존 Access Token 상태와 무관해야 하므로 검증 대상에서 제외
+     * 인증 Controller가 직접 검증하는 요청과 로컬 개발용 계정 전환은 중복 JWT 검사를 하지 않도록 제외
      *
      * @author SeungHyeon.Kang
      * @param request 서블릿 요청 객체
@@ -169,9 +169,10 @@ public class JwtFilter extends OncePerRequestFilter {
      */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        // 만료 토큰 재발급과 loc 전용 계정 전환 경로의 JWT 필터 제외 여부를 반환
+        // 인증 Controller가 직접 검증하는 요청과 loc 전용 계정 전환 경로의 JWT 필터 제외 여부를 반환
         return REFRESH_TOKEN_API_URI.equals(request.getRequestURI())
-                || LOCAL_LOGIN_API_URI.equals(request.getRequestURI());
+                || LOCAL_LOGIN_API_URI.equals(request.getRequestURI())
+                || TOKEN_CHECK_API_URI.equals(request.getRequestURI());
     }
 
     /**

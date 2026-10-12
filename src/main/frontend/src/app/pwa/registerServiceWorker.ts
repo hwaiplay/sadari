@@ -3,7 +3,7 @@
  * 푸시 알림은 service worker가 있어야 토큰 발급과 백그라운드 수신이 가능하므로,
  * 운영 빌드뿐 아니라 localhost와 Tailnet HTTPS 개발 환경에서도 등록되도록 허용
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 반환값이 없음
  */
 export function registerServiceWorker(): void {
@@ -25,62 +25,26 @@ export function registerServiceWorker(): void {
     return;
   }
 
-  // 이미지와 폰트의 지연 여부와 관계없이 서비스워커를 등록해 모바일 브라우저의 설치 판정을 준비
-  setServiceWorker();
+  // 초기 화면과 인증 요청이 끝난 뒤 서비스워커 설치 트래픽을 시작
+  if (document.readyState === "complete") {
+    setServiceWorker();
+    return;
+  }
+
+  window.addEventListener("load", setServiceWorker, { once: true });
 }
 
 /**
  * 전체 웹앱 경로를 제어할 루트 서비스워커를 등록
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 반환값이 없음
  */
 function setServiceWorker(): void {
 
-  // 이미 서비스워커가 제어 중인 화면인지 기록해 최초 설치와 배포 업데이트를 구분
-  const hasCurrentController = navigator.serviceWorker.controller !== null;
-  // 한 번의 서비스워커 교체에서 현재 문서를 한 번만 다시 불러오도록 상태를 관리
-  let reloadStarted = false;
-
-  /**
-   * 새 배포 서비스워커가 현재 화면 제어를 넘겨받으면 새 HTML과 해시 자원을 다시 불러옴
-   *
-   * @author HanWon.Jang
-   * @return 반환값이 없음
-   */
-  const handleControllerChange = (): void => {
-
-    // 최초 설치는 현재 화면을 유지하고 기존 워커 교체일 때만 자동으로 새 배포를 적용
-    if (!hasCurrentController || reloadStarted) {
-      // 불필요한 최초 설치 Reload와 중복 Reload를 차단
-      return;
-    }
-
-    // 같은 교체 이벤트에서 Reload가 반복되지 않도록 먼저 상태를 기록
-    reloadStarted = true;
-    // 이전 JavaScript가 남은 인증 판단을 계속하지 않도록 현재 경로를 새 문서로 다시 불러옴
-    window.location.reload();
-  };
-
-  // 활성 서비스워커가 바뀌는 즉시 열린 화면도 현재 배포로 맞춤
-  navigator.serviceWorker.addEventListener("controllerchange", handleControllerChange);
-  // 서비스워커 원본 캐시를 우회해 앱을 열 때마다 최신 업데이트 스크립트를 확인
+  // 등록 시 브라우저가 수행하는 갱신 확인은 서비스워커 원본 Cache를 사용하지 않음
   navigator.serviceWorker.register("/service-worker.js", { updateViaCache: "none" })
-    .then(handleSwRegistration)
     .catch(handleSwRegisterFailure);
-}
-
-/**
- * 등록된 서비스워커가 서버의 최신 앱 셸을 즉시 확인하도록 요청
- *
- * @author HanWon.Jang
- * @param registration 업데이트를 확인할 서비스워커 등록 정보
- * @return 반환값이 없음
- */
-function handleSwRegistration(registration: ServiceWorkerRegistration): void {
-
-  // 브라우저의 기본 확인 주기와 관계없이 현재 접속 시점에 최신 서비스워커를 조회
-  registration.update().catch(handleSwRegisterFailure);
 }
 
 /**

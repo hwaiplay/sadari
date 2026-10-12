@@ -3,6 +3,7 @@ package org.our.sadari.user.mapper;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
+import org.our.sadari.user.dto.AuthStateDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.dto.UserSettingDto;
 
@@ -33,6 +34,15 @@ public interface UserMapper {
      * 아래 코드의 처리 목적을 설명
      */
     UserDto getUserByNumb(Long userNumb);
+
+    /**
+     * 로그인 초기 화면에 필요한 회원 상태와 언어 설정을 한 번에 조회
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 로그인 사용자 번호
+     * @return 회원 상태와 온보딩 및 언어 설정
+     */
+    AuthStateDto getAuthState(Long userNumb);
 
     /**
      * 로그인 사용자가 확인하는 현재 프로필 또는 배경 사진의 좋아요와 댓글 집계를 조회

@@ -25,6 +25,7 @@ import org.our.sadari.global.security.jwt.TokenRedisService;
 import org.our.sadari.push.service.PushService;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
+import org.our.sadari.user.dto.AuthStateDto;
 import org.our.sadari.user.mapper.UserMapper;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.service.UserWithdrawalService;
@@ -87,6 +88,29 @@ class AuthLoginControllerTest {
         ReflectionTestUtils.setField(authLoginController, "frontDomain", "https://front.example");
         ReflectionTestUtils.setField(authLoginController, "cookieSecure", false);
         ReflectionTestUtils.setField(authLoginController, "cookieSameSite", "Lax");
+    }
+
+    /** 인증 상태와 화면 언어를 한 번의 초기 응답으로 반환 */
+    @Test
+    void returnsAuthBootstrap() {
+        MockHttpServletRequest request = new MockHttpServletRequest();
+        request.setCookies(new Cookie("accessToken", "valid-access"));
+        when(jwtProvider.validateAccessToken("valid-access")).thenReturn(true);
+        when(jwtProvider.getTokenId("valid-access")).thenReturn("token-id");
+        when(jwtProvider.getUserNumb("valid-access")).thenReturn(31L);
+        when(jwtProvider.getSessionId("valid-access")).thenReturn("session-id");
+        when(tokenRedisService.isSessionActive(31L, "session-id")).thenReturn(true);
+        AuthStateDto authState = new AuthStateDto();
+        authState.setUserStat("ACTIVE");
+        authState.setOnbdYsno("Y");
+        authState.setEnglishYsno("N");
+        when(userMapper.getAuthState(31L)).thenReturn(authState);
+
+        ResultData result = authLoginController.tokenCheck(request);
+
+        assertEquals(200, result.getCode());
+        assertEquals(authState, result.getData());
+        verify(tokenRedisService).uptUserStatus(31L, "ACTIVE");
     }
 
     /** 서버 삭제 예정일을 영구 탈퇴 완료 화면에 전달하는지 검증 */

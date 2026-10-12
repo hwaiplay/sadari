@@ -21,6 +21,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-09-16        HanWon.Jang        최초 생성
+ * 2026-10-13        SeungHyeon.Kang    해시 정적 자원 장기 Cache 검증
  */
 class SpaControllerTest {
 
@@ -30,7 +31,7 @@ class SpaControllerTest {
     /**
      * 실제 Spring MVC 경로 매칭을 사용하는 독립 테스트 환경을 구성
      *
-     * @author HanWon.Jang
+     * @author SeungHyeon.Kang
      */
     @BeforeEach
     void setUp() {
@@ -79,11 +80,12 @@ class SpaControllerTest {
      * @throws Exception MVC 요청 처리 중 오류가 발생할 때 전달
      */
     @Test
-    void ignoresStaticAssetPath() throws Exception {
-        // 정적 파일은 화면 전달 Controller가 처리하지 않아 실제 Resource Handler에 위임되는지 검증
+    void cachesStaticAssetPath() throws Exception {
+        // 정적 파일은 화면 전달 Controller가 처리하지 않고 장기 Cache Header만 적용하는지 검증
         mockMvc.perform(get("/assets/index.js"))
                 .andExpect(status().isNotFound())
-                .andExpect(header().doesNotExist(HttpHeaders.CACHE_CONTROL))
+                .andExpect(header().string(HttpHeaders.CACHE_CONTROL,
+                        "public, max-age=31536000, immutable"))
                 .andExpect(forwardedUrl(null));
     }
 }

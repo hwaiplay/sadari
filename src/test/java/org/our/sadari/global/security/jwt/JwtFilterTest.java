@@ -67,6 +67,14 @@ class JwtFilterTest {
         assertTrue(jwtFilter.shouldNotFilter(request));
     }
 
+    /** Token 확인 API는 Controller의 동일 검증과 중복되지 않도록 JWT 필터를 건너뜀 */
+    @Test
+    void tokenCheckSkipsJwtFilter() {
+        MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/oauth/tokenCheck");
+
+        assertTrue(jwtFilter.shouldNotFilter(request));
+    }
+
     /** Refresh Token이 accessToken 쿠키에 들어와도 인증 흐름으로 진입하지 않음 */
     @Test
     void refreshRejectedAsAccess() throws Exception {

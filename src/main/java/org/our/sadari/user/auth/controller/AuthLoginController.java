@@ -9,7 +9,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
-import java.util.Map;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,6 +25,7 @@ import org.our.sadari.push.service.PushService;
 import org.our.sadari.user.auth.dto.AuthLogoutDto;
 import org.our.sadari.user.auth.provider.KakaoAuthProvider;
 import org.our.sadari.user.auth.service.AuthService;
+import org.our.sadari.user.dto.AuthStateDto;
 import org.our.sadari.user.dto.UserDto;
 import org.our.sadari.user.dto.UserWithdrawalDto;
 import org.our.sadari.user.mapper.UserMapper;
@@ -192,23 +192,20 @@ public class AuthLoginController {
             return ResultData.fail(ResultEnum.TOKEN_INVALID);
         }
 
-        // 계정 상태를 Redis 누락값으로 추정하지 않고 DB 원본에서 조회
-        UserDto savedUser = userMapper.getUserByNumb(userNumb);
+        // 초기 화면에 필요한 계정 상태와 온보딩 및 언어 설정을 한 번의 DB 조회로 확인
+        AuthStateDto authState = userMapper.getAuthState(userNumb);
         // 토큰의 사용자가 DB에 없으면 정상 인증 상태로 응답하지 않음
-        if (StringUtil.isEmpty(savedUser) || StringUtil.isEmpty(savedUser.getUserStat())
-                || StringUtil.isEmpty(savedUser.getOnbdYsno())) {
+        if (StringUtil.isEmpty(authState) || StringUtil.isEmpty(authState.getUserStat())
+                || StringUtil.isEmpty(authState.getOnbdYsno()) || StringUtil.isEmpty(authState.getEnglishYsno())) {
             // "인증에 실패했어요.\n다시 로그인 해주세요."
             return ResultData.fail(ResultEnum.AUTH_FAIL);
         }
 
         // 필터와 다음 요청이 같은 상태를 사용하도록 DB 원본 상태를 Redis에 보정
-        tokenRedisService.uptUserStatus(userNumb, savedUser.getUserStat());
+        tokenRedisService.uptUserStatus(userNumb, authState.getUserStat());
 
-        // 프론트엔드가 회원 상태와 최초 로그인 화면을 한 번에 선택할 수 있도록 반환
-        return ResultData.success(Map.of(
-                "userStat", savedUser.getUserStat()
-              , "onbdYsno", savedUser.getOnbdYsno()
-        ));
+        // 프론트엔드가 회원 상태와 최초 로그인 화면 및 언어를 한 번에 선택할 수 있도록 반환
+        return ResultData.success(authState);
     }
 
     /**

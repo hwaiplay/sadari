@@ -1,5 +1,5 @@
 const CACHE_PREFIX = "sadari-pwa-";
-const CACHE_NAME = `${CACHE_PREFIX}v8`;
+const CACHE_NAME = `${CACHE_PREFIX}v9`;
 const APP_SHELL = [
   "/",
   "/favicon/site.webmanifest",
@@ -237,14 +237,14 @@ async function setAppShellCache() {
  */
 function handleSwActivate(event) {
 
-  // 이전 캐시 제거와 현재 화면 제어가 끝날 때까지 활성화 완료를 보류
+  // 이전 앱 셸 캐시 제거가 끝날 때까지 활성화 완료를 보류
   event.waitUntil(activateLatestSw());
 }
 
 /**
  * 이전 앱 셸 캐시를 제거하고 다음 앱 실행에 최신 서비스워커를 적용
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return {Promise<void>} 최신 서비스워커 활성화 완료 Promise
  */
 async function activateLatestSw() {
@@ -265,31 +265,6 @@ async function activateLatestSw() {
 
   // 새 배포와 섞이지 않도록 모든 이전 버전 캐시가 제거될 때까지 기다림
   await Promise.all(deleteCachePromiseList);
-  // 새 서비스워커가 열린 화면을 즉시 제어해 이전 배포 Cache를 더 사용하지 않도록 처리
-  await self.clients.claim();
-  // 구버전 JavaScript가 실행 중인 열린 화면도 최신 진입 문서를 다시 받아오도록 갱신
-  await reloadOpenClients();
-}
-
-/**
- * 서비스워커 교체 전에 열려 있던 동일 출처 화면을 현재 주소에서 다시 불러옴
- *
- * @author HanWon.Jang
- * @return {Promise<void>} 열린 화면 갱신 완료 Promise
- */
-async function reloadOpenClients() {
-
-  // 서비스워커가 제어할 수 있는 현재 브라우저의 모든 열린 화면을 조회
-  const clientList = await self.clients.matchAll({
-    type: "window",
-    includeUncontrolled: true,
-  });
-
-  // 이전 번들의 등록 코드가 controllerchange를 처리하지 못해도 새 문서가 적용되도록 직접 이동
-  await Promise.all(clientList.map(async (client) => {
-    // 동일 출처의 현재 주소를 다시 열어 로그인 경로와 사용자 화면을 최신 번들로 교체
-    await client.navigate(client.url);
-  }));
 }
 
 /**

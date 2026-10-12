@@ -1,27 +1,23 @@
 import { useQuery } from "@tanstack/react-query";
 import { ResultDataError } from "@/app/api/resultData";
 import { checkAuthApi, refreshTokenApi } from "../api/authApi";
-import { getUserSettingApi } from "@/features/User/api/userApi";
 import { setMessageLocale } from "@/app/messages/message";
 
 const REFRESHABLE_AUTH_CODES = new Set([1001, 1002, 1003]);
 
 /**
- * 인증된 활성 회원만 사용자 설정을 조회하여 계정 언어 동기화
+ * 인증 응답의 회원 상태와 계정 언어를 초기 화면에 동기화
  *
- * @author HanWon.Jang
+ * @author SeungHyeon.Kang
  * @return 제한 상태를 포함한 서버 인증 결과
- * @throws 인증 또는 활성 회원 설정 조회 실패 시 발생
+ * @throws 인증 상태 조회 실패 시 발생
  */
 const getAuthenticatedState = async () => {
   // 로그인 여부와 계정 접근 제한을 서버 인증 응답으로 확인
   const authState = await checkAuthApi();
-  // 제한 상태 회원의 설정 API 차단을 로그인 실패로 오인하지 않도록 활성 회원만 조회
-  if (authState.data?.userStat === "ACTIVE") {
-    // 일반 서비스 접근이 허용된 회원의 언어 설정 조회
-    const setting = await getUserSettingApi();
-    // 조회한 계정 언어를 브라우저 표시 언어에 반영
-    setMessageLocale(setting.englishYsno);
+  // 제한 상태 회원의 설정 API 호출 없이 활성 회원의 인증 응답 언어를 바로 반영
+  if (authState.data?.userStat === "ACTIVE" && authState.data.englishYsno) {
+    setMessageLocale(authState.data.englishYsno);
   }
 
   // 탈퇴 대기와 정지 상태도 로그인 성공으로 유지할 서버 인증 결과 반환

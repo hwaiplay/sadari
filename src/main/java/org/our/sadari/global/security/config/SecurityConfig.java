@@ -90,6 +90,9 @@ public class SecurityConfig {
                 .formLogin(form -> form.disable())
                 .httpBasic(basic -> basic.disable())
 
+                // 경로별 Cache-Control은 SpaDocumentCacheFilter에서 정적 자원과 문서를 구분해 설정
+                .headers(headers -> headers.cacheControl(cache -> cache.disable()))
+
                 // 요청 URL별 접근 권한 설정
                 .authorizeHttpRequests(auth -> auth
 
