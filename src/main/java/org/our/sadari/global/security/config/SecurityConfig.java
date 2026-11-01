@@ -38,8 +38,9 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
  * 2026-08-27        SeungHyeon.Kang    서버 오류 화면 접근 허용
  * 2026-09-03        SeungHyeon.Kang    로컬 프로필 간편 로그인 허용
  * 2026-09-04        SeungHyeon.Kang    개인정보처리방침 공개 조회 허용
- * 2026-09-16        HanWon.Jang         Stateless CSRF·공개 화면 접근
- * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
+ * 2026-09-16        HanWon.Jang        Stateless CSRF·공개 화면 접근
+ * 2026-09-19        SeungHyeon.Kang    운영 로그 및 안전한 오류 진단
+ * 2026-11-02        HanWon.Jang        네이버 서치어드바이저 파일 공개
  */
 @Configuration
 @EnableWebSecurity
@@ -112,6 +113,7 @@ public class SecurityConfig {
                                 "/fonts/**",
                                 "/img/**",
                                 "/service-worker.js",
+                                "/naver03dfce13b82f4df54f4d0bff0dc74f66.html",
                                 "/api/oauth/kakao",
                                 "/api/oauth/callback/**",
                                 "/api/oauth/local-login",
