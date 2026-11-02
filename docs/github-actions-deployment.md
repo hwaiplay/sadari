@@ -75,7 +75,7 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 | `HTTP_CONNECT_TIMEOUT_MILLIS` | `3000` | 외부 HTTP 서버 연결 제한시간(ms) |
 | `HTTP_READ_TIMEOUT_MILLIS` | `5000` | 외부 HTTP 서버 응답 제한시간(ms) |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
-| `JWT_REFRESH_TOKEN_SECONDS` | `86400` | Refresh Token 유효시간(초) |
+| `JWT_REFRESH_TOKEN_SECONDS` | `2592000` | Refresh Token 유효시간(초), 재발급 시점부터 30일 |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
 | `WITHDRAWAL_HARD_DELETE_WAIT_DAYS` | `30` | 영구 탈퇴 신청 후 회원 데이터를 물리 삭제하기까지의 유예기간(일) |
 | `TIMER_ATTENDANCE_MIN_SECONDS` | `600` | 하루 독서 출석 인정에 필요한 최소 누적 시간(초) |
@@ -109,6 +109,9 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 
 ## 프로필 고정 설정
 
+- 로그인 유지 기간의 기준은 [계정 및 인증 정책](policies/account-auth-policy.md)의 JWT 절입니다. 로컬 `loc` 프로필도 Refresh Token 유효시간을 `2592000`초로 설정합니다.
+- `mac-production` Environment 또는 저장소 Variables에 `JWT_REFRESH_TOKEN_SECONDS`가 이미 등록되어 있으면 기본값보다 우선하므로 `2592000`으로 변경한 뒤 배포합니다. 새 설정은 로그인 또는 성공한 재발급부터 JWT, Cookie와 Redis 세션에 반영되며 이미 만료된 세션은 다시 로그인해야 합니다.
+- 배포 후 로그인 또는 재발급 응답의 Refresh Token Cookie Max-Age와 해당 Redis 세션 TTL이 30일인지 확인합니다. 토큰 원문은 로그에 기록하지 않습니다. 이전 설정으로 되돌릴 때는 `JWT_REFRESH_TOKEN_SECONDS=86400`으로 배포하며, 이미 발급된 토큰의 만료시간은 소급 변경되지 않습니다.
 - 운영 애플리케이션은 외부 Docker 네트워크의 `sadari-mysql:3306`과 `sadari-redis:6379`에 직접 연결합니다.
   비밀번호와 Redis 인증값은 Mac mini의 `secrets/infra.env`에서만 주입합니다.
 - 운영 애플리케이션용 MySQL과 Redis 포트는 Mac mini의 루프백에만 게시합니다. 별도로 격리한 개발
