@@ -32,7 +32,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 /**
  * fileName       : BookSearchService
- * author         : HanWon.Jang
+ * author         : SuengHyeon.Kang
  * date           : 2026-07-06
  * description    : 사용자 언어 설정에 맞는 외부 도서 검색 API를 호출하고 화면 응답으로 변환
  * ===========================================================
@@ -41,8 +41,8 @@ import org.springframework.web.util.UriComponentsBuilder;
  * 2026-07-06        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    종료된 네이버 API를 카카오 도서 검색 API로 교체
  * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 처리 추가
- * 2026-08-28        HanWon.Jang        캐시 적중 한도 분리
- * 2026-09-08        HanWon.Jang        영어 설정의 Google Books 검색 분기 추가
+ * 2026-08-28        SuengHyeon.Kang        캐시 적중 한도 분리
+ * 2026-09-08        SuengHyeon.Kang        영어 설정의 Google Books 검색 분기 추가
  */
 @Slf4j
 @Service
@@ -100,7 +100,7 @@ public class BookSearchService {
     /**
      * 검색어와 사용자 언어 설정에 맞는 외부 도서 목록을 검색
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param userNumb 도서 검색을 요청한 로그인 회원 번호
      * @param query 외부 도서 API에 전달할 검색어
      * @param start 화면에서 사용하는 검색 결과 시작 위치
@@ -193,7 +193,7 @@ public class BookSearchService {
     /**
      * 카카오 도서 검색 API 응답을 화면 페이지 계약으로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param query 카카오 도서 API에 전달할 검색어
      * @param start 화면 검색 시작 위치
      * @return 카카오 도서 검색 화면 응답
@@ -226,7 +226,7 @@ public class BookSearchService {
     /**
      * Google Books API 응답을 화면 페이지 계약으로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param query Google Books API에 전달할 검색어
      * @param start 화면 검색 시작 위치
      * @return 영어 도서 검색 화면 응답
@@ -291,7 +291,7 @@ public class BookSearchService {
     /**
      * 검색어와 시작 인덱스로 Google Books API의 영어 도서를 호출
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param query Google Books API에 전달할 검색어
      * @param startIndex 0부터 시작하는 Google Books 검색 결과 위치
      * @return Google Books API의 HTTP 응답
@@ -317,7 +317,7 @@ public class BookSearchService {
     /**
      * 카카오 도서 원문 목록을 사용자 화면 응답 목록으로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param kakaoBookList 카카오 도서 검색 API 원문 목록
      * @return 한국어 코드와 표지 대체 주소를 포함한 화면 도서 목록
      */
@@ -345,7 +345,7 @@ public class BookSearchService {
     /**
      * 카카오 도서 원문 항목을 기존 사용자 화면 필드로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param kakaoBook 카카오 도서 검색 API 원문 항목
      * @return 한국어 언어 코드와 표지 대체 주소를 포함한 화면 도서 정보
      */
@@ -377,7 +377,7 @@ public class BookSearchService {
     /**
      * Google Books 원문 목록을 사용자 화면 응답 목록으로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param googleBookList Google Books 원문 도서 목록
      * @return ISBN과 영어 언어 코드를 포함한 화면 도서 목록
      */
@@ -410,7 +410,7 @@ public class BookSearchService {
     /**
      * Google Books 도서 원문 항목을 기존 사용자 화면 필드로 변환
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param volumeInfo Google Books 도서 상세 원문
      * @return 영어 언어 코드와 ISBN을 포함한 화면 도서 정보
      */
@@ -442,7 +442,7 @@ public class BookSearchService {
     /**
      * 계정 설정이 영어 사용 상태인지 확인
      *
-     * @author HanWon.Jang
+     * @author SuengHyeon.Kang
      * @param userSetting 로그인 회원의 저장 설정
      * @return 영어 사용 설정 여부
      */
