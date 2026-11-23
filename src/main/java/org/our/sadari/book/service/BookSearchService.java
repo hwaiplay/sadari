@@ -6,6 +6,10 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.ExecutionException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.book.dto.BookJsonDto;
@@ -14,6 +18,7 @@ import org.our.sadari.book.dto.GoogleBooksJsonDto;
 import org.our.sadari.book.dto.KakaoBookJsonDto;
 import org.our.sadari.book.util.BookCoverUrlUtil;
 import org.our.sadari.global.common.constant.Constant;
+import org.our.sadari.global.common.exception.CustomException;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.util.StringUtil;
@@ -23,6 +28,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
@@ -43,6 +49,7 @@ import org.springframework.web.util.UriComponentsBuilder;
  * 2026-08-16        SeungHyeon.Kang    도서 검색·인기 검색어 처리 추가
  * 2026-08-28        SuengHyeon.Kang        캐시 적중 한도 분리
  * 2026-09-08        SuengHyeon.Kang        영어 설정의 Google Books 검색 분기 추가
+ * 2026-11-23        SeungHyeon.Kang    동시 검색의 외부 호출 공유
  */
 @Slf4j
 @Service
@@ -96,6 +103,8 @@ public class BookSearchService {
     private final BookSearchProtectionService bookSearchProtectionService;
     // 로그인 회원의 저장 언어 설정 조회 Mapper
     private final UserMapper userMapper;
+    // 현재 인스턴스에서 처리 중인 동일 검색의 결과 공유와 완료 후 정리
+    private final ConcurrentMap<String, CompletableFuture<BookSearchResponseDto>> pendingSearches = new ConcurrentHashMap<>();
 
     /**
      * 검색어와 사용자 언어 설정에 맞는 외부 도서 목록을 검색
@@ -149,18 +158,8 @@ public class BookSearchService {
 
             // 공용 캐시에 검색 결과가 없을 때만 공급자별 일일 쿼터를 예약하고 외부 API를 호출
             if (StringUtil.isEmpty(searchResponse)) {
-                // 회원별 일간 또는 공급자별 앱 전체 실제 호출이 보호 한도를 넘으면 요청 전에 차단
-                if (!bookSearchProtectionService.reserveProviderCall(userNumb, provider)) {
-                    // "검색 요청이 너무 많아요. 잠시 후 다시 시도해주세요."
-                    return ResultData.fail(ResultEnum.BOOK_SEARCH_RATE_LIMITED);
-                }
-
-                // 선택된 공급자의 원문 응답을 기존 화면 페이지 계약으로 변환
-                searchResponse = PROVIDER_GOOGLE.equals(provider)
-                        ? searchGoogleBooks(query.trim(), start)
-                        : searchKakaoBooks(query.trim(), start);
-                // 같은 공급자 검색의 반복 호출이 외부 쿼터를 다시 소모하지 않도록 공용 캐시에 저장
-                bookSearchProtectionService.setCachedSearch(provider, query, start, searchResponse);
+                // 동일 캐시 키의 진행 중 작업에 합류하여 실제 외부 호출과 일간 쿼터 예약 공유
+                searchResponse = getSharedSearch(userNumb, provider, query, start);
             }
 
             // 결과가 있는 첫 페이지 검색만 인기 검색어 후보로 반영해 추가 페이지와 빈 검색을 제외
@@ -171,6 +170,12 @@ public class BookSearchService {
 
             // 공급자와 무관한 동일 화면 응답 계약을 반환
             return ResultData.success(searchResponse);
+        }
+
+        // 공유 작업의 쿼터 거절도 각 요청의 표시 언어로 기존 업무 실패 응답 반환
+        catch (CustomException e) {
+            // 호출량 보호의 기존 응답 계약 유지
+            return ResultData.fail(e.getResultEnum());
         }
 
         // 인증, 호출량 또는 요청 오류는 비밀값과 원문 응답을 제외한 상태 코드만 기록
@@ -188,6 +193,107 @@ public class BookSearchService {
             // "검색에 실패했어요.\n다시 시도해주세요."
             return ResultData.fail(ResultEnum.COMMON_SEARCH_REJECTED);
         }
+    }
+
+    /**
+     * 현재 인스턴스의 동일 검색 작업을 공유하고 성공과 실패 모두 완료 후 진행 상태 제거
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 최초 외부 호출의 쿼터를 예약할 회원 번호
+     * @param provider 도서 검색 공급자
+     * @param query 검색어
+     * @param start 검색 시작 위치
+     * @return 공용 검색 결과
+     * @throws JsonProcessingException 공급자 응답 변환 실패
+     */
+    private BookSearchResponseDto getSharedSearch(Long userNumb, String provider, String query
+                                                , int start) throws JsonProcessingException {
+        // 공용 캐시와 동일한 정규화 및 해시 기준 사용
+        String key = bookSearchProtectionService.getCacheKey(provider, query, start);
+        // 최초 호출의 완료 결과를 전달할 작업 생성
+        CompletableFuture<BookSearchResponseDto> created = new CompletableFuture<>();
+        // 먼저 등록된 작업이 있으면 새 외부 호출 대신 결과 대기
+        CompletableFuture<BookSearchResponseDto> running = pendingSearches.putIfAbsent(key, created);
+        // 진행 중인 동일 요청의 성공과 실패를 함께 전달
+        if (!StringUtil.isEmpty(running)) {
+            // 인터럽트된 대기 요청이 공유 작업 자체를 취소하지 않도록 분리
+            try {
+                // 먼저 실행한 검색의 결과 반환
+                return running.get();
+            }
+
+            // 종료된 요청의 대기만 중단하고 공유 작업 유지
+            catch (InterruptedException e) {
+                // 요청 스레드의 인터럽트 상태 복원
+                Thread.currentThread().interrupt();
+                // 공통 검색 실패 경로로 전달
+                throw new RestClientException("Shared search wait interrupted", e);
+            }
+
+            // 최초 요청의 실패 유형을 각 호출부에 전달
+            catch (ExecutionException e) {
+                // JSON 변환 실패 계약 유지
+                if (e.getCause() instanceof JsonProcessingException jsonError) {
+                    // 공급자 응답 변환 오류 전달
+                    throw jsonError;
+                }
+
+                // 쿼터 거절과 외부 통신 실패의 기존 처리 경로 유지
+                if (e.getCause() instanceof RuntimeException runtimeError) {
+                    // 최초 호출과 같은 업무 또는 통신 실패 전달
+                    throw runtimeError;
+                }
+
+                // 런타임의 중대한 오류를 정상 검색 실패로 숨기지 않음
+                if (e.getCause() instanceof Error fatalError) {
+                    // 원래 런타임 오류 전달
+                    throw fatalError;
+                }
+
+                // 예상하지 못한 작업 실패를 공통 검색 실패 경로로 전달
+                throw new RestClientException("Shared search failed", e.getCause());
+            }
+
+        }
+
+        // 최초 작업만 캐시 재확인과 쿼터 예약 및 공급자 호출 수행
+        try {
+            // 최초 캐시 조회 이후 완료된 다른 작업의 결과 재사용
+            BookSearchResponseDto result = bookSearchProtectionService.getCachedSearch(provider, query, start);
+            // 재확인에서도 미적중인 경우에만 외부 공급자 사용
+            if (StringUtil.isEmpty(result)) {
+                // 최초 호출 회원과 앱 전체 쿼터를 함께 예약
+                if (!bookSearchProtectionService.reserveProviderCall(userNumb, provider)) {
+                    // 모든 대기 요청에 같은 거절 코드를 전달할 실패 생성
+                    throw new CustomException(ResultEnum.BOOK_SEARCH_RATE_LIMITED, HttpStatus.TOO_MANY_REQUESTS);
+                }
+
+                // 공급자별 응답을 공용 화면 계약으로 변환
+                result = PROVIDER_GOOGLE.equals(provider) ? searchGoogleBooks(query.trim(), start) : searchKakaoBooks(query.trim(), start);
+                // 다음 순차 요청도 재사용할 공용 캐시 저장
+                bookSearchProtectionService.setCachedSearch(provider, query, start, result);
+            }
+
+            // 모든 대기 요청에 성공 결과 전달
+            created.complete(result);
+            // 최초 요청의 검색 결과 반환
+            return result;
+        }
+
+        // 실패 시에도 대기 요청을 해제하고 다음 검색에서 재시도 허용
+        catch (JsonProcessingException | RuntimeException | Error e) {
+            // 대기 중인 동일 검색 요청에 실패 전달
+            created.completeExceptionally(e);
+            // 최초 요청의 기존 실패 처리 경로 유지
+            throw e;
+        }
+
+        // 성공과 실패에 관계없이 완료된 작업 제거
+        finally {
+            // 새 작업을 삭제하지 않도록 등록한 작업과 같은 경우에만 제거
+            pendingSearches.remove(key, created);
+        }
+
     }
 
     /**

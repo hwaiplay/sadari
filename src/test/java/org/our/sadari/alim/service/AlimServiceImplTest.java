@@ -2,17 +2,26 @@ package org.our.sadari.alim.service;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
 import java.util.Map;
+import java.sql.Connection;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,6 +36,20 @@ import org.our.sadari.push.service.PushService;
 import org.our.sadari.social.service.UserBlockService;
 import org.our.sadari.user.dto.UserSettingDto;
 import org.springframework.context.support.ResourceBundleMessageSource;
+import org.springframework.jdbc.datasource.DataSourceTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.our.sadari.push.dto.PushDto;
+import org.our.sadari.push.mapper.PushMapper;
+import org.our.sadari.push.service.PushServiceImpl;
+import org.our.sadari.push.service.FirebaseMessagingProvider;
+import org.springframework.aop.framework.ProxyFactory;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.scheduling.annotation.AsyncAnnotationBeanPostProcessor;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.transaction.annotation.AnnotationTransactionAttributeSource;
+import org.springframework.transaction.interceptor.TransactionInterceptor;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 /**
  * fileName       : AlimServiceImplTest
@@ -43,9 +66,173 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 알림 설정과 이동 경로 검증
  * 2026-09-14        HanWon.Jang        개인 알림의 차단 동시 실행 잠금 검증
  * 2026-09-15        HanWon.Jang        개인 알림 내부 발신자 저장 검증
+ * 2026-11-23        SeungHyeon.Kang    커밋 후 푸시 동기 대기 검증
  */
 @ExtendWith(MockitoExtension.class)
 class AlimServiceImplTest {
+
+    /**
+     * 커밋 후 비동기 푸시가 대기해도 요청과 JDBC 연결이 반환되고 포화 시 알림 저장이 유지되는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 격리된 트랜잭션 또는 비동기 테스트 실행 실패
+     */
+    @Test
+    void commitDispatchesPush() throws Exception {
+        // 운영 DB에 연결하지 않을 JDBC 대역 생성
+        DataSource dataSource = mock(DataSource.class);
+        // 커밋과 반환 시점을 확인할 JDBC 연결 대역 생성
+        Connection connection = mock(Connection.class);
+        // 알림 저장 트랜잭션에 사용할 연결 설정
+        when(dataSource.getConnection()).thenReturn(connection);
+        // 실제 트랜잭션 시작 조건 설정
+        when(connection.getAutoCommit()).thenReturn(true);
+        // 호출 서비스가 여는 실제 Spring 트랜잭션 경계 생성
+        TransactionTemplate transaction = new TransactionTemplate(new DataSourceTransactionManager(dataSource));
+        // 발송 가능한 가상 알림 템플릿 생성
+        AlimDto.AlimTempDto template = new AlimDto.AlimTempDto();
+        // 가상 알림 제목 설정
+        template.setAlimTitl("테스트 알림");
+        // 가상 알림 본문 설정
+        template.setTempCont("푸시 대기 검증");
+        // 활성 테스트 수신자 조회 결과 설정
+        when(alimMapper.getActiveAlimUserCnt(31L)).thenReturn(1);
+        // 외부 설정 조회 없이 가상 템플릿 사용
+        when(alimMapper.getAlimTemp(any(AlimDto.AlimTempDto.class))).thenReturn(template);
+        // 저장된 알림 번호를 반환할 DB 처리 대역 구성
+        doAnswer(invocation -> {
+            // 저장할 알림 데이터 조회
+            AlimDto.AlimItemDto alim = invocation.getArgument(0);
+            // 가상 저장 결과 식별값 설정
+            alim.setAlimNumb(7L);
+            // 알림 한 건 저장 결과 반환
+            return 1;
+        }).when(alimMapper).setAlim(any(AlimDto.AlimItemDto.class));
+        // 푸시 호출 진입을 확인할 신호 생성
+        CountDownLatch started = new CountDownLatch(1);
+        // Firebase 통신 없이 푸시 완료 시점을 제어할 신호 생성
+        CountDownLatch release = new CountDownLatch(1);
+        // 비동기 푸시 완료와 테스트 종료 시점 분리
+        CountDownLatch finished = new CountDownLatch(1);
+        // 실제 PushService에 연결할 구독 조회 대역 생성
+        PushMapper pushMapper = mock(PushMapper.class);
+        // Firebase 통신 대역 생성
+        FirebaseMessagingProvider firebase = mock(FirebaseMessagingProvider.class);
+        // 비동기 작업의 가상 구독 생성
+        PushDto.PushSubDto subscription = new PushDto.PushSubDto();
+        // 실제 인증정보 대신 가상 구독 식별값 지정
+        subscription.setEndpUrlx("test-token");
+        // 실행 시점에 활성 구독 한 건만 조회
+        when(pushMapper.getActivePushSubList(31L)).thenReturn(List.of(subscription));
+        // 실제 커밋 콜백이 호출하는 Firebase 응답 대기 재현
+        doAnswer(invocation -> {
+            // 푸시 시작 전에 DB 커밋이 완료된 사실 확인
+            verify(connection).commit();
+            // 외부 푸시 호출 중 DB 트랜잭션이 없는지 확인
+            assertFalse(TransactionSynchronizationManager.isActualTransactionActive());
+            // 커밋 후 푸시 진입을 테스트 스레드에 전달
+            started.countDown();
+            // 테스트에서 허용할 때까지 푸시 완료 보류
+            assertTrue(release.await(5, TimeUnit.SECONDS));
+            // 완료된 외부 전송 신호 전달
+            finished.countDown();
+            // 실제 Firebase 요청 없이 푸시 대역 완료
+            return true;
+        }).when(firebase).send(any(), any(), any(), any(), any());
+        // 운영 서비스의 Async와 Transactional 어노테이션을 검증할 실제 대상 생성
+        PushServiceImpl pushTarget = new PushServiceImpl(pushMapper, firebase, new DefaultResourceLoader(), new ObjectMapper());
+        // 실제 트랜잭션 어노테이션 해석기 생성
+        TransactionInterceptor interceptor = new TransactionInterceptor();
+        // 요청과 푸시 양쪽에 같은 JDBC 트랜잭션 관리자 적용
+        interceptor.setTransactionManager(new DataSourceTransactionManager(dataSource));
+        // 운영 메서드의 트랜잭션 전파 설정 적용
+        interceptor.setTransactionAttributeSource(new AnnotationTransactionAttributeSource());
+        // 실제 푸시 메서드의 트랜잭션 프록시 생성
+        ProxyFactory pushFactory = new ProxyFactory(pushTarget);
+        // 비동기 어노테이션의 원본 클래스 탐색을 유지할 클래스 프록시 지정
+        pushFactory.setProxyTargetClass(true);
+        // 푸시 외부 호출의 트랜잭션 제외 설정 적용
+        pushFactory.addAdvice(interceptor);
+        // 포화 시 요청 스레드로 실행을 돌리지 않을 제한된 테스트 실행기 생성
+        ThreadPoolTaskExecutor pushExecutor = new ThreadPoolTaskExecutor();
+        // 포화 상태를 재현할 단일 작업 스레드 지정
+        pushExecutor.setCorePoolSize(1);
+        // 포화 시 추가 스레드 생성 방지
+        pushExecutor.setMaxPoolSize(1);
+        // 두 번째 작업의 접수 거절을 검증할 대기열 크기 지정
+        pushExecutor.setQueueCapacity(0);
+        // 테스트용 비동기 실행기 시작
+        pushExecutor.initialize();
+        // 운영 Async 어노테이션을 실제로 적용할 후처리기 생성
+        AsyncAnnotationBeanPostProcessor async = new AsyncAnnotationBeanPostProcessor();
+        // 테스트의 명시적 실행기를 비동기 프록시에 연결
+        async.setExecutor(pushExecutor);
+        // 실제 컨테이너와 같은 비동기 Advisor 초기화
+        async.setBeanFactory(new org.springframework.beans.factory.support.DefaultListableBeanFactory());
+        // 실제 어노테이션 기반 비동기 푸시 프록시 생성
+        PushService asyncPush = (PushService) async.postProcessAfterInitialization(pushFactory.getProxy(), "pushService");
+        // 운영과 같은 비동기 프록시를 사용하는 알림 서비스 생성
+        AlimServiceImpl asyncAlim = new AlimServiceImpl(alimMapper, asyncPush, userBlockService);
+        // 요청 처리 스레드를 대신할 실행기 생성
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+        // 실패 경로에서도 대기 중인 작업을 정리할 경계
+        try {
+            // 알림 저장과 실제 Spring 커밋 콜백 실행
+            Future<ResultData> result = executor.submit(() ->
+                    // 푸시가 등록될 실제 호출부 트랜잭션 실행
+                    transaction.execute(status -> {
+                        // 알림 저장과 커밋 후 푸시 예약 수행
+                        ResultData saved = asyncAlim.sendAlim(31L, "LIKE", "LIKE_REPORT"
+                                                  , Constant.LIKE_TARGET_REPORT, 10L, null
+                                                  , Map.of());
+                        // 커밋 전에는 구독 조회와 Firebase 발송을 시작하지 않은 상태 확인
+                        org.mockito.Mockito.verifyNoInteractions(pushMapper, firebase);
+                        // 알림 저장 결과 반환
+                        return saved;
+                    }));
+            // 커밋이 끝난 후 푸시가 대기 중인 시점 확인
+            assertTrue(started.await(5, TimeUnit.SECONDS));
+            // 외부 푸시 완료 전에 사용자 요청 성공 반환 확인
+            assertEquals(200, result.get(5, TimeUnit.SECONDS).getCode());
+            // 외부 푸시 대기 중에도 JDBC 연결이 반환된 상태 확인
+            verify(connection).close();
+            // 실행기가 포화된 상태에서도 다음 알림 저장과 커밋 성공 확인
+            ResultData saturated = transaction.execute(status -> {
+                // 푸시 접수 거절이 이미 저장한 알림을 실패로 바꾸지 않는지 검증
+                return asyncAlim.sendAlim(31L, "LIKE", "LIKE_REPORT", Constant.LIKE_TARGET_REPORT, 10L, null, Map.of());
+            });
+            // 포화 상태의 기존 알림 성공 계약 확인
+            assertEquals(200, saturated.getCode());
+            // 외부 푸시 완료 허용
+            release.countDown();
+            // 비동기 푸시가 테스트 종료 전에 완료되는지 확인
+            assertTrue(finished.await(5, TimeUnit.SECONDS));
+            // 롤백될 알림은 비동기 작업을 접수하지 않도록 실제 콜백 경계 실행
+            transaction.execute(status -> {
+                // 저장 후 롤백될 알림의 푸시 예약 생성
+                asyncAlim.sendAlim(31L, "LIKE", "LIKE_REPORT", Constant.LIKE_TARGET_REPORT, 10L, null, Map.of());
+                // 업무 실패로 인한 트랜잭션 롤백 지정
+                status.setRollbackOnly();
+                // 롤백 검증 경계 완료
+                return null;
+            });
+            // 롤백된 알림의 구독 조회 미실행 확인
+            verify(pushMapper).getActivePushSubList(31L);
+        }
+
+        // 비동기 테스트 실패 시에도 대기와 스레드 정리
+        finally {
+            // 푸시 대역의 대기 해제
+            release.countDown();
+            // 별도 푸시 실행기 종료
+            pushExecutor.shutdown();
+            // 테스트 실행기 종료
+            executor.shutdownNow();
+            // 잔여 요청 스레드 정리 확인
+            assertTrue(executor.awaitTermination(5, TimeUnit.SECONDS));
+        }
+
+    }
 
     // Alim 데이터 접근 객체
     @Mock

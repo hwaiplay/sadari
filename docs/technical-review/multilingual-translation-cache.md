@@ -269,78 +269,19 @@ private String getAvailability(
 
 ## 버튼을 누른 순간 번역하고 캐시하기
 
-`ReportTranslationService.setReportTranslation`은 공개 범위 재검증, 캐시 조회, 한도 예약, Google 호출, 저장을 한 흐름으로 처리합니다.
+`ReportTranslationService.setReportTranslation`은 `Propagation.NOT_SUPPORTED`로 실행합니다. Google 응답을 기다리는 동안 DB 트랜잭션과 원문 행 잠금을 유지하지 않고, 조회와 저장에만 짧은 독립 트랜잭션을 사용합니다.
 
-```java
-@Transactional
-public ResultData setReportTranslation(Long userNumb, Long reptNumb) {
-    // 인증 사용자와 양수 독후감 번호를 먼저 확인함
-    if (StringUtil.hasEmpty(userNumb, reptNumb) || reptNumb <= 0) {
-        return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
-    }
+1. 현재 접근 범위를 검증한 원문 스냅샷을 읽고 즉시 DB 연결과 잠금을 반환합니다. 원문 해시와 대상 언어가 일치하는 캐시는 Redis 잠금이나 외부 호출 없이 반환합니다.
+2. 새 번역이 필요하면 독후감 단위 Redis 잠금을 얻습니다. 다른 인스턴스의 요청도 같은 잠금을 사용하며, 대기 중에는 DB 연결을 사용하지 않습니다. 잠금을 얻은 뒤 권한과 원문 및 캐시를 다시 조회합니다.
+3. 새 외부 호출 한 건에 대해서만 기존 Redis Lua로 월간 글자 수를 예약하고, DB 트랜잭션 밖에서 Google을 호출합니다. API 키가 없거나 Redis 잠금·사용량 예약에 실패하면 새 번역을 시작하지 않습니다.
+4. 저장 직전에는 짧은 트랜잭션으로 원문을 다시 잠급니다. 대기 중 삭제·비공개·차단·계정 비활성화로 접근할 수 없어진 경우에는 번역문을 저장하거나 반환하지 않습니다. 본문 해시가 달라진 경우도 이전 원문의 번역을 저장하거나 노출하지 않습니다.
+5. 현재 원문의 캐시가 이미 저장됐다면 먼저 완료된 결과를 재사용합니다. 그렇지 않으면 번역 캐시를 저장하고 커밋합니다. 성공과 실패 모두 현재 요청이 소유한 Redis 잠금만 제거합니다.
 
-    // 공개 범위와 차단 관계를 다시 검증하고 같은 원문의 중복 번역을 잠금
-    ReportTranslationDto source = getLockedSource(userNumb, reptNumb);
-    if (StringUtil.isEmpty(source)) {
-        return ResultData.fail(ResultEnum.FORBIDDEN);
-    }
+잠금의 기본 만료시간과 최대 대기시간은 30초이며 `GOOGLE_TRANSLATION_LOCK_SECONDS`로 조정합니다. 이 값은 외부 통신 제한시간과 짧은 저장 시간보다 여유 있게 잡아야 합니다. 작업이 잠금 유효시간을 넘으면 중복 외부 호출 가능성이 있지만 월간 예약 한도는 계속 적용됩니다. 이전 작업이 늦게 완료돼도 새 소유자의 잠금을 삭제하지 않으며, 현재 원문과 이미 저장된 캐시를 다시 확인합니다.
 
-    String targetLanguage = getTargetLanguage();
-    // 원문과 대상 언어가 같거나 본문이 없으면 번역하지 않음
-    if (targetLanguage.equals(source.getSourceLangCode())
-            || StringUtil.isEmpty(source.getSourceContent())) {
-        return ResultData.fail(ResultEnum.REPORT_TRANSLATION_UNAVAILABLE);
-    }
+공급자 오류로 비용이 이미 발생했을 가능성이 있으므로 월간 사용량 예약은 되돌리지 않습니다. Google API 키는 URL이 아닌 전용 요청 헤더에 전달하며 원문과 키를 로그에 남기지 않습니다.
 
-    source.setLangCode(targetLanguage);
-    // 원문 수정 여부를 판단할 SHA-256 해시를 생성함
-    source.setOrigHash(getSha256(source.getSourceContent()));
-    ReportTranslationDto cachedTranslation =
-            reportMapper.getReportTrnsDtl(source);
-
-    // 같은 원문과 대상 언어의 캐시는 외부 호출과 한도 차감 없이 반환함
-    if (!StringUtil.isEmpty(cachedTranslation)
-            && source.getOrigHash().equals(
-                    cachedTranslation.getOrigHash())) {
-        cachedTranslation.setCached(true);
-        return ResultData.success(cachedTranslation);
-    }
-
-    // API 키가 없으면 비용 경로에 진입하지 않음
-    if (StringUtil.isEmpty(translationApiKey)) {
-        return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
-    }
-
-    // Google 과금 기준에 맞춰 UTF-16 length가 아닌 코드 포인트를 셈
-    int requestChars = source.getSourceContent().codePointCount(
-            0, source.getSourceContent().length());
-    // Redis Lua가 월간 한도를 원자적으로 예약한 요청만 외부 호출함
-    if (!reserveChars(requestChars)) {
-        return ResultData.fail(ResultEnum.REPORT_TRANSLATION_LIMITED);
-    }
-
-    try {
-        String translatedContent = getGoogleTranslation(
-                source.getSourceContent(),
-                source.getSourceLangCode(), targetLanguage);
-        source.setTrnsCntn(translatedContent);
-        // 같은 독후감과 대상 언어의 캐시를 원문 해시와 함께 갱신함
-        reportMapper.setReportTrns(source);
-        source.setCached(false);
-        return ResultData.success(source);
-    }
-    catch (HttpMessageConversionException
-            | RestClientException | IllegalStateException e) {
-        // 원문과 API 키를 로그에 남기지 않음
-        log.error("독후감 번역 처리에 실패했습니다. 독후감 번호={}", reptNumb, e);
-        return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
-    }
-}
-```
-
-원문 해시가 캐시 키의 일부이므로 작성자가 독후감을 수정하면 과거 번역을 반환하지 않습니다. 같은 원문에 대한 동시 요청은 잠금 조회로 직렬화해 둘 다 Google을 호출하는 상황을 줄입니다. 월간 사용량도 Java에서 읽고 나중에 증가하지 않고 Redis Lua에서 검사와 예약을 한 번에 처리합니다.
-
-Google API 키는 URL 쿼리 문자열에 넣지 않고 요청 헤더에 전달합니다. 애플리케이션 설정에는 값이 필요하지만 문서와 저장소에는 실제 키를 기록하지 않습니다.
+`ReportTranslationServiceTest`는 외부 응답 대기 중 JDBC 연결 반환, 본문 수정·접근 제한 이후 저장 거절을 검증합니다. 실제 Redis 동시성 검증은 별도로 띄운 임시 서버의 `SADARI_TEST_REDIS_PORT`와 `SADARI_TEST_REDIS_PID`를 지정한 경우에만 실행합니다. 서버 프로세스가 일치하는지 쓰기 전에 확인하고, 동일 번역의 한 번 호출·소유권 확인 Lua·잠금 만료 후 재획득을 검증합니다.
 
 ## 카드에서 원문과 번역문 전환
 

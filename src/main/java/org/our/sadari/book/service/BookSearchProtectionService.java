@@ -42,6 +42,7 @@ import org.springframework.stereotype.Service;
  * 2026-08-28        HanWon.Jang        캐시 유형별 단기 한도 분리
  * 2026-09-08        HanWon.Jang        검색 공급자별 캐시와 실제 호출 한도 분리
  * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
+ * 2026-11-23        SeungHyeon.Kang    검색 공유와 캐시 키 기준 통합
  */
 @Service
 @RequiredArgsConstructor
@@ -635,7 +636,7 @@ public class BookSearchProtectionService {
      * @param start 화면 검색 시작 위치
      * @return 검색어 원문을 포함하지 않는 공용 캐시 Redis 키
      */
-    private String getCacheKey(String provider, String query, int start) {
+    String getCacheKey(String provider, String query, int start) {
         // 대소문자와 연속 공백 차이로 같은 검색이 중복 저장되지 않도록 검색어를 정규화
         String normalizedQuery = query.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
         // 공급자와 시작 위치가 다른 검색 결과가 충돌하지 않도록 해시 입력에 함께 포함

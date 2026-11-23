@@ -17,6 +17,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.Resource;
 import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Service;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
@@ -29,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * -----------------------------------------------------------
  * 2026-07-25        SeungHyeon.Kang    최초 생성
  * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
+ * 2026-11-23        SeungHyeon.Kang    푸시 발송의 요청·DB 트랜잭션 분리
  */
 @Service
 @Slf4j
@@ -344,6 +347,8 @@ public class PushServiceImpl implements PushService {
      * @param alimNumb 클릭 시 읽음 처리할 사용자별 알림 번호
      */
     @Override
+    @Async
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public void sendPush(Long userNumb, String title, String body
                        , String linkUrlx, Long alimNumb) {
         // userNumb 값이 비어 있을 때 후속 참조를 차단하기 위한 분기
@@ -352,20 +357,22 @@ public class PushServiceImpl implements PushService {
             return;
         }
 
-        // ActivePushSubList 데이터를 DB에서 조회
-        List<PushDto.PushSubDto> pushSubList = pushMapper.getActivePushSubList(userNumb);
+        // 비동기 실행 중 DB 조회 실패도 이미 커밋된 알림과 요청 결과에 영향 없이 격리
+        try {
+            // 작업 실행 시점의 활성 구독만 조회하고 DB 연결은 외부 전송 전에 반환
+            List<PushDto.PushSubDto> pushSubList = pushMapper.getActivePushSubList(userNumb);
+            // 구독별 전송은 외부 응답 대기 동안 DB 트랜잭션 없이 처리
+            for (PushDto.PushSubDto pushSub : pushSubList) {
+                // 인증정보와 원문을 로그에 남기지 않는 공급자로 전송
+                firebaseMessagingProvider.send(pushSub.getEndpUrlx(), title, body, linkUrlx, alimNumb);
+            }
 
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
-        for (PushDto.PushSubDto pushSub : pushSubList) {
-            // send 호출로 검증된 알림 또는 응답을 전송
-            firebaseMessagingProvider.send(
-                    // getEndpUrlx 조회로 후속 처리에 필요한 데이터를 가져옴
-                    pushSub.getEndpUrlx()
-                  , title
-                  , body
-                  , linkUrlx
-                  , alimNumb
-            );
+        }
+
+        // 작업 실패가 비동기 실행기의 원시 예외 로그로 전파되지 않도록 제한
+        catch (RuntimeException e) {
+            // 구독과 푸시 본문 없이 실패 유형 기록
+            log.warn("비동기 푸시 처리에 실패했습니다. failure={}", LogSafe.getFailure(e));
         }
     }
 }

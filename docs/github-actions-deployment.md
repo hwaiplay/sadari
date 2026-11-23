@@ -74,6 +74,10 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
 | `DB_MAXIMUM_POOL_SIZE` | `10` | Hikari 최대 커넥션 수 |
 | `HTTP_CONNECT_TIMEOUT_MILLIS` | `3000` | 외부 HTTP 서버 연결 제한시간(ms) |
 | `HTTP_READ_TIMEOUT_MILLIS` | `5000` | 외부 HTTP 서버 응답 제한시간(ms) |
+| `GOOGLE_TRANSLATION_LOCK_SECONDS` | `30` | 번역 Redis 잠금 만료 및 최대 대기시간(초) |
+| `ASYNC_CORE_POOL_SIZE` | `4` | 푸시·좋아요 후처리 실행기의 기본 스레드 수 |
+| `ASYNC_MAX_POOL_SIZE` | `8` | 비동기 후처리 실행기의 최대 스레드 수 |
+| `ASYNC_QUEUE_CAPACITY` | `100` | 비동기 후처리 실행기의 최대 대기 작업 수 |
 | `JWT_ACCESS_TOKEN_SECONDS` | `1800` | Access Token 유효시간(초) |
 | `JWT_REFRESH_TOKEN_SECONDS` | `2592000` | Refresh Token 유효시간(초), 재발급 시점부터 30일 |
 | `JWT_REFRESH_ROTATION_GRACE_SECONDS` | `10` | 다중 탭 동시 재발급을 동일 회전 결과로 처리하는 유예시간(초) |
@@ -152,6 +156,8 @@ S3 접근키는 배포 환경에 전달하지 않습니다.
   `https://dapi.kakao.com/v3/search/book`으로 고정하며 인증에는 `secrets/app.env`의
   `KAKAO_REST_API_KEY`를 사용합니다.
 - Google 번역은 `GOOGLE_TRANSLATION_API_KEY`가 있을 때 활성화하고, 키가 없으면 기존 번역 캐시만 표시하며 신규 번역 버튼은 숨깁니다. 영어 설정의 도서 검색에는 `GOOGLE_BOOKS_API_KEY`가 필요하며 키가 없으면 외부 요청 없이 검색 실패 응답을 반환합니다.
+- 번역 잠금 시간은 외부 HTTP 연결·응답 제한시간과 짧은 DB 저장 시간을 합한 시간보다 여유 있게 설정합니다. 작업이 잠금 만료를 넘으면 중복 외부 호출 가능성이 있지만 월간 사용량 예약은 계속 적용되고, 저장 직전 권한·원문·기존 캐시를 다시 확인합니다.
+- 비동기 실행기는 기본 스레드 수가 최대 스레드 수를 넘지 않게 설정합니다. 실행기가 포화되면 새 푸시를 요청 스레드에서 대신 전송하지 않고 생략하며, 이미 커밋된 알림센터 기록과 사용자 응답은 유지합니다. 자동 푸시 재처리는 제공하지 않습니다.
 - Google Cloud Console의 `API 및 서비스 > 사용자 인증 정보`에서 `sadari-translation-server` 값은 `GOOGLE_TRANSLATION_API_KEY`, `sadari-books-server` 값은 `GOOGLE_BOOKS_API_KEY`에 각각 등록합니다.
 - Google 번역은 Cloud Translation Basic v2 서버 주소를 사용하고 앱 전체 월간 신규 번역을 500,000 유니코드 코드 포인트로 고정합니다. 월간 경계는 Google 쿼터 기준 시간대와 맞추며, Redis에서 사용량을 확인할 수 없으면 신규 Google 호출을 중단합니다.
 - 운영 도서 검색은 한국어 Kakao에서 최대 50권, 영어 Google Books에서 최대 40권을 조회하며 캐시 적중 300회·미적중 60회의 회원별 60초 제한, 회원별 일간 제한, 공급자별 앱 전체 실제 호출 제한과 10분 공용 캐시를 Redis에서 관리합니다.

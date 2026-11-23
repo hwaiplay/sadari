@@ -12,6 +12,13 @@ spring:
       minimum-idle: ${DB_MINIMUM_IDLE:2}
   application:
     name: sadari
+  task:
+    execution:
+      # 푸시와 좋아요 후처리의 과도한 스레드 생성과 무제한 대기 방지
+      pool:
+        core-size: ${ASYNC_CORE_POOL_SIZE:4}
+        max-size: ${ASYNC_MAX_POOL_SIZE:8}
+        queue-capacity: ${ASYNC_QUEUE_CAPACITY:100}
   config:
     activate:
       on-profile: prod
@@ -86,6 +93,8 @@ google:
     api-key: ${GOOGLE_TRANSLATION_API_KEY:}
     monthly-character-limit: 500000
     quota-zone: America/Los_Angeles
+    # 외부 통신 중 DB 잠금 대신 사용하는 번역 잠금의 만료 및 최대 대기시간
+    lock-seconds: ${GOOGLE_TRANSLATION_LOCK_SECONDS:30}
   books:
     # 영어 설정 회원의 도서 검색에 사용하는 Google Books Volumes API 주소
     url: https://www.googleapis.com/books/v1/volumes

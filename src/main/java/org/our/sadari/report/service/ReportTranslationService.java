@@ -11,6 +11,8 @@ import java.time.ZonedDateTime;
 import java.util.HexFormat;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.our.sadari.feed.dto.FeedDto;
@@ -31,6 +33,10 @@ import org.springframework.http.MediaType;
 import org.springframework.http.converter.HttpMessageConversionException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.annotation.Propagation;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.util.HtmlUtils;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -46,6 +52,7 @@ import org.springframework.web.client.RestTemplate;
  * 2026-09-07        HanWon.Jang        최초 생성
  * 2026-09-08        HanWon.Jang        본문 기준 번역 언어 판정
  * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
+ * 2026-11-23        SeungHyeon.Kang    외부 번역과 저장 트랜잭션 분리
  */
 @Slf4j
 @Service
@@ -74,6 +81,13 @@ public class ReportTranslationService {
             new DefaultRedisScript<>(RESERVE_CHARS_LUA, Long.class);
     // Redis가 월간 한도를 초과한 요청에 반환하는 결과값
     private static final long MONTHLY_LIMIT_EXCEEDED = -1L;
+    // 만료 후 다른 요청이 얻은 잠금을 이전 소유자가 삭제하지 않도록 소유권 확인
+    private static final DefaultRedisScript<Long> RELEASE_LOCK_SCRIPT = new DefaultRedisScript<>("""
+            if redis.call('GET', KEYS[1]) == ARGV[1] then
+                return redis.call('DEL', KEYS[1])
+            end
+            return 0
+            """, Long.class);
 
     // Google Cloud Translation Basic REST API 주소
     @Value("${google.translation.url}")
@@ -87,6 +101,9 @@ public class ReportTranslationService {
     // Google 월간 사용량 경계와 맞출 번역 쿼터 시간대
     @Value("${google.translation.quota-zone:America/Los_Angeles}")
     private String quotaZone;
+    // 인스턴스 간 동일 독후감 번역의 잠금 유효시간과 최대 대기시간
+    @Value("${google.translation.lock-seconds:30}")
+    private long lockSeconds;
 
     // 독후감 원문과 번역 캐시 데이터 접근 객체
     private final ReportMapper reportMapper;
@@ -94,6 +111,8 @@ public class ReportTranslationService {
     private final StringRedisTemplate redisTemplate;
     // Google 번역 REST API 호출 객체
     private final RestTemplate restTemplate;
+    // 외부 통신 전후에만 짧은 DB 트랜잭션을 여는 관리자
+    private final PlatformTransactionManager transactionManager;
 
     /**
      * 공개 독후감 목록에 원문 언어와 캐시 및 월간 잔여량을 반영한 번역 버튼 표시 여부를 설정
@@ -159,7 +178,7 @@ public class ReportTranslationService {
      * @param reptNumb 번역할 공개 독후감 번호
      * @return 캐시 여부와 번역문을 담은 처리 결과
      */
-    @Transactional
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     public ResultData setReportTranslation(Long userNumb, Long reptNumb) {
         // 인증 사용자와 독후감 번호가 없으면 외부 번역 호출 전에 요청을 거부
         if (StringUtil.hasEmpty(userNumb, reptNumb) || reptNumb <= 0) {
@@ -167,7 +186,49 @@ public class ReportTranslationService {
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
         }
 
-        // 서버에서 공개 범위와 차단 관계를 다시 검증하고 같은 독후감의 중복 번역을 직렬화
+        // 유효 캐시는 Redis 잠금 장애와 무관하게 기존 경로로 반환
+        ResultData cached = getTranslationResult(userNumb, reptNumb, false);
+        // 접근 거절과 캐시 적중 및 번역 불가 결과는 외부 호출 없이 확정
+        if (!StringUtil.isEmpty(cached)) {
+            // 외부 번역이 필요하지 않은 현재 요청 결과 반환
+            return cached;
+        }
+
+        // 기존 원문 행 잠금과 같은 독후감 단위의 인스턴스 간 실행 직렬화
+        String lockKey = "report:translation:lock:" + reptNumb;
+        // 만료 이후의 새 소유자를 구분할 요청별 잠금 식별값 생성
+        String owner = UUID.randomUUID().toString();
+        // Redis 장애와 잠금 대기 초과 시 외부 비용 발생 차단
+        if (!getTranslationLock(lockKey, owner)) {
+            // "번역 기능을 사용할 수 없어요.\n잠시 후 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
+        }
+
+        // 잠금 대기 동안 변경된 원문과 권한 및 캐시를 다시 확인
+        try {
+            // DB 트랜잭션 밖의 외부 번역과 짧은 저장 트랜잭션 수행
+            return getTranslationResult(userNumb, reptNumb, true);
+        }
+
+        // 성공과 실패 및 접근 거절 모두 잠금 정리
+        finally {
+            // 현재 요청이 소유한 잠금만 제거
+            delTranslationLock(lockKey, owner);
+        }
+
+    }
+
+    /**
+     * 현재 권한과 캐시를 확인하고 필요한 경우 트랜잭션 밖에서 번역 수행
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 요청 회원 번호
+     * @param reptNumb 독후감 번호
+     * @param translate 캐시 미적중 시 외부 번역 허용 여부
+     * @return 처리 결과 또는 외부 번역이 필요한 사전 조회의 빈 결과
+     */
+    private ResultData getTranslationResult(Long userNumb, Long reptNumb, boolean translate) {
+        // 서버에서 공개 범위와 차단 관계를 짧은 트랜잭션으로 재검증
         ReportTranslationDto source = getLockedSource(userNumb, reptNumb);
 
         // 공개 범위 안의 번역 가능한 독후감이 아니면 외부 호출 없이 접근을 거부
@@ -191,22 +252,22 @@ public class ReportTranslationService {
         source.setLangCode(targetLanguage);
         // 원문 변경 여부를 판정할 SHA-256 해시를 설정
         source.setOrigHash(getSha256(source.getSourceContent()));
-        // 같은 원문과 대상 언어로 이미 생성된 번역 캐시를 조회
-        ReportTranslationDto cachedTranslation = reportMapper.getReportTrnsDtl(source);
-
-        // 원문 해시가 일치하는 캐시는 Google 호출과 월간 글자 수 소모 없이 바로 반환
-        if (!StringUtil.isEmpty(cachedTranslation)
-                && source.getOrigHash().equals(cachedTranslation.getOrigHash())) {
-            // 기존 번역 캐시 사용 여부를 설정
-            cachedTranslation.setCached(true);
-            // 유효한 번역 캐시를 성공 응답으로 반환
-            return ResultData.success(cachedTranslation);
+        // 같은 짧은 트랜잭션에서 원문 권한과 해시가 검증된 캐시는 외부 호출 없이 반환
+        if (source.isCached()) {
+            // 현재 원문과 접근 범위에 맞는 번역 캐시 반환
+            return ResultData.success(source);
         }
 
         // API 키가 없으면 외부 호출과 비용 발생 가능성을 모두 차단
         if (StringUtil.isEmpty(translationApiKey)) {
             // "번역 기능을 사용할 수 없어요.\n잠시 후 다시 시도해주세요."
             return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
+        }
+
+        // 사전 조회의 미적중은 잠금 획득 후 다시 검증할 대상으로 구분
+        if (!translate) {
+            // 외부 번역이 필요한 상태 반환
+            return null;
         }
 
         // Google 과금 기준인 유니코드 코드 포인트 단위로 이번 번역 글자 수를 계산
@@ -225,12 +286,8 @@ public class ReportTranslationService {
                     source.getSourceContent(), sourceLanguage, targetLanguage);
             // 검증된 번역문을 캐시 저장값으로 설정
             source.setTrnsCntn(translatedContent);
-            // 같은 독후감과 언어의 이전 캐시가 있으면 원문 해시와 번역문을 함께 갱신
-            reportMapper.setReportTrns(source);
-            // 신규 Google 호출로 생성한 결과임을 응답에 설정
-            source.setCached(false);
-            // 새로 저장한 번역문을 성공 응답으로 반환
-            return ResultData.success(source);
+            // 응답 대기 동안의 비공개 전환·차단·본문 변경을 잠금 조회로 확인한 뒤에만 저장
+            return setTranslationResult(userNumb, source);
         }
 
         // 외부 API 또는 응답 검증 오류는 원문과 비밀값을 기록하지 않고 공통 실패로 전환
@@ -243,7 +300,7 @@ public class ReportTranslationService {
     }
 
     /**
-     * 공개 범위와 차단 관계를 검증하면서 독후감 원문 행을 잠금 조회
+     * 공개 범위와 차단 관계 및 캐시를 같은 짧은 트랜잭션에서 조회
      *
      * @author HanWon.Jang
      * @param userNumb 번역을 요청한 로그인 사용자 번호
@@ -257,8 +314,170 @@ public class ReportTranslationService {
         request.setUserNumb(userNumb);
         // 번역 캐시와 연결할 독후감 번호를 설정
         request.setReptNumb(reptNumb);
-        // 공개 범위가 검증된 독후감 원문 잠금 조회 결과를 반환
-        return reportMapper.getReportTrnsSource(request);
+        // 원문 조회가 외부 API 응답을 기다리는 동안 잠금을 유지하지 않도록 짧은 경계 적용
+        TransactionTemplate transaction = getTranslationTx();
+        // 공개 범위가 검증된 원문의 스냅샷 반환
+        return transaction.execute(status -> {
+            // 캐시 조회 동안에도 접근 범위와 원문이 바뀌지 않도록 잠금 조회
+            ReportTranslationDto source = reportMapper.getReportTrnsSource(request);
+            // 접근 제한과 빈 본문은 캐시 재사용 전에 원래 상태로 반환
+            if (StringUtil.isEmpty(source) || StringUtil.isEmpty(source.getSourceContent())) {
+                // 번역 대상이 아닌 현재 원문 상태 반환
+                return source;
+            }
+
+            // 요청 표시 언어에 해당하는 캐시 조건 설정
+            source.setLangCode(getTargetLanguage());
+            // 현재 본문을 기준으로 캐시 원문 버전 설정
+            source.setOrigHash(getSha256(source.getSourceContent()));
+            // 원문 권한 확인과 같은 트랜잭션에서 캐시 조회
+            ReportTranslationDto cached = reportMapper.getReportTrnsDtl(source);
+            // 현재 본문과 일치하는 캐시만 스냅샷에 포함
+            if (!StringUtil.isEmpty(cached) && source.getOrigHash().equals(cached.getOrigHash())) {
+                // 유효 캐시의 번역문 설정
+                source.setTrnsCntn(cached.getTrnsCntn());
+                // 잠금과 외부 호출 없이 반환할 캐시 적중 상태 설정
+                source.setCached(true);
+            }
+
+            // 조회 완료 즉시 커밋하여 DB 연결과 원문 잠금 반환
+            return source;
+        });
+    }
+
+    /**
+     * 번역 완료 시점의 접근 권한과 원문을 검증하여 오래된 번역 저장과 노출 방지
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 요청 회원 번호
+     * @param source 번역에 사용한 원문과 결과
+     * @return 현재 원문 기준 번역 저장 결과
+     */
+    private ResultData setTranslationResult(Long userNumb, ReportTranslationDto source) {
+        // 외부 통신 이후의 저장 전용 짧은 트랜잭션 생성
+        TransactionTemplate transaction = getTranslationTx();
+        // 권한과 원문 재확인부터 캐시 저장까지 동일 트랜잭션으로 처리
+        return transaction.execute(status -> {
+            // 최초 번역 요청과 동일한 회원의 현재 접근 범위 설정
+            source.setUserNumb(userNumb);
+            // 삭제·비공개·차단·비활성화와 경합하는 현재 원문 잠금 조회
+            ReportTranslationDto current = reportMapper.getReportTrnsSource(source);
+            // 접근할 수 없어진 원문은 번역문도 반환하지 않음
+            if (StringUtil.isEmpty(current)) {
+                // "접근 권한이 없습니다."
+                return ResultData.fail(ResultEnum.FORBIDDEN);
+            }
+
+            // 대기 중 본문이 바뀌었으면 이전 본문 번역을 저장하거나 반환하지 않음
+            if (StringUtil.isEmpty(current.getSourceContent()) || !source.getOrigHash().equals(getSha256(current.getSourceContent()))) {
+                // "번역 기능을 사용할 수 없어요.\n잠시 후 다시 시도해주세요."
+                return ResultData.fail(ResultEnum.REPORT_TRANSLATION_FAILED);
+            }
+
+            // 잠금 만료 후 다른 요청이 저장한 유효 번역은 덮어쓰지 않고 재사용
+            ReportTranslationDto cached = reportMapper.getReportTrnsDtl(source);
+            // 현재 원문과 같은 캐시가 있으면 먼저 완료된 결과 유지
+            if (!StringUtil.isEmpty(cached) && source.getOrigHash().equals(cached.getOrigHash())) {
+                // 기존 결과 재사용 여부 설정
+                cached.setCached(true);
+                // 먼저 저장된 현재 원문 번역 반환
+                return ResultData.success(cached);
+            }
+
+            // 재검증한 원문의 번역 결과 저장
+            reportMapper.setReportTrns(source);
+            // 신규 외부 번역 결과임을 설정
+            source.setCached(false);
+            // 저장한 번역 결과 반환
+            return ResultData.success(source);
+        });
+    }
+
+    /**
+     * 호출부 트랜잭션과 독립된 짧은 원문 조회와 번역 저장 경계 생성
+     *
+     * @author SeungHyeon.Kang
+     * @return 새 트랜잭션 실행 객체
+     */
+    private TransactionTemplate getTranslationTx() {
+        // 호출부 상태와 무관한 독립된 DB 경계 생성
+        TransactionTemplate transaction = new TransactionTemplate(transactionManager);
+        // 외부 호출 구간에 호출부의 DB 잠금이 남지 않도록 분리
+        transaction.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        // 원문 조회와 결과 저장 전용 실행 경계 반환
+        return transaction;
+    }
+
+    /**
+     * DB 연결 없이 같은 독후감의 번역 순서를 Redis 잠금으로 직렬화
+     *
+     * @author SeungHyeon.Kang
+     * @param key 독후감별 잠금 키
+     * @param owner 현재 요청의 잠금 소유자
+     * @return 대기 한도 안의 잠금 획득 여부
+     */
+    private boolean getTranslationLock(String key, String owner) {
+        // 잘못된 유효시간 설정은 외부 호출 없이 차단
+        if (lockSeconds <= 0) {
+            // 잠금 유효시간이 없는 요청 거절
+            return false;
+        }
+
+        // 시스템 시계 변경의 영향을 받지 않는 최대 대기 종료 시점 계산
+        long deadline = System.nanoTime() + TimeUnit.SECONDS.toNanos(lockSeconds);
+        // Redis 장애와 요청 취소 시 외부 호출을 시작하지 않도록 격리
+        try {
+            // 기존 요청 완료 또는 잠금 만료까지 DB 연결 없이 대기
+            do {
+                // 장애로 작업자가 사라져도 잠금이 자동 만료되도록 유효시간과 함께 생성
+                Boolean acquired = redisTemplate.opsForValue().setIfAbsent(key, owner, Duration.ofSeconds(lockSeconds));
+                // 명시적인 Redis 성공 결과만 외부 번역 허용
+                if (Boolean.TRUE.equals(acquired)) {
+                    // 현재 요청의 번역 실행 권한 반환
+                    return true;
+                }
+
+                // 캐시 경합 중 Redis 재시도 부하를 줄이기 위한 짧은 대기
+                Thread.sleep(50L);
+            } while (System.nanoTime() < deadline);
+        }
+
+        // 종료된 요청은 외부 번역 없이 중단
+        catch (InterruptedException e) {
+            // 호출 스레드의 취소 상태 보존
+            Thread.currentThread().interrupt();
+        }
+
+        // Redis 장애 시 중복 과금 방지를 우회하지 않음
+        catch (RuntimeException e) {
+            // 원문과 잠금 식별값 없이 장애 원인 기록
+            log.warn("번역 잠금 조회에 실패했습니다. failure={}", LogSafe.getFailure(e));
+        }
+
+        // 잠금 대기 초과와 요청 종료 및 저장소 장애의 거절 결과 반환
+        return false;
+    }
+
+    /**
+     * 현재 요청 소유의 번역 잠금만 제거
+     *
+     * @author SeungHyeon.Kang
+     * @param key 독후감별 잠금 키
+     * @param owner 현재 요청의 잠금 소유자
+     */
+    private void delTranslationLock(String key, String owner) {
+        // 잠금 정리 장애가 이미 확정한 번역 결과를 변경하지 않도록 격리
+        try {
+            // 만료 후 재발급된 다른 요청의 잠금 삭제 방지
+            redisTemplate.execute(RELEASE_LOCK_SCRIPT, List.of(key), owner);
+        }
+
+        // 정리 실패 시에도 유효시간 이후 재시도 가능
+        catch (RuntimeException e) {
+            // 원문과 소유자 정보 없이 잠금 정리 실패 기록
+            log.warn("번역 잠금 정리에 실패했습니다. failure={}", LogSafe.getFailure(e));
+        }
+
     }
 
     /**
