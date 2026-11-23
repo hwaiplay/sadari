@@ -15,6 +15,7 @@ import org.apache.ibatis.builder.xml.XMLMapperBuilder;
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.mapping.BoundSql;
 import org.apache.ibatis.mapping.ParameterMapping;
+import org.apache.ibatis.reflection.ParamNameResolver;
 import org.apache.ibatis.session.Configuration;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -31,8 +32,71 @@ import org.springframework.context.i18n.LocaleContextHolder;
  * DATE              AUTHOR             NOTE
  * -----------------------------------------------------------
  * 2026-10-12        SeungHyeon.Kang        최초 생성
+ * 2026-11-23        SeungHyeon.Kang    일괄 초대 검증 SQL 바인딩 검증
  */
 class ReadingClubMapperTest {
+
+    /**
+     * 실제 Mapper 파라미터와 단일·복수·빈 식별값의 일괄 검증 SQL 바인딩 일치 여부 검증
+     *
+     * @author SeungHyeon.Kang
+     * @throws IOException 운영 Mapper XML 읽기 실패
+     * @throws NoSuchMethodException 일괄 검증 Mapper 계약 누락
+     */
+    @Test
+    void inviteSqlBindsTargets() throws IOException, NoSuchMethodException {
+        // 운영 Mapper의 동적 SQL을 해석할 설정 생성
+        Configuration configuration = new Configuration();
+        // 자동 정리할 Mapper 입력 스트림 생성
+        try (InputStream stream = Resources.getResourceAsStream(
+                "org/our/sadari/readingClub/mapper/ReadingClubMapper.xml")) {
+            // 운영 XML과 Java Mapper 계약을 연결할 파서 생성
+            XMLMapperBuilder builder = new XMLMapperBuilder(stream, configuration, "ReadingClubMapper.xml", configuration.getSqlFragments());
+            // 실제 운영 SQL 해석
+            builder.parse();
+        }
+
+        // 실제 Java Mapper의 Param 이름을 적용할 해석기 생성
+        ParamNameResolver resolver = new ParamNameResolver(configuration,
+                ReadingClubMapper.class.getMethod("getInviteTargetCnt", Long.class, Long.class, List.class));
+        // 빈 식별값도 SQL 바인딩 단계에서 예외 없이 부적격으로 제외할 입력 구성
+        List<Long> nullableTargets = new ArrayList<>(List.of(30L));
+        // Controller 이외 내부 호출의 빈 식별값 포함
+        nullableTargets.add(null);
+        // 단일·복수·빈 식별값을 포함한 대상의 바인딩 검증
+        for (List<Long> targets : List.of(List.of(30L), List.of(30L, 40L), nullableTargets)) {
+            // Service 호출과 같은 실제 Mapper 파라미터 이름 해석
+            Object parameters = resolver.getNamedParams(new Object[] {10L, 20L, targets});
+            // 일괄 초대 검증에 사용할 실제 PreparedStatement SQL 생성
+            BoundSql boundSql = configuration.getMappedStatement(
+                    "org.our.sadari.readingClub.mapper.ReadingClubMapper.getInviteTargetCnt").getBoundSql(parameters);
+            // 실제 JDBC 전달값을 검증할 목록 생성
+            List<Object> actualValues = new ArrayList<>();
+            // 바인딩 순서에 따른 활성 상태·모임·모임장·대상 식별값 검증
+            for (ParameterMapping mapping : boundSql.getParameterMappings()) {
+                // 동적 bind와 foreach의 실제 JDBC 전달값 수집
+                if (boundSql.hasAdditionalParameter(mapping.getProperty())) {
+                    // MyBatis가 생성한 동적 파라미터 수집
+                    actualValues.add(boundSql.getAdditionalParameter(mapping.getProperty()));
+                }
+
+                // Java Mapper Param으로 전달한 고정 식별값 수집
+                else {
+                    // 실제 Mapper 호출 파라미터 수집
+                    actualValues.add(configuration.newMetaObject(parameters).getValue(mapping.getProperty()));
+                }
+
+            }
+
+            // 활성 상태·모임·양방향 차단·맞팔 소유자의 바인딩 기대값 생성
+            List<Object> expectedValues = new ArrayList<>(List.of("ACTIVE", 10L, 20L, 20L, 20L));
+            // 요청 순서와 빈 식별값이 그대로 바인딩될 기대값 추가
+            expectedValues.addAll(targets);
+            // 문자열 치환 없이 대상 목록과 내부 식별값이 안전하게 전달되는지 확인
+            assertEquals(expectedValues, actualValues);
+        }
+
+    }
 
     /**
      * 단일·복수 모임 번호가 SQL에 안전하게 바인딩되고 언어와 노출 순서가 유지되는지 검증

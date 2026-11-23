@@ -58,6 +58,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-09-11        HanWon.Jang        모임 독서 등록 기본값·모임원 본인 여부 처리
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 연결
  * 2026-10-12        SeungHyeon.Kang        모임 목록 카테고리 일괄 조회
+ * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증
  */
 @Service
 @RequiredArgsConstructor
@@ -1708,16 +1709,12 @@ public class ReadingClubServiceImpl implements ReadingClubService {
             return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
-        // 모든 대상의 맞팔·기존 관계를 먼저 검증
-        for (Long targetUserNumb : targetUserNumbList) {
-            // 맞팔이 아니거나 이미 모임 관계가 있으면 일괄 초대를 중단
-            if (StringUtil.isEmpty(targetUserNumb)
-                    || userBlockService.isBlocked(userNumb, targetUserNumb)
-                    || readingClubMapper.getMutualFollowCnt(userNumb, targetUserNumb) == 0
-                    || !StringUtil.isEmpty(readingClubMapper.getClubMember(clubNumb, targetUserNumb))) {
-                // "저장에 실패했어요. 다시 시도해주세요."
-                return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
-            }
+        // 모임 잠금 안에서 활성 맞팔·양방향 차단·기존 관계를 한 번 조회하여 대상별 반복 I/O 방지
+        int inviteTargetCnt = readingClubMapper.getInviteTargetCnt(clubNumb, userNumb, targetUserNumbList);
+        // 한 명이라도 부적격이면 초대와 알림을 저장하기 전에 전체 요청 거절
+        if (inviteTargetCnt != targetUserNumbList.size()) {
+            // "저장에 실패했어요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_SAVE_REJECTED);
         }
 
         // 검증된 대상마다 3일 유효한 예약석을 생성

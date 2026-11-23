@@ -1885,10 +1885,10 @@
         )
     </insert>
 
-    <!-- 모임장과 초대 대상 사용자의 활성 맞팔로우 관계 수를 조회 -->
-    <select id="getMutualFollowCnt" resultType="int">
+    <!-- 요청한 대상의 활성 맞팔·양방향 차단·기존 모임 관계를 한 번에 검증 -->
+    <select id="getInviteTargetCnt" resultType="int">
         <include refid="clubCodeBinds" />
-        SELECT /* getMutualFollowCnt */
+        SELECT /* getInviteTargetCnt */
                COUNT(*)
           FROM TB_FOLLOW OWNERFLOW
           JOIN TB_FOLLOW USERFLOW
@@ -1897,8 +1897,23 @@
           JOIN TM_USERXM USERX
             ON USERX.USER_NUMB = OWNERFLOW.FLOW_NUMB
            AND USERX.USER_STAT = #{userActive}
+     LEFT JOIN TB_CLMEMX MEMBER
+            ON MEMBER.CLUB_NUMB = #{clubNumb}
+           AND MEMBER.USER_NUMB = USERX.USER_NUMB
+     LEFT JOIN TB_USBLOC OWNERBLOCK
+            ON OWNERBLOCK.USER_NUMB = #{ownerNumb}
+           AND OWNERBLOCK.BLOC_NUMB = USERX.USER_NUMB
+     LEFT JOIN TB_USBLOC USERBLOCK
+            ON USERBLOCK.USER_NUMB = USERX.USER_NUMB
+           AND USERBLOCK.BLOC_NUMB = #{ownerNumb}
          WHERE OWNERFLOW.USER_NUMB = #{ownerNumb}
-           AND OWNERFLOW.FLOW_NUMB = #{userNumb}
+           AND OWNERFLOW.FLOW_NUMB IN
+        <foreach collection="userNumbList" item="userNumb" open="(" separator="," close=")">
+            #{userNumb}
+        </foreach>
+           AND MEMBER.USER_NUMB IS NULL
+           AND OWNERBLOCK.USER_NUMB IS NULL
+           AND USERBLOCK.USER_NUMB IS NULL
     </select>
 
     <!-- 기존 모임 관계와 처리 중 신청이 없는 맞팔로우 초대 후보를 조회 -->

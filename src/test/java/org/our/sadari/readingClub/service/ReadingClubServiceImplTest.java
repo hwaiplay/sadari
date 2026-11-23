@@ -24,6 +24,9 @@ import java.util.Set;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.MethodSource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.Mock;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
@@ -69,6 +72,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-11        HanWon.Jang        도서 언어·알림 기본값 등록 검증
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 검증
  * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 검증 추가
+ * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증 추가
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -684,8 +688,7 @@ class ReadingClubServiceImplTest {
         // 모임 잠금과 좌석 및 맞팔 검증을 모두 통과하도록 조회 결과를 구성
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
-        when(readingClubMapper.getMutualFollowCnt(20L, 30L)).thenReturn(1);
-        when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(null);
+        when(readingClubMapper.getInviteTargetCnt(10L, 20L, List.of(30L))).thenReturn(1);
         // INVITE_CLUB 템플릿 기반 알림 저장이 성공하도록 결과를 구성
         when(alimService.sendAlim(
                 30L
@@ -744,8 +747,7 @@ class ReadingClubServiceImplTest {
         // 모임 잠금과 좌석 및 맞팔 검증을 모두 통과하도록 조회 결과를 구성
         when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
         when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(1);
-        when(readingClubMapper.getMutualFollowCnt(20L, 30L)).thenReturn(1);
-        when(readingClubMapper.getClubMember(10L, 30L)).thenReturn(null);
+        when(readingClubMapper.getInviteTargetCnt(10L, 20L, List.of(30L))).thenReturn(1);
         // 사용할 수 있는 초대 알림 템플릿이 없는 실패 결과를 구성
         when(alimService.sendAlim(
                 30L
@@ -767,6 +769,165 @@ class ReadingClubServiceImplTest {
         assertEquals(ResultEnum.COMMON_SAVE_REJECTED, exception.getResultEnum());
         // 알림 저장 전에 초대 예약석 저장을 시도했는지 검증
         verify(readingClubMapper).setInvitation(10L, 30L, 20L);
+    }
+
+    /**
+     * 여러 초대 대상의 검증을 한 번만 실행하고 모두 통과한 뒤 요청 순서대로 저장하는지 검증
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void setInviteValidatesOnce() {
+        // 복수 대상 검증용 초대 요청 생성
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 저장 순서 확인을 위한 두 대상 지정
+        request.setUserNumbList(List.of(30L, 40L));
+        // 정원 검사가 가능한 모임 잠금 결과 설정
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(getInviteClubDtl());
+        // 두 대상 모두 초대 가능한 일괄 검증 결과 설정
+        when(readingClubMapper.getInviteTargetCnt(10L, 20L, request.getUserNumbList())).thenReturn(2);
+        // 초대 대상별 알림 저장 성공 설정
+        when(alimService.sendAlim(any(), any(), any(), any(), any(), any(), any())).thenReturn(ResultData.success());
+
+        // 복수 대상 초대 실행
+        ResultData result = readingClubService.setInvitation(20L, 10L, request);
+        // 전체 초대 성공 확인
+        assertEquals(200, result.getCode());
+        // 잠금·좌석·일괄 검증 후에만 대상별 저장을 시작하는 순서 검증
+        InOrder order = org.mockito.Mockito.inOrder(readingClubMapper, alimService);
+        // 정원 경쟁을 직렬화할 모임 잠금 확인
+        order.verify(readingClubMapper).getClubForUpdate(10L);
+        // 좌석 계산 전 만료 초대 정리 확인
+        order.verify(readingClubMapper).delExpiredInvitation(10L);
+        // 현재 점유 좌석 확인
+        order.verify(readingClubMapper).getOccupiedSeatCnt(10L);
+        // 대상 수와 무관하게 한 번의 검증 조회 확인
+        order.verify(readingClubMapper).getInviteTargetCnt(10L, 20L, List.of(30L, 40L));
+        // 첫 대상 초대 저장 확인
+        order.verify(readingClubMapper).setInvitation(10L, 30L, 20L);
+        // 첫 대상 알림 저장 확인
+        order.verify(alimService).sendAlim(30L, Constant.ALIM_SITU_FOLLOW_CLUB, Constant.ALIM_TEMP_CODE_INVITE_CLUB
+                                       , Constant.ALIM_TARGET_READING_CLUB, 10L, null
+                                       , Map.of("userName", "모임장", "clubName", "초대 검증 모임"));
+        // 다음 대상 초대 저장 확인
+        order.verify(readingClubMapper).setInvitation(10L, 40L, 20L);
+        // 다음 대상 알림 저장 확인
+        order.verify(alimService).sendAlim(40L, Constant.ALIM_SITU_FOLLOW_CLUB, Constant.ALIM_TEMP_CODE_INVITE_CLUB
+                                       , Constant.ALIM_TARGET_READING_CLUB, 10L, null
+                                       , Map.of("userName", "모임장", "clubName", "초대 검증 모임"));
+        // 개별 회원 조회 등 숨은 반복 I/O 미발생 확인
+        org.mockito.Mockito.verifyNoMoreInteractions(readingClubMapper, alimService);
+        // 대상별 차단 조회의 일괄 검증 통합 확인
+        org.mockito.Mockito.verifyNoInteractions(userBlockService);
+    }
+
+    /**
+     * 일부 또는 전체 대상이 부적격이면 초대와 알림을 하나도 저장하지 않는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @param eligibleCnt 초대 가능한 대상 수
+     */
+    @ParameterizedTest
+    @ValueSource(ints = {0, 1})
+    void setInviteRejectsTargets(int eligibleCnt) {
+        // 일부만 적격인 일괄 초대 요청 생성
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 전원 검증을 확인할 두 대상 지정
+        request.setUserNumbList(List.of(30L, 40L));
+        // 정원과 권한을 만족하는 모임 설정
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(getInviteClubDtl());
+        // 차단·비활성·맞팔 해제·기존 관계에 따른 부적격 결과 설정
+        when(readingClubMapper.getInviteTargetCnt(10L, 20L, request.getUserNumbList())).thenReturn(eligibleCnt);
+        // 일부 부적격 대상이 포함된 초대 실행
+        ResultData result = readingClubService.setInvitation(20L, 10L, request);
+        // 기존 저장 거절 응답 확인
+        assertEquals(ResultEnum.COMMON_SAVE_REJECTED.getCode(), result.getCode());
+        // 적격 대상도 포함하여 초대 저장 미실행 확인
+        verify(readingClubMapper, never()).setInvitation(any(), any(), any());
+        // 부적격 요청의 알림과 개별 차단 조회 미실행 확인
+        org.mockito.Mockito.verifyNoInteractions(alimService, userBlockService);
+    }
+
+    /**
+     * 정원 초과 시 대상 검증과 초대 저장을 시작하지 않는지 검증
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void setInviteRejectsFull() {
+        // 빈 좌석보다 많은 초대 요청 생성
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 두 좌석이 필요한 대상 지정
+        request.setUserNumbList(List.of(30L, 40L));
+        // 총 정원이 열 명인 모임 설정
+        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(getInviteClubDtl());
+        // 빈 좌석이 하나뿐인 상태 설정
+        when(readingClubMapper.getOccupiedSeatCnt(10L)).thenReturn(9);
+        // 정원을 초과하는 일괄 초대 실행
+        ResultData result = readingClubService.setInvitation(20L, 10L, request);
+        // 기존 정원 초과 거절 응답 확인
+        assertEquals(ResultEnum.COMMON_SAVE_REJECTED.getCode(), result.getCode());
+        // 불필요한 대상 검증 조회 미실행 확인
+        verify(readingClubMapper, never()).getInviteTargetCnt(any(), any(), anyList());
+        // 예약석 저장 미실행 확인
+        verify(readingClubMapper, never()).setInvitation(any(), any(), any());
+        // 알림 미발송 확인
+        org.mockito.Mockito.verifyNoInteractions(alimService);
+    }
+
+    /**
+     * 일괄 초대 검증에 필요한 운영 중 모임 정보 생성
+     *
+     * @author SeungHyeon.Kang
+     * @return 정원과 알림 정보가 설정된 모임
+     */
+    private ReadingClubDto.ClubViewDto getInviteClubDtl() {
+        // 테스트용 모임 정보 생성
+        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
+        // 요청 사용자의 모임장 권한 설정
+        club.setOwnrNumb(20L);
+        // 초대 알림에 사용할 모임장 이름 설정
+        club.setOwnrNick("모임장");
+        // 초대 알림에 사용할 모임 이름 설정
+        club.setClubName("초대 검증 모임");
+        // 운영 중 상태 설정
+        club.setClubStat("ACTIVE");
+        // 복수 초대가 가능한 정원 설정
+        club.setMaxxMemb(10);
+        // 일괄 초대 테스트용 모임 반환
+        return club;
+    }
+
+    /**
+     * 빈 목록과 중복 식별값이 일괄 검증 SQL에 전달되지 않는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @param targets 비어 있거나 중복된 초대 대상 목록
+     */
+    @ParameterizedTest
+    @MethodSource("getInvalidInviteList")
+    void setInviteRejectsInput(List<Long> targets) {
+        // SQL 실행 전 거절할 요청 생성
+        ReadingClubDto.InviteReqDto request = new ReadingClubDto.InviteReqDto();
+        // 잘못된 대상 목록 지정
+        request.setUserNumbList(targets);
+        // 일괄 초대 입력 검증 실행
+        ResultData result = readingClubService.setInvitation(20L, 10L, request);
+        // 기존 요청 오류 응답 유지 확인
+        assertEquals(ResultEnum.COMMON_INVALID_REQUEST.getCode(), result.getCode());
+        // 빈 IN 조건과 중복 집계 및 불필요한 잠금 방지 확인
+        org.mockito.Mockito.verifyNoInteractions(readingClubMapper, alimService, userBlockService);
+    }
+
+    /**
+     * 일괄 조회를 시작할 수 없는 초대 대상 입력 제공
+     *
+     * @author SeungHyeon.Kang
+     * @return 빈 목록과 중복 식별값 입력
+     */
+    private static java.util.stream.Stream<List<Long>> getInvalidInviteList() {
+        // 누락·빈 목록·중복 대상 입력 반환
+        return java.util.stream.Stream.of(null, List.of(), List.of(30L, 30L));
     }
 
     /**

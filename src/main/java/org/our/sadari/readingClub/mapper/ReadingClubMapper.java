@@ -26,6 +26,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 추가
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 계약 변경
+ * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증 계약 변경
  */
 @Mapper
 public interface ReadingClubMapper {
@@ -688,14 +689,16 @@ public interface ReadingClubMapper {
                     , @Param("senderNumb") Long senderNumb);
 
     /**
-     * 유효한 맞팔 관계인지 조회
+     * 요청 목록에서 활성 맞팔이며 양방향 차단과 기존 모임 관계가 없는 초대 대상 수 조회
      *
      * @author SeungHyeon.Kang
+     * @param clubNumb 초대할 모임 번호
      * @param ownerNumb 모임장 사용자 번호
-     * @param userNumb 초대 대상 사용자 번호
-     * @return 상호 팔로우 관계 수
+     * @param userNumbList 중복 없는 초대 대상 사용자 번호 목록
+     * @return 초대 가능한 대상 수
      */
-    int getMutualFollowCnt(@Param("ownerNumb") Long ownerNumb, @Param("userNumb") Long userNumb);
+    int getInviteTargetCnt(@Param("clubNumb") Long clubNumb, @Param("ownerNumb") Long ownerNumb
+                         , @Param("userNumbList") List<Long> userNumbList);
 
     /**
      * 모임장의 맞팔 초대 후보를 조회
