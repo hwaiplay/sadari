@@ -21,6 +21,7 @@ import org.our.sadari.readingClub.dto.ReadingClubDto;
  * 2026-08-31        HanWon.Jang        독서 회차 조기 마감 계약 추가
  * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 계약 확장
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 이력 계약 추가
+ * 2026-11-26        SeungHyeon.Kang    채팅 증분 조회와 열람 신호 분리
  */
 public interface ReadingClubService {
 
@@ -250,6 +251,17 @@ public interface ReadingClubService {
 
     /** 활성 모임원의 채팅 목록을 조회함. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param afterChatNumb 마지막 채팅 번호 @return 채팅 목록 */
     ResultData getClubChatList(Long userNumb, Long clubNumb, Long afterChatNumb);
+
+    /**
+     * 새 메시지와 기존 최근 메시지의 미읽음 수 동기화
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param afterChatNumb 마지막으로 받은 채팅 번호
+     * @return 새 메시지와 미읽음 수
+     */
+    ResultData getClubChatSync(Long userNumb, Long clubNumb, Long afterChatNumb);
 
     /** 활성 모임원이 채팅을 전송함. @param userNumb 사용자 번호 @param clubNumb 모임 번호 @param request 채팅 요청 @return 저장된 채팅 */
     ResultData setClubChat(Long userNumb, Long clubNumb, ReadingClubDto.ClubChatReqDto request);

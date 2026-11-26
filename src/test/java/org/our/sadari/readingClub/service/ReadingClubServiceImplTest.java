@@ -73,6 +73,7 @@ import org.springframework.context.support.ResourceBundleMessageSource;
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 검증
  * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 검증 추가
  * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증 추가
+ * 2026-11-26        SeungHyeon.Kang    기간 조회 및 채팅 동기화 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReadingClubServiceImplTest {
@@ -1809,10 +1810,7 @@ class ReadingClubServiceImplTest {
     @Test
     void uptEmptyChatView() {
         // 원본 메시지 없이 열람 신호만 전달하는 활성 모임원 구성
-        ReadingClubDto.ClubViewDto club = new ReadingClubDto.ClubViewDto();
-        club.setClubStat("ACTIVE");
-        when(readingClubMapper.getClubForUpdate(10L)).thenReturn(club);
-        when(readingClubMapper.getActiveMemberCnt(10L, 20L)).thenReturn(1);
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
         when(alimService.getUnreadAlimCnt(20L)).thenReturn(ResultData.success(Map.of("unreadCnt", 2)));
         ReadingClubDto.ClubChatReadReqDto request = new ReadingClubDto.ClubChatReadReqDto();
         request.setViewId("6e6e0ec8-dfd8-4ba2-8278-f26e6fd6a008");
@@ -1824,6 +1822,7 @@ class ReadingClubServiceImplTest {
         assertEquals(200, readingClubService.uptClubChatRead(20L, 10L, request).getCode());
         verify(clubChatViewService).uptChatView(10L, 20L, request.getViewId(), true);
         verify(clubChatViewService).uptChatView(10L, 20L, request.getViewId(), false);
+        verify(readingClubMapper, never()).getClubForUpdate(any());
         verify(readingClubMapper, never()).uptClubChatRead(any(), any(), any());
         verify(readingClubMapper, never()).uptClubChatAlimRead(any(), any());
     }
@@ -2302,5 +2301,61 @@ class ReadingClubServiceImplTest {
         completionOrder.verify(readingClubMapper).uptExpiredReadingParticipantGoal();
         completionOrder.verify(readingClubMapper).setExpiredResultTarget();
         completionOrder.verify(readingClubMapper).uptExpiredReadingRound();
+    }
+
+    /**
+     * 새 메시지와 기존 숫자를 분리하고 조회 전 권한 검사 검증
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getChatSyncKeepsCounts() {
+        // 활성 회원만 동기화 가능한 상태 구성
+        when(readingClubMapper.getActiveMemberAccessCnt(10L, 20L)).thenReturn(1);
+        // 새 메시지가 없는 응답 구성
+        when(readingClubMapper.getClubChatList(10L, 20L, 42L, 100)).thenReturn(List.of());
+        // 본문 없이 갱신할 기존 미읽음 수 구성
+        var count = new org.our.sadari.readingClub.dto.ClubChatSyncDto.ReadCount();
+        // 기존 화면의 채팅 번호 설정
+        count.setChatNumb(42L);
+        // 다른 회원의 읽음 완료 반영
+        count.setUnreadCnt(0L);
+        // 기존 최근 메시지의 숫자 응답 구성
+        when(readingClubMapper.getChatReadCounts(10L, 20L, 42L, 100)).thenReturn(List.of(count));
+        // 새 메시지가 없는 동기화 실행
+        ResultData result = readingClubService.getClubChatSync(20L, 10L, 42L);
+        // 분리된 동기화 계약 확인
+        var response = (org.our.sadari.readingClub.dto.ClubChatSyncDto) result.getData();
+        // 신규 본문이 없어도 기존 읽음 수 갱신 확인
+        assertEquals(List.of(count), response.getReadCounts());
+        // 기존 본문 재전송 제외 확인
+        assertEquals(List.of(), response.getMessages());
+    }
+
+    /**
+     * 비활성 회원의 동기화와 열람 신호가 DB 잠금 없이 거절되는지 검증
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void denyInactiveChatSync() {
+        // 활성 관계가 없는 기본 응답으로 동기화 실행
+        ResultData result = readingClubService.getClubChatSync(20L, 10L, 42L);
+        // 원본 메시지 조회 전 접근 거절 확인
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        // 읽음 위치 없는 열람 신호 구성
+        ReadingClubDto.ClubChatReadReqDto request = new ReadingClubDto.ClubChatReadReqDto();
+        // 화면 식별값 설정
+        request.setViewId("6e6e0ec8-dfd8-4ba2-8278-f26e6fd6a008");
+        // 열람 등록 요청 설정
+        request.setViewing(true);
+        // 비활성 회원의 열람 신호 실행
+        result = readingClubService.uptClubChatRead(20L, 10L, request);
+        // 읽음 경로와 같은 접근 제한 확인
+        assertEquals(ResultEnum.COMMON_ACCESS_REJECTED.getCode(), result.getCode());
+        // 단순 열람 요청의 공용 행 잠금 제외 확인
+        verify(readingClubMapper, never()).getClubForUpdate(any());
+        // 권한 없는 열람 등록 제외 확인
+        org.mockito.Mockito.verifyNoInteractions(clubChatViewService);
     }
 }

@@ -12,6 +12,9 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 
 import java.util.Iterator;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import org.springframework.beans.factory.annotation.Value;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -42,6 +45,7 @@ import org.springframework.stereotype.Service;
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 표지 호스트 허용
  * 2026-09-19        SeungHyeon.Kang         운영 로그 및 안전한 오류 진단
+ * 2026-11-26        SeungHyeon.Kang    대표 RGB 캐시 및 동시 분석 공유
  */
 @Slf4j
 @Service
@@ -82,6 +86,113 @@ public class BookCoverColorService {
     // 제한 시간과 리다이렉트 차단 정책을 적용한 표지 이미지 HTTP 클라이언트
     private final HttpClient httpClient = HttpClient.newBuilder().connectTimeout(IMAGE_CONNECT_TIMEOUT).followRedirects(HttpClient.Redirect.NEVER).build();
 
+    // RGB 캐시의 유효 시간과 최대 항목 수
+    @Value("${book.cover-color.cache-seconds:900}")
+    private long cacheSeconds;
+    @Value("${book.cover-color.cache-max-entries:256}")
+    private int cacheMaxEntries;
+    // 표지 URL과 RGB만 저장하는 프로세스 범위의 제한된 캐시
+    private final Map<String, CachedColor> colorCache = new LinkedHashMap<>();
+    // 같은 표지의 동시 다운로드를 합치는 고정 개수 잠금
+    private final Object[] coverLocks = getCoverLocks();
+
+    /**
+     * 캐시 항목 수와 무관한 고정 개수 다운로드 잠금 생성
+     *
+     * @author SeungHyeon.Kang
+     * @return URL 해시별 잠금 배열
+     */
+    private static Object[] getCoverLocks() {
+        // 대기 요청 수가 캐시 메모리 증가로 이어지지 않도록 고정 크기 사용
+        Object[] locks = new Object[64];
+        // 각 버킷은 독립된 모니터로 초기화
+        for (int index = 0; index < locks.length; index++) {
+            // 다른 URL 버킷의 네트워크 대기 분리
+            locks[index] = new Object();
+        }
+
+        // 고정된 다운로드 잠금 반환
+        return locks;
+    }
+
+    /**
+     * 동일 표지의 성공한 대표색 계산을 유효 시간과 항목 수 안에서 공유
+     *
+     * @author SeungHyeon.Kang
+     * @param uri 검증된 외부 표지 주소
+     * @return 대표 RGB 또는 이미지 분석 불가 시 null
+     * @throws IOException 이미지 다운로드 및 디코딩 실패
+     * @throws InterruptedException 외부 요청 대기 중단
+     */
+    private int[] getCachedCoverRgb(URI uri) throws IOException, InterruptedException {
+        // 허용 목록 검증을 통과한 전체 주소로 서로 다른 표지 분리
+        String key = uri.toString();
+        // 같은 URL만 직렬화하고 전역 캐시 잠금은 네트워크 대기 전에 해제
+        synchronized (coverLocks[Math.floorMod(key.hashCode(), coverLocks.length)]) {
+            // 캐시 읽기와 만료 제거의 원자성 보장
+            synchronized (colorCache) {
+                // 현재 프로세스의 시간 경과만 사용하는 만료 기준
+                CachedColor cached = colorCache.get(key);
+                // 활성 캐시만 재사용하며 코드 선택 결과는 저장하지 않음
+                if (!StringUtil.isEmpty(cached) && cached.expiresAt() > System.nanoTime()) {
+                    // 성공한 이전 분석의 대표 RGB 반환
+                    return cached.rgb();
+                }
+
+                // 만료된 항목은 다음 다운로드 실패 시에도 유지하지 않음
+                colorCache.remove(key);
+            }
+
+            // SSRF와 이미지 크기 제한을 통과한 기존 다운로드 경로 재사용
+            BufferedImage image = downloadCoverImage(uri);
+            // 디코딩 실패는 캐시에 저장하지 않아 다음 요청에서 복구 허용
+            if (StringUtil.isEmpty(image)) {
+                // 기본 색상 매칭으로 전환할 빈 RGB 반환
+                return null;
+            }
+
+            // 이미지 픽셀 버퍼 대신 작은 RGB 결과만 보존
+            int[] rgb = getRepresentativeColor(image);
+            // 유효한 성공 결과와 양수 설정에만 캐시 적용
+            if (!StringUtil.isEmpty(rgb) && cacheSeconds > 0 && cacheMaxEntries > 0) {
+                // 다른 URL의 캐시 저장과 최대 항목 수 검사를 함께 수행
+                synchronized (colorCache) {
+                    // 가득 찬 캐시는 가장 오래 저장된 항목부터 제거
+                    while (colorCache.size() >= cacheMaxEntries) {
+                        // 전체 캐시를 비우지 않는 점진적 항목 제거
+                        colorCache.remove(colorCache.keySet().iterator().next());
+                    }
+
+                    // 벽시계 변경에 영향을 받지 않는 만료 시각 저장
+                    colorCache.put(key, new CachedColor(rgb, System.nanoTime() + Duration.ofSeconds(cacheSeconds).toNanos()));
+                }
+
+            }
+
+            // 원본 URL과 이미지 없이 완료 건수만 기록
+            log.info("event=book_cover_analysis outcome=completed");
+            // 이번 요청과 후속 요청이 공유할 RGB 반환
+            return rgb;
+        }
+
+    }
+
+    /**
+     * fileName       : CachedColor
+     * author         : SeungHyeon.Kang
+     * date           : 2026-11-26
+     * description    : 외부 표지 대표 RGB와 프로세스 만료 시각 보관
+     * ===========================================================
+     * DATE              AUTHOR             NOTE
+     * -----------------------------------------------------------
+     * 2026-11-26        SeungHyeon.Kang    제한된 대표색 캐시 항목 추가
+     * @param rgb 대표 RGB
+     * @param expiresAt 단조 시계 기준 만료 시각
+     */
+    private record CachedColor(int[] rgb, long expiresAt) {
+
+    }
+
     /**
      * 신뢰된 도서 검색 표지의 대표색과 가장 가까운 활성 BOOK_COLR 코드를 조회
      *
@@ -112,17 +223,10 @@ public class BookCoverColorService {
 
         // 외부 이미지 응답과 디코딩 실패를 기본 색상으로 복구하기 위한 블록
         try {
-            // 크기 제한 안에서 신뢰된 도서 표지 이미지를 내려받음
-            BufferedImage coverImage = downloadCoverImage(coverUri);
-
-            // 이미지가 비어 있거나 디코딩되지 않으면 기본 책장 색상을 사용
-            if (StringUtil.isEmpty(coverImage)) {
-                // 분석할 수 없는 표지의 기본 책장 색상 응답을 반환
-                return ResultData.success(createColorResponse(fallbackColorCode));
-            }
-
-            // 표지 대표색과 CIELAB 거리가 가장 가까운 활성 공통코드를 계산
-            CodeDto matchedColorCode = findNearestBookColor(coverImage, colorCodeList, fallbackColorCode);
+            // 동일 표지의 다운로드와 대표색 계산을 제한된 캐시에서 공유
+            int[] representativeColor = getCachedCoverRgb(coverUri);
+            // 공통코드 변경은 RGB 캐시와 분리하여 요청마다 최신 목록으로 반영
+            CodeDto matchedColorCode = getNearestBookColor(representativeColor, colorCodeList, fallbackColorCode);
 
             // 자동 선택된 책장 색상 코드를 성공 응답으로 반환
             return ResultData.success(createColorResponse(matchedColorCode));
@@ -198,7 +302,7 @@ public class BookCoverColorService {
      * @throws IOException 이미지 응답 읽기 또는 디코딩에 실패한 경우 발생
      * @throws InterruptedException 외부 이미지 요청 중 스레드가 중단된 경우 발생
      */
-    private BufferedImage downloadCoverImage(URI coverUri) throws IOException, InterruptedException {
+    BufferedImage downloadCoverImage(URI coverUri) throws IOException, InterruptedException {
         // 도서 표지 이미지 서버에 전달할 제한 시간과 응답 형식 헤더를 구성
         HttpRequest request = HttpRequest.newBuilder(coverUri).timeout(IMAGE_REQUEST_TIMEOUT).header("Accept", "image/*").header("User-Agent", "Sadari-Book-Cover-Color/1.0").GET().build();
         // 응답 본문을 스트림으로 받아 설정한 최대 크기를 초과하지 않게 읽음
@@ -301,6 +405,20 @@ public class BookCoverColorService {
         // 흰 여백과 투명 픽셀을 제외한 표지의 지배적인 색상을 계산
         int[] representativeColor = getRepresentativeColor(coverImage);
 
+        // 이미지 계산과 현재 팔레트 매칭 경계 분리
+        return getNearestBookColor(representativeColor, colorCodeList, fallbackColorCode);
+    }
+
+    /**
+     * 대표 RGB와 현재 활성 색상 코드의 최근접 색상 계산
+     *
+     * @author SeungHyeon.Kang
+     * @param representativeColor 표지 대표 RGB
+     * @param colorCodeList 현재 활성 색상 코드 목록
+     * @param fallbackColorCode 분석 불가 시 기본 코드
+     * @return 현재 팔레트에서 선택한 색상 코드
+     */
+    private CodeDto getNearestBookColor(int[] representativeColor, List<CodeDto> colorCodeList, CodeDto fallbackColorCode) {
         // 유효한 대표색이 없으면 정렬 순서가 가장 빠른 공통코드를 사용
         if (StringUtil.isEmpty(representativeColor)) {
             // 이미지 분석 실패 시 사용할 기본 색상 코드를 반환

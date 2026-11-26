@@ -38,6 +38,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-31        HanWon.Jang        독서 조기 마감·결과 확인 API 추가
  * 2026-09-01        HanWon.Jang        공개 모임 요약·자진 탈퇴 API 확장
  * 2026-09-04        SeungHyeon.Kang    모임 채팅 읽음 수·강제 퇴장 API 추가
+ * 2026-11-26        SeungHyeon.Kang    채팅 증분 조회와 열람 신호 분리
  */
 @RestController
 @RequiredArgsConstructor
@@ -235,6 +236,24 @@ public class ReadingClubController {
                                      , @RequestParam(required = false) Long afterChatNumb) {
         // 활성 회원 권한을 검증한 채팅 목록을 반환
         return readingClubService.getClubChatList(userNumb, clubNumb, afterChatNumb);
+    }
+
+    /**
+     * 활성 모임원의 새 메시지와 기존 미읽음 수 동기화
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param afterChatNumb 마지막으로 받은 채팅 번호
+     * @return 새 메시지와 기존 메시지의 미읽음 수
+     */
+    @GetMapping("/{clubNumb}/chats/sync")
+    @Operation(summary = "모임 채팅 증분 동기화", description = "활성 모임원의 새 메시지와 기존 최근 메시지의 미읽음 수 조회")
+    public ResultData getClubChatSync(@Parameter(hidden = true) @AuthenticationPrincipal Long userNumb
+                                     , @Parameter(description = "조회할 모임 번호", example = "3") @PathVariable Long clubNumb
+                                     , @Parameter(description = "마지막으로 받은 채팅 번호", example = "100") @RequestParam Long afterChatNumb) {
+        // 매 요청에 현재 모임 상태와 활성 회원 권한 적용
+        return readingClubService.getClubChatSync(userNumb, clubNumb, afterChatNumb);
     }
 
     /**

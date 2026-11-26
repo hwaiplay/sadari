@@ -2,6 +2,7 @@ package org.our.sadari.readingClub.mapper;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import org.our.sadari.readingClub.dto.ClubChatSyncDto;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
@@ -27,9 +28,25 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
  * 2026-10-12        SeungHyeon.Kang        모임 카테고리 일괄 조회 계약 변경
  * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증 계약 변경
+ * 2026-11-26        SeungHyeon.Kang    채팅 증분 조회와 열람 신호 분리
  */
 @Mapper
 public interface ReadingClubMapper {
+
+    /**
+     * 기존 최근 메시지의 본문 없이 미읽음 회원 수 조회
+     *
+     * @author SeungHyeon.Kang
+     * @param clubNumb 모임 번호
+     * @param userNumb 인증 사용자 번호
+     * @param afterChatNumb 마지막으로 받은 채팅 번호
+     * @param maxSize 최대 갱신 메시지 수
+     * @return 메시지별 미읽음 회원 수
+     */
+    List<ClubChatSyncDto.ReadCount> getChatReadCounts(@Param("clubNumb") Long clubNumb
+                                                     , @Param("userNumb") Long userNumb
+                                                     , @Param("afterChatNumb") Long afterChatNumb
+                                                     , @Param("maxSize") int maxSize);
 
     /** 활성 모임원 여부를 조회함. @param clubNumb 모임 번호 @param userNumb 사용자 번호 @return 활성 모임원 수 */
     int getActiveMemberCnt(@Param("clubNumb") Long clubNumb, @Param("userNumb") Long userNumb);

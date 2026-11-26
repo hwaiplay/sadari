@@ -3,6 +3,8 @@ package org.our.sadari.report.mapper;
 import java.math.BigDecimal;
 import java.util.List;
 import org.apache.ibatis.annotations.Mapper;
+import org.apache.ibatis.annotations.Param;
+import org.our.sadari.myPage.dto.ReadingCalendarDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
 import org.our.sadari.report.dto.ReportAlimDto;
@@ -25,9 +27,23 @@ import org.our.sadari.social.dto.SocialDto;
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 조회·변경 추가
  * 2026-09-07        SeungHyeon.Kang    독후감 번역 캐시 조회·저장 추가
  * 2026-09-11        HanWon.Jang        진행 중인 모임 독후감 삭제 시 중도하차 처리 추가
+ * 2026-11-26        SeungHyeon.Kang    달력 기간 및 표시 정보 조회 최적화
  */
 @Mapper
 public interface ReportMapper {
+
+    /**
+     * 달력 표시 기간과 겹치는 본인 독후감의 최소 정보 조회
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @param periodStart 달력 시작일
+     * @param periodEnd 달력 종료일
+     * @return 표시 기간과 겹치는 독후감 목록
+     */
+    List<ReadingCalendarDto> getReadingCalendar(@Param("userNumb") Long userNumb
+                                               , @Param("periodStart") String periodStart
+                                               , @Param("periodEnd") String periodEnd);
     /**
      * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회
      *

@@ -412,6 +412,29 @@ export const getClubChatListApi = async (
   return (assertResultDataSuccess(response.data).data as ClubChatMessage[] | undefined) ?? [];
 };
 
+// 기존 메시지의 본문 없이 변경할 미읽음 수
+export type ClubChatReadCount = {chatNumb: number; unreadCnt: number};
+// 새 메시지와 기존 최근 메시지의 미읽음 수 동기화 결과
+export type ClubChatSync = {messages: ClubChatMessage[]; readCounts: ClubChatReadCount[]};
+
+/**
+ * 마지막 메시지 이후의 본문과 기존 메시지의 미읽음 수 조회
+ *
+ * @author SeungHyeon.Kang
+ * @param clubNumb 모임 번호
+ * @param afterChatNumb 마지막으로 받은 채팅 번호
+ * @return 새 메시지와 기존 미읽음 수
+ * @throws 서버 권한 또는 조회 실패
+ */
+export const getClubChatSyncApi = async (clubNumb: number, afterChatNumb: number): Promise<ClubChatSync> => {
+  // 권한 검증과 현재 모임 상태를 매 요청에 적용
+  const response = await api.get(`/reading-clubs/${clubNumb}/chats/sync`, {params: {afterChatNumb}});
+  // HTTP 성공과 업무 성공을 함께 검증
+  const data = assertResultDataSuccess(response.data).data as ClubChatSync;
+  // 숫자 갱신과 새 본문을 분리하여 호출부에 전달
+  return data;
+};
+
 /**
  * 모임원의 마지막 읽은 채팅 번호를 갱신
  * @author SeungHyeon.Kang

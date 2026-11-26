@@ -1,5 +1,7 @@
 package org.our.sadari.report.service;
 
+import java.time.LocalDate;
+
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.report.dto.ReportAlimDto;
@@ -19,6 +21,7 @@ import org.our.sadari.report.dto.ReportDto;
  * 2026-08-14        SeungHyeon.Kang    공개 독후감 팔로우 작성자 우선 조회 계약 반영
  * 2026-08-15        SeungHyeon.Kang    공개 독후감 조회·정렬 계약
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 계약 추가
+ * 2026-11-26        SeungHyeon.Kang    달력 기간 및 표시 정보 조회 최적화
  */
 public interface ReportService {
     /**
@@ -77,15 +80,15 @@ public interface ReportService {
     ResultData getPublicRatingAvgByIsbn(String bookIsbn);
 
     /**
-     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건으로 조회
+     * 로그인 사용자의 달력 표시 기간과 겹치는 독후감 조회
      *
      * @author SeungHyeon.Kang
      * @param userNumb 로그인 사용자 번호
-     * @param bookKeyword 책 제목 또는 작가명 검색어
-     * @param sortType 목록 정렬 유형
-     * @return 독후감 목록 조회 결과
+     * @param periodStart 달력 시작일
+     * @param periodEnd 달력 종료일
+     * @return 달력 표시용 최소 정보 목록
      */
-    ResultData getBookList(Long userNumb, String bookKeyword, String sortType);
+    ResultData getReadingCalendar(Long userNumb, LocalDate periodStart, LocalDate periodEnd);
 
     /**
      * 로그인 사용자의 독후감을 검색어와 정렬 조건에 따라 페이지 단위로 조회

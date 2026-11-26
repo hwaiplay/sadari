@@ -65,6 +65,7 @@ import org.springframework.transaction.interceptor.TransactionInterceptor;
  * 2026-08-21        SeungHyeon.Kang    독후감별 알림 설정 변경 검증 추가
  * 2026-09-11        HanWon.Jang        모임 독후감 삭제 중도하차 처리 순서 검증 추가
  * 2026-10-12        SeungHyeon.Kang        독서 목표 커밋·롤백 검증 추가
+ * 2026-11-26        SeungHyeon.Kang    기간 조회 및 채팅 동기화 검증
  */
 @ExtendWith(MockitoExtension.class)
 class ReportServiceImplTest {
@@ -447,5 +448,34 @@ class ReportServiceImplTest {
         deleteOrder.verify(reportMapper).delReportLikes(any(ReportDto.class));
         // 모든 참조 데이터가 정리된 뒤 부모 독후감이 삭제되는지 확인
         deleteOrder.verify(reportMapper).delReport(any(ReportDto.class));
+    }
+
+    /**
+     * 달력의 조회 기간 제한과 이전 잘못된 날짜 제외 검증
+     *
+     * @author SeungHyeon.Kang
+     */
+    @Test
+    void getCalendarLimitsPeriod() {
+        // 표시 범위와 겹치는 유효한 기록 구성
+        var valid = new org.our.sadari.myPage.dto.ReadingCalendarDto();
+        // 달력 시작 경계일 설정
+        valid.setReptStdt("2026-10-25");
+        // 달력 끝 경계일 설정
+        valid.setReptEndt("2026-12-05");
+        // 기존 비정상 날짜 기록 구성
+        var invalid = new org.our.sadari.myPage.dto.ReadingCalendarDto();
+        // 파싱 불가 날짜 구성
+        invalid.setReptStdt("invalid");
+        // 표시 기간의 종료일 구성
+        invalid.setReptEndt("2026-11-26");
+        // 기간과 인증 사용자 조건이 적용된 조회 응답 구성
+        when(reportMapper.getReadingCalendar(3L, "2026-10-25", "2026-12-05")).thenReturn(List.of(valid, invalid));
+        // 달력 전용 조회 실행
+        ResultData result = reportService.getReadingCalendar(3L, java.time.LocalDate.of(2026, 10, 25), java.time.LocalDate.of(2026, 12, 5));
+        // 원래 날짜 판정을 통과한 기록만 반환 확인
+        assertEquals(List.of(valid), result.getData());
+        // 전체 본문 조회 경로가 사용되지 않음 확인
+        verify(reportMapper, org.mockito.Mockito.never()).getReportList(any());
     }
 }

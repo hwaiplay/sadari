@@ -65,6 +65,10 @@ kakao:
 
 # 카카오 도서 검색 API 주소는 공급자 계약 변경 시 코드 재빌드 없이 설정 파일에서 교체할 수 있게 관리
 book:
+  cover-color:
+    # 외부 표지 대표 RGB만 저장하는 프로세스 캐시의 수명과 최대 항목 수
+    cache-seconds: ${BOOK_COVER_COLOR_CACHE_SECONDS:900}
+    cache-max-entries: ${BOOK_COVER_COLOR_CACHE_MAX_ENTRIES:256}
   search:
     url: https://dapi.kakao.com/v3/search/book
     # 캐시 적중 검색이 Redis와 서버를 과도하게 사용하지 않도록 차단하는 회원별 60초 요청 한도

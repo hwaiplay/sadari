@@ -26,6 +26,7 @@ import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.global.common.util.XssUtil;
 import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
+import org.our.sadari.myPage.dto.ReadingCalendarDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.myPage.dto.ReadingSummaryQueryDto;
 import org.our.sadari.report.dto.ReportAlimDto;
@@ -58,6 +59,7 @@ import org.springframework.transaction.interceptor.TransactionAspectSupport;
  * 2026-09-07        SeungHyeon.Kang    독후감 작성 언어와 공개 번역 가능 여부 반영
  * 2026-09-11        HanWon.Jang        진행 중인 모임 독후감 삭제 시 중도하차 처리 추가
  * 2026-10-12        SeungHyeon.Kang        독서 목표 일괄 저장 실패 롤백
+ * 2026-11-26        SeungHyeon.Kang    달력 기간 및 표시 정보 조회 최적화
  */
 @Service
 @RequiredArgsConstructor
@@ -112,32 +114,42 @@ public class ReportServiceImpl implements ReportService {
     private static final BigDecimal REPORT_GRADE_STEP = new BigDecimal("0.5");
 
     /**
-     * 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회
-     * 검색어는 HTML entity를 일반 텍스트로 보정한 뒤 Mapper에 전달
+     * 달력 표시 기간과 겹치는 본인 독후감의 최소 정보 조회
      *
      * @author SeungHyeon.Kang
-     * @param userNumb 로그인 사용자 번호
-     * @param bookKeyword 책 제목 또는 작가명 검색어
-     * @param sortType 목록 정렬 유형
-     * @return 독후감 목록 조회 결과
+     * @param userNumb 인증 사용자 번호
+     * @param periodStart 달력 시작일
+     * @param periodEnd 달력 종료일
+     * @return 달력에 표시할 독후감 목록
      */
     @Override
-    public ResultData getBookList(Long userNumb, String bookKeyword, String sortType) {
-        // 독후감 또는 독서 목표 처리 데이터를 담을 객체를 생성
-        ReportDto reportDto = new ReportDto();
-        // UserNumb 업무 값을 reportDto DTO에 설정
-        reportDto.setUserNumb(userNumb);
-        // BookKeyword 업무 값을 reportDto DTO에 설정
-        reportDto.setBookKeyword(StringUtil.normalizePlainText(bookKeyword));
-        // SortType 업무 값을 reportDto DTO에 설정
-        reportDto.setSortType(normalizeListSortType(sortType));
-        // ReptStat 업무 값을 reportDto DTO에 설정
-        reportDto.setReptStat(Constant.REPORT_STAT_READ);
+    public ResultData getReadingCalendar(Long userNumb, LocalDate periodStart, LocalDate periodEnd) {
+        // 인증과 날짜 경계가 없는 내부 호출의 전체 범위 조회 차단
+        if (StringUtil.hasEmpty(userNumb, periodStart, periodEnd) || periodStart.isAfter(periodEnd)) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
 
-        // ReportList 데이터를 DB에서 조회
-        List<ReportDto> list = reportMapper.getReportList(reportDto);
-        // 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회 결과를 성공 응답으로 반환
-        return ResultData.success(list);
+        // SQL 단계에서 기간과 응답 컬럼을 제한하여 본문 및 불필요한 코드명 조회 제외
+        List<ReadingCalendarDto> candidates = reportMapper.getReadingCalendar(userNumb, periodStart.toString(), periodEnd.toString());
+        // 이전 데이터의 잘못된 날짜는 기존 달력 정책과 동일하게 제외
+        List<ReadingCalendarDto> calendar = new ArrayList<>();
+        // 좁혀진 후보에만 기존 날짜 파싱과 기간 중첩 기준 적용
+        for (ReadingCalendarDto item : candidates) {
+            // 레거시 독서 시작일의 기존 파싱 기준 보존
+            LocalDate start = DateUtil.parseDefaultDate(item.getReptStdt());
+            // 레거시 독서 종료일의 기존 파싱 기준 보존
+            LocalDate end = DateUtil.parseDefaultDate(item.getReptEndt());
+            // SQL 후보에서도 기존 달력의 잘못된 날짜 제외 판정 보존
+            if (DateUtil.isDateRangeOverlapped(start, end, periodStart, periodEnd)) {
+                // 달력 계약을 통과한 표시 정보만 응답에 포함
+                calendar.add(item);
+            }
+
+        }
+
+        // 기존 응답 필드와 정렬 순서를 유지한 달력 목록 반환
+        return ResultData.success(calendar);
     }
 
     /**

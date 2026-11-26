@@ -22,6 +22,7 @@ import org.our.sadari.global.common.result.ResultEnum;
 import org.our.sadari.global.common.service.BadWordDetectionService;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.readingClub.dto.ReadingClubDto;
+import org.our.sadari.readingClub.dto.ClubChatSyncDto;
 import org.our.sadari.readingClub.mapper.ReadingClubMapper;
 import org.our.sadari.readingClub.mapper.ReadingClubMembershipMapper;
 import org.our.sadari.report.dto.ReportDto;
@@ -59,6 +60,7 @@ import org.springframework.transaction.annotation.Transactional;
  * 2026-09-13        HanWon.Jang        초대 수락 모임장 알림 연결
  * 2026-10-12        SeungHyeon.Kang        모임 목록 카테고리 일괄 조회
  * 2026-11-23        SeungHyeon.Kang    모임 초대 대상 일괄 검증
+ * 2026-11-26        SeungHyeon.Kang    채팅 증분 조회와 열람 신호 분리
  */
 @Service
 @RequiredArgsConstructor
@@ -731,6 +733,39 @@ public class ReadingClubServiceImpl implements ReadingClubService {
     }
 
     /**
+     * 현재 권한으로 새 메시지와 기존 최근 메시지의 미읽음 수 동기화
+     *
+     * @author SeungHyeon.Kang
+     * @param userNumb 인증 사용자 번호
+     * @param clubNumb 모임 번호
+     * @param afterChatNumb 마지막으로 받은 채팅 번호
+     * @return 새 메시지와 미읽음 수
+     */
+    @Override
+    public ResultData getClubChatSync(Long userNumb, Long clubNumb, Long afterChatNumb) {
+        // 인증과 커서의 양수 범위를 외부 조회 전에 검증
+        if (StringUtil.hasEmpty(userNumb, clubNumb, afterChatNumb) || afterChatNumb <= 0) {
+            // "요청값이 올바르지 않아요."
+            return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 퇴장과 모임 종료 후의 증분 조회 우회 차단
+        if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) == 0) {
+            // "올바르지 않은 접근이에요. 다시 시도해주세요."
+            return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+        }
+
+        // 본문이 필요한 새 메시지와 숫자만 필요한 기존 메시지 분리
+        ClubChatSyncDto response = new ClubChatSyncDto();
+        // 한 번에 최대 기존 페이지 크기의 새 메시지만 전달
+        response.setMessages(readingClubMapper.getClubChatList(clubNumb, userNumb, afterChatNumb, CHAT_LIST_SIZE));
+        // 기존 최근 메시지의 읽음 수는 새 메시지가 없어도 갱신
+        response.setReadCounts(readingClubMapper.getChatReadCounts(clubNumb, userNumb, afterChatNumb, CHAT_LIST_SIZE));
+        // 기존 본문을 재전송하지 않는 동기화 응답 반환
+        return ResultData.success(response);
+    }
+
+    /**
      * 활성 모임원의 마지막 읽은 채팅 번호를 갱신
      *
      * @author SeungHyeon.Kang
@@ -750,6 +785,20 @@ public class ReadingClubServiceImpl implements ReadingClubService {
                 || (!StringUtil.isEmpty(request.getViewing()) && StringUtil.isEmpty(request.getViewId()))) {
             // "요청값이 올바르지 않아요."
             return ResultData.fail(ResultEnum.COMMON_INVALID_REQUEST);
+        }
+
+        // 읽음 위치가 없는 열람 신호는 모임 공용 행 잠금과 DB 갱신에서 제외
+        if (StringUtil.isEmpty(request.getChatNumb())) {
+            // 모임 종료와 계정 및 회원 제한은 기존과 동일하게 적용
+            if (readingClubMapper.getActiveMemberAccessCnt(clubNumb, userNumb) == 0) {
+                // "올바르지 않은 접근이에요. 다시 시도해주세요."
+                return ResultData.fail(ResultEnum.COMMON_ACCESS_REJECTED);
+            }
+
+            // 현재 화면의 열람 유효 시간만 갱신
+            clubChatViewService.uptChatView(clubNumb, userNumb, request.getViewId(), request.getViewing());
+            // 기존 헤더 배지 응답 계약 보존
+            return alimService.getUnreadAlimCnt(userNumb);
         }
 
         // 채팅 생성과 읽음 처리를 직렬화하여 늦게 저장된 알림의 읽음 누락 방지

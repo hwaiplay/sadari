@@ -35,6 +35,7 @@ import org.our.sadari.global.common.result.ResultData;
  * -----------------------------------------------------------
  * 2026-07-30        SeungHyeon.Kang    최초 생성
  * 2026-07-31        SeungHyeon.Kang    카카오 도서 표지 호스트 검증 추가
+ * 2026-11-26        SeungHyeon.Kang    대표 RGB 캐시 경계 검증
  */
 @ExtendWith(MockitoExtension.class)
 class BookCoverColorServiceTest {
@@ -272,5 +273,143 @@ class BookCoverColorServiceTest {
 
         // 크기 헤더만 포함한 테스트 PNG 바이트를 반환
         return pngBuffer.toByteArray();
+    }
+
+    /**
+     * 같은 표지는 한 번만 분석하고 현재 색상 팔레트는 매번 적용하는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 이미지 분석 모의 설정 실패
+     */
+    @Test
+    void reuseRgbWithNewPalette() throws Exception {
+        // 동일 대표 RGB를 다시 매칭할 서로 다른 팔레트 구성
+        CodeDto blue = createColorCode("BLUE", "#0000ff");
+        // 기존 코드가 비활성화된 이후의 팔레트 구성
+        CodeDto red = createColorCode("RED", "#ff0000");
+        // 요청마다 다른 현재 팔레트 반환
+        when(codeUtil.getCodeList(Constant.CODE_BOOK_COLR)).thenReturn(List.of(blue)).thenReturn(List.of(red));
+        // 실제 서비스의 다운로드 경계만 대체
+        BookCoverColorService service = org.mockito.Mockito.spy(bookCoverColorService);
+        // 캐시 유효 시간 설정
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheSeconds", 900L);
+        // 최대 캐시 항목 수 설정
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheMaxEntries", 2);
+        // 대표색이 파란 유효 표지 구성
+        org.mockito.Mockito.doReturn(createSolidColorImage(0xff0000ff)).when(service).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+        // 허용된 표지 요청 구성
+        BookCoverColorRequestDto request = new BookCoverColorRequestDto();
+        // 같은 외부 표지 주소 설정
+        request.setBookCvim("https://search1.kakaocdn.net/thumb/book-cache");
+        // 첫 분석과 두 번째 현재 팔레트 매칭 실행
+        var first = (BookCoverColorResponseDto) service.getBookCoverColor(request).getData();
+        // 원본 픽셀 재분석 없이 두 번째 요청 실행
+        var second = (BookCoverColorResponseDto) service.getBookCoverColor(request).getData();
+        // 첫 팔레트의 선택 결과 확인
+        assertEquals("BLUE", first.getReptColr());
+        // 오래된 코드 대신 현재 팔레트 선택 확인
+        assertEquals("RED", second.getReptColr());
+        // 대표 RGB를 재사용한 다운로드 한 번만 실행 확인
+        org.mockito.Mockito.verify(service).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+    }
+
+    /**
+     * 동일 URL의 동시 분석을 하나로 합치고 캐시 크기를 제한하는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 동시 분석 대기 실패
+     */
+    @Test
+    void shareBoundedCoverCache() throws Exception {
+        // 모든 요청에 같은 현재 팔레트 구성
+        when(codeUtil.getCodeList(Constant.CODE_BOOK_COLR)).thenReturn(List.of(createColorCode("BLUE", "#0000ff")));
+        // 외부 통신 횟수만 관찰할 실제 서비스 구성
+        BookCoverColorService service = org.mockito.Mockito.spy(bookCoverColorService);
+        // 양수 유효 시간 구성
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheSeconds", 900L);
+        // 메모리 상한 경계 검증을 위한 한 항목 캐시 구성
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheMaxEntries", 1);
+        // 유효한 표지 응답 구성
+        org.mockito.Mockito.doReturn(createSolidColorImage(0xff0000ff)).when(service).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+        // 동시에 같은 URL을 요청할 실행기 구성
+        var executor = java.util.concurrent.Executors.newFixedThreadPool(8);
+        // 테스트 실패 시에도 실행기 정리 보장
+        try {
+            // 동시에 공유할 요청 구성
+            BookCoverColorRequestDto request = new BookCoverColorRequestDto();
+            // 허용된 고정 URL 설정
+            request.setBookCvim("https://search1.kakaocdn.net/thumb/book-a");
+            // 병렬 요청 결과 보관
+            var futures = new java.util.ArrayList<java.util.concurrent.Future<ResultData>>();
+            // 같은 표지의 동시 요청 구성
+            for (int index = 0; index < 8; index++) {
+                // 실제 캐시 잠금 경계를 통과하는 요청 실행
+                futures.add(executor.submit(() -> service.getBookCoverColor(request)));
+            }
+
+            // 모든 병렬 결과의 완료와 성공 확인
+            for (var future : futures) {
+                // 무한 대기가 없는 정상 응답 확인
+                assertEquals(200, future.get(5, java.util.concurrent.TimeUnit.SECONDS).getCode());
+            }
+
+            // 같은 URL의 다운로드 한 번만 실행 확인
+            org.mockito.Mockito.verify(service).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+            // 다른 URL을 저장하여 캐시 상한 경계 이동
+            request.setBookCvim("https://search1.kakaocdn.net/thumb/book-b");
+            // 두 번째 URL의 대표색 저장
+            service.getBookCoverColor(request);
+            // 제거된 첫 번째 URL 재요청 구성
+            request.setBookCvim("https://search1.kakaocdn.net/thumb/book-a");
+            // 상한 때문에 제거된 표지 재분석
+            service.getBookCoverColor(request);
+            // 한 항목 캐시의 제거와 재분석 확인
+            org.mockito.Mockito.verify(service, org.mockito.Mockito.times(3)).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+        }
+
+        // 테스트 실행 스레드 누수 방지
+        finally {
+            // 남아 있는 실행 작업 종료
+            executor.shutdownNow();
+        }
+
+    }
+
+    /**
+     * 실패 결과는 캐시하지 않고 만료한 성공 결과는 다시 분석하는지 검증
+     *
+     * @author SeungHyeon.Kang
+     * @throws Exception 이미지 분석 및 만료 대기 실패
+     */
+    @Test
+    void retryAndExpireCoverRgb() throws Exception {
+        // 실패 시 기본 팔레트와 성공 시 매칭 팔레트 구성
+        when(codeUtil.getCodeList(Constant.CODE_BOOK_COLR)).thenReturn(List.of(createColorCode("BLUE", "#0000ff")));
+        // 다운로드 경계 대체
+        BookCoverColorService service = org.mockito.Mockito.spy(bookCoverColorService);
+        // 짧은 만료 시간으로 실제 단조 시계 경계 검증
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheSeconds", 1L);
+        // 캐시 항목 수 구성
+        org.springframework.test.util.ReflectionTestUtils.setField(service, "cacheMaxEntries", 2);
+        // 최초 실패 이후 유효 표지를 반환하는 응답 구성
+        org.mockito.Mockito.doReturn((Object) null, createSolidColorImage(0xff0000ff)).when(service).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+        // 허용된 표지 요청 구성
+        BookCoverColorRequestDto request = new BookCoverColorRequestDto();
+        // 같은 표지 주소 설정
+        request.setBookCvim("https://search1.kakaocdn.net/thumb/book-expiry");
+        // 실패 후 기본 색상 반환
+        service.getBookCoverColor(request);
+        // 실패를 캐시하지 않은 재시도 실행
+        service.getBookCoverColor(request);
+        // 성공한 RGB의 캐시 적중 실행
+        service.getBookCoverColor(request);
+        // 성공 전후 다운로드 두 번 확인
+        org.mockito.Mockito.verify(service, org.mockito.Mockito.times(2)).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
+        // 실제 설정 단위의 만료 경계 대기
+        Thread.sleep(1100);
+        // 만료 이후의 재분석 실행
+        service.getBookCoverColor(request);
+        // 만료된 결과의 다운로드 재실행 확인
+        org.mockito.Mockito.verify(service, org.mockito.Mockito.times(3)).downloadCoverImage(org.mockito.ArgumentMatchers.any(URI.class));
     }
 }

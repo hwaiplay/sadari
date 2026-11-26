@@ -10,6 +10,7 @@
         <bind name="targetProfile" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_PROFILE_IMAGE" />
         <bind name="targetBackground" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_BACKGROUND_IMAGE" />
         <bind name="targetReply" value="@org.our.sadari.global.common.constant.Constant@LIKE_TARGET_REPLY" />
+        <bind name="codeReadStat" value="@org.our.sadari.global.common.constant.Constant@CODE_READ_STAT" />
         <bind name="reportStatRead" value="@org.our.sadari.global.common.constant.Constant@REPORT_STAT_READ" />
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />
         <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
@@ -61,7 +62,7 @@
                  , R.REPT_NUMB
                  , R.LANG_CODE
                  , R.REPT_STAT
-                 , FN_GET_CODE_NAME('READ_STAT', R.REPT_STAT, NULL, #{languageCode}) AS REPT_STAT_NAME
+                 , CAST(NULL AS CHAR(255)) AS REPT_STAT_NAME
                  , R.REPT_GRDE
                  , R.REPT_CNTN
                  , B.BOOK_NUMB
@@ -139,11 +140,44 @@
          LEFT JOIN TM_FILEXM PF
                 ON PF.FILE_NUMB = U.PROF_NUMB
              WHERE COALESCE(S.IMFD_YSNO, #{commYes}) = #{commYes}
+        ), FEED_PAGE AS (
+            SELECT FB.TAGT_TYPE
+                 , FB.TAGT_NUMB
+                 , FB.USER_NUMB
+                 , FB.USER_NICK
+                 , FB.PORF_PATH
+                 , FB.ACTIVITY_DATE
+                 , FB.REPT_NUMB
+                 , FB.LANG_CODE
+                 , FB.REPT_STAT
+                 , FB.REPT_GRDE
+                 , FB.REPT_CNTN
+                 , FB.BOOK_NUMB
+                 , FB.BOOK_TITL
+                 , FB.BOOK_ATHR
+                 , FB.BOOK_CVIM
+                 , FB.CONTENT_IMAGE_PATH
+              FROM FEED_BASE FB
+            <where>
+                <if test="tagtType != null and tagtType != ''">
+                    FB.TAGT_TYPE = #{tagtType}
+                </if>
+                <if test="tagtNumb != null">
+                    AND FB.TAGT_NUMB = #{tagtNumb}
+                </if>
+            </where>
+          ORDER BY FB.ACTIVITY_DATE DESC
+                 , FB.TAGT_TYPE ASC
+                 , FB.TAGT_NUMB DESC
+             LIMIT #{pageOffset}, #{pageLimit}
         ), LIKE_COUNT AS (
             SELECT L.TAGT_TYPE
                  , L.TAGT_NUMB
                  , COUNT(*) AS LIKE_CNT
               FROM TB_LIKEXX L
+              JOIN FEED_PAGE PAGE
+                ON PAGE.TAGT_TYPE = L.TAGT_TYPE
+               AND PAGE.TAGT_NUMB = L.TAGT_NUMB
               JOIN TM_USERXM U
                 ON U.USER_NUMB = L.USER_NUMB
                AND U.USER_STAT = #{userStatActive}
@@ -160,6 +194,9 @@
                  , R.TAGT_NUMB
                  , COUNT(*) AS REPL_CNT
              FROM TB_REPLXX R
+             JOIN FEED_PAGE PAGE
+               ON PAGE.TAGT_TYPE = R.TAGT_TYPE
+              AND PAGE.TAGT_NUMB = R.TAGT_NUMB
              WHERE R.DELT_YSNO = #{commNo}
                AND NOT EXISTS (
                    SELECT 1
@@ -170,7 +207,26 @@
           GROUP BY R.TAGT_TYPE, R.TAGT_NUMB
         )
         SELECT /* getFeedList */
-               FB.*
+               FB.TAGT_TYPE
+             , FB.TAGT_NUMB
+             , FB.USER_NUMB
+             , FB.USER_NICK
+             , FB.PORF_PATH
+             , FB.ACTIVITY_DATE
+             , FB.REPT_NUMB
+             , FB.LANG_CODE
+             , FB.REPT_STAT
+             , CASE WHEN FB.TAGT_TYPE = #{targetReport}
+                         THEN FN_GET_CODE_NAME(#{codeReadStat}, FB.REPT_STAT, NULL, #{languageCode})
+                    ELSE NULL
+                END AS REPT_STAT_NAME
+             , FB.REPT_GRDE
+             , FB.REPT_CNTN
+             , FB.BOOK_NUMB
+             , FB.BOOK_TITL
+             , FB.BOOK_ATHR
+             , FB.BOOK_CVIM
+             , FB.CONTENT_IMAGE_PATH
              , CASE WHEN FB.USER_NUMB = #{loginUserNumb} THEN #{commYes} ELSE #{commNo} END AS ME_YSNO
              , COALESCE(LC.LIKE_CNT, 0) AS LIKE_CNT
              , CASE WHEN UL.USER_NUMB IS NULL THEN #{commNo} ELSE #{commYes} END AS LIKE_YSNO
@@ -180,7 +236,7 @@
                          THEN #{commYes}
                     ELSE #{commNo}
                 END AS TRNS_CACHE_YSNO
-          FROM FEED_BASE FB
+          FROM FEED_PAGE FB
      LEFT JOIN LIKE_COUNT LC
             ON LC.TAGT_TYPE = FB.TAGT_TYPE
            AND LC.TAGT_NUMB = FB.TAGT_NUMB
@@ -194,18 +250,10 @@
      LEFT JOIN TB_REPTRN T
             ON T.REPT_NUMB = FB.REPT_NUMB
            AND T.LANG_CODE = #{languageCode}
-        <where>
-            <if test="tagtType != null and tagtType != ''">
-                FB.TAGT_TYPE = #{tagtType}
-            </if>
-            <if test="tagtNumb != null">
-                AND FB.TAGT_NUMB = #{tagtNumb}
-            </if>
-        </where>
       ORDER BY FB.ACTIVITY_DATE DESC
              , FB.TAGT_TYPE ASC
              , FB.TAGT_NUMB DESC
-         LIMIT #{pageOffset}, #{pageLimit}
+
     </select>
 
     <!-- 현재 사용자 사진 번호와 일치하는 활성 사용자 소유 좋아요 대상만 반환 -->

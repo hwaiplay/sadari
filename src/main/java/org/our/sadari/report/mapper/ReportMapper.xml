@@ -2,6 +2,28 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="org.our.sadari.report.mapper.ReportMapper">
 
+    <!-- 전체 본문과 불필요한 코드명 조회 없이 달력 표시 기간의 본인 기록만 조회 -->
+    <select id="getReadingCalendar" resultType="org.our.sadari.myPage.dto.ReadingCalendarDto">
+        <bind name="codeBookColr" value="@org.our.sadari.global.common.constant.Constant@CODE_BOOK_COLR" />
+        <bind name="languageCode" value="@org.our.sadari.global.common.util.LocaleUtil@getLanguageCode()" />
+        SELECT /* getReadingCalendar */
+               R.REPT_NUMB
+             , B.BOOK_TITL
+             , R.REPT_STDT
+             , R.REPT_ENDT
+             , FN_GET_CODE_NAME(#{codeBookColr}, R.REPT_COLR, NULL, #{languageCode}) AS REPT_COLR
+          FROM TM_REPORT R
+     LEFT JOIN TM_BKINFO B
+            ON B.BOOK_NUMB = R.BOOK_NUMB
+         WHERE R.USER_NUMB = #{userNumb}
+           AND R.REPT_STDT <![CDATA[<=]]> #{periodEnd}
+           AND R.REPT_ENDT <![CDATA[>=]]> #{periodStart}
+           AND R.REPT_STDT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+           AND R.REPT_ENDT REGEXP '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'
+      ORDER BY R.REPT_ENDT DESC
+             , R.REPT_NUMB DESC
+    </select>
+
     <!-- 로그인 사용자의 독후감 목록을 검색어와 정렬 조건에 맞춰 조회 -->
     <select id="getReportList" parameterType="org.our.sadari.report.dto.ReportDto" resultType="org.our.sadari.report.dto.ReportDto">
         <bind name="englishYsno" value="@org.our.sadari.global.common.util.LocaleUtil@getEnglishYsno()" />

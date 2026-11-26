@@ -7,21 +7,14 @@ import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.time.YearMonth;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import lombok.RequiredArgsConstructor;
-import org.our.sadari.global.common.constant.Constant;
 import org.our.sadari.global.common.result.ResultData;
 import org.our.sadari.global.common.result.ResultEnum;
-import org.our.sadari.global.common.util.DateUtil;
 import org.our.sadari.global.common.util.StringUtil;
 import org.our.sadari.myPage.dto.MonthlyReadingSummaryDto;
 import org.our.sadari.myPage.dto.ReadingGoalDto;
 import org.our.sadari.myPage.dto.ReadingStatisticsSettingDto;
 import org.our.sadari.myPage.service.ReadingStatisticsService;
-import org.our.sadari.report.dto.ReportDto;
 import org.our.sadari.report.service.ReportService;
 import org.our.sadari.social.dto.SocialDto;
 import org.our.sadari.social.service.SocialService;
@@ -46,6 +39,7 @@ import org.springframework.web.bind.annotation.RestController;
  * 2026-08-04        SeungHyeon.Kang       본인 독서 요약 전체 범위 유지
  * 2026-08-14        SeungHyeon.Kang    독서 통계·잔디 조회 API 추가
  * 2026-10-12        SeungHyeon.Kang        목표 저장·복사 요약 중복 조회 제거
+ * 2026-11-26        SeungHyeon.Kang    달력 기간 및 표시 정보 조회 최적화
  */
 @RestController
 @RequiredArgsConstructor
@@ -244,55 +238,7 @@ public class MyPageController {
 
         // 아래 처리 단계의 업무 목적을 설명
         LocalDate calendarEnd = calendarStart.plusDays(41);
-        List<Map<String, Object>> calendarReports = new ArrayList<>();
-        // getBookList 업무 로직을 reportService에 위임
-        ResultData bookListResult = reportService.getBookList(userNumb, null, Constant.SORT_END_DATE_DESC);
-
-        // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
-        if (bookListResult.getCode() != 200) {
-            // 로그인 사용자의 독서 달력 데이터 조회 결과를 반환
-            return bookListResult;
-        }
-
-        @SuppressWarnings("unchecked")
-        // 공통 응답에 포함된 업무 데이터를 조회
-        List<ReportDto> bookList = (List<ReportDto>) bookListResult.getData();
-
-        // 목록 또는 문자열 항목을 누락 없이 순차 처리하기 위한 반복 블록
-        for (ReportDto report : bookList) {
-            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
-            if (StringUtil.hasEmpty(report.getReptStdt(), report.getReptEndt())) {
-
-                continue;
-            }
-
-            // 기본 날짜 형식의 문자열을 날짜 객체로 변환
-            LocalDate reportStart = DateUtil.parseDefaultDate(report.getReptStdt());
-            // 기본 날짜 형식의 문자열을 날짜 객체로 변환
-            LocalDate reportEnd = DateUtil.parseDefaultDate(report.getReptEndt());
-
-            // 업무에서 허용한 범위와 상태 조건을 구분하기 위해 분기
-            if (!DateUtil.isDateRangeOverlapped(reportStart, reportEnd, calendarStart, calendarEnd)) {
-
-                continue;
-            }
-
-            Map<String, Object> item = new HashMap<>();
-            // 후속 처리에 사용할 키와 값을 맵에 저장
-            item.put("reptNumb", report.getReptNumb());
-            // 후속 처리에 사용할 키와 값을 맵에 저장
-            item.put("bookTitl", report.getBookTitl());
-            // 후속 처리에 사용할 키와 값을 맵에 저장
-            item.put("reptStdt", report.getReptStdt());
-            // 후속 처리에 사용할 키와 값을 맵에 저장
-            item.put("reptEndt", report.getReptEndt());
-            // 후속 처리에 사용할 키와 값을 맵에 저장
-            item.put("reptColr", report.getReptColrName());
-            // 처리한 값을 결과 컬렉션에 추가
-            calendarReports.add(item);
-        }
-
-        // 로그인 사용자의 독서 달력 데이터 조회 결과를 성공 응답으로 반환
-        return ResultData.success(calendarReports);
+        // 전체 독후감 대신 달력 기간의 최소 정보 조회를 서비스에 위임
+        return reportService.getReadingCalendar(userNumb, calendarStart, calendarEnd);
     }
 }

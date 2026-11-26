@@ -8,6 +8,7 @@
  * -----------------------------------------------------------
  * 2026-09-04        SeungHyeon.Kang    최초 생성
  * 2026-09-10        HanWon.Jang        채팅 열람과 알림 읽음 동기화
+ * 2026-11-26        SeungHyeon.Kang    증분 본문 및 읽음 변경 동기화
  */
 import {getApiErrorMessage} from "@/app/api/resultData";
 import {sweetError} from "@/app/lib/sweetAlert/sweetAlert";
@@ -15,11 +16,14 @@ import {message} from "@/app/messages/message";
 import {
   createClubChatApi,
   getClubChatListApi,
+  getClubChatSyncApi,
+  type ClubChatReadCount,
   getClubDtlApi,
   uptClubChatReadApi,
   type ClubChatMessage,
   type ReadingClub,
 } from "@/features/ReadingClub/api/readingClubApi";
+import {mergeChatMessages} from "@/features/ReadingClub/utils/chatSync";
 import {notifyUnreadAlimChange} from "@/features/Alim/lib/alimEvents";
 import {useCallback, useEffect, useState} from "react";
 import {useNavigate, useParams} from "react-router-dom";
@@ -39,24 +43,28 @@ export const useClubChatPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
 
-  /** 새 채팅과 변경된 안 읽은 수를 기존 목록에 병합함. @author SeungHyeon.Kang */
-  const mergeMessages = useCallback((nextMessages: ClubChatMessage[]): void => {
-    if (!nextMessages.length) {
-      return;
-    }
-
-    setMessages((currentMessages) => {
-      const messageMap = new Map<number, ClubChatMessage>();
-      for (const chat of currentMessages) {
-        messageMap.set(chat.chatNumb, chat);
-      }
-
-      for (const chat of nextMessages) {
-        messageMap.set(chat.chatNumb, chat);
-      }
-
-      return Array.from(messageMap.values()).sort((left, right) => left.chatNumb - right.chatNumb);
-    });
+  /**
+   * 새 본문과 기존 메시지의 미읽음 수 병합
+   *
+   * @author SeungHyeon.Kang
+   * @param nextMessages 새 메시지
+   * @param readCounts 기존 메시지의 미읽음 수
+   * @return 표시 상태 갱신
+   */
+  const mergeMessages = useCallback((nextMessages: ClubChatMessage[], readCounts: ClubChatReadCount[] = []): void => {
+    /**
+     * 가장 최근 표시 상태에 서버 변경 병합
+     *
+     * @author SeungHyeon.Kang
+     * @param current 현재 표시 메시지
+     * @return 변경된 메시지 또는 원래 배열
+     */
+    const mergeCurrent = (current: ClubChatMessage[]): ClubChatMessage[] => {
+      // 무변경 응답의 불필요한 배열 교체 방지
+      return mergeChatMessages(current, nextMessages, readCounts);
+    };
+    // 이전 폴링 응답과 발신 응답의 상태 역전 방지
+    setMessages(mergeCurrent);
   }, []);
 
   // 모임별 화면 수명 안에서 열람 신호와 읽음 요청을 순서대로 처리
@@ -69,6 +77,9 @@ export const useClubChatPage = () => {
     let active = true;
     let polling = false;
     let initialized = false;
+    // 화면 수명 안에서 받은 위치와 서버 읽음 확정 위치 분리
+    let lastSeen: number | undefined;
+    let lastReadSent: number | undefined;
     let terminalError = false;
     let queue = Promise.resolve();
     // 다른 탭과 재진입 화면의 종료 요청을 구분할 식별값
@@ -85,6 +96,11 @@ export const useClubChatPage = () => {
           return;
         }
         const unreadCnt = await uptClubChatReadApi(clubNumb, chatNumb, viewId, viewing);
+        // 실제 서버 요청이 성공한 커서만 확정하여 숨김 전환 중 생략된 요청 재시도 유지
+        if (chatNumb !== undefined) {
+          lastReadSent = chatNumb;
+        }
+
         // 이전 화면의 응답이 현재 화면의 알림 배지를 덮어쓰는 현상 방지
         if (active && document.visibilityState === "visible") {
           notifyUnreadAlimChange(unreadCnt);
@@ -106,10 +122,23 @@ export const useClubChatPage = () => {
         if (!initialized) {
           await syncView(true).catch(() => undefined);
         }
-        const [nextClub, nextMessages] = await Promise.all([
-          initialized ? Promise.resolve(null) : getClubDtlApi(clubNumb),
-          getClubChatListApi(clubNumb),
-        ]);
+        let nextClub: ReadingClub | null = null;
+        let nextMessages: ClubChatMessage[];
+        let readCounts: ClubChatReadCount[] = [];
+        // 최초 본문을 받은 뒤에는 새 본문과 숫자 변경만 조회
+        if (initialized && lastSeen !== undefined) {
+          // 빈 새 메시지 응답에도 기존 메시지의 읽음 수 갱신 유지
+          const sync = await getClubChatSyncApi(clubNumb, lastSeen);
+          nextMessages = sync.messages;
+          readCounts = sync.readCounts;
+        } else {
+          // 빈 채팅방은 첫 메시지가 생길 때까지 기존 최초 조회 사용
+          [nextClub, nextMessages] = await Promise.all([
+            initialized ? Promise.resolve(null) : getClubDtlApi(clubNumb),
+            getClubChatListApi(clubNumb),
+          ]);
+        }
+
         // 다른 모임으로 이동한 뒤 도착한 목록과 읽음 처리 제외
         if (!active || document.visibilityState !== "visible") {
           return;
@@ -117,10 +146,22 @@ export const useClubChatPage = () => {
         if (nextClub) {
           setClub(nextClub);
         }
-        mergeMessages(nextMessages);
+        // 기존 본문과 새 메시지 및 미읽음 수를 함께 반영
+        mergeMessages(nextMessages, readCounts);
         initialized = true;
         // 확인한 메시지까지 알림 읽음 처리와 배지 동기화
-        await syncView(true, nextMessages.at(-1)?.chatNumb);
+        // 중복 메시지와 늦은 응답으로 조회 커서가 뒤로 이동하지 않도록 보정
+        const newest = nextMessages.at(-1)?.chatNumb;
+        // 새 메시지가 있을 때만 다음 조회 위치 전진
+        if (newest !== undefined) {
+          lastSeen = Math.max(lastSeen ?? 0, newest);
+        }
+
+        // 같은 위치의 반복 쓰기는 생략하되 화면 열람 신호는 계속 갱신
+        const readCursor = lastSeen !== lastReadSent ? lastSeen : undefined;
+        // 읽음 확정 실패 시 다음 폴링에서 같은 커서 재시도
+        await syncView(true, readCursor);
+
       } catch (error: unknown) {
         // 최초 조회 실패만 안내하고 주기 조회 실패는 다음 주기에 재시도
         if (active && !initialized) {

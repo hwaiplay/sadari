@@ -97,6 +97,38 @@
          LIMIT #{maxSize}
     </select>
 
+    <!-- 기존 최근 메시지의 미읽음 수만 갱신하여 본문 및 프로필 재전송 제외 -->
+    <select id="getChatReadCounts" resultType="org.our.sadari.readingClub.dto.ClubChatSyncDto$ReadCount">
+        <include refid="clubCodeBinds" />
+        WITH CHATPAGE AS (
+            SELECT C.CHAT_NUMB
+                 , C.USER_NUMB
+                 , C.REGI_DATE
+              FROM TM_CLCHAT C
+             WHERE C.CLUB_NUMB = #{clubNumb}
+               AND C.DELT_YSNO = #{commNo}
+               AND C.CHAT_NUMB <![CDATA[<=]]> #{afterChatNumb}
+          ORDER BY C.CHAT_NUMB DESC
+             LIMIT #{maxSize}
+        )
+        SELECT /* getChatReadCounts */
+               CHAT.CHAT_NUMB
+             , COUNT(READUSER.USER_NUMB) AS UNREAD_CNT
+          FROM CHATPAGE CHAT
+     LEFT JOIN TB_CLMEMX READER
+            ON READER.CLUB_NUMB = #{clubNumb}
+           AND READER.MEMB_STAT = #{memberActive}
+           AND READER.USER_NUMB != CHAT.USER_NUMB
+           AND READER.USER_NUMB != #{userNumb}
+           AND READER.JOIN_DATE <![CDATA[<=]]> CHAT.REGI_DATE
+           AND COALESCE(READER.READ_NUMB, 0) <![CDATA[<]]> CHAT.CHAT_NUMB
+     LEFT JOIN TM_USERXM READUSER
+            ON READUSER.USER_NUMB = READER.USER_NUMB
+           AND READUSER.USER_STAT = #{userActive}
+      GROUP BY CHAT.CHAT_NUMB
+      ORDER BY CHAT.CHAT_NUMB
+    </select>
+
     <!-- 같은 사용자와 클라이언트 중복 방지 키의 채팅을 한 번만 저장 -->
     <insert id="setClubChat">
         INSERT IGNORE /* setClubChat */
